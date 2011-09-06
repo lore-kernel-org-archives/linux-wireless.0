@@ -1,347 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38702 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934500Ab1IOTcJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 15:32:09 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 19/27] iwlagn: rename iwl-pci.h to iwl-cfg.h
-Date: Thu, 15 Sep 2011 11:46:46 -0700
-Message-Id: <1316112414-6341-20-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110915_213302_993939_1FD05C60)
-In-Reply-To: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:42645 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754287Ab1IFMQr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Sep 2011 08:16:47 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1R0ua6-00066P-4Q
+	for linux-wireless@vger.kernel.org; Tue, 06 Sep 2011 14:16:46 +0200
+Message-Id: <20110906121534.774908599@sipsolutions.net> (sfid-20110906_141651_781231_3B42CD3E)
+Date: Tue, 06 Sep 2011 14:14:24 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 3/3] mac80211: also expire filtered frames
+References: <20110906121421.460641040@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-There's nothing PCI(E) specific in this file.
+mac80211 will expire normal PS-buffered frames, but
+if the device rejected some frames for a sleeping
+station, these won't be on the ps_tx_buf queue but
+on the tx_filtered queue instead; this is done to
+avoid reordering.
+
+However, mac80211 will not expire frames from the
+filtered queue, let's fix that.
+
+Also add a more comments to what all this expiry is
+doing and how it works.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-1000.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-2000.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-cfg.h  |  115 ++++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-pci.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-pci.h  |  116 -------------------------------
- 7 files changed, 120 insertions(+), 121 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-cfg.h
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-pci.h
+ net/mac80211/sta_info.c |   57 +++++++++++++++++++++++++++++++++++++++++++-----
+ net/mac80211/status.c   |    5 ++++
+ 2 files changed, 57 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index dacbe3a..887f9ac 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -44,7 +44,7 @@
- #include "iwl-helpers.h"
- #include "iwl-agn-hw.h"
- #include "iwl-shared.h"
--#include "iwl-pci.h"
-+#include "iwl-cfg.h"
+--- a/net/mac80211/sta_info.c	2011-09-06 13:19:20.000000000 +0200
++++ b/net/mac80211/sta_info.c	2011-09-06 13:57:30.000000000 +0200
+@@ -698,6 +698,39 @@ static bool sta_info_cleanup_expire_buff
+ 	unsigned long flags;
+ 	struct sk_buff *skb;
  
- /* Highest firmware API version supported */
- #define IWL1000_UCODE_API_MAX 6
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index 82719b7..5a87010 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -45,7 +45,7 @@
- #include "iwl-agn-hw.h"
- #include "iwl-6000-hw.h"
- #include "iwl-shared.h"
--#include "iwl-pci.h"
-+#include "iwl-cfg.h"
- 
- /* Highest firmware API version supported */
- #define IWL2030_UCODE_API_MAX 6
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index de7f7f2..2907016 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -47,7 +47,7 @@
- #include "iwl-5000-hw.h"
- #include "iwl-trans.h"
- #include "iwl-shared.h"
--#include "iwl-pci.h"
-+#include "iwl-cfg.h"
- 
- /* Highest firmware API version supported */
- #define IWL5000_UCODE_API_MAX 5
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 5c1a8b8..37837f7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -46,7 +46,7 @@
- #include "iwl-6000-hw.h"
- #include "iwl-trans.h"
- #include "iwl-shared.h"
--#include "iwl-pci.h"
-+#include "iwl-cfg.h"
- 
- /* Highest firmware API version supported */
- #define IWL6000_UCODE_API_MAX 4
-diff --git a/drivers/net/wireless/iwlwifi/iwl-cfg.h b/drivers/net/wireless/iwlwifi/iwl-cfg.h
-new file mode 100644
-index 0000000..d4f317c
---- /dev/null
-+++ b/drivers/net/wireless/iwlwifi/iwl-cfg.h
-@@ -0,0 +1,115 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2007 - 2011 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-+ * USA
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called LICENSE.GPL.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2005 - 2011 Intel Corporation. All rights reserved.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ *****************************************************************************/
-+#ifndef __iwl_pci_h__
-+#define __iwl_pci_h__
++	/*
++	 * First check for frames that should expire on the filtered
++	 * queue. Frames here were rejected by the driver and are on
++	 * a separate queue to avoid reordering with normal PS-buffered
++	 * frames. They also aren't accounted for right now in the
++	 * total_ps_buffered counter.
++	 */
++	for (;;) {
++		spin_lock_irqsave(&sta->tx_filtered.lock, flags);
++		skb = skb_peek(&sta->tx_filtered);
++		if (sta_info_buffer_expired(sta, skb))
++			skb = __skb_dequeue(&sta->tx_filtered);
++		else
++			skb = NULL;
++		spin_unlock_irqrestore(&sta->tx_filtered.lock, flags);
 +
++		/*
++		 * Frames are queued in order, so if this one
++		 * hasn't expired yet we can stop testing. If
++		 * we actually reached the end of the queue we
++		 * also need to stop, of course.
++		 */
++		if (!skb)
++			break;
++		dev_kfree_skb(skb);
++	}
 +
-+/*
-+ * This file declares the config structures for all devices.
-+ */
-+
-+extern struct iwl_cfg iwl5300_agn_cfg;
-+extern struct iwl_cfg iwl5100_agn_cfg;
-+extern struct iwl_cfg iwl5350_agn_cfg;
-+extern struct iwl_cfg iwl5100_bgn_cfg;
-+extern struct iwl_cfg iwl5100_abg_cfg;
-+extern struct iwl_cfg iwl5150_agn_cfg;
-+extern struct iwl_cfg iwl5150_abg_cfg;
-+extern struct iwl_cfg iwl6005_2agn_cfg;
-+extern struct iwl_cfg iwl6005_2abg_cfg;
-+extern struct iwl_cfg iwl6005_2bg_cfg;
-+extern struct iwl_cfg iwl6005_2agn_sff_cfg;
-+extern struct iwl_cfg iwl1030_bgn_cfg;
-+extern struct iwl_cfg iwl1030_bg_cfg;
-+extern struct iwl_cfg iwl6030_2agn_cfg;
-+extern struct iwl_cfg iwl6030_2abg_cfg;
-+extern struct iwl_cfg iwl6030_2bgn_cfg;
-+extern struct iwl_cfg iwl6030_2bg_cfg;
-+extern struct iwl_cfg iwl6000i_2agn_cfg;
-+extern struct iwl_cfg iwl6000i_2abg_cfg;
-+extern struct iwl_cfg iwl6000i_2bg_cfg;
-+extern struct iwl_cfg iwl6000_3agn_cfg;
-+extern struct iwl_cfg iwl6050_2agn_cfg;
-+extern struct iwl_cfg iwl6050_2abg_cfg;
-+extern struct iwl_cfg iwl6150_bgn_cfg;
-+extern struct iwl_cfg iwl6150_bg_cfg;
-+extern struct iwl_cfg iwl1000_bgn_cfg;
-+extern struct iwl_cfg iwl1000_bg_cfg;
-+extern struct iwl_cfg iwl100_bgn_cfg;
-+extern struct iwl_cfg iwl100_bg_cfg;
-+extern struct iwl_cfg iwl130_bgn_cfg;
-+extern struct iwl_cfg iwl130_bg_cfg;
-+extern struct iwl_cfg iwl2000_2bgn_cfg;
-+extern struct iwl_cfg iwl2000_2bg_cfg;
-+extern struct iwl_cfg iwl2000_2bgn_d_cfg;
-+extern struct iwl_cfg iwl2030_2bgn_cfg;
-+extern struct iwl_cfg iwl2030_2bg_cfg;
-+extern struct iwl_cfg iwl6035_2agn_cfg;
-+extern struct iwl_cfg iwl6035_2abg_cfg;
-+extern struct iwl_cfg iwl6035_2bg_cfg;
-+extern struct iwl_cfg iwl105_bg_cfg;
-+extern struct iwl_cfg iwl105_bgn_cfg;
-+extern struct iwl_cfg iwl135_bg_cfg;
-+extern struct iwl_cfg iwl135_bgn_cfg;
-+
-+#endif /* __iwl_pci_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
-index 1be0bc4..849b5ef 100644
---- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-@@ -68,7 +68,7 @@
- #include "iwl-shared.h"
- #include "iwl-trans.h"
- #include "iwl-csr.h"
--#include "iwl-pci.h"
-+#include "iwl-cfg.h"
++	/*
++	 * Now also check the normal PS-buffered queue, this will
++	 * only find something if the filtered queue was emptied
++	 * since the filtered frames are all before the normal PS
++	 * buffered frames.
++	 */
+ 	for (;;) {
+ 		spin_lock_irqsave(&sta->ps_tx_buf.lock, flags);
+ 		skb = skb_peek(&sta->ps_tx_buf);
+@@ -707,6 +740,11 @@ static bool sta_info_cleanup_expire_buff
+ 			skb = NULL;
+ 		spin_unlock_irqrestore(&sta->ps_tx_buf.lock, flags);
  
- /* PCI registers */
- #define PCI_CFG_RETRY_TIMEOUT	0x041
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.h b/drivers/net/wireless/iwlwifi/iwl-pci.h
-deleted file mode 100644
-index c0aea9e..0000000
---- a/drivers/net/wireless/iwlwifi/iwl-pci.h
-+++ /dev/null
-@@ -1,116 +0,0 @@
--/******************************************************************************
-- *
-- * This file is provided under a dual BSD/GPLv2 license.  When using or
-- * redistributing this file, you may do so under either license.
-- *
-- * GPL LICENSE SUMMARY
-- *
-- * Copyright(c) 2007 - 2011 Intel Corporation. All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-- * USA
-- *
-- * The full GNU General Public License is included in this distribution
-- * in the file called LICENSE.GPL.
-- *
-- * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-- *
-- * BSD LICENSE
-- *
-- * Copyright(c) 2005 - 2011 Intel Corporation. All rights reserved.
-- * All rights reserved.
-- *
-- * Redistribution and use in source and binary forms, with or without
-- * modification, are permitted provided that the following conditions
-- * are met:
-- *
-- *  * Redistributions of source code must retain the above copyright
-- *    notice, this list of conditions and the following disclaimer.
-- *  * Redistributions in binary form must reproduce the above copyright
-- *    notice, this list of conditions and the following disclaimer in
-- *    the documentation and/or other materials provided with the
-- *    distribution.
-- *  * Neither the name Intel Corporation nor the names of its
-- *    contributors may be used to endorse or promote products derived
-- *    from this software without specific prior written permission.
-- *
-- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-- *
-- *****************************************************************************/
--#ifndef __iwl_pci_h__
--#define __iwl_pci_h__
++		/*
++		 * frames are queued in order, so if this one
++		 * hasn't expired yet (or we reached the end of
++		 * the queue) we can stop testing
++		 */
+ 		if (!skb)
+ 			break;
+ 
+@@ -716,13 +754,22 @@ static bool sta_info_cleanup_expire_buff
+ 		       sta->sta.addr);
+ #endif
+ 		dev_kfree_skb(skb);
 -
--
--/* This file includes the declaration that are internal to the PCI
-- * implementation of the bus layer
-- */
--
--/* configuration for the _agn devices */
--extern struct iwl_cfg iwl5300_agn_cfg;
--extern struct iwl_cfg iwl5100_agn_cfg;
--extern struct iwl_cfg iwl5350_agn_cfg;
--extern struct iwl_cfg iwl5100_bgn_cfg;
--extern struct iwl_cfg iwl5100_abg_cfg;
--extern struct iwl_cfg iwl5150_agn_cfg;
--extern struct iwl_cfg iwl5150_abg_cfg;
--extern struct iwl_cfg iwl6005_2agn_cfg;
--extern struct iwl_cfg iwl6005_2abg_cfg;
--extern struct iwl_cfg iwl6005_2bg_cfg;
--extern struct iwl_cfg iwl6005_2agn_sff_cfg;
--extern struct iwl_cfg iwl1030_bgn_cfg;
--extern struct iwl_cfg iwl1030_bg_cfg;
--extern struct iwl_cfg iwl6030_2agn_cfg;
--extern struct iwl_cfg iwl6030_2abg_cfg;
--extern struct iwl_cfg iwl6030_2bgn_cfg;
--extern struct iwl_cfg iwl6030_2bg_cfg;
--extern struct iwl_cfg iwl6000i_2agn_cfg;
--extern struct iwl_cfg iwl6000i_2abg_cfg;
--extern struct iwl_cfg iwl6000i_2bg_cfg;
--extern struct iwl_cfg iwl6000_3agn_cfg;
--extern struct iwl_cfg iwl6050_2agn_cfg;
--extern struct iwl_cfg iwl6050_2abg_cfg;
--extern struct iwl_cfg iwl6150_bgn_cfg;
--extern struct iwl_cfg iwl6150_bg_cfg;
--extern struct iwl_cfg iwl1000_bgn_cfg;
--extern struct iwl_cfg iwl1000_bg_cfg;
--extern struct iwl_cfg iwl100_bgn_cfg;
--extern struct iwl_cfg iwl100_bg_cfg;
--extern struct iwl_cfg iwl130_bgn_cfg;
--extern struct iwl_cfg iwl130_bg_cfg;
--extern struct iwl_cfg iwl2000_2bgn_cfg;
--extern struct iwl_cfg iwl2000_2bg_cfg;
--extern struct iwl_cfg iwl2000_2bgn_d_cfg;
--extern struct iwl_cfg iwl2030_2bgn_cfg;
--extern struct iwl_cfg iwl2030_2bg_cfg;
--extern struct iwl_cfg iwl6035_2agn_cfg;
--extern struct iwl_cfg iwl6035_2abg_cfg;
--extern struct iwl_cfg iwl6035_2bg_cfg;
--extern struct iwl_cfg iwl105_bg_cfg;
--extern struct iwl_cfg iwl105_bgn_cfg;
--extern struct iwl_cfg iwl135_bg_cfg;
--extern struct iwl_cfg iwl135_bgn_cfg;
--
--#endif /* __iwl_pci_h__ */
--- 
-1.7.0.4
+-		/* if the queue is now empty recalc TIM bit */
+-		if (skb_queue_empty(&sta->ps_tx_buf))
+-			sta_info_recalc_tim(sta);
+ 	}
+ 
+-	return !skb_queue_empty(&sta->ps_tx_buf);
++	/*
++	 * Finally, recalculate the TIM bit for this station -- it might
++	 * now be clear because the station was too slow to retrieve its
++	 * frames.
++	 */
++	sta_info_recalc_tim(sta);
++
++	/*
++	 * Return whether there are any frames still buffered, this is
++	 * used to check whether the cleanup timer still needs to run,
++	 * if there are no frames we don't need to rearm the timer.
++	 */
++	return !(skb_queue_empty(&sta->ps_tx_buf) &&
++		 skb_queue_empty(&sta->tx_filtered));
+ }
+ 
+ static int __must_check __sta_info_destroy(struct sta_info *sta)
+--- a/net/mac80211/status.c	2011-09-06 13:24:28.000000000 +0200
++++ b/net/mac80211/status.c	2011-09-06 13:29:24.000000000 +0200
+@@ -107,6 +107,11 @@ static void ieee80211_handle_filtered_fr
+ 	    skb_queue_len(&sta->tx_filtered) < STA_MAX_TX_BUFFER) {
+ 		skb_queue_tail(&sta->tx_filtered, skb);
+ 		sta_info_recalc_tim(sta);
++
++		if (!timer_pending(&local->sta_cleanup))
++			mod_timer(&local->sta_cleanup,
++				  round_jiffies(jiffies +
++						STA_INFO_CLEANUP_INTERVAL));
+ 		return;
+ 	}
+ 
+
 
