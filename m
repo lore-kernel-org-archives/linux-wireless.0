@@ -1,677 +1,552 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4896 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754691Ab1IOIGw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 04:06:52 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de, dan.carpenter@oracle.com
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH V2 02/17] staging: brcm80211: remove ioctl layer from
- brcmsmac
-Date: Thu, 15 Sep 2011 10:06:21 +0200
-Message-ID: <1316073981-4845-1-git-send-email-rvossen@broadcom.com> (sfid-20110915_100658_991841_E25A0D41)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:59440 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755207Ab1IFU2U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Sep 2011 16:28:20 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1R12Fh-0004I7-MM
+	for linux-wireless@vger.kernel.org; Tue, 06 Sep 2011 22:28:14 +0200
+Message-Id: <20110906202725.130077360@sipsolutions.net> (sfid-20110906_222826_173953_844A1DA3)
+Date: Tue, 06 Sep 2011 22:27:06 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 3/5] mac80211: implement uAPSD
+References: <20110906201703.703254041@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The ioctl layer in brcmsmac only provided an interface layer that
-was internal to the driver. This is considered pointless and has
-been removed.
+Add uAPSD support to mac80211. This is probably not
+possible with all devices, so advertising it with
+the cfg80211 flag will be left up to drivers that
+want it.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Due to my previous patches it is now a fairly
+straight-forward extension. Drivers need to have
+accurate TX status reporting for the EOSP frame.
+For drivers that buffer themselves, the provided
+APIs allow releasing the right number of frames,
+but then drivers need to set EOSP and more-data
+themselves. This is documented in more detail in
+the new code itself.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c |   65 ++---
- drivers/staging/brcm80211/brcmsmac/main.c        |  353 +++++++--------------
- drivers/staging/brcm80211/brcmsmac/pub.h         |   12 +-
- drivers/staging/brcm80211/include/defs.h         |   13 +-
- 4 files changed, 158 insertions(+), 285 deletions(-)
+ drivers/net/wireless/iwlegacy/iwl-4965-tx.c |    2 
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |    2 
+ drivers/net/wireless/p54/txrx.c             |    2 
+ include/net/mac80211.h                      |   22 ++-
+ net/mac80211/rx.c                           |   91 +++++++++++-----
+ net/mac80211/sta_info.c                     |  155 +++++++++++++++++++---------
+ net/mac80211/sta_info.h                     |    8 +
+ net/mac80211/status.c                       |    3 
+ net/mac80211/tx.c                           |    2 
+ 9 files changed, 201 insertions(+), 86 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-index d003786..11ad5d0 100644
---- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-@@ -371,23 +371,23 @@ ieee_set_channel(struct ieee80211_hw *hw, struct ieee80211_channel *chan,
- 		 enum nl80211_channel_type type)
- {
- 	struct brcms_info *wl = hw->priv;
--	int err = 0;
-+	int err;
+--- a/net/mac80211/rx.c	2011-09-06 21:40:08.000000000 +0200
++++ b/net/mac80211/rx.c	2011-09-06 22:05:21.000000000 +0200
+@@ -1172,6 +1172,68 @@ int ieee80211_sta_ps_transition(struct i
+ EXPORT_SYMBOL(ieee80211_sta_ps_transition);
  
- 	switch (type) {
- 	case NL80211_CHAN_HT20:
- 	case NL80211_CHAN_NO_HT:
--		err = brcms_c_set(wl->wlc, BRCM_SET_CHANNEL, chan->hw_value);
-+		err = brcms_c_set_channel(wl->wlc, chan->hw_value);
- 		break;
- 	case NL80211_CHAN_HT40MINUS:
- 	case NL80211_CHAN_HT40PLUS:
- 		wiphy_err(hw->wiphy,
- 			  "%s: Need to implement 40 Mhz Channels!\n", __func__);
--		err = 1;
-+		err = -ENOTSUPP;
- 		break;
-+	default:
-+		err = -EINVAL;
- 	}
- 
--	if (err)
--		return -EIO;
- 	return err;
- }
- 
-@@ -436,21 +436,10 @@ static int brcms_ops_config(struct ieee80211_hw *hw, u32 changed)
- 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL)
- 		err = ieee_set_channel(hw, conf->channel, conf->channel_type);
- 
--	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS) {
--		if (brcms_c_set
--		    (wl->wlc, BRCM_SET_SRL,
--		     conf->short_frame_max_tx_count) < 0) {
--			wiphy_err(wiphy, "%s: Error setting srl\n", __func__);
--			err = -EIO;
--			goto config_out;
--		}
--		if (brcms_c_set(wl->wlc, BRCM_SET_LRL,
--				conf->long_frame_max_tx_count) < 0) {
--			wiphy_err(wiphy, "%s: Error setting lrl\n", __func__);
--			err = -EIO;
--			goto config_out;
--		}
--	}
-+	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS)
-+		err = brcms_c_set_rate_limit(wl->wlc,
-+					     conf->short_frame_max_tx_count,
-+					     conf->long_frame_max_tx_count);
- 
-  config_out:
- 	UNLOCK(wl);
-@@ -464,7 +453,6 @@ brcms_ops_bss_info_changed(struct ieee80211_hw *hw,
- {
- 	struct brcms_info *wl = hw->priv;
- 	struct wiphy *wiphy = hw->wiphy;
--	int val;
- 
- 	if (changed & BSS_CHANGED_ASSOC) {
- 		/* association status changed (associated/disassociated)
-@@ -477,13 +465,15 @@ brcms_ops_bss_info_changed(struct ieee80211_hw *hw,
- 		UNLOCK(wl);
- 	}
- 	if (changed & BSS_CHANGED_ERP_SLOT) {
-+		s8 val;
+ static ieee80211_rx_result debug_noinline
++ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
++{
++	struct ieee80211_sub_if_data *sdata = rx->sdata;
++	struct ieee80211_hdr *hdr = (void *)rx->skb->data;
++	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
++	int tid, ac;
 +
- 		/* slot timing changed */
- 		if (info->use_short_slot)
- 			val = 1;
- 		else
- 			val = 0;
- 		LOCK(wl);
--		brcms_c_set(wl->wlc, BRCMS_SET_SHORTSLOT_OVERRIDE, val);
-+		brcms_c_set_shortslot_override(wl->wlc, val);
- 		UNLOCK(wl);
- 	}
- 
-@@ -509,14 +499,9 @@ brcms_ops_bss_info_changed(struct ieee80211_hw *hw,
- 
- 		/* retrieve the current rates */
- 		LOCK(wl);
--		error = brcms_c_ioctl(wl->wlc, BRCM_GET_CURR_RATESET,
--				  &rs, sizeof(rs));
-+		brcms_c_get_current_rateset(wl->wlc, &rs);
- 		UNLOCK(wl);
--		if (error) {
--			wiphy_err(wiphy, "%s: retrieve rateset failed: %d\n",
--				  __func__, error);
--			return;
--		}
++	if (!rx->sta || !(status->rx_flags & IEEE80211_RX_RA_MATCH))
++		return RX_CONTINUE;
 +
- 		br_mask = info->basic_rates;
- 		bi = hw->wiphy->bands[brcms_c_get_curband(wl->wlc)];
- 		for (i = 0; i < bi->n_bitrates; i++) {
-@@ -530,20 +515,22 @@ brcms_ops_bss_info_changed(struct ieee80211_hw *hw,
- 
- 		/* update the rate set */
- 		LOCK(wl);
--		brcms_c_ioctl(wl->wlc, BRCM_SET_RATESET, &rs, sizeof(rs));
-+		error = brcms_c_set_rateset(wl->wlc, &rs);
- 		UNLOCK(wl);
-+		if (error)
-+			wiphy_err(wiphy, "changing basic rates failed: %d\n",
-+				  error);
- 	}
- 	if (changed & BSS_CHANGED_BEACON_INT) {
- 		/* Beacon interval changed */
- 		LOCK(wl);
--		brcms_c_set(wl->wlc, BRCM_SET_BCNPRD, info->beacon_int);
-+		brcms_c_set_beacon_period(wl->wlc, info->beacon_int);
- 		UNLOCK(wl);
- 	}
- 	if (changed & BSS_CHANGED_BSSID) {
- 		/* BSSID changed, for whatever reason (IBSS and managed mode) */
- 		LOCK(wl);
--		brcms_c_set_addrmatch(wl->wlc, RCM_BSSID_OFFSET,
--				  info->bssid);
-+		brcms_c_set_addrmatch(wl->wlc, RCM_BSSID_OFFSET, info->bssid);
- 		UNLOCK(wl);
- 	}
- 	if (changed & BSS_CHANGED_BEACON)
-@@ -1086,18 +1073,16 @@ static int ieee_hw_rate_init(struct ieee80211_hw *hw)
++	if (sdata->vif.type != NL80211_IFTYPE_AP &&
++	    sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
++		return RX_CONTINUE;
++
++	/*
++	 * The device handles station powersave, so don't do anything about
++	 * uAPSD and PS-Poll frames (the latter shouldn't even come up from
++	 * it to mac80211 since they're handled.)
++	 */
++	if (sdata->local->hw.flags & IEEE80211_HW_AP_LINK_PS)
++		return RX_CONTINUE;
++
++	if (unlikely(ieee80211_is_pspoll(hdr->frame_control))) {
++		if (!test_sta_flags(rx->sta, WLAN_STA_PS_DRIVER))
++			ieee80211_sta_ps_deliver_poll_response(rx->sta);
++		else
++			set_sta_flags(rx->sta, WLAN_STA_PSPOLL);
++
++		/* Free PS Poll skb here instead of returning RX_DROP that would
++		 * count as an dropped frame. */
++		dev_kfree_skb(rx->skb);
++
++		return RX_QUEUED;
++	} else if (ieee80211_is_data_qos(hdr->frame_control) ||
++		   ieee80211_is_qos_nullfunc(hdr->frame_control)) {
++		tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
++		ac = ieee802_1d_to_ac[tid & 7];
++
++		/*
++		 * If this AC is not trigger-enabled do nothing.
++		 *
++		 * NB: This could/should check a separate bitmap of trigger-
++		 * enabled queues, but for now we only implement uAPSD w/o
++		 * TSPEC changes to the ACs, so they're always the same.
++		 */
++		if (!(rx->sta->sta.uapsd_queues & BIT(ac)))
++			return RX_CONTINUE;
++
++		/* if we are in a service period, do nothing */
++		if (test_sta_flags(rx->sta, WLAN_STA_SP))
++			return RX_CONTINUE;
++
++		if (!test_sta_flags(rx->sta, WLAN_STA_PS_DRIVER))
++			ieee80211_sta_ps_deliver_uapsd(rx->sta);
++		else
++			set_sta_flags(rx->sta, WLAN_STA_UAPSD);
++	}
++
++	return RX_CONTINUE;
++}
++
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
  {
- 	struct brcms_info *wl = hw->priv;
- 	int has_5g;
--	char phy_list[4];
-+	u16 phy_type;
- 
- 	has_5g = 0;
- 
- 	hw->wiphy->bands[IEEE80211_BAND_2GHZ] = NULL;
- 	hw->wiphy->bands[IEEE80211_BAND_5GHZ] = NULL;
- 
--	if (brcms_c_get(wl->wlc, BRCM_GET_PHYLIST, (int *)&phy_list) < 0)
--		wiphy_err(hw->wiphy, "Phy list failed\n");
--
--	if (phy_list[0] == 'n' || phy_list[0] == 'c') {
--		if (phy_list[0] == 'c') {
-+	phy_type = brcms_c_get_phy_type(wl->wlc, 0);
-+	if (phy_type == PHY_TYPE_N || phy_type == PHY_TYPE_LCN) {
-+		if (phy_type == PHY_TYPE_LCN) {
- 			/* Single stream */
- 			brcms_band_2GHz_nphy.ht_cap.mcs.rx_mask[1] = 0;
- 			brcms_band_2GHz_nphy.ht_cap.mcs.rx_highest = 72;
-@@ -1110,7 +1095,7 @@ static int ieee_hw_rate_init(struct ieee80211_hw *hw)
- 	/* Assume all bands use the same phy.  True for 11n devices. */
- 	if (wl->pub->_nbands > 1) {
- 		has_5g++;
--		if (phy_list[0] == 'n' || phy_list[0] == 'c')
-+		if (phy_type == PHY_TYPE_N || phy_type == PHY_TYPE_LCN)
- 			hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
- 			    &brcms_band_5GHz_nphy;
- 		else
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index 2b5d4de..705f0eb 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -5252,7 +5252,7 @@ brcms_c_attach(struct brcms_info *wl, u16 vendor, u16 device, uint unit,
- 		/* init per-band default rateset, depend on band->gmode */
- 		brcms_default_rateset(wlc, &wlc->band->defrateset);
- 
--		/* fill in hw_rateset (used early by BRCM_SET_RATESET) */
-+		/* fill in hw_rateset */
- 		brcms_c_rateset_filter(&wlc->band->defrateset,
- 				   &wlc->band->hw_rateset, false,
- 				   BRCMS_RATES_CCK_OFDM, BRCMS_RATE_MASK,
-@@ -6116,7 +6116,8 @@ int brcms_c_set_nmode(struct brcms_c_info *wlc, s32 nmode)
+ 	struct sta_info *sta = rx->sta;
+@@ -1482,33 +1544,6 @@ ieee80211_rx_h_defragment(struct ieee802
  }
  
- static int
--brcms_c_set_rateset(struct brcms_c_info *wlc, struct brcms_c_rateset *rs_arg)
-+brcms_c_set_internal_rateset(struct brcms_c_info *wlc,
-+			     struct brcms_c_rateset *rs_arg)
- {
- 	struct brcms_c_rateset rs, new;
- 	uint bandunit;
-@@ -6158,18 +6159,6 @@ brcms_c_set_rateset(struct brcms_c_info *wlc, struct brcms_c_rateset *rs_arg)
- 	return 0;
- }
- 
--/* simplified integer set interface for common ioctl handler */
--int brcms_c_set(struct brcms_c_info *wlc, int cmd, int arg)
+ static ieee80211_rx_result debug_noinline
+-ieee80211_rx_h_ps_poll(struct ieee80211_rx_data *rx)
 -{
--	return brcms_c_ioctl(wlc, cmd, (void *)&arg, sizeof(arg));
+-	struct ieee80211_sub_if_data *sdata = rx->sdata;
+-	__le16 fc = ((struct ieee80211_hdr *)rx->skb->data)->frame_control;
+-	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
+-
+-	if (likely(!rx->sta || !ieee80211_is_pspoll(fc) ||
+-		   !(status->rx_flags & IEEE80211_RX_RA_MATCH)))
+-		return RX_CONTINUE;
+-
+-	if ((sdata->vif.type != NL80211_IFTYPE_AP) &&
+-	    (sdata->vif.type != NL80211_IFTYPE_AP_VLAN))
+-		return RX_DROP_UNUSABLE;
+-
+-	if (!test_sta_flags(rx->sta, WLAN_STA_PS_DRIVER))
+-		ieee80211_sta_ps_deliver_poll_response(rx->sta);
+-	else
+-		set_sta_flags(rx->sta, WLAN_STA_PSPOLL);
+-
+-	/* Free PS Poll skb here instead of returning RX_DROP that would
+-	 * count as an dropped frame. */
+-	dev_kfree_skb(rx->skb);
+-
+-	return RX_QUEUED;
 -}
 -
--/* simplified integer get interface for common ioctl handler */
--int brcms_c_get(struct brcms_c_info *wlc, int cmd, int *arg)
--{
--	return brcms_c_ioctl(wlc, cmd, arg, sizeof(int));
--}
--
- static void brcms_c_ofdm_rateset_war(struct brcms_c_info *wlc)
+-static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_remove_qos_control(struct ieee80211_rx_data *rx)
  {
- 	u8 r;
-@@ -6185,259 +6174,153 @@ static void brcms_c_ofdm_rateset_war(struct brcms_c_info *wlc)
- 	return;
+ 	u8 *data = rx->skb->data;
+@@ -2564,9 +2599,9 @@ static void ieee80211_rx_handlers(struct
+ 
+ 		CALL_RXH(ieee80211_rx_h_decrypt)
+ 		CALL_RXH(ieee80211_rx_h_check_more_data)
++		CALL_RXH(ieee80211_rx_h_uapsd_and_pspoll)
+ 		CALL_RXH(ieee80211_rx_h_sta_process)
+ 		CALL_RXH(ieee80211_rx_h_defragment)
+-		CALL_RXH(ieee80211_rx_h_ps_poll)
+ 		CALL_RXH(ieee80211_rx_h_michael_mic_verify)
+ 		/* must be after MMIC verify so header is counted in MPDU mic */
+ 		CALL_RXH(ieee80211_rx_h_remove_qos_control)
+--- a/net/mac80211/sta_info.c	2011-09-06 21:40:08.000000000 +0200
++++ b/net/mac80211/sta_info.c	2011-09-06 22:05:29.000000000 +0200
+@@ -248,6 +248,9 @@ static void sta_unblock(struct work_stru
+ 	else if (test_and_clear_sta_flags(sta, WLAN_STA_PSPOLL)) {
+ 		clear_sta_flags(sta, WLAN_STA_PS_DRIVER);
+ 		ieee80211_sta_ps_deliver_poll_response(sta);
++	} else if (test_and_clear_sta_flags(sta, WLAN_STA_UAPSD)) {
++		clear_sta_flags(sta, WLAN_STA_PS_DRIVER);
++		ieee80211_sta_ps_deliver_uapsd(sta);
+ 	} else
+ 		clear_sta_flags(sta, WLAN_STA_PS_DRIVER);
+ }
+@@ -1136,31 +1139,27 @@ void ieee80211_sta_ps_deliver_wakeup(str
+ #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
  }
  
--/* common ioctl handler. return: 0=ok, -1=error, positive=particular error */
--static int
--_brcms_c_ioctl(struct brcms_c_info *wlc, int cmd, void *arg, int len)
-+int brcms_c_set_channel(struct brcms_c_info *wlc, u16 channel)
+-void ieee80211_sta_ps_deliver_poll_response(struct sta_info *sta)
++static void
++ieee80211_sta_ps_deliver_response(struct sta_info *sta,
++				  int n_frames, u8 ignored_acs,
++				  enum ieee80211_frame_release_type reason)
  {
--	int val, *pval;
--	bool bool_val;
--	int bcmerror;
--	struct scb *nextscb;
--	bool ta_ok;
--	uint band;
--	struct brcms_bss_cfg *bsscfg;
--	struct brcms_bss_info *current_bss;
--
--	/* update bsscfg pointer */
--	bsscfg = wlc->cfg;
--	current_bss = bsscfg->current_bss;
--
--	/* initialize the following to get rid of compiler warning */
--	nextscb = NULL;
--	ta_ok = false;
--	band = 0;
--
--	/* If the device is turned off, then it's not "removed" */
--	if (!wlc->pub->hw_off && DEVICEREMOVED(wlc)) {
--		wiphy_err(wlc->wiphy, "wl%d: %s: dead chip\n", wlc->pub->unit,
--			  __func__);
--		brcms_down(wlc->wl);
--		return -EBADE;
--	}
-+	u16 chspec = ch20mhz_chspec(channel);
- 
--	/* default argument is generic integer */
--	pval = arg ? (int *)arg : NULL;
-+	if (channel < 0 || channel > MAXCHANNEL)
-+		return -EINVAL;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+-	struct sk_buff *skb = NULL;
+ 	bool found = false;
+ 	bool more_data = false;
+ 	int ac, driver_release_tid = -1;
+-	u8 ignore_for_response = sta->sta.uapsd_queues;
++	struct sk_buff_head frames;
  
 -	/*
--	 * This will prevent misaligned access. The (void *) cast prevents a
--	 * memcpy alignment issue on e.g. Sparc64 platforms.
+-	 * If all ACs are delivery-enabled then we should reply
+-	 * from any of them, if only some are enabled we reply
+-	 * only from the non-enabled ones.
 -	 */
--	if (pval && (u32) len >= sizeof(val))
--		memcpy((void *)&val, (void *)pval, sizeof(val));
--	else
--		val = 0;
-+	if (!brcms_c_valid_chanspec_db(wlc->cmi, chspec))
-+		return -EINVAL;
+-	if (ignore_for_response == BIT(IEEE80211_NUM_ACS) - 1)
+-		ignore_for_response = 0;
++	__skb_queue_head_init(&frames);
  
--	/* bool conversion to avoid duplication below */
--	bool_val = val != 0;
--	bcmerror = 0;
+ 	/*
+-	 * Get response frame and more data bit for it.
++	 * Get response frame(s) and more data bit for it.
+ 	 */
+ 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+ 		int tid1, tid2;
  
--	if ((arg == NULL) || (len <= 0)) {
--		wiphy_err(wlc->wiphy, "wl%d: %s: Command %d needs arguments\n",
--			  wlc->pub->unit, __func__, cmd);
--		bcmerror = -EINVAL;
--		goto done;
-+	if (!wlc->pub->up && IS_MBAND_UNLOCKED(wlc)) {
-+		if (wlc->band->bandunit != chspec_bandunit(chspec))
-+			wlc->bandinit_pending = true;
-+		else
-+			wlc->bandinit_pending = false;
+-		if (ignore_for_response & BIT(ac))
++		if (ignored_acs & BIT(ac))
+ 			continue;
+ 
+ 		ieee80211_tids_for_ac(ac, &tid1, &tid2);
+@@ -1173,14 +1172,22 @@ void ieee80211_sta_ps_deliver_poll_respo
+ 				found = true;
+ 				driver_release_tid = tid1;
+ 			} else {
+-				skb = skb_dequeue(&sta->tx_filtered[ac]);
+-				if (!skb) {
+-					skb = skb_dequeue(&sta->ps_tx_buf[ac]);
+-					if (skb)
+-						local->total_ps_buffered--;
+-				}
+-				if (skb)
++				struct sk_buff *skb;
++
++				while (n_frames > 0) {
++					skb = skb_dequeue(&sta->tx_filtered[ac]);
++					if (!skb) {
++						skb = skb_dequeue(
++							&sta->ps_tx_buf[ac]);
++						if (skb)
++							local->total_ps_buffered--;
++					}
++					if (!skb)
++						break;
++					n_frames--;
+ 					found = true;
++					__skb_queue_tail(&frames, skb);
++				}
+ 			}
+ 		}
+ 
+@@ -1218,42 +1225,58 @@ void ieee80211_sta_ps_deliver_poll_respo
+ 		 *	  Should we send it a null-func frame indicating we
+ 		 *	  have nothing buffered for it?
+ 		 */
+-		printk(KERN_DEBUG "%s: STA %pM sent PS Poll even "
+-		       "though there are no buffered frames for it\n",
+-		       sdata->name, sta->sta.addr);
++		if (reason == IEEE80211_FRAME_RELEASE_PSPOLL)
++			printk(KERN_DEBUG "%s: STA %pM sent PS Poll even "
++			       "though there are no buffered frames for it\n",
++			       sdata->name, sta->sta.addr);
+ #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
+ 
+ 		return;
  	}
  
--	switch (cmd) {
+-	if (skb) {
+-		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-		struct ieee80211_hdr *hdr =
+-			(struct ieee80211_hdr *) skb->data;
 -
--	case BRCM_SET_CHANNEL:{
--			u16 chspec = ch20mhz_chspec(val);
--
--			if (val < 0 || val > MAXCHANNEL) {
--				bcmerror = -EINVAL;
--				break;
--			}
--
--			if (!brcms_c_valid_chanspec_db(wlc->cmi, chspec)) {
--				bcmerror = -EINVAL;
--				break;
--			}
--
--			if (!wlc->pub->up && IS_MBAND_UNLOCKED(wlc)) {
--				if (wlc->band->bandunit !=
--				    chspec_bandunit(chspec))
--					wlc->bandinit_pending = true;
--				else
--					wlc->bandinit_pending = false;
--			}
--
--			wlc->default_bss->chanspec = chspec;
--			/* brcms_c_BSSinit() will sanitize the rateset before
--			 * using it.. */
--			if (wlc->pub->up &&
--			    (wlc_phy_chanspec_get(wlc->band->pi) != chspec)) {
--				brcms_c_set_home_chanspec(wlc, chspec);
--				brcms_c_suspend_mac_and_wait(wlc);
--				brcms_c_set_chanspec(wlc, chspec);
--				brcms_c_enable_mac(wlc);
--			}
--			break;
--		}
--
--	case BRCM_SET_SRL:
--		if (val >= 1 && val <= RETRY_SHORT_MAX) {
--			int ac;
--			wlc->SRL = (u16) val;
--
--			brcms_b_retrylimit_upd(wlc->hw, wlc->SRL, wlc->LRL);
--
--			for (ac = 0; ac < AC_COUNT; ac++)
--				BRCMS_WME_RETRY_SHORT_SET(wlc, ac, wlc->SRL);
--
--			brcms_c_wme_retries_write(wlc);
--		} else
--			bcmerror = -EINVAL;
--		break;
--
--	case BRCM_SET_LRL:
--		if (val >= 1 && val <= 255) {
--			int ac;
--			wlc->LRL = (u16) val;
--
--			brcms_b_retrylimit_upd(wlc->hw, wlc->SRL, wlc->LRL);
-+	wlc->default_bss->chanspec = chspec;
-+	/* brcms_c_BSSinit() will sanitize the rateset before
-+	 * using it.. */
-+	if (wlc->pub->up && (wlc_phy_chanspec_get(wlc->band->pi) != chspec)) {
-+		brcms_c_set_home_chanspec(wlc, chspec);
-+		brcms_c_suspend_mac_and_wait(wlc);
-+		brcms_c_set_chanspec(wlc, chspec);
-+		brcms_c_enable_mac(wlc);
-+	}
-+	return 0;
-+}
- 
--			for (ac = 0; ac < AC_COUNT; ac++)
--				BRCMS_WME_RETRY_LONG_SET(wlc, ac, wlc->LRL);
-+int brcms_c_set_rate_limit(struct brcms_c_info *wlc, u16 srl, u16 lrl)
-+{
-+	int ac;
- 
--			brcms_c_wme_retries_write(wlc);
--		} else
--			bcmerror = -EINVAL;
--		break;
-+	if (srl < 1 || srl > RETRY_SHORT_MAX ||
-+	    lrl < 1 || lrl > RETRY_SHORT_MAX)
-+		return -EINVAL;
- 
--	case BRCM_GET_CURR_RATESET:{
--			struct brcm_rateset *ret_rs =
--						(struct brcm_rateset *) arg;
--			struct brcms_c_rateset *rs;
-+	wlc->SRL = srl;
-+	wlc->LRL = lrl;
- 
--			if (wlc->pub->associated)
--				rs = &current_bss->rateset;
--			else
--				rs = &wlc->default_bss->rateset;
-+	brcms_b_retrylimit_upd(wlc->hw, wlc->SRL, wlc->LRL);
- 
--			if (len < (int)(rs->count + sizeof(rs->count))) {
--				bcmerror = -EOVERFLOW;
--				break;
--			}
-+	for (ac = 0; ac < AC_COUNT; ac++) {
-+		BRCMS_WME_RETRY_SHORT_SET(wlc, ac, srl);
-+		BRCMS_WME_RETRY_LONG_SET(wlc, ac, lrl);
-+	}
-+	brcms_c_wme_retries_write(wlc);
- 
--			/* Copy only legacy rateset section */
--			ret_rs->count = rs->count;
--			memcpy(&ret_rs->rates, &rs->rates, rs->count);
--			break;
--		}
-+	return 0;
-+}
- 
--	case BRCM_SET_RATESET:{
--			struct brcms_c_rateset rs;
--			struct brcm_rateset *in_rs =
--						(struct brcm_rateset *) arg;
-+void brcms_c_get_current_rateset(struct brcms_c_info *wlc,
-+				 struct brcm_rateset *currs)
-+{
-+	struct brcms_c_rateset *rs;
- 
--			if (len < (int)(in_rs->count + sizeof(in_rs->count))) {
--				bcmerror = -EOVERFLOW;
--				break;
--			}
-+	if (wlc->pub->associated)
-+		rs = &wlc->cfg->current_bss->rateset;
-+	else
-+		rs = &wlc->default_bss->rateset;
- 
--			if (in_rs->count > BRCMS_NUMRATES) {
--				bcmerror = -ENOBUFS;
--				break;
--			}
-+	/* Copy only legacy rateset section */
-+	currs->count = rs->count;
-+	memcpy(&currs->rates, &rs->rates, rs->count);
-+}
- 
--			memset(&rs, 0, sizeof(struct brcms_c_rateset));
--
--			/* Copy only legacy rateset section */
--			rs.count = in_rs->count;
--			memcpy(&rs.rates, &in_rs->rates, rs.count);
--
--			/* merge rateset coming in with the current mcsset */
--			if (wlc->pub->_n_enab & SUPPORT_11N) {
--				struct brcms_bss_info *mcsset_bss;
--				if (bsscfg->associated)
--					mcsset_bss = current_bss;
--				else
--					mcsset_bss = wlc->default_bss;
--				memcpy(rs.mcs, &mcsset_bss->rateset.mcs[0],
--				       MCSSET_LEN);
--			}
-+int brcms_c_set_rateset(struct brcms_c_info *wlc, struct brcm_rateset *rs)
-+{
-+	struct brcms_c_rateset internal_rs;
-+	int bcmerror;
- 
--			bcmerror = brcms_c_set_rateset(wlc, &rs);
-+	if (rs->count > BRCMS_NUMRATES)
-+		return -ENOBUFS;
- 
--			if (!bcmerror)
--				brcms_c_ofdm_rateset_war(wlc);
-+	memset(&internal_rs, 0, sizeof(struct brcms_c_rateset));
- 
--			break;
--		}
-+	/* Copy only legacy rateset section */
-+	internal_rs.count = rs->count;
-+	memcpy(&internal_rs.rates, &rs->rates, internal_rs.count);
- 
--	case BRCM_SET_BCNPRD:
--		/* range [1, 0xffff] */
--		if (val >= DOT11_MIN_BEACON_PERIOD
--		    && val <= DOT11_MAX_BEACON_PERIOD)
--			wlc->default_bss->beacon_period = (u16) val;
-+	/* merge rateset coming in with the current mcsset */
-+	if (wlc->pub->_n_enab & SUPPORT_11N) {
-+		struct brcms_bss_info *mcsset_bss;
-+		if (wlc->cfg->associated)
-+			mcsset_bss = wlc->cfg->current_bss;
- 		else
--			bcmerror = -EINVAL;
--		break;
--
--	case BRCM_GET_PHYLIST:
--		{
--			unsigned char *cp = arg;
--			if (len < 3) {
--				bcmerror = -EOVERFLOW;
--				break;
--			}
-+			mcsset_bss = wlc->default_bss;
-+		memcpy(internal_rs.mcs, &mcsset_bss->rateset.mcs[0],
-+		       MCSSET_LEN);
-+	}
- 
--			if (BRCMS_ISNPHY(wlc->band))
--				*cp++ = 'n';
--			else if (BRCMS_ISLCNPHY(wlc->band))
--				*cp++ = 'c';
--			else if (BRCMS_ISSSLPNPHY(wlc->band))
--				*cp++ = 's';
--			*cp = '\0';
--			break;
--		}
-+	bcmerror = brcms_c_set_internal_rateset(wlc, &internal_rs);
-+	if (!bcmerror)
-+		brcms_c_ofdm_rateset_war(wlc);
- 
--	case BRCMS_SET_SHORTSLOT_OVERRIDE:
--		if (val != BRCMS_SHORTSLOT_AUTO && val != BRCMS_SHORTSLOT_OFF &&
--		    val != BRCMS_SHORTSLOT_ON) {
--			bcmerror = -EINVAL;
--			break;
--		}
--
--		wlc->shortslot_override = (s8) val;
-+	return bcmerror;
-+}
- 
--		/* shortslot is an 11g feature, so no more work if we are
--		 * currently on the 5G band
+-		/*
+-		 * Tell TX path to send this frame even though the STA may
+-		 * still remain is PS mode after this frame exchange.
 -		 */
--		if (wlc->band->bandtype == BRCM_BAND_5G)
--			break;
-+int brcms_c_set_beacon_period(struct brcms_c_info *wlc, u16 period)
-+{
-+	if (period < DOT11_MIN_BEACON_PERIOD ||
-+	    period > DOT11_MAX_BEACON_PERIOD)
-+		return -EINVAL;
+-		info->flags |= IEEE80211_TX_CTL_PSPOLL_RESPONSE;
+-
+-#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+-		printk(KERN_DEBUG "STA %pM aid %d: PS Poll\n",
+-		       sta->sta.addr, sta->sta.aid);
+-#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
++	if (driver_release_tid == -1) {
++		struct sk_buff_head pending;
++		struct sk_buff *skb;
++
++		skb_queue_head_init(&pending);
++
++		while ((skb = __skb_dequeue(&frames))) {
++			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++			struct ieee80211_hdr *hdr = (void *) skb->data;
++
++			/*
++			 * Tell TX path to send this frame even though the
++			 * STA may still remain is PS mode after this frame
++			 * exchange.
++			 */
++			info->flags |= IEEE80211_TX_CTL_POLL_RESPONSE;
++
++			/*
++			 * Use MoreData flag to indicate whether there are
++			 * more buffered frames for this STA
++			 */
++			if (!more_data)
++				hdr->frame_control &=
++					cpu_to_le16(~IEEE80211_FCTL_MOREDATA);
++			else
++				hdr->frame_control |=
++					cpu_to_le16(IEEE80211_FCTL_MOREDATA);
++
++			if (reason == IEEE80211_FRAME_RELEASE_UAPSD &&
++			    skb_queue_empty(&frames)) {
++				/* set EOSP for the frame */
++				u8 *p = ieee80211_get_qos_ctl(hdr);
++				*p |= IEEE80211_QOS_CTL_EOSP;
++				info->flags |= IEEE80211_TX_STATUS_EOSP |
++					       IEEE80211_TX_CTL_REQ_TX_STATUS;
++			}
  
--		if (wlc->pub->up && wlc->pub->associated) {
--			/* let watchdog or beacon processing update shortslot */
--		} else if (wlc->pub->up) {
--			/* unassociated shortslot is off */
--			brcms_c_switch_shortslot(wlc, false);
--		} else {
--			/* driver is down, so just update the brcms_c_info
--			 * value */
--			if (wlc->shortslot_override == BRCMS_SHORTSLOT_AUTO)
--				wlc->shortslot = false;
--			else
--				wlc->shortslot =
--				    (wlc->shortslot_override ==
--				     BRCMS_SHORTSLOT_ON);
--		}
-+	wlc->default_bss->beacon_period = period;
-+	return 0;
-+}
+-		/* Use MoreData flag to indicate whether there are more
+-		 * buffered frames for this STA */
+-		if (!more_data)
+-			hdr->frame_control &= cpu_to_le16(~IEEE80211_FCTL_MOREDATA);
+-		else
+-			hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREDATA);
++			__skb_queue_tail(&pending, skb);
++		}
  
--		break;
-+u16 brcms_c_get_phy_type(struct brcms_c_info *wlc, int phyidx)
-+{
-+	return wlc->band->phytype;
-+}
+-		ieee80211_add_pending_skb(local, skb);
++		ieee80211_add_pending_skbs(local, &pending);
  
-+int brcms_c_set_shortslot_override(struct brcms_c_info *wlc, s8 sslot_override)
-+{
-+	if (sslot_override != BRCMS_SHORTSLOT_AUTO &&
-+	    sslot_override != BRCMS_SHORTSLOT_OFF &&
-+	    sslot_override != BRCMS_SHORTSLOT_ON) {
-+		return -EINVAL;
+ 		sta_info_recalc_tim(sta);
+-	} else if (WARN_ON(driver_release_tid == -1)) {
+-		/* err ... ??? */
+ 	} else {
+ 		/*
+ 		 * We need to release a frame that is buffered somewhere in the
+@@ -1266,8 +1289,7 @@ void ieee80211_sta_ps_deliver_poll_respo
+ 		 * needs to be set anyway.
+ 		 */
+ 		drv_release_buffered_frames(local, sta, driver_release_tid,
+-					    1, IEEE80211_FRAME_RELEASE_PSPOLL,
+-					    more_data);
++					    n_frames, reason, more_data);
+ 
+ 		/*
+ 		 * Note that we don't recalculate the TIM bit here as it would
+@@ -1280,6 +1302,43 @@ void ieee80211_sta_ps_deliver_poll_respo
  	}
-- done:
- 
--	if (bcmerror)
--		wlc->pub->bcmerror = bcmerror;
-+	wlc->shortslot_override = sslot_override;
- 
--	return bcmerror;
--}
-+	/*
-+	 * shortslot is an 11g feature, so no more work if we are
-+	 * currently on the 5G band
-+	 */
-+	if (wlc->band->bandtype == BRCM_BAND_5G)
-+		return 0;
- 
--int
--brcms_c_ioctl(struct brcms_c_info *wlc, int cmd, void *arg, int len)
--{
--	return _brcms_c_ioctl(wlc, cmd, arg, len);
-+	if (wlc->pub->up && wlc->pub->associated) {
-+		/* let watchdog or beacon processing update shortslot */
-+	} else if (wlc->pub->up) {
-+		/* unassociated shortslot is off */
-+		brcms_c_switch_shortslot(wlc, false);
-+	} else {
-+		/* driver is down, so just update the brcms_c_info
-+		 * value */
-+		if (wlc->shortslot_override == BRCMS_SHORTSLOT_AUTO)
-+			wlc->shortslot = false;
-+		else
-+			wlc->shortslot =
-+			    (wlc->shortslot_override ==
-+			     BRCMS_SHORTSLOT_ON);
-+	}
-+	return 0;
  }
  
- /*
-diff --git a/drivers/staging/brcm80211/brcmsmac/pub.h b/drivers/staging/brcm80211/brcmsmac/pub.h
-index 33e7ebe..3655ac6 100644
---- a/drivers/staging/brcm80211/brcmsmac/pub.h
-+++ b/drivers/staging/brcm80211/brcmsmac/pub.h
-@@ -312,8 +312,6 @@ extern uint brcms_c_detach(struct brcms_c_info *wlc);
- extern int brcms_c_up(struct brcms_c_info *wlc);
- extern uint brcms_c_down(struct brcms_c_info *wlc);
- 
--extern int brcms_c_set(struct brcms_c_info *wlc, int cmd, int arg);
--extern int brcms_c_get(struct brcms_c_info *wlc, int cmd, int *arg);
- extern bool brcms_c_chipmatch(u16 vendor, u16 device);
- extern void brcms_c_init(struct brcms_c_info *wlc);
- extern void brcms_c_reset(struct brcms_c_info *wlc);
-@@ -327,7 +325,6 @@ extern bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded);
- extern void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc,
- 				     struct sk_buff *sdu,
- 				     struct ieee80211_hw *hw);
--extern int brcms_c_ioctl(struct brcms_c_info *wlc, int cmd, void *arg, int len);
- extern bool brcms_c_aggregatable(struct brcms_c_info *wlc, u8 tid);
- 
- /* helper functions */
-@@ -382,6 +379,15 @@ extern int brcms_c_get_curband(struct brcms_c_info *wlc);
- extern void brcms_c_wait_for_tx_completion(struct brcms_c_info *wlc,
- 					   bool drop);
- 
-+int brcms_c_set_channel(struct brcms_c_info *wlc, u16 channel);
-+int brcms_c_set_rate_limit(struct brcms_c_info *wlc, u16 srl, u16 lrl);
-+void brcms_c_get_current_rateset(struct brcms_c_info *wlc,
-+				 struct brcm_rateset *currs);
-+int brcms_c_set_rateset(struct brcms_c_info *wlc, struct brcm_rateset *rs);
-+int brcms_c_set_beacon_period(struct brcms_c_info *wlc, u16 period);
-+u16 brcms_c_get_phy_type(struct brcms_c_info *wlc, int phyidx);
-+int brcms_c_set_shortslot_override(struct brcms_c_info *wlc, s8 sslot_override);
++void ieee80211_sta_ps_deliver_poll_response(struct sta_info *sta)
++{
++	u8 ignore_for_response = sta->sta.uapsd_queues;
 +
- /* helper functions */
- extern bool brcms_c_check_radio_disabled(struct brcms_c_info *wlc);
- extern bool brcms_c_radio_monitor_stop(struct brcms_c_info *wlc);
-diff --git a/drivers/staging/brcm80211/include/defs.h b/drivers/staging/brcm80211/include/defs.h
-index c745b7e..3438c54 100644
---- a/drivers/staging/brcm80211/include/defs.h
-+++ b/drivers/staging/brcm80211/include/defs.h
-@@ -57,14 +57,13 @@ struct brcm_rateset {
- 
- #define BRCM_CNTRY_BUF_SZ	4	/* Country string is 3 bytes + NUL */
- 
--#define BRCM_SET_CHANNEL				30
--#define BRCM_SET_SRL				32
--#define BRCM_SET_LRL				34
--
--#define BRCM_SET_RATESET				72
--#define BRCM_SET_BCNPRD				76
--#define BRCM_GET_CURR_RATESET			114	/* current rateset */
--#define BRCM_GET_PHYLIST				180
-+#define BRCM_SET_CHANNEL	30
-+#define BRCM_SET_SRL		32
-+#define BRCM_SET_LRL		34
-+#define BRCM_SET_BCNPRD		76
++	/*
++	 * If all ACs are delivery-enabled then we should reply
++	 * from any of them, if only some are enabled we reply
++	 * only from the non-enabled ones.
++	 */
++	if (ignore_for_response == BIT(IEEE80211_NUM_ACS) - 1)
++		ignore_for_response = 0;
 +
-+#define BRCM_GET_CURR_RATESET	114	/* current rateset */
-+#define BRCM_GET_PHYLIST	180
++	ieee80211_sta_ps_deliver_response(sta, 1, ignore_for_response,
++					  IEEE80211_FRAME_RELEASE_PSPOLL);
++}
++
++void ieee80211_sta_ps_deliver_uapsd(struct sta_info *sta)
++{
++	u8 delivery_enabled = sta->sta.uapsd_queues;
++
++	/*
++	 * If we ever grow support for TSPEC this might happen if
++	 * the TSPEC update from hostapd comes in between a trigger
++	 * frame setting WLAN_STA_UAPSD in the RX path and this
++	 * actually getting called.
++	 */
++	if (!delivery_enabled)
++		return;
++
++	/* Ohh, finally, the service period starts :-) */
++	set_sta_flags(sta, WLAN_STA_SP);
++
++	ieee80211_sta_ps_deliver_response(sta, sta->sta.max_sp,
++					  ~delivery_enabled,
++					  IEEE80211_FRAME_RELEASE_UAPSD);
++}
++
+ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
+ 			       struct ieee80211_sta *pubsta, bool block)
+ {
+--- a/net/mac80211/sta_info.h	2011-09-06 21:40:08.000000000 +0200
++++ b/net/mac80211/sta_info.h	2011-09-06 22:05:21.000000000 +0200
+@@ -43,6 +43,11 @@
+  *	be in the queues
+  * @WLAN_STA_PSPOLL: Station sent PS-poll while driver was keeping
+  *	station in power-save mode, reply when the driver unblocks.
++ * @WLAN_STA_UAPSD: Station requested unscheduled SP while driver was
++ *	keeping station in power-save mode, reply when the driver
++ *	unblocks the station.
++ * @WLAN_STA_SP: Station is in a service period, so don't try to
++ *	reply to other uAPSD trigger frames.
+  */
+ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_AUTH		= 1<<0,
+@@ -58,6 +63,8 @@ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_BLOCK_BA	= 1<<11,
+ 	WLAN_STA_PS_DRIVER	= 1<<12,
+ 	WLAN_STA_PSPOLL		= 1<<13,
++	WLAN_STA_UAPSD		= 1<<14,
++	WLAN_STA_SP		= 1<<15,
+ };
  
- /* Bit masks for radio disabled status - returned by WL_GET_RADIO */
+ #define STA_TID_NUM 16
+@@ -528,5 +535,6 @@ void ieee80211_sta_expire(struct ieee802
  
--- 
-1.7.4.1
+ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta);
+ void ieee80211_sta_ps_deliver_poll_response(struct sta_info *sta);
++void ieee80211_sta_ps_deliver_uapsd(struct sta_info *sta);
+ 
+ #endif /* STA_INFO_H */
+--- a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c	2011-09-06 21:40:08.000000000 +0200
++++ b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c	2011-09-06 21:40:09.000000000 +0200
+@@ -335,7 +335,7 @@ int iwl4965_tx_skb(struct iwl_priv *priv
+ 		sta_priv = (void *)sta->drv_priv;
+ 
+ 	if (sta_priv && sta_priv->asleep &&
+-	    (info->flags & IEEE80211_TX_CTL_PSPOLL_RESPONSE)) {
++	    (info->flags & IEEE80211_TX_CTL_POLL_RESPONSE)) {
+ 		/*
+ 		 * This sends an asynchronous command to the device,
+ 		 * but we can rely on it being processed before the
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c	2011-09-06 21:40:08.000000000 +0200
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c	2011-09-06 21:40:09.000000000 +0200
+@@ -300,7 +300,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
+ 		sta_priv = (void *)info->control.sta->drv_priv;
+ 
+ 	if (sta_priv && sta_priv->asleep &&
+-	    (info->flags & IEEE80211_TX_CTL_PSPOLL_RESPONSE)) {
++	    (info->flags & IEEE80211_TX_CTL_POLL_RESPONSE)) {
+ 		/*
+ 		 * This sends an asynchronous command to the device,
+ 		 * but we can rely on it being processed before the
+--- a/drivers/net/wireless/p54/txrx.c	2011-09-06 21:40:08.000000000 +0200
++++ b/drivers/net/wireless/p54/txrx.c	2011-09-06 21:40:09.000000000 +0200
+@@ -685,7 +685,7 @@ static void p54_tx_80211_header(struct p
+ 	if (!(info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ))
+ 		*flags |= P54_HDR_FLAG_DATA_OUT_SEQNR;
+ 
+-	if (info->flags & IEEE80211_TX_CTL_PSPOLL_RESPONSE)
++	if (info->flags & IEEE80211_TX_CTL_POLL_RESPONSE)
+ 		*flags |= P54_HDR_FLAG_DATA_OUT_NOCANCEL;
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT)
+--- a/include/net/mac80211.h	2011-09-06 21:40:08.000000000 +0200
++++ b/include/net/mac80211.h	2011-09-06 22:05:21.000000000 +0200
+@@ -331,9 +331,9 @@ struct ieee80211_bss_conf {
+  *	used to indicate that a frame was already retried due to PS
+  * @IEEE80211_TX_INTFL_DONT_ENCRYPT: completely internal to mac80211,
+  *	used to indicate frame should not be encrypted
+- * @IEEE80211_TX_CTL_PSPOLL_RESPONSE: (internal?)
+- *	This frame is a response to a PS-poll frame and should be sent
+- *	although the station is in powersave mode.
++ * @IEEE80211_TX_CTL_POLL_RESPONSE: This frame is a response to a poll
++ *	frame (PS-Poll or uAPSD) and should be sent although the station
++ *	is in powersave mode.
+  * @IEEE80211_TX_CTL_MORE_FRAMES: More frames will be passed to the
+  *	transmit function after the current frame, this can be used
+  *	by drivers to kick the DMA queue only if unset or when the
+@@ -356,6 +356,10 @@ struct ieee80211_bss_conf {
+  * @IEEE80211_TX_INTFL_TKIP_MIC_FAILURE: Marks this packet to be used for TKIP
+  *	testing. It will be sent out with incorrect Michael MIC key to allow
+  *	TKIP countermeasures to be tested.
++ * @IEEE80211_TX_STATUS_EOSP: This packet marks the end of service period,
++ *	when its status is reported the service period ends. For frames in
++ *	an SP that mac80211 transmits, it is already set; for driver frames
++ *	the driver may set this flag.
+  *
+  * Note: If you have to add new flags to the enumeration, then don't
+  *	 forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
+@@ -377,7 +381,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_INTFL_NEED_TXPROCESSING	= BIT(14),
+ 	IEEE80211_TX_INTFL_RETRIED		= BIT(15),
+ 	IEEE80211_TX_INTFL_DONT_ENCRYPT		= BIT(16),
+-	IEEE80211_TX_CTL_PSPOLL_RESPONSE	= BIT(17),
++	IEEE80211_TX_CTL_POLL_RESPONSE		= BIT(17),
+ 	IEEE80211_TX_CTL_MORE_FRAMES		= BIT(18),
+ 	IEEE80211_TX_INTFL_RETRANSMISSION	= BIT(19),
+ 	IEEE80211_TX_INTFL_HAS_RADIOTAP		= BIT(20),
+@@ -386,6 +390,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTL_STBC			= BIT(23) | BIT(24),
+ 	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(25),
+ 	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(26),
++	IEEE80211_TX_STATUS_EOSP		= BIT(27),
+ };
+ 
+ #define IEEE80211_TX_CTL_STBC_SHIFT		23
+@@ -399,7 +404,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTL_SEND_AFTER_DTIM | IEEE80211_TX_CTL_AMPDU |	      \
+ 	IEEE80211_TX_STAT_TX_FILTERED |	IEEE80211_TX_STAT_ACK |		      \
+ 	IEEE80211_TX_STAT_AMPDU | IEEE80211_TX_STAT_AMPDU_NO_BACK |	      \
+-	IEEE80211_TX_CTL_RATE_CTRL_PROBE | IEEE80211_TX_CTL_PSPOLL_RESPONSE | \
++	IEEE80211_TX_CTL_RATE_CTRL_PROBE | IEEE80211_TX_CTL_POLL_RESPONSE |   \
+ 	IEEE80211_TX_CTL_MORE_FRAMES | IEEE80211_TX_CTL_LDPC |		      \
+ 	IEEE80211_TX_CTL_STBC)
+ 
+@@ -1604,9 +1609,12 @@ enum ieee80211_tx_sync_type {
+ /**
+  * enum ieee80211_frame_release_type - frame release reason
+  * @IEEE80211_FRAME_RELEASE_PSPOLL: frame released for PS-Poll
++ * @IEEE80211_FRAME_RELEASE_UAPSD: frame(s) released due to
++ *	frame received on trigger-enabled AC
+  */
+ enum ieee80211_frame_release_type {
+ 	IEEE80211_FRAME_RELEASE_PSPOLL,
++	IEEE80211_FRAME_RELEASE_UAPSD,
+ };
+ 
+ /**
+@@ -1932,7 +1940,9 @@ enum ieee80211_frame_release_type {
+  *	In the case this is used for uAPSD, the @num_frames parameter may be
+  *	bigger than one, but the driver may send fewer frames (it must send
+  *	at least one, however). In this case it is also responsible for
+- *	setting the EOSP flag in the QoS header of the frames.
++ *	setting the EOSP flag in the QoS header of the frames. Also, when the
++ *	service period ends, the driver must set %IEEE80211_TX_STATUS_EOSP
++ *	on the last frame in the SP.
+  *	This callback must be atomic.
+  */
+ struct ieee80211_ops {
+--- a/net/mac80211/tx.c	2011-09-06 21:40:08.000000000 +0200
++++ b/net/mac80211/tx.c	2011-09-06 21:40:09.000000000 +0200
+@@ -456,7 +456,7 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
+ 	staflags = get_sta_flags(sta);
+ 
+ 	if (unlikely((staflags & (WLAN_STA_PS_STA | WLAN_STA_PS_DRIVER)) &&
+-		     !(info->flags & IEEE80211_TX_CTL_PSPOLL_RESPONSE))) {
++		     !(info->flags & IEEE80211_TX_CTL_POLL_RESPONSE))) {
+ 		int ac = skb_get_queue_mapping(tx->skb);
+ 
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+--- a/net/mac80211/status.c	2011-09-06 21:40:08.000000000 +0200
++++ b/net/mac80211/status.c	2011-09-06 22:05:21.000000000 +0200
+@@ -234,6 +234,9 @@ void ieee80211_tx_status(struct ieee8021
+ 		if (memcmp(hdr->addr2, sta->sdata->vif.addr, ETH_ALEN))
+ 			continue;
+ 
++		if (info->flags & IEEE80211_TX_STATUS_EOSP)
++			clear_sta_flags(sta, WLAN_STA_SP);
++
+ 		acked = !!(info->flags & IEEE80211_TX_STAT_ACK);
+ 		if (!acked && test_sta_flags(sta, WLAN_STA_PS_STA)) {
+ 			/*
 
 
