@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:27796 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754708Ab1I2LXj (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:49862 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751277Ab1IFEdC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 07:23:39 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 2/2] ath9k: Choose highest rate of MRR based on IEEE80211_TX_CTL_USE_MINRATE
-Date: Thu, 29 Sep 2011 16:54:06 +0530
-Message-ID: <1317295446-20749-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110929_132348_183441_C378143A)
+	Tue, 6 Sep 2011 00:33:02 -0400
+Received: by wyh22 with SMTP id 22so4087790wyh.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Sep 2011 21:33:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <201109060609.46663.chunkeey@googlemail.com>
+References: <201109030906.21009.chunkeey@googlemail.com>
+	<CAD2nsn16Otuzp9KbivA03Q5ySMBHLp36J+-HfU=wRcqkSD6QRg@mail.gmail.com>
+	<201109060609.46663.chunkeey@googlemail.com>
+Date: Tue, 6 Sep 2011 10:03:00 +0530
+Message-ID: <CAD2nsn3FUM-k3bBD3mpwqVVXo3xvwjrf2HEARJddZJq+w0pf9w@mail.gmail.com> (sfid-20110906_063313_489606_8648780D)
+Subject: Re: [RESEND][PATCH] minstrel_ht: fix Open BA session request floods
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>, nbd@openwrt.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Select appropriate rate as highest rate of rate series, if the frame
-was asked to be sent at minimum rate. For example nullfunc frames
-either can be sent at HT rates on normal case or at non-HT rates if
-it is used for connection monitoring.
+On Tue, Sep 6, 2011 at 9:39 AM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> On Monday, September 05, 2011 05:20:09 PM Mohammed Shafi wrote:
+>> On Sat, Sep 3, 2011 at 12:36 PM, Christian Lamparter
+>> <chunkeey@googlemail.com> wrote:
+>> > Minstrel HT tries very hard to establish a BA session with
+>> > each peer once there's some data on the way. However the
+>> > stack does not inform minstrel if an aggregation session
+>> > is already in place, so it keeps trying and wastes good
+>> > cycles in the tx status path.
+>> >
+>> > [ 8149.946393] Open BA session requested for $AP tid 0
+>> > [ 8150.048765] Open BA session requested for $AP tid 0
+>> > [ 8150.174509] Open BA session requested for $AP tid 0
+>> > [ 8150.274376] Open BA session requested for $AP tid 0
+>> > ...
+>>
+>>
+>> Hi Christian,
+>>
+>> I got this messages in ath9k after few cycles of suspend and resume.
+> There's nothing wrong with the message... as long as its reasonable
+> and does not spam the logs as in my case [had about 100k entries].
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+indeed, it spam's the log.
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 8448281..3509f14 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -789,8 +789,8 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	try_per_rate = 4;
- 
- 	rate_table = ath_rc_priv->rate_table;
--	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
--				     &is_probe, false);
-+	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table, &is_probe,
-+			     !!(tx_info->flags & IEEE80211_TX_CTL_USE_MINRATE));
- 	high_rix = rix;
- 
- 	/*
--- 
-1.7.6.4
+>
+>> doing the same fix in ath9k rate control tx_status callback the
+>> messages did not re-appear. I will soon send a proper patch for ath9k
+>> too.
+> Well, ath9k's rc works different than minstrel_ht. In fact that check
+> is not needed as ath9k's rc can check the tid state directly in
+> ath_tx_aggr_check [which I think it already does... unless something
+> is wrong with the txtid->state check?!].
 
+ thanks, i will check  into that.
+
+thanks,
+shafi
