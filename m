@@ -1,63 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:63861 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751481Ab1IZQKL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 12:10:11 -0400
-Received: by eya28 with SMTP id 28so3734317eya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 09:10:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1317050380.1958.13.camel@wwguy-huron>
-References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
-	<CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com>
-	<1317048872.2400.4.camel@wwguy-ubuntu>
-	<CAJTrwG5CQKn9=1=HUDX1L5PsFbGws_zK1DTvot9i=KcMX7SwkQ@mail.gmail.com>
-	<1317049160.1958.8.camel@wwguy-huron>
-	<CAJTrwG5eELbDuGFXU4=3gSunPSkKLFvcpSe6gGE_Wc0s5BXZ+A@mail.gmail.com>
-	<CAJTrwG7tzDHxDha5x8r-GJFK=oUE6Zk5zqpN4z4L2LyAD=DueQ@mail.gmail.com>
-	<1317050380.1958.13.camel@wwguy-huron>
-Date: Mon, 26 Sep 2011 18:10:10 +0200
-Message-ID: <CAJTrwG46qRYvda1vcCZXv0BTUyf26gx2qgpNgOG-bm-BCMpqfg@mail.gmail.com> (sfid-20110926_181016_070411_A891ADB3)
-Subject: Re: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM Fritz!Box
- (7390)" incompatible
-From: Henrik Friedrichsen <hrkfdn@gmail.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:26707 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752688Ab1IFRPN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Sep 2011 13:15:13 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 09/10] iwlagn: remove lines from the wrong place
+Date: Tue,  6 Sep 2011 09:31:24 -0700
+Message-Id: <1315326685-22213-10-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110906_191529_705139_BF4707D8)
+In-Reply-To: <1315326685-22213-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1315326685-22213-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I see. I hope the log is useful to you. I'm not sure, but this issue
-seems to be slightly different to your average performance issue. My
-Android device needs 1 second to completely load the Router webpanel,
-whereas my laptop with the Intel chip needs 30 seconds.
+Few lines for program bt_ch_announce being place in the wrong place. Remove those.
 
-I'm afraid the patches did not make any difference. Oh btw, I did
-apply them before making the log. I believe that was your intention.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-On Mon, Sep 26, 2011 at 5:19 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> On Mon, 2011-09-26 at 09:03 -0700, Henrik Friedrichsen wrote:
->> On Mon, Sep 26, 2011 at 4:59 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
->> > few things I will suggest and please give a try:
->> > 1. Please try to apply the following two patches I attach here.
->> > 2. load the iwlagn with debug=0x45800006, the log will be big, but it
->> > will contain more information on the tx/rx path.
->>
->> Here's the log you asked for:
->> http://diff.cc/tmp/kernel_iwlagn_2.log.bz2
->>
->> As I said, this problem does not occur with the Windows driver. You
->> said you are actively working on it. Does that mean, the problem is
->> known to you?
->>
->
-> we are seeing performance issue and still can not root cause the
-> problem. that is the reason I send you 2 patches for testing. We are
-> very active working on fix the performance problem. the symptoms might
-> be different, but we aware there were issues.
->
-> Thx
-> Wey
->
->
->
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
+index f7b5750..126e5a4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
+@@ -846,9 +846,6 @@ int iwl_dump_nic_event_log(struct iwl_trans *trans, bool full_log,
+ 		return pos;
+ 	}
+ 
+-	/* enable/disable bt channel inhibition */
+-	priv->bt_ch_announce = iwlagn_mod_params.bt_ch_announce;
+-
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	if (!(iwl_get_debug_level(trans->shrd) & IWL_DL_FW_ERRORS) && !full_log)
+ 		size = (size > DEFAULT_DUMP_EVENT_LOG_ENTRIES)
+-- 
+1.7.0.4
+
