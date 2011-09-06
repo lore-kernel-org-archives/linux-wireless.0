@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:33234 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755783Ab1INJZM (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27736 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755011Ab1IFP3m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 05:25:12 -0400
-Received: by mail-bw0-f47.google.com with SMTP id 11so1758346bke.34
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 02:25:11 -0700 (PDT)
-Subject: Re: [PATCH 0/3] wl12xx: add support for SSID matching in sched_scan
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <1314962903-29574-1-git-send-email-coelho@ti.com>
-References: <1314962903-29574-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 14 Sep 2011 12:25:03 +0300
-Message-ID: <1315992303.2498.80.camel@cumari> (sfid-20110914_112515_414592_5658B228)
-Mime-Version: 1.0
+	Tue, 6 Sep 2011 11:29:42 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 2/2] ath9k: Move cycle conters under cc_lock
+Date: Tue, 6 Sep 2011 21:00:07 +0530
+Message-ID: <1315323007-1853-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110906_172944_638031_CB22B65B)
+In-Reply-To: <1315323007-1853-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1315323007-1853-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-09-02 at 14:28 +0300, Luciano Coelho wrote: 
-> Hi,
-> 
-> This patchset adds support for SSID matching (ie. filtering) on
-> scheduled scans.  I have also increased the number of supported SSIDs,
-> because recent versions of the firmware support 16 SSIDs at once.
-> 
-> Due to the increased number of SSIDs supported, I also had to increase
-> the dwell times for the scheduled scan.  I used large arbitrary values
-> that work fine for now, but they should probably be fine-tuned later.
-> 
-> This patchset depends on "nl80211/cfg80211: add match filtering for
-> sched_scan".
-> 
-> Please review.
-> 
-> Cheers,
-> Luca.
-> 
-> 
-> Luciano Coelho (3):
->   wl12xx: add support for sched_scan filters
->   wl12xx: increase number of allowed SSIDs in sched_scan
->   wl12xx: ignore sched scan match sets without SSID
-> 
->  drivers/net/wireless/wl12xx/main.c |    7 +-
->  drivers/net/wireless/wl12xx/scan.c |  116 +++++++++++++++++++++++++-----------
->  2 files changed, 85 insertions(+), 38 deletions(-)
+This patch protects cycle counters access by cc_lock
+and also prints current sample index.
 
-Applied the series, thank me. :)
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index bafb7b7..5cc6a2c 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1323,16 +1323,17 @@ void ath9k_debug_samp_bb_mac(struct ath_softc *sc)
+ 
+ 	ath9k_ps_wakeup(sc);
+ 
++	spin_lock_bh(&sc->debug.samp_lock);
++
+ 	spin_lock_irqsave(&common->cc_lock, flags);
+ 	ath_hw_cycle_counters_update(common);
+-	spin_unlock_irqrestore(&common->cc_lock, flags);
+-
+-	spin_lock_bh(&sc->debug.samp_lock);
+ 
+ 	ATH_SAMP_DBG(cc.cycles) = common->cc_ani.cycles;
+ 	ATH_SAMP_DBG(cc.rx_busy) = common->cc_ani.rx_busy;
+ 	ATH_SAMP_DBG(cc.rx_frame) = common->cc_ani.rx_frame;
+ 	ATH_SAMP_DBG(cc.tx_frame) = common->cc_ani.tx_frame;
++	spin_unlock_irqrestore(&common->cc_lock, flags);
++
+ 	ATH_SAMP_DBG(noise) = ah->noise;
+ 
+ 	REG_WRITE_D(ah, AR_MACMISC,
+@@ -1390,6 +1391,8 @@ static int open_file_bb_mac_samps(struct inode *inode, struct file *file)
+ 	spin_lock_bh(&sc->debug.samp_lock);
+ 	memcpy(bb_mac_samp, sc->debug.bb_mac_samp,
+ 			sizeof(*bb_mac_samp) * ATH_DBG_MAX_SAMPLES);
++	len += snprintf(buf + len, size - len,
++			"Current Sample Index: %d\n", sc->debug.sampidx);
+ 	spin_unlock_bh(&sc->debug.samp_lock);
+ 
+ 	len += snprintf(buf + len, size - len,
 -- 
-Cheers,
-Luca.
+1.7.6.1
 
