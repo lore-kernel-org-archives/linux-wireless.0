@@ -1,52 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f52.google.com ([209.85.212.52]:36509 "EHLO
-	mail-vw0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752910Ab1ITCqA (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:48330 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753411Ab1IFIMh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 22:46:00 -0400
-Received: by vws10 with SMTP id 10so161093vws.11
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 19:46:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4E77C0BF.50108@openwrt.org>
-References: <1316453903-75710-1-git-send-email-nbd@openwrt.org>
-	<1316453903-75710-2-git-send-email-nbd@openwrt.org>
-	<CAB=NE6XvanRQ6Yje_qHhkfzbLmZn9o5Q+5y1NobJwCyuMLFEvg@mail.gmail.com>
-	<4E77AAFB.1080805@openwrt.org>
-	<CAB=NE6XgSz7zz_ZXaPQEsaue307ipd7Qnzgi5QWr8Y4SS1j=Lg@mail.gmail.com>
-	<4E77B25D.9070907@openwrt.org>
-	<CAB=NE6XLdftXKg5-wvme8Vg7BjGi-TpxQ3G6m=7VnEw89YzXoA@mail.gmail.com>
-	<CAB=NE6XQDqG+En2KWOyKGUVT1SWm1rwMwOxMjpE8CjYfvwvOqw@mail.gmail.com>
-	<4E77BC58.7040204@openwrt.org>
-	<CAB=NE6Vi2sun6vJy=yZSJ9HjHxD17FO-GmXtYybcjLVPSt9+wA@mail.gmail.com>
-	<CAB=NE6UzRhp=51QacoRzMPad0vO1qkNxK3=rayPuYXdjA3ZOJQ@mail.gmail.com>
-	<4E77C0BF.50108@openwrt.org>
-Date: Tue, 20 Sep 2011 10:45:59 +0800
-Message-ID: <CAJ-Vmonu2TJgZVEjHrd3UG+_MLzowPUJ=LPQZbG8DPyuwPkyug@mail.gmail.com> (sfid-20110920_044605_694221_986FB6F4)
-Subject: Re: [PATCH v2 2/4] ath9k_hw: clean up tx power handling
-From: Adrian Chadd <adrian@freebsd.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 6 Sep 2011 04:12:37 -0400
+Received: by wwe5 with SMTP id 5so593159wwe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Sep 2011 01:12:35 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] nl80211/cfg80211/mac80211: fix wme docs
+Date: Tue,  6 Sep 2011 11:14:32 +0300
+Message-Id: <1315296872-20424-1-git-send-email-eliad@wizery.com> (sfid-20110906_101241_755344_36AF25A0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IIRC, the TP Scale stuff dates back to the previous NICs which
-(reportedly, from madwifi list/tickets) didn't implement TPC right, or
-Madwifi never ran TPC correctly on them.
+Add/fix some missing docs.
 
-So instead of per-packet TPC being done as driven by the net80211
-stack (which I bet would be needed for hostap mode, to use per-node TX
-power levels), it was likely done as a way for STA's to select a power
-limit, and maybe for coarse grained hostap operation (ie, if all STA's
-are close, use a lower TPC scale.)
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+(thanks johannes for pointing out)
 
-I bet Sam would know why.
+ include/linux/nl80211.h |    2 +-
+ include/net/cfg80211.h  |    2 ++
+ include/net/mac80211.h  |    3 +++
+ 3 files changed, 6 insertions(+), 1 deletions(-)
 
-I agree with Felix; nothing in ath9k/mac80211 currently uses it, so
-why keep it around. All of the ath9k supported NICs should implement
-correct per-packet TPC anyway, right?
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index a3f352f..c37f9e7 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -2493,7 +2493,7 @@ enum nl80211_hidden_ssid {
+ /**
+  * enum nl80211_sta_wme_attr - station WME attributes
+  * @__NL80211_STA_WME_INVALID: invalid number for nested attribute
+- * @NL80211_STA_WME_QUEUES: bitmap of uapsd queues.
++ * @NL80211_STA_WME_UAPSD_QUEUES: bitmap of uapsd queues.
+  * @NL80211_STA_WME_MAX_SP: max service period.
+  * @__NL80211_STA_WME_AFTER_LAST: internal
+  * @NL80211_STA_WME_MAX: highest station WME attribute
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 5390a89..f1659ea 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -441,6 +441,8 @@ enum plink_actions {
+  * @plink_action: plink action to take
+  * @plink_state: set the peer link state for a station
+  * @ht_capa: HT capabilities of station
++ * @uapsd_queues: bitmap of queues configured for uapsd
++ * @max_sp: max Service Period
+  */
+ struct station_parameters {
+ 	u8 *supported_rates;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2e752df..df1b53f 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -947,6 +947,9 @@ enum set_key_cmd {
+  * @wme: indicates whether the STA supports WME. Only valid during AP-mode.
+  * @drv_priv: data area for driver use, will always be aligned to
+  *	sizeof(void *), size is determined in hw information.
++ * @uapsd_queues: bitmap of queues configured for uapsd. Only valid
++ *	if wme is supported.
++ * @max_sp: max Service Period. Only valid if wme is supported.
+  */
+ struct ieee80211_sta {
+ 	u32 supp_rates[IEEE80211_NUM_BANDS];
+-- 
+1.7.6.401.g6a319
 
-
-
-Adrian
