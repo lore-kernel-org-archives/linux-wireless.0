@@ -1,72 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:63565 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803Ab1IZPpB (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49445 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753846Ab1IFKro (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 11:45:01 -0400
-From: Sangwook Lee <sangwook.lee@linaro.org>
-To: Rhyland Klein <rklein@nvidia.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Sangwook Lee <sangwook.lee@linaro.org>
-Subject: [PATCH v2] net:rfkill: add a gpio setup function into GPIO rfkill
-Date: Mon, 26 Sep 2011 16:43:07 +0100
-Message-Id: <1317051787-24142-1-git-send-email-sangwook.lee@linaro.org> (sfid-20110926_174528_527483_B8E26971)
+	Tue, 6 Sep 2011 06:47:44 -0400
+Subject: [PATCH] mac80211: fix missing sta_lock in __sta_info_destroy
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 06 Sep 2011 12:47:39 +0200
+Message-ID: <1315306059.3900.1.camel@jlt3.sipsolutions.net> (sfid-20110906_124755_485827_9445D636)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a gpio setup function which gives a chance to set up
-platform specific configuration such as pin multiplexing,
-input/output direction at the runtime or booting time.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Sangwook Lee <sangwook.lee@linaro.org>
+Since my commit 34e895075e21be3e21e71d6317440d1ee7969ad0
+("mac80211: allow station add/remove to sleep") there is
+a race in mac80211 when it clears the TIM bit because a
+sleeping station disconnected, the spinlock isn't held
+around the relevant code any more. Use the right API to
+acquire the spinlock correctly.
 
-v2:
-- fixed the return type after checking gpio_runtime_setup
+Cc: stable@kernel.org [2.6.34+]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/linux/rfkill-gpio.h |    2 ++
- net/rfkill/rfkill-gpio.c    |    8 ++++++++
- 2 files changed, 10 insertions(+), 0 deletions(-)
+ net/mac80211/sta_info.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill-gpio.h
-index a175d05..786e7bb 100644
---- a/include/linux/rfkill-gpio.h
-+++ b/include/linux/rfkill-gpio.h
-@@ -30,6 +30,7 @@
-  * @reset_gpio:		GPIO which is used for reseting rfkill switch
-  * @shutdown_gpio:	GPIO which is used for shutdown of rfkill switch
-  * @power_clk_name:	[optional] name of clk to turn off while blocked
-+ * @gpio_runtime_setup:	set up platform specific gpio configuration
-  */
+--- a/net/mac80211/sta_info.c	2011-09-06 12:46:20.000000000 +0200
++++ b/net/mac80211/sta_info.c	2011-09-06 12:46:21.000000000 +0200
+@@ -796,7 +796,7 @@ static int __must_check __sta_info_destr
+ 		BUG_ON(!sdata->bss);
  
- struct rfkill_gpio_platform_data {
-@@ -38,6 +39,7 @@ struct rfkill_gpio_platform_data {
- 	int			shutdown_gpio;
- 	const char		*power_clk_name;
- 	enum rfkill_type	type;
-+	int	(*gpio_runtime_setup)(struct platform_device *);
- };
+ 		atomic_dec(&sdata->bss->num_sta_ps);
+-		__sta_info_clear_tim_bit(sdata->bss, sta);
++		sta_info_clear_tim_bit(sta);
+ 	}
  
- #endif /* __RFKILL_GPIO_H */
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index 256c5dd..96a910c 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -101,6 +101,14 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 	if (!rfkill)
- 		return -ENOMEM;
- 
-+	if (pdata->gpio_runtime_setup) {
-+		ret = pdata->gpio_runtime_setup(pdev);
-+		if (ret) {
-+			pr_warn("%s: can't set up gpio\n", __func__);
-+			return ret;
-+		}
-+	}
-+
- 	rfkill->pdata = pdata;
- 
- 	len = strlen(pdata->name);
--- 
-1.7.4.1
+ 	local->num_sta--;
+
 
