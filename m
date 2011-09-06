@@ -1,88 +1,279 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5965 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754133Ab1IAGJk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 02:09:40 -0400
-From: "Sumangala, Suraj" <surajs@qca.qualcomm.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>,
-	"Balasubramanian, senthilkumar" <senthilb@qca.qualcomm.com>,
-	"Mehta, Vipin" <vipimeht@qca.qualcomm.com>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [RFC] nl80211: Added NL80211 commands for Bluetooth-WiFi coex
-Date: Thu, 1 Sep 2011 06:09:38 +0000
-Message-ID: <480687D4EEFE7447A2E09AADFF6673621AF827CC@nasanexd02a.na.qualcomm.com> (sfid-20110901_080944_621500_B4A60C66)
-References: <1314771915-8848-1-git-send-email-surajs@qca.qualcomm.com>
-	 (sfid-20110831_082525_612687_34CC3735),<1314772217.4161.10.camel@jlt3.sipsolutions.net>
-	 <480687D4EEFE7447A2E09AADFF6673621AF7CDCF@nasanexd02a.na.qualcomm.com>
-	 ,<1314772832.4161.16.camel@jlt3.sipsolutions.net>
-	 <480687D4EEFE7447A2E09AADFF6673621AF7CE0B@nasanexd02a.na.qualcomm.com>
-	 <1314801657.3373.260.camel@aeonflux>
-	 <480687D4EEFE7447A2E09AADFF6673621AF7DF82@nasanexd02a.na.qualcomm.com>
- <1314831118.3373.266.camel@aeonflux>
-In-Reply-To: <1314831118.3373.266.camel@aeonflux>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:26702 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752667Ab1IFRPJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Sep 2011 13:15:09 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/10] iwlagn: move traffic_log back to upper layer
+Date: Tue,  6 Sep 2011 09:31:20 -0700
+Message-Id: <1315326685-22213-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110906_191521_982325_25FC650F)
+In-Reply-To: <1315326685-22213-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1315326685-22213-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTWFyY2VsLA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IE1hcmNl
-bCBIb2x0bWFubiBbbWFpbHRvOm1hcmNlbEBob2x0bWFubi5vcmddDQo+IFNlbnQ6IFRodXJzZGF5
-LCBTZXB0ZW1iZXIgMDEsIDIwMTEgNDoyMiBBTQ0KPiBUbzogU3VtYW5nYWxhLCBTdXJhag0KPiBD
-YzogSm9oYW5uZXMgQmVyZzsgbGludmlsbGVAdHV4ZHJpdmVyLmNvbTsgYXRoNmtsLWRldmVsOyBC
-YWxhc3VicmFtYW5pYW4sDQo+IHNlbnRoaWxrdW1hcjsgTWVodGEsIFZpcGluOyBWYWxvLCBLYWxs
-ZTsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJFOiBbUkZDXSBu
-bDgwMjExOiBBZGRlZCBOTDgwMjExIGNvbW1hbmRzIGZvciBCbHVldG9vdGgtV2lGaSBjb2V4DQo+
-IA0KPiBIaSBTdXJhaiwNCj4gDQo+ID4gPiB0aGlzIGxvb2tzIGxpa2UgdGhlIHRvdGFsIHdyb25n
-IGFwcHJvYWNoIHRvIG1lLiBUaGlzIG5lZWRzIHRvIGJlIGRvbmUNCj4gYmV0d2VlbiBtYWM4MDIx
-MSBhbmQgQmx1ZXRvb3RoIHN1YnN5c3RlbXMgaW4gdGhlIGtlcm5lbCBkaXJlY3RseS4gR29pbmcN
-Cj4gdGhyb3VnaCB1c2Vyc3BhY2UgZm9yIHRoaXMgaXMgYSBwcmV0dHkgYmFkIGlkZWEuDQo+ID4N
-Cj4gPiA+IEVzcGVjaWFsbHkgaWYgeW91IHdhbm5hIGxpc3RlbiBvbiBELUJ1cyBldmVudHMgZnJv
-bSBibHVldG9vdGhkIGFuZCB0aGVuIHJ1bg0KPiBhbm90aGVyIHByb2Nlc3MgdG8gdGhlbiBleGVj
-dXRlIG5sODAyMTEgY29tbWFuZHMgbG9va3MgbGlrZSB0b3RhbCBvdmVyaGVhZCBhdA0KPiBubyBn
-YWluLiBOb3QgdG8gdGFsayBhYm91dCBwb3RlbnRpYWwgbGF0ZW5jeSA+IGVmZmVjdHMgdGhhdCBt
-aWdodCBiZQ0KPiBjb3VudGVycHJvZHVjdGl2ZS4NCj4gPg0KPiA+ID4gV2hhdCB5b3UgcmVhbGx5
-IHdhbnQgaXMgYSB3YXkgdG8gbWFyayBBMkRQIGNoYW5uZWxzIGZvciBzdHJlYW1pbmcgZnJvbQ0K
-PiB1c2Vyc3BhY2UgYXMgc3RyZWFtaW5nL3JlYWx0aW1lL3ByaW9yaXR5IHNvIHRoZSBCbHVldG9v
-dGggc3Vic3lzdGVtIGtub3dzIG9uDQo+IHdoYXQgdG8gZG8gd2l0aCBpdCBhbmQgdGhhdCB3YXkg
-Y2FuIGFsc28gdGVsbCA+ID4gbWFjODAyMTEgY29ycmVjdGx5IGFib3V0IGNvZXgNCj4gc2V0dGlu
-Z3MuDQo+ID4NCj4gPiA+IFdlIGFyZSBhbHJlYWR5IHNldHRpbmdzIGZsdXNoYWJsZSBmbGFncyBm
-b3IgQTJEUCBzdHJlYW1pbmcgY2hhbm5lbHMgYW5kIHRoZXJlDQo+IGlzIHdvcmsgb25nb2luZyBm
-b3IgU09fUFJJT1JJVFkgc3VwcG9ydCB3aXRoIEwyQ0FQIHNvY2tldHMuDQo+ID4NCj4gPiBNb3Jl
-IHRoYW4gdGhlIEEyRFAgY29ubmVjdGlvbiwgaXQgd291bGQgYmUgbW9yZSB1c2VmdWwgdG8gZmlu
-ZCBvdXQgd2hlbg0KPiBBMkRQIHN0YXJ0L3N0b3Agc3RyZWFtaW5nIHNvIHRoYXQgd2UgY2FuIGtu
-b3cgd2hlbiB0byByZWFsbG9jYXRlIHJlc291cmNlIHRvDQo+IEJsdWV0b290aC4gSXMgaXQgcG9z
-c2libGUgdG8gdGFwIHRoaXMgaW5mb3JtYXRpb24gb3V0IG9mIHRoZSBCbHVldG9vdGggY29yZT8N
-Cj4gPiBBbHNvLCBjYW4geW91IHN1Z2dlc3QgYSB3YXkgdG8gZ2V0IEEyRFAgc3RyZWFtaW5nIHN0
-YXR1cywgaW5xdWlyeSBzdGF0dXMsIGFuZA0KPiBTQ08gYW5kIEFDTCByb2xlIHdpdGhvdXQgYSBo
-YWNrIGluIHRoZSBCbHVldG9vdGggc3Vic3lzdGVtPw0KPiANCj4gdGhlIGlucXVpcnkgc3RhdHVz
-IGlzIHRyYWNrZWQgYnkgdGhlIExpbnV4IGtlcm5lbCBzaW5jZSBldmVyLiBTYW1lIGdvZXMgZm9y
-IEFDTA0KPiBhbmQgU0NPIHN0YXR1cy4gVGhlIGtlcm5lbCBrZWVwcyB0cmFjayBvdmVyIGFsbW9z
-dCBldmVyeXRoaW5nIG9uIHRoZSBIQ0kgbGV2ZWwNCj4gYW5kIHdpbGwgZG8gcHJvcGVyIGNsZWFu
-dXAgYWZ0ZXJ3YXJkcy4gRG9pbmcgdGhpcyBpbiB1c2Vyc3BhY2Ugd2lsbCBub3Qgd29yayBvdXQu
-DQo+IEFuZCBpdCBpcyBhbHNvIHJhY3kuDQo+IA0KPiBFc3BlY2lhbGx5IGluIHRoZSBmdXR1cmUg
-Ymx1ZXRvb3RoZCB3aWxsIGJlIHRyYWNraW5nIGxlc3MgYW5kIGxlc3MgaW5mb3JtYXRpb24uIFRo
-ZQ0KPiBuZXcgbWFuYWdlbWVudCBpbnRlcmZhY2Ugd2lsbCBoaWRlIGFsbW9zdCBldmVyeSBzaW5n
-bGUgc3RhdGUgZnJvbSBibHVldG9vdGhkDQo+IHdoZXJlIHRoZSBrZXJuZWwgaXMgZG9pbmcgdGhl
-IGpvYiBhbnl3YXkgYW5kIGNhbiBkbyBhIHdheSBiZXR0ZXIgam9iIGluIHRoZSBmaXJzdA0KPiBw
-bGFjZS4gVGhpcyBpcyBhbHNvIGxlYWRzIHRvIHBvd2VyIGNvbnN1bXB0aW9uIGFkdmFudGFnZXMg
-c2luY2UgYmx1ZXRvb3RoZCBkb2VzDQo+IG5vdCBuZWVkIHRvIGJlIHdva2VuIHVwIHRoYXQgb2Z0
-ZW4gYW55d2F5LiBBbmQgaW4gYWRkaXRpb24gdGhlIGtlcm5lbCBoYXMgbm90DQo+IGRlYWwgd2l0
-aCB0aGUgZXh0cmEgSENJIGZpbHRlciBoYW5kbGluZy4NCj4gDQo+IFRoZSBvbmx5IHRoaW5nIHRo
-YXQgeW91IG1lbnRpb25lZCBoZXJlIGlzIEEyRFAgc3RyZWFtaW5nLiBBbmQgYnkgdGhlIG5hdHVy
-ZSBvZg0KPiB0aGUgQTJEUCBwcm90b2NvbCwgeW91IGRvIGVzdGFibGlzaCBhIHNlY29uZCBMMkNB
-UCBjaGFubmVsIHRoYXQgaXMganVzdCB1c2VkIGZvcg0KPiBzdHJlYW1pbmcuIFRoYXQgY2hhbm5l
-bCBpcyBhbHNvIG9ubHkgcHJlc2VudCBpZiB5b3UgYXJlIHN0cmVhbWluZyByaWdodCBub3cuIElm
-IG5vdA0KPiBzdHJlYW1pbmcgaXMgZ29pbmcgb24sIGl0IHdpbGwgYmUgZGlzY29ubmVjdGVkLiBT
-byBpdCBpcyBwcmV0dHkgZWFzeSB0byBoYXZlDQo+IGJsdWV0b290aGQgdGFnIHN1Y2ggYSBjaGFu
-bmVsIHdpdGggcHJvcGVyIFNPX1BSSU9SSVRZIChvbmNlIHdlIGhhdmUgdGhhdCBjb2RlDQo+IG1l
-cmdlZCB1cHN0cmVhbSkgYW5kIHRoZW4gdGhlIEJsdWV0b290aCBzdWJzeXN0ZW0ga25vd3Mgd2hl
-biBBMkRQDQo+IHN0cmVhbWluZyBvciBhbnkgaGlnaCBwcmlvcml0eS9yZWFsdGltZSBkYXRhIGlz
-IHRyYW5zZmVycmVkIG92ZXIgQmx1ZXRvb3RoLg0KPiANCj4gUmVnYXJkcw0KPiANCj4gTWFyY2Vs
-DQo+IA0KDQpUaGFua3MuDQpSZWdhcmRpbmcgU0NPIGFuZCBJbnF1aXJ5IHN0YXR1cywgZG8gd2Ug
-aGF2ZSBhbiBleGlzdGluZyBBUEkgaW4gQmx1ZXRvb3RoIGNvcmUgdGhhdCBJIGNhbiB1c2UgdG8g
-Z2V0IHRoYXQgaW5mb3JtYXRpb24/DQoNClJlZ2FyZHMNClN1cmFqDQoNCg0K
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+
+The traffic log debugfs handlers were mistakenly moved to the
+transport layer because they print the pointers of the Tx / Rx
+queues. The pointers of the queues can be fetched by another debugfs
+handler.
+So bring the traffic log back to the upper layer and remove the part
+that reads the Tx / Rx queues' pointers.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |   85 ++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans.c   |  107 ----------------------------
+ 2 files changed, 85 insertions(+), 107 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index e320cc1..d0c63cf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -804,6 +804,89 @@ DEBUGFS_READ_WRITE_FILE_OPS(disable_ht40);
+ DEBUGFS_READ_WRITE_FILE_OPS(sleep_level_override);
+ DEBUGFS_READ_FILE_OPS(current_sleep_command);
+ 
++static ssize_t iwl_dbgfs_traffic_log_read(struct file *file,
++					 char __user *user_buf,
++					 size_t count, loff_t *ppos)
++{
++	struct iwl_priv *priv = file->private_data;
++	int pos = 0, ofs = 0;
++	int cnt = 0, entry;
++
++	char *buf;
++	int bufsz = ((IWL_TRAFFIC_ENTRIES * IWL_TRAFFIC_ENTRY_SIZE * 64) * 2) +
++		(hw_params(priv).max_txq_num * 32 * 8) + 400;
++	const u8 *ptr;
++	ssize_t ret;
++
++	buf = kzalloc(bufsz, GFP_KERNEL);
++	if (!buf) {
++		IWL_ERR(priv, "Can not allocate buffer\n");
++		return -ENOMEM;
++	}
++	if (priv->tx_traffic &&
++		(iwl_get_debug_level(priv->shrd) & IWL_DL_TX)) {
++		ptr = priv->tx_traffic;
++		pos += scnprintf(buf + pos, bufsz - pos,
++				"Tx Traffic idx: %u\n", priv->tx_traffic_idx);
++		for (cnt = 0, ofs = 0; cnt < IWL_TRAFFIC_ENTRIES; cnt++) {
++			for (entry = 0; entry < IWL_TRAFFIC_ENTRY_SIZE / 16;
++			     entry++,  ofs += 16) {
++				pos += scnprintf(buf + pos, bufsz - pos,
++						"0x%.4x ", ofs);
++				hex_dump_to_buffer(ptr + ofs, 16, 16, 2,
++						   buf + pos, bufsz - pos, 0);
++				pos += strlen(buf + pos);
++				if (bufsz - pos > 0)
++					buf[pos++] = '\n';
++			}
++		}
++	}
++
++	if (priv->rx_traffic &&
++		(iwl_get_debug_level(priv->shrd) & IWL_DL_RX)) {
++		ptr = priv->rx_traffic;
++		pos += scnprintf(buf + pos, bufsz - pos,
++				"Rx Traffic idx: %u\n", priv->rx_traffic_idx);
++		for (cnt = 0, ofs = 0; cnt < IWL_TRAFFIC_ENTRIES; cnt++) {
++			for (entry = 0; entry < IWL_TRAFFIC_ENTRY_SIZE / 16;
++			     entry++,  ofs += 16) {
++				pos += scnprintf(buf + pos, bufsz - pos,
++						"0x%.4x ", ofs);
++				hex_dump_to_buffer(ptr + ofs, 16, 16, 2,
++						   buf + pos, bufsz - pos, 0);
++				pos += strlen(buf + pos);
++				if (bufsz - pos > 0)
++					buf[pos++] = '\n';
++			}
++		}
++	}
++
++	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++	kfree(buf);
++	return ret;
++}
++
++static ssize_t iwl_dbgfs_traffic_log_write(struct file *file,
++					 const char __user *user_buf,
++					 size_t count, loff_t *ppos)
++{
++	struct iwl_priv *priv = file->private_data;
++	char buf[8];
++	int buf_size;
++	int traffic_log;
++
++	memset(buf, 0, sizeof(buf));
++	buf_size = min(count, sizeof(buf) -  1);
++	if (copy_from_user(buf, user_buf, buf_size))
++		return -EFAULT;
++	if (sscanf(buf, "%d", &traffic_log) != 1)
++		return -EFAULT;
++	if (traffic_log == 0)
++		iwl_reset_traffic_log(priv);
++
++	return count;
++}
++
+ static const char *fmt_value = "  %-30s %10u\n";
+ static const char *fmt_hex   = "  %-30s       0x%02X\n";
+ static const char *fmt_table = "  %-30s %10u  %10u  %10u  %10u\n";
+@@ -2340,6 +2423,7 @@ static ssize_t iwl_dbgfs_protection_mode_write(struct file *file,
+ 
+ DEBUGFS_READ_FILE_OPS(rx_statistics);
+ DEBUGFS_READ_FILE_OPS(tx_statistics);
++DEBUGFS_READ_WRITE_FILE_OPS(traffic_log);
+ DEBUGFS_READ_FILE_OPS(ucode_rx_stats);
+ DEBUGFS_READ_FILE_OPS(ucode_tx_stats);
+ DEBUGFS_READ_FILE_OPS(ucode_general_stats);
+@@ -2400,6 +2484,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
+ 	DEBUGFS_ADD_FILE(disable_ht40, dir_data, S_IWUSR | S_IRUSR);
+ 	DEBUGFS_ADD_FILE(rx_statistics, dir_debug, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(tx_statistics, dir_debug, S_IRUSR);
++	DEBUGFS_ADD_FILE(traffic_log, dir_debug, S_IWUSR | S_IRUSR);
+ 	DEBUGFS_ADD_FILE(power_save_status, dir_debug, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(clear_ucode_statistics, dir_debug, S_IWUSR);
+ 	DEBUGFS_ADD_FILE(clear_traffic_statistics, dir_debug, S_IWUSR);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index 3948d31..28fbaa2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -1561,111 +1561,6 @@ static const struct file_operations iwl_dbgfs_##name##_ops = {		\
+ 	.llseek = generic_file_llseek,					\
+ };
+ 
+-static ssize_t iwl_dbgfs_traffic_log_read(struct file *file,
+-					 char __user *user_buf,
+-					 size_t count, loff_t *ppos)
+-{
+-	struct iwl_trans *trans = file->private_data;
+-	struct iwl_priv *priv = priv(trans);
+-	int pos = 0, ofs = 0;
+-	int cnt = 0, entry;
+-	struct iwl_trans_pcie *trans_pcie =
+-		IWL_TRANS_GET_PCIE_TRANS(trans);
+-	struct iwl_tx_queue *txq;
+-	struct iwl_queue *q;
+-	struct iwl_rx_queue *rxq = &trans_pcie->rxq;
+-	char *buf;
+-	int bufsz = ((IWL_TRAFFIC_ENTRIES * IWL_TRAFFIC_ENTRY_SIZE * 64) * 2) +
+-		(hw_params(trans).max_txq_num * 32 * 8) + 400;
+-	const u8 *ptr;
+-	ssize_t ret;
+-
+-	if (!trans_pcie->txq) {
+-		IWL_ERR(trans, "txq not ready\n");
+-		return -EAGAIN;
+-	}
+-	buf = kzalloc(bufsz, GFP_KERNEL);
+-	if (!buf) {
+-		IWL_ERR(trans, "Can not allocate buffer\n");
+-		return -ENOMEM;
+-	}
+-	pos += scnprintf(buf + pos, bufsz - pos, "Tx Queue\n");
+-	for (cnt = 0; cnt < hw_params(trans).max_txq_num; cnt++) {
+-		txq = &trans_pcie->txq[cnt];
+-		q = &txq->q;
+-		pos += scnprintf(buf + pos, bufsz - pos,
+-				"q[%d]: read_ptr: %u, write_ptr: %u\n",
+-				cnt, q->read_ptr, q->write_ptr);
+-	}
+-	if (priv->tx_traffic &&
+-		(iwl_get_debug_level(trans->shrd) & IWL_DL_TX)) {
+-		ptr = priv->tx_traffic;
+-		pos += scnprintf(buf + pos, bufsz - pos,
+-				"Tx Traffic idx: %u\n", priv->tx_traffic_idx);
+-		for (cnt = 0, ofs = 0; cnt < IWL_TRAFFIC_ENTRIES; cnt++) {
+-			for (entry = 0; entry < IWL_TRAFFIC_ENTRY_SIZE / 16;
+-			     entry++,  ofs += 16) {
+-				pos += scnprintf(buf + pos, bufsz - pos,
+-						"0x%.4x ", ofs);
+-				hex_dump_to_buffer(ptr + ofs, 16, 16, 2,
+-						   buf + pos, bufsz - pos, 0);
+-				pos += strlen(buf + pos);
+-				if (bufsz - pos > 0)
+-					buf[pos++] = '\n';
+-			}
+-		}
+-	}
+-
+-	pos += scnprintf(buf + pos, bufsz - pos, "Rx Queue\n");
+-	pos += scnprintf(buf + pos, bufsz - pos,
+-			"read: %u, write: %u\n",
+-			 rxq->read, rxq->write);
+-
+-	if (priv->rx_traffic &&
+-		(iwl_get_debug_level(trans->shrd) & IWL_DL_RX)) {
+-		ptr = priv->rx_traffic;
+-		pos += scnprintf(buf + pos, bufsz - pos,
+-				"Rx Traffic idx: %u\n", priv->rx_traffic_idx);
+-		for (cnt = 0, ofs = 0; cnt < IWL_TRAFFIC_ENTRIES; cnt++) {
+-			for (entry = 0; entry < IWL_TRAFFIC_ENTRY_SIZE / 16;
+-			     entry++,  ofs += 16) {
+-				pos += scnprintf(buf + pos, bufsz - pos,
+-						"0x%.4x ", ofs);
+-				hex_dump_to_buffer(ptr + ofs, 16, 16, 2,
+-						   buf + pos, bufsz - pos, 0);
+-				pos += strlen(buf + pos);
+-				if (bufsz - pos > 0)
+-					buf[pos++] = '\n';
+-			}
+-		}
+-	}
+-
+-	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+-	kfree(buf);
+-	return ret;
+-}
+-
+-static ssize_t iwl_dbgfs_traffic_log_write(struct file *file,
+-					 const char __user *user_buf,
+-					 size_t count, loff_t *ppos)
+-{
+-	struct iwl_trans *trans = file->private_data;
+-	char buf[8];
+-	int buf_size;
+-	int traffic_log;
+-
+-	memset(buf, 0, sizeof(buf));
+-	buf_size = min(count, sizeof(buf) -  1);
+-	if (copy_from_user(buf, user_buf, buf_size))
+-		return -EFAULT;
+-	if (sscanf(buf, "%d", &traffic_log) != 1)
+-		return -EFAULT;
+-	if (traffic_log == 0)
+-		iwl_reset_traffic_log(priv(trans));
+-
+-	return count;
+-}
+-
+ static ssize_t iwl_dbgfs_tx_queue_read(struct file *file,
+ 						char __user *user_buf,
+ 						size_t count, loff_t *ppos)
+@@ -2031,7 +1926,6 @@ static ssize_t iwl_dbgfs_fh_reg_read(struct file *file,
+ 	return ret;
+ }
+ 
+-DEBUGFS_READ_WRITE_FILE_OPS(traffic_log);
+ DEBUGFS_READ_WRITE_FILE_OPS(log_event);
+ DEBUGFS_READ_WRITE_FILE_OPS(interrupt);
+ DEBUGFS_READ_FILE_OPS(fh_reg);
+@@ -2046,7 +1940,6 @@ DEBUGFS_WRITE_FILE_OPS(csr);
+ static int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans,
+ 					struct dentry *dir)
+ {
+-	DEBUGFS_ADD_FILE(traffic_log, dir, S_IWUSR | S_IRUSR);
+ 	DEBUGFS_ADD_FILE(rx_queue, dir, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(tx_queue, dir, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(log_event, dir, S_IWUSR | S_IRUSR);
+-- 
+1.7.0.4
+
