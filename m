@@ -1,68 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:30666 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754732Ab1IOH5w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 03:57:52 -0400
-From: Vivek Natarajan <nataraja@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: Deinitialize wiphy on error.
-Date: Thu, 15 Sep 2011 13:27:46 +0530
-Message-ID: <1316073466-3971-1-git-send-email-nataraja@qca.qualcomm.com> (sfid-20110915_095755_283620_54BD6B4C)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:26704 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752676Ab1IFRPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Sep 2011 13:15:11 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 07/10] iwlagn: disply queue read/write pointer when stuck
+Date: Tue,  6 Sep 2011 09:31:22 -0700
+Message-Id: <1315326685-22213-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110906_191527_552650_FDC110B6)
+In-Reply-To: <1315326685-22213-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1315326685-22213-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes the panic observed on card removal.
+When driver detect queue stuck, display current read/write pointer before
+perform frimware reload.
 
-CC: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/sdio.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-trans.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 0cce801..18154ff 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -25,6 +25,7 @@
- #include "hif-ops.h"
- #include "target.h"
- #include "debug.h"
-+#include "cfg80211.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index 5bf6250..c495fc3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -1497,6 +1497,8 @@ static int iwl_trans_pcie_check_stuck_queue(struct iwl_trans *trans, int cnt)
+ 	if (time_after(jiffies, timeout)) {
+ 		IWL_ERR(trans, "Queue %d stuck for %u ms.\n", q->id,
+ 			hw_params(trans).wd_timeout);
++		IWL_ERR(trans, "Current read_ptr %d write_ptr %d\n",
++			q->read_ptr, q->write_ptr);
+ 		return 1;
+ 	}
  
- struct ath6kl_sdio {
- 	struct sdio_func *func;
-@@ -816,7 +817,7 @@ static int ath6kl_sdio_probe(struct sdio_func *func,
- 			ath6kl_err("Failed to enable 4-bit async irq mode %d\n",
- 				   ret);
- 			sdio_release_host(func);
--			goto err_dma;
-+			goto err_sdio;
- 		}
- 
- 		ath6kl_dbg(ATH6KL_DBG_TRC, "4-bit async irq mode enabled\n");
-@@ -829,7 +830,7 @@ static int ath6kl_sdio_probe(struct sdio_func *func,
- 
- 	ret = ath6kl_sdio_power_on(ar_sdio);
- 	if (ret)
--		goto err_dma;
-+		goto err_sdio;
- 
- 	sdio_claim_host(func);
- 
-@@ -853,6 +854,8 @@ static int ath6kl_sdio_probe(struct sdio_func *func,
- 
- err_off:
- 	ath6kl_sdio_power_off(ar_sdio);
-+err_sdio:
-+	ath6kl_cfg80211_deinit(ar_sdio->ar);
- err_dma:
- 	kfree(ar_sdio->dma_buffer);
- err_hif:
 -- 
-1.7.1
+1.7.0.4
 
