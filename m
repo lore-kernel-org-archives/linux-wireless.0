@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:52518 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755747Ab1INJjA (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25971 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753296Ab1IFIsM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 05:39:00 -0400
-Received: by fxe4 with SMTP id 4so1579259fxe.19
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 02:38:58 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "Louis" <louis.m@gmx.net>
-Subject: Re: AR9170 chipset details
-Date: Wed, 14 Sep 2011 11:38:55 +0200
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-References: <20110913080246.184260@gmx.net>
-In-Reply-To: <20110913080246.184260@gmx.net>
+	Tue, 6 Sep 2011 04:48:12 -0400
+Message-ID: <4E65DE46.7030006@qca.qualcomm.com> (sfid-20110906_104816_701077_9CC5A141)
+Date: Tue, 6 Sep 2011 11:48:06 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201109141138.55437.chunkeey@googlemail.com> (sfid-20110914_113904_827872_ABF8D259)
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: How to request firmware during module init?
+References: <4E65DC7D.70306@qca.qualcomm.com>	 (sfid-20110906_104037_973452_28D96118) <1315298660.3900.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1315298660.3900.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, September 13, 2011 10:02:46 AM Louis wrote:
-> I need a detailed description of the Atheros AR9170 chipset.
-Well, there's me and Stephen. He usually handels the stuff thats
-not in the documents but unfortunately I don't have his new
-qualcomm email... Luis, do you have it?
+On 09/06/2011 11:44 AM, Johannes Berg wrote:
+> On Tue, 2011-09-06 at 11:40 +0300, Kalle Valo wrote:
+>> Hi,
+>>
+>> ath6kl needs to request the firmware from user space during module init
+>> (or to be exact from sdio probe, but it's almost the same thing) and
+>> boot hardware to get some settings etc before it registers itself to
+>> cfg80211. What's the proper way to handle this?
+>>
+>> I noticed that when I compile ath6kl into kernel boot fails on my x86
+>> box as firmware is not available because user space is not ready.
+> 
+> We do an async request, once it comes back we register with mac80211.
 
-> Does someone know if there is a reference guide or a detailed datasheet
-> with the chip`s functions and register descriptions available somewhere. 
-You can learn a lot from the original otus driver and firmware
-sources. In fact thats the only ressources I had during most of
-the development. I have my doubts about the docs. They are not
-of much help anyway since they sort of divert from the actual
-silicon.
+I take it you mean request_firmware_nowait(). I'll use that also.
 
-> On which information base has the carl9170 driver been developed? 
-Original otus driver and the firmware... Unfortunately, most of
-the stuff was hosted on kernel.org which is currently unavailable.
-[I do have copies, but I don't carry them around so I can't provide
-a backup atm.]
+Thanks!
 
-Regards,
-	Chr
+Kalle
