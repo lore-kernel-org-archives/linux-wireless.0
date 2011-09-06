@@ -1,64 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:55768 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751487Ab1ITS4C convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42606 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754200Ab1IFMNN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 14:56:02 -0400
-Received: by yxl31 with SMTP id 31so580662yxl.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 11:56:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4E78D990.3090601@openwrt.org>
-References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com>
- <loom.20110918T004437-426@post.gmane.org> <1316437459.5995.29.camel@jlt3.sipsolutions.net>
- <36569806.Rgjanm0GiI@alex-1> <1316521312.3953.27.camel@jlt3.sipsolutions.net>
- <CAB=NE6VDSTAKK0pmyBOz6hw1pbxo7U6dxbrvg_F-y6CDB0paKw@mail.gmail.com> <4E78D990.3090601@openwrt.org>
-From: Javier Cardona <javier@cozybit.com>
-Date: Tue, 20 Sep 2011 11:55:41 -0700
-Message-ID: <CAPjQAd_KtVnr5RvGMzPOVsVhKVw4F6PKOb4tUahFMrRR_jBu3w@mail.gmail.com> (sfid-20110920_205606_841375_B4EF4655)
-Subject: Re: [PATCH v3 3/3] mac80211: Add HT operation modes for IBSS
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Alexander Simon <an.alexsimon@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 6 Sep 2011 08:13:13 -0400
+Subject: [PATCH] mac80211: further optimise buffer expiry timer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 06 Sep 2011 14:13:06 +0200
+Message-ID: <1315311186.3900.6.camel@jlt3.sipsolutions.net> (sfid-20110906_141316_656185_C69691BC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 20, 2011 at 11:21 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->>>  I don't really know. As I said, I think I'd be happy with an
->>>  implementation that maybe doesn't fully implement everything as long as
->>>  it considers the trade-offs.
->>
->> The same questions come up with HT support and 802.11s, as per Javier
->> this is not really well spelled out in the spec. My recommendation is
->> to just support for now the most simple case and let us not entangle
->> ourselves with the complexities of handling trying to merge different
->> setups. So only enable peering up for adhoc or mesh if and only if the
->> observed IE matches our own supported HT caps or target configuration.
->> If a legacy STA tries to peer up with an HT IBSS, this would simply be
->> rejected. We can leave off handling the change in configuration later
->> for userspace, but do not see this as being a requirement for
->> supporting HT for IBSS or Mesh. The simpler the better, so long as we
->> simply respect the spec.
->
-> I disagree. That'll make it useless for real deployments, which are often a
-> mix of HT and non-HT devices.
+From: Johannes Berg <johannes.berg@intel.com>
 
-For mesh, my initial thought was to allow mismatched peerings
-according to the following rules:
+Juuso optimised the timer to not run all the
+time in commit 3393a608c4979a94d1887efc05b7.
+However, after that it will still run once
+more even if all frames just expired. Fixing
+that also makes the function return value a
+little clearer in the process.
 
- 1. Peering is allowed between non-HT STAs as well as between HT and
-non-HT STAs.  No HT checks in that case.
- 2. If both peer candidates support HT, only allow peering if they
-advertise the same BSSBasicMCSSet in their HT Operation IE.  This
-ensures that a basic link can be established between these stations.
- 3. Don't use the HT info for anything else: if there are poorly
-matched HT links, let the path selection algorithm try and find better
-ones (if there are any).
+Also, while at it, change the return value
+to bool (instead of int).
 
-I believe the above is compliant with 802.11s.
+Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/sta_info.c |   10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-Cheers,
+--- a/net/mac80211/sta_info.c	2011-09-06 09:48:48.000000000 +0200
++++ b/net/mac80211/sta_info.c	2011-09-06 11:36:26.000000000 +0200
+@@ -691,14 +691,13 @@ void sta_info_clear_tim_bit(struct sta_i
+ 	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
+ }
+ 
+-static int sta_info_buffer_expired(struct sta_info *sta,
+-				   struct sk_buff *skb)
++static bool sta_info_buffer_expired(struct sta_info *sta, struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info;
+ 	int timeout;
+ 
+ 	if (!skb)
+-		return 0;
++		return false;
+ 
+ 	info = IEEE80211_SKB_CB(skb);
+ 
+@@ -718,9 +717,6 @@ static bool sta_info_cleanup_expire_buff
+ 	unsigned long flags;
+ 	struct sk_buff *skb;
+ 
+-	if (skb_queue_empty(&sta->ps_tx_buf))
+-		return false;
+-
+ 	for (;;) {
+ 		spin_lock_irqsave(&sta->ps_tx_buf.lock, flags);
+ 		skb = skb_peek(&sta->ps_tx_buf);
+@@ -745,7 +741,7 @@ static bool sta_info_cleanup_expire_buff
+ 			sta_info_clear_tim_bit(sta);
+ 	}
+ 
+-	return true;
++	return !skb_queue_empty(&sta->ps_tx_buf);
+ }
+ 
+ static int __must_check __sta_info_destroy(struct sta_info *sta)
 
-Javier
+
