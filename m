@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:43143 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033Ab1IUACc (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24276 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754239Ab1IFOum (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 20:02:32 -0400
-Received: by gxk6 with SMTP id 6so773604gxk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 17:02:31 -0700 (PDT)
-Message-ID: <4E792994.1080809@lwfinger.net> (sfid-20110921_020241_922701_C58B1128)
-Date: Tue, 20 Sep 2011 19:02:28 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 6 Sep 2011 10:50:42 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 2/2] ath9k: Move cycle conters under cc_lock
+Date: Tue, 6 Sep 2011 20:21:08 +0530
+Message-ID: <1315320668-2882-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110906_165045_199249_6B29A048)
+In-Reply-To: <1315320668-2882-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1315320668-2882-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Chiefdome <chiefdome@googlemail.com>
-CC: linux-wireless@vger.kernel.org, george0505@realtek.com
-Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
-References: <4E77F631.3030202@googlemail.com> <4E77F9FD.1020204@googlemail.com> <4E780309.9010601@lwfinger.net> <4E785DB3.5040109@googlemail.com> <4E7907D3.1020606@googlemail.com>
-In-Reply-To: <4E7907D3.1020606@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/20/2011 04:38 PM, Chiefdome wrote:
-> I tried at least wireless-next but the adapter isn't showing up.
-> Where to get more log files and stuff?
-> Isnt this adapter good supported by the rtl8192cu driver or where is the problem?
+This patch protects cycle counters access by cc_lock
+and also prints current sample index.
 
-For the mainline kernel to work with 802.11n-only APs and to reconnect after an 
-initial try, your kernel needs the following patches:
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-commit bac2555c6d86387132930af4d14cb47c4dd3f4f7
-Author: George <george0505@realtek.com>
-Date:   Sat Sep 3 10:58:48 2011 -0500
-
-     rtlwifi: Fix problem when switching connections
-
-     The driver fails to clear encryption keys making it impossible
-     to switch connections.
-
-     Signed-off-by: George <george0505@realtek.com>
-     Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-     Cc: Stable <stable@kernel.org>        [2.6.39+]
-     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-commit 3401dc6eba788ebc7c14ce51018d775b1c263399
-Author: George <george0505@realtek.com>
-Date:   Sat Sep 3 10:58:47 2011 -0500
-
-     rtlwifi: rtl8192su: Fix problem connecting to HT-enabled AP
-
-     The driver fails to connect to 802.11n-enabled APs. The patch fixes
-     Bug #42262.
-
-     Signed-off-by: George <george0505@realtek.com>
-     Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-     Cc: Stable <stable@kernel.org>        [2.6.39+]
-     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-Both of these are in wireless-testing, and were just merged into the mainline 
-kernel. In addition, they were merged with the 3.0 stable tree today.
-
-Both should be in wireless-next, but as I recall, you were not able to test with 
-that tree.
-
-With the updated mainline kernel, the link is stable and performance is 
-acceptible with netperf TCP_STREAM (TX) at 20.5 +/- 4.8 Mbps and TCP_MAERTS (RX) 
-of 21.7 +/- 3.8 Mbps. These numbers are not spectacular, but they will do.
-
-Larry
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 3d377ee..ee8640d 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1323,16 +1323,17 @@ void ath9k_debug_samp_bb_mac(struct ath_softc *sc)
+ 
+ 	ath9k_ps_wakeup(sc);
+ 
++	spin_lock_bh(&sc->debug.samp_lock);
++
+ 	spin_lock_irqsave(&common->cc_lock, flags);
+ 	ath_hw_cycle_counters_update(common);
+-	spin_unlock_irqrestore(&common->cc_lock, flags);
+-
+-	spin_lock_bh(&sc->debug.samp_lock);
+ 
+ 	ATH_SAMP_DBG(cc.cycles) = common->cc_ani.cycles;
+ 	ATH_SAMP_DBG(cc.rx_busy) = common->cc_ani.rx_busy;
+ 	ATH_SAMP_DBG(cc.rx_frame) = common->cc_ani.rx_frame;
+ 	ATH_SAMP_DBG(cc.tx_frame) = common->cc_ani.tx_frame;
++	spin_unlock_irqrestore(&common->cc_lock, flags);
++
+ 	ATH_SAMP_DBG(noise) = ah->noise;
+ 
+ 	REG_WRITE_D(ah, AR_MACMISC,
+@@ -1387,6 +1388,8 @@ static int open_file_bb_mac_samps(struct inode *inode, struct file *file)
+ 	spin_lock_bh(&sc->debug.samp_lock);
+ 	memcpy(bb_mac_samp, sc->debug.bb_mac_samp,
+ 			sizeof(*bb_mac_samp) * ATH_DBG_MAX_SAMPLES);
++	len += snprintf(buf + len, size - len,
++			"Current Sample Index: %d\n", sc->debug.sampidx);
+ 	spin_unlock_bh(&sc->debug.samp_lock);
+ 
+ 	len += snprintf(buf + len, size - len,
+-- 
+1.7.6.1
 
