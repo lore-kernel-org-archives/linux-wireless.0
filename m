@@ -1,109 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:47896 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751375Ab1ITUSU convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40744 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754077Ab1IFM0U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 16:18:20 -0400
-Received: by qyk30 with SMTP id 30so4300148qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 13:18:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4E78EA05.6000005@openwrt.org>
-References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com>
- <loom.20110918T004437-426@post.gmane.org> <1316437459.5995.29.camel@jlt3.sipsolutions.net>
- <36569806.Rgjanm0GiI@alex-1> <1316521312.3953.27.camel@jlt3.sipsolutions.net>
- <CAB=NE6VDSTAKK0pmyBOz6hw1pbxo7U6dxbrvg_F-y6CDB0paKw@mail.gmail.com>
- <4E78D990.3090601@openwrt.org> <CAB=NE6VZeCViBZA9++NcgZ2JcDppbp3OuagRVK02ENjdb-MAQA@mail.gmail.com>
- <4E78DF6F.3060304@openwrt.org> <CAB=NE6XqT_ZUV7F+0ZvCs-WgxZnJn3onMiWNtBi=+eCkMZMgPA@mail.gmail.com>
- <4E78EA05.6000005@openwrt.org>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 20 Sep 2011 13:18:00 -0700
-Message-ID: <CAB=NE6WhaNpjpernCGY9skU+e+cUurPxi7r-FKaeH5iybeqGEg@mail.gmail.com> (sfid-20110920_221824_921939_F4F5FF54)
-Subject: Re: [PATCH v3 3/3] mac80211: Add HT operation modes for IBSS
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Javier Cardona <javier@cozybit.com>,
-	Alexander Simon <an.alexsimon@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 6 Sep 2011 08:26:20 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1R0ujK-0006GD-4a
+	for linux-wireless@vger.kernel.org; Tue, 06 Sep 2011 14:26:18 +0200
+Subject: Re: [RFC 2/3] mac80211: unify TIM bit handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <20110906121534.491842279@sipsolutions.net> (sfid-20110906_141651_215347_47149ADC)
+References: <20110906121421.460641040@sipsolutions.net>
+	 <20110906121534.491842279@sipsolutions.net>
+	 (sfid-20110906_141651_215347_47149ADC)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 06 Sep 2011 14:26:18 +0200
+Message-ID: <1315311978.26306.0.camel@jlt3.sipsolutions.net> (sfid-20110906_142623_126207_B2C7E9BE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 20, 2011 at 12:31 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2011-09-20 9:05 PM, Luis R. Rodriguez wrote:
->>
->> On Tue, Sep 20, 2011 at 11:46 AM, Felix Fietkau<nbd@openwrt.org>  wrote:
->>>
->>>  On 2011-09-20 8:38 PM, Luis R. Rodriguez wrote:
->>>>
->>>>  On Tue, Sep 20, 2011 at 11:21 AM, Felix Fietkau<nbd@openwrt.org>
->>>>  wrote:
->>>>>
->>>>>   On 2011-09-20 8:12 PM, Luis R. Rodriguez wrote:
->>>>>>
->>>>>>   On Tue, Sep 20, 2011 at 5:21 AM, Johannes Berg
->>>>>>   <johannes@sipsolutions.net>      wrote:
->>>>>>>
->>>>>>>    On Mon, 2011-09-19 at 17:46 +0200, Alexander Simon wrote:
->>>>>>>    That seems pretty complex too ...
->>>>>>>
->>>>>>>    I don't really know. As I said, I think I'd be happy with an
->>>>>>>    implementation that maybe doesn't fully implement everything as
->>>>>>> long
->>>>>>>  as
->>>>>>>    it considers the trade-offs.
->>>>>>
->>>>>>   The same questions come up with HT support and 802.11s, as per
->>>>>> Javier
->>>>>>   this is not really well spelled out in the spec. My recommendation
->>>>>> is
->>>>>>   to just support for now the most simple case and let us not entangle
->>>>>>   ourselves with the complexities of handling trying to merge
->>>>>> different
->>>>>>   setups. So only enable peering up for adhoc or mesh if and only if
->>>>>> the
->>>>>>   observed IE matches our own supported HT caps or target
->>>>>> configuration.
->>>>>>   If a legacy STA tries to peer up with an HT IBSS, this would simply
->>>>>> be
->>>>>>   rejected. We can leave off handling the change in configuration
->>>>>> later
->>>>>>   for userspace, but do not see this as being a requirement for
->>>>>>   supporting HT for IBSS or Mesh. The simpler the better, so long as
->>>>>> we
->>>>>>   simply respect the spec.
->>>>>
->>>>>   I disagree. That'll make it useless for real deployments, which are
->>>>>  often a
->>>>>   mix of HT and non-HT devices.
->>>>
->>>>  I'm not saying to not do it at all, I'm saying to start off with basic
->>>>  support *first* and *later* worry about the mixing.
->>>
->>>  Simply sticking with the configured HT opmode is also simple, but it's a
->>> lot
->>>  more practical.
->>
->> Just need to deal with the complexity, the complexity question is
->> where do we handle this, verifying it respects the standard, and
->> actually getting the work done. With AP mode of operation hostapd
->> already does all this for us so if we want to support IBSS and Mesh
->> without hostapd we'd need to figure out where to stuff this code. In
->> the long run this would need to be resolved for both IBSS and Mesh. We
->> can wait for all this work to get done or get a simple taste of basic
->> HT support for both modes by sticking to the supported HT mode based
->> on the observed beacons.
->
-> HT capabilities are already handled properly, the main issue is handling the
-> HT opmode. For that, the only important bit is whether we're using HT40+,
-> HT40- or HT20. The code can easily just fall back to HT20 when the HT opmode
-> of the peer is incompatible with the local HT opmode.
 
-How about verifying that HT40 primary, secondary channel pair is
-allowed per as IEEE 802.11n Annex J on each peer? In the AP case we do
-this centrally, but for IBSS and Mesh, does each peer have to go on
-and do the check? If each peer does the check, and change settings,
-how do we go about changing the configuration of the established HT
-configuration? Where will this code go? Currently this goes into
-hostapd for APs.
+> +void sta_info_recalc_tim(struct sta_info *sta)
+>  {
 
-  Luis
+> -	__bss_tim_clear(bss, sta->sta.aid);
+> +	spin_lock_irqsave(&local->sta_lock, flags);
+>  
+> -	if (sta->local->ops->set_tim) {
+> -		sta->local->tim_in_locked_section = true;
+> -		drv_set_tim(sta->local, &sta->sta, false);
+> -		sta->local->tim_in_locked_section = false;
+> +	have_data = test_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF) ||
+> +		    !skb_queue_empty(&sta->tx_filtered) ||
+> +		    !skb_queue_empty(&sta->ps_tx_buf);
+
+I'll move the locking to after the have_data check, it's not needed
+around it.
+
+johannes
+
