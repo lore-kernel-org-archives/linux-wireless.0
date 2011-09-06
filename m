@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:38572 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932621Ab1IHMjf (ORCPT
+Received: from c60.cesmail.net ([216.154.195.49]:53714 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755299Ab1IFXrV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 08:39:35 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 4so268175ewy.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 05:39:34 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 6/7] rt2x00: Forbid aggregation for STAs not programmed into the hw
-Date: Thu, 8 Sep 2011 14:38:36 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201109081434.23635.IvDoorn@gmail.com> <201109081437.20667.IvDoorn@gmail.com> <201109081438.02330.IvDoorn@gmail.com>
-In-Reply-To: <201109081438.02330.IvDoorn@gmail.com>
+	Tue, 6 Sep 2011 19:47:21 -0400
+Message-ID: <20110906194720.acgg4aoao0ccksco-cebfxv@webmail.spamcop.net> (sfid-20110907_014727_189067_ADBD9A36)
+Date: Tue, 06 Sep 2011 19:47:20 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?utf-8?b?UmFmYcWCIA==?= =?utf-8?b?TWnFgmVja2k=?=
+	<zajec5@gmail.com>, linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: Looking for BCM43228
+References: <CACna6rwU4RuYuiAFjXFDH-c+EFsKtKFmB1Sh8kXdb9EoUt4abg@mail.gmail.com>
+	<CACna6rzkSgbf8sV2S1mg2OhxKstXeiqnmNmYFSMuAc563acBpg@mail.gmail.com>
+	<CACna6ryTA+nbz9cJtFEWypb1atY2s+eKseANM-u=-EjW6FWE7Q@mail.gmail.com>
+	<CACna6rzJzzhdBig48TGV=cfBYuvmjxowSw2Ai_GA-W0n_Y3Qkw@mail.gmail.com>
+	<4E6152FF.40101@lwfinger.net>
+	<CACna6ryDDorBuh_JJRzm05W_zWaQs+4xJTpbhHPDcXaK0F-ORw@mail.gmail.com>
+	<20110906102407.05289b0b@mj> <4E66941B.8020102@lwfinger.net>
+In-Reply-To: <4E66941B.8020102@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201109081438.37130.IvDoorn@gmail.com> (sfid-20110908_143941_262382_E649553B)
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Quoting Larry Finger <Larry.Finger@lwfinger.net>:
 
-If a STA is not known by the hw (i.e. has no WCID assigned) don't allow
-aggregation since this might mess up tx status reports and we won't be
-able to distinguish the reports of multiple WCID-less STAs.
+> On 09/06/2011 09:24 AM, Pavel Roskin wrote:
+>> On Sat, 3 Sep 2011 21:39:06 +0200
+>>
+>> By the way, there is some money in the b43 fund at
+>> http://linuxwireless.org/en/users/Drivers/b43/donations
+>>
+>> I hope it can be used to compensate the expenses.
+>
+> It certainly should cover Rafał's expenses. Anyone know who is
+> controlling that account?
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+That would be Stefano Brivio.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 7edd487..2f4d51a 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4489,8 +4489,19 @@ int rt2800_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			struct ieee80211_sta *sta, u16 tid, u16 *ssn,
- 			u8 buf_size)
- {
-+	struct rt2x00_sta *sta_priv = (struct rt2x00_sta *)sta->drv_priv;
- 	int ret = 0;
- 
-+	/*
-+	 * Don't allow aggregation for stations the hardware isn't aware
-+	 * of because tx status reports for frames to an unknown station
-+	 * always contain wcid=255 and thus we can't distinguish between
-+	 * multiple stations which leads to unwanted situations when the
-+	 * hw reorders frames due to aggregation.
-+	 */
-+	if (sta_priv->wcid < 0)
-+		return 1;
-+
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
- 	case IEEE80211_AMPDU_RX_STOP:
 -- 
-1.7.3.4
+Regards,
+Pavel Roskin
