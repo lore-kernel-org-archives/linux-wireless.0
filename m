@@ -1,34 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:34574 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751992Ab1I2LcQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 07:32:16 -0400
-Message-ID: <4E845733.1000203@openwrt.org> (sfid-20110929_133219_852759_EFB58AD8)
-Date: Thu, 29 Sep 2011 13:32:03 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] ath9k: Choose highest rate of MRR based on IEEE80211_TX_CTL_USE_MINRATE
-References: <1317295446-20749-1-git-send-email-rmanohar@qca.qualcomm.com>
-In-Reply-To: <1317295446-20749-1-git-send-email-rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:59437 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754921Ab1IFU2C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Sep 2011 16:28:02 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1R12FU-0004Hf-G5
+	for linux-wireless@vger.kernel.org; Tue, 06 Sep 2011 22:28:00 +0200
+Message-Id: <20110906201703.703254041@sipsolutions.net> (sfid-20110906_222815_612924_D7D94DA4)
+Date: Tue, 06 Sep 2011 22:27:03 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 0/5] mac80211 AP-side uAPSD support
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-09-29 1:24 PM, Rajkumar Manoharan wrote:
-> Select appropriate rate as highest rate of rate series, if the frame
-> was asked to be sent at minimum rate. For example nullfunc frames
-> either can be sent at HT rates on normal case or at non-HT rates if
-> it is used for connection monitoring.
->
-> Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
-> ---
->   drivers/net/wireless/ath/ath9k/rc.c |    4 ++--
->   1 files changed, 2 insertions(+), 2 deletions(-)
->
-Shouldn't the check for IEEE80211_TX_CTL_USE_MINRATE be in 
-rate_control_send_low(), so that it does not have to be repeated in 
-every single rate control module?
+Ok, here's a braindump in the form of patches for today.
 
-- Felix
+Basically, adding uAPSD support has two difficulties:
+ 1) we need to split the TX PS buffering into ACs
+ 2) we need to appropriately open an SP when the peer
+    asks for it
+
+Both are complicated by the fact that drivers might
+buffer packets, e.g. ath9k on its software aggregation
+queues and iwlwifi on its HW queues. This warrants a
+separate patch in this set, but the drivers will have
+to follow and implement the new API properly.
+
+Also included is another fix, and a patch to notify
+mac80211 about the end of the SP (EOSP) "out of band",
+i.e. not with a TX status notification. I don't think
+this will be used by ath9k since it can add the EOSP
+status flag to the right packet when adding the EOSP
+bit in the QoS header, but iwlwifi will probably need
+this -- I'm not quite sure yet.
+
+Please comment!
+
+NB: I wouldn't try to run this if I were you, unless
+you're interested in adding support to a driver. Since
+I don't have driver support for any of it yet I haven't
+yet tested this at all. It compiles and seems to make
+sense ;-)
+
+johannes
+
