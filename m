@@ -1,52 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:33241 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752659Ab1IHJ3K (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:9232 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751223Ab1IFQ3Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 05:29:10 -0400
-Received: by qyk7 with SMTP id 7so209067qyk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 02:29:09 -0700 (PDT)
+	Tue, 6 Sep 2011 12:29:25 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Kai Shi <kaishi@qca.qualcomm.com>
+Subject: [PATCH v2] ath9k_hw: Fix magnitude/phase average in TxIQ Calibration
+Date: Tue, 6 Sep 2011 21:59:51 +0530
+Message-ID: <1315326591-2938-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110906_182929_847005_263CB886)
 MIME-Version: 1.0
-In-Reply-To: <4E688601.2020505@openwrt.org>
-References: <1315472282-21051-1-git-send-email-helmut.schaa@googlemail.com>
-	<4E688601.2020505@openwrt.org>
-Date: Thu, 8 Sep 2011 11:21:00 +0200
-Message-ID: <CAGXE3d8Gdjix9dRnAzDSF=D4VUEr8hM2896Pm53Shoi+PMZh-g@mail.gmail.com> (sfid-20110908_112914_713715_50508213)
-Subject: Re: [PATCH 1/2] mac80211: Don't aggregate rate probe frames in minstrel_ht
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 8, 2011 at 11:08 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2011-09-08 10:58 AM, Helmut Schaa wrote:
->>
->> This is already done by rt2x00 and ath9k by checking the
->> IEEE80211_TX_CTL_RATE_CTRL_PROBE flag. Instead we can simply do it in
->> minstrel_ht.
->>
->> Signed-off-by: Helmut Schaa<helmut.schaa@googlemail.com>
->> ---
->>
->> Felix, I didn't have a closer look at the ath9k aggregation code but I
->> guess it
->> can also be simplified with this change.
->>
->> Any objections?
->
-> Yes, this probably breaks ath9k. IEEE80211_TX_CTL_AMPDU is used to indicate
-> that the packet is part of an aggregation session, so ath9k only does block
-> ack window tracking for packets that have this flag set.
-> I think the drivers should continue to check for
-> IEEE80211_TX_CTL_RATE_CTRL_PROBE
+The commit "ath9k_hw: Fix Tx IQ Calibration hang issue in
+AR9003 chips" did not consider more than one potential sample
+while calculating magnitude/phase average if more than one
+sample has the same value which could affect post-processing
+of outlier detection that causes an undesirable Tx IQ
+correction value will be assigned to tx gain settings where
+outlier happens.
 
-Ok, the flag description is a bit misleading then:
+Cc: Kai Shi <kaishi@qca.qualcomm.com>
+Reported-by: Paul Stewart <pstew@google.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |   17 +++++++++++++----
+ 1 files changed, 13 insertions(+), 4 deletions(-)
 
-@IEEE80211_TX_CTL_AMPDU: this frame should be sent as part of an A-MPDU
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index ee3a8a2..695d9d3 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -615,11 +615,10 @@ static void ar9003_hw_detect_outlier(int *mp_coeff, int nmeasurement,
+ {
+ 	int mp_max = -64, max_idx = 0;
+ 	int mp_min = 63, min_idx = 0;
+-	int mp_avg = 0, i, outlier_idx = 0;
++	int mp_avg = 0, i, outlier_idx = 0, mp_count = 0;
+ 
+ 	/* find min/max mismatch across all calibrated gains */
+ 	for (i = 0; i < nmeasurement; i++) {
+-		mp_avg += mp_coeff[i];
+ 		if (mp_coeff[i] > mp_max) {
+ 			mp_max = mp_coeff[i];
+ 			max_idx = i;
+@@ -632,10 +631,20 @@ static void ar9003_hw_detect_outlier(int *mp_coeff, int nmeasurement,
+ 	/* find average (exclude max abs value) */
+ 	for (i = 0; i < nmeasurement; i++) {
+ 		if ((abs(mp_coeff[i]) < abs(mp_max)) ||
+-		    (abs(mp_coeff[i]) < abs(mp_min)))
++		    (abs(mp_coeff[i]) < abs(mp_min))) {
+ 			mp_avg += mp_coeff[i];
++			mp_count++;
++		}
+ 	}
+-	mp_avg /= (nmeasurement - 1);
++
++	/*
++	 * finding mean magnitude/phase if possible, otherwise
++	 * just use the last value as the mean
++	 */
++	if (mp_count)
++		mp_avg /= mp_count;
++	else
++		mp_avg = mp_coeff[nmeasurement - 1];
+ 
+ 	/* detect outlier */
+ 	if (abs(mp_max - mp_min) > max_delta) {
+-- 
+1.7.6.1
 
-John, please drop this series.
-
-Helmut
