@@ -1,108 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38702 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934429Ab1IOTcE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 15:32:04 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:44476 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746Ab1IFEKB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Sep 2011 00:10:01 -0400
+Received: by fxh19 with SMTP id 19so4253625fxh.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Sep 2011 21:10:00 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Subject: Re: [RESEND][PATCH] minstrel_ht: fix Open BA session request floods
+Date: Tue, 6 Sep 2011 06:09:46 +0200
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 03/27] iwlagn: free the Tx cmd when a non empty Tx queue is freed
-Date: Thu, 15 Sep 2011 11:46:30 -0700
-Message-Id: <1316112414-6341-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110915_213320_984375_07D0C85D)
-In-Reply-To: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
+	John Linville <linville@tuxdriver.com>, nbd@openwrt.org
+References: <201109030906.21009.chunkeey@googlemail.com> <CAD2nsn16Otuzp9KbivA03Q5ySMBHLp36J+-HfU=wRcqkSD6QRg@mail.gmail.com>
+In-Reply-To: <CAD2nsn16Otuzp9KbivA03Q5ySMBHLp36J+-HfU=wRcqkSD6QRg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201109060609.46663.chunkeey@googlemail.com> (sfid-20110906_061009_310143_A7D11149)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Monday, September 05, 2011 05:20:09 PM Mohammed Shafi wrote:
+> On Sat, Sep 3, 2011 at 12:36 PM, Christian Lamparter
+> <chunkeey@googlemail.com> wrote:
+> > Minstrel HT tries very hard to establish a BA session with
+> > each peer once there's some data on the way. However the
+> > stack does not inform minstrel if an aggregation session
+> > is already in place, so it keeps trying and wastes good
+> > cycles in the tx status path.
+> >
+> > [ 8149.946393] Open BA session requested for $AP tid 0
+> > [ 8150.048765] Open BA session requested for $AP tid 0
+> > [ 8150.174509] Open BA session requested for $AP tid 0
+> > [ 8150.274376] Open BA session requested for $AP tid 0
+> > ...
+> 
+> 
+> Hi Christian,
+> 
+> I got this messages in ath9k after few cycles of suspend and resume.
+There's nothing wrong with the message... as long as its reasonable
+and does not spam the logs as in my case [had about 100k entries].
 
-When a non-empty Tx queueis freed, the buffer it contains must be
-freed too. Since the Tx cmd are now allocated from a pool, the Tx
-cmd must be freed too.
+> doing the same fix in ath9k rate control tx_status callback the
+> messages did not re-appear. I will soon send a proper patch for ath9k
+> too.
+Well, ath9k's rc works different than minstrel_ht. In fact that check
+is not needed as ath9k's rc can check the tid state directly in
+ath_tx_aggr_check [which I think it already does... unless something
+is wrong with the txtid->state check?!].
 
-This patch avoids to destroy a non-empty pool of Tx cmd.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c           |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-core.c          |    9 +++++++++
- drivers/net/wireless/iwlwifi/iwl-shared.h        |    1 +
- drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c |    7 +++++--
- 4 files changed, 17 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 7f6c58e..1142d85 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1522,6 +1522,8 @@ static void __iwl_down(struct iwl_priv *priv)
- 	if (priv->shrd->mac80211_registered)
- 		ieee80211_stop_queues(priv->hw);
- 
-+	iwl_trans_stop_device(trans(priv));
-+
- 	/* Clear out all status bits but a few that are stable across reset */
- 	priv->shrd->status &=
- 			test_bit(STATUS_RF_KILL_HW, &priv->shrd->status) <<
-@@ -1533,8 +1535,6 @@ static void __iwl_down(struct iwl_priv *priv)
- 			test_bit(STATUS_EXIT_PENDING, &priv->shrd->status) <<
- 				STATUS_EXIT_PENDING;
- 
--	iwl_trans_stop_device(trans(priv));
--
- 	dev_kfree_skb(priv->beacon_skb);
- 	priv->beacon_skb = NULL;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 9270f99..5e490db 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1876,3 +1876,12 @@ void iwl_nic_config(struct iwl_priv *priv)
- 	priv->cfg->lib->nic_config(priv);
- 
- }
-+
-+void iwl_free_skb(struct iwl_priv *priv, struct sk_buff *skb)
-+{
-+	struct ieee80211_tx_info *info;
-+
-+	info = IEEE80211_SKB_CB(skb);
-+	kmem_cache_free(priv->tx_cmd_pool, (info->driver_data[1]));
-+	dev_kfree_skb_any(skb);
-+}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index d987bee..bdfbc60 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -390,6 +390,7 @@ void iwl_stop_tx_ba_trans_ready(struct iwl_priv *priv,
- 				u8 sta_id, u8 tid);
- void iwl_set_hw_rfkill_state(struct iwl_priv *priv, bool state);
- void iwl_nic_config(struct iwl_priv *priv);
-+void iwl_free_skb(struct iwl_priv *priv, struct sk_buff *skb);
- void iwl_apm_stop(struct iwl_priv *priv);
- int iwl_apm_init(struct iwl_priv *priv);
- void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-index c7ddb22..15cb0ff 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-@@ -225,9 +225,12 @@ void iwlagn_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
- 
- 		skb = txq->skbs[index];
- 
--		/* can be called from irqs-disabled context */
-+		/* Can be called from irqs-disabled context
-+		 * If skb is not NULL, it means that the whole queue is being
-+		 * freed and that the queue is not empty - free the skb
-+		 */
- 		if (skb) {
--			dev_kfree_skb_any(skb);
-+			iwl_free_skb(priv(trans), skb);
- 			txq->skbs[index] = NULL;
- 		}
- 	}
--- 
-1.7.0.4
-
+Regards,
+	Chr
