@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:35632 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753783Ab1I3DPo (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:63993 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752936Ab1IFHWH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 23:15:44 -0400
-Received: by yib18 with SMTP id 18so1145046yib.19
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Sep 2011 20:15:43 -0700 (PDT)
-Message-ID: <4E85345D.9080202@lwfinger.net> (sfid-20110930_051548_305434_9258F331)
-Date: Thu, 29 Sep 2011 22:15:41 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 6 Sep 2011 03:22:07 -0400
+Received: by gxk21 with SMTP id 21so3758648gxk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Sep 2011 00:22:06 -0700 (PDT)
 MIME-Version: 1.0
-To: "Cao, Chongxiao" <ccao1@utk.edu>
-CC: "wlanfae@realtek.com" <wlanfae@realtek.com>,
-	"chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: The Problem of RTL8188ce in Ubuntu 11.04
-References: <38894CC285ECBF438599CFCE9811CAB109CFA1FB@CH1PRD0202MB136.namprd02.prod.outlook.com>
-In-Reply-To: <38894CC285ECBF438599CFCE9811CAB109CFA1FB@CH1PRD0202MB136.namprd02.prod.outlook.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4E65C0EB.105@qca.qualcomm.com>
+References: <1315215774-13931-1-git-send-email-nataraja@qca.qualcomm.com>
+	<4E65C0EB.105@qca.qualcomm.com>
+Date: Tue, 6 Sep 2011 12:52:05 +0530
+Message-ID: <CAJqpcCTQa2m413JgrS8qqcNNguEUPz3oRP0V5cTBKEfWn1Q5OA@mail.gmail.com> (sfid-20110906_092210_553839_2815F28F)
+Subject: Re: [PATCH] ath6kl: Process regulatory requests from firmware.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/29/2011 09:19 PM, Cao, Chongxiao wrote:
-> Dear Sir,
+On Tue, Sep 6, 2011 at 12:12 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> On 09/05/2011 12:42 PM, Vivek Natarajan wrote:
+>> Process the regulatory code from eeprom and pass the
+>> country information to cfg80211.
+...
+>> +     else if (!(((u16) reg_code & WORLD_SKU_MASK) == WORLD_SKU_PREFIX)) {
+>> +
+>> +             regpair = ath6kl_get_regpair((u16) reg_code);
+>> +             country = ath6kl_regd_find_country_by_rd((u16) reg_code);
+>> +             printk(KERN_DEBUG "ath6kl: Regpair used: 0x%0x\n",
+>> +                             regpair->regDmnEnum);
 >
-> I'm a graduate student in University of Tennessee. I just bought the Thinkpad
-> T420 laptop that uses the RTL8188CE chipset.
+> ath6kl_dbg() is more approriate here.
 >
-> I installed the Ubuntu 11.04. However, my wireless networking is very unstable
-> in Ubuntu 11.04. The speed of wireless networking is very slow and it always get
-> disconnected in every 2 minutes.
+>> +             regulatory_hint(wmi->parent_dev->wdev->wiphy, alpha2);
+>> +
+>> +             printk(KERN_DEBUG "ath6kl: Country alpha2 being used: %c%c\n",
+>> +                             alpha2[0], alpha2[1]);
 >
-> I always do my research projects in Ubuntu so the wireless networking in Ubuntu
-> is very important to me.
->
-> I have searched on Google to solve this problem and found that lots of people
-> have the same problem. I have tried installed the newest driver of RTL8188ce
-> from the website of Realtek, but it doesn't work.
->
-> Would you please help me deal with this problem? I would appreciate your help.
+> Please use ath6kl_dbg() or, if we really need to log this, you can use
+> ath6kl_info(). But is there a reason to log this everytime?
 
-First of all, not everyone has trouble with rtl8192ce. Neither I nor the Realtek 
-group can reproduce the troubles that you describe. Because of that we are not 
-able to figure out what people are seeing.
+I had kept this print similar to ath9k. Anyhow, cfg80211 also prints
+the country code from the driver. So, I will change this to
+ath6kl_dbg.
 
-The driver in the standard kernel used in Ubuntu 11.04 has been revised. If 
-possible, you should obtain the compat-wireless package built for Ubuntu. If it 
-does not exist, then get the compat-wireless source and build the package. That 
-will get you the latest set of fixes.
-
-One thing you might try is loading the module with the parameter "ips=0".
-
-Larry
+Thanks
+Vivek.
