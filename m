@@ -1,70 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:50001 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753205Ab1IZMXM (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:64964 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754108Ab1IFTK4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 08:23:12 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	<stable@kernel.org>
-Subject: [RFC v3] mac80211: Send nullfunc frames at lower rate
-Date: Mon, 26 Sep 2011 17:53:24 +0530
-Message-ID: <1317039804-8521-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110926_142316_017545_25DFCEEC)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 6 Sep 2011 15:10:56 -0400
+Received: by yxj19 with SMTP id 19so3227207yxj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Sep 2011 12:10:55 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Subject: [PATCH v3] mac80211: Defer tranmission of mesh path errors
+Date: Tue,  6 Sep 2011 12:10:43 -0700
+Message-Id: <1315336244-23351-1-git-send-email-javier@cozybit.com> (sfid-20110906_211100_331045_73E75338)
+In-Reply-To: <1314961190.3927.6.camel@jlt3.sipsolutions.net>
+References: <1314961190.3927.6.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Recently mac80211 was changed to use nullfunc instead of probe
-request for connection monitoring for tx ack status reporting
-hardwares. These nullfunc data frames are being sent at higer
-rates and also as aggregated ones. This could probably delays
-the nullfunc ack so the connection is more frequently getting
-disconnected as max retries are reached. In order to improve
-the connectivity send the nullfunc at lower rate.
+Under failure conditions, the mesh stack sends PERR messages to the
+previous sender of the failed frame.  This happens in the tx feedback
+path, in which the transmission queue lock may be taken.  Avoid a
+deadlock by sending the path error via the pending queue.
 
-Cc: stable@kernel.org
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
-v2: update commit log
-v3: rename rc_no_data_or_no_ack & Ccd stable
- net/mac80211/rate.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+v3: - Comment on headroom size (Johannes)
+v2: - Prepare skb for deferred transmission (Johannes)
+    - Reword comment (Johannes)
 
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index f61244c..240a24d 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -199,7 +199,7 @@ static void rate_control_release(struct kref *kref)
- 	kfree(ctrl_ref);
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+
+ net/mac80211/mesh_hwmp.c |   32 ++++++++++++++++++++++++++++++--
+ 1 files changed, 30 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index fd4f76a..63df0bc 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -8,6 +8,7 @@
+  */
+ 
+ #include <linux/slab.h>
++#include "wme.h"
+ #include "mesh.h"
+ 
+ #ifdef CONFIG_MAC80211_VERBOSE_MHWMP_DEBUG
+@@ -202,6 +203,27 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+ 	return 0;
  }
  
--static bool rc_no_data_or_no_ack(struct ieee80211_tx_rate_control *txrc)
-+static bool rc_no_non_nulldata_or_no_ack(struct ieee80211_tx_rate_control *txrc)
- {
- 	struct sk_buff *skb = txrc->skb;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-@@ -208,7 +208,8 @@ static bool rc_no_data_or_no_ack(struct ieee80211_tx_rate_control *txrc)
++
++/*  Headroom is not adjusted.  Caller should ensure that skb has sufficient
++ *  headroom in case the frame is encrypted. */
++static void prepare_frame_for_deferred_tx(struct ieee80211_sub_if_data *sdata,
++		struct sk_buff *skb)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++
++	skb_set_mac_header(skb, 0);
++	skb_set_network_header(skb, 0);
++	skb_set_transport_header(skb, 0);
++
++	/* Send all internal mgmt frames on VO. Accordingly set TID to 7. */
++	skb_set_queue_mapping(skb, IEEE80211_AC_VO);
++	skb->priority = 7;
++
++	info->control.vif = &sdata->vif;
++	ieee80211_set_qos_hdr(local, skb);
++}
++
+ /**
+  * mesh_send_path error - Sends a PERR mesh management frame
+  *
+@@ -209,6 +231,10 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+  * @target_sn: SN of the broken destination
+  * @target_rcode: reason code for this PERR
+  * @ra: node this frame is addressed to
++ *
++ * Note: This function may be called with driver locks taken that the driver
++ * also acquires in the TX path.  To avoid a deadlock we don't transmit the
++ * frame directly but add it to the pending queue instead.
+  */
+ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
+ 		       __le16 target_rcode, const u8 *ra,
+@@ -222,7 +248,7 @@ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
  
- 	fc = hdr->frame_control;
+ 	if (!skb)
+ 		return -1;
+-	skb_reserve(skb, local->hw.extra_tx_headroom);
++	skb_reserve(skb, local->tx_headroom + local->hw.extra_tx_headroom);
+ 	/* 25 is the size of the common mgmt part (24) plus the size of the
+ 	 * common action part (1)
+ 	 */
+@@ -263,7 +289,9 @@ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
+ 	pos += 4;
+ 	memcpy(pos, &target_rcode, 2);
  
--	return (info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc);
-+	return (info->flags & IEEE80211_TX_CTL_NO_ACK) ||
-+		!ieee80211_is_data(fc) || ieee80211_is_nullfunc(fc);
+-	ieee80211_tx_skb(sdata, skb);
++	/* see note in function header */
++	prepare_frame_for_deferred_tx(sdata, skb);
++	ieee80211_add_pending_skb(local, skb);
+ 	return 0;
  }
  
- static void rc_send_low_broadcast(s8 *idx, u32 basic_rates,
-@@ -262,7 +263,7 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
- 	struct ieee80211_supported_band *sband = txrc->sband;
- 	int mcast_rate;
- 
--	if (!sta || !priv_sta || rc_no_data_or_no_ack(txrc)) {
-+	if (!sta || !priv_sta || rc_no_non_nulldata_or_no_ack(txrc)) {
- 		if ((sband->band != IEEE80211_BAND_2GHZ) ||
- 		    !(info->flags & IEEE80211_TX_CTL_NO_CCK_RATE))
- 			info->control.rates[0].idx =
 -- 
-1.7.6.4
+1.7.6
 
