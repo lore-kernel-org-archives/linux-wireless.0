@@ -1,70 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:33849 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757352Ab1IATcV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35460 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751617Ab1IGQi1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 15:32:21 -0400
-Received: by iabu26 with SMTP id u26so2166057iab.19
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Sep 2011 12:32:21 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH] mac80211: check if mesh frame is in RMC after decrypt
-Date: Thu,  1 Sep 2011 12:32:14 -0700
-Message-Id: <1314905534-24190-1-git-send-email-thomas@cozybit.com> (sfid-20110901_213225_003279_8B775710)
+	Wed, 7 Sep 2011 12:38:27 -0400
+Subject: Re: [PATCH IGNORE AT YOUR PERIL] cfg80211: force interface
+ combinations to be advertised
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <201109071832.48120.chunkeey@googlemail.com> (sfid-20110907_183334_604355_8A4A5491)
+References: <1315412512.4002.10.camel@jlt3.sipsolutions.net>
+	 <201109071832.48120.chunkeey@googlemail.com>
+	 (sfid-20110907_183334_604355_8A4A5491)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 07 Sep 2011 18:38:25 +0200
+Message-ID: <1315413505.4002.11.camel@jlt3.sipsolutions.net> (sfid-20110907_183837_051285_24F639D7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To check whether a frame is in the RMC, we need access to the mesh
-header.  This header is encrypted in encrypted data frames, so make this
-check after the frame has been decrypted.
+On Wed, 2011-09-07 at 18:32 +0200, Christian Lamparter wrote:
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/rx.c |   15 ++++++---------
- 1 files changed, 6 insertions(+), 9 deletions(-)
+> no drivers? I thought I added the necessary bits
+> in carl9170 shortly after the interface combinations
+> patches were accepted?
+> 
+> commit df64962f7d74877624442c059e7878fdf7ec3c22
+> Author: Christian Lamparter <chunkeey@googlemail.com>
+> Date:   Sat May 14 02:42:38 2011 +0200
+> 
+>     carl9170: advertise interface combinations
+> 
+> Did I miss something there?
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 1fe26fa..9410b9f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -476,7 +476,6 @@ static ieee80211_rx_result
- ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
--	unsigned int hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	char *dev_addr = rx->sdata->vif.addr;
- 
- 	if (ieee80211_is_data(hdr->frame_control)) {
-@@ -524,14 +523,6 @@ ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
- 
- 	}
- 
--#define msh_h_get(h, l) ((struct ieee80211s_hdr *) ((u8 *)h + l))
--
--	if (ieee80211_is_data(hdr->frame_control) &&
--	    is_multicast_ether_addr(hdr->addr1) &&
--	    mesh_rmc_check(hdr->addr3, msh_h_get(hdr, hdrlen), rx->sdata))
--		return RX_DROP_MONITOR;
--#undef msh_h_get
--
- 	return RX_CONTINUE;
- }
- 
-@@ -1827,6 +1818,12 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
- 
-+	/* frame is in RMC, don't forward */
-+	if (ieee80211_is_data(hdr->frame_control) &&
-+	    is_multicast_ether_addr(hdr->addr1) &&
-+	    mesh_rmc_check(hdr->addr3, mesh_hdr, rx->sdata))
-+		return RX_DROP_MONITOR;
-+
- 	if (!ieee80211_is_data(hdr->frame_control))
- 		return RX_CONTINUE;
- 
--- 
-1.7.4.1
+No, sorry, I just forgot, my mistake!
+
+However, you were the only one, thanks for that!
+
+johannes
 
