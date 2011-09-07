@@ -1,124 +1,262 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:55390 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753685Ab1IRIWC (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42433 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041Ab1IGUKM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Sep 2011 04:22:02 -0400
-Received: by gxk6 with SMTP id 6so2978588gxk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2011 01:22:01 -0700 (PDT)
-From: ilanelias78@gmail.com
-To: aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
-	samuel@sortiz.org, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 0/4 RESEND] NFC: NCI protocol implementation
-Date: Sun, 18 Sep 2011 11:19:32 +0300
-Message-Id: <1316333976-30388-1-git-send-email-ilane@ti.com> (sfid-20110918_102217_372854_56739A61)
+	Wed, 7 Sep 2011 16:10:12 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1R1ORn-0007ud-0B
+	for linux-wireless@vger.kernel.org; Wed, 07 Sep 2011 22:10:11 +0200
+Message-Id: <20110907200921.487835760@sipsolutions.net> (sfid-20110907_221016_985462_5511F43E)
+Date: Wed, 07 Sep 2011 22:07:46 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 02/11] mac80211: unify TIM bit handling
+References: <20110907200744.076513799@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series of patches is a RESEND via a different mailer.
+From: Johannes Berg <johannes.berg@intel.com>
 
-This series of patches implements the first part of the NFC Controller 
-Interface protocol.
+Currently, the TIM bit for a given station is set
+and cleared all over the place. Since the logic to
+set/clear it will become much more complex when we
+add uAPSD support, as a first step let's collect
+the entire logic in one place. This requires a few
+small adjustments to other places.
 
-The NCI is a standard communication protocol between an NFC Controller (NFCC) 
-and a Device Host (DH), defined by the NFC Forum.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/sta_info.c |   92 +++++++++++++++++-------------------------------
+ net/mac80211/sta_info.h |    3 -
+ net/mac80211/status.c   |    1 
+ net/mac80211/tx.c       |   15 +++----
+ 4 files changed, 41 insertions(+), 70 deletions(-)
 
-The NCI protocol implementation is chip independent and responsible for:
-	- Reset, initialization and configuration of the NFC controller
-	- Sending commands/data to the NFC controller
-	- Receiving responses/notifications/data from the NFC controller
-	- Flow control for Control and Data Messages
-	- Segmentation and reassembly for Control and Data Messages
-	- An addressing scheme for NFC Execution Environments (NFCEE),
-		e.g. secure element
-	- An addressing scheme for Remote NFC Endpoints (NFCEE or RF targets) 
-		(via logical connections)
+--- a/net/mac80211/sta_info.h	2011-09-07 14:31:59.000000000 +0200
++++ b/net/mac80211/sta_info.h	2011-09-07 14:32:37.000000000 +0200
+@@ -518,8 +518,7 @@ int sta_info_destroy_addr(struct ieee802
+ int sta_info_destroy_addr_bss(struct ieee80211_sub_if_data *sdata,
+ 			      const u8 *addr);
+ 
+-void sta_info_set_tim_bit(struct sta_info *sta);
+-void sta_info_clear_tim_bit(struct sta_info *sta);
++void sta_info_recalc_tim(struct sta_info *sta);
+ 
+ void sta_info_init(struct ieee80211_local *local);
+ void sta_info_stop(struct ieee80211_local *local);
+--- a/net/mac80211/tx.c	2011-09-07 14:31:59.000000000 +0200
++++ b/net/mac80211/tx.c	2011-09-07 14:32:37.000000000 +0200
+@@ -469,15 +469,6 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
+ 		} else
+ 			tx->local->total_ps_buffered++;
+ 
+-		/*
+-		 * Queue frame to be sent after STA wakes up/polls,
+-		 * but don't set the TIM bit if the driver is blocking
+-		 * wakeup or poll response transmissions anyway.
+-		 */
+-		if (skb_queue_empty(&sta->ps_tx_buf) &&
+-		    !(staflags & WLAN_STA_PS_DRIVER))
+-			sta_info_set_tim_bit(sta);
+-
+ 		info->control.jiffies = jiffies;
+ 		info->control.vif = &tx->sdata->vif;
+ 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+@@ -488,6 +479,12 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
+ 				  round_jiffies(jiffies +
+ 						STA_INFO_CLEANUP_INTERVAL));
+ 
++		/*
++		 * We queued up some frames, so the TIM bit might
++		 * need to be set, recalculate it.
++		 */
++		sta_info_recalc_tim(sta);
++
+ 		return TX_QUEUED;
+ 	}
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+--- a/net/mac80211/sta_info.c	2011-09-07 14:32:36.000000000 +0200
++++ b/net/mac80211/sta_info.c	2011-09-07 14:32:37.000000000 +0200
+@@ -641,54 +641,35 @@ static inline void __bss_tim_clear(struc
+ 	bss->tim[aid / 8] &= ~(1 << (aid % 8));
+ }
+ 
+-static void __sta_info_set_tim_bit(struct ieee80211_if_ap *bss,
+-				   struct sta_info *sta)
+-{
+-	BUG_ON(!bss);
+-
+-	__bss_tim_set(bss, sta->sta.aid);
+-
+-	if (sta->local->ops->set_tim) {
+-		sta->local->tim_in_locked_section = true;
+-		drv_set_tim(sta->local, &sta->sta, true);
+-		sta->local->tim_in_locked_section = false;
+-	}
+-}
+-
+-void sta_info_set_tim_bit(struct sta_info *sta)
++void sta_info_recalc_tim(struct sta_info *sta)
+ {
++	struct ieee80211_local *local = sta->local;
++	struct ieee80211_if_ap *bss = sta->sdata->bss;
+ 	unsigned long flags;
++	bool have_data;
+ 
+-	BUG_ON(!sta->sdata->bss);
+-
+-	spin_lock_irqsave(&sta->local->sta_lock, flags);
+-	__sta_info_set_tim_bit(sta->sdata->bss, sta);
+-	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
+-}
++	/* No need to do anything if the driver does all */
++	if (local->hw.flags & IEEE80211_HW_AP_LINK_PS)
++		return;
+ 
+-static void __sta_info_clear_tim_bit(struct ieee80211_if_ap *bss,
+-				     struct sta_info *sta)
+-{
+-	BUG_ON(!bss);
++	have_data = test_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF) ||
++		    !skb_queue_empty(&sta->tx_filtered) ||
++		    !skb_queue_empty(&sta->ps_tx_buf);
+ 
+-	__bss_tim_clear(bss, sta->sta.aid);
++	spin_lock_irqsave(&local->sta_lock, flags);
+ 
+-	if (sta->local->ops->set_tim) {
+-		sta->local->tim_in_locked_section = true;
+-		drv_set_tim(sta->local, &sta->sta, false);
+-		sta->local->tim_in_locked_section = false;
++	if (have_data)
++		__bss_tim_set(bss, sta->sta.aid);
++	else
++		__bss_tim_clear(bss, sta->sta.aid);
++
++	if (local->ops->set_tim) {
++		local->tim_in_locked_section = true;
++		drv_set_tim(local, &sta->sta, have_data);
++		local->tim_in_locked_section = false;
+ 	}
+-}
+-
+-void sta_info_clear_tim_bit(struct sta_info *sta)
+-{
+-	unsigned long flags;
+ 
+-	BUG_ON(!sta->sdata->bss);
+-
+-	spin_lock_irqsave(&sta->local->sta_lock, flags);
+-	__sta_info_clear_tim_bit(sta->sdata->bss, sta);
+-	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
++	spin_unlock_irqrestore(&local->sta_lock, flags);
+ }
+ 
+ static bool sta_info_buffer_expired(struct sta_info *sta, struct sk_buff *skb)
+@@ -736,9 +717,9 @@ static bool sta_info_cleanup_expire_buff
+ #endif
+ 		dev_kfree_skb(skb);
+ 
+-		if (skb_queue_empty(&sta->ps_tx_buf) &&
+-		    !test_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF))
+-			sta_info_clear_tim_bit(sta);
++		/* if the queue is now empty recalc TIM bit */
++		if (skb_queue_empty(&sta->ps_tx_buf))
++			sta_info_recalc_tim(sta);
+ 	}
+ 
+ 	return !skb_queue_empty(&sta->ps_tx_buf);
+@@ -748,7 +729,6 @@ static int __must_check __sta_info_destr
+ {
+ 	struct ieee80211_local *local;
+ 	struct ieee80211_sub_if_data *sdata;
+-	struct sk_buff *skb;
+ 	unsigned long flags;
+ 	int ret, i;
+ 
+@@ -787,12 +767,16 @@ static int __must_check __sta_info_destr
+ 
+ 	sta->dead = true;
+ 
++	local->total_ps_buffered -= skb_queue_len(&sta->ps_tx_buf);
++	__skb_queue_purge(&sta->ps_tx_buf);
++	__skb_queue_purge(&sta->tx_filtered);
++
+ 	if (test_and_clear_sta_flags(sta,
+ 				WLAN_STA_PS_STA | WLAN_STA_PS_DRIVER)) {
+ 		BUG_ON(!sdata->bss);
+ 
+ 		atomic_dec(&sdata->bss->num_sta_ps);
+-		sta_info_clear_tim_bit(sta);
++		sta_info_recalc_tim(sta);
+ 	}
+ 
+ 	local->num_sta--;
+@@ -840,14 +824,6 @@ static int __must_check __sta_info_destr
+ 	}
+ #endif
+ 
+-	while ((skb = skb_dequeue(&sta->ps_tx_buf)) != NULL) {
+-		local->total_ps_buffered--;
+-		dev_kfree_skb_any(skb);
+-	}
+-
+-	while ((skb = skb_dequeue(&sta->tx_filtered)) != NULL)
+-		dev_kfree_skb_any(skb);
+-
+ 	__sta_info_free(local, sta);
+ 
+ 	return 0;
+@@ -1027,9 +1003,6 @@ void ieee80211_sta_ps_deliver_wakeup(str
+ 	if (!(local->hw.flags & IEEE80211_HW_AP_LINK_PS))
+ 		drv_sta_notify(local, sdata, STA_NOTIFY_AWAKE, &sta->sta);
+ 
+-	if (!skb_queue_empty(&sta->ps_tx_buf))
+-		sta_info_clear_tim_bit(sta);
+-
+ 	/* Send all buffered frames to the station */
+ 	sent = ieee80211_add_pending_skbs(local, &sta->tx_filtered);
+ 	buffered = ieee80211_add_pending_skbs_fn(local, &sta->ps_tx_buf,
+@@ -1037,6 +1010,8 @@ void ieee80211_sta_ps_deliver_wakeup(str
+ 	sent += buffered;
+ 	local->total_ps_buffered -= buffered;
+ 
++	sta_info_recalc_tim(sta);
++
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+ 	printk(KERN_DEBUG "%s: STA %pM aid %d sending %d filtered/%d PS frames "
+ 	       "since STA not sleeping anymore\n", sdata->name,
+@@ -1086,8 +1061,7 @@ void ieee80211_sta_ps_deliver_poll_respo
+ 
+ 		ieee80211_add_pending_skb(local, skb);
+ 
+-		if (no_pending_pkts)
+-			sta_info_clear_tim_bit(sta);
++		sta_info_recalc_tim(sta);
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+ 	} else {
+ 		/*
+@@ -1126,6 +1100,6 @@ void ieee80211_sta_set_buffered(struct i
+ 		return;
+ 
+ 	set_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF);
+-	sta_info_set_tim_bit(sta);
++	sta_info_recalc_tim(sta);
+ }
+ EXPORT_SYMBOL(ieee80211_sta_set_buffered);
+--- a/net/mac80211/status.c	2011-09-07 14:31:59.000000000 +0200
++++ b/net/mac80211/status.c	2011-09-07 14:32:37.000000000 +0200
+@@ -106,6 +106,7 @@ static void ieee80211_handle_filtered_fr
+ 	if (test_sta_flags(sta, WLAN_STA_PS_STA) &&
+ 	    skb_queue_len(&sta->tx_filtered) < STA_MAX_TX_BUFFER) {
+ 		skb_queue_tail(&sta->tx_filtered, skb);
++		sta_info_recalc_tim(sta);
+ 		return;
+ 	}
+ 
 
-The NCI protocol is added to the NFC subsystem below the NFC core:
-
-+--------------------------------------+
-|              USER SPACE              |
-+--------------------------------------+
-     ^                        ^
-     | low-level              | control
-     | data exchange          | operations
-     |                        |
-     |                        v
-     |                  +-----------+
-     | AF_NFC           |  netlink  |
-     | socket           +-----------+
-     | raw                    ^
-     |                        |
-     v                        v
-+---------+             +-----------+
-| rawsock | <---------> | NFC core  |
-+---------+             +-----------+
-                              ^
-                              |
-                              v
-                        +-----------+
-                        | NCI core  |
-                        +-----------+
-                              ^
-                              |
-                              v
-                        +-----------+
-                        |  driver   |
-                        +-----------+
-
-The driver will register itself to the NCI core, and in turn the NCI core will 
-register itself to the NFC core.
-
-Two new control operations were added (via generic netlink):
-	- Dev_up, which turn on the NFC controller (this operation may take a 
-		few seconds, as it can download new FW to the NFC controller)
-	- Dev_down, which turn off the NFC controller
-
-The nfc.h file was moved from include/net to include/net/nfc,
-since 2 new header files were added to the new include/net/nfc folder.
-
-To test the implementation, we developed the NFC TI Shared Transport driver 
-and tested it with the user application example (provided by Lauro/Aloisio).
-The driver implementation is included in this patch series.
-
-Ilan Elias (4):
-  NFC: Add dev_up and dev_down control operations
-  NFC: move nfc.h from include/net to include/net/nfc
-  NFC: basic NCI protocol implementation
-  NFC: driver for TI shared transport
-
- MAINTAINERS                 |    2 +-
- drivers/nfc/Kconfig         |   11 +
- drivers/nfc/Makefile        |    1 +
- drivers/nfc/nfcwilink.c     |  342 +++++++++++++++++++
- drivers/nfc/pn533.c         |    4 +-
- include/linux/nfc.h         |    6 +
- include/net/nfc/nci.h       |  313 +++++++++++++++++
- include/net/nfc/nci_core.h  |  183 ++++++++++
- include/net/{ => nfc}/nfc.h |    4 +
- net/nfc/Kconfig             |    2 +
- net/nfc/Makefile            |    1 +
- net/nfc/core.c              |   77 +++++
- net/nfc/nci/Kconfig         |   10 +
- net/nfc/nci/Makefile        |    7 +
- net/nfc/nci/core.c          |  790 +++++++++++++++++++++++++++++++++++++++++++
- net/nfc/nci/data.c          |  245 +++++++++++++
- net/nfc/nci/lib.c           |   94 +++++
- net/nfc/nci/ntf.c           |  258 ++++++++++++++
- net/nfc/nci/rsp.c           |  226 ++++++++++++
- net/nfc/netlink.c           |   56 +++
- net/nfc/nfc.h               |    6 +-
- 21 files changed, 2635 insertions(+), 3 deletions(-)
- create mode 100644 drivers/nfc/nfcwilink.c
- create mode 100644 include/net/nfc/nci.h
- create mode 100644 include/net/nfc/nci_core.h
- rename include/net/{ => nfc}/nfc.h (97%)
- create mode 100644 net/nfc/nci/Kconfig
- create mode 100644 net/nfc/nci/Makefile
- create mode 100644 net/nfc/nci/core.c
- create mode 100644 net/nfc/nci/data.c
- create mode 100644 net/nfc/nci/lib.c
- create mode 100644 net/nfc/nci/ntf.c
- create mode 100644 net/nfc/nci/rsp.c
 
