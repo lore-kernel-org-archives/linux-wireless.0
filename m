@@ -1,81 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:35721 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932406Ab1INNJP convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42434 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751419Ab1IGUKN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 09:09:15 -0400
-Received: by yie30 with SMTP id 30so1366566yie.19
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 06:09:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201109141150.30247.chunkeey@googlemail.com>
-References: <CAEh_CyWdC+-mV+YhmoxS6dubWVN10utDim+GWmDLYCX9K9AkkQ@mail.gmail.com>
-	<201109141150.30247.chunkeey@googlemail.com>
-Date: Wed, 14 Sep 2011 09:09:14 -0400
-Message-ID: <CAEh_CyWovAnrF1N0h-iJn72yFUX5e_E4TbEhDuDgbqfoxYCs-Q@mail.gmail.com> (sfid-20110914_150919_190940_413AF656)
-Subject: Re: Carl9170 Firmware
-From: J Igrap <jigrap.code@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 7 Sep 2011 16:10:13 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1R1ORo-0007ug-Dj
+	for linux-wireless@vger.kernel.org; Wed, 07 Sep 2011 22:10:12 +0200
+Message-Id: <20110907200921.760440720@sipsolutions.net> (sfid-20110907_221018_855713_7FE0E010)
+Date: Wed, 07 Sep 2011 22:07:47 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 03/11] mac80211: also expire filtered frames
+References: <20110907200744.076513799@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Chr,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Wed, Sep 14, 2011 at 5:50 AM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> On Tuesday, September 13, 2011 11:18:23 PM J Igrap wrote:
->> While using the past days the carl9170 firmware with a USB card under a
->> linux guest running different kernel and driver versions I kept running into
->> the issue of a usb disconnect when the card was put under load:
-> linux guest? You are not using carl9170 in a VM, are you?
->
+mac80211 will expire normal PS-buffered frames, but
+if the device rejected some frames for a sleeping
+station, these won't be on the ps_tx_buf queue but
+on the tx_filtered queue instead; this is done to
+avoid reordering.
 
-It is in a VM. I was working on a VM for ease of debugging the issue.
+However, mac80211 will not expire frames from the
+filtered queue, let's fix that.
 
->>  usb 1-1: no command feedback received (-110).
->>  carl9170 cmd: 08 01 00 00 f0 36 1c 00 00 24 00 00              .....6...$..
->>  usb 1-1: restart device (6)
->>
->> No matter what kernel driver/firmware I tried I will still get it. I decided
->> to look into it a bit more and I narrowed it down to be a firmware issue
->> with the following code snippet:
-> Or it could be a problem with the USB PHY. However, the driver
-> seems to be able to handle the situation and restarts the device
-> accordingly.
->
+Also add a more comments to what all this expiry is
+doing and how it works.
 
-I tried with several physical devices and they all seemed to have the
-same behavior.
-The device does restart however you lose connectivity and state of
-what you were doing.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/sta_info.c |   57 +++++++++++++++++++++++++++++++++++++++++++-----
+ net/mac80211/status.c   |    5 ++++
+ 2 files changed, 57 insertions(+), 5 deletions(-)
+
+--- a/net/mac80211/sta_info.c	2011-09-07 14:32:37.000000000 +0200
++++ b/net/mac80211/sta_info.c	2011-09-07 14:32:38.000000000 +0200
+@@ -698,6 +698,39 @@ static bool sta_info_cleanup_expire_buff
+ 	unsigned long flags;
+ 	struct sk_buff *skb;
+ 
++	/*
++	 * First check for frames that should expire on the filtered
++	 * queue. Frames here were rejected by the driver and are on
++	 * a separate queue to avoid reordering with normal PS-buffered
++	 * frames. They also aren't accounted for right now in the
++	 * total_ps_buffered counter.
++	 */
++	for (;;) {
++		spin_lock_irqsave(&sta->tx_filtered.lock, flags);
++		skb = skb_peek(&sta->tx_filtered);
++		if (sta_info_buffer_expired(sta, skb))
++			skb = __skb_dequeue(&sta->tx_filtered);
++		else
++			skb = NULL;
++		spin_unlock_irqrestore(&sta->tx_filtered.lock, flags);
++
++		/*
++		 * Frames are queued in order, so if this one
++		 * hasn't expired yet we can stop testing. If
++		 * we actually reached the end of the queue we
++		 * also need to stop, of course.
++		 */
++		if (!skb)
++			break;
++		dev_kfree_skb(skb);
++	}
++
++	/*
++	 * Now also check the normal PS-buffered queue, this will
++	 * only find something if the filtered queue was emptied
++	 * since the filtered frames are all before the normal PS
++	 * buffered frames.
++	 */
+ 	for (;;) {
+ 		spin_lock_irqsave(&sta->ps_tx_buf.lock, flags);
+ 		skb = skb_peek(&sta->ps_tx_buf);
+@@ -707,6 +740,11 @@ static bool sta_info_cleanup_expire_buff
+ 			skb = NULL;
+ 		spin_unlock_irqrestore(&sta->ps_tx_buf.lock, flags);
+ 
++		/*
++		 * frames are queued in order, so if this one
++		 * hasn't expired yet (or we reached the end of
++		 * the queue) we can stop testing
++		 */
+ 		if (!skb)
+ 			break;
+ 
+@@ -716,13 +754,22 @@ static bool sta_info_cleanup_expire_buff
+ 		       sta->sta.addr);
+ #endif
+ 		dev_kfree_skb(skb);
+-
+-		/* if the queue is now empty recalc TIM bit */
+-		if (skb_queue_empty(&sta->ps_tx_buf))
+-			sta_info_recalc_tim(sta);
+ 	}
+ 
+-	return !skb_queue_empty(&sta->ps_tx_buf);
++	/*
++	 * Finally, recalculate the TIM bit for this station -- it might
++	 * now be clear because the station was too slow to retrieve its
++	 * frames.
++	 */
++	sta_info_recalc_tim(sta);
++
++	/*
++	 * Return whether there are any frames still buffered, this is
++	 * used to check whether the cleanup timer still needs to run,
++	 * if there are no frames we don't need to rearm the timer.
++	 */
++	return !(skb_queue_empty(&sta->ps_tx_buf) &&
++		 skb_queue_empty(&sta->tx_filtered));
+ }
+ 
+ static int __must_check __sta_info_destroy(struct sta_info *sta)
+--- a/net/mac80211/status.c	2011-09-07 14:32:37.000000000 +0200
++++ b/net/mac80211/status.c	2011-09-07 14:32:38.000000000 +0200
+@@ -107,6 +107,11 @@ static void ieee80211_handle_filtered_fr
+ 	    skb_queue_len(&sta->tx_filtered) < STA_MAX_TX_BUFFER) {
+ 		skb_queue_tail(&sta->tx_filtered, skb);
+ 		sta_info_recalc_tim(sta);
++
++		if (!timer_pending(&local->sta_cleanup))
++			mod_timer(&local->sta_cleanup,
++				  round_jiffies(jiffies +
++						STA_INFO_CLEANUP_INTERVAL));
+ 		return;
+ 	}
+ 
 
 
->> void handle_cmd(struct carl9170_rsp *resp) in src/cmd.c
->>
->>         case CARL9170_CMD_WREG:
->> esp->hdr.len = 0;
->>                 for (i = 0; i < (cmd->hdr.len / 8); i++)
->>                         set(cmd->wreg.regs[i].addr, cmd->wreg.regs[i].val);
->>                 break;
->>
->> That code appears to handle event 1 which is a write into a register. In
->> some cases that write appeared to cause a failure and a reset into the card.
->> I added a simple delay loop before the switch statement and that seemed to
->> fix the issue and I don't lose the card anymore even under a lot of load.
->> Obviously that's not a real fix and something else more reliable needs to be
->> in place.
-> Any idea what this "something" else might be?
->
-
-I'm not very familiar with how USB works, maybe someone with more
-experience can shed some light here? It seems to me that the event
-handling needs to be slowed down a little or add some kind of
-verification.
-
-Best,
-Jigrap
-
-> Regards,
->        Chr
->
