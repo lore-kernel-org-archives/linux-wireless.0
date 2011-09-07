@@ -1,58 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:31260 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753269Ab1IVPCL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 11:02:11 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 1/2] iwlagn: remove warning in iwl_rx_handle
-Date: Thu, 22 Sep 2011 07:15:36 -0700
-Message-Id: <1316700937-22240-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110922_170217_317817_4C9C1F41)
-In-Reply-To: <1316700937-22240-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1316700937-22240-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:37272 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756520Ab1IGQVx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Sep 2011 12:21:53 -0400
+Subject: [PATCH IGNORE AT YOUR PERIL] cfg80211: force interface
+ combinations to be advertised
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 07 Sep 2011 18:21:52 +0200
+Message-ID: <1315412512.4002.10.camel@jlt3.sipsolutions.net> (sfid-20110907_182203_669205_5D3FA4B3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Txid was used without being initialized.
+So my "sunset" period idea didn't work, nobody
+worked on getting interface combinations added.
+Almost 4 months after introducing this flag, no
+drivers have been changed to advertise their
+interface combinations. Force them now if they
+want to keep multiple virtual interfaces.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+I told you this would happen :-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-index 3ef9eac..b4eff55 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-@@ -401,7 +401,7 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+ include/net/cfg80211.h |    5 -----
+ net/wireless/core.c    |    4 ----
+ net/wireless/util.c    |    7 -------
+ 3 files changed, 16 deletions(-)
+
+--- a/include/net/cfg80211.h	2011-09-07 18:16:22.000000000 +0200
++++ b/include/net/cfg80211.h	2011-09-07 18:16:27.000000000 +0200
+@@ -1601,10 +1601,6 @@ struct cfg80211_ops {
+  *	hints read the documenation for regulatory_hint_found_beacon()
+  * @WIPHY_FLAG_NETNS_OK: if not set, do not allow changing the netns of this
+  *	wiphy at all
+- * @WIPHY_FLAG_ENFORCE_COMBINATIONS: Set this flag to enforce interface
+- *	combinations for this device. This flag is used for backward
+- *	compatibility only until all drivers advertise combinations and
+- *	they will always be enforced.
+  * @WIPHY_FLAG_PS_ON_BY_DEFAULT: if set to true, powersave will be enabled
+  *	by default -- this flag will be set depending on the kernel's default
+  *	on wiphy_new(), but can be changed by the driver if it has a good
+@@ -1632,7 +1628,6 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_IBSS_RSN			= BIT(8),
+ 	WIPHY_FLAG_MESH_AUTH			= BIT(10),
+ 	WIPHY_FLAG_SUPPORTS_SCHED_SCAN		= BIT(11),
+-	WIPHY_FLAG_ENFORCE_COMBINATIONS		= BIT(12),
+ };
  
- 	while (i != r) {
- 		int len, err;
--		u16 txq_id, sequence;
-+		u16 sequence;
+ /**
+--- a/net/wireless/core.c	2011-09-07 18:14:10.000000000 +0200
++++ b/net/wireless/core.c	2011-09-07 18:16:16.000000000 +0200
+@@ -422,10 +422,6 @@ static int wiphy_verify_combinations(str
+ 	const struct ieee80211_iface_combination *c;
+ 	int i, j;
  
- 		rxb = rxq->queue[i];
+-	/* If we have combinations enforce them */
+-	if (wiphy->n_iface_combinations)
+-		wiphy->flags |= WIPHY_FLAG_ENFORCE_COMBINATIONS;
+-
+ 	for (i = 0; i < wiphy->n_iface_combinations; i++) {
+ 		u32 cnt = 0;
+ 		u16 all_iftypes = 0;
+--- a/net/wireless/util.c	2011-09-07 18:14:56.000000000 +0200
++++ b/net/wireless/util.c	2011-09-07 18:16:08.000000000 +0200
+@@ -948,13 +948,6 @@ int cfg80211_can_change_interface(struct
+ 	if (rdev->wiphy.software_iftypes & BIT(iftype))
+ 		return 0;
  
-@@ -452,8 +452,11 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+-	/*
+-	 * Drivers will gradually all set this flag, until all
+-	 * have it we only enforce for those that set it.
+-	 */
+-	if (!(rdev->wiphy.flags & WIPHY_FLAG_ENFORCE_COMBINATIONS))
+-		return 0;
+-
+ 	memset(num, 0, sizeof(num));
  
- 		/* warn if this is cmd response / notification and the uCode
- 		 * didn't set the SEQ_RX_FRAME for a frame that is
--		 * uCode-originated*/
--		WARN(txq_id == trans->shrd->cmd_queue && reclaim == false &&
-+		 * uCode-originated
-+		 * If you saw this code after the second half of 2012, then
-+		 * please remove it
-+		 */
-+		WARN(pkt->hdr.cmd != REPLY_TX && reclaim == false &&
- 		     (!(pkt->hdr.sequence & SEQ_RX_FRAME)),
- 		     "reclaim is false, SEQ_RX_FRAME unset: %s\n",
- 		     get_cmd_string(pkt->hdr.cmd));
--- 
-1.7.0.4
+ 	num[iftype] = 1;
+
 
