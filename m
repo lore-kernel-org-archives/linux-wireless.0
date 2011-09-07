@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46728 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753334Ab1IQTK3 convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:50559 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755850Ab1IGSLq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Sep 2011 15:10:29 -0400
-Received: by iaqq3 with SMTP id q3so3503726iaq.19
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Sep 2011 12:10:28 -0700 (PDT)
+	Wed, 7 Sep 2011 14:11:46 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 24so5210512eyx.19
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Sep 2011 11:11:45 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 4/5] rt2x00: Update some TX descriptor
+Date: Wed, 7 Sep 2011 20:11:03 +0200
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+References: <201109072010.04023.IvDoorn@gmail.com> <201109072010.25836.IvDoorn@gmail.com> <201109072010.45905.IvDoorn@gmail.com>
+In-Reply-To: <201109072010.45905.IvDoorn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20110917190201.BE6FC40639@repository3.orbit-lab.org>
-References: <20110917190201.BE6FC40639@repository3.orbit-lab.org>
-Date: Sat, 17 Sep 2011 12:10:27 -0700
-Message-ID: <CAA93jw5RskMwdziSF-YWedLFRRVe9iG+=c7F5rqJn1Mpx29r9w@mail.gmail.com> (sfid-20110917_211032_715764_14525CBA)
-Subject: Re: Compat-wireless release for 2011-09-17 is baked
-From: Dave Taht <dave.taht@gmail.com>
-To: Compat-wireless cronjob account <compat@orbit-lab.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201109072011.04627.IvDoorn@gmail.com> (sfid-20110907_201149_553887_B829B226)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Something tells me that this script needs slightly better error checking.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-On Sat, Sep 17, 2011 at 12:02 PM, Compat-wireless cronjob account
-<compat@orbit-lab.org> wrote:
->
-> fatal: Unable to look up git.kernel.org (port 9418) (Name or service not known)
-> /usr/bin/sha1sum: *.tar.bz2: No such file or directory
->
-> compat-wireless code metrics
->
->    806210 - Total upstream lines of code being pulled
-> ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
-> rsync: connection unexpectedly closed (0 bytes received so far) [sender]
-> rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-
-
---
-Dave Täht
-SKYPE: davetaht
-US Tel: 1-239-829-5608
-http://the-edge.blogspot.com
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index d448f5c..349008d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -288,8 +288,8 @@ enum txentry_desc_flags {
+  * @signal: PLCP signal.
+  * @service: PLCP service.
+  * @msc: MCS.
+- * @stbc: STBC.
+- * @ba_size: BA size.
++ * @stbc: Use Space Time Block Coding (only available for MCS rates < 8).
++ * @ba_size: Size of the recepients RX reorder buffer - 1.
+  * @rate_mode: Rate mode (See @enum rate_modulation).
+  * @mpdu_density: MDPU density.
+  * @retry_limit: Max number of retries.
+-- 
+1.7.3.4
