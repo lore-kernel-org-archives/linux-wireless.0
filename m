@@ -1,46 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22730 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932088Ab1IOJmU (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42430 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041Ab1IGUKE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 05:42:20 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	<stable@kernel.org>
-Subject: [PATCH] wireless: Fix rate mask for scan request
-Date: Thu, 15 Sep 2011 15:12:29 +0530
-Message-ID: <1316079749-10509-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110915_114225_735245_8E0418E5)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 7 Sep 2011 16:10:04 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1R1ORf-0007sZ-68
+	for linux-wireless@vger.kernel.org; Wed, 07 Sep 2011 22:10:03 +0200
+Message-Id: <20110907200744.076513799@sipsolutions.net> (sfid-20110907_221013_590498_5BFADCE8)
+Date: Wed, 07 Sep 2011 22:07:44 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 00/11] AP powersaving clients changes
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The scan request received from cfg80211_connect do not
-have proper rate mast. So the probe request sent on each
-channel do not have proper the supported rates ie.
+Hi,
 
-Cc: stable@kernel.org
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- net/wireless/sme.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+This series now has a little more than just uAPSD,
+it also fixes some PS-poll issue and adds in an
+optimisation of station flags handling.
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index b7b6ff8..dec0fa2 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -118,6 +118,8 @@ static int cfg80211_conn_scan(struct wireless_dev *wdev)
- 			     i++, j++)
- 				request->channels[i] =
- 					&wdev->wiphy->bands[band]->channels[j];
-+			request->rates[band] =
-+				(1 << wdev->wiphy->bands[band]->n_bitrates) - 1;
- 		}
- 	}
- 	request->n_channels = n_channels;
--- 
-1.7.6.1
+Please review/comment.
+
+johannes
 
