@@ -1,75 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58754 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932916Ab1INTYg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 15:24:36 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 09/12] ath9k: optimize ath9k_ps_restore
-Date: Wed, 14 Sep 2011 21:24:24 +0200
-Message-Id: <1316028267-34187-9-git-send-email-nbd@openwrt.org> (sfid-20110914_212444_202143_1B0DADDB)
-In-Reply-To: <1316028267-34187-8-git-send-email-nbd@openwrt.org>
-References: <1316028267-34187-1-git-send-email-nbd@openwrt.org>
- <1316028267-34187-2-git-send-email-nbd@openwrt.org>
- <1316028267-34187-3-git-send-email-nbd@openwrt.org>
- <1316028267-34187-4-git-send-email-nbd@openwrt.org>
- <1316028267-34187-5-git-send-email-nbd@openwrt.org>
- <1316028267-34187-6-git-send-email-nbd@openwrt.org>
- <1316028267-34187-7-git-send-email-nbd@openwrt.org>
- <1316028267-34187-8-git-send-email-nbd@openwrt.org>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:50559 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755132Ab1IGSLp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Sep 2011 14:11:45 -0400
+Received: by eyx24 with SMTP id 24so5210512eyx.19
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Sep 2011 11:11:43 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/5] rt2x00: Remove incorrect led blink
+Date: Wed, 7 Sep 2011 20:10:45 +0200
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+References: <201109072010.04023.IvDoorn@gmail.com> <201109072010.25836.IvDoorn@gmail.com>
+In-Reply-To: <201109072010.25836.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201109072010.45905.IvDoorn@gmail.com> (sfid-20110907_201147_525276_6C07203F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath_hw_cycle_counters_update only needs to be called if the power state
-changes. Most of the time this does not happen, even when ps_usecount
-goes down to 0.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+rt2800 devices are not capable of configuring arbitrary LED on/off
+periods. The LED_CFG register fields ON_PERIOD and OFF_PERIOD are only
+used by the hw when the LED mode is set to "blink upon TX".
+
+Hence, remove the blink callback. This will result in software emulation
+for LED blinking.
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |   17 +++++++++++------
- 1 files changed, 11 insertions(+), 6 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |   16 ----------------
+ 1 files changed, 0 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a75810a..a16f539 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -111,24 +111,29 @@ void ath9k_ps_wakeup(struct ath_softc *sc)
- void ath9k_ps_restore(struct ath_softc *sc)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	enum ath9k_power_mode mode;
- 	unsigned long flags;
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index ba626a9..877b1e7 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -897,28 +897,12 @@ static void rt2800_brightness_set(struct led_classdev *led_cdev,
+ 	}
+ }
  
- 	spin_lock_irqsave(&sc->sc_pm_lock, flags);
- 	if (--sc->ps_usecount != 0)
- 		goto unlock;
- 
--	spin_lock(&common->cc_lock);
--	ath_hw_cycle_counters_update(common);
--	spin_unlock(&common->cc_lock);
+-static int rt2800_blink_set(struct led_classdev *led_cdev,
+-			    unsigned long *delay_on, unsigned long *delay_off)
+-{
+-	struct rt2x00_led *led =
+-	    container_of(led_cdev, struct rt2x00_led, led_dev);
+-	u32 reg;
 -
- 	if (sc->ps_idle)
--		ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_FULL_SLEEP);
-+		mode = ATH9K_PM_FULL_SLEEP;
- 	else if (sc->ps_enabled &&
- 		 !(sc->ps_flags & (PS_WAIT_FOR_BEACON |
- 			      PS_WAIT_FOR_CAB |
- 			      PS_WAIT_FOR_PSPOLL_DATA |
- 			      PS_WAIT_FOR_TX_ACK)))
--		ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
-+		mode = ATH9K_PM_NETWORK_SLEEP;
-+	else
-+		goto unlock;
-+
-+	spin_lock(&common->cc_lock);
-+	ath_hw_cycle_counters_update(common);
-+	spin_unlock(&common->cc_lock);
-+
-+	ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
- 
-  unlock:
- 	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+-	rt2800_register_read(led->rt2x00dev, LED_CFG, &reg);
+-	rt2x00_set_field32(&reg, LED_CFG_ON_PERIOD, *delay_on);
+-	rt2x00_set_field32(&reg, LED_CFG_OFF_PERIOD, *delay_off);
+-	rt2800_register_write(led->rt2x00dev, LED_CFG, reg);
+-
+-	return 0;
+-}
+-
+ static void rt2800_init_led(struct rt2x00_dev *rt2x00dev,
+ 		     struct rt2x00_led *led, enum led_type type)
+ {
+ 	led->rt2x00dev = rt2x00dev;
+ 	led->type = type;
+ 	led->led_dev.brightness_set = rt2800_brightness_set;
+-	led->led_dev.blink_set = rt2800_blink_set;
+ 	led->flags = LED_INITIALIZED;
+ }
+ #endif /* CONFIG_RT2X00_LIB_LEDS */
 -- 
-1.7.3.2
-
+1.7.3.4
