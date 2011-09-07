@@ -1,135 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3501 "EHLO MMS3.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:45826 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756133Ab1IPT20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 15:28:26 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 12/19] staging: brcm80211: fixed sparse endianness
- warnings on fullmac ratespec
-Date: Fri, 16 Sep 2011 12:28:01 -0700
-Message-ID: <1316201288-29635-13-git-send-email-frankyl@broadcom.com> (sfid-20110916_212853_425375_53B70056)
-In-Reply-To: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
-References: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1755653Ab1IGGGA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Sep 2011 02:06:00 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH v2] mac80211: retry sending failed BAR frames later instead of tearing down aggr
+Date: Wed,  7 Sep 2011 08:05:44 +0200
+Message-Id: <1315375544-94891-1-git-send-email-nbd@openwrt.org> (sfid-20110907_080611_871838_63C107C1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Unfortunately failed BAR tx attempts happen more frequently than I
+expected, and the resulting aggregation teardowns cause performance
+issues, as the aggregation session does not always get re-established
+properly.
+Instead of tearing down the entire aggr session, we can simply store the
+SSN of the last failed BAR tx attempt, wait for the first successful
+tx status event, and then send another BAR with the same SSN.
 
-Structure that is sent to the dongle has been annotated.
+Also fix an endian bug on accessing the control field of the BAR
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd.h         |    7 +++++++
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   12 +++++-------
- drivers/staging/brcm80211/brcmsmac/pub.h         |    7 +++++++
- drivers/staging/brcm80211/include/defs.h         |    7 -------
- 4 files changed, 19 insertions(+), 14 deletions(-)
+ net/mac80211/sta_info.h |    5 +++++
+ net/mac80211/status.c   |   44 +++++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 46 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index af0ad1f..e543640 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -400,6 +400,13 @@ struct brcmf_bss_info {
- 	/* variable length Information Elements */
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index e9eb565..56a3d38 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -86,6 +86,8 @@ enum ieee80211_sta_info_flags {
+  * @stop_initiator: initiator of a session stop
+  * @tx_stop: TX DelBA frame when stopping
+  * @buf_size: reorder buffer size at receiver
++ * @failed_bar_ssn: ssn of the last failed BAR tx attempt
++ * @bar_pending: BAR needs to be re-sent
+  *
+  * This structure's lifetime is managed by RCU, assignments to
+  * the array holding it must hold the aggregation mutex.
+@@ -106,6 +108,9 @@ struct tid_ampdu_tx {
+ 	u8 stop_initiator;
+ 	bool tx_stop;
+ 	u8 buf_size;
++
++	u16 failed_bar_ssn;
++	bool bar_pending;
  };
  
-+struct brcm_rateset_le {
-+	/* # rates in this set */
-+	__le32 count;
-+	/* rates in 500kbps units w/hi bit set if basic */
-+	u8 rates[WL_NUMRATES];
-+};
+ /**
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index e51bd2a..56a0e55 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -127,12 +127,32 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 	dev_kfree_skb(skb);
+ }
+ 
++static void ieee80211_check_pending_bar(struct sta_info *sta, u8 *addr, u8 tid)
++{
++	struct tid_ampdu_tx *tid_tx;
 +
- struct brcmf_ssid {
- 	u32 SSID_len;
- 	unsigned char SSID[32];
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 3b0c1a3..6ac4cc7 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -1864,7 +1864,7 @@ brcmf_cfg80211_set_bitrate_mask(struct wiphy *wiphy, struct net_device *dev,
- 			     const u8 *addr,
- 			     const struct cfg80211_bitrate_mask *mask)
++	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
++	if (!tid_tx || !tid_tx->bar_pending)
++		return;
++
++	tid_tx->bar_pending = false;
++	ieee80211_send_bar(sta->sdata, addr, tid, tid_tx->failed_bar_ssn);
++}
++
+ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
  {
--	struct brcm_rateset rateset;
-+	struct brcm_rateset_le rateset_le;
- 	s32 rate;
- 	s32 val;
- 	s32 err_bg;
-@@ -1878,15 +1878,13 @@ brcmf_cfg80211_set_bitrate_mask(struct wiphy *wiphy, struct net_device *dev,
+ 	struct ieee80211_mgmt *mgmt = (void *) skb->data;
+ 	struct ieee80211_local *local = sta->local;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
  
- 	/* addr param is always NULL. ignore it */
- 	/* Get current rateset */
--	err = brcmf_dev_ioctl(dev, BRCM_GET_CURR_RATESET, &rateset,
--			sizeof(rateset));
-+	err = brcmf_dev_ioctl(dev, BRCM_GET_CURR_RATESET, &rateset_le,
-+			      sizeof(rateset_le));
- 	if (unlikely(err)) {
- 		WL_ERR("could not get current rateset (%d)\n", err);
- 		goto done;
- 	}
- 
--	rateset.count = le32_to_cpu(rateset.count);
--
- 	legacy = ffs(mask->control[IEEE80211_BAND_2GHZ].legacy & 0xFFFF);
- 	if (!legacy)
- 		legacy = ffs(mask->control[IEEE80211_BAND_5GHZ].legacy &
-@@ -1894,9 +1892,9 @@ brcmf_cfg80211_set_bitrate_mask(struct wiphy *wiphy, struct net_device *dev,
- 
- 	val = wl_g_rates[legacy - 1].bitrate * 100000;
- 
--	if (val < rateset.count)
-+	if (val < le32_to_cpu(rateset_le.count))
- 		/* Select rate by rateset index */
--		rate = rateset.rates[val] & 0x7f;
-+		rate = rateset_le.rates[val] & 0x7f;
- 	else
- 		/* Specified rate in bps */
- 		rate = val / 500000;
-diff --git a/drivers/staging/brcm80211/brcmsmac/pub.h b/drivers/staging/brcm80211/brcmsmac/pub.h
-index c72f7b5..9670309 100644
---- a/drivers/staging/brcm80211/brcmsmac/pub.h
-+++ b/drivers/staging/brcm80211/brcmsmac/pub.h
-@@ -101,6 +101,13 @@
- 
- #define MAX_STREAMS_SUPPORTED	4	/* max number of streams supported */
- 
-+struct brcm_rateset {
-+	/* # rates in this set */
-+	u32 count;
-+	/* rates in 500kbps units w/hi bit set if basic */
-+	u8 rates[WL_NUMRATES];
-+};
++	if (ieee80211_is_data_qos(mgmt->frame_control)) {
++		struct ieee80211_hdr *hdr = (void *) skb->data;
++		u8 *qc = ieee80211_get_qos_ctl(hdr);
++		u16 tid = qc[0] & 0xf;
 +
- struct brcms_c_rateset {
- 	uint count;		/* number of rates in rates[] */
- 	 /* rates in 500kbps units w/hi bit set if basic */
-diff --git a/drivers/staging/brcm80211/include/defs.h b/drivers/staging/brcm80211/include/defs.h
-index 3438c54..1e5f310 100644
---- a/drivers/staging/brcm80211/include/defs.h
-+++ b/drivers/staging/brcm80211/include/defs.h
-@@ -48,13 +48,6 @@
++		ieee80211_check_pending_bar(sta, hdr->addr1, tid);
++	}
++
+ 	if (ieee80211_is_action(mgmt->frame_control) &&
+ 	    sdata->vif.type == NL80211_IFTYPE_STATION &&
+ 	    mgmt->u.action.category == WLAN_CATEGORY_HT &&
+@@ -161,6 +181,18 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
+ 	}
+ }
  
- #define WL_NUMRATES		16	/* max # of rates in a rateset */
++static void ieee80211_set_bar_pending(struct sta_info *sta, u8 tid, u16 ssn)
++{
++	struct tid_ampdu_tx *tid_tx;
++
++	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
++	if (!tid_tx)
++		return;
++
++	tid_tx->failed_bar_ssn = ssn;
++	tid_tx->bar_pending = true;
++}
++
+ /*
+  * Use a static threshold for now, best value to be determined
+  * by testing ...
+@@ -246,6 +278,8 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		}
  
--struct brcm_rateset {
--	/* # rates in this set */
--	u32 count;
--	/* rates in 500kbps units w/hi bit set if basic */
--	u8 rates[WL_NUMRATES];
--};
--
- #define BRCM_CNTRY_BUF_SZ	4	/* Country string is 3 bytes + NUL */
+ 		if (!acked && ieee80211_is_back_req(fc)) {
++			u16 control;
++
+ 			/*
+ 			 * BAR failed, let's tear down the BA session as a
+ 			 * last resort as some STAs (Intel 5100 on Windows)
+@@ -253,11 +287,15 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			 * correctly.
+ 			 */
+ 			bar = (struct ieee80211_bar *) skb->data;
+-			if (!(bar->control & IEEE80211_BAR_CTRL_MULTI_TID)) {
+-				tid = (bar->control &
++			control = le16_to_cpu(bar->control);
++			if (!(control & IEEE80211_BAR_CTRL_MULTI_TID)) {
++				u16 ssn = le16_to_cpu(bar->start_seq_num);
++
++				tid = (control &
+ 				       IEEE80211_BAR_CTRL_TID_INFO_MASK) >>
+ 				      IEEE80211_BAR_CTRL_TID_INFO_SHIFT;
+-				ieee80211_stop_tx_ba_session(&sta->sta, tid);
++
++				ieee80211_set_bar_pending(sta, tid, ssn);
+ 			}
+ 		}
  
- #define BRCM_SET_CHANNEL	30
 -- 
-1.7.1
-
+1.7.3.2
 
