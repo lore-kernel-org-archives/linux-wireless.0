@@ -1,66 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:44137 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758324Ab1I3LLv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Sep 2011 07:11:51 -0400
-Message-ID: <4E85A3F4.2000500@neratec.com> (sfid-20110930_131155_903105_8256B832)
-Date: Fri, 30 Sep 2011 13:11:48 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:43629 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753740Ab1IGShA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Sep 2011 14:37:00 -0400
+Received: by yie30 with SMTP id 30so5187502yie.19
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Sep 2011 11:36:59 -0700 (PDT)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-CC: Adrian Chadd <adrian@freebsd.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Boris Presman <boris.presman@ti.com>,
-	Assaf Azulay <assaf@ti.com>,
-	Michael Green <green@qca.qualcomm.com>,
-	David Quan <dquan@qca.qualcomm.com>,
-	Kevin Hayes <hayes@qca.qualcomm.com>,
-	Arun Venkataraman <arunvenk@qca.qualcomm.com>
-Subject: Re: Regulatory revamp status
-References: <CAB=NE6U6qmYbvHPTWGTqOdXtuxbKYbUzZXNiE6POOX9QZNRWAg@mail.gmail.com> <1125417094.1836.1317285426615.JavaMail.root@idefix> <CAJ-VmonqEs4mODDa2=fTj8zWHwRM7-G5e=BWNUyGdy65+kYvfg@mail.gmail.com> <4E8468AF.8000006@neratec.com> <CAB=NE6UQpv1bvsni=rDP=3OKM=oN14g0xJtVN+evvm=47nZu_Q@mail.gmail.com>
-In-Reply-To: <CAB=NE6UQpv1bvsni=rDP=3OKM=oN14g0xJtVN+evvm=47nZu_Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1315419259.4002.16.camel@jlt3.sipsolutions.net>
+References: <1315347976-13950-1-git-send-email-javier@cozybit.com>
+ <1315418920.4002.13.camel@jlt3.sipsolutions.net> <1315419259.4002.16.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Wed, 7 Sep 2011 11:36:37 -0700
+Message-ID: <CAPjQAd8ZLDQKvBOMOoe+hoo5FEjiLV6vBxzdE-bMcz_iEt59tQ@mail.gmail.com> (sfid-20110907_203705_147917_D08A7F6E)
+Subject: Re: [PATCH 0/2] QoS headers for mesh
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
+	jlopex@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/29/2011 07:47 PM, Luis R. Rodriguez wrote:
-> On Thu, Sep 29, 2011 at 5:46 AM, Zefir Kurtisi
-> <zefir.kurtisi@neratec.com> wrote:
->> On 09/29/2011 01:45 PM, Adrian Chadd wrote:
->>> On 29 September 2011 16:37, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
->>>> Thanks for the update.
->>>>
->>>> To me it looks not reasonable to mix in between the two approaches: either we assume countrycodes use the same DFS region for all channels, or each channel/band needs to have its own. Otherwise I feel that a DFS region bitmap would give a semi-flexible compromise that might end up being insufficient to represent some fancy countrycodes.
->>>
->>> There's some funny stuff in there.
->>>
->>> For example, some of the DFS bands have different CAC/NOL timing. :-)
->>>
->>>
->>>
->>> Adrian
+On Wed, Sep 7, 2011 at 11:14 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2011-09-07 at 20:08 +0200, Johannes Berg wrote:
+>> On Tue, 2011-09-06 at 15:26 -0700, Javier Cardona wrote:
+>> > Mesh frames are required to have QoS headers to indicate the presence of a Mesh
+>> > Control Header in the payload.  These patches add QoS headers to mesh frames,
+>> > but note that they don't implement full QoS support: mesh stations don't
+>> > currently advertise QoS capabilities.
 >>
->> Really? Where would be 'there' countrycode-wise?
+>> Uh, so does mesh want full QoS support or just QoS headers? The latter
+>> seems a little odd to me. But if it wants QoS how about zd1211rw? I
+>> don't think that even supports QoS?
 >>
->> That would definitely break today's CRDA capabilities :-\
-> 
-> Well, CRDA has no DFS support yet ;) and hence the regulatory revamp
-Yes, I meant the proposed approach with a regulaltory domain per countrycode won't work with those fancy ones.
-> work, to accommodate as much as possible for both future technologies
-> and capture all these gotchas on existing technologies. If DFS varies
-> so much then using one u8 for a country may not be enough, and we may
-> want to add a whole section for DFS with the u8 being an optional
-> minimum and with a DFS section for overrides on values. Thoughts?
-> 
-That sounds like a doable way to start with the per countrycode domain and traverse to the optional refinement values on demand.
+>> That's one thing that bothers me a little bit about this patchset --
+>> previously, QoS frames could only happen when the device actually
+>> supported 4 queues, now this rule seems to be broken. I don't expect
+>> this to be a major issue, but it certainly is unexpected and will
+>> probably be forgotten by a lot of people in the future ...
+>
+> So after looking at this again -- what I'd much rather see instead of
+> the second patch, and what will also require fewer changes, is *only*
+> doing the change to ieee80211_set_qos_hdr(). Then, if the peer is a QoS
+> station, we'll get the right header -- if it isn't then we can't really
+> mesh with it but we'll accept that for legacy reasons (for now).
+>
+> I'd rather not send QoS frames to mesh stations that don't advertise QoS
+> capability, and I'd also rather not have to worry about sending QoS
+> frames when we don't actually support it locally.
 
-BTW, would this render the countrycode to CTL mappings in regd_common.h redundant, or do DFS and CTL domains differ?
-> That is -- if your country varies per band or CAC / NOL timings we can
-> address these countries only with the future revamp work. This would
-> allow us to move forward with DFS support only for those countries
-> where a unified DFS mapping applies.
-> 
-To start with support for unified DFS domain CCs, was there ever some v2 for the related patch set you posted?
->   Luis
+OK.  If QoS support is mandatory for mesh stations, then definitely
+that's the way to go.  We'll have to investigate how to advertise QoS
+for mesh interfaces:  this is currently not happening even though all
+the hardware we use for mesh supports it.
+Also, we've never attempted to maintain backward compatibility with
+earlier versions of the draft.
 
-Zefir
+Thanks!
+
+Javier
+
+
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
