@@ -1,81 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lunge.queued.net ([173.255.254.236]:43530 "EHLO
-	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757049Ab1IIAnI (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:39060 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752194Ab1IGSLj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 20:43:08 -0400
-Date: Thu, 8 Sep 2011 17:35:17 -0700
-From: Andres Salomon <dilinger@queued.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linville@tuxdriver.com, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dsd@laptop.org, cjb@laptop.org
-Subject: [PATCH v3] libertas: prioritize usb8388_olpc.bin firmware on OLPC
- machines
-Message-ID: <20110908173517.5b8c90be@queued.net> (sfid-20110909_024316_193098_98BC734B)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 7 Sep 2011 14:11:39 -0400
+Received: by ewy4 with SMTP id 4so274569ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Sep 2011 11:11:37 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/5] rt2x00: Minor optimizazion in txdone path
+Date: Wed, 7 Sep 2011 20:10:02 +0200
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201109072010.04023.IvDoorn@gmail.com> (sfid-20110907_201142_497662_D428FA3A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Normally, the v9 firmware will be loaded if it's available.  However, on
-OLPC XO-1 machines, the olpc-specific firmware supports extra functionality.
-This makes the libertas driver attempt to load the custom firmware first
-if the machine is an OLPC machine; if that fails (or it's not an OLPC
-machine), fall back to attempting to load the other firmwares.
+We can save an indirect function call + some instructions for fetching
+the actual function pointer by passing the driver specific txwi pointer
+directly from rt2800pci/rt2800usb to rt2800lib instead of using the
+rt2800_drv_get_txwi callback.
 
-usb8388_olpc.bin is currently found in the linux-firmware repository.
-
-Signed-off-by: Andres Salomon <dilinger@queued.net>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
-v3: changed firmware path to include libertas/ subdirectory.
 
-Since the last submission (v2), usb8388_olpc.bin has found its way into
-wireless-firmware.  It'd be nice to get this into the next merge window.
+ drivers/net/wireless/rt2x00/rt2800lib.c |    4 +---
+ drivers/net/wireless/rt2x00/rt2800lib.h |    2 +-
+ drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
+ drivers/net/wireless/rt2x00/rt2800usb.c |    3 ++-
+ 4 files changed, 5 insertions(+), 6 deletions(-)
 
- drivers/net/wireless/libertas/if_usb.c |   21 +++++++++++++++++++++
- 1 files changed, 21 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index b5acc39..94f8f3e 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -973,6 +973,23 @@ static const struct {
- 	{ MODEL_8682, "libertas/usb8682.bin" }
- };
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 775e996..ba626a9 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -601,7 +601,7 @@ void rt2800_process_rxwi(struct queue_entry *entry,
+ }
+ EXPORT_SYMBOL_GPL(rt2800_process_rxwi);
  
-+#ifdef CONFIG_OLPC
-+
-+static int try_olpc_fw(struct if_usb_card *cardp)
-+{
-+	int retval = -ENOENT;
-+
-+	/* try the OLPC firmware first; fall back to fw_table list */
-+	if (machine_is_olpc() && cardp->model == MODEL_8388)
-+		retval = request_firmware(&cardp->fw,
-+				"libertas/usb8388_olpc.bin", &cardp->udev->dev);
-+	return retval;
-+}
-+
-+#else
-+static int try_olpc_fw(struct if_usb_card *cardp) { return -ENOENT; }
-+#endif /* !CONFIG_OLPC */
-+
- static int get_fw(struct if_usb_card *cardp, const char *fwname)
+-void rt2800_txdone_entry(struct queue_entry *entry, u32 status)
++void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
  {
- 	int i;
-@@ -981,6 +998,10 @@ static int get_fw(struct if_usb_card *cardp, const char *fwname)
- 	if (fwname)
- 		return request_firmware(&cardp->fw, fwname, &cardp->udev->dev);
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+@@ -609,13 +609,11 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status)
+ 	u32 word;
+ 	u16 mcs, real_mcs;
+ 	int aggr, ampdu;
+-	__le32 *txwi;
  
-+	/* Handle OLPC firmware */
-+	if (try_olpc_fw(cardp) == 0)
-+		return 0;
-+
- 	/* Otherwise search for firmware to use */
- 	for (i = 0; i < ARRAY_SIZE(fw_table); i++) {
- 		if (fw_table[i].model != cardp->model)
+ 	/*
+ 	 * Obtain the status about this packet.
+ 	 */
+ 	txdesc.flags = 0;
+-	txwi = rt2800_drv_get_txwi(entry);
+ 	rt2x00_desc_read(txwi, 0, &word);
+ 
+ 	mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
+index b851847..7a2511f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.h
++++ b/drivers/net/wireless/rt2x00/rt2800lib.h
+@@ -152,7 +152,7 @@ void rt2800_write_tx_data(struct queue_entry *entry,
+ 			  struct txentry_desc *txdesc);
+ void rt2800_process_rxwi(struct queue_entry *entry, struct rxdone_entry_desc *txdesc);
+ 
+-void rt2800_txdone_entry(struct queue_entry *entry, u32 status);
++void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32* txwi);
+ 
+ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc);
+ void rt2800_clear_beacon(struct queue_entry *entry);
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 4fd6649..2633628 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -760,7 +760,7 @@ static bool rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
+ 		}
+ 
+ 		entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+-		rt2800_txdone_entry(entry, status);
++		rt2800_txdone_entry(entry, status, rt2800pci_get_txwi(entry));
+ 
+ 		if (--max_tx_done == 0)
+ 			break;
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 42f511b..0015526 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -542,7 +542,8 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+ 		}
+ 
+ 		if (entry)
+-			rt2800_txdone_entry(entry, reg);
++			rt2800_txdone_entry(entry, reg,
++				            rt2800usb_get_txwi(entry));
+ 	}
+ }
+ 
 -- 
-1.7.2.5
-
+1.7.3.4
