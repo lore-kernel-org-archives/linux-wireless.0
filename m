@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:63177 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939Ab1ISFjY (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42161 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753974Ab1IGMYk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 01:39:24 -0400
-Received: by bkbzt4 with SMTP id zt4so5023033bkb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2011 22:39:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4E738BFE.7080201@qca.qualcomm.com>
-References: <4E737241.2080301@qca.qualcomm.com>
-	<CAD2nsn14EnEWyu2ifM6-5evQN4qGqe4Me7wsZ=xLPt+RBpJeWw@mail.gmail.com>
-	<4E738BFE.7080201@qca.qualcomm.com>
-Date: Mon, 19 Sep 2011 11:09:23 +0530
-Message-ID: <CAD2nsn1oC2N5qL2eg8rMa6_2w49DTe_V2w-JGdrZ2jwj9b-Hzg@mail.gmail.com> (sfid-20110919_073928_145010_EEE8D1A6)
-Subject: Re: ath9k_htc: "No free RX buffer" in monitor mode
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>, viscous.liquid@gmail.com
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 7 Sep 2011 08:24:40 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1R1GVh-0000ci-SV
+	for linux-wireless@vger.kernel.org; Wed, 07 Sep 2011 13:41:42 +0200
+Subject: Re: [RFC 3/5] mac80211: implement uAPSD
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <20110906202725.130077360@sipsolutions.net> (sfid-20110906_222826_173953_844A1DA3)
+References: <20110906201703.703254041@sipsolutions.net>
+	 <20110906202725.130077360@sipsolutions.net>
+	 (sfid-20110906_222826_173953_844A1DA3)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 07 Sep 2011 13:41:41 +0200
+Message-ID: <1315395701.4002.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 16, 2011 at 11:18 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Hi Shafi,
->
-> On 09/16/2011 07:09 PM, Mohammed Shafi wrote:
->> On Fri, Sep 16, 2011 at 9:28 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->>> Hi,
->>>
->>> I was testing monitor mode with ath9k_htc and my laptop got slower. Then
->>> I noticed this:
->>>
->>> [ 9246.606150] ath: No free RX buffer
->>> [ 9246.606156] ath: No free RX buffer
->>> [ 9246.606582] ath: No free RX buffer
->>> [ 9246.606590] ath: No free RX buffer
->>>
->>> And I saw it quite a lot:
->>
->> we saw this some time back in AP mode occasionally and it never came
->> up for as in monitor mode. we need to fix this.
->> i will try to fix this.
->
-> Thanks! I will run more tests with monitor mode next week and will let
-> you know if I see it again.
 
-Kalle thanks, now I could easily get this thing in monitor mode itself
-in a busy channel (6, HT20).
-will fix this soon.
+> +       ieee80211_sta_ps_deliver_response(sta, sta->sta.max_sp,
+> +                                         ~delivery_enabled,
+> +
+> IEEE80211_FRAME_RELEASE_UAPSD);
 
-issue can be found with latest compat-wireless/wireless-testing
+This is bogus, sta.max_sp is in the QoS Info field format so needs to be
+translated into # of frames.
 
->
-> Kalle
->
+> @@ -386,6 +390,7 @@ enum mac80211_tx_control_flags {
+>  	IEEE80211_TX_CTL_STBC			= BIT(23) | BIT(24),
+>  	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(25),
+>  	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(26),
+> +	IEEE80211_TX_STATUS_EOSP		= BIT(27),
+>  };
+>  
+>  #define IEEE80211_TX_CTL_STBC_SHIFT		23
+> @@ -399,7 +404,7 @@ enum mac80211_tx_control_flags {
+>  	IEEE80211_TX_CTL_SEND_AFTER_DTIM | IEEE80211_TX_CTL_AMPDU |	      \
+>  	IEEE80211_TX_STAT_TX_FILTERED |	IEEE80211_TX_STAT_ACK |		      \
+>  	IEEE80211_TX_STAT_AMPDU | IEEE80211_TX_STAT_AMPDU_NO_BACK |	      \
+> -	IEEE80211_TX_CTL_RATE_CTRL_PROBE | IEEE80211_TX_CTL_PSPOLL_RESPONSE | \
+> +	IEEE80211_TX_CTL_RATE_CTRL_PROBE | IEEE80211_TX_CTL_POLL_RESPONSE |   \
+>  	IEEE80211_TX_CTL_MORE_FRAMES | IEEE80211_TX_CTL_LDPC |		      \
+>  	IEEE80211_TX_CTL_STBC)
 
+EOSP needs to be added to temporary flags too.
 
+johannes
 
--- 
-shafi
