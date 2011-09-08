@@ -1,149 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:47845 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932621Ab1IHMj3 (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:60334 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755954Ab1IHCuU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 08:39:29 -0400
-Received: by eyx24 with SMTP id 24so422913eyx.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 05:39:28 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/7] rt2x00: Introduce sta_add/remove callbacks
-Date: Thu, 8 Sep 2011 14:36:04 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201109081434.23635.IvDoorn@gmail.com>
-In-Reply-To: <201109081434.23635.IvDoorn@gmail.com>
+	Wed, 7 Sep 2011 22:50:20 -0400
+Received: by gya6 with SMTP id 6so277758gya.19
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Sep 2011 19:50:19 -0700 (PDT)
+Message-ID: <4E682D68.1070408@lwfinger.net> (sfid-20110908_045024_139311_5CCD1244)
+Date: Wed, 07 Sep 2011 21:50:16 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201109081436.05113.IvDoorn@gmail.com> (sfid-20110908_143933_597669_1B33B62B)
+To: Stefan Zwanenburg <stefanhetzwaantje@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	'Chaoming_Li' <chaoming_li@realsil.com.cn>
+Subject: Re: RTL8192SE and 802.11n problem
+References: <4E67CE3F.8090405@gmail.com> <4E67CEA3.7020709@gmail.com> <4E682732.1040700@lwfinger.net>
+In-Reply-To: <4E682732.1040700@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Stefan,
 
-This implements a basic sta_add and sta_remove callback. Introduce a new
-structure rt2x00_sta and ask mac80211 to allocate it as private part of
-its ieee80211_sta. rt2x00_sta only contains the WCID for now.
+I did finish the complete set of tests with my RTL8191SEvB Wireless LAN 
+Controller [10ec:8172] (rev 10). The results for the tests are as follows:
 
-The sta_add callback allows the driver to assign a WCID to a station
-that is currently being added. The same wcid is also passed to the
-sta_remove callback one mac80211 removes this STA.
+TCP_MAERTS:
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h    |   22 ++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2x00dev.c |    5 ++++
- drivers/net/wireless/rt2x00/rt2x00mac.c |   33 +++++++++++++++++++++++++++++++
- 3 files changed, 60 insertions(+), 0 deletions(-)
+kernel 3.0.4:
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index bacb533..2093a55 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -512,6 +512,19 @@ struct rt2x00intf_conf {
- };
- 
- /*
-+ * Private structure for storing STA details
-+ * wcid: Wireless Client ID
-+ */
-+struct rt2x00_sta {
-+	int wcid;
-+};
-+
-+static inline struct rt2x00_sta* sta_to_rt2x00_sta(struct ieee80211_sta *sta)
-+{
-+	return (struct rt2x00_sta *)sta->drv_priv;
-+}
-+
-+/*
-  * rt2x00lib callback functions.
-  */
- struct rt2x00lib_ops {
-@@ -621,6 +634,11 @@ struct rt2x00lib_ops {
- 	void (*config) (struct rt2x00_dev *rt2x00dev,
- 			struct rt2x00lib_conf *libconf,
- 			const unsigned int changed_flags);
-+	int (*sta_add) (struct rt2x00_dev *rt2x00dev,
-+			struct ieee80211_vif *vif,
-+			struct ieee80211_sta *sta);
-+	int (*sta_remove) (struct rt2x00_dev *rt2x00dev,
-+			   int wcid);
- };
- 
- /*
-@@ -1281,6 +1299,10 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- #else
- #define rt2x00mac_set_key	NULL
- #endif /* CONFIG_RT2X00_LIB_CRYPTO */
-+int rt2x00mac_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		      struct ieee80211_sta *sta);
-+int rt2x00mac_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			 struct ieee80211_sta *sta);
- void rt2x00mac_sw_scan_start(struct ieee80211_hw *hw);
- void rt2x00mac_sw_scan_complete(struct ieee80211_hw *hw);
- int rt2x00mac_get_stats(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 4db0ebe..7e4e062 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -932,6 +932,11 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
- 		rt2x00dev->hw->extra_tx_headroom += RT2X00_ALIGN_SIZE;
- 
- 	/*
-+	 * Tell mac80211 about the size of our private STA structure.
-+	 */
-+	rt2x00dev->hw->sta_data_size = sizeof(struct rt2x00_sta);
-+
-+	/*
- 	 * Allocate tx status FIFO for driver use.
- 	 */
- 	if (test_bit(REQUIRE_TXSTATUS_FIFO, &rt2x00dev->cap_flags)) {
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 4cf1848..3cd70ff 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -552,6 +552,39 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- EXPORT_SYMBOL_GPL(rt2x00mac_set_key);
- #endif /* CONFIG_RT2X00_LIB_CRYPTO */
- 
-+int rt2x00mac_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		      struct ieee80211_sta *sta)
-+{
-+	struct rt2x00_dev *rt2x00dev = hw->priv;
-+	struct rt2x00_sta *sta_priv = sta_to_rt2x00_sta(sta);
-+
-+	/*
-+	 * If there's no space left in the device table store
-+	 * -1 as wcid but tell mac80211 everything went ok.
-+	 */
-+	if (rt2x00dev->ops->lib->sta_add(rt2x00dev, vif, sta))
-+		sta_priv->wcid = -1;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(rt2x00mac_sta_add);
-+
-+int rt2x00mac_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			 struct ieee80211_sta *sta)
-+{
-+	struct rt2x00_dev *rt2x00dev = hw->priv;
-+	struct rt2x00_sta *sta_priv = sta_to_rt2x00_sta(sta);
-+
-+	/*
-+	 * If we never sent the STA to the device no need to clean it up.
-+	 */
-+	if (sta_priv->wcid < 0)
-+		return 0;
-+
-+	return rt2x00dev->ops->lib->sta_remove(rt2x00dev, sta_priv->wcid);
-+}
-+EXPORT_SYMBOL_GPL(rt2x00mac_sta_remove);
-+
- void rt2x00mac_sw_scan_start(struct ieee80211_hw *hw)
- {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
--- 
-1.7.3.4
+Results: TX: max 38.61, min 14.04. Mean 33.45(6.95)
+          RX: max 47.55, min 30.52. Mean 37.31(5.36)
+
+3.1-rc4 - Mainline:
+
+Results: TX: max 57.70, min 42.90. Mean 52.79(3.92)
+          RX: max 68.77, min 47.29. Mean 60.38(5.28)
+
+3.1-rc4 - wireless-testing:
+
+Results: TX: max 112.86, min 23.34. Mean 51.70(21.86)
+          RX: max 75.84, min 35.60. Mean 59.03(9.76)
+
+TCP_STREAM:
+
+Kernel 3.0.4:
+
+Results: TX: max 43.94, min 15.74. Mean 32.29(6.93)
+          RX: max 36.01, min 30.75. Mean 34.29(1.75)
+
+Kernel 3.1-rc4 from mainline:
+
+Results: TX: max 59.73, min 23.48. Mean 47.59(12.33)
+          RX: max 49.89, min 25.14. Mean 38.26(7.32)
+
+Kernel 3.1-rc4 from wireless-testing:
+
+Results: TX: max 62.39, min 57.27. Mean 60.69(1.62)
+          RX: max 53.00, min 23.95. Mean 43.17(8.56)
+
+TCP_SENDFILE:
+
+Kernel 3.0.4:
+
+Results: TX: max 30.06, min 20.21. Mean 28.36(2.87)
+          RX: max 38.28, min 29.56. Mean 34.36(2.79)
+
+Kernel 3.1-rc4 from mainline:
+
+Results: TX: max 70.25, min  2.64. Mean 42.59(18.30)
+          RX: max 44.85, min 33.12. Mean 40.83(4.04)
+
+Kernel 3.1-rc4 from wireless-testing:
+
+Results: TX: max 62.51, min 51.26. Mean 56.94(3.35)
+          RX: max 45.35, min 28.40. Mean 37.56(5.16)
+
+It seems that kernel 3.1-rc4 from mainline is quite a bit faster than 3.0.4, but 
+I don't know why. The 3.1-rc4 driver from wireless-testing may be a bit quicker, 
+but the difference is not that great.
+
+My next step will be to bisect the mainline tree to see if I can find a commit 
+that has a big effect. Please open a bug at bugzilla.kernel.org on this issue, 
+if you have not already done so, and send me the bug number.
+
+Larry
