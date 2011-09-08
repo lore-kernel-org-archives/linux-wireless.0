@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:30569 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750747Ab1IVIFR (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:47845 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932607Ab1IHMjg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 04:05:17 -0400
-Message-ID: <4E7AEC37.40405@qca.qualcomm.com> (sfid-20110922_100530_007335_95F6C026)
-Date: Thu, 22 Sep 2011 11:05:11 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Thu, 8 Sep 2011 08:39:36 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 24so422913eyx.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 05:39:36 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 7/7] rt2x00: Use the available helper functions to initialize the WCID table
+Date: Thu, 8 Sep 2011 14:39:04 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201109081434.23635.IvDoorn@gmail.com> <201109081438.02330.IvDoorn@gmail.com> <201109081438.37130.IvDoorn@gmail.com>
+In-Reply-To: <201109081438.37130.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] ath6kl: Report PMKSA candidate events through cfg80211
-References: <20110921135729.GA26105@jouni.qca.qualcomm.com>
-In-Reply-To: <20110921135729.GA26105@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201109081439.05539.IvDoorn@gmail.com> (sfid-20110908_143941_899654_FF69AD4C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/21/2011 04:57 PM, Jouni Malinen wrote:
-> This allows RSN pre-authentication to be used when roaming decisions are
-> done in the target.
-> 
-> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/wmi.c |   30 ++++++++++++++++++++++++++++++
->  drivers/net/wireless/ath/ath6kl/wmi.h |   10 ++++++++++
->  2 files changed, 40 insertions(+), 0 deletions(-)
-> 
-> Please note that this depends on a recent change in wireless-testing.git
-> for cfg80211_pmksa_candidate_notify(). This commit
-> c9df56b48e4ff003eaebd680ec7a45342dcd03ea is not yet in ath6kl.git.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Thanks for the warning, this is always good to know.
+Use rt2800_config_wcid and rt2800_delete_wcid_attr to initialize the
+WCID table instead of writing to the registers directly.
 
-John, I merged latest wireless-next to ath6kl-next branch in ath6kl.git
-to get the latest cfg80211 changes, I hope that's ok. Let's keep this in
-mind when I send the next pull request and double check that I didn't
-break anything.
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
-Kalle
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 2f4d51a..3d9f355 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2846,11 +2846,8 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 					 SHARED_KEY_MODE_ENTRY(i), 0);
+ 
+ 	for (i = 0; i < 256; i++) {
+-		static const u32 wcid[2] = { 0xffffffff, 0x00ffffff };
+-		rt2800_register_multiwrite(rt2x00dev, MAC_WCID_ENTRY(i),
+-					      wcid, sizeof(wcid));
+-
+-		rt2800_register_write(rt2x00dev, MAC_WCID_ATTR_ENTRY(i), 0);
++		rt2800_config_wcid(rt2x00dev, NULL, i);
++		rt2800_delete_wcid_attr(rt2x00dev, i);
+ 		rt2800_register_write(rt2x00dev, MAC_IVEIV_ENTRY(i), 0);
+ 	}
+ 
+-- 
+1.7.3.4
