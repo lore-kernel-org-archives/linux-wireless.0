@@ -1,242 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:49317 "EHLO
-	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754823Ab1ILLMh (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:47845 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932621Ab1IHMj3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Sep 2011 07:12:37 -0400
-Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
-	by emh05-2.mail.saunalahti.fi (Postfix) with SMTP id C08E98C226
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 14:12:35 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-188-95.elisa-laajakaista.fi [88.115.188.95])
-	by emh07.mail.saunalahti.fi (Postfix) with ESMTP id 984AD1C6385
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 14:12:33 +0300 (EEST)
-Subject: [PATCH 4/9] ath6kl: add support for firmware API 2 format
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Date: Mon, 12 Sep 2011 14:12:33 +0300
-Message-ID: <20110912111233.16921.84153.stgit@localhost6.localdomain6> (sfid-20110912_131239_437428_16D78FC4)
-In-Reply-To: <20110912111206.16921.90687.stgit@localhost6.localdomain6>
-References: <20110912111206.16921.90687.stgit@localhost6.localdomain6>
+	Thu, 8 Sep 2011 08:39:29 -0400
+Received: by eyx24 with SMTP id 24so422913eyx.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 05:39:28 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/7] rt2x00: Introduce sta_add/remove callbacks
+Date: Thu, 8 Sep 2011 14:36:04 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201109081434.23635.IvDoorn@gmail.com>
+In-Reply-To: <201109081434.23635.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201109081436.05113.IvDoorn@gmail.com> (sfid-20110908_143933_597669_1B33B62B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the new format all the format images are embedded into one file.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+This implements a basic sta_add and sta_remove callback. Introduce a new
+structure rt2x00_sta and ask mac80211 to allocate it as private part of
+its ieee80211_sta. rt2x00_sta only contains the WCID for now.
+
+The sta_add callback allows the driver to assign a WCID to a station
+that is currently being added. The same wcid is also passed to the
+sta_remove callback one mac80211 removes this STA.
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.h |   20 +++++
- drivers/net/wireless/ath/ath6kl/init.c |  136 +++++++++++++++++++++++++++++++-
- 2 files changed, 151 insertions(+), 5 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00.h    |   22 ++++++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    5 ++++
+ drivers/net/wireless/rt2x00/rt2x00mac.c |   33 +++++++++++++++++++++++++++++++
+ 3 files changed, 60 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index c6ed1fc..761e550 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -58,6 +58,23 @@
- #define A_DEFAULT_LISTEN_INTERVAL         100
- #define A_MAX_WOW_LISTEN_INTERVAL         1000
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index bacb533..2093a55 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -512,6 +512,19 @@ struct rt2x00intf_conf {
+ };
  
-+/* includes also the null byte */
-+#define ATH6KL_FIRMWARE_MAGIC               "QCA-ATH6KL"
-+
-+enum ath6kl_fw_ie_type {
-+	ATH6KL_FW_IE_FW_VERSION = 0,
-+	ATH6KL_FW_IE_TIMESTAMP = 1,
-+	ATH6KL_FW_IE_OTP_IMAGE = 2,
-+	ATH6KL_FW_IE_FW_IMAGE = 3,
-+	ATH6KL_FW_IE_PATCH_IMAGE = 4,
+ /*
++ * Private structure for storing STA details
++ * wcid: Wireless Client ID
++ */
++struct rt2x00_sta {
++	int wcid;
 +};
 +
-+struct ath6kl_fw_ie {
-+	__le32 id;
-+	__le32 len;
-+	u8 data[0];
-+};
-+
- /* AR6003 1.0 definitions */
- #define AR6003_REV1_VERSION                 0x300002ba
- 
-@@ -68,6 +85,7 @@
- #define AR6003_REV2_FIRMWARE_FILE           "ath6k/AR6003/hw2.0/athwlan.bin.z77"
- #define AR6003_REV2_TCMD_FIRMWARE_FILE      "ath6k/AR6003/hw2.0/athtcmd_ram.bin"
- #define AR6003_REV2_PATCH_FILE              "ath6k/AR6003/hw2.0/data.patch.bin"
-+#define AR6003_REV2_FIRMWARE_2_FILE         "ath6k/AR6003/hw2.0/fw-2.bin"
- #define AR6003_REV2_BOARD_DATA_FILE         "ath6k/AR6003/hw2.0/bdata.bin"
- #define AR6003_REV2_DEFAULT_BOARD_DATA_FILE "ath6k/AR6003/hw2.0/bdata.SD31.bin"
- 
-@@ -77,6 +95,7 @@
- #define AR6003_REV3_FIRMWARE_FILE           "ath6k/AR6003/hw2.1.1/athwlan.bin"
- #define AR6003_REV3_TCMD_FIRMWARE_FILE    "ath6k/AR6003/hw2.1.1/athtcmd_ram.bin"
- #define AR6003_REV3_PATCH_FILE            "ath6k/AR6003/hw2.1.1/data.patch.bin"
-+#define AR6003_REV3_FIRMWARE_2_FILE           "ath6k/AR6003/hw2.1.1/fw-2.bin"
- #define AR6003_REV3_BOARD_DATA_FILE       "ath6k/AR6003/hw2.1.1/bdata.bin"
- #define AR6003_REV3_DEFAULT_BOARD_DATA_FILE	\
- 	"ath6k/AR6003/hw2.1.1/bdata.SD31.bin"
-@@ -84,6 +103,7 @@
- /* AR6004 1.0 definitions */
- #define AR6004_REV1_VERSION                 0x30000623
- #define AR6004_REV1_FIRMWARE_FILE           "ath6k/AR6004/hw6.1/fw.ram.bin"
-+#define AR6004_REV1_FIRMWARE_2_FILE         "ath6k/AR6004/hw6.1/fw-2.bin"
- #define AR6004_REV1_BOARD_DATA_FILE         "ath6k/AR6004/hw6.1/bdata.bin"
- #define AR6004_REV1_DEFAULT_BOARD_DATA_FILE "ath6k/AR6004/hw6.1/bdata.DB132.bin"
- #define AR6004_REV1_EPPING_FIRMWARE_FILE "ath6k/AR6004/hw6.1/endpointping.bin"
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 4055947..41f4e0d 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -917,14 +917,10 @@ static int ath6kl_fetch_patch_file(struct ath6kl *ar)
- 	return 0;
- }
- 
--static int ath6kl_fetch_firmwares(struct ath6kl *ar)
-+static int ath6kl_fetch_fw_api1(struct ath6kl *ar)
- {
- 	int ret;
- 
--	ret = ath6kl_fetch_board_file(ar);
--	if (ret)
--		return ret;
--
- 	ret = ath6kl_fetch_otp_file(ar);
- 	if (ret)
- 		return ret;
-@@ -940,6 +936,136 @@ static int ath6kl_fetch_firmwares(struct ath6kl *ar)
- 	return 0;
- }
- 
-+static int ath6kl_fetch_fw_api2(struct ath6kl *ar)
++static inline struct rt2x00_sta* sta_to_rt2x00_sta(struct ieee80211_sta *sta)
 +{
-+	size_t magic_len, len, ie_len;
-+	const struct firmware *fw;
-+	struct ath6kl_fw_ie *hdr;
-+	const char *filename;
-+	const u8 *data;
-+	int ret, ie_id;
-+
-+	switch (ar->version.target_ver) {
-+	case AR6003_REV2_VERSION:
-+		filename = AR6003_REV2_FIRMWARE_2_FILE;
-+		break;
-+	case AR6003_REV3_VERSION:
-+		filename = AR6003_REV3_FIRMWARE_2_FILE;
-+		break;
-+	case AR6004_REV1_VERSION:
-+		filename = AR6004_REV1_FIRMWARE_2_FILE;
-+		break;
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+
-+	ret = request_firmware(&fw, filename, ar->dev);
-+	if (ret)
-+		return ret;
-+
-+	data = fw->data;
-+	len = fw->size;
-+
-+	/* magic also includes the null byte, check that as well */
-+	magic_len = strlen(ATH6KL_FIRMWARE_MAGIC) + 1;
-+
-+	if (len < magic_len) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	if (memcmp(data, ATH6KL_FIRMWARE_MAGIC, magic_len) != 0) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	len -= magic_len;
-+	data += magic_len;
-+
-+	/* loop elements */
-+	while (len > sizeof(struct ath6kl_fw_ie)) {
-+		/* hdr is unaligned! */
-+		hdr = (struct ath6kl_fw_ie *) data;
-+
-+		ie_id = le32_to_cpup(&hdr->id);
-+		ie_len = le32_to_cpup(&hdr->len);
-+
-+		len -= sizeof(*hdr);
-+		data += sizeof(*hdr);
-+
-+		if (len < ie_len) {
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+
-+		switch (ie_id) {
-+		case ATH6KL_FW_IE_OTP_IMAGE:
-+			ar->fw_otp = kmemdup(data, ie_len, GFP_KERNEL);
-+
-+			if (ar->fw_otp == NULL) {
-+				ret = -ENOMEM;
-+				goto out;
-+			}
-+
-+			ar->fw_otp_len = ie_len;
-+			break;
-+		case ATH6KL_FW_IE_FW_IMAGE:
-+			ar->fw = kmemdup(data, ie_len, GFP_KERNEL);
-+
-+			if (ar->fw == NULL) {
-+				ret = -ENOMEM;
-+				goto out;
-+			}
-+
-+			ar->fw_len = ie_len;
-+			break;
-+		case ATH6KL_FW_IE_PATCH_IMAGE:
-+			ar->fw_patch = kmemdup(data, ie_len, GFP_KERNEL);
-+
-+			if (ar->fw_patch == NULL) {
-+				ret = -ENOMEM;
-+				goto out;
-+			}
-+
-+			ar->fw_patch_len = ie_len;
-+			break;
-+		default:
-+			ath6kl_dbg(ATH6KL_DBG_TRC, "Unknown fw ie: %u\n",
-+				   le32_to_cpup(&hdr->id));
-+			break;
-+		}
-+
-+		len -= ie_len;
-+		data += ie_len;
-+	};
-+
-+	ret = 0;
-+out:
-+	release_firmware(fw);
-+
-+	return ret;
++	return (struct rt2x00_sta *)sta->drv_priv;
 +}
 +
-+static int ath6kl_fetch_firmwares(struct ath6kl *ar)
++/*
+  * rt2x00lib callback functions.
+  */
+ struct rt2x00lib_ops {
+@@ -621,6 +634,11 @@ struct rt2x00lib_ops {
+ 	void (*config) (struct rt2x00_dev *rt2x00dev,
+ 			struct rt2x00lib_conf *libconf,
+ 			const unsigned int changed_flags);
++	int (*sta_add) (struct rt2x00_dev *rt2x00dev,
++			struct ieee80211_vif *vif,
++			struct ieee80211_sta *sta);
++	int (*sta_remove) (struct rt2x00_dev *rt2x00dev,
++			   int wcid);
+ };
+ 
+ /*
+@@ -1281,6 +1299,10 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ #else
+ #define rt2x00mac_set_key	NULL
+ #endif /* CONFIG_RT2X00_LIB_CRYPTO */
++int rt2x00mac_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++		      struct ieee80211_sta *sta);
++int rt2x00mac_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			 struct ieee80211_sta *sta);
+ void rt2x00mac_sw_scan_start(struct ieee80211_hw *hw);
+ void rt2x00mac_sw_scan_complete(struct ieee80211_hw *hw);
+ int rt2x00mac_get_stats(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 4db0ebe..7e4e062 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -932,6 +932,11 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 		rt2x00dev->hw->extra_tx_headroom += RT2X00_ALIGN_SIZE;
+ 
+ 	/*
++	 * Tell mac80211 about the size of our private STA structure.
++	 */
++	rt2x00dev->hw->sta_data_size = sizeof(struct rt2x00_sta);
++
++	/*
+ 	 * Allocate tx status FIFO for driver use.
+ 	 */
+ 	if (test_bit(REQUIRE_TXSTATUS_FIFO, &rt2x00dev->cap_flags)) {
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 4cf1848..3cd70ff 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -552,6 +552,39 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ EXPORT_SYMBOL_GPL(rt2x00mac_set_key);
+ #endif /* CONFIG_RT2X00_LIB_CRYPTO */
+ 
++int rt2x00mac_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++		      struct ieee80211_sta *sta)
 +{
-+	int ret;
++	struct rt2x00_dev *rt2x00dev = hw->priv;
++	struct rt2x00_sta *sta_priv = sta_to_rt2x00_sta(sta);
 +
-+	ret = ath6kl_fetch_board_file(ar);
-+	if (ret)
-+		return ret;
-+
-+	ret = ath6kl_fetch_fw_api2(ar);
-+	if (ret == 0)
-+		/* fw api 2 found, use it */
-+		return 0;
-+
-+	ret = ath6kl_fetch_fw_api1(ar);
-+	if (ret)
-+		return ret;
++	/*
++	 * If there's no space left in the device table store
++	 * -1 as wcid but tell mac80211 everything went ok.
++	 */
++	if (rt2x00dev->ops->lib->sta_add(rt2x00dev, vif, sta))
++		sta_priv->wcid = -1;
 +
 +	return 0;
 +}
++EXPORT_SYMBOL_GPL(rt2x00mac_sta_add);
 +
- static int ath6kl_upload_board_file(struct ath6kl *ar)
++int rt2x00mac_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			 struct ieee80211_sta *sta)
++{
++	struct rt2x00_dev *rt2x00dev = hw->priv;
++	struct rt2x00_sta *sta_priv = sta_to_rt2x00_sta(sta);
++
++	/*
++	 * If we never sent the STA to the device no need to clean it up.
++	 */
++	if (sta_priv->wcid < 0)
++		return 0;
++
++	return rt2x00dev->ops->lib->sta_remove(rt2x00dev, sta_priv->wcid);
++}
++EXPORT_SYMBOL_GPL(rt2x00mac_sta_remove);
++
+ void rt2x00mac_sw_scan_start(struct ieee80211_hw *hw)
  {
- 	u32 board_address, board_ext_address, param;
-
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+-- 
+1.7.3.4
