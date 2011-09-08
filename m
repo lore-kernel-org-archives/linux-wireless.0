@@ -1,207 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31218 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751386Ab1IXQvN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Sep 2011 12:51:13 -0400
-Date: Sat, 24 Sep 2011 18:50:01 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Christoph Anton Mitterer <calestyo@scientia.net>
-Cc: Jonathan Nieder <jrnieder@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Dietsche <Gregory.Dietsche@cuw.edu>,
-	linux-kernel@vger.kernel.org
-Subject: Re: iwl4965: "MAC is in deep sleep!" freezes
-Message-ID: <20110924165001.GB10001@redhat.com> (sfid-20110924_185133_266218_19634C95)
-References: <bbdbd01d4965ae789384bc1f9d0a2426@imap.dd24.net>
- <20110902233806.GA22157@elie>
- <20110905091918.GC2221@redhat.com>
- <265f56a4dc9f5d3edeca3d101e445353@imap.dd24.net>
- <20110908084913.GB2195@redhat.com>
- <20110908161955.GA9171@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110908161955.GA9171@redhat.com>
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:50035 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756359Ab1IHKBh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Sep 2011 06:01:37 -0400
+Received: by mail-ww0-f46.google.com with SMTP id 7so409808wwg.27
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 03:01:35 -0700 (PDT)
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Shahar Levi <shahar_levi@ti.com>
+Subject: [PATCH] wl12xx: Add support for HW channel switch
+Date: Thu,  8 Sep 2011 13:01:33 +0300
+Message-Id: <1315476093-27583-1-git-send-email-shahar_levi@ti.com> (sfid-20110908_120140_998671_4F3083F7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 08, 2011 at 06:19:56PM +0200, Stanislaw Gruszka wrote:
-> On Thu, Sep 08, 2011 at 10:49:13AM +0200, Stanislaw Gruszka wrote:
-> > On Mon, Sep 05, 2011 at 09:42:01AM +0000, Christoph Anton Mitterer wrote:
-> > > On Mon, 5 Sep 2011 11:19:18 +0200, Stanislaw Gruszka <sgruszka@redhat.com>
-> > > wrote:
-> > > > this look like firmware hang. This happen just after module load, that's
-> > > > good news, because it allow to log relative small amount debug messages
-> > > > to see what possibly driver do wrong to crash firmware.
-> > > Note, that the effects of - usually but not always - frozen system while
-> > > the errors are printed (sometimes keyboard input seems still be possible
-> > > during that) ... happen over and over again... say about every  10 minutes
-> > > or so.
-> > > Not just the first time the modules is loaded.
-> > > Is the firmware loaded over and over again?
-> > I think is not, but even if is, kernel should not crash. Can you grab
-> > crash logs using photo camera, serial cable or netconsole, to allow to 
-> > see where exactly crash happen and fix it.
-> > 
-> > > > Please configure syslog to log kernel debug messages.
-> > > Will mail it later.
-> > 
-> > Firmware hang seems to happen when REPLY_LEDS_CMD command is send.
-> > No idea if attached patch could help or not, but is worth to try it.
-> > It prevent to send LED command asynchronously, when possibly some
-> > other commands are pending in firmware.
-> > 
-> > If it does not help, please provide the same way captured debug
-> > messages from 2.6.38 kernel, where drivers works. I'll compare
-> > it with broken driver logs to figure out what broken driver
-> > do differently.
-> 
-> Sorry, forgot attch the patch, do it now.
+WL12xx FW supports HW channel switch mechanism.
+Add HW channel switch support via channel_switch ops.
 
-Any feedback here?
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+---
+Dependencies:
+- That patches have a runtime dependency on commit
+ "[PATCH] mac80211: Update device channel in case of HW channel
+ switch supported"
 
-Stanislaw
+ drivers/net/wireless/wl12xx/boot.c   |    3 +-
+ drivers/net/wireless/wl12xx/cmd.c    |   58 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/cmd.h    |   20 ++++++++++++
+ drivers/net/wireless/wl12xx/event.c  |   15 +++++++++
+ drivers/net/wireless/wl12xx/main.c   |   40 +++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl12xx.h |    1 +
+ 6 files changed, 136 insertions(+), 1 deletions(-)
 
-> diff --git a/drivers/net/wireless/iwlegacy/iwl-3945-led.c b/drivers/net/wireless/iwlegacy/iwl-3945-led.c
-> index abd9235..127ffd6 100644
-> --- a/drivers/net/wireless/iwlegacy/iwl-3945-led.c
-> +++ b/drivers/net/wireless/iwlegacy/iwl-3945-led.c
-> @@ -52,8 +52,7 @@ static int iwl3945_send_led_cmd(struct iwl_priv *priv,
->  		.id = REPLY_LEDS_CMD,
->  		.len = sizeof(struct iwl_led_cmd),
->  		.data = led_cmd,
-> -		.flags = CMD_ASYNC,
-> -		.callback = NULL,
-> +		.flags = CMD_SYNC,
->  	};
->  
->  	return iwl_legacy_send_cmd(priv, &cmd);
-> diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-led.c b/drivers/net/wireless/iwlegacy/iwl-4965-led.c
-> index 26d324e..2545c19 100644
-> --- a/drivers/net/wireless/iwlegacy/iwl-4965-led.c
-> +++ b/drivers/net/wireless/iwlegacy/iwl-4965-led.c
-> @@ -51,8 +51,7 @@ iwl4965_send_led_cmd(struct iwl_priv *priv, struct iwl_led_cmd *led_cmd)
->  		.id = REPLY_LEDS_CMD,
->  		.len = sizeof(struct iwl_led_cmd),
->  		.data = led_cmd,
-> -		.flags = CMD_ASYNC,
-> -		.callback = NULL,
-> +		.flags = CMD_SYNC,
->  	};
->  	u32 reg;
->  
-> diff --git a/drivers/net/wireless/iwlegacy/iwl-dev.h b/drivers/net/wireless/iwlegacy/iwl-dev.h
-> index 9c786ed..2623c79 100644
-> --- a/drivers/net/wireless/iwlegacy/iwl-dev.h
-> +++ b/drivers/net/wireless/iwlegacy/iwl-dev.h
-> @@ -1211,6 +1211,8 @@ struct iwl_priv {
->  	struct delayed_work alive_start;
->  	struct delayed_work scan_check;
->  
-> +	struct work_struct led_work;
-> +
->  	/* TX Power */
->  	s8 tx_power_user_lmt;
->  	s8 tx_power_device_lmt;
-> diff --git a/drivers/net/wireless/iwlegacy/iwl-led.c b/drivers/net/wireless/iwlegacy/iwl-led.c
-> index bda0d61..2152d87 100644
-> --- a/drivers/net/wireless/iwlegacy/iwl-led.c
-> +++ b/drivers/net/wireless/iwlegacy/iwl-led.c
-> @@ -106,13 +106,6 @@ static int iwl_legacy_led_cmd(struct iwl_priv *priv,
->  		.id = IWL_LED_LINK,
->  		.interval = IWL_DEF_LED_INTRVL
->  	};
-> -	int ret;
-> -
-> -	if (!test_bit(STATUS_READY, &priv->status))
-> -		return -EBUSY;
-> -
-> -	if (priv->blink_on == on && priv->blink_off == off)
-> -		return 0;
->  
->  	if (off == 0) {
->  		/* led is SOLID_ON */
-> @@ -126,24 +119,25 @@ static int iwl_legacy_led_cmd(struct iwl_priv *priv,
->  	led_cmd.off = iwl_legacy_blink_compensation(priv, off,
->  				priv->cfg->base_params->led_compensation);
->  
-> -	ret = priv->cfg->ops->led->cmd(priv, &led_cmd);
-> -	if (!ret) {
-> -		priv->blink_on = on;
-> -		priv->blink_off = off;
-> -	}
-> -	return ret;
-> +	return priv->cfg->ops->led->cmd(priv, &led_cmd);
->  }
->  
->  static void iwl_legacy_led_brightness_set(struct led_classdev *led_cdev,
->  				   enum led_brightness brightness)
->  {
->  	struct iwl_priv *priv = container_of(led_cdev, struct iwl_priv, led);
-> -	unsigned long on = 0;
-> +	unsigned long on = (brightness > 0) ? IWL_LED_SOLID : 0;
->  
-> -	if (brightness > 0)
-> -		on = IWL_LED_SOLID;
-> +	if (!test_bit(STATUS_READY, &priv->status))
-> +		return;
-> +
-> +	if (priv->blink_on == on && priv->blink_off == 0)
-> +		return;
-> +
-> +	priv->blink_on = on;
-> +	priv->blink_off = 0;
->  
-> -	iwl_legacy_led_cmd(priv, on, 0);
-> +	queue_work(priv->workqueue, &priv->led_work);
->  }
->  
->  static int iwl_legacy_led_blink_set(struct led_classdev *led_cdev,
-> @@ -152,7 +146,28 @@ static int iwl_legacy_led_blink_set(struct led_classdev *led_cdev,
->  {
->  	struct iwl_priv *priv = container_of(led_cdev, struct iwl_priv, led);
->  
-> -	return iwl_legacy_led_cmd(priv, *delay_on, *delay_off);
-> +	if (!test_bit(STATUS_READY, &priv->status))
-> +		return -EBUSY;
-> +
-> +	if (priv->blink_on == *delay_on && priv->blink_off == *delay_off)
-> +		return 0;
-> +
-> +	/* FIXME: Need spinlock to sync with possibly currently running led work? */
-> +	priv->blink_on = *delay_on;
-> +	priv->blink_off = *delay_off;
-> +
-> +	queue_work(priv->workqueue, &priv->led_work);
-> +	
-> +	return 0;
-> +}
-> +
-> +static void iwl_legacy_bg_led(struct work_struct *work)
-> +{
-> +	struct iwl_priv *priv = container_of(work, struct iwl_priv, led_work);
-> +
-> +	mutex_lock(&priv->mutex);
-> +	iwl_legacy_led_cmd(priv, priv->blink_on, priv->blink_off);
-> +	mutex_unlock(&priv->mutex);
->  }
->  
->  void iwl_legacy_leds_init(struct iwl_priv *priv)
-> @@ -160,6 +175,8 @@ void iwl_legacy_leds_init(struct iwl_priv *priv)
->  	int mode = led_mode;
->  	int ret;
->  
-> +	INIT_WORK(&priv->led_work, iwl_legacy_bg_led);
-> +
->  	if (mode == IWL_LED_DEFAULT)
->  		mode = priv->cfg->led_mode;
->  
-> @@ -202,5 +219,7 @@ void iwl_legacy_leds_exit(struct iwl_priv *priv)
->  
->  	led_classdev_unregister(&priv->led);
->  	kfree(priv->led.name);
-> +
-> +	cancel_work_sync(&priv->led_work);
->  }
->  EXPORT_SYMBOL(iwl_legacy_leds_exit);
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index 6d5664b..9b40027 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -503,7 +503,8 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
+ 		BA_SESSION_RX_CONSTRAINT_EVENT_ID |
+ 		REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID |
+ 		INACTIVE_STA_EVENT_ID |
+-		MAX_TX_RETRY_EVENT_ID;
++		MAX_TX_RETRY_EVENT_ID |
++		CHANNEL_SWITCH_COMPLETE_EVENT_ID;
+ 
+ 	ret = wl1271_event_unmask(wl);
+ 	if (ret < 0) {
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index 817bc18..a94bb3a 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -1688,3 +1688,61 @@ int wl12xx_croc(struct wl1271 *wl, u8 role_id)
+ out:
+ 	return ret;
+ }
++
++int wl12xx_cmd_channel_switch(struct wl1271 *wl,
++			      struct ieee80211_channel_switch *ch_switch)
++{
++	struct wl12xx_cmd_channel_switch *cmd;
++	int ret;
++
++	wl1271_debug(DEBUG_ACX, "cmd channel switch");
++
++	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
++	if (!cmd) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	cmd->channel = ch_switch->channel->hw_value;
++	cmd->switch_time = ch_switch->count;
++	cmd->tx_suspend = ch_switch->block_tx;
++	cmd->flush = 0;
++
++	ret = wl1271_cmd_send(wl, CMD_CHANNEL_SWITCH, cmd, sizeof(*cmd), 0);
++	if (ret < 0) {
++		wl1271_error("failed to send channel switch command");
++		goto out_free;
++	}
++
++out_free:
++	kfree(cmd);
++
++out:
++	return ret;
++}
++
++int wl12xx_cmd_stop_channel_switch(struct wl1271 *wl)
++{
++	struct wl12xx_cmd_stop_channel_switch *cmd;
++	int ret;
++
++	wl1271_debug(DEBUG_ACX, "cmd stop channel switch");
++
++	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
++	if (!cmd) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	ret = wl1271_cmd_send(wl, CMD_STOP_CHANNEL_SWICTH, cmd, sizeof(*cmd), 0);
++	if (ret < 0) {
++		wl1271_error("failed to stop channel switch command");
++		goto out_free;
++	}
++
++out_free:
++	kfree(cmd);
++
++out:
++	return ret;
++}
+diff --git a/drivers/net/wireless/wl12xx/cmd.h b/drivers/net/wireless/wl12xx/cmd.h
+index 22c2f37..8eff809 100644
+--- a/drivers/net/wireless/wl12xx/cmd.h
++++ b/drivers/net/wireless/wl12xx/cmd.h
+@@ -79,6 +79,9 @@ int wl12xx_cmd_remove_peer(struct wl1271 *wl, u8 hlid);
+ int wl12xx_cmd_config_fwlog(struct wl1271 *wl);
+ int wl12xx_cmd_start_fwlog(struct wl1271 *wl);
+ int wl12xx_cmd_stop_fwlog(struct wl1271 *wl);
++int wl12xx_cmd_channel_switch(struct wl1271 *wl,
++			      struct ieee80211_channel_switch *ch_switch);
++int wl12xx_cmd_stop_channel_switch(struct wl1271 *wl);
+ 
+ enum wl1271_commands {
+ 	CMD_INTERROGATE     = 1,    /*use this to read information elements*/
+@@ -670,4 +673,21 @@ struct wl12xx_cmd_stop_fwlog {
+ 	struct wl1271_cmd_header header;
+ } __packed;
+ 
++struct wl12xx_cmd_channel_switch {
++	struct wl1271_cmd_header header;
++
++	/* The new serving channel */
++	u8 channel;
++	/* Relative time of the serving channel switch in TBTT units */
++	u8 switch_time;
++	/* 1: Suspend TX till switch time; 0: Do not suspend TX */
++	u8 tx_suspend;
++	/* 1: Flush TX at switch time; 0: Do not flush */
++	u8 flush;
++} __packed;
++
++struct wl12xx_cmd_stop_channel_switch {
++	struct wl1271_cmd_header header;
++} __packed;
++
+ #endif /* __WL1271_CMD_H__ */
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index 0bd7b02..d173971 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -291,6 +291,21 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ 			wl1271_stop_ba_event(wl, mbox->rx_ba_allowed);
+ 	}
+ 
++	if ((vector & CHANNEL_SWITCH_COMPLETE_EVENT_ID) && !is_ap) {
++		wl1271_debug(DEBUG_EVENT, "CHANNEL_SWITCH_COMPLETE_EVENT_ID. "
++					  "status = 0x%x",
++					  mbox->channel_switch_status);
++		/*
++		 * That event uses for two cases:
++		 * 1) channel switch complete with status=0
++		 * 2) channel switch failed status=1
++		 */
++		if (test_and_clear_bit(WL1271_FLAG_CS_PROGRESS, &wl->flags) &&
++		    (wl->vif))
++			ieee80211_chswitch_done(wl->vif,
++				mbox->channel_switch_status ? false : true);
++	}
++
+ 	if ((vector & DUMMY_PACKET_EVENT_ID)) {
+ 		wl1271_debug(DEBUG_EVENT, "DUMMY_PACKET_ID_EVENT_ID");
+ 		if (wl->vif)
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index bde8402..cfdb719 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2183,6 +2183,11 @@ static int wl1271_unjoin(struct wl1271 *wl)
+ {
+ 	int ret;
+ 
++	if (test_and_clear_bit(WL1271_FLAG_CS_PROGRESS, &wl->flags)) {
++		wl12xx_cmd_stop_channel_switch(wl);
++		ieee80211_chswitch_done(wl->vif, false);
++	}
++
+ 	/* to stop listening to a channel, we disconnect */
+ 	ret = wl12xx_cmd_role_stop_sta(wl);
+ 	if (ret < 0)
+@@ -3950,6 +3955,40 @@ out:
+ 	return ret;
+ }
+ 
++static void wl12xx_op_channel_switch(struct ieee80211_hw *hw,
++				     struct ieee80211_channel_switch *ch_switch)
++{
++	struct wl1271 *wl = hw->priv;
++	int ret;
++
++	wl1271_debug(DEBUG_MAC80211, "mac80211 channel switch");
++
++	mutex_lock(&wl->mutex);
++
++	if (unlikely(wl->state == WL1271_STATE_OFF)) {
++		mutex_unlock(&wl->mutex);
++		ieee80211_chswitch_done(wl->vif, false);
++		return;
++	}
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
++
++	/* send all pending packets */
++	wl1271_tx_work_locked(wl);
++
++	ret = wl12xx_cmd_channel_switch(wl, ch_switch);
++
++	if (!ret)
++		set_bit(WL1271_FLAG_CS_PROGRESS, &wl->flags);
++
++	wl1271_ps_elp_sleep(wl);
++
++out:
++	mutex_unlock(&wl->mutex);
++}
++
+ static bool wl1271_tx_frames_pending(struct ieee80211_hw *hw)
+ {
+ 	struct wl1271 *wl = hw->priv;
+@@ -4231,6 +4270,7 @@ static const struct ieee80211_ops wl1271_ops = {
+ 	.sta_remove = wl1271_op_sta_remove,
+ 	.ampdu_action = wl1271_op_ampdu_action,
+ 	.tx_frames_pending = wl1271_tx_frames_pending,
++	.channel_switch = wl12xx_op_channel_switch,
+ 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
+ };
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index fb2753c..8f9cb95 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -348,6 +348,7 @@ enum wl12xx_flags {
+ 	WL1271_FLAG_SOFT_GEMINI,
+ 	WL1271_FLAG_RX_STREAMING_STARTED,
+ 	WL1271_FLAG_RECOVERY_IN_PROGRESS,
++	WL1271_FLAG_CS_PROGRESS,
+ };
+ 
+ struct wl1271_link {
+-- 
+1.7.1
 
