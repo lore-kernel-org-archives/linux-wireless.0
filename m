@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp3.domainxyz.de ([78.47.113.144]:3619 "EHLO
-	smtp3.domainxyz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752081Ab1ILT4Y (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:46573 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932163Ab1IHDsC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Sep 2011 15:56:24 -0400
+	Wed, 7 Sep 2011 23:48:02 -0400
+Received: by gxk21 with SMTP id 21so630837gxk.5
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Sep 2011 20:48:01 -0700 (PDT)
+Message-ID: <4E6839A4.9010403@lwfinger.net> (sfid-20110908_054806_762091_76A9E629)
+Date: Wed, 07 Sep 2011 22:42:28 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Subject: Re: [PATCH 3.1] iwlagn: fix stack corruption
-Date: Mon, 12 Sep 2011 21:55:54 +0200
-Message-ID: <2EBB96D0C3577D479C54D1243926388D03C8E186@mail.ecs-exchange.de> (sfid-20110912_215627_269447_850D260C)
-In-Reply-To: <1315854505.11834.3.camel@jlt3.sipsolutions.net>
-References: <1315854505.11834.3.camel@jlt3.sipsolutions.net>
-From: "Alexander Diewald" <alex@diewald.cc>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"Wey-Yi W Guy" <wey-yi.w.guy@intel.com>,
-	"Meenakshi Venkataraman" <meenakshi.venkataraman@intel.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
+To: Stefan Zwanenburg <stefanhetzwaantje@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	'Chaoming_Li' <chaoming_li@realsil.com.cn>
+Subject: Re: RTL8192SE and 802.11n problem
+References: <4E67CE3F.8090405@gmail.com> <4E67CEA3.7020709@gmail.com> <4E682732.1040700@lwfinger.net> <4E682D68.1070408@lwfinger.net> <4E68353D.3010505@gmail.com>
+In-Reply-To: <4E68353D.3010505@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCkkndmUganVzdCB0cmllZCB0aGUgZml4IGFuZCBpdCB3b3Jrcy4gSSBz
-d2l0Y2hlZCBvZmYgYWxsIHRoZSBkZWJ1Z2dpbmcgb3B0aW9ucyBpbiB0aGUgaXdsd2lmaSBkcml2
-ZXIgYW5kIHRoZSB3aXJlbGVzcyBzdGFjayBhbmQgdHVybmVkIG9mZiB0aGUgZnJhbWUgcG9pbnRl
-cnMgZm9yIHRlc3RpbmcuDQpUaGFuayB5b3UgdmVyeSBtdWNoLiANCg0KSnVzdCBzb21lIGZpbmFs
-IG5vdGVzOg0KVGhhbmsgeW91IFdleSwgZm9yIGV2ZW4gZm9yd2FyZGluZyB0aGlzIGlzc3VlIHdo
-ZW4geW91IHdlcmUgb24gdmFjYXRpb24hDQpBbHNvLCBzcGVjaWFsIFRoYW5rcyB0byB5b3UsIE1l
-ZW5ha3NoaSwgZm9yIHRha2luZyB0aGF0IG11Y2ggdGltZS4gSSBhbHNvIGxlYXJuZWQgYSBsb3Qg
-cmVnYXJkaW5nIGtlcm5lbCBkZWJ1Z2dpbmcgKG5ldGNvbnNvbGUgZXRjLikuIEkgaG9wZSBJIGNv
-dWxkIGdpdmUgc29tZSBnb29kIGZlZWRiYWNrLg0KQW5kIHRoYW5rcyB0byBhbGwgb3RoZXIgcGVv
-cGxlIGludm9sdmVkLg0KDQpNYXliZSwgc2VlIHlvdSBuZXh0IHRpbWUgOyksDQpBbGV4DQoNCg0K
-T24gTW9uZGF5IDEyIFNlcHRlbWJlciAyMDExIDIxOjA4OjI1IEpvaGFubmVzIEJlcmcgd3JvdGU6
-DQo+IEZyb206IEpvaGFubmVzIEJlcmcgPGpvaGFubmVzLmJlcmdAaW50ZWwuY29tPg0KPiANCj4g
-QWxleGFuZGVyIHJlcG9ydGVkIGEgc3RyYW5nZSBjcmFzaCBpbiBpd2xhZ24gdGhhdA0KPiBNZWVu
-YWtzaGkgYW5kIFdleSBjb3VsZG4ndCByZXByb2R1Y2UuIEkganVzdCByYW4NCj4gaW50byB0aGUg
-c2FtZSBpc3N1ZSBhbmQgdHJhY2tlZCBpdCBkb3duIHRvIHN0YWNrDQo+IGNvcnJ1cHRpb24uIFRo
-aXMgZml4ZXMgaXQuDQo+IA0KPiBUaGUgcHJvYmxlbSB3YXMgaW50cm9kdWNlZCBpbg0KPiBjb21t
-aXQgNGI4Yjk5YjZlNjUwZDA1MjdmM2ExMjM3NDRiNzQ1OTk3NjU4MWQxNA0KPiBBdXRob3I6IFdl
-eS1ZaSBHdXkgPHdleS15aS53Lmd1eUBpbnRlbC5jb20+DQo+IERhdGU6ICAgRnJpIEp1bCA4IDE0
-OjI5OjQ4IDIwMTEgLTA3MDANCj4gDQo+ICAgICBpd2xhZ246IHJhZGlvIHNlbnNvciBvZmZzZXQg
-aW4gbGUxNiBmb3JtYXQNCj4gDQo+IENjOiBXZXktWWkgR3V5IDx3ZXkteWkudy5ndXlAaW50ZWwu
-Y29tPg0KPiBDYzogTWVlbmFrc2hpIFZlbmthdGFyYW1hbiA8bWVlbmFrc2hpLnZlbmthdGFyYW1h
-bkBpbnRlbC5jb20+DQo+IFJlcG9ydGVkLWJ5OiBBbGV4YW5kZXIgRGlld2FsZCA8YWxleEBkaWV3
-YWxkLmNjPg0KPiBTaWduZWQtb2ZmLWJ5OiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJnQGlu
-dGVsLmNvbT4NCj4gLS0tDQo+IFdleSwgcGxlYXNlIGZpeCB5b3VyIHJlY2VudCBjb21taXQgaW4g
-b3VyIGludGVybmFsIHRyZWUNCj4gdGhhdCBkb2VzIHRoZSB2MiBvZmZzZXQgY2FsaWJyYXRpb24g
-LS0gaXQgaGFzIHRoZSBzYW1lDQo+IGJ1ZyB0d2ljZS4NCj4gDQo+ICBkcml2ZXJzL25ldC93aXJl
-bGVzcy9pd2x3aWZpL2l3bC1hZ24tdWNvZGUuYyB8ICAgIDIgKy0NCj4gIDEgZmlsZSBjaGFuZ2Vk
-LCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQ0KPiANCj4gLS0tIGEvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvaXdsd2lmaS9pd2wtYWduLXVjb2RlLmMJMjAxMS0wOS0xMg0KPiAyMTowMTozNC4w
-MDAwMDAwMDAgKzAyMDAgKysrDQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wt
-YWduLXVjb2RlLmMJMjAxMS0wOS0xMg0KPiAyMTowMTo0My4wMDAwMDAwMDAgKzAyMDAgQEAgLTE2
-Nyw3ICsxNjcsNyBAQCBzdGF0aWMgaW50DQo+IGl3bGFnbl9zZXRfdGVtcGVyYXR1cmVfb2Zmc2V0
-DQo+IA0KPiAgCW1lbXNldCgmY21kLCAwLCBzaXplb2YoY21kKSk7DQo+ICAJaXdsX3NldF9jYWxp
-Yl9oZHIoJmNtZC5oZHIsIElXTF9QSFlfQ0FMSUJSQVRFX1RFTVBfT0ZGU0VUX0NNRCk7DQo+IC0J
-bWVtY3B5KCZjbWQucmFkaW9fc2Vuc29yX29mZnNldCwgb2Zmc2V0X2NhbGliLCBzaXplb2Yob2Zm
-c2V0X2NhbGliKSk7DQo+ICsJbWVtY3B5KCZjbWQucmFkaW9fc2Vuc29yX29mZnNldCwgb2Zmc2V0
-X2NhbGliLCBzaXplb2YoKm9mZnNldF9jYWxpYikpOw0KPiAgCWlmICghKGNtZC5yYWRpb19zZW5z
-b3Jfb2Zmc2V0KSkNCj4gIAkJY21kLnJhZGlvX3NlbnNvcl9vZmZzZXQgPSBERUZBVUxUX1JBRElP
-X1NFTlNPUl9PRkZTRVQ7DQo=
+On 09/07/2011 10:23 PM, Stefan Zwanenburg wrote:
+> I cannot. The AP itself (which can display a list of its wireless
+> clients including MAC addresses and link type) reports that I'm
+> connected over an 802.11g link.
+> I'd hate for you to put more time into this if we have indeed
+> misunderstood one another.
+
+It is not a matter of "training". If the AP says it is a G connection, then the 
+rate will never be more than 54 Mbps.
+
+> Anyway, I'm more than willing to try out the 3.1-rc4 mainline kernel if
+> that would be of any help. However, it will have to wait until tomorrow,
+> since it's pretty much the end of the night in my timezone, and I have a
+> busy day tomorrow. I'll also file a bug report tomorrow, if I haven't
+> heard back from you regarding our possible misunderstanding.
+
+I think it may be an incompatibility with that AP, but I will wait for Chaoming 
+to check that.
+
+In any case, I would like to know what change increases the rate, thus I'll do 
+the bisection.
+
+Larry
 
