@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27736 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755011Ab1IFP3m (ORCPT
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:48240 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932384Ab1IHI4F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Sep 2011 11:29:42 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 2/2] ath9k: Move cycle conters under cc_lock
-Date: Tue, 6 Sep 2011 21:00:07 +0530
-Message-ID: <1315323007-1853-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110906_172944_638031_CB22B65B)
-In-Reply-To: <1315323007-1853-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1315323007-1853-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Thu, 8 Sep 2011 04:56:05 -0400
+Received: by mail-yx0-f171.google.com with SMTP id 7so549853yxs.2
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 01:56:03 -0700 (PDT)
+Message-ID: <4E688321.7090704@ti.com> (sfid-20110908_105609_891439_9AB11EEC)
+Date: Thu, 08 Sep 2011 11:56:01 +0300
+From: Victor Goldenshtein <victorg@ti.com>
+Reply-To: victorg@ti.com
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 3/5] nl80211/cfg80211: adding intermediate scan result event.
+References: <1315224151-16552-1-git-send-email-VictorG@ti.com>  <1315224151-16552-4-git-send-email-VictorG@ti.com>  <1315224512.4075.10.camel@jlt3.sipsolutions.net> <4E6736D9.3070804@ti.com>  <1315387619.4002.3.camel@jlt3.sipsolutions.net> <4E686125.5050208@ti.com> <1315464556.3948.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1315464556.3948.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch protects cycle counters access by cc_lock
-and also prints current sample index.
+On 08/09/2011 09:49, Johannes Berg wrote:
+> On Thu, 2011-09-08 at 09:31 +0300, Victor Goldenshtein wrote:
+>> On 07/09/2011 12:26, Johannes Berg wrote:
+>>>> The intermediate scan event is not HW dependent, so there is no need to
+>>>> advertise it..
+>>>
+>>> Not with mac80211 drivers, but with cfg80211 drivers?
+>>>
+>>> johannes
+>>>
+>>
+>> You're right, cfg80211 drivers will not support it. As I couldn't find a
+>> way to know whether it mac or cfg based driver, I can add also
+>> IEEE80211_HW_SUPPORTS_IM_RESULT" flag (as with cancel_scan) and then
+>> will advertise the nl80211 command if it set, is it OK?
+>
+> I'd prefer not advertising the command, since so far we've only
+> advertised supported commands as supported -- a new nl80211 flag would
+> be nicer I think.
+>
+> Come to think of it, maybe it's time to bundle capability flags
+> together. We seem to acquire new ones all the time, so maybe we should
+> have a HW_CAPABILITY nl80211 attribute that can simply grow as
+> needed ...
+>
+> johannes
+>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+If I understood you correctly.. I can create new 
+NL80211_ATTR_HW_CAPABILITY (u32) attribute which will advertise all 
+capabilities with "dev->wiphy.flags".
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index bafb7b7..5cc6a2c 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1323,16 +1323,17 @@ void ath9k_debug_samp_bb_mac(struct ath_softc *sc)
- 
- 	ath9k_ps_wakeup(sc);
- 
-+	spin_lock_bh(&sc->debug.samp_lock);
-+
- 	spin_lock_irqsave(&common->cc_lock, flags);
- 	ath_hw_cycle_counters_update(common);
--	spin_unlock_irqrestore(&common->cc_lock, flags);
--
--	spin_lock_bh(&sc->debug.samp_lock);
- 
- 	ATH_SAMP_DBG(cc.cycles) = common->cc_ani.cycles;
- 	ATH_SAMP_DBG(cc.rx_busy) = common->cc_ani.rx_busy;
- 	ATH_SAMP_DBG(cc.rx_frame) = common->cc_ani.rx_frame;
- 	ATH_SAMP_DBG(cc.tx_frame) = common->cc_ani.tx_frame;
-+	spin_unlock_irqrestore(&common->cc_lock, flags);
-+
- 	ATH_SAMP_DBG(noise) = ah->noise;
- 
- 	REG_WRITE_D(ah, AR_MACMISC,
-@@ -1390,6 +1391,8 @@ static int open_file_bb_mac_samps(struct inode *inode, struct file *file)
- 	spin_lock_bh(&sc->debug.samp_lock);
- 	memcpy(bb_mac_samp, sc->debug.bb_mac_samp,
- 			sizeof(*bb_mac_samp) * ATH_DBG_MAX_SAMPLES);
-+	len += snprintf(buf + len, size - len,
-+			"Current Sample Index: %d\n", sc->debug.sampidx);
- 	spin_unlock_bh(&sc->debug.samp_lock);
- 
- 	len += snprintf(buf + len, size - len,
--- 
-1.7.6.1
-
+Thanks,
+Victor.
