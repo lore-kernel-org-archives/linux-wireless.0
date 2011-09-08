@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:45402 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750699Ab1INEJM (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:51783 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932368Ab1IHI6M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 00:09:12 -0400
-Received: by gyg10 with SMTP id 10so1099121gyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2011 21:09:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20110913080246.184260@gmx.net>
-References: <20110913080246.184260@gmx.net>
-Date: Wed, 14 Sep 2011 12:09:12 +0800
-Message-ID: <CAJ-Vmo=q=aJ73Y8sOv_fTNCDM=DhB7Cp0C0NGHpS-GXY=77tHw@mail.gmail.com> (sfid-20110914_060919_121820_3118D787)
-Subject: Re: AR9170 chipset details
-From: Adrian Chadd <adrian@freebsd.org>
-To: Louis <louis.m@gmx.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 8 Sep 2011 04:58:12 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 19so1276683fxh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 01:58:12 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net, nbd@openwrt.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Ivo Van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 2/2] rt2x00: Remove special case for rate probe frames
+Date: Thu,  8 Sep 2011 10:58:02 +0200
+Message-Id: <1315472282-21051-2-git-send-email-helmut.schaa@googlemail.com> (sfid-20110908_105815_243499_CA584276)
+In-Reply-To: <1315472282-21051-1-git-send-email-helmut.schaa@googlemail.com>
+References: <1315472282-21051-1-git-send-email-helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 September 2011 16:02, Louis <louis.m@gmx.net> wrote:
-> Hello,
->
-> I need a detailed description of the Atheros AR9170 chipset.
+This is handled in minstrel_ht now. No need to special case it here
+again.
 
-You're not going to find anything publicly detailed, unfortunately.
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+---
 
-> Since Qualcomm and Atheros merged, there are only descriptions of the most recent chips available on their homepage and even not in the detailed depth I would like to have.
+Ivo, I'm sending this directly to John due to the dependency on the
+minstrel_ht patch.
 
-What kind of detailed descriptions are you after?
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-> Does someone know if there is a reference guide or a detailed datasheet with the chip`s functions and register descriptions available somewhere.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index ba0d7e6..033d2cd 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -330,11 +330,9 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+ 	}
+ 
+ 	/*
+-	 * This frame is eligible for an AMPDU, however, don't aggregate
+-	 * frames that are intended to probe a specific tx rate.
++	 * This frame is eligible for an AMPDU.
+ 	 */
+-	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU &&
+-	    !(tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE))
++	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU)
+ 		__set_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags);
+ 
+ 	/*
+-- 
+1.7.3.4
 
-There's nothing private. There may be documentation available if
-you're working on open source AR9170 support.
-
-> On which information base has the carl91790 driver been developed?
-
-The Otus firmware sources were thrown into a git repository a while
-ago; I believe this formed a base for some of the AR9170 open source
-work.
-
-git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/otus.git
-
-Other than that, Christian is likely the best person to talk to as
-he's the AR9170 firmware maintainer.
-
-
-
-adrian
