@@ -1,214 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4546 "EHLO mms2.broadcom.com"
+Received: from smp.if.uj.edu.pl ([149.156.82.206]:49476 "EHLO smp.if.uj.edu.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932495Ab1ISV0b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 17:26:31 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 06/20] staging: brcm80211: remove unconditional code
- blocks from brcmfmac
-Date: Mon, 19 Sep 2011 14:25:54 -0700
-Message-ID: <1316467568-27683-7-git-send-email-frankyl@broadcom.com> (sfid-20110919_232644_059779_4F669BF0)
-In-Reply-To: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1753134Ab1IHXTi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Sep 2011 19:19:38 -0400
+Date: Thu, 8 Sep 2011 18:57:30 +0200
+From: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
+To: Michael Witten <mfwitten@gmail.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org
+Subject: Re: [PATCH] mac80211: fix suspend/resume races with unregister hw
+Message-ID: <20110908165730.GD9104@smp.if.uj.edu.pl> (sfid-20110909_011942_653072_F8D32331)
+References: <1313150459-13234-1-git-send-email-sgruszka@redhat.com>
+ <d9f6472975e34cb294831e32c8ce2346-mfwitten@gmail.com>
+ <20110908064410.GA2195@redhat.com>
+ <CAMOZ1BvsPok-AZVCwKnv0hWWXyV+np+nARjGRqwqsvC-du_GAw@mail.gmail.com>
+ <20110908162605.GD2195@redhat.com>
+ <CAMOZ1Bs_DesZoyYw6yzC8CdqR3yLgXXpBzxvsEsQ0eX4L6Vw+A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=_smp.if.uj.edu.pl-6859-1315501052-0001-2"
+In-Reply-To: <CAMOZ1Bs_DesZoyYw6yzC8CdqR3yLgXXpBzxvsEsQ0eX4L6Vw+A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-Using a block statement to scope function variables is not
-common in linux kernel development. Browsed through the brcmfmac
-to remove those.
+--=_smp.if.uj.edu.pl-6859-1315501052-0001-2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_common.c |  132 +++++++++++-----------
- 1 files changed, 66 insertions(+), 66 deletions(-)
+On 09-08 16:41, Michael Witten wrote:
+>=20
+> Interestingly, though, `lsmod' shows the following:
+>=20
+>   Module                  Size  Used by
+>   ...
+>   ipw2200               109206  0
+>   ...
+>=20
+> even when the wireless network is up and running; I would have
+> expected the `Used by' column to show that `ipw2200' is being used by
+> at least something else; the consequence is that I am able to run
+> `rmmod' on `ipw2200' while the wireless network is up and running,
+> which seems odd (though it causes no discernible error).
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-index c9bf92a..0c41c1c 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-@@ -198,6 +198,11 @@ brcmf_c_show_host_event(struct brcmf_event_msg *event, void *event_data)
- 		BRCMF_E_PFN_SCAN_COMPLETE, "SCAN_COMPLETE"}
- 	};
- 	uint event_type, flags, auth_type, datalen;
-+	static u32 seqnum_prev;
-+	struct msgtrace_hdr hdr;
-+	u32 nblost;
-+	char *s, *p;
-+
- 	event_type = be32_to_cpu(event->event_type);
- 	flags = be16_to_cpu(event->flags);
- 	status = be32_to_cpu(event->status);
-@@ -348,55 +353,52 @@ brcmf_c_show_host_event(struct brcmf_event_msg *event, void *event_data)
- 		break;
- 
- 	case BRCMF_E_TRACE:
--		{
--			static u32 seqnum_prev;
--			struct msgtrace_hdr hdr;
--			u32 nblost;
--			char *s, *p;
--
--			buf = (unsigned char *) event_data;
--			memcpy(&hdr, buf, sizeof(struct msgtrace_hdr));
--
--			if (hdr.version != MSGTRACE_VERSION) {
--				brcmf_dbg(ERROR, "MACEVENT: %s [unsupported version --> brcmf version:%d dongle version:%d]\n",
--					  event_name,
--					  MSGTRACE_VERSION, hdr.version);
--				/* Reset datalen to avoid display below */
--				datalen = 0;
--				break;
--			}
--
--			/* There are 2 bytes available at the end of data */
--			*(buf + sizeof(struct msgtrace_hdr)
--				 + be16_to_cpu(hdr.len)) = '\0';
--
--			if (be32_to_cpu(hdr.discarded_bytes)
--			    || be32_to_cpu(hdr.discarded_printf))
--				brcmf_dbg(ERROR, "WLC_E_TRACE: [Discarded traces in dongle --> discarded_bytes %d discarded_printf %d]\n",
--					  be32_to_cpu(hdr.discarded_bytes),
--					  be32_to_cpu(hdr.discarded_printf));
--
--			nblost = be32_to_cpu(hdr.seqnum) - seqnum_prev - 1;
--			if (nblost > 0)
--				brcmf_dbg(ERROR, "WLC_E_TRACE: [Event lost --> seqnum %d nblost %d\n",
--					  be32_to_cpu(hdr.seqnum), nblost);
--			seqnum_prev = be32_to_cpu(hdr.seqnum);
--
--			/* Display the trace buffer. Advance from \n to \n to
--			 * avoid display big
--			 * printf (issue with Linux printk )
--			 */
--			p = (char *)&buf[sizeof(struct msgtrace_hdr)];
--			while ((s = strstr(p, "\n")) != NULL) {
--				*s = '\0';
--				printk(KERN_DEBUG"%s\n", p);
--				p = s + 1;
--			}
--			printk(KERN_DEBUG "%s\n", p);
-+		buf = (unsigned char *) event_data;
-+		memcpy(&hdr, buf, sizeof(struct msgtrace_hdr));
- 
-+		if (hdr.version != MSGTRACE_VERSION) {
-+			brcmf_dbg(ERROR,
-+				  "MACEVENT: %s [unsupported version --> brcmf"
-+				  " version:%d dongle version:%d]\n",
-+				  event_name, MSGTRACE_VERSION, hdr.version);
- 			/* Reset datalen to avoid display below */
- 			datalen = 0;
-+			break;
-+		}
-+
-+		/* There are 2 bytes available at the end of data */
-+		*(buf + sizeof(struct msgtrace_hdr)
-+			 + be16_to_cpu(hdr.len)) = '\0';
-+
-+		if (be32_to_cpu(hdr.discarded_bytes)
-+		    || be32_to_cpu(hdr.discarded_printf))
-+			brcmf_dbg(ERROR,
-+				  "WLC_E_TRACE: [Discarded traces in dongle -->"
-+				  " discarded_bytes %d discarded_printf %d]\n",
-+				  be32_to_cpu(hdr.discarded_bytes),
-+				  be32_to_cpu(hdr.discarded_printf));
-+
-+		nblost = be32_to_cpu(hdr.seqnum) - seqnum_prev - 1;
-+		if (nblost > 0)
-+			brcmf_dbg(ERROR, "WLC_E_TRACE: [Event lost --> seqnum "
-+				  " %d nblost %d\n", be32_to_cpu(hdr.seqnum),
-+				  nblost);
-+		seqnum_prev = be32_to_cpu(hdr.seqnum);
-+
-+		/* Display the trace buffer. Advance from \n to \n to
-+		 * avoid display big
-+		 * printf (issue with Linux printk )
-+		 */
-+		p = (char *)&buf[sizeof(struct msgtrace_hdr)];
-+		while ((s = strstr(p, "\n")) != NULL) {
-+			*s = '\0';
-+			printk(KERN_DEBUG"%s\n", p);
-+			p = s + 1;
- 		}
-+		printk(KERN_DEBUG "%s\n", p);
-+
-+		/* Reset datalen to avoid display below */
-+		datalen = 0;
- 		break;
- 
- 	case BRCMF_E_RSSI:
-@@ -405,8 +407,9 @@ brcmf_c_show_host_event(struct brcmf_event_msg *event, void *event_data)
- 		break;
- 
- 	default:
--		brcmf_dbg(EVENT, "MACEVENT: %s %d, MAC %s, status %d, reason %d, auth %d\n",
--			  event_name, event_type, eabuf,
-+		brcmf_dbg(EVENT,
-+			  "MACEVENT: %s %d, MAC %s, status %d, reason %d, "
-+			  "auth %d\n", event_name, event_type, eabuf,
- 			  (int)status, (int)reason, (int)auth_type);
- 		break;
- 	}
-@@ -428,6 +431,7 @@ brcmf_c_host_event(struct brcmf_info *drvr_priv, int *ifidx, void *pktdata,
- {
- 	/* check whether packet is a BRCM event pkt */
- 	struct brcmf_event *pvt_data = (struct brcmf_event *) pktdata;
-+	struct brcmf_if_event *ifevent;
- 	char *event_data;
- 	u32 type, status;
- 	u16 flags;
-@@ -459,26 +463,22 @@ brcmf_c_host_event(struct brcmf_info *drvr_priv, int *ifidx, void *pktdata,
- 
- 	switch (type) {
- 	case BRCMF_E_IF:
--		{
--			struct brcmf_if_event *ifevent =
--					(struct brcmf_if_event *) event_data;
--			brcmf_dbg(TRACE, "if event\n");
--
--			if (ifevent->ifidx > 0 &&
--				 ifevent->ifidx < BRCMF_MAX_IFS) {
--				if (ifevent->action == BRCMF_E_IF_ADD)
--					brcmf_add_if(drvr_priv, ifevent->ifidx,
--						   NULL, event->ifname,
--						   pvt_data->eth.h_dest,
--						   ifevent->flags,
--						   ifevent->bssidx);
--				else
--					brcmf_del_if(drvr_priv, ifevent->ifidx);
--			} else {
--				brcmf_dbg(ERROR, "Invalid ifidx %d for %s\n",
--					  ifevent->ifidx, event->ifname);
--			}
-+		ifevent = (struct brcmf_if_event *) event_data;
-+		brcmf_dbg(TRACE, "if event\n");
-+
-+		if (ifevent->ifidx > 0 && ifevent->ifidx < BRCMF_MAX_IFS) {
-+			if (ifevent->action == BRCMF_E_IF_ADD)
-+				brcmf_add_if(drvr_priv, ifevent->ifidx, NULL,
-+					     event->ifname,
-+					     pvt_data->eth.h_dest,
-+					     ifevent->flags, ifevent->bssidx);
-+			else
-+				brcmf_del_if(drvr_priv, ifevent->ifidx);
-+		} else {
-+			brcmf_dbg(ERROR, "Invalid ifidx %d for %s\n",
-+				  ifevent->ifidx, event->ifname);
- 		}
-+
- 		/* send up the if event: btamp user needs it */
- 		*ifidx = brcmf_ifname2idx(drvr_priv, event->ifname);
- 		break;
--- 
-1.7.1
+Hi.
 
+I think this was always so. I just checked other system
+with vanila 3.0.0 kernel, and it also says "Used by" =3D=3D 0
+I do not remember exactly, but I think it was always saying zero.
+You can actually always rmmod ipw220, regardles
+whetever network interface is used, opened, up, or whetever.
+I guess hot plug is important here.
 
+Regards,
+Witek
+
+--=20
+Witold Baryluk
+
+--=_smp.if.uj.edu.pl-6859-1315501052-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk5o8/oACgkQ7ZLFFOttZ4JGYgCeJSAGJrXhprl9AS7LhMGBeGwL
+Y6sAn3lcoXHfM/n1IfXRG0KACQUYinLd
+=VPwZ
+-----END PGP SIGNATURE-----
+
+--=_smp.if.uj.edu.pl-6859-1315501052-0001-2--
