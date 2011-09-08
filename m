@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f52.google.com ([209.85.212.52]:46896 "EHLO
-	mail-vw0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753407Ab1IMNmz convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f43.google.com ([209.85.212.43]:49738 "EHLO
+	mail-vw0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932397Ab1IHIq3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 09:42:55 -0400
-Received: by vws16 with SMTP id 16so1002681vws.11
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2011 06:42:54 -0700 (PDT)
+	Thu, 8 Sep 2011 04:46:29 -0400
+Received: by vws10 with SMTP id 10so844924vws.2
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 01:46:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20110913132844.GB11772@tuxdriver.com>
-References: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com>
-	<CACna6rwQ60viPGssWzBzgtVGBq1xu+AOxb0fqfRq4NaJFcmP=w@mail.gmail.com>
-	<CAC9WiBi5L7uV=OzYBKs=sdjRr4Xykcd2USQPtPhCsSBLdpW-6g@mail.gmail.com>
-	<20110913132844.GB11772@tuxdriver.com>
-Date: Tue, 13 Sep 2011 15:37:12 +0200
-Message-ID: <CAC9WiBjOj9+HmprcdKhfj5Y=SpNoKQj=wZfBJzR7fpx9OA+1hQ@mail.gmail.com> (sfid-20110913_154258_094594_2107B4D7)
-Subject: Re: About the patch: "staging: brcm80211: only enable brcmsmac if
- bcma is not set"
+Date: Thu, 8 Sep 2011 10:46:25 +0200
+Message-ID: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com> (sfid-20110908_104632_902230_0D28628B)
+Subject: About the patch: "staging: brcm80211: only enable brcmsmac if bcma is
+ not set"
 From: Francis Moreau <francis.moro@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, gregkh@suse.de
-Content-Type: text/plain; charset=UTF-8
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, gregkh@suse.de
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 13, 2011 at 3:28 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Tue, Sep 13, 2011 at 09:03:13AM +0200, Francis Moreau wrote:
->> 2011/9/12 Rafał Miłecki <zajec5@gmail.com>:
->
->> > The real solution is to add bcma driver support in brcmsmac and ssb
->> > driver support in brcmfmac. Then you can always use bcma and:
->> > 1) If b43 will load and detect unsupported PHY, it will release the BCMA's core
->> > 2) brcmsmac will be loaded to let it support the core
->> >
->>
->> Thanks for the description.
->>
->> But what should be done for the time being (3.1-rc5) ?
->
-> Turn-off CONFIG_B43_BCMA.
->
+Hello,
 
-Does the b43/bcma driver support some cards that the brcmsmac one doesn't ?
+I have a question regarding the following patch:
+http://permalink.gmane.org/gmane.linux.kernel.wireless.general/75638
 
+The commit message says:
+
+   brcmsmac doesn't yet use bcma, but both drivers attempt to claim the same
+   device.  For now, turn of brcmsmac if bcma is enabled.
+
+I think it's not quite complete:  both driver claim the same devices
+(actually that's not entirely true since b43/bcma can drive on more
+card) but in the case of b43/bcma not all cards are actually working.
+For example I'm using BCM4313 card with an unsupported phy
+(B43_PHYTYPE_LCN) so it's basically not supported by b43/bcma.
+
+So I'm wondering if b43/bcma should be simply disabled until it got
+the same level of support as brcmsmac ?
+
+Thanks
 -- 
 Francis
