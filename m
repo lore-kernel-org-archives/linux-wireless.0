@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34228 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752180Ab1IWKUh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 06:20:37 -0400
-Subject: Re: [RFC 1/2] nl80211/cfg80211: Add support to disable CCK rate
- for management frame
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-In-Reply-To: <1316703516-24216-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1316703516-24216-1-git-send-email-rmanohar@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:10099 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757512Ab1IIB0U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Sep 2011 21:26:20 -0400
+Subject: Re: File name for libertas_tf_usb firmware
+From: Dan Williams <dcbw@redhat.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 08 Sep 2011 20:29:16 -0500
+In-Reply-To: <1315530381.23168.56.camel@deadeye>
+References: <1315530381.23168.56.camel@deadeye>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 23 Sep 2011 12:20:32 +0200
-Message-ID: <1316773232.4058.1.camel@jlt3.sipsolutions.net> (sfid-20110923_122040_791324_AA3B7D3F)
+Message-ID: <1315531757.2327.2.camel@dcbw.foobar.com> (sfid-20110909_032624_063802_81FF9B40)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-09-22 at 20:28 +0530, Rajkumar Manoharan wrote:
+On Fri, 2011-09-09 at 02:06 +0100, Ben Hutchings wrote:
+> The driver wants to load "lbtf_usb.bin", but we have it in
+> linux-firmware.git as "libertas/lbtf_usb.bin".  It seems like we should
+> rename it in the repository, as the driver has always used the former
+> name.
+> 
+> If no-one has any objections, I'll do the rename here and push the
+> change when I can...
 
-Looks fine, minor nitpick:
- 
-> +	request->no_cck = nla_get_flag(info->attrs
-> +					[NL80211_ATTR_TX_NO_CCK_RATE]);
+No particular objection.
 
-I think that'd be nicer as
-	request->no_cck =
-		nla_get_flag(...);
+Dan
 
-even if potentially that goes above 80 cols.
-
-
-> +	no_cck = nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
-
-Or I guess it probably won't if this fits :)
-
-Thanks!
-
-johannes
 
