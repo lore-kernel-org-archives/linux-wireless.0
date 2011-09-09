@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:35320 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750920Ab1ISRNI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 13:13:08 -0400
-Date: Mon, 19 Sep 2011 19:13:09 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: =?utf-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>
-Cc: 'Larry Finger' <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	'LKML' <linux-kernel@vger.kernel.org>
-Subject: Re: =?utf-8?B?562U5aSN?= =?utf-8?Q?=3A?= 3.1-rc6+ rtl8192se issue
-Message-ID: <20110919171309.GB3271@gere.osrc.amd.com> (sfid-20110919_191312_725992_0CFB201A)
-References: <20110915124406.GA14374@gere.osrc.amd.com>
- <4E721871.7040901@lwfinger.net>
- <20110916180323.GA1988@gere.osrc.amd.com>
- <CD4D8CF16C39438E82FE8241C9AF80F4@realsil.com.cn>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:41746 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758758Ab1IINzG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Sep 2011 09:55:06 -0400
+Received: by ywf7 with SMTP id 7so1630089ywf.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Sep 2011 06:55:06 -0700 (PDT)
+Message-ID: <4E6A1AB7.8080605@lwfinger.net> (sfid-20110909_155511_180102_4346E9FE)
+Date: Fri, 09 Sep 2011 08:55:03 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CD4D8CF16C39438E82FE8241C9AF80F4@realsil.com.cn>
+To: Semigod King <semigodking@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211 driver for RT3070 wifi card does not work on big-endian
+ platform
+References: <CA+TXxM3EgGZmo1F9GS+-QNWfTTgWFD4XHvG31JH=kabrr=ES=A@mail.gmail.com> <4E6911C2.2030309@lwfinger.net> <CA+TXxM0EOBs2x+6jh=0uwDTMTUD+9ZXQ8W-ZR+=TjSARV3kAeQ@mail.gmail.com>
+In-Reply-To: <CA+TXxM0EOBs2x+6jh=0uwDTMTUD+9ZXQ8W-ZR+=TjSARV3kAeQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 19, 2011 at 12:43:45PM +0800, 李朝明 wrote:
-> Dear sir:
-> 
-> 	Can you give me the screen pcitrue after crash again with ips = 0;
-> or swlps=0 ips=0.
+On 09/09/2011 07:05 AM, Semigod King wrote:
+> Larry,
+> Thank you for looking at this issue. I will try your code change tonight and let
+> you know test results. I have an openwrt cross build system ready on my freebsd
+> at home.
 
-FWIW,
+That will not change a thing. Other than trip some sparse warnings, 
+le32_to_cpu() and cpu_to_le32() do the same thing. On little-endian boxes, they 
+are a no-op, and on big-endian platforms, they both reverse the byte order. 
+Switching the call only makes it clearer what is happening.
 
-the box has been running stable a whole workday today with "swlps=0
-ips=0" I'll run it only with "ips=0" tomorrow to try the reproduce the
-sluggishness again.
+I am having trouble getting Ubuntu 11.04 running on my Macbook. The OS is 
+installed, but no X at the moment.
 
-Thanks.
+BTW, please do not drop the Cc to wireless. I want to keep the ML in the loop.
 
--- 
-Regards/Gruss,
-Boris.
+Larry
+
