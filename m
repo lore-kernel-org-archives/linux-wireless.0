@@ -1,81 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:57814 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753609Ab1I0Lug (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:63470 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759356Ab1IIRgG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 07:50:36 -0400
-Received: by ywb5 with SMTP id 5so5222712ywb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 04:50:36 -0700 (PDT)
+	Fri, 9 Sep 2011 13:36:06 -0400
+Received: by yie30 with SMTP id 30so1057768yie.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Sep 2011 10:36:06 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1317121681.4082.8.camel@jlt3.sipsolutions.net>
-References: <1317119624-2974-1-git-send-email-stanv@altlinux.org>
-	<1317109617.4082.0.camel@jlt3.sipsolutions.net>
-	<CAN8FffqH=x+qWnz=YJzatbW-b3aOgoivazH6Nb5SpsGt4Q6hGg@mail.gmail.com>
-	<1317110884.4082.5.camel@jlt3.sipsolutions.net>
-	<CAN8FffqjeurgAvVHtMExgeAyBHRWznYBz2c043jcZgOmqw6TVg@mail.gmail.com>
-	<1317113699.4082.7.camel@jlt3.sipsolutions.net>
-	<CAN8FffrZuGu63oL7ZL8EjjdNqBaPDU6KHuatwrbNB0SjffvaTg@mail.gmail.com>
-	<1317121681.4082.8.camel@jlt3.sipsolutions.net>
-Date: Tue, 27 Sep 2011 15:50:35 +0400
-Message-ID: <CAN8FffrnCt6TL-dWBJtnOpk=oELRXhnU0ksHntFWfbPo5mgWaA@mail.gmail.com> (sfid-20110927_135040_351771_38E1C6CD)
-Subject: Re: [PATCH 1/1] rfkill: add module option to become inactive.
-From: "Andrew V. Stepanov" <stanv@altlinux.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: davem@davemloft.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4E6A1AB7.8080605@lwfinger.net>
+References: <CA+TXxM3EgGZmo1F9GS+-QNWfTTgWFD4XHvG31JH=kabrr=ES=A@mail.gmail.com>
+	<4E6911C2.2030309@lwfinger.net>
+	<CA+TXxM0EOBs2x+6jh=0uwDTMTUD+9ZXQ8W-ZR+=TjSARV3kAeQ@mail.gmail.com>
+	<4E6A1AB7.8080605@lwfinger.net>
+Date: Sat, 10 Sep 2011 01:30:24 +0800
+Message-ID: <CA+TXxM23gnbt5JG+s0QTCFm0Ljcc8nZnXH9PNkBaqqhBwMcVYA@mail.gmail.com> (sfid-20110909_193611_799787_53B77028)
+Subject: Re: mac80211 driver for RT3070 wifi card does not work on big-endian platform
+From: Semigod King <semigodking@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 27, 2011 at 3:08 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2011-09-27 at 13:34 +0400, Andrew V. Stepanov wrote:
->> On Tue, Sep 27, 2011 at 12:54 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Tue, 2011-09-27 at 12:46 +0400, Andrew V. Stepanov wrote:
->> >
->> >> I wan't to completely ignore events (state) of software\hardware rfkill buttons.
->> >
->> > Why would you ever want to do that? I can see that you might want to
->> > ignore soft buttons, but you can use urfkilld for that. Ignoring hard
->> > buttons is completely useless -- they will affect the device they're
->> > wired up to *anyway*.
+I noticed two lines of code:
+                static const u32 wcid[2] = { 0xffffffff, 0x00ffffff };
+                rt2800_register_multiwrite(rt2x00dev, MAC_WCID_ENTRY(i),
+                                              wcid, sizeof(wcid));
+
+Do you think the first line should be changed as below to eliminate
+platform difference?
+                static const u32 wcid[2] = { 0xffffffff,
+cpu_to_le32(0x00ffffff) };
+
+
+On Fri, Sep 9, 2011 at 9:55 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 09/09/2011 07:05 AM, Semigod King wrote:
 >>
->> No. That is not true.
->>
->> Hardware rfkill button doesn't have any action to wlan\bluetooth
->> devices on ThinkPad x201i with "CONFIG_RFKILL is not set".
->> I can assume this is true for other notebooks.
+>> Larry,
+>> Thank you for looking at this issue. I will try your code change tonight
+>> and let
+>> you know test results. I have an openwrt cross build system ready on my
+>> freebsd
+>> at home.
 >
-> Then why is it a hard button instead of the soft button on a separate
-> platform device?
+> That will not change a thing. Other than trip some sparse warnings,
+> le32_to_cpu() and cpu_to_le32() do the same thing. On little-endian boxes,
+> they are a no-op, and on big-endian platforms, they both reverse the byte
+> order. Switching the call only makes it clearer what is happening.
 >
-> johannes
+> I am having trouble getting Ubuntu 11.04 running on my Macbook. The OS is
+> installed, but no X at the moment.
 >
-
-1.
-
-Lenovo ThinkPad x201i has two rfkill buttons.
-One soft: Fn-F5.
-Second hard: small switch on left case side.
-
-With RFKILL_CONFIG == "is not set" this two buttons became inactive.
-They do not has any influence to adapter\drivers state.
-
-This patch give ability disable rfkill sub-system by means to pass
-special module parameter.
-
-Example from real life. Some company want to make inactive rfkill
-SW+HW buttons on some company notebooks.
-For this, you advise to recompile kernel.
-
-2.
-
-One more thing, why this patch is necessary. You advise to use
-urfkilld. But this is doesn't help in case of external USB WIFI
-devices.
-
-Turn on(off) HW button will be effect on all WIFI devices, even
-external. rfkill kernel subsystem will bring all cfg80211 devices to
-software lock. See: net/wireless/core.c for rfkill. I do not think,
-that urfkilld will help.
+> BTW, please do not drop the Cc to wireless. I want to keep the ML in the
+> loop.
+>
+> Larry
+>
+>
