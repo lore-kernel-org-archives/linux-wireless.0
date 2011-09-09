@@ -1,49 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:48001 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750709Ab1I3MxD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Sep 2011 08:53:03 -0400
-Message-ID: <4E85BBAA.5000008@neratec.com> (sfid-20110930_145307_806358_8A34CA76)
-Date: Fri, 30 Sep 2011 14:52:58 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:50261 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932827Ab1IIIyR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Sep 2011 04:54:17 -0400
+Received: by gxk21 with SMTP id 21so960840gxk.5
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Sep 2011 01:54:17 -0700 (PDT)
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Boris Presman <boris.presman@ti.com>,
-	Assaf Azulay <assaf@ti.com>,
-	Michael Green <green@qca.qualcomm.com>,
-	David Quan <dquan@qca.qualcomm.com>,
-	Kevin Hayes <hayes@qca.qualcomm.com>,
-	Arun Venkataraman <arunvenk@qca.qualcomm.com>
-Subject: Re: Regulatory revamp status
-References: <CAB=NE6U6qmYbvHPTWGTqOdXtuxbKYbUzZXNiE6POOX9QZNRWAg@mail.gmail.com>	<1125417094.1836.1317285426615.JavaMail.root@idefix>	<CAJ-VmonqEs4mODDa2=fTj8zWHwRM7-G5e=BWNUyGdy65+kYvfg@mail.gmail.com>	<4E8468AF.8000006@neratec.com> <CAJ-VmokXUectieeOBJSMfuzzT94g7U=dqbPf-S1Oay292ur9yg@mail.gmail.com>
-In-Reply-To: <CAJ-VmokXUectieeOBJSMfuzzT94g7U=dqbPf-S1Oay292ur9yg@mail.gmail.com>
+In-Reply-To: <4E68ECE2.7060504@qca.qualcomm.com>
+References: <CADPsn1bsUJqcuwZrW+e92aGms+t+TKRasnGb=ujzzgvz+S1Maw@mail.gmail.com>
+	<4E68ECE2.7060504@qca.qualcomm.com>
+Date: Fri, 9 Sep 2011 09:54:16 +0100
+Message-ID: <CADPsn1Yvdw58AYXFNPc4L1M1tyJ7K6kEA2j85gRCq+vqAYQu_w@mail.gmail.com> (sfid-20110909_105421_332036_B409FC34)
+Subject: Re: Question: ath6kl (driver/net/wireless/ath/ath6kl) with debug_mask value
+From: Sangwook Lee <sangwook.lee@linaro.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/30/2011 01:21 PM, Adrian Chadd wrote:
-> On 29 September 2011 20:46, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
-> 
->> Really? Where would be 'there' countrycode-wise?
+Hi Kalle
+
+On 8 September 2011 17:27, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Hi Sangwook,
+>
+> On 09/07/2011 04:32 PM, Sangwook Lee wrote:
+>> I am running ath6kl-cleanup git.
+>
+> BTW, ath6kl-cleanup.git is not updated anymore. Instead there's now
+> ath6kl.git which follows wireless-testing. You can find it from
+> git.kernel.org (when it's up again) or from github.
+>
+Thanks for this info, I will use new git.
+
+>> If I add debug_mask values with ath6kl.ko as like followings, I get
+>> the success full results,
+>> but without this, "iwlist wlan0 scan" fails.
 >>
->> That would definitely break today's CRDA capabilities :-\
-> 
-> I -think- one or both of ETSI/FCC have different CAC/NOL requirements
-> for the channels which overlap the weather radars.
-> At least when someone took FreeBSD to get DFS certified a while ago,
-> the weather radar ranges were checked against a 30 minute CAC. :)
-> 
-> I think it's worth defining specific DFS parameters for each frequency
-> range. That's what I'll be doing for FreeBSD when I revamp its
-> net80211 regulatory database code.
-> 
-> 
-> Adrian
+>> ath6kl: hw 2.0 fw 3.1.1.149
+>
+> Hmm, I'm not sure if I have hw 2.0. I try to find one from my "stash" :)
+>
+>> 1) SCAN success with debug values: ( 0xc44,c40,40)
+>> $ insmod ath.ko
+>> $ insmod ath6kl.ko debug_mask=0x40
+>> $ ifconfig wlan0 up
+>> $ iwlist wlan0 scan
+>>
+>> 2) SCAN failure
+>> $ insmod ath.ko
+>> $ insmod ath6kl.ko
+>> $ ifconfig wlan0 up
+>> $ iwlist wlan0 scan
+>> With this case, there is no coming event "WMI_SCAN_COMPLETE_EVENTID".
+>> After receiving  "ath6kl: WMI_EXTENSION_EVENTID"
+>> iwlist shows error message:
+>>       wlan0     Failed to read scan data : Resource temporarily unavailable
+>
+> 0x40 is ATH6KL_DBG_HTC_RECV. I guess the debug prints slow down the
+> execution and papers over the bug. At least I can't think of any other
+> explonation right now.
+>
+> Before I'm able to find a hw 2.0 device, can you try to debug this more?
+> When scanning fails can check if ath6kldev_intr_bh_handler() is called
+> or not? When scanning fails it usually happens because irqs are failing.
+>
+OK, let me debug this point later.
 
-I was assuming that weather radars will not be supported at all but the related channels be just disabled. It is practically impossible to assure a 99.99% detection probability (as required for ETSI 1.5.1), or? E.g. to detect ETSI radar pattern 1 (10 pulses), you basically need to treat any single detected pulse as radar event. Doable, but not very useful ;)
+> Can you share any details about your setup? From linaro.org I assume you
+> are using an arm board of some sort ;)#
+>
+Yes, I am using
+ARM Cortex A9 (Samsung EXYNOS4),
+SDIO Interface
+AR6003 Firmware
+In details,
+ https://wiki.linaro.org/Resources/HowTo/SamsungWlanInOrigen
 
+> Kalle
+>
 
-Zefir
-
+Sangwook
