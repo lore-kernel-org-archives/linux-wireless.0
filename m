@@ -1,80 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:59396 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753616Ab1IWN0V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 09:26:21 -0400
-Received: by mail-gx0-f174.google.com with SMTP id 6so3502626gxk.33
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Sep 2011 06:26:18 -0700 (PDT)
-Subject: pull request: wl12xx 2011-09-23
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 23 Sep 2011 16:26:14 +0300
-Message-ID: <1316784374.4051.13.camel@cumari> (sfid-20110923_152625_033337_767D1147)
-Mime-Version: 1.0
+Received: from mgw2.diku.dk ([130.225.96.92]:46052 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933838Ab1IIUtA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Sep 2011 16:49:00 -0400
+Date: Fri, 9 Sep 2011 22:48:54 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Jesper Andersen <jespera@diku.dk>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: Backporting the Linux kernel, for good - was: Re: semantic patch
+ inference
+In-Reply-To: <CAB=NE6U0ks9CobukO04=bZpnkm3Yw+Pf7keVPsP-hv1NyJZ_Xw@mail.gmail.com>
+Message-ID: <Pine.LNX.4.64.1109092245170.9242@ask.diku.dk> (sfid-20110909_224922_086563_549897FE)
+References: <CAB=NE6U0ks9CobukO04=bZpnkm3Yw+Pf7keVPsP-hv1NyJZ_Xw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Thanks for your email.  It made me realize that there was one thing that I
+didn't understand at all.  If the patches are only intended to apply to
+linux-next, that makes the problem quite a bit simpler.  I guess that the
+patch that spdiff will receive will already contain the appropriate #ifs,
+so we don't have to be concerned about them.  We just add them in as is.
 
-Yet another pull request for 3.2, most likely the last (unless it takes
-longer than normal for the merge window to open).  We have some fixes,
-including an out-of-bounds array read and some P2P stuff, a fix in the
-scanning code (where passive scans were not working properly) and some
-other small things, like support for hidden SSID in AP mode.
+There was also the question about one or multiple types of changes.  I
+think this is not a problem, but Jesper should confirm.  If a patch contains
+two changes and one can be generalized and the other one cannot for some
+reason, does spdiff give up on the whole thing, or does it do what it can?
 
-Please pull or let me know if there's any problem. This tree is based on
-wireless-next/master.
+Overall, the whole thing seems to be doable :)
 
-Thanks! 
-
-
-The following changes since commit ed46fdfc54d2d4523fdd727708fe0b9e2be993cc:
-
-  nfc: NFC_WILINK depends on NFC_NCI (2011-09-21 16:19:44 -0400)
-
-are available in the git repository at:
-  git://github.com/lucacoelho/wl12xx.git for-linville
-
-Arik Nemtsov (3):
-      wl12xx: AP mode - support hidden SSID
-      wl12xx: correct fw_status structure for 8 sta support in AP-mode
-      wl12xx: report the stop_ba event to all STAs in AP-mode
-
-Eliad Peller (5):
-      wl12xx: remove TIM ie from probe response
-      wl12xx: remove P2P ie from probe response
-      wl12xx: send all pending packets on channel change
-      wl12xx: Use dev_hlid for auth and assoc req
-      wl12xx: implement set_bitrate_mask callback
-
-Luciano Coelho (1):
-      wl12xx: fix forced passive scans
-
-Shahar Levi (2):
-      wl12xx: fix sdio_test module functionality
-      wl12xx: Include OFDM rates in IBSS mode
-
- drivers/net/wireless/wl12xx/Makefile    |    6 +-
- drivers/net/wireless/wl12xx/cmd.c       |   43 ++++---
- drivers/net/wireless/wl12xx/conf.h      |    6 +-
- drivers/net/wireless/wl12xx/event.c     |    2 +-
- drivers/net/wireless/wl12xx/init.c      |   17 ++-
- drivers/net/wireless/wl12xx/main.c      |  201 ++++++++++++++++++++++++++-----
- drivers/net/wireless/wl12xx/scan.c      |   42 +++++--
- drivers/net/wireless/wl12xx/sdio_test.c |   15 ++-
- drivers/net/wireless/wl12xx/tx.c        |   38 +++----
- drivers/net/wireless/wl12xx/tx.h        |    5 +-
- drivers/net/wireless/wl12xx/wl12xx.h    |    5 +-
- 11 files changed, 274 insertions(+), 106 deletions(-)
-
-
--- 
-Cheers,
-Luca.
-
-
-
-
+julia
