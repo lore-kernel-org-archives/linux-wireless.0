@@ -1,67 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:44884 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751278Ab1IZKzB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 06:55:01 -0400
-Received: by eya28 with SMTP id 28so3462643eya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 03:55:00 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Kalyan C Gaddam <chakkal@iit.edu>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 0/5] TDLS support for nl80211/mac80211 drivers
-Date: Mon, 26 Sep 2011 13:54:48 +0300
-Message-Id: <1317034493-5300-1-git-send-email-arik@wizery.com> (sfid-20110926_125506_704623_086A369D)
+Received: from mx1.redhat.com ([209.132.183.28]:28125 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757256Ab1IIA50 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Sep 2011 20:57:26 -0400
+Subject: Re: [PATCH v3] libertas: prioritize usb8388_olpc.bin firmware on
+ OLPC machines
+From: Dan Williams <dcbw@redhat.com>
+To: Andres Salomon <dilinger@queued.net>
+Cc: linville@tuxdriver.com, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dsd@laptop.org, cjb@laptop.org
+Date: Thu, 08 Sep 2011 20:00:15 -0500
+In-Reply-To: <20110908173517.5b8c90be@queued.net>
+References: <20110908173517.5b8c90be@queued.net>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1315530016.2327.1.camel@dcbw.foobar.com> (sfid-20110909_025742_892469_9127FF70)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series adds basic kernel-mode TDLS support for nl80211 based drivers.
-It is based in part on patches by Kalyan C. Gaddam, cc-ed here.
+On Thu, 2011-09-08 at 17:35 -0700, Andres Salomon wrote:
+> Normally, the v9 firmware will be loaded if it's available.  However, on
+> OLPC XO-1 machines, the olpc-specific firmware supports extra functionality.
+> This makes the libertas driver attempt to load the custom firmware first
+> if the machine is an OLPC machine; if that fails (or it's not an OLPC
+> machine), fall back to attempting to load the other firmwares.
+> 
+> usb8388_olpc.bin is currently found in the linux-firmware repository.
+> 
+> Signed-off-by: Andres Salomon <dilinger@queued.net>
 
-Support is added for peer discovery and data path setup/teardown.
-Currently not implemented: QoS/HT, peer PSM, peer U-APSD and channel
-switching.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-The main change from the RFC series is the addition of a Tx block
-during link setup. In the new scheme of things, a STA entry is added
-just before setting up a link. This allows us to throw out frames
-sent to a peer while the link is being set up. This is required by
-the specification, to avoid reordering of MSDUs.
+> ---
+> v3: changed firmware path to include libertas/ subdirectory.
+> 
+> Since the last submission (v2), usb8388_olpc.bin has found its way into
+> wireless-firmware.  It'd be nice to get this into the next merge window.
+> 
+>  drivers/net/wireless/libertas/if_usb.c |   21 +++++++++++++++++++++
+>  1 files changed, 21 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+> index b5acc39..94f8f3e 100644
+> --- a/drivers/net/wireless/libertas/if_usb.c
+> +++ b/drivers/net/wireless/libertas/if_usb.c
+> @@ -973,6 +973,23 @@ static const struct {
+>  	{ MODEL_8682, "libertas/usb8682.bin" }
+>  };
+>  
+> +#ifdef CONFIG_OLPC
+> +
+> +static int try_olpc_fw(struct if_usb_card *cardp)
+> +{
+> +	int retval = -ENOENT;
+> +
+> +	/* try the OLPC firmware first; fall back to fw_table list */
+> +	if (machine_is_olpc() && cardp->model == MODEL_8388)
+> +		retval = request_firmware(&cardp->fw,
+> +				"libertas/usb8388_olpc.bin", &cardp->udev->dev);
+> +	return retval;
+> +}
+> +
+> +#else
+> +static int try_olpc_fw(struct if_usb_card *cardp) { return -ENOENT; }
+> +#endif /* !CONFIG_OLPC */
+> +
+>  static int get_fw(struct if_usb_card *cardp, const char *fwname)
+>  {
+>  	int i;
+> @@ -981,6 +998,10 @@ static int get_fw(struct if_usb_card *cardp, const char *fwname)
+>  	if (fwname)
+>  		return request_firmware(&cardp->fw, fwname, &cardp->udev->dev);
+>  
+> +	/* Handle OLPC firmware */
+> +	if (try_olpc_fw(cardp) == 0)
+> +		return 0;
+> +
+>  	/* Otherwise search for firmware to use */
+>  	for (i = 0; i < ARRAY_SIZE(fw_table); i++) {
+>  		if (fw_table[i].model != cardp->model)
 
-User-mode support is added in a companion series.
-
-Tested with wl12xx hardware, with a nl80211/mac80211 based driver.
-
-Arik
-
-Cc: Kalyan C Gaddam <chakkal@iit.edu>
-
-Arik Nemtsov (5):
-  nl80211: support sending TDLS commands/frames
-  mac80211: standardize adding supported rates IEs
-  mac80211: handle TDLS high-level commands and frames
-  nl80211/mac80211: allow adding TDLS peers as stations
-  mac80211: data path modification for TDLS peers
-
- include/linux/ieee80211.h |   85 ++++++++++++
- include/linux/if_ether.h  |    1 +
- include/linux/nl80211.h   |   48 +++++++
- include/net/cfg80211.h    |   17 +++
- include/net/mac80211.h    |    5 +
- net/mac80211/Kconfig      |   12 ++
- net/mac80211/cfg.c        |  335 +++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/main.c       |    4 +
- net/mac80211/mesh.c       |   58 --------
- net/mac80211/mesh.h       |    4 -
- net/mac80211/mesh_plink.c |    4 +-
- net/mac80211/mlme.c       |    7 +-
- net/mac80211/sta_info.h   |    5 +
- net/mac80211/tx.c         |   46 ++++++-
- net/mac80211/util.c       |   59 ++++++++
- net/wireless/nl80211.c    |   97 ++++++++++++-
- net/wireless/util.c       |    5 +-
- 17 files changed, 711 insertions(+), 81 deletions(-)
-
--- 
-1.7.4.1
 
