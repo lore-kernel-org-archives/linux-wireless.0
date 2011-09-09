@@ -1,81 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4208 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753666Ab1IAJRo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 05:17:44 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 22/30] staging: brcm80211: remove sparse warnings from
- mac80211_if.c
-Date: Thu, 1 Sep 2011 11:17:12 +0200
-Message-ID: <1314868640-9425-23-git-send-email-rvossen@broadcom.com> (sfid-20110901_111815_099278_1EF47169)
-In-Reply-To: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
-References: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:53617 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752592Ab1IIFLa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Sep 2011 01:11:30 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linville@tuxdriver.com>, <rmanohar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
+	<senthilb@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH v2] ath9k: Fix kernel panic on unplugging the device
+Date: Fri, 9 Sep 2011 10:41:08 +0530
+Message-ID: <1315545068-5699-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110909_071134_750084_8926962C)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Some changes have been made to get rid of sparse warnings in the
-source file mac80211_if.c.
+when the device is yanked out ath_pci_remove starts doing the cleanups,
+unregistering the hardware etc. so we should bail out immediately when
+we get drv_flush callback from mac80211 when the card is being unplugged.
+the panic occurs after we had associated to an AP.
 
-Reported-by: Aaro Koskinen <aaro.koskinen@iki.fi>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+	EIP: 0060:[<fb315b00>] EFLAGS: 00010246 CPU: 0
+	EIP is at ath_reset+0xa0/0x1c0 [ath9k]
+	EAX: 00000000 EBX: 000697c0 ECX: 00000002 EDX: f3c3ccf0
+	ESI: 00000000 EDI: 00000000 EBP: f43e7b78 ESP: f43e7b50
+ 	DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+ 	Process kworker/u:2 (pid: 182, ti=f43e6000 task=f3c3c7c0
+	task.ti=f43e6000)
+ 	Stack:
+ 	0000002a 00000000 00000000 003e7b78 0000000f eaaa8500
+	ffffffea eaaa97c0
+ 	eaaaa000 00000001 f43e7ba8 fb315d23 f99e7721 ecece680
+	eaaac738 eaaa8500
+ 	eaaaa020 000000c8 000000c8 00000000 eaaa8d58 eaaa8500
+	f43e7bd0 fb080b29
+ 	Call Trace:
+	[<fb315d23>] ath9k_flush+0x103/0x170 [ath9k]
+	[<fb080b29>] __ieee80211_recalc_idle+0x2c9/0x400
+	[mac80211]
+	[<fb080c8e>] ieee80211_recalc_idle+0x2e/0x60 [mac80211]
+	[<fb07aa73>] ieee80211_mgd_deauth+0x173/0x210 [mac80211]
+	[<fb084559>] ieee80211_deauth+0x19/0x20 [mac80211]
+	[<f99dda53>] __cfg80211_mlme_deauth+0xf3/0x140
+	[cfg80211]
+	[<c0633d00>] ? __mutex_lock_common+0x1f0/0x380
+	[<f99e1b5d>] __cfg80211_disconnect+0x18d/0x1f0
+	[cfg80211]
+	[<f99c8199>] cfg80211_netdev_notifier_call+0x159/0x5c0
+	[cfg80211]
+	[<c0608a64>] ? packet_notifier+0x174/0x1f0
+	[<c0639202>] notifier_call_chain+0x82/0xb0
+	[<c0170d8f>] raw_notifier_call_chain+0x1f/0x30
+	[<c053b86c>] call_netdevice_notifiers+0x2c/0x60
+	[<c0182184>] ? trace_hardirqs_on_caller+0xf4/0x180
+	[<c053b8ec>] __dev_close_many+0x4c/0xd0
+	[<c053ba2d>] dev_close_many+0x6d/0xc0
+	[<c053bb53>] rollback_registered_many+0x93/0x1c0
+	[<c018221b>] ? trace_hardirqs_on+0xb/0x10
+	[<c053bc95>] unregister_netdevice_many+0x15/0x50
+	[<fb07f83b>] ieee80211_remove_interfaces+0x7b/0xb0
+	[mac80211]
+	[<fb06a14b>] ieee80211_unregister_hw+0x4b/0x110
+	[mac80211]
+	[<fb311a4a>] ath9k_deinit_device+0x3a/0x60 [ath9k]
+	[<fb31eed6>] ath_pci_remove+0x46/0x90 [ath9k]
+	[<c03b4ac4>] pci_device_remove+0x44/0x100
+	[<c043eb54>] __device_release_driver+0x64/0xb0
+	[<c043ec67>] device_release_driver+0x27/0x40
+	[<c043deeb>] bus_remove_device+0x7b/0xa0
+	[<c043c491>] device_del+0xf1/0x180
+	[<c043c530>] device_unregister+0x10/0x20
+	[<c03afafe>] pci_stop_bus_device+0x6e/0x80
+	[<c03afb72>] pci_remove_bus_device+0x12/0xa0
+	[<c03c2f29>] pciehp_unconfigure_device+0x89/0x180
+	[<c0181e54>] ? mark_held_locks+0x64/0x100
+	[<c063390f>] ? __mutex_unlock_slowpath+0xaf/0x140
+	[<c03c1f84>] pciehp_disable_slot+0x64/0x1b0
+	[<c03c2850>] pciehp_power_thread+0xd0/0x100
+	[<c0164ad0>] ? process_one_work+0x100/0x4d0
+	[<c0164b4c>] process_one_work+0x17c/0x4d0
+	[<c0164ad0>] ? process_one_work+0x100/0x4d0
+	[<c03c2780>] ? queue_interrupt_event+0xa0/0xa0
+	[<c01662bb>] worker_thread+0x13b/0x320
+	[<c018221b>] ? trace_hardirqs_on+0xb/0x10
+	[<c0166180>] ? manage_workers+0x1e0/0x1e0
+	[<c016a654>] kthread+0x84/0x90
+	[<c016a5d0>] ? __init_kthread_worker+0x60/0x60
+	[<c063d106>] kernel_thread_helper+0x6/0x10
+
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c |    6 +++---
- drivers/staging/brcm80211/brcmsmac/mac80211_if.h |    2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-index bd989737..6ed80b2 100644
---- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-@@ -96,7 +96,7 @@ struct firmware_hdr {
- 	u32 idx;
- };
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index df4108f..dacac57 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2312,6 +2312,12 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+ 	mutex_lock(&sc->mutex);
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
  
--char *brcms_firmwares[MAX_FW_IMAGES] = {
-+static const char * const brcms_firmwares[MAX_FW_IMAGES] = {
- 	"brcm/bcm43xx",
- 	NULL
- };
-@@ -1012,7 +1012,7 @@ static void brcms_free(struct brcms_info *wl)
- 	 * after calling unregister_netdev() .
- 	 */
- 	if (wl->regsva)
--		iounmap((void *)wl->regsva);
-+		iounmap(wl->regsva);
- 
- 	wl->regsva = NULL;
- }
-@@ -1596,7 +1596,7 @@ struct brcms_timer *brcms_init_timer(struct brcms_info *wl,
- 	if (!t) {
- 		wiphy_err(wl->wiphy, "wl%d: brcms_init_timer: out of memory\n",
- 			  wl->pub->unit);
--		return 0;
-+		return NULL;
- 	}
- 
- 	init_timer(&t->timer);
-diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.h b/drivers/staging/brcm80211/brcmsmac/mac80211_if.h
-index 1d52803..1eb36ed 100644
---- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.h
-+++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.h
-@@ -67,7 +67,7 @@ struct brcms_info {
- 	spinlock_t isr_lock;	/* per-device ISR synchronization lock */
- 
- 	/* regsva for unmap in brcms_free() */
--	void *regsva;		/* opaque chip registers virtual address */
-+	void __iomem *regsva;	/* opaque chip registers virtual address */
- 
- 	/* timer related fields */
- 	atomic_t callbacks;	/* # outstanding callback functions */
++	if (ah->ah_flags & AH_UNPLUGGED) {
++		ath_dbg(common, ATH_DBG_ANY, "Device has been unplugged!\n");
++		mutex_unlock(&sc->mutex);
++		return;
++	}
++
+ 	if (sc->sc_flags & SC_OP_INVALID) {
+ 		ath_dbg(common, ATH_DBG_ANY, "Device not present\n");
+ 		mutex_unlock(&sc->mutex);
 -- 
-1.7.4.1
-
+1.7.0.4
 
