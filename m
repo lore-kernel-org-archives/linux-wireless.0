@@ -1,40 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:56176 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934606Ab1IOThu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 15:37:50 -0400
-Subject: Re: [PATCH 08/27] iwlagn: beautify the code - remove uneeded line
- break
-From: Joe Perches <joe@perches.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Thu, 15 Sep 2011 12:37:49 -0700
-In-Reply-To: <1316112414-6341-9-git-send-email-wey-yi.w.guy@intel.com>
-References: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1316112414-6341-9-git-send-email-wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1316115470.11236.1.camel@Joe-Laptop> (sfid-20110915_213754_035846_64F2EF67)
+Received: from lunge.queued.net ([173.255.254.236]:43530 "EHLO
+	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757049Ab1IIAnI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Sep 2011 20:43:08 -0400
+Date: Thu, 8 Sep 2011 17:35:17 -0700
+From: Andres Salomon <dilinger@queued.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linville@tuxdriver.com, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dsd@laptop.org, cjb@laptop.org
+Subject: [PATCH v3] libertas: prioritize usb8388_olpc.bin firmware on OLPC
+ machines
+Message-ID: <20110908173517.5b8c90be@queued.net> (sfid-20110909_024316_193098_98BC734B)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-09-15 at 11:46 -0700, Wey-Yi Guy wrote:
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Two lines could be concatenated without exceeding the 80 char limit.
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-[]
-> @@ -308,10 +308,8 @@ static int iwl_trans_txq_alloc(struct iwl_trans *trans,
->  
->  	txq->q.n_window = slots_num;
->  
-> -	txq->meta = kzalloc(sizeof(txq->meta[0]) * slots_num,
-> -			    GFP_KERNEL);
-> -	txq->cmd = kzalloc(sizeof(txq->cmd[0]) * slots_num,
-> -			   GFP_KERNEL);
-> +	txq->meta = kzalloc(sizeof(txq->meta[0]) * slots_num, GFP_KERNEL);
-> +	txq->cmd = kzalloc(sizeof(txq->cmd[0]) * slots_num, GFP_KERNEL);
 
-kcalloc would be even prettier...
+Normally, the v9 firmware will be loaded if it's available.  However, on
+OLPC XO-1 machines, the olpc-specific firmware supports extra functionality.
+This makes the libertas driver attempt to load the custom firmware first
+if the machine is an OLPC machine; if that fails (or it's not an OLPC
+machine), fall back to attempting to load the other firmwares.
 
+usb8388_olpc.bin is currently found in the linux-firmware repository.
+
+Signed-off-by: Andres Salomon <dilinger@queued.net>
+---
+v3: changed firmware path to include libertas/ subdirectory.
+
+Since the last submission (v2), usb8388_olpc.bin has found its way into
+wireless-firmware.  It'd be nice to get this into the next merge window.
+
+ drivers/net/wireless/libertas/if_usb.c |   21 +++++++++++++++++++++
+ 1 files changed, 21 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index b5acc39..94f8f3e 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -973,6 +973,23 @@ static const struct {
+ 	{ MODEL_8682, "libertas/usb8682.bin" }
+ };
+ 
++#ifdef CONFIG_OLPC
++
++static int try_olpc_fw(struct if_usb_card *cardp)
++{
++	int retval = -ENOENT;
++
++	/* try the OLPC firmware first; fall back to fw_table list */
++	if (machine_is_olpc() && cardp->model == MODEL_8388)
++		retval = request_firmware(&cardp->fw,
++				"libertas/usb8388_olpc.bin", &cardp->udev->dev);
++	return retval;
++}
++
++#else
++static int try_olpc_fw(struct if_usb_card *cardp) { return -ENOENT; }
++#endif /* !CONFIG_OLPC */
++
+ static int get_fw(struct if_usb_card *cardp, const char *fwname)
+ {
+ 	int i;
+@@ -981,6 +998,10 @@ static int get_fw(struct if_usb_card *cardp, const char *fwname)
+ 	if (fwname)
+ 		return request_firmware(&cardp->fw, fwname, &cardp->udev->dev);
+ 
++	/* Handle OLPC firmware */
++	if (try_olpc_fw(cardp) == 0)
++		return 0;
++
+ 	/* Otherwise search for firmware to use */
+ 	for (i = 0; i < ARRAY_SIZE(fw_table); i++) {
+ 		if (fw_table[i].model != cardp->model)
+-- 
+1.7.2.5
 
