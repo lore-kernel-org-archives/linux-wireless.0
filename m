@@ -1,342 +1,313 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:34200 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753109Ab1IYRHE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Sep 2011 13:07:04 -0400
-Received: by eya28 with SMTP id 28so3096778eya.19
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Sep 2011 10:07:03 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] mac80211: pass vif param to conf_tx() callback
-Date: Sun, 25 Sep 2011 20:06:55 +0300
-Message-Id: <1316970415-23239-3-git-send-email-eliad@wizery.com> (sfid-20110925_190724_392119_D7C5583F)
-In-Reply-To: <1316970415-23239-1-git-send-email-eliad@wizery.com>
-References: <1316970415-23239-1-git-send-email-eliad@wizery.com>
+Received: from swm.pp.se ([212.247.200.143]:45072 "EHLO uplift.swm.pp.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750982Ab1IJFno (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Sep 2011 01:43:44 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by uplift.swm.pp.se (Postfix) with ESMTP id 72D0D9A
+	for <linux-wireless@vger.kernel.org>; Sat, 10 Sep 2011 07:43:43 +0200 (CEST)
+Date: Sat, 10 Sep 2011 07:43:43 +0200 (CEST)
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+To: linux-wireless@vger.kernel.org
+Subject: problem with intel 5300
+Message-ID: <alpine.DEB.2.00.1109100736280.13538@uplift.swm.pp.se> (sfid-20110910_074349_159366_AEE5A6AD)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tx params should be configured per interface.
-Add ieee80211_vif param to the conf_tx callback,
-and update all the drivers that use this callback.
 
-The following spatch was used:
-@rule1@
-struct ieee80211_ops ops;
-identifier conf_tx_op;
-@@
-	ops.conf_tx = conf_tx_op;
+Hi.
 
-@rule2@
-identifier rule1.conf_tx_op;
-identifier hw, queue, params;
-@@
-	conf_tx_op (
--		struct ieee80211_hw *hw,
-+		struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-		u16 queue,
-		const struct ieee80211_tx_queue_params *params) {...}
+I've had my Lenovo Thinkpad X200 with Intel 5300 wifi card for almost 3 
+years, running ubuntu 8.04 and then going upp through the versions. Up to 
+and including 10.10 with its 2.6.35 kernel, things have been working 
+fairly ok. Now with 11.04 with 2.6.38 I've had a lot more wifi problems. 
+Below is a log from the latest time it stopped working and I had to reboot 
+to get it working again.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ath/ath5k/mac80211-ops.c    |    2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c    |    3 ++-
- drivers/net/wireless/ath/ath9k/main.c            |    3 ++-
- drivers/net/wireless/ath/carl9170/main.c         |    3 ++-
- drivers/net/wireless/b43/main.c                  |    3 ++-
- drivers/net/wireless/b43legacy/main.c            |    3 ++-
- drivers/net/wireless/mac80211_hwsim.c            |    3 ++-
- drivers/net/wireless/mwl8k.c                     |    3 ++-
- drivers/net/wireless/p54/main.c                  |    3 ++-
- drivers/net/wireless/rt2x00/rt2400pci.c          |    3 ++-
- drivers/net/wireless/rt2x00/rt61pci.c            |    3 ++-
- drivers/net/wireless/rt2x00/rt73usb.c            |    3 ++-
- drivers/net/wireless/rtl818x/rtl8187/dev.c       |    3 ++-
- drivers/net/wireless/rtlwifi/core.c              |    3 ++-
- drivers/net/wireless/wl1251/main.c               |    3 ++-
- drivers/net/wireless/wl12xx/main.c               |    3 ++-
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c |    7 ++++---
- include/net/mac80211.h                           |    3 ++-
- net/mac80211/driver-ops.h                        |    3 ++-
- 19 files changed, 39 insertions(+), 21 deletions(-)
+Any ideas what might be going wrong?
 
-diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-index 0560234..0fbfc72 100644
---- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-+++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-@@ -563,7 +563,7 @@ ath5k_get_stats(struct ieee80211_hw *hw,
- 
- 
- static int
--ath5k_conf_tx(struct ieee80211_hw *hw, u16 queue,
-+ath5k_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif, u16 queue,
- 	      const struct ieee80211_tx_queue_params *params)
- {
- 	struct ath5k_hw *ah = hw->priv;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 495fdf6..d56a154 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1352,7 +1352,8 @@ static int ath9k_htc_sta_remove(struct ieee80211_hw *hw,
- 	return ret;
- }
- 
--static int ath9k_htc_conf_tx(struct ieee80211_hw *hw, u16 queue,
-+static int ath9k_htc_conf_tx(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif, u16 queue,
- 			     const struct ieee80211_tx_queue_params *params)
- {
- 	struct ath9k_htc_priv *priv = hw->priv;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index ee39702..0601579 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1843,7 +1843,8 @@ static void ath9k_sta_notify(struct ieee80211_hw *hw,
- 	}
- }
- 
--static int ath9k_conf_tx(struct ieee80211_hw *hw, u16 queue,
-+static int ath9k_conf_tx(struct ieee80211_hw *hw,
-+			 struct ieee80211_vif *vif, u16 queue,
- 			 const struct ieee80211_tx_queue_params *params)
- {
- 	struct ath_softc *sc = hw->priv;
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index af351ec..e390a8e 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -1304,7 +1304,8 @@ static int carl9170_op_sta_remove(struct ieee80211_hw *hw,
- 	return 0;
- }
- 
--static int carl9170_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
-+static int carl9170_op_conf_tx(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif, u16 queue,
- 			       const struct ieee80211_tx_queue_params *param)
- {
- 	struct ar9170 *ar = hw->priv;
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 56fa3a3..29b86d4 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -3552,7 +3552,8 @@ static void b43_qos_init(struct b43_wldev *dev)
- 	b43dbg(dev->wl, "QoS enabled\n");
- }
- 
--static int b43_op_conf_tx(struct ieee80211_hw *hw, u16 _queue,
-+static int b43_op_conf_tx(struct ieee80211_hw *hw,
-+			  struct ieee80211_vif *vif, u16 _queue,
- 			  const struct ieee80211_tx_queue_params *params)
- {
- 	struct b43_wl *wl = hw_to_b43_wl(hw);
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index 468d183..a3b72cd 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -2466,7 +2466,8 @@ out:
- 	}
- }
- 
--static int b43legacy_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
-+static int b43legacy_op_conf_tx(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif, u16 queue,
- 				const struct ieee80211_tx_queue_params *params)
- {
- 	return 0;
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 34b79fc..68455a2 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -970,7 +970,8 @@ static int mac80211_hwsim_set_tim(struct ieee80211_hw *hw,
- }
- 
- static int mac80211_hwsim_conf_tx(
--	struct ieee80211_hw *hw, u16 queue,
-+	struct ieee80211_hw *hw,
-+	struct ieee80211_vif *vif, u16 queue,
- 	const struct ieee80211_tx_queue_params *params)
- {
- 	wiphy_debug(hw->wiphy,
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index ea1395a..2428895 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -4915,7 +4915,8 @@ static int mwl8k_sta_add(struct ieee80211_hw *hw,
- 	return ret;
- }
- 
--static int mwl8k_conf_tx(struct ieee80211_hw *hw, u16 queue,
-+static int mwl8k_conf_tx(struct ieee80211_hw *hw,
-+			 struct ieee80211_vif *vif, u16 queue,
- 			 const struct ieee80211_tx_queue_params *params)
- {
- 	struct mwl8k_priv *priv = hw->priv;
-diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
-index 726a934..ad9ae04 100644
---- a/drivers/net/wireless/p54/main.c
-+++ b/drivers/net/wireless/p54/main.c
-@@ -404,7 +404,8 @@ static void p54_configure_filter(struct ieee80211_hw *dev,
- 		p54_set_groupfilter(priv);
- }
- 
--static int p54_conf_tx(struct ieee80211_hw *dev, u16 queue,
-+static int p54_conf_tx(struct ieee80211_hw *dev,
-+		       struct ieee80211_vif *vif, u16 queue,
- 		       const struct ieee80211_tx_queue_params *params)
- {
- 	struct p54_common *priv = dev->priv;
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index daa32fc..1946060 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1648,7 +1648,8 @@ static int rt2400pci_probe_hw(struct rt2x00_dev *rt2x00dev)
- /*
-  * IEEE80211 stack callback functions.
-  */
--static int rt2400pci_conf_tx(struct ieee80211_hw *hw, u16 queue,
-+static int rt2400pci_conf_tx(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif, u16 queue,
- 			     const struct ieee80211_tx_queue_params *params)
- {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 058ef4b..5438bb4 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2883,7 +2883,8 @@ static int rt61pci_probe_hw(struct rt2x00_dev *rt2x00dev)
- /*
-  * IEEE80211 stack callback functions.
-  */
--static int rt61pci_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
-+static int rt61pci_conf_tx(struct ieee80211_hw *hw,
-+			   struct ieee80211_vif *vif, u16 queue_idx,
- 			   const struct ieee80211_tx_queue_params *params)
- {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 0baeb89..1a6b68b 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2222,7 +2222,8 @@ static int rt73usb_probe_hw(struct rt2x00_dev *rt2x00dev)
- /*
-  * IEEE80211 stack callback functions.
-  */
--static int rt73usb_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
-+static int rt73usb_conf_tx(struct ieee80211_hw *hw,
-+			   struct ieee80211_vif *vif, u16 queue_idx,
- 			   const struct ieee80211_tx_queue_params *params)
- {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
-diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-index 1e0be14..c106742 100644
---- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-@@ -1241,7 +1241,8 @@ static void rtl8187_configure_filter(struct ieee80211_hw *dev,
- 	rtl818x_iowrite32_async(priv, &priv->map->RX_CONF, priv->rx_conf);
- }
- 
--static int rtl8187_conf_tx(struct ieee80211_hw *dev, u16 queue,
-+static int rtl8187_conf_tx(struct ieee80211_hw *dev,
-+			   struct ieee80211_vif *vif, u16 queue,
- 			   const struct ieee80211_tx_queue_params *params)
- {
- 	struct rtl8187_priv *priv = dev->priv;
-diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
-index 04c4e9e..05c27c9 100644
---- a/drivers/net/wireless/rtlwifi/core.c
-+++ b/drivers/net/wireless/rtlwifi/core.c
-@@ -504,7 +504,8 @@ static int _rtl_get_hal_qnum(u16 queue)
-  *for mac80211 VO=0, VI=1, BE=2, BK=3
-  *for rtl819x  BE=0, BK=1, VI=2, VO=3
-  */
--static int rtl_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
-+static int rtl_op_conf_tx(struct ieee80211_hw *hw,
-+		   struct ieee80211_vif *vif, u16 queue,
- 		   const struct ieee80211_tx_queue_params *param)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-diff --git a/drivers/net/wireless/wl1251/main.c b/drivers/net/wireless/wl1251/main.c
-index a14a48c..ba3268e 100644
---- a/drivers/net/wireless/wl1251/main.c
-+++ b/drivers/net/wireless/wl1251/main.c
-@@ -1158,7 +1158,8 @@ static struct ieee80211_channel wl1251_channels[] = {
- 	{ .hw_value = 13, .center_freq = 2472},
- };
- 
--static int wl1251_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
-+static int wl1251_op_conf_tx(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif, u16 queue,
- 			     const struct ieee80211_tx_queue_params *params)
- {
- 	enum wl1251_acx_ps_scheme ps_scheme;
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index a51dd0e..60e2869 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3744,7 +3744,8 @@ out:
- 	mutex_unlock(&wl->mutex);
- }
- 
--static int wl1271_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
-+static int wl1271_op_conf_tx(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif, u16 queue,
- 			     const struct ieee80211_tx_queue_params *params)
- {
- 	struct wl1271 *wl = hw->priv;
-diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-index d6de44e..d03f0cf 100644
---- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-@@ -140,8 +140,9 @@ static void brcms_ops_sta_notify(struct ieee80211_hw *hw,
- 			      struct ieee80211_vif *vif,
- 			      enum sta_notify_cmd cmd,
- 			      struct ieee80211_sta *sta);
--static int brcms_ops_conf_tx(struct ieee80211_hw *hw, u16 queue,
--			  const struct ieee80211_tx_queue_params *params);
-+static int brcms_ops_conf_tx(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif, u16 queue,
-+			     const struct ieee80211_tx_queue_params *params);
- static u64 brcms_ops_get_tsf(struct ieee80211_hw *hw);
- static int brcms_ops_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		      struct ieee80211_sta *sta);
-@@ -553,7 +554,7 @@ brcms_ops_sta_notify(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- }
- 
- static int
--brcms_ops_conf_tx(struct ieee80211_hw *hw, u16 queue,
-+brcms_ops_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif, u16 queue,
- 	       const struct ieee80211_tx_queue_params *params)
- {
- 	struct brcms_info *wl = hw->priv;
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index c0f63fd..b8ecba7 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1998,7 +1998,8 @@ struct ieee80211_ops {
- 			  struct ieee80211_sta *sta);
- 	void (*sta_notify)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			enum sta_notify_cmd, struct ieee80211_sta *sta);
--	int (*conf_tx)(struct ieee80211_hw *hw, u16 queue,
-+	int (*conf_tx)(struct ieee80211_hw *hw,
-+		       struct ieee80211_vif *vif, u16 queue,
- 		       const struct ieee80211_tx_queue_params *params);
- 	u64 (*get_tsf)(struct ieee80211_hw *hw);
- 	void (*set_tsf)(struct ieee80211_hw *hw, u64 tsf);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 5315a5d..d998b24 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -423,7 +423,8 @@ static inline int drv_conf_tx(struct ieee80211_local *local,
- 
- 	trace_drv_conf_tx(local, sdata, queue, params);
- 	if (local->ops->conf_tx)
--		ret = local->ops->conf_tx(&local->hw, queue, params);
-+		ret = local->ops->conf_tx(&local->hw, &sdata->vif,
-+					  queue, params);
- 	trace_drv_return_int(local, ret);
- 	return ret;
- }
--- 
-1.7.6.401.g6a319
+Linux laptop 2.6.38-11-generic-pae #49-Ubuntu SMP Mon Aug 29 21:07:33 UTC 2011 i686 i686 i386 GNU/Linux
 
+03:00.0 Network controller: Intel Corporation Ultimate N WiFi Link 5300
+
+I also have to disable .11n with:
+
+$ cat /etc/modprobe.d/intel-5300-iwlagn-disable11n.conf
+options iwlagn 11n_disable=1
+
+because if I don't, then it basically doesn't work at all (I can provide 
+more information on this if someone is interested). My access point is a 
+D-link DIR-855 and I'm on 5Ghz.
+
+     Sep  6 20:15:01 swm-laptop kernel: [178718.504068] iwlagn 
+0000:03:00.0: Error sending POWER_TABLE_CMD: time out after 500ms.
+     Sep  6 20:15:02 swm-laptop kernel: [178718.504080] iwlagn 
+0000:03:00.0: set power fail, ret = -110
+     Sep  6 20:15:02 swm-laptop kernel: [178719.504050] iwlagn 
+0000:03:00.0: Error sending REPLY_QOS_PARAM: time out after 500ms.
+     Sep  6 20:15:02 swm-laptop kernel: [178719.504055] iwlagn 
+0000:03:00.0: Failed to update QoS
+     Sep  6 20:15:03 swm-laptop kernel: [178720.004571] iwlagn 
+0000:03:00.0: Error sending REPLY_RXON: time out after 500ms.
+     Sep  6 20:15:03 swm-laptop kernel: [178720.004584] iwlagn 
+0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
+     Sep  6 20:15:03 swm-laptop kernel: [178720.504111] iwlagn 
+0000:03:00.0: Error sending REPLY_RXON: time out after 500ms.
+     Sep  6 20:15:03 swm-laptop kernel: [178720.504123] iwlagn 
+0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
+     Sep  6 20:15:04 swm-laptop kernel: [178721.004066] iwlagn 
+0000:03:00.0: Error sending REPLY_ADD_STA: time out after 500ms.
+     Sep  6 20:15:04 swm-laptop kernel: [178721.004076] ieee80211 phy0: 
+failed to remove key (0, 00:21:91:dc:94:57) from hardware (-110)
+     Sep  6 20:15:04 swm-laptop kernel: [178721.504058] iwlagn 
+0000:03:00.0: Error sending REPLY_REMOVE_STA: time out after 500ms.
+     Sep  6 20:15:04 swm-laptop kernel: [178721.504071] iwlagn 
+0000:03:00.0: Error removing station 00:21:91:dc:94:57
+     Sep  6 20:15:05 swm-laptop kernel: [178722.004084] iwlagn 
+0000:03:00.0: Error sending REPLY_RXON: time out after 500ms.
+     Sep  6 20:15:05 swm-laptop kernel: [178722.004097] iwlagn 
+0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
+     Sep  6 20:15:07 swm-laptop kernel: [178724.012038] iwlagn 
+0000:03:00.0: fail to flush all tx fifo queues
+     Sep  6 20:15:07 swm-laptop kernel: [178724.512069] iwlagn 
+0000:03:00.0: Error sending POWER_TABLE_CMD: time out after 500ms.
+     Sep  6 20:15:08 swm-laptop kernel: [178724.512076] iwlagn 
+0000:03:00.0: set power fail, ret = -110
+     Sep  6 20:15:08 swm-laptop kernel: [178725.012134] iwlagn 
+0000:03:00.0: Error sending REPLY_RXON: time out after 500ms.
+     Sep  6 20:15:08 swm-laptop kernel: [178725.012147] iwlagn 
+0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
+     Sep  6 20:15:08 swm-laptop kernel: [178725.512068] iwlagn 
+0000:03:00.0: Error sending REPLY_ADD_STA: time out after 500ms.
+     Sep  6 20:15:08 swm-laptop kernel: [178725.512086] ieee80211 phy0: 
+failed to remove key (1, ff:ff:ff:ff:ff:ff) from hardware (-110)
+     Sep  6 20:15:08 swm-laptop kernel: [178725.532246] cfg80211: All 
+devices are disconnected, going to restore regulatory settings
+     Sep  6 20:15:08 swm-laptop kernel: [178725.532258] cfg80211: Restoring 
+regulatory settings
+     Sep  6 20:15:08 swm-laptop kernel: [178725.532268] cfg80211: Calling 
+CRDA to update world regulatory domain
+     Sep  6 20:15:08 swm-laptop kernel: [178725.556193] cfg80211: Ignoring 
+regulatory request Set by core since the driver uses its own custom 
+regulatory domain
+     Sep  6 20:15:08 swm-laptop kernel: [178725.556199] cfg80211: World 
+regulatory domain updated:
+     Sep  6 20:15:08 swm-laptop kernel: [178725.556201] cfg80211: 
+(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+     Sep  6 20:15:08 swm-laptop kernel: [178725.556204] cfg80211: 
+(2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+     Sep  6 20:15:08 swm-laptop kernel: [178725.556206] cfg80211: 
+(2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+     Sep  6 20:15:08 swm-laptop kernel: [178725.556209] cfg80211: 
+(2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+     Sep  6 20:15:08 swm-laptop kernel: [178725.556212] cfg80211: 
+(5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+     Sep  6 20:15:08 swm-laptop kernel: [178725.556214] cfg80211: 
+(5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+     Sep  6 20:15:09 swm-laptop kernel: [178726.132056] iwlagn 
+0000:03:00.0: Error sending REPLY_RXON: time out after 500ms.
+     Sep  6 20:15:09 swm-laptop kernel: [178726.132063] iwlagn 
+0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
+     Sep  6 20:15:09 swm-laptop kernel: [178726.632100] iwlagn 
+0000:03:00.0: Error sending POWER_TABLE_CMD: time out after 500ms.
+     Sep  6 20:15:10 swm-laptop kernel: [178726.632112] iwlagn 
+0000:03:00.0: set power fail, ret = -110
+     Sep  6 20:15:10 swm-laptop kernel: [178727.132073] iwlagn 
+0000:03:00.0: Error sending REPLY_RXON: time out after 500ms.
+     Sep  6 20:15:10 swm-laptop kernel: [178727.132086] iwlagn 
+0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
+     Sep  6 20:15:10 swm-laptop kernel: [178727.504021] iwlagn 
+0000:03:00.0: Queue 9 stuck for 10000 ms.
+     Sep  6 20:15:10 swm-laptop kernel: [178727.504027] iwlagn 
+0000:03:00.0: On demand firmware reload
+     Sep  6 20:15:11 swm-laptop kernel: [178727.632057] iwlagn 
+0000:03:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
+     Sep  6 20:15:11 swm-laptop kernel: [178727.636027] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: last message repeated 16 times
+     Sep  6 20:15:11 swm-laptop kernel: [178727.942512] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178727.960945] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178727.979119] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178727.997201] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178727.997201] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.033459] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.051594] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.069670] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.087962] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.106091] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.124203] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.142265] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.160338] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.178380] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.196435] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.196435] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.232512] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.250577] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.268631] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.286722] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.304804] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.322846] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.340895] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.358932] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.377024] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.395070] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.413112] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.431164] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.449204] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.467285] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.485344] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.503427] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.521534] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.539606] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.557702] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.575790] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.593851] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.611912] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.629957] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.648044] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.666112] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:11 swm-laptop kernel: [178728.684178] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:13 swm-laptop kernel: [178729.810551] thinkpad_acpi: EC 
+reports that Thermal Table has changed
+     Sep  6 20:15:16 swm-laptop kernel: [178733.696027] iwlagn 
+0000:03:00.0: Could not load the INST uCode section
+     Sep  6 20:15:16 swm-laptop kernel: [178733.696032] iwlagn 
+0000:03:00.0: Unable to set up bootstrap uCode: -110
+     Sep  6 20:15:16 swm-laptop kernel: [178733.700014] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:17 swm-laptop kernel: [178733.718158] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:17 swm-laptop kernel: [178733.736301] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:17 swm-laptop kernel: [178733.754347] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:17 swm-laptop kernel: [178733.772415] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:17 swm-laptop kernel: [178733.790465] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:22 swm-laptop kernel: [178738.804029] iwlagn 
+0000:03:00.0: Could not load the INST uCode section
+     Sep  6 20:15:22 swm-laptop kernel: [178738.804036] iwlagn 
+0000:03:00.0: Unable to set up bootstrap uCode: -110
+     Sep  6 20:15:22 swm-laptop kernel: [178738.808008] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:22 swm-laptop kernel: [178738.826068] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:22 swm-laptop kernel: [178738.844147] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:22 swm-laptop kernel: [178738.862282] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:22 swm-laptop kernel: [178738.880490] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:22 swm-laptop kernel: [178738.898646] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:27 swm-laptop kernel: [178743.912014] iwlagn 
+0000:03:00.0: Could not load the INST uCode section
+     Sep  6 20:15:27 swm-laptop kernel: [178743.912019] iwlagn 
+0000:03:00.0: Unable to set up bootstrap uCode: -110
+     Sep  6 20:15:27 swm-laptop kernel: [178743.916005] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:27 swm-laptop kernel: [178743.939804] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:27 swm-laptop kernel: [178743.952161] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:27 swm-laptop kernel: [178743.970259] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:27 swm-laptop kernel: [178743.988331] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:27 swm-laptop kernel: [178744.006822] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:32 swm-laptop kernel: [178749.020036] iwlagn 
+0000:03:00.0: Could not load the INST uCode section
+     Sep  6 20:15:32 swm-laptop kernel: [178749.020041] iwlagn 
+0000:03:00.0: Unable to set up bootstrap uCode: -110
+     Sep  6 20:15:32 swm-laptop kernel: [178749.024025] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:32 swm-laptop kernel: [178749.042108] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:32 swm-laptop kernel: [178749.060181] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:32 swm-laptop kernel: [178749.078255] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:32 swm-laptop kernel: [178749.096327] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:32 swm-laptop kernel: [178749.114391] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:37 swm-laptop kernel: [178754.128042] iwlagn 
+0000:03:00.0: Could not load the INST uCode section
+     Sep  6 20:15:37 swm-laptop kernel: [178754.128047] iwlagn 
+0000:03:00.0: Unable to set up bootstrap uCode: -110
+     Sep  6 20:15:37 swm-laptop kernel: [178754.132025] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:37 swm-laptop kernel: last message repeated 16 times
+     Sep  6 20:15:37 swm-laptop kernel: [178754.438968] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:37 swm-laptop kernel: [178754.457086] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:37 swm-laptop kernel: [178754.475153] iwlagn 
+0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+     Sep  6 20:15:37 swm-laptop kernel: [178754.489270] iwlagn 
+0000:03:00.0: Unable to initialize device after 5 attempts.
+     Sep  6 20:15:37 swm-laptop kernel: [178754.489293] iwlagn 
+0000:03:00.0: Request scan called when driver not ready.
+     Sep  6 20:15:38 swm-laptop kernel: [178754.971442] EXT4-fs (dm-0): 
+re-mounted. Opts: errors=remount-ro,discard,commit=0
+     Sep  6 20:15:38 swm-laptop kernel: [178755.490274] iwlagn 
+0000:03:00.0: Request scan called when driver not ready.
+     Sep  6 20:15:39 swm-laptop kernel: [178756.491726] iwlagn 
+0000:03:00.0: Request scan called when driver not ready.
+     Sep  6 20:15:40 swm-laptop kernel: [178757.492170] iwlagn 
+0000:03:00.0: Request scan called when driver not ready.
+     Sep  6 20:15:41 swm-laptop kernel: [178758.493486] iwlagn 
+0000:03:00.0: Request scan called when driver not ready.
+     Sep  6 20:15:42 swm-laptop kernel: [178759.494825] iwlagn 
+0000:03:00.0: Request scan called when driver not ready.
+     Sep  6 20:15:43 swm-laptop kernel: [178760.496306] iwlagn 
+0000:03:00.0: Request scan called when driver not ready.
+
+  -- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
