@@ -1,194 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:32816 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753863Ab1ISRim (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 13:38:42 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v2 1/4] ath9k_hw: make ath9k_hw_set_interrupts use ah->imask by default
-Date: Mon, 19 Sep 2011 19:38:20 +0200
-Message-Id: <1316453903-75710-1-git-send-email-nbd@openwrt.org> (sfid-20110919_193846_207903_176E0131)
+Received: from mail-vw0-f43.google.com ([209.85.212.43]:59417 "EHLO
+	mail-vw0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759517Ab1IJQsj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Sep 2011 12:48:39 -0400
+Received: by vws10 with SMTP id 10so2774180vws.2
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Sep 2011 09:48:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACna6rynG8HoOZruSu1t=_GUZ+8mRcHCu46=eATjnBcDMGaO5A@mail.gmail.com>
+References: <20110707002034.GA17885@broadcom.com>
+	<20110824222801.GA5280@broadcom.com>
+	<CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
+	<20110827143513.GN3775@shale.localdomain>
+	<20110827145003.GA9405@suse.de>
+	<CACna6ryfZoahr1FPbZ_syBFhWnfRprEs=95y=piCGXXm_Cu+LQ@mail.gmail.com>
+	<20110827152144.GA10126@suse.de>
+	<20110830014257.GI15771@broadcom.com>
+	<CACna6rynG8HoOZruSu1t=_GUZ+8mRcHCu46=eATjnBcDMGaO5A@mail.gmail.com>
+Date: Sat, 10 Sep 2011 18:48:38 +0200
+Message-ID: <CACna6ryYH1_ueCfDMsd+AYsprb1KTrWMmLRQnjebDQXX+M-ssQ@mail.gmail.com> (sfid-20110910_184848_487031_6C387D87)
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Henry Ptasinski <henryp@broadcom.com>, Greg KH <gregkh@suse.de>
+Cc: Dan Carpenter <error27@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/beacon.c |   10 +++++-----
- drivers/net/wireless/ath/ath9k/gpio.c   |    4 ++--
- drivers/net/wireless/ath/ath9k/mac.c    |    6 +++---
- drivers/net/wireless/ath/ath9k/mac.h    |    2 +-
- drivers/net/wireless/ath/ath9k/main.c   |   10 +++++-----
- drivers/net/wireless/ath/ath9k/recv.c   |    2 +-
- 6 files changed, 17 insertions(+), 17 deletions(-)
+Henry, you ignored most of the questions and explanations. In this
+situation I don't have anything more to add, I'll just post few
+comments/updates.
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 9cdeaeb..a13cabb 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -515,7 +515,7 @@ static void ath_beacon_config_ap(struct ath_softc *sc,
- 	sc->sc_flags |= SC_OP_TSF_RESET;
- 	ath9k_beacon_init(sc, nexttbtt, intval);
- 	sc->beacon.bmisscnt = 0;
--	ath9k_hw_set_interrupts(ah, ah->imask);
-+	ath9k_hw_set_interrupts(ah);
- 	ath9k_hw_enable_interrupts(ah);
- }
- 
-@@ -643,7 +643,7 @@ static void ath_beacon_config_sta(struct ath_softc *sc,
- 	ath9k_hw_set_sta_beacon_timers(ah, &bs);
- 	ah->imask |= ATH9K_INT_BMISS;
- 
--	ath9k_hw_set_interrupts(ah, ah->imask);
-+	ath9k_hw_set_interrupts(ah);
- 	ath9k_hw_enable_interrupts(ah);
- }
- 
-@@ -679,7 +679,7 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
- 	ath9k_beacon_init(sc, nexttbtt, intval);
- 	sc->beacon.bmisscnt = 0;
- 
--	ath9k_hw_set_interrupts(ah, ah->imask);
-+	ath9k_hw_set_interrupts(ah);
- 	ath9k_hw_enable_interrupts(ah);
- }
- 
-@@ -821,11 +821,11 @@ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status)
- 	if (status) {
- 		/* Re-enable beaconing */
- 		ah->imask |= ATH9K_INT_SWBA;
--		ath9k_hw_set_interrupts(ah, ah->imask);
-+		ath9k_hw_set_interrupts(ah);
- 	} else {
- 		/* Disable SWBA interrupt */
- 		ah->imask &= ~ATH9K_INT_SWBA;
--		ath9k_hw_set_interrupts(ah, ah->imask);
-+		ath9k_hw_set_interrupts(ah);
- 		tasklet_kill(&sc->bcon_tasklet);
- 		ath9k_hw_stop_dma_queue(ah, sc->beacon.beaconq);
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index afbf540..d357657 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -150,7 +150,7 @@ static void ath9k_gen_timer_start(struct ath_hw *ah,
- 	if ((ah->imask & ATH9K_INT_GENTIMER) == 0) {
- 		ath9k_hw_disable_interrupts(ah);
- 		ah->imask |= ATH9K_INT_GENTIMER;
--		ath9k_hw_set_interrupts(ah, ah->imask);
-+		ath9k_hw_set_interrupts(ah);
- 		ath9k_hw_enable_interrupts(ah);
- 	}
- }
-@@ -165,7 +165,7 @@ static void ath9k_gen_timer_stop(struct ath_hw *ah, struct ath_gen_timer *timer)
- 	if (timer_table->timer_mask.val == 0) {
- 		ath9k_hw_disable_interrupts(ah);
- 		ah->imask &= ~ATH9K_INT_GENTIMER;
--		ath9k_hw_set_interrupts(ah, ah->imask);
-+		ath9k_hw_set_interrupts(ah);
- 		ath9k_hw_enable_interrupts(ah);
- 	}
- }
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 22f23ea..835e81d 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -827,9 +827,9 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
- }
- EXPORT_SYMBOL(ath9k_hw_enable_interrupts);
- 
--void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
-+void ath9k_hw_set_interrupts(struct ath_hw *ah)
- {
--	enum ath9k_int omask = ah->imask;
-+	enum ath9k_int ints = ah->imask;
- 	u32 mask, mask2;
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -837,7 +837,7 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
- 	if (!(ints & ATH9K_INT_GLOBAL))
- 		ath9k_hw_disable_interrupts(ah);
- 
--	ath_dbg(common, ATH_DBG_INTERRUPT, "0x%x => 0x%x\n", omask, ints);
-+	ath_dbg(common, ATH_DBG_INTERRUPT, "New interrupt mask 0x%x\n", ints);
- 
- 	mask = ints & ATH9K_INT_COMMON;
- 	mask2 = 0;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 91c9654..c7cec9c 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -734,7 +734,7 @@ int ath9k_hw_beaconq_setup(struct ath_hw *ah);
- 
- /* Interrupt Handling */
- bool ath9k_hw_intrpend(struct ath_hw *ah);
--void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints);
-+void ath9k_hw_set_interrupts(struct ath_hw *ah);
- void ath9k_hw_enable_interrupts(struct ath_hw *ah);
- void ath9k_hw_disable_interrupts(struct ath_hw *ah);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a16f539..f7cd461 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -273,7 +273,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 
- 	ath9k_cmn_update_txpow(ah, sc->curtxpow,
- 			       sc->config.txpowlimit, &sc->curtxpow);
--	ath9k_hw_set_interrupts(ah, ah->imask);
-+	ath9k_hw_set_interrupts(ah);
- 	ath9k_hw_enable_interrupts(ah);
- 
- 	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)) && start) {
-@@ -823,7 +823,7 @@ irqreturn_t ath_isr(int irq, void *dev)
- 
- 	if (status & ATH9K_INT_RXEOL) {
- 		ah->imask &= ~(ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
--		ath9k_hw_set_interrupts(ah, ah->imask);
-+		ath9k_hw_set_interrupts(ah);
- 	}
- 
- 	if (status & ATH9K_INT_MIB) {
-@@ -1396,7 +1396,7 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
- 		ah->imask &= ~ATH9K_INT_TSFOOR;
- 	}
- 
--	ath9k_hw_set_interrupts(ah, ah->imask);
-+	ath9k_hw_set_interrupts(ah);
- 
- 	/* Set up ANI */
- 	if (iter_data.naps > 0) {
-@@ -1571,7 +1571,7 @@ static void ath9k_enable_ps(struct ath_softc *sc)
- 	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
- 		if ((ah->imask & ATH9K_INT_TIM_TIMER) == 0) {
- 			ah->imask |= ATH9K_INT_TIM_TIMER;
--			ath9k_hw_set_interrupts(ah, ah->imask);
-+			ath9k_hw_set_interrupts(ah);
- 		}
- 		ath9k_hw_setrxabort(ah, 1);
- 	}
-@@ -1591,7 +1591,7 @@ static void ath9k_disable_ps(struct ath_softc *sc)
- 				  PS_WAIT_FOR_TX_ACK);
- 		if (ah->imask & ATH9K_INT_TIM_TIMER) {
- 			ah->imask &= ~ATH9K_INT_TIM_TIMER;
--			ath9k_hw_set_interrupts(ah, ah->imask);
-+			ath9k_hw_set_interrupts(ah);
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index bcc0b22..bba93eb 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1976,7 +1976,7 @@ requeue:
- 
- 	if (!(ah->imask & ATH9K_INT_RXEOL)) {
- 		ah->imask |= (ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
--		ath9k_hw_set_interrupts(ah, ah->imask);
-+		ath9k_hw_set_interrupts(ah);
- 	}
- 
- 	return 0;
+W dniu 30 sierpnia 2011 08:17 użytkownik Rafał Miłecki
+<zajec5@gmail.com> napisał:
+> 2011/8/30 Henry Ptasinski <henryp@broadcom.com>:
+>> The b43 driver doesn't implement transmit power control for the BCM43224 or
+>> BCM43225, and has various other unimplemented phy functions, e.g.:
+>>
+>>> void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
+>>> {//TODO
+>>> }
+>>>
+>>> static void b43_nphy_op_adjust_txpower(struct b43_wldev *dev)
+>>> {//TODO
+>>> }
+>>>
+>>> static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
+>>>                                                         bool ignore_tssi)
+>>> {//TODO
+>>>         return B43_TXPWR_RES_DONE;
+>>> }
+>>>
+>>> ...
+>>>       b43err(dev->wl, "enabling tx pwr ctrl not implemented yet\n"); ...
+>>> ...
+>>
+>> etc.
+>
+> I've just checked your wlc_phy_txpower_recalc_target_nphy. It's calling:
+> 1) Trivial wlc_phy_txpwr_limit_to_tbl_nphy
+> 2) More advanced wlc_phy_txpwrctrl_pwr_setup_nphy we have to implement
+> 3) Already-implemented-in-b43 wlapi_bmac_mctrl
+> 4) 50% implemented wlc_phy_txpwrctrl_enable_nphy
+>
+> I can do this in 1 day.
+
+If you watch linux-wireless ML, you could see I've started
+implementing calibration for N-PHY in b43.
+
+A progress is little slower recently because of:
+1) Me having less time in few recent days
+2) Problems with kernel.org servers
+
+In any case, *I'm going to finish N-PHY calibration* in b43. I've more
+stuff already, just need to test it before posting and make sure
+nothing was missed due to problems with git.kernel.org.
+
+I've also finished initialization of static tables for LCN-PHY and
+implemented basic operations. Now I'm just going to rewrite other
+initialization ops and that should give us working LCN support.
+
+I'm moving to the new place in next week (that's why I've been busy
+recently) and will start playing with 5 GHz support in b43.
+
+
+Too bad you didn't respond to all our questions and comments :| Ppl
+started commenting that [0] without seeing the real solution I wanted
+to see discussed with you.
+
+[0] http://www.h-online.com/open/features/Kernel-comment-The-obstacle-course-of-cooperation-1340020.html
+
 -- 
-1.7.3.2
-
+Rafał
