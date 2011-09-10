@@ -1,251 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42644 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754444Ab1IFMQq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Sep 2011 08:16:46 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1R0ua4-00066M-PH
-	for linux-wireless@vger.kernel.org; Tue, 06 Sep 2011 14:16:44 +0200
-Message-Id: <20110906121534.491842279@sipsolutions.net> (sfid-20110906_141651_215347_47149ADC)
-Date: Tue, 06 Sep 2011 14:14:23 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 2/3] mac80211: unify TIM bit handling
-References: <20110906121421.460641040@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mgw2.diku.dk ([130.225.96.92]:37678 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756524Ab1IJDM6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Sep 2011 23:12:58 -0400
+Date: Sat, 10 Sep 2011 05:12:51 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: Jesper Andersen <jespera@diku.dk>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: Backporting the Linux kernel, for good - was: Re: semantic patch
+ inference
+In-Reply-To: <CA+RMdsmEJRv8i81o_GD6o7Bn0MpQJMidghTnt3f-QEeU6V6eNQ@mail.gmail.com>
+Message-ID: <Pine.LNX.4.64.1109100512190.14019@ask.diku.dk> (sfid-20110910_051336_304729_B45A355F)
+References: <CAB=NE6U0ks9CobukO04=bZpnkm3Yw+Pf7keVPsP-hv1NyJZ_Xw@mail.gmail.com>
+ <Pine.LNX.4.64.1109092245170.9242@ask.diku.dk>
+ <CA+RMdsmEJRv8i81o_GD6o7Bn0MpQJMidghTnt3f-QEeU6V6eNQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sat, 10 Sep 2011, Jesper Andersen wrote:
 
-Currently, the TIM bit for a given station is set
-and cleared all over the place. Since the logic to
-set/clear it will become much more complex when we
-add uAPSD support, as a first step let's collect
-the entire logic in one place. This requires a few
-small adjustments to other places.
+> I'm in Singapore now and will head for Denmark tomorrow so I can't promise
+> very instant reponses.
+> 
+> I haven't read the full thread just yet, but I just wanted to clarify one
+> thing:
+> 
+> On Saturday, September 10, 2011, Julia Lawall wrote:
+> >
+> > There was also the question about one or multiple types of changes.  I
+> > think this is not a problem, but Jesper should confirm.  If a patch
+> > contains
+> > two changes and one can be generalized and the other one cannot for some
+> > reason, does spdiff give up on the whole thing, or does it do what it can?
+> >
+> >
+> It's a little difficult to answer this precisely, so let me instead give an
+> example and then you can say in what way my example falls short of what you
+> thought of.
+> 
+> Suppose we have two functions that changed:
+> 
+> f1=
+> void foo() {
+>   bar(x->dev);
+>   foz(117);
+> }
+> 
+> f2=
+> void goo() {
+>   if(b) bar(y->dev);
+> }
+> 
+> 
+> And the new versions are:
+> 
+> f1'=
+> void foo() {
+>   bar(x);
+>   foz(117, 42);
+> }
+> 
+> f2'=
+> void goo() {
+>   if(b) bar(y);
+> }
+> 
+> In this example there are basically three changes:
+> 
+> x->dev becomes x
+> y->dev becomes y
+> foz(117) becomes foz(117', 42)
+> 
+> In this case spdiff will find: (I just ran it to be sure)
+> @@
+> expression X0;
+> @@
+> - bar(X0->dev);
+> + bar(X0);
+> 
+> So the one ungeneralizable change was simply not included. Does this cover
+> your question Julia?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/sta_info.c |   94 +++++++++++++++++-------------------------------
- net/mac80211/sta_info.h |    3 -
- net/mac80211/status.c   |    1 
- net/mac80211/tx.c       |    9 +---
- 4 files changed, 39 insertions(+), 68 deletions(-)
+That seems good.  But perhaps the user would like to know about the 
+elements that were not generalizable as well.
 
---- a/net/mac80211/sta_info.h	2011-09-06 12:46:18.000000000 +0200
-+++ b/net/mac80211/sta_info.h	2011-09-06 12:49:39.000000000 +0200
-@@ -518,8 +518,7 @@ int sta_info_destroy_addr(struct ieee802
- int sta_info_destroy_addr_bss(struct ieee80211_sub_if_data *sdata,
- 			      const u8 *addr);
- 
--void sta_info_set_tim_bit(struct sta_info *sta);
--void sta_info_clear_tim_bit(struct sta_info *sta);
-+void sta_info_recalc_tim(struct sta_info *sta);
- 
- void sta_info_init(struct ieee80211_local *local);
- void sta_info_stop(struct ieee80211_local *local);
---- a/net/mac80211/tx.c	2011-09-06 12:46:19.000000000 +0200
-+++ b/net/mac80211/tx.c	2011-09-06 12:49:39.000000000 +0200
-@@ -470,13 +470,10 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
- 			tx->local->total_ps_buffered++;
- 
- 		/*
--		 * Queue frame to be sent after STA wakes up/polls,
--		 * but don't set the TIM bit if the driver is blocking
--		 * wakeup or poll response transmissions anyway.
-+		 * We queued up some frames, so the TIM bit might
-+		 * need to be set, recalculate it.
- 		 */
--		if (skb_queue_empty(&sta->ps_tx_buf) &&
--		    !(staflags & WLAN_STA_PS_DRIVER))
--			sta_info_set_tim_bit(sta);
-+		sta_info_recalc_tim(sta);
- 
- 		info->control.jiffies = jiffies;
- 		info->control.vif = &tx->sdata->vif;
---- a/net/mac80211/sta_info.c	2011-09-06 12:49:15.000000000 +0200
-+++ b/net/mac80211/sta_info.c	2011-09-06 12:59:05.000000000 +0200
-@@ -641,54 +641,35 @@ static inline void __bss_tim_clear(struc
- 	bss->tim[aid / 8] &= ~(1 << (aid % 8));
- }
- 
--static void __sta_info_set_tim_bit(struct ieee80211_if_ap *bss,
--				   struct sta_info *sta)
--{
--	BUG_ON(!bss);
--
--	__bss_tim_set(bss, sta->sta.aid);
--
--	if (sta->local->ops->set_tim) {
--		sta->local->tim_in_locked_section = true;
--		drv_set_tim(sta->local, &sta->sta, true);
--		sta->local->tim_in_locked_section = false;
--	}
--}
--
--void sta_info_set_tim_bit(struct sta_info *sta)
-+void sta_info_recalc_tim(struct sta_info *sta)
- {
-+	struct ieee80211_local *local = sta->local;
-+	struct ieee80211_if_ap *bss = sta->sdata->bss;
- 	unsigned long flags;
-+	bool have_data;
- 
--	BUG_ON(!sta->sdata->bss);
--
--	spin_lock_irqsave(&sta->local->sta_lock, flags);
--	__sta_info_set_tim_bit(sta->sdata->bss, sta);
--	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
--}
--
--static void __sta_info_clear_tim_bit(struct ieee80211_if_ap *bss,
--				     struct sta_info *sta)
--{
--	BUG_ON(!bss);
-+	/* No need to do anything if the driver does all */
-+	if (local->hw.flags & IEEE80211_HW_AP_LINK_PS)
-+		return;
- 
--	__bss_tim_clear(bss, sta->sta.aid);
-+	spin_lock_irqsave(&local->sta_lock, flags);
- 
--	if (sta->local->ops->set_tim) {
--		sta->local->tim_in_locked_section = true;
--		drv_set_tim(sta->local, &sta->sta, false);
--		sta->local->tim_in_locked_section = false;
-+	have_data = test_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF) ||
-+		    !skb_queue_empty(&sta->tx_filtered) ||
-+		    !skb_queue_empty(&sta->ps_tx_buf);
-+
-+	if (have_data)
-+		__bss_tim_set(bss, sta->sta.aid);
-+	else
-+		__bss_tim_clear(bss, sta->sta.aid);
-+
-+	if (local->ops->set_tim) {
-+		local->tim_in_locked_section = true;
-+		drv_set_tim(local, &sta->sta, have_data);
-+		local->tim_in_locked_section = false;
- 	}
--}
- 
--void sta_info_clear_tim_bit(struct sta_info *sta)
--{
--	unsigned long flags;
--
--	BUG_ON(!sta->sdata->bss);
--
--	spin_lock_irqsave(&sta->local->sta_lock, flags);
--	__sta_info_clear_tim_bit(sta->sdata->bss, sta);
--	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
-+	spin_unlock_irqrestore(&local->sta_lock, flags);
- }
- 
- static bool sta_info_buffer_expired(struct sta_info *sta, struct sk_buff *skb)
-@@ -736,9 +717,9 @@ static bool sta_info_cleanup_expire_buff
- #endif
- 		dev_kfree_skb(skb);
- 
--		if (skb_queue_empty(&sta->ps_tx_buf) &&
--		    !test_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF))
--			sta_info_clear_tim_bit(sta);
-+		/* if the queue is now empty recalc TIM bit */
-+		if (skb_queue_empty(&sta->ps_tx_buf))
-+			sta_info_recalc_tim(sta);
- 	}
- 
- 	return !skb_queue_empty(&sta->ps_tx_buf);
-@@ -748,7 +729,6 @@ static int __must_check __sta_info_destr
- {
- 	struct ieee80211_local *local;
- 	struct ieee80211_sub_if_data *sdata;
--	struct sk_buff *skb;
- 	unsigned long flags;
- 	int ret, i;
- 
-@@ -787,12 +767,16 @@ static int __must_check __sta_info_destr
- 
- 	sta->dead = true;
- 
-+	local->total_ps_buffered -= skb_queue_len(&sta->ps_tx_buf);
-+	__skb_queue_purge(&sta->ps_tx_buf);
-+	__skb_queue_purge(&sta->tx_filtered);
-+
- 	if (test_and_clear_sta_flags(sta,
- 				WLAN_STA_PS_STA | WLAN_STA_PS_DRIVER)) {
- 		BUG_ON(!sdata->bss);
- 
- 		atomic_dec(&sdata->bss->num_sta_ps);
--		sta_info_clear_tim_bit(sta);
-+		sta_info_recalc_tim(sta);
- 	}
- 
- 	local->num_sta--;
-@@ -840,14 +824,6 @@ static int __must_check __sta_info_destr
- 	}
- #endif
- 
--	while ((skb = skb_dequeue(&sta->ps_tx_buf)) != NULL) {
--		local->total_ps_buffered--;
--		dev_kfree_skb_any(skb);
--	}
--
--	while ((skb = skb_dequeue(&sta->tx_filtered)) != NULL)
--		dev_kfree_skb_any(skb);
--
- 	__sta_info_free(local, sta);
- 
- 	return 0;
-@@ -1027,9 +1003,6 @@ void ieee80211_sta_ps_deliver_wakeup(str
- 	if (!(local->hw.flags & IEEE80211_HW_AP_LINK_PS))
- 		drv_sta_notify(local, sdata, STA_NOTIFY_AWAKE, &sta->sta);
- 
--	if (!skb_queue_empty(&sta->ps_tx_buf))
--		sta_info_clear_tim_bit(sta);
--
- 	/* Send all buffered frames to the station */
- 	sent = ieee80211_add_pending_skbs(local, &sta->tx_filtered);
- 	buffered = ieee80211_add_pending_skbs_fn(local, &sta->ps_tx_buf,
-@@ -1037,6 +1010,8 @@ void ieee80211_sta_ps_deliver_wakeup(str
- 	sent += buffered;
- 	local->total_ps_buffered -= buffered;
- 
-+	sta_info_recalc_tim(sta);
-+
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
- 	printk(KERN_DEBUG "%s: STA %pM aid %d sending %d filtered/%d PS frames "
- 	       "since STA not sleeping anymore\n", sdata->name,
-@@ -1086,8 +1061,7 @@ void ieee80211_sta_ps_deliver_poll_respo
- 
- 		ieee80211_add_pending_skb(local, skb);
- 
--		if (no_pending_pkts)
--			sta_info_clear_tim_bit(sta);
-+		sta_info_recalc_tim(sta);
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
- 	} else {
- 		/*
-@@ -1126,6 +1100,6 @@ void ieee80211_sta_set_buffered(struct i
- 		return;
- 
- 	set_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF);
--	sta_info_set_tim_bit(sta);
-+	sta_info_recalc_tim(sta);
- }
- EXPORT_SYMBOL(ieee80211_sta_set_buffered);
---- a/net/mac80211/status.c	2011-09-06 13:14:35.000000000 +0200
-+++ b/net/mac80211/status.c	2011-09-06 13:15:01.000000000 +0200
-@@ -106,6 +106,7 @@ static void ieee80211_handle_filtered_fr
- 	if (test_sta_flags(sta, WLAN_STA_PS_STA) &&
- 	    skb_queue_len(&sta->tx_filtered) < STA_MAX_TX_BUFFER) {
- 		skb_queue_tail(&sta->tx_filtered, skb);
-+		sta_info_recalc_tim(sta);
- 		return;
- 	}
- 
-
-
+julia
