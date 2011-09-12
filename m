@@ -1,41 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f48.google.com ([209.85.215.48]:34453 "EHLO
-	mail-ew0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750826Ab1IVFh0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 01:37:26 -0400
-Received: by ewy20 with SMTP id 20so832638ewy.7
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 22:37:25 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:3803 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754283Ab1ILKPY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Sep 2011 06:15:24 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 14/20] staging: brcm80211: removed unused softmac code
+ after macro cleanup
+Date: Mon, 12 Sep 2011 12:14:58 +0200
+Message-ID: <1315822504-24210-15-git-send-email-rvossen@broadcom.com> (sfid-20110912_121547_751801_CF6F0A14)
+In-Reply-To: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
+References: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1316589900.2157.392.camel@cumari>
-References: <20110921070525.GD4999@elgon.mountain> <1316589900.2157.392.camel@cumari>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 22 Sep 2011 08:29:28 +0300
-Message-ID: <CA+XVXffsb52crZcqQEa6u8GKjXuak-dMH7vd+TUSE771T7XNUg@mail.gmail.com> (sfid-20110922_073729_197992_4C95033C)
-Subject: Re: wl12xx: support up to 8 stations in AP-mode
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Luciano Coelho <coelho@ti.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 21, 2011 at 10:25, Luciano Coelho <coelho@ti.com> wrote:
-> On Wed, 2011-09-21 at 00:05 -0700, Dan Carpenter wrote:
->> Hi Arik,
->>
->> Smatch complains about c47e8229fa56 "wl12xx: support up to 8 stations
->> in AP-mode"
->>
->> drivers/net/wireless/wl12xx/main.c +832 wl12xx_irq_update_links_status(22)
->>       error: buffer overflow 'status->tx_lnk_free_pkts' 8 <= 10
->>
->>    828          for (hlid = WL1271_AP_STA_HLID_START; hlid < AP_MAX_LINKS; hlid++) {
->>                                                              ^^^^^^^^^^^^
+Since the macro's IS_MCS(0), RSPEC_STF(0) and PHY_TXC1_MODE_SISO all
+expand to 0, inactive code could be removed.
 
-Again, good catch there Dan. We'll verify the fix internally before
-releasing it (as it changes the host-fw interface).
-I'll also add a BUILD_BUG_ON so this won't happen again.
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c |    2 --
+ drivers/staging/brcm80211/brcmsmac/stf.c  |   26 --------------------------
+ 2 files changed, 0 insertions(+), 28 deletions(-)
 
-Arik
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index d30116d..7ebe060 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -5982,8 +5982,6 @@ int brcms_c_set_nmode(struct brcms_c_info *wlc, s32 nmode)
+ 		for (i = 0; i < wlc->pub->_nbands; i++) {
+ 			memset(wlc->bandstate[i]->hw_rateset.mcs, 0,
+ 			       MCSSET_LEN);
+-			if (IS_MCS(0))
+-				brcms_c_reprate_init(wlc);
+ 		}
+ 		break;
+ 
+diff --git a/drivers/staging/brcm80211/brcmsmac/stf.c b/drivers/staging/brcm80211/brcmsmac/stf.c
+index 71c5d23..82805e0 100644
+--- a/drivers/staging/brcm80211/brcmsmac/stf.c
++++ b/drivers/staging/brcm80211/brcmsmac/stf.c
+@@ -291,32 +291,6 @@ int brcms_c_stf_txchain_set(struct brcms_c_info *wlc, s32 int_val, bool force)
+ 	if (txstreams > MAX_STREAMS_SUPPORTED)
+ 		return -EINVAL;
+ 
+-	if (txstreams == 1) {
+-		for (i = 0; i < wlc->pub->_nbands; i++)
+-			if ((RSPEC_STF(0) !=
+-			     PHY_TXC1_MODE_SISO)
+-			    || (RSPEC_STF(0) !=
+-				PHY_TXC1_MODE_SISO)) {
+-				if (!force)
+-					return -EBADE;
+-
+-				/* over-write the override rspec */
+-				if (RSPEC_STF(0)
+-				    != PHY_TXC1_MODE_SISO) {
+-					wiphy_err(wlc->wiphy, "%s(): temp "
+-						  "sense override non-SISO "
+-						  "rspec_override\n",
+-						  __func__);
+-				}
+-				if (RSPEC_STF(0) != PHY_TXC1_MODE_SISO) {
+-					wiphy_err(wlc->wiphy, "%s(): temp "
+-						  "sense override non-SISO "
+-						  "mrspec_override\n",
+-						  __func__);
+-				}
+-			}
+-	}
+-
+ 	wlc->stf->txchain = txchain;
+ 	wlc->stf->txstreams = txstreams;
+ 	brcms_c_stf_stbc_tx_set(wlc, wlc->band->band_stf_stbc_tx);
+-- 
+1.7.4.1
+
+
