@@ -1,99 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:41603 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752051Ab1I0VYw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 17:24:52 -0400
-Received: by eya28 with SMTP id 28so5123377eya.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 14:24:51 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:3804 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754316Ab1ILKPY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Sep 2011 06:15:24 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 16/20] staging: brcm80211: removed several unused
+ softmac main.h struct members
+Date: Mon, 12 Sep 2011 12:15:00 +0200
+Message-ID: <1315822504-24210-17-git-send-email-rvossen@broadcom.com> (sfid-20110912_121550_389780_A7DB815A)
+In-Reply-To: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
+References: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1317124553.4082.26.camel@jlt3.sipsolutions.net>
-References: <1317034493-5300-1-git-send-email-arik@wizery.com>
- <1317034493-5300-5-git-send-email-arik@wizery.com> <1317124553.4082.26.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 28 Sep 2011 00:24:36 +0300
-Message-ID: <CA+XVXfe99SqqSzmnuVj5FworRZD5y99kuNqynBXP+Uy678NWKQ@mail.gmail.com> (sfid-20110927_232455_805023_545E9EA0)
-Subject: Re: [PATCH 4/5] nl80211/mac80211: allow adding TDLS peers as stations
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Kalyan C Gaddam <chakkal@iit.edu>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 27, 2011 at 14:55, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2011-09-26 at 13:54 +0300, Arik Nemtsov wrote:
->
->> @@ -811,6 +817,11 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
->>
->>       sta_apply_parameters(local, sta, params);
->>
->> +     if (!(wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS) &&
->> +         (sta->flags & WLAN_STA_TDLS_PEER)) {
->> +             return -ENOTSUPP;
->> +     }
->
-> I think this should maybe also make sure that the interface is in
-> station mode? Otherwise it could get somewhat confusing. Also changes to
-> the TDLS flag probably shouldn't be allowed.
+Members were always set to zero, or set but never read.
 
-Sure. I'll add some more guards.
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c |   13 +------------
+ drivers/staging/brcm80211/brcmsmac/main.h |   13 -------------
+ 2 files changed, 1 insertions(+), 25 deletions(-)
 
->
-> And this code might also be better in cfg80211, although this is only
-> with external management, right?
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 13f6cd4..9df2f86 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -2384,9 +2384,7 @@ static void brcms_b_mute(struct brcms_hardware *wlc_hw, bool on, u32 flags)
+ 				       null_ether_addr);
+ 	} else {
+ 		/* resume tx fifos */
+-		if (!wlc_hw->wlc->tx_suspended)
+-			brcms_b_tx_fifo_resume(wlc_hw, TX_DATA_FIFO);
+-
++		brcms_b_tx_fifo_resume(wlc_hw, TX_DATA_FIFO);
+ 		brcms_b_tx_fifo_resume(wlc_hw, TX_CTL_FIFO);
+ 		brcms_b_tx_fifo_resume(wlc_hw, TX_AC_BK_FIFO);
+ 		brcms_b_tx_fifo_resume(wlc_hw, TX_AC_VI_FIFO);
+@@ -2774,10 +2772,6 @@ void brcms_c_coredisable(struct brcms_hardware *wlc_hw)
+ 	/* turn off PHYPLL to save power */
+ 	brcms_b_core_phypll_ctl(wlc_hw, false);
+ 
+-	/* remove gpio controls */
+-	if (wlc_hw->ucode_dbgsel)
+-		ai_gpiocontrol(wlc_hw->sih, ~0, 0, GPIO_DRV_PRIORITY);
+-
+ 	wlc_hw->clk = false;
+ 	ai_core_disable(wlc_hw->sih, 0);
+ 	wlc_phy_hw_clk_state_upd(wlc_hw->band->pi, false);
+@@ -3601,9 +3595,6 @@ void brcms_c_init(struct brcms_c_info *wlc)
+ 	/* clear tx flow control */
+ 	brcms_c_txflowcontrol_reset(wlc);
+ 
+-	/* clear tx data fifo suspends */
+-	wlc->tx_suspended = false;
+-
+ 	/* enable the RF Disable Delay timer */
+ 	W_REG(&wlc->regs->rfdisabledly, RFDISABLE_DEFAULT);
+ 
+@@ -4380,8 +4371,6 @@ bool brcms_c_timers_init(struct brcms_c_info *wlc, int unit)
+ void brcms_c_info_init(struct brcms_c_info *wlc, int unit)
+ {
+ 	int i;
+-	/* Assume the device is there until proven otherwise */
+-	wlc->device_present = true;
+ 
+ 	/* Save our copy of the chanspec */
+ 	wlc->chanspec = ch20mhz_chspec(1);
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
+index d418686..1ee283c 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.h
++++ b/drivers/staging/brcm80211/brcmsmac/main.h
+@@ -382,7 +382,6 @@ struct brcms_hardware {
+ 	u32 boardflags2;	/* More board flags if sromrev >= 4 */
+ 	u32 machwcap;	/* MAC capabilities */
+ 	u32 machwcap_backup;	/* backup of machwcap */
+-	u16 ucode_dbgsel;	/* dbgsel for ucode debug(config gpio) */
+ 
+ 	struct si_pub *sih;	/* SI handle (cookie for siutils calls) */
+ 	char *vars;		/* "environment" name=value */
+@@ -416,14 +415,11 @@ struct brcms_hardware {
+ 	u32 wake_override;	/* bit flags to force MAC to WAKE mode */
+ 	u32 mute_override;	/* Prevent ucode from sending beacons */
+ 	u8 etheraddr[ETH_ALEN];	/* currently configured ethernet address */
+-	u32 led_gpio_mask;	/* LED GPIO Mask */
+ 	bool noreset;		/* true= do not reset hw, used by WLC_OUT */
+ 	bool forcefastclk;	/* true if h/w is forcing to use fast clk */
+ 	bool clk;		/* core is out of reset and has clock */
+ 	bool sbclk;		/* sb has clock */
+-	struct bmac_pmq *bmac_pmq; /*  bmac PM states derived from ucode PMQ */
+ 	bool phyclk;		/* phy is out of reset and has clock */
+-	bool dma_lpbk;		/* core is in DMA loopback */
+ 
+ 	bool ucode_loaded;	/* true after ucode downloaded */
+ 
+@@ -463,14 +459,12 @@ struct brcms_txq_info {
+  * macintstatus: bit channel between isr and dpc.
+  * macintmask: sw runtime master macintmask value.
+  * defmacintmask: default "on" macintmask value.
+- * device_present: (removable) device is present.
+  * clk: core is out of reset and has clock.
+  * core: pointer to active io core.
+  * band: pointer to active per-band state.
+  * corestate: per-core state (one per hw core).
+  * bandstate: per-band state (one per phy/radio).
+  * war16165: PCI slow clock 16165 war flag.
+- * tx_suspended: data fifos need to remain suspended.
+  * txpend16165war: PCI slow clock 16165 war flag.
+  * qvalid: DirFrmQValid and BcMcFrmQValid.
+  * txpwr_local_max: regulatory local txpwr max.
+@@ -559,7 +553,6 @@ struct brcms_c_info {
+ 	struct brcms_hardware *hw;
+ 
+ 	/* clock */
+-	int clkreq_override;
+ 	u16 fastpwrup_dly;
+ 
+ 	/* interrupt */
+@@ -567,9 +560,6 @@ struct brcms_c_info {
+ 	u32 macintmask;
+ 	u32 defmacintmask;
+ 
+-	/* up and down */
+-	bool device_present;
+-
+ 	bool clk;
+ 
+ 	/* multiband */
+@@ -579,9 +569,6 @@ struct brcms_c_info {
+ 	struct brcms_band *bandstate[MAXBANDS];
+ 
+ 	bool war16165;
+-
+-	bool tx_suspended;
+-
+ 	uint txpend16165war;
+ 
+ 	/* packet queue */
+-- 
+1.7.4.1
 
-There's a similar check in cfg80211 code, in nl80211_new_station().
 
->
->> --- a/net/wireless/nl80211.c
->> +++ b/net/wireless/nl80211.c
->> @@ -2521,18 +2521,18 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
->> -             if (params.sta_flags_mask & ~BIT(NL80211_STA_FLAG_AUTHORIZED))
->> +             if (params.sta_flags_mask &
->> +                             ~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
->> +                               BIT(NL80211_STA_FLAG_TDLS_PEER)))
->
-> Why is the TDLS flag allowed to change?
-
-I'll add some more TDLS specific guards in set_station as well.
-
->
->
->> +     /*
->> +      * Managed stations can only add TDLS peers, and only when the
->> +      * wiphy supports it.
->> +      */
->> +     if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_STATION &&
->> +         (!(params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) ||
->> +          !(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS)))
->>               return -EINVAL;
->
-> If the device does full TDLS by itself I don't think we should be
-> allowed to add/remove stations?
-
-Fair point. I'll add a EXTERNAL_SETUP check here.
-
->
-> Maybe you need to describe the command sequences a little bit somewhere.
-> I'm getting a bad feeling about adding stations without supported rates,
-> and this is only when we have external management etc.
->
-> Part of your argument for having the frame sending etc. in the kernel
-> was that then it's more like managed mode, but all the manual station
-> handling is very much unlike that.
->
-> I'm beginning to think that maybe it should be handled through the TDLS
-> operations instead, more implicitly?
->
-
-As discussed on IRC, the added station is convenient for implementing
-the TDLS Tx-lock during link setup. Stations are (almost)
-automatically purged when disassociating, thereby clearing TDLS state.
-It's also already part of the mac80211 Tx path, so no need to add
-other elements.
-
-Adding a station with no supported rates is a bit strange, but it is
-clearly flagged as a TDLS peer sta and checks are in place in the Tx
-path to prevent abuse.
-
-Arik
