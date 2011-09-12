@@ -1,294 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55548 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751739Ab1IVPuE (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:48997 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754884Ab1ILLM5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 11:50:04 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1R6lXH-0002Nz-4B
-	for linux-wireless@vger.kernel.org; Thu, 22 Sep 2011 17:50:03 +0200
-Message-Id: <20110922154850.481500240@sipsolutions.net> (sfid-20110922_175010_719907_70D06311)
-Date: Thu, 22 Sep 2011 17:47:33 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 12 Sep 2011 07:12:57 -0400
+Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
+	by emh07-2.mail.saunalahti.fi (Postfix) with SMTP id 258F218CFD0
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 14:12:56 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-188-95.elisa-laajakaista.fi [88.115.188.95])
+	by emh04.mail.saunalahti.fi (Postfix) with ESMTP id 10E9241BE3
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 14:12:54 +0300 (EEST)
+Subject: [PATCH 7/9] ath6kl: read firmware start address from hardware
 To: linux-wireless@vger.kernel.org
-Subject: [RFC 07/15] mac80211: allow releasing driver-buffered frames
-References: <20110922154726.521122680@sipsolutions.net>
-Mime-Version: 1.0
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Date: Mon, 12 Sep 2011 14:12:54 +0300
+Message-ID: <20110912111254.16921.7357.stgit@localhost6.localdomain6> (sfid-20110912_131259_453718_CE8F6995)
+In-Reply-To: <20110912111206.16921.90687.stgit@localhost6.localdomain6>
+References: <20110912111206.16921.90687.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+It's actually possible to read the firmware start address from hardware,
+that way there's no need to hardcore the address in hardware.
 
-If there are frames for a station buffered in
-the driver, mac80211 announces those in the TIM
-IE but there's no way to release them. Add new
-API to release such frames and use it when the
-station polls for a frame.
+Thanks to Chilam Ng for the idea.
 
-Since the API will soon also be used for uAPSD
-it is easily extensible.
-
-Note that before this change drivers announcing
-driver-buffered frames in the TIM bit actually
-will respond to a PS-Poll with a potentially
-lower priority frame (if there are any frames
-buffered in mac80211), after this patch a driver
-that hasn't been changed will no longer respond
-at all. This only affects ath9k, which will need
-to be fixed to implement the new API.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- include/net/mac80211.h      |   31 ++++++++++++++++
- net/mac80211/driver-ops.h   |   15 ++++++++
- net/mac80211/driver-trace.h |   35 ++++++++++++++++++
- net/mac80211/sta_info.c     |   82 +++++++++++++++++++++++++++++++++++---------
- 4 files changed, 147 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath6kl/init.c   |   17 +++++++++++++----
+ drivers/net/wireless/ath/ath6kl/target.h |    2 --
+ 2 files changed, 13 insertions(+), 6 deletions(-)
 
---- a/net/mac80211/sta_info.c	2011-09-22 15:48:39.000000000 +0200
-+++ b/net/mac80211/sta_info.c	2011-09-22 17:13:36.000000000 +0200
-@@ -1147,8 +1147,10 @@ void ieee80211_sta_ps_deliver_poll_respo
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb = NULL;
-+	bool found = false;
- 	bool more_data = false;
- 	int ac;
-+	unsigned long driver_release_tids = 0;
- 	u8 ignore_for_response = sta->sta.uapsd_queues;
- 
- 	/*
-@@ -1163,19 +1165,40 @@ void ieee80211_sta_ps_deliver_poll_respo
- 	 * Get response frame and more data bit for it.
- 	 */
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
-+		unsigned long tids;
-+
- 		if (ignore_for_response & BIT(ac))
- 			continue;
- 
--		if (!skb) {
--			skb = skb_dequeue(&sta->tx_filtered[ac]);
--			if (!skb) {
--				skb = skb_dequeue(&sta->ps_tx_buf[ac]);
-+		tids = ieee80211_tids_for_ac(ac);
-+
-+		if (!found) {
-+			driver_release_tids = sta->driver_buffered_tids & tids;
-+			if (driver_release_tids) {
-+				found = true;
-+			} else {
-+				skb = skb_dequeue(&sta->tx_filtered[ac]);
-+				if (!skb) {
-+					skb = skb_dequeue(&sta->ps_tx_buf[ac]);
-+					if (skb)
-+						local->total_ps_buffered--;
-+				}
- 				if (skb)
--					local->total_ps_buffered--;
-+					found = true;
- 			}
--		}
- 
--		/* FIXME: take into account driver-buffered frames */
-+			/*
-+			 * If the driver has data on more than one TID then
-+			 * certainly there's more data if we release just a
-+			 * single frame now (from a single TID).
-+			 */
-+			if (hweight16(driver_release_tids) > 1) {
-+				more_data = true;
-+				driver_release_tids =
-+					BIT(ffs(driver_release_tids) - 1);
-+				break;
-+			}
-+		}
- 
- 		if (!skb_queue_empty(&sta->tx_filtered[ac]) ||
- 		    !skb_queue_empty(&sta->ps_tx_buf[ac])) {
-@@ -1184,6 +1207,22 @@ void ieee80211_sta_ps_deliver_poll_respo
- 		}
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index bf0385e..5865466 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1146,9 +1146,21 @@ static int ath6kl_upload_otp(struct ath6kl *ar)
+ 		return ret;
  	}
  
-+	if (!found) {
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		/*
-+		 * FIXME: This can be the result of a race condition between
-+		 *	  us expiring a frame and the station polling for it.
-+		 *	  Should we send it a null-func frame indicating we
-+		 *	  have nothing buffered for it?
-+		 */
-+		printk(KERN_DEBUG "%s: STA %pM sent PS Poll even "
-+		       "though there are no buffered frames for it\n",
-+		       sdata->name, sta->sta.addr);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
++	/* read firmware start address */
++	ret = ath6kl_bmi_read(ar,
++			      ath6kl_get_hi_item_addr(ar,
++						      HI_ITEM(hi_app_start)),
++			      (u8 *) &address, sizeof(address));
 +
-+		return;
++	if (ret) {
++		ath6kl_err("Failed to read hi_app_start: %d\n", ret);
++		return ret;
 +	}
 +
- 	if (skb) {
- 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 		struct ieee80211_hdr *hdr =
-@@ -1210,18 +1249,29 @@ void ieee80211_sta_ps_deliver_poll_respo
- 		ieee80211_add_pending_skb(local, skb);
++	ar->hw.app_start_override_addr = address;
++
+ 	/* execute the OTP code */
+ 	param = 0;
+-	address = ar->hw.app_start_override_addr;
+ 	ath6kl_bmi_execute(ar, address, &param);
  
- 		sta_info_recalc_tim(sta);
--#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
- 	} else {
- 		/*
--		 * FIXME: This can be the result of a race condition between
--		 *	  us expiring a frame and the station polling for it.
--		 *	  Should we send it a null-func frame indicating we
--		 *	  have nothing buffered for it?
-+		 * We need to release a frame that is buffered somewhere in the
-+		 * driver ... it'll have to handle that.
-+		 * Note that, as per the comment above, it'll also have to see
-+		 * if there is more than just one frame on the specific TID that
-+		 * we're releasing from, and it needs to set the more-data bit
-+		 * accordingly if we tell it that there's no more data. If we do
-+		 * tell it there's more data, then of course the more-data bit
-+		 * needs to be set anyway.
-+		 */
-+		drv_release_buffered_frames(local, sta, driver_release_tids,
-+					    1, IEEE80211_FRAME_RELEASE_PSPOLL,
-+					    more_data);
-+
-+		/*
-+		 * Note that we don't recalculate the TIM bit here as it would
-+		 * most likely have no effect at all unless the driver told us
-+		 * that the TID became empty before returning here from the
-+		 * release function.
-+		 * Either way, however, when the driver tells us that the TID
-+		 * became empty we'll do the TIM recalculation.
- 		 */
--		printk(KERN_DEBUG "%s: STA %pM sent PS Poll even "
--		       "though there are no buffered frames for it\n",
--		       sdata->name, sta->sta.addr);
--#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
- 	}
- }
+ 	return ret;
+@@ -1343,21 +1355,18 @@ static int ath6kl_init_hw_params(struct ath6kl *ar)
+ 	case AR6003_REV2_VERSION:
+ 		ar->hw.dataset_patch_addr = AR6003_REV2_DATASET_PATCH_ADDRESS;
+ 		ar->hw.app_load_addr = AR6003_REV2_APP_LOAD_ADDRESS;
+-		ar->hw.app_start_override_addr = AR6003_REV2_APP_START_OVERRIDE;
+ 		ar->hw.board_ext_data_addr = AR6003_REV2_BOARD_EXT_DATA_ADDRESS;
+ 		ar->hw.reserved_ram_size = AR6003_REV2_RAM_RESERVE_SIZE;
+ 		break;
+ 	case AR6003_REV3_VERSION:
+ 		ar->hw.dataset_patch_addr = AR6003_REV3_DATASET_PATCH_ADDRESS;
+ 		ar->hw.app_load_addr = 0x1234;
+-		ar->hw.app_start_override_addr = AR6003_REV3_APP_START_OVERRIDE;
+ 		ar->hw.board_ext_data_addr = AR6003_REV3_BOARD_EXT_DATA_ADDRESS;
+ 		ar->hw.reserved_ram_size = AR6003_REV3_RAM_RESERVE_SIZE;
+ 		break;
+ 	case AR6004_REV1_VERSION:
+ 		ar->hw.dataset_patch_addr = AR6003_REV2_DATASET_PATCH_ADDRESS;
+ 		ar->hw.app_load_addr = AR6003_REV3_APP_LOAD_ADDRESS;
+-		ar->hw.app_start_override_addr = AR6003_REV3_APP_START_OVERRIDE;
+ 		ar->hw.board_ext_data_addr = AR6004_REV1_BOARD_EXT_DATA_ADDRESS;
+ 		ar->hw.reserved_ram_size = AR6004_REV1_RAM_RESERVE_SIZE;
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
+index 7db06a5..c9a7605 100644
+--- a/drivers/net/wireless/ath/ath6kl/target.h
++++ b/drivers/net/wireless/ath/ath6kl/target.h
+@@ -331,13 +331,11 @@ struct host_interest {
+ 	(((target_type) == TARGET_TYPE_AR6003) ? AR6003_VTOP(vaddr) : \
+ 	(((target_type) == TARGET_TYPE_AR6004) ? AR6004_VTOP(vaddr) : 0))
  
---- a/include/net/mac80211.h	2011-09-22 15:48:39.000000000 +0200
-+++ b/include/net/mac80211.h	2011-09-22 17:13:14.000000000 +0200
-@@ -1618,6 +1618,14 @@ enum ieee80211_tx_sync_type {
- };
+-#define AR6003_REV2_APP_START_OVERRIDE          0x944C00
+ #define AR6003_REV2_APP_LOAD_ADDRESS            0x543180
+ #define AR6003_REV2_BOARD_EXT_DATA_ADDRESS      0x57E500
+ #define AR6003_REV2_DATASET_PATCH_ADDRESS       0x57e884
+ #define AR6003_REV2_RAM_RESERVE_SIZE            6912
  
- /**
-+ * enum ieee80211_frame_release_type - frame release reason
-+ * @IEEE80211_FRAME_RELEASE_PSPOLL: frame released for PS-Poll
-+ */
-+enum ieee80211_frame_release_type {
-+	IEEE80211_FRAME_RELEASE_PSPOLL,
-+};
-+
-+/**
-  * struct ieee80211_ops - callbacks from mac80211 to the driver
-  *
-  * This structure contains various callbacks that the driver may
-@@ -1927,6 +1935,23 @@ enum ieee80211_tx_sync_type {
-  *	The callback can sleep.
-  * @rssi_callback: Notify driver when the average RSSI goes above/below
-  *	thresholds that were registered previously. The callback can sleep.
-+ *
-+ * @release_buffered_frames: Release buffered frames according to the given
-+ *	parameters. In the case where the driver buffers some frames for
-+ *	sleeping stations mac80211 will use this callback to tell the driver
-+ *	to release some frames, either for PS-poll or uAPSD.
-+ *	Note that if the @more_data paramter is %false the driver must check
-+ *	if there are more frames on the given TIDs, and if there are more than
-+ *	the frames being released then it must still set the more-data bit in
-+ *	the frame. If the @more_data parameter is %true, then of course the
-+ *	more-data bit must always be set.
-+ *	The @tids parameter tells the driver which TIDs to release frames
-+ *	from, for PS-poll it will always have only a single bit set.
-+ *	In the case this is used for uAPSD, the @num_frames parameter may be
-+ *	bigger than one, but the driver may send fewer frames (it must send
-+ *	at least one, however). In this case it is also responsible for
-+ *	setting the EOSP flag in the QoS header of the frames.
-+ *	This callback must be atomic.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
-@@ -2040,6 +2065,12 @@ struct ieee80211_ops {
- 				const struct cfg80211_bitrate_mask *mask);
- 	void (*rssi_callback)(struct ieee80211_hw *hw,
- 			      enum ieee80211_rssi_event rssi_event);
-+
-+	void (*release_buffered_frames)(struct ieee80211_hw *hw,
-+					struct ieee80211_sta *sta,
-+					u16 tids, int num_frames,
-+					enum ieee80211_frame_release_type reason,
-+					bool more_data);
- };
- 
- /**
---- a/net/mac80211/driver-ops.h	2011-09-22 15:48:19.000000000 +0200
-+++ b/net/mac80211/driver-ops.h	2011-09-22 17:12:55.000000000 +0200
-@@ -665,4 +665,19 @@ static inline void drv_rssi_callback(str
- 		local->ops->rssi_callback(&local->hw, event);
- 	trace_drv_return_void(local);
- }
-+
-+static inline void
-+drv_release_buffered_frames(struct ieee80211_local *local,
-+			    struct sta_info *sta, u16 tids, int num_frames,
-+			    enum ieee80211_frame_release_type reason,
-+			    bool more_data)
-+{
-+	trace_drv_release_buffered_frames(local, &sta->sta, tids, num_frames,
-+					  reason, more_data);
-+	if (local->ops->release_buffered_frames)
-+		local->ops->release_buffered_frames(&local->hw, &sta->sta, tids,
-+						    num_frames, reason,
-+						    more_data);
-+	trace_drv_return_void(local);
-+}
- #endif /* __MAC80211_DRIVER_OPS */
---- a/net/mac80211/driver-trace.h	2011-09-22 15:48:18.000000000 +0200
-+++ b/net/mac80211/driver-trace.h	2011-09-22 17:12:55.000000000 +0200
-@@ -1117,6 +1117,41 @@ TRACE_EVENT(drv_rssi_callback,
- 	)
- );
- 
-+TRACE_EVENT(drv_release_buffered_frames,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sta *sta,
-+		 u16 tids, int num_frames,
-+		 enum ieee80211_frame_release_type reason,
-+		 bool more_data),
-+
-+	TP_ARGS(local, sta, tids, num_frames, reason, more_data),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		STA_ENTRY
-+		__field(u16, tids)
-+		__field(int, num_frames)
-+		__field(int, reason)
-+		__field(bool, more_data)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		STA_ASSIGN;
-+		__entry->tids = tids;
-+		__entry->num_frames = num_frames;
-+		__entry->reason = reason;
-+		__entry->more_data = more_data;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT STA_PR_FMT
-+		" TIDs:0x%.4x frames:%d reason:%d more:%d",
-+		LOCAL_PR_ARG, STA_PR_ARG, __entry->tids, __entry->num_frames,
-+		__entry->reason, __entry->more_data
-+	)
-+);
-+
- /*
-  * Tracing for API calls that drivers call.
-  */
-
+-#define AR6003_REV3_APP_START_OVERRIDE          0x945d00
+ #define AR6003_REV3_APP_LOAD_ADDRESS            0x545000
+ #define AR6003_REV3_BOARD_EXT_DATA_ADDRESS      0x542330
+ #define AR6003_REV3_DATASET_PATCH_ADDRESS       0x57FF74
 
