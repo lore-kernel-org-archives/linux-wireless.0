@@ -1,45 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:60489 "EHLO purkki.adurom.net"
+Received: from mms3.broadcom.com ([216.31.210.19]:1057 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753942Ab1INIp0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 04:45:26 -0400
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <stable@kernel.org>
-Subject: Re: [PATCH] ath9k_hw: Fix magnitude/phase coeff correction
-References: <1315320530-2733-1-git-send-email-rmanohar@qca.qualcomm.com>
-	<20110913173226.GF11772@tuxdriver.com>
-	<20110914034922.GA23349@vmraj-lnx.users.atheros.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 14 Sep 2011 11:45:20 +0300
-In-Reply-To: <20110914034922.GA23349@vmraj-lnx.users.atheros.com> (Rajkumar Manoharan's message of "Wed\, 14 Sep 2011 09\:19\:24 +0530")
-Message-ID: <87ehzjjyvz.fsf@purkki.adurom.net> (sfid-20110914_104529_049313_EECA8FDF)
+	id S1751204Ab1ILKPW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Sep 2011 06:15:22 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 00/20] staging: brcm80211: 4th reaction to mainline
+ patch #2
+Date: Mon, 12 Sep 2011 12:14:44 +0200
+Message-ID: <1315822504-24210-1-git-send-email-rvossen@broadcom.com> (sfid-20110912_121534_514434_6C74B91A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qca.qualcomm.com> writes:
+Code cleanup items, both fullmac and softmac.
 
-> On Tue, Sep 13, 2011 at 01:32:26PM -0400, John W. Linville wrote:
->> On Tue, Sep 06, 2011 at 08:18:50PM +0530, Rajkumar Manoharan wrote:
->> > Do the magnitude/phase coeff correction only if the outlier
->> > is detected.
->> > 
->> > Cc: stable@kernel.org
->> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
->> > ---
->> >  
->> >  static void ar9003_hw_tx_iqcal_load_avg_2_passes(struct ath_hw *ah,
->> 
->> What is the effect of the bug being fixed here?  Is this fix intended for 3.1?
->
-> The first entry of phase/mag got changed to average if outlier is
-> not detected. This patch ensures to update appropriate index of
-> magnitude/phase. This patch is applicable from 3.0 onwards.
+Arend van Spriel (2):
+  staging: brcm80211: remove static function variable in brcmfmac
+  staging: brcm80211: remove static variables from wl_cfg80211.c
 
-Sorry, but this doesn't tell much. What's the user visible change
-with this patch? Better sensitivity, less transmission errors or what?
+Franky Lin (2):
+  staging: brcm80211: stop using kthread for iscan status check in
+    fullmac
+  staging: brcm80211: remove static function declaration in wl_cfg80211
+
+Roland Vossen (16):
+  staging: brcm80211: cleaned up softmac types.h macro's
+  staging: brcm80211: cleaned up brcmu_utils.h macro's
+  staging: brcm80211: cleaned up brcmu_wifi.h macro's
+  staging: brcm80211: cleaned up fullmac macro's
+  staging: brcm80211: removed fullmac BRCMF_IOCTL_MAGIC support
+  staging: brcm80211: removed fullmac function brcmf_sdcard_iovar_op()
+  staging: brcm80211: removed unused encryption/security functionality
+  staging: brcm80211: removed softmac 'tunable' functionality
+  staging: brcm80211: cleaned up unused softmac struct members
+  staging: brcm80211: removed softmac ratespec override functionality
+  staging: brcm80211: removed unused softmac code after macro cleanup
+  staging: brcm80211: removed unused softmac struct brcms_c_if
+  staging: brcm80211: removed several unused softmac main.h struct
+    members
+  staging: brcm80211: removed unused softmac transmit power variables
+  staging: brcm80211: removed more unused softmac main.h struct members
+  staging: brcm80211: removed softmac files alloc.c/alloc.h
+
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |  148 --
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   34 -
+ drivers/staging/brcm80211/brcmfmac/dhd.h          |   15 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_bus.h      |   15 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_cdc.c      |   17 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c   |  297 +---
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c    |   29 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_proto.h    |    7 -
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |  868 +-------
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h    |   22 -
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c  | 2692 +++++++++------------
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h  |   56 +-
+ drivers/staging/brcm80211/brcmsmac/Makefile       |    1 -
+ drivers/staging/brcm80211/brcmsmac/alloc.c        |  265 --
+ drivers/staging/brcm80211/brcmsmac/alloc.h        |   19 -
+ drivers/staging/brcm80211/brcmsmac/ampdu.c        |   11 +-
+ drivers/staging/brcm80211/brcmsmac/channel.c      |   38 +-
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c  |    4 +-
+ drivers/staging/brcm80211/brcmsmac/main.c         |  463 ++--
+ drivers/staging/brcm80211/brcmsmac/main.h         |  197 --
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c  |   32 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c  |    7 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_n.c    |   17 +-
+ drivers/staging/brcm80211/brcmsmac/pub.h          |  105 +-
+ drivers/staging/brcm80211/brcmsmac/rate.c         |    5 +-
+ drivers/staging/brcm80211/brcmsmac/stf.c          |   30 -
+ drivers/staging/brcm80211/brcmsmac/types.h        |   64 +-
+ drivers/staging/brcm80211/brcmutil/utils.c        |   67 -
+ drivers/staging/brcm80211/brcmutil/wifi.c         |    4 +-
+ drivers/staging/brcm80211/include/brcmu_utils.h   |  206 +-
+ drivers/staging/brcm80211/include/brcmu_wifi.h    |   69 +-
+ 31 files changed, 1748 insertions(+), 4056 deletions(-)
+ delete mode 100644 drivers/staging/brcm80211/brcmsmac/alloc.c
+ delete mode 100644 drivers/staging/brcm80211/brcmsmac/alloc.h
 
 -- 
-Kalle Valo
+1.7.4.1
+
+
