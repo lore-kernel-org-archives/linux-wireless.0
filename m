@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:55292 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750884Ab1I2V4m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 17:56:42 -0400
-Date: Thu, 29 Sep 2011 18:56:36 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Andrew V. Stepanov" <stanv@altlinux.org>, davem@davemloft.net,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] rfkill: add module option to become inactive.
-Message-ID: <20110929215636.GA21490@khazad-dum.debian.net> (sfid-20110929_235646_081766_9D255A7C)
-References: <1317119624-2974-1-git-send-email-stanv@altlinux.org>
- <1317109617.4082.0.camel@jlt3.sipsolutions.net>
- <CAN8FffqH=x+qWnz=YJzatbW-b3aOgoivazH6Nb5SpsGt4Q6hGg@mail.gmail.com>
- <1317110884.4082.5.camel@jlt3.sipsolutions.net>
- <CAN8FffqjeurgAvVHtMExgeAyBHRWznYBz2c043jcZgOmqw6TVg@mail.gmail.com>
- <1317113699.4082.7.camel@jlt3.sipsolutions.net>
- <CAN8FffrZuGu63oL7ZL8EjjdNqBaPDU6KHuatwrbNB0SjffvaTg@mail.gmail.com>
- <1317121681.4082.8.camel@jlt3.sipsolutions.net>
- <CAN8FffrnCt6TL-dWBJtnOpk=oELRXhnU0ksHntFWfbPo5mgWaA@mail.gmail.com>
- <1317124813.4082.29.camel@jlt3.sipsolutions.net>
+Received: from mms3.broadcom.com ([216.31.210.19]:1049 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755885Ab1ILNfD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Sep 2011 09:35:03 -0400
+Message-ID: <4E6E0A7A.9010801@broadcom.com> (sfid-20110912_153511_893272_4ECCE117)
+Date: Mon, 12 Sep 2011 15:34:50 +0200
+From: "Roland Vossen" <rvossen@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1317124813.4082.29.camel@jlt3.sipsolutions.net>
+To: "Dan Carpenter" <error27@gmail.com>
+cc: "gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 09/20] staging: brcm80211: remove static variables
+ from wl_cfg80211.c
+References: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
+ <1315822504-24210-10-git-send-email-rvossen@broadcom.com>
+ <20110912130640.GH14370@shale.localdomain>
+In-Reply-To: <20110912130640.GH14370@shale.localdomain>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 27 Sep 2011, Johannes Berg wrote:
-> > This patch give ability disable rfkill sub-system by means to pass
-> > special module parameter.
-> 
-> Because the platform driver is doing the wrong thing.
+On 09/12/2011 03:06 PM, Dan Carpenter wrote:
+> On Mon, Sep 12, 2011 at 12:14:53PM +0200, Roland Vossen wrote:
+>> -	cfg80211_dev = kzalloc(sizeof(struct brcmf_cfg80211_dev), GFP_KERNEL);
+>> -	if (unlikely(!cfg80211_dev)) {
+>> +	cfg_dev = kzalloc(sizeof(struct brcmf_cfg80211_dev), GFP_KERNEL);
+>> +	if (unlikely(!cfg_dev)) {
+>>   		WL_ERR("wl_cfg80211_dev is invalid\n");
+>
+> This message is wrong.  Also it isn't needed because kzalloc() prints
+> its own more complete message.
 
-Hmm?  Is it?
+Understood. Will remove this in a subsequent patch.
 
-> > Example from real life. Some company want to make inactive rfkill
-> > SW+HW buttons on some company notebooks.
-> > For this, you advise to recompile kernel.
-> 
-> No, you need to fix the thinkpad driver.
+> Also unlikely() isn't needed here in the attach function.  Likely and
+> unlikely hints only belong in the fast path, and generally shouldn't
+> be included in driver code (only in core kernel code).
 
-Eh, I can certainly blacklist platform rfkill support for the x201i on the
-grounds that it is a piece of crap, since a hardware button that does it in
-software is clearly el-cheap-o land that does not belong to something that
-dares call itself a ThinkPad X-series.  But I am not sure this is the best
-way to go about it.  It will cause that switch to become useless, for one.
+I will remove all likely/unlikely instances in the drivers except for 
+places where we think they are justified, which I suspect is in 0 places.
 
-I can map it to a soft rfkill button, which seems to be more in line with
-the real truth behind it.  But this is very weird, the EC used to even kick
-bluetooth out of the USB bus when that switch was enabled...
+Thanks for the review,
 
-dmidecode dump, please.  And I'd really appreciate a _full_ report of the
-issue and behaviour of the rfkill hw button on the x201i, please send it to
-ibm-acpi-devel@lists.sourceforge.net, and we can take the thread there.
+Roland.
 
-I'd ask it to be done through bugzilla.kernel.org, but that's still down.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
