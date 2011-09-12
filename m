@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55542 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751362Ab1IBME3 (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:64999 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755711Ab1ILNJF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Sep 2011 08:04:29 -0400
-Subject: RE: [RFC] nl80211: Added NL80211 commands for Bluetooth-WiFi coex
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Sumangala, Suraj" <surajs@qca.qualcomm.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"Balasubramanian, senthilkumar" <senthilb@qca.qualcomm.com>,
-	"Mehta, Vipin" <vipimeht@qca.qualcomm.com>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>
-In-Reply-To: <480687D4EEFE7447A2E09AADFF6673621AF82B5C@nasanexd02a.na.qualcomm.com>
-References: <1314771915-8848-1-git-send-email-surajs@qca.qualcomm.com>
-	 (sfid-20110831_082525_612687_34CC3735),<1314772217.4161.10.camel@jlt3.sipsolutions.net>
-	 <480687D4EEFE7447A2E09AADFF6673621AF7CDCF@nasanexd02a.na.qualcomm.com>
-	 ,<1314772832.4161.16.camel@jlt3.sipsolutions.net>
-	 <480687D4EEFE7447A2E09AADFF6673621AF7CE0B@nasanexd02a.na.qualcomm.com>
-	 <1314801657.3373.260.camel@aeonflux>
-	 <480687D4EEFE7447A2E09AADFF6673621AF7DF82@nasanexd02a.na.qualcomm.com>
-	 <1314831118.3373.266.camel@aeonflux>
-	 <480687D4EEFE7447A2E09AADFF6673621AF827CC@nasanexd02a.na.qualcomm.com>
-	 <1314877381.3373.284.camel@aeonflux>
-	 <480687D4EEFE7447A2E09AADFF6673621AF82B5C@nasanexd02a.na.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 02 Sep 2011 14:04:22 +0200
-Message-ID: <1314965062.3927.7.camel@jlt3.sipsolutions.net> (sfid-20110902_140434_526382_EC5DBE87)
-Mime-Version: 1.0
+	Mon, 12 Sep 2011 09:09:05 -0400
+Received: by yxm8 with SMTP id 8so110158yxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 06:09:04 -0700 (PDT)
+Date: Mon, 12 Sep 2011 16:06:40 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Roland Vossen <rvossen@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 09/20] staging: brcm80211: remove static variables from
+ wl_cfg80211.c
+Message-ID: <20110912130640.GH14370@shale.localdomain> (sfid-20110912_150910_123213_9D04E1CF)
+References: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
+ <1315822504-24210-10-git-send-email-rvossen@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1315822504-24210-10-git-send-email-rvossen@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-09-02 at 07:54 +0000, Sumangala, Suraj wrote:
+On Mon, Sep 12, 2011 at 12:14:53PM +0200, Roland Vossen wrote:
+> -	cfg80211_dev = kzalloc(sizeof(struct brcmf_cfg80211_dev), GFP_KERNEL);
+> -	if (unlikely(!cfg80211_dev)) {
+> +	cfg_dev = kzalloc(sizeof(struct brcmf_cfg80211_dev), GFP_KERNEL);
+> +	if (unlikely(!cfg_dev)) {
+>  		WL_ERR("wl_cfg80211_dev is invalid\n");
 
-> If we can provide "hci_dev" as the handle to the Bluetooth core, does
-> it make sense to follow the below steps to send channel
-> classification?
-> 1. Implement an NL80211 command to provide the Bluetooth BDADDR.
-> 2. Send it down to the WiFi driver via a cfg80211 API.
-> 3. Let it call "hci_get_route" to get a hci_hdev handle.
-> 4. Export an API to set channel classification in Bluetooth HCI core.
-> 5. Let the WiFi driver form the channel classification and call the
-> Bluetooth core "write channel classification" API to set the channels.
+This message is wrong.  Also it isn't needed because kzalloc() prints
+its own more complete message.
 
-I don't see any reason to have a specific wifi device talk to a specific
-BT device. The channel exclusion makes more sense if all wifi devices
-and all BT devices are taken into account. As such, only simple API is
-needed to let cfg80211 tell bluez about the channels, and then bluez can
-multiplex it out to all its BT devices.
+Also unlikely() isn't needed here in the attach function.  Likely and
+unlikely hints only belong in the fast path, and generally shouldn't
+be included in driver code (only in core kernel code).
 
-johannes
+Don't resend the patch obviously since this was there in the
+original code.
 
+regards,
+dan carpenter
