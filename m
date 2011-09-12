@@ -1,68 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.67]:58984 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754546Ab1IMQBi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 12:01:38 -0400
-Received: from hpaq1.eem.corp.google.com (hpaq1.eem.corp.google.com [172.25.149.1])
-	by smtp-out.google.com with ESMTP id p8DG1WQS008705
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2011 09:01:32 -0700
-Received: from ywb3 (ywb3.prod.google.com [10.192.2.3])
-	by hpaq1.eem.corp.google.com with ESMTP id p8DG0okk002151
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2011 09:01:31 -0700
-Received: by ywb3 with SMTP id 3so746038ywb.35
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2011 09:01:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1315927132-21716-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1315927132-21716-1-git-send-email-rmanohar@qca.qualcomm.com>
-Date: Tue, 13 Sep 2011 09:01:29 -0700
-Message-ID: <CAMcMvsj+AHdjf-JteV=vpYYAgRXOCvsFmN=YwWibXAzQyBwdUQ@mail.gmail.com> (sfid-20110913_180145_774122_F3933571)
-Subject: Re: [PATCH] ath9k_hw: Do full chip reset on 11A channels
-From: Paul Stewart <pstew@google.com>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:5898 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751712Ab1ILTxs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Sep 2011 15:53:48 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH_3.1] iwlagn: fix command queue timeout
+Date: Mon, 12 Sep 2011 12:09:10 -0700
+Message-Id: <1315854550-30478-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110912_215355_065666_764B637F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 13, 2011 at 8:18 AM, Rajkumar Manoharan
-<rmanohar@qca.qualcomm.com> wrote:
-> AR9003 seems to have issues sometimes with fast channel change
-> in 5GHz and this case is handled specifically for AR9002 by doing
-> a full reset. So let's do a full reset for 5GHz channles for all
-> chipsets.
->
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/hw.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-> index 308847d..622bfc9 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/hw.c
-> @@ -1504,7 +1504,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
->            (chan->channel != ah->curchan->channel) &&
->            ((chan->channelFlags & CHANNEL_ALL) ==
->             (ah->curchan->channelFlags & CHANNEL_ALL)) &&
-> -           (!AR_SREV_9280(ah) || AR_DEVID_7010(ah))) {
-> +           !IS_CHAN_5GHZ(chan)) {
+From: Johannes Berg <johannes.berg@intel.com>
 
-I'm not sure I understand.  Are you asserting that AR9002 does not
-need a full reset for channel change in 2GHz?   The code before your
-change would fall through for AR_SREV_9280(ah) && !AR_DEVID_7010(ah)
-whether in 2HGz or 5GHz, but that case gets removed with your change.
-Is that intentional?
+If the command queue is constantly busy,
+which can happen in P2P, the hangcheck
+timer will frequently find a command in
+it and will eventually reset the device
+because nothing sets the timestamp for
+this queue when commands are processed.
 
->
->                if (ath9k_hw_channel_change(ah, chan)) {
->                        ath9k_hw_loadnf(ah, ah->curchan);
-> --
-> 1.7.6.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Fix this by setting the timestamp when
+a command completes.
+
+Cc: stable@kernel.org #2.6.39, #3.0.0 #3.1.0
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+SIgned-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+these patches are also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index c0def8e..49431ed 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -928,6 +928,8 @@ void iwl_tx_cmd_complete(struct iwl_trans *trans, struct iwl_rx_mem_buffer *rxb)
+ 	cmd = txq->cmd[cmd_index];
+ 	meta = &txq->meta[cmd_index];
+ 
++	txq->time_stamp = jiffies;
++
+ 	iwlagn_unmap_tfd(trans, meta, &txq->tfds[index],
+ 			 DMA_BIDIRECTIONAL);
+ 
+-- 
+1.7.0.4
+
