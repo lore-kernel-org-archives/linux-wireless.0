@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:23501 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751598Ab1IYJUq (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:34506 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753775Ab1ILTUd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Sep 2011 05:20:46 -0400
-Date: Sun, 25 Sep 2011 14:51:26 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Eliad Peller <eliad@wizery.com>
-CC: <johannes@sipsolutions.net>, <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: Re: [PATCH 2/2] mac80211: Send the management frame at requested rate
-Message-ID: <20110925092124.GA927@vmraj-lnx.users.atheros.com> (sfid-20110925_112050_736292_3E950C77)
-References: <1316790779-8955-1-git-send-email-rmanohar@qca.qualcomm.com>
- <1316790779-8955-2-git-send-email-rmanohar@qca.qualcomm.com>
- <CAB3XZEf0A4fVCrLoCTGy+XndSW412rwTcUyL9tQ6YjoDsYonyA@mail.gmail.com>
+	Mon, 12 Sep 2011 15:20:33 -0400
+Received: by bkbzt4 with SMTP id zt4so2909998bkb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 12:20:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <CAB3XZEf0A4fVCrLoCTGy+XndSW412rwTcUyL9tQ6YjoDsYonyA@mail.gmail.com>
+In-Reply-To: <1315854505.11834.3.camel@jlt3.sipsolutions.net>
+References: <1315854505.11834.3.camel@jlt3.sipsolutions.net>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Mon, 12 Sep 2011 12:14:33 -0700
+Message-ID: <CALSq=BYqNg_xukL5oJuu3pPqU=FcgR+Lov=PdGjMxtL3UNu8HA@mail.gmail.com> (sfid-20110912_212041_202987_62A58CBC)
+Subject: Re: [PATCH 3.1] iwlagn: fix stack corruption
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: julia@diku.dk, John Linville <linville@tuxdriver.com>,
+	Wey-Yi W Guy <wey-yi.w.guy@intel.com>,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Alexander Diewald <alex@diewald.cc>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 25, 2011 at 11:58:47AM +0300, Eliad Peller wrote:
-> On Fri, Sep 23, 2011 at 6:12 PM, Rajkumar Manoharan
-> <rmanohar@qca.qualcomm.com> wrote:
-> > Whenever the scan request or tx_mgmt is requesting not to
-> > use CCK rate for managemet frames through
-> > NL80211_ATTR_TX_NO_CCK_RATE attribute, then mac80211 should
-> > select appropriate least non-CCK rate. This could help to
-> > send P2P probes and P2P action frames at non 11b rates
-> > without diabling 11b rates globally.
-> >
-> > Cc: Jouni Malinen <jouni@qca.qualcomm.com>
-> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> > ---
-> [...]
-> 
-> > +static inline s8
-> > +rate_lowest_non_cck_index(struct ieee80211_supported_band *sband,
-> > +                         struct ieee80211_sta *sta)
-> > +{
-> > +       int i;
-> > +
-> > +       for (i = 0; i < sband->n_bitrates; i++) {
-> > +               struct ieee80211_rate *srate = &sband->bitrates[i];
-> > +               if ((srate->bitrate == 10) || (srate->bitrate == 20) ||
-> > +                   (srate->bitrate == 55) || (srate->bitrate == 110))
-> > +                       continue;
-> > +
-> > +               if ((i != sband->n_bitrates) &&
-> > +                   rate_supported(sta, sband->band, i))
-> > +                       return i;
-> 
-> the first condition seems redundant (according to the loop condition,
-> i < sband->n_bitrates)
-Yeah. i missed it ;)
+On Mon, Sep 12, 2011 at 12:08 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c      2011-09-12 21:01:34.000000000 +0200
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c      2011-09-12 21:01:43.000000000 +0200
+> @@ -167,7 +167,7 @@ static int iwlagn_set_temperature_offset
+>
+>        memset(&cmd, 0, sizeof(cmd));
+>        iwl_set_calib_hdr(&cmd.hdr, IWL_PHY_CALIBRATE_TEMP_OFFSET_CMD);
+> -       memcpy(&cmd.radio_sensor_offset, offset_calib, sizeof(offset_calib));
+> +       memcpy(&cmd.radio_sensor_offset, offset_calib, sizeof(*offset_calib));
+>        if (!(cmd.radio_sensor_offset))
+>                cmd.radio_sensor_offset = DEFAULT_RADIO_SENSOR_OFFSET;
 
---
-Rajkumar
+Nice catch!
+
+This kinda bug seems ideal for Julia Lawall's stuff to catch, doesn't it?
+
+Right: memcpy(addr, obj, sizeof(*obj))
+Wrong: memcpy(addr, obj, sizeof(obj))
+
+Dan
