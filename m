@@ -1,74 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f52.google.com ([209.85.215.52]:42587 "EHLO
-	mail-ew0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750711Ab1IUNzN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 09:55:13 -0400
-Received: by ewy19 with SMTP id 19so1473647ewy.11
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 06:55:12 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:3789 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754214Ab1ILKPY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Sep 2011 06:15:24 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 08/20] staging: brcm80211: remove static function
+ variable in brcmfmac
+Date: Mon, 12 Sep 2011 12:14:52 +0200
+Message-ID: <1315822504-24210-9-git-send-email-rvossen@broadcom.com> (sfid-20110912_121536_301539_9077BF14)
+In-Reply-To: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
+References: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CACna6rzOsbi0ghDUa1ruNq4uefEWmwdU7KUDRrh6r0927Jm9oQ@mail.gmail.com>
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-	<20110920130338.GA9885@kroah.com>
-	<1316524874.3953.41.camel@jlt3.sipsolutions.net>
-	<CACna6rxxoRoLi9C3RBsot8kvZx4k5AZVHzHoE17q-iT1U7i5qg@mail.gmail.com>
-	<20110921134056.GB2828@tuxdriver.com>
-	<CACna6rzOsbi0ghDUa1ruNq4uefEWmwdU7KUDRrh6r0927Jm9oQ@mail.gmail.com>
-Date: Wed, 21 Sep 2011 15:55:12 +0200
-Message-ID: <CACna6rwiWp+eEv+K+zm0VBFC6h4GHnMYrx2g8nk-vaBNpFbMyQ@mail.gmail.com> (sfid-20110921_155518_041935_C4AB6DC7)
-Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline patch #2
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Greg KH <greg@kroah.com>, Franky Lin <frankyl@broadcom.com>,
-	gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 21 września 2011 15:52 użytkownik Rafał Miłecki
-<zajec5@gmail.com> napisał:
-> W dniu 21 września 2011 15:40 użytkownik John W. Linville
-> <linville@tuxdriver.com> napisał:
->> On Tue, Sep 20, 2011 at 10:56:49PM +0200, Rafał Miłecki wrote:
->>> 2011/9/20 Johannes Berg <johannes@sipsolutions.net>:
->>> > On Tue, 2011-09-20 at 06:03 -0700, Greg KH wrote:
->>> >
->>> >> And while code is great and nice, I still haven't seen any real answers
->>> >> to all of the questions that were asked of the Broadcom driver team
->>> >> during that review by the linux-wireless developers about how things
->>> >> will be handled properly due to the overlap in functionality with the
->>> >> existing "real" driver in the tree.
->>> >
->>> > Let's qualify this to "some developers".
->>> >
->>> > One thing I'd like to point out is that the Broadcom's firmware API has
->>> > always undergone changes over time. I'm actually surprised that b43
->>> > works as well as it does (which, tbh, isn't very well at all, at least
->>> > for me with some 11n PHY). I also don't think that Broadcom are going to
->>> > maintain compatibility and/or maintain new firmware features for old
->>> > devices, that just doesn't make any sense.
->>>
->>> Actually, when we got some single response from Broadcom about their
->>> relation to b43, they haven't mentioned support for old HW is any
->>> problem at all. They just pointed we don't support calibration for
->>> N-PHY and we don't support 802.11n feature for a better performance.
->>>
->>> I feel we're creating some problems ourself. Just some guessing that
->>> support for older HW can be real problem for future development... not
->>> confirmed by anyone at all.
->>
->> Their new firmware doesn't run on the older hardware, no?
->
-> AFAIK it does (unless you mean hardware covered by b43legacy).
->
-> If you take a look at 666.2 firmware, it's still available for core 5
-> (and 9, 13, etc.)
+From: Arend van Spriel <arend@broadcom.com>
 
-The reason I've added support for new firmware without dropping
-support for older, was users experience. I didn't want to leave anyone
-with b43 not working after kernel update (without firmware update).
+The static local variable save_ms in brcmf_sdbrcm_wd_timer() has been
+removed and placed in the structure brcmf_bus definition.
 
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index efff099..823567f 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -654,6 +654,7 @@ struct brcmf_bus {
+ 	struct completion watchdog_wait;
+ 	struct task_struct *watchdog_tsk;
+ 	bool wd_timer_valid;
++	uint save_ms;
+ 
+ 	struct tasklet_struct tasklet;
+ 	struct task_struct *dpc_tsk;
+@@ -5031,8 +5032,6 @@ brcmf_sdbrcm_watchdog(unsigned long data)
+ void
+ brcmf_sdbrcm_wd_timer(struct brcmf_bus *bus, uint wdtick)
+ {
+-	static uint save_ms;
+-
+ 	/* don't start the wd until fw is loaded */
+ 	if (bus->drvr->busstate == BRCMF_BUS_DOWN)
+ 		return;
+@@ -5041,14 +5040,14 @@ brcmf_sdbrcm_wd_timer(struct brcmf_bus *bus, uint wdtick)
+ 	if (!wdtick && bus->wd_timer_valid == true) {
+ 		del_timer_sync(&bus->timer);
+ 		bus->wd_timer_valid = false;
+-		save_ms = wdtick;
++		bus->save_ms = wdtick;
+ 		return;
+ 	}
+ 
+ 	if (wdtick) {
+ 		brcmf_watchdog_ms = (uint) wdtick;
+ 
+-		if (save_ms != brcmf_watchdog_ms) {
++		if (bus->save_ms != brcmf_watchdog_ms) {
+ 			if (bus->wd_timer_valid == true)
+ 				/* Stop timer and restart at new value */
+ 				del_timer_sync(&bus->timer);
+@@ -5067,7 +5066,7 @@ brcmf_sdbrcm_wd_timer(struct brcmf_bus *bus, uint wdtick)
+ 		}
+ 
+ 		bus->wd_timer_valid = true;
+-		save_ms = wdtick;
++		bus->save_ms = wdtick;
+ 	}
+ }
+ 
 -- 
-Rafał
+1.7.4.1
+
+
