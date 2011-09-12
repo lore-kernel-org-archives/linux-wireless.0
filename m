@@ -1,131 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7986 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753653Ab1IVXBS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 19:01:18 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 05/12] iwlagn: use kcalloc when possible for array allocation
-Date: Thu, 22 Sep 2011 15:14:53 -0700
-Message-Id: <1316729700-1770-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110923_010148_066944_E5C75CE2)
-In-Reply-To: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:49077 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754884Ab1ILLNK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Sep 2011 07:13:10 -0400
+Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
+	by emh07-2.mail.saunalahti.fi (Postfix) with SMTP id AB1B518CFD0
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 14:13:09 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-188-95.elisa-laajakaista.fi [88.115.188.95])
+	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 8FBDE27D85
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 14:13:08 +0300 (EEST)
+Subject: [PATCH 9/9] ath6kl: add firmware capabilities support
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Date: Mon, 12 Sep 2011 14:13:08 +0300
+Message-ID: <20110912111308.16921.94633.stgit@localhost6.localdomain6> (sfid-20110912_131313_336353_95383426)
+In-Reply-To: <20110912111206.16921.90687.stgit@localhost6.localdomain6>
+References: <20110912111206.16921.90687.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+The new firmware format includes capability bits which make it
+possible to check what features the firmware supports. Add infrastructure
+to read the capabilities. For now it only provides
+ATH6KL_FW_CAPABILITY_HOST_P2P which is not even used anywhere yet, but that
+will be added later.
 
-As everybody knows kcalloc checks the multiplication is safe and
-that we don't run into overflow.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-tt.c     |   12 +++++++-----
- drivers/net/wireless/iwlwifi/iwl-core.c       |    6 +++---
- drivers/net/wireless/iwlwifi/iwl-eeprom.c     |    5 +++--
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   12 ++++++------
- 4 files changed, 19 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath6kl/core.h |   12 ++++++++++++
+ drivers/net/wireless/ath/ath6kl/init.c |   11 ++++++++++-
+ 2 files changed, 22 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
-index 495f936..289e5d8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
-@@ -641,11 +641,13 @@ void iwl_tt_initialize(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index abb4aaf..0fb82e9 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -68,8 +68,18 @@ enum ath6kl_fw_ie_type {
+ 	ATH6KL_FW_IE_FW_IMAGE = 3,
+ 	ATH6KL_FW_IE_PATCH_IMAGE = 4,
+ 	ATH6KL_FW_IE_RESERVED_RAM_SIZE = 5,
++	ATH6KL_FW_IE_CAPABILITIES = 6,
+ };
  
- 	if (priv->cfg->base_params->adv_thermal_throttle) {
- 		IWL_DEBUG_TEMP(priv, "Advanced Thermal Throttling\n");
--		tt->restriction = kzalloc(sizeof(struct iwl_tt_restriction) *
--					 IWL_TI_STATE_MAX, GFP_KERNEL);
--		tt->transaction = kzalloc(sizeof(struct iwl_tt_trans) *
--			IWL_TI_STATE_MAX * (IWL_TI_STATE_MAX - 1),
--			GFP_KERNEL);
-+		tt->restriction = kcalloc(IWL_TI_STATE_MAX,
-+					  sizeof(struct iwl_tt_restriction),
-+					  GFP_KERNEL);
-+		tt->transaction = kcalloc(IWL_TI_STATE_MAX *
-+					  (IWL_TI_STATE_MAX - 1),
-+					  sizeof(struct iwl_tt_trans),
-+					  GFP_KERNEL);
- 		if (!tt->restriction || !tt->transaction) {
- 			IWL_ERR(priv, "Fallback to Legacy Throttling\n");
- 			priv->thermal_throttle.advanced_tt = false;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index cea6520..fc400bb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -125,12 +125,12 @@ int iwl_init_geos(struct iwl_priv *priv)
- 		return 0;
- 	}
++enum ath6kl_fw_capability {
++	ATH6KL_FW_CAPABILITY_HOST_P2P = 0,
++
++	/* this needs to be last */
++	ATH6KL_FW_CAPABILITY_MAX,
++};
++
++#define ATH6KL_CAPABILITY_LEN (ALIGN(ATH6KL_FW_CAPABILITY_MAX, 32) / 32)
++
+ struct ath6kl_fw_ie {
+ 	__le32 id;
+ 	__le32 len;
+@@ -491,6 +501,8 @@ struct ath6kl {
+ 	u8 *fw_patch;
+ 	size_t fw_patch_len;
  
--	channels = kzalloc(sizeof(struct ieee80211_channel) *
--			   priv->channel_count, GFP_KERNEL);
-+	channels = kcalloc(priv->channel_count,
-+			   sizeof(struct ieee80211_channel), GFP_KERNEL);
- 	if (!channels)
- 		return -ENOMEM;
++	unsigned long fw_capabilities[ATH6KL_CAPABILITY_LEN];
++
+ 	struct workqueue_struct *ath6kl_wq;
  
--	rates = kzalloc((sizeof(struct ieee80211_rate) * IWL_RATE_COUNT_LEGACY),
-+	rates = kcalloc(IWL_RATE_COUNT_LEGACY, sizeof(struct ieee80211_rate),
- 			GFP_KERNEL);
- 	if (!rates) {
- 		kfree(channels);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index 0b66941..a4e43bd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -899,8 +899,9 @@ int iwl_init_channel_map(struct iwl_priv *priv)
- 	IWL_DEBUG_EEPROM(priv, "Parsing data for %d channels.\n",
- 			priv->channel_count);
+ 	struct ath6kl_node_table scan_table;
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index e2a29b2..b9b13a0 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -901,7 +901,7 @@ static int ath6kl_fetch_fw_api2(struct ath6kl *ar)
+ 	struct ath6kl_fw_ie *hdr;
+ 	const char *filename;
+ 	const u8 *data;
+-	int ret, ie_id;
++	int ret, ie_id, i, index, bit;
+ 	__le32 *val;
  
--	priv->channel_info = kzalloc(sizeof(struct iwl_channel_info) *
--				     priv->channel_count, GFP_KERNEL);
-+	priv->channel_info = kcalloc(priv->channel_count,
-+				     sizeof(struct iwl_channel_info),
-+				     GFP_KERNEL);
- 	if (!priv->channel_info) {
- 		IWL_ERR(priv, "Could not allocate channel_info\n");
- 		priv->channel_count = 0;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 781f6aa..416e992 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -304,8 +304,8 @@ static int iwl_trans_txq_alloc(struct iwl_trans *trans,
- 
- 	txq->q.n_window = slots_num;
- 
--	txq->meta = kzalloc(sizeof(txq->meta[0]) * slots_num, GFP_KERNEL);
--	txq->cmd = kzalloc(sizeof(txq->cmd[0]) * slots_num, GFP_KERNEL);
-+	txq->meta = kcalloc(slots_num, sizeof(txq->meta[0]), GFP_KERNEL);
-+	txq->cmd = kcalloc(slots_num, sizeof(txq->cmd[0]), GFP_KERNEL);
- 
- 	if (!txq->meta || !txq->cmd)
- 		goto error;
-@@ -322,8 +322,8 @@ static int iwl_trans_txq_alloc(struct iwl_trans *trans,
- 	/* Driver private data, only for Tx (not command) queues,
- 	 * not shared with device. */
- 	if (txq_id != trans->shrd->cmd_queue) {
--		txq->skbs = kzalloc(sizeof(txq->skbs[0]) *
--				   TFD_QUEUE_SIZE_MAX, GFP_KERNEL);
-+		txq->skbs = kcalloc(TFD_QUEUE_SIZE_MAX, sizeof(txq->skbs[0]),
-+				    GFP_KERNEL);
- 		if (!txq->skbs) {
- 			IWL_ERR(trans, "kmalloc for auxiliary BD "
- 				  "structures failed\n");
-@@ -534,8 +534,8 @@ static int iwl_trans_tx_alloc(struct iwl_trans *trans)
- 		goto error;
- 	}
- 
--	trans_pcie->txq = kzalloc(sizeof(struct iwl_tx_queue) *
--			hw_params(trans).max_txq_num, GFP_KERNEL);
-+	trans_pcie->txq = kcalloc(hw_params(trans).max_txq_num,
-+				  sizeof(struct iwl_tx_queue), GFP_KERNEL);
- 	if (!trans_pcie->txq) {
- 		IWL_ERR(trans, "Not enough memory for txq\n");
- 		ret = ENOMEM;
--- 
-1.7.0.4
+ 	switch (ar->version.target_ver) {
+@@ -992,6 +992,15 @@ static int ath6kl_fetch_fw_api2(struct ath6kl *ar)
+ 			val = (__le32 *) data;
+ 			ar->hw.reserved_ram_size = le32_to_cpup(val);
+ 			break;
++		case ATH6KL_FW_IE_CAPABILITIES:
++			for (i = 0; i < ATH6KL_FW_CAPABILITY_MAX; i++) {
++				index = ALIGN(i, 8) / 8;
++				bit = i % 8;
++
++				if (data[index] & (1 << bit))
++					__set_bit(i, ar->fw_capabilities);
++			}
++			break;
+ 		default:
+ 			ath6kl_dbg(ATH6KL_DBG_TRC, "Unknown fw ie: %u\n",
+ 				   le32_to_cpup(&hdr->id));
 
