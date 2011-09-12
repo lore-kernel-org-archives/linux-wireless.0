@@ -1,77 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:42893 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932185Ab1IAPIP (ORCPT
+Received: from smtp3.domainxyz.de ([78.47.113.144]:3619 "EHLO
+	smtp3.domainxyz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752081Ab1ILT4Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 11:08:15 -0400
-Message-ID: <4E5F9FDA.3020901@freedesktop.org> (sfid-20110901_170824_407340_BE9247BA)
-Date: Thu, 01 Sep 2011 11:08:10 -0400
-From: Jim Gettys <jg@freedesktop.org>
+	Mon, 12 Sep 2011 15:56:24 -0400
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Andrew McGregor <andrewmcgr@gmail.com>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Tom Herbert <therbert@google.com>,
-	Dave Taht <dave.taht@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Matt Smith <smithm@qca.qualcomm.com>,
-	Kevin Hayes <hayes@qca.qualcomm.com>,
-	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org
-Subject: Re: BQL crap and wireless
-References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com> <CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com> <CAA93jw7c+Nxc6ZbWZWsQ+F78AoPWU=quSRaOUpT0yRcwJOXsGQ@mail.gmail.com> <4E5C3B47.1050809@freedesktop.org> <CA+mtBx-j_+mrNpntR7CfYOromDnM-ZGzvebpUCjC8Qf14X6u9g@mail.gmail.com> <CAJ-Vmonwur-SXddNwjPEidCMqes+PwbRWFBddfdwTp2jOMu64g@mail.gmail.com> <4E5CEC79.3090802@freedesktop.org> <9BB251C1-A211-486D-A717-59149AC3A709@gmail.com> <4E5E36EE.8080501@freedesktop.org> <CAB=NE6Wj4BxSjZmTOg9EFMcJ+H0RBZE4q8+6DB3x8qP=r42yNQ@mail.gmail.com> <20110901141304.GA2580@tuxdriver.com>
-In-Reply-To: <20110901141304.GA2580@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="UTF-8"
+Subject: Re: [PATCH 3.1] iwlagn: fix stack corruption
+Date: Mon, 12 Sep 2011 21:55:54 +0200
+Message-ID: <2EBB96D0C3577D479C54D1243926388D03C8E186@mail.ecs-exchange.de> (sfid-20110912_215627_269447_850D260C)
+In-Reply-To: <1315854505.11834.3.camel@jlt3.sipsolutions.net>
+References: <1315854505.11834.3.camel@jlt3.sipsolutions.net>
+From: "Alexander Diewald" <alex@diewald.cc>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"Wey-Yi W Guy" <wey-yi.w.guy@intel.com>,
+	"Meenakshi Venkataraman" <meenakshi.venkataraman@intel.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/01/2011 10:13 AM, John W. Linville wrote:
-> On Wed, Aug 31, 2011 at 01:50:48PM -0700, Luis R. Rodriguez wrote:
->> On Wed, Aug 31, 2011 at 6:28 AM, Jim Gettys <jg@freedesktop.org> wrote:
->> such as wireless, or even possibly modern broadband with
->> PowerBoost, classic RED or similar algorithms that do not take the
->> buffer drain rate cannot possibly hack it properly.
->> Understood, just curious if anyone has tried a Minstrel approach.
-> FWIW, eBDP and the related algorithms from Tianji Li's paper are
-> philosophically similar to minstrel.  They depend on measuring recent
-> conditions and modifying the current queue length accordingly.
->
-> 	http://www.hamilton.ie/tianji_li/buffersizing.pdf
->
-> The hack I added in debloat-testing is based on my understanding
-> of eBDP.  It timestamps the SKBs when they are handed to the driver
-> for Tx and then checks the timestamp when the SKB is orphaned.  It is
-> a bit crude and is an abuse of the skb_orphan API.  Also while it
-> accounts for the 802.11e queues separately, it doesn't account for
-> 802.11n aggregation.  Still, it seems to improve latency w/o hugely
-> impacting throughput in at least some environments -- YMMV!
->
-Certainly eBDP *sort of* works for me; I see somewhat more variation
-(jitter) than I'd like, but at least latencies are at least somewhat
-controlled and I've not seen performance (throughput) problems.  This is
-on an Intel chipset.
-
-Tanji Li's work and eBDP came to our attention after a conversation I
-had with Van at the beginning of this year; Van send me a pointer to it
-with the comments:
-
-"As I said on the phone I think there's an easier, more robust way to accomplish the same
-thing but they have running code and I don't."
-
-
-But we've not had time to do any systematic testing on eBDP yet and the
-implementation needs more work before it should go upstream.
-
-About the time we were thinking of starting that testing, it became
-clear that getting aggregation working better was pretty essential to
-validating any results.  I'm looking forward to trying eBDP with the
-revised Ath9k driver as soon as they get put into a single pool.  And if
-Kathleen and Van can get a "RED Light" they are happy with, that will be
-fun to try as well.
-                                - Jim
-
-
-
-
-
+SGkgSm9oYW5uZXMsDQoNCkkndmUganVzdCB0cmllZCB0aGUgZml4IGFuZCBpdCB3b3Jrcy4gSSBz
+d2l0Y2hlZCBvZmYgYWxsIHRoZSBkZWJ1Z2dpbmcgb3B0aW9ucyBpbiB0aGUgaXdsd2lmaSBkcml2
+ZXIgYW5kIHRoZSB3aXJlbGVzcyBzdGFjayBhbmQgdHVybmVkIG9mZiB0aGUgZnJhbWUgcG9pbnRl
+cnMgZm9yIHRlc3RpbmcuDQpUaGFuayB5b3UgdmVyeSBtdWNoLiANCg0KSnVzdCBzb21lIGZpbmFs
+IG5vdGVzOg0KVGhhbmsgeW91IFdleSwgZm9yIGV2ZW4gZm9yd2FyZGluZyB0aGlzIGlzc3VlIHdo
+ZW4geW91IHdlcmUgb24gdmFjYXRpb24hDQpBbHNvLCBzcGVjaWFsIFRoYW5rcyB0byB5b3UsIE1l
+ZW5ha3NoaSwgZm9yIHRha2luZyB0aGF0IG11Y2ggdGltZS4gSSBhbHNvIGxlYXJuZWQgYSBsb3Qg
+cmVnYXJkaW5nIGtlcm5lbCBkZWJ1Z2dpbmcgKG5ldGNvbnNvbGUgZXRjLikuIEkgaG9wZSBJIGNv
+dWxkIGdpdmUgc29tZSBnb29kIGZlZWRiYWNrLg0KQW5kIHRoYW5rcyB0byBhbGwgb3RoZXIgcGVv
+cGxlIGludm9sdmVkLg0KDQpNYXliZSwgc2VlIHlvdSBuZXh0IHRpbWUgOyksDQpBbGV4DQoNCg0K
+T24gTW9uZGF5IDEyIFNlcHRlbWJlciAyMDExIDIxOjA4OjI1IEpvaGFubmVzIEJlcmcgd3JvdGU6
+DQo+IEZyb206IEpvaGFubmVzIEJlcmcgPGpvaGFubmVzLmJlcmdAaW50ZWwuY29tPg0KPiANCj4g
+QWxleGFuZGVyIHJlcG9ydGVkIGEgc3RyYW5nZSBjcmFzaCBpbiBpd2xhZ24gdGhhdA0KPiBNZWVu
+YWtzaGkgYW5kIFdleSBjb3VsZG4ndCByZXByb2R1Y2UuIEkganVzdCByYW4NCj4gaW50byB0aGUg
+c2FtZSBpc3N1ZSBhbmQgdHJhY2tlZCBpdCBkb3duIHRvIHN0YWNrDQo+IGNvcnJ1cHRpb24uIFRo
+aXMgZml4ZXMgaXQuDQo+IA0KPiBUaGUgcHJvYmxlbSB3YXMgaW50cm9kdWNlZCBpbg0KPiBjb21t
+aXQgNGI4Yjk5YjZlNjUwZDA1MjdmM2ExMjM3NDRiNzQ1OTk3NjU4MWQxNA0KPiBBdXRob3I6IFdl
+eS1ZaSBHdXkgPHdleS15aS53Lmd1eUBpbnRlbC5jb20+DQo+IERhdGU6ICAgRnJpIEp1bCA4IDE0
+OjI5OjQ4IDIwMTEgLTA3MDANCj4gDQo+ICAgICBpd2xhZ246IHJhZGlvIHNlbnNvciBvZmZzZXQg
+aW4gbGUxNiBmb3JtYXQNCj4gDQo+IENjOiBXZXktWWkgR3V5IDx3ZXkteWkudy5ndXlAaW50ZWwu
+Y29tPg0KPiBDYzogTWVlbmFrc2hpIFZlbmthdGFyYW1hbiA8bWVlbmFrc2hpLnZlbmthdGFyYW1h
+bkBpbnRlbC5jb20+DQo+IFJlcG9ydGVkLWJ5OiBBbGV4YW5kZXIgRGlld2FsZCA8YWxleEBkaWV3
+YWxkLmNjPg0KPiBTaWduZWQtb2ZmLWJ5OiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJnQGlu
+dGVsLmNvbT4NCj4gLS0tDQo+IFdleSwgcGxlYXNlIGZpeCB5b3VyIHJlY2VudCBjb21taXQgaW4g
+b3VyIGludGVybmFsIHRyZWUNCj4gdGhhdCBkb2VzIHRoZSB2MiBvZmZzZXQgY2FsaWJyYXRpb24g
+LS0gaXQgaGFzIHRoZSBzYW1lDQo+IGJ1ZyB0d2ljZS4NCj4gDQo+ICBkcml2ZXJzL25ldC93aXJl
+bGVzcy9pd2x3aWZpL2l3bC1hZ24tdWNvZGUuYyB8ICAgIDIgKy0NCj4gIDEgZmlsZSBjaGFuZ2Vk
+LCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQ0KPiANCj4gLS0tIGEvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvaXdsd2lmaS9pd2wtYWduLXVjb2RlLmMJMjAxMS0wOS0xMg0KPiAyMTowMTozNC4w
+MDAwMDAwMDAgKzAyMDAgKysrDQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wt
+YWduLXVjb2RlLmMJMjAxMS0wOS0xMg0KPiAyMTowMTo0My4wMDAwMDAwMDAgKzAyMDAgQEAgLTE2
+Nyw3ICsxNjcsNyBAQCBzdGF0aWMgaW50DQo+IGl3bGFnbl9zZXRfdGVtcGVyYXR1cmVfb2Zmc2V0
+DQo+IA0KPiAgCW1lbXNldCgmY21kLCAwLCBzaXplb2YoY21kKSk7DQo+ICAJaXdsX3NldF9jYWxp
+Yl9oZHIoJmNtZC5oZHIsIElXTF9QSFlfQ0FMSUJSQVRFX1RFTVBfT0ZGU0VUX0NNRCk7DQo+IC0J
+bWVtY3B5KCZjbWQucmFkaW9fc2Vuc29yX29mZnNldCwgb2Zmc2V0X2NhbGliLCBzaXplb2Yob2Zm
+c2V0X2NhbGliKSk7DQo+ICsJbWVtY3B5KCZjbWQucmFkaW9fc2Vuc29yX29mZnNldCwgb2Zmc2V0
+X2NhbGliLCBzaXplb2YoKm9mZnNldF9jYWxpYikpOw0KPiAgCWlmICghKGNtZC5yYWRpb19zZW5z
+b3Jfb2Zmc2V0KSkNCj4gIAkJY21kLnJhZGlvX3NlbnNvcl9vZmZzZXQgPSBERUZBVUxUX1JBRElP
+X1NFTlNPUl9PRkZTRVQ7DQo=
 
