@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39586 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513Ab1IZJeo (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55285 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751352Ab1ILSP2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 05:34:44 -0400
-Subject: Re: [PATCH 1/3] cfg80211/mac80211: add netdev param to
- set_txq_params()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1316970415-23239-1-git-send-email-eliad@wizery.com> (sfid-20110925_190730_335163_D6C4F06F)
-References: <1316970415-23239-1-git-send-email-eliad@wizery.com>
-	 (sfid-20110925_190730_335163_D6C4F06F)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 26 Sep 2011 11:34:41 +0200
-Message-ID: <1317029681.4117.29.camel@jlt3.sipsolutions.net> (sfid-20110926_113447_191681_7AF2B258)
-Mime-Version: 1.0
+	Mon, 12 Sep 2011 14:15:28 -0400
+Date: Mon, 12 Sep 2011 14:13:52 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Temporary(?) relocation of wireless git trees...
+Message-ID: <20110912181351.GD2689@tuxdriver.com> (sfid-20110912_201600_198658_8871F2DF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-09-25 at 20:06 +0300, Eliad Peller wrote:
+With no news on when the kernel.org trees will be accessible again
+(which could be 10 minutes from now for all I know), I have pushed
+my local copies to Infradead.  This should be equivalent to what was
+last pushed to kernel.org almost two weeks ago.
 
-> +++ b/net/wireless/nl80211.c
-> @@ -1235,6 +1235,11 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
->  			goto bad_res;
->  		}
->  
-> +		if (!netdev) {
-> +			result = -EINVAL;
-> +			goto bad_res;
-> +		}
-> +
+The "current" wireless tree is here:
 
-I'm a little worried about this change, but I don't think we have a
-choice. Technically, it is an API change. I believe that no existing
-applications (hostapd is probably the only using this) make use of this
-with just the phy (and not the netdev).
+	git://git.infradead.org/users/linville/wireless.git
 
-johannes
+The "next" wireless tree is here:
 
+	git://git.infradead.org/users/linville/wireless-next.git
+
+The "testing" wireless tree is here:
+
+	git://git.infradead.org/users/linville/wireless-testing.git
+
+I don't know how long these trees will be on Infradead or when (or
+if) they will return to kernel.org.  Such changes will be determined
+as conditions change.  Please be flexible.
+
+Thanks,
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
