@@ -1,51 +1,392 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51375 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755850Ab1IOJTV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 05:19:21 -0400
-Subject: Re: [RFC] wireless: Fix rate mask for scan request
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1316078089-7221-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1316078089-7221-1-git-send-email-rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Sep 2011 11:19:18 +0200
-Message-ID: <1316078358.3992.4.camel@jlt3.sipsolutions.net> (sfid-20110915_111925_539359_787BCAA8)
+Received: from mga11.intel.com ([192.55.52.93]:27670 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751314Ab1ILTnA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Sep 2011 15:43:00 -0400
+Subject: Re: Missing routines for iwlagn on PowerPC build
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4E6E5666.50901@lwfinger.net>
+References: <4E6E5666.50901@lwfinger.net>
+Content-Type: multipart/mixed; boundary="=-2LbQSo3yaucsqYfl0WU1"
+Date: Mon, 12 Sep 2011 11:58:22 -0700
+Message-ID: <1315853902.3547.206.camel@wwguy-huron> (sfid-20110912_214312_583955_D13E2495)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-09-15 at 14:44 +0530, Rajkumar Manoharan wrote:
-> The scan request received from cfg80211_connect do not
-> have proper rate mast. So the probe request sent on each
-> channel do not have proper the supported rates ie.
+
+--=-2LbQSo3yaucsqYfl0WU1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+Hi Larry,
+
+On Mon, 2011-09-12 at 11:58 -0700, Larry Finger wrote:
+> I am using a clone of wireless-testing (git describe 
+> master-2011-08-30-272-g811462b) to compile 3.1-rc4 for a Powerbook G4 Titanium. 
+> The default configuration was taken from the standard one that comes with 
+> MintPPC for kernel 2.6.32 as updated for 3.1.
 > 
-> Cc: stable@kernel.org
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> ---
->  net/wireless/sme.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
+> When the build reaches the final stage of the module build, it errors with these 
+> messages:
 > 
-> diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-> index b7b6ff8..8b6ef34 100644
-> --- a/net/wireless/sme.c
-> +++ b/net/wireless/sme.c
-> @@ -118,6 +118,7 @@ static int cfg80211_conn_scan(struct wireless_dev *wdev)
->  			     i++, j++)
->  				request->channels[i] =
->  					&wdev->wiphy->bands[band]->channels[j];
-> +			request->rates[band] = (u32) -1;
+> ERROR: "iwl_dump_fh" [drivers/net/wireless/iwlwifi/iwlagn.ko] undefined!
+> ERROR: "iwl_dump_csr" [drivers/net/wireless/iwlwifi/iwlagn.ko] undefined!
+> 
+> I "fixed" it by disabling the build of iwlagn. It appears that the first one 
+> would be fixed by a patch submitted by Johannes and there is probably a second 
+> patch for error #2.
+> 
 
-Please use
-	(1 << wiphy->bands[band]->n_bitrates) - 1;
+Please try the following patch which it is already part of
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
 
-so we don't have invalid bits set.
+but since the kernel.org issue, no one can access it
 
-Also, CC stable doesn't work that way -- you don't CC them, you just
-write into it "Cc: stable@kernel.org". This makes them pick out the
-patch later once it got applied.
+THanks
+Wey
+> 
 
-johannes
+
+--=-2LbQSo3yaucsqYfl0WU1
+Content-Disposition: attachment; filename="0010-iwlagn-fix-compilation-when-debug-flags-is-unset.patch"
+Content-Type: text/x-patch; name="0010-iwlagn-fix-compilation-when-debug-flags-is-unset.patch"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+>From 28305d9bd1f98f1e640b81f3ba28b701e65cd2e5 Mon Sep 17 00:00:00 2001
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date: Tue, 6 Sep 2011 09:10:38 -0700
+Subject: [PATCH 10/10] iwlagn: fix compilation when debug flags is unset
+
+Trivial fixes to allow compilation without warnings when debug
+compilation flag isn't set.
+Also fix the compilation when debugfs flag isn't set.
+Fix a warning: unused priv pointer on the way.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-shared.h |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans.c  |  260 ++++++++++++++--------------
+ 3 files changed, 132 insertions(+), 132 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index f8a4bcf..ba5c514 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -741,7 +741,7 @@ void iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	u16 sequence = le16_to_cpu(pkt->hdr.sequence);
+ 	int txq_id = SEQ_TO_QUEUE(sequence);
+-	int cmd_index = SEQ_TO_INDEX(sequence);
++	int cmd_index __maybe_unused = SEQ_TO_INDEX(sequence);
+ 	struct iwlagn_tx_resp *tx_resp = (void *)&pkt->u.raw[0];
+ 	struct ieee80211_hdr *hdr;
+ 	u32 status = le16_to_cpu(tx_resp->status.status);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 03f4c64..d987bee 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -403,7 +403,7 @@ void iwl_reset_traffic_log(struct iwl_priv *priv);
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ void iwl_print_rx_config_cmd(struct iwl_priv *priv, u8 ctxid);
+ #else
+-static inline void iwl_print_rx_config_cmd(struct iwl_priv *priv, u8 ctxid);
++static inline void iwl_print_rx_config_cmd(struct iwl_priv *priv, u8 ctxid)
+ {
+ }
+ #endif
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index c495fc3..b2e8907 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -1505,6 +1505,136 @@ static int iwl_trans_pcie_check_stuck_queue(struct iwl_trans *trans, int cnt)
+ 	return 0;
+ }
+ 
++static const char *get_fh_string(int cmd)
++{
++	switch (cmd) {
++	IWL_CMD(FH_RSCSR_CHNL0_STTS_WPTR_REG);
++	IWL_CMD(FH_RSCSR_CHNL0_RBDCB_BASE_REG);
++	IWL_CMD(FH_RSCSR_CHNL0_WPTR);
++	IWL_CMD(FH_MEM_RCSR_CHNL0_CONFIG_REG);
++	IWL_CMD(FH_MEM_RSSR_SHARED_CTRL_REG);
++	IWL_CMD(FH_MEM_RSSR_RX_STATUS_REG);
++	IWL_CMD(FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV);
++	IWL_CMD(FH_TSSR_TX_STATUS_REG);
++	IWL_CMD(FH_TSSR_TX_ERROR_REG);
++	default:
++		return "UNKNOWN";
++	}
++}
++
++int iwl_dump_fh(struct iwl_trans *trans, char **buf, bool display)
++{
++	int i;
++#ifdef CONFIG_IWLWIFI_DEBUG
++	int pos = 0;
++	size_t bufsz = 0;
++#endif
++	static const u32 fh_tbl[] = {
++		FH_RSCSR_CHNL0_STTS_WPTR_REG,
++		FH_RSCSR_CHNL0_RBDCB_BASE_REG,
++		FH_RSCSR_CHNL0_WPTR,
++		FH_MEM_RCSR_CHNL0_CONFIG_REG,
++		FH_MEM_RSSR_SHARED_CTRL_REG,
++		FH_MEM_RSSR_RX_STATUS_REG,
++		FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV,
++		FH_TSSR_TX_STATUS_REG,
++		FH_TSSR_TX_ERROR_REG
++	};
++#ifdef CONFIG_IWLWIFI_DEBUG
++	if (display) {
++		bufsz = ARRAY_SIZE(fh_tbl) * 48 + 40;
++		*buf = kmalloc(bufsz, GFP_KERNEL);
++		if (!*buf)
++			return -ENOMEM;
++		pos += scnprintf(*buf + pos, bufsz - pos,
++				"FH register values:\n");
++		for (i = 0; i < ARRAY_SIZE(fh_tbl); i++) {
++			pos += scnprintf(*buf + pos, bufsz - pos,
++				"  %34s: 0X%08x\n",
++				get_fh_string(fh_tbl[i]),
++				iwl_read_direct32(bus(trans), fh_tbl[i]));
++		}
++		return pos;
++	}
++#endif
++	IWL_ERR(trans, "FH register values:\n");
++	for (i = 0; i <  ARRAY_SIZE(fh_tbl); i++) {
++		IWL_ERR(trans, "  %34s: 0X%08x\n",
++			get_fh_string(fh_tbl[i]),
++			iwl_read_direct32(bus(trans), fh_tbl[i]));
++	}
++	return 0;
++}
++
++static const char *get_csr_string(int cmd)
++{
++	switch (cmd) {
++	IWL_CMD(CSR_HW_IF_CONFIG_REG);
++	IWL_CMD(CSR_INT_COALESCING);
++	IWL_CMD(CSR_INT);
++	IWL_CMD(CSR_INT_MASK);
++	IWL_CMD(CSR_FH_INT_STATUS);
++	IWL_CMD(CSR_GPIO_IN);
++	IWL_CMD(CSR_RESET);
++	IWL_CMD(CSR_GP_CNTRL);
++	IWL_CMD(CSR_HW_REV);
++	IWL_CMD(CSR_EEPROM_REG);
++	IWL_CMD(CSR_EEPROM_GP);
++	IWL_CMD(CSR_OTP_GP_REG);
++	IWL_CMD(CSR_GIO_REG);
++	IWL_CMD(CSR_GP_UCODE_REG);
++	IWL_CMD(CSR_GP_DRIVER_REG);
++	IWL_CMD(CSR_UCODE_DRV_GP1);
++	IWL_CMD(CSR_UCODE_DRV_GP2);
++	IWL_CMD(CSR_LED_REG);
++	IWL_CMD(CSR_DRAM_INT_TBL_REG);
++	IWL_CMD(CSR_GIO_CHICKEN_BITS);
++	IWL_CMD(CSR_ANA_PLL_CFG);
++	IWL_CMD(CSR_HW_REV_WA_REG);
++	IWL_CMD(CSR_DBG_HPET_MEM_REG);
++	default:
++		return "UNKNOWN";
++	}
++}
++
++void iwl_dump_csr(struct iwl_trans *trans)
++{
++	int i;
++	static const u32 csr_tbl[] = {
++		CSR_HW_IF_CONFIG_REG,
++		CSR_INT_COALESCING,
++		CSR_INT,
++		CSR_INT_MASK,
++		CSR_FH_INT_STATUS,
++		CSR_GPIO_IN,
++		CSR_RESET,
++		CSR_GP_CNTRL,
++		CSR_HW_REV,
++		CSR_EEPROM_REG,
++		CSR_EEPROM_GP,
++		CSR_OTP_GP_REG,
++		CSR_GIO_REG,
++		CSR_GP_UCODE_REG,
++		CSR_GP_DRIVER_REG,
++		CSR_UCODE_DRV_GP1,
++		CSR_UCODE_DRV_GP2,
++		CSR_LED_REG,
++		CSR_DRAM_INT_TBL_REG,
++		CSR_GIO_CHICKEN_BITS,
++		CSR_ANA_PLL_CFG,
++		CSR_HW_REV_WA_REG,
++		CSR_DBG_HPET_MEM_REG
++	};
++	IWL_ERR(trans, "CSR values:\n");
++	IWL_ERR(trans, "(2nd byte of CSR_INT_COALESCING is "
++		"CSR_INT_PERIODIC_REG)\n");
++	for (i = 0; i <  ARRAY_SIZE(csr_tbl); i++) {
++		IWL_ERR(trans, "  %25s: 0X%08x\n",
++			get_csr_string(csr_tbl[i]),
++			iwl_read32(bus(trans), csr_tbl[i]));
++	}
++}
++
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ /* create and remove of files */
+ #define DEBUGFS_ADD_FILE(name, parent, mode) do {			\
+@@ -1752,75 +1882,6 @@ static ssize_t iwl_dbgfs_interrupt_write(struct file *file,
+ 	return count;
+ }
+ 
+-static const char *get_csr_string(int cmd)
+-{
+-	switch (cmd) {
+-	IWL_CMD(CSR_HW_IF_CONFIG_REG);
+-	IWL_CMD(CSR_INT_COALESCING);
+-	IWL_CMD(CSR_INT);
+-	IWL_CMD(CSR_INT_MASK);
+-	IWL_CMD(CSR_FH_INT_STATUS);
+-	IWL_CMD(CSR_GPIO_IN);
+-	IWL_CMD(CSR_RESET);
+-	IWL_CMD(CSR_GP_CNTRL);
+-	IWL_CMD(CSR_HW_REV);
+-	IWL_CMD(CSR_EEPROM_REG);
+-	IWL_CMD(CSR_EEPROM_GP);
+-	IWL_CMD(CSR_OTP_GP_REG);
+-	IWL_CMD(CSR_GIO_REG);
+-	IWL_CMD(CSR_GP_UCODE_REG);
+-	IWL_CMD(CSR_GP_DRIVER_REG);
+-	IWL_CMD(CSR_UCODE_DRV_GP1);
+-	IWL_CMD(CSR_UCODE_DRV_GP2);
+-	IWL_CMD(CSR_LED_REG);
+-	IWL_CMD(CSR_DRAM_INT_TBL_REG);
+-	IWL_CMD(CSR_GIO_CHICKEN_BITS);
+-	IWL_CMD(CSR_ANA_PLL_CFG);
+-	IWL_CMD(CSR_HW_REV_WA_REG);
+-	IWL_CMD(CSR_DBG_HPET_MEM_REG);
+-	default:
+-		return "UNKNOWN";
+-	}
+-}
+-
+-void iwl_dump_csr(struct iwl_trans *trans)
+-{
+-	int i;
+-	static const u32 csr_tbl[] = {
+-		CSR_HW_IF_CONFIG_REG,
+-		CSR_INT_COALESCING,
+-		CSR_INT,
+-		CSR_INT_MASK,
+-		CSR_FH_INT_STATUS,
+-		CSR_GPIO_IN,
+-		CSR_RESET,
+-		CSR_GP_CNTRL,
+-		CSR_HW_REV,
+-		CSR_EEPROM_REG,
+-		CSR_EEPROM_GP,
+-		CSR_OTP_GP_REG,
+-		CSR_GIO_REG,
+-		CSR_GP_UCODE_REG,
+-		CSR_GP_DRIVER_REG,
+-		CSR_UCODE_DRV_GP1,
+-		CSR_UCODE_DRV_GP2,
+-		CSR_LED_REG,
+-		CSR_DRAM_INT_TBL_REG,
+-		CSR_GIO_CHICKEN_BITS,
+-		CSR_ANA_PLL_CFG,
+-		CSR_HW_REV_WA_REG,
+-		CSR_DBG_HPET_MEM_REG
+-	};
+-	IWL_ERR(trans, "CSR values:\n");
+-	IWL_ERR(trans, "(2nd byte of CSR_INT_COALESCING is "
+-		"CSR_INT_PERIODIC_REG)\n");
+-	for (i = 0; i <  ARRAY_SIZE(csr_tbl); i++) {
+-		IWL_ERR(trans, "  %25s: 0X%08x\n",
+-			get_csr_string(csr_tbl[i]),
+-			iwl_read32(bus(trans), csr_tbl[i]));
+-	}
+-}
+-
+ static ssize_t iwl_dbgfs_csr_write(struct file *file,
+ 					 const char __user *user_buf,
+ 					 size_t count, loff_t *ppos)
+@@ -1842,67 +1903,6 @@ static ssize_t iwl_dbgfs_csr_write(struct file *file,
+ 	return count;
+ }
+ 
+-static const char *get_fh_string(int cmd)
+-{
+-	switch (cmd) {
+-	IWL_CMD(FH_RSCSR_CHNL0_STTS_WPTR_REG);
+-	IWL_CMD(FH_RSCSR_CHNL0_RBDCB_BASE_REG);
+-	IWL_CMD(FH_RSCSR_CHNL0_WPTR);
+-	IWL_CMD(FH_MEM_RCSR_CHNL0_CONFIG_REG);
+-	IWL_CMD(FH_MEM_RSSR_SHARED_CTRL_REG);
+-	IWL_CMD(FH_MEM_RSSR_RX_STATUS_REG);
+-	IWL_CMD(FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV);
+-	IWL_CMD(FH_TSSR_TX_STATUS_REG);
+-	IWL_CMD(FH_TSSR_TX_ERROR_REG);
+-	default:
+-		return "UNKNOWN";
+-	}
+-}
+-
+-int iwl_dump_fh(struct iwl_trans *trans, char **buf, bool display)
+-{
+-	int i;
+-#ifdef CONFIG_IWLWIFI_DEBUG
+-	int pos = 0;
+-	size_t bufsz = 0;
+-#endif
+-	static const u32 fh_tbl[] = {
+-		FH_RSCSR_CHNL0_STTS_WPTR_REG,
+-		FH_RSCSR_CHNL0_RBDCB_BASE_REG,
+-		FH_RSCSR_CHNL0_WPTR,
+-		FH_MEM_RCSR_CHNL0_CONFIG_REG,
+-		FH_MEM_RSSR_SHARED_CTRL_REG,
+-		FH_MEM_RSSR_RX_STATUS_REG,
+-		FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV,
+-		FH_TSSR_TX_STATUS_REG,
+-		FH_TSSR_TX_ERROR_REG
+-	};
+-#ifdef CONFIG_IWLWIFI_DEBUG
+-	if (display) {
+-		bufsz = ARRAY_SIZE(fh_tbl) * 48 + 40;
+-		*buf = kmalloc(bufsz, GFP_KERNEL);
+-		if (!*buf)
+-			return -ENOMEM;
+-		pos += scnprintf(*buf + pos, bufsz - pos,
+-				"FH register values:\n");
+-		for (i = 0; i < ARRAY_SIZE(fh_tbl); i++) {
+-			pos += scnprintf(*buf + pos, bufsz - pos,
+-				"  %34s: 0X%08x\n",
+-				get_fh_string(fh_tbl[i]),
+-				iwl_read_direct32(bus(trans), fh_tbl[i]));
+-		}
+-		return pos;
+-	}
+-#endif
+-	IWL_ERR(trans, "FH register values:\n");
+-	for (i = 0; i <  ARRAY_SIZE(fh_tbl); i++) {
+-		IWL_ERR(trans, "  %34s: 0X%08x\n",
+-			get_fh_string(fh_tbl[i]),
+-			iwl_read_direct32(bus(trans), fh_tbl[i]));
+-	}
+-	return 0;
+-}
+-
+ static ssize_t iwl_dbgfs_fh_reg_read(struct file *file,
+ 					 char __user *user_buf,
+ 					 size_t count, loff_t *ppos)
+-- 
+1.7.0.4
+
+
+--=-2LbQSo3yaucsqYfl0WU1--
 
