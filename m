@@ -1,260 +1,375 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:46311 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756095Ab1IBWAP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Sep 2011 18:00:15 -0400
+Received: from mms2.broadcom.com ([216.31.210.18]:3819 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754367Ab1ILKPY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Sep 2011 06:15:24 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 09/20] staging: brcm80211: remove static variables from
+ wl_cfg80211.c
+Date: Mon, 12 Sep 2011 12:14:53 +0200
+Message-ID: <1315822504-24210-10-git-send-email-rvossen@broadcom.com> (sfid-20110912_121541_978344_7FD7BEA4)
+In-Reply-To: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
+References: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <4E5FA74D.5000705@freedesktop.org>
-References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com>
- <CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com>
- <CAA93jw7c+Nxc6ZbWZWsQ+F78AoPWU=quSRaOUpT0yRcwJOXsGQ@mail.gmail.com>
- <4E5C3B47.1050809@freedesktop.org> <CA+mtBx-j_+mrNpntR7CfYOromDnM-ZGzvebpUCjC8Qf14X6u9g@mail.gmail.com>
- <CAJ-Vmonwur-SXddNwjPEidCMqes+PwbRWFBddfdwTp2jOMu64g@mail.gmail.com>
- <4E5CEC79.3090802@freedesktop.org> <9BB251C1-A211-486D-A717-59149AC3A709@gmail.com>
- <4E5E36EE.8080501@freedesktop.org> <CAB=NE6Wj4BxSjZmTOg9EFMcJ+H0RBZE4q8+6DB3x8qP=r42yNQ@mail.gmail.com>
- <4E5FA74D.5000705@freedesktop.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 2 Sep 2011 14:59:53 -0700
-Message-ID: <CAB=NE6V-GtHAiaqCqzgo5JSgYT55S2LARr+_NQv3D6WjgvqE7w@mail.gmail.com> (sfid-20110903_000035_212169_7EDF4218)
-Subject: Re: BQL crap and wireless
-To: Jim Gettys <jg@freedesktop.org>
-Cc: Andrew McGregor <andrewmcgr@gmail.com>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Tom Herbert <therbert@google.com>,
-	Dave Taht <dave.taht@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Matt Smith <smithm@qca.qualcomm.com>,
-	Kevin Hayes <hayes@qca.qualcomm.com>,
-	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BTW Jim, as you may have found out after sending this reply, vger
-hates HTML e-mails so your e-mail only got to those on the CC list but
-not to the list. I'm replying below, but since I'm now using ASCII
-text the look of the e-mail will look like poo, I'll try to trim it
-somehow as I did find valuable information you provided there. I also
-make some suggestions below.
+From: Arend van Spriel <arend@broadcom.com>
 
-On Thu, Sep 1, 2011 at 8:39 AM, Jim Gettys <jg@freedesktop.org> wrote:
-> On 08/31/2011 04:50 PM, Luis R. Rodriguez wrote:
->
-> On Wed, Aug 31, 2011 at 6:28 AM, Jim Gettys <jg@freedesktop.org> wrote:
->
-> On 08/30/2011 05:47 PM, Andrew McGregor wrote:
->
-> On 31/08/2011, at 1:58 AM, Jim Gettys wrote:
->
-> On 08/29/2011 11:42 PM, Adrian Chadd wrote:
->
-> On 30 August 2011 11:34, Tom Herbert <therbert@google.com> wrote:
->
-> C(P) is going to be quite variable - a full frame retransmit of a 4ms
-> long aggregate frame is SUM(exponential backoff, grab the air,
-> preamble, header, 4ms, etc. for each pass.)
->
-> It's not clear to me that doing heroic measures to compute the cost is
-> going to be worthwhile due to the rate at which the costs can change on
-> wireless; just getting into the rough ballpark may be enough. But
-> buffering algorithms and AQM algorithms are going to need an estimate of
-> the *time* it will take to transmit data, more than # of bytes or packets.
->
-> That's not heroic measures; mac80211 needs all the code to calculate these
-> times anyway, it's just a matter of collecting together some things we
-> already know and calling the right function.
->
->
-> Fine; if it's easy, accurate is better (presuming the costs get
-> recalculated when circumstances change). We also will need the amount of
-> data being transmitted; it is the rate of transmission (the rate at
-> which the buffers are draining) that we'll likely need.
->
-> Here's what I've gleaned from reading "RED in a different light",  Van
-> Jacobson's Mitre talk and several conversations with Kathleen Nichols
-> and Van: AQM algorithms that can handle variable bandwidth environments
-> will need to be able to know the rate at which buffers empty.  It's the
-> direction they are going with their experiments on a "RED light" algorithm.
->
-> The fundamental insight as to why classic RED can't work in the wireless
-> environment is that the instantaneous queue length has little actual
-> information in it.
+The source file contained two static variable which were used by
+the driver instance. This makes having multiple instances of the driver
+on one system impossible. This patch removes the use of these static
+variables allowing multiple driver instances.
 
-> Classic RED is tuned using the queue length as its
-> basic parameter.  Their belief as to algorithms that will work is that
-> the need to keep track of the running queue length *minimum over time*;
-> you want to keep the buffers small on a longer term basis (so they both
-> can absorb transients, which is their reason for existence, while
-> keeping the latency typically low).
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    1 -
+ drivers/staging/brcm80211/brcmfmac/dhd.h          |    2 +
+ drivers/staging/brcm80211/brcmfmac/dhd_bus.h      |    3 +
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c    |   20 +++--
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |    5 ++
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c  |   77 ++++++++-------------
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h  |   15 ++--
+ 7 files changed, 59 insertions(+), 64 deletions(-)
 
-More details explained by Jim:
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index b38e698..0aff62d 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -539,7 +539,6 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 			return -ENODEV;
+ 		sdiodev->func[2] = func;
+ 
+-		brcmf_cfg80211_sdio_func(func);
+ 		brcmf_dbg(TRACE, "F2 found, calling brcmf_sdio_probe...\n");
+ 		ret = brcmf_sdio_probe(sdiodev);
+ 	}
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index b0cfe51..9f84837 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -540,6 +540,7 @@ struct brcmf_ioctl {
+ struct brcmf_bus;		/* device bus info */
+ struct brcmf_proto;	/* device communication protocol info */
+ struct brcmf_info;	/* device driver info */
++struct brcmf_cfg80211_dev; /* cfg80211 device info */
+ 
+ /* Common structure for module and instance linkage */
+ struct brcmf_pub {
+@@ -547,6 +548,7 @@ struct brcmf_pub {
+ 	struct brcmf_bus *bus;
+ 	struct brcmf_proto *prot;
+ 	struct brcmf_info *info;
++	struct brcmf_cfg80211_dev *config;
+ 
+ 	/* Internal brcmf items */
+ 	bool up;		/* Driver up/down (to OS) */
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_bus.h b/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
+index 3361e01..aa05b1c 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
+@@ -38,6 +38,9 @@ extern uint brcmf_watchdog_ms;
+ extern int brcmf_bus_register(void);
+ extern void brcmf_bus_unregister(void);
+ 
++/* obtain linux device object providing bus function */
++extern struct device *brcmf_bus_get_device(struct brcmf_bus *bus);
++
+ /* Stop bus module: clear pending frames, disable data flow */
+ extern void brcmf_sdbrcm_bus_stop(struct brcmf_bus *bus, bool enforce_mutex);
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 539a24d..cfdd645 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -828,7 +828,7 @@ static void brcmf_ethtool_get_drvinfo(struct net_device *net,
+ 	sprintf(info->version, "%lu", drvr_priv->pub.drv_version);
+ 	sprintf(info->fw_version, "%s", BCM4329_FW_NAME);
+ 	sprintf(info->bus_info, "%s",
+-		dev_name(&brcmf_cfg80211_get_sdio_func()->dev));
++		dev_name(brcmf_bus_get_device(drvr_priv->pub.bus)));
+ }
+ 
+ static struct ethtool_ops brcmf_ethtool_ops = {
+@@ -1055,15 +1055,15 @@ done:
+ 
+ static int brcmf_netdev_stop(struct net_device *net)
+ {
+-	struct brcmf_info *drvr_priv = *(struct brcmf_info **) netdev_priv(net);
++	struct brcmf_pub *drvr = *(struct brcmf_pub **) netdev_priv(net);
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+-	brcmf_cfg80211_down();
+-	if (drvr_priv->pub.up == 0)
++	brcmf_cfg80211_down(drvr->config);
++	if (drvr->up == 0)
+ 		return 0;
+ 
+ 	/* Set state and stop OS transmissions */
+-	drvr_priv->pub.up = 0;
++	drvr->up = 0;
+ 	netif_stop_queue(net);
+ 
+ 	return 0;
+@@ -1102,7 +1102,7 @@ static int brcmf_netdev_open(struct net_device *net)
+ 	/* Allow transmit calls */
+ 	netif_start_queue(net);
+ 	drvr_priv->pub.up = 1;
+-	if (unlikely(brcmf_cfg80211_up())) {
++	if (unlikely(brcmf_cfg80211_up(drvr_priv->pub.config))) {
+ 		brcmf_dbg(ERROR, "failed to bring up cfg80211\n");
+ 		return -1;
+ 	}
+@@ -1220,7 +1220,11 @@ struct brcmf_pub *brcmf_attach(struct brcmf_bus *bus, uint bus_hdrlen)
+ 	}
+ 
+ 	/* Attach and link in the cfg80211 */
+-	if (unlikely(brcmf_cfg80211_attach(net, &drvr_priv->pub))) {
++	drvr_priv->pub.config =
++			brcmf_cfg80211_attach(net,
++					      brcmf_bus_get_device(bus),
++					      &drvr_priv->pub);
++	if (unlikely(drvr_priv->pub.config == NULL)) {
+ 		brcmf_dbg(ERROR, "wl_cfg80211_attach failed\n");
+ 		goto fail;
+ 	}
+@@ -1425,7 +1429,7 @@ void brcmf_detach(struct brcmf_pub *drvr)
+ 			if (drvr->prot)
+ 				brcmf_proto_detach(drvr);
+ 
+-			brcmf_cfg80211_detach();
++			brcmf_cfg80211_detach(drvr->config);
+ 
+ 			free_netdev(ifp->net);
+ 			kfree(ifp);
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 823567f..0de4dc6 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -4317,6 +4317,11 @@ void brcmf_bus_unregister(void)
+ 	brcmf_sdio_unregister();
+ }
+ 
++struct device *brcmf_bus_get_device(struct brcmf_bus *bus)
++{
++	return &bus->sdiodev->func[2]->dev;
++}
++
+ static int brcmf_sdbrcm_download_code_file(struct brcmf_bus *bus)
+ {
+ 	int offset = 0;
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index dd56baa..d33d2cd 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -23,7 +23,6 @@
+ #include <linux/bitops.h>
+ #include <linux/etherdevice.h>
+ #include <linux/ieee80211.h>
+-#include <linux/mmc/sdio_func.h>
+ #include <linux/uaccess.h>
+ #include <net/cfg80211.h>
+ #include <net/rtnetlink.h>
+@@ -37,8 +36,6 @@
+ #define BRCMF_ASSOC_PARAMS_FIXED_SIZE \
+ 	(sizeof(struct brcmf_assoc_params) - sizeof(u16))
+ 
+-static struct sdio_func *cfg80211_sdio_func;
+-static struct brcmf_cfg80211_dev *cfg80211_dev;
+ static const u8 ether_bcast[ETH_ALEN] = {255, 255, 255, 255, 255, 255};
+ 
+ static u32 brcmf_dbg_level = WL_DBG_ERR;
+@@ -148,11 +145,6 @@ static s32 brcmf_notify_mic_status(struct brcmf_cfg80211_priv *cfg_priv,
+ 				   const struct brcmf_event_msg *e, void *data);
+ 
+ /*
+-** register/deregister sdio function
+-*/
+-static void brcmf_clear_sdio_func(void);
+-
+-/*
+ ** ioctl utilites
+ */
+ static s32 brcmf_dev_bufvar_get(struct net_device *dev, s8 *name, s8 *buf,
+@@ -312,9 +304,10 @@ static int
+ brcmf_debugfs_add_netdev_params(struct brcmf_cfg80211_priv *cfg_priv);
+ static void brcmf_debugfs_remove_netdev(struct brcmf_cfg80211_priv *cfg_priv);
+ 
+-static struct brcmf_cfg80211_priv *brcmf_priv_get(void)
++static
++struct brcmf_cfg80211_priv *brcmf_priv_get(struct brcmf_cfg80211_dev *cfg_dev)
+ {
+-	struct brcmf_cfg80211_iface *ci = brcmf_get_drvdata(cfg80211_dev);
++	struct brcmf_cfg80211_iface *ci = brcmf_get_drvdata(cfg_dev);
+ 	return ci->cfg_priv;
+ }
+ 
+@@ -3430,27 +3423,31 @@ static void wl_deinit_priv(struct brcmf_cfg80211_priv *cfg_priv)
+ 	brcmf_deinit_priv_mem(cfg_priv);
+ }
+ 
+-s32 brcmf_cfg80211_attach(struct net_device *ndev, void *data)
++struct brcmf_cfg80211_dev *brcmf_cfg80211_attach(struct net_device *ndev,
++						 struct device *busdev,
++						 void *data)
+ {
+ 	struct wireless_dev *wdev;
+ 	struct brcmf_cfg80211_priv *cfg_priv;
+ 	struct brcmf_cfg80211_iface *ci;
++	struct brcmf_cfg80211_dev *cfg_dev;
+ 	s32 err = 0;
+ 
+ 	if (unlikely(!ndev)) {
+ 		WL_ERR("ndev is invalid\n");
+-		return -ENODEV;
++		return NULL;
+ 	}
+-	cfg80211_dev = kzalloc(sizeof(struct brcmf_cfg80211_dev), GFP_KERNEL);
+-	if (unlikely(!cfg80211_dev)) {
++	cfg_dev = kzalloc(sizeof(struct brcmf_cfg80211_dev), GFP_KERNEL);
++	if (unlikely(!cfg_dev)) {
+ 		WL_ERR("wl_cfg80211_dev is invalid\n");
+-		return -ENOMEM;
++		return NULL;
++	}
++
++	wdev = brcmf_alloc_wdev(sizeof(struct brcmf_cfg80211_iface), busdev);
++	if (IS_ERR(wdev)) {
++		kfree(cfg_dev);
++		return NULL;
+ 	}
+-	WL_INFO("func %p\n", brcmf_cfg80211_get_sdio_func());
+-	wdev = brcmf_alloc_wdev(sizeof(struct brcmf_cfg80211_iface),
+-				&brcmf_cfg80211_get_sdio_func()->dev);
+-	if (IS_ERR(wdev))
+-		return -ENOMEM;
+ 
+ 	wdev->iftype = brcmf_mode_to_nl80211_iftype(WL_MODE_BSS);
+ 	cfg_priv = wdev_to_cfg(wdev);
+@@ -3466,27 +3463,26 @@ s32 brcmf_cfg80211_attach(struct net_device *ndev, void *data)
+ 		WL_ERR("Failed to init iwm_priv (%d)\n", err);
+ 		goto cfg80211_attach_out;
+ 	}
+-	brcmf_set_drvdata(cfg80211_dev, ci);
++	brcmf_set_drvdata(cfg_dev, ci);
+ 
+-	return err;
++	return cfg_dev;
+ 
+ cfg80211_attach_out:
+ 	brcmf_free_wdev(cfg_priv);
+-	return err;
++	kfree(cfg_dev);
++	return NULL;
+ }
+ 
+-void brcmf_cfg80211_detach(void)
++void brcmf_cfg80211_detach(struct brcmf_cfg80211_dev *cfg_dev)
+ {
+ 	struct brcmf_cfg80211_priv *cfg_priv;
+ 
+-	cfg_priv = brcmf_priv_get();
++	cfg_priv = brcmf_priv_get(cfg_dev);
+ 
+ 	wl_deinit_priv(cfg_priv);
+ 	brcmf_free_wdev(cfg_priv);
+-	brcmf_set_drvdata(cfg80211_dev, NULL);
+-	kfree(cfg80211_dev);
+-	cfg80211_dev = NULL;
+-	brcmf_clear_sdio_func();
++	brcmf_set_drvdata(cfg_dev, NULL);
++	kfree(cfg_dev);
+ }
+ 
+ static void brcmf_wakeup_event(struct brcmf_cfg80211_priv *cfg_priv)
+@@ -3620,21 +3616,6 @@ static void brcmf_put_event(struct brcmf_cfg80211_event_q *e)
+ 	kfree(e);
+ }
+ 
+-void brcmf_cfg80211_sdio_func(void *func)
+-{
+-	cfg80211_sdio_func = (struct sdio_func *)func;
+-}
+-
+-static void brcmf_clear_sdio_func(void)
+-{
+-	cfg80211_sdio_func = NULL;
+-}
+-
+-struct sdio_func *brcmf_cfg80211_get_sdio_func(void)
+-{
+-	return cfg80211_sdio_func;
+-}
+-
+ static s32 brcmf_dongle_mode(struct net_device *ndev, s32 iftype)
+ {
+ 	s32 infra = 0;
+@@ -3951,12 +3932,12 @@ static s32 __brcmf_cfg80211_down(struct brcmf_cfg80211_priv *cfg_priv)
+ 	return 0;
+ }
+ 
+-s32 brcmf_cfg80211_up(void)
++s32 brcmf_cfg80211_up(struct brcmf_cfg80211_dev *cfg_dev)
+ {
+ 	struct brcmf_cfg80211_priv *cfg_priv;
+ 	s32 err = 0;
+ 
+-	cfg_priv = brcmf_priv_get();
++	cfg_priv = brcmf_priv_get(cfg_dev);
+ 	mutex_lock(&cfg_priv->usr_sync);
+ 	err = __brcmf_cfg80211_up(cfg_priv);
+ 	mutex_unlock(&cfg_priv->usr_sync);
+@@ -3964,12 +3945,12 @@ s32 brcmf_cfg80211_up(void)
+ 	return err;
+ }
+ 
+-s32 brcmf_cfg80211_down(void)
++s32 brcmf_cfg80211_down(struct brcmf_cfg80211_dev *cfg_dev)
+ {
+ 	struct brcmf_cfg80211_priv *cfg_priv;
+ 	s32 err = 0;
+ 
+-	cfg_priv = brcmf_priv_get();
++	cfg_priv = brcmf_priv_get(cfg_dev);
+ 	mutex_lock(&cfg_priv->usr_sync);
+ 	err = __brcmf_cfg80211_down(cfg_priv);
+ 	mutex_unlock(&cfg_priv->usr_sync);
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
+index cfbf50d..db71762 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -364,16 +364,17 @@ static inline struct brcmf_bss_info *next_bss(struct brcmf_scan_results *list,
+ 
+ #define for_each_bss(list, bss, __i)	\
+ 	for (__i = 0; __i < list->count && __i < WL_AP_MAX; __i++, \
+-	     bss = next_bss(list, bss))
++		bss = next_bss(list, bss))
++
++extern struct brcmf_cfg80211_dev *brcmf_cfg80211_attach(struct net_device *ndev,
++							struct device *busdev,
++							void *data);
++extern void brcmf_cfg80211_detach(struct brcmf_cfg80211_dev *cfg);
+ 
+-extern s32 brcmf_cfg80211_attach(struct net_device *ndev, void *data);
+-extern void brcmf_cfg80211_detach(void);
+ /* event handler from dongle */
+ extern void brcmf_cfg80211_event(struct net_device *ndev,
+ 				 const struct brcmf_event_msg *e, void *data);
+-extern void brcmf_cfg80211_sdio_func(void *func); /* set sdio function info */
+-extern struct sdio_func *brcmf_cfg80211_get_sdio_func(void);
+-extern s32 brcmf_cfg80211_up(void);	/* dongle up */
+-extern s32 brcmf_cfg80211_down(void);	/* dongle down */
++extern s32 brcmf_cfg80211_up(struct brcmf_cfg80211_dev *cfg_dev);
++extern s32 brcmf_cfg80211_down(struct brcmf_cfg80211_dev *cfg_dev);
+ 
+ #endif				/* _wl_cfg80211_h_ */
+-- 
+1.7.4.1
 
-> TCP will fill any buffer just before the bottleneck in a path.  And, of
-> course, other traffic transients can help fill the buffers too.  This is a
-> natural consequence of it trying to figure out how fast it can run.
->
-> Remember, TCP's job is to figure out just how fast it can go, so in its
-> congestion avoidance phase, it increases the rate at which it transmits
-> slowly (typical congestion avoidance algorithms will add one packet/ack to
-> the bottleneck buffer).  This is why in my traces you can find
-> at:
-> http://gettys.wordpress.com/2010/12/06/whose-house-is-of-glasse-must-not-throw-stones-at-another/
-> you see something that sort of looks like a TCP sawtooth, but not: with
-> periodicity of order 10 seconds (given the amount of buffering in that
-> modem).
->
-> What's happening is that as the buffer fills, the acks come back slower and
-> slower
 
-Wait, why is that though?
-
-> (so the buffer fills somewhat more slowly) with time. But as they
-> fill, not only do you get additional latency, but the buffers become less
-> and less effective at doing what they are intended for: smoothing transients
-> of higher rate incoming packets.
-
-Is this bufferbloat or TCP not taking into consideration possible
-variations in latency?
-
-> So I ended up with 1.2 seconds of latency on my cable modem.
-
-Jeesh.
-
-> Depending on
-> how much buffering is in the device, you get different amounts of latency
-> under load.  So at the provisioned bandwidth of those tests, my cable modem
-> has at least 10x the "classic" BDP amount of buffering.
-
-And for readers BDP is:
-
-http://en.wikipedia.org/wiki/TCP_tuning#Bandwidth-delay_product_.28BDP.29
-
-The max in-flight possible unacknowledged data in transit.
-
-Just curious -- why would they have 10x the amount of BDP??
-
-> Eventually, the bloated buffer does fill, (which might be a megabyte in
-> size, btw, on some cable modems), and you get packet loss.
-
-Why is that though?
-
-> But well before this should have occurred, TCP Cubic has decided the path
-> may have changed, and goes into a more aggressive search for a new operating
-> point (so you see something that starts like a TCP sawtooth, but then
-> switches back to something that looks more like slow start). This causes a
-> long period bursty oscillation; the bursts are when multiple packet drops
-> are occurring (because the TCP is hammering at the cable modem at way too
-> high a speed for a short period).
-
-Got it.
-
-> Buffer bloat has therefore managed to destroy congestion avoidance
-> entirely.  Sigh...  It also does a number on slow start, as the amount of
-> buffering is way more than it should be and it takes several sets of packet
-> loss before TCP even starts congestion avoidance.
-
-So an observable trait is we likely can see some packet loss during
-the shifts in throughput? Is that accurate?
-
-For 802.11 this could be a lot of things -- some new noise,
-interference, etc, but for Ethernet I'm curious what would cause this
-assuming we ware blaming the fact that a lot of buffers are queued, is
-the issue that the time it takes to flush out buffers surpasses some
-timer on the OS to actually transmit the frames?
-
-> On some home routers, the buffering is even more extreme; so whenever your
-> bottleneck is in your home router (easy to do in my house as I have chimneys
-> and lots of walls) the buffers in the home router become the problem.
->
-> So I caught my home router of that era (it was a DIR 825, IIRC) with 8
-> seconds of latency one evening.
-
-Shit.
-
->  The additional major challenge we
-> face that core routers do not is the highly variable traffic of mixed
-> mice and elephants.  What actually works only time will tell.
-
-Just FYI for 802.11 we have some effort to help us classify management
-frames further into different access categories, typically we just
-always use AC_VO to transmit management frames but the work undergoing
-in 802.11ae Prioritization of Management frames allows us to assign
-different ACs to different types of management frames, and the AP can
-actually define these rules. People interested in this problem should
-look at that and try out the defined default QoS management frame
-profile and see if that helps. That is -- something like this might be
-good for the bufferbloat experimental work -- but get it upstream,
-don't fork ;)
-
-> All this was well understood in the 1990's.  Most of us *thought* the
-> problem was solved by AQM algorithms such as RED.  I was noddingly aware of
-> AQM in the 1990's as I was working on HTTP in the IETF in that era, and AQM
-> and buffer management in core routers was a very hot topic then.
->
-> But the buffer management problem wasn't actually solved, and that result
-> never got properly published, for the reasons I went into in:
->
-> http://gettys.wordpress.com/2010/12/17/red-in-a-different-light/
->
-> The field has languished since, and the problems that variable bandwidth
-> present went unrecognised.
-
-Then I stated:
-
-> Thank you for elaborating on this, it helps to further dissect the
-> issues. When mixing them together it makes the task harder to address.
-> As for 802.11 we'd just need to worry about management frames. Dave
-> and Andrew had also pointed out issues with multicast and the low
-> rates used for them in comparison to unicast transmissions.
-
-And you said:
-
-> What matters for bufferbloat is how much payload gets moved per unit time:
-> that is what is accumulating in the OS packet buffers.
->
->
-> So in an environment in which the rate of transmission is highly
-> variable,
-
-I had interjected with:
-
-> Not only that, remember we have different possible topologies
-> depending on the type of 802.11 service used, IBSS, the typical AP-STA
-> environment, Mesh, P2P (AP-STA really), and now with 802.11ad we get
-> PBSS. What counts here is we may have variable rate of transmission to
-> different possible peers, as such the queue length will depend on all
-> of the expected transmissions.
-
-and you had continued with:
-
-> such as wireless, or even possibly modern broadband with
-> PowerBoost, classic RED or similar algorithms that do not take the
-> buffer drain rate cannot possibly hack it properly.
-
-I had said:
-
-> Understood, just curious if anyone has tried a Minstrel approach.
->
-> Lets try to document all of this here:
->
-> http://wireless.kernel.org/en/developers/bufferbloat
-
-Then you ended with:
-
-> Please do.  Or work on the material in the bufferbloat.net wiki.  I'm now
-> too close to the problem to be good at explaining it any better than I try
-> to here and in my other writings.  Thomas Jefferson writing is *hard*.
->
-> Probably best is that generic descriptions go into the bufferbloat.net wiki,
-> and linux specific stuff on kernel.org; but I don't honestly care all that
-> much where it is so long as it does get written down, along with the
-> importance of Minstrel like algorithms in dealing with the variable
-> bandwidth problem (which isn't in any of the material in my blog or
-> bufferbloat.net, having not understood the problem there myself at all
-> before a month or two ago when Andrew McGregor explained to me in detail
-> what Minstrel is and does and why it needs to exist).
-
-Sure, will work on this.
-
-  Luis
