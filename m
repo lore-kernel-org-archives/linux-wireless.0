@@ -1,43 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f47.google.com ([209.85.216.47]:41328 "EHLO
-	mail-qw0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751289Ab1IMGnr (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45771 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753689Ab1ILTIh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 02:43:47 -0400
-Received: by qwh5 with SMTP id 5so155071qwh.20
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 23:43:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAD2nsn2eA2d97TRWoYQrPYsFAZmGY7G-dyaXoHNfcVNdrksXUQ@mail.gmail.com>
-References: <201109121535.37425.Iwo.Mergler@netcomm.com.au> <CAD2nsn2eA2d97TRWoYQrPYsFAZmGY7G-dyaXoHNfcVNdrksXUQ@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 12 Sep 2011 23:43:27 -0700
-Message-ID: <CAB=NE6V_W_nGbbQRo-OndL4BxTEVs2tkHa7zDimv_O0AywKV+A@mail.gmail.com> (sfid-20110913_084350_946357_17AA5BF8)
-Subject: Re: Compat-wireless archive?
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: Iwo Mergler <Iwo.Mergler@netcomm.com.au>,
-	linux-wireless@vger.kernel.org,
-	Steven Rostedt <rostedt@goodmis.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 12 Sep 2011 15:08:37 -0400
+Subject: [PATCH 3.1] iwlagn: fix stack corruption
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Wey-Yi W Guy <wey-yi.w.guy@intel.com>,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Alexander Diewald <alex@diewald.cc>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 12 Sep 2011 21:08:25 +0200
+Message-ID: <1315854505.11834.3.camel@jlt3.sipsolutions.net> (sfid-20110912_210840_000847_4B5E659B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 12, 2011 at 11:05 PM, Mohammed Shafi
-<shafi.wireless@gmail.com> wrote:
-> On Mon, Sep 12, 2011 at 11:05 AM, Iwo Mergler
-> <Iwo.Mergler@netcomm.com.au> wrote:
->> Hi all,
->>
->>
->> it appears that wireless.kernel.org has been affected by the kernel.org
->> break-in and is unavailable.
->>
->> Is there an alternate source for the daily compat-wireless snapshots?
->
-> http://linuxwireless.org/download/compat-wireless-2.6/, but we cannot
-> get the bleeding edge.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The bleeding edge stuff is based on linux-next.git daily updates and
-since korg is down we can't get updates from it. I am not aware of
-backups of linux-next.git so this remains stagnant.
+Alexander reported a strange crash in iwlagn that
+Meenakshi and Wey couldn't reproduce. I just ran
+into the same issue and tracked it down to stack
+corruption. This fixes it.
 
-  Luis
+The problem was introduced in
+commit 4b8b99b6e650d0527f3a123744b7459976581d14
+Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Date:   Fri Jul 8 14:29:48 2011 -0700
+
+    iwlagn: radio sensor offset in le16 format
+
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Reported-by: Alexander Diewald <alex@diewald.cc>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+Wey, please fix your recent commit in our internal tree
+that does the v2 offset calibration -- it has the same
+bug twice.
+
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c	2011-09-12 21:01:34.000000000 +0200
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c	2011-09-12 21:01:43.000000000 +0200
+@@ -167,7 +167,7 @@ static int iwlagn_set_temperature_offset
+ 
+ 	memset(&cmd, 0, sizeof(cmd));
+ 	iwl_set_calib_hdr(&cmd.hdr, IWL_PHY_CALIBRATE_TEMP_OFFSET_CMD);
+-	memcpy(&cmd.radio_sensor_offset, offset_calib, sizeof(offset_calib));
++	memcpy(&cmd.radio_sensor_offset, offset_calib, sizeof(*offset_calib));
+ 	if (!(cmd.radio_sensor_offset))
+ 		cmd.radio_sensor_offset = DEFAULT_RADIO_SENSOR_OFFSET;
+ 
+
+
