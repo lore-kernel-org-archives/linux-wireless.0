@@ -1,67 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4308 "EHLO MMS3.broadcom.com"
+Received: from lo.gmane.org ([80.91.229.12]:44340 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752254Ab1IBOA5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Sep 2011 10:00:57 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 05/12] staging: brcm80211: remove 'default n' from
- Kconfig
-Date: Fri, 2 Sep 2011 16:00:32 +0200
-Message-ID: <1314972039-27098-6-git-send-email-rvossen@broadcom.com> (sfid-20110902_160104_596222_E60D976B)
-In-Reply-To: <1314972039-27098-1-git-send-email-rvossen@broadcom.com>
-References: <1314972039-27098-1-git-send-email-rvossen@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751297Ab1ILIAK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Sep 2011 04:00:10 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1R31R2-00036x-R8
+	for linux-wireless@vger.kernel.org; Mon, 12 Sep 2011 10:00:09 +0200
+Received: from 203.91.201.57 ([203.91.201.57])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 10:00:08 +0200
+Received: from sreejithbhaskar by 203.91.201.57 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 10:00:08 +0200
+To: linux-wireless@vger.kernel.org
+From: Sreejith <sreejithbhaskar@gmail.com>
+Subject: Re: looking for more details on BCM4329, access to 802.11 header
+Date: Mon, 12 Sep 2011 06:36:50 +0000 (UTC)
+Message-ID: <loom.20110912T083604-805@post.gmane.org> (sfid-20110912_100019_370057_2410AFCC)
+References: <AANLkTikwBUjSXJf+EUeM+kPhMg3PG0Y22S4BYKVVm8S2@mail.gmail.com> <20110307140140.GC10509@titan.lakedaemon.net> <AANLkTi=TaeNnJ3u+HXojkbHvjsH+Z7C_=3Tg98NMNg1A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
-
-Kconfig options are by default not selected so adding the
-statement 'default n' to the option is not needed.
-
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/Kconfig |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/Kconfig b/drivers/staging/brcm80211/Kconfig
-index 59e9c85..f51e0f1 100644
---- a/drivers/staging/brcm80211/Kconfig
-+++ b/drivers/staging/brcm80211/Kconfig
-@@ -1,10 +1,8 @@
- config BRCMUTIL
- 	tristate
--	default n
+Hi George,
  
- config BRCMSMAC
- 	tristate "Broadcom IEEE802.11n PCIe SoftMAC WLAN driver"
--	default n
- 	depends on PCI
- 	depends on WLAN && MAC80211
- 	depends on BCMA=n
-@@ -20,7 +18,6 @@ config BRCMSMAC
- 
- config BRCMFMAC
- 	tristate "Broadcom IEEE802.11n embedded FullMAC WLAN driver"
--	default n
- 	depends on MMC
- 	depends on WLAN && CFG80211
- 	select BRCMUTIL
-@@ -33,7 +30,6 @@ config BRCMFMAC
- 
- config BRCMDBG
- 	bool "Broadcom driver debug functions"
--	default n
- 	depends on BRCMSMAC || BRCMFMAC
- 	---help---
- 	  Selecting this enables additional code for debug purposes.
--- 
-1.7.4.1
+   I am looking for a 1 GHz powered android phone which can support wifi-
+promiscuous mode , can you please suggest one ?
+
+I was going through your post and came to the impression that the BRCM4329 
+doesn't allow promiscuous mode even by modifying the kernel modules as the 
+firmware sets the local MAC address filter. Is that correct ? 
+
+Thanks in Advance
+Sreejith
+
+
 
 
