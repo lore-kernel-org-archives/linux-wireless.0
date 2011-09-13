@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4661 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932165Ab1IBIXX (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:40409 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932708Ab1IMVVC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Sep 2011 04:23:23 -0400
-Date: Fri, 2 Sep 2011 13:53:04 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V3] ath6kl: ath6kl: Add debugfs interface to dump
-	diagnostic registers
-Message-ID: <20110902082303.GD5883@vasanth-laptop> (sfid-20110902_102329_957762_F464D961)
-References: <1314871752-13740-1-git-send-email-vthiagar@qca.qualcomm.com> <4E608BD7.5060104@qca.qualcomm.com> <20110902080100.GA5883@vasanth-laptop> <4E609204.5080300@qca.qualcomm.com>
+	Tue, 13 Sep 2011 17:21:02 -0400
+Received: by qyk7 with SMTP id 7so937203qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2011 14:21:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E609204.5080300@qca.qualcomm.com>
+Date: Tue, 13 Sep 2011 17:21:01 -0400
+Message-ID: <CAEh_CyWGoaEsouDuLuAqD5K8xA0AqWEuf7S3HQwagrvz3DgajA@mail.gmail.com> (sfid-20110913_232106_690696_AD1D41AA)
+Subject: Carl9170 firmware
+From: J Igrap <jigrap.code@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 02, 2011 at 11:21:24AM +0300, Kalle Valo wrote:
-> On 09/02/2011 11:01 AM, Vasanthakumar Thiagarajan wrote:
-> > On Fri, Sep 02, 2011 at 10:55:03AM +0300, Kalle Valo wrote:
-> >> On 09/01/2011 01:09 PM, Vasanthakumar Thiagarajan wrote:
-> >>
-> >> Thanks, applied. But I did minor changes:
-> >>
-> >> commit 91d57de5adfc40184ef7cb8974104459c5211add
-> >> Author: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-> >> Date:   Fri Sep 2 10:40:06 2011 +0300
-> >>
-> >>     ath6kl: Add debugfs interface to dump diagnostic registers from firmware
-> >>
-> >>     To dump a particular register:
-> >>
-> >>         echo <reg_addr> > <debugfs_root>/ieee80211/phyX/ath6kl/reg_addr
-> >>
-> >>     To dump the entire register set:
-> >>
-> >>         echo 0 > <debugfs_root>/ieee80211/phyX/ath6kl/reg_addr
-> >>
-> >>     Register values will be available at:
-> >>
-> >>         cat <debugfs_root>/ieee80211/phyX/ath6kl/reg_dump
-> >>
-> >>     kvalo: commit log cleanup, renamed few functions, removed a warning
-> >>     message
-> > 
-> > Thanks, what is the warning?
-> 
-> I just removed the ath6kl_warn() about invalid register address in
-> ath6kl_dbg_is_diag_reg_valid(). Kernel should not send any debug logs in
-> that case.
+While using the past days the carl9170 firmware with a USB card under
+a linux guest running different kernel and driver versions I kept
+running into the issue of a usb disconnect when the card was put under
+load:
+ usb 1-1: no command feedback received (-110).
+ carl9170 cmd: 08 01 00 00 f0 36 1c 00 00 24 00 00              .....6...$..
+ usb 1-1: restart device (6)
 
-Ok, thanks.
-> 
-> > Did you apply my other patch which fixes endianess?.
-> 
-> No, not yet. I still have patches pending for review. Will finish them
-> today.
+No matter what kernel driver/firmware I tried I will still get it. I
+decided to look into it a bit more and I narrowed it down to be a
+firmware issue with the following code snippet:
 
-No problem, i thought it was a sparse warning.
+void handle_cmd(struct carl9170_rsp *resp) in src/cmd.c
+        case CARL9170_CMD_WREG:
+esp->hdr.len = 0;
+                for (i = 0; i < (cmd->hdr.len / 8); i++)
+                        set(cmd->wreg.regs[i].addr, cmd->wreg.regs[i].val);
+                break;
 
-Vasanth
+That code appears to handle event 1 which is a write into a register.
+In some cases that write appeared to cause a failure and a reset into
+the card. I added a simple delay loop before the switch statement and
+that seemed to fix the issue and I don't lose the card anymore even
+under a lot of load. Obviously that's not a real fix and something
+else more reliable needs to be in place.
+
+-jigrap
