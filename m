@@ -1,25 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:54798 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756760Ab1I3TEl (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:16185 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754344Ab1IMRKH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Sep 2011 15:04:41 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 9915D5401A1
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Sep 2011 15:16:49 -0400 (EDT)
-Subject: Compat-wireless release for 2011-09-30 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110930190440.9F9614064F@repository3.orbit-lab.org> (sfid-20110930_210444_917852_43F5B1A0)
-Date: Fri, 30 Sep 2011 15:04:40 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 13 Sep 2011 13:10:07 -0400
+From: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Subject: [PATCH 4/4] ath9k_hw: move register definitions to header files
+Date: Tue, 13 Sep 2011 22:38:19 +0530
+Message-ID: <1315933699-7642-4-git-send-email-senthilb@qca.qualcomm.com> (sfid-20110913_191012_292315_65C32D98)
+In-Reply-To: <1315933699-7642-1-git-send-email-senthilb@qca.qualcomm.com>
+References: <1315933699-7642-1-git-send-email-senthilb@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://github.com/sfrothwell/linux-next
- + 19fab9b...8de4587 akpm-end   -> origin/akpm-end  (forced update)
- + a4a2504...a33a912 master     -> origin/master  (forced update)
- * [new tag]         next-20110930 -> next-20110930
+Move the register macros to appropriate header files to be in
+sync with other register definitions and also a single place
+to refer everything.
 
-compat-wireless code metrics
+Signed-off-by: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   26 ------------------------
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h    |   25 +++++++++++++++++++++++
+ 2 files changed, 25 insertions(+), 26 deletions(-)
 
-    813049 - Total upstream lines of code being pulled
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 8884979..51398f0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -22,32 +22,6 @@
+ #define COMP_HDR_LEN 4
+ #define COMP_CKSUM_LEN 2
+ 
+-#define AR_CH0_TOP	(AR_SREV_9300(ah) ? 0x16288 : \
+-				((AR_SREV_9480(ah) ? 0x1628c : 0x16280)))
+-#define AR_CH0_TOP_XPABIASLVL (0x300)
+-#define AR_CH0_TOP_XPABIASLVL_S (8)
+-
+-#define AR_CH0_THERM	(AR_SREV_9300(ah) ? 0x16290 : \
+-				((AR_SREV_9485(ah) ? 0x1628c : 0x16294)))
+-#define AR_CH0_THERM_XPABIASLVL_MSB 0x3
+-#define AR_CH0_THERM_XPABIASLVL_MSB_S 0
+-#define AR_CH0_THERM_XPASHORT2GND 0x4
+-#define AR_CH0_THERM_XPASHORT2GND_S 2
+-
+-#define AR_SWITCH_TABLE_COM_ALL (0xffff)
+-#define AR_SWITCH_TABLE_COM_ALL_S (0)
+-#define AR_SWITCH_TABLE_COM_AR9480_ALL (0xffffff)
+-#define AR_SWITCH_TABLE_COM_AR9480_ALL_S (0)
+-#define AR_SWITCH_TABLE_COM_SPDT (0x00f00000)
+-#define AR_SWITCH_TABLE_COM_SPDT_ALL (0x0000fff0)
+-#define AR_SWITCH_TABLE_COM_SPDT_ALL_S (4)
+-
+-#define AR_SWITCH_TABLE_COM2_ALL (0xffffff)
+-#define AR_SWITCH_TABLE_COM2_ALL_S (0)
+-
+-#define AR_SWITCH_TABLE_ALL (0xfff)
+-#define AR_SWITCH_TABLE_ALL_S (0)
+-
+ #define LE16(x) __constant_cpu_to_le16(x)
+ #define LE32(x) __constant_cpu_to_le32(x)
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 1075fc7..6cea546 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -624,6 +624,31 @@
+ #define AR_PHY_65NM_CH0_BIAS4       0x160cc
+ #define AR_PHY_65NM_CH0_RXTX4       0x1610c
+ 
++#define AR_CH0_TOP	(AR_SREV_9300(ah) ? 0x16288 : \
++				((AR_SREV_9480(ah) ? 0x1628c : 0x16280)))
++#define AR_CH0_TOP_XPABIASLVL (0x300)
++#define AR_CH0_TOP_XPABIASLVL_S (8)
++
++#define AR_CH0_THERM	(AR_SREV_9300(ah) ? 0x16290 : \
++				((AR_SREV_9485(ah) ? 0x1628c : 0x16294)))
++#define AR_CH0_THERM_XPABIASLVL_MSB 0x3
++#define AR_CH0_THERM_XPABIASLVL_MSB_S 0
++#define AR_CH0_THERM_XPASHORT2GND 0x4
++#define AR_CH0_THERM_XPASHORT2GND_S 2
++
++#define AR_SWITCH_TABLE_COM_ALL (0xffff)
++#define AR_SWITCH_TABLE_COM_ALL_S (0)
++#define AR_SWITCH_TABLE_COM_AR9480_ALL (0xffffff)
++#define AR_SWITCH_TABLE_COM_AR9480_ALL_S (0)
++#define AR_SWITCH_TABLE_COM_SPDT (0x00f00000)
++#define AR_SWITCH_TABLE_COM_SPDT_ALL (0x0000fff0)
++#define AR_SWITCH_TABLE_COM_SPDT_ALL_S (4)
++
++#define AR_SWITCH_TABLE_COM2_ALL (0xffffff)
++#define AR_SWITCH_TABLE_COM2_ALL_S (0)
++
++#define AR_SWITCH_TABLE_ALL (0xfff)
++#define AR_SWITCH_TABLE_ALL_S (0)
+ 
+ #define AR_PHY_65NM_CH0_THERM       (AR_SREV_9300(ah) ? 0x16290 :\
+ 					(AR_SREV_9485(ah) ? 0x1628c : 0x16294))
+-- 
+1.7.0.4
+
