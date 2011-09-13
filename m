@@ -1,255 +1,411 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4557 "EHLO MMS3.broadcom.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:59371 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932360Ab1ISV0b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 17:26:31 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 02/20] staging: brcm80211: various fulmac sparse
- endianness fixes
-Date: Mon, 19 Sep 2011 14:25:50 -0700
-Message-ID: <1316467568-27683-3-git-send-email-frankyl@broadcom.com> (sfid-20110919_232834_983651_0D47BD3D)
-In-Reply-To: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+	id S1755540Ab1IMIqv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Sep 2011 04:46:51 -0400
+From: "Elias, Ilan" <ilane@ti.com>
+To: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
+	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
+	"samuel@sortiz.org" <samuel@sortiz.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 13 Sep 2011 10:46:22 +0200
+Subject: [PATCH v2 4/4] NFC: driver for TI shared transport
+Message-ID: <AC090B9732AB2B4DB7FF476E907FE660013226A26E@dnce02.ent.ti.com> (sfid-20110913_104657_752759_9B564254)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+NFC driver for TI shared transport.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Ilan Elias <ilane@ti.com>
 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    6 +++-
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c    |   23 +++++++++++---------
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |   19 ++++++++++-------
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c  |   12 +++++-----
- 4 files changed, 34 insertions(+), 26 deletions(-)
+ drivers/nfc/Kconfig     |   11 ++
+ drivers/nfc/Makefile    |    1 +
+ drivers/nfc/nfcwilink.c |  342 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 354 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/nfc/nfcwilink.c
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 443e3a8..1cbdb80 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -401,7 +401,9 @@ static int brcmf_sdioh_get_cisaddr(struct brcmf_sdio_dev *sdiodev, u32 regaddr)
- 	/* read 24 bits and return valid 17 bit addr */
- 	int i;
- 	u32 scratch, regdata;
--	u8 *ptr = (u8 *)&scratch;
-+	__le32 scratch_le;
-+	u8 *ptr = (u8 *)&scratch_le;
+diff --git a/drivers/nfc/Kconfig b/drivers/nfc/Kconfig
+index 2acff43..8a56fd3 100644
+--- a/drivers/nfc/Kconfig
++++ b/drivers/nfc/Kconfig
+@@ -27,4 +27,15 @@ config NFC_PN533
+ 	  Say Y here to compile support for PN533 devices into the
+ 	  kernel or say M to compile it as module (pn533).
+ 
++config NFC_WILINK
++	tristate "Texas Instruments NFC WiLink driver"
++	depends on TI_ST
++	help
++	  This enables the NFC driver for Texas Instrument's BT/FM/GPS/NFC
++	  combo devices. This makes use of shared transport line discipline
++	  core driver to communicate with the NFC core of the combo chip.
 +
- 	for (i = 0; i < 3; i++) {
- 		if ((brcmf_sdioh_card_regread(sdiodev, 0, regaddr, 1,
- 				&regdata)) != SUCCESS)
-@@ -412,7 +414,7 @@ static int brcmf_sdioh_get_cisaddr(struct brcmf_sdio_dev *sdiodev, u32 regaddr)
- 	}
++	  Say Y here to compile support for Texas Instrument's NFC WiLink driver
++	  into the kernel or say M to compile it as module.
++
+ endmenu
+diff --git a/drivers/nfc/Makefile b/drivers/nfc/Makefile
+index 8ef446d..ab99e85 100644
+--- a/drivers/nfc/Makefile
++++ b/drivers/nfc/Makefile
+@@ -4,5 +4,6 @@
  
- 	/* Only the lower 17-bits are valid */
--	scratch = le32_to_cpu(scratch);
-+	scratch = le32_to_cpu(scratch_le);
- 	scratch &= 0x0001FFFF;
- 	return scratch;
- }
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index 9919fa5..e1d7456 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -138,6 +138,8 @@ static void _brcmf_set_multicast_list(struct work_struct *work)
- 	struct net_device *dev;
- 	struct netdev_hw_addr *ha;
- 	u32 allmulti, cnt;
-+	__le32 cnt_le;
-+	__le32 allmulti_le;
+ obj-$(CONFIG_PN544_NFC)		+= pn544.o
+ obj-$(CONFIG_NFC_PN533)		+= pn533.o
++obj-$(CONFIG_NFC_WILINK)	+= nfcwilink.o
  
- 	struct brcmf_ioctl ioc;
- 	char *buf, *bufp;
-@@ -166,9 +168,9 @@ static void _brcmf_set_multicast_list(struct work_struct *work)
- 	strcpy(bufp, "mcast_list");
- 	bufp += strlen("mcast_list") + 1;
- 
--	cnt = cpu_to_le32(cnt);
--	memcpy(bufp, &cnt, sizeof(cnt));
--	bufp += sizeof(cnt);
-+	cnt_le = cpu_to_le32(cnt);
-+	memcpy(bufp, &cnt_le, sizeof(cnt));
-+	bufp += sizeof(cnt_le);
- 
- 	netdev_for_each_mc_addr(ha, dev) {
- 		if (!cnt)
-@@ -205,10 +207,11 @@ static void _brcmf_set_multicast_list(struct work_struct *work)
- 			  brcmf_ifname(&drvr_priv->pub, 0));
- 		return;
- 	}
--	allmulti = cpu_to_le32(allmulti);
-+	allmulti_le = cpu_to_le32(allmulti);
- 
- 	if (!brcmu_mkiovar
--	    ("allmulti", (void *)&allmulti, sizeof(allmulti), buf, buflen)) {
-+	    ("allmulti", (void *)&allmulti_le,
-+	    sizeof(allmulti_le), buf, buflen)) {
- 		brcmf_dbg(ERROR, "%s: mkiovar failed for allmulti, datalen %d buflen %u\n",
- 			  brcmf_ifname(&drvr_priv->pub, 0),
- 			  (int)sizeof(allmulti), buflen);
-@@ -226,7 +229,7 @@ static void _brcmf_set_multicast_list(struct work_struct *work)
- 	if (ret < 0) {
- 		brcmf_dbg(ERROR, "%s: set allmulti %d failed\n",
- 			  brcmf_ifname(&drvr_priv->pub, 0),
--			  le32_to_cpu(allmulti));
-+			  le32_to_cpu(allmulti_le));
- 	}
- 
- 	kfree(buf);
-@@ -235,19 +238,19 @@ static void _brcmf_set_multicast_list(struct work_struct *work)
- 		 driver does */
- 
- 	allmulti = (dev->flags & IFF_PROMISC) ? true : false;
--	allmulti = cpu_to_le32(allmulti);
-+	allmulti_le = cpu_to_le32(allmulti);
- 
- 	memset(&ioc, 0, sizeof(ioc));
- 	ioc.cmd = BRCMF_C_SET_PROMISC;
--	ioc.buf = &allmulti;
--	ioc.len = sizeof(allmulti);
-+	ioc.buf = &allmulti_le;
-+	ioc.len = sizeof(allmulti_le);
- 	ioc.set = true;
- 
- 	ret = brcmf_proto_ioctl(&drvr_priv->pub, 0, &ioc, ioc.len);
- 	if (ret < 0) {
- 		brcmf_dbg(ERROR, "%s: set promisc %d failed\n",
- 			  brcmf_ifname(&drvr_priv->pub, 0),
--			  le32_to_cpu(allmulti));
-+			  le32_to_cpu(allmulti_le));
- 	}
- }
- 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index fb9b351..57001d4 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2361,8 +2361,8 @@ static int brcmf_sdbrcm_txpkt(struct brcmf_bus *bus, struct sk_buff *pkt,
- 
- 	/* Hardware tag: 2 byte len followed by 2 byte ~len check (all LE) */
- 	len = (u16) (pkt->len);
--	*(u16 *) frame = cpu_to_le16(len);
--	*(((u16 *) frame) + 1) = cpu_to_le16(~len);
-+	*(__le16 *) frame = cpu_to_le16(len);
-+	*(((__le16 *) frame) + 1) = cpu_to_le16(~len);
- 
- 	/* Software tag: channel, sequence number, data offset */
- 	swheader =
-@@ -2917,16 +2917,17 @@ static int
- brcmf_sdbrcm_readshared(struct brcmf_bus *bus, struct sdpcm_shared *sh)
- {
- 	u32 addr;
-+	__le32 addr_le;
- 	int rv;
- 
- 	/* Read last word in memory to determine address of
- 			 sdpcm_shared structure */
--	rv = brcmf_sdbrcm_membytes(bus, false, bus->ramsize - 4, (u8 *)&addr,
-+	rv = brcmf_sdbrcm_membytes(bus, false, bus->ramsize - 4, (u8 *)&addr_le,
- 				   4);
- 	if (rv < 0)
- 		return rv;
- 
--	addr = le32_to_cpu(addr);
-+	addr = le32_to_cpu(addr_le);
- 
- 	brcmf_dbg(INFO, "sdpcm_shared address 0x%08X\n", addr);
- 
-@@ -3273,8 +3274,8 @@ brcmf_sdbrcm_bus_txctl(struct brcmf_bus *bus, unsigned char *msg, uint msglen)
- 	brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
- 
- 	/* Hardware tag: 2 byte len followed by 2 byte ~len check (all LE) */
--	*(u16 *) frame = cpu_to_le16((u16) msglen);
--	*(((u16 *) frame) + 1) = cpu_to_le16(~msglen);
-+	*(__le16 *) frame = cpu_to_le16((u16) msglen);
-+	*(((__le16 *) frame) + 1) = cpu_to_le16(~msglen);
- 
- 	/* Software tag: channel, sequence number, data offset */
- 	swheader =
-@@ -3466,6 +3467,7 @@ static int brcmf_sdbrcm_write_vars(struct brcmf_bus *bus)
- 	u32 varaddr;
- 	u8 *vbuffer;
- 	u32 varsizew;
-+	__le32 varsizew_le;
- #ifdef BCMDBG
- 	char *nvram_ularray;
- #endif				/* BCMDBG */
-@@ -3529,10 +3531,11 @@ static int brcmf_sdbrcm_write_vars(struct brcmf_bus *bus)
- 	 */
- 	if (bcmerror) {
- 		varsizew = 0;
-+		varsizew_le = cpu_to_le32(0);
- 	} else {
- 		varsizew = varsize / 4;
- 		varsizew = (~varsizew << 16) | (varsizew & 0x0000FFFF);
--		varsizew = cpu_to_le32(varsizew);
-+		varsizew_le = cpu_to_le32(varsizew);
- 	}
- 
- 	brcmf_dbg(INFO, "New varsize is %d, length token=0x%08x\n",
-@@ -3540,7 +3543,7 @@ static int brcmf_sdbrcm_write_vars(struct brcmf_bus *bus)
- 
- 	/* Write the length token to the last word */
- 	bcmerror = brcmf_sdbrcm_membytes(bus, true, (bus->orig_ramsize - 4),
--				    (u8 *)&varsizew, 4);
-+					 (u8 *)&varsizew_le, 4);
- 
- 	return bcmerror;
- }
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 9e07f77..b4befec 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -378,7 +378,7 @@ brcmf_dev_intvar_get(struct net_device *dev, s8 *name, s32 *retval)
- {
- 	union {
- 		s8 buf[BRCMF_C_IOCTL_SMLEN];
--		s32 val;
-+		__le32 val;
- 	} var;
- 	u32 len;
- 	u32 data_null;
-@@ -890,11 +890,11 @@ brcmf_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
- 
- 	/* Configure Beacon Interval for starter */
- 	if (params->beacon_interval)
--		bcnprd = cpu_to_le32(params->beacon_interval);
-+		bcnprd = params->beacon_interval;
- 	else
--		bcnprd = cpu_to_le32(100);
-+		bcnprd = 100;
- 
--	err = brcmf_dev_ioctl(dev, BRCM_SET_BCNPRD, &bcnprd, sizeof(bcnprd));
-+	err = brcmf_dev_ioctl_u32(dev, BRCM_SET_BCNPRD, &bcnprd);
- 	if (unlikely(err)) {
- 		WL_ERR("WLC_SET_BCNPRD failed (%d)\n", err);
- 		goto done;
-@@ -2029,7 +2029,7 @@ static s32 wl_inform_ibss(struct brcmf_cfg80211_priv *cfg_priv,
- 		goto CleanUp;
- 	}
- 
--	*(u32 *)buf = cpu_to_le32(WL_BSS_INFO_MAX);
-+	*(__le32 *)buf = cpu_to_le32(WL_BSS_INFO_MAX);
- 
- 	err = brcmf_dev_ioctl(dev, BRCMF_C_GET_BSS_INFO, buf, WL_BSS_INFO_MAX);
- 	if (unlikely(err)) {
-@@ -2098,7 +2098,7 @@ static s32 brcmf_update_bss_info(struct brcmf_cfg80211_priv *cfg_priv)
- 
- 	ssid = (struct brcmf_ssid *)brcmf_read_prof(cfg_priv, WL_PROF_SSID);
- 
--	*(u32 *)cfg_priv->extra_buf = cpu_to_le32(WL_EXTRA_BUF_MAX);
-+	*(__le32 *)cfg_priv->extra_buf = cpu_to_le32(WL_EXTRA_BUF_MAX);
- 	err = brcmf_dev_ioctl(cfg_to_ndev(cfg_priv), BRCMF_C_GET_BSS_INFO,
- 			cfg_priv->extra_buf, WL_EXTRA_BUF_MAX);
- 	if (unlikely(err)) {
+ ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
+diff --git a/drivers/nfc/nfcwilink.c b/drivers/nfc/nfcwilink.c
+new file mode 100644
+index 0000000..5b0f1ff
+--- /dev/null
++++ b/drivers/nfc/nfcwilink.c
+@@ -0,0 +1,342 @@
++/*
++ *  Texas Instrument's NFC Driver For Shared Transport.
++ *
++ *  NFC Driver acts as interface between NCI core and
++ *  TI Shared Transport Layer.
++ *
++ *  Copyright (C) 2011 Texas Instruments, Inc.
++ *
++ *  Written by Ilan Elias <ilane@ti.com>
++ *
++ *  Acknowledgements:
++ *  This file is based on btwilink.c, which was written
++ *  by Raja Mani and Pavan Savoy.
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License version 2 as
++ *  published by the Free Software Foundation.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program; if not, write to the Free Software
++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ *
++ */
++#include <linux/platform_device.h>
++#include <linux/nfc.h>
++#include <net/nfc/nci.h>
++#include <net/nfc/nci_core.h>
++#include <linux/ti_wilink_st.h>
++
++#define NFCWILINK_CHNL			12
++#define NFCWILINK_OPCODE		7
++#define NFCWILINK_MAX_FRAME_SIZE	300
++#define NFCWILINK_HDR_LEN		4
++#define NFCWILINK_OFFSET_LEN_IN_HDR	1
++#define NFCWILINK_LEN_SIZE		2
++#define NFCWILINK_REGISTER_TIMEOUT	8000	/* 8 sec */
++
++struct nfcwilink_hdr {
++	u8 chnl;
++	u8 opcode;
++	u16 len;
++} __packed;
++
++struct nfcwilink {
++	struct platform_device		*pdev;
++	struct nci_dev			*ndev;
++	unsigned long			flags;
++
++	char				st_register_cb_status;
++	long				(*st_write) (struct sk_buff *);
++	struct completion		st_register_completed;
++};
++
++/* NFCWILINK driver flags */
++enum {
++	NFCWILINK_RUNNING,
++};
++
++/* Called by ST when registration is complete */
++static void nfcwilink_register_complete(void *priv_data, char data)
++{
++	struct nfcwilink *drv = priv_data;
++
++	nfc_dev_dbg(&drv->pdev->dev, "register_complete entry");
++
++	/* store ST registration status */
++	drv->st_register_cb_status = data;
++
++	/* complete the wait in nfc_st_open() */
++	complete(&drv->st_register_completed);
++}
++
++/* Called by ST when receive data is available */
++static long nfcwilink_receive(void *priv_data, struct sk_buff *skb)
++{
++	struct nfcwilink *drv = priv_data;
++	int rc;
++
++	nfc_dev_dbg(&drv->pdev->dev, "receive entry, len %d", skb->len);
++
++	if (!skb)
++		return -EFAULT;
++
++	if (!drv) {
++		kfree_skb(skb);
++		return -EFAULT;
++	}
++
++	/* strip the ST header
++	(apart for the chnl byte, which is not received in the hdr) */
++	skb_pull(skb, (NFCWILINK_HDR_LEN-1));
++
++	skb->dev = (void *) drv->ndev;
++
++	/* Forward skb to NCI core layer */
++	rc = nci_recv_frame(skb);
++	if (rc < 0) {
++		nfc_dev_err(&drv->pdev->dev, "nci_recv_frame failed %d", rc);
++		return rc;
++	}
++
++	return 0;
++}
++
++/* protocol structure registered with ST */
++static struct st_proto_s nfcwilink_proto = {
++	.chnl_id = NFCWILINK_CHNL,
++	.max_frame_size = NFCWILINK_MAX_FRAME_SIZE,
++	.hdr_len = (NFCWILINK_HDR_LEN-1),	/* not including chnl byte */
++	.offset_len_in_hdr = NFCWILINK_OFFSET_LEN_IN_HDR,
++	.len_size = NFCWILINK_LEN_SIZE,
++	.reserve = 0,
++	.recv = nfcwilink_receive,
++	.reg_complete_cb = nfcwilink_register_complete,
++	.write = NULL,
++};
++
++static int nfcwilink_open(struct nci_dev *ndev)
++{
++	struct nfcwilink *drv = nci_get_drvdata(ndev);
++	unsigned long comp_ret;
++	int rc;
++
++	nfc_dev_dbg(&drv->pdev->dev, "open entry");
++
++	if (test_and_set_bit(NFCWILINK_RUNNING, &drv->flags)) {
++		rc = -EBUSY;
++		goto exit;
++	}
++
++	nfcwilink_proto.priv_data = drv;
++
++	init_completion(&drv->st_register_completed);
++	drv->st_register_cb_status = -EINPROGRESS;
++
++	rc = st_register(&nfcwilink_proto);
++	if (rc < 0) {
++		if (rc == -EINPROGRESS) {
++			comp_ret = wait_for_completion_timeout(
++			&drv->st_register_completed,
++			msecs_to_jiffies(NFCWILINK_REGISTER_TIMEOUT));
++
++			nfc_dev_dbg(&drv->pdev->dev,
++			"wait_for_completion_timeout returned %ld",
++			comp_ret);
++
++			if (comp_ret == 0) {
++				/* timeout */
++				rc = -ETIMEDOUT;
++				goto clear_exit;
++			} else if (drv->st_register_cb_status != 0) {
++				rc = drv->st_register_cb_status;
++				nfc_dev_err(&drv->pdev->dev,
++				"st_register_cb failed %d", rc);
++				goto clear_exit;
++			}
++		} else {
++			nfc_dev_err(&drv->pdev->dev,
++				"st_register failed %d", rc);
++			goto clear_exit;
++		}
++	}
++
++	/* st_register MUST fill the write callback */
++	BUG_ON(nfcwilink_proto.write == NULL);
++	drv->st_write = nfcwilink_proto.write;
++
++	goto exit;
++
++clear_exit:
++	clear_bit(NFCWILINK_RUNNING, &drv->flags);
++
++exit:
++	return rc;
++}
++
++static int nfcwilink_close(struct nci_dev *ndev)
++{
++	struct nfcwilink *drv = nci_get_drvdata(ndev);
++	int rc;
++
++	nfc_dev_dbg(&drv->pdev->dev, "close entry");
++
++	if (!test_and_clear_bit(NFCWILINK_RUNNING, &drv->flags))
++		return 0;
++
++	rc = st_unregister(&nfcwilink_proto);
++	if (rc)
++		nfc_dev_err(&drv->pdev->dev, "st_unregister failed %d", rc);
++
++	drv->st_write = NULL;
++
++	return rc;
++}
++
++static int nfcwilink_send(struct sk_buff *skb)
++{
++	struct nci_dev *ndev = (struct nci_dev *)skb->dev;
++	struct nfcwilink *drv = nci_get_drvdata(ndev);
++	struct nfcwilink_hdr hdr = {NFCWILINK_CHNL, NFCWILINK_OPCODE, 0x0000};
++	long len;
++
++	nfc_dev_dbg(&drv->pdev->dev, "send entry, len %d", skb->len);
++
++	if (!test_bit(NFCWILINK_RUNNING, &drv->flags))
++		return -EBUSY;
++
++	/* add the ST hdr to the start of the buffer */
++	hdr.len = skb->len;
++	memcpy(skb_push(skb, NFCWILINK_HDR_LEN), &hdr, NFCWILINK_HDR_LEN);
++
++	/* Insert skb to shared transport layer's transmit queue.
++	 * Freeing skb memory is taken care in shared transport layer,
++	 * so don't free skb memory here.
++	 */
++	len = drv->st_write(skb);
++	if (len < 0) {
++		kfree_skb(skb);
++		nfc_dev_err(&drv->pdev->dev, "st_write failed %ld", len);
++		return -EFAULT;
++	}
++
++	return 0;
++}
++
++static struct nci_ops nfcwilink_ops = {
++	.open = nfcwilink_open,
++	.close = nfcwilink_close,
++	.send = nfcwilink_send,
++};
++
++static int nfcwilink_probe(struct platform_device *pdev)
++{
++	static struct nfcwilink *drv;
++	int rc;
++	u32 protocols;
++
++	nfc_dev_dbg(&pdev->dev, "probe entry");
++
++	drv = kzalloc(sizeof(struct nfcwilink), GFP_KERNEL);
++	if (!drv) {
++		rc = -ENOMEM;
++		goto exit;
++	}
++
++	drv->pdev = pdev;
++
++	protocols = NFC_PROTO_JEWEL_MASK
++			| NFC_PROTO_MIFARE_MASK | NFC_PROTO_FELICA_MASK
++			| NFC_PROTO_ISO14443_MASK
++			| NFC_PROTO_NFC_DEP_MASK;
++
++	drv->ndev = nci_allocate_device(&nfcwilink_ops,
++					protocols,
++					NFCWILINK_HDR_LEN,
++					0);
++	if (!drv->ndev) {
++		nfc_dev_err(&pdev->dev, "nci_allocate_device failed");
++		rc = -ENOMEM;
++		goto free_exit;
++	}
++
++	nci_set_parent_dev(drv->ndev, &pdev->dev);
++	nci_set_drvdata(drv->ndev, drv);
++
++	rc = nci_register_device(drv->ndev);
++	if (rc < 0) {
++		nfc_dev_err(&pdev->dev, "nci_register_device failed %d", rc);
++		goto free_dev_exit;
++	}
++
++	dev_set_drvdata(&pdev->dev, drv);
++
++	goto exit;
++
++free_dev_exit:
++	nci_free_device(drv->ndev);
++
++free_exit:
++	kfree(drv);
++
++exit:
++	return rc;
++}
++
++static int nfcwilink_remove(struct platform_device *pdev)
++{
++	struct nfcwilink *drv = dev_get_drvdata(&pdev->dev);
++	struct nci_dev *ndev;
++
++	nfc_dev_dbg(&pdev->dev, "remove entry");
++
++	if (!drv)
++		return -EFAULT;
++
++	ndev = drv->ndev;
++
++	nci_unregister_device(ndev);
++	nci_free_device(ndev);
++
++	kfree(drv);
++
++	dev_set_drvdata(&pdev->dev, NULL);
++
++	return 0;
++}
++
++static struct platform_driver nfcwilink_driver = {
++	.probe = nfcwilink_probe,
++	.remove = nfcwilink_remove,
++	.driver = {
++		.name = "nfcwilink",
++		.owner = THIS_MODULE,
++	},
++};
++
++/* ------- Module Init/Exit interfaces ------ */
++static int __init nfcwilink_init(void)
++{
++	printk(KERN_INFO "NFC Driver for TI WiLink");
++
++	return platform_driver_register(&nfcwilink_driver);
++}
++
++static void __exit nfcwilink_exit(void)
++{
++	platform_driver_unregister(&nfcwilink_driver);
++}
++
++module_init(nfcwilink_init);
++module_exit(nfcwilink_exit);
++
++/* ------ Module Info ------ */
++
++MODULE_AUTHOR("Ilan Elias <ilane@ti.com>");
++MODULE_DESCRIPTION("NFC Driver for TI Shared Transport");
++MODULE_LICENSE("GPL");
 -- 
-1.7.1
-
-
+1.7.0.4
