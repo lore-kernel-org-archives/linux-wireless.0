@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:61411 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756771Ab1I2XQJ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:61318 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751295Ab1IMJot (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 19:16:09 -0400
-Received: by wyg34 with SMTP id 34so509001wyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Sep 2011 16:16:08 -0700 (PDT)
-Message-ID: <4E84FBF6.2020609@gmail.com> (sfid-20110930_011613_731991_C5DBA7F2)
-Date: Fri, 30 Sep 2011 01:15:02 +0200
-From: Stefan Zwanenburg <stefanhetzwaantje@gmail.com>
+	Tue, 13 Sep 2011 05:44:49 -0400
+Date: Tue, 13 Sep 2011 15:14:49 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 4/4] ath6kl: Fix random reconnect failures
+Message-ID: <20110913094448.GA8296@vasanth-laptop> (sfid-20110913_114506_208209_A25F7C68)
+References: <1315648597-17999-1-git-send-email-vthiagar@qca.qualcomm.com>
+ <1315648597-17999-4-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>
-CC: 'Larry Finger' <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: =?UTF-8?B?562U5aSNOiDnrZTlpI06IOetlOWkjTog562U5aSNOiBSVEw4MTk=?=
- =?UTF-8?B?MlNFIGFuZCA4MDIuMTFuIHByb2JsZW0=?=
-References: <4E77AECF.7090001@gmail.com> <4E820130.7080801@gmail.com> <4E823976.2090407@lwfinger.net> <4E824D75.1070509@gmail.com> <4E82A8E9.60409@lwfinger.net> <4E83AD85.8050005@gmail.com> <4E83E5C4.3060905@lwfinger.net> <0EF5E594196F41B48B0B4D168B714838@realsil.com.cn>
-In-Reply-To: <0EF5E594196F41B48B0B4D168B714838@realsil.com.cn>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1315648597-17999-4-git-send-email-vthiagar@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/29/2011 10:55 AM, 李朝明 wrote:
-> Dear Larry:
->
-> 	I don't kown why this efuse is wrong, did Zwanenburg use the same
-> driver with yours ?
-Hi!
-I may be no Larry, but I just diffed the latest version of the
-drivers/net/wireless/rtlwifi directory (obtained from the github mirror
-of linus' repository) with the one from the kernel I'm currently
-running, and I don't notice a whole lot of changes (besides code
-cleanups and differences in the debugging macro "calls"), but there is
-something going on in efuse.c with no more "hoffset" variable in
-efuse_get_current size, but that shouldn't matter, as the variable was
-assigned but never used again.
-I also see there was a whole lot of work put into pci.c, as it looks
-it's had a revamp. I'm not sure it will fix my problems, but I'm going
-to try to run 3.1-rc4 and see if I can get an 802.11n link going.
+On Sat, Sep 10, 2011 at 03:26:37PM +0530, Vasanthakumar Thiagarajan wrote:
+> Sometimes connect events are received after disconnect
+> events from target, this puts host and target in different
+> states. When receiving a connect event in a wrong state,
+> make sure to send disconnect event to target to maintain
+> state consistency.
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 ++++++++
+>  1 files changed, 8 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> index 0ad458b..2e4bea3 100644
+> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> @@ -460,6 +460,14 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
+>  				   "%s: ath6k not in station mode\n", __func__);
+>  			return;
+>  		}
+> +
+> +		if ((ar->sme_state != SME_CONNECTING) &&
+> +		    (ar->sme_state != SME_CONNECTED)) {
+> +			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+> +				   "Connect event at inappropriate state, sending disconnect cmd\n");
+> +			ath6kl_wmi_disconnect_cmd(ar->wmi);
+> +			return;
+> +		}
 
-I'll get back to you on how that went later!
+Please hold on this patch, it seems to introduce regression when
+testing with different APs.
 
-Stefan Zwanenburg
+Vasanth
