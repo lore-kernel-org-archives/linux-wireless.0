@@ -1,67 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:55056 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725Ab1IVHZA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 03:25:00 -0400
-Received: by wwf22 with SMTP id 22so1770245wwf.1
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 00:24:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACna6rw+svsXJ4N_8h2a0YLyRw7T5cggZzLWzBsjd=0RxVWJrg@mail.gmail.com>
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-	<20110920130338.GA9885@kroah.com>
-	<20110920132203.GB7800@tuxdriver.com>
-	<20110920140020.GA11386@kroah.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com>
-	<CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
-	<CACna6rw+svsXJ4N_8h2a0YLyRw7T5cggZzLWzBsjd=0RxVWJrg@mail.gmail.com>
-Date: Thu, 22 Sep 2011 09:24:58 +0200
-Message-ID: <CACna6rwjP=kB-5btcvyQfhcCH+iasW1GjiX3427q3Z+GdE9E7g@mail.gmail.com> (sfid-20110922_092504_002251_DC517E0F)
-Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline patch #2
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Brett Rudley <brudley@broadcom.com>
-Cc: Greg KH <greg@kroah.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([143.182.124.21]:5930 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933105Ab1IMXn4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Sep 2011 19:43:56 -0400
+Subject: RE: Bug#641424: iwlagn: fails to reconnect to WPA2-enterprise
+ (Reason: 23)
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	Miguel Martinez <el.quark@gmail.com>,
+	"641424@bugs.debian.org" <641424@bugs.debian.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1315957298.14749.29.camel@deadeye>
+References: <20110913111546.6947.55565.reportbug@mark>
+	 <1315952954.14749.18.camel@deadeye>
+	 <C5A7FB31FD9AEA42B600BDC3C74F8E00147CA83E@orsmsx511.amr.corp.intel.com>
+	 <1315957298.14749.29.camel@deadeye>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 13 Sep 2011 16:38:41 -0700
+Message-ID: <1315957121.2336.0.camel@wwguy-ubuntu> (sfid-20110914_014359_357434_B3F5F7D7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 22 września 2011 08:54 użytkownik Rafał Miłecki
-<zajec5@gmail.com> napisał:
-> W dniu 22 września 2011 00:12 użytkownik Brett Rudley
->> We helped you with bcma.   You asked us to send you an Arasan board which are hard to get and cost
->> about $1k, I can't do that.  I handed out 4313 and 43224 boards like candy early on to anyone who asked.
->
-> I don't remember you saying finally "Sorry, we won't be able to donate
-> you with that". Will re-check.
+On Tue, 2011-09-13 at 16:41 -0700, Ben Hutchings wrote:
+> On Tue, 2011-09-13 at 16:33 -0700, Venkataraman, Meenakshi wrote:
+> > Hi Miguel,
+> > 
+> > It looks like the AP you're connected to at the University is a Cisco
+> > AP. I'm not sure what reason code 23 is, will need to research it
+> > some.
+> 
+> 	WLAN_REASON_IEEE8021X_FAILED = 23,
+> 
+> > In the meantime, can you do the following so we can see what's going
+> > on in the iwlwifi driver:
+> > 
+> > 1) Enable debugging for the iwlwifi driver like so: 
+> > 	modprobe iwlagn debug=0x47fff 
+> > You'll need to enable debugging for iwlwifi while building the kernel.
+> > 
+> > 2) A wireless sniffer log would also be useful (not sure you're in a
+> > position to gather this log).
+> > 
+> > Please send me (only) the log. We can take this to bugzilla as well.
+> [...]
+> 
+> If you mean bugzilla.kernel.org, that is currently down along with much
+> of the kernel.org infrastructure.
+> 
 
-Yup, there is my question and respond from Henry:
+please use http://bugzilla.intellinuxwireless.org
+
+Thanks
+Wey
+> 
 
 
-W dniu 26 sierpnia 2011 19:31 użytkownik Henry Ptasinski
-<henryp@broadcom.com> napisał:
->> > Is there a chance you can donate me with such a adapter and card?
->>
->> Ping?
->
-> Sorry, I meant to respond to this earlier.  The Arasan adapters are in very
-> short supply here, and honestly they have enough issues that we're looking for
-> better options.  A possibly better approach would be a device with a BCM4329 on
-> the motherboard (e.g. table, phone, etc) that can run a relatively stock linux
-> kernel.  However, I don't know of a specific platform at the moment to
-> recommend.
->
-> A second choice would be something with a decent sdio controller built-in.
-> Some older laptops worked ok (e.g. Dell E4100), but they're more and more
-> diffucult to find.
-
-Unfortunately not a word about donating me such a hardware. Plus not a
-word about the cost.
-
--- 
-Rafał
