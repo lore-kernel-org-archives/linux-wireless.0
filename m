@@ -1,91 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:61968 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754623Ab1IOHOT convert rfc822-to-8bit (ORCPT
+Received: from arroyo.ext.ti.com ([192.94.94.40]:47559 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755492Ab1IMIq2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 03:14:19 -0400
-Received: by wyh22 with SMTP id 22so2398479wyh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Sep 2011 00:14:18 -0700 (PDT)
+	Tue, 13 Sep 2011 04:46:28 -0400
+From: "Elias, Ilan" <ilane@ti.com>
+To: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
+	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
+	"samuel@sortiz.org" <samuel@sortiz.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 13 Sep 2011 10:45:59 +0200
+Subject: [PATCH v2 0/4] NFC: NCI protocol implementation
+Message-ID: <AC090B9732AB2B4DB7FF476E907FE660013226A269@dnce02.ent.ti.com> (sfid-20110913_104632_216710_062F5AC5)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1316028183-33734-1-git-send-email-nbd@openwrt.org>
-References: <1316028183-33734-1-git-send-email-nbd@openwrt.org>
-Date: Thu, 15 Sep 2011 12:44:17 +0530
-Message-ID: <CAD2nsn2G645x00RCLpk7xvT8iBxr+RGN=mdCVAN9jkjKNh7M7Q@mail.gmail.com> (sfid-20110915_091422_929645_E5DAEFEE)
-Subject: Re: [PATCH 1/3] ath9k: fix enabling interrupts after a hardware error interrupt
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Felix,
+This series of patches implements the first part of the NFC Controller 
+Interface protocol.
 
-On Thu, Sep 15, 2011 at 12:53 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> The interrupt handler increases the interrupt disable refcount, so the
-> tasklet needs to always call ath9k_hw_enable_interrupts.
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath9k/main.c |    9 +++++----
->  1 files changed, 5 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index 8a17cff5..a3c3316 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -669,15 +669,15 @@ void ath9k_tasklet(unsigned long data)
->        u32 status = sc->intrstatus;
->        u32 rxmask;
->
-> +       ath9k_ps_wakeup(sc);
+The NCI is a standard communication protocol between an NFC Controller (NFCC) 
+and a Device Host (DH), defined by the NFC Forum.
 
-this is done in ath_reset, is there any corner cases that I had missed ?
+The NCI protocol implementation is chip independent and responsible for:
+	- Reset, initialization and configuration of the NFC controller
+	- Sending commands/data to the NFC controller
+	- Receiving responses/notifications/data from the NFC controller
+	- Flow control for Control and Data Messages
+	- Segmentation and reassembly for Control and Data Messages
+	- An addressing scheme for NFC Execution Environments (NFCEE),
+		e.g. secure element
+	- An addressing scheme for Remote NFC Endpoints (NFCEE or RF targets) 
+		(via logical connections)
 
-> +       spin_lock(&sc->sc_pcu_lock);
+The NCI protocol is added to the NFC subsystem below the NFC core:
 
-spin_lock_bh(&sc->sc_pcu_lock) in ath_reset_internal, won't be a
-problem know, or should we need to move this lock
++--------------------------------------+
+|              USER SPACE              |
++--------------------------------------+
+     ^                        ^
+     | low-level              | control
+     | data exchange          | operations
+     |                        |
+     |                        v
+     |                  +-----------+
+     | AF_NFC           |  netlink  |
+     | socket           +-----------+
+     | raw                    ^
+     |                        |
+     v                        v
++---------+             +-----------+
+| rawsock | <---------> | NFC core  |
++---------+             +-----------+
+                              ^
+                              |
+                              v
+                        +-----------+
+                        | NCI core  |
+                        +-----------+
+                              ^
+                              |
+                              v
+                        +-----------+
+                        |  driver   |
+                        +-----------+
 
-> +
->        if ((status & ATH9K_INT_FATAL) ||
->            (status & ATH9K_INT_BB_WATCHDOG)) {
->                ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
-> -               return;
-> +               goto out;
->        }
->
-> -       ath9k_ps_wakeup(sc);
-> -       spin_lock(&sc->sc_pcu_lock);
-> -
->        /*
->         * Only run the baseband hang check if beacons stop working in AP or
->         * IBSS mode, because it has a high false positive rate. For station
-> @@ -725,6 +725,7 @@ void ath9k_tasklet(unsigned long data)
->                if (status & ATH9K_INT_GENTIMER)
->                        ath_gen_timer_isr(sc->sc_ah);
->
-> +out:
->        /* re-enable hardware interrupt */
->        ath9k_hw_enable_interrupts(ah);
+The driver will register itself to the NCI core, and in turn the NCI core will 
+register itself to the NFC core.
 
+Two new control operations were added (via generic netlink):
+	- Dev_up, which turn on the NFC controller (this operation may take a 
+		few seconds, as it can download new FW to the NFC controller)
+	- Dev_down, which turn off the NFC controller
 
-this is done in ath_complete_reset, should we enable interrupts if
-some times ath9k_hw_reset fails?
-please correct me if I had understood wrongly. thanks!
+The nfc.h file was moved from include/net to include/net/nfc,
+since 2 new header files were added to the new include/net/nfc folder.
 
->
-> --
-> 1.7.3.2
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+To test the implementation, we developed the NFC TI Shared Transport driver 
+and tested it with the user application example (provided by Lauro/Aloisio).
+The driver implementation is included in this patch series.
 
+Ilan Elias (4):
+  NFC: Add dev_up and dev_down control operations
+  NFC: move nfc.h from include/net to include/net/nfc
+  NFC: basic NCI protocol implementation
+  NFC: driver for TI shared transport
 
-
--- 
-shafi
+ MAINTAINERS                 |    2 +-
+ drivers/nfc/Kconfig         |   11 +
+ drivers/nfc/Makefile        |    1 +
+ drivers/nfc/nfcwilink.c     |  342 +++++++++++++++++++
+ drivers/nfc/pn533.c         |    4 +-
+ include/linux/nfc.h         |    6 +
+ include/net/nfc/nci.h       |  313 +++++++++++++++++
+ include/net/nfc/nci_core.h  |  183 ++++++++++
+ include/net/{ => nfc}/nfc.h |    4 +
+ net/nfc/Kconfig             |    2 +
+ net/nfc/Makefile            |    1 +
+ net/nfc/core.c              |   77 +++++
+ net/nfc/nci/Kconfig         |   10 +
+ net/nfc/nci/Makefile        |    7 +
+ net/nfc/nci/core.c          |  790 +++++++++++++++++++++++++++++++++++++++++++
+ net/nfc/nci/data.c          |  245 +++++++++++++
+ net/nfc/nci/lib.c           |   94 +++++
+ net/nfc/nci/ntf.c           |  258 ++++++++++++++
+ net/nfc/nci/rsp.c           |  226 ++++++++++++
+ net/nfc/netlink.c           |   56 +++
+ net/nfc/nfc.h               |    6 +-
+ 21 files changed, 2635 insertions(+), 3 deletions(-)
+ create mode 100644 drivers/nfc/nfcwilink.c
+ create mode 100644 include/net/nfc/nci.h
+ create mode 100644 include/net/nfc/nci_core.h
+ rename include/net/{ => nfc}/nfc.h (97%)
+ create mode 100644 net/nfc/nci/Kconfig
+ create mode 100644 net/nfc/nci/Makefile
+ create mode 100644 net/nfc/nci/core.c
+ create mode 100644 net/nfc/nci/data.c
+ create mode 100644 net/nfc/nci/lib.c
+ create mode 100644 net/nfc/nci/ntf.c
+ create mode 100644 net/nfc/nci/rsp.c
