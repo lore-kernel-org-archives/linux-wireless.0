@@ -1,38 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:53907 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750828Ab1IPKIt (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52349 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755760Ab1IMRp1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 06:08:49 -0400
-From: Vivek Natarajan <nataraja@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath6kl: Indicate the roaming capability of the firmware
-Date: Fri, 16 Sep 2011 15:38:43 +0530
-Message-ID: <1316167723-2346-1-git-send-email-nataraja@qca.qualcomm.com> (sfid-20110916_120853_370553_F0FABF1C)
+	Tue, 13 Sep 2011 13:45:27 -0400
+Date: Tue, 13 Sep 2011 13:32:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org
+Subject: Re: [PATCH] ath9k_hw: Fix magnitude/phase coeff correction
+Message-ID: <20110913173226.GF11772@tuxdriver.com> (sfid-20110913_194532_226122_4FEF85F8)
+References: <1315320530-2733-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1315320530-2733-1-git-send-email-rmanohar@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/init.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+On Tue, Sep 06, 2011 at 08:18:50PM +0530, Rajkumar Manoharan wrote:
+> Do the magnitude/phase coeff correction only if the outlier
+> is detected.
+> 
+> Cc: stable@kernel.org
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9003_calib.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+> index fa35a02..ee3a8a2 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+> @@ -643,8 +643,9 @@ static void ar9003_hw_detect_outlier(int *mp_coeff, int nmeasurement,
+>  			outlier_idx = max_idx;
+>  		else
+>  			outlier_idx = min_idx;
+> +
+> +		mp_coeff[outlier_idx] = mp_avg;
+>  	}
+> -	mp_coeff[outlier_idx] = mp_avg;
+>  }
+>  
+>  static void ar9003_hw_tx_iqcal_load_avg_2_passes(struct ath_hw *ah,
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index b9b13a0..38d7e94 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1494,6 +1494,8 @@ static int ath6kl_init(struct net_device *dev)
- 	if (!status)
- 		goto ath6kl_init_done;
- 
-+	ar->wdev->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
-+
- err_htc_stop:
- 	ath6kl_htc_stop(ar->htc_target);
- err_rxbuf_cleanup:
+What is the effect of the bug being fixed here?  Is this fix intended for 3.1?
+
+John
 -- 
-1.7.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
