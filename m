@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48291 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751464Ab1I2MQZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 08:16:25 -0400
-Date: Thu, 29 Sep 2011 17:44:27 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath9k: Choose highest rate of MRR based on
- IEEE80211_TX_CTL_USE_MINRATE
-Message-ID: <20110929121426.GA20802@vmraj-lnx.users.atheros.com> (sfid-20110929_141628_826135_07699565)
-References: <1317295446-20749-1-git-send-email-rmanohar@qca.qualcomm.com>
- <4E845733.1000203@openwrt.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:2853 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755017Ab1IMHuH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Sep 2011 03:50:07 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 04/17] staging: brcm80211: fix for fullmac build problem
+Date: Tue, 13 Sep 2011 09:49:44 +0200
+Message-ID: <1315900197-7260-5-git-send-email-rvossen@broadcom.com> (sfid-20110913_095013_195673_753888B5)
+In-Reply-To: <1315900197-7260-1-git-send-email-rvossen@broadcom.com>
+References: <1315900197-7260-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E845733.1000203@openwrt.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 29, 2011 at 01:32:03PM +0200, Felix Fietkau wrote:
-> On 2011-09-29 1:24 PM, Rajkumar Manoharan wrote:
-> >Select appropriate rate as highest rate of rate series, if the frame
-> >was asked to be sent at minimum rate. For example nullfunc frames
-> >either can be sent at HT rates on normal case or at non-HT rates if
-> >it is used for connection monitoring.
-> >
-> >Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
-> >---
-> >  drivers/net/wireless/ath/ath9k/rc.c |    4 ++--
-> >  1 files changed, 2 insertions(+), 2 deletions(-)
-> >
-> Shouldn't the check for IEEE80211_TX_CTL_USE_MINRATE be in
-> rate_control_send_low(), so that it does not have to be repeated in
-> every single rate control module?
->
-But I donno what could be the side effect of changing rate_control_send_low
-as it is used by all drivers. And also if the rate control provide the
-minrate, it can be used to update the PER upon tx status. isnt it?
+Fullmac had a build error for CONFIG_PM_SLEEP=n
 
---
-Rajkumar
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 0aff62d..7cb8f3f 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -49,12 +49,10 @@ static const struct sdio_device_id brcmf_sdmmc_ids[] = {
+ };
+ MODULE_DEVICE_TABLE(sdio, brcmf_sdmmc_ids);
+ 
+-#ifdef CONFIG_PM_SLEEP
+ static DECLARE_WAIT_QUEUE_HEAD(sdioh_request_byte_wait);
+ static DECLARE_WAIT_QUEUE_HEAD(sdioh_request_word_wait);
+ static DECLARE_WAIT_QUEUE_HEAD(sdioh_request_packet_wait);
+ static DECLARE_WAIT_QUEUE_HEAD(sdioh_request_buffer_wait);
+-#endif		/* CONFIG_PM_SLEEP */
+ 
+ static bool
+ brcmf_pm_resume_error(struct brcmf_sdio_dev *sdiodev)
+-- 
+1.7.4.1
+
+
