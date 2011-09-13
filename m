@@ -1,70 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43703 "EHLO nbd.name"
+Received: from mga03.intel.com ([143.182.124.21]:38783 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755608Ab1ISUuK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 16:50:10 -0400
-Message-ID: <4E77AAFB.1080805@openwrt.org> (sfid-20110919_225016_131858_C07438E6)
-Date: Mon, 19 Sep 2011 22:50:03 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S933094Ab1IMXol (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Sep 2011 19:44:41 -0400
+From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: Miguel Martinez <el.quark@gmail.com>,
+	"641424@bugs.debian.org" <641424@bugs.debian.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 13 Sep 2011 16:44:38 -0700
+Subject: RE: Bug#641424: iwlagn: fails to reconnect to WPA2-enterprise
+ (Reason: 23)
+Message-ID: <C5A7FB31FD9AEA42B600BDC3C74F8E00147CA869@orsmsx511.amr.corp.intel.com> (sfid-20110914_014444_019082_703D0D42)
+References: <20110913111546.6947.55565.reportbug@mark>
+	 <1315952954.14749.18.camel@deadeye>
+	 <C5A7FB31FD9AEA42B600BDC3C74F8E00147CA83E@orsmsx511.amr.corp.intel.com>
+ <1315957298.14749.29.camel@deadeye>
+In-Reply-To: <1315957298.14749.29.camel@deadeye>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH v2 2/4] ath9k_hw: clean up tx power handling
-References: <1316453903-75710-1-git-send-email-nbd@openwrt.org> <1316453903-75710-2-git-send-email-nbd@openwrt.org> <CAB=NE6XvanRQ6Yje_qHhkfzbLmZn9o5Q+5y1NobJwCyuMLFEvg@mail.gmail.com>
-In-Reply-To: <CAB=NE6XvanRQ6Yje_qHhkfzbLmZn9o5Q+5y1NobJwCyuMLFEvg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-09-19 10:41 PM, Luis R. Rodriguez wrote:
-> On Mon, Sep 19, 2011 at 10:38 AM, Felix Fietkau<nbd@openwrt.org>  wrote:
->>  @@ -986,21 +995,15 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
->>                                                    struct ath9k_channel *chan,
->>                                                    int16_t *ratesArray,
->>                                                    u16 cfgCtl,
->>  -                                                 u16 AntennaReduction,
->>  -                                                 u16 twiceMaxRegulatoryPower,
->>  +                                                 u16 antenna_reduction,
->>                                                    u16 powerLimit)
->>    {
->>    #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
->>    #define REDUCE_SCALED_POWER_BY_THREE_CHAIN   9 /* 10*log10(3)*2 */
->>
->>  -       struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
->>          struct ar5416_eeprom_def *pEepData =&ah->eeprom.def;
->>          u16 twiceMaxEdgePower = MAX_RATE_POWER;
->>  -       static const u16 tpScaleReductionTable[5] =
->>  -               { 0, 3, 6, 9, MAX_RATE_POWER };
->>  -
->>          int i;
->>  -       int16_t twiceLargestAntenna;
->>          struct cal_ctl_data *rep;
->>          struct cal_target_power_leg targetPowerOfdm, targetPowerCck = {
->>                  0, { 0, 0, 0, 0}
->>  @@ -1012,7 +1015,7 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
->>          struct cal_target_power_ht targetPowerHt20, targetPowerHt40 = {
->>                  0, {0, 0, 0, 0}
->>          };
->>  -       u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
->>  +       u16 scaledPower = 0, minCtlPower;
->>          static const u16 ctlModesFor11a[] = {
->>                  CTL_11A, CTL_5GHT20, CTL_11A_EXT, CTL_5GHT40
->>          };
->
-> Although we do not use the reg->tp_scale I see no log which explains
-> that it will not, I'm reviewing TPC right now and we do need to
-> support it but its unclear to me yet if we are doing everything
-> correctly in mac80211 / cfg80211 for it. As far as I can see the
-> tp_scale stuff is used only if the default is not set, but as you
-> noted its always set to the default. I am trying to review the
-> internal code to see under what cases this changes but its hard to
-> review. Although I'd like to see this removed I'd prefer to treat this
-> separately from the cleanup you are doing, which I do find highly
-> valuable.
-Why keep it? All it does is subtract something from the max regulatory 
-power level, so it does not make any sense to keep this crap duplicated 
-in all the the eeprom files.
-If we ever do need it (which I doubt), it needs to be added in a 
-different place anyway.
-
-- Felix
+VGhhbmtzIGZvciB0aGUgcmVhc29uIGNvZGUgaW5mbywgQmVuLA0KDQpJIG1lYW50IHRoYXQgd2Ug
+Y291bGQgY29udGludWUgb24gdGhlIERlYmlhbiBidWd6aWxsYS4gT3IsIHlvdSBjYW4gcG9zdCBp
+dCB0bzogaHR0cDovL2J1Z3ppbGxhLmludGVsbGludXh3aXJlbGVzcy5vcmcvIC0tIHRoZSBidWd6
+aWxsYSBmb3IgdGhlIGl3bHdpZmkgZHJpdmVyICsgY3VycmVudGx5IHN1cHBvcnRlZCBkZXZpY2Vz
+Lg0KDQpUaGFua3MsDQptZWVuYWtzaGkNCg0KPi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+
+RnJvbTogQmVuIEh1dGNoaW5ncyBbbWFpbHRvOmJlbkBkZWNhZGVudC5vcmcudWtdDQo+U2VudDog
+VHVlc2RheSwgU2VwdGVtYmVyIDEzLCAyMDExIDQ6NDEgUE0NCj5UbzogVmVua2F0YXJhbWFuLCBN
+ZWVuYWtzaGkNCj5DYzogTWlndWVsIE1hcnRpbmV6OyA2NDE0MjRAYnVncy5kZWJpYW4ub3JnOyBs
+aW51eC13aXJlbGVzcw0KPlN1YmplY3Q6IFJFOiBCdWcjNjQxNDI0OiBpd2xhZ246IGZhaWxzIHRv
+IHJlY29ubmVjdCB0byBXUEEyLWVudGVycHJpc2UNCj4oUmVhc29uOiAyMykNCj4NCj5PbiBUdWUs
+IDIwMTEtMDktMTMgYXQgMTY6MzMgLTA3MDAsIFZlbmthdGFyYW1hbiwgTWVlbmFrc2hpIHdyb3Rl
+Og0KPj4gSGkgTWlndWVsLA0KPj4NCj4+IEl0IGxvb2tzIGxpa2UgdGhlIEFQIHlvdSdyZSBjb25u
+ZWN0ZWQgdG8gYXQgdGhlIFVuaXZlcnNpdHkgaXMgYSBDaXNjbw0KPj4gQVAuIEknbSBub3Qgc3Vy
+ZSB3aGF0IHJlYXNvbiBjb2RlIDIzIGlzLCB3aWxsIG5lZWQgdG8gcmVzZWFyY2ggaXQNCj4+IHNv
+bWUuDQo+DQo+CVdMQU5fUkVBU09OX0lFRUU4MDIxWF9GQUlMRUQgPSAyMywNCj4NCj4+IEluIHRo
+ZSBtZWFudGltZSwgY2FuIHlvdSBkbyB0aGUgZm9sbG93aW5nIHNvIHdlIGNhbiBzZWUgd2hhdCdz
+IGdvaW5nDQo+PiBvbiBpbiB0aGUgaXdsd2lmaSBkcml2ZXI6DQo+Pg0KPj4gMSkgRW5hYmxlIGRl
+YnVnZ2luZyBmb3IgdGhlIGl3bHdpZmkgZHJpdmVyIGxpa2Ugc286DQo+PiAJbW9kcHJvYmUgaXds
+YWduIGRlYnVnPTB4NDdmZmYNCj4+IFlvdSdsbCBuZWVkIHRvIGVuYWJsZSBkZWJ1Z2dpbmcgZm9y
+IGl3bHdpZmkgd2hpbGUgYnVpbGRpbmcgdGhlIGtlcm5lbC4NCj4+DQo+PiAyKSBBIHdpcmVsZXNz
+IHNuaWZmZXIgbG9nIHdvdWxkIGFsc28gYmUgdXNlZnVsIChub3Qgc3VyZSB5b3UncmUgaW4gYQ0K
+Pj4gcG9zaXRpb24gdG8gZ2F0aGVyIHRoaXMgbG9nKS4NCj4+DQo+PiBQbGVhc2Ugc2VuZCBtZSAo
+b25seSkgdGhlIGxvZy4gV2UgY2FuIHRha2UgdGhpcyB0byBidWd6aWxsYSBhcyB3ZWxsLg0KPlsu
+Li5dDQo+DQo+SWYgeW91IG1lYW4gYnVnemlsbGEua2VybmVsLm9yZywgdGhhdCBpcyBjdXJyZW50
+bHkgZG93biBhbG9uZyB3aXRoIG11Y2ggb2YgdGhlDQo+a2VybmVsLm9yZyBpbmZyYXN0cnVjdHVy
+ZS4NCj4NCj5CZW4uDQo+DQo+LS0NCj5CZW4gSHV0Y2hpbmdzDQo+QWxsIGV4dHJlbWlzdHMgc2hv
+dWxkIGJlIHRha2VuIG91dCBhbmQgc2hvdC4NCg==
