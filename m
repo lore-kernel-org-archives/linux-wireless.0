@@ -1,59 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46093 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750991Ab1INGnR (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:44223 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932092Ab1IMTCD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 02:43:17 -0400
-Date: Wed, 14 Sep 2011 12:13:52 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Paul Stewart <pstew@google.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k_hw: Do full chip reset on 11A channels
-Message-ID: <20110914064352.GA27319@vmraj-lnx.users.atheros.com> (sfid-20110914_084327_946707_FB2E6CC6)
-References: <1315927132-21716-1-git-send-email-rmanohar@qca.qualcomm.com>
- <CAMcMvsj+AHdjf-JteV=vpYYAgRXOCvsFmN=YwWibXAzQyBwdUQ@mail.gmail.com>
- <20110913171308.GA21972@vmraj-lnx.users.atheros.com>
- <CAMcMvsjgGP40g2hokU1sOdY_DdZrK3Ciy5OE5=EgepGH7ZO3VQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <CAMcMvsjgGP40g2hokU1sOdY_DdZrK3Ciy5OE5=EgepGH7ZO3VQ@mail.gmail.com>
+	Tue, 13 Sep 2011 15:02:03 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 39FCE540674
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2011 15:13:38 -0400 (EDT)
+Subject: Compat-wireless release for 2011-09-13 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110913190202.14EFF40644@repository3.orbit-lab.org> (sfid-20110913_210207_398881_F4970F4D)
+Date: Tue, 13 Sep 2011 15:02:02 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 13, 2011 at 10:38:16AM -0700, Paul Stewart wrote:
-> On Tue, Sep 13, 2011 at 10:13 AM, Rajkumar Manoharan
-> <rmanohar@qca.qualcomm.com> wrote:
-> > On Tue, Sep 13, 2011 at 09:01:29AM -0700, Paul Stewart wrote:
-> >> On Tue, Sep 13, 2011 at 8:18 AM, Rajkumar Manoharan
-> >> <rmanohar@qca.qualcomm.com> wrote:
-> >> > AR9003 seems to have issues sometimes with fast channel change
-> >> > in 5GHz and this case is handled specifically for AR9002 by doing
-> >> > a full reset. So let's do a full reset for 5GHz channles for all
-> >> > chipsets.
-> >>
-> >> I'm not sure I understand.  Are you asserting that AR9002 does not
-> >> need a full reset for channel change in 2GHz?   The code before your
-> >> change would fall through for AR_SREV_9280(ah) && !AR_DEVID_7010(ah)
-> >> whether in 2HGz or 5GHz, but that case gets removed with your change.
-> >> Is that intentional?
-> >>
-> > Yes. Fast channel change is completely supported on 2GHz band. And also
-> > if you look at the log history, the fast channel change was initially
-> > disabled in 5GHz alone for AR9280 chips. AR7010 chip is the usb version of
-> > AR9280. Instead of adding chip specific checks, the fastcc is disabled for
-> > 5GHz.
-> 
-> I might not be finding the right part of the history.  I do see things
-> like 0a475cc6a0ac8e38ac3587cff87026551800b7fe: Vasanthakumar
-> Thiagarajan <vasanth@atheros.com> "ath9k: Do a full reset for AR9280;
-> AR9280 requires a full reset during channel change and HW reset.
-> Currently, a fast channel change is done. This patch fixes this bug."
-> This patch disabled fast-channel-change for the 9280 AND 2GHz channels
-> (what I assume 5MHZ_SPACED to be filtering).  I still see no point in
-> history where 9280 was enabled for fast channel change in 2Ghz.
->
-True. Let me check on this. Meanwhile I will send v2 patch to disable fastcc
-on 11A for AR9380 alone.
+fatal: Unable to look up git.kernel.org (port 9418) (Name or service not known)
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
---
-Rajkumar
+compat-wireless code metrics
+
+    806210 - Total upstream lines of code being pulled
+ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
+rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
