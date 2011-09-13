@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:52436 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755169Ab1ISVy6 (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:41825 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752920Ab1IMGFL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 17:54:58 -0400
-Received: by qyk30 with SMTP id 30so3223505qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 14:54:58 -0700 (PDT)
+	Tue, 13 Sep 2011 02:05:11 -0400
+Received: by bkbzt4 with SMTP id zt4so178579bkb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 23:05:10 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6XLdftXKg5-wvme8Vg7BjGi-TpxQ3G6m=7VnEw89YzXoA@mail.gmail.com>
-References: <1316453903-75710-1-git-send-email-nbd@openwrt.org>
- <1316453903-75710-2-git-send-email-nbd@openwrt.org> <CAB=NE6XvanRQ6Yje_qHhkfzbLmZn9o5Q+5y1NobJwCyuMLFEvg@mail.gmail.com>
- <4E77AAFB.1080805@openwrt.org> <CAB=NE6XgSz7zz_ZXaPQEsaue307ipd7Qnzgi5QWr8Y4SS1j=Lg@mail.gmail.com>
- <4E77B25D.9070907@openwrt.org> <CAB=NE6XLdftXKg5-wvme8Vg7BjGi-TpxQ3G6m=7VnEw89YzXoA@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Mon, 19 Sep 2011 14:54:37 -0700
-Message-ID: <CAB=NE6XQDqG+En2KWOyKGUVT1SWm1rwMwOxMjpE8CjYfvwvOqw@mail.gmail.com> (sfid-20110919_235504_704262_1BAD6A65)
-Subject: Re: [PATCH v2 2/4] ath9k_hw: clean up tx power handling
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <201109121535.37425.Iwo.Mergler@netcomm.com.au>
+References: <201109121535.37425.Iwo.Mergler@netcomm.com.au>
+Date: Tue, 13 Sep 2011 11:35:10 +0530
+Message-ID: <CAD2nsn2eA2d97TRWoYQrPYsFAZmGY7G-dyaXoHNfcVNdrksXUQ@mail.gmail.com> (sfid-20110913_080534_413819_53F10F63)
+Subject: Re: Compat-wireless archive?
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Iwo Mergler <Iwo.Mergler@netcomm.com.au>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 19, 2011 at 2:45 PM, Luis R. Rodriguez
-<mcgrof@qca.qualcomm.com> wrote:
-> On Mon, Sep 19, 2011 at 2:21 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->> I looked at the other ath driver and I see no indication that it's related
->> to DFS in any way.
+On Mon, Sep 12, 2011 at 11:05 AM, Iwo Mergler
+<Iwo.Mergler@netcomm.com.au> wrote:
+> Hi all,
 >
-> I have verified this just now as well, it seems it was only used to
-> support an ioctl to userspace to enable users to update a tpscale
-> value but I see no documentation about this. Next question is who in
-> usersapce sets this. I wonder if its done through userspace after
-> measuring some TPC reports from STAs.
+>
+> it appears that wireless.kernel.org has been affected by the kernel.org
+> break-in and is unavailable.
+>
+> Is there an alternate source for the daily compat-wireless snapshots?
 
-So this comes from supporting a "TR-098" specification, which seems to
-be the "Internet Gateway Device data model for the CPE WAN Management
-Protocol". I haven't yet been able to map this to the specification
-respective component:
+http://linuxwireless.org/download/compat-wireless-2.6/, but we cannot
+get the bleeding edge.
 
-http://www.broadband-forum.org/technical/download/TR-098.pdf
+>
+>
+> Best regards,
+>
+> Iwo
+>
+> ______________________________________________________________________
+> This communication contains information which may be confidential or privileged. The information is intended solely for the use of the individual or entity named above.  If you are not the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information is prohibited.  If you have received this communication in error, please notify me by telephone immediately.
+> ______________________________________________________________________
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-  Luis
+
+
+-- 
+shafi
