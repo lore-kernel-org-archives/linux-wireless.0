@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy4-pub.bluehost.com ([69.89.21.11]:38294 "HELO
-	oproxy4-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751167Ab1ITUnT (ORCPT
+Received: from mail-ew0-f52.google.com ([209.85.215.52]:46078 "EHLO
+	mail-ew0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932471Ab1IMUXv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 16:43:19 -0400
-Message-ID: <4E78FAE6.6080903@xenotime.net> (sfid-20110920_224336_761640_D83D8FF4)
-Date: Tue, 20 Sep 2011 13:43:18 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
+	Tue, 13 Sep 2011 16:23:51 -0400
+Received: by ewy28 with SMTP id 28so669415ewy.11
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2011 13:23:48 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH -next] bcma: needs export.h
-References: <20110920173102.d38155c7defbbc29beaae7c0@canb.auug.org.au>	<4E78CFC0.4020003@xenotime.net> <CACna6rxGrd-ORWZrc0xsAOKptU_Xj3eGh9qSfX9vJYCPTZrCRg@mail.gmail.com>
-In-Reply-To: <CACna6rxGrd-ORWZrc0xsAOKptU_Xj3eGh9qSfX9vJYCPTZrCRg@mail.gmail.com>
+In-Reply-To: <20110913174444.GG11772@tuxdriver.com>
+References: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com>
+	<CACna6rwQ60viPGssWzBzgtVGBq1xu+AOxb0fqfRq4NaJFcmP=w@mail.gmail.com>
+	<20110913174444.GG11772@tuxdriver.com>
+Date: Tue, 13 Sep 2011 22:23:47 +0200
+Message-ID: <CACna6rwS0dGwSFOiqgAYqHNV=AatnHvHes=YdbwSWdKZu8OYiQ@mail.gmail.com> (sfid-20110913_222354_439423_CD7EE0DD)
+Subject: Re: About the patch: "staging: brcm80211: only enable brcmsmac if
+ bcma is not set"
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Greg KH <greg@kroah.com>, Greg KH <gregkh@suse.de>
+Cc: Francis Moreau <francis.moro@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/20/2011 11:45 AM, Rafał Miłecki wrote:
-> 2011/9/20 Randy Dunlap <rdunlap@xenotime.net>:
->> From: Randy Dunlap <rdunlap@xenotime.net>
+W dniu 13 września 2011 19:44 użytkownik John W. Linville
+<linville@tuxdriver.com> napisał:
+> On Mon, Sep 12, 2011 at 11:27:20PM +0200, Rafał Miłecki wrote:
+>
+>> The problem is that brcmsmac duplicates code present in the bcma
+>> driver. It doesn't use bcma bus architecture.
 >>
->> bcma/driver_chipcommon_pmu.c needs to include <linux/export.h>,
->> so add it to the headers that are included by bcma_private.h.
-> 
-> Please take a look at discussion in:
-> [PATCH -next] bcma: main.c needs to include <linux/slab.h>
-> thread (by Andrew).
-> 
-> I believe that according to the discussion, such a includes should be
-> done in .c files.
-> 
-> Andrew: can you comment? Am I right?
+>> The real solution is to add bcma driver support in brcmsmac and ssb
+>> driver support in brcmfmac. Then you can always use bcma and:
+>> 1) If b43 will load and detect unsupported PHY, it will release the BCMA's core
+>> 2) brcmsmac will be loaded to let it support the core
+>
+> We are going to have to find a way to get brcmsmac into the
+> wireless-next tree to make it feasible for the Broadcom guys to get
+> bcma support into that driver.  Do you agree?
+>
+> We could move it under the drivers/net/wireless tree.  Or, maybe I
+> could negotiate with Greg to keep it under the drivers/staging tree
+> but to let me manage it under wireless-next.  Or...?  Do you have
+> any thoughts on this?
 
+I'll be posting some bcma patches that will allow brcmsmac being
+converted to bcma support. Currently we don't export few trivial ops
+in bcma, that are needed by b43/brcmsmac.
 
-Sure, I'll resubmit the patch.
+Could we ask Greg after that, to merge wireless-next into staging?
+That would provide Broadcom guys all the symbols they need.
 
-Is there already a patch to remove <linux/delay.h> from bcma_private.h ?
-
-bcma_private.h uses __init & __exit, so it should #include <linux/init.h> ...
-
+AFAIK git is clever enough to allow Linux easily merge both: Greg's
+tree and wireless-next tree. Without conflicts coming from
+"duplicated" patches.
 
 -- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Rafał
