@@ -1,102 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3495 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756132Ab1IPT20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 15:28:26 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 04/19] staging: brcm80211: remove fullmac module_param
- for packet filter feature
-Date: Fri, 16 Sep 2011 12:27:53 -0700
-Message-ID: <1316201288-29635-5-git-send-email-frankyl@broadcom.com> (sfid-20110916_212842_939705_7B049827)
-In-Reply-To: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
-References: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
+Received: from smtp-out.google.com ([74.125.121.67]:58984 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754546Ab1IMQBi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Sep 2011 12:01:38 -0400
+Received: from hpaq1.eem.corp.google.com (hpaq1.eem.corp.google.com [172.25.149.1])
+	by smtp-out.google.com with ESMTP id p8DG1WQS008705
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2011 09:01:32 -0700
+Received: from ywb3 (ywb3.prod.google.com [10.192.2.3])
+	by hpaq1.eem.corp.google.com with ESMTP id p8DG0okk002151
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2011 09:01:31 -0700
+Received: by ywb3 with SMTP id 3so746038ywb.35
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2011 09:01:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1315927132-21716-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1315927132-21716-1-git-send-email-rmanohar@qca.qualcomm.com>
+Date: Tue, 13 Sep 2011 09:01:29 -0700
+Message-ID: <CAMcMvsj+AHdjf-JteV=vpYYAgRXOCvsFmN=YwWibXAzQyBwdUQ@mail.gmail.com> (sfid-20110913_180145_774122_F3933571)
+Subject: Re: [PATCH] ath9k_hw: Do full chip reset on 11A channels
+From: Paul Stewart <pstew@google.com>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use constant values for packet filter configuration
+On Tue, Sep 13, 2011 at 8:18 AM, Rajkumar Manoharan
+<rmanohar@qca.qualcomm.com> wrote:
+> AR9003 seems to have issues sometimes with fast channel change
+> in 5GHz and this case is handled specifically for AR9002 by doing
+> a full reset. So let's do a full reset for 5GHz channles for all
+> chipsets.
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> index 308847d..622bfc9 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> @@ -1504,7 +1504,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+>            (chan->channel != ah->curchan->channel) &&
+>            ((chan->channelFlags & CHANNEL_ALL) ==
+>             (ah->curchan->channelFlags & CHANNEL_ALL)) &&
+> -           (!AR_SREV_9280(ah) || AR_DEVID_7010(ah))) {
+> +           !IS_CHAN_5GHZ(chan)) {
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd.h        |    9 ---------
- drivers/staging/brcm80211/brcmfmac/dhd_common.c |   13 ++++---------
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c  |   12 ------------
- 3 files changed, 4 insertions(+), 30 deletions(-)
+I'm not sure I understand.  Are you asserting that AR9002 does not
+need a full reset for channel change in 2GHz?   The code before your
+change would fall through for AR_SREV_9280(ah) && !AR_DEVID_7010(ah)
+whether in 2HGz or 5GHz, but that case gets removed with your change.
+Is that intentional?
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index c351349..329851c 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -673,15 +673,6 @@ extern uint brcmf_arp_mode;
- /* ARP offload enable */
- extern uint brcmf_arp_enable;
- 
--/* Pkt filte enable control */
--extern uint brcmf_pkt_filter_enable;
--
--/*  Pkt filter init setup */
--extern uint brcmf_pkt_filter_init;
--
--/* Pkt filter mode control */
--extern uint brcmf_master_mode;
--
- /* Roaming mode control */
- extern uint brcmf_roam;
- 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-index fd39998..5ae4a40 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-@@ -865,15 +865,10 @@ int brcmf_c_preinit_ioctls(struct brcmf_pub *drvr)
- 	brcmf_c_arp_offload_enable(drvr, brcmf_arp_enable);
- 
- 	/* Set up pkt filter */
--	if (brcmf_pkt_filter_enable) {
--		for (i = 0; i < drvr->pktfilter_count; i++) {
--			brcmf_c_pktfilter_offload_set(drvr,
--						  drvr->pktfilter[i]);
--			brcmf_c_pktfilter_offload_enable(drvr,
--			     drvr->pktfilter[i],
--			     brcmf_pkt_filter_init,
--			     brcmf_master_mode);
--		}
-+	for (i = 0; i < drvr->pktfilter_count; i++) {
-+		brcmf_c_pktfilter_offload_set(drvr, drvr->pktfilter[i]);
-+		brcmf_c_pktfilter_offload_enable(drvr, drvr->pktfilter[i],
-+						 0, true);
- 	}
- 
- 	brcmf_os_proto_unblock(drvr);
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index 8286885..8e729d8 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -98,18 +98,6 @@ module_param(brcmf_arp_mode, uint, 0);
- uint brcmf_arp_enable = true;
- module_param(brcmf_arp_enable, uint, 0);
- 
--/* Global Pkt filter enable control */
--uint brcmf_pkt_filter_enable = true;
--module_param(brcmf_pkt_filter_enable, uint, 0);
--
--/*  Pkt filter init setup */
--uint brcmf_pkt_filter_init;
--module_param(brcmf_pkt_filter_init, uint, 0);
--
--/* Pkt filter mode control */
--uint brcmf_master_mode = true;
--module_param(brcmf_master_mode, uint, 0);
--
- /* Contorl fw roaming */
- uint brcmf_roam = 1;
- 
--- 
-1.7.1
-
-
+>
+>                if (ath9k_hw_channel_change(ah, chan)) {
+>                        ath9k_hw_loadnf(ah, ah->curchan);
+> --
+> 1.7.6.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
