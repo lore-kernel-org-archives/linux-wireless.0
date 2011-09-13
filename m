@@ -1,157 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4560 "EHLO mms2.broadcom.com"
+Received: from mga14.intel.com ([143.182.124.37]:58667 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932502Ab1ISV0b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 17:26:31 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 19/20] staging: brcm80211: simplified internal ioctl
- function once more
-Date: Mon, 19 Sep 2011 14:26:07 -0700
-Message-ID: <1316467568-27683-20-git-send-email-frankyl@broadcom.com> (sfid-20110919_232808_700699_F024466F)
-In-Reply-To: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+	id S933048Ab1IMXd2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Sep 2011 19:33:28 -0400
+From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
+To: Ben Hutchings <ben@decadent.org.uk>,
+	Miguel Martinez <el.quark@gmail.com>
+CC: "641424@bugs.debian.org" <641424@bugs.debian.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 13 Sep 2011 16:33:24 -0700
+Subject: RE: Bug#641424: iwlagn: fails to reconnect to WPA2-enterprise
+ (Reason: 23)
+Message-ID: <C5A7FB31FD9AEA42B600BDC3C74F8E00147CA83E@orsmsx511.amr.corp.intel.com> (sfid-20110914_013332_405797_BAAE1306)
+References: <20110913111546.6947.55565.reportbug@mark>
+ <1315952954.14749.18.camel@deadeye>
+In-Reply-To: <1315952954.14749.18.camel@deadeye>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
-
-Code cleanup. Merged two functions.
-
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd.h         |    3 +-
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c   |   40 ++++++++++++---------
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   16 ---------
- 3 files changed, 24 insertions(+), 35 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index a16f731..514f779 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -724,8 +724,7 @@ extern struct brcmf_pub *brcmf_attach(struct brcmf_bus *bus,
- extern int brcmf_net_attach(struct brcmf_pub *drvr, int idx);
- extern int brcmf_netdev_wait_pend8021x(struct net_device *ndev);
- 
--extern int brcmf_netdev_ioctl_priv(struct net_device *ndev,
--				   struct brcmf_ioctl *ioc);
-+extern s32 brcmf_dev_ioctl(struct net_device *dev, u32 cmd, void *arg, u32 len);
- 
- /* Indication from bus module regarding removal/absence of dongle */
- extern void brcmf_detach(struct brcmf_pub *drvr);
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index 827022e..3ae0d43 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -849,30 +849,36 @@ static int brcmf_netdev_ioctl_entry(struct net_device *ndev, struct ifreq *ifr,
- 	return -EOPNOTSUPP;
- }
- 
--/* called only from within this driver */
--int brcmf_netdev_ioctl_priv(struct net_device *ndev, struct brcmf_ioctl *ioc)
-+/* called only from within this driver. Sends an ioctl to the dongle. */
-+s32 brcmf_dev_ioctl(struct net_device *ndev, u32 cmd, void *arg, u32 len)
- {
--	int bcmerror = 0;
-+	struct brcmf_ioctl ioc;
-+	s32 err = 0;
- 	int buflen = 0;
- 	bool is_set_key_cmd;
- 	struct brcmf_info *drvr_priv = *(struct brcmf_info **)
--			  netdev_priv(ndev);
-+					netdev_priv(ndev);
- 	int ifidx;
- 
-+	memset(&ioc, 0, sizeof(ioc));
-+	ioc.cmd = cmd;
-+	ioc.buf = arg;
-+	ioc.len = len;
-+
- 	ifidx = brcmf_net2idx(drvr_priv, ndev);
- 
--	if (ioc->buf != NULL)
--		buflen = min_t(uint, ioc->len, BRCMF_IOCTL_MAXLEN);
-+	if (ioc.buf != NULL)
-+		buflen = min_t(uint, ioc.len, BRCMF_IOCTL_MAXLEN);
- 
- 	/* send to dongle (must be up, and wl) */
- 	if ((drvr_priv->pub.busstate != BRCMF_BUS_DATA)) {
- 		brcmf_dbg(ERROR, "DONGLE_DOWN\n");
--		bcmerror = -EIO;
-+		err = -EIO;
- 		goto done;
- 	}
- 
- 	if (!drvr_priv->pub.iswl) {
--		bcmerror = -EIO;
-+		err = -EIO;
- 		goto done;
- 	}
- 
-@@ -880,21 +886,21 @@ int brcmf_netdev_ioctl_priv(struct net_device *ndev, struct brcmf_ioctl *ioc)
- 	 * Intercept BRCMF_C_SET_KEY IOCTL - serialize M4 send and
- 	 * set key IOCTL to prevent M4 encryption.
- 	 */
--	is_set_key_cmd = ((ioc->cmd == BRCMF_C_SET_KEY) ||
--			  ((ioc->cmd == BRCMF_C_SET_VAR) &&
--			   !(strncmp("wsec_key", ioc->buf, 9))) ||
--			  ((ioc->cmd == BRCMF_C_SET_VAR) &&
--			   !(strncmp("bsscfg:wsec_key", ioc->buf, 15))));
-+	is_set_key_cmd = ((ioc.cmd == BRCMF_C_SET_KEY) ||
-+			  ((ioc.cmd == BRCMF_C_SET_VAR) &&
-+			   !(strncmp("wsec_key", ioc.buf, 9))) ||
-+			  ((ioc.cmd == BRCMF_C_SET_VAR) &&
-+			   !(strncmp("bsscfg:wsec_key", ioc.buf, 15))));
- 	if (is_set_key_cmd)
- 		brcmf_netdev_wait_pend8021x(ndev);
- 
--	bcmerror = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, ioc, buflen);
-+	err = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, &ioc, buflen);
- 
- done:
--	if (bcmerror > 0)
--		bcmerror = 0;
-+	if (err > 0)
-+		err = 0;
- 
--	return bcmerror;
-+	return err;
- }
- 
- static int brcmf_netdev_stop(struct net_device *ndev)
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index b707bc0..b956c90 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -249,22 +249,6 @@ static const u32 __wl_cipher_suites[] = {
- 	WLAN_CIPHER_SUITE_AES_CMAC,
- };
- 
--static s32
--brcmf_dev_ioctl(struct net_device *dev, u32 cmd, void *arg, u32 len)
--{
--	struct brcmf_ioctl ioc;
--	s32 err = 0;
--
--	memset(&ioc, 0, sizeof(ioc));
--	ioc.cmd = cmd;
--	ioc.buf = arg;
--	ioc.len = len;
--
--	err = brcmf_netdev_ioctl_priv(dev, &ioc);
--
--	return err;
--}
--
- /* function for reading/writing a single u32 from/to the dongle */
- static int
- brcmf_dev_ioctl_u32(struct net_device *ndev, u32 cmd, u32 *par)
--- 
-1.7.1
-
-
+SGkgTWlndWVsLA0KDQpJdCBsb29rcyBsaWtlIHRoZSBBUCB5b3UncmUgY29ubmVjdGVkIHRvIGF0
+IHRoZSBVbml2ZXJzaXR5IGlzIGEgQ2lzY28gQVAuIEknbSBub3Qgc3VyZSB3aGF0IHJlYXNvbiBj
+b2RlIDIzIGlzLCB3aWxsIG5lZWQgdG8gcmVzZWFyY2ggaXQgc29tZS4NCg0KSW4gdGhlIG1lYW50
+aW1lLCBjYW4geW91IGRvIHRoZSBmb2xsb3dpbmcgc28gd2UgY2FuIHNlZSB3aGF0J3MgZ29pbmcg
+b24gaW4gdGhlIGl3bHdpZmkgZHJpdmVyOg0KDQoxKSBFbmFibGUgZGVidWdnaW5nIGZvciB0aGUg
+aXdsd2lmaSBkcml2ZXIgbGlrZSBzbzogDQoJbW9kcHJvYmUgaXdsYWduIGRlYnVnPTB4NDdmZmYg
+DQpZb3UnbGwgbmVlZCB0byBlbmFibGUgZGVidWdnaW5nIGZvciBpd2x3aWZpIHdoaWxlIGJ1aWxk
+aW5nIHRoZSBrZXJuZWwuDQoNCjIpIEEgd2lyZWxlc3Mgc25pZmZlciBsb2cgd291bGQgYWxzbyBi
+ZSB1c2VmdWwgKG5vdCBzdXJlIHlvdSdyZSBpbiBhIHBvc2l0aW9uIHRvIGdhdGhlciB0aGlzIGxv
+ZykuDQoNClBsZWFzZSBzZW5kIG1lIChvbmx5KSB0aGUgbG9nLiBXZSBjYW4gdGFrZSB0aGlzIHRv
+IGJ1Z3ppbGxhIGFzIHdlbGwuDQoNClRoYW5rcywNCk1lZW5ha3NoaQ0KDQo+LS0tLS1PcmlnaW5h
+bCBNZXNzYWdlLS0tLS0NCj5Gcm9tOiBsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5v
+cmcgW21haWx0bzpsaW51eC13aXJlbGVzcy0NCj5vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJl
+aGFsZiBPZiBCZW4gSHV0Y2hpbmdzDQo+U2VudDogVHVlc2RheSwgU2VwdGVtYmVyIDEzLCAyMDEx
+IDM6MjkgUE0NCj5UbzogTWlndWVsIE1hcnRpbmV6DQo+Q2M6IDY0MTQyNEBidWdzLmRlYmlhbi5v
+cmc7IGxpbnV4LXdpcmVsZXNzDQo+U3ViamVjdDogUmU6IEJ1ZyM2NDE0MjQ6IGl3bGFnbjogZmFp
+bHMgdG8gcmVjb25uZWN0IHRvIFdQQTItZW50ZXJwcmlzZQ0KPihSZWFzb246IDIzKQ0KPg0KPltU
+aGUgcHJldmlvdXMgbWVzc2FnZSBpcyBsb2dnZWQgYXQgPGh0dHA6Ly9idWdzLmRlYmlhbi5vcmcv
+NjQxNDI0Pi5dDQo+DQo+T24gVHVlLCAyMDExLTA5LTEzIGF0IDEyOjE1ICswMTAwLCBNaWd1ZWwg
+TWFydGluZXogd3JvdGU6DQo+PiBQYWNrYWdlOiBsaW51eC0yLjYNCj4+IFZlcnNpb246IDMuMC4w
+LTMNCj4+IFNldmVyaXR5OiBub3JtYWwNCj4+DQo+PiBEZWFyIE1haW50YWluZXIsDQo+Pg0KPj4g
+TXkgbGFwdG9wIChUNDAwLCBJbnRlbCBXaUZpIExpbmsgNTMwMCkgaXMgY29ubmVjdGVkIGF0IHVu
+aXZlcnNpdHkNCj4+IHVzaW5nIEVkdXJvYW0sIGFuIFdQQTItZW50ZXJwcmlzZSBuZXR3b3JrLiBB
+ZnRlciBjb25maWd1cmluZyB0aGUNCj4+IGludGVyZmFjZSAoZWl0aGVyIEtERSBvciBHbm9tZTIg
+dmVyc2lvbnMgb2YgbmV0d29yay1tYW5hZ2VyKSwgYQ0KPj4gY29ubmVjdGlvbiB3aWxsIGJlIGVz
+dGFibGlzaGVkLiBBZnRlciBhIHdoaWxlLCBob3dldmVyLCB0aGUgY29ubmVjdGlvbg0KPj4gd2ls
+bCBiZSBkcm9wcGVkIChsb2NhbCByZWFzb24gMyksIGFuZCB3aWxsIG5vdCBiZSByZWVzdGFibGlz
+aGVkDQo+PiAoUmVhc29uOiAyMykgYWZ0ZXIgYW4gaW5kZWZpbml0ZSBudW1iZXIgb2YgYXR0ZW1w
+dHMuIEFwcGFyZW50bHksIG5tIGlzDQo+PiBub3QgYWJsZSB0byByZW5ldyB0aGUgSVAuDQo+Pg0K
+Pj4gPkZyb20gdGhlIGRtZXNnIG91dHB1dCwgaXQgc2VlbXMgdGhlIHdpZmkgY2FyZCBpcyBzdHJ1
+Z2dsaW5nIHRvIGRlY2lkZQ0KPj4gd2hpY2ggb2YgdHdvIEFQIGl0IHNob3VsZCBjb25uZWN0IHRv
+LiBFeHRyYWN0IGZyb20gZG1lc2cgcmlnaHQgYWZ0ZXINCj4+IHRoZSBmaXJzdCBkaXNjb25uZWN0
+Og0KPg0KPkkgdGhpbmsgdGhhdCdzIGEgc3ltcHRvbSwgbm90IGEgY2F1c2Ugb2YgdGhlIGZhaWx1
+cmUuDQo+DQo+PiBbICA4MTcuNTU1MDI1XSB3bGFuMDogZGVhdXRoZW50aWNhdGluZyBmcm9tIDAw
+OjE2OjlkOjdjOjk3OjAyIGJ5IGxvY2FsDQo+PiBjaG9pY2UgKHJlYXNvbj0zKSBbICA4MTcuNTY1
+NjY1XSBjZmc4MDIxMTogQ2FsbGluZyBDUkRBIHRvIHVwZGF0ZQ0KPj4gd29ybGQgcmVndWxhdG9y
+eSBkb21haW4gWyAgODE3LjU3NTUxM10gd2xhbjA6IGF1dGhlbnRpY2F0ZSB3aXRoDQo+PiAwMDox
+NjpjNzo3MTphMTo0MiAodHJ5IDEpIFsgIDgxNy41NzgxNDhdIHdsYW4wOiBhdXRoZW50aWNhdGVk
+IFsNCj4+IDgxNy41NzkxODVdIGNmZzgwMjExOiBXb3JsZCByZWd1bGF0b3J5IGRvbWFpbiB1cGRh
+dGVkOg0KPj4gWyAgODE3LjU3OTE5Ml0gY2ZnODAyMTE6ICAgICAoc3RhcnRfZnJlcSAtIGVuZF9m
+cmVxIEAgYmFuZHdpZHRoKSwNCj4obWF4X2FudGVubmFfZ2FpbiwgbWF4X2VpcnApDQo+PiBbICA4
+MTcuNTc5MjAwXSBjZmc4MDIxMTogICAgICgyNDAyMDAwIEtIeiAtIDI0NzIwMDAgS0h6IEAgNDAw
+MDAgS0h6KSwgKDMwMA0KPm1CaSwgMjAwMCBtQm0pDQo+PiBbICA4MTcuNTc5MjA5XSBjZmc4MDIx
+MTogICAgICgyNDU3MDAwIEtIeiAtIDI0ODIwMDAgS0h6IEAgMjAwMDAgS0h6KSwgKDMwMA0KPm1C
+aSwgMjAwMCBtQm0pDQo+PiBbICA4MTcuNTc5MjE2XSBjZmc4MDIxMTogICAgICgyNDc0MDAwIEtI
+eiAtIDI0OTQwMDAgS0h6IEAgMjAwMDAgS0h6KSwgKDMwMA0KPm1CaSwgMjAwMCBtQm0pDQo+PiBb
+ICA4MTcuNTc5MjI0XSBjZmc4MDIxMTogICAgICg1MTcwMDAwIEtIeiAtIDUyNTAwMDAgS0h6IEAg
+NDAwMDAgS0h6KSwgKDMwMA0KPm1CaSwgMjAwMCBtQm0pDQo+PiBbICA4MTcuNTc5MjMyXSBjZmc4
+MDIxMTogICAgICg1NzM1MDAwIEtIeiAtIDU4MzUwMDAgS0h6IEAgNDAwMDAgS0h6KSwgKDMwMA0K
+Pm1CaSwgMjAwMCBtQm0pDQo+PiBbICA4MTcuNTgwNjU2XSB3bGFuMDogYXNzb2NpYXRlIHdpdGgg
+MDA6MTY6Yzc6NzE6YTE6NDIgKHRyeSAxKSBbDQo+PiA4MTcuNTgzMDQ2XSB3bGFuMDogUlggQXNz
+b2NSZXNwIGZyb20gMDA6MTY6Yzc6NzE6YTE6NDIgKGNhcGFiPTB4NDMxDQo+PiBzdGF0dXM9MCBh
+aWQ9NzgpIFsgIDgxNy41ODMwNDldIHdsYW4wOiBhc3NvY2lhdGVkIFsgIDgxOC42MjYwNjJdDQo+
+PiB3bGFuMDogZGVhdXRoZW50aWNhdGVkIGZyb20gMDA6MTY6Yzc6NzE6YTE6NDIgKFJlYXNvbjog
+MjMpIFsNCj4+IDgxOC42MzQ3MDVdIGNmZzgwMjExOiBDYWxsaW5nIENSREEgdG8gdXBkYXRlIHdv
+cmxkIHJlZ3VsYXRvcnkgZG9tYWluIFsNCj4+IDgxOC42NDQ5NTJdIGNmZzgwMjExOiBXb3JsZCBy
+ZWd1bGF0b3J5IGRvbWFpbiB1cGRhdGVkOg0KPj4gWyAgODE4LjY0NDk2MF0gY2ZnODAyMTE6ICAg
+ICAoc3RhcnRfZnJlcSAtIGVuZF9mcmVxIEAgYmFuZHdpZHRoKSwNCj4obWF4X2FudGVubmFfZ2Fp
+biwgbWF4X2VpcnApDQo+PiBbICA4MTguNjQ0OTY5XSBjZmc4MDIxMTogICAgICgyNDAyMDAwIEtI
+eiAtIDI0NzIwMDAgS0h6IEAgNDAwMDAgS0h6KSwgKDMwMA0KPm1CaSwgMjAwMCBtQm0pDQo+PiBb
+ICA4MTguNjQ0OTc3XSBjZmc4MDIxMTogICAgICgyNDU3MDAwIEtIeiAtIDI0ODIwMDAgS0h6IEAg
+MjAwMDAgS0h6KSwgKDMwMA0KPm1CaSwgMjAwMCBtQm0pDQo+PiBbICA4MTguNjQ0OTg1XSBjZmc4
+MDIxMTogICAgICgyNDc0MDAwIEtIeiAtIDI0OTQwMDAgS0h6IEAgMjAwMDAgS0h6KSwgKDMwMA0K
+Pm1CaSwgMjAwMCBtQm0pDQo+PiBbICA4MTguNjQ0OTkzXSBjZmc4MDIxMTogICAgICg1MTcwMDAw
+IEtIeiAtIDUyNTAwMDAgS0h6IEAgNDAwMDAgS0h6KSwgKDMwMA0KPm1CaSwgMjAwMCBtQm0pDQo+
+PiBbICA4MTguNjQ1MDAwXSBjZmc4MDIxMTogICAgICg1NzM1MDAwIEtIeiAtIDU4MzUwMDAgS0h6
+IEAgNDAwMDAgS0h6KSwgKDMwMA0KPm1CaSwgMjAwMCBtQm0pDQo+PiBbICA4MjEuOTcxNTAyXSB3
+bGFuMDogYXV0aGVudGljYXRlIHdpdGggMDA6MTY6OWQ6N2M6OTc6MDIgKHRyeSAxKSBbDQo+PiA4
+MjEuOTc0MTUxXSB3bGFuMDogYXV0aGVudGljYXRlZCBbICA4MjEuOTc3NTc4XSB3bGFuMDogYXNz
+b2NpYXRlIHdpdGgNCj4+IDAwOjE2OjlkOjdjOjk3OjAyICh0cnkgMSkgWyAgODIxLjk3OTY1OV0g
+d2xhbjA6IFJYIEFzc29jUmVzcCBmcm9tDQo+PiAwMDoxNjo5ZDo3Yzo5NzowMiAoY2FwYWI9MHg0
+MzEgc3RhdHVzPTAgYWlkPTIwNSkgWyAgODIxLjk3OTY2OF0gd2xhbjA6DQo+PiBhc3NvY2lhdGVk
+IFsgIDgyMy4wMTg1OTFdIHdsYW4wOiBkZWF1dGhlbnRpY2F0ZWQgZnJvbQ0KPj4gMDA6MTY6OWQ6
+N2M6OTc6MDIgKFJlYXNvbjogMjMpDQo+Pg0KPj4gRGlzYWJsaW5nIGFuZCByZWVuYWJsaW5nIHRo
+ZSBuZXR3b3JrIGhlbHBzIHRvIHJlY29ubmVjdCB0byBFZHVyb2FtLA0KPj4gYnV0IHdpbGwgbm90
+IGxhc3QgZm9yIGxvbmcsIHJlcGVhdGluZyB0aGUgcGF0dGVybiBkZXNjcmliZWQgYWJvdmUuDQo+
+Pg0KPj4gSSBmaXJzdCB0aG91Z2h0IGl0IHdhcyBhbiBpc3N1ZSB3aXRoIGtuZXR3b3JrLW1hbmFn
+ZXIgaW4gV2hlZXp5J3MgS0RFDQo+PiBbMV0sIHNvIEkgdXBncmFkZWQgdG8gdGVzdGluZy4NCj4N
+Cj4nd2hlZXp5JyBpcyB0aGUgdGVzdGluZyBzdWl0ZSBhdCB0aGUgbW9tZW50LiAgRGlkIHlvdSBz
+dGFydCBmcm9tIGFuIGVhcmxpZXINCj5pbnN0YWxsYXRpb24gb2YgdGVzdGluZywgb3IgZnJvbSBz
+dGFibGUgKCdzcXVlZXplJyk/DQo+DQo+PiBUaGUgaXNzdWUgcmVtYWlucyBpbiBhbGwga2VybmVs
+cyBJJ3ZlDQo+PiB0cmllZC4gSSd2ZSBhbHNvIHRyaWVkIGluc3RhbGxpbmcgR25vbWUgMi4zMiBm
+cm9tIHRlc3RpbmcgYW5kIHVzaW5nDQo+PiBubS1hcHBsZXQuDQo+Pg0KPj4gRm9sbG93aW5nIHN1
+Z2dlc3Rpb25zIGluIHNvbWUgYnVnIHJlcG9ydHMgWzJdLCBJJ3ZlIHRyaWVkIGRpc2FibGluZw0K
+Pj4gMTFuIGFuZC9vciBkaXNhYmxpbmcgcG93ZXIgbWFuYWdlbWVudCAoc2VlbXMgdG8gYmUgb2Zm
+IGluIGFueSBjYXNlKSwNCj4+IGJ1dCBpdCBkb2Vzbid0IGhlbHAuIFRoaXMgaXMgYWxsIG1vcmUg
+cHV6emxpbmcsIHNpbmNlIG15IFVidW50dSAxMC4xMA0KPj4gcGFydGl0aW9uIGhhcyBubyBzdWNo
+IHByb2JsZW1zIHdpdGggRWR1cm9hbS4gSSBzaG91bGQgbm90ZSB0aGF0IFVidW50dQ0KPj4gMTAu
+MTAgZG9lcyBkaXNhYmxlIDExbiwgYnV0IGl0J3MgcmVlbmFibGVkIGZvciAxMS4wNCBhbmQgbGF0
+ZXIuIEkgd2lsbA0KPj4gdHJ5IE9wZW5TVVNFDQo+PiAxMS40IGZyb20gYSBsaXZlIFVTQiB0byBz
+ZWUgaWYgdGhlIHByb2JsZW0gYWxzbyBleGlzdHMgdGhlcmUuDQo+Pg0KPj4gRmluYWxseSwgaXQg
+c2hvdWxkIGJlIG1lbnRpb25lZCB0aGF0IFdQQTIgYXQgaG9tZSB3b3JrcyB3aXRob3V0DQo+PiBp
+c3N1ZXMsIGFuZCB3aXRoIDExbiBlbmFibGVkICh3aGVyZSBJJ20gd3JpdGluZyB0aGlzIGZyb20p
+Lg0KPj4NCj4+IFJlZ2FyZHMsDQo+Pg0KPj4gTWlndWVsDQo+Pg0KPj4gWzFdIGh0dHA6Ly9idWdz
+LmRlYmlhbi5vcmcvY2dpLWJpbi9idWdyZXBvcnQuY2dpP2J1Zz01OTQ0NTINCj4+IFsyXQ0KPj4g
+aHR0cHM6Ly9idWdzLmxhdW5jaHBhZC5uZXQvdWJ1bnR1L21hdmVyaWNrLytzb3VyY2UvbGludXgt
+DQo+ZmlybXdhcmUvK2J1Zw0KPj4gLzYzMDc0OA0KPj4NCj4+DQo+PiAtLSBQYWNrYWdlLXNwZWNp
+ZmljIGluZm86DQo+PiAqKiBWZXJzaW9uOg0KPj4gTGludXggdmVyc2lvbiAzLjAuMC0xLWFtZDY0
+IChEZWJpYW4gMy4wLjAtMykgKGJlbkBkZWNhZGVudC5vcmcudWspDQo+PiAoZ2NjIHZlcnNpb24g
+NC41LjMgKERlYmlhbiA0LjUuMy04KSApICMxIFNNUCBTYXQgQXVnIDI3IDE2OjIxOjExIFVUQw0K
+Pj4gMjAxMQ0KPj4NCj4+ICoqIENvbW1hbmQgbGluZToNCj4+IEJPT1RfSU1BR0U9L2Jvb3Qvdm1s
+aW51ei0zLjAuMC0xLWFtZDY0DQo+PiByb290PVVVSUQ9MjZkMTc4MTctMWFkZC00YjcyLTgzODYt
+MTAzOWE5MGViODNhIHJvIHF1aWV0DQo+PiBhY3BpX3NsZWVwPXNjaV9mb3JjZV9lbmFibGUgaW50
+ZWxfaW9tbXU9b24gcGNpZV9hc3BtPWZvcmNlDQo+Wy4uLl0NCj4NCj5JIGRvbid0IHRoaW5rIGl0
+J3MgbGlrZWx5IHRvIGJlIHJlbGV2YW50LCBidXQgY291bGQgeW91IHRlc3Qgd2l0aG91dCB0aGUN
+Cj4ncGNpZV9hc3BtPWZvcmNlJyBvcHRpb24/DQo+DQo+QmVuLg0KPg0KPi0tDQo+QmVuIEh1dGNo
+aW5ncw0KPlRvIGVyciBpcyBodW1hbjsgdG8gcmVhbGx5IGZvdWwgdGhpbmdzIHVwIHJlcXVpcmVz
+IGEgY29tcHV0ZXIuDQo=
