@@ -1,66 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:49921 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750889Ab1ISFVz (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:35317 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754762Ab1INDst (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 01:21:55 -0400
-Received: by bkbzt4 with SMTP id zt4so6511116bkb.33
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2011 22:21:53 -0700 (PDT)
-Subject: Re: [PATCH 2/2] wl12xx: handle CHANGE_AUTO_MODE_TIMEOUT_EVENT_ID
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1316347759-22030-2-git-send-email-eliad@wizery.com>
-References: <1316347759-22030-1-git-send-email-eliad@wizery.com>
-	 <1316347759-22030-2-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Sep 2011 08:21:50 +0300
-Message-ID: <1316409710.2157.18.camel@cumari> (sfid-20110919_072203_740054_6369A736)
-Mime-Version: 1.0
+	Tue, 13 Sep 2011 23:48:49 -0400
+Date: Wed, 14 Sep 2011 09:19:24 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <stable@kernel.org>
+Subject: Re: [PATCH] ath9k_hw: Fix magnitude/phase coeff correction
+Message-ID: <20110914034922.GA23349@vmraj-lnx.users.atheros.com> (sfid-20110914_054854_917720_D0FDD38E)
+References: <1315320530-2733-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <20110913173226.GF11772@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20110913173226.GF11772@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-09-18 at 15:09 +0300, Eliad Peller wrote: 
-> The fw sends the CHANGE_AUTO_MODE_TIMEOUT_EVENT_ID event
-> when it wants the driver to increase the dynamic ps (auto-mode)
-> timeout (or restore the original timeout).
+On Tue, Sep 13, 2011 at 01:32:26PM -0400, John W. Linville wrote:
+> On Tue, Sep 06, 2011 at 08:18:50PM +0530, Rajkumar Manoharan wrote:
+> > Do the magnitude/phase coeff correction only if the outlier
+> > is detected.
+> > 
+> > Cc: stable@kernel.org
+> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> > ---
+> >  
+> >  static void ar9003_hw_tx_iqcal_load_avg_2_passes(struct ath_hw *ah,
 > 
-> unmask CHANGE_AUTO_MODE_TIMEOUT_EVENT_ID, and increase/restore
-> the dynamic ps default timeout upon getting this event.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+> What is the effect of the bug being fixed here?  Is this fix intended for 3.1?
+>
+The first entry of phase/mag got changed to average if outlier is not detected.
+This patch ensures to update appropriate index of magnitude/phase. This patch is
+applicable from 3.0 onwards.
 
-Okay, now I see you're doing it automatically here (I should read all
-the series before commenting :P).  Anyway, do we really need the debugfs
-stuff? It's okay to make it readable, but I still don't see why we need
-to write.
-
-
-> diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-> index c73fe4c..79ff3bb 100644
-> --- a/drivers/net/wireless/wl12xx/event.c
-> +++ b/drivers/net/wireless/wl12xx/event.c
-> @@ -258,6 +258,14 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
->  		wl12xx_event_soft_gemini_sense(wl,
->  					       mbox->soft_gemini_sense_info);
->  
-> +	if (vector & CHANGE_AUTO_MODE_TIMEOUT_EVENT_ID &&
-> +	    wl->bss_type == BSS_TYPE_STA_BSS) {
-> +		int timeout = -1;
-> +		if (mbox->change_auto_mode_timeout)
-> +			timeout = 500;
-> +		ieee80211_set_dyn_ps_timeout(wl->vif, timeout);
-> +	}
-> +
->  	/*
->  	 * The BSS_LOSE_EVENT_ID is only needed while psm (and hence beacon
->  	 * filtering) is enabled. Without PSM, the stack will receive all
-
-Any more details on why you chose 500? Should this be part of conf or a
-macro to avoid magic numbers?
-
--- 
-Cheers,
-Luca.
-
+--
+Rajkumar
