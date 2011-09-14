@@ -1,26 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:44223 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932092Ab1IMTCD (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:42264 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755168Ab1INJUF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 15:02:03 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 39FCE540674
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2011 15:13:38 -0400 (EDT)
-Subject: Compat-wireless release for 2011-09-13 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110913190202.14EFF40644@repository3.orbit-lab.org> (sfid-20110913_210207_398881_F4970F4D)
-Date: Tue, 13 Sep 2011 15:02:02 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 14 Sep 2011 05:20:05 -0400
+Received: by bkbzt4 with SMTP id zt4so1559356bkb.5
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 02:20:02 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: use kstrtoul_from_user
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1314791413-32358-1-git-send-email-eliad@wizery.com>
+References: <1314791413-32358-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 14 Sep 2011 12:20:00 +0300
+Message-ID: <1315992000.2498.77.camel@cumari> (sfid-20110914_112009_365205_0B638014)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fatal: Unable to look up git.kernel.org (port 9418) (Name or service not known)
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+On Wed, 2011-08-31 at 14:50 +0300, Eliad Peller wrote: 
+> simplify code by calling kstrtoul_from_user() (instead of
+> copy_from_user() + kstrtoul())
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-compat-wireless code metrics
+Applied, thanks!
 
-    806210 - Total upstream lines of code being pulled
-ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
-rsync: connection unexpectedly closed (0 bytes received so far) [sender]
-rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
+-- 
+Cheers,
+Luca.
+
