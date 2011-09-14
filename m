@@ -1,152 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2441 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754574Ab1IWAIP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 20:08:15 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v2 13/19] staging: brcm80211: removed two fullmac sparse
- spinlock warnings
-Date: Thu, 22 Sep 2011 17:07:50 -0700
-Message-ID: <1316736476-23725-14-git-send-email-frankyl@broadcom.com> (sfid-20110923_020846_074321_67326893)
-In-Reply-To: <1316736476-23725-1-git-send-email-frankyl@broadcom.com>
-References: <1316736476-23725-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-gw0-f52.google.com ([74.125.83.52]:59285 "EHLO
+	mail-gw0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933341Ab1INVvD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Sep 2011 17:51:03 -0400
+Received: by gwb1 with SMTP id 1so677621gwb.11
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 14:51:01 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, stable <stable@kernel.org>
+Subject: [PATCH 1/2] rt2800pci: Fix compiler error on PowerPC
+Date: Wed, 14 Sep 2011 16:50:22 -0500
+Message-Id: <1316037024-17340-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20110914_235113_012185_A0E08558)
+In-Reply-To: <1316037024-17340-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1316037024-17340-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Using gcc 4.4.5 on a Powerbook G4 with a PPC cpu, a complicated
+if statement results in incorrect flow, whereas the equivalent switch
+statement works correctly.
 
-By deleting three redundant functions. The spinlock was related to
-event queue operation. Event queue data members were also renamed
-to make their function more clear.
-
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: stable <stable@kernel.org>
 ---
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   49 ++++++++--------------
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h |    6 +-
- 2 files changed, 20 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 2dd28a2..0bda00c 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3181,21 +3181,6 @@ init_priv_mem_out:
- 	return -ENOMEM;
- }
- 
--static void brcmf_lock_eq(struct brcmf_cfg80211_priv *cfg_priv)
--{
--	spin_lock_irq(&cfg_priv->eq_lock);
--}
--
--static void brcmf_unlock_eq(struct brcmf_cfg80211_priv *cfg_priv)
--{
--	spin_unlock_irq(&cfg_priv->eq_lock);
--}
--
--static void brcmf_init_eq_lock(struct brcmf_cfg80211_priv *cfg_priv)
--{
--	spin_lock_init(&cfg_priv->eq_lock);
--}
--
- /*
- * retrieve first queued event from head
- */
-@@ -3205,13 +3190,13 @@ static struct brcmf_cfg80211_event_q *brcmf_deq_event(
- {
- 	struct brcmf_cfg80211_event_q *e = NULL;
- 
--	brcmf_lock_eq(cfg_priv);
--	if (likely(!list_empty(&cfg_priv->eq_list))) {
--		e = list_first_entry(&cfg_priv->eq_list,
--				     struct brcmf_cfg80211_event_q, eq_list);
--		list_del(&e->eq_list);
-+	spin_lock_irq(&cfg_priv->evt_q_lock);
-+	if (likely(!list_empty(&cfg_priv->evt_q_list))) {
-+		e = list_first_entry(&cfg_priv->evt_q_list,
-+				     struct brcmf_cfg80211_event_q, evt_q_list);
-+		list_del(&e->evt_q_list);
+ drivers/net/wireless/rt2x00/rt2800lib.c |   30 +++++++++++++++++-------------
+ 1 files changed, 17 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index ef67f67..23568af 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -3870,19 +3870,23 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 		return -ENODEV;
  	}
--	brcmf_unlock_eq(cfg_priv);
-+	spin_unlock_irq(&cfg_priv->evt_q_lock);
  
- 	return e;
- }
-@@ -3236,9 +3221,9 @@ brcmf_enq_event(struct brcmf_cfg80211_priv *cfg_priv, u32 event,
- 	e->etype = event;
- 	memcpy(&e->emsg, msg, sizeof(struct brcmf_event_msg));
- 
--	brcmf_lock_eq(cfg_priv);
--	list_add_tail(&e->eq_list, &cfg_priv->eq_list);
--	brcmf_unlock_eq(cfg_priv);
-+	spin_lock_irq(&cfg_priv->evt_q_lock);
-+	list_add_tail(&e->evt_q_list, &cfg_priv->evt_q_list);
-+	spin_unlock_irq(&cfg_priv->evt_q_lock);
- 
- 	return err;
- }
-@@ -3276,22 +3261,22 @@ static void brcmf_cfg80211_event_handler(struct work_struct *work)
- 
- static void brcmf_init_eq(struct brcmf_cfg80211_priv *cfg_priv)
- {
--	brcmf_init_eq_lock(cfg_priv);
--	INIT_LIST_HEAD(&cfg_priv->eq_list);
-+	spin_lock_init(&cfg_priv->evt_q_lock);
-+	INIT_LIST_HEAD(&cfg_priv->evt_q_list);
- }
- 
- static void brcmf_flush_eq(struct brcmf_cfg80211_priv *cfg_priv)
- {
- 	struct brcmf_cfg80211_event_q *e;
- 
--	brcmf_lock_eq(cfg_priv);
--	while (!list_empty(&cfg_priv->eq_list)) {
--		e = list_first_entry(&cfg_priv->eq_list,
--				     struct brcmf_cfg80211_event_q, eq_list);
--		list_del(&e->eq_list);
-+	spin_lock_irq(&cfg_priv->evt_q_lock);
-+	while (!list_empty(&cfg_priv->evt_q_list)) {
-+		e = list_first_entry(&cfg_priv->evt_q_list,
-+				     struct brcmf_cfg80211_event_q, evt_q_list);
-+		list_del(&e->evt_q_list);
- 		kfree(e);
+-	if (!rt2x00_rf(rt2x00dev, RF2820) &&
+-	    !rt2x00_rf(rt2x00dev, RF2850) &&
+-	    !rt2x00_rf(rt2x00dev, RF2720) &&
+-	    !rt2x00_rf(rt2x00dev, RF2750) &&
+-	    !rt2x00_rf(rt2x00dev, RF3020) &&
+-	    !rt2x00_rf(rt2x00dev, RF2020) &&
+-	    !rt2x00_rf(rt2x00dev, RF3021) &&
+-	    !rt2x00_rf(rt2x00dev, RF3022) &&
+-	    !rt2x00_rf(rt2x00dev, RF3052) &&
+-	    !rt2x00_rf(rt2x00dev, RF3320) &&
+-	    !rt2x00_rf(rt2x00dev, RF5370) &&
+-	    !rt2x00_rf(rt2x00dev, RF5390)) {
+-		ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
++	switch (rt2x00dev->chip.rf) {
++	case RF2820:
++	case RF2850:
++	case RF2720:
++	case RF2750:
++	case RF3020:
++	case RF2020:
++	case RF3021:
++	case RF3022:
++	case RF3052:
++	case RF3320:
++	case RF5370:
++	case RF5390:
++		break;
++	default:
++		ERROR(rt2x00dev, "Invalid RF chipset 0x%x detected.\n",
++		      rt2x00dev->chip.rf);
+ 		return -ENODEV;
  	}
--	brcmf_unlock_eq(cfg_priv);
-+	spin_unlock_irq(&cfg_priv->evt_q_lock);
- }
  
- static s32 wl_init_priv(struct brcmf_cfg80211_priv *cfg_priv)
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-index 79806c0..14a32e1 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -199,7 +199,7 @@ struct brcmf_cfg80211_ie {
- 
- /* event queue for cfg80211 main event */
- struct brcmf_cfg80211_event_q {
--	struct list_head eq_list;
-+	struct list_head evt_q_list;
- 	u32 etype;
- 	struct brcmf_event_msg emsg;
- 	s8 edata[1];
-@@ -282,8 +282,8 @@ struct brcmf_cfg80211_priv {
- 	struct cfg80211_scan_request *scan_request;	/* scan request
- 							 object */
- 	struct brcmf_cfg80211_event_loop el;	/* main event loop */
--	struct list_head eq_list;	/* used for event queue */
--	spinlock_t eq_lock;	/* for event queue synchronization */
-+	struct list_head evt_q_list;	/* used for event queue */
-+	spinlock_t	 evt_q_lock;	/* for event queue synchronization */
- 	struct mutex usr_sync;	/* maily for dongle up/down synchronization */
- 	struct brcmf_scan_results *bss_list;	/* bss_list holding scanned
- 						 ap information */
 -- 
-1.7.1
-
+1.7.6.1
 
