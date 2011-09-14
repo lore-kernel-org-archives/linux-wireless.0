@@ -1,75 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:61488 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754120Ab1I2CdW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 22:33:22 -0400
-Received: by eya28 with SMTP id 28so83676eya.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2011 19:33:21 -0700 (PDT)
-Message-ID: <4E83D8B1.1080002@gmail.com> (sfid-20110929_043326_224211_1EEEBA30)
-Date: Thu, 29 Sep 2011 04:32:17 +0200
-From: Stefan Zwanenburg <stefanhetzwaantje@gmail.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: 'Chaoming_Li' <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: =?UTF-8?B?562U5aSNOiDnrZTlpI06IOetlOWkjTogUlRMODE5MlNFIGFuZCA=?=
- =?UTF-8?B?ODAyLjExbiBwcm9ibGVt?=
-References: <4E77AECF.7090001@gmail.com> <4E820130.7080801@gmail.com> <4E823976.2090407@lwfinger.net> <4E824D75.1070509@gmail.com> <4E82A8E9.60409@lwfinger.net> <4E83AD85.8050005@gmail.com>
-In-Reply-To: <4E83AD85.8050005@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:58753 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932915Ab1INTYg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Sep 2011 15:24:36 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 12/12] ath9k: do not insert padding into tx buffers on AR9380+
+Date: Wed, 14 Sep 2011 21:24:27 +0200
+Message-Id: <1316028267-34187-12-git-send-email-nbd@openwrt.org> (sfid-20110914_212441_562019_9DB60F26)
+In-Reply-To: <1316028267-34187-11-git-send-email-nbd@openwrt.org>
+References: <1316028267-34187-1-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-2-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-3-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-4-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-5-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-6-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-7-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-8-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-9-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-10-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-11-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/29/2011 01:28 AM, Stefan Zwanenburg wrote:
-> I had some time on my hands, so I tried to figure out how to dump the
-> EEPROM data myself, and have done so using the following patch (based on
-> linux-3.0.4):
->
-> --- drivers/net/wireless/rtlwifi/rtl8192se/hw.c    2011-07-22
-> 04:17:23.000000000 +0200
-> +++ /home/psychotic/Desktop/rtl8192se_hw.c    2011-09-29
-> 01:16:09.361978051 +0200
-> @@ -1645,6 +1645,13 @@
->      RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, ("MAP\n"),
->                hwinfo, HWSET_MAX_SIZE_92S);
->  
-> +    printk("RTL8192SE - got EEPROM data:");
-> +    for (i = 0; i < HWSET_MAX_SIZE_92S; i++) {
-> +        if (i % 6 == 0)
-> +            printk("\n  ");
-> +        printk("%02X ", hwinfo[i]);
-> +    }
-> +
->      eeprom_id = *((u16 *)&hwinfo[0]);
->      if (eeprom_id != RTL8190_EEPROM_ID) {
->          RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
-For posterity's sake, there was a slightly smaller workaround here, and
-it would be as in the following patch:
+With the new EDMA descriptor format, a single descriptor can contain up
+to four buffer pointers. By splitting the buffer into two parts, we can
+let the hardware add the padding internally instead of using memmove on
+the skb data.
 
---- drivers/net/wireless/rtlwifi/rtl8192se/hw.c    2011-09-29
-04:20:14.660831861 +0200
-+++ drivers/net/wireless/rtlwifi/rtl8192se/hw.c    2011-09-29
-04:20:05.303831474 +0200
-@@ -1642,7 +1642,7 @@
-             HWSET_MAX_SIZE_92S);
-     }
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |   56 +++++++++++++++++++++-----------
+ 1 files changed, 37 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index a0cd51f..2c6aefa 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1017,6 +1017,8 @@ static void ath_tx_fill_desc(struct ath_softc *sc, struct ath_buf *bf,
+ 	while (bf) {
+ 		struct sk_buff *skb = bf->bf_mpdu;
+ 		struct ath_frame_info *fi = get_frame_info(skb);
++		struct ieee80211_hdr *hdr;
++		int padpos, padsize;
  
--    RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, ("MAP\n"),
-+    RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_EMERG, ("MAP\n"),
-               hwinfo, HWSET_MAX_SIZE_92S);
+ 		info.type = get_hw_packet_type(skb);
+ 		if (bf->bf_next)
+@@ -1024,8 +1026,20 @@ static void ath_tx_fill_desc(struct ath_softc *sc, struct ath_buf *bf,
+ 		else
+ 			info.link = 0;
  
-     eeprom_id = *((u16 *)&hwinfo[0]);
+-		info.buf_addr[0] = bf->bf_buf_addr;
+-		info.buf_len[0] = skb->len;
++		if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
++			hdr = (struct ieee80211_hdr *)skb->data;
++			padpos = ath9k_cmn_padpos(hdr->frame_control);
++			padsize = padpos & 3;
++
++			info.buf_addr[0] = bf->bf_buf_addr;
++			info.buf_len[0] = padpos + padsize;
++			info.buf_addr[1] = info.buf_addr[0] + padpos;
++			info.buf_len[1] = skb->len - padpos;
++		} else {
++			info.buf_addr[0] = bf->bf_buf_addr;
++			info.buf_len[0] = skb->len;
++		}
++
+ 		info.pkt_len = fi->framelen;
+ 		info.keyix = fi->keyix;
+ 		info.keytype = fi->keytype;
+@@ -1878,15 +1892,17 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		hdr->seq_ctrl |= cpu_to_le16(sc->tx.seq_no);
+ 	}
+ 
+-	/* Add the padding after the header if this is not already done */
+-	padpos = ath9k_cmn_padpos(hdr->frame_control);
+-	padsize = padpos & 3;
+-	if (padsize && skb->len > padpos) {
+-		if (skb_headroom(skb) < padsize)
+-			return -ENOMEM;
++	if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)) {
++		/* Add the padding after the header if this is not already done */
++		padpos = ath9k_cmn_padpos(hdr->frame_control);
++		padsize = padpos & 3;
++		if (padsize && skb->len > padpos) {
++			if (skb_headroom(skb) < padsize)
++				return -ENOMEM;
+ 
+-		skb_push(skb, padsize);
+-		memmove(skb->data, skb->data + padsize, padpos);
++			skb_push(skb, padsize);
++			memmove(skb->data, skb->data + padsize, padpos);
++		}
+ 	}
+ 
+ 	if ((vif && vif->type != NL80211_IFTYPE_AP &&
+@@ -1936,15 +1952,17 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 		/* Frame was ACKed */
+ 		tx_info->flags |= IEEE80211_TX_STAT_ACK;
+ 
+-	padpos = ath9k_cmn_padpos(hdr->frame_control);
+-	padsize = padpos & 3;
+-	if (padsize && skb->len>padpos+padsize) {
+-		/*
+-		 * Remove MAC header padding before giving the frame back to
+-		 * mac80211.
+-		 */
+-		memmove(skb->data + padsize, skb->data, padpos);
+-		skb_pull(skb, padsize);
++	if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)) {
++		padpos = ath9k_cmn_padpos(hdr->frame_control);
++		padsize = padpos & 3;
++		if (padsize && skb->len>padpos+padsize) {
++			/*
++			 * Remove MAC header padding before giving the frame back to
++			 * mac80211.
++			 */
++			memmove(skb->data + padsize, skb->data, padpos);
++			skb_pull(skb, padsize);
++		}
+ 	}
+ 
+ 	if (sc->ps_flags & PS_WAIT_FOR_TX_ACK) {
+-- 
+1.7.3.2
 
-It's rather nasty though, as it pretends that dumping the EEPROM data is
-happening right before a fatal error has occurred. But there's really no
-other way, as using sysfs to set the "global_debuglevel" is not good
-enough because the EEPROM data is read right after the module is loaded
-(making it hard to set the debuglevel in time).
-
-If this info is useless to you, disregard it!
-
-Stefan Zwanenburg
-
-PS: the EEPROM data I mentioned in my previous message is still the same
-though, so I won't bother to repost it.
