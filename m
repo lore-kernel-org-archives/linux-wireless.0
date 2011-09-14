@@ -1,39 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:34214 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753681Ab1INCEB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 22:04:01 -0400
-Date: Wed, 14 Sep 2011 05:01:25 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Roland Vossen <rvossen@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 14/17] staging: brcm80211: simplification of
- brcmf_netdev_ioctl_priv()
-Message-ID: <20110914020124.GB7002@shale.localdomain> (sfid-20110914_040415_963961_43C65BF5)
-References: <1315900197-7260-1-git-send-email-rvossen@broadcom.com>
- <1315900197-7260-15-git-send-email-rvossen@broadcom.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:4828 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755031Ab1INJLb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Sep 2011 05:11:31 -0400
+From: "Arend Van Spriel" <arend@broadcom.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+cc: "Francis Moreau" <francis.moro@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"gregkh@suse.de" <gregkh@suse.de>
+Date: Wed, 14 Sep 2011 02:11:17 -0700
+Subject: RE: About the patch:
+ "staging: brcm80211: only enable brcmsmac if bcma is not set"
+Message-ID: <400C43189542CE41BC0A5B252FC90136BC0C9DEF26@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20110914_111135_010020_62BF4E6B)
+References: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com>
+ <CACna6rwQ60viPGssWzBzgtVGBq1xu+AOxb0fqfRq4NaJFcmP=w@mail.gmail.com>
+ <CAC9WiBi5L7uV=OzYBKs=sdjRr4Xykcd2USQPtPhCsSBLdpW-6g@mail.gmail.com>
+ <20110913132844.GB11772@tuxdriver.com>
+ <CACna6ryHL1K-1E7aZz_-5XzQZST5bzM4Fh99HbcmQDXvjn4ooA@mail.gmail.com>
+In-Reply-To: <CACna6ryHL1K-1E7aZz_-5XzQZST5bzM4Fh99HbcmQDXvjn4ooA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1315900197-7260-15-git-send-email-rvossen@broadcom.com>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 13, 2011 at 09:49:54AM +0200, Roland Vossen wrote:
-> +	if (ioc->buf != NULL)
-> +		buflen = min_t(int, ioc->len, BRCMF_IOCTL_MAXLEN);
-                              ^^^^
-Should be uint here.
-
-In Linus's tree we cast buflen to int in brcmf_proto_ioctl() so the
-cap there doesn't work either.
-
-        if (len > BRCMF_C_IOCTL_MAXLEN)
-		goto done;
-
-(len is negative).
-
-regards,
-dan carpenter
+UmFmYWwsDQoNCkZyYW5jaXMgaGFzIGEgNDMxMy4gQXMgc3VwcG9ydCBmb3IgdGhhdCBkZXZpY2Ug
+aXMgbm90IHlldCBpbiBiNDMgeW91IGNvdWxkIGNvbnNpZGVyIG5vdCBjbGFpbWluZyBpdCBmb3Ig
+bm93IGluIGJjbWEuDQoNCkdyLiBBdlMNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZy
+b206IFJhZmHFgiBNacWCZWNraSBbbWFpbHRvOnphamVjNUBnbWFpbC5jb21dIA0KU2VudDogZGlu
+c2RhZyAxMyBzZXB0ZW1iZXIgMjAxMSAyMjoyNg0KVG86IEpvaG4gVy4gTGludmlsbGUNCkNjOiBG
+cmFuY2lzIE1vcmVhdTsgQXJlbmQgVmFuIFNwcmllbDsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
+ZWwub3JnOyBncmVna2hAc3VzZS5kZQ0KU3ViamVjdDogUmU6IEFib3V0IHRoZSBwYXRjaDogInN0
+YWdpbmc6IGJyY204MDIxMTogb25seSBlbmFibGUgYnJjbXNtYWMgaWYgYmNtYSBpcyBub3Qgc2V0
+Ig0KDQoyMDExLzkvMTMgSm9obiBXLiBMaW52aWxsZSA8bGludmlsbGVAdHV4ZHJpdmVyLmNvbT46
+DQo+IE9uIFR1ZSwgU2VwIDEzLCAyMDExIGF0IDA5OjAzOjEzQU0gKzAyMDAsIEZyYW5jaXMgTW9y
+ZWF1IHdyb3RlOg0KPj4gMjAxMS85LzEyIFJhZmHFgiBNacWCZWNraSA8emFqZWM1QGdtYWlsLmNv
+bT46DQo+DQo+PiA+IFRoZSByZWFsIHNvbHV0aW9uIGlzIHRvIGFkZCBiY21hIGRyaXZlciBzdXBw
+b3J0IGluIGJyY21zbWFjIGFuZCBzc2INCj4+ID4gZHJpdmVyIHN1cHBvcnQgaW4gYnJjbWZtYWMu
+IFRoZW4geW91IGNhbiBhbHdheXMgdXNlIGJjbWEgYW5kOg0KPj4gPiAxKSBJZiBiNDMgd2lsbCBs
+b2FkIGFuZCBkZXRlY3QgdW5zdXBwb3J0ZWQgUEhZLCBpdCB3aWxsIHJlbGVhc2UgdGhlIEJDTUEn
+cyBjb3JlDQo+PiA+IDIpIGJyY21zbWFjIHdpbGwgYmUgbG9hZGVkIHRvIGxldCBpdCBzdXBwb3J0
+IHRoZSBjb3JlDQo+PiA+DQo+Pg0KPj4gVGhhbmtzIGZvciB0aGUgZGVzY3JpcHRpb24uDQo+Pg0K
+Pj4gQnV0IHdoYXQgc2hvdWxkIGJlIGRvbmUgZm9yIHRoZSB0aW1lIGJlaW5nICgzLjEtcmM1KSA/
+DQo+DQo+IFR1cm4tb2ZmIENPTkZJR19CNDNfQkNNQS4NCg0KV2VsbCwgdGhhdCB3b24ndCBwcmV2
+ZW50IGJjbWEgZnJvbSBsb2FkaW5nIGFuZCB0YWtpbmcgdGhlIChQQ0kpDQpkZXZpY2UuIGJyY21z
+bWFjIHN0aWxsIHdvbid0IGJlIGFibGUgdG8gZ3JhYiB0aGF0IGRldmljZS4NCkNPTkZJR19CNDNf
+QkNNQSBkb2Vzbid0IGFmZmVjdCBiY21hIGJ1cyBkcml2ZXIuDQoNClRoZXJlIGFyZSAyIGRyaXZl
+cnMgcmVxdWVzdGluZyBmb3IgdGhlIHNhbWUgUENJIGlkczogYmNtYSBhbmQNCmJyY21zbWFjLiBZ
+b3UgbWF5IHdhbnQgdG8ganVzdCBibGFja2xpc3QgYmNtYSBpZiB5b3UncmUgZ29pbmcgdG8gdXNl
+DQpicmNtc21hYy4NCg0KLS0gDQpSYWZhxYINCg0K
 
