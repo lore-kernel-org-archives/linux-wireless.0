@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45933 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752808Ab1IWKXJ (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:45402 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750699Ab1INEJM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 06:23:09 -0400
-Subject: Re: [RFC 2/2] mac80211: Send the management frame at requested rate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-In-Reply-To: <1316773324.4058.2.camel@jlt3.sipsolutions.net> (sfid-20110923_122212_939998_57596E54)
-References: <1316703516-24216-1-git-send-email-rmanohar@qca.qualcomm.com>
-	 <1316703516-24216-2-git-send-email-rmanohar@qca.qualcomm.com>
-	 <1316773324.4058.2.camel@jlt3.sipsolutions.net>
-	 (sfid-20110923_122212_939998_57596E54)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 23 Sep 2011 12:23:05 +0200
-Message-ID: <1316773385.4058.3.camel@jlt3.sipsolutions.net> (sfid-20110923_122313_671614_2D959DD6)
-Mime-Version: 1.0
+	Wed, 14 Sep 2011 00:09:12 -0400
+Received: by gyg10 with SMTP id 10so1099121gyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2011 21:09:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110913080246.184260@gmx.net>
+References: <20110913080246.184260@gmx.net>
+Date: Wed, 14 Sep 2011 12:09:12 +0800
+Message-ID: <CAJ-Vmo=q=aJ73Y8sOv_fTNCDM=DhB7Cp0C0NGHpS-GXY=77tHw@mail.gmail.com> (sfid-20110914_060919_121820_3118D787)
+Subject: Re: AR9170 chipset details
+From: Adrian Chadd <adrian@freebsd.org>
+To: Louis <louis.m@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-09-23 at 12:22 +0200, Johannes Berg wrote:
+On 13 September 2011 16:02, Louis <louis.m@gmx.net> wrote:
+> Hello,
+>
+> I need a detailed description of the Atheros AR9170 chipset.
 
-> > +	if (ieee80211_is_probe_req(hdr->frame_control) &&
-> > +	    tx->sdata->local->scan_req &&
-> > +	    tx->sdata->local->scan_req->no_cck)
-> > +		info->flags |= IEEE80211_TX_CTL_NO_CCK_RATE;
-> > +
-> 
-> I think this would make more sense in ieee80211_send_probe_req() rather
-> than here where it'll be executed for every frame.
+You're not going to find anything publicly detailed, unfortunately.
 
-In fact, maybe ieee80211_send_probe_req() should just get an argument to
-avoid all the checks.
+> Since Qualcomm and Atheros merged, there are only descriptions of the most recent chips available on their homepage and even not in the detailed depth I would like to have.
 
-johannes
+What kind of detailed descriptions are you after?
 
+> Does someone know if there is a reference guide or a detailed datasheet with the chip`s functions and register descriptions available somewhere.
+
+There's nothing private. There may be documentation available if
+you're working on open source AR9170 support.
+
+> On which information base has the carl91790 driver been developed?
+
+The Otus firmware sources were thrown into a git repository a while
+ago; I believe this formed a base for some of the AR9170 open source
+work.
+
+git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/otus.git
+
+Other than that, Christian is likely the best person to talk to as
+he's the AR9170 firmware maintainer.
+
+
+
+adrian
