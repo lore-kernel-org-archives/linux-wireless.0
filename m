@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36765 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757191Ab1IAMUK (ORCPT
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:50990 "EHLO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756057Ab1INJ4e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 08:20:10 -0400
-Subject: RE: [RFC] nl80211: Added NL80211 commands for Bluetooth-WiFi coex
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: "Sumangala, Suraj" <surajs@qca.qualcomm.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>,
-	"Balasubramanian, senthilkumar" <senthilb@qca.qualcomm.com>,
-	"Mehta, Vipin" <vipimeht@qca.qualcomm.com>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1314877381.3373.284.camel@aeonflux>
-References: <1314771915-8848-1-git-send-email-surajs@qca.qualcomm.com>
-	 (sfid-20110831_082525_612687_34CC3735),<1314772217.4161.10.camel@jlt3.sipsolutions.net>
-	 <480687D4EEFE7447A2E09AADFF6673621AF7CDCF@nasanexd02a.na.qualcomm.com>
-	 ,<1314772832.4161.16.camel@jlt3.sipsolutions.net>
-	 <480687D4EEFE7447A2E09AADFF6673621AF7CE0B@nasanexd02a.na.qualcomm.com>
-	 <1314801657.3373.260.camel@aeonflux>
-	 <480687D4EEFE7447A2E09AADFF6673621AF7DF82@nasanexd02a.na.qualcomm.com>
-	 <1314831118.3373.266.camel@aeonflux>
-	 <480687D4EEFE7447A2E09AADFF6673621AF827CC@nasanexd02a.na.qualcomm.com>
-	 <1314877381.3373.284.camel@aeonflux>
+	Wed, 14 Sep 2011 05:56:34 -0400
+Received: by bkas6 with SMTP id s6so2010210bka.16
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 02:56:30 -0700 (PDT)
+Subject: Re: [PATCH 1/6] wl12xx: don't indicate up PS-filtered dummy packets
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1314265397-19873-1-git-send-email-arik@wizery.com>
+References: <1314265397-19873-1-git-send-email-arik@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 01 Sep 2011 14:20:02 +0200
-Message-ID: <1314879602.4022.1.camel@jlt3.sipsolutions.net> (sfid-20110901_142014_247740_E241C6C8)
+Date: Wed, 14 Sep 2011 12:56:27 +0300
+Message-ID: <1315994187.2498.89.camel@cumari> (sfid-20110914_115636_939487_E917DB77)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-09-01 at 04:43 -0700, Marcel Holtmann wrote:
+On Thu, 2011-08-25 at 12:43 +0300, Arik Nemtsov wrote: 
+> Dummy packets are currently only sent on the system_hlid link. The
+> system_hlid link should never be filtered for PS (as it is not
+> a STA link). Even so, for correctness, don't indicate dummy packets up.
+> The skb does not belong to mac80211 and as such does not contain a
+> correct skb->cb.
+> 
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
-> We also should not forget direct integration support for changing AFH
-> channel maps based on the used WiFi channels.
+Applied this patchset, thanks!
 
-I would really prefer to see that first, much simpler and it gives us an
-idea of how to work across BT/wifi subsystems.
-
-johannes
+-- 
+Cheers,
+Luca.
 
