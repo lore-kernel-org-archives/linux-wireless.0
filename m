@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37472 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38553 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755657Ab1IPRsx (ORCPT
+	with ESMTP id S1755168Ab1INI5l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 13:48:53 -0400
-Message-ID: <4E738BFE.7080201@qca.qualcomm.com> (sfid-20110916_194857_388038_5D933FE6)
-Date: Fri, 16 Sep 2011 20:48:46 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Wed, 14 Sep 2011 04:57:41 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	<stable@kernel.org>
+Subject: [PATCH] wireless: Reset beacon_found while updating regulatory
+Date: Wed, 14 Sep 2011 14:28:17 +0530
+Message-ID: <1315990697-3575-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110914_105745_689628_AD3F0019)
 MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k_htc: "No free RX buffer" in monitor mode
-References: <4E737241.2080301@qca.qualcomm.com> <CAD2nsn14EnEWyu2ifM6-5evQN4qGqe4Me7wsZ=xLPt+RBpJeWw@mail.gmail.com>
-In-Reply-To: <CAD2nsn14EnEWyu2ifM6-5evQN4qGqe4Me7wsZ=xLPt+RBpJeWw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Shafi,
+During the association, the regulatory is updated by country IE
+that reaps the previously found beacons. The impact is that
+after a STA disconnects *or* when for any reason a regulatory
+domain change happens the beacon hint flag is not cleared
+therefore preventing future beacon hints to be learned.
+This is important as a regulatory domain change or a restore
+of regulatory settings would set back the passive scan and no-ibss
+flags on the channel. This is the right place to do this given that
+it covers any regulatory domain change.
 
-On 09/16/2011 07:09 PM, Mohammed Shafi wrote:
-> On Fri, Sep 16, 2011 at 9:28 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Hi,
->>
->> I was testing monitor mode with ath9k_htc and my laptop got slower. Then
->> I noticed this:
->>
->> [ 9246.606150] ath: No free RX buffer
->> [ 9246.606156] ath: No free RX buffer
->> [ 9246.606582] ath: No free RX buffer
->> [ 9246.606590] ath: No free RX buffer
->>
->> And I saw it quite a lot:
-> 
-> we saw this some time back in AP mode occasionally and it never came
-> up for as in monitor mode. we need to fix this.
-> i will try to fix this.
+Cc: stable@kernel.org
+Reviewed-by: Luis R. Rodriguez <mcgrof@gmail.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ net/wireless/reg.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Thanks! I will run more tests with monitor mode next week and will let
-you know if I see it again.
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index a2b09c2..1bbd2a9 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -851,6 +851,7 @@ static void handle_channel(struct wiphy *wiphy,
+ 		return;
+ 	}
+ 
++	chan->beacon_found = false;
+ 	chan->flags = flags | bw_flags | map_regdom_flags(reg_rule->flags);
+ 	chan->max_antenna_gain = min(chan->orig_mag,
+ 		(int) MBI_TO_DBI(power_rule->max_antenna_gain));
+-- 
+1.7.6.1
 
-Kalle
