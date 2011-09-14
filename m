@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:60245 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752592Ab1ITXXa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 19:23:30 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 6/8] iwlagn: remove uneeded declaration
-Date: Tue, 20 Sep 2011 15:37:25 -0700
-Message-Id: <1316558247-10018-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110921_012347_477236_417BD17F)
-In-Reply-To: <1316558247-10018-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1316558247-10018-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:42913 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750715Ab1INWxj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Sep 2011 18:53:39 -0400
+Received: by wwf22 with SMTP id 22so2849909wwf.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 15:53:38 -0700 (PDT)
+From: Miguel =?iso-8859-15?q?Mart=EDnez?= <el.quark@gmail.com>
+Reply-To: el.quark@gmail.com
+To: "641424@bugs.debian.org" <641424@bugs.debian.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Bug#641424: iwlagn: fails to reconnect to WPA2-enterprise (Reason: 23)
+Date: Wed, 14 Sep 2011 23:53:34 +0100
+References: <C5A7FB31FD9AEA42B600BDC3C74F8E00147CB207@orsmsx511.amr.corp.intel.com>
+In-Reply-To: <C5A7FB31FD9AEA42B600BDC3C74F8E00147CB207@orsmsx511.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201109142353.35030.el.quark@gmail.com> (sfid-20110915_005342_545240_412BB601)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+OK, thanks for the tip. Debian kernel 3.0.0-1 doesn't have these options 
+enabled, so I'll get to know how good the debian kernel build tools are.
 
-This has been removed but the declaration hasn't.
+$ grep CONFIG_IWLWIFI /boot/config-3.0.0-1-amd64 | grep -i debug
+# CONFIG_IWLWIFI_DEBUG is not set
+# CONFIG_IWLWIFI_LEGACY_DEBUG is not set
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+$ grep CONFIG_MAC80211 /boot/config-3.0.0-1-amd64 
+CONFIG_MAC80211=m
+CONFIG_MAC80211_HAS_RC=y
+CONFIG_MAC80211_RC_MINSTREL=y
+CONFIG_MAC80211_RC_MINSTREL_HT=y
+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
+CONFIG_MAC80211_RC_DEFAULT="minstrel_ht"
+CONFIG_MAC80211_MESH=y
+CONFIG_MAC80211_LEDS=y
+# CONFIG_MAC80211_DEBUGFS is not set
+# CONFIG_MAC80211_DEBUG_MENU is not set
+CONFIG_MAC80211_HWSIM=m
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-index 0e7d915..2b6756e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-@@ -275,8 +275,6 @@ int iwlagn_txq_attach_buf_to_tfd(struct iwl_trans *trans,
- 				 dma_addr_t addr, u16 len, u8 reset);
- int iwl_queue_init(struct iwl_queue *q, int count, int slots_num, u32 id);
- int iwl_trans_pcie_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd);
--int __must_check iwl_trans_pcie_send_cmd_pdu(struct iwl_trans *trans, u8 id,
--			u32 flags, u16 len, const void *data);
- void iwl_tx_cmd_complete(struct iwl_trans *trans,
- 			 struct iwl_rx_mem_buffer *rxb, int handler_status);
- void iwl_trans_txq_update_byte_cnt_tbl(struct iwl_trans *trans,
--- 
-1.7.0.4
+Also, Ubuntu 10.10 has kernel 2.6.35, with some extra sauce and backports. 
+I've seen some mentions of 2.6.38 in the changelogs. The iwlagn entries 
+mention only some rfkill changes, though.
 
+Regards,
+
+Miguel
