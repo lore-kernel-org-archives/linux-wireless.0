@@ -1,152 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:50642 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752359Ab1IEMDB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Sep 2011 08:03:01 -0400
-Received: by mail-yw0-f42.google.com with SMTP id 3so3080544ywb.15
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Sep 2011 05:02:59 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <johannes@sipsolutions.net>
-Subject: [RFC v2 1/5] nl80211/cfg80211: adding 'scan_cancel' command.
-Date: Mon,  5 Sep 2011 15:02:27 +0300
-Message-Id: <1315224151-16552-2-git-send-email-VictorG@ti.com> (sfid-20110905_140304_035208_85511FF0)
-In-Reply-To: <1315224151-16552-1-git-send-email-VictorG@ti.com>
-References: <1315224151-16552-1-git-send-email-VictorG@ti.com>
+Received: from nbd.name ([46.4.11.11]:58735 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757430Ab1INTYd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Sep 2011 15:24:33 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 02/12] ath9k: reduce the number of functions that access the tx descriptor
+Date: Wed, 14 Sep 2011 21:24:17 +0200
+Message-Id: <1316028267-34187-2-git-send-email-nbd@openwrt.org> (sfid-20110914_212439_173964_170F7F88)
+In-Reply-To: <1316028267-34187-1-git-send-email-nbd@openwrt.org>
+References: <1316028267-34187-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mostly from an energy consumption and cpu load perspective,
-it can be useful to stop a triggered scan earlier, when one
-finds the desired scan results.
-Adding the ability to stop a scan from user space by exposing
-new NL80211_CMD_SCAN_CANCEL API.
+Makes it easier to clean up the ath9k_hw descriptor API
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- include/linux/nl80211.h |    7 +++++++
- include/net/cfg80211.h  |    2 ++
- net/wireless/core.h     |    1 +
- net/wireless/nl80211.c  |   13 +++++++++++++
- net/wireless/scan.c     |   16 ++++++++++++++++
- 5 files changed, 39 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
+ drivers/net/wireless/ath/ath9k/xmit.c  |   91 +++++++++++++++++++------------
+ 2 files changed, 57 insertions(+), 35 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 89dec16..2fee93a 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -499,6 +499,11 @@
-  *	this command may also be sent by the driver as an MLME event to
-  *	inform userspace of the new replay counter.
-  *
-+ * @NL80211_CMD_SCAN_CANCEL: Stop currently running scan (both sw and hw).
-+ *	This operation will eventually invoke %NL80211_CMD_SCAN_ABORTED
-+ *	event, partial scan results will be available. Returns -ENOENT
-+ *	if scan is not running.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -623,6 +628,8 @@ enum nl80211_commands {
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 51d4a60..9a10ab1 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -213,6 +213,7 @@ struct ath_frame_info {
+ struct ath_buf_state {
+ 	u8 bf_type;
+ 	u8 bfs_paprd;
++	u8 ndelim;
+ 	u16 seqno;
+ 	unsigned long bfs_paprd_timestamp;
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 5404982..48ac9ff 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -774,7 +774,7 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 		if (!bf)
+ 			continue;
  
- 	NL80211_CMD_SET_REKEY_OFFLOAD,
+-		bf->bf_state.bf_type |= BUF_AMPDU;
++		bf->bf_state.bf_type = BUF_AMPDU | BUF_AGGR;
+ 		seqno = bf->bf_state.seqno;
+ 		if (!bf_first)
+ 			bf_first = bf;
+@@ -824,20 +824,17 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
  
-+	NL80211_CMD_SCAN_CANCEL,
+ 		nframes++;
+ 		bf->bf_next = NULL;
+-		ath9k_hw_set_desc_link(sc->sc_ah, bf->bf_desc, 0);
+ 
+ 		/* link buffers of this frame to the aggregate */
+ 		if (!fi->retries)
+ 			ath_tx_addto_baw(sc, tid, seqno);
+-		ath9k_hw_set11n_aggr_middle(sc->sc_ah, bf->bf_desc, ndelim);
++		bf->bf_state.ndelim = ndelim;
+ 
+ 		__skb_unlink(skb, &tid->buf_q);
+ 		list_add_tail(&bf->list, bf_q);
+-		if (bf_prev) {
++		if (bf_prev)
+ 			bf_prev->bf_next = bf;
+-			ath9k_hw_set_desc_link(sc->sc_ah, bf_prev->bf_desc,
+-					       bf->bf_daddr);
+-		}
 +
- 	/* add new commands above here */
+ 		bf_prev = bf;
  
- 	/* used to define NL80211_CMD_MAX below */
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d86a15d..7b0c31e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1298,6 +1298,7 @@ struct cfg80211_gtk_rekey_data {
-  *	the driver, and will be valid until passed to cfg80211_scan_done().
-  *	For scan results, call cfg80211_inform_bss(); you can call this outside
-  *	the scan/scan_done bracket too.
-+ * @scan_cancel: Stop currently running scan (both sw and hw).
-  *
-  * @auth: Request to authenticate with the specified peer
-  * @assoc: Request to (re)associate with the specified peer
-@@ -1465,6 +1466,7 @@ struct cfg80211_ops {
- 
- 	int	(*scan)(struct wiphy *wiphy, struct net_device *dev,
- 			struct cfg80211_scan_request *request);
-+	void    (*scan_cancel)(struct wiphy *wiphy, struct net_device *dev);
- 
- 	int	(*auth)(struct wiphy *wiphy, struct net_device *dev,
- 			struct cfg80211_auth_request *req);
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 8672e02..af22fe3 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -421,6 +421,7 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak);
- void __cfg80211_sched_scan_results(struct work_struct *wk);
- int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
- 			       bool driver_initiated);
-+int cfg80211_scan_cancel(struct cfg80211_registered_device *rdev);
- void cfg80211_upload_connect_keys(struct wireless_dev *wdev);
- int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 			  struct net_device *dev, enum nl80211_iftype ntype,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 2aa6a21..f9f239f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3766,6 +3766,11 @@ static int nl80211_stop_sched_scan(struct sk_buff *skb,
- 	return err;
+ 	} while (!skb_queue_empty(&tid->buf_q));
+@@ -848,12 +845,50 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ #undef PADBYTES
  }
  
-+static int nl80211_scan_cancel(struct sk_buff *skb, struct genl_info *info)
++static void ath_tx_fill_desc(struct ath_softc *sc, struct ath_buf *bf, int len)
 +{
-+	return cfg80211_scan_cancel(info->user_ptr[0]);
++	struct ath_hw *ah = sc->sc_ah;
++	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
++	struct ath_buf *bf_first = bf;
++
++	bool aggr = !!(bf->bf_state.bf_type & BUF_AGGR);
++	bool clrdmask = !!(tx_info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT);
++
++	u32 ds_next;
++
++	ath_buf_set_rate(sc, bf, len);
++
++	while (bf) {
++		if (bf->bf_next)
++			ds_next = bf->bf_next->bf_daddr;
++		else
++			ds_next = 0;
++
++		ath9k_hw_set_clrdmask(sc->sc_ah, bf->bf_desc, clrdmask);
++		if (!aggr)
++			ath9k_hw_clr11n_aggr(sc->sc_ah, bf->bf_desc);
++		else if (!bf->bf_next)
++			ath9k_hw_set11n_aggr_last(sc->sc_ah, bf->bf_desc);
++		else {
++			if (bf == bf_first)
++				ath9k_hw_set11n_aggr_first(sc->sc_ah,
++					bf->bf_desc, len);
++
++			ath9k_hw_set11n_aggr_middle(sc->sc_ah, bf->bf_desc,
++				bf->bf_state.ndelim);
++		}
++
++		ath9k_hw_set_desc_link(ah, bf->bf_desc, ds_next);
++		bf = bf->bf_next;
++	}
 +}
 +
- static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
- 			    u32 seq, int flags,
- 			    struct cfg80211_registered_device *rdev,
-@@ -5906,6 +5911,14 @@ static struct genl_ops nl80211_ops[] = {
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
- 	{
-+		.cmd = NL80211_CMD_SCAN_CANCEL,
-+		.doit = nl80211_scan_cancel,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
-+	{
- 		.cmd = NL80211_CMD_GET_SCAN,
- 		.policy = nl80211_policy,
- 		.dumpit = nl80211_dump_scan,
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index b0f0039..bb4a991 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -156,6 +156,22 @@ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
- 	return 0;
- }
- 
-+int cfg80211_scan_cancel(struct cfg80211_registered_device *rdev)
-+{
-+	struct net_device *dev;
-+
-+	ASSERT_RDEV_LOCK(rdev);
-+
-+	if (!rdev->ops->scan_cancel)
-+		return -EOPNOTSUPP;
-+	if (!rdev->scan_req)
-+		return -ENOENT;
-+
-+	dev = rdev->scan_req->dev;
-+	rdev->ops->scan_cancel(&rdev->wiphy, dev);
-+	return 0;
-+}
-+
- static void bss_release(struct kref *ref)
+ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 			      struct ath_atx_tid *tid)
  {
- 	struct cfg80211_internal_bss *bss;
+ 	struct ath_buf *bf;
+ 	enum ATH_AGGR_STATUS status;
+-	struct ath_frame_info *fi;
++	struct ieee80211_tx_info *tx_info;
+ 	struct list_head bf_q;
+ 	int aggr_len;
+ 
+@@ -874,34 +909,25 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 		bf = list_first_entry(&bf_q, struct ath_buf, list);
+ 		bf->bf_lastbf = list_entry(bf_q.prev, struct ath_buf, list);
++		tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
+ 
+ 		if (tid->ac->clear_ps_filter) {
+ 			tid->ac->clear_ps_filter = false;
+-			ath9k_hw_set_clrdmask(sc->sc_ah, bf->bf_desc, true);
++			tx_info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
++		} else {
++			tx_info->flags &= ~IEEE80211_TX_CTL_CLEAR_PS_FILT;
+ 		}
+ 
+ 		/* if only one frame, send as non-aggregate */
+ 		if (bf == bf->bf_lastbf) {
+-			fi = get_frame_info(bf->bf_mpdu);
+-
+-			bf->bf_state.bf_type &= ~BUF_AGGR;
+-			ath9k_hw_clr11n_aggr(sc->sc_ah, bf->bf_desc);
+-			ath_buf_set_rate(sc, bf, fi->framelen);
+-			ath_tx_txqaddbuf(sc, txq, &bf_q, false);
+-			continue;
++			aggr_len = get_frame_info(bf->bf_mpdu)->framelen;
++			bf->bf_state.bf_type = BUF_AMPDU;
++		} else {
++			TX_STAT_INC(txq->axq_qnum, a_aggr);
+ 		}
+ 
+-		/* setup first desc of aggregate */
+-		bf->bf_state.bf_type |= BUF_AGGR;
+-		ath_buf_set_rate(sc, bf, aggr_len);
+-		ath9k_hw_set11n_aggr_first(sc->sc_ah, bf->bf_desc, aggr_len);
+-
+-		/* anchor last desc of aggregate */
+-		ath9k_hw_set11n_aggr_last(sc->sc_ah, bf->bf_lastbf->bf_desc);
+-
++		ath_tx_fill_desc(sc, bf, aggr_len);
+ 		ath_tx_txqaddbuf(sc, txq, &bf_q, false);
+-		TX_STAT_INC(txq->axq_qnum, a_aggr);
+-
+ 	} while (txq->axq_ampdu_depth < ATH_AGGR_MIN_QDEPTH &&
+ 		 status != ATH_AGGR_BAW_CLOSED);
+ }
+@@ -1479,7 +1505,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 	if (!bf)
+ 		return;
+ 
+-	bf->bf_state.bf_type |= BUF_AMPDU;
++	bf->bf_state.bf_type = BUF_AMPDU;
+ 	INIT_LIST_HEAD(&bf_head);
+ 	list_add(&bf->list, &bf_head);
+ 
+@@ -1489,7 +1515,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 	/* Queue to h/w without aggregation */
+ 	TX_STAT_INC(txctl->txq->axq_qnum, a_queued_hw);
+ 	bf->bf_lastbf = bf;
+-	ath_buf_set_rate(sc, bf, fi->framelen);
++	ath_tx_fill_desc(sc, bf, fi->framelen);
+ 	ath_tx_txqaddbuf(sc, txctl->txq, &bf_head, false);
+ }
+ 
+@@ -1509,14 +1535,14 @@ static void ath_tx_send_normal(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 	INIT_LIST_HEAD(&bf_head);
+ 	list_add_tail(&bf->list, &bf_head);
+-	bf->bf_state.bf_type &= ~BUF_AMPDU;
++	bf->bf_state.bf_type = 0;
+ 
+ 	/* update starting sequence number for subsequent ADDBA request */
+ 	if (tid)
+ 		INCR(tid->seq_start, IEEE80211_SEQ_MAX);
+ 
+ 	bf->bf_lastbf = bf;
+-	ath_buf_set_rate(sc, bf, fi->framelen);
++	ath_tx_fill_desc(sc, bf, fi->framelen);
+ 	ath_tx_txqaddbuf(sc, txq, &bf_head, false);
+ 	TX_STAT_INC(txq->axq_qnum, queued);
+ }
+@@ -1790,8 +1816,6 @@ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
+ 	frm_type = get_hw_packet_type(skb);
+ 
+ 	ds = bf->bf_desc;
+-	ath9k_hw_set_desc_link(ah, ds, 0);
+-
+ 	ath9k_hw_set11n_txdesc(ah, ds, fi->framelen, frm_type, MAX_RATE_POWER,
+ 			       fi->keyix, fi->keytype, bf->bf_flags);
+ 
+@@ -1852,9 +1876,6 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct sk_buff *skb,
+ 		if (txctl->paprd)
+ 			bf->bf_state.bfs_paprd_timestamp = jiffies;
+ 
+-		if (tx_info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT)
+-			ath9k_hw_set_clrdmask(sc->sc_ah, bf->bf_desc, true);
+-
+ 		ath_tx_send_normal(sc, txctl->txq, tid, skb);
+ 	}
+ 
 -- 
-1.7.0.4
+1.7.3.2
 
