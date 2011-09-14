@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31160 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751149Ab1IZH5J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 03:57:09 -0400
-Date: Mon, 26 Sep 2011 09:55:59 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Bernhard M. Wiedemann" <bernhardout@lsmod.de>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:53288 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933341Ab1INVvA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Sep 2011 17:51:00 -0400
+Received: by ywb5 with SMTP id 5so1788623ywb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 14:51:00 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
 Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Ivo van Drn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: Bug in rt2800pci on an RT3090
-Message-ID: <20110926075558.GA2273@redhat.com> (sfid-20110926_095713_267101_FEBBA119)
-References: <4E7CEE67.2070906@lwfinger.net>
- <20110924163007.GA10001@redhat.com>
- <4E7E2738.6020208@lsmod.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E7E2738.6020208@lsmod.de>
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 0/2] Big-endian fixes for rt2800usb
+Date: Wed, 14 Sep 2011 16:50:21 -0500
+Message-Id: <1316037024-17340-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20110914_235112_399258_D9FE8158)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello
+These two patches are needed to fix rt2800usb to work on my Powerbook G4
+Titanium. The first one is not an error in the rt2x00 code, but a
+work-around for a compiler error in gcc 4.4.5 for the PowerPC. The second
+patch fixes the internal storage of the eeprom contents.
 
-> the kernel config already has
-> CONFIG_LOCKDEP_SUPPORT=y
-> Is that what you meant? Does it need any extra to activate?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-LOCKDEP_SUPPORT mean that LOCKDEP can be enabled on cpu architecture
-for which kernel is build. To enable it you have to use "make menuconfig"
-and mark up  "Kernel hacking ---> Lock debugging: prove locking correctness"
-After that CONFIG_LOCKDEP=y should show up in .config.
+John,
 
-> meanwhile I had a similar bug on rc6 hours after resuming.
->
-> This time it had some additional soft lockup messages ontop. see
-> http://www.zq1.de/~bernhard/temp/dmesg.bug
+I'm not sure what should be done with number 1. Should these kind of
+compiler work-arounds be a prt of the kernel? AFAIK, this bug was not
+in the x86 or x86_64 versions of gcc. On the chance that you think it
+should be in 3.1, I have marked it to be sent to stable.
 
-Again, lockdep should print more information and allow to debug
-this easly.
+Patch number 2 should be applied to 3.1 and backported to stable.
 
-Stanislaw
+Larry
+---
+
+Larry Finger (2):
+  rt2800pci: Fix compiler error on PowerPC
+  rtl2800usb: Fix incorrect storage of MAC address on big-endian
+    platforms
+
+ drivers/net/wireless/rt2x00/rt2800lib.c |   47 +++++++++++++++++--------------
+ 1 files changed, 26 insertions(+), 21 deletions(-)
+
+-- 
+1.7.6.1
+
