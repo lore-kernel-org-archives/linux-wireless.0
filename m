@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:51401 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751873Ab1I0VMx convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:34116 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756502Ab1INL1P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 17:12:53 -0400
-Received: by eya28 with SMTP id 28so5113695eya.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 14:12:52 -0700 (PDT)
+	Wed, 14 Sep 2011 07:27:15 -0400
+Received: by wwn22 with SMTP id 22so5144031wwn.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 04:27:14 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1317124207.4082.20.camel@jlt3.sipsolutions.net>
-References: <1317034493-5300-1-git-send-email-arik@wizery.com>
- <1317034493-5300-4-git-send-email-arik@wizery.com> <1317124207.4082.20.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 28 Sep 2011 00:12:37 +0300
-Message-ID: <CA+XVXfd5ZipjgSCaVka9TgLFyc7mi-QSJRcqSpVMxkcir7u_3A@mail.gmail.com> (sfid-20110927_231257_032539_9151CB4E)
-Subject: Re: [PATCH 3/5] mac80211: handle TDLS high-level commands and frames
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Kalyan C Gaddam <chakkal@iit.edu>
+Date: Wed, 14 Sep 2011 06:19:59 -0500
+Message-ID: <CAJ8GFOgNRAr7LvnO8f0Y8uvkQdwhz7uUXRQ6BXomjO05RiiYjg@mail.gmail.com> (sfid-20110914_132718_792679_1050373D)
+Subject: Latency and connection problems with a carl9170-based AP
+From: Harshal Chhaya <harshal@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 27, 2011 at 14:50, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2011-09-26 at 13:54 +0300, Arik Nemtsov wrote:
->
->> +/*
->> + * TDLS capabililites to be enabled in the 5th byte of the
->> + * @WLAN_EID_EXT_CAPABILITY information element
->> + */
->> +#define WLAN_EXT_CAPA_TDLS_ENABLED   BIT(5)
->> +#define WLAN_EXT_CAPA_TDLS_PROHIBITED        BIT(6)
->
-> Would it be useful to have the IE declared as a struct somewhere?
+Hello,
 
-It's really just a bit-mask, and a variable length one as it is. But
-I'll change the name to make it more palatable. Something like
-WLAN_EXT_CAPA5_TDLS_ENABLED :)
+I am working on a TI-OMAP3 + AR9170 based AP. The carl9170 driver is
+version 1.9.2 and the firmware is version 1.9.4. The rest of the
+system is a couple of months old compat-wireless configuration on a
+2.6.37 kernel.
 
->
->
->> +static int
->> +ieee80211_prep_tdls_encap_data(struct wiphy *wiphy, struct net_device *dev,
->> +                            u8 *peer, u8 action_code, u8 dialog_token,
->> +                            u16 status_code, struct sk_buff *skb)
->
-> All the code addition here makes me wonder if it'd be useful to move it
-> into a new tdls.c file and just call the right hooks from cfg.c? the cfg
-> file is pretty large already ... tdls wouldn't be huge, but still might
-> make sense?
+The network is pretty usable when no clients enable WLAN power save.
+However, when power save is enabled, I see lots of disconnects and
+instability in the system. The clients are using legacy power save
+mechanisms (using 'null' packets to indicate going in and coming out
+of power save to the AP).
 
-As discussed on IRC, this code is pretty much stateless, and it's not
-a lot of code. We agreed we can keep it in cfg.c for now.
+Most of the disconnects seem to be caused by beacons that update the
+TIM IE but not the overall length. The result is a corrupted RSN IE
+(e.g. the IE length says 20 bytes but the IE is only 19 bytes in size)
+which causes the clients to disconnect. This problem lasts for only
+one beacon (i.e. the next beacon has the right size) but it is enough
+to cause the clients to disconnect. Is there a way to fix this?
 
-Arik
+Another problem when power save is enabled is the large and
+unpredictable latency. I understand how enabling power save can
+increase latency but my ping times go from 3-4 ms without power save
+to a wide range of 3 ms - 3 s after I enable power save. I am trying
+smaller beacon intervals to reduce this latency but even at a beacon
+interval of 25ms, I get ping times of up to ~400 ms. How do I reduce
+this wide variation in latency.
+
+Thanks for your help.
+
+Regards,
+- Harshal
