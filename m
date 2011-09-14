@@ -1,36 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:42005 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750869Ab1IVIbV (ORCPT
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:45285 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753535Ab1INJVy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 04:31:21 -0400
-Date: Thu, 22 Sep 2011 14:00:39 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: Fix disconnect event reporting
-Message-ID: <20110922083038.GA26383@vasanth-laptop> (sfid-20110922_103129_242419_20C0BEDF)
-References: <1316534999-26990-1-git-send-email-vthiagar@qca.qualcomm.com> <4E7AE818.5010503@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E7AE818.5010503@qca.qualcomm.com>
+	Wed, 14 Sep 2011 05:21:54 -0400
+Received: by bkbzs2 with SMTP id zs2so1711839bkb.14
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 02:21:52 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: set psd_type and sp_len on
+ wl12xx_cmd_add_peer()
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1314100302-25913-1-git-send-email-eliad@wizery.com>
+References: <1314100302-25913-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 14 Sep 2011 12:21:44 +0300
+Message-ID: <1315992104.2498.78.camel@cumari> (sfid-20110914_112157_715075_66DE7F95)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 22, 2011 at 10:47:36AM +0300, Kalle Valo wrote:
-> On 09/20/2011 07:09 PM, Vasanthakumar Thiagarajan wrote:
-> > Driver does not report disconnect event properly when in connecting state,
-> > this leads to issues like not reporting the unavailablity of the
-> > connected AP and failures in starting reconnection. Send a disconnect
-> > command to target when a disconnect event is received with reason code
-> > other than 3 (DISCONNECT_CMD - disconnect request from host) to make the
-> > stop trying even after giving disconnect event. There will be one more
-> > disconnect event for this disconnect command which will be notified to
-> > cfg80211.
+On Tue, 2011-08-23 at 14:51 +0300, Eliad Peller wrote: 
+> Use the values given by mac80211 in order to configure
+> WME correctly (AP mode)
 > 
-> A similar comment in the code would be nice. It's not obvious from the
-> code why a separate disconnect command is needed.
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-Sure.
+I ignored this patch since "wl12xx: declare support for
+WIPHY_FLAG_AP_UAPSD" is a superset of this one.
 
-Vasanth
+-- 
+Cheers,
+Luca.
+
