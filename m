@@ -1,138 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2908 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750783Ab1IAJRh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 05:17:37 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 27/30] staging: brcm80211: macro cleanup in softmac
- ampdu.c
-Date: Thu, 1 Sep 2011 11:17:17 +0200
-Message-ID: <1314868640-9425-28-git-send-email-rvossen@broadcom.com> (sfid-20110901_111836_424187_5E7AE591)
-In-Reply-To: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
-References: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56158 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757186Ab1INRA3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Sep 2011 13:00:29 -0400
+Date: Wed, 14 Sep 2011 12:54:47 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, kvalo@adurom.com
+Subject: Re: [PATCH] ath9k_hw: Fix magnitude/phase coeff correction
+Message-ID: <20110914165446.GB2485@tuxdriver.com> (sfid-20110914_190046_168852_EC1BC43E)
+References: <1315320530-2733-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <20110913173226.GF11772@tuxdriver.com>
+ <20110914034922.GA23349@vmraj-lnx.users.atheros.com>
+ <87ehzjjyvz.fsf@purkki.adurom.net>
+ <20110914090320.GA3074@vmraj-lnx.users.atheros.com>
+ <20110914165426.GA13088@vmraj-lnx.users.atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110914165426.GA13088@vmraj-lnx.users.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Moved, deleted or substituted macro's.
+On Wed, Sep 14, 2011 at 10:24:27PM +0530, Rajkumar Manoharan wrote:
+> On Wed, Sep 14, 2011 at 02:33:22PM +0530, Rajkumar Manoharan wrote:
+> > On Wed, Sep 14, 2011 at 11:45:20AM +0300, Kalle Valo wrote:
+> > > Rajkumar Manoharan <rmanohar@qca.qualcomm.com> writes:
+> > > 
+> > > > On Tue, Sep 13, 2011 at 01:32:26PM -0400, John W. Linville wrote:
+> > > >> On Tue, Sep 06, 2011 at 08:18:50PM +0530, Rajkumar Manoharan wrote:
+> > > >> > Do the magnitude/phase coeff correction only if the outlier
+> > > >> > is detected.
+> > > >> > 
+> > > >> > Cc: stable@kernel.org
+> > > >> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> > > >> > ---
+> > > >> >  
+> > > >> >  static void ar9003_hw_tx_iqcal_load_avg_2_passes(struct ath_hw *ah,
+> > > >> 
+> > > >> What is the effect of the bug being fixed here?  Is this fix intended for 3.1?
+> > > >
+> > > > The first entry of phase/mag got changed to average if outlier is
+> > > > not detected. This patch ensures to update appropriate index of
+> > > > magnitude/phase. This patch is applicable from 3.0 onwards.
+> > > 
+> > > Sorry, but this doesn't tell much. What's the user visible change
+> > > with this patch? Better sensitivity, less transmission errors or what?
+> > >
+> > It has minor impact because of this bug, an undesirable Tx IQ correction value
+> > will be assigned to Tx gain settings wheen outlier is not happened. The impacts
+> > on overall system throughput should be very minor.
+> >
+> John,
+> 
+> Not doing the calibrations in proper manner could impact performance in congested
+> network. Maybe i should update the impact in the commit log. Wanna send me v2
+> patch?
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/ampdu.c |   29 ++++++++-------------------
- 1 files changed, 9 insertions(+), 20 deletions(-)
+Please.
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/ampdu.c b/drivers/staging/brcm80211/brcmsmac/ampdu.c
-index 318235d..341768d 100644
---- a/drivers/staging/brcm80211/brcmsmac/ampdu.c
-+++ b/drivers/staging/brcm80211/brcmsmac/ampdu.c
-@@ -60,8 +60,6 @@
- 					 * accumulate between resets.
- 					 */
- 
--#define SHORTNAME "AMPDU status"
--
- #define TX_SEQ_TO_INDEX(seq) ((seq) % AMPDU_TX_BA_MAX_WSIZE)
- 
- /* max possible overhead per mpdu in the ampdu; 3 is for roundup if needed */
-@@ -144,14 +142,6 @@ struct cb_del_ampdu_pars {
- 	u16 tid;
- };
- 
--#define AMPDU_CLEANUPFLAG_RX   (0x1)
--#define AMPDU_CLEANUPFLAG_TX   (0x2)
--
--#define SCB_AMPDU_CUBBY(ampdu, scb) (&(scb->scb_ampdu))
--#define SCB_AMPDU_INI(scb_ampdu, tid) (&(scb_ampdu->ini[tid]))
--
--#define brcms_c_ampdu_txflowcontrol(a, b, c)	do {} while (0)
--
- static void brcms_c_scb_ampdu_update_max_txlen(struct ampdu_info *ampdu, u8 dur)
- {
- 	u32 rate, mcs;
-@@ -288,7 +278,7 @@ void brcms_c_ampdu_detach(struct ampdu_info *ampdu)
- static void brcms_c_scb_ampdu_update_config(struct ampdu_info *ampdu,
- 					    struct scb *scb)
- {
--	struct scb_ampdu *scb_ampdu = SCB_AMPDU_CUBBY(ampdu, scb);
-+	struct scb_ampdu *scb_ampdu = &scb->scb_ampdu;
- 	int i;
- 
- 	scb_ampdu->max_pdu = (u8) ampdu->wlc->pub->tunables->ampdunummpdu;
-@@ -486,7 +476,7 @@ brcms_c_ampdu_tx_operational(struct brcms_c_info *wlc, u8 tid,
- 	struct scb_ampdu_tid_ini *ini;
- 	struct ampdu_info *ampdu = wlc->ampdu;
- 	struct scb *scb = wlc->pub->global_scb;
--	scb_ampdu = SCB_AMPDU_CUBBY(ampdu, scb);
-+	scb_ampdu = &scb->scb_ampdu;
- 
- 	if (!ampdu->ini_enable[tid]) {
- 		wiphy_err(ampdu->wlc->wiphy, "%s: Rejecting tid %d\n",
-@@ -494,7 +484,7 @@ brcms_c_ampdu_tx_operational(struct brcms_c_info *wlc, u8 tid,
- 		return;
- 	}
- 
--	ini = SCB_AMPDU_INI(scb_ampdu, tid);
-+	ini = &scb_ampdu->ini[tid];
- 	ini->tid = tid;
- 	ini->scb = scb_ampdu->scb;
- 	ini->ba_wsize = ba_wsize;
-@@ -546,7 +536,7 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
- 	f = ampdu->fifo_tb + prio2fifo[tid];
- 
- 	scb = wlc->pub->global_scb;
--	scb_ampdu = SCB_AMPDU_CUBBY(ampdu, scb);
-+	scb_ampdu = &scb->scb_ampdu;
- 	ini = &scb_ampdu->ini[tid];
- 
- 	/* Let pressure continue to build ... */
-@@ -925,10 +915,10 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
- 	memset(hole, 0, sizeof(hole));
- #endif
- 
--	scb_ampdu = SCB_AMPDU_CUBBY(ampdu, scb);
-+	scb_ampdu = &scb->scb_ampdu;
- 	tid = (u8) (p->priority);
- 
--	ini = SCB_AMPDU_INI(scb_ampdu, tid);
-+	ini = &scb_ampdu->ini[tid];
- 	retry_limit = ampdu->retry_limit_tid[tid];
- 	rr_retry_limit = ampdu->rr_retry_limit_tid[tid];
- 	memset(bitmap, 0, sizeof(bitmap));
-@@ -1080,7 +1070,7 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
- 				skb_pull(p, D11_PHY_HDR_LEN);
- 				skb_pull(p, D11_TXH_LEN);
- 				wiphy_err(wiphy, "%s: BA Timeout, seq %d, in_"
--					"transit %d\n", SHORTNAME, seq,
-+					"transit %d\n", "AMPDU status", seq,
- 					ini->tx_in_transit);
- 				ieee80211_tx_status_irqsafe(wlc->pub->ieee_hw,
- 							    p);
-@@ -1134,8 +1124,8 @@ brcms_c_ampdu_dotxstatus(struct ampdu_info *ampdu, struct scb *scb,
- 	}
- 
- 	if (likely(scb)) {
--		scb_ampdu = SCB_AMPDU_CUBBY(ampdu, scb);
--		ini = SCB_AMPDU_INI(scb_ampdu, p->priority);
-+		scb_ampdu = &scb->scb_ampdu;
-+		ini = &scb_ampdu->ini[p->priority];
- 		brcms_c_ampdu_dotxstatus_complete(ampdu, scb, p, txs, s1, s2);
- 	} else {
- 		/* loop through all pkts and free */
-@@ -1155,7 +1145,6 @@ brcms_c_ampdu_dotxstatus(struct ampdu_info *ampdu, struct scb *scb,
- 		}
- 		brcms_c_txfifo_complete(wlc, queue, ampdu->txpkt_weight);
- 	}
--	brcms_c_ampdu_txflowcontrol(wlc, scb_ampdu, ini);
- }
- 
- void brcms_c_ampdu_macaddr_upd(struct brcms_c_info *wlc)
 -- 
-1.7.4.1
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
