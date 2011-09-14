@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:41746 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758758Ab1IINzG (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:35998 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755472Ab1INJT3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Sep 2011 09:55:06 -0400
-Received: by ywf7 with SMTP id 7so1630089ywf.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Sep 2011 06:55:06 -0700 (PDT)
-Message-ID: <4E6A1AB7.8080605@lwfinger.net> (sfid-20110909_155511_180102_4346E9FE)
-Date: Fri, 09 Sep 2011 08:55:03 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Semigod King <semigodking@gmail.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211 driver for RT3070 wifi card does not work on big-endian
- platform
-References: <CA+TXxM3EgGZmo1F9GS+-QNWfTTgWFD4XHvG31JH=kabrr=ES=A@mail.gmail.com> <4E6911C2.2030309@lwfinger.net> <CA+TXxM0EOBs2x+6jh=0uwDTMTUD+9ZXQ8W-ZR+=TjSARV3kAeQ@mail.gmail.com>
-In-Reply-To: <CA+TXxM0EOBs2x+6jh=0uwDTMTUD+9ZXQ8W-ZR+=TjSARV3kAeQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 14 Sep 2011 05:19:29 -0400
+Received: by bkbzu17 with SMTP id zu17so1750231bkb.24
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 02:19:27 -0700 (PDT)
+Subject: Re: [PATCH v2 1/5] wl12xx: don't disconnect on recovery
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1314533517-24639-1-git-send-email-eliad@wizery.com>
+References: <1314533517-24639-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 14 Sep 2011 12:19:24 +0300
+Message-ID: <1315991964.2498.75.camel@cumari> (sfid-20110914_111932_597378_BD3B72C2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/09/2011 07:05 AM, Semigod King wrote:
-> Larry,
-> Thank you for looking at this issue. I will try your code change tonight and let
-> you know test results. I have an openwrt cross build system ready on my freebsd
-> at home.
+On Sun, 2011-08-28 at 15:11 +0300, Eliad Peller wrote: 
+> allow full connection recovery by dropping the
+> beacon_loss notification.
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-That will not change a thing. Other than trip some sparse warnings, 
-le32_to_cpu() and cpu_to_le32() do the same thing. On little-endian boxes, they 
-are a no-op, and on big-endian platforms, they both reverse the byte order. 
-Switching the call only makes it clearer what is happening.
+Applied the series, thanks!
 
-I am having trouble getting Ubuntu 11.04 running on my Macbook. The OS is 
-installed, but no X at the moment.
-
-BTW, please do not drop the Cc to wireless. I want to keep the ML in the loop.
-
-Larry
+-- 
+Cheers,
+Luca.
 
