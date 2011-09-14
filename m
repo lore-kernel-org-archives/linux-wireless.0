@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:40528 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752828Ab1IZJnF (ORCPT
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:58124 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756241Ab1INKAh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 05:43:05 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [RFC] mac80211: Send nullfunc frames at lower rate
-Date: Mon, 26 Sep 2011 15:13:45 +0530
-Message-ID: <1317030225-3986-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110926_114309_561789_4A4B5E3E)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 14 Sep 2011 06:00:37 -0400
+Received: by mail-bw0-f47.google.com with SMTP id 11so1465550bke.20
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 03:00:36 -0700 (PDT)
+Subject: Re: [PATCH v2] wl12xx: set mac80211 flags for A-MPDU aggregation
+ support
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1314686041-25489-1-git-send-email-arik@wizery.com>
+References: <1314686041-25489-1-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 14 Sep 2011 13:00:33 +0300
+Message-ID: <1315994433.2498.90.camel@cumari> (sfid-20110914_120046_269244_FA6001C1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Recently mac80211 was changed to send nullfunc instead of probe
-request for connection monitoring. These nullfunc data frames
-are being sent at higer rates and also as aggregated ones. This
-could probably delays the nullfunc_ack so the connection is getting
-disconnected as max retries reached. In order to improve the
-connectivity send the nullfunc at lower rate.
+On Tue, 2011-08-30 at 09:34 +0300, Arik Nemtsov wrote: 
+> We set the mac80211 flag for A-MPDU support and also indicate that
+> Tx-agg session setup is performed in HW.
+> 
+> This patch depends on
+> "mac80211: add flag to indicate HW only Tx-agg setup support"
+> 
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- net/mac80211/rate.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Applied, thanks.
 
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index f61244c..213e1e9 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -208,7 +208,8 @@ static bool rc_no_data_or_no_ack(struct ieee80211_tx_rate_control *txrc)
- 
- 	fc = hdr->frame_control;
- 
--	return (info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc);
-+	return (info->flags & IEEE80211_TX_CTL_NO_ACK) ||
-+		!ieee80211_is_data(fc) || ieee80211_is_nullfunc(fc);
- }
- 
- static void rc_send_low_broadcast(s8 *idx, u32 basic_rates,
 -- 
-1.7.6.4
+Cheers,
+Luca.
 
