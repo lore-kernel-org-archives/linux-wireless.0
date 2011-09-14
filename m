@@ -1,65 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61417 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751929Ab1IQN35 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Sep 2011 09:29:57 -0400
-Date: Sat, 17 Sep 2011 19:00:32 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Paul Stewart <pstew@chromium.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Adrian Chadd <adrian@freebsd.org>, <linville@tuxdriver.com>
-Subject: Re: [PATCH] ath9k: Fix samp_lock init for non-DEBUGFS
-Message-ID: <20110917133031.GA22467@vmraj-lnx.users.atheros.com> (sfid-20110917_153001_541233_80377288)
-References: <1314442067-11799-1-git-send-email-rmanohar@qca.qualcomm.com>
- <CAJ-Vmo=wLETTSy0i3uz3Zj5w+_o+AouzD=nJzFk9KnERK+g7Cg@mail.gmail.com>
- <20110827111641.GA17693@vmraj-lnx.users.atheros.com>
- <20110916230334.0BDD92043D@glenhelen.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20110916230334.0BDD92043D@glenhelen.mtv.corp.google.com>
+Received: from nbd.name ([46.4.11.11]:58736 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757431Ab1INTYd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Sep 2011 15:24:33 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 05/12] ath9k_hw: do not recalculate the descriptor checksum in ar9003_hw_fill_txdesc
+Date: Wed, 14 Sep 2011 21:24:20 +0200
+Message-Id: <1316028267-34187-5-git-send-email-nbd@openwrt.org> (sfid-20110914_212450_982385_F648D8AC)
+In-Reply-To: <1316028267-34187-4-git-send-email-nbd@openwrt.org>
+References: <1316028267-34187-1-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-2-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-3-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-4-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 16, 2011 at 03:17:58PM -0700, Paul Stewart wrote:
-> Patch "ath9k: Add debugfs support for mac/baseband samples" uses
-> "&sc->debug.samp_lock" which breaks non-ATH9K_DEBUGFS builds.  Place
-> the correct ifdef guard around it.
-> 
-> Signed-off-by: Paul Stewart <pstew@chromium.org>
-> Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> Cc: Adrian Chadd <adrian@freebsd.org>
-> ---
->  drivers/net/wireless/ath/ath9k/init.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-> index 74c9c99..b99ab96 100644
-> --- a/drivers/net/wireless/ath/ath9k/init.c
-> +++ b/drivers/net/wireless/ath/ath9k/init.c
-> @@ -553,7 +553,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
->  	spin_lock_init(&sc->wiphy_lock);
->  	spin_lock_init(&sc->sc_serial_rw);
->  	spin_lock_init(&sc->sc_pm_lock);
-> +#ifdef CONFIG_ATH9K_DEBUGFS
->  	spin_lock_init(&sc->debug.samp_lock);
-> +#endif
-Paul,
+Reduces the number of accesses to uncached descriptor memory.
 
-I donno what tree you are refering to. But debug.samp_lock was placed
-under proper debug switch. The code snippet as follows.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index d7761d1..dd71a5f 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -572,6 +572,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	mutex_init(&sc->mutex);
- #ifdef CONFIG_ATH9K_DEBUGFS
- 	spin_lock_init(&sc->nodes_lock);
-+	spin_lock_init(&sc->debug.samp_lock);
- 	INIT_LIST_HEAD(&sc->nodes);
- #endif
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index d08ab93..c3179d9 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -207,8 +207,7 @@ static void ar9003_hw_fill_txdesc(struct ath_hw *ah, void *ds, u32 seglen,
+ 	ads->ctl3 &= AR_BufLen;
+ 
+ 	/* Fill in pointer checksum and descriptor id */
+-	ads->ctl10 = ar9003_calc_ptr_chksum(ads);
+-	ads->ctl10 |= (descid << AR_TxDescId_S);
++	ads->ctl10 = (descid << AR_TxDescId_S);
+ 
+ 	if (is_firstseg) {
+ 		ads->ctl12 |= (is_lastseg ? 0 : AR_TxMore);
+-- 
+1.7.3.2
 
---
-Rajkumar
