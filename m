@@ -1,440 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:1966 "EHLO mga03.intel.com"
+Received: from nbd.name ([46.4.11.11]:58754 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754606Ab1IJPxn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Sep 2011 11:53:43 -0400
-Subject: Re: problem with intel 5300
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1109100736280.13538@uplift.swm.pp.se>
-References: <alpine.DEB.2.00.1109100736280.13538@uplift.swm.pp.se>
-Content-Type: multipart/mixed; boundary="=-4UArr8XFXM5ACGsjHVHB"
-Date: Sat, 10 Sep 2011 08:09:25 -0700
-Message-ID: <1315667365.3547.20.camel@wwguy-huron> (sfid-20110910_175350_390418_AC46C708)
-Mime-Version: 1.0
+	id S932916Ab1INTYg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Sep 2011 15:24:36 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 09/12] ath9k: optimize ath9k_ps_restore
+Date: Wed, 14 Sep 2011 21:24:24 +0200
+Message-Id: <1316028267-34187-9-git-send-email-nbd@openwrt.org> (sfid-20110914_212444_202143_1B0DADDB)
+In-Reply-To: <1316028267-34187-8-git-send-email-nbd@openwrt.org>
+References: <1316028267-34187-1-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-2-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-3-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-4-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-5-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-6-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-7-git-send-email-nbd@openwrt.org>
+ <1316028267-34187-8-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ath_hw_cycle_counters_update only needs to be called if the power state
+changes. Most of the time this does not happen, even when ps_usecount
+goes down to 0.
 
---=-4UArr8XFXM5ACGsjHVHB
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-
-Hi Mikael,
-
-On Fri, 2011-09-09 at 22:43 -0700, Mikael Abrahamsson wrote:
-> Hi.
-> 
-> I've had my Lenovo Thinkpad X200 with Intel 5300 wifi card for almost 3
-> years, running ubuntu 8.04 and then going upp through the versions. Up to
-> and including 10.10 with its 2.6.35 kernel, things have been working
-> fairly ok. Now with 11.04 with 2.6.38 I've had a lot more wifi problems.
-> Below is a log from the latest time it stopped working and I had to reboot
-> to get it working again.
-> 
-> Any ideas what might be going wrong?
-> 
-> Linux laptop 2.6.38-11-generic-pae #49-Ubuntu SMP Mon Aug 29 21:07:33 UTC 2011 i686 i686 i386 GNU/Linux
-> 
-> 03:00.0 Network controller: Intel Corporation Ultimate N WiFi Link 5300
-> 
-> I also have to disable .11n with:
-> 
-> $ cat /etc/modprobe.d/intel-5300-iwlagn-disable11n.conf
-> options iwlagn 11n_disable=1
-> 
-> because if I don't, then it basically doesn't work at all (I can provide
-> more information on this if someone is interested). My access point is a
-> D-link DIR-855 and I'm on 5Ghz.
-> 
->      Sep  6 20:15:01 swm-laptop kernel: [178718.504068] iwlagn
-> 0000:03:00.0: Error sending POWER_TABLE_CMD: time out after 500ms.
->      Sep  6 20:15:02 swm-laptop kernel: [178718.504080] iwlagn
-> 0000:03:00.0: set power fail, ret = -110
->      Sep  6 20:15:02 swm-laptop kernel: [178719.504050] iwlagn
-> 0000:03:00.0: Error sending REPLY_QOS_PARAM: time out after 500ms.
->      Sep  6 20:15:02 swm-laptop kernel: [178719.504055] iwlagn
-> 0000:03:00.0: Failed to update QoS
->      Sep  6 20:15:03 swm-laptop kernel: [178720.004571] iwlagn
-> 0000:03:00.0: Error sending REPLY_RXON: time out after 500ms.
->      Sep  6 20:15:03 swm-laptop kernel: [178720.004584] iwlagn
-> 0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
->      Sep  6 20:15:03 swm-laptop kernel: [178720.504111] iwlagn
-> 0000:03:00.0: Error sending REPLY_RXON: time out after 500ms.
->      Sep  6 20:15:03 swm-laptop kernel: [178720.504123] iwlagn
-> 0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
->      Sep  6 20:15:04 swm-laptop kernel: [178721.004066] iwlagn
-> 0000:03:00.0: Error sending REPLY_ADD_STA: time out after 500ms.
->      Sep  6 20:15:04 swm-laptop kernel: [178721.004076] ieee80211 phy0:
-> failed to remove key (0, 00:21:91:dc:94:57) from hardware (-110)
->      Sep  6 20:15:04 swm-laptop kernel: [178721.504058] iwlagn
-> 0000:03:00.0: Error sending REPLY_REMOVE_STA: time out after 500ms.
->      Sep  6 20:15:04 swm-laptop kernel: [178721.504071] iwlagn
-> 0000:03:00.0: Error removing station 00:21:91:dc:94:57
->      Sep  6 20:15:05 swm-laptop kernel: [178722.004084] iwlagn
-> 0000:03:00.0: Error sending REPLY_RXON: time out after 500ms.
->      Sep  6 20:15:05 swm-laptop kernel: [178722.004097] iwlagn
-> 0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
->      Sep  6 20:15:07 swm-laptop kernel: [178724.012038] iwlagn
-> 0000:03:00.0: fail to flush all tx fifo queues
->      Sep  6 20:15:07 swm-laptop kernel: [178724.512069] iwlagn
-> 0000:03:00.0: Error sending POWER_TABLE_CMD: time out after 500ms.
->      Sep  6 20:15:08 swm-laptop kernel: [178724.512076] iwlagn
-> 0000:03:00.0: set power fail, ret = -110
->      Sep  6 20:15:08 swm-laptop kernel: [178725.012134] iwlagn
-> 0000:03:00.0: Error sending REPLY_RXON: time out after 500ms.
->      Sep  6 20:15:08 swm-laptop kernel: [178725.012147] iwlagn
-> 0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
->      Sep  6 20:15:08 swm-laptop kernel: [178725.512068] iwlagn
-> 0000:03:00.0: Error sending REPLY_ADD_STA: time out after 500ms.
->      Sep  6 20:15:08 swm-laptop kernel: [178725.512086] ieee80211 phy0:
-> failed to remove key (1, ff:ff:ff:ff:ff:ff) from hardware (-110)
->      Sep  6 20:15:08 swm-laptop kernel: [178725.532246] cfg80211: All
-> devices are disconnected, going to restore regulatory settings
->      Sep  6 20:15:08 swm-laptop kernel: [178725.532258] cfg80211: Restoring
-> regulatory settings
->      Sep  6 20:15:08 swm-laptop kernel: [178725.532268] cfg80211: Calling
-> CRDA to update world regulatory domain
->      Sep  6 20:15:08 swm-laptop kernel: [178725.556193] cfg80211: Ignoring
-> regulatory request Set by core since the driver uses its own custom
-> regulatory domain
->      Sep  6 20:15:08 swm-laptop kernel: [178725.556199] cfg80211: World
-> regulatory domain updated:
->      Sep  6 20:15:08 swm-laptop kernel: [178725.556201] cfg80211:
-> (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
->      Sep  6 20:15:08 swm-laptop kernel: [178725.556204] cfg80211:
-> (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->      Sep  6 20:15:08 swm-laptop kernel: [178725.556206] cfg80211:
-> (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
->      Sep  6 20:15:08 swm-laptop kernel: [178725.556209] cfg80211:
-> (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
->      Sep  6 20:15:08 swm-laptop kernel: [178725.556212] cfg80211:
-> (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->      Sep  6 20:15:08 swm-laptop kernel: [178725.556214] cfg80211:
-> (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->      Sep  6 20:15:09 swm-laptop kernel: [178726.132056] iwlagn
-> 0000:03:00.0: Error sending REPLY_RXON: time out after 500ms.
->      Sep  6 20:15:09 swm-laptop kernel: [178726.132063] iwlagn
-> 0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
->      Sep  6 20:15:09 swm-laptop kernel: [178726.632100] iwlagn
-> 0000:03:00.0: Error sending POWER_TABLE_CMD: time out after 500ms.
->      Sep  6 20:15:10 swm-laptop kernel: [178726.632112] iwlagn
-> 0000:03:00.0: set power fail, ret = -110
->      Sep  6 20:15:10 swm-laptop kernel: [178727.132073] iwlagn
-> 0000:03:00.0: Error sending REPLY_RXON: time out after 500ms.
->      Sep  6 20:15:10 swm-laptop kernel: [178727.132086] iwlagn
-> 0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
->      Sep  6 20:15:10 swm-laptop kernel: [178727.504021] iwlagn
-> 0000:03:00.0: Queue 9 stuck for 10000 ms.
->      Sep  6 20:15:10 swm-laptop kernel: [178727.504027] iwlagn
-> 0000:03:00.0: On demand firmware reload
->      Sep  6 20:15:11 swm-laptop kernel: [178727.632057] iwlagn
-> 0000:03:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
->      Sep  6 20:15:11 swm-laptop kernel: [178727.636027] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: last message repeated 16 times
->      Sep  6 20:15:11 swm-laptop kernel: [178727.942512] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178727.960945] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178727.979119] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178727.997201] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178727.997201] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.033459] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.051594] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.069670] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.087962] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.106091] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.124203] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.142265] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.160338] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.178380] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.196435] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.196435] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.232512] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.250577] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.268631] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.286722] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.304804] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.322846] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.340895] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.358932] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.377024] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.395070] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.413112] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.431164] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.449204] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.467285] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.485344] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.503427] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.521534] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.539606] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.557702] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.575790] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.593851] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.611912] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.629957] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.648044] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.666112] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:11 swm-laptop kernel: [178728.684178] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:13 swm-laptop kernel: [178729.810551] thinkpad_acpi: EC
-> reports that Thermal Table has changed
->      Sep  6 20:15:16 swm-laptop kernel: [178733.696027] iwlagn
-> 0000:03:00.0: Could not load the INST uCode section
->      Sep  6 20:15:16 swm-laptop kernel: [178733.696032] iwlagn
-> 0000:03:00.0: Unable to set up bootstrap uCode: -110
->      Sep  6 20:15:16 swm-laptop kernel: [178733.700014] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:17 swm-laptop kernel: [178733.718158] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:17 swm-laptop kernel: [178733.736301] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:17 swm-laptop kernel: [178733.754347] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:17 swm-laptop kernel: [178733.772415] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:17 swm-laptop kernel: [178733.790465] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:22 swm-laptop kernel: [178738.804029] iwlagn
-> 0000:03:00.0: Could not load the INST uCode section
->      Sep  6 20:15:22 swm-laptop kernel: [178738.804036] iwlagn
-> 0000:03:00.0: Unable to set up bootstrap uCode: -110
->      Sep  6 20:15:22 swm-laptop kernel: [178738.808008] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:22 swm-laptop kernel: [178738.826068] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:22 swm-laptop kernel: [178738.844147] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:22 swm-laptop kernel: [178738.862282] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:22 swm-laptop kernel: [178738.880490] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:22 swm-laptop kernel: [178738.898646] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:27 swm-laptop kernel: [178743.912014] iwlagn
-> 0000:03:00.0: Could not load the INST uCode section
->      Sep  6 20:15:27 swm-laptop kernel: [178743.912019] iwlagn
-> 0000:03:00.0: Unable to set up bootstrap uCode: -110
->      Sep  6 20:15:27 swm-laptop kernel: [178743.916005] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:27 swm-laptop kernel: [178743.939804] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:27 swm-laptop kernel: [178743.952161] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:27 swm-laptop kernel: [178743.970259] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:27 swm-laptop kernel: [178743.988331] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:27 swm-laptop kernel: [178744.006822] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:32 swm-laptop kernel: [178749.020036] iwlagn
-> 0000:03:00.0: Could not load the INST uCode section
->      Sep  6 20:15:32 swm-laptop kernel: [178749.020041] iwlagn
-> 0000:03:00.0: Unable to set up bootstrap uCode: -110
->      Sep  6 20:15:32 swm-laptop kernel: [178749.024025] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:32 swm-laptop kernel: [178749.042108] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:32 swm-laptop kernel: [178749.060181] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:32 swm-laptop kernel: [178749.078255] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:32 swm-laptop kernel: [178749.096327] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:32 swm-laptop kernel: [178749.114391] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:37 swm-laptop kernel: [178754.128042] iwlagn
-> 0000:03:00.0: Could not load the INST uCode section
->      Sep  6 20:15:37 swm-laptop kernel: [178754.128047] iwlagn
-> 0000:03:00.0: Unable to set up bootstrap uCode: -110
->      Sep  6 20:15:37 swm-laptop kernel: [178754.132025] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:37 swm-laptop kernel: last message repeated 16 times
->      Sep  6 20:15:37 swm-laptop kernel: [178754.438968] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:37 swm-laptop kernel: [178754.457086] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:37 swm-laptop kernel: [178754.475153] iwlagn
-> 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->      Sep  6 20:15:37 swm-laptop kernel: [178754.489270] iwlagn
-> 0000:03:00.0: Unable to initialize device after 5 attempts.
->      Sep  6 20:15:37 swm-laptop kernel: [178754.489293] iwlagn
-> 0000:03:00.0: Request scan called when driver not ready.
->      Sep  6 20:15:38 swm-laptop kernel: [178754.971442] EXT4-fs (dm-0):
-> re-mounted. Opts: errors=remount-ro,discard,commit=0
->      Sep  6 20:15:38 swm-laptop kernel: [178755.490274] iwlagn
-> 0000:03:00.0: Request scan called when driver not ready.
->      Sep  6 20:15:39 swm-laptop kernel: [178756.491726] iwlagn
-> 0000:03:00.0: Request scan called when driver not ready.
->      Sep  6 20:15:40 swm-laptop kernel: [178757.492170] iwlagn
-> 0000:03:00.0: Request scan called when driver not ready.
->      Sep  6 20:15:41 swm-laptop kernel: [178758.493486] iwlagn
-> 0000:03:00.0: Request scan called when driver not ready.
->      Sep  6 20:15:42 swm-laptop kernel: [178759.494825] iwlagn
-> 0000:03:00.0: Request scan called when driver not ready.
->      Sep  6 20:15:43 swm-laptop kernel: [178760.496306] iwlagn
-> 0000:03:00.0: Request scan called when driver not ready.
-> 
->   --
-> Mikael Abrahamsson    email: swmike@swm.pp.se
-> --
-
-we aware of this problem and our engineer is working on it now.
-
-Here are two possible solution and work-around and please give a try
-1. apply the patch I attach and see if it help
-2. use module parameter wd_disable=1 to avoid firmware reload and go
-into "deep sleep"
-
-Thanks
-Wey
-
---=-4UArr8XFXM5ACGsjHVHB
-Content-Type: application/mbox; name="[Internal-wifi-devel]_[PATCH]_iwlagn:_fix_command_queue_timeout"
-Content-Disposition: attachment; filename*0="[Internal-wifi-devel]_[PATCH]_iwlagn:_fix_command_queue_timeo"; filename*1="ut"
-Content-Transfer-Encoding: 7bit
-
->From internal-wifi-devel-bounces@linux.intel.com Fri Sep  9 04:58:25 2011
-Received: from fmsmsx103.amr.corp.intel.com (10.19.9.34) by
- orsmsx606.amr.corp.intel.com (10.22.226.128) with Microsoft SMTP Server
- (TLS) id 8.2.255.0; Fri, 9 Sep 2011 04:58:25 -0700
-Received: from rrsmsx603.amr.corp.intel.com (10.31.0.57) by
- FMSMSX103.amr.corp.intel.com (10.19.9.34) with Microsoft SMTP Server (TLS)
- id 14.1.323.3; Fri, 9 Sep 2011 04:58:25 -0700
-Received: from fmsmga002.fm.intel.com (10.253.24.26) by
- rrsmsx603-2.rr.intel.com (10.31.0.37) with Microsoft SMTP Server id
- 8.2.255.0; Fri, 9 Sep 2011 05:58:08 -0600
-Received: from linux.jf.intel.com (HELO linux.intel.com) ([10.23.219.25]) 
- by fmsmga002.fm.intel.com with ESMTP; 09 Sep 2011 04:58:00 -0700
-Received: from linux.intel.com (linux.intel.com [127.0.0.1])	by
- linux.intel.com (Postfix) with ESMTP id C03326A408D;	Fri,  9 Sep 2011
- 04:57:58 -0700 (PDT)
-Received: from fmsmga001.fm.intel.com (fmsmga001.fm.intel.com
- [10.253.24.23]) by linux.intel.com (Postfix) with ESMTP id 00B966A408D	for
- <internal-wifi-devel@linux.intel.com>;	Fri,  9 Sep 2011 04:57:57 -0700 (PDT)
-Received: from unknown (HELO [10.252.120.31]) ([10.252.120.31])	by
- fmsmga001.fm.intel.com with ESMTP; 09 Sep 2011 04:57:58 -0700
-From: "Berg, Johannes" <johannes.berg@intel.com>
-To: "internal-wifi-devel@linux.intel.com" <internal-wifi-devel@linux.intel.com>
-Sender: "internal-wifi-devel-bounces@linux.intel.com"
- <internal-wifi-devel-bounces@linux.intel.com>
-Date: Fri, 9 Sep 2011 04:57:57 -0700
-Subject: [Internal-wifi-devel] [PATCH] iwlagn: fix command queue timeout
-Thread-Topic: [Internal-wifi-devel] [PATCH] iwlagn: fix command queue
- timeout
-Thread-Index: Acxu58fdpqygpyL/TTGoLjjdmkOmog==
-Message-ID: <1315569477.17050.5.camel@jlt3.sipsolutions.net>
-List-Help: <mailto:internal-wifi-devel-request@linux.intel.com?subject=help>
-List-Subscribe:
- <http://linux.intel.com/mailman/listinfo/internal-wifi-devel>,
- <mailto:internal-wifi-devel-request@linux.intel.com?subject=subscribe>
-List-Unsubscribe:
- <http://linux.intel.com/mailman/listinfo/internal-wifi-devel>,
- <mailto:internal-wifi-devel-request@linux.intel.com?subject=unsubscribe>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Exchange-Organization-AuthAs: Internal
-X-MS-Exchange-Organization-AuthMechanism: 10
-X-MS-Exchange-Organization-AuthSource: rrsmsx603.amr.corp.intel.com
-X-MS-Has-Attach: 
-X-Auto-Response-Suppress: All
-X-MS-TNEF-Correlator: 
-x-ironport-av: E=Sophos;i="4.68,355,1312182000"; d="scan'208";a="49613953"
-x-extloop1: 1
-x-extloopcount2: 2 from 10.23.219.25
-errors-to: internal-wifi-devel-bounces@linux.intel.com
-list-id: internal wifi development mailing list
- <internal-wifi-devel.linux.intel.com>
-list-post: <mailto:internal-wifi-devel@linux.intel.com>
-list-archive: <http://linux.intel.com/pipermail/internal-wifi-devel>
-x-original-to: internal-wifi-devel@linux.intel.com
-delivered-to: internal-wifi-devel@localhost.localdomain
-x-beenthere: internal-wifi-devel@linux.intel.com
-x-mailman-version: 2.1.5
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-X-Evolution-Source: imap://wwguy@imapmail.intel.com/
-Content-Transfer-Encoding: 8bit
-
-From: Johannes Berg <johannes.berg@intel.com>
-
-If the command queue is constantly busy,
-which can happen in P2P, the hangcheck
-timer will frequently find a command in
-it and will eventually reset the device
-because nothing sets the timestamp for
-this queue when commands are processed.
-
-Fix this by setting the timestamp when
-a command completes.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-SIgned-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-It's possible this needs to go to stable?
+ drivers/net/wireless/ath/ath9k/main.c |   17 +++++++++++------
+ 1 files changed, 11 insertions(+), 6 deletions(-)
 
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    2 ++
- 1 file changed, 2 insertions(+)
-
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c	2011-09-09 13:55:03.000000000 +0200
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c	2011-09-09 13:55:26.000000000 +0200
-@@ -928,6 +928,8 @@ void iwl_tx_cmd_complete(struct iwl_tran
- 	cmd = txq->cmd[cmd_index];
- 	meta = &txq->meta[cmd_index];
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a75810a..a16f539 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -111,24 +111,29 @@ void ath9k_ps_wakeup(struct ath_softc *sc)
+ void ath9k_ps_restore(struct ath_softc *sc)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	enum ath9k_power_mode mode;
+ 	unsigned long flags;
  
-+	txq->time_stamp = jiffies;
+ 	spin_lock_irqsave(&sc->sc_pm_lock, flags);
+ 	if (--sc->ps_usecount != 0)
+ 		goto unlock;
+ 
+-	spin_lock(&common->cc_lock);
+-	ath_hw_cycle_counters_update(common);
+-	spin_unlock(&common->cc_lock);
+-
+ 	if (sc->ps_idle)
+-		ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_FULL_SLEEP);
++		mode = ATH9K_PM_FULL_SLEEP;
+ 	else if (sc->ps_enabled &&
+ 		 !(sc->ps_flags & (PS_WAIT_FOR_BEACON |
+ 			      PS_WAIT_FOR_CAB |
+ 			      PS_WAIT_FOR_PSPOLL_DATA |
+ 			      PS_WAIT_FOR_TX_ACK)))
+-		ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
++		mode = ATH9K_PM_NETWORK_SLEEP;
++	else
++		goto unlock;
 +
- 	iwlagn_unmap_tfd(trans, meta, &txq->tfds[index],
- 			 DMA_BIDIRECTIONAL);
++	spin_lock(&common->cc_lock);
++	ath_hw_cycle_counters_update(common);
++	spin_unlock(&common->cc_lock);
++
++	ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
  
-
-
-_______________________________________________
-internal-wifi-devel mailing list
-internal-wifi-devel@linux.intel.com
-http://linux.intel.com/mailman/listinfo/internal-wifi-devel
-
-
---=-4UArr8XFXM5ACGsjHVHB--
+  unlock:
+ 	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+-- 
+1.7.3.2
 
