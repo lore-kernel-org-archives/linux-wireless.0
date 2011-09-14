@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:33969 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751503Ab1IZS0O (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:52518 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755747Ab1INJjA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 14:26:14 -0400
-Received: by eya28 with SMTP id 28so3853548eya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 11:26:13 -0700 (PDT)
+	Wed, 14 Sep 2011 05:39:00 -0400
+Received: by fxe4 with SMTP id 4so1579259fxe.19
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 02:38:58 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "Louis" <louis.m@gmx.net>
+Subject: Re: AR9170 chipset details
+Date: Wed, 14 Sep 2011 11:38:55 +0200
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+References: <20110913080246.184260@gmx.net>
+In-Reply-To: <20110913080246.184260@gmx.net>
 MIME-Version: 1.0
-In-Reply-To: <C5A7FB31FD9AEA42B600BDC3C74F8E0017052223@orsmsx511.amr.corp.intel.com>
-References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
-	<CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com>
-	<1317048872.2400.4.camel@wwguy-ubuntu>
-	<CAJTrwG5CQKn9=1=HUDX1L5PsFbGws_zK1DTvot9i=KcMX7SwkQ@mail.gmail.com>
-	<1317049160.1958.8.camel@wwguy-huron>
-	<CAJTrwG5eELbDuGFXU4=3gSunPSkKLFvcpSe6gGE_Wc0s5BXZ+A@mail.gmail.com>
-	<CAJTrwG7tzDHxDha5x8r-GJFK=oUE6Zk5zqpN4z4L2LyAD=DueQ@mail.gmail.com>
-	<1317050380.1958.13.camel@wwguy-huron>
-	<CAJTrwG46qRYvda1vcCZXv0BTUyf26gx2qgpNgOG-bm-BCMpqfg@mail.gmail.com>
-	<1317053131.1958.15.camel@wwguy-huron>
-	<C5A7FB31FD9AEA42B600BDC3C74F8E0017052223@orsmsx511.amr.corp.intel.com>
-Date: Mon, 26 Sep 2011 20:26:12 +0200
-Message-ID: <CAJTrwG5AvbtNRZi54tzAoUDv5X9QLVY3L=-OgHYRtnJ-RMesrQ@mail.gmail.com> (sfid-20110926_202617_549453_059F1961)
-Subject: Re: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM Fritz!Box
- (7390)" incompatible
-From: Henrik Friedrichsen <hrkfdn@gmail.com>
-To: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201109141138.55437.chunkeey@googlemail.com> (sfid-20110914_113904_827872_ABF8D259)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Meenakshi
+On Tuesday, September 13, 2011 10:02:46 AM Louis wrote:
+> I need a detailed description of the Atheros AR9170 chipset.
+Well, there's me and Stephen. He usually handels the stuff thats
+not in the documents but unfortunately I don't have his new
+qualcomm email... Luis, do you have it?
 
-On Mon, Sep 26, 2011 at 7:58 PM, Venkataraman, Meenakshi
-<meenakshi.venkataraman@intel.com> wrote:
-> [MV] Just to verify that this is a 11n issue, you said you tried disabling the 11n mode?
-Yes. I just did, once again, to verify it. No change, unfortunately :(
+> Does someone know if there is a reference guide or a detailed datasheet
+> with the chip`s functions and register descriptions available somewhere. 
+You can learn a lot from the original otus driver and firmware
+sources. In fact thats the only ressources I had during most of
+the development. I have my doubts about the docs. They are not
+of much help anyway since they sort of divert from the actual
+silicon.
 
-> Also, in your first email you mentioned that you were using 3.0.4 earlier? What were the results in that version?
-It was the same. I was hoping a newer kernel might contain a fix of
-some sort, that's why I updated it.
+> On which information base has the carl9170 driver been developed? 
+Original otus driver and the firmware... Unfortunately, most of
+the stuff was hosted on kernel.org which is currently unavailable.
+[I do have copies, but I don't carry them around so I can't provide
+a backup atm.]
 
-> I wonder if we're somehow using very low rates. Can you please send debug logs from your experiment with debug flags 0x143fff?
-Here are the logs: http://diff.cc/tmp/kernel_iwlagn_3.log.bz2
-They were made with "11n_disable=1" and without the patches posted by Wey-Yi.
-
-Cheers,
-Henrik
+Regards,
+	Chr
