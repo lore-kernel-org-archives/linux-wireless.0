@@ -1,179 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4478 "EHLO mms2.broadcom.com"
+Received: from mga09.intel.com ([134.134.136.24]:19373 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932439Ab1ISV0b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 17:26:31 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 07/20] staging: brcm80211: remove event handler thread
- from fullmac
-Date: Mon, 19 Sep 2011 14:25:55 -0700
-Message-ID: <1316467568-27683-8-git-send-email-frankyl@broadcom.com> (sfid-20110919_232821_338448_AC81A5C4)
-In-Reply-To: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S934481Ab1IOTcE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 15:32:04 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 04/27] iwlagn: move iwl_stop / wake_queue to the upper layer
+Date: Thu, 15 Sep 2011 11:46:31 -0700
+Message-Id: <1316112414-6341-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110915_213209_249098_42C530A1)
+In-Reply-To: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use work queue to defer cfg80211 event handle jobs
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Add a wrapper in the upper layer to call the mac80211's function.
+This allows not to have the transport layer call mac80211 directly.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   85 +++++-----------------
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h |    3 +-
- 2 files changed, 21 insertions(+), 67 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c         |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-agn.c            |    9 ++++-----
+ drivers/net/wireless/iwlwifi/iwl-core.c           |   10 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-shared.h         |    9 +++------
+ drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |   10 ++--------
+ 6 files changed, 23 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 5e86e21..2dd28a2 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3248,69 +3248,30 @@ static void brcmf_put_event(struct brcmf_cfg80211_event_q *e)
- 	kfree(e);
- }
- 
--static s32 brcmf_event_handler(void *data)
-+static void brcmf_cfg80211_event_handler(struct work_struct *work)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
+index 92ba8cd..495f936 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
+@@ -209,7 +209,7 @@ static void iwl_perform_ct_kill_task(struct iwl_priv *priv,
  {
- 	struct brcmf_cfg80211_priv *cfg_priv =
--			(struct brcmf_cfg80211_priv *)data;
--	struct sched_param param = {.sched_priority = MAX_RT_PRIO - 1 };
-+			container_of(work, struct brcmf_cfg80211_priv,
-+				     event_work);
- 	struct brcmf_cfg80211_event_q *e;
--	DECLARE_WAITQUEUE(wait, current);
- 
--	sched_setscheduler(current, SCHED_FIFO, &param);
--	allow_signal(SIGTERM);
--	add_wait_queue(&cfg_priv->event_waitq, &wait);
--	while (1) {
--		prepare_to_wait(&cfg_priv->event_waitq, &wait,
--				TASK_INTERRUPTIBLE);
--
--		schedule();
--
--		if (kthread_should_stop())
--			break;
--
--		e = brcmf_deq_event(cfg_priv);
--		if (unlikely(!e)) {
--			WL_ERR("event queue empty...\n");
--			continue;
--		}
--
--		do {
--			WL_INFO("event type (%d)\n", e->etype);
--			if (cfg_priv->el.handler[e->etype])
--				cfg_priv->el.handler[e->etype](cfg_priv,
--					cfg_to_ndev(cfg_priv),
--					&e->emsg, e->edata);
--			else
--				WL_INFO("Unknown Event (%d): ignoring\n",
--					e->etype);
--			brcmf_put_event(e);
--		} while ((e = brcmf_deq_event(cfg_priv)));
-+	e = brcmf_deq_event(cfg_priv);
-+	if (unlikely(!e)) {
-+		WL_ERR("event queue empty...\n");
-+		return;
+ 	if (stop) {
+ 		IWL_DEBUG_TEMP(priv, "Stop all queues\n");
+-		if (priv->shrd->mac80211_registered)
++		if (priv->mac80211_registered)
+ 			ieee80211_stop_queues(priv->hw);
+ 		IWL_DEBUG_TEMP(priv,
+ 				"Schedule 5 seconds CT_KILL Timer\n");
+@@ -217,7 +217,7 @@ static void iwl_perform_ct_kill_task(struct iwl_priv *priv,
+ 			  jiffies + CT_KILL_EXIT_DURATION * HZ);
+ 	} else {
+ 		IWL_DEBUG_TEMP(priv, "Wake all queues\n");
+-		if (priv->shrd->mac80211_registered)
++		if (priv->mac80211_registered)
+ 			ieee80211_wake_queues(priv->hw);
  	}
--	finish_wait(&cfg_priv->event_waitq, &wait);
--	WL_INFO("was terminated\n");
--	return 0;
--}
- 
--static s32 brcmf_create_event_handler(struct brcmf_cfg80211_priv *cfg_priv)
--{
--	init_waitqueue_head(&cfg_priv->event_waitq);
--	cfg_priv->event_tsk = kthread_run(brcmf_event_handler, cfg_priv,
--					  "wl_event_handler");
--	if (IS_ERR(cfg_priv->event_tsk)) {
--		cfg_priv->event_tsk = NULL;
--		WL_ERR("failed to create event thread\n");
--		return -ENOMEM;
--	}
--	return 0;
--}
-+	do {
-+		WL_INFO("event type (%d)\n", e->etype);
-+		if (cfg_priv->el.handler[e->etype])
-+			cfg_priv->el.handler[e->etype](cfg_priv,
-+						       cfg_to_ndev(cfg_priv),
-+						       &e->emsg, e->edata);
-+		else
-+			WL_INFO("Unknown Event (%d): ignoring\n", e->etype);
-+		brcmf_put_event(e);
-+	} while ((e = brcmf_deq_event(cfg_priv)));
- 
--static void brcmf_destroy_event_handler(struct brcmf_cfg80211_priv *cfg_priv)
--{
--	if (cfg_priv->event_tsk) {
--		send_sig(SIGTERM, cfg_priv->event_tsk, 1);
--		kthread_stop(cfg_priv->event_tsk);
--		cfg_priv->event_tsk = NULL;
--	}
  }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 1142d85..61f8ea6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1519,7 +1519,7 @@ static void __iwl_down(struct iwl_priv *priv)
+ 	if (!exit_pending)
+ 		clear_bit(STATUS_EXIT_PENDING, &priv->shrd->status);
  
- static void brcmf_init_eq(struct brcmf_cfg80211_priv *cfg_priv)
-@@ -3352,8 +3313,7 @@ static s32 wl_init_priv(struct brcmf_cfg80211_priv *cfg_priv)
- 	err = brcmf_init_priv_mem(cfg_priv);
- 	if (unlikely(err))
- 		return err;
--	if (unlikely(brcmf_create_event_handler(cfg_priv)))
--		return -ENOMEM;
-+	INIT_WORK(&cfg_priv->event_work, brcmf_cfg80211_event_handler);
- 	brcmf_init_eloop_handler(&cfg_priv->el);
- 	mutex_init(&cfg_priv->usr_sync);
- 	err = brcmf_init_iscan(cfg_priv);
-@@ -3368,7 +3328,7 @@ static s32 wl_init_priv(struct brcmf_cfg80211_priv *cfg_priv)
+-	if (priv->shrd->mac80211_registered)
++	if (priv->mac80211_registered)
+ 		ieee80211_stop_queues(priv->hw);
  
- static void wl_deinit_priv(struct brcmf_cfg80211_priv *cfg_priv)
- {
--	brcmf_destroy_event_handler(cfg_priv);
-+	cancel_work_sync(&cfg_priv->event_work);
- 	cfg_priv->dongle_up = false;	/* dongle down */
- 	brcmf_flush_eq(cfg_priv);
- 	brcmf_link_down(cfg_priv);
-@@ -3438,11 +3398,6 @@ void brcmf_cfg80211_detach(struct brcmf_cfg80211_dev *cfg_dev)
- 	kfree(cfg_dev);
+ 	iwl_trans_stop_device(trans(priv));
+@@ -1863,7 +1863,7 @@ static int iwl_mac_setup_register(struct iwl_priv *priv,
+ 		IWL_ERR(priv, "Failed to register hw (error %d)\n", ret);
+ 		return ret;
+ 	}
+-	priv->shrd->mac80211_registered = 1;
++	priv->mac80211_registered = 1;
+ 
+ 	return 0;
  }
+@@ -3311,7 +3311,6 @@ int iwl_probe(struct iwl_bus *bus, const struct iwl_trans_ops *trans_ops,
+ 	priv->shrd = &priv->_shrd;
+ 	priv->shrd->bus = bus;
+ 	priv->shrd->priv = priv;
+-	priv->shrd->hw = hw;
+ 	bus_set_drv_data(priv->bus, priv->shrd);
  
--static void brcmf_wakeup_event(struct brcmf_cfg80211_priv *cfg_priv)
--{
--	wake_up(&cfg_priv->event_waitq);
--}
+ 	priv->shrd->trans = trans_ops->alloc(priv->shrd);
+@@ -3487,9 +3486,9 @@ void __devexit iwl_remove(struct iwl_priv * priv)
+ 	iwl_testmode_cleanup(priv);
+ 	iwl_leds_exit(priv);
+ 
+-	if (priv->shrd->mac80211_registered) {
++	if (priv->mac80211_registered) {
+ 		ieee80211_unregister_hw(priv->hw);
+-		priv->shrd->mac80211_registered = 0;
++		priv->mac80211_registered = 0;
+ 	}
+ 
+ 	iwl_tt_exit(priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 5e490db..208ca21 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1885,3 +1885,13 @@ void iwl_free_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	kmem_cache_free(priv->tx_cmd_pool, (info->driver_data[1]));
+ 	dev_kfree_skb_any(skb);
+ }
++
++void iwl_stop_sw_queue(struct iwl_priv *priv, u8 ac)
++{
++	ieee80211_stop_queue(priv->hw, ac);
++}
++
++void iwl_wake_sw_queue(struct iwl_priv *priv, u8 ac)
++{
++	ieee80211_wake_queue(priv->hw, ac);
++}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 8438a33..f69e556 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -958,6 +958,8 @@ struct iwl_priv {
+ 	struct iwl_station_entry stations[IWLAGN_STATION_COUNT];
+ 	unsigned long ucode_key_table;
+ 
++	u8 mac80211_registered;
++
+ 	/* Indication if ieee80211_ops->open has been called */
+ 	u8 is_open;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index bdfbc60..0f15d58 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -246,12 +246,6 @@ struct iwl_shared {
+ 	spinlock_t sta_lock;
+ 	struct mutex mutex;
+ 
+-	/*these 2 shouldn't really be here, but they are needed for
+-	 * iwl_queue_stop, which is called from the upper layer too
+-	 */
+-	u8 mac80211_registered;
+-	struct ieee80211_hw *hw;
 -
- void
- brcmf_cfg80211_event(struct net_device *ndev,
- 		  const struct brcmf_event_msg *e, void *data)
-@@ -3451,7 +3406,7 @@ brcmf_cfg80211_event(struct net_device *ndev,
- 	struct brcmf_cfg80211_priv *cfg_priv = ndev_to_cfg(ndev);
+ 	struct iwl_tid_data tid_data[IWLAGN_STATION_COUNT][IWL_MAX_TID_COUNT];
  
- 	if (likely(!brcmf_enq_event(cfg_priv, event_type, e)))
--		brcmf_wakeup_event(cfg_priv);
-+		schedule_work(&cfg_priv->event_work);
+ 	wait_queue_head_t wait_command_queue;
+@@ -397,6 +391,9 @@ void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand);
+ const char *get_cmd_string(u8 cmd);
+ bool iwl_check_for_ct_kill(struct iwl_priv *priv);
+ 
++void iwl_stop_sw_queue(struct iwl_priv *priv, u8 ac);
++void iwl_wake_sw_queue(struct iwl_priv *priv, u8 ac);
++
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ void iwl_reset_traffic_log(struct iwl_priv *priv);
+ #endif /* CONFIG_IWLWIFI_DEBUGFS */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
+index fc33754..49cd5a7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
+@@ -375,12 +375,9 @@ static inline void iwl_wake_queue(struct iwl_trans *trans,
+ 	struct iwl_trans_pcie *trans_pcie =
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+-	if (unlikely(!trans->shrd->mac80211_registered))
+-		return;
+-
+ 	if (test_and_clear_bit(hwq, trans_pcie->queue_stopped))
+ 		if (atomic_dec_return(&trans_pcie->queue_stop_count[ac]) <= 0)
+-			ieee80211_wake_queue(trans->shrd->hw, ac);
++			iwl_wake_sw_queue(priv(trans), ac);
  }
  
- static s32 brcmf_dongle_mode(struct net_device *ndev, s32 iftype)
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-index d27d4e6..79806c0 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -298,8 +298,7 @@ struct brcmf_cfg80211_priv {
- 	struct brcmf_cfg80211_iscan_ctrl *iscan;	/* iscan controller */
- 	struct brcmf_cfg80211_connect_info conn_info; /* association info */
- 	struct brcmf_cfg80211_pmk_list *pmk_list;	/* wpa2 pmk list */
--	struct task_struct *event_tsk;	/* task of main event handler thread */
--	wait_queue_head_t event_waitq;	/* wait queue for main event handling */
-+	struct work_struct event_work;	/* event handler work struct */
- 	unsigned long status;		/* current dongle status */
- 	void *pub;
- 	u32 channel;		/* current channel */
+ static inline void iwl_stop_queue(struct iwl_trans *trans,
+@@ -392,12 +389,9 @@ static inline void iwl_stop_queue(struct iwl_trans *trans,
+ 	struct iwl_trans_pcie *trans_pcie =
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+-	if (unlikely(!trans->shrd->mac80211_registered))
+-		return;
+-
+ 	if (!test_and_set_bit(hwq, trans_pcie->queue_stopped))
+ 		if (atomic_inc_return(&trans_pcie->queue_stop_count[ac]) > 0)
+-			ieee80211_stop_queue(trans->shrd->hw, ac);
++			iwl_stop_sw_queue(priv(trans), ac);
+ }
+ 
+ #ifdef ieee80211_stop_queue
 -- 
-1.7.1
-
+1.7.0.4
 
