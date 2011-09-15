@@ -1,57 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:51225 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754862Ab1IFPnq convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f43.google.com ([209.85.215.43]:50278 "EHLO
+	mail-ew0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932312Ab1IOKdu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Sep 2011 11:43:46 -0400
-Received: from wpaz33.hot.corp.google.com (wpaz33.hot.corp.google.com [172.24.198.97])
-	by smtp-out.google.com with ESMTP id p86Fhhul011735
-	for <linux-wireless@vger.kernel.org>; Tue, 6 Sep 2011 08:43:43 -0700
-Received: from iakc1 (iakc1.prod.google.com [10.13.50.1])
-	by wpaz33.hot.corp.google.com with ESMTP id p86FhgLi012194
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 6 Sep 2011 08:43:42 -0700
-Received: by iakc1 with SMTP id c1so7644356iak.3
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Sep 2011 08:43:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1315320602-2815-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1315320602-2815-1-git-send-email-rmanohar@qca.qualcomm.com>
-Date: Tue, 6 Sep 2011 08:43:42 -0700
-Message-ID: <CAMcMvsgm=HYb+KEz9=15w=xL2BESfwZiQgvXru2uUiQZvYqULA@mail.gmail.com> (sfid-20110906_174350_269535_B8487340)
-Subject: Re: [PATCH] ath9k_hw: Fix magnitude/phase average in TxIQ Calibration
-From: Paul Stewart <pstew@google.com>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Kai Shi <kaishi@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 15 Sep 2011 06:33:50 -0400
+Received: by ewy20 with SMTP id 20so1671957ewy.2
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Sep 2011 03:33:48 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Kalyan C Gaddam <chakkal@iit.edu>, Arik Nemtsov <arik@wizery.com>
+Subject: [RFC 4/5] mac80211: add a HW flag for TDLS support
+Date: Thu, 15 Sep 2011 13:25:33 +0300
+Message-Id: <1316082334-7664-5-git-send-email-arik@wizery.com> (sfid-20110915_123358_258921_F572C594)
+In-Reply-To: <1316082334-7664-1-git-send-email-arik@wizery.com>
+References: <1316082334-7664-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rajkumar,
+Allow TDLS operations and peers only in supporting hardware.
 
-On Tue, Sep 6, 2011 at 7:50 AM, Rajkumar Manoharan
-<rmanohar@qca.qualcomm.com> wrote:
-> The commit "ath9k_hw: Fix Tx IQ Calibration hang issue in
-> AR9003 chips" did not consider more than one potential sample
-> while calculating magnitude/phase average if more than one
-> sample has the same value which could affect post-processing
-> of outlier detection that causes an undesirable Tx IQ
-> correction value will be assigned to tx gain settings where
-> outlier happens.
->
-[...]
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Cc: Kalyan C Gaddam <chakkal@iit.edu>
+---
+ include/net/mac80211.h |    4 ++++
+ net/mac80211/cfg.c     |   11 +++++++++++
+ 2 files changed, 15 insertions(+), 0 deletions(-)
 
-> +       /*
-> +        * finding mean magnitude/phase if possible, otherwise
-> +        * just use the last value as the mean
-> +        */
-> +       if (mp_count)
-> +               mp_avg /= mp_count;
-> +       else
-> +               mp_avg = mp_coeff[i - 1];
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2f01d84..25bd038 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1094,6 +1094,9 @@ enum sta_notify_cmd {
+  *	stations based on the PM bit of incoming frames.
+  *	Use ieee80211_start_ps()/ieee8021_end_ps() to manually configure
+  *	the PS mode of connected stations.
++ *
++ * @IEEE80211_HW_SUPPORTS_TDLS:
++ *	This device can operate as a TDLS (802.11z) peer.
+  */
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
+@@ -1119,6 +1122,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_CQM_RSSI			= 1<<20,
+ 	IEEE80211_HW_SUPPORTS_PER_STA_GTK		= 1<<21,
+ 	IEEE80211_HW_AP_LINK_PS				= 1<<22,
++	IEEE80211_HW_SUPPORTS_TDLS			= 1<<23,
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 3ef0bc6..9c6ac93 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -797,6 +797,11 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	sta_apply_parameters(local, sta, params);
+ 
++	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_TDLS) &&
++	    (sta->flags & WLAN_STA_TDLS_PEER)) {
++		return -ENOTSUPP;
++	}
++
+ 	rate_control_rate_init(sta);
+ 
+ 	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+@@ -2308,6 +2313,9 @@ static int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 	bool send_direct;
+ 	int ret;
+ 
++	if (!(sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_TDLS))
++		return -ENOTSUPP;
++
+ #ifdef CONFIG_MAC80211_VERBOSE_TDLS_DEBUG
+ 	printk(KERN_DEBUG "TDLS mgmt action %d peer %pM\n", action_code, peer);
+ #endif
+@@ -2422,6 +2430,9 @@ static int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct sta_info *sta = NULL;
+ 
++	if (!(sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_TDLS))
++		return -ENOTSUPP;
++
+ #ifdef CONFIG_MAC80211_VERBOSE_TDLS_DEBUG
+ 	printk(KERN_DEBUG "TDLS oper %d peer %pM\n", oper, peer);
+ #endif
+-- 
+1.7.4.1
 
-Why use "i - 1" here instead of "nmeasurement - 1"?  Seems more
-error-prone for later changes and harder to understand.
-
---
-Paul
