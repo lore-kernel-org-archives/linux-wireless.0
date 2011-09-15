@@ -1,51 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52349 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755760Ab1IMRp1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 13:45:27 -0400
-Date: Tue, 13 Sep 2011 13:32:26 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, stable@kernel.org
-Subject: Re: [PATCH] ath9k_hw: Fix magnitude/phase coeff correction
-Message-ID: <20110913173226.GF11772@tuxdriver.com> (sfid-20110913_194532_226122_4FEF85F8)
-References: <1315320530-2733-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1315320530-2733-1-git-send-email-rmanohar@qca.qualcomm.com>
+Received: from mga09.intel.com ([134.134.136.24]:19373 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934538Ab1IOTcH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 15:32:07 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 13/27] iwlagn: provide data after WARN_ON
+Date: Thu, 15 Sep 2011 11:46:40 -0700
+Message-Id: <1316112414-6341-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110915_213241_249901_9A5E4CCC)
+In-Reply-To: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 06, 2011 at 08:18:50PM +0530, Rajkumar Manoharan wrote:
-> Do the magnitude/phase coeff correction only if the outlier
-> is detected.
-> 
-> Cc: stable@kernel.org
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_calib.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-> index fa35a02..ee3a8a2 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-> @@ -643,8 +643,9 @@ static void ar9003_hw_detect_outlier(int *mp_coeff, int nmeasurement,
->  			outlier_idx = max_idx;
->  		else
->  			outlier_idx = min_idx;
-> +
-> +		mp_coeff[outlier_idx] = mp_avg;
->  	}
-> -	mp_coeff[outlier_idx] = mp_avg;
->  }
->  
->  static void ar9003_hw_tx_iqcal_load_avg_2_passes(struct ath_hw *ah,
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-What is the effect of the bug being fixed here?  Is this fix intended for 3.1?
+>From time to time, we hit a WARN_ON in iwl_mac_remove_interface.
+This basically means that we got out of sync with mac80211: the vif
+we hold differs from the vif 80211 passes as parameter. Try to get
+some data that will help to debug this.
 
-John
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 0a426cb..ce8a015 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1328,7 +1328,13 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&priv->shrd->mutex);
+ 
+-	WARN_ON(ctx->vif != vif);
++	if (WARN_ON(ctx->vif != vif)) {
++		struct iwl_rxon_context *tmp;
++		IWL_ERR(priv, "ctx->vif = %p, vif = %p\n", ctx->vif, vif);
++		for_each_context(priv, tmp)
++			IWL_ERR(priv, "\tID = %d:\tctx = %p\tctx->vif = %p\n",
++				tmp->ctxid, tmp, tmp->vif);
++	}
+ 	ctx->vif = NULL;
+ 
+ 	iwl_teardown_interface(priv, vif, false);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
