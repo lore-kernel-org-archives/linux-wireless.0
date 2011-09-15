@@ -1,107 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42477 "EHLO nbd.name"
+Received: from mga11.intel.com ([192.55.52.93]:64568 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932103Ab1ISVVn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 17:21:43 -0400
-Message-ID: <4E77B25D.9070907@openwrt.org> (sfid-20110919_232146_310804_AEF071E4)
-Date: Mon, 19 Sep 2011 23:21:33 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH v2 2/4] ath9k_hw: clean up tx power handling
-References: <1316453903-75710-1-git-send-email-nbd@openwrt.org> <1316453903-75710-2-git-send-email-nbd@openwrt.org> <CAB=NE6XvanRQ6Yje_qHhkfzbLmZn9o5Q+5y1NobJwCyuMLFEvg@mail.gmail.com> <4E77AAFB.1080805@openwrt.org> <CAB=NE6XgSz7zz_ZXaPQEsaue307ipd7Qnzgi5QWr8Y4SS1j=Lg@mail.gmail.com>
-In-Reply-To: <CAB=NE6XgSz7zz_ZXaPQEsaue307ipd7Qnzgi5QWr8Y4SS1j=Lg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	id S934154Ab1IOQV3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 12:21:29 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 3.1] iwlagn: workaround bug crashing some APs
+Date: Thu, 15 Sep 2011 08:36:22 -0700
+Message-Id: <1316100982-1815-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110915_182136_043374_B52BBA2F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-09-19 11:14 PM, Luis R. Rodriguez wrote:
-> On Mon, Sep 19, 2011 at 1:50 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
->>  On 2011-09-19 10:41 PM, Luis R. Rodriguez wrote:
->>>
->>>  On Mon, Sep 19, 2011 at 10:38 AM, Felix Fietkau<nbd@openwrt.org>    wrote:
->>>>
->>>>    @@ -986,21 +995,15 @@ static void
->>>>  ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
->>>>                                                     struct ath9k_channel
->>>>  *chan,
->>>>                                                     int16_t *ratesArray,
->>>>                                                     u16 cfgCtl,
->>>>    -                                                 u16 AntennaReduction,
->>>>    -                                                 u16
->>>>  twiceMaxRegulatoryPower,
->>>>    +                                                 u16 antenna_reduction,
->>>>                                                     u16 powerLimit)
->>>>     {
->>>>     #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
->>>>     #define REDUCE_SCALED_POWER_BY_THREE_CHAIN   9 /* 10*log10(3)*2 */
->>>>
->>>>    -       struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
->>>>           struct ar5416_eeprom_def *pEepData =&ah->eeprom.def;
->>>>           u16 twiceMaxEdgePower = MAX_RATE_POWER;
->>>>    -       static const u16 tpScaleReductionTable[5] =
->>>>    -               { 0, 3, 6, 9, MAX_RATE_POWER };
->>>>    -
->>>>           int i;
->>>>    -       int16_t twiceLargestAntenna;
->>>>           struct cal_ctl_data *rep;
->>>>           struct cal_target_power_leg targetPowerOfdm, targetPowerCck = {
->>>>                   0, { 0, 0, 0, 0}
->>>>    @@ -1012,7 +1015,7 @@ static void
->>>>  ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
->>>>           struct cal_target_power_ht targetPowerHt20, targetPowerHt40 = {
->>>>                   0, {0, 0, 0, 0}
->>>>           };
->>>>    -       u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
->>>>    +       u16 scaledPower = 0, minCtlPower;
->>>>           static const u16 ctlModesFor11a[] = {
->>>>                   CTL_11A, CTL_5GHT20, CTL_11A_EXT, CTL_5GHT40
->>>>           };
->>>
->>>  Although we do not use the reg->tp_scale I see no log which explains
->>>  that it will not, I'm reviewing TPC right now and we do need to
->>>  support it but its unclear to me yet if we are doing everything
->>>  correctly in mac80211 / cfg80211 for it. As far as I can see the
->>>  tp_scale stuff is used only if the default is not set, but as you
->>>  noted its always set to the default. I am trying to review the
->>>  internal code to see under what cases this changes but its hard to
->>>  review. Although I'd like to see this removed I'd prefer to treat this
->>>  separately from the cleanup you are doing, which I do find highly
->>>  valuable.
->>
->>  Why keep it? All it does is subtract something from the max regulatory power
->>  level, so it does not make any sense to keep this crap duplicated in all the
->>  the eeprom files.
->
-> You're right that they do seem to use the same array values, but the
-> fact that its all common code is separate from the question of
-> removing it.
-Right now it's dead code. If we need it later, we should just rewrite 
-it. I think carring forward old dead code just in case we might use it 
-later is not a good idea.
+From: Don Fry <donald.h.fry@intel.com>
 
->>  If we ever do need it (which I doubt),
->
-> I suspect this is needed for APs that support DFS and since we do not
-> yet support DFS I do not think this is used. I am not 100% certain yet
-> but at least in my review in the last few minutes it seems the AP can
-> decide to change TPC constraints dynamically based on TPC reports from
-> the STAs. I suspec this is where this comes in to play.
-I looked at the other ath driver and I see no indication that it's 
-related to DFS in any way. Even if it is, it doesn't even belong in 
-ath9k. Any form of tx power reduction can be handled by cfg80211/mac80211.
+This patch reverts commit 9b7688328422b88a7a15dc0dc123ad9ab1a6e22d which
+was introduced in 2.6.38-rc1.  It works around a problem where the iwlagn
+driver stimulates a bug crashing (requiring power cycle to recover) some
+APs under heavy traffic.
 
->>  it needs to be added in a different place anyway.
->
-> If its card specific so I do not think we can move any of this
-> commonly into cfg80211 / mac80211.
-It's not card specific in any way.
+CC: stable@kernel.org #2.6.39, #3.0.0 #3.1.0
+Signed-off-by: Don Fry <donald.h.fry@intel.com>
+SIgned-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+hese patches are also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
 
-> One thing is to simply common code, another is to remove code which we
-> is not enabled right now, but may be later. I think we should treat
-> these separately.
-I don't think we'll ever enable this, and it's not significant enough to 
-keep it around.
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-- Felix
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 8e1942e..f24165d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2440,7 +2440,12 @@ static int iwl_mac_setup_register(struct iwl_priv *priv,
+ 		    IEEE80211_HW_SPECTRUM_MGMT |
+ 		    IEEE80211_HW_REPORTS_TX_ACK_STATUS;
+ 
++	/*
++	 * Including the following line will crash some AP's.  This
++	 * workaround removes the stimulus which causes the crash until
++	 * the AP software can be fixed.
+ 	hw->max_tx_aggregation_subframes = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
++	 */
+ 
+ 	hw->flags |= IEEE80211_HW_SUPPORTS_PS |
+ 		     IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
+-- 
+1.7.0.4
+
