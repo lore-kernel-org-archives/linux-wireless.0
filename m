@@ -1,37 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36711 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752026Ab1IEJYU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Sep 2011 05:24:20 -0400
-Date: Mon, 5 Sep 2011 11:24:25 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Christoph Anton Mitterer <calestyo@scientia.net>
-Cc: Jonathan Nieder <jrnieder@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Dietsche <Gregory.Dietsche@cuw.edu>,
-	linux-kernel@vger.kernel.org
-Subject: Re: iwl4965: "MAC is in deep sleep!" freezes
-Message-ID: <20110905092423.GD2221@redhat.com> (sfid-20110905_112446_334932_A498FA41)
-References: <bbdbd01d4965ae789384bc1f9d0a2426@imap.dd24.net>
- <20110902233806.GA22157@elie>
- <1315053922.6355.8.camel@fermat.scientia.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1315053922.6355.8.camel@fermat.scientia.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:48550 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755428Ab1IOJDN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 05:03:13 -0400
+Subject: Re: [PATCH] cfg80211: add cfg80211_find_vendor_ie() function
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1316076781-12580-1-git-send-email-eliad@wizery.com> (sfid-20110915_105337_024525_83632A66)
+References: <1316076781-12580-1-git-send-email-eliad@wizery.com>
+	 (sfid-20110915_105337_024525_83632A66)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Sep 2011 11:03:10 +0200
+Message-ID: <1316077390.3992.1.camel@jlt3.sipsolutions.net> (sfid-20110915_110317_164118_D37B5283)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+ 
+> +const u8 *cfg80211_find_vendor_ie(unsigned int oui, u8 oui_type,
+> +				  const u8 *ies, int len)
+> +{
+> +	struct ieee80211_vendor_ie *ie;
+> +	const u8 *pos = ies, *end = ies + len;
+> +	int ie_oui;
+> +
+> +	while (pos < end) {
+> +		pos = cfg80211_find_ie(WLAN_EID_VENDOR_SPECIFIC, pos,
+> +				       end - pos);
+> +		if (!pos)
+> +			return NULL;
+> +
+> +		if (end - pos < sizeof(*ie))
+> +			return NULL;
+> +
+> +		ie = (struct ieee80211_vendor_ie *)pos;
+> +		ie_oui = ie->oui[0] << 16 | ie->oui[1] << 8 | ie->oui[2];
+> +		if (ie_oui == oui && ie->oui_type == oui_type)
+> +			return pos;
+> +
+> +		pos += 2 + ie->len;
 
-On Sat, Sep 03, 2011 at 02:45:22PM +0200, Christoph Anton Mitterer wrote:
-> If there's any quick fix (like reverting the patch above) I'd be happy
-> to test it,
-No patch is available for that problem as far as I know. I requested for
-verbose debug messages for now.
+I think it should also check that the whole IE including ie->len (not
+just sizeof(*ie) fits into the buffer, before returning it. That is, add
+something like
 
-> ... cause I'm on a conference next week,.. and having no Wifi
-> there is annyoing.
-Perhaps you can downgrade kernel to 2.6.38 to make wifi works.
+if (end - pos < 2 + ie->len)
+	return NULL;
 
-Stanislaw
+after the sizeof(*ie) check.
+
+johannes
+
