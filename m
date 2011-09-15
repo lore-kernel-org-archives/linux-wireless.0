@@ -1,85 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:52874 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752299Ab1IVHbY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 03:31:24 -0400
-Received: by bkbzs8 with SMTP id zs8so2893193bkb.13
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 00:31:19 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: coelho@ti.com
-Cc: yoni.divinsky@ti.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] wl12xx: fix forced passive scans
-Date: Thu, 22 Sep 2011 10:30:53 +0300
-Message-Id: <1316676653-1758-1-git-send-email-coelho@ti.com> (sfid-20110922_093127_702276_7D194465)
+Received: from mga09.intel.com ([134.134.136.24]:18631 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934556Ab1IOTcM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 15:32:12 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 26/27] iwlagn: fix stack corruption for temperature offset v2
+Date: Thu, 15 Sep 2011 11:46:53 -0700
+Message-Id: <1316112414-6341-27-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110915_213223_394120_4F403963)
+In-Reply-To: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were using incorrect max and min dwell times during forced passive
-scans because we were still using the active scan states to scan
-(passively) the channels that were not marked as passive.
+Same stack corruption problem as temperature offset
 
-Instead of doing passive scans in active states, we now skip active
-states and scan for all channels in passive states.
-
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
-This replaces Shahar Levi's "Set the correct min&max dwell time
-setting on passive scan".
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Also thanks to Yoni Divinsky who also proposed a similar fix.
-
- drivers/net/wireless/wl12xx/scan.c |   19 +++++++++++++------
- 1 files changed, 13 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
-index eeccc9f..08f7e82 100644
---- a/drivers/net/wireless/wl12xx/scan.c
-+++ b/drivers/net/wireless/wl12xx/scan.c
-@@ -99,14 +99,18 @@ static int wl1271_get_scan_channels(struct wl1271 *wl,
- 	for (i = 0, j = 0;
- 	     i < req->n_channels && j < WL1271_SCAN_MAX_CHANNELS;
- 	     i++) {
--
- 		flags = req->channels[i]->flags;
- 
- 		if (!test_bit(i, wl->scan.scanned_ch) &&
- 		    !(flags & IEEE80211_CHAN_DISABLED) &&
--		    ((!!(flags & IEEE80211_CHAN_PASSIVE_SCAN)) == passive) &&
--		    (req->channels[i]->band == band)) {
--
-+		    (req->channels[i]->band == band) &&
-+		    /*
-+		     * In passive scans, we scan all remaining
-+		     * channels, even if not marked as such.
-+		     * In active scans, we only scan channels not
-+		     * marked as passive.
-+		     */
-+		    (passive || !(flags & IEEE80211_CHAN_PASSIVE_SCAN))) {
- 			wl1271_debug(DEBUG_SCAN, "band %d, center_freq %d ",
- 				     req->channels[i]->band,
- 				     req->channels[i]->center_freq);
-@@ -158,6 +162,10 @@ static int wl1271_scan_send(struct wl1271 *wl, enum ieee80211_band band,
- 	int ret;
- 	u16 scan_options = 0;
- 
-+	/* skip active scans if we don't have SSIDs */
-+	if (!passive && wl->scan.req->n_ssids == 0)
-+		return WL1271_NOTHING_TO_SCAN;
-+
- 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
- 	trigger = kzalloc(sizeof(*trigger), GFP_KERNEL);
- 	if (!cmd || !trigger) {
-@@ -165,8 +173,7 @@ static int wl1271_scan_send(struct wl1271 *wl, enum ieee80211_band band,
- 		goto out;
- 	}
- 
--	/* No SSIDs means that we have a forced passive scan */
--	if (passive || wl->scan.req->n_ssids == 0)
-+	if (passive)
- 		scan_options |= WL1271_SCAN_OPT_PASSIVE;
- 
- 	if (WARN_ON(wl->role_id == WL12XX_INVALID_ROLE_ID)) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+index b5bae38..3e40429 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+@@ -187,9 +187,9 @@ static int iwlagn_set_temperature_offset_calib_v2(struct iwl_priv *priv)
+ 	hdr = (struct iwl_eeprom_calib_hdr *)iwl_eeprom_query_addr(priv,
+ 							EEPROM_CALIB_ALL);
+ 	memcpy(&cmd.radio_sensor_offset_high, offset_calib_high,
+-		sizeof(offset_calib_high));
++		sizeof(*offset_calib_high));
+ 	memcpy(&cmd.radio_sensor_offset_low, offset_calib_low,
+-		sizeof(offset_calib_low));
++		sizeof(*offset_calib_low));
+ 	if (!(cmd.radio_sensor_offset_low)) {
+ 		IWL_DEBUG_CALIB(priv, "no info in EEPROM, use default\n");
+ 		cmd.radio_sensor_offset_low = DEFAULT_RADIO_SENSOR_OFFSET;
 -- 
-1.7.1
+1.7.0.4
 
