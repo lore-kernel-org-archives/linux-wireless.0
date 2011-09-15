@@ -1,45 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33268 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751609Ab1ITR6y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 13:58:54 -0400
-Subject: Re: [PATCH] mac80211: fix AP/VLAN PS buffer race
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <CAB=NE6UEo5C-+KrS+Bvqb2wj5NDcZu5ODqm_a4eSXW9ANU0xxw@mail.gmail.com> (sfid-20110920_194935_279893_128F9050)
-References: <1316533251.3953.46.camel@jlt3.sipsolutions.net>
-	 <CAB=NE6UEo5C-+KrS+Bvqb2wj5NDcZu5ODqm_a4eSXW9ANU0xxw@mail.gmail.com>
-	 (sfid-20110920_194935_279893_128F9050)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Sep 2011 19:58:49 +0200
-Message-ID: <1316541529.3953.50.camel@jlt3.sipsolutions.net> (sfid-20110920_195858_826491_631A7B73)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:19373 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934209Ab1IOTcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 15:32:05 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 01/27] iwlagn: warn about buggy fw that doesn't set SEQ_RX_FRAME
+Date: Thu, 15 Sep 2011 11:46:28 -0700
+Message-Id: <1316112414-6341-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110915_213325_113619_C2A36007)
+In-Reply-To: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-09-20 at 10:48 -0700, Luis R. Rodriguez wrote:
-> On Tue, Sep 20, 2011 at 8:40 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> >
-> > When an AP interface is removed without the
-> > AP/VLAN interfaces having been removed before
-> > already, the AP-VLAN interface might still
-> > have sleeping stations and buffer multicast
-> > frames which will happen on the AP interface.
-> > Thus, we need to remove AP/VLAN interfaces
-> > before purging buffered broadcast frames.
-> >
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> 
-> Curious, what was happening with the inverse?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I never ran into this -- purely by code inspection. What could've
-happened is that frames are still queued for an interface that's dead,
-probably just causing skb leaks.
+The way we check if there is host command that should be reclaimed is
+way too complicated. We should have a clear indication from the fw.
+The fw is expected to set the SEQ_RX_FRAME bit if the frame was
+originated by the fw which indicates to the driver that there is no
+host command to free.
+Somehow, there seem to have been buggy fw out there, hence the very
+old comment.
 
-johannes
+This code checks if we have still buggy fw out there.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
+index 126e5a4..2308177 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
+@@ -398,6 +398,7 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+ 
+ 	while (i != r) {
+ 		int len;
++		u16 txq_id, sequence;
+ 
+ 		rxb = rxq->queue[i];
+ 
+@@ -437,6 +438,17 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+ 			(pkt->hdr.cmd != STATISTICS_NOTIFICATION) &&
+ 			(pkt->hdr.cmd != REPLY_TX);
+ 
++		sequence = le16_to_cpu(pkt->hdr.sequence);
++		txq_id = SEQ_TO_QUEUE(le16_to_cpu(pkt->hdr.sequence));
++
++		/* warn if this is cmd response / notification and the uCode
++		 * didn't set the SEQ_RX_FRAME for a frame that is
++		 * uCode-originated*/
++		WARN(txq_id == trans->shrd->cmd_queue && reclaim == false &&
++		     (!(pkt->hdr.sequence & SEQ_RX_FRAME)),
++		     "reclaim is false, SEQ_RX_FRAME unset: %s\n",
++		     get_cmd_string(pkt->hdr.cmd));
++
+ 		iwl_rx_dispatch(priv(trans), rxb);
+ 
+ 		/*
+-- 
+1.7.0.4
 
