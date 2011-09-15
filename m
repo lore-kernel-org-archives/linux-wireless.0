@@ -1,81 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:59473 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756278Ab1IOPAu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 11:00:50 -0400
-From: Vivek Natarajan <nataraja@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] ath6kl: deinitialise wiphy on error
-Date: Thu, 15 Sep 2011 20:30:43 +0530
-Message-ID: <1316098843-6660-1-git-send-email-nataraja@qca.qualcomm.com> (sfid-20110915_170053_449672_9CA4BAE1)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:38702 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934522Ab1IOTcE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 15:32:04 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 00/27] update for 3.2
+Date: Thu, 15 Sep 2011 11:46:27 -0700
+Message-Id: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110915_213328_352099_EA9DC837)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes the following panic observed on card removal.
+We adding more documents for the transport layer work
+We continue the transport layer work to make it better and cleaner
+We also continue doing the cleanup work after driver split
 
-BUG: unable to handle kernel paging request at f86e22ac
-EIP is at wiphy_update_regulatory+0x252/0x590 [cfg80211]
-Call Trace:
- [<f92fb9e5>] set_regdom+0x165/0x600 [cfg80211]
- [<c02057ba>] ? __kmalloc+0x10a/0x190
- [<c0366557>] ? nla_parse+0xb7/0xd0
- [<f9300b92>] ? T.1400+0x12/0x20 [cfg80211]
- [<f9300c84>] nl80211_set_reg+0xe4/0x270 [cfg80211]
- [<f92fe560>] ? nl80211_pre_doit+0x0/0x160 [cfg80211]
- [<c050bdeb>] genl_rcv_msg+0x23b/0x280
- [<c050bbb0>] ? genl_rcv_msg+0x0/0x280
- [<c050ab76>] netlink_rcv_skb+0x86/0xb0
- [<c050bb80>] ? genl_rcv+0x0/0x30
- [<c050bb9c>] genl_rcv+0x1c/0x30
+Don Fry (1):
+  iwlagn: replace beacon_time_fsf_bits variable with #define
 
-Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/sdio.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+Emmanuel Grumbach (9):
+  iwlagn: warn about buggy fw that doesn't set SEQ_RX_FRAME
+  iwlagn: unmap cmd queue's tfds as BIDI
+  iwlagn: free the Tx cmd when a non empty Tx queue is freed
+  iwlagn: move iwl_stop / wake_queue to the upper layer
+  iwlagn: use enum iwl_rxon_context_id instead of u8
+  iwlagn: document the bus layer API
+  iwlagn: add documentation to the transport layer
+  iwlagn: beautify the code - remove uneeded line break
+  iwlagn: provide data after WARN_ON
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 0cce801..4724ddf 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -25,6 +25,7 @@
- #include "hif-ops.h"
- #include "target.h"
- #include "debug.h"
-+#include "cfg80211.h"
- 
- struct ath6kl_sdio {
- 	struct sdio_func *func;
-@@ -816,7 +817,7 @@ static int ath6kl_sdio_probe(struct sdio_func *func,
- 			ath6kl_err("Failed to enable 4-bit async irq mode %d\n",
- 				   ret);
- 			sdio_release_host(func);
--			goto err_dma;
-+			goto err_cfg80211;
- 		}
- 
- 		ath6kl_dbg(ATH6KL_DBG_TRC, "4-bit async irq mode enabled\n");
-@@ -829,7 +830,7 @@ static int ath6kl_sdio_probe(struct sdio_func *func,
- 
- 	ret = ath6kl_sdio_power_on(ar_sdio);
- 	if (ret)
--		goto err_dma;
-+		goto err_cfg80211;
- 
- 	sdio_claim_host(func);
- 
-@@ -853,6 +854,8 @@ static int ath6kl_sdio_probe(struct sdio_func *func,
- 
- err_off:
- 	ath6kl_sdio_power_off(ar_sdio);
-+err_cfg80211:
-+	ath6kl_cfg80211_deinit(ar_sdio->ar);
- err_dma:
- 	kfree(ar_sdio->dma_buffer);
- err_hif:
--- 
-1.7.1
+Fry, Donald H (2):
+  iwlagn: fix modinfo display for 135 ucode.
+  iwlagn: simplify chain_noise_num_beacons indirection
+
+Johannes Berg (9):
+  iwlagn: move PCI-E transport files
+  iwlagn: generically provide iwl_trans_send_cmd_pdu
+  iwlagn: Makefile whitespace cleanup
+  iwlagn: clean up PM code
+  iwlagn: rename iwl-pci.h to iwl-cfg.h
+  iwlagn: remove unused function declarations
+  iwlagn: move sysfs files to debugfs
+  iwlagn: remove drvdata support from bus layer
+  iwlagn: do not use interruptible waits
+
+Wey-Yi Guy (6):
+  iwlagn: New SKU for 6005 SFF
+  iwlagn: merge eeprom access into single file
+  iwlagn: add support for v2 of temperature offset calibration
+  iwlagn: use iwl_eeprom_calib_hdr structure
+  iwlagn: fix stack corruption for temperature offset v2
+  iwlagn: signedness bug
+
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+
+Because the file system problem, all the patches are not push into 
+git.kernel.org yet. I will push as soon as the file system issue addressed
+
+ drivers/net/wireless/iwlwifi/Makefile             |   23 +-
+ drivers/net/wireless/iwlwifi/iwl-1000.c           |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-2000.c           |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-5000-hw.h        |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c           |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c           |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c      |   21 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c     |  299 ---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c         |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c      |   55 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c            |  148 +--
+ drivers/net/wireless/iwlwifi/iwl-bus.h            |   72 +-
+ drivers/net/wireless/iwlwifi/iwl-cfg.h            |  115 ++
+ drivers/net/wireless/iwlwifi/iwl-commands.h       |    8 +
+ drivers/net/wireless/iwlwifi/iwl-core.c           |   53 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h           |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c        |   72 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |    2 +
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c         |  239 +++-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h         |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-pci.c            |   22 +-
+ drivers/net/wireless/iwlwifi/iwl-pci.h            |  116 --
+ drivers/net/wireless/iwlwifi/iwl-rx.c             |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-shared.h         |  140 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |  454 -----
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |  448 +++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  | 1424 +++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  | 1153 ++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     | 1988 +++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c  | 1412 ---------------
+ drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c  | 1158 ------------
+ drivers/net/wireless/iwlwifi/iwl-trans.c          | 1926 +--------------------
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |   27 +-
+ 35 files changed, 5762 insertions(+), 5675 deletions(-)
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-cfg.h
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-pci.h
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
 
