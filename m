@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:52838 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752240Ab1IWLo7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 07:44:59 -0400
-Received: by mail-bw0-f49.google.com with SMTP id t2so5024646bka.22
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Sep 2011 04:44:58 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: AP mode - support hidden SSID
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1315070523-31102-1-git-send-email-arik@wizery.com>
-References: <1315070523-31102-1-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 23 Sep 2011 14:44:55 +0300
-Message-ID: <1316778295.2157.734.camel@cumari> (sfid-20110923_134502_653017_7097786A)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:18631 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934498Ab1IOTcL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 15:32:11 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 20/27] iwlagn: remove unused function declarations
+Date: Thu, 15 Sep 2011 11:46:47 -0700
+Message-Id: <1316112414-6341-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110915_213231_489448_E7064E51)
+In-Reply-To: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-09-03 at 20:22 +0300, Arik Nemtsov wrote: 
-> If a hidden SSID is requested, generate a probe response template
-> containing the real SSID.
-> 
-> Depends on the patch "mac80211: add ssid config to bss information
-> in AP-mode".
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+From: Johannes Berg <johannes.berg@intel.com>
 
-Rebased and applied.  Thanks!
+iwl_suspend and iwl_resume don't exist.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-shared.h |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 8272a94..40186a6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -420,11 +420,6 @@ enum iwl_rxon_context_id {
+ 	NUM_IWL_RXON_CTX
+ };
+ 
+-#ifdef CONFIG_PM
+-int iwl_suspend(struct iwl_priv *priv);
+-int iwl_resume(struct iwl_priv *priv);
+-#endif /* !CONFIG_PM */
+-
+ int iwl_probe(struct iwl_bus *bus, const struct iwl_trans_ops *trans_ops,
+ 		struct iwl_cfg *cfg);
+ void __devexit iwl_remove(struct iwl_priv * priv);
 -- 
-Cheers,
-Luca.
+1.7.0.4
 
