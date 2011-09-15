@@ -1,77 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:23872 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753209Ab1IFOta (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:47270 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755692Ab1IOJXO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Sep 2011 10:49:30 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Kai Shi <kaishi@qca.qualcomm.com>
-Subject: [PATCH] ath9k_hw: Fix magnitude/phase average in TxIQ Calibration
-Date: Tue, 6 Sep 2011 20:20:02 +0530
-Message-ID: <1315320602-2815-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110906_164934_917939_BD0A35CB)
+	Thu, 15 Sep 2011 05:23:14 -0400
+Received: by wwf22 with SMTP id 22so3423475wwf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Sep 2011 02:23:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Thu, 15 Sep 2011 12:23:13 +0300
+Message-ID: <CAApCBGxz8bP-=m=gmrBcR0UaAGWZCN5-AOyO12t3gt6jocU9qA@mail.gmail.com> (sfid-20110915_112317_887879_A008079C)
+Subject: compat-wireless cross compilation
+From: wireless newbie <wnewbie72@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit "ath9k_hw: Fix Tx IQ Calibration hang issue in
-AR9003 chips" did not consider more than one potential sample
-while calculating magnitude/phase average if more than one
-sample has the same value which could affect post-processing
-of outlier detection that causes an undesirable Tx IQ
-correction value will be assigned to tx gain settings where
-outlier happens.
+Hi all,
 
-Cc: Kai Shi <kaishi@qca.qualcomm.com>
-Reported-by: Paul Stewart <pstew@google.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   17 +++++++++++++----
- 1 files changed, 13 insertions(+), 4 deletions(-)
+I'm trying to cross compile compat-wireless but I haven't had any
+luck. My target architecture is ppc and my target kernel version is
+2.6.39. I have cloned compat.git, linux-next.git and
+compat-wireless-2.6.git to my host machine and set GIT_TREE and
+GIT_COMPAT_TREE variables to point to linux-next and compat
+directories. When in compat-wireless directory I say
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index ee3a8a2..6ec3e6d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -615,11 +615,10 @@ static void ar9003_hw_detect_outlier(int *mp_coeff, int nmeasurement,
- {
- 	int mp_max = -64, max_idx = 0;
- 	int mp_min = 63, min_idx = 0;
--	int mp_avg = 0, i, outlier_idx = 0;
-+	int mp_avg = 0, i, outlier_idx = 0, mp_count = 0;
- 
- 	/* find min/max mismatch across all calibrated gains */
- 	for (i = 0; i < nmeasurement; i++) {
--		mp_avg += mp_coeff[i];
- 		if (mp_coeff[i] > mp_max) {
- 			mp_max = mp_coeff[i];
- 			max_idx = i;
-@@ -632,10 +631,20 @@ static void ar9003_hw_detect_outlier(int *mp_coeff, int nmeasurement,
- 	/* find average (exclude max abs value) */
- 	for (i = 0; i < nmeasurement; i++) {
- 		if ((abs(mp_coeff[i]) < abs(mp_max)) ||
--		    (abs(mp_coeff[i]) < abs(mp_min)))
-+		    (abs(mp_coeff[i]) < abs(mp_min))) {
- 			mp_avg += mp_coeff[i];
-+			mp_count++;
-+		}
- 	}
--	mp_avg /= (nmeasurement - 1);
-+
-+	/*
-+	 * finding mean magnitude/phase if possible, otherwise
-+	 * just use the last value as the mean
-+	 */
-+	if (mp_count)
-+		mp_avg /= mp_count;
-+	else
-+		mp_avg = mp_coeff[i - 1];
- 
- 	/* detect outlier */
- 	if (abs(mp_max - mp_min) > max_delta) {
--- 
-1.7.6.1
+make KLIB=/path/to/my/target/kernel KLIB_BUILD=/path/to/my/target/kernel/
 
+I get this:
+
+cat: /media/data/work/wireless-compat/compat-wireless-2.6/compat_version:
+No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /media/data/work/wireless-compat/compat-wireless-2.6/compat_version:
+No such file or directory
+make -C /path/to/my/target/kernel/
+M=/media/data/work/wireless-compat/compat-wireless-2.6 modules
+make[1]: Entering directory `/path/to/my/target/kernel'
+scripts/Makefile.build:44:
+/media/data/work/wireless-compat/compat-wireless-2.6/compat/Makefile:
+No such file or directory
+make[3]: *** No rule to make target
+`/media/data/work/wireless-compat/compat-wireless-2.6/compat/Makefile'.
+ Stop.
+make[2]: *** [/media/data/work/wireless-compat/compat-wireless-2.6/compat]
+Error 2
+make[1]: *** [_module_/media/data/work/wireless-compat/compat-wireless-2.6]
+Error 2
+make[1]: Leaving directory `/path/to/my/target/kernel'
+make: *** [modules] Error 2
+
+It seems that compat-wireless is missing some files. Why is it so?
+Should I do some preparations before I run make or..?
+
+Also, is it somehow possible to patch my current kernel sources with
+compat-wireless sources? That would be my preference if that would be
+possible.
+
+thanks
