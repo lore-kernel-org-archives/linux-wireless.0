@@ -1,34 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3648 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755208Ab1INHFL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 03:05:11 -0400
-Message-ID: <4E70521B.6050801@broadcom.com> (sfid-20110914_090516_202298_8E0D079D)
-Date: Wed, 14 Sep 2011 09:04:59 +0200
-From: "Roland Vossen" <rvossen@broadcom.com>
-MIME-Version: 1.0
-To: "Dan Carpenter" <dan.carpenter@oracle.com>,
-	"gregkh@suse.de" <gregkh@suse.de>
-cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 14/17] staging: brcm80211: simplification of
- brcmf_netdev_ioctl_priv()
-References: <1315900197-7260-1-git-send-email-rvossen@broadcom.com>
- <1315900197-7260-15-git-send-email-rvossen@broadcom.com>
- <20110914020124.GB7002@shale.localdomain>
-In-Reply-To: <20110914020124.GB7002@shale.localdomain>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from external1.orbit-lab.org ([128.6.192.131]:43875 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S934404Ab1IOTCD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 15:02:03 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 478AE54022F
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Sep 2011 15:13:56 -0400 (EDT)
+Subject: Compat-wireless release for 2011-09-15 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110915190201.78B3240647@repository3.orbit-lab.org> (sfid-20110915_210207_001219_43BB8CE6)
+Date: Thu, 15 Sep 2011 15:02:01 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> +	if (ioc->buf != NULL)
->> +		buflen = min_t(int, ioc->len, BRCMF_IOCTL_MAXLEN);
->                                ^^^^
-> Should be uint here.
+fatal: Unable to look up git.kernel.org (port 9418) (Name or service not known)
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-You are right. Greg, please drop [14/17], I will post a v2 patch.
+compat-wireless code metrics
 
-Thanks, Roland.
-
+    806210 - Total upstream lines of code being pulled
+ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
+rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
