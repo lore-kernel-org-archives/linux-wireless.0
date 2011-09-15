@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42158 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752507Ab1IGMYf (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:41070 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933125Ab1IONcZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Sep 2011 08:24:35 -0400
-Subject: Re: [PATCH] nl80211/cfg80211/mac80211: fix wme docs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1315296872-20424-1-git-send-email-eliad@wizery.com> (sfid-20110906_101306_767250_6A5D3668)
-References: <1315296872-20424-1-git-send-email-eliad@wizery.com>
-	 (sfid-20110906_101306_767250_6A5D3668)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 07 Sep 2011 11:43:56 +0200
-Message-ID: <1315388636.4002.4.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 15 Sep 2011 09:32:25 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 2/2] ath9k: Reset caldata on radio enable
+Date: Thu, 15 Sep 2011 19:02:54 +0530
+Message-ID: <1316093574-8188-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110915_153228_182137_445395FC)
+In-Reply-To: <1316093574-8188-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1316093574-8188-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Not doing so, the caldata continues to retain older history
+values learned on that channel. It is always safer to start
+noise floor calibration from the defaults after the assoication.
+So this patch resets the nf history buffer when none of the
+STA vifs are associated.
 
->   * enum nl80211_sta_wme_attr - station WME attributes
->   * @__NL80211_STA_WME_INVALID: invalid number for nested attribute
-> - * @NL80211_STA_WME_QUEUES: bitmap of uapsd queues.
-> + * @NL80211_STA_WME_UAPSD_QUEUES: bitmap of uapsd queues.
->   * @NL80211_STA_WME_MAX_SP: max service period.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Can you also note what the format of these is, i.e. that the MAX_SP is
-like in the QoS info field but shifted down, and the queues is the AC
-bitmap like in the QoS info field?
-
-I'll send the validation patch separately.
-
-Thx,
-Johannes
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 8a17cff5..b38dc18 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2015,6 +2015,7 @@ static void ath9k_config_bss(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 		/* Stop ANI */
+ 		sc->sc_flags &= ~SC_OP_ANI_RUN;
+ 		del_timer_sync(&common->ani.timer);
++		memset(&sc->caldata, 0, sizeof(sc->caldata));
+ 	}
+ }
+ 
+-- 
+1.7.6.1
 
