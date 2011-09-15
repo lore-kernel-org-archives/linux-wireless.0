@@ -1,71 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f42.google.com ([209.85.215.42]:43495 "EHLO
-	mail-ew0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939Ab1IUTMH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 15:12:07 -0400
-Received: by ewy1 with SMTP id 1so2047977ewy.1
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 12:12:05 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/3] b43: update dummy transmission
-Date: Wed, 21 Sep 2011 21:44:14 +0200
-Message-Id: <1316634255-3116-2-git-send-email-zajec5@gmail.com> (sfid-20110921_211211_933042_E6FA8F94)
-In-Reply-To: <1316634255-3116-1-git-send-email-zajec5@gmail.com>
-References: <1316634255-3116-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:38702 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934534Ab1IOTcL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 15:32:11 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 22/27] iwlagn: remove drvdata support from bus layer
+Date: Thu, 15 Sep 2011 11:46:49 -0700
+Message-Id: <1316112414-6341-23-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110915_213232_718378_AC8266C0)
+In-Reply-To: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Since the removal of the sysfs files, it is no
+longer necessary to have upper layers control
+the drvdata, so let the PCI driver have it for
+itself completely.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/b43/main.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    4 +---
+ drivers/net/wireless/iwlwifi/iwl-bus.h |   10 ++--------
+ drivers/net/wireless/iwlwifi/iwl-pci.c |   19 ++++++++-----------
+ 3 files changed, 11 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 9437c9a..9adc43d 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -738,7 +738,8 @@ void b43_dummy_transmission(struct b43_wldev *dev, bool ofdm, bool pa_on)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 84ba428..1d53eb8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3186,9 +3186,9 @@ int iwl_probe(struct iwl_bus *bus, const struct iwl_trans_ops *trans_ops,
+ 	priv = hw->priv;
+ 	priv->bus = bus;
+ 	priv->shrd = &priv->_shrd;
++	bus->shrd = priv->shrd;
+ 	priv->shrd->bus = bus;
+ 	priv->shrd->priv = priv;
+-	bus_set_drv_data(priv->bus, priv->shrd);
  
- 	value = (ofdm ? 0x41 : 0x40);
- 	b43_write16(dev, B43_MMIO_TXE0_PHYCTL, value);
--	if ((phy->type == B43_PHYTYPE_N) || (phy->type == B43_PHYTYPE_LP))
-+	if (phy->type == B43_PHYTYPE_N || phy->type == B43_PHYTYPE_LP ||
-+	    phy->type == B43_PHYTYPE_LCN)
- 		b43_write16(dev, B43_MMIO_TXE0_PHYCTL1, 0x1A02);
+ 	priv->shrd->trans = trans_ops->alloc(priv->shrd);
+ 	if (priv->shrd->trans == NULL) {
+@@ -3387,8 +3387,6 @@ void __devexit iwl_remove(struct iwl_priv * priv)
  
- 	b43_write16(dev, B43_MMIO_TXE0_WM_0, 0x0000);
-@@ -748,12 +749,13 @@ void b43_dummy_transmission(struct b43_wldev *dev, bool ofdm, bool pa_on)
- 	b43_write16(dev, B43_MMIO_XMTTXCNT, 0x0014);
- 	b43_write16(dev, B43_MMIO_XMTSEL, 0x0826);
- 	b43_write16(dev, B43_MMIO_TXE0_CTL, 0x0000);
--	if (!pa_on && (phy->type == B43_PHYTYPE_N)) {
--		//SPEC TODO
--	}
-+
-+	if (!pa_on && phy->type == B43_PHYTYPE_N)
-+		; /*b43_nphy_pa_override(dev, false) */
+ 	iwl_trans_free(trans(priv));
  
- 	switch (phy->type) {
- 	case B43_PHYTYPE_N:
-+	case B43_PHYTYPE_LCN:
- 		b43_write16(dev, B43_MMIO_TXE0_AUX, 0x00D0);
- 		break;
- 	case B43_PHYTYPE_LP:
-@@ -762,6 +764,7 @@ void b43_dummy_transmission(struct b43_wldev *dev, bool ofdm, bool pa_on)
- 	default:
- 		b43_write16(dev, B43_MMIO_TXE0_AUX, 0x0030);
+-	bus_set_drv_data(priv->bus, NULL);
+-
+ 	iwl_uninit_drv(priv);
+ 
+ 	dev_kfree_skb(priv->beacon_skb);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-bus.h b/drivers/net/wireless/iwlwifi/iwl-bus.h
+index 98535df..08b9759 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-bus.h
++++ b/drivers/net/wireless/iwlwifi/iwl-bus.h
+@@ -122,7 +122,6 @@ struct iwl_bus;
+  * struct iwl_bus_ops - bus specific operations
+  * @get_pm_support: must returns true if the bus can go to sleep
+  * @apm_config: will be called during the config of the APM
+- * @set_drv_data: set the shared data pointer to the bus layer
+  * @get_hw_id: prints the hw_id in the provided buffer
+  * @write8: write a byte to register at offset ofs
+  * @write32: write a dword to register at offset ofs
+@@ -131,7 +130,6 @@ struct iwl_bus;
+ struct iwl_bus_ops {
+ 	bool (*get_pm_support)(struct iwl_bus *bus);
+ 	void (*apm_config)(struct iwl_bus *bus);
+-	void (*set_drv_data)(struct iwl_bus *bus, struct iwl_shared *shrd);
+ 	void (*get_hw_id)(struct iwl_bus *bus, char buf[], int buf_len);
+ 	void (*write8)(struct iwl_bus *bus, u32 ofs, u8 val);
+ 	void (*write32)(struct iwl_bus *bus, u32 ofs, u32 val);
+@@ -146,6 +144,8 @@ struct iwl_bus_ops {
+  * @dev - pointer to struct device * that represents the device
+  * @ops - pointer to iwl_bus_ops
+  * @shrd - pointer to iwl_shared which holds shared data from the upper layer
++ *	NB: for the time being this needs to be set by the upper layer since
++ *	it allocates the shared data
+  * @irq - the irq number for the device
+  * @reg_lock - protect hw register access
+  */
+@@ -172,12 +172,6 @@ static inline void bus_apm_config(struct iwl_bus *bus)
+ 	bus->ops->apm_config(bus);
+ }
+ 
+-static inline void bus_set_drv_data(struct iwl_bus *bus,
+-				struct iwl_shared *shrd)
+-{
+-	bus->ops->set_drv_data(bus, shrd);
+-}
+-
+ static inline void bus_get_hw_id(struct iwl_bus *bus, char buf[], int buf_len)
+ {
+ 	bus->ops->get_hw_id(bus, buf, buf_len);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index 849b5ef..23b5f78 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -134,12 +134,6 @@ static void iwl_pci_apm_config(struct iwl_bus *bus)
  	}
-+	b43_read16(dev, B43_MMIO_TXE0_AUX);
+ }
  
- 	if (phy->radio_ver == 0x2050 && phy->radio_rev <= 0x5)
- 		b43_radio_write16(dev, 0x0051, 0x0017);
+-static void iwl_pci_set_drv_data(struct iwl_bus *bus, struct iwl_shared *shrd)
+-{
+-	bus->shrd = shrd;
+-	pci_set_drvdata(IWL_BUS_GET_PCI_DEV(bus), shrd);
+-}
+-
+ static void iwl_pci_get_hw_id(struct iwl_bus *bus, char buf[],
+ 			      int buf_len)
+ {
+@@ -168,7 +162,6 @@ static u32 iwl_pci_read32(struct iwl_bus *bus, u32 ofs)
+ static const struct iwl_bus_ops bus_ops_pci = {
+ 	.get_pm_support = iwl_pci_is_pm_supported,
+ 	.apm_config = iwl_pci_apm_config,
+-	.set_drv_data = iwl_pci_set_drv_data,
+ 	.get_hw_id = iwl_pci_get_hw_id,
+ 	.write8 = iwl_pci_write8,
+ 	.write32 = iwl_pci_write32,
+@@ -393,6 +386,8 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	pci_bus = IWL_BUS_GET_PCI_BUS(bus);
+ 	pci_bus->pci_dev = pdev;
+ 
++	pci_set_drvdata(pdev, bus);
++
+ 	/* W/A - seems to solve weird behavior. We need to remove this if we
+ 	 * don't want to stay in L1 all the time. This wastes a lot of power */
+ 	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |
+@@ -486,9 +481,9 @@ out_no_pci:
+ 
+ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
+ {
+-	struct iwl_shared *shrd = pci_get_drvdata(pdev);
+-	struct iwl_bus *bus = shrd->bus;
++	struct iwl_bus *bus = pci_get_drvdata(pdev);
+ 	struct iwl_pci_bus *pci_bus = IWL_BUS_GET_PCI_BUS(bus);
++	struct iwl_shared *shrd = bus->shrd;
+ 
+ 	iwl_remove(shrd->priv);
+ 
+@@ -506,7 +501,8 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
+ static int iwl_pci_suspend(struct device *device)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(device);
+-	struct iwl_shared *shrd = pci_get_drvdata(pdev);
++	struct iwl_bus *bus = pci_get_drvdata(pdev);
++	struct iwl_shared *shrd = bus->shrd;
+ 
+ 	/* Before you put code here, think about WoWLAN. You cannot check here
+ 	 * whether WoWLAN is enabled or not, and your code will run even if
+@@ -519,7 +515,8 @@ static int iwl_pci_suspend(struct device *device)
+ static int iwl_pci_resume(struct device *device)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(device);
+-	struct iwl_shared *shrd = pci_get_drvdata(pdev);
++	struct iwl_bus *bus = pci_get_drvdata(pdev);
++	struct iwl_shared *shrd = bus->shrd;
+ 
+ 	/* Before you put code here, think about WoWLAN. You cannot check here
+ 	 * whether WoWLAN is enabled or not, and your code will run even if
 -- 
-1.7.3.4
+1.7.0.4
 
