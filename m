@@ -1,107 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:39060 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752194Ab1IGSLj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Sep 2011 14:11:39 -0400
-Received: by ewy4 with SMTP id 4so274569ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Sep 2011 11:11:37 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/5] rt2x00: Minor optimizazion in txdone path
-Date: Wed, 7 Sep 2011 20:10:02 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201109072010.04023.IvDoorn@gmail.com> (sfid-20110907_201142_497662_D428FA3A)
+Received: from nbd.name ([46.4.11.11]:60817 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933388Ab1IOMXL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 08:23:11 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.atheros.com
+Subject: [PATCH 3/4] ath9k_hw: fix setting the hardware diversity flag
+Date: Thu, 15 Sep 2011 14:22:56 +0200
+Message-Id: <1316089377-86019-3-git-send-email-nbd@openwrt.org> (sfid-20110915_142315_148183_70D3BE1D)
+In-Reply-To: <1316089377-86019-2-git-send-email-nbd@openwrt.org>
+References: <1316089377-86019-1-git-send-email-nbd@openwrt.org>
+ <1316089377-86019-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+ath9k_hw_set_diversity is only called from init.c where it cannot affect
+the hardware setting because it's cleared on the next reset.
+Instead of using a PHY op for something that's supposed to be initialized
+statically, set the register value directly in the INI override function.
 
-We can save an indirect function call + some instructions for fetching
-the actual function pointer by passing the driver specific txwi pointer
-directly from rt2800pci/rt2800usb to rt2800lib instead of using the
-rt2800_drv_get_txwi callback.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c |   14 +++-----------
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |   14 +++-----------
+ drivers/net/wireless/ath/ath9k/hw-ops.h     |    5 -----
+ drivers/net/wireless/ath/ath9k/hw.h         |    1 -
+ drivers/net/wireless/ath/ath9k/init.c       |    1 -
+ 5 files changed, 6 insertions(+), 29 deletions(-)
 
- drivers/net/wireless/rt2x00/rt2800lib.c |    4 +---
- drivers/net/wireless/rt2x00/rt2800lib.h |    2 +-
- drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
- drivers/net/wireless/rt2x00/rt2800usb.c |    3 ++-
- 4 files changed, 5 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 775e996..ba626a9 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -601,7 +601,7 @@ void rt2800_process_rxwi(struct queue_entry *entry,
- }
- EXPORT_SYMBOL_GPL(rt2800_process_rxwi);
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index 1381a39..794a2d9 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -704,6 +704,9 @@ static void ar5008_hw_override_ini(struct ath_hw *ah,
+ 		REG_WRITE(ah, AR_PCU_MISC_MODE2, val);
+ 	}
  
--void rt2800_txdone_entry(struct queue_entry *entry, u32 status)
-+void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
-@@ -609,13 +609,11 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status)
- 	u32 word;
- 	u16 mcs, real_mcs;
- 	int aggr, ampdu;
--	__le32 *txwi;
- 
++	REG_SET_BIT(ah, AR_PHY_CCK_DETECT,
++		    AR_PHY_CCK_DETECT_BB_ENABLE_ANT_FAST_DIV);
++
+ 	if (AR_SREV_9280_20_OR_LATER(ah))
+ 		return;
  	/*
- 	 * Obtain the status about this packet.
- 	 */
- 	txdesc.flags = 0;
--	txwi = rt2800_drv_get_txwi(entry);
- 	rt2x00_desc_read(txwi, 0, &word);
- 
- 	mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-index b851847..7a2511f 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-@@ -152,7 +152,7 @@ void rt2800_write_tx_data(struct queue_entry *entry,
- 			  struct txentry_desc *txdesc);
- void rt2800_process_rxwi(struct queue_entry *entry, struct rxdone_entry_desc *txdesc);
- 
--void rt2800_txdone_entry(struct queue_entry *entry, u32 status);
-+void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32* txwi);
- 
- void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc);
- void rt2800_clear_beacon(struct queue_entry *entry);
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 4fd6649..2633628 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -760,7 +760,7 @@ static bool rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
- 		}
- 
- 		entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
--		rt2800_txdone_entry(entry, status);
-+		rt2800_txdone_entry(entry, status, rt2800pci_get_txwi(entry));
- 
- 		if (--max_tx_done == 0)
- 			break;
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 42f511b..0015526 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -542,7 +542,8 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
- 		}
- 
- 		if (entry)
--			rt2800_txdone_entry(entry, reg);
-+			rt2800_txdone_entry(entry, reg,
-+				            rt2800usb_get_txwi(entry));
+@@ -1007,16 +1010,6 @@ static void ar5008_restore_chainmask(struct ath_hw *ah)
  	}
  }
  
+-static void ar5008_set_diversity(struct ath_hw *ah, bool value)
+-{
+-	u32 v = REG_READ(ah, AR_PHY_CCK_DETECT);
+-	if (value)
+-		v |= AR_PHY_CCK_DETECT_BB_ENABLE_ANT_FAST_DIV;
+-	else
+-		v &= ~AR_PHY_CCK_DETECT_BB_ENABLE_ANT_FAST_DIV;
+-	REG_WRITE(ah, AR_PHY_CCK_DETECT, v);
+-}
+-
+ static u32 ar9100_hw_compute_pll_control(struct ath_hw *ah,
+ 					 struct ath9k_channel *chan)
+ {
+@@ -1654,7 +1647,6 @@ void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
+ 	priv_ops->rfbus_req = ar5008_hw_rfbus_req;
+ 	priv_ops->rfbus_done = ar5008_hw_rfbus_done;
+ 	priv_ops->restore_chainmask = ar5008_restore_chainmask;
+-	priv_ops->set_diversity = ar5008_set_diversity;
+ 	priv_ops->do_getnf = ar5008_hw_do_getnf;
+ 	priv_ops->set_radar_params = ar5008_hw_set_radar_params;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 2f35aee..d7d251e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -592,6 +592,9 @@ static void ar9003_hw_override_ini(struct ath_hw *ah)
+ 	val = REG_READ(ah, AR_PCU_MISC_MODE2) & (~AR_ADHOC_MCAST_KEYID_ENABLE);
+ 	REG_WRITE(ah, AR_PCU_MISC_MODE2,
+ 		  val | AR_AGG_WEP_ENABLE_FIX | AR_AGG_WEP_ENABLE);
++
++	REG_SET_BIT(ah, AR_PHY_CCK_DETECT,
++		    AR_PHY_CCK_DETECT_BB_ENABLE_ANT_FAST_DIV);
+ }
+ 
+ static void ar9003_hw_prog_ini(struct ath_hw *ah,
+@@ -785,16 +788,6 @@ static void ar9003_hw_rfbus_done(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_PHY_RFBUS_REQ, 0);
+ }
+ 
+-static void ar9003_hw_set_diversity(struct ath_hw *ah, bool value)
+-{
+-	u32 v = REG_READ(ah, AR_PHY_CCK_DETECT);
+-	if (value)
+-		v |= AR_PHY_CCK_DETECT_BB_ENABLE_ANT_FAST_DIV;
+-	else
+-		v &= ~AR_PHY_CCK_DETECT_BB_ENABLE_ANT_FAST_DIV;
+-	REG_WRITE(ah, AR_PHY_CCK_DETECT, v);
+-}
+-
+ static bool ar9003_hw_ani_control(struct ath_hw *ah,
+ 				  enum ath9k_ani_cmd cmd, int param)
+ {
+@@ -1277,7 +1270,6 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
+ 	priv_ops->set_delta_slope = ar9003_hw_set_delta_slope;
+ 	priv_ops->rfbus_req = ar9003_hw_rfbus_req;
+ 	priv_ops->rfbus_done = ar9003_hw_rfbus_done;
+-	priv_ops->set_diversity = ar9003_hw_set_diversity;
+ 	priv_ops->ani_control = ar9003_hw_ani_control;
+ 	priv_ops->do_getnf = ar9003_hw_do_getnf;
+ 	priv_ops->ani_cache_ini_regs = ar9003_hw_ani_cache_ini_regs;
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index 41f4bf3..e9782d1 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -181,11 +181,6 @@ static inline void ath9k_hw_restore_chainmask(struct ath_hw *ah)
+ 	return ath9k_hw_private_ops(ah)->restore_chainmask(ah);
+ }
+ 
+-static inline void ath9k_hw_set_diversity(struct ath_hw *ah, bool value)
+-{
+-	return ath9k_hw_private_ops(ah)->set_diversity(ah, value);
+-}
+-
+ static inline bool ath9k_hw_ani_control(struct ath_hw *ah,
+ 					enum ath9k_ani_cmd cmd, int param)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 1444292..45e866d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -583,7 +583,6 @@ struct ath_hw_private_ops {
+ 	bool (*rfbus_req)(struct ath_hw *ah);
+ 	void (*rfbus_done)(struct ath_hw *ah);
+ 	void (*restore_chainmask)(struct ath_hw *ah);
+-	void (*set_diversity)(struct ath_hw *ah, bool value);
+ 	u32 (*compute_pll_control)(struct ath_hw *ah,
+ 				   struct ath9k_channel *chan);
+ 	bool (*ani_control)(struct ath_hw *ah, enum ath9k_ani_cmd cmd,
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 9b34c4b..39514de 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -506,7 +506,6 @@ static void ath9k_init_misc(struct ath_softc *sc)
+ 		sc->sc_flags |= SC_OP_RXAGGR;
+ 	}
+ 
+-	ath9k_hw_set_diversity(sc->sc_ah, true);
+ 	sc->rx.defant = ath9k_hw_getdefantenna(sc->sc_ah);
+ 
+ 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
 -- 
-1.7.3.4
+1.7.3.2
+
