@@ -1,147 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3804 "EHLO mms2.broadcom.com"
+Received: from smp.if.uj.edu.pl ([149.156.82.206]:56630 "EHLO smp.if.uj.edu.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754316Ab1ILKPY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Sep 2011 06:15:24 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 16/20] staging: brcm80211: removed several unused
- softmac main.h struct members
-Date: Mon, 12 Sep 2011 12:15:00 +0200
-Message-ID: <1315822504-24210-17-git-send-email-rvossen@broadcom.com> (sfid-20110912_121550_389780_A7DB815A)
-In-Reply-To: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
-References: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S934922Ab1IOVWz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 17:22:55 -0400
+Date: Thu, 15 Sep 2011 23:22:48 +0200
+From: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Michael Witten <mfwitten@gmail.com>
+Subject: Re: [PATCH] ipw2x00: fix rtnl mutex deadlock
+Message-ID: <20110915212248.GQ23706@smp.if.uj.edu.pl> (sfid-20110915_232258_554451_0E5C42FE)
+References: <1316011670-6787-1-git-send-email-sgruszka@redhat.com>
+ <1316020961.3506.4.camel@dcbw.foobar.com>
+ <20110915074249.GA2262@redhat.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=_smp.if.uj.edu.pl-32711-1316121772-0001-2"
+In-Reply-To: <20110915074249.GA2262@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Members were always set to zero, or set but never read.
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/main.c |   13 +------------
- drivers/staging/brcm80211/brcmsmac/main.h |   13 -------------
- 2 files changed, 1 insertions(+), 25 deletions(-)
+--=_smp.if.uj.edu.pl-32711-1316121772-0001-2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index 13f6cd4..9df2f86 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -2384,9 +2384,7 @@ static void brcms_b_mute(struct brcms_hardware *wlc_hw, bool on, u32 flags)
- 				       null_ether_addr);
- 	} else {
- 		/* resume tx fifos */
--		if (!wlc_hw->wlc->tx_suspended)
--			brcms_b_tx_fifo_resume(wlc_hw, TX_DATA_FIFO);
--
-+		brcms_b_tx_fifo_resume(wlc_hw, TX_DATA_FIFO);
- 		brcms_b_tx_fifo_resume(wlc_hw, TX_CTL_FIFO);
- 		brcms_b_tx_fifo_resume(wlc_hw, TX_AC_BK_FIFO);
- 		brcms_b_tx_fifo_resume(wlc_hw, TX_AC_VI_FIFO);
-@@ -2774,10 +2772,6 @@ void brcms_c_coredisable(struct brcms_hardware *wlc_hw)
- 	/* turn off PHYPLL to save power */
- 	brcms_b_core_phypll_ctl(wlc_hw, false);
- 
--	/* remove gpio controls */
--	if (wlc_hw->ucode_dbgsel)
--		ai_gpiocontrol(wlc_hw->sih, ~0, 0, GPIO_DRV_PRIORITY);
--
- 	wlc_hw->clk = false;
- 	ai_core_disable(wlc_hw->sih, 0);
- 	wlc_phy_hw_clk_state_upd(wlc_hw->band->pi, false);
-@@ -3601,9 +3595,6 @@ void brcms_c_init(struct brcms_c_info *wlc)
- 	/* clear tx flow control */
- 	brcms_c_txflowcontrol_reset(wlc);
- 
--	/* clear tx data fifo suspends */
--	wlc->tx_suspended = false;
--
- 	/* enable the RF Disable Delay timer */
- 	W_REG(&wlc->regs->rfdisabledly, RFDISABLE_DEFAULT);
- 
-@@ -4380,8 +4371,6 @@ bool brcms_c_timers_init(struct brcms_c_info *wlc, int unit)
- void brcms_c_info_init(struct brcms_c_info *wlc, int unit)
- {
- 	int i;
--	/* Assume the device is there until proven otherwise */
--	wlc->device_present = true;
- 
- 	/* Save our copy of the chanspec */
- 	wlc->chanspec = ch20mhz_chspec(1);
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
-index d418686..1ee283c 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.h
-+++ b/drivers/staging/brcm80211/brcmsmac/main.h
-@@ -382,7 +382,6 @@ struct brcms_hardware {
- 	u32 boardflags2;	/* More board flags if sromrev >= 4 */
- 	u32 machwcap;	/* MAC capabilities */
- 	u32 machwcap_backup;	/* backup of machwcap */
--	u16 ucode_dbgsel;	/* dbgsel for ucode debug(config gpio) */
- 
- 	struct si_pub *sih;	/* SI handle (cookie for siutils calls) */
- 	char *vars;		/* "environment" name=value */
-@@ -416,14 +415,11 @@ struct brcms_hardware {
- 	u32 wake_override;	/* bit flags to force MAC to WAKE mode */
- 	u32 mute_override;	/* Prevent ucode from sending beacons */
- 	u8 etheraddr[ETH_ALEN];	/* currently configured ethernet address */
--	u32 led_gpio_mask;	/* LED GPIO Mask */
- 	bool noreset;		/* true= do not reset hw, used by WLC_OUT */
- 	bool forcefastclk;	/* true if h/w is forcing to use fast clk */
- 	bool clk;		/* core is out of reset and has clock */
- 	bool sbclk;		/* sb has clock */
--	struct bmac_pmq *bmac_pmq; /*  bmac PM states derived from ucode PMQ */
- 	bool phyclk;		/* phy is out of reset and has clock */
--	bool dma_lpbk;		/* core is in DMA loopback */
- 
- 	bool ucode_loaded;	/* true after ucode downloaded */
- 
-@@ -463,14 +459,12 @@ struct brcms_txq_info {
-  * macintstatus: bit channel between isr and dpc.
-  * macintmask: sw runtime master macintmask value.
-  * defmacintmask: default "on" macintmask value.
-- * device_present: (removable) device is present.
-  * clk: core is out of reset and has clock.
-  * core: pointer to active io core.
-  * band: pointer to active per-band state.
-  * corestate: per-core state (one per hw core).
-  * bandstate: per-band state (one per phy/radio).
-  * war16165: PCI slow clock 16165 war flag.
-- * tx_suspended: data fifos need to remain suspended.
-  * txpend16165war: PCI slow clock 16165 war flag.
-  * qvalid: DirFrmQValid and BcMcFrmQValid.
-  * txpwr_local_max: regulatory local txpwr max.
-@@ -559,7 +553,6 @@ struct brcms_c_info {
- 	struct brcms_hardware *hw;
- 
- 	/* clock */
--	int clkreq_override;
- 	u16 fastpwrup_dly;
- 
- 	/* interrupt */
-@@ -567,9 +560,6 @@ struct brcms_c_info {
- 	u32 macintmask;
- 	u32 defmacintmask;
- 
--	/* up and down */
--	bool device_present;
--
- 	bool clk;
- 
- 	/* multiband */
-@@ -579,9 +569,6 @@ struct brcms_c_info {
- 	struct brcms_band *bandstate[MAXBANDS];
- 
- 	bool war16165;
--
--	bool tx_suspended;
--
- 	uint txpend16165war;
- 
- 	/* packet queue */
--- 
-1.7.4.1
+On 09-15 09:42, Stanislaw Gruszka wrote:
+> On Wed, Sep 14, 2011 at 12:22:40PM -0500, Dan Williams wrote:
+> > On Wed, 2011-09-14 at 16:47 +0200, Stanislaw Gruszka wrote:
+> > > This fix regression introduced by:
+> > >=20
+> > > commit: ecb4433550f0620f3d1471ae7099037ede30a91e
+> > > Author: Stanislaw Gruszka <sgruszka@redhat.com>
+> > > Date:   Fri Aug 12 14:00:59 2011 +0200
+> > >=20
+> > >     mac80211: fix suspend/resume races with unregister hw
+> > >=20
+> > > Above commit add rtnl_lock() into wiphy_register(), what cause deadlo=
+ck
+> > > when initializing ipw2x00 driver, which itself call wiphy_register()
+> > > from register_netdev() internal callback with rtnl mutex taken.
+> > >=20
+> > > To fix move wiphy_register() outside register_netdev(). This solution
+> > > have side effect of not creating /sys/class/net/wlanX/phy80211 link,
+> > > but that's a minor issue we can live with.
+> >=20
+> > Unfortunately that path is one of the ways that programs distinguish
+> > wifi devices from plain ethernet devices.  The other way is to poke it
+> > with WEXT.  Should poking it with nl80211 be added to the mix instead?
+>=20
+> Not sure, maybe device/ieee80211/phy0 could be used?
+>=20
+> [stasiu@dhcp-27-172 ~]$ readlink -f /sys/class/net/wlan0/phy80211
+> /sys/devices/pci0000:00/0000:00:1c.1/0000:03:00.0/ieee80211/phy0
+> [stasiu@dhcp-27-172 ~]$ readlink -f /sys/class/net/wlan0/device/ieee80211=
+/phy0
+> /sys/devices/pci0000:00/0000:00:1c.1/0000:03:00.0/ieee80211/phy0
 
+I conifrm that (with patch applied)
+/sys/class/net/eth1/device/ieee80211/phy0 does exist
+(both ieee80211 and phy0 are real directories not symlinks,
+only eth1 -> ../../devices/pci0000:00/0000:00:1e.0/0000:0b:02.0/net/eth1,
+and device -> ../../../0000:0b:02.0 are symlinks),
+only .../eth1/phy80211 symlinks is missing.
 
+I am using NetworkManafer 0.9.0-1 and do not have any visible
+problems now.
+
+Regards,
+Witek
+
+--=20
+Witold Baryluk
+
+--=_smp.if.uj.edu.pl-32711-1316121772-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk5ybKgACgkQ7ZLFFOttZ4KYggCfRfu77NjDab5qNcnyJSBx51TG
+FAgAoM/rK758If6QzH220aanwMSBdt5M
+=Psry
+-----END PGP SIGNATURE-----
+
+--=_smp.if.uj.edu.pl-32711-1316121772-0001-2--
