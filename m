@@ -1,75 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37992 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757313Ab1IANXB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 09:23:01 -0400
-Subject: Re: [PATCH] mac80211: stop tx before doing hw config and rate
- update
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1314675711-9363-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1314675711-9363-1-git-send-email-rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 01 Sep 2011 15:22:58 +0200
-Message-ID: <1314883378.4022.25.camel@jlt3.sipsolutions.net> (sfid-20110901_152305_191972_14AD52D6)
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:4898 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755181Ab1IOIGx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 04:06:53 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de, dan.carpenter@oracle.com
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH V2 14/17] staging: brcm80211: simplification of
+ brcmf_netdev_ioctl_priv()
+Date: Thu, 15 Sep 2011 10:06:34 +0200
+Message-ID: <1316073994-4883-1-git-send-email-rvossen@broadcom.com> (sfid-20110915_100700_684676_967FED85)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-30 at 09:11 +0530, Rajkumar Manoharan wrote:
-> The assumption is that during the hw config, transmission was
-> already stopped by mac80211. But during channel type change,
-> the mac80211 continue to transmit frames. The driver like ath9k
-> does chip reset while doing channel set. This could leads to
-> buffer overflow at driver side. And also after configuring the channel
-> and before calling rate updation, the frames are continued to xmit
-> with older rates. This patch ensures that the frames are always
-> xmitted with updated rates and avoid buffer overflow.
-> 
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> ---
->  net/mac80211/ieee80211_i.h |    1 +
->  net/mac80211/mlme.c        |   10 ++++++++++
->  2 files changed, 11 insertions(+), 0 deletions(-)
-> 
+This function is only called from within the driver. Because of that
+certain simplifications (not required to lock down user mem pages,
+not required to check user permissions) could be performed.
 
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -232,6 +232,13 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
->  		WARN_ON(!ieee80211_set_channel_type(local, sdata, channel_type));
->  	}
->  
-> +	ieee80211_stop_queues_by_reason(&sdata->local->hw,
-> +			IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
-> +
-> +	/* flush out all packets */
-> +	synchronize_net();
-> +
-> +	drv_flush(local, false);
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd.h         |   14 +----
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c   |   69 +++------------------
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    5 +-
+ 3 files changed, 13 insertions(+), 75 deletions(-)
 
-I'm curious -- how do you run into the case where this doesn't work
-correctly right now? AFAICT that can only happen on an AP that doesn't
-advertise HT in its probe responses, which is a little strange?
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index 93a1bfc..a92a28e 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -715,7 +715,8 @@ extern struct brcmf_pub *brcmf_attach(struct brcmf_bus *bus,
+ extern int brcmf_net_attach(struct brcmf_pub *drvr, int idx);
+ extern int brcmf_netdev_wait_pend8021x(struct net_device *dev);
+ 
+-extern int brcmf_netdev_ioctl_priv(struct net_device *net, struct ifreq *ifr);
++extern int brcmf_netdev_ioctl_priv(struct net_device *net,
++				   struct brcmf_ioctl *ioc);
+ 
+ /* Indication from bus module regarding removal/absence of dongle */
+ extern void brcmf_detach(struct brcmf_pub *drvr);
+@@ -771,17 +772,6 @@ extern void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg);
+ extern void brcmf_c_pktfilter_offload_enable(struct brcmf_pub *drvr, char *arg,
+ 					     int enable, int master_mode);
+ 
+-/* Linux network driver ioctl encoding */
+-struct brcmf_c_ioctl {
+-	uint cmd;		/* common ioctl definition */
+-	void __user *buf;	/* pointer to user buffer */
+-	uint len;		/* length of user buffer */
+-	bool set;		/* get or set request (optional) */
+-	uint used;		/* bytes read or written (optional) */
+-	uint needed;		/* bytes needed (optional) */
+-	uint driver;		/* to identify target driver */
+-};
+-
+ /* per-driver magic numbers */
+ #define BRCMF_IOCTL_MAGIC		0x00444944
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 4bc231e..26a39ee 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -964,61 +964,19 @@ static int brcmf_netdev_ioctl_entry(struct net_device *net, struct ifreq *ifr,
+ 	return -EOPNOTSUPP;
+ }
+ 
+-/* called only from within this driver, handles cmd == SIOCDEVPRIVATE */
+-int brcmf_netdev_ioctl_priv(struct net_device *net, struct ifreq *ifr)
++/* called only from within this driver */
++int brcmf_netdev_ioctl_priv(struct net_device *net, struct brcmf_ioctl *ioc)
+ {
+-	struct brcmf_c_ioctl ioc;
+ 	int bcmerror = 0;
+ 	int buflen = 0;
+-	void *buf = NULL;
+-	uint driver = 0;
+ 	bool is_set_key_cmd;
+ 	struct brcmf_info *drvr_priv = *(struct brcmf_info **) netdev_priv(net);
+ 	int ifidx;
+ 
+ 	ifidx = brcmf_net2idx(drvr_priv, net);
+ 
+-	memset(&ioc, 0, sizeof(ioc));
+-
+-	/* Copy the ioc control structure part of ioctl request */
+-	if (copy_from_user(&ioc, ifr->ifr_data, sizeof(struct brcmf_ioctl))) {
+-		bcmerror = -EINVAL;
+-		goto done;
+-	}
+-
+-	/* Copy out any buffer passed */
+-	if (ioc.buf) {
+-		buflen = min_t(int, ioc.len, BRCMF_IOCTL_MAXLEN);
+-		/* optimization for direct ioctl calls from kernel */
+-		/*
+-		   if (segment_eq(get_fs(), KERNEL_DS)) {
+-		   buf = ioc.buf;
+-		   } else {
+-		 */
+-		{
+-			buf = kmalloc(buflen, GFP_ATOMIC);
+-			if (!buf) {
+-				bcmerror = -ENOMEM;
+-				goto done;
+-			}
+-			if (copy_from_user(buf, ioc.buf, buflen)) {
+-				bcmerror = -EINVAL;
+-				goto done;
+-			}
+-		}
+-	}
+-
+-	/* To differentiate read 4 more byes */
+-	if ((copy_from_user(&driver, (char __user *)ifr->ifr_data +
+-			    sizeof(struct brcmf_ioctl), sizeof(uint)) != 0)) {
+-		bcmerror = -EINVAL;
+-		goto done;
+-	}
+-
+-	if (!capable(CAP_NET_ADMIN)) {
+-		bcmerror = -EPERM;
+-		goto done;
+-	}
++	if (ioc->buf != NULL)
++		buflen = min_t(uint, ioc->len, BRCMF_IOCTL_MAXLEN);
+ 
+ 	/* send to dongle (must be up, and wl) */
+ 	if ((drvr_priv->pub.busstate != BRCMF_BUS_DATA)) {
+@@ -1036,25 +994,18 @@ int brcmf_netdev_ioctl_priv(struct net_device *net, struct ifreq *ifr)
+ 	 * Intercept BRCMF_C_SET_KEY IOCTL - serialize M4 send and
+ 	 * set key IOCTL to prevent M4 encryption.
+ 	 */
+-	is_set_key_cmd = ((ioc.cmd == BRCMF_C_SET_KEY) ||
+-			  ((ioc.cmd == BRCMF_C_SET_VAR) &&
+-			   !(strncmp("wsec_key", ioc.buf, 9))) ||
+-			  ((ioc.cmd == BRCMF_C_SET_VAR) &&
+-			   !(strncmp("bsscfg:wsec_key", ioc.buf, 15))));
++	is_set_key_cmd = ((ioc->cmd == BRCMF_C_SET_KEY) ||
++			  ((ioc->cmd == BRCMF_C_SET_VAR) &&
++			   !(strncmp("wsec_key", ioc->buf, 9))) ||
++			  ((ioc->cmd == BRCMF_C_SET_VAR) &&
++			   !(strncmp("bsscfg:wsec_key", ioc->buf, 15))));
+ 	if (is_set_key_cmd)
+ 		brcmf_netdev_wait_pend8021x(net);
+ 
+ 	bcmerror = brcmf_proto_ioctl(&drvr_priv->pub, ifidx,
+-				     (struct brcmf_ioctl *)&ioc, buf, buflen);
++				     ioc, ioc->buf, buflen);
+ 
+ done:
+-	if (!bcmerror && buf && ioc.buf) {
+-		if (copy_to_user(ioc.buf, buf, buflen))
+-			bcmerror = -EFAULT;
+-	}
+-
+-	kfree(buf);
+-
+ 	if (bcmerror > 0)
+ 		bcmerror = 0;
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index 3fa0c1b..b001e40 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -272,7 +272,6 @@ static void convert_key_to_CPU(struct brcmf_wsec_key *key)
+ static s32
+ brcmf_dev_ioctl(struct net_device *dev, u32 cmd, void *arg, u32 len)
+ {
+-	struct ifreq ifr;
+ 	struct brcmf_ioctl ioc;
+ 	mm_segment_t fs;
+ 	s32 err = 0;
+@@ -281,12 +280,10 @@ brcmf_dev_ioctl(struct net_device *dev, u32 cmd, void *arg, u32 len)
+ 	ioc.cmd = cmd;
+ 	ioc.buf = arg;
+ 	ioc.len = len;
+-	strcpy(ifr.ifr_name, dev->name);
+-	ifr.ifr_data = (char __user *)&ioc;
+ 
+ 	fs = get_fs();
+ 	set_fs(get_ds());
+-	err = brcmf_netdev_ioctl_priv(dev, &ifr);
++	err = brcmf_netdev_ioctl_priv(dev, &ioc);
+ 	set_fs(fs);
+ 
+ 	return err;
+-- 
+1.7.4.1
 
-This can't happen when the probe response has HT since with that the
-enable_ht will happen during the initial connect in
-ieee80211_assoc_success(), before starting the queues in
-ieee80211_set_associated().
-
-Therefore, this can only happen with the late HT-enabling in
-ieee80211_rx_mgmt_beacon(). I don't even remember what kind of stupid AP
-required that, but maybe we should put this workaround there, or make it
-optional? There's no need to stop queues in the regular case when the
-queues aren't even started yet.
-
-Also, as we partially discussed on IRC the other day, I'm beginning to
-think that we need to not just track different reasons for stopping the
-device queues, but also different reasons for stopping interface queues.
-This really needs to stop interface queues only, but as you pointed out
-scanning also has cases where it stops interface queues which can cause
-race conditions.
-
-johannes
 
