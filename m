@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:26707 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752688Ab1IFRPN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Sep 2011 13:15:13 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 09/10] iwlagn: remove lines from the wrong place
-Date: Tue,  6 Sep 2011 09:31:24 -0700
-Message-Id: <1315326685-22213-10-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110906_191529_705139_BF4707D8)
-In-Reply-To: <1315326685-22213-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1315326685-22213-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:20594 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932575Ab1IOKyW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 06:54:22 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [RFC] mac80211: Do not allow disabled channel during scan
+Date: Thu, 15 Sep 2011 16:24:56 +0530
+Message-ID: <1316084096-12565-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110915_125432_614661_3467831B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Few lines for program bt_ch_announce being place in the wrong place. Remove those.
+The scan decision allows disabled channel to be set. So the
+probe request was seen over the disabled channel. This patch
+skips the disabled channel while scanning.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+ net/mac80211/scan.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
-index f7b5750..126e5a4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
-@@ -846,9 +846,6 @@ int iwl_dump_nic_event_log(struct iwl_trans *trans, bool full_log,
- 		return pos;
- 	}
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 6f09eca..9c3d309 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -616,6 +616,10 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ 		if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
+ 			skip = 1;
  
--	/* enable/disable bt channel inhibition */
--	priv->bt_ch_announce = iwlagn_mod_params.bt_ch_announce;
--
- #ifdef CONFIG_IWLWIFI_DEBUG
- 	if (!(iwl_get_debug_level(trans->shrd) & IWL_DL_FW_ERRORS) && !full_log)
- 		size = (size > DEFAULT_DUMP_EVENT_LOG_ENTRIES)
++	/* Skip disabled channels */
++	if (chan->flags & IEEE80211_CHAN_DISABLED)
++		skip = 1;
++
+ 	/* advance state machine to next channel/band */
+ 	local->scan_channel_idx++;
+ 
 -- 
-1.7.0.4
+1.7.6.1
 
