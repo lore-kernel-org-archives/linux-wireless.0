@@ -1,22 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38262 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754546Ab1I2OGE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44598 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933850Ab1IONhp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 10:06:04 -0400
-Message-Id: <20110929140425.390322480@sipsolutions.net> (sfid-20110929_160608_712994_A202BF6E)
-Date: Thu, 29 Sep 2011 16:04:25 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 00/16] mac80211 uAPSD support
-Mime-Version: 1.0
+	Thu, 15 Sep 2011 09:37:45 -0400
+Message-ID: <4E71FFA5.7010605@qca.qualcomm.com> (sfid-20110915_153748_987672_B104D065)
+Date: Thu, 15 Sep 2011 16:37:41 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/9] ath6kl: query device tree for firmware board-id
+References: <20110912111206.16921.90687.stgit@localhost6.localdomain6>
+In-Reply-To: <20110912111206.16921.90687.stgit@localhost6.localdomain6>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry for the resend!
+On 09/12/2011 02:12 PM, Kalle Valo wrote:
+> From: Sam Leffler <sleffler@chromium.org>
+> 
+> When no default board data file is present query the device tree for a
+> board-id setting to identify the board data to use.  If the FDT lacks the
+> necesary info fall back to the previous behaviour of using a compile-time
+> board filename.
 
-This fixes a stupid bug that made resume crash.
+All nine patches applied.
 
-johannes
-
+Kalle
