@@ -1,77 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:21719 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932165Ab1IBIV3 (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:61927 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932690Ab1IOXTJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Sep 2011 04:21:29 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2] mac80211: stop tx before doing hw config and rate update
-Date: Fri, 2 Sep 2011 13:51:59 +0530
-Message-ID: <1314951719-9816-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110902_102135_513783_84D922AF)
+	Thu, 15 Sep 2011 19:19:09 -0400
+Received: by qyk7 with SMTP id 7so3599180qyk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Sep 2011 16:19:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1316128469.12897.4.camel@Joe-Laptop>
+References: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1316112414-6341-9-git-send-email-wey-yi.w.guy@intel.com> <1316115470.11236.1.camel@Joe-Laptop>
+ <1316112830.19293.4.camel@wwguy-huron> <1316116047.11236.8.camel@Joe-Laptop>
+ <1316127246.7631.2.camel@wwguy-ubuntu> <1316128469.12897.4.camel@Joe-Laptop>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 15 Sep 2011 16:18:49 -0700
+Message-ID: <CAB=NE6Uyib_ZRRRZ76FGTD6WiVtATrb33-D00s=9tO=SevD8LA@mail.gmail.com> (sfid-20110916_011913_925698_D83F4A24)
+Subject: Re: [PATCH] iwlagn: Convert kzalloc to kcalloc
+To: Joe Perches <joe@perches.com>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The assumption is that during the hw config, transmission was
-already stopped by mac80211. Sometimes the AP can be switching
-b/w the ht modes due to intolerant or etc where STA is in
-the middle of transmission. In such scenario, buffer overflow
-was observed at driver side. And also before updating the rate
-control, the frames are continued to xmited with older rates.
-This patch ensures that the frames are always xmitted with
-updated rates and avoid buffer overflow.
+On Thu, Sep 15, 2011 at 4:14 PM, Joe Perches <joe@perches.com> wrote:
+> On Thu, 2011-09-15 at 15:54 -0700, wwguy wrote:
+>> On Thu, 2011-09-15 at 12:47 -0700, Joe Perches wrote:
+>> > Convert kzalloc to kcalloc, coalesce multiple lines too.
+>> IIRC, there is no real different between kcalloc and kzalloc, I think
+>> kcalloc will call kzalloc; both zero out the memory before return.
+>
+> Multiplication overflow protection.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   16 ++++++++++++++++
- 2 files changed, 17 insertions(+), 0 deletions(-)
+Then the patch should explain that, no?
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c204cee..8db9f9a 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -670,6 +670,7 @@ enum queue_stop_reason {
- 	IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
- 	IEEE80211_QUEUE_STOP_REASON_SUSPEND,
- 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
-+	IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE,
- };
- 
- #ifdef CONFIG_MAC80211_LEDS
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 60a6f27..edd2518 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1922,8 +1922,24 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 
- 		rcu_read_unlock();
- 
-+		/*
-+		 * Whenever the AP announces the HT mode change that can be
-+		 * 40MHz intolerant or etc., it would be safer to stop tx
-+		 * queues before doing hw config to avoid buffer overflow.
-+		 */
-+		ieee80211_stop_queues_by_reason(&sdata->local->hw,
-+				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
-+
-+		/* flush out all packets */
-+		synchronize_net();
-+
-+		drv_flush(local, false);
-+
- 		changed |= ieee80211_enable_ht(sdata, elems.ht_info_elem,
- 					       bssid, ap_ht_cap_flags);
-+
-+		ieee80211_wake_queues_by_reason(&sdata->local->hw,
-+				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
- 	}
- 
- 	/* Note: country IE parsing is done for us by cfg80211 */
--- 
-1.7.6.1
-
+  Luis
