@@ -1,328 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4752 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751921Ab1I0Rpr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 13:45:47 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v2 12/26] staging: brcm80211: remove dongle firmware
- related debug code
-Date: Tue, 27 Sep 2011 10:45:16 -0700
-Message-ID: <1317145530-18839-13-git-send-email-frankyl@broadcom.com> (sfid-20110927_194555_528223_FEFBAF19)
-In-Reply-To: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
-References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:57310 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753194Ab1IOIxH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 04:53:07 -0400
+Received: by wwf22 with SMTP id 22so3387842wwf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Sep 2011 01:53:06 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] cfg80211: add cfg80211_find_vendor_ie() function
+Date: Thu, 15 Sep 2011 11:53:01 +0300
+Message-Id: <1316076781-12580-1-git-send-email-eliad@wizery.com> (sfid-20110915_105311_823260_91B00974)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+Add function to find vendor-specific ie (along with
+vendor-specific ie struct definition and P2P OUI values)
 
-When the device dies the driver could extract cpu registers on
-the device to analyze the trap handling on the dongle. As the
-firmware with this driver is stable this code does not belong
-in the brcmfmac driver.
-
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |  259 +------------------------
- 1 files changed, 1 insertions(+), 258 deletions(-)
+ include/linux/ieee80211.h |   10 ++++++++++
+ include/net/cfg80211.h    |   18 ++++++++++++++++++
+ net/wireless/scan.c       |   27 +++++++++++++++++++++++++++
+ 3 files changed, 55 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 9f8bcb3..4992d4d 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -37,29 +37,7 @@
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 37f95f2..3185650 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -775,6 +775,13 @@ struct ieee80211_mmie {
+ 	u8 mic[8];
+ } __attribute__ ((packed));
  
- #ifdef BCMDBG
++struct ieee80211_vendor_ie {
++	u8 element_id;
++	u8 len;
++	u8 oui[3];
++	u8 oui_type;
++} __packed;
++
+ /* Control frames */
+ struct ieee80211_rts {
+ 	__le16 frame_control;
+@@ -1468,6 +1475,9 @@ enum ieee80211_sa_query_action {
  
--/* ARM trap handling */
--struct brcmf_trap {
--	u32 type;
--	u32 epc;
--	u32 cpsr;
--	u32 spsr;
--	u32 r0;
--	u32 r1;
--	u32 r2;
--	u32 r3;
--	u32 r4;
--	u32 r5;
--	u32 r6;
--	u32 r7;
--	u32 r8;
--	u32 r9;
--	u32 r10;
--	u32 r11;
--	u32 r12;
--	u32 r13;
--	u32 r14;
--	u32 pc;
--};
-+#define BRCMF_TRAP_INFO_SIZE	80
+ #define WLAN_PMKID_LEN			16
  
- #define CBUF_LEN	(128)
++#define WLAN_OUI_WFA			0x506f9a
++#define WLAN_OUI_TYPE_WFA_P2P		9
++
+ /*
+  * WMM/802.11e Tspec Element
+  */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index a535b39..540a99e 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2456,6 +2456,24 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb);
+ const u8 *cfg80211_find_ie(u8 eid, const u8 *ies, int len);
  
-@@ -2890,231 +2868,6 @@ xfer_done:
+ /**
++ * cfg80211_find_vendor_ie - find vendor specific information element in data
++ *
++ * @oui: vendor OUI
++ * @oui_type: vendor-specific OUI type
++ * @ies: data consisting of IEs
++ * @len: length of data
++ *
++ * This function will return %NULL if the vendor specific element ID
++ * could not be found or if the element is invalid (claims to be
++ * longer than the given data), or a pointer to the first byte
++ * of the requested element, that is the byte containing the
++ * element ID. There are no checks on the element length
++ * other than having to fit into the given data.
++ */
++const u8 *cfg80211_find_vendor_ie(unsigned int oui, u8 oui_type,
++				  const u8 *ies, int len);
++
++/**
+  * DOC: Regulatory enforcement infrastructure
+  *
+  * TODO
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index b0f0039..0fb1424 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -228,6 +228,33 @@ const u8 *cfg80211_find_ie(u8 eid, const u8 *ies, int len)
  }
+ EXPORT_SYMBOL(cfg80211_find_ie);
  
- #ifdef BCMDBG
--static int
--brcmf_sdbrcm_readshared(struct brcmf_bus *bus, struct sdpcm_shared *sh)
--{
--	u32 addr;
--	__le32 addr_le;
--	int rv;
--	struct sdpcm_shared_le sh_le;
--
--	/* Read last word in memory to determine address of
--			 sdpcm_shared structure */
--	rv = brcmf_sdbrcm_membytes(bus, false, bus->ramsize - 4, (u8 *)&addr_le,
--				   4);
--	if (rv < 0)
--		return rv;
--
--	addr = le32_to_cpu(addr_le);
--
--	brcmf_dbg(INFO, "sdpcm_shared address 0x%08X\n", addr);
--
--	/*
--	 * Check if addr is valid.
--	 * NVRAM length at the end of memory should have been overwritten.
--	 */
--	if (addr == 0 || ((~addr >> 16) & 0xffff) == (addr & 0xffff)) {
--		brcmf_dbg(ERROR, "address (0x%08x) of sdpcm_shared invalid\n",
--			  addr);
--		return -EBADE;
--	}
--
--	/* Read rte_shared structure */
--	rv = brcmf_sdbrcm_membytes(bus, false, addr, (u8 *) &sh_le,
--			      sizeof(struct sdpcm_shared_le));
--	if (rv < 0)
--		return rv;
--
--	/* Endianness */
--	sh->flags = le32_to_cpu(sh_le.flags);
--	sh->trap_addr = le32_to_cpu(sh_le.trap_addr);
--	sh->assert_exp_addr = le32_to_cpu(sh_le.assert_exp_addr);
--	sh->assert_file_addr = le32_to_cpu(sh_le.assert_file_addr);
--	sh->assert_line = le32_to_cpu(sh_le.assert_line);
--	sh->console_addr = le32_to_cpu(sh_le.console_addr);
--	sh->msgtrace_addr = le32_to_cpu(sh_le.msgtrace_addr);
--	memcpy(sh->tag, sh_le.tag, sizeof(sh->tag));
--
--	if ((sh->flags & SDPCM_SHARED_VERSION_MASK) != SDPCM_SHARED_VERSION) {
--		brcmf_dbg(ERROR, "sdpcm_shared version %d in brcmf is different than sdpcm_shared version %d in dongle\n",
--			  SDPCM_SHARED_VERSION,
--			  sh->flags & SDPCM_SHARED_VERSION_MASK);
--		return -EBADE;
--	}
--
--	return 0;
--}
--
--static int brcmf_sdbrcm_mem_dump(struct brcmf_bus *bus)
--{
--	int ret = 0;
--	int size;		/* Full mem size */
--	int start = 0;		/* Start address */
--	int read_size = 0;	/* Read size of each iteration */
--	u8 *buf = NULL, *databuf = NULL;
--
--	/* Get full mem size */
--	size = bus->ramsize;
--	buf = kmalloc(size, GFP_ATOMIC);
--	if (!buf)
--		return -1;
--
--	/* Read mem content */
--	printk(KERN_DEBUG "Dump dongle memory");
--	databuf = buf;
--	while (size) {
--		read_size = min(MEMBLOCK, size);
--		ret = brcmf_sdbrcm_membytes(bus, false, start, databuf,
--					  read_size);
--		if (ret) {
--			brcmf_dbg(ERROR, "Error membytes %d\n", ret);
--			kfree(buf);
--			return -1;
--		}
--		printk(".");
--
--		/* Decrement size and increment start address */
--		size -= read_size;
--		start += read_size;
--		databuf += read_size;
--	}
--	printk(KERN_DEBUG "Done\n");
--
--	/* free buf before return !!! */
--	if (brcmf_write_to_file(bus->drvr, buf, bus->ramsize)) {
--		brcmf_dbg(ERROR, "Error writing to files\n");
--		return -1;
--	}
--
--	/* buf free handled in brcmf_write_to_file, not here */
--	return 0;
--}
--
--static int brcmf_sdbrcm_checkdied(struct brcmf_bus *bus, u8 *data, uint size)
--{
--	int bcmerror = 0;
--	uint msize = 512;
--	char *mbuffer = NULL;
--	uint maxstrlen = 256;
--	char *str = NULL;
--	struct brcmf_trap tr;
--	struct sdpcm_shared sdpcm_shared;
--	struct brcmu_strbuf strbuf;
--
--	brcmf_dbg(TRACE, "Enter\n");
--
--	if (data == NULL) {
--		/*
--		 * Called after a rx ctrl timeout. "data" is NULL.
--		 * allocate memory to trace the trap or assert.
--		 */
--		size = msize;
--		mbuffer = data = kmalloc(msize, GFP_ATOMIC);
--		if (mbuffer == NULL) {
--			bcmerror = -ENOMEM;
--			goto done;
--		}
--	}
--
--	str = kmalloc(maxstrlen, GFP_ATOMIC);
--	if (str == NULL) {
--		bcmerror = -ENOMEM;
--		goto done;
--	}
--
--	bcmerror = brcmf_sdbrcm_readshared(bus, &sdpcm_shared);
--	if (bcmerror < 0)
--		goto done;
--
--	brcmu_binit(&strbuf, data, size);
--
--	brcmu_bprintf(&strbuf,
--		    "msgtrace address : 0x%08X\nconsole address  : 0x%08X\n",
--		    sdpcm_shared.msgtrace_addr, sdpcm_shared.console_addr);
--
--	if ((sdpcm_shared.flags & SDPCM_SHARED_ASSERT_BUILT) == 0)
--		/* NOTE: Misspelled assert is intentional - DO NOT FIX.
--		 * (Avoids conflict with real asserts for programmatic
--		 * parsing of output.)
--		 */
--		brcmu_bprintf(&strbuf, "Assrt not built in dongle\n");
--
--	if ((sdpcm_shared.flags & (SDPCM_SHARED_ASSERT | SDPCM_SHARED_TRAP)) ==
--	    0) {
--		/* NOTE: Misspelled assert is intentional - DO NOT FIX.
--		 * (Avoids conflict with real asserts for programmatic
--		 * parsing of output.)
--		 */
--		brcmu_bprintf(&strbuf, "No trap%s in dongle",
--			    (sdpcm_shared.flags & SDPCM_SHARED_ASSERT_BUILT)
--			    ? "/assrt" : "");
--	} else {
--		if (sdpcm_shared.flags & SDPCM_SHARED_ASSERT) {
--			/* Download assert */
--			brcmu_bprintf(&strbuf, "Dongle assert");
--			if (sdpcm_shared.assert_exp_addr != 0) {
--				str[0] = '\0';
--				bcmerror = brcmf_sdbrcm_membytes(bus, false,
--						sdpcm_shared.assert_exp_addr,
--						(u8 *) str, maxstrlen);
--				if (bcmerror < 0)
--					goto done;
--
--				str[maxstrlen - 1] = '\0';
--				brcmu_bprintf(&strbuf, " expr \"%s\"", str);
--			}
--
--			if (sdpcm_shared.assert_file_addr != 0) {
--				str[0] = '\0';
--				bcmerror = brcmf_sdbrcm_membytes(bus, false,
--						sdpcm_shared.assert_file_addr,
--						(u8 *) str, maxstrlen);
--				if (bcmerror < 0)
--					goto done;
--
--				str[maxstrlen - 1] = '\0';
--				brcmu_bprintf(&strbuf, " file \"%s\"", str);
--			}
--
--			brcmu_bprintf(&strbuf, " line %d ",
--				    sdpcm_shared.assert_line);
--		}
--
--		if (sdpcm_shared.flags & SDPCM_SHARED_TRAP) {
--			bcmerror = brcmf_sdbrcm_membytes(bus, false,
--					sdpcm_shared.trap_addr, (u8 *)&tr,
--					sizeof(struct brcmf_trap));
--			if (bcmerror < 0)
--				goto done;
--
--			brcmu_bprintf(&strbuf,
--				    "Dongle trap type 0x%x @ epc 0x%x, cpsr 0x%x, spsr 0x%x, sp 0x%x,"
--				    "lp 0x%x, rpc 0x%x Trap offset 0x%x, "
--				    "r0 0x%x, r1 0x%x, r2 0x%x, r3 0x%x, r4 0x%x, r5 0x%x, r6 0x%x, r7 0x%x\n",
--				    tr.type, tr.epc, tr.cpsr, tr.spsr, tr.r13,
--				    tr.r14, tr.pc, sdpcm_shared.trap_addr,
--				    tr.r0, tr.r1, tr.r2, tr.r3, tr.r4, tr.r5,
--				    tr.r6, tr.r7);
--		}
--	}
--
--	if (sdpcm_shared.flags & (SDPCM_SHARED_ASSERT | SDPCM_SHARED_TRAP))
--		brcmf_dbg(ERROR, "%s\n", strbuf.origbuf);
--
--#ifdef BCMDBG
--	if (sdpcm_shared.flags & SDPCM_SHARED_TRAP)
--		/* Mem dump to a file on device */
--		brcmf_sdbrcm_mem_dump(bus);
--
--#endif				/* BCMDBG */
--
--done:
--	kfree(mbuffer);
--	kfree(str);
--
--	return bcmerror;
--}
--
- #define CONSOLE_LINE_MAX	192
- 
- static int brcmf_sdbrcm_readconsole(struct brcmf_bus *bus)
-@@ -3377,21 +3130,11 @@ brcmf_sdbrcm_bus_rxctl(struct brcmf_bus *bus, unsigned char *msg, uint msglen)
- 			  rxlen, msglen);
- 	} else if (timeleft == 0) {
- 		brcmf_dbg(ERROR, "resumed on timeout\n");
--#ifdef BCMDBG
--		brcmf_sdbrcm_sdlock(bus);
--		brcmf_sdbrcm_checkdied(bus, NULL, 0);
--		brcmf_sdbrcm_sdunlock(bus);
--#endif				/* BCMDBG */
- 	} else if (pending == true) {
- 		brcmf_dbg(CTL, "cancelled\n");
- 		return -ERESTARTSYS;
- 	} else {
- 		brcmf_dbg(CTL, "resumed for unknown reason?\n");
--#ifdef BCMDBG
--		brcmf_sdbrcm_sdlock(bus);
--		brcmf_sdbrcm_checkdied(bus, NULL, 0);
--		brcmf_sdbrcm_sdunlock(bus);
--#endif				/* BCMDBG */
- 	}
- 
- 	if (rxlen)
++const u8 *cfg80211_find_vendor_ie(unsigned int oui, u8 oui_type,
++				  const u8 *ies, int len)
++{
++	struct ieee80211_vendor_ie *ie;
++	const u8 *pos = ies, *end = ies + len;
++	int ie_oui;
++
++	while (pos < end) {
++		pos = cfg80211_find_ie(WLAN_EID_VENDOR_SPECIFIC, pos,
++				       end - pos);
++		if (!pos)
++			return NULL;
++
++		if (end - pos < sizeof(*ie))
++			return NULL;
++
++		ie = (struct ieee80211_vendor_ie *)pos;
++		ie_oui = ie->oui[0] << 16 | ie->oui[1] << 8 | ie->oui[2];
++		if (ie_oui == oui && ie->oui_type == oui_type)
++			return pos;
++
++		pos += 2 + ie->len;
++	}
++	return NULL;
++}
++EXPORT_SYMBOL(cfg80211_find_vendor_ie);
++
+ static int cmp_ies(u8 num, u8 *ies1, size_t len1, u8 *ies2, size_t len2)
+ {
+ 	const u8 *ie1 = cfg80211_find_ie(num, ies1, len1);
 -- 
-1.7.1
-
+1.7.6.401.g6a319
 
