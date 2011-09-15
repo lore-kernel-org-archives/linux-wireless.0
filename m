@@ -1,118 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61596 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752268Ab1IFGm7 (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:38234 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934018Ab1IOPXg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Sep 2011 02:42:59 -0400
-Message-ID: <4E65C0EB.105@qca.qualcomm.com> (sfid-20110906_084304_448097_C6580BA3)
-Date: Tue, 6 Sep 2011 09:42:51 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Thu, 15 Sep 2011 11:23:36 -0400
+Message-ID: <4E721871.7040901@lwfinger.net> (sfid-20110915_172351_747146_567465E7)
+Date: Thu, 15 Sep 2011 10:23:29 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Vivek Natarajan <nataraja@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: Process regulatory requests from firmware.
-References: <1315215774-13931-1-git-send-email-nataraja@qca.qualcomm.com>
-In-Reply-To: <1315215774-13931-1-git-send-email-nataraja@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: Borislav Petkov <bp@alien8.de>
+CC: linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	'Chaoming_Li' <chaoming_li@realsil.com.cn>
+Subject: Re: 3.1-rc6+ rtl8192se issue
+References: <20110915124406.GA14374@gere.osrc.amd.com>
+In-Reply-To: <20110915124406.GA14374@gere.osrc.amd.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/05/2011 12:42 PM, Vivek Natarajan wrote:
-> Process the regulatory code from eeprom and pass the
-> country information to cfg80211.
+On 09/15/2011 07:44 AM, Borislav Petkov wrote:
+> Hi Larry,
+>
+> I'm experiencing an issue with rtl8192se since 3.1-ish timeframe where
+> the machine becomes completely unresponsive and only a reboot helps
+> the situation. I think the issue has to do with the rtl8192se wireless
+> driver because if I connect the machine through ethernet, it runs pretty
+> smoothly.
+>
+> Today, I left the machine on the vt console in the expectation of an
+> oops or something to appear in the logs and logged into it from another
+> machine over ssh.
+>
+> After a while, the unresponsiveness happened and the box didn't
+> react to keyboard input except sysrq with which I was able to do the
+> show-backtrace-all-active-cpus(L) thing and attached is a partial
+> screen cap of that. It looks like the stuck-up happens somewhere in
+> rtl_lps_leave() along the rtl92s_phy_set_rf_power_state() path but the
+> register dump is missing with the exact %rIP.
+>
+> Anyway, pls take a look and let me know if it rings any bells. I'll
+> continue trying to debug the issue, maybe I should bisect it if nothing
+> else pops up.
 
-Minor comments:
+Borislav,
 
-> +static struct country_code_to_enum_rd*
-> +ath6kl_regd_find_country(u16 countryCode)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < ARRAY_SIZE(allCountries); i++) {
-> +		if (allCountries[i].countryCode == countryCode)
-> +			return &allCountries[i];
-> +	}
+Thanks for the report. I have been running rtl8192se for the past few days and I 
+have also noticed two such system freezes, but not been able to capture any 
+info. As I have recently made many changes in my system recently, I did not know 
+what might be the cause, but rtl8192se is certainly on the suspect list.
 
-Insert space here.
+I have added Chaoming Li to the Cc list. I will send him the screen photo 
+separately.
 
-> +	return NULL;
-> +}
-> +
-> +static struct reg_dmn_pair_mapping*
-> +ath6kl_get_regpair(u16 regdmn)
-> +{
-> +	int i;
-> +
-> +	if (regdmn == NO_ENUMRD)
-> +		return NULL;
+Some questions:
 
-Space here as well
+I expect that you are running a mainline kernel from Linus's tree. If not, 
+please let me know. Mine is 3.1-rc4 from the wireless-testing tree. I don't 
+recall any changes in out "next-flavored" version that are not in 3.1.
 
-> +	for (i = 0; i < ARRAY_SIZE(regDomainPairs); i++) {
-> +		if (regDomainPairs[i].regDmnEnum == regdmn)
-> +			return &regDomainPairs[i];
-> +	}
+Which flavor of RTL8192SE card do you have? The one I'm running shows as 
+"Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless LAN Controller [10ec:8172] 
+(rev 10)", but I have two others. The differences are in the number of TX and RX 
+streams. Mine is the 1x2 variety.
 
-And here :)
+How frequently do your freezes occur? As I said before, I have only had two in 2 
+or 3 days, which would make bisection tricky.
 
-> +	return NULL;
-> +}
-> +
-> +static struct country_code_to_enum_rd*
-> +ath6kl_regd_find_country_by_rd(u16 regdmn)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < ARRAY_SIZE(allCountries); i++) {
-> +		if (allCountries[i].regDmnEnum == regdmn)
-> +			return &allCountries[i];
-> +	}
+I see from the dump that you have x86_64 architecture. How many CPUs and how 
+fast? There is one questionable report of problems on a box with an 8-way fast 
+processor. That was on initialization and is not the same, but may indicate a 
+problem. My system has a dual AMD CPU at 2.0 GHz.
 
-Here also
+Would you also try loading rtl8192se with the "ips=0" option? As power save is 
+implicated in your traceback, that may help. I will be trying "swlps=0 ips=0".
 
-> +	return NULL;
-> +}
-> +
-> +static void ath6kl_wmi_regdomain_event(struct wmi *wmi, u8 *datap,
-int len)
-> +{
-> +
-> +	struct ath6kl_wmi_regdomain *ev;
-> +	struct country_code_to_enum_rd *country = NULL;
-> +	struct reg_dmn_pair_mapping *regpair = NULL;
-> +	char alpha2[2];
-> +	u32 reg_code;
-> +
-> +	ev = (struct ath6kl_wmi_regdomain *) datap;
-> +	reg_code = le32_to_cpu(ev->reg_code);
-> +
-> +	if ((reg_code >> COUNTRY_RD_SHIFT) & COUNTRY_ERD_FLAG)
-> +		country = ath6kl_regd_find_country((u16) reg_code);
-> +	else if (!(((u16) reg_code & WORLD_SKU_MASK) == WORLD_SKU_PREFIX)) {
-> +
-> +		regpair = ath6kl_get_regpair((u16) reg_code);
-> +		country = ath6kl_regd_find_country_by_rd((u16) reg_code);
-> +		printk(KERN_DEBUG "ath6kl: Regpair used: 0x%0x\n",
-> +				regpair->regDmnEnum);
+Thanks for the report,
 
-ath6kl_dbg() is more approriate here.
-
-> +	}
-> +
-> +	if (country) {
-> +		alpha2[0] = country->isoName[0];
-> +		alpha2[1] = country->isoName[1];
-> +
-> +		regulatory_hint(wmi->parent_dev->wdev->wiphy, alpha2);
-> +
-> +		printk(KERN_DEBUG "ath6kl: Country alpha2 being used: %c%c\n",
-> +				alpha2[0], alpha2[1]);
-
-Please use ath6kl_dbg() or, if we really need to log this, you can use
-ath6kl_info(). But is there a reason to log this everytime?
-
-> +#define COUNTRY_RD_SHIFT        16
-
-Please add ATH6KL_ prefix.
-
-Kalle
+Larry
