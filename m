@@ -1,199 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:45811 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754823Ab1ILLMn (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:55485 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755690Ab1IOJHM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Sep 2011 07:12:43 -0400
-Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
-	by emh02-2.mail.saunalahti.fi (Postfix) with SMTP id 6EE30EF6DD
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 14:12:42 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-188-95.elisa-laajakaista.fi [88.115.188.95])
-	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 4761327D8C
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 14:12:41 +0300 (EEST)
-Subject: [PATCH 5/9] ath6kl: refactor firmware load address code
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Date: Mon, 12 Sep 2011 14:12:40 +0300
-Message-ID: <20110912111240.16921.28273.stgit@localhost6.localdomain6> (sfid-20110912_131245_880687_DFED8B21)
-In-Reply-To: <20110912111206.16921.90687.stgit@localhost6.localdomain6>
-References: <20110912111206.16921.90687.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 15 Sep 2011 05:07:12 -0400
+Received: by wwf22 with SMTP id 22so3405096wwf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Sep 2011 02:07:11 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] wl12xx: remove P2P ie from probe response
+Date: Thu, 15 Sep 2011 12:07:05 +0300
+Message-Id: <1316077625-20014-2-git-send-email-eliad@wizery.com> (sfid-20110915_110717_619353_387DF546)
+In-Reply-To: <1316077625-20014-1-git-send-email-eliad@wizery.com>
+References: <1316077625-20014-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the load address was calculated everytime when it was needed,
-and with a mess if clauses. Simplify this by adding a field to struct
-ath6kl for each address and choose the address with simple switch
-statements.
+wl12xx uses a single probe response template, regardless of
+the probe request.
+However, the P2P spec forbids including the p2p ie in some
+cases (e.g. the probe request didn't include the p2p ie).
 
-Also move the code just after target version is retrieved. That way it's
-easier to override the values later in the boot process.
+The fw responds only to probe requests that don't
+include the p2p ie, and passes up probe requests that
+include them (the supplicant will answer them).
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Thus, strip the p2p ie from the probe response template.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.h |    6 +++
- drivers/net/wireless/ath/ath6kl/init.c |   76 +++++++++++++++-----------------
- 2 files changed, 42 insertions(+), 40 deletions(-)
+depends on "cfg80211: add cfg80211_find_vendor_ie() function"
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 761e550..77783f8 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -462,6 +462,12 @@ struct ath6kl {
- 		size_t rx_report_len;
- 	} tm;
- 
-+	struct {
-+		u32 dataset_patch_addr;
-+		u32 app_load_addr;
-+		u32 app_start_override_addr;
-+	} hw;
-+
- 	u16 conf_flags;
- 	wait_queue_head_t event_wq;
- 	struct ath6kl_mbox_info mbox_info;
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 41f4e0d..f94c049 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -56,12 +56,6 @@ module_param(testmode, uint, 0644);
- 
- #define CONFIG_AR600x_DEBUG_UART_TX_PIN 8
- 
--enum addr_type {
--	DATASET_PATCH_ADDR,
--	APP_LOAD_ADDR,
--	APP_START_OVERRIDE_ADDR,
--};
--
- #define ATH6KL_DATA_OFFSET    64
- struct sk_buff *ath6kl_buf_alloc(int size)
- {
-@@ -636,30 +630,6 @@ int ath6kl_unavail_ev(struct ath6kl *ar)
+ drivers/net/wireless/wl12xx/main.c |   28 ++++++++++++++++++++++++++++
+ 1 files changed, 28 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index a1d9639..168ca4e 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -3083,6 +3083,23 @@ static void wl12xx_remove_ie(struct sk_buff *skb, u8 eid, int ieoffset)
+ 	skb_trim(skb, skb->len - len);
  }
  
- /* firmware upload */
--static u32 ath6kl_get_load_address(u32 target_ver, enum addr_type type)
--{
--	WARN_ON(target_ver != AR6003_REV2_VERSION &&
--		target_ver != AR6003_REV3_VERSION &&
--		target_ver != AR6004_REV1_VERSION);
--
--	switch (type) {
--	case DATASET_PATCH_ADDR:
--		return (target_ver == AR6003_REV2_VERSION) ?
--			AR6003_REV2_DATASET_PATCH_ADDRESS :
--			AR6003_REV3_DATASET_PATCH_ADDRESS;
--	case APP_LOAD_ADDR:
--		return (target_ver == AR6003_REV2_VERSION) ?
--			AR6003_REV2_APP_LOAD_ADDRESS :
--			0x1234;
--	case APP_START_OVERRIDE_ADDR:
--		return (target_ver == AR6003_REV2_VERSION) ?
--			AR6003_REV2_APP_START_OVERRIDE :
--			AR6003_REV3_APP_START_OVERRIDE;
--	default:
--		return 0;
--	}
--}
--
- static int ath6kl_get_fw(struct ath6kl *ar, const char *filename,
- 			 u8 **fw, size_t *fw_len)
- {
-@@ -1179,8 +1149,7 @@ static int ath6kl_upload_otp(struct ath6kl *ar)
- 	if (WARN_ON(ar->fw_otp == NULL))
- 		return -ENOENT;
- 
--	address = ath6kl_get_load_address(ar->version.target_ver,
--					  APP_LOAD_ADDR);
-+	address = ar->hw.app_load_addr;
- 
- 	ret = ath6kl_bmi_fast_download(ar, address, ar->fw_otp,
- 				       ar->fw_otp_len);
-@@ -1191,8 +1160,7 @@ static int ath6kl_upload_otp(struct ath6kl *ar)
- 
- 	/* execute the OTP code */
- 	param = 0;
--	address = ath6kl_get_load_address(ar->version.target_ver,
--					  APP_START_OVERRIDE_ADDR);
-+	address = ar->hw.app_start_override_addr;
- 	ath6kl_bmi_execute(ar, address, &param);
- 
- 	return ret;
-@@ -1206,8 +1174,7 @@ static int ath6kl_upload_firmware(struct ath6kl *ar)
- 	if (WARN_ON(ar->fw == NULL))
- 		return -ENOENT;
- 
--	address = ath6kl_get_load_address(ar->version.target_ver,
--					  APP_LOAD_ADDR);
-+	address = ar->hw.app_load_addr;
- 
- 	ret = ath6kl_bmi_fast_download(ar, address, ar->fw, ar->fw_len);
- 
-@@ -1221,8 +1188,7 @@ static int ath6kl_upload_firmware(struct ath6kl *ar)
- 	 * Don't need to setup app_start override addr on AR6004
- 	 */
- 	if (ar->target_type != TARGET_TYPE_AR6004) {
--		address = ath6kl_get_load_address(ar->version.target_ver,
--						  APP_START_OVERRIDE_ADDR);
-+		address = ar->hw.app_start_override_addr;
- 		ath6kl_bmi_set_app_start(ar, address);
- 	}
- 	return ret;
-@@ -1236,8 +1202,7 @@ static int ath6kl_upload_patch(struct ath6kl *ar)
- 	if (WARN_ON(ar->fw_patch == NULL))
- 		return -ENOENT;
- 
--	address = ath6kl_get_load_address(ar->version.target_ver,
--					  DATASET_PATCH_ADDR);
-+	address = ar->hw.dataset_patch_addr;
- 
- 	ret = ath6kl_bmi_write(ar, address, ar->fw_patch, ar->fw_patch_len);
- 	if (ret) {
-@@ -1384,6 +1349,33 @@ static int ath6kl_init_upload(struct ath6kl *ar)
- 	return status;
- }
- 
-+static int ath6kl_init_hw_params(struct ath6kl *ar)
++static void wl12xx_remove_vendor_ie(struct sk_buff *skb,
++					    unsigned int oui, u8 oui_type,
++					    int ieoffset)
 +{
-+	switch (ar->version.target_ver) {
-+	case AR6003_REV2_VERSION:
-+		ar->hw.dataset_patch_addr = AR6003_REV2_DATASET_PATCH_ADDRESS;
-+		ar->hw.app_load_addr = AR6003_REV2_APP_LOAD_ADDRESS;
-+		ar->hw.app_start_override_addr = AR6003_REV2_APP_START_OVERRIDE;
-+		break;
-+	case AR6003_REV3_VERSION:
-+		ar->hw.dataset_patch_addr = AR6003_REV3_DATASET_PATCH_ADDRESS;
-+		ar->hw.app_load_addr = 0x1234;
-+		ar->hw.app_start_override_addr = AR6003_REV3_APP_START_OVERRIDE;
-+		break;
-+	case AR6004_REV1_VERSION:
-+		ar->hw.dataset_patch_addr = AR6003_REV2_DATASET_PATCH_ADDRESS;
-+		ar->hw.app_load_addr = AR6003_REV3_APP_LOAD_ADDRESS;
-+		ar->hw.app_start_override_addr = AR6003_REV3_APP_START_OVERRIDE;
-+		break;
-+	default:
-+		ath6kl_err("Unsupported hardware version: 0x%x\n",
-+			   ar->version.target_ver);
-+		return -EINVAL;
-+	}
-+
-+	return 0;
++	int len;
++	const u8 *next, *end = skb->data + skb->len;
++	u8 *ie = (u8 *)cfg80211_find_vendor_ie(oui, oui_type,
++					       skb->data + ieoffset,
++					       skb->len - ieoffset);
++	if (!ie)
++		return;
++	len = ie[1] + 2;
++	next = ie + len;
++	memmove(ie, next, end - next);
++	skb_trim(skb, skb->len - len);
 +}
 +
- static int ath6kl_init(struct net_device *dev)
- {
- 	struct ath6kl *ar = ath6kl_priv(dev);
-@@ -1523,6 +1515,10 @@ int ath6kl_core_init(struct ath6kl *ar)
- 	ar->target_type = le32_to_cpu(targ_info.type);
- 	ar->wdev->wiphy->hw_version = le32_to_cpu(targ_info.version);
+ static int wl1271_bss_erp_info_changed(struct wl1271 *wl,
+ 				       struct ieee80211_bss_conf *bss_conf,
+ 				       u32 changed)
+@@ -3168,6 +3185,17 @@ static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
+ 		/* remove TIM ie from probe response */
+ 		wl12xx_remove_ie(beacon, WLAN_EID_TIM, ieoffset);
  
-+	ret = ath6kl_init_hw_params(ar);
-+	if (ret)
-+		goto err_bmi_cleanup;
++		/*
++		 * remove p2p ie from probe response.
++		 * the fw reponds to probe requests that don't include
++		 * the p2p ie. probe requests with p2p ie will be passed,
++		 * and will be responded by the supplicant (the spec
++		 * forbids including the p2p ie when responding to probe
++		 * requests that didn't include it).
++		 */
++		wl12xx_remove_vendor_ie(beacon, WLAN_OUI_WFA,
++					WLAN_OUI_TYPE_WFA_P2P, ieoffset);
 +
- 	ret = ath6kl_configure_target(ar);
- 	if (ret)
- 		goto err_bmi_cleanup;
+ 		hdr = (struct ieee80211_hdr *) beacon->data;
+ 		hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+ 						 IEEE80211_STYPE_PROBE_RESP);
+-- 
+1.7.6.401.g6a319
 
