@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:10313 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750814Ab1ITKxO (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22730 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932088Ab1IOJmU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 06:53:14 -0400
+	Thu, 15 Sep 2011 05:42:20 -0400
 From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
+To: <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>,
 	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
 	<stable@kernel.org>
-Subject: [PATCH] ath9k_hw: Fix Rx DMA stuck for AR9003 chips
-Date: Tue, 20 Sep 2011 16:23:51 +0530
-Message-ID: <1316516031-24049-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110920_125318_662606_DDF21A86)
+Subject: [PATCH] wireless: Fix rate mask for scan request
+Date: Thu, 15 Sep 2011 15:12:29 +0530
+Message-ID: <1316079749-10509-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110915_114225_735245_8E0418E5)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During the endurance testing, rx frames are not getting DMAd from
-MAC whereas pcu rx frame counters are getting updated properly.
-As per systems team input updated the initval to fix rx dma stuck
-issue.
+The scan request received from cfg80211_connect do not
+have proper rate mast. So the probe request sent on each
+channel do not have proper the supported rates ie.
 
 Cc: stable@kernel.org
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/wireless/sme.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index f2c6f23..08e9341 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -1514,7 +1514,7 @@ static const u32 ar9300_2p2_mac_core[][2] = {
- 	{0x00008258, 0x00000000},
- 	{0x0000825c, 0x40000000},
- 	{0x00008260, 0x00080922},
--	{0x00008264, 0x9bc00010},
-+	{0x00008264, 0x9d400010},
- 	{0x00008268, 0xffffffff},
- 	{0x0000826c, 0x0000ffff},
- 	{0x00008270, 0x00000000},
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index b7b6ff8..dec0fa2 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -118,6 +118,8 @@ static int cfg80211_conn_scan(struct wireless_dev *wdev)
+ 			     i++, j++)
+ 				request->channels[i] =
+ 					&wdev->wiphy->bands[band]->channels[j];
++			request->rates[band] =
++				(1 << wdev->wiphy->bands[band]->n_bitrates) - 1;
+ 		}
+ 	}
+ 	request->n_channels = n_channels;
 -- 
 1.7.6.1
 
