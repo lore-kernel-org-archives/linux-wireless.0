@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f52.google.com ([74.125.83.52]:51665 "EHLO
-	mail-gw0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886Ab1IVQiz (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51375 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755850Ab1IOJTV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 12:38:55 -0400
-Received: by gwb1 with SMTP id 1so3150518gwb.11
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 09:38:55 -0700 (PDT)
-Message-ID: <4E7B64A0.6060202@lwfinger.net> (sfid-20110922_183859_263084_EF1D6FE7)
-Date: Thu, 22 Sep 2011 11:38:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Edwin <void@edwin.nimell.com>
-CC: linux-wireless@vger.kernel.org,
-	'Chaoming_Li' <chaoming_li@realsil.com.cn>
-Subject: Re: [Bug?] Machine hangs, rtl8192se possible cause
-References: <CAFdoEiT54o+NQKO=dAcOXgyf6GJ1E51w_H_p7PJyRmynz8Sbzg@mail.gmail.com>	<4E36C693.6000705@lwfinger.net> <CAFdoEiRBPMx0C+YXwd4-Q=_nHpOb+r2+GspwujZrPh6S4tDwEQ@mail.gmail.com> <4E3772C5.70606@lwfinger.net> <loom.20110922T174352-81@post.gmane.org>
-In-Reply-To: <loom.20110922T174352-81@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 15 Sep 2011 05:19:21 -0400
+Subject: Re: [RFC] wireless: Fix rate mask for scan request
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1316078089-7221-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1316078089-7221-1-git-send-email-rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Sep 2011 11:19:18 +0200
+Message-ID: <1316078358.3992.4.camel@jlt3.sipsolutions.net> (sfid-20110915_111925_539359_787BCAA8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/22/2011 11:06 AM, Edwin wrote:
->
-> Did you ever find any solution to this issue? Because I got very similar
-> problems with my laptop, which is the same as Fedewicz'.
->
-> Although the issues started to appear after I upgraded from kernel 2.6.something
-> to kernel 3.0.4-1. Before that I only had issues causing the laptop to freeze
-> after resuming form suspend or hibernation, if the rtl8192se module wasn't
-> unloaded before issuing pm-suspend.
->
-> I might add that the freezes have just occurred when I'm on my school's network,
-> using WPA2 with PEAP and MSCHAPv2. I have yet to see it freeze when connected to
-> a unsecured network, but that might just be an coincidence.
->
-> I don't know if I'm able to get any dumps. And I can't try to do a magic sysrq
-> either, as the laptop is missing the SysRq-key...
+On Thu, 2011-09-15 at 14:44 +0530, Rajkumar Manoharan wrote:
+> The scan request received from cfg80211_connect do not
+> have proper rate mast. So the probe request sent on each
+> channel do not have proper the supported rates ie.
+> 
+> Cc: stable@kernel.org
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> ---
+>  net/wireless/sme.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+> index b7b6ff8..8b6ef34 100644
+> --- a/net/wireless/sme.c
+> +++ b/net/wireless/sme.c
+> @@ -118,6 +118,7 @@ static int cfg80211_conn_scan(struct wireless_dev *wdev)
+>  			     i++, j++)
+>  				request->channels[i] =
+>  					&wdev->wiphy->bands[band]->channels[j];
+> +			request->rates[band] = (u32) -1;
 
-No, I have nothing further. These freezes do not happen here and no one has 
-submitted any traceback information.
+Please use
+	(1 << wiphy->bands[band]->n_bitrates) - 1;
 
-Please try the following sequence:
+so we don't have invalid bits set.
 
-modprobe -rv rtl8192se
-modprobe -v rfl8192se ips=0
+Also, CC stable doesn't work that way -- you don't CC them, you just
+write into it "Cc: stable@kernel.org". This makes them pick out the
+patch later once it got applied.
 
-That will disable power save, which might be a cause of the problem.
+johannes
 
-Larry
