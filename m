@@ -1,36 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:39644 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753535Ab1INKGS (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52052 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934154Ab1IOQVj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 06:06:18 -0400
-Received: by mail-bw0-f47.google.com with SMTP id 11so1799481bke.34
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 03:06:17 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: support p2p interfaces
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
+	Thu, 15 Sep 2011 12:21:39 -0400
+Subject: Re: [PATCH] mac80211: don't allow zero mac bssid to be configured
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marek Lindner <lindner_marek@yahoo.de>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1314534181-27200-1-git-send-email-eliad@wizery.com>
-References: <1314534181-27200-1-git-send-email-eliad@wizery.com>
+In-Reply-To: <1316102844-29970-1-git-send-email-lindner_marek@yahoo.de> (sfid-20110915_181048_539834_E4954A19)
+References: <1316102844-29970-1-git-send-email-lindner_marek@yahoo.de>
+	 (sfid-20110915_181048_539834_E4954A19)
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 14 Sep 2011 13:06:13 +0300
-Message-ID: <1315994773.2498.91.camel@cumari> (sfid-20110914_120621_025579_F91036D7)
+Date: Thu, 15 Sep 2011 18:21:38 +0200
+Message-ID: <1316103698.3992.12.camel@jlt3.sipsolutions.net> (sfid-20110915_182142_156356_19C2A3C0)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-08-28 at 15:23 +0300, Eliad Peller wrote: 
-> Declare support for p2p interfaces, and create p2p_cli/p2p_go
-> roles when being asked for.
-> 
-> Indicate we are using a p2p interface by setting the wl->p2p flag.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
+How is this related to configuration? Shouldn't the configuration check
+be in cfg80211 instead?
+
+johannes
+
+
+On Thu, 2011-09-15 at 18:07 +0200, Marek Lindner wrote:
+> Signed-off-by: Marek Lindner <lindner_marek@yahoo.de>
 > ---
+>  net/mac80211/ibss.c |    4 +---
+>  1 files changed, 1 insertions(+), 3 deletions(-)
+> 
+> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> index 4f9235b..9c7991e 100644
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -588,12 +588,10 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+>  	capability = WLAN_CAPABILITY_IBSS;
+>  	if (ifibss->privacy)
+>  		capability |= WLAN_CAPABILITY_PRIVACY;
+> -	if (ifibss->fixed_bssid)
+> +	if (ifibss->fixed_bssid && !is_zero_ether_addr(ifibss->bssid))
+>  		bssid = ifibss->bssid;
+>  	if (ifibss->fixed_channel)
+>  		chan = ifibss->channel;
+> -	if (!is_zero_ether_addr(ifibss->bssid))
+> -		bssid = ifibss->bssid;
+>  	cbss = cfg80211_get_bss(local->hw.wiphy, chan, bssid,
+>  				ifibss->ssid, ifibss->ssid_len,
+>  				WLAN_CAPABILITY_IBSS | WLAN_CAPABILITY_PRIVACY,
 
-Applied with auto-merge.  Thanks!
-
--- 
-Cheers,
-Luca.
 
