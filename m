@@ -1,117 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22807 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751415Ab1IPKCK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 06:02:10 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH] mac80211: Fix regression on queue stop during 2040 bss change
-Date: Fri, 16 Sep 2011 15:32:34 +0530
-Message-ID: <1316167354-5874-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110916_120214_407385_2E6FDCF0)
+Received: from nbd.name ([46.4.11.11]:43967 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754316Ab1IOHUQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 03:20:16 -0400
+Message-ID: <4E71A71F.60306@openwrt.org> (sfid-20110915_092020_110198_222F9454)
+Date: Thu, 15 Sep 2011 09:19:59 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com
+Subject: Re: [PATCH 1/3] ath9k: fix enabling interrupts after a hardware error
+ interrupt
+References: <1316028183-33734-1-git-send-email-nbd@openwrt.org> <CAD2nsn2G645x00RCLpk7xvT8iBxr+RGN=mdCVAN9jkjKNh7M7Q@mail.gmail.com>
+In-Reply-To: <CAD2nsn2G645x00RCLpk7xvT8iBxr+RGN=mdCVAN9jkjKNh7M7Q@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit "mac80211: stop tx before doing hw config and
-rate update" stops the tx queue and call drv_flush so frequently
-whenever a beacon got received with 11n htcap. This leads to
-massive "Failed to stop TX DMA" logspam on embedded hw. So the
-queue stop and flush should be called if and only if there is a
-change in the channel type.
+On 2011-09-15 9:14 AM, Mohammed Shafi wrote:
+> Hi Felix,
+>
+> On Thu, Sep 15, 2011 at 12:53 AM, Felix Fietkau<nbd@openwrt.org>  wrote:
+>>  The interrupt handler increases the interrupt disable refcount, so the
+>>  tasklet needs to always call ath9k_hw_enable_interrupts.
+>>
+>>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>>  ---
+>>    drivers/net/wireless/ath/ath9k/main.c |    9 +++++----
+>>    1 files changed, 5 insertions(+), 4 deletions(-)
+>>
+>>  diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>>  index 8a17cff5..a3c3316 100644
+>>  --- a/drivers/net/wireless/ath/ath9k/main.c
+>>  +++ b/drivers/net/wireless/ath/ath9k/main.c
+>>  @@ -669,15 +669,15 @@ void ath9k_tasklet(unsigned long data)
+>>          u32 status = sc->intrstatus;
+>>          u32 rxmask;
+>>
+>>  +       ath9k_ps_wakeup(sc);
+>
+> this is done in ath_reset, is there any corner cases that I had missed ?
+>
+>>  +       spin_lock(&sc->sc_pcu_lock);
+>
+> spin_lock_bh(&sc->sc_pcu_lock) in ath_reset_internal, won't be a
+> problem know, or should we need to move this lock
+>
+>>  +
+>>          if ((status&  ATH9K_INT_FATAL) ||
+>>              (status&  ATH9K_INT_BB_WATCHDOG)) {
+>>                  ieee80211_queue_work(sc->hw,&sc->hw_reset_work);
+>>  -               return;
+>>  +               goto out;
+>>          }
+>>
+>>  -       ath9k_ps_wakeup(sc);
+>>  -       spin_lock(&sc->sc_pcu_lock);
+>>  -
+>>          /*
+>>           * Only run the baseband hang check if beacons stop working in AP or
+>>           * IBSS mode, because it has a high false positive rate. For station
+>>  @@ -725,6 +725,7 @@ void ath9k_tasklet(unsigned long data)
+>>                  if (status&  ATH9K_INT_GENTIMER)
+>>                          ath_gen_timer_isr(sc->sc_ah);
+>>
+>>  +out:
+>>          /* re-enable hardware interrupt */
+>>          ath9k_hw_enable_interrupts(ah);
+>
+>
+> this is done in ath_complete_reset, should we enable interrupts if
+> some times ath9k_hw_reset fails?
+> please correct me if I had understood wrongly. thanks!
+ath9k_hw_enable_interrupts was changed to use refcounting to keep 
+interrupts blocked. The interrupt handler increses the refcount, so the 
+tasklet needs to decrease it. When a reset is issued, it starts by 
+disabling interrupts, then re-enables them after completing the reset.
+Disabling interrupts in the ISR, but not enabling them in the tasklet 
+causes an imbalance which leaves interrupts disabled after the reset is 
+done.
 
-Reported-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- net/mac80211/mlme.c |   43 ++++++++++++++++++++++++-------------------
- 1 files changed, 24 insertions(+), 19 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2f92ae2..1a59fb6 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -160,7 +160,8 @@ static int ecw2cw(int ecw)
-  */
- static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 			       struct ieee80211_ht_info *hti,
--			       const u8 *bssid, u16 ap_ht_cap_flags)
-+			       const u8 *bssid, u16 ap_ht_cap_flags,
-+			       bool beacon_htcap_ie)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
-@@ -232,6 +233,21 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 		WARN_ON(!ieee80211_set_channel_type(local, sdata, channel_type));
- 	}
- 
-+	if (beacon_htcap_ie && (prev_chantype != channel_type)) {
-+		/*
-+		 * Whenever the AP announces the HT mode change that can be
-+		 * 40MHz intolerant or etc., it would be safer to stop tx
-+		 * queues before doing hw config to avoid buffer overflow.
-+		 */
-+		ieee80211_stop_queues_by_reason(&sdata->local->hw,
-+				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
-+
-+		/* flush out all packets */
-+		synchronize_net();
-+
-+		drv_flush(local, false);
-+	}
-+
- 	/* channel_type change automatically detected */
- 	ieee80211_hw_config(local, 0);
- 
-@@ -243,6 +259,10 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 						 IEEE80211_RC_HT_CHANGED,
- 						 channel_type);
- 		rcu_read_unlock();
-+
-+		if (beacon_htcap_ie)
-+			ieee80211_wake_queues_by_reason(&sdata->local->hw,
-+				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
- 	}
- 
- 	ht_opmode = le16_to_cpu(hti->operation_mode);
-@@ -1588,7 +1608,8 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 	    (sdata->local->hw.queues >= 4) &&
- 	    !(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
- 		changed |= ieee80211_enable_ht(sdata, elems.ht_info_elem,
--					       cbss->bssid, ap_ht_cap_flags);
-+					       cbss->bssid, ap_ht_cap_flags,
-+					       false);
- 
- 	/* set AID and assoc capability,
- 	 * ieee80211_set_associated() will tell the driver */
-@@ -1921,24 +1942,8 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 
- 		rcu_read_unlock();
- 
--		/*
--		 * Whenever the AP announces the HT mode change that can be
--		 * 40MHz intolerant or etc., it would be safer to stop tx
--		 * queues before doing hw config to avoid buffer overflow.
--		 */
--		ieee80211_stop_queues_by_reason(&sdata->local->hw,
--				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
--
--		/* flush out all packets */
--		synchronize_net();
--
--		drv_flush(local, false);
--
- 		changed |= ieee80211_enable_ht(sdata, elems.ht_info_elem,
--					       bssid, ap_ht_cap_flags);
--
--		ieee80211_wake_queues_by_reason(&sdata->local->hw,
--				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
-+					       bssid, ap_ht_cap_flags, true);
- 	}
- 
- 	/* Note: country IE parsing is done for us by cfg80211 */
--- 
-1.7.6.1
-
+- Felix
