@@ -1,51 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:36662 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772Ab1IVGgP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 02:36:15 -0400
-Received: by wwf22 with SMTP id 22so1718567wwf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 23:36:14 -0700 (PDT)
+Received: from mail.skyhub.de ([78.46.96.112]:40523 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934209Ab1IOSlM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 14:41:12 -0400
+Date: Thu, 15 Sep 2011 20:41:12 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	'Chaoming_Li' <chaoming_li@realsil.com.cn>
+Subject: Re: 3.1-rc6+ rtl8192se issue
+Message-ID: <20110915184112.GA16533@gere.osrc.amd.com> (sfid-20110915_204130_949003_AF9450E7)
+References: <20110915124406.GA14374@gere.osrc.amd.com>
+ <4E721871.7040901@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <7A94256FD72B884D9E7C55586C3CBCEE195814DF19@SJEXCHCCR01.corp.ad.broadcom.com>
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-	<20110920130338.GA9885@kroah.com>
-	<20110920132203.GB7800@tuxdriver.com>
-	<20110920140020.GA11386@kroah.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com>
-	<CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
-	<20110922003523.0bf6a460@milhouse>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DE92@SJEXCHCCR01.corp.ad.broadcom.com>
-	<20110922012851.2f3b7801@milhouse>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DF19@SJEXCHCCR01.corp.ad.broadcom.com>
-Date: Thu, 22 Sep 2011 08:36:14 +0200
-Message-ID: <CACna6rxB8omnOdBZfoVgSp0=h+L1ypjcU7Mr4zMgLq5Or+02-Q@mail.gmail.com> (sfid-20110922_083618_824765_D6C3455D)
-Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline patch #2
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Brett Rudley <brudley@broadcom.com>
-Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
-	Greg KH <greg@kroah.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E721871.7040901@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 22 września 2011 04:07 użytkownik Brett Rudley
-<brudley@broadcom.com> napisał:
->> > We did however initially propose (and implement) a dividing line of ssb
->> chips for b43 and AXI based chips for brcmsmac but b43 team chose to
->> ignore/reject that.
->>
->> Well, what about embedded, for instance?
->
-> I was referring to smac. There isn't any controversy over fmac AFAIK.
+On Thu, Sep 15, 2011 at 10:23:29AM -0500, Larry Finger wrote:
+> Thanks for the report. I have been running rtl8192se for the past
+> few days and I have also noticed two such system freezes, but not
 
-I was question about embedded devices like routers I believe.
+Ah ok, so it's not only me seeing this.
+
+> I expect that you are running a mainline kernel from Linus's tree.
+
+It is Linus' tree: v3.1-rc6-10-g003f6c9
+
+> If not, please let me know. Mine is 3.1-rc4 from the
+> wireless-testing tree. I don't recall any changes in out
+> "next-flavored" version that are not in 3.1.
+> 
+> Which flavor of RTL8192SE card do you have? The one I'm running
+> shows as "Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless LAN
+> Controller [10ec:8172] (rev 10)", but I have two others. The
+> differences are in the number of TX and RX streams. Mine is the 1x2
+> variety.
+
+lspci says:
+
+03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless LAN Controller [10ec:8172] (rev 10)
+
+so it is exactly the same as yours.
+
+> How frequently do your freezes occur? As I said before, I have only
+> had two in 2 or 3 days, which would make bisection tricky.
+
+Well, I can reproduce it pretty reliably: it happens shortly after I
+up the iface and establish the WIFI connection with wpa_supplicant. A
+couple of minutes after that, more or less, the box grinds down to a
+halt.
+
+> I see from the dump that you have x86_64 architecture. How many CPUs
+> and how fast? There is one questionable report of problems on a box
+> with an 8-way fast processor. That was on initialization and is not
+> the same, but may indicate a problem. My system has a dual AMD CPU
+> at 2.0 GHz.
+
+I don't think that has any effect on the wifi iface but here it is: dual
+core K8 laptop:
+
+...
+processor       : 1
+vendor_id       : AuthenticAMD
+cpu family      : 15
+model           : 107
+model name      : AMD Turion(tm) Neo X2 Dual Core Processor L625
+stepping        : 2
+cpu MHz         : 800.000
+
+this is of cource the lowest P-state freq - P0 is 1.6GHz.
+
+> Would you also try loading rtl8192se with the "ips=0" option? As
+> power save is implicated in your traceback, that may help. I will be
+> trying "swlps=0 ips=0".
+
+Ok, I'll run both just in case and let you know.
+
+Thanks for looking into this.
 
 -- 
-Rafał
+Regards/Gruss,
+Boris.
