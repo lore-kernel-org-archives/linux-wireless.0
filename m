@@ -1,133 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:64146 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915Ab1IUXPQ convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:42788 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755174Ab1IOH5I convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 19:15:16 -0400
-Received: by qyk30 with SMTP id 30so5613890qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 16:15:15 -0700 (PDT)
+	Thu, 15 Sep 2011 03:57:08 -0400
+Received: by wwf22 with SMTP id 22so3324911wwf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Sep 2011 00:57:07 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE66001323E269F@dnce02.ent.ti.com>
-References: <AC090B9732AB2B4DB7FF476E907FE660013226A26C@dnce02.ent.ti.com>
-	<CAK3JMAadvUag85SfjOhYN+yqW0con9RBo7PQ1_V1uYce_BXgKQ@mail.gmail.com>
-	<AC090B9732AB2B4DB7FF476E907FE66001323E269F@dnce02.ent.ti.com>
-Date: Wed, 21 Sep 2011 20:15:15 -0300
-Message-ID: <CAK3JMAb0kyVkdGiHfF1huVVLG2OxoCYyhAw1FvQDwLuqgCFPYQ@mail.gmail.com> (sfid-20110922_011523_146790_A46C0546)
-Subject: Re: [PATCH v2 3/4] NFC: basic NCI protocol implementation
-From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-To: "Elias, Ilan" <ilane@ti.com>
-Cc: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"samuel@sortiz.org" <samuel@sortiz.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4E71A71F.60306@openwrt.org>
+References: <1316028183-33734-1-git-send-email-nbd@openwrt.org>
+	<CAD2nsn2G645x00RCLpk7xvT8iBxr+RGN=mdCVAN9jkjKNh7M7Q@mail.gmail.com>
+	<4E71A71F.60306@openwrt.org>
+Date: Thu, 15 Sep 2011 13:27:07 +0530
+Message-ID: <CAD2nsn1FdUZir5pFSu8-1QBp8eRQedY+xkeDsyE1npYrjEcd0w@mail.gmail.com> (sfid-20110915_095712_310583_B76CF79C)
+Subject: Re: [PATCH 1/3] ath9k: fix enabling interrupts after a hardware error interrupt
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/9/21 Elias, Ilan <ilane@ti.com>:
-
->> > +
->> > +static int nci_start_poll(struct nfc_dev *nfc_dev, __u32 protocols)
->> > +{
->> > + Â  Â  Â  struct nci_dev *ndev = nfc_get_drvdata(nfc_dev);
->> > + Â  Â  Â  int rc;
->> > +
->> > + Â  Â  Â  nfc_dbg("entry");
->> > +
->> > + Â  Â  Â  if (test_bit(NCI_DISCOVERY, &ndev->flags)) {
->> > + Â  Â  Â  Â  Â  Â  Â  nfc_err("unable to start poll, since poll
->> is already active");
->> > + Â  Â  Â  Â  Â  Â  Â  return -EBUSY;
->> > + Â  Â  Â  }
->> > +
->> > + Â  Â  Â  if (test_bit(NCI_POLL_ACTIVE, &ndev->flags)) {
->> > + Â  Â  Â  Â  Â  Â  Â  nfc_dbg("target already active, first
->> deactivate...");
->> > +
->> > + Â  Â  Â  Â  Â  Â  Â  rc = nci_request(ndev, nci_rf_deactivate_req, 0,
->> > +
->> msecs_to_jiffies(NCI_RF_DEACTIVATE_TIMEOUT));
->> > + Â  Â  Â  Â  Â  Â  Â  if (rc)
->> > + Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  return -EBUSY;
->> > + Â  Â  Â  }
+On Thu, Sep 15, 2011 at 12:49 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2011-09-15 9:14 AM, Mohammed Shafi wrote:
 >>
->> I don't think it is a good idea to implicitly deactivate a target. I
->> think you should just return EBUSY.
-> The problem here is related to the NCI definition.
->
-> The NCI defines that if only 1 target is discovered (the common case),
-> it's automatically activated by the controller (i.e. in state POLL_ACTIVE).
-> On the other hand, if more than 1 target is discovered, the controller
-> sends RF_DISCOVER_NTF for each target, and the host need to select
-> one (this case is much less common and I didn't implemented it yet).
->
-> So, we're talking about the first case: once we start polling, and
-> discover only 1 target, it's automatically activated.
-> Now, if we call start_poll again, we have to deactivate the target before
-> starting the poll again (as dictated by the NCI spec).
-> I think this is the simplest solution to this issue: implicitly deactivate
-> the target before starting to poll.
-
-I don't see any problem in implicitly deactivating a target that was
-implicitly activated. But if the target was activated by the user
-(nfc_activate_target), it should not be deactivated.
-
->
-> Another alternative is to always deactivate the target after it was
-> automatically activated, and when activate_target is called, we'll have to
-> poll again and hope that the same target will be activated again...
-> I think this solution is much less preferred, since it's much more
-> complicated and contradictes the NCI idea.
-
-I agree that is not a good solution.
-
->
-> Please advise.
-
->
+>> Hi Felix,
+>>
+>> On Thu, Sep 15, 2011 at 12:53 AM, Felix Fietkau<nbd@openwrt.org>  wrote:
+>>>
+>>>  The interrupt handler increases the interrupt disable refcount, so the
+>>>  tasklet needs to always call ath9k_hw_enable_interrupts.
+>>>
+>>>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>>>  ---
+>>>   drivers/net/wireless/ath/ath9k/main.c |    9 +++++----
+>>>   1 files changed, 5 insertions(+), 4 deletions(-)
+>>>
+>>>  diff --git a/drivers/net/wireless/ath/ath9k/main.c
+>>> b/drivers/net/wireless/ath/ath9k/main.c
+>>>  index 8a17cff5..a3c3316 100644
+>>>  --- a/drivers/net/wireless/ath/ath9k/main.c
+>>>  +++ b/drivers/net/wireless/ath/ath9k/main.c
+>>>  @@ -669,15 +669,15 @@ void ath9k_tasklet(unsigned long data)
+>>>         u32 status = sc->intrstatus;
+>>>         u32 rxmask;
+>>>
+>>>  +       ath9k_ps_wakeup(sc);
+>>
+>> this is done in ath_reset, is there any corner cases that I had missed ?
+>>
+>>>  +       spin_lock(&sc->sc_pcu_lock);
+>>
+>> spin_lock_bh(&sc->sc_pcu_lock) in ath_reset_internal, won't be a
+>> problem know, or should we need to move this lock
+>>
+>>>  +
+>>>         if ((status&  ATH9K_INT_FATAL) ||
+>>>             (status&  ATH9K_INT_BB_WATCHDOG)) {
+>>>                 ieee80211_queue_work(sc->hw,&sc->hw_reset_work);
+>>>  -               return;
+>>>  +               goto out;
+>>>         }
+>>>
+>>>  -       ath9k_ps_wakeup(sc);
+>>>  -       spin_lock(&sc->sc_pcu_lock);
+>>>  -
+>>>         /*
+>>>          * Only run the baseband hang check if beacons stop working in AP
+>>> or
+>>>          * IBSS mode, because it has a high false positive rate. For
+>>> station
+>>>  @@ -725,6 +725,7 @@ void ath9k_tasklet(unsigned long data)
+>>>                 if (status&  ATH9K_INT_GENTIMER)
+>>>                         ath_gen_timer_isr(sc->sc_ah);
+>>>
+>>>  +out:
+>>>         /* re-enable hardware interrupt */
+>>>         ath9k_hw_enable_interrupts(ah);
 >>
 >>
->>
->> > +static int nci_data_exchange(struct nfc_dev *nfc_dev,
->> __u32 target_idx,
->> > + Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  struct sk_buff *skb,
->> > +
->> data_exchange_cb_t cb,
->> > + Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  void *cb_context)
->> > +{
->> > + Â  Â  Â  struct nci_dev *ndev = nfc_get_drvdata(nfc_dev);
->> > +
->> > + Â  Â  Â  nfc_dbg("entry, target_idx %d, len %d", target_idx,
->> skb->len);
->> > +
->> > + Â  Â  Â  if (!ndev->target_active_prot) {
->> > + Â  Â  Â  Â  Â  Â  Â  nfc_err("unable to exchange data, no active
->> target");
->> > + Â  Â  Â  Â  Â  Â  Â  return -EINVAL;
->> > + Â  Â  Â  }
->> > +
->> > + Â  Â  Â  /* store cb and context to be used on receiving data */
->> > + Â  Â  Â  ndev->data_exchange_cb = cb;
->> > + Â  Â  Â  ndev->data_exchange_cb_context = cb_context;
->>
->> This is wrong. The data exchange can be called again before completing
->> the previous call. So, you shouldn't store the cb and cb_context in
->> the device.
-> You're correct, of course.
-> I see in your pn533 implementation that you also store the arguments
-> (in the field pn533.cmd_complete_arg), but you do protect them with the
-> 'cmd_lock' semaphore.
-> If already in progress of data exchange transaction, you return EBUSY.
-> I can also protect the 'cb' and 'cb_context' with such a semaphore.
-> In fact, this is an implementation of a queue with max length of 1
-> data exchange transaction.
+>> this is done in ath_complete_reset, should we enable interrupts if
+>> some times ath9k_hw_reset fails?
+>> please correct me if I had understood wrongly. thanks!
+>
+> ath9k_hw_enable_interrupts was changed to use refcounting to keep interrupts
+> blocked. The interrupt handler increses the refcount, so the tasklet needs
+> to decrease it. When a reset is issued, it starts by disabling interrupts,
+> then re-enables them after completing the reset.
+> Disabling interrupts in the ISR, but not enabling them in the tasklet causes
+> an imbalance which leaves interrupts disabled after the reset is done.
+
+Felix, thanks  for your explanation. i understood it somewhat :). i
+will take a look at this more carefully, especially intr_ref_cnt.
+
+
+>
+> - Felix
 >
 
-You are right. The pn533 driver protects 'cb' and 'cb_context' but it
-doesn't support full concurrency. Probably we will have to improve
-this when the LLCP is implemented.
-For your patch, I think it is enough to just protect the 'cb' and 'cb_context'.
 
 
-Thanks,
-Lauro
+-- 
+shafi
