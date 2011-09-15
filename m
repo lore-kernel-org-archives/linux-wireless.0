@@ -1,159 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38353 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751223Ab1I2OHL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 10:07:11 -0400
-Message-Id: <20110929140502.799964000@sipsolutions.net> (sfid-20110929_160716_131687_CCF791B7)
-Date: Thu, 29 Sep 2011 16:04:40 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 15/16] mac80211: document client powersave
-References: <20110929140425.390322480@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:19373 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934541Ab1IOTcI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Sep 2011 15:32:08 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 16/27] iwlagn: generically provide iwl_trans_send_cmd_pdu
+Date: Thu, 15 Sep 2011 11:46:43 -0700
+Message-Id: <1316112414-6341-17-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110915_213317_444417_6FAC21D0)
+In-Reply-To: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-With the addition of uAPSD and driver buffering
-the powersave handling has gotten quite complex.
-Add a section to the documentation to explain it
-for anyone wanting to implement it.
+There's no need to have the transport layer have a
+callback for iwl_trans_send_cmd_pdu() since it is
+just a generic wrapper around iwl_trans_send_cmd().
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- Documentation/DocBook/80211.tmpl |   11 ++++
- include/net/mac80211.h           |   89 +++++++++++++++++++++++++++++++++++++++
- 2 files changed, 99 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/Makefile            |    1 +
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   13 ----
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c    |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans.c         |   77 ++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans.h         |   10 +--
+ 5 files changed, 80 insertions(+), 22 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans.c
 
---- a/Documentation/DocBook/80211.tmpl	2011-09-29 16:01:08.000000000 +0200
-+++ b/Documentation/DocBook/80211.tmpl	2011-09-29 16:03:36.000000000 +0200
-@@ -450,8 +450,18 @@ MISSING
-           Insert notes about VLAN interfaces with hw crypto here or
-           in the hw crypto chapter.
-         </para>
-+      <section id="ps-client">
-+        <title>support for powersaving clients</title>
-+!Pinclude/net/mac80211.h AP support for powersaving clients
-+      </section>
- !Finclude/net/mac80211.h ieee80211_get_buffered_bc
- !Finclude/net/mac80211.h ieee80211_beacon_get
-+!Finclude/net/mac80211.h ieee80211_sta_eosp_irqsafe
-+!Finclude/net/mac80211.h ieee80211_frame_release_type
-+!Finclude/net/mac80211.h ieee80211_sta_ps_transition
-+!Finclude/net/mac80211.h ieee80211_sta_ps_transition_ni
-+!Finclude/net/mac80211.h ieee80211_sta_set_buffered
-+!Finclude/net/mac80211.h ieee80211_sta_block_awake
-       </chapter>
+diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
+index 6104f19..a7e954b 100644
+--- a/drivers/net/wireless/iwlwifi/Makefile
++++ b/drivers/net/wireless/iwlwifi/Makefile
+@@ -14,6 +14,7 @@ iwlagn-objs             += iwl-6000.o
+ iwlagn-objs             += iwl-1000.o
+ iwlagn-objs             += iwl-2000.o
+ iwlagn-objs             += iwl-pci.o
++iwlagn-objs		+= iwl-trans.o
+ iwlagn-objs             += iwl-trans-pcie.o iwl-trans-pcie-rx.o iwl-trans-pcie-tx.o
  
-       <chapter id="multi-iface">
-@@ -477,7 +487,6 @@ MISSING
- !Finclude/net/mac80211.h sta_notify_cmd
- !Finclude/net/mac80211.h ieee80211_find_sta
- !Finclude/net/mac80211.h ieee80211_find_sta_by_ifaddr
--!Finclude/net/mac80211.h ieee80211_sta_block_awake
-       </chapter>
+ iwlagn-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 305c072..c0def8e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -1099,19 +1099,6 @@ int iwl_trans_pcie_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	return iwl_send_cmd_sync(trans, cmd);
+ }
  
-       <chapter id="hardware-scan-offload">
---- a/include/net/mac80211.h	2011-09-29 16:03:33.000000000 +0200
-+++ b/include/net/mac80211.h	2011-09-29 16:03:36.000000000 +0200
-@@ -1539,6 +1539,95 @@ ieee80211_get_alt_retry_rate(const struc
-  */
+-int iwl_trans_pcie_send_cmd_pdu(struct iwl_trans *trans, u8 id, u32 flags,
+-		u16 len, const void *data)
+-{
+-	struct iwl_host_cmd cmd = {
+-		.id = id,
+-		.len = { len, },
+-		.data = { data, },
+-		.flags = flags,
+-	};
+-
+-	return iwl_trans_pcie_send_cmd(trans, &cmd);
+-}
+-
+ /* Frees buffers until index _not_ inclusive */
+ int iwl_tx_queue_reclaim(struct iwl_trans *trans, int txq_id, int index,
+ 			 struct sk_buff_head *skbs)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 1c931b7..9a414b2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1971,7 +1971,6 @@ const struct iwl_trans_ops trans_ops_pcie = {
+ 	.wake_any_queue = iwl_trans_pcie_wake_any_queue,
  
- /**
-+ * DOC: AP support for powersaving clients
+ 	.send_cmd = iwl_trans_pcie_send_cmd,
+-	.send_cmd_pdu = iwl_trans_pcie_send_cmd_pdu,
+ 
+ 	.tx = iwl_trans_pcie_tx,
+ 	.reclaim = iwl_trans_pcie_reclaim,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+new file mode 100644
+index 0000000..1b20c4f
+--- /dev/null
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -0,0 +1,77 @@
++/******************************************************************************
 + *
-+ * In order to implement AP and P2P GO modes, mac80211 has support for
-+ * client powersaving, both "legacy" PS (PS-Poll/null data) and uAPSD.
-+ * There currently is no support for sAPSD.
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
 + *
-+ * There is one assumption that mac80211 makes, namely that a client
-+ * will not poll with PS-Poll and trigger with uAPSD at the same time.
-+ * Both are supported, and both can be used by the same client, but
-+ * they can't be used concurrently by the same client. This simplifies
-+ * the driver code.
++ * GPL LICENSE SUMMARY
 + *
-+ * The first thing to keep in mind is that there is a flag for complete
-+ * driver implementation: %IEEE80211_HW_AP_LINK_PS. If this flag is set,
-+ * mac80211 expects the driver to handle most of the state machine for
-+ * powersaving clients and will ignore the PM bit in incoming frames.
-+ * Drivers then use ieee80211_sta_ps_transition() to inform mac80211 of
-+ * stations' powersave transitions. In this mode, mac80211 also doesn't
-+ * handle PS-Poll/uAPSD.
++ * Copyright(c) 2007 - 2011 Intel Corporation. All rights reserved.
 + *
-+ * In the mode without %IEEE80211_HW_AP_LINK_PS, mac80211 will check the
-+ * PM bit in incoming frames for client powersave transitions. When a
-+ * station goes to sleep, we will stop transmitting to it. There is,
-+ * however, a race condition: a station might go to sleep while there is
-+ * data buffered on hardware queues. If the device has support for this
-+ * it will reject frames, and the driver should give the frames back to
-+ * mac80211 with the %IEEE80211_TX_STAT_TX_FILTERED flag set which will
-+ * cause mac80211 to retry the frame when the station wakes up. The
-+ * driver is also notified of powersave transitions by calling its
-+ * @sta_notify callback.
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
 + *
-+ * When the station is asleep, it has three choices: it can wake up,
-+ * it can PS-Poll, or it can possibly start a uAPSD service period.
-+ * Waking up is implemented by simply transmitting all buffered (and
-+ * filtered) frames to the station. This is the easiest case. When
-+ * the station sends a PS-Poll or a uAPSD trigger frame, mac80211
-+ * will inform the driver of this with the @allow_buffered_frames
-+ * callback; this callback is optional. mac80211 will then transmit
-+ * the frames as usual and set the %IEEE80211_TX_CTL_POLL_RESPONSE
-+ * on each frame. The last frame in the service period (or the only
-+ * response to a PS-Poll) also has %IEEE80211_TX_STATUS_EOSP set to
-+ * indicate that it ends the service period; as this frame must have
-+ * TX status report it also sets %IEEE80211_TX_CTL_REQ_TX_STATUS.
-+ * When TX status is reported for this frame, the service period is
-+ * marked has having ended and a new one can be started by the peer.
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
 + *
-+ * Another race condition can happen on some devices like iwlwifi
-+ * when there are frames queued for the station and it wakes up
-+ * or polls; the frames that are already queued could end up being
-+ * transmitted first instead, causing reordering and/or wrong
-+ * processing of the EOSP. The cause is that allowing frames to be
-+ * transmitted to a certain station is out-of-band communication to
-+ * the device. To allow this problem to be solved, the driver can
-+ * call ieee80211_sta_block_awake() if frames are buffered when it
-+ * is notified that the station went to sleep. When all these frames
-+ * have been filtered (see above), it must call the function again
-+ * to indicate that the station is no longer blocked.
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
++ * USA
 + *
-+ * If the driver buffers frames in the driver for aggregation in any
-+ * way, it must use the ieee80211_sta_set_buffered() call when it is
-+ * notified of the station going to sleep to inform mac80211 of any
-+ * TIDs that have frames buffered. Note that when a station wakes up
-+ * this information is reset (hence the requirement to call it when
-+ * informed of the station going to sleep). Then, when a service
-+ * period starts for any reason, @release_buffered_frames is called
-+ * with the number of frames to be released and which TIDs they are
-+ * to come from. In this case, the driver is responsible for setting
-+ * the EOSP (for uAPSD) and MORE_DATA bits in the released frames,
-+ * to help the @more_data paramter is passed to tell the driver if
-+ * there is more data on other TIDs -- the TIDs to release frames
-+ * from are ignored since mac80211 doesn't know how many frames the
-+ * buffers for those TIDs contain.
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
 + *
-+ * If the driver also implement GO mode, where absence periods may
-+ * shorten service periods (or abort PS-Poll responses), it must
-+ * filter those response frames except in the case of frames that
-+ * are buffered in the driver -- those must remain buffered to avoid
-+ * reordering. Because it is possible that no frames are released
-+ * in this case, the driver must call ieee80211_sta_eosp_irqsafe()
-+ * to indicate to mac80211 that the service period ended anyway.
++ * Contact Information:
++ *  Intel Linux Wireless <ilw@linux.intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
 + *
-+ * Finally, if frames from multiple TIDs are released from mac80211
-+ * but the driver might reorder them, it must clear & set the flags
-+ * appropriately (only the last frame may have %IEEE80211_TX_STATUS_EOSP)
-+ * and also take care of the EOSP and MORE_DATA bits in the frame.
-+ * The driver may also use ieee80211_sta_eosp_irqsafe() in this case.
-+ */
++ * BSD LICENSE
++ *
++ * Copyright(c) 2005 - 2011 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *****************************************************************************/
 +
-+/**
-  * enum ieee80211_filter_flags - hardware filter flags
-  *
-  * These flags determine what the filter in hardware should be
-
++#include "iwl-trans.h"
++
++int iwl_trans_send_cmd_pdu(struct iwl_trans *trans, u8 id,
++			   u32 flags, u16 len, const void *data)
++{
++	struct iwl_host_cmd cmd = {
++		.id = id,
++		.len = { len, },
++		.data = { data, },
++		.flags = flags,
++	};
++
++	return iwl_trans_send_cmd(trans, &cmd);
++}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index f067408..8fba516 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -151,7 +151,6 @@ struct iwl_host_cmd {
+  * @wake_any_queue: wake all the queues of a specfic context IWL_RXON_CTX_*
+  * @stop_device:stops the whole device (embedded CPU put to reset)
+  * @send_cmd:send a host command
+- * @send_cmd_pdu:send a host command: flags can be CMD_*
+  * @tx: send an skb
+  * @reclaim: free packet until ssn. Returns a list of freed packets.
+  * @tx_agg_alloc: allocate resources for a TX BA session
+@@ -183,8 +182,6 @@ struct iwl_trans_ops {
+ 
+ 	int (*send_cmd)(struct iwl_trans *trans, struct iwl_host_cmd *cmd);
+ 
+-	int (*send_cmd_pdu)(struct iwl_trans *trans, u8 id, u32 flags, u16 len,
+-		     const void *data);
+ 	int (*tx)(struct iwl_trans *trans, struct sk_buff *skb,
+ 		struct iwl_device_cmd *dev_cmd, enum iwl_rxon_context_id ctx,
+ 		u8 sta_id);
+@@ -270,11 +267,8 @@ static inline int iwl_trans_send_cmd(struct iwl_trans *trans,
+ 	return trans->ops->send_cmd(trans, cmd);
+ }
+ 
+-static inline int iwl_trans_send_cmd_pdu(struct iwl_trans *trans, u8 id,
+-					u32 flags, u16 len, const void *data)
+-{
+-	return trans->ops->send_cmd_pdu(trans, id, flags, len, data);
+-}
++int iwl_trans_send_cmd_pdu(struct iwl_trans *trans, u8 id,
++			   u32 flags, u16 len, const void *data);
+ 
+ static inline int iwl_trans_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 		struct iwl_device_cmd *dev_cmd, enum iwl_rxon_context_id ctx,
+-- 
+1.7.0.4
 
