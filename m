@@ -1,46 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:27236 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751278Ab1IFOYN convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f42.google.com ([209.85.216.42]:46335 "EHLO
+	mail-qw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751126Ab1IPKzB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Sep 2011 10:24:13 -0400
-Date: Tue, 6 Sep 2011 10:24:07 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: Looking for BCM43228
-Message-ID: <20110906102407.05289b0b@mj> (sfid-20110906_162427_127401_91B7AC37)
-In-Reply-To: <CACna6ryDDorBuh_JJRzm05W_zWaQs+4xJTpbhHPDcXaK0F-ORw@mail.gmail.com>
-References: <CACna6rwU4RuYuiAFjXFDH-c+EFsKtKFmB1Sh8kXdb9EoUt4abg@mail.gmail.com>
-	<CACna6rzkSgbf8sV2S1mg2OhxKstXeiqnmNmYFSMuAc563acBpg@mail.gmail.com>
-	<CACna6ryTA+nbz9cJtFEWypb1atY2s+eKseANM-u=-EjW6FWE7Q@mail.gmail.com>
-	<CACna6rzJzzhdBig48TGV=cfBYuvmjxowSw2Ai_GA-W0n_Y3Qkw@mail.gmail.com>
-	<4E6152FF.40101@lwfinger.net>
-	<CACna6ryDDorBuh_JJRzm05W_zWaQs+4xJTpbhHPDcXaK0F-ORw@mail.gmail.com>
-Mime-Version: 1.0
+	Fri, 16 Sep 2011 06:55:01 -0400
+Received: by qwi4 with SMTP id 4so1728183qwi.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 03:55:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <400C43189542CE41BC0A5B252FC90136BC0CA8A32B@SJEXCHCCR02.corp.ad.broadcom.com>
+References: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com>
+	<CACna6rwQ60viPGssWzBzgtVGBq1xu+AOxb0fqfRq4NaJFcmP=w@mail.gmail.com>
+	<20110913174444.GG11772@tuxdriver.com>
+	<CACna6rwS0dGwSFOiqgAYqHNV=AatnHvHes=YdbwSWdKZu8OYiQ@mail.gmail.com>
+	<20110914084234.GA5550@kroah.com>
+	<CACna6rxi6XTUfR_N-n5ss7hmouaaoyZnmvmtdM-pGEfvdaWmQg@mail.gmail.com>
+	<400C43189542CE41BC0A5B252FC90136BC0CA8A32B@SJEXCHCCR02.corp.ad.broadcom.com>
+Date: Fri, 16 Sep 2011 12:55:00 +0200
+Message-ID: <CACna6ry51P=em3=tgEDvO4cUhTfG8T3NJdRkMD3iatdtrOCk7g@mail.gmail.com> (sfid-20110916_125506_148715_9531DB14)
+Subject: Re: About the patch: "staging: brcm80211: only enable brcmsmac if
+ bcma is not set"
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend Van Spriel <arend@broadcom.com>
+Cc: Greg KH <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Francis Moreau <francis.moro@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 3 Sep 2011 21:39:06 +0200
-Rafał Miłecki <zajec5@gmail.com> wrote:
+2011/9/16 Arend Van Spriel <arend@broadcom.com>:
+>> From: Rafał Miłecki [mailto:zajec5@gmail.com]
+>> Sent: vrijdag 16 september 2011 12:43
+>> To: Greg KH; linux-wireless@vger.kernel.org; Arend Van Spriel
+>> Cc: John W. Linville; Francis Moreau
+>> Subject: Re: About the patch: "staging: brcm80211: only enable brcmsmac
+>> if bcma is not set"
+>>
+>>
+>> You're right, it wasn't a good idea.
+>>
+>> Arend: I've just sent patches to John giving you symbols needed by LCN
+>> code. If there is something more missing, I didn't notice it yet, feel
+>> free to report. AFAICS you should be able now to convert brcmsmac to
+>> use bcma, if you wish to.
+>>
+>> --
+>> Rafał
+>
+> Hi Rafał,
+>
+> The last time I refreshed my local wireless-testing repo was a while ago since kernel.org misery. Last commit being:
+>
+> commit b197329717cf054f4dbd8bd86196401bef738978
+> Merge: a7c053d 93ee7a9
+> Author: John W. Linville <linville@tuxdriver.com>
+> Date:   Mon Aug 15 14:01:50 2011 -0700
+>
+>    Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/torva
+>
+>    Conflicts:
+>        drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsparser.c
+>
+> Could you indicate what patches I am missing. If you can provide those to me that would be awesome. For BCMA this is the latest I have:
 
-> It seems Dell can be the only choice for us. I've asked Marc for
-> checking details of that card. I asked him to try bcma&b43 or get MMIO
-> dump with wl. That will make us sure what's PHY hidden inside of that
-> card.
-> 
-> I've already bought once a card (BCM43225) in hope it'll contain PHY
-> different that card I already have (BCM43224). That cards seem to have
-> exactly the same PHY.
+I've *just* sent my patches, they weren't applied yet. I was sure
+you're subscribed to linux-wireless and you received them.
 
-By the way, there is some money in the b43 fund at
-http://linuxwireless.org/en/users/Drivers/b43/donations
-
-I hope it can be used to compensate the expenses.
+Please take a look at:
+[PATCH 1/6] bcma: cc: export more control functions
+Message-Id: <1316169243-8808-1-git-send-email-zajec5@gmail.com>
 
 -- 
-Regards,
-Pavel Roskin
+Rafał
