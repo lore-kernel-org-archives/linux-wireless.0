@@ -1,106 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5330 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750712Ab1IUOAb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 10:00:31 -0400
-Date: Wed, 21 Sep 2011 16:57:29 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath6kl: Report PMKSA candidate events through cfg80211
-Message-ID: <20110921135729.GA26105@jouni.qca.qualcomm.com> (sfid-20110921_160037_776540_B5172DC5)
+Received: from mms2.broadcom.com ([216.31.210.18]:4649 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932134Ab1IPT2V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Sep 2011 15:28:21 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 03/19] staging: brcm80211: remove fullmac module_param
+ brcmf_deferred_tx
+Date: Fri, 16 Sep 2011 12:27:52 -0700
+Message-ID: <1316201288-29635-4-git-send-email-frankyl@broadcom.com> (sfid-20110916_212826_929956_5346E6B0)
+In-Reply-To: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
+References: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows RSN pre-authentication to be used when roaming decisions are
-done in the target.
+Remove brcmf_deferred_tx as it should be always 1
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/ath/ath6kl/wmi.c |   30 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.h |   10 ++++++++++
- 2 files changed, 40 insertions(+), 0 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   83 +++++++-----------------
+ 1 files changed, 24 insertions(+), 59 deletions(-)
 
-Please note that this depends on a recent change in wireless-testing.git
-for cfg80211_pmksa_candidate_notify(). This commit
-c9df56b48e4ff003eaebd680ec7a45342dcd03ea is not yet in ath6kl.git.
-
-
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index dbddb91..c3d91ba 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -1342,6 +1342,35 @@ static int ath6kl_wmi_scan_complete_rx(struct wmi *wmi, u8 *datap, int len)
- 	return 0;
- }
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 680b232..dade3ec 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -721,10 +721,6 @@ static int qcount[NUMPRIO];
+ static int tx_packets[NUMPRIO];
+ #endif				/* BCMDBG */
  
-+static int ath6kl_wmi_neighbor_report_event_rx(struct wmi *wmi, u8 *datap,
-+					       int len)
-+{
-+	struct wmi_neighbor_report_event *ev;
-+	u8 i;
-+
-+	if (len < sizeof(*ev))
-+		return -EINVAL;
-+	ev = (struct wmi_neighbor_report_event *) datap;
-+	if (sizeof(*ev) + ev->num_neighbors * sizeof(struct wmi_neighbor_info)
-+	    > len) {
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "truncated neighbor event "
-+			   "(num=%d len=%d)\n", ev->num_neighbors, len);
-+		return -EINVAL;
-+	}
-+	for (i = 0; i < ev->num_neighbors; i++) {
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "neighbor %d/%d - %pM 0x%x\n",
-+			   i + 1, ev->num_neighbors, ev->neighbor[i].bssid,
-+			   ev->neighbor[i].bss_flags);
-+		cfg80211_pmksa_candidate_notify(wmi->parent_dev->net_dev, i,
-+						ev->neighbor[i].bssid,
-+						!!(ev->neighbor[i].bss_flags &
-+						   WMI_PREAUTH_CAPABLE_BSS),
-+						GFP_ATOMIC);
-+	}
-+
-+	return 0;
-+}
-+
- /*
-  * Target is reporting a programming error.  This is for
-  * developer aid only.  Target only checks a few common violations
-@@ -3153,6 +3182,7 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
- 		break;
- 	case WMI_NEIGHBOR_REPORT_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_NEIGHBOR_REPORT_EVENTID\n");
-+		ret = ath6kl_wmi_neighbor_report_event_rx(wmi, datap, len);
- 		break;
- 	case WMI_SCAN_COMPLETE_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_SCAN_COMPLETE_EVENTID\n");
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index f036e78..4c99a2e 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -1458,6 +1458,16 @@ enum wmi_bss_flags {
- 	WMI_PMKID_VALID_BSS = 0x02,
- };
+-/* Deferred transmit */
+-uint brcmf_deferred_tx = 1;
+-module_param(brcmf_deferred_tx, uint, 0);
+-
+ /* Watchdog thread priority, -1 to use kernel timer */
+ int brcmf_watchdog_prio = 97;
+ module_param(brcmf_watchdog_prio, int, 0);
+@@ -2845,63 +2841,33 @@ int brcmf_sdbrcm_bus_txdata(struct brcmf_bus *bus, struct sk_buff *pkt)
  
-+struct wmi_neighbor_info {
-+	u8 bssid[ETH_ALEN];
-+	u8 bss_flags; /* enum wmi_bss_flags */
-+} __packed;
+ 	/* Check for existing queue, current flow-control,
+ 			 pending event, or pending clock */
+-	if (brcmf_deferred_tx || bus->fcstate || pktq_len(&bus->txq)
+-	    || bus->dpc_sched || (!data_ok(bus))
+-	    || (bus->flowcontrol & NBITVAL(prec))
+-	    || (bus->clkstate != CLK_AVAIL)) {
+-		brcmf_dbg(TRACE, "deferring pktq len %d\n",
+-			  pktq_len(&bus->txq));
+-		bus->fcqueued++;
+-
+-		/* Priority based enq */
+-		spin_lock_bh(&bus->txqlock);
+-		if (brcmf_c_prec_enq(bus->drvr, &bus->txq, pkt, prec) ==
+-		    false) {
+-			skb_pull(pkt, SDPCM_HDRLEN);
+-			brcmf_txcomplete(bus->drvr, pkt, false);
+-			brcmu_pkt_buf_free_skb(pkt);
+-			brcmf_dbg(ERROR, "out of bus->txq !!!\n");
+-			ret = -ENOSR;
+-		} else {
+-			ret = 0;
+-		}
+-		spin_unlock_bh(&bus->txqlock);
++	brcmf_dbg(TRACE, "deferring pktq len %d\n", pktq_len(&bus->txq));
++	bus->fcqueued++;
 +
-+struct wmi_neighbor_report_event {
-+	u8 num_neighbors;
-+	struct wmi_neighbor_info neighbor[0];
-+} __packed;
-+
- /* TKIP MIC Error Event */
- struct wmi_tkip_micerr_event {
- 	u8 key_id;
++	/* Priority based enq */
++	spin_lock_bh(&bus->txqlock);
++	if (brcmf_c_prec_enq(bus->drvr, &bus->txq, pkt, prec) == false) {
++		skb_pull(pkt, SDPCM_HDRLEN);
++		brcmf_txcomplete(bus->drvr, pkt, false);
++		brcmu_pkt_buf_free_skb(pkt);
++		brcmf_dbg(ERROR, "out of bus->txq !!!\n");
++		ret = -ENOSR;
++	} else {
++		ret = 0;
++	}
++	spin_unlock_bh(&bus->txqlock);
+ 
+-		if (pktq_len(&bus->txq) >= TXHI)
+-			brcmf_txflowcontrol(bus->drvr, 0, ON);
++	if (pktq_len(&bus->txq) >= TXHI)
++		brcmf_txflowcontrol(bus->drvr, 0, ON);
+ 
+ #ifdef BCMDBG
+-		if (pktq_plen(&bus->txq, prec) > qcount[prec])
+-			qcount[prec] = pktq_plen(&bus->txq, prec);
++	if (pktq_plen(&bus->txq, prec) > qcount[prec])
++		qcount[prec] = pktq_plen(&bus->txq, prec);
+ #endif
+-		/* Schedule DPC if needed to send queued packet(s) */
+-		if (brcmf_deferred_tx && !bus->dpc_sched) {
+-			bus->dpc_sched = true;
+-			brcmf_sdbrcm_sched_dpc(bus);
+-		}
+-	} else {
+-		/* Lock: we're about to use shared data/code (and SDIO) */
+-		brcmf_sdbrcm_sdlock(bus);
+-
+-		/* Otherwise, send it now */
+-		bus_wake(bus);
+-		/* Make sure back plane ht clk is on, no pending allowed */
+-		brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, true);
+-
+-		brcmf_dbg(TRACE, "calling txpkt\n");
+-		ret = brcmf_sdbrcm_txpkt(bus, pkt, SDPCM_DATA_CHANNEL, true);
+-		if (ret)
+-			bus->drvr->tx_errors++;
+-		else
+-			bus->drvr->dstats.tx_bytes += datalen;
+-
+-		if (bus->idletime == BRCMF_IDLE_IMMEDIATE &&
+-		    !bus->dpc_sched) {
+-			bus->activity = false;
+-			brcmf_sdbrcm_clkctl(bus, CLK_NONE, true);
+-		}
+-
+-		brcmf_sdbrcm_sdunlock(bus);
++	/* Schedule DPC if needed to send queued packet(s) */
++	if (!bus->dpc_sched) {
++		bus->dpc_sched = true;
++		brcmf_sdbrcm_sched_dpc(bus);
+ 	}
+ 
+ 	return ret;
+@@ -5013,8 +4979,7 @@ int brcmf_bus_register(void)
+ 			break;
+ 
+ 		/* If both watchdog and DPC are threads, TX must be deferred */
+-		if ((brcmf_watchdog_prio >= 0) && (brcmf_dpc_prio >= 0)
+-		    && brcmf_deferred_tx)
++		if (brcmf_watchdog_prio >= 0 && brcmf_dpc_prio >= 0)
+ 			break;
+ 
+ 		brcmf_dbg(ERROR, "Invalid module parameters.\n");
 -- 
-1.7.4.1
+1.7.1
 
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
