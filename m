@@ -1,58 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38878 "EHLO nbd.name"
+Received: from mms3.broadcom.com ([216.31.210.19]:3445 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932855Ab1ISWXB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 18:23:01 -0400
-Message-ID: <4E77C0BF.50108@openwrt.org> (sfid-20110920_002313_572570_3DC6A91A)
-Date: Tue, 20 Sep 2011 00:22:55 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1755207Ab1IPT20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Sep 2011 15:28:26 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 06/19] staging: brcm80211: remove global variable
+ brcmf_radio_up from fullmac
+Date: Fri, 16 Sep 2011 12:27:55 -0700
+Message-ID: <1316201288-29635-7-git-send-email-frankyl@broadcom.com> (sfid-20110916_212831_720156_E1DAB18A)
+In-Reply-To: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
+References: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH v2 2/4] ath9k_hw: clean up tx power handling
-References: <1316453903-75710-1-git-send-email-nbd@openwrt.org> <1316453903-75710-2-git-send-email-nbd@openwrt.org> <CAB=NE6XvanRQ6Yje_qHhkfzbLmZn9o5Q+5y1NobJwCyuMLFEvg@mail.gmail.com> <4E77AAFB.1080805@openwrt.org> <CAB=NE6XgSz7zz_ZXaPQEsaue307ipd7Qnzgi5QWr8Y4SS1j=Lg@mail.gmail.com> <4E77B25D.9070907@openwrt.org> <CAB=NE6XLdftXKg5-wvme8Vg7BjGi-TpxQ3G6m=7VnEw89YzXoA@mail.gmail.com> <CAB=NE6XQDqG+En2KWOyKGUVT1SWm1rwMwOxMjpE8CjYfvwvOqw@mail.gmail.com> <4E77BC58.7040204@openwrt.org> <CAB=NE6Vi2sun6vJy=yZSJ9HjHxD17FO-GmXtYybcjLVPSt9+wA@mail.gmail.com> <CAB=NE6UzRhp=51QacoRzMPad0vO1qkNxK3=rayPuYXdjA3ZOJQ@mail.gmail.com>
-In-Reply-To: <CAB=NE6UzRhp=51QacoRzMPad0vO1qkNxK3=rayPuYXdjA3ZOJQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-09-20 12:13 AM, Luis R. Rodriguez wrote:
-> On Mon, Sep 19, 2011 at 3:12 PM, Luis R. Rodriguez
-> <mcgrof@qca.qualcomm.com>  wrote:
->>  On Mon, Sep 19, 2011 at 3:04 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
->>>  On 2011-09-19 11:54 PM, Luis R. Rodriguez wrote:
->>>>
->>>>  On Mon, Sep 19, 2011 at 2:45 PM, Luis R. Rodriguez
->>>>  <mcgrof@qca.qualcomm.com>    wrote:
->>>>>
->>>>>    On Mon, Sep 19, 2011 at 2:21 PM, Felix Fietkau<nbd@openwrt.org>    wrote:
->>>>>>
->>>>>>    I looked at the other ath driver and I see no indication that it's
->>>>>>  related
->>>>>>    to DFS in any way.
->>>>>
->>>>>    I have verified this just now as well, it seems it was only used to
->>>>>    support an ioctl to userspace to enable users to update a tpscale
->>>>>    value but I see no documentation about this. Next question is who in
->>>>>    usersapce sets this. I wonder if its done through userspace after
->>>>>    measuring some TPC reports from STAs.
->>>>
->>>>  So this comes from supporting a "TR-098" specification, which seems to
->>>>  be the "Internet Gateway Device data model for the CPE WAN Management
->>>>  Protocol". I haven't yet been able to map this to the specification
->>>>  respective component:
->>>>
->>>>  http://www.broadband-forum.org/technical/download/TR-098.pdf
->>>
->>>  Interesting. That definitely supports my point that ath9k is the wrong place
->>>  for something like this to be. Let's just get rid of it.
->>
->>  Yeah, I'm now convinced :) die code. But please do add some blurb
->>  about this tumor the code had.
->
-> In fact removing the tumor through a separate patch would be appreciated.
-I don't think it needs a separate patch. It's dead code directly related 
-to the other things that I'm changing, and it does not add any 
-functional changes. I'll add a comment, though.
+Remove unnecessary global variable
 
-- Felix
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd.h        |    3 ---
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c |    4 +---
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c  |    3 ---
+ 3 files changed, 1 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index 5316df9..2967ada 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -673,9 +673,6 @@ extern uint brcmf_arp_mode;
+ /* ARP offload enable */
+ extern uint brcmf_arp_enable;
+ 
+-/* Roaming mode control */
+-extern uint brcmf_radio_up;
+-
+ /* Override to force tx queueing all the time */
+ extern uint brcmf_force_tx_queueing;
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+index c02c8cd..2e8db62 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+@@ -845,9 +845,7 @@ int brcmf_c_preinit_ioctls(struct brcmf_pub *drvr)
+ 				  sizeof(iovbuf));
+ 
+ 	/* Force STA UP */
+-	if (brcmf_radio_up)
+-		brcmf_proto_cdc_set_ioctl(drvr, 0, BRCMF_C_UP, (char *)&up,
+-					  sizeof(up));
++	brcmf_proto_cdc_set_ioctl(drvr, 0, BRCMF_C_UP, (char *)&up, sizeof(up));
+ 
+ 	/* Setup event_msgs */
+ 	brcmu_mkiovar("event_msgs", drvr->eventmask, BRCMF_EVENTING_MASK_LEN,
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index f462a5f..16f7216 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -98,9 +98,6 @@ module_param(brcmf_arp_mode, uint, 0);
+ uint brcmf_arp_enable = true;
+ module_param(brcmf_arp_enable, uint, 0);
+ 
+-/* Control radio state */
+-uint brcmf_radio_up = 1;
+-
+ /* Network inteface name */
+ char iface_name[IFNAMSIZ] = "wlan";
+ module_param_string(iface_name, iface_name, IFNAMSIZ, 0);
+-- 
+1.7.1
+
+
