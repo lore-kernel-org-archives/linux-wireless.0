@@ -1,86 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:34854 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751290Ab1I2L7Z (ORCPT
+Received: from mail-vw0-f42.google.com ([209.85.212.42]:42401 "EHLO
+	mail-vw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751037Ab1IPKnH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 07:59:25 -0400
-From: Sangwook Lee <sangwook.lee@linaro.org>
-To: johannes@sipsolutions.net, rklein@nvidia.com
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	patches@linaro.org, Sangwook Lee <sangwook.lee@linaro.org>
-Subject: [PATCH v3] net:rfkill: add a gpio setup function into GPIO rfkill
-Date: Thu, 29 Sep 2011 12:57:17 +0100
-Message-Id: <1317297437-1155-1-git-send-email-sangwook.lee@linaro.org> (sfid-20110929_135939_927542_E9855F09)
+	Fri, 16 Sep 2011 06:43:07 -0400
+Received: by vwl1 with SMTP id 1so6804964vwl.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 03:43:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110914084234.GA5550@kroah.com>
+References: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com>
+	<CACna6rwQ60viPGssWzBzgtVGBq1xu+AOxb0fqfRq4NaJFcmP=w@mail.gmail.com>
+	<20110913174444.GG11772@tuxdriver.com>
+	<CACna6rwS0dGwSFOiqgAYqHNV=AatnHvHes=YdbwSWdKZu8OYiQ@mail.gmail.com>
+	<20110914084234.GA5550@kroah.com>
+Date: Fri, 16 Sep 2011 12:43:06 +0200
+Message-ID: <CACna6rxi6XTUfR_N-n5ss7hmouaaoyZnmvmtdM-pGEfvdaWmQg@mail.gmail.com> (sfid-20110916_124311_885225_10B99181)
+Subject: Re: About the patch: "staging: brcm80211: only enable brcmsmac if
+ bcma is not set"
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Greg KH <gregkh@suse.de>, linux-wireless@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Francis Moreau <francis.moro@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a gpio setup function which gives a chance to set up
-platform specific configuration such as pin multiplexing,
-input/output direction at the runtime or booting time.
+W dniu 14 września 2011 10:42 użytkownik Greg KH <greg@kroah.com> napisał:
+> On Tue, Sep 13, 2011 at 10:23:47PM +0200, Rafał Miłecki wrote:
+>> W dniu 13 września 2011 19:44 użytkownik John W. Linville
+>> <linville@tuxdriver.com> napisał:
+>> > On Mon, Sep 12, 2011 at 11:27:20PM +0200, Rafał Miłecki wrote:
+>> >
+>> >> The problem is that brcmsmac duplicates code present in the bcma
+>> >> driver. It doesn't use bcma bus architecture.
+>> >>
+>> >> The real solution is to add bcma driver support in brcmsmac and ssb
+>> >> driver support in brcmfmac. Then you can always use bcma and:
+>> >> 1) If b43 will load and detect unsupported PHY, it will release the BCMA's core
+>> >> 2) brcmsmac will be loaded to let it support the core
+>> >
+>> > We are going to have to find a way to get brcmsmac into the
+>> > wireless-next tree to make it feasible for the Broadcom guys to get
+>> > bcma support into that driver.  Do you agree?
+>> >
+>> > We could move it under the drivers/net/wireless tree.  Or, maybe I
+>> > could negotiate with Greg to keep it under the drivers/staging tree
+>> > but to let me manage it under wireless-next.  Or...?  Do you have
+>> > any thoughts on this?
+>>
+>> I'll be posting some bcma patches that will allow brcmsmac being
+>> converted to bcma support. Currently we don't export few trivial ops
+>> in bcma, that are needed by b43/brcmsmac.
+>>
+>> Could we ask Greg after that, to merge wireless-next into staging?
+>
+> No.
+>
+>> That would provide Broadcom guys all the symbols they need.
+>
+> Yes, or they can wait for the next merge window as that will make things
+> easier for everyone involved, right?
+>
+>> AFAIK git is clever enough to allow Linux easily merge both: Greg's
+>> tree and wireless-next tree. Without conflicts coming from
+>> "duplicated" patches.
+>
+> It is, but I really don't want to be dragging around the wireless-next
+> tree in staging-next, just like I doubt John would want to drag
+> staging-next into wireless-next.
 
-Signed-off-by: Sangwook Lee <sangwook.lee@linaro.org>
----
-v3:
-  add a gpio clean-up function into GPIO rfkill
-v2:
-- fixed the return type after checking gpio_runtime_setup
+You're right, it wasn't a good idea.
 
- include/linux/rfkill-gpio.h |    4 ++++
- net/rfkill/rfkill-gpio.c    |   11 +++++++++++
- 2 files changed, 15 insertions(+), 0 deletions(-)
+Arend: I've just sent patches to John giving you symbols needed by LCN
+code. If there is something more missing, I didn't notice it yet, feel
+free to report. AFAICS you should be able now to convert brcmsmac to
+use bcma, if you wish to.
 
-diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill-gpio.h
-index a175d05..4d09f6e 100644
---- a/include/linux/rfkill-gpio.h
-+++ b/include/linux/rfkill-gpio.h
-@@ -30,6 +30,8 @@
-  * @reset_gpio:		GPIO which is used for reseting rfkill switch
-  * @shutdown_gpio:	GPIO which is used for shutdown of rfkill switch
-  * @power_clk_name:	[optional] name of clk to turn off while blocked
-+ * @gpio_runtime_close:	clean up platform specific gpio configuration
-+ * @gpio_runtime_setup:	set up platform specific gpio configuration
-  */
- 
- struct rfkill_gpio_platform_data {
-@@ -38,6 +40,8 @@ struct rfkill_gpio_platform_data {
- 	int			shutdown_gpio;
- 	const char		*power_clk_name;
- 	enum rfkill_type	type;
-+	void	(*gpio_runtime_close)(struct platform_device *);
-+	int	(*gpio_runtime_setup)(struct platform_device *);
- };
- 
- #endif /* __RFKILL_GPIO_H */
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index 256c5dd..128677d 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -101,6 +101,14 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 	if (!rfkill)
- 		return -ENOMEM;
- 
-+	if (pdata->gpio_runtime_setup) {
-+		ret = pdata->gpio_runtime_setup(pdev);
-+		if (ret) {
-+			pr_warn("%s: can't set up gpio\n", __func__);
-+			return ret;
-+		}
-+	}
-+
- 	rfkill->pdata = pdata;
- 
- 	len = strlen(pdata->name);
-@@ -182,7 +190,10 @@ fail_alloc:
- static int rfkill_gpio_remove(struct platform_device *pdev)
- {
- 	struct rfkill_gpio_data *rfkill = platform_get_drvdata(pdev);
-+	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
- 
-+	if (pdata->gpio_runtime_close)
-+		pdata->gpio_runtime_close(pdev);
- 	rfkill_unregister(rfkill->rfkill_dev);
- 	rfkill_destroy(rfkill->rfkill_dev);
- 	if (gpio_is_valid(rfkill->pdata->shutdown_gpio))
 -- 
-1.7.4.1
-
+Rafał
