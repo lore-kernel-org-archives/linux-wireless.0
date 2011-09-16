@@ -1,95 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:46520 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751670Ab1ITKGW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 06:06:22 -0400
-Received: by wyg34 with SMTP id 34so328292wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 03:06:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20110919160124.GA3218@makis.lan>
-References: <20110919160124.GA3218@makis.lan>
-Date: Tue, 20 Sep 2011 15:36:21 +0530
-Message-ID: <CAD2nsn0+hMHBLW_5mtJwxfu37_f3aw-8a7Y2tCkh-btVpcfYPQ@mail.gmail.com> (sfid-20110920_120625_908108_FE38C532)
-Subject: Re: [RFT][PATCH] ath5k: Add rfkill_disable module parameter
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	jirislaby@gmail.com, nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from lo.gmane.org ([80.91.229.12]:37907 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750832Ab1IQJzH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Sep 2011 05:55:07 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1R4rc1-0002sI-GV
+	for linux-wireless@vger.kernel.org; Sat, 17 Sep 2011 11:55:06 +0200
+Received: from 207.59.80.172 ([207.59.80.172])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Sep 2011 11:55:05 +0200
+Received: from viscous.liquid by 207.59.80.172 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Sep 2011 11:55:05 +0200
+To: linux-wireless@vger.kernel.org
+From: Daniel Smith <viscous.liquid@gmail.com>
+Subject: Re: ath9k_htc: "No free RX buffer" in monitor mode
+Date: Fri, 16 Sep 2011 14:35:40 -0400
+Message-ID: <j504ts$n2g$1@dough.gmane.org> (sfid-20110917_115528_495893_ACB6593F)
+References: <4E737241.2080301@qca.qualcomm.com> <CAD2nsn14EnEWyu2ifM6-5evQN4qGqe4Me7wsZ=xLPt+RBpJeWw@mail.gmail.com> <4E738BFE.7080201@qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4E738BFE.7080201@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Nick,
+What compat-wireless version are you running? I use some ath9k_htc 
+devices at home and would be glad to help do some debugging.
 
-On Mon, Sep 19, 2011 at 9:31 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> Add a module parameter to disable hw rf kill (GPIO interrupt) because in some cases when the card doesn't come with the laptop, EEPROM configuration
-> doesn't match laptop's configuration and rf kill interrupt always fires up and disables hw. I thought of moving this to debugfs and make it per-card
+Daniel
 
-i think this seems to happen with a card that comes with laptop.
-AR5212802.11abg NIC (rev 01) in the lenovo T61
-
-i just cannot bring up the card again once i toggle the rfkill switch
-(unblock -> block -> unblock)
-the card is still hard blocked.
-
-quickly, i just commented out those function calls(same as your patch)
- in compat-wireless
-ath5k_rfkill_hw_start(ah);
-ath5k_rfkill_stop(ah);
-as expected the problem disappears, but i can unblock the card via
-soft-rfkill even when it is hard blocked.
-is it ok to unblock via software unblock when the card is
-hard-blocked?. please share your thoughts. meanwhile i will start
-comparing ath5k and ath9k for this. thanks!
-
-> but this way it's easier for users and distros to handle.
->
-> Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
->
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index e9ea38d..000a65d 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -80,6 +80,10 @@ static int modparam_fastchanswitch;
->  module_param_named(fastchanswitch, modparam_fastchanswitch, bool, S_IRUGO);
->  MODULE_PARM_DESC(fastchanswitch, "Enable fast channel switching for AR2413/AR5413 radios.");
->
-> +static int ath5k_modparam_rfkill_disable;
-> +module_param_named(rfkill_disable, ath5k_modparam_rfkill_disable, bool, S_IRUGO);
-> +MODULE_PARM_DESC(rfkill_disable, "Disable hw rfkill support (GPIO interrupt).");
-> +
->
->  /* Module info */
->  MODULE_AUTHOR("Jiri Slaby");
-> @@ -2558,7 +2562,8 @@ int ath5k_start(struct ieee80211_hw *hw)
->        if (ret)
->                goto done;
->
-> -       ath5k_rfkill_hw_start(ah);
-> +       if (!ath5k_modparam_rfkill_disable)
-> +               ath5k_rfkill_hw_start(ah);
->
->        /*
->         * Reset the key cache since some parts do not reset the
-> @@ -2643,7 +2648,8 @@ void ath5k_stop(struct ieee80211_hw *hw)
->
->        cancel_delayed_work_sync(&ah->tx_complete_work);
->
-> -       ath5k_rfkill_hw_stop(ah);
-> +       if (!ath5k_modparam_rfkill_disable)
-> +               ath5k_rfkill_hw_stop(ah);
->  }
->
->  /*
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
--- 
-shafi
