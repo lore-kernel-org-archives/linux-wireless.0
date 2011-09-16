@@ -1,58 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61517 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750965Ab1IUX0f convert rfc822-to-8bit (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:54674 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755207Ab1IPTV6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 19:26:35 -0400
-Received: by iaqq3 with SMTP id q3so2174437iaq.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 16:26:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CADnq5_OBLpQigLX1zqh5NGyW6crJO3G5xyBEnu+CwVxac-dkYQ@mail.gmail.com>
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
- <20110920130338.GA9885@kroah.com> <1316524874.3953.41.camel@jlt3.sipsolutions.net>
- <CACna6rxxoRoLi9C3RBsot8kvZx4k5AZVHzHoE17q-iT1U7i5qg@mail.gmail.com> <CADnq5_OBLpQigLX1zqh5NGyW6crJO3G5xyBEnu+CwVxac-dkYQ@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Wed, 21 Sep 2011 16:26:15 -0700
-Message-ID: <CAB=NE6Wq_07FowUEffPbwvm7zbYZuQwNaUM4BGWH2Cc0Vo+Jig@mail.gmail.com> (sfid-20110922_012642_647137_92FE8CC8)
-Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline patch #2
-To: Alex Deucher <alexdeucher@gmail.com>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>, gregkh@suse.de,
-	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 16 Sep 2011 15:21:58 -0400
+Date: Fri, 16 Sep 2011 15:20:50 -0400 (EDT)
+Message-Id: <20110916.152050.74502091191784524.davem@davemloft.net> (sfid-20110916_212205_834936_EB69E607)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2011-09-16
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110916183118.GB22612@tuxdriver.com>
+References: <20110916183118.GB22612@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/9/20 Alex Deucher <alexdeucher@gmail.com>:
-> 2011/9/20 Rafał Miłecki <zajec5@gmail.com>:
->> 2011/9/20 Johannes Berg <johannes@sipsolutions.net>:
->>> On Tue, 2011-09-20 at 06:03 -0700, Greg KH wrote:
->>>
->>>> And while code is great and nice, I still haven't seen any real answers
->>>> to all of the questions that were asked of the Broadcom driver team
->>>> during that review by the linux-wireless developers about how things
->>>> will be handled properly due to the overlap in functionality with the
->>>> existing "real" driver in the tree.
->>>
->>> Let's qualify this to "some developers".
->>>
->>> One thing I'd like to point out is that the Broadcom's firmware API has
->>> always undergone changes over time. I'm actually surprised that b43
->>> works as well as it does (which, tbh, isn't very well at all, at least
->>> for me with some 11n PHY). I also don't think that Broadcom are going to
->>> maintain compatibility and/or maintain new firmware features for old
->>> devices, that just doesn't make any sense.
->>
->> Actually, when we got some single response from Broadcom about their
->> relation to b43, they haven't mentioned support for old HW is any
->> problem at all.
->
-> If you look at it from the perspective of a hardware manufacturer,
-> supporting EOLed chips is generally not a good return on investment.
-> There is no new revenue associated with them so any work that goes
-> into them stands to return very little.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 16 Sep 2011 14:31:19 -0400
 
-Support is one thing, the other is to enable the community. The later
-can be done while real support goes into the newer chipsets.
+> This is a batch of updates intended for 3.2.  They have been simmering
+> for a while, since I merged them just before the big kernel.org
+> shutdown.  That includes time in wireless-testing and linux-next
+> (albeit the latter is diminished by the kernel.org outage).  For now,
+> I am just trying to clear the backlog... :-)
+> 
+> This includes a sizable wl12xx pull and a bunch of iwlagn updates.
+> There are also a number of ath9k updates, some b43 updates, and a
+> handful of other bits.
+> 
+> Please let me know if there are problems!
 
-  Luis
+Pulled, thanks John.
