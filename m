@@ -1,108 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60814 "EHLO nbd.name"
+Received: from mms2.broadcom.com ([216.31.210.18]:4647 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933388Ab1IOMXJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 08:23:09 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.atheros.com
-Subject: [PATCH 2/4] ath9k_hw: remove dead code in the eeprom ops
-Date: Thu, 15 Sep 2011 14:22:55 +0200
-Message-Id: <1316089377-86019-2-git-send-email-nbd@openwrt.org> (sfid-20110915_142314_484134_3CB4838D)
-In-Reply-To: <1316089377-86019-1-git-send-email-nbd@openwrt.org>
-References: <1316089377-86019-1-git-send-email-nbd@openwrt.org>
+	id S932155Ab1IPT2V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Sep 2011 15:28:21 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 01/19] staging: brcm80211: remove SOFTAP code from
+ fullmac
+Date: Fri, 16 Sep 2011 12:27:50 -0700
+Message-ID: <1316201288-29635-2-git-send-email-frankyl@broadcom.com> (sfid-20110916_212901_172255_0F85EB09)
+In-Reply-To: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
+References: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The eeprom .set_addac function is only necessary for AR9160, remove it
-from eeprom_4k.c and remove the dummy function from eeprom_9287.c
+Dead code removal.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c  |    3 ++-
- drivers/net/wireless/ath/ath9k/eeprom_4k.c   |   23 -----------------------
- drivers/net/wireless/ath/ath9k/eeprom_9287.c |    6 ------
- 3 files changed, 2 insertions(+), 30 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd.h       |   12 ------------
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   21 ---------------------
+ 2 files changed, 0 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index b130c26..1381a39 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -801,7 +801,8 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
- 
- 	/* Write ADDAC shifts */
- 	REG_WRITE(ah, AR_PHY_ADC_SERIAL_CTL, AR_PHY_SEL_EXTERNAL_RADIO);
--	ah->eep_ops->set_addac(ah, chan);
-+	if (ah->eep_ops->set_addac)
-+		ah->eep_ops->set_addac(ah, chan);
- 
- 	if (AR_SREV_5416_22_OR_LATER(ah)) {
- 		REG_WRITE_ARRAY(&ah->iniAddac, 1, regWrites);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 99f7a08..303560e 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -779,28 +779,6 @@ static void ath9k_hw_4k_set_txpower(struct ath_hw *ah,
- 	REGWRITE_BUFFER_FLUSH(ah);
- }
- 
--static void ath9k_hw_4k_set_addac(struct ath_hw *ah,
--				  struct ath9k_channel *chan)
--{
--	struct modal_eep_4k_header *pModal;
--	struct ar5416_eeprom_4k *eep = &ah->eeprom.map4k;
--	u8 biaslevel;
--
--	if (ah->hw_version.macVersion != AR_SREV_VERSION_9160)
--		return;
--
--	if (ah->eep_ops->get_eeprom_rev(ah) < AR5416_EEP_MINOR_VER_7)
--		return;
--
--	pModal = &eep->modalHeader;
--
--	if (pModal->xpaBiasLvl != 0xff) {
--		biaslevel = pModal->xpaBiasLvl;
--		INI_RA(&ah->iniAddac, 7, 1) =
--		  (INI_RA(&ah->iniAddac, 7, 1) & (~0x18)) | biaslevel << 3;
--	}
--}
--
- static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
- 				 struct modal_eep_4k_header *pModal,
- 				 struct ar5416_eeprom_4k *eep,
-@@ -1152,7 +1130,6 @@ const struct eeprom_ops eep_4k_ops = {
- 	.get_eeprom_ver		= ath9k_hw_4k_get_eeprom_ver,
- 	.get_eeprom_rev		= ath9k_hw_4k_get_eeprom_rev,
- 	.set_board_values	= ath9k_hw_4k_set_board_values,
--	.set_addac		= ath9k_hw_4k_set_addac,
- 	.set_txpower		= ath9k_hw_4k_set_txpower,
- 	.get_spur_channel	= ath9k_hw_4k_get_spur_channel
- };
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index ebf97ba..6698b72 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -942,11 +942,6 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 	REGWRITE_BUFFER_FLUSH(ah);
- }
- 
--static void ath9k_hw_ar9287_set_addac(struct ath_hw *ah,
--				      struct ath9k_channel *chan)
--{
--}
--
- static void ath9k_hw_ar9287_set_board_values(struct ath_hw *ah,
- 					     struct ath9k_channel *chan)
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index 8898370..c351349 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -707,18 +707,6 @@ static inline void MUTEX_UNLOCK(struct brcmf_pub *drvr)
  {
-@@ -1098,7 +1093,6 @@ const struct eeprom_ops eep_ar9287_ops = {
- 	.get_eeprom_ver		= ath9k_hw_ar9287_get_eeprom_ver,
- 	.get_eeprom_rev		= ath9k_hw_ar9287_get_eeprom_rev,
- 	.set_board_values	= ath9k_hw_ar9287_set_board_values,
--	.set_addac		= ath9k_hw_ar9287_set_addac,
- 	.set_txpower		= ath9k_hw_ar9287_set_txpower,
- 	.get_spur_channel	= ath9k_hw_ar9287_get_spur_channel
- };
+ }
+ 
+-static inline void MUTEX_LOCK_SOFTAP_SET_INIT(struct brcmf_pub *drvr)
+-{
+-}
+-
+-static inline void MUTEX_LOCK_SOFTAP_SET(struct brcmf_pub *drvr)
+-{
+-}
+-
+-static inline void MUTEX_UNLOCK_SOFTAP_SET(struct brcmf_pub *drvr)
+-{
+-}
+-
+ static inline void MUTEX_LOCK_WL_SCAN_SET_INIT(void)
+ {
+ }
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 26a39ee..8286885 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -314,10 +314,6 @@ _brcmf_set_mac_address(struct brcmf_info *drvr_priv, int ifidx, u8 *addr)
+ 	return ret;
+ }
+ 
+-#ifdef SOFTAP
+-static struct net_device *ap_net_dev;
+-#endif
+-
+ /* Virtual interfaces only ((ifp && ifp->info && ifp->idx == true) */
+ static void brcmf_op_if(struct brcmf_if *ifp)
+ {
+@@ -357,18 +353,6 @@ static void brcmf_op_if(struct brcmf_if *ifp)
+ 					  err);
+ 				ret = -EOPNOTSUPP;
+ 			} else {
+-#ifdef SOFTAP
+-				/* semaphore that the soft AP CODE
+-					 waits on */
+-				struct semaphore ap_eth_sema;
+-
+-				/* save ptr to wl0.1 netdev for use
+-					 in wl_iw.c  */
+-				ap_net_dev = ifp->net;
+-				/* signal to the SOFTAP 'sleeper' thread,
+-					 wl0.1 is ready */
+-				up(&ap_eth_sema);
+-#endif
+ 				brcmf_dbg(TRACE, " ==== pid:%x, net_device for if:%s created ===\n",
+ 					  current->pid, ifp->net->name);
+ 				ifp->state = 0;
+@@ -395,11 +379,6 @@ static void brcmf_op_if(struct brcmf_if *ifp)
+ 
+ 		drvr_priv->iflist[ifp->idx] = NULL;
+ 		kfree(ifp);
+-#ifdef SOFTAP
+-		if (ifp->net == ap_net_dev)
+-			ap_net_dev = NULL;	/*  NULL  SOFTAP global
+-							 wl0.1 as well */
+-#endif				/*  SOFTAP */
+ 	}
+ }
+ 
 -- 
-1.7.3.2
+1.7.1
+
 
