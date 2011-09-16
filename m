@@ -1,47 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47300 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752582Ab1IURG1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 13:06:27 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat-wireless: remove old config options
-Date: Wed, 21 Sep 2011 19:06:17 +0200
-Message-Id: <1316624777-8001-2-git-send-email-hauke@hauke-m.de> (sfid-20110921_190633_988906_AC6937ED)
-In-Reply-To: <1316624777-8001-1-git-send-email-hauke@hauke-m.de>
-References: <1316624777-8001-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.skyhub.de ([78.46.96.112]:43400 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753089Ab1IPSD3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Sep 2011 14:03:29 -0400
+Date: Fri, 16 Sep 2011 20:03:24 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	'Chaoming_Li' <chaoming_li@realsil.com.cn>
+Subject: Re: 3.1-rc6+ rtl8192se issue
+Message-ID: <20110916180323.GA1988@gere.osrc.amd.com> (sfid-20110916_200359_392307_AD7F153F)
+References: <20110915124406.GA14374@gere.osrc.amd.com>
+ <4E721871.7040901@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E721871.7040901@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both config options have be removed from the Kconfig files in the
-kernel and are not used by the code any more.
+On Thu, Sep 15, 2011 at 10:23:29AM -0500, Larry Finger wrote:
+> Would you also try loading rtl8192se with the "ips=0" option? As power
+> save is implicated in your traceback, that may help. I will be trying
+> "swlps=0 ips=0".
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+Ok, "ips=0" seems to fix the issue ... almost. I say, almost because I
+had only one hang so far for running the box for a day today. Will try
+together with "swlps=0" next week.
 
-diff --git a/config.mk b/config.mk
-index 802bf38..3463f83 100644
---- a/config.mk
-+++ b/config.mk
-@@ -252,7 +252,6 @@ CONFIG_IWLAGN=m
- # CONFIG_IWLWIFI_DEVICE_TRACING=y
- # CONFIG_IWLWIFI_DEVICE_SVTOOL=y
- # CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE=y
--CONFIG_IWL_P2P=y
- 
- CONFIG_IWLWIFI_LEGACY=m
- CONFIG_COMPAT_IWL4965=m
-@@ -623,7 +622,6 @@ endif #CONFIG_COMPAT_STAGING
- ifdef CONFIG_CRC7
- CONFIG_WL1251=m
- CONFIG_WL12XX=m
--CONFIG_WL12XX_HT=y
- endif #CONFIG_CRC7
- 
- CONFIG_MWIFIEX=m
+Thanks.
+
 -- 
-1.7.4.1
-
+Regards/Gruss,
+Boris.
