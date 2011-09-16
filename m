@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46377 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750884Ab1I0HrI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 03:47:08 -0400
-Subject: Re: [PATCH 1/1] rfkill: add module option to become inactive.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Andrew V. Stepanov" <stanv@altlinux.org>
-Cc: davem@davemloft.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, Andriy Stepanov <stanv@altlinux.ru>
-In-Reply-To: <1317119624-2974-1-git-send-email-stanv@altlinux.org> (sfid-20110927_083311_957911_9A044E07)
-References: <1317119624-2974-1-git-send-email-stanv@altlinux.org>
-	 (sfid-20110927_083311_957911_9A044E07)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Sep 2011 09:46:57 +0200
-Message-ID: <1317109617.4082.0.camel@jlt3.sipsolutions.net> (sfid-20110927_094712_556375_1BFE201D)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:45845 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755506Ab1IPU6j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Sep 2011 16:58:39 -0400
+Message-ID: <4E73B822.5010403@hauke-m.de> (sfid-20110916_225843_250174_B29C6272)
+Date: Fri, 16 Sep 2011 22:57:06 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Compat-wireless release based on wireless-testing
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-09-27 at 14:33 +0400, Andrew V. Stepanov wrote:
-> From: Andriy Stepanov <stanv@altlinux.ru>
-> 
-> Use as:
-> modprobe rfkill unblocked=1
-> or
-> /etc/modprobe.d/options
-> options rfkill unblocked=1
+As kernel.org is still down and no new version of linux-next is
+available I created a compat-wireless version based on recent
+wireless-testing ( master-2011-09-14 ).
 
-Apart from the obvious style problems in this patch (tons of extra
-braces) I'm not convinced this is a good idea.
+It can be downloaded here and is compile tested with all last kernel
+minor version >= 2.6.27:
+http://hauke-m.de/files/compat-wireless/compat-wireless-wl-2011-09-16.tar.bz2
 
-What problem does it solve? Why can that problem not be solved
-differently with existing mechanisms (e.g. urfkilld configured to do
-nothing)?
+The source code for compat-wireless can be fond on github:
+compat-wireless: https://github.com/hauke/compat-wireless/tree/hauke-wl
+compat: https://github.com/hauke/compat/tree/hauke
 
-johannes
+This release was created manually and I plan to do other releases when
+wireless-testing updates, till no new version of linux-next is
+available, but I will not promise anything. ;-)
 
+Have fun with the recent wireless code.
+
+Hauke
