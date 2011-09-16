@@ -1,31 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:58514 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741Ab1IZU7J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 16:59:09 -0400
-Received: by qyk7 with SMTP id 7so7043135qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 13:59:08 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:4596 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751126Ab1IPKwc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Sep 2011 06:52:32 -0400
+From: "Arend Van Spriel" <arend@broadcom.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"Greg KH" <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Francis Moreau" <francis.moro@gmail.com>
+Date: Fri, 16 Sep 2011 03:52:15 -0700
+Subject: RE: About the patch:
+ "staging: brcm80211: only enable brcmsmac if bcma is not set"
+Message-ID: <400C43189542CE41BC0A5B252FC90136BC0CA8A32B@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20110916_125238_524292_315E6346)
+References: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com>
+ <CACna6rwQ60viPGssWzBzgtVGBq1xu+AOxb0fqfRq4NaJFcmP=w@mail.gmail.com>
+ <20110913174444.GG11772@tuxdriver.com>
+ <CACna6rwS0dGwSFOiqgAYqHNV=AatnHvHes=YdbwSWdKZu8OYiQ@mail.gmail.com>
+ <20110914084234.GA5550@kroah.com>
+ <CACna6rxi6XTUfR_N-n5ss7hmouaaoyZnmvmtdM-pGEfvdaWmQg@mail.gmail.com>
+In-Reply-To: <CACna6rxi6XTUfR_N-n5ss7hmouaaoyZnmvmtdM-pGEfvdaWmQg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1316677672-4812-1-git-send-email-ilane@ti.com>
-References: <1316677672-4812-1-git-send-email-ilane@ti.com>
-Date: Mon, 26 Sep 2011 17:59:08 -0300
-Message-ID: <CAK3JMAY02JgQcsbMZ+e4Zom5nyqUkqL-HbomdBpLmsQuCYNy_g@mail.gmail.com> (sfid-20110926_225914_317743_83826425)
-Subject: Re: [PATCH] NFC: improve readability of an 'if' in nci core.c
-From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-To: ilanelias78@gmail.com
-Cc: aloisio.almeida@openbossa.org, samuel@sortiz.org,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ilan Elias <ilane@ti.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/9/22  <ilanelias78@gmail.com>:
-> From: Ilan Elias <ilane@ti.com>
->
-> Signed-off-by: Ilan Elias <ilane@ti.com>
-Acked-by: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+PiBGcm9tOiBSYWZhxYIgTWnFgmVja2kgW21haWx0bzp6YWplYzVAZ21haWwuY29tXQ0KPiBTZW50
+OiB2cmlqZGFnIDE2IHNlcHRlbWJlciAyMDExIDEyOjQzDQo+IFRvOiBHcmVnIEtIOyBsaW51eC13
+aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEFyZW5kIFZhbiBTcHJpZWwNCj4gQ2M6IEpvaG4gVy4g
+TGludmlsbGU7IEZyYW5jaXMgTW9yZWF1DQo+IFN1YmplY3Q6IFJlOiBBYm91dCB0aGUgcGF0Y2g6
+ICJzdGFnaW5nOiBicmNtODAyMTE6IG9ubHkgZW5hYmxlIGJyY21zbWFjDQo+IGlmIGJjbWEgaXMg
+bm90IHNldCINCj4gDQo+IA0KPiBZb3UncmUgcmlnaHQsIGl0IHdhc24ndCBhIGdvb2QgaWRlYS4N
+Cj4gDQo+IEFyZW5kOiBJJ3ZlIGp1c3Qgc2VudCBwYXRjaGVzIHRvIEpvaG4gZ2l2aW5nIHlvdSBz
+eW1ib2xzIG5lZWRlZCBieSBMQ04NCj4gY29kZS4gSWYgdGhlcmUgaXMgc29tZXRoaW5nIG1vcmUg
+bWlzc2luZywgSSBkaWRuJ3Qgbm90aWNlIGl0IHlldCwgZmVlbA0KPiBmcmVlIHRvIHJlcG9ydC4g
+QUZBSUNTIHlvdSBzaG91bGQgYmUgYWJsZSBub3cgdG8gY29udmVydCBicmNtc21hYyB0bw0KPiB1
+c2UgYmNtYSwgaWYgeW91IHdpc2ggdG8uDQo+IA0KPiAtLQ0KPiBSYWZhxYINCg0KSGkgUmFmYcWC
+LA0KDQpUaGUgbGFzdCB0aW1lIEkgcmVmcmVzaGVkIG15IGxvY2FsIHdpcmVsZXNzLXRlc3Rpbmcg
+cmVwbyB3YXMgYSB3aGlsZSBhZ28gc2luY2Uga2VybmVsLm9yZyBtaXNlcnkuIExhc3QgY29tbWl0
+IGJlaW5nOg0KDQpjb21taXQgYjE5NzMyOTcxN2NmMDU0ZjRkYmQ4YmQ4NjE5NjQwMWJlZjczODk3
+OA0KTWVyZ2U6IGE3YzA1M2QgOTNlZTdhOQ0KQXV0aG9yOiBKb2huIFcuIExpbnZpbGxlIDxsaW52
+aWxsZUB0dXhkcml2ZXIuY29tPg0KRGF0ZTogICBNb24gQXVnIDE1IDE0OjAxOjUwIDIwMTEgLTA3
+MDANCg0KICAgIE1lcmdlIGJyYW5jaCAnbWFzdGVyJyBvZiBnaXQ6Ly9naXQua2VybmVsLm9yZy9w
+dWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvdG9ydmENCiAgICANCiAgICBDb25mbGljdHM6DQogICAg
+ICAgIGRyaXZlcnMvc3RhZ2luZy9hdGg2a2wvbWlzY2Rydi9hcjNrcHMvYXIza3BzcGFyc2VyLmMN
+Cg0KQ291bGQgeW91IGluZGljYXRlIHdoYXQgcGF0Y2hlcyBJIGFtIG1pc3NpbmcuIElmIHlvdSBj
+YW4gcHJvdmlkZSB0aG9zZSB0byBtZSB0aGF0IHdvdWxkIGJlIGF3ZXNvbWUuIEZvciBCQ01BIHRo
+aXMgaXMgdGhlIGxhdGVzdCBJIGhhdmU6DQoNCiQgZ2l0IGxvZyAtMSAtLSBkcml2ZXJzL2JjbWEN
+CmNvbW1pdCBkM2VjNDg0NGQ0NDljZjdhZjllNzQ5ZjczYmEyMDUyZmI3YjcyZmMyDQpNZXJnZTog
+MDAwMzIzMCBkZjJlMzAxDQpBdXRob3I6IExpbnVzIFRvcnZhbGRzIDx0b3J2YWxkc0BsaW51eC1m
+b3VuZGF0aW9uLm9yZz4NCkRhdGU6ICAgTW9uIEp1bCAyNSAxMzo1NjozOSAyMDExIC0wNzAwDQoN
+CiAgICBNZXJnZSBicmFuY2ggJ2Zvci1saW51cycgb2YgZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmcvcHVi
+L3NjbS9saW51eC9rZXJuZWwvZ2l0L2ppDQogICAgDQogICAgKiAnZm9yLWxpbnVzJyBvZiBnaXQ6
+Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvamlrb3MvdHJpdmlhbA0K
+ICAgICAgZnM6IE1lcmdlIHNwbGl0IHN0cmluZ3MNCiAgICAgIHRyZWV3aWRlOiBmaXggcG90ZW50
+aWFsbHkgZGFuZ2Vyb3VzIHRyYWlsaW5nICc7JyBpbiAjZGVmaW5lZCB2YWx1ZXMvZXhwcmVzDQog
+ICAgICB1d2I6IEZpeCBtaXNzcGVsbGluZyBvZiBuZWlnaGJvdXJob29kIGluIGNvbW1lbnQNCiAg
+ICAgIG5ldCwgbmV0ZmlsdGVyOiBSZW1vdmUgcmVkdW5kYW50IGdvdG8gaW4gZWJ0X3Vsb2dfcGFj
+a2V0DQogICAgICB0cml2aWFsOiBkb24ndCB0b3VjaCBmaWxlcyB0aGF0IGFyZSByZW1vdmVkIGlu
+IHRoZSBzdGFnaW5nIHRyZWUNCiAgICAgIGxpYi92c3ByaW50ZjogcmVwbGFjZSBsaW5rIHRvIERy
+YWZ0IGJ5IGZpbmFsIFJGQyBudW1iZXINCg0KR3IuIEF2Uw0K
 
-
-Lauro
