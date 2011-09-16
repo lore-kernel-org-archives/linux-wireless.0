@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:52877 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751388Ab1I0Iqd convert rfc822-to-8bit (ORCPT
+Received: from smtp-out.google.com ([216.239.44.51]:48203 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754037Ab1IPSzE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 04:46:33 -0400
-Received: by ywb5 with SMTP id 5so5081177ywb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 01:46:32 -0700 (PDT)
+	Fri, 16 Sep 2011 14:55:04 -0400
+Received: from wpaz21.hot.corp.google.com (wpaz21.hot.corp.google.com [172.24.198.85])
+	by smtp-out.google.com with ESMTP id p8GIt2ZS010813
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 11:55:03 -0700
+Received: from iaen33 (iaen33.prod.google.com [10.12.165.33])
+	by wpaz21.hot.corp.google.com with ESMTP id p8GIt0tw009147
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 11:55:00 -0700
+Received: by iaen33 with SMTP id n33so3675872iae.0
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 11:55:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1317110884.4082.5.camel@jlt3.sipsolutions.net>
-References: <1317119624-2974-1-git-send-email-stanv@altlinux.org>
-	<1317109617.4082.0.camel@jlt3.sipsolutions.net>
-	<CAN8FffqH=x+qWnz=YJzatbW-b3aOgoivazH6Nb5SpsGt4Q6hGg@mail.gmail.com>
-	<1317110884.4082.5.camel@jlt3.sipsolutions.net>
-Date: Tue, 27 Sep 2011 12:46:32 +0400
-Message-ID: <CAN8FffqjeurgAvVHtMExgeAyBHRWznYBz2c043jcZgOmqw6TVg@mail.gmail.com> (sfid-20110927_104641_981752_E519CB84)
-Subject: Re: [PATCH 1/1] rfkill: add module option to become inactive.
-From: "Andrew V. Stepanov" <stanv@altlinux.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: davem@davemloft.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <1316167723-2346-1-git-send-email-nataraja@qca.qualcomm.com>
+References: <1316167723-2346-1-git-send-email-nataraja@qca.qualcomm.com>
+Date: Fri, 16 Sep 2011 11:55:00 -0700
+Message-ID: <CA+yqC4ZFhCK37LMMZRmp7jJGRiMpijGvBwiQg31PxYHu6XYi=g@mail.gmail.com> (sfid-20110916_205509_120785_B978DCF2)
+Subject: Re: [PATCH] ath6kl: Indicate the roaming capability of the firmware
+From: Sam Leffler <sleffler@google.com>
+To: Vivek Natarajan <nataraja@qca.qualcomm.com>
+Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 27, 2011 at 12:08 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2011-09-27 at 12:03 +0400, Andrew V. Stepanov wrote:
->> On Tue, Sep 27, 2011 at 11:46 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Tue, 2011-09-27 at 14:33 +0400, Andrew V. Stepanov wrote:
->> >> From: Andriy Stepanov <stanv@altlinux.ru>
->> >>
->> >> Use as:
->> >> modprobe rfkill unblocked=1
->> >> or
->> >> /etc/modprobe.d/options
->> >> options rfkill unblocked=1
->> >
->> > Apart from the obvious style problems in this patch (tons of extra
->> > braces) I'm not convinced this is a good idea.
->> >
->> > What problem does it solve? Why can that problem not be solved
->> > differently with existing mechanisms (e.g. urfkilld configured to do
->> > nothing)?
+On Fri, Sep 16, 2011 at 3:08 AM, Vivek Natarajan
+<nataraja@qca.qualcomm.com> wrote:
+> Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath6kl/init.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
 >
->> 2. urfkilld  can't be used to ignore Hard blocked buttons.
+> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+> index b9b13a0..38d7e94 100644
+> --- a/drivers/net/wireless/ath/ath6kl/init.c
+> +++ b/drivers/net/wireless/ath/ath6kl/init.c
+> @@ -1494,6 +1494,8 @@ static int ath6kl_init(struct net_device *dev)
+>        if (!status)
+>                goto ath6kl_init_done;
 >
-> Oh that's a good point -- so NACK on the patch.
->
-> You *can't* ignore hard block buttons. All you can ignore is events from
-> them, which is definitely not useful.
->
-> johannes
->
->
+> +       ar->wdev->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
+> +
+>  err_htc_stop:
+>        ath6kl_htc_stop(ar->htc_target);
+>  err_rxbuf_cleanup:
+> --
+> 1.7.1
 
-I wan't to completely ignore events (state) of software\hardware rfkill buttons.
+This is wrong.  Here is the working version I pointed you at:
 
-One solution for this, is to compile Linux kernel with "CONFIG_RFKILLL
-is no net".
-Than hardware/software rfkill buttons dosn't have any action to wlan-interfaces.
-
-Other method is use this patch.
-
-Do you know third method ?
+http://git.chromium.org/gitweb/?p=chromiumos/third_party/kernel.git;a=commit;h=b1785f108aee6d861d807701bcb6152c7145ded7
