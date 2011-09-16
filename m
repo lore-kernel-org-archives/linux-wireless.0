@@ -1,50 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:42913 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750715Ab1INWxj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 18:53:39 -0400
-Received: by wwf22 with SMTP id 22so2849909wwf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 15:53:38 -0700 (PDT)
-From: Miguel =?iso-8859-15?q?Mart=EDnez?= <el.quark@gmail.com>
-Reply-To: el.quark@gmail.com
-To: "641424@bugs.debian.org" <641424@bugs.debian.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Bug#641424: iwlagn: fails to reconnect to WPA2-enterprise (Reason: 23)
-Date: Wed, 14 Sep 2011 23:53:34 +0100
-References: <C5A7FB31FD9AEA42B600BDC3C74F8E00147CB207@orsmsx511.amr.corp.intel.com>
-In-Reply-To: <C5A7FB31FD9AEA42B600BDC3C74F8E00147CB207@orsmsx511.amr.corp.intel.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:4648 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932133Ab1IPT2V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Sep 2011 15:28:21 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 00/19] staging: brcm80211: 6th reaction for mainline
+ patch #2
+Date: Fri, 16 Sep 2011 12:27:49 -0700
+Message-ID: <1316201288-29635-1-git-send-email-frankyl@broadcom.com> (sfid-20110916_212826_330013_D3CFF70A)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201109142353.35030.el.quark@gmail.com> (sfid-20110915_005342_545240_412BB601)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OK, thanks for the tip. Debian kernel 3.0.0-1 doesn't have these options 
-enabled, so I'll get to know how good the debian kernel build tools are.
+Fullmac code clean up.
 
-$ grep CONFIG_IWLWIFI /boot/config-3.0.0-1-amd64 | grep -i debug
-# CONFIG_IWLWIFI_DEBUG is not set
-# CONFIG_IWLWIFI_LEGACY_DEBUG is not set
+Arend van Spriel (4):
+  staging: brcm80211: remove brcmfmac interface name override
+  staging: brcm80211: remove for_each_bss() macro from brcmfmac driver
+  staging: brcm80211: remove global variable from bcmsdh_sdmmc.c
+  staging: brcm80211: remove static global variables from dhd_sdio.c
 
-$ grep CONFIG_MAC80211 /boot/config-3.0.0-1-amd64 
-CONFIG_MAC80211=m
-CONFIG_MAC80211_HAS_RC=y
-CONFIG_MAC80211_RC_MINSTREL=y
-CONFIG_MAC80211_RC_MINSTREL_HT=y
-CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
-CONFIG_MAC80211_RC_DEFAULT="minstrel_ht"
-CONFIG_MAC80211_MESH=y
-CONFIG_MAC80211_LEDS=y
-# CONFIG_MAC80211_DEBUGFS is not set
-# CONFIG_MAC80211_DEBUG_MENU is not set
-CONFIG_MAC80211_HWSIM=m
+Franky Lin (8):
+  staging: brcm80211: remove SOFTAP code from fullmac
+  staging: brcm80211: remove fullmac module_param sd_f2_blocksize
+  staging: brcm80211: remove fullmac module_param brcmf_deferred_tx
+  staging: brcm80211: remove fullmac module_param for packet filter
+    feature
+  staging: brcm80211: remove global variable brcmf_roam from fullmac
+  staging: brcm80211: remove global variable brcmf_radio_up from
+    fullmac
+  staging: brcm80211: remove _brcmf_sysioc_thread in fullmac
+  staging: brcm80211: remove fullmac module_param for ARP offload
+    feature
 
-Also, Ubuntu 10.10 has kernel 2.6.35, with some extra sauce and backports. 
-I've seen some mentions of 2.6.38 in the changelogs. The iwlagn entries 
-mention only some rfkill changes, though.
+Roland Vossen (7):
+  staging: brcm80211: simplified brcmf_proto_ioctl()
+  staging: brcm80211: removed set_fs/get_fs/get_ds calls from
+    brcmf_dev_ioctl()
+  staging: brcm80211: fixed sparse endianness warnings on fullmac scan
+    pars
+  staging: brcm80211: fixed sparse endianness warnings on fullmac assoc
+    pars
+  staging: brcm80211: fixed sparse endianness warnings on fullmac scb
+    pars
+  staging: brcm80211: fixed sparse endianness warnings on fullmac
+    ratespec
+  staging: brcm80211: sparse endianness warnings on fullmac bss info
 
-Regards,
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |    4 -
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   31 ++--
+ drivers/staging/brcm80211/brcmfmac/dhd.h          |  118 ++++-------
+ drivers/staging/brcm80211/brcmfmac/dhd_cdc.c      |   12 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c   |   26 +--
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c    |  244 +++++----------------
+ drivers/staging/brcm80211/brcmfmac/dhd_proto.h    |    2 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |  244 ++++++++-------------
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    7 +-
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c  |  165 +++++++--------
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h  |    6 +-
+ drivers/staging/brcm80211/brcmsmac/pub.h          |    7 +
+ drivers/staging/brcm80211/include/defs.h          |    7 -
+ 13 files changed, 302 insertions(+), 571 deletions(-)
 
-Miguel
+
