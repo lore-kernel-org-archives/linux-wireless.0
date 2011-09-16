@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:50649 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772Ab1ITV05 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56311 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751225Ab1IPJ4K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 17:26:57 -0400
-Received: by qyk7 with SMTP id 7so1022082qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 14:26:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4E78FFEB.1090301@openwrt.org>
-References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com>
- <loom.20110918T004437-426@post.gmane.org> <1316437459.5995.29.camel@jlt3.sipsolutions.net>
- <36569806.Rgjanm0GiI@alex-1> <1316521312.3953.27.camel@jlt3.sipsolutions.net>
- <CAB=NE6VDSTAKK0pmyBOz6hw1pbxo7U6dxbrvg_F-y6CDB0paKw@mail.gmail.com>
- <4E78D990.3090601@openwrt.org> <CAB=NE6VZeCViBZA9++NcgZ2JcDppbp3OuagRVK02ENjdb-MAQA@mail.gmail.com>
- <4E78DF6F.3060304@openwrt.org> <CAB=NE6XqT_ZUV7F+0ZvCs-WgxZnJn3onMiWNtBi=+eCkMZMgPA@mail.gmail.com>
- <4E78EA05.6000005@openwrt.org> <CAB=NE6WhaNpjpernCGY9skU+e+cUurPxi7r-FKaeH5iybeqGEg@mail.gmail.com>
- <4E78FFEB.1090301@openwrt.org>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 20 Sep 2011 14:26:36 -0700
-Message-ID: <CAB=NE6W76dg_KaN6jB-OQ2xf7Xx93a4ruqzQDwg5+rcwOcSfXg@mail.gmail.com> (sfid-20110920_232700_630490_50F36F10)
-Subject: Re: [PATCH v3 3/3] mac80211: Add HT operation modes for IBSS
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Javier Cardona <javier@cozybit.com>,
-	Alexander Simon <an.alexsimon@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 16 Sep 2011 05:56:10 -0400
+Subject: Re: [PATCH 3.1] iwlagn: workaround bug crashing some APs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>
+In-Reply-To: <CAGXE3d8rVyF9VTtjDtatvX9e6dKLAGtYNEq5wEfvNGLtu_U9UQ@mail.gmail.com> (sfid-20110916_114247_284504_C5223F3E)
+References: <1316100982-1815-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <CAGXE3d8rVyF9VTtjDtatvX9e6dKLAGtYNEq5wEfvNGLtu_U9UQ@mail.gmail.com>
+	 (sfid-20110916_114247_284504_C5223F3E)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 16 Sep 2011 11:56:04 +0200
+Message-ID: <1316166964.4130.4.camel@jlt3.sipsolutions.net> (sfid-20110916_115618_903809_48929763)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 20, 2011 at 2:04 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> This is not really an IBSS specific issue. It applies to WDS or monitor mode
-> as well.
+On Fri, 2011-09-16 at 11:42 +0200, Helmut Schaa wrote:
+> <Hi,
+> 
+> On Thu, Sep 15, 2011 at 5:36 PM, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
+> > From: Don Fry <donald.h.fry@intel.com>
+> >
+> > This patch reverts commit 9b7688328422b88a7a15dc0dc123ad9ab1a6e22d which
+> > was introduced in 2.6.38-rc1.  It works around a problem where the iwlagn
+> > driver stimulates a bug crashing (requiring power cycle to recover) some
+> > APs under heavy traffic.
+> 
+> [...]
+> 
+> > +       /*
+> > +        * Including the following line will crash some AP's.  This
+> > +        * workaround removes the stimulus which causes the crash until
+> > +        * the AP software can be fixed.
+> >        hw->max_tx_aggregation_subframes = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
+> > +        */
+> 
+> Would be interesting to know which AP models suffer from this issue since
+> other drivers might also be affected if max_tx_aggregation_subframes is set
+> to something != 64 or 0.
+> 
+> Did this appear with the previous LINK_QUAL_AGG_FRAME_LIMIT_DEF
+> value of 31 too?
+> 
+> If we can crash APs by sending values != 64 or 0 it might even make sense
+> to not allow drivers to overwrite the max AMPDU size ...
 
-Excellent point!
+It isn't that sending that directly crashes the APs right away. It still
+needs some traffic, so there's a possibility that we send too long
+AMPDUs or something else like that and just can't find that bug ...
 
-> If we want to properly enforce Annex J channel pairs, this needs to
-> be moved to cfg80211.
+johannes
 
-This does not still address the issue of one peer finding out it
-cannot deal with an HT40 pair and correcting the topology and
-propagating this out. Not yet sure if for 802.11ac we'll need
-something similar but its worth considering.
-
-  Luis
