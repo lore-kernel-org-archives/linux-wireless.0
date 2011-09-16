@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61318 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751295Ab1IMJot (ORCPT
+Received: from mail-wy0-f180.google.com ([74.125.82.180]:50540 "EHLO
+	mail-wy0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752773Ab1IPQJU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 05:44:49 -0400
-Date: Tue, 13 Sep 2011 15:14:49 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 4/4] ath6kl: Fix random reconnect failures
-Message-ID: <20110913094448.GA8296@vasanth-laptop> (sfid-20110913_114506_208209_A25F7C68)
-References: <1315648597-17999-1-git-send-email-vthiagar@qca.qualcomm.com>
- <1315648597-17999-4-git-send-email-vthiagar@qca.qualcomm.com>
+	Fri, 16 Sep 2011 12:09:20 -0400
+Received: by wyj26 with SMTP id 26so4936652wyj.11
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 09:09:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1315648597-17999-4-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <4E737241.2080301@qca.qualcomm.com>
+References: <4E737241.2080301@qca.qualcomm.com>
+Date: Fri, 16 Sep 2011 21:39:18 +0530
+Message-ID: <CAD2nsn14EnEWyu2ifM6-5evQN4qGqe4Me7wsZ=xLPt+RBpJeWw@mail.gmail.com> (sfid-20110916_180925_681030_A3DCCA28)
+Subject: Re: ath9k_htc: "No free RX buffer" in monitor mode
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 10, 2011 at 03:26:37PM +0530, Vasanthakumar Thiagarajan wrote:
-> Sometimes connect events are received after disconnect
-> events from target, this puts host and target in different
-> states. When receiving a connect event in a wrong state,
-> make sure to send disconnect event to target to maintain
-> state consistency.
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 ++++++++
->  1 files changed, 8 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> index 0ad458b..2e4bea3 100644
-> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> @@ -460,6 +460,14 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
->  				   "%s: ath6k not in station mode\n", __func__);
->  			return;
->  		}
-> +
-> +		if ((ar->sme_state != SME_CONNECTING) &&
-> +		    (ar->sme_state != SME_CONNECTED)) {
-> +			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
-> +				   "Connect event at inappropriate state, sending disconnect cmd\n");
-> +			ath6kl_wmi_disconnect_cmd(ar->wmi);
-> +			return;
-> +		}
+Hi Kalle,
 
-Please hold on this patch, it seems to introduce regression when
-testing with different APs.
+On Fri, Sep 16, 2011 at 9:28 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Hi,
+>
+> I was testing monitor mode with ath9k_htc and my laptop got slower. Then
+> I noticed this:
+>
+> [ 9246.606150] ath: No free RX buffer
+> [ 9246.606156] ath: No free RX buffer
+> [ 9246.606582] ath: No free RX buffer
+> [ 9246.606590] ath: No free RX buffer
+>
+> And I saw it quite a lot:
 
-Vasanth
+we saw this some time back in AP mode occasionally and it never came
+up for as in monitor mode. we need to fix this.
+i will try to fix this.
+
+>
+> $ grep "ath: No free" /var/log/syslog | wc -l
+> 870950
+>
+> Kalle
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+-- 
+shafi
