@@ -1,52 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:37419 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752512Ab1IPJmn convert rfc822-to-8bit (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:41938 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751759Ab1IPStw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 05:42:43 -0400
-Received: by gxk6 with SMTP id 6so2127291gxk.5
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 02:42:43 -0700 (PDT)
+	Fri, 16 Sep 2011 14:49:52 -0400
+Date: Fri, 16 Sep 2011 20:44:15 +0200
+From: Greg KH <greg@kroah.com>
+To: Roland Vossen <rvossen@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/17] staging: brcm80211: 5th reaction to mainline patch
+ #2
+Message-ID: <20110916184415.GA23339@kroah.com> (sfid-20110916_204955_117323_9E6DF591)
+References: <1315900197-7260-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1316100982-1815-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1316100982-1815-1-git-send-email-wey-yi.w.guy@intel.com>
-Date: Fri, 16 Sep 2011 11:42:42 +0200
-Message-ID: <CAGXE3d8rVyF9VTtjDtatvX9e6dKLAGtYNEq5wEfvNGLtu_U9UQ@mail.gmail.com> (sfid-20110916_114247_284504_C5223F3E)
-Subject: Re: [PATCH 3.1] iwlagn: workaround bug crashing some APs
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Don Fry <donald.h.fry@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1315900197-7260-1-git-send-email-rvossen@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Sep 13, 2011 at 09:49:40AM +0200, Roland Vossen wrote:
+> Code cleanup, and one fix for a build problem.
+> 
+> This series applies to staging-next and depends on the following patch set:
+> 
+> Message-ID: <1315822504-24210-21-git-send-email-rvossen@broadcom.com>
 
-On Thu, Sep 15, 2011 at 5:36 PM, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
-> From: Don Fry <donald.h.fry@intel.com>
->
-> This patch reverts commit 9b7688328422b88a7a15dc0dc123ad9ab1a6e22d which
-> was introduced in 2.6.38-rc1.  It works around a problem where the iwlagn
-> driver stimulates a bug crashing (requiring power cycle to recover) some
-> APs under heavy traffic.
+All queued up, with 2 replacement patches used instead of their
+originals.
 
-[...]
-
-> +       /*
-> +        * Including the following line will crash some AP's.  This
-> +        * workaround removes the stimulus which causes the crash until
-> +        * the AP software can be fixed.
->        hw->max_tx_aggregation_subframes = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
-> +        */
-
-Would be interesting to know which AP models suffer from this issue since
-other drivers might also be affected if max_tx_aggregation_subframes is set
-to something != 64 or 0.
-
-Did this appear with the previous LINK_QUAL_AGG_FRAME_LIMIT_DEF
-value of 31 too?
-
-If we can crash APs by sending values != 64 or 0 it might even make sense
-to not allow drivers to overwrite the max AMPDU size ...
-
-Helmut
+greg k-h
