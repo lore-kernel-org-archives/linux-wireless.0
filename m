@@ -1,140 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:13291 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753216Ab1IVO6H (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48228 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751950Ab1IPKbI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 10:58:07 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [RFC 2/2] mac80211: Send the management frame at requested rate
-Date: Thu, 22 Sep 2011 20:28:36 +0530
-Message-ID: <1316703516-24216-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110922_165811_977479_ECF2EE05)
-In-Reply-To: <1316703516-24216-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1316703516-24216-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Fri, 16 Sep 2011 06:31:08 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 4so1527867fxe.19
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 03:31:07 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/6] b43: LCN-PHY: tweaks for channel switching
+Date: Fri, 16 Sep 2011 12:33:59 +0200
+Message-Id: <1316169243-8808-2-git-send-email-zajec5@gmail.com> (sfid-20110916_123117_992993_455C903A)
+In-Reply-To: <1316169243-8808-1-git-send-email-zajec5@gmail.com>
+References: <1316169243-8808-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whenever the scan request or tx_mgmt is requesting not to
-use CCK rate for managemet frames through
-NL80211_ATTR_TX_NO_CCK_RATE attribute, then mac80211 should
-select appropriate least non-CCK rate. This could help to
-send P2P probes and P2P action frames at non 11b rates
-without diabling 11b rates globally.
+They have been taken from brcmsmac, add Broadcom's copyright.
 
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- include/net/mac80211.h |    4 ++++
- net/mac80211/cfg.c     |    3 +++
- net/mac80211/rate.c    |   30 +++++++++++++++++++++++++++++-
- net/mac80211/tx.c      |    5 +++++
- 4 files changed, 41 insertions(+), 1 deletions(-)
+ drivers/net/wireless/b43/phy_lcn.c |   67 +++++++++++++++++++++++++++++++++--
+ 1 files changed, 63 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index c0f63fd..63a3634 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -363,6 +363,9 @@ struct ieee80211_bss_conf {
-  * @IEEE80211_TX_INTFL_TKIP_MIC_FAILURE: Marks this packet to be used for TKIP
-  *	testing. It will be sent out with incorrect Michael MIC key to allow
-  *	TKIP countermeasures to be tested.
-+ * @IEEE80211_TX_CTL_NO_CCK_RATE: This frame will be sent at non CCK rate.
-+ *	This flag is actually used for management frame especially for P2P frames
-+ *	not being sent at CCK rate at 2GHz band.
-  *
-  * Note: If you have to add new flags to the enumeration, then don't
-  *	 forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
-@@ -393,6 +396,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTL_STBC			= BIT(23) | BIT(24),
- 	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(25),
- 	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(26),
-+	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(27),
- };
+diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
+index d1dfeec..06d8efc 100644
+--- a/drivers/net/wireless/b43/phy_lcn.c
++++ b/drivers/net/wireless/b43/phy_lcn.c
+@@ -20,6 +20,14 @@
+   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
+   Boston, MA 02110-1301, USA.
  
- #define IEEE80211_TX_CTL_STBC_SHIFT		23
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 9cba010..56c3504 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1897,6 +1897,9 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
- 		flags |= IEEE80211_TX_CTL_TX_OFFCHAN;
- 	}
- 
-+	if (no_cck)
-+		flags |= IEEE80211_TX_CTL_NO_CCK_RATE;
++  This file incorporates work covered by the following copyright and
++  permission notice:
 +
- 	if (is_offchan && !offchan)
- 		return -EBUSY;
- 
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 3d5a2cb..6711954 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -233,6 +233,28 @@ static void rc_send_low_broadcast(s8 *idx, u32 basic_rates,
- 	/* could not find a basic rate; use original selection */
- }
- 
-+static inline s8
-+rate_lowest_non_cck_index(struct ieee80211_supported_band *sband,
-+			  struct ieee80211_sta *sta)
-+{
-+	int i;
++      Copyright (c) 2010 Broadcom Corporation
 +
-+	for (i = 0; i < sband->n_bitrates; i++) {
-+		struct ieee80211_rate *srate = &sband->bitrates[i];
-+		if ((srate->bitrate == 10) || (srate->bitrate == 20) ||
-+		    (srate->bitrate == 55) || (srate->bitrate == 110))
-+			continue;
++      Permission to use, copy, modify, and/or distribute this software for any
++      purpose with or without fee is hereby granted, provided that the above
++      copyright notice and this permission notice appear in all copies.
+ */
+ 
+ #include <linux/slab.h>
+@@ -278,14 +286,50 @@ static void b43_phy_lcn_sense_setup(struct b43_wldev *dev)
+  * Channel switching ops.
+  **************************************************/
+ 
+-static int b43_phy_lcn_set_channel(struct b43_wldev *dev,
+-				   struct ieee80211_channel *channel,
+-				   enum nl80211_channel_type channel_type)
++/* wlc_lcnphy_set_chanspec_tweaks */
++static void b43_phy_lcn_set_channel_tweaks(struct b43_wldev *dev, int channel)
+ {
+-	/* TODO: PLL and PHY ops */
++	struct bcma_drv_cc *cc = &dev->dev->bdev->bus->drv_cc;
 +
-+		if ((i != sband->n_bitrates) &&
-+		    rate_supported(sta, sband->band, i))
-+			return i;
++	b43_phy_maskset(dev, 0x448, ~0x300, (channel == 14) ? 0x200 : 0x100);
++
++	if (channel == 1 || channel == 2 || channel == 3 || channel == 4 ||
++	    channel == 9 || channel == 10 || channel == 11 || channel == 12) {
++		bcma_chipco_pll_write(cc, 0x2, 0x03000c04);
++		bcma_chipco_pll_maskset(cc, 0x3, 0x00ffffff, 0x0);
++		bcma_chipco_pll_write(cc, 0x4, 0x200005c0);
++
++		bcma_cc_set32(cc, BCMA_CC_PMU_CTL, 0x400);
++
++		b43_phy_write(dev, 0x942, 0);
++
++		/* b43_phy_lcn_txrx_spur_avoidance_mode(dev, false); */
++		b43_phy_maskset(dev, 0x424, (u16) ~0xff00, 0x1b00);
++		b43_phy_write(dev, 0x425, 0x5907);
++	} else {
++		bcma_chipco_pll_write(cc, 0x2, 0x03140c04);
++		bcma_chipco_pll_maskset(cc, 0x3, 0x00ffffff, 0x333333);
++		bcma_chipco_pll_write(cc, 0x4, 0x202c2820);
++
++		bcma_cc_set32(cc, BCMA_CC_PMU_CTL, 0x400);
++
++		b43_phy_write(dev, 0x942, 0);
++
++		/* b43_phy_lcn_txrx_spur_avoidance_mode(dev, true); */
++		b43_phy_maskset(dev, 0x424, (u16) ~0xff00, 0x1f00);
++		b43_phy_write(dev, 0x425, 0x590a);
 +	}
-+
-+	/* No matching rate found */
-+	return 0;
+ 
+ 	b43_phy_set(dev, 0x44a, 0x44);
+ 	b43_phy_write(dev, 0x44a, 0x80);
 +}
 +
-+
- bool rate_control_send_low(struct ieee80211_sta *sta,
- 			   void *priv_sta,
- 			   struct ieee80211_tx_rate_control *txrc)
-@@ -242,7 +264,13 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
- 	int mcast_rate;
++/* wlc_phy_chanspec_set_lcnphy */
++static int b43_phy_lcn_set_channel(struct b43_wldev *dev,
++				   struct ieee80211_channel *channel,
++				   enum nl80211_channel_type channel_type)
++{
++	b43_phy_lcn_set_channel_tweaks(dev, channel->hw_value);
  
- 	if (!sta || !priv_sta || rc_no_data_or_no_ack(txrc)) {
--		info->control.rates[0].idx = rate_lowest_index(txrc->sband, sta);
-+		if ((sband->band != IEEE80211_BAND_2GHZ) ||
-+		    !(info->flags & IEEE80211_TX_CTL_NO_CCK_RATE))
-+			info->control.rates[0].idx =
-+				rate_lowest_index(txrc->sband, sta);
-+		else
-+			info->control.rates[0].idx =
-+				rate_lowest_non_cck_index(txrc->sband, sta);
- 		info->control.rates[0].count =
- 			(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
- 			1 : txrc->hw->max_rate_tries;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7cd6c28..4f2d5aa 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -639,6 +639,11 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
- 		txrc.rts = rts = true;
- 	}
- 
-+	if (ieee80211_is_probe_req(hdr->frame_control) &&
-+	    tx->sdata->local->scan_req &&
-+	    tx->sdata->local->scan_req->no_cck)
-+		info->flags |= IEEE80211_TX_CTL_NO_CCK_RATE;
+ 	b43_phy_set(dev, 0x44a, 0x44);
+ 	b43_phy_write(dev, 0x44a, 0x80);
+@@ -336,6 +380,8 @@ static void b43_phy_lcn_op_prepare_structs(struct b43_wldev *dev)
+ /* wlc_phy_init_lcnphy */
+ static int b43_phy_lcn_op_init(struct b43_wldev *dev)
+ {
++	struct bcma_drv_cc *cc = &dev->dev->bdev->bus->drv_cc;
 +
- 	/*
- 	 * Use short preamble if the BSS can handle it, but not for
- 	 * management frames unless we know the receiver can handle
+ 	b43_phy_set(dev, 0x44a, 0x80);
+ 	b43_phy_mask(dev, 0x44a, 0x7f);
+ 	b43_phy_set(dev, 0x6d1, 0x80);
+@@ -359,6 +405,19 @@ static int b43_phy_lcn_op_init(struct b43_wldev *dev)
+ 
+ 	b43_phy_lcn_sense_setup(dev);
+ 
++	b43_switch_channel(dev, dev->phy.channel);
++
++	bcma_chipco_regctl_maskset(cc, 0, 0xf, 0x9);
++	bcma_chipco_chipctl_maskset(cc, 0, 0, 0x03cddddd);
++
++	/* TODO */
++
++	b43_phy_set(dev, 0x448, 0x4000);
++	udelay(100);
++	b43_phy_mask(dev, 0x448, ~0x4000);
++
++	/* TODO */
++
+ 	return 0;
+ }
+ 
 -- 
-1.7.6.3
+1.7.3.4
 
