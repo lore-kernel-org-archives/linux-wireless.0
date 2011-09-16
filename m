@@ -1,232 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:55312 "EHLO
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48228 "EHLO
 	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751105Ab1I1JgF (ORCPT
+	with ESMTP id S1751756Ab1IPKbG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 05:36:05 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 4so360088fxe.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2011 02:36:04 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Kalyan C Gaddam <chakkal@iit.edu>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 2/5] mac80211: standardize adding supported rates IEs
-Date: Wed, 28 Sep 2011 12:35:51 +0300
-Message-Id: <1317202554-21221-2-git-send-email-arik@wizery.com> (sfid-20110928_113609_775277_E540B542)
-In-Reply-To: <1317202554-21221-1-git-send-email-arik@wizery.com>
-References: <1317202554-21221-1-git-send-email-arik@wizery.com>
+	Fri, 16 Sep 2011 06:31:06 -0400
+Received: by fxe4 with SMTP id 4so1527867fxe.19
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 03:31:05 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/6] bcma: cc: export more control functions
+Date: Fri, 16 Sep 2011 12:33:58 +0200
+Message-Id: <1316169243-8808-1-git-send-email-zajec5@gmail.com> (sfid-20110916_123116_456124_69F6B612)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Relocate the mesh implementation of adding the (extended) supported
-rates IE to util.c, anticipating its use by other parts of mac80211.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Cc: Kalyan C Gaddam <chakkal@iit.edu>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-v1->2: un-export the helper functions.
+ drivers/bcma/driver_chipcommon_pmu.c        |   38 ++++++++++++++++++++------
+ include/linux/bcma/bcma_driver_chipcommon.h |    9 ++++++
+ 2 files changed, 38 insertions(+), 9 deletions(-)
 
- include/net/mac80211.h    |    5 ++++
- net/mac80211/mesh.c       |   58 ---------------------------------------------
- net/mac80211/mesh.h       |    4 ---
- net/mac80211/mesh_plink.c |    4 +-
- net/mac80211/tx.c         |    4 +-
- net/mac80211/util.c       |   57 ++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 66 insertions(+), 66 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index c0f63fd..4dfead6 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3439,4 +3439,9 @@ void ieee80211_enable_rssi_reports(struct ieee80211_vif *vif,
- 				   int rssi_max_thold);
- 
- void ieee80211_disable_rssi_reports(struct ieee80211_vif *vif);
-+
-+int ieee80211_add_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb);
-+
-+int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif,
-+				struct sk_buff *skb);
- #endif /* MAC80211_H */
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index a4225ae..a7078fd 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -320,64 +320,6 @@ mesh_add_rsn_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 	return 0;
+diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
+index 4bc10aa..2968d80 100644
+--- a/drivers/bcma/driver_chipcommon_pmu.c
++++ b/drivers/bcma/driver_chipcommon_pmu.c
+@@ -18,20 +18,40 @@ static u32 bcma_chipco_pll_read(struct bcma_drv_cc *cc, u32 offset)
+ 	return bcma_cc_read32(cc, BCMA_CC_PLLCTL_DATA);
  }
  
--int
--mesh_add_srates_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_supported_band *sband;
--	int rate;
--	u8 i, rates, *pos;
--
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
--	rates = sband->n_bitrates;
--	if (rates > 8)
--		rates = 8;
--
--	if (skb_tailroom(skb) < rates + 2)
--		return -ENOMEM;
--
--	pos = skb_put(skb, rates + 2);
--	*pos++ = WLAN_EID_SUPP_RATES;
--	*pos++ = rates;
--	for (i = 0; i < rates; i++) {
--		rate = sband->bitrates[i].bitrate;
--		*pos++ = (u8) (rate / 5);
--	}
--
--	return 0;
--}
--
--int
--mesh_add_ext_srates_ie(struct sk_buff *skb,
--		       struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_supported_band *sband;
--	int rate;
--	u8 i, exrates, *pos;
--
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
--	exrates = sband->n_bitrates;
--	if (exrates > 8)
--		exrates -= 8;
--	else
--		exrates = 0;
--
--	if (skb_tailroom(skb) < exrates + 2)
--		return -ENOMEM;
--
--	if (exrates) {
--		pos = skb_put(skb, exrates + 2);
--		*pos++ = WLAN_EID_EXT_SUPP_RATES;
--		*pos++ = exrates;
--		for (i = 8; i < sband->n_bitrates; i++) {
--			rate = sband->bitrates[i].bitrate;
--			*pos++ = (u8) (rate / 5);
--		}
--	}
--	return 0;
--}
--
- int mesh_add_ds_params_ie(struct sk_buff *skb,
- 			  struct ieee80211_sub_if_data *sdata)
+-static void bcma_chipco_chipctl_maskset(struct bcma_drv_cc *cc,
+-					u32 offset, u32 mask, u32 set)
++void bcma_chipco_pll_write(struct bcma_drv_cc *cc, u32 offset, u32 value)
  {
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 7118e8e..8c00e2d 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -210,10 +210,6 @@ int mesh_add_rsn_ie(struct sk_buff *skb,
- 		    struct ieee80211_sub_if_data *sdata);
- int mesh_add_vendor_ies(struct sk_buff *skb,
- 			struct ieee80211_sub_if_data *sdata);
--int mesh_add_srates_ie(struct sk_buff *skb,
--		       struct ieee80211_sub_if_data *sdata);
--int mesh_add_ext_srates_ie(struct sk_buff *skb,
--			   struct ieee80211_sub_if_data *sdata);
- int mesh_add_ds_params_ie(struct sk_buff *skb,
- 			  struct ieee80211_sub_if_data *sdata);
- void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 1213a23..9cc5029 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -185,8 +185,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 			pos = skb_put(skb, 2);
- 			memcpy(pos + 2, &plid, 2);
- 		}
--		if (mesh_add_srates_ie(skb, sdata) ||
--		    mesh_add_ext_srates_ie(skb, sdata) ||
-+		if (ieee80211_add_srates_ie(&sdata->vif, skb) ||
-+		    ieee80211_add_ext_srates_ie(&sdata->vif, skb) ||
- 		    mesh_add_rsn_ie(skb, sdata) ||
- 		    mesh_add_meshid_ie(skb, sdata) ||
- 		    mesh_add_meshconf_ie(skb, sdata))
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7cd6c28..542272a 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2307,9 +2307,9 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 		*pos++ = WLAN_EID_SSID;
- 		*pos++ = 0x0;
+-	u32 value;
++	bcma_cc_write32(cc, BCMA_CC_PLLCTL_ADDR, offset);
++	bcma_cc_read32(cc, BCMA_CC_PLLCTL_ADDR);
++	bcma_cc_write32(cc, BCMA_CC_PLLCTL_DATA, value);
++}
++EXPORT_SYMBOL_GPL(bcma_chipco_pll_write);
  
--		if (mesh_add_srates_ie(skb, sdata) ||
-+		if (ieee80211_add_srates_ie(&sdata->vif, skb) ||
- 		    mesh_add_ds_params_ie(skb, sdata) ||
--		    mesh_add_ext_srates_ie(skb, sdata) ||
-+		    ieee80211_add_ext_srates_ie(&sdata->vif, skb) ||
- 		    mesh_add_rsn_ie(skb, sdata) ||
- 		    mesh_add_meshid_ie(skb, sdata) ||
- 		    mesh_add_meshconf_ie(skb, sdata) ||
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 4b1466d..b6f87c3 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1353,3 +1353,60 @@ void ieee80211_disable_rssi_reports(struct ieee80211_vif *vif)
- 	_ieee80211_enable_rssi_reports(sdata, 0, 0);
+-	bcma_cc_read32(cc, BCMA_CC_CHIPCTL_ADDR);
++void bcma_chipco_pll_maskset(struct bcma_drv_cc *cc, u32 offset, u32 mask,
++			     u32 set)
++{
++	bcma_cc_write32(cc, BCMA_CC_PLLCTL_ADDR, offset);
++	bcma_cc_read32(cc, BCMA_CC_PLLCTL_ADDR);
++	bcma_cc_maskset32(cc, BCMA_CC_PLLCTL_DATA, mask, set);
++}
++EXPORT_SYMBOL_GPL(bcma_chipco_pll_maskset);
++
++void bcma_chipco_chipctl_maskset(struct bcma_drv_cc *cc,
++				 u32 offset, u32 mask, u32 set)
++{
+ 	bcma_cc_write32(cc, BCMA_CC_CHIPCTL_ADDR, offset);
+ 	bcma_cc_read32(cc, BCMA_CC_CHIPCTL_ADDR);
+-	value = bcma_cc_read32(cc, BCMA_CC_CHIPCTL_DATA);
+-	value &= mask;
+-	value |= set;
+-	bcma_cc_write32(cc, BCMA_CC_CHIPCTL_DATA, value);
+-	bcma_cc_read32(cc, BCMA_CC_CHIPCTL_DATA);
++	bcma_cc_maskset32(cc, BCMA_CC_CHIPCTL_DATA, mask, set);
++}
++EXPORT_SYMBOL_GPL(bcma_chipco_chipctl_maskset);
++
++void bcma_chipco_regctl_maskset(struct bcma_drv_cc *cc, u32 offset, u32 mask,
++				u32 set)
++{
++	bcma_cc_write32(cc, BCMA_CC_REGCTL_ADDR, offset);
++	bcma_cc_read32(cc, BCMA_CC_REGCTL_ADDR);
++	bcma_cc_maskset32(cc, BCMA_CC_REGCTL_DATA, mask, set);
  }
- EXPORT_SYMBOL(ieee80211_disable_rssi_reports);
++EXPORT_SYMBOL_GPL(bcma_chipco_regctl_maskset);
+ 
+ static void bcma_pmu_pll_init(struct bcma_drv_cc *cc)
+ {
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index a7ae33d..1526d96 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -378,4 +378,13 @@ u32 bcma_chipco_gpio_polarity(struct bcma_drv_cc *cc, u32 mask, u32 value);
+ /* PMU support */
+ extern void bcma_pmu_init(struct bcma_drv_cc *cc);
+ 
++extern void bcma_chipco_pll_write(struct bcma_drv_cc *cc, u32 offset,
++				  u32 value);
++extern void bcma_chipco_pll_maskset(struct bcma_drv_cc *cc, u32 offset,
++				    u32 mask, u32 set);
++extern void bcma_chipco_chipctl_maskset(struct bcma_drv_cc *cc,
++					u32 offset, u32 mask, u32 set);
++extern void bcma_chipco_regctl_maskset(struct bcma_drv_cc *cc,
++				       u32 offset, u32 mask, u32 set);
 +
-+int ieee80211_add_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
-+	int rate;
-+	u8 i, rates, *pos;
-+
-+	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+	rates = sband->n_bitrates;
-+	if (rates > 8)
-+		rates = 8;
-+
-+	if (skb_tailroom(skb) < rates + 2)
-+		return -ENOMEM;
-+
-+	pos = skb_put(skb, rates + 2);
-+	*pos++ = WLAN_EID_SUPP_RATES;
-+	*pos++ = rates;
-+	for (i = 0; i < rates; i++) {
-+		rate = sband->bitrates[i].bitrate;
-+		*pos++ = (u8) (rate / 5);
-+	}
-+
-+	return 0;
-+}
-+
-+int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
-+	int rate;
-+	u8 i, exrates, *pos;
-+
-+	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+	exrates = sband->n_bitrates;
-+	if (exrates > 8)
-+		exrates -= 8;
-+	else
-+		exrates = 0;
-+
-+	if (skb_tailroom(skb) < exrates + 2)
-+		return -ENOMEM;
-+
-+	if (exrates) {
-+		pos = skb_put(skb, exrates + 2);
-+		*pos++ = WLAN_EID_EXT_SUPP_RATES;
-+		*pos++ = exrates;
-+		for (i = 8; i < sband->n_bitrates; i++) {
-+			rate = sband->bitrates[i].bitrate;
-+			*pos++ = (u8) (rate / 5);
-+		}
-+	}
-+	return 0;
-+}
+ #endif /* LINUX_BCMA_DRIVER_CC_H_ */
 -- 
-1.7.4.1
+1.7.3.4
 
