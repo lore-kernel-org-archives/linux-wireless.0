@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54907 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751757Ab1ISGxA (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:45069 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751968Ab1IPLKh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 02:53:00 -0400
-Message-ID: <4E76E6C8.3080003@qca.qualcomm.com> (sfid-20110919_085307_604991_F09459FC)
-Date: Mon, 19 Sep 2011 09:52:56 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Fri, 16 Sep 2011 07:10:37 -0400
+Received: by gxk6 with SMTP id 6so2199058gxk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 04:10:36 -0700 (PDT)
 MIME-Version: 1.0
-To: Vivek Natarajan <nataraja@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: Indicate the roaming capability of the firmware
-References: <1316167723-2346-1-git-send-email-nataraja@qca.qualcomm.com>
-In-Reply-To: <1316167723-2346-1-git-send-email-nataraja@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <1316166964.4130.4.camel@jlt3.sipsolutions.net>
+References: <1316100982-1815-1-git-send-email-wey-yi.w.guy@intel.com>
+	<CAGXE3d8rVyF9VTtjDtatvX9e6dKLAGtYNEq5wEfvNGLtu_U9UQ@mail.gmail.com>
+	<1316166964.4130.4.camel@jlt3.sipsolutions.net>
+Date: Fri, 16 Sep 2011 13:10:36 +0200
+Message-ID: <CAGXE3d8Ctx9-yD=2W=d_wJRSFHW7RHo=w1+ZKbN_wU97YnD-0A@mail.gmail.com> (sfid-20110916_131043_096395_A9FC6E9A)
+Subject: Re: [PATCH 3.1] iwlagn: workaround bug crashing some APs
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/16/2011 01:08 PM, Vivek Natarajan wrote:
-> Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/init.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-> index b9b13a0..38d7e94 100644
-> --- a/drivers/net/wireless/ath/ath6kl/init.c
-> +++ b/drivers/net/wireless/ath/ath6kl/init.c
-> @@ -1494,6 +1494,8 @@ static int ath6kl_init(struct net_device *dev)
->  	if (!status)
->  		goto ath6kl_init_done;
->  
-> +	ar->wdev->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
-> +
->  err_htc_stop:
->  	ath6kl_htc_stop(ar->htc_target);
->  err_rxbuf_cleanup:
+On Fri, Sep 16, 2011 at 11:56 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>> If we can crash APs by sending values != 64 or 0 it might even make sense
+>> to not allow drivers to overwrite the max AMPDU size ...
+>
+> It isn't that sending that directly crashes the APs right away. It still
+> needs some traffic, so there's a possibility that we send too long
+> AMPDUs or something else like that and just can't find that bug ...
 
-You have to document what this change means in practise and what issue
-it is actually fixing. (firmware/wpas getting out of sync, wpas not
-handling roaming after the flag is set etc.)
-
-Also please address Sam's comment.
-
-Kalle
+Understood, thanks Johannes.
