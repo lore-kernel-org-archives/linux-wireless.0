@@ -1,51 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:38783 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933094Ab1IMXol (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 19:44:41 -0400
-From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: Miguel Martinez <el.quark@gmail.com>,
-	"641424@bugs.debian.org" <641424@bugs.debian.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 13 Sep 2011 16:44:38 -0700
-Subject: RE: Bug#641424: iwlagn: fails to reconnect to WPA2-enterprise
- (Reason: 23)
-Message-ID: <C5A7FB31FD9AEA42B600BDC3C74F8E00147CA869@orsmsx511.amr.corp.intel.com> (sfid-20110914_014444_019082_703D0D42)
-References: <20110913111546.6947.55565.reportbug@mark>
-	 <1315952954.14749.18.camel@deadeye>
-	 <C5A7FB31FD9AEA42B600BDC3C74F8E00147CA83E@orsmsx511.amr.corp.intel.com>
- <1315957298.14749.29.camel@deadeye>
-In-Reply-To: <1315957298.14749.29.camel@deadeye>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48228 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751950Ab1IPKbV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Sep 2011 06:31:21 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 4so1527867fxe.19
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 03:31:20 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 6/6] b43: LCN-PHY: add more init tweaks
+Date: Fri, 16 Sep 2011 12:34:03 +0200
+Message-Id: <1316169243-8808-6-git-send-email-zajec5@gmail.com> (sfid-20110916_123124_954605_6A332DEF)
+In-Reply-To: <1316169243-8808-1-git-send-email-zajec5@gmail.com>
+References: <1316169243-8808-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VGhhbmtzIGZvciB0aGUgcmVhc29uIGNvZGUgaW5mbywgQmVuLA0KDQpJIG1lYW50IHRoYXQgd2Ug
-Y291bGQgY29udGludWUgb24gdGhlIERlYmlhbiBidWd6aWxsYS4gT3IsIHlvdSBjYW4gcG9zdCBp
-dCB0bzogaHR0cDovL2J1Z3ppbGxhLmludGVsbGludXh3aXJlbGVzcy5vcmcvIC0tIHRoZSBidWd6
-aWxsYSBmb3IgdGhlIGl3bHdpZmkgZHJpdmVyICsgY3VycmVudGx5IHN1cHBvcnRlZCBkZXZpY2Vz
-Lg0KDQpUaGFua3MsDQptZWVuYWtzaGkNCg0KPi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+
-RnJvbTogQmVuIEh1dGNoaW5ncyBbbWFpbHRvOmJlbkBkZWNhZGVudC5vcmcudWtdDQo+U2VudDog
-VHVlc2RheSwgU2VwdGVtYmVyIDEzLCAyMDExIDQ6NDEgUE0NCj5UbzogVmVua2F0YXJhbWFuLCBN
-ZWVuYWtzaGkNCj5DYzogTWlndWVsIE1hcnRpbmV6OyA2NDE0MjRAYnVncy5kZWJpYW4ub3JnOyBs
-aW51eC13aXJlbGVzcw0KPlN1YmplY3Q6IFJFOiBCdWcjNjQxNDI0OiBpd2xhZ246IGZhaWxzIHRv
-IHJlY29ubmVjdCB0byBXUEEyLWVudGVycHJpc2UNCj4oUmVhc29uOiAyMykNCj4NCj5PbiBUdWUs
-IDIwMTEtMDktMTMgYXQgMTY6MzMgLTA3MDAsIFZlbmthdGFyYW1hbiwgTWVlbmFrc2hpIHdyb3Rl
-Og0KPj4gSGkgTWlndWVsLA0KPj4NCj4+IEl0IGxvb2tzIGxpa2UgdGhlIEFQIHlvdSdyZSBjb25u
-ZWN0ZWQgdG8gYXQgdGhlIFVuaXZlcnNpdHkgaXMgYSBDaXNjbw0KPj4gQVAuIEknbSBub3Qgc3Vy
-ZSB3aGF0IHJlYXNvbiBjb2RlIDIzIGlzLCB3aWxsIG5lZWQgdG8gcmVzZWFyY2ggaXQNCj4+IHNv
-bWUuDQo+DQo+CVdMQU5fUkVBU09OX0lFRUU4MDIxWF9GQUlMRUQgPSAyMywNCj4NCj4+IEluIHRo
-ZSBtZWFudGltZSwgY2FuIHlvdSBkbyB0aGUgZm9sbG93aW5nIHNvIHdlIGNhbiBzZWUgd2hhdCdz
-IGdvaW5nDQo+PiBvbiBpbiB0aGUgaXdsd2lmaSBkcml2ZXI6DQo+Pg0KPj4gMSkgRW5hYmxlIGRl
-YnVnZ2luZyBmb3IgdGhlIGl3bHdpZmkgZHJpdmVyIGxpa2Ugc286DQo+PiAJbW9kcHJvYmUgaXds
-YWduIGRlYnVnPTB4NDdmZmYNCj4+IFlvdSdsbCBuZWVkIHRvIGVuYWJsZSBkZWJ1Z2dpbmcgZm9y
-IGl3bHdpZmkgd2hpbGUgYnVpbGRpbmcgdGhlIGtlcm5lbC4NCj4+DQo+PiAyKSBBIHdpcmVsZXNz
-IHNuaWZmZXIgbG9nIHdvdWxkIGFsc28gYmUgdXNlZnVsIChub3Qgc3VyZSB5b3UncmUgaW4gYQ0K
-Pj4gcG9zaXRpb24gdG8gZ2F0aGVyIHRoaXMgbG9nKS4NCj4+DQo+PiBQbGVhc2Ugc2VuZCBtZSAo
-b25seSkgdGhlIGxvZy4gV2UgY2FuIHRha2UgdGhpcyB0byBidWd6aWxsYSBhcyB3ZWxsLg0KPlsu
-Li5dDQo+DQo+SWYgeW91IG1lYW4gYnVnemlsbGEua2VybmVsLm9yZywgdGhhdCBpcyBjdXJyZW50
-bHkgZG93biBhbG9uZyB3aXRoIG11Y2ggb2YgdGhlDQo+a2VybmVsLm9yZyBpbmZyYXN0cnVjdHVy
-ZS4NCj4NCj5CZW4uDQo+DQo+LS0NCj5CZW4gSHV0Y2hpbmdzDQo+QWxsIGV4dHJlbWlzdHMgc2hv
-dWxkIGJlIHRha2VuIG91dCBhbmQgc2hvdC4NCg==
+
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_lcn.c |   22 ++++++++++++++++++++--
+ 1 files changed, 20 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
+index 8810bc9..3ac2357 100644
+--- a/drivers/net/wireless/b43/phy_lcn.c
++++ b/drivers/net/wireless/b43/phy_lcn.c
+@@ -307,12 +307,30 @@ static void b43_phy_lcn_bu_tweaks(struct b43_wldev *dev)
+ 
+ 	b43_phy_write(dev, 0x7d6, 0x0902);
+ 
+-	/* TODO: more ops */
++	b43_phy_maskset(dev, 0x429, ~0xf, 0x9);
++	b43_phy_maskset(dev, 0x429, ~(0x3f << 4), 0xe << 4);
+ 
+ 	if (dev->phy.rev == 1) {
+-		/* TODO: more ops */
++		b43_phy_maskset(dev, 0x423, ~0xff, 0x46);
++		b43_phy_maskset(dev, 0x411, ~0xff, 1);
++		b43_phy_set(dev, 0x434, 0xff); /* FIXME: update to wl */
++
++		/* TODO: wl operates on PHY 0x416, brcmsmac is outdated here */
++
++		b43_phy_maskset(dev, 0x656, ~0xf, 2);
++		b43_phy_set(dev, 0x44d, 4);
++
++		b43_radio_set(dev, 0x0f7, 0x4);
++		b43_radio_mask(dev, 0x0f1, ~0x3);
++		b43_radio_maskset(dev, 0x0f2, ~0xf8, 0x90);
++		b43_radio_maskset(dev, 0x0f3, ~0x3, 0x2);
++		b43_radio_maskset(dev, 0x0f3, ~0xf0, 0xa0);
++
++		b43_radio_set(dev, 0x11f, 0x2);
+ 
+ 		b43_phy_lcn_clear_tx_power_offsets(dev);
++
++		/* TODO: something more? */
+ 	}
+ }
+ 
+-- 
+1.7.3.4
+
