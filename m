@@ -1,68 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li235-22.members.linode.com ([173.255.225.22]:57236 "EHLO
-	erley.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750832Ab1IXPn0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Sep 2011 11:43:26 -0400
-Message-ID: <4E7DF8BB.1040807@erley.org> (sfid-20110924_174335_028519_A3FC24DA)
-Date: Sat, 24 Sep 2011 11:35:23 -0400
-From: Pat Erley <pat-lkml@erley.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:3495 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756132Ab1IPT20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Sep 2011 15:28:26 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 04/19] staging: brcm80211: remove fullmac module_param
+ for packet filter feature
+Date: Fri, 16 Sep 2011 12:27:53 -0700
+Message-ID: <1316201288-29635-5-git-send-email-frankyl@broadcom.com> (sfid-20110916_212842_939705_7B049827)
+In-Reply-To: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
+References: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-To: James <bjlockie@lockie.ca>
-CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: Re: higher N rates
-References: <4E7D4EC4.2040506@lockie.ca>
-In-Reply-To: <4E7D4EC4.2040506@lockie.ca>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/2011 11:30 PM, James wrote:
-> $ iw dev wlan0 scan
-> 
-> printed this for my N (only) router:
-> 
-> Supported rates: 1.0* 2.0* 5.5* 11.0* 18.0 24.0 36.0 54.0
-> Extended supported rates: 6.0 9.0 12.0 48.0
-> 
-> Why doesn't it print the higher N rates?
+Use constant values for packet filter configuration
 
-I may be WAY off base here, but I believe iw dev wlan0 scan reports 
-what's shown in the beacons, and not what rates are actually negotiable.  
-Beacons only directly advertise 'pre-n' rates (the basic 802.11abg rates).
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd.h        |    9 ---------
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c |   13 ++++---------
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c  |   12 ------------
+ 3 files changed, 4 insertions(+), 30 deletions(-)
 
-If you look at more of the scan results, you should see something like:
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index c351349..329851c 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -673,15 +673,6 @@ extern uint brcmf_arp_mode;
+ /* ARP offload enable */
+ extern uint brcmf_arp_enable;
+ 
+-/* Pkt filte enable control */
+-extern uint brcmf_pkt_filter_enable;
+-
+-/*  Pkt filter init setup */
+-extern uint brcmf_pkt_filter_init;
+-
+-/* Pkt filter mode control */
+-extern uint brcmf_master_mode;
+-
+ /* Roaming mode control */
+ extern uint brcmf_roam;
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+index fd39998..5ae4a40 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+@@ -865,15 +865,10 @@ int brcmf_c_preinit_ioctls(struct brcmf_pub *drvr)
+ 	brcmf_c_arp_offload_enable(drvr, brcmf_arp_enable);
+ 
+ 	/* Set up pkt filter */
+-	if (brcmf_pkt_filter_enable) {
+-		for (i = 0; i < drvr->pktfilter_count; i++) {
+-			brcmf_c_pktfilter_offload_set(drvr,
+-						  drvr->pktfilter[i]);
+-			brcmf_c_pktfilter_offload_enable(drvr,
+-			     drvr->pktfilter[i],
+-			     brcmf_pkt_filter_init,
+-			     brcmf_master_mode);
+-		}
++	for (i = 0; i < drvr->pktfilter_count; i++) {
++		brcmf_c_pktfilter_offload_set(drvr, drvr->pktfilter[i]);
++		brcmf_c_pktfilter_offload_enable(drvr, drvr->pktfilter[i],
++						 0, true);
+ 	}
+ 
+ 	brcmf_os_proto_unblock(drvr);
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 8286885..8e729d8 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -98,18 +98,6 @@ module_param(brcmf_arp_mode, uint, 0);
+ uint brcmf_arp_enable = true;
+ module_param(brcmf_arp_enable, uint, 0);
+ 
+-/* Global Pkt filter enable control */
+-uint brcmf_pkt_filter_enable = true;
+-module_param(brcmf_pkt_filter_enable, uint, 0);
+-
+-/*  Pkt filter init setup */
+-uint brcmf_pkt_filter_init;
+-module_param(brcmf_pkt_filter_init, uint, 0);
+-
+-/* Pkt filter mode control */
+-uint brcmf_master_mode = true;
+-module_param(brcmf_master_mode, uint, 0);
+-
+ /* Contorl fw roaming */
+ uint brcmf_roam = 1;
+ 
+-- 
+1.7.1
 
-	HT capabilities:
-		Capabilities: 0x11ce
-			HT20/HT40
-			SM Power Save disabled
-			RX HT40 SGI
-			TX STBC
-			RX STBC 1-stream
-			Max AMSDU length: 3839 bytes
-			DSSS/CCK HT40
-		Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
-		Minimum RX AMPDU time spacing: 8 usec (0x06)
-		HT TX/RX MCS rate indexes supported: 0-15
-	HT operation:
-		 * primary channel: 36
-		 * secondary channel offset: above
-		 * STA channel width: any
-		 * RIFS: 0
-		 * HT protection: no
-		 * non-GF present: 0
-		 * OBSS non-GF present: 0
-		 * dual beacon: 0
-		 * dual CTS protection: 0
-		 * STBC beacon: 0
-		 * L-SIG TXOP Prot: 0
-		 * PCO active: 0
-		 * PCO phase: 0
 
-Which outlines the 802.11n parameters that your device and the AP can use
-to negotiate 802.11n operation.  Perhaps there is something more that should
-be reported, but you'll see throughputs in the 802.11n range WHEN it's 
-warranted.  With my DSL connection, I rarely see rates above 9mbit in use (my 
-DSL is 1.5mbit down).
-
-Pat
