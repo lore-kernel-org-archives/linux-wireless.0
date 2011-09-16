@@ -1,54 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:39439 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:57940 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756706Ab1I2PBY (ORCPT
+	with ESMTP id S1752964Ab1IPP7B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 11:01:24 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/4] ath6kl: Fix htc_packet leak in ath6kl_htc_rx_fetch()
-Date: Thu, 29 Sep 2011 20:31:14 +0530
-Message-ID: <1317308476-16204-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110929_170128_887073_4B9DFEBC)
-In-Reply-To: <1317308476-16204-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1317308476-16204-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Fri, 16 Sep 2011 11:59:01 -0400
+Message-ID: <4E737241.2080301@qca.qualcomm.com> (sfid-20110916_175906_929689_FD491149)
+Date: Fri, 16 Sep 2011 18:58:57 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: ath9k_htc: "No free RX buffer" in monitor mode
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index 7bc9884..4a03dac 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -1715,12 +1715,10 @@ static int ath6kl_htc_rx_fetch(struct htc_target *target,
- 			packet = list_first_entry(rx_pktq, struct htc_packet,
- 						   list);
- 
--			list_del(&packet->list);
--
- 			/* fully synchronous */
- 			packet->completion = NULL;
- 
--			if (!list_empty(rx_pktq))
-+			if (!list_is_singular(rx_pktq))
- 				/*
- 				 * look_aheads in all packet
- 				 * except the last one in the
-@@ -1735,7 +1733,7 @@ static int ath6kl_htc_rx_fetch(struct htc_target *target,
- 			if (status)
- 				return status;
- 
--			list_add_tail(&packet->list, comp_pktq);
-+			list_move_tail(&packet->list, comp_pktq);
- 		}
- 	}
- 
--- 
-1.7.0.4
+I was testing monitor mode with ath9k_htc and my laptop got slower. Then
+I noticed this:
 
+[ 9246.606150] ath: No free RX buffer
+[ 9246.606156] ath: No free RX buffer
+[ 9246.606582] ath: No free RX buffer
+[ 9246.606590] ath: No free RX buffer
+
+And I saw it quite a lot:
+
+$ grep "ath: No free" /var/log/syslog | wc -l
+870950
+
+Kalle
