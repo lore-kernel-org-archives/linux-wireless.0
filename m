@@ -1,827 +1,329 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:59497 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754292Ab1IMRJ5 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40975 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751759Ab1IPSpc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 13:09:57 -0400
-From: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Subject: [PATCH 3/4] ath9k_hw: Add support for AR946/8x chipsets.
-Date: Tue, 13 Sep 2011 22:38:18 +0530
-Message-ID: <1315933699-7642-3-git-send-email-senthilb@qca.qualcomm.com> (sfid-20110913_191003_511696_038CC993)
-In-Reply-To: <1315933699-7642-1-git-send-email-senthilb@qca.qualcomm.com>
-References: <1315933699-7642-1-git-send-email-senthilb@qca.qualcomm.com>
+	Fri, 16 Sep 2011 14:45:32 -0400
+Date: Fri, 16 Sep 2011 14:31:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next 2011-09-16
+Message-ID: <20110916183118.GB22612@tuxdriver.com> (sfid-20110916_204543_453739_BC357265)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for AR946/8x chipets.
+Dave,
 
-Signed-off-by: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+This is a batch of updates intended for 3.2.  They have been simmering
+for a while, since I merged them just before the big kernel.org
+shutdown.  That includes time in wireless-testing and linux-next
+(albeit the latter is diminished by the kernel.org outage).  For now,
+I am just trying to clear the backlog... :-)
+
+This includes a sizable wl12xx pull and a bunch of iwlagn updates.
+There are also a number of ath9k updates, some b43 updates, and a
+handful of other bits.
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  109 +++++++++++---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    3 +-
- drivers/net/wireless/ath/ath9k/ar9003_hw.c     |  191 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c  |   11 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c    |   10 ++
- drivers/net/wireless/ath/ath9k/hw.c            |   73 ++++++++-
- drivers/net/wireless/ath/ath9k/pci.c           |    1 +
- 7 files changed, 362 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index fc2d607..8884979 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -22,11 +22,13 @@
- #define COMP_HDR_LEN 4
- #define COMP_CKSUM_LEN 2
- 
--#define AR_CH0_TOP (0x00016288)
-+#define AR_CH0_TOP	(AR_SREV_9300(ah) ? 0x16288 : \
-+				((AR_SREV_9480(ah) ? 0x1628c : 0x16280)))
- #define AR_CH0_TOP_XPABIASLVL (0x300)
- #define AR_CH0_TOP_XPABIASLVL_S (8)
- 
--#define AR_CH0_THERM (0x00016290)
-+#define AR_CH0_THERM	(AR_SREV_9300(ah) ? 0x16290 : \
-+				((AR_SREV_9485(ah) ? 0x1628c : 0x16294)))
- #define AR_CH0_THERM_XPABIASLVL_MSB 0x3
- #define AR_CH0_THERM_XPABIASLVL_MSB_S 0
- #define AR_CH0_THERM_XPASHORT2GND 0x4
-@@ -34,6 +36,11 @@
- 
- #define AR_SWITCH_TABLE_COM_ALL (0xffff)
- #define AR_SWITCH_TABLE_COM_ALL_S (0)
-+#define AR_SWITCH_TABLE_COM_AR9480_ALL (0xffffff)
-+#define AR_SWITCH_TABLE_COM_AR9480_ALL_S (0)
-+#define AR_SWITCH_TABLE_COM_SPDT (0x00f00000)
-+#define AR_SWITCH_TABLE_COM_SPDT_ALL (0x0000fff0)
-+#define AR_SWITCH_TABLE_COM_SPDT_ALL_S (4)
- 
- #define AR_SWITCH_TABLE_COM2_ALL (0xffffff)
- #define AR_SWITCH_TABLE_COM2_ALL_S (0)
-@@ -158,7 +165,7 @@ static const struct ar9300_eeprom ar9300_default = {
- 		.papdRateMaskHt20 = LE32(0x0cf0e0e0),
- 		.papdRateMaskHt40 = LE32(0x6cf0e0e0),
- 		.futureModal = {
--			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-+			0, 0, 0, 0, 0, 0, 0, 0,
- 		},
- 	 },
- 	.base_ext1 = {
-@@ -360,7 +367,7 @@ static const struct ar9300_eeprom ar9300_default = {
- 		.papdRateMaskHt20 = LE32(0x0c80c080),
- 		.papdRateMaskHt40 = LE32(0x0080c080),
- 		.futureModal = {
--			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-+			0, 0, 0, 0, 0, 0, 0, 0,
- 		},
- 	 },
- 	.base_ext2 = {
-@@ -735,7 +742,7 @@ static const struct ar9300_eeprom ar9300_x113 = {
- 		.papdRateMaskHt20 = LE32(0x0c80c080),
- 		.papdRateMaskHt40 = LE32(0x0080c080),
- 		.futureModal = {
--			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-+			0, 0, 0, 0, 0, 0, 0, 0,
- 		},
- 	 },
- 	 .base_ext1 = {
-@@ -937,7 +944,7 @@ static const struct ar9300_eeprom ar9300_x113 = {
- 		.papdRateMaskHt20 = LE32(0x0cf0e0e0),
- 		.papdRateMaskHt40 = LE32(0x6cf0e0e0),
- 		.futureModal = {
--			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-+			0, 0, 0, 0, 0, 0, 0, 0,
- 		},
- 	 },
- 	.base_ext2 = {
-@@ -1313,7 +1320,7 @@ static const struct ar9300_eeprom ar9300_h112 = {
- 		.papdRateMaskHt20 = LE32(0x80c080),
- 		.papdRateMaskHt40 = LE32(0x80c080),
- 		.futureModal = {
--			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-+			0, 0, 0, 0, 0, 0, 0, 0,
- 		},
- 	},
- 	.base_ext1 = {
-@@ -1515,7 +1522,7 @@ static const struct ar9300_eeprom ar9300_h112 = {
- 		.papdRateMaskHt20 = LE32(0x0cf0e0e0),
- 		.papdRateMaskHt40 = LE32(0x6cf0e0e0),
- 		.futureModal = {
--			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-+			0, 0, 0, 0, 0, 0, 0, 0,
- 		},
- 	},
- 	.base_ext2 = {
-@@ -1891,7 +1898,7 @@ static const struct ar9300_eeprom ar9300_x112 = {
- 		.papdRateMaskHt20 = LE32(0x0c80c080),
- 		.papdRateMaskHt40 = LE32(0x0080c080),
- 		.futureModal = {
--			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-+			0, 0, 0, 0, 0, 0, 0, 0,
- 		},
- 	},
- 	.base_ext1 = {
-@@ -2093,7 +2100,7 @@ static const struct ar9300_eeprom ar9300_x112 = {
- 		.papdRateMaskHt20 = LE32(0x0cf0e0e0),
- 		.papdRateMaskHt40 = LE32(0x6cf0e0e0),
- 		.futureModal = {
--			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-+			0, 0, 0, 0, 0, 0, 0, 0,
- 		},
- 	},
- 	.base_ext2 = {
-@@ -2468,7 +2475,7 @@ static const struct ar9300_eeprom ar9300_h116 = {
- 		.papdRateMaskHt20 = LE32(0x0c80C080),
- 		.papdRateMaskHt40 = LE32(0x0080C080),
- 		.futureModal = {
--			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-+			0, 0, 0, 0, 0, 0, 0, 0,
- 		},
- 	 },
- 	 .base_ext1 = {
-@@ -2670,7 +2677,7 @@ static const struct ar9300_eeprom ar9300_h116 = {
- 		.papdRateMaskHt20 = LE32(0x0cf0e0e0),
- 		.papdRateMaskHt40 = LE32(0x6cf0e0e0),
- 		.futureModal = {
--			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-+			0, 0, 0, 0, 0, 0, 0, 0,
- 		},
- 	 },
- 	.base_ext2 = {
-@@ -3573,6 +3580,8 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
- 
- 	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
- 		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
-+	else if (AR_SREV_9480(ah))
-+		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
- 	else {
- 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
- 		REG_RMW_FIELD(ah, AR_CH0_THERM,
-@@ -3583,6 +3592,19 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
- 	}
- }
- 
-+static u16 ar9003_switch_com_spdt_get(struct ath_hw *ah, bool is_2ghz)
-+{
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+	__le32 val;
-+
-+	if (is_2ghz)
-+		val = eep->modalHeader2G.switchcomspdt;
-+	else
-+		val = eep->modalHeader5G.switchcomspdt;
-+	return le32_to_cpu(val);
-+}
-+
-+
- static u32 ar9003_hw_ant_ctrl_common_get(struct ath_hw *ah, bool is2ghz)
- {
- 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-@@ -3637,7 +3659,36 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 
- 	u32 value = ar9003_hw_ant_ctrl_common_get(ah, is2ghz);
- 
--	REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM, AR_SWITCH_TABLE_COM_ALL, value);
-+	if (AR_SREV_9480(ah)) {
-+		if (AR_SREV_9480_10(ah)) {
-+			value &= ~AR_SWITCH_TABLE_COM_SPDT;
-+			value |= 0x00100000;
-+		}
-+		REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM,
-+				AR_SWITCH_TABLE_COM_AR9480_ALL, value);
-+	} else
-+		REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM,
-+			      AR_SWITCH_TABLE_COM_ALL, value);
-+
-+
-+	/*
-+	 *   AR9480 defines new switch table for BT/WLAN,
-+	 *       here's new field name in XXX.ref for both 2G and 5G.
-+	 *   Register: [GLB_CONTROL] GLB_CONTROL (@0x20044)
-+	 *   15:12   R/W     SWITCH_TABLE_COM_SPDT_WLAN_RX
-+	 * SWITCH_TABLE_COM_SPDT_WLAN_RX
-+	 *
-+	 *   11:8     R/W     SWITCH_TABLE_COM_SPDT_WLAN_TX
-+	 * SWITCH_TABLE_COM_SPDT_WLAN_TX
-+	 *
-+	 *   7:4 R/W  SWITCH_TABLE_COM_SPDT_WLAN_IDLE
-+	 * SWITCH_TABLE_COM_SPDT_WLAN_IDLE
-+	 */
-+	if (AR_SREV_9480_20_OR_LATER(ah)) {
-+		value = ar9003_switch_com_spdt_get(ah, is2ghz);
-+		REG_RMW_FIELD(ah, AR_PHY_GLB_CONTROL,
-+				AR_SWITCH_TABLE_COM_SPDT_ALL, value);
-+	}
- 
- 	value = ar9003_hw_ant_ctrl_common_2_get(ah, is2ghz);
- 	REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM_2, AR_SWITCH_TABLE_COM2_ALL, value);
-@@ -3837,6 +3888,7 @@ static void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
- {
- 	int internal_regulator =
- 		ath9k_hw_ar9300_get_eeprom(ah, EEP_INTERNAL_REGULATOR);
-+	u32 reg_val;
- 
- 	if (internal_regulator) {
- 		if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
-@@ -3881,13 +3933,16 @@ static void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
- 			REG_WRITE(ah, AR_PHY_PMU2, reg_pmu_set);
- 			if (!is_pmu_set(ah, AR_PHY_PMU2, reg_pmu_set))
- 				return;
-+		} else if (AR_SREV_9480(ah)) {
-+			reg_val = ath9k_hw_ar9300_get_eeprom(ah, EEP_SWREG);
-+			REG_WRITE(ah, AR_PHY_PMU1, reg_val);
- 		} else {
- 			/* Internal regulator is ON. Write swreg register. */
--			int swreg = ath9k_hw_ar9300_get_eeprom(ah, EEP_SWREG);
-+			reg_val = ath9k_hw_ar9300_get_eeprom(ah, EEP_SWREG);
- 			REG_WRITE(ah, AR_RTC_REG_CONTROL1,
- 				  REG_READ(ah, AR_RTC_REG_CONTROL1) &
- 				  (~AR_RTC_REG_CONTROL1_SWREG_PROGRAM));
--			REG_WRITE(ah, AR_RTC_REG_CONTROL0, swreg);
-+			REG_WRITE(ah, AR_RTC_REG_CONTROL0, reg_val);
- 			/* Set REG_CONTROL1.SWREG_PROGRAM */
- 			REG_WRITE(ah, AR_RTC_REG_CONTROL1,
- 				  REG_READ(ah,
-@@ -3898,22 +3953,24 @@ static void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
- 		if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
- 			REG_RMW_FIELD(ah, AR_PHY_PMU2, AR_PHY_PMU2_PGM, 0);
- 			while (REG_READ_FIELD(ah, AR_PHY_PMU2,
--					      AR_PHY_PMU2_PGM))
-+						AR_PHY_PMU2_PGM))
- 				udelay(10);
- 
- 			REG_RMW_FIELD(ah, AR_PHY_PMU1, AR_PHY_PMU1_PWD, 0x1);
- 			while (!REG_READ_FIELD(ah, AR_PHY_PMU1,
--					       AR_PHY_PMU1_PWD))
-+						AR_PHY_PMU1_PWD))
- 				udelay(10);
- 			REG_RMW_FIELD(ah, AR_PHY_PMU2, AR_PHY_PMU2_PGM, 0x1);
- 			while (!REG_READ_FIELD(ah, AR_PHY_PMU2,
--					      AR_PHY_PMU2_PGM))
-+						AR_PHY_PMU2_PGM))
- 				udelay(10);
--		} else
--			REG_WRITE(ah, AR_RTC_SLEEP_CLK,
--				  (REG_READ(ah,
--				   AR_RTC_SLEEP_CLK) |
--				   AR_RTC_FORCE_SWREG_PRD));
-+		} else if (AR_SREV_9480(ah))
-+			REG_RMW_FIELD(ah, AR_PHY_PMU1, AR_PHY_PMU1_PWD, 0x1);
-+		else {
-+			reg_val = REG_READ(ah, AR_RTC_SLEEP_CLK) |
-+				AR_RTC_FORCE_SWREG_PRD;
-+			REG_WRITE(ah, AR_RTC_SLEEP_CLK, reg_val);
-+		}
- 	}
- 
- }
-@@ -4493,6 +4550,12 @@ static int ar9003_hw_power_control_override(struct ath_hw *ah,
- 		tempSlope = eep->modalHeader5G.tempSlope;
- 
- 	REG_RMW_FIELD(ah, AR_PHY_TPC_19, AR_PHY_TPC_19_ALPHA_THERM, tempSlope);
-+
-+	if (AR_SREV_9480_20(ah))
-+		REG_RMW_FIELD(ah, AR_PHY_TPC_19_B1,
-+			      AR_PHY_TPC_19_B1_ALPHA_THERM, tempSlope);
-+
-+
- 	REG_RMW_FIELD(ah, AR_PHY_TPC_18, AR_PHY_TPC_18_THERM_CAL_VALUE,
- 		      temperature[0]);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index ab21a49..6335a86 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -233,7 +233,8 @@ struct ar9300_modal_eep_header {
- 	u8 thresh62;
- 	__le32 papdRateMaskHt20;
- 	__le32 papdRateMaskHt40;
--	u8 futureModal[10];
-+	__le16 switchcomspdt;
-+	u8 futureModal[8];
- } __packed;
- 
- struct ar9300_cal_data_per_freq_op_loop {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 6b54700..901f417 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -22,6 +22,8 @@
- #include "ar9330_1p1_initvals.h"
- #include "ar9330_1p2_initvals.h"
- #include "ar9580_1p0_initvals.h"
-+#include "ar9480_1p0_initvals.h"
-+#include "ar9480_2p0_initvals.h"
- 
- /* General hardware code for the AR9003 hadware family */
- 
-@@ -32,6 +34,14 @@
-  */
- static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- {
-+#define PCIE_PLL_ON_CREQ_DIS_L1_2P0 \
-+		ar9480_pciephy_pll_on_clkreq_disable_L1_2p0
-+
-+#define AR9480_BB_CTX_COEFJ(x)	\
-+		ar9480_##x##_baseband_core_txfir_coeff_japan_2484
-+
-+#define AR9480_BBC_TXIFR_COEFFJ \
-+		ar9480_2p0_baseband_core_txfir_coeff_japan_2484
- 	if (AR_SREV_9330_11(ah)) {
- 		/* mac */
- 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_PRE], NULL, 0, 0);
-@@ -254,6 +264,132 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 				ar9485_1_1_pcie_phy_clkreq_disable_L1,
- 				ARRAY_SIZE(ar9485_1_1_pcie_phy_clkreq_disable_L1),
- 				2);
-+	} else if (AR_SREV_9480_10(ah)) {
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_PRE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE], ar9480_1p0_mac_core,
-+				ARRAY_SIZE(ar9480_1p0_mac_core), 2);
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_POST],
-+				ar9480_1p0_mac_postamble,
-+				ARRAY_SIZE(ar9480_1p0_mac_postamble),
-+				5);
-+
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_PRE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_CORE],
-+				ar9480_1p0_baseband_core,
-+				ARRAY_SIZE(ar9480_1p0_baseband_core),
-+				2);
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_POST],
-+				ar9480_1p0_baseband_postamble,
-+				ARRAY_SIZE(ar9480_1p0_baseband_postamble), 5);
-+
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_PRE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_CORE],
-+				ar9480_1p0_radio_core,
-+				ARRAY_SIZE(ar9480_1p0_radio_core), 2);
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_POST],
-+				ar9480_1p0_radio_postamble,
-+				ARRAY_SIZE(ar9480_1p0_radio_postamble), 5);
-+
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_PRE],
-+				ar9480_1p0_soc_preamble,
-+				ARRAY_SIZE(ar9480_1p0_soc_preamble), 2);
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_CORE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_POST],
-+				ar9480_1p0_soc_postamble,
-+				ARRAY_SIZE(ar9480_1p0_soc_postamble), 5);
-+
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9480_common_rx_gain_table_1p0,
-+				ARRAY_SIZE(ar9480_common_rx_gain_table_1p0), 2);
-+
-+		/* Awake -> Sleep Setting */
-+		INIT_INI_ARRAY(&ah->iniPcieSerdes,
-+			ar9480_pcie_phy_clkreq_disable_L1_1p0,
-+			ARRAY_SIZE(ar9480_pcie_phy_clkreq_disable_L1_1p0),
-+			2);
-+
-+		/* Sleep -> Awake Setting */
-+		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
-+			ar9480_pcie_phy_clkreq_disable_L1_1p0,
-+			ARRAY_SIZE(ar9480_pcie_phy_clkreq_disable_L1_1p0),
-+			2);
-+
-+		INIT_INI_ARRAY(&ah->iniModesAdditional,
-+				ar9480_modes_fast_clock_1p0,
-+				ARRAY_SIZE(ar9480_modes_fast_clock_1p0), 3);
-+		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
-+				AR9480_BB_CTX_COEFJ(1p0),
-+				ARRAY_SIZE(AR9480_BB_CTX_COEFJ(1p0)), 2);
-+
-+	} else if (AR_SREV_9480_20(ah)) {
-+
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_PRE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE], ar9480_2p0_mac_core,
-+				ARRAY_SIZE(ar9480_2p0_mac_core), 2);
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_POST],
-+				ar9480_2p0_mac_postamble,
-+				ARRAY_SIZE(ar9480_2p0_mac_postamble), 5);
-+
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_PRE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_CORE],
-+				ar9480_2p0_baseband_core,
-+				ARRAY_SIZE(ar9480_2p0_baseband_core), 2);
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_POST],
-+				ar9480_2p0_baseband_postamble,
-+				ARRAY_SIZE(ar9480_2p0_baseband_postamble), 5);
-+
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_PRE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_CORE],
-+				ar9480_2p0_radio_core,
-+				ARRAY_SIZE(ar9480_2p0_radio_core), 2);
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_POST],
-+				ar9480_2p0_radio_postamble,
-+				ARRAY_SIZE(ar9480_2p0_radio_postamble), 5);
-+		INIT_INI_ARRAY(&ah->ini_radio_post_sys2ant,
-+				ar9480_2p0_radio_postamble_sys2ant,
-+				ARRAY_SIZE(ar9480_2p0_radio_postamble_sys2ant),
-+				5);
-+
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_PRE],
-+				ar9480_2p0_soc_preamble,
-+				ARRAY_SIZE(ar9480_2p0_soc_preamble), 2);
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_CORE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_POST],
-+				ar9480_2p0_soc_postamble,
-+				ARRAY_SIZE(ar9480_2p0_soc_postamble), 5);
-+
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9480_common_rx_gain_table_2p0,
-+				ARRAY_SIZE(ar9480_common_rx_gain_table_2p0), 2);
-+
-+		INIT_INI_ARRAY(&ah->ini_BTCOEX_MAX_TXPWR,
-+				ar9480_2p0_BTCOEX_MAX_TXPWR_table,
-+				ARRAY_SIZE(ar9480_2p0_BTCOEX_MAX_TXPWR_table),
-+				2);
-+
-+		/* Awake -> Sleep Setting */
-+		INIT_INI_ARRAY(&ah->iniPcieSerdes,
-+				PCIE_PLL_ON_CREQ_DIS_L1_2P0,
-+				ARRAY_SIZE(PCIE_PLL_ON_CREQ_DIS_L1_2P0),
-+				2);
-+		/* Sleep -> Awake Setting */
-+		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
-+				PCIE_PLL_ON_CREQ_DIS_L1_2P0,
-+				ARRAY_SIZE(PCIE_PLL_ON_CREQ_DIS_L1_2P0),
-+				2);
-+
-+		/* Fast clock modal settings */
-+		INIT_INI_ARRAY(&ah->iniModesAdditional,
-+				ar9480_modes_fast_clock_2p0,
-+				ARRAY_SIZE(ar9480_modes_fast_clock_2p0), 3);
-+
-+		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
-+				AR9480_BB_CTX_COEFJ(2p0),
-+				ARRAY_SIZE(AR9480_BB_CTX_COEFJ(2p0)), 2);
-+
-+		INIT_INI_ARRAY(&ah->ini_japan2484, AR9480_BBC_TXIFR_COEFFJ,
-+				ARRAY_SIZE(AR9480_BBC_TXIFR_COEFFJ), 2);
-+
- 	} else if (AR_SREV_9580(ah)) {
- 		/* mac */
- 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_PRE], NULL, 0, 0);
-@@ -401,6 +537,16 @@ static void ar9003_tx_gain_table_mode0(struct ath_hw *ah)
- 			ar9580_1p0_lowest_ob_db_tx_gain_table,
- 			ARRAY_SIZE(ar9580_1p0_lowest_ob_db_tx_gain_table),
- 			5);
-+	else if (AR_SREV_9480_10(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9480_modes_low_ob_db_tx_gain_table_1p0,
-+			ARRAY_SIZE(ar9480_modes_low_ob_db_tx_gain_table_1p0),
-+			5);
-+	else if (AR_SREV_9480_20(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9480_modes_low_ob_db_tx_gain_table_2p0,
-+			ARRAY_SIZE(ar9480_modes_low_ob_db_tx_gain_table_2p0),
-+			5);
- 	else
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9300Modes_lowest_ob_db_tx_gain_table_2p2,
-@@ -435,6 +581,16 @@ static void ar9003_tx_gain_table_mode1(struct ath_hw *ah)
- 			ar9580_1p0_high_ob_db_tx_gain_table,
- 			ARRAY_SIZE(ar9580_1p0_high_ob_db_tx_gain_table),
- 			5);
-+	else if (AR_SREV_9480_10(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9480_modes_high_ob_db_tx_gain_table_1p0,
-+			ARRAY_SIZE(ar9480_modes_high_ob_db_tx_gain_table_1p0),
-+			5);
-+	else if (AR_SREV_9480_20(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9480_modes_high_ob_db_tx_gain_table_2p0,
-+			ARRAY_SIZE(ar9480_modes_high_ob_db_tx_gain_table_2p0),
-+			5);
- 	else
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9300Modes_high_ob_db_tx_gain_table_2p2,
-@@ -556,6 +712,16 @@ static void ar9003_rx_gain_table_mode0(struct ath_hw *ah)
- 				ar9580_1p0_rx_gain_table,
- 				ARRAY_SIZE(ar9580_1p0_rx_gain_table),
- 				2);
-+	else if (AR_SREV_9480_10(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9480_common_rx_gain_table_1p0,
-+				ARRAY_SIZE(ar9480_common_rx_gain_table_1p0),
-+				2);
-+	else if (AR_SREV_9480_20(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9480_common_rx_gain_table_2p0,
-+				ARRAY_SIZE(ar9480_common_rx_gain_table_2p0),
-+				2);
- 	else
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 				ar9300Common_rx_gain_table_2p2,
-@@ -585,6 +751,16 @@ static void ar9003_rx_gain_table_mode1(struct ath_hw *ah)
- 			ar9485Common_wo_xlna_rx_gain_1_1,
- 			ARRAY_SIZE(ar9485Common_wo_xlna_rx_gain_1_1),
- 			2);
-+	else if (AR_SREV_9480_10(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			ar9480_common_wo_xlna_rx_gain_table_1p0,
-+			ARRAY_SIZE(ar9480_common_wo_xlna_rx_gain_table_1p0),
-+			2);
-+	else if (AR_SREV_9480_20(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			ar9480_common_wo_xlna_rx_gain_table_2p0,
-+			ARRAY_SIZE(ar9480_common_wo_xlna_rx_gain_table_2p0),
-+			2);
- 	else if (AR_SREV_9580(ah))
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 			ar9580_1p0_wo_xlna_rx_gain_table,
-@@ -597,6 +773,18 @@ static void ar9003_rx_gain_table_mode1(struct ath_hw *ah)
- 			2);
- }
- 
-+static void ar9003_rx_gain_table_mode2(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9480_10(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			ar9480_common_mixed_rx_gain_table_1p0,
-+			ARRAY_SIZE(ar9480_common_mixed_rx_gain_table_1p0), 2);
-+	else if (AR_SREV_9480_20(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			ar9480_common_mixed_rx_gain_table_2p0,
-+			ARRAY_SIZE(ar9480_common_mixed_rx_gain_table_2p0), 2);
-+}
-+
- static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
- {
- 	switch (ar9003_hw_get_rx_gain_idx(ah)) {
-@@ -607,6 +795,9 @@ static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
- 	case 1:
- 		ar9003_rx_gain_table_mode1(ah);
- 		break;
-+	case 2:
-+		ar9003_rx_gain_table_mode2(ah);
-+		break;
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index f80d1d6..8ebd414 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -147,7 +147,7 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 		AR_PHY_PAPRD_CTRL1_B2
- 	};
- 	int training_power;
--	int i;
-+	int i, val;
- 
- 	if (IS_CHAN_2GHZ(ah->curchan))
- 		training_power = ar9003_get_training_power_2g(ah);
-@@ -207,8 +207,9 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 		      AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_AGC2_SETTLING, 28);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL1,
- 		      AR_PHY_PAPRD_TRAINER_CNTL1_CF_CF_PAPRD_TRAIN_ENABLE, 1);
-+	val = AR_SREV_9480(ah) ? 0x91 : 147;
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL2,
--		      AR_PHY_PAPRD_TRAINER_CNTL2_CF_PAPRD_INIT_RX_BB_GAIN, 147);
-+		      AR_PHY_PAPRD_TRAINER_CNTL2_CF_PAPRD_INIT_RX_BB_GAIN, val);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
- 		      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_FINE_CORR_LEN, 4);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
-@@ -217,7 +218,7 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 		      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_NUM_CORR_STAGES, 7);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
- 		      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_MIN_LOOPBACK_DEL, 1);
--	if (AR_SREV_9485(ah))
-+	if (AR_SREV_9485(ah) || AR_SREV_9480(ah))
- 		REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
- 			      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_QUICK_DROP,
- 			      -3);
-@@ -225,9 +226,10 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 		REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
- 			      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_QUICK_DROP,
- 			      -6);
-+	val = AR_SREV_9480(ah) ? -10 : -15;
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
- 		      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_ADC_DESIRED_SIZE,
--		      -15);
-+		      val);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
- 		      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_BBTXMIX_DISABLE, 1);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL4,
-@@ -757,6 +759,7 @@ void ar9003_paprd_populate_single_table(struct ath_hw *ah,
- 			      training_power);
- 
- 	if (ah->caps.tx_chainmask & BIT(2))
-+		/* val AR_PHY_PAPRD_CTRL1_PAPRD_POWER_AT_AM2AM_CAL correct? */
- 		REG_RMW_FIELD(ah, AR_PHY_PAPRD_CTRL1_B2,
- 			      AR_PHY_PAPRD_CTRL1_PAPRD_POWER_AT_AM2AM_CAL,
- 			      training_power);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 2f35aee..4956d09 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -559,6 +559,9 @@ static void ar9003_hw_set_chain_masks(struct ath_hw *ah, u8 rx, u8 tx)
- 
- 	if ((ah->caps.hw_caps & ATH9K_HW_CAP_APM) && (tx == 0x7))
- 		REG_WRITE(ah, AR_SELFGEN_MASK, 0x3);
-+	else if (AR_SREV_9480(ah))
-+		/* xxx only when MCI support is enabled */
-+		REG_WRITE(ah, AR_SELFGEN_MASK, 0x3);
- 	else
- 		REG_WRITE(ah, AR_SELFGEN_MASK, tx);
- 
-@@ -658,6 +661,10 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 		ar9003_hw_prog_ini(ah, &ah->iniMac[i], modesIndex);
- 		ar9003_hw_prog_ini(ah, &ah->iniBB[i], modesIndex);
- 		ar9003_hw_prog_ini(ah, &ah->iniRadio[i], modesIndex);
-+		if (i == ATH_INI_POST && AR_SREV_9480_20(ah))
-+			ar9003_hw_prog_ini(ah,
-+					   &ah->ini_radio_post_sys2ant,
-+					   modesIndex);
- 	}
- 
- 	REG_WRITE_ARRAY(&ah->iniModesRxGain, 1, regWrites);
-@@ -677,6 +684,9 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 	if (AR_SREV_9340(ah) && !ah->is_clk_25mhz)
- 		REG_WRITE_ARRAY(&ah->iniModesAdditional_40M, 1, regWrites);
- 
-+	if (AR_SREV_9480(ah))
-+		ar9003_hw_prog_ini(ah, &ah->ini_BTCOEX_MAX_TXPWR, 1);
-+
- 	ar9003_hw_override_ini(ah);
- 	ar9003_hw_set_channel_regs(ah, chan);
- 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 3a16ba2..7f9a4e5 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -580,6 +580,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	case AR_SREV_VERSION_9330:
- 	case AR_SREV_VERSION_9485:
- 	case AR_SREV_VERSION_9340:
-+	case AR_SREV_VERSION_9480:
- 		break;
- 	default:
- 		ath_err(common,
-@@ -664,6 +665,7 @@ int ath9k_hw_init(struct ath_hw *ah)
- 	case AR9300_DEVID_AR9330:
- 	case AR9300_DEVID_AR9340:
- 	case AR9300_DEVID_AR9580:
-+	case AR9300_DEVID_AR9480:
- 		break;
- 	default:
- 		if (common->bus_ops->ath_bus_type == ATH_USB)
-@@ -1336,6 +1338,7 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
- 
- static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
- {
-+
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		REG_WRITE(ah, AR_WA, ah->WARegVal);
- 		udelay(10);
-@@ -1742,25 +1745,41 @@ static void ath9k_set_power_sleep(struct ath_hw *ah, int setChip)
- {
- 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
- 	if (setChip) {
-+		if (AR_SREV_9480(ah)) {
-+			REG_WRITE(ah, AR_TIMER_MODE,
-+				  REG_READ(ah, AR_TIMER_MODE) & 0xFFFFFF00);
-+			REG_WRITE(ah, AR_NDP2_TIMER_MODE, REG_READ(ah,
-+				  AR_NDP2_TIMER_MODE) & 0xFFFFFF00);
-+			REG_WRITE(ah, AR_SLP32_INC,
-+				  REG_READ(ah, AR_SLP32_INC) & 0xFFF00000);
-+			/* xxx Required for WLAN only case ? */
-+			REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, 0);
-+			udelay(100);
-+		}
-+
- 		/*
- 		 * Clear the RTC force wake bit to allow the
- 		 * mac to go to sleep.
- 		 */
--		REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE,
--			    AR_RTC_FORCE_WAKE_EN);
-+		REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN);
-+
-+		if (AR_SREV_9480(ah))
-+			udelay(100);
-+
- 		if (!AR_SREV_9100(ah) && !AR_SREV_9300_20_OR_LATER(ah))
- 			REG_WRITE(ah, AR_RC, AR_RC_AHB | AR_RC_HOSTIF);
- 
- 		/* Shutdown chip. Active low */
--		if (!AR_SREV_5416(ah) && !AR_SREV_9271(ah))
--			REG_CLR_BIT(ah, (AR_RTC_RESET),
--				    AR_RTC_RESET_EN);
-+		if (!AR_SREV_5416(ah) &&
-+				!AR_SREV_9271(ah) && !AR_SREV_9480_10(ah)) {
-+			REG_CLR_BIT(ah, AR_RTC_RESET, AR_RTC_RESET_EN);
-+			udelay(2);
-+		}
- 	}
- 
- 	/* Clear Bit 14 of AR_WA after putting chip into Full Sleep mode. */
--	if (AR_SREV_9300_20_OR_LATER(ah))
--		REG_WRITE(ah, AR_WA,
--			  ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
-+	if (!AR_SREV_9480(ah))
-+		REG_WRITE(ah, AR_WA, ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
- }
- 
- /*
-@@ -1770,6 +1789,8 @@ static void ath9k_set_power_sleep(struct ath_hw *ah, int setChip)
-  */
- static void ath9k_set_power_network_sleep(struct ath_hw *ah, int setChip)
- {
-+	u32 val;
-+
- 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
- 	if (setChip) {
- 		struct ath9k_hw_capabilities *pCap = &ah->caps;
-@@ -1779,12 +1800,30 @@ static void ath9k_set_power_network_sleep(struct ath_hw *ah, int setChip)
- 			REG_WRITE(ah, AR_RTC_FORCE_WAKE,
- 				  AR_RTC_FORCE_WAKE_ON_INT);
- 		} else {
-+
-+			/* When chip goes into network sleep, it could be waken
-+			 * up by MCI_INT interrupt caused by BT's HW messages
-+			 * (LNA_xxx, CONT_xxx) which chould be in a very fast
-+			 * rate (~100us). This will cause chip to leave and
-+			 * re-enter network sleep mode frequently, which in
-+			 * consequence will have WLAN MCI HW to generate lots of
-+			 * SYS_WAKING and SYS_SLEEPING messages which will make
-+			 * BT CPU to busy to process.
-+			 */
-+			if (AR_SREV_9480(ah)) {
-+				val = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_EN) &
-+					~AR_MCI_INTERRUPT_RX_HW_MSG_MASK;
-+				REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, val);
-+			}
- 			/*
- 			 * Clear the RTC force wake bit to allow the
- 			 * mac to go to sleep.
- 			 */
- 			REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE,
- 				    AR_RTC_FORCE_WAKE_EN);
-+
-+			if (AR_SREV_9480(ah))
-+				udelay(30);
- 		}
- 	}
- 
-@@ -2401,6 +2440,9 @@ void ath9k_hw_setrxfilter(struct ath_hw *ah, u32 bits)
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
- 
-+	if (AR_SREV_9480(ah))
-+		bits |= ATH9K_RX_FILTER_CONTROL_WRAPPER;
-+
- 	REG_WRITE(ah, AR_RX_FILTER, bits);
- 
- 	phybits = 0;
-@@ -2657,6 +2699,20 @@ void ath9k_hw_gen_timer_start(struct ath_hw *ah,
- 	REG_SET_BIT(ah, gen_tmr_configuration[timer->index].mode_addr,
- 		    gen_tmr_configuration[timer->index].mode_mask);
- 
-+	if (AR_SREV_9480(ah)) {
-+		/*
-+		 * Starting from AR9480, each generic timer can select which tsf
-+		 * to use. But we still follow the old rule, 0 - 7 use tsf and
-+		 * 8 - 15  use tsf2.
-+		 */
-+		if ((timer->index < AR_GEN_TIMER_BANK_1_LEN))
-+			REG_CLR_BIT(ah, AR_MAC_PCU_GEN_TIMER_TSF_SEL,
-+				       (1 << timer->index));
-+		else
-+			REG_SET_BIT(ah, AR_MAC_PCU_GEN_TIMER_TSF_SEL,
-+				       (1 << timer->index));
-+	}
-+
- 	/* Enable both trigger and thresh interrupt masks */
- 	REG_SET_BIT(ah, AR_IMR_S5,
- 		(SM(AR_GENTMR_BIT(timer->index), AR_IMR_S5_GENTIMER_THRESH) |
-@@ -2762,6 +2818,7 @@ static struct {
- 	{ AR_SREV_VERSION_9330,         "9330" },
- 	{ AR_SREV_VERSION_9340,		"9340" },
- 	{ AR_SREV_VERSION_9485,         "9485" },
-+	{ AR_SREV_VERSION_9480,         "9480" },
- };
- 
- /* For devices with external radios */
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 891661a..bda2233 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -33,6 +33,7 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0033) }, /* PCI-E  AR9580 */
-+	{ PCI_VDEVICE(ATHEROS, 0x0034) }, /* PCI-E  AR9480 */
- 	{ 0 }
- };
- 
+The following changes since commit 986eaa904129fc888c6c3882f6405a0055110e51:
+
+  Merge branch 'master' of ../netdev-next/ (2011-09-16 02:58:54 -0400)
+
+are available in the git repository at:
+
+  git://git.infradead.org/users/linville/wireless-next.git for-davem
+
+Arik Nemtsov (17):
+      wl12xx: Revert "wl12xx: schedule TX packets according to FW occupancy"
+      wl12xx: Use a single fw for both STA and AP roles
+      wl12xx: use 1 spare block in all cases
+      wl12xx: handle dummy packet event also in ap mode
+      wl12xx: fix session counter
+      wl12xx: use dynamic hlids for AP-mode
+      wl12xx: re-enable block ack session support
+      wl12xx: AP-mode - set STA HT capabilities when adding a STA
+      wl12xx: AP-mode - configure STA HT rates on join
+      wl12xx: AP-mode - configure HT rate support to the FW
+      wl12xx: track freed packets in FW by AC
+      wl12xx: schedule TX packets according to FW packet occupancy
+      wl12xx: handle wrap-around overflow in released Tx blocks FW counter
+      wl12xx: enable AP advanced functionality
+      wl12xx: set the AP-started flag only after setting keys
+      wl12xx: AP-mode - prevent Tx to stale/invalid stations
+      wl12xx: fix tx_queue_count spurious increment
+
+Axel Lin (1):
+      p54spi: add "spi:" prefix for stlc45xx modalias
+
+Christian Lamparter (1):
+      p54: Use do_div for 64-bit division to fix 32-bit kernels
+
+Daniel Halperin (1):
+      iwlagn: fix compile warnings when CONFIG_PM_SLEEP is not set
+
+Eliad Peller (23):
+      wl12xx: temporarily disable advanced ap functions
+      wl12xx: remove rx filtering stuff
+      wl12xx: update fw status struct
+      wl12xx: update acx commands
+      wl12xx: update commands & events
+      wl12xx: enable/disable role on interface add/remove
+      wl12xx: add device role commands
+      wl12xx: update scan cmd api
+      wl12xx: update rx/tx
+      wl12xx: change max/default template size
+      wl12xx: use wl1271_acx_beacon_filter_opt for both sta and ap
+      wl12xx: add set_rate_mgmt_params acx
+      wl12xx: add system_hlid
+      wl12xx: add ROC/CROC commands
+      wl12xx: replace dummy_join with ROC/CROC commands
+      wl12xx: update BT coex configuration params
+      wl12xx: call wl12xx_cmd_set_peer_state() in AP mode
+      wl12xx: don't remove key if hlid was already deleted
+      wl12xx: add wl12xx_cmd_role_start_ibss()
+      wl12xx: support IBSS vif type
+      wl12xx: use ap_bcast_hlid for recorded keys
+      wl12xx: don't remove key if hlid was already deleted
+      wl12xx: don't wait for disconnection event
+
+Emmanuel Grumbach (52):
+      iwlagn: use iwl_get_debug_level instead of iwl_debug_level
+      iwlagn: introduce iwl-shared.h
+      iwlagn: introduce struct iwl-shared - known by all layers
+      iwlagn: debug_level moves to struct iwl_shared
+      iwlagn: hw_params moves to iwl_shared
+      iwlagn: cmd_queue moves to iwl_shared
+      iwlagn: workqueue moves to iwl_shared
+      iwlagn: priv->status moves to iwl_shared
+      iwlagn: priv->lock moves to iwl_shared
+      iwlagn: priv->mutex moves to iwl_shared
+      iwlagn: modify the debug macro to be usable by all the layers
+      iwlagn: add IWL_DEBUG_FW_ERRORS
+      iwlagn: priv->sta_lock moves to iwl_shared
+      iwlagn: bus layer chooses its transport layer
+      iwlagn: add comments to iwl_bus / iwl_trans
+      iwlagn: transport handler can register debugfs entries
+      iwlagn: iwl_rx_queue moves to the iwl_trans_pcie
+      iwlagn: move iwl_suspend / iwl_resume to the transport layer
+      iwlagn: move ISR related data to transport layer
+      iwlagn: move the NIC error flow to the transport layer
+      iwlagn: move isr_statistics to transport layer
+      iwlagn: reclaim the packets in transport layer
+      iwlagn: move reclaim related functions
+      iwlagn: move scd_bc_tbls and scd_base_addr to iwl_trans_pcie
+      iwlagn: fix the check of IWLAGN_FIRST_AMPDU_QUEUE
+      iwlagn: move all iwl_is_XXX helpers to iwl-shared.h
+      iwlagn: move iwl_free_pages to iwl-shared.h
+      iwlagn: transport layer should receive iwl_trans
+      iwlagn: move hcmd_lock to transport layer
+      iwlagn: move dump_csr and dump_fh to transport layer
+      iwlagn: remove references to priv from the transport layer
+      iwlagn: remove unused parameters from hw_params
+      iwlagn: iwl-dev.h doesn't include iwl-fh.h any more
+      iwlagn: move Keep Warm to transport layer
+      iwlagn: add missing includes
+      iwlagn: all function iwl-io.c receive iwl_bus
+      iwlagn: iwl-pci doesn't include iwl-dev any more
+      iwlagn: iwl_tid_data moves to iwl-shared
+      iwlagn: remove dereferences of priv from transport
+      iwlagn: stop the device before freeing it
+      iwlagn: upper layer stores iwl_rxon_context in skb's CB
+      iwlagn: set tx_fifo for ampdu in transport layer
+      iwlagn: upper layer uses slabs to allocate tx cmds
+      iwlagn: move the mapping ac to queue / fifo to transport
+      iwlagn: allocate resources for TX BA session in transport
+      iwlagn: move the check_empty logic to the transport layer
+      iwlagn: move the disable agg logic to transport layer
+      iwlagn: cosmetics in iwl-trans.h
+      iwlagn: move wait_for_tx_queue_empty to transport layer
+      iwlagn: move check_stuck_queue to transport layer
+      iwlagn: move the stop / wake queue logic to transport layer
+      iwlagn: move tx queues to transport layer
+
+Felix Fietkau (6):
+      ath9k: fix regression in sending aggregated packets
+      ath9k: use u8 for the tx key index
+      ath9k: clean up the aggregation tid queue
+      ath9k: move the sequence number from ath_frame_info to ath_buf
+      ath9k: move seqno allocation in the tx path to ath_tx_setup_buffer
+      ath9k: defer ath_tx_setup_buffer setup to the first tx attempt during aggr
+
+Florian Fainelli (1):
+      ath9k: add missing AR9340 in ath_mac_bb_names
+
+Gery Kahn (1):
+      wl12xx: fixes for hw_pg_ver and chip id reporting
+
+Greg Dietsche (1):
+      iwlwifi: iwl-agn-rs.c: remove old comment
+
+Joe Perches (2):
+      ath: Make ath_dbg void not int
+      ath: Make ath_printk void not int and remove unused struct ath_common *
+
+Johannes Berg (1):
+      iwlagn: handle GO powersave
+
+John W. Linville (4):
+      Merge branch 'for-linville' of git://git.kernel.org/.../luca/wl12xx
+      mac80211: refactor skb copy to failq in mesh_path_move_to_queue
+      wl12xx/sdio_test.c: fix build breakage from WL127X_FW_NAME change
+      Merge branch 'master' of git://git.infradead.org/users/linville/wireless-next into for-davem
+
+Larry Finger (3):
+      b43: Relax requirement for descriptors to be in the DMA zone
+      ath9k: Fix a smatch warnings
+      b43: Fix swatch warning
+
+Mohammed Shafi Shajakhan (2):
+      ath9k: use appropriate debug mask
+      ath9k: minor cleanup in ani
+
+Peter Huewe (1):
+      net/mac80211/debugfs: Convert to kstrou8_from_user
+
+Rafał Miłecki (2):
+      b43: use 8K buffers for 64-bit DMA to workaround hardware bug
+      b43: make HT-PHY support experimental
+
+Rajkumar Manoharan (3):
+      ath9k_hw: Set default slottime as 9us
+      ath9k: Fix eifs/usec timeout for AR9287 v1.3+
+      ath9k: Add debugfs support for mac/baseband samples
+
+Shahar Levi (1):
+      wl12xx: Add support to RX packets payload alignment
+
+Stanislaw Gruszka (1):
+      cfg80211: document wiphy->registered
+
+Wey-Yi Guy (7):
+      iwlagn: Rename iwlcore prefix
+      iwlagn: remove out-dated comments
+      iwlagn: enable 11n aggregation without checking traffic load
+      iwlagn: support small form factor SKU of 6205
+      iwlagn: more comments for bt channel inhibition
+      iwlagn: add comments to module parameters
+      iwlagn: adding special "D" SKU for 2000 series
+
+ drivers/net/wireless/ath/ath.h                    |   48 +-
+ drivers/net/wireless/ath/ath9k/ani.c              |    2 +-
+ drivers/net/wireless/ath/ath9k/ani.h              |    5 +-
+ drivers/net/wireless/ath/ath9k/ar9002_mac.c       |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c    |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c       |    2 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h            |    7 +-
+ drivers/net/wireless/ath/ath9k/debug.c            |  312 ++++-
+ drivers/net/wireless/ath/ath9k/debug.h            |   47 +
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c     |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c               |   13 +-
+ drivers/net/wireless/ath/ath9k/hw.h               |    2 +-
+ drivers/net/wireless/ath/ath9k/init.c             |    1 +
+ drivers/net/wireless/ath/ath9k/mac.h              |    3 +-
+ drivers/net/wireless/ath/ath9k/main.c             |    2 +
+ drivers/net/wireless/ath/ath9k/recv.c             |   24 +-
+ drivers/net/wireless/ath/ath9k/reg.h              |    2 +
+ drivers/net/wireless/ath/ath9k/xmit.c             |  234 ++--
+ drivers/net/wireless/ath/main.c                   |    8 +-
+ drivers/net/wireless/b43/Kconfig                  |    6 +-
+ drivers/net/wireless/b43/dma.c                    |   31 +-
+ drivers/net/wireless/b43/dma.h                    |    3 +-
+ drivers/net/wireless/b43/main.c                   |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-1000.c           |   42 +-
+ drivers/net/wireless/iwlwifi/iwl-2000.c           |   51 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c           |   72 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c           |   60 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c      |   43 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c     |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-hw.h         |   13 -
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |  676 +--------
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c         |   93 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c       |   65 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c        |   84 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c         |   68 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |  913 ++++++------
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c      |   52 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c            |  938 ++++--------
+ drivers/net/wireless/iwlwifi/iwl-agn.h            |   63 +-
+ drivers/net/wireless/iwlwifi/iwl-bus.h            |   34 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h       |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c           |  284 ++---
+ drivers/net/wireless/iwlwifi/iwl-core.h           |  118 +--
+ drivers/net/wireless/iwlwifi/iwl-debug.h          |   40 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c        |  412 +-----
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |  329 +----
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h       |    2 +
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c         |   62 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h         |    1 -
+ drivers/net/wireless/iwlwifi/iwl-fh.h             |   20 +-
+ drivers/net/wireless/iwlwifi/iwl-helpers.h        |   91 +--
+ drivers/net/wireless/iwlwifi/iwl-io.c             |  192 ++--
+ drivers/net/wireless/iwlwifi/iwl-io.h             |   61 +-
+ drivers/net/wireless/iwlwifi/iwl-led.c            |   11 +-
+ drivers/net/wireless/iwlwifi/iwl-pci.c            |   43 +-
+ drivers/net/wireless/iwlwifi/iwl-pci.h            |  116 ++
+ drivers/net/wireless/iwlwifi/iwl-power.c          |   19 +-
+ drivers/net/wireless/iwlwifi/iwl-prph.h           |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-rx.c             |   42 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c           |   97 +-
+ drivers/net/wireless/iwlwifi/iwl-shared.h         |  430 ++++++
+ drivers/net/wireless/iwlwifi/iwl-sta.c            |  106 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.h            |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c        |   21 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |  314 ++++-
+ drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c  |  862 +++++++++---
+ drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c  |  506 +++++--
+ drivers/net/wireless/iwlwifi/iwl-trans.c          | 1615 ++++++++++++++++-----
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |  216 ++-
+ drivers/net/wireless/p54/p54spi.c                 |    2 +-
+ drivers/net/wireless/p54/txrx.c                   |   12 +-
+ drivers/net/wireless/wl12xx/acx.c                 |  322 ++---
+ drivers/net/wireless/wl12xx/acx.h                 |  394 ++----
+ drivers/net/wireless/wl12xx/boot.c                |   43 +-
+ drivers/net/wireless/wl12xx/boot.h                |    3 +-
+ drivers/net/wireless/wl12xx/cmd.c                 |  793 ++++++++---
+ drivers/net/wireless/wl12xx/cmd.h                 |  329 +++--
+ drivers/net/wireless/wl12xx/conf.h                |  352 ++---
+ drivers/net/wireless/wl12xx/debugfs.c             |   17 +-
+ drivers/net/wireless/wl12xx/event.c               |    6 +-
+ drivers/net/wireless/wl12xx/event.h               |   80 +-
+ drivers/net/wireless/wl12xx/init.c                |   91 +-
+ drivers/net/wireless/wl12xx/io.h                  |    1 -
+ drivers/net/wireless/wl12xx/main.c                |  961 ++++++++-----
+ drivers/net/wireless/wl12xx/ps.c                  |    4 +-
+ drivers/net/wireless/wl12xx/reg.h                 |   75 -
+ drivers/net/wireless/wl12xx/rx.c                  |   60 +-
+ drivers/net/wireless/wl12xx/rx.h                  |   18 +-
+ drivers/net/wireless/wl12xx/scan.c                |   38 +-
+ drivers/net/wireless/wl12xx/scan.h                |   25 +-
+ drivers/net/wireless/wl12xx/sdio.c                |    4 +-
+ drivers/net/wireless/wl12xx/sdio_test.c           |    2 +-
+ drivers/net/wireless/wl12xx/spi.c                 |    4 +-
+ drivers/net/wireless/wl12xx/tx.c                  |  136 ++-
+ drivers/net/wireless/wl12xx/tx.h                  |   16 +-
+ drivers/net/wireless/wl12xx/wl12xx.h              |  153 +-
+ drivers/net/wireless/wl12xx/wl12xx_80211.h        |   25 -
+ include/net/cfg80211.h                            |    1 +
+ net/mac80211/debugfs.c                            |   14 +-
+ net/mac80211/mesh_pathtbl.c                       |    8 +-
+ 100 files changed, 7670 insertions(+), 6378 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-pci.h
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-shared.h
+
+Omnibus patch is available here:
+
+	http://bombadil.infradead.org/~linville/wireless-next-2011-09-16.patch.gz
+
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
