@@ -1,46 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34761 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753522Ab1I0LuL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 07:50:11 -0400
-Subject: Re: [PATCH 3/5] mac80211: handle TDLS high-level commands and
- frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Kalyan C Gaddam <chakkal@iit.edu>
-In-Reply-To: <1317034493-5300-4-git-send-email-arik@wizery.com> (sfid-20110926_125515_791883_21717CE9)
-References: <1317034493-5300-1-git-send-email-arik@wizery.com>
-	 <1317034493-5300-4-git-send-email-arik@wizery.com>
-	 (sfid-20110926_125515_791883_21717CE9)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Sep 2011 13:50:07 +0200
-Message-ID: <1317124207.4082.20.camel@jlt3.sipsolutions.net> (sfid-20110927_135030_161284_4FC0310B)
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:3455 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756080Ab1IPT20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Sep 2011 15:28:26 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 05/19] staging: brcm80211: remove global variable
+ brcmf_roam from fullmac
+Date: Fri, 16 Sep 2011 12:27:54 -0700
+Message-ID: <1316201288-29635-6-git-send-email-frankyl@broadcom.com> (sfid-20110916_212854_062080_FE881D62)
+In-Reply-To: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
+References: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-09-26 at 13:54 +0300, Arik Nemtsov wrote:
+Remove unnecessary global variable
 
-> +/*
-> + * TDLS capabililites to be enabled in the 5th byte of the
-> + * @WLAN_EID_EXT_CAPABILITY information element
-> + */
-> +#define WLAN_EXT_CAPA_TDLS_ENABLED	BIT(5)
-> +#define WLAN_EXT_CAPA_TDLS_PROHIBITED	BIT(6)
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd.h        |    3 ---
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c |    3 ++-
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c  |    3 ---
+ 3 files changed, 2 insertions(+), 7 deletions(-)
 
-Would it be useful to have the IE declared as a struct somewhere?
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index 329851c..5316df9 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -674,9 +674,6 @@ extern uint brcmf_arp_mode;
+ extern uint brcmf_arp_enable;
+ 
+ /* Roaming mode control */
+-extern uint brcmf_roam;
+-
+-/* Roaming mode control */
+ extern uint brcmf_radio_up;
+ 
+ /* Override to force tx queueing all the time */
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+index 5ae4a40..c02c8cd 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+@@ -794,6 +794,7 @@ int brcmf_c_preinit_ioctls(struct brcmf_pub *drvr)
+ 	char buf[128], *ptr;
+ 	u32 dongle_align = BRCMF_SDALIGN;
+ 	u32 glom = 0;
++	u32 roaming = 1;
+ 	uint bcn_timeout = 3;
+ 	int scan_assoc_time = 40;
+ 	int scan_unassoc_time = 40;
+@@ -838,7 +839,7 @@ int brcmf_c_preinit_ioctls(struct brcmf_pub *drvr)
+ 
+ 	/* Enable/Disable build-in roaming to allowed ext supplicant to take
+ 		 of romaing */
+-	brcmu_mkiovar("roam_off", (char *)&brcmf_roam, 4,
++	brcmu_mkiovar("roam_off", (char *)&roaming, 4,
+ 		      iovbuf, sizeof(iovbuf));
+ 	brcmf_proto_cdc_set_ioctl(drvr, 0, BRCMF_C_SET_VAR, iovbuf,
+ 				  sizeof(iovbuf));
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 8e729d8..f462a5f 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -98,9 +98,6 @@ module_param(brcmf_arp_mode, uint, 0);
+ uint brcmf_arp_enable = true;
+ module_param(brcmf_arp_enable, uint, 0);
+ 
+-/* Contorl fw roaming */
+-uint brcmf_roam = 1;
+-
+ /* Control radio state */
+ uint brcmf_radio_up = 1;
+ 
+-- 
+1.7.1
 
-
-> +static int
-> +ieee80211_prep_tdls_encap_data(struct wiphy *wiphy, struct net_device *dev,
-> +			       u8 *peer, u8 action_code, u8 dialog_token,
-> +			       u16 status_code, struct sk_buff *skb)
-
-All the code addition here makes me wonder if it'd be useful to move it
-into a new tdls.c file and just call the right hooks from cfg.c? the cfg
-file is pretty large already ... tdls wouldn't be huge, but still might
-make sense?
-
-johannes
 
