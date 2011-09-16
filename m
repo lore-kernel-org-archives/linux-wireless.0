@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:50137 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756744Ab1I2PEB (ORCPT
+Received: from nm17-vm0.bullet.mail.ukl.yahoo.com ([217.146.183.93]:26259 "HELO
+	nm17-vm0.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753415Ab1IPMMc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 11:04:01 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/4] ath6kl: Fix htc_packet leak in ath6kl_htc_rx_process_packets()
-Date: Thu, 29 Sep 2011 20:31:13 +0530
-Message-ID: <1317308476-16204-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110929_170406_170331_E3B18138)
+	Fri, 16 Sep 2011 08:12:32 -0400
+From: Marek Lindner <lindner_marek@yahoo.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: don't allow zero mac bssid to be configured
+Date: Fri, 16 Sep 2011 14:12:26 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <1316102844-29970-1-git-send-email-lindner_marek@yahoo.de> <1316173301.4130.12.camel@jlt3.sipsolutions.net> <1316173745.4130.15.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1316173745.4130.15.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201109161412.26332.lindner_marek@yahoo.de> (sfid-20110916_141238_776125_E836FA80)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Packet is not reclaimed when ath6kl_htc_rx_process_hdr() fails.
-Fix this by deferring the packet deletion from comp_pktq till
-ath6kl_htc_rx_process_hdr() returns success.
+On Friday, September 16, 2011 13:49:05 Johannes Berg wrote:
+> Fair enough. I take it you're just reporting a bug then.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+I can live with that.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index f88a7c9..7bc9884 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -1643,7 +1643,6 @@ static int ath6kl_htc_rx_process_packets(struct htc_target *target,
- 	int status = 0;
- 
- 	list_for_each_entry_safe(packet, tmp_pkt, comp_pktq, list) {
--		list_del(&packet->list);
- 		ep = &target->endpoint[packet->endpoint];
- 
- 		/* process header for each of the recv packet */
-@@ -1652,6 +1651,8 @@ static int ath6kl_htc_rx_process_packets(struct htc_target *target,
- 		if (status)
- 			return status;
- 
-+		list_del(&packet->list);
-+
- 		if (list_empty(comp_pktq)) {
- 			/*
- 			 * Last packet's more packet flag is set
--- 
-1.7.0.4
 
+> The is_zero_ether_addr() check there means "have we found an IBSS
+> already?" and as such must stay. It doesn't mean "do we have a valid
+> configuration" at all...
+
+In that case you probably should add a comment to make it obvious or come up 
+with a cleaner approach of implementing "have we found an IBSS already?".
+But who I am to judge the code ?  :-)
+
+Regards,
+Marek
