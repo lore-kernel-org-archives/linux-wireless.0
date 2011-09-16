@@ -1,56 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:55494 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751835Ab1IZVTl (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:57234 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751430Ab1IPP43 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 17:19:41 -0400
-Received: by eya28 with SMTP id 28so4010610eya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 14:19:39 -0700 (PDT)
+	Fri, 16 Sep 2011 11:56:29 -0400
+Date: Fri, 16 Sep 2011 18:56:23 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] cfg80211/nl80211: Add PMKSA caching candidate event
+Message-ID: <20110916155623.GA3290@jouni.qca.qualcomm.com> (sfid-20110916_175633_352547_B33F339B)
 MIME-Version: 1.0
-In-Reply-To: <C5A7FB31FD9AEA42B600BDC3C74F8E0017052566@orsmsx511.amr.corp.intel.com>
-References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
-	<CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com>
-	<1317048872.2400.4.camel@wwguy-ubuntu>
-	<CAJTrwG5CQKn9=1=HUDX1L5PsFbGws_zK1DTvot9i=KcMX7SwkQ@mail.gmail.com>
-	<1317049160.1958.8.camel@wwguy-huron>
-	<CAJTrwG5eELbDuGFXU4=3gSunPSkKLFvcpSe6gGE_Wc0s5BXZ+A@mail.gmail.com>
-	<CAJTrwG7tzDHxDha5x8r-GJFK=oUE6Zk5zqpN4z4L2LyAD=DueQ@mail.gmail.com>
-	<1317050380.1958.13.camel@wwguy-huron>
-	<CAJTrwG46qRYvda1vcCZXv0BTUyf26gx2qgpNgOG-bm-BCMpqfg@mail.gmail.com>
-	<1317053131.1958.15.camel@wwguy-huron>
-	<C5A7FB31FD9AEA42B600BDC3C74F8E0017052223@orsmsx511.amr.corp.intel.com>
-	<CAJTrwG5AvbtNRZi54tzAoUDv5X9QLVY3L=-OgHYRtnJ-RMesrQ@mail.gmail.com>
-	<1317062004.1958.18.camel@wwguy-huron>
-	<CAJTrwG57r-B-eT-FODsDW1UgoVcS68zcUWo1mOrdHRdoXtNmCg@mail.gmail.com>
-	<C5A7FB31FD9AEA42B600BDC3C74F8E001705253B@orsmsx511.amr.corp.intel.com>
-	<CAJTrwG5MXfixhnNPOdoA3-DYEeKpC==uv4WvE78ZE5U+A10T7Q@mail.gmail.com>
-	<C5A7FB31FD9AEA42B600BDC3C74F8E0017052566@orsmsx511.amr.corp.intel.com>
-Date: Mon, 26 Sep 2011 23:19:39 +0200
-Message-ID: <CAJTrwG4AHo-_P_j8x2_vbd-eCXRVM=MPRoCh-uQQPHoKduyxvw@mail.gmail.com> (sfid-20110926_231944_127898_6F8B716C)
-Subject: Re: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM Fritz!Box
- (7390)" incompatible
-From: Henrik Friedrichsen <hrkfdn@gmail.com>
-To: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey!
+When the driver (or most likely firmware) decides which AP to use
+for roaming based on internal scan result processing, user space
+needs to be notified of PMKSA caching candidates to allow RSN
+pre-authentication to be used.
 
-On Mon, Sep 26, 2011 at 11:06 PM, Venkataraman, Meenakshi
-<meenakshi.venkataraman@intel.com> wrote:
-> [MV] That's interesting. What is the model of the AP that works? Are you using the same kernel version with this AP (just want to confirm with you)? Also, are you in a position to send us (only) a sniffer log?
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ include/linux/nl80211.h |   33 +++++++++++++++++++++++++++++++++
+ include/net/cfg80211.h  |   11 +++++++++++
+ net/wireless/mlme.c     |   11 +++++++++++
+ net/wireless/nl80211.c  |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h  |    4 ++++
+ 5 files changed, 105 insertions(+), 0 deletions(-)
 
-Well, I can't really tell you which router models worked fine, because
-I almost never had physical access to them (or bothered, for that
-matter ;)). The Netgear WGR614v10, which I used to have at home,
-worked without problems. Same with a few TP-Link routers. Turning my
-HTC Desire HD (Android) handset to a WiFi hotspot worked fine, too. So
-this one is pretty much the first one that I am encountering.
-Unfortunately I don't have any other Fritz!Boxes by AVM at the moment.
-The one I am connected to right now is a ZyXEL ISP rebrand. I don't
-have physical access to it, so I can't really tell you what model it
-is.
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 8aa7bad..0473c7b 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -499,6 +499,9 @@
+  *	this command may also be sent by the driver as an MLME event to
+  *	inform userspace of the new replay counter.
+  *
++ * @NL80211_CMD_PMKSA_CANDIDATE: This is used as an event to inform userspace
++ *	of PMKSA caching dandidates.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -623,6 +626,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_SET_REKEY_OFFLOAD,
+ 
++	NL80211_CMD_PMKSA_CANDIDATE,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -1070,6 +1075,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_ROAM_SUPPORT: Indicates whether the firmware is capable of
+  *	roaming to another AP in the same ESS if the signal lever is low.
+  *
++ * @NL80211_ATTR_PMKSA_CANDIDATE: Nested attribute containing the PMKSA caching
++ *	candidate information, see &enum nl80211_pmksa_candidate_attr.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1288,6 +1296,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_SCHED_SCAN_MATCH,
+ 	NL80211_ATTR_MAX_MATCH_SETS,
+ 
++	NL80211_ATTR_PMKSA_CANDIDATE,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -2556,4 +2566,27 @@ enum nl80211_sta_wme_attr {
+ 	NL80211_STA_WME_MAX = __NL80211_STA_WME_AFTER_LAST - 1
+ };
+ 
++/**
++ * enum nl80211_pmksa_candidate_attr - attributes for PMKSA caching candidates
++ * @__NL80211_PMKSA_CANDIDATE_INVALID: invalid number for nested attributes
++ * @NL80211_PMKSA_CANDIDATE_INDEX: candidate index (u32; the smaller, the higher
++ *	priority)
++ * @NL80211_PMKSA_CANDIDATE_BSSID: candidate BSSID (6 octets)
++ * @NL80211_PMKSA_CANDIDATE_PREAUTH: RSN pre-authentication supported (flag)
++ * @NUM_NL80211_PMKSA_CANDIDATE: number of PMKSA caching candidate attributes
++ *	(internal)
++ * @MAX_NL80211_PMKSA_CANDIDATE: highest PMKSA caching candidate attribute
++ *	(internal)
++ */
++enum nl80211_pmksa_candidate_attr {
++	__NL80211_PMKSA_CANDIDATE_INVALID,
++	NL80211_PMKSA_CANDIDATE_INDEX,
++	NL80211_PMKSA_CANDIDATE_BSSID,
++	NL80211_PMKSA_CANDIDATE_PREAUTH,
++
++	/* keep last */
++	NUM_NL80211_PMKSA_CANDIDATE,
++	MAX_NL80211_PMKSA_CANDIDATE = NUM_NL80211_PMKSA_CANDIDATE - 1
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 992fe0f..3e345b2 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3117,6 +3117,17 @@ void cfg80211_cqm_pktloss_notify(struct net_device *dev,
+ void cfg80211_gtk_rekey_notify(struct net_device *dev, const u8 *bssid,
+ 			       const u8 *replay_ctr, gfp_t gfp);
+ 
++/**
++ * cfg80211_pmksa_candidate_notify - notify about PMKSA caching candidate
++ * @dev: network device
++ * @index: candidate index (the smaller the index, the higher the priority)
++ * @bssid: BSSID of AP
++ * @preauth: Whether AP advertises support for RSN pre-authentication
++ * @gfp: allocation flags
++ */
++void cfg80211_pmksa_candidate_notify(struct net_device *dev, int index,
++				     const u8 *bssid, bool preauth, gfp_t gfp);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 832f657..61adea5 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -1095,3 +1095,14 @@ void cfg80211_gtk_rekey_notify(struct net_device *dev, const u8 *bssid,
+ 	nl80211_gtk_rekey_notify(rdev, dev, bssid, replay_ctr, gfp);
+ }
+ EXPORT_SYMBOL(cfg80211_gtk_rekey_notify);
++
++void cfg80211_pmksa_candidate_notify(struct net_device *dev, int index,
++				     const u8 *bssid, bool preauth, gfp_t gfp)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct wiphy *wiphy = wdev->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++
++	nl80211_pmksa_candidate_notify(rdev, dev, index, bssid, preauth, gfp);
++}
++EXPORT_SYMBOL(cfg80211_pmksa_candidate_notify);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 1108954..9e38e2c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7266,6 +7266,52 @@ void nl80211_gtk_rekey_notify(struct cfg80211_registered_device *rdev,
+ 	nlmsg_free(msg);
+ }
+ 
++void nl80211_pmksa_candidate_notify(struct cfg80211_registered_device *rdev,
++				    struct net_device *netdev, int index,
++				    const u8 *bssid, bool preauth, gfp_t gfp)
++{
++	struct sk_buff *msg;
++	struct nlattr *attr;
++	void *hdr;
++
++	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_PMKSA_CANDIDATE);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
++
++	attr = nla_nest_start(msg, NL80211_ATTR_PMKSA_CANDIDATE);
++	if (!attr)
++		goto nla_put_failure;
++
++	NLA_PUT_U32(msg, NL80211_PMKSA_CANDIDATE_INDEX, index);
++	NLA_PUT(msg, NL80211_PMKSA_CANDIDATE_BSSID, ETH_ALEN, bssid);
++	if (preauth)
++		NLA_PUT_FLAG(msg, NL80211_PMKSA_CANDIDATE_PREAUTH);
++
++	nla_nest_end(msg, attr);
++
++	if (genlmsg_end(msg, hdr) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_mlme_mcgrp.id, gfp);
++	return;
++
++ nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++
+ void
+ nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
+ 				struct net_device *netdev, const u8 *peer,
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 5d69c56..f24a1fb 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -113,4 +113,8 @@ void nl80211_gtk_rekey_notify(struct cfg80211_registered_device *rdev,
+ 			      struct net_device *netdev, const u8 *bssid,
+ 			      const u8 *replay_ctr, gfp_t gfp);
+ 
++void nl80211_pmksa_candidate_notify(struct cfg80211_registered_device *rdev,
++				    struct net_device *netdev, int index,
++				    const u8 *bssid, bool preauth, gfp_t gfp);
++
+ #endif /* __NET_WIRELESS_NL80211_H */
+-- 
+1.7.4.1
 
-What kind of a sniffer log. You mean TCP packets?
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
