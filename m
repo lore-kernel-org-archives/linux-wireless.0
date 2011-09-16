@@ -1,37 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5053 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754424Ab1I1Nwe (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43722 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751073Ab1IPLp0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 09:52:34 -0400
-Date: Wed, 28 Sep 2011 17:08:05 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Update rate control for better performance at
- higer rates
-Message-ID: <20110928113804.GA3412@vmraj-lnx.users.atheros.com> (sfid-20110928_155253_124135_C8551D07)
-References: <1317135241-3523-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1317135241-3523-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Fri, 16 Sep 2011 07:45:26 -0400
+Subject: [PATCH] cfg80211: validate IBSS BSSID
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Marek Lindner <lindner_marek@yahoo.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 16 Sep 2011 13:45:25 +0200
+Message-ID: <1316173525.4130.13.camel@jlt3.sipsolutions.net> (sfid-20110916_134530_184559_012D4B22)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 27, 2011 at 08:24:01PM +0530, Rajkumar Manoharan wrote:
-> The rate control algorithm is updated as follows in order to improve
-> the performance at higher rates. Probe the next allowed phy state
-> only when current rate is max phy and current PER is lower enough.
-> If the current rate is at max phy and current rate's expected throughput
-> is lower than next lower rate's expected throughput then drop the rate.
-> 
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/rc.c |   23 ++++++++++++++++++++---
->  1 files changed, 20 insertions(+), 3 deletions(-)
->
-Please drop this patch. Need to do some more testing with this patch,
-will send v2 patch.
+From: Johannes Berg <johannes.berg@intel.com>
 
---
-Rajkumar
+The IBSS BSSID is never validated, so an
+invalid one might end up being used. Fix
+this by rejecting invalid configuration.
+
+Reported-by: Marek Lindner <lindner_marek@yahoo.de>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+--- a/net/wireless/nl80211.c	2011-09-16 13:42:50.000000000 +0200
++++ b/net/wireless/nl80211.c	2011-09-16 13:43:49.000000000 +0200
+@@ -4522,8 +4522,12 @@ static int nl80211_join_ibss(struct sk_b
+ 
+ 	wiphy = &rdev->wiphy;
+ 
+-	if (info->attrs[NL80211_ATTR_MAC])
++	if (info->attrs[NL80211_ATTR_MAC]) {
+ 		ibss.bssid = nla_data(info->attrs[NL80211_ATTR_MAC]);
++
++		if (!is_valid_ether_addr(ibss.bssid))
++			return -EINVAL;
++	}
+ 	ibss.ssid = nla_data(info->attrs[NL80211_ATTR_SSID]);
+ 	ibss.ssid_len = nla_len(info->attrs[NL80211_ATTR_SSID]);
+ 
+
+
