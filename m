@@ -1,48 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:28533 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932076Ab1IPXEC (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:46203 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751683Ab1IPRCM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 19:04:02 -0400
-From: Paul Stewart <pstew@chromium.org>
-Date: Fri, 16 Sep 2011 15:17:58 -0700
-Subject: [PATCH] ath9k: Fix samp_lock init for non-DEBUGFS
-To: linux-wireless@vger.kernel.org
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Adrian Chadd <adrian@freebsd.org>, linville@tuxdriver.com
-In-Reply-To: <20110827111641.GA17693@vmraj-lnx.users.atheros.com>
-References: <1314442067-11799-1-git-send-email-rmanohar@qca.qualcomm.com>
- <CAJ-Vmo=wLETTSy0i3uz3Zj5w+_o+AouzD=nJzFk9KnERK+g7Cg@mail.gmail.com>
- <20110827111641.GA17693@vmraj-lnx.users.atheros.com>
-Message-Id: <20110916230334.0BDD92043D@glenhelen.mtv.corp.google.com> (sfid-20110917_010413_880556_77F4C66A)
+	Fri, 16 Sep 2011 13:02:12 -0400
+Received: by eya28 with SMTP id 28so932529eya.19
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 10:02:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1316178229.4130.33.camel@jlt3.sipsolutions.net>
+References: <1316082334-7664-1-git-send-email-arik@wizery.com>
+ <1316082334-7664-6-git-send-email-arik@wizery.com> <1316178229.4130.33.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Fri, 16 Sep 2011 20:01:56 +0300
+Message-ID: <CA+XVXfcCgr2bPD-sGR5x3G=aK8yzxxfUiaWzD6ksWUQdHo-yRQ@mail.gmail.com> (sfid-20110916_190220_538879_54553723)
+Subject: Re: [RFC 5/5] mac80211: send data directly to TDLS peers
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Kalyan C Gaddam <chakkal@iit.edu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch "ath9k: Add debugfs support for mac/baseband samples" uses
-"&sc->debug.samp_lock" which breaks non-ATH9K_DEBUGFS builds.  Place
-the correct ifdef guard around it.
+On Fri, Sep 16, 2011 at 16:03, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2011-09-15 at 13:25 +0300, Arik Nemtsov wrote:
 
-Signed-off-by: Paul Stewart <pstew@chromium.org>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: Adrian Chadd <adrian@freebsd.org>
----
- drivers/net/wireless/ath/ath9k/init.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+>>       case NL80211_IFTYPE_STATION:
+>> -             memcpy(hdr.addr1, sdata->u.mgd.bssid, ETH_ALEN);
+>> -             if (sdata->u.mgd.use_4addr &&
+>> -                 cpu_to_be16(ethertype) != sdata->control_port_protocol) {
+>> -                     fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
+>> +             if (local->hw.flags & IEEE80211_HW_SUPPORTS_TDLS) {
+>> +                     rcu_read_lock();
+>> +                     sta = sta_info_get(sdata, skb->data);
+>> +                     tdls_link = (sta && sta->tdls_link_enabled);
+>
+> Why don't you test WLAN_STA_TDLS_PEER and add the station only when the
+> session is set up?
+>
+> That would avoid the problem here when setting up the session.
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 74c9c99..b99ab96 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -553,7 +553,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	spin_lock_init(&sc->wiphy_lock);
- 	spin_lock_init(&sc->sc_serial_rw);
- 	spin_lock_init(&sc->sc_pm_lock);
-+#ifdef CONFIG_ATH9K_DEBUGFS
- 	spin_lock_init(&sc->debug.samp_lock);
-+#endif
- 	mutex_init(&sc->mutex);
- 	tasklet_init(&sc->intr_tq, ath9k_tasklet, (unsigned long)sc);
- 	tasklet_init(&sc->bcon_tasklet, ath_beacon_tasklet,
--- 
-1.7.3.1
+Will do (like I wrote in a previous email). Thanks.
 
+>
+>> --- a/net/wireless/util.c
+>> +++ b/net/wireless/util.c
+>> @@ -392,8 +392,9 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+>>               }
+>>               break;
+>>       case cpu_to_le16(0):
+>> -             if (iftype != NL80211_IFTYPE_ADHOC)
+>> -                     return -1;
+>> +             if (iftype != NL80211_IFTYPE_ADHOC &&
+>> +                 iftype != NL80211_IFTYPE_STATION)
+>> +                             return -1;
+>>               break;
+>>       }
+>>
+>
+> It seems there needs to be a check somewhere that this packet was
+> received from a TDLS peer? OTOH, if somebody is spoofing it crypto will
+> reject it or you're vulnerable anyway...
+
+My thoughts exactly. It's not like a rouge STA can't fake the
+frame_control and bssid fields..
+I didn't want to encumber the Rx path with redundant checks.
+
+Arik
