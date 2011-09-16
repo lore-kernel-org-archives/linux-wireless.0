@@ -1,97 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:60837 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932107Ab1IALni (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:22982 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751495Ab1IPJ1D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 07:43:38 -0400
-Subject: RE: [RFC] nl80211: Added NL80211 commands for Bluetooth-WiFi coex
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "Sumangala, Suraj" <surajs@qca.qualcomm.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>,
-	"Balasubramanian, senthilkumar" <senthilb@qca.qualcomm.com>,
-	"Mehta, Vipin" <vipimeht@qca.qualcomm.com>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 01 Sep 2011 04:43:00 -0700
-In-Reply-To: <480687D4EEFE7447A2E09AADFF6673621AF827CC@nasanexd02a.na.qualcomm.com>
-References: <1314771915-8848-1-git-send-email-surajs@qca.qualcomm.com>
-	 (sfid-20110831_082525_612687_34CC3735),<1314772217.4161.10.camel@jlt3.sipsolutions.net>
-	 <480687D4EEFE7447A2E09AADFF6673621AF7CDCF@nasanexd02a.na.qualcomm.com>
-	 ,<1314772832.4161.16.camel@jlt3.sipsolutions.net>
-	 <480687D4EEFE7447A2E09AADFF6673621AF7CE0B@nasanexd02a.na.qualcomm.com>
-	 <1314801657.3373.260.camel@aeonflux>
-	 <480687D4EEFE7447A2E09AADFF6673621AF7DF82@nasanexd02a.na.qualcomm.com>
-	 <1314831118.3373.266.camel@aeonflux>
-	 <480687D4EEFE7447A2E09AADFF6673621AF827CC@nasanexd02a.na.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1314877381.3373.284.camel@aeonflux> (sfid-20110901_134350_895130_546D1FF7)
-Mime-Version: 1.0
+	Fri, 16 Sep 2011 05:27:03 -0400
+Date: Fri, 16 Sep 2011 14:57:38 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH v2] mac80211: stop tx before doing hw config and rate
+ update
+Message-ID: <20110916092737.GA1834@vmraj-lnx.users.atheros.com> (sfid-20110916_112708_501262_3650C76F)
+References: <1314951719-9816-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <4E730147.1090408@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4E730147.1090408@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Suraj,
+On Fri, Sep 16, 2011 at 09:56:55AM +0200, Felix Fietkau wrote:
+> On 2011-09-02 10:21 AM, Rajkumar Manoharan wrote:
+> >The assumption is that during the hw config, transmission was
+> >already stopped by mac80211. Sometimes the AP can be switching
+> >b/w the ht modes due to intolerant or etc where STA is in
+> >the middle of transmission. In such scenario, buffer overflow
+> >was observed at driver side. And also before updating the rate
+> >control, the frames are continued to xmited with older rates.
+> >This patch ensures that the frames are always xmitted with
+> >updated rates and avoid buffer overflow.
+> >
+> >Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+> John, please revert this one, it's completely messed up. It stops
+> queues, and calls drv_flush whenever it receives a beacon with
+> 802.11n information, even if 802.11n is already enabled and the mode
+> is the correct one.
+> Additionally, it even wakes the queues again before the settings
+> have been applied, so it's 100% useless.
 
-> > > > this looks like the total wrong approach to me. This needs to be done
-> > between mac80211 and Bluetooth subsystems in the kernel directly. Going
-> > through userspace for this is a pretty bad idea.
-> > >
-> > > > Especially if you wanna listen on D-Bus events from bluetoothd and then run
-> > another process to then execute nl80211 commands looks like total overhead at
-> > no gain. Not to talk about potential latency > effects that might be
-> > counterproductive.
-> > >
-> > > > What you really want is a way to mark A2DP channels for streaming from
-> > userspace as streaming/realtime/priority so the Bluetooth subsystem knows on
-> > what to do with it and that way can also tell > > mac80211 correctly about coex
-> > settings.
-> > >
-> > > > We are already settings flushable flags for A2DP streaming channels and there
-> > is work ongoing for SO_PRIORITY support with L2CAP sockets.
-> > >
-> > > More than the A2DP connection, it would be more useful to find out when
-> > A2DP start/stop streaming so that we can know when to reallocate resource to
-> > Bluetooth. Is it possible to tap this information out of the Bluetooth core?
-> > > Also, can you suggest a way to get A2DP streaming status, inquiry status, and
-> > SCO and ACL role without a hack in the Bluetooth subsystem?
-> > 
-> > the inquiry status is tracked by the Linux kernel since ever. Same goes for ACL
-> > and SCO status. The kernel keeps track over almost everything on the HCI level
-> > and will do proper cleanup afterwards. Doing this in userspace will not work out.
-> > And it is also racy.
-> > 
-> > Especially in the future bluetoothd will be tracking less and less information. The
-> > new management interface will hide almost every single state from bluetoothd
-> > where the kernel is doing the job anyway and can do a way better job in the first
-> > place. This is also leads to power consumption advantages since bluetoothd does
-> > not need to be woken up that often anyway. And in addition the kernel has not
-> > deal with the extra HCI filter handling.
-> > 
-> > The only thing that you mentioned here is A2DP streaming. And by the nature of
-> > the A2DP protocol, you do establish a second L2CAP channel that is just used for
-> > streaming. That channel is also only present if you are streaming right now. If not
-> > streaming is going on, it will be disconnected. So it is pretty easy to have
-> > bluetoothd tag such a channel with proper SO_PRIORITY (once we have that code
-> > merged upstream) and then the Bluetooth subsystem knows when A2DP
-> > streaming or any high priority/realtime data is transferred over Bluetooth.
->
-> Regarding SCO and Inquiry status, do we have an existing API in Bluetooth core that I can use to get that information?
+As we discussed in irc, drv_flush & queue stop shouldn't be called
+so frequently. It is a bug. But this patch prevents the transmission
+while doing hw config because of 20/40 switch from beacon ie. So
+this patch is really needed and also there is not point in covering
+bss_info_change state. To avoid the accidential queue wakeup by
+flush, this patch defines new reason code. I will send the followup
+patch ASAP.
 
-there is obviously no exported symbols or anything alike. Since we only
-export things that are used by drivers or other subsystem. So you would
-need to create such an API.
-
-However first we need to establish in which direction this should be
-done anyway. Should the Bluetooth subsystem notify mac80211
-unconditional or should mac80211 register notifiers of the Bluetooth
-subsystem.
-
-We also should not forget direct integration support for changing AFH
-channel maps based on the used WiFi channels.
-
-Regards
-
-Marcel
-
-
+--
+Rajkumar
