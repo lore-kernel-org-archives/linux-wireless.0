@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:32875 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751987Ab1IVSjE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44934 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753672Ab1IPOCq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 14:39:04 -0400
-Received: by eya28 with SMTP id 28so1775116eya.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 11:39:03 -0700 (PDT)
+	Fri, 16 Sep 2011 10:02:46 -0400
+Message-ID: <4E735701.9080609@qca.qualcomm.com> (sfid-20110916_160249_780089_84F07493)
+Date: Fri, 16 Sep 2011 19:32:41 +0530
+From: mohammed <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1316691605.3899.43.camel@jlt3.sipsolutions.net>
-References: <1316082334-7664-1-git-send-email-arik@wizery.com>
- <1316082334-7664-3-git-send-email-arik@wizery.com> <1316606713.3940.29.camel@jlt3.sipsolutions.net>
- <CA+XVXffOFw9RFFuwDTB_ei6Ktwai1tCicTuTeF5=4=WqZSZafw@mail.gmail.com> <1316691605.3899.43.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 22 Sep 2011 21:38:48 +0300
-Message-ID: <CA+XVXfc3QC24PuKZ-FMXmUqH-XLgR7xp0=z--oH3UvSJBUz_xg@mail.gmail.com> (sfid-20110922_203908_350819_038830DD)
-Subject: Re: [RFC 2/5] mac80211: handle TDLS high-level commands and frames
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalyan C Gaddam <chakkal@iit.edu>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rfkill: properly assign a boolean type
+References: <1316180020-9982-1-git-send-email-mohammed@qca.qualcomm.com>	 <1316180237.4130.37.camel@jlt3.sipsolutions.net>	 <4E7354D8.40507@qca.qualcomm.com> <1316181679.4130.38.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1316181679.4130.38.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 22, 2011 at 14:40, Johannes Berg <johannes@sipsolutions.net> wrote:
-
->> The race is even worse - from queuing until the actual Tx, we could
->> have disconnected from this AP and connected do a totally different
->> one. But this shouldn't happen in reality (and we can add some guards
->> to wpa_supplicant to make sure).
->> Do you see this as a security threat?
+On Friday 16 September 2011 07:31 PM, Johannes Berg wrote:
+> On Fri, 2011-09-16 at 19:23 +0530, mohammed wrote:
 >
-> I don't really know :-) I just saw the possible race here. If you remove
-> the TDLS station entries when disassociating then it shouldn't be an
-> issue, right? Since you require a station entry pretty early on anyway.
+>>>> @@ -235,7 +235,7 @@ static bool __rfkill_set_hw_state(struct rfkill *rfkill,
+>>>>    	else
+>>>>    		rfkill->state&= ~RFKILL_BLOCK_HW;
+>>>>    	*change = prev != blocked;
+>>>> -	any = rfkill->state&   RFKILL_BLOCK_ANY;
+>>>> +	any = !!(rfkill->state&   RFKILL_BLOCK_ANY);
+>>>
+>>> I believe this is not necessary since "any" is a "bool" and as such
+>>> should cast correctly to 0/1.
+>
+>> I agree the older one works perfectly fine. I stumbled upon this when i
+>> was trying to understand rfkill. but will not this change make it look
+>> better ? if it looks like a too trivial please drop it. Thanks!
+>
+> Sure, whatever, I don't care; we can change it, but I think it'll
+> generate exactly the same code :)
 
-As discussed on IRC - this race is not really an issue. In the next
-version of the patch stations will be purged by kernel-mode on
-disassociation.
+oh ok, thanks.
 
-Arik
+>
+> johannes
+>
+
