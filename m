@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:53274 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751730Ab1ITXKw (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:46728 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753334Ab1IQTK3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 19:10:52 -0400
-Received: by qyk30 with SMTP id 30so4461016qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 16:10:52 -0700 (PDT)
+	Sat, 17 Sep 2011 15:10:29 -0400
+Received: by iaqq3 with SMTP id q3so3503726iaq.19
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Sep 2011 12:10:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1316426723.16271.17.camel@sortiz-mobl>
-References: <AC090B9732AB2B4DB7FF476E907FE660013226A26A@dnce02.ent.ti.com>
-	<1316426723.16271.17.camel@sortiz-mobl>
-Date: Tue, 20 Sep 2011 20:10:51 -0300
-Message-ID: <CAK3JMAZj8Do6T0Z=gn97uz5=NvANE1NS0Tm6TDOBtAogt_C9LA@mail.gmail.com> (sfid-20110921_011055_984678_46415236)
-Subject: Re: [PATCH v2 1/4] NFC: Add dev_up and dev_down control operations
-From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-To: "Elias, Ilan" <ilane@ti.com>
-Cc: Samuel Ortiz <samuel@sortiz.org>,
-	"aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20110917190201.BE6FC40639@repository3.orbit-lab.org>
+References: <20110917190201.BE6FC40639@repository3.orbit-lab.org>
+Date: Sat, 17 Sep 2011 12:10:27 -0700
+Message-ID: <CAA93jw5RskMwdziSF-YWedLFRRVe9iG+=c7F5rqJn1Mpx29r9w@mail.gmail.com> (sfid-20110917_211032_715764_14525CBA)
+Subject: Re: Compat-wireless release for 2011-09-17 is baked
+From: Dave Taht <dave.taht@gmail.com>
+To: Compat-wireless cronjob account <compat@orbit-lab.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/9/19 Samuel Ortiz <samuel@sortiz.org>:
-> Hi Ilan,
+Something tells me that this script needs slightly better error checking.
+
+On Sat, Sep 17, 2011 at 12:02 PM, Compat-wireless cronjob account
+<compat@orbit-lab.org> wrote:
 >
-> On Tue, 2011-09-13 at 10:46 +0200, Elias, Ilan wrote:
->> Add 2 new nfc control operations:
->> dev_up to turn on the nfc device
->> dev_down to turn off the nfc device
->>
->> Signed-off-by: Ilan Elias <ilane@ti.com>
-> Acked-by: Samuel Ortiz <sameo@linux.intel.com>
-Acked-by: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+> fatal: Unable to look up git.kernel.org (port 9418) (Name or service not known)
+> /usr/bin/sha1sum: *.tar.bz2: No such file or directory
+>
+> compat-wireless code metrics
+>
+>    806210 - Total upstream lines of code being pulled
+> ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
+> rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+> rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
-Lauro
+
+--
+Dave Täht
+SKYPE: davetaht
+US Tel: 1-239-829-5608
+http://the-edge.blogspot.com
