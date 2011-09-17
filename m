@@ -1,101 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:37422 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750711Ab1IUAhu (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:32772 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754840Ab1IQWQ4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 20:37:50 -0400
-Received: by qyk30 with SMTP id 30so4517386qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 17:37:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE660013226A26C@dnce02.ent.ti.com>
-References: <AC090B9732AB2B4DB7FF476E907FE660013226A26C@dnce02.ent.ti.com>
-Date: Tue, 20 Sep 2011 21:37:49 -0300
-Message-ID: <CAK3JMAadvUag85SfjOhYN+yqW0con9RBo7PQ1_V1uYce_BXgKQ@mail.gmail.com> (sfid-20110921_023754_291947_55D32455)
-Subject: Re: [PATCH v2 3/4] NFC: basic NCI protocol implementation
-From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-To: "Elias, Ilan" <ilane@ti.com>
-Cc: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"samuel@sortiz.org" <samuel@sortiz.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 17 Sep 2011 18:16:56 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 4so2775973fxe.19
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Sep 2011 15:16:55 -0700 (PDT)
+From: Alexander Simon <an.alexsimon@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Alexander Simon <an.alexsimon@googlemail.com>
+Subject: [PATCH v3 1/1] mac80211: fix indentation
+Date: Sun, 18 Sep 2011 00:16:45 +0200
+Message-Id: <75426bb99dfa5cca7ae3b3ed9fbf955bb9b8d564.1316297749.git.an.alexsimon@googlemail.com> (sfid-20110918_001659_597713_C3D42941)
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSWxhbiwKCjIwMTEvOS8xMyBFbGlhcywgSWxhbiA8aWxhbmVAdGkuY29tPjoKPiBUaGUgTkZD
-IENvbnRyb2xsZXIgSW50ZXJmYWNlIChOQ0kpIGlzIGEgc3RhbmRhcmQKPiBjb21tdW5pY2F0aW9u
-IHByb3RvY29sIGJldHdlZW4gYW4gTkZDIENvbnRyb2xsZXIgKE5GQ0MpCj4gYW5kIGEgRGV2aWNl
-IEhvc3QgKERIKSwgZGVmaW5lZCBieSB0aGUgTkZDIEZvcnVtLgo+Cj4gU2lnbmVkLW9mZi1ieTog
-SWxhbiBFbGlhcyA8aWxhbmVAdGkuY29tPgo+IC0tLQoKCj4gKwo+ICtzdGF0aWMgdm9pZCBuY2lf
-aW5pdF9jb21wbGV0ZV9yZXEoc3RydWN0IG5jaV9kZXYgKm5kZXYsIHVuc2lnbmVkIGxvbmcgb3B0
-KQo+ICt7Cj4gKyDCoCDCoCDCoCBzdHJ1Y3QgbmNpX3JmX2Rpc2NfbWFwX2NtZCBjbWQ7Cj4gKyDC
-oCDCoCDCoCBzdHJ1Y3QgbmNpX2NvcmVfY29ubl9jcmVhdGVfY21kIGNvbm5fY21kOwo+ICsgwqAg
-wqAgwqAgaW50IGk7Cj4gKwo+ICsgwqAgwqAgwqAgLyogY3JlYXRlIHN0YXRpYyByZiBjb25uZWN0
-aW9uICovCj4gKyDCoCDCoCDCoCBjb25uX2NtZC50YXJnZXRfaGFuZGxlID0gMDsKPiArIMKgIMKg
-IMKgIGNvbm5fY21kLm51bV90YXJnZXRfc3BlY2lmaWNfcGFyYW1zID0gMDsKPiArIMKgIMKgIMKg
-IG5jaV9zZW5kX2NtZChuZGV2LCBOQ0lfT1BfQ09SRV9DT05OX0NSRUFURV9DTUQsIDIsICZjb25u
-X2NtZCk7Cj4gKwo+ICsgwqAgwqAgwqAgLyogc2V0IHJmIG1hcHBpbmcgY29uZmlndXJhdGlvbnMg
-Ki8KPiArIMKgIMKgIMKgIGNtZC5udW1fbWFwcGluZ19jb25maWdzID0gMDsKPiArCj4gKyDCoCDC
-oCDCoCAvKiBieSBkZWZhdWx0IG1hcHBpbmcgaXMgc2V0IHRvIE5DSV9SRl9JTlRFUkZBQ0VfRlJB
-TUUgKi8KPiArIMKgIMKgIMKgIGZvciAoaSA9IDA7IGkgPCBuZGV2LT5udW1fc3VwcG9ydGVkX3Jm
-X2ludGVyZmFjZXM7IGkrKykgewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKG5kZXYtPnN1
-cHBvcnRlZF9yZl9pbnRlcmZhY2VzW2ldID09Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCBOQ0lfUkZfSU5URVJGQUNFX0lTT19ERVApIHsKPiArIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIGNtZC5tYXBwaW5nX2NvbmZpZ3NbY21kLm51bV9tYXBwaW5nX2NvbmZp
-Z3NdCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAucmZfcHJvdG9jb2wgPSBO
-Q0lfUkZfUFJPVE9DT0xfSVNPX0RFUDsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIGNtZC5tYXBwaW5nX2NvbmZpZ3NbY21kLm51bV9tYXBwaW5nX2NvbmZpZ3NdCj4gKyDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAubW9kZSA9IE5DSV9ESVNDX01BUF9NT0RFX0JP
-VEg7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBjbWQubWFwcGluZ19jb25m
-aWdzW2NtZC5udW1fbWFwcGluZ19jb25maWdzXQo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgLnJmX2ludGVyZmFjZV90eXBlID0gTkNJX1JGX0lOVEVSRkFDRV9JU09fREVQOwo+
-ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY21kLm51bV9tYXBwaW5nX2NvbmZp
-Z3MrKzsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIH0gZWxzZSBpZiAobmRldi0+c3VwcG9ydGVk
-X3JmX2ludGVyZmFjZXNbaV0gPT0KPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IE5DSV9SRl9JTlRFUkZBQ0VfTkZDX0RFUCkgewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgY21kLm1hcHBpbmdfY29uZmlnc1tjbWQubnVtX21hcHBpbmdfY29uZmlnc10KPiAr
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIC5yZl9wcm90b2NvbCA9IE5DSV9SRl9Q
-Uk9UT0NPTF9ORkNfREVQOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY21k
-Lm1hcHBpbmdfY29uZmlnc1tjbWQubnVtX21hcHBpbmdfY29uZmlnc10KPiArIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIC5tb2RlID0gTkNJX0RJU0NfTUFQX01PREVfQk9USDsKPiAr
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGNtZC5tYXBwaW5nX2NvbmZpZ3NbY21k
-Lm51bV9tYXBwaW5nX2NvbmZpZ3NdCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCAucmZfaW50ZXJmYWNlX3R5cGUgPSBOQ0lfUkZfSU5URVJGQUNFX05GQ19ERVA7Cj4gKyDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBjbWQubnVtX21hcHBpbmdfY29uZmlncysrOwo+
-ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfQoKSSB0aGluayB5b3Ugc2hvdWxkIGltcHJvdmUgdGhl
-IHJlYWRhYmlsaXR5IGluIHRoaXMgJ2lmJy4KCgoKPiArCj4gK3N0YXRpYyBpbnQgbmNpX3N0YXJ0
-X3BvbGwoc3RydWN0IG5mY19kZXYgKm5mY19kZXYsIF9fdTMyIHByb3RvY29scykKPiArewo+ICsg
-wqAgwqAgwqAgc3RydWN0IG5jaV9kZXYgKm5kZXYgPSBuZmNfZ2V0X2RydmRhdGEobmZjX2Rldik7
-Cj4gKyDCoCDCoCDCoCBpbnQgcmM7Cj4gKwo+ICsgwqAgwqAgwqAgbmZjX2RiZygiZW50cnkiKTsK
-PiArCj4gKyDCoCDCoCDCoCBpZiAodGVzdF9iaXQoTkNJX0RJU0NPVkVSWSwgJm5kZXYtPmZsYWdz
-KSkgewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgbmZjX2VycigidW5hYmxlIHRvIHN0YXJ0IHBv
-bGwsIHNpbmNlIHBvbGwgaXMgYWxyZWFkeSBhY3RpdmUiKTsKPiArIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIHJldHVybiAtRUJVU1k7Cj4gKyDCoCDCoCDCoCB9Cj4gKwo+ICsgwqAgwqAgwqAgaWYgKHRl
-c3RfYml0KE5DSV9QT0xMX0FDVElWRSwgJm5kZXYtPmZsYWdzKSkgewo+ICsgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgbmZjX2RiZygidGFyZ2V0IGFscmVhZHkgYWN0aXZlLCBmaXJzdCBkZWFjdGl2YXRl
-Li4uIik7Cj4gKwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcmMgPSBuY2lfcmVxdWVzdChuZGV2
-LCBuY2lfcmZfZGVhY3RpdmF0ZV9yZXEsIDAsCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCBtc2Vjc190b19qaWZmaWVzKE5DSV9SRl9ERUFDVElWQVRFX1RJTUVPVVQpKTsKPiAr
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlmIChyYykKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIHJldHVybiAtRUJVU1k7Cj4gKyDCoCDCoCDCoCB9CgpJIGRvbid0IHRoaW5rIGl0
-IGlzIGEgZ29vZCBpZGVhIHRvIGltcGxpY2l0bHkgZGVhY3RpdmF0ZSBhIHRhcmdldC4gSQp0aGlu
-ayB5b3Ugc2hvdWxkIGp1c3QgcmV0dXJuIEVCVVNZLgoKCgo+ICtzdGF0aWMgaW50IG5jaV9kYXRh
-X2V4Y2hhbmdlKHN0cnVjdCBuZmNfZGV2ICpuZmNfZGV2LCBfX3UzMiB0YXJnZXRfaWR4LAo+ICsg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgc3RydWN0IHNrX2J1ZmYgKnNrYiwKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGRhdGFfZXhj
-aGFuZ2VfY2JfdCBjYiwKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHZvaWQgKmNiX2NvbnRleHQpCj4gK3sKPiAr
-IMKgIMKgIMKgIHN0cnVjdCBuY2lfZGV2ICpuZGV2ID0gbmZjX2dldF9kcnZkYXRhKG5mY19kZXYp
-Owo+ICsKPiArIMKgIMKgIMKgIG5mY19kYmcoImVudHJ5LCB0YXJnZXRfaWR4ICVkLCBsZW4gJWQi
-LCB0YXJnZXRfaWR4LCBza2ItPmxlbik7Cj4gKwo+ICsgwqAgwqAgwqAgaWYgKCFuZGV2LT50YXJn
-ZXRfYWN0aXZlX3Byb3QpIHsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIG5mY19lcnIoInVuYWJs
-ZSB0byBleGNoYW5nZSBkYXRhLCBubyBhY3RpdmUgdGFyZ2V0Iik7Cj4gKyDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCByZXR1cm4gLUVJTlZBTDsKPiArIMKgIMKgIMKgIH0KPiArCj4gKyDCoCDCoCDCoCAv
-KiBzdG9yZSBjYiBhbmQgY29udGV4dCB0byBiZSB1c2VkIG9uIHJlY2VpdmluZyBkYXRhICovCj4g
-KyDCoCDCoCDCoCBuZGV2LT5kYXRhX2V4Y2hhbmdlX2NiID0gY2I7Cj4gKyDCoCDCoCDCoCBuZGV2
-LT5kYXRhX2V4Y2hhbmdlX2NiX2NvbnRleHQgPSBjYl9jb250ZXh0OwoKVGhpcyBpcyB3cm9uZy4g
-VGhlIGRhdGEgZXhjaGFuZ2UgY2FuIGJlIGNhbGxlZCBhZ2FpbiBiZWZvcmUgY29tcGxldGluZwp0
-aGUgcHJldmlvdXMgY2FsbC4gU28sIHlvdSBzaG91bGRuJ3Qgc3RvcmUgdGhlIGNiIGFuZCBjYl9j
-b250ZXh0IGluCnRoZSBkZXZpY2UuCgo+ICsKPiArIMKgIMKgIMKgIHJldHVybiBuY2lfc2VuZF9k
-YXRhKG5kZXYsIG5kZXYtPmNvbm5faWQsIHNrYik7Cj4gK30KPiArCgoKTGF1cm8K
+Signed-off-by: Alexander Simon <an.alexsimon@googlemail.com>
+---
+ include/net/mac80211.h |    2 +-
+ net/mac80211/ibss.c    |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9edba09..c0f63fd 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -171,7 +171,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_ERP_CTS_PROT	= 1<<1,
+ 	BSS_CHANGED_ERP_PREAMBLE	= 1<<2,
+ 	BSS_CHANGED_ERP_SLOT		= 1<<3,
+-	BSS_CHANGED_HT                  = 1<<4,
++	BSS_CHANGED_HT			= 1<<4,
+ 	BSS_CHANGED_BASIC_RATES		= 1<<5,
+ 	BSS_CHANGED_BEACON_INT		= 1<<6,
+ 	BSS_CHANGED_BSSID		= 1<<7,
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 56c24ca..836b275 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -417,7 +417,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+  * must be callable in atomic context.
+  */
+ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+-					u8 *bssid,u8 *addr, u32 supp_rates,
++					u8 *bssid, u8 *addr, u32 supp_rates,
+ 					gfp_t gfp)
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+-- 
+1.7.3.4
+
