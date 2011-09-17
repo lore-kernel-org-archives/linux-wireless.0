@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51630 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758026Ab1IIIC2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Sep 2011 04:02:28 -0400
-Subject: Re: [PATCH v2 1/3] mac80211: Start implementing QoS support for
- mesh interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
-	jlopex@gmail.com
-In-Reply-To: <CAPjQAd9+QB2WpovrrLV3ArPRqv-tEY_HY3tKjYjvFcJZxM=LHg@mail.gmail.com> (sfid-20110908_181929_199296_563197DA)
-References: <1315442994-304-1-git-send-email-javier@cozybit.com>
-	 <1315442994-304-2-git-send-email-javier@cozybit.com>
-	 <1315465312.3948.4.camel@jlt3.sipsolutions.net>
-	 <CAPjQAd9+QB2WpovrrLV3ArPRqv-tEY_HY3tKjYjvFcJZxM=LHg@mail.gmail.com>
-	 (sfid-20110908_181929_199296_563197DA)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 09 Sep 2011 10:02:18 +0200
-Message-ID: <1315555338.17050.1.camel@jlt3.sipsolutions.net> (sfid-20110909_100233_232370_CCBDF5B3)
-Mime-Version: 1.0
+Received: from smtp.iopen.co.nz ([202.6.116.226]:53048 "EHLO mail.iopen.co.nz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751671Ab1IQBpq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Sep 2011 21:45:46 -0400
+Message-ID: <4E73F3FA.502@iopen.net> (sfid-20110917_034554_507044_C9C96309)
+Date: Sat, 17 Sep 2011 13:12:26 +1200
+From: Linux Wireless Stuff for IOPEN <linwir-list@iopen.net>
+MIME-Version: 1.0
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Update regulatory rules for New Zealand (NZ)
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-09-08 at 09:17 -0700, Javier Cardona wrote:
-> On Thu, Sep 8, 2011 at 12:01 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Wed, 2011-09-07 at 17:49 -0700, Javier Cardona wrote:
-> >
-> >> +     /* For mesh, the use of the QoS header is mandatory */
-> >> +     if (ieee80211_vif_is_mesh(&sdata->vif))
-> >> +             sta_flags |= WLAN_STA_WME;
-> >> +
-> >
-> > With patch 3, this piece seems unnecessary?
-> 
-> At that point we don't know who the next hop peer will so the previous
-> block (below) will not find an sta.  Also, we want the QoS header in
-> multicast frames.  So I thought this might be the least intrusive way.
-> 
-> >>>
->         if (!is_multicast_ether_addr(hdr.addr1)) {
->                 rcu_read_lock();
->                 sta = sta_info_get(sdata, hdr.addr1);
->                 if (sta)
->                         sta_flags = get_sta_flags(sta);
->                 rcu_read_unlock();
->         }
-> >>>
+>From Fedora 14 :
+==============
 
-Ok, yeah, that makes sense.
+> country NZ:
+>         (2402 - 2482 @ 40), (N/A, 30)
+>         (5170 - 5250 @ 20), (3, 23)
+>         (5250 - 5330 @ 20), (3, 23), DFS
+>         (5735 - 5835 @ 20), (3, 30)
 
-johannes
+Updates for 2.4 GHz :
+===================
+
+  Frequency range is 2400 to 2483.5 (Ref 1)
+  Maximum EIRP is 36 dBm (4 W)      (Ref 1)
+
+Updates for 5 GHz :
+=================
+
+  5150 - 5250  23 dBm (200 mW) indoor only            (Ref 1,3)
+  5250 - 5350  23 dBm (200 mW) indoor/outdoor,DFS+TPC (Ref 1,3)
+  5725 - 5875  36 dBm (  4  W) PtMP/PtP               (Ref 1,3)
+  5725 - 5825  53 dBm (200  W) PtP fixed              (Ref 1,2,3)
+
+  And possibly this via the Spread Spectrum Device provision
+
+  5470 - 5725  30 dBm (  1  W) requires DFS+TPC       (Ref 3)
+
+  Maximum power density is specified for some chunks.
+
+References :
+==========
+1 :
+> http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/fixed-radio-link-devices/information-on-the-operation-of-wireless-lan-and-related-systems-in-the-2-ghz-and-5-ghz-bands
+2 :
+> http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/fixed-radio-link-devices
+3 :
+> http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/short-range-devices
+
+Cheers
+The IOPEN wireless deployers
 
