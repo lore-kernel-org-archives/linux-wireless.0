@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53553 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751468Ab1I0LKJ (ORCPT
+Received: from bues.ch ([80.190.117.144]:51913 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756198Ab1IQWXe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 07:10:09 -0400
-Subject: Re: Questions on ieee80211_frame_duration()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Roland Vossen <rvossen@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4E81A098.9040708@broadcom.com>
-References: <4E81A098.9040708@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Sep 2011 13:10:05 +0200
-Message-ID: <1317121805.4082.10.camel@jlt3.sipsolutions.net> (sfid-20110927_131012_604522_F0806572)
+	Sat, 17 Sep 2011 18:23:34 -0400
+Date: Sun, 18 Sep 2011 00:23:20 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Manuel Munz <freifunk@somakoma.de>, linux-wireless@vger.kernel.org
+Subject: Re: No beacons in ad-hoc mode with b43
+Message-ID: <20110918002320.03f6a9fc@milhouse> (sfid-20110918_002341_933669_89BA70B9)
+In-Reply-To: <CACna6rxN+9ZJVnt-WGpxvyUrnBO9gnVOcTeZD9=eJZOUjJcgww@mail.gmail.com>
+References: <4E751496.30903@somakoma.de>
+	<CACna6rxN+9ZJVnt-WGpxvyUrnBO9gnVOcTeZD9=eJZOUjJcgww@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sun, 18 Sep 2011 00:13:32 +0200
+Rafał Miłecki <zajec5@gmail.com> wrote:
 
-> in response to one of your brcm80211 review comments, I am trying to 
-> replace functions that calculate frame duration with Mac80211 counterparts.
-> 
-> As such, I have a hard time grasping this function:
-> 
-> http://lxr.free-electrons.com/source/net/mac80211/util.c#L108
-> 
-> A couple of questions:
-> 
-> a. The comment in the 'else' branch does not mention 802.11n, but I 
-> think it should. Agree ?
+> 2011/9/17 Manuel Munz <freifunk@somakoma.de>:
+> > i want to use b43 on older broadcom wireless routers with openwrt, but
+> > there seems to be a problem: The router doesn't send beacons in adhoc
+> > mode (verified with wireshark), which means users can't see the network
+> > in a network scan. So is there a problem in the adhoc implementation
+> > with b43? Could someone please have a look at this? It is preventing us
+> > from using b43 in our mesh for too long now.
 
-Yeah, the function predates 11n support, and it seems that all devices
-that actually implement 11n don't need to calculate the duration in
-software, so this was never updated.
+adhoc is not tested a lot with b43 and nobody is really interested in it.
+I _think_ it used to work, however.
+You should probably compare AP vs adhoc codepaths. AP mode an adhoc are very
+similar with only tiny differences in the driver.
 
-> b. The long/short preamble choice applies to CCK rates only. But this 
-> function does not take that into account. Is that on purpose ?
+> > Router:
+> > Siemens SE505 (very similar to wrt54g), Broadcom 4712 WLAN (core revision 7)
 > 
-> c. In 802.11n there are 4 preamble types possible:
-> - long (CCK rates)
-> - short (CCK rates)
-> - green field
-> - mixed mode
-> 
-> The function does not seem to take the last two types into account. 
-> Should it ?
+> Please give us at least
+> lspci -nn | grep 14e4
 
-I suppose it needs to. I'd be happy if you would fix it :-)
+This is an embedded device.
 
-johannes
-
+-- 
+Greetings, Michael.
