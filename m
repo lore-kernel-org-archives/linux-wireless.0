@@ -1,26 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:38830 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1759386Ab1IITCD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Sep 2011 15:02:03 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 34AF354038F
-	for <linux-wireless@vger.kernel.org>; Fri,  9 Sep 2011 15:13:00 -0400 (EDT)
-Subject: Compat-wireless release for 2011-09-09 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110909190201.7C5F140644@repository3.orbit-lab.org> (sfid-20110909_210207_528790_D891D4BE)
-Date: Fri,  9 Sep 2011 15:02:01 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mail.compendium.com.ar ([200.69.223.160]:46677 "EHLO
+	rocinante.compendium.com.ar" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751320Ab1IQVEN convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Sep 2011 17:04:13 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by rocinante.compendium.com.ar (Postfix) with ESMTP id 963F7CC1E8
+	for <linux-wireless@vger.kernel.org>; Sat, 17 Sep 2011 17:55:08 -0300 (ART)
+Received: from rocinante.compendium.com.ar ([127.0.0.1])
+	by localhost (rocinante.compendium.com.ar [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id Fgt3bc6f4fZj for <linux-wireless@vger.kernel.org>;
+	Sat, 17 Sep 2011 17:55:07 -0300 (ART)
+Date: Sat, 17 Sep 2011 17:55:07 -0300
+From: Horacio =?iso-8859-1?Q?J=2E_Pe=F1a?= <horape@compendium.com.ar>
+To: linux-wireless@vger.kernel.org
+Subject: Multiple Virtual Interfaces: when the station one fails the ap
+ follows
+Message-ID: <20110917205507.GK8298@compendium.com.ar> (sfid-20110917_230420_791223_D651E70B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fatal: Unable to look up git.kernel.org (port 9418) (Name or service not known)
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+[Please excuse me the openwrt syntax, I wrote this first on the openwrt forum]
 
-compat-wireless code metrics
+When using multiple virtual interfaces like:
 
-    806210 - Total upstream lines of code being pulled
-ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
-rsync: connection unexpectedly closed (0 bytes received so far) [sender]
-rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
+
+config wifi-device  radio0
+        option type     mac80211
+        option channel  6
+...
+
+config wifi-iface
+        option device   radio0
+        option network  wan
+        option mode     sta
+        option ssid     AP1
+...
+config wifi-iface
+        option device   radio0
+        option network  wlan
+        option mode     AP2
+
+
+If wan gets deassociated from AP1, it gets impossible to associate to AP2 network. 
+
+Looking with airodump-ng I see a few beacons sent on the right channel and that it's sending probes on the wrong channels. It seems that this channel hopping looking for AP1 is what breaks AP2.
+
+It seems that devices in managed mode disregard the channel configuration. Is there any way to force it?
+
+This has been tested on a TP-LINK MR3420 (AR9287)
+
+Thanks!
+-- 
+Horacio J. Peña
+horape@compendium.com.ar
+horape@uninet.edu
