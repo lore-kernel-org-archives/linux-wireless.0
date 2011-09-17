@@ -1,33 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51355 "EHLO nbd.name"
+Received: from dell.nexicom.net ([216.168.96.13]:38884 "EHLO smtp.nexicom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752202Ab1IRJFS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Sep 2011 05:05:18 -0400
-Message-ID: <4E75B442.8050806@openwrt.org> (sfid-20110918_110524_307939_E53F0851)
-Date: Sun, 18 Sep 2011 11:05:06 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1755334Ab1IQXUF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Sep 2011 19:20:05 -0400
+Received: from mail.lockie.ca (dyn-dsl-mb-216-168-118-207.nexicom.net [216.168.118.207])
+	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p8HNK3JM002474
+	for <linux-wireless@vger.kernel.org>; Sat, 17 Sep 2011 19:20:03 -0400
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by mail.lockie.ca (Postfix) with ESMTP id 3BDB31E007D
+	for <linux-wireless@vger.kernel.org>; Sat, 17 Sep 2011 19:20:02 -0400 (EDT)
+Message-ID: <4E752B9A.6000509@lockie.ca> (sfid-20110918_012009_595271_D23969C1)
+Date: Sat, 17 Sep 2011 19:22:02 -0400
+From: James <bjlockie@lockie.ca>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH] ath9k: use ACCESS_ONCE_RW for write assignments
-References: <201109180457.37146.chunkeey@googlemail.com>
-In-Reply-To: <201109180457.37146.chunkeey@googlemail.com>
+To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Subject: Re: did my hardware die?
+References: <4E7521C9.5060801@lockie.ca>
+In-Reply-To: <4E7521C9.5060801@lockie.ca>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-09-18 4:57 AM, Christian Lamparter wrote:
-> This patch fixes a compiler error which was introduced by
-> "ath9k_hw: add a new API for setting tx descriptors" [2b63a4].
+On 09/17/11 18:40, James wrote:
+> Does it mean my hardware died since dmesg shows nothing related to ath?
 >
-> ar9002_mac.c:185:2: error: assignment of read-only location
-> ...
-> ar9003_mac.c:37:2: error: assignment of read-only location
-> ...
+> # dmesg | grep ath
 >
-> Signed-off-by: Christian Lamparter<chunkeey@googlemail.com>
-When and where was ACCESS_ONCE_RW added? It's not in wireless-testing 
-and I can only find references to it on the web in grsecurity patches.
+> # lspci
+> 02:09.0 Network controller: Atheros Communications Inc. AR5008 
+> Wireless Network Adapter (rev 01)
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+Kernel 3.6.36.4 sees the hardware:
 
-- Felix
+ath9k 0000:02:08.0: PCI INT A -> Link[LNKA] -> GSI 18 (level, low) -> IRQ 18
+ath: EEPROM regdomain: 0x10
+ath: EEPROM indicates we should expect a direct regpair map
+ath: Country alpha2 being used: CO
+ath: Regpair used: 0x10
+ieee80211 phy0: Selected rate control algorithm 'ath9k_rate_control'
+Registered led device: ath9k-phy0
+
+Kernel-3.0.4 does not.
