@@ -1,61 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f42.google.com ([74.125.83.42]:40399 "EHLO
-	mail-gw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757111Ab1IIAxR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 20:53:17 -0400
-Received: by gwb17 with SMTP id 17so633708gwb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 17:53:17 -0700 (PDT)
-Message-ID: <4E696378.3060005@lwfinger.net> (sfid-20110909_025321_536739_5F22C434)
-Date: Thu, 08 Sep 2011 19:53:12 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Rick Jones <rick.jones2@hp.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Question about netperf terminology in the RTL8192SE and 802.11n
- problem thread
-References: <4E6955B8.4000900@hp.com>
-In-Reply-To: <4E6955B8.4000900@hp.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from nbd.name ([46.4.11.11]:39584 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752220Ab1IQOJt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Sep 2011 10:09:49 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 1/4] ath9k_hw: make ath9k_hw_set_interrupts use ah->imask by default
+Date: Sat, 17 Sep 2011 16:09:34 +0200
+Message-Id: <1316268577-45651-1-git-send-email-nbd@openwrt.org> (sfid-20110917_161014_813289_9F71AB6D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/08/2011 06:54 PM, Rick Jones wrote:
-> Hi -
->
->  From time to time I web search for instances of netperf usage, and came across
-> http://www.spinics.net/lists/linux-wireless/msg76387.html which has verbiage like:
->
->> TCP_MAERTS TX Test: 47.33 53.94 55.19 44.24 57.74 55.44 53.74 54.63 47.87 57.82
->> TCP_MAERTS RX Test: 66.02 69.79 67.70 52.15 82.56 80.30 79.43 80.98 76.26 71.34
->> Results: TX: max 57.82, min 44.24. Mean 52.79(4.42)
->> RX: max 82.56, min 52.15. Mean 72.65(8.85)
->>
->> TCP_STREAM TX Test: 71.83 80.44 72.88 26.11 40.85 58.70 58.49 58.96 59.52 59.35
->> TCP_STREAM RX Test: 46.41 52.64 43.85 48.44 52.15 49.66 52.81 50.61 43.18 52.93
->> Results: TX: max 80.44, min 26.11. Mean 58.71(14.93)
->> RX: max 52.93, min 43.18. Mean 49.27(3.51)
->>
->> TCP_SENDFILE TX Test: 57.86 55.94 55.21 56.13 56.70 61.71 56.85 54.68 55.04 51.30
->> TCP_SENDFILE RX Test: 37.82 47.51 41.61 42.88 45.37 35.11 45.09 40.11 46.48 22.86
->> Results: TX: max 61.71, min 51.30. Mean 56.14(2.50)
->> RX: max 47.51, min 22.86. Mean 40.48(6.96)
->
->
-> in it. Seeing separate TX and RX lines for netperf TCP tests is unfamiliar to me
-> and I was wondering if someone (Stephan?) could explain the split? Netperf
-> itself tends to emit only the one figure for a transfer rate (measured up at the
-> socket level). (Modulo some of the recentish omni output selectors anyway,
-> though for a TCP transfer test they would/should be very very similar...)
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |   10 +++++-----
+ drivers/net/wireless/ath/ath9k/gpio.c   |    4 ++--
+ drivers/net/wireless/ath/ath9k/mac.c    |    6 +++---
+ drivers/net/wireless/ath/ath9k/mac.h    |    2 +-
+ drivers/net/wireless/ath/ath9k/main.c   |   10 +++++-----
+ drivers/net/wireless/ath/ath9k/recv.c   |    2 +-
+ 6 files changed, 17 insertions(+), 17 deletions(-)
 
-Those numbers are from my tests. The TX numbers are the standard netperf output 
-and give the rate from my test laptop to a server that is wired to the 
-AP/router. Those are the numbers that you are used to.
-
-The RX numbers are obtained by starting a server on my laptop and ssh'ing a 
-netperf command to the machine that was the server in the TX tests, i.e. I am 
-measuring the TX rate from the former server, or the RX rate for the laptop. My 
-script does 10 samples of each and calculates the mean and standard deviation.
-
-Larry
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 9cdeaeb..a13cabb 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -515,7 +515,7 @@ static void ath_beacon_config_ap(struct ath_softc *sc,
+ 	sc->sc_flags |= SC_OP_TSF_RESET;
+ 	ath9k_beacon_init(sc, nexttbtt, intval);
+ 	sc->beacon.bmisscnt = 0;
+-	ath9k_hw_set_interrupts(ah, ah->imask);
++	ath9k_hw_set_interrupts(ah);
+ 	ath9k_hw_enable_interrupts(ah);
+ }
+ 
+@@ -643,7 +643,7 @@ static void ath_beacon_config_sta(struct ath_softc *sc,
+ 	ath9k_hw_set_sta_beacon_timers(ah, &bs);
+ 	ah->imask |= ATH9K_INT_BMISS;
+ 
+-	ath9k_hw_set_interrupts(ah, ah->imask);
++	ath9k_hw_set_interrupts(ah);
+ 	ath9k_hw_enable_interrupts(ah);
+ }
+ 
+@@ -679,7 +679,7 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
+ 	ath9k_beacon_init(sc, nexttbtt, intval);
+ 	sc->beacon.bmisscnt = 0;
+ 
+-	ath9k_hw_set_interrupts(ah, ah->imask);
++	ath9k_hw_set_interrupts(ah);
+ 	ath9k_hw_enable_interrupts(ah);
+ }
+ 
+@@ -821,11 +821,11 @@ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status)
+ 	if (status) {
+ 		/* Re-enable beaconing */
+ 		ah->imask |= ATH9K_INT_SWBA;
+-		ath9k_hw_set_interrupts(ah, ah->imask);
++		ath9k_hw_set_interrupts(ah);
+ 	} else {
+ 		/* Disable SWBA interrupt */
+ 		ah->imask &= ~ATH9K_INT_SWBA;
+-		ath9k_hw_set_interrupts(ah, ah->imask);
++		ath9k_hw_set_interrupts(ah);
+ 		tasklet_kill(&sc->bcon_tasklet);
+ 		ath9k_hw_stop_dma_queue(ah, sc->beacon.beaconq);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index afbf540..d357657 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -150,7 +150,7 @@ static void ath9k_gen_timer_start(struct ath_hw *ah,
+ 	if ((ah->imask & ATH9K_INT_GENTIMER) == 0) {
+ 		ath9k_hw_disable_interrupts(ah);
+ 		ah->imask |= ATH9K_INT_GENTIMER;
+-		ath9k_hw_set_interrupts(ah, ah->imask);
++		ath9k_hw_set_interrupts(ah);
+ 		ath9k_hw_enable_interrupts(ah);
+ 	}
+ }
+@@ -165,7 +165,7 @@ static void ath9k_gen_timer_stop(struct ath_hw *ah, struct ath_gen_timer *timer)
+ 	if (timer_table->timer_mask.val == 0) {
+ 		ath9k_hw_disable_interrupts(ah);
+ 		ah->imask &= ~ATH9K_INT_GENTIMER;
+-		ath9k_hw_set_interrupts(ah, ah->imask);
++		ath9k_hw_set_interrupts(ah);
+ 		ath9k_hw_enable_interrupts(ah);
+ 	}
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 22f23ea..835e81d 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -827,9 +827,9 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_enable_interrupts);
+ 
+-void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
++void ath9k_hw_set_interrupts(struct ath_hw *ah)
+ {
+-	enum ath9k_int omask = ah->imask;
++	enum ath9k_int ints = ah->imask;
+ 	u32 mask, mask2;
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -837,7 +837,7 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
+ 	if (!(ints & ATH9K_INT_GLOBAL))
+ 		ath9k_hw_disable_interrupts(ah);
+ 
+-	ath_dbg(common, ATH_DBG_INTERRUPT, "0x%x => 0x%x\n", omask, ints);
++	ath_dbg(common, ATH_DBG_INTERRUPT, "New interrupt mask 0x%x\n", ints);
+ 
+ 	mask = ints & ATH9K_INT_COMMON;
+ 	mask2 = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 91c9654..c7cec9c 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -734,7 +734,7 @@ int ath9k_hw_beaconq_setup(struct ath_hw *ah);
+ 
+ /* Interrupt Handling */
+ bool ath9k_hw_intrpend(struct ath_hw *ah);
+-void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints);
++void ath9k_hw_set_interrupts(struct ath_hw *ah);
+ void ath9k_hw_enable_interrupts(struct ath_hw *ah);
+ void ath9k_hw_disable_interrupts(struct ath_hw *ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a16f539..f7cd461 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -273,7 +273,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 
+ 	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+ 			       sc->config.txpowlimit, &sc->curtxpow);
+-	ath9k_hw_set_interrupts(ah, ah->imask);
++	ath9k_hw_set_interrupts(ah);
+ 	ath9k_hw_enable_interrupts(ah);
+ 
+ 	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)) && start) {
+@@ -823,7 +823,7 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 
+ 	if (status & ATH9K_INT_RXEOL) {
+ 		ah->imask &= ~(ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
+-		ath9k_hw_set_interrupts(ah, ah->imask);
++		ath9k_hw_set_interrupts(ah);
+ 	}
+ 
+ 	if (status & ATH9K_INT_MIB) {
+@@ -1396,7 +1396,7 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
+ 		ah->imask &= ~ATH9K_INT_TSFOOR;
+ 	}
+ 
+-	ath9k_hw_set_interrupts(ah, ah->imask);
++	ath9k_hw_set_interrupts(ah);
+ 
+ 	/* Set up ANI */
+ 	if (iter_data.naps > 0) {
+@@ -1571,7 +1571,7 @@ static void ath9k_enable_ps(struct ath_softc *sc)
+ 	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
+ 		if ((ah->imask & ATH9K_INT_TIM_TIMER) == 0) {
+ 			ah->imask |= ATH9K_INT_TIM_TIMER;
+-			ath9k_hw_set_interrupts(ah, ah->imask);
++			ath9k_hw_set_interrupts(ah);
+ 		}
+ 		ath9k_hw_setrxabort(ah, 1);
+ 	}
+@@ -1591,7 +1591,7 @@ static void ath9k_disable_ps(struct ath_softc *sc)
+ 				  PS_WAIT_FOR_TX_ACK);
+ 		if (ah->imask & ATH9K_INT_TIM_TIMER) {
+ 			ah->imask &= ~ATH9K_INT_TIM_TIMER;
+-			ath9k_hw_set_interrupts(ah, ah->imask);
++			ath9k_hw_set_interrupts(ah);
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index bcc0b22..bba93eb 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1976,7 +1976,7 @@ requeue:
+ 
+ 	if (!(ah->imask & ATH9K_INT_RXEOL)) {
+ 		ah->imask |= (ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
+-		ath9k_hw_set_interrupts(ah, ah->imask);
++		ath9k_hw_set_interrupts(ah);
+ 	}
+ 
+ 	return 0;
+-- 
+1.7.3.2
 
