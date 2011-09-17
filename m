@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f42.google.com ([209.85.216.42]:39459 "EHLO
-	mail-qw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759096Ab1IIW3I convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f180.google.com ([74.125.82.180]:37153 "EHLO
+	mail-wy0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751586Ab1IQBd7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Sep 2011 18:29:08 -0400
+	Fri, 16 Sep 2011 21:33:59 -0400
+Received: by wyj26 with SMTP id 26so5320792wyj.11
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 18:33:58 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.64.1109092352230.13368@ask.diku.dk>
-References: <CAB=NE6U0ks9CobukO04=bZpnkm3Yw+Pf7keVPsP-hv1NyJZ_Xw@mail.gmail.com>
- <Pine.LNX.4.64.1109092245170.9242@ask.diku.dk> <CAB=NE6VVaAgyaEX0iTuuj=r1-Vsi5TgAyCj4+3J=QerrJTWs_Q@mail.gmail.com>
- <Pine.LNX.4.64.1109092352230.13368@ask.diku.dk>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 9 Sep 2011 15:28:47 -0700
-Message-ID: <CAB=NE6UAxOObHye4Tg7whY3mOSYm7mR9W3+kG+3GHjjqFip2rg@mail.gmail.com> (sfid-20110910_002945_950114_780B3C1E)
-Subject: Re: Backporting the Linux kernel, for good - was: Re: semantic patch inference
-To: Julia Lawall <julia@diku.dk>
-Cc: Jesper Andersen <jespera@diku.dk>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+From: Simeon Nifos <archwndas@googlemail.com>
+Date: Fri, 16 Sep 2011 18:33:38 -0700
+Message-ID: <CAL1uj0zX5gGHkQny7fE3xrVm9HgP3PvC+ff2g7sunzNvXzgu=g@mail.gmail.com> (sfid-20110917_033411_943517_80AC4CCE)
+Subject: deactivating one of the two wireless connections
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 9, 2011 at 2:53 PM, Julia Lawall <julia@diku.dk> wrote:
-> On Fri, 9 Sep 2011, Luis R. Rodriguez wrote:
->> On Fri, Sep 9, 2011 at 1:48 PM, Julia Lawall <julia@diku.dk> wrote:
->> > I guess that the patch that spdiff will receive will already contain the
->> > appropriate #ifs, so we don't have to be concerned about them.
->>
->> That is correct.
->>
->> > We just add them in as is.
->>
->> I do not follow, add what?
->
-> Sorry.  The + code. The #ifdefs ad the compatibility code.  We don't have
-> to interpret it, so we don't care whether it is only related to kernel
-> version numbers or something more complex.
+Dear all,
 
-Ah yes, indeed!
+I have a USB wireless card apart from the laptops one. The Gnome
+NetworkManager sees both when I plugin the USB wireless adapter. The
+problem is that for saving power I would like to turn off the wireless
+adapter of my laptop. However, if I use the laptops switch that turns
+off laptops wireless, the Network Manager, turns off both connections
+saying: Deactivated by Hardware switch or something similar.
 
-  Luis
+The problem is that I usually want to connect with my wireless USB
+adapter which has a directional antenna and provides better signal and
+higher download speeds. However, after some minutes automatically by
+itself the laptops adapter connects to the same access point and then
+I lose the connection. I can do something like:
+
+# ifconfig wlan0 down
+
+and deactivate the laptops adapter, but this is a simple ad-hoc solution.
+
+My impression is that the hardware switch on the keyboard of the
+laptop should not control all wireless connections. It is entirely
+wrong. If I wnt my USB connection to be deactivated I just unplug it.
+If I want to use it I just plug it in. This is how things should be.
+Removable devices should be powered on when connected and powered off
+when disconnected. For as long as it remains connected that means I
+want it to function as it is supposed to do so. I do not see why
+switching off my laptop's device switches off every other wireless
+device.
+
+Is there any easy fix for that?
+
+Cheers,
+Archwn.
