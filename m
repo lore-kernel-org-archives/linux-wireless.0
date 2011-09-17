@@ -1,39 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56523 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753211Ab1IAH1Y (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61417 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751929Ab1IQN35 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 03:27:24 -0400
-Received: by iabu26 with SMTP id u26so1594402iab.19
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Sep 2011 00:27:24 -0700 (PDT)
+	Sat, 17 Sep 2011 09:29:57 -0400
+Date: Sat, 17 Sep 2011 19:00:32 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Paul Stewart <pstew@chromium.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Adrian Chadd <adrian@freebsd.org>, <linville@tuxdriver.com>
+Subject: Re: [PATCH] ath9k: Fix samp_lock init for non-DEBUGFS
+Message-ID: <20110917133031.GA22467@vmraj-lnx.users.atheros.com> (sfid-20110917_153001_541233_80377288)
+References: <1314442067-11799-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <CAJ-Vmo=wLETTSy0i3uz3Zj5w+_o+AouzD=nJzFk9KnERK+g7Cg@mail.gmail.com>
+ <20110827111641.GA17693@vmraj-lnx.users.atheros.com>
+ <20110916230334.0BDD92043D@glenhelen.mtv.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <4E5F32B1.3050003@qca.qualcomm.com>
-References: <20110831133900.28842.29247.stgit@localhost6.localdomain6> <4E5F32B1.3050003@qca.qualcomm.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 1 Sep 2011 17:27:03 +1000
-Message-ID: <CAGRGNgWVx9p_9QrqLfStPu6mWq=mOwDy3N5fqr=CHu8zD2ZLrQ@mail.gmail.com> (sfid-20110901_092727_591334_C6BB7320)
-Subject: Re: [PATCH] ath6kl: add testmode support
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20110916230334.0BDD92043D@glenhelen.mtv.corp.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 1, 2011 at 17:22, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> On 08/31/2011 04:39 PM, Kalle Valo wrote:
->> This is port from the staging version of ath6kl. The interface to user space
->> is exactly same.
->
-> Thanks Kalle! I have applied the patch to my local ath6kl.git tree. But
-> as master.kernel.org is still down, I can't push them yet.
+On Fri, Sep 16, 2011 at 03:17:58PM -0700, Paul Stewart wrote:
+> Patch "ath9k: Add debugfs support for mac/baseband samples" uses
+> "&sc->debug.samp_lock" which breaks non-ATH9K_DEBUGFS builds.  Place
+> the correct ifdef guard around it.
+> 
+> Signed-off-by: Paul Stewart <pstew@chromium.org>
+> Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> Cc: Adrian Chadd <adrian@freebsd.org>
+> ---
+>  drivers/net/wireless/ath/ath9k/init.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+> index 74c9c99..b99ab96 100644
+> --- a/drivers/net/wireless/ath/ath9k/init.c
+> +++ b/drivers/net/wireless/ath/ath9k/init.c
+> @@ -553,7 +553,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
+>  	spin_lock_init(&sc->wiphy_lock);
+>  	spin_lock_init(&sc->sc_serial_rw);
+>  	spin_lock_init(&sc->sc_pm_lock);
+> +#ifdef CONFIG_ATH9K_DEBUGFS
+>  	spin_lock_init(&sc->debug.samp_lock);
+> +#endif
+Paul,
 
-Um, er, .... are you having a conversation with yourself?
+I donno what tree you are refering to. But debug.samp_lock was placed
+under proper debug switch. The code snippet as follows.
 
-Thanks,
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index d7761d1..dd71a5f 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -572,6 +572,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	mutex_init(&sc->mutex);
+ #ifdef CONFIG_ATH9K_DEBUGFS
+ 	spin_lock_init(&sc->nodes_lock);
++	spin_lock_init(&sc->debug.samp_lock);
+ 	INIT_LIST_HEAD(&sc->nodes);
+ #endif
 
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+--
+Rajkumar
