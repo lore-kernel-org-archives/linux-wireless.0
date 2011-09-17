@@ -1,45 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:36471 "HELO
-	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752436Ab1IUPwq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 11:52:46 -0400
-Message-ID: <4E7A084C.3000304@xenotime.net> (sfid-20110921_175251_461827_8937BA1B)
-Date: Wed, 21 Sep 2011 08:52:44 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH -next v2] bcma: driver_chipcommon_pmu.c needs linux/export.h
-References: <20110920173102.d38155c7defbbc29beaae7c0@canb.auug.org.au>	<4E78CFC0.4020003@xenotime.net>	<CACna6rxGrd-ORWZrc0xsAOKptU_Xj3eGh9qSfX9vJYCPTZrCRg@mail.gmail.com>	<4E78FCDB.1010002@xenotime.net> <CACna6rywFitSNkkwo6tNy887vdsoyHG5Cadk6Bb8_qBJ+gc42w@mail.gmail.com>
-In-Reply-To: <CACna6rywFitSNkkwo6tNy887vdsoyHG5Cadk6Bb8_qBJ+gc42w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:39582 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751448Ab1IQOJt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Sep 2011 10:09:49 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 3/4] ath: remove ath_regulatory::current_rd_ext
+Date: Sat, 17 Sep 2011 16:09:36 +0200
+Message-Id: <1316268577-45651-3-git-send-email-nbd@openwrt.org> (sfid-20110917_161014_870526_00F0D083)
+In-Reply-To: <1316268577-45651-2-git-send-email-nbd@openwrt.org>
+References: <1316268577-45651-1-git-send-email-nbd@openwrt.org>
+ <1316268577-45651-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/20/2011 11:45 PM, Rafał Miłecki wrote:
-> W dniu 20 września 2011 22:51 użytkownik Randy Dunlap
-> <rdunlap@xenotime.net> napisał:
->> From: Randy Dunlap <rdunlap@xenotime.net>
->>
->> bcma/driver_chipcommon_pmu.c needs to include <linux/export.h>
->> to fix these warnings:
->>
->> drivers/bcma/driver_chipcommon_pmu.c:27:1: warning: data definition has no type or storage class
->> drivers/bcma/driver_chipcommon_pmu.c:27:1: warning: type defaults to 'int' in declaration of 'EXPORT_SYMBOL_GPL'
->> drivers/bcma/driver_chipcommon_pmu.c:27:1: warning: parameter names (without types) in function declaration
-> 
-> Don't you get the same warning for core.c? Weird...
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath.h           |    1 -
+ drivers/net/wireless/ath/ath9k/hw.c      |    5 -----
+ drivers/net/wireless/ath/carl9170/main.c |    1 -
+ 3 files changed, 0 insertions(+), 7 deletions(-)
 
-No, I don't.  Stranger things have happened, I'm sure.
-
-Feel free to add export.h to other files, or do you want me
-to do that?
-
-
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index bb71b4f..908fdbc 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -72,7 +72,6 @@ struct ath_regulatory {
+ 	u16 country_code;
+ 	u16 max_power_level;
+ 	u16 current_rd;
+-	u16 current_rd_ext;
+ 	int16_t power_limit;
+ 	struct reg_dmn_pair_mapping *regpair;
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 67b75d7..88a3888 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2067,11 +2067,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	eeval = ah->eep_ops->get_eeprom(ah, EEP_REG_0);
+ 	regulatory->current_rd = eeval;
+ 
+-	eeval = ah->eep_ops->get_eeprom(ah, EEP_REG_1);
+-	if (AR_SREV_9285_12_OR_LATER(ah))
+-		eeval |= AR9285_RDEXT_DEFAULT;
+-	regulatory->current_rd_ext = eeval;
+-
+ 	if (ah->opmode != NL80211_IFTYPE_AP &&
+ 	    ah->hw_version.subvendorid == AR_SUBVENDOR_ID_NEW_A) {
+ 		if (regulatory->current_rd == 0x64 ||
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index af351ec..6786124 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1894,7 +1894,6 @@ static int carl9170_parse_eeprom(struct ar9170 *ar)
+ 		ar->hw->channel_change_time = 80 * 1000;
+ 
+ 	regulatory->current_rd = le16_to_cpu(ar->eeprom.reg_domain[0]);
+-	regulatory->current_rd_ext = le16_to_cpu(ar->eeprom.reg_domain[1]);
+ 
+ 	/* second part of wiphy init */
+ 	SET_IEEE80211_PERM_ADDR(ar->hw, ar->eeprom.mac_address);
 -- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+1.7.3.2
+
