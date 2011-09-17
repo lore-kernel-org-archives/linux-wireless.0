@@ -1,62 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:42901 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752396Ab1IEKyk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Sep 2011 06:54:40 -0400
-Received: by mail-wy0-f171.google.com with SMTP id 13so5564498wyh.16
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Sep 2011 03:54:39 -0700 (PDT)
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Shahar Levi <shahar_levi@ti.com>
-Subject: [PATCH] wl12xx: Includes OFDM rates in IBSS mode
-Date: Mon,  5 Sep 2011 13:54:36 +0300
-Message-Id: <1315220076-30153-1-git-send-email-shahar_levi@ti.com> (sfid-20110905_125446_177598_414D44B7)
+Received: from lo.gmane.org ([80.91.229.12]:53852 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755437Ab1IQXAH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Sep 2011 19:00:07 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1R53ri-0007O8-9b
+	for linux-wireless@vger.kernel.org; Sun, 18 Sep 2011 01:00:06 +0200
+Received: from dslb-088-068-208-212.pools.arcor-ip.net ([88.68.208.212])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2011 01:00:06 +0200
+Received: from an.alexsimon by dslb-088-068-208-212.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2011 01:00:06 +0200
+To: linux-wireless@vger.kernel.org
+From: Alexander Simon <an.alexsimon@googlemail.com>
+Subject: Re: [PATCH v3 3/3] mac80211: Add HT operation modes for IBSS
+Date: Sat, 17 Sep 2011 22:54:30 +0000 (UTC)
+Message-ID: <loom.20110918T004437-426@post.gmane.org> (sfid-20110918_010021_257649_C3C63FC1)
+References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com> <c06e69fca577a9f162c3d69b4a7e7a212788ee7b.1316297595.git.an.alexsimon@googlemail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IBSS mode includes only 11B rates.
-Includes OFDM rates in IBSS mode. Note that IBSS connection is
-without ERP protection.
+I came to the conclusion that the old patch was way too complicated and
+confusing. Too much cases have to be taken into account when trying to
+homogenize the HT mode.
+I changed the code now that only mode given by iw is considered.
 
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
----
- drivers/net/wireless/wl12xx/conf.h |    5 +++--
- drivers/net/wireless/wl12xx/main.c |    2 +-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+This yields in a way smaller patch and less refactoring as we don't need to
+manipulate the beacon skb and match additionally for HT mode in scan results.
 
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index 43bccc8..381c236 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -459,11 +459,12 @@ struct conf_rx_settings {
- 	CONF_HW_BIT_RATE_2MBPS | CONF_HW_BIT_RATE_5_5MBPS)
- 
- /*
-- * Default rates for working as IBSS. use 11b rates
-+ * Default rates for working as IBSS. use 11b + OFDM rates
-+ * Note that IBSS connection is without ERP protection
-  */
- #define CONF_TX_IBSS_DEFAULT_RATES  (CONF_HW_BIT_RATE_1MBPS |       \
- 		CONF_HW_BIT_RATE_2MBPS | CONF_HW_BIT_RATE_5_5MBPS | \
--		CONF_HW_BIT_RATE_11MBPS);
-+		CONF_HW_BIT_RATE_11MBPS | CONF_TX_OFDM_RATES);
- 
- struct conf_tx_rate_class {
- 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index d66b079..eb10539 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3705,7 +3705,7 @@ sta_not_found:
- 									 rates);
- 			wl->basic_rate = wl1271_tx_min_rate_get(wl);
- 
--			/* by default, use 11b rates */
-+			/* by default, use 11b + OFDM rates */
- 			wl->rate_set = CONF_TX_IBSS_DEFAULT_RATES;
- 			ret = wl1271_acx_sta_rate_policies(wl);
- 			if (ret < 0)
--- 
-1.7.1
+I think it's better that way.
+
+Sorry for the confusion and/or extra work!
 
