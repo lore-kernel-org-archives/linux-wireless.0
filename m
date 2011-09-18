@@ -1,55 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47796 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753989Ab1INIty (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:49208 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932082Ab1IRTCD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 04:49:54 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2] ath9k_hw: Do full chip reset on 11A channels for AR9003
-Date: Wed, 14 Sep 2011 14:20:30 +0530
-Message-ID: <1315990230-2921-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110914_104958_426006_284A2201)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 18 Sep 2011 15:02:03 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 84843540920
+	for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2011 15:14:24 -0400 (EDT)
+Subject: Compat-wireless release for 2011-09-18 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110918190201.881B240642@repository3.orbit-lab.org> (sfid-20110918_210207_275272_7AB6EC22)
+Date: Sun, 18 Sep 2011 15:02:01 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR9003 seems to have issues sometimes with fast channel change
-in 5GHz and this case is handled specifically for AR9280 by doing
-a full reset. Let's do a full reset for 5GHz channles of AR9380
-& for all channels of AR9280 pci chips.
+fatal: Unable to look up git.kernel.org (port 9418) (Name or service not known)
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 47d10a4..ae5adf2 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1499,14 +1499,16 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	}
- 	ah->noise = ath9k_hw_getchan_noise(ah, chan);
- 
-+	if ((AR_SREV_9280(ah) && common->bus_ops->ath_bus_type == ATH_PCI) ||
-+	    (AR_SREV_9300_20_OR_LATER(ah) && IS_CHAN_5GHZ(chan)))
-+		bChannelChange = false;
-+
- 	if (bChannelChange &&
- 	    (ah->chip_fullsleep != true) &&
- 	    (ah->curchan != NULL) &&
- 	    (chan->channel != ah->curchan->channel) &&
- 	    ((chan->channelFlags & CHANNEL_ALL) ==
--	     (ah->curchan->channelFlags & CHANNEL_ALL)) &&
--	    (!AR_SREV_9280(ah) || AR_DEVID_7010(ah))) {
--
-+	     (ah->curchan->channelFlags & CHANNEL_ALL))) {
- 		if (ath9k_hw_channel_change(ah, chan)) {
- 			ath9k_hw_loadnf(ah, ah->curchan);
- 			ath9k_hw_start_nfcal(ah, true);
--- 
-1.7.6.1
-
+    806210 - Total upstream lines of code being pulled
+ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
+rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
