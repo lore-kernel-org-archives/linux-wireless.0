@@ -1,329 +1,290 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37060 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933473Ab1IOMZr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 08:25:47 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH RESEND 1/4] ath9k_hw: clean up hardware revision checks
-Date: Thu, 15 Sep 2011 14:25:35 +0200
-Message-Id: <1316089538-91685-1-git-send-email-nbd@openwrt.org> (sfid-20110915_142555_773758_4661338B)
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:48906 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750753Ab1IRIWT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Sep 2011 04:22:19 -0400
+Received: by gyg10 with SMTP id 10so3574299gyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2011 01:22:18 -0700 (PDT)
+From: ilanelias78@gmail.com
+To: aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	samuel@sortiz.org, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
+Subject: [PATCH v2 1/4 RESEND] NFC: Add dev_up and dev_down control operations
+Date: Sun, 18 Sep 2011 11:19:33 +0300
+Message-Id: <1316333976-30388-2-git-send-email-ilane@ti.com> (sfid-20110918_102223_358292_390A2019)
+In-Reply-To: <1316333976-30388-1-git-send-email-ilane@ti.com>
+References: <1316333976-30388-1-git-send-email-ilane@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-- AR_SREV_5416_20_OR_LATER is always true, remove it
-- AR_SREV_9280_20_OR_LATER is always true within eeprom_4k.c and eeprom_9287.c
-- (AR_SREV_9271 || AR_SREV_9285) is always true in eeprom_4k.c
+From: Ilan Elias <ilane@ti.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Add 2 new nfc control operations:
+dev_up to turn on the nfc device
+dev_down to turn off the nfc device
+
+Signed-off-by: Ilan Elias <ilane@ti.com>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c  |    3 +-
- drivers/net/wireless/ath/ath9k/eeprom.c      |    7 +--
- drivers/net/wireless/ath/ath9k/eeprom_4k.c   |   85 ++++++++++++--------------
- drivers/net/wireless/ath/ath9k/eeprom_9287.c |    6 +-
- drivers/net/wireless/ath/ath9k/eeprom_def.c  |   46 ++++++--------
- drivers/net/wireless/ath/ath9k/mac.c         |    2 +-
- drivers/net/wireless/ath/ath9k/mac.h         |    4 -
- drivers/net/wireless/ath/ath9k/reg.h         |    4 -
- 8 files changed, 63 insertions(+), 94 deletions(-)
+ drivers/nfc/pn533.c |    2 +
+ include/linux/nfc.h |    6 ++++
+ include/net/nfc.h   |    4 ++
+ net/nfc/core.c      |   77 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ net/nfc/netlink.c   |   56 +++++++++++++++++++++++++++++++++++++
+ net/nfc/nfc.h       |    4 ++
+ 6 files changed, 149 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index fac2c6d..b130c26 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -704,8 +704,7 @@ static void ar5008_hw_override_ini(struct ath_hw *ah,
- 		REG_WRITE(ah, AR_PCU_MISC_MODE2, val);
- 	}
- 
--	if (!AR_SREV_5416_20_OR_LATER(ah) ||
--	    AR_SREV_9280_20_OR_LATER(ah))
-+	if (AR_SREV_9280_20_OR_LATER(ah))
- 		return;
- 	/*
- 	 * Disable BB clock gating
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index e61404d..e46f751 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -456,12 +456,7 @@ void ath9k_hw_get_gain_boundaries_pdadcs(struct ath_hw *ah,
- 		pPdGainBoundaries[i] =
- 			min((u16)MAX_RATE_POWER, pPdGainBoundaries[i]);
- 
--		if ((i == 0) && !AR_SREV_5416_20_OR_LATER(ah)) {
--			minDelta = pPdGainBoundaries[0] - 23;
--			pPdGainBoundaries[0] = 23;
--		} else {
--			minDelta = 0;
--		}
-+		minDelta = 0;
- 
- 		if (i == 0) {
- 			if (AR_SREV_9280_20_OR_LATER(ah))
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index ea658e7..99f7a08 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -405,12 +405,7 @@ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
- 	REG_RMW_FIELD(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_GAIN_3, 0);
- 
- 	for (i = 0; i < AR5416_EEP4K_MAX_CHAINS; i++) {
--		if (AR_SREV_5416_20_OR_LATER(ah) &&
--		    (ah->rxchainmask == 5 || ah->txchainmask == 5) &&
--		    (i != 0)) {
--			regChainOffset = (i == 1) ? 0x2000 : 0x1000;
--		} else
--			regChainOffset = i * 0x1000;
-+		regChainOffset = i * 0x1000;
- 
- 		if (pEepData->baseEepHeader.txMask & (1 << i)) {
- 			pRawDataset = pEepData->calPierData2G[i];
-@@ -423,19 +418,17 @@ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
- 
- 			ENABLE_REGWRITE_BUFFER(ah);
- 
--			if ((i == 0) || AR_SREV_5416_20_OR_LATER(ah)) {
--				REG_WRITE(ah, AR_PHY_TPCRG5 + regChainOffset,
--					  SM(pdGainOverlap_t2,
--					     AR_PHY_TPCRG5_PD_GAIN_OVERLAP)
--					  | SM(gainBoundaries[0],
--					       AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_1)
--					  | SM(gainBoundaries[1],
--					       AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_2)
--					  | SM(gainBoundaries[2],
--					       AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_3)
--					  | SM(gainBoundaries[3],
--				       AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_4));
--			}
-+			REG_WRITE(ah, AR_PHY_TPCRG5 + regChainOffset,
-+				  SM(pdGainOverlap_t2,
-+				     AR_PHY_TPCRG5_PD_GAIN_OVERLAP)
-+				  | SM(gainBoundaries[0],
-+				       AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_1)
-+				  | SM(gainBoundaries[1],
-+				       AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_2)
-+				  | SM(gainBoundaries[2],
-+				       AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_3)
-+				  | SM(gainBoundaries[3],
-+			       AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_4));
- 
- 			regOffset = AR_PHY_BASE + (672 << 2) + regChainOffset;
- 			for (j = 0; j < 32; j++) {
-@@ -715,10 +708,8 @@ static void ath9k_hw_4k_set_txpower(struct ath_hw *ah,
- 	if (test)
- 	    return;
- 
--	if (AR_SREV_9280_20_OR_LATER(ah)) {
--		for (i = 0; i < Ar5416RateSize; i++)
--			ratesArray[i] -= AR5416_PWR_TABLE_OFFSET_DB * 2;
--	}
-+	for (i = 0; i < Ar5416RateSize; i++)
-+		ratesArray[i] -= AR5416_PWR_TABLE_OFFSET_DB * 2;
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
- 
-@@ -877,6 +868,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
- 	u8 txRxAttenLocal;
- 	u8 ob[5], db1[5], db2[5];
- 	u8 ant_div_control1, ant_div_control2;
-+	u8 bb_desired_scale;
- 	u32 regVal;
- 
- 	pModal = &eep->modalHeader;
-@@ -1096,30 +1088,29 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
- 				      AR_PHY_SETTLING_SWITCH,
- 				      pModal->swSettleHt40);
- 	}
--	if (AR_SREV_9271(ah) || AR_SREV_9285(ah)) {
--		u8 bb_desired_scale = (pModal->bb_scale_smrt_antenna &
--				EEP_4K_BB_DESIRED_SCALE_MASK);
--		if ((pBase->txGainType == 0) && (bb_desired_scale != 0)) {
--			u32 pwrctrl, mask, clr;
--
--			mask = BIT(0)|BIT(5)|BIT(10)|BIT(15)|BIT(20)|BIT(25);
--			pwrctrl = mask * bb_desired_scale;
--			clr = mask * 0x1f;
--			REG_RMW(ah, AR_PHY_TX_PWRCTRL8, pwrctrl, clr);
--			REG_RMW(ah, AR_PHY_TX_PWRCTRL10, pwrctrl, clr);
--			REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL12, pwrctrl, clr);
--
--			mask = BIT(0)|BIT(5)|BIT(15);
--			pwrctrl = mask * bb_desired_scale;
--			clr = mask * 0x1f;
--			REG_RMW(ah, AR_PHY_TX_PWRCTRL9, pwrctrl, clr);
--
--			mask = BIT(0)|BIT(5);
--			pwrctrl = mask * bb_desired_scale;
--			clr = mask * 0x1f;
--			REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL11, pwrctrl, clr);
--			REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL13, pwrctrl, clr);
--		}
-+
-+	bb_desired_scale = (pModal->bb_scale_smrt_antenna &
-+			EEP_4K_BB_DESIRED_SCALE_MASK);
-+	if ((pBase->txGainType == 0) && (bb_desired_scale != 0)) {
-+		u32 pwrctrl, mask, clr;
-+
-+		mask = BIT(0)|BIT(5)|BIT(10)|BIT(15)|BIT(20)|BIT(25);
-+		pwrctrl = mask * bb_desired_scale;
-+		clr = mask * 0x1f;
-+		REG_RMW(ah, AR_PHY_TX_PWRCTRL8, pwrctrl, clr);
-+		REG_RMW(ah, AR_PHY_TX_PWRCTRL10, pwrctrl, clr);
-+		REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL12, pwrctrl, clr);
-+
-+		mask = BIT(0)|BIT(5)|BIT(15);
-+		pwrctrl = mask * bb_desired_scale;
-+		clr = mask * 0x1f;
-+		REG_RMW(ah, AR_PHY_TX_PWRCTRL9, pwrctrl, clr);
-+
-+		mask = BIT(0)|BIT(5);
-+		pwrctrl = mask * bb_desired_scale;
-+		clr = mask * 0x1f;
-+		REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL11, pwrctrl, clr);
-+		REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL13, pwrctrl, clr);
- 	}
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index f81a93e..c78eb6a 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -1432,6 +1432,8 @@ static int pn533_set_configuration(struct pn533 *dev, u8 cfgitem, u8 *cfgdata,
  }
  
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index 21f180d..ebf97ba 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -851,10 +851,8 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 	if (test)
- 		return;
+ struct nfc_ops pn533_nfc_ops = {
++	.dev_up = NULL,
++	.dev_down = NULL,
+ 	.start_poll = pn533_start_poll,
+ 	.stop_poll = pn533_stop_poll,
+ 	.activate_target = pn533_activate_target,
+diff --git a/include/linux/nfc.h b/include/linux/nfc.h
+index c525e0b..36cb955 100644
+--- a/include/linux/nfc.h
++++ b/include/linux/nfc.h
+@@ -39,6 +39,10 @@
+  *
+  * @NFC_CMD_GET_DEVICE: request information about a device (requires
+  *	%NFC_ATTR_DEVICE_INDEX) or dump request to get a list of all nfc devices
++ * @NFC_CMD_DEV_UP: turn on the nfc device
++ *	(requires %NFC_ATTR_DEVICE_INDEX)
++ * @NFC_CMD_DEV_DOWN: turn off the nfc device
++ *	(requires %NFC_ATTR_DEVICE_INDEX)
+  * @NFC_CMD_START_POLL: start polling for targets using the given protocols
+  *	(requires %NFC_ATTR_DEVICE_INDEX and %NFC_ATTR_PROTOCOLS)
+  * @NFC_CMD_STOP_POLL: stop polling for targets (requires
+@@ -56,6 +60,8 @@
+ enum nfc_commands {
+ 	NFC_CMD_UNSPEC,
+ 	NFC_CMD_GET_DEVICE,
++	NFC_CMD_DEV_UP,
++	NFC_CMD_DEV_DOWN,
+ 	NFC_CMD_START_POLL,
+ 	NFC_CMD_STOP_POLL,
+ 	NFC_CMD_GET_TARGET,
+diff --git a/include/net/nfc.h b/include/net/nfc.h
+index 87b51fe..6a7f602 100644
+--- a/include/net/nfc.h
++++ b/include/net/nfc.h
+@@ -48,6 +48,8 @@ typedef void (*data_exchange_cb_t)(void *context, struct sk_buff *skb,
+ 								int err);
  
--	if (AR_SREV_9280_20_OR_LATER(ah)) {
--		for (i = 0; i < Ar5416RateSize; i++)
--			ratesArray[i] -= AR9287_PWR_TABLE_OFFSET_DB * 2;
--	}
-+	for (i = 0; i < Ar5416RateSize; i++)
-+		ratesArray[i] -= AR9287_PWR_TABLE_OFFSET_DB * 2;
+ struct nfc_ops {
++	int (*dev_up)(struct nfc_dev *dev);
++	int (*dev_down)(struct nfc_dev *dev);
+ 	int (*start_poll)(struct nfc_dev *dev, u32 protocols);
+ 	void (*stop_poll)(struct nfc_dev *dev);
+ 	int (*activate_target)(struct nfc_dev *dev, u32 target_idx,
+@@ -78,7 +80,9 @@ struct nfc_dev {
+ 	int targets_generation;
+ 	spinlock_t targets_lock;
+ 	struct device dev;
++	bool dev_up;
+ 	bool polling;
++	bool remote_activated;
+ 	struct nfc_genl_data genl_data;
+ 	u32 supported_protocols;
  
- 	ENABLE_REGWRITE_BUFFER(ah);
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index 284e2f6..47e02c1 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -53,6 +53,80 @@ int nfc_printk(const char *level, const char *format, ...)
+ EXPORT_SYMBOL(nfc_printk);
  
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index e7e84be..eda681f 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -547,8 +547,7 @@ static void ath9k_hw_def_set_board_values(struct ath_hw *ah,
- 				break;
- 		}
- 
--		if (AR_SREV_5416_20_OR_LATER(ah) &&
--		    (ah->rxchainmask == 5 || ah->txchainmask == 5) && (i != 0))
-+		if ((ah->rxchainmask == 5 || ah->txchainmask == 5) && (i != 0))
- 			regChainOffset = (i == 1) ? 0x2000 : 0x1000;
- 		else
- 			regChainOffset = i * 0x1000;
-@@ -565,9 +564,8 @@ static void ath9k_hw_def_set_board_values(struct ath_hw *ah,
- 			  SM(pModal->iqCalQCh[i],
- 			     AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF));
- 
--		if ((i == 0) || AR_SREV_5416_20_OR_LATER(ah))
--			ath9k_hw_def_set_gain(ah, pModal, eep, txRxAttenLocal,
--					      regChainOffset, i);
-+		ath9k_hw_def_set_gain(ah, pModal, eep, txRxAttenLocal,
-+				      regChainOffset, i);
+ /**
++ * nfc_dev_up - turn on the NFC device
++ *
++ * @dev: The nfc device to be turned on
++ *
++ * The device remains up until the nfc_dev_down function is called.
++ */
++int nfc_dev_up(struct nfc_dev *dev)
++{
++	int rc = 0;
++
++	nfc_dbg("dev_name=%s", dev_name(&dev->dev));
++
++	device_lock(&dev->dev);
++
++	if (!device_is_registered(&dev->dev)) {
++		rc = -ENODEV;
++		goto error;
++	}
++
++	if (dev->dev_up) {
++		rc = -EALREADY;
++		goto error;
++	}
++
++	if (dev->ops->dev_up)
++		rc = dev->ops->dev_up(dev);
++
++	if (!rc)
++		dev->dev_up = true;
++
++error:
++	device_unlock(&dev->dev);
++	return rc;
++}
++
++/**
++ * nfc_dev_down - turn off the NFC device
++ *
++ * @dev: The nfc device to be turned off
++ */
++int nfc_dev_down(struct nfc_dev *dev)
++{
++	int rc = 0;
++
++	nfc_dbg("dev_name=%s", dev_name(&dev->dev));
++
++	device_lock(&dev->dev);
++
++	if (!device_is_registered(&dev->dev)) {
++		rc = -ENODEV;
++		goto error;
++	}
++
++	if (!dev->dev_up) {
++		rc = -EALREADY;
++		goto error;
++	}
++
++	if (dev->polling || dev->remote_activated) {
++		rc = -EBUSY;
++		goto error;
++	}
++
++	if (dev->ops->dev_down)
++		dev->ops->dev_down(dev);
++
++	dev->dev_up = false;
++
++error:
++	device_unlock(&dev->dev);
++	return rc;
++}
++
++/**
+  * nfc_start_poll - start polling for nfc targets
+  *
+  * @dev: The nfc device that must start polling
+@@ -144,6 +218,8 @@ int nfc_activate_target(struct nfc_dev *dev, u32 target_idx, u32 protocol)
  	}
  
- 	if (AR_SREV_9280_20_OR_LATER(ah)) {
-@@ -893,8 +891,7 @@ static void ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
- 		      xpdGainValues[2]);
+ 	rc = dev->ops->activate_target(dev, target_idx, protocol);
++	if (!rc)
++		dev->remote_activated = true;
  
- 	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
--		if (AR_SREV_5416_20_OR_LATER(ah) &&
--		    (ah->rxchainmask == 5 || ah->txchainmask == 5) &&
-+		if ((ah->rxchainmask == 5 || ah->txchainmask == 5) &&
- 		    (i != 0)) {
- 			regChainOffset = (i == 1) ? 0x2000 : 0x1000;
- 		} else
-@@ -935,27 +932,24 @@ static void ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
+ error:
+ 	device_unlock(&dev->dev);
+@@ -170,6 +246,7 @@ int nfc_deactivate_target(struct nfc_dev *dev, u32 target_idx)
+ 	}
  
- 			ENABLE_REGWRITE_BUFFER(ah);
+ 	dev->ops->deactivate_target(dev, target_idx);
++	dev->remote_activated = false;
  
--			if ((i == 0) || AR_SREV_5416_20_OR_LATER(ah)) {
--				if (OLC_FOR_AR9280_20_LATER) {
--					REG_WRITE(ah,
--						AR_PHY_TPCRG5 + regChainOffset,
--						SM(0x6,
--						AR_PHY_TPCRG5_PD_GAIN_OVERLAP) |
--						SM_PD_GAIN(1) | SM_PD_GAIN(2) |
--						SM_PD_GAIN(3) | SM_PD_GAIN(4));
--				} else {
--					REG_WRITE(ah,
--						AR_PHY_TPCRG5 + regChainOffset,
--						SM(pdGainOverlap_t2,
--						AR_PHY_TPCRG5_PD_GAIN_OVERLAP)|
--						SM_PDGAIN_B(0, 1) |
--						SM_PDGAIN_B(1, 2) |
--						SM_PDGAIN_B(2, 3) |
--						SM_PDGAIN_B(3, 4));
--				}
-+			if (OLC_FOR_AR9280_20_LATER) {
-+				REG_WRITE(ah,
-+					AR_PHY_TPCRG5 + regChainOffset,
-+					SM(0x6,
-+					AR_PHY_TPCRG5_PD_GAIN_OVERLAP) |
-+					SM_PD_GAIN(1) | SM_PD_GAIN(2) |
-+					SM_PD_GAIN(3) | SM_PD_GAIN(4));
-+			} else {
-+				REG_WRITE(ah,
-+					AR_PHY_TPCRG5 + regChainOffset,
-+					SM(pdGainOverlap_t2,
-+					AR_PHY_TPCRG5_PD_GAIN_OVERLAP)|
-+					SM_PDGAIN_B(0, 1) |
-+					SM_PDGAIN_B(1, 2) |
-+					SM_PDGAIN_B(2, 3) |
-+					SM_PDGAIN_B(3, 4));
- 			}
+ error:
+ 	device_unlock(&dev->dev);
+diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+index ccdff79..03f8818 100644
+--- a/net/nfc/netlink.c
++++ b/net/nfc/netlink.c
+@@ -367,6 +367,52 @@ out_putdev:
+ 	return rc;
+ }
  
--
- 			ath9k_adjust_pdadc_values(ah, pwr_table_offset,
- 						  diff, pdadcValues);
++static int nfc_genl_dev_up(struct sk_buff *skb, struct genl_info *info)
++{
++	struct nfc_dev *dev;
++	int rc;
++	u32 idx;
++
++	nfc_dbg("entry");
++
++	if (!info->attrs[NFC_ATTR_DEVICE_INDEX])
++		return -EINVAL;
++
++	idx = nla_get_u32(info->attrs[NFC_ATTR_DEVICE_INDEX]);
++
++	dev = nfc_get_device(idx);
++	if (!dev)
++		return -ENODEV;
++
++	rc = nfc_dev_up(dev);
++
++	nfc_put_device(dev);
++	return rc;
++}
++
++static int nfc_genl_dev_down(struct sk_buff *skb, struct genl_info *info)
++{
++	struct nfc_dev *dev;
++	int rc;
++	u32 idx;
++
++	nfc_dbg("entry");
++
++	if (!info->attrs[NFC_ATTR_DEVICE_INDEX])
++		return -EINVAL;
++
++	idx = nla_get_u32(info->attrs[NFC_ATTR_DEVICE_INDEX]);
++
++	dev = nfc_get_device(idx);
++	if (!dev)
++		return -ENODEV;
++
++	rc = nfc_dev_down(dev);
++
++	nfc_put_device(dev);
++	return rc;
++}
++
+ static int nfc_genl_start_poll(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct nfc_dev *dev;
+@@ -441,6 +487,16 @@ static struct genl_ops nfc_genl_ops[] = {
+ 		.policy = nfc_genl_policy,
+ 	},
+ 	{
++		.cmd = NFC_CMD_DEV_UP,
++		.doit = nfc_genl_dev_up,
++		.policy = nfc_genl_policy,
++	},
++	{
++		.cmd = NFC_CMD_DEV_DOWN,
++		.doit = nfc_genl_dev_down,
++		.policy = nfc_genl_policy,
++	},
++	{
+ 		.cmd = NFC_CMD_START_POLL,
+ 		.doit = nfc_genl_start_poll,
+ 		.policy = nfc_genl_policy,
+diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
+index aaf9832..1a877de 100644
+--- a/net/nfc/nfc.h
++++ b/net/nfc/nfc.h
+@@ -101,6 +101,10 @@ static inline void nfc_device_iter_exit(struct class_dev_iter *iter)
+ 	class_dev_iter_exit(iter);
+ }
  
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 786587a..22f23ea 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -584,7 +584,7 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
- 	else
- 		rs->rs_keyix = ATH9K_RXKEYIX_INVALID;
++int nfc_dev_up(struct nfc_dev *dev);
++
++int nfc_dev_down(struct nfc_dev *dev);
++
+ int nfc_start_poll(struct nfc_dev *dev, u32 protocols);
  
--	rs->rs_rate = RXSTATUS_RATE(ah, (&ads));
-+	rs->rs_rate = MS(ads.ds_rxstatus0, AR_RxRate);
- 	rs->rs_more = (ads.ds_rxstatus1 & AR_RxMore) ? 1 : 0;
- 
- 	rs->rs_isaggr = (ads.ds_rxstatus8 & AR_RxAggr) ? 1 : 0;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 25f2c9a..c763977 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -17,10 +17,6 @@
- #ifndef MAC_H
- #define MAC_H
- 
--#define RXSTATUS_RATE(ah, ads) (AR_SREV_5416_20_OR_LATER(ah) ?		\
--				MS(ads->ds_rxstatus0, AR_RxRate) :	\
--				(ads->ds_rxstatus3 >> 2) & 0xFF)
--
- #define set11nTries(_series, _index) \
- 	(SM((_series)[_index].Tries, AR_XmitDataTries##_index))
- 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 5d34381..3286802 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -800,10 +800,6 @@
- #define AR_SREV_5416(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
- 	 ((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCIE))
--#define AR_SREV_5416_20_OR_LATER(_ah) \
--	(((AR_SREV_5416(_ah)) && \
--	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_20)) || \
--	 ((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100))
- #define AR_SREV_5416_22_OR_LATER(_ah) \
- 	(((AR_SREV_5416(_ah)) && \
- 	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_22)) || \
+ int nfc_stop_poll(struct nfc_dev *dev);
 -- 
-1.7.3.2
+1.7.0.4
 
