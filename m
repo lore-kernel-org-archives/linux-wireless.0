@@ -1,47 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:51407 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756240Ab1IHFoL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 01:44:11 -0400
-Received: by mail-ww0-f45.google.com with SMTP id 9so323944wwg.2
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Sep 2011 22:44:08 -0700 (PDT)
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Luciano Coelho <coelho@ti.com>,
-	Shahar Levi <shahar_levi@ti.com>
-Subject: [PATCH] mac80211: Update device channel in case of HW channel switch supported
-Date: Thu,  8 Sep 2011 08:44:05 +0300
-Message-Id: <1315460645-16837-1-git-send-email-shahar_levi@ti.com> (sfid-20110908_074414_622624_6F3E908A)
+Received: from s2.udvp.de ([188.40.48.165]:57504 "EHLO s2.udvp.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751712Ab1IRAQU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Sep 2011 20:16:20 -0400
+Message-ID: <4E75384F.8050501@somakoma.de> (sfid-20110918_021623_906552_BDFEF064)
+Date: Sun, 18 Sep 2011 02:16:15 +0200
+From: Manuel Munz <freifunk@somakoma.de>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: No beacons in ad-hoc mode with b43
+References: <4E751496.30903@somakoma.de> <CACna6rxN+9ZJVnt-WGpxvyUrnBO9gnVOcTeZD9=eJZOUjJcgww@mail.gmail.com>
+In-Reply-To: <CACna6rxN+9ZJVnt-WGpxvyUrnBO9gnVOcTeZD9=eJZOUjJcgww@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig8CF86EE3A8C6C72BEE81A8F4"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The hw.conf.channel value is not updated properly for drivers that
-support HW channel switch.  Since the switch is done entirely by the
-driver and we don't call ieee80211_hw_config(), this value remains
-untouched.  This patch fixes that by setting the new channel directly in
-ieee80211_chswitch_work().
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig8CF86EE3A8C6C72BEE81A8F4
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
----
- net/mac80211/mlme.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+On 18.09.2011 00:13, Rafa=C5=82 Mi=C5=82ecki wrote:
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index d6470c7..6f65ceb 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -394,6 +394,9 @@ static void ieee80211_chswitch_work(struct work_struct *work)
- 		/* call "hw_config" only if doing sw channel switch */
- 		ieee80211_hw_config(sdata->local,
- 			IEEE80211_CONF_CHANGE_CHANNEL);
-+	} else {
-+		/* update the device channel directly */
-+		sdata->local->hw.conf.channel = sdata->local->oper_channel;
- 	}
- 
- 	/* XXX: shouldn't really modify cfg80211-owned data! */
--- 
-1.7.1
+> Please give us at least
+> lspci -nn | grep 14e4
+> dmesg | grep b43
+>=20
 
+Hi,
+
+here is the info you requested:
+
+# dmesg |grep b43
+b43-phy0: Broadcom 4712 WLAN found (core revision 7)
+Registered led device: b43-phy0::tx
+Registered led device: b43-phy0::rx
+b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+
+# lspci -nn | grep 14e4
+00:00.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+00:01.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+00:02.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+00:03.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+00:04.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+00:05.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+00:06.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+00:07.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+00:08.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+00:09.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+00:0a.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+00:0b.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+00:0c.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+00:0d.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+00:0e.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+00:0f.0 Host bridge [0600]: Broadcom Corporation BCM47xx V.92 56k modem
+[14e4:4712] (rev 01)
+
+The device has no 56k modem, so i guess the pciutils database is wrong he=
+re.
+
+Regards, Manuel
+
+
+--------------enig8CF86EE3A8C6C72BEE81A8F4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEUEARECAAYFAk51OE8ACgkQ+zov67K9xz5lfQCdHalWf+cRCXlMIGEeJonPLBcK
+65MAmIt6gvEBseETKt8aSTTo2rqmljg=
+=JLZV
+-----END PGP SIGNATURE-----
+
+--------------enig8CF86EE3A8C6C72BEE81A8F4--
