@@ -1,697 +1,412 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39585 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752041Ab1IQOJu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Sep 2011 10:09:50 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 2/4] ath9k_hw: clean up tx power handling
-Date: Sat, 17 Sep 2011 16:09:35 +0200
-Message-Id: <1316268577-45651-2-git-send-email-nbd@openwrt.org> (sfid-20110917_161014_528371_05D495DC)
-In-Reply-To: <1316268577-45651-1-git-send-email-nbd@openwrt.org>
-References: <1316268577-45651-1-git-send-email-nbd@openwrt.org>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:33366 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754571Ab1IRIWa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Sep 2011 04:22:30 -0400
+Received: by gxk6 with SMTP id 6so2978623gxk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2011 01:22:30 -0700 (PDT)
+From: ilanelias78@gmail.com
+To: aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	samuel@sortiz.org, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
+Subject: [PATCH v2 4/4 RESEND] NFC: driver for TI shared transport
+Date: Sun, 18 Sep 2011 11:19:36 +0300
+Message-Id: <1316333976-30388-5-git-send-email-ilane@ti.com> (sfid-20110918_102234_882088_F5C5ACC4)
+In-Reply-To: <1316333976-30388-1-git-send-email-ilane@ti.com>
+References: <1316333976-30388-1-git-send-email-ilane@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code for handling various restrictions concerning regulatory limits,
-antenna gain, etc. is very convoluted and duplicated across various
-EEPROM parsing implementations, making it hard to review.
+From: Ilan Elias <ilane@ti.com>
 
-This patch partially cleans up the mess by unifying regulatory limit
-handling in one function and removing dead code for transmit power scaling.
-It also simplifies handling of antenna gain
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Ilan Elias <ilane@ti.com>
 ---
- drivers/net/wireless/ath/ath.h                 |    1 -
- drivers/net/wireless/ath/ath9k/ar5008_phy.c    |   11 +----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   39 +++------------
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c  |    9 +---
- drivers/net/wireless/ath/ath9k/ar9003_phy.c    |   11 +----
- drivers/net/wireless/ath/ath9k/common.c        |    6 ++-
- drivers/net/wireless/ath/ath9k/eeprom.h        |    7 ++-
- drivers/net/wireless/ath/ath9k/eeprom_4k.c     |   27 ++--------
- drivers/net/wireless/ath/ath9k/eeprom_9287.c   |   33 ++----------
- drivers/net/wireless/ath/ath9k/eeprom_def.c    |   43 +++++------------
- drivers/net/wireless/ath/ath9k/hw.c            |   63 ++++++++++++++++--------
- drivers/net/wireless/ath/ath9k/hw.h            |    9 +---
- drivers/net/wireless/ath/ath9k/init.c          |    2 -
- 13 files changed, 85 insertions(+), 176 deletions(-)
+ drivers/nfc/Kconfig     |   11 ++
+ drivers/nfc/Makefile    |    1 +
+ drivers/nfc/nfcwilink.c |  342 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 354 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/nfc/nfcwilink.c
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 4ed7f24..bb71b4f 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -71,7 +71,6 @@ struct ath_regulatory {
- 	char alpha2[2];
- 	u16 country_code;
- 	u16 max_power_level;
--	u32 tp_scale;
- 	u16 current_rd;
- 	u16 current_rd_ext;
- 	int16_t power_limit;
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 0a749c8..f199e9e 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -763,10 +763,8 @@ static void ar5008_hw_set_channel_regs(struct ath_hw *ah,
- static int ar5008_hw_process_ini(struct ath_hw *ah,
- 				 struct ath9k_channel *chan)
- {
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int i, regWrites = 0;
--	struct ieee80211_channel *channel = chan->chan;
- 	u32 modesIndex, freqIndex;
+diff --git a/drivers/nfc/Kconfig b/drivers/nfc/Kconfig
+index 2acff43..8a56fd3 100644
+--- a/drivers/nfc/Kconfig
++++ b/drivers/nfc/Kconfig
+@@ -27,4 +27,15 @@ config NFC_PN533
+ 	  Say Y here to compile support for PN533 devices into the
+ 	  kernel or say M to compile it as module (pn533).
  
- 	switch (chan->chanmode) {
-@@ -903,14 +901,7 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
- 	ar5008_hw_set_channel_regs(ah, chan);
- 	ar5008_hw_init_chain_masks(ah);
- 	ath9k_olc_init(ah);
--
--	/* Set TX power */
--	ah->eep_ops->set_txpower(ah, chan,
--				 ath9k_regd_get_ctl(regulatory, chan),
--				 channel->max_antenna_gain * 2,
--				 channel->max_power * 2,
--				 min((u32) MAX_RATE_POWER,
--				 (u32) regulatory->power_limit), false);
-+	ath9k_hw_apply_txpower(ah, chan);
- 
- 	/* Write analog registers */
- 	if (!ath9k_hw_set_rf_regs(ah, chan, freqIndex)) {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 51398f0..d7a5ca7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3021,6 +3021,10 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
- 		return (pBase->miscConfiguration >> 0x3) & 0x1;
- 	case EEP_ANT_DIV_CTL1:
- 		return eep->base_ext1.ant_div_control;
-+	case EEP_ANTENNA_GAIN_5G:
-+		return eep->modalHeader5G.antennaGain;
-+	case EEP_ANTENNA_GAIN_2G:
-+		return eep->modalHeader2G.antennaGain;
- 	default:
- 		return 0;
- 	}
-@@ -4764,20 +4768,14 @@ static u16 ar9003_hw_get_max_edge_power(struct ar9300_eeprom *eep,
- static void ar9003_hw_set_power_per_rate_table(struct ath_hw *ah,
- 					       struct ath9k_channel *chan,
- 					       u8 *pPwrArray, u16 cfgCtl,
--					       u8 twiceAntennaReduction,
--					       u8 twiceMaxRegulatoryPower,
-+					       u8 antenna_reduction,
- 					       u16 powerLimit)
- {
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ar9300_eeprom *pEepData = &ah->eeprom.ar9300_eep;
- 	u16 twiceMaxEdgePower = MAX_RATE_POWER;
--	static const u16 tpScaleReductionTable[5] = {
--		0, 3, 6, 9, MAX_RATE_POWER
--	};
- 	int i;
--	int16_t  twiceLargestAntenna;
--	u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
-+	u16 scaledPower = 0, minCtlPower;
- 	static const u16 ctlModesFor11a[] = {
- 		CTL_11A, CTL_5GHT20, CTL_11A_EXT, CTL_5GHT40
- 	};
-@@ -4795,28 +4793,7 @@ static void ar9003_hw_set_power_per_rate_table(struct ath_hw *ah,
- 	bool is2ghz = IS_CHAN_2GHZ(chan);
- 
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
--
--	/* Compute TxPower reduction due to Antenna Gain */
--	if (is2ghz)
--		twiceLargestAntenna = pEepData->modalHeader2G.antennaGain;
--	else
--		twiceLargestAntenna = pEepData->modalHeader5G.antennaGain;
--
--	twiceLargestAntenna = (int16_t)min((twiceAntennaReduction) -
--				twiceLargestAntenna, 0);
--
--	/*
--	 * scaledPower is the minimum of the user input power level
--	 * and the regulatory allowed power level
--	 */
--	maxRegAllowedPower = twiceMaxRegulatoryPower + twiceLargestAntenna;
--
--	if (regulatory->tp_scale != ATH9K_TP_SCALE_MAX) {
--		maxRegAllowedPower -=
--			(tpScaleReductionTable[(regulatory->tp_scale)] * 2);
--	}
--
--	scaledPower = min(powerLimit, maxRegAllowedPower);
-+	scaledPower = powerLimit - antenna_reduction;
- 
- 	/*
- 	 * Reduce scaled Power by number of chains active to get
-@@ -5003,7 +4980,6 @@ static inline u8 mcsidx_to_tgtpwridx(unsigned int mcs_idx, u8 base_pwridx)
- static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
- 					struct ath9k_channel *chan, u16 cfgCtl,
- 					u8 twiceAntennaReduction,
--					u8 twiceMaxRegulatoryPower,
- 					u8 powerLimit, bool test)
- {
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
-@@ -5056,7 +5032,6 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
- 	ar9003_hw_set_power_per_rate_table(ah, chan,
- 					   targetPowerValT2, cfgCtl,
- 					   twiceAntennaReduction,
--					   twiceMaxRegulatoryPower,
- 					   powerLimit);
- 
- 	if (ah->eep_ops->get_eeprom(ah, EEP_PAPRD)) {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 609acb2..a1a08b3 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -19,7 +19,6 @@
- 
- void ar9003_paprd_enable(struct ath_hw *ah, bool val)
- {
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ath9k_channel *chan = ah->curchan;
- 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
- 
-@@ -54,13 +53,7 @@ void ar9003_paprd_enable(struct ath_hw *ah, bool val)
- 
- 	if (val) {
- 		ah->paprd_table_write_done = true;
--
--		ah->eep_ops->set_txpower(ah, chan,
--				ath9k_regd_get_ctl(regulatory, chan),
--				chan->chan->max_antenna_gain * 2,
--				chan->chan->max_power * 2,
--				min((u32) MAX_RATE_POWER,
--				(u32) regulatory->power_limit), false);
-+		ath9k_hw_apply_txpower(ah, chan);
- 	}
- 
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_CTRL0_B0,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 7db6e86..779f407 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -631,9 +631,7 @@ static void ar9003_hw_prog_ini(struct ath_hw *ah,
- static int ar9003_hw_process_ini(struct ath_hw *ah,
- 				 struct ath9k_channel *chan)
- {
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	unsigned int regWrites = 0, i;
--	struct ieee80211_channel *channel = chan->chan;
- 	u32 modesIndex;
- 
- 	switch (chan->chanmode) {
-@@ -693,14 +691,7 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 	ar9003_hw_override_ini(ah);
- 	ar9003_hw_set_channel_regs(ah, chan);
- 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
--
--	/* Set TX power */
--	ah->eep_ops->set_txpower(ah, chan,
--				 ath9k_regd_get_ctl(regulatory, chan),
--				 channel->max_antenna_gain * 2,
--				 channel->max_power * 2,
--				 min((u32) MAX_RATE_POWER,
--				 (u32) regulatory->power_limit), false);
-+	ath9k_hw_apply_txpower(ah, chan);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index dc705a2..905f1b3 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -161,10 +161,12 @@ EXPORT_SYMBOL(ath9k_cmn_count_streams);
- void ath9k_cmn_update_txpow(struct ath_hw *ah, u16 cur_txpow,
- 			    u16 new_txpow, u16 *txpower)
- {
--	if (cur_txpow != new_txpow) {
-+	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
++config NFC_WILINK
++	tristate "Texas Instruments NFC WiLink driver"
++	depends on TI_ST
++	help
++	  This enables the NFC driver for Texas Instrument's BT/FM/GPS/NFC
++	  combo devices. This makes use of shared transport line discipline
++	  core driver to communicate with the NFC core of the combo chip.
 +
-+	if (reg->power_limit != new_txpow) {
- 		ath9k_hw_set_txpowerlimit(ah, new_txpow, false);
- 		/* read back in case value is clamped */
--		*txpower = ath9k_hw_regulatory(ah)->power_limit;
-+		*txpower = reg->max_power_level;
- 	}
- }
- EXPORT_SYMBOL(ath9k_cmn_update_txpow);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index a3c7d0c2..085d3ba 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -253,7 +253,9 @@ enum eeprom_param {
- 	EEP_PAPRD,
- 	EEP_MODAL_VER,
- 	EEP_ANT_DIV_CTL1,
--	EEP_CHAIN_MASK_REDUCE
-+	EEP_CHAIN_MASK_REDUCE,
-+	EEP_ANTENNA_GAIN_2G,
-+	EEP_ANTENNA_GAIN_5G
- };
++	  Say Y here to compile support for Texas Instrument's NFC WiLink driver
++	  into the kernel or say M to compile it as module.
++
+ endmenu
+diff --git a/drivers/nfc/Makefile b/drivers/nfc/Makefile
+index 8ef446d..ab99e85 100644
+--- a/drivers/nfc/Makefile
++++ b/drivers/nfc/Makefile
+@@ -4,5 +4,6 @@
  
- enum ar5416_rates {
-@@ -657,8 +659,7 @@ struct eeprom_ops {
- 	void (*set_addac)(struct ath_hw *hw, struct ath9k_channel *chan);
- 	void (*set_txpower)(struct ath_hw *hw, struct ath9k_channel *chan,
- 			   u16 cfgCtl, u8 twiceAntennaReduction,
--			   u8 twiceMaxRegulatoryPower, u8 powerLimit,
--			   bool test);
-+			   u8 powerLimit, bool test);
- 	u16 (*get_spur_channel)(struct ath_hw *ah, u16 i, bool is2GHz);
- };
+ obj-$(CONFIG_PN544_NFC)		+= pn544.o
+ obj-$(CONFIG_NFC_PN533)		+= pn533.o
++obj-$(CONFIG_NFC_WILINK)	+= nfcwilink.o
  
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 303560e..ab6811d 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -350,6 +350,8 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
- 		return pModal->antdiv_ctl1;
- 	case EEP_TXGAIN_TYPE:
- 		return pBase->txGainType;
-+	case EEP_ANTENNA_GAIN_2G:
-+		return pModal->antennaGainCh[0];
- 	default:
- 		return 0;
- 	}
-@@ -462,8 +464,7 @@ static void ath9k_hw_set_4k_power_per_rate_table(struct ath_hw *ah,
- 						 struct ath9k_channel *chan,
- 						 int16_t *ratesArray,
- 						 u16 cfgCtl,
--						 u16 AntennaReduction,
--						 u16 twiceMaxRegulatoryPower,
-+						 u16 antenna_reduction,
- 						 u16 powerLimit)
- {
- #define CMP_TEST_GRP \
-@@ -472,20 +473,16 @@ static void ath9k_hw_set_4k_power_per_rate_table(struct ath_hw *ah,
- 	|| (((cfgCtl & ~CTL_MODE_M) | (pCtlMode[ctlMode] & CTL_MODE_M)) == \
- 	    ((pEepData->ctlIndex[i] & CTL_MODE_M) | SD_NO_CTL))
- 
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	int i;
--	int16_t twiceLargestAntenna;
- 	u16 twiceMinEdgePower;
- 	u16 twiceMaxEdgePower = MAX_RATE_POWER;
--	u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
-+	u16 scaledPower = 0, minCtlPower;
- 	u16 numCtlModes;
- 	const u16 *pCtlMode;
- 	u16 ctlMode, freq;
- 	struct chan_centers centers;
- 	struct cal_ctl_data_4k *rep;
- 	struct ar5416_eeprom_4k *pEepData = &ah->eeprom.map4k;
--	static const u16 tpScaleReductionTable[5] =
--		{ 0, 3, 6, 9, MAX_RATE_POWER };
- 	struct cal_target_power_leg targetPowerOfdm, targetPowerCck = {
- 		0, { 0, 0, 0, 0}
- 	};
-@@ -503,19 +500,7 @@ static void ath9k_hw_set_4k_power_per_rate_table(struct ath_hw *ah,
- 
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
- 
--	twiceLargestAntenna = pEepData->modalHeader.antennaGainCh[0];
--	twiceLargestAntenna = (int16_t)min(AntennaReduction -
--					   twiceLargestAntenna, 0);
--
--	maxRegAllowedPower = twiceMaxRegulatoryPower + twiceLargestAntenna;
--	if (regulatory->tp_scale != ATH9K_TP_SCALE_MAX) {
--		maxRegAllowedPower -=
--			(tpScaleReductionTable[(regulatory->tp_scale)] * 2);
--	}
--
--	scaledPower = min(powerLimit, maxRegAllowedPower);
--	scaledPower = max((u16)0, scaledPower);
--
-+	scaledPower = powerLimit - antenna_reduction;
- 	numCtlModes = ARRAY_SIZE(ctlModesFor11g) - SUB_NUM_CTL_MODES_AT_2G_40;
- 	pCtlMode = ctlModesFor11g;
- 
-@@ -671,7 +656,6 @@ static void ath9k_hw_4k_set_txpower(struct ath_hw *ah,
- 				    struct ath9k_channel *chan,
- 				    u16 cfgCtl,
- 				    u8 twiceAntennaReduction,
--				    u8 twiceMaxRegulatoryPower,
- 				    u8 powerLimit, bool test)
- {
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
-@@ -691,7 +675,6 @@ static void ath9k_hw_4k_set_txpower(struct ath_hw *ah,
- 	ath9k_hw_set_4k_power_per_rate_table(ah, chan,
- 					     &ratesArray[0], cfgCtl,
- 					     twiceAntennaReduction,
--					     twiceMaxRegulatoryPower,
- 					     powerLimit);
- 
- 	ath9k_hw_set_4k_power_cal_table(ah, chan);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index 6698b72..90d771f 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -336,6 +336,9 @@ static u32 ath9k_hw_ar9287_get_eeprom(struct ath_hw *ah,
- 			return pBase->tempSensSlopePalOn;
- 		else
- 			return 0;
-+	case EEP_ANTENNA_GAIN_2G:
-+		return max_t(u8, pModal->antennaGainCh[0],
-+				 pModal->antennaGainCh[1]);
- 	default:
- 		return 0;
- 	}
-@@ -554,8 +557,7 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 						     struct ath9k_channel *chan,
- 						     int16_t *ratesArray,
- 						     u16 cfgCtl,
--						     u16 AntennaReduction,
--						     u16 twiceMaxRegulatoryPower,
-+						     u16 antenna_reduction,
- 						     u16 powerLimit)
- {
- #define CMP_CTL \
-@@ -569,12 +571,8 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6
- #define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10
- 
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	u16 twiceMaxEdgePower = MAX_RATE_POWER;
--	static const u16 tpScaleReductionTable[5] =
--		{ 0, 3, 6, 9, MAX_RATE_POWER };
- 	int i;
--	int16_t twiceLargestAntenna;
- 	struct cal_ctl_data_ar9287 *rep;
- 	struct cal_target_power_leg targetPowerOfdm = {0, {0, 0, 0, 0} },
- 				    targetPowerCck = {0, {0, 0, 0, 0} };
-@@ -582,7 +580,7 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 				    targetPowerCckExt = {0, {0, 0, 0, 0} };
- 	struct cal_target_power_ht targetPowerHt20,
- 				    targetPowerHt40 = {0, {0, 0, 0, 0} };
--	u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
-+	u16 scaledPower = 0, minCtlPower;
- 	static const u16 ctlModesFor11g[] = {
- 		CTL_11B, CTL_11G, CTL_2GHT20,
- 		CTL_11B_EXT, CTL_11G_EXT, CTL_2GHT40
-@@ -597,24 +595,7 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 	tx_chainmask = ah->txchainmask;
- 
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
--
--	/* Compute TxPower reduction due to Antenna Gain */
--	twiceLargestAntenna = max(pEepData->modalHeader.antennaGainCh[0],
--				  pEepData->modalHeader.antennaGainCh[1]);
--	twiceLargestAntenna = (int16_t)min((AntennaReduction) -
--					   twiceLargestAntenna, 0);
--
--	/*
--	 * scaledPower is the minimum of the user input power level
--	 * and the regulatory allowed power level.
--	 */
--	maxRegAllowedPower = twiceMaxRegulatoryPower + twiceLargestAntenna;
--
--	if (regulatory->tp_scale != ATH9K_TP_SCALE_MAX)
--		maxRegAllowedPower -=
--			(tpScaleReductionTable[(regulatory->tp_scale)] * 2);
--
--	scaledPower = min(powerLimit, maxRegAllowedPower);
-+	scaledPower = powerLimit - antenna_reduction;
- 
- 	/*
- 	 * Reduce scaled Power by number of chains active
-@@ -815,7 +796,6 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 					struct ath9k_channel *chan, u16 cfgCtl,
- 					u8 twiceAntennaReduction,
--					u8 twiceMaxRegulatoryPower,
- 					u8 powerLimit, bool test)
- {
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
-@@ -834,7 +814,6 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 	ath9k_hw_set_ar9287_power_per_rate_table(ah, chan,
- 						 &ratesArray[0], cfgCtl,
- 						 twiceAntennaReduction,
--						 twiceMaxRegulatoryPower,
- 						 powerLimit);
- 
- 	ath9k_hw_set_ar9287_power_cal_table(ah, chan);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index eda681f..e175e20 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -400,6 +400,7 @@ static u32 ath9k_hw_def_get_eeprom(struct ath_hw *ah,
- 	struct ar5416_eeprom_def *eep = &ah->eeprom.def;
- 	struct modal_eep_header *pModal = eep->modalHeader;
- 	struct base_eep_header *pBase = &eep->baseEepHeader;
-+	int band = 0;
- 
- 	switch (param) {
- 	case EEP_NFTHRESH_5:
-@@ -467,6 +468,14 @@ static u32 ath9k_hw_def_get_eeprom(struct ath_hw *ah,
- 			return pBase->pwr_table_offset;
- 		else
- 			return AR5416_PWR_TABLE_OFFSET_DB;
-+	case EEP_ANTENNA_GAIN_2G:
-+		band = 1;
-+		/* fall through */
-+	case EEP_ANTENNA_GAIN_5G:
-+		return max_t(u8, max_t(u8,
-+			pModal[band].antennaGainCh[0],
-+			pModal[band].antennaGainCh[1]),
-+			pModal[band].antennaGainCh[2]);
- 	default:
- 		return 0;
- 	}
-@@ -986,21 +995,15 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
- 						  struct ath9k_channel *chan,
- 						  int16_t *ratesArray,
- 						  u16 cfgCtl,
--						  u16 AntennaReduction,
--						  u16 twiceMaxRegulatoryPower,
-+						  u16 antenna_reduction,
- 						  u16 powerLimit)
- {
- #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
- #define REDUCE_SCALED_POWER_BY_THREE_CHAIN   9 /* 10*log10(3)*2 */
- 
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ar5416_eeprom_def *pEepData = &ah->eeprom.def;
- 	u16 twiceMaxEdgePower = MAX_RATE_POWER;
--	static const u16 tpScaleReductionTable[5] =
--		{ 0, 3, 6, 9, MAX_RATE_POWER };
--
- 	int i;
--	int16_t twiceLargestAntenna;
- 	struct cal_ctl_data *rep;
- 	struct cal_target_power_leg targetPowerOfdm, targetPowerCck = {
- 		0, { 0, 0, 0, 0}
-@@ -1012,7 +1015,7 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
- 	struct cal_target_power_ht targetPowerHt20, targetPowerHt40 = {
- 		0, {0, 0, 0, 0}
- 	};
--	u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
-+	u16 scaledPower = 0, minCtlPower;
- 	static const u16 ctlModesFor11a[] = {
- 		CTL_11A, CTL_5GHT20, CTL_11A_EXT, CTL_5GHT40
- 	};
-@@ -1031,27 +1034,7 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
- 
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
- 
--	twiceLargestAntenna = max(
--		pEepData->modalHeader
--			[IS_CHAN_2GHZ(chan)].antennaGainCh[0],
--		pEepData->modalHeader
--			[IS_CHAN_2GHZ(chan)].antennaGainCh[1]);
--
--	twiceLargestAntenna = max((u8)twiceLargestAntenna,
--				  pEepData->modalHeader
--				  [IS_CHAN_2GHZ(chan)].antennaGainCh[2]);
--
--	twiceLargestAntenna = (int16_t)min(AntennaReduction -
--					   twiceLargestAntenna, 0);
--
--	maxRegAllowedPower = twiceMaxRegulatoryPower + twiceLargestAntenna;
--
--	if (regulatory->tp_scale != ATH9K_TP_SCALE_MAX) {
--		maxRegAllowedPower -=
--			(tpScaleReductionTable[(regulatory->tp_scale)] * 2);
--	}
--
--	scaledPower = min(powerLimit, maxRegAllowedPower);
-+	scaledPower = powerLimit - antenna_reduction;
- 
- 	switch (ar5416_get_ntxchains(tx_chainmask)) {
- 	case 1:
-@@ -1256,7 +1239,6 @@ static void ath9k_hw_def_set_txpower(struct ath_hw *ah,
- 				    struct ath9k_channel *chan,
- 				    u16 cfgCtl,
- 				    u8 twiceAntennaReduction,
--				    u8 twiceMaxRegulatoryPower,
- 				    u8 powerLimit, bool test)
- {
- #define RT_AR_DELTA(x) (ratesArray[x] - cck_ofdm_delta)
-@@ -1278,7 +1260,6 @@ static void ath9k_hw_def_set_txpower(struct ath_hw *ah,
- 	ath9k_hw_set_def_power_per_rate_table(ah, chan,
- 					       &ratesArray[0], cfgCtl,
- 					       twiceAntennaReduction,
--					       twiceMaxRegulatoryPower,
- 					       powerLimit);
- 
- 	ath9k_hw_set_def_power_cal_table(ah, chan);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index f2de7ee..67b75d7 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -428,7 +428,6 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
- 
- 	regulatory->country_code = CTRY_DEFAULT;
- 	regulatory->power_limit = MAX_RATE_POWER;
--	regulatory->tp_scale = ATH9K_TP_SCALE_MAX;
- 
- 	ah->hw_version.magic = AR5416_MAGIC;
- 	ah->hw_version.subvendorid = 0;
-@@ -1384,9 +1383,7 @@ static bool ath9k_hw_chip_reset(struct ath_hw *ah,
- static bool ath9k_hw_channel_change(struct ath_hw *ah,
- 				    struct ath9k_channel *chan)
- {
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ath_common *common = ath9k_hw_common(ah);
--	struct ieee80211_channel *channel = chan->chan;
- 	u32 qnum;
- 	int r;
- 
-@@ -1411,14 +1408,7 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
- 		return false;
- 	}
- 	ath9k_hw_set_clockrate(ah);
--
--	ah->eep_ops->set_txpower(ah, chan,
--			     ath9k_regd_get_ctl(regulatory, chan),
--			     channel->max_antenna_gain * 2,
--			     channel->max_power * 2,
--			     min((u32) MAX_RATE_POWER,
--			     (u32) regulatory->power_limit), false);
--
-+	ath9k_hw_apply_txpower(ah, chan);
- 	ath9k_hw_rfbus_done(ah);
- 
- 	if (IS_CHAN_OFDM(chan) || IS_CHAN_HT(chan))
-@@ -2489,23 +2479,56 @@ bool ath9k_hw_disable(struct ath_hw *ah)
- }
- EXPORT_SYMBOL(ath9k_hw_disable);
- 
-+static int get_antenna_gain(struct ath_hw *ah, struct ath9k_channel *chan)
+ ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
+diff --git a/drivers/nfc/nfcwilink.c b/drivers/nfc/nfcwilink.c
+new file mode 100644
+index 0000000..5b0f1ff
+--- /dev/null
++++ b/drivers/nfc/nfcwilink.c
+@@ -0,0 +1,342 @@
++/*
++ *  Texas Instrument's NFC Driver For Shared Transport.
++ *
++ *  NFC Driver acts as interface between NCI core and
++ *  TI Shared Transport Layer.
++ *
++ *  Copyright (C) 2011 Texas Instruments, Inc.
++ *
++ *  Written by Ilan Elias <ilane@ti.com>
++ *
++ *  Acknowledgements:
++ *  This file is based on btwilink.c, which was written
++ *  by Raja Mani and Pavan Savoy.
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License version 2 as
++ *  published by the Free Software Foundation.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program; if not, write to the Free Software
++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ *
++ */
++#include <linux/platform_device.h>
++#include <linux/nfc.h>
++#include <net/nfc/nci.h>
++#include <net/nfc/nci_core.h>
++#include <linux/ti_wilink_st.h>
++
++#define NFCWILINK_CHNL			12
++#define NFCWILINK_OPCODE		7
++#define NFCWILINK_MAX_FRAME_SIZE	300
++#define NFCWILINK_HDR_LEN		4
++#define NFCWILINK_OFFSET_LEN_IN_HDR	1
++#define NFCWILINK_LEN_SIZE		2
++#define NFCWILINK_REGISTER_TIMEOUT	8000	/* 8 sec */
++
++struct nfcwilink_hdr {
++	u8 chnl;
++	u8 opcode;
++	u16 len;
++} __packed;
++
++struct nfcwilink {
++	struct platform_device		*pdev;
++	struct nci_dev			*ndev;
++	unsigned long			flags;
++
++	char				st_register_cb_status;
++	long				(*st_write) (struct sk_buff *);
++	struct completion		st_register_completed;
++};
++
++/* NFCWILINK driver flags */
++enum {
++	NFCWILINK_RUNNING,
++};
++
++/* Called by ST when registration is complete */
++static void nfcwilink_register_complete(void *priv_data, char data)
 +{
-+	enum eeprom_param gain_param;
++	struct nfcwilink *drv = priv_data;
 +
-+	if (IS_CHAN_2GHZ(chan))
-+		gain_param = EEP_ANTENNA_GAIN_2G;
-+	else
-+		gain_param = EEP_ANTENNA_GAIN_5G;
++	nfc_dev_dbg(&drv->pdev->dev, "register_complete entry");
 +
-+	return ah->eep_ops->get_eeprom(ah, gain_param);
++	/* store ST registration status */
++	drv->st_register_cb_status = data;
++
++	/* complete the wait in nfc_st_open() */
++	complete(&drv->st_register_completed);
 +}
 +
-+void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan)
++/* Called by ST when receive data is available */
++static long nfcwilink_receive(void *priv_data, struct sk_buff *skb)
 +{
-+	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
-+	struct ieee80211_channel *channel;
-+	int chan_pwr, new_pwr, max_gain;
-+	int ant_gain, ant_reduction = 0;
++	struct nfcwilink *drv = priv_data;
++	int rc;
 +
-+	if (!chan)
-+		return;
++	nfc_dev_dbg(&drv->pdev->dev, "receive entry, len %d", skb->len);
 +
-+	channel = chan->chan;
-+	chan_pwr = min_t(int, channel->max_power * 2, MAX_RATE_POWER);
-+	new_pwr = min_t(int, chan_pwr, reg->power_limit);
-+	max_gain = new_pwr - chan_pwr + channel->max_antenna_gain * 2;
++	if (!skb)
++		return -EFAULT;
 +
-+	ant_gain = get_antenna_gain(ah, chan);
-+	if (ant_gain > max_gain)
-+		ant_reduction = ant_gain - max_gain;
++	if (!drv) {
++		kfree_skb(skb);
++		return -EFAULT;
++	}
 +
-+	ah->eep_ops->set_txpower(ah, chan,
-+				 ath9k_regd_get_ctl(reg, chan),
-+				 ant_reduction, new_pwr, false);
++	/* strip the ST header
++	(apart for the chnl byte, which is not received in the hdr) */
++	skb_pull(skb, (NFCWILINK_HDR_LEN-1));
++
++	skb->dev = (void *) drv->ndev;
++
++	/* Forward skb to NCI core layer */
++	rc = nci_recv_frame(skb);
++	if (rc < 0) {
++		nfc_dev_err(&drv->pdev->dev, "nci_recv_frame failed %d", rc);
++		return rc;
++	}
++
++	return 0;
 +}
 +
- void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit, bool test)
- {
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
-+	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
- 	struct ath9k_channel *chan = ah->curchan;
- 	struct ieee80211_channel *channel = chan->chan;
--	int reg_pwr = min_t(int, MAX_RATE_POWER, limit);
--	int chan_pwr = channel->max_power * 2;
- 
-+	reg->power_limit = min_t(int, limit, MAX_RATE_POWER);
- 	if (test)
--		reg_pwr = chan_pwr = MAX_RATE_POWER;
-+		channel->max_power = MAX_RATE_POWER / 2;
- 
--	regulatory->power_limit = reg_pwr;
-+	ath9k_hw_apply_txpower(ah, chan);
- 
--	ah->eep_ops->set_txpower(ah, chan,
--				 ath9k_regd_get_ctl(regulatory, chan),
--				 channel->max_antenna_gain * 2,
--				 chan_pwr, reg_pwr, test);
-+	if (test)
-+		channel->max_power = DIV_ROUND_UP(reg->max_power_level, 2);
- }
- EXPORT_SYMBOL(ath9k_hw_set_txpowerlimit);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 24889f7..684c33c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -390,14 +390,6 @@ enum ath9k_power_mode {
- 	ATH9K_PM_UNDEFINED
- };
- 
--enum ath9k_tp_scale {
--	ATH9K_TP_SCALE_MAX = 0,
--	ATH9K_TP_SCALE_50,
--	ATH9K_TP_SCALE_25,
--	ATH9K_TP_SCALE_12,
--	ATH9K_TP_SCALE_MIN
--};
--
- enum ser_reg_mode {
- 	SER_REG_MODE_OFF = 0,
- 	SER_REG_MODE_ON = 1,
-@@ -968,6 +960,7 @@ void ath9k_hw_htc_resetinit(struct ath_hw *ah);
- /* PHY */
- void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
- 				   u32 *coef_mantissa, u32 *coef_exponent);
-+void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan);
- 
- /*
-  * Code Specific to AR5008, AR9001 or AR9002,
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 39514de..af1b325 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -626,7 +626,6 @@ static void ath9k_init_band_txpower(struct ath_softc *sc, int band)
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_channel *chan;
- 	struct ath_hw *ah = sc->sc_ah;
--	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
- 	int i;
- 
- 	sband = &sc->sbands[band];
-@@ -635,7 +634,6 @@ static void ath9k_init_band_txpower(struct ath_softc *sc, int band)
- 		ah->curchan = &ah->channels[chan->hw_value];
- 		ath9k_cmn_update_ichannel(ah->curchan, chan, NL80211_CHAN_HT20);
- 		ath9k_hw_set_txpowerlimit(ah, MAX_RATE_POWER, true);
--		chan->max_power = reg->max_power_level / 2;
- 	}
- }
- 
++/* protocol structure registered with ST */
++static struct st_proto_s nfcwilink_proto = {
++	.chnl_id = NFCWILINK_CHNL,
++	.max_frame_size = NFCWILINK_MAX_FRAME_SIZE,
++	.hdr_len = (NFCWILINK_HDR_LEN-1),	/* not including chnl byte */
++	.offset_len_in_hdr = NFCWILINK_OFFSET_LEN_IN_HDR,
++	.len_size = NFCWILINK_LEN_SIZE,
++	.reserve = 0,
++	.recv = nfcwilink_receive,
++	.reg_complete_cb = nfcwilink_register_complete,
++	.write = NULL,
++};
++
++static int nfcwilink_open(struct nci_dev *ndev)
++{
++	struct nfcwilink *drv = nci_get_drvdata(ndev);
++	unsigned long comp_ret;
++	int rc;
++
++	nfc_dev_dbg(&drv->pdev->dev, "open entry");
++
++	if (test_and_set_bit(NFCWILINK_RUNNING, &drv->flags)) {
++		rc = -EBUSY;
++		goto exit;
++	}
++
++	nfcwilink_proto.priv_data = drv;
++
++	init_completion(&drv->st_register_completed);
++	drv->st_register_cb_status = -EINPROGRESS;
++
++	rc = st_register(&nfcwilink_proto);
++	if (rc < 0) {
++		if (rc == -EINPROGRESS) {
++			comp_ret = wait_for_completion_timeout(
++			&drv->st_register_completed,
++			msecs_to_jiffies(NFCWILINK_REGISTER_TIMEOUT));
++
++			nfc_dev_dbg(&drv->pdev->dev,
++			"wait_for_completion_timeout returned %ld",
++			comp_ret);
++
++			if (comp_ret == 0) {
++				/* timeout */
++				rc = -ETIMEDOUT;
++				goto clear_exit;
++			} else if (drv->st_register_cb_status != 0) {
++				rc = drv->st_register_cb_status;
++				nfc_dev_err(&drv->pdev->dev,
++				"st_register_cb failed %d", rc);
++				goto clear_exit;
++			}
++		} else {
++			nfc_dev_err(&drv->pdev->dev,
++				"st_register failed %d", rc);
++			goto clear_exit;
++		}
++	}
++
++	/* st_register MUST fill the write callback */
++	BUG_ON(nfcwilink_proto.write == NULL);
++	drv->st_write = nfcwilink_proto.write;
++
++	goto exit;
++
++clear_exit:
++	clear_bit(NFCWILINK_RUNNING, &drv->flags);
++
++exit:
++	return rc;
++}
++
++static int nfcwilink_close(struct nci_dev *ndev)
++{
++	struct nfcwilink *drv = nci_get_drvdata(ndev);
++	int rc;
++
++	nfc_dev_dbg(&drv->pdev->dev, "close entry");
++
++	if (!test_and_clear_bit(NFCWILINK_RUNNING, &drv->flags))
++		return 0;
++
++	rc = st_unregister(&nfcwilink_proto);
++	if (rc)
++		nfc_dev_err(&drv->pdev->dev, "st_unregister failed %d", rc);
++
++	drv->st_write = NULL;
++
++	return rc;
++}
++
++static int nfcwilink_send(struct sk_buff *skb)
++{
++	struct nci_dev *ndev = (struct nci_dev *)skb->dev;
++	struct nfcwilink *drv = nci_get_drvdata(ndev);
++	struct nfcwilink_hdr hdr = {NFCWILINK_CHNL, NFCWILINK_OPCODE, 0x0000};
++	long len;
++
++	nfc_dev_dbg(&drv->pdev->dev, "send entry, len %d", skb->len);
++
++	if (!test_bit(NFCWILINK_RUNNING, &drv->flags))
++		return -EBUSY;
++
++	/* add the ST hdr to the start of the buffer */
++	hdr.len = skb->len;
++	memcpy(skb_push(skb, NFCWILINK_HDR_LEN), &hdr, NFCWILINK_HDR_LEN);
++
++	/* Insert skb to shared transport layer's transmit queue.
++	 * Freeing skb memory is taken care in shared transport layer,
++	 * so don't free skb memory here.
++	 */
++	len = drv->st_write(skb);
++	if (len < 0) {
++		kfree_skb(skb);
++		nfc_dev_err(&drv->pdev->dev, "st_write failed %ld", len);
++		return -EFAULT;
++	}
++
++	return 0;
++}
++
++static struct nci_ops nfcwilink_ops = {
++	.open = nfcwilink_open,
++	.close = nfcwilink_close,
++	.send = nfcwilink_send,
++};
++
++static int nfcwilink_probe(struct platform_device *pdev)
++{
++	static struct nfcwilink *drv;
++	int rc;
++	u32 protocols;
++
++	nfc_dev_dbg(&pdev->dev, "probe entry");
++
++	drv = kzalloc(sizeof(struct nfcwilink), GFP_KERNEL);
++	if (!drv) {
++		rc = -ENOMEM;
++		goto exit;
++	}
++
++	drv->pdev = pdev;
++
++	protocols = NFC_PROTO_JEWEL_MASK
++			| NFC_PROTO_MIFARE_MASK | NFC_PROTO_FELICA_MASK
++			| NFC_PROTO_ISO14443_MASK
++			| NFC_PROTO_NFC_DEP_MASK;
++
++	drv->ndev = nci_allocate_device(&nfcwilink_ops,
++					protocols,
++					NFCWILINK_HDR_LEN,
++					0);
++	if (!drv->ndev) {
++		nfc_dev_err(&pdev->dev, "nci_allocate_device failed");
++		rc = -ENOMEM;
++		goto free_exit;
++	}
++
++	nci_set_parent_dev(drv->ndev, &pdev->dev);
++	nci_set_drvdata(drv->ndev, drv);
++
++	rc = nci_register_device(drv->ndev);
++	if (rc < 0) {
++		nfc_dev_err(&pdev->dev, "nci_register_device failed %d", rc);
++		goto free_dev_exit;
++	}
++
++	dev_set_drvdata(&pdev->dev, drv);
++
++	goto exit;
++
++free_dev_exit:
++	nci_free_device(drv->ndev);
++
++free_exit:
++	kfree(drv);
++
++exit:
++	return rc;
++}
++
++static int nfcwilink_remove(struct platform_device *pdev)
++{
++	struct nfcwilink *drv = dev_get_drvdata(&pdev->dev);
++	struct nci_dev *ndev;
++
++	nfc_dev_dbg(&pdev->dev, "remove entry");
++
++	if (!drv)
++		return -EFAULT;
++
++	ndev = drv->ndev;
++
++	nci_unregister_device(ndev);
++	nci_free_device(ndev);
++
++	kfree(drv);
++
++	dev_set_drvdata(&pdev->dev, NULL);
++
++	return 0;
++}
++
++static struct platform_driver nfcwilink_driver = {
++	.probe = nfcwilink_probe,
++	.remove = nfcwilink_remove,
++	.driver = {
++		.name = "nfcwilink",
++		.owner = THIS_MODULE,
++	},
++};
++
++/* ------- Module Init/Exit interfaces ------ */
++static int __init nfcwilink_init(void)
++{
++	printk(KERN_INFO "NFC Driver for TI WiLink");
++
++	return platform_driver_register(&nfcwilink_driver);
++}
++
++static void __exit nfcwilink_exit(void)
++{
++	platform_driver_unregister(&nfcwilink_driver);
++}
++
++module_init(nfcwilink_init);
++module_exit(nfcwilink_exit);
++
++/* ------ Module Info ------ */
++
++MODULE_AUTHOR("Ilan Elias <ilane@ti.com>");
++MODULE_DESCRIPTION("NFC Driver for TI Shared Transport");
++MODULE_LICENSE("GPL");
 -- 
-1.7.3.2
+1.7.0.4
 
