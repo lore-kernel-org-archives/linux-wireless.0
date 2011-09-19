@@ -1,58 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60819 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933388Ab1IOMXN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 08:23:13 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.atheros.com
-Subject: [PATCH 4/4] ath9k_hw: remove ar9100_hw_compute_pll_control
-Date: Thu, 15 Sep 2011 14:22:57 +0200
-Message-Id: <1316089377-86019-4-git-send-email-nbd@openwrt.org> (sfid-20110915_142318_369176_1AE15F7B)
-In-Reply-To: <1316089377-86019-3-git-send-email-nbd@openwrt.org>
-References: <1316089377-86019-1-git-send-email-nbd@openwrt.org>
- <1316089377-86019-2-git-send-email-nbd@openwrt.org>
- <1316089377-86019-3-git-send-email-nbd@openwrt.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:11167 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751131Ab1ISOpL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 10:45:11 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k: Store noise immunity values across scanning
+Date: Mon, 19 Sep 2011 20:15:48 +0530
+Message-ID: <1316443548-22991-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110919_164516_401504_3B91C067)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR913x uses the same PLL register layout as AR9160 and later.
+CCK/OFDM noise immunilty values are always reset to defaults
+during bgscan. This could affect the link quality and
+performance when the STA is associated in a noisy channel.
+So do not override the learned values across the scanning.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c |   12 +-----------
- 1 files changed, 1 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath9k/ani.c |   10 ++++++++--
+ drivers/net/wireless/ath/ath9k/ani.h |    1 +
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 794a2d9..0a749c8 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -1010,14 +1010,6 @@ static void ar5008_restore_chainmask(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index d969a11..01240d6 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -273,7 +273,8 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
+ 		immunityLevel, aniState->noiseFloor,
+ 		aniState->rssiThrLow, aniState->rssiThrHigh);
+ 
+-	aniState->ofdmNoiseImmunityLevel = immunityLevel;
++	if (aniState->update_ani)
++		aniState->ofdmNoiseImmunityLevel = immunityLevel;
+ 
+ 	entry_ofdm = &ofdm_level_table[aniState->ofdmNoiseImmunityLevel];
+ 	entry_cck = &cck_level_table[aniState->cckNoiseImmunityLevel];
+@@ -346,7 +347,8 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel)
+ 	    immunityLevel > ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI)
+ 		immunityLevel = ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI;
+ 
+-	aniState->cckNoiseImmunityLevel = immunityLevel;
++	if (aniState->update_ani)
++		aniState->cckNoiseImmunityLevel = immunityLevel;
+ 
+ 	entry_ofdm = &ofdm_level_table[aniState->ofdmNoiseImmunityLevel];
+ 	entry_cck = &cck_level_table[aniState->cckNoiseImmunityLevel];
+@@ -593,6 +595,7 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
+ 				aniState->ofdmNoiseImmunityLevel,
+ 				aniState->cckNoiseImmunityLevel);
+ 
++			aniState->update_ani = false;
+ 			ath9k_hw_set_ofdm_nil(ah, ATH9K_ANI_OFDM_DEF_LEVEL);
+ 			ath9k_hw_set_cck_nil(ah, ATH9K_ANI_CCK_DEF_LEVEL);
+ 		}
+@@ -609,6 +612,7 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
+ 			aniState->ofdmNoiseImmunityLevel,
+ 			aniState->cckNoiseImmunityLevel);
+ 
++			aniState->update_ani = true;
+ 			ath9k_hw_set_ofdm_nil(ah,
+ 					      aniState->ofdmNoiseImmunityLevel);
+ 			ath9k_hw_set_cck_nil(ah,
+@@ -892,6 +896,8 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
+ 		ani->ofdmWeakSigDetectOff =
+ 			!ATH9K_ANI_USE_OFDM_WEAK_SIG;
+ 		ani->cckNoiseImmunityLevel = ATH9K_ANI_CCK_DEF_LEVEL;
++		ani->ofdmNoiseImmunityLevel = ATH9K_ANI_OFDM_DEF_LEVEL;
++		ani->update_ani = false;
  	}
- }
  
--static u32 ar9100_hw_compute_pll_control(struct ath_hw *ah,
--					 struct ath9k_channel *chan)
--{
--	if (chan && IS_CHAN_5GHZ(chan))
--		return 0x1450;
--	return 0x1458;
--}
--
- static u32 ar9160_hw_compute_pll_control(struct ath_hw *ah,
- 					 struct ath9k_channel *chan)
- {
-@@ -1656,9 +1648,7 @@ void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
- 	} else
- 		priv_ops->ani_control = ar5008_hw_ani_control_old;
- 
--	if (AR_SREV_9100(ah))
--		priv_ops->compute_pll_control = ar9100_hw_compute_pll_control;
--	else if (AR_SREV_9160_10_OR_LATER(ah))
-+	if (AR_SREV_9100(ah) || AR_SREV_9160_10_OR_LATER(ah))
- 		priv_ops->compute_pll_control = ar9160_hw_compute_pll_control;
- 	else
- 		priv_ops->compute_pll_control = ar5008_hw_compute_pll_control;
+ 	/*
+diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
+index a547005..83029d6 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.h
++++ b/drivers/net/wireless/ath/ath9k/ani.h
+@@ -122,6 +122,7 @@ struct ar5416AniState {
+ 	u8 firstepLevel;
+ 	u8 ofdmWeakSigDetectOff;
+ 	u8 cckWeakSigThreshold;
++	bool update_ani;
+ 	u32 listenTime;
+ 	int32_t rssiThrLow;
+ 	int32_t rssiThrHigh;
 -- 
-1.7.3.2
+1.7.6.1
 
