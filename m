@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49248 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753598Ab1IMNa2 (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:49814 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756349Ab1ISS7T convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 09:30:28 -0400
-Date: Tue, 13 Sep 2011 09:29:46 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-wireless@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Temporary(?) relocation of wireless git trees...
-Message-ID: <20110913132946.GC11772@tuxdriver.com> (sfid-20110913_153050_990736_7D78CD5B)
-References: <20110912181351.GD2689@tuxdriver.com>
- <20110913105858.eedd5ac594679aa36111c9d4@canb.auug.org.au>
+	Mon, 19 Sep 2011 14:59:19 -0400
+Received: by qyk30 with SMTP id 30so3072398qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 11:59:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110913105858.eedd5ac594679aa36111c9d4@canb.auug.org.au>
+In-Reply-To: <4E779076.2030509@openwrt.org>
+References: <1316453903-75710-1-git-send-email-nbd@openwrt.org>
+ <1316453903-75710-2-git-send-email-nbd@openwrt.org> <1316453903-75710-3-git-send-email-nbd@openwrt.org>
+ <CAB=NE6UhC=am2aVXwf+v4g7ME_49Nv47SZwSNetLgJpRV-=BkA@mail.gmail.com>
+ <4E778A1C.5020206@openwrt.org> <CAB=NE6WLfhEb0X4u9g87oE3poNzPmKr-Z8H554tZ_erJ8-rRjg@mail.gmail.com>
+ <4E779076.2030509@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Mon, 19 Sep 2011 11:58:59 -0700
+Message-ID: <CAB=NE6UtJ=7X84iruquCSGhaj_SDKEWe_5iAnwGyRg94ggugWA@mail.gmail.com> (sfid-20110919_205923_307871_2686DA14)
+Subject: Re: [PATCH v2 3/4] ath: remove ath_regulatory::current_rd_ext
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 13, 2011 at 10:58:58AM +1000, Stephen Rothwell wrote:
-> Hi John,
-> 
-> On Mon, 12 Sep 2011 14:13:52 -0400 "John W. Linville" <linville@tuxdriver.com> wrote:
-> >
-> > With no news on when the kernel.org trees will be accessible again
-> > (which could be 10 minutes from now for all I know), I have pushed
-> > my local copies to Infradead.  This should be equivalent to what was
-> > last pushed to kernel.org almost two weeks ago.
-> > 
-> > The "current" wireless tree is here:
-> > 
-> > 	git://git.infradead.org/users/linville/wireless.git
-> > 
-> > The "next" wireless tree is here:
-> > 
-> > 	git://git.infradead.org/users/linville/wireless-next.git
-> 
-> OK, I have switched to these using their "master" branches.  There is
-> nothing new in them, correct?
+On Mon, Sep 19, 2011 at 11:56 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2011-09-19 8:43 PM, Luis R. Rodriguez wrote:
+>>
+>> On Mon, Sep 19, 2011 at 11:29 AM, Felix Fietkau<nbd@openwrt.org>  wrote:
+>>>
+>>>  On 2011-09-19 8:18 PM, Luis R. Rodriguez wrote:
+>>>>
+>>>>  On Mon, Sep 19, 2011 at 10:38 AM, Felix Fietkau<nbd@openwrt.org>
+>>>>  wrote:
+>>>>>
+>>>>>   Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>>>>
+>>>>  Can you document on the patch commit log why you do remove this.
+>>>
+>>>  Because it's unused
+>>
+>> Why is it unused?
+>
+> Because the code that used to use it was removed a while ago in other
+> patches.
 
-Yes, correct.  Hopefully more new stuff today...
+And what did that do :) ?
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
