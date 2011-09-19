@@ -1,279 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:38782 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751900Ab1IDHJT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Sep 2011 03:09:19 -0400
-Received: by fxh19 with SMTP id 19so2921278fxh.19
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Sep 2011 00:09:18 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org, joe@perches.com,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2 3/3] b43: LCN-PHY: load TX gain table on init
-Date: Sun,  4 Sep 2011 09:11:46 +0200
-Message-Id: <1315120306-14037-4-git-send-email-zajec5@gmail.com> (sfid-20110904_090929_396863_B320DA14)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:32816 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753863Ab1ISRim (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 13:38:42 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v2 1/4] ath9k_hw: make ath9k_hw_set_interrupts use ah->imask by default
+Date: Mon, 19 Sep 2011 19:38:20 +0200
+Message-Id: <1316453903-75710-1-git-send-email-nbd@openwrt.org> (sfid-20110919_193846_207903_176E0131)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-V2: use define for table size
+ drivers/net/wireless/ath/ath9k/beacon.c |   10 +++++-----
+ drivers/net/wireless/ath/ath9k/gpio.c   |    4 ++--
+ drivers/net/wireless/ath/ath9k/mac.c    |    6 +++---
+ drivers/net/wireless/ath/ath9k/mac.h    |    2 +-
+ drivers/net/wireless/ath/ath9k/main.c   |   10 +++++-----
+ drivers/net/wireless/ath/ath9k/recv.c   |    2 +-
+ 6 files changed, 17 insertions(+), 17 deletions(-)
 
-Joe: wolud you like to add yours Reviewed-by now?
----
- drivers/net/wireless/b43/tables_phy_lcn.c |  195 ++++++++++++++++++++++++++++-
- drivers/net/wireless/b43/tables_phy_lcn.h |    2 +
- 2 files changed, 194 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/tables_phy_lcn.c b/drivers/net/wireless/b43/tables_phy_lcn.c
-index 1682ba0..9d484e2 100644
---- a/drivers/net/wireless/b43/tables_phy_lcn.c
-+++ b/drivers/net/wireless/b43/tables_phy_lcn.c
-@@ -27,6 +27,18 @@
- #include "phy_common.h"
- #include "phy_lcn.h"
- 
-+struct b43_lcntab_tx_gain_tbl_entry {
-+	u8 gm;
-+	u8 pga;
-+	u8 pad;
-+	u8 dac;
-+	u8 bb_mult;
-+};
-+
-+/**************************************************
-+ * Static tables.
-+ **************************************************/
-+
- static const u16 b43_lcntab_0x02[] = {
- 	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
- 	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
-@@ -297,6 +309,146 @@ static const u32 b43_lcntab_0x18[] = {
- 	0x00080000, 0x00080000, 0x00080000, 0x00080000,
- };
- 
-+/**************************************************
-+ * TX gain.
-+ **************************************************/
-+
-+const struct b43_lcntab_tx_gain_tbl_entry
-+	b43_lcntab_tx_gain_tbl_2ghz_ext_pa_rev0[B43_LCNTAB_TX_GAIN_SIZE] = {
-+	{ 0x03, 0x00, 0x1f, 0x0, 0x48 },
-+	{ 0x03, 0x00, 0x1f, 0x0, 0x46 },
-+	{ 0x03, 0x00, 0x1f, 0x0, 0x44 },
-+	{ 0x03, 0x00, 0x1e, 0x0, 0x43 },
-+	{ 0x03, 0x00, 0x1d, 0x0, 0x44 },
-+	{ 0x03, 0x00, 0x1c, 0x0, 0x44 },
-+	{ 0x03, 0x00, 0x1b, 0x0, 0x45 },
-+	{ 0x03, 0x00, 0x1a, 0x0, 0x46 },
-+	{ 0x03, 0x00, 0x19, 0x0, 0x46 },
-+	{ 0x03, 0x00, 0x18, 0x0, 0x47 },
-+	{ 0x03, 0x00, 0x17, 0x0, 0x48 },
-+	{ 0x03, 0x00, 0x17, 0x0, 0x46 },
-+	{ 0x03, 0x00, 0x16, 0x0, 0x47 },
-+	{ 0x03, 0x00, 0x15, 0x0, 0x48 },
-+	{ 0x03, 0x00, 0x15, 0x0, 0x46 },
-+	{ 0x03, 0x00, 0x15, 0x0, 0x44 },
-+	{ 0x03, 0x00, 0x15, 0x0, 0x42 },
-+	{ 0x03, 0x00, 0x15, 0x0, 0x40 },
-+	{ 0x03, 0x00, 0x15, 0x0, 0x3f },
-+	{ 0x03, 0x00, 0x14, 0x0, 0x40 },
-+	{ 0x03, 0x00, 0x13, 0x0, 0x41 },
-+	{ 0x03, 0x00, 0x13, 0x0, 0x40 },
-+	{ 0x03, 0x00, 0x12, 0x0, 0x41 },
-+	{ 0x03, 0x00, 0x12, 0x0, 0x40 },
-+	{ 0x03, 0x00, 0x11, 0x0, 0x41 },
-+	{ 0x03, 0x00, 0x11, 0x0, 0x40 },
-+	{ 0x03, 0x00, 0x10, 0x0, 0x41 },
-+	{ 0x03, 0x00, 0x10, 0x0, 0x40 },
-+	{ 0x03, 0x00, 0x10, 0x0, 0x3e },
-+	{ 0x03, 0x00, 0x10, 0x0, 0x3c },
-+	{ 0x03, 0x00, 0x10, 0x0, 0x3a },
-+	{ 0x03, 0x00, 0x0f, 0x0, 0x3d },
-+	{ 0x03, 0x00, 0x0f, 0x0, 0x3b },
-+	{ 0x03, 0x00, 0x0e, 0x0, 0x3d },
-+	{ 0x03, 0x00, 0x0e, 0x0, 0x3c },
-+	{ 0x03, 0x00, 0x0e, 0x0, 0x3a },
-+	{ 0x03, 0x00, 0x0d, 0x0, 0x3c },
-+	{ 0x03, 0x00, 0x0d, 0x0, 0x3b },
-+	{ 0x03, 0x00, 0x0c, 0x0, 0x3e },
-+	{ 0x03, 0x00, 0x0c, 0x0, 0x3c },
-+	{ 0x03, 0x00, 0x0c, 0x0, 0x3a },
-+	{ 0x03, 0x00, 0x0b, 0x0, 0x3e },
-+	{ 0x03, 0x00, 0x0b, 0x0, 0x3c },
-+	{ 0x03, 0x00, 0x0b, 0x0, 0x3b },
-+	{ 0x03, 0x00, 0x0b, 0x0, 0x39 },
-+	{ 0x03, 0x00, 0x0a, 0x0, 0x3d },
-+	{ 0x03, 0x00, 0x0a, 0x0, 0x3b },
-+	{ 0x03, 0x00, 0x0a, 0x0, 0x39 },
-+	{ 0x03, 0x00, 0x09, 0x0, 0x3e },
-+	{ 0x03, 0x00, 0x09, 0x0, 0x3c },
-+	{ 0x03, 0x00, 0x09, 0x0, 0x3a },
-+	{ 0x03, 0x00, 0x09, 0x0, 0x39 },
-+	{ 0x03, 0x00, 0x08, 0x0, 0x3e },
-+	{ 0x03, 0x00, 0x08, 0x0, 0x3c },
-+	{ 0x03, 0x00, 0x08, 0x0, 0x3a },
-+	{ 0x03, 0x00, 0x08, 0x0, 0x39 },
-+	{ 0x03, 0x00, 0x08, 0x0, 0x37 },
-+	{ 0x03, 0x00, 0x07, 0x0, 0x3d },
-+	{ 0x03, 0x00, 0x07, 0x0, 0x3c },
-+	{ 0x03, 0x00, 0x07, 0x0, 0x3a },
-+	{ 0x03, 0x00, 0x07, 0x0, 0x38 },
-+	{ 0x03, 0x00, 0x07, 0x0, 0x37 },
-+	{ 0x03, 0x00, 0x06, 0x0, 0x3e },
-+	{ 0x03, 0x00, 0x06, 0x0, 0x3c },
-+	{ 0x03, 0x00, 0x06, 0x0, 0x3a },
-+	{ 0x03, 0x00, 0x06, 0x0, 0x39 },
-+	{ 0x03, 0x00, 0x06, 0x0, 0x37 },
-+	{ 0x03, 0x00, 0x06, 0x0, 0x36 },
-+	{ 0x03, 0x00, 0x06, 0x0, 0x34 },
-+	{ 0x03, 0x00, 0x05, 0x0, 0x3d },
-+	{ 0x03, 0x00, 0x05, 0x0, 0x3b },
-+	{ 0x03, 0x00, 0x05, 0x0, 0x39 },
-+	{ 0x03, 0x00, 0x05, 0x0, 0x38 },
-+	{ 0x03, 0x00, 0x05, 0x0, 0x36 },
-+	{ 0x03, 0x00, 0x05, 0x0, 0x35 },
-+	{ 0x03, 0x00, 0x05, 0x0, 0x33 },
-+	{ 0x03, 0x00, 0x04, 0x0, 0x3e },
-+	{ 0x03, 0x00, 0x04, 0x0, 0x3c },
-+	{ 0x03, 0x00, 0x04, 0x0, 0x3a },
-+	{ 0x03, 0x00, 0x04, 0x0, 0x39 },
-+	{ 0x03, 0x00, 0x04, 0x0, 0x37 },
-+	{ 0x03, 0x00, 0x04, 0x0, 0x36 },
-+	{ 0x03, 0x00, 0x04, 0x0, 0x34 },
-+	{ 0x03, 0x00, 0x04, 0x0, 0x33 },
-+	{ 0x03, 0x00, 0x04, 0x0, 0x31 },
-+	{ 0x03, 0x00, 0x04, 0x0, 0x30 },
-+	{ 0x03, 0x00, 0x04, 0x0, 0x2e },
-+	{ 0x03, 0x00, 0x03, 0x0, 0x3c },
-+	{ 0x03, 0x00, 0x03, 0x0, 0x3a },
-+	{ 0x03, 0x00, 0x03, 0x0, 0x39 },
-+	{ 0x03, 0x00, 0x03, 0x0, 0x37 },
-+	{ 0x03, 0x00, 0x03, 0x0, 0x36 },
-+	{ 0x03, 0x00, 0x03, 0x0, 0x34 },
-+	{ 0x03, 0x00, 0x03, 0x0, 0x33 },
-+	{ 0x03, 0x00, 0x03, 0x0, 0x31 },
-+	{ 0x03, 0x00, 0x03, 0x0, 0x30 },
-+	{ 0x03, 0x00, 0x03, 0x0, 0x2e },
-+	{ 0x03, 0x00, 0x03, 0x0, 0x2d },
-+	{ 0x03, 0x00, 0x03, 0x0, 0x2c },
-+	{ 0x03, 0x00, 0x03, 0x0, 0x2b },
-+	{ 0x03, 0x00, 0x03, 0x0, 0x29 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x3d },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x3b },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x39 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x38 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x36 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x35 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x33 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x32 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x30 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x2f },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x2e },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x2c },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x2b },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x2a },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x29 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x27 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x26 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x25 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x24 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x23 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x22 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x21 },
-+	{ 0x03, 0x00, 0x02, 0x0, 0x20 },
-+	{ 0x03, 0x00, 0x01, 0x0, 0x3f },
-+	{ 0x03, 0x00, 0x01, 0x0, 0x3d },
-+	{ 0x03, 0x00, 0x01, 0x0, 0x3b },
-+	{ 0x03, 0x00, 0x01, 0x0, 0x39 },
-+};
-+
-+/**************************************************
-+ * SW control.
-+ **************************************************/
-+
- const u16 b43_lcntab_sw_ctl_4313_epa_rev0[] = {
- 	0x0002, 0x0008, 0x0004, 0x0001, 0x0002, 0x0008,
- 	0x0004, 0x0001, 0x0002, 0x0008, 0x0004, 0x0001,
-@@ -479,6 +631,32 @@ static void b43_phy_lcn_upload_static_tables(struct b43_wldev *dev)
- 	lcntab_upload(dev, B43_LCNTAB32(0x18, 0), b43_lcntab_0x18);
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 9cdeaeb..a13cabb 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -515,7 +515,7 @@ static void ath_beacon_config_ap(struct ath_softc *sc,
+ 	sc->sc_flags |= SC_OP_TSF_RESET;
+ 	ath9k_beacon_init(sc, nexttbtt, intval);
+ 	sc->beacon.bmisscnt = 0;
+-	ath9k_hw_set_interrupts(ah, ah->imask);
++	ath9k_hw_set_interrupts(ah);
+ 	ath9k_hw_enable_interrupts(ah);
  }
  
-+void b43_phy_lcn_load_tx_gain_tab(struct b43_wldev *dev,
-+			const struct b43_lcntab_tx_gain_tbl_entry *gain_table)
-+{
-+	u32 i;
-+	u32 val;
-+
-+	u16 pa_gain = 0x70;
-+	if (dev->dev->bus_sprom->boardflags_lo & B43_BFL_FEM)
-+		pa_gain = 0x10;
-+
-+	for (i = 0; i < B43_LCNTAB_TX_GAIN_SIZE; i++) {
-+		val = ((pa_gain << 24) |
-+		       (gain_table[i].pad << 16) |
-+		       (gain_table[i].pga << 8) |
-+			gain_table[i].gm);
-+		b43_lcntab_write(dev, B43_LCNTAB32(0x7, 0xc0 + i), val);
-+
-+		/* brcmsmac doesn't maskset, we follow newer wl here */
-+		val = b43_lcntab_read(dev, B43_LCNTAB32(0x7, 0x140 + i));
-+		val &= 0x000fffff;
-+		val |= ((gain_table[i].dac << 28) |
-+			(gain_table[i].bb_mult << 20));
-+		b43_lcntab_write(dev, B43_LCNTAB32(0x7, 0x140 + i), val);
-+	}
-+}
-+
- /* Not implemented in brcmsmac, noticed in wl in MMIO dump */
- static void b43_phy_lcn_rewrite_tables(struct b43_wldev *dev)
- {
-@@ -499,13 +677,24 @@ static void b43_phy_lcn_clean_papd_comp_table(struct b43_wldev *dev)
- 		b43_lcntab_write(dev, B43_LCNTAB32(0x18, i), 0x80000);
+@@ -643,7 +643,7 @@ static void ath_beacon_config_sta(struct ath_softc *sc,
+ 	ath9k_hw_set_sta_beacon_timers(ah, &bs);
+ 	ah->imask |= ATH9K_INT_BMISS;
+ 
+-	ath9k_hw_set_interrupts(ah, ah->imask);
++	ath9k_hw_set_interrupts(ah);
+ 	ath9k_hw_enable_interrupts(ah);
  }
  
-+/* wlc_lcnphy_tbl_init */
- void b43_phy_lcn_tables_init(struct b43_wldev *dev)
+@@ -679,7 +679,7 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
+ 	ath9k_beacon_init(sc, nexttbtt, intval);
+ 	sc->beacon.bmisscnt = 0;
+ 
+-	ath9k_hw_set_interrupts(ah, ah->imask);
++	ath9k_hw_set_interrupts(ah);
+ 	ath9k_hw_enable_interrupts(ah);
+ }
+ 
+@@ -821,11 +821,11 @@ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status)
+ 	if (status) {
+ 		/* Re-enable beaconing */
+ 		ah->imask |= ATH9K_INT_SWBA;
+-		ath9k_hw_set_interrupts(ah, ah->imask);
++		ath9k_hw_set_interrupts(ah);
+ 	} else {
+ 		/* Disable SWBA interrupt */
+ 		ah->imask &= ~ATH9K_INT_SWBA;
+-		ath9k_hw_set_interrupts(ah, ah->imask);
++		ath9k_hw_set_interrupts(ah);
+ 		tasklet_kill(&sc->bcon_tasklet);
+ 		ath9k_hw_stop_dma_queue(ah, sc->beacon.beaconq);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index afbf540..d357657 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -150,7 +150,7 @@ static void ath9k_gen_timer_start(struct ath_hw *ah,
+ 	if ((ah->imask & ATH9K_INT_GENTIMER) == 0) {
+ 		ath9k_hw_disable_interrupts(ah);
+ 		ah->imask |= ATH9K_INT_GENTIMER;
+-		ath9k_hw_set_interrupts(ah, ah->imask);
++		ath9k_hw_set_interrupts(ah);
+ 		ath9k_hw_enable_interrupts(ah);
+ 	}
+ }
+@@ -165,7 +165,7 @@ static void ath9k_gen_timer_stop(struct ath_hw *ah, struct ath_gen_timer *timer)
+ 	if (timer_table->timer_mask.val == 0) {
+ 		ath9k_hw_disable_interrupts(ah);
+ 		ah->imask &= ~ATH9K_INT_GENTIMER;
+-		ath9k_hw_set_interrupts(ah, ah->imask);
++		ath9k_hw_set_interrupts(ah);
+ 		ath9k_hw_enable_interrupts(ah);
+ 	}
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 22f23ea..835e81d 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -827,9 +827,9 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_enable_interrupts);
+ 
+-void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
++void ath9k_hw_set_interrupts(struct ath_hw *ah)
  {
-+	struct ssb_sprom *sprom = dev->dev->bus_sprom;
-+
- 	b43_phy_lcn_upload_static_tables(dev);
--	/* TODO: various tables ops here */
+-	enum ath9k_int omask = ah->imask;
++	enum ath9k_int ints = ah->imask;
+ 	u32 mask, mask2;
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -837,7 +837,7 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
+ 	if (!(ints & ATH9K_INT_GLOBAL))
+ 		ath9k_hw_disable_interrupts(ah);
  
--	if (dev->dev->bus_sprom->boardflags_lo & B43_BFL_FEM &&
--	    !(dev->dev->bus_sprom->boardflags_hi & B43_BFH_FEM_BT))
-+	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
-+		if (sprom->boardflags_lo & B43_BFL_EXTLNA)
-+			b43_phy_lcn_load_tx_gain_tab(dev,
-+				b43_lcntab_tx_gain_tbl_2ghz_ext_pa_rev0);
-+		else
-+			b43err(dev->wl,
-+			       "TX gain table unknown for this card\n");
-+	}
-+
-+	if (sprom->boardflags_lo & B43_BFL_FEM &&
-+	    !(sprom->boardflags_hi & B43_BFH_FEM_BT))
- 		b43_lcntab_write_bulk(dev, B43_LCNTAB16(0xf, 0),
- 			ARRAY_SIZE(b43_lcntab_sw_ctl_4313_epa_rev0),
- 			b43_lcntab_sw_ctl_4313_epa_rev0);
-diff --git a/drivers/net/wireless/b43/tables_phy_lcn.h b/drivers/net/wireless/b43/tables_phy_lcn.h
-index b6471e8..caff9db 100644
---- a/drivers/net/wireless/b43/tables_phy_lcn.h
-+++ b/drivers/net/wireless/b43/tables_phy_lcn.h
-@@ -10,6 +10,8 @@
- #define B43_LCNTAB16(table, offset)	(((table) << 10) | (offset) | B43_LCNTAB_16BIT)
- #define B43_LCNTAB32(table, offset)	(((table) << 10) | (offset) | B43_LCNTAB_32BIT)
+-	ath_dbg(common, ATH_DBG_INTERRUPT, "0x%x => 0x%x\n", omask, ints);
++	ath_dbg(common, ATH_DBG_INTERRUPT, "New interrupt mask 0x%x\n", ints);
  
-+#define B43_LCNTAB_TX_GAIN_SIZE		128
-+
- u32 b43_lcntab_read(struct b43_wldev *dev, u32 offset);
- void b43_lcntab_read_bulk(struct b43_wldev *dev, u32 offset,
- 			  unsigned int nr_elements, void *_data);
+ 	mask = ints & ATH9K_INT_COMMON;
+ 	mask2 = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 91c9654..c7cec9c 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -734,7 +734,7 @@ int ath9k_hw_beaconq_setup(struct ath_hw *ah);
+ 
+ /* Interrupt Handling */
+ bool ath9k_hw_intrpend(struct ath_hw *ah);
+-void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints);
++void ath9k_hw_set_interrupts(struct ath_hw *ah);
+ void ath9k_hw_enable_interrupts(struct ath_hw *ah);
+ void ath9k_hw_disable_interrupts(struct ath_hw *ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a16f539..f7cd461 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -273,7 +273,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 
+ 	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+ 			       sc->config.txpowlimit, &sc->curtxpow);
+-	ath9k_hw_set_interrupts(ah, ah->imask);
++	ath9k_hw_set_interrupts(ah);
+ 	ath9k_hw_enable_interrupts(ah);
+ 
+ 	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)) && start) {
+@@ -823,7 +823,7 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 
+ 	if (status & ATH9K_INT_RXEOL) {
+ 		ah->imask &= ~(ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
+-		ath9k_hw_set_interrupts(ah, ah->imask);
++		ath9k_hw_set_interrupts(ah);
+ 	}
+ 
+ 	if (status & ATH9K_INT_MIB) {
+@@ -1396,7 +1396,7 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
+ 		ah->imask &= ~ATH9K_INT_TSFOOR;
+ 	}
+ 
+-	ath9k_hw_set_interrupts(ah, ah->imask);
++	ath9k_hw_set_interrupts(ah);
+ 
+ 	/* Set up ANI */
+ 	if (iter_data.naps > 0) {
+@@ -1571,7 +1571,7 @@ static void ath9k_enable_ps(struct ath_softc *sc)
+ 	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
+ 		if ((ah->imask & ATH9K_INT_TIM_TIMER) == 0) {
+ 			ah->imask |= ATH9K_INT_TIM_TIMER;
+-			ath9k_hw_set_interrupts(ah, ah->imask);
++			ath9k_hw_set_interrupts(ah);
+ 		}
+ 		ath9k_hw_setrxabort(ah, 1);
+ 	}
+@@ -1591,7 +1591,7 @@ static void ath9k_disable_ps(struct ath_softc *sc)
+ 				  PS_WAIT_FOR_TX_ACK);
+ 		if (ah->imask & ATH9K_INT_TIM_TIMER) {
+ 			ah->imask &= ~ATH9K_INT_TIM_TIMER;
+-			ath9k_hw_set_interrupts(ah, ah->imask);
++			ath9k_hw_set_interrupts(ah);
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index bcc0b22..bba93eb 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1976,7 +1976,7 @@ requeue:
+ 
+ 	if (!(ah->imask & ATH9K_INT_RXEOL)) {
+ 		ah->imask |= (ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
+-		ath9k_hw_set_interrupts(ah, ah->imask);
++		ath9k_hw_set_interrupts(ah);
+ 	}
+ 
+ 	return 0;
 -- 
-1.7.3.4
+1.7.3.2
 
