@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:44915 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752592Ab1IUITM (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:34755 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755812Ab1ISNCD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 04:19:12 -0400
-Received: by gye5 with SMTP id 5so1220374gye.4
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 01:19:10 -0700 (PDT)
-Message-ID: <4E799DF9.9060807@ti.com> (sfid-20110921_101928_181352_28B834C3)
-Date: Wed, 21 Sep 2011 11:19:05 +0300
-From: Victor Goldenshtein <victorg@ti.com>
-Reply-To: victorg@ti.com
+	Mon, 19 Sep 2011 09:02:03 -0400
+Received: by eya28 with SMTP id 28so1534873eya.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 06:02:01 -0700 (PDT)
+From: Alexander Simon <an.alexsimon@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 2/3] mac80211: Add HT helper functions
+Date: Mon, 19 Sep 2011 15:01:57 +0200
+Message-ID: <4494789.uEd83VaQuB@alex-1> (sfid-20110919_150207_922929_31ED2283)
+In-Reply-To: <1316436947.5995.23.camel@jlt3.sipsolutions.net>
+References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com> <1501100748f4096d10848f6eec03f22e96e35b8e.1316297595.git.an.alexsimon@googlemail.com> <1316436947.5995.23.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: johannes@sipsolutions.net
-CC: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-Subject: Re: [RFC 3/5] nl80211/cfg80211: adding intermediate scan result event.
-References: <1315224151-16552-1-git-send-email-VictorG@ti.com> <1315224151-16552-4-git-send-email-VictorG@ti.com>
-In-Reply-To: <1315224151-16552-4-git-send-email-VictorG@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/09/2011 15:02, Victor Goldenshtein wrote:
-> Adding intermediate scan result event by exposing new
-> NL80211_CMD_IM_SCAN_RESULT event, which will contain
-> NL80211_BSS_BSSID to specify the BSSID of received scan result and
-> NL80211_BSS_SIGNAL_MBM to indicate signal strength.
->
+Am Montag, 19. September 2011, 14:55:47 schrieben Sie:
+> On Sun, 2011-09-18 at 00:14 +0200, Alexander Simon wrote:
+> > Some refactoring for IBSS HT.
+> > 
+> > Move HT info and capability IEs building code into separate functions.
+> > 
+> > Add function to get the channel type from an HT info IE.
+> > 
+> > +enum nl80211_channel_type
+> > +ieee80211_ht_info_to_channel_type(struct ieee80211_ht_info *ht_info);
+> 
+> Did I miss it, or do you not use that function any more?
+> 
+> johannes
+I use it in ieee80211_rx_bss_info, patch 3/3.
 
-Hi,
-
-Just talked with Luciano, and we though to make this event more generic 
-and to pass the whole BSS info instead of just BSSID and rssi, what do 
-you think?
-
-
-Thanks,
-Victor.
+Alex
