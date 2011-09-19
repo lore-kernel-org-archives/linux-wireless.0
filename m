@@ -1,56 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7986 "EHLO mga01.intel.com"
+Received: from nbd.name ([46.4.11.11]:42721 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753777Ab1IVXBR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 19:01:17 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/12] update for 3.2
-Date: Thu, 22 Sep 2011 15:14:48 -0700
-Message-Id: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110923_010129_643626_6CB44F41)
+	id S1756575Ab1ISWCW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 18:02:22 -0400
+Message-ID: <4E77BBE0.1060800@openwrt.org> (sfid-20110920_000233_163488_F18EC7B0)
+Date: Tue, 20 Sep 2011 00:02:08 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH v2 2/4] ath9k_hw: clean up tx power handling
+References: <1316453903-75710-1-git-send-email-nbd@openwrt.org> <1316453903-75710-2-git-send-email-nbd@openwrt.org> <CAB=NE6XvanRQ6Yje_qHhkfzbLmZn9o5Q+5y1NobJwCyuMLFEvg@mail.gmail.com> <4E77AAFB.1080805@openwrt.org> <CAB=NE6XgSz7zz_ZXaPQEsaue307ipd7Qnzgi5QWr8Y4SS1j=Lg@mail.gmail.com> <4E77B25D.9070907@openwrt.org> <CAB=NE6XLdftXKg5-wvme8Vg7BjGi-TpxQ3G6m=7VnEw89YzXoA@mail.gmail.com>
+In-Reply-To: <CAB=NE6XLdftXKg5-wvme8Vg7BjGi-TpxQ3G6m=7VnEw89YzXoA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We fix some performance issue cause by rate scale and sequence control in
-transport layer.
-We fix number of scan related issue mainly for P2P
-Plus number of small cleanup changes 
+On 2011-09-19 11:45 PM, Luis R. Rodriguez wrote:
+> On Mon, Sep 19, 2011 at 2:21 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
+>>  On 2011-09-19 11:14 PM, Luis R. Rodriguez wrote:
+>>>
+>>>  On Mon, Sep 19, 2011 at 1:50 PM, Felix Fietkau<nbd@openwrt.org>    wrote:
+>>>>
+>>>>    On 2011-09-19 10:41 PM, Luis R. Rodriguez wrote:
+>>>>>
+>>>>>    On Mon, Sep 19, 2011 at 10:38 AM, Felix Fietkau<nbd@openwrt.org>
+>>>>>    wrote:
+>>>>>>
+>>>>>>     @@ -986,21 +995,15 @@ static void
+>>>>>>    ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
+>>>>>>                                                      struct ath9k_channel
+>>>>>>    *chan,
+>>>>>>                                                      int16_t *ratesArray,
+>>>>>>                                                      u16 cfgCtl,
+>>>>>>     -                                                 u16
+>>>>>>  AntennaReduction,
+>>>>>>     -                                                 u16
+>>>>>>    twiceMaxRegulatoryPower,
+>>>>>>     +                                                 u16
+>>>>>>  antenna_reduction,
+>>>>>>                                                      u16 powerLimit)
+>>>>>>      {
+>>>>>>      #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
+>>>>>>      #define REDUCE_SCALED_POWER_BY_THREE_CHAIN   9 /* 10*log10(3)*2 */
+>>>>>>
+>>>>>>     -       struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
+>>>>>>            struct ar5416_eeprom_def *pEepData =&ah->eeprom.def;
+>>>>>>            u16 twiceMaxEdgePower = MAX_RATE_POWER;
+>>>>>>     -       static const u16 tpScaleReductionTable[5] =
+>>>>>>     -               { 0, 3, 6, 9, MAX_RATE_POWER };
+>>>>>>     -
+>>>>>>            int i;
+>>>>>>     -       int16_t twiceLargestAntenna;
+>>>>>>            struct cal_ctl_data *rep;
+>>>>>>            struct cal_target_power_leg targetPowerOfdm, targetPowerCck =
+>>>>>>  {
+>>>>>>                    0, { 0, 0, 0, 0}
+>>>>>>     @@ -1012,7 +1015,7 @@ static void
+>>>>>>    ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
+>>>>>>            struct cal_target_power_ht targetPowerHt20, targetPowerHt40 =
+>>>>>>  {
+>>>>>>                    0, {0, 0, 0, 0}
+>>>>>>            };
+>>>>>>     -       u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
+>>>>>>     +       u16 scaledPower = 0, minCtlPower;
+>>>>>>            static const u16 ctlModesFor11a[] = {
+>>>>>>                    CTL_11A, CTL_5GHT20, CTL_11A_EXT, CTL_5GHT40
+>>>>>>            };
+>>>>>
+>>>>>    Although we do not use the reg->tp_scale I see no log which explains
+>>>>>    that it will not, I'm reviewing TPC right now and we do need to
+>>>>>    support it but its unclear to me yet if we are doing everything
+>>>>>    correctly in mac80211 / cfg80211 for it. As far as I can see the
+>>>>>    tp_scale stuff is used only if the default is not set, but as you
+>>>>>    noted its always set to the default. I am trying to review the
+>>>>>    internal code to see under what cases this changes but its hard to
+>>>>>    review. Although I'd like to see this removed I'd prefer to treat this
+>>>>>    separately from the cleanup you are doing, which I do find highly
+>>>>>    valuable.
+>>>>
+>>>>    Why keep it? All it does is subtract something from the max regulatory
+>>>>  power
+>>>>    level, so it does not make any sense to keep this crap duplicated in all
+>>>>  the
+>>>>    the eeprom files.
+>>>
+>>>  You're right that they do seem to use the same array values, but the
+>>>  fact that its all common code is separate from the question of
+>>>  removing it.
+>>
+>>  Right now it's dead code. If we need it later, we should just rewrite it. I
+>>  think carring forward old dead code just in case we might use it later is
+>>  not a good idea.
+>
+> I agree with if the code provides no value, but I do not feel you have
+> proven this.
+It simply provides some knobs to set the power to 50%, 25%, 12.5% or 
+minimum. Why do I have to prove the lack of value of completely dead 
+code, which is unused even in the codebase that it came from?
 
-Emmanuel Grumbach (3):
-  iwlagn: set the sequence control from the transport layer
-  iwlagn: update rate scaling with BA notifications
-  iwlagn: use kcalloc when possible for array allocation
+>>>>    If we ever do need it (which I doubt),
+>>>
+>>>  I suspect this is needed for APs that support DFS and since we do not
+>>>  yet support DFS I do not think this is used. I am not 100% certain yet
+>>>  but at least in my review in the last few minutes it seems the AP can
+>>>  decide to change TPC constraints dynamically based on TPC reports from
+>>>  the STAs. I suspec this is where this comes in to play.
+>>
+>>  I looked at the other ath driver and I see no indication that it's related
+>>  to DFS in any way.
+>
+> I have verified this just now as well, it seems it was only used to
+> support an ioctl to userspace to enable users to update a tpscale
+> value but I see no documentation about this. Next question is who in
+> usersapce sets this. I wonder if its done through userspace after
+> measuring some TPC reports from STAs.
+Even in the default userspace of the ath stuff nothing actually uses this.
 
-Johannes Berg (7):
-  iwlagn: fix dangling scan request
-  iwlagn: fix slot programming
-  iwlagn: remove Kelvin support
-  iwlagn: make iwl_scan_cancel_timeout void
-  iwlagn: refactor scan complete
-  iwlagn: move iwl_process_scan_complete up
-  iwlagn: fix scan complete processing
+>>  Even if it is, it doesn't even belong in ath9k. Any form
+>>  of tx power reduction can be handled by cfg80211/mac80211.
+>
+> Depends, general hooks can surely go into cfg80211 / mac80211 but if
+> any decision is being made to adjust power due to some environmental
+> constraints this would likely require chipset specific knobs or
+> information.
+I really don't see how it would need chip specific hooks.
 
-Wey-Yi Guy (2):
-  MAINTAINERS: update iwlwifi
-  iwlagn: add debugging to show probe related info in scan notification
+>>>>    it needs to be added in a different place anyway.
+>>>
+>>>  If its card specific so I do not think we can move any of this
+>>>  commonly into cfg80211 / mac80211.
+>>
+>>  It's not card specific in any way.
+>
+> In code right now its all the same arrays, but does it mean it will
+> not differ from broadcom's cards?
+Heh, do you really think that dB means something else for Broadcom than 
+it does for Atheros? :)
 
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+>>>  One thing is to simply common code, another is to remove code which we
+>>>  is not enabled right now, but may be later. I think we should treat
+>>>  these separately.
+>>
+>>  I don't think we'll ever enable this, and it's not significant enough to
+>>  keep it around.
+>
+> I am not yet convinced its insignificant. I'd like to better
+> understand first who sets this and why before removing it. If anything
+> at least a separate patch should deal with the removal.
+This is bitrot that has been carried forward since the old AR5212 days. 
+It has been forward ported because nobody bothered to remove it. It's 
+even present in old madwifi releases.
 
-Because the file system problem, all the patches are not push into 
-git.kernel.org yet. I will push as soon as the file system issue addressed
-
- MAINTAINERS                                   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tt.c     |   18 +--
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c     |   16 ++-
- drivers/net/wireless/iwlwifi/iwl-core.c       |    6 +-
- drivers/net/wireless/iwlwifi/iwl-core.h       |    4 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c     |    5 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c       |  179 +++++++++++++++----------
- drivers/net/wireless/iwlwifi/iwl-shared.h     |    1 +
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   15 ++-
- 11 files changed, 142 insertions(+), 108 deletions(-)
-
+- Felix
