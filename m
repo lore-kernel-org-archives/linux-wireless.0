@@ -1,56 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:50931 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934604Ab1IOTr1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 15:47:27 -0400
-Subject: [PATCH] iwlagn: Convert kzalloc to kcalloc
-From: Joe Perches <joe@perches.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Date: Thu, 15 Sep 2011 12:47:26 -0700
-In-Reply-To: <1316112830.19293.4.camel@wwguy-huron>
-References: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1316112414-6341-9-git-send-email-wey-yi.w.guy@intel.com>
-	 <1316115470.11236.1.camel@Joe-Laptop>
-	 <1316112830.19293.4.camel@wwguy-huron>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1316116047.11236.8.camel@Joe-Laptop> (sfid-20110915_214730_545412_CE19ECD8)
-Mime-Version: 1.0
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:63177 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750939Ab1ISFjY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 01:39:24 -0400
+Received: by bkbzt4 with SMTP id zt4so5023033bkb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2011 22:39:23 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4E738BFE.7080201@qca.qualcomm.com>
+References: <4E737241.2080301@qca.qualcomm.com>
+	<CAD2nsn14EnEWyu2ifM6-5evQN4qGqe4Me7wsZ=xLPt+RBpJeWw@mail.gmail.com>
+	<4E738BFE.7080201@qca.qualcomm.com>
+Date: Mon, 19 Sep 2011 11:09:23 +0530
+Message-ID: <CAD2nsn1oC2N5qL2eg8rMa6_2w49DTe_V2w-JGdrZ2jwj9b-Hzg@mail.gmail.com> (sfid-20110919_073928_145010_EEE8D1A6)
+Subject: Re: ath9k_htc: "No free RX buffer" in monitor mode
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>, viscous.liquid@gmail.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert kzalloc to kcalloc, coalesce multiple lines too.
+On Fri, Sep 16, 2011 at 11:18 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Hi Shafi,
+>
+> On 09/16/2011 07:09 PM, Mohammed Shafi wrote:
+>> On Fri, Sep 16, 2011 at 9:28 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>>> Hi,
+>>>
+>>> I was testing monitor mode with ath9k_htc and my laptop got slower. Then
+>>> I noticed this:
+>>>
+>>> [ 9246.606150] ath: No free RX buffer
+>>> [ 9246.606156] ath: No free RX buffer
+>>> [ 9246.606582] ath: No free RX buffer
+>>> [ 9246.606590] ath: No free RX buffer
+>>>
+>>> And I saw it quite a lot:
+>>
+>> we saw this some time back in AP mode occasionally and it never came
+>> up for as in monitor mode. we need to fix this.
+>> i will try to fix this.
+>
+> Thanks! I will run more tests with monitor mode next week and will let
+> you know if I see it again.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
-On Thu, 2011-09-15 at 11:53 -0700, Guy, Wey-Yi wrote:
-> On Thu, 2011-09-15 at 12:37 -0700, Joe Perches wrote:
-> > kcalloc would be even prettier...
-> agree, would you mind submit a patch to changes it
+Kalle thanks, now I could easily get this thing in monitor mode itself
+in a busy channel (6, HT20).
+will fix this soon.
 
-Just converted your original patch inline.
+issue can be found with latest compat-wireless/wireless-testing
 
- drivers/net/wireless/iwlwifi/iwl-trans.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index d4f6281..498e006 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -308,10 +308,8 @@ static int iwl_trans_txq_alloc(struct iwl_trans *trans,
- 
- 	txq->q.n_window = slots_num;
- 
--	txq->meta = kzalloc(sizeof(txq->meta[0]) * slots_num,
--			    GFP_KERNEL);
--	txq->cmd = kzalloc(sizeof(txq->cmd[0]) * slots_num,
--			   GFP_KERNEL);
-+	txq->meta = kcalloc(slots_num, sizeof(txq->meta[0]), GFP_KERNEL);
-+	txq->cmd = kcalloc(slots_num, sizeof(txq->cmd[0]), GFP_KERNEL);
- 
- 	if (!txq->meta || !txq->cmd)
- 		goto error;
+>
+> Kalle
+>
 
 
+
+-- 
+shafi
