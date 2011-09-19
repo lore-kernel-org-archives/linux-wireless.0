@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:62789 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756876Ab1IIA3H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 20:29:07 -0400
-Received: by yxp4 with SMTP id 4so975909yxp.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 17:29:06 -0700 (PDT)
-Message-ID: <4E6911C2.2030309@lwfinger.net> (sfid-20110909_022912_050924_A4E9D071)
-Date: Thu, 08 Sep 2011 14:04:34 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from nbd.name ([46.4.11.11]:42759 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756495Ab1ISWEJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 18:04:09 -0400
+Message-ID: <4E77BC58.7040204@openwrt.org> (sfid-20110920_000413_525320_253A7720)
+Date: Tue, 20 Sep 2011 00:04:08 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Semigod King <semigodking@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: mac80211 driver for RT3070 wifi card does not work on big-endian
- platform
-References: <CA+TXxM3EgGZmo1F9GS+-QNWfTTgWFD4XHvG31JH=kabrr=ES=A@mail.gmail.com>
-In-Reply-To: <CA+TXxM3EgGZmo1F9GS+-QNWfTTgWFD4XHvG31JH=kabrr=ES=A@mail.gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH v2 2/4] ath9k_hw: clean up tx power handling
+References: <1316453903-75710-1-git-send-email-nbd@openwrt.org> <1316453903-75710-2-git-send-email-nbd@openwrt.org> <CAB=NE6XvanRQ6Yje_qHhkfzbLmZn9o5Q+5y1NobJwCyuMLFEvg@mail.gmail.com> <4E77AAFB.1080805@openwrt.org> <CAB=NE6XgSz7zz_ZXaPQEsaue307ipd7Qnzgi5QWr8Y4SS1j=Lg@mail.gmail.com> <4E77B25D.9070907@openwrt.org> <CAB=NE6XLdftXKg5-wvme8Vg7BjGi-TpxQ3G6m=7VnEw89YzXoA@mail.gmail.com> <CAB=NE6XQDqG+En2KWOyKGUVT1SWm1rwMwOxMjpE8CjYfvwvOqw@mail.gmail.com>
+In-Reply-To: <CAB=NE6XQDqG+En2KWOyKGUVT1SWm1rwMwOxMjpE8CjYfvwvOqw@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/08/2011 12:34 AM, Semigod King wrote:
-> Greetings,
+On 2011-09-19 11:54 PM, Luis R. Rodriguez wrote:
+> On Mon, Sep 19, 2011 at 2:45 PM, Luis R. Rodriguez
+> <mcgrof@qca.qualcomm.com>  wrote:
+>>  On Mon, Sep 19, 2011 at 2:21 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
+>>>  I looked at the other ath driver and I see no indication that it's related
+>>>  to DFS in any way.
+>>
+>>  I have verified this just now as well, it seems it was only used to
+>>  support an ioctl to userspace to enable users to update a tpscale
+>>  value but I see no documentation about this. Next question is who in
+>>  usersapce sets this. I wonder if its done through userspace after
+>>  measuring some TPC reports from STAs.
 >
-> I would like to report a bug to you. The same problem was reported to
-> OpenWRT developers. But, they suggest me report it to linux wireless.
+> So this comes from supporting a "TR-098" specification, which seems to
+> be the "Internet Gateway Device data model for the CPE WAN Management
+> Protocol". I haven't yet been able to map this to the specification
+> respective component:
+>
+> http://www.broadband-forum.org/technical/download/TR-098.pdf
+Interesting. That definitely supports my point that ath9k is the wrong 
+place for something like this to be. Let's just get rid of it.
 
-I do see a problem. Looking at one piece of your patch, we see
-
--    rt2800_register_read_lock(rt2x00dev, EFUSE_DATA3,
--                    (u32 *)&rt2x00dev->eeprom[i]);
-+    rt2800_register_read_lock(rt2x00dev, EFUSE_DATA3, &reg);
-+    *(u32 *)&rt2x00dev->eeprom[i] = le32_to_cpu(reg);
-
-The last statement of rt2800_register_read_lock() does an le32_to_cpu() 
-conversion of the output value (3rd argument), but rt2x00dev->eeprom is le16, 
-which is why a double conversion le32 => be32 => le32 is needed. Your second 
-line should be
-
-*(u32 *)&rt2x00dev->eeprom[i] = cpu_to_le32(reg);
-
-That does the same thing, but makes it clearer what is happening.
-
-I am having to rebuild the Ubuntu system on my Mac, which will take a while. 
-When that is done, I will be able to test.
-
-Larry
+- Felix
