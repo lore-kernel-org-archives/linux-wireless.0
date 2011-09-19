@@ -1,86 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:45481 "EHLO
-	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752411Ab1IVHtJ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34407 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755033Ab1ISMFJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 03:49:09 -0400
-Received: by mail-bw0-f41.google.com with SMTP id zs2so2945485bkb.14
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 00:49:07 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: coelho@ti.com
-Cc: yoni.divinsky@ti.com, linux-wireless@vger.kernel.org,
-	stable@kernel.org
-Subject: [PATCH v2] wl12xx: fix forced passive scans
-Date: Thu, 22 Sep 2011 10:48:52 +0300
-Message-Id: <1316677732-2242-1-git-send-email-coelho@ti.com> (sfid-20110922_094924_954117_E59E2ED8)
-In-Reply-To: <1316676653-1758-1-git-send-email-coelho@ti.com>
-References: <1316676653-1758-1-git-send-email-coelho@ti.com>
+	Mon, 19 Sep 2011 08:05:09 -0400
+Subject: Re: [PATCH] mac80211: add ieee80211_set_dyn_ps_timeout()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <coelho@ti.com>
+Cc: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1316408970.2157.9.camel@cumari>
+References: <1316347394-21276-1-git-send-email-eliad@wizery.com>
+	 <1316408970.2157.9.camel@cumari>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Sep 2011 14:05:05 +0200
+Message-ID: <1316433905.5995.4.camel@jlt3.sipsolutions.net> (sfid-20110919_140528_343966_8F70FFBA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were using incorrect max and min dwell times during forced passive
-scans because we were still using the active scan states to scan
-(passively) the channels that were not marked as passive.
+On Mon, 2011-09-19 at 08:09 +0300, Luciano Coelho wrote:
+> On Sun, 2011-09-18 at 15:03 +0300, Eliad Peller wrote: 
+> > In some cases the driver might want to change the
+> > default dynamic ps timeout (e.g. coex activity adds
+> > latency to the rx/tx path, which might result in
+> > redundant psm entrance).
 
-Instead of doing passive scans in active states, we now skip active
-states and scan for all channels in passive states.
+> Let's see what Johannes is going to say about this change in mac80211,
+> but IIRC this timeout used to exist with WEXT, but it was not
+> implemented in nl80211.  We (at Nokia, probably Juuso) tried to
+> implement it a long time ago, but after some discussions with Johannes,
+> it was decided that this value wouldn't be settable from userspace at
+> least.  I don't know if it was considered setting it from the driver
+> side, though.
 
-Cc: <stable@kernel.org> # 2.6.36+
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
-In v2 I just added Cc stable.
+Yeah it's a good question ... but in this case there actually is some
+actual reason for it -- I think it's probably used for BT coexist?
+Obviously the user can't make an informed choice in that scenario, but
+the device might actually be able to? My biggest objection back then was
+that the user has no real reason to play with it, and the latency
+properties of it are better done in other ways.
 
- drivers/net/wireless/wl12xx/scan.c |   19 +++++++++++++------
- 1 files changed, 13 insertions(+), 6 deletions(-)
+Which actually makes me think that having a completely fixed value from
+the driver might not be a good thing? I mean, yes, we allow wext to
+override it, but really we want this to be controlled by the latency
+requirements I think. That's obviously something of a pipe dream right
+now since nothing seems to ever use that, but ...
 
-diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
-index eeccc9f..08f7e82 100644
---- a/drivers/net/wireless/wl12xx/scan.c
-+++ b/drivers/net/wireless/wl12xx/scan.c
-@@ -99,14 +99,18 @@ static int wl1271_get_scan_channels(struct wl1271 *wl,
- 	for (i = 0, j = 0;
- 	     i < req->n_channels && j < WL1271_SCAN_MAX_CHANNELS;
- 	     i++) {
--
- 		flags = req->channels[i]->flags;
- 
- 		if (!test_bit(i, wl->scan.scanned_ch) &&
- 		    !(flags & IEEE80211_CHAN_DISABLED) &&
--		    ((!!(flags & IEEE80211_CHAN_PASSIVE_SCAN)) == passive) &&
--		    (req->channels[i]->band == band)) {
--
-+		    (req->channels[i]->band == band) &&
-+		    /*
-+		     * In passive scans, we scan all remaining
-+		     * channels, even if not marked as such.
-+		     * In active scans, we only scan channels not
-+		     * marked as passive.
-+		     */
-+		    (passive || !(flags & IEEE80211_CHAN_PASSIVE_SCAN))) {
- 			wl1271_debug(DEBUG_SCAN, "band %d, center_freq %d ",
- 				     req->channels[i]->band,
- 				     req->channels[i]->center_freq);
-@@ -158,6 +162,10 @@ static int wl1271_scan_send(struct wl1271 *wl, enum ieee80211_band band,
- 	int ret;
- 	u16 scan_options = 0;
- 
-+	/* skip active scans if we don't have SSIDs */
-+	if (!passive && wl->scan.req->n_ssids == 0)
-+		return WL1271_NOTHING_TO_SCAN;
-+
- 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
- 	trigger = kzalloc(sizeof(*trigger), GFP_KERNEL);
- 	if (!cmd || !trigger) {
-@@ -165,8 +173,7 @@ static int wl1271_scan_send(struct wl1271 *wl, enum ieee80211_band band,
- 		goto out;
- 	}
- 
--	/* No SSIDs means that we have a forced passive scan */
--	if (passive || wl->scan.req->n_ssids == 0)
-+	if (passive)
- 		scan_options |= WL1271_SCAN_OPT_PASSIVE;
- 
- 	if (WARN_ON(wl->role_id == WL12XX_INVALID_ROLE_ID)) {
--- 
-1.7.1
+So anyway, do we really want this to be completely fixed by the driver?
+Maybe a range would be better?
+
+johannes
 
