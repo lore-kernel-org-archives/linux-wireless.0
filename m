@@ -1,206 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:45148 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51746 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754732Ab1IWPOE (ORCPT
+	with ESMTP id S1756389Ab1ISQPq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 11:14:04 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Mon, 19 Sep 2011 12:15:46 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
 	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH 2/2] mac80211: Send the management frame at requested rate
-Date: Fri, 23 Sep 2011 20:42:59 +0530
-Message-ID: <1316790779-8955-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110923_171409_061898_652FB292)
-In-Reply-To: <1316790779-8955-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1316790779-8955-1-git-send-email-rmanohar@qca.qualcomm.com>
+Subject: [PATCH 2/9] ath6kl: Remove deprecated WMI_OPT_RX_FRAME_EVENTID processing
+Date: Mon, 19 Sep 2011 19:15:00 +0300
+Message-ID: <1316448907-10166-3-git-send-email-jouni@qca.qualcomm.com> (sfid-20110919_181550_070793_690ADB73)
+In-Reply-To: <1316448907-10166-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1316448907-10166-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whenever the scan request or tx_mgmt is requesting not to
-use CCK rate for managemet frames through
-NL80211_ATTR_TX_NO_CCK_RATE attribute, then mac80211 should
-select appropriate least non-CCK rate. This could help to
-send P2P probes and P2P action frames at non 11b rates
-without diabling 11b rates globally.
+This event has been deprecated and there is no need for ath6kl to
+include code for processing it.
 
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- include/net/mac80211.h     |    4 ++++
- net/mac80211/cfg.c         |    3 +++
- net/mac80211/ieee80211_i.h |    2 +-
- net/mac80211/mlme.c        |    2 +-
- net/mac80211/rate.c        |   30 +++++++++++++++++++++++++++++-
- net/mac80211/scan.c        |    3 ++-
- net/mac80211/util.c        |    8 ++++++--
- net/mac80211/work.c        |    2 +-
- 8 files changed, 47 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath6kl/wmi.c |   40 +--------------------------------
+ 1 files changed, 1 insertions(+), 39 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index c0f63fd..b8a0df6 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -363,6 +363,9 @@ struct ieee80211_bss_conf {
-  * @IEEE80211_TX_INTFL_TKIP_MIC_FAILURE: Marks this packet to be used for TKIP
-  *	testing. It will be sent out with incorrect Michael MIC key to allow
-  *	TKIP countermeasures to be tested.
-+ * @IEEE80211_TX_CTL_NO_CCK_RATE: This frame will be sent at non CCK rate.
-+ *	This flag is actually used for management frame especially for P2P
-+ *	frames not being sent at CCK rate in 2GHz band.
-  *
-  * Note: If you have to add new flags to the enumeration, then don't
-  *	 forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
-@@ -393,6 +396,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTL_STBC			= BIT(23) | BIT(24),
- 	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(25),
- 	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(26),
-+	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(27),
- };
- 
- #define IEEE80211_TX_CTL_STBC_SHIFT		23
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 9cba010..56c3504 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1897,6 +1897,9 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
- 		flags |= IEEE80211_TX_CTL_TX_OFFCHAN;
- 	}
- 
-+	if (no_cck)
-+		flags |= IEEE80211_TX_CTL_NO_CCK_RATE;
-+
- 	if (is_offchan && !offchan)
- 		return -EBUSY;
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 21186e2..4822d69 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1324,7 +1324,7 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
- void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
- 			      const u8 *ssid, size_t ssid_len,
- 			      const u8 *ie, size_t ie_len,
--			      u32 ratemask, bool directed);
-+			      u32 ratemask, bool directed, bool no_cck);
- 
- void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
- 				  const size_t supp_rates_len,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1a59fb6..cc80d32 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1239,7 +1239,7 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
- 	} else {
- 		ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
- 		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0,
--					 (u32) -1, true);
-+					 (u32) -1, true, false);
- 	}
- 
- 	ifmgd->probe_send_count++;
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 3d5a2cb..6711954 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -233,6 +233,28 @@ static void rc_send_low_broadcast(s8 *idx, u32 basic_rates,
- 	/* could not find a basic rate; use original selection */
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index dbddb91..24f0e3e 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -1185,44 +1185,6 @@ static int ath6kl_wmi_bssinfo_event_rx(struct wmi *wmi, u8 *datap, int len)
+ 	return 0;
  }
  
-+static inline s8
-+rate_lowest_non_cck_index(struct ieee80211_supported_band *sband,
-+			  struct ieee80211_sta *sta)
-+{
-+	int i;
-+
-+	for (i = 0; i < sband->n_bitrates; i++) {
-+		struct ieee80211_rate *srate = &sband->bitrates[i];
-+		if ((srate->bitrate == 10) || (srate->bitrate == 20) ||
-+		    (srate->bitrate == 55) || (srate->bitrate == 110))
-+			continue;
-+
-+		if ((i != sband->n_bitrates) &&
-+		    rate_supported(sta, sband->band, i))
-+			return i;
-+	}
-+
-+	/* No matching rate found */
-+	return 0;
-+}
-+
-+
- bool rate_control_send_low(struct ieee80211_sta *sta,
- 			   void *priv_sta,
- 			   struct ieee80211_tx_rate_control *txrc)
-@@ -242,7 +264,13 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
- 	int mcast_rate;
- 
- 	if (!sta || !priv_sta || rc_no_data_or_no_ack(txrc)) {
--		info->control.rates[0].idx = rate_lowest_index(txrc->sband, sta);
-+		if ((sband->band != IEEE80211_BAND_2GHZ) ||
-+		    !(info->flags & IEEE80211_TX_CTL_NO_CCK_RATE))
-+			info->control.rates[0].idx =
-+				rate_lowest_index(txrc->sband, sta);
-+		else
-+			info->control.rates[0].idx =
-+				rate_lowest_non_cck_index(txrc->sband, sta);
- 		info->control.rates[0].count =
- 			(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
- 			1 : txrc->hw->max_rate_tries;
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 6f09eca..830e60f 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -660,7 +660,8 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
- 			local->scan_req->ssids[i].ssid,
- 			local->scan_req->ssids[i].ssid_len,
- 			local->scan_req->ie, local->scan_req->ie_len,
--			local->scan_req->rates[band], false);
-+			local->scan_req->rates[band], false,
-+			local->scan_req->no_cck);
- 
- 	/*
- 	 * After sending probe requests, wait for probe responses
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 4b1466d..ead345d 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -899,14 +899,18 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
- void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
- 			      const u8 *ssid, size_t ssid_len,
- 			      const u8 *ie, size_t ie_len,
--			      u32 ratemask, bool directed)
-+			      u32 ratemask, bool directed, bool no_cck)
- {
- 	struct sk_buff *skb;
- 
- 	skb = ieee80211_build_probe_req(sdata, dst, ratemask, ssid, ssid_len,
- 					ie, ie_len, directed);
--	if (skb)
-+	if (skb) {
-+		if (no_cck)
-+			IEEE80211_SKB_CB(skb)->flags |=
-+				IEEE80211_TX_CTL_NO_CCK_RATE;
- 		ieee80211_tx_skb(sdata, skb);
-+	}
- }
- 
- u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index bac3439..af374fa 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -458,7 +458,7 @@ ieee80211_direct_probe(struct ieee80211_work *wk)
- 	 */
- 	ieee80211_send_probe_req(sdata, NULL, wk->probe_auth.ssid,
- 				 wk->probe_auth.ssid_len, NULL, 0,
--				 (u32) -1, true);
-+				 (u32) -1, true, false);
- 
- 	wk->timeout = jiffies + IEEE80211_AUTH_TIMEOUT;
- 	run_again(local, wk->timeout);
+-static int ath6kl_wmi_opt_frame_event_rx(struct wmi *wmi, u8 *datap, int len)
+-{
+-	struct bss *bss;
+-	struct wmi_opt_rx_info_hdr *bih;
+-	u8 *buf;
+-
+-	if (len <= sizeof(struct wmi_opt_rx_info_hdr))
+-		return -EINVAL;
+-
+-	bih = (struct wmi_opt_rx_info_hdr *) datap;
+-	buf = datap + sizeof(struct wmi_opt_rx_info_hdr);
+-	len -= sizeof(struct wmi_opt_rx_info_hdr);
+-
+-	ath6kl_dbg(ATH6KL_DBG_WMI, "opt frame event %2.2x:%2.2x\n",
+-		   bih->bssid[4], bih->bssid[5]);
+-
+-	bss = wlan_find_node(&wmi->parent_dev->scan_table, bih->bssid);
+-	if (bss != NULL) {
+-		/* Free up the node. We are about to allocate a new node. */
+-		wlan_node_reclaim(&wmi->parent_dev->scan_table, bss);
+-	}
+-
+-	bss = wlan_node_alloc(len);
+-	if (!bss)
+-		return -ENOMEM;
+-
+-	bss->ni_snr = bih->snr;
+-	bss->ni_cie.ie_chan = le16_to_cpu(bih->ch);
+-
+-	if (WARN_ON(!bss->ni_buf))
+-		return -EINVAL;
+-
+-	memcpy(bss->ni_buf, buf, len);
+-	wlan_setup_node(&wmi->parent_dev->scan_table, bss, bih->bssid);
+-
+-	return 0;
+-}
+-
+ /* Inactivity timeout of a fatpipe(pstream) at the target */
+ static int ath6kl_wmi_pstream_timeout_event_rx(struct wmi *wmi, u8 *datap,
+ 					       int len)
+@@ -3175,7 +3137,7 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
+ 		break;
+ 	case WMI_OPT_RX_FRAME_EVENTID:
+ 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_OPT_RX_FRAME_EVENTID\n");
+-		ret = ath6kl_wmi_opt_frame_event_rx(wmi, datap, len);
++		/* this event has been deprecated */
+ 		break;
+ 	case WMI_REPORT_ROAM_TBL_EVENTID:
+ 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_REPORT_ROAM_TBL_EVENTID\n");
 -- 
-1.7.6.3
+1.7.4.1
 
