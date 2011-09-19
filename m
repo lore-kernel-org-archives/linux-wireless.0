@@ -1,75 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:35708 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751938Ab1ITM2k convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33557 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755812Ab1ISNEU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 08:28:40 -0400
-Received: by ywb5 with SMTP id 5so269963ywb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 05:28:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1316520830.3953.19.camel@jlt3.sipsolutions.net>
-References: <1316347394-21276-1-git-send-email-eliad@wizery.com>
-	<1316408970.2157.9.camel@cumari>
-	<87aaa0k0a1.fsf@purkki.adurom.net>
-	<CAB3XZEdiTRDJGUHWJ5UorQq2w-ZLP+TP0b-qSSVUTzhPG4H2rg@mail.gmail.com>
-	<1316450319.5995.33.camel@jlt3.sipsolutions.net>
-	<CAB3XZEeMZvv374SBTPDg1W8-E24=K5yVRhDQ0ktpUgxAEJgdzw@mail.gmail.com>
-	<1316520830.3953.19.camel@jlt3.sipsolutions.net>
-Date: Tue, 20 Sep 2011 15:28:39 +0300
-Message-ID: <CAB3XZEcJctM2zeAGiftAnbkNDoOM5qgcnbJzFap1YqENakdsbA@mail.gmail.com> (sfid-20110920_142843_784252_1C61634F)
-Subject: Re: [PATCH] mac80211: add ieee80211_set_dyn_ps_timeout()
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@adurom.com>, Luciano Coelho <coelho@ti.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 19 Sep 2011 09:04:20 -0400
+Subject: Re: [PATCH v3 3/3] mac80211: Add HT operation modes for IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexander Simon <an.alexsimon@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <loom.20110918T004437-426@post.gmane.org> (sfid-20110918_010021_257649_C3C63FC1)
+References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com>
+	 <c06e69fca577a9f162c3d69b4a7e7a212788ee7b.1316297595.git.an.alexsimon@googlemail.com>
+	 <loom.20110918T004437-426@post.gmane.org>
+	 (sfid-20110918_010021_257649_C3C63FC1)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Sep 2011 15:04:19 +0200
+Message-ID: <1316437459.5995.29.camel@jlt3.sipsolutions.net> (sfid-20110919_150423_475587_81D04E2F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 20, 2011 at 3:13 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2011-09-20 at 15:05 +0300, Eliad Peller wrote:
->
->> > It'd be interesting to see if we can just treat this as a "minimum awake
->> > time", kinda like going back to the range I thought about earlier.
->> >
->> do you mean something like:
->> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
->> index 4274e94..57695e3 100644
->> --- a/net/mac80211/mlme.c
->> +++ b/net/mac80211/mlme.c
->> @@ -702,11 +702,12 @@ void ieee80211_recalc_ps(struct ieee80211_local
->> *local, s32 latency)
->>                         if (latency > (1900 * USEC_PER_MSEC) &&
->>                             latency != (2000 * USEC_PER_SEC))
->>                                 timeout = 0;
->> -                       else if (local->dynamic_ps_driver_timeout >= 0)
->> -                               timeout = local->dynamic_ps_driver_timeout;
->>                         else
->>                                 timeout = 100;
->>                 }
->> +               if (timeout && local->dynamic_ps_driver_timeout > timeout)
->> +                       timeout = local->dynamic_ps_driver_timeout;
->> +
->>                 local->dynamic_ps_user_timeout = timeout;
->>                 if (!local->disable_dynamic_ps)
->>                         conf->dynamic_ps_timeout =
->>
->> ?
->>
->> i don't find it much different.
->
-> I did mean something like that, yes, but I was thinking we actually
-> calculate the timeout based on latency requirements :)
->
-i think that f(max_latency) -> dynamic_ps_timeout is not well defined,
-so that's probably why we have to use hardcoded values here.
+On Sat, 2011-09-17 at 22:54 +0000, Alexander Simon wrote:
+> I came to the conclusion that the old patch was way too complicated and
+> confusing. Too much cases have to be taken into account when trying to
+> homogenize the HT mode.
+> I changed the code now that only mode given by iw is considered.
+> 
+> This yields in a way smaller patch and less refactoring as we don't need to
+> manipulate the beacon skb and match additionally for HT mode in scan results.
+> 
+> I think it's better that way.
 
-with the current code, i think the original patch is a bit better, as
-the driver (for whatever reason) will also be able to decrease the
-timeout.
-however, i don't mind for either of them.
+Hmm. 10.3.2.2.2 seems to indicate that HT operation parameters should be
+adopted, and 11.14.2 says:
+"An HT STA that is a member of an IBSS adopts the value of the Secondary
+Channel Offset field in received frames according to the rules in 11.1.4
+and shall not transmit a value for the Secondary Channel Offset field
+that differs from the most recently adopted value."
 
-hopefully, the whole ps stuff should be redesigned at some point :)
 
-Eliad.
+Also, are you handling the following?
+
+     1. 9.13.3.1: In an IBSS, the HT Protection field is reserved, but
+        an HT STA shall protect HT transmissions as though the HT
+        Protection field were set to non-HT mixed mode.
+     2. In an IBSS, the RIFS Mode field of the HT Operation element is
+        also reserved, but an HT STA shall operate as though this field
+        were set to 1.
+     3. 11.5.1.1: If the initiating STA is an HT STA, is a member of an
+        IBSS, and has no other existing Block Ack agreement with the
+        recipient STA, then the initiating STA shall transmit a Probe
+        Request frame to the recipient STA and shall not transmit an
+        ADDBA Request frame unless it receives a Probe Response frame
+        from the recipient within dot11ADDBAFailureTimeout.
+
+I'd like to at least give consideration to standards-compliance and make
+it clear where we don't want to be compliant.
+
+johannes
+
