@@ -1,81 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31096 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751636Ab1I2PBm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 11:01:42 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/4] ath6kl: Minor cleanup in msg_look_ahead parameter in ath6kl_htc_rxmsg_pending_handler()
-Date: Thu, 29 Sep 2011 20:31:16 +0530
-Message-ID: <1317308476-16204-4-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110929_170146_059353_36DA58FD)
-In-Reply-To: <1317308476-16204-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1317308476-16204-1-git-send-email-vthiagar@qca.qualcomm.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:4432 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932481Ab1ISV0b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 17:26:31 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 08/20] staging: brcm80211: remove fullmac module_param
+ brcmf_dongle_memsize
+Date: Mon, 19 Sep 2011 14:25:56 -0700
+Message-ID: <1316467568-27683-9-git-send-email-frankyl@broadcom.com> (sfid-20110919_232828_235659_54FA34DC)
+In-Reply-To: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is just a four byte information of the received message
-from ath6kl_htc_rxmsg_pending_handler(). Remove unnecessary
-array representaion.
+remove unused module parameter brcmf_dongle_memsize and related code
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/ath/ath6kl/htc.c     |    4 ++--
- drivers/net/wireless/ath/ath6kl/htc.h     |    2 +-
- drivers/net/wireless/ath/ath6kl/htc_hif.c |    2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd_bus.h  |    3 --
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   35 +++---------------------
+ 2 files changed, 5 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index ca3d084..9a9eae5 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -1770,7 +1770,7 @@ fail_rx:
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_bus.h b/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
+index aa05b1c..d02cb10 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
+@@ -24,9 +24,6 @@
+  * Exported from brcmf bus module (brcmf_usb, brcmf_sdio)
+  */
+ 
+-/* dongle ram module parameter */
+-extern int brcmf_dongle_memsize;
+-
+ /* Tx/Rx bounds module parameters */
+ extern uint brcmf_txbound;
+ extern uint brcmf_rxbound;
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 9d4850d..7090a36 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -568,7 +568,6 @@ struct brcmf_bus {
+ 	uint varsz;		/* Size of variables buffer */
+ 
+ 	u32 ramsize;		/* Size of RAM in SOCRAM (bytes) */
+-	u32 orig_ramsize;	/* Size of RAM in SOCRAM (bytes) */
+ 
+ 	u32 hostintmask;	/* Copy of Host Interrupt Mask */
+ 	u32 intstatus;	/* Intstatus bits (events) pending */
+@@ -772,11 +771,6 @@ module_param(brcmf_poll, uint, 0);
+ uint brcmf_intr = true;
+ module_param(brcmf_intr, uint, 0);
+ 
+-/* override the RAM size if possible */
+-#define DONGLE_MIN_MEMSIZE (128 * 1024)
+-int brcmf_dongle_memsize;
+-module_param(brcmf_dongle_memsize, int, 0);
+-
+ #define RETRYCHAN(chan) ((chan) == SDPCM_EVENT_CHANNEL)
+ 
+ /* Retry count for register access failures */
+@@ -857,17 +851,6 @@ static void brcmf_sdbrcm_pktfree2(struct brcmf_bus *bus, struct sk_buff *pkt)
+ 		brcmu_pkt_buf_free_skb(pkt);
  }
  
- int ath6kl_htc_rxmsg_pending_handler(struct htc_target *target,
--				     u32 msg_look_ahead[], int *num_pkts)
-+				     u32 msg_look_ahead, int *num_pkts)
+-static void brcmf_sdbrcm_setmemsize(struct brcmf_bus *bus, int mem_size)
+-{
+-	s32 min_size = DONGLE_MIN_MEMSIZE;
+-	/* Restrict the memsize to user specified limit */
+-	brcmf_dbg(ERROR, "user: Restrict the dongle ram size to %d, min %d\n",
+-		  brcmf_dongle_memsize, min_size);
+-	if ((brcmf_dongle_memsize > min_size) &&
+-	    (brcmf_dongle_memsize < (s32) bus->orig_ramsize))
+-		bus->ramsize = brcmf_dongle_memsize;
+-}
+-
+ static void brcmf_sdbrcm_sdlock(struct brcmf_bus *bus)
  {
- 	struct htc_packet *packets, *tmp_pkt;
- 	struct htc_endpoint *endpoint;
-@@ -1787,7 +1787,7 @@ int ath6kl_htc_rxmsg_pending_handler(struct htc_target *target,
- 	 * On first entry copy the look_aheads into our temp array for
- 	 * processing
+ 	if (bus->threads_only)
+@@ -3531,11 +3514,10 @@ static int brcmf_sdbrcm_write_vars(struct brcmf_bus *bus)
+ 	}
+ 
+ 	/* adjust to the user specified RAM */
+-	brcmf_dbg(INFO, "Physical memory size: %d, usable memory size: %d\n",
+-		  bus->orig_ramsize, bus->ramsize);
++	brcmf_dbg(INFO, "Physical memory size: %d\n", bus->ramsize);
+ 	brcmf_dbg(INFO, "Vars are at %d, orig varsize is %d\n",
+ 		  varaddr, varsize);
+-	varsize = ((bus->orig_ramsize - 4) - varaddr);
++	varsize = ((bus->ramsize - 4) - varaddr);
+ 
+ 	/*
+ 	 * Determine the length token:
+@@ -3555,7 +3537,7 @@ static int brcmf_sdbrcm_write_vars(struct brcmf_bus *bus)
+ 		  varsize, varsizew);
+ 
+ 	/* Write the length token to the last word */
+-	bcmerror = brcmf_sdbrcm_membytes(bus, true, (bus->orig_ramsize - 4),
++	bcmerror = brcmf_sdbrcm_membytes(bus, true, (bus->ramsize - 4),
+ 					 (u8 *)&varsizew_le, 4);
+ 
+ 	return bcmerror;
+@@ -4630,17 +4612,11 @@ brcmf_sdbrcm_probe_attach(struct brcmf_bus *bus, u32 regsva)
+ 	/* Get info on the ARM and SOCRAM cores... */
+ 	brcmf_sdcard_reg_read(bus->sdiodev,
+ 		  CORE_SB(bus->ci->armcorebase, sbidhigh), 4);
+-	bus->orig_ramsize = bus->ci->ramsize;
+-	if (!(bus->orig_ramsize)) {
++	bus->ramsize = bus->ci->ramsize;
++	if (!(bus->ramsize)) {
+ 		brcmf_dbg(ERROR, "failed to find SOCRAM memory!\n");
+ 		goto fail;
+ 	}
+-	bus->ramsize = bus->orig_ramsize;
+-	if (brcmf_dongle_memsize)
+-		brcmf_sdbrcm_setmemsize(bus, brcmf_dongle_memsize);
+-
+-	brcmf_dbg(ERROR, "DHD: dongle ram size is set to %d(orig %d)\n",
+-		  bus->ramsize, bus->orig_ramsize);
+ 
+ 	/* Set core control so an SDIO reset does a backplane reset */
+ 	reg_addr = bus->ci->buscorebase +
+@@ -4819,7 +4795,6 @@ void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
  	 */
--	memcpy(look_aheads, msg_look_ahead, sizeof(look_aheads));
-+	look_aheads[0] = msg_look_ahead;
+ 	brcmf_txbound = BRCMF_TXBOUND;
+ 	brcmf_rxbound = BRCMF_RXBOUND;
+-	brcmf_dongle_memsize = 0;
+ 	brcmf_txminmax = BRCMF_TXMINMAX;
  
- 	while (true) {
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
-index 8ce0c2c..69d44e3 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.h
-+++ b/drivers/net/wireless/ath/ath6kl/htc.h
-@@ -563,7 +563,7 @@ int ath6kl_htc_get_rxbuf_num(struct htc_target *target,
- int ath6kl_htc_add_rxbuf_multiple(struct htc_target *target,
- 				  struct list_head *pktq);
- int ath6kl_htc_rxmsg_pending_handler(struct htc_target *target,
--				     u32 msg_look_ahead[], int *n_pkts);
-+				     u32 msg_look_ahead, int *n_pkts);
- 
- static inline void set_htc_pkt_info(struct htc_packet *packet, void *context,
- 				    u8 *buf, unsigned int len,
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.c b/drivers/net/wireless/ath/ath6kl/htc_hif.c
-index 86b1cc7..37a13f0 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_hif.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_hif.c
-@@ -417,7 +417,7 @@ static int proc_pending_irqs(struct ath6kl_device *dev, bool *done)
- 		 * we rapidly pull packets.
- 		 */
- 		status = ath6kl_htc_rxmsg_pending_handler(dev->htc_cnxt,
--							  &lk_ahd, &fetched);
-+							  lk_ahd, &fetched);
- 		if (status)
- 			goto out;
- 
+ 	brcmf_c_init();
 -- 
-1.7.0.4
+1.7.1
+
 
