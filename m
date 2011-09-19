@@ -1,41 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54230 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751735Ab1IGSIp (ORCPT
+Received: from mta11.charter.net ([216.33.127.80]:48977 "EHLO
+	mta11.charter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750784Ab1ISW71 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Sep 2011 14:08:45 -0400
-Subject: Re: [PATCH 0/2] QoS headers for mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
-	jlopex@gmail.com
-In-Reply-To: <1315347976-13950-1-git-send-email-javier@cozybit.com> (sfid-20110907_002659_987760_30CFF5E1)
-References: <1315347976-13950-1-git-send-email-javier@cozybit.com>
-	 (sfid-20110907_002659_987760_30CFF5E1)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 07 Sep 2011 20:08:40 +0200
-Message-ID: <1315418920.4002.13.camel@jlt3.sipsolutions.net> (sfid-20110907_200849_198439_CB225490)
-Mime-Version: 1.0
+	Mon, 19 Sep 2011 18:59:27 -0400
+Message-ID: <4E77C951.5010103@gregd.org> (sfid-20110920_005930_624549_B04EC3EE)
+Date: Mon, 19 Sep 2011 17:59:29 -0500
+From: Greg Dietsche <greg@gregd.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: pull request: iwlegacy 2011-09-14
+References: <20110914085900.GA2717@redhat.com> <20110919193122.GD2608@tuxdriver.com> <4E77C129.7070203@gregd.org>
+In-Reply-To: <4E77C129.7070203@gregd.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-09-06 at 15:26 -0700, Javier Cardona wrote:
-> Mesh frames are required to have QoS headers to indicate the presence of a Mesh
-> Control Header in the payload.  These patches add QoS headers to mesh frames,
-> but note that they don't implement full QoS support: mesh stations don't
-> currently advertise QoS capabilities.
+On 09/19/2011 05:24 PM, Greg Dietsche wrote:
+> On Mon, 19 Sep 2011 15:31:22 -0400, John W. Linville wrote:
+>> On Wed, Sep 14, 2011 at 10:59:16AM +0200, Stanislaw Gruszka wrote:
+>>> John,
+>>>
+>>> Please pull iwlegacy cleanup changes done by Greg and me, intended
+>>> for 3.2. These request include huge patches with file renaming and
+>>> automatic code processing done by sed and indent. Work of changing
+>>> iwlegacy driver into something that I could consider maintainable
+>>> is not done yet, but these massive changes bring closer into that.
+>>> Hopefully with having clean, maintainable code I will be able to
+>>> fix some nasty, not easy reproducible bugs, we still have in the
+>>> iwlegacy driver.
+>>>
+>>> Thanks.
+>>>
+>>> The following changes since commit
+>>> d82cdad64a0127611724c61849a8487d69fb76ef:
+>>>
+>>> Merge branch 'master' of
+>>> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next
+>>> (2011-08-30 16:34:33 -0400)
+>>>
+>>> are available in the git repository at:
+>>>
+>>> git://github.com/dietsche/linux.git
+>>> wireless-next-iwlegacy-stanislaw-greg
+>>
+>> It looks like you pulled something other than wireless-next into this
+>> tree. If you want me to pull directly, then you need to based your
+>> tree (or at least the branch I'm pulling) on wireless-next
+>> exclusively.
+>
+> Sorry for the confusing branch name! I was naming it based on which
+> kernel release the code is for and not where it was branched from. Also,
+> I hadn't anticipated that my git tree might end up in pull request...
+>
+> The branch wireless-next-iwlegacy-stanislaw-greg is based on John's
+> wireless-testing tree. Looking at previous emails in this thread, we
+> referred to wireless-testing as the base for the changes, so branching
+> from wireless-testing was done on purpose.
+>
+> I briefly tried to apply the patch set to wireless-next, but it doesn't
+> like Stanislaw's second patch (rename iwl to il). So some work will need
+> to be done if we really need to pull into wireless-next.
+>
+> I'm not real familiar with the pull process... so let me know if you'd
+> like me to do something.
+>
+>
+> Greg
 
-Uh, so does mesh want full QoS support or just QoS headers? The latter
-seems a little odd to me. But if it wants QoS how about zd1211rw? I
-don't think that even supports QoS?
 
-That's one thing that bothers me a little bit about this patchset --
-previously, QoS frames could only happen when the device actually
-supported 4 queues, now this rule seems to be broken. I don't expect
-this to be a major issue, but it certainly is unexpected and will
-probably be forgotten by a lot of people in the future ...
+To make things less confusing, I created a new branch and pushed it. you 
+can pull from here if you'd like:
+git://github.com/dietsche/linux.git 
+wireless-testing-2011-09-14-iwlegacy-cleanup
 
-johannes
 
+Greg
