@@ -1,47 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29235 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751373Ab1IZPtJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 11:49:09 -0400
-Subject: Re: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM
- Fritz!Box (7390)" incompatible
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Henrik Friedrichsen <hrkfdn@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4E809D0F.3080405@lwfinger.net>
-References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
-	 <CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com>
-	 <1317048872.2400.4.camel@wwguy-ubuntu>
-	 <CAJTrwG5CQKn9=1=HUDX1L5PsFbGws_zK1DTvot9i=KcMX7SwkQ@mail.gmail.com>
-	 <4E809D0F.3080405@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 26 Sep 2011 08:02:18 -0700
-Message-ID: <1317049338.1958.10.camel@wwguy-huron> (sfid-20110926_174913_688126_51E585B1)
-Mime-Version: 1.0
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:65035 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755368Ab1ISTef (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 15:34:35 -0400
+Received: by yxl31 with SMTP id 31so403118yxl.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 12:34:34 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] rtlwifi: rtl8192de: Change modinfo messages
+Date: Mon, 19 Sep 2011 14:34:09 -0500
+Message-Id: <1316460850-16443-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20110919_213439_951574_CCD22301)
+In-Reply-To: <1316460850-16443-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1316460850-16443-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-09-26 at 08:41 -0700, Larry Finger wrote:
-> On 09/26/2011 10:20 AM, Henrik Friedrichsen wrote:
-> 
-> >> 1. AP brand and model
-> > AVM Fritz!Box Fon WLAN 7390
-> 
-> FWIW, we are working on a problem with using rtl8192cu and a Fritz!Box 7270 that 
-> doesn't seem to happen with any other AP. Our symptoms are different, but therre 
-> might be a related cause. If you find a fix, please let the list know. Our 
-> debugging is waiting for either Realtek to get access to such an AP, or for the 
-> OP to provide a Wireshark air dump. That AP is too pricey for my budget.
-> 
+The various modparam messages are difficult to understand.
 
-Same here :-), the AP is too pricey and we have problem re-produce the
-problem in-house with other APs. But we are very active working on it
-and will share anything we found.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
 
-Best Regards
-Wey 
-> 
-> 
-
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+index f6419b7..c681597 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+@@ -150,6 +150,10 @@ static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
+ 	rtlpriv->psc.inactiveps = rtlpriv->cfg->mod_params->inactiveps;
+ 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
+ 	rtlpriv->psc.fwctrl_lps = rtlpriv->cfg->mod_params->fwctrl_lps;
++	if (!rtlpriv->psc.inactiveps)
++		pr_info("rtl8192ce: Power Save off (module option)\n");
++	if (!rtlpriv->psc.fwctrl_lps)
++		pr_info("rtl8192ce: FW Power Save off (module option)\n");
+ 	rtlpriv->psc.reg_fwctrl_lps = 3;
+ 	rtlpriv->psc.reg_max_lps_awakeintvl = 5;
+ 	/* for ASPM, you can close aspm through
+@@ -376,10 +380,10 @@ module_param_named(swenc, rtl92de_mod_params.sw_crypto, bool, 0444);
+ module_param_named(ips, rtl92de_mod_params.inactiveps, bool, 0444);
+ module_param_named(swlps, rtl92de_mod_params.swctrl_lps, bool, 0444);
+ module_param_named(fwlps, rtl92de_mod_params.fwctrl_lps, bool, 0444);
+-MODULE_PARM_DESC(swenc, "using hardware crypto (default 0 [hardware])\n");
+-MODULE_PARM_DESC(ips, "using no link power save (default 1 is open)\n");
+-MODULE_PARM_DESC(swlps, "using linked sw control power save (default 1"
+-		 " is open)\n");
++MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
++MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
++MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
++MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
+ 
+ static struct pci_driver rtl92de_driver = {
+ 	.name = KBUILD_MODNAME,
+-- 
+1.7.6.1
 
