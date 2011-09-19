@@ -1,141 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4898 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753111Ab1IXCJT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 22:09:19 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 15/20] staging: brcm80211: remove unnecessary mac80211
- callbacks
-Date: Fri, 23 Sep 2011 19:09:03 -0700
-Message-ID: <1316830148-28661-16-git-send-email-frankyl@broadcom.com> (sfid-20110924_040930_646789_C88C5C05)
-In-Reply-To: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
-References: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-qw0-f42.google.com ([209.85.216.42]:60421 "EHLO
+	mail-qw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754635Ab1ISUlh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 16:41:37 -0400
+Received: by qwi4 with SMTP id 4so18636242qwi.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 13:41:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1316453903-75710-2-git-send-email-nbd@openwrt.org>
+References: <1316453903-75710-1-git-send-email-nbd@openwrt.org> <1316453903-75710-2-git-send-email-nbd@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Mon, 19 Sep 2011 13:41:17 -0700
+Message-ID: <CAB=NE6XvanRQ6Yje_qHhkfzbLmZn9o5Q+5y1NobJwCyuMLFEvg@mail.gmail.com> (sfid-20110919_224141_533329_DBBA9878)
+Subject: Re: [PATCH v2 2/4] ath9k_hw: clean up tx power handling
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
-
-Several callback were implemented without executing any further
-function calls into the driver. Review feedback indicated that
-these could be removed.
-
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c |   61 ----------------------
- 1 files changed, 0 insertions(+), 61 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-index 50ca1bc..0bfab68 100644
---- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-@@ -580,12 +580,6 @@ brcms_ops_configure_filter(struct ieee80211_hw *hw,
- 	return;
- }
- 
--static int
--brcms_ops_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta, bool set)
--{
--	return 0;
--}
--
- static void brcms_ops_sw_scan_start(struct ieee80211_hw *hw)
- {
- 	struct brcms_info *wl = hw->priv;
-@@ -604,42 +598,6 @@ static void brcms_ops_sw_scan_complete(struct ieee80211_hw *hw)
- 	return;
- }
- 
--static void brcms_ops_set_tsf(struct ieee80211_hw *hw, u64 tsf)
--{
--	wiphy_err(hw->wiphy, "%s: Enter\n", __func__);
--	return;
--}
--
--static int
--brcms_ops_get_stats(struct ieee80211_hw *hw,
--		 struct ieee80211_low_level_stats *stats)
--{
--	struct brcms_info *wl = hw->priv;
--	struct wl_cnt *cnt;
--
--	LOCK(wl);
--	cnt = wl->pub->_cnt;
--	stats->dot11ACKFailureCount = 0;
--	stats->dot11RTSFailureCount = 0;
--	stats->dot11FCSErrorCount = 0;
--	stats->dot11RTSSuccessCount = 0;
--	UNLOCK(wl);
--	return 0;
--}
--
--static void
--brcms_ops_sta_notify(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--		  enum sta_notify_cmd cmd, struct ieee80211_sta *sta)
--{
--	switch (cmd) {
--	default:
--		wiphy_err(hw->wiphy, "%s: Unknown cmd = %d\n", __func__,
--			  cmd);
--		break;
--	}
--	return;
--}
--
- static int
- brcms_ops_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 	       const struct ieee80211_tx_queue_params *params)
-@@ -653,12 +611,6 @@ brcms_ops_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 	return 0;
- }
- 
--static u64 brcms_ops_get_tsf(struct ieee80211_hw *hw)
--{
--	wiphy_err(hw->wiphy, "%s: Enter\n", __func__);
--	return 0;
--}
--
- static int
- brcms_ops_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	       struct ieee80211_sta *sta)
-@@ -698,13 +650,6 @@ brcms_ops_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- }
- 
- static int
--brcms_ops_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--		  struct ieee80211_sta *sta)
--{
--	return 0;
--}
--
--static int
- brcms_ops_ampdu_action(struct ieee80211_hw *hw,
- 		    struct ieee80211_vif *vif,
- 		    enum ieee80211_ampdu_mlme_action action,
-@@ -800,16 +745,10 @@ static const struct ieee80211_ops brcms_ops = {
- 	.config = brcms_ops_config,
- 	.bss_info_changed = brcms_ops_bss_info_changed,
- 	.configure_filter = brcms_ops_configure_filter,
--	.set_tim = brcms_ops_set_tim,
- 	.sw_scan_start = brcms_ops_sw_scan_start,
- 	.sw_scan_complete = brcms_ops_sw_scan_complete,
--	.set_tsf = brcms_ops_set_tsf,
--	.get_stats = brcms_ops_get_stats,
--	.sta_notify = brcms_ops_sta_notify,
- 	.conf_tx = brcms_ops_conf_tx,
--	.get_tsf = brcms_ops_get_tsf,
- 	.sta_add = brcms_ops_sta_add,
--	.sta_remove = brcms_ops_sta_remove,
- 	.ampdu_action = brcms_ops_ampdu_action,
- 	.rfkill_poll = brcms_ops_rfkill_poll,
- 	.flush = brcms_ops_flush,
--- 
-1.7.1
-
-
+T24gTW9uLCBTZXAgMTksIDIwMTEgYXQgMTA6MzggQU0sIEZlbGl4IEZpZXRrYXUgPG5iZEBvcGVu
+d3J0Lm9yZz4gd3JvdGU6Cj4gQEAgLTk4NiwyMSArOTk1LDE1IEBAIHN0YXRpYyB2b2lkIGF0aDlr
+X2h3X3NldF9kZWZfcG93ZXJfcGVyX3JhdGVfdGFibGUoc3RydWN0IGF0aF9odyAqYWgsCj4gwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqBzdHJ1Y3QgYXRoOWtfY2hhbm5lbCAqY2hhbiwKPiDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoGludDE2X3QgKnJhdGVzQXJyYXksCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqB1MTYgY2ZnQ3RsLAo+
+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgdTE2IEFudGVubmFSZWR1Y3Rpb24sCj4gLSDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCB1MTYgdHdpY2VNYXhSZWd1bGF0b3J5UG93ZXIsCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB1MTYgYW50
+ZW5uYV9yZWR1Y3Rpb24sCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqB1MTYgcG93ZXJMaW1pdCkKPiDCoHsK
+PiDCoCNkZWZpbmUgUkVEVUNFX1NDQUxFRF9QT1dFUl9CWV9UV09fQ0hBSU4gwqAgwqAgNiDCoC8q
+IDEwKmxvZzEwKDIpKjIgKi8KPiDCoCNkZWZpbmUgUkVEVUNFX1NDQUxFRF9QT1dFUl9CWV9USFJF
+RV9DSEFJTiDCoCA5IC8qIDEwKmxvZzEwKDMpKjIgKi8KPgo+IC0gwqAgwqAgwqAgc3RydWN0IGF0
+aF9yZWd1bGF0b3J5ICpyZWd1bGF0b3J5ID0gYXRoOWtfaHdfcmVndWxhdG9yeShhaCk7Cj4gwqAg
+wqAgwqAgwqBzdHJ1Y3QgYXI1NDE2X2VlcHJvbV9kZWYgKnBFZXBEYXRhID0gJmFoLT5lZXByb20u
+ZGVmOwo+IMKgIMKgIMKgIMKgdTE2IHR3aWNlTWF4RWRnZVBvd2VyID0gTUFYX1JBVEVfUE9XRVI7
+Cj4gLSDCoCDCoCDCoCBzdGF0aWMgY29uc3QgdTE2IHRwU2NhbGVSZWR1Y3Rpb25UYWJsZVs1XSA9
+Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCB7IDAsIDMsIDYsIDksIE1BWF9SQVRFX1BPV0VSIH07
+Cj4gLQo+IMKgIMKgIMKgIMKgaW50IGk7Cj4gLSDCoCDCoCDCoCBpbnQxNl90IHR3aWNlTGFyZ2Vz
+dEFudGVubmE7Cj4gwqAgwqAgwqAgwqBzdHJ1Y3QgY2FsX2N0bF9kYXRhICpyZXA7Cj4gwqAgwqAg
+wqAgwqBzdHJ1Y3QgY2FsX3RhcmdldF9wb3dlcl9sZWcgdGFyZ2V0UG93ZXJPZmRtLCB0YXJnZXRQ
+b3dlckNjayA9IHsKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDAsIHsgMCwgMCwgMCwgMH0KPiBA
+QCAtMTAxMiw3ICsxMDE1LDcgQEAgc3RhdGljIHZvaWQgYXRoOWtfaHdfc2V0X2RlZl9wb3dlcl9w
+ZXJfcmF0ZV90YWJsZShzdHJ1Y3QgYXRoX2h3ICphaCwKPiDCoCDCoCDCoCDCoHN0cnVjdCBjYWxf
+dGFyZ2V0X3Bvd2VyX2h0IHRhcmdldFBvd2VySHQyMCwgdGFyZ2V0UG93ZXJIdDQwID0gewo+IMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgMCwgezAsIDAsIDAsIDB9Cj4gwqAgwqAgwqAgwqB9Owo+IC0g
+wqAgwqAgwqAgdTE2IHNjYWxlZFBvd2VyID0gMCwgbWluQ3RsUG93ZXIsIG1heFJlZ0FsbG93ZWRQ
+b3dlcjsKPiArIMKgIMKgIMKgIHUxNiBzY2FsZWRQb3dlciA9IDAsIG1pbkN0bFBvd2VyOwo+IMKg
+IMKgIMKgIMKgc3RhdGljIGNvbnN0IHUxNiBjdGxNb2Rlc0ZvcjExYVtdID0gewo+IMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgQ1RMXzExQSwgQ1RMXzVHSFQyMCwgQ1RMXzExQV9FWFQsIENUTF81R0hU
+NDAKPiDCoCDCoCDCoCDCoH07CgpBbHRob3VnaCB3ZSBkbyBub3QgdXNlIHRoZSByZWctPnRwX3Nj
+YWxlIEkgc2VlIG5vIGxvZyB3aGljaCBleHBsYWlucwp0aGF0IGl0IHdpbGwgbm90LCBJJ20gcmV2
+aWV3aW5nIFRQQyByaWdodCBub3cgYW5kIHdlIGRvIG5lZWQgdG8Kc3VwcG9ydCBpdCBidXQgaXRz
+IHVuY2xlYXIgdG8gbWUgeWV0IGlmIHdlIGFyZSBkb2luZyBldmVyeXRoaW5nCmNvcnJlY3RseSBp
+biBtYWM4MDIxMSAvIGNmZzgwMjExIGZvciBpdC4gQXMgZmFyIGFzIEkgY2FuIHNlZSB0aGUKdHBf
+c2NhbGUgc3R1ZmYgaXMgdXNlZCBvbmx5IGlmIHRoZSBkZWZhdWx0IGlzIG5vdCBzZXQsIGJ1dCBh
+cyB5b3UKbm90ZWQgaXRzIGFsd2F5cyBzZXQgdG8gdGhlIGRlZmF1bHQuIEkgYW0gdHJ5aW5nIHRv
+IHJldmlldyB0aGUKaW50ZXJuYWwgY29kZSB0byBzZWUgdW5kZXIgd2hhdCBjYXNlcyB0aGlzIGNo
+YW5nZXMgYnV0IGl0cyBoYXJkIHRvCnJldmlldy4gQWx0aG91Z2ggSSdkIGxpa2UgdG8gc2VlIHRo
+aXMgcmVtb3ZlZCBJJ2QgcHJlZmVyIHRvIHRyZWF0IHRoaXMKc2VwYXJhdGVseSBmcm9tIHRoZSBj
+bGVhbnVwIHlvdSBhcmUgZG9pbmcsIHdoaWNoIEkgZG8gZmluZCBoaWdobHkKdmFsdWFibGUuCgog
+IEx1aXMK
