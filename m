@@ -1,84 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28125 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757256Ab1IIA50 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 20:57:26 -0400
-Subject: Re: [PATCH v3] libertas: prioritize usb8388_olpc.bin firmware on
- OLPC machines
-From: Dan Williams <dcbw@redhat.com>
-To: Andres Salomon <dilinger@queued.net>
-Cc: linville@tuxdriver.com, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dsd@laptop.org, cjb@laptop.org
-Date: Thu, 08 Sep 2011 20:00:15 -0500
-In-Reply-To: <20110908173517.5b8c90be@queued.net>
-References: <20110908173517.5b8c90be@queued.net>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1315530016.2327.1.camel@dcbw.foobar.com> (sfid-20110909_025742_892469_9127FF70)
-Mime-Version: 1.0
+Received: from mail-qw0-f42.google.com ([209.85.216.42]:58239 "EHLO
+	mail-qw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754929Ab1ISSTF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 14:19:05 -0400
+Received: by qwi4 with SMTP id 4so17962845qwi.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 11:19:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1316453903-75710-3-git-send-email-nbd@openwrt.org>
+References: <1316453903-75710-1-git-send-email-nbd@openwrt.org>
+ <1316453903-75710-2-git-send-email-nbd@openwrt.org> <1316453903-75710-3-git-send-email-nbd@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Mon, 19 Sep 2011 11:18:44 -0700
+Message-ID: <CAB=NE6UhC=am2aVXwf+v4g7ME_49Nv47SZwSNetLgJpRV-=BkA@mail.gmail.com> (sfid-20110919_201913_061958_D6E5647A)
+Subject: Re: [PATCH v2 3/4] ath: remove ath_regulatory::current_rd_ext
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-09-08 at 17:35 -0700, Andres Salomon wrote:
-> Normally, the v9 firmware will be loaded if it's available.  However, on
-> OLPC XO-1 machines, the olpc-specific firmware supports extra functionality.
-> This makes the libertas driver attempt to load the custom firmware first
-> if the machine is an OLPC machine; if that fails (or it's not an OLPC
-> machine), fall back to attempting to load the other firmwares.
-> 
-> usb8388_olpc.bin is currently found in the linux-firmware repository.
-> 
-> Signed-off-by: Andres Salomon <dilinger@queued.net>
+On Mon, Sep 19, 2011 at 10:38 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Can you document on the patch commit log why you do remove this.
 
-> ---
-> v3: changed firmware path to include libertas/ subdirectory.
-> 
-> Since the last submission (v2), usb8388_olpc.bin has found its way into
-> wireless-firmware.  It'd be nice to get this into the next merge window.
-> 
->  drivers/net/wireless/libertas/if_usb.c |   21 +++++++++++++++++++++
->  1 files changed, 21 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-> index b5acc39..94f8f3e 100644
-> --- a/drivers/net/wireless/libertas/if_usb.c
-> +++ b/drivers/net/wireless/libertas/if_usb.c
-> @@ -973,6 +973,23 @@ static const struct {
->  	{ MODEL_8682, "libertas/usb8682.bin" }
->  };
->  
-> +#ifdef CONFIG_OLPC
-> +
-> +static int try_olpc_fw(struct if_usb_card *cardp)
-> +{
-> +	int retval = -ENOENT;
-> +
-> +	/* try the OLPC firmware first; fall back to fw_table list */
-> +	if (machine_is_olpc() && cardp->model == MODEL_8388)
-> +		retval = request_firmware(&cardp->fw,
-> +				"libertas/usb8388_olpc.bin", &cardp->udev->dev);
-> +	return retval;
-> +}
-> +
-> +#else
-> +static int try_olpc_fw(struct if_usb_card *cardp) { return -ENOENT; }
-> +#endif /* !CONFIG_OLPC */
-> +
->  static int get_fw(struct if_usb_card *cardp, const char *fwname)
->  {
->  	int i;
-> @@ -981,6 +998,10 @@ static int get_fw(struct if_usb_card *cardp, const char *fwname)
->  	if (fwname)
->  		return request_firmware(&cardp->fw, fwname, &cardp->udev->dev);
->  
-> +	/* Handle OLPC firmware */
-> +	if (try_olpc_fw(cardp) == 0)
-> +		return 0;
-> +
->  	/* Otherwise search for firmware to use */
->  	for (i = 0; i < ARRAY_SIZE(fw_table); i++) {
->  		if (fw_table[i].model != cardp->model)
-
-
+  Luis
