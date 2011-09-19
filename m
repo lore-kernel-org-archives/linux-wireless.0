@@ -1,80 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:25988 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752936Ab1IFHVn (ORCPT
+Received: from mail-qw0-f42.google.com ([209.85.216.42]:47310 "EHLO
+	mail-qw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755169Ab1ISWMm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Sep 2011 03:21:43 -0400
-Date: Tue, 6 Sep 2011 10:21:38 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 4/4] ath6kl: Allow enabling of P2P support
-Message-ID: <20110906072138.GA3125@jouni.qca.qualcomm.com> (sfid-20110906_092147_511551_23EB2951)
-References: <1315233527-6234-1-git-send-email-jouni@qca.qualcomm.com>
- <1315233527-6234-5-git-send-email-jouni@qca.qualcomm.com>
- <4E65C49B.2000201@qca.qualcomm.com>
+	Mon, 19 Sep 2011 18:12:42 -0400
+Received: by qwi4 with SMTP id 4so18990812qwi.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 15:12:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E65C49B.2000201@qca.qualcomm.com>
+In-Reply-To: <4E77BC58.7040204@openwrt.org>
+References: <1316453903-75710-1-git-send-email-nbd@openwrt.org>
+ <1316453903-75710-2-git-send-email-nbd@openwrt.org> <CAB=NE6XvanRQ6Yje_qHhkfzbLmZn9o5Q+5y1NobJwCyuMLFEvg@mail.gmail.com>
+ <4E77AAFB.1080805@openwrt.org> <CAB=NE6XgSz7zz_ZXaPQEsaue307ipd7Qnzgi5QWr8Y4SS1j=Lg@mail.gmail.com>
+ <4E77B25D.9070907@openwrt.org> <CAB=NE6XLdftXKg5-wvme8Vg7BjGi-TpxQ3G6m=7VnEw89YzXoA@mail.gmail.com>
+ <CAB=NE6XQDqG+En2KWOyKGUVT1SWm1rwMwOxMjpE8CjYfvwvOqw@mail.gmail.com> <4E77BC58.7040204@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Mon, 19 Sep 2011 15:12:22 -0700
+Message-ID: <CAB=NE6Vi2sun6vJy=yZSJ9HjHxD17FO-GmXtYybcjLVPSt9+wA@mail.gmail.com> (sfid-20110920_001246_104169_B255EE89)
+Subject: Re: [PATCH v2 2/4] ath9k_hw: clean up tx power handling
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 06, 2011 at 09:58:35AM +0300, Kalle Valo wrote:
-> On 09/05/2011 05:38 PM, Jouni Malinen wrote:
-> > --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> > +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> > +static unsigned int ath6kl_p2p;
-> > +
-> > +module_param(ath6kl_p2p, uint, 0644);
-> 
-> Currently all module parameters are in init.c. It's not the best place
-> and most likely will move to core.c soon, but I still would prefer to
-> have them all in one place. I think moving this to init.c would make sense.
+On Mon, Sep 19, 2011 at 3:04 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2011-09-19 11:54 PM, Luis R. Rodriguez wrote:
+>>
+>> On Mon, Sep 19, 2011 at 2:45 PM, Luis R. Rodriguez
+>> <mcgrof@qca.qualcomm.com>  wrote:
+>>>
+>>>  On Mon, Sep 19, 2011 at 2:21 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
+>>>>
+>>>>  I looked at the other ath driver and I see no indication that it's
+>>>> related
+>>>>  to DFS in any way.
+>>>
+>>>  I have verified this just now as well, it seems it was only used to
+>>>  support an ioctl to userspace to enable users to update a tpscale
+>>>  value but I see no documentation about this. Next question is who in
+>>>  usersapce sets this. I wonder if its done through userspace after
+>>>  measuring some TPC reports from STAs.
+>>
+>> So this comes from supporting a "TR-098" specification, which seems to
+>> be the "Internet Gateway Device data model for the CPE WAN Management
+>> Protocol". I haven't yet been able to map this to the specification
+>> respective component:
+>>
+>> http://www.broadband-forum.org/technical/download/TR-098.pdf
+>
+> Interesting. That definitely supports my point that ath9k is the wrong place
+> for something like this to be. Let's just get rid of it.
 
-I started with this in init.c, but that causes checkpatch warnings when
-the variable needs to be accessed as extern in cfg80211.c. Or well, I
-guess I could hide that by defining the extern in a header file, but
-this parameter should not really be used in any other file than
-cfg80211.c to initialize the flag in struct ath6kl. As such, I would
-prefer not to make its visibility any larger that necessary. Why would
-all module parameters need to be defined in the same C file?
+Yeah, I'm now convinced :) die code. But please do add some blurb
+about this tumor the code had.
 
-> > --- a/drivers/net/wireless/ath/ath6kl/core.h
-> > +++ b/drivers/net/wireless/ath/ath6kl/core.h
-> > @@ -471,6 +471,8 @@ struct ath6kl {
-> > +	bool p2p;
-> 
-> We have struct ath6kl::conf_flags exactly for this purpose, see
-> ATH6KL_CONF_ENABLE_11N for an example. I think we should use it also
-> with P2P.
-
-Sounds reasonable.
-
-> > +	if (ar->p2p) {
-> > +		ret = ath6kl_wmi_info_req_cmd(ar->wmi,
-> > +					      P2P_FLAG_CAPABILITIES_REQ |
-> > +					      P2P_FLAG_MACADDR_REQ |
-> > +					      P2P_FLAG_HMODEL_REQ);
-> > +		if (ret) {
-> > +			ath6kl_dbg(ATH6KL_DBG_TRC, "failed to request P2P "
-> > +				   "capabilities (%d) - assuming P2P not "
-> > +				   "supported\n", ret);
-> > +			ar->p2p = 0;
-> > +		}
-> > +	}
-> > +
-> > +	if (ar->p2p) {
-> 
-> Can we combine this if block with the first one?
-
-Sure, but that would add extra indentation level for the following code,
-so this separate check-if-P2P-is-supported followed by
-if-P2P-is-supported looks cleaner to me.
-
-> If it's ok for you, I'll commit the first three patches and we can talk
-> more about this patch.
-
-Yes, please do.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  Luis
