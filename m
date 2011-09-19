@@ -1,41 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:47082 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:38878 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751074Ab1IZPlR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 11:41:17 -0400
-References: <1317030121-3902-1-git-send-email-rmanohar@qca.qualcomm.com> <4E807DCF.1010405@openwrt.org> <20110926151231.GC9947@vmraj-lnx.users.atheros.com>
-In-Reply-To: <20110926151231.GC9947@vmraj-lnx.users.atheros.com>
-Mime-Version: 1.0 (iPhone Mail 8H7)
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <908BF0F1-F887-4A6C-B2F8-2A8B8C5FF74E@nbd.name> (sfid-20110926_174123_680154_6C5EAE63)
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	"<linville@tuxdriver.com>" <linville@tuxdriver.com>,
-	"<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>
-From: Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH] ath9k: optimize tx status update
-Date: Mon, 26 Sep 2011 17:38:54 +0200
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+	id S932855Ab1ISWXB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 18:23:01 -0400
+Message-ID: <4E77C0BF.50108@openwrt.org> (sfid-20110920_002313_572570_3DC6A91A)
+Date: Tue, 20 Sep 2011 00:22:55 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH v2 2/4] ath9k_hw: clean up tx power handling
+References: <1316453903-75710-1-git-send-email-nbd@openwrt.org> <1316453903-75710-2-git-send-email-nbd@openwrt.org> <CAB=NE6XvanRQ6Yje_qHhkfzbLmZn9o5Q+5y1NobJwCyuMLFEvg@mail.gmail.com> <4E77AAFB.1080805@openwrt.org> <CAB=NE6XgSz7zz_ZXaPQEsaue307ipd7Qnzgi5QWr8Y4SS1j=Lg@mail.gmail.com> <4E77B25D.9070907@openwrt.org> <CAB=NE6XLdftXKg5-wvme8Vg7BjGi-TpxQ3G6m=7VnEw89YzXoA@mail.gmail.com> <CAB=NE6XQDqG+En2KWOyKGUVT1SWm1rwMwOxMjpE8CjYfvwvOqw@mail.gmail.com> <4E77BC58.7040204@openwrt.org> <CAB=NE6Vi2sun6vJy=yZSJ9HjHxD17FO-GmXtYybcjLVPSt9+wA@mail.gmail.com> <CAB=NE6UzRhp=51QacoRzMPad0vO1qkNxK3=rayPuYXdjA3ZOJQ@mail.gmail.com>
+In-Reply-To: <CAB=NE6UzRhp=51QacoRzMPad0vO1qkNxK3=rayPuYXdjA3ZOJQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26.09.2011, at 17:12, Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
+On 2011-09-20 12:13 AM, Luis R. Rodriguez wrote:
+> On Mon, Sep 19, 2011 at 3:12 PM, Luis R. Rodriguez
+> <mcgrof@qca.qualcomm.com>  wrote:
+>>  On Mon, Sep 19, 2011 at 3:04 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
+>>>  On 2011-09-19 11:54 PM, Luis R. Rodriguez wrote:
+>>>>
+>>>>  On Mon, Sep 19, 2011 at 2:45 PM, Luis R. Rodriguez
+>>>>  <mcgrof@qca.qualcomm.com>    wrote:
+>>>>>
+>>>>>    On Mon, Sep 19, 2011 at 2:21 PM, Felix Fietkau<nbd@openwrt.org>    wrote:
+>>>>>>
+>>>>>>    I looked at the other ath driver and I see no indication that it's
+>>>>>>  related
+>>>>>>    to DFS in any way.
+>>>>>
+>>>>>    I have verified this just now as well, it seems it was only used to
+>>>>>    support an ioctl to userspace to enable users to update a tpscale
+>>>>>    value but I see no documentation about this. Next question is who in
+>>>>>    usersapce sets this. I wonder if its done through userspace after
+>>>>>    measuring some TPC reports from STAs.
+>>>>
+>>>>  So this comes from supporting a "TR-098" specification, which seems to
+>>>>  be the "Internet Gateway Device data model for the CPE WAN Management
+>>>>  Protocol". I haven't yet been able to map this to the specification
+>>>>  respective component:
+>>>>
+>>>>  http://www.broadband-forum.org/technical/download/TR-098.pdf
+>>>
+>>>  Interesting. That definitely supports my point that ath9k is the wrong place
+>>>  for something like this to be. Let's just get rid of it.
+>>
+>>  Yeah, I'm now convinced :) die code. But please do add some blurb
+>>  about this tumor the code had.
+>
+> In fact removing the tumor through a separate patch would be appreciated.
+I don't think it needs a separate patch. It's dead code directly related 
+to the other things that I'm changing, and it does not add any 
+functional changes. I'll add a comment, though.
 
-> On Mon, Sep 26, 2011 at 07:27:43AM -0600, Felix Fietkau wrote:
->> On 2011-09-26 3:42 AM, Rajkumar Manoharan wrote:
->>> The recent changes of ath_tx_rc_status makes it to be called
->>> only for the first frame of aggregation or if there is a
->>> single subframe and for all normal frames. And also for all
->>> aggregated frames IEEE80211_TX_STAT_AMPDU will be set. This
->>> patch removes the unnecessary checks and make the ampdu_[ack]_len
->>> to be filled on both aggregation and normal frames.
->> This patch looks wrong to me. Only one subframe per A-MPDU is
->> supposed to carry the IEEE80211_TX_STAT_AMPDU flag, so the check you
->> removed from rc.c is actually necessary, otherwise it'll process the
->> tx status of an A-MPDU multiple times (once per completed subframe).
->> 
-> I dont understand. Right now ath_tx_rc_status is called only for the first
-> frame of aggregation or there is only one subframe in the aggregation.
-> It never be called for all subframes. Am i right?
-Right, but the rate control status update is called per subframe, so the rc.c change is broken
+- Felix
