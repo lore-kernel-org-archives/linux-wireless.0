@@ -1,41 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.acc.umu.se ([130.239.18.156]:62140 "EHLO mail.acc.umu.se"
+Received: from que31.charter.net ([209.225.8.23]:40057 "EHLO que31.charter.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753970Ab1IJHCm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Sep 2011 03:02:42 -0400
-Date: Sat, 10 Sep 2011 08:56:20 +0200
-From: Marcus Karlsson <mk@acc.umu.se>
-To: abutalip <abutalip022@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: git clone problems
-Message-ID: <20F121AE0395827D547BA2D0@z0mg.local> (sfid-20110910_090250_205914_9CABE0C4)
-In-Reply-To: <4E6B093B.1030107@gmail.com>
-References: <4E6B093B.1030107@gmail.com>
+	id S1754590Ab1ISX1F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 19:27:05 -0400
+Message-ID: <4E77C129.7070203@gregd.org> (sfid-20110920_012710_010152_4573E066)
+Date: Mon, 19 Sep 2011 17:24:41 -0500
+From: Greg Dietsche <greg@gregd.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: pull request: iwlegacy 2011-09-14
+References: <20110914085900.GA2717@redhat.com> <20110919193122.GD2608@tuxdriver.com>
+In-Reply-To: <20110919193122.GD2608@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 19 Sep 2011 15:31:22 -0400, John W. Linville wrote:
+> On Wed, Sep 14, 2011 at 10:59:16AM +0200, Stanislaw Gruszka wrote:
+>> John,
+>>
+>> Please pull iwlegacy cleanup changes done by Greg and me, intended
+>> for 3.2. These request include huge patches with file renaming and
+>> automatic code processing done by sed and indent. Work of changing
+>> iwlegacy driver into something that I could consider maintainable
+>> is not done yet, but these massive changes bring closer into that.
+>> Hopefully with having clean, maintainable code I will be able to
+>> fix some nasty, not easy reproducible bugs, we still have in the
+>> iwlegacy driver.
+>>
+>> Thanks.
+>>
+>> The following changes since commit
+>> d82cdad64a0127611724c61849a8487d69fb76ef:
+>>
+>>   Merge branch 'master' of
+>> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next
+>> (2011-08-30 16:34:33 -0400)
+>>
+>> are available in the git repository at:
+>>
+>>   git://github.com/dietsche/linux.git
+>> wireless-next-iwlegacy-stanislaw-greg
+>
+> It looks like you pulled something other than wireless-next into this
+> tree.  If you want me to pull directly, then you need to based your
+> tree (or at least the branch I'm pulling) on wireless-next
+> exclusively.
+
+Sorry for the confusing branch name! I was naming it based on which 
+kernel release the code is for and not where it was branched from. Also, 
+I hadn't anticipated that my git tree might end up in pull request...
+
+The branch wireless-next-iwlegacy-stanislaw-greg is based on John's 
+wireless-testing tree. Looking at previous emails in this thread, we 
+referred to wireless-testing as the base for the changes, so branching 
+from wireless-testing was done on purpose.
+
+I briefly tried to apply the patch set to wireless-next, but it doesn't 
+like Stanislaw's second patch (rename iwl to il). So some work will need 
+to be done if we really need to pull into wireless-next.
+
+I'm not real familiar with the pull process... so let me know if you'd 
+like me to do something.
 
 
---On September 10, 2011 9:52:43 AM +0300 abutalip <abutalip022@gmail.com> 
-wrote:
-
-> Hi all,
->
-> I'm new here and I have problems with
->
-> git clone
-> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.g
-> it
->
-> Has anyone ideas why this is not working anymore (at some time in past it
-> works for me).
->
-> Thank you!
->
-> Regards,
-> Stefan
-
-There was a security breach on kernel.org last week. Most of it is down 
-right now for maintenance, including git.
-
+Greg
