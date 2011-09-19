@@ -1,36 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([72.73.18.11]:49043 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750851Ab1I1LGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 07:06:44 -0400
-Date: Wed, 28 Sep 2011 07:06:44 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Where to obtain the carl open source firmware?
-Message-ID: <alpine.DEB.2.02.1109280705410.8348@p34.internal.lan> (sfid-20110928_130700_383207_10D3F717)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32982 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754567Ab1ISRz3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 13:55:29 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [RFC] mac80211: make use of supported rates for probe requests
+Date: Mon, 19 Sep 2011 23:26:06 +0530
+Message-ID: <1316454966-1746-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110919_195533_318847_938BC197)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The supported rates on scan trigger helps to send the probe
+request frames on non-11b rates for p2p. For the drivers that
+have rate control on hw like ath9k_htc, this approch does not
+work. So for those drivers wpa_supplicant should set tx rate
+mask to disable 11b rates.
 
-Since kernel.org is down and the new kernel (3.x) does not work with the 
-older firmware, where can one obtain the firmware for this open source 
-device so I can run the 3.x kernel?
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/rate.c        |   10 ++++++++++
+ net/mac80211/scan.c        |    9 ++++++++-
+ 3 files changed, 19 insertions(+), 1 deletions(-)
 
-[  412.760165] usb 1-3.3: USB disconnect, device number 4
-[  422.489053] usb 2-2: new high speed USB device number 4 using ehci_hcd
-[  422.656097] usb 2-2: New USB device found, idVendor=0cf3, idProduct=1002
-[  422.656102] usb 2-2: New USB device strings: Mfr=16, Product=32, SerialNumber=48
-[  422.656105] usb 2-2: Product: USB2.0 WLAN
-[  422.656107] usb 2-2: Manufacturer: ATHER
-[  422.656109] usb 2-2: SerialNumber: *****
-[  422.759079] usb 2-2: reset high speed USB device number 4 using ehci_hcd
-[  423.025836] usb 2-2: driver   API: 1.9.4 2011-06-30 [1-1]
-[  423.025841] usb 2-2: firmware API: 1.9.2 2010-12-25
-[  423.025843] usb 2-2: failed to find compatible firmware descriptor.
-[  423.025846] usb 2-2: failed to parse firmware (-61).
-
-Justin.
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 21186e2..de63284 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -879,6 +879,7 @@ struct ieee80211_local {
+ 	enum ieee80211_band hw_scan_band;
+ 	int scan_channel_idx;
+ 	int scan_ies_len;
++	u32 mlme_supp_rates[IEEE80211_NUM_BANDS];
+ 
+ 	bool sched_scanning;
+ 	struct ieee80211_sched_scan_ies sched_scan_ies;
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 3d5a2cb..f4380f6 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -328,6 +328,16 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 	 * the common case.
+ 	 */
+ 	mask = sdata->rc_rateidx_mask[info->band];
++	/*
++	 * Filter out rates that are not supported for mlme frames.
++	 * These rates are set defined from supported rates attribute
++	 * during scan start.
++	 */
++	if (local->scanning &&
++	    local->mlme_supp_rates[info->band] &&
++	    rc_no_data_or_no_ack(txrc))
++		mask &= local->mlme_supp_rates[info->band];
++
+ 	if (mask != (1 << txrc->sband->n_bitrates) - 1) {
+ 		if (sta) {
+ 			/* Filter out rates that the STA does not support */
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 6f09eca..1d0048d 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -264,6 +264,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	bool on_oper_chan;
+ 	bool enable_beacons = false;
++	int i;
+ 
+ 	lockdep_assert_held(&local->mtx);
+ 
+@@ -295,6 +296,8 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
+ 
+ 	local->scanning = 0;
+ 	local->scan_channel = NULL;
++	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
++		local->mlme_supp_rates[i] = 0;
+ 
+ 	on_oper_chan = ieee80211_cfg_on_oper_channel(local);
+ 
+@@ -382,7 +385,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 				  struct cfg80211_scan_request *req)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	int rc;
++	int rc, i;
+ 
+ 	lockdep_assert_held(&local->mtx);
+ 
+@@ -427,6 +430,8 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 
+ 	local->scan_req = req;
+ 	local->scan_sdata = sdata;
++	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
++		local->mlme_supp_rates[i] = req->rates[i];
+ 
+ 	if (local->ops->hw_scan)
+ 		__set_bit(SCAN_HW_SCANNING, &local->scanning);
+@@ -450,6 +455,8 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 
+ 		local->scan_req = NULL;
+ 		local->scan_sdata = NULL;
++		for (i = 0; i < IEEE80211_NUM_BANDS; i++)
++			local->mlme_supp_rates[i] = 0;
+ 	}
+ 
+ 	return rc;
+-- 
+1.7.6.1
 
