@@ -1,168 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:47372 "HELO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754682Ab1I3DoE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36886 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756542Ab1ISQiq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 23:44:04 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/2] mwifiex: correct AMSDU aggregation check
-Date: Thu, 29 Sep 2011 20:43:40 -0700
-Message-Id: <1317354221-13688-1-git-send-email-bzhao@marvell.com> (sfid-20110930_054419_100678_ECBAD417)
+	Mon, 19 Sep 2011 12:38:46 -0400
+Subject: Re: [PATCH] mac80211: add ieee80211_set_dyn_ps_timeout()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Kalle Valo <kvalo@adurom.com>, Luciano Coelho <coelho@ti.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <CAB3XZEdiTRDJGUHWJ5UorQq2w-ZLP+TP0b-qSSVUTzhPG4H2rg@mail.gmail.com> (sfid-20110919_183129_883763_93E84C66)
+References: <1316347394-21276-1-git-send-email-eliad@wizery.com>
+	 <1316408970.2157.9.camel@cumari> <87aaa0k0a1.fsf@purkki.adurom.net>
+	 <CAB3XZEdiTRDJGUHWJ5UorQq2w-ZLP+TP0b-qSSVUTzhPG4H2rg@mail.gmail.com>
+	 (sfid-20110919_183129_883763_93E84C66)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Sep 2011 18:38:39 +0200
+Message-ID: <1316450319.5995.33.camel@jlt3.sipsolutions.net> (sfid-20110919_183849_522201_F9BE57E3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Mon, 2011-09-19 at 19:30 +0300, Eliad Peller wrote:
 
-The commit "mwifiex: remove list traversal.."(fcf2176c87..)
-wrongly modifies AMSDU aggregation check. Due to this even though
-packet size for iperf traffic is already large, we unnecessarily
-try to aggregate them which adds some delay. If Tx iperf is started
-on UUT for 30 seconds, UUT keeps sending Tx packets for few more
-seconds.
+> AFAIU from the coex guys, the scenario is something like this:
+> upon coex activity, the fw might delay its rx and tx paths. this means
+> that the fw might get a frame within the 100ms of the dyn ps, but
+> delay its processing and pass it up to the driver only later.
+> this will cause redundant psm enter (after 100ms) and psm exit (after
+> the fw passed the packet).
+> i'm not sure about the exact effect during coex operation, but
+> eventually these psm enter/exit affect the throughput.
+> 
+> another point here, is that during a specific period (during auto_mode
+> on), there might or might not be coex activity. thus, we can't just
+> disable dyn_ps, as it will hurt throughput (when there is no coex
+> activity).
+> 
+> bottom line - i'm not sure about all the details, but according to
+> their tests - it does improve the throughput.
+> (i can try getting better details if you have additional questions)
 
-That commit is reverted to fix the problem.
-Also, MIN_NUM_AMSDU check is moved inside the loop to optimize the
-loop.
+It'd be interesting to see if we can just treat this as a "minimum awake
+time", kinda like going back to the range I thought about earlier.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/11n_aggr.c |    2 -
- drivers/net/wireless/mwifiex/11n_aggr.h |    1 +
- drivers/net/wireless/mwifiex/main.h     |    1 -
- drivers/net/wireless/mwifiex/wmm.c      |   32 +++++++++++++++++++++++-------
- 4 files changed, 25 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
-index 1a453a6..9e63d16 100644
---- a/drivers/net/wireless/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/mwifiex/11n_aggr.c
-@@ -193,7 +193,6 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
- 		skb_src = skb_dequeue(&pra_list->skb_head);
- 
- 		pra_list->total_pkts_size -= skb_src->len;
--		pra_list->total_pkts--;
- 
- 		atomic_dec(&priv->wmm.tx_pkts_queued);
- 
-@@ -269,7 +268,6 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
- 		skb_queue_tail(&pra_list->skb_head, skb_aggr);
- 
- 		pra_list->total_pkts_size += skb_aggr->len;
--		pra_list->total_pkts++;
- 
- 		atomic_inc(&priv->wmm.tx_pkts_queued);
- 
-diff --git a/drivers/net/wireless/mwifiex/11n_aggr.h b/drivers/net/wireless/mwifiex/11n_aggr.h
-index 9c6dca7..900e1c6 100644
---- a/drivers/net/wireless/mwifiex/11n_aggr.h
-+++ b/drivers/net/wireless/mwifiex/11n_aggr.h
-@@ -21,6 +21,7 @@
- #define _MWIFIEX_11N_AGGR_H_
- 
- #define PKT_TYPE_AMSDU	0xE6
-+#define MIN_NUM_AMSDU 2
- 
- int mwifiex_11n_deaggregate_pkt(struct mwifiex_private *priv,
- 				struct sk_buff *skb);
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 4f40428..907ab74 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -173,7 +173,6 @@ struct mwifiex_ra_list_tbl {
- 	struct sk_buff_head skb_head;
- 	u8 ra[ETH_ALEN];
- 	u32 total_pkts_size;
--	u32 total_pkts;
- 	u32 is_11n_enabled;
- };
- 
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 69e260b..eda2447 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -121,7 +121,6 @@ mwifiex_wmm_allocate_ralist_node(struct mwifiex_adapter *adapter, u8 *ra)
- 	memcpy(ra_list->ra, ra, ETH_ALEN);
- 
- 	ra_list->total_pkts_size = 0;
--	ra_list->total_pkts = 0;
- 
- 	dev_dbg(adapter->dev, "info: allocated ra_list %p\n", ra_list);
- 
-@@ -648,7 +647,6 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_adapter *adapter,
- 	skb_queue_tail(&ra_list->skb_head, skb);
- 
- 	ra_list->total_pkts_size += skb->len;
--	ra_list->total_pkts++;
- 
- 	atomic_inc(&priv->wmm.tx_pkts_queued);
- 
-@@ -975,6 +973,28 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
- }
- 
- /*
-+ * This function checks if 11n aggregation is possible.
-+ */
-+static int
-+mwifiex_is_11n_aggragation_possible(struct mwifiex_private *priv,
-+				    struct mwifiex_ra_list_tbl *ptr,
-+				    int max_buf_size)
-+{
-+	int count = 0, total_size = 0;
-+	struct sk_buff *skb, *tmp;
-+
-+	skb_queue_walk_safe(&ptr->skb_head, skb, tmp) {
-+		total_size += skb->len;
-+		if (total_size >= max_buf_size)
-+			break;
-+		if (++count >= MIN_NUM_AMSDU)
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
-+/*
-  * This function sends a single packet to firmware for transmission.
-  */
- static void
-@@ -1001,7 +1021,6 @@ mwifiex_send_single_packet(struct mwifiex_private *priv,
- 	dev_dbg(adapter->dev, "data: dequeuing the packet %p %p\n", ptr, skb);
- 
- 	ptr->total_pkts_size -= skb->len;
--	ptr->total_pkts--;
- 
- 	if (!skb_queue_empty(&ptr->skb_head))
- 		skb_next = skb_peek(&ptr->skb_head);
-@@ -1027,7 +1046,6 @@ mwifiex_send_single_packet(struct mwifiex_private *priv,
- 		skb_queue_tail(&ptr->skb_head, skb);
- 
- 		ptr->total_pkts_size += skb->len;
--		ptr->total_pkts++;
- 		tx_info->flags |= MWIFIEX_BUF_FLAG_REQUEUED_PKT;
- 		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
- 				       ra_list_flags);
-@@ -1213,11 +1231,9 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
- 				mwifiex_send_delba(priv, tid_del, ra, 1);
- 			}
- 		}
--/* Minimum number of AMSDU */
--#define MIN_NUM_AMSDU 2
--
- 		if (mwifiex_is_amsdu_allowed(priv, tid) &&
--				(ptr->total_pkts >= MIN_NUM_AMSDU))
-+		    mwifiex_is_11n_aggragation_possible(priv, ptr,
-+							adapter->tx_buf_size))
- 			mwifiex_11n_aggregate_pkt(priv, ptr, INTF_HEADER_LEN,
- 						  ptr_index, flags);
- 			/* ra_list_spinlock has been freed in
--- 
-1.7.0.2
+johannes
 
