@@ -1,53 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51673 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750896Ab1IGSOW (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:55822 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756389Ab1ISQQB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Sep 2011 14:14:22 -0400
-Subject: Re: [PATCH 0/2] QoS headers for mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
-	jlopex@gmail.com
-In-Reply-To: <1315418920.4002.13.camel@jlt3.sipsolutions.net> (sfid-20110907_200849_198439_CB225490)
-References: <1315347976-13950-1-git-send-email-javier@cozybit.com>
-	 (sfid-20110907_002659_987760_30CFF5E1)  <1315418920.4002.13.camel@jlt3.sipsolutions.net>
-	 (sfid-20110907_200849_198439_CB225490)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 07 Sep 2011 20:14:19 +0200
-Message-ID: <1315419259.4002.16.camel@jlt3.sipsolutions.net> (sfid-20110907_201430_485095_CCFAA6C0)
-Mime-Version: 1.0
+	Mon, 19 Sep 2011 12:16:01 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH 4/9] ath6kl: Remove unnecessary node table update on disconnect event
+Date: Mon, 19 Sep 2011 19:15:02 +0300
+Message-ID: <1316448907-10166-5-git-send-email-jouni@qca.qualcomm.com> (sfid-20110919_181606_932919_09FEFDB5)
+In-Reply-To: <1316448907-10166-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1316448907-10166-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-09-07 at 20:08 +0200, Johannes Berg wrote:
-> On Tue, 2011-09-06 at 15:26 -0700, Javier Cardona wrote:
-> > Mesh frames are required to have QoS headers to indicate the presence of a Mesh
-> > Control Header in the payload.  These patches add QoS headers to mesh frames,
-> > but note that they don't implement full QoS support: mesh stations don't
-> > currently advertise QoS capabilities.
-> 
-> Uh, so does mesh want full QoS support or just QoS headers? The latter
-> seems a little odd to me. But if it wants QoS how about zd1211rw? I
-> don't think that even supports QoS?
-> 
-> That's one thing that bothers me a little bit about this patchset --
-> previously, QoS frames could only happen when the device actually
-> supported 4 queues, now this rule seems to be broken. I don't expect
-> this to be a major issue, but it certainly is unexpected and will
-> probably be forgotten by a lot of people in the future ...
+Since ath6kl does not actually update cfg80211 BSS table when this
+event occurs, there is not much need for removing the entries from
+the internal table that is not really used or exposed.
 
-So after looking at this again -- what I'd much rather see instead of
-the second patch, and what will also require fewer changes, is *only*
-doing the change to ieee80211_set_qos_hdr(). Then, if the peer is a QoS
-station, we'll get the right header -- if it isn't then we can't really
-mesh with it but we'll accept that for legacy reasons (for now).
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/main.c |   28 ----------------------------
+ 1 files changed, 0 insertions(+), 28 deletions(-)
 
-I'd rather not send QoS frames to mesh stations that don't advertise QoS
-capability, and I'd also rather not have to worry about sending QoS
-frames when we don't actually support it locally.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index f21e4b1..55d3331 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -1326,7 +1326,6 @@ void ath6kl_disconnect_event(struct ath6kl *ar, u8 reason, u8 *bssid,
+ 			     u8 assoc_resp_len, u8 *assoc_info,
+ 			     u16 prot_reason_status)
+ {
+-	struct bss *wmi_ssid_node = NULL;
+ 	unsigned long flags;
+ 
+ 	if (ar->nw_type == AP_NETWORK) {
+@@ -1386,33 +1385,6 @@ void ath6kl_disconnect_event(struct ath6kl *ar, u8 reason, u8 *bssid,
+ 		}
+ 	}
+ 
+-	if ((reason == NO_NETWORK_AVAIL) && test_bit(WMI_READY, &ar->flag))  {
+-		ath6kl_wmi_node_free(ar->wmi, bssid);
+-
+-		/*
+-		 * In case any other same SSID nodes are present remove it,
+-		 * since those nodes also not available now.
+-		 */
+-		do {
+-			/*
+-			 * Find the nodes based on SSID and remove it
+-			 *
+-			 * Note: This case will not work out for
+-			 * Hidden-SSID
+-			 */
+-			wmi_ssid_node = ath6kl_wmi_find_ssid_node(ar->wmi,
+-								  ar->ssid,
+-								  ar->ssid_len,
+-								  false,
+-								  true);
+-
+-			if (wmi_ssid_node)
+-				ath6kl_wmi_node_free(ar->wmi,
+-						     wmi_ssid_node->ni_macaddr);
+-
+-		} while (wmi_ssid_node);
+-	}
+-
+ 	/* update connect & link status atomically */
+ 	spin_lock_irqsave(&ar->lock, flags);
+ 	clear_bit(CONNECTED, &ar->flag);
+-- 
+1.7.4.1
 
