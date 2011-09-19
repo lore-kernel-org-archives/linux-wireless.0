@@ -1,156 +1,283 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38284 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753907Ab1I2OGu (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49532 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752328Ab1ISTpq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 10:06:50 -0400
-Message-Id: <20110929140501.289739880@sipsolutions.net> (sfid-20110929_160654_387806_415D0231)
-Date: Thu, 29 Sep 2011 16:04:35 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 10/16] mac80211: reply only once to each PS-poll
-References: <20110929140425.390322480@sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 19 Sep 2011 15:45:46 -0400
+Date: Mon, 19 Sep 2011 15:31:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Greg Dietsche <gregory.dietsche@cuw.edu>,
+	linux-wireless@vger.kernel.org
+Subject: Re: pull request: iwlegacy 2011-09-14
+Message-ID: <20110919193122.GD2608@tuxdriver.com> (sfid-20110919_214551_388347_11D14B6B)
+References: <20110914085900.GA2717@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110914085900.GA2717@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Sep 14, 2011 at 10:59:16AM +0200, Stanislaw Gruszka wrote:
+> John,
+> 
+> Please pull iwlegacy cleanup changes done by Greg and me, intended
+> for 3.2. These request include huge patches with file renaming and
+> automatic code processing done by sed and indent. Work of changing
+> iwlegacy driver into something that I could consider maintainable
+> is not done yet, but these massive changes bring closer into that.
+> Hopefully with having clean, maintainable code I will be able to
+> fix some nasty, not easy reproducible bugs, we still have in the
+> iwlegacy driver.
+> 
+> Thanks.
+> 
+> The following changes since commit d82cdad64a0127611724c61849a8487d69fb76ef:
+> 
+>   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next (2011-08-30 16:34:33 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://github.com/dietsche/linux.git wireless-next-iwlegacy-stanislaw-greg
 
-If a PS-poll frame is retried (but was received)
-there is no way to detect that since it has no
-sequence number. As a consequence, the standard
-asks us to not react to PS-poll frames until the
-response to one made it out (was ACKed or lost).
+It looks like you pulled something other than wireless-next into this
+tree.  If you want me to pull directly, then you need to based your
+tree (or at least the branch I'm pulling) on wireless-next exclusively.
 
-Implement this by using the WLAN_STA_SP flags to
-also indicate a PS-Poll "service period" and the
-IEEE80211_TX_STATUS_EOSP flag for the response
-packet to indicate the end of the "SP" as usual.
+Thanks,
 
-We could use separate flags, but that will most
-likely completely confuse drivers, and while the
-standard doesn't exclude simultaneously polling
-using uAPSD and PS-Poll, doing that seems quite
-problematic.
+John
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h  |    9 ++++++++-
- net/mac80211/rx.c       |   10 ++++++----
- net/mac80211/sta_info.c |   22 +++++++++++-----------
- net/mac80211/sta_info.h |    2 +-
- 4 files changed, 26 insertions(+), 17 deletions(-)
+[linville-8530p.local]:> git pull git://github.com/dietsche/linux.git wireless-next-iwlegacy-stanislaw-greg
+remote: Counting objects: 5879, done.
+remote: Compressing objects: 100% (1686/1686), done.
+remote: Total 4450 (delta 3658), reused 3527 (delta 2753)
+Receiving objects: 100% (4450/4450), 1.56 MiB | 969 KiB/s, done.
+Resolving deltas: 100% (3658/3658), completed with 719 local objects.
+>From git://github.com/dietsche/linux
+ * branch            wireless-next-iwlegacy-stanislaw-greg -> FETCH_HEAD
+Removing Documentation/DocBook/dvb/dvbproperty.xml
+Removing Documentation/DocBook/dvb/dvbstb.png
+Removing Documentation/DocBook/dvb/frontend.h.xml
+Removing Documentation/DocBook/media-entities.tmpl
+Removing Documentation/DocBook/media-indices.tmpl
+Auto-merging Documentation/DocBook/media/dvb/audio.xml
+Auto-merging Documentation/DocBook/media/dvb/ca.xml
+Auto-merging Documentation/DocBook/media/dvb/demux.xml
+Auto-merging Documentation/DocBook/media/dvb/dvbapi.xml
+Auto-merging Documentation/DocBook/media/dvb/frontend.xml
+Auto-merging Documentation/DocBook/media/dvb/intro.xml
+Auto-merging Documentation/DocBook/media/dvb/net.xml
+Auto-merging Documentation/DocBook/media/dvb/video.xml
+Auto-merging Documentation/DocBook/media/v4l/common.xml
+Auto-merging Documentation/DocBook/media/v4l/compat.xml
+Auto-merging Documentation/DocBook/media/v4l/controls.xml
+Auto-merging Documentation/DocBook/media/v4l/lirc_device_interface.xml
+Auto-merging Documentation/DocBook/media/v4l/media-func-ioctl.xml
+Auto-merging Documentation/DocBook/media/v4l/media-ioc-device-info.xml
+Auto-merging Documentation/DocBook/media/v4l/media-ioc-enum-links.xml
+Auto-merging Documentation/DocBook/media/v4l/media-ioc-setup-link.xml
+Auto-merging Documentation/DocBook/media/v4l/pixfmt.xml
+Auto-merging Documentation/DocBook/media/v4l/subdev-formats.xml
+Auto-merging Documentation/DocBook/media/v4l/v4l2.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-cropcap.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-dbg-g-chip-ident.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-dbg-g-register.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-dqevent.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-encoder-cmd.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-enum-frameintervals.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-enum-framesizes.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-enumaudio.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-enumaudioout.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-audio.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-audioout.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-crop.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-ctrl.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-dv-preset.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-dv-timings.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-enc-index.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-ext-ctrls.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-fbuf.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-fmt.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-input.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-jpegcomp.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-output.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-parm.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-priority.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-sliced-vbi-cap.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-g-std.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-log-status.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-overlay.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-qbuf.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-query-dv-preset.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-querycap.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-queryctrl.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-querystd.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-reqbufs.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-streamon.xml
+Auto-merging Documentation/DocBook/media/v4l/vidioc-subdev-g-fmt.xml
+Auto-merging Documentation/DocBook/media_api.tmpl
+Removing Documentation/DocBook/v4l/bayer.pdf
+Removing Documentation/DocBook/v4l/bayer.png
+Removing Documentation/DocBook/v4l/crop.gif
+Removing Documentation/DocBook/v4l/dev-event.xml
+Removing Documentation/DocBook/v4l/fieldseq_bt.gif
+Removing Documentation/DocBook/v4l/fieldseq_tb.gif
+Removing Documentation/DocBook/v4l/func-ioctl.xml
+Removing Documentation/DocBook/v4l/nv12mt.gif
+Removing Documentation/DocBook/v4l/nv12mt_example.gif
+Removing Documentation/DocBook/v4l/pipeline.png
+Removing Documentation/DocBook/v4l/vbi_525.gif
+Removing Documentation/DocBook/v4l/vbi_625.gif
+Removing Documentation/DocBook/v4l/vbi_hsync.gif
+Removing Documentation/DocBook/v4l/videodev2.h.xml
+Removing Documentation/DocBook/v4l/vidioc-subscribe-event.xml
+Auto-merging MAINTAINERS
+Removing arch/arm/lib/sha1.S
+Removing arch/arm/mach-mmp/include/mach/mfp-gplugd.h
+Removing arch/arm/mach-msm/gpio.c
+Removing arch/arm/mach-msm/gpio_hw.h
+Removing arch/arm/mach-zynq/board_dt.c
+Removing arch/sparc/include/asm/div64.h
+Removing arch/sparc/include/asm/irq_regs.h
+Removing arch/sparc/include/asm/local.h
+Removing arch/sparc/include/asm/local64.h
+Removing arch/sparc/lib/NG2page.S
+Removing arch/tile/include/asm/bug.h
+Removing arch/tile/include/asm/bugs.h
+Removing arch/tile/include/asm/cputime.h
+Removing arch/tile/include/asm/device.h
+Removing arch/tile/include/asm/div64.h
+Removing arch/tile/include/asm/emergency-restart.h
+Removing arch/tile/include/asm/errno.h
+Removing arch/tile/include/asm/fb.h
+Removing arch/tile/include/asm/fcntl.h
+Removing arch/tile/include/asm/ioctl.h
+Removing arch/tile/include/asm/ioctls.h
+Removing arch/tile/include/asm/ipc.h
+Removing arch/tile/include/asm/ipcbuf.h
+Removing arch/tile/include/asm/irq_regs.h
+Removing arch/tile/include/asm/kdebug.h
+Removing arch/tile/include/asm/local.h
+Removing arch/tile/include/asm/module.h
+Removing arch/tile/include/asm/msgbuf.h
+Removing arch/tile/include/asm/mutex.h
+Removing arch/tile/include/asm/param.h
+Removing arch/tile/include/asm/parport.h
+Removing arch/tile/include/asm/poll.h
+Removing arch/tile/include/asm/posix_types.h
+Removing arch/tile/include/asm/resource.h
+Removing arch/tile/include/asm/scatterlist.h
+Removing arch/tile/include/asm/sembuf.h
+Removing arch/tile/include/asm/serial.h
+Removing arch/tile/include/asm/shmbuf.h
+Removing arch/tile/include/asm/shmparam.h
+Removing arch/tile/include/asm/socket.h
+Removing arch/tile/include/asm/sockios.h
+Removing arch/tile/include/asm/statfs.h
+Removing arch/tile/include/asm/termbits.h
+Removing arch/tile/include/asm/termios.h
+Removing arch/tile/include/asm/types.h
+Removing arch/tile/include/asm/ucontext.h
+Removing arch/tile/include/asm/xor.h
+Auto-merging drivers/gpio/gpio-msm-v2.c
+Auto-merging drivers/hwmon/pmbus/adm1275.c
+Auto-merging drivers/hwmon/pmbus/max16064.c
+Auto-merging drivers/hwmon/pmbus/max34440.c
+Auto-merging drivers/hwmon/pmbus/max8688.c
+Auto-merging drivers/hwmon/pmbus/pmbus.c
+Auto-merging drivers/hwmon/pmbus/pmbus.h
+Auto-merging drivers/hwmon/pmbus/pmbus_core.c
+Removing drivers/media/video/cafe_ccic-regs.h
+Removing drivers/media/video/cafe_ccic.c
+Removing drivers/media/video/pwc/pwc-ioctl.h
+Removing drivers/media/video/pwc/pwc-uncompress.h
+Auto-merging drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+Auto-merging drivers/net/wireless/ath/ath9k/ar9003_phy.c
+Auto-merging drivers/net/wireless/ath/ath9k/ar9003_phy.h
+Auto-merging drivers/net/wireless/ath/ath9k/main.c
+Auto-merging drivers/net/wireless/iwlegacy/4965-calib.c
+Auto-merging drivers/net/wireless/iwlegacy/commands.h
+Auto-merging drivers/net/wireless/iwlegacy/csr.h
+Removing drivers/net/wireless/iwlegacy/iwl-3945-debugfs.c
+Removing drivers/net/wireless/iwlegacy/iwl-3945-debugfs.h
+Removing drivers/net/wireless/iwlegacy/iwl-3945-fh.h
+Removing drivers/net/wireless/iwlegacy/iwl-3945-hw.h
+Removing drivers/net/wireless/iwlegacy/iwl-3945-led.c
+Removing drivers/net/wireless/iwlegacy/iwl-3945-led.h
+Removing drivers/net/wireless/iwlegacy/iwl-3945-rs.c
+Removing drivers/net/wireless/iwlegacy/iwl-3945.c
+Removing drivers/net/wireless/iwlegacy/iwl-3945.h
+Removing drivers/net/wireless/iwlegacy/iwl-4965-calib.h
+Removing drivers/net/wireless/iwlegacy/iwl-4965-debugfs.c
+Removing drivers/net/wireless/iwlegacy/iwl-4965-debugfs.h
+Removing drivers/net/wireless/iwlegacy/iwl-4965-eeprom.c
+Removing drivers/net/wireless/iwlegacy/iwl-4965-hw.h
+Removing drivers/net/wireless/iwlegacy/iwl-4965-led.c
+Removing drivers/net/wireless/iwlegacy/iwl-4965-led.h
+Removing drivers/net/wireless/iwlegacy/iwl-4965-lib.c
+Removing drivers/net/wireless/iwlegacy/iwl-4965-rs.c
+Removing drivers/net/wireless/iwlegacy/iwl-4965-rx.c
+Removing drivers/net/wireless/iwlegacy/iwl-4965-sta.c
+Removing drivers/net/wireless/iwlegacy/iwl-4965-tx.c
+Removing drivers/net/wireless/iwlegacy/iwl-4965-ucode.c
+Removing drivers/net/wireless/iwlegacy/iwl-4965.c
+Removing drivers/net/wireless/iwlegacy/iwl-4965.h
+Removing drivers/net/wireless/iwlegacy/iwl-core.c
+Removing drivers/net/wireless/iwlegacy/iwl-core.h
+Removing drivers/net/wireless/iwlegacy/iwl-debug.h
+Removing drivers/net/wireless/iwlegacy/iwl-debugfs.c
+Removing drivers/net/wireless/iwlegacy/iwl-dev.h
+Removing drivers/net/wireless/iwlegacy/iwl-devtrace.c
+Removing drivers/net/wireless/iwlegacy/iwl-devtrace.h
+Removing drivers/net/wireless/iwlegacy/iwl-eeprom.c
+Removing drivers/net/wireless/iwlegacy/iwl-eeprom.h
+Removing drivers/net/wireless/iwlegacy/iwl-fh.h
+Removing drivers/net/wireless/iwlegacy/iwl-hcmd.c
+Removing drivers/net/wireless/iwlegacy/iwl-helpers.h
+Removing drivers/net/wireless/iwlegacy/iwl-io.h
+Removing drivers/net/wireless/iwlegacy/iwl-led.c
+Removing drivers/net/wireless/iwlegacy/iwl-led.h
+Removing drivers/net/wireless/iwlegacy/iwl-legacy-rs.h
+Removing drivers/net/wireless/iwlegacy/iwl-power.c
+Removing drivers/net/wireless/iwlegacy/iwl-power.h
+Removing drivers/net/wireless/iwlegacy/iwl-rx.c
+Removing drivers/net/wireless/iwlegacy/iwl-scan.c
+Removing drivers/net/wireless/iwlegacy/iwl-sta.c
+Removing drivers/net/wireless/iwlegacy/iwl-sta.h
+Removing drivers/net/wireless/iwlegacy/iwl-tx.c
+Removing drivers/net/wireless/iwlegacy/iwl3945-base.c
+Removing drivers/net/wireless/iwlegacy/iwl4965-base.c
+Auto-merging drivers/net/wireless/iwlegacy/prph.h
+Auto-merging drivers/net/wireless/iwlwifi/iwl-pci.c
+CONFLICT (content): Merge conflict in drivers/net/wireless/iwlwifi/iwl-pci.c
+Auto-merging drivers/net/wireless/rt2x00/rt2800usb.c
+CONFLICT (content): Merge conflict in drivers/net/wireless/rt2x00/rt2800usb.c
+Auto-merging drivers/net/wireless/wl12xx/main.c
+CONFLICT (content): Merge conflict in drivers/net/wireless/wl12xx/main.c
+Auto-merging drivers/staging/zcache/zcache-main.c
+Auto-merging drivers/watchdog/at91sam9_wdt.h
+Removing fs/btrfs/ref-cache.c
+Removing fs/btrfs/ref-cache.h
+Auto-merging fs/exofs/ore.c
+Removing fs/exofs/pnfs.h
+Auto-merging fs/xfs/xfs_acl.c
+Auto-merging fs/xfs/xfs_buf.c
+Auto-merging fs/xfs/xfs_buf.h
+Auto-merging fs/xfs/xfs_dquot.c
+Auto-merging fs/xfs/xfs_linux.h
+Auto-merging fs/xfs/xfs_qm.c
+Auto-merging fs/xfs/xfs_quotaops.c
+Auto-merging fs/xfs/xfs_sync.c
+Auto-merging fs/xfs/xfs_trace.c
+Auto-merging include/net/cfg80211.h
+Auto-merging include/sound/wm8996.h
+Auto-merging net/wireless/core.c
+Removing scripts/kconfig/kconfig_load.c
+Removing sound/soc/codecs/wm8915.c
+Removing sound/soc/codecs/wm8915.h
+Automatic merge failed; fix conflicts and then commit the result.
 
---- a/net/mac80211/rx.c	2011-09-29 16:03:17.000000000 +0200
-+++ b/net/mac80211/rx.c	2011-09-29 16:03:23.000000000 +0200
-@@ -1194,10 +1194,12 @@ ieee80211_rx_h_uapsd_and_pspoll(struct i
- 		return RX_CONTINUE;
- 
- 	if (unlikely(ieee80211_is_pspoll(hdr->frame_control))) {
--		if (!test_sta_flags(rx->sta, WLAN_STA_PS_DRIVER))
--			ieee80211_sta_ps_deliver_poll_response(rx->sta);
--		else
--			set_sta_flags(rx->sta, WLAN_STA_PSPOLL);
-+		if (!test_sta_flags(rx->sta, WLAN_STA_SP)) {
-+			if (!test_sta_flags(rx->sta, WLAN_STA_PS_DRIVER))
-+				ieee80211_sta_ps_deliver_poll_response(rx->sta);
-+			else
-+				set_sta_flags(rx->sta, WLAN_STA_PSPOLL);
-+		}
- 
- 		/* Free PS Poll skb here instead of returning RX_DROP that would
- 		 * count as an dropped frame. */
---- a/net/mac80211/sta_info.h	2011-09-29 16:03:17.000000000 +0200
-+++ b/net/mac80211/sta_info.h	2011-09-29 16:03:23.000000000 +0200
-@@ -50,7 +50,7 @@
-  *	keeping station in power-save mode, reply when the driver
-  *	unblocks the station.
-  * @WLAN_STA_SP: Station is in a service period, so don't try to
-- *	reply to other uAPSD trigger frames.
-+ *	reply to other uAPSD trigger frames or PS-Poll.
-  */
- enum ieee80211_sta_info_flags {
- 	WLAN_STA_AUTH		= 1<<0,
---- a/include/net/mac80211.h	2011-09-29 16:03:17.000000000 +0200
-+++ b/include/net/mac80211.h	2011-09-29 16:03:23.000000000 +0200
-@@ -370,7 +370,8 @@ struct ieee80211_bss_conf {
-  * @IEEE80211_TX_STATUS_EOSP: This packet marks the end of service period,
-  *	when its status is reported the service period ends. For frames in
-  *	an SP that mac80211 transmits, it is already set; for driver frames
-- *	the driver may set this flag.
-+ *	the driver may set this flag. It is also used to do the same for
-+ *	PS-Poll responses.
-  *
-  * Note: If you have to add new flags to the enumeration, then don't
-  *	 forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
-@@ -1959,6 +1960,12 @@ enum ieee80211_frame_release_type {
-  *	more-data bit must always be set.
-  *	The @tids parameter tells the driver which TIDs to release frames
-  *	from, for PS-poll it will always have only a single bit set.
-+ *	In the case this is used for a PS-poll initiated release, the
-+ *	@num_frames parameter will always be 1 so code can be shared. In
-+ *	this case the driver must also set %IEEE80211_TX_STATUS_EOSP flag
-+ *	on the TX status (and must report TX status) so that the PS-poll
-+ *	period is properly ended. This is used to avoid sending multiple
-+ *	responses for a retried PS-poll frame.
-  *	In the case this is used for uAPSD, the @num_frames parameter may be
-  *	bigger than one, but the driver may send fewer frames (it must send
-  *	at least one, however). In this case it is also responsible for
---- a/net/mac80211/sta_info.c	2011-09-29 16:03:20.000000000 +0200
-+++ b/net/mac80211/sta_info.c	2011-09-29 16:03:23.000000000 +0200
-@@ -1217,13 +1217,12 @@ static void ieee80211_send_null_response
- 	/*
- 	 * Tell TX path to send this frame even though the
- 	 * STA may still remain is PS mode after this frame
--	 * exchange.
-+	 * exchange. Also set EOSP to indicate this packet
-+	 * ends the poll/service period.
- 	 */
--	info->flags |= IEEE80211_TX_CTL_POLL_RESPONSE;
--
--	if (uapsd)
--		info->flags |= IEEE80211_TX_STATUS_EOSP |
--			       IEEE80211_TX_CTL_REQ_TX_STATUS;
-+	info->flags |= IEEE80211_TX_CTL_POLL_RESPONSE |
-+		       IEEE80211_TX_STATUS_EOSP |
-+		       IEEE80211_TX_CTL_REQ_TX_STATUS;
- 
- 	ieee80211_xmit(sdata, skb);
- }
-@@ -1241,6 +1240,9 @@ ieee80211_sta_ps_deliver_response(struct
- 	unsigned long driver_release_tids = 0;
- 	struct sk_buff_head frames;
- 
-+	/* Service or PS-Poll period starts */
-+	set_sta_flags(sta, WLAN_STA_SP);
-+
- 	__skb_queue_head_init(&frames);
- 
- 	/*
-@@ -1357,10 +1359,11 @@ ieee80211_sta_ps_deliver_response(struct
- 				/* set EOSP for the frame */
- 				u8 *p = ieee80211_get_qos_ctl(hdr);
- 				*p |= IEEE80211_QOS_CTL_EOSP;
--				info->flags |= IEEE80211_TX_STATUS_EOSP |
--					       IEEE80211_TX_CTL_REQ_TX_STATUS;
- 			}
- 
-+			info->flags |= IEEE80211_TX_STATUS_EOSP |
-+				       IEEE80211_TX_CTL_REQ_TX_STATUS;
-+
- 			__skb_queue_tail(&pending, skb);
- 		}
- 
-@@ -1422,9 +1425,6 @@ void ieee80211_sta_ps_deliver_uapsd(stru
- 	if (!delivery_enabled)
- 		return;
- 
--	/* Ohh, finally, the service period starts :-) */
--	set_sta_flags(sta, WLAN_STA_SP);
--
- 	switch (sta->sta.max_sp) {
- 	case 1:
- 		n_frames = 2;
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
