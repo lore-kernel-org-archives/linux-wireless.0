@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56706 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753475Ab1I3Sam (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:34352 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754688Ab1ISKCp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Sep 2011 14:30:42 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1R9hr5-0007rW-Iq
-	for linux-wireless@vger.kernel.org; Fri, 30 Sep 2011 14:30:39 -0400
-Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id p8UISgf1000840
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Sep 2011 14:28:43 -0400
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id p8UISgPU000838
-	for linux-wireless@vger.kernel.org; Fri, 30 Sep 2011 14:28:42 -0400
-Date: Fri, 30 Sep 2011 14:28:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: new stuff for 3.2 needs to be posted _now_
-Message-ID: <20110930182842.GA2526@tuxdriver.com> (sfid-20110930_203049_852694_8E0EC3D8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 19 Sep 2011 06:02:45 -0400
+Subject: Re: [PATCH v2 1/4] NFC: Add dev_up and dev_down control operations
+From: Samuel Ortiz <samuel@sortiz.org>
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
+To: "Elias, Ilan" <ilane@ti.com>
+Cc: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
+	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE660013226A26A@dnce02.ent.ti.com>
+References: <AC090B9732AB2B4DB7FF476E907FE660013226A26A@dnce02.ent.ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Sep 2011 12:05:23 +0200
+Message-ID: <1316426723.16271.17.camel@sortiz-mobl> (sfid-20110919_120249_008237_C02445CC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You may have noticed that Linus has released 3.1-rc8.  So, the
-merge window is around the corner!
+Hi Ilan,
 
-For those that need a reminder, the opening of the merge window is a
-_deadline_ for new features.  Once the merge window opens, only fixes
-will be accepted for 3.2.  In fact, any non-fix patches need to
-already be in wireless-next when the merge window opens if you want
-them in 3.2.  That means you need to get them posted _now_, so they
-can be reviewed and I can find time to merge them before the deadline.
+On Tue, 2011-09-13 at 10:46 +0200, Elias, Ilan wrote:
+> Add 2 new nfc control operations:
+> dev_up to turn on the nfc device
+> dev_down to turn off the nfc device
+> 
+> Signed-off-by: Ilan Elias <ilane@ti.com>
+Acked-by: Samuel Ortiz <sameo@linux.intel.com>
 
-You have been warned...this means you!
+Cheers,
+Samuel.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
