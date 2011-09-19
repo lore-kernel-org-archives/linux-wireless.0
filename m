@@ -1,72 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52985 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753563Ab1IBRHu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49962 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755742Ab1ISMwn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Sep 2011 13:07:50 -0400
-Date: Fri, 2 Sep 2011 20:07:06 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] athk6l: Fix channel list processing in scan requests
-Message-ID: <20110902170706.GA16999@jouni.qca.qualcomm.com> (sfid-20110902_190754_411595_EB537282)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 19 Sep 2011 08:52:43 -0400
+Subject: Re: [PATCH v3 1/3] nl80211: Parse channel type attribute in an
+ ibss join request
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexander Simon <an.alexsimon@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com> (sfid-20110918_001516_388499_D9227DC9)
+References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com>
+	 (sfid-20110918_001516_388499_D9227DC9)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Sep 2011 14:52:41 +0200
+Message-ID: <1316436761.5995.22.camel@jlt3.sipsolutions.net> (sfid-20110919_145247_594038_1497A5E1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Limit the length of the channel list to WMI_MAX_CHANNELS to avoid
-rejection of the request in wmi.c. Since there is not really much
-point in using a specific list of more than 32 channels, drop the
-channel list if more channels are specified and scan all channels.
+On Sun, 2011-09-18 at 00:14 +0200, Alexander Simon wrote:
 
-Fix cfg80211 scan API use: ar->scan_req must be set only if returning
-success from scan() handler. The previous version would result in use
-of freed memory and likely kernel panic should the scan request fail
-to be sent to the target.
+> +/**
+> + * cfg80211_can_use_ext_chan - test if ht40 on extension channel can be used
+> + * @wiphy: the wiphy
+> + * @chan: main channel
+> + * @channel_type: HT mode
+> + */
+> +bool cfg80211_can_beacon_sec_chan(struct wiphy *wiphy,
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   14 ++++++++++----
- 1 files changed, 10 insertions(+), 4 deletions(-)
+That doesn't match the documentation now ...
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 7db6658..1fe55f6 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -793,10 +793,16 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
- 		}
- 	}
- 
--	if (request->n_channels > 0) {
-+	/*
-+	 * Scan only the requested channels if the request specifies a set of
-+	 * channels. If the list is longer than the target supports, do not
-+	 * configure the list and instead, scan all available channels.
-+	 */
-+	if (request->n_channels > 0 &&
-+	    request->n_channels <= WMI_MAX_CHANNELS) {
- 		u8 i;
- 
--		n_channels = min(127U, request->n_channels);
-+		n_channels = request->n_channels;
- 
- 		channels = kzalloc(n_channels * sizeof(u16), GFP_KERNEL);
- 		if (channels == NULL) {
-@@ -813,8 +819,8 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
- 				       false, 0, 0, n_channels, channels);
- 	if (ret)
- 		ath6kl_err("wmi_startscan_cmd failed\n");
--
--	ar->scan_req = request;
-+	else
-+		ar->scan_req = request;
- 
- 	kfree(channels);
- 
--- 
-1.7.4.1
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -4537,13 +4537,34 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+>  		ibss.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
+>  	}
+>  
+> -	ibss.channel = ieee80211_get_channel(wiphy,
+> -		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
+> +	if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
+> +		enum nl80211_channel_type channel_type;
+> +
+> +		channel_type = nla_get_u32(
+> +				info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
+> +		if (channel_type > NL80211_CHAN_HT40PLUS)
+> +			return -EINVAL;
+> +		ibss.channel_type = channel_type;
+> +	} else {
+> +		ibss.channel_type = NL80211_CHAN_NO_HT;
+> +	}
+> +
+> +	ibss.channel = rdev_freq_to_chan(rdev,
+> +		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
+> +		ibss.channel_type);
+>  	if (!ibss.channel ||
+> +	    ibss.channel->flags & IEEE80211_CHAN_RADAR ||
+>  	    ibss.channel->flags & IEEE80211_CHAN_NO_IBSS ||
+>  	    ibss.channel->flags & IEEE80211_CHAN_DISABLED)
+>  		return -EINVAL;
+>  
+> +	/* Both channels should be able to initiate communication */
+> +	if ((ibss.channel_type == NL80211_CHAN_HT40PLUS ||
+> +	     ibss.channel_type == NL80211_CHAN_HT40MINUS) &&
+> +	    !cfg80211_can_beacon_sec_chan(&rdev->wiphy, ibss.channel,
+> +					  ibss.channel_type))
+> +		return -EINVAL;
+> +
+>  	ibss.channel_fixed = !!info->attrs[NL80211_ATTR_FREQ_FIXED];
+>  	ibss.privacy = !!info->attrs[NL80211_ATTR_PRIVACY];
+>  
+
+With just this patch, you can set HT IBSS but mac80211 won't be able to
+do it so there probably should be some form of feature check for this so
+other (non-mac80211) drivers would be able to do this correctly -- I
+don't expect all of them to implement HT IBSS.
+
+johannes
 
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
