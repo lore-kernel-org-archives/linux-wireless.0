@@ -1,76 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:38572 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932607Ab1IHMja (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:54907 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757Ab1ISGxA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 08:39:30 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 4so268175ewy.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 05:39:29 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 3/7] rt2x00: Add WCID to crypto struct
-Date: Thu, 8 Sep 2011 14:36:45 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201109081434.23635.IvDoorn@gmail.com> <201109081436.05113.IvDoorn@gmail.com>
-In-Reply-To: <201109081436.05113.IvDoorn@gmail.com>
+	Mon, 19 Sep 2011 02:53:00 -0400
+Message-ID: <4E76E6C8.3080003@qca.qualcomm.com> (sfid-20110919_085307_604991_F09459FC)
+Date: Mon, 19 Sep 2011 09:52:56 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201109081436.46401.IvDoorn@gmail.com> (sfid-20110908_143934_243781_F99667A0)
+To: Vivek Natarajan <nataraja@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: Indicate the roaming capability of the firmware
+References: <1316167723-2346-1-git-send-email-nataraja@qca.qualcomm.com>
+In-Reply-To: <1316167723-2346-1-git-send-email-nataraja@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On 09/16/2011 01:08 PM, Vivek Natarajan wrote:
+> Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath6kl/init.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+> index b9b13a0..38d7e94 100644
+> --- a/drivers/net/wireless/ath/ath6kl/init.c
+> +++ b/drivers/net/wireless/ath/ath6kl/init.c
+> @@ -1494,6 +1494,8 @@ static int ath6kl_init(struct net_device *dev)
+>  	if (!status)
+>  		goto ath6kl_init_done;
+>  
+> +	ar->wdev->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
+> +
+>  err_htc_stop:
+>  	ath6kl_htc_stop(ar->htc_target);
+>  err_rxbuf_cleanup:
 
-When a WCID was already assigned to a STA the key configuration
-functions need to use the same WCID for configuring the keys. Hence, add
-the WCID to the crypo configuration structure.
+You have to document what this change means in practise and what issue
+it is actually fixing. (firmware/wpas getting out of sync, wpas not
+handling roaming after the flag is set etc.)
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h    |    2 ++
- drivers/net/wireless/rt2x00/rt2x00mac.c |    7 +++++--
- 2 files changed, 7 insertions(+), 2 deletions(-)
+Also please address Sam's comment.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 2093a55..c360ab3 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -478,6 +478,8 @@ struct rt2x00lib_crypto {
- 	u8 key[16];
- 	u8 tx_mic[8];
- 	u8 rx_mic[8];
-+
-+	int wcid;
- };
- 
- /*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 3cd70ff..4d82d53 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -494,6 +494,7 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	struct rt2x00lib_crypto crypto;
- 	static const u8 bcast_addr[ETH_ALEN] =
- 		{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, };
-+	struct rt2x00_sta *sta_priv = NULL;
- 
- 	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
- 		return 0;
-@@ -511,9 +512,11 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 	crypto.cmd = cmd;
- 
--	if (sta)
-+	if (sta) {
- 		crypto.address = sta->addr;
--	else
-+		sta_priv = sta_to_rt2x00_sta(sta);
-+		crypto.wcid = sta_priv->wcid;
-+	} else
- 		crypto.address = bcast_addr;
- 
- 	if (crypto.cipher == CIPHER_TKIP)
--- 
-1.7.3.4
+Kalle
