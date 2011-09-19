@@ -1,95 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:39309 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751010Ab1ISGBw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 02:01:52 -0400
-Received: by fxbb27 with SMTP id b27so3658693fxb.29
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2011 23:01:50 -0700 (PDT)
-Subject: pull request: wl12xx 2011-09-19
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Sep 2011 09:01:47 +0300
-Message-ID: <1316412107.2157.29.camel@cumari> (sfid-20110919_080156_886946_8A5FB864)
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:4546 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932495Ab1ISV0b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 17:26:31 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 06/20] staging: brcm80211: remove unconditional code
+ blocks from brcmfmac
+Date: Mon, 19 Sep 2011 14:25:54 -0700
+Message-ID: <1316467568-27683-7-git-send-email-frankyl@broadcom.com> (sfid-20110919_232644_059779_4F669BF0)
+In-Reply-To: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Arend van Spriel <arend@broadcom.com>
 
-One more pull request intended for 3.2.  It contains a bunch of bugfixes
-and improvements related to our new firmware, by Eliad and Arik, support
-for p2p interfaces and support for SSID matching in scheduled scans.  It
-also removes a deprecated Kconfig flag that was only meaningful while
-our 11n code was still experimental. 
+Using a block statement to scope function variables is not
+common in linux kernel development. Browsed through the brcmfmac
+to remove those.
 
-Please pull or let me know if there's any problem. This tree is based
-on wireless-next/master.
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c |  132 +++++++++++-----------
+ 1 files changed, 66 insertions(+), 66 deletions(-)
 
-Thanks!
-
-The following changes since commit
-12e62d6f7ec475e546b40bece2045da15d6c21ef:
-
-  MAINTAINERS: update ath6kl (2011-09-16 16:45:43 -0400)
-
-are available in the git repository at:
-  git://github.com/lucacoelho/wl12xx.git for-linville
-
-Arik Nemtsov (8):
-      wl12xx: don't queue a new dummy packet if one is already pending
-      wl12xx: don't indicate up PS-filtered dummy packets
-      wl12xx: AP mode - don't regulate FW blocks for non-active STAs
-      wl12xx: support up to 8 stations in AP-mode
-      wl12xx: don't regulate links when a single STA is connected
-      wl12xx: AP mode - enable the BA constraint event from the FW
-      wl12xx: AP mode - clean BA and queue state in tx_reset
-      wl12xx: set mac80211 flags for A-MPDU aggregation support
-
-Eliad Peller (11):
-      wl12xx: print acx id
-      wl12xx: print the seq_num of rx packet
-      wl12xx: add module_param to trigger BUG() on recovery
-      wl12xx: add beacon_filtering debugfs file
-      wl12xx: don't disconnect on recovery
-      wl12xx: don't use WL1271_SCAN_OPT_PRIORITY_HIGH flag
-      wl12xx: check for ROC on scan_complete
-      wl12xx: add config_hangover command
-      wl12xx: use kstrtoul_from_user
-      wl12xx: declare support for WIPHY_FLAG_AP_UAPSD
-      wl12xx: support p2p interfaces
-
-Luciano Coelho (4):
-      wl12xx: remove deprecated CONFIG_WL12XX_HT flag
-      wl12xx: add support for sched_scan filters
-      wl12xx: increase number of allowed SSIDs in sched_scan
-      wl12xx: ignore sched scan match sets without SSID
-
-drivers/net/wireless/wl12xx/Kconfig   |   10 ---
-drivers/net/wireless/wl12xx/acx.c     |   40 +++++++++++
-drivers/net/wireless/wl12xx/acx.h     |   18 +++++
-drivers/net/wireless/wl12xx/cmd.c     |   17 +++--
-drivers/net/wireless/wl12xx/cmd.h     |    7 ++
-drivers/net/wireless/wl12xx/conf.h    |   23 ++++--
-drivers/net/wireless/wl12xx/debugfs.c |   88 ++++++++++++-----------
-drivers/net/wireless/wl12xx/event.c   |   39 ++++++----
-drivers/net/wireless/wl12xx/init.c    |    5 ++
-drivers/net/wireless/wl12xx/main.c    |   96 +++++++++++++++++++-------
-drivers/net/wireless/wl12xx/ps.c      |    8 ++-
-drivers/net/wireless/wl12xx/rx.c      |    9 ++-
-drivers/net/wireless/wl12xx/scan.c    |  124
-++++++++++++++++++++++-----------
-drivers/net/wireless/wl12xx/tx.c      |   22 ++++--
-drivers/net/wireless/wl12xx/tx.h      |    4 +
-drivers/net/wireless/wl12xx/wl12xx.h  |    8 ++-
-16 files changed, 359 insertions(+), 159 deletions(-)
-
-
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+index c9bf92a..0c41c1c 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+@@ -198,6 +198,11 @@ brcmf_c_show_host_event(struct brcmf_event_msg *event, void *event_data)
+ 		BRCMF_E_PFN_SCAN_COMPLETE, "SCAN_COMPLETE"}
+ 	};
+ 	uint event_type, flags, auth_type, datalen;
++	static u32 seqnum_prev;
++	struct msgtrace_hdr hdr;
++	u32 nblost;
++	char *s, *p;
++
+ 	event_type = be32_to_cpu(event->event_type);
+ 	flags = be16_to_cpu(event->flags);
+ 	status = be32_to_cpu(event->status);
+@@ -348,55 +353,52 @@ brcmf_c_show_host_event(struct brcmf_event_msg *event, void *event_data)
+ 		break;
+ 
+ 	case BRCMF_E_TRACE:
+-		{
+-			static u32 seqnum_prev;
+-			struct msgtrace_hdr hdr;
+-			u32 nblost;
+-			char *s, *p;
+-
+-			buf = (unsigned char *) event_data;
+-			memcpy(&hdr, buf, sizeof(struct msgtrace_hdr));
+-
+-			if (hdr.version != MSGTRACE_VERSION) {
+-				brcmf_dbg(ERROR, "MACEVENT: %s [unsupported version --> brcmf version:%d dongle version:%d]\n",
+-					  event_name,
+-					  MSGTRACE_VERSION, hdr.version);
+-				/* Reset datalen to avoid display below */
+-				datalen = 0;
+-				break;
+-			}
+-
+-			/* There are 2 bytes available at the end of data */
+-			*(buf + sizeof(struct msgtrace_hdr)
+-				 + be16_to_cpu(hdr.len)) = '\0';
+-
+-			if (be32_to_cpu(hdr.discarded_bytes)
+-			    || be32_to_cpu(hdr.discarded_printf))
+-				brcmf_dbg(ERROR, "WLC_E_TRACE: [Discarded traces in dongle --> discarded_bytes %d discarded_printf %d]\n",
+-					  be32_to_cpu(hdr.discarded_bytes),
+-					  be32_to_cpu(hdr.discarded_printf));
+-
+-			nblost = be32_to_cpu(hdr.seqnum) - seqnum_prev - 1;
+-			if (nblost > 0)
+-				brcmf_dbg(ERROR, "WLC_E_TRACE: [Event lost --> seqnum %d nblost %d\n",
+-					  be32_to_cpu(hdr.seqnum), nblost);
+-			seqnum_prev = be32_to_cpu(hdr.seqnum);
+-
+-			/* Display the trace buffer. Advance from \n to \n to
+-			 * avoid display big
+-			 * printf (issue with Linux printk )
+-			 */
+-			p = (char *)&buf[sizeof(struct msgtrace_hdr)];
+-			while ((s = strstr(p, "\n")) != NULL) {
+-				*s = '\0';
+-				printk(KERN_DEBUG"%s\n", p);
+-				p = s + 1;
+-			}
+-			printk(KERN_DEBUG "%s\n", p);
++		buf = (unsigned char *) event_data;
++		memcpy(&hdr, buf, sizeof(struct msgtrace_hdr));
+ 
++		if (hdr.version != MSGTRACE_VERSION) {
++			brcmf_dbg(ERROR,
++				  "MACEVENT: %s [unsupported version --> brcmf"
++				  " version:%d dongle version:%d]\n",
++				  event_name, MSGTRACE_VERSION, hdr.version);
+ 			/* Reset datalen to avoid display below */
+ 			datalen = 0;
++			break;
++		}
++
++		/* There are 2 bytes available at the end of data */
++		*(buf + sizeof(struct msgtrace_hdr)
++			 + be16_to_cpu(hdr.len)) = '\0';
++
++		if (be32_to_cpu(hdr.discarded_bytes)
++		    || be32_to_cpu(hdr.discarded_printf))
++			brcmf_dbg(ERROR,
++				  "WLC_E_TRACE: [Discarded traces in dongle -->"
++				  " discarded_bytes %d discarded_printf %d]\n",
++				  be32_to_cpu(hdr.discarded_bytes),
++				  be32_to_cpu(hdr.discarded_printf));
++
++		nblost = be32_to_cpu(hdr.seqnum) - seqnum_prev - 1;
++		if (nblost > 0)
++			brcmf_dbg(ERROR, "WLC_E_TRACE: [Event lost --> seqnum "
++				  " %d nblost %d\n", be32_to_cpu(hdr.seqnum),
++				  nblost);
++		seqnum_prev = be32_to_cpu(hdr.seqnum);
++
++		/* Display the trace buffer. Advance from \n to \n to
++		 * avoid display big
++		 * printf (issue with Linux printk )
++		 */
++		p = (char *)&buf[sizeof(struct msgtrace_hdr)];
++		while ((s = strstr(p, "\n")) != NULL) {
++			*s = '\0';
++			printk(KERN_DEBUG"%s\n", p);
++			p = s + 1;
+ 		}
++		printk(KERN_DEBUG "%s\n", p);
++
++		/* Reset datalen to avoid display below */
++		datalen = 0;
+ 		break;
+ 
+ 	case BRCMF_E_RSSI:
+@@ -405,8 +407,9 @@ brcmf_c_show_host_event(struct brcmf_event_msg *event, void *event_data)
+ 		break;
+ 
+ 	default:
+-		brcmf_dbg(EVENT, "MACEVENT: %s %d, MAC %s, status %d, reason %d, auth %d\n",
+-			  event_name, event_type, eabuf,
++		brcmf_dbg(EVENT,
++			  "MACEVENT: %s %d, MAC %s, status %d, reason %d, "
++			  "auth %d\n", event_name, event_type, eabuf,
+ 			  (int)status, (int)reason, (int)auth_type);
+ 		break;
+ 	}
+@@ -428,6 +431,7 @@ brcmf_c_host_event(struct brcmf_info *drvr_priv, int *ifidx, void *pktdata,
+ {
+ 	/* check whether packet is a BRCM event pkt */
+ 	struct brcmf_event *pvt_data = (struct brcmf_event *) pktdata;
++	struct brcmf_if_event *ifevent;
+ 	char *event_data;
+ 	u32 type, status;
+ 	u16 flags;
+@@ -459,26 +463,22 @@ brcmf_c_host_event(struct brcmf_info *drvr_priv, int *ifidx, void *pktdata,
+ 
+ 	switch (type) {
+ 	case BRCMF_E_IF:
+-		{
+-			struct brcmf_if_event *ifevent =
+-					(struct brcmf_if_event *) event_data;
+-			brcmf_dbg(TRACE, "if event\n");
+-
+-			if (ifevent->ifidx > 0 &&
+-				 ifevent->ifidx < BRCMF_MAX_IFS) {
+-				if (ifevent->action == BRCMF_E_IF_ADD)
+-					brcmf_add_if(drvr_priv, ifevent->ifidx,
+-						   NULL, event->ifname,
+-						   pvt_data->eth.h_dest,
+-						   ifevent->flags,
+-						   ifevent->bssidx);
+-				else
+-					brcmf_del_if(drvr_priv, ifevent->ifidx);
+-			} else {
+-				brcmf_dbg(ERROR, "Invalid ifidx %d for %s\n",
+-					  ifevent->ifidx, event->ifname);
+-			}
++		ifevent = (struct brcmf_if_event *) event_data;
++		brcmf_dbg(TRACE, "if event\n");
++
++		if (ifevent->ifidx > 0 && ifevent->ifidx < BRCMF_MAX_IFS) {
++			if (ifevent->action == BRCMF_E_IF_ADD)
++				brcmf_add_if(drvr_priv, ifevent->ifidx, NULL,
++					     event->ifname,
++					     pvt_data->eth.h_dest,
++					     ifevent->flags, ifevent->bssidx);
++			else
++				brcmf_del_if(drvr_priv, ifevent->ifidx);
++		} else {
++			brcmf_dbg(ERROR, "Invalid ifidx %d for %s\n",
++				  ifevent->ifidx, event->ifname);
+ 		}
++
+ 		/* send up the if event: btamp user needs it */
+ 		*ifidx = brcmf_ifname2idx(drvr_priv, event->ifname);
+ 		break;
 -- 
-Cheers,
-Luca.
-
+1.7.1
 
 
