@@ -1,41 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56531 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:42477 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751735Ab1IVOEs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 10:04:48 -0400
+	id S932103Ab1ISVVn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 17:21:43 -0400
+Message-ID: <4E77B25D.9070907@openwrt.org> (sfid-20110919_232146_310804_AEF071E4)
+Date: Mon, 19 Sep 2011 23:21:33 +0200
 From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	nataraja@qca.qualcomm.com
-Subject: [PATCH] ath9k: fix a regression in ath9k_ps_restore
-Date: Thu, 22 Sep 2011 08:04:32 -0600
-Message-Id: <1316700272-8656-1-git-send-email-nbd@openwrt.org> (sfid-20110922_160456_257797_6359B287)
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH v2 2/4] ath9k_hw: clean up tx power handling
+References: <1316453903-75710-1-git-send-email-nbd@openwrt.org> <1316453903-75710-2-git-send-email-nbd@openwrt.org> <CAB=NE6XvanRQ6Yje_qHhkfzbLmZn9o5Q+5y1NobJwCyuMLFEvg@mail.gmail.com> <4E77AAFB.1080805@openwrt.org> <CAB=NE6XgSz7zz_ZXaPQEsaue307ipd7Qnzgi5QWr8Y4SS1j=Lg@mail.gmail.com>
+In-Reply-To: <CAB=NE6XgSz7zz_ZXaPQEsaue307ipd7Qnzgi5QWr8Y4SS1j=Lg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After 'ath9k: optimize ath9k_ps_restore', it would only send the device to
-network sleep and not to full sleep anymore, potentially causing more
-battery drain.
+On 2011-09-19 11:14 PM, Luis R. Rodriguez wrote:
+> On Mon, Sep 19, 2011 at 1:50 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
+>>  On 2011-09-19 10:41 PM, Luis R. Rodriguez wrote:
+>>>
+>>>  On Mon, Sep 19, 2011 at 10:38 AM, Felix Fietkau<nbd@openwrt.org>    wrote:
+>>>>
+>>>>    @@ -986,21 +995,15 @@ static void
+>>>>  ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
+>>>>                                                     struct ath9k_channel
+>>>>  *chan,
+>>>>                                                     int16_t *ratesArray,
+>>>>                                                     u16 cfgCtl,
+>>>>    -                                                 u16 AntennaReduction,
+>>>>    -                                                 u16
+>>>>  twiceMaxRegulatoryPower,
+>>>>    +                                                 u16 antenna_reduction,
+>>>>                                                     u16 powerLimit)
+>>>>     {
+>>>>     #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
+>>>>     #define REDUCE_SCALED_POWER_BY_THREE_CHAIN   9 /* 10*log10(3)*2 */
+>>>>
+>>>>    -       struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
+>>>>           struct ar5416_eeprom_def *pEepData =&ah->eeprom.def;
+>>>>           u16 twiceMaxEdgePower = MAX_RATE_POWER;
+>>>>    -       static const u16 tpScaleReductionTable[5] =
+>>>>    -               { 0, 3, 6, 9, MAX_RATE_POWER };
+>>>>    -
+>>>>           int i;
+>>>>    -       int16_t twiceLargestAntenna;
+>>>>           struct cal_ctl_data *rep;
+>>>>           struct cal_target_power_leg targetPowerOfdm, targetPowerCck = {
+>>>>                   0, { 0, 0, 0, 0}
+>>>>    @@ -1012,7 +1015,7 @@ static void
+>>>>  ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
+>>>>           struct cal_target_power_ht targetPowerHt20, targetPowerHt40 = {
+>>>>                   0, {0, 0, 0, 0}
+>>>>           };
+>>>>    -       u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
+>>>>    +       u16 scaledPower = 0, minCtlPower;
+>>>>           static const u16 ctlModesFor11a[] = {
+>>>>                   CTL_11A, CTL_5GHT20, CTL_11A_EXT, CTL_5GHT40
+>>>>           };
+>>>
+>>>  Although we do not use the reg->tp_scale I see no log which explains
+>>>  that it will not, I'm reviewing TPC right now and we do need to
+>>>  support it but its unclear to me yet if we are doing everything
+>>>  correctly in mac80211 / cfg80211 for it. As far as I can see the
+>>>  tp_scale stuff is used only if the default is not set, but as you
+>>>  noted its always set to the default. I am trying to review the
+>>>  internal code to see under what cases this changes but its hard to
+>>>  review. Although I'd like to see this removed I'd prefer to treat this
+>>>  separately from the cleanup you are doing, which I do find highly
+>>>  valuable.
+>>
+>>  Why keep it? All it does is subtract something from the max regulatory power
+>>  level, so it does not make any sense to keep this crap duplicated in all the
+>>  the eeprom files.
+>
+> You're right that they do seem to use the same array values, but the
+> fact that its all common code is separate from the question of
+> removing it.
+Right now it's dead code. If we need it later, we should just rewrite 
+it. I think carring forward old dead code just in case we might use it 
+later is not a good idea.
 
-Reported-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+>>  If we ever do need it (which I doubt),
+>
+> I suspect this is needed for APs that support DFS and since we do not
+> yet support DFS I do not think this is used. I am not 100% certain yet
+> but at least in my review in the last few minutes it seems the AP can
+> decide to change TPC constraints dynamically based on TPC reports from
+> the STAs. I suspec this is where this comes in to play.
+I looked at the other ath driver and I see no indication that it's 
+related to DFS in any way. Even if it is, it doesn't even belong in 
+ath9k. Any form of tx power reduction can be handled by cfg80211/mac80211.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index ee39702..616bf16 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -133,7 +133,7 @@ void ath9k_ps_restore(struct ath_softc *sc)
- 	ath_hw_cycle_counters_update(common);
- 	spin_unlock(&common->cc_lock);
- 
--	ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
-+	ath9k_hw_setpower(sc->sc_ah, mode);
- 
-  unlock:
- 	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
--- 
-1.7.3.2
+>>  it needs to be added in a different place anyway.
+>
+> If its card specific so I do not think we can move any of this
+> commonly into cfg80211 / mac80211.
+It's not card specific in any way.
 
+> One thing is to simply common code, another is to remove code which we
+> is not enabled right now, but may be later. I think we should treat
+> these separately.
+I don't think we'll ever enable this, and it's not significant enough to 
+keep it around.
+
+- Felix
