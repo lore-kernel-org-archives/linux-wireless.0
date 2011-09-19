@@ -1,88 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f42.google.com ([209.85.216.42]:37930 "EHLO
-	mail-qw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751242Ab1ITXEy convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:34447 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754250Ab1ISQBC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 19:04:54 -0400
-Received: by qwm42 with SMTP id 42so1270158qwm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 16:04:54 -0700 (PDT)
+	Mon, 19 Sep 2011 12:01:02 -0400
+Received: by iaqq3 with SMTP id q3so5453359iaq.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 09:01:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4E791992.2090406@openwrt.org>
-References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com>
- <loom.20110918T004437-426@post.gmane.org> <1316437459.5995.29.camel@jlt3.sipsolutions.net>
- <36569806.Rgjanm0GiI@alex-1> <1316521312.3953.27.camel@jlt3.sipsolutions.net>
- <CAB=NE6VDSTAKK0pmyBOz6hw1pbxo7U6dxbrvg_F-y6CDB0paKw@mail.gmail.com>
- <4E78D990.3090601@openwrt.org> <CAB=NE6VZeCViBZA9++NcgZ2JcDppbp3OuagRVK02ENjdb-MAQA@mail.gmail.com>
- <4E78DF6F.3060304@openwrt.org> <CAB=NE6XqT_ZUV7F+0ZvCs-WgxZnJn3onMiWNtBi=+eCkMZMgPA@mail.gmail.com>
- <4E78EA05.6000005@openwrt.org> <CAB=NE6WhaNpjpernCGY9skU+e+cUurPxi7r-FKaeH5iybeqGEg@mail.gmail.com>
- <4E78FFEB.1090301@openwrt.org> <CAB=NE6W76dg_KaN6jB-OQ2xf7Xx93a4ruqzQDwg5+rcwOcSfXg@mail.gmail.com>
- <4E790B3B.9090004@openwrt.org> <CAB=NE6UYY5sbpmkTHPx1LVFh6SC0QebqhKcpYCawZryvttOS=A@mail.gmail.com>
- <4E791992.2090406@openwrt.org>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 20 Sep 2011 16:04:34 -0700
-Message-ID: <CAB=NE6Xo3R9zmqhNY9gL8vsRhYvg5d7J5-7nN3RQ7Y5yDUDAkA@mail.gmail.com> (sfid-20110921_010458_445472_CB69CB6A)
-Subject: Re: [PATCH v3 3/3] mac80211: Add HT operation modes for IBSS
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Javier Cardona <javier@cozybit.com>,
-	Alexander Simon <an.alexsimon@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1316433905.5995.4.camel@jlt3.sipsolutions.net>
+References: <1316347394-21276-1-git-send-email-eliad@wizery.com>
+	<1316408970.2157.9.camel@cumari>
+	<1316433905.5995.4.camel@jlt3.sipsolutions.net>
+Date: Mon, 19 Sep 2011 19:01:01 +0300
+Message-ID: <CAB3XZEfxr6T6LyBOkmoYHKo5GfAAN_=JTK3au=LvzsPxsVJbLA@mail.gmail.com> (sfid-20110919_180106_584262_98C512B0)
+Subject: Re: [PATCH] mac80211: add ieee80211_set_dyn_ps_timeout()
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 20, 2011 at 3:54 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2011-09-21 12:37 AM, Luis R. Rodriguez wrote:
->>
->> On Tue, Sep 20, 2011 at 2:52 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
->>>
->>>  On 2011-09-20 11:26 PM, Luis R. Rodriguez wrote:
->>>>
->>>>  On Tue, Sep 20, 2011 at 2:04 PM, Felix Fietkau<nbd@openwrt.org>
->>>>  wrote:
->>>>>
->>>>>   If we want to properly enforce Annex J channel pairs, this needs to
->>>>>   be moved to cfg80211.
->>>>
->>>>  This does not still address the issue of one peer finding out it
->>>>  cannot deal with an HT40 pair and correcting the topology and
->>>>  propagating this out. Not yet sure if for 802.11ac we'll need
->>>>  something similar but its worth considering.
->>>
->>>  Don't think of it as a topology. Each node makes its own decisions about
->>>  HT40+/HT40-/HT20.
->>
->> OK lets go with an example.
->>
->> Node A: HT40+
->>    Primary: 5785 (157)
->>    Extension: 5805 (161)
->>
->> Node B: HT20 as it finds a legacy AP with on 5805.
->>   Channel: 5785 (157)
->>
->> Node C: HT40-
->>   Primary:  5785 (157)
->>   Extension: 5765 (153)
->>
->> So we want to support this setup?
->>
->> What if the network changes and we cannot use the original HT40 pair
->> now but we can later? This applies even to today's hostapd AP setup
->> and more rhetorical.
+On Mon, Sep 19, 2011 at 3:05 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2011-09-19 at 08:09 +0300, Luciano Coelho wrote:
+>> On Sun, 2011-09-18 at 15:03 +0300, Eliad Peller wrote:
+>> > In some cases the driver might want to change the
+>> > default dynamic ps timeout (e.g. coex activity adds
+>> > latency to the rx/tx path, which might result in
+>> > redundant psm entrance).
 >
-> Whenever a node is not alone in an IBSS, it must keep the primary channel
-> the same to be able to talk to its neighbors. If it cannot use its HT40
-> opmode because of overlap checks then it should just gracefully fall back to
-> HT20. Refusal to join or randomly changing the primary channel would create
-> big problems for bigger deployments, IBSS merging should always be
-> considered potentially unreliable.
+>> Let's see what Johannes is going to say about this change in mac80211,
+>> but IIRC this timeout used to exist with WEXT, but it was not
+>> implemented in nl80211. �We (at Nokia, probably Juuso) tried to
+>> implement it a long time ago, but after some discussions with Johannes,
+>> it was decided that this value wouldn't be settable from userspace at
+>> least. �I don't know if it was considered setting it from the driver
+>> side, though.
 >
-> Most big ad-hoc mesh deployments use fixed channel and fixed cell-id for
-> that reason.
+> Yeah it's a good question ... but in this case there actually is some
+> actual reason for it -- I think it's probably used for BT coexist?
+> Obviously the user can't make an informed choice in that scenario, but
+> the device might actually be able to? My biggest objection back then was
+> that the user has no real reason to play with it, and the latency
+> properties of it are better done in other ways.
+>
+i agree.
+however, note that the network_latency can only set the dynamic ps
+on/off. it can't control the timeout.
 
-Agreed, the above example shows not the primary changing but the
-extension channel changing. I can't think of an issue with it at this
-moment though.
+> Which actually makes me think that having a completely fixed value from
+> the driver might not be a good thing? I mean, yes, we allow wext to
+> override it, but really we want this to be controlled by the latency
+> requirements I think. That's obviously something of a pipe dream right
+> now since nothing seems to ever use that, but ...
+>
+> So anyway, do we really want this to be completely fixed by the driver?
+> Maybe a range would be better?
+>
+i guess it might be better. but as it doesn't have any real use, and
+the code is over-complicated anyway, i think we can leave it for now
+:)
 
-  Luis
+Eliad.
