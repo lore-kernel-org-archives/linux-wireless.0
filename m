@@ -1,24 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37315 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932085Ab1ISS3y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 14:29:54 -0400
-Message-ID: <4E778A1C.5020206@openwrt.org> (sfid-20110919_202957_951261_A6670E11)
-Date: Mon, 19 Sep 2011 20:29:48 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-qw0-f42.google.com ([209.85.216.42]:47365 "EHLO
+	mail-qw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756451Ab1ISTEE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 15:04:04 -0400
+Received: by qwi4 with SMTP id 4so18175229qwi.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 12:04:04 -0700 (PDT)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH v2 3/4] ath: remove ath_regulatory::current_rd_ext
-References: <1316453903-75710-1-git-send-email-nbd@openwrt.org> <1316453903-75710-2-git-send-email-nbd@openwrt.org> <1316453903-75710-3-git-send-email-nbd@openwrt.org> <CAB=NE6UhC=am2aVXwf+v4g7ME_49Nv47SZwSNetLgJpRV-=BkA@mail.gmail.com>
-In-Reply-To: <CAB=NE6UhC=am2aVXwf+v4g7ME_49Nv47SZwSNetLgJpRV-=BkA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20110919190042.9487F40644@repository3.orbit-lab.org>
+References: <20110919190042.9487F40644@repository3.orbit-lab.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 19 Sep 2011 12:03:44 -0700
+Message-ID: <CAB=NE6UhfNCmuGzARs-HvXAByvecYWw-P54GdeV9x8vJhmgn_A@mail.gmail.com> (sfid-20110919_210409_583051_882D1836)
+Subject: Re: Compat-wireless release for 2011-09-19 is baked
+To: Compat-wireless cronjob account <compat@orbit-lab.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-09-19 8:18 PM, Luis R. Rodriguez wrote:
-> On Mon, Sep 19, 2011 at 10:38 AM, Felix Fietkau<nbd@openwrt.org>  wrote:
->>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+On Mon, Sep 19, 2011 at 12:00 PM, Compat-wireless cronjob account
+<compat@orbit-lab.org> wrote:
+> From git://github.com/mcgrof/compat-wireless
+>   d95cf13..a898f60  master     -> origin/master
+>  * [new tag]         compat-wireless-2011-09-19 -> compat-wireless-2011-09-19
+> From git://github.com/sfrothwell/linux-next
+>  + dc978c7...7f694ea akpm-end   -> origin/akpm-end  (forced update)
+>   9e79e3e..b0e7031  akpm-start -> origin/akpm-start
+>  + 95a6714...28ad777 master     -> origin/master  (forced update)
+>   9e79e3e..b0e7031  stable     -> origin/stable
+>  * [new tag]         next-20110919 -> next-20110919
+> From git://github.com/sfrothwell/linux-next
+>  * [new tag]         v3.1-rc5   -> v3.1-rc5
+>  * [new tag]         v3.1-rc6   -> v3.1-rc6
 >
-> Can you document on the patch commit log why you do remove this.
-Because it's unused
+> compat-wireless code metrics
+>
+>    811531 - Total upstream lines of code being pulled
+>      2397 - backport code changes
+>      2086 - backport code additions
+>       311 - backport code deletions
+>      8527 - backport from compat module
+>     10924 - total backport code
+>    1.3461 - % of code consists of backport work
+
+OK we're back on track, Stephen gave me a github URL that worked. I'll
+be using that until further notice.
+
+  Luis
+
+> ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
+> rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+> rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
+
+This is korg's DNS, I'll switch this to use "linuxwireless.org" for
+now which still does resolve appropriately.
+
+  Luis
