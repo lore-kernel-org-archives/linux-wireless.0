@@ -1,51 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f180.google.com ([74.125.82.180]:37153 "EHLO
-	mail-wy0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751586Ab1IQBd7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 21:33:59 -0400
-Received: by wyj26 with SMTP id 26so5320792wyj.11
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 18:33:58 -0700 (PDT)
-MIME-Version: 1.0
-From: Simeon Nifos <archwndas@googlemail.com>
-Date: Fri, 16 Sep 2011 18:33:38 -0700
-Message-ID: <CAL1uj0zX5gGHkQny7fE3xrVm9HgP3PvC+ff2g7sunzNvXzgu=g@mail.gmail.com> (sfid-20110917_033411_943517_80AC4CCE)
-Subject: deactivating one of the two wireless connections
+Received: from nbd.name ([46.4.11.11]:32817 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753682Ab1ISRim (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 13:38:42 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v2 3/4] ath: remove ath_regulatory::current_rd_ext
+Date: Mon, 19 Sep 2011 19:38:22 +0200
+Message-Id: <1316453903-75710-3-git-send-email-nbd@openwrt.org> (sfid-20110919_193845_633964_181523D0)
+In-Reply-To: <1316453903-75710-2-git-send-email-nbd@openwrt.org>
+References: <1316453903-75710-1-git-send-email-nbd@openwrt.org>
+ <1316453903-75710-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath.h           |    1 -
+ drivers/net/wireless/ath/ath9k/hw.c      |    5 -----
+ drivers/net/wireless/ath/carl9170/main.c |    1 -
+ 3 files changed, 0 insertions(+), 7 deletions(-)
 
-I have a USB wireless card apart from the laptops one. The Gnome
-NetworkManager sees both when I plugin the USB wireless adapter. The
-problem is that for saving power I would like to turn off the wireless
-adapter of my laptop. However, if I use the laptops switch that turns
-off laptops wireless, the Network Manager, turns off both connections
-saying: Deactivated by Hardware switch or something similar.
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index bb71b4f..908fdbc 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -72,7 +72,6 @@ struct ath_regulatory {
+ 	u16 country_code;
+ 	u16 max_power_level;
+ 	u16 current_rd;
+-	u16 current_rd_ext;
+ 	int16_t power_limit;
+ 	struct reg_dmn_pair_mapping *regpair;
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 3255b5b..fbb69e4 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2067,11 +2067,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	eeval = ah->eep_ops->get_eeprom(ah, EEP_REG_0);
+ 	regulatory->current_rd = eeval;
+ 
+-	eeval = ah->eep_ops->get_eeprom(ah, EEP_REG_1);
+-	if (AR_SREV_9285_12_OR_LATER(ah))
+-		eeval |= AR9285_RDEXT_DEFAULT;
+-	regulatory->current_rd_ext = eeval;
+-
+ 	if (ah->opmode != NL80211_IFTYPE_AP &&
+ 	    ah->hw_version.subvendorid == AR_SUBVENDOR_ID_NEW_A) {
+ 		if (regulatory->current_rd == 0x64 ||
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index af351ec..6786124 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1894,7 +1894,6 @@ static int carl9170_parse_eeprom(struct ar9170 *ar)
+ 		ar->hw->channel_change_time = 80 * 1000;
+ 
+ 	regulatory->current_rd = le16_to_cpu(ar->eeprom.reg_domain[0]);
+-	regulatory->current_rd_ext = le16_to_cpu(ar->eeprom.reg_domain[1]);
+ 
+ 	/* second part of wiphy init */
+ 	SET_IEEE80211_PERM_ADDR(ar->hw, ar->eeprom.mac_address);
+-- 
+1.7.3.2
 
-The problem is that I usually want to connect with my wireless USB
-adapter which has a directional antenna and provides better signal and
-higher download speeds. However, after some minutes automatically by
-itself the laptops adapter connects to the same access point and then
-I lose the connection. I can do something like:
-
-# ifconfig wlan0 down
-
-and deactivate the laptops adapter, but this is a simple ad-hoc solution.
-
-My impression is that the hardware switch on the keyboard of the
-laptop should not control all wireless connections. It is entirely
-wrong. If I wnt my USB connection to be deactivated I just unplug it.
-If I want to use it I just plug it in. This is how things should be.
-Removable devices should be powered on when connected and powered off
-when disconnected. For as long as it remains connected that means I
-want it to function as it is supposed to do so. I do not see why
-switching off my laptop's device switches off every other wireless
-device.
-
-Is there any easy fix for that?
-
-Cheers,
-Archwn.
