@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out1.tiscali.nl ([195.241.79.176]:37198 "EHLO
-	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752459Ab1IDI2l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Sep 2011 04:28:41 -0400
-Subject: Re: [iwl4965] Microcode SW error detected
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Bernhard Schmidt <bschmidt@freebsd.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20110607145435.GA5179@redhat.com>
-References: <1306151106.2066.60.camel@x61.thuisdomein>
-	 <201106070832.49048.bschmidt@freebsd.org>
-	 <20110607145435.GA5179@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 04 Sep 2011 10:28:35 +0200
-Message-ID: <1315124915.5239.21.camel@x61.thuisdomein> (sfid-20110904_102845_905822_2FEA4EC7)
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:35290 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753055Ab1ISRjv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 13:39:51 -0400
+Message-ID: <4E777E5D.7040207@openwrt.org> (sfid-20110919_193958_891251_9705E58F)
+Date: Mon, 19 Sep 2011 19:39:41 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	rodrigue@qca.qualcomm.com
+Subject: Re: [PATCH 12/12] ath9k: do not insert padding into tx buffers on
+ AR9380+
+References: <1316028267-34187-5-git-send-email-nbd@openwrt.org> <1316028267-34187-6-git-send-email-nbd@openwrt.org> <1316028267-34187-7-git-send-email-nbd@openwrt.org> <1316028267-34187-8-git-send-email-nbd@openwrt.org> <1316028267-34187-9-git-send-email-nbd@openwrt.org> <1316028267-34187-10-git-send-email-nbd@openwrt.org> <1316028267-34187-11-git-send-email-nbd@openwrt.org> <1316028267-34187-12-git-send-email-nbd@openwrt.org> <20110919144002.GA22040@vmraj-lnx.users.atheros.com> <4E7759CA.4010100@openwrt.org> <20110919164714.GA1234@vmraj-lnx.users.atheros.com>
+In-Reply-To: <20110919164714.GA1234@vmraj-lnx.users.atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-06-07 at 16:54 +0200, Stanislaw Gruszka wrote:
-> That could be useful hint, we do not scan chan by chan, but we
-> have thing called "plcp check health", which "restart radio"
-> by requesting one channel scan. So perhaps disabling that could
-> help.
-> 
-> [...]
->
-> diff --git a/drivers/net/wireless/iwlegacy/iwl-rx.c b/drivers/net/wireless/iwlegacy/iwl-rx.c
-> index 654cf23..6062da0 100644
-> --- a/drivers/net/wireless/iwlegacy/iwl-rx.c
-> +++ b/drivers/net/wireless/iwlegacy/iwl-rx.c
-> @@ -230,6 +230,8 @@ EXPORT_SYMBOL(iwl_legacy_rx_spectrum_measure_notif);
->  void iwl_legacy_recover_from_statistics(struct iwl_priv *priv,
->  				struct iwl_rx_packet *pkt)
->  {
-> +	return;
-> +
->  	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
->  		return;
->  	if (iwl_legacy_is_any_associated(priv)) {
+On 2011-09-19 6:47 PM, Rajkumar Manoharan wrote:
+> On Mon, Sep 19, 2011 at 05:03:38PM +0200, Felix Fietkau wrote:
+>>  On 2011-09-19 4:40 PM, Rajkumar Manoharan wrote:
+>>  >On Wed, Sep 14, 2011 at 09:24:27PM +0200, Felix Fietkau wrote:
+>>  >>  With the new EDMA descriptor format, a single descriptor can contain up
+>>  >>  to four buffer pointers. By splitting the buffer into two parts, we can
+>>  >>  let the hardware add the padding internally instead of using memmove on
+>>  >>  the skb data.
+>>  >>
+>>  >>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>>  >>  ---
+>>  >>   drivers/net/wireless/ath/ath9k/xmit.c |   56 +++++++++++++++++++++-----------
+>>  >>   1 files changed, 37 insertions(+), 19 deletions(-)
+>>  >>
+>>  >Felix,
+>>  >
+>>  >This patch again introduced "ath: Failed to stop TX DMA!" for AR9380+ chips.
+>>  >After reverting this, the errors are completely gone away. Please look into this ASAP.
+>>  How frequent are these errors in your tests? I ran several tests on
+>>  embedded hardware with AR9380 and didn't notice any issues.
+> With this patch after the association and in idle state, the connection seems to be very unstable.
+> Please refer the following log.
+OK. This patch should be reverted then until we figure out what's going on.
 
-0) I finally got around to applying this patch (to v3.0.4).
-
-1) After a few days of normal usage (with quite a bit of suspend and
-resume cycles) this error was again triggered. So avoiding
-check_plcp_health() doesn't seem to help.
-
-2) I never send you the debug output (ie, output after doing "modprobe
-iwl4965 debug=0x47ffffff"), did I?
-
-
-Paul Bolle
-
+- Felix
