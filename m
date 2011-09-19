@@ -1,47 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:37653 "EHLO bues.ch"
+Received: from nbd.name ([46.4.11.11]:32819 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752461Ab1IVKjJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 06:39:09 -0400
-Date: Thu, 22 Sep 2011 12:38:56 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Arend Van Spriel <arend@broadcom.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Brett Rudley <brudley@broadcom.com>, Greg KH <greg@kroah.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
- patch #2
-Message-ID: <20110922123856.1159e258@milhouse> (sfid-20110922_123915_365582_4A4D8B9F)
-In-Reply-To: <CACna6rwCWhbWm28cLFxPkLmDZO0sOHuLTSb=-rLwhW2ZV4AZ0w@mail.gmail.com>
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-	<20110920130338.GA9885@kroah.com>
-	<20110920132203.GB7800@tuxdriver.com>
-	<20110920140020.GA11386@kroah.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com>
-	<CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
-	<4E7AD9E6.1010700@hauke-m.de>
-	<400C43189542CE41BC0A5B252FC90136BC0CC8ABD8@SJEXCHCCR02.corp.ad.broadcom.com>
-	<CACna6rwCWhbWm28cLFxPkLmDZO0sOHuLTSb=-rLwhW2ZV4AZ0w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	id S1754183Ab1ISRim (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 13:38:42 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v2 4/4] ath9k_hw: remove EEP_REG_1
+Date: Mon, 19 Sep 2011 19:38:23 +0200
+Message-Id: <1316453903-75710-4-git-send-email-nbd@openwrt.org> (sfid-20110919_193850_934385_8DEEF030)
+In-Reply-To: <1316453903-75710-3-git-send-email-nbd@openwrt.org>
+References: <1316453903-75710-1-git-send-email-nbd@openwrt.org>
+ <1316453903-75710-2-git-send-email-nbd@openwrt.org>
+ <1316453903-75710-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 22 Sep 2011 11:08:11 +0200
-Rafał Miłecki <zajec5@gmail.com> wrote:
+It was previously used for current_rd_ext
 
-> If we assume we will have the same level support in both drivers soon,
-> then what are the differences? brcmsmac seems to be preferred only
-> because Broadcom guys like it.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 --
+ drivers/net/wireless/ath/ath9k/eeprom.h        |    1 -
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c     |    2 --
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c   |    2 --
+ drivers/net/wireless/ath/ath9k/eeprom_def.c    |    2 --
+ 5 files changed, 0 insertions(+), 9 deletions(-)
 
-Guys, can we _please_ get back to a technical discussion?
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index d7a5ca7..bf08acc 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -2995,8 +2995,6 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
+ 		return get_unaligned_be16(eep->macAddr + 4);
+ 	case EEP_REG_0:
+ 		return le16_to_cpu(pBase->regDmn[0]);
+-	case EEP_REG_1:
+-		return le16_to_cpu(pBase->regDmn[1]);
+ 	case EEP_OP_CAP:
+ 		return pBase->deviceCap;
+ 	case EEP_OP_MODE:
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 085d3ba..291489b 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -225,7 +225,6 @@ enum eeprom_param {
+ 	EEP_MAC_MID,
+ 	EEP_MAC_LSW,
+ 	EEP_REG_0,
+-	EEP_REG_1,
+ 	EEP_OP_CAP,
+ 	EEP_OP_MODE,
+ 	EEP_RF_SILENT,
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index ab6811d..9a7520f 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -322,8 +322,6 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
+ 		return get_unaligned_be16(pBase->macAddr + 4);
+ 	case EEP_REG_0:
+ 		return pBase->regDmn[0];
+-	case EEP_REG_1:
+-		return pBase->regDmn[1];
+ 	case EEP_OP_CAP:
+ 		return pBase->deviceCap;
+ 	case EEP_OP_MODE:
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index 90d771f..4f5c50a 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -308,8 +308,6 @@ static u32 ath9k_hw_ar9287_get_eeprom(struct ath_hw *ah,
+ 		return get_unaligned_be16(pBase->macAddr + 4);
+ 	case EEP_REG_0:
+ 		return pBase->regDmn[0];
+-	case EEP_REG_1:
+-		return pBase->regDmn[1];
+ 	case EEP_OP_CAP:
+ 		return pBase->deviceCap;
+ 	case EEP_OP_MODE:
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index e175e20..81e6296 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -415,8 +415,6 @@ static u32 ath9k_hw_def_get_eeprom(struct ath_hw *ah,
+ 		return get_unaligned_be16(pBase->macAddr + 4);
+ 	case EEP_REG_0:
+ 		return pBase->regDmn[0];
+-	case EEP_REG_1:
+-		return pBase->regDmn[1];
+ 	case EEP_OP_CAP:
+ 		return pBase->deviceCap;
+ 	case EEP_OP_MODE:
 -- 
-Greetings, Michael.
+1.7.3.2
+
