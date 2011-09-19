@@ -1,99 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3466 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756107Ab1IPT20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 15:28:26 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 11/19] staging: brcm80211: fixed sparse endianness
- warnings on fullmac scb pars
-Date: Fri, 16 Sep 2011 12:28:00 -0700
-Message-ID: <1316201288-29635-12-git-send-email-frankyl@broadcom.com> (sfid-20110916_212846_287210_0B9F9CF8)
-In-Reply-To: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
-References: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:38785 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751114Ab1ISPqc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 11:46:32 -0400
+Received: by fxe4 with SMTP id 4so4041245fxe.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 08:46:31 -0700 (PDT)
+From: Alexander Simon <an.alexsimon@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] mac80211: Add HT operation modes for IBSS
+Date: Mon, 19 Sep 2011 17:46:27 +0200
+Message-ID: <36569806.Rgjanm0GiI@alex-1> (sfid-20110919_174635_769341_BA91F565)
+In-Reply-To: <1316437459.5995.29.camel@jlt3.sipsolutions.net>
+References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com> <loom.20110918T004437-426@post.gmane.org> <1316437459.5995.29.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Wow. I've been looking for anything regarding HT IBSS in the standard but I 
+must confess that I found nothing.
+And, I must confess this is more work than I first expected.
 
-Structure that is sent to the dongle has been annotated.
+Of course I agree to conforming to the standard.
+9.13.3.1 and 11.5.1.1 should not be too difficult to implement and that sould 
+be done.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd.h         |    4 ++--
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   13 ++++++-------
- 2 files changed, 8 insertions(+), 9 deletions(-)
+I need some help understanding 11.14.2 and 10.3.2.2.2. (11.1.3.4 seems to 
+explain them somewhat easier in words)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index c34cc7b..af0ad1f 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -535,8 +535,8 @@ struct brcmf_wsec_key_le {
- };
- 
- /* Used to get specific STA parameters */
--struct brcmf_scb_val {
--	u32 val;
-+struct brcmf_scb_val_le {
-+	__le32 val;
- 	u8 ea[ETH_ALEN];
- };
- 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 67955d3..3b0c1a3 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -1327,7 +1327,7 @@ brcmf_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
- 		       u16 reason_code)
- {
- 	struct brcmf_cfg80211_priv *cfg_priv = wiphy_to_cfg(wiphy);
--	struct brcmf_scb_val scbval;
-+	struct brcmf_scb_val_le scbval;
- 	s32 err = 0;
- 
- 	WL_TRACE("Enter. Reason code = %d\n", reason_code);
-@@ -1336,11 +1336,10 @@ brcmf_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
- 
- 	clear_bit(WL_STATUS_CONNECTED, &cfg_priv->status);
- 
--	scbval.val = reason_code;
- 	memcpy(&scbval.ea, brcmf_read_prof(cfg_priv, WL_PROF_BSSID), ETH_ALEN);
--	scbval.val = cpu_to_le32(scbval.val);
-+	scbval.val = cpu_to_le32(reason_code);
- 	err = brcmf_dev_ioctl(dev, BRCMF_C_DISASSOC, &scbval,
--			sizeof(struct brcmf_scb_val));
-+			      sizeof(struct brcmf_scb_val_le));
- 	if (unlikely(err))
- 		WL_ERR("error (%d)\n", err);
- 
-@@ -1771,7 +1770,7 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *dev,
- 			u8 *mac, struct station_info *sinfo)
- {
- 	struct brcmf_cfg80211_priv *cfg_priv = wiphy_to_cfg(wiphy);
--	struct brcmf_scb_val scb_val;
-+	struct brcmf_scb_val_le scb_val;
- 	int rssi;
- 	s32 rate;
- 	s32 err = 0;
-@@ -1803,9 +1802,9 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *dev,
- 	}
- 
- 	if (test_bit(WL_STATUS_CONNECTED, &cfg_priv->status)) {
--		scb_val.val = 0;
-+		scb_val.val = cpu_to_le32(0);
- 		err = brcmf_dev_ioctl(dev, BRCMF_C_GET_RSSI, &scb_val,
--				sizeof(struct brcmf_scb_val));
-+				      sizeof(struct brcmf_scb_val_le));
- 		if (unlikely(err))
- 			WL_ERR("Could not get rssi (%d)\n", err);
- 
--- 
-1.7.1
+10.3.2.2.2 tells to adopt the HT Info IE or none if none found ("else null"), 
+which means to disable HT.
+Then, 11.14.2 says I should use "the most common value" for the extension 
+channel, which implies that the HT Info could diverge. This contradicts the 
+previous statement...
+
+Let's say we'd adopt the HT Info:
+We may join the HT IBSS from a legacy station. Logically, we would disable HT 
+even if there are stations that have HT enabled.
+
+We also could use the most common value, again joining from a legacy STA:
+We must be constantly watching and saving IEs and calculate percentages for 
+them. Over which time window? In larger networks, this could mean several 
+beacons until this homogenization happened, especially in changing network 
+environments of mobile devices. When the network is using an HT Mode we aren't 
+capable of, should we drop HT or even leave the IBSS?
+
+The problem just is that the TSFs are already the same - we have no chance to 
+tell which HT configuration is the oder one.
+
+My first patch was going in that direction (no most-recent algorithm, just the 
+first HT Info received is adopted), which quite some work, had an 
+unpredictable behaviour, needed to change skbs on the fly, etc...
+
+With all this text I'm just trying to say that it would be quite some work and 
+maybe the resulting code would still be ... problematic.
+As broadcasting always happens in legacy mode, I see no problem having a 
+inhomogeneous HT configuration.
 
 
+If we want homogenization (I'll just call it that way) I'd like to propose my 
+idea:
+When joining, adopt the most common HT config out there. Save the number of 
+stations using that configuration, including itself (variable num_configs).
+If no HT config found after scanning, create one, setting num_configs to 0.
+When another configuration shows up, compare num_configs to the count of that 
+configuration (should be 1 as it is unlikely that more than one config will 
+show up within beacon_intervall of typically 100ms).
+A station that created its own config will always adopt another one (as 
+num_configs == 0), but a station that has already changed won't (num_configs > 
+0). 
+Constantly update num_configs. Eg having 4 stations seeing each other should 
+result in all stations having num_configs = 4. One STA leaving -> num_config = 
+3 and so on.
+This way we could limit the uncontrolled growth somewhat.
+
+I'll apreciate any comments on this.
+
+Thanks, Alex
