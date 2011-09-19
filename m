@@ -1,63 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:38718 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935225Ab1IOWgf (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:43936 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751054Ab1ISHHq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 18:36:35 -0400
-Received: by fxe4 with SMTP id 4so1094368fxe.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Sep 2011 15:36:34 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Harshal Chhaya <harshal@gmail.com>
-Subject: Re: Latency and connection problems with a carl9170-based AP
-Date: Fri, 16 Sep 2011 00:36:19 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <CAJ8GFOgNRAr7LvnO8f0Y8uvkQdwhz7uUXRQ6BXomjO05RiiYjg@mail.gmail.com> <201109141932.02929.chunkeey@googlemail.com> <CAJ8GFOg-sac_+5xn95rJkkxcUgXttUdC=qUtQ_qcw+pYrcpNuA@mail.gmail.com>
-In-Reply-To: <CAJ8GFOg-sac_+5xn95rJkkxcUgXttUdC=qUtQ_qcw+pYrcpNuA@mail.gmail.com>
+	Mon, 19 Sep 2011 03:07:46 -0400
+Received: by iaqq3 with SMTP id q3so5007998iaq.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 00:07:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201109160036.19908.chunkeey@googlemail.com> (sfid-20110916_003639_041711_D49790E9)
+In-Reply-To: <1316409710.2157.18.camel@cumari>
+References: <1316347759-22030-1-git-send-email-eliad@wizery.com>
+	<1316347759-22030-2-git-send-email-eliad@wizery.com>
+	<1316409710.2157.18.camel@cumari>
+Date: Mon, 19 Sep 2011 10:07:46 +0300
+Message-ID: <CAB3XZEcKsFZfpJWEV5k3Q5HY68Zr9f4uVDLs5tvFJLOKxeoC1g@mail.gmail.com> (sfid-20110919_090748_857342_49A9B0A3)
+Subject: Re: [PATCH 2/2] wl12xx: handle CHANGE_AUTO_MODE_TIMEOUT_EVENT_ID
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, September 15, 2011 11:37:58 PM Harshal Chhaya wrote:
-> On Wed, Sep 14, 2011 at 12:32 PM, Christian Lamparter
-> <chunkeey@googlemail.com> wrote:
-> > On Wednesday, September 14, 2011 01:19:59 PM Harshal Chhaya wrote:
-> >> Most of the disconnects seem to be caused by beacons that update the
-> >> TIM IE but not the overall length. The result is a corrupted RSN IE
-> >> (e.g. the IE length says 20 bytes but the IE is only 19 bytes in size)
-> >> which causes the clients to disconnect. This problem lasts for only
-> >> one beacon (i.e. the next beacon has the right size) but it is enough
-> >> to cause the clients to disconnect. Is there a way to fix this?
->> Now that is really interesting. Do you know if the TIM IE is generated
->> properly by ieee80211_beacon_add_tim in net/mac80211/tx.c?
-> 
-> I don't know if TIM IE is valid but a change in size of this IE causes
-> the problem. Do you need more details or packet captures or something
-> else to understand the problem better?
-There's a 6 ms window between the TBTT event and beacon xmit. Most x86
-[which have a USB port] and all AMD64 are fast enough to react in time.
-Do you think you can check if your embedded system is fast enough?
+On Mon, Sep 19, 2011 at 8:21 AM, Luciano Coelho <coelho@ti.com> wrote:
+> On Sun, 2011-09-18 at 15:09 +0300, Eliad Peller wrote:
+>> The fw sends the CHANGE_AUTO_MODE_TIMEOUT_EVENT_ID event
+>> when it wants the driver to increase the dynamic ps (auto-mode)
+>> timeout (or restore the original timeout).
+>>
+>> unmask CHANGE_AUTO_MODE_TIMEOUT_EVENT_ID, and increase/restore
+>> the dynamic ps default timeout upon getting this event.
+>>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> ---
+>
+> Okay, now I see you're doing it automatically here (I should read all
+> the series before commenting :P).  Anyway, do we really need the debugfs
+> stuff? It's okay to make it readable, but I still don't see why we need
+> to write.
+>
+i used the debugfs entry for debugging.
+i don't mind dropping it.
 
-An alternative approach we could reorder the TIM IE within the beacon
-and put it at the end. This step reduces the delta between the old
-and new beacon and prevents the corruption.
-> >> Another problem when power save is enabled is the large and
-> >> unpredictable latency. I understand how enabling power save can
-> >> increase latency but my ping times go from 3-4 ms without power save
-> >> to a wide range of 3 ms - 3 s after I enable power save. I am trying
-> >> smaller beacon intervals to reduce this latency but even at a beacon
-> >> interval of 25ms, I get ping times of up to ~400 ms. How do I reduce
-> >> this wide variation in latency.
-> > What's the listen interval of your stations?
-> > Maybe max_listen_interval=1 in hostapd.conf helps.
-> 
-> The listen interval on the clients is 1. It's as if the beacon doesn't
-> have the right TIM bit set or the device is missing beacons. I will
-> narrow down my test set to a single client and capture the packets to
-> understand the interaction better.
-ok, understood.
+>
+>> diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+>> index c73fe4c..79ff3bb 100644
+>> --- a/drivers/net/wireless/wl12xx/event.c
+>> +++ b/drivers/net/wireless/wl12xx/event.c
+>> @@ -258,6 +258,14 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+>>               wl12xx_event_soft_gemini_sense(wl,
+>>                                              mbox->soft_gemini_sense_info);
+>>
+>> +     if (vector & CHANGE_AUTO_MODE_TIMEOUT_EVENT_ID &&
+>> +         wl->bss_type == BSS_TYPE_STA_BSS) {
+>> +             int timeout = -1;
+>> +             if (mbox->change_auto_mode_timeout)
+>> +                     timeout = 500;
+>> +             ieee80211_set_dyn_ps_timeout(wl->vif, timeout);
+>> +     }
+>> +
+>>       /*
+>>        * The BSS_LOSE_EVENT_ID is only needed while psm (and hence beacon
+>>        * filtering) is enabled. Without PSM, the stack will receive all
+>
+> Any more details on why you chose 500? Should this be part of conf or a
+> macro to avoid magic numbers?
+>
+500 was the magic number i got from the coex guys :)
+i'll add it to the conf.
 
-Regards,
-	Chr
+thanks for the review,
+Eliad.
