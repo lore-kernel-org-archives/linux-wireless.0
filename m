@@ -1,80 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1643 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752280Ab1IVIxV convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:55822 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756381Ab1ISQP6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 04:53:21 -0400
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: =?iso-8859-2?Q?Michael_B=FCsch?= <m@bues.ch>,
-	"Brett Rudley" <brudley@broadcom.com>
-cc: =?iso-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	"Greg KH" <greg@kroah.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"jonas.gorski@gmail.com" <jonas.gorski@gmail.com>
-Date: Thu, 22 Sep 2011 01:53:11 -0700
-Subject: RE: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
- patch #2
-Message-ID: <400C43189542CE41BC0A5B252FC90136BC0CC8ABB9@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20110922_105326_400661_F069DB07)
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
- <20110920130338.GA9885@kroah.com> <20110920132203.GB7800@tuxdriver.com>
- <20110920140020.GA11386@kroah.com>
- <7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com>
- <CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com>
- <7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
- <20110922003523.0bf6a460@milhouse>
- <7A94256FD72B884D9E7C55586C3CBCEE195814DE92@SJEXCHCCR01.corp.ad.broadcom.com>
- <20110922012851.2f3b7801@milhouse>
-In-Reply-To: <20110922012851.2f3b7801@milhouse>
+	Mon, 19 Sep 2011 12:15:58 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH 3/9] ath6kl: Remove RSSI update for internal node table
+Date: Mon, 19 Sep 2011 19:15:01 +0300
+Message-ID: <1316448907-10166-4-git-send-email-jouni@qca.qualcomm.com> (sfid-20110919_181601_821232_AF4F6CC6)
+In-Reply-To: <1316448907-10166-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1316448907-10166-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=iso-8859-2
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] On Behalf Of Michael Büsch
-> Sent: donderdag 22 september 2011 1:29
-> To: Brett Rudley
-> Cc: Rafa³ Mi³ecki; Greg KH; John W. Linville; Franky (Zhenhui) Lin;
-> gregkh@suse.de; devel@linuxdriverproject.org; linux-
-> wireless@vger.kernel.org
-> Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for
-> mainline patch #2
-> 
-> On Wed, 21 Sep 2011 16:15:10 -0700
-> "Brett Rudley" <brudley@broadcom.com> wrote:
-> 
-> > We did however initially propose (and implement) a dividing line of
-> ssb chips for b43 and AXI based chips for brcmsmac but b43 team chose
-> to ignore/reject that.
-> 
-> Well, what about embedded, for instance?
+ath6kl does not actually update cfg80211 BSS table when this update
+occurs, so there is not much need in updating the internal table
+that is not used or exposed.
 
-The brcmsmac driver has been tested on a MIPS platform by Jonas Gorski
-although only in STA mode (on a bcm63xx). Not having AP mode has been
-explained in other emails.
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/main.c |   15 ---------------
+ 1 files changed, 0 insertions(+), 15 deletions(-)
 
-Also we fully intend to transition to BCMA but that would also be new
-feature added. Having AP mode and BCMA would enable you guys for using
-it in the embedded targets, right?
-
-> > I'm not totally opposed to that idea but it does not solve the
-> primary issue of conflicting b43 and brcmsmac modules.
-> 
-> I'm not convinced that this is an issue at all and I'm not convinced
-> that it has to be resolved.
-> At least not now.
-> 
-
-It never hurts to look ahead. Both drivers have their use in the linux
-tree and we should align which driver is doing what. Apparently we should
-have yelled really hard when b43 was adding bcma support, because then
-it snatched the chipsets we support as well. You learn your lessons the
-hard way in Linux land, or so it seems ;-)
-
-Gr. AvS
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index acbd35d..f21e4b1 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -1091,26 +1091,11 @@ static void ath6kl_update_target_stats(struct ath6kl *ar, u8 *ptr, u32 len)
+ 		(struct wmi_target_stats *) ptr;
+ 	struct target_stats *stats = &ar->target_stats;
+ 	struct tkip_ccmp_stats *ccmp_stats;
+-	struct bss *conn_bss = NULL;
+-	struct cserv_stats *c_stats;
+ 	u8 ac;
+ 
+ 	if (len < sizeof(*tgt_stats))
+ 		return;
+ 
+-	/* update the RSSI of the connected bss */
+-	if (test_bit(CONNECTED, &ar->flag)) {
+-		conn_bss = ath6kl_wmi_find_node(ar->wmi, ar->bssid);
+-		if (conn_bss) {
+-			c_stats = &tgt_stats->cserv_stats;
+-			conn_bss->ni_rssi =
+-				a_sle16_to_cpu(c_stats->cs_ave_beacon_rssi);
+-			conn_bss->ni_snr =
+-				tgt_stats->cserv_stats.cs_ave_beacon_snr;
+-			ath6kl_wmi_node_return(ar->wmi, conn_bss);
+-		}
+-	}
+-
+ 	ath6kl_dbg(ATH6KL_DBG_TRC, "updating target stats\n");
+ 
+ 	stats->tx_pkt += le32_to_cpu(tgt_stats->stats.tx.pkt);
+-- 
+1.7.4.1
 
