@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18459 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755747Ab1INJjW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 05:39:22 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
-	<senthilb@qca.qualcomm.com>, <rmanohar@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 1/2] ath9k: enable LED pin for AR946/8x chipsets
-Date: Wed, 14 Sep 2011 15:09:13 +0530
-Message-ID: <1315993153-14250-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110914_113931_301234_02D3BF1A)
+Received: from purkki.adurom.net ([80.68.90.206]:36177 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754314Ab1ITIhq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Sep 2011 04:37:46 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Eliad Peller <eliad@wizery.com>, Luciano Coelho <coelho@ti.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: add ieee80211_set_dyn_ps_timeout()
+References: <1316347394-21276-1-git-send-email-eliad@wizery.com>
+	<1316408970.2157.9.camel@cumari> <87aaa0k0a1.fsf@purkki.adurom.net>
+	<CAB3XZEdiTRDJGUHWJ5UorQq2w-ZLP+TP0b-qSSVUTzhPG4H2rg@mail.gmail.com>
+	<1316450319.5995.33.camel@jlt3.sipsolutions.net>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 20 Sep 2011 11:37:45 +0300
+In-Reply-To: <1316450319.5995.33.camel@jlt3.sipsolutions.net> (Johannes Berg's message of "Mon\, 19 Sep 2011 18\:38\:39 +0200")
+Message-ID: <87hb47ip7q.fsf@purkki.adurom.net> (sfid-20110920_103749_152415_89A72D1D)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-now the LED starts working for AR946/8x chipsets
+>> bottom line - i'm not sure about all the details, but according to
+>> their tests - it does improve the throughput.
+>> (i can try getting better details if you have additional questions)
+>
+> It'd be interesting to see if we can just treat this as a "minimum awake
+> time", kinda like going back to the range I thought about earlier.
 
-Cc: "Balasubramanian, senthilkumar" <senthilb@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/gpio.c  |    2 ++
- 2 files changed, 3 insertions(+), 0 deletions(-)
+Yeah. Or maybe have a separate event to postpone dynps timer or
+something like that (if firmware informs host whenever there's coex
+traffic).
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 5d9a9aa..fe570e0 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -460,6 +460,7 @@ void ath9k_btcoex_timer_pause(struct ath_softc *sc);
- #define ATH_LED_PIN_9287		8
- #define ATH_LED_PIN_9300		10
- #define ATH_LED_PIN_9485		6
-+#define ATH_LED_PIN_9480		0
- 
- #ifdef CONFIG_MAC80211_LEDS
- void ath_init_leds(struct ath_softc *sc);
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 5113dd8..afbf540 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -48,6 +48,8 @@ void ath_init_leds(struct ath_softc *sc)
- 			sc->sc_ah->led_pin = ATH_LED_PIN_9485;
- 		else if (AR_SREV_9300(sc->sc_ah))
- 			sc->sc_ah->led_pin = ATH_LED_PIN_9300;
-+		else if (AR_SREV_9480(sc->sc_ah))
-+			sc->sc_ah->led_pin = ATH_LED_PIN_9480;
- 		else
- 			sc->sc_ah->led_pin = ATH_LED_PIN_DEF;
- 	}
+One extreme is that wl12xx would set IEEE80211_HW_SUPPORTS_DYNAMIC_PS
+and reimplement the dynps timer in the driver. That way the driver
+would have full control how it works and not complicate the mac80211
+implementation.
+
 -- 
-1.7.0.4
-
+Kalle Valo
