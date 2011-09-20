@@ -1,26 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:43875 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S934404Ab1IOTCD (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:34160 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752513Ab1ITRsO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 15:02:03 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 478AE54022F
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Sep 2011 15:13:56 -0400 (EDT)
-Subject: Compat-wireless release for 2011-09-15 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110915190201.78B3240647@repository3.orbit-lab.org> (sfid-20110915_210207_001219_43BB8CE6)
-Date: Thu, 15 Sep 2011 15:02:01 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 20 Sep 2011 13:48:14 -0400
+Date: Tue, 20 Sep 2011 13:47:05 -0400 (EDT)
+Message-Id: <20110920.134705.385231251761546079.davem@davemloft.net> (sfid-20110920_194828_523689_D625A0F2)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless 2011-09-20
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110920170501.GE7800@tuxdriver.com>
+References: <20110920170501.GE7800@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fatal: Unable to look up git.kernel.org (port 9418) (Name or service not known)
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 20 Sep 2011 13:05:01 -0400
 
-compat-wireless code metrics
+> This is a batch of fixes intended for 3.1.
+> 
+> Included is a set of Bluetooth fixes from Gustavo:
+> 
+> 	This is probably my unique pull request for 3.1, it fixes
+> 	an regression with the HCI_INQUIRY flag, it was not getting
+> 	cleaned after scan. Fix by Oliver Neukum. Also support for
+> 	two new apple devices and a simple fix the to btwilink driver.
+> 
+> Also included is an iwlagn patch revert to avoid some AP crashes, an
+> rt2800 patch to refactor some code that triggers a compiler bug, another
+> rt2800 patch to correct an endian bug, a b43 fix to restore beaconing in
+> ad-hoc mode, a regulatory enforcement fix for a problem that prevented
+> multiple regulatory domain changes from beacons, a fix to use the proper
+> rates in a probe request, and a fix for a deadlock that had crept into
+> ipw2200 after an earlier patch.
+> 
+> Please let me know if there are problems!
 
-    806210 - Total upstream lines of code being pulled
-ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
-rsync: connection unexpectedly closed (0 bytes received so far) [sender]
-rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
+Pulled, but this is very nearly "too much" this late in the game.
+
+I recognize the issue that we've been stuck in a state of pseudo-limbo
+up until a couple days ago, so I took this.
