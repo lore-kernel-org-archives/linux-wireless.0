@@ -1,155 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42721 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756575Ab1ISWCW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 18:02:22 -0400
-Message-ID: <4E77BBE0.1060800@openwrt.org> (sfid-20110920_000233_163488_F18EC7B0)
-Date: Tue, 20 Sep 2011 00:02:08 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22994 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751790Ab1ITQJ7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Sep 2011 12:09:59 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath6kl: Fix disconnect event reporting
+Date: Tue, 20 Sep 2011 21:39:59 +0530
+Message-ID: <1316534999-26990-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110920_181002_784862_31880960)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH v2 2/4] ath9k_hw: clean up tx power handling
-References: <1316453903-75710-1-git-send-email-nbd@openwrt.org> <1316453903-75710-2-git-send-email-nbd@openwrt.org> <CAB=NE6XvanRQ6Yje_qHhkfzbLmZn9o5Q+5y1NobJwCyuMLFEvg@mail.gmail.com> <4E77AAFB.1080805@openwrt.org> <CAB=NE6XgSz7zz_ZXaPQEsaue307ipd7Qnzgi5QWr8Y4SS1j=Lg@mail.gmail.com> <4E77B25D.9070907@openwrt.org> <CAB=NE6XLdftXKg5-wvme8Vg7BjGi-TpxQ3G6m=7VnEw89YzXoA@mail.gmail.com>
-In-Reply-To: <CAB=NE6XLdftXKg5-wvme8Vg7BjGi-TpxQ3G6m=7VnEw89YzXoA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-09-19 11:45 PM, Luis R. Rodriguez wrote:
-> On Mon, Sep 19, 2011 at 2:21 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
->>  On 2011-09-19 11:14 PM, Luis R. Rodriguez wrote:
->>>
->>>  On Mon, Sep 19, 2011 at 1:50 PM, Felix Fietkau<nbd@openwrt.org>    wrote:
->>>>
->>>>    On 2011-09-19 10:41 PM, Luis R. Rodriguez wrote:
->>>>>
->>>>>    On Mon, Sep 19, 2011 at 10:38 AM, Felix Fietkau<nbd@openwrt.org>
->>>>>    wrote:
->>>>>>
->>>>>>     @@ -986,21 +995,15 @@ static void
->>>>>>    ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
->>>>>>                                                      struct ath9k_channel
->>>>>>    *chan,
->>>>>>                                                      int16_t *ratesArray,
->>>>>>                                                      u16 cfgCtl,
->>>>>>     -                                                 u16
->>>>>>  AntennaReduction,
->>>>>>     -                                                 u16
->>>>>>    twiceMaxRegulatoryPower,
->>>>>>     +                                                 u16
->>>>>>  antenna_reduction,
->>>>>>                                                      u16 powerLimit)
->>>>>>      {
->>>>>>      #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
->>>>>>      #define REDUCE_SCALED_POWER_BY_THREE_CHAIN   9 /* 10*log10(3)*2 */
->>>>>>
->>>>>>     -       struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
->>>>>>            struct ar5416_eeprom_def *pEepData =&ah->eeprom.def;
->>>>>>            u16 twiceMaxEdgePower = MAX_RATE_POWER;
->>>>>>     -       static const u16 tpScaleReductionTable[5] =
->>>>>>     -               { 0, 3, 6, 9, MAX_RATE_POWER };
->>>>>>     -
->>>>>>            int i;
->>>>>>     -       int16_t twiceLargestAntenna;
->>>>>>            struct cal_ctl_data *rep;
->>>>>>            struct cal_target_power_leg targetPowerOfdm, targetPowerCck =
->>>>>>  {
->>>>>>                    0, { 0, 0, 0, 0}
->>>>>>     @@ -1012,7 +1015,7 @@ static void
->>>>>>    ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
->>>>>>            struct cal_target_power_ht targetPowerHt20, targetPowerHt40 =
->>>>>>  {
->>>>>>                    0, {0, 0, 0, 0}
->>>>>>            };
->>>>>>     -       u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
->>>>>>     +       u16 scaledPower = 0, minCtlPower;
->>>>>>            static const u16 ctlModesFor11a[] = {
->>>>>>                    CTL_11A, CTL_5GHT20, CTL_11A_EXT, CTL_5GHT40
->>>>>>            };
->>>>>
->>>>>    Although we do not use the reg->tp_scale I see no log which explains
->>>>>    that it will not, I'm reviewing TPC right now and we do need to
->>>>>    support it but its unclear to me yet if we are doing everything
->>>>>    correctly in mac80211 / cfg80211 for it. As far as I can see the
->>>>>    tp_scale stuff is used only if the default is not set, but as you
->>>>>    noted its always set to the default. I am trying to review the
->>>>>    internal code to see under what cases this changes but its hard to
->>>>>    review. Although I'd like to see this removed I'd prefer to treat this
->>>>>    separately from the cleanup you are doing, which I do find highly
->>>>>    valuable.
->>>>
->>>>    Why keep it? All it does is subtract something from the max regulatory
->>>>  power
->>>>    level, so it does not make any sense to keep this crap duplicated in all
->>>>  the
->>>>    the eeprom files.
->>>
->>>  You're right that they do seem to use the same array values, but the
->>>  fact that its all common code is separate from the question of
->>>  removing it.
->>
->>  Right now it's dead code. If we need it later, we should just rewrite it. I
->>  think carring forward old dead code just in case we might use it later is
->>  not a good idea.
->
-> I agree with if the code provides no value, but I do not feel you have
-> proven this.
-It simply provides some knobs to set the power to 50%, 25%, 12.5% or 
-minimum. Why do I have to prove the lack of value of completely dead 
-code, which is unused even in the codebase that it came from?
+Driver does not report disconnect event properly when in connecting state,
+this leads to issues like not reporting the unavailablity of the
+connected AP and failures in starting reconnection. Send a disconnect
+command to target when a disconnect event is received with reason code
+other than 3 (DISCONNECT_CMD - disconnect request from host) to make the
+stop trying even after giving disconnect event. There will be one more
+disconnect event for this disconnect command which will be notified to
+cfg80211.
 
->>>>    If we ever do need it (which I doubt),
->>>
->>>  I suspect this is needed for APs that support DFS and since we do not
->>>  yet support DFS I do not think this is used. I am not 100% certain yet
->>>  but at least in my review in the last few minutes it seems the AP can
->>>  decide to change TPC constraints dynamically based on TPC reports from
->>>  the STAs. I suspec this is where this comes in to play.
->>
->>  I looked at the other ath driver and I see no indication that it's related
->>  to DFS in any way.
->
-> I have verified this just now as well, it seems it was only used to
-> support an ioctl to userspace to enable users to update a tpscale
-> value but I see no documentation about this. Next question is who in
-> usersapce sets this. I wonder if its done through userspace after
-> measuring some TPC reports from STAs.
-Even in the default userspace of the ath stuff nothing actually uses this.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   13 +------------
+ 1 files changed, 1 insertions(+), 12 deletions(-)
 
->>  Even if it is, it doesn't even belong in ath9k. Any form
->>  of tx power reduction can be handled by cfg80211/mac80211.
->
-> Depends, general hooks can surely go into cfg80211 / mac80211 but if
-> any decision is being made to adjust power due to some environmental
-> constraints this would likely require chipset specific knobs or
-> information.
-I really don't see how it would need chip specific hooks.
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 3280ff1..8125e71 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -615,22 +615,11 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
+ 		}
+ 	}
+ 
+-	if (!test_bit(CONNECT_PEND, &ar->flag)) {
+-		if (reason != DISCONNECT_CMD)
+-			ath6kl_wmi_disconnect_cmd(ar->wmi);
+-
+-		return;
+-	}
+-
+-	if (reason == NO_NETWORK_AVAIL) {
+-		/* connect cmd failed */
++	if (reason != DISCONNECT_CMD) {
+ 		ath6kl_wmi_disconnect_cmd(ar->wmi);
+ 		return;
+ 	}
+ 
+-	if (reason != DISCONNECT_CMD)
+-		return;
+-
+ 	clear_bit(CONNECT_PEND, &ar->flag);
+ 
+ 	if (ar->sme_state == SME_CONNECTING) {
+-- 
+1.7.0.4
 
->>>>    it needs to be added in a different place anyway.
->>>
->>>  If its card specific so I do not think we can move any of this
->>>  commonly into cfg80211 / mac80211.
->>
->>  It's not card specific in any way.
->
-> In code right now its all the same arrays, but does it mean it will
-> not differ from broadcom's cards?
-Heh, do you really think that dB means something else for Broadcom than 
-it does for Atheros? :)
-
->>>  One thing is to simply common code, another is to remove code which we
->>>  is not enabled right now, but may be later. I think we should treat
->>>  these separately.
->>
->>  I don't think we'll ever enable this, and it's not significant enough to
->>  keep it around.
->
-> I am not yet convinced its insignificant. I'd like to better
-> understand first who sets this and why before removing it. If anything
-> at least a separate patch should deal with the removal.
-This is bitrot that has been carried forward since the old AR5212 days. 
-It has been forward ported because nobody bothered to remove it. It's 
-even present in old madwifi releases.
-
-- Felix
