@@ -1,84 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2936 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753586Ab1IAJRn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 05:17:43 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 13/30] staging: brcm80211: consolidate SHOW_EVENTS code
- under BCMDBG in fullmac
-Date: Thu, 1 Sep 2011 11:17:03 +0200
-Message-ID: <1314868640-9425-14-git-send-email-rvossen@broadcom.com> (sfid-20110901_111823_739902_86732734)
-In-Reply-To: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
-References: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:33532 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751454Ab1ITOEQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Sep 2011 10:04:16 -0400
+Date: Tue, 20 Sep 2011 07:00:20 -0700
+From: Greg KH <greg@kroah.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Franky Lin <frankyl@broadcom.com>, gregkh@suse.de,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
+ patch #2
+Message-ID: <20110920140020.GA11386@kroah.com> (sfid-20110920_160419_833691_80A7BC34)
+References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+ <20110920130338.GA9885@kroah.com>
+ <20110920132203.GB7800@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110920132203.GB7800@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On Tue, Sep 20, 2011 at 09:22:03AM -0400, John W. Linville wrote:
+> On Tue, Sep 20, 2011 at 06:03:38AM -0700, Greg KH wrote:
+> > On Mon, Sep 19, 2011 at 02:25:48PM -0700, Franky Lin wrote:
+> > > Code clean up for fullmac.
+> > 
+> > Ok, this is the 7th patch series since the last round of "how do we get
+> > our driver into mainline" happened.
+> > 
+> > And while code is great and nice, I still haven't seen any real answers
+> > to all of the questions that were asked of the Broadcom driver team
+> > during that review by the linux-wireless developers about how things
+> > will be handled properly due to the overlap in functionality with the
+> > existing "real" driver in the tree.
+> > 
+> > So, can you please start answering these questions?  I'm loath to keep
+> > accepting patches until that all gets straightened out as it potentially
+> > wastes my, and your, time by doing so.
+> > 
+> > In other words, I'm not going to apply any more patches until this gets
+> > resolved.  Consider this patchset dropped from my to-apply queue for now
+> > because of that.
+> 
+> I think most of the outstanding series from Broadcom are
+> (almost?) exclusively for their fullmac driver, which has not overlap
+> with b43.  We should be moving forward toward getting the fullmac
+> driver into wireless-next.
 
-Use unify config marco for debug info. Related event debug print out can be
-enabled/disabled by the dedicated event message level.
+Ok, that's great, but again, no one from Broadcom has said what their
+plans are, only sent lots of patches, which while wonderful, has caused
+some confusion on my and other parts.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/Makefile     |    2 --
- drivers/staging/brcm80211/brcmfmac/dhd_common.c |    8 ++++----
- 2 files changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/Makefile b/drivers/staging/brcm80211/brcmfmac/Makefile
-index 826a2ba..3d0878f 100644
---- a/drivers/staging/brcm80211/brcmfmac/Makefile
-+++ b/drivers/staging/brcm80211/brcmfmac/Makefile
-@@ -15,8 +15,6 @@
- # OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
- # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- 
--ccflags-$(CONFIG_BRCMDBG)	+= -DSHOW_EVENTS
--
- ccflags-y += \
- 	-Idrivers/staging/brcm80211/brcmfmac	\
- 	-Idrivers/staging/brcm80211/include
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-index 059289a..e5214b2 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-@@ -411,7 +411,7 @@ int brcmf_c_ioctl(struct brcmf_pub *drvr, struct brcmf_c_ioctl *ioc, void *buf,
- 	return bcmerror;
- }
- 
--#ifdef SHOW_EVENTS
-+#ifdef BCMDBG
- static void
- brcmf_c_show_host_event(struct brcmf_event_msg *event, void *event_data)
- {
-@@ -705,7 +705,7 @@ brcmf_c_show_host_event(struct brcmf_event_msg *event, void *event_data)
- 		brcmf_dbg(EVENT, "\n");
- 	}
- }
--#endif				/* SHOW_EVENTS */
-+#endif				/* BCMDBG */
- 
- int
- brcmf_c_host_event(struct brcmf_info *drvr_priv, int *ifidx, void *pktdata,
-@@ -796,9 +796,9 @@ brcmf_c_host_event(struct brcmf_info *drvr_priv, int *ifidx, void *pktdata,
- 		break;
- 	}
- 
--#ifdef SHOW_EVENTS
-+#ifdef BCMDBG
- 	brcmf_c_show_host_event(event, event_data);
--#endif				/* SHOW_EVENTS */
-+#endif				/* BCMDBG */
- 
- 	return 0;
- }
--- 
-1.7.4.1
-
-
+greg k-h
