@@ -1,62 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:47270 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755692Ab1IOJXO (ORCPT
+Received: from calzone.tip.net.au ([203.10.76.15]:35216 "EHLO
+	calzone.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150Ab1ITVLP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 05:23:14 -0400
-Received: by wwf22 with SMTP id 22so3423475wwf.1
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Sep 2011 02:23:13 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 15 Sep 2011 12:23:13 +0300
-Message-ID: <CAApCBGxz8bP-=m=gmrBcR0UaAGWZCN5-AOyO12t3gt6jocU9qA@mail.gmail.com> (sfid-20110915_112317_887879_A008079C)
-Subject: compat-wireless cross compilation
-From: wireless newbie <wnewbie72@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 20 Sep 2011 17:11:15 -0400
+Date: Wed, 21 Sep 2011 07:11:03 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>
+Subject: Re: [PATCH -next v2] bcma: driver_chipcommon_pmu.c needs
+ linux/export.h
+Message-Id: <20110921071103.b4faaa4648ec3c09a4505ab1@canb.auug.org.au> (sfid-20110920_231133_353380_F1C4D42E)
+In-Reply-To: <4E78FCDB.1010002@xenotime.net>
+References: <20110920173102.d38155c7defbbc29beaae7c0@canb.auug.org.au>
+	<4E78CFC0.4020003@xenotime.net>
+	<CACna6rxGrd-ORWZrc0xsAOKptU_Xj3eGh9qSfX9vJYCPTZrCRg@mail.gmail.com>
+	<4E78FCDB.1010002@xenotime.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Wed__21_Sep_2011_07_11_03_+1000_Cd=aur2Hxw/4KxLk"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+--Signature=_Wed__21_Sep_2011_07_11_03_+1000_Cd=aur2Hxw/4KxLk
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I'm trying to cross compile compat-wireless but I haven't had any
-luck. My target architecture is ppc and my target kernel version is
-2.6.39. I have cloned compat.git, linux-next.git and
-compat-wireless-2.6.git to my host machine and set GIT_TREE and
-GIT_COMPAT_TREE variables to point to linux-next and compat
-directories. When in compat-wireless directory I say
+Hi Randy,
 
-make KLIB=/path/to/my/target/kernel KLIB_BUILD=/path/to/my/target/kernel/
+On Tue, 20 Sep 2011 13:51:39 -0700 Randy Dunlap <rdunlap@xenotime.net> wrot=
+e:
+>
+> From: Randy Dunlap <rdunlap@xenotime.net>
+>=20
+> bcma/driver_chipcommon_pmu.c needs to include <linux/export.h>
+> to fix these warnings:
+>=20
+> drivers/bcma/driver_chipcommon_pmu.c:27:1: warning: data definition has n=
+o type or storage class
+> drivers/bcma/driver_chipcommon_pmu.c:27:1: warning: type defaults to 'int=
+' in declaration of 'EXPORT_SYMBOL_GPL'
+> drivers/bcma/driver_chipcommon_pmu.c:27:1: warning: parameter names (with=
+out types) in function declaration
+> drivers/bcma/driver_chipcommon_pmu.c:36:1: warning: data definition has n=
+o type or storage class
+> drivers/bcma/driver_chipcommon_pmu.c:36:1: warning: type defaults to 'int=
+' in declaration of 'EXPORT_SYMBOL_GPL'
+> drivers/bcma/driver_chipcommon_pmu.c:36:1: warning: parameter names (with=
+out types) in function declaration
+> drivers/bcma/driver_chipcommon_pmu.c:45:1: warning: data definition has n=
+o type or storage class
+> drivers/bcma/driver_chipcommon_pmu.c:45:1: warning: type defaults to 'int=
+' in declaration of 'EXPORT_SYMBOL_GPL'
+> drivers/bcma/driver_chipcommon_pmu.c:45:1: warning: parameter names (with=
+out types) in function declaration
+> drivers/bcma/driver_chipcommon_pmu.c:54:1: warning: data definition has n=
+o type or storage class
+> drivers/bcma/driver_chipcommon_pmu.c:54:1: warning: type defaults to 'int=
+' in declaration of 'EXPORT_SYMBOL_GPL'
+> drivers/bcma/driver_chipcommon_pmu.c:54:1: warning: parameter names (with=
+out types) in function declaration
+>=20
+> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
 
-I get this:
+I have added this to my collection of merge fixups for the moduleh tree
+(since linux/export.h doesn't exist in Linus' tree, yet).
 
-cat: /media/data/work/wireless-compat/compat-wireless-2.6/compat_version:
-No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /media/data/work/wireless-compat/compat-wireless-2.6/compat_version:
-No such file or directory
-make -C /path/to/my/target/kernel/
-M=/media/data/work/wireless-compat/compat-wireless-2.6 modules
-make[1]: Entering directory `/path/to/my/target/kernel'
-scripts/Makefile.build:44:
-/media/data/work/wireless-compat/compat-wireless-2.6/compat/Makefile:
-No such file or directory
-make[3]: *** No rule to make target
-`/media/data/work/wireless-compat/compat-wireless-2.6/compat/Makefile'.
- Stop.
-make[2]: *** [/media/data/work/wireless-compat/compat-wireless-2.6/compat]
-Error 2
-make[1]: *** [_module_/media/data/work/wireless-compat/compat-wireless-2.6]
-Error 2
-make[1]: Leaving directory `/path/to/my/target/kernel'
-make: *** [modules] Error 2
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
-It seems that compat-wireless is missing some files. Why is it so?
-Should I do some preparations before I run make or..?
+--Signature=_Wed__21_Sep_2011_07_11_03_+1000_Cd=aur2Hxw/4KxLk
+Content-Type: application/pgp-signature
 
-Also, is it somehow possible to patch my current kernel sources with
-compat-wireless sources? That would be my preference if that would be
-possible.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
 
-thanks
+iQEcBAEBAgAGBQJOeQFnAAoJEDMEi1NhKgbs+10H/1AQ3BFgi/cfBF8EE6vrfYS/
+S4FA3IMi4/u/SSvpsDQUwbwE0YrDdYIU0DkCsEMEGaZ3zUiaUV8VXW+Q5HAg961t
+mLjjXhS2cyYsyw+VsTpLUG22tYNfU3zydfk/yTxIcl4gRpIbpXz1JYkO2vtyfAHP
+BBuS6W0cqkMY7b/ygNtXbh/rmIL5VDcTjhFMZBxNanrpVsMCRfS3CNp9LycCyNxb
+lSFkEx4b9/gSZmyBUZKAEUAP/2iyoS/r1mg9sU6nvAaFVHV/0oiaZ2bXrYRL5y/Y
+93pfGPnkmZK+D53ItJadFfj/40CFXH8Xm23KYWoY1wmKaUy5ThR2z8azNvrFnDQ=
+=VrL6
+-----END PGP SIGNATURE-----
+
+--Signature=_Wed__21_Sep_2011_07_11_03_+1000_Cd=aur2Hxw/4KxLk--
