@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:61927 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932690Ab1IOXTJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 19:19:09 -0400
-Received: by qyk7 with SMTP id 7so3599180qyk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Sep 2011 16:19:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1316128469.12897.4.camel@Joe-Laptop>
-References: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com>
- <1316112414-6341-9-git-send-email-wey-yi.w.guy@intel.com> <1316115470.11236.1.camel@Joe-Laptop>
- <1316112830.19293.4.camel@wwguy-huron> <1316116047.11236.8.camel@Joe-Laptop>
- <1316127246.7631.2.camel@wwguy-ubuntu> <1316128469.12897.4.camel@Joe-Laptop>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 15 Sep 2011 16:18:49 -0700
-Message-ID: <CAB=NE6Uyib_ZRRRZ76FGTD6WiVtATrb33-D00s=9tO=SevD8LA@mail.gmail.com> (sfid-20110916_011913_925698_D83F4A24)
-Subject: Re: [PATCH] iwlagn: Convert kzalloc to kcalloc
-To: Joe Perches <joe@perches.com>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([143.182.124.37]:60245 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752592Ab1ITXXa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Sep 2011 19:23:30 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 6/8] iwlagn: remove uneeded declaration
+Date: Tue, 20 Sep 2011 15:37:25 -0700
+Message-Id: <1316558247-10018-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110921_012347_477236_417BD17F)
+In-Reply-To: <1316558247-10018-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1316558247-10018-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 15, 2011 at 4:14 PM, Joe Perches <joe@perches.com> wrote:
-> On Thu, 2011-09-15 at 15:54 -0700, wwguy wrote:
->> On Thu, 2011-09-15 at 12:47 -0700, Joe Perches wrote:
->> > Convert kzalloc to kcalloc, coalesce multiple lines too.
->> IIRC, there is no real different between kcalloc and kzalloc, I think
->> kcalloc will call kzalloc; both zero out the memory before return.
->
-> Multiplication overflow protection.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Then the patch should explain that, no?
+This has been removed but the declaration hasn't.
 
-  Luis
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+index 0e7d915..2b6756e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+@@ -275,8 +275,6 @@ int iwlagn_txq_attach_buf_to_tfd(struct iwl_trans *trans,
+ 				 dma_addr_t addr, u16 len, u8 reset);
+ int iwl_queue_init(struct iwl_queue *q, int count, int slots_num, u32 id);
+ int iwl_trans_pcie_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd);
+-int __must_check iwl_trans_pcie_send_cmd_pdu(struct iwl_trans *trans, u8 id,
+-			u32 flags, u16 len, const void *data);
+ void iwl_tx_cmd_complete(struct iwl_trans *trans,
+ 			 struct iwl_rx_mem_buffer *rxb, int handler_status);
+ void iwl_trans_txq_update_byte_cnt_tbl(struct iwl_trans *trans,
+-- 
+1.7.0.4
+
