@@ -1,141 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1892 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755614Ab1I2Weo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 18:34:44 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v3 20/25] staging: brcm80211: convert endianess before
- handling the frame
-Date: Thu, 29 Sep 2011 15:34:31 -0700
-Message-ID: <1317335676-3424-21-git-send-email-frankyl@broadcom.com> (sfid-20110930_003539_881141_10A5C8A3)
-In-Reply-To: <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
-References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
- <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:46190 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750874Ab1ITTFv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Sep 2011 15:05:51 -0400
+Received: by qyk7 with SMTP id 7so878325qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 12:05:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4E78DF6F.3060304@openwrt.org>
+References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com>
+ <loom.20110918T004437-426@post.gmane.org> <1316437459.5995.29.camel@jlt3.sipsolutions.net>
+ <36569806.Rgjanm0GiI@alex-1> <1316521312.3953.27.camel@jlt3.sipsolutions.net>
+ <CAB=NE6VDSTAKK0pmyBOz6hw1pbxo7U6dxbrvg_F-y6CDB0paKw@mail.gmail.com>
+ <4E78D990.3090601@openwrt.org> <CAB=NE6VZeCViBZA9++NcgZ2JcDppbp3OuagRVK02ENjdb-MAQA@mail.gmail.com>
+ <4E78DF6F.3060304@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 20 Sep 2011 12:05:30 -0700
+Message-ID: <CAB=NE6XqT_ZUV7F+0ZvCs-WgxZnJn3onMiWNtBi=+eCkMZMgPA@mail.gmail.com> (sfid-20110920_210555_119178_0ADA1658)
+Subject: Re: [PATCH v3 3/3] mac80211: Add HT operation modes for IBSS
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Javier Cardona <javier@cozybit.com>,
+	Alexander Simon <an.alexsimon@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+On Tue, Sep 20, 2011 at 11:46 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2011-09-20 8:38 PM, Luis R. Rodriguez wrote:
+>>
+>> On Tue, Sep 20, 2011 at 11:21 AM, Felix Fietkau<nbd@openwrt.org>  wrote:
+>>>
+>>>  On 2011-09-20 8:12 PM, Luis R. Rodriguez wrote:
+>>>>
+>>>>  On Tue, Sep 20, 2011 at 5:21 AM, Johannes Berg
+>>>>  <johannes@sipsolutions.net>    wrote:
+>>>>>
+>>>>>   On Mon, 2011-09-19 at 17:46 +0200, Alexander Simon wrote:
+>>>>>   That seems pretty complex too ...
+>>>>>
+>>>>>   I don't really know. As I said, I think I'd be happy with an
+>>>>>   implementation that maybe doesn't fully implement everything as long
+>>>>> as
+>>>>>   it considers the trade-offs.
+>>>>
+>>>>  The same questions come up with HT support and 802.11s, as per Javier
+>>>>  this is not really well spelled out in the spec. My recommendation is
+>>>>  to just support for now the most simple case and let us not entangle
+>>>>  ourselves with the complexities of handling trying to merge different
+>>>>  setups. So only enable peering up for adhoc or mesh if and only if the
+>>>>  observed IE matches our own supported HT caps or target configuration.
+>>>>  If a legacy STA tries to peer up with an HT IBSS, this would simply be
+>>>>  rejected. We can leave off handling the change in configuration later
+>>>>  for userspace, but do not see this as being a requirement for
+>>>>  supporting HT for IBSS or Mesh. The simpler the better, so long as we
+>>>>  simply respect the spec.
+>>>
+>>>  I disagree. That'll make it useless for real deployments, which are
+>>> often a
+>>>  mix of HT and non-HT devices.
+>>
+>> I'm not saying to not do it at all, I'm saying to start off with basic
+>> support *first* and *later* worry about the mixing.
+>
+> Simply sticking with the configured HT opmode is also simple, but it's a lot
+> more practical.
 
-The received frame from the device is in little-endian order and
-converted in the receive path. However, the phy code was doing
-the rssi calculation with packet in LE order. This has been changed
-to do the le_to_cpu conversion before doing the rssi computation
-and further receive processing.
+Just need to deal with the complexity, the complexity question is
+where do we handle this, verifying it respects the standard, and
+actually getting the work done. With AP mode of operation hostapd
+already does all this for us so if we want to support IBSS and Mesh
+without hostapd we'd need to figure out where to stuff this code. In
+the long run this would need to be resolved for both IBSS and Mesh. We
+can wait for all this work to get done or get a simple taste of basic
+HT support for both modes by sticking to the supported HT mode based
+on the observed beacons.
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/main.c        |   27 ++++++++++-----------
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    6 ++--
- drivers/staging/brcm80211/brcmsmac/phy/phy_n.c   |    8 +++---
- 3 files changed, 20 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index ef96358..1a7d005 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -813,11 +813,23 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
- 		wlc_rxhdr = (struct brcms_d11rxhdr *) p->data;
- 		rxh = (struct d11rxhdr *)p->data;
- 
-+		/* fixup rx header endianness */
-+		rxh->RxFrameSize = le16_to_cpu(rxh->RxFrameSize);
-+		rxh->PhyRxStatus_0 = le16_to_cpu(rxh->PhyRxStatus_0);
-+		rxh->PhyRxStatus_1 = le16_to_cpu(rxh->PhyRxStatus_1);
-+		rxh->PhyRxStatus_2 = le16_to_cpu(rxh->PhyRxStatus_2);
-+		rxh->PhyRxStatus_3 = le16_to_cpu(rxh->PhyRxStatus_3);
-+		rxh->PhyRxStatus_4 = le16_to_cpu(rxh->PhyRxStatus_4);
-+		rxh->PhyRxStatus_5 = le16_to_cpu(rxh->PhyRxStatus_5);
-+		rxh->RxStatus1 = le16_to_cpu(rxh->RxStatus1);
-+		rxh->RxStatus2 = le16_to_cpu(rxh->RxStatus2);
-+		rxh->RxTSFTime = le16_to_cpu(rxh->RxTSFTime);
-+		rxh->RxChan = le16_to_cpu(rxh->RxChan);
-+
- 		/*
- 		 * compute the RSSI from d11rxhdr and record it in wlc_rxd11hr
- 		 */
- 		wlc_rxhdr->rssi = wlc_phy_rssi_compute(wlc_hw->band->pi, rxh);
--
- 		brcms_c_recv(wlc_hw->wlc, p);
- 	}
- 
-@@ -8289,19 +8301,6 @@ void brcms_c_recv(struct brcms_c_info *wlc, struct sk_buff *p)
- 	/* strip off rxhdr */
- 	skb_pull(p, BRCMS_HWRXOFF);
- 
--	/* fixup rx header endianness */
--	rxh->RxFrameSize = le16_to_cpu(rxh->RxFrameSize);
--	rxh->PhyRxStatus_0 = le16_to_cpu(rxh->PhyRxStatus_0);
--	rxh->PhyRxStatus_1 = le16_to_cpu(rxh->PhyRxStatus_1);
--	rxh->PhyRxStatus_2 = le16_to_cpu(rxh->PhyRxStatus_2);
--	rxh->PhyRxStatus_3 = le16_to_cpu(rxh->PhyRxStatus_3);
--	rxh->PhyRxStatus_4 = le16_to_cpu(rxh->PhyRxStatus_4);
--	rxh->PhyRxStatus_5 = le16_to_cpu(rxh->PhyRxStatus_5);
--	rxh->RxStatus1 = le16_to_cpu(rxh->RxStatus1);
--	rxh->RxStatus2 = le16_to_cpu(rxh->RxStatus2);
--	rxh->RxTSFTime = le16_to_cpu(rxh->RxTSFTime);
--	rxh->RxChan = le16_to_cpu(rxh->RxChan);
--
- 	/* MAC inserts 2 pad bytes for a4 headers or QoS or A-MSDU subframes */
- 	if (rxh->RxStatus1 & RXS_PBPRES) {
- 		if (p->len < 2) {
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-index c359a10..f9702c0 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -2613,18 +2613,18 @@ void wlc_phy_compute_dB(u32 *cmplx_pwr, s8 *p_cmplx_pwr_dB, u8 core)
- int wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
- 			 struct d11rxhdr *rxh)
- {
--	int rssi = le16_to_cpu(rxh->PhyRxStatus_1) & PRXS1_JSSI_MASK;
-+	int rssi = rxh->PhyRxStatus_1 & PRXS1_JSSI_MASK;
- 	uint radioid = pih->radioid;
- 	struct brcms_phy *pi = (struct brcms_phy *) pih;
- 
- 	if ((pi->sh->corerev >= 11)
--	    && !(le16_to_cpu(rxh->RxStatus2) & RXS_PHYRXST_VALID)) {
-+	    && !(rxh->RxStatus2 & RXS_PHYRXST_VALID)) {
- 		rssi = BRCMS_RSSI_INVALID;
- 		goto end;
- 	}
- 
- 	if (ISLCNPHY(pi)) {
--		u8 gidx = (le16_to_cpu(rxh->PhyRxStatus_2) & 0xFC00) >> 10;
-+		u8 gidx = (rxh->PhyRxStatus_2 & 0xFC00) >> 10;
- 		struct brcms_phy_lcnphy *pi_lcn = pi->u.pi_lcnphy;
- 
- 		if (rssi > 127)
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
-index ff8b1d8..a34d292 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
-@@ -23115,16 +23115,16 @@ wlc_phy_rssi_compute_nphy(struct brcms_phy *pi, struct d11rxhdr *rxh)
- 	s16 phyRx0_l, phyRx2_l;
- 
- 	rxpwr = 0;
--	rxpwr0 = le16_to_cpu(rxh->PhyRxStatus_1) & PRXS1_nphy_PWR0_MASK;
--	rxpwr1 = (le16_to_cpu(rxh->PhyRxStatus_1) & PRXS1_nphy_PWR1_MASK) >> 8;
-+	rxpwr0 = rxh->PhyRxStatus_1 & PRXS1_nphy_PWR0_MASK;
-+	rxpwr1 = (rxh->PhyRxStatus_1 & PRXS1_nphy_PWR1_MASK) >> 8;
- 
- 	if (rxpwr0 > 127)
- 		rxpwr0 -= 256;
- 	if (rxpwr1 > 127)
- 		rxpwr1 -= 256;
- 
--	phyRx0_l = le16_to_cpu(rxh->PhyRxStatus_0) & 0x00ff;
--	phyRx2_l = le16_to_cpu(rxh->PhyRxStatus_2) & 0x00ff;
-+	phyRx0_l = rxh->PhyRxStatus_0 & 0x00ff;
-+	phyRx2_l = rxh->PhyRxStatus_2 & 0x00ff;
- 	if (phyRx2_l > 127)
- 		phyRx2_l -= 256;
- 
--- 
-1.7.1
-
-
+  Luis
