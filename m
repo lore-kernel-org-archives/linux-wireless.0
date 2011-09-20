@@ -1,70 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:49295 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750915Ab1ITOtG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 10:49:06 -0400
-To: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: Eliad Peller <eliad@wizery.com>, Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: add ieee80211_set_dyn_ps_timeout()
-References: <1316347394-21276-1-git-send-email-eliad@wizery.com>
-	<1316408970.2157.9.camel@cumari> <87aaa0k0a1.fsf@purkki.adurom.net>
-	<CAB3XZEdiTRDJGUHWJ5UorQq2w-ZLP+TP0b-qSSVUTzhPG4H2rg@mail.gmail.com>
-	<87litjipda.fsf@purkki.adurom.net>
-	<CAK=WgbZM5zdgOurFfGbQR3V_mqd85qjS_u1_tU35oaVPCh0Rkg@mail.gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 20 Sep 2011 17:49:04 +0300
-In-Reply-To: <CAK=WgbZM5zdgOurFfGbQR3V_mqd85qjS_u1_tU35oaVPCh0Rkg@mail.gmail.com> (Ohad Ben-Cohen's message of "Tue\, 20 Sep 2011 11\:49\:55 +0300")
-Message-ID: <87aa9zi80v.fsf@purkki.adurom.net> (sfid-20110920_164910_893147_FF00388C)
+Received: from mail-gw0-f52.google.com ([74.125.83.52]:56850 "EHLO
+	mail-gw0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753340Ab1ITMFr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Sep 2011 08:05:47 -0400
+Received: by gwb1 with SMTP id 1so332886gwb.11
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 05:05:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1316450319.5995.33.camel@jlt3.sipsolutions.net>
+References: <1316347394-21276-1-git-send-email-eliad@wizery.com>
+	<1316408970.2157.9.camel@cumari>
+	<87aaa0k0a1.fsf@purkki.adurom.net>
+	<CAB3XZEdiTRDJGUHWJ5UorQq2w-ZLP+TP0b-qSSVUTzhPG4H2rg@mail.gmail.com>
+	<1316450319.5995.33.camel@jlt3.sipsolutions.net>
+Date: Tue, 20 Sep 2011 15:05:46 +0300
+Message-ID: <CAB3XZEeMZvv374SBTPDg1W8-E24=K5yVRhDQ0ktpUgxAEJgdzw@mail.gmail.com> (sfid-20110920_140550_826671_651A020D)
+Subject: Re: [PATCH] mac80211: add ieee80211_set_dyn_ps_timeout()
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@adurom.com>, Luciano Coelho <coelho@ti.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ohad Ben-Cohen <ohad@wizery.com> writes:
-
-> On Tue, Sep 20, 2011 at 11:34 AM, Kalle Valo <kvalo@adurom.com> wrote:
->> IIRC Juuso added ieee80211_enable/disable_dyn_ps() to make it possible
->> use BT COEX with wl12xx.
+On Mon, Sep 19, 2011 at 7:38 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2011-09-19 at 19:30 +0300, Eliad Peller wrote:
 >
-> A lot has happened since then :) The wl12xx firmware today is vastly
-> different and much improved.
-
-Yeah, quite a turn. That's good :)
-
->> Now you are saying that you actually want the opposite?
+>> AFAIU from the coex guys, the scenario is something like this:
+>> upon coex activity, the fw might delay its rx and tx paths. this means
+>> that the fw might get a frame within the 100ms of the dyn ps, but
+>> delay its processing and pass it up to the driver only later.
+>> this will cause redundant psm enter (after 100ms) and psm exit (after
+>> the fw passed the packet).
+>> i'm not sure about the exact effect during coex operation, but
+>> eventually these psm enter/exit affect the throughput.
+>>
+>> another point here, is that during a specific period (during auto_mode
+>> on), there might or might not be coex activity. thus, we can't just
+>> disable dyn_ps, as it will hurt throughput (when there is no coex
+>> activity).
+>>
+>> bottom line - i'm not sure about all the details, but according to
+>> their tests - it does improve the throughput.
+>> (i can try getting better details if you have additional questions)
 >
-> Yes. The firmware is now capable of doing coex without enforcing PSM.
-> This leads to a much better WLAN TP while BT is on.
-
-So we can remove the enable/disable dynps interface soon?
-
->> But nevertheless I'm not still convinced that doing all this in
->> mac80211 is the right thing. Especially that this seems to be very
->> wl12xx specific, right?
+> It'd be interesting to see if we can just treat this as a "minimum awake
+> time", kinda like going back to the range I thought about earlier.
 >
-> Not really, why do you consider this wl12xx specific more than any
-> other hw offloading or mac80211 API that is used by a single driver ?
+do you mean something like:
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 4274e94..57695e3 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -702,11 +702,12 @@ void ieee80211_recalc_ps(struct ieee80211_local
+*local, s32 latency)
+                        if (latency > (1900 * USEC_PER_MSEC) &&
+                            latency != (2000 * USEC_PER_SEC))
+                                timeout = 0;
+-                       else if (local->dynamic_ps_driver_timeout >= 0)
+-                               timeout = local->dynamic_ps_driver_timeout;
+                        else
+                                timeout = 100;
+                }
++               if (timeout && local->dynamic_ps_driver_timeout > timeout)
++                       timeout = local->dynamic_ps_driver_timeout;
++
+                local->dynamic_ps_user_timeout = timeout;
+                if (!local->disable_dynamic_ps)
+                        conf->dynamic_ps_timeout =
 
-Can we please avoid hand waving and stick to the matter at hand,
-please?
+?
 
-The problem is that the current mac80211 powersave implementation is a
-HUGE mess and nobody fully understands it nor wants to touch it. We
-should be trying to simplify that instead of creating it more complex.
+i don't find it much different.
 
-I actually believe that it's not possible to properly support all the
-different power save hardware designs out there, instead I think that
-some of the most eccentric implementations should not be supported by
-mac80211 at all. For example, waking up for beacons or multicast
-frames is a good example, we should just rip them out from mac80211
-and let drivers deal that crap.
-
-Now I try to understand what would be the best option for your
-requirement. Are there any other drivers which needs this
-ieee80211_set_dyn_ps_timeout() interface? If there is more than one
-driver needing, implementing this to mac80211 would make more sense.
-
--- 
-Kalle Valo
+Eliad.
