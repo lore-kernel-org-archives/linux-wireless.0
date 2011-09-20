@@ -1,33 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35486 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752460Ab1IWI7H (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52776 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750778Ab1ITNaf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 04:59:07 -0400
-Subject: Re: [RFC 00/15] mac80211 uAPSD support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAB=NE6UzHVMOY=v4EEVojED5PY=T-uriAMvpHqehkh4Bygrn3g@mail.gmail.com> (sfid-20110923_012633_459039_93F47F56)
-References: <20110922154726.521122680@sipsolutions.net>
-	 <1316706736.3899.54.camel@jlt3.sipsolutions.net>
-	 <CAB=NE6UzHVMOY=v4EEVojED5PY=T-uriAMvpHqehkh4Bygrn3g@mail.gmail.com>
-	 (sfid-20110923_012633_459039_93F47F56)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 23 Sep 2011 10:59:00 +0200
-Message-ID: <1316768340.3961.0.camel@jlt3.sipsolutions.net> (sfid-20110923_105912_160862_29B3D2EF)
-Mime-Version: 1.0
+	Tue, 20 Sep 2011 09:30:35 -0400
+Date: Tue, 20 Sep 2011 09:22:03 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Greg KH <greg@kroah.com>
+Cc: Franky Lin <frankyl@broadcom.com>, gregkh@suse.de,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
+ patch #2
+Message-ID: <20110920132203.GB7800@tuxdriver.com> (sfid-20110920_153039_201077_5519DE38)
+References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+ <20110920130338.GA9885@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110920130338.GA9885@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-09-22 at 16:25 -0700, Luis R. Rodriguez wrote:
+On Tue, Sep 20, 2011 at 06:03:38AM -0700, Greg KH wrote:
+> On Mon, Sep 19, 2011 at 02:25:48PM -0700, Franky Lin wrote:
+> > Code clean up for fullmac.
+> 
+> Ok, this is the 7th patch series since the last round of "how do we get
+> our driver into mainline" happened.
+> 
+> And while code is great and nice, I still haven't seen any real answers
+> to all of the questions that were asked of the Broadcom driver team
+> during that review by the linux-wireless developers about how things
+> will be handled properly due to the overlap in functionality with the
+> existing "real" driver in the tree.
+> 
+> So, can you please start answering these questions?  I'm loath to keep
+> accepting patches until that all gets straightened out as it potentially
+> wastes my, and your, time by doing so.
+> 
+> In other words, I'm not going to apply any more patches until this gets
+> resolved.  Consider this patchset dropped from my to-apply queue for now
+> because of that.
 
-> Awesome :) I started to review this but tried applying the entire
-> series [1] to several different master tags on wireless-testing but it
-> doesn't apply, any chance you could rebase? I'll try to finish my
-> review through though.
+I think most of the outstanding series from Broadcom are
+(almost?) exclusively for their fullmac driver, which has not overlap
+with b43.  We should be moving forward toward getting the fullmac
+driver into wireless-next.
 
-It seems to apply to wireless-testing for me, not sure ...
-
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
