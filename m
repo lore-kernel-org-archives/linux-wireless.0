@@ -1,57 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.iopen.co.nz ([202.6.116.226]:53048 "EHLO mail.iopen.co.nz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751671Ab1IQBpq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 21:45:46 -0400
-Message-ID: <4E73F3FA.502@iopen.net> (sfid-20110917_034554_507044_C9C96309)
-Date: Sat, 17 Sep 2011 13:12:26 +1200
-From: Linux Wireless Stuff for IOPEN <linwir-list@iopen.net>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53307 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752018Ab1ITXvZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Sep 2011 19:51:25 -0400
+Received: by bkbzt4 with SMTP id zt4so928759bkb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 16:51:24 -0700 (PDT)
 MIME-Version: 1.0
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Subject: Update regulatory rules for New Zealand (NZ)
+In-Reply-To: <1316558247-10018-8-git-send-email-wey-yi.w.guy@intel.com>
+References: <1316558247-10018-1-git-send-email-wey-yi.w.guy@intel.com> <1316558247-10018-8-git-send-email-wey-yi.w.guy@intel.com>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Tue, 20 Sep 2011 16:51:04 -0700
+Message-ID: <CALSq=Ba0-Jryh=cU5bp9MpeTtOAru3YqavuTtwuudjO2_Ri5Ag@mail.gmail.com> (sfid-20110921_015129_113834_C7407CE8)
+Subject: Re: [PATCH 7/8] iwlagn: pending frames musn't be incremented if agg
+ is on
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From Fedora 14 :
-==============
+On Tue, Sep 20, 2011 at 3:37 PM, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
+>
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>
+> During my works on the transport layer I removed code that updated
+> a local variable (is_agg) that is needed to keep the pending_frames
+> count up to date. Fix this.
 
-> country NZ:
->         (2402 - 2482 @ 40), (N/A, 30)
->         (5170 - 5250 @ 20), (3, 23)
->         (5250 - 5330 @ 20), (3, 23), DFS
->         (5735 - 5835 @ 20), (3, 30)
+Seems like a big bug.
 
-Updates for 2.4 GHz :
-===================
+Is this a bugfix for a patch earlier in the series or a patch that's
+already been accepted. If the former, why not merge? If the latter,
+why not CC'ed as a fix to an earlier version of the kernel?
 
-  Frequency range is 2400 to 2483.5 (Ref 1)
-  Maximum EIRP is 36 dBm (4 W)      (Ref 1)
-
-Updates for 5 GHz :
-=================
-
-  5150 - 5250  23 dBm (200 mW) indoor only            (Ref 1,3)
-  5250 - 5350  23 dBm (200 mW) indoor/outdoor,DFS+TPC (Ref 1,3)
-  5725 - 5875  36 dBm (  4  W) PtMP/PtP               (Ref 1,3)
-  5725 - 5825  53 dBm (200  W) PtP fixed              (Ref 1,2,3)
-
-  And possibly this via the Spread Spectrum Device provision
-
-  5470 - 5725  30 dBm (  1  W) requires DFS+TPC       (Ref 3)
-
-  Maximum power density is specified for some chunks.
-
-References :
-==========
-1 :
-> http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/fixed-radio-link-devices/information-on-the-operation-of-wireless-lan-and-related-systems-in-the-2-ghz-and-5-ghz-bands
-2 :
-> http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/fixed-radio-link-devices
-3 :
-> http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/short-range-devices
-
-Cheers
-The IOPEN wireless deployers
-
+Dan
