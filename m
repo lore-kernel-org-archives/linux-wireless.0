@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:56907 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751433Ab1IZWbB (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:50507 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751182Ab1ITU5P convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 18:31:01 -0400
-Received: by qyk7 with SMTP id 7so7136932qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 15:31:00 -0700 (PDT)
+	Tue, 20 Sep 2011 16:57:15 -0400
+Received: by eya28 with SMTP id 28so501683eya.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 13:57:14 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20110922154849.369194760@sipsolutions.net>
-References: <20110922154726.521122680@sipsolutions.net> <20110922154849.369194760@sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 26 Sep 2011 15:30:40 -0700
-Message-ID: <CAB=NE6UP9xYmLY3nJRMVdjPky87hB1YzFTHEzBv0Pt=qv3kAmg@mail.gmail.com> (sfid-20110927_003105_618484_4E28FC39)
-Subject: Re: [RFC 03/15] mac80211: also expire filtered frames
+In-Reply-To: <1316524874.3953.41.camel@jlt3.sipsolutions.net>
+References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+	<20110920130338.GA9885@kroah.com>
+	<1316524874.3953.41.camel@jlt3.sipsolutions.net>
+Date: Tue, 20 Sep 2011 22:56:49 +0200
+Message-ID: <CACna6rxxoRoLi9C3RBsot8kvZx4k5AZVHzHoE17q-iT1U7i5qg@mail.gmail.com> (sfid-20110920_225718_164001_E4AA9FE0)
+Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline patch #2
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
+Cc: Greg KH <greg@kroah.com>, Franky Lin <frankyl@broadcom.com>,
+	gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 22, 2011 at 8:47 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+2011/9/20 Johannes Berg <johannes@sipsolutions.net>:
+> On Tue, 2011-09-20 at 06:03 -0700, Greg KH wrote:
 >
-> mac80211 will expire normal PS-buffered frames, but
-> if the device rejected some frames for a sleeping
-> station, these won't be on the ps_tx_buf queue but
-> on the tx_filtered queue instead; this is done to
-> avoid reordering.
+>> And while code is great and nice, I still haven't seen any real answers
+>> to all of the questions that were asked of the Broadcom driver team
+>> during that review by the linux-wireless developers about how things
+>> will be handled properly due to the overlap in functionality with the
+>> existing "real" driver in the tree.
 >
-> However, mac80211 will not expire frames from the
-> filtered queue, let's fix that.
+> Let's qualify this to "some developers".
 >
-> Also add a more comments to what all this expiry is
-> doing and how it works.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> One thing I'd like to point out is that the Broadcom's firmware API has
+> always undergone changes over time. I'm actually surprised that b43
+> works as well as it does (which, tbh, isn't very well at all, at least
+> for me with some 11n PHY). I also don't think that Broadcom are going to
+> maintain compatibility and/or maintain new firmware features for old
+> devices, that just doesn't make any sense.
 
-No particular comments on the code yet but latency issues has got me
-thinking about the filtered frames stuff and if we really need it. How
-much benefit does keeping these frames give us instead of just
-dropping them?
+Actually, when we got some single response from Broadcom about their
+relation to b43, they haven't mentioned support for old HW is any
+problem at all. They just pointed we don't support calibration for
+N-PHY and we don't support 802.11n feature for a better performance.
 
-  Luis
+I feel we're creating some problems ourself. Just some guessing that
+support for older HW can be real problem for future development... not
+confirmed by anyone at all.
+
+-- 
+Rafał
