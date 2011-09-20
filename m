@@ -1,30 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2974 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933238Ab1IONqo (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:59597 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751410Ab1ITRtE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 09:46:44 -0400
-Message-ID: <4E7201BE.704@qca.qualcomm.com> (sfid-20110915_154648_210963_A3931C2B)
-Date: Thu, 15 Sep 2011 16:46:38 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Tue, 20 Sep 2011 13:49:04 -0400
+Received: by qyk30 with SMTP id 30so4151334qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 10:49:03 -0700 (PDT)
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/4] ath6kl: Remove auth type fall back in auto authentication
- mode
-References: <1315648597-17999-1-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1315648597-17999-1-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <1316533251.3953.46.camel@jlt3.sipsolutions.net>
+References: <1316533251.3953.46.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 20 Sep 2011 10:48:42 -0700
+Message-ID: <CAB=NE6UEo5C-+KrS+Bvqb2wj5NDcZu5ODqm_a4eSXW9ANU0xxw@mail.gmail.com> (sfid-20110920_194908_608761_376CCA7C)
+Subject: Re: [PATCH] mac80211: fix AP/VLAN PS buffer race
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/10/2011 12:56 PM, Vasanthakumar Thiagarajan wrote:
-> Target already tries with different authentication mechanism
-> when authentication type is configured to NL80211_AUTHTYPE_AUTOMATIC.
-> Remove this piece of code from driver. Having this code in driver
-> even affects auto + WEP authentication in some cases.
+On Tue, Sep 20, 2011 at 8:40 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> When an AP interface is removed without the
+> AP/VLAN interfaces having been removed before
+> already, the AP-VLAN interface might still
+> have sleeping stations and buffer multicast
+> frames which will happen on the AP interface.
+> Thus, we need to remove AP/VLAN interfaces
+> before purging buffered broadcast frames.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Thanks, patches 1-3 applied. Patch 4 dropped per your request. Please
-resend it once it's ready.
+Curious, what was happening with the inverse?
 
-Kalle
+  Luis
