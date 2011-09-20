@@ -1,32 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:1286 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753129Ab1I1ROz (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39445 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751795Ab1ITOaf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 13:14:55 -0400
-Message-ID: <4E834DDA.1030608@qca.qualcomm.com> (sfid-20110928_191458_240850_1F295BF6)
-Date: Wed, 28 Sep 2011 19:39:54 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Tue, 20 Sep 2011 10:30:35 -0400
+Date: Tue, 20 Sep 2011 10:18:50 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2011-09-19
+Message-ID: <20110920141849.GD7800@tuxdriver.com> (sfid-20110920_163051_898098_A2485AB1)
+References: <20110919203639.GF2608@tuxdriver.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/4] ath6kl: add prefix parameter to ath6kl_dbg_dump()
-References: <20110927113045.11592.15974.stgit@localhost6.localdomain6>
-In-Reply-To: <20110927113045.11592.15974.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110919203639.GF2608@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/27/2011 02:30 PM, Kalle Valo wrote:
-> Makes it easier to recognise longs dumps.
+On Mon, Sep 19, 2011 at 04:36:39PM -0400, John W. Linville wrote:
+> David,
 > 
-> Obligatory screenshot using "rx" prefix:
+> Here is another big batch of updates intended for 3.2 -- still
+> clearing-out the backlog...
 > 
-> ath6kl: ath6kl_rx
-> rx 00000000: 10 10 00 00 00 00 08 30 00 00 00 00 00 00 f9 0b  .......0........
-> rx 00000010: 2c 44 08 30 00 00 f9 0b 0c a4 02 00 00 00 73 d2  ,D.0..........s.
-> rx 00000020: 94 00 f9 0b 04 8c 01 00 02 00 07 02 02 00 f9 0b  ................
+> This round includes lots of updates to ath9k, b43, iwlagn, and rt2x00.
+> Some cleanups go to mac80211, along with a number of mesh-mode fixes
+> from Javier.
+> 
+> Please let me know if there are problems!
+> 
+> Thanks,
+> 
+> John
+> 
+> ---
+> 
+> The following changes since commit 765cf9976e937f1cfe9159bf4534967c8bf8eb6d:
+> 
+>   tcp: md5: remove one indirection level in tcp_md5sig_pool (2011-09-17 01:15:46 -0400)
+> 
+> are available in the git repository at:
+>   ssh://infradead/~/public_git/wireless-next.git for-davem
 
-All four applied.
+This is also available at this URL -- sorry about the ssh URL (with
+an alias at that)!
 
-Kalle
+	git://git.infradead.org/users/linville/wireless-next.git for-davem
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
