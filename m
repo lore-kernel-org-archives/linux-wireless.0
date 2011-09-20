@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:34788 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752382Ab1IHOkK (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:60378 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150Ab1ITVxP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 10:40:10 -0400
-Received: by gyd5 with SMTP id 5so718467gyd.15
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 07:40:05 -0700 (PDT)
-Message-ID: <4E68D3BF.5090201@ti.com> (sfid-20110908_164032_680742_E8EE6FCE)
-Date: Thu, 08 Sep 2011 17:39:59 +0300
-From: Victor Goldenshtein <victorg@ti.com>
-Reply-To: victorg@ti.com
+	Tue, 20 Sep 2011 17:53:15 -0400
+Received: by qyk7 with SMTP id 7so1048589qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 14:53:15 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 3/5] nl80211/cfg80211: adding intermediate scan result event.
-References: <1315224151-16552-1-git-send-email-VictorG@ti.com>  <1315224151-16552-4-git-send-email-VictorG@ti.com>  <1315224512.4075.10.camel@jlt3.sipsolutions.net> <4E6736D9.3070804@ti.com>  <1315387619.4002.3.camel@jlt3.sipsolutions.net> <4E686125.5050208@ti.com>  <1315464556.3948.0.camel@jlt3.sipsolutions.net>  <4E688321.7090704@ti.com> <1315474047.7091.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1315474047.7091.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CAB=NE6W76dg_KaN6jB-OQ2xf7Xx93a4ruqzQDwg5+rcwOcSfXg@mail.gmail.com>
+References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com>
+ <loom.20110918T004437-426@post.gmane.org> <1316437459.5995.29.camel@jlt3.sipsolutions.net>
+ <36569806.Rgjanm0GiI@alex-1> <1316521312.3953.27.camel@jlt3.sipsolutions.net>
+ <CAB=NE6VDSTAKK0pmyBOz6hw1pbxo7U6dxbrvg_F-y6CDB0paKw@mail.gmail.com>
+ <4E78D990.3090601@openwrt.org> <CAB=NE6VZeCViBZA9++NcgZ2JcDppbp3OuagRVK02ENjdb-MAQA@mail.gmail.com>
+ <4E78DF6F.3060304@openwrt.org> <CAB=NE6XqT_ZUV7F+0ZvCs-WgxZnJn3onMiWNtBi=+eCkMZMgPA@mail.gmail.com>
+ <4E78EA05.6000005@openwrt.org> <CAB=NE6WhaNpjpernCGY9skU+e+cUurPxi7r-FKaeH5iybeqGEg@mail.gmail.com>
+ <4E78FFEB.1090301@openwrt.org> <CAB=NE6W76dg_KaN6jB-OQ2xf7Xx93a4ruqzQDwg5+rcwOcSfXg@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 20 Sep 2011 14:52:55 -0700
+Message-ID: <CAB=NE6Wynn25oVHzrjusZ4OnrSyN-XwriVKFiPHMC+EvFqvTLg@mail.gmail.com> (sfid-20110920_235319_014909_69392B3C)
+Subject: Re: [PATCH v3 3/3] mac80211: Add HT operation modes for IBSS
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Javier Cardona <javier@cozybit.com>,
+	Alexander Simon <an.alexsimon@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/09/2011 12:27, Johannes Berg wrote:
-> On Thu, 2011-09-08 at 11:56 +0300, Victor Goldenshtein wrote:
+On Tue, Sep 20, 2011 at 2:26 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> On Tue, Sep 20, 2011 at 2:04 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> This is not really an IBSS specific issue. It applies to WDS or monitor mode
+>> as well.
 >
->> If I understood you correctly.. I can create new
->> NL80211_ATTR_HW_CAPABILITY (u32) attribute which will advertise all
->> capabilities with "dev->wiphy.flags".
+> Excellent point!
 >
-> No, I don't think you can advertise wiphy.flags since those flags are
-> internal -- you'll have to map single wiphy flags to single capability
-> flags which are also defined in nl80211.h.
+>> If we want to properly enforce Annex J channel pairs, this needs to
+>> be moved to cfg80211.
 >
-> I'd call it "NL80211_ATTR_CAPABILITIES" to sidestep the issue of it
-> being a driver of HW or whatever capability.
->
-> johannes
->
+> This does not still address the issue of one peer finding out it
+> cannot deal with an HT40 pair and correcting the topology and
+> propagating this out. Not yet sure if for 802.11ac we'll need
+> something similar but its worth considering.
 
-Sorry, I'm not sure that I'm entirely understand, you mean to create 
-*nested* "NL80211_ATTR_CAPABILITIES" attribute which will contain all 
-new capability flags, mapped from wiphy.flags? and to do it within 
-existing nl80211_send_wiphy() function?
+Sorry I meant section 11.14.3.2 which deals with neighboring BSSes
+from the scan list, the annex J stuff would still need to be done by
+all the initial radiators too though for a primary.
 
-Thanks,
-Victor.
+  Luis
