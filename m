@@ -1,127 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:39322 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752831Ab1I1NS1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 09:18:27 -0400
-Date: Wed, 28 Sep 2011 15:18:23 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: =?utf-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org,
-	'LKML' <linux-kernel@vger.kernel.org>
-Subject: Re: =?utf-8?B?562U5aSNOiDnrZTlpI06IOetlA==?= =?utf-8?B?5aSNOg==?=
- 3.1-rc6+ rtl8192se issue
-Message-ID: <20110928131823.GA2693@gere.osrc.amd.com> (sfid-20110928_151847_498242_F056CCBC)
-References: <4E721871.7040901@lwfinger.net>
- <20110916180323.GA1988@gere.osrc.amd.com>
- <CD4D8CF16C39438E82FE8241C9AF80F4@realsil.com.cn>
- <20110921185816.GA2036@gere.osrc.amd.com>
- <791179BCE62F4954AB936E6CAC9CA977@realsil.com.cn>
- <4E7AAB8B.40900@lwfinger.net>
- <20110922075115.GA17640@liondog.tnic>
- <6452E68488784D0EA32E4BDF1B941EFB@realsil.com.cn>
- <20110923103339.GA26078@gere.osrc.amd.com>
- <4E7CB504.4060904@lwfinger.net>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:63041 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751194Ab1ITVox (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Sep 2011 17:44:53 -0400
+Received: by ewy4 with SMTP id 4so756572ewy.5
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 14:44:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4E7CB504.4060904@lwfinger.net>
+In-Reply-To: <87aa9zi80v.fsf@purkki.adurom.net>
+References: <1316347394-21276-1-git-send-email-eliad@wizery.com>
+ <1316408970.2157.9.camel@cumari> <87aaa0k0a1.fsf@purkki.adurom.net>
+ <CAB3XZEdiTRDJGUHWJ5UorQq2w-ZLP+TP0b-qSSVUTzhPG4H2rg@mail.gmail.com>
+ <87litjipda.fsf@purkki.adurom.net> <CAK=WgbZM5zdgOurFfGbQR3V_mqd85qjS_u1_tU35oaVPCh0Rkg@mail.gmail.com>
+ <87aa9zi80v.fsf@purkki.adurom.net>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Wed, 21 Sep 2011 00:44:31 +0300
+Message-ID: <CAK=WgbaELpStOx-K7dKwztTYgM-fZ2WvHrGxOvx775k3eiSUFA@mail.gmail.com> (sfid-20110920_234456_742736_38057FBA)
+Subject: Re: [PATCH] mac80211: add ieee80211_set_dyn_ps_timeout()
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Eliad Peller <eliad@wizery.com>, Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 23, 2011 at 11:34:12AM -0500, Larry Finger wrote:
-> On 09/23/2011 05:33 AM, Borislav Petkov wrote:
-> >On Fri, Sep 23, 2011 at 06:21:07PM +0800, 李朝明 wrote:
-> >>Please set ips =0 and try again..
-> >
-> >What does that mean?
-> >
-> >I can trigger the grinding-to-a-halt reliably with "ips=0" - it only
-> >takes a couple of hours of network traffic. Also, I don't want to try
-> >the driver you sent me because the version in the kernel needs fixing
-> >not some out-of-tree codebase.
-> 
-> I got a chance to review the rtl8192se part of the changes in that
-> 08/16/2011 version. Attached is a patch to update the kernel
-> version.
-> 
-> A prerequisite is:
-> 
-> commit da3ba88a9996cd64c6768bed5727e02da81e2c8d
-> Author: Larry Finger <Larry.Finger@lwfinger.net>
-> Date:   Mon Sep 19 14:34:10 2011 -0500
-> 
->     rtlwifi: Combine instances of RTL_HAL_IS_CCK_RATE macros.
-> 
->     Three drivers, rtl8192ce, rtl8192cu and rtl8192de, use the same macro
->     to check if a particular rate is in the CCK set. This common code is
->     relocated to a common header file. A distinct macro used by rtl8192se
->     with the same name is renamed.
-> 
->     Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+On Tue, Sep 20, 2011 at 5:49 PM, Kalle Valo <kvalo@adurom.com> wrote:
+> Ohad Ben-Cohen <ohad@wizery.com> writes:
+> > A lot has happened since then :) The wl12xx firmware today is vastly
+> > different and much improved.
+>
+> Yeah, quite a turn. That's good :)
 
-Ok, here's what I did.
+And it's getting even better.. we have some news:
 
-* merge 'master' branch of
-git://git.infradead.org/users/linville/wireless-next.git with -rc8 in
-order to get da3ba88a9996.
+One of the things we've been pushing for for some time is to get real
+IEEE80211_HW_SUPPORTS_DYNAMIC_PS support. Coincidentally we've been
+just notified that this is materializing for wl12xx as we speak, so
+we'll be shifting to IEEE80211_HW_SUPPORTS_DYNAMIC_PS very soon.
 
-* apply your attached patch with the Realsil facelift:
-
-patching file drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-patching file drivers/net/wireless/rtlwifi/rtl8192se/reg.h
-patching file drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-patching file drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-Hunk #6 FAILED at 540.
-1 out of 6 hunks FAILED -- saving rejects to file drivers/net/wireless/rtlwifi/rtl8192se/trx.c.rej
-patching file drivers/net/wireless/rtlwifi/wifi.h
-Hunk #1 succeeded at 1328 (offset 3 lines).
-
-(had to apply hunk #6 by hand though)
-
-* build
-
-drivers/net/wireless/rtlwifi/rtl8192se/sw.c:307:8: error: `EFUSE_OOB_PROTECT_BYTES_LEN' undeclared here (not in a function)
-drivers/net/wireless/rtlwifi/rtl8192se/sw.c:307:2: error: array index in initializer not of integer type
-drivers/net/wireless/rtlwifi/rtl8192se/sw.c:307:2: error: (near initialization for `rtl92se_hal_cfg.maps')
-make[5]: *** [drivers/net/wireless/rtlwifi/rtl8192se/sw.o] Error 1
-make[4]: *** [drivers/net/wireless/rtlwifi/rtl8192se] Error 2
-make[3]: *** [drivers/net/wireless/rtlwifi] Error 2
-make[2]: *** [drivers/net/wireless] Error 2
-make[1]: *** [drivers/net] Error 2
-make: *** [drivers] Error 2
-make: *** Waiting for unfinished jobs....
-
-fix with
-
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index 615f6b4..55428f2 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -450,6 +450,7 @@ enum rtl_var_map {
-        EFUSE_HWSET_MAX_SIZE,
-        EFUSE_MAX_SECTION_MAP,
-        EFUSE_REAL_CONTENT_SIZE,
-+       EFUSE_OOB_PROTECT_BYTES_LEN,
- 
-        /*CAM map */
-        RWCAM,
-
-> I have run the new version for a couple of hours without problems.
-> Perhaps it will cure your difficulty, but I am not optimistic.
-
-Yeah, I'm sorry to confirm that your pessimism turned into realism :-).
-It froze in under 20 mins. Ran the driver with default module parameters
-though.
-
-Looks like I'll have to test the Realsil tarball after all. Question, do
-I simply overwrite the subtree under drivers/net/wireless/rtlwifi/ with
-the files from the tarball?
-
-Also, any preferred module parameters settings you want me to test?
-
-Thanks.
-
--- 
-Regards/Gruss,
-Boris.
+In that case, I can happily say this whole discussion is moot. We
+agree not to agree, but at least we don't have to resolve it :)
