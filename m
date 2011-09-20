@@ -1,65 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:39008 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752811Ab1INIiV (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:50859 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751168Ab1ITNuz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 04:38:21 -0400
-Received: by mail-bw0-f53.google.com with SMTP id zt12so1437911bkb.26
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2011 01:38:20 -0700 (PDT)
-Subject: pull request: wl12xx 2011-09-14
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 14 Sep 2011 11:38:12 +0300
-Message-ID: <1315989492.2498.59.camel@cumari> (sfid-20110914_103825_604715_A8DDC5C5)
-Mime-Version: 1.0
+	Tue, 20 Sep 2011 09:50:55 -0400
+Received: by wyg34 with SMTP id 34so519496wyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 06:50:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1316524874.3953.41.camel@jlt3.sipsolutions.net>
+References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+	<20110920130338.GA9885@kroah.com>
+	<1316524874.3953.41.camel@jlt3.sipsolutions.net>
+Date: Tue, 20 Sep 2011 15:50:53 +0200
+Message-ID: <CACna6rz_CowYMLtv_smrNEMBZ-QC-VhoUkAmFq-tCKnmi1gs_g@mail.gmail.com> (sfid-20110920_155059_627589_CA22F45C)
+Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline patch #2
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Greg KH <greg@kroah.com>, Franky Lin <frankyl@broadcom.com>,
+	gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+2011/9/20 Johannes Berg <johannes@sipsolutions.net>:
+> I'm actually surprised that b43
+> works as well as it does (which, tbh, isn't very well at all, at least
+> for me with some 11n PHY).
 
-Another batch of wl12xx patches intended for 3.2.  There are just a few
-bugfixes and some small improvements in the scheduled scan
-implementation.
-
-Please pull or let me know if there's any problem. This tree is based
-on wireless-next/master.
-
-Thanks!
-
-The following changes since commit 56e6786e59cba2c714091ed53deffa6001a32841:
-
-  cfg80211: print bandwidth in chan_reg_rule_print_dbg() (2011-09-13 15:53:46 -0400)
-
-are available in the git repository at:
-  git://github.com/lucacoelho/wl12xx.git for-linville
-
-Arik Nemtsov (1):
-      wl12xx: allow 11a AP-mode for wl127x devices
-
-Eliad Peller (3):
-      wl12xx: initialize rate_set on band rates initialization
-      wl12xx: increase psm_entry_retries
-      wl12xx: enter psm only after station role was started
-
-Guy Eilam (1):
-      wl12xx: use 2 spare TX blocks for GEM cipher
-
-Luciano Coelho (3):
-      wl12xx: add support for multiple SSIDs in sched_scan
-      wl12xx: use SCAN_SSID_TYPE_PUBLIC when using the wildcard in sched_scan
-      Merge branch 'wl12xx-next' into for-linville
-
- drivers/net/wireless/wl12xx/boot.c   |    4 +--
- drivers/net/wireless/wl12xx/main.c   |   50 +++++++++++++++++--------
- drivers/net/wireless/wl12xx/scan.c   |   66 ++++++++++++++++++++++++++++++----
- drivers/net/wireless/wl12xx/tx.c     |    8 +++--
- drivers/net/wireless/wl12xx/tx.h     |    1 +
- drivers/net/wireless/wl12xx/wl12xx.h |    3 ++
- 6 files changed, 103 insertions(+), 29 deletions(-)
+Have you reported that to b43/me? What issue is that? Please report in
+separated thread with some description&logs.
 
 -- 
-Cheers,
-Luca.
-
+Rafał
