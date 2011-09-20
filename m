@@ -1,188 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:50286 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750776Ab1IVHfP convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:55768 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751487Ab1ITS4C convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 03:35:15 -0400
-Received: by eya28 with SMTP id 28so1421028eya.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 00:35:13 -0700 (PDT)
+	Tue, 20 Sep 2011 14:56:02 -0400
+Received: by yxl31 with SMTP id 31so580662yxl.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 11:56:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1316606713.3940.29.camel@jlt3.sipsolutions.net>
-References: <1316082334-7664-1-git-send-email-arik@wizery.com>
- <1316082334-7664-3-git-send-email-arik@wizery.com> <1316606713.3940.29.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 22 Sep 2011 10:34:58 +0300
-Message-ID: <CA+XVXffOFw9RFFuwDTB_ei6Ktwai1tCicTuTeF5=4=WqZSZafw@mail.gmail.com> (sfid-20110922_093519_902674_187DAE26)
-Subject: Re: [RFC 2/5] mac80211: handle TDLS high-level commands and frames
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Kalyan C Gaddam <chakkal@iit.edu>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4E78D990.3090601@openwrt.org>
+References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com>
+ <loom.20110918T004437-426@post.gmane.org> <1316437459.5995.29.camel@jlt3.sipsolutions.net>
+ <36569806.Rgjanm0GiI@alex-1> <1316521312.3953.27.camel@jlt3.sipsolutions.net>
+ <CAB=NE6VDSTAKK0pmyBOz6hw1pbxo7U6dxbrvg_F-y6CDB0paKw@mail.gmail.com> <4E78D990.3090601@openwrt.org>
+From: Javier Cardona <javier@cozybit.com>
+Date: Tue, 20 Sep 2011 11:55:41 -0700
+Message-ID: <CAPjQAd_KtVnr5RvGMzPOVsVhKVw4F6PKOb4tUahFMrRR_jBu3w@mail.gmail.com> (sfid-20110920_205606_841375_B4EF4655)
+Subject: Re: [PATCH v3 3/3] mac80211: Add HT operation modes for IBSS
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Alexander Simon <an.alexsimon@googlemail.com>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 21, 2011 at 15:05, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2011-09-15 at 13:25 +0300, Arik Nemtsov wrote:
+On Tue, Sep 20, 2011 at 11:21 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>>  I don't really know. As I said, I think I'd be happy with an
+>>>  implementation that maybe doesn't fully implement everything as long as
+>>>  it considers the trade-offs.
+>>
+>> The same questions come up with HT support and 802.11s, as per Javier
+>> this is not really well spelled out in the spec. My recommendation is
+>> to just support for now the most simple case and let us not entangle
+>> ourselves with the complexities of handling trying to merge different
+>> setups. So only enable peering up for adhoc or mesh if and only if the
+>> observed IE matches our own supported HT caps or target configuration.
+>> If a legacy STA tries to peer up with an HT IBSS, this would simply be
+>> rejected. We can leave off handling the change in configuration later
+>> for userspace, but do not see this as being a requirement for
+>> supporting HT for IBSS or Mesh. The simpler the better, so long as we
+>> simply respect the spec.
 >
->> +static void ieee80211_tdls_add_supp_rates(struct ieee80211_sub_if_data *sdata,
->> +                                       struct sk_buff *skb)
->
-> maybe it's time to refactor adding supported rates? This must be like
-> the 5th implementation of it ... mesh has exactly the same at least.
+> I disagree. That'll make it useless for real deployments, which are often a
+> mix of HT and non-HT devices.
 
-They're not all exactly the same, but yeah, mesh has exactly the same
-one (with no basic rates).
-I'll move it to util.c and have both places use it.
+For mesh, my initial thought was to allow mismatched peerings
+according to the following rules:
 
->> +     *pos++ = 0x20; /* TDLS enabled */
->
-> That might benefit from a constant in ieee80211.h
+ 1. Peering is allowed between non-HT STAs as well as between HT and
+non-HT STAs.  No HT checks in that case.
+ 2. If both peer candidates support HT, only allow peering if they
+advertise the same BSSBasicMCSSet in their HT Operation IE.  This
+ensures that a basic link can be established between these stations.
+ 3. Don't use the HT info for anything else: if there are poorly
+matched HT links, let the path selection algorithm try and find better
+ones (if there are any).
 
-Will do.
+I believe the above is compliant with 802.11s.
 
->
->> +static u16 ieee80211_get_tdls_sta_capab(struct ieee80211_sub_if_data *sdata)
->> +{
->> +     u16 capab;
->> +     struct ieee80211_local *local = sdata->local;
->> +
->> +     /* We do not support any exotic capabilities yet */
->> +
->> +     capab = WLAN_CAPABILITY_ESS;
->
-> Should we really set the ESS bit for TDLS?
+Cheers,
 
-Well I saw this bit set in an example tdls pcap that Jouni provided
-the wireshark list a while ago. I haven't seen anything about it in
-the spec, but I assumed there was some inter-op cause for this.
-This was on in Kalyan's original patches as well.
-
-Kalyan, Jouni - care to comment?
-
->> +     lnkid->ie_len = 18;
->
-> sizeof too?
-
-Sure.
-
->
->> +     memcpy(tf->da, peer, ETH_ALEN);
->> +     memcpy(tf->sa, sdata->vif.addr, ETH_ALEN);
->> +     tf->ether_type = cpu_to_be16(ETH_P_TDLS);
->> +     tf->payload_type = 2; /* RFTYPE_TDLS */
->
-> another constant?
-
-Right.
-
->
->> +     default:
->> +             /* we don't support other actions for now */
->> +             WARN_ON(1);
->> +             return -EINVAL;
->
-> Wouldn't that warning be triggerable from userspace?
-
-That was more of a debugging thing. I guess I should remove these.
-
->
->> +static int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
->> +                            u8 *peer, u8 action_code, u8 dialog_token,
->> +                            u16 status_code, const u8 *extra_ies,
->> +                            size_t extra_ies_len)
->> +{
->> +     struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->> +     struct ieee80211_local *local = sdata->local;
->> +     struct ieee80211_tx_info *info;
->> +     struct sk_buff *skb = NULL;
->> +     bool send_direct;
->> +     int ret;
->> +
->> +#ifdef CONFIG_MAC80211_VERBOSE_TDLS_DEBUG
->> +     printk(KERN_DEBUG "TDLS mgmt action %d peer %pM\n", action_code, peer);
->> +#endif
->> +
->> +     /* make sure we are in managed mode, and associated */
->> +     if (sdata->vif.type != NL80211_IFTYPE_STATION ||
->> +         !sdata->u.mgd.associated) {
->> +             return -EINVAL;
->> +     }
->
-> braces here seem useless :)
-
-Will fix.
-
->
-> Also accessing u.mgd.associated as a bool like this is fine, but
-> obviously racy. How do we deal with that? Do we even tear down links
-> when disassociating, and do we even need to beyond just killing the
-> station entries?
-
-We don't tear down links just before disassociating (there are too
-many corner cases here). We just disable the links post-factum.
-Killing the station entries won't help for packets meant to be sent
-over the AP. I guess we can take the mutex for a little extra safely
-(but it won't do much).
-
-The race is even worse - from queuing until the actual Tx, we could
-have disconnected from this AP and connected do a totally different
-one. But this shouldn't happen in reality (and we can add some guards
-to wpa_supplicant to make sure).
-Do you see this as a security threat?
-
->
->> +     skb = dev_alloc_skb(local->hw.extra_tx_headroom +
->> +                         max(sizeof(struct ieee80211_mgmt),
->> +                             sizeof(struct ieee80211_tdls_data)) +
->> +                         50 + /* supported rates */
->> +                         7 + /* ext capab */
->> +                         sizeof(struct ieee80211_tdls_lnkie));
->
-> Where are the extra IEs used? They should be accounted for too.
-
-Good catch.
-
->
->> +fail:
->> +     if (skb)
->> +             dev_kfree_skb(skb);
->
-> I believe the if() is pointless.
-
-ok.
-
->
->> +     case NL80211_TDLS_DISABLE_LINK:
->> +             rcu_read_lock();
->> +             sta = sta_info_get(sdata, peer);
->> +             if (sta) {
->> +                     sta->tdls_link_enabled = false;
->> +                     sta_info_destroy_addr(sdata, peer);
->> +             }
->> +             rcu_read_unlock();
->
-> You can't call destroy_addr within rcu section.
-
-Another good catch.
-
->
->> +     case NL80211_TDLS_TEARDOWN:
->> +     case NL80211_TDLS_SETUP:
->> +     case NL80211_TDLS_DISCOVERY_REQ:
->> +             /* We don't support in-driver setup/teardown/discovery */
->> +             return -ENOTSUPP;
->> +     case NL80211_TDLS_DISABLE:
->> +     case NL80211_TDLS_ENABLE:
->> +             /* TODO */
->> +             return -ENOTSUPP;
->> +     default:
->> +             WARN_ON(1);
->> +             return -EINVAL;
->
-> might want to use EOPNOTSUPP and not have a warning -- if nl80211 ever
-> gets extended with more actions you might run into the default case.
-
-Yea I'll remove this one as well as a couple more.
-
-Arik
+Javier
