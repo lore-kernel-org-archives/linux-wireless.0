@@ -1,82 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54910 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755409Ab1ISMUT (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:50649 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772Ab1ITV05 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 08:20:19 -0400
-Subject: Re: [RFC 0/5] TDLS support for nl80211/mac80211 drivers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Kalyan C Gaddam <chakkal@iit.edu>
-In-Reply-To: <CA+XVXfeSMANH7Eoq+3XKY57y64szbGrMP6Y5iUgZmn7R11tQ0g@mail.gmail.com> (sfid-20110916_184921_977646_0BBA3AE0)
-References: <1316082334-7664-1-git-send-email-arik@wizery.com>
-	 <1316177890.4130.27.camel@jlt3.sipsolutions.net>
-	 <CA+XVXfeSMANH7Eoq+3XKY57y64szbGrMP6Y5iUgZmn7R11tQ0g@mail.gmail.com>
-	 (sfid-20110916_184921_977646_0BBA3AE0)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Sep 2011 14:20:17 +0200
-Message-ID: <1316434817.5995.20.camel@jlt3.sipsolutions.net> (sfid-20110919_142023_129308_A8CCFB7E)
-Mime-Version: 1.0
+	Tue, 20 Sep 2011 17:26:57 -0400
+Received: by qyk7 with SMTP id 7so1022082qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 14:26:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4E78FFEB.1090301@openwrt.org>
+References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com>
+ <loom.20110918T004437-426@post.gmane.org> <1316437459.5995.29.camel@jlt3.sipsolutions.net>
+ <36569806.Rgjanm0GiI@alex-1> <1316521312.3953.27.camel@jlt3.sipsolutions.net>
+ <CAB=NE6VDSTAKK0pmyBOz6hw1pbxo7U6dxbrvg_F-y6CDB0paKw@mail.gmail.com>
+ <4E78D990.3090601@openwrt.org> <CAB=NE6VZeCViBZA9++NcgZ2JcDppbp3OuagRVK02ENjdb-MAQA@mail.gmail.com>
+ <4E78DF6F.3060304@openwrt.org> <CAB=NE6XqT_ZUV7F+0ZvCs-WgxZnJn3onMiWNtBi=+eCkMZMgPA@mail.gmail.com>
+ <4E78EA05.6000005@openwrt.org> <CAB=NE6WhaNpjpernCGY9skU+e+cUurPxi7r-FKaeH5iybeqGEg@mail.gmail.com>
+ <4E78FFEB.1090301@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 20 Sep 2011 14:26:36 -0700
+Message-ID: <CAB=NE6W76dg_KaN6jB-OQ2xf7Xx93a4ruqzQDwg5+rcwOcSfXg@mail.gmail.com> (sfid-20110920_232700_630490_50F36F10)
+Subject: Re: [PATCH v3 3/3] mac80211: Add HT operation modes for IBSS
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Javier Cardona <javier@cozybit.com>,
+	Alexander Simon <an.alexsimon@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-09-16 at 19:48 +0300, Arik Nemtsov wrote:
+On Tue, Sep 20, 2011 at 2:04 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> This is not really an IBSS specific issue. It applies to WDS or monitor mode
+> as well.
 
-> We had some qualms about the design ourselves. This is a question
-> Kalyan sent to the hostap list a while back -
-> http://lists.shmoo.com/pipermail/hostap/2011-June/023311.html
-> 
-> The locking requirement (elaborated at the end of the email) was also
-> part of the decision to make mac80211 more aware of the connection
-> state. Also, eventually mac80211 will have to add some IEs of it's own
-> to the setup packets.
+Excellent point!
 
-Hmm, ok, adding the IEs would be a deal-breaker, it didn't seem
-necessary though.
+> If we want to properly enforce Annex J channel pairs, this needs to
+> be moved to cfg80211.
 
-> wpa_supplicant needs to add some IEs to the packet (RSN, FTIE, ..).
-> mac80211 will also have to add some IEs (U-APSD, HT, ...)
-> Does it really matter if the packet's headers are created by usermode
-> or by kernel? Even if we change the "owner" of the packet, the API
-> would still remain about the same. tdls_mgmt would simply get the
-> frame instead of extra IEs.
+This does not still address the issue of one peer finding out it
+cannot deal with an HT40 pair and correcting the topology and
+propagating this out. Not yet sure if for 802.11ac we'll need
+something similar but its worth considering.
 
-Not really. But adding the extra datapath seemed a little pointless.
-
-> Jouni's original wpa_s TDLS code was written for a full-mac driver
-> where the kernel/firmware side created the packet. wpa_supplicant only
-> provided auth IEs. Keeping it this way also avoids refactoring the
-> code and introducing bugs.
-
-Yeah that's another good argument :-)
-
-> >> Notably, this patch-set does not include locking in the data path,
-> >> to switch between AP-based and direct Tx during link setup/tear-down.
-> >> This will be added by a later patch-set, if/when this series is
-> >> accepted. In practice it seems to work quite well without additional
-> >> locking.
-> >
-> > That ought to work without locks if you create/destroy the station
-> > entries appropriately?
-> 
-> I should elaborate on the locking requirement. The TDLS link setup is
-> made up 3 frames - a setup request, followed by a response from the
-> peer, and finally a confirm.
-> This is an excerpt from the spec:
-> 
-> "To avoid possible reordering of MSDUs, a TDLS initiator STA shall
-> cease transmitting MSDUs to the
-> TDLS responder STA through the AP after sending a TDLS Setup Request
-> frame, and a TDLS responder
-> STA shall cease transmitting MSDUs to the TDLS initiator STA through
-> the AP after sending a TDLS
-> Setup Response frame indicating status code 0 (Success)."
-> 
-> This requires a locking mechanism similar to AP-mode buffering for
-> stations in PS (since we probably don't want to stop all queues).
-
-Ok, so the special thing is really that you need to stop after the setup
-request frame. Makes sense.
-
-johannes
-
+  Luis
