@@ -1,178 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1060 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752176Ab1ILKPW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Sep 2011 06:15:22 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 01/20] staging: brcm80211: stop using kthread for iscan
- status check in fullmac
-Date: Mon, 12 Sep 2011 12:14:45 +0200
-Message-ID: <1315822504-24210-2-git-send-email-rvossen@broadcom.com> (sfid-20110912_121528_910023_0F2316C4)
-In-Reply-To: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
-References: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:20396 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751094Ab1ITGWi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Sep 2011 02:22:38 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [RFC v2] mac80211: make use of supported rates for probe requests
+Date: Tue, 20 Sep 2011 11:53:14 +0530
+Message-ID: <1316499794-5979-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110920_082242_033391_ECCD6EA0)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+The supported rates on scan trigger helps to send the probe
+request frames on non-11b rates for p2p. For the drivers that
+have rate control on hw like ath9k_htc, this approch does not
+work. So for those drivers wpa_supplicant should set tx rate
+mask to disable 11b rates.
 
-Use work queue instead.
-
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Howard Harte <hharte@broadcom.com>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   76 ++++++---------------
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h |    3 +-
- 2 files changed, 23 insertions(+), 56 deletions(-)
+ net/mac80211/cfg.c         |   13 +++++++++++++
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/offchannel.c  |    1 +
+ net/mac80211/rate.c        |    9 +++++++++
+ net/mac80211/scan.c        |    9 ++++++++-
+ 5 files changed, 32 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index db51c46..c8e47ff 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -271,7 +271,6 @@ static s32 brcmf_dongle_roam(struct net_device *ndev, u32 roamvar,
- static void brcmf_iscan_timer(unsigned long data);
- static void brcmf_term_iscan(struct brcmf_cfg80211_priv *cfg_priv);
- static s32 brcmf_init_iscan(struct brcmf_cfg80211_priv *cfg_priv);
--static s32 brcmf_iscan_thread(void *data);
- static s32 brcmf_dev_iovar_setbuf(struct net_device *dev, s8 *iovar,
- 				 void *param, s32 paramlen, void *bufptr,
- 				 s32 buflen);
-@@ -3151,18 +3150,15 @@ static void brcmf_term_iscan(struct brcmf_cfg80211_priv *cfg_priv)
- 	struct brcmf_cfg80211_iscan_ctrl *iscan = cfg_to_iscan(cfg_priv);
- 	struct brcmf_ssid ssid;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b57ddf9..2d9384e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1880,6 +1880,9 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
+ 	u32 flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
+ 		    IEEE80211_TX_CTL_REQ_TX_STATUS;
+ 	bool is_offchan = false;
++	struct ieee802_11_elems elems;
++	struct ieee80211_mgmt *hdr;
++	size_t baselen;
  
--	if (cfg_priv->iscan_on && iscan->tsk) {
-+	if (cfg_priv->iscan_on) {
- 		iscan->state = WL_ISCAN_STATE_IDLE;
--		send_sig(SIGTERM, iscan->tsk, 1);
+ 	/* Check that we are on the requested channel for transmission */
+ 	if (chan != local->tmp_channel &&
+@@ -1934,6 +1937,15 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
  
--		/*
--		 * The iscan task may want to acquire the rtnl_lock
--		 * so release it here upon stopping the task.
--		 */
--		rtnl_unlock();
--		kthread_stop(iscan->tsk);
--		rtnl_lock();
--		iscan->tsk = NULL;
-+		if (iscan->timer_on) {
-+			del_timer_sync(&iscan->timer);
-+			iscan->timer_on = 0;
-+		}
+ 	*cookie = (unsigned long) skb;
+ 
++	hdr = (struct ieee80211_mgmt *) skb->data;
++	baselen = (u8 *) hdr->u.probe_resp.variable - (u8 *) hdr;
++	if (baselen < len) {
++		ieee802_11_parse_elems(hdr->u.probe_resp.variable,
++				       len - baselen, &elems);
++		local->mlme_supp_rates[chan->band] =
++			ieee80211_sta_get_rates(local, &elems, chan->band);
++	}
 +
-+		cancel_work_sync(&iscan->work);
- 
- 		/* Abort iscan running in FW */
- 		memset(&ssid, 0, sizeof(ssid));
-@@ -3195,7 +3191,7 @@ static s32 brcmf_wakeup_iscan(struct brcmf_cfg80211_iscan_ctrl *iscan)
- {
- 	if (likely(iscan->state != WL_ISCAN_STATE_IDLE)) {
- 		WL_SCAN("wake up iscan\n");
--		wake_up(&iscan->waitq);
-+		schedule_work(&iscan->work);
+ 	if (is_offchan && local->ops->remain_on_channel) {
+ 		unsigned int duration;
+ 		int ret;
+@@ -1986,6 +1998,7 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
+ 	 */
+ 	if (!is_offchan && !wait && !sdata->vif.bss_conf.idle) {
+ 		ieee80211_tx_skb(sdata, skb);
++		local->mlme_supp_rates[chan->band] = 0;
  		return 0;
  	}
  
-@@ -3294,50 +3290,28 @@ static s32 brcmf_iscan_aborted(struct brcmf_cfg80211_priv *cfg_priv)
- 	return err;
- }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 21186e2..de63284 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -879,6 +879,7 @@ struct ieee80211_local {
+ 	enum ieee80211_band hw_scan_band;
+ 	int scan_channel_idx;
+ 	int scan_ies_len;
++	u32 mlme_supp_rates[IEEE80211_NUM_BANDS];
  
--static s32 brcmf_iscan_thread(void *data)
-+static void brcmf_cfg80211_iscan_handler(struct work_struct *work)
- {
--	struct sched_param param = {.sched_priority = MAX_RT_PRIO - 1 };
- 	struct brcmf_cfg80211_iscan_ctrl *iscan =
--			(struct brcmf_cfg80211_iscan_ctrl *)data;
-+			container_of(work, struct brcmf_cfg80211_iscan_ctrl,
-+				     work);
- 	struct brcmf_cfg80211_priv *cfg_priv = iscan_to_cfg(iscan);
- 	struct brcmf_cfg80211_iscan_eloop *el = &iscan->el;
--	DECLARE_WAITQUEUE(wait, current);
--	u32 status;
--	int err = 0;
--
--	sched_setscheduler(current, SCHED_FIFO, &param);
--	allow_signal(SIGTERM);
--	status = BRCMF_SCAN_RESULTS_PARTIAL;
--	add_wait_queue(&iscan->waitq, &wait);
--	while (1) {
--		prepare_to_wait(&iscan->waitq, &wait, TASK_INTERRUPTIBLE);
--
--		schedule();
-+	u32 status = BRCMF_SCAN_RESULTS_PARTIAL;
- 
--		if (kthread_should_stop())
--			break;
--		if (iscan->timer_on) {
--			del_timer_sync(&iscan->timer);
--			iscan->timer_on = 0;
--		}
--		rtnl_lock();
--		err = brcmf_get_iscan_results(iscan, &status,
--					      &cfg_priv->bss_list);
--		if (unlikely(err)) {
--			status = BRCMF_SCAN_RESULTS_ABORTED;
--			WL_ERR("Abort iscan\n");
--		}
--		rtnl_unlock();
--		el->handler[status](cfg_priv);
--	}
--	finish_wait(&iscan->waitq, &wait);
- 	if (iscan->timer_on) {
- 		del_timer_sync(&iscan->timer);
- 		iscan->timer_on = 0;
- 	}
--	WL_SCAN("ISCAN thread terminated\n");
- 
--	return 0;
-+	rtnl_lock();
-+	if (brcmf_get_iscan_results(iscan, &status, &cfg_priv->bss_list)) {
-+		status = BRCMF_SCAN_RESULTS_ABORTED;
-+		WL_ERR("Abort iscan\n");
-+	}
-+	rtnl_unlock();
+ 	bool sched_scanning;
+ 	struct ieee80211_sched_scan_ies sched_scan_ies;
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 13427b1..b15cc3d 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -216,6 +216,7 @@ static void ieee80211_hw_roc_start(struct work_struct *work)
+ 	if (local->hw_roc_skb) {
+ 		sdata = IEEE80211_DEV_TO_SUB_IF(local->hw_roc_dev);
+ 		ieee80211_tx_skb(sdata, local->hw_roc_skb);
++		local->mlme_supp_rates[local->hw_roc_channel->band] = 0;
+ 		local->hw_roc_skb = NULL;
+ 	} else {
+ 		cfg80211_ready_on_channel(local->hw_roc_dev,
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 3d5a2cb..98f4216 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -328,6 +328,15 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 	 * the common case.
+ 	 */
+ 	mask = sdata->rc_rateidx_mask[info->band];
++	/*
++	 * Filter out rates that are not supported for mlme frames.
++	 * These rates are set defined from supported rates attribute
++	 * during scan start.
++	 */
++	if (sdata->local->mlme_supp_rates[info->band] &&
++	    rc_no_data_or_no_ack(txrc))
++		mask &= sdata->local->mlme_supp_rates[info->band];
 +
-+	el->handler[status](cfg_priv);
- }
+ 	if (mask != (1 << txrc->sband->n_bitrates) - 1) {
+ 		if (sta) {
+ 			/* Filter out rates that the STA does not support */
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 6f09eca..1d0048d 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -264,6 +264,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	bool on_oper_chan;
+ 	bool enable_beacons = false;
++	int i;
  
- static void brcmf_iscan_timer(unsigned long data)
-@@ -3356,15 +3330,9 @@ static s32 brcmf_invoke_iscan(struct brcmf_cfg80211_priv *cfg_priv)
+ 	lockdep_assert_held(&local->mtx);
+ 
+@@ -295,6 +296,8 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
+ 
+ 	local->scanning = 0;
+ 	local->scan_channel = NULL;
++	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
++		local->mlme_supp_rates[i] = 0;
+ 
+ 	on_oper_chan = ieee80211_cfg_on_oper_channel(local);
+ 
+@@ -382,7 +385,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 				  struct cfg80211_scan_request *req)
  {
- 	struct brcmf_cfg80211_iscan_ctrl *iscan = cfg_to_iscan(cfg_priv);
+ 	struct ieee80211_local *local = sdata->local;
+-	int rc;
++	int rc, i;
  
--	if (cfg_priv->iscan_on && !iscan->tsk) {
-+	if (cfg_priv->iscan_on) {
- 		iscan->state = WL_ISCAN_STATE_IDLE;
--		init_waitqueue_head(&iscan->waitq);
--		iscan->tsk = kthread_run(brcmf_iscan_thread, iscan, "wl_iscan");
--		if (IS_ERR(iscan->tsk)) {
--			WL_ERR("Could not create iscan thread\n");
--			iscan->tsk = NULL;
--			return -ENOMEM;
--		}
-+		INIT_WORK(&iscan->work, brcmf_cfg80211_iscan_handler);
+ 	lockdep_assert_held(&local->mtx);
+ 
+@@ -427,6 +430,8 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 
+ 	local->scan_req = req;
+ 	local->scan_sdata = sdata;
++	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
++		local->mlme_supp_rates[i] = req->rates[i];
+ 
+ 	if (local->ops->hw_scan)
+ 		__set_bit(SCAN_HW_SCANNING, &local->scanning);
+@@ -450,6 +455,8 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 
+ 		local->scan_req = NULL;
+ 		local->scan_sdata = NULL;
++		for (i = 0; i < IEEE80211_NUM_BANDS; i++)
++			local->mlme_supp_rates[i] = 0;
  	}
  
- 	return 0;
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-index 0542bac..98cd47d 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -248,8 +248,7 @@ struct brcmf_cfg80211_iscan_ctrl {
- 	u32 timer_ms;
- 	u32 timer_on;
- 	s32 state;
--	struct task_struct *tsk;
--	wait_queue_head_t waitq;
-+	struct work_struct work;
- 	struct brcmf_cfg80211_iscan_eloop el;
- 	void *data;
- 	s8 ioctl_buf[BRCMF_C_IOCTL_SMLEN];
+ 	return rc;
 -- 
-1.7.4.1
-
+1.7.6.1
 
