@@ -1,107 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2996 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753962Ab1IAJRs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 05:17:48 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 11/30] staging: brcm80211: cleaned up fullmac macro
- BRCMF_PM_RESUME_RETURN_ERROR
-Date: Thu, 1 Sep 2011 11:17:01 +0200
-Message-ID: <1314868640-9425-12-git-send-email-rvossen@broadcom.com> (sfid-20110901_111817_809847_8808A24C)
-In-Reply-To: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
-References: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:56580 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750712Ab1ITNVW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Sep 2011 09:21:22 -0400
+Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
+ patch #2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Greg KH <greg@kroah.com>
+Cc: Franky Lin <frankyl@broadcom.com>, gregkh@suse.de,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20110920130338.GA9885@kroah.com> (sfid-20110920_150440_808230_86E73445)
+References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+	 <20110920130338.GA9885@kroah.com> (sfid-20110920_150440_808230_86E73445)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 20 Sep 2011 15:21:14 +0200
+Message-ID: <1316524874.3953.41.camel@jlt3.sipsolutions.net> (sfid-20110920_152126_182521_873B6871)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Macros impacting the code flow are sort of frowned upon. No other macro's
-in the source code impact the code flow. Replaced macro by function.
+On Tue, 2011-09-20 at 06:03 -0700, Greg KH wrote:
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   25 +++++++++++++++------
- 1 files changed, 18 insertions(+), 7 deletions(-)
+> And while code is great and nice, I still haven't seen any real answers
+> to all of the questions that were asked of the Broadcom driver team
+> during that review by the linux-wireless developers about how things
+> will be handled properly due to the overlap in functionality with the
+> existing "real" driver in the tree.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index a15765b..d3d3890 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -90,17 +90,24 @@ DECLARE_WAIT_QUEUE_HEAD(sdioh_request_buffer_wait);
- 			wait_event_timeout(a, false, HZ/100); \
- 		} \
- 	}	while (0)
--#define BRCMF_PM_RESUME_RETURN_ERROR(a, b)	\
--	do { if (atomic_read(&b->suspend)) return a; } while (0)
- #else
- #define BRCMF_PM_RESUME_WAIT(a, b)
--#define BRCMF_PM_RESUME_RETURN_ERROR(a, b)
- #endif		/* CONFIG_PM_SLEEP */
- 
- static int
- brcmf_sdioh_card_regread(struct brcmf_sdio_dev *sdiodev, int func, u32 regaddr,
- 			 int regsize, u32 *data);
- 
-+static bool
-+brcmf_pm_resume_error(struct brcmf_sdio_dev *sdiodev)
-+{
-+	bool is_err = false;
-+#ifdef CONFIG_PM_SLEEP
-+	is_err = atomic_read(&sdiodev->suspend);
-+#endif
-+	return is_err;
-+}
-+
- static int brcmf_sdioh_enablefuncs(struct brcmf_sdio_dev *sdiodev)
- {
- 	int err_ret;
-@@ -249,7 +256,8 @@ brcmf_sdioh_request_byte(struct brcmf_sdio_dev *sdiodev, uint rw, uint func,
- 	brcmf_dbg(INFO, "rw=%d, func=%d, addr=0x%05x\n", rw, func, regaddr);
- 
- 	BRCMF_PM_RESUME_WAIT(sdioh_request_byte_wait, sdiodev);
--	BRCMF_PM_RESUME_RETURN_ERROR(-EIO, sdiodev);
-+	if (brcmf_pm_resume_error(sdiodev))
-+		return -EIO;
- 	if (rw) {		/* CMD52 Write */
- 		if (func == 0) {
- 			/* Can only directly write to some F0 registers.
-@@ -351,7 +359,8 @@ brcmf_sdioh_request_word(struct brcmf_sdio_dev *sdiodev, uint cmd_type, uint rw,
- 		  cmd_type, rw, func, addr, nbytes);
- 
- 	BRCMF_PM_RESUME_WAIT(sdioh_request_word_wait, sdiodev);
--	BRCMF_PM_RESUME_RETURN_ERROR(-EIO, sdiodev);
-+	if (brcmf_pm_resume_error(sdiodev))
-+		return -EIO;
- 	/* Claim host controller */
- 	sdio_claim_host(sdiodev->func[func]);
- 
-@@ -400,7 +409,8 @@ brcmf_sdioh_request_packet(struct brcmf_sdio_dev *sdiodev, uint fix_inc,
- 	brcmf_dbg(TRACE, "Enter\n");
- 
- 	BRCMF_PM_RESUME_WAIT(sdioh_request_packet_wait, sdiodev);
--	BRCMF_PM_RESUME_RETURN_ERROR(-EIO, sdiodev);
-+	if (brcmf_pm_resume_error(sdiodev))
-+		return -EIO;
- 
- 	/* Claim host controller */
- 	sdio_claim_host(sdiodev->func[func]);
-@@ -477,7 +487,8 @@ brcmf_sdioh_request_buffer(struct brcmf_sdio_dev *sdiodev, uint pio_dma,
- 	brcmf_dbg(TRACE, "Enter\n");
- 
- 	BRCMF_PM_RESUME_WAIT(sdioh_request_buffer_wait, sdiodev);
--	BRCMF_PM_RESUME_RETURN_ERROR(-EIO, sdiodev);
-+	if (brcmf_pm_resume_error(sdiodev))
-+		return -EIO;
- 	/* Case 1: we don't have a packet. */
- 	if (pkt == NULL) {
- 		brcmf_dbg(DATA, "Creating new %s Packet, len=%d\n",
--- 
-1.7.4.1
+Let's qualify this to "some developers".
 
+One thing I'd like to point out is that the Broadcom's firmware API has
+always undergone changes over time. I'm actually surprised that b43
+works as well as it does (which, tbh, isn't very well at all, at least
+for me with some 11n PHY). I also don't think that Broadcom are going to
+maintain compatibility and/or maintain new firmware features for old
+devices, that just doesn't make any sense.
+
+As a consequence, I don't think there's any sense in saying b43 should
+be the driver that Broadcom must support upstream. Even we, back then,
+split b43 into b43 and b43legacy when it wasn't really possible any more
+to test and maintain a single driver for different devices. Rafal has
+shown that it is possible today (to some extent) to do that for the
+newer chips and the older 11g only chips that b43 still supports, but
+I'm not convinced that with new features like P2P this will be true in
+the future.
+
+And this is just discussing the technical side -- the support side is an
+entirely different question.
+
+Now, don't get me wrong -- I don't think the duplication is a good
+thing. A lot of the PHY code could be shared. However, I think it will
+probably not be possible for much longer to share the higher level MAC
+code that programs the SHM etc.
+
+So I don't claim to know what the solution is, but I think simply
+rejecting the Broadcom effort like most people seem to imply is a good
+solution at all. It will leave all of us in a bad spot by creating a
+driver that has to support too many different devices.
+
+johannes
 
