@@ -1,65 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:6298 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933125Ab1IOMCZ (ORCPT
+Received: from lider.pardus.org.tr ([193.140.100.216]:49962 "EHLO
+	lider.pardus.org.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751845Ab1ITFu6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 08:02:25 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [RFC] wireless: Do not allow disabled channel in scan request
-Date: Thu, 15 Sep 2011 17:33:01 +0530
-Message-ID: <1316088181-3869-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110915_140231_090917_07BB7DF8)
+	Tue, 20 Sep 2011 01:50:58 -0400
+Received: from [192.168.4.203] (unknown [193.140.74.51])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(No client certificate requested)
+	(Authenticated sender: ozan)
+	by lider.pardus.org.tr (Postfix) with ESMTPSA id F0E5BA7AB03
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 08:38:56 +0300 (EEST)
+Message-ID: <4E7827EC.2030302@pardus.org.tr> (sfid-20110920_075102_957844_5C2AD477)
+Date: Tue, 20 Sep 2011 08:43:08 +0300
+From: =?ISO-8859-9?Q?Ozan_=C7a=F0layan?= <ozan@pardus.org.tr>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: linux-wireless@vger.kernel.org
+Subject: Fix compat-wireless build on 2.6.37
+Content-Type: text/plain; charset=ISO-8859-9; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211_conn_scan allows disabled channels at scan request.
-Hence probe request was seen at the disabled one. This patch
-ensures that disabled channel never be added into the scan
-request's channel list.
+Hi,
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- net/wireless/sme.c |   19 ++++++++++++-------
- 1 files changed, 12 insertions(+), 7 deletions(-)
+The following fix should be applied to the compat tree to fix a build 
+error in wl12xx. Since kernel.org is down, I couldn't fetch the compat 
+tree to post a patch with git send-email.
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index dec0fa2..6e86d5a 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -110,17 +110,22 @@ static int cfg80211_conn_scan(struct wireless_dev *wdev)
- 	else {
- 		int i = 0, j;
- 		enum ieee80211_band band;
-+		struct ieee80211_supported_band *bands;
-+		struct ieee80211_channel *channel;
- 
- 		for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
--			if (!wdev->wiphy->bands[band])
-+			bands = wdev->wiphy->bands[band];
-+			if (!bands)
- 				continue;
--			for (j = 0; j < wdev->wiphy->bands[band]->n_channels;
--			     i++, j++)
--				request->channels[i] =
--					&wdev->wiphy->bands[band]->channels[j];
--			request->rates[band] =
--				(1 << wdev->wiphy->bands[band]->n_bitrates) - 1;
-+			for (j = 0; j < bands->n_channels; j++) {
-+				channel = &bands->channels[j];
-+				if (channel->flags & IEEE80211_CHAN_DISABLED)
-+					continue;
-+				request->channels[i++] = channel;
-+			}
-+			request->rates[band] = (1 << bands->n_bitrates) - 1;
- 		}
-+		n_channels = i;
- 	}
- 	request->n_channels = n_channels;
- 	request->ssids = (void *)&request->channels[n_channels];
--- 
-1.7.6.1
-
+Index: compat-wireless-2011-08-27-p/include/linux/compat-2.6.38.h
+===================================================================
+--- compat-wireless-2011-08-27-p.orig/include/linux/compat-2.6.38.h
++++ compat-wireless-2011-08-27-p/include/linux/compat-2.6.38.h
+@@ -11,6 +11,10 @@
+  /* rename member in struct mmc_host in include/linux/mmc/host.h */
+  #define max_segs·  max_hw_segs
+·
++static inline bool pm_runtime_enabled(struct device *dev)
++{
++·  return !dev->power.disable_depth;
++}
+·
+  /* Exponentially weighted moving average (EWMA) */
