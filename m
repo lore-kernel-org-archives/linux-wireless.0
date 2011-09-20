@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:63298 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753922Ab1IWNuj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 09:50:39 -0400
-Message-ID: <4E7C8EB1.5050007@lwfinger.net> (sfid-20110923_155044_331877_739F7B3C)
-Date: Fri, 23 Sep 2011 08:50:41 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from purkki.adurom.net ([80.68.90.206]:58450 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754259Ab1ITIe1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Sep 2011 04:34:27 -0400
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: add ieee80211_set_dyn_ps_timeout()
+References: <1316347394-21276-1-git-send-email-eliad@wizery.com>
+	<1316408970.2157.9.camel@cumari> <87aaa0k0a1.fsf@purkki.adurom.net>
+	<CAB3XZEdiTRDJGUHWJ5UorQq2w-ZLP+TP0b-qSSVUTzhPG4H2rg@mail.gmail.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 20 Sep 2011 11:34:25 +0300
+In-Reply-To: <CAB3XZEdiTRDJGUHWJ5UorQq2w-ZLP+TP0b-qSSVUTzhPG4H2rg@mail.gmail.com> (Eliad Peller's message of "Mon\, 19 Sep 2011 19\:30\:57 +0300")
+Message-ID: <87litjipda.fsf@purkki.adurom.net> (sfid-20110920_103432_031693_41DE84FA)
 MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: =?UTF-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org,
-	'LKML' <linux-kernel@vger.kernel.org>
-Subject: Re: =?UTF-8?B?562U5aSNOiDnrZTlpI06IOetlOWkjTogMy4xLXJjNisgcnRsODE=?=
- =?UTF-8?B?OTJzZSBpc3N1ZQ==?=
-References: <20110915124406.GA14374@gere.osrc.amd.com> <4E721871.7040901@lwfinger.net> <20110916180323.GA1988@gere.osrc.amd.com> <CD4D8CF16C39438E82FE8241C9AF80F4@realsil.com.cn> <20110921185816.GA2036@gere.osrc.amd.com> <791179BCE62F4954AB936E6CAC9CA977@realsil.com.cn> <4E7AAB8B.40900@lwfinger.net> <20110922075115.GA17640@liondog.tnic> <6452E68488784D0EA32E4BDF1B941EFB@realsil.com.cn> <20110923103339.GA26078@gere.osrc.amd.com>
-In-Reply-To: <20110923103339.GA26078@gere.osrc.amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/2011 05:33 AM, Borislav Petkov wrote:
-> On Fri, Sep 23, 2011 at 06:21:07PM +0800, 李朝明 wrote:
->> Please set ips =0 and try again..
+Eliad Peller <eliad@wizery.com> writes:
+
+> AFAIU from the coex guys, the scenario is something like this: upon
+> coex activity, the fw might delay its rx and tx paths. this means
+> that the fw might get a frame within the 100ms of the dyn ps, but
+> delay its processing and pass it up to the driver only later. this
+> will cause redundant psm enter (after 100ms) and psm exit (after the
+> fw passed the packet). i'm not sure about the exact effect during
+> coex operation, but eventually these psm enter/exit affect the
+> throughput.
 >
-> What does that mean?
->
-> I can trigger the grinding-to-a-halt reliably with "ips=0" - it only
-> takes a couple of hours of network traffic. Also, I don't want to try
-> the driver you sent me because the version in the kernel needs fixing
-> not some out-of-tree codebase.
+> another point here, is that during a specific period (during auto_mode
+> on), there might or might not be coex activity. thus, we can't just
+> disable dyn_ps, as it will hurt throughput (when there is no coex
+> activity).
 
-Does the likelihood of the failure change when "ips=0" is used?
+IIRC Juuso added ieee80211_enable/disable_dyn_ps() to make it possible
+use BT COEX with wl12xx. Now you are saying that you actually want the
+opposite? I'm confused now. 
 
-The Realtek group made several changes in the driver that Chaoming sent you that 
-have not yet been incorporated in the kernel version. If you test that driver, 
-we might learn if any of them are important to your problem. As neither of us 
-can duplicate your results, it is not possible for us to do those tests.
+But nevertheless I'm not still convinced that doing all this in
+mac80211 is the right thing. Especially that this seems to be very
+wl12xx specific, right?
 
-I agree that we want to fix the kernel version. It is unfortunate that Realtek 
-does not generate their improvements as patches to that kernel version, and 
-publish them that way, but that is a fact of life. When they produce a new 
-version, I have to look at the diff file between it and the previous version and 
-test those differences with my devices. Thus far, there have been no changes 
-that have any effect on my system, but who knows on yours. Please run the test 
-as Chaoming asked you to do.
+> bottom line - i'm not sure about all the details, but according to
+> their tests - it does improve the throughput.
 
-Thanks,
+Firmware engineers are notarious in making quick hacks to improve one
+special case and not thinking about the big picture ;)
 
-Larry
+-- 
+Kalle Valo
