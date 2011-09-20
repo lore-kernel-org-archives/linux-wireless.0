@@ -1,66 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2245 "EHLO MMS3.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:55450 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751348Ab1IZTSE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 15:18:04 -0400
-Message-ID: <4E80CFE1.506@broadcom.com> (sfid-20110926_211808_358950_D4315725)
-Date: Mon, 26 Sep 2011 12:17:53 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
+	id S1750867Ab1ITWyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Sep 2011 18:54:15 -0400
+Message-ID: <4E791992.2090406@openwrt.org> (sfid-20110921_005418_920337_2CDB56E1)
+Date: Wed, 21 Sep 2011 00:54:10 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: "Arend van Spriel" <arend@broadcom.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-cc: "gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 09/20] staging: brcm80211: use endian annotated
- structures in brcmsmac
-References: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
- <1316830148-28661-10-git-send-email-frankyl@broadcom.com> (
- sfid-20110924_040943_301385_9930B29B)
- <1316860721.3952.5.camel@jlt3.sipsolutions.net>
- <4E7DCE39.1010406@broadcom.com>
- <1317029844.4117.31.camel@jlt3.sipsolutions.net>
- <4E80C3CE.9010001@broadcom.com>
-In-Reply-To: <4E80C3CE.9010001@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Javier Cardona <javier@cozybit.com>,
+	Alexander Simon <an.alexsimon@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] mac80211: Add HT operation modes for IBSS
+References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com> <loom.20110918T004437-426@post.gmane.org> <1316437459.5995.29.camel@jlt3.sipsolutions.net> <36569806.Rgjanm0GiI@alex-1> <1316521312.3953.27.camel@jlt3.sipsolutions.net> <CAB=NE6VDSTAKK0pmyBOz6hw1pbxo7U6dxbrvg_F-y6CDB0paKw@mail.gmail.com> <4E78D990.3090601@openwrt.org> <CAB=NE6VZeCViBZA9++NcgZ2JcDppbp3OuagRVK02ENjdb-MAQA@mail.gmail.com> <4E78DF6F.3060304@openwrt.org> <CAB=NE6XqT_ZUV7F+0ZvCs-WgxZnJn3onMiWNtBi=+eCkMZMgPA@mail.gmail.com> <4E78EA05.6000005@openwrt.org> <CAB=NE6WhaNpjpernCGY9skU+e+cUurPxi7r-FKaeH5iybeqGEg@mail.gmail.com> <4E78FFEB.1090301@openwrt.org> <CAB=NE6W76dg_KaN6jB-OQ2xf7Xx93a4ruqzQDwg5+rcwOcSfXg@mail.gmail.com> <4E790B3B.9090004@openwrt.org> <CAB=NE6UYY5sbpmkTHPx1LVFh6SC0QebqhKcpYCawZryvttOS=A@mail.gmail.com>
+In-Reply-To: <CAB=NE6UYY5sbpmkTHPx1LVFh6SC0QebqhKcpYCawZryvttOS=A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/26/2011 11:26 AM, Arend van Spriel wrote:
-> On 09/26/2011 11:37 AM, Johannes Berg wrote:
->> On Sat, 2011-09-24 at 14:34 +0200, Arend van Spriel wrote:
->>> On 09/24/2011 12:38 PM, Johannes Berg wrote:
->>>> On Fri, 2011-09-23 at 19:08 -0700, Franky Lin wrote:
->>>>>     struct d11rxhdr {
->>>>>     	u16 RxFrameSize;
->>>>>     	u16 PAD;
->>>>> +	union {
->>>>> +		struct d11rxhdr_le rxh_le;
->>>>> +		struct d11rxhdr rxh_cpu;
->>>>> +	};
->>>> This seems a little strange. Why would it be both in LE and CPU byte
->>>> order?
->>> Indeed. When we receive it from the device it is in LE and we convert it
->>> to CPU order for further processing using rxh_cpu.
->> That seems a confusing and error-prone -- you'll have to remember
->> whether you're before or after conversion. Would it be possible to have
->> two versions of the outer structure and change the pointer type at that
->> point?
+On 2011-09-21 12:37 AM, Luis R. Rodriguez wrote:
+> On Tue, Sep 20, 2011 at 2:52 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
+>>  On 2011-09-20 11:26 PM, Luis R. Rodriguez wrote:
+>>>
+>>>  On Tue, Sep 20, 2011 at 2:04 PM, Felix Fietkau<nbd@openwrt.org>    wrote:
+>>>>
+>>>>    If we want to properly enforce Annex J channel pairs, this needs to
+>>>>    be moved to cfg80211.
+>>>
+>>>  This does not still address the issue of one peer finding out it
+>>>  cannot deal with an HT40 pair and correcting the topology and
+>>>  propagating this out. Not yet sure if for 802.11ac we'll need
+>>>  something similar but its worth considering.
 >>
->> johannes
+>>  Don't think of it as a topology. Each node makes its own decisions about
+>>  HT40+/HT40-/HT20.
 >
-> For me knowing the driver design (a little ;-) it is not difficult to
-> remember. Your feedback has valid arguments so I will reconsider. Franky
-> is looking whether dropping it will affect the other patches submitted
-> to Greg.
+> OK lets go with an example.
 >
-> Gr. AvS
+> Node A: HT40+
+>     Primary: 5785 (157)
+>     Extension: 5805 (161)
+>
+> Node B: HT20 as it finds a legacy AP with on 5805.
+>    Channel: 5785 (157)
+>
+> Node C: HT40-
+>    Primary:  5785 (157)
+>    Extension: 5765 (153)
+>
+> So we want to support this setup?
+>
+> What if the network changes and we cannot use the original HT40 pair
+> now but we can later? This applies even to today's hostapd AP setup
+> and more rhetorical.
+Whenever a node is not alone in an IBSS, it must keep the primary 
+channel the same to be able to talk to its neighbors. If it cannot use 
+its HT40 opmode because of overlap checks then it should just gracefully 
+fall back to HT20. Refusal to join or randomly changing the primary 
+channel would create big problems for bigger deployments, IBSS merging 
+should always be considered potentially unreliable.
 
-Dropping this one will affect some following patches in the series. 
-Since it's not a bug, shall we keep this one and change it as Johannes 
-suggested in future commit?
+Most big ad-hoc mesh deployments use fixed channel and fixed cell-id for 
+that reason.
 
-Franky
-
+- Felix
