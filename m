@@ -1,99 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:45869 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753665Ab1IVXBT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 19:01:19 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 06/12] iwlagn: fix dangling scan request
-Date: Thu, 22 Sep 2011 15:14:54 -0700
-Message-Id: <1316729700-1770-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110923_010130_773170_3AD75923)
-In-Reply-To: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:32884 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752141Ab1ITA7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Sep 2011 20:59:33 -0400
+Subject: Re: [PATCH 20/20] staging: brcm80211: reduced checkpatch warnings
+ to zero
+From: Joe Perches <joe@perches.com>
+To: Franky Lin <frankyl@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Date: Mon, 19 Sep 2011 17:59:32 -0700
+In-Reply-To: <1316477060.27998.4.camel@Joe-Laptop>
+References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+	 <1316467568-27683-21-git-send-email-frankyl@broadcom.com>
+	 <1316477060.27998.4.camel@Joe-Laptop>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1316480372.30319.1.camel@Joe-Laptop> (sfid-20110920_025936_759728_0AF15ACC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2011-09-19 at 17:04 -0700, Joe Perches wrote:
+> It'd be better if you could find some way
+> to reduce the 6 tab indentation rather than
+> split 20 char format strings into pieces.
 
-If iwl_scan_initiate() fails for any reason,
-priv->scan_request and priv->scan_vif are left
-dangling. This can lead to a crash later when
-iwl_bg_scan_completed() tries to run a pending
-scan request.
+Perhaps something like this:
 
-In practice, this seems to be very rare due to
-the STATUS_SCANNING check earlier. That check,
-however, is wrong -- it should allow a scan to
-be queued when a reset/roc scan is going on.
-When a normal scan is already going on, a new
-one can't be issued by mac80211, so that code
-can be removed completely. I introduced this
-bug when adding off-channel support in commit
-266af4c745952e9bebf687dd68af58df553cb59d.
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |  112 ++++++++++-----------
+ 1 files changed, 54 insertions(+), 58 deletions(-)
 
-Cc: stable@kernel.org [3.0]
-Reported-by: Peng Yan <peng.yan@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |   30 ++++++++++++++++--------------
- 1 files changed, 16 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 07af6ec..74204ec 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -874,31 +874,33 @@ int iwl_mac_hw_scan(struct ieee80211_hw *hw,
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index a15765b..ccba1ce 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -240,6 +240,53 @@ brcmf_sdioh_cis_read(struct brcmf_sdio_dev *sdiodev, uint func,
+ 	return 0;
+ }
  
- 	mutex_lock(&priv->shrd->mutex);
- 
--	if (test_bit(STATUS_SCANNING, &priv->shrd->status) &&
--	    priv->scan_type != IWL_SCAN_NORMAL) {
--		IWL_DEBUG_SCAN(priv, "Scan already in progress.\n");
--		ret = -EAGAIN;
--		goto out_unlock;
--	}
--
--	/* mac80211 will only ask for one band at a time */
--	priv->scan_request = req;
--	priv->scan_vif = vif;
--
- 	/*
- 	 * If an internal scan is in progress, just set
- 	 * up the scan_request as per above.
- 	 */
- 	if (priv->scan_type != IWL_SCAN_NORMAL) {
--		IWL_DEBUG_SCAN(priv, "SCAN request during internal scan\n");
-+		IWL_DEBUG_SCAN(priv,
-+			       "SCAN request during internal scan - defer\n");
-+		priv->scan_request = req;
-+		priv->scan_vif = vif;
- 		ret = 0;
--	} else
-+	} else {
-+		priv->scan_request = req;
-+		priv->scan_vif = vif;
-+		/*
-+		 * mac80211 will only ask for one band at a time
-+		 * so using channels[0] here is ok
-+		 */
- 		ret = iwl_scan_initiate(priv, vif, IWL_SCAN_NORMAL,
- 					req->channels[0]->band);
-+		if (ret) {
-+			priv->scan_request = NULL;
-+			priv->scan_vif = NULL;
++static void
++brcmf_sdioh_request_byte_func0(struct brcmf_sdio_dev *sdiodev, uint rw,
++			       uint func, uint regaddr, u8 *byte, int *err_ret)
++{
++	/* Can only directly write to some F0 registers.
++	 * Handle F2 enable as a special case.
++	 */
++	if (regaddr == SDIO_CCCR_IOEx) {
++		if (sdiodev->func[2]) {
++			sdio_claim_host(sdiodev->func[2]);
++			if (*byte & SDIO_FUNC_ENABLE_2) {
++				/* Enable Function 2 */
++				*err_ret = sdio_enable_func(sdiodev->func[2]);
++				if (*err_ret)
++					brcmf_dbg(ERROR,
++						  "enable F2 failed:%d\n",
++						  *err_ret);
++			} else {
++				/* Disable Function 2 */
++				*err_ret = sdio_disable_func(sdiodev->func[2]);
++				if (*err_ret)
++					brcmf_dbg(ERROR,
++						  "Disable F2 failed:%d\n",
++						  *err_ret);
++			}
++			sdio_release_host(sdiodev->func[2]);
 +		}
++	} else if (regaddr == SDIO_CCCR_ABORT) {
++		/* to allow abort command through F1 */
++		sdio_claim_host(sdiodev->func[func]);
++		/*
++		 * this sdio_f0_writeb() can be replaced with another api
++		 * depending upon MMC driver change.
++		 * As of this time, this is temporary one
++		 */
++		sdio_writeb(sdiodev->func[func], *byte, regaddr, err_ret);
++		sdio_release_host(sdiodev->func[func]);
++	} else if (regaddr < 0xF0) {
++		brcmf_dbg(ERROR, "F0 Wr:0x%02x: write disallowed\n", regaddr);
++	} else {
++		/* Claim host controller, perform F0 write, and release */
++		sdio_claim_host(sdiodev->func[func]);
++		sdio_f0_writeb(sdiodev->func[func], *byte, regaddr, err_ret);
++		sdio_release_host(sdiodev->func[func]);
 +	}
++}
++
+ extern int
+ brcmf_sdioh_request_byte(struct brcmf_sdio_dev *sdiodev, uint rw, uint func,
+ 			 uint regaddr, u8 *byte)
+@@ -252,58 +299,9 @@ brcmf_sdioh_request_byte(struct brcmf_sdio_dev *sdiodev, uint rw, uint func,
+ 	BRCMF_PM_RESUME_RETURN_ERROR(-EIO, sdiodev);
+ 	if (rw) {		/* CMD52 Write */
+ 		if (func == 0) {
+-			/* Can only directly write to some F0 registers.
+-			 * Handle F2 enable
+-			 * as a special case.
+-			 */
+-			if (regaddr == SDIO_CCCR_IOEx) {
+-				if (sdiodev->func[2]) {
+-					sdio_claim_host(sdiodev->func[2]);
+-					if (*byte & SDIO_FUNC_ENABLE_2) {
+-						/* Enable Function 2 */
+-						err_ret =
+-						    sdio_enable_func
+-						    (sdiodev->func[2]);
+-						if (err_ret)
+-							brcmf_dbg(ERROR,
+-								  "enable F2 failed:%d\n",
+-								  err_ret);
+-					} else {
+-						/* Disable Function 2 */
+-						err_ret =
+-						    sdio_disable_func
+-						    (sdiodev->func[2]);
+-						if (err_ret)
+-							brcmf_dbg(ERROR,
+-								  "Disable F2 failed:%d\n",
+-								  err_ret);
+-					}
+-					sdio_release_host(sdiodev->func[2]);
+-				}
+-			}
+-			/* to allow abort command through F1 */
+-			else if (regaddr == SDIO_CCCR_ABORT) {
+-				sdio_claim_host(sdiodev->func[func]);
+-				/*
+-				 * this sdio_f0_writeb() can be replaced
+-				 * with another api
+-				 * depending upon MMC driver change.
+-				 * As of this time, this is temporaray one
+-				 */
+-				sdio_writeb(sdiodev->func[func], *byte,
+-					    regaddr, &err_ret);
+-				sdio_release_host(sdiodev->func[func]);
+-			} else if (regaddr < 0xF0) {
+-				brcmf_dbg(ERROR, "F0 Wr:0x%02x: write disallowed\n",
+-					  regaddr);
+-			} else {
+-				/* Claim host controller, perform F0 write,
+-				 and release */
+-				sdio_claim_host(sdiodev->func[func]);
+-				sdio_f0_writeb(sdiodev->func[func], *byte,
+-					       regaddr, &err_ret);
+-				sdio_release_host(sdiodev->func[func]);
+-			}
++			brcmf_sdioh_request_byte_func0(sdiodev, rw, func,
++						       regaddr, byte,
++						       &err_ret);
+ 		} else {
+ 			/* Claim host controller, perform Fn write,
+ 			 and release */
+@@ -317,13 +315,11 @@ brcmf_sdioh_request_byte(struct brcmf_sdio_dev *sdiodev, uint rw, uint func,
+ 		sdio_claim_host(sdiodev->func[func]);
  
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ 		if (func == 0) {
+-			*byte =
+-			    sdio_f0_readb(sdiodev->func[func], regaddr,
+-					  &err_ret);
++			*byte = sdio_f0_readb(sdiodev->func[func], regaddr,
++					      &err_ret);
+ 		} else {
+-			*byte =
+-			    sdio_readb(sdiodev->func[func], regaddr,
+-				       &err_ret);
++			*byte = sdio_readb(sdiodev->func[func], regaddr,
++					   &err_ret);
+ 		}
  
--out_unlock:
- 	mutex_unlock(&priv->shrd->mutex);
- 
- 	return ret;
--- 
-1.7.0.4
+ 		sdio_release_host(sdiodev->func[func]);
+
 
