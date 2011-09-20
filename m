@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:63041 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751194Ab1ITVox (ORCPT
+Received: from smtp-out.google.com ([216.239.44.51]:37348 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752190Ab1ITWkl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 17:44:53 -0400
-Received: by ewy4 with SMTP id 4so756572ewy.5
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 14:44:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87aa9zi80v.fsf@purkki.adurom.net>
-References: <1316347394-21276-1-git-send-email-eliad@wizery.com>
- <1316408970.2157.9.camel@cumari> <87aaa0k0a1.fsf@purkki.adurom.net>
- <CAB3XZEdiTRDJGUHWJ5UorQq2w-ZLP+TP0b-qSSVUTzhPG4H2rg@mail.gmail.com>
- <87litjipda.fsf@purkki.adurom.net> <CAK=WgbZM5zdgOurFfGbQR3V_mqd85qjS_u1_tU35oaVPCh0Rkg@mail.gmail.com>
- <87aa9zi80v.fsf@purkki.adurom.net>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Wed, 21 Sep 2011 00:44:31 +0300
-Message-ID: <CAK=WgbaELpStOx-K7dKwztTYgM-fZ2WvHrGxOvx775k3eiSUFA@mail.gmail.com> (sfid-20110920_234456_742736_38057FBA)
-Subject: Re: [PATCH] mac80211: add ieee80211_set_dyn_ps_timeout()
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Eliad Peller <eliad@wizery.com>, Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 20 Sep 2011 18:40:41 -0400
+Date: Tue, 20 Sep 2011 15:40:23 -0700
+From: Andrew Morton <akpm@google.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Randy Dunlap <rdunlap@xenotime.net>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH -next] bcma: needs export.h
+Message-Id: <20110920154023.c90396d8.akpm@google.com> (sfid-20110921_004057_164423_C36CAF5F)
+In-Reply-To: <CACna6rxGrd-ORWZrc0xsAOKptU_Xj3eGh9qSfX9vJYCPTZrCRg@mail.gmail.com>
+References: <20110920173102.d38155c7defbbc29beaae7c0@canb.auug.org.au>
+	<4E78CFC0.4020003@xenotime.net>
+	<CACna6rxGrd-ORWZrc0xsAOKptU_Xj3eGh9qSfX9vJYCPTZrCRg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 20, 2011 at 5:49 PM, Kalle Valo <kvalo@adurom.com> wrote:
-> Ohad Ben-Cohen <ohad@wizery.com> writes:
-> > A lot has happened since then :) The wl12xx firmware today is vastly
-> > different and much improved.
->
-> Yeah, quite a turn. That's good :)
+On Tue, 20 Sep 2011 20:45:57 +0200
+Rafa__ Mi__ecki <zajec5@gmail.com> wrote:
 
-And it's getting even better.. we have some news:
+> 2011/9/20 Randy Dunlap <rdunlap@xenotime.net>:
+> > From: Randy Dunlap <rdunlap@xenotime.net>
+> >
+> > bcma/driver_chipcommon_pmu.c needs to include <linux/export.h>,
+> > so add it to the headers that are included by bcma_private.h.
+> 
+> Please take a look at discussion in:
+> [PATCH -next] bcma: main.c needs to include <linux/slab.h>
+> thread (by Andrew).
+> 
+> I believe that according to the discussion, such a includes should be
+> done in .c files.
+> 
+> Andrew: can you comment? Am I right?
 
-One of the things we've been pushing for for some time is to get real
-IEEE80211_HW_SUPPORTS_DYNAMIC_PS support. Coincidentally we've been
-just notified that this is materializing for wl12xx as we speak, so
-we'll be shifting to IEEE80211_HW_SUPPORTS_DYNAMIC_PS very soon.
+Ordinarily, yes, it is preferable to include the needed .h files from
+within the .c files.  However quite a mumber of kernel subsystems do
+take the #include "everything.h" approach.
 
-In that case, I can happily say this whole discussion is moot. We
-agree not to agree, but at least we don't have to resolve it :)
+However, drivers/bcma is a bit odd in that it has bcma_private.h which
+includes delay.h (the everything.h approach) but most .c files
+explicitly include other things, including export.h.
+
+There's no real pattern here and yes, I agree that the minimal and more
+typical approach is better.
+
+--- a/drivers/bcma/driver_chipcommon_pmu.c~bcma-needs-exporth
++++ a/drivers/bcma/driver_chipcommon_pmu.c
+@@ -10,6 +10,7 @@
+ 
+ #include "bcma_private.h"
+ #include <linux/bcma/bcma.h>
++#include <linux/export.h>
+ 
+ static u32 bcma_chipco_pll_read(struct bcma_drv_cc *cc, u32 offset)
+ {
+_
+
