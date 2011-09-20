@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:38325 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752271Ab1IVGwP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 02:52:15 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 4so2424791fxe.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 23:52:14 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 2/2] wl12xx: report the stop_ba event to all STAs in AP-mode
-Date: Thu, 22 Sep 2011 09:52:06 +0300
-Message-Id: <1316674326-4873-2-git-send-email-arik@wizery.com> (sfid-20110922_085218_474634_BDA299EA)
-In-Reply-To: <1316674326-4873-1-git-send-email-arik@wizery.com>
-References: <1316674326-4873-1-git-send-email-arik@wizery.com>
+Received: from nbd.name ([46.4.11.11]:57971 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750814Ab1ITSVK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Sep 2011 14:21:10 -0400
+Message-ID: <4E78D990.3090601@openwrt.org> (sfid-20110920_202120_438090_BB784F9E)
+Date: Tue, 20 Sep 2011 20:21:04 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Javier Cardona <javier@cozybit.com>,
+	Alexander Simon <an.alexsimon@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] mac80211: Add HT operation modes for IBSS
+References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com> <loom.20110918T004437-426@post.gmane.org> <1316437459.5995.29.camel@jlt3.sipsolutions.net> <36569806.Rgjanm0GiI@alex-1> <1316521312.3953.27.camel@jlt3.sipsolutions.net> <CAB=NE6VDSTAKK0pmyBOz6hw1pbxo7U6dxbrvg_F-y6CDB0paKw@mail.gmail.com>
+In-Reply-To: <CAB=NE6VDSTAKK0pmyBOz6hw1pbxo7U6dxbrvg_F-y6CDB0paKw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the AP_MAX_LINKS as the upper boundary for traversing the links array,
-thereby guaranteeing BA sessions with all connected STAs are stopped when
-the stop_ba event is received.
+On 2011-09-20 8:12 PM, Luis R. Rodriguez wrote:
+> On Tue, Sep 20, 2011 at 5:21 AM, Johannes Berg
+> <johannes@sipsolutions.net>  wrote:
+>>  On Mon, 2011-09-19 at 17:46 +0200, Alexander Simon wrote:
+>>  That seems pretty complex too ...
+>>
+>>  I don't really know. As I said, I think I'd be happy with an
+>>  implementation that maybe doesn't fully implement everything as long as
+>>  it considers the trade-offs.
+>
+> The same questions come up with HT support and 802.11s, as per Javier
+> this is not really well spelled out in the spec. My recommendation is
+> to just support for now the most simple case and let us not entangle
+> ourselves with the complexities of handling trying to merge different
+> setups. So only enable peering up for adhoc or mesh if and only if the
+> observed IE matches our own supported HT caps or target configuration.
+> If a legacy STA tries to peer up with an HT IBSS, this would simply be
+> rejected. We can leave off handling the change in configuration later
+> for userspace, but do not see this as being a requirement for
+> supporting HT for IBSS or Mesh. The simpler the better, so long as we
+> simply respect the spec.
+I disagree. That'll make it useless for real deployments, which are 
+often a mix of HT and non-HT devices.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/event.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index c73fe4c..e66db69 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -181,7 +181,7 @@ static void wl1271_stop_ba_event(struct wl1271 *wl)
- 	} else {
- 		int i;
- 		struct wl1271_link *lnk;
--		for (i = WL1271_AP_STA_HLID_START; i < WL12XX_MAX_LINKS; i++) {
-+		for (i = WL1271_AP_STA_HLID_START; i < AP_MAX_LINKS; i++) {
- 			lnk = &wl->links[i];
- 			if (!wl1271_is_active_sta(wl, i) || !lnk->ba_bitmap)
- 				continue;
--- 
-1.7.4.1
-
+- Felix
