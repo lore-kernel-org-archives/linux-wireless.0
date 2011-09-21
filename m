@@ -1,83 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1063 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751968Ab1IPLN6 convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:37422 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750711Ab1IUAhu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 07:13:58 -0400
-Message-ID: <4E732F67.6030302@broadcom.com> (sfid-20110916_131401_932672_23F4EE89)
-Date: Fri, 16 Sep 2011 13:13:43 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	Tue, 20 Sep 2011 20:37:50 -0400
+Received: by qyk30 with SMTP id 30so4517386qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 17:37:49 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "Greg KH" <gregkh@suse.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Francis Moreau" <francis.moro@gmail.com>
-Subject: Re: About the patch:
- "staging: brcm80211: only enable brcmsmac if bcma is not set"
-References: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com>
- <CACna6rwQ60viPGssWzBzgtVGBq1xu+AOxb0fqfRq4NaJFcmP=w@mail.gmail.com>
- <20110913174444.GG11772@tuxdriver.com>
- <CACna6rwS0dGwSFOiqgAYqHNV=AatnHvHes=YdbwSWdKZu8OYiQ@mail.gmail.com>
- <20110914084234.GA5550@kroah.com>
- <CACna6rxi6XTUfR_N-n5ss7hmouaaoyZnmvmtdM-pGEfvdaWmQg@mail.gmail.com>
- <400C43189542CE41BC0A5B252FC90136BC0CA8A32B@SJEXCHCCR02.corp.ad.broadcom.com>
- <CACna6ry51P=em3=tgEDvO4cUhTfG8T3NJdRkMD3iatdtrOCk7g@mail.gmail.com>
-In-Reply-To: <CACna6ry51P=em3=tgEDvO4cUhTfG8T3NJdRkMD3iatdtrOCk7g@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE660013226A26C@dnce02.ent.ti.com>
+References: <AC090B9732AB2B4DB7FF476E907FE660013226A26C@dnce02.ent.ti.com>
+Date: Tue, 20 Sep 2011 21:37:49 -0300
+Message-ID: <CAK3JMAadvUag85SfjOhYN+yqW0con9RBo7PQ1_V1uYce_BXgKQ@mail.gmail.com> (sfid-20110921_023754_291947_55D32455)
+Subject: Re: [PATCH v2 3/4] NFC: basic NCI protocol implementation
+From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+To: "Elias, Ilan" <ilane@ti.com>
+Cc: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
+	"samuel@sortiz.org" <samuel@sortiz.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/16/2011 12:55 PM, Rafał Miłecki wrote:
-> 2011/9/16 Arend Van Spriel<arend@broadcom.com>:
->>> From: Rafał Miłecki [mailto:zajec5@gmail.com]
->>> Sent: vrijdag 16 september 2011 12:43
->>> To: Greg KH; linux-wireless@vger.kernel.org; Arend Van Spriel
->>> Cc: John W. Linville; Francis Moreau
->>> Subject: Re: About the patch: "staging: brcm80211: only enable brcmsmac
->>> if bcma is not set"
->>>
->>>
->>> You're right, it wasn't a good idea.
->>>
->>> Arend: I've just sent patches to John giving you symbols needed by LCN
->>> code. If there is something more missing, I didn't notice it yet, feel
->>> free to report. AFAICS you should be able now to convert brcmsmac to
->>> use bcma, if you wish to.
->>>
->>> --
->>> Rafał
->> Hi Rafał,
->>
->> The last time I refreshed my local wireless-testing repo was a while ago since kernel.org misery. Last commit being:
->>
->> commit b197329717cf054f4dbd8bd86196401bef738978
->> Merge: a7c053d 93ee7a9
->> Author: John W. Linville<linville@tuxdriver.com>
->> Date:   Mon Aug 15 14:01:50 2011 -0700
->>
->>     Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/torva
->>
->>     Conflicts:
->>         drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsparser.c
->>
->> Could you indicate what patches I am missing. If you can provide those to me that would be awesome. For BCMA this is the latest I have:
-> I've *just* sent my patches, they weren't applied yet. I was sure
-> you're subscribed to linux-wireless and you received them.
->
-> Please take a look at:
-> [PATCH 1/6] bcma: cc: export more control functions
-> Message-Id:<1316169243-8808-1-git-send-email-zajec5@gmail.com>
-
-Ok,
-
-I saw that one. I was just trying to get the other bcma patches in a 
-quickly manner, but I will start digging through 2 months of wireless 
-patch emails :-(
-
-Gr. AvS
-
-
-
+SGkgSWxhbiwKCjIwMTEvOS8xMyBFbGlhcywgSWxhbiA8aWxhbmVAdGkuY29tPjoKPiBUaGUgTkZD
+IENvbnRyb2xsZXIgSW50ZXJmYWNlIChOQ0kpIGlzIGEgc3RhbmRhcmQKPiBjb21tdW5pY2F0aW9u
+IHByb3RvY29sIGJldHdlZW4gYW4gTkZDIENvbnRyb2xsZXIgKE5GQ0MpCj4gYW5kIGEgRGV2aWNl
+IEhvc3QgKERIKSwgZGVmaW5lZCBieSB0aGUgTkZDIEZvcnVtLgo+Cj4gU2lnbmVkLW9mZi1ieTog
+SWxhbiBFbGlhcyA8aWxhbmVAdGkuY29tPgo+IC0tLQoKCj4gKwo+ICtzdGF0aWMgdm9pZCBuY2lf
+aW5pdF9jb21wbGV0ZV9yZXEoc3RydWN0IG5jaV9kZXYgKm5kZXYsIHVuc2lnbmVkIGxvbmcgb3B0
+KQo+ICt7Cj4gKyDCoCDCoCDCoCBzdHJ1Y3QgbmNpX3JmX2Rpc2NfbWFwX2NtZCBjbWQ7Cj4gKyDC
+oCDCoCDCoCBzdHJ1Y3QgbmNpX2NvcmVfY29ubl9jcmVhdGVfY21kIGNvbm5fY21kOwo+ICsgwqAg
+wqAgwqAgaW50IGk7Cj4gKwo+ICsgwqAgwqAgwqAgLyogY3JlYXRlIHN0YXRpYyByZiBjb25uZWN0
+aW9uICovCj4gKyDCoCDCoCDCoCBjb25uX2NtZC50YXJnZXRfaGFuZGxlID0gMDsKPiArIMKgIMKg
+IMKgIGNvbm5fY21kLm51bV90YXJnZXRfc3BlY2lmaWNfcGFyYW1zID0gMDsKPiArIMKgIMKgIMKg
+IG5jaV9zZW5kX2NtZChuZGV2LCBOQ0lfT1BfQ09SRV9DT05OX0NSRUFURV9DTUQsIDIsICZjb25u
+X2NtZCk7Cj4gKwo+ICsgwqAgwqAgwqAgLyogc2V0IHJmIG1hcHBpbmcgY29uZmlndXJhdGlvbnMg
+Ki8KPiArIMKgIMKgIMKgIGNtZC5udW1fbWFwcGluZ19jb25maWdzID0gMDsKPiArCj4gKyDCoCDC
+oCDCoCAvKiBieSBkZWZhdWx0IG1hcHBpbmcgaXMgc2V0IHRvIE5DSV9SRl9JTlRFUkZBQ0VfRlJB
+TUUgKi8KPiArIMKgIMKgIMKgIGZvciAoaSA9IDA7IGkgPCBuZGV2LT5udW1fc3VwcG9ydGVkX3Jm
+X2ludGVyZmFjZXM7IGkrKykgewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKG5kZXYtPnN1
+cHBvcnRlZF9yZl9pbnRlcmZhY2VzW2ldID09Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCBOQ0lfUkZfSU5URVJGQUNFX0lTT19ERVApIHsKPiArIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIGNtZC5tYXBwaW5nX2NvbmZpZ3NbY21kLm51bV9tYXBwaW5nX2NvbmZp
+Z3NdCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAucmZfcHJvdG9jb2wgPSBO
+Q0lfUkZfUFJPVE9DT0xfSVNPX0RFUDsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIGNtZC5tYXBwaW5nX2NvbmZpZ3NbY21kLm51bV9tYXBwaW5nX2NvbmZpZ3NdCj4gKyDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAubW9kZSA9IE5DSV9ESVNDX01BUF9NT0RFX0JP
+VEg7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBjbWQubWFwcGluZ19jb25m
+aWdzW2NtZC5udW1fbWFwcGluZ19jb25maWdzXQo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgLnJmX2ludGVyZmFjZV90eXBlID0gTkNJX1JGX0lOVEVSRkFDRV9JU09fREVQOwo+
+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY21kLm51bV9tYXBwaW5nX2NvbmZp
+Z3MrKzsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIH0gZWxzZSBpZiAobmRldi0+c3VwcG9ydGVk
+X3JmX2ludGVyZmFjZXNbaV0gPT0KPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IE5DSV9SRl9JTlRFUkZBQ0VfTkZDX0RFUCkgewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgY21kLm1hcHBpbmdfY29uZmlnc1tjbWQubnVtX21hcHBpbmdfY29uZmlnc10KPiAr
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIC5yZl9wcm90b2NvbCA9IE5DSV9SRl9Q
+Uk9UT0NPTF9ORkNfREVQOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY21k
+Lm1hcHBpbmdfY29uZmlnc1tjbWQubnVtX21hcHBpbmdfY29uZmlnc10KPiArIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIC5tb2RlID0gTkNJX0RJU0NfTUFQX01PREVfQk9USDsKPiAr
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGNtZC5tYXBwaW5nX2NvbmZpZ3NbY21k
+Lm51bV9tYXBwaW5nX2NvbmZpZ3NdCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCAucmZfaW50ZXJmYWNlX3R5cGUgPSBOQ0lfUkZfSU5URVJGQUNFX05GQ19ERVA7Cj4gKyDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBjbWQubnVtX21hcHBpbmdfY29uZmlncysrOwo+
+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfQoKSSB0aGluayB5b3Ugc2hvdWxkIGltcHJvdmUgdGhl
+IHJlYWRhYmlsaXR5IGluIHRoaXMgJ2lmJy4KCgoKPiArCj4gK3N0YXRpYyBpbnQgbmNpX3N0YXJ0
+X3BvbGwoc3RydWN0IG5mY19kZXYgKm5mY19kZXYsIF9fdTMyIHByb3RvY29scykKPiArewo+ICsg
+wqAgwqAgwqAgc3RydWN0IG5jaV9kZXYgKm5kZXYgPSBuZmNfZ2V0X2RydmRhdGEobmZjX2Rldik7
+Cj4gKyDCoCDCoCDCoCBpbnQgcmM7Cj4gKwo+ICsgwqAgwqAgwqAgbmZjX2RiZygiZW50cnkiKTsK
+PiArCj4gKyDCoCDCoCDCoCBpZiAodGVzdF9iaXQoTkNJX0RJU0NPVkVSWSwgJm5kZXYtPmZsYWdz
+KSkgewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgbmZjX2VycigidW5hYmxlIHRvIHN0YXJ0IHBv
+bGwsIHNpbmNlIHBvbGwgaXMgYWxyZWFkeSBhY3RpdmUiKTsKPiArIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIHJldHVybiAtRUJVU1k7Cj4gKyDCoCDCoCDCoCB9Cj4gKwo+ICsgwqAgwqAgwqAgaWYgKHRl
+c3RfYml0KE5DSV9QT0xMX0FDVElWRSwgJm5kZXYtPmZsYWdzKSkgewo+ICsgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgbmZjX2RiZygidGFyZ2V0IGFscmVhZHkgYWN0aXZlLCBmaXJzdCBkZWFjdGl2YXRl
+Li4uIik7Cj4gKwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcmMgPSBuY2lfcmVxdWVzdChuZGV2
+LCBuY2lfcmZfZGVhY3RpdmF0ZV9yZXEsIDAsCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCBtc2Vjc190b19qaWZmaWVzKE5DSV9SRl9ERUFDVElWQVRFX1RJTUVPVVQpKTsKPiAr
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlmIChyYykKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIHJldHVybiAtRUJVU1k7Cj4gKyDCoCDCoCDCoCB9CgpJIGRvbid0IHRoaW5rIGl0
+IGlzIGEgZ29vZCBpZGVhIHRvIGltcGxpY2l0bHkgZGVhY3RpdmF0ZSBhIHRhcmdldC4gSQp0aGlu
+ayB5b3Ugc2hvdWxkIGp1c3QgcmV0dXJuIEVCVVNZLgoKCgo+ICtzdGF0aWMgaW50IG5jaV9kYXRh
+X2V4Y2hhbmdlKHN0cnVjdCBuZmNfZGV2ICpuZmNfZGV2LCBfX3UzMiB0YXJnZXRfaWR4LAo+ICsg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgc3RydWN0IHNrX2J1ZmYgKnNrYiwKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGRhdGFfZXhj
+aGFuZ2VfY2JfdCBjYiwKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHZvaWQgKmNiX2NvbnRleHQpCj4gK3sKPiAr
+IMKgIMKgIMKgIHN0cnVjdCBuY2lfZGV2ICpuZGV2ID0gbmZjX2dldF9kcnZkYXRhKG5mY19kZXYp
+Owo+ICsKPiArIMKgIMKgIMKgIG5mY19kYmcoImVudHJ5LCB0YXJnZXRfaWR4ICVkLCBsZW4gJWQi
+LCB0YXJnZXRfaWR4LCBza2ItPmxlbik7Cj4gKwo+ICsgwqAgwqAgwqAgaWYgKCFuZGV2LT50YXJn
+ZXRfYWN0aXZlX3Byb3QpIHsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIG5mY19lcnIoInVuYWJs
+ZSB0byBleGNoYW5nZSBkYXRhLCBubyBhY3RpdmUgdGFyZ2V0Iik7Cj4gKyDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCByZXR1cm4gLUVJTlZBTDsKPiArIMKgIMKgIMKgIH0KPiArCj4gKyDCoCDCoCDCoCAv
+KiBzdG9yZSBjYiBhbmQgY29udGV4dCB0byBiZSB1c2VkIG9uIHJlY2VpdmluZyBkYXRhICovCj4g
+KyDCoCDCoCDCoCBuZGV2LT5kYXRhX2V4Y2hhbmdlX2NiID0gY2I7Cj4gKyDCoCDCoCDCoCBuZGV2
+LT5kYXRhX2V4Y2hhbmdlX2NiX2NvbnRleHQgPSBjYl9jb250ZXh0OwoKVGhpcyBpcyB3cm9uZy4g
+VGhlIGRhdGEgZXhjaGFuZ2UgY2FuIGJlIGNhbGxlZCBhZ2FpbiBiZWZvcmUgY29tcGxldGluZwp0
+aGUgcHJldmlvdXMgY2FsbC4gU28sIHlvdSBzaG91bGRuJ3Qgc3RvcmUgdGhlIGNiIGFuZCBjYl9j
+b250ZXh0IGluCnRoZSBkZXZpY2UuCgo+ICsKPiArIMKgIMKgIMKgIHJldHVybiBuY2lfc2VuZF9k
+YXRhKG5kZXYsIG5kZXYtPmNvbm5faWQsIHNrYik7Cj4gK30KPiArCgoKTGF1cm8K
