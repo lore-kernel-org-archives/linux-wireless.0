@@ -1,145 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4649 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932134Ab1IPT2V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 15:28:21 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 03/19] staging: brcm80211: remove fullmac module_param
- brcmf_deferred_tx
-Date: Fri, 16 Sep 2011 12:27:52 -0700
-Message-ID: <1316201288-29635-4-git-send-email-frankyl@broadcom.com> (sfid-20110916_212826_929956_5346E6B0)
-In-Reply-To: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
-References: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:43143 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752033Ab1IUACc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Sep 2011 20:02:32 -0400
+Received: by gxk6 with SMTP id 6so773604gxk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 17:02:31 -0700 (PDT)
+Message-ID: <4E792994.1080809@lwfinger.net> (sfid-20110921_020241_922701_C58B1128)
+Date: Tue, 20 Sep 2011 19:02:28 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Chiefdome <chiefdome@googlemail.com>
+CC: linux-wireless@vger.kernel.org, george0505@realtek.com
+Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
+References: <4E77F631.3030202@googlemail.com> <4E77F9FD.1020204@googlemail.com> <4E780309.9010601@lwfinger.net> <4E785DB3.5040109@googlemail.com> <4E7907D3.1020606@googlemail.com>
+In-Reply-To: <4E7907D3.1020606@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove brcmf_deferred_tx as it should be always 1
+On 09/20/2011 04:38 PM, Chiefdome wrote:
+> I tried at least wireless-next but the adapter isn't showing up.
+> Where to get more log files and stuff?
+> Isnt this adapter good supported by the rtl8192cu driver or where is the problem?
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   83 +++++++-----------------
- 1 files changed, 24 insertions(+), 59 deletions(-)
+For the mainline kernel to work with 802.11n-only APs and to reconnect after an 
+initial try, your kernel needs the following patches:
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 680b232..dade3ec 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -721,10 +721,6 @@ static int qcount[NUMPRIO];
- static int tx_packets[NUMPRIO];
- #endif				/* BCMDBG */
- 
--/* Deferred transmit */
--uint brcmf_deferred_tx = 1;
--module_param(brcmf_deferred_tx, uint, 0);
--
- /* Watchdog thread priority, -1 to use kernel timer */
- int brcmf_watchdog_prio = 97;
- module_param(brcmf_watchdog_prio, int, 0);
-@@ -2845,63 +2841,33 @@ int brcmf_sdbrcm_bus_txdata(struct brcmf_bus *bus, struct sk_buff *pkt)
- 
- 	/* Check for existing queue, current flow-control,
- 			 pending event, or pending clock */
--	if (brcmf_deferred_tx || bus->fcstate || pktq_len(&bus->txq)
--	    || bus->dpc_sched || (!data_ok(bus))
--	    || (bus->flowcontrol & NBITVAL(prec))
--	    || (bus->clkstate != CLK_AVAIL)) {
--		brcmf_dbg(TRACE, "deferring pktq len %d\n",
--			  pktq_len(&bus->txq));
--		bus->fcqueued++;
--
--		/* Priority based enq */
--		spin_lock_bh(&bus->txqlock);
--		if (brcmf_c_prec_enq(bus->drvr, &bus->txq, pkt, prec) ==
--		    false) {
--			skb_pull(pkt, SDPCM_HDRLEN);
--			brcmf_txcomplete(bus->drvr, pkt, false);
--			brcmu_pkt_buf_free_skb(pkt);
--			brcmf_dbg(ERROR, "out of bus->txq !!!\n");
--			ret = -ENOSR;
--		} else {
--			ret = 0;
--		}
--		spin_unlock_bh(&bus->txqlock);
-+	brcmf_dbg(TRACE, "deferring pktq len %d\n", pktq_len(&bus->txq));
-+	bus->fcqueued++;
-+
-+	/* Priority based enq */
-+	spin_lock_bh(&bus->txqlock);
-+	if (brcmf_c_prec_enq(bus->drvr, &bus->txq, pkt, prec) == false) {
-+		skb_pull(pkt, SDPCM_HDRLEN);
-+		brcmf_txcomplete(bus->drvr, pkt, false);
-+		brcmu_pkt_buf_free_skb(pkt);
-+		brcmf_dbg(ERROR, "out of bus->txq !!!\n");
-+		ret = -ENOSR;
-+	} else {
-+		ret = 0;
-+	}
-+	spin_unlock_bh(&bus->txqlock);
- 
--		if (pktq_len(&bus->txq) >= TXHI)
--			brcmf_txflowcontrol(bus->drvr, 0, ON);
-+	if (pktq_len(&bus->txq) >= TXHI)
-+		brcmf_txflowcontrol(bus->drvr, 0, ON);
- 
- #ifdef BCMDBG
--		if (pktq_plen(&bus->txq, prec) > qcount[prec])
--			qcount[prec] = pktq_plen(&bus->txq, prec);
-+	if (pktq_plen(&bus->txq, prec) > qcount[prec])
-+		qcount[prec] = pktq_plen(&bus->txq, prec);
- #endif
--		/* Schedule DPC if needed to send queued packet(s) */
--		if (brcmf_deferred_tx && !bus->dpc_sched) {
--			bus->dpc_sched = true;
--			brcmf_sdbrcm_sched_dpc(bus);
--		}
--	} else {
--		/* Lock: we're about to use shared data/code (and SDIO) */
--		brcmf_sdbrcm_sdlock(bus);
--
--		/* Otherwise, send it now */
--		bus_wake(bus);
--		/* Make sure back plane ht clk is on, no pending allowed */
--		brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, true);
--
--		brcmf_dbg(TRACE, "calling txpkt\n");
--		ret = brcmf_sdbrcm_txpkt(bus, pkt, SDPCM_DATA_CHANNEL, true);
--		if (ret)
--			bus->drvr->tx_errors++;
--		else
--			bus->drvr->dstats.tx_bytes += datalen;
--
--		if (bus->idletime == BRCMF_IDLE_IMMEDIATE &&
--		    !bus->dpc_sched) {
--			bus->activity = false;
--			brcmf_sdbrcm_clkctl(bus, CLK_NONE, true);
--		}
--
--		brcmf_sdbrcm_sdunlock(bus);
-+	/* Schedule DPC if needed to send queued packet(s) */
-+	if (!bus->dpc_sched) {
-+		bus->dpc_sched = true;
-+		brcmf_sdbrcm_sched_dpc(bus);
- 	}
- 
- 	return ret;
-@@ -5013,8 +4979,7 @@ int brcmf_bus_register(void)
- 			break;
- 
- 		/* If both watchdog and DPC are threads, TX must be deferred */
--		if ((brcmf_watchdog_prio >= 0) && (brcmf_dpc_prio >= 0)
--		    && brcmf_deferred_tx)
-+		if (brcmf_watchdog_prio >= 0 && brcmf_dpc_prio >= 0)
- 			break;
- 
- 		brcmf_dbg(ERROR, "Invalid module parameters.\n");
--- 
-1.7.1
+commit bac2555c6d86387132930af4d14cb47c4dd3f4f7
+Author: George <george0505@realtek.com>
+Date:   Sat Sep 3 10:58:48 2011 -0500
 
+     rtlwifi: Fix problem when switching connections
+
+     The driver fails to clear encryption keys making it impossible
+     to switch connections.
+
+     Signed-off-by: George <george0505@realtek.com>
+     Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+     Cc: Stable <stable@kernel.org>        [2.6.39+]
+     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+commit 3401dc6eba788ebc7c14ce51018d775b1c263399
+Author: George <george0505@realtek.com>
+Date:   Sat Sep 3 10:58:47 2011 -0500
+
+     rtlwifi: rtl8192su: Fix problem connecting to HT-enabled AP
+
+     The driver fails to connect to 802.11n-enabled APs. The patch fixes
+     Bug #42262.
+
+     Signed-off-by: George <george0505@realtek.com>
+     Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+     Cc: Stable <stable@kernel.org>        [2.6.39+]
+     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+Both of these are in wireless-testing, and were just merged into the mainline 
+kernel. In addition, they were merged with the 3.0 stable tree today.
+
+Both should be in wireless-next, but as I recall, you were not able to test with 
+that tree.
+
+With the updated mainline kernel, the link is stable and performance is 
+acceptible with netperf TCP_STREAM (TX) at 20.5 +/- 4.8 Mbps and TCP_MAERTS (RX) 
+of 21.7 +/- 3.8 Mbps. These numbers are not spectacular, but they will do.
+
+Larry
 
