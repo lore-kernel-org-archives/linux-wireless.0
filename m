@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta5.srv.hcvlny.cv.net ([167.206.4.200]:55419 "EHLO
-	mta5.srv.hcvlny.cv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752291Ab1IKVSy (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:48514 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750725Ab1IUHHM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Sep 2011 17:18:54 -0400
-Received: from saf.optonline.net
- (ool-44c01ab5.dyn.optonline.net [68.192.26.181]) by mta5.srv.hcvlny.cv.net
- (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
- with ESMTP id <0LRD0070CN7GEJ30@mta5.srv.hcvlny.cv.net> for
- linux-wireless@vger.kernel.org; Sun, 11 Sep 2011 17:18:54 -0400 (EDT)
-Date: Sun, 11 Sep 2011 17:18:52 -0400
-From: "Steven A. Falco" <safalco@optonline.net>
-Subject: Re: [Question] Realtek USB 0bda:8176 as AP?
-In-reply-to: <4E6CD986.3040104@optonline.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Message-id: <4E6D25BC.80001@optonline.net> (sfid-20110911_231857_877316_65748C07)
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1
-References: <4E6C0AC8.9050805@coincident.com> <4E6C304B.6050306@lwfinger.net>
- <4E6CD986.3040104@optonline.net>
+	Wed, 21 Sep 2011 03:07:12 -0400
+MIME-Version: 1.0
+Message-ID: <20110921070525.GD4999@elgon.mountain> (sfid-20110921_090716_190621_69A0BC97)
+Date: Wed, 21 Sep 2011 00:05:25 -0700 (PDT)
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: re: wl12xx: support up to 8 stations in AP-mode
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/11/2011 11:53 AM, Steven A. Falco wrote:
-> On 09/10/2011 11:51 PM, Larry Finger wrote:
->> On 09/10/2011 08:11 PM, Steven A. Falco wrote:
->>> I am attempting to use a Realtek USB dongle as an access point on
->>> a PC running Fedora 15, with hostapd as the user-layer SW.
->>>
->>> The USB ID is 0bda:8176, which makes this an rtlwifi:rtl8192cu
->>> device.
->>
->> What kernel are you running? The latest is in wireless-testing, but that will be difficult to clone as long as kernel.org is out of commission. In addition, there are two patches that were sent on 9/3, but have not yet been incorporated due to the k.o problems. They are attached.
->>
-> 
-> I'm using kernel-3.1.0-0.rc3.git0.0.fc16.src.rpm from Fedora 16.
-> I'll apply the patches you provided and test a bit later today.
+Hi Arik,
 
-I tried the patches.  They do not make a difference.  Actually,
-that is not surprising, because the first patch relates to 802.11n
-but I am using 802.11g, and the second patch has to do with switching
-networks, but I am coming up cold on this network.
+Smatch complains about c47e8229fa56 "wl12xx: support up to 8 stations
+in AP-mode"
 
-I should receive some USB dongles with different chipsets tomorrow.
-Hopefully one of them will be better behaved.  But if there is more
-data I can gather to help figure this out, I am happy to do so.
+drivers/net/wireless/wl12xx/main.c +832 wl12xx_irq_update_links_status(22)
+	error: buffer overflow 'status->tx_lnk_free_pkts' 8 <= 10
 
-	Steve
+   828          for (hlid = WL1271_AP_STA_HLID_START; hlid < AP_MAX_LINKS; hlid++) {
+                                                             ^^^^^^^^^^^^
+We increased this to 11.
 
->> I just got a Powermac G4 and I'm fixing the big-endian issues, but that is clearly not your problem.
->>
->> Larry
->>
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+   829                  if (!wl1271_is_active_sta(wl, hlid))
+   830                          continue;
+   831  
+   832                  cnt = status->tx_lnk_free_pkts[hlid] -
+                                      ^^^^^^^^^^^^^^^^^^^^^^
 
+But the ->tx_lnk_free_pkts[] array still only has 8 elements so we're
+reading past the end of the array.
+
+   833                        wl->links[hlid].prev_freed_pkts;
+   834  
+   835                  wl->links[hlid].prev_freed_pkts =
+   836                          status->tx_lnk_free_pkts[hlid];
+   837                  wl->links[hlid].allocated_pkts -= cnt;
+   838  
+   839                  wl12xx_irq_ps_regulate_link(wl, hlid,
+   840                                              wl->links[hlid].allocated_pkts);
+   841          }
+
+regards,
+dan carpenter
