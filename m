@@ -1,78 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:42121 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932341Ab1ISSiu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 14:38:50 -0400
-Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
-	by emh01-2.mail.saunalahti.fi (Postfix) with SMTP id 0B1538CB2B
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 21:38:49 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-188-95.elisa-laajakaista.fi [88.115.188.95])
-	by emh04.mail.saunalahti.fi (Postfix) with ESMTP id EB69F41BE7
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 21:38:45 +0300 (EEST)
-Subject: [PATCH] ath6kl: pass only unicast frames for aggregation
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Date: Mon, 19 Sep 2011 21:38:44 +0300
-Message-ID: <20110919183844.25296.65533.stgit@localhost6.localdomain6> (sfid-20110919_203858_334538_65816777)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47300 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752582Ab1IURG1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Sep 2011 13:06:27 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat-wireless: remove old config options
+Date: Wed, 21 Sep 2011 19:06:17 +0200
+Message-Id: <1316624777-8001-2-git-send-email-hauke@hauke-m.de> (sfid-20110921_190633_988906_AC6937ED)
+In-Reply-To: <1316624777-8001-1-git-send-email-hauke@hauke-m.de>
+References: <1316624777-8001-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When pinging form ar6003 to the AP RTT was high even when power save was
-disabled:
+Both config options have be removed from the Kconfig files in the
+kernel and are not used by the code any more.
 
-100 packets transmitted, 97 received, 3% packet loss, time 99125ms
-rtt min/avg/max/mdev = 1.875/46.733/795.506/139.181 ms
-
-After some investigation one reason for this was that received
-multicast traffic confused the aggrecation logic and caused 400 ms
-timeouts when receiving multicast frames from AP.
-
-A simple way to fix is to pass only unicast frames for aggregation. This
-improves RTT:
-
-100 packets transmitted, 99 received, 1% packet loss, time 99144ms
-rtt min/avg/max/mdev = 2.083/13.084/403.390/56.794 ms
-
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath6kl/txrx.c |   16 +++++++++-------
- 1 files changed, 9 insertions(+), 7 deletions(-)
+ config.mk |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index fffd929..348c646 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1230,9 +1230,15 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 			ath6kl_data_tx(skb1, ar->net_dev);
- 	}
+diff --git a/config.mk b/config.mk
+index 802bf38..3463f83 100644
+--- a/config.mk
++++ b/config.mk
+@@ -252,7 +252,6 @@ CONFIG_IWLAGN=m
+ # CONFIG_IWLWIFI_DEVICE_TRACING=y
+ # CONFIG_IWLWIFI_DEVICE_SVTOOL=y
+ # CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE=y
+-CONFIG_IWL_P2P=y
  
--	if (!aggr_process_recv_frm(ar->aggr_cntxt, tid, seq_no,
--				   is_amsdu, skb))
--		ath6kl_deliver_frames_to_nw_stack(ar->net_dev, skb);
-+	datap = (struct ethhdr *) skb->data;
-+
-+	if (is_unicast_ether_addr(datap->h_dest) &&
-+	    aggr_process_recv_frm(ar->aggr_cntxt, tid, seq_no,
-+				  is_amsdu, skb))
-+		/* aggregation code will handle the skb */
-+		return;
-+
-+	ath6kl_deliver_frames_to_nw_stack(ar->net_dev, skb);
- }
+ CONFIG_IWLWIFI_LEGACY=m
+ CONFIG_COMPAT_IWL4965=m
+@@ -623,7 +622,6 @@ endif #CONFIG_COMPAT_STAGING
+ ifdef CONFIG_CRC7
+ CONFIG_WL1251=m
+ CONFIG_WL12XX=m
+-CONFIG_WL12XX_HT=y
+ endif #CONFIG_CRC7
  
- static void aggr_timeout(unsigned long arg)
-@@ -1249,10 +1255,6 @@ static void aggr_timeout(unsigned long arg)
- 		if (!rxtid->aggr || !rxtid->timer_mon || rxtid->progress)
- 			continue;
- 
--		/*
--		 * FIXME: these timeouts happen quite fruently, something
--		 * line once within 60 seconds. Investigate why.
--		 */
- 		stats->num_timeouts++;
- 		ath6kl_dbg(ATH6KL_DBG_AGGR,
- 			   "aggr timeout (st %d end %d)\n",
+ CONFIG_MWIFIEX=m
+-- 
+1.7.4.1
 
