@@ -1,39 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:64475 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987Ab1IZPLv (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:58529 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753363Ab1IUSA6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 11:11:51 -0400
-Date: Mon, 26 Sep 2011 20:42:32 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: optimize tx status update
-Message-ID: <20110926151231.GC9947@vmraj-lnx.users.atheros.com> (sfid-20110926_171155_446581_CB9B05D3)
-References: <1317030121-3902-1-git-send-email-rmanohar@qca.qualcomm.com>
- <4E807DCF.1010405@openwrt.org>
+	Wed, 21 Sep 2011 14:00:58 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E807DCF.1010405@openwrt.org>
+In-Reply-To: <4E7A084C.3000304@xenotime.net>
+References: <20110920173102.d38155c7defbbc29beaae7c0@canb.auug.org.au>
+	<4E78CFC0.4020003@xenotime.net>
+	<CACna6rxGrd-ORWZrc0xsAOKptU_Xj3eGh9qSfX9vJYCPTZrCRg@mail.gmail.com>
+	<4E78FCDB.1010002@xenotime.net>
+	<CACna6rywFitSNkkwo6tNy887vdsoyHG5Cadk6Bb8_qBJ+gc42w@mail.gmail.com>
+	<4E7A084C.3000304@xenotime.net>
+Date: Wed, 21 Sep 2011 20:00:57 +0200
+Message-ID: <CACna6ryNw+YgTiO5dBSGcTfUabM_yO0LaSsbGpC_X6JrQudnBQ@mail.gmail.com> (sfid-20110921_200122_947169_227F6326)
+Subject: Re: [PATCH -next v2] bcma: driver_chipcommon_pmu.c needs linux/export.h
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 26, 2011 at 07:27:43AM -0600, Felix Fietkau wrote:
-> On 2011-09-26 3:42 AM, Rajkumar Manoharan wrote:
-> >The recent changes of ath_tx_rc_status makes it to be called
-> >only for the first frame of aggregation or if there is a
-> >single subframe and for all normal frames. And also for all
-> >aggregated frames IEEE80211_TX_STAT_AMPDU will be set. This
-> >patch removes the unnecessary checks and make the ampdu_[ack]_len
-> >to be filled on both aggregation and normal frames.
-> This patch looks wrong to me. Only one subframe per A-MPDU is
-> supposed to carry the IEEE80211_TX_STAT_AMPDU flag, so the check you
-> removed from rc.c is actually necessary, otherwise it'll process the
-> tx status of an A-MPDU multiple times (once per completed subframe).
-> 
-I dont understand. Right now ath_tx_rc_status is called only for the first
-frame of aggregation or there is only one subframe in the aggregation.
-It never be called for all subframes. Am i right?
+W dniu 21 września 2011 17:52 użytkownik Randy Dunlap
+<rdunlap@xenotime.net> napisał:
+> On 09/20/2011 11:45 PM, Rafał Miłecki wrote:
+>> W dniu 20 września 2011 22:51 użytkownik Randy Dunlap
+>> <rdunlap@xenotime.net> napisał:
+>>> From: Randy Dunlap <rdunlap@xenotime.net>
+>>>
+>>> bcma/driver_chipcommon_pmu.c needs to include <linux/export.h>
+>>> to fix these warnings:
+>>>
+>>> drivers/bcma/driver_chipcommon_pmu.c:27:1: warning: data definition has no type or storage class
+>>> drivers/bcma/driver_chipcommon_pmu.c:27:1: warning: type defaults to 'int' in declaration of 'EXPORT_SYMBOL_GPL'
+>>> drivers/bcma/driver_chipcommon_pmu.c:27:1: warning: parameter names (without types) in function declaration
+>>
+>> Don't you get the same warning for core.c? Weird...
+>
+> No, I don't.  Stranger things have happened, I'm sure.
+>
+> Feel free to add export.h to other files, or do you want me
+> to do that?
 
---
-Rajkumar
+Please do that while you're hacking that include anyway.
+
+-- 
+Rafał
