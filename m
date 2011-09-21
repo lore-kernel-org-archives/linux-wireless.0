@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:50769 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756073Ab1I2Mqm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 08:46:42 -0400
-Message-ID: <4E8468AF.8000006@neratec.com> (sfid-20110929_144646_082777_A4B48043)
-Date: Thu, 29 Sep 2011 14:46:39 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:36471 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752436Ab1IUPwq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Sep 2011 11:52:46 -0400
+Message-ID: <4E7A084C.3000304@xenotime.net> (sfid-20110921_175251_461827_8937BA1B)
+Date: Wed, 21 Sep 2011 08:52:44 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Boris Presman <boris.presman@ti.com>,
-	Assaf Azulay <assaf@ti.com>,
-	Michael Green <green@qca.qualcomm.com>,
-	David Quan <dquan@qca.qualcomm.com>,
-	Kevin Hayes <hayes@qca.qualcomm.com>,
-	Arun Venkataraman <arunvenk@qca.qualcomm.com>
-Subject: Re: Regulatory revamp status
-References: <CAB=NE6U6qmYbvHPTWGTqOdXtuxbKYbUzZXNiE6POOX9QZNRWAg@mail.gmail.com>	<1125417094.1836.1317285426615.JavaMail.root@idefix> <CAJ-VmonqEs4mODDa2=fTj8zWHwRM7-G5e=BWNUyGdy65+kYvfg@mail.gmail.com>
-In-Reply-To: <CAJ-VmonqEs4mODDa2=fTj8zWHwRM7-G5e=BWNUyGdy65+kYvfg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH -next v2] bcma: driver_chipcommon_pmu.c needs linux/export.h
+References: <20110920173102.d38155c7defbbc29beaae7c0@canb.auug.org.au>	<4E78CFC0.4020003@xenotime.net>	<CACna6rxGrd-ORWZrc0xsAOKptU_Xj3eGh9qSfX9vJYCPTZrCRg@mail.gmail.com>	<4E78FCDB.1010002@xenotime.net> <CACna6rywFitSNkkwo6tNy887vdsoyHG5Cadk6Bb8_qBJ+gc42w@mail.gmail.com>
+In-Reply-To: <CACna6rywFitSNkkwo6tNy887vdsoyHG5Cadk6Bb8_qBJ+gc42w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/29/2011 01:45 PM, Adrian Chadd wrote:
-> On 29 September 2011 16:37, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
->> Thanks for the update.
+On 09/20/2011 11:45 PM, Rafał Miłecki wrote:
+> W dniu 20 września 2011 22:51 użytkownik Randy Dunlap
+> <rdunlap@xenotime.net> napisał:
+>> From: Randy Dunlap <rdunlap@xenotime.net>
 >>
->> To me it looks not reasonable to mix in between the two approaches: either we assume countrycodes use the same DFS region for all channels, or each channel/band needs to have its own. Otherwise I feel that a DFS region bitmap would give a semi-flexible compromise that might end up being insufficient to represent some fancy countrycodes.
+>> bcma/driver_chipcommon_pmu.c needs to include <linux/export.h>
+>> to fix these warnings:
+>>
+>> drivers/bcma/driver_chipcommon_pmu.c:27:1: warning: data definition has no type or storage class
+>> drivers/bcma/driver_chipcommon_pmu.c:27:1: warning: type defaults to 'int' in declaration of 'EXPORT_SYMBOL_GPL'
+>> drivers/bcma/driver_chipcommon_pmu.c:27:1: warning: parameter names (without types) in function declaration
 > 
-> There's some funny stuff in there.
-> 
-> For example, some of the DFS bands have different CAC/NOL timing. :-)
-> 
-> 
-> 
-> Adrian
+> Don't you get the same warning for core.c? Weird...
 
-Really? Where would be 'there' countrycode-wise?
+No, I don't.  Stranger things have happened, I'm sure.
 
-That would definitely break today's CRDA capabilities :-\
+Feel free to add export.h to other files, or do you want me
+to do that?
 
 
-Zefir
+-- 
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
