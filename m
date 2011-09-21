@@ -1,120 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7125 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753582Ab1IUMgp (ORCPT
+Received: from mail-ew0-f52.google.com ([209.85.215.52]:42587 "EHLO
+	mail-ew0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750711Ab1IUNzN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 08:36:45 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [RFC 4/4] mac80211: set the request rate as lowest on for mgmt frames
-Date: Wed, 21 Sep 2011 18:07:00 +0530
-Message-ID: <1316608620-16483-4-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110921_143649_038349_719B84D8)
-In-Reply-To: <1316608620-16483-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1316608620-16483-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Wed, 21 Sep 2011 09:55:13 -0400
+Received: by ewy19 with SMTP id 19so1473647ewy.11
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 06:55:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACna6rzOsbi0ghDUa1ruNq4uefEWmwdU7KUDRrh6r0927Jm9oQ@mail.gmail.com>
+References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+	<20110920130338.GA9885@kroah.com>
+	<1316524874.3953.41.camel@jlt3.sipsolutions.net>
+	<CACna6rxxoRoLi9C3RBsot8kvZx4k5AZVHzHoE17q-iT1U7i5qg@mail.gmail.com>
+	<20110921134056.GB2828@tuxdriver.com>
+	<CACna6rzOsbi0ghDUa1ruNq4uefEWmwdU7KUDRrh6r0927Jm9oQ@mail.gmail.com>
+Date: Wed, 21 Sep 2011 15:55:12 +0200
+Message-ID: <CACna6rwiWp+eEv+K+zm0VBFC6h4GHnMYrx2g8nk-vaBNpFbMyQ@mail.gmail.com> (sfid-20110921_155518_041935_C4AB6DC7)
+Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline patch #2
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Greg KH <greg@kroah.com>, Franky Lin <frankyl@broadcom.com>,
+	gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the ath9k/minstral rate control sets the least
-supported rate as first rate for all management frames.
-This patch set the requested rate as first rate that was
-derived either from scan request or from the tx info.
+W dniu 21 września 2011 15:52 użytkownik Rafał Miłecki
+<zajec5@gmail.com> napisał:
+> W dniu 21 września 2011 15:40 użytkownik John W. Linville
+> <linville@tuxdriver.com> napisał:
+>> On Tue, Sep 20, 2011 at 10:56:49PM +0200, Rafał Miłecki wrote:
+>>> 2011/9/20 Johannes Berg <johannes@sipsolutions.net>:
+>>> > On Tue, 2011-09-20 at 06:03 -0700, Greg KH wrote:
+>>> >
+>>> >> And while code is great and nice, I still haven't seen any real answers
+>>> >> to all of the questions that were asked of the Broadcom driver team
+>>> >> during that review by the linux-wireless developers about how things
+>>> >> will be handled properly due to the overlap in functionality with the
+>>> >> existing "real" driver in the tree.
+>>> >
+>>> > Let's qualify this to "some developers".
+>>> >
+>>> > One thing I'd like to point out is that the Broadcom's firmware API has
+>>> > always undergone changes over time. I'm actually surprised that b43
+>>> > works as well as it does (which, tbh, isn't very well at all, at least
+>>> > for me with some 11n PHY). I also don't think that Broadcom are going to
+>>> > maintain compatibility and/or maintain new firmware features for old
+>>> > devices, that just doesn't make any sense.
+>>>
+>>> Actually, when we got some single response from Broadcom about their
+>>> relation to b43, they haven't mentioned support for old HW is any
+>>> problem at all. They just pointed we don't support calibration for
+>>> N-PHY and we don't support 802.11n feature for a better performance.
+>>>
+>>> I feel we're creating some problems ourself. Just some guessing that
+>>> support for older HW can be real problem for future development... not
+>>> confirmed by anyone at all.
+>>
+>> Their new firmware doesn't run on the older hardware, no?
+>
+> AFAIK it does (unless you mean hardware covered by b43legacy).
+>
+> If you take a look at 666.2 firmware, it's still available for core 5
+> (and 9, 13, etc.)
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- net/mac80211/rate.c |   69 ++++++++++++++++++++++++++++----------------------
- 1 files changed, 39 insertions(+), 30 deletions(-)
+The reason I've added support for new firmware without dropping
+support for older, was users experience. I didn't want to leave anyone
+with b43 not working after kernel update (without firmware update).
 
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 3d5a2cb..232acd5 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -233,36 +233,6 @@ static void rc_send_low_broadcast(s8 *idx, u32 basic_rates,
- 	/* could not find a basic rate; use original selection */
- }
- 
--bool rate_control_send_low(struct ieee80211_sta *sta,
--			   void *priv_sta,
--			   struct ieee80211_tx_rate_control *txrc)
--{
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
--	struct ieee80211_supported_band *sband = txrc->sband;
--	int mcast_rate;
--
--	if (!sta || !priv_sta || rc_no_data_or_no_ack(txrc)) {
--		info->control.rates[0].idx = rate_lowest_index(txrc->sband, sta);
--		info->control.rates[0].count =
--			(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
--			1 : txrc->hw->max_rate_tries;
--		if (!sta && txrc->bss) {
--			mcast_rate = txrc->bss_conf->mcast_rate[sband->band];
--			if (mcast_rate > 0) {
--				info->control.rates[0].idx = mcast_rate - 1;
--				return true;
--			}
--
--			rc_send_low_broadcast(&info->control.rates[0].idx,
--					      txrc->bss_conf->basic_rates,
--					      sband);
--		}
--		return true;
--	}
--	return false;
--}
--EXPORT_SYMBOL(rate_control_send_low);
--
- static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
- 				int n_bitrates, u32 mask)
- {
-@@ -295,6 +265,45 @@ static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
- 	 */
- }
- 
-+bool rate_control_send_low(struct ieee80211_sta *sta,
-+			   void *priv_sta,
-+			   struct ieee80211_tx_rate_control *txrc)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
-+	struct ieee80211_supported_band *sband = txrc->sband;
-+	int mcast_rate;
-+
-+	if (!sta || !priv_sta || rc_no_data_or_no_ack(txrc)) {
-+		if (txrc->max_rate_idx != -1) {
-+			rate_idx_match_mask(&info->control.rates[0],
-+					    txrc->sband->n_bitrates,
-+					    txrc->rate_idx_mask);
-+			if (info->control.rates[0].idx == -1)
-+				txrc->max_rate_idx = -1;
-+		}
-+		if (txrc->max_rate_idx == -1)
-+			info->control.rates[0].idx =
-+				rate_lowest_index(txrc->sband, sta);
-+		info->control.rates[0].count =
-+			(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
-+			1 : txrc->hw->max_rate_tries;
-+		if (!sta && txrc->bss) {
-+			mcast_rate = txrc->bss_conf->mcast_rate[sband->band];
-+			if (mcast_rate > 0) {
-+				info->control.rates[0].idx = mcast_rate - 1;
-+				return true;
-+			}
-+
-+			rc_send_low_broadcast(&info->control.rates[0].idx,
-+					      txrc->bss_conf->basic_rates,
-+					      sband);
-+		}
-+		return true;
-+	}
-+	return false;
-+}
-+EXPORT_SYMBOL(rate_control_send_low);
-+
- void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
- 			   struct sta_info *sta,
- 			   struct ieee80211_tx_rate_control *txrc)
 -- 
-1.7.6.3
-
+Rafał
