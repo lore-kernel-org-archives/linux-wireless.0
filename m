@@ -1,283 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2933 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753055Ab1IAJRn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 05:17:43 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 04/30] staging: brcm80211: removed static function
- declarations in antsel.c
-Date: Thu, 1 Sep 2011 11:16:54 +0200
-Message-ID: <1314868640-9425-5-git-send-email-rvossen@broadcom.com> (sfid-20110901_111818_341955_2D9AAB42)
-In-Reply-To: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
-References: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:33752 "EHLO
+	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750811Ab1IURoE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Sep 2011 13:44:04 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: linville@tuxdriver.com
+To: dcbw@redhat.com
+Cc: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org
+Subject: [PATCH] libertas: scan behaviour consistency improvements
+Message-Id: <20110921174359.DD2B39D401D@zog.reactivated.net> (sfid-20110921_194408_189920_377DE945)
+Date: Wed, 21 Sep 2011 18:43:59 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/antsel.c |  214 +++++++++++++--------------
- 1 files changed, 103 insertions(+), 111 deletions(-)
+When scanning for the broadcast SSID, there is no need to add the
+SSID TLV (restoring the behaviour of the driver behaviour in the wext
+days, confirmed in Marvell specifications).
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/antsel.c b/drivers/staging/brcm80211/brcmsmac/antsel.c
-index 23e0453..9dfc2ef 100644
---- a/drivers/staging/brcm80211/brcmsmac/antsel.c
-+++ b/drivers/staging/brcm80211/brcmsmac/antsel.c
-@@ -49,15 +49,6 @@
- #define ANT_SELCFG_NUM_2x4	4
- #define ANT_SELCFG_DEF_2x4	0x02	/* default antenna configuration */
+If bssid is unspecified, the current scan code will usually fire off an
+active scan probing for the specific requested SSID. However, if a scan
+is ongoing (or has just finished), those scan results will be used
+instead (even if that scan is totally different, e.g. a passive scan on
+channel 4 for a different SSID). Fix this inconsistency by always
+firing off a scan when associating without a bssid.
+
+Signed-off-by: Daniel Drake <dsd@laptop.org>
+---
+ drivers/net/wireless/libertas/cfg.c |   33 +++++++++++++++++----------------
+ drivers/net/wireless/libertas/dev.h |    1 -
+ 2 files changed, 17 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+index b456a53..93e5dea 100644
+--- a/drivers/net/wireless/libertas/cfg.c
++++ b/drivers/net/wireless/libertas/cfg.c
+@@ -691,7 +691,7 @@ static void lbs_scan_worker(struct work_struct *work)
+ 	tlv = scan_cmd->tlvbuffer;
  
--/* static functions */
--static int brcms_c_antsel_cfgupd(struct antsel_info *asi,
--				 struct brcms_antselcfg *antsel);
--static u8 brcms_c_antsel_id2antcfg(struct antsel_info *asi, u8 id);
--static u16 brcms_c_antsel_antcfg2antsel(struct antsel_info *asi, u8 ant_cfg);
--static void brcms_c_antsel_init_cfg(struct antsel_info *asi,
--				struct brcms_antselcfg *antsel,
--				bool auto_sel);
--
- const u16 mimo_2x4_div_antselpat_tbl[] = {
- 	0, 0, 0x9, 0xa,		/* ant0: 0 ant1: 2,3 */
- 	0, 0, 0x5, 0x6,		/* ant0: 1 ant1: 2,3 */
-@@ -82,6 +73,38 @@ const u8 mimo_2x3_div_antselid_tbl[16] = {
- 	0, 0, 0, 0, 0, 0, 0, 0	/* pat to antselid */
+ 	/* add SSID TLV */
+-	if (priv->scan_req->n_ssids)
++	if (priv->scan_req->n_ssids && priv->scan_req->ssids[0].ssid_len > 0)
+ 		tlv += lbs_add_ssid_tlv(tlv,
+ 					priv->scan_req->ssids[0].ssid,
+ 					priv->scan_req->ssids[0].ssid_len);
+@@ -732,7 +732,6 @@ static void lbs_scan_worker(struct work_struct *work)
+ 			cfg80211_scan_done(priv->scan_req, false);
+ 
+ 		priv->scan_req = NULL;
+-		priv->last_scan = jiffies;
+ 	}
+ 
+ 	/* Restart network */
+@@ -1295,24 +1294,26 @@ static int lbs_cfg_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	lbs_deb_enter(LBS_DEB_CFG80211);
+ 
+ 	if (!sme->bssid) {
+-		/* Run a scan if one isn't in-progress already and if the last
+-		 * scan was done more than 2 seconds ago.
+-		 */
+-		if (priv->scan_req == NULL &&
+-		    time_after(jiffies, priv->last_scan + (2 * HZ))) {
+-			struct cfg80211_scan_request *creq;
++		struct cfg80211_scan_request *creq;
+ 
+-			creq = _new_connect_scan_req(wiphy, sme);
+-			if (!creq) {
+-				ret = -EINVAL;
+-				goto done;
+-			}
++		/*
++		 * Scan for the requested network after waiting for existing
++		 * scans to finish.
++		 */
++		lbs_deb_assoc("assoc: waiting for existing scans\n");
++		wait_event_interruptible_timeout(priv->scan_q,
++						 (priv->scan_req == NULL),
++						 (15 * HZ));
+ 
+-			lbs_deb_assoc("assoc: scanning for compatible AP\n");
+-			_internal_start_scan(priv, true, creq);
++		creq = _new_connect_scan_req(wiphy, sme);
++		if (!creq) {
++			ret = -EINVAL;
++			goto done;
+ 		}
+ 
+-		/* Wait for any in-progress scan to complete */
++		lbs_deb_assoc("assoc: scanning for compatible AP\n");
++		_internal_start_scan(priv, true, creq);
++
+ 		lbs_deb_assoc("assoc: waiting for scan to complete\n");
+ 		wait_event_interruptible_timeout(priv->scan_q,
+ 						 (priv->scan_req == NULL),
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index adb3490..5ac4d17 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -167,7 +167,6 @@ struct lbs_private {
+ 	wait_queue_head_t scan_q;
+ 	/* Whether the scan was initiated internally and not by cfg80211 */
+ 	bool internal_scan;
+-	unsigned long last_scan;
  };
  
-+/* boardlevel antenna selection: init antenna selection structure */
-+static void
-+brcms_c_antsel_init_cfg(struct antsel_info *asi, struct brcms_antselcfg *antsel,
-+		    bool auto_sel)
-+{
-+	if (asi->antsel_type == ANTSEL_2x3) {
-+		u8 antcfg_def = ANT_SELCFG_DEF_2x3 |
-+		    ((asi->antsel_avail && auto_sel) ? ANT_SELCFG_AUTO : 0);
-+		antsel->ant_config[ANT_SELCFG_TX_DEF] = antcfg_def;
-+		antsel->ant_config[ANT_SELCFG_TX_UNICAST] = antcfg_def;
-+		antsel->ant_config[ANT_SELCFG_RX_DEF] = antcfg_def;
-+		antsel->ant_config[ANT_SELCFG_RX_UNICAST] = antcfg_def;
-+		antsel->num_antcfg = ANT_SELCFG_NUM_2x3;
-+
-+	} else if (asi->antsel_type == ANTSEL_2x4) {
-+
-+		antsel->ant_config[ANT_SELCFG_TX_DEF] = ANT_SELCFG_DEF_2x4;
-+		antsel->ant_config[ANT_SELCFG_TX_UNICAST] = ANT_SELCFG_DEF_2x4;
-+		antsel->ant_config[ANT_SELCFG_RX_DEF] = ANT_SELCFG_DEF_2x4;
-+		antsel->ant_config[ANT_SELCFG_RX_UNICAST] = ANT_SELCFG_DEF_2x4;
-+		antsel->num_antcfg = ANT_SELCFG_NUM_2x4;
-+
-+	} else {		/* no antenna selection available */
-+
-+		antsel->ant_config[ANT_SELCFG_TX_DEF] = ANT_SELCFG_DEF_2x2;
-+		antsel->ant_config[ANT_SELCFG_TX_UNICAST] = ANT_SELCFG_DEF_2x2;
-+		antsel->ant_config[ANT_SELCFG_RX_DEF] = ANT_SELCFG_DEF_2x2;
-+		antsel->ant_config[ANT_SELCFG_RX_UNICAST] = ANT_SELCFG_DEF_2x2;
-+		antsel->num_antcfg = 0;
-+	}
-+}
-+
- struct antsel_info *brcms_c_antsel_attach(struct brcms_c_info *wlc)
- {
- 	struct antsel_info *asi;
-@@ -150,6 +173,64 @@ void brcms_c_antsel_detach(struct antsel_info *asi)
- 	kfree(asi);
- }
- 
-+/*
-+ * boardlevel antenna selection:
-+ *   convert ant_cfg to mimo_antsel (ucode interface)
-+ */
-+static u16 brcms_c_antsel_antcfg2antsel(struct antsel_info *asi, u8 ant_cfg)
-+{
-+	u8 idx = BRCMS_ANTIDX_11N(BRCMS_ANTSEL_11N(ant_cfg));
-+	u16 mimo_antsel = 0;
-+
-+	if (asi->antsel_type == ANTSEL_2x4) {
-+		/* 2x4 antenna diversity board, 4 cfgs: 0-2 0-3 1-2 1-3 */
-+		mimo_antsel = (mimo_2x4_div_antselpat_tbl[idx] & 0xf);
-+		return mimo_antsel;
-+
-+	} else if (asi->antsel_type == ANTSEL_2x3) {
-+		/* 2x3 antenna selection, 3 cfgs: 0-1 0-2 2-1 */
-+		mimo_antsel = (mimo_2x3_div_antselpat_tbl[idx] & 0xf);
-+		return mimo_antsel;
-+	}
-+
-+	return mimo_antsel;
-+}
-+
-+/* boardlevel antenna selection: ucode interface control */
-+static int brcms_c_antsel_cfgupd(struct antsel_info *asi,
-+				 struct brcms_antselcfg *antsel)
-+{
-+	struct brcms_c_info *wlc = asi->wlc;
-+	u8 ant_cfg;
-+	u16 mimo_antsel;
-+
-+	/* 1) Update TX antconfig for all frames that are not unicast data
-+	 *    (aka default TX)
-+	 */
-+	ant_cfg = antsel->ant_config[ANT_SELCFG_TX_DEF];
-+	mimo_antsel = brcms_c_antsel_antcfg2antsel(asi, ant_cfg);
-+	brcms_c_write_shm(wlc, M_MIMO_ANTSEL_TXDFLT, mimo_antsel);
-+	/*
-+	 * Update driver stats for currently selected
-+	 * default tx/rx antenna config
-+	 */
-+	asi->antcfg_cur.ant_config[ANT_SELCFG_TX_DEF] = ant_cfg;
-+
-+	/* 2) Update RX antconfig for all frames that are not unicast data
-+	 *    (aka default RX)
-+	 */
-+	ant_cfg = antsel->ant_config[ANT_SELCFG_RX_DEF];
-+	mimo_antsel = brcms_c_antsel_antcfg2antsel(asi, ant_cfg);
-+	brcms_c_write_shm(wlc, M_MIMO_ANTSEL_RXDFLT, mimo_antsel);
-+	/*
-+	 * Update driver stats for currently selected
-+	 * default tx/rx antenna config
-+	 */
-+	asi->antcfg_cur.ant_config[ANT_SELCFG_RX_DEF] = ant_cfg;
-+
-+	return 0;
-+}
-+
- void brcms_c_antsel_init(struct antsel_info *asi)
- {
- 	if ((asi->antsel_type == ANTSEL_2x3) ||
-@@ -157,36 +238,23 @@ void brcms_c_antsel_init(struct antsel_info *asi)
- 		brcms_c_antsel_cfgupd(asi, &asi->antcfg_11n);
- }
- 
--/* boardlevel antenna selection: init antenna selection structure */
--static void
--brcms_c_antsel_init_cfg(struct antsel_info *asi, struct brcms_antselcfg *antsel,
--		    bool auto_sel)
-+/* boardlevel antenna selection: convert id to ant_cfg */
-+static u8 brcms_c_antsel_id2antcfg(struct antsel_info *asi, u8 id)
- {
--	if (asi->antsel_type == ANTSEL_2x3) {
--		u8 antcfg_def = ANT_SELCFG_DEF_2x3 |
--		    ((asi->antsel_avail && auto_sel) ? ANT_SELCFG_AUTO : 0);
--		antsel->ant_config[ANT_SELCFG_TX_DEF] = antcfg_def;
--		antsel->ant_config[ANT_SELCFG_TX_UNICAST] = antcfg_def;
--		antsel->ant_config[ANT_SELCFG_RX_DEF] = antcfg_def;
--		antsel->ant_config[ANT_SELCFG_RX_UNICAST] = antcfg_def;
--		antsel->num_antcfg = ANT_SELCFG_NUM_2x3;
--
--	} else if (asi->antsel_type == ANTSEL_2x4) {
--
--		antsel->ant_config[ANT_SELCFG_TX_DEF] = ANT_SELCFG_DEF_2x4;
--		antsel->ant_config[ANT_SELCFG_TX_UNICAST] = ANT_SELCFG_DEF_2x4;
--		antsel->ant_config[ANT_SELCFG_RX_DEF] = ANT_SELCFG_DEF_2x4;
--		antsel->ant_config[ANT_SELCFG_RX_UNICAST] = ANT_SELCFG_DEF_2x4;
--		antsel->num_antcfg = ANT_SELCFG_NUM_2x4;
-+	u8 antcfg = ANT_SELCFG_DEF_2x2;
- 
--	} else {		/* no antenna selection available */
-+	if (asi->antsel_type == ANTSEL_2x4) {
-+		/* 2x4 antenna diversity board, 4 cfgs: 0-2 0-3 1-2 1-3 */
-+		antcfg = (((id & 0x2) << 3) | ((id & 0x1) + 2));
-+		return antcfg;
- 
--		antsel->ant_config[ANT_SELCFG_TX_DEF] = ANT_SELCFG_DEF_2x2;
--		antsel->ant_config[ANT_SELCFG_TX_UNICAST] = ANT_SELCFG_DEF_2x2;
--		antsel->ant_config[ANT_SELCFG_RX_DEF] = ANT_SELCFG_DEF_2x2;
--		antsel->ant_config[ANT_SELCFG_RX_UNICAST] = ANT_SELCFG_DEF_2x2;
--		antsel->num_antcfg = 0;
-+	} else if (asi->antsel_type == ANTSEL_2x3) {
-+		/* 2x3 antenna selection, 3 cfgs: 0-1 0-2 2-1 */
-+		antcfg = (((id & 0x02) << 4) | ((id & 0x1) + 1));
-+		return antcfg;
- 	}
-+
-+	return antcfg;
- }
- 
- void
-@@ -240,79 +308,3 @@ u8 brcms_c_antsel_antsel2id(struct antsel_info *asi, u16 antsel)
- 	return antselid;
- }
- 
--/* boardlevel antenna selection: convert id to ant_cfg */
--static u8 brcms_c_antsel_id2antcfg(struct antsel_info *asi, u8 id)
--{
--	u8 antcfg = ANT_SELCFG_DEF_2x2;
--
--	if (asi->antsel_type == ANTSEL_2x4) {
--		/* 2x4 antenna diversity board, 4 cfgs: 0-2 0-3 1-2 1-3 */
--		antcfg = (((id & 0x2) << 3) | ((id & 0x1) + 2));
--		return antcfg;
--
--	} else if (asi->antsel_type == ANTSEL_2x3) {
--		/* 2x3 antenna selection, 3 cfgs: 0-1 0-2 2-1 */
--		antcfg = (((id & 0x02) << 4) | ((id & 0x1) + 1));
--		return antcfg;
--	}
--
--	return antcfg;
--}
--
--/*
-- * boardlevel antenna selection:
-- *   convert ant_cfg to mimo_antsel (ucode interface)
-- */
--static u16 brcms_c_antsel_antcfg2antsel(struct antsel_info *asi, u8 ant_cfg)
--{
--	u8 idx = BRCMS_ANTIDX_11N(BRCMS_ANTSEL_11N(ant_cfg));
--	u16 mimo_antsel = 0;
--
--	if (asi->antsel_type == ANTSEL_2x4) {
--		/* 2x4 antenna diversity board, 4 cfgs: 0-2 0-3 1-2 1-3 */
--		mimo_antsel = (mimo_2x4_div_antselpat_tbl[idx] & 0xf);
--		return mimo_antsel;
--
--	} else if (asi->antsel_type == ANTSEL_2x3) {
--		/* 2x3 antenna selection, 3 cfgs: 0-1 0-2 2-1 */
--		mimo_antsel = (mimo_2x3_div_antselpat_tbl[idx] & 0xf);
--		return mimo_antsel;
--	}
--
--	return mimo_antsel;
--}
--
--/* boardlevel antenna selection: ucode interface control */
--static int brcms_c_antsel_cfgupd(struct antsel_info *asi,
--				 struct brcms_antselcfg *antsel)
--{
--	struct brcms_c_info *wlc = asi->wlc;
--	u8 ant_cfg;
--	u16 mimo_antsel;
--
--	/* 1) Update TX antconfig for all frames that are not unicast data
--	 *    (aka default TX)
--	 */
--	ant_cfg = antsel->ant_config[ANT_SELCFG_TX_DEF];
--	mimo_antsel = brcms_c_antsel_antcfg2antsel(asi, ant_cfg);
--	brcms_c_write_shm(wlc, M_MIMO_ANTSEL_TXDFLT, mimo_antsel);
--	/*
--	 * Update driver stats for currently selected
--	 * default tx/rx antenna config
--	 */
--	asi->antcfg_cur.ant_config[ANT_SELCFG_TX_DEF] = ant_cfg;
--
--	/* 2) Update RX antconfig for all frames that are not unicast data
--	 *    (aka default RX)
--	 */
--	ant_cfg = antsel->ant_config[ANT_SELCFG_RX_DEF];
--	mimo_antsel = brcms_c_antsel_antcfg2antsel(asi, ant_cfg);
--	brcms_c_write_shm(wlc, M_MIMO_ANTSEL_RXDFLT, mimo_antsel);
--	/*
--	 * Update driver stats for currently selected
--	 * default tx/rx antenna config
--	 */
--	asi->antcfg_cur.ant_config[ANT_SELCFG_RX_DEF] = ant_cfg;
--
--	return 0;
--}
+ extern struct cmd_confirm_sleep confirm_sleep;
 -- 
-1.7.4.1
-
+1.7.6.2
 
