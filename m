@@ -1,72 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:50503 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751325Ab1IWGPG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58120 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752778Ab1IUMGR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 02:15:06 -0400
-Date: Fri, 23 Sep 2011 09:14:35 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [patch] NFC: use after free on error
-Message-ID: <20110923061435.GA4387@elgon.mountain> (sfid-20110923_081529_249970_9D05D9D4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 21 Sep 2011 08:06:17 -0400
+Subject: Re: [RFC 3/5] nl80211/mac80211: allow adding TDLS peers as stations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Kalyan C Gaddam <chakkal@iit.edu>
+In-Reply-To: <1316082334-7664-4-git-send-email-arik@wizery.com> (sfid-20110915_122552_918148_08AA1F92)
+References: <1316082334-7664-1-git-send-email-arik@wizery.com>
+	 <1316082334-7664-4-git-send-email-arik@wizery.com>
+	 (sfid-20110915_122552_918148_08AA1F92)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 21 Sep 2011 14:06:12 +0200
+Message-ID: <1316606772.3940.30.camel@jlt3.sipsolutions.net> (sfid-20110921_140619_959765_E24C2550)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We returned a freed variable on some error paths when the intent was
-to return a NULL.  Part of the reason this was missed was that the
-code was confusing because it had too many gotos so I removed them
-and simplified the flow a bit.
+On Thu, 2011-09-15 at 13:25 +0300, Arik Nemtsov wrote:
+> When a TDLS peer STA is added it is marked with a new flag in both
+> nl80211 and in mac80211.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+I think it'd make some sense to allow only TDLS stations on a managed
+mode interface?
 
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 895e5fd..06330cd 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -490,19 +490,19 @@ struct nci_dev *nci_allocate_device(struct nci_ops *ops,
- 					int tx_headroom,
- 					int tx_tailroom)
- {
--	struct nci_dev *ndev = NULL;
-+	struct nci_dev *ndev;
- 
- 	nfc_dbg("entry, supported_protocols 0x%x", supported_protocols);
- 
- 	if (!ops->open || !ops->close || !ops->send)
--		goto exit;
-+		return NULL;
- 
- 	if (!supported_protocols)
--		goto exit;
-+		return NULL;
- 
- 	ndev = kzalloc(sizeof(struct nci_dev), GFP_KERNEL);
- 	if (!ndev)
--		goto exit;
-+		return NULL;
- 
- 	ndev->ops = ops;
- 	ndev->tx_headroom = tx_headroom;
-@@ -517,13 +517,11 @@ struct nci_dev *nci_allocate_device(struct nci_ops *ops,
- 
- 	nfc_set_drvdata(ndev->nfc_dev, ndev);
- 
--	goto exit;
-+	return ndev;
- 
- free_exit:
- 	kfree(ndev);
--
--exit:
--	return ndev;
-+	return NULL;
- }
- EXPORT_SYMBOL(nci_allocate_device);
- 
+johannes
+
+
