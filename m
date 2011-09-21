@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:57681 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752329Ab1IZVc5 (ORCPT
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:36907 "HELO
+	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751018Ab1IUVtI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 17:32:57 -0400
-Received: by eya28 with SMTP id 28so4022123eya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 14:32:56 -0700 (PDT)
+	Wed, 21 Sep 2011 17:49:08 -0400
+Message-ID: <4E7A5BD2.40502@xenotime.net> (sfid-20110921_234937_238037_AE23F352)
+Date: Wed, 21 Sep 2011 14:49:06 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
 MIME-Version: 1.0
-In-Reply-To: <C5A7FB31FD9AEA42B600BDC3C74F8E00170525B4@orsmsx511.amr.corp.intel.com>
-References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
-	<CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com>
-	<1317048872.2400.4.camel@wwguy-ubuntu>
-	<CAJTrwG5CQKn9=1=HUDX1L5PsFbGws_zK1DTvot9i=KcMX7SwkQ@mail.gmail.com>
-	<1317049160.1958.8.camel@wwguy-huron>
-	<CAJTrwG5eELbDuGFXU4=3gSunPSkKLFvcpSe6gGE_Wc0s5BXZ+A@mail.gmail.com>
-	<CAJTrwG7tzDHxDha5x8r-GJFK=oUE6Zk5zqpN4z4L2LyAD=DueQ@mail.gmail.com>
-	<1317050380.1958.13.camel@wwguy-huron>
-	<CAJTrwG46qRYvda1vcCZXv0BTUyf26gx2qgpNgOG-bm-BCMpqfg@mail.gmail.com>
-	<1317053131.1958.15.camel@wwguy-huron>
-	<C5A7FB31FD9AEA42B600BDC3C74F8E0017052223@orsmsx511.amr.corp.intel.com>
-	<CAJTrwG5AvbtNRZi54tzAoUDv5X9QLVY3L=-OgHYRtnJ-RMesrQ@mail.gmail.com>
-	<1317062004.1958.18.camel@wwguy-huron>
-	<CAJTrwG57r-B-eT-FODsDW1UgoVcS68zcUWo1mOrdHRdoXtNmCg@mail.gmail.com>
-	<C5A7FB31FD9AEA42B600BDC3C74F8E001705253B@orsmsx511.amr.corp.intel.com>
-	<CAJTrwG5MXfixhnNPOdoA3-DYEeKpC==uv4WvE78ZE5U+A10T7Q@mail.gmail.com>
-	<C5A7FB31FD9AEA42B600BDC3C74F8E0017052566@orsmsx511.amr.corp.intel.com>
-	<CAJTrwG4AHo-_P_j8x2_vbd-eCXRVM=MPRoCh-uQQPHoKduyxvw@mail.gmail.com>
-	<C5A7FB31FD9AEA42B600BDC3C74F8E00170525B4@orsmsx511.amr.corp.intel.com>
-Date: Mon, 26 Sep 2011 23:32:55 +0200
-Message-ID: <CAJTrwG42nO9vdRAaka32Fj6X27cSfnsOOq7GCg0G2d11tTTryQ@mail.gmail.com> (sfid-20110926_233300_327108_76765BEF)
-Subject: Re: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM Fritz!Box
- (7390)" incompatible
-From: Henrik Friedrichsen <hrkfdn@gmail.com>
-To: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
-Cc: linux-wireless@vger.kernel.org
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>
+Subject: Re: [PATCH -next] bcma: main.c and driver_mips.c need linux/export.h
+References: <20110920173102.d38155c7defbbc29beaae7c0@canb.auug.org.au>	<4E78CFC0.4020003@xenotime.net>	<CACna6rxGrd-ORWZrc0xsAOKptU_Xj3eGh9qSfX9vJYCPTZrCRg@mail.gmail.com>	<4E78FCDB.1010002@xenotime.net>	<CACna6rywFitSNkkwo6tNy887vdsoyHG5Cadk6Bb8_qBJ+gc42w@mail.gmail.com>	<4E7A084C.3000304@xenotime.net> <CACna6ryNw+YgTiO5dBSGcTfUabM_yO0LaSsbGpC_X6JrQudnBQ@mail.gmail.com> <4E7A521B.50104@xenotime.net> <4E7A5A2F.7030402@lwfinger.net>
+In-Reply-To: <4E7A5A2F.7030402@lwfinger.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 26, 2011 at 11:24 PM, Venkataraman, Meenakshi
-<meenakshi.venkataraman@intel.com> wrote:
-> [MV] Well...what I'm interested in is really the IEEE802.11 packets for when you attempt to browse the web (or other workloads) where you're seeing the issue. Of course, TCP traffic that these packets are carrying will also be helpful.
+On 09/21/2011 02:42 PM, Larry Finger wrote:
+> On 09/21/2011 04:07 PM, Randy Dunlap wrote:
+>> From: Randy Dunlap<rdunlap@xenotime.net>
+>>
+>> main.c and driver_mips.c use EXPORT_SYMBOL() etc.
+>> so they should include<linux/export.h>.
+>>
+>> Signed-off-by: Randy Dunlap<rdunlap@xenotime.net>
+> 
+> From this commit message, it appears that every routine that uses EXPORT_SYMBOL() will need to include this header. I looked at modifying rtlwifi and friends to include this header, but found that include/linux/export.h does not exist in any of my source trees. From that I assume that the change will happen in 3.2.
+> 
+> I have prepared a patch, but cannot use it at the moment. Is there somewhere that I should send it?
 
-I see. You're going to have to excuse me here, though. I have never
-done WiFi debugging. What would be the easiest (and for you most
-useful) way to capture IEEE802.11 packets?
+Hi Larry,
+
+linux/export.h is only in linux-next.  I think that you should just prepare
+a linux-next patch for rtlwifi and then push it after Paul Gortmaker's
+module.h-split git tree has been merged (it splits module.h into module.h
+and export.h), or maybe you could ask Paul to merge your patch into his tree.
+
+[I added Paul to the cc: list.]
+
+-- 
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
