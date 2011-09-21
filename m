@@ -1,189 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39192 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752531Ab1I1MMs (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:63981 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751992Ab1IUTEe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 08:12:48 -0400
-Message-Id: <20110928121128.616742159@sipsolutions.net> (sfid-20110928_141257_810924_18CA65AF)
-Date: Wed, 28 Sep 2011 14:08:50 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 01/15] mac80211: let drivers inform it about per TID
- buffered frames
-References: <20110928120849.882884360@sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 21 Sep 2011 15:04:34 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 34so2223980wyg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 12:04:34 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/3] b43: LCN-PHY: minor clean ups
+Date: Wed, 21 Sep 2011 21:44:15 +0200
+Message-Id: <1316634255-3116-3-git-send-email-zajec5@gmail.com> (sfid-20110921_210438_464349_F99F42E0)
+In-Reply-To: <1316634255-3116-1-git-send-email-zajec5@gmail.com>
+References: <1316634255-3116-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-For uAPSD implementation, it is necessary to know on
-which ACs frames are buffered. mac80211 obviously
-knows about the frames it has buffered itself, but
-with aggregation many drivers buffer frames. Thus,
-mac80211 needs to be informed about this.
-
-For now, since we don't have APSD in any form, this
-will unconditionally set the TIM bit for the station
-but later with uAPSD only some ACs might cause the
-TIM bit to be set.
-
-ath9k is the only driver using this API and I only
-modify it in the most basic way, it won't be able
-to implement uAPSD with this yet. But it can't do
-that anyway since there's no way to selectively
-release frames to the peer yet.
-
-Since drivers will buffer frames per TID, let them
-inform mac80211 on a per TID basis, mac80211 will
-then sort out the AC mapping itself.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    3 ++-
- drivers/net/wireless/ath/ath9k/main.c  |    3 +--
- drivers/net/wireless/ath/ath9k/xmit.c  |   14 +++++++-------
- include/net/mac80211.h                 |   30 ++++++++++++++++++++++++------
- net/mac80211/sta_info.c                |    8 ++++++--
- 5 files changed, 40 insertions(+), 18 deletions(-)
+ drivers/net/wireless/b43/phy_lcn.c        |    2 +-
+ drivers/net/wireless/b43/tables_phy_lcn.c |   25 +++++++++++++++++++++----
+ 2 files changed, 22 insertions(+), 5 deletions(-)
 
---- a/include/net/mac80211.h	2011-09-28 13:18:05.000000000 +0200
-+++ b/include/net/mac80211.h	2011-09-28 13:18:28.000000000 +0200
-@@ -2361,17 +2361,35 @@ static inline int ieee80211_sta_ps_trans
- #define IEEE80211_TX_STATUS_HEADROOM	13
+diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
+index bffeb44..a13e28e 100644
+--- a/drivers/net/wireless/b43/phy_lcn.c
++++ b/drivers/net/wireless/b43/phy_lcn.c
+@@ -433,7 +433,7 @@ static void b43_phy_lcn_sense_setup(struct b43_wldev *dev,
+ 	b43_phy_set(dev, 0x4d0, 0x20);
+ 	b43_radio_write(dev, 0x112, 0x6);
  
- /**
-- * ieee80211_sta_set_tim - set the TIM bit for a sleeping station
-+ * ieee80211_sta_set_buffered - inform mac80211 about driver-buffered frames
-  * @sta: &struct ieee80211_sta pointer for the sleeping station
-+ * @tid: the TID that has buffered frames
-+ * @buffered: indicates whether or not frames are buffered for this TID
-  *
-  * If a driver buffers frames for a powersave station instead of passing
-- * them back to mac80211 for retransmission, the station needs to be told
-- * to wake up using the TIM bitmap in the beacon.
-+ * them back to mac80211 for retransmission, the station may still need
-+ * to be told that there are buffered frames via the TIM bit.
-  *
-- * This function sets the station's TIM bit - it will be cleared when the
-- * station wakes up.
-+ * This function informs mac80211 whether or not there are frames that are
-+ * buffered in the driver for a given TID; mac80211 can then use this data
-+ * to set the TIM bit (NOTE: This may call back into the driver's set_tim
-+ * call! Beware of the locking!)
-+ *
-+ * If all frames are released to the station (due to PS-poll or uAPSD)
-+ * then the driver needs to inform mac80211 that there no longer are
-+ * frames buffered. However, when the station wakes up mac80211 assumes
-+ * that all buffered frames will be transmitted and clears this data,
-+ * drivers need to make sure they inform mac80211 about all buffered
-+ * frames on the sleep transition (sta_notify() with %STA_NOTIFY_SLEEP).
-+ *
-+ * Note that technically mac80211 only needs to know this per AC, not per
-+ * TID, but since driver buffering will inevitably happen per TID (since
-+ * it is related to aggregation) it is easier to make mac80211 map the
-+ * TID to the AC as required instead of keeping track in all drivers that
-+ * use this API.
-  */
--void ieee80211_sta_set_tim(struct ieee80211_sta *sta);
-+void ieee80211_sta_set_buffered(struct ieee80211_sta *sta,
-+				u8 tid, bool buffered);
- 
- /**
-  * ieee80211_tx_status - transmit status callback
---- a/net/mac80211/sta_info.c	2011-09-28 11:39:20.000000000 +0200
-+++ b/net/mac80211/sta_info.c	2011-09-28 13:18:28.000000000 +0200
-@@ -1117,11 +1117,15 @@ void ieee80211_sta_block_awake(struct ie
+-	/* TODO: dummy transmission? */
++	b43_dummy_transmission(dev, true, false);
+ 	/* Wait if not done */
+ 	if (!(b43_phy_read(dev, 0x476) & 0x8000))
+ 		udelay(10);
+diff --git a/drivers/net/wireless/b43/tables_phy_lcn.c b/drivers/net/wireless/b43/tables_phy_lcn.c
+index 9d484e2..5176363 100644
+--- a/drivers/net/wireless/b43/tables_phy_lcn.c
++++ b/drivers/net/wireless/b43/tables_phy_lcn.c
+@@ -657,8 +657,25 @@ void b43_phy_lcn_load_tx_gain_tab(struct b43_wldev *dev,
+ 	}
  }
- EXPORT_SYMBOL(ieee80211_sta_block_awake);
  
--void ieee80211_sta_set_tim(struct ieee80211_sta *pubsta)
-+void ieee80211_sta_set_buffered(struct ieee80211_sta *pubsta,
-+				u8 tid, bool buffered)
- {
- 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
- 
-+	if (!buffered)
-+		return;
++/* wlc_lcnphy_load_rfpower */
++static void b43_phy_lcn_load_rfpower(struct b43_wldev *dev)
++{
++	u32 bbmult, rfgain;
++	u8 i;
 +
- 	set_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF);
- 	sta_info_set_tim_bit(sta);
- }
--EXPORT_SYMBOL(ieee80211_sta_set_tim);
-+EXPORT_SYMBOL(ieee80211_sta_set_buffered);
---- a/drivers/net/wireless/ath/ath9k/ath9k.h	2011-09-28 11:39:20.000000000 +0200
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h	2011-09-28 13:18:28.000000000 +0200
-@@ -340,7 +340,8 @@ void ath_tx_aggr_stop(struct ath_softc *
- void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
- 
- void ath_tx_aggr_wakeup(struct ath_softc *sc, struct ath_node *an);
--bool ath_tx_aggr_sleep(struct ath_softc *sc, struct ath_node *an);
-+void ath_tx_aggr_sleep(struct ieee80211_sta *sta, struct ath_softc *sc,
-+		       struct ath_node *an);
- 
- /********/
- /* VIFs */
---- a/drivers/net/wireless/ath/ath9k/main.c	2011-09-28 11:44:04.000000000 +0200
-+++ b/drivers/net/wireless/ath/ath9k/main.c	2011-09-28 13:18:28.000000000 +0200
-@@ -1833,8 +1833,7 @@ static void ath9k_sta_notify(struct ieee
- 	switch (cmd) {
- 	case STA_NOTIFY_SLEEP:
- 		an->sleeping = true;
--		if (ath_tx_aggr_sleep(sc, an))
--			ieee80211_sta_set_tim(sta);
-+		ath_tx_aggr_sleep(sta, sc, an);
- 		break;
- 	case STA_NOTIFY_AWAKE:
- 		an->sleeping = false;
---- a/drivers/net/wireless/ath/ath9k/xmit.c	2011-09-28 11:39:20.000000000 +0200
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c	2011-09-28 13:18:28.000000000 +0200
-@@ -542,7 +542,7 @@ static void ath_tx_complete_aggr(struct
- 	/* prepend un-acked frames to the beginning of the pending frame queue */
- 	if (!skb_queue_empty(&bf_pending)) {
- 		if (an->sleeping)
--			ieee80211_sta_set_tim(sta);
-+			ieee80211_sta_set_buffered(sta, tid->tidno, true);
- 
- 		spin_lock_bh(&txq->axq_lock);
- 		if (clear_filter)
-@@ -1153,12 +1153,13 @@ void ath_tx_aggr_stop(struct ath_softc *
- 	ath_tx_flush_tid(sc, txtid);
- }
- 
--bool ath_tx_aggr_sleep(struct ath_softc *sc, struct ath_node *an)
-+void ath_tx_aggr_sleep(struct ieee80211_sta *sta, struct ath_softc *sc,
-+		       struct ath_node *an)
- {
- 	struct ath_atx_tid *tid;
- 	struct ath_atx_ac *ac;
- 	struct ath_txq *txq;
--	bool buffered = false;
-+	bool buffered;
- 	int tidno;
- 
- 	for (tidno = 0, tid = &an->tid[tidno];
-@@ -1172,8 +1173,7 @@ bool ath_tx_aggr_sleep(struct ath_softc
- 
- 		spin_lock_bh(&txq->axq_lock);
- 
--		if (!skb_queue_empty(&tid->buf_q))
--			buffered = true;
-+		buffered = !skb_queue_empty(&tid->buf_q);
- 
- 		tid->sched = false;
- 		list_del(&tid->list);
-@@ -1184,9 +1184,9 @@ bool ath_tx_aggr_sleep(struct ath_softc
- 		}
- 
- 		spin_unlock_bh(&txq->axq_lock);
--	}
- 
--	return buffered;
-+		ieee80211_sta_set_buffered(sta, tidno, buffered);
++	for (i = 0; i < 128; i++) {
++		bbmult = b43_lcntab_read(dev, B43_LCNTAB32(0x7, 0x140 + i));
++		bbmult >>= 20;
++		rfgain = b43_lcntab_read(dev, B43_LCNTAB32(0x7, 0xc0 + i));
++
++		/* TODO: calculate value for 0x240 + i table offset
++		 * b43_lcntab_write(dev, B43_LCNTAB32(0x7, 0x240 + i), val);
++		 */
 +	}
- }
++}
++
+ /* Not implemented in brcmsmac, noticed in wl in MMIO dump */
+-static void b43_phy_lcn_rewrite_tables(struct b43_wldev *dev)
++static void b43_phy_lcn_rewrite_rfpower_table(struct b43_wldev *dev)
+ {
+ 	int i;
+ 	u32 tmp;
+@@ -685,7 +702,7 @@ void b43_phy_lcn_tables_init(struct b43_wldev *dev)
+ 	b43_phy_lcn_upload_static_tables(dev);
  
- void ath_tx_aggr_wakeup(struct ath_softc *sc, struct ath_node *an)
-
+ 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
+-		if (sprom->boardflags_lo & B43_BFL_EXTLNA)
++		if (sprom->boardflags_lo & B43_BFL_FEM)
+ 			b43_phy_lcn_load_tx_gain_tab(dev,
+ 				b43_lcntab_tx_gain_tbl_2ghz_ext_pa_rev0);
+ 		else
+@@ -701,7 +718,7 @@ void b43_phy_lcn_tables_init(struct b43_wldev *dev)
+ 	else
+ 		b43err(dev->wl, "SW ctl table is unknown for this card\n");
+ 
+-	/* TODO: various tables ops here */
+-	b43_phy_lcn_rewrite_tables(dev);
++	b43_phy_lcn_load_rfpower(dev);
++	b43_phy_lcn_rewrite_rfpower_table(dev);
+ 	b43_phy_lcn_clean_papd_comp_table(dev);
+ }
+-- 
+1.7.3.4
 
