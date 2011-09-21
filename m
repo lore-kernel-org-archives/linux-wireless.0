@@ -1,223 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53596 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751062Ab1IBXkj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Sep 2011 19:40:39 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	rmanohar@qca.qualcomm.com, shafi.wireless@gmail.com,
-	vthiagar@qca.qualcomm.com
-Subject: [PATCH v13 5/5] ath9k: implement .get_antenna and .set_antenna
-Date: Sat,  3 Sep 2011 01:40:27 +0200
-Message-Id: <1315006827-81443-5-git-send-email-nbd@openwrt.org> (sfid-20110903_014045_471923_9CB0855E)
-In-Reply-To: <1315006827-81443-4-git-send-email-nbd@openwrt.org>
-References: <1315006827-81443-1-git-send-email-nbd@openwrt.org>
- <1315006827-81443-2-git-send-email-nbd@openwrt.org>
- <1315006827-81443-3-git-send-email-nbd@openwrt.org>
- <1315006827-81443-4-git-send-email-nbd@openwrt.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:41029 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750911Ab1IUHNv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Sep 2011 03:13:51 -0400
+Date: Wed, 21 Sep 2011 10:13:29 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch 1/2] mwifiex: add a kfree() to an error path
+Message-ID: <20110921071329.GF4999@elgon.mountain> (sfid-20110921_091356_102203_6BDA7C43)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On MIMO chips this can be used to enable/disable hardware chains, ensuring
-that the MCS information is updated accordingly.
-On non-MIMO chips with rx diversity (e.g. 9285), this configures the rx
-input antenna.
+We're not likely to hit this small memory leak, but lets fix it
+anyway to keep the static checkers happy.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +
- drivers/net/wireless/ath/ath9k/init.c  |   32 +++++++++++---
- drivers/net/wireless/ath/ath9k/main.c  |   71 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
- 4 files changed, 99 insertions(+), 8 deletions(-)
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index b2992d4..0fb4a26 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -649,6 +649,7 @@ struct ath_softc {
- 	struct ath_descdma txsdma;
- 
- 	struct ath_ant_comb ant_comb;
-+	u8 ant_tx, ant_rx;
- };
- 
- void ath9k_tasklet(unsigned long data);
-@@ -669,6 +670,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 		    const struct ath_bus_ops *bus_ops);
- void ath9k_deinit_device(struct ath_softc *sc);
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw);
-+void ath9k_reload_chainmask_settings(struct ath_softc *sc);
- 
- void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw);
- bool ath9k_uses_beacons(int type);
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index be302fb..9b34c4b 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -653,9 +653,22 @@ static void ath9k_init_txpower_limits(struct ath_softc *sc)
- 	ah->curchan = curchan;
- }
- 
-+void ath9k_reload_chainmask_settings(struct ath_softc *sc)
-+{
-+	if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT))
-+		return;
-+
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
-+		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
-+		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
-+}
-+
-+
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- {
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
- 		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
-@@ -693,6 +706,16 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->sta_data_size = sizeof(struct ath_node);
- 	hw->vif_data_size = sizeof(struct ath_vif);
- 
-+	hw->wiphy->available_antennas_rx = BIT(ah->caps.max_rxchains) - 1;
-+	hw->wiphy->available_antennas_tx = BIT(ah->caps.max_txchains) - 1;
-+
-+	/* single chain devices with rx diversity */
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
-+		hw->wiphy->available_antennas_rx = BIT(0) | BIT(1);
-+
-+	sc->ant_rx = hw->wiphy->available_antennas_rx;
-+	sc->ant_tx = hw->wiphy->available_antennas_tx;
-+
- #ifdef CONFIG_ATH9K_RATE_CONTROL
- 	hw->rate_control_algorithm = "ath9k_rate_control";
- #endif
-@@ -704,12 +727,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
- 			&sc->sbands[IEEE80211_BAND_5GHZ];
- 
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
--		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
--			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
--		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
--			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
--	}
-+	ath9k_reload_chainmask_settings(sc);
- 
- 	SET_IEEE80211_PERM_ADDR(hw, common->macaddr);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 1398204..526fd7e 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -281,6 +281,22 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 			ath_start_ani(common);
- 	}
- 
-+	if (ath9k_hw_ops(ah)->antdiv_comb_conf_get && sc->ant_rx != 3) {
-+		struct ath_hw_antcomb_conf div_ant_conf;
-+		u8 lna_conf;
-+
-+		ath9k_hw_antdiv_comb_conf_get(ah, &div_ant_conf);
-+
-+		if (sc->ant_rx == 1)
-+			lna_conf = ATH_ANT_DIV_COMB_LNA1;
-+		else
-+			lna_conf = ATH_ANT_DIV_COMB_LNA2;
-+		div_ant_conf.main_lna_conf = lna_conf;
-+		div_ant_conf.alt_lna_conf = lna_conf;
-+
-+		ath9k_hw_antdiv_comb_conf_set(ah, &div_ant_conf);
-+	}
-+
- 	ieee80211_wake_queues(sc->hw);
- 
- 	return true;
-@@ -2383,6 +2399,59 @@ static int ath9k_get_stats(struct ieee80211_hw *hw,
- 	return 0;
- }
- 
-+static u32 fill_chainmask(u32 cap, u32 new)
-+{
-+	u32 filled = 0;
-+	int i;
-+
-+	for (i = 0; cap && new; i++, cap >>= 1) {
-+		if (!(cap & BIT(0)))
-+			continue;
-+
-+		if (new & BIT(0))
-+			filled |= BIT(i);
-+
-+		new >>= 1;
-+	}
-+
-+	return filled;
-+}
-+
-+static int ath9k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	if (!rx_ant || !tx_ant)
-+		return -EINVAL;
-+
-+	sc->ant_rx = rx_ant;
-+	sc->ant_tx = tx_ant;
-+
-+	if (ah->caps.rx_chainmask == 1)
-+		return 0;
-+
-+	/* AR9100 runs into calibration issues if not all rx chains are enabled */
-+	if (AR_SREV_9100(ah))
-+		ah->rxchainmask = 0x7;
-+	else
-+		ah->rxchainmask = fill_chainmask(ah->caps.rx_chainmask, rx_ant);
-+
-+	ah->txchainmask = fill_chainmask(ah->caps.tx_chainmask, tx_ant);
-+	ath9k_reload_chainmask_settings(sc);
-+
-+	return 0;
-+}
-+
-+static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
-+{
-+	struct ath_softc *sc = hw->priv;
-+
-+	*tx_ant = sc->ant_tx;
-+	*rx_ant = sc->ant_rx;
-+	return 0;
-+}
-+
- struct ieee80211_ops ath9k_ops = {
- 	.tx 		    = ath9k_tx,
- 	.start 		    = ath9k_start,
-@@ -2409,4 +2478,6 @@ struct ieee80211_ops ath9k_ops = {
- 	.tx_frames_pending  = ath9k_tx_frames_pending,
- 	.tx_last_beacon     = ath9k_tx_last_beacon,
- 	.get_stats	    = ath9k_get_stats,
-+	.set_antenna	    = ath9k_set_antenna,
-+	.get_antenna	    = ath9k_get_antenna,
- };
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 9c7f905..8d3e19d 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1950,7 +1950,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 			ath_rx_ps(sc, skb);
- 		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
--		if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
-+		if ((ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) && sc->ant_rx == 3)
- 			ath_ant_comb_scan(sc, &rs);
- 
- 		ieee80211_rx(hw, skb);
--- 
-1.7.3.2
-
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index eb569fa..215c65a 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -203,6 +203,7 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
+ 		beacon_ie = kmemdup(bss->information_elements,
+ 					bss->len_beacon_ies, GFP_KERNEL);
+ 		if (!beacon_ie) {
++			kfree(bss_desc);
+ 			dev_err(priv->adapter->dev, " failed to alloc beacon_ie\n");
+ 			return -ENOMEM;
+ 		}
