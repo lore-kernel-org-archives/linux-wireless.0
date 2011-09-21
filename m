@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49250 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753661Ab1IMNa2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 09:30:28 -0400
-Date: Tue, 13 Sep 2011 09:28:45 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Francis Moreau <francis.moro@gmail.com>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, gregkh@suse.de
-Subject: Re: About the patch: "staging: brcm80211: only enable brcmsmac if
- bcma is not set"
-Message-ID: <20110913132844.GB11772@tuxdriver.com> (sfid-20110913_153045_256039_4D91DFD8)
-References: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com>
- <CACna6rwQ60viPGssWzBzgtVGBq1xu+AOxb0fqfRq4NaJFcmP=w@mail.gmail.com>
- <CAC9WiBi5L7uV=OzYBKs=sdjRr4Xykcd2USQPtPhCsSBLdpW-6g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAC9WiBi5L7uV=OzYBKs=sdjRr4Xykcd2USQPtPhCsSBLdpW-6g@mail.gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:25670 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750825Ab1IUVz3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Sep 2011 17:55:29 -0400
+Date: Wed, 21 Sep 2011 17:55:19 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: Re: Compat-wireless release for 2011-09-21 is baked
+Message-ID: <20110921175519.4c095804@mj> (sfid-20110921_235532_699900_9318B342)
+In-Reply-To: <20110921190442.E2EB540629@repository3.orbit-lab.org>
+References: <20110921190442.E2EB540629@repository3.orbit-lab.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 13, 2011 at 09:03:13AM +0200, Francis Moreau wrote:
-> 2011/9/12 Rafał Miłecki <zajec5@gmail.com>:
+On Wed, 21 Sep 2011 15:04:42 -0400 (EDT)
+compat@orbit-lab.org (Compat-wireless cronjob account) wrote:
 
-> > The real solution is to add bcma driver support in brcmsmac and ssb
-> > driver support in brcmfmac. Then you can always use bcma and:
-> > 1) If b43 will load and detect unsupported PHY, it will release the BCMA's core
-> > 2) brcmsmac will be loaded to let it support the core
-> >
+> From git://github.com/sfrothwell/linux-next
+>  + ec5d67e...39fc525 akpm-end   -> origin/akpm-end  (forced update)
+>    9d037a7..38867a2  akpm-start -> origin/akpm-start
+>  + 8c024a2...367fd59 master     -> origin/master  (forced update)
+>    9d037a7..38867a2  stable     -> origin/stable
+>  * [new tag]         next-20110921 -> next-20110921
 > 
-> Thanks for the description.
+> compat-wireless code metrics
 > 
-> But what should be done for the time being (3.1-rc5) ?
+>     812354 - Total upstream lines of code being pulled
+> Host key verification failed.
+> rsync: connection unexpectedly closed (0 bytes received so far)
+> [sender] rsync error: unexplained error (code 255) at io.c(601)
 
-Turn-off CONFIG_B43_BCMA.
+OK, we are getting closer, but we are not there yet :(
+
+By the way, where is compat-user now?
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regards,
+Pavel Roskin
