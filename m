@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:40409 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932708Ab1IMVVC convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:59778 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751267Ab1IUQ2V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 17:21:02 -0400
-Received: by qyk7 with SMTP id 7so937203qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2011 14:21:01 -0700 (PDT)
+	Wed, 21 Sep 2011 12:28:21 -0400
+Received: by gwm11 with SMTP id 11so631187gwm.2
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 09:28:19 -0700 (PDT)
+Message-ID: <4E7A109C.2010701@ti.com> (sfid-20110921_182824_699226_4BF4D371)
+Date: Wed, 21 Sep 2011 19:28:12 +0300
+From: Victor Goldenshtein <victorg@ti.com>
+Reply-To: victorg@ti.com
 MIME-Version: 1.0
-Date: Tue, 13 Sep 2011 17:21:01 -0400
-Message-ID: <CAEh_CyWGoaEsouDuLuAqD5K8xA0AqWEuf7S3HQwagrvz3DgajA@mail.gmail.com> (sfid-20110913_232106_690696_AD1D41AA)
-Subject: Carl9170 firmware
-From: J Igrap <jigrap.code@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Luciano Coelho <coelho@ti.com>, Jouni Malinen <j@w1.fi>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 3/5] nl80211/cfg80211: adding intermediate scan result event.
+References: <1315224151-16552-1-git-send-email-VictorG@ti.com>  <1315224151-16552-4-git-send-email-VictorG@ti.com>  <1315224512.4075.10.camel@jlt3.sipsolutions.net> <4E6736D9.3070804@ti.com>  <1315387619.4002.3.camel@jlt3.sipsolutions.net> <4E686125.5050208@ti.com>  <20110921153102.GA32374@jm.kir.nu> <1316619903.2157.546.camel@cumari>
+In-Reply-To: <1316619903.2157.546.camel@cumari>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While using the past days the carl9170 firmware with a USB card under
-a linux guest running different kernel and driver versions I kept
-running into the issue of a usb disconnect when the card was put under
-load:
- usb 1-1: no command feedback received (-110).
- carl9170 cmd: 08 01 00 00 f0 36 1c 00 00 24 00 00              .....6...$..
- usb 1-1: restart device (6)
+On 21/09/2011 18:45, Luciano Coelho wrote:
+> On Wed, 2011-09-21 at 18:31 +0300, Jouni Malinen wrote:
+>> On Thu, Sep 08, 2011 at 09:31:01AM +0300, Victor Goldenshtein wrote:
+>> That brings up a question: Do we need to have this new function or would it
+>> be feasible for cfg80211 to generate the intermediate reports
+>> automatically based on cfg80211_inform_bss{,_frame}() calls during the
+>> scan?
+>
+> Very good point! Thinking of it, there is not need to add this new
+> function and have the drivers call it.  cfg80211 can find out when to
+> send the results by itself, whenever someone calls
+> cfg80211_inform_bss_frame(), by checking whether intermediate results
+> are enabled or not.
+>
+> This will simplify the code. :) Thanks for your comments!
+>
 
-No matter what kernel driver/firmware I tried I will still get it. I
-decided to look into it a bit more and I narrowed it down to be a
-firmware issue with the following code snippet:
+This could be a little bit problematic, since we need the 
+rdev->event_work, for the queue_work(), and wdev->event_list to save a 
+copy of the BSS, or just the mac which will be used to fetch the BSS 
+before the transmission (still not sure about it ..), and it seems like 
+these two can be obtained form sdata->dev, so it's look like that we 
+need this function and it should be in ieee80211_scan_rx.
 
-void handle_cmd(struct carl9170_rsp *resp) in src/cmd.c
-        case CARL9170_CMD_WREG:
-esp->hdr.len = 0;
-                for (i = 0; i < (cmd->hdr.len / 8); i++)
-                        set(cmd->wreg.regs[i].addr, cmd->wreg.regs[i].val);
-                break;
 
-That code appears to handle event 1 which is a write into a register.
-In some cases that write appeared to cause a failure and a reset into
-the card. I added a simple delay loop before the switch statement and
-that seemed to fix the issue and I don't lose the card anymore even
-under a lot of load. Obviously that's not a real fix and something
-else more reliable needs to be in place.
-
--jigrap
+Thanks,
+Victor.
