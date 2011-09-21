@@ -1,101 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:45253 "EHLO
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47298 "EHLO
 	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756740Ab1HaWU3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 18:20:29 -0400
+	id S1752582Ab1IURGY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Sep 2011 13:06:24 -0400
 From: Hauke Mehrtens <hauke@hauke-m.de>
 To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
 Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] compat: add kstrtou8_from_user
-Date: Thu,  1 Sep 2011 00:20:12 +0200
-Message-Id: <1314829212-27365-3-git-send-email-hauke@hauke-m.de> (sfid-20110901_002035_037690_910EBF51)
-In-Reply-To: <1314829212-27365-1-git-send-email-hauke@hauke-m.de>
-References: <1314829212-27365-1-git-send-email-hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat-wireless: make patches apply again
+Date: Wed, 21 Sep 2011 19:06:16 +0200
+Message-Id: <1316624777-8001-1-git-send-email-hauke@hauke-m.de> (sfid-20110921_190633_416554_ADA17F54)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
 Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- compat/compat-3.0.c        |   25 +++++++++++++++++++++++++
- include/linux/compat-3.0.h |   31 +++++++++++++++++++++++++++++++
- 2 files changed, 56 insertions(+), 0 deletions(-)
+ patches/09-threaded-irq.patch |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/compat/compat-3.0.c b/compat/compat-3.0.c
-index 312eea0..f517e9f 100644
---- a/compat/compat-3.0.c
-+++ b/compat/compat-3.0.c
-@@ -35,3 +35,28 @@ int mac_pton(const char *s, u8 *mac)
- 	return 1;
- }
- EXPORT_SYMBOL(mac_pton);
-+
-+#define kstrto_from_user(f, g, type)					\
-+int f(const char __user *s, size_t count, unsigned int base, type *res)	\
-+{									\
-+	/* sign, base 2 representation, newline, terminator */		\
-+	char buf[1 + sizeof(type) * 8 + 1 + 1];				\
-+									\
-+	count = min(count, sizeof(buf) - 1);				\
-+	if (copy_from_user(buf, s, count))				\
-+		return -EFAULT;						\
-+	buf[count] = '\0';						\
-+	return g(buf, base, res);					\
-+}									\
-+EXPORT_SYMBOL(f)
-+
-+kstrto_from_user(kstrtoull_from_user,	kstrtoull,	unsigned long long);
-+kstrto_from_user(kstrtoll_from_user,	kstrtoll,	long long);
-+kstrto_from_user(kstrtoul_from_user,	kstrtoul,	unsigned long);
-+kstrto_from_user(kstrtol_from_user,	kstrtol,	long);
-+kstrto_from_user(kstrtouint_from_user,	kstrtouint,	unsigned int);
-+kstrto_from_user(kstrtoint_from_user,	kstrtoint,	int);
-+kstrto_from_user(kstrtou16_from_user,	kstrtou16,	u16);
-+kstrto_from_user(kstrtos16_from_user,	kstrtos16,	s16);
-+kstrto_from_user(kstrtou8_from_user,	kstrtou8,	u8);
-+kstrto_from_user(kstrtos8_from_user,	kstrtos8,	s8);
-diff --git a/include/linux/compat-3.0.h b/include/linux/compat-3.0.h
-index 7954ddb..8c8720e 100644
---- a/include/linux/compat-3.0.h
-+++ b/include/linux/compat-3.0.h
-@@ -48,6 +48,37 @@ struct bcma_device_id {
+diff --git a/patches/09-threaded-irq.patch b/patches/09-threaded-irq.patch
+index 7df41f6..d83b6d4 100644
+--- a/patches/09-threaded-irq.patch
++++ b/patches/09-threaded-irq.patch
+@@ -6,7 +6,7 @@ thread in process context as well.
  
- int mac_pton(const char *s, u8 *mac);
- 
-+int __must_check kstrtoull_from_user(const char __user *s, size_t count, unsigned int base, unsigned long long *res);
-+int __must_check kstrtoll_from_user(const char __user *s, size_t count, unsigned int base, long long *res);
-+int __must_check kstrtoul_from_user(const char __user *s, size_t count, unsigned int base, unsigned long *res);
-+int __must_check kstrtol_from_user(const char __user *s, size_t count, unsigned int base, long *res);
-+int __must_check kstrtouint_from_user(const char __user *s, size_t count, unsigned int base, unsigned int *res);
-+int __must_check kstrtoint_from_user(const char __user *s, size_t count, unsigned int base, int *res);
-+int __must_check kstrtou16_from_user(const char __user *s, size_t count, unsigned int base, u16 *res);
-+int __must_check kstrtos16_from_user(const char __user *s, size_t count, unsigned int base, s16 *res);
-+int __must_check kstrtou8_from_user(const char __user *s, size_t count, unsigned int base, u8 *res);
-+int __must_check kstrtos8_from_user(const char __user *s, size_t count, unsigned int base, s8 *res);
-+
-+static inline int __must_check kstrtou64_from_user(const char __user *s, size_t count, unsigned int base, u64 *res)
-+{
-+	return kstrtoull_from_user(s, count, base, res);
-+}
-+
-+static inline int __must_check kstrtos64_from_user(const char __user *s, size_t count, unsigned int base, s64 *res)
-+{
-+	return kstrtoll_from_user(s, count, base, res);
-+}
-+
-+static inline int __must_check kstrtou32_from_user(const char __user *s, size_t count, unsigned int base, u32 *res)
-+{
-+	return kstrtouint_from_user(s, count, base, res);
-+}
-+
-+static inline int __must_check kstrtos32_from_user(const char __user *s, size_t count, unsigned int base, s32 *res)
-+{
-+	return kstrtoint_from_user(s, count, base, res);
-+}
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)) */
- 
- #endif /* LINUX_3_0_COMPAT_H */
+ --- a/drivers/net/wireless/b43/main.c
+ +++ b/drivers/net/wireless/b43/main.c
+-@@ -4174,8 +4174,13 @@ redo:
++@@ -4175,8 +4175,13 @@ redo:
+  	if (b43_bus_host_is_sdio(dev->dev)) {
+  		b43_sdio_free_irq(dev);
+  	} else {
+@@ -20,7 +20,7 @@ thread in process context as well.
+  	}
+  	mutex_lock(&wl->mutex);
+  	dev = wl->current_dev;
+-@@ -4215,9 +4220,17 @@ static int b43_wireless_core_start(struc
++@@ -4216,9 +4221,17 @@ static int b43_wireless_core_start(struc
+  			goto out;
+  		}
+  	} else {
+@@ -38,7 +38,7 @@ thread in process context as well.
+  		if (err) {
+  			b43err(dev->wl, "Cannot request IRQ-%d\n",
+  			       dev->dev->irq);
+-@@ -5006,6 +5019,10 @@ static int b43_setup_bands(struct b43_wl
++@@ -5007,6 +5020,10 @@ static int b43_setup_bands(struct b43_wl
+  
+  static void b43_wireless_core_detach(struct b43_wldev *dev)
+  {
+@@ -122,10 +122,10 @@ thread in process context as well.
+  	return 0;
+ --- a/drivers/net/wireless/wl12xx/wl12xx.h
+ +++ b/drivers/net/wireless/wl12xx/wl12xx.h
+-@@ -626,6 +626,10 @@ struct wl1271 {
++@@ -630,6 +630,10 @@ struct wl1271 {
+  
+- 	/* number of currently active RX BA sessions */
+- 	int ba_rx_session_count;
++ 	/* AP-mode - number of currently connected stations */
++ 	int active_sta_count;
+ +
+ +#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+ +	struct compat_threaded_irq irq_compat;
 -- 
 1.7.4.1
 
