@@ -1,59 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:54671 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751220Ab1I1AOr (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42873 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752778Ab1IUMHn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 20:14:47 -0400
-Received: by pzk1 with SMTP id 1so18877403pzk.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 17:14:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6U-=6UZfMvtv5Z77PcRbZCmXrbveM4N0mzcqXAR0QtTAQ@mail.gmail.com>
-References: <CAMxespA2quGEuN3B0CE2SJGeRLr5vgtfqQYVQ5r5Oxtj-paj2w@mail.gmail.com>
- <CAPjQAd-=ihu5ULzuyUjGQD3DKe2Tpi749esOi9nb1c-dW=5nSQ@mail.gmail.com>
- <CAMxespDxUdm1Qx+GGYzzfJ+jdUVw_nmZDcyeRV2HqmB=0LhtDg@mail.gmail.com>
- <CAB=NE6USxp0rGPP2NFkThCFzpSccZ7WUF7AfxJ=3js5Ph5D82g@mail.gmail.com> <CAB=NE6U-=6UZfMvtv5Z77PcRbZCmXrbveM4N0mzcqXAR0QtTAQ@mail.gmail.com>
-From: Javier Cardona <javier@cozybit.com>
-Date: Tue, 27 Sep 2011 17:14:27 -0700
-Message-ID: <CAPjQAd-jdhPewBMT-9qmFPtuz58VL78+g2woy+yuk8fwAWaLTw@mail.gmail.com> (sfid-20110928_021450_729284_65EB67C7)
-Subject: =?windows-1252?Q?Re=3A_Channel_type_negotiation_=96_HT_support_for_mesh?=
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Ashok Nagarajan <anagar6@uic.edu>, thomas <thomas@cozybit.com>,
-	devel@lists.open80211s.org, Sidharth Thakur <sidthakur@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 21 Sep 2011 08:07:43 -0400
+Subject: Re: [RFC 5/5] mac80211: send data directly to TDLS peers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Kalyan C Gaddam <chakkal@iit.edu>
+In-Reply-To: <1316082334-7664-6-git-send-email-arik@wizery.com> (sfid-20110915_123146_593683_1FBA16D4)
+References: <1316082334-7664-1-git-send-email-arik@wizery.com>
+	 <1316082334-7664-6-git-send-email-arik@wizery.com>
+	 (sfid-20110915_123146_593683_1FBA16D4)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 21 Sep 2011 14:07:39 +0200
+Message-ID: <1316606859.3940.32.camel@jlt3.sipsolutions.net> (sfid-20110921_140752_985314_792B98DA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis,
+On Thu, 2011-09-15 at 13:25 +0300, Arik Nemtsov wrote:
+> When a station is determined to be a TDLS peer, send the data directly,
+> bypassing the AP.
+> 
+> In addition, allow data to be received directly from TDLS peers.
 
-On Tue, Sep 27, 2011 at 4:29 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> (...)
-> A while back we had heard 802.11s support will *not* support
-> aggregation, Javier, did the spec go out like that?
+We talked a bit about this but I forgot -- did you want to add the
+buffering here?
 
-No it did not.  HT support (and aggregation) was a relatively late
-addition to the draft and we never got to implement it.
-But the spec assumes it is doable.  For A-MSDU aggregation, the Mesh
-Control header should go on the first fragment.  I don't see anything
-special required to support A-MPDU aggregation in mesh.
+johannes
 
-> Why was aggregation thought to not be possible with 802.11s?
-> I can't see why right now.
-
-Probably because when we had that conversation, HT support was not yet
-specified in the draft?  Not sure.
-
-> If we want to do comparable throughput tests for HT rates
-> with Mesh we'd need to setup an AP with aggregation disabled, and the
-> same WMM parameters.
-
-OK
-
-Thanks!
-
-Javier
-
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
