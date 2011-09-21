@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:56774 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751931Ab1IUHOQ (ORCPT
+Received: from c60.cesmail.net ([216.154.195.49]:18732 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750783Ab1IUP6e convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 03:14:16 -0400
-Date: Wed, 21 Sep 2011 10:13:56 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch 2/2] mwifiex: remove unneeded NULL check
-Message-ID: <20110921071356.GG4999@elgon.mountain> (sfid-20110921_091421_277361_1A7901D2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 21 Sep 2011 11:58:34 -0400
+Date: Wed, 21 Sep 2011 11:58:25 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Christian Kapeller <christian.kapeller@cmotion.eu>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Oops while loading firmware of ath9k_htc device.
+Message-ID: <20110921115825.6e28bd75@mj> (sfid-20110921_175838_077081_B4CC31D1)
+In-Reply-To: <CAD2nsn1KBtDrxLNMr_gJZTJ0hr0aZKg5JM+TSE2EfXe8YOxpKg@mail.gmail.com>
+References: <1314956005.12761.10.camel@christian-kapeller>
+	<CAD2nsn1KBtDrxLNMr_gJZTJ0hr0aZKg5JM+TSE2EfXe8YOxpKg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We dereference "rate" on the lines before so the checks here are too
-late to help.  This function is only called from
-mwifiex_dump_station_info() and "rate" is always a non-NULL pointer
-so the check can be removed.
+On Mon, 5 Sep 2011 13:19:39 +0530
+Mohammed Shafi <shafi.wireless@gmail.com> wrote:
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> On Fri, Sep 2, 2011 at 3:03 PM, Christian Kapeller
+> <christian.kapeller@cmotion.eu> wrote:
 
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 215c65a..1df5ef6 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -868,10 +868,10 @@ int mwifiex_drv_get_data_rate(struct mwifiex_private *priv,
- 	ret = mwifiex_rate_ioctl_cfg(priv, rate);
- 
- 	if (!ret) {
--		if (rate && rate->is_rate_auto)
-+		if (rate->is_rate_auto)
- 			rate->rate = mwifiex_index_to_data_rate(priv->tx_rate,
- 							priv->tx_htinfo);
--		else if (rate)
-+		else
- 			rate->rate = priv->data_rate;
- 	} else {
- 		ret = -1;
+> > I use the openwrt backfire distribution on an arm device, with
+> > kernel 2.6.31.12 and compat-wireless-2011-06-22. The firmware file
+> > is at /lib/firmware/ar9271.fw
+...
+> >  (2.6.31.12 #1) PC is at get_device_parent+0x78/0x14c
+> > LR is at get_device_parent+0x70/0x14c
+...
+> > Something goes wrong, starting in compat_firmware_class.c. I wasn't
+> > able to nail it down yet.
+> 
+> please try to use the updated firmware
+> http://wireless.kernel.org/download/htc_fw/1.3/
+> unlikely the oops disappears
+
+Indeed, it's very unlikely.
+
+I suspect the compat_firmware_class.c code, which is specific to
+compat-wireless. The way do debug it is to find out what's wrong in
+get_device_parent and work from there.
+
+I suggest trying the latest compat-wireless.
+
+I think it might be possible to reproduce the problem on the same
+kernel version (2.6.31.12) on a PC.
+
+-- 
+Regards,
+Pavel Roskin
