@@ -1,78 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:27918 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754535Ab1I3Nuo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Sep 2011 09:50:44 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/5] ath6kl: Remove unused ar_sdio->dma_buffer
-Date: Fri, 30 Sep 2011 19:18:46 +0530
-Message-ID: <1317390526-3442-5-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110930_155048_713001_EA196BBF)
-In-Reply-To: <1317390526-3442-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1317390526-3442-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:7986 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753653Ab1IVXBS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Sep 2011 19:01:18 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/12] iwlagn: use kcalloc when possible for array allocation
+Date: Thu, 22 Sep 2011 15:14:53 -0700
+Message-Id: <1316729700-1770-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110923_010148_066944_E5C75CE2)
+In-Reply-To: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/sdio.c |   12 +-----------
- 1 files changed, 1 insertions(+), 11 deletions(-)
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 06e3f09..6bef420 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -39,7 +39,6 @@ struct ath6kl_sdio {
- 	struct bus_request bus_req[BUS_REQUEST_MAX_NUM];
+As everybody knows kcalloc checks the multiplication is safe and
+that we don't run into overflow.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c     |   12 +++++++-----
+ drivers/net/wireless/iwlwifi/iwl-core.c       |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c     |    5 +++--
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   12 ++++++------
+ 4 files changed, 19 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
+index 495f936..289e5d8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
+@@ -641,11 +641,13 @@ void iwl_tt_initialize(struct iwl_priv *priv)
  
- 	struct ath6kl *ar;
--	u8 *dma_buffer;
- 
- 	/* scatter request list head */
- 	struct list_head scat_req;
-@@ -777,12 +776,6 @@ static int ath6kl_sdio_probe(struct sdio_func *func,
- 	if (!ar_sdio)
- 		return -ENOMEM;
- 
--	ar_sdio->dma_buffer = kzalloc(HIF_DMA_BUFFER_SIZE, GFP_KERNEL);
--	if (!ar_sdio->dma_buffer) {
--		ret = -ENOMEM;
--		goto err_hif;
--	}
--
- 	ar_sdio->func = func;
- 	sdio_set_drvdata(func, ar_sdio);
- 
-@@ -806,7 +799,7 @@ static int ath6kl_sdio_probe(struct sdio_func *func,
- 	if (!ar) {
- 		ath6kl_err("Failed to alloc ath6kl core\n");
- 		ret = -ENOMEM;
--		goto err_dma;
-+		goto err_hif;
+ 	if (priv->cfg->base_params->adv_thermal_throttle) {
+ 		IWL_DEBUG_TEMP(priv, "Advanced Thermal Throttling\n");
+-		tt->restriction = kzalloc(sizeof(struct iwl_tt_restriction) *
+-					 IWL_TI_STATE_MAX, GFP_KERNEL);
+-		tt->transaction = kzalloc(sizeof(struct iwl_tt_trans) *
+-			IWL_TI_STATE_MAX * (IWL_TI_STATE_MAX - 1),
+-			GFP_KERNEL);
++		tt->restriction = kcalloc(IWL_TI_STATE_MAX,
++					  sizeof(struct iwl_tt_restriction),
++					  GFP_KERNEL);
++		tt->transaction = kcalloc(IWL_TI_STATE_MAX *
++					  (IWL_TI_STATE_MAX - 1),
++					  sizeof(struct iwl_tt_trans),
++					  GFP_KERNEL);
+ 		if (!tt->restriction || !tt->transaction) {
+ 			IWL_ERR(priv, "Fallback to Legacy Throttling\n");
+ 			priv->thermal_throttle.advanced_tt = false;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index cea6520..fc400bb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -125,12 +125,12 @@ int iwl_init_geos(struct iwl_priv *priv)
+ 		return 0;
  	}
  
- 	ar_sdio->ar = ar;
-@@ -866,8 +859,6 @@ err_off:
- 	ath6kl_sdio_power_off(ar_sdio);
- err_cfg80211:
- 	ath6kl_cfg80211_deinit(ar_sdio->ar);
--err_dma:
--	kfree(ar_sdio->dma_buffer);
- err_hif:
- 	kfree(ar_sdio);
+-	channels = kzalloc(sizeof(struct ieee80211_channel) *
+-			   priv->channel_count, GFP_KERNEL);
++	channels = kcalloc(priv->channel_count,
++			   sizeof(struct ieee80211_channel), GFP_KERNEL);
+ 	if (!channels)
+ 		return -ENOMEM;
  
-@@ -891,7 +882,6 @@ static void ath6kl_sdio_remove(struct sdio_func *func)
+-	rates = kzalloc((sizeof(struct ieee80211_rate) * IWL_RATE_COUNT_LEGACY),
++	rates = kcalloc(IWL_RATE_COUNT_LEGACY, sizeof(struct ieee80211_rate),
+ 			GFP_KERNEL);
+ 	if (!rates) {
+ 		kfree(channels);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index 0b66941..a4e43bd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -899,8 +899,9 @@ int iwl_init_channel_map(struct iwl_priv *priv)
+ 	IWL_DEBUG_EEPROM(priv, "Parsing data for %d channels.\n",
+ 			priv->channel_count);
  
- 	ath6kl_sdio_power_off(ar_sdio);
+-	priv->channel_info = kzalloc(sizeof(struct iwl_channel_info) *
+-				     priv->channel_count, GFP_KERNEL);
++	priv->channel_info = kcalloc(priv->channel_count,
++				     sizeof(struct iwl_channel_info),
++				     GFP_KERNEL);
+ 	if (!priv->channel_info) {
+ 		IWL_ERR(priv, "Could not allocate channel_info\n");
+ 		priv->channel_count = 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 781f6aa..416e992 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -304,8 +304,8 @@ static int iwl_trans_txq_alloc(struct iwl_trans *trans,
  
--	kfree(ar_sdio->dma_buffer);
- 	kfree(ar_sdio);
- }
+ 	txq->q.n_window = slots_num;
  
+-	txq->meta = kzalloc(sizeof(txq->meta[0]) * slots_num, GFP_KERNEL);
+-	txq->cmd = kzalloc(sizeof(txq->cmd[0]) * slots_num, GFP_KERNEL);
++	txq->meta = kcalloc(slots_num, sizeof(txq->meta[0]), GFP_KERNEL);
++	txq->cmd = kcalloc(slots_num, sizeof(txq->cmd[0]), GFP_KERNEL);
+ 
+ 	if (!txq->meta || !txq->cmd)
+ 		goto error;
+@@ -322,8 +322,8 @@ static int iwl_trans_txq_alloc(struct iwl_trans *trans,
+ 	/* Driver private data, only for Tx (not command) queues,
+ 	 * not shared with device. */
+ 	if (txq_id != trans->shrd->cmd_queue) {
+-		txq->skbs = kzalloc(sizeof(txq->skbs[0]) *
+-				   TFD_QUEUE_SIZE_MAX, GFP_KERNEL);
++		txq->skbs = kcalloc(TFD_QUEUE_SIZE_MAX, sizeof(txq->skbs[0]),
++				    GFP_KERNEL);
+ 		if (!txq->skbs) {
+ 			IWL_ERR(trans, "kmalloc for auxiliary BD "
+ 				  "structures failed\n");
+@@ -534,8 +534,8 @@ static int iwl_trans_tx_alloc(struct iwl_trans *trans)
+ 		goto error;
+ 	}
+ 
+-	trans_pcie->txq = kzalloc(sizeof(struct iwl_tx_queue) *
+-			hw_params(trans).max_txq_num, GFP_KERNEL);
++	trans_pcie->txq = kcalloc(hw_params(trans).max_txq_num,
++				  sizeof(struct iwl_tx_queue), GFP_KERNEL);
+ 	if (!trans_pcie->txq) {
+ 		IWL_ERR(trans, "Not enough memory for txq\n");
+ 		ret = ENOMEM;
 -- 
 1.7.0.4
 
