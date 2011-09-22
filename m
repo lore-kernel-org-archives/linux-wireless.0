@@ -1,99 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40986 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751610Ab1IVNyq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 09:54:46 -0400
-Message-ID: <4E7B3E19.2020001@openwrt.org> (sfid-20110922_155449_947791_4CD45CC3)
-Date: Thu, 22 Sep 2011 07:54:33 -0600
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com, Johannes Berg <johannes@sipsolutions.net>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: Re: [PATCH 09/12] ath9k: optimize ath9k_ps_restore
-References: <1316028267-34187-1-git-send-email-nbd@openwrt.org> <1316028267-34187-2-git-send-email-nbd@openwrt.org> <1316028267-34187-3-git-send-email-nbd@openwrt.org> <1316028267-34187-4-git-send-email-nbd@openwrt.org> <1316028267-34187-5-git-send-email-nbd@openwrt.org> <1316028267-34187-6-git-send-email-nbd@openwrt.org> <1316028267-34187-7-git-send-email-nbd@openwrt.org> <1316028267-34187-8-git-send-email-nbd@openwrt.org> <1316028267-34187-9-git-send-email-nbd@openwrt.org> <CAJqpcCQ9gpKG1ivvDReSyvMq9i5kxwDmRZwvNbYfRhwByOOC4w@mail.gmail.com>
-In-Reply-To: <CAJqpcCQ9gpKG1ivvDReSyvMq9i5kxwDmRZwvNbYfRhwByOOC4w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:33976 "HELO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751026Ab1IVEnS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Sep 2011 00:43:18 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/4] mwifiex: pass correct band parameter to ieee80211_channel_to_frequency()
+Date: Wed, 21 Sep 2011 21:43:24 -0700
+Message-Id: <1316666605-30954-3-git-send-email-bzhao@marvell.com> (sfid-20110922_064321_413297_A1DD2506)
+In-Reply-To: <1316666605-30954-1-git-send-email-bzhao@marvell.com>
+References: <1316666605-30954-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-09-21 11:49 PM, Vivek Natarajan wrote:
-> On Thu, Sep 15, 2011 at 12:54 AM, Felix Fietkau<nbd@openwrt.org>  wrote:
->>  ath_hw_cycle_counters_update only needs to be called if the power state
->>  changes. Most of the time this does not happen, even when ps_usecount
->>  goes down to 0.
->>
->>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
->>  ---
->>    drivers/net/wireless/ath/ath9k/main.c |   17 +++++++++++------
->>    1 files changed, 11 insertions(+), 6 deletions(-)
->>
->>  diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->>  index a75810a..a16f539 100644
->>  --- a/drivers/net/wireless/ath/ath9k/main.c
->>  +++ b/drivers/net/wireless/ath/ath9k/main.c
->>  @@ -111,24 +111,29 @@ void ath9k_ps_wakeup(struct ath_softc *sc)
->>    void ath9k_ps_restore(struct ath_softc *sc)
->>    {
->>          struct ath_common *common = ath9k_hw_common(sc->sc_ah);
->>  +       enum ath9k_power_mode mode;
->>          unsigned long flags;
->>
->>          spin_lock_irqsave(&sc->sc_pm_lock, flags);
->>          if (--sc->ps_usecount != 0)
->>                  goto unlock;
->>
->>  -       spin_lock(&common->cc_lock);
->>  -       ath_hw_cycle_counters_update(common);
->>  -       spin_unlock(&common->cc_lock);
->>  -
->>          if (sc->ps_idle)
->>  -               ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_FULL_SLEEP);
->>  +               mode = ATH9K_PM_FULL_SLEEP;
->>          else if (sc->ps_enabled&&
->>                   !(sc->ps_flags&  (PS_WAIT_FOR_BEACON |
->>                                PS_WAIT_FOR_CAB |
->>                                PS_WAIT_FOR_PSPOLL_DATA |
->>                                PS_WAIT_FOR_TX_ACK)))
->>  -               ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
->>  +               mode = ATH9K_PM_NETWORK_SLEEP;
->
-> What is the use of setting the mode above if you use NETWORK_SLEEP by
-> default in the below code.
-Yes, I forgot to change it in the call below. I'll send a fix ASAP.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
->>  +       else
->>  +               goto unlock;
->>  +
->>  +       spin_lock(&common->cc_lock);
->>  +       ath_hw_cycle_counters_update(common);
->>  +       spin_unlock(&common->cc_lock);
->>  +
->>  +       ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
->
-> huh???
->
-> It shows this patch was never tested and please clarify what you tried
-> to achieve with this patch. Do you ever test a patch before sending it
-> upstream?
->
-> There is no wonder Johannes reports that power save is completely
-> broken with ath9k if we have patches like these. We have better work
-> to concentrate on, than to fix the regression your patch introduces
-> every time.
->
-> Please fix this and __test__ properly.
-I did test this patch, and while it clearly has a bug (always setting 
-network sleep instead of full sleep), I don't think this would break 
-powersave. The only consequence I can think of is more battery drain 
-when the card is idle and not connected.
+ieee80211_channel_to_frequency() routine expects band parameter in
+the form of "enum ieee80211_band band". Currently driver specific
+band (BAND_A, BAND_AN etc.) is passed to the routine.
 
-What this patch achieves is this: ath9k_ps_restore is called frequently 
-from functions handling the data path, also setting ps_usecount to 0 
-frequently. That caused excessive calls to ath_hw_cycle_counters_update 
-vasting a noticeable amount of CPU cycles (showed up during profiling).
-My patch changes the code to only call ath_hw_cycle_counters_update 
-before the card's power state changes.
+This patch makes sure that correct parameter is passed.
 
-- Felix
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c  |    4 +++-
+ drivers/net/wireless/mwifiex/sta_ioctl.c |    5 +++--
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 62932c2..0ddcdca 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -768,6 +768,7 @@ static int mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
+ 	struct mwifiex_bss_info bss_info;
+ 	int ie_len;
+ 	u8 ie_buf[IEEE80211_MAX_SSID_LEN + sizeof(struct ieee_types_header)];
++	enum ieee80211_band band;
+ 
+ 	if (mwifiex_get_bss_info(priv, &bss_info))
+ 		return -1;
+@@ -780,9 +781,10 @@ static int mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
+ 			bss_info.ssid.ssid_len);
+ 	ie_len = ie_buf[1] + sizeof(struct ieee_types_header);
+ 
++	band = mwifiex_band_to_radio_type(priv->curr_bss_params.band);
+ 	chan = __ieee80211_get_channel(priv->wdev->wiphy,
+ 			ieee80211_channel_to_frequency(bss_info.bss_chan,
+-						priv->curr_bss_params.band));
++						       band));
+ 
+ 	cfg80211_inform_bss(priv->wdev->wiphy, chan,
+ 		bss_info.bssid, 0, WLAN_CAPABILITY_IBSS,
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 157d312..a9dfeb1 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -655,6 +655,7 @@ mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, int channel)
+ 	u16 curr_chan = 0;
+ 	struct cfg80211_bss *bss = NULL;
+ 	struct ieee80211_channel *chan;
++	enum ieee80211_band band;
+ 
+ 	memset(&bss_info, 0, sizeof(bss_info));
+ 
+@@ -691,9 +692,9 @@ mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, int channel)
+ 		goto done;
+ 	}
+ 
++	band = mwifiex_band_to_radio_type(priv->curr_bss_params.band);
+ 	chan = __ieee80211_get_channel(priv->wdev->wiphy,
+-			ieee80211_channel_to_frequency(channel,
+-						priv->curr_bss_params.band));
++			ieee80211_channel_to_frequency(channel, band));
+ 
+ 	/* Find the BSS we want using available scan results */
+ 	bss = cfg80211_get_bss(priv->wdev->wiphy, chan, bss_info.bssid,
+-- 
+1.7.0.2
+
