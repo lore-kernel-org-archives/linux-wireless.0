@@ -1,87 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:60334 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755954Ab1IHCuU (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55556 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886Ab1IVPuc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Sep 2011 22:50:20 -0400
-Received: by gya6 with SMTP id 6so277758gya.19
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Sep 2011 19:50:19 -0700 (PDT)
-Message-ID: <4E682D68.1070408@lwfinger.net> (sfid-20110908_045024_139311_5CCD1244)
-Date: Wed, 07 Sep 2011 21:50:16 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Stefan Zwanenburg <stefanhetzwaantje@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	'Chaoming_Li' <chaoming_li@realsil.com.cn>
-Subject: Re: RTL8192SE and 802.11n problem
-References: <4E67CE3F.8090405@gmail.com> <4E67CEA3.7020709@gmail.com> <4E682732.1040700@lwfinger.net>
-In-Reply-To: <4E682732.1040700@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 22 Sep 2011 11:50:32 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1R6lXj-0002TC-BI
+	for linux-wireless@vger.kernel.org; Thu, 22 Sep 2011 17:50:31 +0200
+Message-Id: <20110922154852.131981800@sipsolutions.net> (sfid-20110922_175037_803910_FDA7C791)
+Date: Thu, 22 Sep 2011 17:47:39 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 13/15] mac80211: explicitly notify drivers of frame release
+References: <20110922154726.521122680@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stefan,
+From: Johannes Berg <johannes.berg@intel.com>
 
-I did finish the complete set of tests with my RTL8191SEvB Wireless LAN 
-Controller [10ec:8172] (rev 10). The results for the tests are as follows:
+iwlwifi needs to know the number of frames that are
+going to be sent to a station while it is asleep so
+it can properly handle the uCode blocking of that
+station.
 
-TCP_MAERTS:
+Before uAPSD, we got by by telling the device that
+a single frame was going to be released whenever we
+encountered IEEE80211_TX_CTL_POLL_RESPONSE. With
+uAPSD, however, that is no longer possible since
+there could be more than a single frame.
 
-kernel 3.0.4:
+To support this model, add a new callback to notify
+drivers when frames are going to be released.
 
-Results: TX: max 38.61, min 14.04. Mean 33.45(6.95)
-          RX: max 47.55, min 30.52. Mean 37.31(5.36)
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h      |   17 +++++++++++++++++
+ net/mac80211/driver-ops.h   |   15 +++++++++++++++
+ net/mac80211/driver-trace.h |   22 +++++++++++++++++++++-
+ net/mac80211/sta_info.c     |   34 +++++++++++++++++++++++++---------
+ 4 files changed, 78 insertions(+), 10 deletions(-)
 
-3.1-rc4 - Mainline:
+--- a/include/net/mac80211.h	2011-09-22 17:16:25.000000000 +0200
++++ b/include/net/mac80211.h	2011-09-22 17:16:55.000000000 +0200
+@@ -1969,6 +1969,18 @@ enum ieee80211_frame_release_type {
+  *	service period ends, the driver must set %IEEE80211_TX_STATUS_EOSP
+  *	on the last frame in the SP.
+  *	This callback must be atomic.
++ * @allow_buffered_frames: Prepare device to allow the given number of frames
++ *	to go out to the given station. The frames will be sent by mac80211
++ *	via the usual TX path after this call. The TX information for frames
++ *	released will also have the %IEEE80211_TX_CTL_POLL_RESPONSE flag set
++ *	and the last one will also have %IEEE80211_TX_STATUS_EOSP set. In case
++ *	frames from multiple TIDs are released and the driver might reorder
++ *	them between the TIDs, it must set the %IEEE80211_TX_STATUS_EOSP flag
++ *	on the last frame and clear it on all others and also handle the EOSP
++ *	bit in the QoS header correctly.
++ *	The @tids parameter is a bitmap and tells the driver which TIDs the
++ *	frames will be on; it will at most have two bits set.
++ *	This callback must be atomic.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -2083,6 +2095,11 @@ struct ieee80211_ops {
+ 	void (*rssi_callback)(struct ieee80211_hw *hw,
+ 			      enum ieee80211_rssi_event rssi_event);
+ 
++	void (*allow_buffered_frames)(struct ieee80211_hw *hw,
++				      struct ieee80211_sta *sta,
++				      u16 tids, int num_frames,
++				      enum ieee80211_frame_release_type reason,
++				      bool more_data);
+ 	void (*release_buffered_frames)(struct ieee80211_hw *hw,
+ 					struct ieee80211_sta *sta,
+ 					u16 tids, int num_frames,
+--- a/net/mac80211/driver-ops.h	2011-09-22 17:12:55.000000000 +0200
++++ b/net/mac80211/driver-ops.h	2011-09-22 17:16:55.000000000 +0200
+@@ -680,4 +680,19 @@ drv_release_buffered_frames(struct ieee8
+ 						    more_data);
+ 	trace_drv_return_void(local);
+ }
++
++static inline void
++drv_allow_buffered_frames(struct ieee80211_local *local,
++			  struct sta_info *sta, u16 tids, int num_frames,
++			  enum ieee80211_frame_release_type reason,
++			  bool more_data)
++{
++	trace_drv_allow_buffered_frames(local, &sta->sta, tids, num_frames,
++					reason, more_data);
++	if (local->ops->allow_buffered_frames)
++		local->ops->allow_buffered_frames(&local->hw, &sta->sta,
++						  tids, num_frames, reason,
++						  more_data);
++	trace_drv_return_void(local);
++}
+ #endif /* __MAC80211_DRIVER_OPS */
+--- a/net/mac80211/driver-trace.h	2011-09-22 17:12:55.000000000 +0200
++++ b/net/mac80211/driver-trace.h	2011-09-22 17:16:55.000000000 +0200
+@@ -1117,7 +1117,7 @@ TRACE_EVENT(drv_rssi_callback,
+ 	)
+ );
+ 
+-TRACE_EVENT(drv_release_buffered_frames,
++DECLARE_EVENT_CLASS(release_evt,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sta *sta,
+ 		 u16 tids, int num_frames,
+@@ -1152,6 +1152,26 @@ TRACE_EVENT(drv_release_buffered_frames,
+ 	)
+ );
+ 
++DEFINE_EVENT(release_evt, drv_release_buffered_frames,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sta *sta,
++		 u16 tids, int num_frames,
++		 enum ieee80211_frame_release_type reason,
++		 bool more_data),
++
++	TP_ARGS(local, sta, tids, num_frames, reason, more_data)
++);
++
++DEFINE_EVENT(release_evt, drv_allow_buffered_frames,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sta *sta,
++		 u16 tids, int num_frames,
++		 enum ieee80211_frame_release_type reason,
++		 bool more_data),
++
++	TP_ARGS(local, sta, tids, num_frames, reason, more_data)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
+--- a/net/mac80211/sta_info.c	2011-09-22 17:16:51.000000000 +0200
++++ b/net/mac80211/sta_info.c	2011-09-22 17:19:55.000000000 +0200
+@@ -1157,7 +1157,7 @@ void ieee80211_sta_ps_deliver_wakeup(str
+ 
+ static void ieee80211_send_null_response(struct ieee80211_sub_if_data *sdata,
+ 					 struct sta_info *sta, int tid,
+-					 bool uapsd)
++					 enum ieee80211_frame_release_type reason)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_qos_hdr *nullfunc;
+@@ -1198,7 +1198,7 @@ static void ieee80211_send_null_response
+ 
+ 		nullfunc->qos_ctrl = cpu_to_le16(tid);
+ 
+-		if (uapsd)
++		if (reason == IEEE80211_FRAME_RELEASE_UAPSD)
+ 			nullfunc->qos_ctrl |=
+ 				cpu_to_le16(IEEE80211_QOS_CTL_EOSP);
+ 	}
+@@ -1215,6 +1215,8 @@ static void ieee80211_send_null_response
+ 		       IEEE80211_TX_STATUS_EOSP |
+ 		       IEEE80211_TX_CTL_REQ_TX_STATUS;
+ 
++	drv_allow_buffered_frames(local, sta, BIT(tid), 1, reason, false);
++
+ 	ieee80211_xmit(sdata, skb);
+ }
+ 
+@@ -1312,20 +1314,24 @@ ieee80211_sta_ps_deliver_response(struct
+ 		/* This will evaluate to 1, 3, 5 or 7. */
+ 		tid = 7 - ((ffs(~ignored_acs) - 1) << 1);
+ 
+-		ieee80211_send_null_response(sdata, sta, tid,
+-				reason == IEEE80211_FRAME_RELEASE_UAPSD);
++		ieee80211_send_null_response(sdata, sta, tid, reason);
+ 		return;
+ 	}
+ 
+ 	if (!driver_release_tids) {
+ 		struct sk_buff_head pending;
+ 		struct sk_buff *skb;
++		int num = 0;
++		u16 tids = 0;
+ 
+ 		skb_queue_head_init(&pending);
+ 
+ 		while ((skb = __skb_dequeue(&frames))) {
+ 			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 			struct ieee80211_hdr *hdr = (void *) skb->data;
++			u8 *qoshdr = NULL;
++
++			num++;
+ 
+ 			/*
+ 			 * Tell TX path to send this frame even though the
+@@ -1345,19 +1351,29 @@ ieee80211_sta_ps_deliver_response(struct
+ 				hdr->frame_control |=
+ 					cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+ 
++			if (ieee80211_is_data_qos(hdr->frame_control) ||
++			    ieee80211_is_qos_nullfunc(hdr->frame_control))
++				qoshdr = ieee80211_get_qos_ctl(hdr);
++
++			/* set EOSP for the frame */
+ 			if (reason == IEEE80211_FRAME_RELEASE_UAPSD &&
+-			    skb_queue_empty(&frames)) {
+-				/* set EOSP for the frame */
+-				u8 *p = ieee80211_get_qos_ctl(hdr);
+-				*p |= IEEE80211_QOS_CTL_EOSP;
+-			}
++			    qoshdr && skb_queue_empty(&frames))
++				*qoshdr |= IEEE80211_QOS_CTL_EOSP;
+ 
+ 			info->flags |= IEEE80211_TX_STATUS_EOSP |
+ 				       IEEE80211_TX_CTL_REQ_TX_STATUS;
+ 
++			if (qoshdr)
++				tids |= BIT(*qoshdr & IEEE80211_QOS_CTL_TID_MASK);
++			else
++				tids |= BIT(0);
++
+ 			__skb_queue_tail(&pending, skb);
+ 		}
+ 
++		drv_allow_buffered_frames(local, sta, tids, num,
++					  reason, more_data);
++
+ 		ieee80211_add_pending_skbs(local, &pending);
+ 
+ 		sta_info_recalc_tim(sta);
 
-Results: TX: max 57.70, min 42.90. Mean 52.79(3.92)
-          RX: max 68.77, min 47.29. Mean 60.38(5.28)
 
-3.1-rc4 - wireless-testing:
-
-Results: TX: max 112.86, min 23.34. Mean 51.70(21.86)
-          RX: max 75.84, min 35.60. Mean 59.03(9.76)
-
-TCP_STREAM:
-
-Kernel 3.0.4:
-
-Results: TX: max 43.94, min 15.74. Mean 32.29(6.93)
-          RX: max 36.01, min 30.75. Mean 34.29(1.75)
-
-Kernel 3.1-rc4 from mainline:
-
-Results: TX: max 59.73, min 23.48. Mean 47.59(12.33)
-          RX: max 49.89, min 25.14. Mean 38.26(7.32)
-
-Kernel 3.1-rc4 from wireless-testing:
-
-Results: TX: max 62.39, min 57.27. Mean 60.69(1.62)
-          RX: max 53.00, min 23.95. Mean 43.17(8.56)
-
-TCP_SENDFILE:
-
-Kernel 3.0.4:
-
-Results: TX: max 30.06, min 20.21. Mean 28.36(2.87)
-          RX: max 38.28, min 29.56. Mean 34.36(2.79)
-
-Kernel 3.1-rc4 from mainline:
-
-Results: TX: max 70.25, min  2.64. Mean 42.59(18.30)
-          RX: max 44.85, min 33.12. Mean 40.83(4.04)
-
-Kernel 3.1-rc4 from wireless-testing:
-
-Results: TX: max 62.51, min 51.26. Mean 56.94(3.35)
-          RX: max 45.35, min 28.40. Mean 37.56(5.16)
-
-It seems that kernel 3.1-rc4 from mainline is quite a bit faster than 3.0.4, but 
-I don't know why. The 3.1-rc4 driver from wireless-testing may be a bit quicker, 
-but the difference is not that great.
-
-My next step will be to bisect the mainline tree to see if I can find a commit 
-that has a big effect. Please open a bug at bugzilla.kernel.org on this issue, 
-if you have not already done so, and send me the bug number.
-
-Larry
