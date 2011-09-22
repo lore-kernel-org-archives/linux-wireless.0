@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:37191 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756881Ab1IIBG1 (ORCPT
+Received: from mail-gw0-f52.google.com ([74.125.83.52]:51665 "EHLO
+	mail-gw0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886Ab1IVQiz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 21:06:27 -0400
-Subject: File name for libertas_tf_usb firmware
-From: Ben Hutchings <ben@decadent.org.uk>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 09 Sep 2011 02:06:16 +0100
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-hzFaF4vxUYHe0nBXAID3"
-Message-ID: <1315530381.23168.56.camel@deadeye> (sfid-20110909_030631_155603_9F8DB580)
-Mime-Version: 1.0
+	Thu, 22 Sep 2011 12:38:55 -0400
+Received: by gwb1 with SMTP id 1so3150518gwb.11
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 09:38:55 -0700 (PDT)
+Message-ID: <4E7B64A0.6060202@lwfinger.net> (sfid-20110922_183859_263084_EF1D6FE7)
+Date: Thu, 22 Sep 2011 11:38:56 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Edwin <void@edwin.nimell.com>
+CC: linux-wireless@vger.kernel.org,
+	'Chaoming_Li' <chaoming_li@realsil.com.cn>
+Subject: Re: [Bug?] Machine hangs, rtl8192se possible cause
+References: <CAFdoEiT54o+NQKO=dAcOXgyf6GJ1E51w_H_p7PJyRmynz8Sbzg@mail.gmail.com>	<4E36C693.6000705@lwfinger.net> <CAFdoEiRBPMx0C+YXwd4-Q=_nHpOb+r2+GspwujZrPh6S4tDwEQ@mail.gmail.com> <4E3772C5.70606@lwfinger.net> <loom.20110922T174352-81@post.gmane.org>
+In-Reply-To: <loom.20110922T174352-81@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 09/22/2011 11:06 AM, Edwin wrote:
+>
+> Did you ever find any solution to this issue? Because I got very similar
+> problems with my laptop, which is the same as Fedewicz'.
+>
+> Although the issues started to appear after I upgraded from kernel 2.6.something
+> to kernel 3.0.4-1. Before that I only had issues causing the laptop to freeze
+> after resuming form suspend or hibernation, if the rtl8192se module wasn't
+> unloaded before issuing pm-suspend.
+>
+> I might add that the freezes have just occurred when I'm on my school's network,
+> using WPA2 with PEAP and MSCHAPv2. I have yet to see it freeze when connected to
+> a unsecured network, but that might just be an coincidence.
+>
+> I don't know if I'm able to get any dumps. And I can't try to do a magic sysrq
+> either, as the laptop is missing the SysRq-key...
 
---=-hzFaF4vxUYHe0nBXAID3
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+No, I have nothing further. These freezes do not happen here and no one has 
+submitted any traceback information.
 
-The driver wants to load "lbtf_usb.bin", but we have it in
-linux-firmware.git as "libertas/lbtf_usb.bin".  It seems like we should
-rename it in the repository, as the driver has always used the former
-name.
+Please try the following sequence:
 
-If no-one has any objections, I'll do the rename here and push the
-change when I can...
+modprobe -rv rtl8192se
+modprobe -v rfl8192se ips=0
 
-Ben.
+That will disable power save, which might be a cause of the problem.
 
---=20
-Ben Hutchings
-I say we take off; nuke the site from orbit.  It's the only way to be sure.
-
---=-hzFaF4vxUYHe0nBXAID3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIVAwUATmlmiOe/yOyVhhEJAQpUgA//eX9koQ34eCzcdge50YnzCOIkQAlodGLO
-RBEYCX7lJ4hKCUfK6CKB24Q2+XvnfvTOjZYwcOWcyCLbyy+9d8c/bRqlASHEPqhY
-+qLOQ+Z8qD7h24wDEgPjjowDc/z1ifY1sPitqtswfw5Yz6AwZw3hv4WSeKYHkBbS
-166Wut4MDlV50lkwWPJuo2L4JmI1Of00EmvvTakYpvoM+c4hCb1tuxyD7rpe56/I
-lTFdtn3CXhBt4erWpz04Rl/1jTgdYTeilAJ2HCv9CpqH5p2cP7Ga9dCtQ85QWKIo
-OyN7lS4O5fultmYtR74EeQcdAAxS6rCwRwEC3PwF40nT4rF5o32JCex1Wn+I/Mgv
-YM5xbZPQyK8pFG+w+lDfw9b+j1mfv+qonoKyhQ8+d84NRzHhJ/H/CDBfGzaQna7o
-AzQRiMt7iKIDs7AK0IAa96bDGuYIMqy94XmpdBcfhiYtK4COFB0KC6esTtfzeLS5
-E4OyW3L2UUDGevUpu3vs6KQy5isubOTEopRhcsx0wBQDDcWsVyDeVWLjlhtxJi8B
-QLiIQGnpDhByZWVh5sePUF4aCdmTllkgjP1f1dDSaayPeFSWcr/dmLIGHO9GbphS
-/v4xQWIR0DhnVaFMorjXXtLxAf0jee8U0cJdmPwX2EgAB/7oP0nbfnB6iTPRvcKC
-LTg+3GdVDU0=
-=k8LU
------END PGP SIGNATURE-----
-
---=-hzFaF4vxUYHe0nBXAID3--
+Larry
