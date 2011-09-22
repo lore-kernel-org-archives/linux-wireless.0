@@ -1,454 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37002 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753899Ab1IMRJs (ORCPT
+Received: from mms1.broadcom.com ([216.31.210.17]:4405 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752267Ab1IVSiG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 13:09:48 -0400
-From: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Subject: [PATCH 2/4] ath9k_hw: Split tx/rx gain table initval handling
-Date: Tue, 13 Sep 2011 22:38:17 +0530
-Message-ID: <1315933699-7642-2-git-send-email-senthilb@qca.qualcomm.com> (sfid-20110913_190958_027566_5268F3B9)
-In-Reply-To: <1315933699-7642-1-git-send-email-senthilb@qca.qualcomm.com>
-References: <1315933699-7642-1-git-send-email-senthilb@qca.qualcomm.com>
+	Thu, 22 Sep 2011 14:38:06 -0400
+From: "Arend Van Spriel" <arend@broadcom.com>
+To: "Christoph Hellwig" <hch@infradead.org>,
+	"Brett Rudley" <brudley@broadcom.com>
+cc: "Rafa?? Mi??ecki" <zajec5@gmail.com>, "Greg KH" <greg@kroah.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 22 Sep 2011 11:37:51 -0700
+Subject: RE: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
+ patch #2
+Message-ID: <400C43189542CE41BC0A5B252FC90136BC0CC8B05A@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20110922_203823_083342_5D48992F)
+References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+ <20110920130338.GA9885@kroah.com> <20110920132203.GB7800@tuxdriver.com>
+ <20110920140020.GA11386@kroah.com>
+ <7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com>
+ <CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com>
+ <7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
+ <20110922143107.GA27153@infradead.org>
+In-Reply-To: <20110922143107.GA27153@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Split tx/rx gain table initval hanlding part so readability
-is better and easy to manage the code.
+> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> owner@vger.kernel.org] On Behalf Of Christoph Hellwig
+> Sent: donderdag 22 september 2011 16:31
+> To: Brett Rudley
+> Cc: Rafa?? Mi??ecki; Greg KH; John W. Linville; Franky (Zhenhui) Lin;
+> gregkh@suse.de; devel@linuxdriverproject.org; linux-
+> wireless@vger.kernel.org
+> Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for
+> mainline patch #2
+> 
+> On Wed, Sep 21, 2011 at 03:12:02PM -0700, Brett Rudley wrote:
+> > > > Our original plan was to remain a separate driver from b43. We
+> were
+> > > aware of it and all the good work that had been done to create it
+> and we
+> > > had no intention of interfering with it. ??At that point there had
+> not
+> > > been very much recent movement in b43 and it did not support any of
+> our
+> > > AXI based chips. ??We figured that ssb vs AXI was a good dividing
+> line and
+> > > there would be no conflict, and there wasn't initially.
+> > >
+> > > The first obvious problem is that there are SSB and BCMA (aka AXI)
+> > > cards using N-PHY. That resulted in PHY code duplication between
+> b43
+> > > and brcmsmac. And since we already supported N-PHY in b43, adding
+> bcma
+> > > support automatically gave us BCM43224 and BCM43225 support. That
+> of
+> > > course means duplicated supported for the same hardware.
+> >
+> > Agree, when you created bcma, it did duplicate HW support already in
+> brcmsmac.  Why didn't you address that then?
+> 
+> Because doing inside a driver is wrong.  bcma is a separate bus layer
+> and really must stay outside the driver.  It can very reasonably argued
+> that the same is true for the PHY support.
 
-Signed-off-by: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |  390 +++++++++++++++-------------
- 1 files changed, 210 insertions(+), 180 deletions(-)
+I am not disputing that the bcma bus driver was a good move, but there are
+numerous chip devices out there with an internal bus of some sore and not
+having a separate bus driver.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index b6839e6..6b54700 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -374,208 +374,238 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 	}
- }
+Regarding PHY support compared to a system bus on a chip is comparing
+apples with pears. However, as said earlier we are not opposed to the
+idea.
+
+> Given the arguments from Johannes and other I think the only reasonable
+> outcome here is to make sure the broadcom drivers share
+> 
+>  a) the bcma bus support (already done), and
+>  b) the phy layer
+> 
+> and just make them the driver for the newer MAC revisions.
+
+A BCMA bus driver and PHY layer does not give a wireless driver. Am I
+missing something?
  
-+static void ar9003_tx_gain_table_mode0(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9330_12(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9331_modes_lowest_ob_db_tx_gain_1p2,
-+			ARRAY_SIZE(ar9331_modes_lowest_ob_db_tx_gain_1p2),
-+			5);
-+	else if (AR_SREV_9330_11(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9331_modes_lowest_ob_db_tx_gain_1p1,
-+			ARRAY_SIZE(ar9331_modes_lowest_ob_db_tx_gain_1p1),
-+			5);
-+	else if (AR_SREV_9340(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
-+			ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+			5);
-+	else if (AR_SREV_9485_11(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9485_modes_lowest_ob_db_tx_gain_1_1,
-+			ARRAY_SIZE(ar9485_modes_lowest_ob_db_tx_gain_1_1),
-+			5);
-+	else if (AR_SREV_9580(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9580_1p0_lowest_ob_db_tx_gain_table,
-+			ARRAY_SIZE(ar9580_1p0_lowest_ob_db_tx_gain_table),
-+			5);
-+	else
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9300Modes_lowest_ob_db_tx_gain_table_2p2,
-+			ARRAY_SIZE(ar9300Modes_lowest_ob_db_tx_gain_table_2p2),
-+			5);
-+}
-+
-+static void ar9003_tx_gain_table_mode1(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9330_12(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9331_modes_high_ob_db_tx_gain_1p2,
-+			ARRAY_SIZE(ar9331_modes_high_ob_db_tx_gain_1p2),
-+			5);
-+	else if (AR_SREV_9330_11(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9331_modes_high_ob_db_tx_gain_1p1,
-+			ARRAY_SIZE(ar9331_modes_high_ob_db_tx_gain_1p1),
-+			5);
-+	else if (AR_SREV_9340(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
-+			ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+			5);
-+	else if (AR_SREV_9485_11(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9485Modes_high_ob_db_tx_gain_1_1,
-+			ARRAY_SIZE(ar9485Modes_high_ob_db_tx_gain_1_1),
-+			5);
-+	else if (AR_SREV_9580(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9580_1p0_high_ob_db_tx_gain_table,
-+			ARRAY_SIZE(ar9580_1p0_high_ob_db_tx_gain_table),
-+			5);
-+	else
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9300Modes_high_ob_db_tx_gain_table_2p2,
-+			ARRAY_SIZE(ar9300Modes_high_ob_db_tx_gain_table_2p2),
-+			5);
-+}
-+
-+static void ar9003_tx_gain_table_mode2(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9330_12(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9331_modes_low_ob_db_tx_gain_1p2,
-+			ARRAY_SIZE(ar9331_modes_low_ob_db_tx_gain_1p2),
-+			5);
-+	else if (AR_SREV_9330_11(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9331_modes_low_ob_db_tx_gain_1p1,
-+			ARRAY_SIZE(ar9331_modes_low_ob_db_tx_gain_1p1),
-+			5);
-+	else if (AR_SREV_9340(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
-+			ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+			5);
-+	else if (AR_SREV_9485_11(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9485Modes_low_ob_db_tx_gain_1_1,
-+			ARRAY_SIZE(ar9485Modes_low_ob_db_tx_gain_1_1),
-+			5);
-+	else if (AR_SREV_9580(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9580_1p0_low_ob_db_tx_gain_table,
-+			ARRAY_SIZE(ar9580_1p0_low_ob_db_tx_gain_table),
-+			5);
-+	else
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9300Modes_low_ob_db_tx_gain_table_2p2,
-+			ARRAY_SIZE(ar9300Modes_low_ob_db_tx_gain_table_2p2),
-+			5);
-+}
-+
-+static void ar9003_tx_gain_table_mode3(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9330_12(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9331_modes_high_power_tx_gain_1p2,
-+			ARRAY_SIZE(ar9331_modes_high_power_tx_gain_1p2),
-+			5);
-+	else if (AR_SREV_9330_11(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9331_modes_high_power_tx_gain_1p1,
-+			ARRAY_SIZE(ar9331_modes_high_power_tx_gain_1p1),
-+			5);
-+	else if (AR_SREV_9340(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
-+			ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+			5);
-+	else if (AR_SREV_9485_11(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9485Modes_high_power_tx_gain_1_1,
-+			ARRAY_SIZE(ar9485Modes_high_power_tx_gain_1_1),
-+			5);
-+	else if (AR_SREV_9580(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9580_1p0_high_power_tx_gain_table,
-+			ARRAY_SIZE(ar9580_1p0_high_power_tx_gain_table),
-+			5);
-+	else
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9300Modes_high_power_tx_gain_table_2p2,
-+			ARRAY_SIZE(ar9300Modes_high_power_tx_gain_table_2p2),
-+			5);
-+}
-+
- static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- {
- 	switch (ar9003_hw_get_tx_gain_idx(ah)) {
- 	case 0:
- 	default:
--		if (AR_SREV_9330_12(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				ar9331_modes_lowest_ob_db_tx_gain_1p2,
--				ARRAY_SIZE(ar9331_modes_lowest_ob_db_tx_gain_1p2),
--				5);
--		else if (AR_SREV_9330_11(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				ar9331_modes_lowest_ob_db_tx_gain_1p1,
--				ARRAY_SIZE(ar9331_modes_lowest_ob_db_tx_gain_1p1),
--				5);
--		else if (AR_SREV_9340(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
--				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
--				       5);
--		else if (AR_SREV_9485_11(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				       ar9485_modes_lowest_ob_db_tx_gain_1_1,
--				       ARRAY_SIZE(ar9485_modes_lowest_ob_db_tx_gain_1_1),
--				       5);
--		else if (AR_SREV_9580(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--			      ar9580_1p0_lowest_ob_db_tx_gain_table,
--			      ARRAY_SIZE(ar9580_1p0_lowest_ob_db_tx_gain_table),
--			      5);
--		else
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				       ar9300Modes_lowest_ob_db_tx_gain_table_2p2,
--				       ARRAY_SIZE(ar9300Modes_lowest_ob_db_tx_gain_table_2p2),
--				       5);
-+		ar9003_tx_gain_table_mode0(ah);
- 		break;
- 	case 1:
--		if (AR_SREV_9330_12(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				ar9331_modes_high_ob_db_tx_gain_1p2,
--				ARRAY_SIZE(ar9331_modes_high_ob_db_tx_gain_1p2),
--				5);
--		else if (AR_SREV_9330_11(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				ar9331_modes_high_ob_db_tx_gain_1p1,
--				ARRAY_SIZE(ar9331_modes_high_ob_db_tx_gain_1p1),
--				5);
--		else if (AR_SREV_9340(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
--				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
--				       5);
--		else if (AR_SREV_9485_11(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				       ar9485Modes_high_ob_db_tx_gain_1_1,
--				       ARRAY_SIZE(ar9485Modes_high_ob_db_tx_gain_1_1),
--				       5);
--		else if (AR_SREV_9580(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				ar9580_1p0_high_ob_db_tx_gain_table,
--				ARRAY_SIZE(ar9580_1p0_high_ob_db_tx_gain_table),
--				       5);
--		else
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				       ar9300Modes_high_ob_db_tx_gain_table_2p2,
--				       ARRAY_SIZE(ar9300Modes_high_ob_db_tx_gain_table_2p2),
--				       5);
-+		ar9003_tx_gain_table_mode1(ah);
- 		break;
- 	case 2:
--		if (AR_SREV_9330_12(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				ar9331_modes_low_ob_db_tx_gain_1p2,
--				ARRAY_SIZE(ar9331_modes_low_ob_db_tx_gain_1p2),
--				5);
--		else if (AR_SREV_9330_11(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				ar9331_modes_low_ob_db_tx_gain_1p1,
--				ARRAY_SIZE(ar9331_modes_low_ob_db_tx_gain_1p1),
--				5);
--		else if (AR_SREV_9340(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
--				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
--				       5);
--		else if (AR_SREV_9485_11(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				       ar9485Modes_low_ob_db_tx_gain_1_1,
--				       ARRAY_SIZE(ar9485Modes_low_ob_db_tx_gain_1_1),
--				       5);
--		else if (AR_SREV_9580(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				 ar9580_1p0_low_ob_db_tx_gain_table,
--				 ARRAY_SIZE(ar9580_1p0_low_ob_db_tx_gain_table),
--				 5);
--		else
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				       ar9300Modes_low_ob_db_tx_gain_table_2p2,
--				       ARRAY_SIZE(ar9300Modes_low_ob_db_tx_gain_table_2p2),
--				       5);
-+		ar9003_tx_gain_table_mode2(ah);
- 		break;
- 	case 3:
--		if (AR_SREV_9330_12(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				ar9331_modes_high_power_tx_gain_1p2,
--				ARRAY_SIZE(ar9331_modes_high_power_tx_gain_1p2),
--				5);
--		else if (AR_SREV_9330_11(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				ar9331_modes_high_power_tx_gain_1p1,
--				ARRAY_SIZE(ar9331_modes_high_power_tx_gain_1p1),
--				5);
--		else if (AR_SREV_9340(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
--				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
--				       5);
--		else if (AR_SREV_9485_11(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				       ar9485Modes_high_power_tx_gain_1_1,
--				       ARRAY_SIZE(ar9485Modes_high_power_tx_gain_1_1),
--				       5);
--		else if (AR_SREV_9580(ah))
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				ar9580_1p0_high_power_tx_gain_table,
--				ARRAY_SIZE(ar9580_1p0_high_power_tx_gain_table),
--				5);
--		else
--			INIT_INI_ARRAY(&ah->iniModesTxGain,
--				       ar9300Modes_high_power_tx_gain_table_2p2,
--				       ARRAY_SIZE(ar9300Modes_high_power_tx_gain_table_2p2),
--				       5);
-+		ar9003_tx_gain_table_mode3(ah);
- 		break;
- 	}
- }
- 
-+static void ar9003_rx_gain_table_mode0(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9330_12(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9331_common_rx_gain_1p2,
-+				ARRAY_SIZE(ar9331_common_rx_gain_1p2),
-+				2);
-+	else if (AR_SREV_9330_11(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9331_common_rx_gain_1p1,
-+				ARRAY_SIZE(ar9331_common_rx_gain_1p1),
-+				2);
-+	else if (AR_SREV_9340(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9340Common_rx_gain_table_1p0,
-+				ARRAY_SIZE(ar9340Common_rx_gain_table_1p0),
-+				2);
-+	else if (AR_SREV_9485_11(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9485Common_wo_xlna_rx_gain_1_1,
-+				ARRAY_SIZE(ar9485Common_wo_xlna_rx_gain_1_1),
-+				2);
-+	else if (AR_SREV_9580(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9580_1p0_rx_gain_table,
-+				ARRAY_SIZE(ar9580_1p0_rx_gain_table),
-+				2);
-+	else
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9300Common_rx_gain_table_2p2,
-+				ARRAY_SIZE(ar9300Common_rx_gain_table_2p2),
-+				2);
-+}
-+
-+static void ar9003_rx_gain_table_mode1(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9330_12(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			ar9331_common_wo_xlna_rx_gain_1p2,
-+			ARRAY_SIZE(ar9331_common_wo_xlna_rx_gain_1p2),
-+			2);
-+	else if (AR_SREV_9330_11(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			ar9331_common_wo_xlna_rx_gain_1p1,
-+			ARRAY_SIZE(ar9331_common_wo_xlna_rx_gain_1p1),
-+			2);
-+	else if (AR_SREV_9340(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			ar9340Common_wo_xlna_rx_gain_table_1p0,
-+			ARRAY_SIZE(ar9340Common_wo_xlna_rx_gain_table_1p0),
-+			2);
-+	else if (AR_SREV_9485_11(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			ar9485Common_wo_xlna_rx_gain_1_1,
-+			ARRAY_SIZE(ar9485Common_wo_xlna_rx_gain_1_1),
-+			2);
-+	else if (AR_SREV_9580(ah))
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			ar9580_1p0_wo_xlna_rx_gain_table,
-+			ARRAY_SIZE(ar9580_1p0_wo_xlna_rx_gain_table),
-+			2);
-+	else
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			ar9300Common_wo_xlna_rx_gain_table_2p2,
-+			ARRAY_SIZE(ar9300Common_wo_xlna_rx_gain_table_2p2),
-+			2);
-+}
-+
- static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
- {
- 	switch (ar9003_hw_get_rx_gain_idx(ah)) {
- 	case 0:
- 	default:
--		if (AR_SREV_9330_12(ah))
--			INIT_INI_ARRAY(&ah->iniModesRxGain,
--					ar9331_common_rx_gain_1p2,
--					ARRAY_SIZE(ar9331_common_rx_gain_1p2),
--					2);
--		else if (AR_SREV_9330_11(ah))
--			INIT_INI_ARRAY(&ah->iniModesRxGain,
--					ar9331_common_rx_gain_1p1,
--					ARRAY_SIZE(ar9331_common_rx_gain_1p1),
--					2);
--		else if (AR_SREV_9340(ah))
--			INIT_INI_ARRAY(&ah->iniModesRxGain,
--				       ar9340Common_rx_gain_table_1p0,
--				       ARRAY_SIZE(ar9340Common_rx_gain_table_1p0),
--				       2);
--		else if (AR_SREV_9485_11(ah))
--			INIT_INI_ARRAY(&ah->iniModesRxGain,
--				       ar9485Common_wo_xlna_rx_gain_1_1,
--				       ARRAY_SIZE(ar9485Common_wo_xlna_rx_gain_1_1),
--				       2);
--		else if (AR_SREV_9580(ah))
--			INIT_INI_ARRAY(&ah->iniModesRxGain,
--				       ar9580_1p0_rx_gain_table,
--				       ARRAY_SIZE(ar9580_1p0_rx_gain_table),
--				       2);
--		else
--			INIT_INI_ARRAY(&ah->iniModesRxGain,
--				       ar9300Common_rx_gain_table_2p2,
--				       ARRAY_SIZE(ar9300Common_rx_gain_table_2p2),
--				       2);
-+		ar9003_rx_gain_table_mode0(ah);
- 		break;
- 	case 1:
--		if (AR_SREV_9330_12(ah))
--			INIT_INI_ARRAY(&ah->iniModesRxGain,
--				ar9331_common_wo_xlna_rx_gain_1p2,
--				ARRAY_SIZE(ar9331_common_wo_xlna_rx_gain_1p2),
--				2);
--		else if (AR_SREV_9330_11(ah))
--			INIT_INI_ARRAY(&ah->iniModesRxGain,
--				ar9331_common_wo_xlna_rx_gain_1p1,
--				ARRAY_SIZE(ar9331_common_wo_xlna_rx_gain_1p1),
--				2);
--		else if (AR_SREV_9340(ah))
--			INIT_INI_ARRAY(&ah->iniModesRxGain,
--				       ar9340Common_wo_xlna_rx_gain_table_1p0,
--				       ARRAY_SIZE(ar9340Common_wo_xlna_rx_gain_table_1p0),
--				       2);
--		else if (AR_SREV_9485_11(ah))
--			INIT_INI_ARRAY(&ah->iniModesRxGain,
--				       ar9485Common_wo_xlna_rx_gain_1_1,
--				       ARRAY_SIZE(ar9485Common_wo_xlna_rx_gain_1_1),
--				       2);
--		else if (AR_SREV_9580(ah))
--			INIT_INI_ARRAY(&ah->iniModesRxGain,
--				   ar9580_1p0_wo_xlna_rx_gain_table,
--				   ARRAY_SIZE(ar9580_1p0_wo_xlna_rx_gain_table),
--				   2);
--		else
--			INIT_INI_ARRAY(&ah->iniModesRxGain,
--				       ar9300Common_wo_xlna_rx_gain_table_2p2,
--				       ARRAY_SIZE(ar9300Common_wo_xlna_rx_gain_table_2p2),
--				       2);
-+		ar9003_rx_gain_table_mode1(ah);
- 		break;
- 	}
- }
--- 
-1.7.0.4
+> (and stop those fight already, shh..)
+
+I thought this was just an open and lively discussion ;-)
+
+Gr. AvS
 
