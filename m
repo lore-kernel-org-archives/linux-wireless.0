@@ -1,41 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:52021 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752110Ab1ITWcB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 18:32:01 -0400
-Received: by ywb5 with SMTP id 5so735434ywb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 15:32:01 -0700 (PDT)
-Message-ID: <4E791465.2020000@lwfinger.net> (sfid-20110921_003206_090268_FA755DF8)
-Date: Tue, 20 Sep 2011 17:32:05 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:2103 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751596Ab1IVNjv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Sep 2011 09:39:51 -0400
+From: "Arend Van Spriel" <arend@broadcom.com>
+To: "Jonas Gorski" <jonas.gorski@gmail.com>
+cc: =?utf-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"Greg KH" <greg@kroah.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 22 Sep 2011 06:39:39 -0700
+Subject: RE: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
+ patch #2
+Message-ID: <400C43189542CE41BC0A5B252FC90136BC0CC8AD82@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20110922_153954_423731_AA389F44)
+References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+ <20110920130338.GA9885@kroah.com> <20110920132203.GB7800@tuxdriver.com>
+ <20110920140020.GA11386@kroah.com>
+ <7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com>
+ <CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com>
+ <7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
+ <20110922003523.0bf6a460@milhouse>
+ <7A94256FD72B884D9E7C55586C3CBCEE195814DE92@SJEXCHCCR01.corp.ad.broadcom.com>
+ <20110922012851.2f3b7801@milhouse>
+ <400C43189542CE41BC0A5B252FC90136BC0CC8ABB9@SJEXCHCCR02.corp.ad.broadcom.com>
+ <CAOiHx==ubVZBHwVBph5uAJSsT_0g6fv5w2YPT-3T7Tkv6wsZgA@mail.gmail.com>
+In-Reply-To: <CAOiHx==ubVZBHwVBph5uAJSsT_0g6fv5w2YPT-3T7Tkv6wsZgA@mail.gmail.com>
 MIME-Version: 1.0
-To: Chiefdome <chiefdome@googlemail.com>
-CC: linux-wireless@vger.kernel.org, george0505@realtek.com
-Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
-References: <4E77F631.3030202@googlemail.com> <4E77F9FD.1020204@googlemail.com> <4E780309.9010601@lwfinger.net> <4E785DB3.5040109@googlemail.com> <4E7907D3.1020606@googlemail.com>
-In-Reply-To: <4E7907D3.1020606@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/20/2011 04:38 PM, Chiefdome wrote:
-> I tried at least wireless-next but the adapter isn't showing up.
-> Where to get more log files and stuff?
-> Isnt this adapter good supported by the rtl8192cu driver or where is the problem?
-
-I have no idea as the only AWUS036 I have is the old one with an RTL8187 chip.
-
-I have been running a wireless-testing 3.1-rc6 kernel with an RTL8188CUS chip 
-(USB IDs are 7392:7811) with no problems. George will know more about supporting 
-that chip than I do.
-
-I will boot my mainline kernel, but I think it is OK.
-
-If the adapter isn't showing up in wireless-next, you need to check the USB IDs 
-using lsusb, and compare them with the USB_DEVICE tables in 
-drivers/net/wireless/rtl8192cu/sw.c. The only place that logs will occur is 
-dmesg, /var/log/messages, or /var/log/syslog.
-
-Larry
+PiBGcm9tOiBKb25hcyBHb3Jza2kgW21haWx0bzpqb25hcy5nb3Jza2lAZ21haWwuY29tXQ0KPiBT
+ZW50OiBkb25kZXJkYWcgMjIgc2VwdGVtYmVyIDIwMTEgMTI6MDgNCj4gVG86IEFyZW5kIFZhbiBT
+cHJpZWwNCj4gQ2M6IE1pY2hhZWwgQsO8c2NoOyBCcmV0dCBSdWRsZXk7IFJhZmHFgiBNacWCZWNr
+aTsgR3JlZyBLSDsgSm9obiBXLg0KPiBMaW52aWxsZTsgRnJhbmt5IChaaGVuaHVpKSBMaW47IGdy
+ZWdraEBzdXNlLmRlOw0KPiBkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnOyBsaW51eC13aXJl
+bGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAwMC8yMF0gc3RhZ2lu
+ZzogYnJjbTgwMjExOiA3dGggcmVhY3Rpb24gZm9yDQo+IG1haW5saW5lIHBhdGNoICMyDQo+IA0K
+PiAyMDExLzkvMjIgQXJlbmQgVmFuIFNwcmllbCA8YXJlbmRAYnJvYWRjb20uY29tPjoNCj4gPj4g
+RnJvbTogbGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgt
+d2lyZWxlc3MtDQo+ID4+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIE1pY2hh
+ZWwgQsO8c2NoDQo+ID4+IFNlbnQ6IGRvbmRlcmRhZyAyMiBzZXB0ZW1iZXIgMjAxMSAxOjI5DQo+
+ID4+IFRvOiBCcmV0dCBSdWRsZXkNCj4gPj4gQ2M6IFJhZmHFgiBNacWCZWNraTsgR3JlZyBLSDsg
+Sm9obiBXLiBMaW52aWxsZTsgRnJhbmt5IChaaGVuaHVpKSBMaW47DQo+ID4+IGdyZWdraEBzdXNl
+LmRlOyBkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnOyBsaW51eC0NCj4gPj4gd2lyZWxlc3NA
+dmdlci5rZXJuZWwub3JnDQo+ID4+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMDAvMjBdIHN0YWdpbmc6
+IGJyY204MDIxMTogN3RoIHJlYWN0aW9uIGZvcg0KPiA+PiBtYWlubGluZSBwYXRjaCAjMg0KPiA+
+Pg0KPiA+PiBPbiBXZWQsIDIxIFNlcCAyMDExIDE2OjE1OjEwIC0wNzAwDQo+ID4+ICJCcmV0dCBS
+dWRsZXkiIDxicnVkbGV5QGJyb2FkY29tLmNvbT4gd3JvdGU6DQo+ID4+DQo+ID4+ID4gV2UgZGlk
+IGhvd2V2ZXIgaW5pdGlhbGx5IHByb3Bvc2UgKGFuZCBpbXBsZW1lbnQpIGEgZGl2aWRpbmcgbGlu
+ZQ0KPiBvZg0KPiA+PiBzc2IgY2hpcHMgZm9yIGI0MyBhbmQgQVhJIGJhc2VkIGNoaXBzIGZvciBi
+cmNtc21hYyBidXQgYjQzIHRlYW0NCj4gY2hvc2UNCj4gPj4gdG8gaWdub3JlL3JlamVjdCB0aGF0
+Lg0KPiA+Pg0KPiA+PiBXZWxsLCB3aGF0IGFib3V0IGVtYmVkZGVkLCBmb3IgaW5zdGFuY2U/DQo+
+ID4NCj4gPiBUaGUgYnJjbXNtYWMgZHJpdmVyIGhhcyBiZWVuIHRlc3RlZCBvbiBhIE1JUFMgcGxh
+dGZvcm0gYnkgSm9uYXMNCj4gR29yc2tpDQo+ID4gYWx0aG91Z2ggb25seSBpbiBTVEEgbW9kZSAo
+b24gYSBiY202M3h4KS4gTm90IGhhdmluZyBBUCBtb2RlIGhhcyBiZWVuDQo+ID4gZXhwbGFpbmVk
+IGluIG90aGVyIGVtYWlscy4NCj4gDQo+IFRoaXMganVzdCBoYXBwZW5lZCB0byBiZSBhIE1JUFMs
+IGJ1dCBhcGFydCBmcm9tIHRoYXQgaXQgd2FzIHN0aWxsIGENCj4gbW9zdGx5IHN0YW5kYXJkIGZh
+cmUgUENJZSBjb25uZWN0ZWQgQkNNNDMxMywgbm8gbm90aGluZyByZWFsbHkNCj4gZW1iZWRkZWQu
+IFdoYXQgTWljaGFlbCAoYW5kIEhhdWtlLCBhbmQgUmFmYWwpIGlzIHRhbGtpbmcgYWJvdXQgYXJl
+DQo+IEJDTTQ3eHggU29DIHdoZXJlIEFNQkEvQVhJIGlzIHRoZSBTeXN0ZW0gQnVzLCBhbmQgdGhl
+cmUgaXMgbm8gUENJKGUpDQo+IGF0IGFsbCAoZXhjZXB0IG1heWJlIGZvciBjb25uZWN0aW5nIGEg
+L3NlY29uZC8gd2lmaSkuDQo+IA0KPiBUaGlzIHdhcyBvbmUgb2YgdGhlIG1haW4gbW90aXZhdGlv
+bnMgb2YgdGhlIGJjbWEgZHJpdmVyLg0KDQpZZXMuIFRoYXQgaXMgY29ycmVjdC4gVGhleSBjb3Vs
+ZCBvcHQgZm9yIGJyY21zbWFjK2JjbWEgZm9yIHRoYXQgb25jZQ0KdGhhdCBpcyBhZGRlZC4NCg0K
+PiBSZWdhcmRzLA0KPiBKb25hcw0KPiANCj4gUC5TOiBXaGljaCByZW1pbmRzIG1lLCBkbyB5b3Ug
+cGxhbiB0byAobm90KSBzdXBwb3J0IHRoZSBpbnRlZ3JhdGVkDQo+IHdpZmkgaW4gdGhlIEJDTTYz
+NjI/IFRoaXMgb25lIHNlZW1zIHRvIGJlIG5laXRoZXIgYmNtYSBub3Igc3NiLCBidXQNCj4gaXQn
+cyBkZWZpbml0ZWx5IEJyb2FkY29tIDspIChIYXZlbid0IGdvdHRlbiBteSBoYW5kcyB5ZXQgb24g
+YSBkZXZpY2UNCj4gdGhvdWdoKS4NCg0KVGhlcmUgaXMgbm8gcGxhbiBvbiByZWNvcmQgZm9yIHRo
+YXQuIEkgaGFkIGEgcXVpY2sgbG9vayBhbmQgaXQgaW5kZWVkDQppcyBhbm90aGVyIGZsYXZvciBv
+ZiBzeXN0ZW0gYnVzLiBJIGRpZCBub3QgZmlndXJlIG91dCB5ZXQgaG93IHRvIGJ1aWxkDQphIHJv
+dXRlciBpbWFnZSBhbmQgd2hpY2ggc291cmNlIGZpbGVzIHByb3ZpZGUgYnVzIGFjY2VzcyBmb3Ig
+aXQuIEkgZG8NCm5vdCBoYXZlIGFjY2VzcyB0byBEU0wgc3R1ZmYgb3ZlciBoZXJlLg0KDQpHci4g
+QXZTDQo=
 
