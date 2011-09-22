@@ -1,52 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37323 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754705Ab1INJCq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 05:02:46 -0400
-Date: Wed, 14 Sep 2011 14:33:22 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Kalle Valo <kvalo@adurom.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <stable@kernel.org>
-Subject: Re: [PATCH] ath9k_hw: Fix magnitude/phase coeff correction
-Message-ID: <20110914090320.GA3074@vmraj-lnx.users.atheros.com> (sfid-20110914_110250_647214_503C861C)
-References: <1315320530-2733-1-git-send-email-rmanohar@qca.qualcomm.com>
- <20110913173226.GF11772@tuxdriver.com>
- <20110914034922.GA23349@vmraj-lnx.users.atheros.com>
- <87ehzjjyvz.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <87ehzjjyvz.fsf@purkki.adurom.net>
+Received: from nbd.name ([46.4.11.11]:56531 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751735Ab1IVOEs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Sep 2011 10:04:48 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	nataraja@qca.qualcomm.com
+Subject: [PATCH] ath9k: fix a regression in ath9k_ps_restore
+Date: Thu, 22 Sep 2011 08:04:32 -0600
+Message-Id: <1316700272-8656-1-git-send-email-nbd@openwrt.org> (sfid-20110922_160456_257797_6359B287)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 14, 2011 at 11:45:20AM +0300, Kalle Valo wrote:
-> Rajkumar Manoharan <rmanohar@qca.qualcomm.com> writes:
-> 
-> > On Tue, Sep 13, 2011 at 01:32:26PM -0400, John W. Linville wrote:
-> >> On Tue, Sep 06, 2011 at 08:18:50PM +0530, Rajkumar Manoharan wrote:
-> >> > Do the magnitude/phase coeff correction only if the outlier
-> >> > is detected.
-> >> > 
-> >> > Cc: stable@kernel.org
-> >> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> >> > ---
-> >> >  
-> >> >  static void ar9003_hw_tx_iqcal_load_avg_2_passes(struct ath_hw *ah,
-> >> 
-> >> What is the effect of the bug being fixed here?  Is this fix intended for 3.1?
-> >
-> > The first entry of phase/mag got changed to average if outlier is
-> > not detected. This patch ensures to update appropriate index of
-> > magnitude/phase. This patch is applicable from 3.0 onwards.
-> 
-> Sorry, but this doesn't tell much. What's the user visible change
-> with this patch? Better sensitivity, less transmission errors or what?
->
-It has minor impact because of this bug, an undesirable Tx IQ correction value
-will be assigned to Tx gain settings wheen outlier is not happened. The impacts
-on overall system throughput should be very minor.
+After 'ath9k: optimize ath9k_ps_restore', it would only send the device to
+network sleep and not to full sleep anymore, potentially causing more
+battery drain.
 
---
-Rajkumar
+Reported-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index ee39702..616bf16 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -133,7 +133,7 @@ void ath9k_ps_restore(struct ath_softc *sc)
+ 	ath_hw_cycle_counters_update(common);
+ 	spin_unlock(&common->cc_lock);
+ 
+-	ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
++	ath9k_hw_setpower(sc->sc_ah, mode);
+ 
+  unlock:
+ 	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+-- 
+1.7.3.2
+
