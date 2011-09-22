@@ -1,228 +1,262 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1886 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756126Ab1I2Wet (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 18:34:49 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v3 15/25] staging: brcm80211: removed global var
- global_scb from softmac
-Date: Thu, 29 Sep 2011 15:34:26 -0700
-Message-ID: <1317335676-3424-16-git-send-email-frankyl@broadcom.com> (sfid-20110930_003552_371045_65231380)
-In-Reply-To: <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
-References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
- <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:55542 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751534Ab1IVPto (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Sep 2011 11:49:44 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1R6lWx-0002Mc-H5
+	for linux-wireless@vger.kernel.org; Thu, 22 Sep 2011 17:49:43 +0200
+Message-Id: <20110922154849.087754240@sipsolutions.net> (sfid-20110922_174949_189074_310F3249)
+Date: Thu, 22 Sep 2011 17:47:28 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 02/15] mac80211: unify TIM bit handling
+References: <20110922154726.521122680@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Global variables are undesirable unless they are read only. Removed by
-instead using an already defined Station Control Block variable in a
-per-device structure.
+Currently, the TIM bit for a given station is set
+and cleared all over the place. Since the logic to
+set/clear it will become much more complex when we
+add uAPSD support, as a first step let's collect
+the entire logic in one place. This requires a few
+small adjustments to other places.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/brcm80211/brcmsmac/ampdu.c       |    6 +++---
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c |   19 ++++---------------
- drivers/staging/brcm80211/brcmsmac/main.c        |   21 +++++++++++++--------
- drivers/staging/brcm80211/brcmsmac/main.h        |    4 ++++
- drivers/staging/brcm80211/brcmsmac/pub.h         |    1 -
- 5 files changed, 24 insertions(+), 27 deletions(-)
+ net/mac80211/sta_info.c |   92 +++++++++++++++++-------------------------------
+ net/mac80211/sta_info.h |    3 -
+ net/mac80211/status.c   |    1 
+ net/mac80211/tx.c       |   15 +++----
+ 4 files changed, 41 insertions(+), 70 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/ampdu.c b/drivers/staging/brcm80211/brcmsmac/ampdu.c
-index b94d60c..e29c62e 100644
---- a/drivers/staging/brcm80211/brcmsmac/ampdu.c
-+++ b/drivers/staging/brcm80211/brcmsmac/ampdu.c
-@@ -314,7 +314,7 @@ static void brcms_c_scb_ampdu_update_config(struct ampdu_info *ampdu,
+--- a/net/mac80211/sta_info.h	2011-09-22 14:27:09.000000000 +0200
++++ b/net/mac80211/sta_info.h	2011-09-22 14:29:39.000000000 +0200
+@@ -523,8 +523,7 @@ int sta_info_destroy_addr(struct ieee802
+ int sta_info_destroy_addr_bss(struct ieee80211_sub_if_data *sdata,
+ 			      const u8 *addr);
  
- static void brcms_c_scb_ampdu_update_config_all(struct ampdu_info *ampdu)
- {
--	brcms_c_scb_ampdu_update_config(ampdu, ampdu->wlc->pub->global_scb);
-+	brcms_c_scb_ampdu_update_config(ampdu, &ampdu->wlc->pri_scb);
- }
+-void sta_info_set_tim_bit(struct sta_info *sta);
+-void sta_info_clear_tim_bit(struct sta_info *sta);
++void sta_info_recalc_tim(struct sta_info *sta);
  
- static void brcms_c_ffpld_calc_mcs2ampdu_table(struct ampdu_info *ampdu, int f)
-@@ -482,7 +482,7 @@ brcms_c_ampdu_tx_operational(struct brcms_c_info *wlc, u8 tid,
- 	struct scb_ampdu *scb_ampdu;
- 	struct scb_ampdu_tid_ini *ini;
- 	struct ampdu_info *ampdu = wlc->ampdu;
--	struct scb *scb = wlc->pub->global_scb;
-+	struct scb *scb = &wlc->pri_scb;
- 	scb_ampdu = &scb->scb_ampdu;
+ void sta_info_init(struct ieee80211_local *local);
+ void sta_info_stop(struct ieee80211_local *local);
+--- a/net/mac80211/tx.c	2011-09-22 14:27:09.000000000 +0200
++++ b/net/mac80211/tx.c	2011-09-22 14:29:39.000000000 +0200
+@@ -469,15 +469,6 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
+ 		} else
+ 			tx->local->total_ps_buffered++;
  
- 	if (!ampdu->ini_enable[tid]) {
-@@ -542,7 +542,7 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
- 
- 	f = ampdu->fifo_tb + prio2fifo[tid];
- 
--	scb = wlc->pub->global_scb;
-+	scb = &wlc->pri_scb;
- 	scb_ampdu = &scb->scb_ampdu;
- 	ini = &scb_ampdu->ini[tid];
- 
-diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-index d5d0d9e..1c45687 100644
---- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-@@ -616,25 +616,14 @@ static int
- brcms_ops_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	       struct ieee80211_sta *sta)
- {
--	struct scb *scb;
+-		/*
+-		 * Queue frame to be sent after STA wakes up/polls,
+-		 * but don't set the TIM bit if the driver is blocking
+-		 * wakeup or poll response transmissions anyway.
+-		 */
+-		if (skb_queue_empty(&sta->ps_tx_buf) &&
+-		    !(staflags & WLAN_STA_PS_DRIVER))
+-			sta_info_set_tim_bit(sta);
 -
--	int i;
- 	struct brcms_info *wl = hw->priv;
-+	struct scb *scb = &wl->wlc->pri_scb;
+ 		info->control.jiffies = jiffies;
+ 		info->control.vif = &tx->sdata->vif;
+ 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+@@ -488,6 +479,12 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
+ 				  round_jiffies(jiffies +
+ 						STA_INFO_CLEANUP_INTERVAL));
  
--	/* Init the scb */
--	scb = (struct scb *)sta->drv_priv;
--	memset(scb, 0, sizeof(struct scb));
--	for (i = 0; i < NUMPRIO; i++)
--		scb->seqctl[i] = 0xFFFF;
--	scb->seqctl_nonqos = 0xFFFF;
--	scb->magic = SCB_MAGIC;
-+	brcms_c_init_scb(scb);
- 
--	wl->pub->global_scb = scb;
- 	wl->pub->global_ampdu = &(scb->scb_ampdu);
- 	wl->pub->global_ampdu->scb = scb;
- 	wl->pub->global_ampdu->max_pdu = 16;
--	brcmu_pktq_init(&scb->scb_ampdu.txq, AMPDU_MAX_SCB_TID,
--		  AMPDU_MAX_SCB_TID * PKTQ_LEN_DEFAULT);
- 
- 	sta->ht_cap.ht_supported = true;
- 	sta->ht_cap.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
-@@ -657,8 +646,8 @@ brcms_ops_ampdu_action(struct ieee80211_hw *hw,
- 		    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
- 		    u8 buf_size)
- {
--	struct scb *scb = (struct scb *)sta->drv_priv;
- 	struct brcms_info *wl = hw->priv;
-+	struct scb *scb = &wl->wlc->pri_scb;
- 	int status;
- 
- 	if (WARN_ON(scb->magic != SCB_MAGIC))
-@@ -1038,7 +1027,7 @@ static int ieee_hw_init(struct ieee80211_hw *hw)
- 
- 	hw->rate_control_algorithm = "minstrel_ht";
- 
--	hw->sta_data_size = sizeof(struct scb);
-+	hw->sta_data_size = 0;
- 	return ieee_hw_rate_init(hw);
- }
- 
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index a3c0157..7a14ab9 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -882,7 +882,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
- 	h = (struct ieee80211_hdr *)((u8 *) (txh + 1) + D11_PHY_HDR_LEN);
- 
- 	if (tx_info->control.sta)
--		scb = (struct scb *)tx_info->control.sta->drv_priv;
-+		scb = &wlc->pri_scb;
- 
- 	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
- 		brcms_c_ampdu_dotxstatus(wlc->ampdu, scb, p, txs);
-@@ -3331,14 +3331,21 @@ static u16 brcms_c_init_chanspec(struct brcms_c_info *wlc)
- 	return chanspec;
- }
- 
--static struct scb global_scb;
--
--static void brcms_c_init_scb(struct brcms_c_info *wlc, struct scb *scb)
-+void brcms_c_init_scb(struct scb *scb)
- {
- 	int i;
++		/*
++		 * We queued up some frames, so the TIM bit might
++		 * need to be set, recalculate it.
++		 */
++		sta_info_recalc_tim(sta);
 +
-+	memset(scb, 0, sizeof(struct scb));
- 	scb->flags = SCB_WMECAP | SCB_HTCAP;
--	for (i = 0; i < NUMPRIO; i++)
-+	for (i = 0; i < NUMPRIO; i++) {
- 		scb->seqnum[i] = 0;
-+		scb->seqctl[i] = 0xFFFF;
-+	}
-+
-+	scb->seqctl_nonqos = 0xFFFF;
-+	scb->magic = SCB_MAGIC;
-+	brcmu_pktq_init(&scb->scb_ampdu.txq, AMPDU_MAX_SCB_TID,
-+		  AMPDU_MAX_SCB_TID * PKTQ_LEN_DEFAULT);
+ 		return TX_QUEUED;
+ 	}
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+--- a/net/mac80211/sta_info.c	2011-09-22 14:29:25.000000000 +0200
++++ b/net/mac80211/sta_info.c	2011-09-22 14:29:51.000000000 +0200
+@@ -641,54 +641,35 @@ static inline void __bss_tim_clear(struc
+ 	bss->tim[aid / 8] &= ~(1 << (aid % 8));
  }
  
- /* d11 core init
-@@ -3799,8 +3806,6 @@ void brcms_c_init(struct brcms_c_info *wlc)
- 
- 	brcms_c_bandinit_ordered(wlc, chanspec);
- 
--	brcms_c_init_scb(wlc, &global_scb);
+-static void __sta_info_set_tim_bit(struct ieee80211_if_ap *bss,
+-				   struct sta_info *sta)
+-{
+-	BUG_ON(!bss);
 -
- 	/* init probe response timeout */
- 	brcms_c_write_shm(wlc, M_PRS_MAXTIME, wlc->prb_resp_timeout);
- 
-@@ -7684,7 +7689,7 @@ void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
+-	__bss_tim_set(bss, sta->sta.aid);
+-
+-	if (sta->local->ops->set_tim) {
+-		sta->local->tim_in_locked_section = true;
+-		drv_set_tim(sta->local, &sta->sta, true);
+-		sta->local->tim_in_locked_section = false;
+-	}
+-}
+-
+-void sta_info_set_tim_bit(struct sta_info *sta)
++void sta_info_recalc_tim(struct sta_info *sta)
  {
- 	u8 prio;
- 	uint fifo;
--	struct scb *scb = &global_scb;
-+	struct scb *scb = &wlc->pri_scb;
- 	struct ieee80211_hdr *d11_header = (struct ieee80211_hdr *)(sdu->data);
++	struct ieee80211_local *local = sta->local;
++	struct ieee80211_if_ap *bss = sta->sdata->bss;
+ 	unsigned long flags;
++	bool have_data;
  
- 	/*
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
-index 9e12a14..47665da 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.h
-+++ b/drivers/staging/brcm80211/brcmsmac/main.h
-@@ -22,6 +22,7 @@
- #include <brcmu_utils.h>
- #include "types.h"
- #include "d11.h"
-+#include "scb.h"
+-	BUG_ON(!sta->sdata->bss);
+-
+-	spin_lock_irqsave(&sta->local->sta_lock, flags);
+-	__sta_info_set_tim_bit(sta->sdata->bss, sta);
+-	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
+-}
++	/* No need to do anything if the driver does all */
++	if (local->hw.flags & IEEE80211_HW_AP_LINK_PS)
++		return;
  
- #define	INVCHANNEL		255	/* invalid channel */
+-static void __sta_info_clear_tim_bit(struct ieee80211_if_ap *bss,
+-				     struct sta_info *sta)
+-{
+-	BUG_ON(!bss);
++	have_data = test_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF) ||
++		    !skb_queue_empty(&sta->tx_filtered) ||
++		    !skb_queue_empty(&sta->ps_tx_buf);
  
-@@ -483,6 +484,7 @@ struct brcms_txq_info {
-  * tx_duty_cycle_cck: maximum allowed duty cycle for CCK.
-  * pkt_queue: txq for transmit packets.
-  * wiphy:
-+ * pri_scb: primary Station Control Block
-  */
- struct brcms_c_info {
- 	struct brcms_pub *pub;
-@@ -610,6 +612,7 @@ struct brcms_c_info {
+-	__bss_tim_clear(bss, sta->sta.aid);
++	spin_lock_irqsave(&local->sta_lock, flags);
  
- 	struct brcms_txq_info *pkt_queue;
- 	struct wiphy *wiphy;
-+	struct scb pri_scb;
- };
+-	if (sta->local->ops->set_tim) {
+-		sta->local->tim_in_locked_section = true;
+-		drv_set_tim(sta->local, &sta->sta, false);
+-		sta->local->tim_in_locked_section = false;
++	if (have_data)
++		__bss_tim_set(bss, sta->sta.aid);
++	else
++		__bss_tim_clear(bss, sta->sta.aid);
++
++	if (local->ops->set_tim) {
++		local->tim_in_locked_section = true;
++		drv_set_tim(local, &sta->sta, have_data);
++		local->tim_in_locked_section = false;
+ 	}
+-}
+-
+-void sta_info_clear_tim_bit(struct sta_info *sta)
+-{
+-	unsigned long flags;
  
- /* antsel module specific state */
-@@ -864,5 +867,6 @@ extern void brcms_b_core_phypll_ctl(struct brcms_hardware *wlc_hw, bool on);
- extern void brcms_b_txant_set(struct brcms_hardware *wlc_hw, u16 phytxant);
- extern void brcms_b_band_stf_ss_set(struct brcms_hardware *wlc_hw,
- 				    u8 stf_mode);
-+extern void brcms_c_init_scb(struct scb *scb);
+-	BUG_ON(!sta->sdata->bss);
+-
+-	spin_lock_irqsave(&sta->local->sta_lock, flags);
+-	__sta_info_clear_tim_bit(sta->sdata->bss, sta);
+-	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
++	spin_unlock_irqrestore(&local->sta_lock, flags);
+ }
  
- #endif				/* _BRCM_MAIN_H_ */
-diff --git a/drivers/staging/brcm80211/brcmsmac/pub.h b/drivers/staging/brcm80211/brcmsmac/pub.h
-index 9670309..b69833e 100644
---- a/drivers/staging/brcm80211/brcmsmac/pub.h
-+++ b/drivers/staging/brcm80211/brcmsmac/pub.h
-@@ -144,7 +144,6 @@ struct brcms_bss_info {
- struct brcms_pub {
- 	struct brcms_c_info *wlc;
- 	struct ieee80211_hw *ieee_hw;
--	struct scb *global_scb;
- 	struct scb_ampdu *global_ampdu;
- 	uint mac80211_state;
- 	uint unit;		/* device instance number */
--- 
-1.7.1
+ static bool sta_info_buffer_expired(struct sta_info *sta, struct sk_buff *skb)
+@@ -736,9 +717,9 @@ static bool sta_info_cleanup_expire_buff
+ #endif
+ 		dev_kfree_skb(skb);
+ 
+-		if (skb_queue_empty(&sta->ps_tx_buf) &&
+-		    !test_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF))
+-			sta_info_clear_tim_bit(sta);
++		/* if the queue is now empty recalc TIM bit */
++		if (skb_queue_empty(&sta->ps_tx_buf))
++			sta_info_recalc_tim(sta);
+ 	}
+ 
+ 	return !skb_queue_empty(&sta->ps_tx_buf);
+@@ -748,7 +729,6 @@ static int __must_check __sta_info_destr
+ {
+ 	struct ieee80211_local *local;
+ 	struct ieee80211_sub_if_data *sdata;
+-	struct sk_buff *skb;
+ 	unsigned long flags;
+ 	int ret, i;
+ 
+@@ -787,12 +767,16 @@ static int __must_check __sta_info_destr
+ 
+ 	sta->dead = true;
+ 
++	local->total_ps_buffered -= skb_queue_len(&sta->ps_tx_buf);
++	__skb_queue_purge(&sta->ps_tx_buf);
++	__skb_queue_purge(&sta->tx_filtered);
++
+ 	if (test_and_clear_sta_flags(sta,
+ 				WLAN_STA_PS_STA | WLAN_STA_PS_DRIVER)) {
+ 		BUG_ON(!sdata->bss);
+ 
+ 		atomic_dec(&sdata->bss->num_sta_ps);
+-		sta_info_clear_tim_bit(sta);
++		sta_info_recalc_tim(sta);
+ 	}
+ 
+ 	local->num_sta--;
+@@ -840,14 +824,6 @@ static int __must_check __sta_info_destr
+ 	}
+ #endif
+ 
+-	while ((skb = skb_dequeue(&sta->ps_tx_buf)) != NULL) {
+-		local->total_ps_buffered--;
+-		dev_kfree_skb_any(skb);
+-	}
+-
+-	while ((skb = skb_dequeue(&sta->tx_filtered)) != NULL)
+-		dev_kfree_skb_any(skb);
+-
+ 	__sta_info_free(local, sta);
+ 
+ 	return 0;
+@@ -1027,9 +1003,6 @@ void ieee80211_sta_ps_deliver_wakeup(str
+ 	if (!(local->hw.flags & IEEE80211_HW_AP_LINK_PS))
+ 		drv_sta_notify(local, sdata, STA_NOTIFY_AWAKE, &sta->sta);
+ 
+-	if (!skb_queue_empty(&sta->ps_tx_buf))
+-		sta_info_clear_tim_bit(sta);
+-
+ 	/* Send all buffered frames to the station */
+ 	sent = ieee80211_add_pending_skbs(local, &sta->tx_filtered);
+ 	buffered = ieee80211_add_pending_skbs_fn(local, &sta->ps_tx_buf,
+@@ -1037,6 +1010,8 @@ void ieee80211_sta_ps_deliver_wakeup(str
+ 	sent += buffered;
+ 	local->total_ps_buffered -= buffered;
+ 
++	sta_info_recalc_tim(sta);
++
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+ 	printk(KERN_DEBUG "%s: STA %pM aid %d sending %d filtered/%d PS frames "
+ 	       "since STA not sleeping anymore\n", sdata->name,
+@@ -1086,8 +1061,7 @@ void ieee80211_sta_ps_deliver_poll_respo
+ 
+ 		ieee80211_add_pending_skb(local, skb);
+ 
+-		if (no_pending_pkts)
+-			sta_info_clear_tim_bit(sta);
++		sta_info_recalc_tim(sta);
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+ 	} else {
+ 		/*
+@@ -1126,6 +1100,6 @@ void ieee80211_sta_set_buffered(struct i
+ 		return;
+ 
+ 	set_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF);
+-	sta_info_set_tim_bit(sta);
++	sta_info_recalc_tim(sta);
+ }
+ EXPORT_SYMBOL(ieee80211_sta_set_buffered);
+--- a/net/mac80211/status.c	2011-09-22 14:27:09.000000000 +0200
++++ b/net/mac80211/status.c	2011-09-22 14:29:51.000000000 +0200
+@@ -106,6 +106,7 @@ static void ieee80211_handle_filtered_fr
+ 	if (test_sta_flags(sta, WLAN_STA_PS_STA) &&
+ 	    skb_queue_len(&sta->tx_filtered) < STA_MAX_TX_BUFFER) {
+ 		skb_queue_tail(&sta->tx_filtered, skb);
++		sta_info_recalc_tim(sta);
+ 		return;
+ 	}
+ 
 
 
