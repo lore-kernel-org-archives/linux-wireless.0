@@ -1,80 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:38234 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934018Ab1IOPXg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 11:23:36 -0400
-Message-ID: <4E721871.7040901@lwfinger.net> (sfid-20110915_172351_747146_567465E7)
-Date: Thu, 15 Sep 2011 10:23:29 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	'Chaoming_Li' <chaoming_li@realsil.com.cn>
-Subject: Re: 3.1-rc6+ rtl8192se issue
-References: <20110915124406.GA14374@gere.osrc.amd.com>
-In-Reply-To: <20110915124406.GA14374@gere.osrc.amd.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga01.intel.com ([192.55.52.88]:45869 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753665Ab1IVXBT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Sep 2011 19:01:19 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 06/12] iwlagn: fix dangling scan request
+Date: Thu, 22 Sep 2011 15:14:54 -0700
+Message-Id: <1316729700-1770-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110923_010130_773170_3AD75923)
+In-Reply-To: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/15/2011 07:44 AM, Borislav Petkov wrote:
-> Hi Larry,
->
-> I'm experiencing an issue with rtl8192se since 3.1-ish timeframe where
-> the machine becomes completely unresponsive and only a reboot helps
-> the situation. I think the issue has to do with the rtl8192se wireless
-> driver because if I connect the machine through ethernet, it runs pretty
-> smoothly.
->
-> Today, I left the machine on the vt console in the expectation of an
-> oops or something to appear in the logs and logged into it from another
-> machine over ssh.
->
-> After a while, the unresponsiveness happened and the box didn't
-> react to keyboard input except sysrq with which I was able to do the
-> show-backtrace-all-active-cpus(L) thing and attached is a partial
-> screen cap of that. It looks like the stuck-up happens somewhere in
-> rtl_lps_leave() along the rtl92s_phy_set_rf_power_state() path but the
-> register dump is missing with the exact %rIP.
->
-> Anyway, pls take a look and let me know if it rings any bells. I'll
-> continue trying to debug the issue, maybe I should bisect it if nothing
-> else pops up.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Borislav,
+If iwl_scan_initiate() fails for any reason,
+priv->scan_request and priv->scan_vif are left
+dangling. This can lead to a crash later when
+iwl_bg_scan_completed() tries to run a pending
+scan request.
 
-Thanks for the report. I have been running rtl8192se for the past few days and I 
-have also noticed two such system freezes, but not been able to capture any 
-info. As I have recently made many changes in my system recently, I did not know 
-what might be the cause, but rtl8192se is certainly on the suspect list.
+In practice, this seems to be very rare due to
+the STATUS_SCANNING check earlier. That check,
+however, is wrong -- it should allow a scan to
+be queued when a reset/roc scan is going on.
+When a normal scan is already going on, a new
+one can't be issued by mac80211, so that code
+can be removed completely. I introduced this
+bug when adding off-channel support in commit
+266af4c745952e9bebf687dd68af58df553cb59d.
 
-I have added Chaoming Li to the Cc list. I will send him the screen photo 
-separately.
+Cc: stable@kernel.org [3.0]
+Reported-by: Peng Yan <peng.yan@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   30 ++++++++++++++++--------------
+ 1 files changed, 16 insertions(+), 14 deletions(-)
 
-Some questions:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 07af6ec..74204ec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -874,31 +874,33 @@ int iwl_mac_hw_scan(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&priv->shrd->mutex);
+ 
+-	if (test_bit(STATUS_SCANNING, &priv->shrd->status) &&
+-	    priv->scan_type != IWL_SCAN_NORMAL) {
+-		IWL_DEBUG_SCAN(priv, "Scan already in progress.\n");
+-		ret = -EAGAIN;
+-		goto out_unlock;
+-	}
+-
+-	/* mac80211 will only ask for one band at a time */
+-	priv->scan_request = req;
+-	priv->scan_vif = vif;
+-
+ 	/*
+ 	 * If an internal scan is in progress, just set
+ 	 * up the scan_request as per above.
+ 	 */
+ 	if (priv->scan_type != IWL_SCAN_NORMAL) {
+-		IWL_DEBUG_SCAN(priv, "SCAN request during internal scan\n");
++		IWL_DEBUG_SCAN(priv,
++			       "SCAN request during internal scan - defer\n");
++		priv->scan_request = req;
++		priv->scan_vif = vif;
+ 		ret = 0;
+-	} else
++	} else {
++		priv->scan_request = req;
++		priv->scan_vif = vif;
++		/*
++		 * mac80211 will only ask for one band at a time
++		 * so using channels[0] here is ok
++		 */
+ 		ret = iwl_scan_initiate(priv, vif, IWL_SCAN_NORMAL,
+ 					req->channels[0]->band);
++		if (ret) {
++			priv->scan_request = NULL;
++			priv->scan_vif = NULL;
++		}
++	}
+ 
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ 
+-out_unlock:
+ 	mutex_unlock(&priv->shrd->mutex);
+ 
+ 	return ret;
+-- 
+1.7.0.4
 
-I expect that you are running a mainline kernel from Linus's tree. If not, 
-please let me know. Mine is 3.1-rc4 from the wireless-testing tree. I don't 
-recall any changes in out "next-flavored" version that are not in 3.1.
-
-Which flavor of RTL8192SE card do you have? The one I'm running shows as 
-"Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless LAN Controller [10ec:8172] 
-(rev 10)", but I have two others. The differences are in the number of TX and RX 
-streams. Mine is the 1x2 variety.
-
-How frequently do your freezes occur? As I said before, I have only had two in 2 
-or 3 days, which would make bisection tricky.
-
-I see from the dump that you have x86_64 architecture. How many CPUs and how 
-fast? There is one questionable report of problems on a box with an 8-way fast 
-processor. That was on initialization and is not the same, but may indicate a 
-problem. My system has a dual AMD CPU at 2.0 GHz.
-
-Would you also try loading rtl8192se with the "ips=0" option? As power save is 
-implicated in your traceback, that may help. I will be trying "swlps=0 ips=0".
-
-Thanks for the report,
-
-Larry
