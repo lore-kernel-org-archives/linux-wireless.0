@@ -1,43 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:26760 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753343Ab1IFICk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Sep 2011 04:02:40 -0400
-To: Vivek Natarajan <nataraja@qca.qualcomm.com>
-Message-ID: <4E65D399.6020904@qca.qualcomm.com> (sfid-20110906_100245_709531_E9446585)
-Date: Tue, 6 Sep 2011 11:02:33 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from mail.skyhub.de ([78.46.96.112]:41000 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750971Ab1IVHvU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Sep 2011 03:51:20 -0400
+Date: Thu, 22 Sep 2011 09:51:15 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?utf-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org,
+	'LKML' <linux-kernel@vger.kernel.org>
+Subject: Re: =?utf-8?B?562U5aSNOiDnrZTlpI0=?=
+	=?utf-8?Q?=3A?= 3.1-rc6+ rtl8192se issue
+Message-ID: <20110922075115.GA17640@liondog.tnic> (sfid-20110922_095148_877739_B4096F34)
+References: <20110915124406.GA14374@gere.osrc.amd.com>
+ <4E721871.7040901@lwfinger.net>
+ <20110916180323.GA1988@gere.osrc.amd.com>
+ <CD4D8CF16C39438E82FE8241C9AF80F4@realsil.com.cn>
+ <20110921185816.GA2036@gere.osrc.amd.com>
+ <791179BCE62F4954AB936E6CAC9CA977@realsil.com.cn>
+ <4E7AAB8B.40900@lwfinger.net>
 MIME-Version: 1.0
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath6kl: Process regulatory requests from firmware.
-References: <1315294296-3712-1-git-send-email-vivek.natarajan@qca.qualcomm.com>
-In-Reply-To: <1315294296-3712-1-git-send-email-vivek.natarajan@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4E7AAB8B.40900@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/06/2011 10:31 AM, Vivek Natarajan wrote:
-> From: Vivek Natarajan <nataraja@qca.qualcomm.com>
+On Wed, Sep 21, 2011 at 10:29:15PM -0500, Larry Finger wrote:
+> On 09/21/2011 08:24 PM, 李朝明 wrote:
+> > Dear Sir:
+> > 
+> > 	I can't find _rtl_pci_lps_leave_tasklet in my driver, So I want to
+> > kown which driver did you use.
+> > 	Would you like to try this new driver with ips =0 and lps = 0, or
+> > some combination of these two functions.
 > 
-> Process the regulatory code from eeprom and pass the
-> country information to cfg80211.
+> It is not in my driver either. Where did that driver come from?
 
-Thanks, applied. I did a minor white space change which I missed in my
-original review:
+That's actually _rtl_pci_ips_leave_tasklet with an "i"
+in "_ips_" and it is a wrapper around rtl_lps_leave() in
+<drivers/net/wireless/rtlwifi/pci.c>
 
-commit 060337604577e55c5bf3246bcaf161929c603d54
-Author: Vivek Natarajan <nataraja@qca.qualcomm.com>
-Date:   Tue Sep 6 13:01:36 2011 +0530
+Basically, that's the tasklet handler for ips_leave_tasklet regged in
+_rtl_pci_init_struct():
 
-    ath6kl: Process regulatory requests from firmware.
+        tasklet_init(&rtlpriv->works.ips_leave_tasklet,
+                     (void (*)(unsigned long))_rtl_pci_ips_leave_tasklet,
+                     (unsigned long)hw);
 
-    Process the regulatory code from eeprom and pass the
-    country information to cfg80211.
 
-    kvalo: add space between struct name and *
+The sluggishness is consistent with the tasklet choking on something,
+from looking at rtl_lps_leave() it grabs some spinlocks and then enables
+IRQs in the middle of it with a very explanatory comment /* FIXME */
+ontop of it which looks very suspicious to me:
 
-    Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
-    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+/*Leave the leisure power save mode.*/
+void rtl_lps_leave(struct ieee80211_hw *hw)
+{
+        struct rtl_priv *rtlpriv = rtl_priv(hw);
+        struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+        struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
 
-Kalle
+        spin_lock(&rtlpriv->locks.lps_lock);
+
+        if (ppsc->fwctrl_lps) {
+                if (ppsc->dot11_psmode != EACTIVE) {
+
+                        /*FIX ME */
+                        rtlpriv->cfg->ops->enable_interrupt(hw);
+...
+
+But since I don't know anything about networking drivers, I'm actually
+hoping that you guys could have an idea here.
+
+HTH.
+
+-- 
+Regards/Gruss,
+    Boris.
