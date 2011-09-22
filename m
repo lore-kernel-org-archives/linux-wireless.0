@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:60180 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754940Ab1I3LVq (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:44410 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751370Ab1IVTEw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Sep 2011 07:21:46 -0400
-Received: by vws1 with SMTP id 1so1197769vws.19
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Sep 2011 04:21:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4E8468AF.8000006@neratec.com>
-References: <CAB=NE6U6qmYbvHPTWGTqOdXtuxbKYbUzZXNiE6POOX9QZNRWAg@mail.gmail.com>
-	<1125417094.1836.1317285426615.JavaMail.root@idefix>
-	<CAJ-VmonqEs4mODDa2=fTj8zWHwRM7-G5e=BWNUyGdy65+kYvfg@mail.gmail.com>
-	<4E8468AF.8000006@neratec.com>
-Date: Fri, 30 Sep 2011 19:21:45 +0800
-Message-ID: <CAJ-VmokXUectieeOBJSMfuzzT94g7U=dqbPf-S1Oay292ur9yg@mail.gmail.com> (sfid-20110930_132154_040095_FD456869)
-Subject: Re: Regulatory revamp status
-From: Adrian Chadd <adrian@freebsd.org>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Boris Presman <boris.presman@ti.com>,
-	Assaf Azulay <assaf@ti.com>,
-	Michael Green <green@qca.qualcomm.com>,
-	David Quan <dquan@qca.qualcomm.com>,
-	Kevin Hayes <hayes@qca.qualcomm.com>,
-	Arun Venkataraman <arunvenk@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 22 Sep 2011 15:04:52 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 96AC25401A7
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 15:17:51 -0400 (EDT)
+Subject: Compat-wireless release for 2011-09-22 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110922190451.3DE1F40647@repository3.orbit-lab.org> (sfid-20110922_210500_142631_12931C59)
+Date: Thu, 22 Sep 2011 15:04:51 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29 September 2011 20:46, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+>From git://github.com/mcgrof/compat-wireless
+   a898f60..5904b94  master     -> origin/master
+>From git://github.com/mcgrof/compat
+   0808fea..8331446  master     -> origin/master
+>From git://github.com/sfrothwell/linux-next
+ + 39fc525...4deee6e akpm-end   -> origin/akpm-end  (forced update)
+   38867a2..d93dc5c  akpm-start -> origin/akpm-start
+ + 367fd59...c4d76b4 master     -> origin/master  (forced update)
+   38867a2..d93dc5c  stable     -> origin/stable
+ * [new tag]         next-20110922 -> next-20110922
+ * [new tag]         v3.1-rc7   -> v3.1-rc7
 
-> Really? Where would be 'there' countrycode-wise?
->
-> That would definitely break today's CRDA capabilities :-\
+compat-wireless code metrics
 
-I -think- one or both of ETSI/FCC have different CAC/NOL requirements
-for the channels which overlap the weather radars.
-At least when someone took FreeBSD to get DFS certified a while ago,
-the weather radar ranges were checked against a 30 minute CAC. :)
-
-I think it's worth defining specific DFS parameters for each frequency
-range. That's what I'll be doing for FreeBSD when I revamp its
-net80211 regulatory database code.
-
-
-Adrian
+    812386 - Total upstream lines of code being pulled
+      2397 - backport code changes
+      2086 - backport code additions
+       311 - backport code deletions
+      8538 - backport from compat module
+     10935 - total backport code
+    1.3460 - % of code consists of backport work
+Host key verification failed.
+rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
