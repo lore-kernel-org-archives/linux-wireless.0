@@ -1,72 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12866 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751380Ab1IWF1q (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:50139 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047Ab1IVHjT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 01:27:46 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2] ath6kl: Fix disconnect event reporting
-Date: Fri, 23 Sep 2011 10:57:50 +0530
-Message-ID: <1316755670-1795-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110923_072749_986246_783217B2)
+	Thu, 22 Sep 2011 03:39:19 -0400
+Received: by eya28 with SMTP id 28so1421891eya.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 00:39:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1316606815.3940.31.camel@jlt3.sipsolutions.net>
+References: <1316082334-7664-1-git-send-email-arik@wizery.com>
+ <1316082334-7664-5-git-send-email-arik@wizery.com> <1316606815.3940.31.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 22 Sep 2011 10:39:03 +0300
+Message-ID: <CA+XVXfeNeLyiPxTLyUderJHsUAKukWGiAFZjJ4P5+siNou8pWg@mail.gmail.com> (sfid-20110922_093922_494320_438D87AA)
+Subject: Re: [RFC 4/5] mac80211: add a HW flag for TDLS support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Kalyan C Gaddam <chakkal@iit.edu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver does not report disconnect event properly when in connecting state,
-this leads to issues failures in starting reconnection. Send a disconnect
-command to target when a disconnect event is received with reason code
-other than 3 (DISCONNECT_CMD - disconnect request from host) to make the
-frimware stop trying to connect even after giving disconnect event. There
-will be one more disconnect event for this disconnect command with reason
-code DISCONNECT_CMD which will be notified to cfg80211.
+On Wed, Sep 21, 2011 at 15:06, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2011-09-15 at 13:25 +0300, Arik Nemtsov wrote:
+>> Allow TDLS operations and peers only in supporting hardware.
+>
+> In terms of patch ordering I think this should be part of patch 1 (and
+> maybe patch 3 can be too), otherwise patch 2 adds some incomplete
+> mac80211 stuff and even enables it ...
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
+Sure.
 
-V2 -- Add commands in code and change in commit log
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   20 +++++++++-----------
- 1 files changed, 9 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index c3540bb..c84f53d 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -602,22 +602,20 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
- 		}
- 	}
- 
--	if (!test_bit(CONNECT_PEND, &ar->flag)) {
--		if (reason != DISCONNECT_CMD)
--			ath6kl_wmi_disconnect_cmd(ar->wmi);
--
--		return;
--	}
-+	/*
-+	 * Send a disconnect command to target when a disconnect event is
-+	 * received with reason code other than 3 (DISCONNECT_CMD - disconnect
-+	 * request from host) to make the firmware stop trying to connect even
-+	 * after giving disconnect event. There will be one more disconnect
-+	 * event for this disconnect command with reason code DISCONNECT_CMD
-+	 * which will be notified to cfg80211.
-+	 */
- 
--	if (reason == NO_NETWORK_AVAIL) {
--		/* connect cmd failed */
-+	if (reason != DISCONNECT_CMD) {
- 		ath6kl_wmi_disconnect_cmd(ar->wmi);
- 		return;
- 	}
- 
--	if (reason != DISCONNECT_CMD)
--		return;
--
- 	clear_bit(CONNECT_PEND, &ar->flag);
- 
- 	if (ar->sme_state == SME_CONNECTING) {
--- 
-1.7.0.4
-
+Arik
