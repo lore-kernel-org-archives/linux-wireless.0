@@ -1,80 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta11.charter.net ([216.33.127.80]:48977 "EHLO
-	mta11.charter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750784Ab1ISW71 (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:1421 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750914Ab1IVCIM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 18:59:27 -0400
-Message-ID: <4E77C951.5010103@gregd.org> (sfid-20110920_005930_624549_B04EC3EE)
-Date: Mon, 19 Sep 2011 17:59:29 -0500
-From: Greg Dietsche <greg@gregd.org>
+	Wed, 21 Sep 2011 22:08:12 -0400
+From: "Brett Rudley" <brudley@broadcom.com>
+To: =?iso-8859-2?Q?Michael_B=FCsch?= <m@bues.ch>
+cc: =?iso-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
+	"Greg KH" <greg@kroah.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 21 Sep 2011 19:07:54 -0700
+Subject: RE: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
+ patch #2
+Message-ID: <7A94256FD72B884D9E7C55586C3CBCEE195814DF19@SJEXCHCCR01.corp.ad.broadcom.com> (sfid-20110922_040817_958934_2124196C)
+References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+ <20110920130338.GA9885@kroah.com> <20110920132203.GB7800@tuxdriver.com>
+ <20110920140020.GA11386@kroah.com>
+ <7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com>
+ <CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com>
+ <7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
+ <20110922003523.0bf6a460@milhouse>
+ <7A94256FD72B884D9E7C55586C3CBCEE195814DE92@SJEXCHCCR01.corp.ad.broadcom.com>
+ <20110922012851.2f3b7801@milhouse>
+In-Reply-To: <20110922012851.2f3b7801@milhouse>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: pull request: iwlegacy 2011-09-14
-References: <20110914085900.GA2717@redhat.com> <20110919193122.GD2608@tuxdriver.com> <4E77C129.7070203@gregd.org>
-In-Reply-To: <4E77C129.7070203@gregd.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/19/2011 05:24 PM, Greg Dietsche wrote:
-> On Mon, 19 Sep 2011 15:31:22 -0400, John W. Linville wrote:
->> On Wed, Sep 14, 2011 at 10:59:16AM +0200, Stanislaw Gruszka wrote:
->>> John,
->>>
->>> Please pull iwlegacy cleanup changes done by Greg and me, intended
->>> for 3.2. These request include huge patches with file renaming and
->>> automatic code processing done by sed and indent. Work of changing
->>> iwlegacy driver into something that I could consider maintainable
->>> is not done yet, but these massive changes bring closer into that.
->>> Hopefully with having clean, maintainable code I will be able to
->>> fix some nasty, not easy reproducible bugs, we still have in the
->>> iwlegacy driver.
->>>
->>> Thanks.
->>>
->>> The following changes since commit
->>> d82cdad64a0127611724c61849a8487d69fb76ef:
->>>
->>> Merge branch 'master' of
->>> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next
->>> (2011-08-30 16:34:33 -0400)
->>>
->>> are available in the git repository at:
->>>
->>> git://github.com/dietsche/linux.git
->>> wireless-next-iwlegacy-stanislaw-greg
->>
->> It looks like you pulled something other than wireless-next into this
->> tree. If you want me to pull directly, then you need to based your
->> tree (or at least the branch I'm pulling) on wireless-next
->> exclusively.
->
-> Sorry for the confusing branch name! I was naming it based on which
-> kernel release the code is for and not where it was branched from. Also,
-> I hadn't anticipated that my git tree might end up in pull request...
->
-> The branch wireless-next-iwlegacy-stanislaw-greg is based on John's
-> wireless-testing tree. Looking at previous emails in this thread, we
-> referred to wireless-testing as the base for the changes, so branching
-> from wireless-testing was done on purpose.
->
-> I briefly tried to apply the patch set to wireless-next, but it doesn't
-> like Stanislaw's second patch (rename iwl to il). So some work will need
-> to be done if we really need to pull into wireless-next.
->
-> I'm not real familiar with the pull process... so let me know if you'd
-> like me to do something.
->
->
-> Greg
+> 
+> > We did however initially propose (and implement) a dividing line of ssb
+> chips for b43 and AXI based chips for brcmsmac but b43 team chose to
+> ignore/reject that.
+> 
+> Well, what about embedded, for instance?
 
+I was referring to smac. There isn't any controversy over fmac AFAIK.
 
-To make things less confusing, I created a new branch and pushed it. you 
-can pull from here if you'd like:
-git://github.com/dietsche/linux.git 
-wireless-testing-2011-09-14-iwlegacy-cleanup
+Brett
 
-
-Greg
