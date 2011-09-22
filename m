@@ -1,85 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:36749 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750810Ab1ITNkX convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:50286 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750776Ab1IVHfP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 09:40:23 -0400
-Received: by wyg34 with SMTP id 34so509961wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 06:40:22 -0700 (PDT)
+	Thu, 22 Sep 2011 03:35:15 -0400
+Received: by eya28 with SMTP id 28so1421028eya.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 00:35:13 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1316524874.3953.41.camel@jlt3.sipsolutions.net>
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-	<20110920130338.GA9885@kroah.com>
-	<1316524874.3953.41.camel@jlt3.sipsolutions.net>
-Date: Tue, 20 Sep 2011 15:40:22 +0200
-Message-ID: <CACna6rxzTz5tP1VkT7+bjXh=9w7+ZBu=y4wnW2XGi2wG+a8-sA@mail.gmail.com> (sfid-20110920_154026_639062_5F1C88C6)
-Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline patch #2
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Greg KH <greg@kroah.com>, Franky Lin <frankyl@broadcom.com>,
-	gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1316606713.3940.29.camel@jlt3.sipsolutions.net>
+References: <1316082334-7664-1-git-send-email-arik@wizery.com>
+ <1316082334-7664-3-git-send-email-arik@wizery.com> <1316606713.3940.29.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 22 Sep 2011 10:34:58 +0300
+Message-ID: <CA+XVXffOFw9RFFuwDTB_ei6Ktwai1tCicTuTeF5=4=WqZSZafw@mail.gmail.com> (sfid-20110922_093519_902674_187DAE26)
+Subject: Re: [RFC 2/5] mac80211: handle TDLS high-level commands and frames
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Kalyan C Gaddam <chakkal@iit.edu>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/9/20 Johannes Berg <johannes@sipsolutions.net>:
-> On Tue, 2011-09-20 at 06:03 -0700, Greg KH wrote:
+On Wed, Sep 21, 2011 at 15:05, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2011-09-15 at 13:25 +0300, Arik Nemtsov wrote:
 >
->> And while code is great and nice, I still haven't seen any real answers
->> to all of the questions that were asked of the Broadcom driver team
->> during that review by the linux-wireless developers about how things
->> will be handled properly due to the overlap in functionality with the
->> existing "real" driver in the tree.
+>> +static void ieee80211_tdls_add_supp_rates(struct ieee80211_sub_if_data *sdata,
+>> +                                       struct sk_buff *skb)
 >
-> Let's qualify this to "some developers".
+> maybe it's time to refactor adding supported rates? This must be like
+> the 5th implementation of it ... mesh has exactly the same at least.
+
+They're not all exactly the same, but yeah, mesh has exactly the same
+one (with no basic rates).
+I'll move it to util.c and have both places use it.
+
+>> +     *pos++ = 0x20; /* TDLS enabled */
 >
-> One thing I'd like to point out is that the Broadcom's firmware API has
-> always undergone changes over time. I'm actually surprised that b43
-> works as well as it does (which, tbh, isn't very well at all, at least
-> for me with some 11n PHY). I also don't think that Broadcom are going to
-> maintain compatibility and/or maintain new firmware features for old
-> devices, that just doesn't make any sense.
+> That might benefit from a constant in ieee80211.h
 
-It's hard to talk about API compatibility breakage, until it really
-happens. So far we support all firmwares, I don't have much more to
-say about that. We can decide about some driver splitting, when API
-breakage really happens. Now I think that are just thoeritical talks.
+Will do.
 
-
-> As a consequence, I don't think there's any sense in saying b43 should
-> be the driver that Broadcom must support upstream. Even we, back then,
-> split b43 into b43 and b43legacy when it wasn't really possible any more
-> to test and maintain a single driver for different devices. Rafal has
-> shown that it is possible today (to some extent) to do that for the
-> newer chips and the older 11g only chips that b43 still supports, but
-> I'm not convinced that with new features like P2P this will be true in
-> the future.
-
-That's what we try to discuss with Broadcom. If they really see a
-requirement to split driver into 2, they have to explain that and
-discuss it with us.
-
-I'm flexible, I've accepted Michaels' view on SSB & BCMA. We just need
-to make Broadcom talk with us.
-
-
-> And this is just discussing the technical side -- the support side is an
-> entirely different question.
 >
-> Now, don't get me wrong -- I don't think the duplication is a good
-> thing. A lot of the PHY code could be shared. However, I think it will
-> probably not be possible for much longer to share the higher level MAC
-> code that programs the SHM etc.
+>> +static u16 ieee80211_get_tdls_sta_capab(struct ieee80211_sub_if_data *sdata)
+>> +{
+>> +     u16 capab;
+>> +     struct ieee80211_local *local = sdata->local;
+>> +
+>> +     /* We do not support any exotic capabilities yet */
+>> +
+>> +     capab = WLAN_CAPABILITY_ESS;
 >
-> So I don't claim to know what the solution is, but I think simply
-> rejecting the Broadcom effort like most people seem to imply is a good
-> solution at all. It will leave all of us in a bad spot by creating a
-> driver that has to support too many different devices.
+> Should we really set the ESS bit for TDLS?
 
-Having Broadcom ignoring all out questions and just sending more&more
-patches is not good as well. How differently we can make them talk?
-I've requested for discussion several times.
+Well I saw this bit set in an example tdls pcap that Jouni provided
+the wireshark list a while ago. I haven't seen anything about it in
+the spec, but I assumed there was some inter-op cause for this.
+This was on in Kalyan's original patches as well.
 
--- 
-RafaÅ‚
+Kalyan, Jouni - care to comment?
+
+>> +     lnkid->ie_len = 18;
+>
+> sizeof too?
+
+Sure.
+
+>
+>> +     memcpy(tf->da, peer, ETH_ALEN);
+>> +     memcpy(tf->sa, sdata->vif.addr, ETH_ALEN);
+>> +     tf->ether_type = cpu_to_be16(ETH_P_TDLS);
+>> +     tf->payload_type = 2; /* RFTYPE_TDLS */
+>
+> another constant?
+
+Right.
+
+>
+>> +     default:
+>> +             /* we don't support other actions for now */
+>> +             WARN_ON(1);
+>> +             return -EINVAL;
+>
+> Wouldn't that warning be triggerable from userspace?
+
+That was more of a debugging thing. I guess I should remove these.
+
+>
+>> +static int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
+>> +                            u8 *peer, u8 action_code, u8 dialog_token,
+>> +                            u16 status_code, const u8 *extra_ies,
+>> +                            size_t extra_ies_len)
+>> +{
+>> +     struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>> +     struct ieee80211_local *local = sdata->local;
+>> +     struct ieee80211_tx_info *info;
+>> +     struct sk_buff *skb = NULL;
+>> +     bool send_direct;
+>> +     int ret;
+>> +
+>> +#ifdef CONFIG_MAC80211_VERBOSE_TDLS_DEBUG
+>> +     printk(KERN_DEBUG "TDLS mgmt action %d peer %pM\n", action_code, peer);
+>> +#endif
+>> +
+>> +     /* make sure we are in managed mode, and associated */
+>> +     if (sdata->vif.type != NL80211_IFTYPE_STATION ||
+>> +         !sdata->u.mgd.associated) {
+>> +             return -EINVAL;
+>> +     }
+>
+> braces here seem useless :)
+
+Will fix.
+
+>
+> Also accessing u.mgd.associated as a bool like this is fine, but
+> obviously racy. How do we deal with that? Do we even tear down links
+> when disassociating, and do we even need to beyond just killing the
+> station entries?
+
+We don't tear down links just before disassociating (there are too
+many corner cases here). We just disable the links post-factum.
+Killing the station entries won't help for packets meant to be sent
+over the AP. I guess we can take the mutex for a little extra safely
+(but it won't do much).
+
+The race is even worse - from queuing until the actual Tx, we could
+have disconnected from this AP and connected do a totally different
+one. But this shouldn't happen in reality (and we can add some guards
+to wpa_supplicant to make sure).
+Do you see this as a security threat?
+
+>
+>> +     skb = dev_alloc_skb(local->hw.extra_tx_headroom +
+>> +                         max(sizeof(struct ieee80211_mgmt),
+>> +                             sizeof(struct ieee80211_tdls_data)) +
+>> +                         50 + /* supported rates */
+>> +                         7 + /* ext capab */
+>> +                         sizeof(struct ieee80211_tdls_lnkie));
+>
+> Where are the extra IEs used? They should be accounted for too.
+
+Good catch.
+
+>
+>> +fail:
+>> +     if (skb)
+>> +             dev_kfree_skb(skb);
+>
+> I believe the if() is pointless.
+
+ok.
+
+>
+>> +     case NL80211_TDLS_DISABLE_LINK:
+>> +             rcu_read_lock();
+>> +             sta = sta_info_get(sdata, peer);
+>> +             if (sta) {
+>> +                     sta->tdls_link_enabled = false;
+>> +                     sta_info_destroy_addr(sdata, peer);
+>> +             }
+>> +             rcu_read_unlock();
+>
+> You can't call destroy_addr within rcu section.
+
+Another good catch.
+
+>
+>> +     case NL80211_TDLS_TEARDOWN:
+>> +     case NL80211_TDLS_SETUP:
+>> +     case NL80211_TDLS_DISCOVERY_REQ:
+>> +             /* We don't support in-driver setup/teardown/discovery */
+>> +             return -ENOTSUPP;
+>> +     case NL80211_TDLS_DISABLE:
+>> +     case NL80211_TDLS_ENABLE:
+>> +             /* TODO */
+>> +             return -ENOTSUPP;
+>> +     default:
+>> +             WARN_ON(1);
+>> +             return -EINVAL;
+>
+> might want to use EOPNOTSUPP and not have a warning -- if nl80211 ever
+> gets extended with more actions you might run into the default case.
+
+Yea I'll remove this one as well as a couple more.
+
+Arik
