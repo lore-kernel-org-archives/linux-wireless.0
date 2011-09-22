@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:57721 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750928Ab1IZIRF (ORCPT
+Received: from mail-ew0-f48.google.com ([209.85.215.48]:34453 "EHLO
+	mail-ew0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826Ab1IVFh0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 04:17:05 -0400
-Date: Mon, 26 Sep 2011 09:30:40 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Arnaldo Carvalho de Melo <acme@ghostprotocols.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] wl3501_cs: min_t() cast truncates high bits
-Message-ID: <20110926063040.GE11832@elgon.mountain> (sfid-20110926_101711_920668_B3BB1CCE)
+	Thu, 22 Sep 2011 01:37:26 -0400
+Received: by ewy20 with SMTP id 20so832638ewy.7
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 22:37:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1316589900.2157.392.camel@cumari>
+References: <20110921070525.GD4999@elgon.mountain> <1316589900.2157.392.camel@cumari>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 22 Sep 2011 08:29:28 +0300
+Message-ID: <CA+XVXffsb52crZcqQEa6u8GKjXuak-dMH7vd+TUSE771T7XNUg@mail.gmail.com> (sfid-20110922_073729_197992_4C95033C)
+Subject: Re: wl12xx: support up to 8 stations in AP-mode
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wrqu->encoding.length comes from the network administrator.  It's
-size u16.  We want to limit "tocopy" to the smallest value of either
-"len_keys", "wrqu->encoding.length" or 100.  But because .length
-gets cast from u16 to u8 we might use a random, smaller value than
-the was desired.  It's probably not very serious, but we may as well
-fix it.
+On Wed, Sep 21, 2011 at 10:25, Luciano Coelho <coelho@ti.com> wrote:
+> On Wed, 2011-09-21 at 00:05 -0700, Dan Carpenter wrote:
+>> Hi Arik,
+>>
+>> Smatch complains about c47e8229fa56 "wl12xx: support up to 8 stations
+>> in AP-mode"
+>>
+>> drivers/net/wireless/wl12xx/main.c +832 wl12xx_irq_update_links_status(22)
+>>       error: buffer overflow 'status->tx_lnk_free_pkts' 8 <= 10
+>>
+>>    828          for (hlid = WL1271_AP_STA_HLID_START; hlid < AP_MAX_LINKS; hlid++) {
+>>                                                              ^^^^^^^^^^^^
 
-Btw, this is from code auditing and not from testing.  I don't know
-if this affects anyone in real life.
+Again, good catch there Dan. We'll verify the fix internally before
+releasing it (as it changes the host-fw interface).
+I'll also add a BUILD_BUG_ON so this won't happen again.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
-index 6bc7c92..98fbf54 100644
---- a/drivers/net/wireless/wl3501_cs.c
-+++ b/drivers/net/wireless/wl3501_cs.c
-@@ -1781,7 +1781,7 @@ static int wl3501_get_encode(struct net_device *dev,
- 				  keys, len_keys);
- 	if (rc)
- 		goto out;
--	tocopy = min_t(u8, len_keys, wrqu->encoding.length);
-+	tocopy = min_t(u16, len_keys, wrqu->encoding.length);
- 	tocopy = min_t(u8, tocopy, 100);
- 	wrqu->encoding.length = tocopy;
- 	memcpy(extra, keys, tocopy);
+Arik
