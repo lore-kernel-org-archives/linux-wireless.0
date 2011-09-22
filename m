@@ -1,61 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:40977 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752945Ab1IBPtZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Sep 2011 11:49:25 -0400
-Subject: Re: [PATCH 12/12] staging: brcm80211: cleaned up softmac srom macro
-From: Joe Perches <joe@perches.com>
-To: Roland Vossen <rvossen@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1314972039-27098-13-git-send-email-rvossen@broadcom.com>
-References: <1314972039-27098-1-git-send-email-rvossen@broadcom.com>
-	 <1314972039-27098-13-git-send-email-rvossen@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 02 Sep 2011 08:49:23 -0700
-Message-ID: <1314978563.1773.13.camel@Joe-Laptop> (sfid-20110902_174928_488715_1A7F1E06)
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42813 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751545Ab1IVHrl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Sep 2011 03:47:41 -0400
+Message-ID: <4E7AE818.5010503@qca.qualcomm.com> (sfid-20110922_094744_446497_774817D5)
+Date: Thu, 22 Sep 2011 10:47:36 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: Fix disconnect event reporting
+References: <1316534999-26990-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1316534999-26990-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-09-02 at 16:00 +0200, Roland Vossen wrote:
-> Substituted macro.
-[]
-> diff --git a/drivers/staging/brcm80211/brcmsmac/srom.c b/drivers/staging/brcm80211/brcmsmac/srom.c
-[]
-> @@ -792,6 +780,14 @@ static const struct brcms_sromvar perpath_pci_sromvars[] = {
->  
->  static u8 srom_crc8_table[CRC8_TABLE_SIZE];
->  
-> +static u8 *srom_window_address(struct si_pub *sih, void *curmap)
-> +{
-> +	return sih->ccrev > 31 ?
-> +	       (((sih->cccaps & CC_CAP_SROM) == 0) ? NULL :
-> +	       ((u8 *)curmap + PCI_16KB0_CCREGS_OFFSET + CC_SROM_OTP)) :
-> +	       ((u8 *)curmap + PCI_BAR0_SPROM_OFFSET);
-> +}
+On 09/20/2011 07:09 PM, Vasanthakumar Thiagarajan wrote:
+> Driver does not report disconnect event properly when in connecting state,
+> this leads to issues like not reporting the unavailablity of the
+> connected AP and failures in starting reconnection. Send a disconnect
+> command to target when a disconnect event is received with reason code
+> other than 3 (DISCONNECT_CMD - disconnect request from host) to make the
+> stop trying even after giving disconnect event. There will be one more
+> disconnect event for this disconnect command which will be notified to
+> cfg80211.
 
-Please try to make code more readable when
-converting to functions too.
+A similar comment in the code would be nice. It's not obvious from the
+code why a separate disconnect command is needed.
 
-Maybe:
-
-static u16 *srom_window_address(struct si_pub *sih, u8 *curmap)
-{
-	if (sih->ccrev < 32)
-		return (u16 *)(curmap + PCI_BAR0_SPROM_OFFSET);
-	if (sih->cccaps & CC_CAP_SROM)
-		return (u16 *)(curmap + PCI_16KB0_CCREGS_OFFSET + CC_SROM_OTP);
-
-	return NULL;
-}
-> @@ -1147,7 +1143,7 @@ static int initvars_srom_pci(struct si_pub *sih, void *curmap, char **vars,
->  	if (!srom)
->  		return -ENOMEM;
->  
-> -	sromwindow = (u16 *) SROM_OFFSET(sih);
-> +	sromwindow = (u16 *) srom_window_address(sih, curmap);
-
-	sromwindow = srom_window_address(sih, curmap)
-
-
+Kalle
