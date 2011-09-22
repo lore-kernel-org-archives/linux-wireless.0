@@ -1,33 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:50139 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752047Ab1IVHjT (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:44388 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751345Ab1IVHuX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 03:39:19 -0400
-Received: by eya28 with SMTP id 28so1421891eya.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 00:39:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1316606815.3940.31.camel@jlt3.sipsolutions.net>
-References: <1316082334-7664-1-git-send-email-arik@wizery.com>
- <1316082334-7664-5-git-send-email-arik@wizery.com> <1316606815.3940.31.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 22 Sep 2011 10:39:03 +0300
-Message-ID: <CA+XVXfeNeLyiPxTLyUderJHsUAKukWGiAFZjJ4P5+siNou8pWg@mail.gmail.com> (sfid-20110922_093922_494320_438D87AA)
-Subject: Re: [RFC 4/5] mac80211: add a HW flag for TDLS support
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Kalyan C Gaddam <chakkal@iit.edu>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 22 Sep 2011 03:50:23 -0400
+Received: by yib18 with SMTP id 18so1689999yib.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 00:50:22 -0700 (PDT)
+From: ilanelias78@gmail.com
+To: aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	samuel@sortiz.org, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
+Subject: [PATCH] NFC: improve readability of an 'if' in nci core.c
+Date: Thu, 22 Sep 2011 10:47:52 +0300
+Message-Id: <1316677672-4812-1-git-send-email-ilane@ti.com> (sfid-20110922_095026_493366_AD46AF78)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 21, 2011 at 15:06, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2011-09-15 at 13:25 +0300, Arik Nemtsov wrote:
->> Allow TDLS operations and peers only in supporting hardware.
->
-> In terms of patch ordering I think this should be part of patch 1 (and
-> maybe patch 3 can be too), otherwise patch 2 adds some incomplete
-> mac80211 stuff and even enables it ...
+From: Ilan Elias <ilane@ti.com>
 
-Sure.
+Signed-off-by: Ilan Elias <ilane@ti.com>
+---
+ net/nfc/nci/core.c |   32 ++++++++++++++------------------
+ 1 files changed, 14 insertions(+), 18 deletions(-)
 
-Arik
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index 895e5fd..c3dfd4e 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -135,8 +135,10 @@ static void nci_init_req(struct nci_dev *ndev, unsigned long opt)
+ 
+ static void nci_init_complete_req(struct nci_dev *ndev, unsigned long opt)
+ {
+-	struct nci_rf_disc_map_cmd cmd;
+ 	struct nci_core_conn_create_cmd conn_cmd;
++	struct nci_rf_disc_map_cmd cmd;
++	struct disc_map_config *cfg = cmd.mapping_configs;
++	__u8 *num = &cmd.num_mapping_configs;
+ 	int i;
+ 
+ 	/* create static rf connection */
+@@ -145,36 +147,30 @@ static void nci_init_complete_req(struct nci_dev *ndev, unsigned long opt)
+ 	nci_send_cmd(ndev, NCI_OP_CORE_CONN_CREATE_CMD, 2, &conn_cmd);
+ 
+ 	/* set rf mapping configurations */
+-	cmd.num_mapping_configs = 0;
++	*num = 0;
+ 
+ 	/* by default mapping is set to NCI_RF_INTERFACE_FRAME */
+ 	for (i = 0; i < ndev->num_supported_rf_interfaces; i++) {
+ 		if (ndev->supported_rf_interfaces[i] ==
+ 			NCI_RF_INTERFACE_ISO_DEP) {
+-			cmd.mapping_configs[cmd.num_mapping_configs]
+-			.rf_protocol = NCI_RF_PROTOCOL_ISO_DEP;
+-			cmd.mapping_configs[cmd.num_mapping_configs]
+-			.mode = NCI_DISC_MAP_MODE_BOTH;
+-			cmd.mapping_configs[cmd.num_mapping_configs]
+-			.rf_interface_type = NCI_RF_INTERFACE_ISO_DEP;
+-			cmd.num_mapping_configs++;
++			cfg[*num].rf_protocol = NCI_RF_PROTOCOL_ISO_DEP;
++			cfg[*num].mode = NCI_DISC_MAP_MODE_BOTH;
++			cfg[*num].rf_interface_type = NCI_RF_INTERFACE_ISO_DEP;
++			(*num)++;
+ 		} else if (ndev->supported_rf_interfaces[i] ==
+ 			NCI_RF_INTERFACE_NFC_DEP) {
+-			cmd.mapping_configs[cmd.num_mapping_configs]
+-			.rf_protocol = NCI_RF_PROTOCOL_NFC_DEP;
+-			cmd.mapping_configs[cmd.num_mapping_configs]
+-			.mode = NCI_DISC_MAP_MODE_BOTH;
+-			cmd.mapping_configs[cmd.num_mapping_configs]
+-			.rf_interface_type = NCI_RF_INTERFACE_NFC_DEP;
+-			cmd.num_mapping_configs++;
++			cfg[*num].rf_protocol = NCI_RF_PROTOCOL_NFC_DEP;
++			cfg[*num].mode = NCI_DISC_MAP_MODE_BOTH;
++			cfg[*num].rf_interface_type = NCI_RF_INTERFACE_NFC_DEP;
++			(*num)++;
+ 		}
+ 
+-		if (cmd.num_mapping_configs == NCI_MAX_NUM_MAPPING_CONFIGS)
++		if (*num == NCI_MAX_NUM_MAPPING_CONFIGS)
+ 			break;
+ 	}
+ 
+ 	nci_send_cmd(ndev, NCI_OP_RF_DISCOVER_MAP_CMD,
+-		(1 + (cmd.num_mapping_configs*sizeof(struct disc_map_config))),
++		(1 + ((*num)*sizeof(struct disc_map_config))),
+ 		&cmd);
+ }
+ 
+-- 
+1.7.0.4
+
