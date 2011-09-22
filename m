@@ -1,192 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f170.google.com ([74.125.82.170]:43412 "EHLO
-	mail-wy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751573Ab1IRMKz (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:38182 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750789Ab1IVHNH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Sep 2011 08:10:55 -0400
-Received: by wyg8 with SMTP id 8so7912352wyg.1
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2011 05:10:53 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: add ieee80211_set_dyn_ps_timeout()
-Date: Sun, 18 Sep 2011 15:03:14 +0300
-Message-Id: <1316347394-21276-1-git-send-email-eliad@wizery.com> (sfid-20110918_141058_424519_6F7A0693)
+	Thu, 22 Sep 2011 03:13:07 -0400
+Received: by gyd8 with SMTP id 8so2643314gyd.11
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 00:13:05 -0700 (PDT)
+Message-ID: <4E7ADFFC.8080903@ti.com> (sfid-20110922_091311_693594_7407726C)
+Date: Thu, 22 Sep 2011 10:13:00 +0300
+From: Victor Goldenshtein <victorg@ti.com>
+Reply-To: victorg@ti.com
+MIME-Version: 1.0
+To: Luciano Coelho <coelho@ti.com>
+CC: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 3/5] nl80211/cfg80211: adding intermediate scan result event.
+References: <1315224151-16552-1-git-send-email-VictorG@ti.com>  <1315224151-16552-4-git-send-email-VictorG@ti.com>  <1315224512.4075.10.camel@jlt3.sipsolutions.net> <4E6736D9.3070804@ti.com>  <1315387619.4002.3.camel@jlt3.sipsolutions.net> <4E686125.5050208@ti.com>  <20110921153102.GA32374@jm.kir.nu> <1316619903.2157.546.camel@cumari>  <4E7A109C.2010701@ti.com> <1316623133.3940.55.camel@jlt3.sipsolutions.net>  <4E7AD88C.4020806@ti.com> <1316674177.2157.563.camel@cumari>
+In-Reply-To: <1316674177.2157.563.camel@cumari>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some cases the driver might want to change the
-default dynamic ps timeout (e.g. coex activity adds
-latency to the rx/tx path, which might result in
-redundant psm entrance).
+On 22/09/2011 09:49, Luciano Coelho wrote:
 
-Introduce a new ieee80211_set_dyn_ps_timeout() function
-to let low-level drivers change the default timeout.
+> I guess what Johannes meant is that you can send the genl message in
+> atomic context, so you don't need to save stuff and use the event work.
+> You can just send it immediately when cfg80211_inform_bss() and
+> cfg80211_inform_bss_frame() are called.
+>
+> I'm not really sure you can send genl messages while atomic, I think I
+> had problems with that earlier, but you can try. ;)
+>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- include/net/mac80211.h     |   14 ++++++++++++++
- net/mac80211/ieee80211_i.h |    3 +++
- net/mac80211/iface.c       |    1 +
- net/mac80211/main.c        |    3 +++
- net/mac80211/mlme.c        |   31 +++++++++++++++++++++++++++++++
- net/mac80211/pm.c          |    1 +
- 6 files changed, 53 insertions(+), 0 deletions(-)
+;)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 5e5029b..0db4ba8 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3133,6 +3133,20 @@ void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif);
- void ieee80211_enable_dyn_ps(struct ieee80211_vif *vif);
- 
- /**
-+ * ieee80211_set_dyn_ps_timeout - set the default dynamic ps timeout
-+ *
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ * @timeout: timeout in ms, -1 for default value.
-+ *
-+ * This function lets the driver set its default dynamic ps timeout.
-+ * This timeout will be evaluated only if the user didn't set his own
-+ * timeout (explicitly or implicitly, by setting network_latency).
-+ * Setting timeout to -1 will cause this timeout to be ignored, and the
-+ * default timeout (100ms) will be used.
-+ */
-+void ieee80211_set_dyn_ps_timeout(struct ieee80211_vif *vif, int timeout);
-+
-+/**
-  * ieee80211_cqm_rssi_notify - inform a configured connection quality monitoring
-  *	rssi threshold triggered
-  *
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c204cee..d960a16 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -969,6 +969,7 @@ struct ieee80211_local {
- 	struct ieee80211_sub_if_data *ps_sdata;
- 	struct work_struct dynamic_ps_enable_work;
- 	struct work_struct dynamic_ps_disable_work;
-+	struct work_struct dynamic_ps_reconfig_work;
- 	struct timer_list dynamic_ps_timer;
- 	struct notifier_block network_latency_notifier;
- 	struct notifier_block ifa_notifier;
-@@ -978,6 +979,7 @@ struct ieee80211_local {
- 	 * this will override whatever chosen by mac80211 internally.
- 	 */
- 	int dynamic_ps_forced_timeout;
-+	int dynamic_ps_driver_timeout;
- 	int dynamic_ps_user_timeout;
- 	bool disable_dynamic_ps;
- 
-@@ -1281,6 +1283,7 @@ u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
- 
- void ieee80211_dynamic_ps_enable_work(struct work_struct *work);
- void ieee80211_dynamic_ps_disable_work(struct work_struct *work);
-+void ieee80211_dynamic_ps_reconfig_work(struct work_struct *work);
- void ieee80211_dynamic_ps_timer(unsigned long data);
- void ieee80211_send_nullfunc(struct ieee80211_local *local,
- 			     struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index eaa80a3..cf1ecd6 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -442,6 +442,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 
- 	ieee80211_configure_filter(local);
- 
-+	cancel_work_sync(&local->dynamic_ps_reconfig_work);
- 	del_timer_sync(&local->dynamic_ps_timer);
- 	cancel_work_sync(&local->dynamic_ps_enable_work);
- 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index a5809a1..7f9cc77 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -650,6 +650,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 		  ieee80211_dynamic_ps_enable_work);
- 	INIT_WORK(&local->dynamic_ps_disable_work,
- 		  ieee80211_dynamic_ps_disable_work);
-+	INIT_WORK(&local->dynamic_ps_reconfig_work,
-+		  ieee80211_dynamic_ps_reconfig_work);
- 	setup_timer(&local->dynamic_ps_timer,
- 		    ieee80211_dynamic_ps_timer, (unsigned long) local);
- 
-@@ -905,6 +907,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	local->hw.conf.listen_interval = local->hw.max_listen_interval;
- 
- 	local->dynamic_ps_forced_timeout = -1;
-+	local->dynamic_ps_driver_timeout = -1;
- 
- 	result = ieee80211_wep_init(local);
- 	if (result < 0)
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index fb2f0f9..4274e94 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -556,6 +556,21 @@ void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif)
- }
- EXPORT_SYMBOL(ieee80211_disable_dyn_ps);
- 
-+void ieee80211_set_dyn_ps_timeout(struct ieee80211_vif *vif, int timeout)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_local *local = sdata->local;
-+
-+	WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION ||
-+		!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS) ||
-+		(local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS));
-+
-+	local->dynamic_ps_driver_timeout = timeout;
-+	ieee80211_queue_work(&local->hw,
-+			     &local->dynamic_ps_reconfig_work);
-+}
-+EXPORT_SYMBOL(ieee80211_set_dyn_ps_timeout);
-+
- /* powersave */
- static void ieee80211_enable_ps(struct ieee80211_local *local,
- 				struct ieee80211_sub_if_data *sdata)
-@@ -687,6 +702,8 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
- 			if (latency > (1900 * USEC_PER_MSEC) &&
- 			    latency != (2000 * USEC_PER_SEC))
- 				timeout = 0;
-+			else if (local->dynamic_ps_driver_timeout >= 0)
-+				timeout = local->dynamic_ps_driver_timeout;
- 			else
- 				timeout = 100;
- 		}
-@@ -814,6 +831,20 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
- 		netif_tx_wake_all_queues(sdata->dev);
- }
- 
-+void ieee80211_dynamic_ps_reconfig_work(struct work_struct *work)
-+{
-+	struct ieee80211_local *local =
-+		container_of(work, struct ieee80211_local,
-+			     dynamic_ps_reconfig_work);
-+
-+	WARN_ON(!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS) ||
-+		(local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS));
-+
-+	mutex_lock(&local->iflist_mtx);
-+	ieee80211_recalc_ps(local, -1);
-+	mutex_unlock(&local->iflist_mtx);
-+}
-+
- void ieee80211_dynamic_ps_timer(unsigned long data)
- {
- 	struct ieee80211_local *local = (void *) data;
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index 6326d34..afb52a5 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -69,6 +69,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 	 * Note that this particular timer doesn't need to be
- 	 * restarted at resume.
- 	 */
-+	cancel_work_sync(&local->dynamic_ps_reconfig_work);
- 	cancel_work_sync(&local->dynamic_ps_enable_work);
- 	del_timer_sync(&local->dynamic_ps_timer);
- 
--- 
-1.7.6.401.g6a319
+Well I already did, and it's not working, when you"ll try to send genl 
+messages while atomic, you will get kernel warning regarding "sleeping 
+function called from invalid context".
 
+
+Thanks,
+Victor.
