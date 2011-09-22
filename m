@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:41987 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752391Ab1IZTFK (ORCPT
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:42483 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750963Ab1IVGlY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 15:05:10 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id C758A54022F
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 15:16:16 -0400 (EDT)
-Subject: Compat-wireless release for 2011-09-26 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110926190508.94DF740647@repository3.orbit-lab.org> (sfid-20110926_210513_961277_CC44463F)
-Date: Mon, 26 Sep 2011 15:05:08 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 22 Sep 2011 02:41:24 -0400
+Received: by mail-gy0-f171.google.com with SMTP id 3so2280722gyh.2
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 23:41:23 -0700 (PDT)
+Message-ID: <4E7AD88C.4020806@ti.com> (sfid-20110922_084128_242796_868C8D56)
+Date: Thu, 22 Sep 2011 09:41:16 +0300
+From: Victor Goldenshtein <victorg@ti.com>
+Reply-To: victorg@ti.com
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luciano Coelho <coelho@ti.com>, Jouni Malinen <j@w1.fi>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 3/5] nl80211/cfg80211: adding intermediate scan result event.
+References: <1315224151-16552-1-git-send-email-VictorG@ti.com>  <1315224151-16552-4-git-send-email-VictorG@ti.com>  <1315224512.4075.10.camel@jlt3.sipsolutions.net> <4E6736D9.3070804@ti.com>  <1315387619.4002.3.camel@jlt3.sipsolutions.net> <4E686125.5050208@ti.com>  <20110921153102.GA32374@jm.kir.nu> <1316619903.2157.546.camel@cumari>  <4E7A109C.2010701@ti.com> <1316623133.3940.55.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1316623133.3940.55.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://github.com/sfrothwell/linux-next
- + 1b85977...a4edb65 akpm-end   -> origin/akpm-end  (forced update)
-   d93dc5c..f9d81f6  akpm-start -> origin/akpm-start
- + b2ec973...8164e8e master     -> origin/master  (forced update)
-   d93dc5c..f9d81f6  stable     -> origin/stable
- * [new tag]         next-20110926 -> next-20110926
+On 21/09/2011 19:38, Johannes Berg wrote:
 
-compat-wireless code metrics
+>> This could be a little bit problematic, since we need the
+>> rdev->event_work, for the queue_work(), and wdev->event_list to save a
+>> copy of the BSS, or just the mac which will be used to fetch the BSS
+>> before the transmission (still not sure about it ..), and it seems like
+>> these two can be obtained form sdata->dev, so it's look like that we
+>> need this function and it should be in ieee80211_scan_rx.
+>
+> It is not an issue to send a genl message with GFP_ATOMIC.
+>
 
-    812386 - Total upstream lines of code being pulled
-      2397 - backport code changes
-      2086 - backport code additions
-       311 - backport code deletions
-      8559 - backport from compat module
-     10956 - total backport code
-    1.3486 - % of code consists of backport work
-Host key verification failed.
-rsync: connection unexpectedly closed (0 bytes received so far) [sender]
-rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
+
+The GFP_ATOMIC is for the event info allocation, and not for the genl 
+message, it have to be "GFP_ATOMIC" otherwise we will get kernel warnings.
+
+
+Victor.
