@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53836 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752611Ab1IEMMA (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:64357 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751545Ab1IVHpK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Sep 2011 08:12:00 -0400
-Subject: Re: [RFC 5/5] nl80211/cfg80211: adding intermediate scan result
- filter.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1315224151-16552-6-git-send-email-VictorG@ti.com>
-References: <1315224151-16552-1-git-send-email-VictorG@ti.com>
-	 <1315224151-16552-6-git-send-email-VictorG@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 05 Sep 2011 14:11:56 +0200
-Message-ID: <1315224716.4075.13.camel@jlt3.sipsolutions.net> (sfid-20110905_141202_596786_080714CD)
-Mime-Version: 1.0
+	Thu, 22 Sep 2011 03:45:10 -0400
+Received: by eya28 with SMTP id 28so1423127eya.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 00:45:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1316606076.3940.19.camel@jlt3.sipsolutions.net>
+References: <1316082334-7664-1-git-send-email-arik@wizery.com>
+ <1316082334-7664-2-git-send-email-arik@wizery.com> <1316606076.3940.19.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 22 Sep 2011 10:44:54 +0300
+Message-ID: <CA+XVXfce2=nD7wgEonSL7STzGGESZgyM_=GdGW+h=-WAMgxAow@mail.gmail.com> (sfid-20110922_094514_767608_E6A4BC1C)
+Subject: Re: [RFC 1/5] nl80211: support sending TDLS commands/frames
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Kalyan C Gaddam <chakkal@iit.edu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-09-05 at 15:02 +0300, Victor Goldenshtein wrote:
-> User might want to be notified with intermediate scan results only
-> above some minimal RSSI. Adding new NL80211_ATTR_IM_SCAN_RESULT_MIN_RSSI
-> u32 attribute for the intermediate scan results  RSSI filtering mechanism,
-> which will significantly reduce unnecessary Kernel-User traffic.
-> It might be optionally enabled during NL80211_CMD_TRIGGER_SCAN.
+On Wed, Sep 21, 2011 at 14:54, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2011-09-15 at 13:25 +0300, Arik Nemtsov wrote:
+>
+>> +static int nl80211_tdls_mgmt(struct sk_buff *skb, struct genl_info *info)
+>> +{
+>> +     struct cfg80211_registered_device *rdev = info->user_ptr[0];
+>> +     struct net_device *dev = info->user_ptr[1];
+>> +     u8 action_code, dialog_token;
+>> +     u16 status_code;
+>> +     u8 *peer;
+>> +
+>> +     if (!rdev->ops->tdls_mgmt)
+>> +             return -EOPNOTSUPP;
+>> +
+>> +     if (!info->attrs[NL80211_ATTR_TDLS_ACTION] ||
+>> +         !info->attrs[NL80211_ATTR_STATUS_CODE] ||
+>> +         !info->attrs[NL80211_ATTR_TDLS_DIALOG_TOKEN] ||
+>> +         !info->attrs[NL80211_ATTR_FRAME] ||
+>> +         !info->attrs[NL80211_ATTR_MAC])
+>> +             return -EINVAL;
+>
+> Should that really use ATTR_FRAME as opposed to ATTR_IE?
+>
 
-I think unicasting the responses will be a better reduction in traffic
--- is this really worth the complexity?
+I guess ATTR_IE is more appropriate (looking at the docs).
 
-
-Also -- I don't like your subjects much. IMHO they shouldn't have a . at
-the end and should worded in "simple present" rather than "present
-continuous" tense [1]: "add intermediate ..." rather than "adding
-intermediate".
-
-johannes
-
-[1] http://www.englishpage.com/verbpage/simplepresent.html
-
+Arik
