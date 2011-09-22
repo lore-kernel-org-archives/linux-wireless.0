@@ -1,32 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:57940 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752964Ab1IPP7B (ORCPT
+Received: from mail-qw0-f42.google.com ([209.85.216.42]:55081 "EHLO
+	mail-qw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753931Ab1IVX0B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 11:59:01 -0400
-Message-ID: <4E737241.2080301@qca.qualcomm.com> (sfid-20110916_175906_929689_FD491149)
-Date: Fri, 16 Sep 2011 18:58:57 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Thu, 22 Sep 2011 19:26:01 -0400
+Received: by qwm42 with SMTP id 42so5645117qwm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 16:26:01 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: ath9k_htc: "No free RX buffer" in monitor mode
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <1316706736.3899.54.camel@jlt3.sipsolutions.net>
+References: <20110922154726.521122680@sipsolutions.net> <1316706736.3899.54.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 22 Sep 2011 16:25:41 -0700
+Message-ID: <CAB=NE6UzHVMOY=v4EEVojED5PY=T-uriAMvpHqehkh4Bygrn3g@mail.gmail.com> (sfid-20110923_012606_700049_FF75338E)
+Subject: Re: [RFC 00/15] mac80211 uAPSD support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-I was testing monitor mode with ath9k_htc and my laptop got slower. Then
-I noticed this:
-
-[ 9246.606150] ath: No free RX buffer
-[ 9246.606156] ath: No free RX buffer
-[ 9246.606582] ath: No free RX buffer
-[ 9246.606590] ath: No free RX buffer
-
-And I saw it quite a lot:
-
-$ grep "ath: No free" /var/log/syslog | wc -l
-870950
-
-Kalle
+T24gVGh1LCBTZXAgMjIsIDIwMTEgYXQgODo1MiBBTSwgSm9oYW5uZXMgQmVyZwo8am9oYW5uZXNA
+c2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4gT29wcywgZm9yZ290IHRoZSB0b3RhbCBkaWZmc3Rh
+dDoKPgo+IMKgRG9jdW1lbnRhdGlvbi9Eb2NCb29rLzgwMjExLnRtcGwgwqAgwqAgwqAgwqAgwqAg
+wqB8IMKgIDExCj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvYXRoOWsuaCDCoCDC
+oCDCoHwgwqAgwqAzCj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvbWFpbi5jIMKg
+IMKgIMKgIHwgwqAgwqAzCj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsveG1pdC5j
+IMKgIMKgIMKgIHwgwqAgMTQKPiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bGVnYWN5L2l3bC00
+OTY1LXR4LmMgfCDCoCDCoDIKPiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFn
+bi10eC5jIMKgIHwgwqAgwqAyCj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9wNTQvdHhyeC5jIMKg
+IMKgIMKgIMKgIMKgIMKgIHwgwqAgwqAyCj4gwqBpbmNsdWRlL25ldC9tYWM4MDIxMS5oIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgfCDCoDIyNSArKysrKysrCj4gwqBuZXQvbWFjODAy
+MTEvYWdnLXJ4LmMgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfCDCoCDCoDIKPiDC
+oG5ldC9tYWM4MDIxMS9hZ2ctdHguYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8
+IMKgIMKgMgo+IMKgbmV0L21hYzgwMjExL2NmZy5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgfCDCoCAzMyAtCj4gwqBuZXQvbWFjODAyMTEvZGVidWdmc19zdGEuYyDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoHwgwqAgNTQgKwo+IMKgbmV0L21hYzgwMjExL2RyaXZlci1v
+cHMuaCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKgIDMwICsKPiDCoG5ldC9tYWM4MDIx
+MS9kcml2ZXItdHJhY2UuaCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKgIDU3ICsKPiDCoG5l
+dC9tYWM4MDIxMS9odC5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHwg
+wqAgwqAyCj4gwqBuZXQvbWFjODAyMTEvaWJzcy5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIHwgwqAgwqA0Cj4gwqBuZXQvbWFjODAyMTEvaWVlZTgwMjExX2kuaCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoHwgwqAgMTYKPiDCoG5ldC9tYWM4MDIxMS9pZmFjZS5jIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgfCDCoCDCoDQKPiDCoG5ldC9tYWM4MDIxMS9r
+ZXkuYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHwgwqAgwqA0Cj4gwqBu
+ZXQvbWFjODAyMTEvbWFpbi5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHwg
+wqAgMTQKPiDCoG5ldC9tYWM4MDIxMS9tZXNoX3BsaW5rLmMgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgfCDCoCDCoDgKPiDCoG5ldC9tYWM4MDIxMS9tbG1lLmMgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgfCDCoCAyMgo+IMKgbmV0L21hYzgwMjExL3BtLmMgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfCDCoCDCoDIKPiDCoG5ldC9tYWM4MDIxMS9y
+eC5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHwgwqAxMjcgKystLQo+
+IMKgbmV0L21hYzgwMjExL3N0YV9pbmZvLmMgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+fCDCoDgxNiArKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tCj4gwqBuZXQvbWFjODAyMTEvc3Rh
+X2luZm8uaCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKgMTM3ICstLS0KPiDCoG5l
+dC9tYWM4MDIxMS9zdGF0dXMuYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKg
+IDYwICstCj4gwqBuZXQvbWFjODAyMTEvdHguYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCB8IMKgMTExICstLQo+IMKgbmV0L21hYzgwMjExL3V0aWwuYyDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKgIDE5Cj4gwqBuZXQvbWFjODAyMTEvd21lLmMg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqB8IMKgIMKgNAo+IMKgMzAgZmls
+ZXMgY2hhbmdlZCwgMTI2OCBpbnNlcnRpb25zKCspLCA1MjIgZGVsZXRpb25zKC0pCgpBd2Vzb21l
+IDopIEkgc3RhcnRlZCB0byByZXZpZXcgdGhpcyBidXQgdHJpZWQgYXBwbHlpbmcgdGhlIGVudGly
+ZQpzZXJpZXMgWzFdIHRvIHNldmVyYWwgZGlmZmVyZW50IG1hc3RlciB0YWdzIG9uIHdpcmVsZXNz
+LXRlc3RpbmcgYnV0IGl0CmRvZXNuJ3QgYXBwbHksIGFueSBjaGFuY2UgeW91IGNvdWxkIHJlYmFz
+ZT8gSSdsbCB0cnkgdG8gZmluaXNoIG15CnJldmlldyB0aHJvdWdoIHRob3VnaC4KClsxXSBodHRw
+Oi8vYm9tYmFkaWwuaW5mcmFkZWFkLm9yZy9+bWNncm9mL3BhdGNoZXMvMjAxMS8wOS8yMi9yZmMt
+dWFwc2QucGF0Y2gKCiAgTHVpcwo=
