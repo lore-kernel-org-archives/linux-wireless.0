@@ -1,100 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4490 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932476Ab1ISV0b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 17:26:31 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 03/20] staging: brcm80211: sparse endianness warnings
- for struct brcmf_proto_cdc_ioctl
-Date: Mon, 19 Sep 2011 14:25:51 -0700
-Message-ID: <1316467568-27683-4-git-send-email-frankyl@broadcom.com> (sfid-20110919_232820_703328_63429644)
-In-Reply-To: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:47168 "HELO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751026Ab1IVEnD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Sep 2011 00:43:03 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 2/4] mwifiex: update bss band information
+Date: Wed, 21 Sep 2011 21:43:23 -0700
+Message-Id: <1316666605-30954-2-git-send-email-bzhao@marvell.com> (sfid-20110922_064313_315413_AFC275A3)
+In-Reply-To: <1316666605-30954-1-git-send-email-bzhao@marvell.com>
+References: <1316666605-30954-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Structure that is send/received to/from dongle has been annotated.
+In recent commit "mwifiex: use cfg80211 dynamic scan..."
+(7c6fa2a843..) scan table handling in driver is removed to
+make use of cfg80211 dynamic scan table. Now driver sends
+beacon buffers found in scanning directly to stack and parse
+the buffer for requested BSS only during association.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Beacon buffer doesn't contain bss band information. Driver
+gets it from firmware in separate tlv (chan_band_tlv).
+Currently since we don't inform stack about bss bandinfo,
+there is an issue with 5GHz association.
+
+Use "priv" field of struct cfg80211_bss to store bandinfo.
+This fixes 5GHz association issue.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd_cdc.c |   25 +++++++++++--------------
- 1 files changed, 11 insertions(+), 14 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c  |    3 +++
+ drivers/net/wireless/mwifiex/main.h      |    2 +-
+ drivers/net/wireless/mwifiex/scan.c      |   26 +++++++++++++++++---------
+ drivers/net/wireless/mwifiex/sta_ioctl.c |    6 ++++--
+ 4 files changed, 25 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-index 6f65683..28bdf9e 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-@@ -28,11 +28,11 @@
- #include "dhd_dbg.h"
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 6fd53e4..62932c2 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1219,6 +1219,9 @@ int mwifiex_register_cfg80211(struct net_device *dev, u8 *mac,
+ 	/* We are using custom domains */
+ 	wdev->wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY;
  
- struct brcmf_proto_cdc_ioctl {
--	u32 cmd;	/* ioctl command value */
--	u32 len;	/* lower 16: output buflen;
-+	__le32 cmd;	/* ioctl command value */
-+	__le32 len;	/* lower 16: output buflen;
- 			 * upper 16: input buflen (excludes header) */
--	u32 flags;	/* flag defns given below */
--	u32 status;	/* status code returned from the device */
-+	__le32 flags;	/* flag defns given below */
-+	__le32 status;	/* status code returned from the device */
- };
++	/* Reserve space for bss band information */
++	wdev->wiphy->bss_priv_size = sizeof(u8);
++
+ 	wdev->wiphy->reg_notifier = mwifiex_reg_notifier;
  
- /* Max valid buffer size that can be sent to the dongle */
-@@ -47,9 +47,6 @@ struct brcmf_proto_cdc_ioctl {
- #define CDCF_IOC_ID_SHIFT	16		/* ID Mask shift bits */
- #define CDC_IOC_ID(flags)	\
- 	(((flags) & CDCF_IOC_ID_MASK) >> CDCF_IOC_ID_SHIFT)
--#define CDC_SET_IF_IDX(hdr, idx) \
--	((hdr)->flags = (((hdr)->flags & ~CDCF_IOC_IF_MASK) | \
--	((idx) << CDCF_IOC_IF_SHIFT)))
+ 	/* Set struct mwifiex_private pointer in wiphy_priv */
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index e6b6c0c..1e80132 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -958,7 +958,7 @@ int mwifiex_get_bss_info(struct mwifiex_private *,
+ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
+ 			      u8 *bssid, s32 rssi, u8 *ie_buf,
+ 			      size_t ie_len, u16 beacon_period,
+-			      u16 cap_info_bitmap,
++			      u16 cap_info_bitmap, u8 band,
+ 			      struct mwifiex_bssdescriptor *bss_desc);
+ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 				struct mwifiex_bssdescriptor *bss_entry,
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index ecebff6..ca37619 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1464,9 +1464,9 @@ int mwifiex_check_network_compatibility(struct mwifiex_private *priv,
+ }
  
+ static int
+-mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
+-			u8 *bssid, s32 rssi, const u8 *ie_buf,
+-			size_t ie_len, u16 beacon_period, u16 cap_info_bitmap)
++mwifiex_update_curr_bss_params(struct mwifiex_private *priv, u8 *bssid,
++			       s32 rssi, const u8 *ie_buf, size_t ie_len,
++			       u16 beacon_period, u16 cap_info_bitmap, u8 band)
+ {
+ 	struct mwifiex_bssdescriptor *bss_desc = NULL;
+ 	int ret;
+@@ -1489,7 +1489,7 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
+ 
+ 	ret = mwifiex_fill_new_bss_desc(priv, bssid, rssi, beacon_ie,
+ 					ie_len, beacon_period,
+-					cap_info_bitmap, bss_desc);
++					cap_info_bitmap, band, bss_desc);
+ 	if (ret)
+ 		goto done;
+ 
+@@ -1533,6 +1533,11 @@ done:
+ 	return 0;
+ }
+ 
++static void mwifiex_free_bss_priv(struct cfg80211_bss *bss)
++{
++	kfree(bss->priv);
++}
++
  /*
-  * BDC header - Broadcom specific extension of CDC.
-@@ -144,7 +141,7 @@ brcmf_proto_cdc_query_ioctl(struct brcmf_pub *drvr, int ifidx, uint cmd,
- 	struct brcmf_proto_cdc_ioctl *msg = &prot->msg;
- 	void *info;
- 	int ret = 0, retries = 0;
--	u32 id, flags = 0;
-+	u32 id, flags;
+  * This function handles the command response of scan.
+  *
+@@ -1571,6 +1576,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 	struct chan_band_param_set *chan_band;
+ 	u8 is_bgscan_resp;
+ 	unsigned long flags;
++	struct cfg80211_bss *bss;
  
- 	brcmf_dbg(TRACE, "Enter\n");
- 	brcmf_dbg(CTL, "cmd %d len %d\n", cmd, len);
-@@ -165,9 +162,9 @@ brcmf_proto_cdc_query_ioctl(struct brcmf_pub *drvr, int ifidx, uint cmd,
+ 	is_bgscan_resp = (le16_to_cpu(resp->command)
+ 		== HostCmd_CMD_802_11_BG_SCAN_QUERY);
+@@ -1752,10 +1758,12 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 			chan = ieee80211_get_channel(priv->wdev->wiphy, freq);
  
- 	msg->cmd = cpu_to_le32(cmd);
- 	msg->len = cpu_to_le32(len);
--	msg->flags = (++prot->reqid << CDCF_IOC_ID_SHIFT);
--	CDC_SET_IF_IDX(msg, ifidx);
--	msg->flags = cpu_to_le32(msg->flags);
-+	flags = (++prot->reqid << CDCF_IOC_ID_SHIFT);
-+	flags = (flags & ~CDCF_IOC_IF_MASK) | (ifidx << CDCF_IOC_IF_SHIFT);
-+	msg->flags = cpu_to_le32(flags);
+ 			if (chan && !(chan->flags & IEEE80211_CHAN_DISABLED)) {
+-				cfg80211_inform_bss(priv->wdev->wiphy, chan,
+-					bssid, network_tsf, cap_info_bitmap,
+-					beacon_period, ie_buf, ie_len, rssi,
+-					GFP_KERNEL);
++				bss = cfg80211_inform_bss(priv->wdev->wiphy,
++					      chan, bssid, network_tsf,
++					      cap_info_bitmap, beacon_period,
++					      ie_buf, ie_len, rssi, GFP_KERNEL);
++				*(u8 *)bss->priv = band;
++				bss->free_priv = mwifiex_free_bss_priv;
  
- 	if (buf)
- 		memcpy(prot->buf, buf, len);
-@@ -233,9 +230,9 @@ int brcmf_proto_cdc_set_ioctl(struct brcmf_pub *drvr, int ifidx, uint cmd,
- 
- 	msg->cmd = cpu_to_le32(cmd);
- 	msg->len = cpu_to_le32(len);
--	msg->flags = (++prot->reqid << CDCF_IOC_ID_SHIFT) | CDCF_IOC_SET;
--	CDC_SET_IF_IDX(msg, ifidx);
--	msg->flags = cpu_to_le32(msg->flags);
-+	flags = (++prot->reqid << CDCF_IOC_ID_SHIFT) | CDCF_IOC_SET;
-+	flags = (flags & ~CDCF_IOC_IF_MASK) | (ifidx << CDCF_IOC_IF_SHIFT);
-+	msg->flags = cpu_to_le32(flags);
- 
- 	if (buf)
- 		memcpy(prot->buf, buf, len);
+ 				if (priv->media_connected && !memcmp(bssid,
+ 					priv->curr_bss_params.bss_descriptor
+@@ -1763,7 +1771,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 					mwifiex_update_curr_bss_params(priv,
+ 							bssid, rssi, ie_buf,
+ 							ie_len, beacon_period,
+-							cap_info_bitmap);
++							cap_info_bitmap, band);
+ 			}
+ 		} else {
+ 			dev_dbg(adapter->dev, "missing BSS channel IE\n");
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 1df5ef6..157d312 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -148,7 +148,7 @@ int mwifiex_request_set_multicast_list(struct mwifiex_private *priv,
+ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
+ 			      u8 *bssid, s32 rssi, u8 *ie_buf,
+ 			      size_t ie_len, u16 beacon_period,
+-			      u16 cap_info_bitmap,
++			      u16 cap_info_bitmap, u8 band,
+ 			      struct mwifiex_bssdescriptor *bss_desc)
+ {
+ 	int ret;
+@@ -159,6 +159,7 @@ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
+ 	bss_desc->beacon_buf_size = ie_len;
+ 	bss_desc->beacon_period = beacon_period;
+ 	bss_desc->cap_info_bitmap = cap_info_bitmap;
++	bss_desc->bss_band = band;
+ 	if (bss_desc->cap_info_bitmap & WLAN_CAPABILITY_PRIVACY) {
+ 		dev_dbg(priv->adapter->dev, "info: InterpretIE: AP WEP enabled\n");
+ 		bss_desc->privacy = MWIFIEX_802_11_PRIV_FILTER_8021X_WEP;
+@@ -211,7 +212,8 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
+ 		ret = mwifiex_fill_new_bss_desc(priv, bss->bssid, bss->signal,
+ 						beacon_ie, bss->len_beacon_ies,
+ 						bss->beacon_interval,
+-						bss->capability, bss_desc);
++						bss->capability,
++						*(u8 *)bss->priv, bss_desc);
+ 		if (ret)
+ 			goto done;
+ 	}
 -- 
-1.7.1
-
+1.7.0.2
 
