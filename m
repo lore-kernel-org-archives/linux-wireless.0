@@ -1,117 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48417 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751192Ab1I1HRx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 03:17:53 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [RFC v4] mac80211: Send nullfunc frames at lower rate during connection monitor
-Date: Wed, 28 Sep 2011 12:48:33 +0530
-Message-ID: <1317194313-10292-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110928_091757_234231_6FF03015)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:7986 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753984Ab1IVXBU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Sep 2011 19:01:20 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 08/12] iwlagn: remove Kelvin support
+Date: Thu, 22 Sep 2011 15:14:56 -0700
+Message-Id: <1316729700-1770-9-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110923_010133_676468_020640F5)
+In-Reply-To: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Recently mac80211 was changed to use nullfunc instead of probe
-request for connection monitoring for tx ack status reporting
-hardwares. Frequent disconnection was observed when the STA is
-moving so frequesntly and it is on idle state without any transmission.
-So the rate control is not learned completely in order to send data
-frame at proper rate. So sending the nullfunc at higher rate in
-in congested network is failed offenly.
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch sends the nullfunc frame at minimum rate only if it is used
-for monitoring purpose.
+Only 5150 series devices report their temperature
+in Kelvin, and for those we already convert it to
+Celsius when storing into priv->temperature, so
+there's no way priv->temperature will ever be in
+Kelvin. Remove support for this.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- include/net/mac80211.h |    4 ++++
- net/mac80211/mlme.c    |    5 +++++
- net/mac80211/rate.c    |    8 +++++---
- 3 files changed, 14 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c |    6 ------
+ drivers/net/wireless/iwlwifi/iwl-core.h   |    2 --
+ drivers/net/wireless/iwlwifi/iwl-dev.h    |    2 +-
+ 3 files changed, 1 insertions(+), 9 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 1e83afa..35038ca 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -366,6 +366,9 @@ struct ieee80211_bss_conf {
-  * @IEEE80211_TX_CTL_NO_CCK_RATE: This frame will be sent at non CCK rate.
-  *	This flag is actually used for management frame especially for P2P
-  *	frames not being sent at CCK rate in 2GHz band.
-+ * @IEEE80211_TX_CTL_USE_MINRATE: This frame will be sent at lowest rate.
-+ *	This flag is used to send nullfunc frame at minimum rate where this
-+ *	this nullfunc is used for connection monitoring.
-  *
-  * Note: If you have to add new flags to the enumeration, then don't
-  *	 forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
-@@ -397,6 +400,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(25),
- 	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(26),
- 	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(27),
-+	IEEE80211_TX_CTL_USE_MINRATE		= BIT(28),
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
+index 289e5d8..c27180a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
+@@ -114,9 +114,6 @@ static bool iwl_within_ct_kill_margin(struct iwl_priv *priv)
+ 	s32 temp = priv->temperature; /* degrees CELSIUS except specified */
+ 	bool within_margin = false;
  
- #define IEEE80211_TX_CTL_STBC_SHIFT		23
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index cd37a4e..d87a88e 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -348,6 +348,7 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
- {
- 	struct sk_buff *skb;
- 	struct ieee80211_hdr_3addr *nullfunc;
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	if (priv->cfg->base_params->temperature_kelvin)
+-		temp = KELVIN_TO_CELSIUS(priv->temperature);
+-
+ 	if (!priv->thermal_throttle.advanced_tt)
+ 		within_margin = ((temp + IWL_TT_CT_KILL_MARGIN) >=
+ 				CT_KILL_THRESHOLD_LEGACY) ? true : false;
+@@ -591,9 +588,6 @@ static void iwl_bg_tt_work(struct work_struct *work)
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->shrd->status))
+ 		return;
  
- 	skb = ieee80211_nullfunc_get(&local->hw, &sdata->vif);
- 	if (!skb)
-@@ -358,6 +359,10 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
- 		nullfunc->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
+-	if (priv->cfg->base_params->temperature_kelvin)
+-		temp = KELVIN_TO_CELSIUS(priv->temperature);
+-
+ 	if (!priv->thermal_throttle.advanced_tt)
+ 		iwl_legacy_tt_handler(priv, temp, false);
+ 	else
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 74d4cff..8ed72e8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -108,7 +108,6 @@ struct iwl_lib_ops {
+  *	radio tuning when there is a high receiving plcp error rate
+  * @chain_noise_scale: default chain noise scale used for gain computation
+  * @wd_timeout: TX queues watchdog timeout
+- * @temperature_kelvin: temperature report by uCode in kelvin
+  * @max_event_log_size: size of event log buffer size for ucode event logging
+  * @shadow_reg_enable: HW shadhow register bit
+  * @no_idle_support: do not support idle mode
+@@ -130,7 +129,6 @@ struct iwl_base_params {
+ 	u8 plcp_delta_threshold;
+ 	s32 chain_noise_scale;
+ 	unsigned int wd_timeout;
+-	bool temperature_kelvin;
+ 	u32 max_event_log_size;
+ 	const bool shadow_reg_enable;
+ 	const bool no_idle_support;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 4ddaf2c..257aa9a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -877,7 +877,7 @@ struct iwl_priv {
+ 	u8 channel_count;	/* # of channels */
  
- 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
-+			    IEEE80211_STA_CONNECTION_POLL))
-+		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_USE_MINRATE;
-+
- 	ieee80211_tx_skb(sdata, skb);
- }
+ 	/* thermal calibration */
+-	s32 temperature;	/* degrees Kelvin */
++	s32 temperature;	/* Celsius */
+ 	s32 last_temperature;
  
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index f61244c..ff5c3aa 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -199,7 +199,7 @@ static void rate_control_release(struct kref *kref)
- 	kfree(ctrl_ref);
- }
- 
--static bool rc_no_data_or_no_ack(struct ieee80211_tx_rate_control *txrc)
-+static bool rc_no_data_or_no_ack_use_min(struct ieee80211_tx_rate_control *txrc)
- {
- 	struct sk_buff *skb = txrc->skb;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-@@ -208,7 +208,9 @@ static bool rc_no_data_or_no_ack(struct ieee80211_tx_rate_control *txrc)
- 
- 	fc = hdr->frame_control;
- 
--	return (info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc);
-+	return (info->flags & (IEEE80211_TX_CTL_NO_ACK |
-+			       IEEE80211_TX_CTL_USE_MINRATE)) ||
-+		!ieee80211_is_data(fc);
- }
- 
- static void rc_send_low_broadcast(s8 *idx, u32 basic_rates,
-@@ -262,7 +264,7 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
- 	struct ieee80211_supported_band *sband = txrc->sband;
- 	int mcast_rate;
- 
--	if (!sta || !priv_sta || rc_no_data_or_no_ack(txrc)) {
-+	if (!sta || !priv_sta || rc_no_data_or_no_ack_use_min(txrc)) {
- 		if ((sband->band != IEEE80211_BAND_2GHZ) ||
- 		    !(info->flags & IEEE80211_TX_CTL_NO_CCK_RATE))
- 			info->control.rates[0].idx =
+ 	/* init calibration results */
 -- 
-1.7.6.4
+1.7.0.4
 
