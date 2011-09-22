@@ -1,96 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39210 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752831Ab1I1MNK (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:62290 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753823Ab1IVUrI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 08:13:10 -0400
-Message-Id: <20110928121129.854893439@sipsolutions.net> (sfid-20110928_141313_886989_9B32BA6D)
-Date: Wed, 28 Sep 2011 14:08:54 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 05/15] mac80211: remove return value from add_pending_skbs
-References: <20110928120849.882884360@sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 22 Sep 2011 16:47:08 -0400
+Date: Thu, 22 Sep 2011 17:47:39 -0300
+From: Gustavo Padovan <padovan@profusion.mobi>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth-next 2011-09-22
+Message-ID: <20110922204739.GA2673@joana> (sfid-20110922_224732_850311_014FDB8E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi John,
 
-Now that we no longer use the return value, we no
-longer need to maintain it either, so remove it.
+Here are a bunch of patches for 3.2. The biggest changes are for Bluetooth Low
+Energy. The rest are mostly bugfixes and cleanups, except a simple
+optimization on our scheduler and improvements to the Management Interface.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |   10 +++++-----
- net/mac80211/util.c        |   17 +++++++----------
- 2 files changed, 12 insertions(+), 15 deletions(-)
+Please pull, or let me know any problems.
 
---- a/net/mac80211/ieee80211_i.h	2011-09-28 11:44:04.000000000 +0200
-+++ b/net/mac80211/ieee80211_i.h	2011-09-28 13:22:26.000000000 +0200
-@@ -1303,11 +1303,11 @@ void ieee80211_stop_queue_by_reason(stru
- 				    enum queue_stop_reason reason);
- void ieee80211_add_pending_skb(struct ieee80211_local *local,
- 			       struct sk_buff *skb);
--int ieee80211_add_pending_skbs(struct ieee80211_local *local,
--			       struct sk_buff_head *skbs);
--int ieee80211_add_pending_skbs_fn(struct ieee80211_local *local,
--				  struct sk_buff_head *skbs,
--				  void (*fn)(void *data), void *data);
-+void ieee80211_add_pending_skbs(struct ieee80211_local *local,
-+				struct sk_buff_head *skbs);
-+void ieee80211_add_pending_skbs_fn(struct ieee80211_local *local,
-+				   struct sk_buff_head *skbs,
-+				   void (*fn)(void *data), void *data);
- 
- void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
- 			 u16 transaction, u16 auth_alg,
---- a/net/mac80211/util.c	2011-09-28 13:18:05.000000000 +0200
-+++ b/net/mac80211/util.c	2011-09-28 13:22:26.000000000 +0200
-@@ -367,14 +367,14 @@ void ieee80211_add_pending_skb(struct ie
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- }
- 
--int ieee80211_add_pending_skbs_fn(struct ieee80211_local *local,
--				  struct sk_buff_head *skbs,
--				  void (*fn)(void *data), void *data)
-+void ieee80211_add_pending_skbs_fn(struct ieee80211_local *local,
-+				   struct sk_buff_head *skbs,
-+				   void (*fn)(void *data), void *data)
- {
- 	struct ieee80211_hw *hw = &local->hw;
- 	struct sk_buff *skb;
- 	unsigned long flags;
--	int queue, ret = 0, i;
-+	int queue, i;
- 
- 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
- 	for (i = 0; i < hw->queues; i++)
-@@ -389,7 +389,6 @@ int ieee80211_add_pending_skbs_fn(struct
- 			continue;
- 		}
- 
--		ret++;
- 		queue = skb_get_queue_mapping(skb);
- 		__skb_queue_tail(&local->pending[queue], skb);
- 	}
-@@ -401,14 +400,12 @@ int ieee80211_add_pending_skbs_fn(struct
- 		__ieee80211_wake_queue(hw, i,
- 			IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
--
--	return ret;
- }
- 
--int ieee80211_add_pending_skbs(struct ieee80211_local *local,
--			       struct sk_buff_head *skbs)
-+void ieee80211_add_pending_skbs(struct ieee80211_local *local,
-+				struct sk_buff_head *skbs)
- {
--	return ieee80211_add_pending_skbs_fn(local, skbs, NULL, NULL);
-+	ieee80211_add_pending_skbs_fn(local, skbs, NULL, NULL);
- }
- 
- void ieee80211_stop_queues_by_reason(struct ieee80211_hw *hw,
+	Gustavo
 
+The following changes since commit da3ba88a9996cd64c6768bed5727e02da81e2c8d:
+
+  rtlwifi: Combine instances of RTL_HAL_IS_CCK_RATE macros. (2011-09-20 14:43:50 -0400)
+
+are available in the git repository at:
+  git://github.com/padovan/bluetooth-next.git master
+
+Anderson Briglia (1):
+      Bluetooth: Fix wrong memcpy size on LE start encryption
+
+Andre Guedes (2):
+      Bluetooth: Reduce critical region.
+      Bluetooth: Check 'dev_class' in mgmt_device_found()
+
+Antti Julku (2):
+      Bluetooth: Add mgmt command for fast connectable mode
+      Bluetooth: Add mgmt events for blacklisting
+
+David Herrmann (1):
+      Bluetooth: hidp: Add support for NO_INIT_REPORTS quirk
+
+Luiz Augusto von Dentz (2):
+      Bluetooth: make use of connection number to optimize the scheduler
+      Bluetooth: mark l2cap_create_iframe_pdu as static
+
+Peter Hurley (1):
+      Bluetooth: Add LE link type for debugfs output
+
+Vinicius Costa Gomes (15):
+      Bluetooth: Reset the security timer when a command is queued
+      Bluetooth: Add a flag to indicate that SMP is going on
+      Bluetooth: Use the same timeouts for both ACL and LE links
+      Bluetooth: Add support for pairing via mgmt over LE
+      Bluetooth: Add support for running SMP without a socket
+      Bluetooth: Add link_type information to the mgmt Connected event
+      Bluetooth: Move SMP fields to a separate structure
+      Bluetooth: Move SMP crypto functions to a workqueue
+      Bluetooth: Require authentication if MITM protection is requested
+      Bluetooth: Use the MEDIUM security level for pairings
+      Bluetooth: Fix sending wrong authentication requirements
+      Bluetooth: Use the LTK after receiving a LE Security Request
+      Revert "Bluetooth: Add support for communicating keys with userspace"
+      Bluetooth: Fix not setting a pending security level
+      Bluetooth: Remove support for other SMP keys than the LTK
+
+ include/net/bluetooth/hci.h      |   10 +
+ include/net/bluetooth/hci_core.h |   25 ++-
+ include/net/bluetooth/l2cap.h    |    8 +-
+ include/net/bluetooth/mgmt.h     |   16 ++
+ include/net/bluetooth/smp.h      |   17 ++
+ net/bluetooth/hci_conn.c         |    2 +-
+ net/bluetooth/hci_core.c         |   57 ++---
+ net/bluetooth/hci_event.c        |   16 +-
+ net/bluetooth/hci_sock.c         |   18 ++-
+ net/bluetooth/hci_sysfs.c        |    2 +
+ net/bluetooth/hidp/core.c        |    3 +
+ net/bluetooth/l2cap_core.c       |   18 ++-
+ net/bluetooth/mgmt.c             |  212 ++++++++++++++------
+ net/bluetooth/smp.c              |  421 +++++++++++++++++++++++---------------
+ 14 files changed, 538 insertions(+), 287 deletions(-)
 
