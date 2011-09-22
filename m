@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:61692 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751672Ab1IPDBZ convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55546 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751684Ab1IVPuA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 23:01:25 -0400
-MIME-Version: 1.0
-In-Reply-To: <20110915.150552.93591736515744753.davem@davemloft.net>
-References: <20110915.150552.93591736515744753.davem@davemloft.net>
-Date: Thu, 15 Sep 2011 20:01:23 -0700
-Message-ID: <CAL3LdT4CVqw7u4OS7hCiEQP0vjBW58CYUrdAGFnSs3oUYXsz8w@mail.gmail.com> (sfid-20110916_050131_076771_F3385E5F)
-Subject: Re: net GIT trees on github
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 22 Sep 2011 11:50:00 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1R6lXD-0002Nw-5o
+	for linux-wireless@vger.kernel.org; Thu, 22 Sep 2011 17:49:59 +0200
+Message-Id: <20110922154850.205323680@sipsolutions.net> (sfid-20110922_175112_303601_2F949C36)
+Date: Thu, 22 Sep 2011 17:47:32 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 06/15] mac80211: clear more-data bit on filtered frames
+References: <20110922154726.521122680@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 15, 2011 at 12:05, David Miller <davem@davemloft.net> wrote:
->
-> I finally broke down and started putting some trees up on github.
->
-> The plain 'net' tree is up already:
->
->        git://github.com/davem330/net.git
->
-> And a "net-next.git" will be there shortly.
->
-> This is a temporary situation so that I can push out the backlog
-> a little bit until kernel.org is fully back in service.  Once
-> kernel.org is back I will stop updating these trees.
->
+From: Johannes Berg <johannes.berg@intel.com>
 
-I have forked your net-next tree for Intel Wired LAN Driver updates,
-here is the link
+It doesn't seem likely, but maybe possible, that the
+more-data bit needs to be recomputed due to changes
+in the queued frames. Clear it for filtered frames
+to ensure that we never send it incorrectly. It'll
+be set again as necessary when we retransmit this
+frame.
 
-    git://github.com/Jkirsher/net-next.git
+The more likely case is maybe where the station woke
+up after the filtered frame in which case more-data
+should be clear when the frame is transmitted to the
+station since it is now awake.
 
-My pull requests will use this tree (only while master.kernel.org is
-down).  This is meant as a FYI and will still send out a cover page
-with this info as well.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/status.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
--- 
-Cheers,
-Jeff
+--- a/net/mac80211/status.c	2011-09-09 08:58:32.000000000 +0200
++++ b/net/mac80211/status.c	2011-09-09 08:58:33.000000000 +0200
+@@ -65,6 +65,16 @@ static void ieee80211_handle_filtered_fr
+ 
+ 	sta->tx_filtered_count++;
+ 
++	/*
++	 * Clear more-data bit on filtered frames, it might be set
++	 * but later frames might time out so it might have to be
++	 * clear again ... It's all rather unlikely (this frame
++	 * should time out first, right?) but let's not confuse
++	 * peers unnecessarily.
++	 */
++	if (hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_MOREDATA))
++		hdr->frame_control &= ~cpu_to_le16(IEEE80211_FCTL_MOREDATA);
++
+ 	if (ieee80211_is_data_qos(hdr->frame_control)) {
+ 		int tid = *ieee80211_get_qos_ctl(hdr) &
+ 					IEEE80211_QOS_CTL_TID_MASK;
+
+
