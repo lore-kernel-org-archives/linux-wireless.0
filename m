@@ -1,89 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45017 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750789Ab1IWSOR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 14:14:17 -0400
-Subject: Re: [RFC 00/15] mac80211 uAPSD support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAMG6FYiiyW3Ai_G8vs9Ksxqy9-3bwp88HpCX_iDSSwb7UKO-Hg@mail.gmail.com> (sfid-20110923_200636_786507_3A5EDB86)
-References: <20110922154726.521122680@sipsolutions.net>
-	 <CAMG6FYiiyW3Ai_G8vs9Ksxqy9-3bwp88HpCX_iDSSwb7UKO-Hg@mail.gmail.com>
-	 (sfid-20110923_200636_786507_3A5EDB86)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 23 Sep 2011 20:14:10 +0200
-Message-ID: <1316801650.4058.10.camel@jlt3.sipsolutions.net> (sfid-20110923_201420_341358_7FCF61BB)
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:40986 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751610Ab1IVNyq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Sep 2011 09:54:46 -0400
+Message-ID: <4E7B3E19.2020001@openwrt.org> (sfid-20110922_155449_947791_4CD45CC3)
+Date: Thu, 22 Sep 2011 07:54:33 -0600
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com, Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: Re: [PATCH 09/12] ath9k: optimize ath9k_ps_restore
+References: <1316028267-34187-1-git-send-email-nbd@openwrt.org> <1316028267-34187-2-git-send-email-nbd@openwrt.org> <1316028267-34187-3-git-send-email-nbd@openwrt.org> <1316028267-34187-4-git-send-email-nbd@openwrt.org> <1316028267-34187-5-git-send-email-nbd@openwrt.org> <1316028267-34187-6-git-send-email-nbd@openwrt.org> <1316028267-34187-7-git-send-email-nbd@openwrt.org> <1316028267-34187-8-git-send-email-nbd@openwrt.org> <1316028267-34187-9-git-send-email-nbd@openwrt.org> <CAJqpcCQ9gpKG1ivvDReSyvMq9i5kxwDmRZwvNbYfRhwByOOC4w@mail.gmail.com>
+In-Reply-To: <CAJqpcCQ9gpKG1ivvDReSyvMq9i5kxwDmRZwvNbYfRhwByOOC4w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 2011-09-21 11:49 PM, Vivek Natarajan wrote:
+> On Thu, Sep 15, 2011 at 12:54 AM, Felix Fietkau<nbd@openwrt.org>  wrote:
+>>  ath_hw_cycle_counters_update only needs to be called if the power state
+>>  changes. Most of the time this does not happen, even when ps_usecount
+>>  goes down to 0.
+>>
+>>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>>  ---
+>>    drivers/net/wireless/ath/ath9k/main.c |   17 +++++++++++------
+>>    1 files changed, 11 insertions(+), 6 deletions(-)
+>>
+>>  diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>>  index a75810a..a16f539 100644
+>>  --- a/drivers/net/wireless/ath/ath9k/main.c
+>>  +++ b/drivers/net/wireless/ath/ath9k/main.c
+>>  @@ -111,24 +111,29 @@ void ath9k_ps_wakeup(struct ath_softc *sc)
+>>    void ath9k_ps_restore(struct ath_softc *sc)
+>>    {
+>>          struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+>>  +       enum ath9k_power_mode mode;
+>>          unsigned long flags;
+>>
+>>          spin_lock_irqsave(&sc->sc_pm_lock, flags);
+>>          if (--sc->ps_usecount != 0)
+>>                  goto unlock;
+>>
+>>  -       spin_lock(&common->cc_lock);
+>>  -       ath_hw_cycle_counters_update(common);
+>>  -       spin_unlock(&common->cc_lock);
+>>  -
+>>          if (sc->ps_idle)
+>>  -               ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_FULL_SLEEP);
+>>  +               mode = ATH9K_PM_FULL_SLEEP;
+>>          else if (sc->ps_enabled&&
+>>                   !(sc->ps_flags&  (PS_WAIT_FOR_BEACON |
+>>                                PS_WAIT_FOR_CAB |
+>>                                PS_WAIT_FOR_PSPOLL_DATA |
+>>                                PS_WAIT_FOR_TX_ACK)))
+>>  -               ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
+>>  +               mode = ATH9K_PM_NETWORK_SLEEP;
+>
+> What is the use of setting the mode above if you use NETWORK_SLEEP by
+> default in the below code.
+Yes, I forgot to change it in the call below. I'll send a fix ASAP.
 
-Thanks for looking.
+>>  +       else
+>>  +               goto unlock;
+>>  +
+>>  +       spin_lock(&common->cc_lock);
+>>  +       ath_hw_cycle_counters_update(common);
+>>  +       spin_unlock(&common->cc_lock);
+>>  +
+>>  +       ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
+>
+> huh???
+>
+> It shows this patch was never tested and please clarify what you tried
+> to achieve with this patch. Do you ever test a patch before sending it
+> upstream?
+>
+> There is no wonder Johannes reports that power save is completely
+> broken with ath9k if we have patches like these. We have better work
+> to concentrate on, than to fix the regression your patch introduces
+> every time.
+>
+> Please fix this and __test__ properly.
+I did test this patch, and while it clearly has a bug (always setting 
+network sleep instead of full sleep), I don't think this would break 
+powersave. The only consequence I can think of is more battery drain 
+when the card is idle and not connected.
 
-> I think it should be like below (NL80211_ATTR_QOS_INFO and
-> NL80211_ATTR_UAPSD_SUPPORTED only for backward-compatibility)
+What this patch achieves is this: ath9k_ps_restore is called frequently 
+from functions handling the data path, also setting ps_usecount to 0 
+frequently. That caused excessive calls to ath_hw_cycle_counters_update 
+vasting a noticeable amount of CPU cycles (showed up during profiling).
+My patch changes the code to only call ath_hw_cycle_counters_update 
+before the card's power state changes.
 
-Is the change below on top of my changes? I'm not sure I understand it
-completely. See inline.
-
-> --- a/include/linux/ieee80211.h
-> +++ b/include/linux/ieee80211.h
-> @@ -117,6 +117,7 @@
->  #define IEEE80211_MAX_MESH_ID_LEN	32
-> 
->  #define IEEE80211_QOS_CTL_LEN		2
-> +#define IEEE80211_QOS_CTL_EOSP		0x0010
->  #define IEEE80211_QOS_CTL_TID_MASK	0x000F
->  #define IEEE80211_QOS_CTL_TAG1D_MASK	0x0007
-
-This is already in the kernel for me...?
-
-> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-> index 2636c01..d831c15 100644
-> --- a/include/linux/nl80211.h
-> +++ b/include/linux/nl80211.h
-> @@ -610,8 +610,6 @@ enum nl80211_commands {
->  	NL80211_CMD_SET_NOA,
->  	NL80211_CMD_SET_P2P_POWER_SAVE,
-> 
-> -	NL80211_ATTR_STA_WME,
-> -
->  	/* add new commands above here */
-
-How did you get the ATTR_STA_WME as part of the commands? It's not like
-that in my kernel.
-
->  	/* used to define NL80211_CMD_MAX below */
-> @@ -1216,6 +1214,10 @@ enum nl80211_attrs {
->  	NL80211_ATTR_P2P_PS_CTWINDOW,
->  	NL80211_ATTR_UAPSD,
-> 
-> +	NL80211_ATTR_STA_WME,
-> +	NL80211_ATTR_UAPSD_SUPPORTED,	/* OBSOLETE */
-> +	NL80211_ATTR_QOS_INFO,		/* OBSOLETE */
-
-Where do you get PS_CTWINDOW? ATTR_UAPSD? I'm getting the impression
-that you're using a pretty hacked up nl80211 here.
-
-> +++ b/net/mac80211/sta_info.c
-> @@ -625,7 +625,7 @@ static bool
-> sta_info_cleanup_expire_buffered_ac(struct ieee80211_local *local,
->  	unsigned long flags;
->  	struct sk_buff *skb;
-> 
-> -	if (skb_queue_empty(&sta->ps_tx_buf))
-> +	if (skb_queue_empty(&sta->ps_tx_buf[ac]))
->  		return false;
-
-If that kind of change was necessary on top of my patches, they wouldn't
-even compile, so what does this mean?
-
-
-I'm confused.
-
-
-johannes
-
+- Felix
