@@ -1,32 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:51786 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752294Ab1IZVDZ (ORCPT
+Received: from bues.ch ([80.190.117.144]:37653 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752461Ab1IVKjJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 17:03:25 -0400
-Received: by qyk7 with SMTP id 7so7048032qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 14:03:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1316680579-5055-1-git-send-email-ilane@ti.com>
-References: <1316680579-5055-1-git-send-email-ilane@ti.com>
-Date: Mon, 26 Sep 2011 18:03:24 -0300
-Message-ID: <CAK3JMAZG5HBDajGEuGWzcVA1h185MjN4feqEJNxayh0QneXJ2Q@mail.gmail.com> (sfid-20110926_230328_612857_7CA1843E)
-Subject: Re: [PATCH] NFC: protect nci_data_exchange transactions
-From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-To: ilanelias78@gmail.com
-Cc: aloisio.almeida@openbossa.org, samuel@sortiz.org,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ilan Elias <ilane@ti.com>
+	Thu, 22 Sep 2011 06:39:09 -0400
+Date: Thu, 22 Sep 2011 12:38:56 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Arend Van Spriel <arend@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Brett Rudley <brudley@broadcom.com>, Greg KH <greg@kroah.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
+ patch #2
+Message-ID: <20110922123856.1159e258@milhouse> (sfid-20110922_123915_365582_4A4D8B9F)
+In-Reply-To: <CACna6rwCWhbWm28cLFxPkLmDZO0sOHuLTSb=-rLwhW2ZV4AZ0w@mail.gmail.com>
+References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+	<20110920130338.GA9885@kroah.com>
+	<20110920132203.GB7800@tuxdriver.com>
+	<20110920140020.GA11386@kroah.com>
+	<7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com>
+	<CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com>
+	<7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
+	<4E7AD9E6.1010700@hauke-m.de>
+	<400C43189542CE41BC0A5B252FC90136BC0CC8ABD8@SJEXCHCCR02.corp.ad.broadcom.com>
+	<CACna6rwCWhbWm28cLFxPkLmDZO0sOHuLTSb=-rLwhW2ZV4AZ0w@mail.gmail.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/9/22  <ilanelias78@gmail.com>:
-> From: Ilan Elias <ilane@ti.com>
->
-> Protect 'cb' and 'cb_context' arguments in nci_data_exchange.
-> In fact, this implements a queue with max length of 1 data
-> exchange transactions in parallel.
->
-> Signed-off-by: Ilan Elias <ilane@ti.com>
-Acked-by: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+On Thu, 22 Sep 2011 11:08:11 +0200
+Rafał Miłecki <zajec5@gmail.com> wrote:
+
+> If we assume we will have the same level support in both drivers soon,
+> then what are the differences? brcmsmac seems to be preferred only
+> because Broadcom guys like it.
+
+Guys, can we _please_ get back to a technical discussion?
+
+-- 
+Greetings, Michael.
