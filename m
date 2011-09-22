@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:62245 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752843Ab1ICHGm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Sep 2011 03:06:42 -0400
-Received: by fxh19 with SMTP id 19so2284462fxh.19
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Sep 2011 00:06:41 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Subject: [RESEND][PATCH] minstrel_ht: fix Open BA session request floods
-Cc: John Linville <linville@tuxdriver.com>, nbd@openwrt.org
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sat, 3 Sep 2011 09:06:20 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201109030906.21009.chunkeey@googlemail.com> (sfid-20110903_090646_048305_0174529E)
+Received: from mga01.intel.com ([192.55.52.88]:45869 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754010Ab1IVXBU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Sep 2011 19:01:20 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 09/12] iwlagn: make iwl_scan_cancel_timeout void
+Date: Thu, 22 Sep 2011 15:14:57 -0700
+Message-Id: <1316729700-1770-10-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110923_010133_111283_ABF4F834)
+In-Reply-To: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Minstrel HT tries very hard to establish a BA session with
-each peer once there's some data on the way. However the
-stack does not inform minstrel if an aggregation session
-is already in place, so it keeps trying and wastes good
-cycles in the tx status path.
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ 8149.946393] Open BA session requested for $AP tid 0
-[ 8150.048765] Open BA session requested for $AP tid 0
-[ 8150.174509] Open BA session requested for $AP tid 0
-[ 8150.274376] Open BA session requested for $AP tid 0
-...
+The return value of iwl_scan_cancel_timeout()
+isn't used anywhere, so let's just remove it.
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
-Hm, this time without the HTML-part.
----
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 2158838..e19249b 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -452,7 +452,8 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    4 +---
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 8ed72e8..e55ffad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -318,7 +318,7 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force);
+  ******************************************************************************/
+ void iwl_init_scan_params(struct iwl_priv *priv);
+ int iwl_scan_cancel(struct iwl_priv *priv);
+-int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms);
++void iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms);
+ void iwl_force_scan_end(struct iwl_priv *priv);
+ int iwl_mac_hw_scan(struct ieee80211_hw *hw,
+ 		    struct ieee80211_vif *vif,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 74204ec..d9596ba 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -169,7 +169,7 @@ int iwl_scan_cancel(struct iwl_priv *priv)
+  * @ms: amount of time to wait (in milliseconds) for scan to abort
+  *
+  */
+-int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
++void iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
+ {
+ 	unsigned long timeout = jiffies + msecs_to_jiffies(ms);
  
- 	if (time_after(jiffies, mi->stats_update + (mp->update_interval / 2 * HZ) / 1000)) {
- 		minstrel_ht_update_stats(mp, mi);
--		minstrel_aggr_check(mp, sta, skb);
-+		if (!(info->flags & IEEE80211_TX_CTL_AMPDU))
-+			minstrel_aggr_check(mp, sta, skb);
+@@ -184,8 +184,6 @@ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
+ 			break;
+ 		msleep(20);
  	}
+-
+-	return test_bit(STATUS_SCAN_HW, &priv->shrd->status);
  }
  
-
+ /* Service response to REPLY_SCAN_CMD (0x80) */
+-- 
+1.7.0.4
 
