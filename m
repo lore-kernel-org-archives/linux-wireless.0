@@ -1,64 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19992 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752076Ab1IOIfN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 04:35:13 -0400
-Date: Thu, 15 Sep 2011 09:42:50 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Michael Witten <mfwitten@gmail.com>,
-	Witold Baryluk <baryluk@smp.if.uj.edu.pl>
-Subject: Re: [PATCH] ipw2x00: fix rtnl mutex deadlock
-Message-ID: <20110915074249.GA2262@redhat.com> (sfid-20110915_103518_000688_3C832607)
-References: <1316011670-6787-1-git-send-email-sgruszka@redhat.com>
- <1316020961.3506.4.camel@dcbw.foobar.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1316020961.3506.4.camel@dcbw.foobar.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:55555 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751286Ab1IVPu2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Sep 2011 11:50:28 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1R6lXf-0002Rg-SD
+	for linux-wireless@vger.kernel.org; Thu, 22 Sep 2011 17:50:27 +0200
+Message-Id: <20110922154851.859347080@sipsolutions.net> (sfid-20110922_175033_652097_0C4A3200)
+Date: Thu, 22 Sep 2011 17:47:38 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 12/15] mac80211: add missing station flags to debugfs
+References: <20110922154726.521122680@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 14, 2011 at 12:22:40PM -0500, Dan Williams wrote:
-> On Wed, 2011-09-14 at 16:47 +0200, Stanislaw Gruszka wrote:
-> > This fix regression introduced by:
-> > 
-> > commit: ecb4433550f0620f3d1471ae7099037ede30a91e
-> > Author: Stanislaw Gruszka <sgruszka@redhat.com>
-> > Date:   Fri Aug 12 14:00:59 2011 +0200
-> > 
-> >     mac80211: fix suspend/resume races with unregister hw
-> > 
-> > Above commit add rtnl_lock() into wiphy_register(), what cause deadlock
-> > when initializing ipw2x00 driver, which itself call wiphy_register()
-> > from register_netdev() internal callback with rtnl mutex taken.
-> > 
-> > To fix move wiphy_register() outside register_netdev(). This solution
-> > have side effect of not creating /sys/class/net/wlanX/phy80211 link,
-> > but that's a minor issue we can live with.
-> 
-> Unfortunately that path is one of the ways that programs distinguish
-> wifi devices from plain ethernet devices.  The other way is to poke it
-> with WEXT.  Should poking it with nl80211 be added to the mix instead?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Not sure, maybe device/ieee80211/phy0 could be used?
+My work and some previous work didn't add
+all the flags, add them now and while at it
+simplify the code.
 
-[stasiu@dhcp-27-172 ~]$ readlink -f /sys/class/net/wlan0/phy80211
-/sys/devices/pci0000:00/0000:00:1c.1/0000:03:00.0/ieee80211/phy0
-[stasiu@dhcp-27-172 ~]$ readlink -f /sys/class/net/wlan0/device/ieee80211/phy0
-/sys/devices/pci0000:00/0000:00:1c.1/0000:03:00.0/ieee80211/phy0
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/debugfs_sta.c |   24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
 
-> I guess for ipw2x00 it's not an issue since the driver depends on WEXT
-> and thus the WEXT method will always work.
+--- a/net/mac80211/debugfs_sta.c	2011-09-22 15:12:26.000000000 +0200
++++ b/net/mac80211/debugfs_sta.c	2011-09-22 15:15:29.000000000 +0200
+@@ -56,19 +56,21 @@ STA_FILE(last_signal, last_signal, D);
+ static ssize_t sta_flags_read(struct file *file, char __user *userbuf,
+ 			      size_t count, loff_t *ppos)
+ {
+-	char buf[100];
++	char buf[121];
+ 	struct sta_info *sta = file->private_data;
+ 
+-	int res = scnprintf(buf, sizeof(buf), "%s%s%s%s%s%s%s%s%s",
+-		test_sta_flag(sta, WLAN_STA_AUTH) ? "AUTH\n" : "",
+-		test_sta_flag(sta, WLAN_STA_ASSOC) ? "ASSOC\n" : "",
+-		test_sta_flag(sta, WLAN_STA_PS_STA) ? "PS (sta)\n" : "",
+-		test_sta_flag(sta, WLAN_STA_PS_DRIVER) ? "PS (driver)\n" : "",
+-		test_sta_flag(sta, WLAN_STA_AUTHORIZED) ? "AUTHORIZED\n" : "",
+-		test_sta_flag(sta, WLAN_STA_SHORT_PREAMBLE) ? "SHORT PREAMBLE\n" : "",
+-		test_sta_flag(sta, WLAN_STA_WME) ? "WME\n" : "",
+-		test_sta_flag(sta, WLAN_STA_WDS) ? "WDS\n" : "",
+-		test_sta_flag(sta, WLAN_STA_MFP) ? "MFP\n" : "");
++#define TEST(flg) \
++	test_sta_flag(sta, WLAN_STA_##flg) ? #flg "\n" : ""
++
++	int res = scnprintf(buf, sizeof(buf),
++			    "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
++			    TEST(AUTH), TEST(ASSOC), TEST(PS_STA),
++			    TEST(PS_DRIVER), TEST(AUTHORIZED),
++			    TEST(SHORT_PREAMBLE), TEST(ASSOC_AP),
++			    TEST(WME), TEST(WDS), TEST(CLEAR_PS_FILT),
++			    TEST(MFP), TEST(BLOCK_BA), TEST(PSPOLL),
++			    TEST(UAPSD), TEST(SP));
++#undef TEST
+ 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+ }
+ STA_OPS(flags);
 
-Hopefully yes.
 
-Generally this link creation problem is fixable, but requires some more
-rumble in ipw2x00 driver, which is old and orphaned, hence I'm reluctant
-to modify it in some more way.
-
-Stanislaw
