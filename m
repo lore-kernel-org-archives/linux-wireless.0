@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56118 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751458Ab1IHOmZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 10:42:25 -0400
-Subject: Re: [RFC 3/5] nl80211/cfg80211: adding intermediate scan result
- event.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: victorg@ti.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4E68D3BF.5090201@ti.com>
-References: <1315224151-16552-1-git-send-email-VictorG@ti.com>
-	 <1315224151-16552-4-git-send-email-VictorG@ti.com>
-	 <1315224512.4075.10.camel@jlt3.sipsolutions.net> <4E6736D9.3070804@ti.com>
-	 <1315387619.4002.3.camel@jlt3.sipsolutions.net> <4E686125.5050208@ti.com>
-	 <1315464556.3948.0.camel@jlt3.sipsolutions.net>  <4E688321.7090704@ti.com>
-	 <1315474047.7091.1.camel@jlt3.sipsolutions.net>  <4E68D3BF.5090201@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 08 Sep 2011 16:42:21 +0200
-Message-ID: <1315492941.16729.12.camel@jlt3.sipsolutions.net> (sfid-20110908_164231_944396_5180F949)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:38610 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751172Ab1IVGrK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Sep 2011 02:47:10 -0400
+Message-ID: <4E7AD9E6.1010700@hauke-m.de> (sfid-20110922_084714_407795_CE4D2661)
+Date: Thu, 22 Sep 2011 08:47:02 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Brett Rudley <brudley@broadcom.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Greg KH <greg@kroah.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline patch
+ #2
+References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com> <20110920130338.GA9885@kroah.com> <20110920132203.GB7800@tuxdriver.com> <20110920140020.GA11386@kroah.com> <7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com> <CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com> <7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
+In-Reply-To: <7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-09-08 at 17:39 +0300, Victor Goldenshtein wrote:
+On 09/22/2011 12:12 AM, Brett Rudley wrote:
+>>> Our original plan was to remain a separate driver from b43. We were
+>> aware of it and all the good work that had been done to create it and we
+>> had no intention of interfering with it.  At that point there had not
+>> been very much recent movement in b43 and it did not support any of our
+>> AXI based chips.  We figured that ssb vs AXI was a good dividing line and
+>> there would be no conflict, and there wasn't initially.
+>>
+>> The first obvious problem is that there are SSB and BCMA (aka AXI)
+>> cards using N-PHY. That resulted in PHY code duplication between b43
+>> and brcmsmac. And since we already supported N-PHY in b43, adding bcma
+>> support automatically gave us BCM43224 and BCM43225 support. That of
+>> course means duplicated supported for the same hardware.
+> 
+> Agree, when you created bcma, it did duplicate HW support already in brcmsmac.  Why didn't you address that then?
 
-> > No, I don't think you can advertise wiphy.flags since those flags are
-> > internal -- you'll have to map single wiphy flags to single capability
-> > flags which are also defined in nl80211.h.
-> >
-> > I'd call it "NL80211_ATTR_CAPABILITIES" to sidestep the issue of it
-> > being a driver of HW or whatever capability.
+bcma is not only used to support the bus on a pci based wireless cards
+it now also contains support for SoCs like the BCM4718. There it
+provides a common interface to the hardware for the wireless so that
+there were no changes in b43 needed to get the wireless core running on
+this SoC. It also provides some parts needed to get the SoC boot in
+Linux and so on, some parts are related to the MIPS CPU and not related
+to the wireless core, so it makes sense to put that into an own module.
 
-> Sorry, I'm not sure that I'm entirely understand, you mean to create 
-> *nested* "NL80211_ATTR_CAPABILITIES" attribute which will contain all 
-> new capability flags, mapped from wiphy.flags? and to do it within 
-> existing nl80211_send_wiphy() function?
-
-No, I mean just add a U32 NL80211_ATTR_CAPABILITIES and put new flags
-there, like this in nl80211.h:
-
-enum nl80211_device_capabilities {
-	NL80211_DEV_CAPA_XXX	= (1<<0);
-etc...
-};
-
-Just don't use wiphy.flags directly since that's internal flags.
-
-johannes
-
+Hauke
