@@ -1,67 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:57207 "EHLO mga01.intel.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:1137 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753959Ab1IVXBR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 19:01:17 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 02/12] iwlagn: set the sequence control from the transport layer
-Date: Thu, 22 Sep 2011 15:14:50 -0700
-Message-Id: <1316729700-1770-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110923_010144_739025_68E742D7)
-In-Reply-To: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1752899Ab1IVJEz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Sep 2011 05:04:55 -0400
+From: "Arend Van Spriel" <arend@broadcom.com>
+To: "Hauke Mehrtens" <hauke@hauke-m.de>,
+	"Brett Rudley" <brudley@broadcom.com>
+cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"Greg KH" <greg@kroah.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 22 Sep 2011 02:04:45 -0700
+Subject: RE: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
+ patch #2
+Message-ID: <400C43189542CE41BC0A5B252FC90136BC0CC8ABD8@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20110922_110514_579603_FD6E6666)
+References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
+ <20110920130338.GA9885@kroah.com> <20110920132203.GB7800@tuxdriver.com>
+ <20110920140020.GA11386@kroah.com>
+ <7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com>
+ <CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com>
+ <7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
+ <4E7AD9E6.1010700@hauke-m.de>
+In-Reply-To: <4E7AD9E6.1010700@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-Since all the queue logic has been moved to the transport layer,
-the sequence number is set in the transport layer.
-While doing that I forgot that the mac header is copied to the
-TB of the TX cmd in the upper layer before the call to the transport
-layer. So basically we used the sequence number from mac80211...
-This was fine for the first assocation but after the second, mac80211
-resets its counters while we don't hence a shift that led to terrible
-impact on performance.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c     |    3 ---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    3 +++
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 8c0f07f..12a9808 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -327,9 +327,6 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	memset(dev_cmd, 0, sizeof(*dev_cmd));
- 	tx_cmd = (struct iwl_tx_cmd *) dev_cmd->payload;
- 
--	/* Copy MAC header from skb into command buffer */
--	memcpy(tx_cmd->hdr, hdr, hdr_len);
--
- 	/* Total # bytes to be transmitted */
- 	len = (u16)skb->len;
- 	tx_cmd->len = cpu_to_le16(len);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index b78ac65..781f6aa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1101,6 +1101,9 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 		}
- 	}
- 
-+	/* Copy MAC header from skb into command buffer */
-+	memcpy(tx_cmd->hdr, hdr, hdr_len);
-+
- 	txq = &trans_pcie->txq[txq_id];
- 	q = &txq->q;
- 
--- 
-1.7.0.4
+PiBGcm9tOiBsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51
+eC13aXJlbGVzcy0NCj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgSGF1a2Ug
+TWVocnRlbnMNCj4gU2VudDogZG9uZGVyZGFnIDIyIHNlcHRlbWJlciAyMDExIDg6NDcNCj4gVG86
+IEJyZXR0IFJ1ZGxleQ0KPiBDYzogUmFmYcWCIE1pxYJlY2tpOyBHcmVnIEtIOyBKb2huIFcuIExp
+bnZpbGxlOyBGcmFua3kgKFpoZW5odWkpIExpbjsNCj4gZ3JlZ2toQHN1c2UuZGU7IGRldmVsQGxp
+bnV4ZHJpdmVycHJvamVjdC5vcmc7IGxpbnV4LQ0KPiB3aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcN
+Cj4gU3ViamVjdDogUmU6IFtQQVRDSCAwMC8yMF0gc3RhZ2luZzogYnJjbTgwMjExOiA3dGggcmVh
+Y3Rpb24gZm9yDQo+IG1haW5saW5lIHBhdGNoICMyDQo+IA0KPiBPbiAwOS8yMi8yMDExIDEyOjEy
+IEFNLCBCcmV0dCBSdWRsZXkgd3JvdGU6DQo+ID4+PiBPdXIgb3JpZ2luYWwgcGxhbiB3YXMgdG8g
+cmVtYWluIGEgc2VwYXJhdGUgZHJpdmVyIGZyb20gYjQzLiBXZSB3ZXJlDQo+ID4+IGF3YXJlIG9m
+IGl0IGFuZCBhbGwgdGhlIGdvb2Qgd29yayB0aGF0IGhhZCBiZWVuIGRvbmUgdG8gY3JlYXRlIGl0
+DQo+IGFuZCB3ZQ0KPiA+PiBoYWQgbm8gaW50ZW50aW9uIG9mIGludGVyZmVyaW5nIHdpdGggaXQu
+ICBBdCB0aGF0IHBvaW50IHRoZXJlIGhhZA0KPiBub3QNCj4gPj4gYmVlbiB2ZXJ5IG11Y2ggcmVj
+ZW50IG1vdmVtZW50IGluIGI0MyBhbmQgaXQgZGlkIG5vdCBzdXBwb3J0IGFueSBvZg0KPiBvdXIN
+Cj4gPj4gQVhJIGJhc2VkIGNoaXBzLiAgV2UgZmlndXJlZCB0aGF0IHNzYiB2cyBBWEkgd2FzIGEg
+Z29vZCBkaXZpZGluZw0KPiBsaW5lIGFuZA0KPiA+PiB0aGVyZSB3b3VsZCBiZSBubyBjb25mbGlj
+dCwgYW5kIHRoZXJlIHdhc24ndCBpbml0aWFsbHkuDQo+ID4+DQo+ID4+IFRoZSBmaXJzdCBvYnZp
+b3VzIHByb2JsZW0gaXMgdGhhdCB0aGVyZSBhcmUgU1NCIGFuZCBCQ01BIChha2EgQVhJKQ0KPiA+
+PiBjYXJkcyB1c2luZyBOLVBIWS4gVGhhdCByZXN1bHRlZCBpbiBQSFkgY29kZSBkdXBsaWNhdGlv
+biBiZXR3ZWVuIGI0Mw0KPiA+PiBhbmQgYnJjbXNtYWMuIEFuZCBzaW5jZSB3ZSBhbHJlYWR5IHN1
+cHBvcnRlZCBOLVBIWSBpbiBiNDMsIGFkZGluZw0KPiBiY21hDQo+ID4+IHN1cHBvcnQgYXV0b21h
+dGljYWxseSBnYXZlIHVzIEJDTTQzMjI0IGFuZCBCQ000MzIyNSBzdXBwb3J0LiBUaGF0IG9mDQo+
+ID4+IGNvdXJzZSBtZWFucyBkdXBsaWNhdGVkIHN1cHBvcnRlZCBmb3IgdGhlIHNhbWUgaGFyZHdh
+cmUuDQo+ID4NCj4gPiBBZ3JlZSwgd2hlbiB5b3UgY3JlYXRlZCBiY21hLCBpdCBkaWQgZHVwbGlj
+YXRlIEhXIHN1cHBvcnQgYWxyZWFkeSBpbg0KPiBicmNtc21hYy4gIFdoeSBkaWRuJ3QgeW91IGFk
+ZHJlc3MgdGhhdCB0aGVuPw0KPiANCj4gYmNtYSBpcyBub3Qgb25seSB1c2VkIHRvIHN1cHBvcnQg
+dGhlIGJ1cyBvbiBhIHBjaSBiYXNlZCB3aXJlbGVzcyBjYXJkcw0KPiBpdCBub3cgYWxzbyBjb250
+YWlucyBzdXBwb3J0IGZvciBTb0NzIGxpa2UgdGhlIEJDTTQ3MTguIFRoZXJlIGl0DQo+IHByb3Zp
+ZGVzIGEgY29tbW9uIGludGVyZmFjZSB0byB0aGUgaGFyZHdhcmUgZm9yIHRoZSB3aXJlbGVzcyBz
+byB0aGF0DQo+IHRoZXJlIHdlcmUgbm8gY2hhbmdlcyBpbiBiNDMgbmVlZGVkIHRvIGdldCB0aGUg
+d2lyZWxlc3MgY29yZSBydW5uaW5nIG9uDQo+IHRoaXMgU29DLiBJdCBhbHNvIHByb3ZpZGVzIHNv
+bWUgcGFydHMgbmVlZGVkIHRvIGdldCB0aGUgU29DIGJvb3QgaW4NCj4gTGludXggYW5kIHNvIG9u
+LCBzb21lIHBhcnRzIGFyZSByZWxhdGVkIHRvIHRoZSBNSVBTIENQVSBhbmQgbm90IHJlbGF0ZWQN
+Cj4gdG8gdGhlIHdpcmVsZXNzIGNvcmUsIHNvIGl0IG1ha2VzIHNlbnNlIHRvIHB1dCB0aGF0IGlu
+dG8gYW4gb3duIG1vZHVsZS4NCj4gDQo+IEhhdWtlDQoNCllvdSBhcmUgcmlnaHQuIEJDTUEgaW4g
+aXRzZWxmIG9ubHkgZHVwbGljYXRlcyBwYXJ0IG9mIHdoYXQgaXMgaW4gYnJjbXNtYWMNCmFuZCBp
+dHMgZXhpc3RlbmNlIHByb3ZpZGVzIGdvb2QgZnVuY3Rpb25hbCBzZXBhcmF0aW9uLiBUaGF0IGlz
+IHdoeSB3ZSBmdWxseQ0KaW50ZW5kIHRvIGhhdmUgYnJjbXNtYWMgdXNlIGJjbWEuIEJyZXR0IG1l
+YW50IHRoYXQgdGhlIGR1cGxpY2F0aW9uIHN0YXJ0ZWQNCndoZW4gYjQzIHdhcyBnZXR0aW5nIHBh
+dGNoZXMgZm9yIGJjbWEgc3VwcG9ydC4NCg0KUmFmYcWCIGluZGljYXRlZCB0aGF0IGI0MyB0ZWFt
+IHdhcyB3b3JraW5nIG9uIG4tcGh5IHN1cHBvcnQgd2hlbiB3ZSByZWxlYXNlZA0KdGhlIGJyY204
+MDIxMSBkcml2ZXIgKGFrYSBicmNtc21hYykuIE5vIG9uZSBpbmRpY2F0ZWQgdGhpcyBiZWZvcmUg
+c28gSSBjYW4NCm9ubHkgYXNzdW1lIHRoYXQgYjQzIGRlY2lkZWQgdG8gbW92ZSBvbiBidWlsZGlu
+ZyBiY21hIGFuZCBoYXZlIG5vIGludGVyZXN0DQppbiBicmNtc21hYyBtb3ZpbmcgaW4gdGhlIGxp
+bnV4IHRyZWUuDQoNCkdyLiBBdlMNCg==
 
