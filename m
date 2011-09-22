@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45101 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:52197 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752362Ab1I1MRw (ORCPT
+	with ESMTP id S1752129Ab1IVHyd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 08:17:52 -0400
-Subject: Re: [PATCH 00/15] mac80211 uAPSD support
+	Thu, 22 Sep 2011 03:54:33 -0400
+Subject: Re: [RFC 3/5] nl80211/cfg80211: adding intermediate scan result
+ event.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20110928120849.882884360@sipsolutions.net> (sfid-20110928_141249_243564_22D2F86A)
-References: <20110928120849.882884360@sipsolutions.net>
-	 (sfid-20110928_141249_243564_22D2F86A)
+To: victorg@ti.com
+Cc: Luciano Coelho <coelho@ti.com>, Jouni Malinen <j@w1.fi>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4E7ADFFC.8080903@ti.com>
+References: <1315224151-16552-1-git-send-email-VictorG@ti.com>
+	 <1315224151-16552-4-git-send-email-VictorG@ti.com>
+	 <1315224512.4075.10.camel@jlt3.sipsolutions.net> <4E6736D9.3070804@ti.com>
+	 <1315387619.4002.3.camel@jlt3.sipsolutions.net> <4E686125.5050208@ti.com>
+	 <20110921153102.GA32374@jm.kir.nu> <1316619903.2157.546.camel@cumari>
+	 <4E7A109C.2010701@ti.com> <1316623133.3940.55.camel@jlt3.sipsolutions.net>
+	 <4E7AD88C.4020806@ti.com> <1316674177.2157.563.camel@cumari>
+	 <4E7ADFFC.8080903@ti.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 28 Sep 2011 14:17:48 +0200
-Message-ID: <1317212268.3986.11.camel@jlt3.sipsolutions.net> (sfid-20110928_141755_568249_00B506A0)
+Date: Thu, 22 Sep 2011 09:54:28 +0200
+Message-ID: <1316678068.3899.0.camel@jlt3.sipsolutions.net> (sfid-20110922_095436_972191_9E7A339C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-09-28 at 14:08 +0200, Johannes Berg wrote:
-> I've tested this more, and am happy with it. There'll probably
-> be some bugs, but hopefully nothing bad.
+On Thu, 2011-09-22 at 10:13 +0300, Victor Goldenshtein wrote:
+> On 22/09/2011 09:49, Luciano Coelho wrote:
 > 
-> The series now also comes with documentation.
+> > I guess what Johannes meant is that you can send the genl message in
+> > atomic context, so you don't need to save stuff and use the event work.
+> > You can just send it immediately when cfg80211_inform_bss() and
+> > cfg80211_inform_bss_frame() are called.
+> >
+> > I'm not really sure you can send genl messages while atomic, I think I
+> > had problems with that earlier, but you can try. ;)
+> >
 > 
-> Drivers still need to enable uAPSD on a per-driver basis since
-> it isn't guaranteed that they support it.
+> ;)
+> 
+> Well I already did, and it's not working, when you"ll try to send genl 
+> messages while atomic, you will get kernel warning regarding "sleeping 
+> function called from invalid context".
 
-I should also mention that you need Eliad's uAPSD patches for hostapd,
-and need to enable it in the config there as well
-(uapsd_advertisement_enabled=1)
+Where? We do that a lot, e.g. nl80211_send_mlme_event().
 
 johannes
 
