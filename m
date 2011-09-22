@@ -1,128 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:56753 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753199Ab1ICRVI (ORCPT
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:34981 "HELO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750804Ab1IVEnD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Sep 2011 13:21:08 -0400
-Received: by wyh22 with SMTP id 22so2663405wyh.19
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Sep 2011 10:21:07 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] mac80211: add ssid config to bss information in AP-mode
-Date: Sat,  3 Sep 2011 20:21:01 +0300
-Message-Id: <1315070461-31042-1-git-send-email-arik@wizery.com> (sfid-20110903_192116_948422_7BF69300)
+	Thu, 22 Sep 2011 00:43:03 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/4] mwifiex: fix 5GHz association issue
+Date: Wed, 21 Sep 2011 21:43:22 -0700
+Message-Id: <1316666605-30954-1-git-send-email-bzhao@marvell.com> (sfid-20110922_064312_496431_ECB5C1CD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set SSID information from nl80211 beacon parameters. Advertise changes
-in SSID to low level drivers.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Sometimes association in 5GHz doesn't work. Dmesg log shows
+"Can not find requested SSID xyz" error message. Currently
+while preparing scan channel list for firmware Null entries
+are created for disabled channels. The routine which retrieves
+this list ignores channels after Null entry. Hence sometimes
+driver doesn't scan the channel of requested AP and association
+fails. The issue is fixed by avoiding those NULL entries.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- include/net/mac80211.h |    8 ++++++++
- net/mac80211/cfg.c     |   19 ++++++++++++++++++-
- net/mac80211/util.c    |    4 +++-
- 3 files changed, 29 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/scan.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 2f01d84..137d67d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -164,6 +164,7 @@ struct ieee80211_low_level_stats {
-  * @BSS_CHANGED_QOS: QoS for this association was enabled/disabled. Note
-  *	that it is only ever disabled for station mode.
-  * @BSS_CHANGED_IDLE: Idle changed for this BSS/interface.
-+ * @BSS_CHANGED_SSID: SSID changed for this BSS (AP mode)
-  */
- enum ieee80211_bss_change {
- 	BSS_CHANGED_ASSOC		= 1<<0,
-@@ -181,6 +182,7 @@ enum ieee80211_bss_change {
- 	BSS_CHANGED_ARP_FILTER		= 1<<12,
- 	BSS_CHANGED_QOS			= 1<<13,
- 	BSS_CHANGED_IDLE		= 1<<14,
-+	BSS_CHANGED_SSID		= 1<<15,
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index 8d8588d..ecebff6 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -532,7 +532,7 @@ mwifiex_scan_create_channel_list(struct mwifiex_private *priv,
  
- 	/* when adding here, make sure to change ieee80211_reconfig */
- };
-@@ -254,6 +256,9 @@ enum ieee80211_rssi_event {
-  * @idle: This interface is idle. There's also a global idle flag in the
-  *	hardware config which may be more appropriate depending on what
-  *	your driver/device needs to do.
-+ * @ssid: The SSID of the current vif. Only valid in AP-mode.
-+ * @ssid_len: Length of SSID given in @ssid.
-+ * @hidden_ssid: The SSID of the current vif is hidden. Only valid in AP-mode.
-  */
- struct ieee80211_bss_conf {
- 	const u8 *bssid;
-@@ -280,6 +285,9 @@ struct ieee80211_bss_conf {
- 	bool arp_filter_enabled;
- 	bool qos;
- 	bool idle;
-+	u8 ssid[IEEE80211_MAX_SSID_LEN];
-+	size_t ssid_len;
-+	bool hidden_ssid;
- };
+ 		sband = priv->wdev->wiphy->bands[band];
  
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7d17a91..d8682dd 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -455,6 +455,20 @@ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
- 	return ret;
- }
+-		for (i = 0; (i < sband->n_channels) ; i++, chan_idx++) {
++		for (i = 0; (i < sband->n_channels) ; i++) {
+ 			ch = &sband->channels[i];
+ 			if (ch->flags & IEEE80211_CHAN_DISABLED)
+ 				continue;
+@@ -563,6 +563,7 @@ mwifiex_scan_create_channel_list(struct mwifiex_private *priv,
+ 				scan_chan_list[chan_idx].chan_scan_mode_bitmap
+ 					|= MWIFIEX_DISABLE_CHAN_FILT;
+ 			}
++			chan_idx++;
+ 		}
  
-+static void ieee80211_config_ap_ssid(struct ieee80211_sub_if_data *sdata,
-+				     struct beacon_parameters *params)
-+{
-+	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
-+
-+	bss_conf->ssid_len = params->ssid_len;
-+
-+	if (params->ssid_len)
-+		memcpy(bss_conf->ssid, params->ssid, params->ssid_len);
-+
-+	bss_conf->hidden_ssid =
-+		(params->hidden_ssid != NL80211_HIDDEN_SSID_NOT_IN_USE);
-+}
-+
- /*
-  * This handles both adding a beacon and setting new beacon info
-  */
-@@ -548,8 +562,11 @@ static int ieee80211_config_beacon(struct ieee80211_sub_if_data *sdata,
- 
- 	kfree(old);
- 
-+	ieee80211_config_ap_ssid(sdata, params);
-+
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED |
--						BSS_CHANGED_BEACON);
-+						BSS_CHANGED_BEACON |
-+						BSS_CHANGED_SSID);
- 	return 0;
- }
- 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index ce916ff..9626fb9 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1081,10 +1081,12 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		case NL80211_IFTYPE_ADHOC:
- 			changed |= BSS_CHANGED_IBSS;
- 			/* fall through */
--		case NL80211_IFTYPE_AP:
- 		case NL80211_IFTYPE_MESH_POINT:
- 			changed |= BSS_CHANGED_BEACON |
- 				   BSS_CHANGED_BEACON_ENABLED;
-+			/* fall through */
-+		case NL80211_IFTYPE_AP:
-+			changed |= BSS_CHANGED_SSID;
- 			ieee80211_bss_info_change_notify(sdata, changed);
- 			break;
- 		case NL80211_IFTYPE_WDS:
+ 	}
 -- 
-1.7.4.1
+1.7.0.2
 
