@@ -1,193 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42643 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754287Ab1IFMQo (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:47835 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751113Ab1IVHhY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Sep 2011 08:16:44 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1R0ua3-00066J-E7
-	for linux-wireless@vger.kernel.org; Tue, 06 Sep 2011 14:16:43 +0200
-Message-Id: <20110906121534.235147159@sipsolutions.net> (sfid-20110906_141649_038223_F7BA5276)
-Date: Tue, 06 Sep 2011 14:14:22 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 1/3] mac80211: let drivers inform it about per TID buffered
- frames
-References: <20110906121421.460641040@sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 22 Sep 2011 03:37:24 -0400
+Received: by eya28 with SMTP id 28so1421505eya.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 00:37:23 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1316606772.3940.30.camel@jlt3.sipsolutions.net>
+References: <1316082334-7664-1-git-send-email-arik@wizery.com>
+ <1316082334-7664-4-git-send-email-arik@wizery.com> <1316606772.3940.30.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 22 Sep 2011 10:37:08 +0300
+Message-ID: <CA+XVXfcbrrR112Lf0oUz_Ok8NCo_M=nDNzOdRkdP3k+PrQZ0tg@mail.gmail.com> (sfid-20110922_093727_368024_11C1C0E0)
+Subject: Re: [RFC 3/5] nl80211/mac80211: allow adding TDLS peers as stations
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Kalyan C Gaddam <chakkal@iit.edu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Sep 21, 2011 at 15:06, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2011-09-15 at 13:25 +0300, Arik Nemtsov wrote:
+>> When a TDLS peer STA is added it is marked with a new flag in both
+>> nl80211 and in mac80211.
+>
+> I think it'd make some sense to allow only TDLS stations on a managed
+> mode interface?
 
-For uAPSD implementation, it is necessary to know on
-which ACs frames are buffered. mac80211 obviously
-knows about the frames it has buffered itself, but
-with aggregation many drivers buffer frames. Thus,
-mac80211 needs to be informed about this.
+Yea i'll add the check.
 
-For now, since we don't have APSD in any form, this
-will unconditionally set the TIM bit for the station
-but later with uAPSD only some ACs might cause the
-TIM bit to be set.
-
-ath9k is the only driver using this API and I only
-modify it in the most basic way, it won't be able
-to implement uAPSD with this yet. But it can't do
-that anyway since there's no way to selectively
-release frames to the peer yet.
-
-Since drivers will buffer frames per TID, let them
-inform mac80211 on a per TID basis, mac80211 will
-then sort out the AC mapping itself.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    3 ++-
- drivers/net/wireless/ath/ath9k/main.c  |    3 +--
- drivers/net/wireless/ath/ath9k/xmit.c  |   14 +++++++-------
- include/net/mac80211.h                 |   30 ++++++++++++++++++++++++------
- net/mac80211/sta_info.c                |    8 ++++++--
- 5 files changed, 40 insertions(+), 18 deletions(-)
-
---- a/include/net/mac80211.h	2011-09-06 12:46:19.000000000 +0200
-+++ b/include/net/mac80211.h	2011-09-06 12:49:15.000000000 +0200
-@@ -2340,17 +2340,35 @@ static inline int ieee80211_sta_ps_trans
- #define IEEE80211_TX_STATUS_HEADROOM	13
- 
- /**
-- * ieee80211_sta_set_tim - set the TIM bit for a sleeping station
-+ * ieee80211_sta_set_buffered - inform mac80211 about driver-buffered frames
-  * @sta: &struct ieee80211_sta pointer for the sleeping station
-+ * @tid: the TID that has buffered frames
-+ * @buffered: indicates whether or not frames are buffered for this TID
-  *
-  * If a driver buffers frames for a powersave station instead of passing
-- * them back to mac80211 for retransmission, the station needs to be told
-- * to wake up using the TIM bitmap in the beacon.
-+ * them back to mac80211 for retransmission, the station may still need
-+ * to be told that there are buffered frames via the TIM bit.
-  *
-- * This function sets the station's TIM bit - it will be cleared when the
-- * station wakes up.
-+ * This function informs mac80211 whether or not there are frames that are
-+ * buffered in the driver for a given TID; mac80211 can then use this data
-+ * to set the TIM bit (NOTE: This may call back into the driver's set_tim
-+ * call! Beware of the locking!)
-+ *
-+ * If all frames are released to the station (due to PS-poll or uAPSD)
-+ * then the driver needs to inform mac80211 that there no longer are
-+ * frames buffered. However, when the station wakes up mac80211 assumes
-+ * that all buffered frames will be transmitted and clears this data,
-+ * drivers need to make sure they inform mac80211 about all buffered
-+ * frames on the sleep transition (sta_notify() with %STA_NOTIFY_SLEEP).
-+ *
-+ * Note that technically mac80211 only needs to know this per AC, not per
-+ * TID, but since driver buffering will inevitably happen per TID (since
-+ * it is related to aggregation) it is easier to make mac80211 map the
-+ * TID to the AC as required instead of keeping track in all drivers that
-+ * use this API.
-  */
--void ieee80211_sta_set_tim(struct ieee80211_sta *sta);
-+void ieee80211_sta_set_buffered(struct ieee80211_sta *sta,
-+				u8 tid, bool buffered);
- 
- /**
-  * ieee80211_tx_status - transmit status callback
---- a/net/mac80211/sta_info.c	2011-09-06 12:48:06.000000000 +0200
-+++ b/net/mac80211/sta_info.c	2011-09-06 12:49:15.000000000 +0200
-@@ -1117,11 +1117,15 @@ void ieee80211_sta_block_awake(struct ie
- }
- EXPORT_SYMBOL(ieee80211_sta_block_awake);
- 
--void ieee80211_sta_set_tim(struct ieee80211_sta *pubsta)
-+void ieee80211_sta_set_buffered(struct ieee80211_sta *pubsta,
-+				u8 tid, bool buffered)
- {
- 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
- 
-+	if (!buffered)
-+		return;
-+
- 	set_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF);
- 	sta_info_set_tim_bit(sta);
- }
--EXPORT_SYMBOL(ieee80211_sta_set_tim);
-+EXPORT_SYMBOL(ieee80211_sta_set_buffered);
---- a/drivers/net/wireless/ath/ath9k/ath9k.h	2011-09-06 12:46:19.000000000 +0200
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h	2011-09-06 12:49:15.000000000 +0200
-@@ -343,7 +343,8 @@ void ath_tx_aggr_stop(struct ath_softc *
- void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
- 
- void ath_tx_aggr_wakeup(struct ath_softc *sc, struct ath_node *an);
--bool ath_tx_aggr_sleep(struct ath_softc *sc, struct ath_node *an);
-+void ath_tx_aggr_sleep(struct ieee80211_sta *sta, struct ath_softc *sc,
-+		       struct ath_node *an);
- 
- /********/
- /* VIFs */
---- a/drivers/net/wireless/ath/ath9k/main.c	2011-09-06 12:46:19.000000000 +0200
-+++ b/drivers/net/wireless/ath/ath9k/main.c	2011-09-06 12:49:15.000000000 +0200
-@@ -1851,8 +1851,7 @@ static void ath9k_sta_notify(struct ieee
- 	switch (cmd) {
- 	case STA_NOTIFY_SLEEP:
- 		an->sleeping = true;
--		if (ath_tx_aggr_sleep(sc, an))
--			ieee80211_sta_set_tim(sta);
-+		ath_tx_aggr_sleep(sta, sc, an);
- 		break;
- 	case STA_NOTIFY_AWAKE:
- 		an->sleeping = false;
---- a/drivers/net/wireless/ath/ath9k/xmit.c	2011-09-06 12:46:19.000000000 +0200
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c	2011-09-06 12:49:15.000000000 +0200
-@@ -545,7 +545,7 @@ static void ath_tx_complete_aggr(struct
- 	/* prepend un-acked frames to the beginning of the pending frame queue */
- 	if (!list_empty(&bf_pending)) {
- 		if (an->sleeping)
--			ieee80211_sta_set_tim(sta);
-+			ieee80211_sta_set_buffered(sta, tid->tidno, true);
- 
- 		spin_lock_bh(&txq->axq_lock);
- 		if (clear_filter)
-@@ -933,12 +933,13 @@ void ath_tx_aggr_stop(struct ath_softc *
- 	ath_tx_flush_tid(sc, txtid);
- }
- 
--bool ath_tx_aggr_sleep(struct ath_softc *sc, struct ath_node *an)
-+void ath_tx_aggr_sleep(struct ieee80211_sta *sta, struct ath_softc *sc,
-+		       struct ath_node *an)
- {
- 	struct ath_atx_tid *tid;
- 	struct ath_atx_ac *ac;
- 	struct ath_txq *txq;
--	bool buffered = false;
-+	bool buffered;
- 	int tidno;
- 
- 	for (tidno = 0, tid = &an->tid[tidno];
-@@ -952,8 +953,7 @@ bool ath_tx_aggr_sleep(struct ath_softc
- 
- 		spin_lock_bh(&txq->axq_lock);
- 
--		if (!list_empty(&tid->buf_q))
--			buffered = true;
-+		buffered = !list_empty(&tid->buf_q);
- 
- 		tid->sched = false;
- 		list_del(&tid->list);
-@@ -964,9 +964,9 @@ bool ath_tx_aggr_sleep(struct ath_softc
- 		}
- 
- 		spin_unlock_bh(&txq->axq_lock);
--	}
- 
--	return buffered;
-+		ieee80211_sta_set_buffered(sta, tidno, buffered);
-+	}
- }
- 
- void ath_tx_aggr_wakeup(struct ath_softc *sc, struct ath_node *an)
-
-
+Arik
