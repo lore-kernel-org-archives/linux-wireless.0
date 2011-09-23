@@ -1,131 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:6192 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:49062 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014Ab1IUPR0 (ORCPT
+	with ESMTP id S1754602Ab1IWPMV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 11:17:26 -0400
-Date: Wed, 21 Sep 2011 18:14:56 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211: Validate cipher suite against supported ciphers
-Message-ID: <20110921151456.GA32043@jouni.qca.qualcomm.com> (sfid-20110921_171734_815954_DC0FF3E0)
+	Fri, 23 Sep 2011 11:12:21 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH 1/2] nl80211/cfg80211: Add support to disable CCK rate for management frame
+Date: Fri, 23 Sep 2011 20:42:58 +0530
+Message-ID: <1316790779-8955-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110923_171226_114715_F48FD00D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of using a hardcoded list of cipher suites in nl80211.c, use a
-shared function in util.c to verify that the driver advertises support
-for the specified cipher. This provides more accurate validation of the
-values and allows vendor-specific cipher suites to be added in drivers.
+Add a new nl80211 attribute to specify whether to send the management
+frames in CCK rate or not. As of now the wpa_supplicant is disabling
+CCK rate at P2P init itself. So this patch helps to send P2P probe
+request/probe response/action frames being sent at non CCK rate in 2GHz
+without disabling 11b rates.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+This attribute is used with NL80211_CMD_TRIGGER_SCAN and
+NL80211_CMD_FRAME commands to disable CCK rate for management frame
+transmission.
+
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- net/wireless/core.h    |    1 +
- net/wireless/nl80211.c |   16 ++++------------
- net/wireless/util.c    |   16 ++++++++++------
- 3 files changed, 15 insertions(+), 18 deletions(-)
+ include/linux/nl80211.h |   13 +++++++++++++
+ include/net/cfg80211.h  |    5 ++++-
+ net/mac80211/cfg.c      |    3 ++-
+ net/wireless/core.h     |    3 ++-
+ net/wireless/mlme.c     |    5 +++--
+ net/wireless/nl80211.c  |    9 ++++++++-
+ 6 files changed, 32 insertions(+), 6 deletions(-)
 
-(while this is independent of the previous patch, you may want to apply
-this after the AKM validation changes to avoid any conflicts)
-
-
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 460b12a..c73582f 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -238,6 +238,8 @@
+  *
+  * @NL80211_CMD_GET_SCAN: get scan results
+  * @NL80211_CMD_TRIGGER_SCAN: trigger a new scan with the given parameters
++ *	%NL80211_ATTR_TX_NO_CCK_RATE is used to decide whether to send the
++ *	probe requests at CCK rate or not.
+  * @NL80211_CMD_NEW_SCAN_RESULTS: scan notification (as a reply to
+  *	NL80211_CMD_GET_SCAN and on the "scan" multicast group)
+  * @NL80211_CMD_SCAN_ABORTED: scan was aborted, for unspecified reasons,
+@@ -432,6 +434,8 @@
+  *	specified using %NL80211_ATTR_DURATION. When called, this operation
+  *	returns a cookie (%NL80211_ATTR_COOKIE) that will be included with the
+  *	TX status event pertaining to the TX request.
++ *	%NL80211_ATTR_TX_NO_CCK_RATE is used to decide whether to send the
++ *	management frames at CCK rate or not in 2GHz band.
+  * @NL80211_CMD_FRAME_WAIT_CANCEL: When an off-channel TX was requested, this
+  *	command may be used with the corresponding cookie to cancel the wait
+  *	time if it is known that it is no longer necessary.
+@@ -1078,6 +1082,13 @@ enum nl80211_commands {
+  * @NL80211_ATTR_PMKSA_CANDIDATE: Nested attribute containing the PMKSA caching
+  *	candidate information, see &enum nl80211_pmksa_candidate_attr.
+  *
++ * @NL80211_ATTR_TX_NO_CCK_RATE: Indicates whether to use CCK rate or not
++ *	for management frames transmission. In order to avoid p2p probe/action
++ *	frames are being transmitted at CCK rate in 2GHz band, the user space
++ *	applications use this attribute.
++ *	This attribute is used with %NL80211_CMD_TRIGGER_SCAN and
++ *	%NL80211_CMD_FRAME commands.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1298,6 +1309,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_PMKSA_CANDIDATE,
+ 
++	NL80211_ATTR_TX_NO_CCK_RATE,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ccfdf3f..c1dd56b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -860,6 +860,7 @@ struct cfg80211_ssid {
+  * @wiphy: the wiphy this was for
+  * @dev: the interface
+  * @aborted: (internal) scan request was notified as aborted
++ * @no_cck: used to send probe requests at non CCK rate in 2GHz band
+  */
+ struct cfg80211_scan_request {
+ 	struct cfg80211_ssid *ssids;
+@@ -874,6 +875,7 @@ struct cfg80211_scan_request {
+ 	struct wiphy *wiphy;
+ 	struct net_device *dev;
+ 	bool aborted;
++	bool no_cck;
+ 
+ 	/* keep last */
+ 	struct ieee80211_channel *channels[0];
+@@ -1560,7 +1562,8 @@ struct cfg80211_ops {
+ 			  struct ieee80211_channel *chan, bool offchan,
+ 			  enum nl80211_channel_type channel_type,
+ 			  bool channel_type_valid, unsigned int wait,
+-			  const u8 *buf, size_t len, u64 *cookie);
++			  const u8 *buf, size_t len, bool no_cck,
++			  u64 *cookie);
+ 	int	(*mgmt_tx_cancel_wait)(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+ 				       u64 cookie);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b57ddf9..9cba010 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1869,7 +1869,8 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
+ 			     struct ieee80211_channel *chan, bool offchan,
+ 			     enum nl80211_channel_type channel_type,
+ 			     bool channel_type_valid, unsigned int wait,
+-			     const u8 *buf, size_t len, u64 *cookie)
++			     const u8 *buf, size_t len, bool no_cck,
++			     u64 *cookie)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
 diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 796a4bd..cb87b8b 100644
+index 796a4bd..a472d60 100644
 --- a/net/wireless/core.h
 +++ b/net/wireless/core.h
-@@ -406,6 +406,7 @@ void cfg80211_sme_failed_assoc(struct wireless_dev *wdev);
- bool cfg80211_sme_failed_reassoc(struct wireless_dev *wdev);
+@@ -375,7 +375,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 			  struct ieee80211_channel *chan, bool offchan,
+ 			  enum nl80211_channel_type channel_type,
+ 			  bool channel_type_valid, unsigned int wait,
+-			  const u8 *buf, size_t len, u64 *cookie);
++			  const u8 *buf, size_t len, bool no_cck,
++			  u64 *cookie);
  
- /* internal helpers */
-+bool cfg80211_supported_cipher_suite(struct wiphy *wiphy, u32 cipher);
- int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
- 				   struct key_params *params, int key_idx,
- 				   bool pairwise, const u8 *mac_addr);
+ /* SME */
+ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 61adea5..21fc970 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -900,7 +900,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 			  struct ieee80211_channel *chan, bool offchan,
+ 			  enum nl80211_channel_type channel_type,
+ 			  bool channel_type_valid, unsigned int wait,
+-			  const u8 *buf, size_t len, u64 *cookie)
++			  const u8 *buf, size_t len, bool no_cck,
++			  u64 *cookie)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	const struct ieee80211_mgmt *mgmt;
+@@ -991,7 +992,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 	/* Transmit the Action frame as requested by user space */
+ 	return rdev->ops->mgmt_tx(&rdev->wiphy, dev, chan, offchan,
+ 				  channel_type, channel_type_valid,
+-				  wait, buf, len, cookie);
++				  wait, buf, len, no_cck, cookie);
+ }
+ 
+ bool cfg80211_rx_mgmt(struct net_device *dev, int freq, const u8 *buf,
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index fd4da99..b6288b1 100644
+index c26a1da..eba88c7e 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -4126,16 +4126,6 @@ static bool nl80211_valid_wpa_versions(u32 wpa_versions)
- 				  NL80211_WPA_VERSION_2));
- }
+@@ -191,6 +191,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 					 .len = IEEE80211_MAX_DATA_LEN },
+ 	[NL80211_ATTR_ROAM_SUPPORT] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_SCHED_SCAN_MATCH] = { .type = NLA_NESTED },
++	[NL80211_ATTR_TX_NO_CCK_RATE] = { .type = NLA_FLAG },
+ };
  
--static bool nl80211_valid_cipher_suite(u32 cipher)
--{
--	return cipher == WLAN_CIPHER_SUITE_WEP40 ||
--		cipher == WLAN_CIPHER_SUITE_WEP104 ||
--		cipher == WLAN_CIPHER_SUITE_TKIP ||
--		cipher == WLAN_CIPHER_SUITE_CCMP ||
--		cipher == WLAN_CIPHER_SUITE_AES_CMAC;
--}
--
--
- static int nl80211_authenticate(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-@@ -4268,7 +4258,8 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
- 		memcpy(settings->ciphers_pairwise, data, len);
- 
- 		for (i = 0; i < settings->n_ciphers_pairwise; i++)
--			if (!nl80211_valid_cipher_suite(
-+			if (!cfg80211_supported_cipher_suite(
-+					&rdev->wiphy,
- 					settings->ciphers_pairwise[i]))
- 				return -EINVAL;
- 	}
-@@ -4276,7 +4267,8 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
- 	if (info->attrs[NL80211_ATTR_CIPHER_SUITE_GROUP]) {
- 		settings->cipher_group =
- 			nla_get_u32(info->attrs[NL80211_ATTR_CIPHER_SUITE_GROUP]);
--		if (!nl80211_valid_cipher_suite(settings->cipher_group))
-+		if (!cfg80211_supported_cipher_suite(&rdev->wiphy,
-+						     settings->cipher_group))
- 			return -EINVAL;
- 	}
- 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 39dbf4a..6304ed6 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -151,12 +151,19 @@ void ieee80211_set_bitrate_flags(struct wiphy *wiphy)
- 			set_mandatory_flags_band(wiphy->bands[band], band);
- }
- 
-+bool cfg80211_supported_cipher_suite(struct wiphy *wiphy, u32 cipher)
-+{
-+	int i;
-+	for (i = 0; i < wiphy->n_cipher_suites; i++)
-+		if (cipher == wiphy->cipher_suites[i])
-+			return true;
-+	return false;
-+}
-+
- int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
- 				   struct key_params *params, int key_idx,
- 				   bool pairwise, const u8 *mac_addr)
- {
--	int i;
--
- 	if (key_idx > 5)
- 		return -EINVAL;
- 
-@@ -226,10 +233,7 @@ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
+ /* policy for the key attributes */
+@@ -3620,6 +3621,9 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
  		}
  	}
  
--	for (i = 0; i < rdev->wiphy.n_cipher_suites; i++)
--		if (params->cipher == rdev->wiphy.cipher_suites[i])
--			break;
--	if (i == rdev->wiphy.n_cipher_suites)
-+	if (!cfg80211_supported_cipher_suite(&rdev->wiphy, params->cipher))
- 		return -EINVAL;
++	request->no_cck =
++		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
++
+ 	request->dev = dev;
+ 	request->wiphy = &rdev->wiphy;
  
- 	return 0;
+@@ -5192,6 +5196,7 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 	struct sk_buff *msg;
+ 	unsigned int wait = 0;
+ 	bool offchan;
++	bool no_cck;
+ 
+ 	if (!info->attrs[NL80211_ATTR_FRAME] ||
+ 	    !info->attrs[NL80211_ATTR_WIPHY_FREQ])
+@@ -5228,6 +5233,8 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	offchan = info->attrs[NL80211_ATTR_OFFCHANNEL_TX_OK];
+ 
++	no_cck = nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
++
+ 	freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
+ 	chan = rdev_freq_to_chan(rdev, freq, channel_type);
+ 	if (chan == NULL)
+@@ -5248,7 +5255,7 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 				    channel_type_valid, wait,
+ 				    nla_data(info->attrs[NL80211_ATTR_FRAME]),
+ 				    nla_len(info->attrs[NL80211_ATTR_FRAME]),
+-				    &cookie);
++				    no_cck, &cookie);
+ 	if (err)
+ 		goto free_msg;
+ 
 -- 
-1.7.4.1
+1.7.6.3
 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
