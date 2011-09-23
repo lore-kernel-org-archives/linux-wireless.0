@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm14.bullet.mail.ukl.yahoo.com ([217.146.183.188]:47592 "HELO
-	nm14.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S934067Ab1IOQKa (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:32792 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753054Ab1IWK7v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 12:10:30 -0400
-From: Marek Lindner <lindner_marek@yahoo.de>
-To: linux-wireless@vger.kernel.org
-Cc: Marek Lindner <lindner_marek@yahoo.de>
-Subject: [PATCH] mac80211: don't allow zero mac bssid to be configured
-Date: Thu, 15 Sep 2011 18:07:23 +0200
-Message-Id: <1316102844-29970-1-git-send-email-lindner_marek@yahoo.de> (sfid-20110915_181048_539834_E4954A19)
+	Fri, 23 Sep 2011 06:59:51 -0400
+Received: by bkar4 with SMTP id r4so3988637bka.15
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Sep 2011 03:59:47 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: Add support for HW channel switch
+From: Luciano Coelho <coelho@ti.com>
+To: Shahar Levi <shahar_levi@ti.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1316698619.2157.628.camel@cumari>
+References: <1315476093-27583-1-git-send-email-shahar_levi@ti.com>
+	 <1316698619.2157.628.camel@cumari>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 23 Sep 2011 13:59:43 +0300
+Message-ID: <1316775583.2157.728.camel@cumari> (sfid-20110923_125954_304007_7278A506)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Marek Lindner <lindner_marek@yahoo.de>
----
- net/mac80211/ibss.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+On Thu, 2011-09-22 at 16:36 +0300, Luciano Coelho wrote: 
+> On Thu, 2011-09-08 at 13:01 +0300, Shahar Levi wrote: 
+> > WL12xx FW supports HW channel switch mechanism.
+> > Add HW channel switch support via channel_switch ops.
+> > 
+> > Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> > ---
+> 
+> [...]
+> 
+> > +static void wl12xx_op_channel_switch(struct ieee80211_hw *hw,
+> > +				     struct ieee80211_channel_switch *ch_switch)
+> > +{
+> > +	struct wl1271 *wl = hw->priv;
+> > +	int ret;
+> > +
+> > +	wl1271_debug(DEBUG_MAC80211, "mac80211 channel switch");
+> > +
+> > +	mutex_lock(&wl->mutex);
+> > +
+> > +	if (unlikely(wl->state == WL1271_STATE_OFF)) {
+> > +		mutex_unlock(&wl->mutex);
+> > +		ieee80211_chswitch_done(wl->vif, false);
+> > +		return;
+> > +	}
+> > +
+> > +	ret = wl1271_ps_elp_wakeup(wl);
+> > +	if (ret < 0)
+> > +		goto out;
+> > +
+> > +	/* send all pending packets */
+> > +	wl1271_tx_work_locked(wl);
+> 
+> Is this really needed? Can anyone tell why?
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 4f9235b..9c7991e 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -588,12 +588,10 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- 	capability = WLAN_CAPABILITY_IBSS;
- 	if (ifibss->privacy)
- 		capability |= WLAN_CAPABILITY_PRIVACY;
--	if (ifibss->fixed_bssid)
-+	if (ifibss->fixed_bssid && !is_zero_ether_addr(ifibss->bssid))
- 		bssid = ifibss->bssid;
- 	if (ifibss->fixed_channel)
- 		chan = ifibss->channel;
--	if (!is_zero_ether_addr(ifibss->bssid))
--		bssid = ifibss->bssid;
- 	cbss = cfg80211_get_bss(local->hw.wiphy, chan, bssid,
- 				ifibss->ssid, ifibss->ssid_len,
- 				WLAN_CAPABILITY_IBSS | WLAN_CAPABILITY_PRIVACY,
+I checked this a bit further and I don't see the point in sending all
+packets here.  In fact, if block_tx is set, we can't even send any more
+frames until the switch happens (or fails).  So we should at least check
+this here.
+
+I'm leaving this patch out for now until I understand this better.
+
 -- 
-1.7.5.4
+Cheers,
+Luca.
 
