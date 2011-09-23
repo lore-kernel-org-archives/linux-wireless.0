@@ -1,49 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:45928 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932770Ab1IRXY3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35486 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752460Ab1IWI7H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Sep 2011 19:24:29 -0400
-Received: by yxm8 with SMTP id 8so3746212yxm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2011 16:24:28 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Manual Munz <freifunk@somakoma.de>, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@kernel.org>
-Subject: [PATCH] b43: Fix beacon problem in ad-hoc mode
-Date: Sun, 18 Sep 2011 18:24:03 -0500
-Message-Id: <1316388243-5830-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20110919_012432_424921_5D3D3BB9)
+	Fri, 23 Sep 2011 04:59:07 -0400
+Subject: Re: [RFC 00/15] mac80211 uAPSD support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAB=NE6UzHVMOY=v4EEVojED5PY=T-uriAMvpHqehkh4Bygrn3g@mail.gmail.com> (sfid-20110923_012633_459039_93F47F56)
+References: <20110922154726.521122680@sipsolutions.net>
+	 <1316706736.3899.54.camel@jlt3.sipsolutions.net>
+	 <CAB=NE6UzHVMOY=v4EEVojED5PY=T-uriAMvpHqehkh4Bygrn3g@mail.gmail.com>
+	 (sfid-20110923_012633_459039_93F47F56)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 23 Sep 2011 10:59:00 +0200
+Message-ID: <1316768340.3961.0.camel@jlt3.sipsolutions.net> (sfid-20110923_105912_160862_29B3D2EF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Manual Munz <freifunk@somakoma.de>
+On Thu, 2011-09-22 at 16:25 -0700, Luis R. Rodriguez wrote:
 
-In ad-hoc mode, driver b43 does not issue beacons.
+> Awesome :) I started to review this but tried applying the entire
+> series [1] to several different master tags on wireless-testing but it
+> doesn't apply, any chance you could rebase? I'll try to finish my
+> review through though.
 
-Signed-off-by: Manual Munz <freifunk@somakoma.de>
-Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@kernel.org>
----
+It seems to apply to wireless-testing for me, not sure ...
 
- drivers/net/wireless/b43/main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 2407702..56fa3a3 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -1637,7 +1637,8 @@ static void handle_irq_beacon(struct b43_wldev *dev)
- 	u32 cmd, beacon0_valid, beacon1_valid;
- 
- 	if (!b43_is_mode(wl, NL80211_IFTYPE_AP) &&
--	    !b43_is_mode(wl, NL80211_IFTYPE_MESH_POINT))
-+	    !b43_is_mode(wl, NL80211_IFTYPE_MESH_POINT) &&
-+	    !b43_is_mode(wl, NL80211_IFTYPE_ADHOC))
- 		return;
- 
- 	/* This is the bottom half of the asynchronous beacon update. */
--- 
-1.7.6.1
+johannes
 
