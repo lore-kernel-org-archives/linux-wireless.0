@@ -1,38 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:61785 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752413Ab1I1Pgk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 11:36:40 -0400
-Date: Wed, 28 Sep 2011 11:36:30 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: sedat.dilek@gmail.com, Justin Piszcz <jpiszcz@lucidpixels.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Where to obtain the carl open source firmware?
-Message-ID: <20110928113630.35378eb9@mj> (sfid-20110928_173643_586917_CE60C47B)
-In-Reply-To: <201109281359.26182.chunkeey@googlemail.com>
-References: <alpine.DEB.2.02.1109280705410.8348@p34.internal.lan>
-	<CA+icZUVVdxVEZ-gYWe3u84YUafUpZwupwBkEL0dsVAdwRB8KDA@mail.gmail.com>
-	<201109281359.26182.chunkeey@googlemail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12866 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751380Ab1IWF1q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Sep 2011 01:27:46 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2] ath6kl: Fix disconnect event reporting
+Date: Fri, 23 Sep 2011 10:57:50 +0530
+Message-ID: <1316755670-1795-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110923_072749_986246_783217B2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 28 Sep 2011 13:59:26 +0200
-Christian Lamparter <chunkeey@googlemail.com> wrote:
+Driver does not report disconnect event properly when in connecting state,
+this leads to issues failures in starting reconnection. Send a disconnect
+command to target when a disconnect event is received with reason code
+other than 3 (DISCONNECT_CMD - disconnect request from host) to make the
+frimware stop trying to connect even after giving disconnect event. There
+will be one more disconnect event for this disconnect command with reason
+code DISCONNECT_CMD which will be notified to cfg80211.
 
-> As Sedat has already pointed out the 1.9.4 firmware binary is hosted
-> on the wiki-site [Thankfully, Pavel Roskin uploaded it there a while
-> ago. Who would have tought that it was a good idea... now we know it
-> sort of is.]
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
 
-I have put 1.9.2 on http://linuxwireless.org/en/users/Drivers/carl9170
-as well.  It's still recommended for all released kernels.  As I
-understand, Linux 3.1 will need 1.9.4 (according to
-CARL9170FW_VERSION_GIT in 3.1-rc8), so I'm going to add that to the
-Wiki.
+V2 -- Add commands in code and change in commit log
 
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   20 +++++++++-----------
+ 1 files changed, 9 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index c3540bb..c84f53d 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -602,22 +602,20 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
+ 		}
+ 	}
+ 
+-	if (!test_bit(CONNECT_PEND, &ar->flag)) {
+-		if (reason != DISCONNECT_CMD)
+-			ath6kl_wmi_disconnect_cmd(ar->wmi);
+-
+-		return;
+-	}
++	/*
++	 * Send a disconnect command to target when a disconnect event is
++	 * received with reason code other than 3 (DISCONNECT_CMD - disconnect
++	 * request from host) to make the firmware stop trying to connect even
++	 * after giving disconnect event. There will be one more disconnect
++	 * event for this disconnect command with reason code DISCONNECT_CMD
++	 * which will be notified to cfg80211.
++	 */
+ 
+-	if (reason == NO_NETWORK_AVAIL) {
+-		/* connect cmd failed */
++	if (reason != DISCONNECT_CMD) {
+ 		ath6kl_wmi_disconnect_cmd(ar->wmi);
+ 		return;
+ 	}
+ 
+-	if (reason != DISCONNECT_CMD)
+-		return;
+-
+ 	clear_bit(CONNECT_PEND, &ar->flag);
+ 
+ 	if (ar->sme_state == SME_CONNECTING) {
 -- 
-Regards,
-Pavel Roskin
+1.7.0.4
+
