@@ -1,69 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f42.google.com ([74.125.83.42]:61760 "EHLO
-	mail-gw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755087Ab1ISTed (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 15:34:33 -0400
-Received: by gwb17 with SMTP id 17so7043628gwb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 12:34:33 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2/4] rtlwifi: rtl8192se: Change modinfo messages
-Date: Mon, 19 Sep 2011 14:34:08 -0500
-Message-Id: <1316460850-16443-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20110919_213437_383514_0B20A784)
-In-Reply-To: <1316460850-16443-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1316460850-16443-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from mail.skyhub.de ([78.46.96.112]:59577 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753047Ab1IWKdh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Sep 2011 06:33:37 -0400
+Date: Fri, 23 Sep 2011 12:33:39 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: =?utf-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>
+Cc: 'Larry Finger' <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	'LKML' <linux-kernel@vger.kernel.org>
+Subject: Re: =?utf-8?B?562U5aSNOiDnrZTlpI06IOetlA==?= =?utf-8?B?5aSNOg==?=
+ 3.1-rc6+ rtl8192se issue
+Message-ID: <20110923103339.GA26078@gere.osrc.amd.com> (sfid-20110923_123347_942905_278AF00F)
+References: <20110915124406.GA14374@gere.osrc.amd.com>
+ <4E721871.7040901@lwfinger.net>
+ <20110916180323.GA1988@gere.osrc.amd.com>
+ <CD4D8CF16C39438E82FE8241C9AF80F4@realsil.com.cn>
+ <20110921185816.GA2036@gere.osrc.amd.com>
+ <791179BCE62F4954AB936E6CAC9CA977@realsil.com.cn>
+ <4E7AAB8B.40900@lwfinger.net>
+ <20110922075115.GA17640@liondog.tnic>
+ <6452E68488784D0EA32E4BDF1B941EFB@realsil.com.cn>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <6452E68488784D0EA32E4BDF1B941EFB@realsil.com.cn>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The various modparam messages are difficult to understand.
+On Fri, Sep 23, 2011 at 06:21:07PM +0800, 李朝明 wrote:
+> Please set ips =0 and try again..
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192se/sw.c |   14 +++++++++-----
- 1 files changed, 9 insertions(+), 5 deletions(-)
+What does that mean?
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-index 0055a1c..24bd331 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-@@ -164,6 +164,10 @@ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
- 	rtlpriv->psc.inactiveps = rtlpriv->cfg->mod_params->inactiveps;
- 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
- 	rtlpriv->psc.fwctrl_lps = rtlpriv->cfg->mod_params->fwctrl_lps;
-+	if (!rtlpriv->psc.inactiveps)
-+		pr_info("rtl8192ce: Power Save off (module option)\n");
-+	if (!rtlpriv->psc.fwctrl_lps)
-+		pr_info("rtl8192ce: FW Power Save off (module option)\n");
- 	rtlpriv->psc.reg_fwctrl_lps = 3;
- 	rtlpriv->psc.reg_max_lps_awakeintvl = 5;
- 	/* for ASPM, you can close aspm through
-@@ -378,6 +382,7 @@ MODULE_DEVICE_TABLE(pci, rtl92se_pci_ids);
- 
- MODULE_AUTHOR("lizhaoming	<chaoming_li@realsil.com.cn>");
- MODULE_AUTHOR("Realtek WlanFAE	<wlanfae@realtek.com>");
-+MODULE_AUTHOR("Larry Finger	<Larry.Finger@lwfinger.net>");
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("Realtek 8192S/8191S 802.11n PCI wireless");
- MODULE_FIRMWARE("rtlwifi/rtl8192sefw.bin");
-@@ -386,11 +391,10 @@ module_param_named(swenc, rtl92se_mod_params.sw_crypto, bool, 0444);
- module_param_named(ips, rtl92se_mod_params.inactiveps, bool, 0444);
- module_param_named(swlps, rtl92se_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl92se_mod_params.fwctrl_lps, bool, 0444);
--MODULE_PARM_DESC(swenc, "using hardware crypto (default 0 [hardware])\n");
--MODULE_PARM_DESC(ips, "using no link power save (default 1 is open)\n");
--MODULE_PARM_DESC(swlps, "using linked sw control power save (default 1 is "
--		 "open)\n");
--
-+MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
-+MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
-+MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
-+MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
- 
- static struct pci_driver rtl92se_driver = {
- 	.name = KBUILD_MODNAME,
+I can trigger the grinding-to-a-halt reliably with "ips=0" - it only
+takes a couple of hours of network traffic. Also, I don't want to try
+the driver you sent me because the version in the kernel needs fixing
+not some out-of-tree codebase.
+
+So please clarify your request.
+
+Thanks.
+
 -- 
-1.7.6.1
-
+Regards/Gruss,
+Boris.
