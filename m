@@ -1,376 +1,239 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:14745 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756555Ab1ISQQH (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:47019 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751889Ab1IWQeK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 12:16:07 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH 5/9] ath6kl: Replace internal node table with cfg80211 BSS table
-Date: Mon, 19 Sep 2011 19:15:03 +0300
-Message-ID: <1316448907-10166-6-git-send-email-jouni@qca.qualcomm.com> (sfid-20110919_181612_539625_C1EFD217)
-In-Reply-To: <1316448907-10166-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1316448907-10166-1-git-send-email-jouni@qca.qualcomm.com>
+	Fri, 23 Sep 2011 12:34:10 -0400
+Message-ID: <4E7CB504.4060904@lwfinger.net> (sfid-20110923_183428_583933_C7374C91)
+Date: Fri, 23 Sep 2011 11:34:12 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Borislav Petkov <bp@alien8.de>
+CC: =?UTF-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org,
+	'LKML' <linux-kernel@vger.kernel.org>
+Subject: Re: =?UTF-8?B?562U5aSNOiDnrZTlpI06IOetlOWkjTogMy4xLXJjNisgcnRsODE=?=
+ =?UTF-8?B?OTJzZSBpc3N1ZQ==?=
+References: <20110915124406.GA14374@gere.osrc.amd.com> <4E721871.7040901@lwfinger.net> <20110916180323.GA1988@gere.osrc.amd.com> <CD4D8CF16C39438E82FE8241C9AF80F4@realsil.com.cn> <20110921185816.GA2036@gere.osrc.amd.com> <791179BCE62F4954AB936E6CAC9CA977@realsil.com.cn> <4E7AAB8B.40900@lwfinger.net> <20110922075115.GA17640@liondog.tnic> <6452E68488784D0EA32E4BDF1B941EFB@realsil.com.cn> <20110923103339.GA26078@gere.osrc.amd.com>
+In-Reply-To: <20110923103339.GA26078@gere.osrc.amd.com>
+Content-Type: multipart/mixed;
+ boundary="------------040404010806080607090504"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The internal node table in ath6kl was not really used for any useful
-purpose. It was just used to collect scan results during a scan and then
-provide them in a burst to cfg80211 at the completion of the scan. There
-is no point in doing this since cfg80211 is perfectly capable of
-maintaining the BSS table and the BSS inform messages are sent in
-separate function calls anyway.
+This is a multi-part message in MIME format.
+--------------040404010806080607090504
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-This provides more complete information in the cfg80211 BSS table since
-this allows Beacon and Probe Response frames to be distinguished and IEs
-from them reported separately.
+On 09/23/2011 05:33 AM, Borislav Petkov wrote:
+> On Fri, Sep 23, 2011 at 06:21:07PM +0800, 李朝明 wrote:
+>> Please set ips =0 and try again..
+>
+> What does that mean?
+>
+> I can trigger the grinding-to-a-halt reliably with "ips=0" - it only
+> takes a couple of hours of network traffic. Also, I don't want to try
+> the driver you sent me because the version in the kernel needs fixing
+> not some out-of-tree codebase.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/wmi.c |  296 +++++----------------------------
- 1 files changed, 45 insertions(+), 251 deletions(-)
+I got a chance to review the rtl8192se part of the changes in that 08/16/2011 
+version. Attached is a patch to update the kernel version.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 24f0e3e..ff13e0b 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -910,277 +910,74 @@ static int ath6kl_wmi_tkip_micerr_event_rx(struct wmi *wmi, u8 *datap, int len)
- 	return 0;
- }
- 
--static int ath6kl_wlan_parse_beacon(u8 *buf, int frame_len,
--				    struct ath6kl_common_ie *cie)
--{
--	u8 *frm, *efrm;
--	u8 elemid_ssid = false;
--
--	frm = buf;
--	efrm = (u8 *) (frm + frame_len);
--
--	/*
--	 * beacon/probe response frame format
--	 *  [8] time stamp
--	 *  [2] beacon interval
--	 *  [2] capability information
--	 *  [tlv] ssid
--	 *  [tlv] supported rates
--	 *  [tlv] country information
--	 *  [tlv] parameter set (FH/DS)
--	 *  [tlv] erp information
--	 *  [tlv] extended supported rates
--	 *  [tlv] WMM
--	 *  [tlv] WPA or RSN
--	 *  [tlv] Atheros Advanced Capabilities
--	 */
--	if ((efrm - frm) < 12)
--		return -EINVAL;
--
--	memset(cie, 0, sizeof(*cie));
--
--	cie->ie_tstamp = frm;
--	frm += 8;
--	cie->ie_beaconInt = *(u16 *) frm;
--	frm += 2;
--	cie->ie_capInfo = *(u16 *) frm;
--	frm += 2;
--	cie->ie_chan = 0;
--
--	while (frm < efrm) {
--		switch (*frm) {
--		case WLAN_EID_SSID:
--			if (!elemid_ssid) {
--				cie->ie_ssid = frm;
--				elemid_ssid = true;
--			}
--			break;
--		case WLAN_EID_SUPP_RATES:
--			cie->ie_rates = frm;
--			break;
--		case WLAN_EID_COUNTRY:
--			cie->ie_country = frm;
--			break;
--		case WLAN_EID_FH_PARAMS:
--			break;
--		case WLAN_EID_DS_PARAMS:
--			cie->ie_chan = frm[2];
--			break;
--		case WLAN_EID_TIM:
--			cie->ie_tim = frm;
--			break;
--		case WLAN_EID_IBSS_PARAMS:
--			break;
--		case WLAN_EID_EXT_SUPP_RATES:
--			cie->ie_xrates = frm;
--			break;
--		case WLAN_EID_ERP_INFO:
--			if (frm[1] != 1)
--				return -EINVAL;
--
--			cie->ie_erp = frm[2];
--			break;
--		case WLAN_EID_RSN:
--			cie->ie_rsn = frm;
--			break;
--		case WLAN_EID_HT_CAPABILITY:
--			cie->ie_htcap = frm;
--			break;
--		case WLAN_EID_HT_INFORMATION:
--			cie->ie_htop = frm;
--			break;
--		case WLAN_EID_VENDOR_SPECIFIC:
--			if (frm[1] > 3 && frm[2] == 0x00 && frm[3] == 0x50 &&
--			    frm[4] == 0xf2) {
--				/* OUT Type (00:50:F2) */
--
--				if (frm[5] == WPA_OUI_TYPE) {
--					/* WPA OUT */
--					cie->ie_wpa = frm;
--				} else if (frm[5] == WMM_OUI_TYPE) {
--					/* WMM OUT */
--					cie->ie_wmm = frm;
--				} else if (frm[5] == WSC_OUT_TYPE) {
--					/* WSC OUT */
--					cie->ie_wsc = frm;
--				}
--
--			} else if (frm[1] > 3 && frm[2] == 0x00
--				   && frm[3] == 0x03 && frm[4] == 0x7f
--				   && frm[5] == ATH_OUI_TYPE) {
--				/* Atheros OUI (00:03:7f) */
--				cie->ie_ath = frm;
--			}
--			break;
--		default:
--			break;
--		}
--		frm += frm[1] + 2;
--	}
--
--	if ((cie->ie_rates == NULL)
--	    || (cie->ie_rates[1] > ATH6KL_RATE_MAXSIZE))
--		return -EINVAL;
--
--	if ((cie->ie_ssid == NULL)
--	    || (cie->ie_ssid[1] > IEEE80211_MAX_SSID_LEN))
--		return -EINVAL;
--
--	return 0;
--}
--
- static int ath6kl_wmi_bssinfo_event_rx(struct wmi *wmi, u8 *datap, int len)
- {
--	struct bss *bss = NULL;
- 	struct wmi_bss_info_hdr *bih;
--	u8 cached_ssid_len = 0;
--	u8 cached_ssid[IEEE80211_MAX_SSID_LEN] = { 0 };
--	u8 beacon_ssid_len = 0;
--	u8 *buf, *ie_ssid;
--	u8 *ni_buf;
--	int buf_len;
--
--	int ret;
-+	u8 *buf;
-+	struct ieee80211_channel *channel;
-+	struct ath6kl *ar = wmi->parent_dev;
-+	struct ieee80211_mgmt *mgmt;
-+	struct cfg80211_bss *bss;
- 
- 	if (len <= sizeof(struct wmi_bss_info_hdr))
- 		return -EINVAL;
- 
- 	bih = (struct wmi_bss_info_hdr *) datap;
--	bss = wlan_find_node(&wmi->parent_dev->scan_table, bih->bssid);
--
--	if (a_sle16_to_cpu(bih->rssi) > 0) {
--		if (bss == NULL)
--			return 0;
--		else
--			bih->rssi = a_cpu_to_sle16(bss->ni_rssi);
--	}
--
- 	buf = datap + sizeof(struct wmi_bss_info_hdr);
- 	len -= sizeof(struct wmi_bss_info_hdr);
- 
- 	ath6kl_dbg(ATH6KL_DBG_WMI,
--		   "bss info evt - ch %u, rssi %02x, bssid \"%pM\"\n",
--		   bih->ch, a_sle16_to_cpu(bih->rssi), bih->bssid);
--
--	if (bss != NULL) {
--		/*
--		 * Free up the node. We are about to allocate a new node.
--		 * In case of hidden AP, beacon will not have ssid,
--		 * but a directed probe response will have it,
--		 * so cache the probe-resp-ssid if already present.
--		 */
--		if (wmi->is_probe_ssid && (bih->frame_type == BEACON_FTYPE)) {
--			ie_ssid = bss->ni_cie.ie_ssid;
--			if (ie_ssid && (ie_ssid[1] <= IEEE80211_MAX_SSID_LEN) &&
--			    (ie_ssid[2] != 0)) {
--				cached_ssid_len = ie_ssid[1];
--				memcpy(cached_ssid, ie_ssid + 2,
--				       cached_ssid_len);
--			}
--		}
--
--		/*
--		 * Use the current average rssi of associated AP base on
--		 * assumption
--		 *   1. Most os with GUI will update RSSI by
--		 *      ath6kl_wmi_get_stats_cmd() periodically.
--		 *   2. ath6kl_wmi_get_stats_cmd(..) will be called when calling
--		 *      ath6kl_wmi_startscan_cmd(...)
--		 * The average value of RSSI give end-user better feeling for
--		 * instance value of scan result. It also sync up RSSI info
--		 * in GUI between scan result and RSSI signal icon.
--		 */
--		if (memcmp(wmi->parent_dev->bssid, bih->bssid, ETH_ALEN) == 0) {
--			bih->rssi = a_cpu_to_sle16(bss->ni_rssi);
--			bih->snr = bss->ni_snr;
--		}
--
--		wlan_node_reclaim(&wmi->parent_dev->scan_table, bss);
--	}
--
--	/*
--	 * beacon/probe response frame format
--	 *  [8] time stamp
--	 *  [2] beacon interval
--	 *  [2] capability information
--	 *  [tlv] ssid
--	 */
--	beacon_ssid_len = buf[SSID_IE_LEN_INDEX];
--
--	/*
--	 * If ssid is cached for this hidden AP, then change
--	 * buffer len accordingly.
--	 */
--	if (wmi->is_probe_ssid && (bih->frame_type == BEACON_FTYPE) &&
--	    (cached_ssid_len != 0) &&
--	    (beacon_ssid_len == 0 || (cached_ssid_len > beacon_ssid_len &&
--				      buf[SSID_IE_LEN_INDEX + 1] == 0))) {
--
--		len += (cached_ssid_len - beacon_ssid_len);
--	}
-+		   "bss info evt - ch %u, snr %d, rssi %d, bssid \"%pM\" "
-+		   "frame_type=%d\n",
-+		   bih->ch, bih->snr, a_sle16_to_cpu(bih->rssi), bih->bssid,
-+		   bih->frame_type);
- 
--	bss = wlan_node_alloc(len);
--	if (!bss)
--		return -ENOMEM;
-+	if (bih->frame_type != BEACON_FTYPE &&
-+	    bih->frame_type != PROBERESP_FTYPE)
-+		return 0; /* Only update BSS table for now */
- 
--	bss->ni_snr = bih->snr;
--	bss->ni_rssi = a_sle16_to_cpu(bih->rssi);
-+	channel = ieee80211_get_channel(ar->wdev->wiphy, le16_to_cpu(bih->ch));
-+	if (channel == NULL)
-+		return -EINVAL;
- 
--	if (WARN_ON(!bss->ni_buf))
-+	if (len < 8 + 2 + 2)
- 		return -EINVAL;
- 
- 	/*
--	 * In case of hidden AP, beacon will not have ssid,
--	 * but a directed probe response will have it,
--	 * so place the cached-ssid(probe-resp) in the bss info.
-+	 * In theory, use of cfg80211_inform_bss() would be more natural here
-+	 * since we do not have the full frame. However, at least for now,
-+	 * cfg80211 can only distinguish Beacon and Probe Response frames from
-+	 * each other when using cfg80211_inform_bss_frame(), so let's build a
-+	 * fake IEEE 802.11 header to be able to take benefit of this.
- 	 */
--	if (wmi->is_probe_ssid && (bih->frame_type == BEACON_FTYPE) &&
--	    (cached_ssid_len != 0) &&
--	    (beacon_ssid_len == 0 || (beacon_ssid_len &&
--				      buf[SSID_IE_LEN_INDEX + 1] == 0))) {
--		ni_buf = bss->ni_buf;
--		buf_len = len;
--
--		/*
--		 * Copy the first 14 bytes:
--		 * time-stamp(8), beacon-interval(2),
--		 * cap-info(2), ssid-id(1), ssid-len(1).
--		 */
--		memcpy(ni_buf, buf, SSID_IE_LEN_INDEX + 1);
--
--		ni_buf[SSID_IE_LEN_INDEX] = cached_ssid_len;
--		ni_buf += (SSID_IE_LEN_INDEX + 1);
--
--		buf += (SSID_IE_LEN_INDEX + 1);
--		buf_len -= (SSID_IE_LEN_INDEX + 1);
--
--		memcpy(ni_buf, cached_ssid, cached_ssid_len);
--		ni_buf += cached_ssid_len;
--
--		buf += beacon_ssid_len;
--		buf_len -= beacon_ssid_len;
--
--		if (cached_ssid_len > beacon_ssid_len)
--			buf_len -= (cached_ssid_len - beacon_ssid_len);
--
--		memcpy(ni_buf, buf, buf_len);
--	} else
--		memcpy(bss->ni_buf, buf, len);
-+	mgmt = kmalloc(24 + len, GFP_ATOMIC);
-+	if (mgmt == NULL)
-+		return -EINVAL;
- 
--	bss->ni_framelen = len;
-+	if (bih->frame_type == BEACON_FTYPE) {
-+		mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+						  IEEE80211_STYPE_BEACON);
-+		memset(mgmt->da, 0xff, ETH_ALEN);
-+	} else {
-+		struct net_device *dev = ar->net_dev;
- 
--	ret = ath6kl_wlan_parse_beacon(bss->ni_buf, len, &bss->ni_cie);
--	if (ret) {
--		wlan_node_free(bss);
--		return -EINVAL;
-+		mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+						  IEEE80211_STYPE_PROBE_RESP);
-+		memcpy(mgmt->da, dev->dev_addr, ETH_ALEN);
- 	}
-+	mgmt->duration = cpu_to_le16(0);
-+	memcpy(mgmt->sa, bih->bssid, ETH_ALEN);
-+	memcpy(mgmt->bssid, bih->bssid, ETH_ALEN);
-+	mgmt->seq_ctrl = cpu_to_le16(0);
- 
--	/*
--	 * Update the frequency in ie_chan, overwriting of channel number
--	 * which is done in ath6kl_wlan_parse_beacon
--	 */
--	bss->ni_cie.ie_chan = le16_to_cpu(bih->ch);
--	wlan_setup_node(&wmi->parent_dev->scan_table, bss, bih->bssid);
-+	memcpy(&mgmt->u.beacon, buf, len);
-+
-+	bss = cfg80211_inform_bss_frame(ar->wdev->wiphy, channel, mgmt,
-+					24 + len, bih->snr * 100, GFP_ATOMIC);
-+	kfree(mgmt);
-+	if (bss == NULL)
-+		return -ENOMEM;
-+	cfg80211_put_bss(bss);
- 
- 	return 0;
- }
-@@ -1295,9 +1092,6 @@ static int ath6kl_wmi_scan_complete_rx(struct wmi *wmi, u8 *datap, int len)
- 
- 	ev = (struct wmi_scan_complete_event *) datap;
- 
--	if (a_sle32_to_cpu(ev->status) == 0)
--		wlan_refresh_inactive_nodes(wmi->parent_dev);
--
- 	ath6kl_scan_complete_evt(wmi->parent_dev, a_sle32_to_cpu(ev->status));
- 	wmi->is_probe_ssid = false;
- 
--- 
-1.7.4.1
+A prerequisite is:
 
+commit da3ba88a9996cd64c6768bed5727e02da81e2c8d
+Author: Larry Finger <Larry.Finger@lwfinger.net>
+Date:   Mon Sep 19 14:34:10 2011 -0500
+
+     rtlwifi: Combine instances of RTL_HAL_IS_CCK_RATE macros.
+
+     Three drivers, rtl8192ce, rtl8192cu and rtl8192de, use the same macro
+     to check if a particular rate is in the CCK set. This common code is
+     relocated to a common header file. A distinct macro used by rtl8192se
+     with the same name is renamed.
+
+     Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+I have run the new version for a couple of hours without problems. Perhaps it 
+will cure your difficulty, but I am not optimistic.
+
+Larry
+
+--------------040404010806080607090504
+Content-Type: text/plain;
+ name="rtl8192se_reg_en"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="rtl8192se_reg_en"
+
+RnJvbTogQ2hhb21pbmcgTGkgPGNoYW9taW5nX2xpQHJlYWxzaWwuY29tLmNuPgoKVGhpcyBw
+YXRjaCBpbmNvcnBvcmF0ZSB0aGUgZGlmZmVyZW5jZXMgYmV0d2VlbiB0aGUgMDYvMjAvMjAx
+MSBhbmQKMDgvMTYvMjAxMSBSZWFsdGVrIHJlbGVhc2VzIG9mIHRoZSBydGw4MTkyc2UgZHJp
+dmVyLgoKVGhlIGNoYW5nZXMgaW5jbHVkZToKCjEuIEZpeGluZyBzb21lIHR5cG9zIGluIHJl
+Z2lzdGVyIHVzYWdlLgoyLiBBIGNoYW5nZSBpbiB0aGUgaGFuZGxpbmcgb2YgZGVjcnlwdGlv
+biBzdGF0dXMgZm9yIDgwMi4xMXcgcGFja2V0cy4KClNpZ25lZC1vZmYtYnk6IENoYW9taW5n
+IExpIDxjaGFvbWluZ19saUByZWFsc2lsLmNvbS5jbj4KU2lnbmVkLW9mZi1ieTogTGFycnkg
+RmluZ2VyIDxMYXJyeS5GaW5nZXJAbHdmaW5nZXIubmV0PgotLS0KCkluZGV4OiB3aXJlbGVz
+cy10ZXN0aW5nLW5ldy9kcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJzZS9o
+dy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT0KLS0tIHdpcmVsZXNzLXRlc3RpbmctbmV3Lm9yaWcvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvcnRsd2lmaS9ydGw4MTkyc2UvaHcuYworKysgd2lyZWxlc3MtdGVz
+dGluZy1uZXcvZHJpdmVycy9uZXQvd2lyZWxlc3MvcnRsd2lmaS9ydGw4MTkyc2UvaHcuYwpA
+QCAtMTM4Miw3ICsxMzgyLDcgQEAgc3RhdGljIHZvaWQgX3J0bDkyc2VfcG93ZXJfZG9tYWlu
+X2luaXQocwogCXJ0bF93cml0ZV9ieXRlKHJ0bHByaXYsIExET0ExNV9DVFJMLCAweDM0KTsK
+IAogCS8qIFJlc2V0IE1BQy1JTyBhbmQgQ1BVIGFuZCBDb3JlIERpZ2l0YWwgQklUMTAvMTEv
+MTUgKi8KLQl0bXB1MWIgPSBydGxfcmVhZF9ieXRlKHJ0bHByaXYsIFNZU19GVU5DX0VOICsg
+MSk7CisJdG1wdTFiID0gcnRsX3JlYWRfYnl0ZShydGxwcml2LCBSRUdfU1lTX0ZVTkNfRU4g
+KyAxKTsKIAogCS8qIElmIElQUyB3ZSBuZWVkIHRvIHR1cm4gTEVEIG9uLiBTbyB3ZSBub3QK
+IAkgKiBub3QgZGlzYWJsZSBCSVQgMy83IG9mIHJlZzMuICovCkBAIC0xMzkxLDcgKzEzOTEs
+NyBAQCBzdGF0aWMgdm9pZCBfcnRsOTJzZV9wb3dlcl9kb21haW5faW5pdChzCiAJZWxzZQog
+CQl0bXB1MWIgJj0gMHg3MzsKIAotCXJ0bF93cml0ZV9ieXRlKHJ0bHByaXYsIFNZU19GVU5D
+X0VOICsgMSwgdG1wdTFiKTsKKwlydGxfd3JpdGVfYnl0ZShydGxwcml2LCBSRUdfU1lTX0ZV
+TkNfRU4gKyAxLCB0bXB1MWIpOwogCS8qIHdhaXQgZm9yIEJJVCAxMC8xMS8xNSB0byBwdWxs
+IGhpZ2ggYXV0b21hdGljYWxseSEhICovCiAJbWRlbGF5KDEpOwogCkBAIC0xNDI4LDE1ICsx
+NDI4LDE1IEBAIHN0YXRpYyB2b2lkIF9ydGw5MnNlX3Bvd2VyX2RvbWFpbl9pbml0KHMKIAly
+dGxfd3JpdGVfYnl0ZShydGxwcml2LCBMRE9BMTVfQ1RSTCwgKHRtcHUxYiB8IEJJVCgwKSkp
+OwogCiAJLyogU2V0IERpZ2l0YWwgVmRkIHRvIFJldGVudGlvbiBpc29sYXRpb24gUGF0aC4g
+Ki8KLQl0bXB1MmIgPSBydGxfcmVhZF93b3JkKHJ0bHByaXYsIFNZU19JU09fQ1RSTCk7Ci0J
+cnRsX3dyaXRlX3dvcmQocnRscHJpdiwgU1lTX0lTT19DVFJMLCAodG1wdTJiIHwgQklUKDEx
+KSkpOworCXRtcHUyYiA9IHJ0bF9yZWFkX3dvcmQocnRscHJpdiwgUkVHX1NZU19JU09fQ1RS
+TCk7CisJcnRsX3dyaXRlX3dvcmQocnRscHJpdiwgUkVHX1NZU19JU09fQ1RSTCwgKHRtcHUy
+YiB8IEJJVCgxMSkpKTsKIAogCiAJLyogRm9yIHdhcm0gcmVib290IE5JQyBkaXNhcHBlcmEg
+YnVnLiAqLwotCXRtcHUyYiA9IHJ0bF9yZWFkX3dvcmQocnRscHJpdiwgU1lTX0ZVTkNfRU4p
+OwotCXJ0bF93cml0ZV93b3JkKHJ0bHByaXYsIFNZU19GVU5DX0VOLCAodG1wdTJiIHwgQklU
+KDEzKSkpOworCXRtcHUyYiA9IHJ0bF9yZWFkX3dvcmQocnRscHJpdiwgUkVHX1NZU19GVU5D
+X0VOKTsKKwlydGxfd3JpdGVfd29yZChydGxwcml2LCBSRUdfU1lTX0ZVTkNfRU4sICh0bXB1
+MmIgfCBCSVQoMTMpKSk7CiAKLQlydGxfd3JpdGVfYnl0ZShydGxwcml2LCBTWVNfSVNPX0NU
+UkwgKyAxLCAweDY4KTsKKwlydGxfd3JpdGVfYnl0ZShydGxwcml2LCBSRUdfU1lTX0lTT19D
+VFJMICsgMSwgMHg2OCk7CiAKIAkvKiBFbmFibGUgQUZFIFBMTCBNYWNybyBCbG9jayAqLwog
+CXRtcHUxYiA9IHJ0bF9yZWFkX2J5dGUocnRscHJpdiwgQUZFX1BMTF9DVFJMKTsKQEAgLTE0
+NDcsMTcgKzE0NDcsMTcgQEAgc3RhdGljIHZvaWQgX3J0bDkyc2VfcG93ZXJfZG9tYWluX2lu
+aXQocwogCW1kZWxheSgxKTsKIAogCS8qIFJlbGVhc2UgaXNvbGF0aW9uIEFGRSBQTEwgJiBN
+RCAqLwotCXJ0bF93cml0ZV9ieXRlKHJ0bHByaXYsIFNZU19JU09fQ1RSTCwgMHhBNik7CisJ
+cnRsX3dyaXRlX2J5dGUocnRscHJpdiwgUkVHX1NZU19JU09fQ1RSTCwgMHhBNik7CiAKIAkv
+KiBFbmFibGUgTUFDIGNsb2NrICovCiAJdG1wdTJiID0gcnRsX3JlYWRfd29yZChydGxwcml2
+LCBTWVNfQ0xLUik7CiAJcnRsX3dyaXRlX3dvcmQocnRscHJpdiwgU1lTX0NMS1IsICh0bXB1
+MmIgfCBCSVQoMTIpIHwgQklUKDExKSkpOwogCiAJLyogRW5hYmxlIENvcmUgZGlnaXRhbCBh
+bmQgZW5hYmxlIElPUkVHIFIvVyAqLwotCXRtcHUyYiA9IHJ0bF9yZWFkX3dvcmQocnRscHJp
+diwgU1lTX0ZVTkNfRU4pOwotCXJ0bF93cml0ZV93b3JkKHJ0bHByaXYsIFNZU19GVU5DX0VO
+LCAodG1wdTJiIHwgQklUKDExKSkpOworCXRtcHUyYiA9IHJ0bF9yZWFkX3dvcmQocnRscHJp
+diwgUkVHX1NZU19GVU5DX0VOKTsKKwlydGxfd3JpdGVfd29yZChydGxwcml2LCBSRUdfU1lT
+X0ZVTkNfRU4sICh0bXB1MmIgfCBCSVQoMTEpKSk7CiAJLyogZW5hYmxlIFJFR19FTiAqLwot
+CXJ0bF93cml0ZV93b3JkKHJ0bHByaXYsIFNZU19GVU5DX0VOLCAodG1wdTJiIHwgQklUKDEx
+KSB8IEJJVCgxNSkpKTsKKwlydGxfd3JpdGVfd29yZChydGxwcml2LCBSRUdfU1lTX0ZVTkNf
+RU4sICh0bXB1MmIgfCBCSVQoMTEpIHwgQklUKDE1KSkpOwogCiAJLyogU3dpdGNoIHRoZSBj
+b250cm9sIHBhdGguICovCiAJdG1wdTJiID0gcnRsX3JlYWRfd29yZChydGxwcml2LCBTWVNf
+Q0xLUik7CkluZGV4OiB3aXJlbGVzcy10ZXN0aW5nLW5ldy9kcml2ZXJzL25ldC93aXJlbGVz
+cy9ydGx3aWZpL3J0bDgxOTJzZS9yZWcuaAo9PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSB3aXJlbGVzcy10
+ZXN0aW5nLW5ldy5vcmlnL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0bHdpZmkvcnRsODE5MnNl
+L3JlZy5oCisrKyB3aXJlbGVzcy10ZXN0aW5nLW5ldy9kcml2ZXJzL25ldC93aXJlbGVzcy9y
+dGx3aWZpL3J0bDgxOTJzZS9yZWcuaApAQCAtNzM1LDYgKzczNSw3IEBACiAjZGVmaW5lCUhX
+U0VUX01BWF9TSVpFXzkyUwkJCTEyOAogI2RlZmluZSBFRlVTRV9NQVhfU0VDVElPTgkJCTE2
+CiAjZGVmaW5lIEVGVVNFX1JFQUxfQ09OVEVOVF9MRU4JCQk1MTIKKyNkZWZpbmUgRUZVU0Vf
+T09CX1BST1RFQ1RfQllURVMJCQkxNQogCiAjZGVmaW5lIFJUTDgxOTBfRUVQUk9NX0lECQkJ
+MHg4MTI5CiAjZGVmaW5lIEVFUFJPTV9IUE9OCQkJCTB4MDIKSW5kZXg6IHdpcmVsZXNzLXRl
+c3RpbmctbmV3L2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0bHdpZmkvcnRsODE5MnNlL3N3LmMK
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PQotLS0gd2lyZWxlc3MtdGVzdGluZy1uZXcub3JpZy9kcml2ZXJzL25l
+dC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJzZS9zdy5jCisrKyB3aXJlbGVzcy10ZXN0aW5n
+LW5ldy9kcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJzZS9zdy5jCkBAIC0z
+MDQsNiArMzA0LDcgQEAgc3RhdGljIHN0cnVjdCBydGxfaGFsX2NmZyBydGw5MnNlX2hhbF9j
+ZgogCS5tYXBzW0VGVVNFX0hXU0VUX01BWF9TSVpFXSA9IEhXU0VUX01BWF9TSVpFXzkyUywK
+IAkubWFwc1tFRlVTRV9NQVhfU0VDVElPTl9NQVBdID0gRUZVU0VfTUFYX1NFQ1RJT04sCiAJ
+Lm1hcHNbRUZVU0VfUkVBTF9DT05URU5UX1NJWkVdID0gRUZVU0VfUkVBTF9DT05URU5UX0xF
+TiwKKwkubWFwc1tFRlVTRV9PT0JfUFJPVEVDVF9CWVRFU19MRU5dID0gRUZVU0VfT09CX1BS
+T1RFQ1RfQllURVMsCiAKIAkubWFwc1tSV0NBTV0gPSBSRUdfUldDQU0sCiAJLm1hcHNbV0NB
+TUldID0gUkVHX1dDQU1JLApJbmRleDogd2lyZWxlc3MtdGVzdGluZy1uZXcvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvcnRsd2lmaS9ydGw4MTkyc2UvdHJ4LmMKPT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0g
+d2lyZWxlc3MtdGVzdGluZy1uZXcub3JpZy9kcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZp
+L3J0bDgxOTJzZS90cnguYworKysgd2lyZWxlc3MtdGVzdGluZy1uZXcvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvcnRsd2lmaS9ydGw4MTkyc2UvdHJ4LmMKQEAgLTEyNCwxOCArMTI0LDE1IEBA
+IHN0YXRpYyB2b2lkIF9ydGw5MnNlX3F1ZXJ5X3J4cGh5c3RhdHVzKHMKIAl1OCBpLCBtYXhf
+c3BhdGlhbF9zdHJlYW07CiAJdTMyIHJzc2ksIHRvdGFsX3Jzc2kgPSAwOwogCWJvb2wgaW5f
+cG93ZXJzYXZlbW9kZSA9IGZhbHNlOwotCWJvb2wgaXNfY2NrX3JhdGU7CisJYm9vbCBpc19j
+Y2sgPSBwc3RhdHMtPmlzX2NjazsKIAotCWlzX2Nja19yYXRlID0gU0VfUlhfSEFMX0lTX0ND
+S19SQVRFKHBkZXNjKTsKIAlwc3RhdHMtPnBhY2tldF9tYXRjaGJzc2lkID0gcGFja2V0X21h
+dGNoX2Jzc2lkOwogCXBzdGF0cy0+cGFja2V0X3Rvc2VsZiA9IHBhY2tldF90b3NlbGY7Ci0J
+cHN0YXRzLT5pc19jY2sgPSBpc19jY2tfcmF0ZTsKIAlwc3RhdHMtPnBhY2tldF9iZWFjb24g
+PSBwYWNrZXRfYmVhY29uOwotCXBzdGF0cy0+aXNfY2NrID0gaXNfY2NrX3JhdGU7CiAJcHN0
+YXRzLT5yeF9taW1vX3NpZ25hbHF1YWxpdHlbMF0gPSAtMTsKIAlwc3RhdHMtPnJ4X21pbW9f
+c2lnbmFscXVhbGl0eVsxXSA9IC0xOwogCi0JaWYgKGlzX2Nja19yYXRlKSB7CisJaWYgKGlz
+X2NjaykgewogCQl1OCByZXBvcnQsIGNja19oaWdocHdyOwogCQljY2tfYnVmID0gKHN0cnVj
+dCBwaHlfc3RzX2Nja184MTkyc190ICopcF9kcnZpbmZvOwogCkBAIC0yNDYsOSArMjQzLDgg
+QEAgc3RhdGljIHZvaWQgX3J0bDkyc2VfcXVlcnlfcnhwaHlzdGF0dXMocwogCQlwc3RhdHMt
+PnJ4cG93ZXIgPSByeF9wd3JfYWxsOwogCQlwc3RhdHMtPnJlY3ZzaWduYWxwb3dlciA9IHJ4
+X3B3cl9hbGw7CiAKLQkJaWYgKEdFVF9SWF9TVEFUVVNfREVTQ19SWF9IVChwZGVzYykgJiYK
+LQkJCUdFVF9SWF9TVEFUVVNfREVTQ19SWF9NQ1MocGRlc2MpID49IERFU0M5Ml9SQVRFTUNT
+OCAmJgotCQkgICAgR0VUX1JYX1NUQVRVU19ERVNDX1JYX01DUyhwZGVzYykgPD0gREVTQzky
+X1JBVEVNQ1MxNSkKKwkJaWYgKHBzdGF0cy0+aXNfaHQgJiYgcHN0YXRzLT5yYXRlID49IERF
+U0M5Ml9SQVRFTUNTOCAmJgorCQkgICAgcHN0YXRzLT5yYXRlIDw9IERFU0M5Ml9SQVRFTUNT
+MTUpCiAJCQltYXhfc3BhdGlhbF9zdHJlYW0gPSAyOwogCQllbHNlCiAJCQltYXhfc3BhdGlh
+bF9zdHJlYW0gPSAxOwpAQCAtMjY2LDcgKzI2Miw3IEBAIHN0YXRpYyB2b2lkIF9ydGw5MnNl
+X3F1ZXJ5X3J4cGh5c3RhdHVzKHMKIAkJfQogCX0KIAotCWlmIChpc19jY2tfcmF0ZSkKKwlp
+ZiAoaXNfY2NrKQogCQlwc3RhdHMtPnNpZ25hbHN0cmVuZ3RoID0gKHU4KShfcnRsOTJzZV9z
+aWduYWxfc2NhbGVfbWFwcGluZyhodywKIAkJCQkJIHB3ZGJfYWxsKSk7CiAJZWxzZSBpZiAo
+cmZfcnhfbnVtICE9IDApCkBAIC01MTgsNiArNTE0LDcgQEAgYm9vbCBydGw5MnNlX3J4X3F1
+ZXJ5X2Rlc2Moc3RydWN0IGllZWU4MAogewogCXN0cnVjdCByeF9md2luZm8gKnBfZHJ2aW5m
+bzsKIAl1MzIgcGh5c3RhdHVzID0gKHUzMilHRVRfUlhfU1RBVFVTX0RFU0NfUEhZX1NUQVRV
+UyhwZGVzYyk7CisJc3RydWN0IGllZWU4MDIxMV9oZHIgKmhkcjsKIAogCXN0YXRzLT5sZW5n
+dGggPSAodTE2KUdFVF9SWF9TVEFUVVNfREVTQ19QS1RfTEVOKHBkZXNjKTsKIAlzdGF0cy0+
+cnhfZHJ2aW5mb19zaXplID0gKHU4KUdFVF9SWF9TVEFUVVNfREVTQ19EUlZJTkZPX1NJWkUo
+cGRlc2MpICogODsKQEAgLTUzMCw4ICs1MjcsMTIgQEAgYm9vbCBydGw5MnNlX3J4X3F1ZXJ5
+X2Rlc2Moc3RydWN0IGllZWU4MAogCXN0YXRzLT5yYXRlID0gKHU4KUdFVF9SWF9TVEFUVVNf
+REVTQ19SWF9NQ1MocGRlc2MpOwogCXN0YXRzLT5zaG9ydHByZWFtYmxlID0gKHUxNilHRVRf
+UlhfU1RBVFVTX0RFU0NfU1BMQ1AocGRlc2MpOwogCXN0YXRzLT5pc2FtcGR1ID0gKGJvb2wp
+KEdFVF9SWF9TVEFUVVNfREVTQ19QQUdHUihwZGVzYykgPT0gMSk7CisJc3RhdHMtPmlzZmly
+c3RfYW1wZHUgPSAoYm9vbCkgKChHRVRfUlhfU1RBVFVTX0RFU0NfUEFHR1IocGRlc2MpID09
+IDEpCisJCQkgICAgICAgJiYgKEdFVF9SWF9TVEFUVVNfREVTQ19GQUdHUihwZGVzYykgPT0g
+MSkpOwogCXN0YXRzLT50aW1lc3RhbXBfbG93ID0gR0VUX1JYX1NUQVRVU19ERVNDX1RTRkwo
+cGRlc2MpOwogCXN0YXRzLT5yeF9pczQwTWh6cGFja2V0ID0gKGJvb2wpR0VUX1JYX1NUQVRV
+U19ERVNDX0JXKHBkZXNjKTsKKwlzdGF0cy0+aXNfaHQgPSAoYm9vbClHRVRfUlhfU1RBVFVT
+X0RFU0NfUlhfSFQocGRlc2MpOworCXN0YXRzLT5pc19jY2sgPSBTRV9SWF9IQUxfSVNfQ0NL
+X1JBVEUocGRlc2MpOwogCiAJaWYgKHN0YXRzLT5od2Vycm9yKQogCQlyZXR1cm4gZmFsc2U7
+CkBAIC01MzksMjkgKzU0MCwzOSBAQCBib29sIHJ0bDkyc2VfcnhfcXVlcnlfZGVzYyhzdHJ1
+Y3QgaWVlZTgwCiAJcnhfc3RhdHVzLT5mcmVxID0gaHctPmNvbmYuY2hhbm5lbC0+Y2VudGVy
+X2ZyZXE7CiAJcnhfc3RhdHVzLT5iYW5kID0gaHctPmNvbmYuY2hhbm5lbC0+YmFuZDsKIAot
+CWlmIChHRVRfUlhfU1RBVFVTX0RFU0NfQ1JDMzIocGRlc2MpKQotCQlyeF9zdGF0dXMtPmZs
+YWcgfD0gUlhfRkxBR19GQUlMRURfRkNTX0NSQzsKKwloZHIgPSAoc3RydWN0IGllZWU4MDIx
+MV9oZHIgKikoc2tiLT5kYXRhICsgc3RhdHMtPnJ4X2RydmluZm9fc2l6ZQorCSAgICAgICsg
+c3RhdHMtPnJ4X2J1ZnNoaWZ0KTsKIAotCWlmICghR0VUX1JYX1NUQVRVU19ERVNDX1NXREVD
+KHBkZXNjKSkKLQkJcnhfc3RhdHVzLT5mbGFnIHw9IFJYX0ZMQUdfREVDUllQVEVEOworCWlm
+IChzdGF0cy0+Y3JjKQorCQlyeF9zdGF0dXMtPmZsYWcgfD0gUlhfRkxBR19GQUlMRURfRkNT
+X0NSQzsKIAotCWlmIChHRVRfUlhfU1RBVFVTX0RFU0NfQlcocGRlc2MpKQorCWlmIChzdGF0
+cy0+cnhfaXM0ME1oenBhY2tldCkKIAkJcnhfc3RhdHVzLT5mbGFnIHw9IFJYX0ZMQUdfNDBN
+SFo7CiAKLQlpZiAoR0VUX1JYX1NUQVRVU19ERVNDX1JYX0hUKHBkZXNjKSkKKwlpZiAoc3Rh
+dHMtPmlzX2h0KQogCQlyeF9zdGF0dXMtPmZsYWcgfD0gUlhfRkxBR19IVDsKIAogCXJ4X3N0
+YXR1cy0+ZmxhZyB8PSBSWF9GTEFHX01BQ1RJTUVfTVBEVTsKIAotCWlmIChzdGF0cy0+ZGVj
+cnlwdGVkKQotCQlyeF9zdGF0dXMtPmZsYWcgfD0gUlhfRkxBR19ERUNSWVBURUQ7CisJLyog
+aHcgd2lsbCBzZXQgc3RhdHMtPmRlY3J5cHRlZCB0cnVlLCBpZiBpdCBmaW5kcyB0aGUKKwkg
+KiBmcmFtZSBpcyBvcGVuIGRhdGEgZnJhbWUgb3IgbWdtdCBmcmFtZSwKKwkgKiBodyB3aWxs
+IG5vdCBkZWNyeXB0IHJvYnVzdCBtYW5hZ21lbnQgZnJhbWUKKwkgKiBmb3IgSUVFRTgwMjEx
+dyBidXQgc3RpbGwgc2V0IHN0YXRzLT5kZWNyeXB0ZWQKKwkgKiB0cnVlLCBzbyBoZXJlIHdl
+IHNob3VsZCBzZXQgaXQgYmFjayB0byB1bmRlY3J5cHRlZAorCSAqIGZvciBJRUVFODAyMTF3
+IGZyYW1lLCBhbmQgbWFjODAyMTEgc3cgd2lsbCBoZWxwCisJICogdG8gZGVjcnlwdCBpdCAq
+LworCWlmIChzdGF0cy0+ZGVjcnlwdGVkKSB7CisJCWlmICgoaWVlZTgwMjExX2lzX3JvYnVz
+dF9tZ210X2ZyYW1lKGhkcikpICYmCisJCQkoaWVlZTgwMjExX2hhc19wcm90ZWN0ZWQoaGRy
+LT5mcmFtZV9jb250cm9sKSkpCisJCQlyeF9zdGF0dXMtPmZsYWcgJj0gflJYX0ZMQUdfREVD
+UllQVEVEOworCQllbHNlCisJCQlyeF9zdGF0dXMtPmZsYWcgfD0gUlhfRkxBR19ERUNSWVBU
+RUQ7CisJfQogCiAJcnhfc3RhdHVzLT5yYXRlX2lkeCA9IHJ0bHdpZmlfcmF0ZV9tYXBwaW5n
+KGh3LAotCQkJCShib29sKUdFVF9SWF9TVEFUVVNfREVTQ19SWF9IVChwZGVzYyksCi0JCQkJ
+KHU4KUdFVF9SWF9TVEFUVVNfREVTQ19SWF9NQ1MocGRlc2MpKTsKLQorCQkJICAgICBzdGF0
+cy0+aXNfaHQsIHN0YXRzLT5yYXRlKTsKIAotCXJ4X3N0YXR1cy0+bWFjdGltZSA9IEdFVF9S
+WF9TVEFUVVNfREVTQ19UU0ZMKHBkZXNjKTsKKwlyeF9zdGF0dXMtPm1hY3RpbWUgPSBzdGF0
+cy0+dGltZXN0YW1wX2xvdzsKIAlpZiAocGh5c3RhdHVzKSB7CiAJCXBfZHJ2aW5mbyA9IChz
+dHJ1Y3QgcnhfZndpbmZvICopKHNrYi0+ZGF0YSArCiAJCQkJCQkgc3RhdHMtPnJ4X2J1ZnNo
+aWZ0KTsKSW5kZXg6IHdpcmVsZXNzLXRlc3RpbmctbmV3L2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L3J0bHdpZmkvd2lmaS5oCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIHdpcmVsZXNzLXRlc3RpbmctbmV3
+Lm9yaWcvZHJpdmVycy9uZXQvd2lyZWxlc3MvcnRsd2lmaS93aWZpLmgKKysrIHdpcmVsZXNz
+LXRlc3RpbmctbmV3L2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0bHdpZmkvd2lmaS5oCkBAIC0x
+MzI1LDYgKzEzMjUsNyBAQCBzdHJ1Y3QgcnRsX3N0YXRzIHsKIAlzOCByeF9taW1vX3NpZ25h
+bHF1YWxpdHlbMl07CiAJYm9vbCBwYWNrZXRfbWF0Y2hic3NpZDsKIAlib29sIGlzX2NjazsK
+Kwlib29sIGlzX2h0OwogCWJvb2wgcGFja2V0X3Rvc2VsZjsKIAlib29sIHBhY2tldF9iZWFj
+b247CS8qZm9yIHJzc2kgKi8KIAljaGFyIGNja19hZGNfcHdkYls0XTsJLypmb3IgcnggcGF0
+aCBzZWxlY3Rpb24gKi8K
+--------------040404010806080607090504--
