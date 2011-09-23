@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:64357 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751545Ab1IVHpK convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:55989 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752415Ab1IWLoF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 03:45:10 -0400
-Received: by eya28 with SMTP id 28so1423127eya.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 00:45:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1316606076.3940.19.camel@jlt3.sipsolutions.net>
-References: <1316082334-7664-1-git-send-email-arik@wizery.com>
- <1316082334-7664-2-git-send-email-arik@wizery.com> <1316606076.3940.19.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 22 Sep 2011 10:44:54 +0300
-Message-ID: <CA+XVXfce2=nD7wgEonSL7STzGGESZgyM_=GdGW+h=-WAMgxAow@mail.gmail.com> (sfid-20110922_094514_767608_E6A4BC1C)
-Subject: Re: [RFC 1/5] nl80211: support sending TDLS commands/frames
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Kalyan C Gaddam <chakkal@iit.edu>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 23 Sep 2011 07:44:05 -0400
+Received: by mail-bw0-f51.google.com with SMTP id zu17so4583437bkb.24
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Sep 2011 04:44:03 -0700 (PDT)
+Subject: Re: [PATCH 1/2] wl12xx: remove TIM ie from probe response
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1316077625-20014-1-git-send-email-eliad@wizery.com>
+References: <1316077625-20014-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 23 Sep 2011 14:43:59 +0300
+Message-ID: <1316778239.2157.731.camel@cumari> (sfid-20110923_134409_122579_9342B31C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 21, 2011 at 14:54, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2011-09-15 at 13:25 +0300, Arik Nemtsov wrote:
->
->> +static int nl80211_tdls_mgmt(struct sk_buff *skb, struct genl_info *info)
->> +{
->> +     struct cfg80211_registered_device *rdev = info->user_ptr[0];
->> +     struct net_device *dev = info->user_ptr[1];
->> +     u8 action_code, dialog_token;
->> +     u16 status_code;
->> +     u8 *peer;
->> +
->> +     if (!rdev->ops->tdls_mgmt)
->> +             return -EOPNOTSUPP;
->> +
->> +     if (!info->attrs[NL80211_ATTR_TDLS_ACTION] ||
->> +         !info->attrs[NL80211_ATTR_STATUS_CODE] ||
->> +         !info->attrs[NL80211_ATTR_TDLS_DIALOG_TOKEN] ||
->> +         !info->attrs[NL80211_ATTR_FRAME] ||
->> +         !info->attrs[NL80211_ATTR_MAC])
->> +             return -EINVAL;
->
-> Should that really use ATTR_FRAME as opposed to ATTR_IE?
->
+On Thu, 2011-09-15 at 12:07 +0300, Eliad Peller wrote: 
+> wl12xx uses the beacon as the probe response template.
+> However, the beacon includes a TIM ie, which shouldn't
+> exist in the probe response.
+> 
+> Delete it from the skb before configuring the probe
+> response template.
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-I guess ATTR_IE is more appropriate (looking at the docs).
+Applied both patches.  Thanks!
 
-Arik
+-- 
+Cheers,
+Luca.
+
