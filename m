@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:11944 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754984Ab1IMPSR (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:62352 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750724Ab1IWHvL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 11:18:17 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH] ath9k_hw: Do full chip reset on 11A channels
-Date: Tue, 13 Sep 2011 20:48:52 +0530
-Message-ID: <1315927132-21716-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110913_171821_102071_A0D40589)
+	Fri, 23 Sep 2011 03:51:11 -0400
+Message-ID: <4E7C3A66.7040509@qca.qualcomm.com> (sfid-20110923_095114_416739_B6552C09)
+Date: Fri, 23 Sep 2011 10:51:02 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V2] ath6kl: Fix disconnect event reporting
+References: <1316755670-1795-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1316755670-1795-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR9003 seems to have issues sometimes with fast channel change
-in 5GHz and this case is handled specifically for AR9002 by doing
-a full reset. So let's do a full reset for 5GHz channles for all
-chipsets.
+On 09/23/2011 08:27 AM, Vasanthakumar Thiagarajan wrote:
+> Driver does not report disconnect event properly when in connecting state,
+> this leads to issues failures in starting reconnection. Send a disconnect
+> command to target when a disconnect event is received with reason code
+> other than 3 (DISCONNECT_CMD - disconnect request from host) to make the
+> frimware stop trying to connect even after giving disconnect event. There
+> will be one more disconnect event for this disconnect command with reason
+> code DISCONNECT_CMD which will be notified to cfg80211.
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+> ---
+> 
+> V2 -- Add commands in code and change in commit log
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Perfect, thanks. Patch applied.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 308847d..622bfc9 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1504,7 +1504,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	    (chan->channel != ah->curchan->channel) &&
- 	    ((chan->channelFlags & CHANNEL_ALL) ==
- 	     (ah->curchan->channelFlags & CHANNEL_ALL)) &&
--	    (!AR_SREV_9280(ah) || AR_DEVID_7010(ah))) {
-+	    !IS_CHAN_5GHZ(chan)) {
- 
- 		if (ath9k_hw_channel_change(ah, chan)) {
- 			ath9k_hw_loadnf(ah, ah->curchan);
--- 
-1.7.6.1
-
+Kalle
