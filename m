@@ -1,86 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3080 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752995Ab1IVJKV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 05:10:21 -0400
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: =?utf-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
-	"Brett Rudley" <brudley@broadcom.com>, "Greg KH" <greg@kroah.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"jonas.gorski@gmail.com" <jonas.gorski@gmail.com>
-Date: Thu, 22 Sep 2011 02:10:05 -0700
-Subject: RE: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
- patch #2
-Message-ID: <400C43189542CE41BC0A5B252FC90136BC0CC8ABE6@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20110922_111051_911485_05E7FAE7)
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
- <20110920130338.GA9885@kroah.com> <20110920132203.GB7800@tuxdriver.com>
- <20110920140020.GA11386@kroah.com>
- <7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com>
- <CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com>
- <7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
- <20110922003523.0bf6a460@milhouse>
- <7A94256FD72B884D9E7C55586C3CBCEE195814DE92@SJEXCHCCR01.corp.ad.broadcom.com>
- <20110922012851.2f3b7801@milhouse>
- <400C43189542CE41BC0A5B252FC90136BC0CC8ABB9@SJEXCHCCR02.corp.ad.broadcom.com>
- <CACna6rxD_U+beqbWxv4VJ7nWHQuJjb47seRQECEBFR3DHW8t+Q@mail.gmail.com>
-In-Reply-To: <CACna6rxD_U+beqbWxv4VJ7nWHQuJjb47seRQECEBFR3DHW8t+Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+Received: from he.sipsolutions.net ([78.46.109.217]:45928 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752872Ab1IWKWH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Sep 2011 06:22:07 -0400
+Subject: Re: [RFC 2/2] mac80211: Send the management frame at requested rate
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+In-Reply-To: <1316703516-24216-2-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1316703516-24216-1-git-send-email-rmanohar@qca.qualcomm.com>
+	 <1316703516-24216-2-git-send-email-rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 23 Sep 2011 12:22:04 +0200
+Message-ID: <1316773324.4058.2.camel@jlt3.sipsolutions.net> (sfid-20110923_122212_939998_57596E54)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBGcm9tOiBSYWZhxYIgTWnFgmVja2kgW21haWx0bzp6YWplYzVAZ21haWwuY29tXQ0KPiBTZW50
-OiBkb25kZXJkYWcgMjIgc2VwdGVtYmVyIDIwMTEgMTA6NTcNCj4gVG86IEFyZW5kIFZhbiBTcHJp
-ZWwNCj4gQ2M6IE1pY2hhZWwgQsO8c2NoOyBCcmV0dCBSdWRsZXk7IEdyZWcgS0g7IEpvaG4gVy4g
-TGludmlsbGU7IEZyYW5reQ0KPiAoWmhlbmh1aSkgTGluOyBncmVna2hAc3VzZS5kZTsgZGV2ZWxA
-bGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgbGludXgtDQo+IHdpcmVsZXNzQHZnZXIua2VybmVsLm9y
-Zzsgam9uYXMuZ29yc2tpQGdtYWlsLmNvbQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDAwLzIwXSBz
-dGFnaW5nOiBicmNtODAyMTE6IDd0aCByZWFjdGlvbiBmb3INCj4gbWFpbmxpbmUgcGF0Y2ggIzIN
-Cj4gDQo+IFcgZG5pdSAyMiB3cnplxZtuaWEgMjAxMSAxMDo1MyB1xbx5dGtvd25payBBcmVuZCBW
-YW4gU3ByaWVsDQo+IDxhcmVuZEBicm9hZGNvbS5jb20+IG5hcGlzYcWCOg0KPiA+PiBGcm9tOiBs
-aW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC13aXJlbGVz
-cy0NCj4gPj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgTWljaGFlbCBCw7xz
-Y2gNCj4gPj4gU2VudDogZG9uZGVyZGFnIDIyIHNlcHRlbWJlciAyMDExIDE6MjkNCj4gPj4gVG86
-IEJyZXR0IFJ1ZGxleQ0KPiA+PiBDYzogUmFmYcWCIE1pxYJlY2tpOyBHcmVnIEtIOyBKb2huIFcu
-IExpbnZpbGxlOyBGcmFua3kgKFpoZW5odWkpIExpbjsNCj4gPj4gZ3JlZ2toQHN1c2UuZGU7IGRl
-dmVsQGxpbnV4ZHJpdmVycHJvamVjdC5vcmc7IGxpbnV4LQ0KPiA+PiB3aXJlbGVzc0B2Z2VyLmtl
-cm5lbC5vcmcNCj4gPj4gU3ViamVjdDogUmU6IFtQQVRDSCAwMC8yMF0gc3RhZ2luZzogYnJjbTgw
-MjExOiA3dGggcmVhY3Rpb24gZm9yDQo+ID4+IG1haW5saW5lIHBhdGNoICMyDQo+ID4+DQo+ID4+
-IE9uIFdlZCwgMjEgU2VwIDIwMTEgMTY6MTU6MTAgLTA3MDANCj4gPj4gIkJyZXR0IFJ1ZGxleSIg
-PGJydWRsZXlAYnJvYWRjb20uY29tPiB3cm90ZToNCj4gPj4NCj4gPj4gPiBXZSBkaWQgaG93ZXZl
-ciBpbml0aWFsbHkgcHJvcG9zZSAoYW5kIGltcGxlbWVudCkgYSBkaXZpZGluZyBsaW5lDQo+IG9m
-DQo+ID4+IHNzYiBjaGlwcyBmb3IgYjQzIGFuZCBBWEkgYmFzZWQgY2hpcHMgZm9yIGJyY21zbWFj
-IGJ1dCBiNDMgdGVhbQ0KPiBjaG9zZQ0KPiA+PiB0byBpZ25vcmUvcmVqZWN0IHRoYXQuDQo+ID4+
-DQo+ID4+IFdlbGwsIHdoYXQgYWJvdXQgZW1iZWRkZWQsIGZvciBpbnN0YW5jZT8NCj4gPg0KPiA+
-IFRoZSBicmNtc21hYyBkcml2ZXIgaGFzIGJlZW4gdGVzdGVkIG9uIGEgTUlQUyBwbGF0Zm9ybSBi
-eSBKb25hcw0KPiBHb3Jza2kNCj4gPiBhbHRob3VnaCBvbmx5IGluIFNUQSBtb2RlIChvbiBhIGJj
-bTYzeHgpLiBOb3QgaGF2aW5nIEFQIG1vZGUgaGFzIGJlZW4NCj4gPiBleHBsYWluZWQgaW4gb3Ro
-ZXIgZW1haWxzLg0KPiA+DQo+ID4gQWxzbyB3ZSBmdWxseSBpbnRlbmQgdG8gdHJhbnNpdGlvbiB0
-byBCQ01BIGJ1dCB0aGF0IHdvdWxkIGFsc28gYmUgbmV3DQo+ID4gZmVhdHVyZSBhZGRlZC4gSGF2
-aW5nIEFQIG1vZGUgYW5kIEJDTUEgd291bGQgZW5hYmxlIHlvdSBndXlzIGZvcg0KPiB1c2luZw0K
-PiA+IGl0IGluIHRoZSBlbWJlZGRlZCB0YXJnZXRzLCByaWdodD8NCj4gPg0KPiA+PiA+IEknbSBu
-b3QgdG90YWxseSBvcHBvc2VkIHRvIHRoYXQgaWRlYSBidXQgaXQgZG9lcyBub3Qgc29sdmUgdGhl
-DQo+ID4+IHByaW1hcnkgaXNzdWUgb2YgY29uZmxpY3RpbmcgYjQzIGFuZCBicmNtc21hYyBtb2R1
-bGVzLg0KPiA+Pg0KPiA+PiBJJ20gbm90IGNvbnZpbmNlZCB0aGF0IHRoaXMgaXMgYW4gaXNzdWUg
-YXQgYWxsIGFuZCBJJ20gbm90IGNvbnZpbmNlZA0KPiA+PiB0aGF0IGl0IGhhcyB0byBiZSByZXNv
-bHZlZC4NCj4gPj4gQXQgbGVhc3Qgbm90IG5vdy4NCj4gPj4NCj4gPg0KPiA+IEl0IG5ldmVyIGh1
-cnRzIHRvIGxvb2sgYWhlYWQuIEJvdGggZHJpdmVycyBoYXZlIHRoZWlyIHVzZSBpbiB0aGUNCj4g
-bGludXgNCj4gPiB0cmVlIGFuZCB3ZSBzaG91bGQgYWxpZ24gd2hpY2ggZHJpdmVyIGlzIGRvaW5n
-IHdoYXQuIEFwcGFyZW50bHkgd2UNCj4gc2hvdWxkDQo+ID4gaGF2ZSB5ZWxsZWQgcmVhbGx5IGhh
-cmQgd2hlbiBiNDMgd2FzIGFkZGluZyBiY21hIHN1cHBvcnQsIGJlY2F1c2UNCj4gdGhlbg0KPiA+
-IGl0IHNuYXRjaGVkIHRoZSBjaGlwc2V0cyB3ZSBzdXBwb3J0IGFzIHdlbGwuIFlvdSBsZWFybiB5
-b3VyIGxlc3NvbnMNCj4gdGhlDQo+ID4gaGFyZCB3YXkgaW4gTGludXggbGFuZCwgb3Igc28gaXQg
-c2VlbXMgOy0pDQo+IA0KPiBBbmQgSSBzaG91bGQgaGF2ZSBub3RpY2UgeW91IGFkZCBjb2RlIGZv
-ciBOLVBIWSB3aXRoIHlvdXIgaW5pdGlhbA0KPiBicmNtODAyMTEgY29tbWl0IDspIFRoZXJlJ3Mg
-YWx3YXlzIHNvbWV0aGluZyB0aGF0IHlvdSB3b24ndCBub3RpY2UgYXQNCj4gdGhlIGNvcnJlY3Qg
-dGltZS4NCj4gDQo+IC0tDQo+IFJhZmHFgg0KDQpXZXJlIHlvdSB1bmF3YXJlIG9mIHRoZSBjaGlw
-c2V0cyB0aGF0IGJyY21zbWFjIHdhcyBzdXBwb3J0aW5nPyBXaGVuIHlvdQ0KV2VyZSB3b3JraW5n
-IG9uIE4tUEhZIGl0IHdhcyB0byBlbmFibGUgY2VydGFpbiBjaGlwc2V0cywgcmlnaHQ/IFdhcyB0
-aGF0DQppbiBzc2IgY29udGV4dD8NCg0KR3IuIEF2Uw0K
+On Thu, 2011-09-22 at 20:28 +0530, Rajkumar Manoharan wrote:
+
+> +++ b/net/mac80211/tx.c
+> @@ -639,6 +639,11 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+>  		txrc.rts = rts = true;
+>  	}
+>  
+> +	if (ieee80211_is_probe_req(hdr->frame_control) &&
+> +	    tx->sdata->local->scan_req &&
+> +	    tx->sdata->local->scan_req->no_cck)
+> +		info->flags |= IEEE80211_TX_CTL_NO_CCK_RATE;
+> +
+
+I think this would make more sense in ieee80211_send_probe_req() rather
+than here where it'll be executed for every frame.
+
+johannes
 
