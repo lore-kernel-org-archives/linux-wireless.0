@@ -1,58 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:38899 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753208Ab1IURBi (ORCPT
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:59396 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753616Ab1IWN0V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 13:01:38 -0400
-Message-ID: <4E7A1868.1040401@adurom.com> (sfid-20110921_190159_837144_70FEC14A)
-Date: Wed, 21 Sep 2011 20:01:28 +0300
-From: Kalle Valo <kvalo@adurom.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: client powersave is completely broken on ath9k and similar HW
-References: <1316623059.3940.54.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1316623059.3940.54.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 23 Sep 2011 09:26:21 -0400
+Received: by mail-gx0-f174.google.com with SMTP id 6so3502626gxk.33
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Sep 2011 06:26:18 -0700 (PDT)
+Subject: pull request: wl12xx 2011-09-23
+From: Luciano Coelho <coelho@ti.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 23 Sep 2011 16:26:14 +0300
+Message-ID: <1316784374.4051.13.camel@cumari> (sfid-20110923_152625_033337_767D1147)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/21/2011 07:37 PM, Johannes Berg wrote:
-> iwconfig wlan0 power timeout 0
-> iwconfig wlan0 power off
-> iwconfig wlan0 power on
-> 
-> => observe that power saving stays disabled forever
-> 
-> Last little bit of http://paste.pocoo.org/raw/479987/ seems to make it
-> work somewhat, but is then still completely broken when timeout is >0
-> due to the abuse of the dynps timer/work to process tx status:
-> 
-> Clearly this is completely messed up. Somebody is going to need to pay
-> back all the technical debt accumulated here and rewrite it all.
+Hi John,
 
-I think we should just remove the client PS support from mac8011 and
-drivers instead should implement power save on their own. The current
-setup simply don't work.
+Yet another pull request for 3.2, most likely the last (unless it takes
+longer than normal for the merge window to open).  We have some fixes,
+including an out-of-bounds array read and some P2P stuff, a fix in the
+scanning code (where passive scans were not working properly) and some
+other small things, like support for hidden SSID in AP mode.
 
-My reasoning:
+Please pull or let me know if there's any problem. This tree is based on
+wireless-next/master.
 
-1) all power save implementations in hardware are a bit different, which
-makes mac80211 implementation complex (how many different designs do we
-support now, three or four?)
+Thanks! 
 
-2) Driver authors care only about their driver and the bugs they are
-trying to fix with zero interest how it might affect other drivers. They
-dump something to mac80211 and then the change is forgotten.
 
-3) Power save bugs are difficult to notice, test and debug. So
-regressions are easily missed.
+The following changes since commit ed46fdfc54d2d4523fdd727708fe0b9e2be993cc:
 
-4) If the power save support is implemented in the driver, they can't
-break other drivers and are free to do whatever optimisations/fixes they
-want.
+  nfc: NFC_WILINK depends on NFC_NCI (2011-09-21 16:19:44 -0400)
 
-I'm happy to create a patch to remove client PS code from mac80211 if we
-so decide.
+are available in the git repository at:
+  git://github.com/lucacoelho/wl12xx.git for-linville
 
-Kalle
+Arik Nemtsov (3):
+      wl12xx: AP mode - support hidden SSID
+      wl12xx: correct fw_status structure for 8 sta support in AP-mode
+      wl12xx: report the stop_ba event to all STAs in AP-mode
+
+Eliad Peller (5):
+      wl12xx: remove TIM ie from probe response
+      wl12xx: remove P2P ie from probe response
+      wl12xx: send all pending packets on channel change
+      wl12xx: Use dev_hlid for auth and assoc req
+      wl12xx: implement set_bitrate_mask callback
+
+Luciano Coelho (1):
+      wl12xx: fix forced passive scans
+
+Shahar Levi (2):
+      wl12xx: fix sdio_test module functionality
+      wl12xx: Include OFDM rates in IBSS mode
+
+ drivers/net/wireless/wl12xx/Makefile    |    6 +-
+ drivers/net/wireless/wl12xx/cmd.c       |   43 ++++---
+ drivers/net/wireless/wl12xx/conf.h      |    6 +-
+ drivers/net/wireless/wl12xx/event.c     |    2 +-
+ drivers/net/wireless/wl12xx/init.c      |   17 ++-
+ drivers/net/wireless/wl12xx/main.c      |  201 ++++++++++++++++++++++++++-----
+ drivers/net/wireless/wl12xx/scan.c      |   42 +++++--
+ drivers/net/wireless/wl12xx/sdio_test.c |   15 ++-
+ drivers/net/wireless/wl12xx/tx.c        |   38 +++----
+ drivers/net/wireless/wl12xx/tx.h        |    5 +-
+ drivers/net/wireless/wl12xx/wl12xx.h    |    5 +-
+ 11 files changed, 274 insertions(+), 106 deletions(-)
+
+
+-- 
+Cheers,
+Luca.
+
+
+
+
