@@ -1,40 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:38469 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752674Ab1IAQzM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 12:55:12 -0400
-Received: by qyk34 with SMTP id 34so1286573qyk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Sep 2011 09:55:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1314833554-40721-2-git-send-email-nbd@openwrt.org>
-References: <1314833554-40721-1-git-send-email-nbd@openwrt.org> <1314833554-40721-2-git-send-email-nbd@openwrt.org>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Thu, 1 Sep 2011 09:54:51 -0700
-Message-ID: <CAB=NE6VP_+V=T=Dx0KL9Z0tDNxUW91pPkK4BzqBPwWUP-mzCwg@mail.gmail.com> (sfid-20110901_185527_688414_D7FF3733)
-Subject: Re: [PATCH v11 2/4] ath9k: always call ath_reset from workqueue context
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	rmanohar@qca.qualcomm.com, shafi.wireless@gmail.com,
-	vthiagar@qca.qualcomm.com
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:46440 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753141Ab1IWKsL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Sep 2011 06:48:11 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-kernel@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 2/2] wireless: at76c50x: use native hex_pack_byte() method
+Date: Fri, 23 Sep 2011 13:47:27 +0300
+Message-Id: <71d8213731be21f26a82255a4fffdbe1b6dd4a44.1316774801.git.andriy.shevchenko@linux.intel.com> (sfid-20110923_124833_868542_62304343)
+In-Reply-To: <fa146966b0ce1e7f04d59eb27cc0e968f51b22de.1316774801.git.andriy.shevchenko@linux.intel.com>
+References: <20110919232602.ac450450.akpm00@gmail.com>
+ <fa146966b0ce1e7f04d59eb27cc0e968f51b22de.1316774801.git.andriy.shevchenko@linux.intel.com>
+In-Reply-To: <fa146966b0ce1e7f04d59eb27cc0e968f51b22de.1316774801.git.andriy.shevchenko@linux.intel.com>
+References: <fa146966b0ce1e7f04d59eb27cc0e968f51b22de.1316774801.git.andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 31, 2011 at 4:32 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> This makes it much easier to add further rework to avoid race conditions
-> between reset and other work items.
-> Move other functions to make ath_reset static.
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+---
+ drivers/net/wireless/at76c50x-usb.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index 2986014..157507a6 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -500,7 +500,6 @@ exit:
+ 
+ #define HEX2STR_BUFFERS 4
+ #define HEX2STR_MAX_LEN 64
+-#define BIN2HEX(x) ((x) < 10 ? '0' + (x) : (x) + 'A' - 10)
+ 
+ /* Convert binary data into hex string */
+ static char *hex2str(void *buf, int len)
+@@ -520,10 +519,8 @@ static char *hex2str(void *buf, int len)
+ 	}
+ 
+ 	while (len--) {
+-		*obuf++ = BIN2HEX(*ibuf >> 4);
+-		*obuf++ = BIN2HEX(*ibuf & 0xf);
++		obuf = hex_pack_byte(obuf, *ibuf++);
+ 		*obuf++ = '-';
+-		ibuf++;
+ 	}
+ 	*(--obuf) = '\0';
+ 
+-- 
+1.7.6.3
 
-> -void ath_hw_check(struct work_struct *work)
-
-I see you are just shuffling this code below but its unclear if the
-code is changed for the routine. To make this easier for the reviewer
-or anyone who wants to look back in history can you split this into
-two patches, one which moves the routines, and the other that does the
-other work?
-
-  Luis
