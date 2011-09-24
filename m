@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from que21.charter.net ([209.225.8.22]:51658 "EHLO que21.charter.net"
+Received: from mms1.broadcom.com ([216.31.210.17]:3451 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932166Ab1IHD4H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Sep 2011 23:56:07 -0400
-Message-ID: <4E683BBE.3060105@cuw.edu> (sfid-20110908_055614_154044_54791BC5)
-Date: Wed, 07 Sep 2011 22:51:26 -0500
-From: Greg Dietsche <gregory.dietsche@cuw.edu>
+	id S1753224Ab1IXCJU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Sep 2011 22:09:20 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 05/20] staging: brcm80211: removed global var from
+ aiutils.c
+Date: Fri, 23 Sep 2011 19:08:53 -0700
+Message-ID: <1316830148-28661-6-git-send-email-frankyl@broadcom.com> (sfid-20110924_040947_704622_44031E1A)
+In-Reply-To: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
+References: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] iwlegacy: change IWL_WARN to IWL_DEBUG_HT in iwl4965_tx_agg_start
-References: <1314537977-20097-1-git-send-email-Gregory.Dietsche@cuw.edu> <20110829122013.GA3597@redhat.com> <4E5B9533.6000109@cuw.edu> <20110829140032.GA1573@redhat.com> <20110906150131.GA7322@redhat.com>
-In-Reply-To: <20110906150131.GA7322@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
-On 09/06/2011 10:01 AM, Stanislaw Gruszka wrote:
-> I put patches here:
-> http://people.redhat.com/sgruszka/iwlegacy_cleanup.tar.bz2
->
-> They are on top of wireless-testing tree.
->    
-<snip>
-> Series include your 2 patches. You can test this cleanup and
-> apply your new changes on top. I'll not do any further cleanup
-> for some time now, perhaps continue when I got public git tree.
->
->    
-Thanks! I've re-worked my patches and you can find them here:
-http://www.gregd.org/stuff/linux/iwlegacy_cleanup_greg.tar.bz2
+From: Roland Vossen <rvossen@broadcom.com>
 
-I also decided to play with github a little bit: 
-git://github.com/dietsche/linux.git and pushed two branches:
-   1) wireless-next-iwlegacy-stanislaw - your patch set
-   2) wireless-next-iwlegacy-stanislaw-greg - a branch that has my 
-additional patches.
-`git format-patch 
-wireless-next-iwlegacy-stanislaw..wireless-next-iwlegacy-stanislaw-greg` 
-will generate the patches that are in the link i posted above.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/aiutils.c |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
-The first two patches in my series are the ones that I think folks 
-should take a closer look at. The rest are pretty safe.
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index b7b0bdf..d05c4ba 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -477,9 +477,6 @@ struct aidmp {
+ 	u32 componentid3;	/* 0xffc */
+ };
+ 
+-/* global kernel resource */
+-static struct si_info ksii;
+-
+ /* EROM parsing */
+ 
+ static u32
+@@ -1216,8 +1213,7 @@ void ai_detach(struct si_pub *sih)
+ 		pcicore_deinit(sii->pch);
+ 	sii->pch = NULL;
+ 
+-	if (sii != &ksii)
+-		kfree(sii);
++	kfree(sii);
+ }
+ 
+ /* register driver interrupt disabling and restoring callback functions */
+-- 
+1.7.1
 
-I'm running both patch sets right now on my laptop. So far it is running 
-perfectly.
-
-Greg
 
