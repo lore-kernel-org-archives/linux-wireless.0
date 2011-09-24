@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58734 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757424Ab1INTYd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 15:24:33 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 04/12] ath9k: call ath9k_hw_set_desc_link for beacon descriptors
-Date: Wed, 14 Sep 2011 21:24:19 +0200
-Message-Id: <1316028267-34187-4-git-send-email-nbd@openwrt.org> (sfid-20110914_212436_919779_6552F3CB)
-In-Reply-To: <1316028267-34187-3-git-send-email-nbd@openwrt.org>
-References: <1316028267-34187-1-git-send-email-nbd@openwrt.org>
- <1316028267-34187-2-git-send-email-nbd@openwrt.org>
- <1316028267-34187-3-git-send-email-nbd@openwrt.org>
+Received: from li235-22.members.linode.com ([173.255.225.22]:57236 "EHLO
+	erley.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750832Ab1IXPn0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Sep 2011 11:43:26 -0400
+Message-ID: <4E7DF8BB.1040807@erley.org> (sfid-20110924_174335_028519_A3FC24DA)
+Date: Sat, 24 Sep 2011 11:35:23 -0400
+From: Pat Erley <pat-lkml@erley.org>
+MIME-Version: 1.0
+To: James <bjlockie@lockie.ca>
+CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Subject: Re: higher N rates
+References: <4E7D4EC4.2040506@lockie.ca>
+In-Reply-To: <4E7D4EC4.2040506@lockie.ca>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This ensures that only ath9k_hw_set_desc_link needs to recalculate the tx
-descriptor checksum on AR9380+
+On 09/23/2011 11:30 PM, James wrote:
+> $ iw dev wlan0 scan
+> 
+> printed this for my N (only) router:
+> 
+> Supported rates: 1.0* 2.0* 5.5* 11.0* 18.0 24.0 36.0 54.0
+> Extended supported rates: 6.0 9.0 12.0 48.0
+> 
+> Why doesn't it print the higher N rates?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/beacon.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+I may be WAY off base here, but I believe iw dev wlan0 scan reports 
+what's shown in the beacons, and not what rates are actually negotiable.  
+Beacons only directly advertise 'pre-n' rates (the basic 802.11abg rates).
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 6d7088b..b97d01d 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -111,6 +111,7 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
- 	series[0].RateFlags = (ctsrate) ? ATH9K_RATESERIES_RTS_CTS : 0;
- 	ath9k_hw_set11n_ratescenario(ah, ds, ds, 0, ctsrate, ctsduration,
- 				     series, 4, 0);
-+	ath9k_hw_set_desc_link(ah, ds, 0);
- }
- 
- static void ath_tx_cabq(struct ieee80211_hw *hw, struct sk_buff *skb)
--- 
-1.7.3.2
+If you look at more of the scan results, you should see something like:
 
+	HT capabilities:
+		Capabilities: 0x11ce
+			HT20/HT40
+			SM Power Save disabled
+			RX HT40 SGI
+			TX STBC
+			RX STBC 1-stream
+			Max AMSDU length: 3839 bytes
+			DSSS/CCK HT40
+		Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+		Minimum RX AMPDU time spacing: 8 usec (0x06)
+		HT TX/RX MCS rate indexes supported: 0-15
+	HT operation:
+		 * primary channel: 36
+		 * secondary channel offset: above
+		 * STA channel width: any
+		 * RIFS: 0
+		 * HT protection: no
+		 * non-GF present: 0
+		 * OBSS non-GF present: 0
+		 * dual beacon: 0
+		 * dual CTS protection: 0
+		 * STBC beacon: 0
+		 * L-SIG TXOP Prot: 0
+		 * PCO active: 0
+		 * PCO phase: 0
+
+Which outlines the 802.11n parameters that your device and the AP can use
+to negotiate 802.11n operation.  Perhaps there is something more that should
+be reported, but you'll see throughputs in the 802.11n range WHEN it's 
+warranted.  With my DSL connection, I rarely see rates above 9mbit in use (my 
+DSL is 1.5mbit down).
+
+Pat
