@@ -1,85 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:60079 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753311Ab1IAUKB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 16:10:01 -0400
-Received: by pzk37 with SMTP id 37so3467837pzk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Sep 2011 13:10:01 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:4581 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753173Ab1IXCJU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Sep 2011 22:09:20 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 12/20] staging: brcm80211: remove unused function
+ si_pmu_ilp_clock()
+Date: Fri, 23 Sep 2011 19:09:00 -0700
+Message-ID: <1316830148-28661-13-git-send-email-frankyl@broadcom.com> (sfid-20110924_040949_900644_D7DCD8EC)
+In-Reply-To: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
+References: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1314905534-24190-1-git-send-email-thomas@cozybit.com>
-References: <1314905534-24190-1-git-send-email-thomas@cozybit.com>
-From: Javier Cardona <javier@cozybit.com>
-Date: Thu, 1 Sep 2011 13:09:41 -0700
-Message-ID: <CAPjQAd-GWdJawo4wFQXD_Lpfzcq7_DxG0zS+bgTtZ433-m6cnA@mail.gmail.com> (sfid-20110901_221009_156990_69056AEC)
-Subject: Re: [PATCH] mac80211: check if mesh frame is in RMC after decrypt
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 1, 2011 at 12:32 PM, Thomas Pedersen <thomas@cozybit.com> wrote:
-> To check whether a frame is in the RMC, we need access to the mesh
-> header.  This header is encrypted in encrypted data frames, so make this
-> check after the frame has been decrypted.
->
-> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+From: Arend van Spriel <arend@broadcom.com>
 
-> ---
->  net/mac80211/rx.c |   15 ++++++---------
->  1 files changed, 6 insertions(+), 9 deletions(-)
->
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 1fe26fa..9410b9f 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -476,7 +476,6 @@ static ieee80211_rx_result
->  ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
->  {
->        struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
-> -       unsigned int hdrlen = ieee80211_hdrlen(hdr->frame_control);
->        char *dev_addr = rx->sdata->vif.addr;
->
->        if (ieee80211_is_data(hdr->frame_control)) {
-> @@ -524,14 +523,6 @@ ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
->
->        }
->
-> -#define msh_h_get(h, l) ((struct ieee80211s_hdr *) ((u8 *)h + l))
-> -
-> -       if (ieee80211_is_data(hdr->frame_control) &&
-> -           is_multicast_ether_addr(hdr->addr1) &&
-> -           mesh_rmc_check(hdr->addr3, msh_h_get(hdr, hdrlen), rx->sdata))
-> -               return RX_DROP_MONITOR;
-> -#undef msh_h_get
-> -
->        return RX_CONTINUE;
->  }
->
-> @@ -1827,6 +1818,12 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
->        hdrlen = ieee80211_hdrlen(hdr->frame_control);
->        mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
->
-> +       /* frame is in RMC, don't forward */
-> +       if (ieee80211_is_data(hdr->frame_control) &&
-> +           is_multicast_ether_addr(hdr->addr1) &&
-> +           mesh_rmc_check(hdr->addr3, mesh_hdr, rx->sdata))
-> +               return RX_DROP_MONITOR;
-> +
->        if (!ieee80211_is_data(hdr->frame_control))
->                return RX_CONTINUE;
->
-> --
-> 1.7.4.1
->
->
+The function is not used in the driver and has been removed.
 
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/pmu.c |   22 ----------------------
+ drivers/staging/brcm80211/brcmsmac/pmu.h |    1 -
+ 2 files changed, 0 insertions(+), 23 deletions(-)
 
-
+diff --git a/drivers/staging/brcm80211/brcmsmac/pmu.c b/drivers/staging/brcm80211/brcmsmac/pmu.c
+index 61ba373..6d4cd9f 100644
+--- a/drivers/staging/brcm80211/brcmsmac/pmu.c
++++ b/drivers/staging/brcm80211/brcmsmac/pmu.c
+@@ -202,28 +202,6 @@ si_pmu_spuravoid_pllupdate(struct si_pub *sih, struct chipcregs *cc,
+ 	W_REG(&cc->pmucontrol, tmp);
+ }
+ 
+-u32 si_pmu_ilp_clock(struct si_pub *sih)
+-{
+-	static u32 ilpcycles_per_sec;
+-
+-	if (!(sih->cccaps & CC_CAP_PMU))
+-		return ILP_CLOCK;
+-
+-	if (ilpcycles_per_sec == 0) {
+-		u32 start, end, delta;
+-		u32 origidx = ai_coreidx(sih);
+-		struct chipcregs *cc = ai_setcoreidx(sih, SI_CC_IDX);
+-		start = R_REG(&cc->pmutimer);
+-		mdelay(ILP_CALC_DUR);
+-		end = R_REG(&cc->pmutimer);
+-		delta = end - start;
+-		ilpcycles_per_sec = delta * (1000 / ILP_CALC_DUR);
+-		ai_setcoreidx(sih, origidx);
+-	}
+-
+-	return ilpcycles_per_sec;
+-}
+-
+ u16 si_pmu_fast_pwrup_delay(struct si_pub *sih)
+ {
+ 	uint delay = PMU_MAX_TRANSITION_DLY;
+diff --git a/drivers/staging/brcm80211/brcmsmac/pmu.h b/drivers/staging/brcm80211/brcmsmac/pmu.h
+index 2917e6f..3a08c62 100644
+--- a/drivers/staging/brcm80211/brcmsmac/pmu.h
++++ b/drivers/staging/brcm80211/brcmsmac/pmu.h
+@@ -24,7 +24,6 @@ extern u16 si_pmu_fast_pwrup_delay(struct si_pub *sih);
+ extern void si_pmu_sprom_enable(struct si_pub *sih, bool enable);
+ extern u32 si_pmu_chipcontrol(struct si_pub *sih, uint reg, u32 mask, u32 val);
+ extern u32 si_pmu_regcontrol(struct si_pub *sih, uint reg, u32 mask, u32 val);
+-extern u32 si_pmu_ilp_clock(struct si_pub *sih);
+ extern u32 si_pmu_alp_clock(struct si_pub *sih);
+ extern void si_pmu_pllupd(struct si_pub *sih);
+ extern void si_pmu_spuravoid(struct si_pub *sih, u8 spuravoid);
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+1.7.1
+
+
