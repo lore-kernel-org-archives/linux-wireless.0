@@ -1,138 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:48811 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755147Ab1ILLMa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Sep 2011 07:12:30 -0400
-Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
-	by emh07-2.mail.saunalahti.fi (Postfix) with SMTP id 6A2DA18D279
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 14:12:28 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-188-95.elisa-laajakaista.fi [88.115.188.95])
-	by emh04.mail.saunalahti.fi (Postfix) with ESMTP id 4A70041BE7
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 14:12:25 +0300 (EEST)
-Subject: [PATCH 3/9] ath6kl: fix busy loop in ath6kl_bmi_get_rx_lkahd()
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Date: Mon, 12 Sep 2011 14:12:25 +0300
-Message-ID: <20110912111224.16921.8172.stgit@localhost6.localdomain6> (sfid-20110912_131233_076198_3551B000)
-In-Reply-To: <20110912111206.16921.90687.stgit@localhost6.localdomain6>
-References: <20110912111206.16921.90687.stgit@localhost6.localdomain6>
+Received: from mms1.broadcom.com ([216.31.210.17]:3453 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753216Ab1IXCJU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Sep 2011 22:09:20 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 17/20] staging: brcm80211: removed band related global
+ vars from softmac
+Date: Fri, 23 Sep 2011 19:09:05 -0700
+Message-ID: <1316830148-28661-18-git-send-email-frankyl@broadcom.com> (sfid-20110924_040942_562797_F66D825B)
+In-Reply-To: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
+References: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brent reported that ath6kl busy loops if firmware doesn't boot for some
-reason (in this case he was using an older firmware which wasn't supported
-by ath6kl).
+From: Roland Vossen <rvossen@broadcom.com>
 
-Investigation revealed that this was even on purpose,
-ath6kl_bmi_get_rx_lkahd() had a parameter to disable the timeout check,
-which is extremely evil. I didn't find any reason why the timeout needs
-to be disabled so I just removed the feature. The function already busyloops
-a maximum of one second if it doesn't get an answer, even that's too long.
-If something takes longer than that a more friendly approach is needed.
+Global variables are undesirable unless they are read only. Variables are
+now maintained in a device specific structure.
 
-Reported-by: Brent Taylor <btaylor1@motorolasolutions.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/ath/ath6kl/bmi.c |   23 ++++++++++-------------
- 1 files changed, 10 insertions(+), 13 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c |   30 ++++++++++++---------
+ drivers/staging/brcm80211/brcmsmac/main.h        |    1 +
+ 2 files changed, 18 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/bmi.c b/drivers/net/wireless/ath/ath6kl/bmi.c
-index 8467669..c5d11cc 100644
---- a/drivers/net/wireless/ath/ath6kl/bmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/bmi.c
-@@ -62,14 +62,14 @@ static int ath6kl_get_bmi_cmd_credits(struct ath6kl *ar)
+diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+index 0bfab68..938bbe6 100644
+--- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+@@ -31,6 +31,7 @@
+ #include "pub.h"
+ #include "ucode_loader.h"
+ #include "mac80211_if.h"
++#include "main.h"
+ 
+ #define N_TX_QUEUES	4 /* #tx queues on mac80211<->driver interface */
+ 
+@@ -225,7 +226,7 @@ static struct ieee80211_rate legacy_ratetable[] = {
+ 	RATE(540, 0),
+ };
+ 
+-static struct ieee80211_supported_band brcms_band_2GHz_nphy = {
++static const struct ieee80211_supported_band brcms_band_2GHz_nphy_template = {
+ 	.band = IEEE80211_BAND_2GHZ,
+ 	.channels = brcms_2ghz_chantable,
+ 	.n_channels = ARRAY_SIZE(brcms_2ghz_chantable),
+@@ -247,7 +248,7 @@ static struct ieee80211_supported_band brcms_band_2GHz_nphy = {
+ 		   }
+ };
+ 
+-static struct ieee80211_supported_band brcms_band_5GHz_nphy = {
++static const struct ieee80211_supported_band brcms_band_5GHz_nphy_template = {
+ 	.band = IEEE80211_BAND_5GHZ,
+ 	.channels = brcms_5ghz_nphy_chantable,
+ 	.n_channels = ARRAY_SIZE(brcms_5ghz_nphy_chantable),
+@@ -981,23 +982,24 @@ static irqreturn_t brcms_isr(int irq, void *dev_id)
+ static int ieee_hw_rate_init(struct ieee80211_hw *hw)
+ {
+ 	struct brcms_info *wl = hw->priv;
+-	int has_5g;
++	struct brcms_c_info *wlc = wl->wlc;
++	struct ieee80211_supported_band *band;
++	int has_5g = 0;
+ 	u16 phy_type;
+ 
+-	has_5g = 0;
+-
+ 	hw->wiphy->bands[IEEE80211_BAND_2GHZ] = NULL;
+ 	hw->wiphy->bands[IEEE80211_BAND_5GHZ] = NULL;
+ 
+ 	phy_type = brcms_c_get_phy_type(wl->wlc, 0);
+ 	if (phy_type == PHY_TYPE_N || phy_type == PHY_TYPE_LCN) {
++		band = &wlc->bandstate[BAND_2G_INDEX]->band;
++		*band = brcms_band_2GHz_nphy_template;
+ 		if (phy_type == PHY_TYPE_LCN) {
+ 			/* Single stream */
+-			brcms_band_2GHz_nphy.ht_cap.mcs.rx_mask[1] = 0;
+-			brcms_band_2GHz_nphy.ht_cap.mcs.rx_highest =
+-					cpu_to_le16(72);
++			band->ht_cap.mcs.rx_mask[1] = 0;
++			band->ht_cap.mcs.rx_highest = cpu_to_le16(72);
+ 		}
+-		hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &brcms_band_2GHz_nphy;
++		hw->wiphy->bands[IEEE80211_BAND_2GHZ] = band;
+ 	} else {
+ 		return -EPERM;
+ 	}
+@@ -1005,11 +1007,13 @@ static int ieee_hw_rate_init(struct ieee80211_hw *hw)
+ 	/* Assume all bands use the same phy.  True for 11n devices. */
+ 	if (wl->pub->_nbands > 1) {
+ 		has_5g++;
+-		if (phy_type == PHY_TYPE_N || phy_type == PHY_TYPE_LCN)
+-			hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+-			    &brcms_band_5GHz_nphy;
+-		else
++		if (phy_type == PHY_TYPE_N || phy_type == PHY_TYPE_LCN) {
++			band = &wlc->bandstate[BAND_5G_INDEX]->band;
++			*band = brcms_band_5GHz_nphy_template;
++			hw->wiphy->bands[IEEE80211_BAND_5GHZ] = band;
++		} else {
+ 			return -EPERM;
++		}
+ 	}
  	return 0;
  }
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
+index 8760d7e..9e12a14 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.h
++++ b/drivers/staging/brcm80211/brcmsmac/main.h
+@@ -281,6 +281,7 @@ struct brcms_band {
  
--static int ath6kl_bmi_get_rx_lkahd(struct ath6kl *ar, bool need_timeout)
-+static int ath6kl_bmi_get_rx_lkahd(struct ath6kl *ar)
- {
- 	unsigned long timeout;
- 	u32 rx_word = 0;
- 	int ret = 0;
+ 	u16 CWmin; /* minimum size of contention window, in unit of aSlotTime */
+ 	u16 CWmax; /* maximum size of contention window, in unit of aSlotTime */
++	struct ieee80211_supported_band band;
+ };
  
- 	timeout = jiffies + msecs_to_jiffies(BMI_COMMUNICATION_TIMEOUT);
--	while ((!need_timeout || time_before(jiffies, timeout)) && !rx_word) {
-+	while (time_before(jiffies, timeout) && !rx_word) {
- 		ret = hif_read_write_sync(ar, RX_LOOKAHEAD_VALID_ADDRESS,
- 					  (u8 *)&rx_word, sizeof(rx_word),
- 					  HIF_RD_SYNC_BYTE_INC);
-@@ -109,8 +109,7 @@ static int ath6kl_bmi_send_buf(struct ath6kl *ar, u8 *buf, u32 len)
- 	return ret;
- }
- 
--static int ath6kl_bmi_recv_buf(struct ath6kl *ar,
--			u8 *buf, u32 len, bool want_timeout)
-+static int ath6kl_bmi_recv_buf(struct ath6kl *ar, u8 *buf, u32 len)
- {
- 	int ret;
- 	u32 addr;
-@@ -162,7 +161,7 @@ static int ath6kl_bmi_recv_buf(struct ath6kl *ar,
- 	 * a function of Host processor speed.
- 	 */
- 	if (len >= 4) { /* NB: Currently, always true */
--		ret = ath6kl_bmi_get_rx_lkahd(ar, want_timeout);
-+		ret = ath6kl_bmi_get_rx_lkahd(ar);
- 		if (ret)
- 			return ret;
- 	}
-@@ -220,7 +219,7 @@ int ath6kl_bmi_get_target_info(struct ath6kl *ar,
- 	}
- 
- 	ret = ath6kl_bmi_recv_buf(ar, (u8 *)&targ_info->version,
--			sizeof(targ_info->version), true);
-+				  sizeof(targ_info->version));
- 	if (ret) {
- 		ath6kl_err("Unable to recv target info: %d\n", ret);
- 		return ret;
-@@ -230,8 +229,7 @@ int ath6kl_bmi_get_target_info(struct ath6kl *ar,
- 		/* Determine how many bytes are in the Target's targ_info */
- 		ret = ath6kl_bmi_recv_buf(ar,
- 				   (u8 *)&targ_info->byte_count,
--				   sizeof(targ_info->byte_count),
--				   true);
-+				   sizeof(targ_info->byte_count));
- 		if (ret) {
- 			ath6kl_err("unable to read target info byte count: %d\n",
- 				   ret);
-@@ -252,8 +250,7 @@ int ath6kl_bmi_get_target_info(struct ath6kl *ar,
- 				   ((u8 *)targ_info) +
- 				   sizeof(targ_info->byte_count),
- 				   sizeof(*targ_info) -
--				   sizeof(targ_info->byte_count),
--				   true);
-+				   sizeof(targ_info->byte_count));
- 
- 		if (ret) {
- 			ath6kl_err("Unable to read target info (%d bytes): %d\n",
-@@ -311,7 +308,7 @@ int ath6kl_bmi_read(struct ath6kl *ar, u32 addr, u8 *buf, u32 len)
- 				   ret);
- 			return ret;
- 		}
--		ret = ath6kl_bmi_recv_buf(ar, ar->bmi.cmd_buf, rx_len, true);
-+		ret = ath6kl_bmi_recv_buf(ar, ar->bmi.cmd_buf, rx_len);
- 		if (ret) {
- 			ath6kl_err("Unable to read from the device: %d\n",
- 				   ret);
-@@ -424,7 +421,7 @@ int ath6kl_bmi_execute(struct ath6kl *ar, u32 addr, u32 *param)
- 		return ret;
- 	}
- 
--	ret = ath6kl_bmi_recv_buf(ar, ar->bmi.cmd_buf, sizeof(*param), false);
-+	ret = ath6kl_bmi_recv_buf(ar, ar->bmi.cmd_buf, sizeof(*param));
- 	if (ret) {
- 		ath6kl_err("Unable to read from the device: %d\n", ret);
- 		return ret;
-@@ -504,7 +501,7 @@ int ath6kl_bmi_reg_read(struct ath6kl *ar, u32 addr, u32 *param)
- 		return ret;
- 	}
- 
--	ret = ath6kl_bmi_recv_buf(ar, ar->bmi.cmd_buf, sizeof(*param), true);
-+	ret = ath6kl_bmi_recv_buf(ar, ar->bmi.cmd_buf, sizeof(*param));
- 	if (ret) {
- 		ath6kl_err("Unable to read from the device: %d\n", ret);
- 		return ret;
+ /* module control blocks */
+-- 
+1.7.1
+
 
