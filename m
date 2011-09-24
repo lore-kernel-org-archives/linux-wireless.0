@@ -1,108 +1,328 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38702 "EHLO mga09.intel.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4597 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934522Ab1IOTcE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 15:32:04 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/27] update for 3.2
-Date: Thu, 15 Sep 2011 11:46:27 -0700
-Message-Id: <1316112414-6341-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110915_213328_352099_EA9DC837)
+	id S1753185Ab1IXCJU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Sep 2011 22:09:20 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 14/20] staging: brcm80211: remove dongle firmware
+ related debug code
+Date: Fri, 23 Sep 2011 19:09:02 -0700
+Message-ID: <1316830148-28661-15-git-send-email-frankyl@broadcom.com> (sfid-20110924_041001_582824_018BAB77)
+In-Reply-To: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
+References: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We adding more documents for the transport layer work
-We continue the transport layer work to make it better and cleaner
-We also continue doing the cleanup work after driver split
+From: Arend van Spriel <arend@broadcom.com>
 
-Don Fry (1):
-  iwlagn: replace beacon_time_fsf_bits variable with #define
+When the device dies the driver could extract cpu registers on
+the device to analyze the trap handling on the dongle. As the
+firmware with this driver is stable this code does not belong
+in the brcmfmac driver.
 
-Emmanuel Grumbach (9):
-  iwlagn: warn about buggy fw that doesn't set SEQ_RX_FRAME
-  iwlagn: unmap cmd queue's tfds as BIDI
-  iwlagn: free the Tx cmd when a non empty Tx queue is freed
-  iwlagn: move iwl_stop / wake_queue to the upper layer
-  iwlagn: use enum iwl_rxon_context_id instead of u8
-  iwlagn: document the bus layer API
-  iwlagn: add documentation to the transport layer
-  iwlagn: beautify the code - remove uneeded line break
-  iwlagn: provide data after WARN_ON
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |  259 +------------------------
+ 1 files changed, 1 insertions(+), 258 deletions(-)
 
-Fry, Donald H (2):
-  iwlagn: fix modinfo display for 135 ucode.
-  iwlagn: simplify chain_noise_num_beacons indirection
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 9f8bcb3..4992d4d 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -37,29 +37,7 @@
+ 
+ #ifdef BCMDBG
+ 
+-/* ARM trap handling */
+-struct brcmf_trap {
+-	u32 type;
+-	u32 epc;
+-	u32 cpsr;
+-	u32 spsr;
+-	u32 r0;
+-	u32 r1;
+-	u32 r2;
+-	u32 r3;
+-	u32 r4;
+-	u32 r5;
+-	u32 r6;
+-	u32 r7;
+-	u32 r8;
+-	u32 r9;
+-	u32 r10;
+-	u32 r11;
+-	u32 r12;
+-	u32 r13;
+-	u32 r14;
+-	u32 pc;
+-};
++#define BRCMF_TRAP_INFO_SIZE	80
+ 
+ #define CBUF_LEN	(128)
+ 
+@@ -2890,231 +2868,6 @@ xfer_done:
+ }
+ 
+ #ifdef BCMDBG
+-static int
+-brcmf_sdbrcm_readshared(struct brcmf_bus *bus, struct sdpcm_shared *sh)
+-{
+-	u32 addr;
+-	__le32 addr_le;
+-	int rv;
+-	struct sdpcm_shared_le sh_le;
+-
+-	/* Read last word in memory to determine address of
+-			 sdpcm_shared structure */
+-	rv = brcmf_sdbrcm_membytes(bus, false, bus->ramsize - 4, (u8 *)&addr_le,
+-				   4);
+-	if (rv < 0)
+-		return rv;
+-
+-	addr = le32_to_cpu(addr_le);
+-
+-	brcmf_dbg(INFO, "sdpcm_shared address 0x%08X\n", addr);
+-
+-	/*
+-	 * Check if addr is valid.
+-	 * NVRAM length at the end of memory should have been overwritten.
+-	 */
+-	if (addr == 0 || ((~addr >> 16) & 0xffff) == (addr & 0xffff)) {
+-		brcmf_dbg(ERROR, "address (0x%08x) of sdpcm_shared invalid\n",
+-			  addr);
+-		return -EBADE;
+-	}
+-
+-	/* Read rte_shared structure */
+-	rv = brcmf_sdbrcm_membytes(bus, false, addr, (u8 *) &sh_le,
+-			      sizeof(struct sdpcm_shared_le));
+-	if (rv < 0)
+-		return rv;
+-
+-	/* Endianness */
+-	sh->flags = le32_to_cpu(sh_le.flags);
+-	sh->trap_addr = le32_to_cpu(sh_le.trap_addr);
+-	sh->assert_exp_addr = le32_to_cpu(sh_le.assert_exp_addr);
+-	sh->assert_file_addr = le32_to_cpu(sh_le.assert_file_addr);
+-	sh->assert_line = le32_to_cpu(sh_le.assert_line);
+-	sh->console_addr = le32_to_cpu(sh_le.console_addr);
+-	sh->msgtrace_addr = le32_to_cpu(sh_le.msgtrace_addr);
+-	memcpy(sh->tag, sh_le.tag, sizeof(sh->tag));
+-
+-	if ((sh->flags & SDPCM_SHARED_VERSION_MASK) != SDPCM_SHARED_VERSION) {
+-		brcmf_dbg(ERROR, "sdpcm_shared version %d in brcmf is different than sdpcm_shared version %d in dongle\n",
+-			  SDPCM_SHARED_VERSION,
+-			  sh->flags & SDPCM_SHARED_VERSION_MASK);
+-		return -EBADE;
+-	}
+-
+-	return 0;
+-}
+-
+-static int brcmf_sdbrcm_mem_dump(struct brcmf_bus *bus)
+-{
+-	int ret = 0;
+-	int size;		/* Full mem size */
+-	int start = 0;		/* Start address */
+-	int read_size = 0;	/* Read size of each iteration */
+-	u8 *buf = NULL, *databuf = NULL;
+-
+-	/* Get full mem size */
+-	size = bus->ramsize;
+-	buf = kmalloc(size, GFP_ATOMIC);
+-	if (!buf)
+-		return -1;
+-
+-	/* Read mem content */
+-	printk(KERN_DEBUG "Dump dongle memory");
+-	databuf = buf;
+-	while (size) {
+-		read_size = min(MEMBLOCK, size);
+-		ret = brcmf_sdbrcm_membytes(bus, false, start, databuf,
+-					  read_size);
+-		if (ret) {
+-			brcmf_dbg(ERROR, "Error membytes %d\n", ret);
+-			kfree(buf);
+-			return -1;
+-		}
+-		printk(".");
+-
+-		/* Decrement size and increment start address */
+-		size -= read_size;
+-		start += read_size;
+-		databuf += read_size;
+-	}
+-	printk(KERN_DEBUG "Done\n");
+-
+-	/* free buf before return !!! */
+-	if (brcmf_write_to_file(bus->drvr, buf, bus->ramsize)) {
+-		brcmf_dbg(ERROR, "Error writing to files\n");
+-		return -1;
+-	}
+-
+-	/* buf free handled in brcmf_write_to_file, not here */
+-	return 0;
+-}
+-
+-static int brcmf_sdbrcm_checkdied(struct brcmf_bus *bus, u8 *data, uint size)
+-{
+-	int bcmerror = 0;
+-	uint msize = 512;
+-	char *mbuffer = NULL;
+-	uint maxstrlen = 256;
+-	char *str = NULL;
+-	struct brcmf_trap tr;
+-	struct sdpcm_shared sdpcm_shared;
+-	struct brcmu_strbuf strbuf;
+-
+-	brcmf_dbg(TRACE, "Enter\n");
+-
+-	if (data == NULL) {
+-		/*
+-		 * Called after a rx ctrl timeout. "data" is NULL.
+-		 * allocate memory to trace the trap or assert.
+-		 */
+-		size = msize;
+-		mbuffer = data = kmalloc(msize, GFP_ATOMIC);
+-		if (mbuffer == NULL) {
+-			bcmerror = -ENOMEM;
+-			goto done;
+-		}
+-	}
+-
+-	str = kmalloc(maxstrlen, GFP_ATOMIC);
+-	if (str == NULL) {
+-		bcmerror = -ENOMEM;
+-		goto done;
+-	}
+-
+-	bcmerror = brcmf_sdbrcm_readshared(bus, &sdpcm_shared);
+-	if (bcmerror < 0)
+-		goto done;
+-
+-	brcmu_binit(&strbuf, data, size);
+-
+-	brcmu_bprintf(&strbuf,
+-		    "msgtrace address : 0x%08X\nconsole address  : 0x%08X\n",
+-		    sdpcm_shared.msgtrace_addr, sdpcm_shared.console_addr);
+-
+-	if ((sdpcm_shared.flags & SDPCM_SHARED_ASSERT_BUILT) == 0)
+-		/* NOTE: Misspelled assert is intentional - DO NOT FIX.
+-		 * (Avoids conflict with real asserts for programmatic
+-		 * parsing of output.)
+-		 */
+-		brcmu_bprintf(&strbuf, "Assrt not built in dongle\n");
+-
+-	if ((sdpcm_shared.flags & (SDPCM_SHARED_ASSERT | SDPCM_SHARED_TRAP)) ==
+-	    0) {
+-		/* NOTE: Misspelled assert is intentional - DO NOT FIX.
+-		 * (Avoids conflict with real asserts for programmatic
+-		 * parsing of output.)
+-		 */
+-		brcmu_bprintf(&strbuf, "No trap%s in dongle",
+-			    (sdpcm_shared.flags & SDPCM_SHARED_ASSERT_BUILT)
+-			    ? "/assrt" : "");
+-	} else {
+-		if (sdpcm_shared.flags & SDPCM_SHARED_ASSERT) {
+-			/* Download assert */
+-			brcmu_bprintf(&strbuf, "Dongle assert");
+-			if (sdpcm_shared.assert_exp_addr != 0) {
+-				str[0] = '\0';
+-				bcmerror = brcmf_sdbrcm_membytes(bus, false,
+-						sdpcm_shared.assert_exp_addr,
+-						(u8 *) str, maxstrlen);
+-				if (bcmerror < 0)
+-					goto done;
+-
+-				str[maxstrlen - 1] = '\0';
+-				brcmu_bprintf(&strbuf, " expr \"%s\"", str);
+-			}
+-
+-			if (sdpcm_shared.assert_file_addr != 0) {
+-				str[0] = '\0';
+-				bcmerror = brcmf_sdbrcm_membytes(bus, false,
+-						sdpcm_shared.assert_file_addr,
+-						(u8 *) str, maxstrlen);
+-				if (bcmerror < 0)
+-					goto done;
+-
+-				str[maxstrlen - 1] = '\0';
+-				brcmu_bprintf(&strbuf, " file \"%s\"", str);
+-			}
+-
+-			brcmu_bprintf(&strbuf, " line %d ",
+-				    sdpcm_shared.assert_line);
+-		}
+-
+-		if (sdpcm_shared.flags & SDPCM_SHARED_TRAP) {
+-			bcmerror = brcmf_sdbrcm_membytes(bus, false,
+-					sdpcm_shared.trap_addr, (u8 *)&tr,
+-					sizeof(struct brcmf_trap));
+-			if (bcmerror < 0)
+-				goto done;
+-
+-			brcmu_bprintf(&strbuf,
+-				    "Dongle trap type 0x%x @ epc 0x%x, cpsr 0x%x, spsr 0x%x, sp 0x%x,"
+-				    "lp 0x%x, rpc 0x%x Trap offset 0x%x, "
+-				    "r0 0x%x, r1 0x%x, r2 0x%x, r3 0x%x, r4 0x%x, r5 0x%x, r6 0x%x, r7 0x%x\n",
+-				    tr.type, tr.epc, tr.cpsr, tr.spsr, tr.r13,
+-				    tr.r14, tr.pc, sdpcm_shared.trap_addr,
+-				    tr.r0, tr.r1, tr.r2, tr.r3, tr.r4, tr.r5,
+-				    tr.r6, tr.r7);
+-		}
+-	}
+-
+-	if (sdpcm_shared.flags & (SDPCM_SHARED_ASSERT | SDPCM_SHARED_TRAP))
+-		brcmf_dbg(ERROR, "%s\n", strbuf.origbuf);
+-
+-#ifdef BCMDBG
+-	if (sdpcm_shared.flags & SDPCM_SHARED_TRAP)
+-		/* Mem dump to a file on device */
+-		brcmf_sdbrcm_mem_dump(bus);
+-
+-#endif				/* BCMDBG */
+-
+-done:
+-	kfree(mbuffer);
+-	kfree(str);
+-
+-	return bcmerror;
+-}
+-
+ #define CONSOLE_LINE_MAX	192
+ 
+ static int brcmf_sdbrcm_readconsole(struct brcmf_bus *bus)
+@@ -3377,21 +3130,11 @@ brcmf_sdbrcm_bus_rxctl(struct brcmf_bus *bus, unsigned char *msg, uint msglen)
+ 			  rxlen, msglen);
+ 	} else if (timeleft == 0) {
+ 		brcmf_dbg(ERROR, "resumed on timeout\n");
+-#ifdef BCMDBG
+-		brcmf_sdbrcm_sdlock(bus);
+-		brcmf_sdbrcm_checkdied(bus, NULL, 0);
+-		brcmf_sdbrcm_sdunlock(bus);
+-#endif				/* BCMDBG */
+ 	} else if (pending == true) {
+ 		brcmf_dbg(CTL, "cancelled\n");
+ 		return -ERESTARTSYS;
+ 	} else {
+ 		brcmf_dbg(CTL, "resumed for unknown reason?\n");
+-#ifdef BCMDBG
+-		brcmf_sdbrcm_sdlock(bus);
+-		brcmf_sdbrcm_checkdied(bus, NULL, 0);
+-		brcmf_sdbrcm_sdunlock(bus);
+-#endif				/* BCMDBG */
+ 	}
+ 
+ 	if (rxlen)
+-- 
+1.7.1
 
-Johannes Berg (9):
-  iwlagn: move PCI-E transport files
-  iwlagn: generically provide iwl_trans_send_cmd_pdu
-  iwlagn: Makefile whitespace cleanup
-  iwlagn: clean up PM code
-  iwlagn: rename iwl-pci.h to iwl-cfg.h
-  iwlagn: remove unused function declarations
-  iwlagn: move sysfs files to debugfs
-  iwlagn: remove drvdata support from bus layer
-  iwlagn: do not use interruptible waits
-
-Wey-Yi Guy (6):
-  iwlagn: New SKU for 6005 SFF
-  iwlagn: merge eeprom access into single file
-  iwlagn: add support for v2 of temperature offset calibration
-  iwlagn: use iwl_eeprom_calib_hdr structure
-  iwlagn: fix stack corruption for temperature offset v2
-  iwlagn: signedness bug
-
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
-
-Because the file system problem, all the patches are not push into 
-git.kernel.org yet. I will push as soon as the file system issue addressed
-
- drivers/net/wireless/iwlwifi/Makefile             |   23 +-
- drivers/net/wireless/iwlwifi/iwl-1000.c           |    5 +-
- drivers/net/wireless/iwlwifi/iwl-2000.c           |   12 +-
- drivers/net/wireless/iwlwifi/iwl-5000-hw.h        |    4 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c           |    7 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c           |    7 +-
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c      |   21 +-
- drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c     |  299 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |    6 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tt.c         |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c      |   55 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c            |  148 +--
- drivers/net/wireless/iwlwifi/iwl-bus.h            |   72 +-
- drivers/net/wireless/iwlwifi/iwl-cfg.h            |  115 ++
- drivers/net/wireless/iwlwifi/iwl-commands.h       |    8 +
- drivers/net/wireless/iwlwifi/iwl-core.c           |   53 +-
- drivers/net/wireless/iwlwifi/iwl-core.h           |    3 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c        |   72 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h            |    2 +
- drivers/net/wireless/iwlwifi/iwl-eeprom.c         |  239 +++-
- drivers/net/wireless/iwlwifi/iwl-eeprom.h         |   10 +-
- drivers/net/wireless/iwlwifi/iwl-pci.c            |   22 +-
- drivers/net/wireless/iwlwifi/iwl-pci.h            |  116 --
- drivers/net/wireless/iwlwifi/iwl-rx.c             |    2 +-
- drivers/net/wireless/iwlwifi/iwl-shared.h         |  140 +-
- drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |  454 -----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |  448 +++++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  | 1424 +++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  | 1153 ++++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     | 1988 +++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c  | 1412 ---------------
- drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c  | 1158 ------------
- drivers/net/wireless/iwlwifi/iwl-trans.c          | 1926 +--------------------
- drivers/net/wireless/iwlwifi/iwl-trans.h          |   27 +-
- 35 files changed, 5762 insertions(+), 5675 deletions(-)
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-cfg.h
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-pci.h
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
 
