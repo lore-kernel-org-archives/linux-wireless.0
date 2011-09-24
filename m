@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:20594 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932575Ab1IOKyW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Sep 2011 06:54:22 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [RFC] mac80211: Do not allow disabled channel during scan
-Date: Thu, 15 Sep 2011 16:24:56 +0530
-Message-ID: <1316084096-12565-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110915_125432_614661_3467831B)
+Received: from mx1.redhat.com ([209.132.183.28]:21127 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751668Ab1IXQbT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Sep 2011 12:31:19 -0400
+Date: Sat, 24 Sep 2011 18:30:07 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	"Bernhard M. Wiedemann" <bernhardout@lsmod.de>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Drn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: Bug in rt2800pci on an RT3090
+Message-ID: <20110924163007.GA10001@redhat.com> (sfid-20110924_183124_476355_CBFF99C2)
+References: <4E7CEE67.2070906@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E7CEE67.2070906@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The scan decision allows disabled channel to be set. So the
-probe request was seen over the disabled channel. This patch
-skips the disabled channel while scanning.
+On Fri, Sep 23, 2011 at 03:39:03PM -0500, Larry Finger wrote:
+> A bug was sent to me concerning a scheduling-while-atomic-BUG. This
+> happened shortly after KDE suspended an eeepc1015PE netbook during
+> system update over WLAN. Suspend&resume normally worked allright.
+> The OP is Berhard Wiedemann in the Cc list. Inquiries for more info
+> go to him.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- net/mac80211/scan.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+It looks like we forgot to unlock spinlock somewhere or we do not
+use _irqsave version of spinlock where needed, but provided calltrace
+is not naught to find the bug.
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 6f09eca..9c3d309 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -616,6 +616,10 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
- 		if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
- 			skip = 1;
- 
-+	/* Skip disabled channels */
-+	if (chan->flags & IEEE80211_CHAN_DISABLED)
-+		skip = 1;
-+
- 	/* advance state machine to next channel/band */
- 	local->scan_channel_idx++;
- 
--- 
-1.7.6.1
+I suggest compile kernel with CONFIG_LOCKDEP, try to reproduce and see
+if we do get some more messages.
 
+Stanislaw
