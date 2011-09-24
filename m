@@ -1,29 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dell.nexicom.net ([216.168.96.13]:50139 "EHLO smtp.nexicom.net"
+Received: from mms1.broadcom.com ([216.31.210.17]:2583 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753505Ab1IWCAx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 22:00:53 -0400
-Received: from mail.lockie.ca (dyn-dsl-mb-216-168-118-207.nexicom.net [216.168.118.207])
-	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p8N20nGb032266
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 22:00:50 -0400
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by mail.lockie.ca (Postfix) with ESMTP id 373DC1E011B
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 22:00:49 -0400 (EDT)
-Message-ID: <4E7BE8CC.6060305@lockie.ca> (sfid-20110923_040103_404624_87E31D1A)
-Date: Thu, 22 Sep 2011 22:02:52 -0400
-From: James <bjlockie@lockie.ca>
+	id S1751340Ab1IXOt2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Sep 2011 10:49:28 -0400
+Message-ID: <4E7DEDE9.9010102@broadcom.com> (sfid-20110924_164932_009799_0136B2A6)
+Date: Sat, 24 Sep 2011 16:49:13 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: higher N rates
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 14/20] staging: brcm80211: remove dongle firmware
+ related debug code
+References: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
+ <1316830148-28661-15-git-send-email-frankyl@broadcom.com> (
+ sfid-20110924_041001_582824_018BAB77)
+ <1316860785.3952.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1316860785.3952.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-$ iw dev wlan0 scan
+On 09/24/2011 12:39 PM, Johannes Berg wrote:
+> On Fri, 2011-09-23 at 19:09 -0700, Franky Lin wrote:
+>> From: Arend van Spriel<arend@broadcom.com>
+>>
+>> When the device dies the driver could extract cpu registers on
+>> the device to analyze the trap handling on the dongle. As the
+>> firmware with this driver is stable this code does not belong
+>> in the brcmfmac driver.
+>>
+>> Reported-by: Johannes Berg<johannes@sipsolutions.net>
+> FWIW, when I said this looked strange I might have thought that it was
+> actually accessing the *host* registers. I don't remember exactly what I
+> said. If this is debug code for the dongle, then maybe it makes sense to
+> keep it, maybe optionally. I don't think you'll want to support a
+> separate driver just for debug. You could even use nl80211 testmode to
+> export it to userspace for your tools.
 
-printed this for my N (only) router:
+Thanks, Johannes
 
-Supported rates: 1.0* 2.0* 5.5* 11.0* 18.0 24.0 36.0 54.0
-Extended supported rates: 6.0 9.0 12.0 48.0
+Your comment was understood and merely a trigger for us to reconsider 
+whether we would need it in this driver. As the mechanism has also not 
+been tested in the brcmfmac driver and we consider the firmware stable, 
+we decided to remove it.
 
-Why doesn't it print the higher N rates?
+Gr. AvS
+
