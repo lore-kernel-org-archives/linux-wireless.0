@@ -1,18 +1,17 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2061 "EHLO MMS3.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4562 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756242Ab1I2Wex (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 18:34:53 -0400
+	id S1753140Ab1IXCJU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Sep 2011 22:09:20 -0400
 From: "Franky Lin" <frankyl@broadcom.com>
 To: gregkh@suse.de
 cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v3 14/25] staging: brcm80211: removed band related
- global vars from softmac
-Date: Thu, 29 Sep 2011 15:34:25 -0700
-Message-ID: <1317335676-3424-15-git-send-email-frankyl@broadcom.com> (sfid-20110930_003459_531793_182FB9A2)
-In-Reply-To: <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
-References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
- <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
+Subject: [PATCH 04/20] staging: brcm80211: removed redundant wlc->cfg
+ struct member
+Date: Fri, 23 Sep 2011 19:08:52 -0700
+Message-ID: <1316830148-28661-5-git-send-email-frankyl@broadcom.com> (sfid-20110924_041100_208836_781D0A3A)
+In-Reply-To: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
+References: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -20,109 +19,161 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Roland Vossen <rvossen@broadcom.com>
 
-Global variables are undesirable unless they are read only. Variables are
-now maintained in a device specific structure.
+After initialization ('attach'), this struct member always pointed at
+the same memory as wlc->bsscfg.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
 Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
 Reviewed-by: Arend van Spriel <arend@broadcom.com>
 Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c |   29 +++++++++++++---------
- drivers/staging/brcm80211/brcmsmac/main.h        |    1 +
- 2 files changed, 18 insertions(+), 12 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/main.c |   47 ++++++++++++----------------
+ drivers/staging/brcm80211/brcmsmac/main.h |    1 -
+ 2 files changed, 20 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-index 11ba061..d5d0d9e 100644
---- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-@@ -31,6 +31,7 @@
- #include "pub.h"
- #include "ucode_loader.h"
- #include "mac80211_if.h"
-+#include "main.h"
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 138f63b..ee9c322 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -486,7 +486,7 @@ static void brcms_c_detach_mfree(struct brcms_c_info *wlc)
+ 	if (wlc == NULL)
+ 		return;
  
- #define N_TX_QUEUES	4 /* #tx queues on mac80211<->driver interface */
+-	brcms_c_bsscfg_mfree(wlc->cfg);
++	brcms_c_bsscfg_mfree(wlc->bsscfg);
+ 	kfree(wlc->pub);
+ 	kfree(wlc->modulecb);
+ 	kfree(wlc->default_bss);
+@@ -577,8 +577,8 @@ brcms_c_attach_malloc(uint unit, uint *err, uint devid)
+ 		goto fail;
+ 	}
  
-@@ -225,7 +226,7 @@ static struct ieee80211_rate legacy_ratetable[] = {
- 	RATE(540, 0),
- };
- 
--static struct ieee80211_supported_band brcms_band_2GHz_nphy = {
-+static const struct ieee80211_supported_band brcms_band_2GHz_nphy_template = {
- 	.band = IEEE80211_BAND_2GHZ,
- 	.channels = brcms_2ghz_chantable,
- 	.n_channels = ARRAY_SIZE(brcms_2ghz_chantable),
-@@ -247,7 +248,7 @@ static struct ieee80211_supported_band brcms_band_2GHz_nphy = {
- 		   }
- };
- 
--static struct ieee80211_supported_band brcms_band_5GHz_nphy = {
-+static const struct ieee80211_supported_band brcms_band_5GHz_nphy_template = {
- 	.band = IEEE80211_BAND_5GHZ,
- 	.channels = brcms_5ghz_nphy_chantable,
- 	.n_channels = ARRAY_SIZE(brcms_5ghz_nphy_chantable),
-@@ -981,22 +982,24 @@ static irqreturn_t brcms_isr(int irq, void *dev_id)
- static int ieee_hw_rate_init(struct ieee80211_hw *hw)
+-	wlc->cfg = brcms_c_bsscfg_malloc(unit);
+-	if (wlc->cfg == NULL) {
++	wlc->bsscfg = brcms_c_bsscfg_malloc(unit);
++	if (wlc->bsscfg == NULL) {
+ 		*err = 1011;
+ 		goto fail;
+ 	}
+@@ -3943,14 +3943,13 @@ void brcms_c_set_ps_ctrl(struct brcms_c_info *wlc)
+  * Write this BSS config's MAC address to core.
+  * Updates RXE match engine.
+  */
+-int brcms_c_set_mac(struct brcms_bss_cfg *cfg)
++int brcms_c_set_mac(struct brcms_bss_cfg *bsscfg)
  {
- 	struct brcms_info *wl = hw->priv;
--	int has_5g;
-+	struct brcms_c_info *wlc = wl->wlc;
-+	struct ieee80211_supported_band *band;
-+	int has_5g = 0;
- 	u16 phy_type;
+ 	int err = 0;
+-	struct brcms_c_info *wlc = cfg->wlc;
++	struct brcms_c_info *wlc = bsscfg->wlc;
  
--	has_5g = 0;
+-	if (cfg == wlc->cfg)
+-		/* enter the MAC addr into the RXE match registers */
+-		brcms_c_set_addrmatch(wlc, RCM_MAC_OFFSET, cfg->cur_etheraddr);
++	/* enter the MAC addr into the RXE match registers */
++	brcms_c_set_addrmatch(wlc, RCM_MAC_OFFSET, bsscfg->cur_etheraddr);
+ 
+ 	brcms_c_ampdu_macaddr_upd(wlc);
+ 
+@@ -3960,13 +3959,10 @@ int brcms_c_set_mac(struct brcms_bss_cfg *cfg)
+ /* Write the BSS config's BSSID address to core (set_bssid in d11procs.tcl).
+  * Updates RXE match engine.
+  */
+-void brcms_c_set_bssid(struct brcms_bss_cfg *cfg)
++void brcms_c_set_bssid(struct brcms_bss_cfg *bsscfg)
+ {
+-	struct brcms_c_info *wlc = cfg->wlc;
 -
- 	hw->wiphy->bands[IEEE80211_BAND_2GHZ] = NULL;
- 	hw->wiphy->bands[IEEE80211_BAND_5GHZ] = NULL;
- 
- 	phy_type = brcms_c_get_phy_type(wl->wlc, 0);
- 	if (phy_type == PHY_TYPE_N || phy_type == PHY_TYPE_LCN) {
-+		band = &wlc->bandstate[BAND_2G_INDEX]->band;
-+		*band = brcms_band_2GHz_nphy_template;
- 		if (phy_type == PHY_TYPE_LCN) {
- 			/* Single stream */
--			brcms_band_2GHz_nphy.ht_cap.mcs.rx_mask[1] = 0;
--			brcms_band_2GHz_nphy.ht_cap.mcs.rx_highest = 72;
-+			band->ht_cap.mcs.rx_mask[1] = 0;
-+			band->ht_cap.mcs.rx_highest = 72;
- 		}
--		hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &brcms_band_2GHz_nphy;
-+		hw->wiphy->bands[IEEE80211_BAND_2GHZ] = band;
- 	} else {
- 		return -EPERM;
- 	}
-@@ -1004,11 +1007,13 @@ static int ieee_hw_rate_init(struct ieee80211_hw *hw)
- 	/* Assume all bands use the same phy.  True for 11n devices. */
- 	if (wl->pub->_nbands > 1) {
- 		has_5g++;
--		if (phy_type == PHY_TYPE_N || phy_type == PHY_TYPE_LCN)
--			hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
--			    &brcms_band_5GHz_nphy;
--		else
-+		if (phy_type == PHY_TYPE_N || phy_type == PHY_TYPE_LCN) {
-+			band = &wlc->bandstate[BAND_5G_INDEX]->band;
-+			*band = brcms_band_5GHz_nphy_template;
-+			hw->wiphy->bands[IEEE80211_BAND_5GHZ] = band;
-+		} else {
- 			return -EPERM;
-+		}
- 	}
- 	return 0;
+-	/* if primary config, we need to update BSSID in RXE match registers */
+-	if (cfg == wlc->cfg)
+-		brcms_c_set_addrmatch(wlc, RCM_BSSID_OFFSET, cfg->BSSID);
++	/* we need to update BSSID in RXE match registers */
++	brcms_c_set_addrmatch(bsscfg->wlc, RCM_BSSID_OFFSET, bsscfg->BSSID);
  }
+ 
+ static void brcms_b_set_shortslot(struct brcms_hardware *wlc_hw, bool shortslot)
+@@ -5388,9 +5384,8 @@ brcms_c_attach(struct brcms_info *wl, u16 vendor, u16 device, uint unit,
+ 		goto fail;
+ 	}
+ 
+-	wlc->bsscfg = wlc->cfg;
+-	wlc->cfg->_idx = 0;
+-	wlc->cfg->wlc = wlc;
++	wlc->bsscfg->_idx = 0;
++	wlc->bsscfg->wlc = wlc;
+ 
+ 	wlc->mimoft = FT_HT;
+ 	wlc->ht_cap.cap_info = HT_CAP;
+@@ -6241,8 +6236,8 @@ static void brcms_c_ofdm_rateset_war(struct brcms_c_info *wlc)
+ 	u8 r;
+ 	bool war = false;
+ 
+-	if (wlc->cfg->associated)
+-		r = wlc->cfg->current_bss->rateset.rates[0];
++	if (wlc->bsscfg->associated)
++		r = wlc->bsscfg->current_bss->rateset.rates[0];
+ 	else
+ 		r = wlc->default_bss->rateset.rates[0];
+ 
+@@ -6311,7 +6306,7 @@ void brcms_c_get_current_rateset(struct brcms_c_info *wlc,
+ 	struct brcms_c_rateset *rs;
+ 
+ 	if (wlc->pub->associated)
+-		rs = &wlc->cfg->current_bss->rateset;
++		rs = &wlc->bsscfg->current_bss->rateset;
+ 	else
+ 		rs = &wlc->default_bss->rateset;
+ 
+@@ -6337,8 +6332,8 @@ int brcms_c_set_rateset(struct brcms_c_info *wlc, struct brcm_rateset *rs)
+ 	/* merge rateset coming in with the current mcsset */
+ 	if (wlc->pub->_n_enab & SUPPORT_11N) {
+ 		struct brcms_bss_info *mcsset_bss;
+-		if (wlc->cfg->associated)
+-			mcsset_bss = wlc->cfg->current_bss;
++		if (wlc->bsscfg->associated)
++			mcsset_bss = wlc->bsscfg->current_bss;
+ 		else
+ 			mcsset_bss = wlc->default_bss;
+ 		memcpy(internal_rs.mcs, &mcsset_bss->rateset.mcs[0],
+@@ -8096,9 +8091,7 @@ brcms_c_rspec_to_rts_rspec(struct brcms_c_info *wlc, u32 rspec,
+ 
+ void brcms_c_tbtt(struct brcms_c_info *wlc)
+ {
+-	struct brcms_bss_cfg *cfg = wlc->cfg;
+-
+-	if (!cfg->BSS)
++	if (!wlc->bsscfg->BSS)
+ 		/*
+ 		 * DirFrmQ is now valid...defer setting until end
+ 		 * of ATIM window
+@@ -9144,7 +9137,7 @@ brcms_c_set_addrmatch(struct brcms_c_info *wlc, int match_reg_offset,
+ {
+ 	brcms_b_set_addrmatch(wlc->hw, match_reg_offset, addr);
+ 	if (match_reg_offset == RCM_BSSID_OFFSET)
+-		memcpy(wlc->cfg->BSSID, addr, ETH_ALEN);
++		memcpy(wlc->bsscfg->BSSID, addr, ETH_ALEN);
+ }
+ 
+ void brcms_c_pllreq(struct brcms_c_info *wlc, bool set, u32 req_bit)
+@@ -9273,7 +9266,7 @@ void brcms_c_scan_stop(struct brcms_c_info *wlc)
+ void brcms_c_associate_upd(struct brcms_c_info *wlc, bool state)
+ {
+ 	wlc->pub->associated = state;
+-	wlc->cfg->associated = state;
++	wlc->bsscfg->associated = state;
+ }
+ 
+ /*
 diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
-index 8760d7e..9e12a14 100644
+index ede4aef..d6de9c3 100644
 --- a/drivers/staging/brcm80211/brcmsmac/main.h
 +++ b/drivers/staging/brcm80211/brcmsmac/main.h
-@@ -281,6 +281,7 @@ struct brcms_band {
+@@ -565,7 +565,6 @@ struct brcms_c_info {
+ 	u16 fifo2prec_map[NFIFO];
  
- 	u16 CWmin; /* minimum size of contention window, in unit of aSlotTime */
- 	u16 CWmax; /* maximum size of contention window, in unit of aSlotTime */
-+	struct ieee80211_supported_band band;
- };
+ 	struct brcms_bss_cfg *bsscfg;
+-	struct brcms_bss_cfg *cfg;
  
- /* module control blocks */
+ 	/* tx queue */
+ 	struct brcms_txq_info *tx_queues;
 -- 
 1.7.1
 
