@@ -1,160 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:59118 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757887Ab1IAUre (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 16:47:34 -0400
-Received: by fxh19 with SMTP id 19so1029458fxh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Sep 2011 13:47:33 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org, Henry Ptasinski <henryp@broadcom.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: N-PHY: implement enabling TX power control
-Date: Thu,  1 Sep 2011 22:49:57 +0200
-Message-Id: <1314910197-10995-1-git-send-email-zajec5@gmail.com> (sfid-20110901_224742_347815_25404EF4)
+Received: from mms1.broadcom.com ([216.31.210.17]:3469 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753230Ab1IXCJU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Sep 2011 22:09:20 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 18/20] staging: brcm80211: removed global var global_scb
+ from softmac
+Date: Fri, 23 Sep 2011 19:09:06 -0700
+Message-ID: <1316830148-28661-19-git-send-email-frankyl@broadcom.com> (sfid-20110924_040941_957241_7E7580AF)
+In-Reply-To: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
+References: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Roland Vossen <rvossen@broadcom.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Global variables are undesirable unless they are read only. Removed by
+instead using an already defined Station Control Block variable in a
+per-device structure.
+
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/b43/phy_n.c |   84 +++++++++++++++++++++++++++++++++++---
- drivers/net/wireless/b43/phy_n.h |    2 +
- 2 files changed, 80 insertions(+), 6 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/ampdu.c       |    6 +++---
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c |   19 ++++---------------
+ drivers/staging/brcm80211/brcmsmac/main.c        |   21 +++++++++++++--------
+ drivers/staging/brcm80211/brcmsmac/main.h        |    4 ++++
+ drivers/staging/brcm80211/brcmsmac/pub.h         |    1 -
+ 5 files changed, 24 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 2eadadf..6e91680 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -248,15 +248,25 @@ static void b43_nphy_tx_power_ctrl(struct b43_wldev *dev, bool enable)
+diff --git a/drivers/staging/brcm80211/brcmsmac/ampdu.c b/drivers/staging/brcm80211/brcmsmac/ampdu.c
+index b94d60c..e29c62e 100644
+--- a/drivers/staging/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/staging/brcm80211/brcmsmac/ampdu.c
+@@ -314,7 +314,7 @@ static void brcms_c_scb_ampdu_update_config(struct ampdu_info *ampdu,
+ 
+ static void brcms_c_scb_ampdu_update_config_all(struct ampdu_info *ampdu)
  {
- 	struct b43_phy_n *nphy = dev->phy.n;
- 	u8 i;
--	u16 tmp;
-+	u16 bmask, val, tmp;
-+	enum ieee80211_band band = b43_current_band(dev->wl);
- 
- 	if (nphy->hang_avoid)
- 		b43_nphy_stay_in_carrier_search(dev, 1);
- 
- 	nphy->txpwrctrl = enable;
- 	if (!enable) {
--		if (dev->phy.rev >= 3)
--			; /* TODO */
-+		if (dev->phy.rev >= 3 &&
-+		    (b43_phy_read(dev, B43_NPHY_TXPCTL_CMD) &
-+		     (B43_NPHY_TXPCTL_CMD_COEFF |
-+		      B43_NPHY_TXPCTL_CMD_HWPCTLEN |
-+		      B43_NPHY_TXPCTL_CMD_PCTLEN))) {
-+			/* We disable enabled TX pwr ctl, save it's state */
-+			nphy->tx_pwr_idx[0] = b43_phy_read(dev,
-+						B43_NPHY_C1_TXPCTL_STAT) & 0x7f;
-+			nphy->tx_pwr_idx[1] = b43_phy_read(dev,
-+						B43_NPHY_C2_TXPCTL_STAT) & 0x7f;
-+		}
- 
- 		b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x6840);
- 		for (i = 0; i < 84; i++)
-@@ -285,10 +295,68 @@ static void b43_nphy_tx_power_ctrl(struct b43_wldev *dev, bool enable)
- 			b43_phy_maskset(dev, B43_NPHY_BPHY_CTL3,
- 				~B43_NPHY_BPHY_CTL3_SCALE, 0x5A);
- 
--		if (dev->phy.rev < 2 && 0)
--			; /* TODO */
-+		if (dev->phy.rev < 2 && dev->phy.is_40mhz)
-+			b43_hf_write(dev, b43_hf_read(dev) | B43_HF_TSSIRPSMW);
- 	} else {
--		b43err(dev->wl, "enabling tx pwr ctrl not implemented yet\n");
-+		b43_ntab_write_bulk(dev, B43_NTAB16(26, 64), 84,
-+				    nphy->adj_pwr_tbl);
-+		b43_ntab_write_bulk(dev, B43_NTAB16(27, 64), 84,
-+				    nphy->adj_pwr_tbl);
-+
-+		bmask = B43_NPHY_TXPCTL_CMD_COEFF |
-+			B43_NPHY_TXPCTL_CMD_HWPCTLEN;
-+		/* wl does useless check for "enable" param here */
-+		val = B43_NPHY_TXPCTL_CMD_COEFF | B43_NPHY_TXPCTL_CMD_HWPCTLEN;
-+		if (dev->phy.rev >= 3) {
-+			bmask |= B43_NPHY_TXPCTL_CMD_PCTLEN;
-+			if (val)
-+				val |= B43_NPHY_TXPCTL_CMD_PCTLEN;
-+		}
-+		b43_phy_maskset(dev, B43_NPHY_TXPCTL_CMD, ~(bmask), val);
-+
-+		if (band == IEEE80211_BAND_5GHZ) {
-+			b43_phy_maskset(dev, B43_NPHY_TXPCTL_CMD,
-+					~B43_NPHY_TXPCTL_CMD_INIT, 0x64);
-+			if (dev->phy.rev > 1)
-+				b43_phy_maskset(dev, B43_NPHY_TXPCTL_INIT,
-+						~B43_NPHY_TXPCTL_INIT_PIDXI1,
-+						0x64);
-+		}
-+
-+		if (dev->phy.rev >= 3) {
-+			if (nphy->tx_pwr_idx[0] != 128 &&
-+			    nphy->tx_pwr_idx[1] != 128) {
-+				/* Recover TX pwr ctl state */
-+				b43_phy_maskset(dev, B43_NPHY_TXPCTL_CMD,
-+						~B43_NPHY_TXPCTL_CMD_INIT,
-+						nphy->tx_pwr_idx[0]);
-+				if (dev->phy.rev > 1)
-+					b43_phy_maskset(dev,
-+						B43_NPHY_TXPCTL_INIT,
-+						~0xff, nphy->tx_pwr_idx[1]);
-+			}
-+		}
-+
-+		if (dev->phy.rev >= 3) {
-+			b43_phy_mask(dev, B43_NPHY_AFECTL_OVER1, ~0x100);
-+			b43_phy_mask(dev, B43_NPHY_AFECTL_OVER, ~0x100);
-+		} else {
-+			b43_phy_mask(dev, B43_NPHY_AFECTL_OVER, ~0x4000);
-+		}
-+
-+		if (dev->phy.rev == 2)
-+			b43_phy_maskset(dev, B43_NPHY_BPHY_CTL3, ~0xFF, 0x3b);
-+		else if (dev->phy.rev < 2)
-+			b43_phy_maskset(dev, B43_NPHY_BPHY_CTL3, ~0xFF, 0x40);
-+
-+		if (dev->phy.rev < 2 && dev->phy.is_40mhz)
-+			b43_hf_write(dev, b43_hf_read(dev) & ~B43_HF_TSSIRPSMW);
-+
-+		if ((nphy->ipa2g_on && band == IEEE80211_BAND_2GHZ) ||
-+		    (nphy->ipa5g_on && band == IEEE80211_BAND_5GHZ)) {
-+			b43_phy_mask(dev, B43_NPHY_PAPD_EN0, ~0x4);
-+			b43_phy_mask(dev, B43_NPHY_PAPD_EN1, ~0x4);
-+		}
- 	}
- 
- 	if (nphy->hang_avoid)
-@@ -3918,6 +3986,10 @@ static void b43_nphy_op_prepare_structs(struct b43_wldev *dev)
- 	nphy->txrx_chain = 2; /* sth different than 0 and 1 for now */
- 	nphy->phyrxchain = 3; /* to avoid b43_nphy_set_rx_core_state like wl */
- 	nphy->perical = 2; /* avoid additional rssi cal on init (like wl) */
-+	/* 128 can mean disabled-by-default state of TX pwr ctl. Max value is
-+	 * 0x7f == 127 and we check for 128 when restoring TX pwr ctl. */
-+	nphy->tx_pwr_idx[0] = 128;
-+	nphy->tx_pwr_idx[1] = 128;
+-	brcms_c_scb_ampdu_update_config(ampdu, ampdu->wlc->pub->global_scb);
++	brcms_c_scb_ampdu_update_config(ampdu, &ampdu->wlc->pri_scb);
  }
  
- static void b43_nphy_op_free(struct b43_wldev *dev)
-diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
-index e789a89..cd84989 100644
---- a/drivers/net/wireless/b43/phy_n.h
-+++ b/drivers/net/wireless/b43/phy_n.h
-@@ -783,6 +783,8 @@ struct b43_phy_n {
- 	u16 mphase_txcal_bestcoeffs[11];
+ static void brcms_c_ffpld_calc_mcs2ampdu_table(struct ampdu_info *ampdu, int f)
+@@ -482,7 +482,7 @@ brcms_c_ampdu_tx_operational(struct brcms_c_info *wlc, u8 tid,
+ 	struct scb_ampdu *scb_ampdu;
+ 	struct scb_ampdu_tid_ini *ini;
+ 	struct ampdu_info *ampdu = wlc->ampdu;
+-	struct scb *scb = wlc->pub->global_scb;
++	struct scb *scb = &wlc->pri_scb;
+ 	scb_ampdu = &scb->scb_ampdu;
  
- 	bool txpwrctrl;
-+	u8 tx_pwr_idx[2];
-+	u16 adj_pwr_tbl[84];
- 	u16 txcal_bbmult;
- 	u16 txiqlocal_bestc[11];
- 	bool txiqlocal_coeffsvalid;
+ 	if (!ampdu->ini_enable[tid]) {
+@@ -542,7 +542,7 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
+ 
+ 	f = ampdu->fifo_tb + prio2fifo[tid];
+ 
+-	scb = wlc->pub->global_scb;
++	scb = &wlc->pri_scb;
+ 	scb_ampdu = &scb->scb_ampdu;
+ 	ini = &scb_ampdu->ini[tid];
+ 
+diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+index 938bbe6..d22903e 100644
+--- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+@@ -616,25 +616,14 @@ static int
+ brcms_ops_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	       struct ieee80211_sta *sta)
+ {
+-	struct scb *scb;
+-
+-	int i;
+ 	struct brcms_info *wl = hw->priv;
++	struct scb *scb = &wl->wlc->pri_scb;
+ 
+-	/* Init the scb */
+-	scb = (struct scb *)sta->drv_priv;
+-	memset(scb, 0, sizeof(struct scb));
+-	for (i = 0; i < NUMPRIO; i++)
+-		scb->seqctl[i] = 0xFFFF;
+-	scb->seqctl_nonqos = 0xFFFF;
+-	scb->magic = SCB_MAGIC;
++	brcms_c_init_scb(scb);
+ 
+-	wl->pub->global_scb = scb;
+ 	wl->pub->global_ampdu = &(scb->scb_ampdu);
+ 	wl->pub->global_ampdu->scb = scb;
+ 	wl->pub->global_ampdu->max_pdu = 16;
+-	brcmu_pktq_init(&scb->scb_ampdu.txq, AMPDU_MAX_SCB_TID,
+-		  AMPDU_MAX_SCB_TID * PKTQ_LEN_DEFAULT);
+ 
+ 	sta->ht_cap.ht_supported = true;
+ 	sta->ht_cap.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
+@@ -657,8 +646,8 @@ brcms_ops_ampdu_action(struct ieee80211_hw *hw,
+ 		    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
+ 		    u8 buf_size)
+ {
+-	struct scb *scb = (struct scb *)sta->drv_priv;
+ 	struct brcms_info *wl = hw->priv;
++	struct scb *scb = &wl->wlc->pri_scb;
+ 	int status;
+ 
+ 	if (WARN_ON(scb->magic != SCB_MAGIC))
+@@ -1038,7 +1027,7 @@ static int ieee_hw_init(struct ieee80211_hw *hw)
+ 
+ 	hw->rate_control_algorithm = "minstrel_ht";
+ 
+-	hw->sta_data_size = sizeof(struct scb);
++	hw->sta_data_size = 0;
+ 	return ieee_hw_rate_init(hw);
+ }
+ 
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 407e99e..5edf8b8 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -882,7 +882,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
+ 	h = (struct ieee80211_hdr *)((u8 *) (txh + 1) + D11_PHY_HDR_LEN);
+ 
+ 	if (tx_info->control.sta)
+-		scb = (struct scb *)tx_info->control.sta->drv_priv;
++		scb = &wlc->pri_scb;
+ 
+ 	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
+ 		brcms_c_ampdu_dotxstatus(wlc->ampdu, scb, p, txs);
+@@ -3337,14 +3337,21 @@ static u16 brcms_c_init_chanspec(struct brcms_c_info *wlc)
+ 	return chanspec;
+ }
+ 
+-static struct scb global_scb;
+-
+-static void brcms_c_init_scb(struct brcms_c_info *wlc, struct scb *scb)
++void brcms_c_init_scb(struct scb *scb)
+ {
+ 	int i;
++
++	memset(scb, 0, sizeof(struct scb));
+ 	scb->flags = SCB_WMECAP | SCB_HTCAP;
+-	for (i = 0; i < NUMPRIO; i++)
++	for (i = 0; i < NUMPRIO; i++) {
+ 		scb->seqnum[i] = 0;
++		scb->seqctl[i] = 0xFFFF;
++	}
++
++	scb->seqctl_nonqos = 0xFFFF;
++	scb->magic = SCB_MAGIC;
++	brcmu_pktq_init(&scb->scb_ampdu.txq, AMPDU_MAX_SCB_TID,
++		  AMPDU_MAX_SCB_TID * PKTQ_LEN_DEFAULT);
+ }
+ 
+ /* d11 core init
+@@ -3805,8 +3812,6 @@ void brcms_c_init(struct brcms_c_info *wlc)
+ 
+ 	brcms_c_bandinit_ordered(wlc, chanspec);
+ 
+-	brcms_c_init_scb(wlc, &global_scb);
+-
+ 	/* init probe response timeout */
+ 	brcms_c_write_shm(wlc, M_PRS_MAXTIME, wlc->prb_resp_timeout);
+ 
+@@ -7685,7 +7690,7 @@ void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
+ {
+ 	u8 prio;
+ 	uint fifo;
+-	struct scb *scb = &global_scb;
++	struct scb *scb = &wlc->pri_scb;
+ 	struct ieee80211_hdr *d11_header = (struct ieee80211_hdr *)(sdu->data);
+ 
+ 	/*
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
+index 9e12a14..47665da 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.h
++++ b/drivers/staging/brcm80211/brcmsmac/main.h
+@@ -22,6 +22,7 @@
+ #include <brcmu_utils.h>
+ #include "types.h"
+ #include "d11.h"
++#include "scb.h"
+ 
+ #define	INVCHANNEL		255	/* invalid channel */
+ 
+@@ -483,6 +484,7 @@ struct brcms_txq_info {
+  * tx_duty_cycle_cck: maximum allowed duty cycle for CCK.
+  * pkt_queue: txq for transmit packets.
+  * wiphy:
++ * pri_scb: primary Station Control Block
+  */
+ struct brcms_c_info {
+ 	struct brcms_pub *pub;
+@@ -610,6 +612,7 @@ struct brcms_c_info {
+ 
+ 	struct brcms_txq_info *pkt_queue;
+ 	struct wiphy *wiphy;
++	struct scb pri_scb;
+ };
+ 
+ /* antsel module specific state */
+@@ -864,5 +867,6 @@ extern void brcms_b_core_phypll_ctl(struct brcms_hardware *wlc_hw, bool on);
+ extern void brcms_b_txant_set(struct brcms_hardware *wlc_hw, u16 phytxant);
+ extern void brcms_b_band_stf_ss_set(struct brcms_hardware *wlc_hw,
+ 				    u8 stf_mode);
++extern void brcms_c_init_scb(struct scb *scb);
+ 
+ #endif				/* _BRCM_MAIN_H_ */
+diff --git a/drivers/staging/brcm80211/brcmsmac/pub.h b/drivers/staging/brcm80211/brcmsmac/pub.h
+index 9670309..b69833e 100644
+--- a/drivers/staging/brcm80211/brcmsmac/pub.h
++++ b/drivers/staging/brcm80211/brcmsmac/pub.h
+@@ -144,7 +144,6 @@ struct brcms_bss_info {
+ struct brcms_pub {
+ 	struct brcms_c_info *wlc;
+ 	struct ieee80211_hw *ieee_hw;
+-	struct scb *global_scb;
+ 	struct scb_ampdu *global_ampdu;
+ 	uint mac80211_state;
+ 	uint unit;		/* device instance number */
 -- 
-1.7.3.4
+1.7.1
+
 
