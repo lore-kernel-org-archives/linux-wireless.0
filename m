@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:53340 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752519Ab1I1L7j (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:64075 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751587Ab1IYI6s convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 07:59:39 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: sedat.dilek@gmail.com
-Subject: Re: Where to obtain the carl open source firmware?
-Date: Wed, 28 Sep 2011 13:59:26 +0200
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Pavel Roskin <proski@gnu.org>
-References: <alpine.DEB.2.02.1109280705410.8348@p34.internal.lan> <CA+icZUVVdxVEZ-gYWe3u84YUafUpZwupwBkEL0dsVAdwRB8KDA@mail.gmail.com>
-In-Reply-To: <CA+icZUVVdxVEZ-gYWe3u84YUafUpZwupwBkEL0dsVAdwRB8KDA@mail.gmail.com>
+	Sun, 25 Sep 2011 04:58:48 -0400
+Received: by gxk6 with SMTP id 6so3622741gxk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Sep 2011 01:58:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201109281359.26182.chunkeey@googlemail.com> (sfid-20110928_135954_338699_81FEA13A)
+In-Reply-To: <1316790779-8955-2-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1316790779-8955-1-git-send-email-rmanohar@qca.qualcomm.com>
+	<1316790779-8955-2-git-send-email-rmanohar@qca.qualcomm.com>
+Date: Sun, 25 Sep 2011 11:58:47 +0300
+Message-ID: <CAB3XZEf0A4fVCrLoCTGy+XndSW412rwTcUyL9tQ6YjoDsYonyA@mail.gmail.com> (sfid-20110925_105852_745930_0312FAB3)
+Subject: Re: [PATCH 2/2] mac80211: Send the management frame at requested rate
+From: Eliad Peller <eliad@wizery.com>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, September 28, 2011 01:15:03 PM Sedat Dilek wrote:
-> Try <http://linuxwireless.org/en/users/Drivers/carl9170#Firmware>.
-> 
-> - Sedat -
-> 
-> On Wed, Sep 28, 2011 at 1:06 PM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> > Hi,
-> >
-> > Since kernel.org is down and the new kernel (3.x) does not work with the
-> > older firmware, where can one obtain the firmware for this open source
-> > device so I can run the 3.x kernel?
-> >
-As Sedat has already pointed out the 1.9.4 firmware binary is hosted
-on the wiki-site [Thankfully, Pavel Roskin uploaded it there a while
-ago. Who would have tought that it was a good idea... now we know it
-sort of is.]
+On Fri, Sep 23, 2011 at 6:12 PM, Rajkumar Manoharan
+<rmanohar@qca.qualcomm.com> wrote:
+> Whenever the scan request or tx_mgmt is requesting not to
+> use CCK rate for managemet frames through
+> NL80211_ATTR_TX_NO_CCK_RATE attribute, then mac80211 should
+> select appropriate least non-CCK rate. This could help to
+> send P2P probes and P2P action frames at non 11b rates
+> without diabling 11b rates globally.
+>
+> Cc: Jouni Malinen <jouni@qca.qualcomm.com>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> ---
+[...]
 
-I'll restore the git tree once kernel.org is back in place. Until then
-I guess we can stick to email, the source is just around 140 kb packed.
+> +static inline s8
+> +rate_lowest_non_cck_index(struct ieee80211_supported_band *sband,
+> +                         struct ieee80211_sta *sta)
+> +{
+> +       int i;
+> +
+> +       for (i = 0; i < sband->n_bitrates; i++) {
+> +               struct ieee80211_rate *srate = &sband->bitrates[i];
+> +               if ((srate->bitrate == 10) || (srate->bitrate == 20) ||
+> +                   (srate->bitrate == 55) || (srate->bitrate == 110))
+> +                       continue;
+> +
+> +               if ((i != sband->n_bitrates) &&
+> +                   rate_supported(sta, sband->band, i))
+> +                       return i;
 
-I think the current head is:
-d1dbdf395b7ee5330b22008ba7c2cc704e157229 "config: import latest kconfig"
+the first condition seems redundant (according to the loop condition,
+i < sband->n_bitrates)
 
-1.9.4 has:
-a1d719850538748c7087876a8bce0e3597ca461f "carl9170 firmware: update version to 1.9.4"
-
-Regards,
-	Chr
+Eliad.
