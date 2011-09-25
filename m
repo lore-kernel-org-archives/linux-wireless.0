@@ -1,73 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:44295 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752110Ab1ITWhi convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14988 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751598Ab1IYJY3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 18:37:38 -0400
-Received: by qyk30 with SMTP id 30so4436118qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 15:37:37 -0700 (PDT)
+	Sun, 25 Sep 2011 05:24:29 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v2 2/2] mac80211: Send the management frame at requested rate
+Date: Sun, 25 Sep 2011 14:53:31 +0530
+Message-ID: <1316942611-2053-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110925_112433_931026_C8CC5169)
+In-Reply-To: <1316942611-2053-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1316942611-2053-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <4E790B3B.9090004@openwrt.org>
-References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com>
- <loom.20110918T004437-426@post.gmane.org> <1316437459.5995.29.camel@jlt3.sipsolutions.net>
- <36569806.Rgjanm0GiI@alex-1> <1316521312.3953.27.camel@jlt3.sipsolutions.net>
- <CAB=NE6VDSTAKK0pmyBOz6hw1pbxo7U6dxbrvg_F-y6CDB0paKw@mail.gmail.com>
- <4E78D990.3090601@openwrt.org> <CAB=NE6VZeCViBZA9++NcgZ2JcDppbp3OuagRVK02ENjdb-MAQA@mail.gmail.com>
- <4E78DF6F.3060304@openwrt.org> <CAB=NE6XqT_ZUV7F+0ZvCs-WgxZnJn3onMiWNtBi=+eCkMZMgPA@mail.gmail.com>
- <4E78EA05.6000005@openwrt.org> <CAB=NE6WhaNpjpernCGY9skU+e+cUurPxi7r-FKaeH5iybeqGEg@mail.gmail.com>
- <4E78FFEB.1090301@openwrt.org> <CAB=NE6W76dg_KaN6jB-OQ2xf7Xx93a4ruqzQDwg5+rcwOcSfXg@mail.gmail.com>
- <4E790B3B.9090004@openwrt.org>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 20 Sep 2011 15:37:17 -0700
-Message-ID: <CAB=NE6UYY5sbpmkTHPx1LVFh6SC0QebqhKcpYCawZryvttOS=A@mail.gmail.com> (sfid-20110921_003741_217047_C9790D14)
-Subject: Re: [PATCH v3 3/3] mac80211: Add HT operation modes for IBSS
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Javier Cardona <javier@cozybit.com>,
-	Alexander Simon <an.alexsimon@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 20, 2011 at 2:52 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2011-09-20 11:26 PM, Luis R. Rodriguez wrote:
->>
->> On Tue, Sep 20, 2011 at 2:04 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
->>>
->>>  If we want to properly enforce Annex J channel pairs, this needs to
->>>  be moved to cfg80211.
->>
->> This does not still address the issue of one peer finding out it
->> cannot deal with an HT40 pair and correcting the topology and
->> propagating this out. Not yet sure if for 802.11ac we'll need
->> something similar but its worth considering.
->
-> Don't think of it as a topology. Each node makes its own decisions about
-> HT40+/HT40-/HT20.
+Whenever the scan request or tx_mgmt is requesting not to
+use CCK rate for managemet frames through
+NL80211_ATTR_TX_NO_CCK_RATE attribute, then mac80211 should
+select appropriate least non-CCK rate. This could help to
+send P2P probes and P2P action frames at non 11b rates
+without diabling 11b rates globally.
 
-OK lets go with an example.
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ include/net/mac80211.h     |    4 ++++
+ net/mac80211/cfg.c         |    3 +++
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/mlme.c        |    2 +-
+ net/mac80211/rate.c        |   29 ++++++++++++++++++++++++++++-
+ net/mac80211/scan.c        |    3 ++-
+ net/mac80211/util.c        |    8 ++++++--
+ net/mac80211/work.c        |    2 +-
+ 8 files changed, 46 insertions(+), 7 deletions(-)
 
-Node A: HT40+
-   Primary: 5785 (157)
-   Extension: 5805 (161)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index c0f63fd..b8a0df6 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -363,6 +363,9 @@ struct ieee80211_bss_conf {
+  * @IEEE80211_TX_INTFL_TKIP_MIC_FAILURE: Marks this packet to be used for TKIP
+  *	testing. It will be sent out with incorrect Michael MIC key to allow
+  *	TKIP countermeasures to be tested.
++ * @IEEE80211_TX_CTL_NO_CCK_RATE: This frame will be sent at non CCK rate.
++ *	This flag is actually used for management frame especially for P2P
++ *	frames not being sent at CCK rate in 2GHz band.
+  *
+  * Note: If you have to add new flags to the enumeration, then don't
+  *	 forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
+@@ -393,6 +396,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTL_STBC			= BIT(23) | BIT(24),
+ 	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(25),
+ 	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(26),
++	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(27),
+ };
+ 
+ #define IEEE80211_TX_CTL_STBC_SHIFT		23
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9cba010..56c3504 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1897,6 +1897,9 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
+ 		flags |= IEEE80211_TX_CTL_TX_OFFCHAN;
+ 	}
+ 
++	if (no_cck)
++		flags |= IEEE80211_TX_CTL_NO_CCK_RATE;
++
+ 	if (is_offchan && !offchan)
+ 		return -EBUSY;
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 21186e2..4822d69 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1324,7 +1324,7 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 			      const u8 *ssid, size_t ssid_len,
+ 			      const u8 *ie, size_t ie_len,
+-			      u32 ratemask, bool directed);
++			      u32 ratemask, bool directed, bool no_cck);
+ 
+ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+ 				  const size_t supp_rates_len,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 1a59fb6..cc80d32 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1239,7 +1239,7 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 	} else {
+ 		ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
+ 		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0,
+-					 (u32) -1, true);
++					 (u32) -1, true, false);
+ 	}
+ 
+ 	ifmgd->probe_send_count++;
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 3d5a2cb..f61244c 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -233,6 +233,27 @@ static void rc_send_low_broadcast(s8 *idx, u32 basic_rates,
+ 	/* could not find a basic rate; use original selection */
+ }
+ 
++static inline s8
++rate_lowest_non_cck_index(struct ieee80211_supported_band *sband,
++			  struct ieee80211_sta *sta)
++{
++	int i;
++
++	for (i = 0; i < sband->n_bitrates; i++) {
++		struct ieee80211_rate *srate = &sband->bitrates[i];
++		if ((srate->bitrate == 10) || (srate->bitrate == 20) ||
++		    (srate->bitrate == 55) || (srate->bitrate == 110))
++			continue;
++
++		if (rate_supported(sta, sband->band, i))
++			return i;
++	}
++
++	/* No matching rate found */
++	return 0;
++}
++
++
+ bool rate_control_send_low(struct ieee80211_sta *sta,
+ 			   void *priv_sta,
+ 			   struct ieee80211_tx_rate_control *txrc)
+@@ -242,7 +263,13 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
+ 	int mcast_rate;
+ 
+ 	if (!sta || !priv_sta || rc_no_data_or_no_ack(txrc)) {
+-		info->control.rates[0].idx = rate_lowest_index(txrc->sband, sta);
++		if ((sband->band != IEEE80211_BAND_2GHZ) ||
++		    !(info->flags & IEEE80211_TX_CTL_NO_CCK_RATE))
++			info->control.rates[0].idx =
++				rate_lowest_index(txrc->sband, sta);
++		else
++			info->control.rates[0].idx =
++				rate_lowest_non_cck_index(txrc->sband, sta);
+ 		info->control.rates[0].count =
+ 			(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
+ 			1 : txrc->hw->max_rate_tries;
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 6f09eca..830e60f 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -660,7 +660,8 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
+ 			local->scan_req->ssids[i].ssid,
+ 			local->scan_req->ssids[i].ssid_len,
+ 			local->scan_req->ie, local->scan_req->ie_len,
+-			local->scan_req->rates[band], false);
++			local->scan_req->rates[band], false,
++			local->scan_req->no_cck);
+ 
+ 	/*
+ 	 * After sending probe requests, wait for probe responses
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 4b1466d..ead345d 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -899,14 +899,18 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 			      const u8 *ssid, size_t ssid_len,
+ 			      const u8 *ie, size_t ie_len,
+-			      u32 ratemask, bool directed)
++			      u32 ratemask, bool directed, bool no_cck)
+ {
+ 	struct sk_buff *skb;
+ 
+ 	skb = ieee80211_build_probe_req(sdata, dst, ratemask, ssid, ssid_len,
+ 					ie, ie_len, directed);
+-	if (skb)
++	if (skb) {
++		if (no_cck)
++			IEEE80211_SKB_CB(skb)->flags |=
++				IEEE80211_TX_CTL_NO_CCK_RATE;
+ 		ieee80211_tx_skb(sdata, skb);
++	}
+ }
+ 
+ u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index bac3439..af374fa 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -458,7 +458,7 @@ ieee80211_direct_probe(struct ieee80211_work *wk)
+ 	 */
+ 	ieee80211_send_probe_req(sdata, NULL, wk->probe_auth.ssid,
+ 				 wk->probe_auth.ssid_len, NULL, 0,
+-				 (u32) -1, true);
++				 (u32) -1, true, false);
+ 
+ 	wk->timeout = jiffies + IEEE80211_AUTH_TIMEOUT;
+ 	run_again(local, wk->timeout);
+-- 
+1.7.6.3
 
-Node B: HT20 as it finds a legacy AP with on 5805.
-  Channel: 5785 (157)
-
-Node C: HT40-
-  Primary:  5785 (157)
-  Extension: 5765 (153)
-
-So we want to support this setup?
-
-What if the network changes and we cannot use the original HT40 pair
-now but we can later? This applies even to today's hostapd AP setup
-and more rhetorical.
-
-> If modes are incompatible, fallback to HT20  always works
-> for communicating with a peer.
-
-Agreed.
-
-  Luis
