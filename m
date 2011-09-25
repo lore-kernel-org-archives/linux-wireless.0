@@ -1,47 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55285 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751352Ab1ILSP2 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:37525 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752411Ab1IYTCk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Sep 2011 14:15:28 -0400
-Date: Mon, 12 Sep 2011 14:13:52 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Temporary(?) relocation of wireless git trees...
-Message-ID: <20110912181351.GD2689@tuxdriver.com> (sfid-20110912_201600_198658_8871F2DF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 25 Sep 2011 15:02:40 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id E4D6354022F
+	for <linux-wireless@vger.kernel.org>; Sun, 25 Sep 2011 15:13:31 -0400 (EDT)
+Subject: Compat-wireless release for 2011-09-25 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110925190238.E680740647@repository3.orbit-lab.org> (sfid-20110925_210248_606087_816DA8CF)
+Date: Sun, 25 Sep 2011 15:02:38 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With no news on when the kernel.org trees will be accessible again
-(which could be 10 minutes from now for all I know), I have pushed
-my local copies to Infradead.  This should be equivalent to what was
-last pushed to kernel.org almost two weeks ago.
 
-The "current" wireless tree is here:
+compat-wireless code metrics
 
-	git://git.infradead.org/users/linville/wireless.git
-
-The "next" wireless tree is here:
-
-	git://git.infradead.org/users/linville/wireless-next.git
-
-The "testing" wireless tree is here:
-
-	git://git.infradead.org/users/linville/wireless-testing.git
-
-I don't know how long these trees will be on Infradead or when (or
-if) they will return to kernel.org.  Such changes will be determined
-as conditions change.  Please be flexible.
-
-Thanks,
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+    812386 - Total upstream lines of code being pulled
+      2397 - backport code changes
+      2086 - backport code additions
+       311 - backport code deletions
+      8559 - backport from compat module
+     10956 - total backport code
+    1.3486 - % of code consists of backport work
+Host key verification failed.
+rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
