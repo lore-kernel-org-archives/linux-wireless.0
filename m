@@ -1,118 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:36852 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752496Ab1IVJMm convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48894 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975Ab1IZIYw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 05:12:42 -0400
-Received: by wyg34 with SMTP id 34so2773134wyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 02:12:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <400C43189542CE41BC0A5B252FC90136BC0CC8ABE6@SJEXCHCCR02.corp.ad.broadcom.com>
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-	<20110920130338.GA9885@kroah.com>
-	<20110920132203.GB7800@tuxdriver.com>
-	<20110920140020.GA11386@kroah.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com>
-	<CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
-	<20110922003523.0bf6a460@milhouse>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DE92@SJEXCHCCR01.corp.ad.broadcom.com>
-	<20110922012851.2f3b7801@milhouse>
-	<400C43189542CE41BC0A5B252FC90136BC0CC8ABB9@SJEXCHCCR02.corp.ad.broadcom.com>
-	<CACna6rxD_U+beqbWxv4VJ7nWHQuJjb47seRQECEBFR3DHW8t+Q@mail.gmail.com>
-	<400C43189542CE41BC0A5B252FC90136BC0CC8ABE6@SJEXCHCCR02.corp.ad.broadcom.com>
-Date: Thu, 22 Sep 2011 11:12:41 +0200
-Message-ID: <CACna6rzq+Bcrx79MWVepkhBbCqQvxczMcmn=FNYRAqf72qAwWQ@mail.gmail.com> (sfid-20110922_111246_656901_D8B99ED3)
-Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline patch #2
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend Van Spriel <arend@broadcom.com>
-Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
-	Brett Rudley <brudley@broadcom.com>, Greg KH <greg@kroah.com>,
+	Mon, 26 Sep 2011 04:24:52 -0400
+Subject: Re: [patch] wl3501_cs: min_t() cast truncates high bits
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"jonas.gorski@gmail.com" <jonas.gorski@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+In-Reply-To: <20110926063040.GE11832@elgon.mountain> (sfid-20110926_101711_920668_B3BB1CCE)
+References: <20110926063040.GE11832@elgon.mountain>
+	 (sfid-20110926_101711_920668_B3BB1CCE)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Sep 2011 10:24:37 +0200
+Message-ID: <1317025477.4117.21.camel@jlt3.sipsolutions.net> (sfid-20110926_102457_082675_283691D4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/9/22 Arend Van Spriel <arend@broadcom.com>:
->> From: Rafał Miłecki [mailto:zajec5@gmail.com]
->> Sent: donderdag 22 september 2011 10:57
->> To: Arend Van Spriel
->> Cc: Michael Büsch; Brett Rudley; Greg KH; John W. Linville; Franky
->> (Zhenhui) Lin; gregkh@suse.de; devel@linuxdriverproject.org; linux-
->> wireless@vger.kernel.org; jonas.gorski@gmail.com
->> Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for
->> mainline patch #2
->>
->> W dniu 22 września 2011 10:53 użytkownik Arend Van Spriel
->> <arend@broadcom.com> napisał:
->> >> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
->> >> owner@vger.kernel.org] On Behalf Of Michael Büsch
->> >> Sent: donderdag 22 september 2011 1:29
->> >> To: Brett Rudley
->> >> Cc: Rafał Miłecki; Greg KH; John W. Linville; Franky (Zhenhui) Lin;
->> >> gregkh@suse.de; devel@linuxdriverproject.org; linux-
->> >> wireless@vger.kernel.org
->> >> Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for
->> >> mainline patch #2
->> >>
->> >> On Wed, 21 Sep 2011 16:15:10 -0700
->> >> "Brett Rudley" <brudley@broadcom.com> wrote:
->> >>
->> >> > We did however initially propose (and implement) a dividing line
->> of
->> >> ssb chips for b43 and AXI based chips for brcmsmac but b43 team
->> chose
->> >> to ignore/reject that.
->> >>
->> >> Well, what about embedded, for instance?
->> >
->> > The brcmsmac driver has been tested on a MIPS platform by Jonas
->> Gorski
->> > although only in STA mode (on a bcm63xx). Not having AP mode has been
->> > explained in other emails.
->> >
->> > Also we fully intend to transition to BCMA but that would also be new
->> > feature added. Having AP mode and BCMA would enable you guys for
->> using
->> > it in the embedded targets, right?
->> >
->> >> > I'm not totally opposed to that idea but it does not solve the
->> >> primary issue of conflicting b43 and brcmsmac modules.
->> >>
->> >> I'm not convinced that this is an issue at all and I'm not convinced
->> >> that it has to be resolved.
->> >> At least not now.
->> >>
->> >
->> > It never hurts to look ahead. Both drivers have their use in the
->> linux
->> > tree and we should align which driver is doing what. Apparently we
->> should
->> > have yelled really hard when b43 was adding bcma support, because
->> then
->> > it snatched the chipsets we support as well. You learn your lessons
->> the
->> > hard way in Linux land, or so it seems ;-)
->>
->> And I should have notice you add code for N-PHY with your initial
->> brcm80211 commit ;) There's always something that you won't notice at
->> the correct time.
->>
->> --
->> Rafał
->
-> Were you unaware of the chipsets that brcmsmac was supporting? When you
-> Were working on N-PHY it was to enable certain chipsets, right? Was that
-> in ssb context?
+On Mon, 2011-09-26 at 09:30 +0300, Dan Carpenter wrote:
+> wrqu->encoding.length comes from the network administrator.  It's
+> size u16.  We want to limit "tocopy" to the smallest value of either
+> "len_keys", "wrqu->encoding.length" or 100.  But because .length
+> gets cast from u16 to u8 we might use a random, smaller value than
+> the was desired.  It's probably not very serious, but we may as well
+> fix it.
 
-I was aware of supported chipsets (by their names), but I got no idea
-that they (BCM43224 and BCM43225) are N-PHY based ones. I though that
-that are some totally new PHYs (like SSLPN/HT/LCN/LCNXN/etc.).
+Nice catch.
 
--- 
-Rafał
+> Btw, this is from code auditing and not from testing.  I don't know
+> if this affects anyone in real life.
+
+FWIW, it doesn't, the max key length that makes sense is 32 anyway, and
+since this is on an output path I doubt the min_t() will ever have done
+anything but returned "tocopy" :-)
+
+johannes
+
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
+> index 6bc7c92..98fbf54 100644
+> --- a/drivers/net/wireless/wl3501_cs.c
+> +++ b/drivers/net/wireless/wl3501_cs.c
+> @@ -1781,7 +1781,7 @@ static int wl3501_get_encode(struct net_device *dev,
+>  				  keys, len_keys);
+>  	if (rc)
+>  		goto out;
+> -	tocopy = min_t(u8, len_keys, wrqu->encoding.length);
+> +	tocopy = min_t(u16, len_keys, wrqu->encoding.length);
+>  	tocopy = min_t(u8, tocopy, 100);
+>  	wrqu->encoding.length = tocopy;
+>  	memcpy(extra, keys, tocopy);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
