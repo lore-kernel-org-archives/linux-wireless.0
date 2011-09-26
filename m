@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51737 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753431Ab1IPOB2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 10:01:28 -0400
-Subject: Re: [PATCH] rfkill: properly assign a boolean type
-From: Johannes Berg <johannes@sipsolutions.net>
-To: mohammed <mohammed@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <4E7354D8.40507@qca.qualcomm.com>
-References: <1316180020-9982-1-git-send-email-mohammed@qca.qualcomm.com>
-	 <1316180237.4130.37.camel@jlt3.sipsolutions.net>
-	 <4E7354D8.40507@qca.qualcomm.com>
+Received: from mga11.intel.com ([192.55.52.93]:29235 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751373Ab1IZPtJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 11:49:09 -0400
+Subject: Re: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM
+ Fritz!Box (7390)" incompatible
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Henrik Friedrichsen <hrkfdn@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4E809D0F.3080405@lwfinger.net>
+References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
+	 <CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com>
+	 <1317048872.2400.4.camel@wwguy-ubuntu>
+	 <CAJTrwG5CQKn9=1=HUDX1L5PsFbGws_zK1DTvot9i=KcMX7SwkQ@mail.gmail.com>
+	 <4E809D0F.3080405@lwfinger.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Sep 2011 16:01:19 +0200
-Message-ID: <1316181679.4130.38.camel@jlt3.sipsolutions.net> (sfid-20110916_160131_258873_2483120E)
+Date: Mon, 26 Sep 2011 08:02:18 -0700
+Message-ID: <1317049338.1958.10.camel@wwguy-huron> (sfid-20110926_174913_688126_51E585B1)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-09-16 at 19:23 +0530, mohammed wrote:
+On Mon, 2011-09-26 at 08:41 -0700, Larry Finger wrote:
+> On 09/26/2011 10:20 AM, Henrik Friedrichsen wrote:
+> 
+> >> 1. AP brand and model
+> > AVM Fritz!Box Fon WLAN 7390
+> 
+> FWIW, we are working on a problem with using rtl8192cu and a Fritz!Box 7270 that 
+> doesn't seem to happen with any other AP. Our symptoms are different, but therre 
+> might be a related cause. If you find a fix, please let the list know. Our 
+> debugging is waiting for either Realtek to get access to such an AP, or for the 
+> OP to provide a Wireshark air dump. That AP is too pricey for my budget.
+> 
 
-> >> @@ -235,7 +235,7 @@ static bool __rfkill_set_hw_state(struct rfkill *rfkill,
-> >>   	else
-> >>   		rfkill->state&= ~RFKILL_BLOCK_HW;
-> >>   	*change = prev != blocked;
-> >> -	any = rfkill->state&  RFKILL_BLOCK_ANY;
-> >> +	any = !!(rfkill->state&  RFKILL_BLOCK_ANY);
-> >
-> > I believe this is not necessary since "any" is a "bool" and as such
-> > should cast correctly to 0/1.
+Same here :-), the AP is too pricey and we have problem re-produce the
+problem in-house with other APs. But we are very active working on it
+and will share anything we found.
 
-> I agree the older one works perfectly fine. I stumbled upon this when i 
-> was trying to understand rfkill. but will not this change make it look 
-> better ? if it looks like a too trivial please drop it. Thanks!
+Best Regards
+Wey 
+> 
+> 
 
-Sure, whatever, I don't care; we can change it, but I think it'll
-generate exactly the same code :)
-
-johannes
 
