@@ -1,40 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy5-pub.bluehost.com ([67.222.38.55]:52805 "HELO
-	oproxy5-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756850Ab1IIAXb (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:37047 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751733Ab1IZOYp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 20:23:31 -0400
-Message-ID: <4E68F882.8000705@xenotime.net> (sfid-20110909_022345_341097_AE842D97)
-Date: Thu, 08 Sep 2011 10:16:50 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: [PATCH] wireless: fix kernel-doc warning in net/cfg80211.h
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 26 Sep 2011 10:24:45 -0400
+From: Sangwook Lee <sangwook.lee@linaro.org>
+To: Rhyland Klein <rklein@nvidia.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Sangwook Lee <sangwook.lee@linaro.org>
+Subject: [PATCH] net:rfkill: add a gpio setup function into GPIO rfkill
+Date: Mon, 26 Sep 2011 15:22:52 +0100
+Message-Id: <1317046972-18570-1-git-send-email-sangwook.lee@linaro.org> (sfid-20110926_162507_948074_94FA2F69)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+Add a gpio setup function which gives a chance to set up
+platform specific configuration such as pin multiplexing,
+input/output direction at the runtime or booting time.
 
-Fix kernel-doc warning in net/cfg80211.h:
-
-Warning(include/net/cfg80211.h:1884): No description found for parameter 'registered'
-
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: Sangwook Lee <sangwook.lee@linaro.org>
 ---
- include/net/cfg80211.h |    2 ++
- 1 file changed, 2 insertions(+)
+ include/linux/rfkill-gpio.h |    2 ++
+ net/rfkill/rfkill-gpio.c    |    8 ++++++++
+ 2 files changed, 10 insertions(+), 0 deletions(-)
 
---- lnx-31-rc5.orig/include/net/cfg80211.h
-+++ lnx-31-rc5/include/net/cfg80211.h
-@@ -1744,6 +1744,8 @@ struct wiphy_wowlan_support {
-  *	by default for perm_addr. In this case, the mask should be set to
-  *	all-zeroes. In this case it is assumed that the device can handle
-  *	the same number of arbitrary MAC addresses.
-+ * @registered: protects ->resume and ->suspend sysfs callbacks against
-+ *	unregister hardware
-  * @debugfsdir: debugfs directory used for this wiphy, will be renamed
-  *	automatically on wiphy renames
-  * @dev: (virtual) struct device for this wiphy
+diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill-gpio.h
+index a175d05..786e7bb 100644
+--- a/include/linux/rfkill-gpio.h
++++ b/include/linux/rfkill-gpio.h
+@@ -30,6 +30,7 @@
+  * @reset_gpio:		GPIO which is used for reseting rfkill switch
+  * @shutdown_gpio:	GPIO which is used for shutdown of rfkill switch
+  * @power_clk_name:	[optional] name of clk to turn off while blocked
++ * @gpio_runtime_setup:	set up platform specific gpio configuration
+  */
+ 
+ struct rfkill_gpio_platform_data {
+@@ -38,6 +39,7 @@ struct rfkill_gpio_platform_data {
+ 	int			shutdown_gpio;
+ 	const char		*power_clk_name;
+ 	enum rfkill_type	type;
++	int	(*gpio_runtime_setup)(struct platform_device *);
+ };
+ 
+ #endif /* __RFKILL_GPIO_H */
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 256c5dd..d6cec90 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -101,6 +101,14 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 	if (!rfkill)
+ 		return -ENOMEM;
+ 
++	if (pdata->gpio_runtime_setup) {
++		ret = pdata->gpio_runtime_setup(pdev);
++		if (ret) {
++			pr_warn("%s: can't set up gpio\n", __func__);
++			return -EINVAL;
++		}
++	}
++
+ 	rfkill->pdata = pdata;
+ 
+ 	len = strlen(pdata->name);
+-- 
+1.7.4.1
+
