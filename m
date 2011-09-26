@@ -1,80 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3436 "EHLO mms1.broadcom.com"
+Received: from mga01.intel.com ([192.55.52.88]:45680 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753200Ab1IXCJU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 22:09:20 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 00/20] staging: brcm80211: 8th reaction for mainline
- patch #2
-Date: Fri, 23 Sep 2011 19:08:48 -0700
-Message-ID: <1316830148-28661-1-git-send-email-frankyl@broadcom.com> (sfid-20110924_040958_866150_94F9761F)
+	id S1751835Ab1IZVSa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 17:18:30 -0400
+From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+To: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	Henrik Friedrichsen <hrkfdn@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 26 Sep 2011 14:18:26 -0700
+Subject: RE: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM Fritz!Box
+ (7390)" incompatible
+Message-ID: <E9954878DD1FB34FAE5187FB88C58A35019D24207D@orsmsx506.amr.corp.intel.com> (sfid-20110926_231834_048220_F3E19040)
+References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
+	<CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com>
+	<1317048872.2400.4.camel@wwguy-ubuntu>
+	<CAJTrwG5CQKn9=1=HUDX1L5PsFbGws_zK1DTvot9i=KcMX7SwkQ@mail.gmail.com>
+	<1317049160.1958.8.camel@wwguy-huron>
+	<CAJTrwG5eELbDuGFXU4=3gSunPSkKLFvcpSe6gGE_Wc0s5BXZ+A@mail.gmail.com>
+	<CAJTrwG7tzDHxDha5x8r-GJFK=oUE6Zk5zqpN4z4L2LyAD=DueQ@mail.gmail.com>
+	<1317050380.1958.13.camel@wwguy-huron>
+	<CAJTrwG46qRYvda1vcCZXv0BTUyf26gx2qgpNgOG-bm-BCMpqfg@mail.gmail.com>
+	<1317053131.1958.15.camel@wwguy-huron>
+	<C5A7FB31FD9AEA42B600BDC3C74F8E0017052223@orsmsx511.amr.corp.intel.com>
+	<CAJTrwG5AvbtNRZi54tzAoUDv5X9QLVY3L=-OgHYRtnJ-RMesrQ@mail.gmail.com>
+	<1317062004.1958.18.camel@wwguy-huron>
+	<CAJTrwG57r-B-eT-FODsDW1UgoVcS68zcUWo1mOrdHRdoXtNmCg@mail.gmail.com>
+	<C5A7FB31FD9AEA42B600BDC3C74F8E001705253B@orsmsx511.amr.corp.intel.com>
+ <CAJTrwG5MXfixhnNPOdoA3-DYEeKpC==uv4WvE78ZE5U+A10T7Q@mail.gmail.com>
+ <C5A7FB31FD9AEA42B600BDC3C74F8E0017052566@orsmsx511.amr.corp.intel.com>
+In-Reply-To: <C5A7FB31FD9AEA42B600BDC3C74F8E0017052566@orsmsx511.amr.corp.intel.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code clean up for softmac.
-
-This series applies to staging-next and depends on the following patch set:
-
-Message-ID: <1316736476-23725-1-git-send-email-frankyl@broadcom.com>
-
-Arend van Spriel (9):
-  staging: brcm80211: remove uncoditional code blocks from brcmsmac
-  staging: brcm80211: cleanup structure fields used for scanning
-  staging: brcm80211: use endian annotated structures in brcmsmac
-  staging: brcm80211: remove ht_cap field from brcms_c_info structure
-  staging: brcm80211: use fragment number provided in transmit frame
-  staging: brcm80211: remove unused function si_pmu_ilp_clock()
-  staging: brcm80211: make device initializer table for wme constant
-  staging: brcm80211: remove dongle firmware related debug code
-  staging: brcm80211: remove unnecessary mac80211 callbacks
-
-Roland Vossen (11):
-  staging: brcm80211: removed unused argument from softmac functions
-  staging: brcm80211: deleted unused array of bss configurations in
-    softmac
-  staging: brcm80211: removed redundant wlc->cfg struct member
-  staging: brcm80211: removed global var from aiutils.c
-  staging: brcm80211: removed global vars in softmac ucode handling
-  staging: brcm80211: removed unused softmac workaround
-  staging: brcm80211: declared global vars in softmac phy as const
-  staging: brcm80211: removed band related global vars from softmac
-  staging: brcm80211: removed global var global_scb from softmac
-  staging: brcm80211: various global var related changes in softmac
-  staging: brcm80211: removed global variable in softmac otp
-
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |  259 +-------
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c   |   32 +-
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h   |    5 +-
- drivers/staging/brcm80211/brcmsmac/Makefile        |    3 +-
- drivers/staging/brcm80211/brcmsmac/aiutils.c       |   15 +-
- drivers/staging/brcm80211/brcmsmac/aiutils.h       |    2 -
- drivers/staging/brcm80211/brcmsmac/ampdu.c         |    6 +-
- drivers/staging/brcm80211/brcmsmac/d11.h           |   83 ++-
- drivers/staging/brcm80211/brcmsmac/dma.c           |   41 +-
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c   |  125 +---
- drivers/staging/brcm80211/brcmsmac/mac80211_if.h   |    3 +-
- drivers/staging/brcm80211/brcmsmac/main.c          |  729 +++++++++-----------
- drivers/staging/brcm80211/brcmsmac/main.h          |   19 +-
- drivers/staging/brcm80211/brcmsmac/otp.c           |  147 +----
- drivers/staging/brcm80211/brcmsmac/otp.h           |    8 -
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c   |   49 +-
- drivers/staging/brcm80211/brcmsmac/phy/phy_int.h   |   23 -
- drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c   |  112 ++--
- drivers/staging/brcm80211/brcmsmac/phy/phy_n.c     |   62 +-
- .../staging/brcm80211/brcmsmac/phy/phytbl_lcn.c    |    2 +-
- drivers/staging/brcm80211/brcmsmac/pmu.c           |   22 -
- drivers/staging/brcm80211/brcmsmac/pmu.h           |    1 -
- drivers/staging/brcm80211/brcmsmac/pub.h           |    1 -
- drivers/staging/brcm80211/brcmsmac/rate.h          |    1 -
- drivers/staging/brcm80211/brcmsmac/srom.c          |   19 +-
- drivers/staging/brcm80211/brcmsmac/stf.c           |    9 -
- drivers/staging/brcm80211/brcmsmac/types.h         |    5 -
- drivers/staging/brcm80211/brcmsmac/ucode_loader.c  |  121 ++--
- drivers/staging/brcm80211/brcmsmac/ucode_loader.h  |   46 +-
- 29 files changed, 656 insertions(+), 1294 deletions(-)
-
-
+QVZNIEZyaXR6IUJveCBGb24gV0xBTiA3MzkwDQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
+LS0NCkZyb206IGxpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxp
+bnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIFZlbmthdGFy
+YW1hbiwgTWVlbmFrc2hpDQpTZW50OiBNb25kYXksIFNlcHRlbWJlciAyNiwgMjAxMSAyOjA3IFBN
+DQpUbzogSGVucmlrIEZyaWVkcmljaHNlbg0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVs
+Lm9yZw0KU3ViamVjdDogUkU6IGl3bGFnbjogIkludGVsIENlbnRyaW5vIEFkdmFuY2VkLU4gNjIw
+NSBBR04iIGFuZCAiQVZNIEZyaXR6IUJveCAoNzM5MCkiIGluY29tcGF0aWJsZQ0KDQpIaSBIZW5y
+aWssDQoNCj5UaGF0J3MgY29ycmVjdC4gT24gV2luZG93cyB0aGUgcHJvYmxlbSBkb2VzIG5vdCBv
+Y2N1ciB3aXRoIHRoYXQgcGFydGljdWxhcg0KPnJvdXRlci4gQWxzbyBJIGRvbid0IHRoaW5rIEkg
+aGF2ZSBoYWQgY29tcGFyYWJsZSBwcm9ibGVtcyB3aXRoIG90aGVyIHJvdXRlcnMsDQo+YXQgbGVh
+c3Qgbm90IGluIG15IGhvbWUgKG5vdCBvbiBMaW51eCwgZWl0aGVyKS4NCj5JJ20gdXNpbmcgYSBk
+aWZmZXJlbnQgQVAgcmlnaHQgbm93IGFuZCBpdCB3b3JrcyBqdXN0IGZpbmUuDQoNCltNVl0gVGhh
+dCdzIGludGVyZXN0aW5nLiBXaGF0IGlzIHRoZSBtb2RlbCBvZiB0aGUgQVAgdGhhdCB3b3Jrcz8g
+QXJlIHlvdSB1c2luZyB0aGUgc2FtZSBrZXJuZWwgdmVyc2lvbiB3aXRoIHRoaXMgQVAgKGp1c3Qg
+d2FudCB0byBjb25maXJtIHdpdGggeW91KT8gQWxzbywgYXJlIHlvdSBpbiBhIHBvc2l0aW9uIHRv
+IHNlbmQgdXMgKG9ubHkpIGEgc25pZmZlciBsb2c/IA0KDQpUaGFua3MsDQpNZWVuYWtzaGkNCg0K
+BO+/vXsubu+/vSvvv73vv73vv73vv73vv73vv73vv70rJe+/ve+/vWx6d23vv73vv71i77+966ey
+77+977+9cu+/ve+/vXpY77+977+9HCLvv73vv71e77+9yKfvv70X77+977+93Kh977+977+977+9
+xqB677+9Jmo6K3bvv73vv73vv70N77+977+977+977+9elor77+977+9K3pm77+977+977+9aO+/
+ve+/ve+/vX7vv73vv73vv73vv71p77+977+977+9eu+/vR7vv71377+977+977+9P++/ve+/ve+/
+ve+/vSbvv70p36IbZg0K
