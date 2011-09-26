@@ -1,109 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smp.if.uj.edu.pl ([149.156.82.206]:37603 "EHLO smp.if.uj.edu.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751472Ab1IHXQp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 19:16:45 -0400
-Date: Thu, 8 Sep 2011 18:54:34 +0200
-From: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Michael Witten <mfwitten@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, stable@kernel.org
-Subject: Re: [PATCH] mac80211: fix suspend/resume races with unregister hw
-Message-ID: <20110908165434.GC9104@smp.if.uj.edu.pl> (sfid-20110909_011649_264728_A97F809D)
-References: <1313150459-13234-1-git-send-email-sgruszka@redhat.com>
- <d9f6472975e34cb294831e32c8ce2346-mfwitten@gmail.com>
- <20110908064410.GA2195@redhat.com>
- <CAMOZ1BvsPok-AZVCwKnv0hWWXyV+np+nARjGRqwqsvC-du_GAw@mail.gmail.com>
- <20110908162605.GD2195@redhat.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=_smp.if.uj.edu.pl-6834-1315500875-0001-2"
-In-Reply-To: <20110908162605.GD2195@redhat.com>
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:50897 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751122Ab1IZK3V convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 06:29:21 -0400
+Received: by mail-ww0-f48.google.com with SMTP id 32so5038498wwe.17
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 03:29:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1317018322.2171.17.camel@cumari>
+References: <1315476093-27583-1-git-send-email-shahar_levi@ti.com>
+	<1316698619.2157.628.camel@cumari>
+	<1316775583.2157.728.camel@cumari>
+	<CAHiDVwkeMTYdVubk=YPp6XTfNtmr2+mTwuX-ED0TcmzmrvEfUw@mail.gmail.com>
+	<1317018322.2171.17.camel@cumari>
+Date: Mon, 26 Sep 2011 13:29:20 +0300
+Message-ID: <CAHiDVwksE1pjwij9cJDbFjQ_6XVdk2X=ULPpvL4KBnJzqJVLUg@mail.gmail.com> (sfid-20110926_122924_825497_ABE5B66D)
+Subject: Re: [PATCH] wl12xx: Add support for HW channel switch
+From: "Levi, Shahar" <shahar_levi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+On Mon, Sep 26, 2011 at 9:25 AM, Luciano Coelho <coelho@ti.com> wrote:
+> On Sun, 2011-09-25 at 19:08 +0300, Levi, Shahar wrote:
+>> On Fri, Sep 23, 2011 at 1:59 PM, Luciano Coelho <coelho@ti.com> wrote:
+>> > On Thu, 2011-09-22 at 16:36 +0300, Luciano Coelho wrote:
+>> >> On Thu, 2011-09-08 at 13:01 +0300, Shahar Levi wrote:
+>> >> > +static void wl12xx_op_channel_switch(struct ieee80211_hw *hw,
+>> >> > +                                struct ieee80211_channel_switch *ch_switch)
+>> >> > +{
+>> >> > +   struct wl1271 *wl = hw->priv;
+>> >> > +   int ret;
+>> >> > +
+>> >> > +   wl1271_debug(DEBUG_MAC80211, "mac80211 channel switch");
+>> >> > +
+>> >> > +   mutex_lock(&wl->mutex);
+>> >> > +
+>> >> > +   if (unlikely(wl->state == WL1271_STATE_OFF)) {
+>> >> > +           mutex_unlock(&wl->mutex);
+>> >> > +           ieee80211_chswitch_done(wl->vif, false);
+>> >> > +           return;
+>> >> > +   }
+>> >> > +
+>> >> > +   ret = wl1271_ps_elp_wakeup(wl);
+>> >> > +   if (ret < 0)
+>> >> > +           goto out;
+>> >> > +
+>> >> > +   /* send all pending packets */
+>> >> > +   wl1271_tx_work_locked(wl);
+>> >>
+>> >> Is this really needed? Can anyone tell why?
+>> I have re- discussed with the FW guys and it seems that when using HW
+>> channel switch sending all TX packet isn't needed.
+>
+> As I suspected. ;)
+>
+>
+>> > I checked this a bit further and I don't see the point in sending all
+>> > packets here.  In fact, if block_tx is set, we can't even send any more
+>> > frames until the switch happens (or fails).  So we should at least check
+>> > this here.
+>> The block_tx is taken into account in the mac layer.
+>
+> This is a bit strange, though.  I checked the code and nobody seems to
+> be using the block_tx element of ieee80211_channel_switch, so I wonder
+> why it's there at all.
+>
+> In any case, wouldn't it be a good idea for us to use it and send it to
+> the firmware, since our firmware supports it? This way we would also
+> block TX packets that are queued in the firmware, wouldn't we?
+The FW support blocking TX in case of block_tx. The sepc definition is
+to block TX in case of block_tx. Is that peer respectability?
 
---=_smp.if.uj.edu.pl-6834-1315500875-0001-2
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+>
+>> > I'm leaving this patch out for now until I understand this better.
+>> Do you prefer me to set v2 without that line or you could fix that in
+>> the apply stage?
+>
+> No need to send v2.  It seems that Victor will need this change for
+> something else he's working on, so I guess he can take it over once it
+> is needed.  I don't want to include this unless we have a good reason to
+> do it.
+There is a good reason to include this:
+a) It solve STA calibration issue in the FW in case of SW channel
+switch (Rx issues)
+b) This is FW support for channel switch with one command instead of
+using several commands: rate_policies, roc \ join...
 
-On 09-08 18:26, Stanislaw Gruszka wrote:
-> On Thu, Sep 08, 2011 at 04:04:28PM +0000, Michael Witten wrote:
-> > On Thu, Sep 8, 2011 at 06:44, Stanislaw Gruszka <sgruszka@redhat.com> w=
-rote:
-> > > On Wed, Sep 07, 2011 at 09:50:29PM -0000, Michael Witten wrote:
-> > >> My boot process is stalling proximate the following messages (after =
-a period
-> > >> of time, some other message might show up, but the boot never progre=
-sses much
-> > >> further):
-> > >>
-> > >> =A0 cfg80211: World regulatory domain updated:
-> > >> =A0 cfg80211: =A0 =A0 (start_freq - end_freq @ bandwidth), (max_ante=
-nna_gain, max_eirp)
-> > >> =A0 cfg80211: =A0 =A0 (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 =
-mBi, 2000 mBm)
-> > >> =A0 cfg80211: =A0 =A0 (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 =
-mBi, 2000 mBm)
-> > >> =A0 cfg80211: =A0 =A0 (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 =
-mBi, 2000 mBm)
-> > >> =A0 cfg80211: =A0 =A0 (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 =
-mBi, 2000 mBm)
-> > >> =A0 cfg80211: =A0 =A0 (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 =
-mBi, 2000 mBm)
-> > >>
-> > >> I bisected to this patch, namely via the following commit:
-> > >>
-> > >> =A0 commit ecb4433550f0620f3d1471ae7099037ede30a91e
-> > >> =A0 Author: Stanislaw Gruszka <sgruszka@redhat.com>
-> > >> =A0 Date: =A0 Fri Aug 12 14:00:59 2011 +0200
-> > >
-> > > Grr, crap.
-> > >
-> > >>
-> > >> Now, it may be the case that my system startup's scripts are doing s=
-omething
-> > >> funny, as the stall described above occurs after Arch Linux outputs:
-> > >>
-> > >> =A0 Waiting for UDev uevents to be processed
-> > >>
-> > >> At this point, that's all I know.
-> > >
-> > > What wireless driver are you using? If this is ipw2x00 please try
-> > > attached patch.
-> >=20
-> > I am indeed using `ipw2200', and your patch seems to fix the problem.
-> >=20
-> > How did you know what to do?
->=20
-> You are not the first person who hit this bug and did bisection :-/
-> Witold (CCed) did it. Can you also check if wireless network and rmmod
-> ipw2x00 works? I did not yet receive that information from Witold
-> regarding latest patch.
-
-I'm just checking it (latest patch). Hit some another bug in logfs :)
-
-
-
---=20
-Witold Baryluk
-
---=_smp.if.uj.edu.pl-6834-1315500875-0001-2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Transfer-Encoding: 7bit
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk5o80oACgkQ7ZLFFOttZ4JnhgCdF9yX7aPnXWCLpzDAOcaEEQOJ
-jnsAn3KC22HhQIdiw58qV/V1Zyosp/+U
-=a+4W
------END PGP SIGNATURE-----
-
---=_smp.if.uj.edu.pl-6834-1315500875-0001-2--
+Our latest version pass full test cycle with that fix that solve CS issues.
+> --
+> Cheers,
+> Luca.
+All the best,
+Shahar
