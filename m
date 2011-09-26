@@ -1,43 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:58522 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751386Ab1IXQs1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37180 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751315Ab1IZO3c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Sep 2011 12:48:27 -0400
-Received: by vws1 with SMTP id 1so4837918vws.19
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Sep 2011 09:48:26 -0700 (PDT)
-MIME-Version: 1.0
-Date: Sat, 24 Sep 2011 18:48:26 +0200
-Message-ID: <CAA2SeNLpVQTSEtNnbD+E9kVuc3OJ9Bro4rya4JnE6gR+ik=Nxg@mail.gmail.com> (sfid-20110924_184830_763976_2D65E176)
-Subject: [PATCH] mac80211: max_tp_rate2 management of minstrel_ht
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: nbd@openwrt.org, linville@tuxdriver.com,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 26 Sep 2011 10:29:32 -0400
+Subject: Re: [PATCH] net:rfkill: add a gpio setup function into GPIO rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sangwook Lee <sangwook.lee@linaro.org>
+Cc: Rhyland Klein <rklein@nvidia.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <1317046972-18570-1-git-send-email-sangwook.lee@linaro.org> (sfid-20110926_162515_088596_55377D64)
+References: <1317046972-18570-1-git-send-email-sangwook.lee@linaro.org>
+	 (sfid-20110926_162515_088596_55377D64)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Sep 2011 16:29:24 +0200
+Message-ID: <1317047364.11511.2.camel@jlt3.sipsolutions.net> (sfid-20110926_162948_162405_9D71D798)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I noticed a possible issue in the max_tp_rate2 management of
-minstrel_ht. In particular, if we look up just among max_tp_rate2 of
-each group it will be possible that the selected rate will not be the
-mcs with second maximum throughput. I wrote this simple patch.
+On Mon, 2011-09-26 at 15:22 +0100, Sangwook Lee wrote:
+> Add a gpio setup function which gives a chance to set up
+> platform specific configuration such as pin multiplexing,
+> input/output direction at the runtime or booting time.
+> 
+> Signed-off-by: Sangwook Lee <sangwook.lee@linaro.org>
+> ---
+>  include/linux/rfkill-gpio.h |    2 ++
+>  net/rfkill/rfkill-gpio.c    |    8 ++++++++
+>  2 files changed, 10 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill-gpio.h
+> index a175d05..786e7bb 100644
+> --- a/include/linux/rfkill-gpio.h
+> +++ b/include/linux/rfkill-gpio.h
+> @@ -30,6 +30,7 @@
+>   * @reset_gpio:		GPIO which is used for reseting rfkill switch
+>   * @shutdown_gpio:	GPIO which is used for shutdown of rfkill switch
+>   * @power_clk_name:	[optional] name of clk to turn off while blocked
+> + * @gpio_runtime_setup:	set up platform specific gpio configuration
+>   */
+>  
+>  struct rfkill_gpio_platform_data {
+> @@ -38,6 +39,7 @@ struct rfkill_gpio_platform_data {
+>  	int			shutdown_gpio;
+>  	const char		*power_clk_name;
+>  	enum rfkill_type	type;
+> +	int	(*gpio_runtime_setup)(struct platform_device *);
+>  };
+>  
+>  #endif /* __RFKILL_GPIO_H */
+> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+> index 256c5dd..d6cec90 100644
+> --- a/net/rfkill/rfkill-gpio.c
+> +++ b/net/rfkill/rfkill-gpio.c
+> @@ -101,6 +101,14 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+>  	if (!rfkill)
+>  		return -ENOMEM;
+>  
+> +	if (pdata->gpio_runtime_setup) {
+> +		ret = pdata->gpio_runtime_setup(pdev);
+> +		if (ret) {
+> +			pr_warn("%s: can't set up gpio\n", __func__);
+> +			return -EINVAL;
 
-Regards
+Wouldn't you want to return ret?
 
-Lorenzo
+johannes
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -281,6 +281,8 @@
-
- 		mr = minstrel_get_ratestats(mi, mg->max_tp_rate);
- 		if (cur_tp < mr->cur_tp) {
-+			mi->max_tp_rate2 = mi->max_tp_rate;
-+			cur_tp2 = cur_tp;
- 			mi->max_tp_rate = mg->max_tp_rate;
- 			cur_tp = mr->cur_tp;
- 		}
---
