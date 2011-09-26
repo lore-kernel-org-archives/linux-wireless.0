@@ -1,49 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:45905 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751744Ab1IZQGl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 12:06:41 -0400
-Subject: Re: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM
- Fritz!Box (7390)" incompatible
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Henrik Friedrichsen <hrkfdn@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <CAJTrwG7tzDHxDha5x8r-GJFK=oUE6Zk5zqpN4z4L2LyAD=DueQ@mail.gmail.com>
-References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
-	 <CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com>
-	 <1317048872.2400.4.camel@wwguy-ubuntu>
-	 <CAJTrwG5CQKn9=1=HUDX1L5PsFbGws_zK1DTvot9i=KcMX7SwkQ@mail.gmail.com>
-	 <1317049160.1958.8.camel@wwguy-huron>
-	 <CAJTrwG5eELbDuGFXU4=3gSunPSkKLFvcpSe6gGE_Wc0s5BXZ+A@mail.gmail.com>
-	 <CAJTrwG7tzDHxDha5x8r-GJFK=oUE6Zk5zqpN4z4L2LyAD=DueQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 26 Sep 2011 08:19:40 -0700
-Message-ID: <1317050380.1958.13.camel@wwguy-huron> (sfid-20110926_180644_511055_05AC118E)
-Mime-Version: 1.0
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:59098 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975Ab1IZIUU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 04:20:20 -0400
+Received: by yxl31 with SMTP id 31so4082585yxl.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 01:20:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4E7CEE67.2070906@lwfinger.net>
+References: <4E7CEE67.2070906@lwfinger.net>
+Date: Mon, 26 Sep 2011 10:20:19 +0200
+Message-ID: <CAGXE3d9quHYWP8GxpgagNHGCsg_S1xJ2bo+sRWCQpyTb0U0nhw@mail.gmail.com> (sfid-20110926_102024_419668_DE700BD9)
+Subject: Re: Bug in rt2800pci on an RT3090
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Drn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	"Bernhard M. Wiedemann" <bernhardout@lsmod.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-09-26 at 09:03 -0700, Henrik Friedrichsen wrote:
-> On Mon, Sep 26, 2011 at 4:59 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> > few things I will suggest and please give a try:
-> > 1. Please try to apply the following two patches I attach here.
-> > 2. load the iwlagn with debug=0x45800006, the log will be big, but it
-> > will contain more information on the tx/rx path.
-> 
-> Here's the log you asked for:
-> http://diff.cc/tmp/kernel_iwlagn_2.log.bz2
-> 
-> As I said, this problem does not occur with the Windows driver. You
-> said you are actively working on it. Does that mean, the problem is
-> known to you?
-> 
+On Fri, Sep 23, 2011 at 10:39 PM, Larry Finger
+<Larry.Finger@lwfinger.net> wrote:
+> A bug was sent to me concerning a scheduling-while-atomic-BUG. This happened
+> shortly after KDE suspended an eeepc1015PE netbook during system update over
+> WLAN. Suspend&resume normally worked allright. The OP is Berhard Wiedemann
+> in the Cc list. Inquiries for more info go to him.
+>
+> The kernel is 3.1-rc5 from the openSUSE Factory repo on a 32-bit system.
+>
+> The device is:
+>
+> 02:00.0 Network controller [0280]: Ralink corp. RT3090 Wireless 802.11n
+> 1T/1R PCIe [1814:3090]
+>
+> The dmesg error dump is
+>
+> [23281.115155] BUG: scheduling while atomic: kworker/u:22/12821/0x00000101
+> [23281.115166] Modules linked in: loop af_packet tun coretemp microcode
+> sha256_generic cbc dm_crypt fuse dm_mod arc4 rt2800pci rt2800lib crc_ccitt
+> rt2x00pci rt2x00lib mac80211 snd_hda_codec_realtek cfg80211 snd_hda_intel
+> snd_hda_codec snd_hwdep snd_pcm uvcvideo videodev snd_timer snd eeepc_wmi
+> asus_wmi sparse_keymap pci_hotplug rfkill soundcore eeprom_93cx6
+> snd_page_alloc iTCO_wdt sg pcspkr iTCO_vendor_support battery atl1c wmi
+> joydev ac autofs4 i915 drm_kms_helper drm i2c_algo_bit button video fan
+> thermal processor thermal_sys
+> [23281.115299] Modules linked in: loop af_packet tun coretemp microcode
+> sha256_generic cbc dm_crypt fuse dm_mod arc4 rt2800pci rt2800lib crc_ccitt
+> rt2x00pci rt2x00lib mac80211 snd_hda_codec_realtek cfg80211 snd_hda_intel
+> snd_hda_codec snd_hwdep snd_pcm uvcvideo videodev snd_timer snd eeepc_wmi
+> asus_wmi sparse_keymap pci_hotplug rfkill soundcore eeprom_93cx6
+> snd_page_alloc iTCO_wdt sg pcspkr iTCO_vendor_support battery atl1c wmi
+> joydev ac autofs4 i915 drm_kms_helper drm i2c_algo_bit button video fan
+> thermal processor thermal_sys
+> [23281.115403]
+> [23281.115412] Pid: 12821, comm: kworker/u:22 Not tainted
+> 3.1.0-rc5-2-desktop #1 ASUSTeK Computer INC. 1015P/1015PE
+> [23281.115426] EIP: 0060:[<f7b9c43b>] EFLAGS: 00000282 CPU: 1
+> [23281.115440] EIP is at rt2x00pci_regbusy_read+0xb/0xd0 [rt2x00pci]
+> [23281.115447] EAX: f2915160 EBX: f2915160 ECX: f7baa2a0 EDX: 00007010
+> [23281.115454] ESI: f2915160 EDI: 00007010 EBP: 000000ff ESP: f1db1e2c
+> [23281.115461]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+> [23281.115470] Process kworker/u:22 (pid: 12821, ti=f4910000 task=eb86a4b0
+> task.ti=f1db0000)
+> [23281.115477] Stack:
+> [23281.115482]  00000000 f1db1e60 8e97f4be 001e8480 ffffffff eb86a4e4
+> f2414f24 eb86a4b0
+> [23281.115503]  00000001 f2915160 f29153f0 000000ff f7bce81d 00000018
+> ff000000 f1db1e70
+> [23281.115521]  013020a0 f1db1e84 f2915160 f2915160 fffffdf4 f2914320
+> f7ba8965 000000ff
+> [23281.115541] Call Trace:
+> [23281.115576]  [<f7bce81d>] rt2800_mcu_request.part.27+0x5d/0xd0
+> [rt2800lib]
+> [23281.115612]  [<f7ba8965>] rt2800pci_set_state+0x55/0x90 [rt2800pci]
+> [23281.115638]  [<f7ba90a5>] rt2800pci_set_device_state+0xd5/0x13b
+> [rt2800pci]
+> [23281.115670]  [<f7bcdc82>] rt2800_config_ps.isra.19+0x82/0xe0 [rt2800lib]
+> [23281.115706]  [<f7bbf5c1>] rt2x00lib_config+0xd1/0x280 [rt2x00lib]
+> [23281.115744]  [<f7bbec56>] rt2x00mac_config+0x36/0x80 [rt2x00lib]
+> [23281.115789]  [<f8201fb0>] ieee80211_hw_config+0xc0/0x130 [mac80211]
+> [23281.115830]  [<f820ca7c>] ieee80211_dynamic_ps_enable_work+0x18c/0x280
+> [mac80211]
+> [23281.115927]  [<c0262f5e>] process_one_work+0xee/0x400
+> [23281.115945]  [<c026356e>] worker_thread+0x11e/0x2c0
+> [23281.115960]  [<c0266d19>] kthread+0x69/0x70
+> [23281.115976]  [<c070d3e6>] kernel_thread_helper+0x6/0xd
+> [23281.115987] Code: 81 fa 00 00 00 01 19 c0 f7 d0 05 d1 00 00 00 eb d4 b8
+> f4 ff ff ff eb 8c 90 8d b4 26 00 00 00 00 55 57 89 d7 56 53 89 c3 83 ec 20
+> <8b> 8b 38 02 00 00 8b 44 24 38 8b 54 24 34 8b 6c 24 3c 89 44 24
+> [23281.116133] Call Trace:
+> [23281.116163]  [<f7bce81d>] rt2800_mcu_request.part.27+0x5d/0xd0
+> [rt2800lib]
+> [23281.116196]  [<f7ba8965>] rt2800pci_set_state+0x55/0x90 [rt2800pci]
+> [23281.116220]  [<f7ba90a5>] rt2800pci_set_device_state+0xd5/0x13b
+> [rt2800pci]
+> [23281.116249]  [<f7bcdc82>] rt2800_config_ps.isra.19+0x82/0xe0 [rt2800lib]
+> [23281.116282]  [<f7bbf5c1>] rt2x00lib_config+0xd1/0x280 [rt2x00lib]
+> [23281.116318]  [<f7bbec56>] rt2x00mac_config+0x36/0x80 [rt2x00lib]
+> [23281.116360]  [<f8201fb0>] ieee80211_hw_config+0xc0/0x130 [mac80211]
+> [23281.116397]  [<f820ca7c>] ieee80211_dynamic_ps_enable_work+0x18c/0x280
+> [mac80211]
+> [23281.116493]  [<c0262f5e>] process_one_work+0xee/0x400
+> [23281.116507]  [<c026356e>] worker_thread+0x11e/0x2c0
+> [23281.116520]  [<c0266d19>] kthread+0x69/0x70
+> [23281.116534]  [<c070d3e6>] kernel_thread_helper+0x6/0xd
 
-we are seeing performance issue and still can not root cause the
-problem. that is the reason I send you 2 patches for testing. We are
-very active working on fix the performance problem. the symptoms might
-be different, but we aware there were issues.
+This is a bug in the rt2800pci powersave code, the device is woken up in
+a tasklet while the MCU request needs to sleep.
 
-Thx
-Wey
+A workaround is to disable PS.
 
+Hopefully I can work on a fix soon ...
 
+Helmut
