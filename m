@@ -1,230 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:44514 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282Ab1I1LNF (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:44970 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752333Ab1IZJYU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 07:13:05 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 4so428931fxe.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2011 04:13:05 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Kalyan C Gaddam <chakkal@iit.edu>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v3 2/5] mac80211: standardize adding supported rates IEs
-Date: Wed, 28 Sep 2011 14:12:51 +0300
-Message-Id: <1317208374-19286-2-git-send-email-arik@wizery.com> (sfid-20110928_131320_177708_5EE350CA)
-In-Reply-To: <1317208374-19286-1-git-send-email-arik@wizery.com>
-References: <1317208374-19286-1-git-send-email-arik@wizery.com>
+	Mon, 26 Sep 2011 05:24:20 -0400
+Received: by wwf22 with SMTP id 22so6486024wwf.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 02:24:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <14be9f3b-4c91-481d-9e52-f3119659fd59@email.android.com>
+References: <CAD2nsn2Bbxxy9ZYpBe_QEqCkGYYROHE+j7qASRq3OkKmWD5PMg@mail.gmail.com>
+	<CAD2nsn1+5QWtzeG-3RHEJi8+oDthAfXYunHnDTLie84oJPOQuw@mail.gmail.com>
+	<CAD2nsn1roVNB5+H1CYHVnerLN3pjGB5KmEX1mJZ4yJhHqFGOVA@mail.gmail.com>
+	<20110830064137.GA4719@ecki>
+	<CAD2nsn2Reu+T=g6HwdQT5cdkD0C-06y7GJ_B2q-UzpRnshxAWw@mail.gmail.com>
+	<14be9f3b-4c91-481d-9e52-f3119659fd59@email.android.com>
+Date: Mon, 26 Sep 2011 14:54:18 +0530
+Message-ID: <CAD2nsn1+WVaLR_TR37Z6YRCFnQH1hJkSOri=nxc8Ff3pa9N8dw@mail.gmail.com> (sfid-20110926_112423_718263_E4A8DF2C)
+Subject: Re: ath9k: irq storm after suspend/resume
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Clemens Buchacher <drizzd@aon.at>
+Cc: linux-wireless@vger.kernel.org, beta992@gmail.com
+Content-Type: multipart/mixed; boundary=0016368318d437242b04add4b903
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Relocate the mesh implementation of adding the (extended) supported
-rates IE to util.c, anticipating its use by other parts of mac80211.
+--0016368318d437242b04add4b903
+Content-Type: text/plain; charset=ISO-8859-1
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Cc: Kalyan C Gaddam <chakkal@iit.edu>
----
- include/net/mac80211.h    |    5 ++++
- net/mac80211/mesh.c       |   58 ---------------------------------------------
- net/mac80211/mesh.h       |    4 ---
- net/mac80211/mesh_plink.c |    4 +-
- net/mac80211/tx.c         |    4 +-
- net/mac80211/util.c       |   57 ++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 66 insertions(+), 66 deletions(-)
+Hi,
+On Thu, Sep 1, 2011 at 11:54 AM, Clemens Buchacher <drizzd@aon.at> wrote:
+> Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+>>
+>>i am bit confused looking at bug comments. please correct me.
+>>the bug comments say that disabling/making the Network-Manager to
+>>sleep triggers the problem.
+> That is correct.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 1e83afa..b5f7ada 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3444,4 +3444,9 @@ void ieee80211_enable_rssi_reports(struct ieee80211_vif *vif,
- 				   int rssi_max_thold);
- 
- void ieee80211_disable_rssi_reports(struct ieee80211_vif *vif);
-+
-+int ieee80211_add_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb);
-+
-+int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif,
-+				struct sk_buff *skb);
- #endif /* MAC80211_H */
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index a4225ae..a7078fd 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -320,64 +320,6 @@ mesh_add_rsn_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 	return 0;
- }
- 
--int
--mesh_add_srates_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_supported_band *sband;
--	int rate;
--	u8 i, rates, *pos;
--
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
--	rates = sband->n_bitrates;
--	if (rates > 8)
--		rates = 8;
--
--	if (skb_tailroom(skb) < rates + 2)
--		return -ENOMEM;
--
--	pos = skb_put(skb, rates + 2);
--	*pos++ = WLAN_EID_SUPP_RATES;
--	*pos++ = rates;
--	for (i = 0; i < rates; i++) {
--		rate = sband->bitrates[i].bitrate;
--		*pos++ = (u8) (rate / 5);
--	}
--
--	return 0;
--}
--
--int
--mesh_add_ext_srates_ie(struct sk_buff *skb,
--		       struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_supported_band *sband;
--	int rate;
--	u8 i, exrates, *pos;
--
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
--	exrates = sband->n_bitrates;
--	if (exrates > 8)
--		exrates -= 8;
--	else
--		exrates = 0;
--
--	if (skb_tailroom(skb) < exrates + 2)
--		return -ENOMEM;
--
--	if (exrates) {
--		pos = skb_put(skb, exrates + 2);
--		*pos++ = WLAN_EID_EXT_SUPP_RATES;
--		*pos++ = exrates;
--		for (i = 8; i < sband->n_bitrates; i++) {
--			rate = sband->bitrates[i].bitrate;
--			*pos++ = (u8) (rate / 5);
--		}
--	}
--	return 0;
--}
--
- int mesh_add_ds_params_ie(struct sk_buff *skb,
- 			  struct ieee80211_sub_if_data *sdata)
- {
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 7118e8e..8c00e2d 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -210,10 +210,6 @@ int mesh_add_rsn_ie(struct sk_buff *skb,
- 		    struct ieee80211_sub_if_data *sdata);
- int mesh_add_vendor_ies(struct sk_buff *skb,
- 			struct ieee80211_sub_if_data *sdata);
--int mesh_add_srates_ie(struct sk_buff *skb,
--		       struct ieee80211_sub_if_data *sdata);
--int mesh_add_ext_srates_ie(struct sk_buff *skb,
--			   struct ieee80211_sub_if_data *sdata);
- int mesh_add_ds_params_ie(struct sk_buff *skb,
- 			  struct ieee80211_sub_if_data *sdata);
- void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 1213a23..9cc5029 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -185,8 +185,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 			pos = skb_put(skb, 2);
- 			memcpy(pos + 2, &plid, 2);
- 		}
--		if (mesh_add_srates_ie(skb, sdata) ||
--		    mesh_add_ext_srates_ie(skb, sdata) ||
-+		if (ieee80211_add_srates_ie(&sdata->vif, skb) ||
-+		    ieee80211_add_ext_srates_ie(&sdata->vif, skb) ||
- 		    mesh_add_rsn_ie(skb, sdata) ||
- 		    mesh_add_meshid_ie(skb, sdata) ||
- 		    mesh_add_meshconf_ie(skb, sdata))
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7cd6c28..542272a 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2307,9 +2307,9 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 		*pos++ = WLAN_EID_SSID;
- 		*pos++ = 0x0;
- 
--		if (mesh_add_srates_ie(skb, sdata) ||
-+		if (ieee80211_add_srates_ie(&sdata->vif, skb) ||
- 		    mesh_add_ds_params_ie(skb, sdata) ||
--		    mesh_add_ext_srates_ie(skb, sdata) ||
-+		    ieee80211_add_ext_srates_ie(&sdata->vif, skb) ||
- 		    mesh_add_rsn_ie(skb, sdata) ||
- 		    mesh_add_meshid_ie(skb, sdata) ||
- 		    mesh_add_meshconf_ie(skb, sdata) ||
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 2c9dc36..9d4f146 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1364,3 +1364,60 @@ void ieee80211_disable_rssi_reports(struct ieee80211_vif *vif)
- 	_ieee80211_enable_rssi_reports(sdata, 0, 0);
- }
- EXPORT_SYMBOL(ieee80211_disable_rssi_reports);
-+
-+int ieee80211_add_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
-+	int rate;
-+	u8 i, rates, *pos;
-+
-+	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+	rates = sband->n_bitrates;
-+	if (rates > 8)
-+		rates = 8;
-+
-+	if (skb_tailroom(skb) < rates + 2)
-+		return -ENOMEM;
-+
-+	pos = skb_put(skb, rates + 2);
-+	*pos++ = WLAN_EID_SUPP_RATES;
-+	*pos++ = rates;
-+	for (i = 0; i < rates; i++) {
-+		rate = sband->bitrates[i].bitrate;
-+		*pos++ = (u8) (rate / 5);
-+	}
-+
-+	return 0;
-+}
-+
-+int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
-+	int rate;
-+	u8 i, exrates, *pos;
-+
-+	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+	exrates = sband->n_bitrates;
-+	if (exrates > 8)
-+		exrates -= 8;
-+	else
-+		exrates = 0;
-+
-+	if (skb_tailroom(skb) < exrates + 2)
-+		return -ENOMEM;
-+
-+	if (exrates) {
-+		pos = skb_put(skb, exrates + 2);
-+		*pos++ = WLAN_EID_EXT_SUPP_RATES;
-+		*pos++ = exrates;
-+		for (i = 8; i < sband->n_bitrates; i++) {
-+			rate = sband->bitrates[i].bitrate;
-+			*pos++ = (u8) (rate / 5);
-+		}
-+	}
-+	return 0;
-+}
+is the issue still seen? any improvement with the attached patch..
+will just again take a look at this thread and ath_pci_probe once i
+finish my work. thanks!
+
+>
+
+
+
 -- 
-1.7.4.1
+shafi
 
+--0016368318d437242b04add4b903
+Content-Type: text/x-diff; charset=US-ASCII;
+	name="0001-ath9k-disable-interrupt-before-free_irq.patch"
+Content-Disposition: attachment;
+	filename="0001-ath9k-disable-interrupt-before-free_irq.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gt18xxjx0
+
+RnJvbSAzNTUwY2Q3YTExM2UxN2M0ZTdjZWQ4YWNiZDdmMTRhM2E3MzU4NmVkIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBNb2hhbW1lZCBTaGFmaSBTaGFqYWtoYW4gPG1vaGFtbWVkQHFj
+YS5xdWFsY29tbS5jb20+CkRhdGU6IFNhdCwgMjQgU2VwIDIwMTEgMjE6MDc6MTYgKzA1MzAKU3Vi
+amVjdDogW1BBVENIXSBhdGg5azogZGlzYWJsZSBpbnRlcnJ1cHQgYmVmb3JlIGZyZWVfaXJxCgpm
+cmVlX2lycSBjbGFpbXMgdGhhdCBmb3IgYSBzaGFyZWQgSVJRIHRoZSBjYWxsZXIgbXVzdCBlbnN1
+cmUgdGhhdCB0aGUgaW50ZXJydXB0IGlzCmRpc2FibGVkIG9uIHRoZSBjYXJkIGl0IGRyaXZlcyBi
+ZWZvcmUgY2FsbGluZyBpdC4gd2lsbCBzb29uIHRlc3QgYW5kCnNlbmQgYSBwcm9wZXIgcGF0Y2gK
+ClNpZ25lZC1vZmYtYnk6IE1vaGFtbWVkIFNoYWZpIFNoYWpha2hhbiA8bW9oYW1tZWRAcWNhLnF1
+YWxjb21tLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvcGNpLmMgfCAg
+ICA3ICsrKysrKysKIDEgZmlsZXMgY2hhbmdlZCwgNyBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9u
+cygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9wY2kuYyBi
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9wY2kuYwppbmRleCBkNjdkNmVlLi4zNTUz
+N2NhIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvcGNpLmMKKysr
+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlrL3BjaS5jCkBAIC0yODUsMTEgKzI4NSwx
+OCBAQCBzdGF0aWMgdm9pZCBhdGhfcGNpX3JlbW92ZShzdHJ1Y3QgcGNpX2RldiAqcGRldikKIHsK
+IAlzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodyA9IHBjaV9nZXRfZHJ2ZGF0YShwZGV2KTsKIAlzdHJ1
+Y3QgYXRoX3NvZnRjICpzYyA9IGh3LT5wcml2OworCXN0cnVjdCBhdGhfaHcgKmFoID0gc2MtPnNj
+X2FoOwogCXZvaWQgX19pb21lbSAqbWVtID0gc2MtPm1lbTsKIAogCWlmICghaXNfYXRoOWtfdW5s
+b2FkZWQpCiAJCXNjLT5zY19haC0+YWhfZmxhZ3MgfD0gQUhfVU5QTFVHR0VEOworCisJLyogZGlz
+YWJsZSBpbnRlcnJ1cHRzICovCisJYWgtPmltYXNrICY9IH5BVEg5S19JTlRfR0xPQkFMOworCWF0
+aDlrX2h3X2Rpc2FibGVfaW50ZXJydXB0cyhhaCk7CisKIAlhdGg5a19kZWluaXRfZGV2aWNlKHNj
+KTsKKwogCWZyZWVfaXJxKHNjLT5pcnEsIHNjKTsKIAlpZWVlODAyMTFfZnJlZV9odyhzYy0+aHcp
+OwogCi0tIAoxLjcuMC40Cgo=
+--0016368318d437242b04add4b903--
