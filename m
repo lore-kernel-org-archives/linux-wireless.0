@@ -1,43 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([72.73.18.11]:47941 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754808Ab1I1PjB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 11:39:01 -0400
-Date: Wed, 28 Sep 2011 11:39:01 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Pavel Roskin <proski@gnu.org>
-cc: Christian Lamparter <chunkeey@googlemail.com>,
-	sedat.dilek@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: Where to obtain the carl open source firmware?
-In-Reply-To: <20110928113630.35378eb9@mj>
-Message-ID: <alpine.DEB.2.02.1109281138340.8348@p34.internal.lan> (sfid-20110928_173907_095282_3BF0A436)
-References: <alpine.DEB.2.02.1109280705410.8348@p34.internal.lan> <CA+icZUVVdxVEZ-gYWe3u84YUafUpZwupwBkEL0dsVAdwRB8KDA@mail.gmail.com> <201109281359.26182.chunkeey@googlemail.com> <20110928113630.35378eb9@mj>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:49587 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750808Ab1IZGZ1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 02:25:27 -0400
+Received: by mail-bw0-f43.google.com with SMTP id s6so7227134bka.30
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Sep 2011 23:25:26 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: Add support for HW channel switch
+From: Luciano Coelho <coelho@ti.com>
+To: "Levi, Shahar" <shahar_levi@ti.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAHiDVwkeMTYdVubk=YPp6XTfNtmr2+mTwuX-ED0TcmzmrvEfUw@mail.gmail.com>
+References: <1315476093-27583-1-git-send-email-shahar_levi@ti.com>
+	 <1316698619.2157.628.camel@cumari> <1316775583.2157.728.camel@cumari>
+	 <CAHiDVwkeMTYdVubk=YPp6XTfNtmr2+mTwuX-ED0TcmzmrvEfUw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Sep 2011 09:25:22 +0300
+Message-ID: <1317018322.2171.17.camel@cumari> (sfid-20110926_082537_249534_5859173A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, 2011-09-25 at 19:08 +0300, Levi, Shahar wrote: 
+> On Fri, Sep 23, 2011 at 1:59 PM, Luciano Coelho <coelho@ti.com> wrote:
+> > On Thu, 2011-09-22 at 16:36 +0300, Luciano Coelho wrote:
+> >> On Thu, 2011-09-08 at 13:01 +0300, Shahar Levi wrote:
+> >> > +static void wl12xx_op_channel_switch(struct ieee80211_hw *hw,
+> >> > +                                struct ieee80211_channel_switch *ch_switch)
+> >> > +{
+> >> > +   struct wl1271 *wl = hw->priv;
+> >> > +   int ret;
+> >> > +
+> >> > +   wl1271_debug(DEBUG_MAC80211, "mac80211 channel switch");
+> >> > +
+> >> > +   mutex_lock(&wl->mutex);
+> >> > +
+> >> > +   if (unlikely(wl->state == WL1271_STATE_OFF)) {
+> >> > +           mutex_unlock(&wl->mutex);
+> >> > +           ieee80211_chswitch_done(wl->vif, false);
+> >> > +           return;
+> >> > +   }
+> >> > +
+> >> > +   ret = wl1271_ps_elp_wakeup(wl);
+> >> > +   if (ret < 0)
+> >> > +           goto out;
+> >> > +
+> >> > +   /* send all pending packets */
+> >> > +   wl1271_tx_work_locked(wl);
+> >>
+> >> Is this really needed? Can anyone tell why?
+> I have re- discussed with the FW guys and it seems that when using HW
+> channel switch sending all TX packet isn't needed.
+
+As I suspected. ;)
 
 
-On Wed, 28 Sep 2011, Pavel Roskin wrote:
+> > I checked this a bit further and I don't see the point in sending all
+> > packets here.  In fact, if block_tx is set, we can't even send any more
+> > frames until the switch happens (or fails).  So we should at least check
+> > this here.
+> The block_tx is taken into account in the mac layer.
 
-> On Wed, 28 Sep 2011 13:59:26 +0200
-> Christian Lamparter <chunkeey@googlemail.com> wrote:
->
->> As Sedat has already pointed out the 1.9.4 firmware binary is hosted
->> on the wiki-site [Thankfully, Pavel Roskin uploaded it there a while
->> ago. Who would have tought that it was a good idea... now we know it
->> sort of is.]
->
-> I have put 1.9.2 on http://linuxwireless.org/en/users/Drivers/carl9170
-> as well.  It's still recommended for all released kernels.  As I
-> understand, Linux 3.1 will need 1.9.4 (according to
-> CARL9170FW_VERSION_GIT in 3.1-rc8), so I'm going to add that to the
-> Wiki.
+This is a bit strange, though.  I checked the code and nobody seems to
+be using the block_tx element of ieee80211_channel_switch, so I wonder
+why it's there at all.
 
-Hi Pavel,
+In any case, wouldn't it be a good idea for us to use it and send it to
+the firmware, since our firmware supports it? This way we would also
+block TX packets that are queued in the firmware, wouldn't we?
 
-Thanks! I'll give 1.9.4 a spin with 3.1-rc8.
 
-Justin.
+> > I'm leaving this patch out for now until I understand this better.
+> Do you prefer me to set v2 without that line or you could fix that in
+> the apply stage?
+
+No need to send v2.  It seems that Victor will need this change for
+something else he's working on, so I guess he can take it over once it
+is needed.  I don't want to include this unless we have a good reason to
+do it.
+
+-- 
+Cheers,
+Luca.
 
