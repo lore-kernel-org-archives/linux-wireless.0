@@ -1,40 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:61313 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751295Ab1ITSp7 convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:50892 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752904Ab1IZJnd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 14:45:59 -0400
+	Mon, 26 Sep 2011 05:43:33 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k: optimize tx status update
+Date: Mon, 26 Sep 2011 15:12:01 +0530
+Message-ID: <1317030121-3902-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110926_114336_513142_2BB3ACAF)
 MIME-Version: 1.0
-In-Reply-To: <4E78CFC0.4020003@xenotime.net>
-References: <20110920173102.d38155c7defbbc29beaae7c0@canb.auug.org.au>
-	<4E78CFC0.4020003@xenotime.net>
-Date: Tue, 20 Sep 2011 20:45:57 +0200
-Message-ID: <CACna6rxGrd-ORWZrc0xsAOKptU_Xj3eGh9qSfX9vJYCPTZrCRg@mail.gmail.com> (sfid-20110920_204621_986879_0567EE46)
-Subject: Re: [PATCH -next] bcma: needs export.h
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Randy Dunlap <rdunlap@xenotime.net>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/9/20 Randy Dunlap <rdunlap@xenotime.net>:
-> From: Randy Dunlap <rdunlap@xenotime.net>
->
-> bcma/driver_chipcommon_pmu.c needs to include <linux/export.h>,
-> so add it to the headers that are included by bcma_private.h.
+The recent changes of ath_tx_rc_status makes it to be called
+only for the first frame of aggregation or if there is a
+single subframe and for all normal frames. And also for all
+aggregated frames IEEE80211_TX_STAT_AMPDU will be set. This
+patch removes the unnecessary checks and make the ampdu_[ack]_len
+to be filled on both aggregation and normal frames.
 
-Please take a look at discussion in:
-[PATCH -next] bcma: main.c needs to include <linux/slab.h>
-thread (by Andrew).
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c   |   11 -----------
+ drivers/net/wireless/ath/ath9k/xmit.c |    5 ++---
+ 2 files changed, 2 insertions(+), 14 deletions(-)
 
-I believe that according to the discussion, such a includes should be
-done in .c files.
-
-Andrew: can you comment? Am I right?
-
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 4f13018..81c48fb 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1354,20 +1354,9 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	if (!priv_sta || !ieee80211_is_data(fc))
+ 		return;
+ 
+-	/* This packet was aggregated but doesn't carry status info */
+-	if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) &&
+-	    !(tx_info->flags & IEEE80211_TX_STAT_AMPDU))
+-		return;
+-
+ 	if (tx_info->flags & IEEE80211_TX_STAT_TX_FILTERED)
+ 		return;
+ 
+-	if (!(tx_info->flags & IEEE80211_TX_STAT_AMPDU)) {
+-		tx_info->status.ampdu_ack_len =
+-			(tx_info->flags & IEEE80211_TX_STAT_ACK ? 1 : 0);
+-		tx_info->status.ampdu_len = 1;
+-	}
+-
+ 	if (!(tx_info->flags & IEEE80211_TX_STAT_ACK))
+ 		tx_status = 1;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index fa3dcfd..f5d4764 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2043,10 +2043,9 @@ static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
+ 		tx_info->flags |= IEEE80211_TX_STAT_AMPDU;
+ 
+ 		BUG_ON(nbad > nframes);
+-
+-		tx_info->status.ampdu_len = nframes;
+-		tx_info->status.ampdu_ack_len = nframes - nbad;
+ 	}
++	tx_info->status.ampdu_len = nframes;
++	tx_info->status.ampdu_ack_len = nframes - nbad;
+ 
+ 	if ((ts->ts_status & ATH9K_TXERR_FILT) == 0 &&
+ 	    (tx_info->flags & IEEE80211_TX_CTL_NO_ACK) == 0) {
 -- 
-Rafał
+1.7.6.4
+
