@@ -1,51 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:44536 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753042Ab1I0W1C (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:51786 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752294Ab1IZVDZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 18:27:02 -0400
-Received: by eya28 with SMTP id 28so5154483eya.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 15:27:00 -0700 (PDT)
-Message-ID: <4E824D75.1070509@gmail.com> (sfid-20110928_002715_174279_9C87447D)
-Date: Wed, 28 Sep 2011 00:25:57 +0200
-From: Stefan Zwanenburg <stefanhetzwaantje@gmail.com>
+	Mon, 26 Sep 2011 17:03:25 -0400
+Received: by qyk7 with SMTP id 7so7048032qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 14:03:25 -0700 (PDT)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: 'Chaoming_Li' <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: =?UTF-8?B?562U5aSNOiDnrZTlpI06IOetlOWkjTogUlRMODE5MlNFIGFuZCA=?=
- =?UTF-8?B?ODAyLjExbiBwcm9ibGVt?=
-References: <4E77AECF.7090001@gmail.com> <4E820130.7080801@gmail.com> <4E823976.2090407@lwfinger.net>
-In-Reply-To: <4E823976.2090407@lwfinger.net>
+In-Reply-To: <1316680579-5055-1-git-send-email-ilane@ti.com>
+References: <1316680579-5055-1-git-send-email-ilane@ti.com>
+Date: Mon, 26 Sep 2011 18:03:24 -0300
+Message-ID: <CAK3JMAZG5HBDajGEuGWzcVA1h185MjN4feqEJNxayh0QneXJ2Q@mail.gmail.com> (sfid-20110926_230328_612857_7CA1843E)
+Subject: Re: [PATCH] NFC: protect nci_data_exchange transactions
+From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+To: ilanelias78@gmail.com
+Cc: aloisio.almeida@openbossa.org, samuel@sortiz.org,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Ilan Elias <ilane@ti.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/27/2011 11:00 PM, Larry Finger wrote:
-> I have to go now, but if no one describes what we are seeing, I'll
-> review the 802.11n specs and get back to you tomorrow.
+2011/9/22  <ilanelias78@gmail.com>:
+> From: Ilan Elias <ilane@ti.com>
 >
-> Larry
-I've taken a quick peek at the specs, and I'm afraid I can't be of any
-help there (I found out — again — I have great respect for you guys for
-reading those documents!). However, something just dawned on me, and I'm
-not sure if it is at all relevant here, but somehow, my NIC seems to be
-getting all kinds of different MAC addresses assigned (apparently
-randomly). I just checked my "persistent net" udev rules file (mind you,
-this file is automatically amended whenever a new NIC appears on my
-system), and there are 26(!) different rules for just my wireless
-interface, all with different MAC addresses.
-As you may have noticed from my dump of the association process, the MAC
-address in use is one with a vendor ID for some "Azurewave" interface.
-There are quite a few in the rules file for Realtek interfaces, but the
-one I mostly get is for an Azurewave vendor ID.
-
-I just tried setting a different MAC address (using ifconfig wlan0 hw
-ether 00:e0:4c:81:82:58) however it didn't change anything about my no
-802.11n link situation (as I expected). So perhaps this little tidbit
-should be ignored for now.
-
-I just thought I'd let you know, in case this isn't a known problem.
-
-Regards,
-Stefan Zwanenburg
+> Protect 'cb' and 'cb_context' arguments in nci_data_exchange.
+> In fact, this implements a queue with max length of 1 data
+> exchange transactions in parallel.
+>
+> Signed-off-by: Ilan Elias <ilane@ti.com>
+Acked-by: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
