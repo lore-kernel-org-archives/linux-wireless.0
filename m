@@ -1,107 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1185 "EHLO mms2.broadcom.com"
+Received: from mga02.intel.com ([134.134.136.20]:45905 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751313Ab1IAJRg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 05:17:36 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 02/30] staging: brcm80211: removed static function
- declarations in alloc.c
-Date: Thu, 1 Sep 2011 11:16:52 +0200
-Message-ID: <1314868640-9425-3-git-send-email-rvossen@broadcom.com> (sfid-20110901_111750_750188_7B952B84)
-In-Reply-To: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
-References: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751744Ab1IZQGl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 12:06:41 -0400
+Subject: Re: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM
+ Fritz!Box (7390)" incompatible
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Henrik Friedrichsen <hrkfdn@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAJTrwG7tzDHxDha5x8r-GJFK=oUE6Zk5zqpN4z4L2LyAD=DueQ@mail.gmail.com>
+References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
+	 <CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com>
+	 <1317048872.2400.4.camel@wwguy-ubuntu>
+	 <CAJTrwG5CQKn9=1=HUDX1L5PsFbGws_zK1DTvot9i=KcMX7SwkQ@mail.gmail.com>
+	 <1317049160.1958.8.camel@wwguy-huron>
+	 <CAJTrwG5eELbDuGFXU4=3gSunPSkKLFvcpSe6gGE_Wc0s5BXZ+A@mail.gmail.com>
+	 <CAJTrwG7tzDHxDha5x8r-GJFK=oUE6Zk5zqpN4z4L2LyAD=DueQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Sep 2011 08:19:40 -0700
+Message-ID: <1317050380.1958.13.camel@wwguy-huron> (sfid-20110926_180644_511055_05AC118E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/alloc.c |   39 +++++++++++----------------
- 1 files changed, 16 insertions(+), 23 deletions(-)
+On Mon, 2011-09-26 at 09:03 -0700, Henrik Friedrichsen wrote:
+> On Mon, Sep 26, 2011 at 4:59 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> > few things I will suggest and please give a try:
+> > 1. Please try to apply the following two patches I attach here.
+> > 2. load the iwlagn with debug=0x45800006, the log will be big, but it
+> > will contain more information on the tx/rx path.
+> 
+> Here's the log you asked for:
+> http://diff.cc/tmp/kernel_iwlagn_2.log.bz2
+> 
+> As I said, this problem does not occur with the Windows driver. You
+> said you are actively working on it. Does that mean, the problem is
+> known to you?
+> 
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/alloc.c b/drivers/staging/brcm80211/brcmsmac/alloc.c
-index 7dc2875..52ca7e3 100644
---- a/drivers/staging/brcm80211/brcmsmac/alloc.c
-+++ b/drivers/staging/brcm80211/brcmsmac/alloc.c
-@@ -1,4 +1,4 @@
--/*
-+#/*
-  * Copyright (c) 2010 Broadcom Corporation
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-@@ -20,13 +20,6 @@
- #include "main.h"
- #include "alloc.h"
- 
--static struct brcms_bss_cfg *brcms_c_bsscfg_malloc(uint unit);
--static void brcms_c_bsscfg_mfree(struct brcms_bss_cfg *cfg);
--static struct brcms_pub *brcms_c_pub_malloc(uint unit,
--				      uint *err, uint devid);
--static void brcms_c_pub_mfree(struct brcms_pub *pub);
--static void brcms_c_tunables_init(struct brcms_tunables *tunables, uint devid);
--
- static void brcms_c_tunables_init(struct brcms_tunables *tunables, uint devid)
- {
- 	tunables->ntxd = NTXD;
-@@ -45,6 +38,16 @@ static void brcms_c_tunables_init(struct brcms_tunables *tunables, uint devid)
- 	tunables->txsbnd = TXSBND;
- }
- 
-+static void brcms_c_pub_mfree(struct brcms_pub *pub)
-+{
-+	if (pub == NULL)
-+		return;
-+
-+	kfree(pub->multicast);
-+	kfree(pub->tunables);
-+	kfree(pub);
-+}
-+
- static struct brcms_pub *brcms_c_pub_malloc(uint unit, uint *err, uint devid)
- {
- 	struct brcms_pub *pub;
-@@ -77,14 +80,14 @@ static struct brcms_pub *brcms_c_pub_malloc(uint unit, uint *err, uint devid)
- 	return NULL;
- }
- 
--static void brcms_c_pub_mfree(struct brcms_pub *pub)
-+static void brcms_c_bsscfg_mfree(struct brcms_bss_cfg *cfg)
- {
--	if (pub == NULL)
-+	if (cfg == NULL)
- 		return;
- 
--	kfree(pub->multicast);
--	kfree(pub->tunables);
--	kfree(pub);
-+	kfree(cfg->maclist);
-+	kfree(cfg->current_bss);
-+	kfree(cfg);
- }
- 
- static struct brcms_bss_cfg *brcms_c_bsscfg_malloc(uint unit)
-@@ -106,16 +109,6 @@ static struct brcms_bss_cfg *brcms_c_bsscfg_malloc(uint unit)
- 	return NULL;
- }
- 
--static void brcms_c_bsscfg_mfree(struct brcms_bss_cfg *cfg)
--{
--	if (cfg == NULL)
--		return;
--
--	kfree(cfg->maclist);
--	kfree(cfg->current_bss);
--	kfree(cfg);
--}
--
- static void brcms_c_bsscfg_ID_assign(struct brcms_c_info *wlc,
- 				 struct brcms_bss_cfg *bsscfg)
- {
--- 
-1.7.4.1
+we are seeing performance issue and still can not root cause the
+problem. that is the reason I send you 2 patches for testing. We are
+very active working on fix the performance problem. the symptoms might
+be different, but we aware there were issues.
+
+Thx
+Wey
 
 
