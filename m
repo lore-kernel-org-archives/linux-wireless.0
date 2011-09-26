@@ -1,66 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39254 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752452Ab1I1MNi (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:42756 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751003Ab1IZOHS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 08:13:38 -0400
-Message-Id: <20110928121132.038320759@sipsolutions.net> (sfid-20110928_141341_936442_C5F3E96E)
-Date: Wed, 28 Sep 2011 14:09:01 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 12/15] mac80211: add missing station flags to debugfs
-References: <20110928120849.882884360@sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 26 Sep 2011 10:07:18 -0400
+Received: by eya28 with SMTP id 28so3618033eya.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 07:07:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
+References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
+Date: Mon, 26 Sep 2011 16:07:17 +0200
+Message-ID: <CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com> (sfid-20110926_160722_409164_E6DB8C9E)
+Subject: Re: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM Fritz!Box
+ (7390)" incompatible
+From: Henrik Friedrichsen <hrkfdn@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+One more thing I have noticed:
 
-My work and some previous work didn't add
-all the flags, add them now and while at it
-simplify the code.
+This message is only being printed when I connect to the AP, that I
+have problems with:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/debugfs_sta.c |   25 ++++++++++++++-----------
- 1 file changed, 14 insertions(+), 11 deletions(-)
+Sep 26 07:05:03 dharma kernel: [ 2213.379252] iwlagn 0000:03:00.0: Tx
+aggregation enabled on ra = xx:xx:xx:xx:xx:xx tid = 0
 
---- a/net/mac80211/debugfs_sta.c	2011-09-28 13:53:57.000000000 +0200
-+++ b/net/mac80211/debugfs_sta.c	2011-09-28 14:04:03.000000000 +0200
-@@ -56,19 +56,22 @@ STA_FILE(last_signal, last_signal, D);
- static ssize_t sta_flags_read(struct file *file, char __user *userbuf,
- 			      size_t count, loff_t *ppos)
- {
--	char buf[100];
-+	char buf[121];
- 	struct sta_info *sta = file->private_data;
- 
--	int res = scnprintf(buf, sizeof(buf), "%s%s%s%s%s%s%s%s%s",
--		test_sta_flag(sta, WLAN_STA_AUTH) ? "AUTH\n" : "",
--		test_sta_flag(sta, WLAN_STA_ASSOC) ? "ASSOC\n" : "",
--		test_sta_flag(sta, WLAN_STA_PS_STA) ? "PS (sta)\n" : "",
--		test_sta_flag(sta, WLAN_STA_PS_DRIVER) ? "PS (driver)\n" : "",
--		test_sta_flag(sta, WLAN_STA_AUTHORIZED) ? "AUTHORIZED\n" : "",
--		test_sta_flag(sta, WLAN_STA_SHORT_PREAMBLE) ? "SHORT PREAMBLE\n" : "",
--		test_sta_flag(sta, WLAN_STA_WME) ? "WME\n" : "",
--		test_sta_flag(sta, WLAN_STA_WDS) ? "WDS\n" : "",
--		test_sta_flag(sta, WLAN_STA_MFP) ? "MFP\n" : "");
-+#define TEST(flg) \
-+	test_sta_flag(sta, WLAN_STA_##flg) ? #flg "\n" : ""
-+
-+	int res = scnprintf(buf, sizeof(buf),
-+			    "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
-+			    TEST(AUTH), TEST(ASSOC), TEST(PS_STA),
-+			    TEST(PS_DRIVER), TEST(AUTHORIZED),
-+			    TEST(SHORT_PREAMBLE), TEST(ASSOC_AP),
-+			    TEST(WME), TEST(WDS), TEST(CLEAR_PS_FILT),
-+			    TEST(MFP), TEST(BLOCK_BA), TEST(PSPOLL),
-+			    TEST(UAPSD), TEST(SP), TEST(TDLS_PEER),
-+			    TEST(TDLS_PEER_AUTH));
-+#undef TEST
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
- }
- STA_OPS(flags);
-
-
+On the APs that work fine, it DOES NOT get printed.
