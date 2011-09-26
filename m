@@ -1,66 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56220 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751052Ab1IBXiP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Sep 2011 19:38:15 -0400
-Date: Fri, 2 Sep 2011 18:38:06 -0500
-From: Jonathan Nieder <jrnieder@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Christoph Anton Mitterer <calestyo@scientia.net>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Dietsche <Gregory.Dietsche@cuw.edu>,
-	linux-kernel@vger.kernel.org
-Subject: Re: iwl4965: "MAC is in deep sleep!" freezes
-Message-ID: <20110902233806.GA22157@elie> (sfid-20110903_013833_436787_F8FC2EA3)
-References: <bbdbd01d4965ae789384bc1f9d0a2426@imap.dd24.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <bbdbd01d4965ae789384bc1f9d0a2426@imap.dd24.net>
+Received: from mga01.intel.com ([192.55.52.88]:40186 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751835Ab1IZVRJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 17:17:09 -0400
+Subject: Re: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM
+ Fritz!Box (7390)" incompatible
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Henrik Friedrichsen <hrkfdn@gmail.com>
+Cc: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAJTrwG5MXfixhnNPOdoA3-DYEeKpC==uv4WvE78ZE5U+A10T7Q@mail.gmail.com>
+References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
+	 <CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com>
+	 <1317048872.2400.4.camel@wwguy-ubuntu>
+	 <CAJTrwG5CQKn9=1=HUDX1L5PsFbGws_zK1DTvot9i=KcMX7SwkQ@mail.gmail.com>
+	 <1317049160.1958.8.camel@wwguy-huron>
+	 <CAJTrwG5eELbDuGFXU4=3gSunPSkKLFvcpSe6gGE_Wc0s5BXZ+A@mail.gmail.com>
+	 <CAJTrwG7tzDHxDha5x8r-GJFK=oUE6Zk5zqpN4z4L2LyAD=DueQ@mail.gmail.com>
+	 <1317050380.1958.13.camel@wwguy-huron>
+	 <CAJTrwG46qRYvda1vcCZXv0BTUyf26gx2qgpNgOG-bm-BCMpqfg@mail.gmail.com>
+	 <1317053131.1958.15.camel@wwguy-huron>
+	 <C5A7FB31FD9AEA42B600BDC3C74F8E0017052223@orsmsx511.amr.corp.intel.com>
+	 <CAJTrwG5AvbtNRZi54tzAoUDv5X9QLVY3L=-OgHYRtnJ-RMesrQ@mail.gmail.com>
+	 <1317062004.1958.18.camel@wwguy-huron>
+	 <CAJTrwG57r-B-eT-FODsDW1UgoVcS68zcUWo1mOrdHRdoXtNmCg@mail.gmail.com>
+	 <C5A7FB31FD9AEA42B600BDC3C74F8E001705253B@orsmsx511.amr.corp.intel.com>
+	 <CAJTrwG5MXfixhnNPOdoA3-DYEeKpC==uv4WvE78ZE5U+A10T7Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Sep 2011 14:11:41 -0700
+Message-ID: <1317071501.2400.10.camel@wwguy-ubuntu> (sfid-20110926_231713_882191_DFB20DB5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Meenakshi,
 
-Christoph Anton Mitterer wrote[1]:
+On Mon, 2011-09-26 at 14:02 -0700, Henrik Friedrichsen wrote:
+> Hey Meenakshi,
+> 
+> On Mon, Sep 26, 2011 at 10:59 PM, Venkataraman, Meenakshi
+> <meenakshi.venkataraman@intel.com> wrote:
+> > [MV] You're running Windows using the same card (6205), right? Also, have you ever seen good performance with your 6205 on your Linux system? What about with a different AP?
+> 
+> That's correct. On Windows the problem does not occur with that
+> particular router. Also I don't think I have had comparable problems
+> with other routers, at least not in my home (not on Linux, either).
+> I'm using a different AP right now and it works just fine.
 
-> When I bring the WLAN interface up, after some time (usually just
-> minutes) I get the following error (during which the system
-> completely freezes for some 10-20s)
-[...]
-> kernel: [  951.087153] iwl4965 0000:14:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
-> wpa_supplicant[13032]: Failed to initiate AP scan.
-> kernel: [  952.089208] ------------[ cut here ]------------
-> kernel: [  952.090089] WARNING: at drivers/net/wireless/iwlegacy/iwl-tx.c:483 iwl_legacy_enqueue_hcmd+0x3c7/0x3f0()
+yes, we know this could be AP related, Larry also seeing some issues
+against this AP, but I still like to understand and root cause the issue
+and find a solution or W/A for it.
 
-The warning is from v3.0-rc2~7^2~16^2~216 (iwlegacy: fix enqueue hcmd
-race conditions, 2011-04-28):
+Henrik. what kind of traffic you are running? what I see from the log,
+there are not many aggregated frames, (what I mean is I do not see a lot
+of BA in the log) which is very different from what I am test here. also
+I see the retry ratio is high in the aggregated frame compare to what I
+have here.
 
-| -	spin_lock_irqsave(&priv->hcmd_lock, flags);
-| -
-| -	/* If this is a huge cmd, mark the huge flag also on the meta.flags
-| -	 * of the _original_ cmd. This is used for DMA mapping clean up.
-| -	 */
-| -	if (cmd->flags & CMD_SIZE_HUGE) {
-| -		idx = iwl_legacy_get_cmd_index(q, q->write_ptr, 0);
-| -		txq->meta[idx].flags = CMD_SIZE_HUGE;
-| -	}
-| -
-| 	idx = iwl_legacy_get_cmd_index(q, q->write_ptr, cmd->flags & CMD_SIZE_HUGE);
-| 	out_cmd = txq->cmd[idx];
-| 	out_meta = &txq->meta[idx];
-|  
-| +	if (WARN_ON(out_meta->flags & CMD_MAPPED)) {
-| +		spin_unlock_irqrestore(&priv->hcmd_lock, flags);
-| +		return -ENOSPC;
-| +	}
-| +
+Wey
 
-More details are at [1].  Stanislav, thoughts?  Is this a bug, and if
-so, any ideas for tracking it down?
+  
 
-Thanks,
-Jonathan
-
-[1] http://bugs.debian.org/636355
