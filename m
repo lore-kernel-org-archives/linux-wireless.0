@@ -1,60 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:60861 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752232Ab1ISTec (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:57721 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750928Ab1IZIRF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 15:34:32 -0400
-Received: by gyg10 with SMTP id 10so4313865gyg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 12:34:31 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] rtlwifi: rtl8192ce: Change modinfo messages
-Date: Mon, 19 Sep 2011 14:34:07 -0500
-Message-Id: <1316460850-16443-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20110919_213436_100271_62E64862)
-In-Reply-To: <1316460850-16443-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1316460850-16443-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 26 Sep 2011 04:17:05 -0400
+Date: Mon, 26 Sep 2011 09:30:40 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Arnaldo Carvalho de Melo <acme@ghostprotocols.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] wl3501_cs: min_t() cast truncates high bits
+Message-ID: <20110926063040.GE11832@elgon.mountain> (sfid-20110926_101711_920668_B3BB1CCE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The various modparam messages are difficult to understand.
+wrqu->encoding.length comes from the network administrator.  It's
+size u16.  We want to limit "tocopy" to the smallest value of either
+"len_keys", "wrqu->encoding.length" or 100.  But because .length
+gets cast from u16 to u8 we might use a random, smaller value than
+the was desired.  It's probably not very serious, but we may as well
+fix it.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c |   12 ++++++++----
- 1 files changed, 8 insertions(+), 4 deletions(-)
+Btw, this is from code auditing and not from testing.  I don't know
+if this affects anyone in real life.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-index 4c34c4c..b7ecb9e 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-@@ -133,6 +133,10 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
- 	rtlpriv->psc.inactiveps = rtlpriv->cfg->mod_params->inactiveps;
- 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
- 	rtlpriv->psc.fwctrl_lps = rtlpriv->cfg->mod_params->fwctrl_lps;
-+	if (!rtlpriv->psc.inactiveps)
-+		pr_info("rtl8192ce: Power Save off (module option)\n");
-+	if (!rtlpriv->psc.fwctrl_lps)
-+		pr_info("rtl8192ce: FW Power Save off (module option)\n");
- 	rtlpriv->psc.reg_fwctrl_lps = 3;
- 	rtlpriv->psc.reg_max_lps_awakeintvl = 5;
- 	/* for ASPM, you can close aspm through
-@@ -356,10 +360,10 @@ module_param_named(swenc, rtl92ce_mod_params.sw_crypto, bool, 0444);
- module_param_named(ips, rtl92ce_mod_params.inactiveps, bool, 0444);
- module_param_named(swlps, rtl92ce_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl92ce_mod_params.fwctrl_lps, bool, 0444);
--MODULE_PARM_DESC(swenc, "using hardware crypto (default 0 [hardware])\n");
--MODULE_PARM_DESC(ips, "using no link power save (default 1 is open)\n");
--MODULE_PARM_DESC(fwlps, "using linked fw control power save "
--		 "(default 1 is open)\n");
-+MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
-+MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
-+MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
-+MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
- 
- static struct pci_driver rtl92ce_driver = {
- 	.name = KBUILD_MODNAME,
--- 
-1.7.6.1
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
+diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
+index 6bc7c92..98fbf54 100644
+--- a/drivers/net/wireless/wl3501_cs.c
++++ b/drivers/net/wireless/wl3501_cs.c
+@@ -1781,7 +1781,7 @@ static int wl3501_get_encode(struct net_device *dev,
+ 				  keys, len_keys);
+ 	if (rc)
+ 		goto out;
+-	tocopy = min_t(u8, len_keys, wrqu->encoding.length);
++	tocopy = min_t(u16, len_keys, wrqu->encoding.length);
+ 	tocopy = min_t(u8, tocopy, 100);
+ 	wrqu->encoding.length = tocopy;
+ 	memcpy(extra, keys, tocopy);
