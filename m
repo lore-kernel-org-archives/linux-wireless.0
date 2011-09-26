@@ -1,159 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7986 "EHLO mga01.intel.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:2245 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754063Ab1IVXBV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 19:01:21 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 11/12] iwlagn: move iwl_process_scan_complete up
-Date: Thu, 22 Sep 2011 15:14:59 -0700
-Message-Id: <1316729700-1770-12-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110923_010132_512742_97FBAF23)
-In-Reply-To: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751348Ab1IZTSE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 15:18:04 -0400
+Message-ID: <4E80CFE1.506@broadcom.com> (sfid-20110926_211808_358950_D4315725)
+Date: Mon, 26 Sep 2011 12:17:53 -0700
+From: "Franky Lin" <frankyl@broadcom.com>
+MIME-Version: 1.0
+To: "Arend van Spriel" <arend@broadcom.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+cc: "gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 09/20] staging: brcm80211: use endian annotated
+ structures in brcmsmac
+References: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
+ <1316830148-28661-10-git-send-email-frankyl@broadcom.com> (
+ sfid-20110924_040943_301385_9930B29B)
+ <1316860721.3952.5.camel@jlt3.sipsolutions.net>
+ <4E7DCE39.1010406@broadcom.com>
+ <1317029844.4117.31.camel@jlt3.sipsolutions.net>
+ <4E80C3CE.9010001@broadcom.com>
+In-Reply-To: <4E80C3CE.9010001@broadcom.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 09/26/2011 11:26 AM, Arend van Spriel wrote:
+> On 09/26/2011 11:37 AM, Johannes Berg wrote:
+>> On Sat, 2011-09-24 at 14:34 +0200, Arend van Spriel wrote:
+>>> On 09/24/2011 12:38 PM, Johannes Berg wrote:
+>>>> On Fri, 2011-09-23 at 19:08 -0700, Franky Lin wrote:
+>>>>>     struct d11rxhdr {
+>>>>>     	u16 RxFrameSize;
+>>>>>     	u16 PAD;
+>>>>> +	union {
+>>>>> +		struct d11rxhdr_le rxh_le;
+>>>>> +		struct d11rxhdr rxh_cpu;
+>>>>> +	};
+>>>> This seems a little strange. Why would it be both in LE and CPU byte
+>>>> order?
+>>> Indeed. When we receive it from the device it is in LE and we convert it
+>>> to CPU order for further processing using rxh_cpu.
+>> That seems a confusing and error-prone -- you'll have to remember
+>> whether you're before or after conversion. Would it be possible to have
+>> two versions of the outer structure and change the pointer type at that
+>> point?
+>>
+>> johannes
+>
+> For me knowing the driver design (a little ;-) it is not difficult to
+> remember. Your feedback has valid arguments so I will reconsider. Franky
+> is looking whether dropping it will affect the other patches submitted
+> to Greg.
+>
+> Gr. AvS
 
-To make the next patch easier to read, move
-the function up, it'll be needed earlier in
-this file in the next patch.
+Dropping this one will affect some following patches in the series. 
+Since it's not a bug, shall we keep this one and change it as Johannes 
+suggested in future commit?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |  108 +++++++++++++++---------------
- 1 files changed, 54 insertions(+), 54 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 3010022..e50338b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -114,6 +114,60 @@ static void iwl_complete_scan(struct iwl_priv *priv, bool aborted)
- 	priv->scan_request = NULL;
- }
- 
-+static void iwl_process_scan_complete(struct iwl_priv *priv)
-+{
-+	bool aborted;
-+
-+	IWL_DEBUG_SCAN(priv, "Completed scan.\n");
-+
-+	cancel_delayed_work(&priv->scan_check);
-+
-+	aborted = test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->shrd->status);
-+	if (aborted)
-+		IWL_DEBUG_SCAN(priv, "Aborted scan completed.\n");
-+
-+	if (!test_and_clear_bit(STATUS_SCANNING, &priv->shrd->status)) {
-+		IWL_DEBUG_SCAN(priv, "Scan already completed.\n");
-+		goto out_settings;
-+	}
-+
-+	if (priv->scan_type == IWL_SCAN_ROC) {
-+		ieee80211_remain_on_channel_expired(priv->hw);
-+		priv->hw_roc_channel = NULL;
-+		schedule_delayed_work(&priv->hw_roc_disable_work, 10 * HZ);
-+	}
-+
-+	if (priv->scan_type != IWL_SCAN_NORMAL && !aborted) {
-+		int err;
-+
-+		/* Check if mac80211 requested scan during our internal scan */
-+		if (priv->scan_request == NULL)
-+			goto out_complete;
-+
-+		/* If so request a new scan */
-+		err = iwl_scan_initiate(priv, priv->scan_vif, IWL_SCAN_NORMAL,
-+					priv->scan_request->channels[0]->band);
-+		if (err) {
-+			IWL_DEBUG_SCAN(priv,
-+				"failed to initiate pending scan: %d\n", err);
-+			aborted = true;
-+			goto out_complete;
-+		}
-+
-+		return;
-+	}
-+
-+out_complete:
-+	iwl_complete_scan(priv, aborted);
-+
-+out_settings:
-+	/* Can we still talk to firmware ? */
-+	if (!iwl_is_ready_rf(priv->shrd))
-+		return;
-+
-+	iwlagn_post_scan(priv);
-+}
-+
- void iwl_force_scan_end(struct iwl_priv *priv)
- {
- 	lockdep_assert_held(&priv->shrd->mutex);
-@@ -1013,60 +1067,6 @@ static void iwl_bg_abort_scan(struct work_struct *work)
- 	mutex_unlock(&priv->shrd->mutex);
- }
- 
--static void iwl_process_scan_complete(struct iwl_priv *priv)
--{
--	bool aborted;
--
--	IWL_DEBUG_SCAN(priv, "Completed scan.\n");
--
--	cancel_delayed_work(&priv->scan_check);
--
--	aborted = test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->shrd->status);
--	if (aborted)
--		IWL_DEBUG_SCAN(priv, "Aborted scan completed.\n");
--
--	if (!test_and_clear_bit(STATUS_SCANNING, &priv->shrd->status)) {
--		IWL_DEBUG_SCAN(priv, "Scan already completed.\n");
--		goto out_settings;
--	}
--
--	if (priv->scan_type == IWL_SCAN_ROC) {
--		ieee80211_remain_on_channel_expired(priv->hw);
--		priv->hw_roc_channel = NULL;
--		schedule_delayed_work(&priv->hw_roc_disable_work, 10 * HZ);
--	}
--
--	if (priv->scan_type != IWL_SCAN_NORMAL && !aborted) {
--		int err;
--
--		/* Check if mac80211 requested scan during our internal scan */
--		if (priv->scan_request == NULL)
--			goto out_complete;
--
--		/* If so request a new scan */
--		err = iwl_scan_initiate(priv, priv->scan_vif, IWL_SCAN_NORMAL,
--					priv->scan_request->channels[0]->band);
--		if (err) {
--			IWL_DEBUG_SCAN(priv,
--				"failed to initiate pending scan: %d\n", err);
--			aborted = true;
--			goto out_complete;
--		}
--
--		return;
--	}
--
--out_complete:
--	iwl_complete_scan(priv, aborted);
--
--out_settings:
--	/* Can we still talk to firmware ? */
--	if (!iwl_is_ready_rf(priv->shrd))
--		return;
--
--	iwlagn_post_scan(priv);
--}
--
- static void iwl_bg_scan_completed(struct work_struct *work)
- {
- 	struct iwl_priv *priv =
--- 
-1.7.0.4
+Franky
 
