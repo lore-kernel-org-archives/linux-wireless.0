@@ -1,131 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3797 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754281Ab1ILKPY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Sep 2011 06:15:24 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 13/20] staging: brcm80211: removed softmac ratespec
- override functionality
-Date: Mon, 12 Sep 2011 12:14:57 +0200
-Message-ID: <1315822504-24210-14-git-send-email-rvossen@broadcom.com> (sfid-20110912_121535_077457_51F51B9A)
-In-Reply-To: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
-References: <1315822504-24210-1-git-send-email-rvossen@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:63456 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750830Ab1IZGgt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 02:36:49 -0400
+Received: by eya28 with SMTP id 28so3293981eya.19
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Sep 2011 23:36:48 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] mac80211: treat the WME sta flag as a bit
+Date: Mon, 26 Sep 2011 09:36:42 +0300
+Message-Id: <1317019002-32560-1-git-send-email-arik@wizery.com> (sfid-20110926_083652_818005_1757E7D8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This was unused.
+Correct flag usage - use it as a bit index instead of a bit value.
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/staging/brcm80211/brcmsmac/main.c |   17 +++--------------
- drivers/staging/brcm80211/brcmsmac/main.h |    2 --
- drivers/staging/brcm80211/brcmsmac/stf.c  |   12 ++++--------
- 3 files changed, 7 insertions(+), 24 deletions(-)
+ net/wireless/nl80211.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index e330c02..d30116d 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -5913,12 +5913,6 @@ int brcms_c_set_gmode(struct brcms_c_info *wlc, u8 gmode, bool config)
- 	 */
- 	if ((gmode == GMODE_LEGACY_B) && (band->gmode != GMODE_LEGACY_B)) {
- 		band->gmode = gmode;
--		if (band->rspec_override && !IS_CCK(band->rspec_override)) {
--			band->rspec_override = 0;
--			brcms_c_reprate_init(wlc);
--		}
--		if (band->mrspec_override && !IS_CCK(band->mrspec_override))
--			band->mrspec_override = 0;
- 	}
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c26a1da..4bb1f48 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2613,7 +2613,7 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
  
- 	band->gmode = gmode;
-@@ -5988,12 +5982,8 @@ int brcms_c_set_nmode(struct brcms_c_info *wlc, s32 nmode)
- 		for (i = 0; i < wlc->pub->_nbands; i++) {
- 			memset(wlc->bandstate[i]->hw_rateset.mcs, 0,
- 			       MCSSET_LEN);
--			if (IS_MCS(wlc->band->rspec_override)) {
--				wlc->bandstate[i]->rspec_override = 0;
-+			if (IS_MCS(0))
- 				brcms_c_reprate_init(wlc);
--			}
--			if (IS_MCS(wlc->band->mrspec_override))
--				wlc->bandstate[i]->mrspec_override = 0;
- 		}
- 		break;
- 
-@@ -7052,8 +7042,7 @@ done:
- static u16
- brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
- 		     struct sk_buff *p, struct scb *scb, uint frag,
--		     uint nfrags, uint queue, uint next_frag_len,
--		     u32 rspec_override)
-+		     uint nfrags, uint queue, uint next_frag_len)
- {
- 	struct ieee80211_hdr *h;
- 	struct d11txh *txh;
-@@ -7713,7 +7702,7 @@ void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
- 	prio = ieee80211_is_data(d11_header->frame_control) ? sdu->priority :
- 		MAXPRIO;
- 	fifo = prio2fifo[prio];
--	if (brcms_c_d11hdrs_mac80211(wlc, hw, sdu, scb, 0, 1, fifo, 0, 0))
-+	if (brcms_c_d11hdrs_mac80211(wlc, hw, sdu, scb, 0, 1, fifo, 0))
- 		return;
- 	brcms_c_txq_enq(wlc, scb, sdu, BRCMS_PRIO_TO_PREC(prio));
- 	brcms_c_send_q(wlc);
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
-index b31c20f..4e576e5 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.h
-+++ b/drivers/staging/brcm80211/brcmsmac/main.h
-@@ -271,8 +271,6 @@ struct brcms_band {
- 	/* band-specific copy of default_bss.rateset */
- 	struct brcms_c_rateset defrateset;
- 
--	u32 rspec_override;	/* 802.11 rate override */
--	u32 mrspec_override;	/* multicast rate override */
- 	u8 band_stf_ss_mode;	/* Configured STF type, 0:siso; 1:cdd */
- 	s8 band_stf_stbc_tx;	/* STBC TX 0:off; 1:force on; -1:auto */
- 	/* rates supported by chip (phy-specific) */
-diff --git a/drivers/staging/brcm80211/brcmsmac/stf.c b/drivers/staging/brcm80211/brcmsmac/stf.c
-index 0a101a4..71c5d23 100644
---- a/drivers/staging/brcm80211/brcmsmac/stf.c
-+++ b/drivers/staging/brcm80211/brcmsmac/stf.c
-@@ -293,26 +293,22 @@ int brcms_c_stf_txchain_set(struct brcms_c_info *wlc, s32 int_val, bool force)
- 
- 	if (txstreams == 1) {
- 		for (i = 0; i < wlc->pub->_nbands; i++)
--			if ((RSPEC_STF(wlc->bandstate[i]->rspec_override) !=
-+			if ((RSPEC_STF(0) !=
- 			     PHY_TXC1_MODE_SISO)
--			    || (RSPEC_STF(wlc->bandstate[i]->mrspec_override) !=
-+			    || (RSPEC_STF(0) !=
- 				PHY_TXC1_MODE_SISO)) {
- 				if (!force)
- 					return -EBADE;
- 
- 				/* over-write the override rspec */
--				if (RSPEC_STF(wlc->bandstate[i]->rspec_override)
-+				if (RSPEC_STF(0)
- 				    != PHY_TXC1_MODE_SISO) {
--					wlc->bandstate[i]->rspec_override = 0;
- 					wiphy_err(wlc->wiphy, "%s(): temp "
- 						  "sense override non-SISO "
- 						  "rspec_override\n",
- 						  __func__);
- 				}
--				if (RSPEC_STF
--				    (wlc->bandstate[i]->mrspec_override) !=
--				    PHY_TXC1_MODE_SISO) {
--					wlc->bandstate[i]->mrspec_override = 0;
-+				if (RSPEC_STF(0) != PHY_TXC1_MODE_SISO) {
- 					wiphy_err(wlc->wiphy, "%s(): temp "
- 						  "sense override non-SISO "
- 						  "mrspec_override\n",
+ 	/* parse WME attributes if sta is WME capable */
+ 	if ((rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) &&
+-	    (params.sta_flags_set & NL80211_STA_FLAG_WME) &&
++	    (params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)) &&
+ 	    info->attrs[NL80211_ATTR_STA_WME]) {
+ 		struct nlattr *tb[NL80211_STA_WME_MAX + 1];
+ 		struct nlattr *nla;
 -- 
 1.7.4.1
-
 
