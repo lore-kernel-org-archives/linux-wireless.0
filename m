@@ -1,212 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10806 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754171Ab1IHGoi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 02:44:38 -0400
-Date: Thu, 8 Sep 2011 08:44:10 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Michael Witten <mfwitten@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, stable@kernel.org
-Subject: Re: [PATCH] mac80211: fix suspend/resume races with unregister hw
-Message-ID: <20110908064410.GA2195@redhat.com> (sfid-20110908_084442_544427_64A59B10)
-References: <1313150459-13234-1-git-send-email-sgruszka@redhat.com>
- <d9f6472975e34cb294831e32c8ce2346-mfwitten@gmail.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50001 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753205Ab1IZMXM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 08:23:12 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	<stable@kernel.org>
+Subject: [RFC v3] mac80211: Send nullfunc frames at lower rate
+Date: Mon, 26 Sep 2011 17:53:24 +0530
+Message-ID: <1317039804-8521-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110926_142316_017545_25DFCEEC)
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="AhhlLboLdkugWU4S"
-In-Reply-To: <d9f6472975e34cb294831e32c8ce2346-mfwitten@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Recently mac80211 was changed to use nullfunc instead of probe
+request for connection monitoring for tx ack status reporting
+hardwares. These nullfunc data frames are being sent at higer
+rates and also as aggregated ones. This could probably delays
+the nullfunc ack so the connection is more frequently getting
+disconnected as max retries are reached. In order to improve
+the connectivity send the nullfunc at lower rate.
 
---AhhlLboLdkugWU4S
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Cc: stable@kernel.org
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+v2: update commit log
+v3: rename rc_no_data_or_no_ack & Ccd stable
+ net/mac80211/rate.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-On Wed, Sep 07, 2011 at 09:50:29PM -0000, Michael Witten wrote:
-> My boot process is stalling proximate the following messages (after a period
-> of time, some other message might show up, but the boot never progresses much
-> further):
-> 
->   cfg80211: World regulatory domain updated:
->   cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
->   cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->   cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
->   cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
->   cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->   cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> 
-> I bisected to this patch, namely via the following commit:
->   
->   commit ecb4433550f0620f3d1471ae7099037ede30a91e
->   Author: Stanislaw Gruszka <sgruszka@redhat.com>
->   Date:   Fri Aug 12 14:00:59 2011 +0200
-
-Grr, crap.
-
-> 
-> Now, it may be the case that my system startup's scripts are doing something
-> funny, as the stall described above occurs after Arch Linux outputs:
-> 
->   Waiting for UDev uevents to be processed
-> 
-> At this point, that's all I know.
-
-What wireless driver are you using? If this is ipw2x00 please try
-attached patch.
-
-Thanks
-Stanislaw
-
-
---AhhlLboLdkugWU4S
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="ipw2x00_do_not_call_wiphy_register_with_rtnl_lock.patch"
-
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 3774dd0..ef9ad79 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -1903,15 +1903,17 @@ static void ipw2100_down(struct ipw2100_priv *priv)
- static int ipw2100_net_init(struct net_device *dev)
- {
- 	struct ipw2100_priv *priv = libipw_priv(dev);
-+
-+	return ipw2100_up(priv, 1);
-+}
-+
-+static int ipw2100_wdev_init(struct net_device *dev)
-+{
-+	struct ipw2100_priv *priv = libipw_priv(dev);
- 	const struct libipw_geo *geo = libipw_get_geo(priv->ieee);
- 	struct wireless_dev *wdev = &priv->ieee->wdev;
--	int ret;
- 	int i;
- 
--	ret = ipw2100_up(priv, 1);
--	if (ret)
--		return ret;
--
- 	memcpy(wdev->wiphy->perm_addr, priv->mac_addr, ETH_ALEN);
- 
- 	/* fill-out priv->ieee->bg_band */
-@@ -6350,9 +6352,13 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
- 		       "Error calling register_netdev.\n");
- 		goto fail;
- 	}
-+	registered = 1;
-+
-+	err = ipw2100_wdev_init(dev);
-+	if (err)
-+		goto fail;
- 
- 	mutex_lock(&priv->action_mutex);
--	registered = 1;
- 
- 	IPW_DEBUG_INFO("%s: Bound to %s\n", dev->name, pci_name(pci_dev));
- 
-@@ -6389,7 +6395,8 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
- 
-       fail_unlock:
- 	mutex_unlock(&priv->action_mutex);
--
-+	wiphy_unregister(priv->ieee->wdev.wiphy);
-+	kfree(priv->ieee->bg_band.channels);
-       fail:
- 	if (dev) {
- 		if (registered)
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 87813c3..6a6d48f 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -11425,16 +11425,23 @@ static void ipw_bg_down(struct work_struct *work)
- /* Called by register_netdev() */
- static int ipw_net_init(struct net_device *dev)
- {
-+	int rc = 0;
-+	struct ipw_priv *priv = libipw_priv(dev);
-+
-+	mutex_lock(&priv->mutex);
-+	if (ipw_up(priv))
-+		rc = -EIO;
-+	mutex_unlock(&priv->mutex);
-+
-+	return rc;
-+}
-+
-+static int ipw_wdev_init(struct net_device *dev)
-+{
- 	int i, rc = 0;
- 	struct ipw_priv *priv = libipw_priv(dev);
- 	const struct libipw_geo *geo = libipw_get_geo(priv->ieee);
- 	struct wireless_dev *wdev = &priv->ieee->wdev;
--	mutex_lock(&priv->mutex);
--
--	if (ipw_up(priv)) {
--		rc = -EIO;
--		goto out;
--	}
- 
- 	memcpy(wdev->wiphy->perm_addr, priv->mac_addr, ETH_ALEN);
- 
-@@ -11519,13 +11526,9 @@ static int ipw_net_init(struct net_device *dev)
- 	set_wiphy_dev(wdev->wiphy, &priv->pci_dev->dev);
- 
- 	/* With that information in place, we can now register the wiphy... */
--	if (wiphy_register(wdev->wiphy)) {
-+	if (wiphy_register(wdev->wiphy))
- 		rc = -EIO;
--		goto out;
--	}
--
- out:
--	mutex_unlock(&priv->mutex);
- 	return rc;
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index f61244c..240a24d 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -199,7 +199,7 @@ static void rate_control_release(struct kref *kref)
+ 	kfree(ctrl_ref);
  }
  
-@@ -11678,7 +11681,6 @@ static int ipw_prom_alloc(struct ipw_priv *priv)
- 	if (rc) {
- 		free_libipw(priv->prom_net_dev, 1);
- 		priv->prom_net_dev = NULL;
--		return rc;
- 	}
+-static bool rc_no_data_or_no_ack(struct ieee80211_tx_rate_control *txrc)
++static bool rc_no_non_nulldata_or_no_ack(struct ieee80211_tx_rate_control *txrc)
+ {
+ 	struct sk_buff *skb = txrc->skb;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+@@ -208,7 +208,8 @@ static bool rc_no_data_or_no_ack(struct ieee80211_tx_rate_control *txrc)
  
- 	return 0;
-@@ -11832,14 +11834,23 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
- 		goto out_remove_sysfs;
- 	}
+ 	fc = hdr->frame_control;
  
-+	err = ipw_wdev_init(net_dev);
-+	if (err) {
-+		IPW_ERROR("failed to register wireless device\n");
-+		goto out_unregister_netdev;
-+	}
-+
- #ifdef CONFIG_IPW2200_PROMISCUOUS
- 	if (rtap_iface) {
- 	        err = ipw_prom_alloc(priv);
- 		if (err) {
- 			IPW_ERROR("Failed to register promiscuous network "
- 				  "device (error %d).\n", err);
--			unregister_netdev(priv->net_dev);
--			goto out_remove_sysfs;
-+
-+			wiphy_unregister(priv->ieee->wdev.wiphy);
-+			kfree(priv->ieee->a_band.channels);
-+			kfree(priv->ieee->bg_band.channels);
-+			goto out_unregister_netdev;
- 		}
- 	}
- #endif
-@@ -11851,6 +11862,8 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
+-	return (info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc);
++	return (info->flags & IEEE80211_TX_CTL_NO_ACK) ||
++		!ieee80211_is_data(fc) || ieee80211_is_nullfunc(fc);
+ }
  
- 	return 0;
+ static void rc_send_low_broadcast(s8 *idx, u32 basic_rates,
+@@ -262,7 +263,7 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
+ 	struct ieee80211_supported_band *sband = txrc->sband;
+ 	int mcast_rate;
  
-+      out_unregister_netdev:
-+	unregister_netdev(priv->net_dev);
-       out_remove_sysfs:
- 	sysfs_remove_group(&pdev->dev.kobj, &ipw_attribute_group);
-       out_release_irq:
+-	if (!sta || !priv_sta || rc_no_data_or_no_ack(txrc)) {
++	if (!sta || !priv_sta || rc_no_non_nulldata_or_no_ack(txrc)) {
+ 		if ((sband->band != IEEE80211_BAND_2GHZ) ||
+ 		    !(info->flags & IEEE80211_TX_CTL_NO_CCK_RATE))
+ 			info->control.rates[0].idx =
+-- 
+1.7.6.4
 
---AhhlLboLdkugWU4S--
