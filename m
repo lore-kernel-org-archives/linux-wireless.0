@@ -1,195 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38282 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753769Ab1I2OGq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 10:06:46 -0400
-Message-Id: <20110929140500.982799400@sipsolutions.net> (sfid-20110929_160650_655739_D939942A)
-Date: Thu, 29 Sep 2011 16:04:34 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 09/16] mac80211: send (QoS) Null if no buffered frames
-References: <20110929140425.390322480@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:31160 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751149Ab1IZH5J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 03:57:09 -0400
+Date: Mon, 26 Sep 2011 09:55:59 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Bernhard M. Wiedemann" <bernhardout@lsmod.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Drn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: Bug in rt2800pci on an RT3090
+Message-ID: <20110926075558.GA2273@redhat.com> (sfid-20110926_095713_267101_FEBBA119)
+References: <4E7CEE67.2070906@lwfinger.net>
+ <20110924163007.GA10001@redhat.com>
+ <4E7E2738.6020208@lsmod.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E7E2738.6020208@lsmod.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello
 
-For PS-poll, there's a possible race between
-us expiring a frame and the station polling
-for it -- send it a null frame in that case.
+> the kernel config already has
+> CONFIG_LOCKDEP_SUPPORT=y
+> Is that what you meant? Does it need any extra to activate?
 
-For uAPSD, the standard says that we have to
-send a frame in each SP, so send null if we
-don't have any other frames.
+LOCKDEP_SUPPORT mean that LOCKDEP can be enabled on cpu architecture
+for which kernel is build. To enable it you have to use "make menuconfig"
+and mark up  "Kernel hacking ---> Lock debugging: prove locking correctness"
+After that CONFIG_LOCKDEP=y should show up in .config.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |    1 
- net/mac80211/sta_info.c    |  100 ++++++++++++++++++++++++++++++++++++++++-----
- net/mac80211/tx.c          |    3 -
- 3 files changed, 92 insertions(+), 12 deletions(-)
+> meanwhile I had a similar bug on rc6 hours after resuming.
+>
+> This time it had some additional soft lockup messages ontop. see
+> http://www.zq1.de/~bernhard/temp/dmesg.bug
 
---- a/net/mac80211/tx.c	2011-09-29 16:03:17.000000000 +0200
-+++ b/net/mac80211/tx.c	2011-09-29 16:03:20.000000000 +0200
-@@ -1520,8 +1520,7 @@ static int ieee80211_skb_resize(struct i
- 	return 0;
- }
- 
--static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
--			   struct sk_buff *skb)
-+void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
---- a/net/mac80211/ieee80211_i.h	2011-09-29 16:03:12.000000000 +0200
-+++ b/net/mac80211/ieee80211_i.h	2011-09-29 16:03:20.000000000 +0200
-@@ -1272,6 +1272,7 @@ void mac80211_ev_michael_mic_failure(str
- 				     struct ieee80211_hdr *hdr, const u8 *tsc,
- 				     gfp_t gfp);
- void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
- void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
- void ieee802_11_parse_elems(u8 *start, size_t len,
- 			    struct ieee802_11_elems *elems);
---- a/net/mac80211/sta_info.c	2011-09-29 16:03:17.000000000 +0200
-+++ b/net/mac80211/sta_info.c	2011-09-29 16:03:20.000000000 +0200
-@@ -24,6 +24,7 @@
- #include "sta_info.h"
- #include "debugfs_sta.h"
- #include "mesh.h"
-+#include "wme.h"
- 
- /**
-  * DOC: STA information lifetime rules
-@@ -247,10 +248,16 @@ static void sta_unblock(struct work_stru
- 		ieee80211_sta_ps_deliver_wakeup(sta);
- 	else if (test_and_clear_sta_flags(sta, WLAN_STA_PSPOLL)) {
- 		clear_sta_flags(sta, WLAN_STA_PS_DRIVER);
-+
-+		local_bh_disable();
- 		ieee80211_sta_ps_deliver_poll_response(sta);
-+		local_bh_enable();
- 	} else if (test_and_clear_sta_flags(sta, WLAN_STA_UAPSD)) {
- 		clear_sta_flags(sta, WLAN_STA_PS_DRIVER);
-+
-+		local_bh_disable();
- 		ieee80211_sta_ps_deliver_uapsd(sta);
-+		local_bh_enable();
- 	} else
- 		clear_sta_flags(sta, WLAN_STA_PS_DRIVER);
- }
-@@ -1157,6 +1164,70 @@ void ieee80211_sta_ps_deliver_wakeup(str
- #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
- }
- 
-+static void ieee80211_send_null_response(struct ieee80211_sub_if_data *sdata,
-+					 struct sta_info *sta, int tid,
-+					 bool uapsd)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_qos_hdr *nullfunc;
-+	struct sk_buff *skb;
-+	int size = sizeof(*nullfunc);
-+	__le16 fc;
-+	bool qos = test_sta_flags(sta, WLAN_STA_WME);
-+	struct ieee80211_tx_info *info;
-+
-+	if (qos) {
-+		fc = cpu_to_le16(IEEE80211_FTYPE_DATA |
-+				 IEEE80211_STYPE_QOS_NULLFUNC |
-+				 IEEE80211_FCTL_FROMDS);
-+	} else {
-+		size -= 2;
-+		fc = cpu_to_le16(IEEE80211_FTYPE_DATA |
-+				 IEEE80211_STYPE_NULLFUNC |
-+				 IEEE80211_FCTL_FROMDS);
-+	}
-+
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom + size);
-+	if (!skb)
-+		return;
-+
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+
-+	nullfunc = (void *) skb_put(skb, size);
-+	nullfunc->frame_control = fc;
-+	nullfunc->duration_id = 0;
-+	memcpy(nullfunc->addr1, sta->sta.addr, ETH_ALEN);
-+	memcpy(nullfunc->addr2, sdata->vif.addr, ETH_ALEN);
-+	memcpy(nullfunc->addr3, sdata->vif.addr, ETH_ALEN);
-+
-+	if (qos) {
-+		skb->priority = tid;
-+
-+		skb_set_queue_mapping(skb, ieee802_1d_to_ac[tid]);
-+
-+		nullfunc->qos_ctrl = cpu_to_le16(tid);
-+
-+		if (uapsd)
-+			nullfunc->qos_ctrl |=
-+				cpu_to_le16(IEEE80211_QOS_CTL_EOSP);
-+	}
-+
-+	info = IEEE80211_SKB_CB(skb);
-+
-+	/*
-+	 * Tell TX path to send this frame even though the
-+	 * STA may still remain is PS mode after this frame
-+	 * exchange.
-+	 */
-+	info->flags |= IEEE80211_TX_CTL_POLL_RESPONSE;
-+
-+	if (uapsd)
-+		info->flags |= IEEE80211_TX_STATUS_EOSP |
-+			       IEEE80211_TX_CTL_REQ_TX_STATUS;
-+
-+	ieee80211_xmit(sdata, skb);
-+}
-+
- static void
- ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 				  int n_frames, u8 ignored_acs,
-@@ -1228,19 +1299,28 @@ ieee80211_sta_ps_deliver_response(struct
- 	}
- 
- 	if (!found) {
--#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		int tid;
-+
- 		/*
--		 * FIXME: This can be the result of a race condition between
--		 *	  us expiring a frame and the station polling for it.
--		 *	  Should we send it a null-func frame indicating we
--		 *	  have nothing buffered for it?
-+		 * For PS-Poll, this can only happen due to a race condition
-+		 * when we set the TIM bit and the station notices it, but
-+		 * before it can poll for the frame we expire it.
-+		 *
-+		 * For uAPSD, this is said in the standard (11.2.1.5 h):
-+		 *	At each unscheduled SP for a non-AP STA, the AP shall
-+		 *	attempt to transmit at least one MSDU or MMPDU, but no
-+		 *	more than the value specified in the Max SP Length field
-+		 *	in the QoS Capability element from delivery-enabled ACs,
-+		 *	that are destined for the non-AP STA.
-+		 *
-+		 * Since we have no other MSDU/MMPDU, transmit a QoS null frame.
- 		 */
--		if (reason == IEEE80211_FRAME_RELEASE_PSPOLL)
--			printk(KERN_DEBUG "%s: STA %pM sent PS Poll even "
--			       "though there are no buffered frames for it\n",
--			       sdata->name, sta->sta.addr);
--#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
- 
-+		/* This will evaluate to 1, 3, 5 or 7. */
-+		tid = 7 - ((ffs(~ignored_acs) - 1) << 1);
-+
-+		ieee80211_send_null_response(sdata, sta, tid,
-+				reason == IEEE80211_FRAME_RELEASE_UAPSD);
- 		return;
- 	}
- 
+Again, lockdep should print more information and allow to debug
+this easly.
 
-
+Stanislaw
