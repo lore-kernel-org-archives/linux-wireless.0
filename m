@@ -1,106 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.iopen.co.nz ([202.6.116.226]:54081 "EHLO mail.iopen.co.nz"
+Received: from mga02.intel.com ([134.134.136.20]:65091 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751760Ab1IVDUe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 23:20:34 -0400
-Message-ID: <4E7AA97D.40402@iopen.net> (sfid-20110922_052049_213489_E35F6C44)
-Date: Thu, 22 Sep 2011 15:20:29 +1200
-From: Linux Wireless Stuff for IOPEN <linwir-list@iopen.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [wireless-regdb] Update regulatory rules for New Zealand (NZ)
-References: <4E73F3FA.502@iopen.net> <20110919141340.GB2608@tuxdriver.com>
-In-Reply-To: <20110919141340.GB2608@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1751439Ab1IZQwW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 12:52:22 -0400
+Subject: Re: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM
+ Fritz!Box (7390)" incompatible
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Henrik Friedrichsen <hrkfdn@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAJTrwG46qRYvda1vcCZXv0BTUyf26gx2qgpNgOG-bm-BCMpqfg@mail.gmail.com>
+References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
+	 <CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com>
+	 <1317048872.2400.4.camel@wwguy-ubuntu>
+	 <CAJTrwG5CQKn9=1=HUDX1L5PsFbGws_zK1DTvot9i=KcMX7SwkQ@mail.gmail.com>
+	 <1317049160.1958.8.camel@wwguy-huron>
+	 <CAJTrwG5eELbDuGFXU4=3gSunPSkKLFvcpSe6gGE_Wc0s5BXZ+A@mail.gmail.com>
+	 <CAJTrwG7tzDHxDha5x8r-GJFK=oUE6Zk5zqpN4z4L2LyAD=DueQ@mail.gmail.com>
+	 <1317050380.1958.13.camel@wwguy-huron>
+	 <CAJTrwG46qRYvda1vcCZXv0BTUyf26gx2qgpNgOG-bm-BCMpqfg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Sep 2011 09:05:31 -0700
+Message-ID: <1317053131.1958.15.camel@wwguy-huron> (sfid-20110926_185225_540129_40B6F698)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/20/2011 02:13 AM, John W. Linville wrote:
-> On Sat, Sep 17, 2011 at 01:12:26PM +1200, Linux Wireless Stuff for IOPEN wrote:
->> From Fedora 14 :
->> ==============
->>
->>> country NZ:
->>>         (2402 - 2482 @ 40), (N/A, 30)
->>>         (5170 - 5250 @ 20), (3, 23)
->>>         (5250 - 5330 @ 20), (3, 23), DFS
->>>         (5735 - 5835 @ 20), (3, 30)
->>
->> Updates for 2.4 GHz :
->> ===================
->>
->>   Frequency range is 2400 to 2483.5 (Ref 1)
->>   Maximum EIRP is 36 dBm (4 W)      (Ref 1)
->>
->> Updates for 5 GHz :
->> =================
->>
->>   5150 - 5250  23 dBm (200 mW) indoor only            (Ref 1,3)
->>   5250 - 5350  23 dBm (200 mW) indoor/outdoor,DFS+TPC (Ref 1,3)
->>   5725 - 5875  36 dBm (  4  W) PtMP/PtP               (Ref 1,3)
->>   5725 - 5825  53 dBm (200  W) PtP fixed              (Ref 1,2,3)
->>
->>   And possibly this via the Spread Spectrum Device provision
->>
->>   5470 - 5725  30 dBm (  1  W) requires DFS+TPC       (Ref 3)
->>
->>   Maximum power density is specified for some chunks.
->>
->> References :
->> ==========
->> 1 :
->>> http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/fixed-radio-link-devices/information-on-the-operation-of-wireless-lan-and-related-systems-in-the-2-ghz-and-5-ghz-bands
->> 2 :
->>> http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/fixed-radio-link-devices
->> 3 :
->>> http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/short-range-devices
->>
->> Cheers
->> The IOPEN wireless deployers
+On Mon, 2011-09-26 at 09:10 -0700, Henrik Friedrichsen wrote:
+> I see. I hope the log is useful to you. I'm not sure, but this issue
+> seems to be slightly different to your average performance issue. My
+> Android device needs 1 second to completely load the Router webpanel,
+> whereas my laptop with the Intel chip needs 30 seconds.
 > 
-> Thanks for the info.  Any chance you could propose this in the form
-> of a patch?
+> I'm afraid the patches did not make any difference. Oh btw, I did
+> apply them before making the log. I believe that was your intention.
+> 
+> On Mon, Sep 26, 2011 at 5:19 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> > On Mon, 2011-09-26 at 09:03 -0700, Henrik Friedrichsen wrote:
+> >> On Mon, Sep 26, 2011 at 4:59 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> >> > few things I will suggest and please give a try:
+> >> > 1. Please try to apply the following two patches I attach here.
+> >> > 2. load the iwlagn with debug=0x45800006, the log will be big, but it
+> >> > will contain more information on the tx/rx path.
+> >>
+> >> Here's the log you asked for:
+> >> http://diff.cc/tmp/kernel_iwlagn_2.log.bz2
+> >>
+> >> As I said, this problem does not occur with the Windows driver. You
+> >> said you are actively working on it. Does that mean, the problem is
+> >> known to you?
+> >>
+> >
+> > we are seeing performance issue and still can not root cause the
+> > problem. that is the reason I send you 2 patches for testing. We are
+> > very active working on fix the performance problem. the symptoms might
+> > be different, but we aware there were issues.
+> >
+btw, what if you using "Open/no security"?
 
-TaDa!
+Thanks
+Wey
+> >
+> >
+> >
 
-kernel.org is still down so we've derived the below patch from ...
 
-> http://linuxwireless.org/download/wireless-regdb/wireless-regdb-2011.04.28.tar.bz2
-
-For the DFS items, if TPC isn't used the maximum power is 3 dB less, but
-there's no way of representing that in your scheme.
-
------CUT-----
-*** db.txt      2011-04-29 07:17:40.000000000 +1200
---- db-updated.txt      2011-09-22 14:36:04.966154148 +1200
-***************
-
-*** 512,521 ****
-        (5735 - 5835 @ 40), (N/A, 30)
-
-  country NZ:
-!       (2402 - 2482 @ 40), (N/A, 30)
-!       (5170 - 5250 @ 20), (3, 23)
-!       (5250 - 5330 @ 20), (3, 23), DFS
-!       (5735 - 5835 @ 20), (3, 30)
-
-  country OM:
-        (2402 - 2482 @ 40), (N/A, 20)
---- 512,523 ----
-        (5735 - 5835 @ 40), (N/A, 30)
-
-  country NZ:
-!       (2400 - 2483 @ 40), (N/A, 36)
-!       (5150 - 5250 @ 40), (N/A, 23), NO-OUTDOOR
-!       (5250 - 5350 @ 40), (N/A, 23), DFS
-!       (5470 - 5725 @ 40), (N/A, 30), DFS
-!       (5725 - 5875 @ 40), (N/A, 36)
-!       (5725 - 5825 @ 40), (N/A, 53), PTP-ONLY
-
-  country OM:
-        (2402 - 2482 @ 40), (N/A, 20)
------CUT-----
-
-Cheers
-The IOPEN wireless deployers
