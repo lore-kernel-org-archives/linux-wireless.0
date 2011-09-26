@@ -1,218 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41462 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755085Ab1IASBW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 14:01:22 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	rmanohar@qca.qualcomm.com, shafi.wireless@gmail.com,
-	vthiagar@qca.qualcomm.com
-Subject: [PATCH v12 3/5] ath9k: always call ath_reset from workqueue context
-Date: Thu,  1 Sep 2011 20:01:05 +0200
-Message-Id: <1314900067-85242-3-git-send-email-nbd@openwrt.org> (sfid-20110901_200126_284583_936800C0)
-In-Reply-To: <1314900067-85242-2-git-send-email-nbd@openwrt.org>
-References: <1314900067-85242-1-git-send-email-nbd@openwrt.org>
- <1314900067-85242-2-git-send-email-nbd@openwrt.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:63565 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750803Ab1IZPpB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 11:45:01 -0400
+From: Sangwook Lee <sangwook.lee@linaro.org>
+To: Rhyland Klein <rklein@nvidia.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Sangwook Lee <sangwook.lee@linaro.org>
+Subject: [PATCH v2] net:rfkill: add a gpio setup function into GPIO rfkill
+Date: Mon, 26 Sep 2011 16:43:07 +0100
+Message-Id: <1317051787-24142-1-git-send-email-sangwook.lee@linaro.org> (sfid-20110926_174528_527483_B8E26971)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes it much easier to add further rework to avoid race conditions
-between reset and other work items.
-Move other functions to make ath_reset static.
+Add a gpio setup function which gives a chance to set up
+platform specific configuration such as pin multiplexing,
+input/output direction at the runtime or booting time.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Sangwook Lee <sangwook.lee@linaro.org>
+
+v2:
+- fixed the return type after checking gpio_runtime_setup
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h  |    4 +++-
- drivers/net/wireless/ath/ath9k/beacon.c |    4 +---
- drivers/net/wireless/ath/ath9k/init.c   |    1 +
- drivers/net/wireless/ath/ath9k/main.c   |   18 ++++++++++++++----
- drivers/net/wireless/ath/ath9k/xmit.c   |   18 ++++++++++++------
- 5 files changed, 31 insertions(+), 14 deletions(-)
+ include/linux/rfkill-gpio.h |    2 ++
+ net/rfkill/rfkill-gpio.c    |    8 ++++++++
+ 2 files changed, 10 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 5d9a9aa..bfc90e4 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -425,6 +425,7 @@ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status);
+diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill-gpio.h
+index a175d05..786e7bb 100644
+--- a/include/linux/rfkill-gpio.h
++++ b/include/linux/rfkill-gpio.h
+@@ -30,6 +30,7 @@
+  * @reset_gpio:		GPIO which is used for reseting rfkill switch
+  * @shutdown_gpio:	GPIO which is used for shutdown of rfkill switch
+  * @power_clk_name:	[optional] name of clk to turn off while blocked
++ * @gpio_runtime_setup:	set up platform specific gpio configuration
+  */
  
- #define ATH_PAPRD_TIMEOUT	100 /* msecs */
- 
-+void ath_reset_work(struct work_struct *work);
- void ath_hw_check(struct work_struct *work);
- void ath_hw_pll_work(struct work_struct *work);
- void ath_paprd_calibrate(struct work_struct *work);
-@@ -555,6 +556,7 @@ struct ath_ant_comb {
- #define SC_OP_RXFLUSH                BIT(7)
- #define SC_OP_LED_ASSOCIATED         BIT(8)
- #define SC_OP_LED_ON                 BIT(9)
-+#define SC_OP_HW_RESET               BIT(10)
- #define SC_OP_TSF_RESET              BIT(11)
- #define SC_OP_BT_PRIORITY_DETECTED   BIT(12)
- #define SC_OP_BT_SCAN		     BIT(13)
-@@ -604,6 +606,7 @@ struct ath_softc {
- 	struct mutex mutex;
- 	struct work_struct paprd_work;
- 	struct work_struct hw_check_work;
-+	struct work_struct hw_reset_work;
- 	struct completion paprd_complete;
- 
- 	unsigned int hw_busy_count;
-@@ -650,7 +653,6 @@ struct ath_softc {
+ struct rfkill_gpio_platform_data {
+@@ -38,6 +39,7 @@ struct rfkill_gpio_platform_data {
+ 	int			shutdown_gpio;
+ 	const char		*power_clk_name;
+ 	enum rfkill_type	type;
++	int	(*gpio_runtime_setup)(struct platform_device *);
  };
  
- void ath9k_tasklet(unsigned long data);
--int ath_reset(struct ath_softc *sc, bool retry_tx);
- int ath_cabq_update(struct ath_softc *);
+ #endif /* __RFKILL_GPIO_H */
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 256c5dd..96a910c 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -101,6 +101,14 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 	if (!rfkill)
+ 		return -ENOMEM;
  
- static inline void ath_read_cachesize(struct ath_common *common, int *csz)
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 0c757c9..22e8e25 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -386,9 +386,7 @@ void ath_beacon_tasklet(unsigned long data)
- 			ath_dbg(common, ATH_DBG_BSTUCK,
- 				"beacon is officially stuck\n");
- 			sc->sc_flags |= SC_OP_TSF_RESET;
--			spin_lock(&sc->sc_pcu_lock);
--			ath_reset(sc, true);
--			spin_unlock(&sc->sc_pcu_lock);
-+			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
- 		}
- 
- 		return;
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 50da642..be302fb 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -777,6 +777,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 			goto error_world;
- 	}
- 
-+	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
- 	INIT_WORK(&sc->hw_check_work, ath_hw_check);
- 	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
- 	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 9bb222c..36ae12a 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -236,6 +236,7 @@ static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	del_timer_sync(&common->ani.timer);
- 	cancel_work_sync(&sc->paprd_work);
- 	cancel_work_sync(&sc->hw_check_work);
-+	cancel_work_sync(&sc->hw_reset_work);
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
- 	cancel_delayed_work_sync(&sc->hw_pll_work);
- 
-@@ -608,9 +609,7 @@ void ath9k_tasklet(unsigned long data)
- 
- 	if ((status & ATH9K_INT_FATAL) ||
- 	    (status & ATH9K_INT_BB_WATCHDOG)) {
--		spin_lock(&sc->sc_pcu_lock);
--		ath_reset(sc, true);
--		spin_unlock(&sc->sc_pcu_lock);
-+		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
- 		return;
- 	}
- 
-@@ -901,13 +900,14 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	ath9k_ps_restore(sc);
- }
- 
--int ath_reset(struct ath_softc *sc, bool retry_tx)
-+static int ath_reset(struct ath_softc *sc, bool retry_tx)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ieee80211_hw *hw = sc->hw;
- 	int r;
- 
-+	sc->sc_flags &= ~SC_OP_HW_RESET;
- 	sc->hw_busy_count = 0;
- 
- 	ath9k_debug_samp_bb_mac(sc);
-@@ -969,6 +969,15 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	return r;
- }
- 
-+void ath_reset_work(struct work_struct *work)
-+{
-+	struct ath_softc *sc = container_of(work, struct ath_softc, hw_reset_work);
-+
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+	ath_reset(sc, true);
-+	spin_unlock_bh(&sc->sc_pcu_lock);
-+}
-+
- void ath_hw_check(struct work_struct *work)
- {
- 	struct ath_softc *sc = container_of(work, struct ath_softc, hw_check_work);
-@@ -1230,6 +1239,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	cancel_delayed_work_sync(&sc->hw_pll_work);
- 	cancel_work_sync(&sc->paprd_work);
- 	cancel_work_sync(&sc->hw_check_work);
-+	cancel_work_sync(&sc->hw_reset_work);
- 
- 	if (sc->sc_flags & SC_OP_INVALID) {
- 		ath_dbg(common, ATH_DBG_ANY, "Device not present\n");
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 49b93c2..95bc459 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -581,8 +581,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 
- 	rcu_read_unlock();
- 
--	if (needreset)
--		ath_reset(sc, false);
-+	if (needreset) {
-+		sc->sc_flags |= SC_OP_HW_RESET;
-+		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
++	if (pdata->gpio_runtime_setup) {
++		ret = pdata->gpio_runtime_setup(pdev);
++		if (ret) {
++			pr_warn("%s: can't set up gpio\n", __func__);
++			return ret;
++		}
 +	}
- }
- 
- static bool ath_lookup_legacy(struct ath_buf *bf)
-@@ -1332,7 +1334,7 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 	struct ath_atx_ac *ac, *ac_tmp, *last_ac;
- 	struct ath_atx_tid *tid, *last_tid;
- 
--	if (list_empty(&txq->axq_acq) ||
-+	if ((sc->sc_flags & SC_OP_HW_RESET) || list_empty(&txq->axq_acq) ||
- 	    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
- 		return;
- 
-@@ -2147,6 +2149,9 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 
- 	spin_lock_bh(&txq->axq_lock);
- 	for (;;) {
-+		if (sc->sc_flags & SC_OP_HW_RESET)
-+			break;
 +
- 		if (list_empty(&txq->axq_q)) {
- 			txq->axq_link = NULL;
- 			if (sc->sc_flags & SC_OP_TXAGGR)
-@@ -2234,9 +2239,7 @@ static void ath_tx_complete_poll_work(struct work_struct *work)
- 	if (needreset) {
- 		ath_dbg(ath9k_hw_common(sc->sc_ah), ATH_DBG_RESET,
- 			"tx hung, resetting the chip\n");
--		spin_lock_bh(&sc->sc_pcu_lock);
--		ath_reset(sc, true);
--		spin_unlock_bh(&sc->sc_pcu_lock);
-+		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
- 	}
+ 	rfkill->pdata = pdata;
  
- 	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work,
-@@ -2269,6 +2272,9 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 	int status;
- 
- 	for (;;) {
-+		if (sc->sc_flags & SC_OP_HW_RESET)
-+			break;
-+
- 		status = ath9k_hw_txprocdesc(ah, NULL, (void *)&ts);
- 		if (status == -EINPROGRESS)
- 			break;
+ 	len = strlen(pdata->name);
 -- 
-1.7.3.2
+1.7.4.1
 
