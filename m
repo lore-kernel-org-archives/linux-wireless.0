@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:33532 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751454Ab1ITOEQ (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:55494 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751835Ab1IZVTl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 10:04:16 -0400
-Date: Tue, 20 Sep 2011 07:00:20 -0700
-From: Greg KH <greg@kroah.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Franky Lin <frankyl@broadcom.com>, gregkh@suse.de,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
- patch #2
-Message-ID: <20110920140020.GA11386@kroah.com> (sfid-20110920_160419_833691_80A7BC34)
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
- <20110920130338.GA9885@kroah.com>
- <20110920132203.GB7800@tuxdriver.com>
+	Mon, 26 Sep 2011 17:19:41 -0400
+Received: by eya28 with SMTP id 28so4010610eya.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 14:19:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110920132203.GB7800@tuxdriver.com>
+In-Reply-To: <C5A7FB31FD9AEA42B600BDC3C74F8E0017052566@orsmsx511.amr.corp.intel.com>
+References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
+	<CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com>
+	<1317048872.2400.4.camel@wwguy-ubuntu>
+	<CAJTrwG5CQKn9=1=HUDX1L5PsFbGws_zK1DTvot9i=KcMX7SwkQ@mail.gmail.com>
+	<1317049160.1958.8.camel@wwguy-huron>
+	<CAJTrwG5eELbDuGFXU4=3gSunPSkKLFvcpSe6gGE_Wc0s5BXZ+A@mail.gmail.com>
+	<CAJTrwG7tzDHxDha5x8r-GJFK=oUE6Zk5zqpN4z4L2LyAD=DueQ@mail.gmail.com>
+	<1317050380.1958.13.camel@wwguy-huron>
+	<CAJTrwG46qRYvda1vcCZXv0BTUyf26gx2qgpNgOG-bm-BCMpqfg@mail.gmail.com>
+	<1317053131.1958.15.camel@wwguy-huron>
+	<C5A7FB31FD9AEA42B600BDC3C74F8E0017052223@orsmsx511.amr.corp.intel.com>
+	<CAJTrwG5AvbtNRZi54tzAoUDv5X9QLVY3L=-OgHYRtnJ-RMesrQ@mail.gmail.com>
+	<1317062004.1958.18.camel@wwguy-huron>
+	<CAJTrwG57r-B-eT-FODsDW1UgoVcS68zcUWo1mOrdHRdoXtNmCg@mail.gmail.com>
+	<C5A7FB31FD9AEA42B600BDC3C74F8E001705253B@orsmsx511.amr.corp.intel.com>
+	<CAJTrwG5MXfixhnNPOdoA3-DYEeKpC==uv4WvE78ZE5U+A10T7Q@mail.gmail.com>
+	<C5A7FB31FD9AEA42B600BDC3C74F8E0017052566@orsmsx511.amr.corp.intel.com>
+Date: Mon, 26 Sep 2011 23:19:39 +0200
+Message-ID: <CAJTrwG4AHo-_P_j8x2_vbd-eCXRVM=MPRoCh-uQQPHoKduyxvw@mail.gmail.com> (sfid-20110926_231944_127898_6F8B716C)
+Subject: Re: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM Fritz!Box
+ (7390)" incompatible
+From: Henrik Friedrichsen <hrkfdn@gmail.com>
+To: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 20, 2011 at 09:22:03AM -0400, John W. Linville wrote:
-> On Tue, Sep 20, 2011 at 06:03:38AM -0700, Greg KH wrote:
-> > On Mon, Sep 19, 2011 at 02:25:48PM -0700, Franky Lin wrote:
-> > > Code clean up for fullmac.
-> > 
-> > Ok, this is the 7th patch series since the last round of "how do we get
-> > our driver into mainline" happened.
-> > 
-> > And while code is great and nice, I still haven't seen any real answers
-> > to all of the questions that were asked of the Broadcom driver team
-> > during that review by the linux-wireless developers about how things
-> > will be handled properly due to the overlap in functionality with the
-> > existing "real" driver in the tree.
-> > 
-> > So, can you please start answering these questions?  I'm loath to keep
-> > accepting patches until that all gets straightened out as it potentially
-> > wastes my, and your, time by doing so.
-> > 
-> > In other words, I'm not going to apply any more patches until this gets
-> > resolved.  Consider this patchset dropped from my to-apply queue for now
-> > because of that.
-> 
-> I think most of the outstanding series from Broadcom are
-> (almost?) exclusively for their fullmac driver, which has not overlap
-> with b43.  We should be moving forward toward getting the fullmac
-> driver into wireless-next.
+Hey!
 
-Ok, that's great, but again, no one from Broadcom has said what their
-plans are, only sent lots of patches, which while wonderful, has caused
-some confusion on my and other parts.
+On Mon, Sep 26, 2011 at 11:06 PM, Venkataraman, Meenakshi
+<meenakshi.venkataraman@intel.com> wrote:
+> [MV] That's interesting. What is the model of the AP that works? Are you using the same kernel version with this AP (just want to confirm with you)? Also, are you in a position to send us (only) a sniffer log?
 
-greg k-h
+Well, I can't really tell you which router models worked fine, because
+I almost never had physical access to them (or bothered, for that
+matter ;)). The Netgear WGR614v10, which I used to have at home,
+worked without problems. Same with a few TP-Link routers. Turning my
+HTC Desire HD (Android) handset to a WiFi hotspot worked fine, too. So
+this one is pretty much the first one that I am encountering.
+Unfortunately I don't have any other Fritz!Boxes by AVM at the moment.
+The one I am connected to right now is a ZyXEL ISP rebrand. I don't
+have physical access to it, so I can't really tell you what model it
+is.
+
+What kind of a sniffer log. You mean TCP packets?
