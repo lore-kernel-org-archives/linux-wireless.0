@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:44233 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754510Ab1IEPUL (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:36134 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751348Ab1IZJSy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Sep 2011 11:20:11 -0400
-Received: by wwf5 with SMTP id 5so5285389wwf.1
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Sep 2011 08:20:10 -0700 (PDT)
+	Mon, 26 Sep 2011 05:18:54 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath6kl: Remove unnecessary retrieval of first list entry in ath6kl_htc_tx_setup_scat_list()
+Date: Mon, 26 Sep 2011 14:49:03 +0530
+Message-ID: <1317028743-18092-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110926_111857_776984_57B18097)
 MIME-Version: 1.0
-In-Reply-To: <201109030906.21009.chunkeey@googlemail.com>
-References: <201109030906.21009.chunkeey@googlemail.com>
-Date: Mon, 5 Sep 2011 20:50:09 +0530
-Message-ID: <CAD2nsn16Otuzp9KbivA03Q5ySMBHLp36J+-HfU=wRcqkSD6QRg@mail.gmail.com> (sfid-20110905_172015_186014_ED2C418C)
-Subject: Re: [RESEND][PATCH] minstrel_ht: fix Open BA session request floods
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>, nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 3, 2011 at 12:36 PM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> Minstrel HT tries very hard to establish a BA session with
-> each peer once there's some data on the way. However the
-> stack does not inform minstrel if an aggregation session
-> is already in place, so it keeps trying and wastes good
-> cycles in the tx status path.
->
-> [ 8149.946393] Open BA session requested for $AP tid 0
-> [ 8150.048765] Open BA session requested for $AP tid 0
-> [ 8150.174509] Open BA session requested for $AP tid 0
-> [ 8150.274376] Open BA session requested for $AP tid 0
-> ...
+It is unnecessary to take the first list entry from queue again for
+transmission. Sometimes it may look racy when the head of the list
+changes between subsequent retrival, but should not happen in
+practical.
 
+Reported-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/htc.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Hi Christian,
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index 9aa2e44..feed985 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -389,7 +389,6 @@ static int ath6kl_htc_tx_setup_scat_list(struct htc_target *target,
+ 
+ 		rem_scat -= len;
+ 		/* now remove it from the queue */
+-		packet = list_first_entry(queue, struct htc_packet, list);
+ 		list_del(&packet->list);
+ 
+ 		scat_req->scat_list[i].packet = packet;
+-- 
+1.7.0.4
 
-I got this messages in ath9k after few cycles of suspend and resume.
-doing the same fix in ath9k rate control tx_status callback the
-messages did not re-appear. I will soon send a proper patch for ath9k
-too.
-
-thanks,
-shafi
