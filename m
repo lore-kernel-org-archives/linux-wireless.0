@@ -1,28 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:64959 "EHLO
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:56907 "EHLO
 	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753732Ab1I1UmK (ORCPT
+	with ESMTP id S1751433Ab1IZWbB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 16:42:10 -0400
-Received: by qyk7 with SMTP id 7so9653760qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2011 13:42:09 -0700 (PDT)
+	Mon, 26 Sep 2011 18:31:01 -0400
+Received: by qyk7 with SMTP id 7so7136932qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 15:31:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1317235424-14378-1-git-send-email-hauke@hauke-m.de>
-References: <1317235424-14378-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <20110922154849.369194760@sipsolutions.net>
+References: <20110922154726.521122680@sipsolutions.net> <20110922154849.369194760@sipsolutions.net>
 From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Wed, 28 Sep 2011 13:41:49 -0700
-Message-ID: <CAB=NE6WZuhnrmtUg0D-AAqDWnrHXB1hLPvo+YaJES0HT7yb+0A@mail.gmail.com> (sfid-20110928_224213_914675_6E5D058F)
-Subject: Re: [PATCH] compat: add IS_ERR_OR_NULL()
-To: Hauke Mehrtens <hauke@hauke-m.de>
+Date: Mon, 26 Sep 2011 15:30:40 -0700
+Message-ID: <CAB=NE6UP9xYmLY3nJRMVdjPky87hB1YzFTHEzBv0Pt=qv3kAmg@mail.gmail.com> (sfid-20110927_003105_618484_4E28FC39)
+Subject: Re: [RFC 03/15] mac80211: also expire filtered frames
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 28, 2011 at 11:43 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+On Thu, Sep 22, 2011 at 8:47 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> mac80211 will expire normal PS-buffered frames, but
+> if the device rejected some frames for a sleeping
+> station, these won't be on the ps_tx_buf queue but
+> on the tx_filtered queue instead; this is done to
+> avoid reordering.
+>
+> However, mac80211 will not expire frames from the
+> filtered queue, let's fix that.
+>
+> Also add a more comments to what all this expiry is
+> doing and how it works.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Thanks, applied and pushed both patches out!
+No particular comments on the code yet but latency issues has got me
+thinking about the filtered frames stuff and if we really need it. How
+much benefit does keeping these frames give us instead of just
+dropping them?
 
   Luis
