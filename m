@@ -1,57 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:33789 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750926Ab1IBL2n (ORCPT
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:58299 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752990Ab1IZXzo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Sep 2011 07:28:43 -0400
-Received: by mail-bw0-f44.google.com with SMTP id r4so3832176bka.17
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Sep 2011 04:28:42 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: coelho@ti.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] wl12xx: increase number of allowed SSIDs in sched_scan
-Date: Fri,  2 Sep 2011 14:28:22 +0300
-Message-Id: <1314962903-29574-3-git-send-email-coelho@ti.com> (sfid-20110902_132848_737457_EC5B0612)
-In-Reply-To: <1314962903-29574-1-git-send-email-coelho@ti.com>
-References: <1314962903-29574-1-git-send-email-coelho@ti.com>
+	Mon, 26 Sep 2011 19:55:44 -0400
+Date: Mon, 26 Sep 2011 16:50:11 -0700
+From: Greg KH <greg@kroah.com>
+To: Franky Lin <frankyl@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 09/20] staging: brcm80211: use endian annotated
+ structures in brcmsmac
+Message-ID: <20110926235011.GA3878@kroah.com> (sfid-20110927_015547_935781_DE9679F5)
+References: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
+ <1316830148-28661-10-git-send-email-frankyl@broadcom.com>
+ <1316860721.3952.5.camel@jlt3.sipsolutions.net>
+ <4E7DCE39.1010406@broadcom.com>
+ <1317029844.4117.31.camel@jlt3.sipsolutions.net>
+ <4E80C3CE.9010001@broadcom.com>
+ <4E80CFE1.506@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E80CFE1.506@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The latest firmware supports up to 16 SSIDs in the scheduled scan
-lists.  Increase the number we report to cfg80211 and increase the
-min/max dwell time to 30 and 60 TUs respectively, because otherwise we
-don't have the time to send the probes for all SSIDs.
+On Mon, Sep 26, 2011 at 12:17:53PM -0700, Franky Lin wrote:
+> On 09/26/2011 11:26 AM, Arend van Spriel wrote:
+> >On 09/26/2011 11:37 AM, Johannes Berg wrote:
+> >>On Sat, 2011-09-24 at 14:34 +0200, Arend van Spriel wrote:
+> >>>On 09/24/2011 12:38 PM, Johannes Berg wrote:
+> >>>>On Fri, 2011-09-23 at 19:08 -0700, Franky Lin wrote:
+> >>>>>    struct d11rxhdr {
+> >>>>>    	u16 RxFrameSize;
+> >>>>>    	u16 PAD;
+> >>>>>+	union {
+> >>>>>+		struct d11rxhdr_le rxh_le;
+> >>>>>+		struct d11rxhdr rxh_cpu;
+> >>>>>+	};
+> >>>>This seems a little strange. Why would it be both in LE and CPU byte
+> >>>>order?
+> >>>Indeed. When we receive it from the device it is in LE and we convert it
+> >>>to CPU order for further processing using rxh_cpu.
+> >>That seems a confusing and error-prone -- you'll have to remember
+> >>whether you're before or after conversion. Would it be possible to have
+> >>two versions of the outer structure and change the pointer type at that
+> >>point?
+> >>
+> >>johannes
+> >
+> >For me knowing the driver design (a little ;-) it is not difficult to
+> >remember. Your feedback has valid arguments so I will reconsider. Franky
+> >is looking whether dropping it will affect the other patches submitted
+> >to Greg.
+> >
+> >Gr. AvS
+> 
+> Dropping this one will affect some following patches in the series.
+> Since it's not a bug, shall we keep this one and change it as
+> Johannes suggested in future commit?
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/main.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+How about just resend the whole series, that way I don't accidentally
+apply it, or the other one you wanted dropped?
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index bde8402..49da03d 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -267,8 +267,8 @@ static struct conf_drv_settings default_conf = {
- 	},
- 	.sched_scan = {
- 		/* sched_scan requires dwell times in TU instead of TU/1000 */
--		.min_dwell_time_active = 8,
--		.max_dwell_time_active = 30,
-+		.min_dwell_time_active = 30,
-+		.max_dwell_time_active = 60,
- 		.dwell_time_passive    = 100,
- 		.dwell_time_dfs        = 150,
- 		.num_probe_reqs        = 2,
-@@ -4491,7 +4491,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC) | BIT(NL80211_IFTYPE_AP);
- 	wl->hw->wiphy->max_scan_ssids = 1;
--	wl->hw->wiphy->max_sched_scan_ssids = 8;
-+	wl->hw->wiphy->max_sched_scan_ssids = 16;
-+	wl->hw->wiphy->max_match_sets = 16;
- 	/*
- 	 * Maximum length of elements in scanning probe request templates
- 	 * should be the maximum length possible for a template, without
--- 
-1.7.1
+I've dropped this whole series from my to-apply queue now.
 
+thanks,
+
+greg k-h
