@@ -1,66 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:43692 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752217Ab1IMHVf (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:44884 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751278Ab1IZKzB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 03:21:35 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Naveen Singh <nvesing@qca.qualcomm.com>
-Subject: [PATCH] MAINTAINERS: update ath6kl
-Date: Tue, 13 Sep 2011 10:21:25 +0300
-Message-Id: <1315898485-8441-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110913_092138_035951_0C7D9C8A)
-In-Reply-To: <4E6F0390.4060704@qca.qualcomm.com>
-References: <4E6F0390.4060704@qca.qualcomm.com>
+	Mon, 26 Sep 2011 06:55:01 -0400
+Received: by eya28 with SMTP id 28so3462643eya.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 03:55:00 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Kalyan C Gaddam <chakkal@iit.edu>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 0/5] TDLS support for nl80211/mac80211 drivers
+Date: Mon, 26 Sep 2011 13:54:48 +0300
+Message-Id: <1317034493-5300-1-git-send-email-arik@wizery.com> (sfid-20110926_125506_704623_086A369D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's not in staging anymore and I'm the current maintainer.
+This series adds basic kernel-mode TDLS support for nl80211 based drivers.
+It is based in part on patches by Kalyan C. Gaddam, cc-ed here.
 
-Cc: Luis R. Rodriguez <mcgrof@gmail.com>
-Cc: Naveen Singh <nvesing@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
+Support is added for peer discovery and data path setup/teardown.
+Currently not implemented: QoS/HT, peer PSM, peer U-APSD and channel
+switching.
 
-John, please take this directly. Hopefully less conflicts that way.
+The main change from the RFC series is the addition of a Tx block
+during link setup. In the new scheme of things, a STA entry is added
+just before setting up a link. This allows us to throw out frames
+sent to a peer while the link is being set up. This is required by
+the specification, to avoid reordering of MSDUs.
 
- MAINTAINERS |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
+User-mode support is added in a companion series.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index d4f2532..d8b5d05 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1246,6 +1246,14 @@ W:	http://wireless.kernel.org/en/users/Drivers/ath5k
- S:	Maintained
- F:	drivers/net/wireless/ath/ath5k/
- 
-+ATHEROS ATH6KL WIRELESS DRIVER
-+M:	Kalle Valo <kvalo@qca.qualcomm.com>
-+L:	linux-wireless@vger.kernel.org
-+W:	http://wireless.kernel.org/en/users/Drivers/ath6kl
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath6kl.git
-+S:	Supported
-+F:	drivers/net/wireless/ath/ath6kl/
-+
- ATHEROS ATH9K WIRELESS DRIVER
- M:	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
- M:	Jouni Malinen <jouni@qca.qualcomm.com>
-@@ -6152,12 +6160,6 @@ M:	Jakub Schmidtke <sjakub@gmail.com>
- S:	Odd Fixes
- F:	drivers/staging/asus_oled/
- 
--STAGING - ATHEROS ATH6KL WIRELESS DRIVER
--M:	Luis R. Rodriguez <mcgrof@gmail.com>
--M:	Naveen Singh <nsingh@atheros.com>
--S:	Odd Fixes
--F:	drivers/staging/ath6kl/
--
- STAGING - COMEDI
- M:	Ian Abbott <abbotti@mev.co.uk>
- M:	Mori Hess <fmhess@users.sourceforge.net>
+Tested with wl12xx hardware, with a nl80211/mac80211 based driver.
+
+Arik
+
+Cc: Kalyan C Gaddam <chakkal@iit.edu>
+
+Arik Nemtsov (5):
+  nl80211: support sending TDLS commands/frames
+  mac80211: standardize adding supported rates IEs
+  mac80211: handle TDLS high-level commands and frames
+  nl80211/mac80211: allow adding TDLS peers as stations
+  mac80211: data path modification for TDLS peers
+
+ include/linux/ieee80211.h |   85 ++++++++++++
+ include/linux/if_ether.h  |    1 +
+ include/linux/nl80211.h   |   48 +++++++
+ include/net/cfg80211.h    |   17 +++
+ include/net/mac80211.h    |    5 +
+ net/mac80211/Kconfig      |   12 ++
+ net/mac80211/cfg.c        |  335 +++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/main.c       |    4 +
+ net/mac80211/mesh.c       |   58 --------
+ net/mac80211/mesh.h       |    4 -
+ net/mac80211/mesh_plink.c |    4 +-
+ net/mac80211/mlme.c       |    7 +-
+ net/mac80211/sta_info.h   |    5 +
+ net/mac80211/tx.c         |   46 ++++++-
+ net/mac80211/util.c       |   59 ++++++++
+ net/wireless/nl80211.c    |   97 ++++++++++++-
+ net/wireless/util.c       |    5 +-
+ 17 files changed, 711 insertions(+), 81 deletions(-)
+
 -- 
-1.7.1
+1.7.4.1
 
