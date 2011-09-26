@@ -1,39 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:35317 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754762Ab1INDst (ORCPT
+Received: from hqemgate04.nvidia.com ([216.228.121.35]:6086 "EHLO
+	hqemgate04.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751607Ab1IZS3D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 23:48:49 -0400
-Date: Wed, 14 Sep 2011 09:19:24 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <stable@kernel.org>
-Subject: Re: [PATCH] ath9k_hw: Fix magnitude/phase coeff correction
-Message-ID: <20110914034922.GA23349@vmraj-lnx.users.atheros.com> (sfid-20110914_054854_917720_D0FDD38E)
-References: <1315320530-2733-1-git-send-email-rmanohar@qca.qualcomm.com>
- <20110913173226.GF11772@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20110913173226.GF11772@tuxdriver.com>
+	Mon, 26 Sep 2011 14:29:03 -0400
+Subject: Re: [PATCH v2] net:rfkill: add a gpio setup function into GPIO
+ rfkill
+From: Rhyland Klein <rklein@nvidia.com>
+To: Sangwook Lee <sangwook.lee@linaro.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1317051787-24142-1-git-send-email-sangwook.lee@linaro.org>
+References: <1317051787-24142-1-git-send-email-sangwook.lee@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Sep 2011 11:27:17 -0700
+Message-ID: <1317061637.31414.1.camel@rklein-linux2> (sfid-20110926_202908_057113_BB65D37D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 13, 2011 at 01:32:26PM -0400, John W. Linville wrote:
-> On Tue, Sep 06, 2011 at 08:18:50PM +0530, Rajkumar Manoharan wrote:
-> > Do the magnitude/phase coeff correction only if the outlier
-> > is detected.
-> > 
-> > Cc: stable@kernel.org
-> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> > ---
-> >  
-> >  static void ar9003_hw_tx_iqcal_load_avg_2_passes(struct ath_hw *ah,
+On Mon, 2011-09-26 at 08:43 -0700, Sangwook Lee wrote:
+> Add a gpio setup function which gives a chance to set up
+> platform specific configuration such as pin multiplexing,
+> input/output direction at the runtime or booting time.
 > 
-> What is the effect of the bug being fixed here?  Is this fix intended for 3.1?
->
-The first entry of phase/mag got changed to average if outlier is not detected.
-This patch ensures to update appropriate index of magnitude/phase. This patch is
-applicable from 3.0 onwards.
+> Signed-off-by: Sangwook Lee <sangwook.lee@linaro.org>
+> 
+> v2:
+> - fixed the return type after checking gpio_runtime_setup
+> ---
+>  include/linux/rfkill-gpio.h |    2 ++
+>  net/rfkill/rfkill-gpio.c    |    8 ++++++++
+>  2 files changed, 10 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill-gpio.h
+> index a175d05..786e7bb 100644
+> --- a/include/linux/rfkill-gpio.h
+> +++ b/include/linux/rfkill-gpio.h
+> @@ -30,6 +30,7 @@
+>   * @reset_gpio:		GPIO which is used for reseting rfkill switch
+>   * @shutdown_gpio:	GPIO which is used for shutdown of rfkill switch
+>   * @power_clk_name:	[optional] name of clk to turn off while blocked
+> + * @gpio_runtime_setup:	set up platform specific gpio configuration
+>   */
+>  
+>  struct rfkill_gpio_platform_data {
+> @@ -38,6 +39,7 @@ struct rfkill_gpio_platform_data {
+>  	int			shutdown_gpio;
+>  	const char		*power_clk_name;
+>  	enum rfkill_type	type;
+> +	int	(*gpio_runtime_setup)(struct platform_device *);
+>  };
+>  
+>  #endif /* __RFKILL_GPIO_H */
+> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+> index 256c5dd..96a910c 100644
+> --- a/net/rfkill/rfkill-gpio.c
+> +++ b/net/rfkill/rfkill-gpio.c
+> @@ -101,6 +101,14 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+>  	if (!rfkill)
+>  		return -ENOMEM;
+>  
+> +	if (pdata->gpio_runtime_setup) {
+> +		ret = pdata->gpio_runtime_setup(pdev);
+> +		if (ret) {
+> +			pr_warn("%s: can't set up gpio\n", __func__);
+> +			return ret;
+> +		}
+> +	}
+> +
+>  	rfkill->pdata = pdata;
+>  
+>  	len = strlen(pdata->name);
 
---
-Rajkumar
+Acked-by Rhyland Klein <rklein@nvidia.com>
+
