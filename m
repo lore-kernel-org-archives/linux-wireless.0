@@ -1,214 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2414 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754560Ab1IWAIO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 20:08:14 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v2 06/19] staging: brcm80211: remove unconditional code
- blocks from brcmfmac
-Date: Thu, 22 Sep 2011 17:07:43 -0700
-Message-ID: <1316736476-23725-7-git-send-email-frankyl@broadcom.com> (sfid-20110923_020842_581824_E8B01F27)
-In-Reply-To: <1316736476-23725-1-git-send-email-frankyl@broadcom.com>
-References: <1316736476-23725-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:36511 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752526Ab1IZWol (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 18:44:41 -0400
+Received: by ywb5 with SMTP id 5so4743266ywb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 15:44:40 -0700 (PDT)
+Message-ID: <4E81005C.7010303@lwfinger.net> (sfid-20110927_004444_788176_122216B9)
+Date: Mon, 26 Sep 2011 17:44:44 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Henrik Friedrichsen <hrkfdn@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM Fritz!Box
+ (7390)" incompatible
+References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com> <1317050380.1958.13.camel@wwguy-huron> <CAJTrwG46qRYvda1vcCZXv0BTUyf26gx2qgpNgOG-bm-BCMpqfg@mail.gmail.com> <1317053131.1958.15.camel@wwguy-huron> <C5A7FB31FD9AEA42B600BDC3C74F8E0017052223@orsmsx511.amr.corp.intel.com> <CAJTrwG5AvbtNRZi54tzAoUDv5X9QLVY3L=-OgHYRtnJ-RMesrQ@mail.gmail.com> <1317062004.1958.18.camel@wwguy-huron> <CAJTrwG57r-B-eT-FODsDW1UgoVcS68zcUWo1mOrdHRdoXtNmCg@mail.gmail.com> <C5A7FB31FD9AEA42B600BDC3C74F8E001705253B@orsmsx511.amr.corp.intel.com> <CAJTrwG5MXfixhnNPOdoA3-DYEeKpC==uv4WvE78ZE5U+A10T7Q@mail.gmail.com> <1317071501.2400.10.camel@wwguy-ubuntu> <CAJTrwG6_ybjD9u2zMi+bY73j6CZoncbmOzk8N2N=8Cd=EWLUcA@mail.gmail.com> <1317071853.2400.11.camel@wwguy-ubuntu> <CAJTrwG5ydoheYzYuRZaaR0AfqBgE9KnfYQ8X_0esRNVog3hF=g@mail.gmail.com> <4E80F522.3010903@lwfinger.net> <CAJTrwG6r2ZEUg8VugVxDQ_AKL6_ukdregydm-_r9SjUMNbwBHQ@mail.gmail.com>
+In-Reply-To: <CAJTrwG6r2ZEUg8VugVxDQ_AKL6_ukdregydm-_r9SjUMNbwBHQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+On 09/26/2011 05:12 PM, Henrik Friedrichsen wrote:
+> On Mon, Sep 26, 2011 at 11:56 PM, Larry Finger
+> <Larry.Finger@lwfinger.net>  wrote:
+>> Of course, it should take a little over 4 sec. Try adding the -D switch to
+>> the ping command. Does repeating the ping command immediately change the
+>> timing?
+>
+> There you go:
+> ~>  ping -Dc5 fritz.box
+> PING fritz.box (192.168.178.1) 56(84) bytes of data.
+> [1317074796.140468] 64 bytes from fritz.box (192.168.178.1):
+> icmp_req=1 ttl=64 time=1.19 ms
+> [1317074804.154425] 64 bytes from fritz.box (192.168.178.1):
+> icmp_req=2 ttl=64 time=1.52 ms
+> [1317074812.165947] 64 bytes from fritz.box (192.168.178.1):
+> icmp_req=3 ttl=64 time=1.20 ms
+> [1317074820.177252] 64 bytes from fritz.box (192.168.178.1):
+> icmp_req=4 ttl=64 time=1.23 ms
+> [1317074828.187470] 64 bytes from fritz.box (192.168.178.1):
+> icmp_req=5 ttl=64 time=1.76 ms
+>
+> Nope, it doesn't.
 
-Using a block statement to scope function variables is not
-common in linux kernel development. Browsed through the brcmfmac
-to remove those.
+Your ping seems to have an interval of 8 seconds, not 1 like the man page says.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_common.c |  132 +++++++++++-----------
- 1 files changed, 66 insertions(+), 66 deletions(-)
+Mine shows
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-index c9bf92a..0c41c1c 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-@@ -198,6 +198,11 @@ brcmf_c_show_host_event(struct brcmf_event_msg *event, void *event_data)
- 		BRCMF_E_PFN_SCAN_COMPLETE, "SCAN_COMPLETE"}
- 	};
- 	uint event_type, flags, auth_type, datalen;
-+	static u32 seqnum_prev;
-+	struct msgtrace_hdr hdr;
-+	u32 nblost;
-+	char *s, *p;
-+
- 	event_type = be32_to_cpu(event->event_type);
- 	flags = be16_to_cpu(event->flags);
- 	status = be32_to_cpu(event->status);
-@@ -348,55 +353,52 @@ brcmf_c_show_host_event(struct brcmf_event_msg *event, void *event_data)
- 		break;
- 
- 	case BRCMF_E_TRACE:
--		{
--			static u32 seqnum_prev;
--			struct msgtrace_hdr hdr;
--			u32 nblost;
--			char *s, *p;
--
--			buf = (unsigned char *) event_data;
--			memcpy(&hdr, buf, sizeof(struct msgtrace_hdr));
--
--			if (hdr.version != MSGTRACE_VERSION) {
--				brcmf_dbg(ERROR, "MACEVENT: %s [unsupported version --> brcmf version:%d dongle version:%d]\n",
--					  event_name,
--					  MSGTRACE_VERSION, hdr.version);
--				/* Reset datalen to avoid display below */
--				datalen = 0;
--				break;
--			}
--
--			/* There are 2 bytes available at the end of data */
--			*(buf + sizeof(struct msgtrace_hdr)
--				 + be16_to_cpu(hdr.len)) = '\0';
--
--			if (be32_to_cpu(hdr.discarded_bytes)
--			    || be32_to_cpu(hdr.discarded_printf))
--				brcmf_dbg(ERROR, "WLC_E_TRACE: [Discarded traces in dongle --> discarded_bytes %d discarded_printf %d]\n",
--					  be32_to_cpu(hdr.discarded_bytes),
--					  be32_to_cpu(hdr.discarded_printf));
--
--			nblost = be32_to_cpu(hdr.seqnum) - seqnum_prev - 1;
--			if (nblost > 0)
--				brcmf_dbg(ERROR, "WLC_E_TRACE: [Event lost --> seqnum %d nblost %d\n",
--					  be32_to_cpu(hdr.seqnum), nblost);
--			seqnum_prev = be32_to_cpu(hdr.seqnum);
--
--			/* Display the trace buffer. Advance from \n to \n to
--			 * avoid display big
--			 * printf (issue with Linux printk )
--			 */
--			p = (char *)&buf[sizeof(struct msgtrace_hdr)];
--			while ((s = strstr(p, "\n")) != NULL) {
--				*s = '\0';
--				printk(KERN_DEBUG"%s\n", p);
--				p = s + 1;
--			}
--			printk(KERN_DEBUG "%s\n", p);
-+		buf = (unsigned char *) event_data;
-+		memcpy(&hdr, buf, sizeof(struct msgtrace_hdr));
- 
-+		if (hdr.version != MSGTRACE_VERSION) {
-+			brcmf_dbg(ERROR,
-+				  "MACEVENT: %s [unsupported version --> brcmf"
-+				  " version:%d dongle version:%d]\n",
-+				  event_name, MSGTRACE_VERSION, hdr.version);
- 			/* Reset datalen to avoid display below */
- 			datalen = 0;
-+			break;
-+		}
-+
-+		/* There are 2 bytes available at the end of data */
-+		*(buf + sizeof(struct msgtrace_hdr)
-+			 + be16_to_cpu(hdr.len)) = '\0';
-+
-+		if (be32_to_cpu(hdr.discarded_bytes)
-+		    || be32_to_cpu(hdr.discarded_printf))
-+			brcmf_dbg(ERROR,
-+				  "WLC_E_TRACE: [Discarded traces in dongle -->"
-+				  " discarded_bytes %d discarded_printf %d]\n",
-+				  be32_to_cpu(hdr.discarded_bytes),
-+				  be32_to_cpu(hdr.discarded_printf));
-+
-+		nblost = be32_to_cpu(hdr.seqnum) - seqnum_prev - 1;
-+		if (nblost > 0)
-+			brcmf_dbg(ERROR, "WLC_E_TRACE: [Event lost --> seqnum "
-+				  " %d nblost %d\n", be32_to_cpu(hdr.seqnum),
-+				  nblost);
-+		seqnum_prev = be32_to_cpu(hdr.seqnum);
-+
-+		/* Display the trace buffer. Advance from \n to \n to
-+		 * avoid display big
-+		 * printf (issue with Linux printk )
-+		 */
-+		p = (char *)&buf[sizeof(struct msgtrace_hdr)];
-+		while ((s = strstr(p, "\n")) != NULL) {
-+			*s = '\0';
-+			printk(KERN_DEBUG"%s\n", p);
-+			p = s + 1;
- 		}
-+		printk(KERN_DEBUG "%s\n", p);
-+
-+		/* Reset datalen to avoid display below */
-+		datalen = 0;
- 		break;
- 
- 	case BRCMF_E_RSSI:
-@@ -405,8 +407,9 @@ brcmf_c_show_host_event(struct brcmf_event_msg *event, void *event_data)
- 		break;
- 
- 	default:
--		brcmf_dbg(EVENT, "MACEVENT: %s %d, MAC %s, status %d, reason %d, auth %d\n",
--			  event_name, event_type, eabuf,
-+		brcmf_dbg(EVENT,
-+			  "MACEVENT: %s %d, MAC %s, status %d, reason %d, "
-+			  "auth %d\n", event_name, event_type, eabuf,
- 			  (int)status, (int)reason, (int)auth_type);
- 		break;
- 	}
-@@ -428,6 +431,7 @@ brcmf_c_host_event(struct brcmf_info *drvr_priv, int *ifidx, void *pktdata,
- {
- 	/* check whether packet is a BRCM event pkt */
- 	struct brcmf_event *pvt_data = (struct brcmf_event *) pktdata;
-+	struct brcmf_if_event *ifevent;
- 	char *event_data;
- 	u32 type, status;
- 	u16 flags;
-@@ -459,26 +463,22 @@ brcmf_c_host_event(struct brcmf_info *drvr_priv, int *ifidx, void *pktdata,
- 
- 	switch (type) {
- 	case BRCMF_E_IF:
--		{
--			struct brcmf_if_event *ifevent =
--					(struct brcmf_if_event *) event_data;
--			brcmf_dbg(TRACE, "if event\n");
--
--			if (ifevent->ifidx > 0 &&
--				 ifevent->ifidx < BRCMF_MAX_IFS) {
--				if (ifevent->action == BRCMF_E_IF_ADD)
--					brcmf_add_if(drvr_priv, ifevent->ifidx,
--						   NULL, event->ifname,
--						   pvt_data->eth.h_dest,
--						   ifevent->flags,
--						   ifevent->bssidx);
--				else
--					brcmf_del_if(drvr_priv, ifevent->ifidx);
--			} else {
--				brcmf_dbg(ERROR, "Invalid ifidx %d for %s\n",
--					  ifevent->ifidx, event->ifname);
--			}
-+		ifevent = (struct brcmf_if_event *) event_data;
-+		brcmf_dbg(TRACE, "if event\n");
-+
-+		if (ifevent->ifidx > 0 && ifevent->ifidx < BRCMF_MAX_IFS) {
-+			if (ifevent->action == BRCMF_E_IF_ADD)
-+				brcmf_add_if(drvr_priv, ifevent->ifidx, NULL,
-+					     event->ifname,
-+					     pvt_data->eth.h_dest,
-+					     ifevent->flags, ifevent->bssidx);
-+			else
-+				brcmf_del_if(drvr_priv, ifevent->ifidx);
-+		} else {
-+			brcmf_dbg(ERROR, "Invalid ifidx %d for %s\n",
-+				  ifevent->ifidx, event->ifname);
- 		}
-+
- 		/* send up the if event: btamp user needs it */
- 		*ifidx = brcmf_ifname2idx(drvr_priv, event->ifname);
- 		break;
--- 
-1.7.1
+finger@larrylap:~> ping -D -c5 192.168.1.1
+PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
+[1317073193.249666] 64 bytes from 192.168.1.1: icmp_seq=1 ttl=64 time=2.19 ms
+[1317073194.251148] 64 bytes from 192.168.1.1: icmp_seq=2 ttl=64 time=2.27 ms
+[1317073195.250589] 64 bytes from 192.168.1.1: icmp_seq=3 ttl=64 time=1.14 ms
+[1317073196.252548] 64 bytes from 192.168.1.1: icmp_seq=4 ttl=64 time=1.76 ms
+[1317073197.253527] 64 bytes from 192.168.1.1: icmp_seq=5 ttl=64 time=0.801 ms
 
+What does 'ping -i1 -D -c5 <AP>' show?
 
+Larry
