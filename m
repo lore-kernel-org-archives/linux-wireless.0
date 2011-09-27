@@ -1,53 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2583 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751340Ab1IXOt2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Sep 2011 10:49:28 -0400
-Message-ID: <4E7DEDE9.9010102@broadcom.com> (sfid-20110924_164932_009799_0136B2A6)
-Date: Sat, 24 Sep 2011 16:49:13 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:43495 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753812Ab1I0MZz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Sep 2011 08:25:55 -0400
+Received: by yxl31 with SMTP id 31so5244047yxl.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 05:25:55 -0700 (PDT)
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 14/20] staging: brcm80211: remove dongle firmware
- related debug code
-References: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
- <1316830148-28661-15-git-send-email-frankyl@broadcom.com> (
- sfid-20110924_041001_582824_018BAB77)
- <1316860785.3952.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1316860785.3952.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+In-Reply-To: <CAJ-VmonVHyv0dqApO+0xyP=AfgmEHzG=fxb-rr69CVo21k1btw@mail.gmail.com>
+References: <20110922154726.521122680@sipsolutions.net>
+	<20110922154849.369194760@sipsolutions.net>
+	<CAB=NE6UP9xYmLY3nJRMVdjPky87hB1YzFTHEzBv0Pt=qv3kAmg@mail.gmail.com>
+	<CAJ-Vmo=9MUaKph=EXwF2VnE+=nHg4s=j=qhR2jnwa-xsXMno7g@mail.gmail.com>
+	<1317109807.4082.4.camel@jlt3.sipsolutions.net>
+	<CAJ-VmonVHyv0dqApO+0xyP=AfgmEHzG=fxb-rr69CVo21k1btw@mail.gmail.com>
+Date: Tue, 27 Sep 2011 20:25:55 +0800
+Message-ID: <CAJ-Vmo=GKq4_kvxBsZxibpdpw=2J8RAxaQEVUkcK+XQK0MNTPQ@mail.gmail.com> (sfid-20110927_142559_021447_A60E7FD7)
+Subject: Re: [RFC 03/15] mac80211: also expire filtered frames
+From: Adrian Chadd <adrian@freebsd.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/24/2011 12:39 PM, Johannes Berg wrote:
-> On Fri, 2011-09-23 at 19:09 -0700, Franky Lin wrote:
->> From: Arend van Spriel<arend@broadcom.com>
->>
->> When the device dies the driver could extract cpu registers on
->> the device to analyze the trap handling on the dongle. As the
->> firmware with this driver is stable this code does not belong
->> in the brcmfmac driver.
->>
->> Reported-by: Johannes Berg<johannes@sipsolutions.net>
-> FWIW, when I said this looked strange I might have thought that it was
-> actually accessing the *host* registers. I don't remember exactly what I
-> said. If this is debug code for the dongle, then maybe it makes sense to
-> keep it, maybe optionally. I don't think you'll want to support a
-> separate driver just for debug. You could even use nl80211 testmode to
-> export it to userspace for your tools.
+.. the host _hardware_ TX queue. (And software TX queue, I likely have
+to pause that too.)
 
-Thanks, Johannes
+I'm specifically only porting over small chunks to begin with so I
+don't get overwhelmed with what needs to be developed, debugged and
+supported.
 
-Your comment was understood and merely a trigger for us to reconsider 
-whether we would need it in this driver. As the mechanism has also not 
-been tested in the brcmfmac driver and we consider the firmware stable, 
-we decided to remove it.
 
-Gr. AvS
-
+Adrian
