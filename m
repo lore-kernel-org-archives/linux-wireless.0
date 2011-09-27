@@ -1,54 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:51868 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751978Ab1I3PSF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Sep 2011 11:18:05 -0400
-Received: by gyg10 with SMTP id 10so1573393gyg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Sep 2011 08:18:04 -0700 (PDT)
-Message-ID: <4E85DDA9.3090300@lwfinger.net> (sfid-20110930_171810_079336_A4F5D9A2)
-Date: Fri, 30 Sep 2011 10:18:01 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms3.broadcom.com ([216.31.210.19]:4078 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751921Ab1I0Rpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Sep 2011 13:45:52 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v2 00/26] staging: brcm80211: 8th reaction for mainline
+ patch #2
+Date: Tue, 27 Sep 2011 10:45:04 -0700
+Message-ID: <1317145530-18839-1-git-send-email-frankyl@broadcom.com> (sfid-20110927_194607_108831_94BCB1CD)
 MIME-Version: 1.0
-To: v4mp <gaigo88@hotmail.it>
-CC: linux-wireless@vger.kernel.org,
-	'George0505' <george0505@realtek.com>,
-	'georgia' <georgia@realtek.com>
-Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
-References: <4E77F631.3030202@googlemail.com> <4E77F9FD.1020204@googlemail.com> <4E780309.9010601@lwfinger.net> <4E785DB3.5040109@googlemail.com> <4E7907D3.1020606@googlemail.com> <4E792994.1080809@lwfinger.net> <4E79B1D0.7090602@googlemail.com> <4E79F87F.1050402@lwfinger.net> <4E7A38D0.7070304@googlemail.com> <4E7A4310.30106@lwfinger.net> <4E7A48D1.8050009@googlemail.com> <4E7A4B03.4070006@lwfinger.net> <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com> <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org>
-In-Reply-To: <loom.20110930T160704-310@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/30/2011 09:20 AM, v4mp wrote:
-> hello larry,
->
-> i've an ALFA AWUS036NHR and i tried latest compat-wireless-2011-09-27 on ubuntu
-> natty 3.0.4-030004-generic,
-> the adapter is recognized as rtl8192cu but is not
-> responding, no network is detected.
->
-> Then if i try to "modprobe -r rtl8192cu" results
-> FATAL: Error removing rtl8192cu
-> (/lib/modules/3.0.4-030004-generic/updates/drivers/net/wireless/rtlwifi
-> /rtl8192cu/rtl8192cu.ko):
-> Device or resource busy
->
-> seems that remains blocked..i can't do anything
+Code clean up for softmac.
 
-You are the second person that has reported a problem with this device. 
-Unfortunately, I do not have a sample of the device, but I have just ordered one 
-that will be delivered in about one week. I would guess that there is some 
-difference between the RTL8192CU and the RTL8188RU chips.
+V2:
+* Rework some patches based on the comments from community
 
-I Cc'd the Realtek group that works on USB devices. Perhaps they have some info 
-that will be useful. Given the difference in time between the US and Taiwan, I 
-would not expect any answer until Monday.
+Arend van Spriel (13):
+  staging: brcm80211: remove uncoditional code blocks from brcmsmac
+  staging: brcm80211: remove ht_cap field from brcms_c_info structure
+  staging: brcm80211: use fragment number provided in transmit frame
+  staging: brcm80211: remove unused function si_pmu_ilp_clock()
+  staging: brcm80211: make device initializer table for wme constant
+  staging: brcm80211: remove dongle firmware related debug code
+  staging: brcm80211: remove unnecessary mac80211 callbacks
+  staging: brcm80211: changing interface to n-phy rssi compute function
+  staging: brcm80211: change interface for common rssi compute function
+  staging: brcm80211: convert endianess before handling the frame
+  staging: brcm80211: use endian annotated structures in brcmsmac
+  staging: brcm80211: move rssi computation to place we need it
+  staging: brcm80211: use d11rxhdr structure in brcms_c_recover_tsf64()
 
-There are some changes that affect connection with an 802.11n network that are 
-found in the latest kernels. I'm not sure they are in the one you are using. You 
-can get the very latest by downloading and building the "bleeding edge" version 
-of compat-wireless.
+Roland Vossen (13):
+  staging: brcm80211: removed unused argument from softmac functions
+  staging: brcm80211: deleted unused array of bss configurations in
+    softmac
+  staging: brcm80211: removed redundant wlc->cfg struct member
+  staging: brcm80211: removed global var from aiutils.c
+  staging: brcm80211: removed global vars in softmac ucode handling
+  staging: brcm80211: removed unused softmac workaround
+  staging: brcm80211: removed band related global vars from softmac
+  staging: brcm80211: removed global var global_scb from softmac
+  staging: brcm80211: various global var related changes in softmac
+  staging: brcm80211: removed global variable in softmac otp
+  staging: brcm80211: declared global vars in softmac phy as const
+  staging: brcm80211: simple changes to softmac phy variables
+  staging: brcm80211: declared global vars in softmac phy as const
 
-Larry
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |  259 +-------
+ drivers/staging/brcm80211/brcmsmac/Makefile       |    3 +-
+ drivers/staging/brcm80211/brcmsmac/aiutils.c      |   15 +-
+ drivers/staging/brcm80211/brcmsmac/aiutils.h      |    2 -
+ drivers/staging/brcm80211/brcmsmac/ampdu.c        |    6 +-
+ drivers/staging/brcm80211/brcmsmac/d11.h          |   91 ++--
+ drivers/staging/brcm80211/brcmsmac/dma.c          |   41 +-
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c  |  125 +---
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.h  |    3 +-
+ drivers/staging/brcm80211/brcmsmac/main.c         |  747 +++++++++------------
+ drivers/staging/brcm80211/brcmsmac/main.h         |   19 +-
+ drivers/staging/brcm80211/brcmsmac/otp.c          |  147 +----
+ drivers/staging/brcm80211/brcmsmac/otp.h          |    8 -
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c  |   62 +--
+ drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h  |    4 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_int.h  |   25 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c  |  112 ++--
+ drivers/staging/brcm80211/brcmsmac/phy/phy_n.c    |   75 +--
+ drivers/staging/brcm80211/brcmsmac/pmu.c          |   22 -
+ drivers/staging/brcm80211/brcmsmac/pmu.h          |    1 -
+ drivers/staging/brcm80211/brcmsmac/pub.h          |    1 -
+ drivers/staging/brcm80211/brcmsmac/rate.h         |    1 -
+ drivers/staging/brcm80211/brcmsmac/srom.c         |   19 +-
+ drivers/staging/brcm80211/brcmsmac/stf.c          |    9 -
+ drivers/staging/brcm80211/brcmsmac/types.h        |    6 -
+ drivers/staging/brcm80211/brcmsmac/ucode_loader.c |  121 ++--
+ drivers/staging/brcm80211/brcmsmac/ucode_loader.h |   46 +-
+ 27 files changed, 648 insertions(+), 1322 deletions(-)
+
+
