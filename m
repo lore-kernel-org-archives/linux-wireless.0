@@ -1,87 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51218 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752175Ab1IUKQH (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:40987 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750741Ab1I0Pf4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 06:16:07 -0400
-Subject: Re: [RFC 3/5] nl80211/cfg80211: adding intermediate scan result
- event.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <coelho@ti.com>
-Cc: victorg@ti.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1316595838.2157.468.camel@cumari>
-References: <1315224151-16552-1-git-send-email-VictorG@ti.com>
-	 <1315224151-16552-4-git-send-email-VictorG@ti.com>
-	 <4E799DF9.9060807@ti.com>  <1316594138.3940.10.camel@jlt3.sipsolutions.net>
-	 <1316595838.2157.468.camel@cumari>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 21 Sep 2011 12:16:01 +0200
-Message-ID: <1316600161.3940.17.camel@jlt3.sipsolutions.net> (sfid-20110921_121611_463152_34125538)
-Mime-Version: 1.0
+	Tue, 27 Sep 2011 11:35:56 -0400
+Received: from [192.168.78.76] (glasgow.emobix.co.uk [81.187.12.227])
+	by mail.messagingengine.com (Postfix) with ESMTPSA id 3A0F96C0110
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 11:35:56 -0400 (EDT)
+Message-ID: <4E81ED65.7060703@emobix.co.uk> (sfid-20110927_173600_030811_10BD36D0)
+Date: Tue, 27 Sep 2011 16:36:05 +0100
+From: Ian Jeffray <ian@emobix.co.uk>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: r8712u driver - on ARM
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-09-21 at 12:03 +0300, Luciano Coelho wrote:
+Dear all,
 
-> > advantages of 1:
-> > + info is directly available
-> > + very fine-grained
-> > 
-> > disadvantages of 1:
-> > - lots of context switches, fairly expensive
-> 
-> I just want to mention that these context switches will be there
-> regardless of whether the full BSS info is passed or not.
+I'm attempting to get some sense from a Realtek 8191S device on
+ARM linux.   Using the latest kernel/drivers (3.0.4) I've had
+great success on x86 linux, achieving 94Mbit throughput.
 
-Of course, but sending half the info is not really an option I'm willing
-to consider :-)
+On ARM linux, however, the device is barely working.   I can
+bring up the firmware (using the 20110818 firmware package):
 
-> > advantages of 2:
-> > + adds more generic filtering capability
-> 
-> What do you mean here? I think we can have quite generic filtering in
-> both cases.
+usb 1-1: new high speed USB device using musb-hdrc and address 2
+usb 1-1: New USB device found, idVendor=0bda, idProduct=8172
+usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+usb 1-1: Product: RTL8191S WLAN Adapter
+usb 1-1: Manufacturer: Manufacturer Realtek
+usb 1-1: SerialNumber: 00e04c000001
+r8712u: DriverVersion: v7_0.20100831
+r8712u: register rtl8712_netdev_ops to netdev_ops
+r8712u: USB_SPEED_HIGH with 4 endpoints
+r8712u: Boot from EFUSE: Autoload OK
+r8712u: CustomerID = 0x0000
+r8712u: MAC Address from efuse = 00:02:72:a7:12:47
 
-True, but we won't do it if we don't need it here ;-)
+# ifconfig wlan0 up
+r8712u: Loading firmware from "rtlwifi/rtl8712u.bin"
+r8712u: 1 RCR=0x153f00e
+r8712u: 2 RCR=0x553f00e
 
-> > + fewer context switches since retrieving BSS dump is limited & only
-> > needs very few messages
-> 
-> Indeed the number of switches will be smaller.  To improve it further,
-> as we discussed on IRC, we should also implement a per-channel BSS dump,
-> otherwise we would have to retrieve the same data over an over again.
+I then attempt some basic operations such as an SSID scan.
+At this point, I occasionally get a result, but more often than not,
+I get no results at all.    There are 7 access points around me, so
+it's surprising to get nothing.
 
-That's what I meant by the filtering.
+Attempting to forcibly connect to anything is also fruitless.
 
-> > disadvantages of 2:
-> > - not quite as fine-grained
-> 
-> One more:
-> - this requires HW support (which we don't have in wl12xx ;), unless SW
-> scan is used
+My host is a TI DaVinci DM8168 (OMAP3+toys).   The USB host is not
+fantastic, but has been thrashed heavily with other devices and seems
+to be reliable in those cases.
 
-Oh, that might be true. You might be able to fake it but that seems
-complex.
+I'd appreciate any input and guidance as to what may be the issue here.
+There doesn't appear to be a great deal of debug info to be enabled in
+the driver, so I'm not sure what more I can add at this point to aid
+with resolving the problem.  I fear some long days of pain trying to
+track down differences in operation for this device between ARM and x86.
 
-> I see your point about reducing the context switches while still
-> increasing the granularity of scan results with this option 2, but I
-> think it's not going to be that helpful.  Sure we can stop the scan
-> earlier if we find what we want, but the possibilities will be smaller.
-> 
-> Also, with option 2, you may have more context switches too, if you're
-> scanning on not-so-crowded areas.  If we report results per-channel, we
-> will always have at least 37 events (with 11a and 11bg), each triggering
-> at least 3 context switches, because userspace requests the BSS dump
-> separately.  If we use per-results events, including all BSS info, we
-> will have just as many context switches as there are results available.
-> 
-> Thus, I think passing intermediate result events, as they come, is more
-> flexible and efficient in normal situations.  And if we really want to
-> reduce the context switches and data copied from kernel to userspace, we
-> also have the option of improving results filtering.  We could make some
-> similar "match" filters as I have recently implemented for sched_scans.
+Could I ask if anyone can actually confirm (or deny) this particular
+driver/chipset works with an ARM host?
 
-Good points! I'm convinced :-)
+Very many thanks,
 
-johannes
+Ian.
 
