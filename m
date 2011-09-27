@@ -1,96 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47434 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752448Ab1I0Lz6 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:57121 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202Ab1I0OyU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 07:55:58 -0400
-Subject: Re: [PATCH 4/5] nl80211/mac80211: allow adding TDLS peers as
- stations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Kalyan C Gaddam <chakkal@iit.edu>
-In-Reply-To: <1317034493-5300-5-git-send-email-arik@wizery.com> (sfid-20110926_125521_419653_B5DAD54E)
-References: <1317034493-5300-1-git-send-email-arik@wizery.com>
-	 <1317034493-5300-5-git-send-email-arik@wizery.com>
-	 (sfid-20110926_125521_419653_B5DAD54E)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Sep 2011 13:55:53 +0200
-Message-ID: <1317124553.4082.26.camel@jlt3.sipsolutions.net> (sfid-20110927_135601_483366_6EFD0AF7)
-Mime-Version: 1.0
+	Tue, 27 Sep 2011 10:54:20 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k: Update rate control for better performance at higer rates
+Date: Tue, 27 Sep 2011 20:24:01 +0530
+Message-ID: <1317135241-3523-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110927_165423_612737_EE2C2929)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-09-26 at 13:54 +0300, Arik Nemtsov wrote:
+The rate control algorithm is updated as follows in order to improve
+the performance at higher rates. Probe the next allowed phy state
+only when current rate is max phy and current PER is lower enough.
+If the current rate is at max phy and current rate's expected throughput
+is lower than next lower rate's expected throughput then drop the rate.
 
-> @@ -811,6 +817,11 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
->  
->  	sta_apply_parameters(local, sta, params);
->  
-> +	if (!(wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS) &&
-> +	    (sta->flags & WLAN_STA_TDLS_PEER)) {
-> +		return -ENOTSUPP;
-> +	}
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |   23 ++++++++++++++++++++---
+ 1 files changed, 20 insertions(+), 3 deletions(-)
 
-I think this should maybe also make sure that the interface is in
-station mode? Otherwise it could get somewhat confusing. Also changes to
-the TDLS flag probably shouldn't be allowed.
-
-And this code might also be better in cfg80211, although this is only
-with external management, right?
-
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -2521,18 +2521,18 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
->  		break;
->  	case NL80211_IFTYPE_P2P_CLIENT:
->  	case NL80211_IFTYPE_STATION:
-> -		/* disallow everything but AUTHORIZED flag */
-> +		/* disallow things sta doesn't support */
->  		if (params.plink_action)
->  			err = -EINVAL;
->  		if (params.vlan)
->  			err = -EINVAL;
-> -		if (params.supported_rates)
-> -			err = -EINVAL;
-
-Hmm. Should this be dependent on TLDS somehow?
-
->  		if (params.ht_capa)
->  			err = -EINVAL;
->  		if (params.listen_interval >= 0)
->  			err = -EINVAL;
-> -		if (params.sta_flags_mask & ~BIT(NL80211_STA_FLAG_AUTHORIZED))
-> +		if (params.sta_flags_mask &
-> +				~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
-> +				  BIT(NL80211_STA_FLAG_TDLS_PEER)))
-
-Why is the TDLS flag allowed to change?
-
-
-> +	/*
-> +	 * Managed stations can only add TDLS peers, and only when the
-> +	 * wiphy supports it.
-> +	 */
-> +	if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_STATION &&
-> +	    (!(params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) ||
-> +	     !(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS)))
->  		return -EINVAL;
-
-If the device does full TDLS by itself I don't think we should be
-allowed to add/remove stations?
-
-
-
-Maybe you need to describe the command sequences a little bit somewhere.
-I'm getting a bad feeling about adding stations without supported rates,
-and this is only when we have external management etc.
-
-Part of your argument for having the frame sending etc. in the kernel
-was that then it's more like managed mode, but all the manual station
-handling is very much unlike that.
-
-I'm beginning to think that maybe it should be handled through the TDLS
-operations instead, more implicitly?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 8448281..5ee2abe 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -657,11 +657,12 @@ static u8 ath_rc_get_highest_rix(struct ath_softc *sc,
+ 	rate = best_rate;
+ 
+ 	/*
+-	 * Must check the actual rate (ratekbps) to account for
+-	 * non-monoticity of 11g's rate table
++	 * Probe only when current rate is max phy and current PER
++	 * is lower enough (less or equal to target PER)
+ 	 */
+ 
+-	if (rate >= ath_rc_priv->rate_max_phy) {
++	if ((rate == ath_rc_priv->rate_max_phy) &&
++	    (ath_rc_priv->per[rate] <= 12)) {
+ 		rate = ath_rc_priv->rate_max_phy;
+ 
+ 		/* Probe the next allowed phy state */
+@@ -1085,6 +1086,22 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 		ath_rc_priv->probe_time = now_msec;
+ 	}
+ 
++	/*
++	 * When at max allow rate, if current rate expected throuhgput is lower
++	 * then next lower rate expected throughput ,then drop one rate
++	 */
++	if (tx_rate == ath_rc_priv->rate_max_phy) {
++		u8 next_txrate;
++		if (ath_rc_get_lower_rix(rate_table, ath_rc_priv,
++				(u8)tx_rate, &next_txrate)) {
++			if ((rate_table->info[tx_rate].user_ratekbps *
++			     (100 - ath_rc_priv->per[tx_rate])) <
++			    (rate_table->info[next_txrate].user_ratekbps *
++			     (100 - 12)))
++				ath_rc_priv->rate_max_phy = next_txrate;
++		}
++	}
++
+ 	/* Make sure the rates below this have lower PER */
+ 	/* Monotonicity is kept only for rates below the current rate. */
+ 	if (ath_rc_priv->per[tx_rate] < last_per) {
+-- 
+1.7.6.4
 
