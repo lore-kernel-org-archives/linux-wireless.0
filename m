@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4755 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752252Ab1I0Rpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 13:45:52 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v2 22/26] staging: brcm80211: move rssi computation to
- place we need it
-Date: Tue, 27 Sep 2011 10:45:26 -0700
-Message-ID: <1317145530-18839-23-git-send-email-frankyl@broadcom.com> (sfid-20110927_194559_402742_111A019A)
-In-Reply-To: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
-References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:36860 "HELO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751979Ab1I0Dhu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 23:37:50 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/4] mwifiex: remove unnecessary mwifiex_dump_station_info() call
+Date: Mon, 26 Sep 2011 20:37:23 -0700
+Message-Id: <1317094646-7718-1-git-send-email-bzhao@marvell.com> (sfid-20110927_053754_226243_32A6EDE5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-The rssi computation was done upon getting the frame from the
-queue, but the value is needed when filling in the receive status
-data for mac80211. The call to wlc_phy_rssi_compute() has been
-deferred.
+An extra call to mwifiex_dump_station_info() routine in get_station
+callback function is redundant
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/staging/brcm80211/brcmsmac/main.c |    7 +------
- 1 files changed, 1 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index 3e39407..bdc0611 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -828,11 +828,6 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
- 		rxh->RxTSFTime = le16_to_cpu(rxh_le->RxTSFTime);
- 		rxh->RxChan = le16_to_cpu(rxh_le->RxChan);
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 6fd53e4..5550741 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -565,8 +565,6 @@ mwifiex_cfg80211_get_station(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
  
--		/*
--		 * compute the RSSI from d11rxhdr and record it in wlc_rxd11hr
--		 */
--		wlc_rxhdr->rssi = (s8)wlc_phy_rssi_compute(wlc_hw->band->pi,
--							   rxh);
- 		brcms_c_recv(wlc_hw->wlc, p);
- 	}
- 
-@@ -8172,7 +8167,7 @@ prep_mac80211_status(struct brcms_c_info *wlc, struct d11rxhdr *rxh,
- 		rx_status->freq = ieee80211_dsss_chan_to_freq(channel);
- 	}
- 
--	rx_status->signal = wlc_rxh->rssi;
-+	rx_status->signal = wlc_phy_rssi_compute(wlc->hw->band->pi, rxh);
- 
- 	/* noise */
- 	/* qual */
+-	mwifiex_dump_station_info(priv, sinfo);
+-
+ 	if (!priv->media_connected)
+ 		return -ENOENT;
+ 	if (memcmp(mac, priv->cfg_bssid, ETH_ALEN))
 -- 
-1.7.1
-
+1.7.0.2
 
