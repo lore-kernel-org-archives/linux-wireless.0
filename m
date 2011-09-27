@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:46203 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755175Ab1I1WyI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 18:54:08 -0400
+Received: from mms1.broadcom.com ([216.31.210.17]:4459 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752159Ab1I0Rps (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Sep 2011 13:45:48 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v2 05/26] staging: brcm80211: removed global var from
+ aiutils.c
+Date: Tue, 27 Sep 2011 10:45:09 -0700
+Message-ID: <1317145530-18839-6-git-send-email-frankyl@broadcom.com> (sfid-20110927_194645_471715_43BE1C3D)
+In-Reply-To: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Wed, 28 Sep 2011 15:53:46 -0700
-Message-ID: <CAB=NE6WKv3ZDP_2xq5D8Y7S6-w1=a4gsRBj8QvQ1QX9G413Rww@mail.gmail.com> (sfid-20110929_005446_823710_8E22897B)
-Subject: [ANN] compat-wireless for 3.1-rc8 is out
-To: linux-kernel@vger.kernel.org
-Cc: linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	netdev@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The world hasn't ended yet, even without kernel.org, so we get a new
-compat-wireless release based on Linus' rc8 release. Given that
-kernel.org is down I just sucked in Linus' tree on github into my
-linux-2.6-allstable and reset it to 3.1-rc8. Please test and rant
-about issues found.
+From: Roland Vossen <rvossen@broadcom.com>
 
-http://linuxwireless.org/en/users/Download/stable (as
-wireless.kernel.org DNS is bust right now)
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/aiutils.c |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
-sha1sum: db33de991c9764185707591da881963e041de9c8
-Size: 4.1 MiB
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index b7b0bdf..d05c4ba 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -477,9 +477,6 @@ struct aidmp {
+ 	u32 componentid3;	/* 0xffc */
+ };
+ 
+-/* global kernel resource */
+-static struct si_info ksii;
+-
+ /* EROM parsing */
+ 
+ static u32
+@@ -1216,8 +1213,7 @@ void ai_detach(struct si_pub *sih)
+ 		pcicore_deinit(sii->pch);
+ 	sii->pch = NULL;
+ 
+-	if (sii != &ksii)
+-		kfree(sii);
++	kfree(sii);
+ }
+ 
+ /* register driver interrupt disabling and restoring callback functions */
+-- 
+1.7.1
 
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.1/compat-wireless-3.1-rc8-1.tar.bz2
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.1/ChangeLog-3.1-wireless
 
-  Luis
