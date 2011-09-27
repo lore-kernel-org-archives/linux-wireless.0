@@ -1,70 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:39760 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753489Ab1IDVV1 (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:41603 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752051Ab1I0VYw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Sep 2011 17:21:27 -0400
-Received: by bke11 with SMTP id 11so4036793bke.19
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Sep 2011 14:21:26 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/4] b43: N-PHY: replace some hacks with nice tables ops
-Date: Sun,  4 Sep 2011 23:23:51 +0200
-Message-Id: <1315171433-26625-2-git-send-email-zajec5@gmail.com> (sfid-20110904_232130_031937_FA43582A)
+	Tue, 27 Sep 2011 17:24:52 -0400
+Received: by eya28 with SMTP id 28so5123377eya.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 14:24:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1317124553.4082.26.camel@jlt3.sipsolutions.net>
+References: <1317034493-5300-1-git-send-email-arik@wizery.com>
+ <1317034493-5300-5-git-send-email-arik@wizery.com> <1317124553.4082.26.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 28 Sep 2011 00:24:36 +0300
+Message-ID: <CA+XVXfe99SqqSzmnuVj5FworRZD5y99kuNqynBXP+Uy678NWKQ@mail.gmail.com> (sfid-20110927_232455_805023_545E9EA0)
+Subject: Re: [PATCH 4/5] nl80211/mac80211: allow adding TDLS peers as stations
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Kalyan C Gaddam <chakkal@iit.edu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Sep 27, 2011 at 14:55, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2011-09-26 at 13:54 +0300, Arik Nemtsov wrote:
+>
+>> @@ -811,6 +817,11 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+>>
+>> † † † sta_apply_parameters(local, sta, params);
+>>
+>> + † † if (!(wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS) &&
+>> + † † † † (sta->flags & WLAN_STA_TDLS_PEER)) {
+>> + † † † † † † return -ENOTSUPP;
+>> + † † }
+>
+> I think this should maybe also make sure that the interface is in
+> station mode? Otherwise it could get somewhat confusing. Also changes to
+> the TDLS flag probably shouldn't be allowed.
 
-Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   17 ++++-------------
- 1 files changed, 4 insertions(+), 13 deletions(-)
+Sure. I'll add some more guards.
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 40e436e..c291ae5 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -444,19 +444,14 @@ static void b43_nphy_tx_power_fix(struct b43_wldev *dev)
- 		else
- 			b43_phy_write(dev, B43_NPHY_AFECTL_DACGAIN2, dac_gain);
- 
--		b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x1D10 + i);
--		b43_phy_write(dev, B43_NPHY_TABLE_DATALO, radio_gain);
--
--		b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x3C57);
--		tmp = b43_phy_read(dev, B43_NPHY_TABLE_DATALO);
-+		b43_ntab_write(dev, B43_NTAB16(0x7, 0x110 + i), radio_gain);
- 
-+		tmp = b43_ntab_read(dev, B43_NTAB16(0xF, 0x57));
- 		if (i == 0)
- 			tmp = (tmp & 0x00FF) | (bbmult << 8);
- 		else
- 			tmp = (tmp & 0xFF00) | bbmult;
--
--		b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x3C57);
--		b43_phy_write(dev, B43_NPHY_TABLE_DATALO, tmp);
-+		b43_ntab_write(dev, B43_NTAB16(0xF, 0x57), tmp);
- 
- 		if (0)
- 			; /* TODO */
-@@ -970,11 +965,7 @@ static void b43_nphy_calc_rx_iq_comp(struct b43_wldev *dev, u8 mask)
- static void b43_nphy_tx_iq_workaround(struct b43_wldev *dev)
- {
- 	u16 array[4];
--	int i;
--
--	b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x3C50);
--	for (i = 0; i < 4; i++)
--		array[i] = b43_phy_read(dev, B43_NPHY_TABLE_DATALO);
-+	b43_ntab_read_bulk(dev, B43_NTAB16(0xF, 0x50), 4, array);
- 
- 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_NPHY_TXIQW0, array[0]);
- 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_NPHY_TXIQW1, array[1]);
--- 
-1.7.3.4
+>
+> And this code might also be better in cfg80211, although this is only
+> with external management, right?
 
+There's a similar check in cfg80211 code, in nl80211_new_station().
+
+>
+>> --- a/net/wireless/nl80211.c
+>> +++ b/net/wireless/nl80211.c
+>> @@ -2521,18 +2521,18 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+>> - † † † † † † if (params.sta_flags_mask & ~BIT(NL80211_STA_FLAG_AUTHORIZED))
+>> + † † † † † † if (params.sta_flags_mask &
+>> + † † † † † † † † † † † † † † ~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
+>> + † † † † † † † † † † † † † † † BIT(NL80211_STA_FLAG_TDLS_PEER)))
+>
+> Why is the TDLS flag allowed to change?
+
+I'll add some more TDLS specific guards in set_station as well.
+
+>
+>
+>> + † † /*
+>> + † † †* Managed stations can only add TDLS peers, and only when the
+>> + † † †* wiphy supports it.
+>> + † † †*/
+>> + † † if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_STATION &&
+>> + † † † † (!(params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) ||
+>> + † † † † †!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS)))
+>> † † † † † † † return -EINVAL;
+>
+> If the device does full TDLS by itself I don't think we should be
+> allowed to add/remove stations?
+
+Fair point. I'll add a EXTERNAL_SETUP check here.
+
+>
+> Maybe you need to describe the command sequences a little bit somewhere.
+> I'm getting a bad feeling about adding stations without supported rates,
+> and this is only when we have external management etc.
+>
+> Part of your argument for having the frame sending etc. in the kernel
+> was that then it's more like managed mode, but all the manual station
+> handling is very much unlike that.
+>
+> I'm beginning to think that maybe it should be handled through the TDLS
+> operations instead, more implicitly?
+>
+
+As discussed on IRC, the added station is convenient for implementing
+the TDLS Tx-lock during link setup. Stations are (almost)
+automatically purged when disassociating, thereby clearing TDLS state.
+It's also already part of the mac80211 Tx path, so no need to add
+other elements.
+
+Adding a station with no supported rates is a bit strange, but it is
+clearly flagged as a TDLS peer sta and checks are in place in the Tx
+path to prevent abuse.
+
+Arik
