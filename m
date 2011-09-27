@@ -1,217 +1,470 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44668 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753216Ab1IVO7d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 10:59:33 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [RFC 1/2] nl80211/cfg80211: Add support to disable CCK rate for management frame
-Date: Thu, 22 Sep 2011 20:28:35 +0530
-Message-ID: <1316703516-24216-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110922_165937_492738_87D1815F)
+Received: from mms1.broadcom.com ([216.31.210.17]:4448 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752157Ab1I0Rps (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Sep 2011 13:45:48 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v2 02/26] staging: brcm80211: removed unused argument
+ from softmac functions
+Date: Tue, 27 Sep 2011 10:45:06 -0700
+Message-ID: <1317145530-18839-3-git-send-email-frankyl@broadcom.com> (sfid-20110927_194643_147522_2FACE172)
+In-Reply-To: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a new nl80211 attribute to specify whether to send the management
-frames in CCK rate or not. As of now the wpa_supplicant is disabling
-CCK rate at P2P init itself. So this patch helps to send P2P probe
-request/probe response/action frames being sent at non CCK rate in 2GHz
-without disabling 11b rates.
+From: Roland Vossen <rvossen@broadcom.com>
 
-This attribute is used with NL80211_CMD_TRIGGER_SCAN and
-NL80211_CMD_FRAME commands to disable CCK rate for management frame
-transmission.
+Parameter 's2' was unused. Affected function was only used internally
+to main.c and has been made static and moved above its callers.
 
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- include/linux/nl80211.h |   13 +++++++++++++
- include/net/cfg80211.h  |    5 ++++-
- net/mac80211/cfg.c      |    3 ++-
- net/wireless/core.h     |    3 ++-
- net/wireless/mlme.c     |    5 +++--
- net/wireless/nl80211.c  |    9 ++++++++-
- 6 files changed, 32 insertions(+), 6 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/main.c |  380 ++++++++++++++---------------
+ drivers/staging/brcm80211/brcmsmac/main.h |    2 -
+ 2 files changed, 188 insertions(+), 194 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 460b12a..c73582f 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -238,6 +238,8 @@
-  *
-  * @NL80211_CMD_GET_SCAN: get scan results
-  * @NL80211_CMD_TRIGGER_SCAN: trigger a new scan with the given parameters
-+ *	%NL80211_ATTR_TX_NO_CCK_RATE is used to decide whether to send the
-+ *	probe requests at CCK rate or not.
-  * @NL80211_CMD_NEW_SCAN_RESULTS: scan notification (as a reply to
-  *	NL80211_CMD_GET_SCAN and on the "scan" multicast group)
-  * @NL80211_CMD_SCAN_ABORTED: scan was aborted, for unspecified reasons,
-@@ -432,6 +434,8 @@
-  *	specified using %NL80211_ATTR_DURATION. When called, this operation
-  *	returns a cookie (%NL80211_ATTR_COOKIE) that will be included with the
-  *	TX status event pertaining to the TX request.
-+ *	%NL80211_ATTR_TX_NO_CCK_RATE is used to decide whether to send the
-+ *	management frames at CCK rate or not in 2GHz band.
-  * @NL80211_CMD_FRAME_WAIT_CANCEL: When an off-channel TX was requested, this
-  *	command may be used with the corresponding cookie to cancel the wait
-  *	time if it is known that it is no longer necessary.
-@@ -1078,6 +1082,13 @@ enum nl80211_commands {
-  * @NL80211_ATTR_PMKSA_CANDIDATE: Nested attribute containing the PMKSA caching
-  *	candidate information, see &enum nl80211_pmksa_candidate_attr.
-  *
-+ * @NL80211_ATTR_TX_NO_CCK_RATE: Indicates whether to use CCK rate or not
-+ *	for management frames transmission. In order to avoid p2p probe/action
-+ *	frames are being transmitted at CCK rate in 2GHz band, the user space
-+ *	applications use this attribute.
-+ *	This attribute is used with %NL80211_CMD_TRIGGER_SCAN and
-+ *	%NL80211_CMD_FRAME commands.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1298,6 +1309,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_PMKSA_CANDIDATE,
- 
-+	NL80211_ATTR_TX_NO_CCK_RATE,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ccfdf3f..c1dd56b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -860,6 +860,7 @@ struct cfg80211_ssid {
-  * @wiphy: the wiphy this was for
-  * @dev: the interface
-  * @aborted: (internal) scan request was notified as aborted
-+ * @no_cck: used to send probe requests at non CCK rate in 2GHz band
-  */
- struct cfg80211_scan_request {
- 	struct cfg80211_ssid *ssids;
-@@ -874,6 +875,7 @@ struct cfg80211_scan_request {
- 	struct wiphy *wiphy;
- 	struct net_device *dev;
- 	bool aborted;
-+	bool no_cck;
- 
- 	/* keep last */
- 	struct ieee80211_channel *channels[0];
-@@ -1560,7 +1562,8 @@ struct cfg80211_ops {
- 			  struct ieee80211_channel *chan, bool offchan,
- 			  enum nl80211_channel_type channel_type,
- 			  bool channel_type_valid, unsigned int wait,
--			  const u8 *buf, size_t len, u64 *cookie);
-+			  const u8 *buf, size_t len, bool no_cck,
-+			  u64 *cookie);
- 	int	(*mgmt_tx_cancel_wait)(struct wiphy *wiphy,
- 				       struct net_device *dev,
- 				       u64 cookie);
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b57ddf9..9cba010 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1869,7 +1869,8 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
- 			     struct ieee80211_channel *chan, bool offchan,
- 			     enum nl80211_channel_type channel_type,
- 			     bool channel_type_valid, unsigned int wait,
--			     const u8 *buf, size_t len, u64 *cookie)
-+			     const u8 *buf, size_t len, bool no_cck,
-+			     u64 *cookie)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 796a4bd..a472d60 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -375,7 +375,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 			  struct ieee80211_channel *chan, bool offchan,
- 			  enum nl80211_channel_type channel_type,
- 			  bool channel_type_valid, unsigned int wait,
--			  const u8 *buf, size_t len, u64 *cookie);
-+			  const u8 *buf, size_t len, bool no_cck,
-+			  u64 *cookie);
- 
- /* SME */
- int __cfg80211_connect(struct cfg80211_registered_device *rdev,
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 61adea5..21fc970 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -900,7 +900,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 			  struct ieee80211_channel *chan, bool offchan,
- 			  enum nl80211_channel_type channel_type,
- 			  bool channel_type_valid, unsigned int wait,
--			  const u8 *buf, size_t len, u64 *cookie)
-+			  const u8 *buf, size_t len, bool no_cck,
-+			  u64 *cookie)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	const struct ieee80211_mgmt *mgmt;
-@@ -991,7 +992,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 	/* Transmit the Action frame as requested by user space */
- 	return rdev->ops->mgmt_tx(&rdev->wiphy, dev, chan, offchan,
- 				  channel_type, channel_type_valid,
--				  wait, buf, len, cookie);
-+				  wait, buf, len, no_cck, cookie);
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index d6b43ff..d160212 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -830,9 +830,193 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+ 	return n >= bound_limit;
  }
  
- bool cfg80211_rx_mgmt(struct net_device *dev, int freq, const u8 *buf,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c26a1da..d6ce8b7 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -191,6 +191,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 					 .len = IEEE80211_MAX_DATA_LEN },
- 	[NL80211_ATTR_ROAM_SUPPORT] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_SCHED_SCAN_MATCH] = { .type = NLA_NESTED },
-+	[NL80211_ATTR_TX_NO_CCK_RATE] = { .type = NLA_FLAG },
- };
- 
- /* policy for the key attributes */
-@@ -3620,6 +3621,9 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 		}
- 	}
- 
-+	request->no_cck = nla_get_flag(info->attrs
-+					[NL80211_ATTR_TX_NO_CCK_RATE]);
++static void brcms_c_war16165(struct brcms_c_info *wlc, bool tx)
++{
++	if (tx) {
++		/* the post-increment is used in STAY_AWAKE macro */
++		if (wlc->txpend16165war++ == 0)
++			brcms_c_set_ps_ctrl(wlc);
++	} else {
++		wlc->txpend16165war--;
++		if (wlc->txpend16165war == 0)
++			brcms_c_set_ps_ctrl(wlc);
++	}
++}
 +
- 	request->dev = dev;
- 	request->wiphy = &rdev->wiphy;
- 
-@@ -5192,6 +5196,7 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
- 	struct sk_buff *msg;
- 	unsigned int wait = 0;
- 	bool offchan;
-+	bool no_cck;
- 
- 	if (!info->attrs[NL80211_ATTR_FRAME] ||
- 	    !info->attrs[NL80211_ATTR_WIPHY_FREQ])
-@@ -5228,6 +5233,8 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
- 
- 	offchan = info->attrs[NL80211_ATTR_OFFCHANNEL_TX_OK];
- 
-+	no_cck = nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
++/* process an individual struct tx_status */
+ static bool
+-brcms_b_dotxstatus(struct brcms_hardware *wlc_hw, struct tx_status *txs,
+-		   u32 s2)
++brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
++{
++	struct sk_buff *p;
++	uint queue;
++	struct d11txh *txh;
++	struct scb *scb = NULL;
++	bool free_pdu;
++	int tx_rts, tx_frame_count, tx_rts_count;
++	uint totlen, supr_status;
++	bool lastframe;
++	struct ieee80211_hdr *h;
++	u16 mcl;
++	struct ieee80211_tx_info *tx_info;
++	struct ieee80211_tx_rate *txrate;
++	int i;
 +
- 	freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
- 	chan = rdev_freq_to_chan(rdev, freq, channel_type);
- 	if (chan == NULL)
-@@ -5248,7 +5255,7 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
- 				    channel_type_valid, wait,
- 				    nla_data(info->attrs[NL80211_ATTR_FRAME]),
- 				    nla_len(info->attrs[NL80211_ATTR_FRAME]),
--				    &cookie);
-+				    no_cck, &cookie);
- 	if (err)
- 		goto free_msg;
++	/* discard intermediate indications for ucode with one legitimate case:
++	 *   e.g. if "useRTS" is set. ucode did a successful rts/cts exchange,
++	 *   but the subsequent tx of DATA failed. so it will start rts/cts
++	 *   from the beginning (resetting the rts transmission count)
++	 */
++	if (!(txs->status & TX_STATUS_AMPDU)
++	    && (txs->status & TX_STATUS_INTERMEDIATE)) {
++		wiphy_err(wlc->wiphy, "%s: INTERMEDIATE but not AMPDU\n",
++			  __func__);
++		return false;
++	}
++
++	queue = txs->frameid & TXFID_QUEUE_MASK;
++	if (queue >= NFIFO) {
++		p = NULL;
++		goto fatal;
++	}
++
++	p = dma_getnexttxp(wlc->hw->di[queue], DMA_RANGE_TRANSMITTED);
++	if (wlc->war16165)
++		brcms_c_war16165(wlc, false);
++	if (p == NULL)
++		goto fatal;
++
++	txh = (struct d11txh *) (p->data);
++	mcl = le16_to_cpu(txh->MacTxControlLow);
++
++	if (txs->phyerr) {
++		if (brcm_msg_level & LOG_ERROR_VAL) {
++			wiphy_err(wlc->wiphy, "phyerr 0x%x, rate 0x%x\n",
++				  txs->phyerr, txh->MainRates);
++			brcms_c_print_txdesc(txh);
++		}
++		brcms_c_print_txstatus(txs);
++	}
++
++	if (txs->frameid != cpu_to_le16(txh->TxFrameID))
++		goto fatal;
++	tx_info = IEEE80211_SKB_CB(p);
++	h = (struct ieee80211_hdr *)((u8 *) (txh + 1) + D11_PHY_HDR_LEN);
++
++	if (tx_info->control.sta)
++		scb = (struct scb *)tx_info->control.sta->drv_priv;
++
++	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
++		brcms_c_ampdu_dotxstatus(wlc->ampdu, scb, p, txs);
++		return false;
++	}
++
++	supr_status = txs->status & TX_STATUS_SUPR_MASK;
++	if (supr_status == TX_STATUS_SUPR_BADCH)
++		BCMMSG(wlc->wiphy,
++		       "%s: Pkt tx suppressed, possibly channel %d\n",
++		       __func__, CHSPEC_CHANNEL(wlc->default_bss->chanspec));
++
++	tx_rts = cpu_to_le16(txh->MacTxControlLow) & TXC_SENDRTS;
++	tx_frame_count =
++	    (txs->status & TX_STATUS_FRM_RTX_MASK) >> TX_STATUS_FRM_RTX_SHIFT;
++	tx_rts_count =
++	    (txs->status & TX_STATUS_RTS_RTX_MASK) >> TX_STATUS_RTS_RTX_SHIFT;
++
++	lastframe = !ieee80211_has_morefrags(h->frame_control);
++
++	if (!lastframe) {
++		wiphy_err(wlc->wiphy, "Not last frame!\n");
++	} else {
++		/*
++		 * Set information to be consumed by Minstrel ht.
++		 *
++		 * The "fallback limit" is the number of tx attempts a given
++		 * MPDU is sent at the "primary" rate. Tx attempts beyond that
++		 * limit are sent at the "secondary" rate.
++		 * A 'short frame' does not exceed RTS treshold.
++		 */
++		u16 sfbl,	/* Short Frame Rate Fallback Limit */
++		    lfbl,	/* Long Frame Rate Fallback Limit */
++		    fbl;
++
++		if (queue < AC_COUNT) {
++			sfbl = GFIELD(wlc->wme_retries[wme_fifo2ac[queue]],
++				      EDCF_SFB);
++			lfbl = GFIELD(wlc->wme_retries[wme_fifo2ac[queue]],
++				      EDCF_LFB);
++		} else {
++			sfbl = wlc->SFBL;
++			lfbl = wlc->LFBL;
++		}
++
++		txrate = tx_info->status.rates;
++		if (txrate[0].flags & IEEE80211_TX_RC_USE_RTS_CTS)
++			fbl = lfbl;
++		else
++			fbl = sfbl;
++
++		ieee80211_tx_info_clear_status(tx_info);
++
++		if ((tx_frame_count > fbl) && (txrate[1].idx >= 0)) {
++			/*
++			 * rate selection requested a fallback rate
++			 * and we used it
++			 */
++			txrate[0].count = fbl;
++			txrate[1].count = tx_frame_count - fbl;
++		} else {
++			/*
++			 * rate selection did not request fallback rate, or
++			 * we didn't need it
++			 */
++			txrate[0].count = tx_frame_count;
++			/*
++			 * rc80211_minstrel.c:minstrel_tx_status() expects
++			 * unused rates to be marked with idx = -1
++			 */
++			txrate[1].idx = -1;
++			txrate[1].count = 0;
++		}
++
++		/* clear the rest of the rates */
++		for (i = 2; i < IEEE80211_TX_MAX_RATES; i++) {
++			txrate[i].idx = -1;
++			txrate[i].count = 0;
++		}
++
++		if (txs->status & TX_STATUS_ACK_RCV)
++			tx_info->flags |= IEEE80211_TX_STAT_ACK;
++	}
++
++	totlen = brcmu_pkttotlen(p);
++	free_pdu = true;
++
++	brcms_c_txfifo_complete(wlc, queue, 1);
++
++	if (lastframe) {
++		p->next = NULL;
++		p->prev = NULL;
++		/* remove PLCP & Broadcom tx descriptor header */
++		skb_pull(p, D11_PHY_HDR_LEN);
++		skb_pull(p, D11_TXH_LEN);
++		ieee80211_tx_status_irqsafe(wlc->pub->ieee_hw, p);
++	} else {
++		wiphy_err(wlc->wiphy, "%s: Not last frame => not calling "
++			  "tx_status\n", __func__);
++	}
++
++	return false;
++
++ fatal:
++	if (p)
++		brcmu_pkt_buf_free_skb(p);
++
++	return true;
++
++}
++
++static bool
++brcms_b_dotxstatus(struct brcms_hardware *wlc_hw, struct tx_status *txs)
+ {
+ 	/* discard intermediate indications for ucode with one legitimate case:
+ 	 *   e.g. if "useRTS" is set. ucode did a successful rts/cts exchange,
+@@ -843,7 +1027,7 @@ brcms_b_dotxstatus(struct brcms_hardware *wlc_hw, struct tx_status *txs,
+ 	    && (txs->status & TX_STATUS_INTERMEDIATE))
+ 		return false;
  
+-	return brcms_c_dotxstatus(wlc_hw->wlc, txs, s2);
++	return brcms_c_dotxstatus(wlc_hw->wlc, txs);
+ }
+ 
+ /* process tx completion events in BMAC
+@@ -885,7 +1069,7 @@ brcms_b_txstatus(struct brcms_hardware *wlc_hw, bool bound, bool *fatal)
+ 		txs->phyerr = (s2 & TXS_PTX_MASK) >> TXS_PTX_SHIFT;
+ 		txs->lasttxtime = 0;
+ 
+-		*fatal = brcms_b_dotxstatus(wlc_hw, txs, s2);
++		*fatal = brcms_b_dotxstatus(wlc_hw, txs);
+ 
+ 		/* !give others some time to run! */
+ 		if (++n >= max_tx_num)
+@@ -7654,19 +7838,6 @@ void brcms_c_send_q(struct brcms_c_info *wlc)
+ 	in_send_q = false;
+ }
+ 
+-static void brcms_c_war16165(struct brcms_c_info *wlc, bool tx)
+-{
+-	if (tx) {
+-		/* the post-increment is used in STAY_AWAKE macro */
+-		if (wlc->txpend16165war++ == 0)
+-			brcms_c_set_ps_ctrl(wlc);
+-	} else {
+-		wlc->txpend16165war--;
+-		if (wlc->txpend16165war == 0)
+-			brcms_c_set_ps_ctrl(wlc);
+-	}
+-}
+-
+ void
+ brcms_c_txfifo(struct brcms_c_info *wlc, uint fifo, struct sk_buff *p,
+ 	       bool commit, s8 txpktpend)
+@@ -7978,181 +8149,6 @@ void brcms_c_tbtt(struct brcms_c_info *wlc)
+ 		wlc->qvalid |= MCMD_DIRFRMQVAL;
+ }
+ 
+-/* process an individual struct tx_status */
+-bool
+-brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs, u32 frm_tx2)
+-{
+-	struct sk_buff *p;
+-	uint queue;
+-	struct d11txh *txh;
+-	struct scb *scb = NULL;
+-	bool free_pdu;
+-	int tx_rts, tx_frame_count, tx_rts_count;
+-	uint totlen, supr_status;
+-	bool lastframe;
+-	struct ieee80211_hdr *h;
+-	u16 mcl;
+-	struct ieee80211_tx_info *tx_info;
+-	struct ieee80211_tx_rate *txrate;
+-	int i;
+-
+-	/* Compiler reference to avoid unused variable warning */
+-	(void)(frm_tx2);
+-
+-	/* discard intermediate indications for ucode with one legitimate case:
+-	 *   e.g. if "useRTS" is set. ucode did a successful rts/cts exchange,
+-	 *   but the subsequent tx of DATA failed. so it will start rts/cts
+-	 *   from the beginning (resetting the rts transmission count)
+-	 */
+-	if (!(txs->status & TX_STATUS_AMPDU)
+-	    && (txs->status & TX_STATUS_INTERMEDIATE)) {
+-		wiphy_err(wlc->wiphy, "%s: INTERMEDIATE but not AMPDU\n",
+-			  __func__);
+-		return false;
+-	}
+-
+-	queue = txs->frameid & TXFID_QUEUE_MASK;
+-	if (queue >= NFIFO) {
+-		p = NULL;
+-		goto fatal;
+-	}
+-
+-	p = dma_getnexttxp(wlc->hw->di[queue], DMA_RANGE_TRANSMITTED);
+-	if (wlc->war16165)
+-		brcms_c_war16165(wlc, false);
+-	if (p == NULL)
+-		goto fatal;
+-
+-	txh = (struct d11txh *) (p->data);
+-	mcl = le16_to_cpu(txh->MacTxControlLow);
+-
+-	if (txs->phyerr) {
+-		if (brcm_msg_level & LOG_ERROR_VAL) {
+-			wiphy_err(wlc->wiphy, "phyerr 0x%x, rate 0x%x\n",
+-				  txs->phyerr, txh->MainRates);
+-			brcms_c_print_txdesc(txh);
+-		}
+-		brcms_c_print_txstatus(txs);
+-	}
+-
+-	if (txs->frameid != cpu_to_le16(txh->TxFrameID))
+-		goto fatal;
+-	tx_info = IEEE80211_SKB_CB(p);
+-	h = (struct ieee80211_hdr *)((u8 *) (txh + 1) + D11_PHY_HDR_LEN);
+-
+-	if (tx_info->control.sta)
+-		scb = (struct scb *)tx_info->control.sta->drv_priv;
+-
+-	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
+-		brcms_c_ampdu_dotxstatus(wlc->ampdu, scb, p, txs);
+-		return false;
+-	}
+-
+-	supr_status = txs->status & TX_STATUS_SUPR_MASK;
+-	if (supr_status == TX_STATUS_SUPR_BADCH)
+-		BCMMSG(wlc->wiphy,
+-		       "%s: Pkt tx suppressed, possibly channel %d\n",
+-		       __func__, CHSPEC_CHANNEL(wlc->default_bss->chanspec));
+-
+-	tx_rts = cpu_to_le16(txh->MacTxControlLow) & TXC_SENDRTS;
+-	tx_frame_count =
+-	    (txs->status & TX_STATUS_FRM_RTX_MASK) >> TX_STATUS_FRM_RTX_SHIFT;
+-	tx_rts_count =
+-	    (txs->status & TX_STATUS_RTS_RTX_MASK) >> TX_STATUS_RTS_RTX_SHIFT;
+-
+-	lastframe = !ieee80211_has_morefrags(h->frame_control);
+-
+-	if (!lastframe) {
+-		wiphy_err(wlc->wiphy, "Not last frame!\n");
+-	} else {
+-		/*
+-		 * Set information to be consumed by Minstrel ht.
+-		 *
+-		 * The "fallback limit" is the number of tx attempts a given
+-		 * MPDU is sent at the "primary" rate. Tx attempts beyond that
+-		 * limit are sent at the "secondary" rate.
+-		 * A 'short frame' does not exceed RTS treshold.
+-		 */
+-		u16 sfbl,	/* Short Frame Rate Fallback Limit */
+-		    lfbl,	/* Long Frame Rate Fallback Limit */
+-		    fbl;
+-
+-		if (queue < AC_COUNT) {
+-			sfbl = GFIELD(wlc->wme_retries[wme_fifo2ac[queue]],
+-				      EDCF_SFB);
+-			lfbl = GFIELD(wlc->wme_retries[wme_fifo2ac[queue]],
+-				      EDCF_LFB);
+-		} else {
+-			sfbl = wlc->SFBL;
+-			lfbl = wlc->LFBL;
+-		}
+-
+-		txrate = tx_info->status.rates;
+-		if (txrate[0].flags & IEEE80211_TX_RC_USE_RTS_CTS)
+-			fbl = lfbl;
+-		else
+-			fbl = sfbl;
+-
+-		ieee80211_tx_info_clear_status(tx_info);
+-
+-		if ((tx_frame_count > fbl) && (txrate[1].idx >= 0)) {
+-			/*
+-			 * rate selection requested a fallback rate
+-			 * and we used it
+-			 */
+-			txrate[0].count = fbl;
+-			txrate[1].count = tx_frame_count - fbl;
+-		} else {
+-			/*
+-			 * rate selection did not request fallback rate, or
+-			 * we didn't need it
+-			 */
+-			txrate[0].count = tx_frame_count;
+-			/*
+-			 * rc80211_minstrel.c:minstrel_tx_status() expects
+-			 * unused rates to be marked with idx = -1
+-			 */
+-			txrate[1].idx = -1;
+-			txrate[1].count = 0;
+-		}
+-
+-		/* clear the rest of the rates */
+-		for (i = 2; i < IEEE80211_TX_MAX_RATES; i++) {
+-			txrate[i].idx = -1;
+-			txrate[i].count = 0;
+-		}
+-
+-		if (txs->status & TX_STATUS_ACK_RCV)
+-			tx_info->flags |= IEEE80211_TX_STAT_ACK;
+-	}
+-
+-	totlen = brcmu_pkttotlen(p);
+-	free_pdu = true;
+-
+-	brcms_c_txfifo_complete(wlc, queue, 1);
+-
+-	if (lastframe) {
+-		p->next = NULL;
+-		p->prev = NULL;
+-		/* remove PLCP & Broadcom tx descriptor header */
+-		skb_pull(p, D11_PHY_HDR_LEN);
+-		skb_pull(p, D11_TXH_LEN);
+-		ieee80211_tx_status_irqsafe(wlc->pub->ieee_hw, p);
+-	} else {
+-		wiphy_err(wlc->wiphy, "%s: Not last frame => not calling "
+-			  "tx_status\n", __func__);
+-	}
+-
+-	return false;
+-
+- fatal:
+-	if (p)
+-		brcmu_pkt_buf_free_skb(p);
+-
+-	return true;
+-
+-}
+-
+ void
+ brcms_c_txfifo_complete(struct brcms_c_info *wlc, uint fifo, s8 txpktpend)
+ {
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
+index aa0bf03..1572e46 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.h
++++ b/drivers/staging/brcm80211/brcmsmac/main.h
+@@ -702,8 +702,6 @@ struct brcms_bss_cfg {
+ extern void brcms_c_fatal_error(struct brcms_c_info *wlc);
+ extern void brcms_b_rpc_watchdog(struct brcms_c_info *wlc);
+ extern void brcms_c_recv(struct brcms_c_info *wlc, struct sk_buff *p);
+-extern bool brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs,
+-			       u32 frm_tx2);
+ extern void brcms_c_txfifo(struct brcms_c_info *wlc, uint fifo,
+ 			   struct sk_buff *p,
+ 			   bool commit, s8 txpktpend);
 -- 
-1.7.6.3
+1.7.1
+
 
