@@ -1,79 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1137 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752899Ab1IVJEz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 05:04:55 -0400
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: "Hauke Mehrtens" <hauke@hauke-m.de>,
-	"Brett Rudley" <brudley@broadcom.com>
-cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"Greg KH" <greg@kroah.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 22 Sep 2011 02:04:45 -0700
-Subject: RE: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
- patch #2
-Message-ID: <400C43189542CE41BC0A5B252FC90136BC0CC8ABD8@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20110922_110514_579603_FD6E6666)
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
- <20110920130338.GA9885@kroah.com> <20110920132203.GB7800@tuxdriver.com>
- <20110920140020.GA11386@kroah.com>
- <7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com>
- <CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com>
- <7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
- <4E7AD9E6.1010700@hauke-m.de>
-In-Reply-To: <4E7AD9E6.1010700@hauke-m.de>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:49371 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752815Ab1I0X3c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Sep 2011 19:29:32 -0400
+Received: by qyk30 with SMTP id 30so1645247qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 16:29:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+In-Reply-To: <CAB=NE6USxp0rGPP2NFkThCFzpSccZ7WUF7AfxJ=3js5Ph5D82g@mail.gmail.com>
+References: <CAMxespA2quGEuN3B0CE2SJGeRLr5vgtfqQYVQ5r5Oxtj-paj2w@mail.gmail.com>
+ <CAPjQAd-=ihu5ULzuyUjGQD3DKe2Tpi749esOi9nb1c-dW=5nSQ@mail.gmail.com>
+ <CAMxespDxUdm1Qx+GGYzzfJ+jdUVw_nmZDcyeRV2HqmB=0LhtDg@mail.gmail.com> <CAB=NE6USxp0rGPP2NFkThCFzpSccZ7WUF7AfxJ=3js5Ph5D82g@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 27 Sep 2011 16:29:11 -0700
+Message-ID: <CAB=NE6U-=6UZfMvtv5Z77PcRbZCmXrbveM4N0mzcqXAR0QtTAQ@mail.gmail.com> (sfid-20110928_012935_837503_289DA1F9)
+Subject: =?UTF-8?Q?Re=3A_Channel_type_negotiation_=E2=80=93_HT_support_for_mesh?=
+To: Ashok Nagarajan <anagar6@uic.edu>, thomas <thomas@cozybit.com>
+Cc: devel@lists.open80211s.org, Javier Cardona <javier@cozybit.com>,
+	Sidharth Thakur <sidthakur@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBGcm9tOiBsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51
-eC13aXJlbGVzcy0NCj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgSGF1a2Ug
-TWVocnRlbnMNCj4gU2VudDogZG9uZGVyZGFnIDIyIHNlcHRlbWJlciAyMDExIDg6NDcNCj4gVG86
-IEJyZXR0IFJ1ZGxleQ0KPiBDYzogUmFmYcWCIE1pxYJlY2tpOyBHcmVnIEtIOyBKb2huIFcuIExp
-bnZpbGxlOyBGcmFua3kgKFpoZW5odWkpIExpbjsNCj4gZ3JlZ2toQHN1c2UuZGU7IGRldmVsQGxp
-bnV4ZHJpdmVycHJvamVjdC5vcmc7IGxpbnV4LQ0KPiB3aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcN
-Cj4gU3ViamVjdDogUmU6IFtQQVRDSCAwMC8yMF0gc3RhZ2luZzogYnJjbTgwMjExOiA3dGggcmVh
-Y3Rpb24gZm9yDQo+IG1haW5saW5lIHBhdGNoICMyDQo+IA0KPiBPbiAwOS8yMi8yMDExIDEyOjEy
-IEFNLCBCcmV0dCBSdWRsZXkgd3JvdGU6DQo+ID4+PiBPdXIgb3JpZ2luYWwgcGxhbiB3YXMgdG8g
-cmVtYWluIGEgc2VwYXJhdGUgZHJpdmVyIGZyb20gYjQzLiBXZSB3ZXJlDQo+ID4+IGF3YXJlIG9m
-IGl0IGFuZCBhbGwgdGhlIGdvb2Qgd29yayB0aGF0IGhhZCBiZWVuIGRvbmUgdG8gY3JlYXRlIGl0
-DQo+IGFuZCB3ZQ0KPiA+PiBoYWQgbm8gaW50ZW50aW9uIG9mIGludGVyZmVyaW5nIHdpdGggaXQu
-ICBBdCB0aGF0IHBvaW50IHRoZXJlIGhhZA0KPiBub3QNCj4gPj4gYmVlbiB2ZXJ5IG11Y2ggcmVj
-ZW50IG1vdmVtZW50IGluIGI0MyBhbmQgaXQgZGlkIG5vdCBzdXBwb3J0IGFueSBvZg0KPiBvdXIN
-Cj4gPj4gQVhJIGJhc2VkIGNoaXBzLiAgV2UgZmlndXJlZCB0aGF0IHNzYiB2cyBBWEkgd2FzIGEg
-Z29vZCBkaXZpZGluZw0KPiBsaW5lIGFuZA0KPiA+PiB0aGVyZSB3b3VsZCBiZSBubyBjb25mbGlj
-dCwgYW5kIHRoZXJlIHdhc24ndCBpbml0aWFsbHkuDQo+ID4+DQo+ID4+IFRoZSBmaXJzdCBvYnZp
-b3VzIHByb2JsZW0gaXMgdGhhdCB0aGVyZSBhcmUgU1NCIGFuZCBCQ01BIChha2EgQVhJKQ0KPiA+
-PiBjYXJkcyB1c2luZyBOLVBIWS4gVGhhdCByZXN1bHRlZCBpbiBQSFkgY29kZSBkdXBsaWNhdGlv
-biBiZXR3ZWVuIGI0Mw0KPiA+PiBhbmQgYnJjbXNtYWMuIEFuZCBzaW5jZSB3ZSBhbHJlYWR5IHN1
-cHBvcnRlZCBOLVBIWSBpbiBiNDMsIGFkZGluZw0KPiBiY21hDQo+ID4+IHN1cHBvcnQgYXV0b21h
-dGljYWxseSBnYXZlIHVzIEJDTTQzMjI0IGFuZCBCQ000MzIyNSBzdXBwb3J0LiBUaGF0IG9mDQo+
-ID4+IGNvdXJzZSBtZWFucyBkdXBsaWNhdGVkIHN1cHBvcnRlZCBmb3IgdGhlIHNhbWUgaGFyZHdh
-cmUuDQo+ID4NCj4gPiBBZ3JlZSwgd2hlbiB5b3UgY3JlYXRlZCBiY21hLCBpdCBkaWQgZHVwbGlj
-YXRlIEhXIHN1cHBvcnQgYWxyZWFkeSBpbg0KPiBicmNtc21hYy4gIFdoeSBkaWRuJ3QgeW91IGFk
-ZHJlc3MgdGhhdCB0aGVuPw0KPiANCj4gYmNtYSBpcyBub3Qgb25seSB1c2VkIHRvIHN1cHBvcnQg
-dGhlIGJ1cyBvbiBhIHBjaSBiYXNlZCB3aXJlbGVzcyBjYXJkcw0KPiBpdCBub3cgYWxzbyBjb250
-YWlucyBzdXBwb3J0IGZvciBTb0NzIGxpa2UgdGhlIEJDTTQ3MTguIFRoZXJlIGl0DQo+IHByb3Zp
-ZGVzIGEgY29tbW9uIGludGVyZmFjZSB0byB0aGUgaGFyZHdhcmUgZm9yIHRoZSB3aXJlbGVzcyBz
-byB0aGF0DQo+IHRoZXJlIHdlcmUgbm8gY2hhbmdlcyBpbiBiNDMgbmVlZGVkIHRvIGdldCB0aGUg
-d2lyZWxlc3MgY29yZSBydW5uaW5nIG9uDQo+IHRoaXMgU29DLiBJdCBhbHNvIHByb3ZpZGVzIHNv
-bWUgcGFydHMgbmVlZGVkIHRvIGdldCB0aGUgU29DIGJvb3QgaW4NCj4gTGludXggYW5kIHNvIG9u
-LCBzb21lIHBhcnRzIGFyZSByZWxhdGVkIHRvIHRoZSBNSVBTIENQVSBhbmQgbm90IHJlbGF0ZWQN
-Cj4gdG8gdGhlIHdpcmVsZXNzIGNvcmUsIHNvIGl0IG1ha2VzIHNlbnNlIHRvIHB1dCB0aGF0IGlu
-dG8gYW4gb3duIG1vZHVsZS4NCj4gDQo+IEhhdWtlDQoNCllvdSBhcmUgcmlnaHQuIEJDTUEgaW4g
-aXRzZWxmIG9ubHkgZHVwbGljYXRlcyBwYXJ0IG9mIHdoYXQgaXMgaW4gYnJjbXNtYWMNCmFuZCBp
-dHMgZXhpc3RlbmNlIHByb3ZpZGVzIGdvb2QgZnVuY3Rpb25hbCBzZXBhcmF0aW9uLiBUaGF0IGlz
-IHdoeSB3ZSBmdWxseQ0KaW50ZW5kIHRvIGhhdmUgYnJjbXNtYWMgdXNlIGJjbWEuIEJyZXR0IG1l
-YW50IHRoYXQgdGhlIGR1cGxpY2F0aW9uIHN0YXJ0ZWQNCndoZW4gYjQzIHdhcyBnZXR0aW5nIHBh
-dGNoZXMgZm9yIGJjbWEgc3VwcG9ydC4NCg0KUmFmYcWCIGluZGljYXRlZCB0aGF0IGI0MyB0ZWFt
-IHdhcyB3b3JraW5nIG9uIG4tcGh5IHN1cHBvcnQgd2hlbiB3ZSByZWxlYXNlZA0KdGhlIGJyY204
-MDIxMSBkcml2ZXIgKGFrYSBicmNtc21hYykuIE5vIG9uZSBpbmRpY2F0ZWQgdGhpcyBiZWZvcmUg
-c28gSSBjYW4NCm9ubHkgYXNzdW1lIHRoYXQgYjQzIGRlY2lkZWQgdG8gbW92ZSBvbiBidWlsZGlu
-ZyBiY21hIGFuZCBoYXZlIG5vIGludGVyZXN0DQppbiBicmNtc21hYyBtb3ZpbmcgaW4gdGhlIGxp
-bnV4IHRyZWUuDQoNCkdyLiBBdlMNCg==
+On Tue, Sep 27, 2011 at 3:39 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Tue, Sep 27, 2011 at 1:49 AM, Ashok Nagarajan <anagar6@uic.edu> wrote:
+>> In our previous conversation, Thomas was mentioning about very low
+>> 802.11n rate and we din't have a clear reason for such low 11n rate!
+>
+> This may be WMM not being configured which is required for 802.11n, if
+> you disable WMM on the AP <--> STA setup you may see the same poor
+> performance.
 
+So this is due to the fact that 802.11e which WMM requires is the
+component of the spec that adds BlockAck support and therefore
+Aggregation. You'll achieve higher throughput once you support
+aggregation. I just reviewed with Thomas how we'd go about setting WMM
+parameters and it seems we want to do this in cfg80211 at set channel.
+This also bring up the question for IBSS as well and what to do when
+your peer has different WMM parameters, this is not something you deal
+with with infrastructure mode.
+
+For now I would go with using default WMM parameters which the spec
+does specify for both IBSS and Mesh and not peering up unless your
+peer also beacons those same parameters. Later we can figure out how
+we want to handle differences, maybe go with the minimum? The
+difficulty with converging to values is although likely possible you
+can also end up with races with different nodes on your network trying
+to sych up with the same values.
+
+For example, for IBSS we've already learned that if you do not want an
+IBSS merge split you want to ensure to use the same SSID and BSSID. I
+cannot be sure right now that any sort of similar splits may happen
+with WMM / HT settings but just want to put that thought out there
+before we support it. If we only support peering up with peers with
+the same WMM capabilities at least we will not introduce issues, only
+limitations with peers which can later be addressed if it addresses
+properly all known mismatch issues.
+
+Thomas is now looking at adding the WMM stuff for Mesh, the same will
+be required for IBSS HT support.
+
+A while back we had heard 802.11s support will *not* support
+aggregation, Javier, did the spec go out like that? Why was
+aggregation thought to not be possible with 802.11s? I can't see why
+right now. If we want to do comparable throughput tests for HT rates
+with Mesh we'd need to setup an AP with aggregation disabled, and the
+same WMM parameters.
+
+  Luis
