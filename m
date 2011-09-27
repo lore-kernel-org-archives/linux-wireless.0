@@ -1,279 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:26702 "EHLO mga11.intel.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4460 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752667Ab1IFRPJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Sep 2011 13:15:09 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 05/10] iwlagn: move traffic_log back to upper layer
-Date: Tue,  6 Sep 2011 09:31:20 -0700
-Message-Id: <1315326685-22213-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110906_191521_982325_25FC650F)
-In-Reply-To: <1315326685-22213-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1315326685-22213-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1752171Ab1I0Rps (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Sep 2011 13:45:48 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v2 20/26] staging: brcm80211: convert endianess before
+ handling the frame
+Date: Tue, 27 Sep 2011 10:45:24 -0700
+Message-ID: <1317145530-18839-21-git-send-email-frankyl@broadcom.com> (sfid-20110927_194643_731765_DC0B99DB)
+In-Reply-To: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Arend van Spriel <arend@broadcom.com>
 
-The traffic log debugfs handlers were mistakenly moved to the
-transport layer because they print the pointers of the Tx / Rx
-queues. The pointers of the queues can be fetched by another debugfs
-handler.
-So bring the traffic log back to the upper layer and remove the part
-that reads the Tx / Rx queues' pointers.
+The received frame from the device is in little-endian order and
+converted in the receive path. However, the phy code was doing
+the rssi calculation with packet in LE order. This has been changed
+to do the le_to_cpu conversion before doing the rssi computation
+and further receive processing.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |   85 ++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans.c   |  107 ----------------------------
- 2 files changed, 85 insertions(+), 107 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/main.c        |   27 ++++++++++-----------
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    6 ++--
+ drivers/staging/brcm80211/brcmsmac/phy/phy_n.c   |    8 +++---
+ 3 files changed, 20 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index e320cc1..d0c63cf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -804,6 +804,89 @@ DEBUGFS_READ_WRITE_FILE_OPS(disable_ht40);
- DEBUGFS_READ_WRITE_FILE_OPS(sleep_level_override);
- DEBUGFS_READ_FILE_OPS(current_sleep_command);
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index ef96358..1a7d005 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -813,11 +813,23 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+ 		wlc_rxhdr = (struct brcms_d11rxhdr *) p->data;
+ 		rxh = (struct d11rxhdr *)p->data;
  
-+static ssize_t iwl_dbgfs_traffic_log_read(struct file *file,
-+					 char __user *user_buf,
-+					 size_t count, loff_t *ppos)
-+{
-+	struct iwl_priv *priv = file->private_data;
-+	int pos = 0, ofs = 0;
-+	int cnt = 0, entry;
++		/* fixup rx header endianness */
++		rxh->RxFrameSize = le16_to_cpu(rxh->RxFrameSize);
++		rxh->PhyRxStatus_0 = le16_to_cpu(rxh->PhyRxStatus_0);
++		rxh->PhyRxStatus_1 = le16_to_cpu(rxh->PhyRxStatus_1);
++		rxh->PhyRxStatus_2 = le16_to_cpu(rxh->PhyRxStatus_2);
++		rxh->PhyRxStatus_3 = le16_to_cpu(rxh->PhyRxStatus_3);
++		rxh->PhyRxStatus_4 = le16_to_cpu(rxh->PhyRxStatus_4);
++		rxh->PhyRxStatus_5 = le16_to_cpu(rxh->PhyRxStatus_5);
++		rxh->RxStatus1 = le16_to_cpu(rxh->RxStatus1);
++		rxh->RxStatus2 = le16_to_cpu(rxh->RxStatus2);
++		rxh->RxTSFTime = le16_to_cpu(rxh->RxTSFTime);
++		rxh->RxChan = le16_to_cpu(rxh->RxChan);
 +
-+	char *buf;
-+	int bufsz = ((IWL_TRAFFIC_ENTRIES * IWL_TRAFFIC_ENTRY_SIZE * 64) * 2) +
-+		(hw_params(priv).max_txq_num * 32 * 8) + 400;
-+	const u8 *ptr;
-+	ssize_t ret;
-+
-+	buf = kzalloc(bufsz, GFP_KERNEL);
-+	if (!buf) {
-+		IWL_ERR(priv, "Can not allocate buffer\n");
-+		return -ENOMEM;
-+	}
-+	if (priv->tx_traffic &&
-+		(iwl_get_debug_level(priv->shrd) & IWL_DL_TX)) {
-+		ptr = priv->tx_traffic;
-+		pos += scnprintf(buf + pos, bufsz - pos,
-+				"Tx Traffic idx: %u\n", priv->tx_traffic_idx);
-+		for (cnt = 0, ofs = 0; cnt < IWL_TRAFFIC_ENTRIES; cnt++) {
-+			for (entry = 0; entry < IWL_TRAFFIC_ENTRY_SIZE / 16;
-+			     entry++,  ofs += 16) {
-+				pos += scnprintf(buf + pos, bufsz - pos,
-+						"0x%.4x ", ofs);
-+				hex_dump_to_buffer(ptr + ofs, 16, 16, 2,
-+						   buf + pos, bufsz - pos, 0);
-+				pos += strlen(buf + pos);
-+				if (bufsz - pos > 0)
-+					buf[pos++] = '\n';
-+			}
-+		}
-+	}
-+
-+	if (priv->rx_traffic &&
-+		(iwl_get_debug_level(priv->shrd) & IWL_DL_RX)) {
-+		ptr = priv->rx_traffic;
-+		pos += scnprintf(buf + pos, bufsz - pos,
-+				"Rx Traffic idx: %u\n", priv->rx_traffic_idx);
-+		for (cnt = 0, ofs = 0; cnt < IWL_TRAFFIC_ENTRIES; cnt++) {
-+			for (entry = 0; entry < IWL_TRAFFIC_ENTRY_SIZE / 16;
-+			     entry++,  ofs += 16) {
-+				pos += scnprintf(buf + pos, bufsz - pos,
-+						"0x%.4x ", ofs);
-+				hex_dump_to_buffer(ptr + ofs, 16, 16, 2,
-+						   buf + pos, bufsz - pos, 0);
-+				pos += strlen(buf + pos);
-+				if (bufsz - pos > 0)
-+					buf[pos++] = '\n';
-+			}
-+		}
-+	}
-+
-+	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
-+	kfree(buf);
-+	return ret;
-+}
-+
-+static ssize_t iwl_dbgfs_traffic_log_write(struct file *file,
-+					 const char __user *user_buf,
-+					 size_t count, loff_t *ppos)
-+{
-+	struct iwl_priv *priv = file->private_data;
-+	char buf[8];
-+	int buf_size;
-+	int traffic_log;
-+
-+	memset(buf, 0, sizeof(buf));
-+	buf_size = min(count, sizeof(buf) -  1);
-+	if (copy_from_user(buf, user_buf, buf_size))
-+		return -EFAULT;
-+	if (sscanf(buf, "%d", &traffic_log) != 1)
-+		return -EFAULT;
-+	if (traffic_log == 0)
-+		iwl_reset_traffic_log(priv);
-+
-+	return count;
-+}
-+
- static const char *fmt_value = "  %-30s %10u\n";
- static const char *fmt_hex   = "  %-30s       0x%02X\n";
- static const char *fmt_table = "  %-30s %10u  %10u  %10u  %10u\n";
-@@ -2340,6 +2423,7 @@ static ssize_t iwl_dbgfs_protection_mode_write(struct file *file,
+ 		/*
+ 		 * compute the RSSI from d11rxhdr and record it in wlc_rxd11hr
+ 		 */
+ 		wlc_rxhdr->rssi = wlc_phy_rssi_compute(wlc_hw->band->pi, rxh);
+-
+ 		brcms_c_recv(wlc_hw->wlc, p);
+ 	}
  
- DEBUGFS_READ_FILE_OPS(rx_statistics);
- DEBUGFS_READ_FILE_OPS(tx_statistics);
-+DEBUGFS_READ_WRITE_FILE_OPS(traffic_log);
- DEBUGFS_READ_FILE_OPS(ucode_rx_stats);
- DEBUGFS_READ_FILE_OPS(ucode_tx_stats);
- DEBUGFS_READ_FILE_OPS(ucode_general_stats);
-@@ -2400,6 +2484,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
- 	DEBUGFS_ADD_FILE(disable_ht40, dir_data, S_IWUSR | S_IRUSR);
- 	DEBUGFS_ADD_FILE(rx_statistics, dir_debug, S_IRUSR);
- 	DEBUGFS_ADD_FILE(tx_statistics, dir_debug, S_IRUSR);
-+	DEBUGFS_ADD_FILE(traffic_log, dir_debug, S_IWUSR | S_IRUSR);
- 	DEBUGFS_ADD_FILE(power_save_status, dir_debug, S_IRUSR);
- 	DEBUGFS_ADD_FILE(clear_ucode_statistics, dir_debug, S_IWUSR);
- 	DEBUGFS_ADD_FILE(clear_traffic_statistics, dir_debug, S_IWUSR);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index 3948d31..28fbaa2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -1561,111 +1561,6 @@ static const struct file_operations iwl_dbgfs_##name##_ops = {		\
- 	.llseek = generic_file_llseek,					\
- };
+@@ -8289,19 +8301,6 @@ void brcms_c_recv(struct brcms_c_info *wlc, struct sk_buff *p)
+ 	/* strip off rxhdr */
+ 	skb_pull(p, BRCMS_HWRXOFF);
  
--static ssize_t iwl_dbgfs_traffic_log_read(struct file *file,
--					 char __user *user_buf,
--					 size_t count, loff_t *ppos)
--{
--	struct iwl_trans *trans = file->private_data;
--	struct iwl_priv *priv = priv(trans);
--	int pos = 0, ofs = 0;
--	int cnt = 0, entry;
--	struct iwl_trans_pcie *trans_pcie =
--		IWL_TRANS_GET_PCIE_TRANS(trans);
--	struct iwl_tx_queue *txq;
--	struct iwl_queue *q;
--	struct iwl_rx_queue *rxq = &trans_pcie->rxq;
--	char *buf;
--	int bufsz = ((IWL_TRAFFIC_ENTRIES * IWL_TRAFFIC_ENTRY_SIZE * 64) * 2) +
--		(hw_params(trans).max_txq_num * 32 * 8) + 400;
--	const u8 *ptr;
--	ssize_t ret;
+-	/* fixup rx header endianness */
+-	rxh->RxFrameSize = le16_to_cpu(rxh->RxFrameSize);
+-	rxh->PhyRxStatus_0 = le16_to_cpu(rxh->PhyRxStatus_0);
+-	rxh->PhyRxStatus_1 = le16_to_cpu(rxh->PhyRxStatus_1);
+-	rxh->PhyRxStatus_2 = le16_to_cpu(rxh->PhyRxStatus_2);
+-	rxh->PhyRxStatus_3 = le16_to_cpu(rxh->PhyRxStatus_3);
+-	rxh->PhyRxStatus_4 = le16_to_cpu(rxh->PhyRxStatus_4);
+-	rxh->PhyRxStatus_5 = le16_to_cpu(rxh->PhyRxStatus_5);
+-	rxh->RxStatus1 = le16_to_cpu(rxh->RxStatus1);
+-	rxh->RxStatus2 = le16_to_cpu(rxh->RxStatus2);
+-	rxh->RxTSFTime = le16_to_cpu(rxh->RxTSFTime);
+-	rxh->RxChan = le16_to_cpu(rxh->RxChan);
 -
--	if (!trans_pcie->txq) {
--		IWL_ERR(trans, "txq not ready\n");
--		return -EAGAIN;
--	}
--	buf = kzalloc(bufsz, GFP_KERNEL);
--	if (!buf) {
--		IWL_ERR(trans, "Can not allocate buffer\n");
--		return -ENOMEM;
--	}
--	pos += scnprintf(buf + pos, bufsz - pos, "Tx Queue\n");
--	for (cnt = 0; cnt < hw_params(trans).max_txq_num; cnt++) {
--		txq = &trans_pcie->txq[cnt];
--		q = &txq->q;
--		pos += scnprintf(buf + pos, bufsz - pos,
--				"q[%d]: read_ptr: %u, write_ptr: %u\n",
--				cnt, q->read_ptr, q->write_ptr);
--	}
--	if (priv->tx_traffic &&
--		(iwl_get_debug_level(trans->shrd) & IWL_DL_TX)) {
--		ptr = priv->tx_traffic;
--		pos += scnprintf(buf + pos, bufsz - pos,
--				"Tx Traffic idx: %u\n", priv->tx_traffic_idx);
--		for (cnt = 0, ofs = 0; cnt < IWL_TRAFFIC_ENTRIES; cnt++) {
--			for (entry = 0; entry < IWL_TRAFFIC_ENTRY_SIZE / 16;
--			     entry++,  ofs += 16) {
--				pos += scnprintf(buf + pos, bufsz - pos,
--						"0x%.4x ", ofs);
--				hex_dump_to_buffer(ptr + ofs, 16, 16, 2,
--						   buf + pos, bufsz - pos, 0);
--				pos += strlen(buf + pos);
--				if (bufsz - pos > 0)
--					buf[pos++] = '\n';
--			}
--		}
--	}
--
--	pos += scnprintf(buf + pos, bufsz - pos, "Rx Queue\n");
--	pos += scnprintf(buf + pos, bufsz - pos,
--			"read: %u, write: %u\n",
--			 rxq->read, rxq->write);
--
--	if (priv->rx_traffic &&
--		(iwl_get_debug_level(trans->shrd) & IWL_DL_RX)) {
--		ptr = priv->rx_traffic;
--		pos += scnprintf(buf + pos, bufsz - pos,
--				"Rx Traffic idx: %u\n", priv->rx_traffic_idx);
--		for (cnt = 0, ofs = 0; cnt < IWL_TRAFFIC_ENTRIES; cnt++) {
--			for (entry = 0; entry < IWL_TRAFFIC_ENTRY_SIZE / 16;
--			     entry++,  ofs += 16) {
--				pos += scnprintf(buf + pos, bufsz - pos,
--						"0x%.4x ", ofs);
--				hex_dump_to_buffer(ptr + ofs, 16, 16, 2,
--						   buf + pos, bufsz - pos, 0);
--				pos += strlen(buf + pos);
--				if (bufsz - pos > 0)
--					buf[pos++] = '\n';
--			}
--		}
--	}
--
--	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
--	kfree(buf);
--	return ret;
--}
--
--static ssize_t iwl_dbgfs_traffic_log_write(struct file *file,
--					 const char __user *user_buf,
--					 size_t count, loff_t *ppos)
--{
--	struct iwl_trans *trans = file->private_data;
--	char buf[8];
--	int buf_size;
--	int traffic_log;
--
--	memset(buf, 0, sizeof(buf));
--	buf_size = min(count, sizeof(buf) -  1);
--	if (copy_from_user(buf, user_buf, buf_size))
--		return -EFAULT;
--	if (sscanf(buf, "%d", &traffic_log) != 1)
--		return -EFAULT;
--	if (traffic_log == 0)
--		iwl_reset_traffic_log(priv(trans));
--
--	return count;
--}
--
- static ssize_t iwl_dbgfs_tx_queue_read(struct file *file,
- 						char __user *user_buf,
- 						size_t count, loff_t *ppos)
-@@ -2031,7 +1926,6 @@ static ssize_t iwl_dbgfs_fh_reg_read(struct file *file,
- 	return ret;
- }
- 
--DEBUGFS_READ_WRITE_FILE_OPS(traffic_log);
- DEBUGFS_READ_WRITE_FILE_OPS(log_event);
- DEBUGFS_READ_WRITE_FILE_OPS(interrupt);
- DEBUGFS_READ_FILE_OPS(fh_reg);
-@@ -2046,7 +1940,6 @@ DEBUGFS_WRITE_FILE_OPS(csr);
- static int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans,
- 					struct dentry *dir)
+ 	/* MAC inserts 2 pad bytes for a4 headers or QoS or A-MSDU subframes */
+ 	if (rxh->RxStatus1 & RXS_PBPRES) {
+ 		if (p->len < 2) {
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+index c359a10..f9702c0 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -2613,18 +2613,18 @@ void wlc_phy_compute_dB(u32 *cmplx_pwr, s8 *p_cmplx_pwr_dB, u8 core)
+ int wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
+ 			 struct d11rxhdr *rxh)
  {
--	DEBUGFS_ADD_FILE(traffic_log, dir, S_IWUSR | S_IRUSR);
- 	DEBUGFS_ADD_FILE(rx_queue, dir, S_IRUSR);
- 	DEBUGFS_ADD_FILE(tx_queue, dir, S_IRUSR);
- 	DEBUGFS_ADD_FILE(log_event, dir, S_IWUSR | S_IRUSR);
+-	int rssi = le16_to_cpu(rxh->PhyRxStatus_1) & PRXS1_JSSI_MASK;
++	int rssi = rxh->PhyRxStatus_1 & PRXS1_JSSI_MASK;
+ 	uint radioid = pih->radioid;
+ 	struct brcms_phy *pi = (struct brcms_phy *) pih;
+ 
+ 	if ((pi->sh->corerev >= 11)
+-	    && !(le16_to_cpu(rxh->RxStatus2) & RXS_PHYRXST_VALID)) {
++	    && !(rxh->RxStatus2 & RXS_PHYRXST_VALID)) {
+ 		rssi = BRCMS_RSSI_INVALID;
+ 		goto end;
+ 	}
+ 
+ 	if (ISLCNPHY(pi)) {
+-		u8 gidx = (le16_to_cpu(rxh->PhyRxStatus_2) & 0xFC00) >> 10;
++		u8 gidx = (rxh->PhyRxStatus_2 & 0xFC00) >> 10;
+ 		struct brcms_phy_lcnphy *pi_lcn = pi->u.pi_lcnphy;
+ 
+ 		if (rssi > 127)
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
+index ff8b1d8..a34d292 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
+@@ -23115,16 +23115,16 @@ wlc_phy_rssi_compute_nphy(struct brcms_phy *pi, struct d11rxhdr *rxh)
+ 	s16 phyRx0_l, phyRx2_l;
+ 
+ 	rxpwr = 0;
+-	rxpwr0 = le16_to_cpu(rxh->PhyRxStatus_1) & PRXS1_nphy_PWR0_MASK;
+-	rxpwr1 = (le16_to_cpu(rxh->PhyRxStatus_1) & PRXS1_nphy_PWR1_MASK) >> 8;
++	rxpwr0 = rxh->PhyRxStatus_1 & PRXS1_nphy_PWR0_MASK;
++	rxpwr1 = (rxh->PhyRxStatus_1 & PRXS1_nphy_PWR1_MASK) >> 8;
+ 
+ 	if (rxpwr0 > 127)
+ 		rxpwr0 -= 256;
+ 	if (rxpwr1 > 127)
+ 		rxpwr1 -= 256;
+ 
+-	phyRx0_l = le16_to_cpu(rxh->PhyRxStatus_0) & 0x00ff;
+-	phyRx2_l = le16_to_cpu(rxh->PhyRxStatus_2) & 0x00ff;
++	phyRx0_l = rxh->PhyRxStatus_0 & 0x00ff;
++	phyRx2_l = rxh->PhyRxStatus_2 & 0x00ff;
+ 	if (phyRx2_l > 127)
+ 		phyRx2_l -= 256;
+ 
 -- 
-1.7.0.4
+1.7.1
+
 
