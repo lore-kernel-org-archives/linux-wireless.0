@@ -1,72 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3988 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755063Ab1IMHuM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 03:50:12 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 00/17] staging: brcm80211: 5th reaction to mainline
- patch #2
-Date: Tue, 13 Sep 2011 09:49:40 +0200
-Message-ID: <1315900197-7260-1-git-send-email-rvossen@broadcom.com> (sfid-20110913_095019_267733_478B7628)
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:44536 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753042Ab1I0W1C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Sep 2011 18:27:02 -0400
+Received: by eya28 with SMTP id 28so5154483eya.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 15:27:00 -0700 (PDT)
+Message-ID: <4E824D75.1070509@gmail.com> (sfid-20110928_002715_174279_9C87447D)
+Date: Wed, 28 Sep 2011 00:25:57 +0200
+From: Stefan Zwanenburg <stefanhetzwaantje@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: 'Chaoming_Li' <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org
+Subject: Re: =?UTF-8?B?562U5aSNOiDnrZTlpI06IOetlOWkjTogUlRMODE5MlNFIGFuZCA=?=
+ =?UTF-8?B?ODAyLjExbiBwcm9ibGVt?=
+References: <4E77AECF.7090001@gmail.com> <4E820130.7080801@gmail.com> <4E823976.2090407@lwfinger.net>
+In-Reply-To: <4E823976.2090407@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code cleanup, and one fix for a build problem.
+On 09/27/2011 11:00 PM, Larry Finger wrote:
+> I have to go now, but if no one describes what we are seeing, I'll
+> review the 802.11n specs and get back to you tomorrow.
+>
+> Larry
+I've taken a quick peek at the specs, and I'm afraid I can't be of any
+help there (I found out — again — I have great respect for you guys for
+reading those documents!). However, something just dawned on me, and I'm
+not sure if it is at all relevant here, but somehow, my NIC seems to be
+getting all kinds of different MAC addresses assigned (apparently
+randomly). I just checked my "persistent net" udev rules file (mind you,
+this file is automatically amended whenever a new NIC appears on my
+system), and there are 26(!) different rules for just my wireless
+interface, all with different MAC addresses.
+As you may have noticed from my dump of the association process, the MAC
+address in use is one with a vendor ID for some "Azurewave" interface.
+There are quite a few in the rules file for Realtek interfaces, but the
+one I mostly get is for an Azurewave vendor ID.
 
-This series applies to staging-next and depends on the following patch set:
+I just tried setting a different MAC address (using ifconfig wlan0 hw
+ether 00:e0:4c:81:82:58) however it didn't change anything about my no
+802.11n link situation (as I expected). So perhaps this little tidbit
+should be ignored for now.
 
-Message-ID: <1315822504-24210-21-git-send-email-rvossen@broadcom.com>
+I just thought I'd let you know, in case this isn't a known problem.
 
-Arend van Spriel (4):
-  staging: brcm80211: remove ioctl layer from brcmsmac
-  staging: brcm80211: remove function ieee_set_channel()
-  staging: brcm80211: remove devpath related nvram variable lookup
-  staging: brcm80211: remove brcms_c_get_par and set_par functions
-
-Franky Lin (1):
-  staging: brcm80211: remove static function declaration in dhd_sdio
-
-Roland Vossen (12):
-  staging: brcm80211: fix for fullmac build problem
-  staging: brcm80211: macro cleanup in softmac dma
-  staging: brcm80211: cleanup of softmac macro EDCF_ENAB()
-  staging: brcm80211: removed function brcms_c_wme_initparams_sta()
-  staging: brcm80211: macro cleanup in softmac main.c
-  staging: brcm80211: added clarification on softmac dma alignment
-  staging: brcm80211: macro cleanup in softmac rate.h
-  staging: brcm80211: separated public from private ioctl functions
-  staging: brcm80211: simplification of brcmf_netdev_ioctl_priv()
-  staging: brcm80211: cleaned up function brcmf_cfg80211_get_key()
-  staging: brcm80211: fullmac sparse endianness encryption keys check
-  staging: brcm80211: introduced fullmac function get/set u32 to/from
-    dongle
-
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 -
- drivers/staging/brcm80211/brcmfmac/dhd.h          |   50 +-
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c    |   79 +-
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     | 6392 ++++++++++-----------
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c  |  162 +-
- drivers/staging/brcm80211/brcmsmac/aiutils.c      |   62 +-
- drivers/staging/brcm80211/brcmsmac/aiutils.h      |    5 -
- drivers/staging/brcm80211/brcmsmac/ampdu.c        |   25 +-
- drivers/staging/brcm80211/brcmsmac/dma.c          |  147 +-
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c  |  118 +-
- drivers/staging/brcm80211/brcmsmac/main.c         |  955 ++--
- drivers/staging/brcm80211/brcmsmac/main.h         |   21 -
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c  |    2 +-
- drivers/staging/brcm80211/brcmsmac/pub.h          |   25 +-
- drivers/staging/brcm80211/brcmsmac/rate.c         |   16 +-
- drivers/staging/brcm80211/brcmsmac/rate.h         |  188 +-
- drivers/staging/brcm80211/brcmsmac/scb.h          |    2 +-
- drivers/staging/brcm80211/brcmsmac/stf.c          |    2 +-
- drivers/staging/brcm80211/include/defs.h          |   13 +-
- 19 files changed, 3931 insertions(+), 4335 deletions(-)
-
--- 
-1.7.4.1
-
-
+Regards,
+Stefan Zwanenburg
