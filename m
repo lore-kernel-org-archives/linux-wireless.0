@@ -1,59 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45771 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753689Ab1ILTIh (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:51614 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751794Ab1I0C0V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Sep 2011 15:08:37 -0400
-Subject: [PATCH 3.1] iwlagn: fix stack corruption
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Wey-Yi W Guy <wey-yi.w.guy@intel.com>,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
-	Alexander Diewald <alex@diewald.cc>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 12 Sep 2011 21:08:25 +0200
-Message-ID: <1315854505.11834.3.camel@jlt3.sipsolutions.net> (sfid-20110912_210840_000847_4B5E659B)
-Mime-Version: 1.0
+	Mon, 26 Sep 2011 22:26:21 -0400
+Received: by yib18 with SMTP id 18so4803478yib.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 19:26:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6UP9xYmLY3nJRMVdjPky87hB1YzFTHEzBv0Pt=qv3kAmg@mail.gmail.com>
+References: <20110922154726.521122680@sipsolutions.net>
+	<20110922154849.369194760@sipsolutions.net>
+	<CAB=NE6UP9xYmLY3nJRMVdjPky87hB1YzFTHEzBv0Pt=qv3kAmg@mail.gmail.com>
+Date: Tue, 27 Sep 2011 10:26:21 +0800
+Message-ID: <CAJ-Vmo=9MUaKph=EXwF2VnE+=nHg4s=j=qhR2jnwa-xsXMno7g@mail.gmail.com> (sfid-20110927_042625_121516_7E40FF2F)
+Subject: Re: [RFC 03/15] mac80211: also expire filtered frames
+From: Adrian Chadd <adrian@freebsd.org>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 27 September 2011 06:30, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
 
-Alexander reported a strange crash in iwlagn that
-Meenakshi and Wey couldn't reproduce. I just ran
-into the same issue and tracked it down to stack
-corruption. This fixes it.
+> No particular comments on the code yet but latency issues has got me
+> thinking about the filtered frames stuff and if we really need it. How
+> much benefit does keeping these frames give us instead of just
+> dropping them?
 
-The problem was introduced in
-commit 4b8b99b6e650d0527f3a123744b7459976581d14
-Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Date:   Fri Jul 8 14:29:48 2011 -0700
+Do you guys keep statistics about this sort of thing?
 
-    iwlagn: radio sensor offset in le16 format
+My macbook pro ends up causing my FreeBSD AP to miss TX'ing a lot of
+frames, even if it's close by. This only occurs when it's on battery
+power.
 
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Reported-by: Alexander Diewald <alex@diewald.cc>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
-Wey, please fix your recent commit in our internal tree
-that does the v2 offset calibration -- it has the same
-bug twice.
-
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c	2011-09-12 21:01:34.000000000 +0200
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c	2011-09-12 21:01:43.000000000 +0200
-@@ -167,7 +167,7 @@ static int iwlagn_set_temperature_offset
- 
- 	memset(&cmd, 0, sizeof(cmd));
- 	iwl_set_calib_hdr(&cmd.hdr, IWL_PHY_CALIBRATE_TEMP_OFFSET_CMD);
--	memcpy(&cmd.radio_sensor_offset, offset_calib, sizeof(offset_calib));
-+	memcpy(&cmd.radio_sensor_offset, offset_calib, sizeof(*offset_calib));
- 	if (!(cmd.radio_sensor_offset))
- 		cmd.radio_sensor_offset = DEFAULT_RADIO_SENSOR_OFFSET;
- 
+I have a feeling it's going to be doing aggressiveish power saving
+stuff and this'll be fixed by me porting over and tidying up the
+filtered frames support.
 
 
+Adrian
