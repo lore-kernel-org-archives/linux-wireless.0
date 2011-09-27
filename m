@@ -1,120 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53617 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752592Ab1IIFLa (ORCPT
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:45813 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753469Ab1I0Laz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Sep 2011 01:11:30 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linville@tuxdriver.com>, <rmanohar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
-	<senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH v2] ath9k: Fix kernel panic on unplugging the device
-Date: Fri, 9 Sep 2011 10:41:08 +0530
-Message-ID: <1315545068-5699-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110909_071134_750084_8926962C)
+	Tue, 27 Sep 2011 07:30:55 -0400
+Subject: [PATCH 1/4] ath6kl: add prefix parameter to ath6kl_dbg_dump()
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 Sep 2011 14:30:45 +0300
+Message-ID: <20110927113045.11592.15974.stgit@localhost6.localdomain6> (sfid-20110927_133058_906812_F35F7C08)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Makes it easier to recognise longs dumps.
 
-when the device is yanked out ath_pci_remove starts doing the cleanups,
-unregistering the hardware etc. so we should bail out immediately when
-we get drv_flush callback from mac80211 when the card is being unplugged.
-the panic occurs after we had associated to an AP.
+Obligatory screenshot using "rx" prefix:
 
-	EIP: 0060:[<fb315b00>] EFLAGS: 00010246 CPU: 0
-	EIP is at ath_reset+0xa0/0x1c0 [ath9k]
-	EAX: 00000000 EBX: 000697c0 ECX: 00000002 EDX: f3c3ccf0
-	ESI: 00000000 EDI: 00000000 EBP: f43e7b78 ESP: f43e7b50
- 	DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
- 	Process kworker/u:2 (pid: 182, ti=f43e6000 task=f3c3c7c0
-	task.ti=f43e6000)
- 	Stack:
- 	0000002a 00000000 00000000 003e7b78 0000000f eaaa8500
-	ffffffea eaaa97c0
- 	eaaaa000 00000001 f43e7ba8 fb315d23 f99e7721 ecece680
-	eaaac738 eaaa8500
- 	eaaaa020 000000c8 000000c8 00000000 eaaa8d58 eaaa8500
-	f43e7bd0 fb080b29
- 	Call Trace:
-	[<fb315d23>] ath9k_flush+0x103/0x170 [ath9k]
-	[<fb080b29>] __ieee80211_recalc_idle+0x2c9/0x400
-	[mac80211]
-	[<fb080c8e>] ieee80211_recalc_idle+0x2e/0x60 [mac80211]
-	[<fb07aa73>] ieee80211_mgd_deauth+0x173/0x210 [mac80211]
-	[<fb084559>] ieee80211_deauth+0x19/0x20 [mac80211]
-	[<f99dda53>] __cfg80211_mlme_deauth+0xf3/0x140
-	[cfg80211]
-	[<c0633d00>] ? __mutex_lock_common+0x1f0/0x380
-	[<f99e1b5d>] __cfg80211_disconnect+0x18d/0x1f0
-	[cfg80211]
-	[<f99c8199>] cfg80211_netdev_notifier_call+0x159/0x5c0
-	[cfg80211]
-	[<c0608a64>] ? packet_notifier+0x174/0x1f0
-	[<c0639202>] notifier_call_chain+0x82/0xb0
-	[<c0170d8f>] raw_notifier_call_chain+0x1f/0x30
-	[<c053b86c>] call_netdevice_notifiers+0x2c/0x60
-	[<c0182184>] ? trace_hardirqs_on_caller+0xf4/0x180
-	[<c053b8ec>] __dev_close_many+0x4c/0xd0
-	[<c053ba2d>] dev_close_many+0x6d/0xc0
-	[<c053bb53>] rollback_registered_many+0x93/0x1c0
-	[<c018221b>] ? trace_hardirqs_on+0xb/0x10
-	[<c053bc95>] unregister_netdevice_many+0x15/0x50
-	[<fb07f83b>] ieee80211_remove_interfaces+0x7b/0xb0
-	[mac80211]
-	[<fb06a14b>] ieee80211_unregister_hw+0x4b/0x110
-	[mac80211]
-	[<fb311a4a>] ath9k_deinit_device+0x3a/0x60 [ath9k]
-	[<fb31eed6>] ath_pci_remove+0x46/0x90 [ath9k]
-	[<c03b4ac4>] pci_device_remove+0x44/0x100
-	[<c043eb54>] __device_release_driver+0x64/0xb0
-	[<c043ec67>] device_release_driver+0x27/0x40
-	[<c043deeb>] bus_remove_device+0x7b/0xa0
-	[<c043c491>] device_del+0xf1/0x180
-	[<c043c530>] device_unregister+0x10/0x20
-	[<c03afafe>] pci_stop_bus_device+0x6e/0x80
-	[<c03afb72>] pci_remove_bus_device+0x12/0xa0
-	[<c03c2f29>] pciehp_unconfigure_device+0x89/0x180
-	[<c0181e54>] ? mark_held_locks+0x64/0x100
-	[<c063390f>] ? __mutex_unlock_slowpath+0xaf/0x140
-	[<c03c1f84>] pciehp_disable_slot+0x64/0x1b0
-	[<c03c2850>] pciehp_power_thread+0xd0/0x100
-	[<c0164ad0>] ? process_one_work+0x100/0x4d0
-	[<c0164b4c>] process_one_work+0x17c/0x4d0
-	[<c0164ad0>] ? process_one_work+0x100/0x4d0
-	[<c03c2780>] ? queue_interrupt_event+0xa0/0xa0
-	[<c01662bb>] worker_thread+0x13b/0x320
-	[<c018221b>] ? trace_hardirqs_on+0xb/0x10
-	[<c0166180>] ? manage_workers+0x1e0/0x1e0
-	[<c016a654>] kthread+0x84/0x90
-	[<c016a5d0>] ? __init_kthread_worker+0x60/0x60
-	[<c063d106>] kernel_thread_helper+0x6/0x10
+ath6kl: ath6kl_rx
+rx 00000000: 10 10 00 00 00 00 08 30 00 00 00 00 00 00 f9 0b  .......0........
+rx 00000010: 2c 44 08 30 00 00 f9 0b 0c a4 02 00 00 00 73 d2  ,D.0..........s.
+rx 00000020: 94 00 f9 0b 04 8c 01 00 02 00 07 02 02 00 f9 0b  ................
 
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath6kl/debug.h |   14 ++++++++------
+ drivers/net/wireless/ath/ath6kl/htc.c   |   27 ++++++++++++++-------------
+ drivers/net/wireless/ath/ath6kl/txrx.c  |    6 ++++--
+ drivers/net/wireless/ath/ath6kl/wmi.c   |    3 ++-
+ 4 files changed, 28 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index df4108f..dacac57 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2312,6 +2312,12 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
- 	mutex_lock(&sc->mutex);
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
+index 89bf8e1..3730e09 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.h
++++ b/drivers/net/wireless/ath/ath6kl/debug.h
+@@ -65,12 +65,14 @@ extern int ath6kl_printk(const char *level, const char *fmt, ...)
+ 	 })
  
-+	if (ah->ah_flags & AH_UNPLUGGED) {
-+		ath_dbg(common, ATH_DBG_ANY, "Device has been unplugged!\n");
-+		mutex_unlock(&sc->mutex);
-+		return;
-+	}
+ static inline void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
+-				   const char *msg, const void *buf,
+-				   size_t len)
++				   const char *msg, const char *prefix,
++				   const void *buf, size_t len)
+ {
+ 	if (debug_mask & mask) {
+-		ath6kl_dbg(mask, "%s\n", msg);
+-		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, buf, len);
++		if (msg)
++			ath6kl_dbg(mask, "%s\n", msg);
 +
- 	if (sc->sc_flags & SC_OP_INVALID) {
- 		ath_dbg(common, ATH_DBG_ANY, "Device not present\n");
- 		mutex_unlock(&sc->mutex);
--- 
-1.7.0.4
++		print_hex_dump_bytes(prefix, DUMP_PREFIX_OFFSET, buf, len);
+ 	}
+ }
+ 
+@@ -90,8 +92,8 @@ static inline int ath6kl_dbg(enum ATH6K_DEBUG_MASK dbg_mask,
+ }
+ 
+ static inline void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
+-				   const char *msg, const void *buf,
+-				   size_t len)
++				   const char *msg, const char *prefix,
++				   const void *buf, size_t len)
+ {
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index feed985..f88a7c9 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -1192,9 +1192,9 @@ static void htc_ctrl_rx(struct htc_target *context, struct htc_packet *packets)
+ 			packets->act_len + HTC_HDR_LENGTH);
+ 
+ 		ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES,
+-			     "Unexpected ENDPOINT 0 Message",
+-			     packets->buf - HTC_HDR_LENGTH,
+-			     packets->act_len + HTC_HDR_LENGTH);
++				"Unexpected ENDPOINT 0 Message", "",
++				packets->buf - HTC_HDR_LENGTH,
++				packets->act_len + HTC_HDR_LENGTH);
+ 	}
+ 
+ 	htc_reclaim_rxbuf(context, packets, &context->endpoint[0]);
+@@ -1328,7 +1328,7 @@ static int htc_parse_trailer(struct htc_target *target,
+ 			memcpy((u8 *)&next_lk_ahds[0], lk_ahd->lk_ahd, 4);
+ 
+ 			ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, "Next Look Ahead",
+-					next_lk_ahds, 4);
++					"", next_lk_ahds, 4);
+ 
+ 			*n_lk_ahds = 1;
+ 		}
+@@ -1347,7 +1347,7 @@ static int htc_parse_trailer(struct htc_target *target,
+ 				(struct htc_bundle_lkahd_rpt *) record_buf;
+ 
+ 			ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, "Bundle lk_ahd",
+-					record_buf, record->len);
++					"", record_buf, record->len);
+ 
+ 			for (i = 0; i < len; i++) {
+ 				memcpy((u8 *)&next_lk_ahds[i],
+@@ -1380,7 +1380,8 @@ static int htc_proc_trailer(struct htc_target *target,
+ 
+ 	ath6kl_dbg(ATH6KL_DBG_HTC_RECV, "+htc_proc_trailer (len:%d)\n", len);
+ 
+-	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, "Recv Trailer", buf, len);
++	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, "Recv Trailer", "",
++			buf, len);
+ 
+ 	orig_buf = buf;
+ 	orig_len = len;
+@@ -1418,7 +1419,7 @@ static int htc_proc_trailer(struct htc_target *target,
+ 
+ 	if (status)
+ 		ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, "BAD Recv Trailer",
+-				orig_buf, orig_len);
++				"", orig_buf, orig_len);
+ 
+ 	return status;
+ }
+@@ -1435,8 +1436,8 @@ static int ath6kl_htc_rx_process_hdr(struct htc_target *target,
+ 	if (n_lkahds != NULL)
+ 		*n_lkahds = 0;
+ 
+-	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, "HTC Recv PKT", packet->buf,
+-			packet->act_len);
++	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, "HTC Recv PKT", "htc ",
++			packet->buf, packet->act_len);
+ 
+ 	/*
+ 	 * NOTE: we cannot assume the alignment of buf, so we use the safe
+@@ -1480,9 +1481,9 @@ static int ath6kl_htc_rx_process_hdr(struct htc_target *target,
+ 		ath6kl_err("%s(): lk_ahd mismatch! (pPkt:0x%p flags:0x%X)\n",
+ 			   __func__, packet, packet->info.rx.rx_flags);
+ 		ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, "Expected Message lk_ahd",
+-				&packet->info.rx.exp_hdr, 4);
++				"", &packet->info.rx.exp_hdr, 4);
+ 		ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, "Current Frame Header",
+-				(u8 *)&lk_ahd, sizeof(lk_ahd));
++				"", (u8 *)&lk_ahd, sizeof(lk_ahd));
+ 		status = -ENOMEM;
+ 		goto fail_rx;
+ 	}
+@@ -1518,12 +1519,12 @@ static int ath6kl_htc_rx_process_hdr(struct htc_target *target,
+ fail_rx:
+ 	if (status)
+ 		ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, "BAD HTC Recv PKT",
+-				packet->buf,
++				"", packet->buf,
+ 				packet->act_len < 256 ? packet->act_len : 256);
+ 	else {
+ 		if (packet->act_len > 0)
+ 			ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES,
+-					"HTC - Application Msg",
++					"HTC - Application Msg", "",
+ 					packet->buf, packet->act_len);
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 348c646..bc65781 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -322,7 +322,8 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
+ 	set_htc_pkt_info(&cookie->htc_pkt, cookie, skb->data, skb->len,
+ 			 eid, htc_tag);
+ 
+-	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, __func__, skb->data, skb->len);
++	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, __func__, "tx ",
++			skb->data, skb->len);
+ 
+ 	/*
+ 	 * HTC interface is asynchronous, if this fails, cleanup will
+@@ -1050,7 +1051,8 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 	skb_put(skb, packet->act_len + HTC_HDR_LENGTH);
+ 	skb_pull(skb, HTC_HDR_LENGTH);
+ 
+-	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, __func__, skb->data, skb->len);
++	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, __func__, "rx ",
++			skb->data, skb->len);
+ 
+ 	skb->dev = ar->net_dev;
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 47fbb8e..785a8c7 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -2850,7 +2850,8 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
+ 	len = skb->len;
+ 
+ 	ath6kl_dbg(ATH6KL_DBG_WMI, "%s: wmi id: %d\n", __func__, id);
+-	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, "msg payload ", datap, len);
++	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, "msg payload ", "wmi rx ",
++			datap, len);
+ 
+ 	switch (id) {
+ 	case WMI_GET_BITRATE_CMDID:
 
