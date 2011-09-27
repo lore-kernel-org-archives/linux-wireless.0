@@ -1,56 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:49949 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755084Ab1IHXdK convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53548 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751468Ab1I0LIJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 19:33:10 -0400
-Received: by pzk37 with SMTP id 37so1809354pzk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 16:33:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1315465312.3948.4.camel@jlt3.sipsolutions.net>
-References: <1315442994-304-1-git-send-email-javier@cozybit.com>
- <1315442994-304-2-git-send-email-javier@cozybit.com> <1315465312.3948.4.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Thu, 8 Sep 2011 09:17:27 -0700
-Message-ID: <CAPjQAd9+QB2WpovrrLV3ArPRqv-tEY_HY3tKjYjvFcJZxM=LHg@mail.gmail.com> (sfid-20110909_013318_919363_9C17CB54)
-Subject: Re: [PATCH v2 1/3] mac80211: Start implementing QoS support for mesh interfaces
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
-	jlopex@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 27 Sep 2011 07:08:09 -0400
+Subject: Re: [PATCH 1/1] rfkill: add module option to become inactive.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Andrew V. Stepanov" <stanv@altlinux.org>
+Cc: davem@davemloft.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <CAN8FffrZuGu63oL7ZL8EjjdNqBaPDU6KHuatwrbNB0SjffvaTg@mail.gmail.com> (sfid-20110927_113513_869091_360B4376)
+References: <1317119624-2974-1-git-send-email-stanv@altlinux.org>
+	 <1317109617.4082.0.camel@jlt3.sipsolutions.net>
+	 <CAN8FffqH=x+qWnz=YJzatbW-b3aOgoivazH6Nb5SpsGt4Q6hGg@mail.gmail.com>
+	 <1317110884.4082.5.camel@jlt3.sipsolutions.net>
+	 <CAN8FffqjeurgAvVHtMExgeAyBHRWznYBz2c043jcZgOmqw6TVg@mail.gmail.com>
+	 <1317113699.4082.7.camel@jlt3.sipsolutions.net>
+	 <CAN8FffrZuGu63oL7ZL8EjjdNqBaPDU6KHuatwrbNB0SjffvaTg@mail.gmail.com>
+	 (sfid-20110927_113513_869091_360B4376)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 27 Sep 2011 13:08:01 +0200
+Message-ID: <1317121681.4082.8.camel@jlt3.sipsolutions.net> (sfid-20110927_130813_360014_DED2042A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 8, 2011 at 12:01 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2011-09-07 at 17:49 -0700, Javier Cardona wrote:
->
->> +     /* For mesh, the use of the QoS header is mandatory */
->> +     if (ieee80211_vif_is_mesh(&sdata->vif))
->> +             sta_flags |= WLAN_STA_WME;
->> +
->
-> With patch 3, this piece seems unnecessary?
+On Tue, 2011-09-27 at 13:34 +0400, Andrew V. Stepanov wrote:
+> On Tue, Sep 27, 2011 at 12:54 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Tue, 2011-09-27 at 12:46 +0400, Andrew V. Stepanov wrote:
+> >
+> >> I wan't to completely ignore events (state) of software\hardware rfkill buttons.
+> >
+> > Why would you ever want to do that? I can see that you might want to
+> > ignore soft buttons, but you can use urfkilld for that. Ignoring hard
+> > buttons is completely useless -- they will affect the device they're
+> > wired up to *anyway*.
+> 
+> No. That is not true.
+> 
+> Hardware rfkill button doesn't have any action to wlan\bluetooth
+> devices on ThinkPad x201i with "CONFIG_RFKILL is not set".
+> I can assume this is true for other notebooks.
 
-At that point we don't know who the next hop peer will so the previous
-block (below) will not find an sta.  Also, we want the QoS header in
-multicast frames.  So I thought this might be the least intrusive way.
+Then why is it a hard button instead of the soft button on a separate
+platform device?
 
->>>
-        if (!is_multicast_ether_addr(hdr.addr1)) {
-                rcu_read_lock();
-                sta = sta_info_get(sdata, hdr.addr1);
-                if (sta)
-                        sta_flags = get_sta_flags(sta);
-                rcu_read_unlock();
-        }
->>>
+johannes
 
-Javier
-
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
