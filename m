@@ -1,83 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3455 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756080Ab1IPT20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 15:28:26 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 05/19] staging: brcm80211: remove global variable
- brcmf_roam from fullmac
-Date: Fri, 16 Sep 2011 12:27:54 -0700
-Message-ID: <1316201288-29635-6-git-send-email-frankyl@broadcom.com> (sfid-20110916_212854_062080_FE881D62)
-In-Reply-To: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
-References: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:37942 "HELO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751979Ab1I0DiJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Sep 2011 23:38:09 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/4] mwifiex: fix Tx data rate display issue
+Date: Mon, 26 Sep 2011 20:37:25 -0700
+Message-Id: <1317094646-7718-3-git-send-email-bzhao@marvell.com> (sfid-20110927_053813_213142_5F8280AD)
+In-Reply-To: <1317094646-7718-1-git-send-email-bzhao@marvell.com>
+References: <1317094646-7718-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unnecessary global variable
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+"iw dev mlan0 link" shows wrong data rate, because data rate is
+not sent properly to cfg80211 stack. Also stack is not updated
+with mcs and Tx data flags information.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd.h        |    3 ---
- drivers/staging/brcm80211/brcmfmac/dhd_common.c |    3 ++-
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c  |    3 ---
- 3 files changed, 2 insertions(+), 7 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c |   18 +++++++++++++++++-
+ 1 files changed, 17 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index 329851c..5316df9 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -674,9 +674,6 @@ extern uint brcmf_arp_mode;
- extern uint brcmf_arp_enable;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 5550741..c429661 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -543,12 +543,28 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
+ 		ret = -EFAULT;
+ 	}
  
- /* Roaming mode control */
--extern uint brcmf_roam;
--
--/* Roaming mode control */
- extern uint brcmf_radio_up;
++	/*
++	 * Bit 0 in tx_htinfo indicates that current Tx rate is 11n rate. Valid
++	 * MCS index values for us are 0 to 7.
++	 */
++	if ((priv->tx_htinfo & BIT(0)) && (priv->tx_rate < 8)) {
++		sinfo->txrate.mcs = priv->tx_rate;
++		sinfo->txrate.flags |= RATE_INFO_FLAGS_MCS;
++		/* 40MHz rate */
++		if (priv->tx_htinfo & BIT(1))
++			sinfo->txrate.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
++		/* SGI enabled */
++		if (priv->tx_htinfo & BIT(2))
++			sinfo->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
++	}
++
+ 	sinfo->rx_bytes = priv->stats.rx_bytes;
+ 	sinfo->tx_bytes = priv->stats.tx_bytes;
+ 	sinfo->rx_packets = priv->stats.rx_packets;
+ 	sinfo->tx_packets = priv->stats.tx_packets;
+ 	sinfo->signal = priv->qual_level;
+-	sinfo->txrate.legacy = rate.rate;
++	/* bit rate is in 500 kb/s units. Convert it to 100kb/s units */
++	sinfo->txrate.legacy = rate.rate * 5;
  
- /* Override to force tx queueing all the time */
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-index 5ae4a40..c02c8cd 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-@@ -794,6 +794,7 @@ int brcmf_c_preinit_ioctls(struct brcmf_pub *drvr)
- 	char buf[128], *ptr;
- 	u32 dongle_align = BRCMF_SDALIGN;
- 	u32 glom = 0;
-+	u32 roaming = 1;
- 	uint bcn_timeout = 3;
- 	int scan_assoc_time = 40;
- 	int scan_unassoc_time = 40;
-@@ -838,7 +839,7 @@ int brcmf_c_preinit_ioctls(struct brcmf_pub *drvr)
- 
- 	/* Enable/Disable build-in roaming to allowed ext supplicant to take
- 		 of romaing */
--	brcmu_mkiovar("roam_off", (char *)&brcmf_roam, 4,
-+	brcmu_mkiovar("roam_off", (char *)&roaming, 4,
- 		      iovbuf, sizeof(iovbuf));
- 	brcmf_proto_cdc_set_ioctl(drvr, 0, BRCMF_C_SET_VAR, iovbuf,
- 				  sizeof(iovbuf));
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index 8e729d8..f462a5f 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -98,9 +98,6 @@ module_param(brcmf_arp_mode, uint, 0);
- uint brcmf_arp_enable = true;
- module_param(brcmf_arp_enable, uint, 0);
- 
--/* Contorl fw roaming */
--uint brcmf_roam = 1;
--
- /* Control radio state */
- uint brcmf_radio_up = 1;
- 
+ 	return ret;
+ }
 -- 
-1.7.1
-
+1.7.0.2
 
