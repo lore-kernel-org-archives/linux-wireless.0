@@ -1,41 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:42483 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750963Ab1IVGlY (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:49569 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752731Ab1I0S3J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 02:41:24 -0400
-Received: by mail-gy0-f171.google.com with SMTP id 3so2280722gyh.2
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 23:41:23 -0700 (PDT)
-Message-ID: <4E7AD88C.4020806@ti.com> (sfid-20110922_084128_242796_868C8D56)
-Date: Thu, 22 Sep 2011 09:41:16 +0300
-From: Victor Goldenshtein <victorg@ti.com>
-Reply-To: victorg@ti.com
+	Tue, 27 Sep 2011 14:29:09 -0400
+Message-ID: <4E8215BF.5040301@qca.qualcomm.com> (sfid-20110927_202913_673632_60AC125A)
+Date: Tue, 27 Sep 2011 21:28:15 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luciano Coelho <coelho@ti.com>, Jouni Malinen <j@w1.fi>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC 3/5] nl80211/cfg80211: adding intermediate scan result event.
-References: <1315224151-16552-1-git-send-email-VictorG@ti.com>  <1315224151-16552-4-git-send-email-VictorG@ti.com>  <1315224512.4075.10.camel@jlt3.sipsolutions.net> <4E6736D9.3070804@ti.com>  <1315387619.4002.3.camel@jlt3.sipsolutions.net> <4E686125.5050208@ti.com>  <20110921153102.GA32374@jm.kir.nu> <1316619903.2157.546.camel@cumari>  <4E7A109C.2010701@ti.com> <1316623133.3940.55.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1316623133.3940.55.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: fix TCP corruption
+References: <20110927080008.28000.50462.stgit@localhost6.localdomain6>
+In-Reply-To: <20110927080008.28000.50462.stgit@localhost6.localdomain6>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21/09/2011 19:38, Johannes Berg wrote:
+On 09/27/2011 11:00 AM, Kalle Valo wrote:
+> From: Jouni Malinen <jouni@qca.qualcomm.com>
+> 
+> Commit 94e532d1a ("ath6kl: Fix system freeze under heavy data load")
+> aligns the skb data without checking if the skb is cloned. Because of
+> this ath6kl can corrupt the local TCP stack information that can result
+> in TCP retransmission failing and TCP connections stalling.
+> 
+> To avoid the corruption we need to copy the skb. Now the alignment
+> in ath6kl_htc_tx_buf_align() doesn't corrupt TCP packets anymore (and is
+> not even used for the cloned skb's that got copied since the alignment
+> of the data is handled at the copy time).
 
->> This could be a little bit problematic, since we need the
->> rdev->event_work, for the queue_work(), and wdev->event_list to save a
->> copy of the BSS, or just the mac which will be used to fetch the BSS
->> before the transmission (still not sure about it ..), and it seems like
->> these two can be obtained form sdata->dev, so it's look like that we
->> need this function and it should be in ieee80211_scan_rx.
->
-> It is not an issue to send a genl message with GFP_ATOMIC.
->
+Applied.
 
-
-The GFP_ATOMIC is for the event info allocation, and not for the genl 
-message, it have to be "GFP_ATOMIC" otherwise we will get kernel warnings.
-
-
-Victor.
+Kalle
