@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2013 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756035Ab1I2Wes (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 18:34:48 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v3 05/25] staging: brcm80211: removed global var from
- aiutils.c
-Date: Thu, 29 Sep 2011 15:34:16 -0700
-Message-ID: <1317335676-3424-6-git-send-email-frankyl@broadcom.com> (sfid-20110930_003547_991137_97C7C710)
-In-Reply-To: <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
-References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
- <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:34096 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752395Ab1I0F2P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Sep 2011 01:28:15 -0400
+Received: by bkbzt19 with SMTP id zt19so6224363bkb.9
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 22:28:11 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: Add support for HW channel switch
+From: Luciano Coelho <coelho@ti.com>
+To: victorg@ti.com
+Cc: "Levi, Shahar" <shahar_levi@ti.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <4E80286C.8090801@ti.com>
+References: <1315476093-27583-1-git-send-email-shahar_levi@ti.com>
+	 <1316698619.2157.628.camel@cumari> <1316775583.2157.728.camel@cumari>
+	 <CAHiDVwkeMTYdVubk=YPp6XTfNtmr2+mTwuX-ED0TcmzmrvEfUw@mail.gmail.com>
+	 <1317018322.2171.17.camel@cumari>  <4E80286C.8090801@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 27 Sep 2011 08:28:07 +0300
+Message-ID: <1317101287.2171.81.camel@cumari> (sfid-20110927_072819_036108_5ADB12DC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+On Mon, 2011-09-26 at 10:23 +0300, Victor Goldenshtein wrote: 
+> On 26/09/2011 09:25, Luciano Coelho wrote:
+> >>> I checked this a bit further and I don't see the point in sending all
+> >>> packets here.  In fact, if block_tx is set, we can't even send any more
+> >>> frames until the switch happens (or fails).  So we should at least check
+> >>> this here.
+> >> The block_tx is taken into account in the mac layer.
+> >
+> > This is a bit strange, though.  I checked the code and nobody seems to
+> > be using the block_tx element of ieee80211_channel_switch, so I wonder
+> > why it's there at all.
+> >
+> 
+> As far as I know the block_tx is for the DFS channel switch 
+> implementation, when block_tx=1, the firmware will not start tx on new 
+> channel.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/aiutils.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+I'll check this up with our firmware team.
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-index b7b0bdf..d05c4ba 100644
---- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-@@ -477,9 +477,6 @@ struct aidmp {
- 	u32 componentid3;	/* 0xffc */
- };
- 
--/* global kernel resource */
--static struct si_info ksii;
--
- /* EROM parsing */
- 
- static u32
-@@ -1216,8 +1213,7 @@ void ai_detach(struct si_pub *sih)
- 		pcicore_deinit(sii->pch);
- 	sii->pch = NULL;
- 
--	if (sii != &ksii)
--		kfree(sii);
-+	kfree(sii);
- }
- 
- /* register driver interrupt disabling and restoring callback functions */
 -- 
-1.7.1
-
+Cheers,
+Luca.
 
