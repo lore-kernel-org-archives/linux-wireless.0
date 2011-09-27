@@ -1,277 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38266 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755673Ab1I2OGL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 10:06:11 -0400
-Message-Id: <20110929140458.861780480@sipsolutions.net> (sfid-20110929_160615_698246_9717B86E)
-Date: Thu, 29 Sep 2011 16:04:27 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 02/16] mac80211: unify TIM bit handling
-References: <20110929140425.390322480@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:4760 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752256Ab1I0Rpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Sep 2011 13:45:52 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v2 07/26] staging: brcm80211: removed unused softmac
+ workaround
+Date: Tue, 27 Sep 2011 10:45:11 -0700
+Message-ID: <1317145530-18839-8-git-send-email-frankyl@broadcom.com> (sfid-20110927_194609_185652_3BF2DAB0)
+In-Reply-To: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Roland Vossen <rvossen@broadcom.com>
 
-Currently, the TIM bit for a given station is set
-and cleared all over the place. Since the logic to
-set/clear it will become much more complex when we
-add uAPSD support, as a first step let's collect
-the entire logic in one place. This requires a few
-small adjustments to other places.
+WAR16165 is only used on older PCI chips, the driver does not support
+these chips.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- net/mac80211/sta_info.c |  101 ++++++++++++++++++++----------------------------
- net/mac80211/sta_info.h |    3 -
- net/mac80211/status.c   |    1 
- net/mac80211/tx.c       |   15 ++-----
- 4 files changed, 51 insertions(+), 69 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/aiutils.c |    9 -------
+ drivers/staging/brcm80211/brcmsmac/aiutils.h |    2 -
+ drivers/staging/brcm80211/brcmsmac/d11.h     |    3 +-
+ drivers/staging/brcm80211/brcmsmac/main.c    |   31 --------------------------
+ drivers/staging/brcm80211/brcmsmac/main.h    |    5 ----
+ 5 files changed, 1 insertions(+), 49 deletions(-)
 
---- a/net/mac80211/sta_info.h	2011-09-29 15:57:18.000000000 +0200
-+++ b/net/mac80211/sta_info.h	2011-09-29 15:57:29.000000000 +0200
-@@ -528,8 +528,7 @@ int sta_info_destroy_addr(struct ieee802
- int sta_info_destroy_addr_bss(struct ieee80211_sub_if_data *sdata,
- 			      const u8 *addr);
- 
--void sta_info_set_tim_bit(struct sta_info *sta);
--void sta_info_clear_tim_bit(struct sta_info *sta);
-+void sta_info_recalc_tim(struct sta_info *sta);
- 
- void sta_info_init(struct ieee80211_local *local);
- void sta_info_stop(struct ieee80211_local *local);
---- a/net/mac80211/tx.c	2011-09-29 15:57:18.000000000 +0200
-+++ b/net/mac80211/tx.c	2011-09-29 15:57:29.000000000 +0200
-@@ -469,15 +469,6 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
- 		} else
- 			tx->local->total_ps_buffered++;
- 
--		/*
--		 * Queue frame to be sent after STA wakes up/polls,
--		 * but don't set the TIM bit if the driver is blocking
--		 * wakeup or poll response transmissions anyway.
--		 */
--		if (skb_queue_empty(&sta->ps_tx_buf) &&
--		    !(staflags & WLAN_STA_PS_DRIVER))
--			sta_info_set_tim_bit(sta);
--
- 		info->control.jiffies = jiffies;
- 		info->control.vif = &tx->sdata->vif;
- 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
-@@ -488,6 +479,12 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
- 				  round_jiffies(jiffies +
- 						STA_INFO_CLEANUP_INTERVAL));
- 
-+		/*
-+		 * We queued up some frames, so the TIM bit might
-+		 * need to be set, recalculate it.
-+		 */
-+		sta_info_recalc_tim(sta);
-+
- 		return TX_QUEUED;
- 	}
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
---- a/net/mac80211/sta_info.c	2011-09-29 15:57:18.000000000 +0200
-+++ b/net/mac80211/sta_info.c	2011-09-29 15:58:07.000000000 +0200
-@@ -641,54 +641,42 @@ static inline void __bss_tim_clear(struc
- 	bss->tim[aid / 8] &= ~(1 << (aid % 8));
- }
- 
--static void __sta_info_set_tim_bit(struct ieee80211_if_ap *bss,
--				   struct sta_info *sta)
--{
--	BUG_ON(!bss);
--
--	__bss_tim_set(bss, sta->sta.aid);
--
--	if (sta->local->ops->set_tim) {
--		sta->local->tim_in_locked_section = true;
--		drv_set_tim(sta->local, &sta->sta, true);
--		sta->local->tim_in_locked_section = false;
--	}
--}
--
--void sta_info_set_tim_bit(struct sta_info *sta)
-+void sta_info_recalc_tim(struct sta_info *sta)
- {
-+	struct ieee80211_local *local = sta->local;
-+	struct ieee80211_if_ap *bss = sta->sdata->bss;
- 	unsigned long flags;
-+	bool have_data = false;
- 
--	BUG_ON(!sta->sdata->bss);
--
--	spin_lock_irqsave(&sta->local->sta_lock, flags);
--	__sta_info_set_tim_bit(sta->sdata->bss, sta);
--	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
--}
-+	if (WARN_ON_ONCE(!sta->sdata->bss))
-+		return;
- 
--static void __sta_info_clear_tim_bit(struct ieee80211_if_ap *bss,
--				     struct sta_info *sta)
--{
--	BUG_ON(!bss);
-+	/* No need to do anything if the driver does all */
-+	if (local->hw.flags & IEEE80211_HW_AP_LINK_PS)
-+		return;
- 
--	__bss_tim_clear(bss, sta->sta.aid);
-+	if (sta->dead)
-+		goto done;
- 
--	if (sta->local->ops->set_tim) {
--		sta->local->tim_in_locked_section = true;
--		drv_set_tim(sta->local, &sta->sta, false);
--		sta->local->tim_in_locked_section = false;
--	}
--}
-+	have_data = test_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF) ||
-+		    !skb_queue_empty(&sta->tx_filtered) ||
-+		    !skb_queue_empty(&sta->ps_tx_buf);
- 
--void sta_info_clear_tim_bit(struct sta_info *sta)
--{
--	unsigned long flags;
-+ done:
-+	spin_lock_irqsave(&local->sta_lock, flags);
- 
--	BUG_ON(!sta->sdata->bss);
-+	if (have_data)
-+		__bss_tim_set(bss, sta->sta.aid);
-+	else
-+		__bss_tim_clear(bss, sta->sta.aid);
-+
-+	if (local->ops->set_tim) {
-+		local->tim_in_locked_section = true;
-+		drv_set_tim(local, &sta->sta, have_data);
-+		local->tim_in_locked_section = false;
-+	}
- 
--	spin_lock_irqsave(&sta->local->sta_lock, flags);
--	__sta_info_clear_tim_bit(sta->sdata->bss, sta);
--	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
-+	spin_unlock_irqrestore(&local->sta_lock, flags);
- }
- 
- static bool sta_info_buffer_expired(struct sta_info *sta, struct sk_buff *skb)
-@@ -717,6 +705,10 @@ static bool sta_info_cleanup_expire_buff
- 	unsigned long flags;
- 	struct sk_buff *skb;
- 
-+	/* This is only necessary for stations on BSS interfaces */
-+	if (!sta->sdata->bss)
-+		return false;
-+
- 	for (;;) {
- 		spin_lock_irqsave(&sta->ps_tx_buf.lock, flags);
- 		skb = skb_peek(&sta->ps_tx_buf);
-@@ -736,9 +728,9 @@ static bool sta_info_cleanup_expire_buff
- #endif
- 		dev_kfree_skb(skb);
- 
--		if (skb_queue_empty(&sta->ps_tx_buf) &&
--		    !test_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF))
--			sta_info_clear_tim_bit(sta);
-+		/* if the queue is now empty recalc TIM bit */
-+		if (skb_queue_empty(&sta->ps_tx_buf))
-+			sta_info_recalc_tim(sta);
- 	}
- 
- 	return !skb_queue_empty(&sta->ps_tx_buf);
-@@ -748,7 +740,6 @@ static int __must_check __sta_info_destr
- {
- 	struct ieee80211_local *local;
- 	struct ieee80211_sub_if_data *sdata;
--	struct sk_buff *skb;
- 	unsigned long flags;
- 	int ret, i;
- 
-@@ -792,7 +783,7 @@ static int __must_check __sta_info_destr
- 		BUG_ON(!sdata->bss);
- 
- 		atomic_dec(&sdata->bss->num_sta_ps);
--		sta_info_clear_tim_bit(sta);
-+		sta_info_recalc_tim(sta);
- 	}
- 
- 	local->num_sta--;
-@@ -818,6 +809,10 @@ static int __must_check __sta_info_destr
- 	 */
- 	synchronize_rcu();
- 
-+	local->total_ps_buffered -= skb_queue_len(&sta->ps_tx_buf);
-+	__skb_queue_purge(&sta->ps_tx_buf);
-+	__skb_queue_purge(&sta->tx_filtered);
-+
- #ifdef CONFIG_MAC80211_MESH
- 	if (ieee80211_vif_is_mesh(&sdata->vif))
- 		mesh_accept_plinks_update(sdata);
-@@ -840,14 +835,6 @@ static int __must_check __sta_info_destr
- 	}
- #endif
- 
--	while ((skb = skb_dequeue(&sta->ps_tx_buf)) != NULL) {
--		local->total_ps_buffered--;
--		dev_kfree_skb_any(skb);
--	}
--
--	while ((skb = skb_dequeue(&sta->tx_filtered)) != NULL)
--		dev_kfree_skb_any(skb);
--
- 	__sta_info_free(local, sta);
- 
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index d05c4ba..790fdce 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -1852,15 +1852,6 @@ int ai_devpath(struct si_pub *sih, char *path, int size)
  	return 0;
-@@ -1027,9 +1014,6 @@ void ieee80211_sta_ps_deliver_wakeup(str
- 	if (!(local->hw.flags & IEEE80211_HW_AP_LINK_PS))
- 		drv_sta_notify(local, sdata, STA_NOTIFY_AWAKE, &sta->sta);
- 
--	if (!skb_queue_empty(&sta->ps_tx_buf))
--		sta_info_clear_tim_bit(sta);
--
- 	/* Send all buffered frames to the station */
- 	sent = ieee80211_add_pending_skbs(local, &sta->tx_filtered);
- 	buffered = ieee80211_add_pending_skbs_fn(local, &sta->ps_tx_buf,
-@@ -1037,6 +1021,8 @@ void ieee80211_sta_ps_deliver_wakeup(str
- 	sent += buffered;
- 	local->total_ps_buffered -= buffered;
- 
-+	sta_info_recalc_tim(sta);
-+
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
- 	printk(KERN_DEBUG "%s: STA %pM aid %d sending %d filtered/%d PS frames "
- 	       "since STA not sleeping anymore\n", sdata->name,
-@@ -1086,8 +1072,7 @@ void ieee80211_sta_ps_deliver_poll_respo
- 
- 		ieee80211_add_pending_skb(local, skb);
- 
--		if (no_pending_pkts)
--			sta_info_clear_tim_bit(sta);
-+		sta_info_recalc_tim(sta);
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
- 	} else {
- 		/*
-@@ -1126,6 +1111,6 @@ void ieee80211_sta_set_buffered(struct i
- 		return;
- 
- 	set_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF);
--	sta_info_set_tim_bit(sta);
-+	sta_info_recalc_tim(sta);
  }
- EXPORT_SYMBOL(ieee80211_sta_set_buffered);
---- a/net/mac80211/status.c	2011-09-29 15:57:18.000000000 +0200
-+++ b/net/mac80211/status.c	2011-09-29 15:58:07.000000000 +0200
-@@ -106,6 +106,7 @@ static void ieee80211_handle_filtered_fr
- 	if (test_sta_flags(sta, WLAN_STA_PS_STA) &&
- 	    skb_queue_len(&sta->tx_filtered) < STA_MAX_TX_BUFFER) {
- 		skb_queue_tail(&sta->tx_filtered, skb);
-+		sta_info_recalc_tim(sta);
- 		return;
+ 
+-bool ai_pci_war16165(struct si_pub *sih)
+-{
+-	struct si_info *sii;
+-
+-	sii = (struct si_info *)sih;
+-
+-	return PCI(sii) && (sih->buscorerev <= 10);
+-}
+-
+ void ai_pci_up(struct si_pub *sih)
+ {
+ 	struct si_info *sii;
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+index a776945..3917192 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+@@ -322,8 +322,6 @@ extern void ai_write_wrap_reg(struct si_pub *sih, u32 offset, u32 val);
+ extern struct si_pub *ai_attach(void *regs, struct pci_dev *sdh, char **vars,
+ 				uint *varsz);
+ extern void ai_detach(struct si_pub *sih);
+-extern bool ai_pci_war16165(struct si_pub *sih);
+-
+ extern uint ai_coreid(struct si_pub *sih);
+ extern uint ai_corerev(struct si_pub *sih);
+ extern uint ai_corereg(struct si_pub *sih, uint coreidx, uint regoff, uint mask,
+diff --git a/drivers/staging/brcm80211/brcmsmac/d11.h b/drivers/staging/brcm80211/brcmsmac/d11.h
+index 14e60a5..cbb574a 100644
+--- a/drivers/staging/brcm80211/brcmsmac/d11.h
++++ b/drivers/staging/brcm80211/brcmsmac/d11.h
+@@ -1330,8 +1330,7 @@ struct shm_acparams {
+ #define	MHF1_FORCEFASTCLK	0x0400
+ 
+ /* Flags in M_HOST_FLAGS2 */
+-/* PR16165WAR : Enable ucode PCI slow clock WAR */
+-#define MHF2_PCISLOWCLKWAR	0x0008
++
+ /* Flush BCMC FIFO immediately */
+ #define MHF2_TXBCMC_NOW		0x0040
+ /* Enable ucode/hw power control */
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 4d5c842..3ec952c 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -829,19 +829,6 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+ 	return n >= bound_limit;
+ }
+ 
+-static void brcms_c_war16165(struct brcms_c_info *wlc, bool tx)
+-{
+-	if (tx) {
+-		/* the post-increment is used in STAY_AWAKE macro */
+-		if (wlc->txpend16165war++ == 0)
+-			brcms_c_set_ps_ctrl(wlc);
+-	} else {
+-		wlc->txpend16165war--;
+-		if (wlc->txpend16165war == 0)
+-			brcms_c_set_ps_ctrl(wlc);
+-	}
+-}
+-
+ /* process an individual struct tx_status */
+ static bool
+ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
+@@ -879,8 +866,6 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
  	}
  
+ 	p = dma_getnexttxp(wlc->hw->di[queue], DMA_RANGE_TRANSMITTED);
+-	if (wlc->war16165)
+-		brcms_c_war16165(wlc, false);
+ 	if (p == NULL)
+ 		goto fatal;
+ 
+@@ -3109,8 +3094,6 @@ static void brcms_c_flushqueues(struct brcms_c_info *wlc)
+ 	struct brcms_hardware *wlc_hw = wlc->hw;
+ 	uint i;
+ 
+-	wlc->txpend16165war = 0;
+-
+ 	/* free any posted tx packets */
+ 	for (i = 0; i < NFIFO; i++)
+ 		if (wlc_hw->di[i]) {
+@@ -3532,9 +3515,6 @@ static void brcms_b_coreinit(struct brcms_c_info *wlc)
+ 	AND_REG(&regs->ifs_ctl, 0x0FFF);
+ 	W_REG(&regs->ifs_aifsn, EDCF_AIFSN_MIN);
+ 
+-	/* dma initializations */
+-	wlc->txpend16165war = 0;
+-
+ 	/* init the tx dma engines */
+ 	for (i = 0; i < NFIFO; i++) {
+ 		if (wlc_hw->di[i])
+@@ -4832,9 +4812,6 @@ static int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device,
+ 	if (wlc_hw->boardflags & BFL_NOPLLDOWN)
+ 		brcms_b_pllreq(wlc_hw, true, BRCMS_PLLREQ_SHARED);
+ 
+-	if (ai_pci_war16165(wlc_hw->sih))
+-		wlc->war16165 = true;
+-
+ 	/* check device id(srom, nvram etc.) to set bands */
+ 	if (wlc_hw->deviceid == BCM43224_D11N_ID ||
+ 	    wlc_hw->deviceid == BCM43224_D11N_ID_VEN1)
+@@ -5833,10 +5810,6 @@ int brcms_c_up(struct brcms_c_info *wlc)
+ 	/* Set EDCF hostflags */
+ 	brcms_c_mhf(wlc, MHF1, MHF1_EDCF, MHF1_EDCF, BRCM_BAND_ALL);
+ 
+-	if (wlc->war16165)
+-		brcms_c_mhf(wlc, MHF2, MHF2_PCISLOWCLKWAR, MHF2_PCISLOWCLKWAR,
+-			BRCM_BAND_ALL);
+-
+ 	brcms_init(wlc->wl);
+ 	wlc->pub->up = true;
+ 
+@@ -7816,10 +7789,6 @@ brcms_c_txfifo(struct brcms_c_info *wlc, uint fifo, struct sk_buff *p,
+ 	if (fifo == TX_BCMC_FIFO)
+ 		frameid = le16_to_cpu(txh->TxFrameID);
+ 
+-	if (wlc->war16165)
+-		brcms_c_war16165(wlc, true);
+-
+-
+ 	/*
+ 	 * Bump up pending count for if not using rpc. If rpc is
+ 	 * used, this will be handled in brcms_b_txfifo()
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
+index d6de9c3..717843a 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.h
++++ b/drivers/staging/brcm80211/brcmsmac/main.h
+@@ -416,8 +416,6 @@ struct brcms_txq_info {
+  * band: pointer to active per-band state.
+  * corestate: per-core state (one per hw core).
+  * bandstate: per-band state (one per phy/radio).
+- * war16165: PCI slow clock 16165 war flag.
+- * txpend16165war: PCI slow clock 16165 war flag.
+  * qvalid: DirFrmQValid and BcMcFrmQValid.
+  * ampdu: ampdu module handler.
+  * asi: antsel module handler.
+@@ -508,9 +506,6 @@ struct brcms_c_info {
+ 	struct brcms_core *corestate;
+ 	struct brcms_band *bandstate[MAXBANDS];
+ 
+-	bool war16165;
+-	uint txpend16165war;
+-
+ 	/* packet queue */
+ 	uint qvalid;
+ 
+-- 
+1.7.1
 
 
