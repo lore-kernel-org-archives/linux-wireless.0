@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:57207 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753954Ab1IVXBT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 19:01:19 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 07/12] iwlagn: fix slot programming
-Date: Thu, 22 Sep 2011 15:14:55 -0700
-Message-Id: <1316729700-1770-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110923_010136_437561_1355C225)
-In-Reply-To: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:35754 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753812Ab1I0MYj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Sep 2011 08:24:39 -0400
+Received: by gyg10 with SMTP id 10so5112801gyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 05:24:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1317109807.4082.4.camel@jlt3.sipsolutions.net>
+References: <20110922154726.521122680@sipsolutions.net>
+	<20110922154849.369194760@sipsolutions.net>
+	<CAB=NE6UP9xYmLY3nJRMVdjPky87hB1YzFTHEzBv0Pt=qv3kAmg@mail.gmail.com>
+	<CAJ-Vmo=9MUaKph=EXwF2VnE+=nHg4s=j=qhR2jnwa-xsXMno7g@mail.gmail.com>
+	<1317109807.4082.4.camel@jlt3.sipsolutions.net>
+Date: Tue, 27 Sep 2011 20:24:39 +0800
+Message-ID: <CAJ-VmonVHyv0dqApO+0xyP=AfgmEHzG=fxb-rr69CVo21k1btw@mail.gmail.com> (sfid-20110927_142443_085961_3F3A3451)
+Subject: Re: [RFC 03/15] mac80211: also expire filtered frames
+From: Adrian Chadd <adrian@freebsd.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+There's sleep queue support in the net80211 stack but that doesn't
+close the race for what failed to TX because the station went to sleep
+with stuff in the hostap TX queue.
+That small window is small for 11bg/11a rates but for 11n it could be
+lots of frames.
 
-When an AP mode interface is added with a DTIM
-period of two, the slot programming is wrong.
-Fix it by taking into account the DTIM period.
+That's what I have to port to FreeBSD's ath driver (and then when it's
+all stable and sensible looking, migrate back into net80211.)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 00e6fc5..ca632f9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -370,7 +370,7 @@ int iwlagn_set_pan_params(struct iwl_priv *priv)
- 			slot1 = IWL_MIN_SLOT_TIME;
- 		} else if (!ctx_pan->vif->bss_conf.idle &&
- 			   !ctx_pan->vif->bss_conf.assoc) {
--			slot1 = bcnint * 3 - IWL_MIN_SLOT_TIME;
-+			slot1 = dtim * bcnint * 3 - IWL_MIN_SLOT_TIME;
- 			slot0 = IWL_MIN_SLOT_TIME;
- 		}
- 	} else if (ctx_pan->vif) {
--- 
-1.7.0.4
 
+Adrian
