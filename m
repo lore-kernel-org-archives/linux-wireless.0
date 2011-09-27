@@ -1,40 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:36978 "EHLO mga03.intel.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4755 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752560Ab1IZU7n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 16:59:43 -0400
-From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
-To: Henrik Friedrichsen <hrkfdn@gmail.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 26 Sep 2011 13:59:40 -0700
-Subject: RE: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM Fritz!Box
- (7390)" incompatible
-Message-ID: <C5A7FB31FD9AEA42B600BDC3C74F8E001705253B@orsmsx511.amr.corp.intel.com> (sfid-20110926_225947_342586_CAF507FA)
-References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
-	<CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com>
-	<1317048872.2400.4.camel@wwguy-ubuntu>
-	<CAJTrwG5CQKn9=1=HUDX1L5PsFbGws_zK1DTvot9i=KcMX7SwkQ@mail.gmail.com>
-	<1317049160.1958.8.camel@wwguy-huron>
-	<CAJTrwG5eELbDuGFXU4=3gSunPSkKLFvcpSe6gGE_Wc0s5BXZ+A@mail.gmail.com>
-	<CAJTrwG7tzDHxDha5x8r-GJFK=oUE6Zk5zqpN4z4L2LyAD=DueQ@mail.gmail.com>
-	<1317050380.1958.13.camel@wwguy-huron>
-	<CAJTrwG46qRYvda1vcCZXv0BTUyf26gx2qgpNgOG-bm-BCMpqfg@mail.gmail.com>
-	<1317053131.1958.15.camel@wwguy-huron>
-	<C5A7FB31FD9AEA42B600BDC3C74F8E0017052223@orsmsx511.amr.corp.intel.com>
-	<CAJTrwG5AvbtNRZi54tzAoUDv5X9QLVY3L=-OgHYRtnJ-RMesrQ@mail.gmail.com>
-	<1317062004.1958.18.camel@wwguy-huron>
- <CAJTrwG57r-B-eT-FODsDW1UgoVcS68zcUWo1mOrdHRdoXtNmCg@mail.gmail.com>
-In-Reply-To: <CAJTrwG57r-B-eT-FODsDW1UgoVcS68zcUWo1mOrdHRdoXtNmCg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	id S1751928Ab1I0Rpr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Sep 2011 13:45:47 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v2 18/26] staging: brcm80211: changing interface to
+ n-phy rssi compute function
+Date: Tue, 27 Sep 2011 10:45:22 -0700
+Message-ID: <1317145530-18839-19-git-send-email-frankyl@broadcom.com> (sfid-20110927_194731_721383_3EBA46F7)
+In-Reply-To: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSGVucmlrLA0KDQo+PiBwbGVhc2UgcmVzZXQgdGhlIHJlcG9zaXRvcnkgdG8NCj4+IGNvbW1p
-dCMxZjdiNjE3MmRiODZlOWFiMmI0Y2Q3OTQ0NDFiYjJjNDBhYjI4N2ZjDQo+Pg0KPj4gYW5kIGdp
-dmUgYSB0cnkgdG8gc2VlIGlmIHlvdSBzdGlsbCBzZWVpbmcgdGhlIGlzc3VlLg0KPg0KPk5vIG5v
-dGljZWFibGUgZGlmZmVyZW5jZSA6KA0KDQpbTVZdIFlvdSdyZSBydW5uaW5nIFdpbmRvd3MgdXNp
-bmcgdGhlIHNhbWUgY2FyZCAoNjIwNSksIHJpZ2h0PyBBbHNvLCBoYXZlIHlvdSBldmVyIHNlZW4g
-Z29vZCBwZXJmb3JtYW5jZSB3aXRoIHlvdXIgNjIwNSBvbiB5b3VyIExpbnV4IHN5c3RlbT8gV2hh
-dCBhYm91dCB3aXRoIGEgZGlmZmVyZW50IEFQPw0KDQpUaGFua3MsDQpNZWVuYWtzaGkNCg==
+From: Arend van Spriel <arend@broadcom.com>
+
+The function wlc_phy_rssi_compute_nphy() was called with pointer to
+brcms_d11rxhdr structure in which it filled in the received power
+per antenna. However, these are not used further in the driver so
+it only needs the d11rxhdr structure as input for rssi calculation.
+
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    2 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_int.h |    2 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_n.c   |    7 +------
+ 3 files changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+index a26c682..8025247 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -2646,7 +2646,7 @@ void wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
+ 			rssi -= 256;
+ 	} else if (radioid == BCM2055_ID || radioid == BCM2056_ID
+ 		   || radioid == BCM2057_ID) {
+-		rssi = wlc_phy_rssi_compute_nphy(pi, wlc_rxhdr);
++		rssi = wlc_phy_rssi_compute_nphy(pi, rxh);
+ 	}
+ 
+ end:
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h b/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h
+index b94117b..8ce0159 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h
+@@ -1183,7 +1183,7 @@ extern void wlc_phy_est_tonepwr_nphy(struct brcms_phy *pi, s32 *qdBm_pwrbuf,
+ extern void wlc_phy_radio205x_vcocal_nphy(struct brcms_phy *pi);
+ 
+ extern int wlc_phy_rssi_compute_nphy(struct brcms_phy *pi,
+-				     struct brcms_d11rxhdr *wlc_rxh);
++				     struct d11rxhdr *rxh);
+ 
+ #define NPHY_TESTPATTERN_BPHY_EVM   0
+ #define NPHY_TESTPATTERN_BPHY_RFCS  1
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
+index 58645d2..ff8b1d8 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
+@@ -23109,9 +23109,8 @@ void wlc_phy_rssi_cal_nphy(struct brcms_phy *pi)
+ }
+ 
+ int
+-wlc_phy_rssi_compute_nphy(struct brcms_phy *pi, struct brcms_d11rxhdr *wlc_rxh)
++wlc_phy_rssi_compute_nphy(struct brcms_phy *pi, struct d11rxhdr *rxh)
+ {
+-	struct d11rxhdr *rxh = &wlc_rxh->rxhdr;
+ 	s16 rxpwr, rxpwr0, rxpwr1;
+ 	s16 phyRx0_l, phyRx2_l;
+ 
+@@ -23134,10 +23133,6 @@ wlc_phy_rssi_compute_nphy(struct brcms_phy *pi, struct brcms_d11rxhdr *wlc_rxh)
+ 		rxpwr1 = phyRx2_l;
+ 	}
+ 
+-	wlc_rxh->rxpwr[0] = (s8) rxpwr0;
+-	wlc_rxh->rxpwr[1] = (s8) rxpwr1;
+-	wlc_rxh->do_rssi_ma = 0;
+-
+ 	if (pi->sh->rssi_mode == RSSI_ANT_MERGE_MAX)
+ 		rxpwr = (rxpwr0 > rxpwr1) ? rxpwr0 : rxpwr1;
+ 	else if (pi->sh->rssi_mode == RSSI_ANT_MERGE_MIN)
+-- 
+1.7.1
+
+
