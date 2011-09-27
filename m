@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:55989 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752415Ab1IWLoF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 07:44:05 -0400
-Received: by mail-bw0-f51.google.com with SMTP id zu17so4583437bkb.24
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Sep 2011 04:44:03 -0700 (PDT)
-Subject: Re: [PATCH 1/2] wl12xx: remove TIM ie from probe response
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1316077625-20014-1-git-send-email-eliad@wizery.com>
-References: <1316077625-20014-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 23 Sep 2011 14:43:59 +0300
-Message-ID: <1316778239.2157.731.camel@cumari> (sfid-20110923_134409_122579_9342B31C)
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:3546 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752742Ab1I0KIe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Sep 2011 06:08:34 -0400
+Message-ID: <4E81A098.9040708@broadcom.com> (sfid-20110927_120837_767994_9F234955)
+Date: Tue, 27 Sep 2011 12:08:24 +0200
+From: "Roland Vossen" <rvossen@broadcom.com>
+MIME-Version: 1.0
+To: "johannes Berg" <johannes@sipsolutions.net>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Questions on ieee80211_frame_duration()
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-09-15 at 12:07 +0300, Eliad Peller wrote: 
-> wl12xx uses the beacon as the probe response template.
-> However, the beacon includes a TIM ie, which shouldn't
-> exist in the probe response.
-> 
-> Delete it from the skb before configuring the probe
-> response template.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+Hello Johannes,
 
-Applied both patches.  Thanks!
+in response to one of your brcm80211 review comments, I am trying to 
+replace functions that calculate frame duration with Mac80211 counterparts.
 
--- 
-Cheers,
-Luca.
+As such, I have a hard time grasping this function:
+
+http://lxr.free-electrons.com/source/net/mac80211/util.c#L108
+
+A couple of questions:
+
+a. The comment in the 'else' branch does not mention 802.11n, but I 
+think it should. Agree ?
+
+b. The long/short preamble choice applies to CCK rates only. But this 
+function does not take that into account. Is that on purpose ?
+
+c. In 802.11n there are 4 preamble types possible:
+- long (CCK rates)
+- short (CCK rates)
+- green field
+- mixed mode
+
+The function does not seem to take the last two types into account. 
+Should it ?
+
+Bye, Roland.
 
