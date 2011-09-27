@@ -1,26 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:40325 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751948Ab1IJTCE (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:50333 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751485Ab1I0NWu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Sep 2011 15:02:04 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 57FA9540356
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Sep 2011 15:13:10 -0400 (EDT)
-Subject: Compat-wireless release for 2011-09-10 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110910190202.3F4C540631@repository3.orbit-lab.org> (sfid-20110910_210216_601125_407A67EA)
-Date: Sat, 10 Sep 2011 15:02:02 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 27 Sep 2011 09:22:50 -0400
+Received: by mail-bw0-f54.google.com with SMTP id zs8so8423255bkb.13
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 06:22:48 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: coelho@ti.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] wl12xx: set max_sched_scan_ie_len correctly
+Date: Tue, 27 Sep 2011 16:22:35 +0300
+Message-Id: <1317129755-14825-1-git-send-email-coelho@ti.com> (sfid-20110927_152253_694293_997DCA21)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fatal: Unable to look up git.kernel.org (port 9418) (Name or service not known)
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+The wiphy max_sched_scan_ie_len attribute was not set correctly and
+remained as 0, so when IEs were being passed in a scheduled scan, we
+were returning -EINVAL.
 
-compat-wireless code metrics
+Fix this by setting the attribute properly.
 
-    806210 - Total upstream lines of code being pulled
-ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
-rsync: connection unexpectedly closed (0 bytes received so far) [sender]
-rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index a51dd0e..723d657 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -4677,6 +4677,9 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 	wl->hw->wiphy->max_scan_ie_len = WL1271_CMD_TEMPL_DFLT_SIZE -
+ 			sizeof(struct ieee80211_header);
+ 
++	wl->hw->wiphy->max_sched_scan_ie_len = WL1271_CMD_TEMPL_DFLT_SIZE -
++		sizeof(struct ieee80211_header);
++
+ 	wl->hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
+ 
+ 	/* make sure all our channels fit in the scanned_ch bitmask */
+-- 
+1.7.1
+
