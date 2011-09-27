@@ -1,37 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42159 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753881Ab1IGMYg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Sep 2011 08:24:36 -0400
-Subject: Re: [RFC 3/5] nl80211/cfg80211: adding intermediate scan result
- event.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: victorg@ti.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4E6736D9.3070804@ti.com>
-References: <1315224151-16552-1-git-send-email-VictorG@ti.com>
-	 <1315224151-16552-4-git-send-email-VictorG@ti.com>
-	 <1315224512.4075.10.camel@jlt3.sipsolutions.net>  <4E6736D9.3070804@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 07 Sep 2011 11:26:59 +0200
-Message-ID: <1315387619.4002.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:33110 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752184Ab1I0MCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Sep 2011 08:02:20 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-kernel@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCHv2.1] wireless: at76c50x: use native hex_pack_byte() method
+Date: Tue, 27 Sep 2011 15:01:49 +0300
+Message-Id: <3feae30d537a79c064495cc834f585192a1e636d.1317124866.git.andriy.shevchenko@linux.intel.com> (sfid-20110927_140241_184098_A3F3B32F)
+In-Reply-To: <71d8213731be21f26a82255a4fffdbe1b6dd4a44.1316774801.git.andriy.shevchenko@linux.intel.com>
+References: <71d8213731be21f26a82255a4fffdbe1b6dd4a44.1316774801.git.andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-09-07 at 12:18 +0300, Victor Goldenshtein wrote:
-> On 05/09/2011 15:08, Johannes Berg wrote:
-> 
-> > Also, this feature needs to be discoverable somehow, I think?
-> >
-> > johannes
-> >
-> 
-> The intermediate scan event is not HW dependent, so there is no need to 
-> advertise it..
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+---
+ drivers/net/wireless/at76c50x-usb.c |   18 +++++++-----------
+ 1 files changed, 7 insertions(+), 11 deletions(-)
 
-Not with mac80211 drivers, but with cfg80211 drivers?
-
-johannes
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index 2986014..2dde5f6 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -500,10 +500,9 @@ exit:
+ 
+ #define HEX2STR_BUFFERS 4
+ #define HEX2STR_MAX_LEN 64
+-#define BIN2HEX(x) ((x) < 10 ? '0' + (x) : (x) + 'A' - 10)
+ 
+ /* Convert binary data into hex string */
+-static char *hex2str(void *buf, int len)
++static char *hex2str(void *buf, size_t len)
+ {
+ 	static atomic_t a = ATOMIC_INIT(0);
+ 	static char bufs[HEX2STR_BUFFERS][3 * HEX2STR_MAX_LEN + 1];
+@@ -514,18 +513,15 @@ static char *hex2str(void *buf, int len)
+ 	if (len > HEX2STR_MAX_LEN)
+ 		len = HEX2STR_MAX_LEN;
+ 
+-	if (len <= 0) {
+-		ret[0] = '\0';
+-		return ret;
+-	}
+-
+ 	while (len--) {
+-		*obuf++ = BIN2HEX(*ibuf >> 4);
+-		*obuf++ = BIN2HEX(*ibuf & 0xf);
++		obuf = pack_hex_byte(obuf, *ibuf++);
+ 		*obuf++ = '-';
+-		ibuf++;
+ 	}
+-	*(--obuf) = '\0';
++
++	if (*obuf == '-')
++		obuf--;
++
++	*obuf = '\0';
+ 
+ 	return ret;
+ }
+-- 
+1.7.6.3
 
