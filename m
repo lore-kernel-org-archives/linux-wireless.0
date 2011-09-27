@@ -1,66 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:65091 "EHLO mga02.intel.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4408 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751439Ab1IZQwW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 12:52:22 -0400
-Subject: Re: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM
- Fritz!Box (7390)" incompatible
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Henrik Friedrichsen <hrkfdn@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <CAJTrwG46qRYvda1vcCZXv0BTUyf26gx2qgpNgOG-bm-BCMpqfg@mail.gmail.com>
-References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
-	 <CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com>
-	 <1317048872.2400.4.camel@wwguy-ubuntu>
-	 <CAJTrwG5CQKn9=1=HUDX1L5PsFbGws_zK1DTvot9i=KcMX7SwkQ@mail.gmail.com>
-	 <1317049160.1958.8.camel@wwguy-huron>
-	 <CAJTrwG5eELbDuGFXU4=3gSunPSkKLFvcpSe6gGE_Wc0s5BXZ+A@mail.gmail.com>
-	 <CAJTrwG7tzDHxDha5x8r-GJFK=oUE6Zk5zqpN4z4L2LyAD=DueQ@mail.gmail.com>
-	 <1317050380.1958.13.camel@wwguy-huron>
-	 <CAJTrwG46qRYvda1vcCZXv0BTUyf26gx2qgpNgOG-bm-BCMpqfg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 26 Sep 2011 09:05:31 -0700
-Message-ID: <1317053131.1958.15.camel@wwguy-huron> (sfid-20110926_185225_540129_40B6F698)
-Mime-Version: 1.0
+	id S1752084Ab1I0Rps (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Sep 2011 13:45:48 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v2 09/26] staging: brcm80211: use fragment number
+ provided in transmit frame
+Date: Tue, 27 Sep 2011 10:45:13 -0700
+Message-ID: <1317145530-18839-10-git-send-email-frankyl@broadcom.com> (sfid-20110927_194727_786212_77B47B40)
+In-Reply-To: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-09-26 at 09:10 -0700, Henrik Friedrichsen wrote:
-> I see. I hope the log is useful to you. I'm not sure, but this issue
-> seems to be slightly different to your average performance issue. My
-> Android device needs 1 second to completely load the Router webpanel,
-> whereas my laptop with the Intel chip needs 30 seconds.
-> 
-> I'm afraid the patches did not make any difference. Oh btw, I did
-> apply them before making the log. I believe that was your intention.
-> 
-> On Mon, Sep 26, 2011 at 5:19 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> > On Mon, 2011-09-26 at 09:03 -0700, Henrik Friedrichsen wrote:
-> >> On Mon, Sep 26, 2011 at 4:59 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> >> > few things I will suggest and please give a try:
-> >> > 1. Please try to apply the following two patches I attach here.
-> >> > 2. load the iwlagn with debug=0x45800006, the log will be big, but it
-> >> > will contain more information on the tx/rx path.
-> >>
-> >> Here's the log you asked for:
-> >> http://diff.cc/tmp/kernel_iwlagn_2.log.bz2
-> >>
-> >> As I said, this problem does not occur with the Windows driver. You
-> >> said you are actively working on it. Does that mean, the problem is
-> >> known to you?
-> >>
-> >
-> > we are seeing performance issue and still can not root cause the
-> > problem. that is the reason I send you 2 patches for testing. We are
-> > very active working on fix the performance problem. the symptoms might
-> > be different, but we aware there were issues.
-> >
-btw, what if you using "Open/no security"?
+From: Arend van Spriel <arend@broadcom.com>
 
-Thanks
-Wey
-> >
-> >
-> >
+In the transmit path the field seq_ctrl is filled in, but the fragment
+number was not properly determined.
+
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 074e16f..dfd67de 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -7100,7 +7100,7 @@ brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
+ 				scb->seqnum[p->priority]++;
+ 
+ 			/* extract fragment number from frame first */
+-			seq = le16_to_cpu(seq) & FRAGNUM_MASK;
++			seq = le16_to_cpu(h->seq_ctrl) & FRAGNUM_MASK;
+ 			seq |= (scb->seqnum[p->priority] << SEQNUM_SHIFT);
+ 			h->seq_ctrl = cpu_to_le16(seq);
+ 
+-- 
+1.7.1
 
 
