@@ -1,180 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:62148 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752849Ab1IPOda (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:50277 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752841Ab1I1FMZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 10:33:30 -0400
-Received: by fxe4 with SMTP id 4so1724576fxe.19
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 07:33:29 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 7/6] b43: LCN-PHY: finish sense setup
-Date: Fri, 16 Sep 2011 16:36:32 +0200
-Message-Id: <1316183792-14824-7-git-send-email-zajec5@gmail.com> (sfid-20110916_163333_920870_0BB35CCB)
+	Wed, 28 Sep 2011 01:12:25 -0400
+Received: by yib18 with SMTP id 18so5990762yib.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 22:12:24 -0700 (PDT)
+Message-ID: <4E82ACB5.3000301@lwfinger.net> (sfid-20110928_071228_576163_BF24E7A2)
+Date: Wed, 28 Sep 2011 00:12:21 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Arend van Spriel <arend@broadcom.com>
+CC: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 24/26] staging: brcm80211: declared global vars in
+ softmac phy as const
+References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com> <1317145530-18839-25-git-send-email-frankyl@broadcom.com> <4E82175A.7020504@lwfinger.net> <4E823BB5.6070206@broadcom.com>
+In-Reply-To: <4E823BB5.6070206@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 09/27/2011 04:10 PM, Arend van Spriel wrote:
+> On 09/27/2011 08:35 PM, Larry Finger wrote:
+>> On 09/27/2011 12:45 PM, Franky Lin wrote:
+>>> From: Roland Vossen<rvossen@broadcom.com>
+>>>
+>>> Global variables are undesirable unless they are read only.
+>>>
+>>> Reported-by: Johannes Berg<johannes@sipsolutions.net>
+>>> Reviewed-by: Pieter-Paul Giesberts<pieterpg@broadcom.com>
+>>> Reviewed-by: Arend van Spriel<arend@broadcom.com>
+>>> Signed-off-by: Franky Lin<frankyl@broadcom.com>
+>>> ---
+>>> drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c | 16 +-----
+>>> drivers/staging/brcm80211/brcmsmac/phy/phy_int.h | 23 --------
+>>> drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c | 6 +-
+>>> drivers/staging/brcm80211/brcmsmac/phy/phy_n.c | 60 ++++++++++----------
+>>> .../staging/brcm80211/brcmsmac/phy/phytbl_lcn.c | 2 +-
+>>> 5 files changed, 36 insertions(+), 71 deletions(-)
+>>>
+>>> diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+>>> b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+>>> index f9702c0..5b81480 100644
+>>> --- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+>>> +++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+>>> @@ -52,7 +52,7 @@ struct chan_info_basic {
+>>> u16 freq;
+>>> };
+>>>
+>>> -static struct chan_info_basic chan_info_all[] = {
+>>> +static const struct chan_info_basic chan_info_all[] = {
+>>> {1, 2412},
+>>> {2, 2417},
+>>> {3, 2422},
+>> What are you doing? You make this change here in patch 24, then undo it in #25,
+>> and redo it in #26! Are you guys actually thinking about what you are doing?
+>
+> We reordered the patches a little to move the ones we got feedback about at the
+> end for rework. My bet is that you see rebase at work although I agree this is
+> pretty tricky. I am glad the net result is that the const qualifier is added.
+> There was some thinking involved in what we did today ;-)
+>
+>> This needs to be fixed. In addition, the next time you submit this patch bomb,
+>> change from V2 to V3. That is the standard way to handle resubmissions that are
+>> addressing comments, not by increasing some extra counter in the 00/XX cover
+>> patch. The VX notation helps the maintainer keep track of the patches as he
+>> knows to drop all the V2 ones when V3 arrives. Maintainers are precious and must
+>> be treated very carefully.
+>
+> And here we were thinking we would have learned all tricks about submitting
+> patches in our staging year ;-)
+>
+> So to be sure I have it right: Only the cover letter should say: [PATCH v2
+> 00/20] with the same headline as the orignal. Or should each patch say [PATCH v2
+> xx/20] even when there are 26 patches?
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_lcn.c |   90 ++++++++++++++++++++++++++++++++++-
- drivers/net/wireless/b43/phy_lcn.h |    1 +
- 2 files changed, 88 insertions(+), 3 deletions(-)
+No, the number of patches should always be correct, but I would go to V2 even if 
+there are a different number of patches in the series than there were with V1.
 
-diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
-index 3ac2357..bffeb44 100644
---- a/drivers/net/wireless/b43/phy_lcn.c
-+++ b/drivers/net/wireless/b43/phy_lcn.c
-@@ -49,6 +49,11 @@ struct lcn_tx_iir_filter {
- 	u16 values[16];
- };
- 
-+enum lcn_sense_type {
-+	B43_SENSE_TEMP,
-+	B43_SENSE_VBAT,
-+};
-+
- /* In theory it's PHY common function, move if needed */
- /* brcms_b_switch_macfreq */
- static void b43_phy_switch_macfreq(struct b43_wldev *dev, u8 spurmode)
-@@ -335,8 +340,12 @@ static void b43_phy_lcn_bu_tweaks(struct b43_wldev *dev)
- }
- 
- /* wlc_lcnphy_vbat_temp_sense_setup */
--static void b43_phy_lcn_sense_setup(struct b43_wldev *dev)
-+static void b43_phy_lcn_sense_setup(struct b43_wldev *dev,
-+				    enum lcn_sense_type sense_type)
- {
-+	u8 auxpga_vmidcourse, auxpga_vmidfine, auxpga_gain;
-+	u16 auxpga_vmid;
-+	u8 tx_pwr_idx;
- 	u8 i;
- 
- 	u16 save_radio_regs[6][2] = {
-@@ -351,21 +360,96 @@ static void b43_phy_lcn_sense_setup(struct b43_wldev *dev)
- 	};
- 	u16 save_radio_4a4;
- 
-+	msleep(1);
-+
-+	/* Save */
- 	for (i = 0; i < 6; i++)
- 		save_radio_regs[i][1] = b43_radio_read(dev,
- 						       save_radio_regs[i][0]);
- 	for (i = 0; i < 14; i++)
- 		save_phy_regs[i][1] = b43_phy_read(dev, save_phy_regs[i][0]);
-+	b43_mac_suspend(dev);
- 	save_radio_4a4 = b43_radio_read(dev, 0x4a4);
-+	/* wlc_lcnphy_set_tx_pwr_ctrl(pi, LCNPHY_TX_PWR_CTRL_OFF); */
-+	tx_pwr_idx = dev->phy.lcn->tx_pwr_curr_idx;
-+
-+	/* Setup */
-+	/* TODO: wlc_lcnphy_set_tx_pwr_by_index(pi, 127); */
-+	b43_radio_set(dev, 0x007, 0x1);
-+	b43_radio_set(dev, 0x0ff, 0x10);
-+	b43_radio_set(dev, 0x11f, 0x4);
-+
-+	b43_phy_mask(dev, 0x503, ~0x1);
-+	b43_phy_mask(dev, 0x503, ~0x4);
-+	b43_phy_mask(dev, 0x4a4, ~0x4000);
-+	b43_phy_mask(dev, 0x4a4, (u16) ~0x8000);
-+	b43_phy_mask(dev, 0x4d0, ~0x20);
-+	b43_phy_set(dev, 0x4a5, 0xff);
-+	b43_phy_maskset(dev, 0x4a5, ~0x7000, 0x5000);
-+	b43_phy_mask(dev, 0x4a5, ~0x700);
-+	b43_phy_maskset(dev, 0x40d, ~0xff, 64);
-+	b43_phy_maskset(dev, 0x40d, ~0x700, 0x600);
-+	b43_phy_maskset(dev, 0x4a2, ~0xff, 64);
-+	b43_phy_maskset(dev, 0x4a2, ~0x700, 0x600);
-+	b43_phy_maskset(dev, 0x4d9, ~0x70, 0x20);
-+	b43_phy_maskset(dev, 0x4d9, ~0x700, 0x300);
-+	b43_phy_maskset(dev, 0x4d9, ~0x7000, 0x1000);
-+	b43_phy_mask(dev, 0x4da, ~0x1000);
-+	b43_phy_set(dev, 0x4da, 0x2000);
-+	b43_phy_set(dev, 0x4a6, 0x8000);
-+
-+	b43_radio_write(dev, 0x025, 0xc);
-+	b43_radio_set(dev, 0x005, 0x8);
-+	b43_phy_set(dev, 0x938, 0x4);
-+	b43_phy_set(dev, 0x939, 0x4);
-+	b43_phy_set(dev, 0x4a4, 0x1000);
-+
-+	/* FIXME: don't hardcode */
-+	b43_lcntab_write(dev, B43_LCNTAB16(0x8, 0x6), 0x640);
-+
-+	switch (sense_type) {
-+	case B43_SENSE_TEMP:
-+		b43_phy_set(dev, 0x4d7, 0x8);
-+		b43_phy_maskset(dev, 0x4d7, ~0x7000, 0x1000);
-+		auxpga_vmidcourse = 8;
-+		auxpga_vmidfine = 0x4;
-+		auxpga_gain = 2;
-+		b43_radio_set(dev, 0x082, 0x20);
-+		break;
-+	case B43_SENSE_VBAT:
-+		b43_phy_set(dev, 0x4d7, 0x8);
-+		b43_phy_maskset(dev, 0x4d7, ~0x7000, 0x3000);
-+		auxpga_vmidcourse = 7;
-+		auxpga_vmidfine = 0xa;
-+		auxpga_gain = 2;
-+		break;
-+	}
-+	auxpga_vmid = (0x200 | (auxpga_vmidcourse << 4) | auxpga_vmidfine);
- 
--	/* TODO: config sth */
-+	b43_phy_set(dev, 0x4d8, 0x1);
-+	b43_phy_maskset(dev, 0x4d8, ~(0x3ff << 2), auxpga_vmid << 2);
-+	b43_phy_set(dev, 0x4d8, 0x2);
-+	b43_phy_maskset(dev, 0x4d8, ~(0x7 << 12), auxpga_gain << 12);
-+	b43_phy_set(dev, 0x4d0, 0x20);
-+	b43_radio_write(dev, 0x112, 0x6);
- 
-+	/* TODO: dummy transmission? */
-+	/* Wait if not done */
-+	if (!(b43_phy_read(dev, 0x476) & 0x8000))
-+		udelay(10);
-+
-+	/* Restore */
- 	for (i = 0; i < 6; i++)
- 		b43_radio_write(dev, save_radio_regs[i][0],
- 				save_radio_regs[i][1]);
- 	for (i = 0; i < 14; i++)
- 		b43_phy_write(dev, save_phy_regs[i][0], save_phy_regs[i][1]);
-+	/* TODO: wlc_lcnphy_set_tx_pwr_by_index(tx_pwr_idx) */
- 	b43_radio_write(dev, 0x4a4, save_radio_4a4);
-+
-+	b43_mac_enable(dev);
-+
-+	msleep(1);
- }
- 
- static bool b43_phy_lcn_load_tx_iir_cck_filter(struct b43_wldev *dev,
-@@ -499,7 +583,7 @@ static void b43_phy_lcn_tx_pwr_ctl_init(struct b43_wldev *dev)
- 		}
- 		b43_phy_lcn_set_tx_gain(dev, &tx_gains);
- 		b43_phy_lcn_set_bbmult(dev, bbmult);
--		b43_phy_lcn_sense_setup(dev); /* TODO: TEMPSENSE as arg */
-+		b43_phy_lcn_sense_setup(dev, B43_SENSE_TEMP);
- 	} else {
- 		b43err(dev->wl, "TX power control not supported for this HW\n");
- 	}
-diff --git a/drivers/net/wireless/b43/phy_lcn.h b/drivers/net/wireless/b43/phy_lcn.h
-index 2a386d0..6a7092e 100644
---- a/drivers/net/wireless/b43/phy_lcn.h
-+++ b/drivers/net/wireless/b43/phy_lcn.h
-@@ -21,6 +21,7 @@
- struct b43_phy_lcn {
- 	bool hw_pwr_ctl;
- 	bool hw_pwr_ctl_capable;
-+	u8 tx_pwr_curr_idx;
- };
- 
- 
--- 
-1.7.3.4
+There are as many ways to do it as there are kernel hackers - perhaps more. The 
+main thing is to make is absolutely clear to the maintainer and any possible 
+reviewers what is happening. Make certain that the patch subject is unique and 
+have the cover patch spell out what is happening in great detail. That material 
+is never included with the git commit, so you can say anything.
 
+It would be best if your brcmsmac and brcmfmac patches are clearly distinguished 
+in the subject line. That was what tripped me. I saw V2 for soft mac and thought 
+I had seen V2 already. I had, but it was for full mac.
+
+> It would not have hurt if the cover letter of this series would indicate it
+> replaces the previous series by refering to its message-id. Would that be an
+> alternative approach or just a good addition.
+
+That would be a good addition, but I would still keep the other description as well.
+
+Larry
