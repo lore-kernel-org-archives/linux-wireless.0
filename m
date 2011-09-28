@@ -1,227 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4758 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751957Ab1I0Rpr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 13:45:47 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v2 15/26] staging: brcm80211: removed global var
- global_scb from softmac
-Date: Tue, 27 Sep 2011 10:45:19 -0700
-Message-ID: <1317145530-18839-16-git-send-email-frankyl@broadcom.com> (sfid-20110927_194650_752421_F3E440CD)
-In-Reply-To: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
-References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:55312 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105Ab1I1JgK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Sep 2011 05:36:10 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 4so360088fxe.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2011 02:36:10 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Kalyan C Gaddam <chakkal@iit.edu>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 5/5] mac80211: data path modification for TDLS peers
+Date: Wed, 28 Sep 2011 12:35:54 +0300
+Message-Id: <1317202554-21221-5-git-send-email-arik@wizery.com> (sfid-20110928_113615_414048_6BB357D1)
+In-Reply-To: <1317202554-21221-1-git-send-email-arik@wizery.com>
+References: <1317202554-21221-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Mark the STA entries of enabled TDLS peers with a new "peer authorized"
+flag.
 
-Global variables are undesirable unless they are read only. Removed by
-instead using an already defined Station Control Block variable in a
-per-device structure.
+During link setup, allow special TDLS setup frames through the AP, but
+otherwise drop all packets destined to the peer. This is required by the
+TDLS (802.11z) specification in order to prevent reordering of MSDUs
+between the AP and direct paths.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+When setup completes and the peer is authorized, send data directly,
+bypassing the AP.
+
+In the Rx path, allow data to be received directly from TDLS peers.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Cc: Kalyan C Gaddam <chakkal@iit.edu>
 ---
- drivers/staging/brcm80211/brcmsmac/ampdu.c       |    6 +++---
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c |   19 ++++---------------
- drivers/staging/brcm80211/brcmsmac/main.c        |   21 +++++++++++++--------
- drivers/staging/brcm80211/brcmsmac/main.h        |    4 ++++
- drivers/staging/brcm80211/brcmsmac/pub.h         |    1 -
- 5 files changed, 24 insertions(+), 27 deletions(-)
+ net/mac80211/cfg.c      |   10 ++++++++++
+ net/mac80211/sta_info.h |    5 ++++-
+ net/mac80211/tx.c       |   42 ++++++++++++++++++++++++++++++++++++++----
+ net/wireless/util.c     |    5 +++--
+ 4 files changed, 55 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/ampdu.c b/drivers/staging/brcm80211/brcmsmac/ampdu.c
-index b94d60c..e29c62e 100644
---- a/drivers/staging/brcm80211/brcmsmac/ampdu.c
-+++ b/drivers/staging/brcm80211/brcmsmac/ampdu.c
-@@ -314,7 +314,7 @@ static void brcms_c_scb_ampdu_update_config(struct ampdu_info *ampdu,
- 
- static void brcms_c_scb_ampdu_update_config_all(struct ampdu_info *ampdu)
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9fbe5f4..9998514 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2419,6 +2419,7 @@ fail:
+ static int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
+ 			       u8 *peer, enum nl80211_tdls_operation oper)
  {
--	brcms_c_scb_ampdu_update_config(ampdu, ampdu->wlc->pub->global_scb);
-+	brcms_c_scb_ampdu_update_config(ampdu, &ampdu->wlc->pri_scb);
- }
++	struct sta_info *sta;
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
  
- static void brcms_c_ffpld_calc_mcs2ampdu_table(struct ampdu_info *ampdu, int f)
-@@ -482,7 +482,7 @@ brcms_c_ampdu_tx_operational(struct brcms_c_info *wlc, u8 tid,
- 	struct scb_ampdu *scb_ampdu;
- 	struct scb_ampdu_tid_ini *ini;
- 	struct ampdu_info *ampdu = wlc->ampdu;
--	struct scb *scb = wlc->pub->global_scb;
-+	struct scb *scb = &wlc->pri_scb;
- 	scb_ampdu = &scb->scb_ampdu;
+ 	if (!(wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS))
+@@ -2433,6 +2434,15 @@ static int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
  
- 	if (!ampdu->ini_enable[tid]) {
-@@ -542,7 +542,7 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
- 
- 	f = ampdu->fifo_tb + prio2fifo[tid];
- 
--	scb = wlc->pub->global_scb;
-+	scb = &wlc->pri_scb;
- 	scb_ampdu = &scb->scb_ampdu;
- 	ini = &scb_ampdu->ini[tid];
- 
-diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-index d5d0d9e..1c45687 100644
---- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-@@ -616,25 +616,14 @@ static int
- brcms_ops_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	       struct ieee80211_sta *sta)
- {
--	struct scb *scb;
--
--	int i;
- 	struct brcms_info *wl = hw->priv;
-+	struct scb *scb = &wl->wlc->pri_scb;
- 
--	/* Init the scb */
--	scb = (struct scb *)sta->drv_priv;
--	memset(scb, 0, sizeof(struct scb));
--	for (i = 0; i < NUMPRIO; i++)
--		scb->seqctl[i] = 0xFFFF;
--	scb->seqctl_nonqos = 0xFFFF;
--	scb->magic = SCB_MAGIC;
-+	brcms_c_init_scb(scb);
- 
--	wl->pub->global_scb = scb;
- 	wl->pub->global_ampdu = &(scb->scb_ampdu);
- 	wl->pub->global_ampdu->scb = scb;
- 	wl->pub->global_ampdu->max_pdu = 16;
--	brcmu_pktq_init(&scb->scb_ampdu.txq, AMPDU_MAX_SCB_TID,
--		  AMPDU_MAX_SCB_TID * PKTQ_LEN_DEFAULT);
- 
- 	sta->ht_cap.ht_supported = true;
- 	sta->ht_cap.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
-@@ -657,8 +646,8 @@ brcms_ops_ampdu_action(struct ieee80211_hw *hw,
- 		    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
- 		    u8 buf_size)
- {
--	struct scb *scb = (struct scb *)sta->drv_priv;
- 	struct brcms_info *wl = hw->priv;
-+	struct scb *scb = &wl->wlc->pri_scb;
- 	int status;
- 
- 	if (WARN_ON(scb->magic != SCB_MAGIC))
-@@ -1038,7 +1027,7 @@ static int ieee_hw_init(struct ieee80211_hw *hw)
- 
- 	hw->rate_control_algorithm = "minstrel_ht";
- 
--	hw->sta_data_size = sizeof(struct scb);
-+	hw->sta_data_size = 0;
- 	return ieee_hw_rate_init(hw);
- }
- 
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index a3c0157..7a14ab9 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -882,7 +882,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
- 	h = (struct ieee80211_hdr *)((u8 *) (txh + 1) + D11_PHY_HDR_LEN);
- 
- 	if (tx_info->control.sta)
--		scb = (struct scb *)tx_info->control.sta->drv_priv;
-+		scb = &wlc->pri_scb;
- 
- 	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
- 		brcms_c_ampdu_dotxstatus(wlc->ampdu, scb, p, txs);
-@@ -3331,14 +3331,21 @@ static u16 brcms_c_init_chanspec(struct brcms_c_info *wlc)
- 	return chanspec;
- }
- 
--static struct scb global_scb;
--
--static void brcms_c_init_scb(struct brcms_c_info *wlc, struct scb *scb)
-+void brcms_c_init_scb(struct scb *scb)
- {
- 	int i;
+ 	switch (oper) {
+ 	case NL80211_TDLS_ENABLE_LINK:
++		rcu_read_lock();
++		sta = sta_info_get(sdata, peer);
++		if (!sta) {
++			rcu_read_unlock();
++			return -ENOLINK;
++		}
 +
-+	memset(scb, 0, sizeof(struct scb));
- 	scb->flags = SCB_WMECAP | SCB_HTCAP;
--	for (i = 0; i < NUMPRIO; i++)
-+	for (i = 0; i < NUMPRIO; i++) {
- 		scb->seqnum[i] = 0;
-+		scb->seqctl[i] = 0xFFFF;
-+	}
-+
-+	scb->seqctl_nonqos = 0xFFFF;
-+	scb->magic = SCB_MAGIC;
-+	brcmu_pktq_init(&scb->scb_ampdu.txq, AMPDU_MAX_SCB_TID,
-+		  AMPDU_MAX_SCB_TID * PKTQ_LEN_DEFAULT);
- }
- 
- /* d11 core init
-@@ -3799,8 +3806,6 @@ void brcms_c_init(struct brcms_c_info *wlc)
- 
- 	brcms_c_bandinit_ordered(wlc, chanspec);
- 
--	brcms_c_init_scb(wlc, &global_scb);
--
- 	/* init probe response timeout */
- 	brcms_c_write_shm(wlc, M_PRS_MAXTIME, wlc->prb_resp_timeout);
- 
-@@ -7684,7 +7689,7 @@ void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
- {
- 	u8 prio;
- 	uint fifo;
--	struct scb *scb = &global_scb;
-+	struct scb *scb = &wlc->pri_scb;
- 	struct ieee80211_hdr *d11_header = (struct ieee80211_hdr *)(sdu->data);
- 
- 	/*
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
-index 9e12a14..47665da 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.h
-+++ b/drivers/staging/brcm80211/brcmsmac/main.h
-@@ -22,6 +22,7 @@
- #include <brcmu_utils.h>
- #include "types.h"
- #include "d11.h"
-+#include "scb.h"
- 
- #define	INVCHANNEL		255	/* invalid channel */
- 
-@@ -483,6 +484,7 @@ struct brcms_txq_info {
-  * tx_duty_cycle_cck: maximum allowed duty cycle for CCK.
-  * pkt_queue: txq for transmit packets.
-  * wiphy:
-+ * pri_scb: primary Station Control Block
++		set_sta_flags(sta, WLAN_STA_TDLS_PEER_AUTH);
++		rcu_read_unlock();
+ 		break;
+ 	case NL80211_TDLS_DISABLE_LINK:
+ 		return sta_info_destroy_addr(sdata, peer);
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index b6bd4e9..c10e2e8 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -45,7 +45,9 @@
+  *	station in power-save mode, reply when the driver unblocks.
+  * @WLAN_STA_PS_DRIVER_BUF: Station has frames pending in driver internal
+  *	buffers. Automatically cleared on station wake-up.
+- * @WLAN_STA_TDLS_PEER: station is a TDLS peer.
++ * @WLAN_STA_TDLS_PEER: Station is a TDLS peer.
++ * @WLAN_STA_TDLS_PEER_AUTH: This TDLS peer is authorized to send direct
++ *	packets. This means the link is enabled.
   */
- struct brcms_c_info {
- 	struct brcms_pub *pub;
-@@ -610,6 +612,7 @@ struct brcms_c_info {
- 
- 	struct brcms_txq_info *pkt_queue;
- 	struct wiphy *wiphy;
-+	struct scb pri_scb;
+ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_AUTH		= 1<<0,
+@@ -63,6 +65,7 @@ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_PSPOLL		= 1<<13,
+ 	WLAN_STA_PS_DRIVER_BUF	= 1<<14,
+ 	WLAN_STA_TDLS_PEER	= 1<<15,
++	WLAN_STA_TDLS_PEER_AUTH	= 1<<16,
  };
  
- /* antsel module specific state */
-@@ -864,5 +867,6 @@ extern void brcms_b_core_phypll_ctl(struct brcms_hardware *wlc_hw, bool on);
- extern void brcms_b_txant_set(struct brcms_hardware *wlc_hw, u16 phytxant);
- extern void brcms_b_band_stf_ss_set(struct brcms_hardware *wlc_hw,
- 				    u8 stf_mode);
-+extern void brcms_c_init_scb(struct scb *scb);
+ #define STA_TID_NUM 16
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 542272a..0ca1688 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1726,6 +1726,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	struct sta_info *sta = NULL;
+ 	u32 sta_flags = 0;
+ 	struct sk_buff *tmp_skb;
++	bool tdls_direct = false;
  
- #endif				/* _BRCM_MAIN_H_ */
-diff --git a/drivers/staging/brcm80211/brcmsmac/pub.h b/drivers/staging/brcm80211/brcmsmac/pub.h
-index 9670309..b69833e 100644
---- a/drivers/staging/brcm80211/brcmsmac/pub.h
-+++ b/drivers/staging/brcm80211/brcmsmac/pub.h
-@@ -144,7 +144,6 @@ struct brcms_bss_info {
- struct brcms_pub {
- 	struct brcms_c_info *wlc;
- 	struct ieee80211_hw *ieee_hw;
--	struct scb *global_scb;
- 	struct scb_ampdu *global_ampdu;
- 	uint mac80211_state;
- 	uint unit;		/* device instance number */
+ 	if (unlikely(skb->len < ETH_HLEN)) {
+ 		ret = NETDEV_TX_OK;
+@@ -1837,11 +1838,43 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		break;
+ #endif
+ 	case NL80211_IFTYPE_STATION:
+-		memcpy(hdr.addr1, sdata->u.mgd.bssid, ETH_ALEN);
+-		if (sdata->u.mgd.use_4addr &&
+-		    cpu_to_be16(ethertype) != sdata->control_port_protocol) {
+-			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
++		if (sdata->wdev.wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS) {
++			rcu_read_lock();
++			sta = sta_info_get(sdata, skb->data);
++			if (sta)
++				sta_flags = get_sta_flags(sta);
++			rcu_read_unlock();
++
++			/*
++			 * If the TDLS link is enabled, send everything
++			 * directly. Otherwise, allow TDLS setup frames
++			 * to be transmitted indirectly.
++			 */
++			tdls_direct =
++				(sta_flags & WLAN_STA_TDLS_PEER) &&
++				((sta_flags & WLAN_STA_TDLS_PEER_AUTH) ||
++				 !(ethertype == ETH_P_TDLS && skb->len > 14 &&
++				   skb->data[14] == WLAN_TDLS_SNAP_RFTYPE));
++		}
++
++		if (tdls_direct) {
++			/* link during setup - throw out frames to peer */
++			if (!(sta_flags & WLAN_STA_TDLS_PEER_AUTH)) {
++				ret = NETDEV_TX_OK;
++				goto fail;
++			}
++
++			/* DA SA BSSID */
++			memcpy(hdr.addr1, skb->data, ETH_ALEN);
++			memcpy(hdr.addr2, skb->data + ETH_ALEN, ETH_ALEN);
++			memcpy(hdr.addr3, sdata->u.mgd.bssid, ETH_ALEN);
++			hdrlen = 24;
++		}  else if (sdata->u.mgd.use_4addr &&
++			    cpu_to_be16(ethertype) != sdata->control_port_protocol) {
++			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS |
++					  IEEE80211_FCTL_TODS);
+ 			/* RA TA DA SA */
++			memcpy(hdr.addr1, sdata->u.mgd.bssid, ETH_ALEN);
+ 			memcpy(hdr.addr2, sdata->vif.addr, ETH_ALEN);
+ 			memcpy(hdr.addr3, skb->data, ETH_ALEN);
+ 			memcpy(hdr.addr4, skb->data + ETH_ALEN, ETH_ALEN);
+@@ -1849,6 +1882,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		} else {
+ 			fc |= cpu_to_le16(IEEE80211_FCTL_TODS);
+ 			/* BSSID SA DA */
++			memcpy(hdr.addr1, sdata->u.mgd.bssid, ETH_ALEN);
+ 			memcpy(hdr.addr2, skb->data + ETH_ALEN, ETH_ALEN);
+ 			memcpy(hdr.addr3, skb->data, ETH_ALEN);
+ 			hdrlen = 24;
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 39dbf4a..13e6596 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -392,8 +392,9 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+ 		}
+ 		break;
+ 	case cpu_to_le16(0):
+-		if (iftype != NL80211_IFTYPE_ADHOC)
+-			return -1;
++		if (iftype != NL80211_IFTYPE_ADHOC &&
++		    iftype != NL80211_IFTYPE_STATION)
++				return -1;
+ 		break;
+ 	}
+ 
 -- 
-1.7.1
-
+1.7.4.1
 
