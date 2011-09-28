@@ -1,39 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46640 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932493Ab1IHJbt (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:55808 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105Ab1I1LPE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 05:31:49 -0400
-Subject: Re: [RFC 3/5] nl80211/cfg80211: adding intermediate scan result
- event.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: victorg@ti.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4E688321.7090704@ti.com>
-References: <1315224151-16552-1-git-send-email-VictorG@ti.com>
-	 <1315224151-16552-4-git-send-email-VictorG@ti.com>
-	 <1315224512.4075.10.camel@jlt3.sipsolutions.net> <4E6736D9.3070804@ti.com>
-	 <1315387619.4002.3.camel@jlt3.sipsolutions.net> <4E686125.5050208@ti.com>
-	 <1315464556.3948.0.camel@jlt3.sipsolutions.net>  <4E688321.7090704@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 08 Sep 2011 11:27:27 +0200
-Message-ID: <1315474047.7091.1.camel@jlt3.sipsolutions.net> (sfid-20110908_113152_647510_FCE98C30)
-Mime-Version: 1.0
+	Wed, 28 Sep 2011 07:15:04 -0400
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <alpine.DEB.2.02.1109280705410.8348@p34.internal.lan>
+References: <alpine.DEB.2.02.1109280705410.8348@p34.internal.lan>
+Date: Wed, 28 Sep 2011 13:15:03 +0200
+Message-ID: <CA+icZUVVdxVEZ-gYWe3u84YUafUpZwupwBkEL0dsVAdwRB8KDA@mail.gmail.com> (sfid-20110928_131531_267509_635646E9)
+Subject: Re: Where to obtain the carl open source firmware?
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-09-08 at 11:56 +0300, Victor Goldenshtein wrote:
+Try <http://linuxwireless.org/en/users/Drivers/carl9170#Firmware>.
 
-> If I understood you correctly.. I can create new 
-> NL80211_ATTR_HW_CAPABILITY (u32) attribute which will advertise all 
-> capabilities with "dev->wiphy.flags".
+- Sedat -
 
-No, I don't think you can advertise wiphy.flags since those flags are
-internal -- you'll have to map single wiphy flags to single capability
-flags which are also defined in nl80211.h.
-
-I'd call it "NL80211_ATTR_CAPABILITIES" to sidestep the issue of it
-being a driver of HW or whatever capability.
-
-johannes
-
+On Wed, Sep 28, 2011 at 1:06 PM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+> Hi,
+>
+> Since kernel.org is down and the new kernel (3.x) does not work with the
+> older firmware, where can one obtain the firmware for this open source
+> device so I can run the 3.x kernel?
+>
+> [  412.760165] usb 1-3.3: USB disconnect, device number 4
+> [  422.489053] usb 2-2: new high speed USB device number 4 using ehci_hcd
+> [  422.656097] usb 2-2: New USB device found, idVendor=0cf3, idProduct=1002
+> [  422.656102] usb 2-2: New USB device strings: Mfr=16, Product=32,
+> SerialNumber=48
+> [  422.656105] usb 2-2: Product: USB2.0 WLAN
+> [  422.656107] usb 2-2: Manufacturer: ATHER
+> [  422.656109] usb 2-2: SerialNumber: *****
+> [  422.759079] usb 2-2: reset high speed USB device number 4 using ehci_hcd
+> [  423.025836] usb 2-2: driver   API: 1.9.4 2011-06-30 [1-1]
+> [  423.025841] usb 2-2: firmware API: 1.9.2 2010-12-25
+> [  423.025843] usb 2-2: failed to find compatible firmware descriptor.
+> [  423.025846] usb 2-2: failed to parse firmware (-61).
+>
+> Justin.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
