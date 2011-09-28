@@ -1,88 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3983 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753601Ab1IWAIJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 20:08:09 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v2 17/19] staging: brcm80211: clarified fullmac io and
- event codes
-Date: Thu, 22 Sep 2011 17:07:54 -0700
-Message-ID: <1316736476-23725-18-git-send-email-frankyl@broadcom.com> (sfid-20110923_020815_509649_F8AC249B)
-In-Reply-To: <1316736476-23725-1-git-send-email-frankyl@broadcom.com>
-References: <1316736476-23725-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:39254 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752452Ab1I1MNi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Sep 2011 08:13:38 -0400
+Message-Id: <20110928121132.038320759@sipsolutions.net> (sfid-20110928_141341_936442_C5F3E96E)
+Date: Wed, 28 Sep 2011 14:09:01 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 12/15] mac80211: add missing station flags to debugfs
+References: <20110928120849.882884360@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Added comments to make code more readable.
+My work and some previous work didn't add
+all the flags, add them now and while at it
+simplify the code.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd.h         |    4 ++++
- drivers/staging/brcm80211/brcmfmac/dhd_cdc.c     |    5 +++++
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    2 ++
- 3 files changed, 11 insertions(+), 0 deletions(-)
+ net/mac80211/debugfs_sta.c |   25 ++++++++++++++-----------
+ 1 file changed, 14 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index 7ca9172..7ab45d9 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -27,6 +27,9 @@
- #define BRCMF_C_IOCTL_MEDLEN	1536	/* "med" ioctl buffer required */
- #define	BRCMF_C_IOCTL_MAXLEN	8192
+--- a/net/mac80211/debugfs_sta.c	2011-09-28 13:53:57.000000000 +0200
++++ b/net/mac80211/debugfs_sta.c	2011-09-28 14:04:03.000000000 +0200
+@@ -56,19 +56,22 @@ STA_FILE(last_signal, last_signal, D);
+ static ssize_t sta_flags_read(struct file *file, char __user *userbuf,
+ 			      size_t count, loff_t *ppos)
+ {
+-	char buf[100];
++	char buf[121];
+ 	struct sta_info *sta = file->private_data;
  
-+/*******************************************************************************
-+ * IO codes that are interpreted by dongle firmware
-+ ******************************************************************************/
- #define BRCMF_C_UP				2
- #define BRCMF_C_SET_PROMISC			10
- #define BRCMF_C_GET_RATE			12
-@@ -171,6 +174,7 @@ struct dngl_stats {
- 	unsigned long multicast;	/* multicast packets received */
- };
- 
-+/* event codes sent by the dongle to this driver */
- #define BRCMF_E_SET_SSID			0
- #define BRCMF_E_JOIN				1
- #define BRCMF_E_START				2
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-index 91b4d3c..4c171a3 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-@@ -14,6 +14,11 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+/*******************************************************************************
-+ * Communicates with the dongle by using Broadcom specific ioctl codes.
-+ * For certain ioctl codes, the dongle interprets string data from the host.
-+ ******************************************************************************/
+-	int res = scnprintf(buf, sizeof(buf), "%s%s%s%s%s%s%s%s%s",
+-		test_sta_flag(sta, WLAN_STA_AUTH) ? "AUTH\n" : "",
+-		test_sta_flag(sta, WLAN_STA_ASSOC) ? "ASSOC\n" : "",
+-		test_sta_flag(sta, WLAN_STA_PS_STA) ? "PS (sta)\n" : "",
+-		test_sta_flag(sta, WLAN_STA_PS_DRIVER) ? "PS (driver)\n" : "",
+-		test_sta_flag(sta, WLAN_STA_AUTHORIZED) ? "AUTHORIZED\n" : "",
+-		test_sta_flag(sta, WLAN_STA_SHORT_PREAMBLE) ? "SHORT PREAMBLE\n" : "",
+-		test_sta_flag(sta, WLAN_STA_WME) ? "WME\n" : "",
+-		test_sta_flag(sta, WLAN_STA_WDS) ? "WDS\n" : "",
+-		test_sta_flag(sta, WLAN_STA_MFP) ? "MFP\n" : "");
++#define TEST(flg) \
++	test_sta_flag(sta, WLAN_STA_##flg) ? #flg "\n" : ""
 +
- #include <linux/types.h>
- #include <linux/netdevice.h>
- #include <linux/sched.h>
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index d0ae2b6..45c9e78 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -14,6 +14,8 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+/* Toplevel file. Relies on dhd_linux.c to send ioctls to the dongle. */
-+
- #include <linux/kernel.h>
- #include <linux/if_arp.h>
- #include <linux/sched.h>
--- 
-1.7.1
++	int res = scnprintf(buf, sizeof(buf),
++			    "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
++			    TEST(AUTH), TEST(ASSOC), TEST(PS_STA),
++			    TEST(PS_DRIVER), TEST(AUTHORIZED),
++			    TEST(SHORT_PREAMBLE), TEST(ASSOC_AP),
++			    TEST(WME), TEST(WDS), TEST(CLEAR_PS_FILT),
++			    TEST(MFP), TEST(BLOCK_BA), TEST(PSPOLL),
++			    TEST(UAPSD), TEST(SP), TEST(TDLS_PEER),
++			    TEST(TDLS_PEER_AUTH));
++#undef TEST
+ 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+ }
+ STA_OPS(flags);
 
 
