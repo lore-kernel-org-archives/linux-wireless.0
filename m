@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f42.google.com ([209.85.216.42]:60421 "EHLO
-	mail-qw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754635Ab1ISUlh (ORCPT
+Received: from mta21.charter.net ([216.33.127.81]:53608 "EHLO
+	mta21.charter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755175Ab1I1WyS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 16:41:37 -0400
-Received: by qwi4 with SMTP id 4so18636242qwi.1
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 13:41:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1316453903-75710-2-git-send-email-nbd@openwrt.org>
-References: <1316453903-75710-1-git-send-email-nbd@openwrt.org> <1316453903-75710-2-git-send-email-nbd@openwrt.org>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Mon, 19 Sep 2011 13:41:17 -0700
-Message-ID: <CAB=NE6XvanRQ6Yje_qHhkfzbLmZn9o5Q+5y1NobJwCyuMLFEvg@mail.gmail.com> (sfid-20110919_224141_533329_DBBA9878)
-Subject: Re: [PATCH v2 2/4] ath9k_hw: clean up tx power handling
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+	Wed, 28 Sep 2011 18:54:18 -0400
+From: Gregory.Dietsche@cuw.edu
+To: wey-yi.w.guy@intel.com
+Cc: ilw@linux.intel.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Dietsche <Gregory.Dietsche@cuw.edu>
+Subject: [PATCH] iwlagn: iwl-agn-rs: remove unnecessary null check for sta and lq_sta
+Date: Wed, 28 Sep 2011 17:54:04 -0500
+Message-Id: <1317250444-2248-1-git-send-email-Gregory.Dietsche@cuw.edu> (sfid-20110929_005444_269036_AE13B118)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCBTZXAgMTksIDIwMTEgYXQgMTA6MzggQU0sIEZlbGl4IEZpZXRrYXUgPG5iZEBvcGVu
-d3J0Lm9yZz4gd3JvdGU6Cj4gQEAgLTk4NiwyMSArOTk1LDE1IEBAIHN0YXRpYyB2b2lkIGF0aDlr
-X2h3X3NldF9kZWZfcG93ZXJfcGVyX3JhdGVfdGFibGUoc3RydWN0IGF0aF9odyAqYWgsCj4gwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqBzdHJ1Y3QgYXRoOWtfY2hhbm5lbCAqY2hhbiwKPiDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoGludDE2X3QgKnJhdGVzQXJyYXksCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqB1MTYgY2ZnQ3RsLAo+
-IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgdTE2IEFudGVubmFSZWR1Y3Rpb24sCj4gLSDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCB1MTYgdHdpY2VNYXhSZWd1bGF0b3J5UG93ZXIsCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB1MTYgYW50
-ZW5uYV9yZWR1Y3Rpb24sCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqB1MTYgcG93ZXJMaW1pdCkKPiDCoHsK
-PiDCoCNkZWZpbmUgUkVEVUNFX1NDQUxFRF9QT1dFUl9CWV9UV09fQ0hBSU4gwqAgwqAgNiDCoC8q
-IDEwKmxvZzEwKDIpKjIgKi8KPiDCoCNkZWZpbmUgUkVEVUNFX1NDQUxFRF9QT1dFUl9CWV9USFJF
-RV9DSEFJTiDCoCA5IC8qIDEwKmxvZzEwKDMpKjIgKi8KPgo+IC0gwqAgwqAgwqAgc3RydWN0IGF0
-aF9yZWd1bGF0b3J5ICpyZWd1bGF0b3J5ID0gYXRoOWtfaHdfcmVndWxhdG9yeShhaCk7Cj4gwqAg
-wqAgwqAgwqBzdHJ1Y3QgYXI1NDE2X2VlcHJvbV9kZWYgKnBFZXBEYXRhID0gJmFoLT5lZXByb20u
-ZGVmOwo+IMKgIMKgIMKgIMKgdTE2IHR3aWNlTWF4RWRnZVBvd2VyID0gTUFYX1JBVEVfUE9XRVI7
-Cj4gLSDCoCDCoCDCoCBzdGF0aWMgY29uc3QgdTE2IHRwU2NhbGVSZWR1Y3Rpb25UYWJsZVs1XSA9
-Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCB7IDAsIDMsIDYsIDksIE1BWF9SQVRFX1BPV0VSIH07
-Cj4gLQo+IMKgIMKgIMKgIMKgaW50IGk7Cj4gLSDCoCDCoCDCoCBpbnQxNl90IHR3aWNlTGFyZ2Vz
-dEFudGVubmE7Cj4gwqAgwqAgwqAgwqBzdHJ1Y3QgY2FsX2N0bF9kYXRhICpyZXA7Cj4gwqAgwqAg
-wqAgwqBzdHJ1Y3QgY2FsX3RhcmdldF9wb3dlcl9sZWcgdGFyZ2V0UG93ZXJPZmRtLCB0YXJnZXRQ
-b3dlckNjayA9IHsKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDAsIHsgMCwgMCwgMCwgMH0KPiBA
-QCAtMTAxMiw3ICsxMDE1LDcgQEAgc3RhdGljIHZvaWQgYXRoOWtfaHdfc2V0X2RlZl9wb3dlcl9w
-ZXJfcmF0ZV90YWJsZShzdHJ1Y3QgYXRoX2h3ICphaCwKPiDCoCDCoCDCoCDCoHN0cnVjdCBjYWxf
-dGFyZ2V0X3Bvd2VyX2h0IHRhcmdldFBvd2VySHQyMCwgdGFyZ2V0UG93ZXJIdDQwID0gewo+IMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgMCwgezAsIDAsIDAsIDB9Cj4gwqAgwqAgwqAgwqB9Owo+IC0g
-wqAgwqAgwqAgdTE2IHNjYWxlZFBvd2VyID0gMCwgbWluQ3RsUG93ZXIsIG1heFJlZ0FsbG93ZWRQ
-b3dlcjsKPiArIMKgIMKgIMKgIHUxNiBzY2FsZWRQb3dlciA9IDAsIG1pbkN0bFBvd2VyOwo+IMKg
-IMKgIMKgIMKgc3RhdGljIGNvbnN0IHUxNiBjdGxNb2Rlc0ZvcjExYVtdID0gewo+IMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgQ1RMXzExQSwgQ1RMXzVHSFQyMCwgQ1RMXzExQV9FWFQsIENUTF81R0hU
-NDAKPiDCoCDCoCDCoCDCoH07CgpBbHRob3VnaCB3ZSBkbyBub3QgdXNlIHRoZSByZWctPnRwX3Nj
-YWxlIEkgc2VlIG5vIGxvZyB3aGljaCBleHBsYWlucwp0aGF0IGl0IHdpbGwgbm90LCBJJ20gcmV2
-aWV3aW5nIFRQQyByaWdodCBub3cgYW5kIHdlIGRvIG5lZWQgdG8Kc3VwcG9ydCBpdCBidXQgaXRz
-IHVuY2xlYXIgdG8gbWUgeWV0IGlmIHdlIGFyZSBkb2luZyBldmVyeXRoaW5nCmNvcnJlY3RseSBp
-biBtYWM4MDIxMSAvIGNmZzgwMjExIGZvciBpdC4gQXMgZmFyIGFzIEkgY2FuIHNlZSB0aGUKdHBf
-c2NhbGUgc3R1ZmYgaXMgdXNlZCBvbmx5IGlmIHRoZSBkZWZhdWx0IGlzIG5vdCBzZXQsIGJ1dCBh
-cyB5b3UKbm90ZWQgaXRzIGFsd2F5cyBzZXQgdG8gdGhlIGRlZmF1bHQuIEkgYW0gdHJ5aW5nIHRv
-IHJldmlldyB0aGUKaW50ZXJuYWwgY29kZSB0byBzZWUgdW5kZXIgd2hhdCBjYXNlcyB0aGlzIGNo
-YW5nZXMgYnV0IGl0cyBoYXJkIHRvCnJldmlldy4gQWx0aG91Z2ggSSdkIGxpa2UgdG8gc2VlIHRo
-aXMgcmVtb3ZlZCBJJ2QgcHJlZmVyIHRvIHRyZWF0IHRoaXMKc2VwYXJhdGVseSBmcm9tIHRoZSBj
-bGVhbnVwIHlvdSBhcmUgZG9pbmcsIHdoaWNoIEkgZG8gZmluZCBoaWdobHkKdmFsdWFibGUuCgog
-IEx1aXMK
+From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+
+both sta and lq_sta are guaranteed to be not null in the
+calling function so we don't need to check them here.
+
+Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 3789ff4..e5ea33b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2269,9 +2269,6 @@ static void rs_rate_scale_perform(struct iwl_priv *priv,
+ 	    info->flags & IEEE80211_TX_CTL_NO_ACK)
+ 		return;
+ 
+-	if (!sta || !lq_sta)
+-		return;
+-
+ 	lq_sta->supp_rates = sta->supp_rates[lq_sta->band];
+ 
+ 	tid = rs_tl_add_packet(lq_sta, hdr);
+-- 
+1.7.6.4
+
