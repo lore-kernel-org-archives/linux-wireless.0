@@ -1,200 +1,587 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:50755 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751878Ab1IVGyF convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39201 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753777Ab1I1MNF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 02:54:05 -0400
-Received: by wyg34 with SMTP id 34so2661734wyg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 23:54:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-	<20110920130338.GA9885@kroah.com>
-	<20110920132203.GB7800@tuxdriver.com>
-	<20110920140020.GA11386@kroah.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com>
-	<CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
-Date: Thu, 22 Sep 2011 08:54:03 +0200
-Message-ID: <CACna6rw+svsXJ4N_8h2a0YLyRw7T5cggZzLWzBsjd=0RxVWJrg@mail.gmail.com> (sfid-20110922_085410_197602_94FA1214)
-Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline patch #2
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Brett Rudley <brudley@broadcom.com>
-Cc: Greg KH <greg@kroah.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 28 Sep 2011 08:13:05 -0400
+Message-Id: <20110928121129.541566399@sipsolutions.net> (sfid-20110928_141310_398436_AFEB4943)
+Date: Wed, 28 Sep 2011 14:08:53 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 04/15] mac80211: split PS buffers into ACs
+References: <20110928120849.882884360@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 22 września 2011 00:12 użytkownik Brett Rudley
-<brudley@broadcom.com> napisał:
->> > Our original plan was to remain a separate driver from b43. We were
->> aware of it and all the good work that had been done to create it and we
->> had no intention of interfering with it.  At that point there had not
->> been very much recent movement in b43 and it did not support any of our
->> AXI based chips.  We figured that ssb vs AXI was a good dividing line and
->> there would be no conflict, and there wasn't initially.
->>
->> The first obvious problem is that there are SSB and BCMA (aka AXI)
->> cards using N-PHY. That resulted in PHY code duplication between b43
->> and brcmsmac. And since we already supported N-PHY in b43, adding bcma
->> support automatically gave us BCM43224 and BCM43225 support. That of
->> course means duplicated supported for the same hardware.
->
-> Agree, when you created bcma, it did duplicate HW support already in brcmsmac.  Why didn't you address that then?
+From: Johannes Berg <johannes.berg@intel.com>
 
-bcma is not the issue, it had to be created anyway. We can not accept
-one driver handling all the BCMA/AXI cores (80211, ethernet, whatever
-else). And you, I believe brcmsmac has to switch to bcma.
+For uAPSD support we'll need to have per-AC PS
+buffers. As this is a major undertaking, split
+the buffers before really adding support for
+uAPSD. This already makes some reference to the
+uapsd_queues variable, but for now that will
+never be non-zero.
+
+Since book-keeping is complicated, also change
+the logic for keeping a maximum of frames only
+and allow 64 frames per AC (up from 128 for a
+station).
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h     |    1 
+ net/mac80211/debugfs_sta.c |   10 +-
+ net/mac80211/sta_info.c    |  197 ++++++++++++++++++++++++++++++++++-----------
+ net/mac80211/sta_info.h    |   24 ++---
+ net/mac80211/status.c      |   17 +++
+ net/mac80211/tx.c          |   42 +++++----
+ 6 files changed, 211 insertions(+), 80 deletions(-)
+
+--- a/net/mac80211/sta_info.c	2011-09-28 13:18:30.000000000 +0200
++++ b/net/mac80211/sta_info.c	2011-09-28 13:22:04.000000000 +0200
+@@ -309,8 +309,10 @@ struct sta_info *sta_info_alloc(struct i
+ 		 */
+ 		sta->timer_to_tid[i] = i;
+ 	}
+-	skb_queue_head_init(&sta->ps_tx_buf);
+-	skb_queue_head_init(&sta->tx_filtered);
++	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
++		skb_queue_head_init(&sta->ps_tx_buf[i]);
++		skb_queue_head_init(&sta->tx_filtered[i]);
++	}
+ 
+ 	for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
+ 		sta->last_seq_ctrl[i] = cpu_to_le16(USHRT_MAX);
+@@ -641,31 +643,73 @@ static inline void __bss_tim_clear(struc
+ 	bss->tim[aid / 8] &= ~(1 << (aid % 8));
+ }
+ 
++static unsigned long ieee80211_tids_for_ac(int ac)
++{
++	/* If we ever support TIDs > 7, this obviously needs to be adjusted */
++	switch (ac) {
++	case IEEE80211_AC_VO:
++		return BIT(6) | BIT(7);
++	case IEEE80211_AC_VI:
++		return BIT(4) | BIT(5);
++	case IEEE80211_AC_BE:
++		return BIT(0) | BIT(3);
++	case IEEE80211_AC_BK:
++		return BIT(1) | BIT(2);
++	default:
++		WARN_ON(1);
++		return 0;
++	}
++}
++
+ void sta_info_recalc_tim(struct sta_info *sta)
+ {
+ 	struct ieee80211_local *local = sta->local;
+ 	struct ieee80211_if_ap *bss = sta->sdata->bss;
+ 	unsigned long flags;
+-	bool have_data;
++	bool indicate_tim = false;
++	u8 ignore_for_tim = sta->sta.uapsd_queues;
++	int ac;
+ 
+ 	/* No need to do anything if the driver does all */
+ 	if (local->hw.flags & IEEE80211_HW_AP_LINK_PS)
+ 		return;
+ 
+-	have_data = test_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF) ||
+-		    !skb_queue_empty(&sta->tx_filtered) ||
+-		    !skb_queue_empty(&sta->ps_tx_buf);
++	/*
++	 * If all ACs are delivery-enabled then we should build
++	 * the TIM bit for all ACs anyway; if only some are then
++	 * we ignore those and build the TIM bit using only the
++	 * non-enabled ones.
++	 */
++	if (ignore_for_tim == BIT(IEEE80211_NUM_ACS) - 1)
++		ignore_for_tim = 0;
++
++	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
++		unsigned long tids;
++
++		if (ignore_for_tim & BIT(ac))
++			continue;
++
++		indicate_tim |= !skb_queue_empty(&sta->tx_filtered[ac]) ||
++				!skb_queue_empty(&sta->ps_tx_buf[ac]);
++		if (indicate_tim)
++			break;
++
++		tids = ieee80211_tids_for_ac(ac);
++
++		indicate_tim |=
++			sta->driver_buffered_tids & tids;
++	}
+ 
+ 	spin_lock_irqsave(&local->sta_lock, flags);
+ 
+-	if (have_data)
++	if (indicate_tim)
+ 		__bss_tim_set(bss, sta->sta.aid);
+ 	else
+ 		__bss_tim_clear(bss, sta->sta.aid);
+ 
+ 	if (local->ops->set_tim) {
+ 		local->tim_in_locked_section = true;
+-		drv_set_tim(local, &sta->sta, have_data);
++		drv_set_tim(local, &sta->sta, indicate_tim);
+ 		local->tim_in_locked_section = false;
+ 	}
+ 
+@@ -692,8 +736,8 @@ static bool sta_info_buffer_expired(stru
+ }
+ 
+ 
+-static bool sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
+-					     struct sta_info *sta)
++static bool sta_info_cleanup_expire_buffered_ac(struct ieee80211_local *local,
++						struct sta_info *sta, int ac)
+ {
+ 	unsigned long flags;
+ 	struct sk_buff *skb;
+@@ -706,13 +750,13 @@ static bool sta_info_cleanup_expire_buff
+ 	 * total_ps_buffered counter.
+ 	 */
+ 	for (;;) {
+-		spin_lock_irqsave(&sta->tx_filtered.lock, flags);
+-		skb = skb_peek(&sta->tx_filtered);
++		spin_lock_irqsave(&sta->tx_filtered[ac].lock, flags);
++		skb = skb_peek(&sta->tx_filtered[ac]);
+ 		if (sta_info_buffer_expired(sta, skb))
+-			skb = __skb_dequeue(&sta->tx_filtered);
++			skb = __skb_dequeue(&sta->tx_filtered[ac]);
+ 		else
+ 			skb = NULL;
+-		spin_unlock_irqrestore(&sta->tx_filtered.lock, flags);
++		spin_unlock_irqrestore(&sta->tx_filtered[ac].lock, flags);
+ 
+ 		/*
+ 		 * Frames are queued in order, so if this one
+@@ -732,13 +776,13 @@ static bool sta_info_cleanup_expire_buff
+ 	 * buffered frames.
+ 	 */
+ 	for (;;) {
+-		spin_lock_irqsave(&sta->ps_tx_buf.lock, flags);
+-		skb = skb_peek(&sta->ps_tx_buf);
++		spin_lock_irqsave(&sta->ps_tx_buf[ac].lock, flags);
++		skb = skb_peek(&sta->ps_tx_buf[ac]);
+ 		if (sta_info_buffer_expired(sta, skb))
+-			skb = __skb_dequeue(&sta->ps_tx_buf);
++			skb = __skb_dequeue(&sta->ps_tx_buf[ac]);
+ 		else
+ 			skb = NULL;
+-		spin_unlock_irqrestore(&sta->ps_tx_buf.lock, flags);
++		spin_unlock_irqrestore(&sta->ps_tx_buf[ac].lock, flags);
+ 
+ 		/*
+ 		 * frames are queued in order, so if this one
+@@ -768,8 +812,22 @@ static bool sta_info_cleanup_expire_buff
+ 	 * used to check whether the cleanup timer still needs to run,
+ 	 * if there are no frames we don't need to rearm the timer.
+ 	 */
+-	return !(skb_queue_empty(&sta->ps_tx_buf) &&
+-		 skb_queue_empty(&sta->tx_filtered));
++	return !(skb_queue_empty(&sta->ps_tx_buf[ac]) &&
++		 skb_queue_empty(&sta->tx_filtered[ac]));
++}
++
++static bool sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
++					     struct sta_info *sta)
++{
++	bool have_buffered = false;
++	int ac;
++
++	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
++		have_buffered |=
++			sta_info_cleanup_expire_buffered_ac(local, sta, ac);
++	}
++
++	return have_buffered;
+ }
+ 
+ static int __must_check __sta_info_destroy(struct sta_info *sta)
+@@ -777,7 +835,7 @@ static int __must_check __sta_info_destr
+ 	struct ieee80211_local *local;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	unsigned long flags;
+-	int ret, i;
++	int ret, i, ac;
+ 
+ 	might_sleep();
+ 
+@@ -814,9 +872,11 @@ static int __must_check __sta_info_destr
+ 
+ 	sta->dead = true;
+ 
+-	local->total_ps_buffered -= skb_queue_len(&sta->ps_tx_buf);
+-	__skb_queue_purge(&sta->ps_tx_buf);
+-	__skb_queue_purge(&sta->tx_filtered);
++	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
++		local->total_ps_buffered -= skb_queue_len(&sta->ps_tx_buf[ac]);
++		__skb_queue_purge(&sta->ps_tx_buf[ac]);
++		__skb_queue_purge(&sta->tx_filtered[ac]);
++	}
+ 
+ 	if (test_and_clear_sta_flags(sta,
+ 				WLAN_STA_PS_STA | WLAN_STA_PS_DRIVER)) {
+@@ -1044,17 +1104,33 @@ void ieee80211_sta_ps_deliver_wakeup(str
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+-	int sent, buffered;
++	struct sk_buff_head pending;
++	int filtered = 0, buffered = 0, ac;
++
++	BUILD_BUG_ON(BITS_TO_LONGS(STA_TID_NUM) > 1);
++	sta->driver_buffered_tids = 0;
+ 
+-	clear_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF);
+ 	if (!(local->hw.flags & IEEE80211_HW_AP_LINK_PS))
+ 		drv_sta_notify(local, sdata, STA_NOTIFY_AWAKE, &sta->sta);
+ 
++	skb_queue_head_init(&pending);
++
+ 	/* Send all buffered frames to the station */
+-	sent = ieee80211_add_pending_skbs(local, &sta->tx_filtered);
+-	buffered = ieee80211_add_pending_skbs_fn(local, &sta->ps_tx_buf,
+-						 clear_sta_ps_flags, sta);
+-	sent += buffered;
++	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
++		int count = skb_queue_len(&pending), tmp;
++
++		skb_queue_splice_tail_init(&sta->tx_filtered[ac], &pending);
++		tmp = skb_queue_len(&pending);
++		filtered += tmp - count;
++		count = tmp;
++
++		skb_queue_splice_tail_init(&sta->ps_tx_buf[ac], &pending);
++		tmp = skb_queue_len(&pending);
++		buffered += tmp - count;
++	}
++
++	ieee80211_add_pending_skbs_fn(local, &pending, clear_sta_ps_flags, sta);
++
+ 	local->total_ps_buffered -= buffered;
+ 
+ 	sta_info_recalc_tim(sta);
+@@ -1062,7 +1138,7 @@ void ieee80211_sta_ps_deliver_wakeup(str
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+ 	printk(KERN_DEBUG "%s: STA %pM aid %d sending %d filtered/%d PS frames "
+ 	       "since STA not sleeping anymore\n", sdata->name,
+-	       sta->sta.addr, sta->sta.aid, sent - buffered, buffered);
++	       sta->sta.addr, sta->sta.aid, filtered, buffered);
+ #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
+ }
+ 
+@@ -1070,17 +1146,43 @@ void ieee80211_sta_ps_deliver_poll_respo
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+-	struct sk_buff *skb;
+-	int no_pending_pkts;
++	struct sk_buff *skb = NULL;
++	bool more_data = false;
++	int ac;
++	u8 ignore_for_response = sta->sta.uapsd_queues;
++
++	/*
++	 * If all ACs are delivery-enabled then we should reply
++	 * from any of them, if only some are enabled we reply
++	 * only from the non-enabled ones.
++	 */
++	if (ignore_for_response == BIT(IEEE80211_NUM_ACS) - 1)
++		ignore_for_response = 0;
++
++	/*
++	 * Get response frame and more data bit for it.
++	 */
++	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
++		if (ignore_for_response & BIT(ac))
++			continue;
++
++		if (!skb) {
++			skb = skb_dequeue(&sta->tx_filtered[ac]);
++			if (!skb) {
++				skb = skb_dequeue(&sta->ps_tx_buf[ac]);
++				if (skb)
++					local->total_ps_buffered--;
++			}
++		}
++
++		/* FIXME: take into account driver-buffered frames */
+ 
+-	skb = skb_dequeue(&sta->tx_filtered);
+-	if (!skb) {
+-		skb = skb_dequeue(&sta->ps_tx_buf);
+-		if (skb)
+-			local->total_ps_buffered--;
++		if (!skb_queue_empty(&sta->tx_filtered[ac]) ||
++		    !skb_queue_empty(&sta->ps_tx_buf[ac])) {
++			more_data = true;
++			break;
++		}
+ 	}
+-	no_pending_pkts = skb_queue_empty(&sta->tx_filtered) &&
+-		skb_queue_empty(&sta->ps_tx_buf);
+ 
+ 	if (skb) {
+ 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+@@ -1094,14 +1196,13 @@ void ieee80211_sta_ps_deliver_poll_respo
+ 		info->flags |= IEEE80211_TX_CTL_PSPOLL_RESPONSE;
+ 
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+-		printk(KERN_DEBUG "STA %pM aid %d: PS Poll (entries after %d)\n",
+-		       sta->sta.addr, sta->sta.aid,
+-		       skb_queue_len(&sta->ps_tx_buf));
++		printk(KERN_DEBUG "STA %pM aid %d: PS Poll\n",
++		       sta->sta.addr, sta->sta.aid);
+ #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
+ 
+ 		/* Use MoreData flag to indicate whether there are more
+ 		 * buffered frames for this STA */
+-		if (no_pending_pkts)
++		if (!more_data)
+ 			hdr->frame_control &= cpu_to_le16(~IEEE80211_FCTL_MOREDATA);
+ 		else
+ 			hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+@@ -1143,10 +1244,14 @@ void ieee80211_sta_set_buffered(struct i
+ {
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+ 
+-	if (!buffered)
++	if (WARN_ON(tid >= STA_TID_NUM))
+ 		return;
+ 
+-	set_sta_flags(sta, WLAN_STA_PS_DRIVER_BUF);
++	if (buffered)
++		set_bit(tid, &sta->driver_buffered_tids);
++	else
++		clear_bit(tid, &sta->driver_buffered_tids);
++
+ 	sta_info_recalc_tim(sta);
+ }
+ EXPORT_SYMBOL(ieee80211_sta_set_buffered);
+--- a/net/mac80211/sta_info.h	2011-09-28 13:18:29.000000000 +0200
++++ b/net/mac80211/sta_info.h	2011-09-28 13:22:04.000000000 +0200
+@@ -43,8 +43,6 @@
+  *	be in the queues
+  * @WLAN_STA_PSPOLL: Station sent PS-poll while driver was keeping
+  *	station in power-save mode, reply when the driver unblocks.
+- * @WLAN_STA_PS_DRIVER_BUF: Station has frames pending in driver internal
+- *	buffers. Automatically cleared on station wake-up.
+  * @WLAN_STA_TDLS_PEER: Station is a TDLS peer.
+  * @WLAN_STA_TDLS_PEER_AUTH: This TDLS peer is authorized to send direct
+  *	packets. This means the link is enabled.
+@@ -63,7 +61,6 @@ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_BLOCK_BA	= 1<<11,
+ 	WLAN_STA_PS_DRIVER	= 1<<12,
+ 	WLAN_STA_PSPOLL		= 1<<13,
+-	WLAN_STA_PS_DRIVER_BUF	= 1<<14,
+ 	WLAN_STA_TDLS_PEER	= 1<<15,
+ 	WLAN_STA_TDLS_PEER_AUTH	= 1<<16,
+ };
+@@ -212,11 +209,13 @@ struct sta_ampdu_mlme {
+  * @drv_unblock_wk: used for driver PS unblocking
+  * @listen_interval: listen interval of this station, when we're acting as AP
+  * @flags: STA flags, see &enum ieee80211_sta_info_flags
+- * @ps_tx_buf: buffer of frames to transmit to this station
+- *	when it leaves power saving state
+- * @tx_filtered: buffer of frames we already tried to transmit
+- *	but were filtered by hardware due to STA having entered
+- *	power saving state
++ * @ps_tx_buf: buffers (per AC) of frames to transmit to this station
++ *	when it leaves power saving state or polls
++ * @tx_filtered: buffers (per AC) of frames we already tried to
++ *	transmit but were filtered by hardware due to STA having
++ *	entered power saving state, these are also delivered to
++ *	the station when it leaves powersave or polls for frames
++ * @driver_buffered_tids: bitmap of TIDs the driver has data buffered on
+  * @rx_packets: Number of MSDUs received from this STA
+  * @rx_bytes: Number of bytes received from this STA
+  * @wep_weak_iv_count: number of weak WEP IVs received from this station
+@@ -286,8 +285,9 @@ struct sta_info {
+ 	 * STA powersave frame queues, no more than the internal
+ 	 * locking required.
+ 	 */
+-	struct sk_buff_head ps_tx_buf;
+-	struct sk_buff_head tx_filtered;
++	struct sk_buff_head ps_tx_buf[IEEE80211_NUM_ACS];
++	struct sk_buff_head tx_filtered[IEEE80211_NUM_ACS];
++	unsigned long driver_buffered_tids;
+ 
+ 	/* Updated from RX path only, no locking requirements */
+ 	unsigned long rx_packets, rx_bytes;
+@@ -434,8 +434,8 @@ rcu_dereference_protected_tid_tx(struct
+ #define STA_HASH(sta) (sta[5])
+ 
+ 
+-/* Maximum number of frames to buffer per power saving station */
+-#define STA_MAX_TX_BUFFER 128
++/* Maximum number of frames to buffer per power saving station per AC */
++#define STA_MAX_TX_BUFFER	64
+ 
+ /* Minimum buffered frame expiry time. If STA uses listen interval that is
+  * smaller than this value, the minimum value here is used instead. */
+--- a/include/net/mac80211.h	2011-09-28 13:18:28.000000000 +0200
++++ b/include/net/mac80211.h	2011-09-28 13:22:04.000000000 +0200
+@@ -109,6 +109,7 @@ enum ieee80211_ac_numbers {
+ 	IEEE80211_AC_BE		= 2,
+ 	IEEE80211_AC_BK		= 3,
+ };
++#define IEEE80211_NUM_ACS	4
+ 
+ /**
+  * struct ieee80211_tx_queue_params - transmit queue configuration
+--- a/net/mac80211/status.c	2011-09-28 13:18:30.000000000 +0200
++++ b/net/mac80211/status.c	2011-09-28 13:22:04.000000000 +0200
+@@ -14,6 +14,7 @@
+ #include "rate.h"
+ #include "mesh.h"
+ #include "led.h"
++#include "wme.h"
+ 
+ 
+ void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
+@@ -43,6 +44,8 @@ static void ieee80211_handle_filtered_fr
+ 					    struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_hdr *hdr = (void *)skb->data;
++	int ac;
+ 
+ 	/*
+ 	 * This skb 'survived' a round-trip through the driver, and
+@@ -62,6 +65,14 @@ static void ieee80211_handle_filtered_fr
+ 
+ 	sta->tx_filtered_count++;
+ 
++	if (ieee80211_is_data_qos(hdr->frame_control)) {
++		int tid = *ieee80211_get_qos_ctl(hdr) &
++					IEEE80211_QOS_CTL_TID_MASK;
++		ac = ieee802_1d_to_ac[tid & 7];
++	} else {
++		ac = IEEE80211_AC_BE;
++	}
++
+ 	/*
+ 	 * Clear the TX filter mask for this STA when sending the next
+ 	 * packet. If the STA went to power save mode, this will happen
+@@ -104,8 +115,8 @@ static void ieee80211_handle_filtered_fr
+ 	 *	unknown.
+ 	 */
+ 	if (test_sta_flags(sta, WLAN_STA_PS_STA) &&
+-	    skb_queue_len(&sta->tx_filtered) < STA_MAX_TX_BUFFER) {
+-		skb_queue_tail(&sta->tx_filtered, skb);
++	    skb_queue_len(&sta->tx_filtered[ac]) < STA_MAX_TX_BUFFER) {
++		skb_queue_tail(&sta->tx_filtered[ac], skb);
+ 		sta_info_recalc_tim(sta);
+ 
+ 		if (!timer_pending(&local->sta_cleanup))
+@@ -127,7 +138,7 @@ static void ieee80211_handle_filtered_fr
+ 	if (net_ratelimit())
+ 		wiphy_debug(local->hw.wiphy,
+ 			    "dropped TX filtered frame, queue_len=%d PS=%d @%lu\n",
+-			    skb_queue_len(&sta->tx_filtered),
++			    skb_queue_len(&sta->tx_filtered[ac]),
+ 			    !!test_sta_flags(sta, WLAN_STA_PS_STA), jiffies);
+ #endif
+ 	dev_kfree_skb(skb);
+--- a/net/mac80211/debugfs_sta.c	2011-09-28 11:39:18.000000000 +0200
++++ b/net/mac80211/debugfs_sta.c	2011-09-28 13:22:04.000000000 +0200
+@@ -78,8 +78,14 @@ static ssize_t sta_num_ps_buf_frames_rea
+ 					  size_t count, loff_t *ppos)
+ {
+ 	struct sta_info *sta = file->private_data;
+-	return mac80211_format_buffer(userbuf, count, ppos, "%u\n",
+-				      skb_queue_len(&sta->ps_tx_buf));
++	char buf[17*IEEE80211_NUM_ACS], *p = buf;
++	int ac;
++
++	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "AC%d: %d\n", ac,
++			       skb_queue_len(&sta->ps_tx_buf[ac]) +
++			       skb_queue_len(&sta->tx_filtered[ac]));
++	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
+ }
+ STA_OPS(num_ps_buf_frames);
+ 
+--- a/net/mac80211/tx.c	2011-09-28 13:18:29.000000000 +0200
++++ b/net/mac80211/tx.c	2011-09-28 13:22:04.000000000 +0200
+@@ -343,13 +343,22 @@ static void purge_old_ps_buffers(struct
+ 		total += skb_queue_len(&ap->ps_bc_buf);
+ 	}
+ 
++	/*
++	 * Drop one frame from each station from the lowest-priority
++	 * AC that has frames at all.
++	 */
+ 	list_for_each_entry_rcu(sta, &local->sta_list, list) {
+-		skb = skb_dequeue(&sta->ps_tx_buf);
+-		if (skb) {
+-			purged++;
+-			dev_kfree_skb(skb);
++		int ac;
++
++		for (ac = IEEE80211_AC_BK; ac >= IEEE80211_AC_VO; ac--) {
++			skb = skb_dequeue(&sta->ps_tx_buf[ac]);
++			total += skb_queue_len(&sta->ps_tx_buf[ac]);
++			if (skb) {
++				purged++;
++				dev_kfree_skb(skb);
++				break;
++			}
+ 		}
+-		total += skb_queue_len(&sta->ps_tx_buf);
+ 	}
+ 
+ 	rcu_read_unlock();
+@@ -448,22 +457,21 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
+ 
+ 	if (unlikely((staflags & (WLAN_STA_PS_STA | WLAN_STA_PS_DRIVER)) &&
+ 		     !(info->flags & IEEE80211_TX_CTL_PSPOLL_RESPONSE))) {
++		int ac = skb_get_queue_mapping(tx->skb);
++
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+-		printk(KERN_DEBUG "STA %pM aid %d: PS buffer (entries "
+-		       "before %d)\n",
+-		       sta->sta.addr, sta->sta.aid,
+-		       skb_queue_len(&sta->ps_tx_buf));
++		printk(KERN_DEBUG "STA %pM aid %d: PS buffer for AC %d\n",
++		       sta->sta.addr, sta->sta.aid, ac);
+ #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
+ 		if (tx->local->total_ps_buffered >= TOTAL_MAX_TX_BUFFER)
+ 			purge_old_ps_buffers(tx->local);
+-		if (skb_queue_len(&sta->ps_tx_buf) >= STA_MAX_TX_BUFFER) {
+-			struct sk_buff *old = skb_dequeue(&sta->ps_tx_buf);
++		if (skb_queue_len(&sta->ps_tx_buf[ac]) >= STA_MAX_TX_BUFFER) {
++			struct sk_buff *old = skb_dequeue(&sta->ps_tx_buf[ac]);
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+-			if (net_ratelimit()) {
+-				printk(KERN_DEBUG "%s: STA %pM TX "
+-				       "buffer full - dropping oldest frame\n",
+-				       tx->sdata->name, sta->sta.addr);
+-			}
++			if (net_ratelimit())
++				printk(KERN_DEBUG "%s: STA %pM TX buffer for "
++				       "AC %d full - dropping oldest frame\n",
++				       tx->sdata->name, sta->sta.addr, ac);
+ #endif
+ 			dev_kfree_skb(old);
+ 		} else
+@@ -472,7 +480,7 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
+ 		info->control.jiffies = jiffies;
+ 		info->control.vif = &tx->sdata->vif;
+ 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+-		skb_queue_tail(&sta->ps_tx_buf, tx->skb);
++		skb_queue_tail(&sta->ps_tx_buf[ac], tx->skb);
+ 
+ 		if (!timer_pending(&local->sta_cleanup))
+ 			mod_timer(&local->sta_cleanup,
 
 
-> Also, brcmsmac realizes that there are tweaks and features specific to each chip and to each revision of each phy.  While they are of the same family, each version has its own feature set and settings.
->
-> But b43 got 224/5 so called support 'automaticly' simply by adding AXI access.
-
-Chips tweaks mostly lays in bus code, which is bcma in this case. As
-for PHY code, you've not even cared to take a look at our phy_n.c! But
-you're commenting that anyway.
-BCM43224 and BCM43225 are nothing special, there are N-PHY rev 6.
-We've code for revs 1-6 from the beginning. That's how we got support
-for that cards "automaticly". I was here since "ever", we just got to
-add BCMA/AXI support.
-
-
->> > Internally, prior to releasing to staging tree, development had gone
->> quickly and it didn't take long at all to get the driver up and running.
->>  We did not anticipate that things would go somewhat slower in the
->> staging tree and a year (and hundreds of patches) later we are still
->> there.  During that year b43 got some limited support for the same new
->> chips brcmsmac already had, into its driver.  So now, here we are... both
->> drivers supporting the new chips and b43 also supporting the old.
->> >
->> > We have seen the requests for us to add AXI based chipset support into
->> b43.  I don't think that will happen in a substantial way:
->> > - Our driver is already stable and performance is better than b43 in
->> terms of AXI chips.  B43 seems quite raw: its full of TODO and FIXME
->> notes and performance is 1/10th of brcmsmac on our testing. Spending
->> another round of time and effort on b43 to get it to the place where smac
->> already is, seems redundant and unattractive.
->>
->> Well, I guess you were comparing brcmsmac working in 802.11n mode vs.
->> b43 workin in 802.11g mode?
->
-> I just loaded the two drivers on my machine and ran iperf.  Are users expected to do something else?  802.11N APs are not esoteric equipment anymore, sorry.
-
-[irony, yes]
-Monitor mode is nothing esoteric anymore. I've compared b43 with
-brcmsmac. b43 is 100000000 times faster (compared to 0 b/s).
-
-
->> Yes, I'm aware you may be not so comfortable with differences between
->> internal driver and b43.
->> However you're already at the place, when you can not just copy&paste
->> code from your internal driver to brcmsmac. You have to adopt in
->> anyway. Are there really so many differences if you look at b43? DMA
->> is something you probably don't need to touch. PHY code should be
->> portable to b43 in the same way it is to brcmsmac. The biggest problem
->> is to touch some general things, not PHY-directly-related. And even in
->> that code we share a lot of code. Our code is based on RE of your
->> driver. It has to be similar.
->
-> If they are so similar why do you think b43 is better?
-
-I've said what I don't like currently in brcmsmac. I've also said both
-drivers should be equal in next few months. Nothing really more to
-add, it's not about flamewar. Plus Michael commented this nicely.
-
-
->> > - Most of the recent b43 additions support comes from a single person
->> doing reverse engineering. brcmsmac has a few software people working on
->> it directly and hundreds of people working on it indirectly (through the
->> internal version) including engineers working on firmware, RTL, testing,
->> etc.
->>
->> You're doing much harder job and obviously you need much more people.
->> I just implement the driver, without testing hardware for various
->> possible configurations, etc. That's the only explanation how we've
->> achieved such a good state. We copied init/config values from your
->> driver, didn't invent them ourself.
->
-> Speaking of init values, I noticed you have init values but no others after that during runtime.  We don't drive our chips
-> without proper periodic calibrations.
-
-You really got to ignore previous thread about going mainline.
-That issue was already pointed to me, and I've already started sending
-patches for that.
-
-
->> Well, you spent a lot of time on cleaning brcmsmac, I spent a lot of
->> time on adding support for new hardware. I believe now we both are at
->> similar stage from reaching fully functional, feature-full driver. 1:1
->> for both of us ;)
->>
->
->
->> Well, you were submitting patches, but you weren't discussing anything
->> with us. That's really important in being a good citizens.
->> How many times have I asked about the firmware? How many times about
->> access to the hardware? How many times about the future? Really, I was
->> trying hard to cooperate, you just were ignoring all of that :|
->> We've now finally made you respond to the questions about the future,
->> but you still ignore my fw questions and hw requests.
->> This of course resulted in the complex situation we have now.
->>
->
-> Do you think were in the smokey back room making deals or something?  All our patches are out in the open.
-> We have tried to be as transparent as possible.
-> We responded and integrated all (almost all?) feedback that we got on our patches.
-> We published our TODO list and updated it several times throughout devel cycle.
-
-I didn't comment your patches. Maybe I've said sth about amount of
-them, but it's your choice to spend your time on cleaning, cleaning,
-cleaning, I'm find with that.
-
-
-> We helped you with bcma.   You asked us to send you an Arasan board which are hard to get and cost
-> about $1k, I can't do that.  I handed out 4313 and 43224 boards like candy early on to anyone who asked.
-
-I don't remember you saying finally "Sorry, we won't be able to donate
-you with that". Will re-check.
-Still, you refused to share BCM4331 (which is already available on
-market, and even hackish-supported by b43). Same for BCM43227 and
-BCM43228. I didn't even care to ask for some SSLPN card (which is also
-available on the market in some routers, can find proves).
-Oh, and you still didn't care too much about our firmware requests.
-
-
->> > Other than barely supporting one of our chips first in mainline, I
->> would really like to understand what are the benefits and justifications
->> of using b43 over brcmsmac for AXI based chips in the long run.  Can
->> someone explain them?
->>
->> What I don't like about brcmsmac?
->> 1) Not modularized, bcma support built in and duplicated with bcma module
->
-> As discussed numerous times:
-> We have been in staging and no new features is the rule. We have bcma code waiting to be released.
-
-Please, do this soon. When merge window for 3.2 will open, you'll
-receive all recent bcma code. If there is anything missing in bcma you
-need, *please report that* (or provide patches).
-I believe this is part of cleaning, nothing like new features. You'll
-simply drop a lot of duplicated code by switching to bcma.
-
-
->> 2) Poor quality code
->
->> 3) Duplication of a lot of code with bcma&b43. Not just PHY code, but
->> also more general functions, DMA support, MAC, etc.
->
-> Seriously? Again? You keep bringing this up. Do you understand that there was no bcma when we released to staging and that we
-> were asked not to add new features while in staging?   It would be nice if you could acknowledge that.
->
-> But other than the one line comment on code, you still haven't answered the question of why you think b43 is a better driver.
-
--- 
-Rafał
