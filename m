@@ -1,70 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1799 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755589Ab1INJX3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 05:23:29 -0400
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Greg KH" <greg@kroah.com>, "Greg KH" <gregkh@suse.de>
-cc: "Francis Moreau" <francis.moro@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Michael Buesch" <mb@bu3sch.de>
-Date: Wed, 14 Sep 2011 02:23:19 -0700
-Subject: RE: About the patch:
- "staging: brcm80211: only enable brcmsmac if bcma is not set"
-Message-ID: <400C43189542CE41BC0A5B252FC90136BC0C9DEF38@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20110914_112331_916154_F53A0180)
-References: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com>
- <CACna6rwQ60viPGssWzBzgtVGBq1xu+AOxb0fqfRq4NaJFcmP=w@mail.gmail.com>
- <20110913174444.GG11772@tuxdriver.com>
- <CACna6rwS0dGwSFOiqgAYqHNV=AatnHvHes=YdbwSWdKZu8OYiQ@mail.gmail.com>
-In-Reply-To: <CACna6rwS0dGwSFOiqgAYqHNV=AatnHvHes=YdbwSWdKZu8OYiQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:63218 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592Ab1I1JgM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Sep 2011 05:36:12 -0400
+Received: by fxe4 with SMTP id 4so360174fxe.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2011 02:36:10 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Kalyan C Gaddam <chakkal@iit.edu>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 4/5] nl80211/mac80211: allow adding TDLS peers as stations
+Date: Wed, 28 Sep 2011 12:35:53 +0300
+Message-Id: <1317202554-21221-4-git-send-email-arik@wizery.com> (sfid-20110928_113617_910947_ADF7366B)
+In-Reply-To: <1317202554-21221-1-git-send-email-arik@wizery.com>
+References: <1317202554-21221-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgUmFmYWwsDQoNCkZvciBteSBiY21hIGludGVncmF0aW9uIGVmZm9ydCAod2hpY2ggaXMgYWxy
-ZWFkeSBzdGFsZSBkdWUgdG8gb3VyIGJyY21zbWFjIGNsZWFudXApIEkgc2ltcGx5IHRvb2sgIndp
-cmVsZXNzLW5leHQiIGJjbWEgdXNpbmcgbWVsZC4gV2FzIHN1cnByaXNlZCB0aGF0IEkgYWxzbyBu
-ZWVkZWQgdG8gZG8gdGhpcyBmb3Igc3NiIGFzIHRoZXJlIGFyZSBzb21lIGluY2x1ZGUgZGVwZW5k
-ZW5jaWVzLiBJbiBlYXJseSBiY21hIGRpc2N1c3Npb25zIGEgc3Ryb25nIHByZWZlcmVuY2Ugd2Fz
-IGdpdmVuIChieSBNaWNoYWVsIGlmIEkgYW0gY29ycmVjdCkgdG8ga2VlcCBiY21hIGluZGVwZW5k
-ZW50IGZyb20gc3NiIGF0IHRoZSBjb3N0IG9mIHNvbWUgZHVwbGljYXRpb24uIEZvciBpbmNsdWRl
-IGZpbGVzIHRoaXMgcHJlZmVyZW5jZSBtaWdodCBiZSBsZXNzIHN0cm9uZywgYnV0IEkgc3RpbGwg
-dGhpbmsgaXQgaXMgYSBnb29kIGlkZWEgdG8gaGF2ZSB0aGVzZSBjaGlwIGludGVyY29ubmVjdCBi
-dXMgZHJpdmVycyBpbmRlcGVuZGVudCBmcm9tIGVhY2ggb3RoZXIuDQoNCkdyLiBBdlMNCg0KLS0t
-LS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IFJhZmHFgiBNacWCZWNraSBbbWFpbHRvOnph
-amVjNUBnbWFpbC5jb21dIA0KU2VudDogZGluc2RhZyAxMyBzZXB0ZW1iZXIgMjAxMSAyMjoyNA0K
-VG86IEpvaG4gVy4gTGludmlsbGU7IEdyZWcgS0g7IEdyZWcgS0gNCkNjOiBGcmFuY2lzIE1vcmVh
-dTsgQXJlbmQgVmFuIFNwcmllbDsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQpTdWJq
-ZWN0OiBSZTogQWJvdXQgdGhlIHBhdGNoOiAic3RhZ2luZzogYnJjbTgwMjExOiBvbmx5IGVuYWJs
-ZSBicmNtc21hYyBpZiBiY21hIGlzIG5vdCBzZXQiDQoNClcgZG5pdSAxMyB3cnplxZtuaWEgMjAx
-MSAxOTo0NCB1xbx5dGtvd25payBKb2huIFcuIExpbnZpbGxlDQo8bGludmlsbGVAdHV4ZHJpdmVy
-LmNvbT4gbmFwaXNhxYI6DQo+IE9uIE1vbiwgU2VwIDEyLCAyMDExIGF0IDExOjI3OjIwUE0gKzAy
-MDAsIFJhZmHFgiBNacWCZWNraSB3cm90ZToNCj4NCj4+IFRoZSBwcm9ibGVtIGlzIHRoYXQgYnJj
-bXNtYWMgZHVwbGljYXRlcyBjb2RlIHByZXNlbnQgaW4gdGhlIGJjbWENCj4+IGRyaXZlci4gSXQg
-ZG9lc24ndCB1c2UgYmNtYSBidXMgYXJjaGl0ZWN0dXJlLg0KPj4NCj4+IFRoZSByZWFsIHNvbHV0
-aW9uIGlzIHRvIGFkZCBiY21hIGRyaXZlciBzdXBwb3J0IGluIGJyY21zbWFjIGFuZCBzc2INCj4+
-IGRyaXZlciBzdXBwb3J0IGluIGJyY21mbWFjLiBUaGVuIHlvdSBjYW4gYWx3YXlzIHVzZSBiY21h
-IGFuZDoNCj4+IDEpIElmIGI0MyB3aWxsIGxvYWQgYW5kIGRldGVjdCB1bnN1cHBvcnRlZCBQSFks
-IGl0IHdpbGwgcmVsZWFzZSB0aGUgQkNNQSdzIGNvcmUNCj4+IDIpIGJyY21zbWFjIHdpbGwgYmUg
-bG9hZGVkIHRvIGxldCBpdCBzdXBwb3J0IHRoZSBjb3JlDQo+DQo+IFdlIGFyZSBnb2luZyB0byBo
-YXZlIHRvIGZpbmQgYSB3YXkgdG8gZ2V0IGJyY21zbWFjIGludG8gdGhlDQo+IHdpcmVsZXNzLW5l
-eHQgdHJlZSB0byBtYWtlIGl0IGZlYXNpYmxlIGZvciB0aGUgQnJvYWRjb20gZ3V5cyB0byBnZXQN
-Cj4gYmNtYSBzdXBwb3J0IGludG8gdGhhdCBkcml2ZXIuIMKgRG8geW91IGFncmVlPw0KPg0KPiBX
-ZSBjb3VsZCBtb3ZlIGl0IHVuZGVyIHRoZSBkcml2ZXJzL25ldC93aXJlbGVzcyB0cmVlLiDCoE9y
-LCBtYXliZSBJDQo+IGNvdWxkIG5lZ290aWF0ZSB3aXRoIEdyZWcgdG8ga2VlcCBpdCB1bmRlciB0
-aGUgZHJpdmVycy9zdGFnaW5nIHRyZWUNCj4gYnV0IHRvIGxldCBtZSBtYW5hZ2UgaXQgdW5kZXIg
-d2lyZWxlc3MtbmV4dC4gwqBPci4uLj8gwqBEbyB5b3UgaGF2ZQ0KPiBhbnkgdGhvdWdodHMgb24g
-dGhpcz8NCg0KSSdsbCBiZSBwb3N0aW5nIHNvbWUgYmNtYSBwYXRjaGVzIHRoYXQgd2lsbCBhbGxv
-dyBicmNtc21hYyBiZWluZw0KY29udmVydGVkIHRvIGJjbWEgc3VwcG9ydC4gQ3VycmVudGx5IHdl
-IGRvbid0IGV4cG9ydCBmZXcgdHJpdmlhbCBvcHMNCmluIGJjbWEsIHRoYXQgYXJlIG5lZWRlZCBi
-eSBiNDMvYnJjbXNtYWMuDQoNCkNvdWxkIHdlIGFzayBHcmVnIGFmdGVyIHRoYXQsIHRvIG1lcmdl
-IHdpcmVsZXNzLW5leHQgaW50byBzdGFnaW5nPw0KVGhhdCB3b3VsZCBwcm92aWRlIEJyb2FkY29t
-IGd1eXMgYWxsIHRoZSBzeW1ib2xzIHRoZXkgbmVlZC4NCg0KQUZBSUsgZ2l0IGlzIGNsZXZlciBl
-bm91Z2ggdG8gYWxsb3cgTGludXggZWFzaWx5IG1lcmdlIGJvdGg6IEdyZWcncw0KdHJlZSBhbmQg
-d2lyZWxlc3MtbmV4dCB0cmVlLiBXaXRob3V0IGNvbmZsaWN0cyBjb21pbmcgZnJvbQ0KImR1cGxp
-Y2F0ZWQiIHBhdGNoZXMuDQoNCi0tIA0KUmFmYcWCDQoNCg==
+When adding a TDLS peer STA, mark it with a new flag in both nl80211 and
+mac80211. Before adding a peer, make sure the wiphy supports TDLS and
+our operating mode is appropriate (managed).
+
+In addition, make sure all peers are removed on disassociation.
+
+A TDLS peer is first added just before link setup is initiated. In later
+setup stages we have more info about peer supported rates, capabilities,
+etc. This info is reported via nl80211_set_station().
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Cc: Kalyan C Gaddam <chakkal@iit.edu>
+---
+v1->2: Add some guards in nl80211/mac80211 against abuse of the
+new/set_station commands when adding a TDLS peer.
+
+ include/linux/nl80211.h |    2 ++
+ net/mac80211/cfg.c      |   20 ++++++++++++++++++++
+ net/mac80211/mlme.c     |    7 ++++---
+ net/mac80211/sta_info.h |    2 ++
+ net/wireless/nl80211.c  |   26 ++++++++++++++++++++++----
+ 5 files changed, 50 insertions(+), 7 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 329fc9d..f9818d3 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1421,6 +1421,7 @@ enum nl80211_iftype {
+  * @NL80211_STA_FLAG_WME: station is WME/QoS capable
+  * @NL80211_STA_FLAG_MFP: station uses management frame protection
+  * @NL80211_STA_FLAG_AUTHENTICATED: station is authenticated
++ * @NL80211_STA_FLAG_TDLS_PEER: station is a TDLS peer
+  * @NL80211_STA_FLAG_MAX: highest station flag number currently defined
+  * @__NL80211_STA_FLAG_AFTER_LAST: internal use
+  */
+@@ -1431,6 +1432,7 @@ enum nl80211_sta_flags {
+ 	NL80211_STA_FLAG_WME,
+ 	NL80211_STA_FLAG_MFP,
+ 	NL80211_STA_FLAG_AUTHENTICATED,
++	NL80211_STA_FLAG_TDLS_PEER,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_FLAG_AFTER_LAST,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 42167eb..9fbe5f4 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -713,6 +713,12 @@ static void sta_apply_parameters(struct ieee80211_local *local,
+ 		if (set & BIT(NL80211_STA_FLAG_AUTHENTICATED))
+ 			sta->flags |= WLAN_STA_AUTH;
+ 	}
++
++	if (mask & BIT(NL80211_STA_FLAG_TDLS_PEER)) {
++		sta->flags &= ~WLAN_STA_TDLS_PEER;
++		if (set & BIT(NL80211_STA_FLAG_TDLS_PEER))
++			sta->flags |= WLAN_STA_TDLS_PEER;
++	}
+ 	spin_unlock_irqrestore(&sta->flaglock, flags);
+ 
+ 	sta->sta.uapsd_queues = params->uapsd_queues;
+@@ -811,6 +817,12 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	sta_apply_parameters(local, sta, params);
+ 
++	/* Only TDLS-supporting stations can add TDLS peers */
++	if ((sta->flags & WLAN_STA_TDLS_PEER) &&
++	    !((wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS) &&
++	      sdata->vif.type == NL80211_IFTYPE_STATION))
++		return -ENOTSUPP;
++
+ 	rate_control_rate_init(sta);
+ 
+ 	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+@@ -863,6 +875,14 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 		return -ENOENT;
+ 	}
+ 
++	/* The TDLS bit cannot be toggled after the STA was added */
++	if ((params->sta_flags_mask & BIT(NL80211_STA_FLAG_TDLS_PEER)) &&
++	    !!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) !=
++	    !!test_sta_flags(sta, WLAN_STA_TDLS_PEER)) {
++		rcu_read_unlock();
++		return -EINVAL;
++	}
++
+ 	if (params->vlan && params->vlan != sta->sdata->dev) {
+ 		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 1a59fb6..593a244 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1137,8 +1137,9 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	changed |= BSS_CHANGED_BSSID | BSS_CHANGED_HT;
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ 
++	/* remove AP and TDLS peers */
+ 	if (remove_sta)
+-		sta_info_destroy_addr(sdata, bssid);
++		sta_info_flush(local, sdata);
+ 
+ 	del_timer_sync(&sdata->u.mgd.conn_mon_timer);
+ 	del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
+@@ -2738,7 +2739,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 				       req->reason_code, cookie,
+ 				       !req->local_state_change);
+ 	if (assoc_bss)
+-		sta_info_destroy_addr(sdata, bssid);
++		sta_info_flush(sdata->local, sdata);
+ 
+ 	mutex_lock(&sdata->local->mtx);
+ 	ieee80211_recalc_idle(sdata->local);
+@@ -2778,7 +2779,7 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_send_deauth_disassoc(sdata, req->bss->bssid,
+ 			IEEE80211_STYPE_DISASSOC, req->reason_code,
+ 			cookie, !req->local_state_change);
+-	sta_info_destroy_addr(sdata, bssid);
++	sta_info_flush(sdata->local, sdata);
+ 
+ 	mutex_lock(&sdata->local->mtx);
+ 	ieee80211_recalc_idle(sdata->local);
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 56a3d38..b6bd4e9 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -45,6 +45,7 @@
+  *	station in power-save mode, reply when the driver unblocks.
+  * @WLAN_STA_PS_DRIVER_BUF: Station has frames pending in driver internal
+  *	buffers. Automatically cleared on station wake-up.
++ * @WLAN_STA_TDLS_PEER: station is a TDLS peer.
+  */
+ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_AUTH		= 1<<0,
+@@ -61,6 +62,7 @@ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_PS_DRIVER	= 1<<12,
+ 	WLAN_STA_PSPOLL		= 1<<13,
+ 	WLAN_STA_PS_DRIVER_BUF	= 1<<14,
++	WLAN_STA_TDLS_PEER	= 1<<15,
+ };
+ 
+ #define STA_TID_NUM 16
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f853a83..2eef08a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2523,18 +2523,25 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 	case NL80211_IFTYPE_STATION:
+-		/* disallow everything but AUTHORIZED flag */
++		/* disallow things sta doesn't support */
+ 		if (params.plink_action)
+ 			err = -EINVAL;
+ 		if (params.vlan)
+ 			err = -EINVAL;
+-		if (params.supported_rates)
++		if (params.supported_rates &&
++		    !(params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)))
+ 			err = -EINVAL;
+ 		if (params.ht_capa)
+ 			err = -EINVAL;
+ 		if (params.listen_interval >= 0)
+ 			err = -EINVAL;
+-		if (params.sta_flags_mask & ~BIT(NL80211_STA_FLAG_AUTHORIZED))
++		if (params.sta_flags_mask &
++				~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
++				  BIT(NL80211_STA_FLAG_TDLS_PEER)))
++			err = -EINVAL;
++		/* can't change the TDLS bit */
++		if (!(params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) &&
++		    (params.sta_flags_mask & BIT(NL80211_STA_FLAG_TDLS_PEER)))
+ 			err = -EINVAL;
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
+@@ -2653,7 +2660,18 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+ 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN &&
+ 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT &&
+-	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_STATION)
++		return -EINVAL;
++
++	/*
++	 * Only managed stations can add TDLS peers, and only when the
++	 * wiphy supports external TDLS setup.
++	 */
++	if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_STATION &&
++	    !((params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) &&
++	      (rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS) &&
++	      (rdev->wiphy.flags & WIPHY_FLAG_TDLS_EXTERNAL_SETUP)))
+ 		return -EINVAL;
+ 
+ 	err = get_vlan(info, rdev, &params.vlan);
+-- 
+1.7.4.1
 
