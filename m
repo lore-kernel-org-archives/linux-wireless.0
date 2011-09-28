@@ -1,98 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:49077 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754884Ab1ILLNK (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:44514 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751282Ab1I1LNF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Sep 2011 07:13:10 -0400
-Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
-	by emh07-2.mail.saunalahti.fi (Postfix) with SMTP id AB1B518CFD0
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 14:13:09 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-188-95.elisa-laajakaista.fi [88.115.188.95])
-	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 8FBDE27D85
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2011 14:13:08 +0300 (EEST)
-Subject: [PATCH 9/9] ath6kl: add firmware capabilities support
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Date: Mon, 12 Sep 2011 14:13:08 +0300
-Message-ID: <20110912111308.16921.94633.stgit@localhost6.localdomain6> (sfid-20110912_131313_336353_95383426)
-In-Reply-To: <20110912111206.16921.90687.stgit@localhost6.localdomain6>
-References: <20110912111206.16921.90687.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 28 Sep 2011 07:13:05 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 4so428931fxe.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2011 04:13:05 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Kalyan C Gaddam <chakkal@iit.edu>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v3 2/5] mac80211: standardize adding supported rates IEs
+Date: Wed, 28 Sep 2011 14:12:51 +0300
+Message-Id: <1317208374-19286-2-git-send-email-arik@wizery.com> (sfid-20110928_131320_177708_5EE350CA)
+In-Reply-To: <1317208374-19286-1-git-send-email-arik@wizery.com>
+References: <1317208374-19286-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new firmware format includes capability bits which make it
-possible to check what features the firmware supports. Add infrastructure
-to read the capabilities. For now it only provides
-ATH6KL_FW_CAPABILITY_HOST_P2P which is not even used anywhere yet, but that
-will be added later.
+Relocate the mesh implementation of adding the (extended) supported
+rates IE to util.c, anticipating its use by other parts of mac80211.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Cc: Kalyan C Gaddam <chakkal@iit.edu>
 ---
- drivers/net/wireless/ath/ath6kl/core.h |   12 ++++++++++++
- drivers/net/wireless/ath/ath6kl/init.c |   11 ++++++++++-
- 2 files changed, 22 insertions(+), 1 deletions(-)
+ include/net/mac80211.h    |    5 ++++
+ net/mac80211/mesh.c       |   58 ---------------------------------------------
+ net/mac80211/mesh.h       |    4 ---
+ net/mac80211/mesh_plink.c |    4 +-
+ net/mac80211/tx.c         |    4 +-
+ net/mac80211/util.c       |   57 ++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 66 insertions(+), 66 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index abb4aaf..0fb82e9 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -68,8 +68,18 @@ enum ath6kl_fw_ie_type {
- 	ATH6KL_FW_IE_FW_IMAGE = 3,
- 	ATH6KL_FW_IE_PATCH_IMAGE = 4,
- 	ATH6KL_FW_IE_RESERVED_RAM_SIZE = 5,
-+	ATH6KL_FW_IE_CAPABILITIES = 6,
- };
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 1e83afa..b5f7ada 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3444,4 +3444,9 @@ void ieee80211_enable_rssi_reports(struct ieee80211_vif *vif,
+ 				   int rssi_max_thold);
  
-+enum ath6kl_fw_capability {
-+	ATH6KL_FW_CAPABILITY_HOST_P2P = 0,
+ void ieee80211_disable_rssi_reports(struct ieee80211_vif *vif);
 +
-+	/* this needs to be last */
-+	ATH6KL_FW_CAPABILITY_MAX,
-+};
++int ieee80211_add_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb);
 +
-+#define ATH6KL_CAPABILITY_LEN (ALIGN(ATH6KL_FW_CAPABILITY_MAX, 32) / 32)
-+
- struct ath6kl_fw_ie {
- 	__le32 id;
- 	__le32 len;
-@@ -491,6 +501,8 @@ struct ath6kl {
- 	u8 *fw_patch;
- 	size_t fw_patch_len;
++int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif,
++				struct sk_buff *skb);
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index a4225ae..a7078fd 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -320,64 +320,6 @@ mesh_add_rsn_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
+ 	return 0;
+ }
  
-+	unsigned long fw_capabilities[ATH6KL_CAPABILITY_LEN];
-+
- 	struct workqueue_struct *ath6kl_wq;
+-int
+-mesh_add_srates_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
+-{
+-	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_supported_band *sband;
+-	int rate;
+-	u8 i, rates, *pos;
+-
+-	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+-	rates = sband->n_bitrates;
+-	if (rates > 8)
+-		rates = 8;
+-
+-	if (skb_tailroom(skb) < rates + 2)
+-		return -ENOMEM;
+-
+-	pos = skb_put(skb, rates + 2);
+-	*pos++ = WLAN_EID_SUPP_RATES;
+-	*pos++ = rates;
+-	for (i = 0; i < rates; i++) {
+-		rate = sband->bitrates[i].bitrate;
+-		*pos++ = (u8) (rate / 5);
+-	}
+-
+-	return 0;
+-}
+-
+-int
+-mesh_add_ext_srates_ie(struct sk_buff *skb,
+-		       struct ieee80211_sub_if_data *sdata)
+-{
+-	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_supported_band *sband;
+-	int rate;
+-	u8 i, exrates, *pos;
+-
+-	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+-	exrates = sband->n_bitrates;
+-	if (exrates > 8)
+-		exrates -= 8;
+-	else
+-		exrates = 0;
+-
+-	if (skb_tailroom(skb) < exrates + 2)
+-		return -ENOMEM;
+-
+-	if (exrates) {
+-		pos = skb_put(skb, exrates + 2);
+-		*pos++ = WLAN_EID_EXT_SUPP_RATES;
+-		*pos++ = exrates;
+-		for (i = 8; i < sband->n_bitrates; i++) {
+-			rate = sband->bitrates[i].bitrate;
+-			*pos++ = (u8) (rate / 5);
+-		}
+-	}
+-	return 0;
+-}
+-
+ int mesh_add_ds_params_ie(struct sk_buff *skb,
+ 			  struct ieee80211_sub_if_data *sdata)
+ {
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 7118e8e..8c00e2d 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -210,10 +210,6 @@ int mesh_add_rsn_ie(struct sk_buff *skb,
+ 		    struct ieee80211_sub_if_data *sdata);
+ int mesh_add_vendor_ies(struct sk_buff *skb,
+ 			struct ieee80211_sub_if_data *sdata);
+-int mesh_add_srates_ie(struct sk_buff *skb,
+-		       struct ieee80211_sub_if_data *sdata);
+-int mesh_add_ext_srates_ie(struct sk_buff *skb,
+-			   struct ieee80211_sub_if_data *sdata);
+ int mesh_add_ds_params_ie(struct sk_buff *skb,
+ 			  struct ieee80211_sub_if_data *sdata);
+ void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 1213a23..9cc5029 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -185,8 +185,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 			pos = skb_put(skb, 2);
+ 			memcpy(pos + 2, &plid, 2);
+ 		}
+-		if (mesh_add_srates_ie(skb, sdata) ||
+-		    mesh_add_ext_srates_ie(skb, sdata) ||
++		if (ieee80211_add_srates_ie(&sdata->vif, skb) ||
++		    ieee80211_add_ext_srates_ie(&sdata->vif, skb) ||
+ 		    mesh_add_rsn_ie(skb, sdata) ||
+ 		    mesh_add_meshid_ie(skb, sdata) ||
+ 		    mesh_add_meshconf_ie(skb, sdata))
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 7cd6c28..542272a 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2307,9 +2307,9 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 		*pos++ = WLAN_EID_SSID;
+ 		*pos++ = 0x0;
  
- 	struct ath6kl_node_table scan_table;
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index e2a29b2..b9b13a0 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -901,7 +901,7 @@ static int ath6kl_fetch_fw_api2(struct ath6kl *ar)
- 	struct ath6kl_fw_ie *hdr;
- 	const char *filename;
- 	const u8 *data;
--	int ret, ie_id;
-+	int ret, ie_id, i, index, bit;
- 	__le32 *val;
- 
- 	switch (ar->version.target_ver) {
-@@ -992,6 +992,15 @@ static int ath6kl_fetch_fw_api2(struct ath6kl *ar)
- 			val = (__le32 *) data;
- 			ar->hw.reserved_ram_size = le32_to_cpup(val);
- 			break;
-+		case ATH6KL_FW_IE_CAPABILITIES:
-+			for (i = 0; i < ATH6KL_FW_CAPABILITY_MAX; i++) {
-+				index = ALIGN(i, 8) / 8;
-+				bit = i % 8;
+-		if (mesh_add_srates_ie(skb, sdata) ||
++		if (ieee80211_add_srates_ie(&sdata->vif, skb) ||
+ 		    mesh_add_ds_params_ie(skb, sdata) ||
+-		    mesh_add_ext_srates_ie(skb, sdata) ||
++		    ieee80211_add_ext_srates_ie(&sdata->vif, skb) ||
+ 		    mesh_add_rsn_ie(skb, sdata) ||
+ 		    mesh_add_meshid_ie(skb, sdata) ||
+ 		    mesh_add_meshconf_ie(skb, sdata) ||
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 2c9dc36..9d4f146 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1364,3 +1364,60 @@ void ieee80211_disable_rssi_reports(struct ieee80211_vif *vif)
+ 	_ieee80211_enable_rssi_reports(sdata, 0, 0);
+ }
+ EXPORT_SYMBOL(ieee80211_disable_rssi_reports);
 +
-+				if (data[index] & (1 << bit))
-+					__set_bit(i, ar->fw_capabilities);
-+			}
-+			break;
- 		default:
- 			ath6kl_dbg(ATH6KL_DBG_TRC, "Unknown fw ie: %u\n",
- 				   le32_to_cpup(&hdr->id));
++int ieee80211_add_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_supported_band *sband;
++	int rate;
++	u8 i, rates, *pos;
++
++	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
++	rates = sband->n_bitrates;
++	if (rates > 8)
++		rates = 8;
++
++	if (skb_tailroom(skb) < rates + 2)
++		return -ENOMEM;
++
++	pos = skb_put(skb, rates + 2);
++	*pos++ = WLAN_EID_SUPP_RATES;
++	*pos++ = rates;
++	for (i = 0; i < rates; i++) {
++		rate = sband->bitrates[i].bitrate;
++		*pos++ = (u8) (rate / 5);
++	}
++
++	return 0;
++}
++
++int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_supported_band *sband;
++	int rate;
++	u8 i, exrates, *pos;
++
++	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
++	exrates = sband->n_bitrates;
++	if (exrates > 8)
++		exrates -= 8;
++	else
++		exrates = 0;
++
++	if (skb_tailroom(skb) < exrates + 2)
++		return -ENOMEM;
++
++	if (exrates) {
++		pos = skb_put(skb, exrates + 2);
++		*pos++ = WLAN_EID_EXT_SUPP_RATES;
++		*pos++ = exrates;
++		for (i = 8; i < sband->n_bitrates; i++) {
++			rate = sband->bitrates[i].bitrate;
++			*pos++ = (u8) (rate / 5);
++		}
++	}
++	return 0;
++}
+-- 
+1.7.4.1
 
