@@ -1,139 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42645 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754287Ab1IFMQr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Sep 2011 08:16:47 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1R0ua6-00066P-4Q
-	for linux-wireless@vger.kernel.org; Tue, 06 Sep 2011 14:16:46 +0200
-Message-Id: <20110906121534.774908599@sipsolutions.net> (sfid-20110906_141651_781231_3B42CD3E)
-Date: Tue, 06 Sep 2011 14:14:24 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 3/3] mac80211: also expire filtered frames
-References: <20110906121421.460641040@sipsolutions.net>
+Received: from mga11.intel.com ([192.55.52.93]:54361 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756076Ab1I1XFv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Sep 2011 19:05:51 -0400
+Subject: Re: [PATCH] iwlagn: iwl-agn-rs: remove unnecessary null check for
+ sta and lq_sta
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "Gregory.Dietsche@cuw.edu" <Gregory.Dietsche@cuw.edu>
+Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1317250444-2248-1-git-send-email-Gregory.Dietsche@cuw.edu>
+References: <1317250444-2248-1-git-send-email-Gregory.Dietsche@cuw.edu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 28 Sep 2011 15:18:38 -0700
+Message-ID: <1317248318.1958.21.camel@wwguy-huron> (sfid-20110929_010629_308237_2887BDF9)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2011-09-28 at 15:54 -0700, Gregory.Dietsche@cuw.edu wrote:
+> From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+> 
+> both sta and lq_sta are guaranteed to be not null in the
+> calling function so we don't need to check them here.
+> 
+> Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    3 ---
+>  1 files changed, 0 insertions(+), 3 deletions(-)
+> 
+you are correct
 
-mac80211 will expire normal PS-buffered frames, but
-if the device rejected some frames for a sleeping
-station, these won't be on the ps_tx_buf queue but
-on the tx_filtered queue instead; this is done to
-avoid reordering.
-
-However, mac80211 will not expire frames from the
-filtered queue, let's fix that.
-
-Also add a more comments to what all this expiry is
-doing and how it works.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/sta_info.c |   57 +++++++++++++++++++++++++++++++++++++++++++-----
- net/mac80211/status.c   |    5 ++++
- 2 files changed, 57 insertions(+), 5 deletions(-)
-
---- a/net/mac80211/sta_info.c	2011-09-06 13:19:20.000000000 +0200
-+++ b/net/mac80211/sta_info.c	2011-09-06 13:57:30.000000000 +0200
-@@ -698,6 +698,39 @@ static bool sta_info_cleanup_expire_buff
- 	unsigned long flags;
- 	struct sk_buff *skb;
- 
-+	/*
-+	 * First check for frames that should expire on the filtered
-+	 * queue. Frames here were rejected by the driver and are on
-+	 * a separate queue to avoid reordering with normal PS-buffered
-+	 * frames. They also aren't accounted for right now in the
-+	 * total_ps_buffered counter.
-+	 */
-+	for (;;) {
-+		spin_lock_irqsave(&sta->tx_filtered.lock, flags);
-+		skb = skb_peek(&sta->tx_filtered);
-+		if (sta_info_buffer_expired(sta, skb))
-+			skb = __skb_dequeue(&sta->tx_filtered);
-+		else
-+			skb = NULL;
-+		spin_unlock_irqrestore(&sta->tx_filtered.lock, flags);
-+
-+		/*
-+		 * Frames are queued in order, so if this one
-+		 * hasn't expired yet we can stop testing. If
-+		 * we actually reached the end of the queue we
-+		 * also need to stop, of course.
-+		 */
-+		if (!skb)
-+			break;
-+		dev_kfree_skb(skb);
-+	}
-+
-+	/*
-+	 * Now also check the normal PS-buffered queue, this will
-+	 * only find something if the filtered queue was emptied
-+	 * since the filtered frames are all before the normal PS
-+	 * buffered frames.
-+	 */
- 	for (;;) {
- 		spin_lock_irqsave(&sta->ps_tx_buf.lock, flags);
- 		skb = skb_peek(&sta->ps_tx_buf);
-@@ -707,6 +740,11 @@ static bool sta_info_cleanup_expire_buff
- 			skb = NULL;
- 		spin_unlock_irqrestore(&sta->ps_tx_buf.lock, flags);
- 
-+		/*
-+		 * frames are queued in order, so if this one
-+		 * hasn't expired yet (or we reached the end of
-+		 * the queue) we can stop testing
-+		 */
- 		if (!skb)
- 			break;
- 
-@@ -716,13 +754,22 @@ static bool sta_info_cleanup_expire_buff
- 		       sta->sta.addr);
- #endif
- 		dev_kfree_skb(skb);
--
--		/* if the queue is now empty recalc TIM bit */
--		if (skb_queue_empty(&sta->ps_tx_buf))
--			sta_info_recalc_tim(sta);
- 	}
- 
--	return !skb_queue_empty(&sta->ps_tx_buf);
-+	/*
-+	 * Finally, recalculate the TIM bit for this station -- it might
-+	 * now be clear because the station was too slow to retrieve its
-+	 * frames.
-+	 */
-+	sta_info_recalc_tim(sta);
-+
-+	/*
-+	 * Return whether there are any frames still buffered, this is
-+	 * used to check whether the cleanup timer still needs to run,
-+	 * if there are no frames we don't need to rearm the timer.
-+	 */
-+	return !(skb_queue_empty(&sta->ps_tx_buf) &&
-+		 skb_queue_empty(&sta->tx_filtered));
- }
- 
- static int __must_check __sta_info_destroy(struct sta_info *sta)
---- a/net/mac80211/status.c	2011-09-06 13:24:28.000000000 +0200
-+++ b/net/mac80211/status.c	2011-09-06 13:29:24.000000000 +0200
-@@ -107,6 +107,11 @@ static void ieee80211_handle_filtered_fr
- 	    skb_queue_len(&sta->tx_filtered) < STA_MAX_TX_BUFFER) {
- 		skb_queue_tail(&sta->tx_filtered, skb);
- 		sta_info_recalc_tim(sta);
-+
-+		if (!timer_pending(&local->sta_cleanup))
-+			mod_timer(&local->sta_cleanup,
-+				  round_jiffies(jiffies +
-+						STA_INFO_CLEANUP_INTERVAL));
- 		return;
- 	}
- 
-
+Wey
 
