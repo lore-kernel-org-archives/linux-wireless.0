@@ -1,44 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12840 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754474Ab1IMOsj (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:55047 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753454Ab1I1WY1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 10:48:39 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [RFC] wireless: Reset beacon_found while updating regulatory
-Date: Tue, 13 Sep 2011 20:19:13 +0530
-Message-ID: <1315925353-20152-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110913_164843_233035_DDBC1F13)
+	Wed, 28 Sep 2011 18:24:27 -0400
+Received: by qyk7 with SMTP id 7so75801qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2011 15:24:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20110928190532.9ACDF40652@repository3.orbit-lab.org>
+References: <20110928190532.9ACDF40652@repository3.orbit-lab.org>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Wed, 28 Sep 2011 15:24:07 -0700
+Message-ID: <CAB=NE6VpUd43k3CH3401c8v1A4zwZqsGghQMuwPv0=dQAdVAbA@mail.gmail.com> (sfid-20110929_002431_080990_4DD9B9DE)
+Subject: Re: Compat-wireless release for 2011-09-28 is baked
+To: Compat-wireless cronjob account <compat@orbit-lab.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During the association, the regulatory is updated by country IE
-that reaps the previously found beacons. So the passive scan
-channels after the association is never getting cleared even
-the beacons are received on that channel. This patch resets
-beacon_found while updating regulatory.
+On Wed, Sep 28, 2011 at 12:05 PM, Compat-wireless cronjob account
+<compat@orbit-lab.org> wrote:
+> Host key verification failed.
+> rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+> rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- net/wireless/reg.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+This should be fixed now. Sorry for the delay.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 9f3aa5c..e38ccbb 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -850,6 +850,7 @@ static void handle_channel(struct wiphy *wiphy,
- 		return;
- 	}
- 
-+	chan->beacon_found = false;
- 	chan->flags = flags | bw_flags | map_regdom_flags(reg_rule->flags);
- 	chan->max_antenna_gain = min(chan->orig_mag,
- 		(int) MBI_TO_DBI(power_rule->max_antenna_gain));
--- 
-1.7.6.1
-
+  Luis
