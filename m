@@ -1,95 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2134 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754561Ab1IWAIi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 20:08:38 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v2 04/19] staging: brcm80211: sparse endianness warnings
- for struct sdpcm_shared
-Date: Thu, 22 Sep 2011 17:07:41 -0700
-Message-ID: <1316736476-23725-5-git-send-email-frankyl@broadcom.com> (sfid-20110923_020849_888682_7FE67FC0)
-In-Reply-To: <1316736476-23725-1-git-send-email-frankyl@broadcom.com>
-References: <1316736476-23725-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:56822 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751785Ab1I1H2n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Sep 2011 03:28:43 -0400
+Subject: Re: Questions on ieee80211_frame_duration()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Roland Vossen <rvossen@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4E82CA8C.9060102@broadcom.com>
+References: <4E81A098.9040708@broadcom.com>
+	 <1317121805.4082.10.camel@jlt3.sipsolutions.net>
+	 <4E82CA8C.9060102@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 28 Sep 2011 09:28:41 +0200
+Message-ID: <1317194921.3986.6.camel@jlt3.sipsolutions.net> (sfid-20110928_092846_662387_9689959B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Hi Roland,
 
-Structure that is received from dongle has been annotated.
+> >> The function does not seem to take the last two types into account.
+> >> Should it ?
+> >
+> > I suppose it needs to. I'd be happy if you would fix it :-)
+> 
+> I feel a bit uncomfortable changing such a critical function, especially 
+> since I am not that familiar with Mac80211 design yet. So don't expect 
+> miracles from me on the short term :-)
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   31 +++++++++++++++++-------
- 1 files changed, 22 insertions(+), 9 deletions(-)
+:-)
+I suspect it's actually not very critical for most drivers.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 57001d4..9d4850d 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -530,6 +530,17 @@ struct sdpcm_shared {
- 	u8 tag[32];
- };
- 
-+struct sdpcm_shared_le {
-+	__le32 flags;
-+	__le32 trap_addr;
-+	__le32 assert_exp_addr;
-+	__le32 assert_file_addr;
-+	__le32 assert_line;
-+	__le32 console_addr;	/* Address of struct rte_console */
-+	__le32 msgtrace_addr;
-+	u8 tag[32];
-+};
-+
- 
- /* misc chip info needed by some of the routines */
- struct chip_info {
-@@ -2919,6 +2930,7 @@ brcmf_sdbrcm_readshared(struct brcmf_bus *bus, struct sdpcm_shared *sh)
- 	u32 addr;
- 	__le32 addr_le;
- 	int rv;
-+	struct sdpcm_shared_le sh_le;
- 
- 	/* Read last word in memory to determine address of
- 			 sdpcm_shared structure */
-@@ -2942,19 +2954,20 @@ brcmf_sdbrcm_readshared(struct brcmf_bus *bus, struct sdpcm_shared *sh)
- 	}
- 
- 	/* Read rte_shared structure */
--	rv = brcmf_sdbrcm_membytes(bus, false, addr, (u8 *) sh,
--			      sizeof(struct sdpcm_shared));
-+	rv = brcmf_sdbrcm_membytes(bus, false, addr, (u8 *) &sh_le,
-+			      sizeof(struct sdpcm_shared_le));
- 	if (rv < 0)
- 		return rv;
- 
- 	/* Endianness */
--	sh->flags = le32_to_cpu(sh->flags);
--	sh->trap_addr = le32_to_cpu(sh->trap_addr);
--	sh->assert_exp_addr = le32_to_cpu(sh->assert_exp_addr);
--	sh->assert_file_addr = le32_to_cpu(sh->assert_file_addr);
--	sh->assert_line = le32_to_cpu(sh->assert_line);
--	sh->console_addr = le32_to_cpu(sh->console_addr);
--	sh->msgtrace_addr = le32_to_cpu(sh->msgtrace_addr);
-+	sh->flags = le32_to_cpu(sh_le.flags);
-+	sh->trap_addr = le32_to_cpu(sh_le.trap_addr);
-+	sh->assert_exp_addr = le32_to_cpu(sh_le.assert_exp_addr);
-+	sh->assert_file_addr = le32_to_cpu(sh_le.assert_file_addr);
-+	sh->assert_line = le32_to_cpu(sh_le.assert_line);
-+	sh->console_addr = le32_to_cpu(sh_le.console_addr);
-+	sh->msgtrace_addr = le32_to_cpu(sh_le.msgtrace_addr);
-+	memcpy(sh->tag, sh_le.tag, sizeof(sh->tag));
- 
- 	if ((sh->flags & SDPCM_SHARED_VERSION_MASK) != SDPCM_SHARED_VERSION) {
- 		brcmf_dbg(ERROR, "sdpcm_shared version %d in brcmf is different than sdpcm_shared version %d in dongle\n",
--- 
-1.7.1
-
+johannes
 
