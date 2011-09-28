@@ -1,23 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:35344 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756663Ab1IGTC2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35635 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754288Ab1I1Nsw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Sep 2011 15:02:28 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 58A3B5401F4
-	for <linux-wireless@vger.kernel.org>; Wed,  7 Sep 2011 15:13:04 -0400 (EDT)
-Subject: Compat-wireless release for 2011-09-07 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110907190224.588B740622@repository3.orbit-lab.org> (sfid-20110907_210231_841716_A0ED95F6)
-Date: Wed,  7 Sep 2011 15:02:24 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 28 Sep 2011 09:48:52 -0400
+Subject: Re: [PATCH 3/3] mac80211: pass vif param to conf_tx() callback
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1316970415-23239-3-git-send-email-eliad@wizery.com> (sfid-20110925_190724_392119_D7C5583F)
+References: <1316970415-23239-1-git-send-email-eliad@wizery.com>
+	 <1316970415-23239-3-git-send-email-eliad@wizery.com>
+	 (sfid-20110925_190724_392119_D7C5583F)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 28 Sep 2011 15:48:28 +0200
+Message-ID: <1317217708.3986.17.camel@jlt3.sipsolutions.net> (sfid-20110928_154856_280002_4A14F93D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fatal: Unable to look up git.kernel.org (port 9418) (Name or service not known)
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+On Sun, 2011-09-25 at 20:06 +0300, Eliad Peller wrote:
+> tx params should be configured per interface.
+> Add ieee80211_vif param to the conf_tx callback,
+> and update all the drivers that use this callback.
 
-compat-wireless code metrics
+I see patches 1 and 2 in the tree, but not this. I suspect the reason is
+that it was actually incomplete, not updating for example iwlwifi
+because there the function is defined in another file and the spatch
+failed?
 
-    806210 - Total upstream lines of code being pulled
+johannes
+
