@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:37953 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752710Ab1IVKWZ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:50158 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752898Ab1I1OJA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 06:22:25 -0400
-Received: by mail-bw0-f44.google.com with SMTP id q10so2288330bka.3
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 03:22:23 -0700 (PDT)
-Subject: Re: [PATCH v2] wl12xx: fix forced passive scans
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: stable@kernel.org, yoni.divinsky@ti.com
-In-Reply-To: <1316677732-2242-1-git-send-email-coelho@ti.com>
-References: <1316676653-1758-1-git-send-email-coelho@ti.com>
-	 <1316677732-2242-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Sep 2011 13:22:15 +0300
-Message-ID: <1316686935.2157.572.camel@cumari> (sfid-20110922_122228_338214_6A6A34F0)
-Mime-Version: 1.0
+	Wed, 28 Sep 2011 10:09:00 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC] ath9k_hw: Fix number of GPIO pins for AR9287/9300
+Date: Wed, 28 Sep 2011 17:10:34 +0530
+Message-ID: <1317210034-8239-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110928_160905_723634_E66A139D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-09-22 at 10:48 +0300, Luciano Coelho wrote: 
-> We were using incorrect max and min dwell times during forced passive
-> scans because we were still using the active scan states to scan
-> (passively) the channels that were not marked as passive.
-> 
-> Instead of doing passive scans in active states, we now skip active
-> states and scan for all channels in passive states.
-> 
-> Cc: <stable@kernel.org> # 2.6.36+
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Applied.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index f2de7ee..e2c62ea 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2153,6 +2153,10 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		pCap->num_gpio_pins = AR9271_NUM_GPIO;
+ 	else if (AR_DEVID_7010(ah))
+ 		pCap->num_gpio_pins = AR7010_NUM_GPIO;
++	else if (AR_SREV_9300_20_OR_LATER(ah))
++		pCap->num_gpio_pins = AR9300_NUM_GPIO;
++	else if (AR_SREV_9287_11_OR_LATER(ah))
++		pCap->num_gpio_pins = AR9287_NUM_GPIO;
+ 	else if (AR_SREV_9285_12_OR_LATER(ah))
+ 		pCap->num_gpio_pins = AR9285_NUM_GPIO;
+ 	else if (AR_SREV_9280_20_OR_LATER(ah))
 -- 
-Cheers,
-Luca.
+1.7.0.4
 
