@@ -1,99 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48538 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:39196 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752426Ab1I0S4Q (ORCPT
+	with ESMTP id S1752531Ab1I1MNB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 14:56:16 -0400
-Subject: [PATCH] cfg80211/mac80211: apply station uAPSD parameters
- selectively
+	Wed, 28 Sep 2011 08:13:01 -0400
+Message-Id: <20110928121129.222176759@sipsolutions.net> (sfid-20110928_141305_344220_9364C3E0)
+Date: Wed, 28 Sep 2011 14:08:52 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Eliad Peller <eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Sep 2011 20:56:12 +0200
-Message-ID: <1317149772.1931.4.camel@jlt3.sipsolutions.net> (sfid-20110927_205621_889232_76432483)
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 03/15] mac80211: also expire filtered frames
+References: <20110928120849.882884360@sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Currently, when hostapd sets the station as authorized
-we also overwrite its uAPSD parameter. This obviously
-leads to buggy behaviour (later, with my patches that
-actually add uAPSD support). To fix this, only apply
-those parameters if they were actually set in nl80211,
-and to achieve that add a bitmap of things to apply.
+mac80211 will expire normal PS-buffered frames, but
+if the device rejected some frames for a sleeping
+station, these won't be on the ps_tx_buf queue but
+on the tx_filtered queue instead; this is done to
+avoid reordering.
+
+However, mac80211 will not expire frames from the
+filtered queue, let's fix that.
+
+Also add a more comments to what all this expiry is
+doing and how it works.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-So it'd be possible to fix this much simpler by moving the code, but I'm
-doing it like this for two reasons:
+ net/mac80211/sta_info.c |   57 +++++++++++++++++++++++++++++++++++++++++++-----
+ net/mac80211/status.c   |    5 ++++
+ 2 files changed, 57 insertions(+), 5 deletions(-)
 
-1) we might later want to implement TSPEC handling and allow them to
-change
-2) it adds the bitmap that others can build on in the future for other
-parameters
-
- include/net/cfg80211.h |   12 ++++++++++++
- net/mac80211/cfg.c     |    6 ++++--
- net/wireless/nl80211.c |    2 ++
- 3 files changed, 18 insertions(+), 2 deletions(-)
-
---- a/net/mac80211/cfg.c	2011-09-27 20:37:01.000000000 +0200
-+++ b/net/mac80211/cfg.c	2011-09-27 20:37:55.000000000 +0200
-@@ -714,8 +714,10 @@ static void sta_apply_parameters(struct
- 	}
- 	spin_unlock_irqrestore(&sta->flaglock, flags);
+--- a/net/mac80211/sta_info.c	2011-09-28 13:18:29.000000000 +0200
++++ b/net/mac80211/sta_info.c	2011-09-28 13:18:30.000000000 +0200
+@@ -698,6 +698,39 @@ static bool sta_info_cleanup_expire_buff
+ 	unsigned long flags;
+ 	struct sk_buff *skb;
  
--	sta->sta.uapsd_queues = params->uapsd_queues;
--	sta->sta.max_sp = params->max_sp;
-+	if (params->sta_modify_mask & STATION_PARAM_APPLY_UAPSD) {
-+		sta->sta.uapsd_queues = params->uapsd_queues;
-+		sta->sta.max_sp = params->max_sp;
++	/*
++	 * First check for frames that should expire on the filtered
++	 * queue. Frames here were rejected by the driver and are on
++	 * a separate queue to avoid reordering with normal PS-buffered
++	 * frames. They also aren't accounted for right now in the
++	 * total_ps_buffered counter.
++	 */
++	for (;;) {
++		spin_lock_irqsave(&sta->tx_filtered.lock, flags);
++		skb = skb_peek(&sta->tx_filtered);
++		if (sta_info_buffer_expired(sta, skb))
++			skb = __skb_dequeue(&sta->tx_filtered);
++		else
++			skb = NULL;
++		spin_unlock_irqrestore(&sta->tx_filtered.lock, flags);
++
++		/*
++		 * Frames are queued in order, so if this one
++		 * hasn't expired yet we can stop testing. If
++		 * we actually reached the end of the queue we
++		 * also need to stop, of course.
++		 */
++		if (!skb)
++			break;
++		dev_kfree_skb(skb);
 +	}
- 
- 	/*
- 	 * cfg80211 validates this (1-2007) and allows setting the AID
---- a/include/net/cfg80211.h	2011-09-27 20:37:00.000000000 +0200
-+++ b/include/net/cfg80211.h	2011-09-27 20:37:55.000000000 +0200
-@@ -424,6 +424,17 @@ enum plink_actions {
- };
- 
- /**
-+ * enum station_parameters_apply_mask - station parameter values to apply
-+ * @STATION_PARAM_APPLY_UAPSD: apply new uAPSD parameters (uapsd_queues, max_sp)
-+ *
-+ * Not all station parameters have in-band "no change" signalling,
-+ * for those that don't these flags will are used.
-+ */
-+enum station_parameters_apply_mask {
-+	STATION_PARAM_APPLY_UAPSD = BIT(0),
-+};
 +
-+/**
-  * struct station_parameters - station parameters
-  *
-  * Used to change and create a new station.
-@@ -450,6 +461,7 @@ struct station_parameters {
- 	u8 *supported_rates;
- 	struct net_device *vlan;
- 	u32 sta_flags_mask, sta_flags_set;
-+	u32 sta_modify_mask;
- 	int listen_interval;
- 	u16 aid;
- 	u8 supported_rates_len;
---- a/net/wireless/nl80211.c	2011-09-27 20:37:01.000000000 +0200
-+++ b/net/wireless/nl80211.c	2011-09-27 20:37:55.000000000 +0200
-@@ -2636,6 +2636,8 @@ static int nl80211_new_station(struct sk
++	/*
++	 * Now also check the normal PS-buffered queue, this will
++	 * only find something if the filtered queue was emptied
++	 * since the filtered frames are all before the normal PS
++	 * buffered frames.
++	 */
+ 	for (;;) {
+ 		spin_lock_irqsave(&sta->ps_tx_buf.lock, flags);
+ 		skb = skb_peek(&sta->ps_tx_buf);
+@@ -707,6 +740,11 @@ static bool sta_info_cleanup_expire_buff
+ 			skb = NULL;
+ 		spin_unlock_irqrestore(&sta->ps_tx_buf.lock, flags);
  
- 		if (params.max_sp & ~IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK)
- 			return -EINVAL;
-+
-+		params.sta_modify_mask |= STATION_PARAM_APPLY_UAPSD;
++		/*
++		 * frames are queued in order, so if this one
++		 * hasn't expired yet (or we reached the end of
++		 * the queue) we can stop testing
++		 */
+ 		if (!skb)
+ 			break;
+ 
+@@ -716,13 +754,22 @@ static bool sta_info_cleanup_expire_buff
+ 		       sta->sta.addr);
+ #endif
+ 		dev_kfree_skb(skb);
+-
+-		/* if the queue is now empty recalc TIM bit */
+-		if (skb_queue_empty(&sta->ps_tx_buf))
+-			sta_info_recalc_tim(sta);
  	}
  
- 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+-	return !skb_queue_empty(&sta->ps_tx_buf);
++	/*
++	 * Finally, recalculate the TIM bit for this station -- it might
++	 * now be clear because the station was too slow to retrieve its
++	 * frames.
++	 */
++	sta_info_recalc_tim(sta);
++
++	/*
++	 * Return whether there are any frames still buffered, this is
++	 * used to check whether the cleanup timer still needs to run,
++	 * if there are no frames we don't need to rearm the timer.
++	 */
++	return !(skb_queue_empty(&sta->ps_tx_buf) &&
++		 skb_queue_empty(&sta->tx_filtered));
+ }
+ 
+ static int __must_check __sta_info_destroy(struct sta_info *sta)
+--- a/net/mac80211/status.c	2011-09-28 13:18:29.000000000 +0200
++++ b/net/mac80211/status.c	2011-09-28 13:18:30.000000000 +0200
+@@ -107,6 +107,11 @@ static void ieee80211_handle_filtered_fr
+ 	    skb_queue_len(&sta->tx_filtered) < STA_MAX_TX_BUFFER) {
+ 		skb_queue_tail(&sta->tx_filtered, skb);
+ 		sta_info_recalc_tim(sta);
++
++		if (!timer_pending(&local->sta_cleanup))
++			mod_timer(&local->sta_cleanup,
++				  round_jiffies(jiffies +
++						STA_INFO_CLEANUP_INTERVAL));
+ 		return;
+ 	}
+ 
 
 
