@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:39194 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752322Ab1IEMC5 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52798 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752269Ab1I1HK6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Sep 2011 08:02:57 -0400
-Received: by mail-yi0-f43.google.com with SMTP id 27so3788512yia.2
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Sep 2011 05:02:56 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <johannes@sipsolutions.net>
-Subject: [RFC 0/5] Scan optimization
-Date: Mon,  5 Sep 2011 15:02:26 +0300
-Message-Id: <1315224151-16552-1-git-send-email-VictorG@ti.com> (sfid-20110905_140300_950548_7D2FC2D1)
+	Wed, 28 Sep 2011 03:10:58 -0400
+Subject: Re: [RFC 04/15] mac80211: split PS buffers into ACs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAB=NE6Wi1EJtyW=4kCNTgdhjzzgTMT3N7xhgKu+AWd9cphcD5Q@mail.gmail.com> (sfid-20110927_225152_449291_118F1AA2)
+References: <20110922154726.521122680@sipsolutions.net>
+	 <20110922154849.648785480@sipsolutions.net>
+	 <CAB=NE6Wi1EJtyW=4kCNTgdhjzzgTMT3N7xhgKu+AWd9cphcD5Q@mail.gmail.com>
+	 (sfid-20110927_225152_449291_118F1AA2)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 28 Sep 2011 09:10:55 +0200
+Message-ID: <1317193855.3986.4.camel@jlt3.sipsolutions.net> (sfid-20110928_091101_937344_83C176EE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To be able to stop a triggered scan earlier (when one finds the desired
-amount of scan results or some specific BSSID), the user needs to be 
-notified with intermediate scan result on reception of each new beacon/probe
-response during the scan process.
+On Tue, 2011-09-27 at 13:51 -0700, Luis R. Rodriguez wrote:
 
-Next patches adding the ability:
- 1. 	To stop a running scan with new 'scan cancel' command,
-	this v2 patch has mostly cosmetic changes.
- 2. 	To get new intermediate scan result event, during running scan.
- 3. 	To setup min RSSI threshold for intermediate scan events, which will 
-    	reduce significantly irrelevant intermediate scan result notification 
-    	(i.e. kernel-user traffic).
+> > +       /*
+> > +        * If all ACs are delivery-enabled then we should build
+> > +        * the TIM bit for all ACs anyway; if only some are then
+> > +        * we ignore those and build the TIM bit using only the
+> > +        * non-enabled ones.
+> > +        */
+> 
+> As per the documentation uapsd_queues is the "bitmap of queues
+> configured for uapsd". As I read this we are ignoring setting the TIM
+> for the STA if an AC queue was marked as uapsd-enabled but had
+> buffered frames for it, so we'd only set the TIM if we had at least
+> one AC queue that did not have uapsd enabled and had buffered frames
+> pending. Is that accurate?
 
+Almost.
 
-Victor Goldenshtein (5):
-  nl80211/cfg80211: adding 'scan_cancel' command.
-  mac80211: adding 'scan_cancel' command.
-  nl80211/cfg80211: adding intermediate scan result event.
-  mac80211: adding intermediate scan result event call.
-  nl80211/cfg80211: adding intermediate scan result filter.
+First of all, we need to differentiate between delivery- and
+trigger-enabled, which currently we don't. Since this only happens with
+TSPEC, we're not worried about that right now, but it's good to keep it
+in mind. So right now, the uapsd_queues bitmap marks those that are both
+trigger- and delivery-enabled.
 
- include/linux/nl80211.h |   29 ++++++++++++++++++
- include/net/cfg80211.h  |   12 +++++++
- net/mac80211/cfg.c      |    8 +++++
- net/mac80211/scan.c     |    6 +++-
- net/wireless/core.h     |   12 +++++++
- net/wireless/nl80211.c  |   74 +++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    3 ++
- net/wireless/scan.c     |   63 ++++++++++++++++++++++++++++++++++++++++
- net/wireless/util.c     |    3 ++
- 9 files changed, 209 insertions(+), 1 deletions(-)
+Now, to the TIM bit: when *all* ACs are delivery-enabled, the TIM bit
+will be set from all ACs. This is the case you missed. When only some of
+the ACs are delivery-enabled, the delivery-enabled ACs are ignored for
+purposes of setting the TIM bit. This is what you described.
+
+This is described in 11.2.1.5 (IIRC).
+
+johannes
 
