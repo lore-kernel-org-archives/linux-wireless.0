@@ -1,194 +1,290 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39584 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752220Ab1IQOJt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Sep 2011 10:09:49 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 1/4] ath9k_hw: make ath9k_hw_set_interrupts use ah->imask by default
-Date: Sat, 17 Sep 2011 16:09:34 +0200
-Message-Id: <1316268577-45651-1-git-send-email-nbd@openwrt.org> (sfid-20110917_161014_813289_9F71AB6D)
+Received: from he.sipsolutions.net ([78.46.109.217]:39223 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752568Ab1I1MNS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Sep 2011 08:13:18 -0400
+Message-Id: <20110928121130.483673519@sipsolutions.net> (sfid-20110928_141321_543404_B69B513B)
+Date: Wed, 28 Sep 2011 14:08:56 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 07/15] mac80211: allow releasing driver-buffered frames
+References: <20110928120849.882884360@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/beacon.c |   10 +++++-----
- drivers/net/wireless/ath/ath9k/gpio.c   |    4 ++--
- drivers/net/wireless/ath/ath9k/mac.c    |    6 +++---
- drivers/net/wireless/ath/ath9k/mac.h    |    2 +-
- drivers/net/wireless/ath/ath9k/main.c   |   10 +++++-----
- drivers/net/wireless/ath/ath9k/recv.c   |    2 +-
- 6 files changed, 17 insertions(+), 17 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 9cdeaeb..a13cabb 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -515,7 +515,7 @@ static void ath_beacon_config_ap(struct ath_softc *sc,
- 	sc->sc_flags |= SC_OP_TSF_RESET;
- 	ath9k_beacon_init(sc, nexttbtt, intval);
- 	sc->beacon.bmisscnt = 0;
--	ath9k_hw_set_interrupts(ah, ah->imask);
-+	ath9k_hw_set_interrupts(ah);
- 	ath9k_hw_enable_interrupts(ah);
- }
+If there are frames for a station buffered in
+the driver, mac80211 announces those in the TIM
+IE but there's no way to release them. Add new
+API to release such frames and use it when the
+station polls for a frame.
+
+Since the API will soon also be used for uAPSD
+it is easily extensible.
+
+Note that before this change drivers announcing
+driver-buffered frames in the TIM bit actually
+will respond to a PS-Poll with a potentially
+lower priority frame (if there are any frames
+buffered in mac80211), after this patch a driver
+that hasn't been changed will no longer respond
+at all. This only affects ath9k, which will need
+to be fixed to implement the new API.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h      |   31 ++++++++++++++++
+ net/mac80211/driver-ops.h   |   15 ++++++++
+ net/mac80211/driver-trace.h |   35 ++++++++++++++++++
+ net/mac80211/sta_info.c     |   82 +++++++++++++++++++++++++++++++++++---------
+ 4 files changed, 147 insertions(+), 16 deletions(-)
+
+--- a/net/mac80211/sta_info.c	2011-09-28 13:22:04.000000000 +0200
++++ b/net/mac80211/sta_info.c	2011-09-28 13:22:29.000000000 +0200
+@@ -1147,8 +1147,10 @@ void ieee80211_sta_ps_deliver_poll_respo
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb = NULL;
++	bool found = false;
+ 	bool more_data = false;
+ 	int ac;
++	unsigned long driver_release_tids = 0;
+ 	u8 ignore_for_response = sta->sta.uapsd_queues;
  
-@@ -643,7 +643,7 @@ static void ath_beacon_config_sta(struct ath_softc *sc,
- 	ath9k_hw_set_sta_beacon_timers(ah, &bs);
- 	ah->imask |= ATH9K_INT_BMISS;
+ 	/*
+@@ -1163,19 +1165,40 @@ void ieee80211_sta_ps_deliver_poll_respo
+ 	 * Get response frame and more data bit for it.
+ 	 */
+ 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
++		unsigned long tids;
++
+ 		if (ignore_for_response & BIT(ac))
+ 			continue;
  
--	ath9k_hw_set_interrupts(ah, ah->imask);
-+	ath9k_hw_set_interrupts(ah);
- 	ath9k_hw_enable_interrupts(ah);
- }
+-		if (!skb) {
+-			skb = skb_dequeue(&sta->tx_filtered[ac]);
+-			if (!skb) {
+-				skb = skb_dequeue(&sta->ps_tx_buf[ac]);
++		tids = ieee80211_tids_for_ac(ac);
++
++		if (!found) {
++			driver_release_tids = sta->driver_buffered_tids & tids;
++			if (driver_release_tids) {
++				found = true;
++			} else {
++				skb = skb_dequeue(&sta->tx_filtered[ac]);
++				if (!skb) {
++					skb = skb_dequeue(&sta->ps_tx_buf[ac]);
++					if (skb)
++						local->total_ps_buffered--;
++				}
+ 				if (skb)
+-					local->total_ps_buffered--;
++					found = true;
+ 			}
+-		}
  
-@@ -679,7 +679,7 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
- 	ath9k_beacon_init(sc, nexttbtt, intval);
- 	sc->beacon.bmisscnt = 0;
+-		/* FIXME: take into account driver-buffered frames */
++			/*
++			 * If the driver has data on more than one TID then
++			 * certainly there's more data if we release just a
++			 * single frame now (from a single TID).
++			 */
++			if (hweight16(driver_release_tids) > 1) {
++				more_data = true;
++				driver_release_tids =
++					BIT(ffs(driver_release_tids) - 1);
++				break;
++			}
++		}
  
--	ath9k_hw_set_interrupts(ah, ah->imask);
-+	ath9k_hw_set_interrupts(ah);
- 	ath9k_hw_enable_interrupts(ah);
- }
+ 		if (!skb_queue_empty(&sta->tx_filtered[ac]) ||
+ 		    !skb_queue_empty(&sta->ps_tx_buf[ac])) {
+@@ -1184,6 +1207,22 @@ void ieee80211_sta_ps_deliver_poll_respo
+ 		}
+ 	}
  
-@@ -821,11 +821,11 @@ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status)
- 	if (status) {
- 		/* Re-enable beaconing */
- 		ah->imask |= ATH9K_INT_SWBA;
--		ath9k_hw_set_interrupts(ah, ah->imask);
-+		ath9k_hw_set_interrupts(ah);
++	if (!found) {
++#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
++		/*
++		 * FIXME: This can be the result of a race condition between
++		 *	  us expiring a frame and the station polling for it.
++		 *	  Should we send it a null-func frame indicating we
++		 *	  have nothing buffered for it?
++		 */
++		printk(KERN_DEBUG "%s: STA %pM sent PS Poll even "
++		       "though there are no buffered frames for it\n",
++		       sdata->name, sta->sta.addr);
++#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
++
++		return;
++	}
++
+ 	if (skb) {
+ 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 		struct ieee80211_hdr *hdr =
+@@ -1210,18 +1249,29 @@ void ieee80211_sta_ps_deliver_poll_respo
+ 		ieee80211_add_pending_skb(local, skb);
+ 
+ 		sta_info_recalc_tim(sta);
+-#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
  	} else {
- 		/* Disable SWBA interrupt */
- 		ah->imask &= ~ATH9K_INT_SWBA;
--		ath9k_hw_set_interrupts(ah, ah->imask);
-+		ath9k_hw_set_interrupts(ah);
- 		tasklet_kill(&sc->bcon_tasklet);
- 		ath9k_hw_stop_dma_queue(ah, sc->beacon.beaconq);
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index afbf540..d357657 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -150,7 +150,7 @@ static void ath9k_gen_timer_start(struct ath_hw *ah,
- 	if ((ah->imask & ATH9K_INT_GENTIMER) == 0) {
- 		ath9k_hw_disable_interrupts(ah);
- 		ah->imask |= ATH9K_INT_GENTIMER;
--		ath9k_hw_set_interrupts(ah, ah->imask);
-+		ath9k_hw_set_interrupts(ah);
- 		ath9k_hw_enable_interrupts(ah);
+ 		/*
+-		 * FIXME: This can be the result of a race condition between
+-		 *	  us expiring a frame and the station polling for it.
+-		 *	  Should we send it a null-func frame indicating we
+-		 *	  have nothing buffered for it?
++		 * We need to release a frame that is buffered somewhere in the
++		 * driver ... it'll have to handle that.
++		 * Note that, as per the comment above, it'll also have to see
++		 * if there is more than just one frame on the specific TID that
++		 * we're releasing from, and it needs to set the more-data bit
++		 * accordingly if we tell it that there's no more data. If we do
++		 * tell it there's more data, then of course the more-data bit
++		 * needs to be set anyway.
++		 */
++		drv_release_buffered_frames(local, sta, driver_release_tids,
++					    1, IEEE80211_FRAME_RELEASE_PSPOLL,
++					    more_data);
++
++		/*
++		 * Note that we don't recalculate the TIM bit here as it would
++		 * most likely have no effect at all unless the driver told us
++		 * that the TID became empty before returning here from the
++		 * release function.
++		 * Either way, however, when the driver tells us that the TID
++		 * became empty we'll do the TIM recalculation.
+ 		 */
+-		printk(KERN_DEBUG "%s: STA %pM sent PS Poll even "
+-		       "though there are no buffered frames for it\n",
+-		       sdata->name, sta->sta.addr);
+-#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
  	}
  }
-@@ -165,7 +165,7 @@ static void ath9k_gen_timer_stop(struct ath_hw *ah, struct ath_gen_timer *timer)
- 	if (timer_table->timer_mask.val == 0) {
- 		ath9k_hw_disable_interrupts(ah);
- 		ah->imask &= ~ATH9K_INT_GENTIMER;
--		ath9k_hw_set_interrupts(ah, ah->imask);
-+		ath9k_hw_set_interrupts(ah);
- 		ath9k_hw_enable_interrupts(ah);
- 	}
+ 
+--- a/include/net/mac80211.h	2011-09-28 13:22:04.000000000 +0200
++++ b/include/net/mac80211.h	2011-09-28 13:22:29.000000000 +0200
+@@ -1622,6 +1622,14 @@ enum ieee80211_tx_sync_type {
+ };
+ 
+ /**
++ * enum ieee80211_frame_release_type - frame release reason
++ * @IEEE80211_FRAME_RELEASE_PSPOLL: frame released for PS-Poll
++ */
++enum ieee80211_frame_release_type {
++	IEEE80211_FRAME_RELEASE_PSPOLL,
++};
++
++/**
+  * struct ieee80211_ops - callbacks from mac80211 to the driver
+  *
+  * This structure contains various callbacks that the driver may
+@@ -1931,6 +1939,23 @@ enum ieee80211_tx_sync_type {
+  *	The callback can sleep.
+  * @rssi_callback: Notify driver when the average RSSI goes above/below
+  *	thresholds that were registered previously. The callback can sleep.
++ *
++ * @release_buffered_frames: Release buffered frames according to the given
++ *	parameters. In the case where the driver buffers some frames for
++ *	sleeping stations mac80211 will use this callback to tell the driver
++ *	to release some frames, either for PS-poll or uAPSD.
++ *	Note that if the @more_data paramter is %false the driver must check
++ *	if there are more frames on the given TIDs, and if there are more than
++ *	the frames being released then it must still set the more-data bit in
++ *	the frame. If the @more_data parameter is %true, then of course the
++ *	more-data bit must always be set.
++ *	The @tids parameter tells the driver which TIDs to release frames
++ *	from, for PS-poll it will always have only a single bit set.
++ *	In the case this is used for uAPSD, the @num_frames parameter may be
++ *	bigger than one, but the driver may send fewer frames (it must send
++ *	at least one, however). In this case it is also responsible for
++ *	setting the EOSP flag in the QoS header of the frames.
++ *	This callback must be atomic.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -2045,6 +2070,12 @@ struct ieee80211_ops {
+ 				const struct cfg80211_bitrate_mask *mask);
+ 	void (*rssi_callback)(struct ieee80211_hw *hw,
+ 			      enum ieee80211_rssi_event rssi_event);
++
++	void (*release_buffered_frames)(struct ieee80211_hw *hw,
++					struct ieee80211_sta *sta,
++					u16 tids, int num_frames,
++					enum ieee80211_frame_release_type reason,
++					bool more_data);
+ };
+ 
+ /**
+--- a/net/mac80211/driver-ops.h	2011-09-28 11:44:04.000000000 +0200
++++ b/net/mac80211/driver-ops.h	2011-09-28 13:22:29.000000000 +0200
+@@ -670,4 +670,19 @@ static inline void drv_rssi_callback(str
+ 		local->ops->rssi_callback(&local->hw, event);
+ 	trace_drv_return_void(local);
  }
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 22f23ea..835e81d 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -827,9 +827,9 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
- }
- EXPORT_SYMBOL(ath9k_hw_enable_interrupts);
++
++static inline void
++drv_release_buffered_frames(struct ieee80211_local *local,
++			    struct sta_info *sta, u16 tids, int num_frames,
++			    enum ieee80211_frame_release_type reason,
++			    bool more_data)
++{
++	trace_drv_release_buffered_frames(local, &sta->sta, tids, num_frames,
++					  reason, more_data);
++	if (local->ops->release_buffered_frames)
++		local->ops->release_buffered_frames(&local->hw, &sta->sta, tids,
++						    num_frames, reason,
++						    more_data);
++	trace_drv_return_void(local);
++}
+ #endif /* __MAC80211_DRIVER_OPS */
+--- a/net/mac80211/driver-trace.h	2011-09-28 11:44:04.000000000 +0200
++++ b/net/mac80211/driver-trace.h	2011-09-28 13:22:29.000000000 +0200
+@@ -1129,6 +1129,41 @@ TRACE_EVENT(drv_rssi_callback,
+ 	)
+ );
  
--void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
-+void ath9k_hw_set_interrupts(struct ath_hw *ah)
- {
--	enum ath9k_int omask = ah->imask;
-+	enum ath9k_int ints = ah->imask;
- 	u32 mask, mask2;
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -837,7 +837,7 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
- 	if (!(ints & ATH9K_INT_GLOBAL))
- 		ath9k_hw_disable_interrupts(ah);
- 
--	ath_dbg(common, ATH_DBG_INTERRUPT, "0x%x => 0x%x\n", omask, ints);
-+	ath_dbg(common, ATH_DBG_INTERRUPT, "New interrupt mask 0x%x\n", ints);
- 
- 	mask = ints & ATH9K_INT_COMMON;
- 	mask2 = 0;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 91c9654..c7cec9c 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -734,7 +734,7 @@ int ath9k_hw_beaconq_setup(struct ath_hw *ah);
- 
- /* Interrupt Handling */
- bool ath9k_hw_intrpend(struct ath_hw *ah);
--void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints);
-+void ath9k_hw_set_interrupts(struct ath_hw *ah);
- void ath9k_hw_enable_interrupts(struct ath_hw *ah);
- void ath9k_hw_disable_interrupts(struct ath_hw *ah);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a16f539..f7cd461 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -273,7 +273,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 
- 	ath9k_cmn_update_txpow(ah, sc->curtxpow,
- 			       sc->config.txpowlimit, &sc->curtxpow);
--	ath9k_hw_set_interrupts(ah, ah->imask);
-+	ath9k_hw_set_interrupts(ah);
- 	ath9k_hw_enable_interrupts(ah);
- 
- 	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)) && start) {
-@@ -823,7 +823,7 @@ irqreturn_t ath_isr(int irq, void *dev)
- 
- 	if (status & ATH9K_INT_RXEOL) {
- 		ah->imask &= ~(ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
--		ath9k_hw_set_interrupts(ah, ah->imask);
-+		ath9k_hw_set_interrupts(ah);
- 	}
- 
- 	if (status & ATH9K_INT_MIB) {
-@@ -1396,7 +1396,7 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
- 		ah->imask &= ~ATH9K_INT_TSFOOR;
- 	}
- 
--	ath9k_hw_set_interrupts(ah, ah->imask);
-+	ath9k_hw_set_interrupts(ah);
- 
- 	/* Set up ANI */
- 	if (iter_data.naps > 0) {
-@@ -1571,7 +1571,7 @@ static void ath9k_enable_ps(struct ath_softc *sc)
- 	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
- 		if ((ah->imask & ATH9K_INT_TIM_TIMER) == 0) {
- 			ah->imask |= ATH9K_INT_TIM_TIMER;
--			ath9k_hw_set_interrupts(ah, ah->imask);
-+			ath9k_hw_set_interrupts(ah);
- 		}
- 		ath9k_hw_setrxabort(ah, 1);
- 	}
-@@ -1591,7 +1591,7 @@ static void ath9k_disable_ps(struct ath_softc *sc)
- 				  PS_WAIT_FOR_TX_ACK);
- 		if (ah->imask & ATH9K_INT_TIM_TIMER) {
- 			ah->imask &= ~ATH9K_INT_TIM_TIMER;
--			ath9k_hw_set_interrupts(ah, ah->imask);
-+			ath9k_hw_set_interrupts(ah);
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index bcc0b22..bba93eb 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1976,7 +1976,7 @@ requeue:
- 
- 	if (!(ah->imask & ATH9K_INT_RXEOL)) {
- 		ah->imask |= (ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
--		ath9k_hw_set_interrupts(ah, ah->imask);
-+		ath9k_hw_set_interrupts(ah);
- 	}
- 
- 	return 0;
--- 
-1.7.3.2
++TRACE_EVENT(drv_release_buffered_frames,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sta *sta,
++		 u16 tids, int num_frames,
++		 enum ieee80211_frame_release_type reason,
++		 bool more_data),
++
++	TP_ARGS(local, sta, tids, num_frames, reason, more_data),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		STA_ENTRY
++		__field(u16, tids)
++		__field(int, num_frames)
++		__field(int, reason)
++		__field(bool, more_data)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		STA_ASSIGN;
++		__entry->tids = tids;
++		__entry->num_frames = num_frames;
++		__entry->reason = reason;
++		__entry->more_data = more_data;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT STA_PR_FMT
++		" TIDs:0x%.4x frames:%d reason:%d more:%d",
++		LOCAL_PR_ARG, STA_PR_ARG, __entry->tids, __entry->num_frames,
++		__entry->reason, __entry->more_data
++	)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
+
 
