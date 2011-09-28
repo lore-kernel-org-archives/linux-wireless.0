@@ -1,82 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.compendium.com.ar ([200.69.223.40]:39373 "EHLO
-	rocinante.compendium.com.ar" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752219Ab1IVNXf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 09:23:35 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by rocinante.compendium.com.ar (Postfix) with ESMTP id 688C614825B
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 10:23:33 -0300 (ART)
-Received: from rocinante.compendium.com.ar ([127.0.0.1])
-	by localhost (rocinante.compendium.com.ar [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id W4Zv+poOAmdJ for <linux-wireless@vger.kernel.org>;
-	Thu, 22 Sep 2011 10:23:32 -0300 (ART)
-Date: Thu, 22 Sep 2011 10:23:32 -0300
-From: Horacio =?iso-8859-1?Q?J=2E_Pe=F1a?= <horape@compendium.com.ar>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Multiple Virtual Interfaces: when the station one fails the ap
- follows
-Message-ID: <20110922132332.GY18063@compendium.com.ar> (sfid-20110922_152338_804399_61BF6B1B)
-References: <20110917205507.GK8298@compendium.com.ar>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:9935 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752531Ab1I1NQH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Sep 2011 09:16:07 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] ath9k/ath9k_htc: Fix PS wrappers for RF kill
+Date: Wed, 28 Sep 2011 16:56:10 +0530
+Message-ID: <1317209170-7128-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110928_151612_398867_B441F2B6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20110917205507.GK8298@compendium.com.ar>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Following on this, I've found that "It seems that this channel hopping looking
-for AP1 is what breaks AP2." was wrong. I've tried a very dirty workaround,
-making a fake regulatory domain that only allows channel 6. Then, there is no
-channel hopping, but still the AP2 doesn't works. It sometimes sends out Probe
-Responses but no beacons.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Some idea on where to look?
+ath9k_hw_gpio_get reads the GPIO in/out registers to get the status of
+GPIO pins, so use PS wrappers
 
-Thanks,
-Horacio J. Peña
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/gpio.c         |    7 ++++++-
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |   10 ++++++++--
+ 2 files changed, 14 insertions(+), 3 deletions(-)
 
-On Sat, Sep 17, 2011 at 05:55:07PM -0300, Horacio J. Peña wrote:
-> [Please excuse me the openwrt syntax, I wrote this first on the openwrt forum]
-> 
-> When using multiple virtual interfaces like:
-> 
-> 
-> config wifi-device  radio0
->         option type     mac80211
->         option channel  6
-> ...
-> 
-> config wifi-iface
->         option device   radio0
->         option network  wan
->         option mode     sta
->         option ssid     AP1
-> ...
-> config wifi-iface
->         option device   radio0
->         option network  wlan
->         option mode     AP2
-> 
-> 
-> If wan gets deassociated from AP1, it gets impossible to associate to AP2 network. 
-> 
-> Looking with airodump-ng I see a few beacons sent on the right channel and that it's sending probes on the wrong channels. It seems that this channel hopping looking for AP1 is what breaks AP2.
-> 
-> It seems that devices in managed mode disregard the channel configuration. Is there any way to force it?
-> 
-> This has been tested on a TP-LINK MR3420 (AR9287)
-> 
-> Thanks!
-> -- 
-> Horacio J. Peña
-> horape@compendium.com.ar
-> horape@uninet.edu
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index afbf540..fd0f84e 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -84,9 +84,14 @@ void ath_init_leds(struct ath_softc *sc)
+ static bool ath_is_rfkill_set(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
++	bool is_blocked;
+ 
+-	return ath9k_hw_gpio_get(ah, ah->rfkill_gpio) ==
++	ath9k_ps_wakeup(sc);
++	is_blocked = ath9k_hw_gpio_get(ah, ah->rfkill_gpio) ==
+ 				  ah->rfkill_polarity;
++	ath9k_ps_restore(sc);
++
++	return is_blocked;
+ }
+ 
+ void ath9k_rfkill_poll_state(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index db2352e..e3a02eb 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -228,8 +228,14 @@ void ath9k_init_leds(struct ath9k_htc_priv *priv)
+ 
+ static bool ath_is_rfkill_set(struct ath9k_htc_priv *priv)
+ {
+-	return ath9k_hw_gpio_get(priv->ah, priv->ah->rfkill_gpio) ==
+-		priv->ah->rfkill_polarity;
++	bool is_blocked;
++
++	ath9k_htc_ps_wakeup(priv);
++	is_blocked = ath9k_hw_gpio_get(priv->ah, priv->ah->rfkill_gpio) ==
++						 priv->ah->rfkill_polarity;
++	ath9k_htc_ps_restore(priv);
++
++	return is_blocked;
+ }
+ 
+ void ath9k_htc_rfkill_poll_state(struct ieee80211_hw *hw)
 -- 
-Horacio J. Peña
-horape@compendium.com.ar
-horape@uninet.edu
+1.7.0.4
+
