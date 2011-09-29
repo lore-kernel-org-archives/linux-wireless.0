@@ -1,38 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:40045 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751049Ab1ISToY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 15:44:24 -0400
-Received: by wwf22 with SMTP id 22so8473498wwf.1
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 12:44:22 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:2013 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756227Ab1I2Wex (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Sep 2011 18:34:53 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v3 23/25] staging: brcm80211: use d11rxhdr structure in
+ brcms_c_recover_tsf64()
+Date: Thu, 29 Sep 2011 15:34:34 -0700
+Message-ID: <1317335676-3424-24-git-send-email-frankyl@broadcom.com> (sfid-20110930_003501_550598_00AE9428)
+In-Reply-To: <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
+References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+ <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1316460850-16443-2-git-send-email-Larry.Finger@lwfinger.net>
-References: <1316460850-16443-1-git-send-email-Larry.Finger@lwfinger.net>
-	<1316460850-16443-2-git-send-email-Larry.Finger@lwfinger.net>
-Date: Mon, 19 Sep 2011 21:44:22 +0200
-Message-ID: <CACna6ryk5em_JOBLO+oWiXkb8tO6=179sPP54=RJdsN=X=7JWw@mail.gmail.com> (sfid-20110919_214428_934322_944D1D29)
-Subject: Re: [PATCH 1/4] rtlwifi: rtl8192ce: Change modinfo messages
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/9/19 Larry Finger <Larry.Finger@lwfinger.net>:
-> The various modparam messages are difficult to understand.
+From: Arend van Spriel <arend@broadcom.com>
 
-I'm not native English speaker, or language expert, so it's more like
-a question than real opinion.
+All information needed for this function is available in the d11rxhdr
+structure. This is the last place where the brcms_d11rxhdr structure
+so it can be removed.
 
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/d11.h   |   17 -----------------
+ drivers/staging/brcm80211/brcmsmac/main.c  |    9 +++------
+ drivers/staging/brcm80211/brcmsmac/types.h |    1 -
+ 3 files changed, 3 insertions(+), 24 deletions(-)
 
-> +       if (!rtlpriv->psc.inactiveps)
-> +               pr_info("rtl8192ce: Power Save off (module option)\n");
-> +       if (!rtlpriv->psc.fwctrl_lps)
-> +               pr_info("rtl8192ce: FW Power Save off (module option)\n");
-
-Wouldn't something like "Power Save turner off (by module option)" sound better?
-
+diff --git a/drivers/staging/brcm80211/brcmsmac/d11.h b/drivers/staging/brcm80211/brcmsmac/d11.h
+index 1f05e8a..ed51616 100644
+--- a/drivers/staging/brcm80211/brcmsmac/d11.h
++++ b/drivers/staging/brcm80211/brcmsmac/d11.h
+@@ -1407,23 +1407,6 @@ struct d11rxhdr {
+ 	u16 RxStatus2;
+ 	u16 RxTSFTime;
+ 	u16 RxChan;
+-};
+-
+-/*
+- * rxhdr: received frame header data
+- * rssi: rssi computed by PHY
+- * rxpwr0: obsoleted, place holder for legacy ROM code. use rxpwr[]
+- * rxpwr1: obsoleted, place holder for legacy ROM code. use rxpwr[]
+- * do_rssi_ma: do per-pkt sampling for per-antenna ma in HIGH
+- * rxpwr: rssi for supported antennas
+- */
+-struct brcms_d11rxhdr {
+-	struct d11rxhdr rxh_cpu;
+-	s8 rssi;
+-	s8 rxpwr0;
+-	s8 rxpwr1;
+-	s8 do_rssi_ma;
+-	s8 rxpwr[WL_RSSI_ANT_MAX];
+ } __packed;
+ 
+ /* PhyRxStatus_0: */
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index bdc0611..4f79a42 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -783,7 +783,6 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+ 	struct sk_buff *tail = NULL;
+ 	uint n = 0;
+ 	uint bound_limit = bound ? RXBND : -1;
+-	struct brcms_d11rxhdr *wlc_rxhdr = NULL;
+ 
+ 	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
+ 	/* gather received frames */
+@@ -813,7 +812,6 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+ 
+ 		rxh_le = (struct d11rxhdr_le *)p->data;
+ 		rxh = (struct d11rxhdr *)p->data;
+-		wlc_rxhdr = (struct brcms_d11rxhdr *) p->data;
+ 
+ 		/* fixup rx header endianness */
+ 		rxh->RxFrameSize = le16_to_cpu(rxh_le->RxFrameSize);
+@@ -8117,7 +8115,7 @@ brcms_b_read_tsf(struct brcms_hardware *wlc_hw, u32 *tsf_l_ptr,
+  * are used. Finally, the tsf_h is read from the tsf register.
+  */
+ static u64 brcms_c_recover_tsf64(struct brcms_c_info *wlc,
+-				 struct brcms_d11rxhdr *rxh)
++				 struct d11rxhdr *rxh)
+ {
+ 	u32 tsf_h, tsf_l;
+ 	u16 rx_tsf_0_15, rx_tsf_16_31;
+@@ -8125,7 +8123,7 @@ static u64 brcms_c_recover_tsf64(struct brcms_c_info *wlc,
+ 	brcms_b_read_tsf(wlc->hw, &tsf_l, &tsf_h);
+ 
+ 	rx_tsf_16_31 = (u16)(tsf_l >> 16);
+-	rx_tsf_0_15 = rxh->rxh_cpu.RxTSFTime;
++	rx_tsf_0_15 = rxh->RxTSFTime;
+ 
+ 	/*
+ 	 * a greater tsf time indicates the low 16 bits of
+@@ -8145,14 +8143,13 @@ prep_mac80211_status(struct brcms_c_info *wlc, struct d11rxhdr *rxh,
+ 		     struct sk_buff *p,
+ 		     struct ieee80211_rx_status *rx_status)
+ {
+-	struct brcms_d11rxhdr *wlc_rxh = (struct brcms_d11rxhdr *) rxh;
+ 	int preamble;
+ 	int channel;
+ 	u32 rspec;
+ 	unsigned char *plcp;
+ 
+ 	/* fill in TSF and flag its presence */
+-	rx_status->mactime = brcms_c_recover_tsf64(wlc, wlc_rxh);
++	rx_status->mactime = brcms_c_recover_tsf64(wlc, rxh);
+ 	rx_status->flag |= RX_FLAG_MACTIME_MPDU;
+ 
+ 	channel = BRCMS_CHAN_CHANNEL(rxh->RxChan);
+diff --git a/drivers/staging/brcm80211/brcmsmac/types.h b/drivers/staging/brcm80211/brcmsmac/types.h
+index 415ab8b..23969fe 100644
+--- a/drivers/staging/brcm80211/brcmsmac/types.h
++++ b/drivers/staging/brcm80211/brcmsmac/types.h
+@@ -336,7 +336,6 @@ struct dma_pub;
+ struct si_pub;
+ struct tx_status;
+ struct d11rxhdr;
+-struct brcms_d11rxhdr;
+ struct txpwr_limits;
+ 
+ /* iovar structure */
 -- 
-Rafał
+1.7.1
+
+
