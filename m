@@ -1,36 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:46052 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933838Ab1IIUtA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Sep 2011 16:49:00 -0400
-Date: Fri, 9 Sep 2011 22:48:54 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Jesper Andersen <jespera@diku.dk>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: Backporting the Linux kernel, for good - was: Re: semantic patch
- inference
-In-Reply-To: <CAB=NE6U0ks9CobukO04=bZpnkm3Yw+Pf7keVPsP-hv1NyJZ_Xw@mail.gmail.com>
-Message-ID: <Pine.LNX.4.64.1109092245170.9242@ask.diku.dk> (sfid-20110909_224922_086563_549897FE)
-References: <CAB=NE6U0ks9CobukO04=bZpnkm3Yw+Pf7keVPsP-hv1NyJZ_Xw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from he.sipsolutions.net ([78.46.109.217]:38262 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754546Ab1I2OGE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Sep 2011 10:06:04 -0400
+Message-Id: <20110929140425.390322480@sipsolutions.net> (sfid-20110929_160608_712994_A202BF6E)
+Date: Thu, 29 Sep 2011 16:04:25 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 00/16] mac80211 uAPSD support
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for your email.  It made me realize that there was one thing that I
-didn't understand at all.  If the patches are only intended to apply to
-linux-next, that makes the problem quite a bit simpler.  I guess that the
-patch that spdiff will receive will already contain the appropriate #ifs,
-so we don't have to be concerned about them.  We just add them in as is.
+Sorry for the resend!
 
-There was also the question about one or multiple types of changes.  I
-think this is not a problem, but Jesper should confirm.  If a patch contains
-two changes and one can be generalized and the other one cannot for some
-reason, does spdiff give up on the whole thing, or does it do what it can?
+This fixes a stupid bug that made resume crash.
 
-Overall, the whole thing seems to be doable :)
+johannes
 
-julia
