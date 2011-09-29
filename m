@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:33322 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756048Ab1IQU0F (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:39439 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756706Ab1I2PBY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Sep 2011 16:26:05 -0400
-Date: Sat, 17 Sep 2011 17:26:34 -0300
-From: Gustavo Padovan <padovan@profusion.mobi>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2011-09-17
-Message-ID: <20110917202634.GA3819@joana> (sfid-20110917_222640_781705_F74F5697)
+	Thu, 29 Sep 2011 11:01:24 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/4] ath6kl: Fix htc_packet leak in ath6kl_htc_rx_fetch()
+Date: Thu, 29 Sep 2011 20:31:14 +0530
+Message-ID: <1317308476-16204-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110929_170128_887073_4B9DFEBC)
+In-Reply-To: <1317308476-16204-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1317308476-16204-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/htc.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-This is probably my unique pull request for 3.1, it fixes an regression with
-the HCI_INQUIRY flag, it was not getting cleaned after scan. Fix by Oliver
-Neukum. Also support for two new apple devices and a simple fix the to
-btwilink driver.
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index 7bc9884..4a03dac 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -1715,12 +1715,10 @@ static int ath6kl_htc_rx_fetch(struct htc_target *target,
+ 			packet = list_first_entry(rx_pktq, struct htc_packet,
+ 						   list);
+ 
+-			list_del(&packet->list);
+-
+ 			/* fully synchronous */
+ 			packet->completion = NULL;
+ 
+-			if (!list_empty(rx_pktq))
++			if (!list_is_singular(rx_pktq))
+ 				/*
+ 				 * look_aheads in all packet
+ 				 * except the last one in the
+@@ -1735,7 +1733,7 @@ static int ath6kl_htc_rx_fetch(struct htc_target *target,
+ 			if (status)
+ 				return status;
+ 
+-			list_add_tail(&packet->list, comp_pktq);
++			list_move_tail(&packet->list, comp_pktq);
+ 		}
+ 	}
+ 
+-- 
+1.7.0.4
 
-Please pull, or let me know any problem. Thanks.
-
-	Gustavo
-
-The following changes since commit 2249b011432ca3dcce112f0f71e0f531b4bb9347:
-
-  iwlagn: workaround bug crashing some APs (2011-09-16 15:32:12 -0400)
-
-are available in the git repository at:
-  git://github.com/padovan/bluetooth-next.git for-3.1
-
-Chen Ganir (1):
-      Bluetooth: Fixed BT ST Channel reg order
-
-Jurgen Kramer (1):
-      Bluetooth: add support for 2011 mac mini
-
-Oliver Neukum (1):
-      Bluetooth: Fix timeout on scanning for the second time
-
-Pieter-Augustijn Van Malleghem (1):
-      Bluetooth: Add MacBookAir4,1 support
-
- drivers/bluetooth/btusb.c    |    6 ++++++
- drivers/bluetooth/btwilink.c |   16 ++++++++--------
- net/bluetooth/hci_event.c    |   17 ++++++++---------
- 3 files changed, 22 insertions(+), 17 deletions(-)
