@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7986 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753842Ab1IVXBR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 19:01:17 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 01/12] MAINTAINERS: update iwlwifi
-Date: Thu, 22 Sep 2011 15:14:49 -0700
-Message-Id: <1316729700-1770-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110923_010145_301982_557C9557)
-In-Reply-To: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:27796 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754708Ab1I2LXj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Sep 2011 07:23:39 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 2/2] ath9k: Choose highest rate of MRR based on IEEE80211_TX_CTL_USE_MINRATE
+Date: Thu, 29 Sep 2011 16:54:06 +0530
+Message-ID: <1317295446-20749-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110929_132348_183441_C378143A)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change to iwlwifi.git instead of iwlwifi-2.6.git
-iwlwifi-2.6.git still works for backward compatibility
+Select appropriate rate as highest rate of rate series, if the frame
+was asked to be sent at minimum rate. For example nullfunc frames
+either can be sent at HT rates on normal case or at non-HT rates if
+it is used for connection monitoring.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- MAINTAINERS |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/rc.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 1789ce2..a31c614 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3413,7 +3413,7 @@ M:	Wey-Yi Guy <wey-yi.w.guy@intel.com>
- M:	Intel Linux Wireless <ilw@linux.intel.com>
- L:	linux-wireless@vger.kernel.org
- W:	http://intellinuxwireless.org
--T:	git git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
- S:	Supported
- F:	drivers/net/wireless/iwlwifi/
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 8448281..3509f14 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -789,8 +789,8 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	try_per_rate = 4;
  
+ 	rate_table = ath_rc_priv->rate_table;
+-	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
+-				     &is_probe, false);
++	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table, &is_probe,
++			     !!(tx_info->flags & IEEE80211_TX_CTL_USE_MINRATE));
+ 	high_rix = rix;
+ 
+ 	/*
 -- 
-1.7.0.4
+1.7.6.4
 
