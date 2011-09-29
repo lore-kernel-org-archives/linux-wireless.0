@@ -1,66 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:24481 "EHLO mga03.intel.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:2013 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753522Ab1I0Lvd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 07:51:33 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: linux-kernel@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCHv2] wireless: at76c50x: use native hex_pack_byte() method
-Date: Tue, 27 Sep 2011 14:51:02 +0300
-Message-Id: <a1f4782ddfc14a689a056a911f1efac6e9e9a6da.1317124055.git.andriy.shevchenko@linux.intel.com> (sfid-20110927_135146_639424_BF7CE568)
-In-Reply-To: <71d8213731be21f26a82255a4fffdbe1b6dd4a44.1316774801.git.andriy.shevchenko@linux.intel.com>
-References: <71d8213731be21f26a82255a4fffdbe1b6dd4a44.1316774801.git.andriy.shevchenko@linux.intel.com>
+	id S1756035Ab1I2Wes (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Sep 2011 18:34:48 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v3 05/25] staging: brcm80211: removed global var from
+ aiutils.c
+Date: Thu, 29 Sep 2011 15:34:16 -0700
+Message-ID: <1317335676-3424-6-git-send-email-frankyl@broadcom.com> (sfid-20110930_003547_991137_97C7C710)
+In-Reply-To: <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
+References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+ <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
----
- drivers/net/wireless/at76c50x-usb.c |   16 ++++++----------
- 1 files changed, 6 insertions(+), 10 deletions(-)
+From: Roland Vossen <rvossen@broadcom.com>
 
-diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
-index 2986014..96daaad 100644
---- a/drivers/net/wireless/at76c50x-usb.c
-+++ b/drivers/net/wireless/at76c50x-usb.c
-@@ -500,7 +500,6 @@ exit:
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/aiutils.c |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index b7b0bdf..d05c4ba 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -477,9 +477,6 @@ struct aidmp {
+ 	u32 componentid3;	/* 0xffc */
+ };
  
- #define HEX2STR_BUFFERS 4
- #define HEX2STR_MAX_LEN 64
--#define BIN2HEX(x) ((x) < 10 ? '0' + (x) : (x) + 'A' - 10)
- 
- /* Convert binary data into hex string */
- static char *hex2str(void *buf, int len)
-@@ -514,18 +513,15 @@ static char *hex2str(void *buf, int len)
- 	if (len > HEX2STR_MAX_LEN)
- 		len = HEX2STR_MAX_LEN;
- 
--	if (len <= 0) {
--		ret[0] = '\0';
--		return ret;
--	}
+-/* global kernel resource */
+-static struct si_info ksii;
 -
- 	while (len--) {
--		*obuf++ = BIN2HEX(*ibuf >> 4);
--		*obuf++ = BIN2HEX(*ibuf & 0xf);
-+		obuf = pack_hex_byte(obuf, *ibuf++);
- 		*obuf++ = '-';
--		ibuf++;
- 	}
--	*(--obuf) = '\0';
-+
-+	if (*obuf == '-')
-+		obuf--;
-+
-+	*obuf = '\0';
+ /* EROM parsing */
  
- 	return ret;
+ static u32
+@@ -1216,8 +1213,7 @@ void ai_detach(struct si_pub *sih)
+ 		pcicore_deinit(sii->pch);
+ 	sii->pch = NULL;
+ 
+-	if (sii != &ksii)
+-		kfree(sii);
++	kfree(sii);
  }
+ 
+ /* register driver interrupt disabling and restoring callback functions */
 -- 
-1.7.6.3
+1.7.1
+
 
