@@ -1,179 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:47168 "HELO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751026Ab1IVEnD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 00:43:03 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/4] mwifiex: update bss band information
-Date: Wed, 21 Sep 2011 21:43:23 -0700
-Message-Id: <1316666605-30954-2-git-send-email-bzhao@marvell.com> (sfid-20110922_064313_315413_AFC275A3)
-In-Reply-To: <1316666605-30954-1-git-send-email-bzhao@marvell.com>
-References: <1316666605-30954-1-git-send-email-bzhao@marvell.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:1884 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754935Ab1I2Weo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Sep 2011 18:34:44 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v3 04/25] staging: brcm80211: removed redundant wlc->cfg
+ struct member
+Date: Thu, 29 Sep 2011 15:34:15 -0700
+Message-ID: <1317335676-3424-5-git-send-email-frankyl@broadcom.com> (sfid-20110930_003451_123400_E8378A00)
+In-Reply-To: <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
+References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+ <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: Roland Vossen <rvossen@broadcom.com>
 
-In recent commit "mwifiex: use cfg80211 dynamic scan..."
-(7c6fa2a843..) scan table handling in driver is removed to
-make use of cfg80211 dynamic scan table. Now driver sends
-beacon buffers found in scanning directly to stack and parse
-the buffer for requested BSS only during association.
+After initialization ('attach'), this struct member always pointed at
+the same memory as wlc->bsscfg.
 
-Beacon buffer doesn't contain bss band information. Driver
-gets it from firmware in separate tlv (chan_band_tlv).
-Currently since we don't inform stack about bss bandinfo,
-there is an issue with 5GHz association.
-
-Use "priv" field of struct cfg80211_bss to store bandinfo.
-This fixes 5GHz association issue.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c  |    3 +++
- drivers/net/wireless/mwifiex/main.h      |    2 +-
- drivers/net/wireless/mwifiex/scan.c      |   26 +++++++++++++++++---------
- drivers/net/wireless/mwifiex/sta_ioctl.c |    6 ++++--
- 4 files changed, 25 insertions(+), 12 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/main.c |   47 ++++++++++++----------------
+ drivers/staging/brcm80211/brcmsmac/main.h |    1 -
+ 2 files changed, 20 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 6fd53e4..62932c2 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1219,6 +1219,9 @@ int mwifiex_register_cfg80211(struct net_device *dev, u8 *mac,
- 	/* We are using custom domains */
- 	wdev->wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY;
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 138f63b..ee9c322 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -486,7 +486,7 @@ static void brcms_c_detach_mfree(struct brcms_c_info *wlc)
+ 	if (wlc == NULL)
+ 		return;
  
-+	/* Reserve space for bss band information */
-+	wdev->wiphy->bss_priv_size = sizeof(u8);
-+
- 	wdev->wiphy->reg_notifier = mwifiex_reg_notifier;
- 
- 	/* Set struct mwifiex_private pointer in wiphy_priv */
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index e6b6c0c..1e80132 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -958,7 +958,7 @@ int mwifiex_get_bss_info(struct mwifiex_private *,
- int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
- 			      u8 *bssid, s32 rssi, u8 *ie_buf,
- 			      size_t ie_len, u16 beacon_period,
--			      u16 cap_info_bitmap,
-+			      u16 cap_info_bitmap, u8 band,
- 			      struct mwifiex_bssdescriptor *bss_desc);
- int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
- 				struct mwifiex_bssdescriptor *bss_entry,
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index ecebff6..ca37619 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1464,9 +1464,9 @@ int mwifiex_check_network_compatibility(struct mwifiex_private *priv,
- }
- 
- static int
--mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
--			u8 *bssid, s32 rssi, const u8 *ie_buf,
--			size_t ie_len, u16 beacon_period, u16 cap_info_bitmap)
-+mwifiex_update_curr_bss_params(struct mwifiex_private *priv, u8 *bssid,
-+			       s32 rssi, const u8 *ie_buf, size_t ie_len,
-+			       u16 beacon_period, u16 cap_info_bitmap, u8 band)
- {
- 	struct mwifiex_bssdescriptor *bss_desc = NULL;
- 	int ret;
-@@ -1489,7 +1489,7 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
- 
- 	ret = mwifiex_fill_new_bss_desc(priv, bssid, rssi, beacon_ie,
- 					ie_len, beacon_period,
--					cap_info_bitmap, bss_desc);
-+					cap_info_bitmap, band, bss_desc);
- 	if (ret)
- 		goto done;
- 
-@@ -1533,6 +1533,11 @@ done:
- 	return 0;
- }
- 
-+static void mwifiex_free_bss_priv(struct cfg80211_bss *bss)
-+{
-+	kfree(bss->priv);
-+}
-+
- /*
-  * This function handles the command response of scan.
-  *
-@@ -1571,6 +1576,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 	struct chan_band_param_set *chan_band;
- 	u8 is_bgscan_resp;
- 	unsigned long flags;
-+	struct cfg80211_bss *bss;
- 
- 	is_bgscan_resp = (le16_to_cpu(resp->command)
- 		== HostCmd_CMD_802_11_BG_SCAN_QUERY);
-@@ -1752,10 +1758,12 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 			chan = ieee80211_get_channel(priv->wdev->wiphy, freq);
- 
- 			if (chan && !(chan->flags & IEEE80211_CHAN_DISABLED)) {
--				cfg80211_inform_bss(priv->wdev->wiphy, chan,
--					bssid, network_tsf, cap_info_bitmap,
--					beacon_period, ie_buf, ie_len, rssi,
--					GFP_KERNEL);
-+				bss = cfg80211_inform_bss(priv->wdev->wiphy,
-+					      chan, bssid, network_tsf,
-+					      cap_info_bitmap, beacon_period,
-+					      ie_buf, ie_len, rssi, GFP_KERNEL);
-+				*(u8 *)bss->priv = band;
-+				bss->free_priv = mwifiex_free_bss_priv;
- 
- 				if (priv->media_connected && !memcmp(bssid,
- 					priv->curr_bss_params.bss_descriptor
-@@ -1763,7 +1771,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 					mwifiex_update_curr_bss_params(priv,
- 							bssid, rssi, ie_buf,
- 							ie_len, beacon_period,
--							cap_info_bitmap);
-+							cap_info_bitmap, band);
- 			}
- 		} else {
- 			dev_dbg(adapter->dev, "missing BSS channel IE\n");
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 1df5ef6..157d312 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -148,7 +148,7 @@ int mwifiex_request_set_multicast_list(struct mwifiex_private *priv,
- int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
- 			      u8 *bssid, s32 rssi, u8 *ie_buf,
- 			      size_t ie_len, u16 beacon_period,
--			      u16 cap_info_bitmap,
-+			      u16 cap_info_bitmap, u8 band,
- 			      struct mwifiex_bssdescriptor *bss_desc)
- {
- 	int ret;
-@@ -159,6 +159,7 @@ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
- 	bss_desc->beacon_buf_size = ie_len;
- 	bss_desc->beacon_period = beacon_period;
- 	bss_desc->cap_info_bitmap = cap_info_bitmap;
-+	bss_desc->bss_band = band;
- 	if (bss_desc->cap_info_bitmap & WLAN_CAPABILITY_PRIVACY) {
- 		dev_dbg(priv->adapter->dev, "info: InterpretIE: AP WEP enabled\n");
- 		bss_desc->privacy = MWIFIEX_802_11_PRIV_FILTER_8021X_WEP;
-@@ -211,7 +212,8 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
- 		ret = mwifiex_fill_new_bss_desc(priv, bss->bssid, bss->signal,
- 						beacon_ie, bss->len_beacon_ies,
- 						bss->beacon_interval,
--						bss->capability, bss_desc);
-+						bss->capability,
-+						*(u8 *)bss->priv, bss_desc);
- 		if (ret)
- 			goto done;
+-	brcms_c_bsscfg_mfree(wlc->cfg);
++	brcms_c_bsscfg_mfree(wlc->bsscfg);
+ 	kfree(wlc->pub);
+ 	kfree(wlc->modulecb);
+ 	kfree(wlc->default_bss);
+@@ -577,8 +577,8 @@ brcms_c_attach_malloc(uint unit, uint *err, uint devid)
+ 		goto fail;
  	}
+ 
+-	wlc->cfg = brcms_c_bsscfg_malloc(unit);
+-	if (wlc->cfg == NULL) {
++	wlc->bsscfg = brcms_c_bsscfg_malloc(unit);
++	if (wlc->bsscfg == NULL) {
+ 		*err = 1011;
+ 		goto fail;
+ 	}
+@@ -3943,14 +3943,13 @@ void brcms_c_set_ps_ctrl(struct brcms_c_info *wlc)
+  * Write this BSS config's MAC address to core.
+  * Updates RXE match engine.
+  */
+-int brcms_c_set_mac(struct brcms_bss_cfg *cfg)
++int brcms_c_set_mac(struct brcms_bss_cfg *bsscfg)
+ {
+ 	int err = 0;
+-	struct brcms_c_info *wlc = cfg->wlc;
++	struct brcms_c_info *wlc = bsscfg->wlc;
+ 
+-	if (cfg == wlc->cfg)
+-		/* enter the MAC addr into the RXE match registers */
+-		brcms_c_set_addrmatch(wlc, RCM_MAC_OFFSET, cfg->cur_etheraddr);
++	/* enter the MAC addr into the RXE match registers */
++	brcms_c_set_addrmatch(wlc, RCM_MAC_OFFSET, bsscfg->cur_etheraddr);
+ 
+ 	brcms_c_ampdu_macaddr_upd(wlc);
+ 
+@@ -3960,13 +3959,10 @@ int brcms_c_set_mac(struct brcms_bss_cfg *cfg)
+ /* Write the BSS config's BSSID address to core (set_bssid in d11procs.tcl).
+  * Updates RXE match engine.
+  */
+-void brcms_c_set_bssid(struct brcms_bss_cfg *cfg)
++void brcms_c_set_bssid(struct brcms_bss_cfg *bsscfg)
+ {
+-	struct brcms_c_info *wlc = cfg->wlc;
+-
+-	/* if primary config, we need to update BSSID in RXE match registers */
+-	if (cfg == wlc->cfg)
+-		brcms_c_set_addrmatch(wlc, RCM_BSSID_OFFSET, cfg->BSSID);
++	/* we need to update BSSID in RXE match registers */
++	brcms_c_set_addrmatch(bsscfg->wlc, RCM_BSSID_OFFSET, bsscfg->BSSID);
+ }
+ 
+ static void brcms_b_set_shortslot(struct brcms_hardware *wlc_hw, bool shortslot)
+@@ -5388,9 +5384,8 @@ brcms_c_attach(struct brcms_info *wl, u16 vendor, u16 device, uint unit,
+ 		goto fail;
+ 	}
+ 
+-	wlc->bsscfg = wlc->cfg;
+-	wlc->cfg->_idx = 0;
+-	wlc->cfg->wlc = wlc;
++	wlc->bsscfg->_idx = 0;
++	wlc->bsscfg->wlc = wlc;
+ 
+ 	wlc->mimoft = FT_HT;
+ 	wlc->ht_cap.cap_info = HT_CAP;
+@@ -6241,8 +6236,8 @@ static void brcms_c_ofdm_rateset_war(struct brcms_c_info *wlc)
+ 	u8 r;
+ 	bool war = false;
+ 
+-	if (wlc->cfg->associated)
+-		r = wlc->cfg->current_bss->rateset.rates[0];
++	if (wlc->bsscfg->associated)
++		r = wlc->bsscfg->current_bss->rateset.rates[0];
+ 	else
+ 		r = wlc->default_bss->rateset.rates[0];
+ 
+@@ -6311,7 +6306,7 @@ void brcms_c_get_current_rateset(struct brcms_c_info *wlc,
+ 	struct brcms_c_rateset *rs;
+ 
+ 	if (wlc->pub->associated)
+-		rs = &wlc->cfg->current_bss->rateset;
++		rs = &wlc->bsscfg->current_bss->rateset;
+ 	else
+ 		rs = &wlc->default_bss->rateset;
+ 
+@@ -6337,8 +6332,8 @@ int brcms_c_set_rateset(struct brcms_c_info *wlc, struct brcm_rateset *rs)
+ 	/* merge rateset coming in with the current mcsset */
+ 	if (wlc->pub->_n_enab & SUPPORT_11N) {
+ 		struct brcms_bss_info *mcsset_bss;
+-		if (wlc->cfg->associated)
+-			mcsset_bss = wlc->cfg->current_bss;
++		if (wlc->bsscfg->associated)
++			mcsset_bss = wlc->bsscfg->current_bss;
+ 		else
+ 			mcsset_bss = wlc->default_bss;
+ 		memcpy(internal_rs.mcs, &mcsset_bss->rateset.mcs[0],
+@@ -8096,9 +8091,7 @@ brcms_c_rspec_to_rts_rspec(struct brcms_c_info *wlc, u32 rspec,
+ 
+ void brcms_c_tbtt(struct brcms_c_info *wlc)
+ {
+-	struct brcms_bss_cfg *cfg = wlc->cfg;
+-
+-	if (!cfg->BSS)
++	if (!wlc->bsscfg->BSS)
+ 		/*
+ 		 * DirFrmQ is now valid...defer setting until end
+ 		 * of ATIM window
+@@ -9144,7 +9137,7 @@ brcms_c_set_addrmatch(struct brcms_c_info *wlc, int match_reg_offset,
+ {
+ 	brcms_b_set_addrmatch(wlc->hw, match_reg_offset, addr);
+ 	if (match_reg_offset == RCM_BSSID_OFFSET)
+-		memcpy(wlc->cfg->BSSID, addr, ETH_ALEN);
++		memcpy(wlc->bsscfg->BSSID, addr, ETH_ALEN);
+ }
+ 
+ void brcms_c_pllreq(struct brcms_c_info *wlc, bool set, u32 req_bit)
+@@ -9273,7 +9266,7 @@ void brcms_c_scan_stop(struct brcms_c_info *wlc)
+ void brcms_c_associate_upd(struct brcms_c_info *wlc, bool state)
+ {
+ 	wlc->pub->associated = state;
+-	wlc->cfg->associated = state;
++	wlc->bsscfg->associated = state;
+ }
+ 
+ /*
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
+index ede4aef..d6de9c3 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.h
++++ b/drivers/staging/brcm80211/brcmsmac/main.h
+@@ -565,7 +565,6 @@ struct brcms_c_info {
+ 	u16 fifo2prec_map[NFIFO];
+ 
+ 	struct brcms_bss_cfg *bsscfg;
+-	struct brcms_bss_cfg *cfg;
+ 
+ 	/* tx queue */
+ 	struct brcms_txq_info *tx_queues;
 -- 
-1.7.0.2
+1.7.1
+
 
