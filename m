@@ -1,42 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:36177 "EHLO purkki.adurom.net"
+Received: from mms3.broadcom.com ([216.31.210.19]:2019 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754314Ab1ITIhq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 04:37:46 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Eliad Peller <eliad@wizery.com>, Luciano Coelho <coelho@ti.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: add ieee80211_set_dyn_ps_timeout()
-References: <1316347394-21276-1-git-send-email-eliad@wizery.com>
-	<1316408970.2157.9.camel@cumari> <87aaa0k0a1.fsf@purkki.adurom.net>
-	<CAB3XZEdiTRDJGUHWJ5UorQq2w-ZLP+TP0b-qSSVUTzhPG4H2rg@mail.gmail.com>
-	<1316450319.5995.33.camel@jlt3.sipsolutions.net>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 20 Sep 2011 11:37:45 +0300
-In-Reply-To: <1316450319.5995.33.camel@jlt3.sipsolutions.net> (Johannes Berg's message of "Mon\, 19 Sep 2011 18\:38\:39 +0200")
-Message-ID: <87hb47ip7q.fsf@purkki.adurom.net> (sfid-20110920_103749_152415_89A72D1D)
+	id S1756046Ab1I2Wes (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Sep 2011 18:34:48 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v3 10/25] staging: brcm80211: remove unused function
+ si_pmu_ilp_clock()
+Date: Thu, 29 Sep 2011 15:34:21 -0700
+Message-ID: <1317335676-3424-11-git-send-email-frankyl@broadcom.com> (sfid-20110930_003546_169723_53EB8330)
+In-Reply-To: <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
+References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+ <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+From: Arend van Spriel <arend@broadcom.com>
 
->> bottom line - i'm not sure about all the details, but according to
->> their tests - it does improve the throughput.
->> (i can try getting better details if you have additional questions)
->
-> It'd be interesting to see if we can just treat this as a "minimum awake
-> time", kinda like going back to the range I thought about earlier.
+The function is not used in the driver and has been removed.
 
-Yeah. Or maybe have a separate event to postpone dynps timer or
-something like that (if firmware informs host whenever there's coex
-traffic).
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/pmu.c |   22 ----------------------
+ drivers/staging/brcm80211/brcmsmac/pmu.h |    1 -
+ 2 files changed, 0 insertions(+), 23 deletions(-)
 
-One extreme is that wl12xx would set IEEE80211_HW_SUPPORTS_DYNAMIC_PS
-and reimplement the dynps timer in the driver. That way the driver
-would have full control how it works and not complicate the mac80211
-implementation.
-
+diff --git a/drivers/staging/brcm80211/brcmsmac/pmu.c b/drivers/staging/brcm80211/brcmsmac/pmu.c
+index 61ba373..6d4cd9f 100644
+--- a/drivers/staging/brcm80211/brcmsmac/pmu.c
++++ b/drivers/staging/brcm80211/brcmsmac/pmu.c
+@@ -202,28 +202,6 @@ si_pmu_spuravoid_pllupdate(struct si_pub *sih, struct chipcregs *cc,
+ 	W_REG(&cc->pmucontrol, tmp);
+ }
+ 
+-u32 si_pmu_ilp_clock(struct si_pub *sih)
+-{
+-	static u32 ilpcycles_per_sec;
+-
+-	if (!(sih->cccaps & CC_CAP_PMU))
+-		return ILP_CLOCK;
+-
+-	if (ilpcycles_per_sec == 0) {
+-		u32 start, end, delta;
+-		u32 origidx = ai_coreidx(sih);
+-		struct chipcregs *cc = ai_setcoreidx(sih, SI_CC_IDX);
+-		start = R_REG(&cc->pmutimer);
+-		mdelay(ILP_CALC_DUR);
+-		end = R_REG(&cc->pmutimer);
+-		delta = end - start;
+-		ilpcycles_per_sec = delta * (1000 / ILP_CALC_DUR);
+-		ai_setcoreidx(sih, origidx);
+-	}
+-
+-	return ilpcycles_per_sec;
+-}
+-
+ u16 si_pmu_fast_pwrup_delay(struct si_pub *sih)
+ {
+ 	uint delay = PMU_MAX_TRANSITION_DLY;
+diff --git a/drivers/staging/brcm80211/brcmsmac/pmu.h b/drivers/staging/brcm80211/brcmsmac/pmu.h
+index 2917e6f..3a08c62 100644
+--- a/drivers/staging/brcm80211/brcmsmac/pmu.h
++++ b/drivers/staging/brcm80211/brcmsmac/pmu.h
+@@ -24,7 +24,6 @@ extern u16 si_pmu_fast_pwrup_delay(struct si_pub *sih);
+ extern void si_pmu_sprom_enable(struct si_pub *sih, bool enable);
+ extern u32 si_pmu_chipcontrol(struct si_pub *sih, uint reg, u32 mask, u32 val);
+ extern u32 si_pmu_regcontrol(struct si_pub *sih, uint reg, u32 mask, u32 val);
+-extern u32 si_pmu_ilp_clock(struct si_pub *sih);
+ extern u32 si_pmu_alp_clock(struct si_pub *sih);
+ extern void si_pmu_pllupd(struct si_pub *sih);
+ extern void si_pmu_spuravoid(struct si_pub *sih, u8 spuravoid);
 -- 
-Kalle Valo
+1.7.1
+
+
