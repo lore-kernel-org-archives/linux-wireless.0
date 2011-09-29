@@ -1,75 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f42.google.com ([209.85.216.42]:46335 "EHLO
-	mail-qw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751126Ab1IPKzB convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:47829 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757552Ab1I2UeE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 06:55:01 -0400
-Received: by qwi4 with SMTP id 4so1728183qwi.1
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 03:55:00 -0700 (PDT)
+	Thu, 29 Sep 2011 16:34:04 -0400
+Received: by vws1 with SMTP id 1so826626vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Sep 2011 13:34:03 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <400C43189542CE41BC0A5B252FC90136BC0CA8A32B@SJEXCHCCR02.corp.ad.broadcom.com>
-References: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com>
-	<CACna6rwQ60viPGssWzBzgtVGBq1xu+AOxb0fqfRq4NaJFcmP=w@mail.gmail.com>
-	<20110913174444.GG11772@tuxdriver.com>
-	<CACna6rwS0dGwSFOiqgAYqHNV=AatnHvHes=YdbwSWdKZu8OYiQ@mail.gmail.com>
-	<20110914084234.GA5550@kroah.com>
-	<CACna6rxi6XTUfR_N-n5ss7hmouaaoyZnmvmtdM-pGEfvdaWmQg@mail.gmail.com>
-	<400C43189542CE41BC0A5B252FC90136BC0CA8A32B@SJEXCHCCR02.corp.ad.broadcom.com>
-Date: Fri, 16 Sep 2011 12:55:00 +0200
-Message-ID: <CACna6ry51P=em3=tgEDvO4cUhTfG8T3NJdRkMD3iatdtrOCk7g@mail.gmail.com> (sfid-20110916_125506_148715_9531DB14)
-Subject: Re: About the patch: "staging: brcm80211: only enable brcmsmac if
- bcma is not set"
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend Van Spriel <arend@broadcom.com>
-Cc: Greg KH <gregkh@suse.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Francis Moreau <francis.moro@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Date: Thu, 29 Sep 2011 22:34:03 +0200
+Message-ID: <CAGxArmeAH5K1ESVA79YYcUEueTB1zqcZZXTxvkUeKUG1Mjhd+Q@mail.gmail.com> (sfid-20110929_223409_254864_91A445FE)
+Subject: re: carl9170 AP mode stops working in 3.0.x
+From: Damian Lesiuk <ja@lesiuk.net>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/9/16 Arend Van Spriel <arend@broadcom.com>:
->> From: Rafał Miłecki [mailto:zajec5@gmail.com]
->> Sent: vrijdag 16 september 2011 12:43
->> To: Greg KH; linux-wireless@vger.kernel.org; Arend Van Spriel
->> Cc: John W. Linville; Francis Moreau
->> Subject: Re: About the patch: "staging: brcm80211: only enable brcmsmac
->> if bcma is not set"
->>
->>
->> You're right, it wasn't a good idea.
->>
->> Arend: I've just sent patches to John giving you symbols needed by LCN
->> code. If there is something more missing, I didn't notice it yet, feel
->> free to report. AFAICS you should be able now to convert brcmsmac to
->> use bcma, if you wish to.
->>
->> --
->> Rafał
->
-> Hi Rafał,
->
-> The last time I refreshed my local wireless-testing repo was a while ago since kernel.org misery. Last commit being:
->
-> commit b197329717cf054f4dbd8bd86196401bef738978
-> Merge: a7c053d 93ee7a9
-> Author: John W. Linville <linville@tuxdriver.com>
-> Date:   Mon Aug 15 14:01:50 2011 -0700
->
->    Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/torva
->
->    Conflicts:
->        drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsparser.c
->
-> Could you indicate what patches I am missing. If you can provide those to me that would be awesome. For BCMA this is the latest I have:
+I have the same issue.
 
-I've *just* sent my patches, they weren't applied yet. I was sure
-you're subscribed to linux-wireless and you received them.
+hostapd log:
+http://pastebin.com/raw.php?i=23uxgBre
 
-Please take a look at:
-[PATCH 1/6] bcma: cc: export more control functions
-Message-Id: <1316169243-8808-1-git-send-email-zajec5@gmail.com>
+For me it's like 15-30 minutes. After that I can't connect to that
+network but I can see it.
+Only hostapd restart helps.
 
--- 
-Rafał
+I tried older hostapd and 1.9.4 fw and it's the same.
+
+I'm using Arch Linux with 3.0.4 kernel.
+
+>
+> Good day!
+> I've been using TL-WN821Nv2 dongle as AP for a year or so. I'm using
+> linux x86_64 desktop + hostapd. After upgrading to linux
+> 3.0/compat-wireless-3.0-1/2, my AP started freezing after a while
+> (Maybe several minutes or so).
+> What I've tried so far:
+> 1) switching hostapd in b/g mode.
+> 2) checked /sys/.../power/autosuspend and various power-saving
+> features. (Seems to be unsupported by my device anyway)
+> 3) upgrading to firmware-1.9.4 + latest compat-wireless version.
+>
+> Sometimes restarting hostapd helps, sometimes not. I don't see any
+> relevant error messages or something suspicious in logs. (Tried
+> raising hostapd logs to maximum verbosity)
+> The last good configuration was 2.6.39-r3 + compat-wireless-stable-39.1
+>
+> How could I help you find/debug this problem? I saw other complaint on
+> the mail list and I guess it's similar issue.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@xxxxxxxxxxxxxxx
+> More majordomo info at �http://vger.kernel.org/majordomo-info.html
