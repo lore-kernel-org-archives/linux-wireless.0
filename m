@@ -1,46 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52350 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755734Ab1IMRp1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38268 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754232Ab1I2OGP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Sep 2011 13:45:27 -0400
-Date: Tue, 13 Sep 2011 13:44:44 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Francis Moreau <francis.moro@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, gregkh@suse.de
-Subject: Re: About the patch: "staging: brcm80211: only enable brcmsmac if
- bcma is not set"
-Message-ID: <20110913174444.GG11772@tuxdriver.com> (sfid-20110913_194531_636990_518B7BA5)
-References: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com>
- <CACna6rwQ60viPGssWzBzgtVGBq1xu+AOxb0fqfRq4NaJFcmP=w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6rwQ60viPGssWzBzgtVGBq1xu+AOxb0fqfRq4NaJFcmP=w@mail.gmail.com>
+	Thu, 29 Sep 2011 10:06:15 -0400
+Message-Id: <20110929140459.153399080@sipsolutions.net> (sfid-20110929_160618_854686_9689567D)
+Date: Thu, 29 Sep 2011 16:04:28 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 03/16] mac80211: also expire filtered frames
+References: <20110929140425.390322480@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 12, 2011 at 11:27:20PM +0200, Rafał Miłecki wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> The problem is that brcmsmac duplicates code present in the bcma
-> driver. It doesn't use bcma bus architecture.
-> 
-> The real solution is to add bcma driver support in brcmsmac and ssb
-> driver support in brcmfmac. Then you can always use bcma and:
-> 1) If b43 will load and detect unsupported PHY, it will release the BCMA's core
-> 2) brcmsmac will be loaded to let it support the core
+mac80211 will expire normal PS-buffered frames, but
+if the device rejected some frames for a sleeping
+station, these won't be on the ps_tx_buf queue but
+on the tx_filtered queue instead; this is done to
+avoid reordering.
 
-We are going to have to find a way to get brcmsmac into the
-wireless-next tree to make it feasible for the Broadcom guys to get
-bcma support into that driver.  Do you agree?
+However, mac80211 will not expire frames from the
+filtered queue, let's fix that.
 
-We could move it under the drivers/net/wireless tree.  Or, maybe I
-could negotiate with Greg to keep it under the drivers/staging tree
-but to let me manage it under wireless-next.  Or...?  Do you have
-any thoughts on this?
+Also add a more comments to what all this expiry is
+doing and how it works.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/sta_info.c |   57 +++++++++++++++++++++++++++++++++++++++++++-----
+ net/mac80211/status.c   |    5 ++++
+ 2 files changed, 57 insertions(+), 5 deletions(-)
+
+--- a/net/mac80211/sta_info.c	2011-09-29 15:52:41.000000000 +0200
++++ b/net/mac80211/sta_info.c	2011-09-29 15:52:55.000000000 +0200
+@@ -709,6 +709,39 @@ static bool sta_info_cleanup_expire_buff
+ 	if (!sta->sdata->bss)
+ 		return false;
+ 
++	/*
++	 * First check for frames that should expire on the filtered
++	 * queue. Frames here were rejected by the driver and are on
++	 * a separate queue to avoid reordering with normal PS-buffered
++	 * frames. They also aren't accounted for right now in the
++	 * total_ps_buffered counter.
++	 */
++	for (;;) {
++		spin_lock_irqsave(&sta->tx_filtered.lock, flags);
++		skb = skb_peek(&sta->tx_filtered);
++		if (sta_info_buffer_expired(sta, skb))
++			skb = __skb_dequeue(&sta->tx_filtered);
++		else
++			skb = NULL;
++		spin_unlock_irqrestore(&sta->tx_filtered.lock, flags);
++
++		/*
++		 * Frames are queued in order, so if this one
++		 * hasn't expired yet we can stop testing. If
++		 * we actually reached the end of the queue we
++		 * also need to stop, of course.
++		 */
++		if (!skb)
++			break;
++		dev_kfree_skb(skb);
++	}
++
++	/*
++	 * Now also check the normal PS-buffered queue, this will
++	 * only find something if the filtered queue was emptied
++	 * since the filtered frames are all before the normal PS
++	 * buffered frames.
++	 */
+ 	for (;;) {
+ 		spin_lock_irqsave(&sta->ps_tx_buf.lock, flags);
+ 		skb = skb_peek(&sta->ps_tx_buf);
+@@ -718,6 +751,11 @@ static bool sta_info_cleanup_expire_buff
+ 			skb = NULL;
+ 		spin_unlock_irqrestore(&sta->ps_tx_buf.lock, flags);
+ 
++		/*
++		 * frames are queued in order, so if this one
++		 * hasn't expired yet (or we reached the end of
++		 * the queue) we can stop testing
++		 */
+ 		if (!skb)
+ 			break;
+ 
+@@ -727,13 +765,22 @@ static bool sta_info_cleanup_expire_buff
+ 		       sta->sta.addr);
+ #endif
+ 		dev_kfree_skb(skb);
+-
+-		/* if the queue is now empty recalc TIM bit */
+-		if (skb_queue_empty(&sta->ps_tx_buf))
+-			sta_info_recalc_tim(sta);
+ 	}
+ 
+-	return !skb_queue_empty(&sta->ps_tx_buf);
++	/*
++	 * Finally, recalculate the TIM bit for this station -- it might
++	 * now be clear because the station was too slow to retrieve its
++	 * frames.
++	 */
++	sta_info_recalc_tim(sta);
++
++	/*
++	 * Return whether there are any frames still buffered, this is
++	 * used to check whether the cleanup timer still needs to run,
++	 * if there are no frames we don't need to rearm the timer.
++	 */
++	return !(skb_queue_empty(&sta->ps_tx_buf) &&
++		 skb_queue_empty(&sta->tx_filtered));
+ }
+ 
+ static int __must_check __sta_info_destroy(struct sta_info *sta)
+--- a/net/mac80211/status.c	2011-09-29 15:51:45.000000000 +0200
++++ b/net/mac80211/status.c	2011-09-29 15:52:55.000000000 +0200
+@@ -107,6 +107,11 @@ static void ieee80211_handle_filtered_fr
+ 	    skb_queue_len(&sta->tx_filtered) < STA_MAX_TX_BUFFER) {
+ 		skb_queue_tail(&sta->tx_filtered, skb);
+ 		sta_info_recalc_tim(sta);
++
++		if (!timer_pending(&local->sta_cleanup))
++			mod_timer(&local->sta_cleanup,
++				  round_jiffies(jiffies +
++						STA_INFO_CLEANUP_INTERVAL));
+ 		return;
+ 	}
+ 
+
+
