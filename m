@@ -1,176 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3452 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756039Ab1IPT20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 15:28:26 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 07/19] staging: brcm80211: simplified
- brcmf_proto_ioctl()
-Date: Fri, 16 Sep 2011 12:27:56 -0700
-Message-ID: <1316201288-29635-8-git-send-email-frankyl@broadcom.com> (sfid-20110916_212839_470558_418D97C9)
-In-Reply-To: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
-References: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
+Received: from bsmtp4.bon.at ([195.3.86.186]:52492 "EHLO bsmtp.bon.at"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753336Ab1I2SLv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Sep 2011 14:11:51 -0400
+Date: Thu, 29 Sep 2011 19:11:47 +0200
+From: Clemens Buchacher <drizzd@aon.at>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+	linux-wireless@vger.kernel.org, beta992@gmail.com
+Subject: Re: ath9k: irq storm after suspend/resume
+Message-ID: <20110929171147.GA6788@ecki> (sfid-20110929_201200_785441_2A09D4F0)
+References: <CAD2nsn2Bbxxy9ZYpBe_QEqCkGYYROHE+j7qASRq3OkKmWD5PMg@mail.gmail.com>
+ <CAD2nsn1+5QWtzeG-3RHEJi8+oDthAfXYunHnDTLie84oJPOQuw@mail.gmail.com>
+ <CAD2nsn1roVNB5+H1CYHVnerLN3pjGB5KmEX1mJZ4yJhHqFGOVA@mail.gmail.com>
+ <20110830064137.GA4719@ecki>
+ <CAD2nsn2Reu+T=g6HwdQT5cdkD0C-06y7GJ_B2q-UzpRnshxAWw@mail.gmail.com>
+ <14be9f3b-4c91-481d-9e52-f3119659fd59@email.android.com>
+ <CAD2nsn1+WVaLR_TR37Z6YRCFnQH1hJkSOri=nxc8Ff3pa9N8dw@mail.gmail.com>
+ <20110927214245.GA1416@ecki>
+ <CAD2nsn3ZwUJsFRLyjKenO6Pm3+jr9gfmAMRDQPStEcC1hN_mkw@mail.gmail.com>
+ <CAJ-Vmok8FvrYtT2QwXY0NowLSogfkZYNbGLFbVR8Uzv507FrdA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJ-Vmok8FvrYtT2QwXY0NowLSogfkZYNbGLFbVR8Uzv507FrdA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Hi Adrian,
 
-Removed a function parameter since it was redundant.
+On Thu, Sep 29, 2011 at 06:33:42PM +0800, Adrian Chadd wrote:
+> 
+> Has someone figured out which ISR bits are being triggered?
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_cdc.c   |   12 ++++++------
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   17 ++++++++---------
- drivers/staging/brcm80211/brcmfmac/dhd_proto.h |    2 +-
- 3 files changed, 15 insertions(+), 16 deletions(-)
+No.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-index f8731c8..0d8389e 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-@@ -271,7 +271,7 @@ done:
- 
- int
- brcmf_proto_ioctl(struct brcmf_pub *drvr, int ifidx, struct brcmf_ioctl *ioc,
--		  void *buf, int len)
-+		  int len)
- {
- 	struct brcmf_proto *prot = drvr->prot;
- 	int ret = -1;
-@@ -293,7 +293,7 @@ brcmf_proto_ioctl(struct brcmf_pub *drvr, int ifidx, struct brcmf_ioctl *ioc,
- 			  (unsigned long)prot->lastcmd);
- 		if ((ioc->cmd == BRCMF_C_SET_VAR) ||
- 		    (ioc->cmd == BRCMF_C_GET_VAR))
--			brcmf_dbg(TRACE, "iovar cmd=%s\n", (char *)buf);
-+			brcmf_dbg(TRACE, "iovar cmd=%s\n", (char *)ioc->buf);
- 
- 		goto done;
- 	}
-@@ -302,10 +302,10 @@ brcmf_proto_ioctl(struct brcmf_pub *drvr, int ifidx, struct brcmf_ioctl *ioc,
- 	prot->lastcmd = ioc->cmd;
- 	if (ioc->set)
- 		ret = brcmf_proto_cdc_set_ioctl(drvr, ifidx, ioc->cmd,
--						buf, len);
-+						ioc->buf, len);
- 	else {
- 		ret = brcmf_proto_cdc_query_ioctl(drvr, ifidx, ioc->cmd,
--						  buf, len);
-+						  ioc->buf, len);
- 		if (ret > 0)
- 			ioc->used = ret - sizeof(struct brcmf_proto_cdc_ioctl);
- 	}
-@@ -321,12 +321,12 @@ brcmf_proto_ioctl(struct brcmf_pub *drvr, int ifidx, struct brcmf_ioctl *ioc,
- 
- 	/* Intercept the wme_dp ioctl here */
- 	if (!ret && ioc->cmd == BRCMF_C_SET_VAR &&
--	    !strcmp(buf, "wme_dp")) {
-+	    !strcmp(ioc->buf, "wme_dp")) {
- 		int slen, val = 0;
- 
- 		slen = strlen("wme_dp") + 1;
- 		if (len >= (int)(slen + sizeof(int)))
--			memcpy(&val, (char *)buf + slen, sizeof(int));
-+			memcpy(&val, (char *)ioc->buf + slen, sizeof(int));
- 		drvr->wme_dp = (u8) le32_to_cpu(val);
- 	}
- 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index 16f7216..ca42883 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -200,7 +200,7 @@ static void _brcmf_set_multicast_list(struct brcmf_info *drvr_priv, int ifidx)
- 	ioc.len = buflen;
- 	ioc.set = true;
- 
--	ret = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, &ioc, ioc.buf, ioc.len);
-+	ret = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, &ioc, ioc.len);
- 	if (ret < 0) {
- 		brcmf_dbg(ERROR, "%s: set mcast_list failed, cnt %d\n",
- 			  brcmf_ifname(&drvr_priv->pub, ifidx), cnt);
-@@ -238,7 +238,7 @@ static void _brcmf_set_multicast_list(struct brcmf_info *drvr_priv, int ifidx)
- 	ioc.len = buflen;
- 	ioc.set = true;
- 
--	ret = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, &ioc, ioc.buf, ioc.len);
-+	ret = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, &ioc, ioc.len);
- 	if (ret < 0) {
- 		brcmf_dbg(ERROR, "%s: set allmulti %d failed\n",
- 			  brcmf_ifname(&drvr_priv->pub, ifidx),
-@@ -259,7 +259,7 @@ static void _brcmf_set_multicast_list(struct brcmf_info *drvr_priv, int ifidx)
- 	ioc.len = sizeof(allmulti);
- 	ioc.set = true;
- 
--	ret = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, &ioc, ioc.buf, ioc.len);
-+	ret = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, &ioc, ioc.len);
- 	if (ret < 0) {
- 		brcmf_dbg(ERROR, "%s: set promisc %d failed\n",
- 			  brcmf_ifname(&drvr_priv->pub, ifidx),
-@@ -286,7 +286,7 @@ _brcmf_set_mac_address(struct brcmf_info *drvr_priv, int ifidx, u8 *addr)
- 	ioc.len = 32;
- 	ioc.set = true;
- 
--	ret = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, &ioc, ioc.buf, ioc.len);
-+	ret = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, &ioc, ioc.len);
- 	if (ret < 0)
- 		brcmf_dbg(ERROR, "%s: set cur_etheraddr failed\n",
- 			  brcmf_ifname(&drvr_priv->pub, ifidx));
-@@ -718,7 +718,7 @@ static int brcmf_toe_get(struct brcmf_info *drvr_priv, int ifidx, u32 *toe_ol)
- 	ioc.set = false;
- 
- 	strcpy(buf, "toe_ol");
--	ret = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, &ioc, ioc.buf, ioc.len);
-+	ret = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, &ioc, ioc.len);
- 	if (ret < 0) {
- 		/* Check for older dongle image that doesn't support toe_ol */
- 		if (ret == -EIO) {
-@@ -756,7 +756,7 @@ static int brcmf_toe_set(struct brcmf_info *drvr_priv, int ifidx, u32 toe_ol)
- 	strcpy(buf, "toe_ol");
- 	memcpy(&buf[sizeof("toe_ol")], &toe_ol, sizeof(u32));
- 
--	ret = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, &ioc, ioc.buf, ioc.len);
-+	ret = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, &ioc, ioc.len);
- 	if (ret < 0) {
- 		brcmf_dbg(ERROR, "%s: could not set toe_ol: ret=%d\n",
- 			  brcmf_ifname(&drvr_priv->pub, ifidx), ret);
-@@ -770,7 +770,7 @@ static int brcmf_toe_set(struct brcmf_info *drvr_priv, int ifidx, u32 toe_ol)
- 	strcpy(buf, "toe");
- 	memcpy(&buf[sizeof("toe")], &toe, sizeof(u32));
- 
--	ret = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, &ioc, ioc.buf, ioc.len);
-+	ret = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, &ioc, ioc.len);
- 	if (ret < 0) {
- 		brcmf_dbg(ERROR, "%s: could not set toe: ret=%d\n",
- 			  brcmf_ifname(&drvr_priv->pub, ifidx), ret);
-@@ -963,8 +963,7 @@ int brcmf_netdev_ioctl_priv(struct net_device *net, struct brcmf_ioctl *ioc)
- 	if (is_set_key_cmd)
- 		brcmf_netdev_wait_pend8021x(net);
- 
--	bcmerror = brcmf_proto_ioctl(&drvr_priv->pub, ifidx,
--				     ioc, ioc->buf, buflen);
-+	bcmerror = brcmf_proto_ioctl(&drvr_priv->pub, ifidx, ioc, buflen);
- 
- done:
- 	if (bcmerror > 0)
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_proto.h b/drivers/staging/brcm80211/brcmfmac/dhd_proto.h
-index 6686f4c..24b0f99 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_proto.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_proto.h
-@@ -50,7 +50,7 @@ extern int brcmf_proto_hdrpull(struct brcmf_pub *, int *ifidx,
- 
- /* Use protocol to issue ioctl to dongle */
- extern int brcmf_proto_ioctl(struct brcmf_pub *drvr, int ifidx,
--			     struct brcmf_ioctl *ioc, void *buf, int len);
-+			     struct brcmf_ioctl *ioc, int len);
- 
- /* Update local copy of dongle statistics */
- extern void brcmf_proto_dstats(struct brcmf_pub *drvr);
--- 
-1.7.1
+I tried to move the SC_OP_INVALID check until after the call to
+ath9k_hw_getisr in ath_isr. But that caused the kernel to freeze
+IIRC.
 
+What I also tried and failed to do a hardware reset before
+request_irq gets called. For ath9k_hw_reset I need an initialized
+ath_hw struct, but that's done after request_irq in
+ath9k_init_device. I remember I tried to delay request_irq, but for
+some reason that did not work out either.
 
+> If not, I can likely whip up a patch which adds some relevant
+> printk's. I think it's worth establishing:
+> 
+> * is it a sync/async interrupt;
+> * is it a fatal interrupt (eg something like a PCI bus error or
+> transaction timeout) or is it a normal ISR bit that keeps firing;
+> * .. and which one is firing.
+
+If you have an idea how to do this, I think that would be most
+helpful.
+
+Clemens
