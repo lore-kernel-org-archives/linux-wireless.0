@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56580 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750712Ab1ITNVW (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:41749 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870Ab1I2Kdn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 09:21:22 -0400
-Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
- patch #2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Greg KH <greg@kroah.com>
-Cc: Franky Lin <frankyl@broadcom.com>, gregkh@suse.de,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20110920130338.GA9885@kroah.com> (sfid-20110920_150440_808230_86E73445)
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-	 <20110920130338.GA9885@kroah.com> (sfid-20110920_150440_808230_86E73445)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Sep 2011 15:21:14 +0200
-Message-ID: <1316524874.3953.41.camel@jlt3.sipsolutions.net> (sfid-20110920_152126_182521_873B6871)
-Mime-Version: 1.0
+	Thu, 29 Sep 2011 06:33:43 -0400
+Received: by gyg10 with SMTP id 10so380487gyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Sep 2011 03:33:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAD2nsn3ZwUJsFRLyjKenO6Pm3+jr9gfmAMRDQPStEcC1hN_mkw@mail.gmail.com>
+References: <CAD2nsn2Bbxxy9ZYpBe_QEqCkGYYROHE+j7qASRq3OkKmWD5PMg@mail.gmail.com>
+	<CAD2nsn1+5QWtzeG-3RHEJi8+oDthAfXYunHnDTLie84oJPOQuw@mail.gmail.com>
+	<CAD2nsn1roVNB5+H1CYHVnerLN3pjGB5KmEX1mJZ4yJhHqFGOVA@mail.gmail.com>
+	<20110830064137.GA4719@ecki>
+	<CAD2nsn2Reu+T=g6HwdQT5cdkD0C-06y7GJ_B2q-UzpRnshxAWw@mail.gmail.com>
+	<14be9f3b-4c91-481d-9e52-f3119659fd59@email.android.com>
+	<CAD2nsn1+WVaLR_TR37Z6YRCFnQH1hJkSOri=nxc8Ff3pa9N8dw@mail.gmail.com>
+	<20110927214245.GA1416@ecki>
+	<CAD2nsn3ZwUJsFRLyjKenO6Pm3+jr9gfmAMRDQPStEcC1hN_mkw@mail.gmail.com>
+Date: Thu, 29 Sep 2011 18:33:42 +0800
+Message-ID: <CAJ-Vmok8FvrYtT2QwXY0NowLSogfkZYNbGLFbVR8Uzv507FrdA@mail.gmail.com> (sfid-20110929_123356_162506_D20DF93F)
+Subject: Re: ath9k: irq storm after suspend/resume
+From: Adrian Chadd <adrian@freebsd.org>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Clemens Buchacher <drizzd@aon.at>, linux-wireless@vger.kernel.org,
+	beta992@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-09-20 at 06:03 -0700, Greg KH wrote:
+Hm,
 
-> And while code is great and nice, I still haven't seen any real answers
-> to all of the questions that were asked of the Broadcom driver team
-> during that review by the linux-wireless developers about how things
-> will be handled properly due to the overlap in functionality with the
-> existing "real" driver in the tree.
+Has someone figured out which ISR bits are being triggered?
 
-Let's qualify this to "some developers".
+If not, I can likely whip up a patch which adds some relevant
+printk's. I think it's worth establishing:
 
-One thing I'd like to point out is that the Broadcom's firmware API has
-always undergone changes over time. I'm actually surprised that b43
-works as well as it does (which, tbh, isn't very well at all, at least
-for me with some 11n PHY). I also don't think that Broadcom are going to
-maintain compatibility and/or maintain new firmware features for old
-devices, that just doesn't make any sense.
+* is it a sync/async interrupt;
+* is it a fatal interrupt (eg something like a PCI bus error or
+transaction timeout) or is it a normal ISR bit that keeps firing;
+* .. and which one is firing.
 
-As a consequence, I don't think there's any sense in saying b43 should
-be the driver that Broadcom must support upstream. Even we, back then,
-split b43 into b43 and b43legacy when it wasn't really possible any more
-to test and maintain a single driver for different devices. Rafal has
-shown that it is possible today (to some extent) to do that for the
-newer chips and the older 11g only chips that b43 still supports, but
-I'm not convinced that with new features like P2P this will be true in
-the future.
 
-And this is just discussing the technical side -- the support side is an
-entirely different question.
-
-Now, don't get me wrong -- I don't think the duplication is a good
-thing. A lot of the PHY code could be shared. However, I think it will
-probably not be possible for much longer to share the higher level MAC
-code that programs the SHM etc.
-
-So I don't claim to know what the solution is, but I think simply
-rejecting the Broadcom effort like most people seem to imply is a good
-solution at all. It will leave all of us in a bad spot by creating a
-driver that has to support too many different devices.
-
-johannes
-
+Adrian
