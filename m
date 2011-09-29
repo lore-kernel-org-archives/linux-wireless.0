@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:53509 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752190Ab1IIVOU convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38355 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753389Ab1I2OHP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Sep 2011 17:14:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.64.1109092245170.9242@ask.diku.dk>
-References: <CAB=NE6U0ks9CobukO04=bZpnkm3Yw+Pf7keVPsP-hv1NyJZ_Xw@mail.gmail.com>
- <Pine.LNX.4.64.1109092245170.9242@ask.diku.dk>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 9 Sep 2011 14:13:59 -0700
-Message-ID: <CAB=NE6VVaAgyaEX0iTuuj=r1-Vsi5TgAyCj4+3J=QerrJTWs_Q@mail.gmail.com> (sfid-20110909_231440_627334_CE3B7D5E)
-Subject: Re: Backporting the Linux kernel, for good - was: Re: semantic patch inference
-To: Julia Lawall <julia@diku.dk>
-Cc: Jesper Andersen <jespera@diku.dk>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 29 Sep 2011 10:07:15 -0400
+Message-Id: <20110929140503.096662080@sipsolutions.net> (sfid-20110929_160719_550162_30CA9FE0)
+Date: Thu, 29 Sep 2011 16:04:41 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 16/16] mac80211: dont assign seqno to or aggregate QoS
+ Null frames
+References: <20110929140425.390322480@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 9, 2011 at 1:48 PM, Julia Lawall <julia@diku.dk> wrote:
-> Thanks for your email.  It made me realize that there was one thing that I
-> didn't understand at all.  If the patches are only intended to apply to
-> linux-next, that makes the problem quite a bit simpler.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Awesome, and yes the patches/ are only targeted at applying onto
-linux-next.git. When Linus decides to merge and out 3.x-rc1 I simply
-then set $GIT_TREE to $HOME/linux-2.6-allstable/ and run the script to
-suck code from there and apply patches from there.Turns out that
-because the effort was done on linux-next and because linux-next will
-look very much like what Linus ends up merging the patches/ will still
-apply. So what I do then is simply create a branch for that target
-stable kernel and keep refreshing the patches for that stable kernel
-on that branch -- while the master branch keeps chugging along with
-linux-next.
+802.11 says:
+"Sequence numbers for QoS (+)Null frames may be
+set to any value."
 
-> I guess that the patch that spdiff will receive will already contain the
-> appropriate #ifs, so we don't have to be concerned about them.
+However, if we use the normal counters then peers
+will get confused with aggregation since there'll
+be holes in the sequence number sequence.
 
-That is correct.
+To avoid that, neither assign a sequence number
+to QoS null frames nor put them on aggregation.
 
-> We just add them in as is.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-I do not follow, add what?
+--- a/net/mac80211/tx.c	2011-09-28 19:10:21.000000000 +0200
++++ b/net/mac80211/tx.c	2011-09-28 19:10:26.000000000 +0200
+@@ -804,6 +804,9 @@ ieee80211_tx_h_sequence(struct ieee80211
+ 	if (ieee80211_hdrlen(hdr->frame_control) < 24)
+ 		return TX_CONTINUE;
+ 
++	if (ieee80211_is_qos_nullfunc(hdr->frame_control))
++		return TX_CONTINUE;
++
+ 	/*
+ 	 * Anything but QoS data that has a sequence number field
+ 	 * (is long enough) gets a sequence number from the global
+@@ -1236,6 +1239,7 @@ ieee80211_tx_prepare(struct ieee80211_su
+ 		tx->sta = sta_info_get(sdata, hdr->addr1);
+ 
+ 	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) &&
++	    !ieee80211_is_qos_nullfunc(hdr->frame_control) &&
+ 	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION) &&
+ 	    !(local->hw.flags & IEEE80211_HW_TX_AMPDU_SETUP_IN_HW)) {
+ 		struct tid_ampdu_tx *tid_tx;
 
-> There was also the question about one or multiple types of changes.  I
-> think this is not a problem, but Jesper should confirm.  If a patch contains
-> two changes and one can be generalized and the other one cannot for some
-> reason, does spdiff give up on the whole thing, or does it do what it can?
->
-> Overall, the whole thing seems to be doable :)
 
-Wow. I'm thrilled, so say the least.
-
-  Luis
