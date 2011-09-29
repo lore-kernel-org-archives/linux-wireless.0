@@ -1,72 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:63326 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428Ab1IPHMQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 03:12:16 -0400
-Received: by iaqq3 with SMTP id q3so1977646iaq.19
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 00:12:16 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:2019 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756230Ab1I2Wex (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Sep 2011 18:34:53 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v3 08/25] staging: brcm80211: remove ht_cap field from
+ brcms_c_info structure
+Date: Thu, 29 Sep 2011 15:34:19 -0700
+Message-ID: <1317335676-3424-9-git-send-email-frankyl@broadcom.com> (sfid-20110930_003502_162327_739E0B42)
+In-Reply-To: <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
+References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+ <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <4E711AFB.7030806@lwfinger.net>
-References: <CA+TXxM3EgGZmo1F9GS+-QNWfTTgWFD4XHvG31JH=kabrr=ES=A@mail.gmail.com>
-	<4E6911C2.2030309@lwfinger.net>
-	<CA+TXxM0EOBs2x+6jh=0uwDTMTUD+9ZXQ8W-ZR+=TjSARV3kAeQ@mail.gmail.com>
-	<4E6A1AB7.8080605@lwfinger.net>
-	<CA+TXxM23gnbt5JG+s0QTCFm0Ljcc8nZnXH9PNkBaqqhBwMcVYA@mail.gmail.com>
-	<4E711AFB.7030806@lwfinger.net>
-Date: Fri, 16 Sep 2011 15:12:15 +0800
-Message-ID: <CA+TXxM1uTOdhqWrTPQtvfY6tm5bQh6tXSxchF12eW6zwo-r-Qg@mail.gmail.com> (sfid-20110916_091222_961671_F3BCD93E)
-Subject: Re: mac80211 driver for RT3070 wifi card does not work on big-endian platform
-From: Semigod King <semigodking@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry,
-Thanks for your work. It seems the driver works with your dongle &
-platform. In your patch, the code changes are just refactor besides
-efuse reading part. I tried your patch, no luck. Any r/w operation to
-the card causes segment fault.
-For changing
-  static const u32 wcid[2] = { 0xffffffff, 0x00ffffff };
-to
-  static const u32 wcid[2] = { 0xffffffff, cpu_to_le32(0x00ffffff) };
-, my understanding is that rt2800_register_multiwrite always write
-data with assumption that the data is little-endian.
+From: Arend van Spriel <arend@broadcom.com>
 
-I have no other big-endian platform to test the driver on with regular
-linux. So, i have to stick to Brcm6358 based wireless router and
-openwrt.
+The field ht_cap was typed ieee80211_ht_cap from ieee80211.h. This
+contained little endian annotated field cap_info resulting in sparse
+endian warnings. It turned out the driver was setting the field, but
+it was actually never used. Therefore it has been removed.
+
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c |   23 -----------------------
+ drivers/staging/brcm80211/brcmsmac/main.h |    2 --
+ drivers/staging/brcm80211/brcmsmac/stf.c  |    9 ---------
+ 3 files changed, 0 insertions(+), 34 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 3ec952c..074e16f 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -325,11 +325,6 @@ static u16 frametype(u32 rspec, u8 mimoframe)
+  */
+ #define SSID_FMT_BUF_LEN	((4 * IEEE80211_MAX_SSID_LEN) + 1)
+ 
+-/* defaults for the HT (MIMO) bss */
+-#define HT_CAP	(IEEE80211_HT_CAP_SM_PS |\
+-	IEEE80211_HT_CAP_SUP_WIDTH_20_40 | IEEE80211_HT_CAP_GRN_FLD |\
+-	IEEE80211_HT_CAP_MAX_AMSDU | IEEE80211_HT_CAP_DSSSCCK40)
+-
+ /*
+  * The following table lists the buffer memory allocated to xmt fifos in HW.
+  * the size is in units of 256bytes(one block), total size is HW dependent
+@@ -4213,13 +4208,6 @@ void brcms_c_protection_upd(struct brcms_c_info *wlc, uint idx, int val)
+ 
+ static void brcms_c_ht_update_sgi_rx(struct brcms_c_info *wlc, int val)
+ {
+-	wlc->ht_cap.cap_info &= ~(IEEE80211_HT_CAP_SGI_20 |
+-					IEEE80211_HT_CAP_SGI_40);
+-	wlc->ht_cap.cap_info |= (val & BRCMS_N_SGI_20) ?
+-					IEEE80211_HT_CAP_SGI_20 : 0;
+-	wlc->ht_cap.cap_info |= (val & BRCMS_N_SGI_40) ?
+-					IEEE80211_HT_CAP_SGI_40 : 0;
+-
+ 	if (wlc->pub->up) {
+ 		brcms_c_update_beacon(wlc);
+ 		brcms_c_update_probe_resp(wlc, true);
+@@ -4230,10 +4218,6 @@ static void brcms_c_ht_update_ldpc(struct brcms_c_info *wlc, s8 val)
+ {
+ 	wlc->stf->ldpc = val;
+ 
+-	wlc->ht_cap.cap_info &= ~IEEE80211_HT_CAP_LDPC_CODING;
+-	if (wlc->stf->ldpc != OFF)
+-		wlc->ht_cap.cap_info |= IEEE80211_HT_CAP_LDPC_CODING;
+-
+ 	if (wlc->pub->up) {
+ 		brcms_c_update_beacon(wlc);
+ 		brcms_c_update_probe_resp(wlc, true);
+@@ -5376,8 +5360,6 @@ brcms_c_attach(struct brcms_info *wl, u16 vendor, u16 device, uint unit,
+ 	wlc->bsscfg->wlc = wlc;
+ 
+ 	wlc->mimoft = FT_HT;
+-	wlc->ht_cap.cap_info = HT_CAP;
+-
+ 	wlc->mimo_40txbw = AUTO;
+ 	wlc->ofdm_40txbw = AUTO;
+ 	wlc->cck_40txbw = AUTO;
+@@ -5403,15 +5385,10 @@ brcms_c_attach(struct brcms_info *wl, u16 vendor, u16 device, uint unit,
+ 	if (n_disabled & WLFEATURE_DISABLE_11N_STBC_TX) {
+ 		wlc->bandstate[BAND_2G_INDEX]->band_stf_stbc_tx = OFF;
+ 		wlc->bandstate[BAND_5G_INDEX]->band_stf_stbc_tx = OFF;
+-		wlc->ht_cap.cap_info &= ~IEEE80211_HT_CAP_TX_STBC;
+ 	}
+ 	if (n_disabled & WLFEATURE_DISABLE_11N_STBC_RX)
+ 		brcms_c_stf_stbc_rx_set(wlc, HT_CAP_RX_STBC_NO);
+ 
+-	/* apply the GF override from nvram conf */
+-	if (n_disabled & WLFEATURE_DISABLE_11N_GF)
+-		wlc->ht_cap.cap_info &= ~IEEE80211_HT_CAP_GRN_FLD;
+-
+ 	/* initialize radio_mpc_disable according to wlc->mpc */
+ 	brcms_c_radio_mpc_upd(wlc);
+ 	brcms_b_antsel_set(wlc->hw, wlc->asi->antsel_avail);
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
+index 717843a..8760d7e 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.h
++++ b/drivers/staging/brcm80211/brcmsmac/main.h
+@@ -456,7 +456,6 @@ struct brcms_txq_info {
+  * cck_40txbw: 11N, cck tx b/w override when in 40MHZ mode.
+  * ofdm_40txbw: 11N, ofdm tx b/w override when in 40MHZ mode.
+  * mimo_40txbw: 11N, mimo tx b/w override when in 40MHZ mode.
+- * ht_cap: HT CAP IE being advertised by this node.
+  * default_bss: configured BSS parameters.
+  * mc_fid_counter: BC/MC FIFO frame ID counter.
+  * country_default: saved country for leaving 802.11d auto-country mode.
+@@ -570,7 +569,6 @@ struct brcms_c_info {
+ 	s8 cck_40txbw;
+ 	s8 ofdm_40txbw;
+ 	s8 mimo_40txbw;
+-	struct ieee80211_ht_cap ht_cap;
+ 
+ 	struct brcms_bss_info *default_bss;
+ 
+diff --git a/drivers/staging/brcm80211/brcmsmac/stf.c b/drivers/staging/brcm80211/brcmsmac/stf.c
+index 91b53a5..c77bab2 100644
+--- a/drivers/staging/brcm80211/brcmsmac/stf.c
++++ b/drivers/staging/brcm80211/brcmsmac/stf.c
+@@ -53,9 +53,6 @@ static void brcms_c_stf_stbc_rx_ht_update(struct brcms_c_info *wlc, int val)
+ 			return;
+ 	}
+ 
+-	wlc->ht_cap.cap_info &= ~IEEE80211_HT_CAP_RX_STBC;
+-	wlc->ht_cap.cap_info |= (val << IEEE80211_HT_CAP_RX_STBC_SHIFT);
+-
+ 	if (wlc->pub->up) {
+ 		brcms_c_update_beacon(wlc);
+ 		brcms_c_update_probe_resp(wlc, true);
+@@ -140,12 +137,6 @@ static bool brcms_c_stf_stbc_tx_set(struct brcms_c_info *wlc, s32 int_val)
+ 	if ((int_val == ON) && (wlc->stf->txstreams == 1))
+ 		return false;
+ 
+-	if ((int_val == OFF) || (wlc->stf->txstreams == 1)
+-	    || !BRCMS_STBC_CAP_PHY(wlc))
+-		wlc->ht_cap.cap_info &= ~IEEE80211_HT_CAP_TX_STBC;
+-	else
+-		wlc->ht_cap.cap_info |= IEEE80211_HT_CAP_TX_STBC;
+-
+ 	wlc->bandstate[BAND_2G_INDEX]->band_stf_stbc_tx = (s8) int_val;
+ 	wlc->bandstate[BAND_5G_INDEX]->band_stf_stbc_tx = (s8) int_val;
+ 
+-- 
+1.7.1
 
 
-
-On Thu, Sep 15, 2011 at 5:22 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 09/09/2011 12:30 PM, Semigod King wrote:
->>
->> I noticed two lines of code:
->>                 static const u32 wcid[2] = { 0xffffffff, 0x00ffffff };
->>                 rt2800_register_multiwrite(rt2x00dev, MAC_WCID_ENTRY(i),
->>                                               wcid, sizeof(wcid));
->>
->> Do you think the first line should be changed as below to eliminate
->> platform difference?
->>                 static const u32 wcid[2] = { 0xffffffff,
->> cpu_to_le32(0x00ffffff) };
->
-> No, that kind of thing should not be done. Internal data that are not
-> specifically set to be little- or big-endian should be in cpu order. The
-> conversions need to be done when writing to or reading from the device when
-> the order differs from that of the cpu.
->
-> The changes were minimal. Most of the time it took me were in getting Linux
-> running on my Powerbook G4 and getting the code to compile - I had to work
-> around a bug in gcc version 4.4.5 on the PowerMac platform. The patch I
-> needed is attached. The performance of rt2800usb is not great. With netperf,
-> I'm getting about 5 Mbps for the netperf MAERTS, STREAM, and SENDFILE tests.
->
-> Larry
->
->
->
