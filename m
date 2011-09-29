@@ -1,60 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:34568 "HELO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754682Ab1I3DoI (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38284 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753907Ab1I2OGu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 23:44:08 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/2] mwifiex: handle an error path correctly
-Date: Thu, 29 Sep 2011 20:43:41 -0700
-Message-Id: <1317354221-13688-2-git-send-email-bzhao@marvell.com> (sfid-20110930_054420_744140_03688A9B)
-In-Reply-To: <1317354221-13688-1-git-send-email-bzhao@marvell.com>
-References: <1317354221-13688-1-git-send-email-bzhao@marvell.com>
+	Thu, 29 Sep 2011 10:06:50 -0400
+Message-Id: <20110929140501.289739880@sipsolutions.net> (sfid-20110929_160654_387806_415D0231)
+Date: Thu, 29 Sep 2011 16:04:35 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 10/16] mac80211: reply only once to each PS-poll
+References: <20110929140425.390322480@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-In failure case locks are not allocated in mwifiex_register().
-So mwifiex_free_lock_list() routine call becomes redundant.
-Also we don't need to check return type for mwifiex_init_lock_list()
-routine. It never fails.
+If a PS-poll frame is retried (but was received)
+there is no way to detect that since it has no
+sequence number. As a consequence, the standard
+asks us to not react to PS-poll frames until the
+response to one made it out (was ACKed or lost).
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Implement this by using the WLAN_STA_SP flags to
+also indicate a PS-Poll "service period" and the
+IEEE80211_TX_STATUS_EOSP flag for the response
+packet to indicate the end of the "SP" as usual.
+
+We could use separate flags, but that will most
+likely completely confuse drivers, and while the
+standard doesn't exclude simultaneously polling
+using uAPSD and PS-Poll, doing that seems quite
+problematic.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mwifiex/main.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
+ include/net/mac80211.h  |    9 ++++++++-
+ net/mac80211/rx.c       |   10 ++++++----
+ net/mac80211/sta_info.c |   22 +++++++++++-----------
+ net/mac80211/sta_info.h |    2 +-
+ 4 files changed, 26 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 8b05b4f..8486451 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -75,8 +75,7 @@ static int mwifiex_register(void *card, struct mwifiex_if_ops *if_ops,
- 	adapter->priv_num++;
+--- a/net/mac80211/rx.c	2011-09-29 16:03:17.000000000 +0200
++++ b/net/mac80211/rx.c	2011-09-29 16:03:23.000000000 +0200
+@@ -1194,10 +1194,12 @@ ieee80211_rx_h_uapsd_and_pspoll(struct i
+ 		return RX_CONTINUE;
  
- 	adapter->priv[0]->adapter = adapter;
--	if (mwifiex_init_lock_list(adapter))
--		goto error;
-+	mwifiex_init_lock_list(adapter);
+ 	if (unlikely(ieee80211_is_pspoll(hdr->frame_control))) {
+-		if (!test_sta_flags(rx->sta, WLAN_STA_PS_DRIVER))
+-			ieee80211_sta_ps_deliver_poll_response(rx->sta);
+-		else
+-			set_sta_flags(rx->sta, WLAN_STA_PSPOLL);
++		if (!test_sta_flags(rx->sta, WLAN_STA_SP)) {
++			if (!test_sta_flags(rx->sta, WLAN_STA_PS_DRIVER))
++				ieee80211_sta_ps_deliver_poll_response(rx->sta);
++			else
++				set_sta_flags(rx->sta, WLAN_STA_PSPOLL);
++		}
  
- 	init_timer(&adapter->cmd_timer);
- 	adapter->cmd_timer.function = mwifiex_cmd_timeout_func;
-@@ -87,8 +86,6 @@ static int mwifiex_register(void *card, struct mwifiex_if_ops *if_ops,
- error:
- 	dev_dbg(adapter->dev, "info: leave mwifiex_register with error\n");
- 
--	mwifiex_free_lock_list(adapter);
+ 		/* Free PS Poll skb here instead of returning RX_DROP that would
+ 		 * count as an dropped frame. */
+--- a/net/mac80211/sta_info.h	2011-09-29 16:03:17.000000000 +0200
++++ b/net/mac80211/sta_info.h	2011-09-29 16:03:23.000000000 +0200
+@@ -50,7 +50,7 @@
+  *	keeping station in power-save mode, reply when the driver
+  *	unblocks the station.
+  * @WLAN_STA_SP: Station is in a service period, so don't try to
+- *	reply to other uAPSD trigger frames.
++ *	reply to other uAPSD trigger frames or PS-Poll.
+  */
+ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_AUTH		= 1<<0,
+--- a/include/net/mac80211.h	2011-09-29 16:03:17.000000000 +0200
++++ b/include/net/mac80211.h	2011-09-29 16:03:23.000000000 +0200
+@@ -370,7 +370,8 @@ struct ieee80211_bss_conf {
+  * @IEEE80211_TX_STATUS_EOSP: This packet marks the end of service period,
+  *	when its status is reported the service period ends. For frames in
+  *	an SP that mac80211 transmits, it is already set; for driver frames
+- *	the driver may set this flag.
++ *	the driver may set this flag. It is also used to do the same for
++ *	PS-Poll responses.
+  *
+  * Note: If you have to add new flags to the enumeration, then don't
+  *	 forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
+@@ -1959,6 +1960,12 @@ enum ieee80211_frame_release_type {
+  *	more-data bit must always be set.
+  *	The @tids parameter tells the driver which TIDs to release frames
+  *	from, for PS-poll it will always have only a single bit set.
++ *	In the case this is used for a PS-poll initiated release, the
++ *	@num_frames parameter will always be 1 so code can be shared. In
++ *	this case the driver must also set %IEEE80211_TX_STATUS_EOSP flag
++ *	on the TX status (and must report TX status) so that the PS-poll
++ *	period is properly ended. This is used to avoid sending multiple
++ *	responses for a retried PS-poll frame.
+  *	In the case this is used for uAPSD, the @num_frames parameter may be
+  *	bigger than one, but the driver may send fewer frames (it must send
+  *	at least one, however). In this case it is also responsible for
+--- a/net/mac80211/sta_info.c	2011-09-29 16:03:20.000000000 +0200
++++ b/net/mac80211/sta_info.c	2011-09-29 16:03:23.000000000 +0200
+@@ -1217,13 +1217,12 @@ static void ieee80211_send_null_response
+ 	/*
+ 	 * Tell TX path to send this frame even though the
+ 	 * STA may still remain is PS mode after this frame
+-	 * exchange.
++	 * exchange. Also set EOSP to indicate this packet
++	 * ends the poll/service period.
+ 	 */
+-	info->flags |= IEEE80211_TX_CTL_POLL_RESPONSE;
 -
- 	for (i = 0; i < adapter->priv_num; i++)
- 		kfree(adapter->priv[i]);
+-	if (uapsd)
+-		info->flags |= IEEE80211_TX_STATUS_EOSP |
+-			       IEEE80211_TX_CTL_REQ_TX_STATUS;
++	info->flags |= IEEE80211_TX_CTL_POLL_RESPONSE |
++		       IEEE80211_TX_STATUS_EOSP |
++		       IEEE80211_TX_CTL_REQ_TX_STATUS;
  
--- 
-1.7.0.2
+ 	ieee80211_xmit(sdata, skb);
+ }
+@@ -1241,6 +1240,9 @@ ieee80211_sta_ps_deliver_response(struct
+ 	unsigned long driver_release_tids = 0;
+ 	struct sk_buff_head frames;
+ 
++	/* Service or PS-Poll period starts */
++	set_sta_flags(sta, WLAN_STA_SP);
++
+ 	__skb_queue_head_init(&frames);
+ 
+ 	/*
+@@ -1357,10 +1359,11 @@ ieee80211_sta_ps_deliver_response(struct
+ 				/* set EOSP for the frame */
+ 				u8 *p = ieee80211_get_qos_ctl(hdr);
+ 				*p |= IEEE80211_QOS_CTL_EOSP;
+-				info->flags |= IEEE80211_TX_STATUS_EOSP |
+-					       IEEE80211_TX_CTL_REQ_TX_STATUS;
+ 			}
+ 
++			info->flags |= IEEE80211_TX_STATUS_EOSP |
++				       IEEE80211_TX_CTL_REQ_TX_STATUS;
++
+ 			__skb_queue_tail(&pending, skb);
+ 		}
+ 
+@@ -1422,9 +1425,6 @@ void ieee80211_sta_ps_deliver_uapsd(stru
+ 	if (!delivery_enabled)
+ 		return;
+ 
+-	/* Ohh, finally, the service period starts :-) */
+-	set_sta_flags(sta, WLAN_STA_SP);
+-
+ 	switch (sta->sta.max_sp) {
+ 	case 1:
+ 		n_frames = 2;
+
 
