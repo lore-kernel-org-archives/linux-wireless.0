@@ -1,36 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46380 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750884Ab1I0HsD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 03:48:03 -0400
-Subject: Re: [RFC 03/15] mac80211: also expire filtered frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAB=NE6UP9xYmLY3nJRMVdjPky87hB1YzFTHEzBv0Pt=qv3kAmg@mail.gmail.com> (sfid-20110927_003132_449210_ED324B61)
-References: <20110922154726.521122680@sipsolutions.net>
-	 <20110922154849.369194760@sipsolutions.net>
-	 <CAB=NE6UP9xYmLY3nJRMVdjPky87hB1YzFTHEzBv0Pt=qv3kAmg@mail.gmail.com>
-	 (sfid-20110927_003132_449210_ED324B61)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Sep 2011 09:47:51 +0200
-Message-ID: <1317109671.4082.1.camel@jlt3.sipsolutions.net> (sfid-20110927_094807_203582_0E0556AD)
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:1999 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755718Ab1I2Wes (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Sep 2011 18:34:48 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v3 00/25] staging: brcm80211: 8th reaction for mainline
+ patch #2
+Date: Thu, 29 Sep 2011 15:34:11 -0700
+Message-ID: <1317335676-3424-1-git-send-email-frankyl@broadcom.com> (sfid-20110930_003541_379264_F0B80FBA)
+In-Reply-To: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-09-26 at 15:30 -0700, Luis R. Rodriguez wrote:
+Code clean up for softmac.
 
-> No particular comments on the code yet but latency issues has got me
-> thinking about the filtered frames stuff and if we really need it. How
-> much benefit does keeping these frames give us instead of just
-> dropping them?
+This patch series is in order to replace the following one:
+Message-ID: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
 
-If the station goes to sleep, it'll incur latency by design. The
-filtered frames stuff is really just a way to close the race between
-giving a packet to the device and the station going to sleep -- as such
-I think we should really keep it.
+V2:
+* Rework some patches based on the comments from community
+V3:
+* Fix patch misorder of V2
 
-johannes
+Arend van Spriel (13):
+  staging: brcm80211: remove uncoditional code blocks from brcmsmac
+  staging: brcm80211: remove ht_cap field from brcms_c_info structure
+  staging: brcm80211: use fragment number provided in transmit frame
+  staging: brcm80211: remove unused function si_pmu_ilp_clock()
+  staging: brcm80211: make device initializer table for wme constant
+  staging: brcm80211: remove dongle firmware related debug code
+  staging: brcm80211: remove unnecessary mac80211 callbacks
+  staging: brcm80211: changing interface to n-phy rssi compute function
+  staging: brcm80211: change interface for common rssi compute function
+  staging: brcm80211: convert endianess before handling the frame
+  staging: brcm80211: use endian annotated structures in brcmsmac
+  staging: brcm80211: move rssi computation to place we need it
+  staging: brcm80211: use d11rxhdr structure in brcms_c_recover_tsf64()
+
+Roland Vossen (12):
+  staging: brcm80211: removed unused argument from softmac functions
+  staging: brcm80211: deleted unused array of bss configurations in
+    softmac
+  staging: brcm80211: removed redundant wlc->cfg struct member
+  staging: brcm80211: removed global var from aiutils.c
+  staging: brcm80211: removed global vars in softmac ucode handling
+  staging: brcm80211: removed unused softmac workaround
+  staging: brcm80211: removed band related global vars from softmac
+  staging: brcm80211: removed global var global_scb from softmac
+  staging: brcm80211: various global var related changes in softmac
+  staging: brcm80211: removed global variable in softmac otp
+  staging: brcm80211: simple changes to softmac phy variables
+  staging: brcm80211: declared global vars in softmac phy as const
+
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |  259 +-------
+ drivers/staging/brcm80211/brcmsmac/Makefile       |    3 +-
+ drivers/staging/brcm80211/brcmsmac/aiutils.c      |   15 +-
+ drivers/staging/brcm80211/brcmsmac/aiutils.h      |    2 -
+ drivers/staging/brcm80211/brcmsmac/ampdu.c        |    6 +-
+ drivers/staging/brcm80211/brcmsmac/d11.h          |   91 ++--
+ drivers/staging/brcm80211/brcmsmac/dma.c          |   41 +-
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c  |  125 +---
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.h  |    3 +-
+ drivers/staging/brcm80211/brcmsmac/main.c         |  747 +++++++++------------
+ drivers/staging/brcm80211/brcmsmac/main.h         |   19 +-
+ drivers/staging/brcm80211/brcmsmac/otp.c          |  147 +----
+ drivers/staging/brcm80211/brcmsmac/otp.h          |    8 -
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c  |   62 +--
+ drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h  |    4 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_int.h  |   25 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c  |  112 ++--
+ drivers/staging/brcm80211/brcmsmac/phy/phy_n.c    |   75 +--
+ drivers/staging/brcm80211/brcmsmac/pmu.c          |   22 -
+ drivers/staging/brcm80211/brcmsmac/pmu.h          |    1 -
+ drivers/staging/brcm80211/brcmsmac/pub.h          |    1 -
+ drivers/staging/brcm80211/brcmsmac/rate.h         |    1 -
+ drivers/staging/brcm80211/brcmsmac/srom.c         |   19 +-
+ drivers/staging/brcm80211/brcmsmac/stf.c          |    9 -
+ drivers/staging/brcm80211/brcmsmac/types.h        |    6 -
+ drivers/staging/brcm80211/brcmsmac/ucode_loader.c |  121 ++--
+ drivers/staging/brcm80211/brcmsmac/ucode_loader.h |   46 +-
+ 27 files changed, 648 insertions(+), 1322 deletions(-)
+
 
