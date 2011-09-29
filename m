@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f42.google.com ([74.125.83.42]:63645 "EHLO
-	mail-gw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750962Ab1IVIPX (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50137 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756744Ab1I2PEB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 04:15:23 -0400
-Received: by gwj16 with SMTP id 16so1404396gwj.1
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 01:15:22 -0700 (PDT)
-From: ilanelias78@gmail.com
-To: aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
-	samuel@sortiz.org, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
-Subject: [PATCH] NFC: implicitly deactivate in nci_start_poll
-Date: Thu, 22 Sep 2011 11:13:01 +0300
-Message-Id: <1316679181-4917-1-git-send-email-ilane@ti.com> (sfid-20110922_101527_662011_E1CD8F98)
+	Thu, 29 Sep 2011 11:04:01 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/4] ath6kl: Fix htc_packet leak in ath6kl_htc_rx_process_packets()
+Date: Thu, 29 Sep 2011 20:31:13 +0530
+Message-ID: <1317308476-16204-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110929_170406_170331_E3B18138)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Elias <ilane@ti.com>
+Packet is not reclaimed when ath6kl_htc_rx_process_hdr() fails.
+Fix this by deferring the packet deletion from comp_pktq till
+ath6kl_htc_rx_process_hdr() returns success.
 
-When start_poll is called, and a target was implicitly activated,
-we need to implicitly deactivate it.
-On the other hand, when the target was activated by the user,
-we should not deactivate it.
-
-Signed-off-by: Ilan Elias <ilane@ti.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- net/nfc/nci/core.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath6kl/htc.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 895e5fd..361491b 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -365,8 +365,13 @@ static int nci_start_poll(struct nfc_dev *nfc_dev, __u32 protocols)
- 		return -EBUSY;
- 	}
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index f88a7c9..7bc9884 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -1643,7 +1643,6 @@ static int ath6kl_htc_rx_process_packets(struct htc_target *target,
+ 	int status = 0;
  
-+	if (ndev->target_active_prot) {
-+		nfc_err("there is an active target");
-+		return -EBUSY;
-+	}
+ 	list_for_each_entry_safe(packet, tmp_pkt, comp_pktq, list) {
+-		list_del(&packet->list);
+ 		ep = &target->endpoint[packet->endpoint];
+ 
+ 		/* process header for each of the recv packet */
+@@ -1652,6 +1651,8 @@ static int ath6kl_htc_rx_process_packets(struct htc_target *target,
+ 		if (status)
+ 			return status;
+ 
++		list_del(&packet->list);
 +
- 	if (test_bit(NCI_POLL_ACTIVE, &ndev->flags)) {
--		nfc_dbg("target already active, first deactivate...");
-+		nfc_dbg("target is active, implicitly deactivate...");
- 
- 		rc = nci_request(ndev, nci_rf_deactivate_req, 0,
- 			msecs_to_jiffies(NCI_RF_DEACTIVATE_TIMEOUT));
+ 		if (list_empty(comp_pktq)) {
+ 			/*
+ 			 * Last packet's more packet flag is set
 -- 
 1.7.0.4
 
