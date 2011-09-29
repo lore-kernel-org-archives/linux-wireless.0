@@ -1,83 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:57207 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753777Ab1IVXBS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 19:01:18 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 04/12] iwlagn: update rate scaling with BA notifications
-Date: Thu, 22 Sep 2011 15:14:52 -0700
-Message-Id: <1316729700-1770-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110923_010140_466472_0029B1FF)
-In-Reply-To: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1316729700-1770-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:55292 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750884Ab1I2V4m (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Sep 2011 17:56:42 -0400
+Date: Thu, 29 Sep 2011 18:56:36 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Andrew V. Stepanov" <stanv@altlinux.org>, davem@davemloft.net,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] rfkill: add module option to become inactive.
+Message-ID: <20110929215636.GA21490@khazad-dum.debian.net> (sfid-20110929_235646_081766_9D255A7C)
+References: <1317119624-2974-1-git-send-email-stanv@altlinux.org>
+ <1317109617.4082.0.camel@jlt3.sipsolutions.net>
+ <CAN8FffqH=x+qWnz=YJzatbW-b3aOgoivazH6Nb5SpsGt4Q6hGg@mail.gmail.com>
+ <1317110884.4082.5.camel@jlt3.sipsolutions.net>
+ <CAN8FffqjeurgAvVHtMExgeAyBHRWznYBz2c043jcZgOmqw6TVg@mail.gmail.com>
+ <1317113699.4082.7.camel@jlt3.sipsolutions.net>
+ <CAN8FffrZuGu63oL7ZL8EjjdNqBaPDU6KHuatwrbNB0SjffvaTg@mail.gmail.com>
+ <1317121681.4082.8.camel@jlt3.sipsolutions.net>
+ <CAN8FffrnCt6TL-dWBJtnOpk=oELRXhnU0ksHntFWfbPo5mgWaA@mail.gmail.com>
+ <1317124813.4082.29.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1317124813.4082.29.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Tue, 27 Sep 2011, Johannes Berg wrote:
+> > This patch give ability disable rfkill sub-system by means to pass
+> > special module parameter.
+> 
+> Because the platform driver is doing the wrong thing.
 
-In the current code, the rate scaling isn't fed with
-statistics from the BA notifications.
+Hmm?  Is it?
 
-This is since my patch:
+> > Example from real life. Some company want to make inactive rfkill
+> > SW+HW buttons on some company notebooks.
+> > For this, you advise to recompile kernel.
+> 
+> No, you need to fix the thinkpad driver.
 
-	iwlagn: reclaim the packets in transport layer
+Eh, I can certainly blacklist platform rfkill support for the x201i on the
+grounds that it is a piece of crap, since a hardware button that does it in
+software is clearly el-cheap-o land that does not belong to something that
+dares call itself a ThinkPad X-series.  But I am not sure this is the best
+way to go about it.  It will cause that switch to become useless, for one.
 
-Fix that.
+I can map it to a soft rfkill button, which seems to be more in line with
+the real truth behind it.  But this is very weird, the EC used to even kick
+bluetooth out of the USB bus when that switch was enabled...
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   13 +++++++++----
- 1 files changed, 9 insertions(+), 4 deletions(-)
+dmidecode dump, please.  And I'd really appreciate a _full_ report of the
+issue and behaviour of the rfkill hw button on the x201i, please send it to
+ibm-acpi-devel@lists.sourceforge.net, and we can take the thread there.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 12a9808..0e5d649 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -342,6 +342,8 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 
- 	iwl_update_stats(priv, true, fc, len);
- 
-+	memset(&info->status, 0, sizeof(info->status));
-+
- 	info->driver_data[0] = ctx;
- 	info->driver_data[1] = dev_cmd;
- 
-@@ -580,6 +582,9 @@ static void iwl_rx_reply_tx_agg(struct iwl_priv *priv,
- 		IWL_DEBUG_COEX(priv, "receive reply tx w/ bt_kill\n");
- 	}
- 
-+	if (tx_resp->frame_count == 1)
-+		return;
-+
- 	/* Construct bit-map of pending frames within Tx window */
- 	for (i = 0; i < tx_resp->frame_count; i++) {
- 		u16 fstatus = le16_to_cpu(frame_status[i].status);
-@@ -938,7 +943,10 @@ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
- 		else
- 			WARN_ON_ONCE(1);
- 
--		if (freed == 0) {
-+		info = IEEE80211_SKB_CB(skb);
-+		kmem_cache_free(priv->tx_cmd_pool, (info->driver_data[1]));
-+
-+		if (freed == 1) {
- 			/* this is the first skb we deliver in this batch */
- 			/* put the rate scaling data there */
- 			info = IEEE80211_SKB_CB(skb);
-@@ -951,9 +959,6 @@ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
- 						    info);
- 		}
- 
--		info = IEEE80211_SKB_CB(skb);
--		kmem_cache_free(priv->tx_cmd_pool, (info->driver_data[1]));
--
- 		ieee80211_tx_status_irqsafe(priv->hw, skb);
- 	}
- 
+I'd ask it to be done through bugzilla.kernel.org, but that's still down.
+
 -- 
-1.7.0.4
-
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
