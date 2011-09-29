@@ -1,38 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:35754 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753812Ab1I0MYj (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:48587 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755861Ab1I2RsI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 08:24:39 -0400
-Received: by gyg10 with SMTP id 10so5112801gyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 05:24:39 -0700 (PDT)
+	Thu, 29 Sep 2011 13:48:08 -0400
+Received: by vcbfk10 with SMTP id fk10so664459vcb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Sep 2011 10:48:08 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1317109807.4082.4.camel@jlt3.sipsolutions.net>
-References: <20110922154726.521122680@sipsolutions.net>
-	<20110922154849.369194760@sipsolutions.net>
-	<CAB=NE6UP9xYmLY3nJRMVdjPky87hB1YzFTHEzBv0Pt=qv3kAmg@mail.gmail.com>
-	<CAJ-Vmo=9MUaKph=EXwF2VnE+=nHg4s=j=qhR2jnwa-xsXMno7g@mail.gmail.com>
-	<1317109807.4082.4.camel@jlt3.sipsolutions.net>
-Date: Tue, 27 Sep 2011 20:24:39 +0800
-Message-ID: <CAJ-VmonVHyv0dqApO+0xyP=AfgmEHzG=fxb-rr69CVo21k1btw@mail.gmail.com> (sfid-20110927_142443_085961_3F3A3451)
-Subject: Re: [RFC 03/15] mac80211: also expire filtered frames
-From: Adrian Chadd <adrian@freebsd.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4E8468AF.8000006@neratec.com>
+References: <CAB=NE6U6qmYbvHPTWGTqOdXtuxbKYbUzZXNiE6POOX9QZNRWAg@mail.gmail.com>
+ <1125417094.1836.1317285426615.JavaMail.root@idefix> <CAJ-VmonqEs4mODDa2=fTj8zWHwRM7-G5e=BWNUyGdy65+kYvfg@mail.gmail.com>
+ <4E8468AF.8000006@neratec.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Thu, 29 Sep 2011 10:47:48 -0700
+Message-ID: <CAB=NE6UQpv1bvsni=rDP=3OKM=oN14g0xJtVN+evvm=47nZu_Q@mail.gmail.com> (sfid-20110929_194834_156833_2C76F6FF)
+Subject: Re: Regulatory revamp status
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Boris Presman <boris.presman@ti.com>,
+	Assaf Azulay <assaf@ti.com>,
+	Michael Green <green@qca.qualcomm.com>,
+	David Quan <dquan@qca.qualcomm.com>,
+	Kevin Hayes <hayes@qca.qualcomm.com>,
+	Arun Venkataraman <arunvenk@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's sleep queue support in the net80211 stack but that doesn't
-close the race for what failed to TX because the station went to sleep
-with stuff in the hostap TX queue.
-That small window is small for 11bg/11a rates but for 11n it could be
-lots of frames.
+On Thu, Sep 29, 2011 at 5:46 AM, Zefir Kurtisi
+<zefir.kurtisi@neratec.com> wrote:
+> On 09/29/2011 01:45 PM, Adrian Chadd wrote:
+>> On 29 September 2011 16:37, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+>>> Thanks for the update.
+>>>
+>>> To me it looks not reasonable to mix in between the two approaches: either we assume countrycodes use the same DFS region for all channels, or each channel/band needs to have its own. Otherwise I feel that a DFS region bitmap would give a semi-flexible compromise that might end up being insufficient to represent some fancy countrycodes.
+>>
+>> There's some funny stuff in there.
+>>
+>> For example, some of the DFS bands have different CAC/NOL timing. :-)
+>>
+>>
+>>
+>> Adrian
+>
+> Really? Where would be 'there' countrycode-wise?
+>
+> That would definitely break today's CRDA capabilities :-\
 
-That's what I have to port to FreeBSD's ath driver (and then when it's
-all stable and sensible looking, migrate back into net80211.)
+Well, CRDA has no DFS support yet ;) and hence the regulatory revamp
+work, to accommodate as much as possible for both future technologies
+and capture all these gotchas on existing technologies. If DFS varies
+so much then using one u8 for a country may not be enough, and we may
+want to add a whole section for DFS with the u8 being an optional
+minimum and with a DFS section for overrides on values. Thoughts?
 
+That is -- if your country varies per band or CAC / NOL timings we can
+address these countries only with the future revamp work. This would
+allow us to move forward with DFS support only for those countries
+where a unified DFS mapping applies.
 
-
-Adrian
+  Luis
