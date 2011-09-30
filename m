@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:41740 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754338Ab1IFLHA (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:51868 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751978Ab1I3PSF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Sep 2011 07:07:00 -0400
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: Avoid taking semaphore in TCMD event report handling func
-Date: Tue, 6 Sep 2011 16:35:55 +0530
-Message-ID: <1315307155-11878-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20110906_130705_278220_092DB2E8)
+	Fri, 30 Sep 2011 11:18:05 -0400
+Received: by gyg10 with SMTP id 10so1573393gyg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Sep 2011 08:18:04 -0700 (PDT)
+Message-ID: <4E85DDA9.3090300@lwfinger.net> (sfid-20110930_171810_079336_A4F5D9A2)
+Date: Fri, 30 Sep 2011 10:18:01 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: v4mp <gaigo88@hotmail.it>
+CC: linux-wireless@vger.kernel.org,
+	'George0505' <george0505@realtek.com>,
+	'georgia' <georgia@realtek.com>
+Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
+References: <4E77F631.3030202@googlemail.com> <4E77F9FD.1020204@googlemail.com> <4E780309.9010601@lwfinger.net> <4E785DB3.5040109@googlemail.com> <4E7907D3.1020606@googlemail.com> <4E792994.1080809@lwfinger.net> <4E79B1D0.7090602@googlemail.com> <4E79F87F.1050402@lwfinger.net> <4E7A38D0.7070304@googlemail.com> <4E7A4310.30106@lwfinger.net> <4E7A48D1.8050009@googlemail.com> <4E7A4B03.4070006@lwfinger.net> <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com> <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org>
+In-Reply-To: <loom.20110930T160704-310@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+On 09/30/2011 09:20 AM, v4mp wrote:
+> hello larry,
+>
+> i've an ALFA AWUS036NHR and i tried latest compat-wireless-2011-09-27 on ubuntu
+> natty 3.0.4-030004-generic,
+> the adapter is recognized as rtl8192cu but is not
+> responding, no network is detected.
+>
+> Then if i try to "modprobe -r rtl8192cu" results
+> FATAL: Error removing rtl8192cu
+> (/lib/modules/3.0.4-030004-generic/updates/drivers/net/wireless/rtlwifi
+> /rtl8192cu/rtl8192cu.ko):
+> Device or resource busy
+>
+> seems that remains blocked..i can't do anything
 
-ath6kl_tm_rx_report() func takes ar->sem and sends tcmd to the chip
-and then waits for wake_up event from ath6kl_tm_rx_report_event() with timeout.
+You are the second person that has reported a problem with this device. 
+Unfortunately, I do not have a sample of the device, but I have just ordered one 
+that will be delivered in about one week. I would guess that there is some 
+difference between the RTL8192CU and the RTL8188RU chips.
 
-In the current case, When tcmd report is reached to the host,
-ath6kl_tm_rx_report_event() func tries to take the same semaphore (ar->sem)
-which is already taken in ath6kl_tm_rx_report().
+I Cc'd the Realtek group that works on USB devices. Perhaps they have some info 
+that will be useful. Given the difference in time between the US and Taiwan, I 
+would not expect any answer until Monday.
 
-Due to this, ath6kl_tm_rx_report_event() func always fails to update
-tcmd report in the local buffer and sends wake_up event to ath6kl_tm_rx_report().
-So, the timeout will happen in ath6kl_tm_rx_report() always and
-then it will release ar->sem. Now ath6kl_tm_rx_report_event() will
-get a chance to update tcmd report in the local buffer.
+There are some changes that affect connection with an 802.11n network that are 
+found in the latest kernels. I'm not sure they are in the one you are using. You 
+can get the very latest by downloading and building the "bleeding edge" version 
+of compat-wireless.
 
-There is no need of taking ar->sem in ath6kl_tm_rx_report_event(), we can go ahead
-and update the local buffer and send wake_up event to ath6kl_tm_rx_report().
-In this way, we will get tcmd report (in the user space) in the first time itself.
-
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/testmode.c |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/testmode.c b/drivers/net/wireless/ath/ath6kl/testmode.c
-index 381eb66..971ea61 100644
---- a/drivers/net/wireless/ath/ath6kl/testmode.c
-+++ b/drivers/net/wireless/ath/ath6kl/testmode.c
-@@ -43,16 +43,11 @@ static const struct nla_policy ath6kl_tm_policy[ATH6KL_TM_ATTR_MAX + 1] = {
- 
- void ath6kl_tm_rx_report_event(struct ath6kl *ar, void *buf, size_t buf_len)
- {
--	if (down_interruptible(&ar->sem))
--		return;
--
- 	kfree(ar->tm.rx_report);
- 
- 	ar->tm.rx_report = kmemdup(buf, buf_len, GFP_KERNEL);
- 	ar->tm.rx_report_len = buf_len;
- 
--	up(&ar->sem);
--
- 	wake_up(&ar->event_wq);
- }
- 
--- 
-1.7.0.4
-
+Larry
