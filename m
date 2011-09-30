@@ -1,103 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:53959 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755013Ab1ISQqi (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:13033 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756628Ab1I3GBl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 12:46:38 -0400
-Date: Mon, 19 Sep 2011 22:17:15 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH 12/12] ath9k: do not insert padding into tx buffers on
- AR9380+
-Message-ID: <20110919164714.GA1234@vmraj-lnx.users.atheros.com> (sfid-20110919_184642_826475_0BD1BB4B)
-References: <1316028267-34187-5-git-send-email-nbd@openwrt.org>
- <1316028267-34187-6-git-send-email-nbd@openwrt.org>
- <1316028267-34187-7-git-send-email-nbd@openwrt.org>
- <1316028267-34187-8-git-send-email-nbd@openwrt.org>
- <1316028267-34187-9-git-send-email-nbd@openwrt.org>
- <1316028267-34187-10-git-send-email-nbd@openwrt.org>
- <1316028267-34187-11-git-send-email-nbd@openwrt.org>
- <1316028267-34187-12-git-send-email-nbd@openwrt.org>
- <20110919144002.GA22040@vmraj-lnx.users.atheros.com>
- <4E7759CA.4010100@openwrt.org>
+	Fri, 30 Sep 2011 02:01:41 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>
+CC: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>,
+	"Hu, Russell" <rhu@qca.qualcomm.com>
+Subject: [PATCH v2] ath9k_hw: extend GPIO pin select mask for rfkill
+Date: Fri, 30 Sep 2011 11:31:26 +0530
+Message-ID: <1317362488-4816-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110930_080146_234269_CE5E63BF)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E7759CA.4010100@openwrt.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 19, 2011 at 05:03:38PM +0200, Felix Fietkau wrote:
-> On 2011-09-19 4:40 PM, Rajkumar Manoharan wrote:
-> >On Wed, Sep 14, 2011 at 09:24:27PM +0200, Felix Fietkau wrote:
-> >> With the new EDMA descriptor format, a single descriptor can contain up
-> >> to four buffer pointers. By splitting the buffer into two parts, we can
-> >> let the hardware add the padding internally instead of using memmove on
-> >> the skb data.
-> >>
-> >> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
-> >> ---
-> >>  drivers/net/wireless/ath/ath9k/xmit.c |   56 +++++++++++++++++++++-----------
-> >>  1 files changed, 37 insertions(+), 19 deletions(-)
-> >>
-> >Felix,
-> >
-> >This patch again introduced "ath: Failed to stop TX DMA!" for AR9380+ chips.
-> >After reverting this, the errors are completely gone away. Please look into this ASAP.
-> How frequent are these errors in your tests? I ran several tests on
-> embedded hardware with AR9380 and didn't notice any issues.
-With this patch after the association and in idle state, the connection seems to be very unstable.
-Please refer the following log. 
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
---
-Rajkumar
-Sep 19 22:05:44 localhost kernel: [   85.170229] ieee80211 phy0: device no longer idle - scanning
-Sep 19 22:05:48 localhost kernel: [   89.068830] ieee80211 phy0: device now idle
-Sep 19 22:05:48 localhost kernel: [   89.071068] ieee80211 phy0: device no longer idle - working
-Sep 19 22:05:48 localhost kernel: [   89.073040] wlan0: authenticate with 00:03:7f:0b:a6:1b (try 1)
-Sep 19 22:05:48 localhost kernel: [   89.074958] wlan0: authenticated
-Sep 19 22:05:48 localhost kernel: [   89.074980] ieee80211 phy0: Allocated STA 00:03:7f:0b:a6:1b
-Sep 19 22:05:48 localhost kernel: [   89.074984] ieee80211 phy0: Inserted dummy STA 00:03:7f:0b:a6:1b
-Sep 19 22:05:48 localhost kernel: [   89.074994] wlan0: associate with 00:03:7f:0b:a6:1b (try 1)
-Sep 19 22:05:48 localhost kernel: [   89.079027] wlan0: RX AssocResp from 00:03:7f:0b:a6:1b (capab=0x21 status=0 aid=1)
-Sep 19 22:05:48 localhost kernel: [   89.079031] wlan0: associated
-Sep 19 22:05:48 localhost kernel: [   89.079114] ieee80211 phy0: Inserted STA 00:03:7f:0b:a6:1b
-Sep 19 22:05:48 localhost kernel: [   89.079119] ieee80211 phy0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0 uapsd=0
-Sep 19 22:05:48 localhost kernel: [   89.079125] ieee80211 phy0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0 uapsd=0
-Sep 19 22:05:48 localhost kernel: [   89.079131] ieee80211 phy0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94 uapsd=0
-Sep 19 22:05:48 localhost kernel: [   89.079137] ieee80211 phy0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47 uapsd=0
-Sep 19 22:05:48 localhost kernel: [   89.081580] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-Sep 19 22:05:48 localhost kernel: [   89.086962] Open BA session requested for 00:03:7f:0b:a6:1b tid 0
-Sep 19 22:05:48 localhost kernel: [   89.096789] activated addBA response timer on tid 0
-Sep 19 22:05:48 localhost kernel: [   89.098850] switched off addBA timer for tid 0
-Sep 19 22:05:48 localhost kernel: [   89.098852] Aggregation is on for tid 0
-Sep 19 22:05:49 localhost kernel: [   89.535843] ath: Failed to stop TX DMA!
-Sep 19 22:05:49 localhost kernel: [   89.542849] ath: Failed to stop TX DMA!
-Sep 19 22:05:51 localhost kernel: [   91.561998] ath: Failed to stop TX DMA!
-Sep 19 22:05:56 localhost kernel: [   96.638656] ath: Failed to stop TX DMA!
-Sep 19 22:05:56 localhost kernel: [   97.065752] ath: Failed to stop TX DMA!
-Sep 19 22:05:56 localhost kernel: [   97.072759] ath: Failed to stop TX DMA!
-Sep 19 22:05:57 localhost kernel: [   97.512480] ath: Failed to stop TX DMA!
-Sep 19 22:05:57 localhost kernel: [   97.519489] ath: Failed to stop TX DMA!
-Sep 19 22:05:59 localhost kernel: [  100.043425] wlan0: no IPv6 routers present
-Sep 19 22:06:00 localhost kernel: [  100.541988] ath: Failed to stop TX DMA!
-Sep 19 22:06:31 localhost kernel: [  131.860090] ieee80211 phy0: wlan0: Failed to send nullfunc to AP 00:03:7f:0b:a6:1b after 500ms, disconnecting.
-Sep 19 22:06:31 localhost kernel: [  131.860114] Tx BA session stop requested for 00:03:7f:0b:a6:1b tid 0
-Sep 19 22:06:31 localhost kernel: [  131.869103] ath: Failed to stop TX DMA!
-Sep 19 22:06:31 localhost kernel: [  131.871102] Tx BA session stop requested for 00:03:7f:0b:a6:1b tid 0
-Sep 19 22:06:31 localhost kernel: [  131.900106] ieee80211 phy0: Removed STA 00:03:7f:0b:a6:1b
-Sep 19 22:06:31 localhost kernel: [  131.900170] ieee80211 phy0: Destroyed STA 00:03:7f:0b:a6:1b
-Sep 19 22:06:31 localhost kernel: [  131.900176] ieee80211 phy0: device now idle
-Sep 19 22:06:31 localhost kernel: [  131.902326] cfg80211: Calling CRDA to update world regulatory domain
-Sep 19 22:06:31 localhost kernel: [  131.902344] Stopping Tx BA session for 00:03:7f:0b:a6:1b tid 0
-Sep 19 22:06:31 localhost kernel: [  131.902345] Could not find station: 00:03:7f:0b:a6:1b
-Sep 19 22:06:31 localhost kernel: [  131.902347] Stopping Tx BA session for 00:03:7f:0b:a6:1b tid 0
-Sep 19 22:06:31 localhost kernel: [  131.902348] Could not find station: 00:03:7f:0b:a6:1b
-Sep 19 22:06:31 localhost kernel: [  131.904407] cfg80211: World regulatory domain updated:
-Sep 19 22:06:31 localhost kernel: [  131.904410] cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-Sep 19 22:06:31 localhost kernel: [  131.904412] cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-Sep 19 22:06:31 localhost kernel: [  131.904414] cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-Sep 19 22:06:31 localhost kernel: [  131.904416] cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-Sep 19 22:06:31 localhost kernel: [  131.904418] cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-Sep 19 22:06:31 localhost kernel: [  131.904420] cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+this extends the bits for rf kill GPIO selection to [7:2] from [4:2] as
+we use GPIO pin 11 as rfkill for AR9480 and also remove few unused
+macros
+
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: "Hu, Russell" <rhu@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/eeprom.h |    8 +++-----
+ drivers/net/wireless/ath/ath9k/hw.c     |   10 ++++++++--
+ 2 files changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index a3c7d0c..70fe75c 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -104,11 +104,6 @@
+ #define OLC_FOR_AR9287_10_LATER (AR_SREV_9287_11_OR_LATER(ah) && \
+ 				 ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
+ 
+-#define AR_EEPROM_RFSILENT_GPIO_SEL     0x001c
+-#define AR_EEPROM_RFSILENT_GPIO_SEL_S   2
+-#define AR_EEPROM_RFSILENT_POLARITY     0x0002
+-#define AR_EEPROM_RFSILENT_POLARITY_S   1
+-
+ #define EEP_RFSILENT_ENABLED        0x0001
+ #define EEP_RFSILENT_ENABLED_S      0
+ #define EEP_RFSILENT_POLARITY       0x0002
+@@ -116,6 +111,9 @@
+ #define EEP_RFSILENT_GPIO_SEL       0x001c
+ #define EEP_RFSILENT_GPIO_SEL_S     2
+ 
++#define AR9480_EEP_RFSILENT_GPIO_SEL       0x00fc
++#define AR9480_EEP_RFSILENT_GPIO_SEL_S     2
++
+ #define AR5416_OPFLAGS_11A           0x01
+ #define AR5416_OPFLAGS_11G           0x02
+ #define AR5416_OPFLAGS_N_5G_HT40     0x04
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index f2de7ee..521bb79 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2170,8 +2170,14 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ #if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+ 	ah->rfsilent = ah->eep_ops->get_eeprom(ah, EEP_RF_SILENT);
+ 	if (ah->rfsilent & EEP_RFSILENT_ENABLED) {
+-		ah->rfkill_gpio =
+-			MS(ah->rfsilent, EEP_RFSILENT_GPIO_SEL);
++
++		if (AR_SREV_9480(ah))
++			ah->rfkill_gpio =
++				MS(ah->rfsilent, AR9480_EEP_RFSILENT_GPIO_SEL);
++		else
++			ah->rfkill_gpio =
++				MS(ah->rfsilent, EEP_RFSILENT_GPIO_SEL);
++
+ 		ah->rfkill_polarity =
+ 			MS(ah->rfsilent, EEP_RFSILENT_POLARITY);
+ 
+-- 
+1.7.0.4
+
