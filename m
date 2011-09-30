@@ -1,65 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:62646 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932621Ab1IHMld convert rfc822-to-8bit (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:35632 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753783Ab1I3DPo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 08:41:33 -0400
-Received: by vxi9 with SMTP id 9so147124vxi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 05:41:33 -0700 (PDT)
+	Thu, 29 Sep 2011 23:15:44 -0400
+Received: by yib18 with SMTP id 18so1145046yib.19
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Sep 2011 20:15:43 -0700 (PDT)
+Message-ID: <4E85345D.9080202@lwfinger.net> (sfid-20110930_051548_305434_9258F331)
+Date: Thu, 29 Sep 2011 22:15:41 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1315472282-21051-2-git-send-email-helmut.schaa@googlemail.com>
-References: <1315472282-21051-1-git-send-email-helmut.schaa@googlemail.com>
-	<1315472282-21051-2-git-send-email-helmut.schaa@googlemail.com>
-Date: Thu, 8 Sep 2011 14:41:32 +0200
-Message-ID: <CAOZOX0X7qcbOuLWeoM7Lyhg80A-g-=JhSqFiB2EWE6BiW6FOZQ@mail.gmail.com> (sfid-20110908_144136_044681_01B20FE7)
-Subject: Re: [PATCH 2/2] rt2x00: Remove special case for rate probe frames
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, nbd@openwrt.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Cao, Chongxiao" <ccao1@utk.edu>
+CC: "wlanfae@realtek.com" <wlanfae@realtek.com>,
+	"chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: The Problem of RTL8188ce in Ubuntu 11.04
+References: <38894CC285ECBF438599CFCE9811CAB109CFA1FB@CH1PRD0202MB136.namprd02.prod.outlook.com>
+In-Reply-To: <38894CC285ECBF438599CFCE9811CAB109CFA1FB@CH1PRD0202MB136.namprd02.prod.outlook.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 8, 2011 at 10:58 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> This is handled in minstrel_ht now. No need to special case it here
-> again.
+On 09/29/2011 09:19 PM, Cao, Chongxiao wrote:
+> Dear Sir,
 >
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> Cc: Ivo Van Doorn <ivdoorn@gmail.com>
-> Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+> I'm a graduate student in University of Tennessee. I just bought the Thinkpad
+> T420 laptop that uses the RTL8188CE chipset.
+>
+> I installed the Ubuntu 11.04. However, my wireless networking is very unstable
+> in Ubuntu 11.04. The speed of wireless networking is very slow and it always get
+> disconnected in every 2 minutes.
+>
+> I always do my research projects in Ubuntu so the wireless networking in Ubuntu
+> is very important to me.
+>
+> I have searched on Google to solve this problem and found that lots of people
+> have the same problem. I have tried installed the newest driver of RTL8188ce
+> from the website of Realtek, but it doesn't work.
+>
+> Would you please help me deal with this problem? I would appreciate your help.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+First of all, not everyone has trouble with rtl8192ce. Neither I nor the Realtek 
+group can reproduce the troubles that you describe. Because of that we are not 
+able to figure out what people are seeing.
 
-> ---
->
-> Ivo, I'm sending this directly to John due to the dependency on the
-> minstrel_ht patch.
->
->  drivers/net/wireless/rt2x00/rt2x00queue.c |    6 ++----
->  1 files changed, 2 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> index ba0d7e6..033d2cd 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> @@ -330,11 +330,9 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
->        }
->
->        /*
-> -        * This frame is eligible for an AMPDU, however, don't aggregate
-> -        * frames that are intended to probe a specific tx rate.
-> +        * This frame is eligible for an AMPDU.
->         */
-> -       if (tx_info->flags & IEEE80211_TX_CTL_AMPDU &&
-> -           !(tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE))
-> +       if (tx_info->flags & IEEE80211_TX_CTL_AMPDU)
->                __set_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags);
->
->        /*
-> --
-> 1.7.3.4
->
->
+The driver in the standard kernel used in Ubuntu 11.04 has been revised. If 
+possible, you should obtain the compat-wireless package built for Ubuntu. If it 
+does not exist, then get the compat-wireless source and build the package. That 
+will get you the latest set of fixes.
+
+One thing you might try is loading the module with the parameter "ips=0".
+
+Larry
