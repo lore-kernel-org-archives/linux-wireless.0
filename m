@@ -1,48 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63309 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751050Ab1IUFIP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 01:08:15 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Daniel Halperin <dhalperi@cs.washington.edu>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 21 Sep 2011 08:06:20 +0300
-Subject: RE: [PATCH 7/8] iwlagn: pending frames musn't be incremented if agg
- is on
-Message-ID: <4825B8A2C4E264489E57869F0DCFB223445749EA16@hasmsx502.ger.corp.intel.com> (sfid-20110921_070818_556694_D23FF1BA)
-References: <1316558247-10018-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1316558247-10018-8-git-send-email-wey-yi.w.guy@intel.com>
-	 <CALSq=Ba0-Jryh=cU5bp9MpeTtOAru3YqavuTtwuudjO2_Ri5Ag@mail.gmail.com>
- <1316565315.23660.2.camel@wwguy-ubuntu>
-In-Reply-To: <1316565315.23660.2.camel@wwguy-ubuntu>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:64777 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756646Ab1I3TGQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Sep 2011 15:06:16 -0400
+Received: by fxe4 with SMTP id 4so3234749fxe.19
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Sep 2011 12:06:15 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Ian Jeffray <ian@emobix.co.uk>
+Subject: Re: r8712u driver - on ARM
+Date: Fri, 30 Sep 2011 21:06:11 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <4E81ED65.7060703@emobix.co.uk> <4E81F8C8.4010909@lwfinger.net> <4E860CDB.9040207@emobix.co.uk>
+In-Reply-To: <4E860CDB.9040207@emobix.co.uk>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201109302106.12028.chunkeey@googlemail.com> (sfid-20110930_210620_271506_96988452)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiA+ID4NCj4gPiA+IEZyb206IEVtbWFudWVsIEdydW1iYWNoIDxlbW1hbnVlbC5ncnVtYmFjaEBp
-bnRlbC5jb20+DQo+ID4gPg0KPiA+ID4gRHVyaW5nIG15IHdvcmtzIG9uIHRoZSB0cmFuc3BvcnQg
-bGF5ZXIgSSByZW1vdmVkIGNvZGUgdGhhdCB1cGRhdGVkDQo+ID4gPiBhIGxvY2FsIHZhcmlhYmxl
-IChpc19hZ2cpIHRoYXQgaXMgbmVlZGVkIHRvIGtlZXAgdGhlIHBlbmRpbmdfZnJhbWVzDQo+ID4g
-PiBjb3VudCB1cCB0byBkYXRlLiBGaXggdGhpcy4NCj4gPg0KPiA+IFNlZW1zIGxpa2UgYSBiaWcg
-YnVnLg0KPiA+DQo+ID4gSXMgdGhpcyBhIGJ1Z2ZpeCBmb3IgYSBwYXRjaCBlYXJsaWVyIGluIHRo
-ZSBzZXJpZXMgb3IgYSBwYXRjaCB0aGF0J3MNCj4gPiBhbHJlYWR5IGJlZW4gYWNjZXB0ZWQuIElm
-IHRoZSBmb3JtZXIsIHdoeSBub3QgbWVyZ2U/IElmIHRoZSBsYXR0ZXIsDQo+ID4gd2h5IG5vdCBD
-QydlZCBhcyBhIGZpeCB0byBhbiBlYXJsaWVyIHZlcnNpb24gb2YgdGhlIGtlcm5lbD8NCj4gPg0K
-PiBnb29kIHBvaW50LCBJIHdpbGwgd29yayB3aXRoIEVtbWFudWVsIHRvIGZpZ3VyZSBvdXQgaWYg
-d2UgbmVlZCB0bw0KPiBiYWNrcG9ydCB0byB0aGUgZWFybGllciBrZXJuZWwNCj4gDQo+IFRoYW5r
-cyBmb3IgY2F0Y2ggdGhpcyBvbmUNCj4gDQo+IFdleQ0KPiANCg0KVGhlIGJ1ZyB3YXMgaW50cm9k
-dWNlZCBieSBlMTNjMGM1OWUwZWMzODU1OGFjODUzZDU2NTU1ZTkxNWI0ZGM3ZGMyIGluIEpvaG4n
-cyB0cmVlIHdoaWNoIGlzbid0IGluIDMuMSBzZXJpZXMuIFNvIHRoZXJlIGlzIG5vIGVhcmxpZXIg
-dmVyc2lvbiBvZiB0aGUga2VybmVsIHRoYXQgbmVlZCB0byBiZSBmaXhlZC4gQnVnIGludHJvZHVj
-ZWQgYW5kIGZpeGVkIGluIDMuMiBieSBkaWZmZXJlbnQgcGF0Y2ggc2VyaWVzLg0KLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tCkludGVsIElzcmFlbCAoNzQpIExpbWl0ZWQKClRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0YWNo
-bWVudHMgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZvcgp0aGUgc29sZSB1c2Ug
-b2YgdGhlIGludGVuZGVkIHJlY2lwaWVudChzKS4gQW55IHJldmlldyBvciBkaXN0cmlidXRpb24K
-Ynkgb3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRl
-bmRlZApyZWNpcGllbnQsIHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIgYW5kIGRlbGV0ZSBhbGwg
-Y29waWVzLgo=
+On Friday 30 September 2011 20:39:23 Ian Jeffray wrote:
+> On 27/09/2011 17:24, Larry Finger wrote:
+> > On 09/27/2011 10:36 AM, Ian Jeffray wrote:
+> >> Dear all,
+> >>
+> >> I'm attempting to get some sense from a Realtek 8191S device on
+> >> ARM linux.
+> <SNIP>
+> >> My host is a TI DaVinci DM8168 (OMAP3+toys). The USB host is not
+> >> fantastic, but has been thrashed heavily with other devices and seems
+> >> to be reliable in those cases.
+> <SNIP>
+> >
+> > I have not tried this chip on an ARM host as I have no hardware. My
+> > testing has been with X86 and PPC - thus I know the endianess is OK, but
+> > that is the extent of my platform testing.
+> >
+> > The first thing I would try is wireshark on another host to verify that
+> > packets are actually getting on the air.
+> 
+> Ok, so I've spent more more days working on this.  The driver appears
+> to be fine on an ARM9 S3X board.   I've contacted the TI support
+> team about the USB host and applied some patches from them which have
+> slightly improved the situation, but it's still horrible - I'm actually
+> getting "reliable" scans but only a pathetic 1Mbit or less of data
+> throughput.
+> 
+> I've also tried this driver (and the realtek upstream version) with
+> a Blackfin BF527 device, which has roughly the same 'musb' Inventra
+> USB host controller... and I see exactly the same problem there!
+> The firmware appears to load fine, but scans produce no results.
+> 
+> I'm not really sure about your comment about wireshark because,
+> as far as I understand, a 'iwlist wlan0 scan' command doesn't cause
+> any traffic which would be wireshark capturable on another host...
+> am I misunderstanding something?
+> 
+> So it appears as though there may be some general problem with this
+> driver and an 'musb' host controller.  Very strange.
+> 
+> My next course of attack is to try comparing outputs of 'usbmon'
+> dumps between hosts which work and hosts which don't... but I can't
+> make a great deal of sense looking at them really.
+> 
+> I'd greatly appreciate any more advice you may be able to give.
 
+Well, I'm not really in r8712u but I can tell you a few things about
+carl9170 and musb.
+
+You see I had a similar discussion a while ago:
+http://www.spinics.net/lists/linux-wireless/msg68870.html
+
+Apparently, musb can't do DMA with non 4-bytes aligned buffers
+and falls back to PIO [which results in a much higher cpu utilization
+and really bad usb throughput... so if timing is critical this "fact"
+is pretty much a deal-breaker for the combination].
+
+Now, you might ask, why this DMA vs. PIO is so importent... Well,
+it's because the network stack has its own alignment ideas and
+about the data/skbs. There's a comment in include/linux/skbuff.h
+around line 1400 which explains the situation. The upshot is you
+can choose between a penatly on the packet processing by the
+stack, or a penatly on the driver/hardware site if r8712u does
+not implement any additional techniques to counter the issues.
+
+Regards,
+	Chr
