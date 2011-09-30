@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:54114 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754575Ab1IGE1Q (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52406 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932096Ab1I3Tap (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Sep 2011 00:27:16 -0400
-Received: by yxj19 with SMTP id 19so3584214yxj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Sep 2011 21:27:16 -0700 (PDT)
-Subject: Re: [PATCH] p54: Use do_div for 64-bit division to fix 32-bit
- kernels
-From: Calvin Walton <calvin.walton@kepstin.ca>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Wed, 07 Sep 2011 00:27:13 -0400
-In-Reply-To: <201108252347.35706.chunkeey@googlemail.com>
-References: <201108252347.35706.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1315369635.3089.1.camel@ayu> (sfid-20110907_062736_540785_41C9F1AF)
-Mime-Version: 1.0
+	Fri, 30 Sep 2011 15:30:45 -0400
+Date: Fri, 30 Sep 2011 15:15:47 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Daniel Drake <dsd@laptop.org>
+Cc: dcbw@redhat.com, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+Subject: Re: [PATCH] libertas: detect TX lockups and reset hardware
+Message-ID: <20110930191547.GD2526@tuxdriver.com> (sfid-20110930_213049_201163_506C8A28)
+References: <20110921153017.8FDAE9D401D@zog.reactivated.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110921153017.8FDAE9D401D@zog.reactivated.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-08-25 at 23:47 +0200, Christian Lamparter wrote:
-> Use the do_div macro for 64-bit division. Otherwise, the module will
-> reference __udivdi3 under 32-bit kernels, which is not allowed in
-> kernel space.
+On Wed, Sep 21, 2011 at 04:30:17PM +0100, Daniel Drake wrote:
+> Recent patches added support for resetting the SD8686 hardware when
+> commands time out, which seems to happen quite frequently soon after
+> resuming the system from a Wake-on-WLAN-triggered resume.
 > 
-> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
-> ---
-> diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
+> At http://dev.laptop.org/ticket/10969 we see the same thing happen
+> with transmits. In this case, the hardware will fail to respond to
+> a frame passed for transmission, and libertas (correctly) will block
+> all further commands and transmissions as the hardware can only
+> deal with one thing at a time. This results in a lockup while the
+> system waits indefinitely for the dead card to respond.
+> 
+> Hook up a TX lockup timer to detect this and reset the hardware.
+> 
+> Signed-off-by: Daniel Drake <dsd@laptop.org>
 
-> +		do_div(survey->channel_time, 1024);
-> +		do_div(survey->channel_time_tx, 1024);
-> +		do_div(survey->channel_time_busy, 1024);
+> @@ -995,6 +1029,7 @@ void lbs_stop_card(struct lbs_private *priv)
+>  
+>  	/* Delete the timeout of the currently processing command */
+>  	del_timer_sync(&priv->command_timer);
+> +	del_timer_sync(&priv->tx_lockup_timer);
+>  	del_timer_sync(&priv->auto_deepsleep_timer);
+>  
+>  	/* Flush pending command nodes */
 
-You're doing a division by a power of two here, why not just use a
-bit-shift operation ">> 10" instead of a full division operation?
+This hunk doesn't apply.  What tree are you using as a base?
 
+John
 -- 
-Calvin Walton <calvin.walton@kepstin.ca>
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
