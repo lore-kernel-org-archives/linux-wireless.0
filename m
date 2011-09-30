@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:34160 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513Ab1ITRsO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 13:48:14 -0400
-Date: Tue, 20 Sep 2011 13:47:05 -0400 (EDT)
-Message-Id: <20110920.134705.385231251761546079.davem@davemloft.net> (sfid-20110920_194828_523689_D625A0F2)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless 2011-09-20
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110920170501.GE7800@tuxdriver.com>
-References: <20110920170501.GE7800@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.neratec.ch ([80.75.119.105]:48001 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750709Ab1I3MxD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Sep 2011 08:53:03 -0400
+Message-ID: <4E85BBAA.5000008@neratec.com> (sfid-20110930_145307_806358_8A34CA76)
+Date: Fri, 30 Sep 2011 14:52:58 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+MIME-Version: 1.0
+To: Adrian Chadd <adrian@freebsd.org>
+CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Boris Presman <boris.presman@ti.com>,
+	Assaf Azulay <assaf@ti.com>,
+	Michael Green <green@qca.qualcomm.com>,
+	David Quan <dquan@qca.qualcomm.com>,
+	Kevin Hayes <hayes@qca.qualcomm.com>,
+	Arun Venkataraman <arunvenk@qca.qualcomm.com>
+Subject: Re: Regulatory revamp status
+References: <CAB=NE6U6qmYbvHPTWGTqOdXtuxbKYbUzZXNiE6POOX9QZNRWAg@mail.gmail.com>	<1125417094.1836.1317285426615.JavaMail.root@idefix>	<CAJ-VmonqEs4mODDa2=fTj8zWHwRM7-G5e=BWNUyGdy65+kYvfg@mail.gmail.com>	<4E8468AF.8000006@neratec.com> <CAJ-VmokXUectieeOBJSMfuzzT94g7U=dqbPf-S1Oay292ur9yg@mail.gmail.com>
+In-Reply-To: <CAJ-VmokXUectieeOBJSMfuzzT94g7U=dqbPf-S1Oay292ur9yg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 20 Sep 2011 13:05:01 -0400
+On 09/30/2011 01:21 PM, Adrian Chadd wrote:
+> On 29 September 2011 20:46, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+> 
+>> Really? Where would be 'there' countrycode-wise?
+>>
+>> That would definitely break today's CRDA capabilities :-\
+> 
+> I -think- one or both of ETSI/FCC have different CAC/NOL requirements
+> for the channels which overlap the weather radars.
+> At least when someone took FreeBSD to get DFS certified a while ago,
+> the weather radar ranges were checked against a 30 minute CAC. :)
+> 
+> I think it's worth defining specific DFS parameters for each frequency
+> range. That's what I'll be doing for FreeBSD when I revamp its
+> net80211 regulatory database code.
+> 
+> 
+> Adrian
 
-> This is a batch of fixes intended for 3.1.
-> 
-> Included is a set of Bluetooth fixes from Gustavo:
-> 
-> 	This is probably my unique pull request for 3.1, it fixes
-> 	an regression with the HCI_INQUIRY flag, it was not getting
-> 	cleaned after scan. Fix by Oliver Neukum. Also support for
-> 	two new apple devices and a simple fix the to btwilink driver.
-> 
-> Also included is an iwlagn patch revert to avoid some AP crashes, an
-> rt2800 patch to refactor some code that triggers a compiler bug, another
-> rt2800 patch to correct an endian bug, a b43 fix to restore beaconing in
-> ad-hoc mode, a regulatory enforcement fix for a problem that prevented
-> multiple regulatory domain changes from beacons, a fix to use the proper
-> rates in a probe request, and a fix for a deadlock that had crept into
-> ipw2200 after an earlier patch.
-> 
-> Please let me know if there are problems!
+I was assuming that weather radars will not be supported at all but the related channels be just disabled. It is practically impossible to assure a 99.99% detection probability (as required for ETSI 1.5.1), or? E.g. to detect ETSI radar pattern 1 (10 pulses), you basically need to treat any single detected pulse as radar event. Doable, but not very useful ;)
 
-Pulled, but this is very nearly "too much" this late in the game.
 
-I recognize the issue that we've been stuck in a state of pseudo-limbo
-up until a couple days ago, so I took this.
+Zefir
+
