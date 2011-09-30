@@ -1,39 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:45282 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752805Ab1I1Snu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 14:43:50 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat: add IS_ERR_OR_NULL()
-Date: Wed, 28 Sep 2011 20:43:44 +0200
-Message-Id: <1317235424-14378-1-git-send-email-hauke@hauke-m.de> (sfid-20110928_204353_215874_59CF924F)
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:47203 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932077Ab1I3Siw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Sep 2011 14:38:52 -0400
+Received: from [10.0.0.100] (cpc2-livi5-2-0-cust271.sgyl.cable.virginmedia.com [62.31.13.16])
+	by mail.messagingengine.com (Postfix) with ESMTPSA id 119EA94050D
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Sep 2011 14:38:50 -0400 (EDT)
+Message-ID: <4E860CDB.9040207@emobix.co.uk> (sfid-20110930_203855_600890_A202A0CF)
+Date: Fri, 30 Sep 2011 19:39:23 +0100
+From: Ian Jeffray <ian@emobix.co.uk>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Re: r8712u driver - on ARM
+References: <4E81ED65.7060703@emobix.co.uk> <4E81F8C8.4010909@lwfinger.net>
+In-Reply-To: <4E81F8C8.4010909@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 27/09/2011 17:24, Larry Finger wrote:
+> On 09/27/2011 10:36 AM, Ian Jeffray wrote:
+>> Dear all,
+>>
+>> I'm attempting to get some sense from a Realtek 8191S device on
+>> ARM linux.
+<SNIP>
+>> My host is a TI DaVinci DM8168 (OMAP3+toys). The USB host is not
+>> fantastic, but has been thrashed heavily with other devices and seems
+>> to be reliable in those cases.
+<SNIP>
+>
+> I have not tried this chip on an ARM host as I have no hardware. My
+> testing has been with X86 and PPC - thus I know the endianess is OK, but
+> that is the extent of my platform testing.
+>
+> The first thing I would try is wireshark on another host to verify that
+> packets are actually getting on the air.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.33.h |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+Ok, so I've spent more more days working on this.  The driver appears
+to be fine on an ARM9 S3X board.   I've contacted the TI support
+team about the USB host and applied some patches from them which have
+slightly improved the situation, but it's still horrible - I'm actually
+getting "reliable" scans but only a pathetic 1Mbit or less of data
+throughput.
 
-diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
-index 43f1989..386ee4c 100644
---- a/include/linux/compat-2.6.33.h
-+++ b/include/linux/compat-2.6.33.h
-@@ -144,6 +144,11 @@ static inline bool pci_is_pcie(struct pci_dev *dev)
- #define __always_unused			/* unimplemented */
- #endif
- 
-+static inline long __must_check IS_ERR_OR_NULL(const void *ptr)
-+{
-+	return !ptr || IS_ERR_VALUE((unsigned long)ptr);
-+}
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33)) */
- 
- #endif /* LINUX_26_33_COMPAT_H */
+I've also tried this driver (and the realtek upstream version) with
+a Blackfin BF527 device, which has roughly the same 'musb' Inventra
+USB host controller... and I see exactly the same problem there!
+The firmware appears to load fine, but scans produce no results.
+
+I'm not really sure about your comment about wireshark because,
+as far as I understand, a 'iwlist wlan0 scan' command doesn't cause
+any traffic which would be wireshark capturable on another host...
+am I misunderstanding something?
+
+So it appears as though there may be some general problem with this
+driver and an 'musb' host controller.  Very strange.
+
+My next course of attack is to try comparing outputs of 'usbmon'
+dumps between hosts which work and hosts which don't... but I can't
+make a great deal of sense looking at them really.
+
+I'd greatly appreciate any more advice you may be able to give.
+
+Many thanks,
+
+Ian.
+
 -- 
-1.7.4.1
-
+Ian Jeffray    ian@emobix.co.uk    Tel: +44 (0) 141 221 8449
+emobix Limited, Suite 5/5, 29 St Vincent Place, Glasgow, G1 2DT
+Registered in Scotland; Company No. 371276 - VAT No. 983 4833 78
