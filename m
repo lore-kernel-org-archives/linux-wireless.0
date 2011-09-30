@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:44410 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751370Ab1IVTEw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 15:04:52 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 96AC25401A7
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 15:17:51 -0400 (EDT)
-Subject: Compat-wireless release for 2011-09-22 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110922190451.3DE1F40647@repository3.orbit-lab.org> (sfid-20110922_210500_142631_12931C59)
-Date: Thu, 22 Sep 2011 15:04:51 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from c60.cesmail.net ([216.154.195.49]:28105 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753916Ab1I3Pxl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Sep 2011 11:53:41 -0400
+Date: Fri, 30 Sep 2011 11:53:06 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] wireless: at76c50x: fix multithread access to hex2str
+Message-ID: <20110930115306.3bc105cb@mj> (sfid-20110930_175344_427006_54E6D5A3)
+In-Reply-To: <1317293215.2676.111.camel@smile>
+References: <21514bff06a915d2edd0a83c74ac512eb8b80b3f.1317215809.git.andriy.shevchenko@linux.intel.com>
+	<20110928171909.6889916c@mj>
+	<1317293215.2676.111.camel@smile>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://github.com/mcgrof/compat-wireless
-   a898f60..5904b94  master     -> origin/master
->From git://github.com/mcgrof/compat
-   0808fea..8331446  master     -> origin/master
->From git://github.com/sfrothwell/linux-next
- + 39fc525...4deee6e akpm-end   -> origin/akpm-end  (forced update)
-   38867a2..d93dc5c  akpm-start -> origin/akpm-start
- + 367fd59...c4d76b4 master     -> origin/master  (forced update)
-   38867a2..d93dc5c  stable     -> origin/stable
- * [new tag]         next-20110922 -> next-20110922
- * [new tag]         v3.1-rc7   -> v3.1-rc7
+On Thu, 29 Sep 2011 13:46:55 +0300
+Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
 
-compat-wireless code metrics
+> On Wed, 2011-09-28 at 17:19 -0400, Pavel Roskin wrote: 
+> > Or maybe you could develop an extension for printk() format that
+> > would dump strings of the given length?  Something like %pM, but
+> > with an extra argument (and make sure it would not trigger a gcc
+> > warning). This way, everybody would benefit.
+> I don't think it would be a noticeable benefit. On the other hand
+> vsnprintf() is hugely overloaded by many "extensions" to the C99
+> variant.
 
-    812386 - Total upstream lines of code being pulled
-      2397 - backport code changes
-      2086 - backport code additions
-       311 - backport code deletions
-      8538 - backport from compat module
-     10935 - total backport code
-    1.3460 - % of code consists of backport work
-Host key verification failed.
-rsync: connection unexpectedly closed (0 bytes received so far) [sender]
-rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
+I looked at the code, and it seems very little is needed to support
+"%*pM"
+
+> > Please rethink whether it's helpful to send such "fixes" for old and
+> > little maintained drivers.
+> Last copyright is 2010, TODO list actually suggests to remove hex2str
+> at all.
+
+I don't know where it's written, but I think it's a good idea,
+especially if there is a better alternative available for all drivers.
+
+-- 
+Regards,
+Pavel Roskin
