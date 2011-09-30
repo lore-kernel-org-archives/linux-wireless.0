@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3982 "EHLO mms1.broadcom.com"
+Received: from mail.neratec.ch ([80.75.119.105]:44137 "EHLO mail.neratec.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754197Ab1IWAIJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 20:08:09 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v2 11/19] staging: brcm80211: remove fullmac
- module_param brcmf_idletime
-Date: Thu, 22 Sep 2011 17:07:48 -0700
-Message-ID: <1316736476-23725-12-git-send-email-frankyl@broadcom.com> (sfid-20110923_020817_825836_85ED80B8)
-In-Reply-To: <1316736476-23725-1-git-send-email-frankyl@broadcom.com>
-References: <1316736476-23725-1-git-send-email-frankyl@broadcom.com>
+	id S1758324Ab1I3LLv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Sep 2011 07:11:51 -0400
+Message-ID: <4E85A3F4.2000500@neratec.com> (sfid-20110930_131155_903105_8256B832)
+Date: Fri, 30 Sep 2011 13:11:48 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+CC: Adrian Chadd <adrian@freebsd.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Boris Presman <boris.presman@ti.com>,
+	Assaf Azulay <assaf@ti.com>,
+	Michael Green <green@qca.qualcomm.com>,
+	David Quan <dquan@qca.qualcomm.com>,
+	Kevin Hayes <hayes@qca.qualcomm.com>,
+	Arun Venkataraman <arunvenk@qca.qualcomm.com>
+Subject: Re: Regulatory revamp status
+References: <CAB=NE6U6qmYbvHPTWGTqOdXtuxbKYbUzZXNiE6POOX9QZNRWAg@mail.gmail.com> <1125417094.1836.1317285426615.JavaMail.root@idefix> <CAJ-VmonqEs4mODDa2=fTj8zWHwRM7-G5e=BWNUyGdy65+kYvfg@mail.gmail.com> <4E8468AF.8000006@neratec.com> <CAB=NE6UQpv1bvsni=rDP=3OKM=oN14g0xJtVN+evvm=47nZu_Q@mail.gmail.com>
+In-Reply-To: <CAB=NE6UQpv1bvsni=rDP=3OKM=oN14g0xJtVN+evvm=47nZu_Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use constant for idle time setting.
+On 09/29/2011 07:47 PM, Luis R. Rodriguez wrote:
+> On Thu, Sep 29, 2011 at 5:46 AM, Zefir Kurtisi
+> <zefir.kurtisi@neratec.com> wrote:
+>> On 09/29/2011 01:45 PM, Adrian Chadd wrote:
+>>> On 29 September 2011 16:37, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+>>>> Thanks for the update.
+>>>>
+>>>> To me it looks not reasonable to mix in between the two approaches: either we assume countrycodes use the same DFS region for all channels, or each channel/band needs to have its own. Otherwise I feel that a DFS region bitmap would give a semi-flexible compromise that might end up being insufficient to represent some fancy countrycodes.
+>>>
+>>> There's some funny stuff in there.
+>>>
+>>> For example, some of the DFS bands have different CAC/NOL timing. :-)
+>>>
+>>>
+>>>
+>>> Adrian
+>>
+>> Really? Where would be 'there' countrycode-wise?
+>>
+>> That would definitely break today's CRDA capabilities :-\
+> 
+> Well, CRDA has no DFS support yet ;) and hence the regulatory revamp
+Yes, I meant the proposed approach with a regulaltory domain per countrycode won't work with those fancy ones.
+> work, to accommodate as much as possible for both future technologies
+> and capture all these gotchas on existing technologies. If DFS varies
+> so much then using one u8 for a country may not be enough, and we may
+> want to add a whole section for DFS with the u8 being an optional
+> minimum and with a DFS section for overrides on values. Thoughts?
+> 
+That sounds like a doable way to start with the per countrycode domain and traverse to the optional refinement values on demand.
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd.h      |    1 +
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |    5 +----
- 2 files changed, 2 insertions(+), 4 deletions(-)
+BTW, would this render the countrycode to CTL mappings in regd_common.h redundant, or do DFS and CTL domains differ?
+> That is -- if your country varies per band or CAC / NOL timings we can
+> address these countries only with the future revamp work. This would
+> allow us to move forward with DFS support only for those countries
+> where a unified DFS mapping applies.
+> 
+To start with support for unified DFS domain CCs, was there ever some v2 for the related patch set you posted?
+>   Luis
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index 1e18ad0..7ca9172 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -808,5 +808,6 @@ extern void brcmf_c_pktfilter_offload_enable(struct brcmf_pub *drvr, char *arg,
- #define BRCMF_IDLE_IMMEDIATE	(-1)
- #define BRCMF_IDLE_ACTIVE	0	/* Do not request any SD clock change
- 				 when idle */
-+#define BRCMF_IDLE_INTERVAL	1
- 
- #endif				/* _BRCMF_H_ */
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 4033e73..57049ec 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -747,9 +747,6 @@ module_param(brcmf_txbound, uint, 0);
- module_param(brcmf_rxbound, uint, 0);
- static uint brcmf_txminmax;
- 
--int brcmf_idletime = 1;
--module_param(brcmf_idletime, int, 0);
--
- #define SDIO_DRIVE_STRENGTH	6	/* in milliamps */
- 
- /* Use polling */
-@@ -4650,7 +4647,7 @@ static bool brcmf_sdbrcm_probe_init(struct brcmf_bus *bus)
- 
- 	/* ...and initialize clock/power states */
- 	bus->clkstate = CLK_SDONLY;
--	bus->idletime = (s32) brcmf_idletime;
-+	bus->idletime = BRCMF_IDLE_INTERVAL;
- 	bus->idleclock = BRCMF_IDLE_ACTIVE;
- 
- 	/* Query the F2 block size, set roundup accordingly */
--- 
-1.7.1
-
-
+Zefir
