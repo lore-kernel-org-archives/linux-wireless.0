@@ -1,697 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:32818 "EHLO nbd.name"
+Received: from mga09.intel.com ([134.134.136.24]:38478 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752922Ab1ISRim (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 13:38:42 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v2 2/4] ath9k_hw: clean up tx power handling
-Date: Mon, 19 Sep 2011 19:38:21 +0200
-Message-Id: <1316453903-75710-2-git-send-email-nbd@openwrt.org> (sfid-20110919_193850_264325_A5F94D1C)
-In-Reply-To: <1316453903-75710-1-git-send-email-nbd@openwrt.org>
-References: <1316453903-75710-1-git-send-email-nbd@openwrt.org>
+	id S1755072Ab1I3T1z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Sep 2011 15:27:55 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/1] iwlagn: rename iwlagn module iwlwifi and alias to iwlagn.
+Date: Fri, 30 Sep 2011 11:40:20 -0700
+Message-Id: <1317408020-16627-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110930_212800_003958_26528182)
+In-Reply-To: <1317408020-16627-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1317408020-16627-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code for handling various restrictions concerning regulatory limits,
-antenna gain, etc. is very convoluted and duplicated across various
-EEPROM parsing implementations, making it hard to review.
+From: Don Fry <donald.h.fry@intel.com>
 
-This patch partially cleans up the mess by unifying regulatory limit
-handling in one function and removing dead code for transmit power scaling.
-It also simplifies handling of antenna gain
+Rename the iwlagn module as iwlwifi in preparation for future
+changes.  Add an alias to iwlagn for backward compatibility.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Don Fry <donald.h.fry@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath.h                 |    1 -
- drivers/net/wireless/ath/ath9k/ar5008_phy.c    |   11 +----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   39 +++------------
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c  |    9 +---
- drivers/net/wireless/ath/ath9k/ar9003_phy.c    |   11 +----
- drivers/net/wireless/ath/ath9k/common.c        |    6 ++-
- drivers/net/wireless/ath/ath9k/eeprom.h        |    7 ++-
- drivers/net/wireless/ath/ath9k/eeprom_4k.c     |   27 ++--------
- drivers/net/wireless/ath/ath9k/eeprom_9287.c   |   33 ++----------
- drivers/net/wireless/ath/ath9k/eeprom_def.c    |   43 +++++------------
- drivers/net/wireless/ath/ath9k/hw.c            |   63 ++++++++++++++++--------
- drivers/net/wireless/ath/ath9k/hw.h            |    9 +---
- drivers/net/wireless/ath/ath9k/init.c          |    2 -
- 13 files changed, 85 insertions(+), 176 deletions(-)
+ Documentation/feature-removal-schedule.txt |    5 +++
+ drivers/net/wireless/Makefile              |    2 +-
+ drivers/net/wireless/iwlwifi/Kconfig       |   22 +++++++-------
+ drivers/net/wireless/iwlwifi/Makefile      |   40 ++++++++++++++--------------
+ drivers/net/wireless/iwlwifi/iwl-agn.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-shared.h  |    2 +-
+ 6 files changed, 39 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 4ed7f24..bb71b4f 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -71,7 +71,6 @@ struct ath_regulatory {
- 	char alpha2[2];
- 	u16 country_code;
- 	u16 max_power_level;
--	u32 tp_scale;
- 	u16 current_rd;
- 	u16 current_rd_ext;
- 	int16_t power_limit;
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 0a749c8..f199e9e 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -763,10 +763,8 @@ static void ar5008_hw_set_channel_regs(struct ath_hw *ah,
- static int ar5008_hw_process_ini(struct ath_hw *ah,
- 				 struct ath9k_channel *chan)
+diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
+index dfd6a9f..1cf3dbd 100644
+--- a/Documentation/feature-removal-schedule.txt
++++ b/Documentation/feature-removal-schedule.txt
+@@ -555,3 +555,8 @@ Why:	This driver has been superseded by g_mass_storage.
+ Who:	Alan Stern <stern@rowland.harvard.edu>
+ 
+ ----------------------------
++What:	iwlagn alias support
++When:	3.5
++Why:	The iwlagn module has been renamed iwlwifi.  The alias will be around
++	for backward compatibility for several cycles and then dropped.
++Who:	Don Fry <donald.h.fry@intel.com>
+\ No newline at end of file
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 7bba6a8..4cf0ad3 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -41,7 +41,7 @@ obj-$(CONFIG_ADM8211)	+= adm8211.o
+ 
+ obj-$(CONFIG_MWL8K)	+= mwl8k.o
+ 
+-obj-$(CONFIG_IWLAGN)	+= iwlwifi/
++obj-$(CONFIG_IWLWIFI)	+= iwlwifi/
+ obj-$(CONFIG_IWLWIFI_LEGACY)	+= iwlegacy/
+ obj-$(CONFIG_RT2X00)	+= rt2x00/
+ 
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 1d7572f..e044103 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -1,5 +1,5 @@
+-config IWLAGN
+-	tristate "Intel Wireless WiFi Next Gen AGN - Wireless-N/Advanced-N/Ultimate-N (iwlagn) "
++config IWLWIFI
++	tristate "Intel Wireless WiFi Next Gen AGN - Wireless-N/Advanced-N/Ultimate-N (iwlwifi) "
+ 	depends on PCI && MAC80211
+ 	select FW_LOADER
+ 	select NEW_LEDS
+@@ -39,14 +39,14 @@ config IWLAGN
+ 	  If you want to compile the driver as a module ( = code which can be
+ 	  inserted in and removed from the running kernel whenever you want),
+ 	  say M here and read <file:Documentation/kbuild/modules.txt>.  The
+-	  module will be called iwlagn.
++	  module will be called iwlwifi.
+ 
+ menu "Debugging Options"
+-	depends on IWLAGN
++	depends on IWLWIFI
+ 
+ config IWLWIFI_DEBUG
+-	bool "Enable full debugging output in the iwlagn driver"
+-	depends on IWLAGN
++	bool "Enable full debugging output in the iwlwifi driver"
++	depends on IWLWIFI
+ 	---help---
+ 	  This option will enable debug tracing output for the iwlwifi drivers
+ 
+@@ -70,8 +70,8 @@ config IWLWIFI_DEBUG
+ 	  any problems you may encounter.
+ 
+ config IWLWIFI_DEBUGFS
+-        bool "iwlagn debugfs support"
+-        depends on IWLAGN && MAC80211_DEBUGFS
++        bool "iwlwifi debugfs support"
++        depends on IWLWIFI && MAC80211_DEBUGFS
+         ---help---
+ 	  Enable creation of debugfs files for the iwlwifi drivers. This
+ 	  is a low-impact option that allows getting insight into the
+@@ -79,13 +79,13 @@ config IWLWIFI_DEBUGFS
+ 
+ config IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
+         bool "Experimental uCode support"
+-        depends on IWLAGN && IWLWIFI_DEBUG
++        depends on IWLWIFI && IWLWIFI_DEBUG
+         ---help---
+ 	  Enable use of experimental ucode for testing and debugging.
+ 
+ config IWLWIFI_DEVICE_TRACING
+ 	bool "iwlwifi device access tracing"
+-	depends on IWLAGN
++	depends on IWLWIFI
+ 	depends on EVENT_TRACING
+ 	help
+ 	  Say Y here to trace all commands, including TX frames and IO
+@@ -104,7 +104,7 @@ endmenu
+ 
+ config IWLWIFI_DEVICE_SVTOOL
+ 	bool "iwlwifi device svtool support"
+-	depends on IWLAGN
++	depends on IWLWIFI
+ 	select NL80211_TESTMODE
+ 	help
+ 	  This option enables the svtool support for iwlwifi device through
+diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
+index 8fa59cd..bacafa4 100644
+--- a/drivers/net/wireless/iwlwifi/Makefile
++++ b/drivers/net/wireless/iwlwifi/Makefile
+@@ -1,25 +1,25 @@
+-# AGN
+-obj-$(CONFIG_IWLAGN)	+= iwlagn.o
+-iwlagn-objs		:= iwl-agn.o iwl-agn-rs.o
+-iwlagn-objs		+= iwl-agn-ucode.o iwl-agn-tx.o
+-iwlagn-objs		+= iwl-agn-lib.o iwl-agn-calib.o iwl-io.o
+-iwlagn-objs		+= iwl-agn-tt.o iwl-agn-sta.o
++# WIFI
++obj-$(CONFIG_IWLWIFI)	+= iwlwifi.o
++iwlwifi-objs		:= iwl-agn.o iwl-agn-rs.o
++iwlwifi-objs		+= iwl-agn-ucode.o iwl-agn-tx.o
++iwlwifi-objs		+= iwl-agn-lib.o iwl-agn-calib.o iwl-io.o
++iwlwifi-objs		+= iwl-agn-tt.o iwl-agn-sta.o
+ 
+-iwlagn-objs		+= iwl-core.o iwl-eeprom.o iwl-power.o
+-iwlagn-objs		+= iwl-rx.o iwl-sta.o
+-iwlagn-objs		+= iwl-scan.o iwl-led.o
+-iwlagn-objs		+= iwl-agn-rxon.o
+-iwlagn-objs		+= iwl-5000.o
+-iwlagn-objs		+= iwl-6000.o
+-iwlagn-objs		+= iwl-1000.o
+-iwlagn-objs		+= iwl-2000.o
+-iwlagn-objs		+= iwl-pci.o
+-iwlagn-objs		+= iwl-trans.o
+-iwlagn-objs		+= iwl-trans-pcie.o iwl-trans-pcie-rx.o iwl-trans-pcie-tx.o
++iwlwifi-objs		+= iwl-core.o iwl-eeprom.o iwl-power.o
++iwlwifi-objs		+= iwl-rx.o iwl-sta.o
++iwlwifi-objs		+= iwl-scan.o iwl-led.o
++iwlwifi-objs		+= iwl-agn-rxon.o
++iwlwifi-objs		+= iwl-5000.o
++iwlwifi-objs		+= iwl-6000.o
++iwlwifi-objs		+= iwl-1000.o
++iwlwifi-objs		+= iwl-2000.o
++iwlwifi-objs		+= iwl-pci.o
++iwlwifi-objs		+= iwl-trans.o
++iwlwifi-objs		+= iwl-trans-pcie.o iwl-trans-pcie-rx.o iwl-trans-pcie-tx.o
+ 
+-iwlagn-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
+-iwlagn-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
+-iwlagn-$(CONFIG_IWLWIFI_DEVICE_SVTOOL) += iwl-sv-open.o
++iwlwifi-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
++iwlwifi-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
++iwlwifi-$(CONFIG_IWLWIFI_DEVICE_SVTOOL) += iwl-sv-open.o
+ 
+ CFLAGS_iwl-devtrace.o := -I$(src)
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index baaf486..d0fd6f0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -79,6 +79,7 @@ MODULE_DESCRIPTION(DRV_DESCRIPTION);
+ MODULE_VERSION(DRV_VERSION);
+ MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
+ MODULE_LICENSE("GPL");
++MODULE_ALIAS("iwlagn");
+ 
+ void iwl_update_chain_flags(struct iwl_priv *priv)
  {
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int i, regWrites = 0;
--	struct ieee80211_channel *channel = chan->chan;
- 	u32 modesIndex, freqIndex;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 8747bbd..3a24b47 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -100,7 +100,7 @@ struct iwl_priv;
+ struct iwl_sensitivity_ranges;
+ struct iwl_trans_ops;
  
- 	switch (chan->chanmode) {
-@@ -903,14 +901,7 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
- 	ar5008_hw_set_channel_regs(ah, chan);
- 	ar5008_hw_init_chain_masks(ah);
- 	ath9k_olc_init(ah);
--
--	/* Set TX power */
--	ah->eep_ops->set_txpower(ah, chan,
--				 ath9k_regd_get_ctl(regulatory, chan),
--				 channel->max_antenna_gain * 2,
--				 channel->max_power * 2,
--				 min((u32) MAX_RATE_POWER,
--				 (u32) regulatory->power_limit), false);
-+	ath9k_hw_apply_txpower(ah, chan);
- 
- 	/* Write analog registers */
- 	if (!ath9k_hw_set_rf_regs(ah, chan, freqIndex)) {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 51398f0..d7a5ca7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3021,6 +3021,10 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
- 		return (pBase->miscConfiguration >> 0x3) & 0x1;
- 	case EEP_ANT_DIV_CTL1:
- 		return eep->base_ext1.ant_div_control;
-+	case EEP_ANTENNA_GAIN_5G:
-+		return eep->modalHeader5G.antennaGain;
-+	case EEP_ANTENNA_GAIN_2G:
-+		return eep->modalHeader2G.antennaGain;
- 	default:
- 		return 0;
- 	}
-@@ -4764,20 +4768,14 @@ static u16 ar9003_hw_get_max_edge_power(struct ar9300_eeprom *eep,
- static void ar9003_hw_set_power_per_rate_table(struct ath_hw *ah,
- 					       struct ath9k_channel *chan,
- 					       u8 *pPwrArray, u16 cfgCtl,
--					       u8 twiceAntennaReduction,
--					       u8 twiceMaxRegulatoryPower,
-+					       u8 antenna_reduction,
- 					       u16 powerLimit)
- {
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ar9300_eeprom *pEepData = &ah->eeprom.ar9300_eep;
- 	u16 twiceMaxEdgePower = MAX_RATE_POWER;
--	static const u16 tpScaleReductionTable[5] = {
--		0, 3, 6, 9, MAX_RATE_POWER
--	};
- 	int i;
--	int16_t  twiceLargestAntenna;
--	u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
-+	u16 scaledPower = 0, minCtlPower;
- 	static const u16 ctlModesFor11a[] = {
- 		CTL_11A, CTL_5GHT20, CTL_11A_EXT, CTL_5GHT40
- 	};
-@@ -4795,28 +4793,7 @@ static void ar9003_hw_set_power_per_rate_table(struct ath_hw *ah,
- 	bool is2ghz = IS_CHAN_2GHZ(chan);
- 
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
--
--	/* Compute TxPower reduction due to Antenna Gain */
--	if (is2ghz)
--		twiceLargestAntenna = pEepData->modalHeader2G.antennaGain;
--	else
--		twiceLargestAntenna = pEepData->modalHeader5G.antennaGain;
--
--	twiceLargestAntenna = (int16_t)min((twiceAntennaReduction) -
--				twiceLargestAntenna, 0);
--
--	/*
--	 * scaledPower is the minimum of the user input power level
--	 * and the regulatory allowed power level
--	 */
--	maxRegAllowedPower = twiceMaxRegulatoryPower + twiceLargestAntenna;
--
--	if (regulatory->tp_scale != ATH9K_TP_SCALE_MAX) {
--		maxRegAllowedPower -=
--			(tpScaleReductionTable[(regulatory->tp_scale)] * 2);
--	}
--
--	scaledPower = min(powerLimit, maxRegAllowedPower);
-+	scaledPower = powerLimit - antenna_reduction;
- 
- 	/*
- 	 * Reduce scaled Power by number of chains active to get
-@@ -5003,7 +4980,6 @@ static inline u8 mcsidx_to_tgtpwridx(unsigned int mcs_idx, u8 base_pwridx)
- static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
- 					struct ath9k_channel *chan, u16 cfgCtl,
- 					u8 twiceAntennaReduction,
--					u8 twiceMaxRegulatoryPower,
- 					u8 powerLimit, bool test)
- {
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
-@@ -5056,7 +5032,6 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
- 	ar9003_hw_set_power_per_rate_table(ah, chan,
- 					   targetPowerValT2, cfgCtl,
- 					   twiceAntennaReduction,
--					   twiceMaxRegulatoryPower,
- 					   powerLimit);
- 
- 	if (ah->eep_ops->get_eeprom(ah, EEP_PAPRD)) {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 609acb2..a1a08b3 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -19,7 +19,6 @@
- 
- void ar9003_paprd_enable(struct ath_hw *ah, bool val)
- {
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ath9k_channel *chan = ah->curchan;
- 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
- 
-@@ -54,13 +53,7 @@ void ar9003_paprd_enable(struct ath_hw *ah, bool val)
- 
- 	if (val) {
- 		ah->paprd_table_write_done = true;
--
--		ah->eep_ops->set_txpower(ah, chan,
--				ath9k_regd_get_ctl(regulatory, chan),
--				chan->chan->max_antenna_gain * 2,
--				chan->chan->max_power * 2,
--				min((u32) MAX_RATE_POWER,
--				(u32) regulatory->power_limit), false);
-+		ath9k_hw_apply_txpower(ah, chan);
- 	}
- 
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_CTRL0_B0,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 7db6e86..779f407 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -631,9 +631,7 @@ static void ar9003_hw_prog_ini(struct ath_hw *ah,
- static int ar9003_hw_process_ini(struct ath_hw *ah,
- 				 struct ath9k_channel *chan)
- {
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	unsigned int regWrites = 0, i;
--	struct ieee80211_channel *channel = chan->chan;
- 	u32 modesIndex;
- 
- 	switch (chan->chanmode) {
-@@ -693,14 +691,7 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 	ar9003_hw_override_ini(ah);
- 	ar9003_hw_set_channel_regs(ah, chan);
- 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
--
--	/* Set TX power */
--	ah->eep_ops->set_txpower(ah, chan,
--				 ath9k_regd_get_ctl(regulatory, chan),
--				 channel->max_antenna_gain * 2,
--				 channel->max_power * 2,
--				 min((u32) MAX_RATE_POWER,
--				 (u32) regulatory->power_limit), false);
-+	ath9k_hw_apply_txpower(ah, chan);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index dc705a2..905f1b3 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -161,10 +161,12 @@ EXPORT_SYMBOL(ath9k_cmn_count_streams);
- void ath9k_cmn_update_txpow(struct ath_hw *ah, u16 cur_txpow,
- 			    u16 new_txpow, u16 *txpower)
- {
--	if (cur_txpow != new_txpow) {
-+	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
-+
-+	if (reg->power_limit != new_txpow) {
- 		ath9k_hw_set_txpowerlimit(ah, new_txpow, false);
- 		/* read back in case value is clamped */
--		*txpower = ath9k_hw_regulatory(ah)->power_limit;
-+		*txpower = reg->max_power_level;
- 	}
- }
- EXPORT_SYMBOL(ath9k_cmn_update_txpow);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index a3c7d0c2..085d3ba 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -253,7 +253,9 @@ enum eeprom_param {
- 	EEP_PAPRD,
- 	EEP_MODAL_VER,
- 	EEP_ANT_DIV_CTL1,
--	EEP_CHAIN_MASK_REDUCE
-+	EEP_CHAIN_MASK_REDUCE,
-+	EEP_ANTENNA_GAIN_2G,
-+	EEP_ANTENNA_GAIN_5G
- };
- 
- enum ar5416_rates {
-@@ -657,8 +659,7 @@ struct eeprom_ops {
- 	void (*set_addac)(struct ath_hw *hw, struct ath9k_channel *chan);
- 	void (*set_txpower)(struct ath_hw *hw, struct ath9k_channel *chan,
- 			   u16 cfgCtl, u8 twiceAntennaReduction,
--			   u8 twiceMaxRegulatoryPower, u8 powerLimit,
--			   bool test);
-+			   u8 powerLimit, bool test);
- 	u16 (*get_spur_channel)(struct ath_hw *ah, u16 i, bool is2GHz);
- };
- 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 303560e..ab6811d 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -350,6 +350,8 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
- 		return pModal->antdiv_ctl1;
- 	case EEP_TXGAIN_TYPE:
- 		return pBase->txGainType;
-+	case EEP_ANTENNA_GAIN_2G:
-+		return pModal->antennaGainCh[0];
- 	default:
- 		return 0;
- 	}
-@@ -462,8 +464,7 @@ static void ath9k_hw_set_4k_power_per_rate_table(struct ath_hw *ah,
- 						 struct ath9k_channel *chan,
- 						 int16_t *ratesArray,
- 						 u16 cfgCtl,
--						 u16 AntennaReduction,
--						 u16 twiceMaxRegulatoryPower,
-+						 u16 antenna_reduction,
- 						 u16 powerLimit)
- {
- #define CMP_TEST_GRP \
-@@ -472,20 +473,16 @@ static void ath9k_hw_set_4k_power_per_rate_table(struct ath_hw *ah,
- 	|| (((cfgCtl & ~CTL_MODE_M) | (pCtlMode[ctlMode] & CTL_MODE_M)) == \
- 	    ((pEepData->ctlIndex[i] & CTL_MODE_M) | SD_NO_CTL))
- 
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	int i;
--	int16_t twiceLargestAntenna;
- 	u16 twiceMinEdgePower;
- 	u16 twiceMaxEdgePower = MAX_RATE_POWER;
--	u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
-+	u16 scaledPower = 0, minCtlPower;
- 	u16 numCtlModes;
- 	const u16 *pCtlMode;
- 	u16 ctlMode, freq;
- 	struct chan_centers centers;
- 	struct cal_ctl_data_4k *rep;
- 	struct ar5416_eeprom_4k *pEepData = &ah->eeprom.map4k;
--	static const u16 tpScaleReductionTable[5] =
--		{ 0, 3, 6, 9, MAX_RATE_POWER };
- 	struct cal_target_power_leg targetPowerOfdm, targetPowerCck = {
- 		0, { 0, 0, 0, 0}
- 	};
-@@ -503,19 +500,7 @@ static void ath9k_hw_set_4k_power_per_rate_table(struct ath_hw *ah,
- 
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
- 
--	twiceLargestAntenna = pEepData->modalHeader.antennaGainCh[0];
--	twiceLargestAntenna = (int16_t)min(AntennaReduction -
--					   twiceLargestAntenna, 0);
--
--	maxRegAllowedPower = twiceMaxRegulatoryPower + twiceLargestAntenna;
--	if (regulatory->tp_scale != ATH9K_TP_SCALE_MAX) {
--		maxRegAllowedPower -=
--			(tpScaleReductionTable[(regulatory->tp_scale)] * 2);
--	}
--
--	scaledPower = min(powerLimit, maxRegAllowedPower);
--	scaledPower = max((u16)0, scaledPower);
--
-+	scaledPower = powerLimit - antenna_reduction;
- 	numCtlModes = ARRAY_SIZE(ctlModesFor11g) - SUB_NUM_CTL_MODES_AT_2G_40;
- 	pCtlMode = ctlModesFor11g;
- 
-@@ -671,7 +656,6 @@ static void ath9k_hw_4k_set_txpower(struct ath_hw *ah,
- 				    struct ath9k_channel *chan,
- 				    u16 cfgCtl,
- 				    u8 twiceAntennaReduction,
--				    u8 twiceMaxRegulatoryPower,
- 				    u8 powerLimit, bool test)
- {
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
-@@ -691,7 +675,6 @@ static void ath9k_hw_4k_set_txpower(struct ath_hw *ah,
- 	ath9k_hw_set_4k_power_per_rate_table(ah, chan,
- 					     &ratesArray[0], cfgCtl,
- 					     twiceAntennaReduction,
--					     twiceMaxRegulatoryPower,
- 					     powerLimit);
- 
- 	ath9k_hw_set_4k_power_cal_table(ah, chan);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index 6698b72..90d771f 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -336,6 +336,9 @@ static u32 ath9k_hw_ar9287_get_eeprom(struct ath_hw *ah,
- 			return pBase->tempSensSlopePalOn;
- 		else
- 			return 0;
-+	case EEP_ANTENNA_GAIN_2G:
-+		return max_t(u8, pModal->antennaGainCh[0],
-+				 pModal->antennaGainCh[1]);
- 	default:
- 		return 0;
- 	}
-@@ -554,8 +557,7 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 						     struct ath9k_channel *chan,
- 						     int16_t *ratesArray,
- 						     u16 cfgCtl,
--						     u16 AntennaReduction,
--						     u16 twiceMaxRegulatoryPower,
-+						     u16 antenna_reduction,
- 						     u16 powerLimit)
- {
- #define CMP_CTL \
-@@ -569,12 +571,8 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6
- #define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10
- 
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	u16 twiceMaxEdgePower = MAX_RATE_POWER;
--	static const u16 tpScaleReductionTable[5] =
--		{ 0, 3, 6, 9, MAX_RATE_POWER };
- 	int i;
--	int16_t twiceLargestAntenna;
- 	struct cal_ctl_data_ar9287 *rep;
- 	struct cal_target_power_leg targetPowerOfdm = {0, {0, 0, 0, 0} },
- 				    targetPowerCck = {0, {0, 0, 0, 0} };
-@@ -582,7 +580,7 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 				    targetPowerCckExt = {0, {0, 0, 0, 0} };
- 	struct cal_target_power_ht targetPowerHt20,
- 				    targetPowerHt40 = {0, {0, 0, 0, 0} };
--	u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
-+	u16 scaledPower = 0, minCtlPower;
- 	static const u16 ctlModesFor11g[] = {
- 		CTL_11B, CTL_11G, CTL_2GHT20,
- 		CTL_11B_EXT, CTL_11G_EXT, CTL_2GHT40
-@@ -597,24 +595,7 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 	tx_chainmask = ah->txchainmask;
- 
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
--
--	/* Compute TxPower reduction due to Antenna Gain */
--	twiceLargestAntenna = max(pEepData->modalHeader.antennaGainCh[0],
--				  pEepData->modalHeader.antennaGainCh[1]);
--	twiceLargestAntenna = (int16_t)min((AntennaReduction) -
--					   twiceLargestAntenna, 0);
--
--	/*
--	 * scaledPower is the minimum of the user input power level
--	 * and the regulatory allowed power level.
--	 */
--	maxRegAllowedPower = twiceMaxRegulatoryPower + twiceLargestAntenna;
--
--	if (regulatory->tp_scale != ATH9K_TP_SCALE_MAX)
--		maxRegAllowedPower -=
--			(tpScaleReductionTable[(regulatory->tp_scale)] * 2);
--
--	scaledPower = min(powerLimit, maxRegAllowedPower);
-+	scaledPower = powerLimit - antenna_reduction;
- 
- 	/*
- 	 * Reduce scaled Power by number of chains active
-@@ -815,7 +796,6 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 					struct ath9k_channel *chan, u16 cfgCtl,
- 					u8 twiceAntennaReduction,
--					u8 twiceMaxRegulatoryPower,
- 					u8 powerLimit, bool test)
- {
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
-@@ -834,7 +814,6 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 	ath9k_hw_set_ar9287_power_per_rate_table(ah, chan,
- 						 &ratesArray[0], cfgCtl,
- 						 twiceAntennaReduction,
--						 twiceMaxRegulatoryPower,
- 						 powerLimit);
- 
- 	ath9k_hw_set_ar9287_power_cal_table(ah, chan);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index eda681f..e175e20 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -400,6 +400,7 @@ static u32 ath9k_hw_def_get_eeprom(struct ath_hw *ah,
- 	struct ar5416_eeprom_def *eep = &ah->eeprom.def;
- 	struct modal_eep_header *pModal = eep->modalHeader;
- 	struct base_eep_header *pBase = &eep->baseEepHeader;
-+	int band = 0;
- 
- 	switch (param) {
- 	case EEP_NFTHRESH_5:
-@@ -467,6 +468,14 @@ static u32 ath9k_hw_def_get_eeprom(struct ath_hw *ah,
- 			return pBase->pwr_table_offset;
- 		else
- 			return AR5416_PWR_TABLE_OFFSET_DB;
-+	case EEP_ANTENNA_GAIN_2G:
-+		band = 1;
-+		/* fall through */
-+	case EEP_ANTENNA_GAIN_5G:
-+		return max_t(u8, max_t(u8,
-+			pModal[band].antennaGainCh[0],
-+			pModal[band].antennaGainCh[1]),
-+			pModal[band].antennaGainCh[2]);
- 	default:
- 		return 0;
- 	}
-@@ -986,21 +995,15 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
- 						  struct ath9k_channel *chan,
- 						  int16_t *ratesArray,
- 						  u16 cfgCtl,
--						  u16 AntennaReduction,
--						  u16 twiceMaxRegulatoryPower,
-+						  u16 antenna_reduction,
- 						  u16 powerLimit)
- {
- #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
- #define REDUCE_SCALED_POWER_BY_THREE_CHAIN   9 /* 10*log10(3)*2 */
- 
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ar5416_eeprom_def *pEepData = &ah->eeprom.def;
- 	u16 twiceMaxEdgePower = MAX_RATE_POWER;
--	static const u16 tpScaleReductionTable[5] =
--		{ 0, 3, 6, 9, MAX_RATE_POWER };
--
- 	int i;
--	int16_t twiceLargestAntenna;
- 	struct cal_ctl_data *rep;
- 	struct cal_target_power_leg targetPowerOfdm, targetPowerCck = {
- 		0, { 0, 0, 0, 0}
-@@ -1012,7 +1015,7 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
- 	struct cal_target_power_ht targetPowerHt20, targetPowerHt40 = {
- 		0, {0, 0, 0, 0}
- 	};
--	u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
-+	u16 scaledPower = 0, minCtlPower;
- 	static const u16 ctlModesFor11a[] = {
- 		CTL_11A, CTL_5GHT20, CTL_11A_EXT, CTL_5GHT40
- 	};
-@@ -1031,27 +1034,7 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
- 
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
- 
--	twiceLargestAntenna = max(
--		pEepData->modalHeader
--			[IS_CHAN_2GHZ(chan)].antennaGainCh[0],
--		pEepData->modalHeader
--			[IS_CHAN_2GHZ(chan)].antennaGainCh[1]);
--
--	twiceLargestAntenna = max((u8)twiceLargestAntenna,
--				  pEepData->modalHeader
--				  [IS_CHAN_2GHZ(chan)].antennaGainCh[2]);
--
--	twiceLargestAntenna = (int16_t)min(AntennaReduction -
--					   twiceLargestAntenna, 0);
--
--	maxRegAllowedPower = twiceMaxRegulatoryPower + twiceLargestAntenna;
--
--	if (regulatory->tp_scale != ATH9K_TP_SCALE_MAX) {
--		maxRegAllowedPower -=
--			(tpScaleReductionTable[(regulatory->tp_scale)] * 2);
--	}
--
--	scaledPower = min(powerLimit, maxRegAllowedPower);
-+	scaledPower = powerLimit - antenna_reduction;
- 
- 	switch (ar5416_get_ntxchains(tx_chainmask)) {
- 	case 1:
-@@ -1256,7 +1239,6 @@ static void ath9k_hw_def_set_txpower(struct ath_hw *ah,
- 				    struct ath9k_channel *chan,
- 				    u16 cfgCtl,
- 				    u8 twiceAntennaReduction,
--				    u8 twiceMaxRegulatoryPower,
- 				    u8 powerLimit, bool test)
- {
- #define RT_AR_DELTA(x) (ratesArray[x] - cck_ofdm_delta)
-@@ -1278,7 +1260,6 @@ static void ath9k_hw_def_set_txpower(struct ath_hw *ah,
- 	ath9k_hw_set_def_power_per_rate_table(ah, chan,
- 					       &ratesArray[0], cfgCtl,
- 					       twiceAntennaReduction,
--					       twiceMaxRegulatoryPower,
- 					       powerLimit);
- 
- 	ath9k_hw_set_def_power_cal_table(ah, chan);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index f2de7ee..3255b5b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -428,7 +428,6 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
- 
- 	regulatory->country_code = CTRY_DEFAULT;
- 	regulatory->power_limit = MAX_RATE_POWER;
--	regulatory->tp_scale = ATH9K_TP_SCALE_MAX;
- 
- 	ah->hw_version.magic = AR5416_MAGIC;
- 	ah->hw_version.subvendorid = 0;
-@@ -1384,9 +1383,7 @@ static bool ath9k_hw_chip_reset(struct ath_hw *ah,
- static bool ath9k_hw_channel_change(struct ath_hw *ah,
- 				    struct ath9k_channel *chan)
- {
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ath_common *common = ath9k_hw_common(ah);
--	struct ieee80211_channel *channel = chan->chan;
- 	u32 qnum;
- 	int r;
- 
-@@ -1411,14 +1408,7 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
- 		return false;
- 	}
- 	ath9k_hw_set_clockrate(ah);
--
--	ah->eep_ops->set_txpower(ah, chan,
--			     ath9k_regd_get_ctl(regulatory, chan),
--			     channel->max_antenna_gain * 2,
--			     channel->max_power * 2,
--			     min((u32) MAX_RATE_POWER,
--			     (u32) regulatory->power_limit), false);
--
-+	ath9k_hw_apply_txpower(ah, chan);
- 	ath9k_hw_rfbus_done(ah);
- 
- 	if (IS_CHAN_OFDM(chan) || IS_CHAN_HT(chan))
-@@ -2489,23 +2479,56 @@ bool ath9k_hw_disable(struct ath_hw *ah)
- }
- EXPORT_SYMBOL(ath9k_hw_disable);
- 
-+static int get_antenna_gain(struct ath_hw *ah, struct ath9k_channel *chan)
-+{
-+	enum eeprom_param gain_param;
-+
-+	if (IS_CHAN_2GHZ(chan))
-+		gain_param = EEP_ANTENNA_GAIN_2G;
-+	else
-+		gain_param = EEP_ANTENNA_GAIN_5G;
-+
-+	return ah->eep_ops->get_eeprom(ah, gain_param);
-+}
-+
-+void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan)
-+{
-+	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
-+	struct ieee80211_channel *channel;
-+	int chan_pwr, new_pwr, max_gain;
-+	int ant_gain, ant_reduction = 0;
-+
-+	if (!chan)
-+		return;
-+
-+	channel = chan->chan;
-+	chan_pwr = min_t(int, channel->max_power * 2, MAX_RATE_POWER);
-+	new_pwr = min_t(int, chan_pwr, reg->power_limit);
-+	max_gain = new_pwr - chan_pwr + channel->max_antenna_gain * 2;
-+
-+	ant_gain = get_antenna_gain(ah, chan);
-+	if (ant_gain > max_gain)
-+		ant_reduction = ant_gain - max_gain;
-+
-+	ah->eep_ops->set_txpower(ah, chan,
-+				 ath9k_regd_get_ctl(reg, chan),
-+				 ant_reduction, new_pwr, false);
-+}
-+
- void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit, bool test)
- {
--	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
-+	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
- 	struct ath9k_channel *chan = ah->curchan;
- 	struct ieee80211_channel *channel = chan->chan;
--	int reg_pwr = min_t(int, MAX_RATE_POWER, limit);
--	int chan_pwr = channel->max_power * 2;
- 
-+	reg->power_limit = min_t(int, limit * 2, MAX_RATE_POWER);
- 	if (test)
--		reg_pwr = chan_pwr = MAX_RATE_POWER;
-+		channel->max_power = MAX_RATE_POWER / 2;
- 
--	regulatory->power_limit = reg_pwr;
-+	ath9k_hw_apply_txpower(ah, chan);
- 
--	ah->eep_ops->set_txpower(ah, chan,
--				 ath9k_regd_get_ctl(regulatory, chan),
--				 channel->max_antenna_gain * 2,
--				 chan_pwr, reg_pwr, test);
-+	if (test)
-+		channel->max_power = DIV_ROUND_UP(reg->max_power_level, 2);
- }
- EXPORT_SYMBOL(ath9k_hw_set_txpowerlimit);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 24889f7..684c33c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -390,14 +390,6 @@ enum ath9k_power_mode {
- 	ATH9K_PM_UNDEFINED
- };
- 
--enum ath9k_tp_scale {
--	ATH9K_TP_SCALE_MAX = 0,
--	ATH9K_TP_SCALE_50,
--	ATH9K_TP_SCALE_25,
--	ATH9K_TP_SCALE_12,
--	ATH9K_TP_SCALE_MIN
--};
--
- enum ser_reg_mode {
- 	SER_REG_MODE_OFF = 0,
- 	SER_REG_MODE_ON = 1,
-@@ -968,6 +960,7 @@ void ath9k_hw_htc_resetinit(struct ath_hw *ah);
- /* PHY */
- void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
- 				   u32 *coef_mantissa, u32 *coef_exponent);
-+void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan);
- 
- /*
-  * Code Specific to AR5008, AR9001 or AR9002,
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 39514de..af1b325 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -626,7 +626,6 @@ static void ath9k_init_band_txpower(struct ath_softc *sc, int band)
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_channel *chan;
- 	struct ath_hw *ah = sc->sc_ah;
--	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
- 	int i;
- 
- 	sband = &sc->sbands[band];
-@@ -635,7 +634,6 @@ static void ath9k_init_band_txpower(struct ath_softc *sc, int band)
- 		ah->curchan = &ah->channels[chan->hw_value];
- 		ath9k_cmn_update_ichannel(ah->curchan, chan, NL80211_CHAN_HT20);
- 		ath9k_hw_set_txpowerlimit(ah, MAX_RATE_POWER, true);
--		chan->max_power = reg->max_power_level / 2;
- 	}
- }
- 
+-#define DRV_NAME        "iwlagn"
++#define DRV_NAME        "iwlwifi"
+ #define IWLWIFI_VERSION "in-tree:"
+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2011 Intel Corporation"
+ #define DRV_AUTHOR     "<ilw@linux.intel.com>"
 -- 
-1.7.3.2
+1.7.0.4
 
