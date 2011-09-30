@@ -1,199 +1,499 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53593 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750735Ab1IBXkj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Sep 2011 19:40:39 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	rmanohar@qca.qualcomm.com, shafi.wireless@gmail.com,
-	vthiagar@qca.qualcomm.com
-Subject: [PATCH v13 3/5] ath9k: always call ath_reset from workqueue context
-Date: Sat,  3 Sep 2011 01:40:25 +0200
-Message-Id: <1315006827-81443-3-git-send-email-nbd@openwrt.org> (sfid-20110903_014042_652746_0E69E4DF)
-In-Reply-To: <1315006827-81443-2-git-send-email-nbd@openwrt.org>
-References: <1315006827-81443-1-git-send-email-nbd@openwrt.org>
- <1315006827-81443-2-git-send-email-nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41951 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755046Ab1I3TPk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Sep 2011 15:15:40 -0400
+Date: Fri, 30 Sep 2011 15:11:31 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next 2011-09-30
+Message-ID: <20110930191131.GC2526@tuxdriver.com> (sfid-20110930_211551_821127_8D33FA53)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes it much easier to add further rework to avoid race conditions
-between reset and other work items.
-Move other functions to make ath_reset static.
+Dave,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Here is yet another big package of wireless updates for 3.2.  Highlights
+include a bluetooth pull, a wl12xx pull, and a pull of the wireless tree
+to fix some merge issues.  Also included is the usual big sets of
+updates to ath9k, iwlagn, b43, and others.  Plus, the NFC subsystem grew
+NCI support.
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h  |    3 ++-
- drivers/net/wireless/ath/ath9k/beacon.c |    4 +---
- drivers/net/wireless/ath/ath9k/init.c   |    1 +
- drivers/net/wireless/ath/ath9k/main.c   |   17 +++++++++++++----
- drivers/net/wireless/ath/ath9k/xmit.c   |   14 +++++++++-----
- 5 files changed, 26 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 5d9a9aa..b2992d4 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -425,6 +425,7 @@ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status);
- 
- #define ATH_PAPRD_TIMEOUT	100 /* msecs */
- 
-+void ath_reset_work(struct work_struct *work);
- void ath_hw_check(struct work_struct *work);
- void ath_hw_pll_work(struct work_struct *work);
- void ath_paprd_calibrate(struct work_struct *work);
-@@ -604,6 +605,7 @@ struct ath_softc {
- 	struct mutex mutex;
- 	struct work_struct paprd_work;
- 	struct work_struct hw_check_work;
-+	struct work_struct hw_reset_work;
- 	struct completion paprd_complete;
- 
- 	unsigned int hw_busy_count;
-@@ -650,7 +652,6 @@ struct ath_softc {
- };
- 
- void ath9k_tasklet(unsigned long data);
--int ath_reset(struct ath_softc *sc, bool retry_tx);
- int ath_cabq_update(struct ath_softc *);
- 
- static inline void ath_read_cachesize(struct ath_common *common, int *csz)
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 0c757c9..22e8e25 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -386,9 +386,7 @@ void ath_beacon_tasklet(unsigned long data)
- 			ath_dbg(common, ATH_DBG_BSTUCK,
- 				"beacon is officially stuck\n");
- 			sc->sc_flags |= SC_OP_TSF_RESET;
--			spin_lock(&sc->sc_pcu_lock);
--			ath_reset(sc, true);
--			spin_unlock(&sc->sc_pcu_lock);
-+			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
- 		}
- 
- 		return;
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 50da642..be302fb 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -777,6 +777,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 			goto error_world;
- 	}
- 
-+	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
- 	INIT_WORK(&sc->hw_check_work, ath_hw_check);
- 	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
- 	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 9bb222c..9afcc66 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -236,6 +236,7 @@ static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	del_timer_sync(&common->ani.timer);
- 	cancel_work_sync(&sc->paprd_work);
- 	cancel_work_sync(&sc->hw_check_work);
-+	cancel_work_sync(&sc->hw_reset_work);
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
- 	cancel_delayed_work_sync(&sc->hw_pll_work);
- 
-@@ -608,9 +609,7 @@ void ath9k_tasklet(unsigned long data)
- 
- 	if ((status & ATH9K_INT_FATAL) ||
- 	    (status & ATH9K_INT_BB_WATCHDOG)) {
--		spin_lock(&sc->sc_pcu_lock);
--		ath_reset(sc, true);
--		spin_unlock(&sc->sc_pcu_lock);
-+		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
- 		return;
- 	}
- 
-@@ -901,7 +900,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	ath9k_ps_restore(sc);
- }
- 
--int ath_reset(struct ath_softc *sc, bool retry_tx)
-+static int ath_reset(struct ath_softc *sc, bool retry_tx)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -969,6 +968,15 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	return r;
- }
- 
-+void ath_reset_work(struct work_struct *work)
-+{
-+	struct ath_softc *sc = container_of(work, struct ath_softc, hw_reset_work);
-+
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+	ath_reset(sc, true);
-+	spin_unlock_bh(&sc->sc_pcu_lock);
-+}
-+
- void ath_hw_check(struct work_struct *work)
- {
- 	struct ath_softc *sc = container_of(work, struct ath_softc, hw_check_work);
-@@ -1230,6 +1238,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	cancel_delayed_work_sync(&sc->hw_pll_work);
- 	cancel_work_sync(&sc->paprd_work);
- 	cancel_work_sync(&sc->hw_check_work);
-+	cancel_work_sync(&sc->hw_reset_work);
- 
- 	if (sc->sc_flags & SC_OP_INVALID) {
- 		ath_dbg(common, ATH_DBG_ANY, "Device not present\n");
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 49b93c2..782b0c9 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -582,7 +582,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	rcu_read_unlock();
- 
- 	if (needreset)
--		ath_reset(sc, false);
-+		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
- }
- 
- static bool ath_lookup_legacy(struct ath_buf *bf)
-@@ -1332,7 +1332,7 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 	struct ath_atx_ac *ac, *ac_tmp, *last_ac;
- 	struct ath_atx_tid *tid, *last_tid;
- 
--	if (list_empty(&txq->axq_acq) ||
-+	if (work_pending(&sc->hw_reset_work) || list_empty(&txq->axq_acq) ||
- 	    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
- 		return;
- 
-@@ -2147,6 +2147,9 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 
- 	spin_lock_bh(&txq->axq_lock);
- 	for (;;) {
-+		if (work_pending(&sc->hw_reset_work))
-+			break;
-+
- 		if (list_empty(&txq->axq_q)) {
- 			txq->axq_link = NULL;
- 			if (sc->sc_flags & SC_OP_TXAGGR)
-@@ -2234,9 +2237,7 @@ static void ath_tx_complete_poll_work(struct work_struct *work)
- 	if (needreset) {
- 		ath_dbg(ath9k_hw_common(sc->sc_ah), ATH_DBG_RESET,
- 			"tx hung, resetting the chip\n");
--		spin_lock_bh(&sc->sc_pcu_lock);
--		ath_reset(sc, true);
--		spin_unlock_bh(&sc->sc_pcu_lock);
-+		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
- 	}
- 
- 	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work,
-@@ -2269,6 +2270,9 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 	int status;
- 
- 	for (;;) {
-+		if (work_pending(&sc->hw_reset_work))
-+			break;
-+
- 		status = ath9k_hw_txprocdesc(ah, NULL, (void *)&ts);
- 		if (status == -EINPROGRESS)
- 			break;
+The following changes since commit 56fd49e399ce1d82200fad5b8924d4e35a587809:
+
+  bna: Driver Version changed to 3.0.2.2 (2011-09-29 19:36:36 -0400)
+
+are available in the git repository at:
+  git://git.infradead.org/users/linville/wireless-next.git for-davem
+
+Alexander Simon (1):
+      mac80211: fix indentation
+
+Amit Beka (1):
+      iwlagn: remove duplicate list init
+
+Amitkumar Karwar (4):
+      mwifiex: fix 5GHz association issue
+      mwifiex: update bss band information
+      mwifiex: pass correct band parameter to ieee80211_channel_to_frequency()
+      mwifiex: reset skb length before inserting to free queue
+
+Anderson Briglia (1):
+      Bluetooth: Fix wrong memcpy size on LE start encryption
+
+Andre Guedes (2):
+      Bluetooth: Reduce critical region.
+      Bluetooth: Check 'dev_class' in mgmt_device_found()
+
+Antti Julku (2):
+      Bluetooth: Add mgmt command for fast connectable mode
+      Bluetooth: Add mgmt events for blacklisting
+
+Arik Nemtsov (12):
+      wl12xx: don't queue a new dummy packet if one is already pending
+      wl12xx: don't indicate up PS-filtered dummy packets
+      wl12xx: AP mode - don't regulate FW blocks for non-active STAs
+      wl12xx: support up to 8 stations in AP-mode
+      wl12xx: don't regulate links when a single STA is connected
+      wl12xx: AP mode - enable the BA constraint event from the FW
+      wl12xx: AP mode - clean BA and queue state in tx_reset
+      wl12xx: set mac80211 flags for A-MPDU aggregation support
+      wl12xx: AP mode - support hidden SSID
+      wl12xx: correct fw_status structure for 8 sta support in AP-mode
+      wl12xx: report the stop_ba event to all STAs in AP-mode
+      mac80211: treat the WME sta flag as a bit
+
+Dan Carpenter (4):
+      mwifiex: add a kfree() to an error path
+      mwifiex: remove unneeded NULL check
+      NFC: use after free on error
+      wl3501_cs: min_t() cast truncates high bits
+
+Daniel Drake (1):
+      libertas: scan behaviour consistency improvements
+
+David Herrmann (1):
+      Bluetooth: hidp: Add support for NO_INIT_REPORTS quirk
+
+Don Fry (1):
+      iwlagn: replace beacon_time_fsf_bits variable with #define
+
+Eliad Peller (20):
+      wl12xx: print acx id
+      wl12xx: print the seq_num of rx packet
+      wl12xx: add module_param to trigger BUG() on recovery
+      wl12xx: add beacon_filtering debugfs file
+      wl12xx: don't disconnect on recovery
+      wl12xx: don't use WL1271_SCAN_OPT_PRIORITY_HIGH flag
+      wl12xx: check for ROC on scan_complete
+      wl12xx: add config_hangover command
+      wl12xx: use kstrtoul_from_user
+      wl12xx: declare support for WIPHY_FLAG_AP_UAPSD
+      wl12xx: support p2p interfaces
+      cfg80211: add cfg80211_find_vendor_ie() function
+      wl12xx: remove TIM ie from probe response
+      wl12xx: remove P2P ie from probe response
+      wl12xx: send all pending packets on channel change
+      wl12xx: Use dev_hlid for auth and assoc req
+      wl12xx: implement set_bitrate_mask callback
+      mac80211: add ieee80211_vif param to tsf functions
+      cfg80211/mac80211: add netdev param to set_txq_params()
+      mac80211: save tx params per sdata
+
+Emmanuel Grumbach (17):
+      iwlagn: warn about buggy fw that doesn't set SEQ_RX_FRAME
+      iwlagn: unmap cmd queue's tfds as BIDI
+      iwlagn: free the Tx cmd when a non empty Tx queue is freed
+      iwlagn: move iwl_stop / wake_queue to the upper layer
+      iwlagn: use enum iwl_rxon_context_id instead of u8
+      iwlagn: document the bus layer API
+      iwlagn: add documentation to the transport layer
+      iwlagn: provide data after WARN_ON
+      iwlagn: remove the callback in host commands
+      iwlagn: simplify the iwl_device_cmd layout
+      iwlagn: remove uneeded declaration
+      iwlagn: pending frames musn't be incremented if agg is on
+      iwlagn: remove warning in iwl_rx_handle
+      iwlagn: sparse warning priv->temperature is signed
+      iwlagn: set the sequence control from the transport layer
+      iwlagn: update rate scaling with BA notifications
+      iwlagn: use kcalloc when possible for array allocation
+
+Felix Fietkau (7):
+      ath9k: fix setting the IEEE80211_TX_CTL_CLEAR_PS_FILT flag
+      ath9k: sync the dma buffer after changing the retry flag
+      ath9k_hw: clean up hardware revision checks
+      ath9k_hw: remove dead code in the eeprom ops
+      ath9k_hw: fix setting the hardware diversity flag
+      ath9k_hw: remove ar9100_hw_compute_pll_control
+      ath9k: fix a regression in ath9k_ps_restore
+
+Fry, Donald H (2):
+      iwlagn: fix modinfo display for 135 ucode.
+      iwlagn: simplify chain_noise_num_beacons indirection
+
+Ilan Elias (7):
+      NFC: Add dev_up and dev_down control operations
+      NFC: move nfc.h from include/net to include/net/nfc
+      NFC: basic NCI protocol implementation
+      NFC: driver for TI shared transport
+      NFC: improve readability of an 'if' in nci core.c
+      NFC: implicitly deactivate in nci_start_poll
+      NFC: protect nci_data_exchange transactions
+
+Joe Perches (1):
+      iwlagn: Convert kzalloc to kcalloc
+
+Johannes Berg (22):
+      iwlagn: move PCI-E transport files
+      iwlagn: generically provide iwl_trans_send_cmd_pdu
+      iwlagn: Makefile whitespace cleanup
+      iwlagn: clean up PM code
+      iwlagn: rename iwl-pci.h to iwl-cfg.h
+      iwlagn: remove unused function declarations
+      iwlagn: move sysfs files to debugfs
+      iwlagn: remove drvdata support from bus layer
+      iwlagn: do not use interruptible waits
+      cfg80211: validate IBSS BSSID
+      mac80211: fix AP/VLAN PS buffer race
+      iwlagn: move scan code to scan file
+      iwlagn: remove common station priv
+      iwlagn: split remain-on-channel
+      iwlagn: fix dangling scan request
+      iwlagn: fix dangling scan request
+      iwlagn: fix slot programming
+      iwlagn: remove Kelvin support
+      iwlagn: make iwl_scan_cancel_timeout void
+      iwlagn: refactor scan complete
+      iwlagn: move iwl_process_scan_complete up
+      iwlagn: fix scan complete processing
+
+John W. Linville (7):
+      Merge branch 'for-linville' of git://github.com/lucacoelho/wl12xx
+      Revert "ath9k: do not insert padding into tx buffers on AR9380+"
+      Merge branch 'master' of git://git.infradead.org/users/linville/wireless
+      Merge branch 'master' of git://github.com/padovan/bluetooth-next
+      Merge branch 'for-linville' of git://github.com/lucacoelho/wl12xx
+      Merge branch 'master' of git://git.infradead.org/users/linville/wireless
+      Merge branch 'master' of git://git.infradead.org/users/linville/wireless-next into for-davem
+
+Jouni Malinen (4):
+      cfg80211/nl80211: Add PMKSA caching candidate event
+      cfg80211: Fix validation of AKM suites
+      cfg80211: Remove strict validation of AKM suites
+      cfg80211: Validate cipher suite against supported ciphers
+
+Larry Finger (5):
+      rtlwifi: rtl8192ce: Change modinfo messages
+      rtlwifi: rtl8192se: Change modinfo messages
+      rtlwifi: rtl8192de: Change modinfo messages
+      rtlwifi: Combine instances of RTL_HAL_IS_CCK_RATE macros.
+      rtlwifi: rtl8192cu: Fix unitialized struct
+
+Luciano Coelho (5):
+      wl12xx: remove deprecated CONFIG_WL12XX_HT flag
+      wl12xx: add support for sched_scan filters
+      wl12xx: increase number of allowed SSIDs in sched_scan
+      wl12xx: ignore sched scan match sets without SSID
+      wl12xx: fix forced passive scans
+
+Luiz Augusto von Dentz (2):
+      Bluetooth: make use of connection number to optimize the scheduler
+      Bluetooth: mark l2cap_create_iframe_pdu as static
+
+Mohammed Shafi Shajakhan (3):
+      rfkill: properly assign a boolean type
+      ath9k: Fix a dma warning/memory leak
+      ath9k: add Block ACK bitmap in sample debug
+
+Peter Hurley (1):
+      Bluetooth: Add LE link type for debugfs output
+
+Rafał Miłecki (10):
+      bcma: cc: export more control functions
+      b43: LCN-PHY: tweaks for channel switching
+      b43: LCN-PHY: set TX filters
+      b43: LCN-PHY: implement SPUR avoidance mode
+      b43: LCN-PHY: init TX power control
+      b43: LCN-PHY: add more init tweaks
+      b43: LCN-PHY: finish sense setup
+      b43: add missing MMIO defines
+      b43: update dummy transmission
+      b43: LCN-PHY: minor clean ups
+
+Rajkumar Manoharan (9):
+      ath9k_hw: Fix magnitude/phase coeff correction
+      ath9k: load noise floor from history after the full chip reset
+      ath9k: Reset caldata on radio enable
+      mac80211: Fix regression on queue stop during 2040 bss change
+      wireless: Do not allow disabled channel in scan request
+      ath9k: Store noise immunity values across scanning
+      ath9k_hw: Fix Rx DMA stuck for AR9003 chips
+      nl80211/cfg80211: Add support to disable CCK rate for management frame
+      mac80211: Send the management frame at requested rate
+
+Randy Dunlap (1):
+      nfc: NFC_WILINK depends on NFC_NCI
+
+Shahar Levi (2):
+      wl12xx: fix sdio_test module functionality
+      wl12xx: Include OFDM rates in IBSS mode
+
+Stanislaw Gruszka (2):
+      iwlegacy: fix command queue timeout
+      iwlegacy: do not use interruptible waits
+
+Thomas Pedersen (1):
+      mac80211: notify peer when shutting down peer link
+
+Vinicius Costa Gomes (15):
+      Bluetooth: Reset the security timer when a command is queued
+      Bluetooth: Add a flag to indicate that SMP is going on
+      Bluetooth: Use the same timeouts for both ACL and LE links
+      Bluetooth: Add support for pairing via mgmt over LE
+      Bluetooth: Add support for running SMP without a socket
+      Bluetooth: Add link_type information to the mgmt Connected event
+      Bluetooth: Move SMP fields to a separate structure
+      Bluetooth: Move SMP crypto functions to a workqueue
+      Bluetooth: Require authentication if MITM protection is requested
+      Bluetooth: Use the MEDIUM security level for pairings
+      Bluetooth: Fix sending wrong authentication requirements
+      Bluetooth: Use the LTK after receiving a LE Security Request
+      Revert "Bluetooth: Add support for communicating keys with userspace"
+      Bluetooth: Fix not setting a pending security level
+      Bluetooth: Remove support for other SMP keys than the LTK
+
+Wey-Yi Guy (8):
+      iwlagn: New SKU for 6005 SFF
+      iwlagn: merge eeprom access into single file
+      iwlagn: add support for v2 of temperature offset calibration
+      iwlagn: use iwl_eeprom_calib_hdr structure
+      iwlagn: fix stack corruption for temperature offset v2
+      iwlagn: signedness bug
+      MAINTAINERS: update iwlwifi
+      iwlagn: add debugging to show probe related info in scan notification
+
+ MAINTAINERS                                        |    4 +-
+ drivers/bcma/driver_chipcommon_pmu.c               |   38 +-
+ drivers/net/wireless/adm8211.c                     |    3 +-
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c      |    6 +-
+ drivers/net/wireless/ath/ath9k/ani.c               |   10 +-
+ drivers/net/wireless/ath/ath9k/ani.h               |    1 +
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c        |   32 +-
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c      |    1 +
+ .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c      |    4 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c        |   14 +-
+ drivers/net/wireless/ath/ath9k/debug.c             |   24 +-
+ drivers/net/wireless/ath/ath9k/debug.h             |    2 +
+ drivers/net/wireless/ath/ath9k/eeprom.c            |    7 +-
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c         |  108 +-
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c       |   12 +-
+ drivers/net/wireless/ath/ath9k/eeprom_def.c        |   46 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c      |    9 +-
+ drivers/net/wireless/ath/ath9k/hw-ops.h            |    5 -
+ drivers/net/wireless/ath/ath9k/hw.h                |    1 -
+ drivers/net/wireless/ath/ath9k/init.c              |    1 -
+ drivers/net/wireless/ath/ath9k/mac.c               |    2 +-
+ drivers/net/wireless/ath/ath9k/mac.h               |    4 -
+ drivers/net/wireless/ath/ath9k/main.c              |   11 +-
+ drivers/net/wireless/ath/ath9k/recv.c              |   10 +-
+ drivers/net/wireless/ath/ath9k/reg.h               |    4 -
+ drivers/net/wireless/ath/ath9k/xmit.c              |   60 +-
+ drivers/net/wireless/ath/carl9170/main.c           |    3 +-
+ drivers/net/wireless/b43/b43.h                     |   40 +-
+ drivers/net/wireless/b43/main.c                    |   54 +-
+ drivers/net/wireless/b43/phy_lcn.c                 |  428 ++++-
+ drivers/net/wireless/b43/phy_lcn.h                 |    3 +
+ drivers/net/wireless/b43/tables_phy_lcn.c          |   25 +-
+ drivers/net/wireless/iwlegacy/iwl-core.c           |    7 +-
+ drivers/net/wireless/iwlegacy/iwl-core.h           |    3 +-
+ drivers/net/wireless/iwlegacy/iwl-hcmd.c           |    2 +-
+ drivers/net/wireless/iwlegacy/iwl-tx.c             |    4 +-
+ drivers/net/wireless/iwlegacy/iwl3945-base.c       |    8 +-
+ drivers/net/wireless/iwlegacy/iwl4965-base.c       |   10 +-
+ drivers/net/wireless/iwlwifi/Makefile              |   23 +-
+ drivers/net/wireless/iwlwifi/iwl-1000.c            |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-2000.c            |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-5000-hw.h         |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c            |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c            |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c       |   21 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c      |  299 ---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c         |  441 +-----
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c          |   16 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c          |   22 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c          |   39 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c       |   63 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c             |  162 +--
+ drivers/net/wireless/iwlwifi/iwl-agn.h             |   19 +-
+ drivers/net/wireless/iwlwifi/iwl-bus.h             |   72 +-
+ .../net/wireless/iwlwifi/{iwl-pci.h => iwl-cfg.h}  |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h        |    8 +
+ drivers/net/wireless/iwlwifi/iwl-core.c            |   59 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h            |   13 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c         |   87 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h             |   19 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c          |  244 +++-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h          |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-led.c             |    1 -
+ drivers/net/wireless/iwlwifi/iwl-pci.c             |   33 +-
+ drivers/net/wireless/iwlwifi/iwl-rx.c              |   97 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c            |  696 ++++++-
+ drivers/net/wireless/iwlwifi/iwl-shared.h          |  146 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.c             |   37 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.h             |    5 +-
+ .../{iwl-trans-int-pcie.h => iwl-trans-pcie-int.h} |   26 +-
+ .../{iwl-trans-rx-pcie.c => iwl-trans-pcie-rx.c}   |   36 +-
+ .../{iwl-trans-tx-pcie.c => iwl-trans-pcie-tx.c}   |   92 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c      | 1989 ++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans.c           | 1926 +-------------------
+ drivers/net/wireless/iwlwifi/iwl-trans.h           |   44 +-
+ drivers/net/wireless/libertas/cfg.c                |   33 +-
+ drivers/net/wireless/libertas/dev.h                |    1 -
+ drivers/net/wireless/mwifiex/cfg80211.c            |    7 +-
+ drivers/net/wireless/mwifiex/cmdevt.c              |    3 +
+ drivers/net/wireless/mwifiex/main.h                |    2 +-
+ drivers/net/wireless/mwifiex/scan.c                |   29 +-
+ drivers/net/wireless/mwifiex/sta_ioctl.c           |   16 +-
+ drivers/net/wireless/rt2x00/rt2400pci.c            |    5 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c            |    3 +-
+ drivers/net/wireless/rt2x00/rt2800lib.c            |    2 +-
+ drivers/net/wireless/rt2x00/rt2800lib.h            |    2 +-
+ drivers/net/wireless/rt2x00/rt61pci.c              |    2 +-
+ drivers/net/wireless/rt2x00/rt73usb.c              |    2 +-
+ drivers/net/wireless/rtl818x/rtl8180/dev.c         |    5 +-
+ drivers/net/wireless/rtl818x/rtl8187/dev.c         |    2 +-
+ drivers/net/wireless/rtlwifi/core.c                |    8 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c        |   12 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.h       |    6 -
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.h       |    6 -
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.c        |   12 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.h       |    6 -
+ drivers/net/wireless/rtlwifi/rtl8192se/def.h       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c        |   14 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |    2 +-
+ drivers/net/wireless/rtlwifi/usb.c                 |    1 +
+ drivers/net/wireless/rtlwifi/wifi.h                |    6 +
+ drivers/net/wireless/wl12xx/Kconfig                |   10 -
+ drivers/net/wireless/wl12xx/Makefile               |    6 +-
+ drivers/net/wireless/wl12xx/acx.c                  |   40 +
+ drivers/net/wireless/wl12xx/acx.h                  |   18 +
+ drivers/net/wireless/wl12xx/cmd.c                  |   60 +-
+ drivers/net/wireless/wl12xx/cmd.h                  |    7 +
+ drivers/net/wireless/wl12xx/conf.h                 |   29 +-
+ drivers/net/wireless/wl12xx/debugfs.c              |   88 +-
+ drivers/net/wireless/wl12xx/event.c                |   39 +-
+ drivers/net/wireless/wl12xx/init.c                 |   22 +-
+ drivers/net/wireless/wl12xx/main.c                 |  300 +++-
+ drivers/net/wireless/wl12xx/ps.c                   |    8 +-
+ drivers/net/wireless/wl12xx/rx.c                   |    9 +-
+ drivers/net/wireless/wl12xx/scan.c                 |  166 ++-
+ drivers/net/wireless/wl12xx/sdio_test.c            |   15 +-
+ drivers/net/wireless/wl12xx/tx.c                   |   60 +-
+ drivers/net/wireless/wl12xx/tx.h                   |    9 +-
+ drivers/net/wireless/wl12xx/wl12xx.h               |   13 +-
+ drivers/net/wireless/wl3501_cs.c                   |    2 +-
+ drivers/net/wireless/zd1211rw/zd_mac.c             |    2 +-
+ drivers/nfc/Kconfig                                |   11 +
+ drivers/nfc/Makefile                               |    1 +
+ drivers/nfc/nfcwilink.c                            |  342 ++++
+ drivers/nfc/pn533.c                                |    4 +-
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c   |   12 +-
+ drivers/staging/winbond/wbusb.c                    |    2 +-
+ include/linux/bcma/bcma_driver_chipcommon.h        |    9 +
+ include/linux/ieee80211.h                          |   10 +
+ include/linux/nfc.h                                |    6 +
+ include/linux/nl80211.h                            |   46 +
+ include/net/bluetooth/hci.h                        |   10 +
+ include/net/bluetooth/hci_core.h                   |   25 +-
+ include/net/bluetooth/l2cap.h                      |    8 +-
+ include/net/bluetooth/mgmt.h                       |   16 +
+ include/net/bluetooth/smp.h                        |   17 +
+ include/net/cfg80211.h                             |   36 +-
+ include/net/mac80211.h                             |   13 +-
+ include/net/nfc/nci.h                              |  313 +++
+ include/net/nfc/nci_core.h                         |  184 ++
+ include/net/{ => nfc}/nfc.h                        |    4 +
+ net/bluetooth/hci_conn.c                           |    2 +-
+ net/bluetooth/hci_core.c                           |   57 +-
+ net/bluetooth/hci_event.c                          |   16 +-
+ net/bluetooth/hci_sock.c                           |   18 +-
+ net/bluetooth/hci_sysfs.c                          |    2 +
+ net/bluetooth/hidp/core.c                          |    3 +
+ net/bluetooth/l2cap_core.c                         |   18 +-
+ net/bluetooth/mgmt.c                               |  212 ++-
+ net/bluetooth/smp.c                                |  421 +++--
+ net/mac80211/cfg.c                                 |   12 +-
+ net/mac80211/debugfs.c                             |   52 -
+ net/mac80211/debugfs_netdev.c                      |   48 +-
+ net/mac80211/driver-ops.h                          |   27 +-
+ net/mac80211/driver-trace.h                        |   40 +-
+ net/mac80211/ibss.c                                |    6 +-
+ net/mac80211/ieee80211_i.h                         |    5 +-
+ net/mac80211/iface.c                               |   10 +-
+ net/mac80211/mesh_plink.c                          |    8 +
+ net/mac80211/mlme.c                                |   49 +-
+ net/mac80211/rate.c                                |   29 +-
+ net/mac80211/scan.c                                |    3 +-
+ net/mac80211/util.c                                |   23 +-
+ net/mac80211/work.c                                |    2 +-
+ net/nfc/Kconfig                                    |    2 +
+ net/nfc/Makefile                                   |    1 +
+ net/nfc/core.c                                     |   77 +
+ net/nfc/nci/Kconfig                                |   10 +
+ net/nfc/nci/Makefile                               |    7 +
+ net/nfc/nci/core.c                                 |  797 ++++++++
+ net/nfc/nci/data.c                                 |  247 +++
+ net/nfc/nci/lib.c                                  |   94 +
+ net/nfc/nci/ntf.c                                  |  258 +++
+ net/nfc/nci/rsp.c                                  |  226 +++
+ net/nfc/netlink.c                                  |   56 +
+ net/nfc/nfc.h                                      |    6 +-
+ net/rfkill/core.c                                  |    2 +-
+ net/wireless/core.h                                |    4 +-
+ net/wireless/mlme.c                                |   16 +-
+ net/wireless/nl80211.c                             |  100 +-
+ net/wireless/nl80211.h                             |    4 +
+ net/wireless/scan.c                                |   27 +
+ net/wireless/sme.c                                 |   19 +-
+ net/wireless/util.c                                |   16 +-
+ 186 files changed, 8573 insertions(+), 4415 deletions(-)
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
+ rename drivers/net/wireless/iwlwifi/{iwl-pci.h => iwl-cfg.h} (97%)
+ rename drivers/net/wireless/iwlwifi/{iwl-trans-int-pcie.h => iwl-trans-pcie-int.h} (94%)
+ rename drivers/net/wireless/iwlwifi/{iwl-trans-rx-pcie.c => iwl-trans-pcie-rx.c} (97%)
+ rename drivers/net/wireless/iwlwifi/{iwl-trans-tx-pcie.c => iwl-trans-pcie-tx.c} (94%)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+ create mode 100644 drivers/nfc/nfcwilink.c
+ create mode 100644 include/net/nfc/nci.h
+ create mode 100644 include/net/nfc/nci_core.h
+ rename include/net/{ => nfc}/nfc.h (97%)
+ create mode 100644 net/nfc/nci/Kconfig
+ create mode 100644 net/nfc/nci/Makefile
+ create mode 100644 net/nfc/nci/core.c
+ create mode 100644 net/nfc/nci/data.c
+ create mode 100644 net/nfc/nci/lib.c
+ create mode 100644 net/nfc/nci/ntf.c
+ create mode 100644 net/nfc/nci/rsp.c
+
+Omnibus patch is (or should be) available here:
+
+	http://bombadil.infradead.org/users/linville/wireless-next-2011-09-30.patch.gz
+
 -- 
-1.7.3.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
