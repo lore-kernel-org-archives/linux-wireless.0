@@ -1,62 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58338 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754743Ab1JRQDV (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:64456 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750949Ab1JASBK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Oct 2011 12:03:21 -0400
-Message-ID: <4E9DA33E.2000603@candelatech.com> (sfid-20111018_180324_329314_FFC8E6B9)
-Date: Tue, 18 Oct 2011 09:03:10 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sat, 1 Oct 2011 14:01:10 -0400
+Received: by bkbzt4 with SMTP id zt4so3134865bkb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Oct 2011 11:01:08 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: r8712u driver - on ARM
+Date: Sat, 1 Oct 2011 20:01:04 +0200
+Cc: Ian Jeffray <ian@emobix.co.uk>, linux-wireless@vger.kernel.org
+References: <4E81ED65.7060703@emobix.co.uk> <201110011822.00637.chunkeey@googlemail.com> <4E875365.50206@lwfinger.net>
+In-Reply-To: <4E875365.50206@lwfinger.net>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	reinette chatre <reinette.chatre@intel.com>
-Subject: Re: [RFC] mac80211: properly go back to operational channel?
-References: <1317121970-3638-1-git-send-email-sgruszka@redhat.com>  <1317123289.4082.12.camel@jlt3.sipsolutions.net>  <20110929150018.GA4554@redhat.com>  <1317740824.6741.22.camel@jlt3.sipsolutions.net>  <20111005111507.GA2184@redhat.com>  <1317813762.4839.7.camel@jlt3.sipsolutions.net>  <20111018141922.GA6204@redhat.com> <1318948251.3958.29.camel@jlt3.sipsolutions.net> <4E9D9306.1060005@openwrt.org>
-In-Reply-To: <4E9D9306.1060005@openwrt.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201110012001.05111.chunkeey@googlemail.com> (sfid-20111001_200113_928358_DD13A67E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/18/2011 07:53 AM, Felix Fietkau wrote:
-> On 2011-10-18 4:30 PM, Johannes Berg wrote:
->> On Tue, 2011-10-18 at 16:19 +0200, Stanislaw Gruszka wrote:
->>>   For local->tmp_channel == NULL and local->scan_channel == NULL
->>>   ieee80211_cfg_on_oper_channel() will return false if
->>>   local->oper_channel != local->hw.conf.channel,
->>>   hece we do not properly go back to oper_channel from tmp_channel.
->>
->> Huh, good catch.
->>
->>>   Does patch have sense?
->>
->> Let's see what Ben says. It seems a bit like the
->> ieee80211_cfg_on_oper_channel() test there should be inverted instead of
->> removed?
->>
->>>   Could it fixes problems we are talking
->>>   in this thread?
->>
->> Yes, could be related, also some issue Jouni and Reinette have been
->> seeing with P2P might be related as well.
-> Just remembered this old patch, also related to this part:
-> http://news.gmane.org/find-root.php?message_id=%3c1311607763%2d12603%2d3%2dgit%2dsend%2demail%2deliad%40wizery.com%3e
+On Saturday 01 October 2011 19:52:37 Larry Finger wrote:
+> On 10/01/2011 11:22 AM, Christian Lamparter wrote:
+> > On Saturday 01 October 2011 18:01:08 Larry Finger wrote:
+> >> Ian,
+> >>
+> >> Most of the skb assignments in r8712u are aligned OK and most aligned on
+> >> 512-byte boundaries, but there was one that had the minimal offset of 14 bytes.
+> >> The attached patch should fix it. Does it help?
+> > Interesting, this "patch" goes in a completely different direction.
+> > Can you tell me where the driver aligns the frames which will be
+> > xmitted by the device [i.e.: which is passed to the usb subsystem
+> > by usb_submit_urb]? Because that's what actually matters.
+> 
+> In this driver, all references are to _usb_submit_urb(), which is defined to be 
+> usb_submit_urb() in one of the header files. That made it easy to insert a test 
+> for misalignment of the DMA buffer as follows:
+> 
+> Index: wireless-testing-new/drivers/staging/rtl8712/osdep_service.h
+> ===================================================================
+> --- wireless-testing-new.orig/drivers/staging/rtl8712/osdep_service.h
+> +++ wireless-testing-new/drivers/staging/rtl8712/osdep_service.h
+> @@ -34,7 +34,7 @@
+>   #include <linux/if_arp.h>
+>   #include <linux/firmware.h>
+>   #define   _usb_alloc_urb(x, y)       usb_alloc_urb(x, y)
+> -#define   _usb_submit_urb(x, y)     usb_submit_urb(x, y)
+> +//#define   _usb_submit_urb(x, y)     usb_submit_urb(x, y)
+> 
+>   struct __queue {
+>          struct  list_head       queue;
+> @@ -232,5 +232,13 @@ static inline u32 _RND512(u32 sz)
+>          return ((sz >> 9) + ((sz & 511) ? 1 : 0)) << 9;
+>   }
+> 
+> +static inline int _usb_submit_urb(struct urb *urb, gfp_t mem_flags)
+> +{
+> +       if (urb->transfer_dma & 3) {
+> +               pr_info("Transfer_dma 0x%x not on 4-byte boundary\n", 
+> (uint)urb->transfer_dma);
+> +               dump_stack();
+> +       }
+> +       return usb_submit_urb(urb, mem_flags);
+> +}
+>   #endif
 
-I thought that patch was going into the kernel.
+I think you need to check transfer_buffer and not transfer_dma.
 
-I'm busy this morning, but I'm hacking on wifi later today if
-all goes well, so I can test out this patch.
-
-Thanks,
-Ben
-
->
-> - Felix
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Regards,
+	Christian
