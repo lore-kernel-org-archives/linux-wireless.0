@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54611 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935724Ab1JFJPt (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:56078 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754998Ab1JAKmc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Oct 2011 05:15:49 -0400
-Subject: [PATCH] compat: make driver-select only select complete lines
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 06 Oct 2011 11:15:45 +0200
-Message-ID: <1317892545.3945.2.camel@jlt3.sipsolutions.net> (sfid-20111006_111610_086085_32126AFA)
-Mime-Version: 1.0
+	Sat, 1 Oct 2011 06:42:32 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2] ath6kl: Enable force foreground scan in connected state
+Date: Sat, 1 Oct 2011 16:12:36 +0530
+Message-ID: <1317465756-5978-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111001_124236_234721_69A42736)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This was disabled beacause there was a network stall
+issue when scan is issued. This issue does not happen
+with the new firmware (3.1.1.609), enable it back.
 
-Otherwise we end up enabling CONFIG_FOOBAR if
-only CONFIG_FOO is requested.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
---- a/scripts/driver-select
-+++ b/scripts/driver-select
-@@ -88,7 +88,7 @@ function disable_makefile
- function select_driver 
- {
- 	backup_file $DRIVERS_MAKEFILE
--	perl -i -ne 'print if /'$1'/ ' $DRIVERS_MAKEFILE
-+	perl -i -ne 'print if /'$1'\)/ ' $DRIVERS_MAKEFILE
- }
+V2 -- Add version of the firmware which has the fix in commit log
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 8d9fbd4..c50697d 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -639,6 +639,7 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 	s8 n_channels = 0;
+ 	u16 *channels = NULL;
+ 	int ret = 0;
++	u32 force_fg_scan = 0;
  
- function select_drivers
-
+ 	if (!ath6kl_cfg80211_ready(ar))
+ 		return -EIO;
+@@ -700,7 +701,10 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 			channels[i] = request->channels[i]->center_freq;
+ 	}
+ 
+-	ret = ath6kl_wmi_startscan_cmd(ar->wmi, WMI_LONG_SCAN, 0,
++	if (test_bit(CONNECTED, &ar->flag))
++		force_fg_scan = 1;
++
++	ret = ath6kl_wmi_startscan_cmd(ar->wmi, WMI_LONG_SCAN, force_fg_scan,
+ 				       false, 0, 0, n_channels, channels);
+ 	if (ret)
+ 		ath6kl_err("wmi_startscan_cmd failed\n");
+-- 
+1.7.0.4
 
