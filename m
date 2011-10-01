@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:55244 "HELO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752189Ab1JSB2A (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Oct 2011 21:28:00 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: enable SDIO multiport aggregation
-Date: Tue, 18 Oct 2011 18:22:26 -0700
-Message-Id: <1318987346-19938-1-git-send-email-bzhao@marvell.com> (sfid-20111019_032817_524051_46CB572F)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:37711 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755503Ab1JAKdf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Oct 2011 06:33:35 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat-wireless: make patches apply again
+Date: Sat,  1 Oct 2011 12:33:18 +0200
+Message-Id: <1317465198-2733-1-git-send-email-hauke@hauke-m.de> (sfid-20111001_123338_095136_993D2E5E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
 
-By default SDIO multiport aggregation is disabled. It's useful to
-get good throughput results. This patch enables it.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/mwifiex/sdio.c |    4 ++--
+ patches/06-header-changes.patch |    4 ++--
  1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 283171b..ffaf3f3 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -1630,14 +1630,14 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
- 	card->mpa_tx.pkt_cnt = 0;
- 	card->mpa_tx.start_port = 0;
- 
--	card->mpa_tx.enabled = 0;
-+	card->mpa_tx.enabled = 1;
- 	card->mpa_tx.pkt_aggr_limit = SDIO_MP_AGGR_DEF_PKT_LIMIT;
- 
- 	card->mpa_rx.buf_len = 0;
- 	card->mpa_rx.pkt_cnt = 0;
- 	card->mpa_rx.start_port = 0;
- 
--	card->mpa_rx.enabled = 0;
-+	card->mpa_rx.enabled = 1;
- 	card->mpa_rx.pkt_aggr_limit = SDIO_MP_AGGR_DEF_PKT_LIMIT;
- 
- 	/* Allocate buffers for SDIO MP-A */
+diff --git a/patches/06-header-changes.patch b/patches/06-header-changes.patch
+index 9a2041f..d90fb06 100644
+--- a/patches/06-header-changes.patch
++++ b/patches/06-header-changes.patch
+@@ -23,9 +23,9 @@ cases.
+  
+  #include <linux/ip.h>
+ +#include <linux/in.h>
++ #include <linux/module.h>
+  #include "wifi.h"
+  #include "rc.h"
+- #include "base.h"
+ --- a/drivers/net/wireless/wl1251/main.c
+ +++ b/drivers/net/wireless/wl1251/main.c
+ @@ -24,6 +24,9 @@
+@@ -52,7 +52,7 @@ cases.
+  
+ --- a/net/mac80211/key.c
+ +++ b/net/mac80211/key.c
+-@@ -22,6 +22,9 @@
++@@ -23,6 +23,9 @@
+  #include "aes_ccm.h"
+  #include "aes_cmac.h"
+  
 -- 
-1.7.0.2
+1.7.4.1
 
