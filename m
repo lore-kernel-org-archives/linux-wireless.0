@@ -1,150 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:32822 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753041Ab1JZVro (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:56403 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755006Ab1JAQWG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 17:47:44 -0400
-Received: by mail-pz0-f42.google.com with SMTP id 36so5621103pzk.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 14:47:44 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
-	johannes@sipsolutions.net, linville@tuxdriver.com
-Subject: [PATCH 3/5] mac80211: add HT IEs to mesh frames
-Date: Wed, 26 Oct 2011 14:47:27 -0700
-Message-Id: <1319665649-21784-4-git-send-email-thomas@cozybit.com> (sfid-20111026_234754_209145_0651683E)
-In-Reply-To: <1319665649-21784-1-git-send-email-thomas@cozybit.com>
-References: <1319665649-21784-1-git-send-email-thomas@cozybit.com>
+	Sat, 1 Oct 2011 12:22:06 -0400
+Received: by eya28 with SMTP id 28so1841624eya.19
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Oct 2011 09:22:04 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: r8712u driver - on ARM
+Date: Sat, 1 Oct 2011 18:22:00 +0200
+Cc: Ian Jeffray <ian@emobix.co.uk>, linux-wireless@vger.kernel.org
+References: <4E81ED65.7060703@emobix.co.uk> <201109302106.12028.chunkeey@googlemail.com> <4E873944.70104@lwfinger.net>
+In-Reply-To: <4E873944.70104@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201110011822.00637.chunkeey@googlemail.com> (sfid-20111001_182219_646173_9E03C71E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-Signed-off-by: Ashok Nagarajan <anagar6@uic.edu>
----
- net/mac80211/mesh.c       |   43 +++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/mesh.h       |    4 ++++
- net/mac80211/mesh_plink.c |    9 +++++++++
- net/mac80211/tx.c         |    4 ++++
- 4 files changed, 60 insertions(+), 0 deletions(-)
+On Saturday 01 October 2011 18:01:08 Larry Finger wrote:
+> Ian,
+> 
+> Most of the skb assignments in r8712u are aligned OK and most aligned on 
+> 512-byte boundaries, but there was one that had the minimal offset of 14 bytes. 
+> The attached patch should fix it. Does it help?
+Interesting, this "patch" goes in a completely different direction.
+Can you tell me where the driver aligns the frames which will be
+xmitted by the device [i.e.: which is passed to the usb subsystem
+by usb_submit_urb]? Because that's what actually matters.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index a7078fd..2dc76a9 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -341,6 +341,49 @@ int mesh_add_ds_params_ie(struct sk_buff *skb,
- 	return 0;
- }
- 
-+int mesh_add_ht_cap_ie(struct sk_buff *skb,
-+		       struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
-+	u8 *pos;
-+
-+	sband = local->hw.wiphy->bands[local->oper_channel->band];
-+	if (!sband->ht_cap.ht_supported ||
-+	    local->_oper_channel_type == NL80211_CHAN_NO_HT)
-+		return 0;
-+
-+	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_cap))
-+		return -ENOMEM;
-+
-+	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_cap));
-+	ieee80211_ie_build_ht_cap(pos, sband, sband->ht_cap.cap);
-+
-+	return 0;
-+}
-+
-+int mesh_add_ht_info_ie(struct sk_buff *skb,
-+			struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_channel *channel = local->oper_channel;
-+	enum nl80211_channel_type channel_type = local->_oper_channel_type;
-+	struct ieee80211_supported_band *sband =
-+				local->hw.wiphy->bands[channel->band];
-+	struct ieee80211_sta_ht_cap *ht_cap = &sband->ht_cap;
-+	u8 *pos;
-+
-+	if (!ht_cap->ht_supported || channel_type == NL80211_CHAN_NO_HT)
-+		return 0;
-+
-+	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_info))
-+		return -ENOMEM;
-+
-+	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_info));
-+	ieee80211_ie_build_ht_info(pos, ht_cap, channel, channel_type);
-+
-+	return 0;
-+}
- static void ieee80211_mesh_path_timer(unsigned long data)
- {
- 	struct ieee80211_sub_if_data *sdata =
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 8c00e2d..0f2c4e6 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -212,6 +212,10 @@ int mesh_add_vendor_ies(struct sk_buff *skb,
- 			struct ieee80211_sub_if_data *sdata);
- int mesh_add_ds_params_ie(struct sk_buff *skb,
- 			  struct ieee80211_sub_if_data *sdata);
-+int mesh_add_ht_cap_ie(struct sk_buff *skb,
-+		       struct ieee80211_sub_if_data *sdata);
-+int mesh_add_ht_info_ie(struct sk_buff *skb,
-+			struct ieee80211_sub_if_data *sdata);
- void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
- int mesh_rmc_init(struct ieee80211_sub_if_data *sdata);
- void ieee80211s_init(void);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 351e48c..986af8a 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -169,6 +169,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 			    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
- 			    2 + sdata->u.mesh.mesh_id_len +
- 			    2 + sizeof(struct ieee80211_meshconf_ie) +
-+			    2 + sizeof(struct ieee80211_ht_cap) +
-+			    2 + sizeof(struct ieee80211_ht_info) +
- 			    2 + 8 + /* peering IE */
- 			    sdata->u.mesh.ie_len);
- 	if (!skb)
-@@ -241,6 +243,13 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		memcpy(pos, &reason, 2);
- 		pos += 2;
- 	}
-+
-+	if (action != WLAN_SP_MESH_PEERING_CLOSE) {
-+		if (mesh_add_ht_cap_ie(skb, sdata) ||
-+		    mesh_add_ht_info_ie(skb, sdata))
-+			return -1;
-+	}
-+
- 	if (mesh_add_vendor_ies(skb, sdata))
- 		return -1;
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index f4dd339..a543d26 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2292,6 +2292,8 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 				    2 + 8 + /* supported rates */
- 				    2 + 3 + /* DS params */
- 				    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
-+				    2 + sizeof(struct ieee80211_ht_cap) +
-+				    2 + sizeof(struct ieee80211_ht_info) +
- 				    2 + sdata->u.mesh.mesh_id_len +
- 				    2 + sizeof(struct ieee80211_meshconf_ie) +
- 				    sdata->u.mesh.ie_len);
-@@ -2319,6 +2321,8 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 		    mesh_add_ds_params_ie(skb, sdata) ||
- 		    ieee80211_add_ext_srates_ie(&sdata->vif, skb) ||
- 		    mesh_add_rsn_ie(skb, sdata) ||
-+		    mesh_add_ht_cap_ie(skb, sdata) ||
-+		    mesh_add_ht_info_ie(skb, sdata) ||
- 		    mesh_add_meshid_ie(skb, sdata) ||
- 		    mesh_add_meshconf_ie(skb, sdata) ||
- 		    mesh_add_vendor_ies(skb, sdata)) {
--- 
-1.7.5.4
-
+Regards,
+	Chr
