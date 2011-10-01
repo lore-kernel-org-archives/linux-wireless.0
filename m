@@ -1,196 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:33865 "EHLO
-	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932221Ab1JaJ4P (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:60954 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753921Ab1JAJCA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Oct 2011 05:56:15 -0400
-Subject: [PATCH 3/5] ath6kl: implement ath6kl_cfg80211_suspend()
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 31 Oct 2011 11:56:10 +0200
-Message-ID: <20111031095610.3598.16599.stgit@localhost6.localdomain6> (sfid-20111031_105622_879554_6A85DEE1)
-In-Reply-To: <20111031095550.3598.52653.stgit@localhost6.localdomain6>
-References: <20111031095550.3598.52653.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sat, 1 Oct 2011 05:02:00 -0400
+Subject: Re: [PATCH 1/1] linux-firmware: Add new firmware image for ath6kl
+ driver
+From: David Woodhouse <dwmw2@infradead.org>
+To: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Sat, 01 Oct 2011 10:01:51 +0100
+In-Reply-To: <1317455234-2416-1-git-send-email-senthilb@qca.qualcomm.com>
+References: <1317455234-2416-1-git-send-email-senthilb@qca.qualcomm.com>
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature";
+	boundary="=-gnLRRyix/V3KOVka92L4"
+Message-ID: <1317459713.18433.42.camel@shinybook.infradead.org> (sfid-20111001_110213_846882_02ED8A35)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is in preparation for cutpower suspend feature. HIF layer makes
-the decision based on information provided by cfg80211 and what hardware
-actually supports. Then it calls ath6kl_cfg80211_suspend() to enable
-the chosen mode.
 
-Functionality should be the same, this is just preparation for
-more suspend modes (cutpower and wow).
+--=-gnLRRyix/V3KOVka92L4
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   46 ++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath6kl/cfg80211.h |    8 +++++
- drivers/net/wireless/ath/ath6kl/core.h     |    1 -
- drivers/net/wireless/ath/ath6kl/main.c     |   12 -------
- drivers/net/wireless/ath/ath6kl/sdio.c     |    9 +----
- 5 files changed, 52 insertions(+), 24 deletions(-)
+On Sat, 2011-10-01 at 13:17 +0530, Senthil Balasubramanian wrote:
+> This patch adds the inital version of newly formatted firmware
+> for ath6kl driver.
+>=20
+> Signed-off-by: Senthil Balasubramanian <senthilb@qca.qualcomm.com>=20
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 94038cb..0691a95 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1653,8 +1653,46 @@ static int ath6kl_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
- 	return 0;
- }
- 
-+int ath6kl_cfg80211_suspend(struct ath6kl *ar,
-+			    enum ath6kl_cfg_suspend_mode mode)
-+{
-+	int ret;
-+
-+	ath6kl_cfg80211_stop(ar);
-+
-+	switch (mode) {
-+	case ATH6KL_CFG_SUSPEND_DEEPSLEEP:
-+		/* save the current power mode before enabling power save */
-+		ar->wmi->saved_pwr_mode = ar->wmi->pwr_mode;
-+
-+		ret = ath6kl_wmi_powermode_cmd(ar->wmi, 0, REC_POWER);
-+		if (ret) {
-+			ath6kl_warn("wmi powermode command failed during suspend: %d\n",
-+				    ret);
-+		}
-+
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
-+int ath6kl_cfg80211_resume(struct ath6kl *ar)
-+{
-+	if (ar->wmi->pwr_mode != ar->wmi->saved_pwr_mode) {
-+		if (ath6kl_wmi_powermode_cmd(ar->wmi, 0,
-+			ar->wmi->saved_pwr_mode) != 0)
-+			ath6kl_warn("ath6kl_sdio_resume: "
-+				"wmi_powermode_cmd failed\n");
-+	}
-+
-+	return 0;
-+}
-+
- #ifdef CONFIG_PM
--static int ar6k_cfg80211_suspend(struct wiphy *wiphy,
-+
-+/* hif layer decides what suspend mode to use */
-+static int __ath6kl_cfg80211_suspend(struct wiphy *wiphy,
- 				 struct cfg80211_wowlan *wow)
- {
- 	struct ath6kl *ar = wiphy_priv(wiphy);
-@@ -1662,7 +1700,7 @@ static int ar6k_cfg80211_suspend(struct wiphy *wiphy,
- 	return ath6kl_hif_suspend(ar);
- }
- 
--static int ar6k_cfg80211_resume(struct wiphy *wiphy)
-+static int __ath6kl_cfg80211_resume(struct wiphy *wiphy)
- {
- 	struct ath6kl *ar = wiphy_priv(wiphy);
- 
-@@ -2098,8 +2136,8 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
- 	.flush_pmksa = ath6kl_flush_pmksa,
- 	CFG80211_TESTMODE_CMD(ath6kl_tm_cmd)
- #ifdef CONFIG_PM
--	.suspend = ar6k_cfg80211_suspend,
--	.resume = ar6k_cfg80211_resume,
-+	.suspend = __ath6kl_cfg80211_suspend,
-+	.resume = __ath6kl_cfg80211_resume,
- #endif
- 	.set_channel = ath6kl_set_channel,
- 	.add_beacon = ath6kl_add_beacon,
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-index bb0ac22..3630c5e 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-@@ -17,6 +17,10 @@
- #ifndef ATH6KL_CFG80211_H
- #define ATH6KL_CFG80211_H
- 
-+enum ath6kl_cfg_suspend_mode {
-+	ATH6KL_CFG_SUSPEND_DEEPSLEEP,
-+};
-+
- struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 					enum nl80211_iftype type,
- 					u8 fw_vif_idx, u8 nw_type);
-@@ -40,6 +44,10 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl_vif *vif, u8 reason,
- void ath6kl_cfg80211_tkip_micerr_event(struct ath6kl_vif *vif, u8 keyid,
- 				     bool ismcast);
- 
-+int ath6kl_cfg80211_suspend(struct ath6kl *ar,
-+			    enum ath6kl_cfg_suspend_mode mode);
-+int ath6kl_cfg80211_resume(struct ath6kl *ar);
-+
- void ath6kl_cfg80211_stop(struct ath6kl *ar);
- 
- #endif /* ATH6KL_CFG80211_H */
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 95aed7d..00cc1db 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -649,7 +649,6 @@ void ath6kl_pspoll_event(struct ath6kl_vif *vif, u8 aid);
- 
- void ath6kl_dtimexpiry_event(struct ath6kl_vif *vif);
- void ath6kl_disconnect(struct ath6kl_vif *vif);
--void ath6kl_deep_sleep_enable(struct ath6kl *ar);
- void aggr_recv_delba_req_evt(struct ath6kl_vif *vif, u8 tid);
- void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid, u16 seq_no,
- 			     u8 win_sz);
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 378dc8d..23da82e 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -578,18 +578,6 @@ void ath6kl_disconnect(struct ath6kl_vif *vif)
- 	}
- }
- 
--void ath6kl_deep_sleep_enable(struct ath6kl *ar)
--{
--	ath6kl_cfg80211_stop(ar);
--
--	/* save the current power mode before enabling power save */
--	ar->wmi->saved_pwr_mode = ar->wmi->pwr_mode;
--
--	if (ath6kl_wmi_powermode_cmd(ar->wmi, 0, REC_POWER) != 0)
--		ath6kl_warn("ath6kl_deep_sleep_enable: "
--			"wmi_powermode_cmd failed\n");
--}
--
- /* WMI Event handlers */
- 
- static const char *get_hw_id_string(u32 id)
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index c61c512..d718926 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -757,19 +757,14 @@ static int ath6kl_sdio_suspend(struct ath6kl *ar)
- 		return ret;
- 	}
- 
--	ath6kl_deep_sleep_enable(ar);
-+	ath6kl_cfg80211_suspend(ar, ATH6KL_CFG_SUSPEND_DEEPSLEEP);
- 
- 	return 0;
- }
- 
- static int ath6kl_sdio_resume(struct ath6kl *ar)
- {
--	if (ar->wmi->pwr_mode != ar->wmi->saved_pwr_mode) {
--		if (ath6kl_wmi_powermode_cmd(ar->wmi, 0,
--			ar->wmi->saved_pwr_mode) != 0)
--			ath6kl_warn("ath6kl_sdio_resume: "
--				"wmi_powermode_cmd failed\n");
--	}
-+	ath6kl_cfg80211_resume(ar);
- 
- 	return 0;
- }
+Pushed to the tree at git.infradead.org/users/dwmw2/linux-firmware.git
+(until kernel.org is running again). Thanks.
+
+--=20
+dwmw2
+
+--=-gnLRRyix/V3KOVka92L4
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIITvzCCBi0w
+ggQVoAMCAQICAwCtOTANBgkqhkiG9w0BAQUFADBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwG
+A1UECxMVaHR0cDovL3d3dy5DQWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290
+MB4XDTEwMDYxMjEwMDMwMFoXDTEyMDYxMTEwMDMwMFowgegxGDAWBgNVBAMTD0RhdmlkIFdvb2Ro
+b3VzZTEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzEfMB0GCSqGSIb3DQEJARYQ
+ZGF2aWRAd29vZGhvdS5zZTEoMCYGCSqGSIb3DQEJARYZZGF2aWQud29vZGhvdXNlQGludGVsLmNv
+bTEkMCIGCSqGSIb3DQEJARYVZHdtdzJAbGludXguaW50ZWwuY29tMTcwNQYJKoZIhvcNAQkBFigx
+MDg3MmEwN2Y2ZDdlMWUwN2Y1NWZmMTcyYTAzYjMwMGVlYWFkMjAzMIIBIjANBgkqhkiG9w0BAQEF
+AAOCAQ8AMIIBCgKCAQEA29OPhNvMxBMW83psWdVhZDtmJvgN+tBEp1r6MZamONsR0k81a6fDFwJz
+M0fEzEbV/bDG102QyX/xXC/0IpKV4acnqESC+sTHUmRwxfRKGNmR6t2iwEs2Y5kQDF31JxbCt49w
+AlhLMAa+e1MBZ7vO0uDmRuJpS7+ZdHboq7cdk6dyoeumGv5sl6U/SPK9rL4KzULtqQaw6Wucd6MJ
+irIggEHfCNqeT5a+TyuH4zKCwv9nblIGXq9wt+yqu5t/RicGaKPnXSqo/WpJAGggaO8g92mnYlVl
+Wu/b9bYVISwQ8LI0sEtjN1WnP5AQO2f59bdPAVk4Rn25HceOO4NvlG47LwIDAQABo4IBcTCCAW0w
+DAYDVR0TAQH/BAIwADBWBglghkgBhvhCAQ0ESRZHVG8gZ2V0IHlvdXIgb3duIGNlcnRpZmljYXRl
+IGZvciBGUkVFIGhlYWQgb3ZlciB0byBodHRwOi8vd3d3LkNBY2VydC5vcmcwQAYDVR0lBDkwNwYI
+KwYBBQUHAwQGCCsGAQUFBwMCBgorBgEEAYI3CgMEBgorBgEEAYI3CgMDBglghkgBhvhCBAEwMgYI
+KwYBBQUHAQEEJjAkMCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5jYWNlcnQub3JnMIGOBgNVHREE
+gYYwgYOBE2R3bXcyQGluZnJhZGVhZC5vcmeBEGRhdmlkQHdvb2Rob3Uuc2WBGWRhdmlkLndvb2Ro
+b3VzZUBpbnRlbC5jb22BFWR3bXcyQGxpbnV4LmludGVsLmNvbYEoMTA4NzJhMDdmNmQ3ZTFlMDdm
+NTVmZjE3MmEwM2IzMDBlZWFhZDIwMzANBgkqhkiG9w0BAQUFAAOCAgEAXm+SUO1/TSeGJK0D9pAm
+E9LTFkdlgbaD6HXGbS0TNUDyfLFkacc2F1JLoWcoFwcL6Rup5o/Rt4QYDBPWgF9EXFvqsc9SLrSe
+X6VwRj7vI40x19ThE2A1Y8DzBJ9+2MzIR6hd5n9axATCOIRhmZVjX1cRkwshEGvAn8mTYGhWttkx
+WhBcaAuCd9OOQqUwfxTUXiSfVumPUNrrbuvaH6MjrNjDrXdvicL26Y+AzFSJn3o8DShjjMhkUx9l
+qV46BpjSGIuvkHhcLkGJ3Y1YmtOX1hwT+Z+d/10WJh8ZG2FqIlJtPtqvHK5ol/KvdzMwmMBd4qFj
+YAO32vf7zde+jdTHNp2Mb15bJHhNdGOsZicpGue42fg3deZQFe1E2KBl9VO09fjncjt9YdhCUtxO
+buDnoOixY6YSJgSmGJB2Xs+TE5gps4UiiOYen+NeJkuwg5x9vmyraU061Uc0csfc/E5IoxhTX/Pc
+H+zXiER8aSjA/9MXQfrJM2xkY6UNKlDbCYSLKnH/O02eu7Hma6lB4wtcY8ECu7LJuFY2448Quolv
+SQfQLRvKauGFGUAhbPClOxObuv/fNzA+lfg8DX2y5jXDutnpvBGgsplKxoah01SZfR9zNqxodPx2
+srKhujBNB+WiAZntMf0xp4e0JPMlTFxm3tbY9wuBSyTJyueO9hUkbN4wggYtMIIEFaADAgECAgMA
+rTkwDQYJKoZIhvcNAQEFBQAwVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6
+Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdDAeFw0xMDA2MTIx
+MDAzMDBaFw0xMjA2MTExMDAzMDBaMIHoMRgwFgYDVQQDEw9EYXZpZCBXb29kaG91c2UxIjAgBgkq
+hkiG9w0BCQEWE2R3bXcyQGluZnJhZGVhZC5vcmcxHzAdBgkqhkiG9w0BCQEWEGRhdmlkQHdvb2Ro
+b3Uuc2UxKDAmBgkqhkiG9w0BCQEWGWRhdmlkLndvb2Rob3VzZUBpbnRlbC5jb20xJDAiBgkqhkiG
+9w0BCQEWFWR3bXcyQGxpbnV4LmludGVsLmNvbTE3MDUGCSqGSIb3DQEJARYoMTA4NzJhMDdmNmQ3
+ZTFlMDdmNTVmZjE3MmEwM2IzMDBlZWFhZDIwMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ggEBANvTj4TbzMQTFvN6bFnVYWQ7Zib4DfrQRKda+jGWpjjbEdJPNWunwxcCczNHxMxG1f2wxtdN
+kMl/8Vwv9CKSleGnJ6hEgvrEx1JkcMX0ShjZkerdosBLNmOZEAxd9ScWwrePcAJYSzAGvntTAWe7
+ztLg5kbiaUu/mXR26Ku3HZOncqHrphr+bJelP0jyvay+Cs1C7akGsOlrnHejCYqyIIBB3wjank+W
+vk8rh+MygsL/Z25SBl6vcLfsqrubf0YnBmij510qqP1qSQBoIGjvIPdpp2JVZVrv2/W2FSEsEPCy
+NLBLYzdVpz+QEDtn+fW3TwFZOEZ9uR3HjjuDb5RuOy8CAwEAAaOCAXEwggFtMAwGA1UdEwEB/wQC
+MAAwVgYJYIZIAYb4QgENBEkWR1RvIGdldCB5b3VyIG93biBjZXJ0aWZpY2F0ZSBmb3IgRlJFRSBo
+ZWFkIG92ZXIgdG8gaHR0cDovL3d3dy5DQWNlcnQub3JnMEAGA1UdJQQ5MDcGCCsGAQUFBwMEBggr
+BgEFBQcDAgYKKwYBBAGCNwoDBAYKKwYBBAGCNwoDAwYJYIZIAYb4QgQBMDIGCCsGAQUFBwEBBCYw
+JDAiBggrBgEFBQcwAYYWaHR0cDovL29jc3AuY2FjZXJ0Lm9yZzCBjgYDVR0RBIGGMIGDgRNkd213
+MkBpbmZyYWRlYWQub3JngRBkYXZpZEB3b29kaG91LnNlgRlkYXZpZC53b29kaG91c2VAaW50ZWwu
+Y29tgRVkd213MkBsaW51eC5pbnRlbC5jb22BKDEwODcyYTA3ZjZkN2UxZTA3ZjU1ZmYxNzJhMDNi
+MzAwZWVhYWQyMDMwDQYJKoZIhvcNAQEFBQADggIBAF5vklDtf00nhiStA/aQJhPS0xZHZYG2g+h1
+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
+AAAAAA==
+
+
+--=-gnLRRyix/V3KOVka92L4--
 
