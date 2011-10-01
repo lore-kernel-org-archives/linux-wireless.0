@@ -1,96 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53197 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751824Ab1JHSGc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Oct 2011 14:06:32 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v3 4/4] ath9k_hw: remove EEP_REG_1
-Date: Sat,  8 Oct 2011 20:06:22 +0200
-Message-Id: <1318097182-78364-4-git-send-email-nbd@openwrt.org> (sfid-20111008_200635_495907_7A19A120)
-In-Reply-To: <1318097182-78364-3-git-send-email-nbd@openwrt.org>
-References: <1318097182-78364-1-git-send-email-nbd@openwrt.org>
- <1318097182-78364-2-git-send-email-nbd@openwrt.org>
- <1318097182-78364-3-git-send-email-nbd@openwrt.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:51449 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321Ab1JARmU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Oct 2011 13:42:20 -0400
+Received: by wyg34 with SMTP id 34so1957868wyg.19
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Oct 2011 10:42:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6Ug-wF+UMC3fLkrcb43x94_Pc0DeK51pDnVnDckiyshAQ@mail.gmail.com>
+References: <CAB=NE6Ug-wF+UMC3fLkrcb43x94_Pc0DeK51pDnVnDckiyshAQ@mail.gmail.com>
+Date: Sat, 1 Oct 2011 20:42:18 +0300
+Message-ID: <CANUX_P0xz_uS8xb_rjF_=BR=fJ+QQDB74c-9YBQUwrn=ubdHaA@mail.gmail.com> (sfid-20111001_194223_140738_0CEBC75E)
+Subject: Re: iwlagn rmmod BUG iwlagn_dev_cmd: Objects remaining on kmem_cache_close()
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was previously used for current_rd_ext
+On Sat, Oct 1, 2011 at 02:41, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+>
+> While I rmmod iwlagn, I get this.
+>
+> mcgrof@tux ~ $ uname -r
+> 3.1.0-rc5-wl+
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 --
- drivers/net/wireless/ath/ath9k/eeprom.h        |    1 -
- drivers/net/wireless/ath/ath9k/eeprom_4k.c     |    2 --
- drivers/net/wireless/ath/ath9k/eeprom_9287.c   |    2 --
- drivers/net/wireless/ath/ath9k/eeprom_def.c    |    2 --
- 5 files changed, 0 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index d7a5ca7..bf08acc 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -2995,8 +2995,6 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
- 		return get_unaligned_be16(eep->macAddr + 4);
- 	case EEP_REG_0:
- 		return le16_to_cpu(pBase->regDmn[0]);
--	case EEP_REG_1:
--		return le16_to_cpu(pBase->regDmn[1]);
- 	case EEP_OP_CAP:
- 		return pBase->deviceCap;
- 	case EEP_OP_MODE:
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 909a224..3721770 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -220,7 +220,6 @@ enum eeprom_param {
- 	EEP_MAC_MID,
- 	EEP_MAC_LSW,
- 	EEP_REG_0,
--	EEP_REG_1,
- 	EEP_OP_CAP,
- 	EEP_OP_MODE,
- 	EEP_RF_SILENT,
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index ab6811d..9a7520f 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -322,8 +322,6 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
- 		return get_unaligned_be16(pBase->macAddr + 4);
- 	case EEP_REG_0:
- 		return pBase->regDmn[0];
--	case EEP_REG_1:
--		return pBase->regDmn[1];
- 	case EEP_OP_CAP:
- 		return pBase->deviceCap;
- 	case EEP_OP_MODE:
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index 90d771f..4f5c50a 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -308,8 +308,6 @@ static u32 ath9k_hw_ar9287_get_eeprom(struct ath_hw *ah,
- 		return get_unaligned_be16(pBase->macAddr + 4);
- 	case EEP_REG_0:
- 		return pBase->regDmn[0];
--	case EEP_REG_1:
--		return pBase->regDmn[1];
- 	case EEP_OP_CAP:
- 		return pBase->deviceCap;
- 	case EEP_OP_MODE:
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index e175e20..81e6296 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -415,8 +415,6 @@ static u32 ath9k_hw_def_get_eeprom(struct ath_hw *ah,
- 		return get_unaligned_be16(pBase->macAddr + 4);
- 	case EEP_REG_0:
- 		return pBase->regDmn[0];
--	case EEP_REG_1:
--		return pBase->regDmn[1];
- 	case EEP_OP_CAP:
- 		return pBase->deviceCap;
- 	case EEP_OP_MODE:
--- 
-1.7.3.2
+Please check that you have this one:
 
+Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date:   Sun Sep 4 11:46:59 2011 +0300
+
+    iwlagn: free the Tx cmd when a non empty Tx queue is freed
+
+
+I can't find the commit ID right now
