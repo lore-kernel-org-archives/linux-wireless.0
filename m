@@ -1,49 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:56146 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751604Ab1J3GsA (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:54663 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753928Ab1JAJwP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Oct 2011 02:48:00 -0400
-Received: by faan17 with SMTP id n17so4693010faa.19
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Oct 2011 23:47:58 -0700 (PDT)
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Subject: [PATCH] ipw2x00: remove unused function libipw_ratelimit_debug.
-Date: Sun, 30 Oct 2011 02:47:50 -0400
-Message-Id: <1319957270-1406-1-git-send-email-stas.yakovlev@gmail.com> (sfid-20111030_074826_797310_DFF3FC9C)
+	Sat, 1 Oct 2011 05:52:15 -0400
+Message-ID: <4E86E253.7000203@qca.qualcomm.com> (sfid-20111001_115220_037044_DE9EB37B)
+Date: Sat, 1 Oct 2011 12:50:11 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: Enable force foreground scan in connected state
+References: <1317461107-5611-1-git-send-email-vthiagar@qca.qualcomm.com> <4E86DCC2.4020008@qca.qualcomm.com>
+In-Reply-To: <4E86DCC2.4020008@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Looks like no one uses it.
+On 10/01/2011 12:26 PM, Kalle Valo wrote:
+> On 10/01/2011 12:25 PM, Vasanthakumar Thiagarajan wrote:
+>> This was disabled beacause there was a network stall
+>> issue when scan is issued. This issue does not happen
+>> with the new firmware, enable it back.
+> 
+> Please mention the firmware version which has the fix in the commit log.
 
-Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
----
- drivers/net/wireless/ipw2x00/libipw.h |    8 --------
- 1 files changed, 0 insertions(+), 8 deletions(-)
+And I can't apply this before the new firmware available, preferably
+even commited to linux-firmware repo.
 
-diff --git a/drivers/net/wireless/ipw2x00/libipw.h b/drivers/net/wireless/ipw2x00/libipw.h
-index 70f5586..3d5821e 100644
---- a/drivers/net/wireless/ipw2x00/libipw.h
-+++ b/drivers/net/wireless/ipw2x00/libipw.h
-@@ -66,16 +66,8 @@ extern u32 libipw_debug_level;
- do { if (libipw_debug_level & (level)) \
-   printk(KERN_DEBUG "libipw: %c %s " fmt, \
-          in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
--static inline bool libipw_ratelimit_debug(u32 level)
--{
--	return (libipw_debug_level & level) && net_ratelimit();
--}
- #else
- #define LIBIPW_DEBUG(level, fmt, args...) do {} while (0)
--static inline bool libipw_ratelimit_debug(u32 level)
--{
--	return false;
--}
- #endif				/* CONFIG_LIBIPW_DEBUG */
- 
- /*
--- 
-1.7.2.5
-
+Kalle
