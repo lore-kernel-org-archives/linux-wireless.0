@@ -1,89 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:59427 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751455Ab1JLXYd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 19:24:33 -0400
-Subject: Re: Bug#645055: realtek 8188CE ad-hoc mode not supported
-From: Ben Hutchings <ben@decadent.org.uk>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: 645055@bugs.debian.org,
-	Antoine =?ISO-8859-1?Q?Beaupr=E9?= <anarcat@koumbit.org>
-Date: Thu, 13 Oct 2011 00:24:12 +0100
-In-Reply-To: <20111012160135.GK3366@decadent.org.uk>
-References: <20111012052940.17383.59248.reportbug@localhost>
-	 <1318424918.4024.180.camel@deadeye> <87pqi2s0cg.fsf@marcos.anarcat.ath.cx>
-	 <20111012160135.GK3366@decadent.org.uk>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-xxlrx9u3BY0QHIIA/FoD"
-Message-ID: <1318461858.4024.197.camel@deadeye> (sfid-20111013_012437_392459_F7606C75)
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:1731 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753708Ab1JBRPC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Oct 2011 13:15:02 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 16/20] staging: brcm80211: removed fullmac function
+ brcmf_bus_devreset()
+Date: Sun, 2 Oct 2011 10:14:41 -0700
+Message-ID: <1317575685-3156-17-git-send-email-frankyl@broadcom.com> (sfid-20111002_191537_148776_8362EC75)
+In-Reply-To: <1317575685-3156-1-git-send-email-frankyl@broadcom.com>
+References: <1317575685-3156-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Roland Vossen <rvossen@broadcom.com>
 
---=-xxlrx9u3BY0QHIIA/FoD
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Function is not called anymore.
 
-On Wed, 2011-10-12 at 17:01 +0100, Ben Hutchings wrote:
-> On Wed, Oct 12, 2011 at 11:20:31AM -0400, Antoine Beaupr=C3=A9 wrote:
-> > On Wed, 12 Oct 2011 14:08:32 +0100, Ben Hutchings <ben@decadent.org.uk>=
- wrote:
-> > > Can you create an ad-hoc interface like this:
-> > >=20
-> > >     iw dev wlan0 interface add wlan1 type adhoc
-> > >=20
-> > > (you'll need the iw package).
-> >=20
-> > Interesting - this works. Didn't know of the iw tool. But this creates =
-a
-> > separate interface, kind of odd!
-> >=20
-> > The adhoc mode works like that. I am not sure I understand why it
-> > doesn't work with iwconfig, can you enlighten me?
->=20
-> iwconfig uses the original WEXT (wireless extensions) configuration
-> interface.  This interface was never very well specified and was
-> implemented in inconsistent ways by different drivers.
->=20
-> The newer configuration interface used by iw, Network Manager and
-> other tools is nl80211 (netlink for IEEE 802.11).
-[...]
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd.h      |    2 -
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   82 +------------------------
+ 2 files changed, 1 insertions(+), 83 deletions(-)
 
-I looked a little further and saw that nl80211 does support changing
-interface type (mode).  But this driver (rtl8192ce) only supports
-creating new interfaces, not changing their type.
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index be6c620..d79bd79 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -599,7 +599,6 @@ struct brcmf_pub {
+ 	/* Internal brcmf items */
+ 	bool up;		/* Driver up/down (to OS) */
+ 	bool txoff;		/* Transmit flow-controlled */
+-	bool dongle_reset;	/* true = DEVRESET put dongle into reset */
+ 	enum brcmf_bus_state busstate;
+ 	uint hdrlen;		/* Total BRCMF header length (proto + bus) */
+ 	uint maxctl;		/* Max size rxctl request from proto to bus */
+@@ -744,7 +743,6 @@ extern void brcmf_del_if(struct brcmf_info *drvr_priv, int ifidx);
+ extern int brcmf_sendpkt(struct brcmf_pub *drvr, int ifidx,\
+ 			 struct sk_buff *pkt);
+ 
+-extern int brcmf_bus_devreset(struct brcmf_pub *drvr, u8 flag);
+ extern int brcmf_bus_start(struct brcmf_pub *drvr);
+ 
+ extern void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg);
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 198d544..655209d 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -2269,11 +2269,6 @@ static int brcmf_sdbrcm_txpkt(struct brcmf_bus *bus, struct sk_buff *pkt,
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	if (bus->drvr->dongle_reset) {
+-		ret = -EPERM;
+-		goto done;
+-	}
+-
+ 	frame = (u8 *) (pkt->data);
+ 
+ 	/* Add alignment padding, allocate new packet if needed */
+@@ -2997,9 +2992,6 @@ brcmf_sdbrcm_bus_txctl(struct brcmf_bus *bus, unsigned char *msg, uint msglen)
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	if (bus->drvr->dongle_reset)
+-		return -EIO;
+-
+ 	/* Back the pointer to make a room for bus header */
+ 	frame = msg - SDPCM_HDRLEN;
+ 	len = (msglen += SDPCM_HDRLEN);
+@@ -3112,9 +3104,6 @@ brcmf_sdbrcm_bus_rxctl(struct brcmf_bus *bus, unsigned char *msg, uint msglen)
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	if (bus->drvr->dongle_reset)
+-		return -EIO;
+-
+ 	/* Wait until control frame is available */
+ 	timeleft = brcmf_sdbrcm_ioctl_resp_wait(bus, &bus->rxlen, &pending);
+ 
+@@ -3880,9 +3869,6 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_pub *drvr)
+ 
+ 	bus = drvr->bus;
+ 
+-	if (bus->drvr->dongle_reset)
+-		return false;
+-
+ 	/* Ignore the timer if simulating bus down */
+ 	if (bus->sleeping)
+ 		return false;
+@@ -3968,9 +3954,6 @@ static void brcmf_sdbrcm_release_malloc(struct brcmf_bus *bus)
+ {
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	if (bus->drvr && bus->drvr->dongle_reset)
+-		return;
+-
+ 	kfree(bus->rxbuf);
+ 	bus->rxctl = bus->rxbuf = NULL;
+ 	bus->rxlen = 0;
+@@ -4406,8 +4389,7 @@ brcmf_sdbrcm_watchdog_thread(void *data)
+ 		if (kthread_should_stop())
+ 			break;
+ 		if (!wait_for_completion_interruptible(&bus->watchdog_wait)) {
+-			if (bus->drvr->dongle_reset == false)
+-				brcmf_sdbrcm_bus_watchdog(bus->drvr);
++			brcmf_sdbrcm_bus_watchdog(bus->drvr);
+ 			/* Count the tick for reference */
+ 			bus->drvr->tickcnt++;
+ 		} else
+@@ -4451,9 +4433,6 @@ static void brcmf_sdbrcm_release_dongle(struct brcmf_bus *bus)
+ {
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	if (bus->drvr && bus->drvr->dongle_reset)
+-		return;
+-
+ 	if (bus->ci) {
+ 		brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
+ 		brcmf_sdbrcm_clkctl(bus, CLK_NONE, false);
+@@ -4672,65 +4651,6 @@ struct device *brcmf_bus_get_device(struct brcmf_bus *bus)
+ 	return &bus->sdiodev->func[2]->dev;
+ }
+ 
+-int brcmf_bus_devreset(struct brcmf_pub *drvr, u8 flag)
+-{
+-	int bcmerror = 0;
+-	struct brcmf_bus *bus;
+-
+-	bus = drvr->bus;
+-
+-	if (flag == true) {
+-		brcmf_sdbrcm_wd_timer(bus, 0);
+-		if (!bus->drvr->dongle_reset) {
+-			/* Expect app to have torn down any
+-			 connection before calling */
+-			/* Stop the bus, disable F2 */
+-			brcmf_sdbrcm_bus_stop(bus, false);
+-
+-			/* Clean tx/rx buffer pointers,
+-			 detach from the dongle */
+-			brcmf_sdbrcm_release_dongle(bus);
+-
+-			bus->drvr->dongle_reset = true;
+-			bus->drvr->up = false;
+-
+-			brcmf_dbg(TRACE, "WLAN OFF DONE\n");
+-			/* App can now remove power from device */
+-		} else
+-			bcmerror = -EIO;
+-	} else {
+-		/* App must have restored power to device before calling */
+-
+-		brcmf_dbg(TRACE, " == WLAN ON ==\n");
+-
+-		if (bus->drvr->dongle_reset) {
+-			/* Turn on WLAN */
+-
+-			/* Attempt to re-attach & download */
+-			if (brcmf_sdbrcm_probe_attach(bus, SI_ENUM_BASE)) {
+-				/* Attempt to download binary to the dongle */
+-				if (brcmf_sdbrcm_probe_init(bus)) {
+-					/* Re-init bus, enable F2 transfer */
+-					brcmf_sdbrcm_bus_init(bus->drvr, false);
+-
+-					bus->drvr->dongle_reset = false;
+-					bus->drvr->up = true;
+-
+-					brcmf_dbg(TRACE, "WLAN ON DONE\n");
+-				} else
+-					bcmerror = -EIO;
+-			} else
+-				bcmerror = -EIO;
+-		} else {
+-			bcmerror = -EISCONN;
+-			brcmf_dbg(ERROR, "Set DEVRESET=false invoked when device is on\n");
+-			bcmerror = -EIO;
+-		}
+-		brcmf_sdbrcm_wd_timer(bus, BRCMF_WD_POLL_MS);
+-	}
+-	return bcmerror;
+-}
+-
+ void
+ brcmf_sdbrcm_wd_timer(struct brcmf_bus *bus, uint wdtick)
+ {
+-- 
+1.7.1
 
-Should mac80211 drivers generally support changing interface type
-(change_interface operation)?
 
-Ben.
-
---=20
-Ben Hutchings
-Quantity is no substitute for quality, but it's the only one we've got.
-
---=-xxlrx9u3BY0QHIIA/FoD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIVAwUATpYhnOe/yOyVhhEJAQreYg//Rxa5KxvXQYh2hhU1+/9VhbWnBh10xqvs
-zB30s9DiJLejShUSZ4JDueFQNwdiVNbsOlLADAapvXkdIkU5NUViRFofHYkvnQ9J
-MnfcAIcAlgCzZyxnBXCmkoJ6m1xt8E8fH9j/JzU2jOH8Am41HrLLFl8brLeXncoP
-6K0ahJV1m8QBlkgDQQ0VK3ZmJ7Rfgy7JwsfaDtw3iD2koFgq5CY/AV+2qqMGkA5o
-I+D4sMvWPZ8KQX1J3xBs+3SJsDzsOlcAHYuBhf6r9TlqavkbySA4Z9qUzDMpVFW2
-vDaP63gFydR6GUFrLFEfbLa/HGpikxtH1H5VAq3fMqsrofYUJoZ1Oex4vtsrmn1w
-l/JILz3sXab19koyg2pHDK9hFletEIZNCZ4WI6ntxlqkDIh14RRqQBpzCPu/VUWK
-dky/N/bBxhZBGgZQPTmeR7Za41vAAIdUVLCyy8ZDSUoo50MDwBwpY6/EXLWOdUeq
-CI8qEISopEDlIbX+yPsS+utQSObkaFvG/XDA1hvvqz1KaXJ+oW6P2s0bMUcLpDz1
-R1IdhJr/5N+1acrpgguAj4/WmItxJk/T0dc9ZxKDtR51Em6onPwMhYfZTTE9fBo6
-pr+rlfaGcAVnpTq2LXAcQZ+6uHRk82s4H+bK0sKNPo3O+JhgeY3sJmynjq5tk80G
-CX1Erslu0x8=
-=Rhu/
------END PGP SIGNATURE-----
-
---=-xxlrx9u3BY0QHIIA/FoD--
