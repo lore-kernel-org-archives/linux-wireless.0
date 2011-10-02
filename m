@@ -1,127 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:61247 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753014Ab1JZVrr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 17:47:47 -0400
-Received: by qyk27 with SMTP id 27so2345465qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 14:47:46 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
-	johannes@sipsolutions.net, linville@tuxdriver.com
-Subject: [PATCH 4/5] mac80211: set HT capabilities for mesh peer
-Date: Wed, 26 Oct 2011 14:47:28 -0700
-Message-Id: <1319665649-21784-5-git-send-email-thomas@cozybit.com> (sfid-20111026_234754_797162_A7EBDFF5)
-In-Reply-To: <1319665649-21784-1-git-send-email-thomas@cozybit.com>
-References: <1319665649-21784-1-git-send-email-thomas@cozybit.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:2424 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753679Ab1JBRO7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Oct 2011 13:14:59 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 11/20] staging: brcm80211: reduce indentation level in
+ dhd_sdio.c #2
+Date: Sun, 2 Oct 2011 10:14:36 -0700
+Message-ID: <1317575685-3156-12-git-send-email-frankyl@broadcom.com> (sfid-20111002_191515_202294_44302233)
+In-Reply-To: <1317575685-3156-1-git-send-email-frankyl@broadcom.com>
+References: <1317575685-3156-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set peer's HT capabilities, and disallow peering if we're on a different
-channel type.
+From: Roland Vossen <rvossen@broadcom.com>
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-Signed-off-by: Ashok Nagarajan <anagar6@uic.edu>
+By introducing 1 new function.
+
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- net/mac80211/mesh.c       |   25 +++++++++++++++++--------
- net/mac80211/mesh_plink.c |   13 ++++++++++---
- 2 files changed, 27 insertions(+), 11 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |  103 ++++++++++++++-----------
+ 1 files changed, 58 insertions(+), 45 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 2dc76a9..b3a125f 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -76,6 +76,7 @@ static void ieee80211_mesh_housekeeping_timer(unsigned long data)
- bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	struct ieee80211_local *local = sdata->local;
- 
- 	/*
- 	 * As support for each feature is added, check for matching
-@@ -87,15 +88,23 @@ bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_dat
- 	 *   - MDA enabled
- 	 * - Power management control on fc
- 	 */
--	if (ifmsh->mesh_id_len == ie->mesh_id_len &&
--		memcmp(ifmsh->mesh_id, ie->mesh_id, ie->mesh_id_len) == 0 &&
--		(ifmsh->mesh_pp_id == ie->mesh_config->meshconf_psel) &&
--		(ifmsh->mesh_pm_id == ie->mesh_config->meshconf_pmetric) &&
--		(ifmsh->mesh_cc_id == ie->mesh_config->meshconf_congest) &&
--		(ifmsh->mesh_sp_id == ie->mesh_config->meshconf_synch) &&
--		(ifmsh->mesh_auth_id == ie->mesh_config->meshconf_auth))
--		return true;
--
-+	if (!(ifmsh->mesh_id_len == ie->mesh_id_len &&
-+	     memcmp(ifmsh->mesh_id, ie->mesh_id, ie->mesh_id_len) == 0 &&
-+	     (ifmsh->mesh_pp_id == ie->mesh_config->meshconf_psel) &&
-+	     (ifmsh->mesh_pm_id == ie->mesh_config->meshconf_pmetric) &&
-+	     (ifmsh->mesh_cc_id == ie->mesh_config->meshconf_congest) &&
-+	     (ifmsh->mesh_sp_id == ie->mesh_config->meshconf_synch) &&
-+	     (ifmsh->mesh_auth_id == ie->mesh_config->meshconf_auth)))
-+		goto mismatch;
-+
-+	/* disallow peering with mismatched channel types for now */
-+	if (ie->ht_info_elem &&
-+	    (local->_oper_channel_type !=
-+	     ieee80211_ht_info_to_channel_type(ie->ht_info_elem)))
-+		goto mismatch;
-+
-+	return true;
-+mismatch:
- 	return false;
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 169c6b2..cabf912 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -1797,6 +1797,62 @@ brcmf_alloc_pkt_and_read(struct brcmf_bus *bus, u16 rdlen,
+ 	}
  }
  
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 986af8a..0140e88 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -80,11 +80,15 @@ static inline void mesh_plink_fsm_restart(struct sta_info *sta)
-  *       on it in the lifecycle management section!
-  */
- static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
--					 u8 *hw_addr, u32 rates)
-+					 u8 *hw_addr, u32 rates,
-+					 struct ieee802_11_elems *elems)
- {
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
- 	struct sta_info *sta;
- 
-+	sband = local->hw.wiphy->bands[local->oper_channel->band];
++/* Checks the header */
++static int
++brcmf_check_rxbuf(struct brcmf_bus *bus, struct sk_buff *pkt, u8 *rxbuf,
++		  u8 rxseq, u16 nextlen, u16 *len)
++{
++	u16 check;
++	bool len_consistent;	/* Result of comparing readahead len and
++				   len from hw-hdr */
 +
- 	if (local->num_sta >= MESH_MAX_PLINKS)
- 		return NULL;
++	memcpy(bus->rxhdr, rxbuf, SDPCM_HDRLEN);
++
++	/* Extract hardware header fields */
++	*len = get_unaligned_le16(bus->rxhdr);
++	check = get_unaligned_le16(bus->rxhdr + sizeof(u16));
++
++	/* All zeros means readahead info was bad */
++	if (!(*len | check)) {
++		brcmf_dbg(INFO, "(nextlen): read zeros in HW header???\n");
++		goto fail;
++	}
++
++	/* Validate check bytes */
++	if ((u16)~(*len ^ check)) {
++		brcmf_dbg(ERROR, "(nextlen): HW hdr error: nextlen/len/check 0x%04x/0x%04x/0x%04x\n",
++			  nextlen, *len, check);
++		bus->rx_badhdr++;
++		brcmf_sdbrcm_rxfail(bus, false, false);
++		goto fail;
++	}
++
++	/* Validate frame length */
++	if (*len < SDPCM_HDRLEN) {
++		brcmf_dbg(ERROR, "(nextlen): HW hdr length invalid: %d\n",
++			  *len);
++		goto fail;
++	}
++
++	/* Check for consistency with readahead info */
++	len_consistent = (nextlen != (roundup(*len, 16) >> 4));
++	if (len_consistent) {
++		/* Mismatch, force retry w/normal
++			header (may be >4K) */
++		brcmf_dbg(ERROR, "(nextlen): mismatch, nextlen %d len %d rnd %d; expected rxseq %d\n",
++			  nextlen, *len, roundup(*len, 16),
++			  rxseq);
++		brcmf_sdbrcm_rxfail(bus, true, true);
++		goto fail;
++	}
++
++	return 0;
++
++fail:
++	brcmf_sdbrcm_pktfree2(bus, pkt);
++	return -EINVAL;
++}
++
+ /* Return true if there may be more frames to read */
+ static uint
+ brcmf_sdbrcm_readframes(struct brcmf_bus *bus, uint maxframes, bool *finished)
+@@ -1812,8 +1868,6 @@ brcmf_sdbrcm_readframes(struct brcmf_bus *bus, uint maxframes, bool *finished)
+ 	uint rxleft = 0;	/* Remaining number of frames allowed */
+ 	int sdret;		/* Return code from calls */
+ 	u8 txmax;		/* Maximum tx sequence offered */
+-	bool len_consistent;	/* Result of comparing readahead len and
+-					 len from hw-hdr */
+ 	u8 *rxbuf;
+ 	int ifidx = 0;
+ 	uint rxcount = 0;	/* Total frames read */
+@@ -1860,50 +1914,9 @@ brcmf_sdbrcm_readframes(struct brcmf_bus *bus, uint maxframes, bool *finished)
+ 				continue;
+ 			}
  
-@@ -96,6 +100,9 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
- 	set_sta_flag(sta, WLAN_STA_AUTHORIZED);
- 	set_sta_flag(sta, WLAN_STA_WME);
- 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
-+	if (elems->ht_cap_elem)
-+		ieee80211_ht_cap_ie_to_sta_ht_cap(sband, elems->ht_cap_elem,
-+						  &sta->sta.ht_cap);
- 	rate_control_rate_init(sta);
+-			/* Now check the header */
+-			memcpy(bus->rxhdr, rxbuf, SDPCM_HDRLEN);
+-
+-			/* Extract hardware header fields */
+-			len = get_unaligned_le16(bus->rxhdr);
+-			check = get_unaligned_le16(bus->rxhdr + sizeof(u16));
+-
+-			/* All zeros means readahead info was bad */
+-			if (!(len | check)) {
+-				brcmf_dbg(INFO, "(nextlen): read zeros in HW header???\n");
+-				brcmf_sdbrcm_pktfree2(bus, pkt);
+-				continue;
+-			}
+-
+-			/* Validate check bytes */
+-			if ((u16)~(len ^ check)) {
+-				brcmf_dbg(ERROR, "(nextlen): HW hdr error: nextlen/len/check 0x%04x/0x%04x/0x%04x\n",
+-					  nextlen, len, check);
+-				bus->rx_badhdr++;
+-				brcmf_sdbrcm_rxfail(bus, false, false);
+-				brcmf_sdbrcm_pktfree2(bus, pkt);
+-				continue;
+-			}
+-
+-			/* Validate frame length */
+-			if (len < SDPCM_HDRLEN) {
+-				brcmf_dbg(ERROR, "(nextlen): HW hdr length invalid: %d\n",
+-					  len);
+-				brcmf_sdbrcm_pktfree2(bus, pkt);
++			if (brcmf_check_rxbuf(bus, pkt, rxbuf, rxseq, nextlen,
++					      &len) < 0)
+ 				continue;
+-			}
+-
+-			/* Check for consistency withreadahead info */
+-			len_consistent = (nextlen != (roundup(len, 16) >> 4));
+-			if (len_consistent) {
+-				/* Mismatch, force retry w/normal
+-					header (may be >4K) */
+-				brcmf_dbg(ERROR, "(nextlen): mismatch, nextlen %d len %d rnd %d; expected rxseq %d\n",
+-					  nextlen, len, roundup(len, 16),
+-					  rxseq);
+-				brcmf_sdbrcm_rxfail(bus, true, true);
+-				brcmf_sdbrcm_pktfree2(bus, pkt);
+-				continue;
+-			}
  
- 	return sta;
-@@ -276,7 +283,7 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
- 					elems->ie_start, elems->total_len,
- 					GFP_KERNEL);
- 		else
--			sta = mesh_plink_alloc(sdata, hw_addr, rates);
-+			sta = mesh_plink_alloc(sdata, hw_addr, rates, elems);
- 		if (!sta)
- 			return;
- 		if (sta_info_insert_rcu(sta)) {
-@@ -567,7 +574,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		}
- 
- 		rates = ieee80211_sta_get_rates(local, &elems, rx_status->band);
--		sta = mesh_plink_alloc(sdata, mgmt->sa, rates);
-+		sta = mesh_plink_alloc(sdata, mgmt->sa, rates, &elems);
- 		if (!sta) {
- 			mpl_dbg("Mesh plink error: plink table full\n");
- 			return;
+ 			/* Extract software header fields */
+ 			chan = SDPCM_PACKET_CHANNEL(
 -- 
-1.7.5.4
+1.7.1
+
 
