@@ -1,27 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:42542 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935493Ab1JEXFf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 19:05:35 -0400
-Received: by qyk7 with SMTP id 7so2137367qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 16:05:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAFHVRfc1N8YNCmxMwsk1_UCZFQuOMNJE-9y31dnfcwrDsk36wA@mail.gmail.com>
-References: <CAFHVRfc1N8YNCmxMwsk1_UCZFQuOMNJE-9y31dnfcwrDsk36wA@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Wed, 5 Oct 2011 16:05:15 -0700
-Message-ID: <CAB=NE6VhgWws89upWaON_0FXmSnmyzsLSyO2S2fTfY2eYvwv4w@mail.gmail.com> (sfid-20111006_010540_022550_5CC2685F)
-Subject: Re: Cannot make ath9k driver
-To: Panu Avakul <avakulpa@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.neratec.ch ([80.75.119.105]:51280 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754501Ab1JCKaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Oct 2011 06:30:05 -0400
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Cc: kgiori@qca.qualcomm.com, rodrigue@qca.qualcomm.com,
+	nbd@openwrt.org, Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [RFC 0/6] ath9k: DFS pattern detection
+Date: Mon,  3 Oct 2011 12:29:12 +0200
+Message-Id: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20111003_123008_491345_ABF13A80)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 5, 2011 at 3:57 PM, Panu Avakul <avakulpa@gmail.com> wrote:
-> Hello, I got the compat-wireless-2011-09-27
+(now with patches ;))
 
-Can you try today's release?
+This patch series proposes DFS pattern detection for ath9k.
 
-  Luis
+With the source code for the proprietary wireless driver provided by
+Atheros, the basic functionality to inspect radar pulses detected by
+the HW and to post-filter false pulses has been re-implemented
+for ath9k.
+
+
+
+Zefir Kurtisi (6):
+  ath9k: add DFS statistics to debugfs
+  ath9k: add DFS debug flag
+  ath9k: initial radar pulse detection for DFS
+  ath9k: add DFS build parameter
+  ath9k: enable DFS pulse detection
+  ath9k: handle pulse data reported by DFS HW
+
+ drivers/net/wireless/ath/ath.h          |   34 +++---
+ drivers/net/wireless/ath/ath9k/Kconfig  |    7 +
+ drivers/net/wireless/ath/ath9k/Makefile |    2 +
+ drivers/net/wireless/ath/ath9k/debug.c  |   51 ++++++++
+ drivers/net/wireless/ath/ath9k/debug.h  |   29 +++++
+ drivers/net/wireless/ath/ath9k/dfs.c    |  192 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/dfs.h    |   24 ++++
+ drivers/net/wireless/ath/ath9k/main.c   |   12 ++
+ drivers/net/wireless/ath/ath9k/recv.c   |   22 +++-
+ 9 files changed, 352 insertions(+), 21 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/dfs.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/dfs.h
+
+-- 
+1.7.4.1
+
