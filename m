@@ -1,242 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:54982 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752687Ab1JJIMf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 04:12:35 -0400
-Received: by wyg34 with SMTP id 34so5615227wyg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 01:12:34 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/29] wl12xx: refactor fw init into a new function
-Date: Mon, 10 Oct 2011 10:12:49 +0200
-Message-Id: <1318234397-21081-2-git-send-email-eliad@wizery.com> (sfid-20111010_101238_725746_AEAAFEEE)
-In-Reply-To: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:3735 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751674Ab1JCXdz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Oct 2011 19:33:55 -0400
+Message-ID: <4E8A4652.5070808@broadcom.com> (sfid-20111004_013359_734219_06B8CF62)
+Date: Mon, 3 Oct 2011 16:33:38 -0700
+From: "Franky Lin" <frankyl@broadcom.com>
+MIME-Version: 1.0
+To: "Greg KH" <gregkh@suse.de>
+cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 00/25] staging: brcm80211: 8th reaction for
+ mainline patch #2
+References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+ <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
+ <20111003232327.GA23716@suse.de>
+In-Reply-To: <20111003232327.GA23716@suse.de>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The fw boot and initialization currently happens inside the
-add_interface() callback. This is wrong, as add_interface is
-called for each new vif. However, we due to some fw limitation
-(we have to know the actual mac address on boot), we can't
-completely move it into the start() callback.
+On 10/03/2011 04:23 PM, Greg KH wrote:
+> Please note that my staging git tree moved, and is now public at
+> git.kernel.org, just drop the "-2.6" from your old address.
 
-Until the fw will be fixed, refactor the fw init into
-a new function, and call it from add_interface()
+Glad to know everything is back on track. Thanks for the heads up.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |  171 +++++++++++++++++++----------------
- 1 files changed, 93 insertions(+), 78 deletions(-)
+Franky
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 194d7cc..3667acf 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1888,60 +1888,12 @@ static int wl12xx_init_vif_data(struct ieee80211_vif *vif)
- 	return 0;
- }
- 
--static int wl1271_op_add_interface(struct ieee80211_hw *hw,
--				   struct ieee80211_vif *vif)
-+static bool wl12xx_init_fw(struct wl1271 *wl)
- {
--	struct wl1271 *wl = hw->priv;
--	struct wiphy *wiphy = hw->wiphy;
--	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
- 	int retries = WL1271_BOOT_RETRIES;
--	int ret = 0;
--	u8 role_type;
- 	bool booted = false;
--
--	wl1271_debug(DEBUG_MAC80211, "mac80211 add interface type %d mac %pM",
--		     ieee80211_vif_type_p2p(vif), vif->addr);
--
--	mutex_lock(&wl->mutex);
--	if (wl->vif) {
--		wl1271_debug(DEBUG_MAC80211,
--			     "multiple vifs are not supported yet");
--		ret = -EBUSY;
--		goto out;
--	}
--
--	/*
--	 * in some very corner case HW recovery scenarios its possible to
--	 * get here before __wl1271_op_remove_interface is complete, so
--	 * opt out if that is the case.
--	 */
--	if (test_bit(WL1271_FLAG_IF_INITIALIZED, &wl->flags)) {
--		ret = -EBUSY;
--		goto out;
--	}
--
--	ret = wl12xx_init_vif_data(vif);
--	if (ret < 0)
--		goto out;
--
--	wlvif->wl = wl;
--	role_type = wl12xx_get_role_type(wl, wlvif);
--	if (role_type == WL12XX_INVALID_ROLE_TYPE) {
--		ret = -EINVAL;
--		goto out;
--	}
--	/*
--	 * we still need this in order to configure the fw
--	 * while uploading the nvs
--	 */
--	memcpy(wl->mac_addr, vif->addr, ETH_ALEN);
--
--	if (wl->state != WL1271_STATE_OFF) {
--		wl1271_error("cannot start because not in off state: %d",
--			     wl->state);
--		ret = -EBUSY;
--		goto out;
--	}
-+	struct wiphy *wiphy = wl->hw->wiphy;
-+	int ret;
- 
- 	while (retries) {
- 		retries--;
-@@ -1957,30 +1909,6 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 		if (ret < 0)
- 			goto irq_disable;
- 
--		if (wlvif->bss_type == BSS_TYPE_STA_BSS ||
--		    wlvif->bss_type == BSS_TYPE_IBSS) {
--			/*
--			 * The device role is a special role used for
--			 * rx and tx frames prior to association (as
--			 * the STA role can get packets only from
--			 * its associated bssid)
--			 */
--			ret = wl12xx_cmd_role_enable(wl, vif->addr,
--							 WL1271_ROLE_DEVICE,
--							 &wlvif->dev_role_id);
--			if (ret < 0)
--				goto irq_disable;
--		}
--
--		ret = wl12xx_cmd_role_enable(wl, vif->addr,
--					     role_type, &wlvif->role_id);
--		if (ret < 0)
--			goto irq_disable;
--
--		ret = wl1271_init_vif_specific(wl, vif);
--		if (ret < 0)
--			goto irq_disable;
--
- 		booted = true;
- 		break;
- 
-@@ -2007,9 +1935,6 @@ power_off:
- 		goto out;
- 	}
- 
--	wl->vif = vif;
--	wl->state = WL1271_STATE_ON;
--	set_bit(WL1271_FLAG_IF_INITIALIZED, &wl->flags);
- 	wl1271_info("firmware booted (%s)", wl->chip.fw_ver_str);
- 
- 	/* update hw/fw version info in wiphy struct */
-@@ -2027,6 +1952,96 @@ power_off:
- 	wl1271_debug(DEBUG_MAC80211, "11a is %ssupported",
- 		     wl->enable_11a ? "" : "not ");
- 
-+	wl->state = WL1271_STATE_ON;
-+out:
-+	return booted;
-+}
-+
-+static int wl1271_op_add_interface(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
-+	int ret = 0;
-+	u8 role_type;
-+	bool booted = false;
-+
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 add interface type %d mac %pM",
-+		     ieee80211_vif_type_p2p(vif), vif->addr);
-+
-+	mutex_lock(&wl->mutex);
-+	if (wl->vif) {
-+		wl1271_debug(DEBUG_MAC80211,
-+			     "multiple vifs are not supported yet");
-+		ret = -EBUSY;
-+		goto out;
-+	}
-+
-+	/*
-+	 * in some very corner case HW recovery scenarios its possible to
-+	 * get here before __wl1271_op_remove_interface is complete, so
-+	 * opt out if that is the case.
-+	 */
-+	if (test_bit(WL1271_FLAG_IF_INITIALIZED, &wl->flags)) {
-+		ret = -EBUSY;
-+		goto out;
-+	}
-+
-+	ret = wl12xx_init_vif_data(vif);
-+	if (ret < 0)
-+		goto out;
-+
-+	wlvif->wl = wl;
-+	role_type = wl12xx_get_role_type(wl, wlvif);
-+	if (role_type == WL12XX_INVALID_ROLE_TYPE) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	/*
-+	 * TODO: after the nvs issue will be solved, move this block
-+	 * to start(), and make sure here the driver is ON.
-+	 */
-+	if (wl->state == WL1271_STATE_OFF) {
-+		/*
-+		 * we still need this in order to configure the fw
-+		 * while uploading the nvs
-+		 */
-+		memcpy(wl->mac_addr, vif->addr, ETH_ALEN);
-+
-+		booted = wl12xx_init_fw(wl);
-+		if (!booted) {
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+	}
-+
-+	if (wlvif->bss_type == BSS_TYPE_STA_BSS ||
-+	    wlvif->bss_type == BSS_TYPE_IBSS) {
-+		/*
-+		 * The device role is a special role used for
-+		 * rx and tx frames prior to association (as
-+		 * the STA role can get packets only from
-+		 * its associated bssid)
-+		 */
-+		ret = wl12xx_cmd_role_enable(wl, vif->addr,
-+						 WL1271_ROLE_DEVICE,
-+						 &wlvif->dev_role_id);
-+		if (ret < 0)
-+			goto out;
-+	}
-+
-+	ret = wl12xx_cmd_role_enable(wl, vif->addr,
-+				     role_type, &wlvif->role_id);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = wl1271_init_vif_specific(wl, vif);
-+	if (ret < 0)
-+		goto out;
-+
-+	wl->vif = vif;
-+	set_bit(WL1271_FLAG_IF_INITIALIZED, &wl->flags);
- out:
- 	mutex_unlock(&wl->mutex);
- 
--- 
-1.7.6.401.g6a319
 
