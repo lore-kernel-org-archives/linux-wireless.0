@@ -1,141 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4099 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933583Ab1JYOHF (ORCPT
+Received: from queueout02-winn.ispmail.ntl.com ([81.103.221.56]:25028 "EHLO
+	queueout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752062Ab1JCLVd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 10:07:05 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 24/31] ath6kl: Introduce spinlock to protect vif specific information
-Date: Tue, 25 Oct 2011 19:34:19 +0530
-Message-ID: <1319551466-29070-25-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_160710_878481_0FA8E14E)
-In-Reply-To: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 3 Oct 2011 07:21:33 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: linville@tuxdriver.com
+Cc: dcbw@redhat.com
+Cc: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org
+Subject: [PATCH v2] libertas: detect TX lockups and reset hardware
+Message-Id: <20111003103302.644D79D401D@zog.reactivated.net> (sfid-20111003_132137_189331_44DE1CF0)
+Date: Mon,  3 Oct 2011 11:33:02 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use this spinlock to protect the vif's data instead of
-one from ath6kl.
+Recent patches added support for resetting the SD8686 hardware when
+commands time out, which seems to happen quite frequently soon after
+resuming the system from a Wake-on-WLAN-triggered resume.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+At http://dev.laptop.org/ticket/10969 we see the same thing happen
+with transmits. In this case, the hardware will fail to respond to
+a frame passed for transmission, and libertas (correctly) will block
+all further commands and transmissions as the hardware can only
+deal with one thing at a time. This results in a lockup while the
+system waits indefinitely for the dead card to respond.
+
+Hook up a TX lockup timer to detect this and reset the hardware.
+
+Signed-off-by: Daniel Drake <dsd@laptop.org>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    1 +
- drivers/net/wireless/ath/ath6kl/core.h     |    2 ++
- drivers/net/wireless/ath/ath6kl/main.c     |   13 ++++---------
- drivers/net/wireless/ath/ath6kl/txrx.c     |    8 ++++----
- 4 files changed, 11 insertions(+), 13 deletions(-)
+ drivers/net/wireless/libertas/dev.h  |    1 +
+ drivers/net/wireless/libertas/main.c |   35 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index d42cb3e..5eadcaa 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2076,6 +2076,7 @@ static int ath6kl_init_if_data(struct ath6kl_vif *vif)
- 	setup_timer(&vif->disconnect_timer, disconnect_timer_handler,
- 		    (unsigned long) vif->ndev);
- 	set_bit(WMM_ENABLED, &vif->flags);
-+	spin_lock_init(&vif->if_lock);
+v2: regenerated against wireless-next.git. Compared to the first version,
+minor changes were needed to the way the timer is stopped when the interface
+is brought down (these routines changed as a result of other recent work).
+
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index fb3e40b..f3fd447 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -158,6 +158,7 @@ struct lbs_private {
+ 	/* protected by hard_start_xmit serialization */
+ 	u8 txretrycount;
+ 	struct sk_buff *currenttxskb;
++	struct timer_list tx_lockup_timer;
  
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 747e5a7..2c64652 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -400,6 +400,8 @@ struct ath6kl_vif {
- 	struct wireless_dev wdev;
- 	struct net_device *ndev;
- 	struct ath6kl *ar;
-+	/* Lock to protect vif specific net_stats and flags */
-+	spinlock_t if_lock;
- 	u8 fw_vif_idx;
- 	unsigned long flags;
- 	int ssid_len;
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 6bf9402..ca86ed3 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -989,11 +989,11 @@ void ath6kl_connect_event(struct ath6kl_vif *vif, u16 channel, u8 *bssid,
- 	netif_wake_queue(vif->ndev);
+ 	/* Locks */
+ 	struct mutex lock;
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index d62d1fb..6a32623 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -188,6 +188,7 @@ int lbs_stop_iface(struct lbs_private *priv)
+ 	spin_unlock_irqrestore(&priv->driver_lock, flags);
  
- 	/* Update connect & link status atomically */
--	spin_lock_bh(&ar->lock);
-+	spin_lock_bh(&vif->if_lock);
- 	set_bit(CONNECTED, &vif->flags);
- 	clear_bit(CONNECT_PEND, &vif->flags);
- 	netif_carrier_on(vif->ndev);
--	spin_unlock_bh(&ar->lock);
-+	spin_unlock_bh(&vif->if_lock);
+ 	cancel_work_sync(&priv->mcast_work);
++	del_timer_sync(&priv->tx_lockup_timer);
  
- 	aggr_reset_state(vif->aggr_cntxt);
- 	vif->reconnect_flag = 0;
-@@ -1345,10 +1345,10 @@ void ath6kl_disconnect_event(struct ath6kl_vif *vif, u8 reason, u8 *bssid,
+ 	/* Disable command processing, and wait for all commands to complete */
+ 	lbs_deb_main("waiting for commands to complete\n");
+@@ -243,6 +244,7 @@ void lbs_host_to_card_done(struct lbs_private *priv)
+ 	lbs_deb_enter(LBS_DEB_THREAD);
+ 
+ 	spin_lock_irqsave(&priv->driver_lock, flags);
++	del_timer(&priv->tx_lockup_timer);
+ 
+ 	priv->dnld_sent = DNLD_RES_RECEIVED;
+ 
+@@ -585,6 +587,9 @@ static int lbs_thread(void *data)
+ 			if (ret) {
+ 				lbs_deb_tx("host_to_card failed %d\n", ret);
+ 				priv->dnld_sent = DNLD_RES_RECEIVED;
++			} else {
++				mod_timer(&priv->tx_lockup_timer,
++					  jiffies + (HZ * 5));
+ 			}
+ 			priv->tx_pending_len = 0;
+ 			if (!priv->currenttxskb) {
+@@ -601,6 +606,7 @@ static int lbs_thread(void *data)
  	}
  
- 	/* update connect & link status atomically */
--	spin_lock_bh(&ar->lock);
-+	spin_lock_bh(&vif->if_lock);
- 	clear_bit(CONNECTED, &vif->flags);
- 	netif_carrier_off(vif->ndev);
--	spin_unlock_bh(&ar->lock);
-+	spin_unlock_bh(&vif->if_lock);
+ 	del_timer(&priv->command_timer);
++	del_timer(&priv->tx_lockup_timer);
+ 	del_timer(&priv->auto_deepsleep_timer);
  
- 	if ((reason != CSERV_DISCONNECT) || (vif->reconnect_flag != 1))
- 		vif->reconnect_flag = 0;
-@@ -1365,11 +1365,8 @@ void ath6kl_disconnect_event(struct ath6kl_vif *vif, u8 reason, u8 *bssid,
- 
- static int ath6kl_open(struct net_device *dev)
- {
--	struct ath6kl *ar = ath6kl_priv(dev);
- 	struct ath6kl_vif *vif = netdev_priv(dev);
- 
--	spin_lock_bh(&ar->lock);
--
- 	set_bit(WLAN_ENABLED, &vif->flags);
- 
- 	if (test_bit(CONNECTED, &vif->flags)) {
-@@ -1378,8 +1375,6 @@ static int ath6kl_open(struct net_device *dev)
- 	} else
- 		netif_carrier_off(dev);
- 
--	spin_unlock_bh(&ar->lock);
--
- 	return 0;
+ 	lbs_deb_leave(LBS_DEB_THREAD);
+@@ -735,6 +741,32 @@ out:
  }
  
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index e4a6d8f..ff288da 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -475,9 +475,9 @@ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
- 		return HTC_SEND_FULL_DROP;
+ /**
++ * lbs_tx_lockup_handler - handles the timeout of the passing of TX frames
++ * to the hardware. This is known to frequently happen with SD8686 when
++ * waking up after a Wake-on-WLAN-triggered resume.
++ *
++ * @data: &struct lbs_private pointer
++ */
++static void lbs_tx_lockup_handler(unsigned long data)
++{
++	struct lbs_private *priv = (struct lbs_private *)data;
++	unsigned long flags;
++
++	lbs_deb_enter(LBS_DEB_TX);
++	spin_lock_irqsave(&priv->driver_lock, flags);
++
++	netdev_info(priv->dev, "TX lockup detected\n");
++	if (priv->reset_card)
++		priv->reset_card(priv);
++
++	priv->dnld_sent = DNLD_RES_RECEIVED;
++	wake_up_interruptible(&priv->waitq);
++
++	spin_unlock_irqrestore(&priv->driver_lock, flags);
++	lbs_deb_leave(LBS_DEB_TX);
++}
++
++/**
+  * auto_deepsleep_timer_fn - put the device back to deep sleep mode when
+  * timer expires and no activity (command, event, data etc.) is detected.
+  * @data:	&struct lbs_private pointer
+@@ -820,6 +852,8 @@ static int lbs_init_adapter(struct lbs_private *priv)
  
- stop_net_queues:
--	spin_lock_bh(&ar->lock);
-+	spin_lock_bh(&vif->if_lock);
- 	set_bit(NETQ_STOPPED, &vif->flags);
--	spin_unlock_bh(&ar->lock);
-+	spin_unlock_bh(&vif->if_lock);
- 	netif_stop_queue(vif->ndev);
+ 	setup_timer(&priv->command_timer, lbs_cmd_timeout_handler,
+ 		(unsigned long)priv);
++	setup_timer(&priv->tx_lockup_timer, lbs_tx_lockup_handler,
++		(unsigned long)priv);
+ 	setup_timer(&priv->auto_deepsleep_timer, auto_deepsleep_timer_fn,
+ 			(unsigned long)priv);
  
- 	return HTC_SEND_FULL_KEEP;
-@@ -1103,12 +1103,12 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 	 * Take lock to protect buffer counts and adaptive power throughput
- 	 * state.
- 	 */
--	spin_lock_bh(&ar->lock);
-+	spin_lock_bh(&vif->if_lock);
+@@ -857,6 +891,7 @@ static void lbs_free_adapter(struct lbs_private *priv)
+ 	lbs_free_cmd_buffer(priv);
+ 	kfifo_free(&priv->event_fifo);
+ 	del_timer(&priv->command_timer);
++	del_timer(&priv->tx_lockup_timer);
+ 	del_timer(&priv->auto_deepsleep_timer);
  
- 	vif->net_stats.rx_packets++;
- 	vif->net_stats.rx_bytes += packet->act_len;
- 
--	spin_unlock_bh(&ar->lock);
-+	spin_unlock_bh(&vif->if_lock);
- 
- 
- 	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, __func__, "rx ",
+ 	lbs_deb_leave(LBS_DEB_MAIN);
 -- 
-1.7.0.4
+1.7.6.4
 
