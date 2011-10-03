@@ -1,91 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2054 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758049Ab1JEPeb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 11:34:31 -0400
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Alwin Beukers" <alwin@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>
-Date: Wed, 5 Oct 2011 08:34:14 -0700
-Subject: RE: [PATCH v3] move brcm80211 drivers to mainline
-Message-ID: <400C43189542CE41BC0A5B252FC90136BC0D574E70@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20111005_173436_026699_53B8FBC3)
-References: <4E8C64EF.3070203@broadcom.com> (
- sfid-20111005_160911_496386_985D7509)
- <1317826602.4839.46.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1317826602.4839.46.camel@jlt3.sipsolutions.net>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:59144 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754226Ab1JCL4l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Oct 2011 07:56:41 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2 3/4] ath6kl: Avoid processing failed rx packets
+Date: Mon, 3 Oct 2011 17:26:26 +0530
+Message-ID: <1317642987-16026-3-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111003_135645_243884_7E03F9E7)
+In-Reply-To: <1317642987-16026-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1317642987-16026-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0N
-Cj4gU2VudDogd29lbnNkYWcgNSBva3RvYmVyIDIwMTEgMTY6NTcNCj4gDQo+IFNvbWUgY29tbWVu
-dHMuDQo+IA0KPiBJIHNvcnQgb2YgdW5kZXJzdGFuZCB5b3VyIGZhc2NpbmF0aW9uIHdpdGggImdl
-bmVyaWMgdXRpbHMiIGJ1dCB0aGV5J3JlDQo+IHdhc3RlZnVsIGlmIHRoZXkncmUgaW4gYSBzaW5n
-bGUgZHJpdmVyIG9ubHkuIFRoZXkgc2hvdWxkIGVpdGhlciBiZSBtYWRlDQo+IG1vcmUgZ2VuZXJp
-YyAoZm9yIGFsbCBkcml2ZXJzKSBvciBkaXNzb2x2ZWQsIHNvOg0KPiANCj4gICogWW91IGNhbiBn
-ZXQgcmlkIG9mIEJSQ01TX0JJVFNDTlQgYW5kIGJyY211X2JpdGNvdW50LCB0aGV5J3JlIG5vDQo+
-ICAgIGxvbmdlciB1c2VkIGF0IGFsbC4NCj4gICogYnJjbXVfbWh6MmNoYW5uZWwgaXNuJ3QgdXNl
-ZCBhbnl3aGVyZSBlaXRoZXINCj4gICogbmVpdGhlciBpcyBicmNtdV9jaHNwZWNfY3RsY2hhbg0K
-PiAgKiBicmNtdV9td190b19xZGJtIGlzIHVzZWQgb25seSBpbiBhIHNpbmdsZSBmaWxlLA0KPiAg
-ICBpdCBjYW4gbW92ZSB0aGVyZSB0byBzYXZlIHRoZSBleHBvcnQgZXRjLg0KPiAgKiBzYW1lIGZv
-ciBicmNtdV9xZGJtX3RvX213LCBicmNtdV9jaGlwbmFtZSwgYnJjbXVfcGFyc2VfdGx2cywNCj4g
-ICAgYnJjbXVfY2hzcGVjX21hbGZvcm1lZA0KPiAgKiBicmNtdV9ta2lvdmFyIGlzIHVzZWQgb25s
-eSBpbiBmbWFjLCBzbyB5b3UgY2FuIG1vdmUgaXQgdGhlcmUNCj4gICAgdG8gc2F2ZSB0aGUgZXhw
-b3J0DQo+ICAqIGJyY211X2Zvcm1hdF9mbGFncyBpcyB1c2VkIG9ubHkgaW4gc21hYywgc28gc2Ft
-ZQ0KPiAgKiBzYW1lIGZvciBicmNtdV9mb3JtYXRfZmxhZ3MNCj4gDQo+IEFmdGVyIGFsbCB0aGUg
-YWJvdmUsIGJjbXV0aWxzIGFyZSBsZWZ0IHdpdGggb25seSB0aGUgcGt0cSBhbmQgcGt0YnVmDQo+
-IHN0dWZmLCB3aGljaCBob3BlZnVsbHkgd2lsbCBiZSBlaXRoZXIgbW9yZSBnZW5lcmljIG9yIGRp
-c3NvbHZlZCBhdCBzb21lDQo+IHBvaW50IGluIHRoZSBmdXR1cmUgc2luY2UgaXQgc2hvdWxkIHJl
-YWxseSBqdXN0IGJlIGEgZmV3IHNrYiBxdWV1ZXMuDQoNCkFncmVlLiBUaGVyZSBpcyBvcHBvcnR1
-bml0eSB0byBjbGVhbnVwIG9uIHRoZSBicmNtdXRpbCBtb2R1bGUgb3INCmV2ZW4gZ2V0IHJpZCBv
-ZiBpdC4NCg0KPiBOb3cgdGhlIGRyaXZlcnMgOi0pDQo+IA0KPiBGTUFDOg0KPiAgKiBBIHdob2xl
-IGJ1bmNoIG9mIHRoaW5ncyBpbiBkaGQuaCBzdGlsbCBzZWVtIHRvIGxhY2sgZW5kaWFuDQo+ICAg
-IGFubm90YXRpb25zLCB3aGljaCBJIHdvdWxkbid0IGJlIHRvbyB3b3JyaWVkIGFib3V0LCBpZiBp
-dCBkaWRuJ3QNCj4gICAgYWxzbyBzZWVtIHRvIGxhY2sgY29udmVyc2lvbnMuIEZvciBleGFtcGxl
-IGJyY21mX3BrdF9maWx0ZXJfZW5hYmxlLA0KPiAgICBicmNtZl9wa3RfZmlsdGVyLCBicmNtZl9w
-a3RfZmlsdGVyX3BhdHRlcm4uDQo+ICAqIFRoZXNlLCBhbG9uZyB3aXRoIG90aGVycyBsaWtlIGJy
-Y21mX2Jzc19pbmZvLCBhbHNvIHNlZW0gdG8gbGFjaw0KPiAgICBfX3BhY2tlZCBhbm5vdGF0aW9u
-cy4gSSB0aG91Z2h0IHlvdSBmaXhlZCBhbGwgdGhpcywgd2hhdCBhbSBJDQo+ICAgIG1pc3Npbmc/
-DQo+ICAqIGJzc19pbmZvWzFdOyBhbmQgc2ltaWxhciBzaG91bGQganVzdCBiZSBbXSBJIHRoaW5r
-Pw0KPiAgKiBzb21lIHZlcnkgb2RkIGluZGVudGF0aW9uIG9uIGxpbmUgMTE3MiBvZiB3bF9jZmc4
-MDIxMS5jDQo+IA0KPiBTTUFDOg0KPiAgKiBkbyB5b3UgcmVhbGx5IHdhbnQgdG8gYmUgNDBNSHog
-aW50b2xlcmFudCBhbGwgdGhlIHRpbWU/IG5vdA0KPiAgICBzdXBwb3J0aW5nIDQwIE1IeiBpcyBv
-bmUgdGhpbmcsIGJ1dCBiZWluZyBpbnRvbGVyYW50Pw0KPiAgKiBicmNtc19vcHNfc3RvcCBkb2Vz
-bid0IHNlZW0gcmlnaHQgLS0gdGhpcyBzaG91bGQgcmVhbGx5IHBvd2VyIGRvd24NCj4gICAgdGhl
-IGRldmljZSwgdGhpcyBzaG91bGRuJ3QgYmUgZG9uZSBwZXIgaW50ZXJmYWNlIHNpbmNlIHRoZSBt
-b25pdG9yDQo+ICAgIGNhc2Ugd2lsbCB3YW50IHRvIFJYL1RYIGV2ZW4gd2hlbiBubyBpbnRlcmZh
-Y2UgaXMgdGhlcmU7IGFsc28sDQo+IHlvdSdsbA0KPiAgICB3YW50IG11bHRpLXZpZiBzdXBwb3J0
-IHNvb24gOi0pDQoNCkFncmVlLiBXZSBub3RpY2VkIHJlYWRpbmcgbWFjODAyMTEuaCB3aXRoIHN0
-YXRlbWVudCBhYm91dCBhZGRfaW50ZXJmYWNlDQpjYWxsYmFjayBub3QgYmVpbmcgdXNlZCBpbiBt
-b25pdG9yIG1vZGUuDQoNCj4gICogbG9ja2luZyB0eCgpIGlzIGluZWZmaWNpZW50LCB5b3Ugc2hv
-dWxkIGJlIGFibGUgdG8gZ28gd2l0aCBhIGxvY2sNCj4gcGVyDQo+ICAgIEhXIHF1ZXVlDQo+ICAq
-IGJyY21zX29wc19zdGFfYWRkIGlzIHN0cmFuZ2UgLS0gaXQgc2hvdWxkbid0IGJlIG1vZGlmeWlu
-ZyB0aGUNCj4gc3RhdGlvbg0KPiAgICBwYXJhbWV0ZXJzLCB3aHkgd291bGQgaXQgZG8gdGhhdD8g
-c2VlbXMgbGlrZSBhIGJ1ZyB0byBtZSwgZXNwZWNpYWxseQ0KPiAgICBhbHdheXMgYXNzdW1pbmcg
-dGhlIHBlZXIgY2FuIGRvIGdyZWVuZmllbGQgZXRjLiBUaGlzIGRhdGEgc2hvdWxkDQo+ICAgIGFs
-cmVhZHkgYmUgc2V0IGJ5IG1hYzgwMjExLCBpZiBub3QgdGhhdCdzIGEgYnVnLCBub3Qgc29tZXRo
-aW5nIHRvDQo+ICAgICJmaXgiIGluIHRoZSBkcml2ZXINCj4gICogSSBzdGlsbCB0aGluayB0aGlu
-Z3MgbGlrZSBicmNtc19tc2xlZXAoKSBhcmUgZ3VhcmFudGVlZCB0byBjcmVhdGUNCj4gICAgc3Vi
-dGxlIGxvY2tpbmcgYnVncyB0aGF0IGFyZSBhbG1vc3QgaW1wb3NzaWJsZSB0byBmaW5kIHNpbmNl
-IGl0DQo+IGRyb3BzDQo+ICAgIHRoZSBzcGlubG9jayBhbmQgaWYgc29tZWJvZHkgY2FsbHMgdGhl
-IGZ1bmN0aW9uIHNvbWV3aGVyZSB0aGV5IHdvbid0DQo+ICAgIG5lY2Vzc2FyaWx5IGtlZXAgdGhh
-dCBpbiBtaW5kLiBUaGVyZSBhcmUgYSB3aG9sZSBidW5jaCBvZiBmdW5jdGlvbnMNCj4gICAgYmVo
-YXZpbmcgbGlrZSB0aGF0Lg0KDQpBZ3JlZS4gVGhlIGxvY2tpbmcgc3RyYXRlZ3kgaW4gdGhlIGRy
-aXZlciB3b3JrcyBhbmQgaGFzIGJlZW4gcHJvdmVuDQp0byB3b3JrIGZvciB0aGUgY3VycmVudCBj
-b2RlIGJhc2UgaW4gbWFueSB0ZXN0IGN5Y2xlcywgYnV0IGl0IHBvc2VzDQphIHJpc2sgZm9yIHVw
-Y29taW5nIGZlYXR1cmUgZGV2ZWxvcG1lbnQuDQoNCj4gDQo+IEFueXdheSwgdGhlIGNvZGUgaXMg
-bm93IHJlYWRhYmxlIHRvIG1lLCBJIHNlZSBubyBnbGFyaW5nIG1hYzgwMjExIG9yDQo+IGNmZzgw
-MjExIGludGVyZmFjaW5nIGVycm9ycywgc28gSSBndWVzcyB5b3UgY2FuIHdvcmsgdGhlIHJlc3Qg
-aW4NCj4gbWFpbmxpbmUuDQo+IA0KPiBqb2hhbm5lcw0KPiANCg0KVGhhbmtzIGZvciB0aGUgZmVl
-ZGJhY2suIFRoZXNlIGFyZSBhbGwgdmFsaWQgcG9pbnRzIGFuZCBhcyBzdWNoIGRlc2VydmUNCm91
-ciBhdHRlbnRpb24uDQoNCkFyZW5kDQo=
+It is not necessary to process an htc_packet which is allocated for rx
+but failed in sdio rx. Though it does not fix any real issue, it does
+not make much sense to process the failed frame.
+
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/htc.c |   48 +++++++++++++++++++++++---------
+ 1 files changed, 34 insertions(+), 14 deletions(-)
+
+V2 -- commit log change
+
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index 4a03dac..ca3d084 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -1687,11 +1687,15 @@ static int ath6kl_htc_rx_fetch(struct htc_target *target,
+ 	int fetched_pkts;
+ 	bool part_bundle = false;
+ 	int status = 0;
++	struct list_head tmp_rxq;
++	struct htc_packet *packet, *tmp_pkt;
+ 
+ 	/* now go fetch the list of HTC packets */
+ 	while (!list_empty(rx_pktq)) {
+ 		fetched_pkts = 0;
+ 
++		INIT_LIST_HEAD(&tmp_rxq);
++
+ 		if (target->rx_bndl_enable && (get_queue_depth(rx_pktq) > 1)) {
+ 			/*
+ 			 * There are enough packets to attempt a
+@@ -1699,18 +1703,19 @@ static int ath6kl_htc_rx_fetch(struct htc_target *target,
+ 			 * allowed.
+ 			 */
+ 			status = ath6kl_htc_rx_bundle(target, rx_pktq,
+-						      comp_pktq,
++						      &tmp_rxq,
+ 						      &fetched_pkts,
+ 						      part_bundle);
+ 			if (status)
+-				return status;
++				goto fail_rx;
+ 
+ 			if (!list_empty(rx_pktq))
+ 				part_bundle = true;
++
++			list_splice_tail_init(&tmp_rxq, comp_pktq);
+ 		}
+ 
+ 		if (!fetched_pkts) {
+-			struct htc_packet *packet;
+ 
+ 			packet = list_first_entry(rx_pktq, struct htc_packet,
+ 						   list);
+@@ -1730,13 +1735,37 @@ static int ath6kl_htc_rx_fetch(struct htc_target *target,
+ 			/* go fetch the packet */
+ 			status = ath6kl_htc_rx_packet(target, packet,
+ 						      packet->act_len);
++
++			list_move_tail(&packet->list, &tmp_rxq);
++
+ 			if (status)
+-				return status;
++				goto fail_rx;
+ 
+-			list_move_tail(&packet->list, comp_pktq);
++			list_splice_tail_init(&tmp_rxq, comp_pktq);
+ 		}
+ 	}
+ 
++	return 0;
++
++fail_rx:
++
++	/*
++	 * Cleanup any packets we allocated but didn't use to
++	 * actually fetch any packets.
++	 */
++
++	list_for_each_entry_safe(packet, tmp_pkt, rx_pktq, list) {
++		list_del(&packet->list);
++		htc_reclaim_rxbuf(target, packet,
++				&target->endpoint[packet->endpoint]);
++	}
++
++	list_for_each_entry_safe(packet, tmp_pkt, &tmp_rxq, list) {
++		list_del(&packet->list);
++		htc_reclaim_rxbuf(target, packet,
++				&target->endpoint[packet->endpoint]);
++	}
++
+ 	return status;
+ }
+ 
+@@ -1826,15 +1855,6 @@ int ath6kl_htc_rxmsg_pending_handler(struct htc_target *target,
+ 	if (status) {
+ 		ath6kl_err("failed to get pending recv messages: %d\n",
+ 			   status);
+-		/*
+-		 * Cleanup any packets we allocated but didn't use to
+-		 * actually fetch any packets.
+-		 */
+-		list_for_each_entry_safe(packets, tmp_pkt, &rx_pktq, list) {
+-			list_del(&packets->list);
+-			htc_reclaim_rxbuf(target, packets,
+-					&target->endpoint[packets->endpoint]);
+-		}
+ 
+ 		/* cleanup any packets in sync completion queue */
+ 		list_for_each_entry_safe(packets, tmp_pkt, &comp_pktq, list) {
+-- 
+1.7.0.4
 
