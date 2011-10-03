@@ -1,89 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42050 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754199Ab1JDGhN (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:56394 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756920Ab1JCUBM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 02:37:13 -0400
-Subject: Re: [PATCH] cfg80211: allow channel change on monitor i/f if no
- active i/f present
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Gilboa Davara <gilboad@gmail.com>
-In-Reply-To: <1317673413-1467-1-git-send-email-linville@tuxdriver.com>
-References: <1317673413-1467-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 04 Oct 2011 08:37:10 +0200
-Message-ID: <1317710230.3986.4.camel@jlt3.sipsolutions.net> (sfid-20111004_083717_157192_0A4EF685)
-Mime-Version: 1.0
+	Mon, 3 Oct 2011 16:01:12 -0400
+Received: by qyk30 with SMTP id 30so2549613qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2011 13:01:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1125417094.1836.1317285426615.JavaMail.root@idefix>
+References: <CAB=NE6U6qmYbvHPTWGTqOdXtuxbKYbUzZXNiE6POOX9QZNRWAg@mail.gmail.com>
+ <1125417094.1836.1317285426615.JavaMail.root@idefix>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Mon, 3 Oct 2011 13:00:52 -0700
+Message-ID: <CAB=NE6UKYPu0GtsLrP0sXHESuhVba0oqrqEWVedXqv-cjhbB8w@mail.gmail.com> (sfid-20111003_220116_134654_B08D58CE)
+Subject: Re: Regulatory revamp status
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Boris Presman <boris.presman@ti.com>,
+	Assaf Azulay <assaf@ti.com>,
+	Michael Green <green@qca.qualcomm.com>,
+	David Quan <dquan@qca.qualcomm.com>,
+	Kevin Hayes <hayes@qca.qualcomm.com>,
+	Arun Venkataraman <arunvenk@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-10-03 at 16:23 -0400, John W. Linville wrote:
-> This is the latest attempt to address the long-standing complaint from
-> the aircrack-ng folks about being unable to change the channel on
-> monitor interfaces.  This version checks for the existance of other
-> "active" interfaces and refuses the channel change if they are present.
-> 
-> 	https://bugzilla.redhat.com/show_bug.cgi?id=654344
+On Thu, Sep 29, 2011 at 1:37 AM, Zefir Kurtisi
+<zefir.kurtisi@neratec.com> wrote:
+> Thanks for the update.
+>
+> To me it looks not reasonable to mix in between the two approaches: either we assume countrycodes use the same DFS region for all channels, or each channel/band needs to have its own. Otherwise I feel that a DFS region bitmap would give a semi-flexible compromise that might end up being insufficient to represent some fancy countrycodes.
 
-Thanks for working on this.
+I reviewed this with Michael. The answer is we only want one DFS
+region per country, that's it. I'll respin my DFS patches.
 
-> @@ -81,10 +81,32 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
->  		      enum nl80211_channel_type channel_type)
->  {
->  	struct ieee80211_channel *chan;
-> -	int result;
-> +	int result, active_intf_present = 0;
-> +	struct wireless_dev *mon_wdev = NULL;
-> +
-> +	if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR) {
-> +		mon_wdev = wdev;
-> +
-> +		ASSERT_RDEV_LOCK(rdev);
-> +
-> +		/* rdev->devlist_mtx locked by callers */
-> +		list_for_each_entry(wdev, &rdev->netdev_list, list) {
-> +			if (wdev && wdev != mon_wdev &&
-> +			    (wdev->iftype == NL80211_IFTYPE_ADHOC ||
-> +			     wdev->iftype == NL80211_IFTYPE_AP ||
-> +			     wdev->iftype == NL80211_IFTYPE_AP_VLAN ||
-> +			     wdev->iftype == NL80211_IFTYPE_MESH_POINT ||
-> +			     wdev->iftype == NL80211_IFTYPE_P2P_GO)) {
-> +				active_intf_present = 1;
-> +				break;
-> +			}
-> +		}
-> +
-> +		if (active_intf_present)
-> +			return -EINVAL;
->  
-> -	if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR)
->  		wdev = NULL;
-> +	}
-
-This really isn't the problem though, mac80211 will correctly treat
-monitor interfaces already, and drivers are pretty much expected to do
-the same thing.
-
-> @@ -131,5 +153,8 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
->  	if (wdev)
->  		wdev->channel = chan;
->  
-> +	if (mon_wdev)
-> +		mon_wdev->channel = chan;
-
-This is the issue, it doesn't work. I'm finally getting to a point where
-I'm not sure I care any more though, if the people who user monitor mode
-are happy with this patch and don't care about getting the wrong results
-then who am I to complain?
-
-Maybe you should respin this patch with just the last bit. The checking
-above is pretty much useless. Also please add *huge* warnings to it that
-this *will* give the wrong results.
-
-Alternatively, it could be fixed up properly, but I think to do that we
-need a cfg80211 get_channel op to ask mac80211 what channel it really is
-using. Not that this will help much once we go multi-channel :-)
-
-johannes
-
+  Luis
