@@ -1,36 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:28241 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751170Ab1JCLjK (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:58552 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756250Ab1JCTbc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Oct 2011 07:39:10 -0400
-Date: Mon, 3 Oct 2011 17:08:14 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V2 3/5] ath6kl: Claim sdio function only at appropriate
-	places
-Message-ID: <20111003113812.GA24335@vasanth-laptop> (sfid-20111003_133914_256947_56F77655)
-References: <1317399419-3929-1-git-send-email-vthiagar@qca.qualcomm.com> <4E899830.2070506@qca.qualcomm.com>
+	Mon, 3 Oct 2011 15:31:32 -0400
+Received: by qadb15 with SMTP id b15so1850864qad.19
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2011 12:31:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E899830.2070506@qca.qualcomm.com>
+In-Reply-To: <201110032124.53937.chunkeey@googlemail.com>
+References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com>
+ <1317637758-11907-6-git-send-email-zefir.kurtisi@neratec.com>
+ <CAB=NE6VO4W=ZJcgb3G5Gh=YM-jdkJ3ey5Ppka2Rn0XGmpx8=Gg@mail.gmail.com> <201110032124.53937.chunkeey@googlemail.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Mon, 3 Oct 2011 12:31:12 -0700
+Message-ID: <CAB=NE6XBkisvFmj6F7wS6i8XV7WEsM6bQ5zsXFWXm9XM8z0pwA@mail.gmail.com> (sfid-20111003_213136_133780_2A0B3CB9)
+Subject: Re: [RFC 5/6] ath9k: enable DFS pulse detection
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kgiori@qca.qualcomm.com, nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 03, 2011 at 02:10:40PM +0300, Kalle Valo wrote:
-> On 09/30/2011 07:16 PM, Vasanthakumar Thiagarajan wrote:
-> > There are places where tx_complete callbacks are called with
-> > claiming the sdio function. It is not necessary to hold the
-> > sdio func for longer. This may even affect the host side power
-> > save, if it is supported by the controller.
-> 
-> Applied, thanks.
-> 
-> But in the future, please resend the whole patchset even when you modify
-> just one patch. Resending invidividual patches from a patchset is error
-> prone and most likely I will apply the wrong patch.
+On Mon, Oct 3, 2011 at 12:24 PM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> On Monday, October 03, 2011 08:27:39 PM Luis R. Rodriguez wrote:
+>> On Mon, Oct 3, 2011 at 3:29 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+>> >
+>> > Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+>> > ---
+>> >  drivers/net/wireless/ath/ath9k/main.c |   12 ++++++++++++
+>> >  1 files changed, 12 insertions(+), 0 deletions(-)
+>> >
+>> > diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>> > index e8aeb98..5defebe 100644
+>> > --- a/drivers/net/wireless/ath/ath9k/main.c
+>> > +++ b/drivers/net/wireless/ath/ath9k/main.c
+>> > @@ -344,6 +344,18 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
+>> >                        "Unable to reset channel, reset status %d\n", r);
+>> >                goto out;
+>> >        }
+>> > +#ifdef CONFIG_ATH9K_DFS
+>> > +       /**
+>> > +        * enable radar pulse detection
+>> > +        *
+>> > +        * TODO: do this only for DFS channels
+>> > +        */
+>> > +       ah->private_ops.set_radar_params(ah, &ah->radar_conf);
+>> > +       ath9k_hw_setrxfilter(ah,
+>> > +                       ath9k_hw_getrxfilter(ah) | ATH9K_RX_FILTER_PHYRADAR);
+>> > +       ath_dbg(common, ATH_DBG_DFS,
+>> > +               "DFS enabled for channel %d\n", hchan->chan->center_freq);
+>> > +#endif
+>>
+>> Please spare the #ifdef and just call something within dfs.c, then
+>> dfs.h would wrap it to nothing if DFS is disabled.
+> Why would anyone want to disable DFS driver support?
+> I would say: drop the ifdefs altogether since DFS
+> is and will be "required".
 
-Sure, thanks.
+Because DFS requires to be properly tested before being enabled. You
+may also want to simply disable DFS if you do not want to deal with
+the regulatory test implications of having it enabled.
 
-Vasanth
+  Luis
