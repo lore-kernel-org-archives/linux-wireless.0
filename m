@@ -1,37 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:43694 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246Ab1JKLwR (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:37769 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756471Ab1JCT7L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 07:52:17 -0400
-Received: by ywb5 with SMTP id 5so6427614ywb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 04:52:16 -0700 (PDT)
+	Mon, 3 Oct 2011 15:59:11 -0400
+Received: by qadb15 with SMTP id b15so1876448qad.19
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2011 12:59:10 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1318333875.3965.10.camel@jlt3.sipsolutions.net>
-References: <1318332535-8815-1-git-send-email-helmut.schaa@googlemail.com>
-	<1318332927.3965.9.camel@jlt3.sipsolutions.net>
-	<CAGXE3d8cuBg28PfMYQcAJ96oTEqUg6rG8ExUr+Sezq51eM2J_Q@mail.gmail.com>
-	<1318333875.3965.10.camel@jlt3.sipsolutions.net>
-Date: Tue, 11 Oct 2011 13:52:16 +0200
-Message-ID: <CAGXE3d_d0RY8YNwmfdhARfKhTFDLn7pkyQGE=8h0b=8t=rY7+g@mail.gmail.com> (sfid-20111011_135219_180895_E035953C)
-Subject: Re: [PATCH] mac80211: Populate radiotap header with MCS info for
- tx'ed frames
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1317465198-2733-1-git-send-email-hauke@hauke-m.de>
+References: <1317465198-2733-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 3 Oct 2011 12:58:50 -0700
+Message-ID: <CAB=NE6V-d=FQTZMegC5erdNO879cgSX1YOduUkqGOPOeLHgqcQ@mail.gmail.com> (sfid-20111003_215914_831288_B339E09C)
+Subject: Re: [PATCH] compat-wireless: make patches apply again
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 11, 2011 at 1:51 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->> Or should we just get rid of the whole struct and fill in the
->> rtap header dynamically like it is done in the rx path and
->> drop the build-bug-on thing?
+On Sat, Oct 1, 2011 at 3:33 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
 >
-> I wouldn't mind that either, but we'll want to have a WARN_ON_ONCE()
-> somewhere if we run out of space.
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Ok, let's try it that way. John please drop this one, I'll do a v2.
+Applied and pushed, thanks!
 
-Helmut
+  Luis
