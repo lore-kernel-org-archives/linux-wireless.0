@@ -1,73 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:55770 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753234Ab1JUH23 convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31247 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755506Ab1JCL6D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 03:28:29 -0400
-Received: by qyk27 with SMTP id 27so3569950qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2011 00:28:29 -0700 (PDT)
+	Mon, 3 Oct 2011 07:58:03 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2 1/4] ath6kl: Fix htc_packet leak in ath6kl_htc_rx_process_packets()
+Date: Mon, 3 Oct 2011 17:28:07 +0530
+Message-ID: <1317643087-16104-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111003_135808_978406_294907F3)
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <4EA0EE26.8010107@lwfinger.net>
-References: <CAN4ACka-egrr=GnBomT0Yc_r_mzS-+v8OE=D0vBoH+jFQJwX8w@mail.gmail.com>
-	<4EA0EE26.8010107@lwfinger.net>
-Date: Fri, 21 Oct 2011 09:28:28 +0200
-Message-ID: <CA+icZUVGi9t6Prawqz4jDqChFR+w8X9xmc_wRgPmHG3BwUVEpw@mail.gmail.com> (sfid-20111021_092832_671031_EA1E4FAB)
-Subject: Re: rtl8192cu - fails to maintain connection to some Access Points
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Alan Pater <alan.pater@gmail.com>, linux-wireless@vger.kernel.org,
-	George0505 <george0505@realtek.com>,
-	georgia <georgia@realtek.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 21, 2011 at 5:59 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 10/20/2011 06:02 PM, Alan Pater wrote:
->>
->> Hi folks
->>
->> Several people over on Ubuntu Launchpad are reporting that this USB WiFi
->> adaptor has issues connecting to certain access points. In my case, I
->> cannot
->> connect to a Meraki mesh network, but have no trouble when using my
->> Android
->> phone as a WiFi Access Point.
->>
->> The launchpad bugs are:
->> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/852190
->> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/869530
->>
->> https://bugs.launchpad.net/ubuntu/+source/linux-backports-modules-3.0.0/+bug/862684
->>
->> ~$ uname -a
->> Linux crow 2.6.38-11-generic #50-Ubuntu SMP Mon Sep 12 21:18:14 UTC 2011
->> i686 i686 i386 GNU/Linux
->> ~$ lsusb
->> Bus 001 Device 004: ID 0bda:8176 Realtek Semiconductor Corp.
->>
->> Note that I have tried newer kernels, including 3.1.0 without it making a
->> difference.
->>
->> Is there some other steps we could be taking to figure out what is going
->> on
->> here?
->
-> You need to run wireshark on a different computer and capture the attempt to
-> connect. The device works with my 3 APs, but none are Meraki.
->
+Packet is not reclaimed when ath6kl_htc_rx_process_hdr() fails.
+Fix this by deferring the packet deletion from comp_pktq till
+ath6kl_htc_rx_process_hdr() returns success. This bug is found
+in code review, impact is not easily visible as the leak happens
+only in failure cases.
 
-Asking as a non-native speaker/writer: What do you mean by "Meraki"?
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/htc.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-- Sedat -
+V2 --- Commit log change
 
-[1] http://meraki.com/products/wireless/wifi-stumbler
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index f88a7c9..7bc9884 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -1643,7 +1643,6 @@ static int ath6kl_htc_rx_process_packets(struct htc_target *target,
+ 	int status = 0;
+ 
+ 	list_for_each_entry_safe(packet, tmp_pkt, comp_pktq, list) {
+-		list_del(&packet->list);
+ 		ep = &target->endpoint[packet->endpoint];
+ 
+ 		/* process header for each of the recv packet */
+@@ -1652,6 +1651,8 @@ static int ath6kl_htc_rx_process_packets(struct htc_target *target,
+ 		if (status)
+ 			return status;
+ 
++		list_del(&packet->list);
++
+ 		if (list_empty(comp_pktq)) {
+ 			/*
+ 			 * Last packet's more packet flag is set
+-- 
+1.7.0.4
 
-> Larry
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
