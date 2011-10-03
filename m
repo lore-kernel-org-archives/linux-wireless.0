@@ -1,64 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2879 "EHLO MMS3.broadcom.com"
+Received: from mail.neratec.ch ([80.75.119.105]:35267 "EHLO mail.neratec.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754822Ab1JUOQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 10:16:50 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH v2 01/17] brcm80211: fmac: allow wd timer to be disabled
- when bus down
-Date: Fri, 21 Oct 2011 16:16:19 +0200
-Message-ID: <1319206595-17138-2-git-send-email-arend@broadcom.com> (sfid-20111021_161705_725400_AF232887)
-In-Reply-To: <1319206595-17138-1-git-send-email-arend@broadcom.com>
-References: <1319206595-17138-1-git-send-email-arend@broadcom.com>
+	id S1755692Ab1JCMXc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Oct 2011 08:23:32 -0400
+Message-ID: <4E89A941.8060208@neratec.com> (sfid-20111003_142335_616859_8420DCF7)
+Date: Mon, 03 Oct 2011 14:23:29 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Adrian Chadd <adrian@freebsd.org>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kgiori@qca.qualcomm.com, rodrigue@qca.qualcomm.com, nbd@openwrt.org
+Subject: Re: [RFC 3/6] ath9k: initial radar pulse detection for DFS
+References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com>	<1317637758-11907-4-git-send-email-zefir.kurtisi@neratec.com> <CAJ-VmonP5V2dL8aYiMRrkNcQR19kKAy2PCWHSkxb1biyJS7pow@mail.gmail.com>
+In-Reply-To: <CAJ-VmonP5V2dL8aYiMRrkNcQR19kKAy2PCWHSkxb1biyJS7pow@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On 10/03/2011 01:57 PM, Adrian Chadd wrote:
+> Just out of curiousity, is there any "fast clock" on or off with the AR93xx ?
+> 
+> (That's one of the gotchas I came across when porting DFS code to
+> FreeBSD for the AR9160/AR9280.)
+> 
+> Thanks,
+> 
+> 
+> Adrian
 
-Watchdog timer should be able to be stopped even firmware is not
-loaded.
+There might be one, but I left it out (for now) for the sake of simplicity.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index c6825f2..785ab08 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -4579,10 +4579,6 @@ struct device *brcmf_bus_get_device(struct brcmf_bus *bus)
- void
- brcmf_sdbrcm_wd_timer(struct brcmf_bus *bus, uint wdtick)
- {
--	/* don't start the wd until fw is loaded */
--	if (bus->drvr->busstate == BRCMF_BUS_DOWN)
--		return;
--
- 	/* Totally stop the timer */
- 	if (!wdtick && bus->wd_timer_valid == true) {
- 		del_timer_sync(&bus->timer);
-@@ -4591,6 +4587,10 @@ brcmf_sdbrcm_wd_timer(struct brcmf_bus *bus, uint wdtick)
- 		return;
- 	}
- 
-+	/* don't start the wd until fw is loaded */
-+	if (bus->drvr->busstate == BRCMF_BUS_DOWN)
-+		return;
-+
- 	if (wdtick) {
- 		if (bus->save_ms != BRCMF_WD_POLL_MS) {
- 			if (bus->wd_timer_valid == true)
--- 
-1.7.4.1
+I anyhow doubt it has a practical relevance, since the pulse width is reported with usec granularity and therefore a scaling factor of 1/811 vs. 1/800 has no impact on the re-scaled value for widths up to 50 usecs.
 
 
+Zefir
