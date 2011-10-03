@@ -1,54 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:39321 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751964Ab1JVH3m (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:46878 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751170Ab1JCLlQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Oct 2011 03:29:42 -0400
-Received: by ywm3 with SMTP id 3so228098ywm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Oct 2011 00:29:42 -0700 (PDT)
+	Mon, 3 Oct 2011 07:41:16 -0400
+Date: Mon, 3 Oct 2011 17:10:19 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/4] ath6kl: Fix htc_packet leak in
+	ath6kl_htc_rx_process_packets()
+Message-ID: <20111003114018.GB24335@vasanth-laptop> (sfid-20111003_134125_538423_8EF56A15)
+References: <1317308476-16204-1-git-send-email-vthiagar@qca.qualcomm.com> <4E899876.4060103@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20111022072215.GA2524@ecki>
-References: <CAJ-Vmok4v2+ZEpAmVaj2pQ5U2StWxxD8f20u2Ln87o4+C_ST0g@mail.gmail.com>
-	<CAD2nsn1S7r2o0bqnNgzuHBd9XWYdA7uZgtmtFDTePk0SwybuCQ@mail.gmail.com>
-	<20111015093902.GA23520@ecki>
-	<CAJ-VmokQBcXyDByWgMfGRFvW_z_9YU4oPUrXJpfPY9J4riEuBQ@mail.gmail.com>
-	<20111018064459.GA1442@ecki>
-	<CAJ-Vmo=Qt3rGDbM0yOvFuz6Pksdx9bdm8HEBnhfjP6=zjGOgTA@mail.gmail.com>
-	<20111021102221.GA1463@ecki.lan>
-	<CAJ-Vmonaec_i5d_LGupY5uwzMUn3CzNn-rGSh6oqLOHc8ewFVg@mail.gmail.com>
-	<20111021202038.GA1523@ecki.lan>
-	<CAJ-Vmonu-75rtOyyqP7aWNA5NvQ7XW+0YB-G7N5gF3tS5E0EaA@mail.gmail.com>
-	<20111022072215.GA2524@ecki>
-Date: Sat, 22 Oct 2011 15:29:42 +0800
-Message-ID: <CAJ-Vmo=KiTB=ZfGH50rYVCWt5D0GHiNAkH0VLpY=mLt9NJQeRw@mail.gmail.com> (sfid-20111022_092946_212519_17ABD172)
-Subject: Re: ath9k: irq storm after suspend/resume
-From: Adrian Chadd <adrian@freebsd.org>
-To: Clemens Buchacher <drizzd@aon.at>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4E899876.4060103@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 October 2011 15:22, Clemens Buchacher <drizzd@aon.at> wrote:
+On Mon, Oct 03, 2011 at 02:11:50PM +0300, Kalle Valo wrote:
+> On 09/29/2011 06:01 PM, Vasanthakumar Thiagarajan wrote:
+> > Packet is not reclaimed when ath6kl_htc_rx_process_hdr() fails.
+> > Fix this by deferring the packet deletion from comp_pktq till
+> > ath6kl_htc_rx_process_hdr() returns success.
+> 
+> Does this fix a user visible bug? Or is this just something you found
+> while doing code review?
 
-> Looks like you had it right from the start. After unloading the jme
-> module [*1*] I cannot reproduce the IRQ storm any more. From
-> looking at dmesg it should have been obvious, since it also gets
-> IRQ 17 assigned. I don't know how I missed that, I was sure I had
-> checked.
->
-> Sorry guys, for most likely wasting your time. And thanks for your
-> patience.
+This one is found in code review, it does not fix any visible bug.
 
-Ah, eek! Well, you're welcome! And I hope you/others have a better
-understanding of how the interrupt setup on these NICs work.
-(I certainly have a better understanding now of the host interface and
-what we can poke when it's awake and asleep.)
-
-Good luck!
-
-
-
-Adrian
+Vasanth
