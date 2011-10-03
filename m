@@ -1,56 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:47667 "EHLO
-	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934139Ab1JEJXV (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:35244 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752515Ab1JCKsj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 05:23:21 -0400
-Subject: [PATCH 2/6] ath6kl: fix struct host_app_area endian handling
-To: kvalo@qca.qualcomm.com
+	Mon, 3 Oct 2011 06:48:39 -0400
+Message-ID: <4E899301.8040808@qca.qualcomm.com> (sfid-20111003_124844_736937_AB1CC693)
+Date: Mon, 3 Oct 2011 13:48:33 +0300
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 05 Oct 2011 12:23:17 +0300
-Message-ID: <20111005092317.1095.3909.stgit@localhost6.localdomain6> (sfid-20111005_112324_819731_50653558)
-In-Reply-To: <20111005092305.1095.713.stgit@localhost6.localdomain6>
-References: <20111005092305.1095.713.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+CC: <davem@davemloft.net>, <netdev@vger.kernel.org>,
+	<linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH net-next] drivers/net: Add module.h to wireless/ath/ath6kl/sdio.c
+References: <1317424079-31793-1-git-send-email-paul.gortmaker@windriver.com>
+In-Reply-To: <1317424079-31793-1-git-send-email-paul.gortmaker@windriver.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was missing endian annotation.
+On 10/01/2011 02:07 AM, Paul Gortmaker wrote:
+> This file uses various MODULE_* macros, and so needs the full
+> module.h header called out explicitly.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/init.c |    2 +-
- drivers/net/wireless/ath/ath6kl/wmi.h  |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+FWIW last week I added a similar patch to ath6kl.git (but not the same
+as the file has changed):
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index c1d2366..8466f3d 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -120,7 +120,7 @@ static int ath6kl_set_host_app_area(struct ath6kl *ar)
- 		return -EIO;
- 
- 	address = TARG_VTOP(ar->target_type, data);
--	host_app_area.wmi_protocol_ver = WMI_PROTOCOL_VERSION;
-+	host_app_area.wmi_protocol_ver = cpu_to_le32(WMI_PROTOCOL_VERSION);
- 	if (ath6kl_diag_write(ar, address, (u8 *) &host_app_area,
- 			      sizeof(struct host_app_area)))
- 		return -EIO;
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 5166f05..96102c6 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -124,8 +124,8 @@ struct wmi {
- };
- 
- struct host_app_area {
--	u32 wmi_protocol_ver;
--};
-+	__le32 wmi_protocol_ver;
-+} __packed;
- 
- enum wmi_msg_type {
- 	DATA_MSGTYPE = 0x0,
+https://github.com/kvalo/ath6kl/commit/c6efe578fc5dd02463d2ee20343494da56bdd3a9
 
+I also sent a pull request to John so it should be in wireless-next soon.
+
+Kalle
