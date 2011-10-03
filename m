@@ -1,50 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:58489 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754795Ab1JaN3n (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:61287 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932478Ab1JCS36 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Oct 2011 09:29:43 -0400
-Message-ID: <4EAEA2C0.6050401@qca.qualcomm.com> (sfid-20111031_142946_871589_1A9FC229)
-Date: Mon, 31 Oct 2011 15:29:36 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 3 Oct 2011 14:29:58 -0400
+Received: by qyk7 with SMTP id 7so3957245qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2011 11:29:57 -0700 (PDT)
 MIME-Version: 1.0
-To: Raja Mani <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 5/7] ath6kl: Invoke wow suspend/resume calls during PM
- operations
-References: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com> <1319539047-8756-6-git-send-email-rmani@qca.qualcomm.com> <4EAAAC61.405@qca.qualcomm.com> <4EAE705C.3090704@qca.qualcomm.com>
-In-Reply-To: <4EAE705C.3090704@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <1317637758-11907-3-git-send-email-zefir.kurtisi@neratec.com>
+References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com> <1317637758-11907-3-git-send-email-zefir.kurtisi@neratec.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Mon, 3 Oct 2011 11:15:46 -0700
+Message-ID: <CAB=NE6WupXPFNOpzW6=De1XwpLdg16mv_jTjvwdaGomNJ9ktJg@mail.gmail.com> (sfid-20111003_203005_174790_B98B051A)
+Subject: Re: [RFC 2/6] ath9k: add DFS debug flag
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kgiori@qca.qualcomm.com, nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/31/2011 11:54 AM, Raja Mani wrote:
-> On Friday 28 October 2011 06:51 PM, Kalle Valo wrote:
->> On 10/25/2011 01:37 PM, rmani@qca.qualcomm.com wrote:
->>
->>> +	if (wow&&  ath6kl_cfg80211_ready(ar)&&
->>> +	    test_bit(CONNECTED,&ar->flag)&&
->>> +	    ath6kl_hif_keep_pwr_caps(ar)) {
->>> +
->>> +		/* Flush all non control pkts in Tx path */
->>> +		ath6kl_tx_data_cleanup(ar);
->>> +
->>> +		ret = ath6kl_pm_wow_suspend(ar, wow);
->>> +		if (ret)
->>> +			return ret;
->>> +	}
->>
->> Forgot to mention: don't you also need to check for MMC_PM_WAKE_SDIO_IRQ
->> and also set it with sdio_set_host_pm_flags()?
-> 
-> I tested it in x86 machine. Wow suspend/resume works even without 
-> setting MMC_PM_WAKE_SDIO_IRQ. Should i really handle it ?
-
-Yes, you should. Otherwise firmware is not able to wake up the host.
-
-Also you should both check that wake sdio irq supported by the sdio
-controller. Otherwise we might enable WoW even in cases when sdio
-controller doesn't support it and which would result in broken wow
-functionality.
-
-Kalle
+T24gTW9uLCBPY3QgMywgMjAxMSBhdCAzOjI5IEFNLCBaZWZpciBLdXJ0aXNpIDx6ZWZpci5rdXJ0
+aXNpQG5lcmF0ZWMuY29tPiB3cm90ZToKPgo+IFNpZ25lZC1vZmYtYnk6IFplZmlyIEt1cnRpc2kg
+PHplZmlyLmt1cnRpc2lAbmVyYXRlYy5jb20+Cj4gLS0tCj4gwqBkcml2ZXJzL25ldC93aXJlbGVz
+cy9hdGgvYXRoLmggfCDCoCAzNCArKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0tCj4g
+wqAxIGZpbGVzIGNoYW5nZWQsIDE4IGluc2VydGlvbnMoKyksIDE2IGRlbGV0aW9ucygtKQo+Cj4g
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGguaCBiL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL2F0aC9hdGguaAo+IGluZGV4IDZkNTY1MzIuLjM0ZDRkYTEgMTAwNjQ0Cj4gLS0t
+IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aC5oCj4gKysrIGIvZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvYXRoL2F0aC5oCj4gQEAgLTIxMSw2ICsyMTEsNyBAQCBhdGhfcHJpbnRrKGNvbnN0IGNo
+YXIgKmxldmVsLCBzdHJ1Y3QgYXRoX2NvbW1vbiAqY29tbW9uLCBjb25zdCBjaGFyICpmbXQsIC4u
+Lik7Cj4gwqAqIEBBVEhfREJHX0hXVElNRVI6IGhhcmR3YXJlIHRpbWVyIGhhbmRsaW5nCj4gwqAq
+IEBBVEhfREJHX0JUQ09FWDogYmx1ZXRvb3RoIGNvZXhpc3RhbmNlCj4gwqAqIEBBVEhfREJHX0JT
+VFVDSzogc3R1Y2sgYmVhY29ucwo+ICsgKiBAQVRIX0RCR19ERlM6IHJhZGFyIGRhdGVjdGlvbgo+
+IMKgKiBAQVRIX0RCR19BTlk6IGVuYWJsZSBhbGwgZGVidWdnaW5nCj4gwqAqCj4gwqAqIFRoZSBk
+ZWJ1ZyBsZXZlbCBpcyB1c2VkIHRvIGNvbnRyb2wgdGhlIGFtb3VudCBhbmQgdHlwZSBvZiBkZWJ1
+Z2dpbmcgb3V0cHV0Cj4gQEAgLTIyMCwyMiArMjIxLDIzIEBAIGF0aF9wcmludGsoY29uc3QgY2hh
+ciAqbGV2ZWwsIHN0cnVjdCBhdGhfY29tbW9uICpjb21tb24sIGNvbnN0IGNoYXIgKmZtdCwgLi4u
+KTsKPiDCoCogZW50cnkuCj4gwqAqLwo+IMKgZW51bSBBVEhfREVCVUcgewo+IC0gwqAgwqAgwqAg
+QVRIX0RCR19SRVNFVCDCoCDCoCDCoCDCoCDCoCA9IDB4MDAwMDAwMDEsCj4gLSDCoCDCoCDCoCBB
+VEhfREJHX1FVRVVFIMKgIMKgIMKgIMKgIMKgID0gMHgwMDAwMDAwMiwKPiAtIMKgIMKgIMKgIEFU
+SF9EQkdfRUVQUk9NIMKgIMKgIMKgIMKgIMKgPSAweDAwMDAwMDA0LAo+IC0gwqAgwqAgwqAgQVRI
+X0RCR19DQUxJQlJBVEUgwqAgwqAgwqAgPSAweDAwMDAwMDA4LAo+IC0gwqAgwqAgwqAgQVRIX0RC
+R19JTlRFUlJVUFQgwqAgwqAgwqAgPSAweDAwMDAwMDEwLAo+IC0gwqAgwqAgwqAgQVRIX0RCR19S
+RUdVTEFUT1JZIMKgIMKgIMKgPSAweDAwMDAwMDIwLAo+IC0gwqAgwqAgwqAgQVRIX0RCR19BTkkg
+wqAgwqAgwqAgwqAgwqAgwqAgPSAweDAwMDAwMDQwLAo+IC0gwqAgwqAgwqAgQVRIX0RCR19YTUlU
+IMKgIMKgIMKgIMKgIMKgIMKgPSAweDAwMDAwMDgwLAo+IC0gwqAgwqAgwqAgQVRIX0RCR19CRUFD
+T04gwqAgwqAgwqAgwqAgwqA9IDB4MDAwMDAxMDAsCj4gLSDCoCDCoCDCoCBBVEhfREJHX0NPTkZJ
+RyDCoCDCoCDCoCDCoCDCoD0gMHgwMDAwMDIwMCwKPiAtIMKgIMKgIMKgIEFUSF9EQkdfRkFUQUwg
+wqAgwqAgwqAgwqAgwqAgPSAweDAwMDAwNDAwLAo+IC0gwqAgwqAgwqAgQVRIX0RCR19QUyDCoCDC
+oCDCoCDCoCDCoCDCoCDCoD0gMHgwMDAwMDgwMCwKPiAtIMKgIMKgIMKgIEFUSF9EQkdfSFdUSU1F
+UiDCoCDCoCDCoCDCoCA9IDB4MDAwMDEwMDAsCj4gLSDCoCDCoCDCoCBBVEhfREJHX0JUQ09FWCDC
+oCDCoCDCoCDCoCDCoD0gMHgwMDAwMjAwMCwKPiAtIMKgIMKgIMKgIEFUSF9EQkdfV01JIMKgIMKg
+IMKgIMKgIMKgIMKgID0gMHgwMDAwNDAwMCwKPiAtIMKgIMKgIMKgIEFUSF9EQkdfQlNUVUNLIMKg
+IMKgIMKgIMKgIMKgPSAweDAwMDA4MDAwLAo+ICsgwqAgwqAgwqAgQVRIX0RCR19SRVNFVCDCoCDC
+oCDCoCDCoCDCoCA9IEJJVCgwKSwKPiArIMKgIMKgIMKgIEFUSF9EQkdfUVVFVUUgwqAgwqAgwqAg
+wqAgwqAgPSBCSVQoMSksCj4gKyDCoCDCoCDCoCBBVEhfREJHX0VFUFJPTSDCoCDCoCDCoCDCoCDC
+oD0gQklUKDIpLAo+ICsgwqAgwqAgwqAgQVRIX0RCR19DQUxJQlJBVEUgwqAgwqAgwqAgPSBCSVQo
+MyksCj4gKyDCoCDCoCDCoCBBVEhfREJHX0lOVEVSUlVQVCDCoCDCoCDCoCA9IEJJVCg0KSwKPiAr
+IMKgIMKgIMKgIEFUSF9EQkdfUkVHVUxBVE9SWSDCoCDCoCDCoD0gQklUKDUpLAo+ICsgwqAgwqAg
+wqAgQVRIX0RCR19BTkkgwqAgwqAgwqAgwqAgwqAgwqAgPSBCSVQoNiksCj4gKyDCoCDCoCDCoCBB
+VEhfREJHX1hNSVQgwqAgwqAgwqAgwqAgwqAgwqA9IEJJVCg3KSwKPiArIMKgIMKgIMKgIEFUSF9E
+QkdfQkVBQ09OIMKgIMKgIMKgIMKgIMKgPSBCSVQoOCksCj4gKyDCoCDCoCDCoCBBVEhfREJHX0NP
+TkZJRyDCoCDCoCDCoCDCoCDCoD0gQklUKDkpLAo+ICsgwqAgwqAgwqAgQVRIX0RCR19GQVRBTCDC
+oCDCoCDCoCDCoCDCoCA9IEJJVCgxMCksCj4gKyDCoCDCoCDCoCBBVEhfREJHX1BTIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgPSBCSVQoMTEpLAo+ICsgwqAgwqAgwqAgQVRIX0RCR19IV1RJTUVSIMKgIMKg
+IMKgIMKgID0gQklUKDEyKSwKPiArIMKgIMKgIMKgIEFUSF9EQkdfQlRDT0VYIMKgIMKgIMKgIMKg
+IMKgPSBCSVQoMTMpLAo+ICsgwqAgwqAgwqAgQVRIX0RCR19XTUkgwqAgwqAgwqAgwqAgwqAgwqAg
+PSBCSVQoMTQpLAo+ICsgwqAgwqAgwqAgQVRIX0RCR19CU1RVQ0sgwqAgwqAgwqAgwqAgwqA9IEJJ
+VCgxNSksCj4gKyDCoCDCoCDCoCBBVEhfREJHX0RGUyDCoCDCoCDCoCDCoCDCoCDCoCA9IEJJVCgx
+NiksCj4gwqAgwqAgwqAgwqBBVEhfREJHX0FOWSDCoCDCoCDCoCDCoCDCoCDCoCA9IDB4ZmZmZmZm
+ZmYKClNwbGl0IHRoaXMgaW50byB0d28gcGF0Y2hlcywgb25lIHRvIGNvbnZlcnQgc3R1ZmYgdG8g
+QklUKGZvbykgYW5kIHRoZQpvdGhlciBvbmUgdG8gYWRkIEFUSF9EQkdfREZTCgogIEx1aXMK
