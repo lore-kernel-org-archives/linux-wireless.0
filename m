@@ -1,154 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37138 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754795Ab1JUOZW (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:49789 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932264Ab1JCS3A convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 10:25:22 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1RHG2D-0008UH-Mp
-	for linux-wireless@vger.kernel.org; Fri, 21 Oct 2011 16:25:21 +0200
-Message-Id: <20111021142428.470831999@sipsolutions.net> (sfid-20111021_162526_375027_F59141CA)
-Date: Fri, 21 Oct 2011 16:23:27 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC v2 05/12] nl80211: advertise device AP SME
-References: <20111021142322.229128720@sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 3 Oct 2011 14:29:00 -0400
+Received: by qyk30 with SMTP id 30so2441619qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2011 11:29:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1317637758-11907-2-git-send-email-zefir.kurtisi@neratec.com>
+References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com> <1317637758-11907-2-git-send-email-zefir.kurtisi@neratec.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Mon, 3 Oct 2011 11:14:54 -0700
+Message-ID: <CAB=NE6UUspgQtFeVr+dfFtHEHxW6wMue+PS1RrwmJO1rqroW7A@mail.gmail.com> (sfid-20111003_202906_098330_D724992C)
+Subject: Re: [RFC 1/6] ath9k: add DFS statistics to debugfs
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kgiori@qca.qualcomm.com, nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Oct 3, 2011 at 3:29 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+>
+> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/debug.c |   51 ++++++++++++++++++++++++++++++++
+>  drivers/net/wireless/ath/ath9k/debug.h |   29 ++++++++++++++++++
+>  2 files changed, 80 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+> index cdece82..6ad2266 100644
+> --- a/drivers/net/wireless/ath/ath9k/debug.c
+> +++ b/drivers/net/wireless/ath/ath9k/debug.c
+> @@ -89,6 +89,53 @@ static const struct file_operations fops_debug = {
+>
+>  #endif
+>
+> +
+> +#ifdef CONFIG_ATH9K_DFS
 
-Add the ability to advertise that the device
-contains the AP SME and what features it can
-support.
+This kconfig entry doesn't exist yet, so no point in referring to it
+yet, you can add a patch that adds this but describe it as work in
+progress or something like that and later correct the text as you move
+on.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/ath/ath6kl/init.c |    4 +++-
- include/linux/nl80211.h                |   20 ++++++++++++++++++++
- include/net/cfg80211.h                 |    6 ++++++
- net/wireless/core.c                    |    4 ++++
- net/wireless/nl80211.c                 |    4 ++++
- 5 files changed, 37 insertions(+), 1 deletion(-)
+> +
+> +#define DFS_STAT(s, p) \
+> +       len += snprintf(buf + len, size - len, "%28s : %10u\n", s, \
+> +                       sc->debug.stats.dfs_stats.p);
+> +
 
---- a/include/linux/nl80211.h	2011-10-21 12:07:39.000000000 +0200
-+++ b/include/linux/nl80211.h	2011-10-21 12:07:41.000000000 +0200
-@@ -1122,6 +1122,11 @@ enum nl80211_commands {
-  *	%NL80211_CMD_TDLS_MGMT. Otherwise %NL80211_CMD_TDLS_OPER should be
-  *	used for asking the driver to perform a TDLS operation.
-  *
-+ * @NL80211_ATTR_DEVICE_AP_SME: This u32 attribute may be listed for devices
-+ *	that have AP support to indicate that the have the AP SME integrated
-+ *	with support for the features listed in this attribute, see
-+ *	&enum nl80211_ap_sme_features.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1350,6 +1355,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_TDLS_SUPPORT,
- 	NL80211_ATTR_TDLS_EXTERNAL_SETUP,
- 
-+	NL80211_ATTR_DEVICE_AP_MLME,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -2663,4 +2670,17 @@ enum nl80211_tdls_operation {
- 	NL80211_TDLS_DISABLE_LINK,
- };
- 
-+/**
-+ * enum nl80211_ap_sme_features - device-integrated AP features
-+ * @NL80211_AP_SME_WSC: The driver is capable of indicating received probe
-+ *	request frames to userspace via management frame subscription events
-+ *	if the payload includes the WSC IE. The driver is capable of adding
-+ *	the WSC IE as configured from userspace into beacons, probe responses
-+ *	and (re)association reponse frame and allows userspace to update them
-+ *	during the lifetime of the BSS.
-+ */
-+enum nl80211_ap_sme_features {
-+	NL80211_AP_SME_WSC	= 1 << 0,
-+};
-+
- #endif /* __LINUX_NL80211_H */
---- a/include/net/cfg80211.h	2011-10-21 12:07:39.000000000 +0200
-+++ b/include/net/cfg80211.h	2011-10-21 12:07:41.000000000 +0200
-@@ -1675,6 +1675,7 @@ struct cfg80211_ops {
-  *	teardown packets should be sent through the @NL80211_CMD_TDLS_MGMT
-  *	command. When this flag is not set, @NL80211_CMD_TDLS_OPER should be
-  *	used for asking the driver/firmware to perform a TDLS operation.
-+ * @WIPHY_FLAG_HAVE_AP_SME: device integrates AP SME
-  */
- enum wiphy_flags {
- 	WIPHY_FLAG_CUSTOM_REGULATORY		= BIT(0),
-@@ -1693,6 +1694,7 @@ enum wiphy_flags {
- 	WIPHY_FLAG_AP_UAPSD			= BIT(14),
- 	WIPHY_FLAG_SUPPORTS_TDLS		= BIT(15),
- 	WIPHY_FLAG_TDLS_EXTERNAL_SETUP		= BIT(16),
-+	WIPHY_FLAG_HAVE_AP_SME			= BIT(17),
- };
- 
- /**
-@@ -1903,6 +1905,8 @@ struct wiphy_wowlan_support {
-  *	may request, if implemented.
-  *
-  * @wowlan: WoWLAN support information
-+ *
-+ * @ap_sme_capa: AP SME capabilities, flags from &enum nl80211_ap_sme_features.
-  */
- struct wiphy {
- 	/* assign these fields before you register the wiphy */
-@@ -1926,6 +1930,8 @@ struct wiphy {
- 
- 	u32 flags;
- 
-+	u32 ap_sme_capa;
-+
- 	enum cfg80211_signal_type signal_type;
- 
- 	int bss_priv_size;
---- a/net/wireless/core.c	2011-10-21 10:20:41.000000000 +0200
-+++ b/net/wireless/core.c	2011-10-21 12:07:41.000000000 +0200
-@@ -492,6 +492,10 @@ int wiphy_register(struct wiphy *wiphy)
- 		    !(wiphy->wowlan.flags & WIPHY_WOWLAN_SUPPORTS_GTK_REKEY)))
- 		return -EINVAL;
- 
-+	if (WARN_ON(wiphy->ap_sme_capa &&
-+		    !(wiphy->flags & WIPHY_FLAG_HAVE_AP_SME)))
-+		return -EINVAL;
-+
- 	if (WARN_ON(wiphy->addresses && !wiphy->n_addresses))
- 		return -EINVAL;
- 
---- a/net/wireless/nl80211.c	2011-10-21 12:07:39.000000000 +0200
-+++ b/net/wireless/nl80211.c	2011-10-21 12:07:41.000000000 +0200
-@@ -1008,6 +1008,10 @@ static int nl80211_send_wiphy(struct sk_
- 	if (nl80211_put_iface_combinations(&dev->wiphy, msg))
- 		goto nla_put_failure;
- 
-+	if (dev->wiphy.flags & WIPHY_FLAG_HAVE_AP_SME)
-+		NLA_PUT_U32(msg, NL80211_ATTR_DEVICE_AP_MLME,
-+			    dev->wiphy.ap_sme_capa);
-+
- 	return genlmsg_end(msg, hdr);
- 
-  nla_put_failure:
---- a/drivers/net/wireless/ath/ath6kl/init.c	2011-10-21 10:20:41.000000000 +0200
-+++ b/drivers/net/wireless/ath/ath6kl/init.c	2011-10-21 12:07:41.000000000 +0200
-@@ -1548,7 +1548,9 @@ static int ath6kl_init(struct net_device
- 	ar->conf_flags = ATH6KL_CONF_IGNORE_ERP_BARKER |
- 			 ATH6KL_CONF_ENABLE_11N | ATH6KL_CONF_ENABLE_TX_BURST;
- 
--	ar->wdev->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
-+	ar->wdev->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM |
-+				  WIPHY_FLAG_HAVE_AP_SME;
-+	ar->wdev->wiphy->ap_sme_capa = NL80211_AP_SME_WSC;
- 
- 	status = ath6kl_target_config_wlan_params(ar);
- 	if (!status)
+Either rename DFS_STAT to ATH9K_DFS_STAT or undef DFS_STAT after its usage.
 
+> +static ssize_t read_file_dfs(struct file *file, char __user *user_buf,
+> +                            size_t count, loff_t *ppos)
+> +{
+> +       struct ath_softc *sc = file->private_data;
+> +       char *buf;
+> +       unsigned int len = 0, size = 8000;
+> +       ssize_t retval = 0;
+> +
+> +       buf = kzalloc(size, GFP_KERNEL);
+> +       if (buf == NULL)
+> +               return -ENOMEM;
+> +
+> +       DFS_STAT("DFS pulses detected     ", pulses_detected);
+> +       DFS_STAT("Datalen discards        ", datalen_discards);
+> +       DFS_STAT("RSSI discards           ", rssi_discards);
+> +       DFS_STAT("BW info discards        ", bwinfo_discards);
+> +       DFS_STAT("Primary channel pulses  ", pri_phy_errors);
+> +       DFS_STAT("Secondary channel pulses", ext_phy_errors);
+> +       DFS_STAT("Dual channel pulses     ", dc_phy_errors);
+> +
+> +       if (len > size)
+> +               len = size;
+> +
+> +       retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
+> +       kfree(buf);
+> +
+> +       return retval;
+> +}
+> +
+> +
+> +static const struct file_operations fops_dfs_stats = {
+> +       .read = read_file_dfs,
+> +       .open = ath9k_debugfs_open,
+> +       .owner = THIS_MODULE,
+> +       .llseek = default_llseek,
+> +};
+> +#endif /* CONFIG_ATH9K_DFS */
 
+I'd prefer to keep this apart into a debugfs_dfs.c but that's just me,
+I would like to ensure to keep *all* DFS stat as easy to review as
+possible and am not a fan of the ifdef sprinkle.
+
+> +
+> +
+>  #define DMA_BUF_LEN 1024
+>
+>  static ssize_t read_file_tx_chainmask(struct file *file, char __user *user_buf,
+> @@ -1385,6 +1432,10 @@ int ath9k_init_debug(struct ath_hw *ah)
+>        debugfs_create_u32("chanbw", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
+>                           &sc->chan_bw);
+>
+> +#ifdef CONFIG_ATH9K_DFS
+> +       debugfs_create_file("dfs_stats", S_IRUSR, sc->debug.debugfs_phy, sc,
+> +                           &fops_dfs_stats);
+> +#endif
+
+If you stuff the code into a file here you'd just need a caller to
+ath9k_debugfs_dfs_create() or something like that.
+
+>        sc->debug.regidx = 0;
+>        return 0;
+>  }
+> diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+> index 4a04510..3a3c3b7 100644
+> --- a/drivers/net/wireless/ath/ath9k/debug.h
+> +++ b/drivers/net/wireless/ath/ath9k/debug.h
+> @@ -25,8 +25,10 @@ struct ath_buf;
+>
+>  #ifdef CONFIG_ATH9K_DEBUGFS
+>  #define TX_STAT_INC(q, c) sc->debug.stats.txstats[q].c++
+> +#define DFS_STAT_INC(sc, c) (sc->debug.stats.dfs_stats.c++)
+>  #else
+>  #define TX_STAT_INC(q, c) do { } while (0)
+> +#define DFS_STAT_INC(sc, c) do { } while (0)
+
+Who's using this? If no one, then why add it? That is add it only when
+its in code.
+
+>  #endif
+>
+>  #ifdef CONFIG_ATH9K_DEBUGFS
+> @@ -171,10 +173,37 @@ struct ath_rx_stats {
+>        u8 rs_antenna;
+>  };
+>
+> +#ifdef CONFIG_ATH9K_DFS
+> +/**
+> + * struct ath_dfs_stats - DFS Statistics
+> + *
+> + * @pulses_detected: No. of pulses detected so far
+> + * @datalen_discards:  No. of pulses discarded due to invalid datalen
+> + * @rssi_discards: No. of pulses discarded due to invalid RSSI
+> + * @bwinfo_discards: No. of pulses discarded due to invalid BW info
+> + * @pri_phy_errors: No. of pulses reported for primary channel
+> + * @ext_phy_errors: No. of pulses reported for extension channel
+> + * @dc_phy_errors: No. of pulses reported for primary + extension channel
+> + */
+> +struct ath_dfs_stats {
+> +       u32 pulses_detected;
+> +       u32 datalen_discards;
+> +       u32 rssi_discards;
+> +       u32 bwinfo_discards;
+> +       u32 pri_phy_errors;
+> +       u32 ext_phy_errors;
+> +       u32 dc_phy_errors;
+> +};
+> +#endif
+> +
+> +
+>  struct ath_stats {
+>        struct ath_interrupt_stats istats;
+>        struct ath_tx_stats txstats[ATH9K_NUM_TX_QUEUES];
+>        struct ath_rx_stats rxstats;
+> +#ifdef CONFIG_ATH9K_DFS
+> +       struct ath_dfs_stats dfs_stats;
+> +#endif
+
+If code used this set of stats this would give a compile error if
+CONFIG_ATH9K_DEBUGFS is enabled but CONFIG_ATH9K_DFS was disabled as
+the ifdef over the increment stat stuff is over CONFIG_ATH9K_DEBUGFS
+and not CONFIG_ATH9K_DFS, but again, no one uses this code yet.
+
+  Luis
