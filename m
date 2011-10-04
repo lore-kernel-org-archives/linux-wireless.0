@@ -1,173 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39566 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933151Ab1JNPNB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 11:13:01 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1REjRV-0001RD-1c
-	for linux-wireless@vger.kernel.org; Fri, 14 Oct 2011 17:13:01 +0200
-Message-Id: <20111014151152.125864240@sipsolutions.net> (sfid-20111014_171306_135479_C4A7906B)
-Date: Fri, 14 Oct 2011 17:11:28 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 09/12] mac80211: support client probe
-References: <20111014151119.246288840@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:2405 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933190Ab1JDVTi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 17:19:38 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Alwin Beukers" <alwin@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 10/26] staging: brcm80211: fixed checkpatch warnings
+Date: Tue, 4 Oct 2011 23:18:56 +0200
+Message-ID: <1317763152-17607-11-git-send-email-arend@broadcom.com> (sfid-20111004_232024_207050_145351A7)
+In-Reply-To: <1317763152-17607-1-git-send-email-arend@broadcom.com>
+References: <1317763152-17607-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Alwin Beukers <alwin@broadcom.com>
 
-Support probing clients with null data frames
-in AP mode.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/cfg.c    |   68 ++++++++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/status.c |   45 +++++++++++++++++++--------------
- 2 files changed, 95 insertions(+), 18 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/aiutils.c |   14 ++++++--------
+ drivers/staging/brcm80211/brcmsmac/main.c    |    3 +--
+ drivers/staging/brcm80211/brcmsmac/nicpci.c  |    3 +--
+ drivers/staging/brcm80211/brcmsmac/srom.c    |    3 +--
+ 4 files changed, 9 insertions(+), 14 deletions(-)
 
---- a/net/mac80211/cfg.c	2011-10-13 13:45:15.000000000 +0200
-+++ b/net/mac80211/cfg.c	2011-10-13 21:52:32.000000000 +0200
-@@ -2484,6 +2484,73 @@ static int ieee80211_tdls_oper(struct wi
- 	return 0;
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index 0b3ba6a..8d4024e 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -1054,9 +1054,8 @@ static struct si_info *ai_doattach(struct si_info *sii,
+ 	cc = (struct chipcregs __iomem *) regs;
+ 
+ 	/* bus/core/clk setup for register access */
+-	if (!ai_buscore_prep(sii)) {
++	if (!ai_buscore_prep(sii))
+ 		return NULL;
+-	}
+ 
+ 	/*
+ 	 * ChipID recognition.
+@@ -1084,19 +1083,18 @@ static struct si_info *ai_doattach(struct si_info *sii,
+ 		return NULL;
+ 	}
+ 	/* no cores found, bail out */
+-	if (sii->numcores == 0) {
++	if (sii->numcores == 0)
+ 		return NULL;
+-	}
++
+ 	/* bus/core/clk setup */
+ 	origidx = SI_CC_IDX;
+-	if (!ai_buscore_setup(sii, savewin, &origidx)) {
++	if (!ai_buscore_setup(sii, savewin, &origidx))
+ 		goto exit;
+-	}
+ 
+ 	/* Init nvram from sprom/otp if they exist */
+-	if (srom_var_init(&sii->pub, cc, vars, varsz)) {
++	if (srom_var_init(&sii->pub, cc, vars, varsz))
+ 		goto exit;
+-	}
++
+ 	pvars = vars ? *vars : NULL;
+ 	ai_nvram_process(sii, pvars);
+ 
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 39b91d6..db05521 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -5995,9 +5995,8 @@ int brcms_c_set_gmode(struct brcms_c_info *wlc, u8 gmode, bool config)
+ 	 * If we are switching to gmode == GMODE_LEGACY_B,
+ 	 * clean up rate info that may refer to OFDM rates.
+ 	 */
+-	if ((gmode == GMODE_LEGACY_B) && (band->gmode != GMODE_LEGACY_B)) {
++	if ((gmode == GMODE_LEGACY_B) && (band->gmode != GMODE_LEGACY_B))
+ 		band->gmode = gmode;
+-	}
+ 
+ 	band->gmode = gmode;
+ 
+diff --git a/drivers/staging/brcm80211/brcmsmac/nicpci.c b/drivers/staging/brcm80211/brcmsmac/nicpci.c
+index e3cce29..460b105 100644
+--- a/drivers/staging/brcm80211/brcmsmac/nicpci.c
++++ b/drivers/staging/brcm80211/brcmsmac/nicpci.c
+@@ -394,9 +394,8 @@ static bool pcie_mdiosetblock(struct pcicore_info *pi, uint blk)
+ 		i++;
+ 	}
+ 
+-	if (i >= pcie_serdes_spinwait) {
++	if (i >= pcie_serdes_spinwait)
+ 		return false;
+-	}
+ 
+ 	return true;
  }
- 
-+static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
-+				  const u8 *peer, u64 *cookie)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_qos_hdr *nullfunc;
-+	struct sk_buff *skb;
-+	int size = sizeof(*nullfunc);
-+	__le16 fc;
-+	bool qos;
-+	struct ieee80211_tx_info *info;
-+	struct sta_info *sta;
-+
-+	rcu_read_lock();
-+	sta = sta_info_get(sdata, peer);
-+	if (sta)
-+		qos = test_sta_flag(sta, WLAN_STA_WME);
-+	rcu_read_unlock();
-+
-+	if (!sta)
-+		return -ENOLINK;
-+
-+	if (qos) {
-+		fc = cpu_to_le16(IEEE80211_FTYPE_DATA |
-+				 IEEE80211_STYPE_QOS_NULLFUNC |
-+				 IEEE80211_FCTL_FROMDS);
+diff --git a/drivers/staging/brcm80211/brcmsmac/srom.c b/drivers/staging/brcm80211/brcmsmac/srom.c
+index 6f3b12c..13d17eb 100644
+--- a/drivers/staging/brcm80211/brcmsmac/srom.c
++++ b/drivers/staging/brcm80211/brcmsmac/srom.c
+@@ -1175,8 +1175,7 @@ static int initvars_srom_pci(struct si_pub *sih, void __iomem *curmap,
+ 			if (sromrev == 0x10)
+ 				sromrev = 1;
+ 		}
+-	}
+-	else {
 +	} else {
-+		size -= 2;
-+		fc = cpu_to_le16(IEEE80211_FTYPE_DATA |
-+				 IEEE80211_STYPE_NULLFUNC |
-+				 IEEE80211_FCTL_FROMDS);
-+	}
-+
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom + size);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb->dev = dev;
-+
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+
-+	nullfunc = (void *) skb_put(skb, size);
-+	nullfunc->frame_control = fc;
-+	nullfunc->duration_id = 0;
-+	memcpy(nullfunc->addr1, sta->sta.addr, ETH_ALEN);
-+	memcpy(nullfunc->addr2, sdata->vif.addr, ETH_ALEN);
-+	memcpy(nullfunc->addr3, sdata->vif.addr, ETH_ALEN);
-+	nullfunc->seq_ctrl = 0;
-+
-+	info = IEEE80211_SKB_CB(skb);
-+
-+	info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS |
-+		       IEEE80211_TX_INTFL_NL80211_FRAME_TX;
-+
-+	skb_set_queue_mapping(skb, IEEE80211_AC_VO);
-+	skb->priority = 7;
-+	if (qos)
-+		nullfunc->qos_ctrl = cpu_to_le16(7);
-+
-+	local_bh_disable();
-+	ieee80211_xmit(sdata, skb);
-+	local_bh_enable();
-+
-+	*cookie = (unsigned long) skb;
-+	return 0;
-+}
-+
- struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -2549,4 +2616,5 @@ struct cfg80211_ops mac80211_config_ops
- 	.set_rekey_data = ieee80211_set_rekey_data,
- 	.tdls_oper = ieee80211_tdls_oper,
- 	.tdls_mgmt = ieee80211_tdls_mgmt,
-+	.probe_client = ieee80211_probe_client,
- };
---- a/net/mac80211/status.c	2011-10-13 13:45:14.000000000 +0200
-+++ b/net/mac80211/status.c	2011-10-13 21:51:41.000000000 +0200
-@@ -420,27 +420,36 @@ void ieee80211_tx_status(struct ieee8021
- 	}
- 
- 	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX) {
--		struct ieee80211_work *wk;
- 		u64 cookie = (unsigned long)skb;
- 
--		rcu_read_lock();
--		list_for_each_entry_rcu(wk, &local->work_list, list) {
--			if (wk->type != IEEE80211_WORK_OFFCHANNEL_TX)
--				continue;
--			if (wk->offchan_tx.frame != skb)
--				continue;
--			wk->offchan_tx.status = true;
--			break;
--		}
--		rcu_read_unlock();
--		if (local->hw_roc_skb_for_status == skb) {
--			cookie = local->hw_roc_cookie ^ 2;
--			local->hw_roc_skb_for_status = NULL;
--		}
-+		if (ieee80211_is_nullfunc(hdr->frame_control) ||
-+		    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
-+			if (info->flags & IEEE80211_TX_STAT_ACK)
-+				cfg80211_probe_acked(skb->dev, hdr->addr1,
-+						     cookie, GFP_ATOMIC);
-+		} else {
-+			struct ieee80211_work *wk;
- 
--		cfg80211_mgmt_tx_status(
--			skb->dev, cookie, skb->data, skb->len,
--			!!(info->flags & IEEE80211_TX_STAT_ACK), GFP_ATOMIC);
-+			rcu_read_lock();
-+			list_for_each_entry_rcu(wk, &local->work_list, list) {
-+				if (wk->type != IEEE80211_WORK_OFFCHANNEL_TX)
-+					continue;
-+				if (wk->offchan_tx.frame != skb)
-+					continue;
-+				wk->offchan_tx.status = true;
-+				break;
-+			}
-+			rcu_read_unlock();
-+			if (local->hw_roc_skb_for_status == skb) {
-+				cookie = local->hw_roc_cookie ^ 2;
-+				local->hw_roc_skb_for_status = NULL;
-+			}
-+
-+			cfg80211_mgmt_tx_status(
-+				skb->dev, cookie, skb->data, skb->len,
-+				!!(info->flags & IEEE80211_TX_STAT_ACK),
-+				GFP_ATOMIC);
-+		}
- 	}
- 
- 	/* this was a transmitted frame, but now we want to reuse it */
+ 		/* Use OTP if SPROM not available */
+ 		err = otp_read_pci(sih, srom, SROM_MAX);
+ 		if (err == 0)
+-- 
+1.7.4.1
 
 
