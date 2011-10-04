@@ -1,67 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:51275 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754355Ab1JSV3V convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Oct 2011 17:29:21 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Date: Wed, 19 Oct 2011 14:29:02 -0700
-Subject: RE: [patch 3/4 v2] mwifiex: prevent corruption instead of just
- warning
-Message-ID: <477F20668A386D41ADCC57781B1F70430817F59AC7@SC-VEXCH1.marvell.com> (sfid-20111019_232926_676272_BEF69F5E)
-References: <20111018061514.GI27732@elgon.mountain>
- <477F20668A386D41ADCC57781B1F70430817F59764@SC-VEXCH1.marvell.com>
- <20111019073228.GS30887@longonot.mountain>
-In-Reply-To: <20111019073228.GS30887@longonot.mountain>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:57340 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932141Ab1JDOum (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 10:50:42 -0400
+Received: by ywb5 with SMTP id 5so553651ywb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 07:50:42 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <201110041642.54453.chunkeey@googlemail.com>
+References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com>
+	<201110041538.12885.chunkeey@googlemail.com>
+	<4E8B157F.2080203@neratec.com>
+	<201110041642.54453.chunkeey@googlemail.com>
+Date: Tue, 4 Oct 2011 22:50:42 +0800
+Message-ID: <CAJ-VmomWYUtd84APvEg7mKC-sevT3UVaX2qKBn3KiVriPZybgQ@mail.gmail.com> (sfid-20111004_165047_305022_A3BD5373)
+Subject: Re: [RFC 5/6] ath9k: enable DFS pulse detection
+From: Adrian Chadd <adrian@freebsd.org>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kgiori@qca.qualcomm.com, nbd@openwrt.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+Also whilst I'm at it, "SPECTRUM_MANAGEMENT" is a very broad flag to set.
 
-Thanks for the patch.
+For example: you may not want to do DFS on the AR5416 NICs because (as
+documented in the open hal and earlier ath9k bits) there isn't support
+for radar pulses on the ext channel. So even if you had a successful
+DFS algorithm for this NIC, you'd have to somehow tell the DFS
+machinery that HT40+DFS channels aren't supported but HT20+DFS
+channels are.
 
-> -----Original Message-----
-> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-> Sent: Wednesday, October 19, 2011 12:32 AM
-> To: Bing Zhao
-> Cc: John W. Linville; linux-wireless@vger.kernel.org; kernel-janitors@vger.kernel.org
-> Subject: [patch 3/4 v2] mwifiex: prevent corruption instead of just warning
-> 
-> Probably we never hit this condition, but in case we do, we may as
-> well put a return here instead of just printing a warning message and
-> then corrupting memory.  The caller doesn't check the return code.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+But then, the AR5416 supports per-packet TPC, so you could use it in
+STA mode perfectly fine and it'd support that part of spectrum
+management. Since you get per-frame RSSI of RX'ed frames, you can
+support the spectrum power histogram IE.
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
+And since it supports quiet time stuff, you can use it in STA and
+hostap mode for supporting the quiet time IE.
 
-Regards,
-Bing
+(Yes, I'm looking at how to make all of this work in FreeBSD net80211,
+as some patches have been supplied to start fleshing out these
+functions. :)
 
-> ---
-> v2: Use the error handling code to free the skb before returning.
-> 
-> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-> index d12d440..a2f3200 100644
-> --- a/drivers/net/wireless/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/mwifiex/pcie.c
-> @@ -1228,9 +1228,12 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
->  	if (!skb)
->  		return 0;
-> 
-> -	if (rdptr >= MWIFIEX_MAX_EVT_BD)
-> +	if (rdptr >= MWIFIEX_MAX_EVT_BD) {
->  		dev_err(adapter->dev, "event_complete: Invalid rdptr 0x%x\n",
->  					rdptr);
-> +		ret = -EINVAL;
-> +		goto done;
-> +	}
-> 
->  	/* Read the event ring write pointer set by firmware */
->  	if (mwifiex_read_reg(adapter, REG_EVTBD_WRPTR, &wrptr)) {
+I'm not saying this needs to be solved now, but I think it's worth
+thinking about how to encapsulate exactly what it is that NICs
+support, rather than simply saying "yup, 11h is here, all good mate."
+
+
+Adrian
