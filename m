@@ -1,38 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63265 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755518Ab1JCLpX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Oct 2011 07:45:23 -0400
-Message-ID: <4E89A01B.2010709@qca.qualcomm.com> (sfid-20111003_134531_347490_ABBFA87C)
-Date: Mon, 3 Oct 2011 14:44:27 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:2379 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933184Ab1JDVTi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 17:19:38 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Alwin Beukers" <alwin@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 15/26] staging: brcm80211: decreased indentation level
+ of brcms_c_wme_setparams function
+Date: Tue, 4 Oct 2011 23:19:01 +0200
+Message-ID: <1317763152-17607-16-git-send-email-arend@broadcom.com> (sfid-20111004_232017_932966_16CEDFC4)
+In-Reply-To: <1317763152-17607-1-git-send-email-arend@broadcom.com>
+References: <1317763152-17607-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/4] ath6kl: Avoid processing failed rx packets
-References: <1317308476-16204-1-git-send-email-vthiagar@qca.qualcomm.com> <1317308476-16204-3-git-send-email-vthiagar@qca.qualcomm.com> <4E8999E9.4090904@qca.qualcomm.com> <20111003114134.GC24335@vasanth-laptop>
-In-Reply-To: <20111003114134.GC24335@vasanth-laptop>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/03/2011 02:41 PM, Vasanthakumar Thiagarajan wrote:
-> On Mon, Oct 03, 2011 at 02:18:01PM +0300, Kalle Valo wrote:
->> On 09/29/2011 06:01 PM, Vasanthakumar Thiagarajan wrote:
->>> It is not necessary to process an htc_packet which is allocated for rx
->>> but failed in sdio rx.
->>
->> Same question here: does it fix a visible bug or is it more like a
->> theoretical issue?
->>
->> I would prefer that fixes would also state the impact of the bug: is it
->> a theoretical issue, a random bug which almost nobody sees or really bad
->> bug visible almost everywhere? That way it's easier to decide which
->> trees it should be sent.
-> 
-> Ok, I can add this to commit log. I'll resend everything with V2.
+From: Alwin Beukers <alwin@broadcom.com>
 
-Excellent, thanks a lot.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c |   40 +++++++++++++----------------
+ 1 files changed, 18 insertions(+), 22 deletions(-)
 
-Kalle
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index d75756d..3349716 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -4199,26 +4199,23 @@ void brcms_c_wme_setparams(struct brcms_c_info *wlc, u16 aci,
+ 		return;
+ 	}
+ 
+-	do {
+-		memset((char *)&acp_shm, 0, sizeof(struct shm_acparams));
+-		/* fill in shm ac params struct */
+-		acp_shm.txop = params->txop;
+-		/* convert from units of 32us to us for ucode */
+-		wlc->edcf_txop[aci & 0x3] = acp_shm.txop =
+-		    EDCF_TXOP2USEC(acp_shm.txop);
+-		acp_shm.aifs = (params->aifs & EDCF_AIFSN_MASK);
+-
+-		if (aci == AC_VI && acp_shm.txop == 0
+-		    && acp_shm.aifs < EDCF_AIFSN_MAX)
+-			acp_shm.aifs++;
+-
+-		if (acp_shm.aifs < EDCF_AIFSN_MIN
+-		    || acp_shm.aifs > EDCF_AIFSN_MAX) {
+-			wiphy_err(wlc->wiphy, "wl%d: edcf_setparams: bad "
+-				  "aifs %d\n", wlc->pub->unit, acp_shm.aifs);
+-			continue;
+-		}
+-
++	memset((char *)&acp_shm, 0, sizeof(struct shm_acparams));
++	/* fill in shm ac params struct */
++	acp_shm.txop = params->txop;
++	/* convert from units of 32us to us for ucode */
++	wlc->edcf_txop[aci & 0x3] = acp_shm.txop =
++	    EDCF_TXOP2USEC(acp_shm.txop);
++	acp_shm.aifs = (params->aifs & EDCF_AIFSN_MASK);
++
++	if (aci == AC_VI && acp_shm.txop == 0
++	    && acp_shm.aifs < EDCF_AIFSN_MAX)
++		acp_shm.aifs++;
++
++	if (acp_shm.aifs < EDCF_AIFSN_MIN
++	    || acp_shm.aifs > EDCF_AIFSN_MAX) {
++		wiphy_err(wlc->wiphy, "wl%d: edcf_setparams: bad "
++			  "aifs %d\n", wlc->pub->unit, acp_shm.aifs);
++	} else {
+ 		acp_shm.cwmin = params->cw_min;
+ 		acp_shm.cwmax = params->cw_max;
+ 		acp_shm.cwcur = acp_shm.cwmin;
+@@ -4239,8 +4236,7 @@ void brcms_c_wme_setparams(struct brcms_c_info *wlc, u16 aci,
+ 					  M_EDCF_QINFO +
+ 					  wme_ac2fifo[aci] * M_EDCF_QLEN + i,
+ 					  *shm_entry++);
+-
+-	} while (0);
++	}
+ 
+ 	if (suspend)
+ 		brcms_c_suspend_mac_and_wait(wlc);
+-- 
+1.7.4.1
+
+
