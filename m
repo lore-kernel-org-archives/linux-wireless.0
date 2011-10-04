@@ -1,56 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:32873 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753636Ab1JQCQt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Oct 2011 22:16:49 -0400
-Message-ID: <4E9B9018.1000002@lwfinger.net> (sfid-20111017_041722_525439_94C72619)
-Date: Sun, 16 Oct 2011 21:16:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:1195 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933050Ab1JDVTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 17:19:36 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 05/26] staging: brcm80211: replace brcmu_bitcount with
+ hweight8
+Date: Tue, 4 Oct 2011 23:18:51 +0200
+Message-ID: <1317763152-17607-6-git-send-email-arend@broadcom.com> (sfid-20111004_231950_797520_81848C70)
+In-Reply-To: <1317763152-17607-1-git-send-email-arend@broadcom.com>
+References: <1317763152-17607-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: werner <w.landgraf@ru.ru>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	dave.taht@gmail.com, rientjes@google.com, arend@broadcom.com,
-	toralf.foerster@gmx.de, wey-yi.w.guy@intel.com,
-	ilw@linux.intel.com, larry.finger@gmail.com
-Subject: Re: 3.1-rc9 wifi problem
-References: <web-626905859@zbackend1.aha.ru> <4E9A4496.1000906@lwfinger.net> <web-627302724@zbackend1.aha.ru>
-In-Reply-To: <web-627302724@zbackend1.aha.ru>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/16/2011 08:33 PM, werner wrote:
-> I have to wait until the friend with the laptop comes back, perhaps this week.
-> Then I can look what wireless card is in it.
->
-> However, now I remember me: that laptop worked only good since 2.6.39 with the
-> new kernel-embedded modules. Before, it didn't work normally, i.e. on booting
-> the wireless almost never didn't switch on; only ocasionally .
->
->
-> And, beside of kernel 2.6.39, and the normal wifi software, I still had him to
-> install a file iwlwifi-1000-3.ucode or .5 ucode (i'm not sure, the number can
-> also be 5000), and I had the problem to search long time for that file because
-> one find only .2 or .4 in internet but what don't work at that wifi card. You
-> could improve the kernel-module so that everything is included so that one don't
-> need to search such files.
+The kernel provides bit operations to replace brcmu_bitcount so
+using those instead.
 
-That will not happen. In fact, the trend is from having firmware be a part of 
-the driver to having it be external.
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    7 +++----
+ drivers/staging/brcm80211/brcmsmac/stf.c         |   10 +++++-----
+ 2 files changed, 8 insertions(+), 9 deletions(-)
 
-I don't know what distro you use, but mine (openSUSE) maintains a package called 
-kernel-firmware that contains all the redistributable firmware that is available 
-from tne linux-firmware git tree. If that package is installed, then you do not 
-have to search for firmware in most cases. If your distro does not have such a 
-package, then complain or find another distro.
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+index 45e3b4b..0d3c9d8 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -15,6 +15,7 @@
+  */
+ #include <linux/kernel.h>
+ #include <linux/delay.h>
++#include <linux/bitops.h>
+ 
+ #include <brcm_hw_ids.h>
+ #include <chipcommon.h>
+@@ -2879,8 +2880,7 @@ void wlc_phy_stf_chain_init(struct brcms_phy_pub *pih, u8 txchain, u8 rxchain)
+ 	pi->sh->hw_phyrxchain = rxchain;
+ 	pi->sh->phytxchain = txchain;
+ 	pi->sh->phyrxchain = rxchain;
+-	pi->pubpi.phy_corenum = (u8) brcmu_bitcount((u8 *)&pi->sh->phyrxchain,
+-						    sizeof(u8));
++	pi->pubpi.phy_corenum = (u8)hweight8(pi->sh->phyrxchain);
+ }
+ 
+ void wlc_phy_stf_chain_set(struct brcms_phy_pub *pih, u8 txchain, u8 rxchain)
+@@ -2892,8 +2892,7 @@ void wlc_phy_stf_chain_set(struct brcms_phy_pub *pih, u8 txchain, u8 rxchain)
+ 	if (ISNPHY(pi))
+ 		wlc_phy_rxcore_setstate_nphy(pih, rxchain);
+ 
+-	pi->pubpi.phy_corenum = (u8) brcmu_bitcount((u8 *)&pi->sh->phyrxchain,
+-						    sizeof(u8));
++	pi->pubpi.phy_corenum = (u8)hweight8(pi->sh->phyrxchain);
+ }
+ 
+ void wlc_phy_stf_chain_get(struct brcms_phy_pub *pih, u8 *txchain, u8 *rxchain)
+diff --git a/drivers/staging/brcm80211/brcmsmac/stf.c b/drivers/staging/brcm80211/brcmsmac/stf.c
+index ba3c3ef..9460cd1 100644
+--- a/drivers/staging/brcm80211/brcmsmac/stf.c
++++ b/drivers/staging/brcm80211/brcmsmac/stf.c
+@@ -165,10 +165,10 @@ static int brcms_c_stf_txcore_set(struct brcms_c_info *wlc, u8 Nsts,
+ 	BCMMSG(wlc->wiphy, "wl%d: Nsts %d core_mask %x\n",
+ 		 wlc->pub->unit, Nsts, core_mask);
+ 
+-	if (BRCMS_BITSCNT(core_mask) > wlc->stf->txstreams)
++	if (hweight8(core_mask) > wlc->stf->txstreams)
+ 		core_mask = 0;
+ 
+-	if ((BRCMS_BITSCNT(core_mask) == wlc->stf->txstreams) &&
++	if ((hweight8(core_mask) == wlc->stf->txstreams) &&
+ 	    ((core_mask & ~wlc->stf->txchain)
+ 	     || !(core_mask & wlc->stf->txchain)))
+ 		core_mask = wlc->stf->txchain;
+@@ -278,7 +278,7 @@ int brcms_c_stf_txchain_set(struct brcms_c_info *wlc, s32 int_val, bool force)
+ 	 * if nrate override is configured to be non-SISO STF mode, reject
+ 	 * reducing txchain to 1
+ 	 */
+-	txstreams = (u8) BRCMS_BITSCNT(txchain);
++	txstreams = (u8) hweight8(txchain);
+ 	if (txstreams > MAX_STREAMS_SUPPORTED)
+ 		return -EINVAL;
+ 
+@@ -385,7 +385,7 @@ void brcms_c_stf_phy_chain_calc(struct brcms_c_info *wlc)
+ 	}
+ 
+ 	wlc->stf->txchain = wlc->stf->hw_txchain;
+-	wlc->stf->txstreams = (u8) BRCMS_BITSCNT(wlc->stf->hw_txchain);
++	wlc->stf->txstreams = (u8) hweight8(wlc->stf->hw_txchain);
+ 
+ 	if (wlc->stf->hw_rxchain == 0 || wlc->stf->hw_rxchain == 0xf) {
+ 		if (BRCMS_ISNPHY(wlc->band))
+@@ -395,7 +395,7 @@ void brcms_c_stf_phy_chain_calc(struct brcms_c_info *wlc)
+ 	}
+ 
+ 	wlc->stf->rxchain = wlc->stf->hw_rxchain;
+-	wlc->stf->rxstreams = (u8) BRCMS_BITSCNT(wlc->stf->hw_rxchain);
++	wlc->stf->rxstreams = (u8) hweight8(wlc->stf->hw_rxchain);
+ 
+ 	/* initialize the txcore table */
+ 	memcpy(wlc->stf->txcore, txcore_default, sizeof(wlc->stf->txcore));
+-- 
+1.7.4.1
 
-> Then, with this kernel and that file however, it worked without any problem.
->
-> I hope from these informations you can find out what wifi card or what driver is
-> in the laptop.
-
-We can tell that you have an Intel card, but not much more.
-
-Larry
 
