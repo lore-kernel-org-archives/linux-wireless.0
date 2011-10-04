@@ -1,42 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:38962 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1759033Ab1JFTEt (ORCPT
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:51628 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932820Ab1JDSzu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Oct 2011 15:04:49 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 014EB5403E8
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Oct 2011 15:18:27 -0400 (EDT)
-Subject: Compat-wireless release for 2011-10-06 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20111006190442.53FBF40650@repository3.orbit-lab.org> (sfid-20111006_210453_448957_0806AC20)
-Date: Thu,  6 Oct 2011 15:04:42 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 4 Oct 2011 14:55:50 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Tue, 4 Oct 2011 11:50:41 -0700
+Subject: RE: [PATCH] mwifiex: use separate wait queue for each command node
+Message-ID: <477F20668A386D41ADCC57781B1F70430815597203@SC-VEXCH1.marvell.com> (sfid-20111004_205554_460450_7BD4281D)
+References: <1317701303-21871-1-git-send-email-bzhao@marvell.com>
+	 (sfid-20111004_061336_546510_9B44E171)
+ <1317709788.3986.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1317709788.3986.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://github.com/mcgrof/compat-wireless
-   2309ddb..e4f1a17  master     -> origin/master
->From git://github.com/mcgrof/compat
-   966e847..b5edac3  master     -> origin/master
->From git://github.com/sfrothwell/linux-next
- + a2851f2...98b3e8f akpm-end   -> origin/akpm-end  (forced update)
-   a8062e4..538d288  akpm-start -> origin/akpm-start
- + 09d70e2...40a33ae master     -> origin/master  (forced update)
-   a8062e4..538d288  stable     -> origin/stable
- * [new tag]         next-20111006 -> next-20111006
->From git://github.com/sfrothwell/linux-next
- * [new tag]         v3.1-rc9   -> v3.1-rc9
-
-compat-wireless code metrics
-
-    811845 - Total upstream lines of code being pulled
-      2413 - backport code changes
-      2097 - backport code additions
-       316 - backport code deletions
-      8588 - backport from compat module
-     11001 - total backport code
-    1.3551 - % of code consists of backport work
-Permission denied (publickey,gssapi-keyex,gssapi-with-mic).
-rsync: connection unexpectedly closed (0 bytes received so far) [sender]
-rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
+SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9o
+YW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdDQo+IFNlbnQ6IE1v
+bmRheSwgT2N0b2JlciAwMywgMjAxMSAxMTozMCBQTQ0KPiBUbzogQmluZyBaaGFvDQo+IENjOiBs
+aW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEpvaG4gVy4gTGludmlsbGU7IEFtaXRrdW1h
+ciBLYXJ3YXI7IEtpcmFuIERpdmVrYXI7IFlvZ2VzaCBQb3dhcjsNCj4gRnJhbmsgSHVhbmcNCj4g
+U3ViamVjdDogUmU6IFtQQVRDSF0gbXdpZmlleDogdXNlIHNlcGFyYXRlIHdhaXQgcXVldWUgZm9y
+IGVhY2ggY29tbWFuZCBub2RlDQo+IA0KPiBPbiBNb24sIDIwMTEtMTAtMDMgYXQgMjE6MDggLTA3
+MDAsIEJpbmcgWmhhbyB3cm90ZToNCj4gPiBGcm9tOiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2Fy
+QG1hcnZlbGwuY29tPg0KPiA+DQo+ID4gQ3VycmVudGx5IGdsb2JhbCB3YWl0IHF1ZXVlIChhZGFw
+dGVyLT5jbWRfd2FpdF9xKSBpcyB1c2VkIGZvcg0KPiA+IHNlbmRpbmcgc3luY2hyb25vdXMgY29t
+bWFuZHMgdG8gRlcuIFdoZW4gdHdvIHRocmVhZHMgZW50ZXIgaW4NCj4gPiBtd2lmaWV4X3NlbmRf
+Y21kX3N5bmMoKSByb3V0aW5lIGF0IHRoZSBzYW1lIHRpbWUsIGJvdGggdGhlDQo+ID4gdGhyZWFk
+cyB3YWl0IGZvciB0aGVpciBjb21tYW5kIHJlc3BvbnNlcy4gVGhleSB3YWtlIHVwDQo+ID4gc2lt
+dWx0YW5lb3VzbHkgYWZ0ZXIgZ2V0dGluZyByZXNwb25zZSBvZiAxc3QgY29tbWFuZC4gQWZ0ZXIN
+Cj4gPiB0aGlzIHdoZW4gYSB0aHJlYWQgaXMgd2FpdGluZyBmb3IgY29tbWFuZCByZXNwb25zZSBv
+ZiAzcmQNCj4gPiBjb21tYW5kLCBpdCB3YWtlcyB1cCBhZnRlciBnZXR0aW5nIHJlc3BvbnNlIG9m
+IDJuZCBjb21tYW5kDQo+ID4gYW5kIHNvIG9uLiBUaGVyZWZvcmUgd2UgZG9uJ3Qgd2FpdCBmb3Ig
+dGhlIHJlc3BvbnNlIG9mIGxhc3QNCj4gPiBjb21tYW5kKDB4YWEpIGR1cmluZyB1bmxvYWQuIEhl
+bmNlIHdoaWxlIG5leHQgdGltZSBsb2FkaW5nIHRoZQ0KPiA+IGRyaXZlciBjb21tYW5kIHRpbWUg
+b3V0IGlzIHNlZW4gZm9yIElOSVQgY29tbWFuZC4NCj4gPg0KPiA+IFRoaXMgcHJvYmxlbSBpcyBy
+ZXNvbHZlZCBieSBoYXZpbmcgc2VwYXJhdGUgd2FpdCBxdWV1ZSBmb3IgZWFjaA0KPiA+IGNvbW1h
+bmQuIFNpbmNlIGRyaXZlciBzZW5kcyBtdWx0aXBsZSBzY2FuIGNvbW1hbmRzIGFzeW5jaHJvbm91
+c2x5DQo+ID4gdG8gRlcgZm9yIHNjYW5uaW5nIHRoZSBuZXR3b3JrLCB3ZSB3aWxsIG5lZWQgc2Vw
+YXJhdGUgd2FpdCBxdWV1ZQ0KPiA+IGZvciB0aGUgd2hvbGUgc2NhbiBvcGVyYXRpb24uIEVhcmxp
+ZXIgdGhlIGdsb2JhbCB3YWl0IHF1ZXVlIHdhcw0KPiA+IGJlaW5nIHVzZWQgZm9yIHNjYW4uDQo+
+IA0KPiBJIGNhbid0IHNheSBJIHJlYWxseSBjYXJlIGFib3V0IHRoaXMsIGJ1dCB0aGlzIHNlZW1z
+IGNvbXBsZXRlbHkNCj4gcG9pbnRsZXNzLiBBIHdhaXRxdWV1ZSBkb2Vzbid0IGltcGx5IHRoYXQg
+anVzdCBhIHNpbmdsZSB0aGluZyBjYW4gYmUNCj4gd2FpdGluZyBvbiBpdCwgc2luY2UgeW91IHNo
+b3VsZCBiZSB1c2luZyB3YWl0X2ZvcigpIG1hY3Jvcy4gVGh1cywgYWxsDQo+IHlvdSAqcmVhbGx5
+KiBuZWVkIGlzIGEgYml0IGluIHRoZSBjb21tYW5kIHRoYXQgbWFya3MgaXQgYXMgY29tcGxldGVk
+LA0KPiBhbmQgdGhlbiB5b3UgdXNlIHRoZSB3YWl0cXVldWUgdG8gd2FpdCBmb3IgdGhhdCBiaXQg
+dG8gYmUgc2V0Lg0KDQpUaGFua3MgZm9yIHlvdXIgY29tbWVudC4NCldpbGwgd29yayBvbiB2MiBw
+YXRjaCBhbmQgcmVzdWJtaXQuDQoNClRoYW5rcywNCkJpbmcNCg0KPiANCj4gam9oYW5uZXMNCj4g
+DQoNCg==
