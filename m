@@ -1,68 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43837 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751530Ab1JSSsS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Oct 2011 14:48:18 -0400
-Message-ID: <4E9F1B6B.1080401@candelatech.com> (sfid-20111019_204821_659778_187B05B5)
-Date: Wed, 19 Oct 2011 11:48:11 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:2388 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933193Ab1JDVTi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 17:19:38 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Alwin Beukers" <alwin@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 12/26] staging: brcm80211: fixed function returns
+Date: Tue, 4 Oct 2011 23:18:58 +0200
+Message-ID: <1317763152-17607-13-git-send-email-arend@broadcom.com> (sfid-20111004_232012_589507_715E7C36)
+In-Reply-To: <1317763152-17607-1-git-send-email-arend@broadcom.com>
+References: <1317763152-17607-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	reinette chatre <reinette.chatre@intel.com>,
-	Eliad Peller <eliad@wizery.com>
-Subject: Re: [RFC] mac80211: properly go back to operational channel?
-References: <1317121970-3638-1-git-send-email-sgruszka@redhat.com>  <1317123289.4082.12.camel@jlt3.sipsolutions.net>  <20110929150018.GA4554@redhat.com>  <1317740824.6741.22.camel@jlt3.sipsolutions.net>  <20111005111507.GA2184@redhat.com>  <1317813762.4839.7.camel@jlt3.sipsolutions.net>  <20111018141922.GA6204@redhat.com> <1318948251.3958.29.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1318948251.3958.29.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/18/2011 07:30 AM, Johannes Berg wrote:
-> On Tue, 2011-10-18 at 16:19 +0200, Stanislaw Gruszka wrote:
->> For local->tmp_channel == NULL and local->scan_channel == NULL
->> ieee80211_cfg_on_oper_channel() will return false if
->> local->oper_channel != local->hw.conf.channel,
->> hece we do not properly go back to oper_channel from tmp_channel.
->
-> Huh, good catch.
->
->> Does patch have sense?
->
-> Let's see what Ben says. It seems a bit like the
-> ieee80211_cfg_on_oper_channel() test there should be inverted instead of
-> removed?
->
->> Could it fixes problems we are talking
->> in this thread?
->
-> Yes, could be related, also some issue Jouni and Reinette have been
-> seeing with P2P might be related as well.
+From: Alwin Beukers <alwin@broadcom.com>
 
-Please see the patch I just posted.  I think it fixes the
-issue (which was originally reported by
-Eliad Peller <eliad@wizery.com>, who also posted a patch).
-I re-worked his suggested patch to what I believe is a more
-proper patch.
+- removed unneeded return statements at end of functions.
+- changed return value of brcms_c_radio_monitor_start to void.
 
-Also, Eliad had posted another patch that seems to be good
-as is (which I also just re-posted).
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c |   23 ++---------------------
+ 1 files changed, 2 insertions(+), 21 deletions(-)
 
-Obviously, my tests cases are not catching all of these issues,
-so please review the patches and/or test them out to see if
-they fix the problem.
-
-Thanks,
-Ben
-
->
-> johannes
->
-
-
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index b6c4361..dc95ba0 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -1572,8 +1572,6 @@ void brcms_c_ucode_wake_override_set(struct brcms_hardware *wlc_hw,
+ 
+ 	brcms_c_mctrl_write(wlc_hw);
+ 	brcms_b_wait_for_wake(wlc_hw);
+-
+-	return;
+ }
+ 
+ void brcms_c_ucode_wake_override_clear(struct brcms_hardware *wlc_hw,
+@@ -1585,8 +1583,6 @@ void brcms_c_ucode_wake_override_clear(struct brcms_hardware *wlc_hw,
+ 		return;
+ 
+ 	brcms_c_mctrl_write(wlc_hw);
+-
+-	return;
+ }
+ 
+ /* When driver needs ucode to stop beaconing, it has to make sure that
+@@ -1607,8 +1603,6 @@ static void brcms_c_ucode_mute_override_set(struct brcms_hardware *wlc_hw)
+ 		return;
+ 
+ 	brcms_c_mctrl_write(wlc_hw);
+-
+-	return;
+ }
+ 
+ /* Clear the override on AP and INFRA bits */
+@@ -3217,8 +3211,6 @@ static void brcms_b_pllreq(struct brcms_hardware *wlc_hw, bool set, u32 req_bit)
+ 				brcms_b_xtal(wlc_hw, OFF);
+ 		}
+ 	}
+-
+-	return;
+ }
+ 
+ static void brcms_b_antsel_set(struct brcms_hardware *wlc_hw, u32 antsel_avail)
+@@ -4308,17 +4300,16 @@ static void brcms_c_down_led_upd(struct brcms_c_info *wlc)
+ 	brcms_c_pllreq(wlc, false, BRCMS_PLLREQ_FLIP);
+ }
+ 
+-static bool brcms_c_radio_monitor_start(struct brcms_c_info *wlc)
++static void brcms_c_radio_monitor_start(struct brcms_c_info *wlc)
+ {
+ 	/* Don't start the timer if HWRADIO feature is disabled */
+ 	if (wlc->radio_monitor)
+-		return true;
++		return;
+ 
+ 	wlc->radio_monitor = true;
+ 	brcms_c_pllreq(wlc, true, BRCMS_PLLREQ_RADIO_MON);
+ 	brcms_add_timer(wlc->wl, wlc->radio_timer, TIMER_INTERVAL_RADIOCHK,
+ 			true);
+-	return true;
+ }
+ 
+ void brcms_c_radio_disable(struct brcms_c_info *wlc)
+@@ -6123,8 +6114,6 @@ static void brcms_c_ofdm_rateset_war(struct brcms_c_info *wlc)
+ 		r = wlc->default_bss->rateset.rates[0];
+ 
+ 	wlc_phy_ofdm_rateset_war(wlc->band->pi, war);
+-
+-	return;
+ }
+ 
+ int brcms_c_set_channel(struct brcms_c_info *wlc, u16 channel)
+@@ -7785,8 +7774,6 @@ brcms_c_compute_ofdm_plcp(u32 rspec, u32 length, u8 *plcp)
+ 	plcp[2] |= (tmp >> 16) & 0xff;
+ 	plcp[1] |= (tmp >> 8) & 0xff;
+ 	plcp[0] |= tmp & 0xff;
+-
+-	return;
+ }
+ 
+ /* Rate: 802.11 rate code, length: PSDU length in octets */
+@@ -7808,7 +7795,6 @@ brcms_c_compute_plcp(struct brcms_c_info *wlc, u32 rspec,
+ 		brcms_c_compute_ofdm_plcp(rspec, length, plcp);
+ 	else
+ 		brcms_c_compute_cck_plcp(wlc, rspec, length, plcp);
+-	return;
+ }
+ 
+ /* brcms_c_compute_rtscts_dur()
+@@ -7997,8 +7983,6 @@ brcms_b_read_tsf(struct brcms_hardware *wlc_hw, u32 *tsf_l_ptr,
+ 	/* read the tsf timer low, then high to get an atomic read */
+ 	*tsf_l_ptr = R_REG(&regs->tsf_timerlow);
+ 	*tsf_h_ptr = R_REG(&regs->tsf_timerhigh);
+-
+-	return;
+ }
+ 
+ /*
+@@ -8175,7 +8159,6 @@ brcms_c_recvctl(struct brcms_c_info *wlc, struct d11rxhdr *rxh,
+ 
+ 	memcpy(IEEE80211_SKB_RXCB(p), &rx_status, sizeof(rx_status));
+ 	ieee80211_rx_irqsafe(wlc->pub->ieee_hw, p);
+-	return;
+ }
+ 
+ /* Process received frames */
+@@ -8683,8 +8666,6 @@ brcms_c_bcn_prb_template(struct brcms_c_info *wlc, u16 type,
+ 	memcpy(&h->bssid, &cfg->BSSID, ETH_ALEN);
+ 
+ 	/* SEQ filled in by MAC */
+-
+-	return;
+ }
+ 
+ int brcms_c_get_header_len(void)
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.4.1
+
 
