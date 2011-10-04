@@ -1,72 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2844 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751541Ab1JUNze (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 09:55:34 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 00/17] fix mac80211 callback in brcmsmac and brcmfmac
- refactor
-Date: Fri, 21 Oct 2011 15:55:02 +0200
-Message-ID: <1319205319-16891-1-git-send-email-arend@broadcom.com> (sfid-20111021_161149_258924_F9DCE4D0)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:48846 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933860Ab1JDXsU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 19:48:20 -0400
+Received: by yxl31 with SMTP id 31so1031168yxl.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 16:48:19 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH 8/8] iw: add DFS region parsing support
+Date: Tue,  4 Oct 2011 16:47:47 -0700
+Message-Id: <1317772067-6998-9-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111005_014822_980307_22050B42)
+In-Reply-To: <1317772067-6998-1-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1317772067-6998-1-git-send-email-mcgrof@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg commented on our use of the start/stop callbacks in brcmsmac
-and we changed those callbacks. In rfkill testing it revealed a problem which
-has been fixed in this series as well.
+This lets iw parse the DFS region passed on by the kernel
+when one is found for the currently used regulatory domain.
 
-The brcmfmac driver had some restructuring in preparation of USB support
-for new devices.
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ reg.c |   31 +++++++++++++++++++++++++++++++
+ 1 files changed, 31 insertions(+), 0 deletions(-)
 
-This patch series applies to the wireless-testing repository and depends on the
-series posted on Oct 18, 2011 with message id:
-
-Message-ID: <1318939391-19495-1-git-send-email-arend@broadcom.com> 
-
-Arend van Spriel (3):
-  brcm80211: smac: rename buffer endianess conversion functions
-  brcm80211: smac: use sk_buff list for handling frames in receive path
-  brcm80211: smac: change buffer endianess convert function interface
-
-Franky Lin (5):
-  brcm80211: fmac: allow wd timer to be disabled when bus down
-  brcm80211: fmac: use brcmf_del_if for all net devices
-  brcm80211: fmac: use brcmf_add_if for all net devices
-  brcm80211: fmac: store brcmf_if in net device private data
-  brcm80211: fmac: remove state from brcmf_if in fullmac
-
-Roland Vossen (9):
-  brcm80211: smac: removed MPC related code
-  brcm80211: smac: removed MPC related variables
-  brcm80211: smac: removed down-on-watchdog MPC functionality
-  brcm80211: smac: removed down-on-rf-kill functionality
-  brcm80211: smac: bugfix for tx mute in brcms_b_init()
-  brcm80211: smac: fixed inconsistency in transmit mute
-  brcm80211: smac: modified Mac80211 callback interface
-  brcm80211: smac: mute transmit on ops_start
-  brcm80211: smac: changed check to confirm STA only support
-
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    5 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    5 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |  301 +++++++-------------
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   15 +-
- drivers/net/wireless/brcm80211/brcmsmac/dma.c      |   38 ++-
- drivers/net/wireless/brcm80211/brcmsmac/dma.h      |    3 +-
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  100 +++----
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |    1 +
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |  219 ++------------
- drivers/net/wireless/brcm80211/brcmsmac/main.h     |   11 -
- drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    4 +-
- drivers/net/wireless/brcm80211/brcmsmac/srom.c     |   33 +--
- drivers/net/wireless/brcm80211/include/defs.h      |    1 -
- 13 files changed, 232 insertions(+), 504 deletions(-)
-
+diff --git a/reg.c b/reg.c
+index c4ee1c4..4fa5bec 100644
+--- a/reg.c
++++ b/reg.c
+@@ -96,6 +96,31 @@ COMMAND(reg, set, "<ISO/IEC 3166-1 alpha2>",
+ 	NL80211_CMD_REQ_SET_REG, 0, CIB_NONE, handle_reg_set,
+ 	"Notify the kernel about the current regulatory domain.");
+ 
++static void print_dfs_region(__u8 dfs_region)
++{
++	if (!dfs_region)
++		return;
++
++	printf("DFS Master region: ");
++
++	switch (dfs_region) {
++	case NL80211_DFS_FCC:
++		printf("FCC");
++		break;
++	case NL80211_DFS_ETSI:
++		printf("ETSI");
++		break;
++	case NL80211_DFS_JP:
++		printf("JP");
++		break;
++	default:
++		printf("Uknown");
++		break;
++	}
++
++	printf("\n");
++}
++
+ static int print_reg_handler(struct nl_msg *msg, void *arg)
+ 
+ {
+@@ -107,6 +132,7 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
+ 	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
+ 	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
+ 	char *alpha2;
++	__u8 dfs_region = 0;
+ 	struct nlattr *nl_rule;
+ 	int rem_rule;
+ 	static struct nla_policy reg_rule_policy[NL80211_FREQUENCY_ATTR_MAX + 1] = {
+@@ -132,7 +158,12 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
+ 	}
+ 
+ 	alpha2 = nla_data(tb_msg[NL80211_ATTR_REG_ALPHA2]);
++
++	if (tb_msg[NL80211_ATTR_DFS_REGION])
++		dfs_region = nla_get_u8(tb_msg[NL80211_ATTR_DFS_REGION]);
++
+ 	printf("country %c%c:\n", alpha2[0], alpha2[1]);
++	print_dfs_region(dfs_region);
+ 
+ 	nla_for_each_nested(nl_rule, tb_msg[NL80211_ATTR_REG_RULES], rem_rule) {
+ 		struct nlattr *tb_rule[NL80211_FREQUENCY_ATTR_MAX + 1];
 -- 
-1.7.4.1
-
+1.7.4.15.g7811d
 
