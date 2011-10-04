@@ -1,67 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:21106 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935288Ab1JFL2B (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Oct 2011 07:28:01 -0400
-Message-ID: <4E8D90BB.5040506@qca.qualcomm.com> (sfid-20111006_132806_414847_88E682CD)
-Date: Thu, 6 Oct 2011 14:27:55 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-CC: Dan Carpenter <dan.carpenter@oracle.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: ath6kl: pass only unicast frames for aggregation
-References: <20111005055958.GA32513@elgon.mountain> <4E8C2CF1.7000206@qca.qualcomm.com> <20111005115738.GA7368@jouni.qca.qualcomm.com>
-In-Reply-To: <20111005115738.GA7368@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:41075 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755800Ab1JDLLU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 07:11:20 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat-wireless: make patches apply again
+Date: Tue,  4 Oct 2011 13:11:09 +0200
+Message-Id: <1317726670-23319-1-git-send-email-hauke@hauke-m.de> (sfid-20111004_131124_199509_63F8F738)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/05/2011 02:57 PM, Jouni Malinen wrote:
-> On Wed, Oct 05, 2011 at 01:09:53PM +0300, Kalle Valo wrote:
->> Good catch, thanks! I should run smatch more, it's a really nice tool.
-> 
-> This could have actually been found even before
-> 5694f962964c5162f6b49ddb5d517180bd7d1d98 with more thorough static
-> analysis since an A-MSDU sent to ath6kl AP would have hit the NULL
-> pointer dereference in aggr_slice_amsdu().. Anyway, this new commit does
-> indeed seem to make this much more likely to hit the issue (any data
-> frame between two associated STAs).
 
-Good point, I'll mention in the patch how severe this actually is.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/29-sdio_no_suspend.patch |   50 +++++++++++++++++++-------------------
+ 1 files changed, 25 insertions(+), 25 deletions(-)
 
->> I think a fix like this would be appropriate. Jouni, what do you think?
-> 
->> --- a/drivers/net/wireless/ath/ath6kl/txrx.c
->> +++ b/drivers/net/wireless/ath/ath6kl/txrx.c
->> @@ -1247,6 +1247,10 @@ void ath6kl_rx(struct htc_target *target, struct
->> htc_packet *packet)
->>                 }
->>                 if (skb1)
->>                         ath6kl_data_tx(skb1, ar->net_dev);
->> +
->> +               if (skb == NULL)
->> +                       /* nothing to deliver up the stack */
->> +                       return;
->>         }
->>
->>         datap = (struct ethhdr *) skb->data;
-> 
-> 
-> This looks like the correct behavior here. However, I would recommend
-> using braces around any multi-line conditional statement even if it
-> really is a comment and a single statement that would not, in theory,
-> require this in C language. Leaving those out here seems to be just
-> asking for problems should someone add something before the "return;"
-> line and not notice to add braces at that point. The same comment would
-> actually apply for the commit 5694f962964c5162f6b49ddb5d517180bd7d1d98,
-> too. If you want to avoid the extra line an braces, moving the comment
-> to the end of the return line would work for me.
+diff --git a/patches/29-sdio_no_suspend.patch b/patches/29-sdio_no_suspend.patch
+index cb2fbed..5cc26a1 100644
+--- a/patches/29-sdio_no_suspend.patch
++++ b/patches/29-sdio_no_suspend.patch
+@@ -86,39 +86,39 @@ suspend and resume that are not backported.
+  
+ --- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+ +++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+-@@ -45,7 +45,7 @@ static int brcmf_ops_sdio_probe(struct s
+- 				const struct sdio_device_id *id);
+- static void brcmf_ops_sdio_remove(struct sdio_func *func);
+- 
+--#ifdef CONFIG_PM
+-+#if defined(CONFIG_PM) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
+- static int brcmf_sdio_suspend(struct device *dev);
+- static int brcmf_sdio_resume(struct device *dev);
+- #endif /* CONFIG_PM */
+-@@ -58,7 +58,7 @@ static const struct sdio_device_id brcmf
+- 	{ /* end: all zeroes */ },
+- };
+- 
++@@ -55,7 +55,7 @@ static bool
++ brcmf_pm_resume_error(struct brcmf_sdio_dev *sdiodev)
++ {
++ 	bool is_err = false;
+ -#ifdef CONFIG_PM_SLEEP
+ +#if defined(CONFIG_PM_SLEEP) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
+- static const struct dev_pm_ops brcmf_sdio_pm_ops = {
+- 	.suspend	= brcmf_sdio_suspend,
+- 	.resume		= brcmf_sdio_resume,
+-@@ -70,7 +70,7 @@ static struct sdio_driver brcmf_sdmmc_dr
+- 	.remove = brcmf_ops_sdio_remove,
+- 	.name = "brcmfmac",
+- 	.id_table = brcmf_sdmmc_ids,
++ 	is_err = atomic_read(&sdiodev->suspend);
++ #endif
++ 	return is_err;
++@@ -64,7 +64,7 @@ brcmf_pm_resume_error(struct brcmf_sdio_
++ static void
++ brcmf_pm_resume_wait(struct brcmf_sdio_dev *sdiodev, wait_queue_head_t *wq)
++ {
+ -#ifdef CONFIG_PM_SLEEP
+ +#if defined(CONFIG_PM_SLEEP) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
+- 	.drv = {
+- 		.pm = &brcmf_sdio_pm_ops,
+- 	},
+-@@ -623,7 +623,7 @@ static void brcmf_ops_sdio_remove(struct
++ 	int retry = 0;
++ 	while (atomic_read(&sdiodev->suspend) && retry++ != 30)
++ 		wait_event_timeout(*wq, false, HZ/100);
++@@ -564,7 +564,7 @@ static void brcmf_ops_sdio_remove(struct
++ 	}
+  }
+  
+- 
+ -#ifdef CONFIG_PM_SLEEP
+ +#if defined(CONFIG_PM_SLEEP) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
+  static int brcmf_sdio_suspend(struct device *dev)
+  {
+  	mmc_pm_flag_t sdio_flags;
++@@ -617,7 +617,7 @@ static struct sdio_driver brcmf_sdmmc_dr
++ 	.remove = brcmf_ops_sdio_remove,
++ 	.name = "brcmfmac",
++ 	.id_table = brcmf_sdmmc_ids,
++-#ifdef CONFIG_PM_SLEEP
+++#if defined(CONFIG_PM_SLEEP) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
++ 	.drv = {
++ 		.pm = &brcmf_sdio_pm_ops,
++ 	},
+-- 
+1.7.4.1
 
-I have used to not using braces even there's a comment like here. But
-you have a point and I'll change my style.
-
-Thanks for checking this.
-
-Kalle
