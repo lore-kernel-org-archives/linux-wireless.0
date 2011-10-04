@@ -1,58 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7356 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754071Ab1JDHfh (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:43199 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933569Ab1JDU7r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 03:35:37 -0400
-Message-ID: <4E8AB741.9030707@qca.qualcomm.com> (sfid-20111004_093554_635020_0C31E147)
-Date: Tue, 4 Oct 2011 10:35:29 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Tue, 4 Oct 2011 16:59:47 -0400
+Received: by eya28 with SMTP id 28so908001eya.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 13:59:46 -0700 (PDT)
 MIME-Version: 1.0
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	<linux-next@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: build failure after merge of the moduleh tree
-References: <20111004180333.44f741dc08063a918c9b581f@canb.auug.org.au>
-In-Reply-To: <20111004180333.44f741dc08063a918c9b581f@canb.auug.org.au>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <4E8B5886.3010103@lwfinger.net>
+References: <CA+z-pWFvBfvqY9_km8t3Xbmt=2Pw7eJo8T+SyFp=Lv=d1+ZOPw@mail.gmail.com>
+ <4E8B5886.3010103@lwfinger.net>
+From: Jamie Kitson <jamie@kitten-x.com>
+Date: Tue, 4 Oct 2011 21:59:26 +0100
+Message-ID: <CA+z-pWE32ui3nL-NMs5xERiqET6BJ=DkTK7DtkG_pFDt_=YAAg@mail.gmail.com> (sfid-20111004_225950_656350_82096B8D)
+Subject: Re: BUG: Soft lockup CPU#0 stuck for 22s! [wpa_supplicant:756]
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/04/2011 10:03 AM, Stephen Rothwell wrote:
-> After merging the moduleh tree, today's linux-next build (x86_64
-> allmodconfig) failed like this:
-> 
-> drivers/net/wireless/ath/ath6kl/debug.c:237:11: error: 'THIS_MODULE' undeclared here (not in a function)
-> 
-> Caused by commit 9a7308341b71 ("ath6kl: silence "invalid rate" warning")
-> from the wireless tree interacting with the module.h split.
-> 
-> I added this patch:
+> Which variant of the RTL8188CE do you have? Use 'lspci -nn' to tell.
 
-John&Paul, how do we handle this patch?
+03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd.
+RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
 
-> From: Stephen Rothwell <sfr@canb.auug.org.au>
-> Date: Tue, 4 Oct 2011 18:01:03 +1100
-> Subject: [PATCH] ath6kl: THIS_MODULES needs export.h
-> 
-> Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> ---
->  drivers/net/wireless/ath/ath6kl/debug.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-> index ba3f23d..7879b53 100644
-> --- a/drivers/net/wireless/ath/ath6kl/debug.c
-> +++ b/drivers/net/wireless/ath/ath6kl/debug.c
-> @@ -19,6 +19,7 @@
->  #include <linux/circ_buf.h>
->  #include <linux/fs.h>
->  #include <linux/vmalloc.h>
-> +#include <linux/export.h>
->  
->  #include "debug.h"
->  #include "target.h"
+> Does ARCH have an updated kernel later than 3.0?
 
-Kalle
+Looks like I am using the latest core of 3.0.4, there's 3.0.6 in testing:
+
+http://www.archlinux.org/packages/testing/x86_64/linux/
+
+Might that help?
+
+> What version of wpa-supplicant?
+
+wpa_supplicant v0.7.3
+
+> Are you using NetworkManager? If so, what version? Is your desktop KDE,
+> Gnome, or something else? If NM, what applet and version?
+>
+> If not NM, how do you connect?
+
+I use dwm and wpa_supplicant, no manager.
+
+Thanks, Jamie
