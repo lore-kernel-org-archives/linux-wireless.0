@@ -1,27 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53339 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753111Ab1JOOWt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Oct 2011 10:22:49 -0400
-Message-ID: <4E999737.50904@openwrt.org> (sfid-20111015_162258_719271_5AF291B9)
-Date: Sat, 15 Oct 2011 16:22:47 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:43096 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754909Ab1JDH6J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 03:58:09 -0400
+Received: by ywb5 with SMTP id 5so202488ywb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 00:58:09 -0700 (PDT)
 MIME-Version: 1.0
-To: Stanislav Demakov <s.demakov@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Ath9k, single antenna on ar9280
-References: <CAN=pzd+TcY+n90RBMU+Cpp0Bt9d_eAGgY4yffO+PSStWSzbf-Q@mail.gmail.com> <4E9970A6.10305@openwrt.org> <CAN=pzd+ou1DXL_d_W0dvTcYrNMfH9NjSoFUa=07fE4BYJ+N7bQ@mail.gmail.com> <4E997413.8010008@openwrt.org> <CAN=pzd+R42SArWR+gEgqvJ7h1_6ZnB61xyKzOo8FqNxkRhxqrQ@mail.gmail.com> <4E997A54.2080004@openwrt.org> <CAN=pzdLBxCB7U1+ig+ctPJKZMgC3D2V0KHOXXZH8ZVBgi67BQg@mail.gmail.com> <4E997F13.7060602@openwrt.org> <CAN=pzd+8b9cqc6BgvaF8vdq-CywJ7mNTVpeXz92ZvwJwefJOkA@mail.gmail.com> <CAN=pzdJgba-mdJHLDC+_LpgSiMwff4vbB-oUp2VDwYsSouedPA@mail.gmail.com>
-In-Reply-To: <CAN=pzdJgba-mdJHLDC+_LpgSiMwff4vbB-oUp2VDwYsSouedPA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20111003084823.GA1521@ecki.lan>
+References: <CAD2nsn1roVNB5+H1CYHVnerLN3pjGB5KmEX1mJZ4yJhHqFGOVA@mail.gmail.com>
+	<20110830064137.GA4719@ecki>
+	<CAD2nsn2Reu+T=g6HwdQT5cdkD0C-06y7GJ_B2q-UzpRnshxAWw@mail.gmail.com>
+	<14be9f3b-4c91-481d-9e52-f3119659fd59@email.android.com>
+	<CAD2nsn1+WVaLR_TR37Z6YRCFnQH1hJkSOri=nxc8Ff3pa9N8dw@mail.gmail.com>
+	<20110927214245.GA1416@ecki>
+	<CAD2nsn3ZwUJsFRLyjKenO6Pm3+jr9gfmAMRDQPStEcC1hN_mkw@mail.gmail.com>
+	<CAJ-Vmok8FvrYtT2QwXY0NowLSogfkZYNbGLFbVR8Uzv507FrdA@mail.gmail.com>
+	<CAD2nsn0Z2J4r4tN_fLjx5bbvz2bg6NVcQ8vppJbbNcgOF8pFew@mail.gmail.com>
+	<CAJ-VmokcM4KmzV7Rn9PA68iEiTJiPw=ffYgNFLDAHShxD0HNAg@mail.gmail.com>
+	<20111003084823.GA1521@ecki.lan>
+Date: Tue, 4 Oct 2011 15:58:09 +0800
+Message-ID: <CAJ-Vmo=sE4KeOp1CKAR5v+Rzm1bm0R=ZvtMvJaE_8Sjn1dOdsw@mail.gmail.com> (sfid-20111004_095813_775148_4C3FB1E1)
+Subject: Re: ath9k: irq storm after suspend/resume
+From: Adrian Chadd <adrian@freebsd.org>
+To: Clemens Buchacher <drizzd@aon.at>
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-10-15 3:41 PM, Stanislav Demakov wrote:
-> And the last question...
-> Can you confirm that after setting antenna configuration to 1x1 I can
-> safely detach 2nd physical connector from the adapter? I mean is there
-> a guarantees that device will only use the 1st antenna.
-Changing the antenna configuration will alter the chainmask accordingly, 
-so it should be safe to disconnect the second physical connector.
+Right, this looks a bit evil. ;)
 
-- Felix
+On 3 October 2011 16:48, Clemens Buchacher <drizzd@aon.at> wrote:
+
+> for 1, 2, ..., 99, 128, 256:
+> AR_INTR_SYNC_CAUSE: 0x00000000, AR_INTR_ASYNC_CAUSE: 0x00000000
+> AR_IMR: 0xdeadbeef, AR_ISR: 0xdeadbeef
+
+.. that says some part of the MAC is very asleep. But no interrupt
+cause bits are set. So I bet it's a shared interrupt.
+
+> for 512:
+> AR_INTR_SYNC_CAUSE: 0x00000000, AR_INTR_ASYNC_CAUSE: 0x00000000
+> AR_IMR: 0x00000000, AR_ISR: 0x00000208
+
+That looks valid, but why are you receiving an interrupt here? Is it
+some other device on a shared irq? Or a non-acked interrupt?
+Ie - there's no sync/async cause bits set and IMR is 0, the status
+bits are no tx pkt / no rx pkt. So that looks fine. You shouldn't have
+received an interrupt.
+
+> for 1024:
+> AR_INTR_SYNC_CAUSE: 0x00000000, AR_INTR_ASYNC_CAUSE: 0x00000000
+> AR_IMR: 0x81800964, AR_ISR: 0x00000008
+
+.. hm,  why'd you receive an interrupt here? the ISR bits aren't set that way.
+Again, I think this is another shared or non-acked interrupt coming in.
+
+> for 2048:
+> AR_INTR_SYNC_CAUSE: 0x00000000, AR_INTR_ASYNC_CAUSE: 0x00000000
+> AR_IMR: 0xdeadbeef, AR_ISR: 0xdeadbeef
+>
+> for 2^12, 2^13, ..., 2^16
+> AR_INTR_SYNC_CAUSE: 0x00020000, AR_INTR_ASYNC_CAUSE: 0x00000000
+> AR_IMR: 0xdeadbeef, AR_ISR: 0xdeadbeef
+>
+> The last ones indeed correspond to AR_INTR_SYNC_MAC_SLEEP_ACCESS
+> that you mentioned. Note that this output is interleaved with
+> device initialization. So I don't know if that causes the register
+> contents to become valid, or if it changes the contents.
+>
+> If I suspend/resume first, then load the module, then wait for 500
+> ms after request_irq I get only zeroes, repeated 109 times:
+>
+> for 1, 2, ..., 99, 2^7, 2^8, ..., 2^16:
+> AR_IMR: 0x00000000, AR_ISR: 0x00000000
+> AR_INTR_SYNC_CAUSE: 0x00000000, AR_INTR_ASYNC_CAUSE: 0x00000000
+
+Would you mind also printing the contents of AR_IER there? I wonder if
+AR_IER is incorrectly being enabled.
+
+I think this may be a shared interrupt. What else is using the same
+IRQ line? What about only printing out those lines if the interrupt is
+actually generated by the NIC? There's a function further down in the
+isr routine which checks whether the NIC itself posted the interrupt
+(it checks SYNC_CAUSE/ASYNC_CAUSE.) That should cut down the spam
+quite a bit and only log the relevant entries for ath9k.
+
+
+
+
+Adrian
