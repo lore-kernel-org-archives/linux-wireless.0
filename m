@@ -1,45 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:44434 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750708Ab1JZEDi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 00:03:38 -0400
-Date: Wed, 26 Oct 2011 13:03:33 +0900
-From: Norbert Preining <preining@logic.at>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-Subject: Re: iwlagn is getting very shaky
-Message-ID: <20111026040332.GF24956@gamma.logic.tuwien.ac.at> (sfid-20111026_060354_170009_B2524102)
-References: <20111019062517.GC11588@gamma.logic.tuwien.ac.at> <1319003304.31823.46.camel@wwguy-huron> <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111020045927.GB23044@gamma.logic.tuwien.ac.at> <1319119852.2111.2.camel@wwguy-ubuntu> <20111021012442.GB26758@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110231424500.17218@chino.kir.corp.google.com> <20111026025014.GB24956@gamma.logic.tuwien.ac.at> <1319601333.14693.19.camel@wwguy-ubuntu>
+Received: from mms2.broadcom.com ([216.31.210.18]:4626 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933212Ab1JDVTi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 17:19:38 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Alwin Beukers" <alwin@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 23/26] staging: brcm80211: combined if statements
+Date: Tue, 4 Oct 2011 23:19:09 +0200
+Message-ID: <1317763152-17607-24-git-send-email-arend@broadcom.com> (sfid-20111004_232001_272856_5ED867FD)
+In-Reply-To: <1317763152-17607-1-git-send-email-arend@broadcom.com>
+References: <1317763152-17607-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1319601333.14693.19.camel@wwguy-ubuntu>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Di, 25 Okt 2011, wwguy wrote:
-> so this is different problem, right? it looks different compare to what
-> you described before which is cause by queue stopped.
+From: Alwin Beukers <alwin@broadcom.com>
 
-I assume that this is a different regression concerning 3.1.0 released.
+Combined if statements in brcms_c_edcf_setparams and brcms_c_wme_setparams functions.
 
-But *I* cannot be sure about it ;-)
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c |   12 ++++--------
+ 1 files changed, 4 insertions(+), 8 deletions(-)
 
-Best wishes
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 4e2226e..30c5573 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -4186,12 +4186,10 @@ void brcms_c_wme_setparams(struct brcms_c_info *wlc, u16 aci,
+ 					  *shm_entry++);
+ 	}
+ 
+-	if (suspend)
++	if (suspend) {
+ 		brcms_c_suspend_mac_and_wait(wlc);
+-
+-	if (suspend)
+ 		brcms_c_enable_mac(wlc);
+-
++	}
+ }
+ 
+ void brcms_c_edcf_setparams(struct brcms_c_info *wlc, bool suspend)
+@@ -4223,12 +4221,10 @@ void brcms_c_edcf_setparams(struct brcms_c_info *wlc, bool suspend)
+ 		brcms_c_wme_setparams(wlc, aci, &txq_pars, suspend);
+ 	}
+ 
+-	if (suspend)
++	if (suspend) {
+ 		brcms_c_suspend_mac_and_wait(wlc);
+-
+-	if (suspend)
+ 		brcms_c_enable_mac(wlc);
+-
++	}
+ }
+ 
+ /* maintain LED behavior in down state */
+-- 
+1.7.4.1
 
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-ROCHESTER (n.)
-One who is able to gain occupation of the armrest on both sides of
-their cinema or aircraft seat.
-			--- Douglas Adams, The Meaning of Liff
+
