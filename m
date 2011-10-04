@@ -1,59 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:57758 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754126Ab1JVR06 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Oct 2011 13:26:58 -0400
-Received: by wwe6 with SMTP id 6so7101623wwe.1
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Oct 2011 10:26:57 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:1167 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932558Ab1JDVTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 17:19:36 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 00/26] various cleanup changes for brcmfmac and brcmsmac
+Date: Tue, 4 Oct 2011 23:18:46 +0200
+Message-ID: <1317763152-17607-1-git-send-email-arend@broadcom.com> (sfid-20111004_231940_777647_EBB4021A)
 MIME-Version: 1.0
-In-Reply-To: <1319290618.3956.6.camel@jlt3.sipsolutions.net>
-References: <1319289112-21896-1-git-send-email-guy@wizery.com>
-	<1319290457.3956.3.camel@jlt3.sipsolutions.net>
-	<1319290618.3956.6.camel@jlt3.sipsolutions.net>
-Date: Sat, 22 Oct 2011 19:26:56 +0200
-Message-ID: <CAA038468Y7T4BSAycqmNc0q+Ph1wSh07B57tV--O00kvDEp-wg@mail.gmail.com> (sfid-20111022_192701_834395_27820085)
-Subject: Re: [PATCH 1/4] nl80211: Add probe response offload attribute
-From: Guy Eilam <guy@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 22, 2011 at 3:36 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sat, 2011-10-22 at 15:34 +0200, Johannes Berg wrote:
->> On Sat, 2011-10-22 at 15:11 +0200, Guy Eilam wrote:
->>
->> > +enum nl80211_probe_resp_offload_support_attr {
->> > +   NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS,
->> > +   NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2,
->> > +   NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P,
->> > +};
->>
->> I think doing = 1<<N here would be nicer to use in drivers & userspace.
->
-> Hm, also: should we call this WPS or WSC, and do we need to distinguish
-> WPS and WPS2? My AP mode patch called it WSC in a different context but
-> I can change, we just should be consistent.
->
->> > + * @get_probe_resp_offload: Get probe response offload support from driver.
->>
->> and this seems unnecessary -- why not just put a u32 value into struct
->> wiphy?
->
-> Oh, and probably a regular WIPHY flag that indicates whether the
-> attribute should be added at all so that it can also be 0 but present
-> (presence with 0 value indicates something other than not present).
+Third attempt as the mailer somehow did not sent these outside the
+Broadcom intranet. Another series of cleanup changes based on community
+feedback received on the mainline patch (v2) as sent August 25, 2011.
 
-When this is not supported a -EOPNOTSUPP should be returned.
-A 0 return means that it is supported.
-I now see that I have a small mistake in the patch regarding this.
-The check should be (res >= 0) and not (!res).
-I'll fix it.
+This series is to be applied to the staging-next branch. There are no
+pending patches that this series depend on.
 
->
-> johannes
->
->
+Alwin Beukers (15):
+  staging: brcm80211: fixed checkpatch warnings
+  staging: brcm80211: removed accessor functions for band type and
+    etheraddress.
+  staging: brcm80211: fixed function returns
+  staging: brcm80211: made NULL ethernet address const
+  staging: brcm80211: removed empty brcms_c_reset_bmac_done callback
+    function
+  staging: brcm80211: decreased indentation level of
+    brcms_c_wme_setparams function
+  staging: brcm80211: removed redundant code from brcms_c_set_gmode
+  staging: brcm80211: cleanup of shared memory related wrapper
+    functions
+  staging: brcm80211: cleanup of transmit buffer size related wrapper
+    function
+  staging: brcm80211: cleanup of several wrapper functions
+  staging: brcm80211: removed unneeded call to
+    brcms_b_tx_fifo_suspended
+  staging: brcm80211: removed synchronisation of wlc->machwcap field
+  staging: brcm80211: remove brcms_b_dotxstatus wrapper function
+  staging: brcm80211: combined if statements
+  staging: brcm80211: remove N mode validation function
+
+Arend van Spriel (4):
+  staging: brcm80211: remove setting ssn to zero upon AMPDU_TX_START
+  staging: brcm80211: remove filtering of received frames
+  staging: brcm80211: remove brcmu_bprintf and related functions
+  staging: brcm80211: replace brcmu_bitcount with hweight8
+
+Franky Lin (3):
+  staging: brcm80211: clean up rtnl_lock in fullmac
+  staging: brcm80211: remove fullmac module_param for intr/poll mode
+  staging: brcm80211: stop using assigned thread priority in fullmac
+
+Roland Vossen (4):
+  staging: brcm80211: cleaned up struct brcms_bss_cfg
+  staging: brcm80211: fullmac: fixed double #include
+  staging: brcm80211: softmac: added event tracing
+  staging: brcm80211: smac: fix for 64 bit systems
+
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |    3 +
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |   72 +---
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c   |   25 +-
+ drivers/staging/brcm80211/brcmsmac/Makefile        |    3 +-
+ drivers/staging/brcm80211/brcmsmac/aiutils.c       |   14 +-
+ drivers/staging/brcm80211/brcmsmac/ampdu.c         |   14 +-
+ drivers/staging/brcm80211/brcmsmac/antsel.c        |    4 +-
+ .../brcm80211/brcmsmac/brcms_trace_events.c        |   23 +
+ .../brcm80211/brcmsmac/brcms_trace_events.h        |   92 ++++
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c   |   19 +-
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.h   |    2 +
+ drivers/staging/brcm80211/brcmsmac/main.c          |  525 ++++----------------
+ drivers/staging/brcm80211/brcmsmac/main.h          |   50 +--
+ drivers/staging/brcm80211/brcmsmac/nicpci.c        |    3 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c   |    7 +-
+ drivers/staging/brcm80211/brcmsmac/srom.c          |    3 +-
+ drivers/staging/brcm80211/brcmsmac/stf.c           |   10 +-
+ drivers/staging/brcm80211/brcmsmac/types.h         |    1 -
+ drivers/staging/brcm80211/brcmsmac/ucode_loader.h  |    4 +-
+ drivers/staging/brcm80211/brcmutil/utils.c         |   34 --
+ drivers/staging/brcm80211/include/brcmu_utils.h    |   15 -
+ 21 files changed, 252 insertions(+), 671 deletions(-)
+ create mode 100644 drivers/staging/brcm80211/brcmsmac/brcms_trace_events.c
+ create mode 100644 drivers/staging/brcm80211/brcmsmac/brcms_trace_events.h
+
+-- 
+1.7.4.1
+
+
