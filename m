@@ -1,168 +1,335 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35956 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759937Ab1JGMFG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 08:05:06 -0400
-Message-Id: <20111007120217.261654601@sipsolutions.net> (sfid-20111007_140509_329343_E84A008B)
-Date: Fri, 07 Oct 2011 14:01:25 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] mac80211: move fragment flag to info flag as
- dont-fragment
-References: <20111007120122.982757001@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:2423 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933208Ab1JDVTi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 17:19:38 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Alwin Beukers" <alwin@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 17/26] staging: brcm80211: cleanup of shared memory
+ related wrapper functions
+Date: Tue, 4 Oct 2011 23:19:03 +0200
+Message-ID: <1317763152-17607-18-git-send-email-arend@broadcom.com> (sfid-20111004_231954_445759_8099770A)
+In-Reply-To: <1317763152-17607-1-git-send-email-arend@broadcom.com>
+References: <1317763152-17607-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Alwin Beukers <alwin@broadcom.com>
 
-The purpose of this is two-fold:
- 1) by moving it out of tx_data.flags, we can in
-    another patch move the radiotap parsing so it
-    no longer is in the hotpath
- 2) if a device implements fragmentation but can
-    optionally skip it, the radiotap request for
-    not doing fragmentation may be honoured
+- removed brcms_c_read_shm and brcms_c_write_shm functions.
+- removed redundant argument check from brcms_c_copyto_shm function.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- include/net/mac80211.h     |    4 ++++
- net/mac80211/ieee80211_i.h |    1 -
- net/mac80211/tx.c          |   39 ++++++++++++++-------------------------
- net/mac80211/wpa.c         |    3 ++-
- 4 files changed, 20 insertions(+), 27 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/ampdu.c  |   10 ++--
+ drivers/staging/brcm80211/brcmsmac/antsel.c |    4 +-
+ drivers/staging/brcm80211/brcmsmac/main.c   |   78 ++++++++++++---------------
+ drivers/staging/brcm80211/brcmsmac/main.h   |    2 -
+ 4 files changed, 41 insertions(+), 53 deletions(-)
 
---- a/include/net/mac80211.h	2011-10-07 11:01:01.000000000 +0200
-+++ b/include/net/mac80211.h	2011-10-07 11:01:03.000000000 +0200
-@@ -375,6 +375,9 @@ struct ieee80211_bss_conf {
-  * @IEEE80211_TX_CTL_USE_MINRATE: This frame will be sent at lowest rate.
-  *	This flag is used to send nullfunc frame at minimum rate when
-  *	the nullfunc is used for connection monitoring purpose.
-+ * @IEEE80211_TX_CTL_DONTFRAG: Don't fragment this packet even if it
-+ *	would be fragmented by size (this is optional, only used for
-+ *	monitor injection).
-  *
-  * Note: If you have to add new flags to the enumeration, then don't
-  *	 forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
-@@ -408,6 +411,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(27),
- 	IEEE80211_TX_STATUS_EOSP		= BIT(28),
- 	IEEE80211_TX_CTL_USE_MINRATE		= BIT(29),
-+	IEEE80211_TX_CTL_DONTFRAG		= BIT(30),
- };
+diff --git a/drivers/staging/brcm80211/brcmsmac/ampdu.c b/drivers/staging/brcm80211/brcmsmac/ampdu.c
+index e29c62e..506c392 100644
+--- a/drivers/staging/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/staging/brcm80211/brcmsmac/ampdu.c
+@@ -369,7 +369,7 @@ static int brcms_c_ffpld_check_txfunfl(struct brcms_c_info *wlc, int fid)
+ 	u16 cur_txunfl;
  
- #define IEEE80211_TX_CTL_STBC_SHIFT		23
---- a/net/mac80211/ieee80211_i.h	2011-10-07 11:01:01.000000000 +0200
-+++ b/net/mac80211/ieee80211_i.h	2011-10-07 11:01:03.000000000 +0200
-@@ -136,7 +136,6 @@ typedef unsigned __bitwise__ ieee80211_t
- #define TX_DROP		((__force ieee80211_tx_result) 1u)
- #define TX_QUEUED	((__force ieee80211_tx_result) 2u)
+ 	/* return if we got here for a different reason than underflows */
+-	cur_txunfl = brcms_c_read_shm(wlc,
++	cur_txunfl = brcms_b_read_shm(wlc->hw,
+ 				      M_UCODE_MACSTAT +
+ 				      offsetof(struct macstat, txfunfl[fid]));
+ 	new_txunfl = (u16) (cur_txunfl - fifo->prev_txfunfl);
+@@ -1182,11 +1182,11 @@ void brcms_c_ampdu_shm_upd(struct ampdu_info *ampdu)
+ 	 */
+ 	if ((ampdu->rx_factor & IEEE80211_HT_AMPDU_PARM_FACTOR) ==
+ 	    IEEE80211_HT_MAX_AMPDU_64K) {
+-		brcms_c_write_shm(wlc, M_MIMO_MAXSYM, MIMO_MAXSYM_MAX);
+-		brcms_c_write_shm(wlc, M_WATCHDOG_8TU, WATCHDOG_8TU_MAX);
++		brcms_b_write_shm(wlc->hw, M_MIMO_MAXSYM, MIMO_MAXSYM_MAX);
++		brcms_b_write_shm(wlc->hw, M_WATCHDOG_8TU, WATCHDOG_8TU_MAX);
+ 	} else {
+-		brcms_c_write_shm(wlc, M_MIMO_MAXSYM, MIMO_MAXSYM_DEF);
+-		brcms_c_write_shm(wlc, M_WATCHDOG_8TU, WATCHDOG_8TU_DEF);
++		brcms_b_write_shm(wlc->hw, M_MIMO_MAXSYM, MIMO_MAXSYM_DEF);
++		brcms_b_write_shm(wlc->hw, M_WATCHDOG_8TU, WATCHDOG_8TU_DEF);
+ 	}
+ }
  
--#define IEEE80211_TX_FRAGMENTED		BIT(0)
- #define IEEE80211_TX_UNICAST		BIT(1)
- #define IEEE80211_TX_PS_BUFFERED	BIT(2)
- 
---- a/net/mac80211/tx.c	2011-10-07 11:01:01.000000000 +0200
-+++ b/net/mac80211/tx.c	2011-10-07 11:05:26.000000000 +0200
-@@ -898,7 +898,10 @@ ieee80211_tx_h_fragment(struct ieee80211
- 	int hdrlen;
- 	int fragnum;
- 
--	if (!(tx->flags & IEEE80211_TX_FRAGMENTED))
-+	if (info->flags & IEEE80211_TX_CTL_DONTFRAG)
-+		return TX_CONTINUE;
-+
-+	if (tx->local->ops->set_frag_threshold)
- 		return TX_CONTINUE;
- 
+diff --git a/drivers/staging/brcm80211/brcmsmac/antsel.c b/drivers/staging/brcm80211/brcmsmac/antsel.c
+index c61c520..c2aa47b 100644
+--- a/drivers/staging/brcm80211/brcmsmac/antsel.c
++++ b/drivers/staging/brcm80211/brcmsmac/antsel.c
+@@ -206,7 +206,7 @@ static int brcms_c_antsel_cfgupd(struct antsel_info *asi,
+ 	 */
+ 	ant_cfg = antsel->ant_config[ANT_SELCFG_TX_DEF];
+ 	mimo_antsel = brcms_c_antsel_antcfg2antsel(asi, ant_cfg);
+-	brcms_c_write_shm(wlc, M_MIMO_ANTSEL_TXDFLT, mimo_antsel);
++	brcms_b_write_shm(wlc->hw, M_MIMO_ANTSEL_TXDFLT, mimo_antsel);
  	/*
-@@ -911,7 +914,7 @@ ieee80211_tx_h_fragment(struct ieee80211
+ 	 * Update driver stats for currently selected
+ 	 * default tx/rx antenna config
+@@ -218,7 +218,7 @@ static int brcms_c_antsel_cfgupd(struct antsel_info *asi,
+ 	 */
+ 	ant_cfg = antsel->ant_config[ANT_SELCFG_RX_DEF];
+ 	mimo_antsel = brcms_c_antsel_antcfg2antsel(asi, ant_cfg);
+-	brcms_c_write_shm(wlc, M_MIMO_ANTSEL_RXDFLT, mimo_antsel);
++	brcms_b_write_shm(wlc->hw, M_MIMO_ANTSEL_RXDFLT, mimo_antsel);
+ 	/*
+ 	 * Update driver stats for currently selected
+ 	 * default tx/rx antenna config
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 9988e03..5d3bfda 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -3104,17 +3104,26 @@ brcms_b_write_objmem(struct brcms_hardware *wlc_hw, uint offset, u16 v,
+ 		W_REG(objdata_lo, v);
+ }
  
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++/*
++ * Read a single u16 from shared memory.
++ * SHM 'offset' needs to be an even address
++ */
+ u16 brcms_b_read_shm(struct brcms_hardware *wlc_hw, uint offset)
+ {
+ 	return brcms_b_read_objmem(wlc_hw, offset, OBJADDR_SHM_SEL);
+ }
  
--	/* internal error, why is TX_FRAGMENTED set? */
-+	/* internal error, why isn't DONTFRAG set? */
- 	if (WARN_ON(skb->len + FCS_LEN <= frag_threshold))
- 		return TX_DROP;
++/*
++ * Write a single u16 to shared memory.
++ * SHM 'offset' needs to be an even address
++ */
+ void brcms_b_write_shm(struct brcms_hardware *wlc_hw, uint offset, u16 v)
+ {
+ 	brcms_b_write_objmem(wlc_hw, offset, v, OBJADDR_SHM_SEL);
+ }
  
-@@ -1050,17 +1053,13 @@ static bool __ieee80211_parse_tx_radiota
- 	struct ieee80211_radiotap_iterator iterator;
- 	struct ieee80211_radiotap_header *rthdr =
- 		(struct ieee80211_radiotap_header *) skb->data;
--	bool hw_frag;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	int ret = ieee80211_radiotap_iterator_init(&iterator, rthdr, skb->len,
- 						   NULL);
- 	u16 txflags;
+-/* Copy a buffer to shared memory of specified type .
++/*
++ * Copy a buffer to shared memory of specified type .
+  * SHM 'offset' needs to be an even address and
+  * Buffer length 'len' must be an even number of bytes
+  * 'sel' selects the type of memory
+@@ -3136,7 +3145,8 @@ brcms_b_copyto_objmem(struct brcms_hardware *wlc_hw, uint offset,
+ 	}
+ }
  
--	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
--	tx->flags &= ~IEEE80211_TX_FRAGMENTED;
+-/* Copy a piece of shared memory of specified type to a buffer .
++/*
++ * Copy a piece of shared memory of specified type to a buffer .
+  * SHM 'offset' needs to be an even address and
+  * Buffer length 'len' must be an even number of bytes
+  * 'sel' selects the type of memory
+@@ -3627,7 +3637,8 @@ static void brcms_c_ucode_mac_upd(struct brcms_c_info *wlc)
+ 			 * inits to populate a bogus beacon.
+ 			 */
+ 			if (BRCMS_PHY_11N_CAP(wlc->band))
+-				brcms_c_write_shm(wlc, M_BCN_TXTSF_OFFSET, 0);
++				brcms_b_write_shm(wlc->hw,
++						M_BCN_TXTSF_OFFSET, 0);
+ 		}
+ 	} else {
+ 		/* disable an active IBSS if we are not on the home channel */
+@@ -3673,7 +3684,7 @@ brcms_c_duty_cycle_set(struct brcms_c_info *wlc, int duty_cycle, bool isOFDM,
+ 		idle_busy_ratio_x_16 = (100 - duty_cycle) * 16 / duty_cycle;
+ 	/* Only write to shared memory  when wl is up */
+ 	if (writeToShm)
+-		brcms_c_write_shm(wlc, offset, (u16) idle_busy_ratio_x_16);
++		brcms_b_write_shm(wlc->hw, offset, (u16) idle_busy_ratio_x_16);
+ 
+ 	if (isOFDM)
+ 		wlc->tx_duty_cycle_ofdm = (u16) duty_cycle;
+@@ -3766,10 +3777,10 @@ void brcms_c_init(struct brcms_c_info *wlc)
+ 	brcms_c_bandinit_ordered(wlc, chanspec);
+ 
+ 	/* init probe response timeout */
+-	brcms_c_write_shm(wlc, M_PRS_MAXTIME, wlc->prb_resp_timeout);
++	brcms_b_write_shm(wlc->hw, M_PRS_MAXTIME, wlc->prb_resp_timeout);
+ 
+ 	/* init max burst txop (framebursting) */
+-	brcms_c_write_shm(wlc, M_MBURST_TXOP,
++	brcms_b_write_shm(wlc->hw, M_MBURST_TXOP,
+ 		      (wlc->
+ 		       _rifs ? (EDCF_AC_VO_TXOP_AP << 5) : MAXFRAMEBURST_TXOP));
+ 
+@@ -3796,8 +3807,8 @@ void brcms_c_init(struct brcms_c_info *wlc)
+ 	/* read the ucode version if we have not yet done so */
+ 	if (wlc->ucode_rev == 0) {
+ 		wlc->ucode_rev =
+-		    brcms_c_read_shm(wlc, M_BOM_REV_MAJOR) << NBITS(u16);
+-		wlc->ucode_rev |= brcms_c_read_shm(wlc, M_BOM_REV_MINOR);
++		    brcms_b_read_shm(wlc->hw, M_BOM_REV_MAJOR) << NBITS(u16);
++		wlc->ucode_rev |= brcms_b_read_shm(wlc->hw, M_BOM_REV_MINOR);
+ 	}
+ 
+ 	/* ..now really unleash hell (allow the MAC out of suspend) */
+@@ -3822,7 +3833,7 @@ void brcms_c_init(struct brcms_c_info *wlc)
+ 
+ 		for (ac = 0; ac < AC_COUNT; ac++)
+ 			wlc->wme_retries[ac] =
+-			    brcms_c_read_shm(wlc, M_AC_TXLMT_ADDR(ac));
++			    brcms_b_read_shm(wlc->hw, M_AC_TXLMT_ADDR(ac));
+ 	}
+ }
+ 
+@@ -4110,9 +4121,9 @@ void brcms_c_beacon_phytxctl_txant_upd(struct brcms_c_info *wlc,
+ 	if (BRCMS_PHY_11N_CAP(wlc->band))
+ 		phytxant = brcms_c_stf_phytxchain_sel(wlc, bcn_rspec);
+ 
+-	phyctl = brcms_c_read_shm(wlc, M_BCN_PCTLWD);
++	phyctl = brcms_b_read_shm(wlc->hw, M_BCN_PCTLWD);
+ 	phyctl = (phyctl & ~mask) | phytxant;
+-	brcms_c_write_shm(wlc, M_BCN_PCTLWD, phyctl);
++	brcms_b_write_shm(wlc->hw, M_BCN_PCTLWD, phyctl);
+ }
+ 
+ /*
+@@ -4223,7 +4234,7 @@ void brcms_c_wme_setparams(struct brcms_c_info *wlc, u16 aci,
+ 		    R_REG(&wlc->regs->tsf_random) & acp_shm.cwcur;
+ 		acp_shm.reggap = acp_shm.bslots + acp_shm.aifs;
+ 		/* Indicate the new params to the ucode */
+-		acp_shm.status = brcms_c_read_shm(wlc, (M_EDCF_QINFO +
++		acp_shm.status = brcms_b_read_shm(wlc->hw, (M_EDCF_QINFO +
+ 						  wme_ac2fifo[aci] *
+ 						  M_EDCF_QLEN +
+ 						  M_EDCF_STATUS_OFF));
+@@ -4232,7 +4243,7 @@ void brcms_c_wme_setparams(struct brcms_c_info *wlc, u16 aci,
+ 		/* Fill in shm acparam table */
+ 		shm_entry = (u16 *) &acp_shm;
+ 		for (i = 0; i < (int)sizeof(struct shm_acparams); i += 2)
+-			brcms_c_write_shm(wlc,
++			brcms_b_write_shm(wlc->hw,
+ 					  M_EDCF_QINFO +
+ 					  wme_ac2fifo[aci] * M_EDCF_QLEN + i,
+ 					  *shm_entry++);
+@@ -5642,7 +5653,7 @@ static void brcms_c_wme_retries_write(struct brcms_c_info *wlc)
+ 		return;
+ 
+ 	for (ac = 0; ac < AC_COUNT; ac++)
+-		brcms_c_write_shm(wlc, M_AC_TXLMT_ADDR(ac),
++		brcms_b_write_shm(wlc->hw, M_AC_TXLMT_ADDR(ac),
+ 				  wlc->wme_retries[ac]);
+ }
+ 
+@@ -7955,9 +7966,9 @@ void brcms_c_bcn_li_upd(struct brcms_c_info *wlc)
+ {
+ 	/* wake up every DTIM is the default */
+ 	if (wlc->bcn_li_dtim == 1)
+-		brcms_c_write_shm(wlc, M_BCN_LI, 0);
++		brcms_b_write_shm(wlc->hw, M_BCN_LI, 0);
+ 	else
+-		brcms_c_write_shm(wlc, M_BCN_LI,
++		brcms_b_write_shm(wlc->hw, M_BCN_LI,
+ 			      (wlc->bcn_li_dtim << 8) | wlc->bcn_li_bcn);
+ }
+ 
+@@ -8453,12 +8464,12 @@ static void brcms_c_write_rate_shm(struct brcms_c_info *wlc, u8 rate,
+ 	/* Find the SHM pointer to the ACK rate entry by looking in the
+ 	 * Direct-map Table
+ 	 */
+-	basic_ptr = brcms_c_read_shm(wlc, (dir_table + basic_index * 2));
++	basic_ptr = brcms_b_read_shm(wlc->hw, (dir_table + basic_index * 2));
+ 
+ 	/* Update the SHM BSS-basic-rate-set mapping table with the pointer
+ 	 * to the correct basic rate for the given incoming rate
+ 	 */
+-	brcms_c_write_shm(wlc, (basic_table + index * 2), basic_ptr);
++	brcms_b_write_shm(wlc->hw, (basic_table + index * 2), basic_ptr);
+ }
+ 
+ static const struct brcms_c_rateset *
+@@ -8584,11 +8595,11 @@ void brcms_c_mod_prb_rsp_rate_table(struct brcms_c_info *wlc, uint frame_len)
+ 		dur += sifs;
+ 
+ 		/* Update the SHM Rate Table entry Probe Response values */
+-		brcms_c_write_shm(wlc, entry_ptr + M_RT_PRS_PLCP_POS,
++		brcms_b_write_shm(wlc->hw, entry_ptr + M_RT_PRS_PLCP_POS,
+ 			      (u16) (plcp[0] + (plcp[1] << 8)));
+-		brcms_c_write_shm(wlc, entry_ptr + M_RT_PRS_PLCP_POS + 2,
++		brcms_b_write_shm(wlc->hw, entry_ptr + M_RT_PRS_PLCP_POS + 2,
+ 			      (u16) (plcp[2] + (plcp[3] << 8)));
+-		brcms_c_write_shm(wlc, entry_ptr + M_RT_PRS_DUR_POS, dur);
++		brcms_b_write_shm(wlc->hw, entry_ptr + M_RT_PRS_DUR_POS, dur);
+ 	}
+ }
+ 
+@@ -8684,7 +8695,7 @@ void brcms_c_shm_ssid_upd(struct brcms_c_info *wlc, struct brcms_bss_cfg *cfg)
+ 	memcpy(ssidbuf, ssidptr, cfg->SSID_len);
+ 
+ 	brcms_c_copyto_shm(wlc, base, ssidbuf, IEEE80211_MAX_SSID_LEN);
+-	brcms_c_write_shm(wlc, M_SSIDLEN, (u16) cfg->SSID_len);
++	brcms_b_write_shm(wlc->hw, M_SSIDLEN, (u16) cfg->SSID_len);
+ }
+ 
+ void brcms_c_update_probe_resp(struct brcms_c_info *wlc, bool suspend)
+@@ -8721,7 +8732,7 @@ brcms_c_bss_update_probe_resp(struct brcms_c_info *wlc,
+ 				    (len + 3) & ~3, prb_resp);
+ 
+ 	/* write the length of the probe response frame (+PLCP/-FCS) */
+-	brcms_c_write_shm(wlc, M_PRB_RESP_FRM_LEN, (u16) len);
++	brcms_b_write_shm(wlc->hw, M_PRB_RESP_FRM_LEN, (u16) len);
+ 
+ 	/* write the SSID and SSID length */
+ 	brcms_c_shm_ssid_upd(wlc, cfg);
+@@ -8777,22 +8788,6 @@ void brcms_default_rateset(struct brcms_c_info *wlc, struct brcms_c_rateset *rs)
+ 		wlc->stf->txstreams);
+ }
+ 
+-/* Read a single u16 from shared memory.
+- * SHM 'offset' needs to be an even address
+- */
+-u16 brcms_c_read_shm(struct brcms_c_info *wlc, uint offset)
+-{
+-	return brcms_b_read_shm(wlc->hw, offset);
+-}
 -
--	/* packet is fragmented in HW if we have a non-NULL driver callback */
--	hw_frag = (tx->local->ops->set_frag_threshold != NULL);
-+	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT |
-+		       IEEE80211_TX_CTL_DONTFRAG;
+-/* Write a single u16 to shared memory.
+- * SHM 'offset' needs to be an even address
+- */
+-void brcms_c_write_shm(struct brcms_c_info *wlc, uint offset, u16 v)
+-{
+-	brcms_b_write_shm(wlc->hw, offset, v);
+-}
+-
+ /* Copy a buffer to shared memory.
+  * SHM 'offset' needs to be an even address and
+  * Buffer length 'len' must be an even number of bytes
+@@ -8800,12 +8795,7 @@ void brcms_c_write_shm(struct brcms_c_info *wlc, uint offset, u16 v)
+ void brcms_c_copyto_shm(struct brcms_c_info *wlc, uint offset, const void *buf,
+ 			int len)
+ {
+-	/* offset and len need to be even */
+-	if (len <= 0 || (offset & 1) || (len & 1))
+-		return;
+-
+ 	brcms_b_copyto_objmem(wlc->hw, offset, buf, len, OBJADDR_SHM_SEL);
+-
+ }
  
- 	/*
- 	 * for every radiotap entry that is present
-@@ -1098,9 +1097,8 @@ static bool __ieee80211_parse_tx_radiota
- 			}
- 			if (*iterator.this_arg & IEEE80211_RADIOTAP_F_WEP)
- 				info->flags &= ~IEEE80211_TX_INTFL_DONT_ENCRYPT;
--			if ((*iterator.this_arg & IEEE80211_RADIOTAP_F_FRAG) &&
--								!hw_frag)
--				tx->flags |= IEEE80211_TX_FRAGMENTED;
-+			if (*iterator.this_arg & IEEE80211_RADIOTAP_F_FRAG)
-+				info->flags &= ~IEEE80211_TX_CTL_DONTFRAG;
- 			break;
+ /* wrapper BMAC functions to for HIGH driver access */
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
+index 5a2ec53..6512e7a 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.h
++++ b/drivers/staging/brcm80211/brcmsmac/main.h
+@@ -732,8 +732,6 @@ extern void brcms_c_inval_dma_pkts(struct brcms_hardware *hw,
+ 			       void (*dma_callback_fn));
  
- 		case IEEE80211_RADIOTAP_TX_FLAGS:
-@@ -1206,13 +1204,6 @@ ieee80211_tx_prepare(struct ieee80211_su
- 	tx->local = local;
- 	tx->sdata = sdata;
- 	tx->channel = local->hw.conf.channel;
--	/*
--	 * Set this flag (used below to indicate "automatic fragmentation"),
--	 * it will be cleared/left by radiotap as desired.
--	 * Only valid when fragmentation is done by the stack.
--	 */
--	if (!local->ops->set_frag_threshold)
--		tx->flags |= IEEE80211_TX_FRAGMENTED;
+ /* Shared memory access */
+-extern void brcms_c_write_shm(struct brcms_c_info *wlc, uint offset, u16 v);
+-extern u16 brcms_c_read_shm(struct brcms_c_info *wlc, uint offset);
+ extern void brcms_c_copyto_shm(struct brcms_c_info *wlc, uint offset,
+ 			       const void *buf, int len);
  
- 	/* process and remove the injection radiotap header */
- 	if (unlikely(info->flags & IEEE80211_TX_INTFL_HAS_RADIOTAP)) {
-@@ -1281,13 +1272,11 @@ ieee80211_tx_prepare(struct ieee80211_su
- 		 */
- 	}
- 
--	if (tx->flags & IEEE80211_TX_FRAGMENTED) {
--		if ((tx->flags & IEEE80211_TX_UNICAST) &&
--		    skb->len + FCS_LEN > local->hw.wiphy->frag_threshold &&
--		    !(info->flags & IEEE80211_TX_CTL_AMPDU))
--			tx->flags |= IEEE80211_TX_FRAGMENTED;
--		else
--			tx->flags &= ~IEEE80211_TX_FRAGMENTED;
-+	if (!(info->flags & IEEE80211_TX_CTL_DONTFRAG)) {
-+		if (!(tx->flags & IEEE80211_TX_UNICAST) ||
-+		    skb->len + FCS_LEN <= local->hw.wiphy->frag_threshold ||
-+		    info->flags & IEEE80211_TX_CTL_AMPDU)
-+			info->flags |= IEEE80211_TX_CTL_DONTFRAG;
- 	}
- 
- 	if (!tx->sta)
---- a/net/mac80211/wpa.c	2011-10-07 11:01:01.000000000 +0200
-+++ b/net/mac80211/wpa.c	2011-10-07 11:01:18.000000000 +0200
-@@ -53,7 +53,8 @@ ieee80211_tx_h_michael_mic_add(struct ie
- 	}
- 
- 	if (info->control.hw_key &&
--	    !(tx->flags & IEEE80211_TX_FRAGMENTED) &&
-+	    (info->flags & IEEE80211_TX_CTL_DONTFRAG ||
-+	     tx->local->ops->set_frag_threshold) &&
- 	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)) {
- 		/* hwaccel - with no need for SW-generated MMIC */
- 		return TX_CONTINUE;
+-- 
+1.7.4.1
 
 
