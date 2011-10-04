@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53613 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934336Ab1JEOax (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 10:30:53 -0400
-Date: Wed, 5 Oct 2011 10:24:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Alwin Beukers <alwin@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>
-Subject: Re: [PATCH v3] move brcm80211 drivers to mainline
-Message-ID: <20111005142402.GC17286@tuxdriver.com> (sfid-20111005_163056_879669_358FE3B6)
-References: <4E8C64EF.3070203@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E8C64EF.3070203@broadcom.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:41106 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752070Ab1JDLLz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 07:11:55 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/3] compat: add is_unicast_ether_addr
+Date: Tue,  4 Oct 2011 13:11:46 +0200
+Message-Id: <1317726707-23497-2-git-send-email-hauke@hauke-m.de> (sfid-20111004_131158_411773_89A5A39A)
+In-Reply-To: <1317726707-23497-1-git-send-email-hauke@hauke-m.de>
+References: <1317726707-23497-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 05, 2011 at 04:08:47PM +0200, Arend van Spriel wrote:
-> With number of cleanup patch series merged in by Greg KH, I'd like to
-> once again propose moving brcm80211 out of staging and into mainline.
-> 
-> I've put together a patch to add a copy of the current sources from
-> staging-next into drivers/net/wireless/brcm80211 of the wireless-next
-> repository.
-> 
-> The patch is somewhat large, so I've posted the patch at:
-> 
-> http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=view&target=0001-net-wireless-add-brcm80211-drivers-v3.patch
 
-Feel free to complain, but I plan to merge this in time for the merge
-window unless someone identifies a true "showstopper" problem with
-this patch in the next day or so.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.38.h |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-John
+diff --git a/include/linux/compat-2.6.38.h b/include/linux/compat-2.6.38.h
+index 1f9ab52..ad04ebc 100644
+--- a/include/linux/compat-2.6.38.h
++++ b/include/linux/compat-2.6.38.h
+@@ -7,6 +7,7 @@
+ 
+ #include <linux/kernel.h>
+ #include <linux/skbuff.h>
++#include <linux/etherdevice.h>
+ 
+ /* rename member in struct mmc_host in include/linux/mmc/host.h */
+ #define max_segs	max_hw_segs
+@@ -77,6 +78,17 @@ static inline int skb_checksum_start_offset(const struct sk_buff *skb)
+ 
+ #define ETH_P_LINK_CTL	0x886c		/* HPNA, wlan link local tunnel */
+ 
++/**
++ * is_unicast_ether_addr - Determine if the Ethernet address is unicast
++ * @addr: Pointer to a six-byte array containing the Ethernet address
++ *
++ * Return true if the address is a unicast address.
++ */
++static inline int is_unicast_ether_addr(const u8 *addr)
++{
++	return !is_multicast_ether_addr(addr);
++}
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38)) */
+ 
+ #endif /* LINUX_26_38_COMPAT_H */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.1
+
