@@ -1,86 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:34389 "EHLO
-	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753889Ab1JRHOy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Oct 2011 03:14:54 -0400
-Message-ID: <20111018100717.94287ia4tuafwk8w@www.81.fi> (sfid-20111018_091509_003919_277F7BD2)
-Date: Tue, 18 Oct 2011 10:07:17 +0300
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] rndis_wlan: add range check in del_key()
-References: <20111018064729.GQ27732@elgon.mountain>
-In-Reply-To: <20111018064729.GQ27732@elgon.mountain>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:41074 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752070Ab1JDLLU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 07:11:20 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat-wireless: deactivate sdio suspend in ath6kl with kernel < 2.6.34
+Date: Tue,  4 Oct 2011 13:11:10 +0200
+Message-Id: <1317726670-23319-2-git-send-email-hauke@hauke-m.de> (sfid-20111004_131124_786773_8CEA1CC5)
+In-Reply-To: <1317726670-23319-1-git-send-email-hauke@hauke-m.de>
+References: <1317726670-23319-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Dan Carpenter <dan.carpenter@oracle.com>:
+The API to sdio suspend changed in kernel 2.6.34 and it is not
+backported by compat. Just deactivate it when compat-wireless is
+compiled for such an old kernel.
 
-> Wifi drivers can have up to 6 keys but the rndis_wlan only has 4 so
-> it needs to have its own checks to make sure we don't go out of
-> bounds.  The add_key() function already checks but I added some
-> checks to del_key() and set_default_key().
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/29-sdio_no_suspend.patch |   62 ++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 62 insertions(+), 0 deletions(-)
 
-Looks ok, thanks.
-
-Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
-> diff --git a/drivers/net/wireless/rndis_wlan.c  
-> b/drivers/net/wireless/rndis_wlan.c
-> index 0c13840..da78369 100644
-> --- a/drivers/net/wireless/rndis_wlan.c
-> +++ b/drivers/net/wireless/rndis_wlan.c
-> @@ -414,6 +414,7 @@ struct ndis_80211_pmkid {
->  #define RNDIS_WLAN_ALG_TKIP	(1<<1)
->  #define RNDIS_WLAN_ALG_CCMP	(1<<2)
->
-> +#define RNDIS_WLAN_NUM_KEYS		4
->  #define RNDIS_WLAN_KEY_MGMT_NONE	0
->  #define RNDIS_WLAN_KEY_MGMT_802_1X	(1<<0)
->  #define RNDIS_WLAN_KEY_MGMT_PSK		(1<<1)
-> @@ -516,7 +517,7 @@ struct rndis_wlan_private {
->
->  	/* encryption stuff */
->  	int  encr_tx_key_index;
-> -	struct rndis_wlan_encr_key encr_keys[4];
-> +	struct rndis_wlan_encr_key encr_keys[RNDIS_WLAN_NUM_KEYS];
->  	int  wpa_version;
->
->  	u8 command_buffer[COMMAND_BUFFER_SIZE];
-> @@ -1535,6 +1536,9 @@ static int remove_key(struct usbnet *usbdev,  
-> int index, const u8 *bssid)
->  	bool is_wpa;
->  	int ret;
->
-> +	if (index >= RNDIS_WLAN_NUM_KEYS)
-> +		return -ENOENT;
-> +
->  	if (priv->encr_keys[index].len == 0)
->  		return 0;
->
-> @@ -2451,6 +2455,9 @@ static int rndis_set_default_key(struct wiphy  
-> *wiphy, struct net_device *netdev,
->
->  	netdev_dbg(usbdev->net, "%s(%i)\n", __func__, key_index);
->
-> +	if (key_index >= RNDIS_WLAN_NUM_KEYS)
-> +		return -ENOENT;
-> +
->  	priv->encr_tx_key_index = key_index;
->
->  	if (is_wpa_key(priv, key_index))
->
->
-
-
+diff --git a/patches/29-sdio_no_suspend.patch b/patches/29-sdio_no_suspend.patch
+index 5cc26a1..1d09d34 100644
+--- a/patches/29-sdio_no_suspend.patch
++++ b/patches/29-sdio_no_suspend.patch
+@@ -3,6 +3,68 @@ Starting with commit 66fceb69b72ff7e9cd8da2ca70033982d5376e0e
+ libertas uses new functions from the in kernel sdio framework for
+ suspend and resume that are not backported.
+ 
++--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
++@@ -1411,7 +1411,7 @@ static int ath6kl_flush_pmksa(struct wip
++ 	return 0;
++ }
++ 
++-#ifdef CONFIG_PM
+++#if defined(CONFIG_PM) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
++ static int ar6k_cfg80211_suspend(struct wiphy *wiphy,
++ 				 struct cfg80211_wowlan *wow)
++ {
++@@ -1827,7 +1827,7 @@ static struct cfg80211_ops ath6kl_cfg802
++ 	.del_pmksa = ath6kl_del_pmksa,
++ 	.flush_pmksa = ath6kl_flush_pmksa,
++ 	CFG80211_TESTMODE_CMD(ath6kl_tm_cmd)
++-#ifdef CONFIG_PM
+++#if defined(CONFIG_PM) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
++ 	.suspend = ar6k_cfg80211_suspend,
++ #endif
++ 	.set_channel = ath6kl_set_channel,
++--- a/drivers/net/wireless/ath/ath6kl/hif-ops.h
+++++ b/drivers/net/wireless/ath/ath6kl/hif-ops.h
++@@ -69,9 +69,11 @@ static inline void ath6kl_hif_cleanup_sc
++ 	return ar->hif_ops->cleanup_scatter(ar);
++ }
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
++ static inline int ath6kl_hif_suspend(struct ath6kl *ar)
++ {
++ 	return ar->hif_ops->suspend(ar);
++ }
+++#endif
++ 
++ #endif
++--- a/drivers/net/wireless/ath/ath6kl/sdio.c
+++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
++@@ -724,6 +724,7 @@ static int ath6kl_sdio_enable_scatter(st
++ 	return 0;
++ }
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
++ static int ath6kl_sdio_suspend(struct ath6kl *ar)
++ {
++ 	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
++@@ -751,6 +752,7 @@ static int ath6kl_sdio_suspend(struct at
++ 
++ 	return 0;
++ }
+++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)) */
++ 
++ static const struct ath6kl_hif_ops ath6kl_sdio_ops = {
++ 	.read_write_sync = ath6kl_sdio_read_write_sync,
++@@ -762,7 +764,9 @@ static const struct ath6kl_hif_ops ath6k
++ 	.enable_scatter = ath6kl_sdio_enable_scatter,
++ 	.scat_req_rw = ath6kl_sdio_async_rw_scatter,
++ 	.cleanup_scatter = ath6kl_sdio_cleanup_scatter,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
++ 	.suspend = ath6kl_sdio_suspend,
+++#endif
++ };
++ 
++ static int ath6kl_sdio_probe(struct sdio_func *func,
+ --- a/drivers/net/wireless/libertas/if_sdio.c
+ +++ b/drivers/net/wireless/libertas/if_sdio.c
+ @@ -1306,6 +1306,7 @@ static void if_sdio_remove(struct sdio_f
+-- 
+1.7.4.1
 
