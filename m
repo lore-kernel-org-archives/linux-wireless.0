@@ -1,34 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25959 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754499Ab1JOAi2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 20:38:28 -0400
-From: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rishi Panjwani <rpanjwan@qca.qualcomm.com>
-Subject: [PATCH] Implement support for QOS-enable and QOS-disable from userspace
-Date: Fri, 14 Oct 2011 17:38:05 -0700
-Message-ID: <1318639086-28236-1-git-send-email-rpanjwan@qca.qualcomm.com> (sfid-20111015_023832_545885_F00D4D9E)
+Received: from mx1.redhat.com ([209.132.183.28]:53894 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757279Ab1JDOAV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 10:00:21 -0400
+Date: Tue, 4 Oct 2011 15:57:59 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Stefan Zwanenburg <stefanhetzwaantje@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Subject: Re: RTL8192SE blank EFUSE readout after suspend resume cycle
+Message-ID: <20111004135757.GA6207@redhat.com> (sfid-20111004_160025_980879_553E8146)
+References: <4E8AFBCB.8070100@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E8AFBCB.8070100@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement support for QOS-enable and QOS-disable from userspace
-    
-In order to allow user space based QOS control we use the available debugfs
-infrastructure. With this feature, user can make changes to qos parameters,
-thereby allowing creation and deletion of user defined priority streams and
-features like uapsd. This feature has been added for testing purposes. As
-described in the commit description, all parameters are necessary for create_qos
-and delete_qos
-   
-Rishi Panjwani (1):
-  ath6kl: Implement support for QOS-enable and QOS-disable from
-    userspace
+On Tue, Oct 04, 2011 at 02:27:55PM +0200, Stefan Zwanenburg wrote:
+> I recently discussed this with Larry Finger and Chaomin Li, but every
+> once in a while, after having resumed from suspending to RAM, my NIC
+> (10ec:8172) doesn't work anymore, even after reloading the module. Even
+> worse, after reloading the module, my NIC's name gets changed (because
+> of udev rules) as a result of the MAC address changing, which means I
+> have to temporarily reconfigure whatever I'm using to make a connection
+> (wicd in my case).
 
- drivers/net/wireless/ath/ath6kl/debug.c |  250 +++++++++++++++++++++++++++++--
- 1 files changed, 236 insertions(+), 14 deletions(-)
+You might try configure pm-utils to unload module before suspend, by
+something like this:
 
+echo 'SUSPEND_MODULES="rtl8192se rtlwifi"' >> /etc/pm/config.d/modules.conf 
+
+Other than that, would be good to try if converting to new PM framework
+helps. It can be done quite simply, similar way like in this ath9k commit:
+
+commit f0e94b479c987abef17eb18e5c8e0ed178d00cd4
+Author: Rafael J. Wysocki <rjw@sisk.pl>
+Date:   Sat Oct 16 00:36:17 2010 +0200
+
+    ath9k: Convert to new PCI PM framework
+
+Stanislaw 
