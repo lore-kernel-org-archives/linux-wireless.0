@@ -1,44 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:63761 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752706Ab1JJThA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 15:37:00 -0400
-Received: by gyg10 with SMTP id 10so5678891gyg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 12:37:00 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:1211 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933163Ab1JDVTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 17:19:36 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 04/26] staging: brcm80211: remove brcmu_bprintf and
+ related functions
+Date: Tue, 4 Oct 2011 23:18:50 +0200
+Message-ID: <1317763152-17607-5-git-send-email-arend@broadcom.com> (sfid-20111004_232038_366220_20474CEF)
+In-Reply-To: <1317763152-17607-1-git-send-email-arend@broadcom.com>
+References: <1317763152-17607-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1318273094.9690.385.camel@cumari>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-	<1318234397-21081-10-git-send-email-eliad@wizery.com>
-	<1318273094.9690.385.camel@cumari>
-Date: Mon, 10 Oct 2011 21:36:56 +0200
-Message-ID: <CAB3XZEc9DcYHmph9wH=+8jQkjBPAiGqHW7P-oVcQJcBHeONNWQ@mail.gmail.com> (sfid-20111010_213705_512931_81FA83F8)
-Subject: Re: [PATCH 09/29] wl12xx: make event handling support multirole
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 10, 2011 at 8:58 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote:
->> Some events don't indicate the role they are intended for.
->> In these cases, iterate through all the relevant vifs,
->> and pass the event to each one of them.
->>
->> This is only a workaround. future fw releases should indicate
->> the relevant role_id for such events.
->>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> ---
->
-> Is this workaround really necessary? Are we going to have a firmware
-> that supports multi-role but does *not* pass the role_id for these
-> events?
->
-i hope not. :)
-but in the meantime, we use this workaround to keep compatibility with
-the current (single-role) fw.
+The functions brcmu_bprintf and brcmu_binit could be replaced by
+snprintf kernel function. These are no longer used in both brcm80211
+drivers so they have been removed.
 
-Eliad.
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/types.h      |    1 -
+ drivers/staging/brcm80211/brcmutil/utils.c      |   34 -----------------------
+ drivers/staging/brcm80211/include/brcmu_utils.h |   15 ----------
+ 3 files changed, 0 insertions(+), 50 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/types.h b/drivers/staging/brcm80211/brcmsmac/types.h
+index 23969fe..27a814b 100644
+--- a/drivers/staging/brcm80211/brcmsmac/types.h
++++ b/drivers/staging/brcm80211/brcmsmac/types.h
+@@ -329,7 +329,6 @@ struct ieee80211_tx_queue_params;
+ struct brcms_info;
+ struct brcms_c_info;
+ struct brcms_hardware;
+-struct brcmu_strbuf;
+ struct brcms_txq_info;
+ struct brcms_band;
+ struct dma_pub;
+diff --git a/drivers/staging/brcm80211/brcmutil/utils.c b/drivers/staging/brcm80211/brcmutil/utils.c
+index 1fe47fe..62bcc71 100644
+--- a/drivers/staging/brcm80211/brcmutil/utils.c
++++ b/drivers/staging/brcm80211/brcmutil/utils.c
+@@ -598,37 +598,3 @@ uint brcmu_bitcount(u8 *bitmap, uint length)
+ 	return bitcount;
+ }
+ EXPORT_SYMBOL(brcmu_bitcount);
+-
+-/* Initialization of brcmu_strbuf structure */
+-void brcmu_binit(struct brcmu_strbuf *b, char *buf, uint size)
+-{
+-	b->origsize = b->size = size;
+-	b->origbuf = b->buf = buf;
+-}
+-EXPORT_SYMBOL(brcmu_binit);
+-
+-/* Buffer sprintf wrapper to guard against buffer overflow */
+-int brcmu_bprintf(struct brcmu_strbuf *b, const char *fmt, ...)
+-{
+-	va_list ap;
+-	int r;
+-
+-	va_start(ap, fmt);
+-	r = vsnprintf(b->buf, b->size, fmt, ap);
+-
+-	/* Non Ansi C99 compliant returns -1,
+-	 * Ansi compliant return r >= b->size,
+-	 * stdlib returns 0, handle all
+-	 */
+-	if ((r == -1) || (r >= (int)b->size) || (r == 0)) {
+-		b->size = 0;
+-	} else {
+-		b->size -= r;
+-		b->buf += r;
+-	}
+-
+-	va_end(ap);
+-
+-	return r;
+-}
+-EXPORT_SYMBOL(brcmu_bprintf);
+diff --git a/drivers/staging/brcm80211/include/brcmu_utils.h b/drivers/staging/brcm80211/include/brcmu_utils.h
+index cf34bd3..a7d3df2 100644
+--- a/drivers/staging/brcm80211/include/brcmu_utils.h
++++ b/drivers/staging/brcm80211/include/brcmu_utils.h
+@@ -19,18 +19,6 @@
+ 
+ #include <linux/skbuff.h>
+ 
+-/* Buffer structure for collecting string-formatted data
+-* using brcmu_bprintf() API.
+-* Use brcmu_binit() to initialize before use
+-*/
+-
+-struct brcmu_strbuf {
+-	char *buf;	/* pointer to current position in origbuf */
+-	unsigned int size;	/* current (residual) size in bytes */
+-	char *origbuf;	/* unmodified pointer to orignal buffer */
+-	unsigned int origsize;	/* unmodified orignal buffer size in bytes */
+-};
+-
+ /*
+  * Spin at most 'us' microseconds while 'exp' is true.
+  * Caller should explicitly test 'exp' when this completes
+@@ -228,9 +216,6 @@ extern struct brcmu_tlv *brcmu_parse_tlvs(void *buf, int buflen,
+ extern u16 brcmu_qdbm_to_mw(u8 qdbm);
+ extern u8 brcmu_mw_to_qdbm(u16 mw);
+ 
+-extern void brcmu_binit(struct brcmu_strbuf *b, char *buf, uint size);
+-extern int brcmu_bprintf(struct brcmu_strbuf *b, const char *fmt, ...);
+-
+ extern uint brcmu_mkiovar(char *name, char *data, uint datalen,
+ 			  char *buf, uint len);
+ extern uint brcmu_bitcount(u8 *bitmap, uint bytelength);
+-- 
+1.7.4.1
+
+
