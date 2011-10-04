@@ -1,111 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43429 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751817Ab1JJFwB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 01:52:01 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 11/13] ath9k_hw: Do fast channel change based on reusable calibration results
-Date: Mon, 10 Oct 2011 11:21:16 +0530
-Message-ID: <1318225878-7283-11-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111010_081655_889116_A7EDE7F7)
-In-Reply-To: <1318225878-7283-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1318225878-7283-1-git-send-email-rmanohar@qca.qualcomm.com>
+Received: from mail.neratec.ch ([80.75.119.105]:38991 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754194Ab1JDORj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 10:17:39 -0400
+Message-ID: <4E8B157F.2080203@neratec.com> (sfid-20111004_161742_433341_2E9DF477)
+Date: Tue, 04 Oct 2011 16:17:35 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kgiori@qca.qualcomm.com, nbd@openwrt.org
+Subject: Re: [RFC 5/6] ath9k: enable DFS pulse detection
+References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com> <201110032124.53937.chunkeey@googlemail.com> <CAB=NE6XBkisvFmj6F7wS6i8XV7WEsM6bQ5zsXFWXm9XM8z0pwA@mail.gmail.com> <201110041538.12885.chunkeey@googlemail.com>
+In-Reply-To: <201110041538.12885.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support the fast channel change across band switch only when there
-are available of reusable cabliration results. And also observed that
-doing agc control calibration on fastcc, sometimes causing calibration
-timeout. Hence changing agc control to be run only on full chip reset.
+On 10/04/2011 03:38 PM, Christian Lamparter wrote:
+> On Monday, October 03, 2011 09:31:12 PM Luis R. Rodriguez wrote:
+>> On Mon, Oct 3, 2011 at 12:24 PM, Christian Lamparter
+>> <chunkeey@googlemail.com> wrote:
+>>> On Monday, October 03, 2011 08:27:39 PM Luis R. Rodriguez wrote:
+>>>> On Mon, Oct 3, 2011 at 3:29 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+>>>>>
+>>>>> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+>>>>> ---
+>>>>>  drivers/net/wireless/ath/ath9k/main.c |   12 ++++++++++++
+>>>>>  1 files changed, 12 insertions(+), 0 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>>>>> index e8aeb98..5defebe 100644
+>>>>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>>>>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>>>>> @@ -344,6 +344,18 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
+>>>>>                        "Unable to reset channel, reset status %d\n", r);
+>>>>>                goto out;
+>>>>>        }
+>>>>> +#ifdef CONFIG_ATH9K_DFS
+>>>>
+>>>> Please spare the #ifdef and just call something within dfs.c, then
+>>>> dfs.h would wrap it to nothing if DFS is disabled.
+>>> Why would anyone want to disable DFS driver support?
+>>> I would say: drop the ifdefs altogether since DFS
+>>> is and will be "required".
+>>
+>> Because DFS requires to be properly tested before being enabled.
+> Testing if a driver detects a pulse is "trivial" compared to the
+> stuff mac80211/cfg80211 and hostapd will have to do to make a
+> channel-change as smooth as possible. I think if there's a DFS
+> "OFF" switch, it should be in hostapd and I hope more people
+> agree on this one.  
+> 
+Yes on both. Work on the management part of the DFS module has just been started by TI guys. When this is in, hostapd will be able to query the driver's DFS detection capabilities and leave DFS channels disabled for those devices with no (or insufficient) support (like it is generally done today for DFS channels).
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |    3 +--
- drivers/net/wireless/ath/ath9k/hw.c           |   14 ++++++++++++--
- drivers/net/wireless/ath/ath9k/hw.h           |    1 +
- 3 files changed, 14 insertions(+), 4 deletions(-)
+The proper way for a driver's OFF switch would then be to just announce missing DFS capabilities.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 47f140c..16851cb 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -1008,8 +1008,7 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
- 
- skip_tx_iqcal:
--
--	if (run_agc_cal) {
-+	if (run_agc_cal || !(ah->ah_flags & AH_FASTCC)) {
- 		/* Calibrate the AGC */
- 		REG_WRITE(ah, AR_PHY_AGC_CONTROL,
- 			  REG_READ(ah, AR_PHY_AGC_CONTROL) |
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 0ef8566..b51035f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1452,6 +1452,7 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
- 	ath9k_hw_spur_mitigate_freq(ah, chan);
- 
- 	if (edma && (band_switch || mode_diff)) {
-+		ah->ah_flags |= AH_FASTCC;
- 		if (band_switch || ini_reloaded)
- 			ah->eep_ops->set_board_values(ah, chan);
- 
-@@ -1459,6 +1460,7 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
- 
- 		if (band_switch || ini_reloaded)
- 			ath9k_hw_init_cal(ah, chan);
-+		ah->ah_flags &= ~AH_FASTCC;
- 	}
- 
- 	return true;
-@@ -1516,6 +1518,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	u32 macStaId1;
- 	u64 tsf = 0;
- 	int i, r;
-+	bool allow_fbs = false;
- 
- 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
- 		return -EIO;
-@@ -1537,12 +1540,19 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (AR_SREV_9280(ah) && common->bus_ops->ath_bus_type == ATH_PCI)
- 		bChannelChange = false;
- 
-+	if (caldata &&
-+	    caldata->done_txiqcal_once &&
-+	    caldata->done_txclcal_once &&
-+	    caldata->rtt_hist.num_readings)
-+		allow_fbs = true;
-+
- 	if (bChannelChange &&
- 	    (ah->chip_fullsleep != true) &&
- 	    (ah->curchan != NULL) &&
- 	    (chan->channel != ah->curchan->channel) &&
--	    ((chan->channelFlags & CHANNEL_ALL) ==
--	     (ah->curchan->channelFlags & CHANNEL_ALL))) {
-+	    (allow_fbs ||
-+	     ((chan->channelFlags & CHANNEL_ALL) ==
-+	      (ah->curchan->channelFlags & CHANNEL_ALL)))) {
- 		if (ath9k_hw_channel_change(ah, chan)) {
- 			ath9k_hw_loadnf(ah, ah->curchan);
- 			ath9k_hw_start_nfcal(ah, true);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 64f5a92..3ed3619 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -660,6 +660,7 @@ enum ath_cal_list {
- /* ah_flags */
- #define AH_USE_EEPROM   0x1
- #define AH_UNPLUGGED    0x2 /* The card has been physically removed. */
-+#define AH_FASTCC       0x4
- 
- struct ath_hw {
- 	struct ath_ops reg_ops;
--- 
-1.7.7
+>> You may also want to simply disable DFS if you do not want to
+>> deal with the regulatory test implications of having it enabled.
+> AFAIK you can't "simply" disable the DFS requirement: hostapd
+> (hw_features.c), [cfg80211] (checks if tx on secondary channel
+> is possible) and mac80211 (tx.c) all have checks. Indeed, the
+> easiest way is to modify crda's database. So there's no need
+> for an extra compile-time option.
+> 
+There might be a demand for conditional compiling in addition to DFS capabilities announcements to reduce memory footprint, since (especially) pattern matching algorithms will increase it significantly.
 
+> Regards,
+> 	Chr
+
+Zefir
