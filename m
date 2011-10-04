@@ -1,68 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:51667 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750813Ab1JOUZg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Oct 2011 16:25:36 -0400
-Received: by bkbzt19 with SMTP id zt19so1620363bkb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Oct 2011 13:25:34 -0700 (PDT)
-From: Guy Eilam <guy@wizery.com>
-To: coelho@ti.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl12xx: set scan probe requests rate according to the no_cck flag
-Date: Sat, 15 Oct 2011 22:23:43 +0200
-Message-Id: <1318710223-29285-1-git-send-email-guy@wizery.com> (sfid-20111015_222558_717881_0097BF06)
+Received: from mga01.intel.com ([192.55.52.88]:56215 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932258Ab1JDO61 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 10:58:27 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 3.2] iwlagn: separate init calib and rt calib
+Date: Tue,  4 Oct 2011 07:10:19 -0700
+Message-Id: <1317737419-2049-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111004_165830_621805_016E0823)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set the TX rate of probe requests during scanning according to the
-no_cck flag in the scan request struct.
+My previous patch for init calib cfg disable a set of calibration for both
+init and runtime which cause performance issue, Fix it
 
-Signed-off-by: Guy Eilam <guy@wizery.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/wl12xx/scan.c |   15 ++++++++++++---
- 1 files changed, 12 insertions(+), 3 deletions(-)
+hese patches will be also available later from wireless branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
 
-diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
-index 5a6ae29..9a6bba4 100644
---- a/drivers/net/wireless/wl12xx/scan.c
-+++ b/drivers/net/wireless/wl12xx/scan.c
-@@ -184,7 +184,6 @@ static int wl1271_scan_send(struct wl1271 *wl, enum ieee80211_band band,
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h |   10 ++++++++++
+ 2 files changed, 11 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 90ca2d0..afd4b4c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1222,7 +1222,7 @@ static int iwlagn_send_calib_cfg_rt(struct iwl_priv *priv, u32 cfg)
+ 	};
  
- 	cmd->params.tx_rate = cpu_to_le32(basic_rate);
- 	cmd->params.n_probe_reqs = wl->conf.scan.num_probe_reqs;
--	cmd->params.tx_rate = cpu_to_le32(basic_rate);
- 	cmd->params.tid_trigger = 0;
- 	cmd->params.scan_tag = WL1271_SCAN_DEFAULT_TAG;
+ 	memset(&calib_cfg_cmd, 0, sizeof(calib_cfg_cmd));
+-	calib_cfg_cmd.ucd_calib_cfg.once.is_enable = IWL_CALIB_INIT_CFG_ALL;
++	calib_cfg_cmd.ucd_calib_cfg.once.is_enable = IWL_CALIB_RT_CFG_ALL;
+ 	calib_cfg_cmd.ucd_calib_cfg.once.start = cpu_to_le32(cfg);
  
-@@ -243,7 +242,12 @@ void wl1271_scan_stm(struct wl1271 *wl)
+ 	return iwl_trans_send_cmd(trans(priv), &cmd);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 9a5d993..69d5f85 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -3216,6 +3216,16 @@ enum iwl_ucode_calib_cfg {
+ 					IWL_CALIB_CFG_RX_IQ_IDX |	\
+ 					IWL_CALIB_CFG_CRYSTAL_IDX)
  
- 	case WL1271_SCAN_STATE_2GHZ_ACTIVE:
- 		band = IEEE80211_BAND_2GHZ;
--		rate = wl1271_tx_min_rate_get(wl, wl->bitrate_masks[band]);
-+		if (wl->scan.req->no_cck)
-+			rate = wl1271_tx_min_rate_get(wl,
-+						 CONF_TX_RATE_MASK_BASIC_P2P);
-+		else
-+			rate = wl1271_tx_min_rate_get(wl,
-+						 CONF_TX_RATE_MASK_BASIC);
- 		ret = wl1271_scan_send(wl, band, false, rate);
- 		if (ret == WL1271_NOTHING_TO_SCAN) {
- 			wl->scan.state = WL1271_SCAN_STATE_2GHZ_PASSIVE;
-@@ -254,7 +258,12 @@ void wl1271_scan_stm(struct wl1271 *wl)
++#define IWL_CALIB_RT_CFG_ALL	cpu_to_le32(IWL_CALIB_CFG_RX_BB_IDX |	\
++					IWL_CALIB_CFG_DC_IDX |		\
++					IWL_CALIB_CFG_LO_IDX |		\
++					IWL_CALIB_CFG_TX_IQ_IDX |	\
++					IWL_CALIB_CFG_RX_IQ_IDX |	\
++					IWL_CALIB_CFG_TEMPERATURE_IDX |	\
++					IWL_CALIB_CFG_PAPD_IDX |	\
++					IWL_CALIB_CFG_TX_PWR_IDX |	\
++					IWL_CALIB_CFG_CRYSTAL_IDX)
++
+ #define IWL_CALIB_CFG_FLAG_SEND_COMPLETE_NTFY_MSK	cpu_to_le32(BIT(0))
  
- 	case WL1271_SCAN_STATE_2GHZ_PASSIVE:
- 		band = IEEE80211_BAND_2GHZ;
--		rate = wl1271_tx_min_rate_get(wl, wl->bitrate_masks[band]);
-+		if (wl->scan.req->no_cck)
-+			rate = wl1271_tx_min_rate_get(wl,
-+						 CONF_TX_RATE_MASK_BASIC_P2P);
-+		else
-+			rate = wl1271_tx_min_rate_get(wl,
-+						 CONF_TX_RATE_MASK_BASIC);
- 		ret = wl1271_scan_send(wl, band, true, rate);
- 		if (ret == WL1271_NOTHING_TO_SCAN) {
- 			if (wl->enable_11a)
+ struct iwl_calib_cfg_elmnt_s {
 -- 
-1.7.4.1
+1.7.0.4
 
