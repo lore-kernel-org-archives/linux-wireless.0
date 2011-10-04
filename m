@@ -1,157 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:39180 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246Ab1JKLvi (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:50843 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933776Ab1JDVLB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 07:51:38 -0400
-Received: by gyg10 with SMTP id 10so6397011gyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 04:51:37 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: handle injected packets
-Date: Tue, 11 Oct 2011 13:52:25 +0200
-Message-Id: <1318333945-27839-1-git-send-email-eliad@wizery.com> (sfid-20111011_135140_564437_1105BA91)
+	Tue, 4 Oct 2011 17:11:01 -0400
+Received: by ggnv2 with SMTP id v2so422799ggn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 14:11:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20111004181534.GA1502@ecki>
+References: <CAD2nsn2Reu+T=g6HwdQT5cdkD0C-06y7GJ_B2q-UzpRnshxAWw@mail.gmail.com>
+	<14be9f3b-4c91-481d-9e52-f3119659fd59@email.android.com>
+	<CAD2nsn1+WVaLR_TR37Z6YRCFnQH1hJkSOri=nxc8Ff3pa9N8dw@mail.gmail.com>
+	<20110927214245.GA1416@ecki>
+	<CAD2nsn3ZwUJsFRLyjKenO6Pm3+jr9gfmAMRDQPStEcC1hN_mkw@mail.gmail.com>
+	<CAJ-Vmok8FvrYtT2QwXY0NowLSogfkZYNbGLFbVR8Uzv507FrdA@mail.gmail.com>
+	<CAD2nsn0Z2J4r4tN_fLjx5bbvz2bg6NVcQ8vppJbbNcgOF8pFew@mail.gmail.com>
+	<CAJ-VmokcM4KmzV7Rn9PA68iEiTJiPw=ffYgNFLDAHShxD0HNAg@mail.gmail.com>
+	<20111003084823.GA1521@ecki.lan>
+	<CAJ-Vmo=sE4KeOp1CKAR5v+Rzm1bm0R=ZvtMvJaE_8Sjn1dOdsw@mail.gmail.com>
+	<20111004181534.GA1502@ecki>
+Date: Wed, 5 Oct 2011 05:11:00 +0800
+Message-ID: <CAJ-Vmo=5z6EEZBtb2_7e6wvU39ZvLSmAxEPKwP_MDQCzdkPGyA@mail.gmail.com> (sfid-20111004_231107_226907_6B765D12)
+Subject: Re: ath9k: irq storm after suspend/resume
+From: Adrian Chadd <adrian@freebsd.org>
+To: Clemens Buchacher <drizzd@aon.at>
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Injected packets are sent with no vif, causing the wl12xx
-to NULL-dereference in multiple places.
+On 5 October 2011 02:15, Clemens Buchacher <drizzd@aon.at> wrote:
+>> Would you mind also printing the contents of AR_IER there? I wonder if
+>> AR_IER is incorrectly being enabled.
+>
+> Not much more helpful, I'm afraid:
+>
+> AR_IMR: 0x00000000, AR_ISR: 0x00000000, AR_IER: 0x00000000
+> AR_INTR_SYNC_CAUSE: 0x00000000, AR_INTR_ASYNC_CAUSE: 0x00000000
+> (repeated 109 times)
+>
+> It seems that at this point the device is in a bad state.
 
-Furthermore, injected packets are currently not sent at all,
-as system_hlid doesn't belong to any specific role, so
-wl1271_skb_dequeue() never return its packets.
+Well, the question now is whether the device itself is actually firing
+off interrupts.
 
-Handle both these problems.
+>From what you've shown there, the device _isn't_ firing off interrupts
+the normal way.
+So I wonder if it's the card or whether it's something else (eg the
+PCI bus glue.)
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-thanks Johannes for providing a testing app
+Here, you could try inserting this in the SC_OP_INVALID bit, right
+after you do some logging. I'm still assuming your AR9285 is somehow
+firing off interrupts.
+At this point however I'm all just guessing here. It'd be nice to know
+whether the device is _really_ sending interrupts or not.
 
- drivers/net/wireless/wl12xx/main.c |    7 +++++--
- drivers/net/wireless/wl12xx/tx.c   |   27 +++++++++++++--------------
- 2 files changed, 18 insertions(+), 16 deletions(-)
+/* Mark _all_ async interrupts as serviced */
+REG_WRITE(ah, AR_INTR_ASYNC_CAUSE, 0xffffffff);
+REG_READ(ah, AR_INTR_ASYNC_CAUSE);
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 692a275..fc652c4 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1517,11 +1517,14 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	struct wl1271 *wl = hw->priv;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_vif *vif = info->control.vif;
--	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
-+	struct wl12xx_vif *wlvif = NULL;
- 	unsigned long flags;
- 	int q, mapping;
- 	u8 hlid;
- 
-+	if (vif)
-+		wlvif = wl12xx_vif_to_data(vif);
-+
- 	mapping = skb_get_queue_mapping(skb);
- 	q = wl1271_tx_get_queue(mapping);
- 
-@@ -1531,7 +1534,7 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 	/* queue the packet */
- 	if (hlid == WL12XX_INVALID_LINK_ID ||
--	    !test_bit(hlid, wlvif->links_map)) {
-+	    (wlvif && !test_bit(hlid, wlvif->links_map))) {
- 		wl1271_debug(DEBUG_TX, "DROP skb hlid %d q %d", hlid, q);
- 		dev_kfree_skb(skb);
- 		goto out;
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 02d606f..33b800d 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -180,7 +180,7 @@ u8 wl12xx_tx_get_hlid(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 
--	if (wl12xx_is_dummy_packet(wl, skb))
-+	if (!wlvif || wl12xx_is_dummy_packet(wl, skb))
- 		return wl->system_hlid;
- 
- 	if (wlvif->bss_type == BSS_TYPE_AP_BSS)
-@@ -259,7 +259,8 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		ac = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
- 		wl->tx_allocated_pkts[ac]++;
- 
--		if (!is_dummy && wlvif->bss_type == BSS_TYPE_AP_BSS &&
-+		if (!is_dummy && wlvif &&
-+		    wlvif->bss_type == BSS_TYPE_AP_BSS &&
- 		    test_bit(hlid, wlvif->ap.sta_hlid_map))
- 			wl->links[hlid].allocated_pkts++;
- 
-@@ -302,7 +303,7 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	desc->start_time = cpu_to_le32(hosttime - wl->time_offset);
- 
- 	is_dummy = wl12xx_is_dummy_packet(wl, skb);
--	if (is_dummy || wlvif->bss_type != BSS_TYPE_AP_BSS)
-+	if (is_dummy || !wlvif || wlvif->bss_type != BSS_TYPE_AP_BSS)
- 		desc->life_time = cpu_to_le16(TX_HW_MGMT_PKT_LIFETIME_TU);
- 	else
- 		desc->life_time = cpu_to_le16(TX_HW_AP_MODE_PKT_LIFETIME_TU);
-@@ -321,14 +322,14 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			   TX_HW_ATTR_SESSION_COUNTER;
- 
- 		tx_attr |= TX_HW_ATTR_TX_DUMMY_REQ;
--	} else {
-+	} else if (wlvif) {
- 		/* configure the tx attributes */
- 		tx_attr = wlvif->session_counter <<
- 			  TX_HW_ATTR_OFST_SESSION_COUNTER;
- 	}
- 
- 	desc->hlid = hlid;
--	if (is_dummy)
-+	if (is_dummy || !wlvif)
- 		rate_idx = 0;
- 	else if (wlvif->bss_type != BSS_TYPE_AP_BSS) {
- 		/* if the packets are destined for AP (have a STA entry)
-@@ -433,7 +434,7 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 
- 	wl1271_tx_fill_hdr(wl, wlvif, skb, extra, info, hlid);
- 
--	if (!is_dummy && wlvif->bss_type == BSS_TYPE_AP_BSS) {
-+	if (!is_dummy && wlvif && wlvif->bss_type == BSS_TYPE_AP_BSS) {
- 		wl1271_tx_ap_update_inconnection_sta(wl, skb);
- 		wl1271_tx_regulate_link(wl, wlvif, hlid);
- 	}
-@@ -610,6 +611,9 @@ static struct sk_buff *wl1271_skb_dequeue(struct wl1271 *wl)
- 		}
- 	}
- 
-+	if (!skb)
-+		skb = wl12xx_lnk_skb_dequeue(wl, &wl->links[wl->system_hlid]);
-+
- 	if (!skb &&
- 	    test_and_clear_bit(WL1271_FLAG_DUMMY_PACKET_PENDING, &wl->flags)) {
- 		int q;
-@@ -703,19 +707,14 @@ void wl1271_tx_work_locked(struct wl1271 *wl)
- 		return;
- 
- 	while ((skb = wl1271_skb_dequeue(wl))) {
-+		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 		bool has_data = false;
- 
- 		wlvif = NULL;
--		if (!wl12xx_is_dummy_packet(wl, skb)) {
--			struct ieee80211_tx_info *info;
--			struct ieee80211_vif *vif;
-+		if (!wl12xx_is_dummy_packet(wl, skb) && info->control.vif)
-+			wlvif = wl12xx_vif_to_data(info->control.vif);
- 
--			info = IEEE80211_SKB_CB(skb);
--			vif = info->control.vif;
--			wlvif = wl12xx_vif_to_data(vif);
--		}
- 		has_data = wlvif && wl1271_tx_is_data_present(skb);
--
- 		ret = wl1271_prepare_tx_frame(wl, wlvif, skb, buf_offset);
- 		if (ret == -EAGAIN) {
- 			/*
--- 
-1.7.6.401.g6a319
+/* Disable sync interrupt sources */
+REG_WRITE(ah, AR_INTR_SYNC_ENABLE, 0);
+/* Mark _all_ sync interrupts as serviced */
+REG_WRITE(ah, AR_INTR_SYNC_CAUSE, 0xffffffff);
+REG_READ(ah, AR_INTR_SYNC_CAUSE);
 
+/* Do a reset of the AHB and host interface */
+REG_WRITE(ah, AR_RC, AR_RC_AHB | AR_RC_HOSTIF);
+DELAY(100);
+REG_WRITE(ah, AR_RC, 0);
