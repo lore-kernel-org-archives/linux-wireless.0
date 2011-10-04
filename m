@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4006 "EHLO MMS3.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:1205 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751511Ab1JQU0X convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Oct 2011 16:26:23 -0400
-Message-ID: <4E9C8F60.1030209@broadcom.com> (sfid-20111017_222627_617177_88C24009)
-Date: Mon, 17 Oct 2011 13:26:08 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
+	id S933158Ab1JDVTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 17:19:36 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 06/26] staging: brcm80211: fullmac: fixed double
+ #include
+Date: Tue, 4 Oct 2011 23:18:52 +0200
+Message-ID: <1317763152-17607-7-git-send-email-arend@broadcom.com> (sfid-20111004_232035_618812_68E6D5C7)
+In-Reply-To: <1317763152-17607-1-git-send-email-arend@broadcom.com>
+References: <1317763152-17607-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Andr=E9s_Garc=EDa_Saavedra?=
-	<andres.garcia.saavedra@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: brcmfmac driver implementation: Questions
-References: <CADxqDgHYu51DQXOLT3eA=6PckSmXc42BFUF=Z7qZ_Cs45T1GjQ@mail.gmail.com>
-In-Reply-To: <CADxqDgHYu51DQXOLT3eA=6PckSmXc42BFUF=Z7qZ_Cs45T1GjQ@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andres,
+From: Roland Vossen <rvossen@broadcom.com>
 
-On 10/17/2011 10:59 AM, Andrés García Saavedra wrote:
-> Hi all,
->
-> I would like to test some custom powersaving algorithms for 802.11abg
-> WLANs on some current android smartphone (e.g., nexus one). My
-> question is regarding the brcmfmac driver implementation for BCM4329
-> chipsets:
+Fix double include as detected by checkincludes script.
 
-Android drive is a little different from brcmfmac. We do have plan to 
-add android support on a fullmac based code. But it's not going to 
-happen in short time. I would suggest you could start with the android 
-driver to save the time of porting fullmac to Android.
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-> * The current open source implementation of the driver, brcmfmac, does
-> ONLY support 11n PHY?
-
-No. 11g is supported as well.
-
-> * Does this driver interfaces the mac80211 operations or "acts as" a
-> mac80211 driver itself talking to cfg80211/nl80211?
-
-We implement the callback and talk to cfg80211 directly.
-
-> * Does the chipset/current implementation support sleep/awake
-> triggers? (or at least quiet elements?)
-
-I don't think there is any interface available to bypass the firmware 
-and control the RF directly.
-
-Hope this can help.
-
-Regards,
-Franky
-
-
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index d12aa75..f7b3077 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -21,7 +21,6 @@
+ #include <linux/sched.h>
+ #include <linux/kthread.h>
+ #include <linux/netdevice.h>
+-#include <linux/sched.h>
+ #include <linux/bitops.h>
+ #include <linux/etherdevice.h>
+ #include <linux/ieee80211.h>
+-- 
+1.7.4.1
 
 
