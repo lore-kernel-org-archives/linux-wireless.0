@@ -1,261 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3035 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754045Ab1JLSvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 14:51:51 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Alwin Beukers" <alwin@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 16/22] brcm80211: moved power conversion functions
-Date: Wed, 12 Oct 2011 20:51:26 +0200
-Message-ID: <1318445492-24207-17-git-send-email-arend@broadcom.com> (sfid-20111012_205207_378503_AB3D33D7)
-In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
-References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:35807 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756986Ab1JDNW3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 09:22:29 -0400
+Received: by pzk1 with SMTP id 1so1292994pzk.1
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 06:22:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CADPsn1Zi20JHmc7EOFCvjDmKWKtHnBCcyxTxWwBK8_vLps_u_w@mail.gmail.com>
+References: <CADPsn1bsUJqcuwZrW+e92aGms+t+TKRasnGb=ujzzgvz+S1Maw@mail.gmail.com>
+	<4E68ECE2.7060504@qca.qualcomm.com>
+	<CADPsn1Yvdw58AYXFNPc4L1M1tyJ7K6kEA2j85gRCq+vqAYQu_w@mail.gmail.com>
+	<CADPsn1Zi20JHmc7EOFCvjDmKWKtHnBCcyxTxWwBK8_vLps_u_w@mail.gmail.com>
+Date: Tue, 4 Oct 2011 14:22:28 +0100
+Message-ID: <CADPsn1ZB_Po5TumMA5r5WewUHC=M+3JUpzt0SyRdc+RG5WeU+g@mail.gmail.com> (sfid-20111004_152232_338889_A41232C9)
+Subject: Re: Question: ath6kl (driver/net/wireless/ath/ath6kl) with debug_mask value
+From: Sangwook Lee <sangwook.lee@linaro.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alwin Beukers <alwin@broadcom.com>
+Hi Kalle
 
-Moved brcmu_mw_to_qdbm and brcmu_qdbm_to_mw functions into the only
-file using them. Names were adjusted accordingly.
+I used  git://github.com/kvalo/ath6kl.git for-linville (Sat Oct 1
+09:43:09 2011 +0300)
+to run AR6003 HW2.0 (hw 2.0 fw 3.1.1.149) in my ARM board.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   88 +++++++++++++++++++-
- drivers/net/wireless/brcm80211/brcmutil/utils.c    |   86 -------------------
- .../net/wireless/brcm80211/include/brcmu_utils.h   |    4 -
- 3 files changed, 86 insertions(+), 92 deletions(-)
+But I faced booting problem as like the following:
+Is there any changes for AR6003 HW2.0 with the latest ath6kl git ?
+-----------------------------------------------------------------------
+mmc2: queuing unknown CIS tuple 0x01 (3 bytes)
+mmc2: queuing unknown CIS tuple 0x1a (5 bytes)
+mmc2: queuing unknown CIS tuple 0x1b (8 bytes)
+mmc2: queuing unknown CIS tuple 0x14 (0 bytes)
+mmc2: queuing unknown CIS tuple 0x80 (1 bytes)
+mmc2: queuing unknown CIS tuple 0x81 (1 bytes)
+mmc2: queuing unknown CIS tuple 0x82 (1 bytes)
+mmc2: new high speed SDIO card at address 0001
+ath6kl: target_ver 0x30000384 target_type 0x3 dataset_patch 0x57e884
+app_load_addr 0x543180
+ath6kl: app_start_override_addr 0x0 board_ext_data_addr 0x57e500
+reserved_ram_size 0x1b00
+ath6kl: using fw api 1
+ath6kl: temporary war to avoid sdio crc error
+ath6kl: writing extended board data to 0x57e500 (768 B)
+ath6kl: writing board file to 0x541800 (1024 B)
+ath6kl: writing otp to 0x543180 (3689 B)
+ath6kl: app_start_override_addr 0x0
+ath6kl: executing OTP at 0x0
+ath6kl: bmi_recv_buf FIFO empty
+ath6kl: Unable to read from the device: -22
+ath6kl: writing firmware to 0x543180 (100694 B)
+ath6kl: bmi communication timeout
+ath6kl: Unable to write to the device: -110
+ath6kl: Failed to write firmware: -110
+ath6kl: Failed to init ath6kl core
+ath6kl_sdio: probe of mmc2:0001:1 failed with error -110
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 27a748e..db9176d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -247,6 +247,90 @@ static const u32 __wl_cipher_suites[] = {
- 	WLAN_CIPHER_SUITE_AES_CMAC,
- };
- 
-+/* Quarter dBm units to mW
-+ * Table starts at QDBM_OFFSET, so the first entry is mW for qdBm=153
-+ * Table is offset so the last entry is largest mW value that fits in
-+ * a u16.
-+ */
-+
-+#define QDBM_OFFSET 153		/* Offset for first entry */
-+#define QDBM_TABLE_LEN 40	/* Table size */
-+
-+/* Smallest mW value that will round up to the first table entry, QDBM_OFFSET.
-+ * Value is ( mW(QDBM_OFFSET - 1) + mW(QDBM_OFFSET) ) / 2
-+ */
-+#define QDBM_TABLE_LOW_BOUND 6493	/* Low bound */
-+
-+/* Largest mW value that will round down to the last table entry,
-+ * QDBM_OFFSET + QDBM_TABLE_LEN-1.
-+ * Value is ( mW(QDBM_OFFSET + QDBM_TABLE_LEN - 1) +
-+ * mW(QDBM_OFFSET + QDBM_TABLE_LEN) ) / 2.
-+ */
-+#define QDBM_TABLE_HIGH_BOUND 64938	/* High bound */
-+
-+static const u16 nqdBm_to_mW_map[QDBM_TABLE_LEN] = {
-+/* qdBm:	+0	+1	+2	+3	+4	+5	+6	+7 */
-+/* 153: */ 6683, 7079, 7499, 7943, 8414, 8913, 9441, 10000,
-+/* 161: */ 10593, 11220, 11885, 12589, 13335, 14125, 14962, 15849,
-+/* 169: */ 16788, 17783, 18836, 19953, 21135, 22387, 23714, 25119,
-+/* 177: */ 26607, 28184, 29854, 31623, 33497, 35481, 37584, 39811,
-+/* 185: */ 42170, 44668, 47315, 50119, 53088, 56234, 59566, 63096
-+};
-+
-+static u16 brcmf_qdbm_to_mw(u8 qdbm)
-+{
-+	uint factor = 1;
-+	int idx = qdbm - QDBM_OFFSET;
-+
-+	if (idx >= QDBM_TABLE_LEN)
-+		/* clamp to max u16 mW value */
-+		return 0xFFFF;
-+
-+	/* scale the qdBm index up to the range of the table 0-40
-+	 * where an offset of 40 qdBm equals a factor of 10 mW.
-+	 */
-+	while (idx < 0) {
-+		idx += 40;
-+		factor *= 10;
-+	}
-+
-+	/* return the mW value scaled down to the correct factor of 10,
-+	 * adding in factor/2 to get proper rounding.
-+	 */
-+	return (nqdBm_to_mW_map[idx] + factor / 2) / factor;
-+}
-+
-+static u8 brcmf_mw_to_qdbm(u16 mw)
-+{
-+	u8 qdbm;
-+	int offset;
-+	uint mw_uint = mw;
-+	uint boundary;
-+
-+	/* handle boundary case */
-+	if (mw_uint <= 1)
-+		return 0;
-+
-+	offset = QDBM_OFFSET;
-+
-+	/* move mw into the range of the table */
-+	while (mw_uint < QDBM_TABLE_LOW_BOUND) {
-+		mw_uint *= 10;
-+		offset -= 40;
-+	}
-+
-+	for (qdbm = 0; qdbm < QDBM_TABLE_LEN - 1; qdbm++) {
-+		boundary = nqdBm_to_mW_map[qdbm] + (nqdBm_to_mW_map[qdbm + 1] -
-+						    nqdBm_to_mW_map[qdbm]) / 2;
-+		if (mw_uint < boundary)
-+			break;
-+	}
-+
-+	qdbm += (u8) offset;
-+
-+	return qdbm;
-+}
-+
- /* function for reading/writing a single u32 from/to the dongle */
- static int
- brcmf_exec_dcmd_u32(struct net_device *ndev, u32 cmd, u32 *par)
-@@ -1380,7 +1464,7 @@ brcmf_cfg80211_set_tx_power(struct wiphy *wiphy,
- 	else
- 		txpwrmw = (u16) dbm;
- 	err = brcmf_dev_intvar_set(ndev, "qtxpower",
--			(s32) (brcmu_mw_to_qdbm(txpwrmw)));
-+			(s32) (brcmf_mw_to_qdbm(txpwrmw)));
- 	if (err)
- 		WL_ERR("qtxpower error (%d)\n", err);
- 	cfg_priv->conf->tx_power = dbm;
-@@ -1409,7 +1493,7 @@ static s32 brcmf_cfg80211_get_tx_power(struct wiphy *wiphy, s32 *dbm)
- 	}
- 
- 	result = (u8) (txpwrdbm & ~WL_TXPWR_OVERRIDE);
--	*dbm = (s32) brcmu_qdbm_to_mw(result);
-+	*dbm = (s32) brcmf_qdbm_to_mw(result);
- 
- done:
- 	WL_TRACE("Exit\n");
-diff --git a/drivers/net/wireless/brcm80211/brcmutil/utils.c b/drivers/net/wireless/brcm80211/brcmutil/utils.c
-index 990cb2e..7f53a70 100644
---- a/drivers/net/wireless/brcm80211/brcmutil/utils.c
-+++ b/drivers/net/wireless/brcm80211/brcmutil/utils.c
-@@ -499,89 +499,3 @@ uint brcmu_mkiovar(char *name, char *data, uint datalen, char *buf, uint buflen)
- }
- EXPORT_SYMBOL(brcmu_mkiovar);
- 
--/* Quarter dBm units to mW
-- * Table starts at QDBM_OFFSET, so the first entry is mW for qdBm=153
-- * Table is offset so the last entry is largest mW value that fits in
-- * a u16.
-- */
--
--#define QDBM_OFFSET 153		/* Offset for first entry */
--#define QDBM_TABLE_LEN 40	/* Table size */
--
--/* Smallest mW value that will round up to the first table entry, QDBM_OFFSET.
-- * Value is ( mW(QDBM_OFFSET - 1) + mW(QDBM_OFFSET) ) / 2
-- */
--#define QDBM_TABLE_LOW_BOUND 6493	/* Low bound */
--
--/* Largest mW value that will round down to the last table entry,
-- * QDBM_OFFSET + QDBM_TABLE_LEN-1.
-- * Value is ( mW(QDBM_OFFSET + QDBM_TABLE_LEN - 1) +
-- * mW(QDBM_OFFSET + QDBM_TABLE_LEN) ) / 2.
-- */
--#define QDBM_TABLE_HIGH_BOUND 64938	/* High bound */
--
--static const u16 nqdBm_to_mW_map[QDBM_TABLE_LEN] = {
--/* qdBm:	+0	+1	+2	+3	+4	+5	+6	+7 */
--/* 153: */ 6683, 7079, 7499, 7943, 8414, 8913, 9441, 10000,
--/* 161: */ 10593, 11220, 11885, 12589, 13335, 14125, 14962, 15849,
--/* 169: */ 16788, 17783, 18836, 19953, 21135, 22387, 23714, 25119,
--/* 177: */ 26607, 28184, 29854, 31623, 33497, 35481, 37584, 39811,
--/* 185: */ 42170, 44668, 47315, 50119, 53088, 56234, 59566, 63096
--};
--
--u16 brcmu_qdbm_to_mw(u8 qdbm)
--{
--	uint factor = 1;
--	int idx = qdbm - QDBM_OFFSET;
--
--	if (idx >= QDBM_TABLE_LEN)
--		/* clamp to max u16 mW value */
--		return 0xFFFF;
--
--	/* scale the qdBm index up to the range of the table 0-40
--	 * where an offset of 40 qdBm equals a factor of 10 mW.
--	 */
--	while (idx < 0) {
--		idx += 40;
--		factor *= 10;
--	}
--
--	/* return the mW value scaled down to the correct factor of 10,
--	 * adding in factor/2 to get proper rounding.
--	 */
--	return (nqdBm_to_mW_map[idx] + factor / 2) / factor;
--}
--EXPORT_SYMBOL(brcmu_qdbm_to_mw);
--
--u8 brcmu_mw_to_qdbm(u16 mw)
--{
--	u8 qdbm;
--	int offset;
--	uint mw_uint = mw;
--	uint boundary;
--
--	/* handle boundary case */
--	if (mw_uint <= 1)
--		return 0;
--
--	offset = QDBM_OFFSET;
--
--	/* move mw into the range of the table */
--	while (mw_uint < QDBM_TABLE_LOW_BOUND) {
--		mw_uint *= 10;
--		offset -= 40;
--	}
--
--	for (qdbm = 0; qdbm < QDBM_TABLE_LEN - 1; qdbm++) {
--		boundary = nqdBm_to_mW_map[qdbm] + (nqdBm_to_mW_map[qdbm + 1] -
--						    nqdBm_to_mW_map[qdbm]) / 2;
--		if (mw_uint < boundary)
--			break;
--	}
--
--	qdbm += (u8) offset;
--
--	return qdbm;
--}
--EXPORT_SYMBOL(brcmu_mw_to_qdbm);
--
-diff --git a/drivers/net/wireless/brcm80211/include/brcmu_utils.h b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-index 96f05d7..d716cd2 100644
---- a/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-+++ b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-@@ -212,10 +212,6 @@ extern char *brcmu_chipname(uint chipid, char *buf, uint len);
- extern struct brcmu_tlv *brcmu_parse_tlvs(void *buf, int buflen,
- 					  uint key);
- 
--/* power conversion */
--extern u16 brcmu_qdbm_to_mw(u8 qdbm);
--extern u8 brcmu_mw_to_qdbm(u16 mw);
--
- extern uint brcmu_mkiovar(char *name, char *data, uint datalen,
- 			  char *buf, uint len);
- 
--- 
-1.7.4.1
+--------------------------------------------------------------------------------
+
+Thanks
+Sangwook
 
 
+
+On 9 September 2011 09:54, Sangwook Lee <sangwook.lee@linaro.org> wrote:
+>
+> Hi Kalle
+>
+> On 8 September 2011 17:27, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> > Hi Sangwook,
+> >
+> > On 09/07/2011 04:32 PM, Sangwook Lee wrote:
+> >> I am running ath6kl-cleanup git.
+> >
+> > BTW, ath6kl-cleanup.git is not updated anymore. Instead there's now
+> > ath6kl.git which follows wireless-testing. You can find it from
+> > git.kernel.org (when it's up again) or from github.
+> >
+> Thanks for this info, I will use new git.
+>
+> >> If I add debug_mask values with ath6kl.ko as like followings, I get
+> >> the success full results,
+
+[snip]
+
+> >> $ insmod ath6kl.ko
+> >> $ ifconfig wlan0 up
+> >> $ iwlist wlan0 scan
+> >> With this case, there is no coming event "WMI_SCAN_COMPLETE_EVENTID".
+> >> After receiving  "ath6kl: WMI_EXTENSION_EVENTID"
+> >> iwlist shows error message:
+> >>       wlan0     Failed to read scan data : Resource temporarily unavailable
+> >
+[snip]
