@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54032 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751147Ab1JJPQ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 11:16:29 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 19/34] iwlagn: separate init calib and rt calib
-Date: Mon, 10 Oct 2011 07:27:04 -0700
-Message-Id: <1318256839-31837-20-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171724_052571_779BDA9B)
-In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:46669 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932522Ab1JDQmT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 12:42:19 -0400
+Received: by eya28 with SMTP id 28so670028eya.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 09:42:18 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Subject: Re: [RFC 5/6] ath9k: enable DFS pulse detection
+Date: Tue, 4 Oct 2011 18:42:04 +0200
+Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kgiori@qca.qualcomm.com, nbd@openwrt.org
+References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com> <201110041726.40722.chunkeey@googlemail.com> <CAJ-Vmom44ZDo7CqrnNgo+MQ=otOB=+WyQYAyAZAt2ko=STkSsA@mail.gmail.com>
+In-Reply-To: <CAJ-Vmom44ZDo7CqrnNgo+MQ=otOB=+WyQYAyAZAt2ko=STkSsA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201110041842.05218.chunkeey@googlemail.com> (sfid-20111004_184224_429713_32F36C7E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My previous patch for init calib cfg disable a set of calibration for both
-init and runtime which cause performance issue, Fix it
+On Tuesday, October 04, 2011 05:57:32 PM Adrian Chadd wrote:
+> On 4 October 2011 23:26, Christian Lamparter <chunkeey@googlemail.com> wrote:
+> > On Tuesday, October 04, 2011 04:50:42 PM Adrian Chadd wrote:
+> >> Also whilst I'm at it, "SPECTRUM_MANAGEMENT" is a very broad flag to set.
+> >
+> > Hm, 802.11-2007 5.4.4 "Spectrum management services" explicitly
+> > mentions that both services TPC and DFS are required in some
+> > regulatory domains for operation in the 5 GHz band.
+> 
+> Right, but just for hostap mode, correct? I'm also thinking about
+> non-hostap mode support.
+I don't think it's just hostap mode. More like hostap, IBSS and MESH.
+In fact, with P2P/Wifi-Direct, the station mode might becoming a
+thing of the past, right?
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h |   10 ++++++++++
- 2 files changed, 11 insertions(+), 1 deletions(-)
+> > [ Just for fun: Do you know how the AR5418 handled radars in
+> > the proprietary turbo mode in the 5 GHz band? And how does
+> > Atheros own driver/stack/etc. deals with this limitation?
+> > After all Unex sold/sells the DNBA-81 on their product page
+> > as: <http://www.unex.com.tw/product/dnba-81>
+> >
+> > "DNBA-81 is a 802.11n 2x3 2-stream a/b/g dual band wifi
+> > Cardbus designed specifically for laptops and *access points*/
+> > home gateways/consumer electronics/multimedia entertainment
+> > devices/peripherals with standard Cardbus slot." ]
+> 
+> Besides, you realise that vendors say the darnest things at times? :)
+> For example, one well-known vendor lists their AR9160 NICs as DFS
+> ready (and thus people who buy them think they're DFS ready), but if
+> you buy some of their MIPS SOC hardware, they only support
+> OpenWRT+ath9k on it. I'm sure more than a few people fell into that
+> trap. :)
+Well, ok. I found a better example:
+http://www.wikidevi.com/wiki/Apple_AirPort_Extreme_Base_Station_A1143_%28MA073LL/A%29
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 90ca2d0..afd4b4c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1222,7 +1222,7 @@ static int iwlagn_send_calib_cfg_rt(struct iwl_priv *priv, u32 cfg)
- 	};
- 
- 	memset(&calib_cfg_cmd, 0, sizeof(calib_cfg_cmd));
--	calib_cfg_cmd.ucd_calib_cfg.once.is_enable = IWL_CALIB_INIT_CFG_ALL;
-+	calib_cfg_cmd.ucd_calib_cfg.once.is_enable = IWL_CALIB_RT_CFG_ALL;
- 	calib_cfg_cmd.ucd_calib_cfg.once.start = cpu_to_le32(cfg);
- 
- 	return iwl_trans_send_cmd(trans(priv), &cmd);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 9a5d993..69d5f85 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -3216,6 +3216,16 @@ enum iwl_ucode_calib_cfg {
- 					IWL_CALIB_CFG_RX_IQ_IDX |	\
- 					IWL_CALIB_CFG_CRYSTAL_IDX)
- 
-+#define IWL_CALIB_RT_CFG_ALL	cpu_to_le32(IWL_CALIB_CFG_RX_BB_IDX |	\
-+					IWL_CALIB_CFG_DC_IDX |		\
-+					IWL_CALIB_CFG_LO_IDX |		\
-+					IWL_CALIB_CFG_TX_IQ_IDX |	\
-+					IWL_CALIB_CFG_RX_IQ_IDX |	\
-+					IWL_CALIB_CFG_TEMPERATURE_IDX |	\
-+					IWL_CALIB_CFG_PAPD_IDX |	\
-+					IWL_CALIB_CFG_TX_PWR_IDX |	\
-+					IWL_CALIB_CFG_CRYSTAL_IDX)
-+
- #define IWL_CALIB_CFG_FLAG_SEND_COMPLETE_NTFY_MSK	cpu_to_le32(BIT(0))
- 
- struct iwl_calib_cfg_elmnt_s {
--- 
-1.7.0.4
+You see, they put an AR5418(or 6?) with an AR5133 into the first draft-n
+Apple Airport Base Station. If this much money was involved, do you
+think that an American Company would "lie" to another American Company?
 
+Regards,
+	Chr
