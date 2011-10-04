@@ -1,84 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:33735 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754686Ab1JaNQ1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Oct 2011 09:16:27 -0400
-Message-ID: <4EAE9F9D.2000209@qca.qualcomm.com> (sfid-20111031_141629_877613_40498F47)
-Date: Mon, 31 Oct 2011 15:16:13 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from mail.neratec.ch ([80.75.119.105]:53061 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755598Ab1JDKLs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Oct 2011 06:11:48 -0400
+Message-ID: <4E8ADBE0.6050406@neratec.com> (sfid-20111004_121152_805213_3F665290)
+Date: Tue, 04 Oct 2011 12:11:44 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-To: Raja Mani <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 5/7] ath6kl: Invoke wow suspend/resume calls during PM
- operations
-References: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com> <1319539047-8756-6-git-send-email-rmani@qca.qualcomm.com> <4EAAAAF6.3090906@qca.qualcomm.com> <4EAE7038.7010306@qca.qualcomm.com>
-In-Reply-To: <4EAE7038.7010306@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kgiori@qca.qualcomm.com, nbd@openwrt.org
+Subject: Re: [RFC 5/6] ath9k: enable DFS pulse detection
+References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com> <1317637758-11907-6-git-send-email-zefir.kurtisi@neratec.com> <CAB=NE6VO4W=ZJcgb3G5Gh=YM-jdkJ3ey5Ppka2Rn0XGmpx8=Gg@mail.gmail.com>
+In-Reply-To: <CAB=NE6VO4W=ZJcgb3G5Gh=YM-jdkJ3ey5Ppka2Rn0XGmpx8=Gg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/31/2011 11:54 AM, Raja Mani wrote:
-> On Friday 28 October 2011 06:45 PM, Kalle Valo wrote:
->> On 10/25/2011 01:37 PM, rmani@qca.qualcomm.com wrote:
->>> From: Raja Mani<rmani@qca.qualcomm.com>
->>>
->>> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
->>> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
->>> @@ -1606,6 +1606,19 @@ static int ar6k_cfg80211_suspend(struct wiphy *wiphy,
->>>   				 struct cfg80211_wowlan *wow)
->>>   {
->>>   	struct ath6kl *ar = wiphy_priv(wiphy);
->>> +	int ret;
->>> +
->>> +	if (wow&&  ath6kl_cfg80211_ready(ar)&&
->>> +	    test_bit(CONNECTED,&ar->flag)&&
->>> +	    ath6kl_hif_keep_pwr_caps(ar)) {
->>> +
->>> +		/* Flush all non control pkts in Tx path */
->>> +		ath6kl_tx_data_cleanup(ar);
->>> +
->>> +		ret = ath6kl_pm_wow_suspend(ar, wow);
->>> +		if (ret)
->>> +			return ret;
->>> +	}
+On 10/03/2011 08:27 PM, Luis R. Rodriguez wrote:
+> On Mon, Oct 3, 2011 at 3:29 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
 >>
->> This is now confusing. Some of the suspend logic is now in sdio.c and
->> some here. It's better to have everything in one place, that is in
->> sdio.c. We just need to add an interface so that sdio.c can request the
->> correct suspend mode.
+>> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/main.c |   12 ++++++++++++
+>>  1 files changed, 12 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>> index e8aeb98..5defebe 100644
+>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>> @@ -344,6 +344,18 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
+>>                        "Unable to reset channel, reset status %d\n", r);
+>>                goto out;
+>>        }
+>> +#ifdef CONFIG_ATH9K_DFS
+>> +       /**
+>> +        * enable radar pulse detection
+>> +        *
+>> +        * TODO: do this only for DFS channels
+>> +        */
+>> +       ah->private_ops.set_radar_params(ah, &ah->radar_conf);
+>> +       ath9k_hw_setrxfilter(ah,
+>> +                       ath9k_hw_getrxfilter(ah) | ATH9K_RX_FILTER_PHYRADAR);
+>> +       ath_dbg(common, ATH_DBG_DFS,
+>> +               "DFS enabled for channel %d\n", hchan->chan->center_freq);
+>> +#endif
 > 
-> Do you want me to keep ath6kl_pm_wow_suspend() implementation in 
-> cfg80211.c file and move only above code to ath6kl_sdio_suspend() ?
+> Please spare the #ifdef and just call something within dfs.c, then
+> dfs.h would wrap it to nothing if DFS is disabled.
+> 
+This possibly won't work, since setting up DFS registers is part of HW layer and not done in the dfs module. If you want to have DFS conditionally compilable, you can not spare this #ifdefs.
 
-I gave this more thought and in my suspend patches earlier today I added
-this function:
+But I see that this would work in patch 6/6 when calling ath9k_dfs_process_phyerr() on ATH9K_PHYERR_RADAR. Will be considered.
 
-int ath6kl_cfg80211_suspend(struct ath6kl *ar,
-			    enum ath6kl_cfg_suspend_mode mode)
-{
-	int ret;
+>   Luis
 
-	ath6kl_cfg80211_stop(ar);
-
-	switch (mode) {
-	case ATH6KL_CFG_SUSPEND_DEEPSLEEP:
-		/* save the current power mode before enabling power save */
-		ar->wmi->saved_pwr_mode = ar->wmi->pwr_mode;
-
-		ret = ath6kl_wmi_powermode_cmd(ar->wmi, 0, REC_POWER);
-		if (ret) {
-			ath6kl_warn("wmi powermode command failed during suspend: %d\n",
-				    ret);
-		}
-
-		ar->state = ATH6KL_STATE_DEEPSLEEP;
-
-		break;
-
-You can add a new mode for WOW and call your wow functions from that
-function. And you need to make changes to ath6kl_sdio_suspend() so that
-it will enable WOW in correct cases. Also I added a state variable
-ar->state and hopefully we don't need a separate wow state anymore.
-
-Kalle
+Thanks,
+Zefir
