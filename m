@@ -1,56 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3527 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753403Ab1JLT0N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 15:26:13 -0400
-Message-ID: <4E95E9C5.6060006@broadcom.com> (sfid-20111012_212616_511269_5EFC6B42)
-Date: Wed, 12 Oct 2011 21:25:57 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Stephen Rothwell" <sfr@canb.auug.org.au>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: build failure after merge of the moduleh tree
-References: <20111012172954.4d5a638ef2a399b72bce5bf1@canb.auug.org.au>
-In-Reply-To: <20111012172954.4d5a638ef2a399b72bce5bf1@canb.auug.org.au>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:35975 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753139Ab1JEJzk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Oct 2011 05:55:40 -0400
+Received: by eya28 with SMTP id 28so1405752eya.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:55:39 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 00/29] wl12xx: start preparing the driver for multi-vif support
+Date: Wed,  5 Oct 2011 11:55:37 +0200
+Message-Id: <1317808566-18857-1-git-send-email-eliad@wizery.com> (sfid-20111005_115543_550084_8647D273)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/12/2011 08:29 AM, Stephen Rothwell wrote:
-> Hi Paul,
-> 
-> After merging the moduleh tree, today's linux-next build (x86_64
-> allmodconfig) failed like this:
-> 
-> drivers/net/wireless/brcm80211/brcmutil/utils.c:20:15: error: expected declaration specifiers or '...' before string constant
-> drivers/net/wireless/brcm80211/brcmutil/utils.c:21:20: error: expected declaration specifiers or '...' before string constant
-> drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c:51:1: warning: type defaults to 'int' in declaration of 'MODULE_DEVICE_TABLE' [-Wimplicit-int]
-> drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c:51:1: warning: parameter names (without types) in function declaration [enabled by default]
-> 
-> Caused by commit 5b435de0d786 ("net: wireless: add brcm80211 drivers")
-> from the wireless tree interacting with the module.h split up.
-> 
-> These files clearly should include module.h (John, please apply this to the
-> wireless tree):
-> 
-> From d89b14ffc84a2b8a54ffe89453b8bbf9cabf1468 Mon Sep 17 00:00:00 2001
-> From: Stephen Rothwell <sfr@canb.auug.org.au>
-> Date: Wed, 12 Oct 2011 17:07:06 +1100
-> Subject: [PATCH] net: wireless: brcm80211: include module.h
-> 
-> Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+The wl12xx fw currently supports only a single vif at a time.
+Upcoming fw versions are going to support concurrentl vifs.
 
-Hi John,
+While mac80211 works well with multiple vifs, the wl12xx
+driver assumes it handles only a single interface.
 
-Do you intend to take this patch as well. I used it to prepare the patch
-series I sent earlier titled "[PATCH 00/22] brcm80211: mainline patch
-related cleanup" identified by:
+This is the first patchset in order to make the driver ready
+for multiple vifs support. The main action here is defining
+a new per-interface data struct (wlvif), and moving the
+currently-global fields into it.
 
-Message-ID: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+(Additional global fields/flags will be addressed by further patchsets)
 
-Gr. AvS
+Note that this patchset only adds functionality - it doesn't
+break compatability with the current fw.
 
-ps: If you want the bare patch file, I still have it on disk here.
+Eliad Peller (29):
+  wl12xx: disable AP-mode-specific quirks
+  wl12xx: replace wl->mac_addr with vif->addr
+  wl12xx: start reworking the init sequence
+  wl12xx: define wl12xx_vif
+  wl12xx: move rate_set into wlvif
+  wl12xx: move basic_rate into wlvif
+  wl12xx: replace wl->bssid with vif->bss_conf.bssid
+  wl12xx: move bss_type into wlvif
+  wl12xx: remove set_bss_type field
+  wl12xx: move p2p into wlvif
+  wl12xx: move ssid and ssid_len into wlvif
+  wl12xx: move probereq into wlvif
+  wl12xx: move aid into wlvif
+  wl12xx: move role_id into wlvif
+  wl12xx: move dev_role_id into wlvif
+  wl12xx: move sta_hlid into wlvif
+  wl12xx: move ap_global_hlid and ap_bcast_hlid into wlvif
+  wl12xx: move session_counter into wlvif
+  wl12xx: move some logic into wl12xx_init_vif_data
+  wl12xx: move dev_hlid into wlvif
+  wl12xx: move beacon_int into wlvif
+  wl12xx: move default_key into wlvif
+  wl12xx: move pspoll_work into wlvif
+  wl12xx: move ps_compl into wlvif
+  wl12xx: move ps_poll_failures and psm_entry_retry into wlvif
+  wl12xx: move rssi_thold and last_rssi_event into wlvif
+  wl12xx: move ba fields into wlvif
+  wl12xx: move ap_hlid_map into wlvif.ap
+  wl12xx: move recorded_ap_keys into wlvif
+
+ drivers/net/wireless/wl12xx/acx.c     |  138 ++++---
+ drivers/net/wireless/wl12xx/acx.h     |   75 ++--
+ drivers/net/wireless/wl12xx/boot.c    |    3 -
+ drivers/net/wireless/wl12xx/cmd.c     |  231 ++++++-----
+ drivers/net/wireless/wl12xx/cmd.h     |   42 ++-
+ drivers/net/wireless/wl12xx/debugfs.c |   23 +-
+ drivers/net/wireless/wl12xx/event.c   |  103 +++--
+ drivers/net/wireless/wl12xx/event.h   |    3 -
+ drivers/net/wireless/wl12xx/init.c    |  413 ++++++++++---------
+ drivers/net/wireless/wl12xx/init.h    |    7 +-
+ drivers/net/wireless/wl12xx/main.c    |  754 +++++++++++++++++---------------
+ drivers/net/wireless/wl12xx/ps.c      |   14 +-
+ drivers/net/wireless/wl12xx/ps.h      |    4 +-
+ drivers/net/wireless/wl12xx/rx.c      |    4 +-
+ drivers/net/wireless/wl12xx/scan.c    |   59 ++-
+ drivers/net/wireless/wl12xx/scan.h    |    8 +-
+ drivers/net/wireless/wl12xx/tx.c      |  165 ++++---
+ drivers/net/wireless/wl12xx/tx.h      |    7 +-
+ drivers/net/wireless/wl12xx/wl12xx.h  |  170 ++++----
+ 19 files changed, 1204 insertions(+), 1019 deletions(-)
+
+-- 
+1.7.6.401.g6a319
 
