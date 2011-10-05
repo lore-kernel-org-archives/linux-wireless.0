@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:33989 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751924Ab1JJT0A (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:56328 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757843Ab1JEWXj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 15:26:00 -0400
-Received: by bkbzv15 with SMTP id zv15so8836020bkb.4
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 12:25:58 -0700 (PDT)
-Subject: Re: [PATCH 05/29] wl12xx: move bitrate_masks into wlvif
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAB3XZEejP2iELFGd+s+-4fBPTxDk_iuNPhU1AZdmCxneBKGF-Q@mail.gmail.com>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-	 <1318234397-21081-6-git-send-email-eliad@wizery.com>
-	 <1318270806.9690.373.camel@cumari>
-	 <CAB3XZEejP2iELFGd+s+-4fBPTxDk_iuNPhU1AZdmCxneBKGF-Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 10 Oct 2011 22:25:55 +0300
-Message-ID: <1318274755.9690.400.camel@cumari> (sfid-20111010_212604_780848_80B113C0)
-Mime-Version: 1.0
+	Wed, 5 Oct 2011 18:23:39 -0400
+Received: by qadb15 with SMTP id b15so1626512qad.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 15:23:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4E8ADBE0.6050406@neratec.com>
+References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com>
+ <1317637758-11907-6-git-send-email-zefir.kurtisi@neratec.com>
+ <CAB=NE6VO4W=ZJcgb3G5Gh=YM-jdkJ3ey5Ppka2Rn0XGmpx8=Gg@mail.gmail.com> <4E8ADBE0.6050406@neratec.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Wed, 5 Oct 2011 15:23:19 -0700
+Message-ID: <CAB=NE6W47W8WAJmRaPO3jMfTOOxs+muZXzrnDCRuUBSpbw40bA@mail.gmail.com> (sfid-20111006_002345_830960_069FCBDA)
+Subject: Re: [RFC 5/6] ath9k: enable DFS pulse detection
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kgiori@qca.qualcomm.com, nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-10-10 at 21:21 +0200, Eliad Peller wrote: 
-> On Mon, Oct 10, 2011 at 8:20 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote:
-> >> move bitrate_masks into the per-interface data, rather than
-> >> being global.
-> >>
-> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> >> ---
-> >
-> > [...]
-> >
-> >> diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-> >> index 102a8a5..ff653e8 100644
-> >> --- a/drivers/net/wireless/wl12xx/cmd.c
-> >> +++ b/drivers/net/wireless/wl12xx/cmd.c
-> >> @@ -1111,15 +1111,16 @@ out:
-> >>       return ret;
-> >>  }
-> >>
-> >> -int wl1271_cmd_build_probe_req(struct wl1271 *wl,
-> >> +int wl1271_cmd_build_probe_req(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-> >>                              const u8 *ssid, size_t ssid_len,
-> >>                              const u8 *ie, size_t ie_len, u8 band)
-> >
-> > If struct wl12xx_vif contains a pointer to wl, can't you pass only wlvif
-> > to all these functions instead of passing both?
-> >
-> yes, it's possible.
-> but maybe leave it for some future overhaul?
+On Tue, Oct 4, 2011 at 3:11 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+> On 10/03/2011 08:27 PM, Luis R. Rodriguez wrote:
+>> On Mon, Oct 3, 2011 at 3:29 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+>>>
+>>> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+>>> ---
+>>>  drivers/net/wireless/ath/ath9k/main.c |   12 ++++++++++++
+>>>  1 files changed, 12 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>>> index e8aeb98..5defebe 100644
+>>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>>> @@ -344,6 +344,18 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
+>>>                        "Unable to reset channel, reset status %d\n", r);
+>>>                goto out;
+>>>        }
+>>> +#ifdef CONFIG_ATH9K_DFS
+>>> +       /**
+>>> +        * enable radar pulse detection
+>>> +        *
+>>> +        * TODO: do this only for DFS channels
+>>> +        */
+>>> +       ah->private_ops.set_radar_params(ah, &ah->radar_conf);
+>>> +       ath9k_hw_setrxfilter(ah,
+>>> +                       ath9k_hw_getrxfilter(ah) | ATH9K_RX_FILTER_PHYRADAR);
+>>> +       ath_dbg(common, ATH_DBG_DFS,
+>>> +               "DFS enabled for channel %d\n", hchan->chan->center_freq);
+>>> +#endif
+>>
+>> Please spare the #ifdef and just call something within dfs.c, then
+>> dfs.h would wrap it to nothing if DFS is disabled.
+>>
+> This possibly won't work, since setting up DFS registers is part of HW layer and not
+> done in the dfs module. If you want to have DFS conditionally compilable, you can not spare this #ifdefs.
 
-Yes, it's okay.  Otherwise the rebasing of this would be annoying to
-do. ;)
+Its not about sparing the ifdefs completely but instead to place them
+strategically to remove #ifdef sprinkling all over C code. You can
+leave ifdefs on header files, and for C files leaves this as a
+conditional build time option.
 
-
--- 
-Cheers,
-Luca.
-
+  Luis
