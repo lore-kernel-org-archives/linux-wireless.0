@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54113 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752007Ab1JRLjV (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:1518 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934801Ab1JEPkR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Oct 2011 07:39:21 -0400
-Subject: [PATCH] mac80211: fix confusing parentheses
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 18 Oct 2011 13:39:14 +0200
-Message-ID: <1318937954.3958.23.camel@jlt3.sipsolutions.net> (sfid-20111018_133924_632382_45D4E330)
-Mime-Version: 1.0
+	Wed, 5 Oct 2011 11:40:17 -0400
+From: "Arend Van Spriel" <arend@broadcom.com>
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Alwin Beukers" <alwin@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>
+Date: Wed, 5 Oct 2011 08:40:02 -0700
+Subject: RE: [PATCH v3] move brcm80211 drivers to mainline
+Message-ID: <400C43189542CE41BC0A5B252FC90136BC0D574E7D@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20111005_174021_697186_B67737A8)
+References: <4E8C64EF.3070203@broadcom.com> <4E8C7289.50706@hauke-m.de>
+In-Reply-To: <4E8C7289.50706@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+> From: Hauke Mehrtens [mailto:hauke@hauke-m.de]
+> Sent: woensdag 5 oktober 2011 17:07
+> 
+> Hi Arend,
+> 
+> Most of the things defined in
+> drivers/net/wireless/brcm80211/include/soc.h are also defined in
+> drivers/net/wireless/brcm80211/brcmsmac/aiutils.h.
+> 
+> Hauke
 
-There's an extra pair of parentheses here that
-is simply confusing because it implies a nesting
-that doesn't actually exist. Just remove it.
+Thanks, Hauke
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+One of the reasons we wanted to move to mainline is that bcma
+is worked on from John's repo and we want our brcmsmac driver
+to use that. The aiutils.h file is going away when we are
+using bcma.
 
---- a/net/mac80211/cfg.c	2011-10-18 13:36:05.000000000 +0200
-+++ b/net/mac80211/cfg.c	2011-10-18 13:38:05.000000000 +0200
-@@ -1413,7 +1413,7 @@ static int ieee80211_set_channel(struct
- 	    (old_oper_type != local->_oper_channel_type))
- 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
- 
--	if ((sdata && sdata->vif.type != NL80211_IFTYPE_MONITOR) &&
-+	if (sdata && sdata->vif.type != NL80211_IFTYPE_MONITOR &&
- 	    old_vif_oper_type != sdata->vif.bss_conf.channel_type)
- 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_HT);
- 
-
+Gr. AvS
 
