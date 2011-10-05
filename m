@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:42264 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750899Ab1J0Tmo (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53613 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934336Ab1JEOax (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Oct 2011 15:42:44 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	Dan Williams <dcbw@redhat.com>,
-	Arend Van Spriel <arend@broadcom.com>
-Date: Thu, 27 Oct 2011 12:40:20 -0700
-Subject: RE: [PATCH] cfg80211: annotate cfg80211_inform_bss
-Message-ID: <477F20668A386D41ADCC57781B1F704308180815FD@SC-VEXCH1.marvell.com> (sfid-20111027_214247_750430_640F9B6F)
-References: <1319719502.3944.5.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1319719502.3944.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 5 Oct 2011 10:30:53 -0400
+Date: Wed, 5 Oct 2011 10:24:03 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Alwin Beukers <alwin@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>
+Subject: Re: [PATCH v3] move brcm80211 drivers to mainline
+Message-ID: <20111005142402.GC17286@tuxdriver.com> (sfid-20111005_163056_879669_358FE3B6)
+References: <4E8C64EF.3070203@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E8C64EF.3070203@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
-dXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mt
-b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YNCj4gSm9oYW5uZXMgQmVyZw0KPiBT
-ZW50OiBUaHVyc2RheSwgT2N0b2JlciAyNywgMjAxMSA1OjQ1IEFNDQo+IFRvOiBKb2huIExpbnZp
-bGxlDQo+IENjOiBsaW51eC13aXJlbGVzczsgU2FtdWVsIE9ydGl6OyBCaW5nIFpoYW87IEp1c3Np
-IEtpdmlsaW5uYTsgRGFuIFdpbGxpYW1zOyBBcmVuZCBWYW4gU3ByaWVsDQo+IFN1YmplY3Q6IFtQ
-QVRDSF0gY2ZnODAyMTE6IGFubm90YXRlIGNmZzgwMjExX2luZm9ybV9ic3MNCj4gDQo+IEZyb206
-IEpvaGFubmVzIEJlcmcgPGpvaGFubmVzLmJlcmdAaW50ZWwuY29tPg0KPiANCj4gVGhpcyBmdW5j
-dGlvbiByZXR1cm5zIGEgcmVmZXJlbmNlZCBCU1Mgc3RydWN0DQo+IChvciBOVUxMKSwgYW5ub3Rh
-dGUgd2l0aCBfX211c3RfY2hlY2suIEl0IHNlZW1zDQo+IHRoYXQgYSBsb3Qgb2YgZHJpdmVycyBn
-ZXQgdGhpcyBjb21wbGV0ZWx5IHdyb25nDQo+IGFuZCBsZWFrIGFsbCBCU1Mgc3RydWN0cyBhcyBh
-IHJlc3VsdC4NCj4gDQo+IFJlcG9ydGVkLWJ5OiBBZGFtIE1pa3V0YSA8QWRhbS5NaWt1dGFAdGll
-dG8uY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJnQGlu
-dGVsLmNvbT4NCj4gLS0tDQo+IENDIGxvdHMgb2YgZHJpdmVyIG1haW50YWluZXJzIHdobyBuZWVk
-IHRvIGZpeCB0aGlzIGJ1Zy4NCg0KSSB3aWxsIHdvcmsgb24gdGhlIG13aWZpZXggZHJpdmVyIHBh
-cnQuDQoNClRoYW5rcywNCkJpbmcNCg0KPiANCj4gIGluY2x1ZGUvbmV0L2NmZzgwMjExLmggfCAg
-ICA4ICsrKysrKy0tDQo+ICAxIGZpbGUgY2hhbmdlZCwgNiBpbnNlcnRpb25zKCspLCAyIGRlbGV0
-aW9ucygtKQ0KPiANCj4gLS0tIGEvaW5jbHVkZS9uZXQvY2ZnODAyMTEuaAkyMDExLTEwLTI3IDE0
-OjA1OjE3LjAwMDAwMDAwMCArMDIwMA0KPiArKysgYi9pbmNsdWRlL25ldC9jZmc4MDIxMS5oCTIw
-MTEtMTAtMjcgMTQ6NDI6NTEuMDAwMDAwMDAwICswMjAwDQo+IEBAIC0yNjUxLDggKzI2NTEsMTAg
-QEAgdm9pZCBjZmc4MDIxMV9zY2hlZF9zY2FuX3N0b3BwZWQoc3RydWN0DQo+ICAgKg0KPiAgICog
-VGhpcyBpbmZvcm1zIGNmZzgwMjExIHRoYXQgQlNTIGluZm9ybWF0aW9uIHdhcyBmb3VuZCBhbmQN
-Cj4gICAqIHRoZSBCU1Mgc2hvdWxkIGJlIHVwZGF0ZWQvYWRkZWQuDQo+ICsgKg0KPiArICogTk9U
-RTogUmV0dXJucyBhIHJlZmVyZW5jZWQgc3RydWN0LCBtdXN0IGJlIHJlbGVhc2VkIHdpdGggY2Zn
-ODAyMTFfcHV0X2JzcygpIQ0KPiAgICovDQo+IC1zdHJ1Y3QgY2ZnODAyMTFfYnNzKg0KPiArc3Ry
-dWN0IGNmZzgwMjExX2JzcyAqIF9fbXVzdF9jaGVjaw0KPiAgY2ZnODAyMTFfaW5mb3JtX2Jzc19m
-cmFtZShzdHJ1Y3Qgd2lwaHkgKndpcGh5LA0KPiAgCQkJICBzdHJ1Y3QgaWVlZTgwMjExX2NoYW5u
-ZWwgKmNoYW5uZWwsDQo+ICAJCQkgIHN0cnVjdCBpZWVlODAyMTFfbWdtdCAqbWdtdCwgc2l6ZV90
-IGxlbiwNCj4gQEAgLTI2NzQsOCArMjY3NiwxMCBAQCBjZmc4MDIxMV9pbmZvcm1fYnNzX2ZyYW1l
-KHN0cnVjdCB3aXBoeSAqDQo+ICAgKg0KPiAgICogVGhpcyBpbmZvcm1zIGNmZzgwMjExIHRoYXQg
-QlNTIGluZm9ybWF0aW9uIHdhcyBmb3VuZCBhbmQNCj4gICAqIHRoZSBCU1Mgc2hvdWxkIGJlIHVw
-ZGF0ZWQvYWRkZWQuDQo+ICsgKg0KPiArICogTk9URTogUmV0dXJucyBhIHJlZmVyZW5jZWQgc3Ry
-dWN0LCBtdXN0IGJlIHJlbGVhc2VkIHdpdGggY2ZnODAyMTFfcHV0X2JzcygpIQ0KPiAgICovDQo+
-IC1zdHJ1Y3QgY2ZnODAyMTFfYnNzKg0KPiArc3RydWN0IGNmZzgwMjExX2JzcyAqIF9fbXVzdF9j
-aGVjaw0KPiAgY2ZnODAyMTFfaW5mb3JtX2JzcyhzdHJ1Y3Qgd2lwaHkgKndpcGh5LA0KPiAgCQkg
-ICAgc3RydWN0IGllZWU4MDIxMV9jaGFubmVsICpjaGFubmVsLA0KPiAgCQkgICAgY29uc3QgdTgg
-KmJzc2lkLA0KPiANCj4gDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBz
-ZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC13aXJlbGVzcyIgaW4NCj4gdGhlIGJvZHkg
-b2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gTW9yZSBtYWpvcmRv
-bW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo=
+On Wed, Oct 05, 2011 at 04:08:47PM +0200, Arend van Spriel wrote:
+> With number of cleanup patch series merged in by Greg KH, I'd like to
+> once again propose moving brcm80211 out of staging and into mainline.
+> 
+> I've put together a patch to add a copy of the current sources from
+> staging-next into drivers/net/wireless/brcm80211 of the wireless-next
+> repository.
+> 
+> The patch is somewhat large, so I've posted the patch at:
+> 
+> http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=view&target=0001-net-wireless-add-brcm80211-drivers-v3.patch
+
+Feel free to complain, but I plan to merge this in time for the merge
+window unless someone identifies a true "showstopper" problem with
+this patch in the next day or so.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
