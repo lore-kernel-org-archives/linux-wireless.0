@@ -1,40 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:34168 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750820Ab1JZTDX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 15:03:23 -0400
-Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p9QJ3MUG004031
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 12:03:23 -0700
-Message-ID: <4EA8597A.50609@candelatech.com> (sfid-20111026_210325_886708_85470263)
-Date: Wed, 26 Oct 2011 12:03:22 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:2288 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934694Ab1JENUo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Oct 2011 09:20:44 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 00/15] staging: brcm80211: cleanup fullmac structs and
+ softmac srom lookup
+Date: Wed, 5 Oct 2011 15:19:59 +0200
+Message-ID: <1317820814-7083-1-git-send-email-arend@broadcom.com> (sfid-20111005_152051_119733_697B05D9)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: a-MSDU question (bug in debugfs?)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This code from net/mac80211/debugfs_sta.c appears to say that
-if the IEEE80211_HT_CAP_MAX_AMSDU is set, we are at value 3839,
-but elsewhere on the web it appears the opposite.
+This series addresses more community feedback items received on mainline
+patch (v2) posted August 25, 2011. The driver structures in brcmfmac could
+do with some tidying and in the brcmsmac variables loaded from srom were
+accessed by string identifiers. This has been replaced by enumerated
+identifiers and the entries are stored in kernel standard linked list.
 
-Anyone know what is correct?  I'm having no good luck finding
-an official document about this...
+This series applies to staging-next and depends on the patch series posted
+on Oct 4, 2011 (see Message-ID below).
 
-                PRINT_HT_CAP((htc->cap & BIT(11)), "Max AMSDU length: "
-                              "3839 bytes");
-                 PRINT_HT_CAP(!(htc->cap & BIT(11)), "Max AMSDU length: "
-                              "7935 bytes");
+Message-ID: <1317763152-17607-1-git-send-email-arend@broadcom.com>
 
-Thanks,
-Ben
+Arend van Spriel (11):
+  staging: brcm80211: move driver variable functions to srom.c
+  staging: brcm80211: remove code duplication for driver variable
+    lookup
+  staging: brcm80211: change parameter in driver variable lookup
+  staging: brcm80211: remove locking macro definitions
+  staging: brcm80211: fix thread blocking issue in
+    brcmf_sdbrcm_bus_stop()
+  staging: brcm80211: remove invalid variable lookup from srom
+  staging: brcm80211: use identifiers instead of string for srom lookup
+  staging: brcm80211: use enum identifiers in srom variable tables
+  staging: brcm80211: replace string based variable storage by linked
+    list
+  staging: brcm80211: remove parameter 'off' from _initvars_srom_pci()
+  staging: brcm80211: cleanup driver variable references
+
+Franky Lin (4):
+  staging: brcm80211: remove threads_only code from fullmac
+  staging: brcm80211: remove redundant bus register layer from fullmac
+  staging: brcm80211: clean up struct brcmf_if in fullmac
+  staging: brcm80211: remove brcmf_op_if from fullmac
+
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |   10 -
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   16 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c    |  134 +--
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |  133 +--
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    4 -
+ drivers/staging/brcm80211/brcmsmac/aiutils.c      |   32 +-
+ drivers/staging/brcm80211/brcmsmac/aiutils.h      |    6 +-
+ drivers/staging/brcm80211/brcmsmac/antsel.c       |   15 +-
+ drivers/staging/brcm80211/brcmsmac/channel.c      |    2 +-
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c  |  157 ++--
+ drivers/staging/brcm80211/brcmsmac/main.c         |  144 +---
+ drivers/staging/brcm80211/brcmsmac/main.h         |    5 -
+ drivers/staging/brcm80211/brcmsmac/nicpci.c       |    5 +-
+ drivers/staging/brcm80211/brcmsmac/nicpci.h       |    2 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c  |   42 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h  |    4 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_int.h  |    7 -
+ drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c  |   64 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_n.c    |  330 ++++--
+ drivers/staging/brcm80211/brcmsmac/phy_shim.c     |    9 +
+ drivers/staging/brcm80211/brcmsmac/phy_shim.h     |    4 +
+ drivers/staging/brcm80211/brcmsmac/pub.h          |  263 +++++-
+ drivers/staging/brcm80211/brcmsmac/srom.c         | 1124 +++++++++++----------
+ drivers/staging/brcm80211/brcmsmac/srom.h         |    4 +-
+ drivers/staging/brcm80211/brcmsmac/stf.c          |    4 +-
+ 25 files changed, 1342 insertions(+), 1178 deletions(-)
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.4.1
+
 
