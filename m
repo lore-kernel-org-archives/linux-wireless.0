@@ -1,189 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2288 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934694Ab1JENUa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 09:20:30 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 15/15] staging: brcm80211: remove brcmf_op_if from
- fullmac
-Date: Wed, 5 Oct 2011 15:20:14 +0200
-Message-ID: <1317820814-7083-16-git-send-email-arend@broadcom.com> (sfid-20111005_152035_462416_5AA5F862)
-In-Reply-To: <1317820814-7083-1-git-send-email-arend@broadcom.com>
-References: <1317820814-7083-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:35975 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934241Ab1JEJ4O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Oct 2011 05:56:14 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 28so1405752eya.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:56:13 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 18/29] wl12xx: move session_counter into wlvif
+Date: Wed,  5 Oct 2011 11:55:55 +0200
+Message-Id: <1317808566-18857-19-git-send-email-eliad@wizery.com> (sfid-20111005_115619_047054_2A5D0B54)
+In-Reply-To: <1317808566-18857-1-git-send-email-eliad@wizery.com>
+References: <1317808566-18857-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+move session_counter into the per-interface data, rather than
+being global.
 
-Absorb related code into brcmf_add_if/brcmf_del_if. This is part
-of the net device interface clean up.
-
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c |  120 ++++++++++--------------
- 1 files changed, 50 insertions(+), 70 deletions(-)
+ drivers/net/wireless/wl12xx/cmd.c     |   15 ++++++++-------
+ drivers/net/wireless/wl12xx/debugfs.c |    1 -
+ drivers/net/wireless/wl12xx/main.c    |    2 --
+ drivers/net/wireless/wl12xx/tx.c      |    6 +++---
+ drivers/net/wireless/wl12xx/wl12xx.h  |    9 +++++----
+ 5 files changed, 16 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index b0202b7..99ba5e3 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -282,74 +282,6 @@ _brcmf_set_mac_address(struct work_struct *work)
- 	return;
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index e6e3717..c827759 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -454,14 +454,15 @@ static void wl12xx_free_link(struct wl1271 *wl, u8 *hlid)
+ 	*hlid = WL12XX_INVALID_LINK_ID;
  }
  
--/* Virtual interfaces only ((ifp && ifp->info && ifp->idx == true) */
--static void brcmf_op_if(struct brcmf_if *ifp)
--{
--	struct brcmf_info *drvr_priv;
--	int ret = 0, err = 0;
--
--	drvr_priv = ifp->info;
--
--	brcmf_dbg(TRACE, "idx %d, state %d\n", ifp->idx, ifp->state);
--
--	switch (ifp->state) {
--	case BRCMF_E_IF_ADD:
--		/*
--		 * Delete the existing interface before overwriting it
--		 * in case we missed the BRCMF_E_IF_DEL event.
--		 */
--		if (ifp->ndev != NULL) {
--			brcmf_dbg(ERROR, "ERROR: netdev:%s already exists, try free & unregister\n",
--				  ifp->ndev->name);
--			netif_stop_queue(ifp->ndev);
--			unregister_netdev(ifp->ndev);
--			free_netdev(ifp->ndev);
--		}
--		/* Allocate netdev, including space for private structure */
--		ifp->ndev = alloc_netdev(sizeof(drvr_priv), "wlan%d",
--					 ether_setup);
--		if (!ifp->ndev) {
--			brcmf_dbg(ERROR, "OOM - alloc_netdev\n");
--			ret = -ENOMEM;
--		}
--		if (ret == 0) {
--			memcpy(netdev_priv(ifp->ndev), &drvr_priv,
--			       sizeof(drvr_priv));
--			err = brcmf_net_attach(&drvr_priv->pub, ifp->idx);
--			if (err != 0) {
--				brcmf_dbg(ERROR, "brcmf_net_attach failed, err %d\n",
--					  err);
--				ret = -EOPNOTSUPP;
--			} else {
--				brcmf_dbg(TRACE, " ==== pid:%x, net_device for if:%s created ===\n",
--					  current->pid, ifp->ndev->name);
--				ifp->state = 0;
--			}
--		}
--		break;
--	case BRCMF_E_IF_DEL:
--		if (ifp->ndev != NULL) {
--			brcmf_dbg(TRACE, "got 'WLC_E_IF_DEL' state\n");
--			netif_stop_queue(ifp->ndev);
--			unregister_netdev(ifp->ndev);
--			ret = BRCMF_DEL_IF;	/* Make sure the free_netdev()
--							 is called */
--		}
--		break;
--	default:
--		brcmf_dbg(ERROR, "bad op %d\n", ifp->state);
--		break;
--	}
--
--	if (ret < 0) {
--		if (ifp->ndev)
--			free_netdev(ifp->ndev);
--
--		drvr_priv->iflist[ifp->idx] = NULL;
--		kfree(ifp);
--	}
--}
--
- static int brcmf_netdev_set_mac_address(struct net_device *ndev, void *addr)
+-static int wl12xx_get_new_session_id(struct wl1271 *wl)
++static int wl12xx_get_new_session_id(struct wl1271 *wl,
++				     struct wl12xx_vif *wlvif)
  {
- 	struct brcmf_info *drvr_priv = *(struct brcmf_info **)
-@@ -964,6 +896,7 @@ brcmf_add_if(struct brcmf_info *drvr_priv, int ifidx, struct net_device *ndev,
- 	     char *name, u8 *mac_addr, u32 flags, u8 bssidx)
- {
- 	struct brcmf_if *ifp;
-+	int ret = 0, err = 0;
+-	if (wl->session_counter >= SESSION_COUNTER_MAX)
+-		wl->session_counter = 0;
++	if (wlvif->session_counter >= SESSION_COUNTER_MAX)
++		wlvif->session_counter = 0;
  
- 	brcmf_dbg(TRACE, "idx %d, handle->%p\n", ifidx, ndev);
+-	wl->session_counter++;
++	wlvif->session_counter++;
  
-@@ -983,7 +916,48 @@ brcmf_add_if(struct brcmf_info *drvr_priv, int ifidx, struct net_device *ndev,
- 	if (ndev == NULL) {
- 		ifp->state = BRCMF_E_IF_ADD;
- 		ifp->idx = ifidx;
--		brcmf_op_if(ifp);
-+		/*
-+		 * Delete the existing interface before overwriting it
-+		 * in case we missed the BRCMF_E_IF_DEL event.
-+		 */
-+		if (ifp->ndev != NULL) {
-+			brcmf_dbg(ERROR, "ERROR: netdev:%s already exists, try free & unregister\n",
-+				  ifp->ndev->name);
-+			netif_stop_queue(ifp->ndev);
-+			unregister_netdev(ifp->ndev);
-+			free_netdev(ifp->ndev);
-+		}
-+
-+		/* Allocate netdev, including space for private structure */
-+		ifp->ndev = alloc_netdev(sizeof(drvr_priv), "wlan%d",
-+					 ether_setup);
-+		if (!ifp->ndev) {
-+			brcmf_dbg(ERROR, "OOM - alloc_netdev\n");
-+			ret = -ENOMEM;
-+		}
-+
-+		if (ret == 0) {
-+			memcpy(netdev_priv(ifp->ndev), &drvr_priv,
-+			       sizeof(drvr_priv));
-+			err = brcmf_net_attach(&drvr_priv->pub, ifp->idx);
-+			if (err != 0) {
-+				brcmf_dbg(ERROR, "brcmf_net_attach failed, err %d\n",
-+					  err);
-+				ret = -EOPNOTSUPP;
-+			} else {
-+				brcmf_dbg(TRACE, " ==== pid:%x, net_device for if:%s created ===\n",
-+					  current->pid, ifp->ndev->name);
-+				ifp->state = 0;
-+			}
-+		}
-+
-+		if (ret < 0) {
-+			if (ifp->ndev)
-+				free_netdev(ifp->ndev);
-+
-+			drvr_priv->iflist[ifp->idx] = NULL;
-+			kfree(ifp);
-+		}
- 	} else
- 		ifp->ndev = ndev;
- 
-@@ -1004,7 +978,13 @@ void brcmf_del_if(struct brcmf_info *drvr_priv, int ifidx)
- 
- 	ifp->state = BRCMF_E_IF_DEL;
- 	ifp->idx = ifidx;
--	brcmf_op_if(ifp);
-+	if (ifp->ndev != NULL) {
-+		netif_stop_queue(ifp->ndev);
-+		unregister_netdev(ifp->ndev);
-+		free_netdev(ifp->ndev);
-+		drvr_priv->iflist[ifidx] = NULL;
-+		kfree(ifp);
-+	}
+-	return wl->session_counter;
++	return wlvif->session_counter;
  }
  
- struct brcmf_pub *brcmf_attach(struct brcmf_bus *bus, uint bus_hdrlen)
+ int wl12xx_cmd_role_start_dev(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+@@ -488,7 +489,7 @@ int wl12xx_cmd_role_start_dev(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 			goto out_free;
+ 	}
+ 	cmd->device.hlid = wl->dev_hlid;
+-	cmd->device.session = wl->session_counter;
++	cmd->device.session = wlvif->session_counter;
+ 
+ 	wl1271_debug(DEBUG_CMD, "role start: roleid=%d, hlid=%d, session=%d",
+ 		     cmd->role_id, cmd->device.hlid, cmd->device.session);
+@@ -587,7 +588,7 @@ int wl12xx_cmd_role_start_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 			goto out_free;
+ 	}
+ 	cmd->sta.hlid = wlvif->sta.hlid;
+-	cmd->sta.session = wl12xx_get_new_session_id(wl);
++	cmd->sta.session = wl12xx_get_new_session_id(wl, wlvif);
+ 	cmd->sta.remote_rates = cpu_to_le32(wlvif->rate_set);
+ 
+ 	wl1271_debug(DEBUG_CMD, "role start: roleid=%d, hlid=%d, session=%d "
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index 3309fea..d8d8568 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -348,7 +348,6 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+ 	DRIVER_STATE_PRINT_INT(tx_blocks_freed);
+ 	DRIVER_STATE_PRINT_INT(tx_security_last_seq_lsb);
+ 	DRIVER_STATE_PRINT_INT(rx_counter);
+-	DRIVER_STATE_PRINT_INT(session_counter);
+ 	DRIVER_STATE_PRINT_INT(state);
+ 	DRIVER_STATE_PRINT_INT(channel);
+ 	DRIVER_STATE_PRINT_INT(band);
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index f1358b3..8743885 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2128,7 +2128,6 @@ deinit:
+ 	wl->tx_results_count = 0;
+ 	wl->tx_packets_count = 0;
+ 	wl->time_offset = 0;
+-	wl->session_counter = 0;
+ 	wl->bitrate_masks[IEEE80211_BAND_2GHZ] = wl->conf.tx.basic_rate;
+ 	wl->bitrate_masks[IEEE80211_BAND_5GHZ] = wl->conf.tx.basic_rate_5;
+ 	wl->vif = NULL;
+@@ -4855,7 +4854,6 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
+ 	wl->system_hlid = WL12XX_SYSTEM_HLID;
+ 	wl->dev_hlid = WL12XX_INVALID_LINK_ID;
+-	wl->session_counter = 0;
+ 	wl->active_sta_count = 0;
+ 	setup_timer(&wl->rx_streaming_timer, wl1271_rx_streaming_timer,
+ 		    (unsigned long) wl);
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 53c6451..da8427f 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -321,15 +321,15 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct ieee80211_vif *vif,
+ 		 * FW expects the dummy packet to have an invalid session id -
+ 		 * any session id that is different than the one set in the join
+ 		 */
+-		tx_attr = ((~wl->session_counter) <<
++		tx_attr = (SESSION_COUNTER_INVALID <<
+ 			   TX_HW_ATTR_OFST_SESSION_COUNTER) &
+ 			   TX_HW_ATTR_SESSION_COUNTER;
+ 
+ 		tx_attr |= TX_HW_ATTR_TX_DUMMY_REQ;
+ 	} else {
+ 		/* configure the tx attributes */
+-		tx_attr =
+-			wl->session_counter << TX_HW_ATTR_OFST_SESSION_COUNTER;
++		tx_attr = wlvif->session_counter <<
++			  TX_HW_ATTR_OFST_SESSION_COUNTER;
+ 	}
+ 
+ 	desc->hlid = hlid;
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 91d666f..10b45f7 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -428,9 +428,6 @@ struct wl1271 {
+ 	/* Time-offset between host and chipset clocks */
+ 	s64 time_offset;
+ 
+-	/* Session counter for the chipset */
+-	int session_counter;
+-
+ 	/* Frames scheduled for transmission, not handled yet */
+ 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
+ 	int tx_queue_count[NUM_TX_QUEUES];
+@@ -649,6 +646,9 @@ struct wl12xx_vif {
+ 
+ 	/* Our association ID */
+ 	u16 aid;
++
++	/* Session counter for the chipset */
++	int session_counter;
+ };
+ 
+ static inline struct wl12xx_vif *wl12xx_vif_to_data(struct ieee80211_vif *vif)
+@@ -670,7 +670,8 @@ size_t wl12xx_copy_fwlog(struct wl1271 *wl, u8 *memblock, size_t maxlen);
+ 
+ #define JOIN_TIMEOUT 5000 /* 5000 milliseconds to join */
+ 
+-#define SESSION_COUNTER_MAX 7 /* maximum value for the session counter */
++#define SESSION_COUNTER_MAX 6 /* maximum value for the session counter */
++#define SESSION_COUNTER_INVALID 7 /* used with dummy_packet */
+ 
+ #define WL1271_DEFAULT_POWER_LEVEL 0
+ 
 -- 
-1.7.4.1
-
+1.7.6.401.g6a319
 
