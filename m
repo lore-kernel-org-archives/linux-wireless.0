@@ -1,76 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:45024 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750775Ab1JHX35 convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1866 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934365Ab1JENEL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Oct 2011 19:29:57 -0400
-Received: by qadb15 with SMTP id b15so3357146qad.19
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Oct 2011 16:29:56 -0700 (PDT)
+	Wed, 5 Oct 2011 09:04:11 -0400
+Date: Wed, 5 Oct 2011 08:33:24 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch] ath5k: remove some unneeded error handling code
+Message-ID: <20111005123324.GB3662@hash.lan> (sfid-20111005_150416_334789_9A58524C)
+References: <20111005054637.GA32077@elgon.mountain>
 MIME-Version: 1.0
-In-Reply-To: <4E907FB8.1040101@lwfinger.net>
-References: <4E77F631.3030202@googlemail.com> <4E77F9FD.1020204@googlemail.com>
- <4E780309.9010601@lwfinger.net> <4E785DB3.5040109@googlemail.com>
- <4E7907D3.1020606@googlemail.com> <4E792994.1080809@lwfinger.net>
- <4E79B1D0.7090602@googlemail.com> <4E79F87F.1050402@lwfinger.net>
- <4E7A38D0.7070304@googlemail.com> <4E7A4310.30106@lwfinger.net>
- <4E7A48D1.8050009@googlemail.com> <4E7A4B03.4070006@lwfinger.net>
- <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com>
- <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org>
- <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org>
- <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net>
- <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 9 Oct 2011 01:29:34 +0200
-Message-ID: <CA+XFjio+on2rUymoSZNxOWKMX9xOn5hutA6q01r0yBeOXz0ivw@mail.gmail.com> (sfid-20111009_013011_690198_3C9FC00E)
-Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Toddy <toddy@fishpost.de>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111005054637.GA32077@elgon.mountain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 8, 2011 at 6:52 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 10/08/2011 11:24 AM, Toddy wrote:
->>
->> Hello Larry,
->>
->> thanks for the quick reply! Yes I know this version is a bit older, but
->> when I
->> use the newest compat-wireless (eg.
->>
->> http://www.orbit-lab.org/kernel/compat-wireless-2.6/compat-wireless-2011-10-07.tar.bz2)
->> the driver loads but some features like monitor-mode and packet injection
->> doesn't work. The listing of available networks (with airodump) doesn't
->> work
->> too. Usually I have 13 channels because I live in Germany but if I use the
->> newest driver I have only 11 channels. But if I use the older
->> compat-wireless
->> package all works fine.
->
-> The difference between 11 and 13 channels depends on your CRDA settings. Do
-> you have that package installed? Check the output of dmesg to see what
-> domain is being set. If you have CRDA installed, then you can force the use
-> of Germany in the domain by creating a file named
-> /etc/modprobe.d/50-cfg80211.conf containing a single line with "options
-> cfg80211 ieee80211_regdom=DE" (without the quote marks).
->
-> You can get a list of available networks using iwconfig or iw. I know those
-> work.
->
-> As I do not test, support, nor condone packet injection, I cannot speak to
-> it working on any driver.
+On Wed, Oct 05, 2011 at 08:46:37AM +0300, Dan Carpenter wrote:
+> th5k_hw_setup_tx_queue() returns a valid offset into the ah->ah_txq[]
 
-Well, packet injection is required for Hostapd to work.
+ath5k_....
 
->
-> Larry
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> array.  The ah->ah_txq[] and the ah->txqs[] array are the same size.
+> Both have AR5K_NUM_TX_QUEUES elements.  So this error handling code
+> will never trigger.
 
+This originally came from the HAL.  I concur that this code will not
+be executed, since the enum from which ath5k_hw_setup_tx_queue() selects
+qnum has all elements less than AR5K_NUM_TX_QUEUES, which in turn is equal
+to ARRAY_SIZE(ah->txqs).  ath5k_hw_setup_tx_queue() already uses qnum in
+a memset of a same-sized array (ah->txq).
 
+> Also it's wrong.  The call to ath5k_hw_release_tx_queue() with a qnum
+> of AR5K_NUM_TX_QUEUES or more will just trigger a WARN_ON() and
+> return.  Or if it missed the WARN_ON(), it would just corrupt some
+> memory and return.
+
+"corrupt memory and return" sounds undeserving of the adverb 'just' :)
+I guess you are trying to say that it should not have called
+ath5k_hw_release_tx_queue() but I read this comment as saying the
+ATH5K_ERR() was superfluous?
+
+ath5k_hw_release_tx_queue() compares against the queue capabilities
+instead of AR5K_NUM_TX_QUEUES, so there's extra potential for the
+"just corrupt memory and return" case -- but since those are also
+initialized to AR5K_NUM_TX_QUEUES{,_NO_QCU}, that case won't happen
+either.
+
+All that to say the patch is fine, but the patch description didn't
+convince me so I double-checked.  My comments above reflect how I
+might have worded it.
+
+Thanks for the patch!
+
+Reviewed-by: Bob Copeland <me@bobcopeland.com>
+
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index e9ea38d..b346d04 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -921,12 +921,6 @@ ath5k_txq_setup(struct ath5k_hw *ah,
+>  		 */
+>  		return ERR_PTR(qnum);
+>  	}
+> -	if (qnum >= ARRAY_SIZE(ah->txqs)) {
+> -		ATH5K_ERR(ah, "hw qnum %u out of range, max %tu!\n",
+> -			qnum, ARRAY_SIZE(ah->txqs));
+> -		ath5k_hw_release_tx_queue(ah, qnum);
+> -		return ERR_PTR(-EINVAL);
+> -	}
+>  	txq = &ah->txqs[qnum];
+>  	if (!txq->setup) {
+>  		txq->qnum = qnum;
+> 
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Bob Copeland %% www.bobcopeland.com
+
