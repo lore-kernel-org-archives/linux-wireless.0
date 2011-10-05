@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:56027 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752649Ab1JQHws convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:48009 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753436Ab1JEAmX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Oct 2011 03:52:48 -0400
-From: Toralf =?iso-8859-1?q?F=F6rster?= <toralf.foerster@gmx.de>
-To: David Rientjes <rientjes@google.com>
-Subject: Re: 3.1.0-rc9+ : wlan stops working w/o any error messages
-Date: Mon, 17 Oct 2011 09:52:43 +0200
-Cc: werner <w.landgraf@ru.ru>, "Wey-Yi Guy" <wey-yi.w.guy@intel.com>,
-	ilw@linux.intel.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <201110152119.58509.toralf.foerster@gmx.de> <alpine.DEB.2.00.1110151416360.15894@chino.kir.corp.google.com> <201110170931.59534.toralf.foerster@gmx.de>
-In-Reply-To: <201110170931.59534.toralf.foerster@gmx.de>
+	Tue, 4 Oct 2011 20:42:23 -0400
+Received: by qadb15 with SMTP id b15so844624qad.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 17:42:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201110170952.43916.toralf.foerster@gmx.de> (sfid-20111017_095253_430111_13A2F382)
+In-Reply-To: <1317726707-23497-3-git-send-email-hauke@hauke-m.de>
+References: <1317726707-23497-1-git-send-email-hauke@hauke-m.de> <1317726707-23497-3-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 4 Oct 2011 17:42:02 -0700
+Message-ID: <CAB=NE6WFVnu+MB7uh_Np=Z6E93b75dZLVa9xcjwx8a25qbJFJQ@mail.gmail.com> (sfid-20111005_024228_258568_2018B5C7)
+Subject: Re: [PATCH 3/3] compat: add linux/of.h just when CONFIG_OF is set.
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Oct 4, 2011 at 4:11 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> In kernel < 2.6.34 linux/of.h unconditionally includes asm/prom.h which
+> is not available on all architectures. In newer kernel versions this is
+> just included if CONFIG_OF is set. For these old kernel just include
+> linux/of.h when CONFIG_OF is set. This fixes a compile problem with
+> ath6kl as it uses linux/of.h only when CONFIG_OF is set.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Toralf Förster wrote at 09:31:58
-> > What does "iwconfig" show?
+Applied and pushed all 5 patches, thanks!
 
-And this is the state if the netwerk stops working :
-
-wlan0     IEEE 802.11abgn  ESSID:"IBM"  
-          Mode:Managed  Frequency:2.462 GHz  Access Point: 00:21:55:AC:8B:80   
-          Bit Rate=54 Mb/s   Tx-Power=15 dBm   
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:off
-          Link Quality=45/70  Signal level=-65 dBm  
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:77   Missed beacon:0
-
-
--- 
-MfG/Sincerely
-Toralf Förster
-pgp finger print: 7B1A 07F4 EC82 0F90 D4C2 8936 872A E508 7DB6 9DA3
+  Luis
