@@ -1,188 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:62854 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752889Ab1JJINS (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:54156 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934801Ab1JEWai convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 04:13:18 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 22so8786663wwf.1
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 01:13:17 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 24/29] wl12xx: make op_config configure all vifs
-Date: Mon, 10 Oct 2011 10:13:12 +0200
-Message-Id: <1318234397-21081-25-git-send-email-eliad@wizery.com> (sfid-20111010_101324_468739_A3BAAFF4)
-In-Reply-To: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+	Wed, 5 Oct 2011 18:30:38 -0400
+Received: by qadb15 with SMTP id b15so1629041qad.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 15:30:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4E8B157F.2080203@neratec.com>
+References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com>
+ <201110032124.53937.chunkeey@googlemail.com> <CAB=NE6XBkisvFmj6F7wS6i8XV7WEsM6bQ5zsXFWXm9XM8z0pwA@mail.gmail.com>
+ <201110041538.12885.chunkeey@googlemail.com> <4E8B157F.2080203@neratec.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Wed, 5 Oct 2011 15:30:18 -0700
+Message-ID: <CAB=NE6V4jBiGo4Od4SRPiHJembYw9JGAnBed_2w=1Y1k4_Jd_g@mail.gmail.com> (sfid-20111006_003042_519097_C423DBAF)
+Subject: Re: [RFC 5/6] ath9k: enable DFS pulse detection
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kgiori@qca.qualcomm.com, nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When mac80211 changes a global (hw) config, iterate
-through all the relevant vifs and update them.
+On Tue, Oct 4, 2011 at 7:17 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+> On 10/04/2011 03:38 PM, Christian Lamparter wrote:
+>> On Monday, October 03, 2011 09:31:12 PM Luis R. Rodriguez wrote:
+>>> On Mon, Oct 3, 2011 at 12:24 PM, Christian Lamparter
+>>> <chunkeey@googlemail.com> wrote:
+>>>> On Monday, October 03, 2011 08:27:39 PM Luis R. Rodriguez wrote:
+>>>>> On Mon, Oct 3, 2011 at 3:29 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+>>>>>>
+>>>>>> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+>>>>>> ---
+>>>>>>  drivers/net/wireless/ath/ath9k/main.c |   12 ++++++++++++
+>>>>>>  1 files changed, 12 insertions(+), 0 deletions(-)
+>>>>>>
+>>>>>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>>>>>> index e8aeb98..5defebe 100644
+>>>>>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>>>>>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>>>>>> @@ -344,6 +344,18 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
+>>>>>>                        "Unable to reset channel, reset status %d\n", r);
+>>>>>>                goto out;
+>>>>>>        }
+>>>>>> +#ifdef CONFIG_ATH9K_DFS
+>>>>>
+>>>>> Please spare the #ifdef and just call something within dfs.c, then
+>>>>> dfs.h would wrap it to nothing if DFS is disabled.
+>>>> Why would anyone want to disable DFS driver support?
+>>>> I would say: drop the ifdefs altogether since DFS
+>>>> is and will be "required".
+>>>
+>>> Because DFS requires to be properly tested before being enabled.
+>> Testing if a driver detects a pulse is "trivial" compared to the
+>> stuff mac80211/cfg80211 and hostapd will have to do to make a
+>> channel-change as smooth as possible. I think if there's a DFS
+>> "OFF" switch, it should be in hostapd and I hope more people
+>> agree on this one.
+>>
+> Yes on both. Work on the management part of the DFS module has just been started by TI guys. When this is in, hostapd will be able to query the driver's DFS detection capabilities and leave DFS channels disabled for those devices with no (or insufficient) support (like it is generally done today for DFS channels).
+>
+> The proper way for a driver's OFF switch would then be to just announce missing DFS capabilities.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |  112 +++++++++++++++++++----------------
- 1 files changed, 61 insertions(+), 51 deletions(-)
+And this is what I meant by leaving a kernel build option available
+for each driver to enable/disable DFS. If a vendor does not want to
+deal with the question of enabling DFS they can disable it on the
+driver front.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index c8b5290..43cd276 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2398,63 +2398,20 @@ out:
- 	return ret;
- }
- 
--static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
-+static int wl12xx_config_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+			     struct ieee80211_conf *conf, u32 changed)
- {
--	struct wl1271 *wl = hw->priv;
--	struct ieee80211_vif *vif = wl->vif; /* TODO: reconfig all vifs */
--	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
--	struct ieee80211_conf *conf = &hw->conf;
--	int channel, ret = 0;
--	bool is_ap;
-+	bool is_ap = (wlvif->bss_type == BSS_TYPE_AP_BSS);
-+	int channel, ret;
- 
- 	channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
- 
--	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d %s"
--		     " changed 0x%x",
--		     channel,
--		     conf->flags & IEEE80211_CONF_PS ? "on" : "off",
--		     conf->power_level,
--		     conf->flags & IEEE80211_CONF_IDLE ? "idle" : "in use",
--			 changed);
--
--	/*
--	 * mac80211 will go to idle nearly immediately after transmitting some
--	 * frames, such as the deauth. To make sure those frames reach the air,
--	 * wait here until the TX queue is fully flushed.
--	 */
--	if ((changed & IEEE80211_CONF_CHANGE_IDLE) &&
--	    (conf->flags & IEEE80211_CONF_IDLE))
--		wl1271_tx_flush(wl);
--
--	mutex_lock(&wl->mutex);
--
--	if (unlikely(wl->state == WL1271_STATE_OFF)) {
--		/* we support configuring the channel and band while off */
--		if ((changed & IEEE80211_CONF_CHANGE_CHANNEL)) {
--			wl->band = conf->channel->band;
--			wl->channel = channel;
--		}
--
--		if ((changed & IEEE80211_CONF_CHANGE_POWER))
--			wl->power_level = conf->power_level;
--
--		goto out;
--	}
--
--	is_ap = (wlvif->bss_type == BSS_TYPE_AP_BSS);
--
--	ret = wl1271_ps_elp_wakeup(wl);
--	if (ret < 0)
--		goto out;
--
- 	/* if the channel changes while joined, join again */
- 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL &&
- 	    ((wlvif->band != conf->channel->band) ||
- 	     (wlvif->channel != channel))) {
- 		/* send all pending packets */
- 		wl1271_tx_work_locked(wl);
--		wl->band = conf->channel->band;
--		wl->channel = channel;
- 		wlvif->band = conf->channel->band;
- 		wlvif->channel = channel;
- 
-@@ -2483,7 +2440,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 					ret = wl12xx_croc(wl,
- 							  wlvif->dev_role_id);
- 					if (ret < 0)
--						goto out_sleep;
-+						return ret;
- 				}
- 				ret = wl1271_join(wl, wlvif, false);
- 				if (ret < 0)
-@@ -2500,7 +2457,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 					ret = wl12xx_croc(wl,
- 							  wlvif->dev_role_id);
- 					if (ret < 0)
--						goto out_sleep;
-+						return ret;
- 
- 					ret = wl12xx_roc(wl, wlvif,
- 							 wlvif->dev_role_id);
-@@ -2556,12 +2513,65 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 	if (conf->power_level != wlvif->power_level) {
- 		ret = wl1271_acx_tx_power(wl, wlvif, conf->power_level);
- 		if (ret < 0)
--			goto out_sleep;
-+			return ret;
- 
--		wl->power_level = conf->power_level;
- 		wlvif->power_level = conf->power_level;
- 	}
- 
-+	return 0;
-+}
-+
-+static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	struct wl12xx_vif *wlvif;
-+	struct ieee80211_conf *conf = &hw->conf;
-+	int channel, ret = 0;
-+
-+	channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
-+
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d %s"
-+		     " changed 0x%x",
-+		     channel,
-+		     conf->flags & IEEE80211_CONF_PS ? "on" : "off",
-+		     conf->power_level,
-+		     conf->flags & IEEE80211_CONF_IDLE ? "idle" : "in use",
-+			 changed);
-+
-+	/*
-+	 * mac80211 will go to idle nearly immediately after transmitting some
-+	 * frames, such as the deauth. To make sure those frames reach the air,
-+	 * wait here until the TX queue is fully flushed.
-+	 */
-+	if ((changed & IEEE80211_CONF_CHANGE_IDLE) &&
-+	    (conf->flags & IEEE80211_CONF_IDLE))
-+		wl1271_tx_flush(wl);
-+
-+	mutex_lock(&wl->mutex);
-+
-+	/* we support configuring the channel and band even while off */
-+	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
-+		wl->band = conf->channel->band;
-+		wl->channel = channel;
-+	}
-+
-+	if (changed & IEEE80211_CONF_CHANGE_POWER)
-+		wl->power_level = conf->power_level;
-+
-+	if (unlikely(wl->state == WL1271_STATE_OFF))
-+		goto out;
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	/* configure each interface */
-+	wl12xx_for_each_wlvif(wl, wlvif) {
-+		ret = wl12xx_config_vif(wl, wlvif, conf, changed);
-+		if (ret < 0)
-+			goto out_sleep;
-+	}
-+
- out_sleep:
- 	wl1271_ps_elp_sleep(wl);
- 
--- 
-1.7.6.401.g6a319
+>>> You may also want to simply disable DFS if you do not want to
+>>> deal with the regulatory test implications of having it enabled.
+>> AFAIK you can't "simply" disable the DFS requirement: hostapd
+>> (hw_features.c), [cfg80211] (checks if tx on secondary channel
+>> is possible) and mac80211 (tx.c) all have checks. Indeed, the
+>> easiest way is to modify crda's database. So there's no need
+>> for an extra compile-time option.
+>>
+> There might be a demand for conditional compiling in addition to DFS capabilities announcements to reduce memory footprint, since (especially) pattern matching algorithms will increase it significantly.
 
+I doubt space considerations will be that much given that we don't
+even have build options to disable hardware families, at least nbd had
+determine already that separating families at build time wouldn't save
+us much. Given that -- I suspect using build size as an argument for
+introducing a flag here doesn't carry much weight. The argument I'm
+using is to simply enable integrators to decide whether or not to have
+to deal with testing such features.
+
+ Luis
