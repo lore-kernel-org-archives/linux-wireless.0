@@ -1,32 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33509 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754868Ab1JYHZh (ORCPT
+Received: from mailrelay.embarq.synacor.com ([208.47.184.3]:42785 "EHLO
+	mailrelay.embarq.synacor.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757417Ab1JEBLI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 03:25:37 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-Reply-To: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@adurom.com>, Guy Eilam <guy@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] nl80211: Add probe response offload attribute
-References: <1319313081-28722-1-git-send-email-guy@wizery.com>
-	  <87zkgpbnpx.fsf@purkki.adurom.net>
-In-Reply-To: <87zkgpbnpx.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=utf-8
-Date: Tue, 25 Oct 2011 09:25:24 +0200
-Message-Id: <1319527524.7461.2.camel@Nokia-N900-51-1> (sfid-20111025_092548_506015_1F346187)
-Mime-Version: 1.0
+	Tue, 4 Oct 2011 21:11:08 -0400
+Message-ID: <3b4ddb232a2c884c0d83ee5fe1754932.squirrel@mail.errtech.com> (sfid-20111005_031112_709068_32C6B762)
+Date: Tue, 4 Oct 2011 21:11:08 -0400
+Subject: Carl9170 firmware source code /w kernel.org down
+From: "chris" <tmail133@kglug.org>
+To: linux-wireless@vger.kernel.org
+Reply-To: tmail133@kglug.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > +enum nl80211_probe_resp_offload_support_attr {
-> > +    NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WSC =    1<<0,
-> > +    NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WSC2 =    1<<1,
-> > +    NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P =    1<<2,
-> > +};
-> 
-> Maybe BIT() macro (like below) would be better for consistency?
+How can I get the source code for the Carl9170 firmware and drive with
+kernel.org being down?
 
-No, this header is userspace visible, so BIT isn't easily available.
+The wiki says:
 
-johannes
+You can get the firmware source code from
+http://git.kernel.org/?p=linux/kernel/git/chr/carl9170fw.git.
+
