@@ -1,76 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42523 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750942Ab1JKMjY convert rfc822-to-8bit (ORCPT
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:47667 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934139Ab1JEJXV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 08:39:24 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 11 Oct 2011 14:38:52 +0200
-Subject: RE: [PATCH 17/34] iwlagn: fix a race in the unmapping of the TFDs
-Message-ID: <4825B8A2C4E264489E57869F0DCFB2234457A944F2@hasmsx502.ger.corp.intel.com> (sfid-20111011_143926_524096_AF5934DC)
-References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
- <1318256839-31837-18-git-send-email-wey-yi.w.guy@intel.com>
- <20111011122216.GA2218@redhat.com>
- <4825B8A2C4E264489E57869F0DCFB2234457A944D0@hasmsx502.ger.corp.intel.com>
- <20111011123630.GB2218@redhat.com>
-In-Reply-To: <20111011123630.GB2218@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 5 Oct 2011 05:23:21 -0400
+Subject: [PATCH 2/6] ath6kl: fix struct host_app_area endian handling
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 05 Oct 2011 12:23:17 +0300
+Message-ID: <20111005092317.1095.3909.stgit@localhost6.localdomain6> (sfid-20111005_112324_819731_50653558)
+In-Reply-To: <20111005092305.1095.713.stgit@localhost6.localdomain6>
+References: <20111005092305.1095.713.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > > > While inspecting the code, I saw that iwl_tx_queue_unmap modifies
-> > > > the read pointer of the Tx queue without taking any locks. This means
-> > > > that it can race with the reclaim flow. This can possibly lead to
-> > > > a DMA warning complaining that we unmap the same buffer twice.
-> > > >
-> > > > This is more a W/A than a fix since it is really weird to take
-> > > > sta_lock inside iwl_tx_queue_unmap, but it can help until we revamp
-> > > > the locking model in the transport layer.
-> > > >
-> > > > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> > > > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > > > ---
-> > > >  drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    3 +++
-> > > >  1 files changed, 3 insertions(+), 0 deletions(-)
-> > > >
-> > > > diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-> > > b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-> > > > index 60067c7..f69aecb 100644
-> > > > --- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-> > > > +++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-> > > > @@ -406,6 +406,7 @@ static void iwl_tx_queue_unmap(struct iwl_trans
-> > > *trans, int txq_id)
-> > > >  	struct iwl_tx_queue *txq = &trans_pcie->txq[txq_id];
-> > > >  	struct iwl_queue *q = &txq->q;
-> > > >  	enum dma_data_direction dma_dir;
-> > > > +	unsigned long flags;
-> > > >
-> > > >  	if (!q->n_bd)
-> > > >  		return;
-> > > > @@ -418,12 +419,14 @@ static void iwl_tx_queue_unmap(struct iwl_trans
-> > > *trans, int txq_id)
-> > > >  	else
-> > > >  		dma_dir = DMA_TO_DEVICE;
-> > > >
-> > > > +	spin_lock_irqsave(&trans->shrd->sta_lock, flags);
-> > > sta_lock does not look like right lock to use.
-> > >
-> > True. And I wrote in the commit message that this is a W/A until we
-> revamp the locking model.
-> 
-> Why not simply take hcmd_lock?
+It was missing endian annotation.
 
-Hcmd_lock is related to the host command queue only, it won't work for Tx queues.
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c |    2 +-
+ drivers/net/wireless/ath/ath6kl/wmi.h  |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index c1d2366..8466f3d 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -120,7 +120,7 @@ static int ath6kl_set_host_app_area(struct ath6kl *ar)
+ 		return -EIO;
+ 
+ 	address = TARG_VTOP(ar->target_type, data);
+-	host_app_area.wmi_protocol_ver = WMI_PROTOCOL_VERSION;
++	host_app_area.wmi_protocol_ver = cpu_to_le32(WMI_PROTOCOL_VERSION);
+ 	if (ath6kl_diag_write(ar, address, (u8 *) &host_app_area,
+ 			      sizeof(struct host_app_area)))
+ 		return -EIO;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 5166f05..96102c6 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -124,8 +124,8 @@ struct wmi {
+ };
+ 
+ struct host_app_area {
+-	u32 wmi_protocol_ver;
+-};
++	__le32 wmi_protocol_ver;
++} __packed;
+ 
+ enum wmi_msg_type {
+ 	DATA_MSGTYPE = 0x0,
 
