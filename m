@@ -1,87 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2464 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756006Ab1JYKNe (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:48103 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934218Ab1JEJ4C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 06:13:34 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
-	<athiruve@qca.qualcomm.com>
-Subject: [PATCH 23/34] ath6kl: Store hw mac address in struct ath6kl
-Date: Tue, 25 Oct 2011 15:40:19 +0530
-Message-ID: <1319537430-12459-24-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_121739_701297_6B22C7F5)
-In-Reply-To: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 5 Oct 2011 05:56:02 -0400
+Received: by gyg10 with SMTP id 10so1387199gyg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:56:02 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 12/29] wl12xx: move probereq into wlvif
+Date: Wed,  5 Oct 2011 11:55:49 +0200
+Message-Id: <1317808566-18857-13-git-send-email-eliad@wizery.com> (sfid-20111005_115605_462990_A46B3CF4)
+In-Reply-To: <1317808566-18857-1-git-send-email-eliad@wizery.com>
+References: <1317808566-18857-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WMI ready event gives the mac address, cache this
-mac address in struct ath6kl so that it can be used to
-compute the mac address for other vif in case of multi vif.
+move probereq into the per-interface data, rather than
+being global.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.h |    1 +
- drivers/net/wireless/ath/ath6kl/init.c |   12 ++++++++++--
- drivers/net/wireless/ath/ath6kl/main.c |    5 ++---
- 3 files changed, 13 insertions(+), 5 deletions(-)
+ drivers/net/wireless/wl12xx/main.c   |   11 ++++++-----
+ drivers/net/wireless/wl12xx/scan.c   |    2 +-
+ drivers/net/wireless/wl12xx/wl12xx.h |    6 +++---
+ 3 files changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index bc8364f..de4af5c 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -492,6 +492,7 @@ struct ath6kl {
- 	struct wireless_dev *wdev;
- 	enum wlan_low_pwr_state wlan_pwr_state;
- 	struct wmi_scan_params_cmd sc_params;
-+	u8 mac_addr[ETH_ALEN];
- #define AR_MCAST_FILTER_MAC_ADDR_SIZE  4
- 	struct {
- 		void *rx_report;
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 82fde65..9818a48 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1503,8 +1503,16 @@ static int ath6kl_init(struct ath6kl *ar)
- 	ar->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index c8acd33..3686109 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -3520,11 +3520,12 @@ sta_not_found:
+ 			/*
+ 			 * Get a template for hardware connection maintenance
+ 			 */
+-			dev_kfree_skb(wl->probereq);
+-			wl->probereq = wl1271_cmd_build_ap_probe_req(wl, NULL);
++			dev_kfree_skb(wlvif->probereq);
++			wlvif->probereq = wl1271_cmd_build_ap_probe_req(wl,
++									NULL);
+ 			ieoffset = offsetof(struct ieee80211_mgmt,
+ 					    u.probe_req.variable);
+-			wl1271_ssid_set(vif, wl->probereq, ieoffset);
++			wl1271_ssid_set(vif, wlvif->probereq, ieoffset);
  
- 	status = ath6kl_target_config_wlan_params(ar);
--	if (!status)
--		goto ath6kl_init_done;
-+	if (status)
-+		goto err_htc_stop;
+ 			/* enable the connection monitoring feature */
+ 			ret = wl1271_acx_conn_monit_params(wl, true);
+@@ -3541,8 +3542,8 @@ sta_not_found:
+ 			wl->aid = 0;
+ 
+ 			/* free probe-request template */
+-			dev_kfree_skb(wl->probereq);
+-			wl->probereq = NULL;
++			dev_kfree_skb(wlvif->probereq);
++			wlvif->probereq = NULL;
+ 
+ 			/* re-enable dynamic ps - just in case */
+ 			ieee80211_enable_dyn_ps(wl->vif);
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index 197d2c2..e3b863b 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -64,7 +64,7 @@ void wl1271_scan_complete_work(struct work_struct *work)
+ 
+ 	if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags)) {
+ 		/* restore hardware connection monitoring template */
+-		wl1271_cmd_build_ap_probe_req(wl, wl->probereq);
++		wl1271_cmd_build_ap_probe_req(wl, wlvif->probereq);
+ 	}
+ 
+ 	/* return to ROC if needed */
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index df24500..81d3839 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -506,9 +506,6 @@ struct wl1271 {
+ 
+ 	bool sched_scanning;
+ 
+-	/* probe-req template for the current AP */
+-	struct sk_buff *probereq;
+-
+ 	/* Our association ID */
+ 	u16 aid;
+ 
+@@ -640,6 +637,9 @@ struct wl12xx_vif {
+ 	 */
+ 	u32 basic_rate;
+ 	u32 rate_set;
 +
-+	/*
-+	 * Set mac address which is received in ready event
-+	 * FIXME: Move to ath6kl_interface_add()
-+	 */
-+	memcpy(ndev->dev_addr, ar->mac_addr, ETH_ALEN);
-+
-+	return status;
++	/* probe-req template for the current AP */
++	struct sk_buff *probereq;
+ };
  
- err_htc_stop:
- 	ath6kl_htc_stop(ar->htc_target);
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index a9ed8a0..dd3cfeb 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -642,11 +642,10 @@ static const char *get_hw_id_string(u32 id)
- void ath6kl_ready_event(void *devt, u8 *datap, u32 sw_ver, u32 abi_ver)
- {
- 	struct ath6kl *ar = devt;
--	struct net_device *dev = ar->vif->ndev;
- 
--	memcpy(dev->dev_addr, datap, ETH_ALEN);
-+	memcpy(ar->mac_addr, datap, ETH_ALEN);
- 	ath6kl_dbg(ATH6KL_DBG_TRC, "%s: mac addr = %pM\n",
--		   __func__, dev->dev_addr);
-+		   __func__, ar->mac_addr);
- 
- 	ar->version.wlan_ver = sw_ver;
- 	ar->version.abi_ver = abi_ver;
+ static inline struct wl12xx_vif *wl12xx_vif_to_data(struct ieee80211_vif *vif)
 -- 
-1.7.0.4
+1.7.6.401.g6a319
 
