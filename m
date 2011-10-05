@@ -1,68 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:61427 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753373Ab1JUOKW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 10:10:22 -0400
-Received: by ywf7 with SMTP id 7so3899182ywf.19
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2011 07:10:21 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:2288 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934694Ab1JENUa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Oct 2011 09:20:30 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 15/15] staging: brcm80211: remove brcmf_op_if from
+ fullmac
+Date: Wed, 5 Oct 2011 15:20:14 +0200
+Message-ID: <1317820814-7083-16-git-send-email-arend@broadcom.com> (sfid-20111005_152035_462416_5AA5F862)
+In-Reply-To: <1317820814-7083-1-git-send-email-arend@broadcom.com>
+References: <1317820814-7083-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20111021102221.GA1463@ecki.lan>
-References: <CAJ-Vmo=sE4KeOp1CKAR5v+Rzm1bm0R=ZvtMvJaE_8Sjn1dOdsw@mail.gmail.com>
-	<20111004181534.GA1502@ecki>
-	<CAJ-Vmo=5z6EEZBtb2_7e6wvU39ZvLSmAxEPKwP_MDQCzdkPGyA@mail.gmail.com>
-	<20111005062528.GA1403@ecki>
-	<CAJ-Vmok4v2+ZEpAmVaj2pQ5U2StWxxD8f20u2Ln87o4+C_ST0g@mail.gmail.com>
-	<CAD2nsn1S7r2o0bqnNgzuHBd9XWYdA7uZgtmtFDTePk0SwybuCQ@mail.gmail.com>
-	<20111015093902.GA23520@ecki>
-	<CAJ-VmokQBcXyDByWgMfGRFvW_z_9YU4oPUrXJpfPY9J4riEuBQ@mail.gmail.com>
-	<20111018064459.GA1442@ecki>
-	<CAJ-Vmo=Qt3rGDbM0yOvFuz6Pksdx9bdm8HEBnhfjP6=zjGOgTA@mail.gmail.com>
-	<20111021102221.GA1463@ecki.lan>
-Date: Fri, 21 Oct 2011 22:10:21 +0800
-Message-ID: <CAJ-Vmonaec_i5d_LGupY5uwzMUn3CzNn-rGSh6oqLOHc8ewFVg@mail.gmail.com> (sfid-20111021_161025_990041_D37AD28D)
-Subject: Re: ath9k: irq storm after suspend/resume
-From: Adrian Chadd <adrian@freebsd.org>
-To: Clemens Buchacher <drizzd@aon.at>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 October 2011 18:22, Clemens Buchacher <drizzd@aon.at> wrote:
+From: Franky Lin <frankyl@broadcom.com>
 
-> It matches AR_SREV_9285, but it does not match AR_SREV_9285E_20.
+Absorb related code into brcmf_add_if/brcmf_del_if. This is part
+of the net device interface clean up.
 
-Ok. Well, I've read the ar9285 host documentation that I've gotten my
-hands on and I can't see anything obvious. All I can think of is that
-something else is throwing those interrupts - whether it's the NIC
-throwing the error, or whether its the bus itself throwing an error
-and you're seeing the AR9285 because it's the only thing attached. I
-however know next to nothing about PCI/PCIe and the various fruity
-behaviour seen.
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |  120 ++++++++++--------------
+ 1 files changed, 50 insertions(+), 70 deletions(-)
 
-I assume you have disabled the NIC power save option. Not just APSM,
-etc, but the powersave options in iw. I don't know what they are,
-sorry, only that they exist.
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index b0202b7..99ba5e3 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -282,74 +282,6 @@ _brcmf_set_mac_address(struct work_struct *work)
+ 	return;
+ }
+ 
+-/* Virtual interfaces only ((ifp && ifp->info && ifp->idx == true) */
+-static void brcmf_op_if(struct brcmf_if *ifp)
+-{
+-	struct brcmf_info *drvr_priv;
+-	int ret = 0, err = 0;
+-
+-	drvr_priv = ifp->info;
+-
+-	brcmf_dbg(TRACE, "idx %d, state %d\n", ifp->idx, ifp->state);
+-
+-	switch (ifp->state) {
+-	case BRCMF_E_IF_ADD:
+-		/*
+-		 * Delete the existing interface before overwriting it
+-		 * in case we missed the BRCMF_E_IF_DEL event.
+-		 */
+-		if (ifp->ndev != NULL) {
+-			brcmf_dbg(ERROR, "ERROR: netdev:%s already exists, try free & unregister\n",
+-				  ifp->ndev->name);
+-			netif_stop_queue(ifp->ndev);
+-			unregister_netdev(ifp->ndev);
+-			free_netdev(ifp->ndev);
+-		}
+-		/* Allocate netdev, including space for private structure */
+-		ifp->ndev = alloc_netdev(sizeof(drvr_priv), "wlan%d",
+-					 ether_setup);
+-		if (!ifp->ndev) {
+-			brcmf_dbg(ERROR, "OOM - alloc_netdev\n");
+-			ret = -ENOMEM;
+-		}
+-		if (ret == 0) {
+-			memcpy(netdev_priv(ifp->ndev), &drvr_priv,
+-			       sizeof(drvr_priv));
+-			err = brcmf_net_attach(&drvr_priv->pub, ifp->idx);
+-			if (err != 0) {
+-				brcmf_dbg(ERROR, "brcmf_net_attach failed, err %d\n",
+-					  err);
+-				ret = -EOPNOTSUPP;
+-			} else {
+-				brcmf_dbg(TRACE, " ==== pid:%x, net_device for if:%s created ===\n",
+-					  current->pid, ifp->ndev->name);
+-				ifp->state = 0;
+-			}
+-		}
+-		break;
+-	case BRCMF_E_IF_DEL:
+-		if (ifp->ndev != NULL) {
+-			brcmf_dbg(TRACE, "got 'WLC_E_IF_DEL' state\n");
+-			netif_stop_queue(ifp->ndev);
+-			unregister_netdev(ifp->ndev);
+-			ret = BRCMF_DEL_IF;	/* Make sure the free_netdev()
+-							 is called */
+-		}
+-		break;
+-	default:
+-		brcmf_dbg(ERROR, "bad op %d\n", ifp->state);
+-		break;
+-	}
+-
+-	if (ret < 0) {
+-		if (ifp->ndev)
+-			free_netdev(ifp->ndev);
+-
+-		drvr_priv->iflist[ifp->idx] = NULL;
+-		kfree(ifp);
+-	}
+-}
+-
+ static int brcmf_netdev_set_mac_address(struct net_device *ndev, void *addr)
+ {
+ 	struct brcmf_info *drvr_priv = *(struct brcmf_info **)
+@@ -964,6 +896,7 @@ brcmf_add_if(struct brcmf_info *drvr_priv, int ifidx, struct net_device *ndev,
+ 	     char *name, u8 *mac_addr, u32 flags, u8 bssidx)
+ {
+ 	struct brcmf_if *ifp;
++	int ret = 0, err = 0;
+ 
+ 	brcmf_dbg(TRACE, "idx %d, handle->%p\n", ifidx, ndev);
+ 
+@@ -983,7 +916,48 @@ brcmf_add_if(struct brcmf_info *drvr_priv, int ifidx, struct net_device *ndev,
+ 	if (ndev == NULL) {
+ 		ifp->state = BRCMF_E_IF_ADD;
+ 		ifp->idx = ifidx;
+-		brcmf_op_if(ifp);
++		/*
++		 * Delete the existing interface before overwriting it
++		 * in case we missed the BRCMF_E_IF_DEL event.
++		 */
++		if (ifp->ndev != NULL) {
++			brcmf_dbg(ERROR, "ERROR: netdev:%s already exists, try free & unregister\n",
++				  ifp->ndev->name);
++			netif_stop_queue(ifp->ndev);
++			unregister_netdev(ifp->ndev);
++			free_netdev(ifp->ndev);
++		}
++
++		/* Allocate netdev, including space for private structure */
++		ifp->ndev = alloc_netdev(sizeof(drvr_priv), "wlan%d",
++					 ether_setup);
++		if (!ifp->ndev) {
++			brcmf_dbg(ERROR, "OOM - alloc_netdev\n");
++			ret = -ENOMEM;
++		}
++
++		if (ret == 0) {
++			memcpy(netdev_priv(ifp->ndev), &drvr_priv,
++			       sizeof(drvr_priv));
++			err = brcmf_net_attach(&drvr_priv->pub, ifp->idx);
++			if (err != 0) {
++				brcmf_dbg(ERROR, "brcmf_net_attach failed, err %d\n",
++					  err);
++				ret = -EOPNOTSUPP;
++			} else {
++				brcmf_dbg(TRACE, " ==== pid:%x, net_device for if:%s created ===\n",
++					  current->pid, ifp->ndev->name);
++				ifp->state = 0;
++			}
++		}
++
++		if (ret < 0) {
++			if (ifp->ndev)
++				free_netdev(ifp->ndev);
++
++			drvr_priv->iflist[ifp->idx] = NULL;
++			kfree(ifp);
++		}
+ 	} else
+ 		ifp->ndev = ndev;
+ 
+@@ -1004,7 +978,13 @@ void brcmf_del_if(struct brcmf_info *drvr_priv, int ifidx)
+ 
+ 	ifp->state = BRCMF_E_IF_DEL;
+ 	ifp->idx = ifidx;
+-	brcmf_op_if(ifp);
++	if (ifp->ndev != NULL) {
++		netif_stop_queue(ifp->ndev);
++		unregister_netdev(ifp->ndev);
++		free_netdev(ifp->ndev);
++		drvr_priv->iflist[ifidx] = NULL;
++		kfree(ifp);
++	}
+ }
+ 
+ struct brcmf_pub *brcmf_attach(struct brcmf_bus *bus, uint bus_hdrlen)
+-- 
+1.7.4.1
 
-I suggest modifying ath_intr() so if there is an interrupt storm,
-disable _all_ sources of interrupts (ie, set sync_cause, async_cause
-to 0, set imr to 0, set ier to 0) and see if it continues occuring.
 
-If the interrupt storm continue occuring, try putting the whole NIC to
-sleep entirely (ie, call pcipowersave to put the NIC to sleep, then
-make sure the NIC -stays- asleep somehow, ie so nothing else tries
-waking it up - I don't know how to do this, likely you'll have to
-clear some interface flag so the rest of the ath9k and 802.11 stack
-thinks the nic is actually down for the count) and see if you're still
-getting spurious interrupts.
-
-If you are at this point, the only other possible thing I can think of
-doing involves a PCIe bus analyser, and you/I don't have access to
-those. :-)
-
-
-
-Adrian
