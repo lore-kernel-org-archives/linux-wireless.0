@@ -1,151 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:38868 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752055Ab1JTE7e (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:45560 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933071Ab1JEKL6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 00:59:34 -0400
-Date: Thu, 20 Oct 2011 13:59:27 +0900
-From: Norbert Preining <preining@logic.at>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-Subject: Re: iwlagn is getting very shaky
-Message-ID: <20111020045927.GB23044@gamma.logic.tuwien.ac.at> (sfid-20111020_065949_480246_E6D70D7B)
-References: <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111019124931.GC3963@gamma.logic.tuwien.ac.at> <1319038282.25023.21.camel@wwguy-ubuntu> <20111019060108.GA11588@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com> <20111019062517.GC11588@gamma.logic.tuwien.ac.at> <1319003304.31823.46.camel@wwguy-huron> <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron>
+	Wed, 5 Oct 2011 06:11:58 -0400
+Message-ID: <4E8C2CF1.7000206@qca.qualcomm.com> (sfid-20111005_121202_954190_C0AF7F6C)
+Date: Wed, 5 Oct 2011 13:09:53 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1319038282.25023.21.camel@wwguy-ubuntu> <1319004836.31823.57.camel@wwguy-huron>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>
+Subject: Re: ath6kl: pass only unicast frames for aggregation
+References: <20111005055958.GA32513@elgon.mountain>
+In-Reply-To: <20111005055958.GA32513@elgon.mountain>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wey,
+Hi Dan,
 
-so I am now at the university, and it seems your last patch
-did wonder. Here a log after waking up from suspend at university...
+On 10/05/2011 08:59 AM, Dan Carpenter wrote:
+> Smatch complains that 5694f962964 "ath6kl: pass only unicast frames
+> for aggregation"
+> 
+> drivers/net/wireless/ath/ath6kl/txrx.c
+>   1241                          if (conn && ar->intra_bss) {
+>   1242                                  skb1 = skb;
+>   1243                                  skb = NULL;
+>                                         ^^^^^^^^^^^
+>   1244                          } else if (conn && !ar->intra_bss) {
+>   1245                                  dev_kfree_skb(skb);
+>   1246                                  skb = NULL;
+>                                         ^^^^^^^^^^^
+>   1247                          }
+>   1248                  }
+>   1249                  if (skb1)
+>   1250                          ath6kl_data_tx(skb1, ar->net_dev);
+>   1251          }
+>   1252  
+>   1253          datap = (struct ethhdr *) skb->data;
+>                                           ^^^^^^^^^
+> skb can be NULL.
 
-[17394.694774] wlan0: associate with 00:24:c4:ab:bd:ef (try 1)
-[17394.892077] wlan0: associate with 00:24:c4:ab:bd:ef (try 2)
-[17394.896190] wlan0: RX AssocResp from 00:24:c4:ab:bd:ef (capab=0x1 status=0 aid=2)
-[17394.896199] wlan0: associated
-[17394.974620] iwlagn 0000:06:00.0: Encounter TX_STATUS_FAIL_PASSIVE_NO_RX, am I on 5.2G band? (2)
-[17394.976930] iwlagn 0000:06:00.0: Encounter TX_STATUS_FAIL_PASSIVE_NO_RX, am I on 5.2G band? (2)
-[17409.608674] iwlagn 0000:06:00.0: Tx aggregation enabled on ra = 00:24:c4:ab:bd:ef tid = 0
-[17409.616748] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
-[17409.816093] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
-[17410.016083] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
-[17410.216086] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
-[17419.285141] iwlagn 0000:06:00.0: Encounter TX_STATUS_FAIL_PASSIVE_NO_RX, am I on 5.2G band? (0)
-[17419.285315] iwlagn 0000:06:00.0: Encounter TX_STATUS_FAIL_PASSIVE_NO_RX, am I on 5.2G band? (0)
-[17419.286583] wlan0: deauthenticating from 00:24:c4:ab:bd:ef by local choice (reason=2)
-[17419.300296] cfg80211: Calling CRDA for country: JP
-[17419.309278] wlan0: authenticate with 00:24:c4:ab:bd:ef (try 1)
-[17419.310105] wlan0: authenticated
-[17419.317900] wlan0: associate with 00:24:c4:ab:bd:ef (try 1)
-[17419.319837] wlan0: RX ReassocResp from 00:24:c4:ab:bd:ef (capab=0x1 status=0 aid=2)
-[17419.319840] wlan0: associated
-[17422.384922] iwlagn 0000:06:00.0: Tx aggregation enabled on ra = 00:24:c4:ab:bd:ef tid = 0
-[17509.576705] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
-[17509.776098] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
-[17509.976086] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
-[17509.980861] wlan0: direct probe responded
-[17510.016116] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 1)
-[17510.018753] wlan0: authenticated
-[17510.042702] wlan0: associate with 00:24:c4:ab:bd:e0 (try 1)
-[17510.050541] wlan0: RX ReassocResp from 00:24:c4:ab:bd:e0 (capab=0x421 status=0 aid=1)
-[17510.050551] wlan0: associated
-[17589.724188] iwlagn 0000:06:00.0: Tx aggregation enabled on ra = 00:24:c4:ab:bd:e0 tid = 0
-[17590.839852] iwlagn 0000:06:00.0: Tx aggregation enabled on ra = 00:24:c4:ab:bd:e0 tid = 0
+Good catch, thanks! I should run smatch more, it's a really nice tool.
 
-but the connection is up and working.
+I think a fix like this would be appropriate. Jouni, what do you think?
 
-On Di, 18 Okt 2011, Guy, Wey-Yi wrote:
-> Could you please let me know the brand/model of the AP which having
-> problem. Also the configuration of your NIC also help.
+(I have just copypasted the patch to thunderbird, I'm sure it's white
+space damaged. Sorry about that.)
 
-THe AP is a big Cisco one, more I cannot see, with 3 antenna.
+Kalle
 
-For the NIC, what do you want to know:
-wlan0     IEEE 802.11abgn  ESSID:"XXXXXXXXXX"  
-          Mode:Managed  Frequency:2.412 GHz  Access Point: 00:24:C4:AB:BD:E0   
-          Bit Rate=72.2 Mb/s   Tx-Power=15 dBm   
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:off
-          Link Quality=51/70  Signal level=-59 dBm  
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:685  Invalid misc:59   Missed beacon:0
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -1247,6 +1247,10 @@ void ath6kl_rx(struct htc_target *target, struct
+htc_packet *packet)
+                }
+                if (skb1)
+                        ath6kl_data_tx(skb1, ar->net_dev);
++
++               if (skb == NULL)
++                       /* nothing to deliver up the stack */
++                       return;
+        }
 
-The last line looks interesting, excessive retires: 685, INvalid misc: 59
-
-
-Note that the "Tx excessive retries" increase steaadily and radically,
-downloading updates with aptitude I see afterwards:
-	Tx excessive retries:17922
-
-The "Invalid misc" also increase, but slowly.
-
-On Mi, 19 Okt 2011, wwguy wrote:
-> Are you connect on 5.2GHz? looks to me there were only one place can
-> stop the queue which is for radar channel detection.
-
-No, it is channel 1
-$ iwlist wlan0 channel
-wlan0     32 channels in total; available frequencies :
-          Channel 01 : 2.412 GHz
-          Channel 02 : 2.417 GHz
-          Channel 03 : 2.422 GHz
-          Channel 04 : 2.427 GHz
-          Channel 05 : 2.432 GHz
-          Channel 06 : 2.437 GHz
-          Channel 07 : 2.442 GHz
-          Channel 08 : 2.447 GHz
-          Channel 09 : 2.452 GHz
-          Channel 10 : 2.457 GHz
-          Channel 11 : 2.462 GHz
-          Channel 12 : 2.467 GHz
-          Channel 13 : 2.472 GHz
-          Channel 36 : 5.18 GHz
-          Channel 40 : 5.2 GHz
-          Channel 44 : 5.22 GHz
-          Channel 48 : 5.24 GHz
-          Channel 52 : 5.26 GHz
-          Channel 56 : 5.28 GHz
-          Channel 60 : 5.3 GHz
-          Channel 64 : 5.32 GHz
-          Channel 100 : 5.5 GHz
-          Channel 104 : 5.52 GHz
-          Channel 108 : 5.54 GHz
-          Channel 112 : 5.56 GHz
-          Channel 116 : 5.58 GHz
-          Channel 120 : 5.6 GHz
-          Channel 124 : 5.62 GHz
-          Channel 128 : 5.64 GHz
-          Channel 132 : 5.66 GHz
-          Channel 136 : 5.68 GHz
-          Channel 140 : 5.7 GHz
-          Current Frequency:2.412 GHz (Channel 1)
-
-
-Well, for the time being the patch is nice and helps, thanks!
-
-If you want me to test more please let me know, but I am leaving
-today for some business trip and will be back on Wednesday at 
-work here.
-
-Best wishes
-
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-GOLANT (adj.)
-Blank, sly and faintly embarrassed. Pertaining to the expression seen
-on the face of someone who has clearly forgotten your name.
-			--- Douglas Adams, The Meaning of Liff
+        datap = (struct ethhdr *) skb->data;
