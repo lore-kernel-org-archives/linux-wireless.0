@@ -1,112 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:48704 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934828Ab1JGRl0 convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:35975 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934298Ab1JEJ4U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 13:41:26 -0400
-MIME-Version: 1.0
-In-Reply-To: <1317721043.11231.2.camel@jmachine>
-References: <1317721043.11231.2.camel@jmachine>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 7 Oct 2011 10:41:06 -0700
-Message-ID: <CAB=NE6X81KPvx-yt33MghmoftUznoP-jYO8sBxoeW_0fzQ1pdA@mail.gmail.com> (sfid-20111007_194146_011541_4D57975C)
-Subject: Re: Using spdiff for backporting
-To: Jesper Andersen <jespera@gmail.com>
-Cc: julia@diku.dk, linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, alsa-devel@alsa-project.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 5 Oct 2011 05:56:20 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 28so1405752eya.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:56:20 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 22/29] wl12xx: move default_key into wlvif
+Date: Wed,  5 Oct 2011 11:55:59 +0200
+Message-Id: <1317808566-18857-23-git-send-email-eliad@wizery.com> (sfid-20111005_115626_751288_9421956C)
+In-Reply-To: <1317808566-18857-1-git-send-email-eliad@wizery.com>
+References: <1317808566-18857-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 4, 2011 at 2:37 AM, Jesper Andersen <jespera@gmail.com> wrote:
-> Hi
->
-> Somehow, I think the email below was never sent? Could either of you confirm my suspicion?
+move default_key into the per-interface data, rather than
+being global.
 
-I just checked and I did get the original e-mail. Apologies for the
-late reply. Below my reply.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c   |    7 +++----
+ drivers/net/wireless/wl12xx/tx.c     |    4 ++--
+ drivers/net/wireless/wl12xx/wl12xx.h |    6 +++---
+ 3 files changed, 8 insertions(+), 9 deletions(-)
 
-> ====== Original email ======
->
-> Here are a two results that I have found using spdiff on some of the
-> patches from compat-wireless.
->
-> 01-netdev:
-> @@
-> struct net_device *  X5;
-> const struct net_device_ops X6;
-> @@
-> - X5->netdev_ops=&X6;
-> + netdev_attach_ops(X5,&X6);
->
-> 27-hermes-read-pda:
-> @@
-> struct hermes *  X0;
-> @@
-> - X0->ops->read_pda
-> + X0->ops->read_pda_h
->
-> Basically, I have done the following
->
-> - clone the linux-next tree
-> - apply a patch from compat-wireless/patches
-> - git commit
-> - extract pairs of original and modified files affected by the commit
->  (I call this set of pairs a "change set")
-> - apply spdiff to the extracted pairs
-> - adjust parameters to spdiff until something reasonable comes out
->
-> For spdiff to work in its current form we need a change set with at
-> least two similar modifications. For the netdev-ops case we actually
-> have many changes matching "X5->netdev_ops=&X6" and seemingly those
-> locations are all rewritten into: "netdev_attach_ops(X5,&X6)".
->
-> For many of the patches in compat-wireless/patches, however such a
-> scenario is not present. For example 03-rfkill consists of just one
-> change of the string "rfkill" to "rfkill_backport". In this case spdiff
-> cannot really infer anything useful.
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 54c146a..9302c88 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2699,7 +2699,7 @@ static int wl1271_ap_init_hwenc(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	}
+ 
+ 	if (wep_key_added) {
+-		ret = wl12xx_cmd_set_default_wep_key(wl, wl->default_key,
++		ret = wl12xx_cmd_set_default_wep_key(wl, wlvif->default_key,
+ 						     wlvif->ap.bcast_hlid);
+ 		if (ret < 0)
+ 			goto out;
+@@ -2796,8 +2796,8 @@ static int wl1271_set_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		/* the default WEP key needs to be configured at least once */
+ 		if (key_type == KEY_WEP) {
+ 			ret = wl12xx_cmd_set_default_wep_key(wl,
+-							     wl->default_key,
+-							     wlvif->sta.hlid);
++							wlvif->default_key,
++							wlvif->sta.hlid);
+ 			if (ret < 0)
+ 				return ret;
+ 		}
+@@ -4850,7 +4850,6 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	}
+ 
+ 	wl->channel = WL1271_DEFAULT_CHANNEL;
+-	wl->default_key = 0;
+ 	wl->rx_counter = 0;
+ 	wl->psm_entry_retry = 0;
+ 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 8db68c6..509ae10 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -424,11 +424,11 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
+ 		is_wep = (cipher == WLAN_CIPHER_SUITE_WEP40) ||
+ 			 (cipher == WLAN_CIPHER_SUITE_WEP104);
+ 
+-		if (unlikely(is_wep && wl->default_key != idx)) {
++		if (unlikely(is_wep && wlvif->default_key != idx)) {
+ 			ret = wl1271_set_default_wep_key(wl, wlvif, idx);
+ 			if (ret < 0)
+ 				return ret;
+-			wl->default_key = idx;
++			wlvif->default_key = idx;
+ 		}
+ 	}
+ 	hlid = wl1271_tx_get_hlid(wl, vif, skb);
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 3646410..4755aad 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -502,9 +502,6 @@ struct wl1271 {
+ 	/* The current band */
+ 	enum ieee80211_band band;
+ 
+-	/* Default key (for WEP) */
+-	u32 default_key;
+-
+ 	/* Rx Streaming */
+ 	struct work_struct rx_streaming_enable_work;
+ 	struct work_struct rx_streaming_disable_work;
+@@ -644,6 +641,9 @@ struct wl12xx_vif {
+ 	/* Beaconing interval (needed for ad-hoc) */
+ 	u32 beacon_int;
+ 
++	/* Default key (for WEP) */
++	u32 default_key;
++
+ 	/* Our association ID */
+ 	u16 aid;
+ 
+-- 
+1.7.6.401.g6a319
 
-Ah I see.
-
-> The question is: given that spdiff in its current form really needs at
-> least two example changes, could you perhaps point me at which of the
-> patches in compat-wireless/patches should contain such things?
-
-Sure thing. I'll review that and get back to you.
-
-> Also, in the slides from the plumbers-conf. I think I saw it mentioned
-> that there's also an alsa-compat git-tree somewhere. Maybe that is a
-> more compelling usecase? I was unable to find it though so I'd
-> appreciate a link.
-
-It was on kernel.org, but if it got rm -rf'd then its gone as I do not
-have a local copy. The compat-alsa stuff though was determined to be
-superflous with the ALSA's team's own backport work which is currently
-independent. My hope though is to unify these through the compat.git /
-compat-kernel (currently just called compat-wireless) effort.
-
-> A way that we maybe could get some more similar changes would be to
-> focus on finding a patch for a specific version. E.g. for
-> 09-threaded-irq there's a lot if #ifdefs for versions less than 2.6.31.
-> In that case it seems for the lower version numbers, some code is added
-> and for higher versions some other code has to be present. Instead, we
-> could try to find a patch from the changes between >2.6.31 and <2.6.31
-> perhaps?
-
-Not sure I get this, could you elaborate a bit more? Are you saying to
-cheat and double up the ifdef's for at least two older kernels or
-newer kernels so that spatch gets two "change sets"?
-
-> Or maybe you (Luis) have a better suggestion for how spdiff could be
-> used. I am very open to modifications required specifically for doing
-> backports work, I just need to get an idea for what would be useful to
-> be able to infer. :-)
-
-I'm perfectly happy with living with spdiff only helping with large
-"change sets", and dealing with the rest of the patches manually.
-Likely spdiff can help when we decide we want to add backport support
-for a new subsystem, so we'd just apply the spatch's generated to the
-new directories we want to consider, and then just require manual work
-for what is left.
-
-  Luis
