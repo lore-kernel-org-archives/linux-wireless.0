@@ -1,211 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2135 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934711Ab1JENUj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 09:20:39 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 02/15] staging: brcm80211: remove threads_only code from
- fullmac
-Date: Wed, 5 Oct 2011 15:20:01 +0200
-Message-ID: <1317820814-7083-3-git-send-email-arend@broadcom.com> (sfid-20111005_152045_228666_AB844F40)
-In-Reply-To: <1317820814-7083-1-git-send-email-arend@broadcom.com>
-References: <1317820814-7083-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:35975 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934316Ab1JEJ43 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Oct 2011 05:56:29 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 28so1405752eya.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:56:28 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 13/29] wl12xx: move aid into wlvif
+Date: Wed,  5 Oct 2011 11:55:50 +0200
+Message-Id: <1317808566-18857-14-git-send-email-eliad@wizery.com> (sfid-20111005_115641_018184_14A782B2)
+In-Reply-To: <1317808566-18857-1-git-send-email-eliad@wizery.com>
+References: <1317808566-18857-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+move aid into the per-interface data, rather than
+being global.
 
-threads_only is always true as we never use the tasklet implementation.
-So related code is removed.
-
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |  100 ++++++++-----------------
- 1 files changed, 30 insertions(+), 70 deletions(-)
+ drivers/net/wireless/wl12xx/main.c   |    8 ++++----
+ drivers/net/wireless/wl12xx/wl12xx.h |    6 +++---
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index f3e6249..0ae8dc0 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -651,11 +651,9 @@ struct brcmf_bus {
- 	bool wd_timer_valid;
- 	uint save_ms;
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 3686109..4a35523 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2217,7 +2217,7 @@ static int wl1271_join(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	if (ret < 0)
+ 		goto out;
  
--	struct tasklet_struct tasklet;
- 	struct task_struct *dpc_tsk;
- 	struct completion dpc_wait;
+-	ret = wl1271_acx_aid(wl, wl->aid);
++	ret = wl1271_acx_aid(wl, wlvif->aid);
+ 	if (ret < 0)
+ 		goto out;
  
--	bool threads_only;
- 	struct semaphore sdsem;
+@@ -3482,7 +3482,7 @@ sta_not_found:
+ 		if (bss_conf->assoc) {
+ 			u32 rates;
+ 			int ieoffset;
+-			wl->aid = bss_conf->aid;
++			wlvif->aid = bss_conf->aid;
+ 			set_assoc = true;
  
- 	const char *fw_name;
-@@ -2704,29 +2702,6 @@ static int brcmf_sdbrcm_dpc_thread(void *data)
- 	return 0;
- }
+ 			wl->ps_poll_failures = 0;
+@@ -3513,7 +3513,7 @@ sta_not_found:
+ 			 * updates it by itself when the first beacon is
+ 			 * received after a join.
+ 			 */
+-			ret = wl1271_cmd_build_ps_poll(wl, wlvif, wl->aid);
++			ret = wl1271_cmd_build_ps_poll(wl, wlvif, wlvif->aid);
+ 			if (ret < 0)
+ 				goto out;
  
--static void brcmf_sdbrcm_dpc_tasklet(unsigned long data)
--{
--	struct brcmf_bus *bus = (struct brcmf_bus *) data;
+@@ -3539,7 +3539,7 @@ sta_not_found:
+ 			bool was_ifup =
+ 			    !!test_and_clear_bit(WL1271_FLAG_STA_STATE_SENT,
+ 						 &wl->flags);
+-			wl->aid = 0;
++			wlvif->aid = 0;
+ 
+ 			/* free probe-request template */
+ 			dev_kfree_skb(wlvif->probereq);
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 81d3839..4ca483f 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -506,9 +506,6 @@ struct wl1271 {
+ 
+ 	bool sched_scanning;
+ 
+-	/* Our association ID */
+-	u16 aid;
 -
--	/* Call bus dpc unless it indicated down (then clean stop) */
--	if (bus->drvr->busstate != BRCMF_BUS_DOWN) {
--		if (brcmf_sdbrcm_dpc(bus))
--			tasklet_schedule(&bus->tasklet);
--	} else {
--		brcmf_sdbrcm_bus_stop(bus);
--	}
--}
--
--static void brcmf_sdbrcm_sched_dpc(struct brcmf_bus *bus)
--{
--	if (bus->dpc_tsk) {
--		complete(&bus->dpc_wait);
--		return;
--	}
--
--	tasklet_schedule(&bus->tasklet);
--}
--
- int brcmf_sdbrcm_bus_txdata(struct brcmf_bus *bus, struct sk_buff *pkt)
- {
- 	int ret = -EBADE;
-@@ -2770,7 +2745,8 @@ int brcmf_sdbrcm_bus_txdata(struct brcmf_bus *bus, struct sk_buff *pkt)
- 	/* Schedule DPC if needed to send queued packet(s) */
- 	if (!bus->dpc_sched) {
- 		bus->dpc_sched = true;
--		brcmf_sdbrcm_sched_dpc(bus);
-+		if (bus->dpc_tsk)
-+			complete(&bus->dpc_wait);
- 	}
+ 	u32 bitrate_masks[IEEE80211_NUM_BANDS];
  
- 	return ret;
-@@ -3642,8 +3618,7 @@ void brcmf_sdbrcm_bus_stop(struct brcmf_bus *bus)
- 		send_sig(SIGTERM, bus->dpc_tsk, 1);
- 		kthread_stop(bus->dpc_tsk);
- 		bus->dpc_tsk = NULL;
--	} else
--		tasklet_kill(&bus->tasklet);
-+	}
+ 	/* The current band */
+@@ -640,6 +637,9 @@ struct wl12xx_vif {
  
- 	/* Disable and clear interrupts at the chip level also */
- 	w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, hostintmask), &retries);
-@@ -3831,7 +3806,8 @@ void brcmf_sdbrcm_isr(void *arg)
- 		brcmf_dbg(ERROR, "isr w/o interrupt configured!\n");
- 
- 	bus->dpc_sched = true;
--	brcmf_sdbrcm_sched_dpc(bus);
-+	if (bus->dpc_tsk)
-+		complete(&bus->dpc_wait);
- }
- 
- static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_pub *drvr)
-@@ -3875,8 +3851,8 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_pub *drvr)
- 				bus->ipend = true;
- 
- 				bus->dpc_sched = true;
--				brcmf_sdbrcm_sched_dpc(bus);
--
-+				if (bus->dpc_tsk)
-+					complete(&bus->dpc_wait);
- 			}
- 		}
- 
-@@ -4366,21 +4342,13 @@ brcmf_sdbrcm_watchdog(unsigned long data)
- {
- 	struct brcmf_bus *bus = (struct brcmf_bus *)data;
- 
--	if (bus->threads_only) {
--		if (bus->watchdog_tsk)
--			complete(&bus->watchdog_wait);
--		else
--			return;
--	} else {
--		brcmf_sdbrcm_bus_watchdog(bus->drvr);
--
--		/* Count the tick for reference */
--		bus->drvr->tickcnt++;
-+	if (bus->watchdog_tsk) {
-+		complete(&bus->watchdog_wait);
-+		/* Reschedule the watchdog */
-+		if (bus->wd_timer_valid)
-+			mod_timer(&bus->timer,
-+				  jiffies + BRCMF_WD_POLL_MS * HZ / 1000);
- 	}
--
--	/* Reschedule the watchdog */
--	if (bus->wd_timer_valid)
--		mod_timer(&bus->timer, jiffies + BRCMF_WD_POLL_MS * HZ / 1000);
- }
- 
- static void
-@@ -4465,7 +4433,6 @@ void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
- 	bus->tx_seq = SDPCM_SEQUENCE_WRAP - 1;
- 	bus->usebufpool = false;	/* Use bufpool if allocated,
- 					 else use locally malloced rxbuf */
--	bus->threads_only = true;
- 
- 	/* attempt to attach to the dongle */
- 	if (!(brcmf_sdbrcm_probe_attach(bus, regsva))) {
-@@ -4483,32 +4450,25 @@ void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
- 	bus->timer.function = brcmf_sdbrcm_watchdog;
- 
- 	/* Initialize thread based operation and lock */
--	if (bus->threads_only) {
--		sema_init(&bus->sdsem, 1);
--
--		/* Initialize watchdog thread */
--		init_completion(&bus->watchdog_wait);
--		bus->watchdog_tsk = kthread_run(brcmf_sdbrcm_watchdog_thread,
--						bus, "brcmf_watchdog");
--		if (IS_ERR(bus->watchdog_tsk)) {
--			printk(KERN_WARNING
--			       "brcmf_watchdog thread failed to start\n");
--			bus->watchdog_tsk = NULL;
--		}
--		/* Initialize DPC thread */
--		init_completion(&bus->dpc_wait);
--		bus->dpc_tsk = kthread_run(brcmf_sdbrcm_dpc_thread,
--					   bus, "brcmf_dpc");
--		if (IS_ERR(bus->dpc_tsk)) {
--			printk(KERN_WARNING
--			       "brcmf_dpc thread failed to start\n");
--			bus->dpc_tsk = NULL;
--		}
--	} else {
-+	sema_init(&bus->sdsem, 1);
+ 	/* probe-req template for the current AP */
+ 	struct sk_buff *probereq;
 +
-+	/* Initialize watchdog thread */
-+	init_completion(&bus->watchdog_wait);
-+	bus->watchdog_tsk = kthread_run(brcmf_sdbrcm_watchdog_thread,
-+					bus, "brcmf_watchdog");
-+	if (IS_ERR(bus->watchdog_tsk)) {
-+		printk(KERN_WARNING
-+		       "brcmf_watchdog thread failed to start\n");
- 		bus->watchdog_tsk = NULL;
-+	}
-+	/* Initialize DPC thread */
-+	init_completion(&bus->dpc_wait);
-+	bus->dpc_tsk = kthread_run(brcmf_sdbrcm_dpc_thread,
-+				   bus, "brcmf_dpc");
-+	if (IS_ERR(bus->dpc_tsk)) {
-+		printk(KERN_WARNING
-+		       "brcmf_dpc thread failed to start\n");
- 		bus->dpc_tsk = NULL;
--		tasklet_init(&bus->tasklet, brcmf_sdbrcm_dpc_tasklet,
--			     (unsigned long)bus);
- 	}
++	/* Our association ID */
++	u16 aid;
+ };
  
- 	/* Attach to the brcmf/OS/network interface */
+ static inline struct wl12xx_vif *wl12xx_vif_to_data(struct ieee80211_vif *vif)
 -- 
-1.7.4.1
-
+1.7.6.401.g6a319
 
