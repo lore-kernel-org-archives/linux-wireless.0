@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:60475 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751240Ab1JWNMx (ORCPT
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:47729 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934139Ab1JEJX3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Oct 2011 09:12:53 -0400
-Received: by yxl42 with SMTP id 42so2444437yxl.19
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Oct 2011 06:12:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1319191502.3964.11.camel@jlt3.sipsolutions.net>
-References: <CAG5dHkT8fPodB_ejoqSmH4Dgr-ynuMzwo5r5czXfCWgJWLiS=w@mail.gmail.com>
-	<1319191502.3964.11.camel@jlt3.sipsolutions.net>
-Date: Sun, 23 Oct 2011 17:12:53 +0400
-Message-ID: <CAG5dHkSf3+x5kEBSnq7Q4WjnEr4_oeHz_cMHF_mKJoTOzhzeFw@mail.gmail.com> (sfid-20111023_151258_216158_1B0CB990)
-Subject: Re: [RFC 4/7] mac80211: setting link-specific mesh power modes when
- plink open
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 5 Oct 2011 05:23:29 -0400
+Subject: [PATCH 3/6] ath6kl: return error block size is not power of 2
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Wed, 05 Oct 2011 12:23:25 +0300
+Message-ID: <20111005092325.1095.72436.stgit@localhost6.localdomain6> (sfid-20111005_112332_462000_42696119)
+In-Reply-To: <20111005092305.1095.713.stgit@localhost6.localdomain6>
+References: <20111005092305.1095.713.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 October 2011 14:05, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2011-10-21 at 12:37 +0400, Ivan Bezyazychnyy wrote:
->> Setting peer link-specific power mode equal to peer non-peer power mode
->> value and local link-specific power mode equal to local non-peer value
->
-> You really need more verbose changelogs, I can't even parse that
-> properly. How about mentioning why, what it means, etc?
+Currently only a warning is emitted but no error is returned.
 
-Yes, I understand.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/htc_hif.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> You should also extend your cover letter to explain how the power save
-> stuff works.
-OK. Thank you very much for all comments.
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.c b/drivers/net/wireless/ath/ath6kl/htc_hif.c
+index 86b1cc7..4a5e9a3 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_hif.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_hif.c
+@@ -621,6 +621,7 @@ int ath6kldev_setup(struct ath6kl_device *dev)
+ 	/* must be a power of 2 */
+ 	if ((dev->htc_cnxt->block_sz & (dev->htc_cnxt->block_sz - 1)) != 0) {
+ 		WARN_ON(1);
++		status = -EINVAL;
+ 		goto fail_setup;
+ 	}
+ 
 
---Ivan
