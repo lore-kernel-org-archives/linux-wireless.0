@@ -1,187 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51324 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759867Ab1JGLsG (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:33441 "HELO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S934884Ab1JEV7M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 07:48:06 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 07/14] ath9k_hw: Cleanup Tx calibrations for AR9003 chips
-Date: Fri, 7 Oct 2011 17:17:12 +0530
-Message-ID: <1317988039-28632-7-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111007_134810_512903_80C0C0E9)
-In-Reply-To: <1317988039-28632-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1317988039-28632-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 5 Oct 2011 17:59:12 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH] mwifiex: fix smatch errors
+Date: Wed,  5 Oct 2011 14:58:24 -0700
+Message-Id: <1317851904-26004-1-git-send-email-bzhao@marvell.com> (sfid-20111005_235916_168456_C9B8A05B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently Tx IQ calibration is enabled by default for all AR9003
-chips. But for AR9480, the calibration status should be read from
-chip after processing ini. And also the carrier leak calibration
-status is checked during init cal. As the init_cal is being called
-for fast channel change too, the tx_cl status only be read after
-full reset. Hence moving that into process ini function.
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+drivers/net/wireless/mwifiex/main.c +828 mwifiex_remove_card(52)
+  error: potential null derefence 'priv'.
+drivers/net/wireless/mwifiex/main.c +828 mwifiex_remove_card(52)
+  error: we previously assumed 'priv' could be null (see line 820)
+drivers/net/wireless/mwifiex/txrx.c +90 mwifiex_process_tx(24)
+  error: potential null derefence 'local_tx_pd'.
+drivers/net/wireless/mwifiex/sta_ioctl.c +766
+mwifiex_rate_ioctl_set_rate_value(30)
+  error: buffer overflow 'rate' 14 <= 14
+
+Cc: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   27 +++++++++++++------------
- drivers/net/wireless/ath/ath9k/ar9003_phy.c   |   12 +++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h   |    1 +
- drivers/net/wireless/ath/ath9k/hw.c           |    5 ++++
- drivers/net/wireless/ath/ath9k/hw.h           |    7 ++++++
- 5 files changed, 39 insertions(+), 13 deletions(-)
+ drivers/net/wireless/mwifiex/main.c      |    4 ++++
+ drivers/net/wireless/mwifiex/sta_ioctl.c |    2 +-
+ drivers/net/wireless/mwifiex/txrx.c      |    3 ++-
+ 3 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 5f40638..3506e7b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -906,15 +906,13 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_hw_cal_data *caldata = ah->caldata;
- 	bool txiqcal_done = false, txclcal_done = false;
--	bool is_reusable = true, txclcal_enabled;
-+	bool is_reusable = true;
-+	int i, j;
- 	u32 cl_idx[AR9300_MAX_CHAINS] = { AR_PHY_CL_TAB_0,
- 					  AR_PHY_CL_TAB_1,
- 					  AR_PHY_CL_TAB_2 };
- 
--	txclcal_enabled = !!(REG_READ(ah, AR_PHY_CL_CAL_CTL) &
--				      AR_PHY_CL_CAL_ENABLE);
--
--	if (txclcal_enabled) {
-+	if (ah->enabled_cals & TX_CL_CAL) {
- 		if (caldata && caldata->done_txclcal_once)
- 			REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL,
- 				    AR_PHY_CL_CAL_ENABLE);
-@@ -923,6 +921,9 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 				    AR_PHY_CL_CAL_ENABLE);
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 8486451..277ea84 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -825,6 +825,10 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter, struct semaphore *sem)
+ 		rtnl_unlock();
  	}
  
-+	if (!(ah->enabled_cals & TX_IQ_CAL))
-+		goto skip_tx_iqcal;
++	priv = adapter->priv[0];
++	if (!priv)
++		goto exit_remove;
 +
- 	/* Do Tx IQ Calibration */
- 	REG_RMW_FIELD(ah, AR_PHY_TX_IQCAL_CONTROL_1,
- 		      AR_PHY_TX_IQCAL_CONTROL_1_IQCORR_I_Q_COFF_DELPT,
-@@ -932,7 +933,7 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	 * For AR9485 or later chips, TxIQ cal runs as part of
- 	 * AGC calibration
- 	 */
--	if (AR_SREV_9485_OR_LATER(ah) && !AR_SREV_9340(ah)) {
-+	if (ah->enabled_cals & TX_IQ_ON_AGC_CAL) {
- 		if (caldata && !caldata->done_txiqcal_once)
- 			REG_SET_BIT(ah, AR_PHY_TX_IQCAL_CONTROL_0,
- 				    AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL);
-@@ -940,13 +941,14 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 			REG_CLR_BIT(ah, AR_PHY_TX_IQCAL_CONTROL_0,
- 				    AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL);
- 		txiqcal_done = true;
--	} else {
--		txiqcal_done = ar9003_hw_tx_iq_cal_run(ah);
--		REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
--		udelay(5);
--		REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
-+		goto skip_tx_iqcal;
- 	}
-+	txiqcal_done = ar9003_hw_tx_iq_cal_run(ah);
-+	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
-+	udelay(5);
-+	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
- 
-+skip_tx_iqcal:
- 	/* Calibrate the AGC */
- 	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
- 		  REG_READ(ah, AR_PHY_AGC_CONTROL) |
-@@ -966,8 +968,7 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 		ar9003_hw_tx_iq_cal_reload(ah);
- 
- #define CL_TAB_ENTRY(reg_base)	(reg_base + (4 * j))
--	if (caldata && txclcal_enabled) {
--		int i, j;
-+	if (caldata && (ah->enabled_cals & TX_CL_CAL)) {
- 		txclcal_done = !!(REG_READ(ah, AR_PHY_AGC_CONTROL) &
- 					   AR_PHY_AGC_CONTROL_CLC_SUCCESS);
- 		if (caldata->done_txclcal_once) {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index c01ee82..3bf7c81 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -702,6 +702,18 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 				 channel->max_power * 2,
- 				 min((u32) MAX_RATE_POWER,
- 				 (u32) regulatory->power_limit), false);
-+	if (AR_SREV_9480(ah)) {
-+		if (REG_READ_FIELD(ah, AR_PHY_TX_IQCAL_CONTROL_0,
-+				AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL))
-+			ah->enabled_cals |= TX_IQ_CAL;
-+		else
-+			ah->enabled_cals &= ~TX_IQ_CAL;
-+
-+		if (REG_READ(ah, AR_PHY_CL_CAL_CTL) & AR_PHY_CL_CAL_ENABLE)
-+			ah->enabled_cals |= TX_CL_CAL;
-+		else
-+			ah->enabled_cals &= ~TX_CL_CAL;
-+	}
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index c6ed51f..ef90ab7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -826,6 +826,7 @@
- #define AR_PHY_SPECTRAL_SCAN_SHORT_REPEAT_S 24
- #define AR_PHY_CHANNEL_STATUS_RX_CLEAR      0x00000004
- #define AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL                   0x80000000
-+#define AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL_S                         31
- #define AR_PHY_TX_IQCAL_CONTROL_1_IQCORR_I_Q_COFF_DELPT             0x01fc0000
- #define AR_PHY_TX_IQCAL_CONTROL_1_IQCORR_I_Q_COFF_DELPT_S                   18
- #define AR_PHY_TX_IQCAL_START_DO_CAL	    0x00000001
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index e2cae1a..067f968 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2328,6 +2328,11 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 		rx_chainmask >>= 1;
- 	}
- 
-+	if (AR_SREV_9300_20_OR_LATER(ah)) {
-+		ah->enabled_cals |= TX_IQ_CAL;
-+		if (!AR_SREV_9330(ah))
-+			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
-+	}
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 0a8aef9..5ac013a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -642,6 +642,12 @@ struct ath_nf_limits {
- 	s16 nominal;
- };
- 
-+enum ath_cal_list {
-+	TX_IQ_CAL         =	BIT(0),
-+	TX_IQ_ON_AGC_CAL  =	BIT(1),
-+	TX_CL_CAL         =	BIT(2),
-+};
-+
- /* ah_flags */
- #define AH_USE_EEPROM   0x1
- #define AH_UNPLUGGED    0x2 /* The card has been physically removed. */
-@@ -741,6 +747,7 @@ struct ath_hw {
- 		int32_t sign[AR5416_MAX_CHAINS];
- 	} meas3;
- 	u16 cal_samples;
-+	u8 enabled_cals;
- 
- 	u32 sta_id1_defaults;
- 	u32 misc_mode;
+ 	wiphy_unregister(priv->wdev->wiphy);
+ 	wiphy_free(priv->wdev->wiphy);
+ 	kfree(priv->wdev);
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 520800b..f20550a 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -763,7 +763,7 @@ static int mwifiex_rate_ioctl_set_rate_value(struct mwifiex_private *priv,
+ 			if ((rate[i] & 0x7f) == (rate_cfg->rate & 0x7f))
+ 				break;
+ 		}
+-		if (!rate[i] || (i == MWIFIEX_SUPPORTED_RATES)) {
++		if ((i == MWIFIEX_SUPPORTED_RATES) || !rate[i]) {
+ 			dev_err(adapter->dev, "fixed data rate %#x is out "
+ 			       "of range\n", rate_cfg->rate);
+ 			return -1;
+diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
+index 6190b2f..5d95c4b 100644
+--- a/drivers/net/wireless/mwifiex/txrx.c
++++ b/drivers/net/wireless/mwifiex/txrx.c
+@@ -87,7 +87,8 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
+ 			(adapter->pps_uapsd_mode) &&
+ 			(adapter->tx_lock_flag)) {
+ 				priv->adapter->tx_lock_flag = false;
+-				local_tx_pd->flags = 0;
++				if (local_tx_pd)
++					local_tx_pd->flags = 0;
+ 		}
+ 		dev_dbg(adapter->dev, "data: -EBUSY is returned\n");
+ 		break;
 -- 
-1.7.7
+1.7.0.2
 
