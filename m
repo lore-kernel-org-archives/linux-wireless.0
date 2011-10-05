@@ -1,141 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:43979 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751260Ab1J3TQN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Oct 2011 15:16:13 -0400
-Subject: [PATCH 1/5] ath6kl: create ath6kl_hif_stop()
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 30 Oct 2011 21:15:57 +0200
-Message-ID: <20111030191556.20466.19407.stgit@localhost6.localdomain6> (sfid-20111030_201622_727387_90FCEB72)
-In-Reply-To: <20111030190922.20466.299.stgit@localhost6.localdomain6>
-References: <20111030190922.20466.299.stgit@localhost6.localdomain6>
+Received: from mms2.broadcom.com ([216.31.210.18]:3156 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934694Ab1JENUl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Oct 2011 09:20:41 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 12/15] staging: brcm80211: remove parameter 'off' from
+ _initvars_srom_pci()
+Date: Wed, 5 Oct 2011 15:20:11 +0200
+Message-ID: <1317820814-7083-13-git-send-email-arend@broadcom.com> (sfid-20111005_152045_791240_22F3C146)
+In-Reply-To: <1317820814-7083-1-git-send-email-arend@broadcom.com>
+References: <1317820814-7083-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is to reset hif layer for powering down hw.
+The function is called once with parameter 'off' fixed to zero. This
+parameter has been removed.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath6kl/hif-ops.h |    7 +++++
- drivers/net/wireless/ath/ath6kl/hif.h     |    1 +
- drivers/net/wireless/ath/ath6kl/sdio.c    |   45 +++++++++++++++++++++++++++++
- 3 files changed, 53 insertions(+), 0 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/srom.c |   30 +++++++++++-----------------
+ 1 files changed, 12 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/hif-ops.h b/drivers/net/wireless/ath/ath6kl/hif-ops.h
-index 34adc77..50fd3e9 100644
---- a/drivers/net/wireless/ath/ath6kl/hif-ops.h
-+++ b/drivers/net/wireless/ath/ath6kl/hif-ops.h
-@@ -111,4 +111,11 @@ static inline int ath6kl_hif_power_off(struct ath6kl *ar)
- 	return ar->hif_ops->power_off(ar);
- }
+diff --git a/drivers/staging/brcm80211/brcmsmac/srom.c b/drivers/staging/brcm80211/brcmsmac/srom.c
+index 75de8d1..8400cf4 100644
+--- a/drivers/staging/brcm80211/brcmsmac/srom.c
++++ b/drivers/staging/brcm80211/brcmsmac/srom.c
+@@ -924,7 +924,7 @@ static inline void htol16_buf(u16 *buf, unsigned int size)
+  * convert binary srom data into linked list of srom variable items.
+  */
+ static void
+-_initvars_srom_pci(u8 sromrev, u16 *srom, uint off, struct list_head *var_list)
++_initvars_srom_pci(u8 sromrev, u16 *srom, struct list_head *var_list)
+ {
+ 	struct brcms_srom_list_head *entry;
+ 	enum brcms_srom_id id;
+@@ -950,9 +950,6 @@ _initvars_srom_pci(u8 sromrev, u16 *srom, uint off, struct list_head *var_list)
+ 		if ((srv->revmask & sr) == 0)
+ 			continue;
  
-+static inline void ath6kl_hif_stop(struct ath6kl *ar)
-+{
-+	ath6kl_dbg(ATH6KL_DBG_HIF, "hif stop\n");
-+
-+	ar->hif_ops->stop(ar);
-+}
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath6kl/hif.h b/drivers/net/wireless/ath/ath6kl/hif.h
-index 78a6c79..814386d 100644
---- a/drivers/net/wireless/ath/ath6kl/hif.h
-+++ b/drivers/net/wireless/ath/ath6kl/hif.h
-@@ -246,6 +246,7 @@ struct ath6kl_hif_ops {
- 	int (*resume)(struct ath6kl *ar);
- 	int (*power_on)(struct ath6kl *ar);
- 	int (*power_off)(struct ath6kl *ar);
-+	void (*stop)(struct ath6kl *ar);
- };
+-		if (srv->off < off)
+-			continue;
+-
+ 		flags = srv->flags;
+ 		id = srv->varid;
  
- int ath6kl_hif_setup(struct ath6kl_device *dev);
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 682c47c..c61c512 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -45,6 +45,8 @@ struct ath6kl_sdio {
- 	struct list_head scat_req;
+@@ -964,26 +961,26 @@ _initvars_srom_pci(u8 sromrev, u16 *srom, uint off, struct list_head *var_list)
+ 			/*
+ 			 * stored in string format XX:XX:XX:XX:XX:XX (17 chars)
+ 			 */
+-			ea[0] = (srom[srv->off - off] >> 8) & 0xff;
+-			ea[1] = srom[srv->off - off] & 0xff;
+-			ea[2] = (srom[srv->off + 1 - off] >> 8) & 0xff;
+-			ea[3] = srom[srv->off + 1 - off] & 0xff;
+-			ea[4] = (srom[srv->off + 2 - off] >> 8) & 0xff;
+-			ea[5] = srom[srv->off + 2 - off] & 0xff;
++			ea[0] = (srom[srv->off] >> 8) & 0xff;
++			ea[1] = srom[srv->off] & 0xff;
++			ea[2] = (srom[srv->off + 1] >> 8) & 0xff;
++			ea[3] = srom[srv->off + 1] & 0xff;
++			ea[4] = (srom[srv->off + 2] >> 8) & 0xff;
++			ea[5] = srom[srv->off + 2] & 0xff;
+ 			/* 17 characters + string terminator - union size */
+ 			extra_space = 18 - sizeof(s32);
+ 			type = BRCMS_SROM_STRING;
+ 		} else {
+-			w = srom[srv->off - off];
++			w = srom[srv->off];
+ 			val = (w & srv->mask) >> mask_shift(srv->mask);
+ 			width = mask_width(srv->mask);
  
- 	spinlock_t scat_lock;
-+	bool scatter_enabled;
-+
- 	bool is_disabled;
- 	atomic_t irq_handling;
- 	const struct sdio_device_id *id;
-@@ -651,6 +653,11 @@ static void ath6kl_sdio_cleanup_scatter(struct ath6kl *ar)
- 		list_del(&s_req->list);
- 		spin_unlock_bh(&ar_sdio->scat_lock);
+ 			while (srv->flags & SRFL_MORE) {
+ 				srv++;
+-				if (srv->off == 0 || srv->off < off)
++				if (srv->off == 0)
+ 					continue;
  
-+		/*
-+		 * FIXME: should we also call completion handler with
-+		 * ath6kl_hif_rw_comp_handler() with status -ECANCELED so
-+		 * that the packet is properly freed?
-+		 */
- 		if (s_req->busrequest)
- 			ath6kl_sdio_free_bus_req(ar_sdio, s_req->busrequest);
- 		kfree(s_req->virt_dma_buf);
-@@ -670,6 +677,11 @@ static int ath6kl_sdio_enable_scatter(struct ath6kl *ar)
- 	int ret;
- 	bool virt_scat = false;
+-				w = srom[srv->off - off];
++				w = srom[srv->off];
+ 				val +=
+ 				    ((w & srv->mask) >> mask_shift(srv->
+ 								   mask)) <<
+@@ -1052,13 +1049,10 @@ _initvars_srom_pci(u8 sromrev, u16 *srom, uint off, struct list_head *var_list)
+ 				if ((srv->revmask & sr) == 0)
+ 					continue;
  
-+	if (ar_sdio->scatter_enabled)
-+		return 0;
-+
-+	ar_sdio->scatter_enabled = true;
-+
- 	/* check if host supports scatter and it meets our requirements */
- 	if (ar_sdio->func->card->host->max_segs < MAX_SCATTER_ENTRIES_PER_REQ) {
- 		ath6kl_err("host only supports scatter of :%d entries, need: %d\n",
-@@ -762,6 +774,38 @@ static int ath6kl_sdio_resume(struct ath6kl *ar)
- 	return 0;
- }
+-				if (pb + srv->off < off)
+-					continue;
+-
+ 				if (srv->flags & SRFL_NOVAR)
+ 					continue;
  
-+static void ath6kl_sdio_stop(struct ath6kl *ar)
-+{
-+	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
-+	struct bus_request *req, *tmp_req;
-+	void *context;
-+
-+	/* FIXME: make sure that wq is not queued again */
-+
-+	cancel_work_sync(&ar_sdio->wr_async_work);
-+
-+	spin_lock_bh(&ar_sdio->wr_async_lock);
-+
-+	list_for_each_entry_safe(req, tmp_req, &ar_sdio->wr_asyncq, list) {
-+		list_del(&req->list);
-+
-+		if (req->scat_req) {
-+			/* this is a scatter gather request */
-+			req->scat_req->status = -ECANCELED;
-+			req->scat_req->complete(ar_sdio->ar->htc_target,
-+						req->scat_req);
-+		} else {
-+			context = req->packet;
-+			ath6kl_sdio_free_bus_req(ar_sdio, req);
-+			ath6kl_hif_rw_comp_handler(context, -ECANCELED);
-+		}
-+	}
-+
-+	spin_unlock_bh(&ar_sdio->wr_async_lock);
-+
-+	WARN_ON(get_queue_depth(&ar_sdio->scat_req) != 4);
-+}
-+
- static const struct ath6kl_hif_ops ath6kl_sdio_ops = {
- 	.read_write_sync = ath6kl_sdio_read_write_sync,
- 	.write_async = ath6kl_sdio_write_async,
-@@ -776,6 +820,7 @@ static const struct ath6kl_hif_ops ath6kl_sdio_ops = {
- 	.resume = ath6kl_sdio_resume,
- 	.power_on = ath6kl_sdio_power_on,
- 	.power_off = ath6kl_sdio_power_off,
-+	.stop = ath6kl_sdio_stop,
- };
+-				w = srom[pb + srv->off - off];
++				w = srom[pb + srv->off];
+ 				val = (w & srv->mask) >> mask_shift(srv->mask);
+ 				width = mask_width(srv->mask);
  
- static int ath6kl_sdio_probe(struct sdio_func *func,
+@@ -1226,7 +1220,7 @@ static int initvars_srom_pci(struct si_pub *sih, void __iomem *curmap,
+ 		INIT_LIST_HEAD(&sii->var_list);
+ 
+ 		/* parse SROM into name=value pairs. */
+-		_initvars_srom_pci(sromrev, srom, 0, &sii->var_list);
++		_initvars_srom_pci(sromrev, srom, &sii->var_list);
+ 	}
+ 
+ errout:
+-- 
+1.7.4.1
+
 
