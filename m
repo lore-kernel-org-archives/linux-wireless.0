@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:60418 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751322Ab1JTDO1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Oct 2011 23:14:27 -0400
-Date: Thu, 20 Oct 2011 12:14:21 +0900
-From: Norbert Preining <preining@logic.at>
-To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-Cc: David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-Subject: Re: iwlagn is getting very shaky
-Message-ID: <20111020031421.GS11060@gamma.logic.tuwien.ac.at> (sfid-20111020_051450_680682_2956407E)
-References: <20111019062517.GC11588@gamma.logic.tuwien.ac.at> <1319003304.31823.46.camel@wwguy-huron> <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111019124931.GC3963@gamma.logic.tuwien.ac.at> <1319038282.25023.21.camel@wwguy-ubuntu> <20111020020225.GO11060@gamma.logic.tuwien.ac.at> <1319074339.31823.68.camel@wwguy-huron> <20111020025123.GR11060@gamma.logic.tuwien.ac.at> <E9954878DD1FB34FAE5187FB88C58A3501A0D0992E@orsmsx506.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E9954878DD1FB34FAE5187FB88C58A3501A0D0992E@orsmsx506.amr.corp.intel.com>
+Received: from lo.gmane.org ([80.91.229.12]:60910 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932812Ab1JESJj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Oct 2011 14:09:39 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1RBVuT-0003Ii-UE
+	for linux-wireless@vger.kernel.org; Wed, 05 Oct 2011 20:09:37 +0200
+Received: from 207.59.80.172 ([207.59.80.172])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 20:09:37 +0200
+Received: from viscous.liquid by 207.59.80.172 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 20:09:37 +0200
+To: linux-wireless@vger.kernel.org
+From: Daniel Smith <viscous.liquid@gmail.com>
+Subject: Re: [PATCH v13 5/5] ath9k: implement .get_antenna and .set_antenna
+Date: Wed, 05 Oct 2011 14:09:23 -0400
+Message-ID: <4E8C9D53.1080307@gmail.com> (sfid-20111005_200943_274180_B66824C4)
+References: <1315006827-81443-1-git-send-email-nbd@openwrt.org> <1315006827-81443-2-git-send-email-nbd@openwrt.org> <1315006827-81443-3-git-send-email-nbd@openwrt.org> <1315006827-81443-4-git-send-email-nbd@openwrt.org> <1315006827-81443-5-git-send-email-nbd@openwrt.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: Felix Fietkau <public-nbd-p3rKhJxN3npAfugRpC6u6w@lo.gmane.org>
+In-Reply-To: <1315006827-81443-5-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mi, 19 Okt 2011, Guy, Wey-Yi W wrote:
-> Hmm, I am sure I have the attachment, but here I attach again.
-> 
-> Also, the patch is simple. Only few lines
+On 9/2/2011 7:40 PM, Felix Fietkau wrote:
+> On MIMO chips this can be used to enable/disable hardware chains, ensuring
+> that the MCS information is updated accordingly.
+> On non-MIMO chips with rx diversity (e.g. 9285), this configures the rx
+> input antenna.
 
-No attachment again ... something is filtering here???
+I have been working with this patch as I needed the ability to select 
+the rx chain/antenna on an AR9820.. A problem I have ran into is that 
+regardless of what I set the antenna chain to, the radiotap header 
+always reports antenna 1. I know this originates from the rx status 
+descriptor, but is this really what should be used to report the antenna 
+when using chains to select the antenna?
 
-Please include it directly in the email
+V/r,
+Daniel
 
-Best wishes
-
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-`How do you feel?' he asked him.
-bits of me keep
-passing out.' ....
-`We're safe,' he said.
-`Oh good,' said Arthur.
-in one of the
-spaceships of the Vogon Constructor Fleet.'
-this is obviously some strange usage of
-the word "safe" that I wasn't previously aware of.'
-                 --- Arthur after his first ever teleport ride.
-                 --- Douglas Adams, The Hitchhikers Guide to the Galaxy
