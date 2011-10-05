@@ -1,26 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:39895 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751593Ab1J3ULs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Oct 2011 16:11:48 -0400
-Received: by faan17 with SMTP id n17so4991134faa.19
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Oct 2011 13:11:47 -0700 (PDT)
-Message-ID: <4EADAF81.3090307@gmail.com> (sfid-20111030_211151_340063_0C244F28)
-Date: Sun, 30 Oct 2011 21:11:45 +0100
-From: Nico Gerwien <n.gerwien@googlemail.com>
+Received: from mail.skyhub.de ([78.46.96.112]:42588 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757554Ab1JEPPh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Oct 2011 11:15:37 -0400
+Date: Wed, 5 Oct 2011 17:15:33 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?utf-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org,
+	'LKML' <linux-kernel@vger.kernel.org>
+Subject: Re: =?utf-8?B?562U5aSNOiDnrZTlpI06IOetlA==?= =?utf-8?B?5aSNOg==?=
+ 3.1-rc6+ rtl8192se issue
+Message-ID: <20111005151533.GA18592@gere.osrc.amd.com> (sfid-20111005_171558_708852_EFEE8423)
+References: <CD4D8CF16C39438E82FE8241C9AF80F4@realsil.com.cn>
+ <20110921185816.GA2036@gere.osrc.amd.com>
+ <791179BCE62F4954AB936E6CAC9CA977@realsil.com.cn>
+ <4E7AAB8B.40900@lwfinger.net>
+ <20110922075115.GA17640@liondog.tnic>
+ <6452E68488784D0EA32E4BDF1B941EFB@realsil.com.cn>
+ <20110923103339.GA26078@gere.osrc.amd.com>
+ <4E7CB504.4060904@lwfinger.net>
+ <20110928131823.GA2693@gere.osrc.amd.com>
+ <4E83D092.7010405@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: open802.11s on android
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E83D092.7010405@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Sep 28, 2011 at 08:57:38PM -0500, Larry Finger wrote:
+> Asa you probably do not want to kill your standard tree, unpack the
+> Realtek version normally, cd to where it unpacked, and do a make.
+> Once it builds, do the following:
+> 
+> sudo modprobe -rv rtl8192se
+> sudo modprobe -v mac80211
+> sudo insmod rtlwifi.ko
+> sudo insmod rtl8192se/rtl8192se.ko
+> 
+> >
+> >Also, any preferred module parameters settings you want me to test?
+> 
+> Try it first with the default parameters. If that fails, use "ips=0".
 
-i didn't work with open802.11s yet. So i would like to know if it is 
-compilable on android systems?
-Or is there already a precompiled package for android?
+Ok, I can cautiosly say now that after a couple days of running the
+Realtek version that the box runs just fine, no hiccups whatsoever.
 
-Greetings
-Nicole
+Larry, you said in an earlier mail that you've gone through the
+rtl8192se changes and weren't optimistic with the attached diff you sent
+me. What about the rtlwifi changes, is there something in Realtek's
+version which is missing upstream that would cause the sluggishness?
+
+Thanks.
+
+-- 
+Regards/Gruss,
+Boris.
