@@ -1,31 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24665 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752571Ab1JMKXF (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:57691 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932975Ab1JEGAK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Oct 2011 06:23:05 -0400
-Message-ID: <4E96BC01.5000404@qca.qualcomm.com> (sfid-20111013_122311_624494_ED8453D6)
-Date: Thu, 13 Oct 2011 13:22:57 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
+	Wed, 5 Oct 2011 02:00:10 -0400
+Date: Wed, 5 Oct 2011 08:59:58 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
 To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Sam Leffler <sleffler@chromium.org>
-Subject: Re: [PATCH] ath6kl: unbreak suspend
-References: <20111012074216.26442.87419.stgit@localhost6.localdomain6>
-In-Reply-To: <20111012074216.26442.87419.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset="UTF-8"
+Cc: linux-wireless@vger.kernel.org
+Subject: re: ath6kl: pass only unicast frames for aggregation
+Message-ID: <20111005055958.GA32513@elgon.mountain> (sfid-20111005_080014_141134_437A5F20)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/12/2011 10:42 AM, Kalle Valo wrote:
-> From: Sam Leffler <sleffler@chromium.org>
-> 
-> Add missing {}'s that caused ath6kl_sdio_suspend to always return -EINVAL
-> causing suspend to be aborted.
-> 
-> kvalo: I broke this in commit f7325b85e ("ath6kl: add sdio debug messages")
+Hi Kalle,
 
-Applied. Thanks Sam.
+Smatch complains that 5694f962964 "ath6kl: pass only unicast frames
+for aggregation"
 
-Kalle
+drivers/net/wireless/ath/ath6kl/txrx.c
+  1241                          if (conn && ar->intra_bss) {
+  1242                                  skb1 = skb;
+  1243                                  skb = NULL;
+                                        ^^^^^^^^^^^
+  1244                          } else if (conn && !ar->intra_bss) {
+  1245                                  dev_kfree_skb(skb);
+  1246                                  skb = NULL;
+                                        ^^^^^^^^^^^
+  1247                          }
+  1248                  }
+  1249                  if (skb1)
+  1250                          ath6kl_data_tx(skb1, ar->net_dev);
+  1251          }
+  1252  
+  1253          datap = (struct ethhdr *) skb->data;
+                                          ^^^^^^^^^
+skb can be NULL.
+
+  1254  
+
+regards,
+dan carpenter
