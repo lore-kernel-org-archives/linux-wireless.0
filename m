@@ -1,63 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:36533 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751446Ab1J3TRA (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:41414 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934298Ab1JEJ4Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Oct 2011 15:17:00 -0400
-Subject: [PATCH 5/5] ath6kl: print seqno in htc debug logs
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 30 Oct 2011 21:16:49 +0200
-Message-ID: <20111030191649.20466.43897.stgit@localhost6.localdomain6> (sfid-20111030_201704_592175_179E69F7)
-In-Reply-To: <20111030190922.20466.299.stgit@localhost6.localdomain6>
-References: <20111030190922.20466.299.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 5 Oct 2011 05:56:24 -0400
+Received: by mail-bw0-f46.google.com with SMTP id zt4so1903568bkb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:56:23 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 24/29] wl12xx: move ps_compl into wlvif
+Date: Wed,  5 Oct 2011 11:56:01 +0200
+Message-Id: <1317808566-18857-25-git-send-email-eliad@wizery.com> (sfid-20111005_115629_919187_925DD707)
+In-Reply-To: <1317808566-18857-1-git-send-email-eliad@wizery.com>
+References: <1317808566-18857-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Makes it easier to debug where frames are going.
+move ps_compl into the per-interface data, rather than
+being global.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath6kl/htc.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
+ drivers/net/wireless/wl12xx/event.c  |    6 +++---
+ drivers/net/wireless/wl12xx/main.c   |    2 +-
+ drivers/net/wireless/wl12xx/wl12xx.h |    2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index 99220d4..f3b63ca 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -439,6 +439,9 @@ static void htc_tx_comp_handler(struct htc_target *target,
- 	struct htc_endpoint *endpoint = &target->endpoint[packet->endpoint];
- 	struct list_head container;
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index 1ea508b..fac4eae 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -149,9 +149,9 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
+ 			/* enable beacon early termination */
+ 			ret = wl1271_acx_bet_enable(wl, wlvif, true);
  
-+	ath6kl_dbg(ATH6KL_DBG_HTC, "htc tx complete seqno %d\n",
-+		   packet->info.tx.seqno);
-+
- 	htc_tx_comp_update(target, endpoint, packet);
- 	INIT_LIST_HEAD(&container);
- 	list_add_tail(&packet->list, &container);
-@@ -501,8 +504,8 @@ static int ath6kl_htc_tx_issue(struct htc_target *target,
- 	padded_len = CALC_TXRX_PADDED_LEN(target, send_len);
+-		if (wl->ps_compl) {
+-			complete(wl->ps_compl);
+-			wl->ps_compl = NULL;
++		if (wlvif->ps_compl) {
++			complete(wlvif->ps_compl);
++			wlvif->ps_compl = NULL;
+ 		}
+ 		break;
+ 	default:
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 4fe7662..1d3ed60 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1636,7 +1636,7 @@ static int wl1271_configure_suspend_sta(struct wl1271 *wl,
+ 	if (!test_bit(WL1271_FLAG_PSM, &wl->flags)) {
+ 		DECLARE_COMPLETION_ONSTACK(compl);
  
- 	ath6kl_dbg(ATH6KL_DBG_HTC,
--		   "htc tx issue len %d padded_len %d mbox 0x%X %s\n",
--		   send_len, padded_len,
-+		   "htc tx issue len %d seqno %d padded_len %d mbox 0x%X %s\n",
-+		   send_len, packet->info.tx.seqno, padded_len,
- 		   target->dev->ar->mbox_info.htc_addr,
- 		   sync ? "sync" : "async");
+-		wl->ps_compl = &compl;
++		wlvif->ps_compl = &compl;
+ 		ret = wl1271_ps_set_mode(wl, wlvif, STATION_POWER_SAVE_MODE,
+ 				   wlvif->basic_rate, true);
+ 		if (ret < 0)
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index d016509..d153b24 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -508,7 +508,6 @@ struct wl1271 {
+ 	struct timer_list rx_streaming_timer;
  
-@@ -705,8 +708,8 @@ static int ath6kl_htc_tx_setup_scat_list(struct htc_target *target,
- 		scat_req->len += len;
- 		scat_req->scat_entries++;
- 		ath6kl_dbg(ATH6KL_DBG_HTC,
--			   "htc tx adding (%d) pkt 0x%p len %d remaining %d\n",
--			   i, packet, len, rem_scat);
-+			   "htc tx adding (%d) pkt 0x%p seqno %d len %d remaining %d\n",
-+			   i, packet, packet->info.tx.seqno, len, rem_scat);
- 	}
+ 	struct completion *elp_compl;
+-	struct completion *ps_compl;
+ 	struct delayed_work elp_work;
  
- 	/* Roll back scatter setup in case of any failure */
+ 	/* counter for ps-poll delivery failures */
+@@ -650,6 +649,7 @@ struct wl12xx_vif {
+ 	/* Session counter for the chipset */
+ 	int session_counter;
+ 
++	struct completion *ps_compl;
+ 	struct delayed_work pspoll_work;
+ };
+ 
+-- 
+1.7.6.401.g6a319
 
