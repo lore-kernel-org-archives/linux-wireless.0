@@ -1,30 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42634 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932879Ab1JZRWp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 13:22:45 -0400
-Message-ID: <4EA7DA0F.7050603@sipsolutions.net> (sfid-20111026_192247_679315_277E7D08)
-Date: Wed, 26 Oct 2011 11:59:43 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:2442 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934700Ab1JENbE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Oct 2011 09:31:04 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 01/15] staging: brcm80211: move driver variable
+ functions to srom.c
+Date: Wed, 5 Oct 2011 15:30:44 +0200
+Message-ID: <1317821444-7303-1-git-send-email-arend@broadcom.com> (sfid-20111005_153108_931230_DB266497)
 MIME-Version: 1.0
-To: Arik Nemtsov <arik@wizery.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: support adding IV-room in the skb for CCMP
- keys
-References: <1319350901-31178-1-git-send-email-arik@wizery.com> (sfid-20111023_082219_026010_8DDA891C)
-In-Reply-To: <1319350901-31178-1-git-send-email-arik@wizery.com> (sfid-20111023_082219_026010_8DDA891C)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/23/2011 8:21 AM, Arik Nemtsov wrote:
-> Some cards can generate CCMP IVs in HW, but require the space for the IV
-> to be pre-allocated in the frame at the correct offset. Add a key flag
-> that allows us to achieve this.
+The driver uses variables which are stored in string format. Using
+strings as variable identifiers is disliked by the community. The
+driver has been cleaned up and the only module providing these
+variables is srom.c. The variable retrieval functions have been
+moved to srom.c in preparation of a more likable way to store and
+lookup these driver variables.
 
-Is it really that expensive to generate the IV and then not use it that 
-this is worth the extra complexity? This not just makes it more complex 
-but also more expensive in the other case.
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+Greg,
 
-johannes
+Retrying this one as I do not see it appearing on the reflectors nor
+my own mailbox.
+
+Gr. AvS
+---
+ drivers/staging/brcm80211/brcmsmac/main.c |   44 -----------------------------
+ drivers/staging/brcm80211/brcmsmac/srom.c |   44 +++++++++++++++++++++++++++++
+ 2 files changed, 44 insertions(+), 44 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 9fa8485..100e6ec 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -8881,47 +8881,3 @@ void brcms_c_set_radio_mpc(struct brcms_c_info *wlc, bool mpc)
+ 	wlc->mpc = mpc;
+ 	brcms_c_radio_mpc_upd(wlc);
+ }
+-
+-/*
+- * Search the name=value vars for a specific one and return its value.
+- * Returns NULL if not found.
+- */
+-char *getvar(char *vars, const char *name)
+-{
+-	char *s;
+-	int len;
+-
+-	if (!name)
+-		return NULL;
+-
+-	len = strlen(name);
+-	if (len == 0)
+-		return NULL;
+-
+-	/* first look in vars[] */
+-	for (s = vars; s && *s;) {
+-		if ((memcmp(s, name, len) == 0) && (s[len] == '='))
+-			return &s[len + 1];
+-
+-		while (*s++)
+-			;
+-	}
+-	/* nothing found */
+-	return NULL;
+-}
+-
+-/*
+- * Search the vars for a specific one and return its value as
+- * an integer. Returns 0 if not found.
+- */
+-int getintvar(char *vars, const char *name)
+-{
+-	char *val;
+-	unsigned long res;
+-
+-	val = getvar(vars, name);
+-	if (val && !kstrtoul(val, 0, &res))
+-		return res;
+-
+-	return 0;
+-}
+diff --git a/drivers/staging/brcm80211/brcmsmac/srom.c b/drivers/staging/brcm80211/brcmsmac/srom.c
+index 13d17eb..02dbd98 100644
+--- a/drivers/staging/brcm80211/brcmsmac/srom.c
++++ b/drivers/staging/brcm80211/brcmsmac/srom.c
+@@ -1242,3 +1242,47 @@ int srom_var_init(struct si_pub *sih, void __iomem *curmap, char **vars,
+ 
+ 	return -EINVAL;
+ }
++
++/*
++ * Search the name=value vars for a specific one and return its value.
++ * Returns NULL if not found.
++ */
++char *getvar(char *vars, const char *name)
++{
++	char *s;
++	int len;
++
++	if (!name)
++		return NULL;
++
++	len = strlen(name);
++	if (len == 0)
++		return NULL;
++
++	/* first look in vars[] */
++	for (s = vars; s && *s;) {
++		if ((memcmp(s, name, len) == 0) && (s[len] == '='))
++			return &s[len + 1];
++
++		while (*s++)
++			;
++	}
++	/* nothing found */
++	return NULL;
++}
++
++/*
++ * Search the vars for a specific one and return its value as
++ * an integer. Returns 0 if not found.
++ */
++int getintvar(char *vars, const char *name)
++{
++	char *val;
++	unsigned long res;
++
++	val = getvar(vars, name);
++	if (val && !kstrtoul(val, 0, &res))
++		return res;
++
++	return 0;
++}
+-- 
+1.7.4.1
+
+
