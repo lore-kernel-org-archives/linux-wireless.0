@@ -1,87 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4924 "EHLO MMS3.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:27435 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752245Ab1JMIvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Oct 2011 04:51:51 -0400
-Message-ID: <4E96A696.9040607@broadcom.com> (sfid-20111013_105158_632565_C248FDB0)
-Date: Thu, 13 Oct 2011 10:51:34 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S934386Ab1JELRZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Oct 2011 07:17:25 -0400
+Date: Wed, 5 Oct 2011 13:15:08 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: Re: [RFC] mac80211: remove per band sta supported rates
+Message-ID: <20111005111507.GA2184@redhat.com> (sfid-20111005_131732_330818_E6F18326)
+References: <1317121970-3638-1-git-send-email-sgruszka@redhat.com>
+ <1317123289.4082.12.camel@jlt3.sipsolutions.net>
+ <20110929150018.GA4554@redhat.com>
+ <1317740824.6741.22.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Alwin Beukers" <alwin@broadcom.com>
-Subject: Re: [PATCH 22/22] brcm80211: removed file wifi.c
-References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
- <1318445492-24207-23-git-send-email-arend@broadcom.com>
- <CAB=NE6XYFB4uWcRR1kSNKLaJC4W1E3uLZOd3hGEArjzsmNG4PQ@mail.gmail.com>
-In-Reply-To: <CAB=NE6XYFB4uWcRR1kSNKLaJC4W1E3uLZOd3hGEArjzsmNG4PQ@mail.gmail.com>
-Content-Type: multipart/signed;
- boundary=------------enigAA02C002FE68D619099AF0D0;
- micalg=pgp-sha1;
- protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1317740824.6741.22.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Oct 04, 2011 at 05:07:04PM +0200, Johannes Berg wrote:
+> On Thu, 2011-09-29 at 17:00 +0200, Stanislaw Gruszka wrote:
+> > On Tue, Sep 27, 2011 at 01:34:49PM +0200, Johannes Berg wrote:
+> > > On Tue, 2011-09-27 at 13:12 +0200, Stanislaw Gruszka wrote:
+> > > > It is not possible to connect to remote station on two bands
+> > > > at once, or I'm wrong?
+> > > 
+> > > I don't think it is, but there could be channel switches maybe?
+> > 
+> > If AP would like to change to different band, it will need provide new
+> > Supported Rates element, or operate on older one.
+> > 
+> > So this could be simplified, but from other hand this helps to catch
+> > bugs, so maybe would be better to keep it. As long some other warning
+> > would be added to check that we send on proper channel.
+> 
+> Yeah I was going to say ... the main purpose of this these days seems to
+> be catching this tx-on-wrong-band (which should be channel) ...
 
---------------enigAA02C002FE68D619099AF0D0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+There is a old patch from Luis, which add channel to sta_info,
+http://www.spinics.net/lists/linux-wireless/msg56399.html
+I could incorporate it into my sta->supp_rates[BAND] removal patch,
+so we will not loose debuggability, but event extend it.
+ 
+> > > > Which may happen when we are just after disassociation and changed
+> > > > channel/band, but still want send some frames (namely delBA) to old
+> > > > sta. Right fix should prevent to change channel before we fully
+> > > > dissassocate, or prevent to send frames after connection is lost,
+> > > > or both, but I don't know how to correctly do this so far.
+> > > 
+> > > Well, either we should simply not send the frame, or send it before
+> > > disassoc, no?
+> > 
+> > I think I can fix this that way, but I'm not sure if that would be right
+> > fix either. We have few instances of warning:
+> 
+> I think that would be the right fix. In some cases, we may want to
+> reorder things instead of just not sending frames.
+> 
+> > 1) started at ieee80211_sta_connection_lost()
+> > https://bugzilla.redhat.com/show_bug.cgi?id=731365#c0
+> > could be fixed by:
+> > ieee80211_set_disassoc(..., false);
+> > ieee80211_send_deauth_disassoc(, false);
+> 
+> Why would this trigger the problem? Can we somehow lose connection while
+> already trying to connect to a new AP?
 
-On 10/12/2011 11:54 PM, Luis R. Rodriguez wrote:
-> On Wed, Oct 12, 2011 at 11:51 AM, Arend van Spriel <arend@broadcom.com>=
- wrote:
->> From: Alwin Beukers <alwin@broadcom.com>
->>
->> Wifi.c was empty after previous cleanups, so it was removed.
->>
->> Reviewed-by: Arend van Spriel <arend@broadcom.com>
->> Signed-off-by: Arend van Spriel <arend@broadcom.com>
->=20
-> Heh, remove Reviewed-by dude.
->=20
->   Luis
->=20
+Not sure if I understand. I think that change should not influence
+new AP connection. Also if we really loose connection to old AP, not
+sending deauth/disassoc frames does not matter. It can have matter if
+for some reason old AP start to become available again, so we properly
+disassociate. But for such corner case we should rather not care.
 
-I had a remark on this in earlier commits. So I am clearly missing the
-point here. The author submitted this change and others for review to me
-and I reviewed it as requested. Hence the Reviewed-by: entry.
+> > 2) started at ieee80211_tx_status()
+> > https://bugzilla.redhat.com/show_bug.cgi?id=731365#c11
+> > could be fixed by adding association check before 
+> > ieee80211_send_bar()
+> 
+> That seems reasonable. No use in trying to tear down BA sessions when
+> we're already disconnected.
+> 
+> > 3) started at ieee80211_offchannel_return()
+> > https://bugzilla.redhat.com/show_bug.cgi?id=737993#c0
+> > no idea how to fix
+> 
+> Hm, seems like maybe offchannel return is telling the AP that we woke
+> up, but maybe the offchannel work disconnected or something?
+> 
+> > All these problems looks like channel switching issue -
+> > - we changed channel, whereas we should still operate on old one.
+> > Fedora 15 users start to report that WARNING after update to 3.0
+> > from 2.6.38, so this could be related to Ben offchannel work.
+> 
+> That's very well possible.
+> 
+> Thanks for looking into all this!
 
-I have been given the task to publish these patches and I sign them off
-for the "Developer's Certificate of Origin". Hence the Signed-off-by: ent=
-ry.
+Unfortunately problem is not reproducible for me, so I can not debug.
+I'm currently review channel switching on mac80211, to try to understand
+how things work. Hopefully I'll be able to send reasonable patches
+soon.
 
-Is there something wrong with this reasoning?
-
-Gr. AvS
-
-
---------------enigAA02C002FE68D619099AF0D0
-Content-Type: application/pgp-signature;
- name=signature.asc
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment;
- filename=signature.asc
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iQIcBAEBAgAGBQJOlqadAAoJELcEx/G14aEW1jgP/0X/cA+i0PRF7gN+pnh2UVOZ
-TmWX9DpEwedkG3hJQt3zSHKLtfTlB8MUyDinZWdhu+X4AZ4olLdTcpyCb0HS71j4
-5OQY712LBgAvo2SVU1pD99Q58SR6H3/fmF6kWcGXS+wE6elFPDvNGWu2JOpdSXG2
-agcRR8uuk1HRUd8axcpij/yVb6aD3aqgCB7OoiJgujHbo+fvY1MMp4i51iv6TQK7
-/g3NUJAAG5cecvJ3Wa8W8+KbqHIo2b+zEnu9BPISz/i3sB8toZ8VU1tgY74R1fy0
-V+EI0qW0e3nT93JKTCS8LqAjRx55+pn2Z9LoIu3kfY0+GIMdnUwRZXxqwyJfibxt
-GZh59I/KvdIxEJIPuNHjCJUm4V5OZUQW5dBw76z4T2nOP8gW8FUzIQAsGu8sOey3
-ptv/Pzj05R62CPQ/Tg4beAN0SkBwIcT7w0F9ZbN2t7kdKnxkAQ1MSpR0MsP/htHY
-cd+ups798Emsxzbk/4yEV4z2q33GJBb1OaqtR/WMx+t3vAIECHUUMkLy6wWlt0AV
-+8pKuNTI2bMU6gasHaZG72/2kEFZ4B+jD21MSKtbSLTD8iRc/FDcDjlvEMtQytas
-iXnMEC5X9Tbtni7sJG/SuyX6I0tnkumw8MdBebBQERWCGUDxgLyc5u2x6OuJeesG
-YcQfO/MTb2fp7+rDKu84
-=m4nM
------END PGP SIGNATURE-----
-
---------------enigAA02C002FE68D619099AF0D0--
-
+Stanislaw
