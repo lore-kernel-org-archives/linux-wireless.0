@@ -1,169 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:64879 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753723Ab1JUIhM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37247 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757832Ab1JEO4q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 04:37:12 -0400
-Received: by ggnb1 with SMTP id b1so3634075ggn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2011 01:37:11 -0700 (PDT)
-MIME-Version: 1.0
-Date: Fri, 21 Oct 2011 12:37:11 +0400
-Message-ID: <CAG5dHkRJ0UJMyTR4YuND262gAHBYrieCUex=Oe3D+pNW7wfCfQ@mail.gmail.com> (sfid-20111021_103717_210150_BEA4E630)
-Subject: [RFC 2/7] mac80211: tracking mesh peer link-specific power mode
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 5 Oct 2011 10:56:46 -0400
+Subject: Re: [PATCH v3] move brcm80211 drivers to mainline
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Alwin Beukers <alwin@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>
+In-Reply-To: <4E8C64EF.3070203@broadcom.com> (sfid-20111005_160911_496386_985D7509)
+References: <4E8C64EF.3070203@broadcom.com>
+	 (sfid-20111005_160911_496386_985D7509)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 05 Oct 2011 16:56:42 +0200
+Message-ID: <1317826602.4839.46.camel@jlt3.sipsolutions.net> (sfid-20111005_165649_310818_3DB408A2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tracking link-specific power mode from QoS data and QoS null frames
+On Wed, 2011-10-05 at 16:08 +0200, Arend van Spriel wrote:
+With number of cleanup patch series merged in by Greg KH, I'd like to
+> once again propose moving brcm80211 out of staging and into mainline.
+> 
+> I've put together a patch to add a copy of the current sources from
+> staging-next into drivers/net/wireless/brcm80211 of the wireless-next
+> repository.
+> 
+> The patch is somewhat large, so I've posted the patch at:
+> 
+> http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=view&target=0001-net-wireless-add-brcm80211-drivers-v3.patch
 
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
----
- include/linux/ieee80211.h |   10 +++++++
- net/mac80211/mesh.h       |    2 +
- net/mac80211/rx.c         |   65 +++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/sta_info.h   |    2 +
- 4 files changed, 79 insertions(+), 0 deletions(-)
+Some comments.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index b206b94..aa6e61d 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -546,6 +546,16 @@ static inline int ieee80211_is_qos_nullfunc(__le16 fc)
- 	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_NULLFUNC);
- }
+I sort of understand your fascination with "generic utils" but they're
+wasteful if they're in a single driver only. They should either be made
+more generic (for all drivers) or dissolved, so:
 
-+/**
-+ * ieee80211s_has_qos_pm - check Power Save Level in QoS control
-+ * @qc - QoS control bytes in little-endian byteorder
-+ */
-+
-+static inline int ieee80211s_has_qos_pm(__le16 qc)
-+{
-+	return (qc & cpu_to_le16(IEEE80211_QOS_CTL_PS_LEVEL)) != 0;
-+}
-+
- struct ieee80211s_hdr {
- 	u8 flags;
- 	u8 ttl;
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 8c00e2d..6842453 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -222,6 +222,8 @@ void ieee80211_mesh_init_sdata(struct
-ieee80211_sub_if_data *sdata);
- void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata);
- void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata);
- void ieee80211_mesh_root_setup(struct ieee80211_if_mesh *ifmsh);
-+void ieee80211s_set_sta_ps_mode(struct sta_info *sta,
-+				enum nl80211_mesh_power_mode mode);
+ * You can get rid of BRCMS_BITSCNT and brcmu_bitcount, they're no
+   longer used at all.
+ * brcmu_mhz2channel isn't used anywhere either
+ * neither is brcmu_chspec_ctlchan
+ * brcmu_mw_to_qdbm is used only in a single file,
+   it can move there to save the export etc.
+ * same for brcmu_qdbm_to_mw, brcmu_chipname, brcmu_parse_tlvs,
+   brcmu_chspec_malformed
+ * brcmu_mkiovar is used only in fmac, so you can move it there
+   to save the export
+ * brcmu_format_flags is used only in smac, so same
+ * same for brcmu_format_flags
 
- /* Mesh paths */
- int mesh_nexthop_lookup(struct sk_buff *skb,
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index b867bd5..4decfab 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1162,6 +1162,36 @@ int ieee80211_sta_ps_transition(struct
-ieee80211_sta *sta, bool start)
- }
- EXPORT_SYMBOL(ieee80211_sta_ps_transition);
+After all the above, bcmutils are left with only the pktq and pktbuf
+stuff, which hopefully will be either more generic or dissolved at some
+point in the future since it should really just be a few skb queues.
 
-+#ifdef CONFIG_MAC80211_MESH
-+void ieee80211s_set_sta_ps_mode(struct sta_info *sta,
-+				enum nl80211_mesh_power_mode mode)
-+{
-+	if (sta->peer_ps_mode != mode) {
-+		sta->peer_ps_mode = mode;
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		switch (mode) {
-+		case NL80211_MESH_POWER_ACTIVE:
-+			printk(KERN_DEBUG "%s: STA %pM enters active mode\n",
-+				sta->sdata->name, sta->sta.addr);
-+			break;
-+		case NL80211_MESH_POWER_LIGHT_SLEEP:
-+			printk(KERN_DEBUG "%s: STA %pM enters light sleep mode\n",
-+				sta->sdata->name, sta->sta.addr);
-+			break;
-+		case NL80211_MESH_POWER_DEEP_SLEEP:
-+			printk(KERN_DEBUG "%s: STA %pM enters deep sleep mode\n",
-+				sta->sdata->name, sta->sta.addr);
-+			break;
-+		default:
-+			printk(KERN_DEBUG "%s: STA %pM used invalid power save mode\n",
-+				sta->sdata->name, sta->sta.addr);
-+			break;
-+		}
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+	}
-+}
-+#endif /* CONFIG_MAC80211_MESH */
-+
- static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
- {
-@@ -1313,6 +1343,41 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 		}
- 	}
+Now the drivers :-)
 
-+#ifdef CONFIG_MAC80211_MESH
-+	/*
-+	 * Test mesh power save level subfield of QoS control field (PSL)
-+	 * and Power Managment field of frame control (PW)
-+	 * +----+----+-----------------+
-+	 * | PM | PSL| Mesh Power Mode |
-+	 * +----+----+-----------------+
-+	 * | 0  |Rsrv|    Active       |
-+	 * +----+----+-----------------+
-+	 * | 1  | 0  |    Light        |
-+	 * +----+----+-----------------+
-+	 * | 1  | 1  |    Deep         |
-+	 * +----+----+-----------------+
-+	 */
-+	if (!ieee80211_has_morefrags(hdr->frame_control) &&
-+	    !(status->rx_flags & IEEE80211_RX_DEFERRED_RELEASE) &&
-+	    ieee80211_vif_is_mesh(&rx->sdata->vif) &&
-+	    (ieee80211_is_data(hdr->frame_control) ||
-+	     ieee80211_is_nullfunc(hdr->frame_control))) {
-+		if (ieee80211_has_pm(hdr->frame_control)) {
-+			__le16 *qc = (__le16 *) ieee80211_get_qos_ctl(hdr);
-+			if (ieee80211s_has_qos_pm(*qc)) {
-+				ieee80211s_set_sta_ps_mode(sta,
-+					NL80211_MESH_POWER_DEEP_SLEEP);
-+			} else {
-+				ieee80211s_set_sta_ps_mode(sta,
-+					NL80211_MESH_POWER_LIGHT_SLEEP);
-+			}
-+		} else {
-+			ieee80211s_set_sta_ps_mode(sta,
-+				NL80211_MESH_POWER_ACTIVE);
-+		}
-+	}
-+#endif /* CONFIG_MAC80211_MESH */
-+
- 	/*
- 	 * Drop (qos-)data::nullfunc frames silently, since they
- 	 * are used only to control station power saving mode.
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 8742668..86fe10a 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -251,6 +251,7 @@ struct sta_ampdu_mlme {
-  * @ignore_plink_timer: ignore the peer-link timer (used internally)
-  * @plink_state: peer link state
-  * @local_ps_mode: local link-specific power save mode
-+ * @peer_ps_mode: peer link-specific power save mode
-  * @plink_timeout: timeout of peer link
-  * @plink_timer: peer link watch timer
-  * @plink_timer_was_running: used by suspend/resume to restore timers
-@@ -340,6 +341,7 @@ struct sta_info {
- 	bool plink_timer_was_running;
- 	enum nl80211_plink_state plink_state;
- 	enum nl80211_mesh_power_mode local_ps_mode;
-+	enum nl80211_mesh_power_mode peer_ps_mode;
- 	u32 plink_timeout;
- 	struct timer_list plink_timer;
- #endif
--- 
-1.7.3.4
+FMAC:
+ * A whole bunch of things in dhd.h still seem to lack endian
+   annotations, which I wouldn't be too worried about, if it didn't
+   also seem to lack conversions. For example brcmf_pkt_filter_enable,
+   brcmf_pkt_filter, brcmf_pkt_filter_pattern.
+ * These, along with others like brcmf_bss_info, also seem to lack
+   __packed annotations. I thought you fixed all this, what am I
+   missing?
+ * bss_info[1]; and similar should just be [] I think?
+ * some very odd indentation on line 1172 of wl_cfg80211.c
+
+SMAC:
+ * do you really want to be 40MHz intolerant all the time? not
+   supporting 40 MHz is one thing, but being intolerant?
+ * brcms_ops_stop doesn't seem right -- this should really power down
+   the device, this shouldn't be done per interface since the monitor
+   case will want to RX/TX even when no interface is there; also, you'll
+   want multi-vif support soon :-)
+ * locking tx() is inefficient, you should be able to go with a lock per
+   HW queue
+ * brcms_ops_sta_add is strange -- it shouldn't be modifying the station
+   parameters, why would it do that? seems like a bug to me, especially
+   always assuming the peer can do greenfield etc. This data should
+   already be set by mac80211, if not that's a bug, not something to
+   "fix" in the driver
+ * I still think things like brcms_msleep() are guaranteed to create
+   subtle locking bugs that are almost impossible to find since it drops
+   the spinlock and if somebody calls the function somewhere they won't
+   necessarily keep that in mind. There are a whole bunch of functions
+   behaving like that.
+
+
+Anyway, the code is now readable to me, I see no glaring mac80211 or
+cfg80211 interfacing errors, so I guess you can work the rest in
+mainline.
+
+johannes
+
