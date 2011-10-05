@@ -1,56 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:39550 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753467Ab1JJTQT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 15:16:19 -0400
-Received: by yxl31 with SMTP id 31so5685999yxl.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 12:16:19 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:3157 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934727Ab1JENU4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Oct 2011 09:20:56 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 03/15] staging: brcm80211: remove redundant bus register
+ layer from fullmac
+Date: Wed, 5 Oct 2011 15:20:02 +0200
+Message-ID: <1317820814-7083-4-git-send-email-arend@broadcom.com> (sfid-20111005_152101_933229_CA0C1404)
+In-Reply-To: <1317820814-7083-1-git-send-email-arend@broadcom.com>
+References: <1317820814-7083-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1318269135.9690.369.camel@cumari>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-	<1318234397-21081-3-git-send-email-eliad@wizery.com>
-	<1318269135.9690.369.camel@cumari>
-Date: Mon, 10 Oct 2011 21:16:18 +0200
-Message-ID: <CAB3XZEf0=132jQ2HrsbbFXrCd9A6AXqFYkKSJU4SdbMsG5C=hw@mail.gmail.com> (sfid-20111010_211622_854286_DF25B6AD)
-Subject: Re: [PATCH 02/29] wl12xx: move last_tx_hlid into wlvif
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 10, 2011 at 7:52 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote:
->> move last_tx_hlid into the per-interface data, rather than
->> being global.
->>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> ---
->>  drivers/net/wireless/wl12xx/debugfs.c |    1 -
->>  drivers/net/wireless/wl12xx/main.c    |    1 -
->>  drivers/net/wireless/wl12xx/tx.c      |   10 +++++-----
->>  drivers/net/wireless/wl12xx/wl12xx.h  |    6 +++---
->>  4 files changed, 8 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
->> index f0398d0..bbc8004 100644
->> --- a/drivers/net/wireless/wl12xx/debugfs.c
->> +++ b/drivers/net/wireless/wl12xx/debugfs.c
->> @@ -355,7 +355,6 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
->>       DRIVER_STATE_PRINT_INT(sg_enabled);
->>       DRIVER_STATE_PRINT_INT(enable_11a);
->>       DRIVER_STATE_PRINT_INT(noise);
->> -     DRIVER_STATE_PRINT_INT(last_tx_hlid);
->>       DRIVER_STATE_PRINT_HEX(ap_fw_ps_map);
->>       DRIVER_STATE_PRINT_LHEX(ap_ps_map);
->>       DRIVER_STATE_PRINT_HEX(quirks);
->
-> No big deal at this point, so I'll apply this, but maybe we should print
-> the last_tx_hlid from inside all the vifs as well?
->
-yes.
-i plan to add a new vif_state debugfs key that will print all the relevant info.
+From: Franky Lin <frankyl@broadcom.com>
 
-Eliad.
+Remove some single line functions for bus register/unregister interface
+
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |   10 ----------
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   16 ++++------------
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |   14 --------------
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    4 ----
+ 4 files changed, 4 insertions(+), 40 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 5906337..bff9dcd 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -362,16 +362,6 @@ int brcmf_sdio_remove(struct brcmf_sdio_dev *sdiodev)
+ }
+ EXPORT_SYMBOL(brcmf_sdio_remove);
+ 
+-int brcmf_sdio_register(void)
+-{
+-	return brcmf_sdio_function_init();
+-}
+-
+-void brcmf_sdio_unregister(void)
+-{
+-	brcmf_sdio_function_cleanup();
+-}
+-
+ void brcmf_sdio_wdtmr_enable(struct brcmf_sdio_dev *sdiodev, bool enable)
+ {
+ 	if (enable)
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index fc95bb2..e919de2 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -609,23 +609,15 @@ static struct sdio_driver brcmf_sdmmc_driver = {
+ #endif	/* CONFIG_PM_SLEEP */
+ };
+ 
+-/*
+- * module init
+-*/
+-int brcmf_sdio_function_init(void)
++/* bus register interface */
++int brcmf_bus_register(void)
+ {
+-	int error = 0;
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	error = sdio_register_driver(&brcmf_sdmmc_driver);
+-
+-	return error;
++	return sdio_register_driver(&brcmf_sdmmc_driver);
+ }
+ 
+-/*
+- * module cleanup
+-*/
+-void brcmf_sdio_function_cleanup(void)
++void brcmf_bus_unregister(void)
+ {
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 0ae8dc0..0f7b80d 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -4533,20 +4533,6 @@ void brcmf_sdbrcm_disconnect(void *ptr)
+ 	brcmf_dbg(TRACE, "Disconnected\n");
+ }
+ 
+-int brcmf_bus_register(void)
+-{
+-	brcmf_dbg(TRACE, "Enter\n");
+-
+-	return brcmf_sdio_register();
+-}
+-
+-void brcmf_bus_unregister(void)
+-{
+-	brcmf_dbg(TRACE, "Enter\n");
+-
+-	brcmf_sdio_unregister();
+-}
+-
+ struct device *brcmf_bus_get_device(struct brcmf_bus *bus)
+ {
+ 	return &bus->sdiodev->func[2]->dev;
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index 397ad48..726fa89 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -211,10 +211,6 @@ extern int brcmf_sdcard_rwdata(struct brcmf_sdio_dev *sdiodev, uint rw,
+ extern int brcmf_sdcard_abort(struct brcmf_sdio_dev *sdiodev, uint fn);
+ 
+ /* platform specific/high level functions */
+-extern int brcmf_sdio_function_init(void);
+-extern int brcmf_sdio_register(void);
+-extern void brcmf_sdio_unregister(void);
+-extern void brcmf_sdio_function_cleanup(void);
+ extern int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev);
+ extern int brcmf_sdio_remove(struct brcmf_sdio_dev *sdiodev);
+ 
+-- 
+1.7.4.1
+
+
