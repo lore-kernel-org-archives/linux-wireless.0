@@ -1,361 +1,358 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:35975 "EHLO
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:49843 "EHLO
 	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934289Ab1JEJ4M (ORCPT
+	with ESMTP id S932909Ab1JEJ7n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 05:56:12 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 28so1405752eya.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:56:11 -0700 (PDT)
+	Wed, 5 Oct 2011 05:59:43 -0400
+Received: by eya28 with SMTP id 28so1409114eya.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:59:41 -0700 (PDT)
 From: Eliad Peller <eliad@wizery.com>
 To: Luciano Coelho <coelho@ti.com>
 Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 17/29] wl12xx: move ap_global_hlid and ap_bcast_hlid into wlvif
-Date: Wed,  5 Oct 2011 11:55:54 +0200
-Message-Id: <1317808566-18857-18-git-send-email-eliad@wizery.com> (sfid-20111005_115616_803678_1B580188)
+Subject: [PATCH 15/29] wl12xx: move dev_role_id into wlvif
+Date: Wed,  5 Oct 2011 11:55:52 +0200
+Message-Id: <1317808566-18857-16-git-send-email-eliad@wizery.com> (sfid-20111005_121655_755211_39BD7FE6)
 In-Reply-To: <1317808566-18857-1-git-send-email-eliad@wizery.com>
 References: <1317808566-18857-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-move ap_global_hlid and ap_bcast_hlid into the per-interface
-data, rather than being global.
+move dev_role_id into the per-interface data, rather than
+being global.
 
 Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/wl12xx/cmd.c    |   28 ++++++++++++++--------------
- drivers/net/wireless/wl12xx/cmd.h    |    5 +++--
- drivers/net/wireless/wl12xx/main.c   |   34 +++++++++++++++++++---------------
- drivers/net/wireless/wl12xx/tx.c     |   15 ++++++++-------
- drivers/net/wireless/wl12xx/tx.h     |    3 ++-
- drivers/net/wireless/wl12xx/wl12xx.h |    6 ++++--
- 6 files changed, 50 insertions(+), 41 deletions(-)
+ drivers/net/wireless/wl12xx/cmd.c    |   10 +++---
+ drivers/net/wireless/wl12xx/cmd.h    |    4 +-
+ drivers/net/wireless/wl12xx/main.c   |   50 +++++++++++++++++++---------------
+ drivers/net/wireless/wl12xx/scan.c   |   10 ++++---
+ drivers/net/wireless/wl12xx/tx.c     |    9 +++---
+ drivers/net/wireless/wl12xx/wl12xx.h |    4 ++-
+ 6 files changed, 49 insertions(+), 38 deletions(-)
 
 diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 67ee9e3..e6e3717 100644
+index 961d9b0..5b7b37a 100644
 --- a/drivers/net/wireless/wl12xx/cmd.c
 +++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -671,19 +671,19 @@ int wl12xx_cmd_role_start_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+@@ -464,7 +464,7 @@ static int wl12xx_get_new_session_id(struct wl1271 *wl)
+ 	return wl->session_counter;
+ }
+ 
+-int wl12xx_cmd_role_start_dev(struct wl1271 *wl)
++int wl12xx_cmd_role_start_dev(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ {
+ 	struct wl12xx_cmd_role_start *cmd;
+ 	int ret;
+@@ -475,9 +475,9 @@ int wl12xx_cmd_role_start_dev(struct wl1271 *wl)
  		goto out;
  	}
  
--	ret = wl12xx_allocate_link(wl, &wl->ap_global_hlid);
-+	ret = wl12xx_allocate_link(wl, &wlvif->ap.global_hlid);
- 	if (ret < 0)
- 		goto out_free;
+-	wl1271_debug(DEBUG_CMD, "cmd role start dev %d", wl->dev_role_id);
++	wl1271_debug(DEBUG_CMD, "cmd role start dev %d", wlvif->dev_role_id);
  
--	ret = wl12xx_allocate_link(wl, &wl->ap_bcast_hlid);
-+	ret = wl12xx_allocate_link(wl, &wlvif->ap.bcast_hlid);
- 	if (ret < 0)
- 		goto out_free_global;
- 
- 	cmd->role_id = wlvif->role_id;
- 	cmd->ap.aging_period = cpu_to_le16(wl->conf.tx.ap_aging_period);
- 	cmd->ap.bss_index = WL1271_AP_BSS_INDEX;
--	cmd->ap.global_hlid = wl->ap_global_hlid;
--	cmd->ap.broadcast_hlid = wl->ap_bcast_hlid;
-+	cmd->ap.global_hlid = wlvif->ap.global_hlid;
-+	cmd->ap.broadcast_hlid = wlvif->ap.bcast_hlid;
- 	cmd->ap.basic_rate_set = cpu_to_le32(wlvif->basic_rate_set);
- 	cmd->ap.beacon_interval = cpu_to_le16(wl->beacon_int);
- 	cmd->ap.dtim_interval = bss_conf->dtim_period;
-@@ -725,10 +725,10 @@ int wl12xx_cmd_role_start_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	goto out_free;
- 
- out_free_bcast:
--	wl12xx_free_link(wl, &wl->ap_bcast_hlid);
-+	wl12xx_free_link(wl, &wlvif->ap.bcast_hlid);
- 
- out_free_global:
--	wl12xx_free_link(wl, &wl->ap_global_hlid);
-+	wl12xx_free_link(wl, &wlvif->ap.global_hlid);
- 
- out_free:
- 	kfree(cmd);
-@@ -758,8 +758,8 @@ int wl12xx_cmd_role_stop_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 		goto out_free;
- 	}
- 
--	wl12xx_free_link(wl, &wl->ap_bcast_hlid);
--	wl12xx_free_link(wl, &wl->ap_global_hlid);
-+	wl12xx_free_link(wl, &wlvif->ap.bcast_hlid);
-+	wl12xx_free_link(wl, &wlvif->ap.global_hlid);
- 
- out_free:
- 	kfree(cmd);
-@@ -1264,12 +1264,11 @@ out:
+-	cmd->role_id = wl->dev_role_id;
++	cmd->role_id = wlvif->dev_role_id;
+ 	if (wl->band == IEEE80211_BAND_5GHZ)
+ 		cmd->band = WL12XX_BAND_5GHZ;
+ 	cmd->channel = wl->channel;
+@@ -514,7 +514,7 @@ out:
  	return ret;
  }
  
--int wl1271_cmd_set_sta_key(struct wl1271 *wl, struct ieee80211_vif *vif,
-+int wl1271_cmd_set_sta_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		       u16 action, u8 id, u8 key_type,
- 		       u8 key_size, const u8 *key, const u8 *addr,
- 		       u32 tx_seq_32, u16 tx_seq_16)
+-int wl12xx_cmd_role_stop_dev(struct wl1271 *wl)
++int wl12xx_cmd_role_stop_dev(struct wl1271 *wl, struct wl12xx_vif *wlvif)
  {
--	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
- 	struct wl1271_cmd_set_keys *cmd;
- 	int ret = 0;
+ 	struct wl12xx_cmd_role_stop *cmd;
+ 	int ret;
+@@ -530,7 +530,7 @@ int wl12xx_cmd_role_stop_dev(struct wl1271 *wl)
  
-@@ -1334,9 +1333,10 @@ out:
-  * TODO: merge with sta/ibss into 1 set_key function.
-  * note there are slight diffs
-  */
--int wl1271_cmd_set_ap_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
--			u8 key_size, const u8 *key, u8 hlid, u32 tx_seq_32,
--			u16 tx_seq_16)
-+int wl1271_cmd_set_ap_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+			  u16 action, u8 id, u8 key_type,
-+			  u8 key_size, const u8 *key, u8 hlid, u32 tx_seq_32,
-+			  u16 tx_seq_16)
- {
- 	struct wl1271_cmd_set_keys *cmd;
- 	int ret = 0;
-@@ -1346,7 +1346,7 @@ int wl1271_cmd_set_ap_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
- 	if (!cmd)
- 		return -ENOMEM;
+ 	wl1271_debug(DEBUG_CMD, "cmd role stop dev");
  
--	if (hlid == wl->ap_bcast_hlid) {
-+	if (hlid == wlvif->ap.bcast_hlid) {
- 		if (key_type == KEY_WEP)
- 			lid_type = WEP_DEFAULT_LID_TYPE;
- 		else
+-	cmd->role_id = wl->dev_role_id;
++	cmd->role_id = wlvif->dev_role_id;
+ 	cmd->disc_type = DISCONNECT_IMMEDIATE;
+ 	cmd->reason = cpu_to_le16(WLAN_REASON_UNSPECIFIED);
+ 
 diff --git a/drivers/net/wireless/wl12xx/cmd.h b/drivers/net/wireless/wl12xx/cmd.h
-index 62904c5..d1a88c4 100644
+index c17294c..f7c74dc 100644
 --- a/drivers/net/wireless/wl12xx/cmd.h
 +++ b/drivers/net/wireless/wl12xx/cmd.h
-@@ -70,11 +70,12 @@ int wl1271_build_qos_null_data(struct wl1271 *wl, struct ieee80211_vif *vif);
- int wl12xx_cmd_build_klv_null_data(struct wl1271 *wl,
- 				   struct wl12xx_vif *wlvif);
- int wl12xx_cmd_set_default_wep_key(struct wl1271 *wl, u8 id, u8 hlid);
--int wl1271_cmd_set_sta_key(struct wl1271 *wl, struct ieee80211_vif *vif,
-+int wl1271_cmd_set_sta_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			   u16 action, u8 id, u8 key_type,
- 			   u8 key_size, const u8 *key, const u8 *addr,
- 			   u32 tx_seq_32, u16 tx_seq_16);
--int wl1271_cmd_set_ap_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
-+int wl1271_cmd_set_ap_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+			  u16 action, u8 id, u8 key_type,
- 			  u8 key_size, const u8 *key, u8 hlid, u32 tx_seq_32,
- 			  u16 tx_seq_16);
- int wl12xx_cmd_set_peer_state(struct wl1271 *wl, u8 hlid);
+@@ -39,8 +39,8 @@ int wl1271_cmd_ext_radio_parms(struct wl1271 *wl);
+ int wl12xx_cmd_role_enable(struct wl1271 *wl, u8 *addr, u8 role_type,
+ 			   u8 *role_id);
+ int wl12xx_cmd_role_disable(struct wl1271 *wl, u8 *role_id);
+-int wl12xx_cmd_role_start_dev(struct wl1271 *wl);
+-int wl12xx_cmd_role_stop_dev(struct wl1271 *wl);
++int wl12xx_cmd_role_start_dev(struct wl1271 *wl, struct wl12xx_vif *wlvif);
++int wl12xx_cmd_role_stop_dev(struct wl1271 *wl, struct wl12xx_vif *wlvif);
+ int wl12xx_cmd_role_start_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif);
+ int wl12xx_cmd_role_stop_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif);
+ int wl12xx_cmd_role_start_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif);
 diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 6ecb372..f1358b3 100644
+index 5c12bf4..9a7c94f 100644
 --- a/drivers/net/wireless/wl12xx/main.c
 +++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1488,8 +1488,9 @@ int wl1271_plt_stop(struct wl1271 *wl)
- static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+@@ -1857,6 +1857,7 @@ static void wl12xx_init_vif_data(struct wl12xx_vif *wlvif)
  {
- 	struct wl1271 *wl = hw->priv;
--	struct ieee80211_tx_info *control = IEEE80211_SKB_CB(skb);
--	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(control->control.vif);
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_vif *vif = info->control.vif;
-+	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
- 	unsigned long flags;
- 	int q, mapping;
- 	u8 hlid = 0;
-@@ -1498,7 +1499,7 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	q = wl1271_tx_get_queue(mapping);
- 
- 	if (wlvif->bss_type == BSS_TYPE_AP_BSS)
--		hlid = wl12xx_tx_get_hlid_ap(wl, skb);
-+		hlid = wl12xx_tx_get_hlid_ap(wl, wlvif, skb);
- 
- 	spin_lock_irqsave(&wl->wl_lock, flags);
- 
-@@ -1858,7 +1859,12 @@ static void wl12xx_init_vif_data(struct wl12xx_vif *wlvif)
  	wlvif->bss_type = MAX_BSS_TYPE;
  	wlvif->role_id = WL12XX_INVALID_ROLE_ID;
- 	wlvif->dev_role_id = WL12XX_INVALID_ROLE_ID;
-+
-+	/* TODO: init union by type */
- 	wlvif->sta.hlid = WL12XX_INVALID_LINK_ID;
-+	wlvif->ap.bcast_hlid = WL12XX_INVALID_LINK_ID;
-+	wlvif->ap.global_hlid = WL12XX_INVALID_LINK_ID;
-+
++	wlvif->dev_role_id = WL12XX_INVALID_ROLE_ID;
  	wlvif->basic_rate_set = CONF_TX_RATE_MASK_BASIC;
  	wlvif->basic_rate = CONF_TX_RATE_MASK_BASIC;
  	wlvif->rate_set = CONF_TX_RATE_MASK_BASIC;
-@@ -2084,8 +2090,8 @@ deinit:
- 	/* clear all hlids (except system_hlid) */
- 	wlvif->sta.hlid = WL12XX_INVALID_LINK_ID;
- 	wl->dev_hlid = WL12XX_INVALID_LINK_ID;
--	wl->ap_bcast_hlid = WL12XX_INVALID_LINK_ID;
--	wl->ap_global_hlid = WL12XX_INVALID_LINK_ID;
-+	wlvif->ap.bcast_hlid = WL12XX_INVALID_LINK_ID;
-+	wlvif->ap.global_hlid = WL12XX_INVALID_LINK_ID;
+@@ -1958,7 +1959,7 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 			 */
+ 			ret = wl12xx_cmd_role_enable(wl, vif->addr,
+ 							 WL1271_ROLE_DEVICE,
+-							 &wl->dev_role_id);
++							 &wlvif->dev_role_id);
+ 			if (ret < 0)
+ 				goto irq_disable;
+ 		}
+@@ -2067,7 +2068,7 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 			goto deinit;
  
- 	/*
- 	 * this must be before the cancel_work calls below, so that the work
-@@ -2648,7 +2654,7 @@ static void wl1271_free_ap_keys(struct wl1271 *wl)
- 	}
- }
+ 		if (wlvif->bss_type == BSS_TYPE_STA_BSS) {
+-			ret = wl12xx_cmd_role_disable(wl, &wl->dev_role_id);
++			ret = wl12xx_cmd_role_disable(wl, &wlvif->dev_role_id);
+ 			if (ret < 0)
+ 				goto deinit;
+ 		}
+@@ -2131,7 +2132,7 @@ deinit:
+ 	wl->ap_ps_map = 0;
+ 	wl->sched_scanning = false;
+ 	wlvif->role_id = WL12XX_INVALID_ROLE_ID;
+-	wl->dev_role_id = WL12XX_INVALID_ROLE_ID;
++	wlvif->dev_role_id = WL12XX_INVALID_ROLE_ID;
+ 	memset(wl->roles_map, 0, sizeof(wl->roles_map));
+ 	memset(wl->links_map, 0, sizeof(wl->links_map));
+ 	memset(wl->roc_map, 0, sizeof(wl->roc_map));
+@@ -2284,11 +2285,11 @@ static int wl1271_sta_handle_idle(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	if (idle) {
+ 		/* no need to croc if we weren't busy (e.g. during boot) */
+ 		if (wl12xx_is_roc(wl)) {
+-			ret = wl12xx_croc(wl, wl->dev_role_id);
++			ret = wl12xx_croc(wl, wlvif->dev_role_id);
+ 			if (ret < 0)
+ 				goto out;
  
--static int wl1271_ap_init_hwenc(struct wl1271 *wl)
-+static int wl1271_ap_init_hwenc(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- {
- 	int i, ret = 0;
- 	struct wl1271_ap_key *key;
-@@ -2662,9 +2668,9 @@ static int wl1271_ap_init_hwenc(struct wl1271 *wl)
- 		key = wl->recorded_ap_keys[i];
- 		hlid = key->hlid;
- 		if (hlid == WL12XX_INVALID_LINK_ID)
--			hlid = wl->ap_bcast_hlid;
-+			hlid = wlvif->ap.bcast_hlid;
- 
--		ret = wl1271_cmd_set_ap_key(wl, KEY_ADD_OR_REPLACE,
-+		ret = wl1271_cmd_set_ap_key(wl, wlvif, KEY_ADD_OR_REPLACE,
- 					    key->id, key->key_type,
- 					    key->key_size, key->key,
- 					    hlid, key->tx_seq_32,
-@@ -2678,7 +2684,7 @@ static int wl1271_ap_init_hwenc(struct wl1271 *wl)
- 
- 	if (wep_key_added) {
- 		ret = wl12xx_cmd_set_default_wep_key(wl, wl->default_key,
--						     wl->ap_bcast_hlid);
-+						     wlvif->ap.bcast_hlid);
- 		if (ret < 0)
- 			goto out;
- 	}
-@@ -2704,7 +2710,7 @@ static int wl1271_set_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			wl_sta = (struct wl1271_station *)sta->drv_priv;
- 			hlid = wl_sta->hlid;
- 		} else {
--			hlid = wl->ap_bcast_hlid;
-+			hlid = wlvif->ap.bcast_hlid;
+-			ret = wl12xx_cmd_role_stop_dev(wl);
++			ret = wl12xx_cmd_role_stop_dev(wl, wlvif);
+ 			if (ret < 0)
+ 				goto out;
+ 		}
+@@ -2310,11 +2311,11 @@ static int wl1271_sta_handle_idle(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 			ieee80211_sched_scan_stopped(wl->hw);
  		}
  
- 		if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags)) {
-@@ -2720,7 +2726,7 @@ static int wl1271_set_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 					     key, hlid, tx_seq_32,
- 					     tx_seq_16);
- 		} else {
--			ret = wl1271_cmd_set_ap_key(wl, action,
-+			ret = wl1271_cmd_set_ap_key(wl, wlvif, action,
- 					     id, key_type, key_size,
- 					     key, hlid, tx_seq_32,
- 					     tx_seq_16);
-@@ -2764,7 +2770,7 @@ static int wl1271_set_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		    wlvif->sta.hlid == WL12XX_INVALID_LINK_ID)
- 			return 0;
+-		ret = wl12xx_cmd_role_start_dev(wl);
++		ret = wl12xx_cmd_role_start_dev(wl, wlvif);
+ 		if (ret < 0)
+ 			goto out;
  
--		ret = wl1271_cmd_set_sta_key(wl, vif, action,
-+		ret = wl1271_cmd_set_sta_key(wl, wlvif, action,
- 					     id, key_type, key_size,
- 					     key, addr, tx_seq_32,
- 					     tx_seq_16);
-@@ -3370,7 +3376,7 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
- 				if (ret < 0)
- 					goto out;
+-		ret = wl12xx_roc(wl, wl->dev_role_id);
++		ret = wl12xx_roc(wl, wlvif->dev_role_id);
+ 		if (ret < 0)
+ 			goto out;
+ 		clear_bit(WL1271_FLAG_IDLE, &wl->flags);
+@@ -2403,7 +2404,8 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 			if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags)) {
+ 				if (wl12xx_is_roc(wl)) {
+ 					/* roaming */
+-					ret = wl12xx_croc(wl, wl->dev_role_id);
++					ret = wl12xx_croc(wl,
++							  wlvif->dev_role_id);
+ 					if (ret < 0)
+ 						goto out_sleep;
+ 				}
+@@ -2419,11 +2421,13 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 				 */
+ 				if (wl12xx_is_roc(wl) &&
+ 				    !(conf->flags & IEEE80211_CONF_IDLE)) {
+-					ret = wl12xx_croc(wl, wl->dev_role_id);
++					ret = wl12xx_croc(wl,
++							  wlvif->dev_role_id);
+ 					if (ret < 0)
+ 						goto out_sleep;
  
--				ret = wl1271_ap_init_hwenc(wl);
-+				ret = wl1271_ap_init_hwenc(wl, wlvif);
- 				if (ret < 0)
- 					goto out;
+-					ret = wl12xx_roc(wl, wl->dev_role_id);
++					ret = wl12xx_roc(wl,
++							 wlvif->dev_role_id);
+ 					if (ret < 0)
+ 						wl1271_warning("roc failed %d",
+ 							       ret);
+@@ -2886,6 +2890,8 @@ static int wl1271_op_hw_scan(struct ieee80211_hw *hw,
+ 			     struct cfg80211_scan_request *req)
+ {
+ 	struct wl1271 *wl = hw->priv;
++	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
++
+ 	int ret;
+ 	u8 *ssid = NULL;
+ 	size_t len = 0;
+@@ -2920,8 +2926,8 @@ static int wl1271_op_hw_scan(struct ieee80211_hw *hw,
+ 			ret = -EBUSY;
+ 			goto out_sleep;
+ 		}
+-		wl12xx_croc(wl, wl->dev_role_id);
+-		wl12xx_cmd_role_stop_dev(wl);
++		wl12xx_croc(wl, wlvif->dev_role_id);
++		wl12xx_cmd_role_stop_dev(wl, wlvif);
+ 	}
  
-@@ -4850,8 +4856,6 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	ret = wl1271_scan(hw->priv, vif, ssid, len, req);
+@@ -3432,8 +3438,8 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+ 			if (test_and_clear_bit(WL1271_FLAG_IBSS_JOINED,
+ 					       &wl->flags)) {
+ 				wl1271_unjoin(wl, wlvif);
+-				wl12xx_cmd_role_start_dev(wl);
+-				wl12xx_roc(wl, wl->dev_role_id);
++				wl12xx_cmd_role_start_dev(wl, wlvif);
++				wl12xx_roc(wl, wlvif->dev_role_id);
+ 			}
+ 		}
+ 	}
+@@ -3600,16 +3606,17 @@ sta_not_found:
+ 				 * roaming on the same channel. until we will
+ 				 * have a better flow...)
+ 				 */
+-				if (test_bit(wl->dev_role_id, wl->roc_map)) {
+-					ret = wl12xx_croc(wl, wl->dev_role_id);
++				if (test_bit(wlvif->dev_role_id, wl->roc_map)) {
++					ret = wl12xx_croc(wl,
++							  wlvif->dev_role_id);
+ 					if (ret < 0)
+ 						goto out;
+ 				}
+ 
+ 				wl1271_unjoin(wl, wlvif);
+ 				if (!(conf_flags & IEEE80211_CONF_IDLE)) {
+-					wl12xx_cmd_role_start_dev(wl);
+-					wl12xx_roc(wl, wl->dev_role_id);
++					wl12xx_cmd_role_start_dev(wl, wlvif);
++					wl12xx_roc(wl, wlvif->dev_role_id);
+ 				}
+ 			}
+ 		}
+@@ -3688,12 +3695,12 @@ sta_not_found:
+ 		 * stop device role if started (we might already be in
+ 		 * STA role). TODO: make it better.
+ 		 */
+-		if (wl->dev_role_id != WL12XX_INVALID_ROLE_ID) {
+-			ret = wl12xx_croc(wl, wl->dev_role_id);
++		if (wlvif->dev_role_id != WL12XX_INVALID_ROLE_ID) {
++			ret = wl12xx_croc(wl, wlvif->dev_role_id);
+ 			if (ret < 0)
+ 				goto out;
+ 
+-			ret = wl12xx_cmd_role_stop_dev(wl);
++			ret = wl12xx_cmd_role_stop_dev(wl, wlvif);
+ 			if (ret < 0)
+ 				goto out;
+ 		}
+@@ -4841,7 +4848,6 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
  	wl->system_hlid = WL12XX_SYSTEM_HLID;
+ 	wl->sta_hlid = WL12XX_INVALID_LINK_ID;
+-	wl->dev_role_id = WL12XX_INVALID_ROLE_ID;
  	wl->dev_hlid = WL12XX_INVALID_LINK_ID;
  	wl->session_counter = 0;
--	wl->ap_bcast_hlid = WL12XX_INVALID_LINK_ID;
--	wl->ap_global_hlid = WL12XX_INVALID_LINK_ID;
- 	wl->active_sta_count = 0;
- 	setup_timer(&wl->rx_streaming_timer, wl1271_rx_streaming_timer,
- 		    (unsigned long) wl);
+ 	wl->ap_bcast_hlid = WL12XX_INVALID_LINK_ID;
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index 9d0dfb5..9372136 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -34,6 +34,7 @@ void wl1271_scan_complete_work(struct work_struct *work)
+ {
+ 	struct delayed_work *dwork;
+ 	struct wl1271 *wl;
++	struct ieee80211_vif *vif;
+ 	struct wl12xx_vif *wlvif;
+ 	int ret;
+ 	bool is_sta, is_ibss;
+@@ -51,7 +52,8 @@ void wl1271_scan_complete_work(struct work_struct *work)
+ 	if (wl->scan.state == WL1271_SCAN_STATE_IDLE)
+ 		goto out;
+ 
+-	wlvif = wl12xx_vif_to_data(wl->scan_vif);
++	vif = wl->scan_vif;
++	wlvif = wl12xx_vif_to_data(vif);
+ 
+ 	wl->scan.state = WL1271_SCAN_STATE_IDLE;
+ 	memset(wl->scan.scanned_ch, 0, sizeof(wl->scan.scanned_ch));
+@@ -72,10 +74,10 @@ void wl1271_scan_complete_work(struct work_struct *work)
+ 	is_ibss = (wlvif->bss_type == BSS_TYPE_IBSS);
+ 	if (((is_sta && !test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags)) ||
+ 	     (is_ibss && !test_bit(WL1271_FLAG_IBSS_JOINED, &wl->flags))) &&
+-	    !test_bit(wl->dev_role_id, wl->roc_map)) {
++	    !test_bit(wlvif->dev_role_id, wl->roc_map)) {
+ 		/* restore remain on channel */
+-		wl12xx_cmd_role_start_dev(wl);
+-		wl12xx_roc(wl, wl->dev_role_id);
++		wl12xx_cmd_role_start_dev(wl, wlvif);
++		wl12xx_roc(wl, wlvif->dev_role_id);
+ 	}
+ 	wl1271_ps_elp_sleep(wl);
+ 
 diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index db55767..53c6451 100644
+index 5561ec2..538d861 100644
 --- a/drivers/net/wireless/wl12xx/tx.c
 +++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -40,7 +40,7 @@ static int wl1271_set_default_wep_key(struct wl1271 *wl,
- 
- 	if (is_ap)
- 		ret = wl12xx_cmd_set_default_wep_key(wl, id,
--						     wl->ap_bcast_hlid);
-+						     wlvif->ap.bcast_hlid);
- 	else
- 		ret = wl12xx_cmd_set_default_wep_key(wl, id, wlvif->sta.hlid);
- 
-@@ -156,7 +156,8 @@ bool wl12xx_is_dummy_packet(struct wl1271 *wl, struct sk_buff *skb)
- 	return wl->dummy_packet == skb;
+@@ -77,7 +77,8 @@ static void wl1271_free_tx_id(struct wl1271 *wl, int id)
  }
  
--u8 wl12xx_tx_get_hlid_ap(struct wl1271 *wl, struct sk_buff *skb)
-+u8 wl12xx_tx_get_hlid_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+			 struct sk_buff *skb)
+ static int wl1271_tx_update_filters(struct wl1271 *wl,
+-						 struct sk_buff *skb)
++				    struct wl12xx_vif *wlvif,
++				    struct sk_buff *skb)
  {
- 	struct ieee80211_tx_info *control = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr;
+ 	int ret;
+@@ -97,11 +98,11 @@ static int wl1271_tx_update_filters(struct wl1271 *wl,
+ 		goto out;
  
-@@ -174,9 +175,9 @@ u8 wl12xx_tx_get_hlid_ap(struct wl1271 *wl, struct sk_buff *skb)
+ 	wl1271_debug(DEBUG_CMD, "starting device role for roaming");
+-	ret = wl12xx_cmd_role_start_dev(wl);
++	ret = wl12xx_cmd_role_start_dev(wl, wlvif);
+ 	if (ret < 0)
+ 		goto out;
  
- 		hdr = (struct ieee80211_hdr *)skb->data;
- 		if (ieee80211_is_mgmt(hdr->frame_control))
--			return wl->ap_global_hlid;
-+			return wlvif->ap.global_hlid;
- 		else
--			return wl->ap_bcast_hlid;
-+			return wlvif->ap.bcast_hlid;
- 	}
- }
- 
-@@ -191,7 +192,7 @@ static u8 wl1271_tx_get_hlid(struct wl1271 *wl, struct ieee80211_vif *vif,
- 		return wl->system_hlid;
- 
+-	ret = wl12xx_roc(wl, wl->dev_role_id);
++	ret = wl12xx_roc(wl, wlvif->dev_role_id);
+ 	if (ret < 0)
+ 		goto out;
+ out:
+@@ -192,7 +193,7 @@ static u8 wl1271_tx_get_hlid(struct wl1271 *wl, struct ieee80211_vif *vif,
  	if (wlvif->bss_type == BSS_TYPE_AP_BSS)
--		return wl12xx_tx_get_hlid_ap(wl, skb);
-+		return wl12xx_tx_get_hlid_ap(wl, wlvif, skb);
+ 		return wl12xx_tx_get_hlid_ap(wl, skb);
  
- 	wl1271_tx_update_filters(wl, wlvif, skb);
+-	wl1271_tx_update_filters(wl, skb);
++	wl1271_tx_update_filters(wl, wlvif, skb);
  
-@@ -341,9 +342,9 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct ieee80211_vif *vif,
- 		else
- 			rate_idx = ACX_TX_BASIC_RATE;
- 	} else {
--		if (hlid == wl->ap_global_hlid)
-+		if (hlid == wlvif->ap.global_hlid)
- 			rate_idx = ACX_TX_AP_MODE_MGMT_RATE;
--		else if (hlid == wl->ap_bcast_hlid)
-+		else if (hlid == wlvif->ap.bcast_hlid)
- 			rate_idx = ACX_TX_AP_MODE_BCST_RATE;
- 		else
- 			rate_idx = ac;
-diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
-index ba9403a..0964c93 100644
---- a/drivers/net/wireless/wl12xx/tx.h
-+++ b/drivers/net/wireless/wl12xx/tx.h
-@@ -212,7 +212,8 @@ u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
- u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set,
- 				enum ieee80211_band rate_band);
- u32 wl1271_tx_min_rate_get(struct wl1271 *wl, u32 rate_set);
--u8 wl12xx_tx_get_hlid_ap(struct wl1271 *wl, struct sk_buff *skb);
-+u8 wl12xx_tx_get_hlid_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+			 struct sk_buff *skb);
- void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid);
- void wl1271_handle_tx_low_watermark(struct wl1271 *wl);
- bool wl12xx_is_dummy_packet(struct wl1271 *wl, struct sk_buff *skb);
+ 	if ((test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags) ||
+ 	     test_bit(WL1271_FLAG_IBSS_JOINED, &wl->flags)) &&
 diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index a07b55f..91d666f 100644
+index 46258c7..32fecae 100644
 --- a/drivers/net/wireless/wl12xx/wl12xx.h
 +++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -402,8 +402,6 @@ struct wl1271 {
+@@ -400,7 +400,6 @@ struct wl1271 {
+ 
+ 	u8 mac_addr[ETH_ALEN];
  	int channel;
+-	u8 dev_role_id;
  	u8 system_hlid;
+ 	u8 sta_hlid;
  	u8 dev_hlid;
--	u8 ap_global_hlid;
--	u8 ap_bcast_hlid;
+@@ -621,6 +620,9 @@ struct wl12xx_vif {
+ 	u8 p2p; /* we are using p2p role */
+ 	u8 role_id;
  
- 	unsigned long links_map[BITS_TO_LONGS(WL12XX_MAX_LINKS)];
- 	unsigned long roles_map[BITS_TO_LONGS(WL12XX_MAX_ROLES)];
-@@ -626,6 +624,10 @@ struct wl12xx_vif {
- 		struct {
- 			u8 hlid;
- 		} sta;
-+		struct {
-+			u8 global_hlid;
-+			u8 bcast_hlid;
-+		} ap;
- 	};
- 
++	/* sta/ibss specific */
++	u8 dev_role_id;
++
  	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
+ 	u8 ssid_len;
+ 
 -- 
 1.7.6.401.g6a319
 
