@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:40070 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750850Ab1JLIuj (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:26311 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934819Ab1JETzQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 04:50:39 -0400
-Date: Wed, 12 Oct 2011 11:50:30 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Bartosz MARKOWSKI <bartosz.markowski@tieto.com>,
-	Janusz DZIEDZIC <janusz.dziedzic@tieto.com>
-Subject: Re: [RFC 01/07] wireless-next: WAPI support for hardware-accelerated
- drivers
-Message-ID: <20111012085030.GA3698@jm.kir.nu> (sfid-20111012_105042_998869_9D76C9FF)
-References: <op.v27rufm9ya27un@edmitar>
+	Wed, 5 Oct 2011 15:55:16 -0400
+Date: Wed, 5 Oct 2011 22:52:28 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: Yogesh Powar <yogeshp@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: mwifiex: add cfg80211 handlers add/del_virtual_intf
+Message-ID: <20111005195228.GG30887@longonot.mountain> (sfid-20111005_215521_557191_FFD958AD)
+References: <20111005060744.GB32513@elgon.mountain>
+ <477F20668A386D41ADCC57781B1F70430815597445@SC-VEXCH1.marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <op.v27rufm9ya27un@edmitar>
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430815597445@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 12, 2011 at 03:02:29AM +0200, Dmitry Tarnyagin wrote:
-> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-> @@ -1551,12 +1552,14 @@ enum ieee80211_sa_query_action {
->  #define WLAN_CIPHER_SUITE_CCMP		0x000FAC04
->  #define WLAN_CIPHER_SUITE_WEP104	0x000FAC05
->  #define WLAN_CIPHER_SUITE_AES_CMAC	0x000FAC06
-> +#define WLAN_CIPHER_SUITE_SMS4		0x000FAC07
+On Wed, Oct 05, 2011 at 12:08:36PM -0700, Bing Zhao wrote:
+> Since the first element of priv[] cannot be NULL. How about this fix?
 > 
->  /* AKM suite selectors */
->  #define WLAN_AKM_SUITE_8021X		0x000FAC01
->  #define WLAN_AKM_SUITE_PSK		0x000FAC02
->  #define WLAN_AKM_SUITE_SAE			0x000FAC08
->  #define WLAN_AKM_SUITE_FT_OVER_SAE	0x000FAC09
-> +#define WLAN_AKM_SUITE_WAPI_PSK		0x000FAC03
+> +       priv = adapter->priv[0];
+> +       BUG_ON(!priv);
+> +
+>         wiphy_unregister(priv->wdev->wiphy);
+> 
 
-Where do these values come from?
+I don't know the code at all, so I'll trust you on that.  :)
 
-00-0F-AC:7 cipher suite selector has already been allocated for other
-purposes ("Group addressed traffic not allowed") and similarly, AKM
-suite 00-0F-AC:3 is already in use ("FT authentication negotiated over
-IEEE 802.1X"). The 00-0F-AC OUI is managed by IEEE 802.11 and you cannot
-just pick a random suite type from that OUI and hope for the best. This
-will result in conflicts with other uses.
+But please don't add the BUG_ON().  Calls to BUG_ON() make the code
+messier, and they are more painful than needed for the user.  If we
+don't have the BUG_ON() then we get an Oops and the driver will die,
+but we can still can close our documents and reboot the system.
 
-These need to be either allocated by IEEE 802.11 ANA or maybe more
-likely, by any vendor that has their own OUI could allocate a unique
-identifier for this purpose.
+Debugging NULL dereference bugs is normally super easy.  Just compile
+with CONFIG_DEBUG_INFO=y, run gdb on the .ko file and type:
+"list *(function_name+0x63)" at the gdb prompt.  Done.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+regards,
+dan carpenter
+
