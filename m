@@ -1,119 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:57729 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753317Ab1JZXW6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 19:22:58 -0400
-Received: by ggnb1 with SMTP id b1so2058490ggn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 16:22:57 -0700 (PDT)
-Message-ID: <4EA8965D.2030207@lwfinger.net> (sfid-20111027_012302_358517_0460C5B7)
-Date: Wed, 26 Oct 2011 18:23:09 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:2115 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934694Ab1JENUj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Oct 2011 09:20:39 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 08/15] staging: brcm80211: remove invalid variable
+ lookup from srom
+Date: Wed, 5 Oct 2011 15:20:07 +0200
+Message-ID: <1317820814-7083-9-git-send-email-arend@broadcom.com> (sfid-20111005_152054_456309_53AE4553)
+In-Reply-To: <1317820814-7083-1-git-send-email-arend@broadcom.com>
+References: <1317820814-7083-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Roman Proud <setamagiga@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: RTL8188RU no injection?
-References: <CAF7qGM4BL10gn2786kW73sAk8f-y8CzX0rx2BQsY_Q96W=pfog@mail.gmail.com>
-In-Reply-To: <CAF7qGM4BL10gn2786kW73sAk8f-y8CzX0rx2BQsY_Q96W=pfog@mail.gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------030907010202070501060000"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------030907010202070501060000
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+In the driver several driver variables were looked up that are
+not supported by the srom code. These have been removed.
 
-On 10/26/2011 05:29 PM, Roman Proud wrote:
-> Hi there,
->
-> i hope you guys can help me.
-> I wanted a new Wifi card, because mine has no injection, what i need sometimes.
->
-> So i forced the Internet to find that a 8187 would be best for. So i
-> bought the 8188 (newer = better?)... i never had thought about so much
-> difference in just one number... it was horrible to even get the card
-> work, first no monitor mode works, but now it does (i dunno why
-> O_o)... The only thing i miss is Package injection.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/aiutils.c     |    6 +--
+ drivers/staging/brcm80211/brcmsmac/main.c        |   34 ++--------------------
+ drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c |    6 ----
+ 3 files changed, 5 insertions(+), 41 deletions(-)
 
-Well, your research should have shown that the 8187 chip is an 802.11g version, 
-while the 8188 works with 802.11n. That should have given you a clue that the 
-driver would be VERY different.
-
-> So my Question. Is it there? is it in the driver and i just have to do
-> some magic again like i did with the monitor mode?
-> If not, is there any Patch? (i didn't find anything...)
-> Or should i simply send the damn thing back and get me an 8187? (its
-> not that simple, and i like hacking into my linux, so one of the first
-> both, would be nicer)
-
-What kernel are you using? If you want the latest version of wireless code, you 
-should be running the version found in the git repo at
-git://git.infradead.org/users/linville/wireless-next.git. Your next-best option 
-would be to get the bleeding-edge version of compat-wireless and build it for 
-your current kernel.
-
-There is a bug in rtlwifi that affects monitor mode in rtl8192cu, rtl8192ce, 
-rtl8192se, and rtl8192de. I think it is fixed by the attached patch. At least 
-monitor mode works here after the patch is applied. Please let me know if it 
-works for you.
-
-Larry
-
-
-
-
---------------030907010202070501060000
-Content-Type: text/plain;
- name="rtl8192cu_monitor"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="rtl8192cu_monitor"
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/core.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/core.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/core.c
-@@ -375,6 +375,7 @@ static void rtl_op_configure_filter(stru
- 					  rtlpriv->cfg->maps[MAC_RCR_AB]);
- 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
- 				 ("Disable receive multicast frame.\n"));
-+			*new_flags |= FIF_ALLMULTI;
- 		}
- 	}
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index d44f619..2bc4bb3 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -1109,10 +1109,8 @@ static struct si_info *ai_doattach(struct si_info *sii,
+ 		u32 xtalfreq;
+ 		si_pmu_init(sih);
+ 		si_pmu_chip_init(sih);
+-		xtalfreq = getintvar(sih, "xtalfreq");
+-		/* If xtalfreq var not available, try to measure it */
+-		if (xtalfreq == 0)
+-			xtalfreq = si_pmu_measure_alpclk(sih);
++
++		xtalfreq = si_pmu_measure_alpclk(sih);
+ 		si_pmu_pll_init(sih, xtalfreq);
+ 		si_pmu_res_init(sih);
+ 		si_pmu_swreg_init(sih);
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index f2339a5..cfa918d 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -4557,8 +4557,6 @@ static int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device,
+ 	bool wme = false;
+ 	struct shared_phy_params sha_params;
+ 	struct wiphy *wiphy = wlc->wiphy;
+-	char *var;
+-	unsigned long res;
  
-@@ -387,6 +388,7 @@ static void rtl_op_configure_filter(stru
- 			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACRC32];
- 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
- 				 ("Disable receive FCS error frame.\n"));
-+			*new_flags |= FIF_FCSFAIL;
- 		}
+ 	BCMMSG(wlc->wiphy, "wl%d: vendor 0x%x device 0x%x\n", unit, vendor,
+ 		device);
+@@ -4588,27 +4586,6 @@ static int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device,
  	}
+ 	vars = wlc_hw->vars;
  
-@@ -400,6 +402,7 @@ static void rtl_op_configure_filter(stru
- 				rtlpriv->cfg->ops->set_chk_bssid(hw, false);
- 			} else {
- 				rtlpriv->cfg->ops->set_chk_bssid(hw, true);
-+				*new_flags |= FIF_BCN_PRBRESP_PROMISC;
- 			}
- 		}
- 	}
-@@ -414,6 +417,7 @@ static void rtl_op_configure_filter(stru
- 			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACF];
- 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
- 				 ("Disable receive control frame.\n"));
-+			*new_flags |= FIF_CONTROL;
- 		}
- 	}
+-	/*
+-	 * Get vendid/devid nvram overwrites, which could be different
+-	 * than those the BIOS recognizes for devices on PCMCIA_BUS,
+-	 * SDIO_BUS, and SROMless devices on PCI_BUS.
+-	 */
+-	var = getvar(wlc_hw->sih, "vendid");
+-	if (var && !kstrtoul(var, 0, &res)) {
+-		vendor = (u16)res;
+-		wiphy_err(wiphy, "Overriding vendor id = 0x%x\n",
+-			  vendor);
+-	}
+-	var = getvar(wlc_hw->sih, "devid");
+-	if (var && !kstrtoul(var, 0, &res)) {
+-		u16 devid = (u16)res;
+-		if (devid != 0xffff) {
+-			device = devid;
+-			wiphy_err(wiphy, "Overriding device id = 0x%x"
+-				  "\n", device);
+-		}
+-	}
+-
+ 	/* verify again the device is supported */
+ 	if (!brcms_c_chipmatch(vendor, device)) {
+ 		wiphy_err(wiphy, "wl%d: brcms_b_attach: Unsupported "
+@@ -4928,9 +4905,6 @@ static bool brcms_c_attach_stf_ant_init(struct brcms_c_info *wlc)
  
-@@ -426,6 +430,7 @@ static void rtl_op_configure_filter(stru
- 			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_AAP];
- 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
- 				 ("Disable receive other BSS's frame.\n"));
-+			*new_flags |= FIF_OTHER_BSS;
- 		}
+ 	/* get antennas available */
+ 	aa = (s8) getintvar(sih, bandtype == BRCM_BAND_5G ? "aa5g" : "aa2g");
+-	if (aa == 0)
+-		aa = (s8) getintvar(sih,
+-				    bandtype == BRCM_BAND_5G ? "aa1" : "aa0");
+ 	if ((aa < 1) || (aa > 15)) {
+ 		wiphy_err(wlc->wiphy, "wl%d: %s: Invalid antennas available in"
+ 			  " srom (0x%x), using 3\n", unit, __func__, aa);
+@@ -5113,11 +5087,9 @@ brcms_c_attach(struct brcms_info *wl, u16 vendor, u16 device, uint unit,
+ 	brcms_b_copyfrom_vars(wlc->hw, &pub->vars, &wlc->vars_size);
+ 
+ 
+-	/* set maximum allowed duty cycle */
+-	wlc->tx_duty_cycle_ofdm =
+-	    (u16) getintvar(wlc->hw->sih, "tx_duty_cycle_ofdm");
+-	wlc->tx_duty_cycle_cck =
+-	    (u16) getintvar(wlc->hw->sih, "tx_duty_cycle_cck");
++	/* disable allowed duty cycle */
++	wlc->tx_duty_cycle_ofdm = 0;
++	wlc->tx_duty_cycle_cck = 0;
+ 
+ 	brcms_c_stf_phy_chain_calc(wlc);
+ 
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
+index d84e1cf..4bcf305 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -4920,12 +4920,6 @@ static bool wlc_phy_txpwr_srom_read_lcnphy(struct brcms_phy *pi)
+ 								   "aa2g"));
  	}
+ 	pi_lcn->lcnphy_cck_dig_filt_type = -1;
+-	if (wlapi_getvar(shim, "cckdigfilttype")) {
+-		s16 temp;
+-		temp = (s16)wlapi_getintvar(shim, "cckdigfilttype");
+-		if (temp >= 0)
+-			pi_lcn->lcnphy_cck_dig_filt_type = temp;
+-	}
+ 
+ 	return true;
  }
+-- 
+1.7.4.1
 
---------------030907010202070501060000--
+
