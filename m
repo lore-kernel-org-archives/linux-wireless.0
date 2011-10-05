@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:61902 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751298Ab1JJPQ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 11:16:29 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 18/34] iwlagn: warn only once if AGG state is wrong
-Date: Mon, 10 Oct 2011 07:27:03 -0700
-Message-Id: <1318256839-31837-19-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171722_669880_D767B309)
-In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:19311 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934218Ab1JEJz7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Oct 2011 05:55:59 -0400
+Message-ID: <4E8C297C.4000103@qca.qualcomm.com> (sfid-20111005_115603_770377_FD0D987E)
+Date: Wed, 5 Oct 2011 12:55:08 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Sangwook Lee <sangwook.lee@linaro.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: Question: ath6kl (driver/net/wireless/ath/ath6kl) with debug_mask
+ value
+References: <CADPsn1bsUJqcuwZrW+e92aGms+t+TKRasnGb=ujzzgvz+S1Maw@mail.gmail.com>	<4E68ECE2.7060504@qca.qualcomm.com>	<CADPsn1Yvdw58AYXFNPc4L1M1tyJ7K6kEA2j85gRCq+vqAYQu_w@mail.gmail.com>	<CADPsn1Zi20JHmc7EOFCvjDmKWKtHnBCcyxTxWwBK8_vLps_u_w@mail.gmail.com> <CADPsn1ZB_Po5TumMA5r5WewUHC=M+3JUpzt0SyRdc+RG5WeU+g@mail.gmail.com>
+In-Reply-To: <CADPsn1ZB_Po5TumMA5r5WewUHC=M+3JUpzt0SyRdc+RG5WeU+g@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 10/04/2011 04:22 PM, Sangwook Lee wrote:
+> Hi Kalle
 
-This one can be _very_ noisy.
+Hi Sangwook,
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> I used  git://github.com/kvalo/ath6kl.git for-linville (Sat Oct 1
+> 09:43:09 2011 +0300)
+> to run AR6003 HW2.0 (hw 2.0 fw 3.1.1.149) in my ARM board.
+> 
+> But I faced booting problem as like the following:
+> Is there any changes for AR6003 HW2.0 with the latest ath6kl git ?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index f69aecb..2abd07f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1098,7 +1098,7 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 		seq_number += 0x10;
- 		/* aggregation is on for this <sta,tid> */
- 		if (info->flags & IEEE80211_TX_CTL_AMPDU) {
--			WARN_ON(tid_data->agg.state != IWL_AGG_ON);
-+			WARN_ON_ONCE(tid_data->agg.state != IWL_AGG_ON);
- 			txq_id = tid_data->agg.txq_id;
- 			is_agg = true;
- 		}
--- 
-1.7.0.4
+We don't actively test hw 2.0 anymore, actually I'm not even sure
+anymore if I have hw2.0 anywhere. If I find the time and a hw2.0 card,
+I'll try to debug this.
 
+Kalle
