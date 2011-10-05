@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44777 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752388Ab1J1QN3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 12:13:29 -0400
-Message-ID: <4EAAD4A5.3070308@candelatech.com> (sfid-20111028_181334_527189_74B6FF3B)
-Date: Fri, 28 Oct 2011 09:13:25 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:37756 "EHLO
+	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S935524Ab1JEXTa convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Oct 2011 19:19:30 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Yogesh Powar <yogeshp@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 5 Oct 2011 16:14:04 -0700
+Subject: RE: mwifiex: add cfg80211 handlers add/del_virtual_intf
+Message-ID: <477F20668A386D41ADCC57781B1F704308155974F7@SC-VEXCH1.marvell.com> (sfid-20111006_011933_253278_751D5792)
+References: <20111005060744.GB32513@elgon.mountain>
+ <477F20668A386D41ADCC57781B1F70430815597445@SC-VEXCH1.marvell.com>
+ <20111005195228.GG30887@longonot.mountain>
+In-Reply-To: <20111005195228.GG30887@longonot.mountain>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [wireless-next PATCH 4/5] wifi: Warn if cannot add station debugfs
- entries.
-References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>  <1319778680-11405-4-git-send-email-greearb@candelatech.com>  (sfid-20111028_071154_398499_47BB01A2) <1319789588.3914.16.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1319789588.3914.16.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/28/2011 01:13 AM, Johannes Berg wrote:
-> On Thu, 2011-10-27 at 22:11 -0700, greearb@candelatech.com wrote:
->> From: Ben Greear<greearb@candelatech.com>
->>
->> Signed-off-by: Ben Greear<greearb@candelatech.com>
->> ---
->> :100644 100644 c5f3417... 1ceec86... M	net/mac80211/debugfs_sta.c
->>   net/mac80211/debugfs_sta.c |   10 ++++++++--
->>   1 files changed, 8 insertions(+), 2 deletions(-)
->>
->> diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
->> index c5f3417..1ceec86 100644
->> --- a/net/mac80211/debugfs_sta.c
->> +++ b/net/mac80211/debugfs_sta.c
->> @@ -337,8 +337,11 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
->>
->>   	sta->debugfs.add_has_run = true;
->>
->> -	if (!stations_dir)
->> +	if (!stations_dir) {
->> +		printk(KERN_DEBUG "%s: sta_debugfs_add: stations_dir is NULL\n",
->> +			sta->sdata->name);
->>   		return;
->> +	}
->
-> I honestly don't see any point in this.
+Hi Dan,
 
-Ok, I wasn't sure if this was wanted, so please just
-drop it.  I did see a case where the debugfs files didn't
-exist, and was trying to figure out why..but never reproduced
-the problem after this printk was in, so not sure if this
-was the issue or not.
+> -----Original Message-----
+> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+> Sent: Wednesday, October 05, 2011 12:52 PM
+> To: Bing Zhao
+> Cc: Yogesh Powar; linux-wireless@vger.kernel.org
+> Subject: Re: mwifiex: add cfg80211 handlers add/del_virtual_intf
+> 
+> On Wed, Oct 05, 2011 at 12:08:36PM -0700, Bing Zhao wrote:
+> > Since the first element of priv[] cannot be NULL. How about this fix?
+> >
+> > +       priv = adapter->priv[0];
+> > +       BUG_ON(!priv);
+> > +
+> >         wiphy_unregister(priv->wdev->wiphy);
+> >
+> 
+> I don't know the code at all, so I'll trust you on that.  :)
+> 
+> But please don't add the BUG_ON().  Calls to BUG_ON() make the code
+> messier, and they are more painful than needed for the user.  If we
+> don't have the BUG_ON() then we get an Oops and the driver will die,
+> but we can still can close our documents and reboot the system.
+> 
+> Debugging NULL dereference bugs is normally super easy.  Just compile
+> with CONFIG_DEBUG_INFO=y, run gdb on the .ko file and type:
+> "list *(function_name+0x63)" at the gdb prompt.  Done.
 
-Thanks,
-Ben
+Thanks for the information.
 
->
-> johannes
+Regards,
+Bing
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+> 
+> regards,
+> dan carpenter
 
