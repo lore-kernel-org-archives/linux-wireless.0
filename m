@@ -1,140 +1,531 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:60058 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753443Ab1JHS0d convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:35975 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933071Ab1JEJ4S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Oct 2011 14:26:33 -0400
-Received: by qyk7 with SMTP id 7so4493450qyk.19
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Oct 2011 11:26:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4E908C6D.7040703@neratec.com>
-References: <1317772067-6998-1-git-send-email-mcgrof@qca.qualcomm.com>
- <CAB=NE6V1gUSNc4L8sNv-NnDDVSzDB4A=cc_Z7tmZ79Q4LKtbwQ@mail.gmail.com>
- <CAB=NE6VxNKJPQPBbkn9ha1EC6dWawj96B6f-R1XREN1JAcrOQQ@mail.gmail.com>
- <CAB=NE6U6hFMBhgkjhpjpQk+FpMbDi4X6aW6i70MUWRH73K+AuQ@mail.gmail.com>
- <CAB=NE6Xz26oOudnyw17_1ijqe+L8qwQAGH8qjZEocgHQOY54eg@mail.gmail.com> <4E908C6D.7040703@neratec.com>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Sat, 8 Oct 2011 11:26:12 -0700
-Message-ID: <CAB=NE6UouofityugcjTvcXpBFx6cYEbAQ_FAe3gPO-GaS8Vh3w@mail.gmail.com> (sfid-20111008_202637_204055_B0D2AE63)
-Subject: Re: [PATCH 0/8] wireless: add DFS master support
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 5 Oct 2011 05:56:18 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 28so1405752eya.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:56:17 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 03/29] wl12xx: start reworking the init sequence
+Date: Wed,  5 Oct 2011 11:55:40 +0200
+Message-Id: <1317808566-18857-4-git-send-email-eliad@wizery.com> (sfid-20111005_115624_064951_8E429548)
+In-Reply-To: <1317808566-18857-1-git-send-email-eliad@wizery.com>
+References: <1317808566-18857-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 8, 2011 at 10:46 AM, Zefir Kurtisi
-<zefir.kurtisi@neratec.com> wrote:
-> On 08.10.2011 00:32, Luis R. Rodriguez wrote:
->>
->> On Fri, Oct 7, 2011 at 3:29 PM, Luis R. Rodriguez
->> <mcgrof@qca.qualcomm.com>  wrote:
->>>
->>> On Fri, Oct 7, 2011 at 2:11 PM, Luis R. Rodriguez
->>> <mcgrof@qca.qualcomm.com>  wrote:
->>>>
->>>> On Tue, Oct 4, 2011 at 5:14 PM, Luis R. Rodriguez
->>>> <mcgrof@qca.qualcomm.com>  wrote:
->>>>>
->>>>> On Tue, Oct 4, 2011 at 4:47 PM, Luis R. Rodriguez
->>>>> <mcgrof@qca.qualcomm.com>  wrote:
->>>>>>
->>>>>> This set of 8 patches adds DFS master support to the Linux wireless
->>>>>> subsystem.
->>>>>> I've reviewed future possible changes to DFS master regions and it
->>>>>> seems that
->>>>>> we are not going to be having multiple DFS regions for one country,
->>>>>> instead
->>>>>> we'll always have one DFS region for one country.
->>>>>>
->>>>>> The changes here are spread out throughout wireless-regdb, crda the
->>>>>> kernel and
->>>>>> lastly iw. The changes made allow for older verions of CRDA to work
->>>>>> with new
->>>>>> wireless-regdb files with DFS region support. If you want DFS master
->>>>>> region
->>>>>> support you'll need to upgrade your CRDA, your kernel and then hope
->>>>>> someone
->>>>>> implements DFS master support for your respective driver.
->>>>>>
->>>>>> This patch series does not have specific driver changes, although some
->>>>>> seem to
->>>>>> be backing in the oven right now.
->>>>>
->>>>> Here's a puzzle though... If we change this series to use the other
->>>>> pad byte that was available, the first pad byte, instead of the last
->>>>> one, we loose backward compatibility support and I cannot figure out
->>>>> why. What I ended up seeing was that crda sends the message, and for
->>>>> some reason (return code is 222 from nl_wait_for_ack(), whatever that
->>>>> is) the kernel rejects it. I suspect it may have to do with some sort
->>>>> of offset to the *other* data that makes some of the rules output
->>>>> invalid data for the attribute policy, but at least when I hexdump the
->>>>> wireless-regdb the only changes I see are in the signature and the pad
->>>>> shift.
->>>>>
->>>>> I got tired of trying though and after seeing flipping the pad bytes
->>>>> things worked decided to stay with it. In my original RFC in December
->>>>> I had used u16 instead, but since the data was in the last pad byte
->>>>> things still worked. So something is fishy about only using the first
->>>>> pad byte. The change below, as far as I can tell, should not have any
->>>>> issues but it does with the older version of CRDA and even a new one.
->>>>
->>>> Johannes spotted the issue, I'll send the fix, thanks to Johannes.
->>>> John, Johannes the patches still apply my fix goes on top of these
->>>> changes, the fix is not addressing a regression introduced by this
->>>> patchset, instead it fixes a long standing issue which would prevent
->>>> us from using the next available pad byte.
->>>
->>> I'm going to respin this to make use of 2 bits:
->>>
->>> 00 unset
->>> 01 FCC
->>> 10 ETSI
->>> 11 JP
->>>
->>> We may need some more DFS values later but
->>
->> Sorry I did not finish this e-mail I meant that we may later have a
->> requirement for more DFS values but at this time we don't, we should
->> consider whether or not we will want to leave more bits for usage of
->> more DFS values and if so how many? Using two bits will give us
->> support for what we know today but nothing for the future.
->>
-> For the future things we do not know of today we should add another bit and
-> define
->
-> 111 unknown / other
->
-> to be able to mark special countrycodes that do not fully belong to the
-> three known domains.
+Split the init sequence into common commands (non role-specific)
+and role-specific commands.
 
-I thought about this a bit more, so we'd have to define this as a U8
-attribute either way, so I would instead of calling NL80211_DFS_REGION
-call it something like NL80211_CTRY_REQS and for now only use 2 bits
-for the known DFS regions. We'd mask out the rest of the values. If we
-ever decide we need a new DFS region we could just extend the values
-on NL80211_CTRY_REQS after the last region. If we want to add a new
-requirement that is country specific other than DFS we could start at
-the end of the u8 instead of after the last DFS region. We could do
-this without making any explicit reservations.
+We still need to call the common commands only on add_interface()
+(rather than on start()) as the fw must get the mac address
+when uploading the nvs.
 
-> We could use some invalid coding for those CCs (like no
-> DFS domain set in CC
+Future patches will refactor the init sequence further more.
 
-Sure, I should point out today every single regulatory domain will
-have this set except US, only because I added a patch to match US to
-DFS-FCC DFS region.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/init.c |  306 +++++++++++++++++++-----------------
+ drivers/net/wireless/wl12xx/init.h |    5 +-
+ drivers/net/wireless/wl12xx/main.c |    8 +-
+ 3 files changed, 171 insertions(+), 148 deletions(-)
 
-> but flag set for frequency band) to identify those
-> special domains,
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index 4692a91..ff5c5f4 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -33,7 +33,7 @@
+ #include "tx.h"
+ #include "io.h"
+ 
+-int wl1271_sta_init_templates_config(struct wl1271 *wl)
++int wl1271_init_templates_config(struct wl1271 *wl)
+ {
+ 	int ret, i;
+ 
+@@ -88,6 +88,29 @@ int wl1271_sta_init_templates_config(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
+ 
++	/*
++	 * Put very large empty placeholders for all templates. These
++	 * reserve memory for later.
++	 */
++	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_AP_PROBE_RESPONSE, NULL,
++				      WL1271_CMD_TEMPL_MAX_SIZE,
++				      0, WL1271_RATE_AUTOMATIC);
++	if (ret < 0)
++		return ret;
++
++	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_AP_BEACON, NULL,
++				      WL1271_CMD_TEMPL_MAX_SIZE,
++				      0, WL1271_RATE_AUTOMATIC);
++	if (ret < 0)
++		return ret;
++
++	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_DEAUTH_AP, NULL,
++				      sizeof
++				      (struct wl12xx_disconn_template),
++				      0, WL1271_RATE_AUTOMATIC);
++	if (ret < 0)
++		return ret;
++
+ 	for (i = 0; i < CMD_TEMPL_KLV_IDX_MAX; i++) {
+ 		ret = wl1271_cmd_template_set(wl, CMD_TEMPL_KLV, NULL,
+ 					      WL1271_CMD_TEMPL_DFLT_SIZE, i,
+@@ -185,68 +208,32 @@ out:
+ 	return ret;
+ }
+ 
+-static int wl1271_ap_init_templates_config(struct wl1271 *wl)
++static int wl12xx_init_rx_config(struct wl1271 *wl)
+ {
+ 	int ret;
+ 
+-	/*
+-	 * Put very large empty placeholders for all templates. These
+-	 * reserve memory for later.
+-	 */
+-	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_AP_PROBE_RESPONSE, NULL,
+-				      WL1271_CMD_TEMPL_MAX_SIZE,
+-				      0, WL1271_RATE_AUTOMATIC);
+-	if (ret < 0)
+-		return ret;
+-
+-	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_AP_BEACON, NULL,
+-				      WL1271_CMD_TEMPL_MAX_SIZE,
+-				      0, WL1271_RATE_AUTOMATIC);
+-	if (ret < 0)
+-		return ret;
+-
+-	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_DEAUTH_AP, NULL,
+-				      sizeof
+-				      (struct wl12xx_disconn_template),
+-				      0, WL1271_RATE_AUTOMATIC);
+-	if (ret < 0)
+-		return ret;
+-
+-	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_NULL_DATA, NULL,
+-				      sizeof(struct wl12xx_null_data_template),
+-				      0, WL1271_RATE_AUTOMATIC);
+-	if (ret < 0)
+-		return ret;
+-
+-	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_QOS_NULL_DATA, NULL,
+-				      sizeof
+-				      (struct wl12xx_qos_null_data_template),
+-				      0, WL1271_RATE_AUTOMATIC);
++	ret = wl1271_acx_rx_msdu_life_time(wl);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	return 0;
+ }
+ 
+-static int wl12xx_init_rx_config(struct wl1271 *wl)
++int wl1271_init_phy_config(struct wl1271 *wl)
+ {
+ 	int ret;
+ 
+-	ret = wl1271_acx_rx_msdu_life_time(wl);
++	ret = wl1271_acx_pd_threshold(wl);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	return 0;
+ }
+ 
+-int wl1271_init_phy_config(struct wl1271 *wl)
++static int wl12xx_init_phy_vif_config(struct wl1271 *wl)
+ {
+ 	int ret;
+ 
+-	ret = wl1271_acx_pd_threshold(wl);
+-	if (ret < 0)
+-		return ret;
+-
+ 	ret = wl1271_acx_slot(wl, DEFAULT_SLOT_TIME);
+ 	if (ret < 0)
+ 		return ret;
+@@ -329,6 +316,7 @@ static int wl12xx_init_fwlog(struct wl1271 *wl)
+ 	return 0;
+ }
+ 
++/* generic sta initialization (non vif-specific) */
+ static int wl1271_sta_hw_init(struct wl1271 *wl)
+ {
+ 	int ret;
+@@ -344,57 +332,20 @@ static int wl1271_sta_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	ret = wl1271_sta_init_templates_config(wl);
+-	if (ret < 0)
+-		return ret;
+-
+-	ret = wl1271_acx_group_address_tbl(wl, true, NULL, 0);
+-	if (ret < 0)
+-		return ret;
+-
+-	/* Initialize connection monitoring thresholds */
+-	ret = wl1271_acx_conn_monit_params(wl, false);
+-	if (ret < 0)
+-		return ret;
+-
+-	/* Beacon filtering */
+-	ret = wl1271_init_beacon_filter(wl);
+-	if (ret < 0)
+-		return ret;
+-
+ 	/* FM WLAN coexistence */
+ 	ret = wl1271_acx_fm_coex(wl);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	/* Beacons and broadcast settings */
+-	ret = wl1271_init_beacon_broadcast(wl);
+-	if (ret < 0)
+-		return ret;
+-
+ 	/* Configure for ELP power saving */
+ 	ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_ELP);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	/* Configure rssi/snr averaging weights */
+-	ret = wl1271_acx_rssi_snr_avg_weights(wl);
+-	if (ret < 0)
+-		return ret;
+-
+ 	ret = wl1271_acx_sta_rate_policies(wl);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	ret = wl12xx_acx_mem_cfg(wl);
+-	if (ret < 0)
+-		return ret;
+-
+-	/* Configure the FW logger */
+-	ret = wl12xx_init_fwlog(wl);
+-	if (ret < 0)
+-		return ret;
+-
+ 	return 0;
+ }
+ 
+@@ -418,14 +369,11 @@ static int wl1271_sta_hw_init_post_mem(struct wl1271 *wl)
+ 	return 0;
+ }
+ 
++/* generic ap initialization (non vif-specific) */
+ static int wl1271_ap_hw_init(struct wl1271 *wl)
+ {
+ 	int ret;
+ 
+-	ret = wl1271_ap_init_templates_config(wl);
+-	if (ret < 0)
+-		return ret;
+-
+ 	/* Configure for power always on */
+ 	ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
+ 	if (ret < 0)
+@@ -435,19 +383,6 @@ static int wl1271_ap_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	ret = wl1271_acx_ap_max_tx_retry(wl);
+-	if (ret < 0)
+-		return ret;
+-
+-	ret = wl12xx_acx_mem_cfg(wl);
+-	if (ret < 0)
+-		return ret;
+-
+-	/* initialize Tx power */
+-	ret = wl1271_acx_tx_power(wl, wl->power_level);
+-	if (ret < 0)
+-		return ret;
+-
+ 	return 0;
+ }
+ 
+@@ -578,14 +513,133 @@ out:
+ 	return ret;
+ }
+ 
++/* vif-specifc initialization */
++int wl12xx_init_sta_role(struct wl1271 *wl, struct ieee80211_vif *vif)
++{
++	int ret;
++
++	ret = wl1271_acx_group_address_tbl(wl, true, NULL, 0);
++	if (ret < 0)
++		return ret;
++
++	/* Initialize connection monitoring thresholds */
++	ret = wl1271_acx_conn_monit_params(wl, false);
++	if (ret < 0)
++		return ret;
++
++	/* Beacon filtering */
++	ret = wl1271_init_beacon_filter(wl);
++	if (ret < 0)
++		return ret;
++
++	/* Beacons and broadcast settings */
++	ret = wl1271_init_beacon_broadcast(wl);
++	if (ret < 0)
++		return ret;
+ 
+-int wl1271_hw_init(struct wl1271 *wl, struct ieee80211_vif *vif)
++	/* Configure rssi/snr averaging weights */
++	ret = wl1271_acx_rssi_snr_avg_weights(wl);
++	if (ret < 0)
++		return ret;
++
++	return 0;
++}
++
++/* vif-specific intialization */
++int wl12xx_init_ap_role(struct wl1271 *wl, struct ieee80211_vif *vif)
++{
++	int ret;
++
++	ret = wl1271_acx_ap_max_tx_retry(wl);
++	if (ret < 0)
++		return ret;
++
++	/* initialize Tx power */
++	ret = wl1271_acx_tx_power(wl, wl->power_level);
++	if (ret < 0)
++		return ret;
++
++	return 0;
++}
++
++int wl1271_init_vif_specific(struct wl1271 *wl, struct ieee80211_vif *vif)
+ {
+ 	struct conf_tx_ac_category *conf_ac;
+ 	struct conf_tx_tid *conf_tid;
+-	int ret, i;
+ 	bool is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
+ 
++	int ret, i;
++
++	/* Mode specific init */
++	if (is_ap) {
++		ret = wl1271_ap_hw_init(wl);
++		if (ret < 0)
++			return ret;
++
++		ret = wl12xx_init_ap_role(wl, vif);
++		if (ret < 0)
++			return ret;
++	} else {
++		ret = wl1271_sta_hw_init(wl);
++		if (ret < 0)
++			return ret;
++
++		ret = wl12xx_init_sta_role(wl, vif);
++		if (ret < 0)
++			return ret;
++	}
++
++	wl12xx_init_phy_vif_config(wl);
++
++	/* Default TID/AC configuration */
++	BUG_ON(wl->conf.tx.tid_conf_count != wl->conf.tx.ac_conf_count);
++	for (i = 0; i < wl->conf.tx.tid_conf_count; i++) {
++		conf_ac = &wl->conf.tx.ac_conf[i];
++		ret = wl1271_acx_ac_cfg(wl, conf_ac->ac, conf_ac->cw_min,
++					conf_ac->cw_max, conf_ac->aifsn,
++					conf_ac->tx_op_limit);
++		if (ret < 0)
++			return ret;
++
++		conf_tid = &wl->conf.tx.tid_conf[i];
++		ret = wl1271_acx_tid_cfg(wl,
++					 conf_tid->queue_id,
++					 conf_tid->channel_type,
++					 conf_tid->tsid,
++					 conf_tid->ps_scheme,
++					 conf_tid->ack_policy,
++					 conf_tid->apsd_conf[0],
++					 conf_tid->apsd_conf[1]);
++		if (ret < 0)
++			return ret;
++	}
++
++	/* Configure HW encryption */
++	ret = wl1271_acx_feature_cfg(wl);
++	if (ret < 0)
++		return ret;
++
++	/* Mode specific init - post mem init */
++	if (is_ap)
++		ret = wl1271_ap_hw_init_post_mem(wl, vif);
++	else
++		ret = wl1271_sta_hw_init_post_mem(wl);
++
++	if (ret < 0)
++		return ret;
++
++	/* Configure initiator BA sessions policies */
++	ret = wl1271_set_ba_policies(wl);
++	if (ret < 0)
++		return ret;
++
++	return 0;
++}
++
++int wl1271_hw_init(struct wl1271 *wl)
++{
++	int ret;
++
+ 	if (wl->chip.id == CHIP_ID_1283_PG20)
+ 		ret = wl128x_cmd_general_parms(wl);
+ 	else
+@@ -605,12 +659,17 @@ int wl1271_hw_init(struct wl1271 *wl, struct ieee80211_vif *vif)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	/* Mode specific init */
+-	if (is_ap)
+-		ret = wl1271_ap_hw_init(wl);
+-	else
+-		ret = wl1271_sta_hw_init(wl);
++	/* Init templates */
++	ret = wl1271_init_templates_config(wl);
++	if (ret < 0)
++		return ret;
+ 
++	ret = wl12xx_acx_mem_cfg(wl);
++	if (ret < 0)
++		return ret;
++
++	/* Configure the FW logger */
++	ret = wl12xx_init_fwlog(wl);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -658,61 +717,20 @@ int wl1271_hw_init(struct wl1271 *wl, struct ieee80211_vif *vif)
+ 	if (ret < 0)
+ 		goto out_free_memmap;
+ 
+-	/* Default TID/AC configuration */
+-	BUG_ON(wl->conf.tx.tid_conf_count != wl->conf.tx.ac_conf_count);
+-	for (i = 0; i < wl->conf.tx.tid_conf_count; i++) {
+-		conf_ac = &wl->conf.tx.ac_conf[i];
+-		ret = wl1271_acx_ac_cfg(wl, conf_ac->ac, conf_ac->cw_min,
+-					conf_ac->cw_max, conf_ac->aifsn,
+-					conf_ac->tx_op_limit);
+-		if (ret < 0)
+-			goto out_free_memmap;
+-
+-		conf_tid = &wl->conf.tx.tid_conf[i];
+-		ret = wl1271_acx_tid_cfg(wl, conf_tid->queue_id,
+-					 conf_tid->channel_type,
+-					 conf_tid->tsid,
+-					 conf_tid->ps_scheme,
+-					 conf_tid->ack_policy,
+-					 conf_tid->apsd_conf[0],
+-					 conf_tid->apsd_conf[1]);
+-		if (ret < 0)
+-			goto out_free_memmap;
+-	}
+-
+ 	/* Enable data path */
+ 	ret = wl1271_cmd_data_path(wl, 1);
+ 	if (ret < 0)
+ 		goto out_free_memmap;
+ 
+-	/* Configure HW encryption */
+-	ret = wl1271_acx_feature_cfg(wl);
+-	if (ret < 0)
+-		goto out_free_memmap;
+-
+ 	/* configure PM */
+ 	ret = wl1271_acx_pm_config(wl);
+ 	if (ret < 0)
+ 		goto out_free_memmap;
+ 
+-	/* Mode specific init - post mem init */
+-	if (is_ap)
+-		ret = wl1271_ap_hw_init_post_mem(wl, vif);
+-	else
+-		ret = wl1271_sta_hw_init_post_mem(wl);
+-
+-	if (ret < 0)
+-		goto out_free_memmap;
+-
+ 	ret = wl12xx_acx_set_rate_mgmt_params(wl);
+ 	if (ret < 0)
+ 		goto out_free_memmap;
+ 
+-	/* Configure initiator BA sessions policies */
+-	ret = wl1271_set_ba_policies(wl);
+-	if (ret < 0)
+-		goto out_free_memmap;
+-
+ 	/* configure hangover */
+ 	ret = wl12xx_acx_config_hangover(wl);
+ 	if (ret < 0)
+diff --git a/drivers/net/wireless/wl12xx/init.h b/drivers/net/wireless/wl12xx/init.h
+index b1f97bc..64320c0 100644
+--- a/drivers/net/wireless/wl12xx/init.h
++++ b/drivers/net/wireless/wl12xx/init.h
+@@ -27,12 +27,13 @@
+ #include "wl12xx.h"
+ 
+ int wl1271_hw_init_power_auth(struct wl1271 *wl);
+-int wl1271_sta_init_templates_config(struct wl1271 *wl);
++int wl1271_init_templates_config(struct wl1271 *wl);
+ int wl1271_init_phy_config(struct wl1271 *wl);
+ int wl1271_init_pta(struct wl1271 *wl);
+ int wl1271_init_energy_detection(struct wl1271 *wl);
+ int wl1271_chip_specific_init(struct wl1271 *wl);
+-int wl1271_hw_init(struct wl1271 *wl, struct ieee80211_vif *vif);
++int wl1271_hw_init(struct wl1271 *wl);
++int wl1271_init_vif_specific(struct wl1271 *wl, struct ieee80211_vif *vif);
+ int wl1271_init_ap_rates(struct wl1271 *wl);
+ int wl1271_ap_init_templates(struct wl1271 *wl, struct ieee80211_vif *vif);
+ 
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index d676794..28f47e0 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -676,7 +676,7 @@ static int wl1271_plt_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	ret = wl1271_sta_init_templates_config(wl);
++	ret = wl1271_init_templates_config(wl);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -1919,6 +1919,10 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		if (ret < 0)
+ 			goto power_off;
+ 
++		ret = wl1271_hw_init(wl);
++		if (ret < 0)
++			goto irq_disable;
++
+ 		if (wl->bss_type == BSS_TYPE_STA_BSS ||
+ 		    wl->bss_type == BSS_TYPE_IBSS) {
+ 			/*
+@@ -1939,7 +1943,7 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		if (ret < 0)
+ 			goto irq_disable;
+ 
+-		ret = wl1271_hw_init(wl, vif);
++		ret = wl1271_init_vif_specific(wl, vif);
+ 		if (ret < 0)
+ 			goto irq_disable;
+ 
+-- 
+1.7.6.401.g6a319
 
-So you're saying in case later we find out we need band specific DFS data later?
-
-> but using an additional bit would make things easier to
-> handle.
-
-We can extend this as we go, and just ensure upon review of new code
-that we accommodate non -DFS crap at the end of the u8. Whatdya think?
-
-  Luis
