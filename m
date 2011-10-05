@@ -1,69 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37132 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754390Ab1JUOZG (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:63060 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932862Ab1JEFre (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 10:25:06 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1RHG1x-0008Qv-3c
-	for linux-wireless@vger.kernel.org; Fri, 21 Oct 2011 16:25:05 +0200
-Message-Id: <20111021142427.449830119@sipsolutions.net> (sfid-20111021_162515_360472_6EE3FB97)
-Date: Fri, 21 Oct 2011 16:23:23 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC v2 01/12] mac80211: add helper to free TX skb
-References: <20111021142322.229128720@sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 5 Oct 2011 01:47:34 -0400
+Date: Wed, 5 Oct 2011 08:46:37 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	kernel-janitors@vger.kernel.org
+Subject: [patch] ath5k: remove some unneeded error handling code
+Message-ID: <20111005054637.GA32077@elgon.mountain> (sfid-20111005_074745_066003_67B01259)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+th5k_hw_setup_tx_queue() returns a valid offset into the ah->ah_txq[]
+array.  The ah->ah_txq[] and the ah->txqs[] array are the same size.
+Both have AR5K_NUM_TX_QUEUES elements.  So this error handling code
+will never trigger.
 
-Drivers that need to drop a frame before it
-can be transmitted will usually simply free
-that frame. This is currently fine, but in
-the future it'll be needed to tell mac80211
-about this case, so add a new routine that
-frees a TX skb.
+Also it's wrong.  The call to ath5k_hw_release_tx_queue() with a qnum
+of AR5K_NUM_TX_QUEUES or more will just trigger a WARN_ON() and
+return.  Or if it missed the WARN_ON(), it would just corrupt some
+memory and return.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h |   10 ++++++++++
- net/mac80211/status.c  |    6 ++++++
- 2 files changed, 16 insertions(+)
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
---- a/include/net/mac80211.h	2011-10-21 10:20:42.000000000 +0200
-+++ b/include/net/mac80211.h	2011-10-21 12:07:38.000000000 +0200
-@@ -1304,6 +1304,16 @@ ieee80211_get_alt_retry_rate(const struc
- }
- 
- /**
-+ * ieee80211_free_txskb - free TX skb
-+ * @hw: the hardware
-+ * @skb: the skb
-+ *
-+ * Free a transmit skb. Use this funtion when some failure
-+ * to transmit happened and thus status cannot be reported.
-+ */
-+void ieee80211_free_txskb(struct ieee80211_hw *hw, struct sk_buff *skb);
-+
-+/**
-  * DOC: Hardware crypto acceleration
-  *
-  * mac80211 is capable of taking advantage of many hardware
---- a/net/mac80211/status.c	2011-10-21 10:20:42.000000000 +0200
-+++ b/net/mac80211/status.c	2011-10-21 12:07:38.000000000 +0200
-@@ -609,3 +609,9 @@ void ieee80211_report_low_ack(struct iee
- 				    num_packets, GFP_ATOMIC);
- }
- EXPORT_SYMBOL(ieee80211_report_low_ack);
-+
-+void ieee80211_free_txskb(struct ieee80211_hw *hw, struct sk_buff *skb)
-+{
-+	dev_kfree_skb_any(skb);
-+}
-+EXPORT_SYMBOL(ieee80211_free_txskb);
-
-
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index e9ea38d..b346d04 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -921,12 +921,6 @@ ath5k_txq_setup(struct ath5k_hw *ah,
+ 		 */
+ 		return ERR_PTR(qnum);
+ 	}
+-	if (qnum >= ARRAY_SIZE(ah->txqs)) {
+-		ATH5K_ERR(ah, "hw qnum %u out of range, max %tu!\n",
+-			qnum, ARRAY_SIZE(ah->txqs));
+-		ath5k_hw_release_tx_queue(ah, qnum);
+-		return ERR_PTR(-EINVAL);
+-	}
+ 	txq = &ah->txqs[qnum];
+ 	if (!txq->setup) {
+ 		txq->qnum = qnum;
