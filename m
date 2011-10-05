@@ -1,59 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4194 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754844Ab1JKTI0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 15:08:26 -0400
-Date: Tue, 11 Oct 2011 22:08:21 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, Joe Perches <joe@perches.com>
-Subject: [PATCH] ath6kl: Fix endpoint_stats debugfs buffer length calculation
-Message-ID: <20111011190821.GA29419@jouni.qca.qualcomm.com> (sfid-20111011_210829_813644_6832D2FB)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:45769 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934472Ab1JEPHA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Oct 2011 11:07:00 -0400
+Message-ID: <4E8C7289.50706@hauke-m.de> (sfid-20111005_170704_839551_BD69ABF4)
+Date: Wed, 05 Oct 2011 17:06:49 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Arend van Spriel <arend@broadcom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Alwin Beukers <alwin@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>
+Subject: Re: [PATCH v3] move brcm80211 drivers to mainline
+References: <4E8C64EF.3070203@broadcom.com>
+In-Reply-To: <4E8C64EF.3070203@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The previous version did not really make much sense and the theoretical
-maximum length would be a bit longer. Calculate the length more
-accurately. In addition, there is no need to clear the buffer, so use
-kmalloc instead of kzalloc. For bonus points, add the forgotten
-cred_rpt_from_other value to the file.
+On 10/05/2011 04:08 PM, Arend van Spriel wrote:
+> With number of cleanup patch series merged in by Greg KH, I'd like to
+> once again propose moving brcm80211 out of staging and into mainline.
+> 
+> I've put together a patch to add a copy of the current sources from
+> staging-next into drivers/net/wireless/brcm80211 of the wireless-next
+> repository.
+> 
+> The patch is somewhat large, so I've posted the patch at:
+> 
+> http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=view&target=0001-net-wireless-add-brcm80211-drivers-v3.patch
+> 
+> 
+> Changes from the previous version:
+> 
+> V3:
+> - remove -D line from Makefiles
+> - use endian annotated structures
+> - enable sparse endian checking
+> - remove use of (static) global variables
+> - remove own buffer printing implementation
+> - remove static function prototypes
+> - replace macros by inline functions
+> - reduce sparse warnings
+> - remove using string-based iovars
+> - remove driver internal use of ioctls
+> - remove (un)likely
+> - remove uncoditional curly braces for variable scoping
+> - remove error messages upon alloc failures
+> - reduced code indentation levels
+> - cleanup in brcmutil module
+> - remove changing lock state which is acquired by other layer
+> (wpa_supplicant)
+> - brcmfmac:
+>     - use ffs() instead of brcmf_find_msb()
+>     - replace threads with work queues
+>     - cleanup module parameters
+> - brcmsmac:
+>     - not modifying ssn value upon AMPDU start
+>     - use hweight8() instead of brcmu_bitcount()
+>     - remove unnecessary mac80211 callbacks
+>     - remove brcms_c_set_par and get_par functions
+>     - remove bmac wrapper functions
+>     - remove lock related macros
+>     - add debugfs based event tracing (not functional in staging)
+> 
+> The brcmsmac driver has been verified to work on x86 (both 32- and
+> 64-bit), PPC
+> (64-bit), SPARC, MIPS BE, and ARM.  The brcmfmac driver has been
+> verified to
+> work on x86 32-bit and ARM (additional testing is in progress, but
+> getting a
+> working sdio controller on some of the other platforms remains
+> challenging).
+> 
+> The drivers compile cleanly for x86 (32- and 64-bit), PPC (32- and 64-bit),
+> SPARC, MIPS BE, MIPS LE, and ARM.
+> 
+> Thanks,
+> Arend van Spriel
+> 
+Hi Arend,
 
-Reported-by: Joe Perches <joe@perches.com>
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/debug.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+Most of the things defined in
+drivers/net/wireless/brcm80211/include/soc.h are also defined in
+drivers/net/wireless/brcm80211/brcmsmac/aiutils.h.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index 7b1c9ae..dd37785 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -624,8 +624,9 @@ static ssize_t ath6kl_endpoint_stats_read(struct file *file,
- 	unsigned int buf_len, len = 0;
- 	ssize_t ret_cnt;
- 
--	buf_len = 1000 + ENDPOINT_MAX * 100;
--	buf = kzalloc(buf_len, GFP_KERNEL);
-+	buf_len = sizeof(struct htc_endpoint_stats) / sizeof(u32) *
-+		(25 + ENDPOINT_MAX * 11);
-+	buf = kmalloc(buf_len, GFP_KERNEL);
- 	if (!buf)
- 		return -ENOMEM;
- 
-@@ -640,6 +641,7 @@ static ssize_t ath6kl_endpoint_stats_read(struct file *file,
- 	EPSTAT(tx_dropped);
- 	EPSTAT(tx_cred_rpt);
- 	EPSTAT(cred_rpt_from_rx);
-+	EPSTAT(cred_rpt_from_other);
- 	EPSTAT(cred_rpt_ep0);
- 	EPSTAT(cred_from_rx);
- 	EPSTAT(cred_from_other);
--- 
-1.7.4.1
-
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Hauke
