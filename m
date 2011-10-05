@@ -1,143 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:5218 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754942Ab1JYKkr (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:49788 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934139Ab1JEJXq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 06:40:47 -0400
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH 5/7] ath6kl: Invoke wow suspend/resume calls during PM operations
-Date: Tue, 25 Oct 2011 16:07:25 +0530
-Message-ID: <1319539047-8756-6-git-send-email-rmani@qca.qualcomm.com> (sfid-20111025_124051_531545_EB488555)
-In-Reply-To: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com>
-References: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com>
+	Wed, 5 Oct 2011 05:23:46 -0400
+Subject: [PATCH 5/6] ath6kl: remove unused values from htc_hif.h
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 05 Oct 2011 12:23:42 +0300
+Message-ID: <20111005092341.1095.47805.stgit@localhost6.localdomain6> (sfid-20111005_112348_374280_F413AB8C)
+In-Reply-To: <20111005092305.1095.713.stgit@localhost6.localdomain6>
+References: <20111005092305.1095.713.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+Also remove some cache line optimisation. It was using hardcoded values
+which is wrong.
 
- Link ath6kl's wow suspend/resume functions with the callback functions
- registered with the CFG layer for suspend and resume operation.
-
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   20 ++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/hif-ops.h  |    5 +++++
- drivers/net/wireless/ath/ath6kl/hif.h      |    1 +
- drivers/net/wireless/ath/ath6kl/sdio.c     |   18 +++++++++++++++++-
- 4 files changed, 43 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath6kl/htc_hif.h |   18 +-----------------
+ 1 files changed, 1 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index aaf8d0f..ddef445 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1606,6 +1606,19 @@ static int ar6k_cfg80211_suspend(struct wiphy *wiphy,
- 				 struct cfg80211_wowlan *wow)
- {
- 	struct ath6kl *ar = wiphy_priv(wiphy);
-+	int ret;
-+
-+	if (wow && ath6kl_cfg80211_ready(ar) &&
-+	    test_bit(CONNECTED, &ar->flag) &&
-+	    ath6kl_hif_keep_pwr_caps(ar)) {
-+
-+		/* Flush all non control pkts in Tx path */
-+		ath6kl_tx_data_cleanup(ar);
-+
-+		ret = ath6kl_pm_wow_suspend(ar, wow);
-+		if (ret)
-+			return ret;
-+	}
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.h b/drivers/net/wireless/ath/ath6kl/htc_hif.h
+index 5572c23..a8a6de5 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_hif.h
++++ b/drivers/net/wireless/ath/ath6kl/htc_hif.h
+@@ -20,29 +20,16 @@
+ #include "htc.h"
+ #include "hif.h"
  
- 	return ath6kl_hif_suspend(ar);
- }
-@@ -1613,6 +1626,13 @@ static int ar6k_cfg80211_suspend(struct wiphy *wiphy,
- static int ar6k_cfg80211_resume(struct wiphy *wiphy)
- {
- 	struct ath6kl *ar = wiphy_priv(wiphy);
-+	int ret;
-+
-+	if (ar->wow_state == ATH6KL_WOW_STATE_SUSPENDED) {
-+		ret = ath6kl_pm_wow_resume(ar);
-+		if (ret)
-+			return ret;
-+	}
+-#define ATH6KL_MAILBOXES	4
+-
+ /* HTC runs over mailbox 0 */
+ #define HTC_MAILBOX	0
  
- 	return ath6kl_hif_resume(ar);
- }
-diff --git a/drivers/net/wireless/ath/ath6kl/hif-ops.h b/drivers/net/wireless/ath/ath6kl/hif-ops.h
-index 95e7303..ab1140d 100644
---- a/drivers/net/wireless/ath/ath6kl/hif-ops.h
-+++ b/drivers/net/wireless/ath/ath6kl/hif-ops.h
-@@ -96,4 +96,9 @@ static inline int ath6kl_hif_resume(struct ath6kl *ar)
+ #define ATH6KL_TARGET_DEBUG_INTR_MASK     0x01
  
- 	return ar->hif_ops->resume(ar);
- }
-+
-+static inline int ath6kl_hif_keep_pwr_caps(struct ath6kl *ar)
-+{
-+	return ar->hif_ops->keep_pwr_caps(ar);
-+}
- #endif
-diff --git a/drivers/net/wireless/ath/ath6kl/hif.h b/drivers/net/wireless/ath/ath6kl/hif.h
-index 93d2912..fbe3622 100644
---- a/drivers/net/wireless/ath/ath6kl/hif.h
-+++ b/drivers/net/wireless/ath/ath6kl/hif.h
-@@ -242,6 +242,7 @@ struct ath6kl_hif_ops {
- 	void (*cleanup_scatter)(struct ath6kl *ar);
- 	int (*suspend)(struct ath6kl *ar);
- 	int (*resume)(struct ath6kl *ar);
-+	bool (*keep_pwr_caps)(struct ath6kl *ar);
+-#define OTHER_INTS_ENABLED		(INT_STATUS_ENABLE_ERROR_MASK |	\
+-					INT_STATUS_ENABLE_CPU_MASK   |	\
+-					INT_STATUS_ENABLE_COUNTER_MASK)
+-
+-#define ATH6KL_REG_IO_BUFFER_SIZE			32
+-#define ATH6KL_MAX_REG_IO_BUFFERS			8
++/* FIXME: are these duplicates with MAX_SCATTER_ values in hif.h? */
+ #define ATH6KL_SCATTER_ENTRIES_PER_REQ            16
+ #define ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER      (16 * 1024)
+ #define ATH6KL_SCATTER_REQS                       4
+ 
+-#ifndef A_CACHE_LINE_PAD
+-#define A_CACHE_LINE_PAD                        128
+-#endif
+-#define ATH6KL_MIN_SCATTER_ENTRIES_PER_REQ        2
+-#define ATH6KL_MIN_TRANSFER_SIZE_PER_SCATTER      (4 * 1024)
+-
+ struct ath6kl_irq_proc_registers {
+ 	u8 host_int_status;
+ 	u8 cpu_int_status;
+@@ -65,11 +52,8 @@ struct ath6kl_irq_enable_reg {
+ 
+ struct ath6kl_device {
+ 	spinlock_t lock;
+-	u8 pad1[A_CACHE_LINE_PAD];
+ 	struct ath6kl_irq_proc_registers irq_proc_reg;
+-	u8 pad2[A_CACHE_LINE_PAD];
+ 	struct ath6kl_irq_enable_reg irq_en_reg;
+-	u8 pad3[A_CACHE_LINE_PAD];
+ 	struct htc_target *htc_cnxt;
+ 	struct ath6kl *ar;
  };
- 
- int ath6kl_hif_setup(struct ath6kl_device *dev);
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 58e31f6..ec0e58c 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -739,7 +739,8 @@ static int ath6kl_sdio_suspend(struct ath6kl *ar)
- 		return ret;
- 	}
- 
--	ath6kl_deep_sleep_enable(ar);
-+	if (ar->wow_state != ATH6KL_WOW_STATE_SUSPENDED)
-+		ath6kl_deep_sleep_enable(ar);
- 
- 	return 0;
- }
-@@ -756,6 +757,20 @@ static int ath6kl_sdio_resume(struct ath6kl *ar)
- 	return 0;
- }
- 
-+static bool ath6kl_sdio_keep_pwr_caps(struct ath6kl *ar)
-+{
-+	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
-+	struct sdio_func *func = ar_sdio->func;
-+	mmc_pm_flag_t flags;
-+
-+	flags = sdio_get_host_pm_caps(func);
-+
-+	if (!(flags & MMC_PM_KEEP_POWER))
-+		return false;
-+
-+	return true;
-+}
-+
- static const struct ath6kl_hif_ops ath6kl_sdio_ops = {
- 	.read_write_sync = ath6kl_sdio_read_write_sync,
- 	.write_async = ath6kl_sdio_write_async,
-@@ -768,6 +783,7 @@ static const struct ath6kl_hif_ops ath6kl_sdio_ops = {
- 	.cleanup_scatter = ath6kl_sdio_cleanup_scatter,
- 	.suspend = ath6kl_sdio_suspend,
- 	.resume = ath6kl_sdio_resume,
-+	.keep_pwr_caps = ath6kl_sdio_keep_pwr_caps,
- };
- 
- static int ath6kl_sdio_probe(struct sdio_func *func,
--- 
-1.7.0.4
 
