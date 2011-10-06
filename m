@@ -1,206 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36249 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752950Ab1JTO7p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 10:59:45 -0400
-Date: Thu, 20 Oct 2011 16:58:53 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211:  Fix off-channel problem in work task.
-Message-ID: <20111020145852.GB2293@redhat.com> (sfid-20111020_165949_197029_1D82D369)
-References: <1319049876-16243-1-git-send-email-greearb@candelatech.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21106 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935288Ab1JFL2B (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Oct 2011 07:28:01 -0400
+Message-ID: <4E8D90BB.5040506@qca.qualcomm.com> (sfid-20111006_132806_414847_88E682CD)
+Date: Thu, 6 Oct 2011 14:27:55 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1319049876-16243-1-git-send-email-greearb@candelatech.com>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+CC: Dan Carpenter <dan.carpenter@oracle.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: ath6kl: pass only unicast frames for aggregation
+References: <20111005055958.GA32513@elgon.mountain> <4E8C2CF1.7000206@qca.qualcomm.com> <20111005115738.GA7368@jouni.qca.qualcomm.com>
+In-Reply-To: <20111005115738.GA7368@jouni.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 19, 2011 at 11:44:36AM -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
+On 10/05/2011 02:57 PM, Jouni Malinen wrote:
+> On Wed, Oct 05, 2011 at 01:09:53PM +0300, Kalle Valo wrote:
+>> Good catch, thanks! I should run smatch more, it's a really nice tool.
 > 
-> The ieee80211_cfg_on_oper_channel method compared the
-> current hardware config as well as the desired hardware
-> config.  In most cases, this is proper, but when deciding
-> whether to go back on-channel, if the hardware is not
-> configured on-channel, but logically it *should* be
-> on-channel, then we must go on-channel.
-> 
-> This patch adds a flag to the ieee80211_cfg_on_oper_channel
-> logic to disable comparing the actual hardware so we do not
-> have to create another tricky method with similar logic.
-> 
-> Reported-by: Eliad Peller <eliad@wizery.com>
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> This could have actually been found even before
+> 5694f962964c5162f6b49ddb5d517180bd7d1d98 with more thorough static
+> analysis since an A-MSDU sent to ath6kl AP would have hit the NULL
+> pointer dereference in aggr_slice_amsdu().. Anyway, this new commit does
+> indeed seem to make this much more likely to hit the issue (any data
+> frame between two associated STAs).
 
-I much more prefer previous one-line patch from Eliad
-http://news.gmane.org/find-root.php?message_id=%3c1311607763%2d12603%2d3%2dgit%2dsend%2demail%2deliad%40wizery.com%3e
+Good point, I'll mention in the patch how severe this actually is.
 
-this one seems to provide unneeded code complexity, but
-behaviour i.e. number of channel switches in hardware
-is the same.
+>> I think a fix like this would be appropriate. Jouni, what do you think?
+> 
+>> --- a/drivers/net/wireless/ath/ath6kl/txrx.c
+>> +++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+>> @@ -1247,6 +1247,10 @@ void ath6kl_rx(struct htc_target *target, struct
+>> htc_packet *packet)
+>>                 }
+>>                 if (skb1)
+>>                         ath6kl_data_tx(skb1, ar->net_dev);
+>> +
+>> +               if (skb == NULL)
+>> +                       /* nothing to deliver up the stack */
+>> +                       return;
+>>         }
+>>
+>>         datap = (struct ethhdr *) skb->data;
+> 
+> 
+> This looks like the correct behavior here. However, I would recommend
+> using braces around any multi-line conditional statement even if it
+> really is a comment and a single statement that would not, in theory,
+> require this in C language. Leaving those out here seems to be just
+> asking for problems should someone add something before the "return;"
+> line and not notice to add braces at that point. The same comment would
+> actually apply for the commit 5694f962964c5162f6b49ddb5d517180bd7d1d98,
+> too. If you want to avoid the extra line an braces, moving the comment
+> to the end of the return line would work for me.
 
-Stanislaw
+I have used to not using braces even there's a comment like here. But
+you have a point and I'll change my style.
 
-> ---
-> 
-> NOTE:  This is tricky stuff, please do not apply until at
-> least Johannes gets time to review this.
-> 
-> :100644 100644 4c3d1f5... 40ca484... M	net/mac80211/ieee80211_i.h
-> :100644 100644 d4ee6d2... 3ead637... M	net/mac80211/main.c
-> :100644 100644 397343a... d1b6b29... M	net/mac80211/scan.c
-> :100644 100644 bf5be22... 62a3357... M	net/mac80211/work.c
->  net/mac80211/ieee80211_i.h |    3 ++-
->  net/mac80211/main.c        |   13 ++++++++-----
->  net/mac80211/scan.c        |   10 +++++-----
->  net/mac80211/work.c        |   11 +++++++----
->  4 files changed, 22 insertions(+), 15 deletions(-)
-> 
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index 4c3d1f5..40ca484 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -1139,7 +1139,8 @@ int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata);
->  void ieee80211_sched_scan_stopped_work(struct work_struct *work);
->  
->  /* off-channel helpers */
-> -bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local);
-> +bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local,
-> +				   bool check_current_hw_cfg);
->  void ieee80211_offchannel_enable_all_ps(struct ieee80211_local *local,
->  					bool tell_ap);
->  void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index d4ee6d2..3ead637 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -94,11 +94,13 @@ static void ieee80211_reconfig_filter(struct work_struct *work)
->  
->  /*
->   * Returns true if we are logically configured to be on
-> - * the operating channel AND the hardware-conf is currently
-> - * configured on the operating channel.  Compares channel-type
-> + * the operating channel and channel-type.
-> + * If the check_current_hw_cfg argument is TRUE,
-> + * the currently configured hardware value is checked
->   * as well.
->   */
-> -bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local)
-> +bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local,
-> +				   bool check_current_hw_cfg)
->  {
->  	struct ieee80211_channel *chan, *scan_chan;
->  	enum nl80211_channel_type channel_type;
-> @@ -126,8 +128,9 @@ bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local)
->  		return false;
->  
->  	/* Check current hardware-config against oper_channel. */
-> -	if ((local->oper_channel != local->hw.conf.channel) ||
-> -	    (local->_oper_channel_type != local->hw.conf.channel_type))
-> +	if (check_current_hw_cfg &&
-> +	    ((local->oper_channel != local->hw.conf.channel) ||
-> +	     (local->_oper_channel_type != local->hw.conf.channel_type)))
->  		return false;
->  
->  	return true;
-> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-> index 397343a..d1b6b29 100644
-> --- a/net/mac80211/scan.c
-> +++ b/net/mac80211/scan.c
-> @@ -216,7 +216,7 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
->  	 * current channel, pass the pkt on up the stack so that
->  	 * the rest of the stack can make use of it.
->  	 */
-> -	if (ieee80211_cfg_on_oper_channel(sdata->local)
-> +	if (ieee80211_cfg_on_oper_channel(sdata->local, true)
->  	    && (channel == sdata->local->oper_channel))
->  		return RX_CONTINUE;
->  
-> @@ -297,7 +297,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
->  	local->scanning = 0;
->  	local->scan_channel = NULL;
->  
-> -	on_oper_chan = ieee80211_cfg_on_oper_channel(local);
-> +	on_oper_chan = ieee80211_cfg_on_oper_channel(local, true);
->  
->  	if (was_hw_scan || !on_oper_chan)
->  		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
-> @@ -309,7 +309,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
->  		bool on_oper_chan2;
->  		ieee80211_configure_filter(local);
->  		drv_sw_scan_complete(local);
-> -		on_oper_chan2 = ieee80211_cfg_on_oper_channel(local);
-> +		on_oper_chan2 = ieee80211_cfg_on_oper_channel(local, true);
->  		/* We should always be on-channel at this point. */
->  		WARN_ON(!on_oper_chan2);
->  		if (on_oper_chan2 && (on_oper_chan != on_oper_chan2))
-> @@ -509,7 +509,7 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
->  
->  	next_chan = local->scan_req->channels[local->scan_channel_idx];
->  
-> -	if (ieee80211_cfg_on_oper_channel(local)) {
-> +	if (ieee80211_cfg_on_oper_channel(local, true)) {
->  		/* We're currently on operating channel. */
->  		if (next_chan == local->oper_channel)
->  			/* We don't need to move off of operating channel. */
-> @@ -587,7 +587,7 @@ static void ieee80211_scan_state_enter_oper_channel(struct ieee80211_local *loca
->  {
->  	/* switch back to the operating channel */
->  	local->scan_channel = NULL;
-> -	if (!ieee80211_cfg_on_oper_channel(local))
-> +	if (!ieee80211_cfg_on_oper_channel(local, true))
->  		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
->  
->  	/*
-> diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-> index bf5be22..62a3357 100644
-> --- a/net/mac80211/work.c
-> +++ b/net/mac80211/work.c
-> @@ -973,7 +973,8 @@ static void ieee80211_work_work(struct work_struct *work)
->  			bool tmp_chan_changed = false;
->  			bool on_oper_chan2;
->  			enum nl80211_channel_type wk_ct;
-> -			on_oper_chan = ieee80211_cfg_on_oper_channel(local);
-> +			on_oper_chan = ieee80211_cfg_on_oper_channel(local,
-> +								     true);
->  
->  			/* Work with existing channel type if possible. */
->  			wk_ct = wk->chan_type;
-> @@ -993,7 +994,8 @@ static void ieee80211_work_work(struct work_struct *work)
->  			 * happen to be on the same channel as
->  			 * the requested channel.
->  			 */
-> -			on_oper_chan2 = ieee80211_cfg_on_oper_channel(local);
-> +			on_oper_chan2 = ieee80211_cfg_on_oper_channel(local,
-> +								      true);
->  			if (on_oper_chan != on_oper_chan2) {
->  				if (on_oper_chan2) {
->  					/* going off oper channel, PS too */
-> @@ -1091,7 +1093,7 @@ static void ieee80211_work_work(struct work_struct *work)
->  	}
->  
->  	if (!remain_off_channel && local->tmp_channel) {
-> -		bool on_oper_chan = ieee80211_cfg_on_oper_channel(local);
-> +		bool on_oper_chan = ieee80211_cfg_on_oper_channel(local, true);
->  		local->tmp_channel = NULL;
->  		/* If tmp_channel wasn't operating channel, then
->  		 * we need to go back on-channel.
-> @@ -1101,7 +1103,8 @@ static void ieee80211_work_work(struct work_struct *work)
->  		 * we still need to do a hardware config.  Currently,
->  		 * we cannot be here while scanning, however.
->  		 */
-> -		if (ieee80211_cfg_on_oper_channel(local) && !on_oper_chan)
-> +		if (ieee80211_cfg_on_oper_channel(local, false) &&
-> +		    !on_oper_chan)
->  			ieee80211_hw_config(local, 0);
->  
->  		/* At the least, we need to disable offchannel_ps,
-> -- 
-> 1.7.3.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks for checking this.
+
+Kalle
