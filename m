@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:35146 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752035Ab1JSHTF (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56792 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932384Ab1JFIpc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Oct 2011 03:19:05 -0400
-MIME-Version: 1.0
-In-Reply-To: <1319004938.31823.59.camel@wwguy-huron>
-References: <20111019060108.GA11588@gamma.logic.tuwien.ac.at>
-	<alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com>
-	<CAOJsxLFXBQXDtjGkuHV8fpxSy4U0dOdzBm6=4xfy2dMQo7NvOg@mail.gmail.com>
-	<1319003710.31823.53.camel@wwguy-huron>
-	<20111019064818.GB14817@gamma.logic.tuwien.ac.at>
-	<1319004938.31823.59.camel@wwguy-huron>
-Date: Wed, 19 Oct 2011 10:19:03 +0300
-Message-ID: <CAOJsxLHLmtYAR1c34Kkn+hzGeOSwhU646PP04pvTFx2e5M0NfA@mail.gmail.com> (sfid-20111019_091924_716694_0A2E30CC)
-Subject: Re: iwlagn is getting very shaky
-From: Pekka Enberg <penberg@cs.helsinki.fi>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Norbert Preining <preining@logic.at>,
-	David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 6 Oct 2011 04:45:32 -0400
+Subject: [PATCH] compat: fix warning in alloc_netdev_mqs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 06 Oct 2011 10:45:26 +0200
+Message-ID: <1317890726.3945.0.camel@jlt3.sipsolutions.net> (sfid-20111006_104536_245695_B061E061)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wey,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Wed, Oct 19, 2011 at 9:15 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> Sorry, I was thinking ask Pekka to use the officialfirmware. But more
-> important, I will like to find out is Pekka has the same issue as you
-> have which is tx queue stopped.
+Depending on the arguments to alloc_netdev_mqs(),
+it may give a warning due to the use of max().
+Fix the warning with max_t().
 
-I'm happy to help but I have no idea what you want me to do :-). When
-my internet connection dies the next time, what do you want me to
-capture for you? What's official firmware? I'm using Fedora 15 with
-3.1-rc9 built from sources here. Do you want to see my lspci, .config,
-dmesg, something else?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/compat-2.6.38.h |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-As for the problems, I'm using iPhone 3G internet via WiFi sharing and
-connection seems to die few times a day or if I take the phone far
-enough from the laptop. I usually turn off the AP for a while and use
-NetworkManager on the laptop to disable/enable networking to make it
-come back up.
+diff --git a/include/linux/compat-2.6.38.h b/include/linux/compat-2.6.38.h
+index 1f9ab52..06bbd9d 100644
+--- a/include/linux/compat-2.6.38.h
++++ b/include/linux/compat-2.6.38.h
+@@ -73,7 +73,8 @@ static inline int skb_checksum_start_offset(const struct sk_buff *skb)
+ 
+ /* include/linux/netdevice.h */
+ #define alloc_netdev_mqs(sizeof_priv, name, setup, txqs, rxqs) \
+-	alloc_netdev_mq(sizeof_priv, name, setup, max(txqs, rxqs))
++	alloc_netdev_mq(sizeof_priv, name, setup, \
++			max_t(unsigned int, txqs, rxqs))
+ 
+ #define ETH_P_LINK_CTL	0x886c		/* HPNA, wlan link local tunnel */
+ 
+-- 
+1.7.6.3
 
-I haven't tested anything but 3.1-rcX kernels on this machine but I
-can do git bisect too if it comes to that.
 
-                        Pekka
+
