@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:54112 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752773Ab1JJRwV (ORCPT
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:36812 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758394Ab1JFNSW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 13:52:21 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 27so1828326eye.5
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 10:52:19 -0700 (PDT)
-Subject: Re: [PATCH 02/29] wl12xx: move last_tx_hlid into wlvif
+	Thu, 6 Oct 2011 09:18:22 -0400
+Received: by mail-bw0-f42.google.com with SMTP id r4so7220710bka.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 06:18:21 -0700 (PDT)
+Subject: Re: [PATCH 00/29] wl12xx: start preparing the driver for multi-vif
+ support
 From: Luciano Coelho <coelho@ti.com>
 To: Eliad Peller <eliad@wizery.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1318234397-21081-3-git-send-email-eliad@wizery.com>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-	 <1318234397-21081-3-git-send-email-eliad@wizery.com>
+In-Reply-To: <1317808566-18857-1-git-send-email-eliad@wizery.com>
+References: <1317808566-18857-1-git-send-email-eliad@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 10 Oct 2011 20:52:15 +0300
-Message-ID: <1318269135.9690.369.camel@cumari> (sfid-20111010_195224_340049_9B38C38A)
+Date: Thu, 06 Oct 2011 16:18:18 +0300
+Message-ID: <1317907098.3549.9.camel@cumari> (sfid-20111006_151832_002142_57E34AAE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote: 
-> move last_tx_hlid into the per-interface data, rather than
-> being global.
+On Wed, 2011-10-05 at 11:55 +0200, Eliad Peller wrote: 
+> The wl12xx fw currently supports only a single vif at a time.
+> Upcoming fw versions are going to support concurrentl vifs.
 > 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
->  drivers/net/wireless/wl12xx/debugfs.c |    1 -
->  drivers/net/wireless/wl12xx/main.c    |    1 -
->  drivers/net/wireless/wl12xx/tx.c      |   10 +++++-----
->  drivers/net/wireless/wl12xx/wl12xx.h  |    6 +++---
->  4 files changed, 8 insertions(+), 10 deletions(-)
+> While mac80211 works well with multiple vifs, the wl12xx
+> driver assumes it handles only a single interface.
 > 
-> diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-> index f0398d0..bbc8004 100644
-> --- a/drivers/net/wireless/wl12xx/debugfs.c
-> +++ b/drivers/net/wireless/wl12xx/debugfs.c
-> @@ -355,7 +355,6 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
->  	DRIVER_STATE_PRINT_INT(sg_enabled);
->  	DRIVER_STATE_PRINT_INT(enable_11a);
->  	DRIVER_STATE_PRINT_INT(noise);
-> -	DRIVER_STATE_PRINT_INT(last_tx_hlid);
->  	DRIVER_STATE_PRINT_HEX(ap_fw_ps_map);
->  	DRIVER_STATE_PRINT_LHEX(ap_ps_map);
->  	DRIVER_STATE_PRINT_HEX(quirks);
+> This is the first patchset in order to make the driver ready
+> for multiple vifs support. The main action here is defining
+> a new per-interface data struct (wlvif), and moving the
+> currently-global fields into it.
+> 
+> (Additional global fields/flags will be addressed by further patchsets)
+> 
+> Note that this patchset only adds functionality - it doesn't
+> break compatability with the current fw.
 
-No big deal at this point, so I'll apply this, but maybe we should print
-the last_tx_hlid from inside all the vifs as well?
+Applied the series.  Thanks for the patchbomb! :P
+
 
 -- 
 Cheers,
