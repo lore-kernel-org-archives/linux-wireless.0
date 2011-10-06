@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:27855 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753867Ab1JNPLU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 11:11:20 -0400
-Date: Fri, 14 Oct 2011 11:11:03 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, zajec5@gmail.com,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ssb: Convert to use crc8 code in kernel library
-Message-ID: <20111014111103.5658d4aa@mj> (sfid-20111014_171124_075652_0278EA9B)
-In-Reply-To: <4e90ce9a.89uGF659NNpbpyA3%Larry.Finger@lwfinger.net>
-References: <4e90ce9a.89uGF659NNpbpyA3%Larry.Finger@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:44030 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754284Ab1JFMk6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Oct 2011 08:40:58 -0400
+Subject: [PATCH] of: include errno.h
+To: grant.likely@secretlab.ca
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: devicetree-discuss@lists.ozlabs.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 06 Oct 2011 15:40:44 +0300
+Message-ID: <20111006124044.1066.7111.stgit@localhost6.localdomain6> (sfid-20111006_144102_497950_B2684FD6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 08 Oct 2011 17:28:42 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+When compiling ath6kl for beagleboard (omap2plus_defconfig plus
+CONFIG_ATH6KL, CONFIG_OF disable) with current linux-next compilation
+fails:
 
-> +static inline void htol16_buf(u16 *buf, unsigned int size)
-> +{
-> +	size /= 2;
-> +	while (size--)
-> +		*(__le16 *)(buf + size) = cpu_to_le16(*(buf + size));
->  }
+include/linux/of.h:269: error: 'ENOSYS' undeclared (first use in this function)
+include/linux/of.h:276: error: 'ENOSYS' undeclared (first use in this function)
+include/linux/of.h:289: error: 'ENOSYS' undeclared (first use in this function)
 
-I'm not not sure compilers would optimize it out on little-endian
-systems.  Perhaps you want a define that uses this code on
-big-endian systems and does nothing on little endian systems.
+Fix this by including errno.h from of.h.
 
-Also, it would be nice to have a compile-time check that size is even.
-Or maybe size should be the number of 16-bit words, but then it would be
-better to call the argument "count" or something like that.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ include/linux/of.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
--- 
-Regards,
-Pavel Roskin
+diff --git a/include/linux/of.h b/include/linux/of.h
+index 9180dc5..219c29d 100644
+--- a/include/linux/of.h
++++ b/include/linux/of.h
+@@ -17,6 +17,7 @@
+  */
+ #include <linux/types.h>
+ #include <linux/bitops.h>
++#include <linux/errno.h>
+ #include <linux/kref.h>
+ #include <linux/mod_devicetable.h>
+ #include <linux/spinlock.h>
+
