@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:45768 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932221Ab1JaJyl (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:37519 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755944Ab1JFOnj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Oct 2011 05:54:41 -0400
-Message-ID: <4EAE705C.3090704@qca.qualcomm.com> (sfid-20111031_105443_864429_9371A212)
-Date: Mon, 31 Oct 2011 15:24:36 +0530
-From: Raja Mani <rmani@qca.qualcomm.com>
+	Thu, 6 Oct 2011 10:43:39 -0400
+Received: by bkbzt4 with SMTP id zt4so3538586bkb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 07:43:37 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: tmail133@kglug.org
+Subject: Re: Carl9170 firmware source code /w kernel.org down
+Date: Thu, 6 Oct 2011 16:43:24 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <3b4ddb232a2c884c0d83ee5fe1754932.squirrel@mail.errtech.com>
+In-Reply-To: <3b4ddb232a2c884c0d83ee5fe1754932.squirrel@mail.errtech.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 5/7] ath6kl: Invoke wow suspend/resume calls during PM
- operations
-References: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com> <1319539047-8756-6-git-send-email-rmani@qca.qualcomm.com> <4EAAAC61.405@qca.qualcomm.com>
-In-Reply-To: <4EAAAC61.405@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201110061643.24960.chunkeey@googlemail.com> (sfid-20111006_164342_828442_DBF0A83E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 28 October 2011 06:51 PM, Kalle Valo wrote:
-> On 10/25/2011 01:37 PM, rmani@qca.qualcomm.com wrote:
->
->> +	if (wow&&  ath6kl_cfg80211_ready(ar)&&
->> +	    test_bit(CONNECTED,&ar->flag)&&
->> +	    ath6kl_hif_keep_pwr_caps(ar)) {
->> +
->> +		/* Flush all non control pkts in Tx path */
->> +		ath6kl_tx_data_cleanup(ar);
->> +
->> +		ret = ath6kl_pm_wow_suspend(ar, wow);
->> +		if (ret)
->> +			return ret;
->> +	}
->
-> Forgot to mention: don't you also need to check for MMC_PM_WAKE_SDIO_IRQ
-> and also set it with sdio_set_host_pm_flags()?
+On Wednesday, October 05, 2011 03:11:08 AM chris wrote:
+> How can I get the source code for the Carl9170 firmware
+> and drive with kernel.org being down?
+Sure, but why the sudden interest?
 
-I tested it in x86 machine. Wow suspend/resume works even without 
-setting MMC_PM_WAKE_SDIO_IRQ. Should i really handle it ?
+http://www.sendspace.com/file/cvg2gv [~132 kb]
+[This is a snapshot from the latest HEAD, if you
+want a specific release just let me know].
+> The wiki says:
+> 
+> You can get the firmware source code from
+> http://git.kernel.org/?p=linux/kernel/git/chr/carl9170fw.git.
+The kernel.org git is still unavailable and will be for
+some time:
+https://www.linuxfoundation.org/news-media/blogs/browse/2011/08/cracking-kernelorg
 
->
-> Kalle
+Regards,
+	Chr
