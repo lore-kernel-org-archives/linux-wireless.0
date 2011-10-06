@@ -1,73 +1,267 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:36705 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933860Ab1JDXsK (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:44544 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759084Ab1JFTLQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 19:48:10 -0400
-Received: by mail-gx0-f174.google.com with SMTP id v2so478718ggn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 16:48:10 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH 5/8] crda: synch up nl80211.h
-Date: Tue,  4 Oct 2011 16:47:44 -0700
-Message-Id: <1317772067-6998-6-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111005_014813_477986_EE4493B4)
-In-Reply-To: <1317772067-6998-1-git-send-email-mcgrof@qca.qualcomm.com>
-References: <1317772067-6998-1-git-send-email-mcgrof@qca.qualcomm.com>
+	Thu, 6 Oct 2011 15:11:16 -0400
+Received: by mail-bw0-f53.google.com with SMTP id zt12so4794754bkb.40
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 12:11:14 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: coelho@ti.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/8] wl12xx: add an spi glue struct to keep wl and device side-by-side
+Date: Thu,  6 Oct 2011 22:10:53 +0300
+Message-Id: <1317928259-26437-3-git-send-email-coelho@ti.com> (sfid-20111006_211121_304446_5BF1F3B6)
+In-Reply-To: <1317928259-26437-1-git-send-email-coelho@ti.com>
+References: <1317928259-26437-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- nl80211.h |   21 +++++++++++++++++++++
- 1 files changed, 21 insertions(+), 0 deletions(-)
+From: Felipe Balbi <balbi@ti.com>
 
-diff --git a/nl80211.h b/nl80211.h
-index 9d797f2..3d7f468 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -1109,6 +1109,10 @@ enum nl80211_commands {
-  *	%NL80211_CMD_TDLS_MGMT. Otherwise %NL80211_CMD_TDLS_OPER should be
-  *	used for asking the driver to perform a TDLS operation.
-  *
-+ * @NL80211_ATTR_DFS_REGION: region for regulatory rules which this country
-+ *    abides to when initiating radiation on DFS channels. A country maps
-+ *    to one DFS region.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1337,6 +1341,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_TDLS_SUPPORT,
- 	NL80211_ATTR_TDLS_EXTERNAL_SETUP,
+In order to fully abstract the bus, we need to save the device
+structure *beside* wl1271, instead of inside it.
+
+This will help re-structuring the driver so that we avoid the
+duplicated code in the bus modules.
+
+Signed-off-by: Felipe Balbi <balbi@ti.com>
+[forward-ported and cleaned up and rephrased commit message]
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/spi.c |   67 ++++++++++++++++++++++++++-----------
+ 1 files changed, 47 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index 0f97186..16f0c71 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -69,14 +69,19 @@
  
-+	NL80211_ATTR_DFS_REGION,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+ #define WSPI_MAX_NUM_OF_CHUNKS (WL1271_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE)
  
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -1843,6 +1849,21 @@ enum nl80211_reg_rule_flags {
- };
- 
- /**
-+ * enum nl80211_dfs_regions - regulatory DFS regions
-+ *
-+ * @NL80211_DFS_UNSET: Country has no DFS master region specified
-+ * @NL80211_DFS_FCC_: Country follows DFS master rules from FCC
-+ * @NL80211_DFS_FCC_: Country follows DFS master rules from ETSI
-+ * @NL80211_DFS_JP_: Country follows DFS master rules from JP/MKK/Telec
-+ */
-+enum nl80211_cflags {
-+	NL80211_DFS_UNSET	= 0,
-+	NL80211_DFS_FCC		= 1,
-+	NL80211_DFS_ETSI	= 2,
-+	NL80211_DFS_JP		= 3,
+-static inline struct spi_device *wl_to_spi(struct wl1271 *wl)
++struct wl12xx_spi_glue {
++	struct device *dev;
++	struct wl1271 *wl;
 +};
 +
-+/**
-  * enum nl80211_survey_info - survey information
-  *
-  * These attribute types are used with %NL80211_ATTR_SURVEY_INFO
++static inline struct wl12xx_spi_glue *wl_to_glue(struct wl1271 *wl)
+ {
+ 	return wl->if_priv;
+ }
+ 
+ static struct device *wl1271_spi_wl_to_dev(struct wl1271 *wl)
+ {
+-	return &(wl_to_spi(wl)->dev);
++	return wl_to_glue(wl)->dev;
+ }
+ 
+ static void wl1271_spi_disable_interrupts(struct wl1271 *wl)
+@@ -91,6 +96,7 @@ static void wl1271_spi_enable_interrupts(struct wl1271 *wl)
+ 
+ static void wl1271_spi_reset(struct wl1271 *wl)
+ {
++	struct wl12xx_spi_glue *glue = wl_to_glue(wl);
+ 	u8 *cmd;
+ 	struct spi_transfer t;
+ 	struct spi_message m;
+@@ -110,7 +116,7 @@ static void wl1271_spi_reset(struct wl1271 *wl)
+ 	t.len = WSPI_INIT_CMD_LEN;
+ 	spi_message_add_tail(&t, &m);
+ 
+-	spi_sync(wl_to_spi(wl), &m);
++	spi_sync(to_spi_device(glue->dev), &m);
+ 
+ 	wl1271_dump(DEBUG_SPI, "spi reset -> ", cmd, WSPI_INIT_CMD_LEN);
+ 	kfree(cmd);
+@@ -118,6 +124,7 @@ static void wl1271_spi_reset(struct wl1271 *wl)
+ 
+ static void wl1271_spi_init(struct wl1271 *wl)
+ {
++	struct wl12xx_spi_glue *glue = wl_to_glue(wl);
+ 	u8 crc[WSPI_INIT_CMD_CRC_LEN], *cmd;
+ 	struct spi_transfer t;
+ 	struct spi_message m;
+@@ -165,7 +172,7 @@ static void wl1271_spi_init(struct wl1271 *wl)
+ 	t.len = WSPI_INIT_CMD_LEN;
+ 	spi_message_add_tail(&t, &m);
+ 
+-	spi_sync(wl_to_spi(wl), &m);
++	spi_sync(to_spi_device(glue->dev), &m);
+ 	wl1271_dump(DEBUG_SPI, "spi init -> ", cmd, WSPI_INIT_CMD_LEN);
+ 	kfree(cmd);
+ }
+@@ -174,6 +181,7 @@ static void wl1271_spi_init(struct wl1271 *wl)
+ 
+ static int wl1271_spi_read_busy(struct wl1271 *wl)
+ {
++	struct wl12xx_spi_glue *glue = wl_to_glue(wl);
+ 	struct spi_transfer t[1];
+ 	struct spi_message m;
+ 	u32 *busy_buf;
+@@ -194,7 +202,7 @@ static int wl1271_spi_read_busy(struct wl1271 *wl)
+ 		t[0].len = sizeof(u32);
+ 		t[0].cs_change = true;
+ 		spi_message_add_tail(&t[0], &m);
+-		spi_sync(wl_to_spi(wl), &m);
++		spi_sync(to_spi_device(glue->dev), &m);
+ 
+ 		if (*busy_buf & 0x1)
+ 			return 0;
+@@ -208,6 +216,7 @@ static int wl1271_spi_read_busy(struct wl1271 *wl)
+ static void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
+ 				size_t len, bool fixed)
+ {
++	struct wl12xx_spi_glue *glue = wl_to_glue(wl);
+ 	struct spi_transfer t[2];
+ 	struct spi_message m;
+ 	u32 *busy_buf;
+@@ -243,7 +252,7 @@ static void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
+ 		t[1].cs_change = true;
+ 		spi_message_add_tail(&t[1], &m);
+ 
+-		spi_sync(wl_to_spi(wl), &m);
++		spi_sync(to_spi_device(glue->dev), &m);
+ 
+ 		if (!(busy_buf[WL1271_BUSY_WORD_CNT - 1] & 0x1) &&
+ 		    wl1271_spi_read_busy(wl)) {
+@@ -259,7 +268,7 @@ static void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
+ 		t[0].cs_change = true;
+ 		spi_message_add_tail(&t[0], &m);
+ 
+-		spi_sync(wl_to_spi(wl), &m);
++		spi_sync(to_spi_device(glue->dev), &m);
+ 
+ 		wl1271_dump(DEBUG_SPI, "spi_read cmd -> ", cmd, sizeof(*cmd));
+ 		wl1271_dump(DEBUG_SPI, "spi_read buf <- ", buf, chunk_len);
+@@ -274,6 +283,7 @@ static void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
+ static void wl1271_spi_raw_write(struct wl1271 *wl, int addr, void *buf,
+ 			  size_t len, bool fixed)
+ {
++	struct wl12xx_spi_glue *glue = wl_to_glue(wl);
+ 	struct spi_transfer t[2 * WSPI_MAX_NUM_OF_CHUNKS];
+ 	struct spi_message m;
+ 	u32 commands[WSPI_MAX_NUM_OF_CHUNKS];
+@@ -318,7 +328,7 @@ static void wl1271_spi_raw_write(struct wl1271 *wl, int addr, void *buf,
+ 		cmd++;
+ 	}
+ 
+-	spi_sync(wl_to_spi(wl), &m);
++	spi_sync(to_spi_device(glue->dev), &m);
+ }
+ 
+ static irqreturn_t wl1271_hardirq(int irq, void *cookie)
+@@ -362,11 +372,12 @@ static struct wl1271_if_operations spi_ops = {
+ 
+ static int __devinit wl1271_probe(struct spi_device *spi)
+ {
++	struct wl12xx_spi_glue *glue;
+ 	struct wl12xx_platform_data *pdata;
+ 	struct ieee80211_hw *hw;
+ 	struct wl1271 *wl;
+ 	unsigned long irqflags;
+-	int ret;
++	int ret = -ENOMEM;
+ 
+ 	pdata = spi->dev.platform_data;
+ 	if (!pdata) {
+@@ -374,14 +385,25 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 		return -ENODEV;
+ 	}
+ 
++	glue = kzalloc(sizeof(*glue), GFP_KERNEL);
++	if (!glue) {
++		wl1271_error("can't allocate glue");
++		goto out;
++	}
++
+ 	hw = wl1271_alloc_hw();
+-	if (IS_ERR(hw))
+-		return PTR_ERR(hw);
++	if (IS_ERR(hw)) {
++		ret = PTR_ERR(hw);
++		goto out_free_glue;
++	}
+ 
+ 	wl = hw->priv;
+ 
+-	dev_set_drvdata(&spi->dev, wl);
+-	wl->if_priv = spi;
++	glue->dev = &spi->dev;
++	glue->wl = wl;
++
++	spi_set_drvdata(spi, glue);
++	wl->if_priv = glue;
+ 
+ 	wl->if_ops = &spi_ops;
+ 
+@@ -392,14 +414,14 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 	ret = spi_setup(spi);
+ 	if (ret < 0) {
+ 		wl1271_error("spi_setup failed");
+-		goto out_free;
++		goto out_free_hw;
+ 	}
+ 
+ 	wl->set_power = pdata->set_power;
+ 	if (!wl->set_power) {
+ 		wl1271_error("set power function missing in platform data");
+ 		ret = -ENODEV;
+-		goto out_free;
++		goto out_free_hw;
+ 	}
+ 
+ 	wl->ref_clock = pdata->board_ref_clock;
+@@ -415,7 +437,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 	if (wl->irq < 0) {
+ 		wl1271_error("irq missing in platform data");
+ 		ret = -ENODEV;
+-		goto out_free;
++		goto out_free_hw;
+ 	}
+ 
+ 	ret = request_threaded_irq(wl->irq, wl1271_hardirq, wl1271_irq,
+@@ -423,7 +445,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 				   DRIVER_NAME, wl);
+ 	if (ret < 0) {
+ 		wl1271_error("request_irq() failed: %d", ret);
+-		goto out_free;
++		goto out_free_hw;
+ 	}
+ 
+ 	disable_irq(wl->irq);
+@@ -438,22 +460,27 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 
+ 	return 0;
+ 
+- out_irq:
++out_irq:
+ 	free_irq(wl->irq, wl);
+ 
+- out_free:
++out_free_hw:
+ 	wl1271_free_hw(wl);
+ 
++out_free_glue:
++	kfree(glue);
++out:
+ 	return ret;
+ }
+ 
+ static int __devexit wl1271_remove(struct spi_device *spi)
+ {
+-	struct wl1271 *wl = dev_get_drvdata(&spi->dev);
++	struct wl12xx_spi_glue *glue = spi_get_drvdata(spi);
++	struct wl1271 *wl = glue->wl;
+ 
+ 	wl1271_unregister_hw(wl);
+ 	free_irq(wl->irq, wl);
+ 	wl1271_free_hw(wl);
++	kfree(glue);
+ 
+ 	return 0;
+ }
 -- 
-1.7.4.15.g7811d
+1.7.1
 
