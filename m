@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52727 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754012Ab1JGTyZ (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:56158 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755720Ab1JFHML (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 15:54:25 -0400
-Subject: Re: [PATCH 3/8] cfg80211: process regulatory DFS region for
- countries
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1317772067-6998-4-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111005_014806_861657_74E532F3)
-References: <1317772067-6998-1-git-send-email-mcgrof@qca.qualcomm.com>
-	 <1317772067-6998-4-git-send-email-mcgrof@qca.qualcomm.com>
-	 (sfid-20111005_014806_861657_74E532F3)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 07 Oct 2011 21:54:20 +0200
-Message-ID: <1318017260.3974.9.camel@jlt3.sipsolutions.net> (sfid-20111007_215444_087210_F5FD032C)
-Mime-Version: 1.0
+	Thu, 6 Oct 2011 03:12:11 -0400
+Received: by ggnv2 with SMTP id v2so1433834ggn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 00:12:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <loom.20111005T122216-407@post.gmane.org>
+References: <loom.20111005T122216-407@post.gmane.org>
+Date: Thu, 6 Oct 2011 09:12:09 +0200
+Message-ID: <CAGXE3d_3NBVta6+QZKN+_c7H+f5fwq+zvfAaFTA7KDugVq6L8A@mail.gmail.com> (sfid-20111006_091214_796836_8F27D74F)
+Subject: Re: hostapd with Ralink3060, SSID not visible to STA
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Manish Verma <mail.manishverma@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-10-04 at 16:47 -0700, Luis R. Rodriguez wrote:
+On Wed, Oct 5, 2011 at 12:47 PM, Manish Verma
+<mail.manishverma@gmail.com> wrote:
+> I'm not able to see the SSID configured on my x86 PC using hostapd-0.7.3 with a
+> DWA-525 (Dlink N-150) wifi adapter.
+> This card has a Ralink's 3060 chipset that is using rt2800pci drivers.
+>
+> Although hostapd is able to configure the card in AP mode but its SSID is not
+> visible to other STAs to connect.
+>
+>
+> I'm using FC15 shipped kernel 2.6.28.6-26.rc1.fc15.i686
 
->  /**
-> + * enum nl80211_dfs_regions - regulatory DFS regions
-> + *
-> + * @NL80211_DFS_UNSET: Country has no DFS master region specified
-> + * @NL80211_DFS_FCC_: Country follows DFS master rules from FCC
-> + * @NL80211_DFS_FCC_: Country follows DFS master rules from ETSI
-> + * @NL80211_DFS_JP_: Country follows DFS master rules from JP/MKK/Telec
-> + */
-> +enum nl80211_cflags {
-> +	NL80211_DFS_UNSET	= 0,
+2.6.28 is quite old, you could try to use a newer driver version
+by using compat-wireless [1].
 
-That seems odd -- nl80211 convention would be to just leave out the
-attribute.
+Helmut
 
-johannes
-
+[1] http://linuxwireless.org/en/users/Download
