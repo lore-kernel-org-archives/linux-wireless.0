@@ -1,76 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:41933 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752687Ab1JJIMe (ORCPT
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:45527 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759160Ab1JFTLV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 04:12:34 -0400
-Received: by eye27 with SMTP id 27so1109073eye.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 01:12:32 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 00/29] make the driver ready for multi-vif support
-Date: Mon, 10 Oct 2011 10:12:48 +0200
-Message-Id: <1318234397-21081-1-git-send-email-eliad@wizery.com> (sfid-20111010_101238_173341_E5FB3F12)
+	Thu, 6 Oct 2011 15:11:21 -0400
+Received: by mail-bw0-f49.google.com with SMTP id t2so4418851bka.8
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 12:11:19 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: coelho@ti.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/8] wl12xx: add platform driver to the core module
+Date: Thu,  6 Oct 2011 22:10:56 +0300
+Message-Id: <1317928259-26437-6-git-send-email-coelho@ti.com> (sfid-20111006_211132_190254_B5497C7D)
+In-Reply-To: <1317928259-26437-1-git-send-email-coelho@ti.com>
+References: <1317928259-26437-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset finishes adding multiple vif support to the
-wl12xx driver.
+From: Felipe Balbi <balbi@ti.com>
 
-The driver still allows only a single vif, as the current
-fw only supports a single vif.
+Nnow that we have a platform_device on both glue layers, add a
+platform_driver to the core driver.
 
-This patchset doesn't break compatibility with the current fw.
+It's currently an empty platform_driver but more functionality will be
+added on later patches.
 
-Eliad Peller (29):
-  wl12xx: refactor fw init into a new function
-  wl12xx: move last_tx_hlid into wlvif
-  wl12xx: unify STA and AP tx_queue mechanism
-  wl12xx: move some functions from remove_interface() to stop()
-  wl12xx: move bitrate_masks into wlvif
-  wl12xx: add vifs list
-  wl12xx: support multiple vifs in the tx path
-  wl12xx: configure sleep_policy according to active roles
-  wl12xx: make event handling support multirole
-  wl12xx: move tx_security_seq into wlvif
-  wl12xx: rearm rx streaming per vif
-  wl12xx: make WL1271_FLAG_STA_ASSOCIATED flag per-vif
-  wl12xx: make WL1271_FLAG_IBSS_JOINED flag per-vif
-  wl12xx: make WL1271_FLAG_AP_STARTED flag per-vif
-  wl12xx: make WL1271_FLAG_PSM flag per-vif
-  wl12xx: make WL1271_FLAG_STA_STATE_SENT flag per-vif
-  wl12xx: make WL1271_FLAG_RX_STREAMING_STARTED flag per-vif
-  wl12xx: make WL1271_FLAG_IF_INITIALIZED per-vif
-  wl12xx: make WL1271_FLAG_PSPOLL_FAILURE flag per-vif
-  wl12xx: make WL1271_FLAG_CS_PROGRESS flag per-vif
-  wl12xx: add band field to wlvif
-  wl12xx: add channel field to wlvif
-  wl12xx: add power_level field to wlvif
-  wl12xx: make op_config configure all vifs
-  wl12xx: replace all remaining wl->vif references
-  wl12xx: call stop() on recovery
-  wl12xx: use dynamic rate policies
-  wl12xx: add elp wakeup/sleep calls to add_interface
-  wl12xx: use round-robin policy for tx
+Signed-off-by: Felipe Balbi <balbi@ti.com>
+[forward-ported, cleaned-up and rephrased commit message]
+[added platform_driver.driver initialization]
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   39 ++++++++++++++++++++++++++++++++++++
+ 1 files changed, 39 insertions(+), 0 deletions(-)
 
- drivers/net/wireless/wl12xx/acx.c     |   11 +-
- drivers/net/wireless/wl12xx/acx.h     |    8 +-
- drivers/net/wireless/wl12xx/cmd.c     |   70 ++--
- drivers/net/wireless/wl12xx/cmd.h     |    8 +-
- drivers/net/wireless/wl12xx/debugfs.c |   23 +-
- drivers/net/wireless/wl12xx/event.c   |  137 ++++--
- drivers/net/wireless/wl12xx/init.c    |   48 ++-
- drivers/net/wireless/wl12xx/main.c    |  923 +++++++++++++++++++--------------
- drivers/net/wireless/wl12xx/ps.c      |   38 +-
- drivers/net/wireless/wl12xx/ps.h      |    5 +-
- drivers/net/wireless/wl12xx/rx.c      |   35 +-
- drivers/net/wireless/wl12xx/scan.c    |   29 +-
- drivers/net/wireless/wl12xx/tx.c      |  294 ++++++-----
- drivers/net/wireless/wl12xx/tx.h      |    8 +-
- drivers/net/wireless/wl12xx/wl12xx.h  |  117 +++--
- 15 files changed, 1029 insertions(+), 725 deletions(-)
-
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 194d7cc..84904bd 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -5041,6 +5041,45 @@ int wl1271_free_hw(struct wl1271 *wl)
+ }
+ EXPORT_SYMBOL_GPL(wl1271_free_hw);
+ 
++static int __devinit wl12xx_probe(struct platform_device *pdev)
++{
++	return 0;
++}
++
++static int __devexit wl12xx_remove(struct platform_device *pdev)
++{
++	return 0;
++}
++
++static const struct platform_device_id wl12xx_id_table[] __devinitconst = {
++	{ "wl12xx-sdio", 0 },
++	{ "wl12xx-spi", 0 },
++	{  } /* Terminating Entry */
++};
++MODULE_DEVICE_TABLE(platform, wl12xx_id_table);
++
++static struct platform_driver wl12xx_driver = {
++	.probe		= wl12xx_probe,
++	.remove		= __devexit_p(wl12xx_remove),
++	.id_table	= wl12xx_id_table,
++	.driver = {
++		.name	= "wl12xx",
++		.owner	= THIS_MODULE,
++	}
++};
++
++static int __init wl12xx_init(void)
++{
++	return platform_driver_register(&wl12xx_driver);
++}
++module_init(wl12xx_init);
++
++static void __exit wl12xx_exit(void)
++{
++	platform_driver_unregister(&wl12xx_driver);
++}
++module_exit(wl12xx_exit);
++
+ u32 wl12xx_debug_level = DEBUG_NONE;
+ EXPORT_SYMBOL_GPL(wl12xx_debug_level);
+ module_param_named(debug_level, wl12xx_debug_level, uint, S_IRUSR | S_IWUSR);
 -- 
-1.7.6.401.g6a319
+1.7.1
 
