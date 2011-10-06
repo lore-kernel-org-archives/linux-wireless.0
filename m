@@ -1,223 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2275 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757520Ab1JRMD2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Oct 2011 08:03:28 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Alwin Beukers" <alwin@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 02/15] brcm80211: removed duplicate defines
-Date: Tue, 18 Oct 2011 14:02:58 +0200
-Message-ID: <1318939391-19495-3-git-send-email-arend@broadcom.com> (sfid-20111018_140341_676554_76B3ED71)
-In-Reply-To: <1318939391-19495-1-git-send-email-arend@broadcom.com>
-References: <1318939391-19495-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:35659 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754778Ab1JFNOM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Oct 2011 09:14:12 -0400
+Received: by gyg10 with SMTP id 10so2540522gyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 06:14:11 -0700 (PDT)
+From: Sangwook Lee <sangwook.lee@linaro.org>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath6kl: fix firmware start address for ar6003 hw2.0
+Date: Thu,  6 Oct 2011 14:12:05 +0100
+Message-Id: <1317906725-31130-1-git-send-email-sangwook.lee@linaro.org> (sfid-20111006_151415_477769_004A8CDD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alwin Beukers <alwin@broadcom.com>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Removed defines from aiutils.h also present in soc.h.
+Sangwook found out that commit 639d0b89 ("ath6kl: read firmware start
+address from hardware") broke firmware boot on ar6003 hw2.0 as it seems
+it's not posible to automatically query the address from hardware. So
+we need to hardcode the address for hw2.0.
 
-Reported-by: Hauke Mehrtens <hauke@hauke-m.de>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reported-by: Sangwook Lee <sangwook.lee@linaro.org>
+Tested-by: Sangwook Lee <sangwook.lee@linaro.org>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.h  |   76 --------------------
- drivers/net/wireless/brcm80211/brcmsmac/dma.c      |    1 +
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |    1 +
- .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |    1 +
- drivers/net/wireless/brcm80211/brcmsmac/pmu.c      |    1 +
- drivers/net/wireless/brcm80211/brcmsmac/srom.c     |    1 +
- drivers/net/wireless/brcm80211/include/soc.h       |   12 +++-
- 7 files changed, 15 insertions(+), 78 deletions(-)
+Kalle:
+I slightly changed again. without running ath6kl_bmi_read() before,
+ath6kl_bmi_execute() failed with hw2.0 board, but I am not clear about this reason.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-index 106a742..b51d1e4 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-@@ -38,88 +38,12 @@
- /* PCIE Client Mode sb2pcitranslation2 (2 ZettaBytes), high 32 bits */
- #define SI_PCIE_DMA_H32		0x80000000
+ drivers/net/wireless/ath/ath6kl/init.c |   24 ++++++++++++++++--------
+ 1 files changed, 16 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index b277111..07a6a44 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1183,6 +1183,7 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
+ static int ath6kl_upload_otp(struct ath6kl *ar)
+ {
+ 	u32 address, param;
++	bool from_hw = false;
+ 	int ret;
  
--/* core codes */
--#define	NODEV_CORE_ID		0x700	/* Invalid coreid */
--#define	CC_CORE_ID		0x800	/* chipcommon core */
--#define	ILINE20_CORE_ID		0x801	/* iline20 core */
--#define	SRAM_CORE_ID		0x802	/* sram core */
--#define	SDRAM_CORE_ID		0x803	/* sdram core */
--#define	PCI_CORE_ID		0x804	/* pci core */
--#define	MIPS_CORE_ID		0x805	/* mips core */
--#define	ENET_CORE_ID		0x806	/* enet mac core */
--#define	CODEC_CORE_ID		0x807	/* v90 codec core */
--#define	USB_CORE_ID		0x808	/* usb 1.1 host/device core */
--#define	ADSL_CORE_ID		0x809	/* ADSL core */
--#define	ILINE100_CORE_ID	0x80a	/* iline100 core */
--#define	IPSEC_CORE_ID		0x80b	/* ipsec core */
--#define	UTOPIA_CORE_ID		0x80c	/* utopia core */
--#define	PCMCIA_CORE_ID		0x80d	/* pcmcia core */
--#define	SOCRAM_CORE_ID		0x80e	/* internal memory core */
--#define	MEMC_CORE_ID		0x80f	/* memc sdram core */
--#define	OFDM_CORE_ID		0x810	/* OFDM phy core */
--#define	EXTIF_CORE_ID		0x811	/* external interface core */
--#define	D11_CORE_ID		0x812	/* 802.11 MAC core */
--#define	APHY_CORE_ID		0x813	/* 802.11a phy core */
--#define	BPHY_CORE_ID		0x814	/* 802.11b phy core */
--#define	GPHY_CORE_ID		0x815	/* 802.11g phy core */
--#define	MIPS33_CORE_ID		0x816	/* mips3302 core */
--#define	USB11H_CORE_ID		0x817	/* usb 1.1 host core */
--#define	USB11D_CORE_ID		0x818	/* usb 1.1 device core */
--#define	USB20H_CORE_ID		0x819	/* usb 2.0 host core */
--#define	USB20D_CORE_ID		0x81a	/* usb 2.0 device core */
--#define	SDIOH_CORE_ID		0x81b	/* sdio host core */
--#define	ROBO_CORE_ID		0x81c	/* roboswitch core */
--#define	ATA100_CORE_ID		0x81d	/* parallel ATA core */
--#define	SATAXOR_CORE_ID		0x81e	/* serial ATA & XOR DMA core */
--#define	GIGETH_CORE_ID		0x81f	/* gigabit ethernet core */
--#define	PCIE_CORE_ID		0x820	/* pci express core */
--#define	NPHY_CORE_ID		0x821	/* 802.11n 2x2 phy core */
--#define	SRAMC_CORE_ID		0x822	/* SRAM controller core */
--#define	MINIMAC_CORE_ID		0x823	/* MINI MAC/phy core */
--#define	ARM11_CORE_ID		0x824	/* ARM 1176 core */
--#define	ARM7S_CORE_ID		0x825	/* ARM7tdmi-s core */
--#define	LPPHY_CORE_ID		0x826	/* 802.11a/b/g phy core */
--#define	PMU_CORE_ID		0x827	/* PMU core */
--#define	SSNPHY_CORE_ID		0x828	/* 802.11n single-stream phy core */
--#define	SDIOD_CORE_ID		0x829	/* SDIO device core */
--#define	ARMCM3_CORE_ID		0x82a	/* ARM Cortex M3 core */
--#define	HTPHY_CORE_ID		0x82b	/* 802.11n 4x4 phy core */
--#define	MIPS74K_CORE_ID		0x82c	/* mips 74k core */
--#define	GMAC_CORE_ID		0x82d	/* Gigabit MAC core */
--#define	DMEMC_CORE_ID		0x82e	/* DDR1/2 memory controller core */
--#define	PCIERC_CORE_ID		0x82f	/* PCIE Root Complex core */
--#define	OCP_CORE_ID		0x830	/* OCP2OCP bridge core */
--#define	SC_CORE_ID		0x831	/* shared common core */
--#define	AHB_CORE_ID		0x832	/* OCP2AHB bridge core */
--#define	SPIH_CORE_ID		0x833	/* SPI host core */
--#define	I2S_CORE_ID		0x834	/* I2S core */
--#define	DMEMS_CORE_ID		0x835	/* SDR/DDR1 memory controller core */
--#define	DEF_SHIM_COMP		0x837	/* SHIM component in ubus/6362 */
--#define OOB_ROUTER_CORE_ID	0x367	/* OOB router core ID */
--#define	DEF_AI_COMP		0xfff	/* Default component, in ai chips it
--					 * maps all unused address ranges
--					 */
--
- /* chipcommon being the first core: */
- #define	SI_CC_IDX		0
+ 	if (WARN_ON(ar->fw_otp == NULL))
+@@ -1201,25 +1202,28 @@ static int ath6kl_upload_otp(struct ath6kl *ar)
+ 	}
  
- /* SOC Interconnect types (aka chip types) */
- #define	SOCI_AI			1
+ 	/* read firmware start address */
+-	ret = ath6kl_bmi_read(ar,
+-			      ath6kl_get_hi_item_addr(ar,
+-						      HI_ITEM(hi_app_start)),
+-			      (u8 *) &address, sizeof(address));
++	ret = ath6kl_bmi_read(ar, ath6kl_get_hi_item_addr(ar,
++		HI_ITEM(hi_app_start)), (u8 *) &address, sizeof(address));
  
--/* Common core control flags */
--#define	SICF_BIST_EN		0x8000
--#define	SICF_PME_EN		0x4000
--#define	SICF_CORE_BITS		0x3ffc
--#define	SICF_FGC		0x0002
--#define	SICF_CLOCK_EN		0x0001
--
--/* Common core status flags */
--#define	SISF_BIST_DONE		0x8000
--#define	SISF_BIST_ERROR		0x4000
--#define	SISF_GATED_CLK		0x2000
--#define	SISF_DMA64		0x1000
--#define	SISF_CORE_BITS		0x0fff
--
- /* A register that is common to all cores to
-  * communicate w/PMU regarding clock control.
-  */
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-index b56a302..08960ce 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-@@ -22,6 +22,7 @@
- #include <aiutils.h>
- #include "types.h"
- #include "dma.h"
-+#include "soc.h"
+ 	if (ret) {
+ 		ath6kl_err("Failed to read hi_app_start: %d\n", ret);
+ 		return ret;
+ 	}
  
- /*
-  * DMA hardware requires each descriptor ring to be 8kB aligned, and fit within
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 77261ea..84f32b6 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -30,6 +30,7 @@
- #include "mac80211_if.h"
- #include "ucode_loader.h"
- #include "main.h"
-+#include "soc.h"
+-	ar->hw.app_start_override_addr = address;
++	if (ar->hw.app_start_override_addr == 0) {
++		ar->hw.app_start_override_addr = address;
++		from_hw = true;
++	}
  
- /*
-  * Indication for txflowcontrol that all priority bits in
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-index cd19c2f..db612f8 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-@@ -29,6 +29,7 @@
- #include "phy_radio.h"
- #include "phyreg_n.h"
- #include "phytbl_n.h"
-+#include "soc.h"
+-	ath6kl_dbg(ATH6KL_DBG_BOOT, "app_start_override_addr 0x%x\n",
++	ath6kl_dbg(ATH6KL_DBG_BOOT, "app_start_override_addr%s 0x%x\n",
++		   from_hw ? " (from hw)" : "",
+ 		   ar->hw.app_start_override_addr);
  
- #define READ_RADIO_REG2(pi, radio_type, jspace, core, reg_name)	\
- 	read_radio_reg(pi, radio_type##_##jspace##_##reg_name |	\
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pmu.c b/drivers/net/wireless/brcm80211/brcmsmac/pmu.c
-index 3b36e3a..12ba575 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/pmu.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/pmu.c
-@@ -23,6 +23,7 @@
- #include "pub.h"
- #include "aiutils.h"
- #include "pmu.h"
-+#include "soc.h"
+ 	/* execute the OTP code */
+-	ath6kl_dbg(ATH6KL_DBG_BOOT, "executing OTP at 0x%x\n", address);
++	ath6kl_dbg(ATH6KL_DBG_BOOT, "executing OTP at 0x%x\n",
++		   ar->hw.app_start_override_addr);
+ 	param = 0;
+-	ath6kl_bmi_execute(ar, address, &param);
++	ath6kl_bmi_execute(ar, ar->hw.app_start_override_addr, &param);
  
- /*
-  * external LPO crystal frequency
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/srom.c b/drivers/net/wireless/brcm80211/brcmsmac/srom.c
-index 99f7910..b52b0d2 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/srom.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/srom.c
-@@ -28,6 +28,7 @@
- #include "aiutils.h"
- #include "otp.h"
- #include "srom.h"
-+#include "soc.h"
- 
- /*
-  * SROM CRC8 polynomial value:
-diff --git a/drivers/net/wireless/brcm80211/include/soc.h b/drivers/net/wireless/brcm80211/include/soc.h
-index 4fcb956..4e9b7e4 100644
---- a/drivers/net/wireless/brcm80211/include/soc.h
-+++ b/drivers/net/wireless/brcm80211/include/soc.h
-@@ -77,8 +77,9 @@
- #define	DMEMS_CORE_ID		0x835	/* SDR/DDR1 memory controller core */
- #define	DEF_SHIM_COMP		0x837	/* SHIM component in ubus/6362 */
- #define OOB_ROUTER_CORE_ID	0x367	/* OOB router core ID */
--/* Default component, in ai chips it maps all unused address ranges */
--#define	DEF_AI_COMP		0xfff
-+#define	DEF_AI_COMP		0xfff	/* Default component, in ai chips it
-+					 * maps all unused address ranges
-+					 */
- 
- /* Common core control flags */
- #define	SICF_BIST_EN		0x8000
-@@ -87,4 +88,11 @@
- #define	SICF_FGC		0x0002
- #define	SICF_CLOCK_EN		0x0001
- 
-+/* Common core status flags */
-+#define	SISF_BIST_DONE		0x8000
-+#define	SISF_BIST_ERROR		0x4000
-+#define	SISF_GATED_CLK		0x2000
-+#define	SISF_DMA64		0x1000
-+#define	SISF_CORE_BITS		0x0fff
+ 	return ret;
+ }
+@@ -1421,6 +1425,10 @@ static int ath6kl_init_hw_params(struct ath6kl *ar)
+ 		ar->hw.app_load_addr = AR6003_REV2_APP_LOAD_ADDRESS;
+ 		ar->hw.board_ext_data_addr = AR6003_REV2_BOARD_EXT_DATA_ADDRESS;
+ 		ar->hw.reserved_ram_size = AR6003_REV2_RAM_RESERVE_SIZE;
 +
- #endif				/* _BRCM_SOC_H */
++		/* hw2.0 needs override address hardcoded */
++		ar->hw.app_start_override_addr = 0x944C00;
++
+ 		break;
+ 	case AR6003_REV3_VERSION:
+ 		ar->hw.dataset_patch_addr = AR6003_REV3_DATASET_PATCH_ADDRESS;
 -- 
 1.7.4.1
-
 
