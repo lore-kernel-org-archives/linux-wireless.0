@@ -1,295 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:35975 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932963Ab1JEJzt (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54826 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756812Ab1JFUFl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 05:55:49 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 28so1405752eya.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:55:48 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/29] wl12xx: move rate_set into wlvif
-Date: Wed,  5 Oct 2011 11:55:42 +0200
-Message-Id: <1317808566-18857-6-git-send-email-eliad@wizery.com> (sfid-20111005_115553_223917_DA8D5622)
-In-Reply-To: <1317808566-18857-1-git-send-email-eliad@wizery.com>
-References: <1317808566-18857-1-git-send-email-eliad@wizery.com>
+	Thu, 6 Oct 2011 16:05:41 -0400
+Subject: [PATCH] compat-wireless: add struct padding to fix wext issue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 06 Oct 2011 22:05:39 +0200
+Message-ID: <1317931539.3945.9.camel@jlt3.sipsolutions.net> (sfid-20111006_220545_302520_2DC78A23)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-move rate_set into the per-interface data, rather than
-being global.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+See description in the patch :-)
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/wl12xx/acx.c     |    6 +++---
- drivers/net/wireless/wl12xx/acx.h     |    2 +-
- drivers/net/wireless/wl12xx/cmd.c     |   12 ++++++------
- drivers/net/wireless/wl12xx/debugfs.c |    1 -
- drivers/net/wireless/wl12xx/init.c    |    6 +++---
- drivers/net/wireless/wl12xx/main.c    |   24 ++++++++++++------------
- drivers/net/wireless/wl12xx/wl12xx.h  |    9 ++++++++-
- 7 files changed, 33 insertions(+), 27 deletions(-)
+ patches/09-cfg80211-wext-padding.patch |   62 ++++++++++++++++++++++++++++++++
+ 1 files changed, 62 insertions(+), 0 deletions(-)
+ create mode 100644 patches/09-cfg80211-wext-padding.patch
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index ca044a7..1ef9b0b 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -739,7 +739,7 @@ int wl1271_acx_statistics(struct wl1271 *wl, struct acx_statistics *stats)
- 	return 0;
- }
- 
--int wl1271_acx_sta_rate_policies(struct wl1271 *wl)
-+int wl1271_acx_sta_rate_policies(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- {
- 	struct acx_rate_policy *acx;
- 	struct conf_tx_rate_class *c = &wl->conf.tx.sta_rc_conf;
-@@ -755,7 +755,7 @@ int wl1271_acx_sta_rate_policies(struct wl1271 *wl)
- 	}
- 
- 	wl1271_debug(DEBUG_ACX, "basic_rate: 0x%x, full_rate: 0x%x",
--		wl->basic_rate, wl->rate_set);
-+		wl->basic_rate, wlvif->rate_set);
- 
- 	/* configure one basic rate class */
- 	acx->rate_policy_idx = cpu_to_le32(ACX_TX_BASIC_RATE);
-@@ -772,7 +772,7 @@ int wl1271_acx_sta_rate_policies(struct wl1271 *wl)
- 
- 	/* configure one AP supported rate class */
- 	acx->rate_policy_idx = cpu_to_le32(ACX_TX_AP_FULL_RATE);
--	acx->rate_policy.enabled_rates = cpu_to_le32(wl->rate_set);
-+	acx->rate_policy.enabled_rates = cpu_to_le32(wlvif->rate_set);
- 	acx->rate_policy.short_retry_limit = c->short_retry_limit;
- 	acx->rate_policy.long_retry_limit = c->long_retry_limit;
- 	acx->rate_policy.aflags = c->aflags;
-diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
-index e3f93b4..81779f4 100644
---- a/drivers/net/wireless/wl12xx/acx.h
-+++ b/drivers/net/wireless/wl12xx/acx.h
-@@ -1261,7 +1261,7 @@ int wl1271_acx_set_preamble(struct wl1271 *wl, enum acx_preamble_type preamble);
- int wl1271_acx_cts_protect(struct wl1271 *wl,
- 			   enum acx_ctsprotect_type ctsprotect);
- int wl1271_acx_statistics(struct wl1271 *wl, struct acx_statistics *stats);
--int wl1271_acx_sta_rate_policies(struct wl1271 *wl);
-+int wl1271_acx_sta_rate_policies(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- int wl1271_acx_ap_rate_policy(struct wl1271 *wl, struct conf_tx_rate_class *c,
- 		      u8 idx);
- int wl1271_acx_ac_cfg(struct wl1271 *wl, u8 ac, u8 cw_min, u16 cw_max,
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index f28e429..2ae6799 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -578,7 +578,7 @@ int wl12xx_cmd_role_start_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	cmd->sta.ssid_len = wl->ssid_len;
- 	memcpy(cmd->sta.ssid, wl->ssid, wl->ssid_len);
- 	memcpy(cmd->sta.bssid, wl->bssid, ETH_ALEN);
--	cmd->sta.local_rates = cpu_to_le32(wl->rate_set);
-+	cmd->sta.local_rates = cpu_to_le32(wlvif->rate_set);
- 
- 	if (wl->sta_hlid == WL12XX_INVALID_LINK_ID) {
- 		ret = wl12xx_allocate_link(wl, &wl->sta_hlid);
-@@ -587,12 +587,12 @@ int wl12xx_cmd_role_start_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	}
- 	cmd->sta.hlid = wl->sta_hlid;
- 	cmd->sta.session = wl12xx_get_new_session_id(wl);
--	cmd->sta.remote_rates = cpu_to_le32(wl->rate_set);
-+	cmd->sta.remote_rates = cpu_to_le32(wlvif->rate_set);
- 
- 	wl1271_debug(DEBUG_CMD, "role start: roleid=%d, hlid=%d, session=%d "
- 		     "basic_rate_set: 0x%x, remote_rates: 0x%x",
- 		     wl->role_id, cmd->sta.hlid, cmd->sta.session,
--		     wlvif->basic_rate_set, wl->rate_set);
-+		     wlvif->basic_rate_set, wlvif->rate_set);
- 
- 	ret = wl1271_cmd_send(wl, CMD_ROLE_START, cmd, sizeof(*cmd), 0);
- 	if (ret < 0) {
-@@ -792,7 +792,7 @@ int wl12xx_cmd_role_start_ibss(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	cmd->ibss.ssid_len = wl->ssid_len;
- 	memcpy(cmd->ibss.ssid, wl->ssid, wl->ssid_len);
- 	memcpy(cmd->ibss.bssid, wl->bssid, ETH_ALEN);
--	cmd->sta.local_rates = cpu_to_le32(wl->rate_set);
-+	cmd->sta.local_rates = cpu_to_le32(wlvif->rate_set);
- 
- 	if (wl->sta_hlid == WL12XX_INVALID_LINK_ID) {
- 		ret = wl12xx_allocate_link(wl, &wl->sta_hlid);
-@@ -800,12 +800,12 @@ int wl12xx_cmd_role_start_ibss(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 			goto out_free;
- 	}
- 	cmd->ibss.hlid = wl->sta_hlid;
--	cmd->ibss.remote_rates = cpu_to_le32(wl->rate_set);
-+	cmd->ibss.remote_rates = cpu_to_le32(wlvif->rate_set);
- 
- 	wl1271_debug(DEBUG_CMD, "role start: roleid=%d, hlid=%d, session=%d "
- 		     "basic_rate_set: 0x%x, remote_rates: 0x%x",
- 		     wl->role_id, cmd->sta.hlid, cmd->sta.session,
--		     wlvif->basic_rate_set, wl->rate_set);
-+		     wlvif->basic_rate_set, wlvif->rate_set);
- 
- 	wl1271_debug(DEBUG_CMD, "wl->bssid = %pM", wl->bssid);
- 
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 0419aaf..e63fea4 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -352,7 +352,6 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- 	DRIVER_STATE_PRINT_INT(state);
- 	DRIVER_STATE_PRINT_INT(bss_type);
- 	DRIVER_STATE_PRINT_INT(channel);
--	DRIVER_STATE_PRINT_HEX(rate_set);
- 	DRIVER_STATE_PRINT_HEX(basic_rate);
- 	DRIVER_STATE_PRINT_INT(band);
- 	DRIVER_STATE_PRINT_INT(beacon_int);
-diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
-index d9da36c..6e87e72 100644
---- a/drivers/net/wireless/wl12xx/init.c
-+++ b/drivers/net/wireless/wl12xx/init.c
-@@ -320,7 +320,7 @@ static int wl12xx_init_fwlog(struct wl1271 *wl)
- }
- 
- /* generic sta initialization (non vif-specific) */
--static int wl1271_sta_hw_init(struct wl1271 *wl)
-+static int wl1271_sta_hw_init(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- {
- 	int ret;
- 
-@@ -345,7 +345,7 @@ static int wl1271_sta_hw_init(struct wl1271 *wl)
- 	if (ret < 0)
- 		return ret;
- 
--	ret = wl1271_acx_sta_rate_policies(wl);
-+	ret = wl1271_acx_sta_rate_policies(wl, wlvif);
- 	if (ret < 0)
- 		return ret;
- 
-@@ -586,7 +586,7 @@ int wl1271_init_vif_specific(struct wl1271 *wl, struct ieee80211_vif *vif)
- 		if (ret < 0)
- 			return ret;
- 	} else {
--		ret = wl1271_sta_hw_init(wl);
-+		ret = wl1271_sta_hw_init(wl, wlvif);
- 		if (ret < 0)
- 			return ret;
- 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index b1a3967..9afe8b9 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1840,6 +1840,7 @@ static u8 wl12xx_get_role_type(struct wl1271 *wl)
- static void wl12xx_init_vif_data(struct wl12xx_vif *wlvif)
- {
- 	wlvif->basic_rate_set = CONF_TX_RATE_MASK_BASIC;
-+	wlvif->rate_set = CONF_TX_RATE_MASK_BASIC;
- }
- 
- static int wl1271_op_add_interface(struct ieee80211_hw *hw,
-@@ -2106,7 +2107,6 @@ deinit:
- 	wl->tx_packets_count = 0;
- 	wl->time_offset = 0;
- 	wl->session_counter = 0;
--	wl->rate_set = CONF_TX_RATE_MASK_BASIC;
- 	wl->bitrate_masks[IEEE80211_BAND_2GHZ] = wl->conf.tx.basic_rate;
- 	wl->bitrate_masks[IEEE80211_BAND_5GHZ] = wl->conf.tx.basic_rate_5;
- 	wl->vif = NULL;
-@@ -2249,7 +2249,7 @@ out:
- static void wl1271_set_band_rate(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- {
- 	wlvif->basic_rate_set = wl->bitrate_masks[wl->band];
--	wl->rate_set = wlvif->basic_rate_set;
-+	wlvif->rate_set = wlvif->basic_rate_set;
- }
- 
- static bool wl12xx_is_roc(struct wl1271 *wl)
-@@ -2279,9 +2279,9 @@ static int wl1271_sta_handle_idle(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			if (ret < 0)
- 				goto out;
- 		}
--		wl->rate_set = wl1271_tx_min_rate_get(wl,
--						      wlvif->basic_rate_set);
--		ret = wl1271_acx_sta_rate_policies(wl);
-+		wlvif->rate_set =
-+			wl1271_tx_min_rate_get(wl, wlvif->basic_rate_set);
-+		ret = wl1271_acx_sta_rate_policies(wl, wlvif);
- 		if (ret < 0)
- 			goto out;
- 		ret = wl1271_acx_keep_alive_config(
-@@ -2382,7 +2382,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 			wl->basic_rate =
- 				wl1271_tx_min_rate_get(wl,
- 						       wlvif->basic_rate_set);
--			ret = wl1271_acx_sta_rate_policies(wl);
-+			ret = wl1271_acx_sta_rate_policies(wl, wlvif);
- 			if (ret < 0)
- 				wl1271_warning("rate policy for channel "
- 					       "failed %d", ret);
-@@ -3497,10 +3497,11 @@ sta_not_found:
- 				wl1271_tx_min_rate_get(wl,
- 						       wlvif->basic_rate_set);
- 			if (sta_rate_set)
--				wl->rate_set = wl1271_tx_enabled_rates_get(wl,
-+				wlvif->rate_set =
-+					wl1271_tx_enabled_rates_get(wl,
- 								sta_rate_set,
- 								wl->band);
--			ret = wl1271_acx_sta_rate_policies(wl);
-+			ret = wl1271_acx_sta_rate_policies(wl, wlvif);
- 			if (ret < 0)
- 				goto out;
- 
-@@ -3549,7 +3550,7 @@ sta_not_found:
- 			wl->basic_rate =
- 				wl1271_tx_min_rate_get(wl,
- 						       wlvif->basic_rate_set);
--			ret = wl1271_acx_sta_rate_policies(wl);
-+			ret = wl1271_acx_sta_rate_policies(wl, wlvif);
- 			if (ret < 0)
- 				goto out;
- 
-@@ -3607,8 +3608,8 @@ sta_not_found:
- 						       wlvif->basic_rate_set);
- 
- 			/* by default, use 11b + OFDM rates */
--			wl->rate_set = CONF_TX_IBSS_DEFAULT_RATES;
--			ret = wl1271_acx_sta_rate_policies(wl);
-+			wlvif->rate_set = CONF_TX_IBSS_DEFAULT_RATES;
-+			ret = wl1271_acx_sta_rate_policies(wl, wlvif);
- 			if (ret < 0)
- 				goto out;
- 		}
-@@ -4803,7 +4804,6 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
- 	wl->psm_entry_retry = 0;
- 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
- 	wl->basic_rate = CONF_TX_RATE_MASK_BASIC;
--	wl->rate_set = CONF_TX_RATE_MASK_BASIC;
- 	wl->band = IEEE80211_BAND_2GHZ;
- 	wl->vif = NULL;
- 	wl->flags = 0;
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index d531e09..78e7320 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -525,7 +525,6 @@ struct wl1271 {
- 	 * support only 1 stream, thus only 8 bits for the MCS rates (0-7).
- 	 */
- 	u32 basic_rate;
--	u32 rate_set;
- 	u32 bitrate_masks[IEEE80211_NUM_BANDS];
- 
- 	/* The current band */
-@@ -639,6 +638,14 @@ struct wl1271_station {
- 
- struct wl12xx_vif {
- 	u32 basic_rate_set;
+diff --git a/patches/09-cfg80211-wext-padding.patch b/patches/09-cfg80211-wext-padding.patch
+new file mode 100644
+index 0000000..36b4e70
+--- /dev/null
++++ b/patches/09-cfg80211-wext-padding.patch
+@@ -0,0 +1,62 @@
++This is a tricky one.
 +
-+	/*
-+	 * currently configured rate set:
-+	 *	bits  0-15 - 802.11abg rates
-+	 *	bits 16-23 - 802.11n   MCS index mask
-+	 * support only 1 stream, thus only 8 bits for the MCS rates (0-7).
-+	 */
-+	u32 rate_set;
- };
- 
- static inline struct wl12xx_vif *wl12xx_vif_to_data(struct ieee80211_vif *vif)
++Consider a kernel that has this code in net/wireless/wext-core.c:
++
++#ifdef CONFIG_CFG80211_WEXT
++        if (dev->ieee80211_ptr && dev->ieee80211_ptr->wiphy)
++                handlers = dev->ieee80211_ptr->wiphy->wext;
++#endif
++#ifdef CONFIG_WIRELESS_EXT
++        if (dev->wireless_handlers)
++                handlers = dev->wireless_handlers;
++#endif
++
++If a kernel is compiled without CONFIG_WIRELESS_EXT then
++compat-wireless can't do wireless extensions against it.
++However, if the kernel is compiled with CONFIG_CFG80211_WEXT
++then it will try to get the wext handlers from struct wiphy.
++
++Now, struct wiphy in the base kernel and struct wiphy in
++compat-wireless don't match, so the kernel crashes!!
++
++To fix this, add lots of padding to compat-wireless's
++struct wiphy so that the "wext" pointer is guaranteed
++to be NULL.
++
++Make sure the padding is larger than the struct so we
++don't ever run into this again because the wext pointer
++moved due to struct enlargements.
++
++
++--- a/include/net/cfg80211.h	2011-10-04 10:49:07.000000000 +0200
+++++ b/include/net/cfg80211.h	2011-10-06 21:50:47.000000000 +0200
++@@ -1904,6 +1904,9 @@ struct wiphy_wowlan_support {
++ struct wiphy {
++ 	/* assign these fields before you register the wiphy */
++ 
+++#define WIPHY_COMPAT_PAD_SIZE	2048
+++	u8 padding[WIPHY_COMPAT_PAD_SIZE];
+++
++ 	/* permanent MAC address(es) */
++ 	u8 perm_addr[ETH_ALEN];
++ 	u8 addr_mask[ETH_ALEN];
++--- a/net/wireless/core.c	2011-09-23 10:34:28.000000000 +0200
+++++ b/net/wireless/core.c	2011-10-06 21:52:02.000000000 +0200
++@@ -330,6 +330,17 @@ struct wiphy *wiphy_new(const struct cfg
++ 	struct cfg80211_registered_device *rdev;
++ 	int alloc_size;
++ 
+++	/*
+++	 * Make sure the padding is >= the rest of the struct so that we
+++	 * always keep it large enough to pad out the entire original
+++	 * kernel's struct. We really only need to make sure it's larger
+++	 * than the kernel compat is compiled against, but since it'll
+++	 * only increase in size make sure it's larger than the current
+++	 * version of it. Subtract since it's included.
+++	 */
+++	BUILD_BUG_ON(WIPHY_COMPAT_PAD_SIZE <
+++		     sizeof(struct wiphy) - WIPHY_COMPAT_PAD_SIZE);
+++
++ 	WARN_ON(ops->add_key && (!ops->del_key || !ops->set_default_key));
++ 	WARN_ON(ops->auth && (!ops->assoc || !ops->deauth || !ops->disassoc));
++ 	WARN_ON(ops->connect && !ops->disconnect);
 -- 
-1.7.6.401.g6a319
+1.7.6.3
+
+
 
