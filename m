@@ -1,85 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:41203 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757087Ab1JEWU5 convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27286 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755064Ab1JFKuR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 18:20:57 -0400
-Received: by qadb15 with SMTP id b15so1625518qad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 15:20:57 -0700 (PDT)
+	Thu, 6 Oct 2011 06:50:17 -0400
+Message-ID: <4E8D8766.1030809@qca.qualcomm.com> (sfid-20111006_125022_840127_51560A68)
+Date: Thu, 6 Oct 2011 13:48:06 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <4E8AE1CC.5060703@openwrt.org>
-References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com>
- <1317637758-11907-5-git-send-email-zefir.kurtisi@neratec.com>
- <CAB=NE6XxW_kMnWLkC4dy4naUKaTk_hZi0_F86LNyuk3RNyqNQA@mail.gmail.com>
- <4E8AD800.9040208@neratec.com> <4E8AE1CC.5060703@openwrt.org>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Wed, 5 Oct 2011 15:20:36 -0700
-Message-ID: <CAB=NE6U5W8rxGXa0G13HkqOWFX7tMHAmBtnnSWO-YLLZvKHucg@mail.gmail.com> (sfid-20111006_002101_249854_7B58CEAB)
-Subject: Re: [RFC 4/6] ath9k: add DFS build parameter
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kgiori@qca.qualcomm.com
-Content-Type: text/plain; charset=UTF-8
+To: Sangwook Lee <sangwook.lee@linaro.org>
+CC: <linux-wireless@vger.kernel.org>, <patches@linaro.org>
+Subject: Re: [PATCH] ath6kl:Fix execution address of OTP AR6003 HW2.0
+References: <1317824077-13476-1-git-send-email-sangwook.lee@linaro.org>
+In-Reply-To: <1317824077-13476-1-git-send-email-sangwook.lee@linaro.org>
+Content-Type: multipart/mixed;
+	boundary="------------000603040702080902080409"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 4, 2011 at 3:37 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2011-10-04 11:55 AM, Zefir Kurtisi wrote:
->>
->> On 10/03/2011 08:26 PM, Luis R. Rodriguez wrote:
->>>
->>>  On Mon, Oct 3, 2011 at 3:29 AM, Zefir Kurtisi<zefir.kurtisi@neratec.com>
->>>  wrote:
->>>>
->>>>  Signed-off-by: Zefir Kurtisi<zefir.kurtisi@neratec.com>
->>>>  ---
->>>>  drivers/net/wireless/ath/ath9k/Kconfig  |    7 +++++++
->>>>  drivers/net/wireless/ath/ath9k/Makefile |    2 ++
->>>>  2 files changed, 9 insertions(+), 0 deletions(-)
->>>>
->>>>  diff --git a/drivers/net/wireless/ath/ath9k/Kconfig
->>>> b/drivers/net/wireless/ath/ath9k/Kconfig
->>>>  index d9c08c6..adddcca 100644
->>>>  --- a/drivers/net/wireless/ath/ath9k/Kconfig
->>>>  +++ b/drivers/net/wireless/ath/ath9k/Kconfig
->>>>  @@ -58,6 +58,13 @@ config ATH9K_RATE_CONTROL
->>>>          Say Y, if you want to use the ath9k specific rate control
->>>>          module instead of minstrel_ht.
->>>>
->>>>  +config ATH9K_DFS
->>>>  +       bool "Atheros ath9k DFS support"
->>>>  +       depends on ATH9K
->>>>  +       default y
->>>
->>>  At this point selecting y does nothing. Leave this patch out until
->>>  selecting "y" means something.
->>>
->> What do you mean by 'nothing'? It allows you to select DFS as ath9k
->> feature in your kernel configuration, or? Though, I agree that enabling it
->> by default is not a good idea.
->>
->>>  Default should be n, and in particular Atheros itself can only likely
->>>  commit to supporting DFS for AR9003 when it finds resources to do so
->>>  as well as properly test it, so DFS support kconfig should state this.
->>>  If someone wants to step up to completely support all bugs for older
->>>  families that is their prerogative but we cannot commit to it, due to
->>>  the regulatory considerations though unless this happens this cannot
->>>  and should not be enabled for older families in code.
->>>
->> In fact, AR9003 is the platform we are interested in. Although it
->> seems that older chipsets do also detect pulses with this patches
->> (AR9280 does, IIRC), I agree to limit DFS support to AR9003 (and later).
->> This should be easily possible by setting priv_ops->set_radar_params for
->> AR9003 only. I'll remove it for AR5008 in my v2 RFC.
->
-> Please don't remove support code for older hardware. I'm fine with adding a
-> SREV check that prevents it from being enabled by default on older hardware,
-> but eventually I will need at least AR9280 DFS support for a few devices in
-> OpenWrt.
+--------------000603040702080902080409
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 
-That's fine, leaving it disabled is what I meant, and only once
-something has been properly tested do we enable it. I personally only
-want to spend my own energy on AR9003 and newer.
+On 10/05/2011 05:14 PM, Sangwook Lee wrote:
+> Fix OTP execution address for AR6003 HW2.0
+> 
+> ath6kl: writing otp to 0x543180 (3689 B)
+> ath6kl: bmi LZ stream start: addr: 0x543180)
+> ath6kl: bmi send LZ data: len: 3688)
+> ath6kl: bmi send LZ data: len: 4)
+> ath6kl: bmi LZ stream start: addr: 0x0)
+> ath6kl: bmi read memory: device: addr: 0x54061c, len: 4
+> ath6kl: app_start_override_addr 0x0
+> ath6kl: executing OTP at 0x0
+> ath6kl: bmi execute: addr: 0x0, param: 0)
+> ath6kl: bmi_recv_buf FIFO empty
+> ath6kl: Unable to read from the device: -22
 
-  Luis
+Ah, now I understand. So this patch broke it:
+
+commit 639d0b8996aa5913402b846932d57a51a23a40c9
+Author: Kalle Valo <kvalo@qca.qualcomm.com>
+Date:   Mon Sep 12 12:48:09 2011 +0300
+
+    ath6kl: read firmware start address from hardware
+
+    It's actually possible to read the firmware start address from hardware,
+    that way there's no need to hardcode the address in hardware.
+
+
+So the firmware start address detections doesn't actually work with hw
+2.0, too bad.
+
+Actually I would like to fix this a bit differently, can you please try
+the attached patch? Compile tested only. If it works, please send me a
+Tested-by tag.
+
+BTW, do you still need to enable debug logs to get hw2.0 working properly?
+
+Kalle
+
+--------------000603040702080902080409
+Content-Type: text/x-patch;
+	name="0001-ath6kl-fix-firmware-start-address-for-ar6003-hw2.0.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename*0="0001-ath6kl-fix-firmware-start-address-for-ar6003-hw2.0.patc";
+	filename*1="h"
+
+>From e982bc13435b3f5dca76c77d472dcd2cfcba2b66 Mon Sep 17 00:00:00 2001
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Date: Thu, 6 Oct 2011 13:26:58 +0300
+Subject: [PATCH] ath6kl: fix firmware start address for ar6003 hw2.0
+
+Sangwook found out that commit 639d0b89 ("ath6kl: read firmware start
+address from hardware") broke firmware boot on ar6003 hw2.0 as it seems
+it's not posible to automatically query the address from hardware. So
+we need to hardcode the address for hw2.0.
+
+Reported-by: Sangwook Lee <sangwook.lee@linaro.org>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c |   34 ++++++++++++++++++++-----------
+ 1 files changed, 22 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 8466f3d..d52c925 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1182,6 +1182,7 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
+ static int ath6kl_upload_otp(struct ath6kl *ar)
+ {
+ 	u32 address, param;
++	bool from_hw = false;
+ 	int ret;
+ 
+ 	if (WARN_ON(ar->fw_otp == NULL))
+@@ -1199,24 +1200,29 @@ static int ath6kl_upload_otp(struct ath6kl *ar)
+ 		return ret;
+ 	}
+ 
+-	/* read firmware start address */
+-	ret = ath6kl_bmi_read(ar,
+-			      ath6kl_get_hi_item_addr(ar,
+-						      HI_ITEM(hi_app_start)),
+-			      (u8 *) &address, sizeof(address));
++	if (ar->hw.app_start_override_addr == 0) {
++		/* read firmware start address */
++		ret = ath6kl_bmi_read(ar,
++				      ath6kl_get_hi_item_addr(ar,
++							      HI_ITEM(hi_app_start)),
++				      (u8 *) &address, sizeof(address));
+ 
+-	if (ret) {
+-		ath6kl_err("Failed to read hi_app_start: %d\n", ret);
+-		return ret;
+-	}
++		if (ret) {
++			ath6kl_err("Failed to read hi_app_start: %d\n", ret);
++			return ret;
++		}
+ 
+-	ar->hw.app_start_override_addr = address;
++		ar->hw.app_start_override_addr = address;
++		from_hw = true;
++	}
+ 
+-	ath6kl_dbg(ATH6KL_DBG_BOOT, "app_start_override_addr 0x%x\n",
++	ath6kl_dbg(ATH6KL_DBG_BOOT, "app_start_override_addr%s 0x%x\n",
++		   from_hw ? " (from hw)" : "",
+ 		   ar->hw.app_start_override_addr);
+ 
+ 	/* execute the OTP code */
+-	ath6kl_dbg(ATH6KL_DBG_BOOT, "executing OTP at 0x%x\n", address);
++	ath6kl_dbg(ATH6KL_DBG_BOOT, "executing OTP at 0x%x\n",
++		   ar->hw.app_start_override_addr);
+ 	param = 0;
+ 	ath6kl_bmi_execute(ar, address, &param);
+ 
+@@ -1420,6 +1426,10 @@ static int ath6kl_init_hw_params(struct ath6kl *ar)
+ 		ar->hw.app_load_addr = AR6003_REV2_APP_LOAD_ADDRESS;
+ 		ar->hw.board_ext_data_addr = AR6003_REV2_BOARD_EXT_DATA_ADDRESS;
+ 		ar->hw.reserved_ram_size = AR6003_REV2_RAM_RESERVE_SIZE;
++
++		/* hw2.0 needs override address hardcoded */
++		ar->hw.app_start_override_addr = 0x944C00;
++
+ 		break;
+ 	case AR6003_REV3_VERSION:
+ 		ar->hw.dataset_patch_addr = AR6003_REV3_DATASET_PATCH_ADDRESS;
+-- 
+1.7.1
+
+
+--------------000603040702080902080409--
