@@ -1,96 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:54747 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751508Ab1JPVat (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:63034 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760178Ab1JGQoM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Oct 2011 17:30:49 -0400
-Received: by bkbzt19 with SMTP id zt19so2782896bkb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Oct 2011 14:30:48 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org, David Woodhouse <dwmw2@infradead.org>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3.2 REQUEST] b43: HT-PHY: report signal to mac80211
-Date: Sun, 16 Oct 2011 23:30:49 +0200
-Message-Id: <1318800649-5609-1-git-send-email-zajec5@gmail.com> (sfid-20111016_233053_144541_F398BE47)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 7 Oct 2011 12:44:12 -0400
+Received: by gyg10 with SMTP id 10so3781751gyg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Oct 2011 09:44:12 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 1/5] rtlwifi: Change PCI drivers to use the new PM framework
+Date: Fri,  7 Oct 2011 11:43:18 -0500
+Message-Id: <1318005802-29057-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20111007_184418_568036_03B12A51)
+In-Reply-To: <1318005802-29057-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1318005802-29057-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
-John, this is new feature, not a bug fix. However I still think it'd be
-great to take this for 3.2. This is hopefully final b43 patch for 3.2
-related to HT-PHY support. With this last one, basic support should be
-100% implemented now.
+ drivers/net/wireless/rtlwifi/pci.c          |   19 ++++---------------
+ drivers/net/wireless/rtlwifi/pci.h          |    4 ++--
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c |   16 ++++++++++------
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.c |   16 ++++++++++------
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c |   16 ++++++++++------
+ 5 files changed, 36 insertions(+), 35 deletions(-)
 
-This can be even more important, as there isn't any native Linux driver
-(open or closed source) for HT-PHY (BCM4331) other than b43.
-
-This has been succesfully tested by David, reported signal looked sane
-for him. Unfortunately we still lack info about the noise, but having
-signal gives users some basic overview on the available networks.
----
- drivers/net/wireless/b43/xmit.c |    7 +++++++
- drivers/net/wireless/b43/xmit.h |   16 +++++++++++++++-
- 2 files changed, 22 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-index 390c234..ed54f7d 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -737,7 +737,14 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index 9983fa1..5380f3b 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -1993,36 +1993,25 @@ call rtl_mac_stop() from the mac80211
+ suspend function first, So there is
+ no need to call hw_disable here.
+ ****************************************/
+-int rtl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
++int rtl_pci_suspend(struct device *dev)
+ {
++	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
  
- 	/* Link quality statistics */
- 	switch (chanstat & B43_RX_CHAN_PHYTYPE) {
-+	case B43_PHYTYPE_HT:
-+		/* TODO: is max the right choice? */
-+		status.signal = max(
-+			(__s8) max(rxhdr->phy_ht_power0, rxhdr->phy_ht_power1),
-+			rxhdr->phy_ht_power2);
-+		break;
- 	case B43_PHYTYPE_N:
-+		/* Broadcom has code for min and avg, but always uses max */
- 		if (rxhdr->power0 == 16 || rxhdr->power0 == 32)
- 			status.signal = max(rxhdr->power1, rxhdr->power2);
- 		else
-diff --git a/drivers/net/wireless/b43/xmit.h b/drivers/net/wireless/b43/xmit.h
-index 16c514d..98d9074 100644
---- a/drivers/net/wireless/b43/xmit.h
-+++ b/drivers/net/wireless/b43/xmit.h
-@@ -249,6 +249,12 @@ struct b43_rxhdr_fw4 {
- 		} __packed;
- 	} __packed;
- 	union {
-+		/* HT-PHY */
-+		struct {
-+			PAD_BYTES(1);
-+			__s8 phy_ht_power0;
-+		} __packed;
-+
- 		/* RSSI for N-PHYs */
- 		struct {
- 			__s8 power2;
-@@ -257,7 +263,15 @@ struct b43_rxhdr_fw4 {
+ 	rtlpriv->cfg->ops->hw_suspend(hw);
+ 	rtl_deinit_rfkill(hw);
  
- 		__le16 phy_status2;	/* PHY RX Status 2 */
- 	} __packed;
--	__le16 phy_status3;	/* PHY RX Status 3 */
-+	union {
-+		/* HT-PHY */
-+		struct {
-+			__s8 phy_ht_power1;
-+			__s8 phy_ht_power2;
-+		} __packed;
+-	pci_save_state(pdev);
+-	pci_disable_device(pdev);
+-	pci_set_power_state(pdev, PCI_D3hot);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(rtl_pci_suspend);
+ 
+-int rtl_pci_resume(struct pci_dev *pdev)
++int rtl_pci_resume(struct device *dev)
+ {
+-	int ret;
++	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+-	pci_set_power_state(pdev, PCI_D0);
+-	ret = pci_enable_device(pdev);
+-	if (ret) {
+-		RT_ASSERT(false, ("ERR: <======\n"));
+-		return ret;
+-	}
+-
+-	pci_restore_state(pdev);
+-
+ 	rtlpriv->cfg->ops->hw_resume(hw);
+ 	rtl_init_rfkill(hw);
+ 	return 0;
+diff --git a/drivers/net/wireless/rtlwifi/pci.h b/drivers/net/wireless/rtlwifi/pci.h
+index a24e505..ebe0b42 100644
+--- a/drivers/net/wireless/rtlwifi/pci.h
++++ b/drivers/net/wireless/rtlwifi/pci.h
+@@ -237,8 +237,8 @@ extern struct rtl_intf_ops rtl_pci_ops;
+ int __devinit rtl_pci_probe(struct pci_dev *pdev,
+ 			    const struct pci_device_id *id);
+ void rtl_pci_disconnect(struct pci_dev *pdev);
+-int rtl_pci_suspend(struct pci_dev *pdev, pm_message_t state);
+-int rtl_pci_resume(struct pci_dev *pdev);
++int rtl_pci_suspend(struct device *dev);
++int rtl_pci_resume(struct device *dev);
+ 
+ static inline u8 pci_read8_sync(struct rtl_priv *rtlpriv, u32 addr)
+ {
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+index b7ecb9e..07a75d3 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+@@ -365,17 +365,21 @@ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
+ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+ MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
+ 
++static const struct dev_pm_ops rtlwifi_pm_ops = {
++	.suspend = rtl_pci_suspend,
++	.resume = rtl_pci_resume,
++	.freeze = rtl_pci_suspend,
++	.thaw = rtl_pci_resume,
++	.poweroff = rtl_pci_suspend,
++	.restore = rtl_pci_resume,
++};
 +
-+		__le16 phy_status3;	/* PHY RX Status 3 */
-+	} __packed;
- 	union {
- 		/* Tested with 598.314, 644.1001 and 666.2 */
- 		struct {
+ static struct pci_driver rtl92ce_driver = {
+ 	.name = KBUILD_MODNAME,
+ 	.id_table = rtl92ce_pci_ids,
+ 	.probe = rtl_pci_probe,
+ 	.remove = rtl_pci_disconnect,
+-
+-#ifdef CONFIG_PM
+-	.suspend = rtl_pci_suspend,
+-	.resume = rtl_pci_resume,
+-#endif
+-
++	.driver.pm = &rtlwifi_pm_ops,
+ };
+ 
+ static int __init rtl92ce_module_init(void)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+index c681597..12042d8 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+@@ -385,17 +385,21 @@ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
+ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+ MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
+ 
++static const struct dev_pm_ops rtlwifi_pm_ops = {
++	.suspend = rtl_pci_suspend,
++	.resume = rtl_pci_resume,
++	.freeze = rtl_pci_suspend,
++	.thaw = rtl_pci_resume,
++	.poweroff = rtl_pci_suspend,
++	.restore = rtl_pci_resume,
++};
++
+ static struct pci_driver rtl92de_driver = {
+ 	.name = KBUILD_MODNAME,
+ 	.id_table = rtl92de_pci_ids,
+ 	.probe = rtl_pci_probe,
+ 	.remove = rtl_pci_disconnect,
+-
+-#ifdef CONFIG_PM
+-	.suspend = rtl_pci_suspend,
+-	.resume = rtl_pci_resume,
+-#endif
+-
++	.driver.pm = &rtlwifi_pm_ops,
+ };
+ 
+ /* add global spin lock to solve the problem that
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+index 24bd331..80facb5 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -396,17 +396,21 @@ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
+ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+ MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
+ 
++static const struct dev_pm_ops rtlwifi_pm_ops = {
++	.suspend = rtl_pci_suspend,
++	.resume = rtl_pci_resume,
++	.freeze = rtl_pci_suspend,
++	.thaw = rtl_pci_resume,
++	.poweroff = rtl_pci_suspend,
++	.restore = rtl_pci_resume,
++};
++
+ static struct pci_driver rtl92se_driver = {
+ 	.name = KBUILD_MODNAME,
+ 	.id_table = rtl92se_pci_ids,
+ 	.probe = rtl_pci_probe,
+ 	.remove = rtl_pci_disconnect,
+-
+-#ifdef CONFIG_PM
+-	.suspend = rtl_pci_suspend,
+-	.resume = rtl_pci_resume,
+-#endif
+-
++	.driver.pm = &rtlwifi_pm_ops,
+ };
+ 
+ static int __init rtl92se_module_init(void)
 -- 
-1.7.3.4
+1.7.6.4
 
