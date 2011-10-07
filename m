@@ -1,76 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3019 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751678Ab1JOI1Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Oct 2011 04:27:24 -0400
-Message-ID: <4E9943D5.1060607@broadcom.com> (sfid-20111015_102740_791159_84DC415E)
-Date: Sat, 15 Oct 2011 10:27:01 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-cc: "Pavel Roskin" <proski@gnu.org>,
-	"John W Linville" <linville@tuxdriver.com>,
-	"Michael Buesch" <mb@bu3sch.de>,
-	"zajec5@gmail.com" <zajec5@gmail.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ssb: Convert to use crc8 code in kernel library
-References: <4e90ce9a.89uGF659NNpbpyA3%Larry.Finger@lwfinger.net>
- <20111014111103.5658d4aa@mj> <4E986392.7020008@lwfinger.net>
-In-Reply-To: <4E986392.7020008@lwfinger.net>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:36287 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751525Ab1JGHui (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Oct 2011 03:50:38 -0400
+Subject: Re: [PATCH] mac80211: Fix regression that allowed mpaths between
+ non-peers.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
+	jlopex@gmail.com
+In-Reply-To: <1317938062-1226-1-git-send-email-javier@cozybit.com> (sfid-20111006_235503_003519_EC0F43DC)
+References: <1317938062-1226-1-git-send-email-javier@cozybit.com>
+	 (sfid-20111006_235503_003519_EC0F43DC)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 07 Oct 2011 09:50:29 +0200
+Message-ID: <1317973829.3988.8.camel@jlt3.sipsolutions.net> (sfid-20111007_095041_787969_9215137F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/14/2011 06:30 PM, Larry Finger wrote:
-> On 10/14/2011 10:11 AM, Pavel Roskin wrote:
->> On Sat, 08 Oct 2011 17:28:42 -0500
->> Larry Finger<Larry.Finger@lwfinger.net>  wrote:
->>
->>> +static inline void htol16_buf(u16 *buf, unsigned int size)
->>> +{
->>> +	size /= 2;
->>> +	while (size--)
->>> +		*(__le16 *)(buf + size) = cpu_to_le16(*(buf + size));
->>>   }
->>
->> I'm not not sure compilers would optimize it out on little-endian
->> systems.  Perhaps you want a define that uses this code on
->> big-endian systems and does nothing on little endian systems.
->>
->> Also, it would be nice to have a compile-time check that size is even.
->> Or maybe size should be the number of 16-bit words, but then it would be
->> better to call the argument "count" or something like that.
+On Thu, 2011-10-06 at 14:54 -0700, Javier Cardona wrote:
+> Mesh paths should only exist over established peer links.
 > 
-> The patch was dropped. Even so, as this routine is found in brcmsmac, your 
-> comments warrant further discussion.
-
-Following the thread over here ;-)
-
-> I am pretty sure that the compiler would optimize out the entire htol16_buf 
-> routine. After substitution for cpu_to_le16() on a little-endian system, the 
-> statement in the while loop becomes '*(buf + size) = *(buf + size)', which is 
-> certainly optimized away, as will the now empty while loop. The entire routine 
-> is reduced to 'size /= 2'. As this will have no effect on the external world, it 
-> will also be dropped leaving an empty htol16_buf(). I don't think any "#ifdef 
-> __BIG_ENDIAN ... #endif" statements are needed.
-
-Agree.
-
-> Your suggestion that the argument be renamed is good, but there is no need to 
-> check for an even number as the data in question come from 16-bit reads of the
-> SPROM on the b43 device. That number of 16-bit quantities was multiplied by 2 to 
-> get the byte count before calling this routine. Of course, the routine should 
-> have been passed the number of 16-bit words, not the byte count. My second 
-> version would have done this.
+> Signed-off-by: Javier Cardona <javier@cozybit.com>
+> ---
+>  net/mac80211/mesh_hwmp.c |    9 +++++++++
+>  1 files changed, 9 insertions(+), 0 deletions(-)
 > 
-> Larry
+> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+> index 6df7913..174040a 100644
+> --- a/net/mac80211/mesh_hwmp.c
+> +++ b/net/mac80211/mesh_hwmp.c
+> @@ -789,11 +789,20 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
+>  	struct ieee802_11_elems elems;
+>  	size_t baselen;
+>  	u32 last_hop_metric;
+> +	struct sta_info *sta;
+>  
+>  	/* need action_code */
+>  	if (len < IEEE80211_MIN_ACTION_SIZE + 1)
+>  		return;
+>  
+> +	rcu_read_lock();
+> +	sta = sta_info_get(sdata, mgmt->sa);
+> +	if (!sta || sta->plink_state != NL80211_PLINK_ESTAB) {
+> +		rcu_read_unlock();
+> +		return;
+> +	}
+> +	rcu_read_unlock();
+> +
 
-Feedback on the renaming is indeed valid. Passing the word count is
-better here. For brcmsmac I plan to fill the buffer using 8-bit reads
-from SPROM, verify the crc8, and perform the endianess conversion from
-le16 to cpu when crc is ok (actually under review internally).
+No real objections to this patch as I'm sure this is how it works, but I
+do wonder ... if a mesh path (mesh_path_add right?) can only exist with
+a nexthop peer, how is all this correct when their lifetime isn't tied
+together? Yes, mesh_path is flushed when sta_info dies, but there can be
+mesh_path w/o a next_hop. How can that be correct?
 
-Gr. AvS
+Or put another way: what guarantees that the sta you find above will be
+assigned next_hop for the path? Couldn't it have been deleted by that
+time since you don't hang on to the pointer here?
+
+Or am I completely misunderstanding this?
+
+johannes
 
