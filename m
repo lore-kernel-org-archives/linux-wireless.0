@@ -1,307 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:6701 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754196Ab1JOAsG (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:60409 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965366Ab1JGLfL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 20:48:06 -0400
-From: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rishi Panjwani <rpanjwan@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: Implement support for QOS-enable and QOS-disable from userspace
-Date: Fri, 14 Oct 2011 17:48:07 -0700
-Message-ID: <1318639687-28457-2-git-send-email-rpanjwan@qca.qualcomm.com> (sfid-20111015_024811_469220_EAA83CAE)
-In-Reply-To: <1318639687-28457-1-git-send-email-rpanjwan@qca.qualcomm.com>
-References: <1318639687-28457-1-git-send-email-rpanjwan@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 7 Oct 2011 07:35:11 -0400
+Received: by mail-bw0-f43.google.com with SMTP id s6so5210266bka.2
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Oct 2011 04:35:10 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH 1/2] wl12xx: sdio: use dev_dbg instead of wl1271_debug
+Date: Fri,  7 Oct 2011 14:34:56 +0300
+Message-Id: <1317987297-18172-1-git-send-email-coelho@ti.com> (sfid-20111007_133520_086817_AE40D0AE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to allow user space based QOS control we use the available debugfs
-infrastructure. With this feature, user can make changes to qos parameters,
-thereby allowing creation and deletion of user defined priority streams and
-features like uapsd. This feature has been added for testing purposes.
+To prevent a useless dependency between the sdio module and the wl12xx
+module, we need to replace the wl1271_debug macros (and friends) for
+dev_dbg and other equivalents.
 
-All 21 parameters for the create_qos command are mandatory in the correct
-order. They have to be written to the create_qos file in
-the ath6kl debug directory. These parameters(in order) are:
-1)user priority
-2)direction
-3)traffic class
-4)traffic type
-5)voice PS capability
-6)min service intvl
-7)max service intvl
-8)inactivity intvl
-9)suspension intvl
-10)serv start time
-11)tsid
-12)nominal msdu
-13)max msdu
-14)min data rate
-15)mean data rate
-16)peak data rate
-17)max burst size
-18)delay bound
-19)min phy rate
-20)surplus bw allowance
-21)medium time
-For eg :
-echo "6 2 3 1 1 9999999 9999999 9999999 7777777 0 6 45000 200 56789000
-56789000 5678900 0 0 9999999 20000 0" > create_qos
+At the same time, remove the SDIO data hexdump, since this produces
+way too much data and is not particularly useful.  There's not
+print_hex_dump() equivalent for dynamic debug, so it's hard to control
+when the dumps are printed out.
 
-delete_qos requires 2 parameters:
-1)traffic class
-2)tsid
-For eg :
-echo "3 1" > delete_qos
-
-Signed-off-by: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/ath/ath6kl/debug.c |  250 +++++++++++++++++++++++++++++--
- 1 files changed, 236 insertions(+), 14 deletions(-)
+ drivers/net/wireless/wl12xx/sdio.c |   47 ++++++++++++++++-------------------
+ 1 files changed, 22 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index dd37785..383a3c7 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -1240,6 +1240,222 @@ static const struct file_operations fops_disconnect_timeout = {
- 	.llseek = default_llseek,
- };
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index 55c63ad..50fdd9b 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -34,7 +34,6 @@
+ #include <linux/pm_runtime.h>
  
-+static ssize_t ath6kl_create_qos_write(struct file *file,
-+						const char __user *user_buf,
-+						size_t count, loff_t *ppos)
-+{
-+
-+	struct ath6kl *ar = file->private_data;
-+	char buf[100];
-+	ssize_t len;
-+	char *sptr, *token;
-+	struct wmi_create_pstream_cmd pstream;
-+	u32 val32;
-+	u16 val16;
-+
-+	len = min(count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, len))
-+		return -EFAULT;
-+	buf[len] = '\0';
-+	sptr = buf;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &pstream.user_pri))
-+		return -EINVAL;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &pstream.traffic_direc))
-+		return -EINVAL;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &pstream.traffic_class))
-+		return -EINVAL;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &pstream.traffic_type))
-+		return -EINVAL;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &pstream.voice_psc_cap))
-+		return -EINVAL;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.min_service_int = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.max_service_int = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.inactivity_int = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.suspension_int = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.service_start_time = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &pstream.tsid))
-+		return -EINVAL;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou16(token, 0, &val16))
-+		return -EINVAL;
-+	pstream.nominal_msdu = cpu_to_le16(val16);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou16(token, 0, &val16))
-+		return -EINVAL;
-+	pstream.max_msdu = cpu_to_le16(val16);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.min_data_rate = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.mean_data_rate = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.peak_data_rate = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.max_burst_size = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.delay_bound = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.min_phy_rate = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.sba = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.medium_time = cpu_to_le32(val32);
-+
-+	ath6kl_wmi_create_pstream_cmd(ar->wmi, &pstream);
-+
-+	return count;
-+}
-+
-+
-+static const struct file_operations fops_create_qos = {
-+	.write = ath6kl_create_qos_write,
-+	.open = ath6kl_debugfs_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
-+static ssize_t ath6kl_delete_qos_write(struct file *file,
-+				const char __user *user_buf,
-+				size_t count, loff_t *ppos)
-+{
-+
-+	struct ath6kl *ar = file->private_data;
-+	char buf[100];
-+	ssize_t len;
-+	char *sptr, *token;
-+	u8 traffic_class;
-+	u8 tsid;
-+
-+	len = min(count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, len))
-+		return -EFAULT;
-+	buf[len] = '\0';
-+	sptr = buf;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &traffic_class))
-+		return -EINVAL;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &tsid))
-+		return -EINVAL;
-+
-+	ath6kl_wmi_delete_pstream_cmd(ar->wmi, traffic_class, tsid);
-+
-+	return count;
-+}
-+
-+
-+static const struct file_operations fops_delete_qos = {
-+	.write = ath6kl_delete_qos_write,
-+	.open = ath6kl_debugfs_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- int ath6kl_debug_init(struct ath6kl *ar)
- {
- 	ar->debug.fwlog_buf.buf = vmalloc(ATH6KL_FWLOG_SIZE);
-@@ -1313,6 +1529,12 @@ int ath6kl_debug_init(struct ath6kl *ar)
- 	debugfs_create_file("disconnect_timeout", S_IRUSR | S_IWUSR,
- 			    ar->debugfs_phy, ar, &fops_disconnect_timeout);
+ #include "wl12xx.h"
+-#include "debug.h"
+ #include "wl12xx_80211.h"
+ #include "io.h"
  
-+	debugfs_create_file("create_qos", S_IWUSR, ar->debugfs_phy, ar,
-+				&fops_create_qos);
-+
-+	debugfs_create_file("delete_qos", S_IWUSR, ar->debugfs_phy, ar,
-+				&fops_delete_qos);
-+
- 	return 0;
+@@ -77,21 +76,20 @@ static void wl12xx_sdio_raw_read(struct device *child, int addr, void *buf,
+ 
+ 	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG_ADDR)) {
+ 		((u8 *)buf)[0] = sdio_f0_readb(func, addr, &ret);
+-		wl1271_debug(DEBUG_SDIO, "sdio read 52 addr 0x%x, byte 0x%02x",
+-			     addr, ((u8 *)buf)[0]);
++		dev_dbg(child->parent, "sdio read 52 addr 0x%x, byte 0x%02x\n",
++			addr, ((u8 *)buf)[0]);
+ 	} else {
+ 		if (fixed)
+ 			ret = sdio_readsb(func, buf, addr, len);
+ 		else
+ 			ret = sdio_memcpy_fromio(func, buf, addr, len);
+ 
+-		wl1271_debug(DEBUG_SDIO, "sdio read 53 addr 0x%x, %zu bytes",
+-			     addr, len);
+-		wl1271_dump_ascii(DEBUG_SDIO, "data: ", buf, len);
++		dev_dbg(child->parent, "sdio read 53 addr 0x%x, %zu bytes\n",
++			addr, len);
+ 	}
+ 
+ 	if (ret)
+-		wl1271_error("sdio read failed (%d)", ret);
++		dev_err(child->parent, "sdio read failed (%d)\n", ret);
  }
  
+ static void wl12xx_sdio_raw_write(struct device *child, int addr, void *buf,
+@@ -103,12 +101,11 @@ static void wl12xx_sdio_raw_write(struct device *child, int addr, void *buf,
+ 
+ 	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG_ADDR)) {
+ 		sdio_f0_writeb(func, ((u8 *)buf)[0], addr, &ret);
+-		wl1271_debug(DEBUG_SDIO, "sdio write 52 addr 0x%x, byte 0x%02x",
+-			     addr, ((u8 *)buf)[0]);
++		dev_dbg(child->parent, "sdio write 52 addr 0x%x, byte 0x%02x\n",
++			addr, ((u8 *)buf)[0]);
+ 	} else {
+-		wl1271_debug(DEBUG_SDIO, "sdio write 53 addr 0x%x, %zu bytes",
+-			     addr, len);
+-		wl1271_dump_ascii(DEBUG_SDIO, "data: ", buf, len);
++		dev_dbg(child->parent, "sdio write 53 addr 0x%x, %zu bytes\n",
++			addr, len);
+ 
+ 		if (fixed)
+ 			ret = sdio_writesb(func, addr, buf, len);
+@@ -117,7 +114,7 @@ static void wl12xx_sdio_raw_write(struct device *child, int addr, void *buf,
+ 	}
+ 
+ 	if (ret)
+-		wl1271_error("sdio write failed (%d)", ret);
++		dev_err(child->parent, "sdio write failed (%d)\n", ret);
+ }
+ 
+ static int wl12xx_sdio_power_on(struct wl12xx_sdio_glue *glue)
+@@ -196,7 +193,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 
+ 	glue = kzalloc(sizeof(*glue), GFP_KERNEL);
+ 	if (!glue) {
+-		wl1271_error("can't allocate glue");
++		dev_err(&func->dev, "can't allocate glue\n");
+ 		goto out;
+ 	}
+ 
+@@ -211,13 +208,13 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 	wlan_data = wl12xx_get_platform_data();
+ 	if (IS_ERR(wlan_data)) {
+ 		ret = PTR_ERR(wlan_data);
+-		wl1271_error("missing wlan platform data: %d", ret);
++		dev_err(glue->dev, "missing wlan platform data: %d\n", ret);
+ 		goto out_free_glue;
+ 	}
+ 
+ 	/* if sdio can keep power while host is suspended, enable wow */
+ 	mmcflags = sdio_get_host_pm_caps(func);
+-	wl1271_debug(DEBUG_SDIO, "sdio PM caps = 0x%x", mmcflags);
++	dev_dbg(glue->dev, "sdio PM caps = 0x%x\n", mmcflags);
+ 
+ 	if (mmcflags & MMC_PM_KEEP_POWER)
+ 		wlan_data->pwr_in_suspend = true;
+@@ -231,7 +228,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 
+ 	glue->core = platform_device_alloc("wl12xx-sdio", -1);
+ 	if (!glue->core) {
+-		wl1271_error("can't allocate platform_device");
++		dev_err(glue->dev, "can't allocate platform_device");
+ 		ret = -ENOMEM;
+ 		goto out_free_glue;
+ 	}
+@@ -246,20 +243,20 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 
+ 	ret = platform_device_add_resources(glue->core, res, ARRAY_SIZE(res));
+ 	if (ret) {
+-		wl1271_error("can't add resources");
++		dev_err(glue->dev, "can't add resources\n");
+ 		goto out_dev_put;
+ 	}
+ 
+ 	ret = platform_device_add_data(glue->core, wlan_data,
+ 				       sizeof(*wlan_data));
+ 	if (ret) {
+-		wl1271_error("can't add platform data");
++		dev_err(glue->dev, "can't add platform data\n");
+ 		goto out_dev_put;
+ 	}
+ 
+ 	ret = platform_device_add(glue->core);
+ 	if (ret) {
+-		wl1271_error("can't add platform device");
++		dev_err(glue->dev, "can't add platform device\n");
+ 		goto out_dev_put;
+ 	}
+ 	return 0;
+@@ -296,15 +293,15 @@ static int wl1271_suspend(struct device *dev)
+ 	mmc_pm_flag_t sdio_flags;
+ 	int ret = 0;
+ 
+-	wl1271_debug(DEBUG_MAC80211, "wl1271 suspend. wow_enabled: %d",
+-		     wl->wow_enabled);
++	dev_dbg(dev, "wl1271 suspend. wow_enabled: %d\n",
++		wl->wow_enabled);
+ 
+ 	/* check whether sdio should keep power */
+ 	if (wl->wow_enabled) {
+ 		sdio_flags = sdio_get_host_pm_caps(func);
+ 
+ 		if (!(sdio_flags & MMC_PM_KEEP_POWER)) {
+-			wl1271_error("can't keep power while host "
++			dev_err(dev, "can't keep power while host \n"
+ 				     "is suspended");
+ 			ret = -EINVAL;
+ 			goto out;
+@@ -313,7 +310,7 @@ static int wl1271_suspend(struct device *dev)
+ 		/* keep power while host suspended */
+ 		ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
+ 		if (ret) {
+-			wl1271_error("error while trying to keep power");
++			dev_err(dev, "error while trying to keep power\n");
+ 			goto out;
+ 		}
+ 
+@@ -329,7 +326,7 @@ static int wl1271_resume(struct device *dev)
+ 	struct sdio_func *func = dev_to_sdio_func(dev);
+ 	struct wl1271 *wl = sdio_get_drvdata(func);
+ 
+-	wl1271_debug(DEBUG_MAC80211, "wl1271 resume");
++	dev_dbg(dev, "wl1271 resume\n");
+ 	if (wl->wow_enabled) {
+ 		/* claim back host */
+ 		sdio_claim_host(func);
 -- 
-1.7.0.4
+1.7.1
 
