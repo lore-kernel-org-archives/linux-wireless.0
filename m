@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:60533 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042Ab1JTSaP (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:46172 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754531Ab1JGUjl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 14:30:15 -0400
-Received: by mail-pz0-f42.google.com with SMTP id 36so7654640pzk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 11:30:15 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v2 2/2] mac80211: select queue for fwded mesh frames
-Date: Thu, 20 Oct 2011 11:30:07 -0700
-Message-Id: <1319135408-6370-2-git-send-email-thomas@cozybit.com> (sfid-20111020_203022_489327_11D7CF56)
-In-Reply-To: <1319135408-6370-1-git-send-email-thomas@cozybit.com>
-References: <1319135408-6370-1-git-send-email-thomas@cozybit.com>
+	Fri, 7 Oct 2011 16:39:41 -0400
+Received: by wyg34 with SMTP id 34so4268001wyg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Oct 2011 13:39:40 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3.2] b43: trivial: do not report any link quality instead of invalid one
+Date: Fri,  7 Oct 2011 22:39:35 +0200
+Message-Id: <1318019975-31743-1-git-send-email-zajec5@gmail.com> (sfid-20111007_223946_603654_841DB9FF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set proper queue mapping and timestamp for forwarded mesh frames.
+We don't want to report random quality info (new PHYs are affected).
 
-Thanks to Luis Rodriguez for investigating and fixing this.
-
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-v2:
-	We were already doing this for mcast frames, so don't duplicate
-	the code.
+ drivers/net/wireless/b43/xmit.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
 
- net/mac80211/rx.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index b867bd5..1408472 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1952,13 +1952,15 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 			info = IEEE80211_SKB_CB(fwd_skb);
- 			memset(info, 0, sizeof(*info));
- 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
-+			info->control.jiffies = jiffies;
- 			info->control.vif = &rx->sdata->vif;
-+			skb_set_queue_mapping(fwd_skb,
-+				ieee80211_select_queue(sdata, fwd_skb));
-+			ieee80211_set_qos_hdr(sdata, fwd_skb);
-+
- 			if (is_multicast_ether_addr(fwd_hdr->addr1)) {
- 				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
- 								fwded_mcast);
--				skb_set_queue_mapping(fwd_skb,
--					ieee80211_select_queue(sdata, fwd_skb));
--				ieee80211_set_qos_hdr(sdata, fwd_skb);
- 			} else {
- 				int err;
- 				/*
+diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+index b8de62c..5f812d1 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -735,11 +735,13 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+ 	}
+ 
+ 	/* Link quality statistics */
+-	if ((chanstat & B43_RX_CHAN_PHYTYPE) == B43_PHYTYPE_N) {
+-//		s8 rssi = max(rxhdr->power0, rxhdr->power1);
+-		//TODO: Find out what the rssi value is (dBm or percentage?)
+-		//      and also find out what the maximum possible value is.
+-		//      Fill status.ssi and status.signal fields.
++	if ((chanstat & B43_RX_CHAN_PHYTYPE) >= B43_PHYTYPE_N) {
++		/*
++		s8 rssi = max(rxhdr->power0, rxhdr->power1);
++		TODO: Find out what the rssi value is (dBm or percentage?)
++		      and also find out what the maximum possible value is.
++		      Fill status.ssi and status.signal fields.
++		*/
+ 	} else {
+ 		status.signal = b43_rssi_postprocess(dev, rxhdr->jssi,
+ 						  (phystat0 & B43_RX_PHYST0_OFDM),
 -- 
-1.7.5.4
+1.7.3.4
 
