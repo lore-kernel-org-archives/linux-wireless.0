@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:12752 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751401Ab1JLHXt (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:40944 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758737Ab1JGWtE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 03:23:49 -0400
-Message-ID: <4E953FDB.9090709@qca.qualcomm.com> (sfid-20111012_092352_695399_15AA3A2E)
-Date: Wed, 12 Oct 2011 10:20:59 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Sangwook Lee <sangwook.lee@linaro.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: fix firmware start address for ar6003 hw2.0
-References: <1317906725-31130-1-git-send-email-sangwook.lee@linaro.org>
-In-Reply-To: <1317906725-31130-1-git-send-email-sangwook.lee@linaro.org>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Fri, 7 Oct 2011 18:49:04 -0400
+Date: Fri, 07 Oct 2011 18:46:57 -0400 (EDT)
+Message-Id: <20111007.184657.1471438956485710175.davem@davemloft.net> (sfid-20111008_004913_639139_499404B5)
+To: sfr@canb.auug.org.au
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netfilter-devel@vger.kernel.org, sparclinux@vger.kernel.org,
+	linux-ide@vger.kernel.org
+Subject: Re: moving GIT back to kernel.org...
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20111008094212.e3342930c1833f73ef602a3e@canb.auug.org.au>
+References: <20111007.145703.842130763413648388.davem@davemloft.net>
+	<20111007.155902.916470368193047875.davem@davemloft.net>
+	<20111008094212.e3342930c1833f73ef602a3e@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/06/2011 04:12 PM, Sangwook Lee wrote:
-> From: Kalle Valo <kvalo@qca.qualcomm.com>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Date: Sat, 8 Oct 2011 09:42:12 +1100
+
+> On Fri, 07 Oct 2011 15:59:02 -0400 (EDT) David Miller <davem@davemloft.net> wrote:
+>> git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc.git
+>> git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git
 > 
-> Sangwook found out that commit 639d0b89 ("ath6kl: read firmware start
-> address from hardware") broke firmware boot on ar6003 hw2.0 as it seems
-> it's not posible to automatically query the address from hardware. So
-> we need to hardcode the address for hw2.0.
-> 
-> Reported-by: Sangwook Lee <sangwook.lee@linaro.org>
-> Tested-by: Sangwook Lee <sangwook.lee@linaro.org>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> ---
-> Kalle:
-> I slightly changed again. without running ath6kl_bmi_read() before,
-> ath6kl_bmi_execute() failed with hw2.0 board, but I am not clear about this reason.
+> You used to have sparc-next and ide-next (and the above used to be your
+> "current release fixes" trees) ...
 
-Hmm, that's strange. I didn't find any reason why this is needed.
+I've made a dummy sparc-next tree for you to pull from, thanks:
 
-> @@ -1201,25 +1202,28 @@ static int ath6kl_upload_otp(struct ath6kl *ar)
->  	}
->  
->  	/* read firmware start address */
-> -	ret = ath6kl_bmi_read(ar,
-> -			      ath6kl_get_hi_item_addr(ar,
-> -						      HI_ITEM(hi_app_start)),
-> -			      (u8 *) &address, sizeof(address));
-> +	ret = ath6kl_bmi_read(ar, ath6kl_get_hi_item_addr(ar,
-> +		HI_ITEM(hi_app_start)), (u8 *) &address, sizeof(address));
+git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc-next.git
 
-You just change indentation here, right? So this part can be dropped.
-
-I have applied to ath6kl.git now. Thank you very much for your help!
-
-Kalle
+As for ide, I only plan to accept real bug fixes for that subsystem
+so I'll avoid creating an ide-next tree for now.
