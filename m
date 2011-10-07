@@ -1,105 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:52218 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754957Ab1JKSAC (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:62419 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753365Ab1JGQ1g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 14:00:02 -0400
-Received: by qyk30 with SMTP id 30so3793673qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 11:00:01 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH 3/4] crda: fix null string assumption for alpha2
-Date: Tue, 11 Oct 2011 10:59:00 -0700
-Message-Id: <1318355944-24708-4-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111011_200006_711188_DFF9F8FC)
-In-Reply-To: <1318355944-24708-1-git-send-email-mcgrof@qca.qualcomm.com>
-References: <1318355944-24708-1-git-send-email-mcgrof@qca.qualcomm.com>
+	Fri, 7 Oct 2011 12:27:36 -0400
+Date: Fri, 07 Oct 2011 11:27:33 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: Change debug parameter to apply to individual
+ drivers
+Message-ID: <4e8f2875.9zb3XOO0mZeRKHSE%Larry.Finger@lwfinger.net> (sfid-20111007_182803_090991_E1152E55)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wireless-regdb only accounts for two bytes for
-the country code but CRDA defined the alpha2 to be
-as a string of length 2, and so does the nl80211 attribute
-policy:
+The current debug parameter is applied to rtlwifi, which means that all
+loaded drivers have the same level of debugging applied. In addition,
+the previous method requires a two-step load process to enable debugging.
 
-        [NL80211_ATTR_REG_ALPHA2] = { .type = NLA_STRING, .len = 2 },
-
-The meaning of a string is it'll be null terminated, so if you
-do not add the null termination a country without the null termination
-will not match up with the nl80211 attribute policy.
-
-This has no impact for us unless we want to use the next available
-pad byte on the wireless-regdb. This fixes CRDA by using a local copy
-of the regdb's alpha2 that is properly null terminated and sending it.
-
-The implications of this change is that new wirelesss-regdb's that
-make use of the next pad byte for a country will get that country
-ignored for regulatory hints sent to the kernel. At this point we
-don't yet know what the next byte will be used for though so this
-has no impact. The second pad byte is being used for DFS and that
-is not impacted by this nor is this change required for it.
-
-Distributions should upgrade though in case we ever do decide to use
-this last precious country byte. I've tested that this indeed fixes
-the bogus issue I saw when instead of using the second pad byte we
-use the first pad byte. Thanks to Johannes for spotting the issue.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- crda.c   |    4 ++--
- reglib.h |   13 -------------
- 2 files changed, 2 insertions(+), 15 deletions(-)
 
-diff --git a/crda.c b/crda.c
-index 6857e3f..fcb0c11 100644
---- a/crda.c
-+++ b/crda.c
-@@ -149,7 +149,7 @@ int main(int argc, char **argv)
- 	struct regdb_file_header *header;
- 	struct regdb_file_reg_country *countries;
- 	int dblen, siglen, num_countries, i, j, r;
--	char alpha2[2];
-+	char alpha2[3] = {}; /* NUL-terminate */
- 	char *env_country;
- 	struct nl80211_state nlstate;
- 	struct nl_cb *cb = NULL;
-@@ -279,7 +279,7 @@ int main(int argc, char **argv)
- 				sizeof(*rcoll) + num_rules * sizeof(__be32),
- 				country->reg_collection_ptr);
+John,
+
+This is -next material.
+
+Larry
+---
+
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/debug.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/debug.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/debug.c
+@@ -30,17 +30,11 @@
  
--	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2, (char *) country->alpha2);
-+	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2, alpha2);
+ #include "wifi.h"
  
- 	nl_reg_rules = nla_nest_start(msg, NL80211_ATTR_REG_RULES);
- 	if (!nl_reg_rules) {
-diff --git a/reglib.h b/reglib.h
-index f3a76ef..9fe5d8b 100644
---- a/reglib.h
-+++ b/reglib.h
-@@ -53,21 +53,8 @@ static inline int is_alpha2(const char *alpha2)
- 	return 0;
- }
- 
--/* Avoid stdlib */
--static inline int is_len_2(const char *alpha2)
--{
--        if (alpha2[0] == '\0' || (alpha2[1] == '\0'))
--                return 0;
--        if (alpha2[2] == '\0')
--                return 1;
--        return 0;
--}
+-static unsigned int debug = DBG_EMERG;
+-module_param(debug, uint, 0);
+-MODULE_PARM_DESC(debug, "Set global debug level for rtlwifi (0,2-5)");
 -
- static inline int is_valid_regdom(const char *alpha2)
+ void rtl_dbgp_flag_init(struct ieee80211_hw *hw)
  {
--	if (!is_len_2(alpha2))
--		return 0;
--
- 	if (!is_alpha2(alpha2) && !is_world_regdom(alpha2))
- 		return 0;
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u8 i;
  
--- 
-1.7.4.15.g7811d
-
+-	rtlpriv->dbg.global_debuglevel = debug;
+-
+ 	rtlpriv->dbg.global_debugcomponents =
+ 	    COMP_ERR | COMP_FW | COMP_INIT | COMP_RECV | COMP_SEND |
+ 	    COMP_MLME | COMP_SCAN | COMP_INTR | COMP_LED | COMP_SEC |
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+@@ -131,6 +131,8 @@ int rtl92c_init_sw_vars(struct ieee80211
+ 
+ 	rtlpci->irq_mask[1] = (u32) (IMR_CPWM | IMR_C2HCMD | 0);
+ 
++	/* for debug level */
++	rtlpriv->dbg.global_debuglevel = rtlpriv->cfg->mod_params->debug;
+ 	/* for LPS & IPS */
+ 	rtlpriv->psc.inactiveps = rtlpriv->cfg->mod_params->inactiveps;
+ 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
+@@ -253,6 +255,7 @@ static struct rtl_mod_params rtl92ce_mod
+ 	.inactiveps = true,
+ 	.swctrl_lps = false,
+ 	.fwctrl_lps = true,
++	.debug = DBG_EMERG,
+ };
+ 
+ static struct rtl_hal_cfg rtl92ce_hal_cfg = {
+@@ -367,6 +370,7 @@ MODULE_FIRMWARE("rtlwifi/rtl8192cfwU.bin
+ MODULE_FIRMWARE("rtlwifi/rtl8192cfwU_B.bin");
+ 
+ module_param_named(swenc, rtl92ce_mod_params.sw_crypto, bool, 0444);
++module_param_named(debug, rtl92ce_mod_params.debug, int, 0444);
+ module_param_named(ips, rtl92ce_mod_params.inactiveps, bool, 0444);
+ module_param_named(swlps, rtl92ce_mod_params.swctrl_lps, bool, 0444);
+ module_param_named(fwlps, rtl92ce_mod_params.fwctrl_lps, bool, 0444);
+@@ -374,6 +378,7 @@ MODULE_PARM_DESC(swenc, "Set to 1 for so
+ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
+ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+ MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
++MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+ 
+ static const struct dev_pm_ops rtlwifi_pm_ops = {
+ 	.suspend = rtl_pci_suspend,
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/wifi.h
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
+@@ -1487,6 +1487,9 @@ struct rtl_mod_params {
+ 	/* default: 0 = using hardware encryption */
+ 	int sw_crypto;
+ 
++	/* default: 0 = DBG_EMERG (0)*/
++	int debug;
++
+ 	/* default: 1 = using no linked power save */
+ 	bool inactiveps;
+ 
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+@@ -60,6 +60,7 @@ static int rtl92cu_init_sw_vars(struct i
+ 	rtlpriv->dm.dm_flag = 0;
+ 	rtlpriv->dm.disable_framebursting = 0;
+ 	rtlpriv->dm.thermalvalue = 0;
++	rtlpriv->dbg.global_debuglevel = rtlpriv->cfg->mod_params->debug;
+ 	rtlpriv->rtlhal.pfirmware = vmalloc(0x4000);
+ 	if (!rtlpriv->rtlhal.pfirmware) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+@@ -149,8 +150,14 @@ static struct rtl_hal_ops rtl8192cu_hal_
+ 
+ static struct rtl_mod_params rtl92cu_mod_params = {
+ 	.sw_crypto = 0,
++	.debug = DBG_EMERG,
+ };
+ 
++module_param_named(swenc, rtl92cu_mod_params.sw_crypto, bool, 0444);
++module_param_named(debug, rtl92cu_mod_params.debug, int, 0444);
++MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
++MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
++
+ static struct rtl_hal_usbint_cfg rtl92cu_interface_cfg = {
+ 	/* rx */
+ 	.in_ep_num = RTL92C_USB_BULK_IN_NUM,
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+@@ -146,6 +146,8 @@ static int rtl92d_init_sw_vars(struct ie
+ 
+ 	rtlpci->irq_mask[1] = (u32) (IMR_CPWM | IMR_C2HCMD);
+ 
++	/* for debug level */
++	rtlpriv->dbg.global_debuglevel = rtlpriv->cfg->mod_params->debug;
+ 	/* for LPS & IPS */
+ 	rtlpriv->psc.inactiveps = rtlpriv->cfg->mod_params->inactiveps;
+ 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
+@@ -267,6 +269,7 @@ static struct rtl_mod_params rtl92de_mod
+ 	.inactiveps = true,
+ 	.swctrl_lps = true,
+ 	.fwctrl_lps = false,
++	.debug = DBG_EMERG,
+ };
+ 
+ static struct rtl_hal_cfg rtl92de_hal_cfg = {
+@@ -377,6 +380,7 @@ MODULE_DESCRIPTION("Realtek 8192DE 802.1
+ MODULE_FIRMWARE("rtlwifi/rtl8192defw.bin");
+ 
+ module_param_named(swenc, rtl92de_mod_params.sw_crypto, bool, 0444);
++module_param_named(debug, rtl92de_mod_params.debug, int, 0444);
+ module_param_named(ips, rtl92de_mod_params.inactiveps, bool, 0444);
+ module_param_named(swlps, rtl92de_mod_params.swctrl_lps, bool, 0444);
+ module_param_named(fwlps, rtl92de_mod_params.fwctrl_lps, bool, 0444);
+@@ -384,6 +388,7 @@ MODULE_PARM_DESC(swenc, "Set to 1 for so
+ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
+ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+ MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
++MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+ 
+ static const struct dev_pm_ops rtlwifi_pm_ops = {
+ 	.suspend = rtl_pci_suspend,
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -160,6 +160,8 @@ static int rtl92s_init_sw_vars(struct ie
+ 
+ 	rtlpci->first_init = true;
+ 
++	/* for debug level */
++	rtlpriv->dbg.global_debuglevel = rtlpriv->cfg->mod_params->debug;
+ 	/* for LPS & IPS */
+ 	rtlpriv->psc.inactiveps = rtlpriv->cfg->mod_params->inactiveps;
+ 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
+@@ -272,6 +274,7 @@ static struct rtl_mod_params rtl92se_mod
+ 	.inactiveps = true,
+ 	.swctrl_lps = true,
+ 	.fwctrl_lps = false,
++	.debug = DBG_EMERG,
+ };
+ 
+ /* Because memory R/W bursting will cause system hang/crash
+@@ -389,6 +392,7 @@ MODULE_DESCRIPTION("Realtek 8192S/8191S
+ MODULE_FIRMWARE("rtlwifi/rtl8192sefw.bin");
+ 
+ module_param_named(swenc, rtl92se_mod_params.sw_crypto, bool, 0444);
++module_param_named(debug, rtl92se_mod_params.debug, int, 0444);
+ module_param_named(ips, rtl92se_mod_params.inactiveps, bool, 0444);
+ module_param_named(swlps, rtl92se_mod_params.swctrl_lps, bool, 0444);
+ module_param_named(fwlps, rtl92se_mod_params.fwctrl_lps, bool, 0444);
+@@ -396,6 +400,7 @@ MODULE_PARM_DESC(swenc, "Set to 1 for so
+ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
+ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+ MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
++MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+ 
+ static const struct dev_pm_ops rtlwifi_pm_ops = {
+ 	.suspend = rtl_pci_suspend,
