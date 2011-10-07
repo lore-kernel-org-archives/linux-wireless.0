@@ -1,47 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37711 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755503Ab1JAKdf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Oct 2011 06:33:35 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat-wireless: make patches apply again
-Date: Sat,  1 Oct 2011 12:33:18 +0200
-Message-Id: <1317465198-2733-1-git-send-email-hauke@hauke-m.de> (sfid-20111001_123338_095136_993D2E5E)
+Received: from external1.orbit-lab.org ([128.6.192.131]:58154 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753703Ab1JGTEx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Oct 2011 15:04:53 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 656D454022F
+	for <linux-wireless@vger.kernel.org>; Fri,  7 Oct 2011 15:18:47 -0400 (EDT)
+Subject: Compat-wireless release for 2011-10-07 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111007190451.F15F740650@repository3.orbit-lab.org> (sfid-20111007_210456_857207_E04E4237)
+Date: Fri,  7 Oct 2011 15:04:51 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>From git://github.com/mcgrof/compat-wireless
+   e4f1a17..8163a60  master     -> origin/master
+>From git://github.com/sfrothwell/linux-next
+ + 98b3e8f...186cf8e akpm-end   -> origin/akpm-end  (forced update)
+   538d288..3ee72ca  akpm-start -> origin/akpm-start
+ + 40a33ae...12d1b9a master     -> origin/master  (forced update)
+   538d288..3ee72ca  stable     -> origin/stable
+ * [new tag]         next-20111007 -> next-20111007
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/06-header-changes.patch |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+compat-wireless code metrics
 
-diff --git a/patches/06-header-changes.patch b/patches/06-header-changes.patch
-index 9a2041f..d90fb06 100644
---- a/patches/06-header-changes.patch
-+++ b/patches/06-header-changes.patch
-@@ -23,9 +23,9 @@ cases.
-  
-  #include <linux/ip.h>
- +#include <linux/in.h>
-+ #include <linux/module.h>
-  #include "wifi.h"
-  #include "rc.h"
-- #include "base.h"
- --- a/drivers/net/wireless/wl1251/main.c
- +++ b/drivers/net/wireless/wl1251/main.c
- @@ -24,6 +24,9 @@
-@@ -52,7 +52,7 @@ cases.
-  
- --- a/net/mac80211/key.c
- +++ b/net/mac80211/key.c
--@@ -22,6 +22,9 @@
-+@@ -23,6 +23,9 @@
-  #include "aes_ccm.h"
-  #include "aes_cmac.h"
-  
--- 
-1.7.4.1
-
+    811845 - Total upstream lines of code being pulled
+      2431 - backport code changes
+      2113 - backport code additions
+       318 - backport code deletions
+      8588 - backport from compat module
+     11019 - total backport code
+    1.3573 - % of code consists of backport work
