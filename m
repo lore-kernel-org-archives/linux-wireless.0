@@ -1,159 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:55100 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752278Ab1JNWOz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 18:14:55 -0400
-Received: by bkbzt19 with SMTP id zt19so484438bkb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2011 15:14:53 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Jouni Malinen <j@w1.fi>
-Subject: [PATCH v2] mac80211: handle HT PHY BSS membership selector value correctly
-Date: Sat, 15 Oct 2011 00:14:49 +0200
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-References: <201110132108.50019.chunkeey@googlemail.com> <201110140942.37085.chunkeey@googlemail.com> <201110141012.21010.chunkeey@googlemail.com>
-In-Reply-To: <201110141012.21010.chunkeey@googlemail.com>
+Received: from mail.neratec.ch ([80.75.119.105]:45501 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758587Ab1JGIsr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Oct 2011 04:48:47 -0400
+Message-ID: <4E8EBCEB.80705@neratec.com> (sfid-20111007_104851_431349_97E35798)
+Date: Fri, 07 Oct 2011 10:48:43 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201110150014.50136.chunkeey@googlemail.com> (sfid-20111015_001459_536948_4D165E7B)
+To: Adrian Chadd <adrian@freebsd.org>
+CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	kgiori@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] [RFC 5/6] ath9k: enable DFS pulse detection
+References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com>	<201110041538.12885.chunkeey@googlemail.com>	<CAB=NE6VC3txpDh4SdDKDxKWKKZVtGQXKVH8opszKDnZeeZTjUQ@mail.gmail.com>	<201110061849.48838.chunkeey@googlemail.com>	<CAB=NE6WbMi2GYJyFfvsdH-NSXn8dPBsgxgfdGXO_RHiJxwz2Fw@mail.gmail.com>	<4E8E1062.1070206@neratec.com>	<CAB=NE6XwNDc8v-qtQuQQZdh2ST-skpcZM7wqD32qHn3CgN-5Dw@mail.gmail.com>	<4E8E18DB.5070002@neratec.com> <CAJ-VmonYaTW3xX7CKzU4Okb1nW86mJMV0RRDnqkMSJ-mASJ+4Q@mail.gmail.com>
+In-Reply-To: <CAJ-VmonYaTW3xX7CKzU4Okb1nW86mJMV0RRDnqkMSJ-mASJ+4Q@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-802.11n-2009 extends the supported rates element with a
-magic value which can be used to prevent legacy stations
-from joining the BSS.
+On 10/07/2011 05:06 AM, Adrian Chadd wrote:
+> Just FYI, that's what I'm likely to do for FreeBSD 10 (as I just don't
+> have time to try and make all the required regulatory changes before
+> the upcoming 9.0 release.)
+> 
+> Ie:
+> 
+> * DFS station mode (net80211) is going to be compiled and enabled by default;
+> * DFS master mode (net80211) is going to be compiled and enabled by default;
+> * The drivers which support radar detection in firmware (currently
+> only if_mwl) will set the DFS net80211 flag (ie, for master mode radar
+> detection);
+> * ath won't ship with the DFS enable flag (for master mode);
+> * I'll modify the regulatory database code to include per-band DFS
+> information (DFS domain, CAC/NOL timeout, interference timeout, etc)
+> and some device information (eg whether it supports HT20/HT40/etc DFS
+> detection);
+> * I'll then flip on the DFS channel enforcement in the net80211 code
+> so disables master mode on channels requiring DFS.
+> 
+> The radar detection code and channel interference code will live in
+> the ath driver but the DFS machinery (CAC, NOL, CSA, etc) is in
+> net80211. That way other NICs (eg if_mwl Marvell NICs) with DFS radar
+> detection support can leverage this.
+> 
+Quite some work ahead. Good luck on that!
 
-However, this magic value is not a rate like the others
-and the magic can simply be ignored/skipped at this late
-stage.
+So you are confident to get existing code re-factored and split into multiple layers?
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>---
----
-v2:
-	Jouni's comment... Although I'm still not sure what is
-	the difference between the membership and basic
-	rate flag at this point.
----
- include/linux/ieee80211.h |    3 ++
- net/mac80211/mlme.c       |   75 +++++++++++++++++++++++++--------------------
- 2 files changed, 45 insertions(+), 33 deletions(-)
+> I'll then likely ship two DFS modules - dfs_null (no DFS support, just
+> a placeholder for the API) and whatever code is ported from the
+> reference driver. Maybe I'll also include the code from Neratec if
+> it's dual-licenced. But I won't include radar patterns by default -
+> I'll include those on a documentation page which explains the how and
+> why of regulatory domain stuff.
+> 
+Initially we planned to have common pattern detectors in mac80211 to handle pulses reported by all drivers, but so far only TI is working on DFS -- with pattern matching done in firmware. So, no need yet for common detectors, we might end up going the other way around, i.e. taking your port and integrate in into ath9k -- if licensing allowed us to do.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 48363c3..9789aed 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -770,6 +770,9 @@ struct ieee80211_mgmt {
- 	} u;
- } __attribute__ ((packed));
- 
-+/* Supported Rates value encodings in 802.11n-2009 7.3.2.2 */
-+#define BSS_MEMBERSHIP_SELECTOR_HT_PHY	127
-+
- /* mgmt header + 1 byte category code */
- #define IEEE80211_MIN_ACTION_SIZE offsetof(struct ieee80211_mgmt, u.action.u)
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0e5d8da..c0e54c5 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1463,6 +1463,42 @@ ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
- 	return RX_MGMT_CFG80211_DISASSOC;
- }
- 
-+static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
-+				u8 *supp_rates, unsigned int supp_rates_len,
-+				u32 *rates, u32 *basic_rates,
-+				bool *have_higher_than_11mbit)
-+{
-+	int i, j;
-+
-+	for (i = 0; i < supp_rates_len; i++) {
-+		int rate = (supp_rates[i] & 0x7f) * 5;
-+		bool is_basic = !!(supp_rates[i] & 0x80);
-+
-+		if (rate > 110)
-+			*have_higher_than_11mbit = true;
-+
-+		/*
-+		 * BSS_MEMBERSHIP_SELECTOR_HT_PHY is defined in 802.11n-2009
-+		 * 7.3.2.2 as a magic value instead of a rate. Hence, skip it.
-+		 *
-+		 * Note: Even through the membership selector and the basic
-+		 *	 rate flag share the same bit, they are not exactly
-+		 *	 the same.
-+		 */
-+		if (!!(supp_rates[i] & 0x80) &&
-+		    (supp_rates[i] & 0x7f) == BSS_MEMBERSHIP_SELECTOR_HT_PHY)
-+			continue;
-+
-+		for (j = 0; j < sband->n_bitrates; j++) {
-+			if (sband->bitrates[j].bitrate == rate) {
-+				*rates |= BIT(j);
-+				if (is_basic)
-+					*basic_rates |= BIT(j);
-+				break;
-+			}
-+		}
-+	}
-+}
- 
- static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 				    struct ieee80211_mgmt *mgmt, size_t len)
-@@ -1479,7 +1515,7 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 	struct ieee802_11_elems elems;
- 	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
- 	u32 changed = 0;
--	int i, j, err;
-+	int err;
- 	bool have_higher_than_11mbit = false;
- 	u16 ap_ht_cap_flags;
- 
-@@ -1525,39 +1561,12 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 	basic_rates = 0;
- 	sband = local->hw.wiphy->bands[wk->chan->band];
- 
--	for (i = 0; i < elems.supp_rates_len; i++) {
--		int rate = (elems.supp_rates[i] & 0x7f) * 5;
--		bool is_basic = !!(elems.supp_rates[i] & 0x80);
--
--		if (rate > 110)
--			have_higher_than_11mbit = true;
--
--		for (j = 0; j < sband->n_bitrates; j++) {
--			if (sband->bitrates[j].bitrate == rate) {
--				rates |= BIT(j);
--				if (is_basic)
--					basic_rates |= BIT(j);
--				break;
--			}
--		}
--	}
--
--	for (i = 0; i < elems.ext_supp_rates_len; i++) {
--		int rate = (elems.ext_supp_rates[i] & 0x7f) * 5;
--		bool is_basic = !!(elems.ext_supp_rates[i] & 0x80);
-+	ieee80211_get_rates(sband, elems.supp_rates, elems.supp_rates_len,
-+			    &rates, &basic_rates, &have_higher_than_11mbit);
- 
--		if (rate > 110)
--			have_higher_than_11mbit = true;
--
--		for (j = 0; j < sband->n_bitrates; j++) {
--			if (sband->bitrates[j].bitrate == rate) {
--				rates |= BIT(j);
--				if (is_basic)
--					basic_rates |= BIT(j);
--				break;
--			}
--		}
--	}
-+	ieee80211_get_rates(sband, elems.ext_supp_rates,
-+			    elems.ext_supp_rates_len, &rates, &basic_rates,
-+			    &have_higher_than_11mbit);
- 
- 	sta->sta.supp_rates[wk->chan->band] = rates;
- 	sdata->vif.bss_conf.basic_rates = basic_rates;
--- 
-1.7.6.3
+> Once FreeBSD ships DFS radar detection code, I'll make sure it isn't
+> compiled by default and even if enabled, it won't advertise DFS
+> channel support unless a valid radar pattern and radar parameter
+> configuration is loaded in. That way users won't inadvertently enable
+> it without being compliant.
+> 
+> Finally, I'm hoping to get all of this documented as much as possible
+> so the community can pick this stuff up and run with it. I was hoping
+> someone would throw me a 5ghz SDR (software defined radio) so I could
+> prototype up some open source radar pulse generation code, just to
+> lower the entry barrier to all of this.
+> 
+Yeah, an AR9003 card used as cheap radar generator is on top of my wish list for DFS testing without our always otherwise occupied vector signal generator. But fur obvious reasons we wont get the required documentation for such unofficial hacks.
+
+> HTH,
+> 
+> 
+> Adrian
+
+Thanks
+Zefir
