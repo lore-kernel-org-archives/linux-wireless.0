@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:43690 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751584Ab1JRGO0 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58593 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964935Ab1JGI47 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Oct 2011 02:14:26 -0400
-Date: Tue, 18 Oct 2011 09:14:09 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch 2/4] mwifiex: remove an unneeded NULL check
-Message-ID: <20111018061409.GH27732@elgon.mountain> (sfid-20111018_081431_421031_6D1D99DB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 7 Oct 2011 04:56:59 -0400
+Subject: Re: [PATCH] mac80211: Allow NO_ACK flag overwrite for injected
+ frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1317288432-26380-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20110929_112749_887836_A27DE080)
+References: <1317288432-26380-1-git-send-email-helmut.schaa@googlemail.com>
+	 (sfid-20110929_112749_887836_A27DE080)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 07 Oct 2011 10:56:54 +0200
+Message-ID: <1317977814.3988.10.camel@jlt3.sipsolutions.net> (sfid-20111007_105703_208036_20113F22)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We dereference adapter in the error handling code so this needed to
-be fixed.  This function is always called like:
-	adapter->if_ops.host_to_card(adapter, ...);
-so adapter can never be NULL and I've removed the NULL check.
+On Thu, 2011-09-29 at 11:27 +0200, Helmut Schaa wrote:
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> +		case IEEE80211_RADIOTAP_TX_FLAGS:
+> +			txflags = le16_to_cpu(get_unaligned((__le16*)
+> +						iterator.this_arg));
+> +			if (txflags & IEEE80211_RADIOTAP_F_TX_NOACK)
+> +				info->flags |= IEEE80211_TX_CTL_NO_ACK;
+> +			break;
+> +
+>  		/*
+>  		 * Please update the file
+>  		 * Documentation/networking/mac80211-injection.txt
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 4466976..d12d440 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -1671,9 +1671,8 @@ static int mwifiex_pcie_host_to_card(struct mwifiex_adapter *adapter, u8 type,
- 				     struct sk_buff *skb,
- 				     struct mwifiex_tx_param *tx_param)
- {
--	if (!adapter || !skb) {
--		dev_err(adapter->dev, "Invalid parameter in %s <%p, %p>\n",
--				__func__, adapter, skb);
-+	if (!skb) {
-+		dev_err(adapter->dev, "Passed NULL skb to %s\n", __func__);
- 		return -1;
- 	}
- 
+... :-)
+
+johannes
+
