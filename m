@@ -1,154 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3179 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754765Ab1JUNzi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 09:55:38 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 10/17] brcm80211: smac: mute transmit on ops_start
-Date: Fri, 21 Oct 2011 15:55:12 +0200
-Message-ID: <1319205319-16891-11-git-send-email-arend@broadcom.com> (sfid-20111021_155544_506770_30E8FF2C)
-In-Reply-To: <1319205319-16891-1-git-send-email-arend@broadcom.com>
-References: <1319205319-16891-1-git-send-email-arend@broadcom.com>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:54264 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753564Ab1JGPt4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Oct 2011 11:49:56 -0400
+Received: by qyk7 with SMTP id 7so3766112qyk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Oct 2011 08:49:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1317988039-28632-9-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1317988039-28632-1-git-send-email-rmanohar@qca.qualcomm.com> <1317988039-28632-9-git-send-email-rmanohar@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Fri, 7 Oct 2011 08:49:35 -0700
+Message-ID: <CAB=NE6XLSr08L3f1DFZawX+U71xuAjmwRMMMABKuYKUXdidriw@mail.gmail.com> (sfid-20111007_175003_747349_A685C715)
+Subject: Re: [PATCH 09/14] ath9k_hw: Fix ASPM L1 issue for AR9480
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+On Fri, Oct 7, 2011 at 4:47 AM, Rajkumar Manoharan
+<rmanohar@qca.qualcomm.com> wrote:
+> Because of not clearing Bit 14 of AR_WA, the ASPM L1 is not
+> enabled when entering into sleep mode. AR9480 does not need
+> bit 14 to be set.
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-Monitor mode functionality (not functional yet) requires transmit to be
-muted after ops_start() is called, transmit is unmuted when the first
-interface is added.
+Is this a stable fix?
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   11 +++++++++--
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |    1 +
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |   10 ++++++++--
- drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    3 ++-
- 4 files changed, 20 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index f38ba17..824c608 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -294,6 +294,9 @@ static int brcms_ops_start(struct ieee80211_hw *hw)
- 		wiphy_rfkill_stop_polling(wl->pub->ieee_hw->wiphy);
- 
- 	spin_lock_bh(&wl->lock);
-+	/* avoid acknowledging frames before a non-monitor device is added */
-+	wl->mute_tx = true;
-+
- 	if (!wl->pub->up)
- 		err = brcms_up(wl);
- 	else
-@@ -335,6 +338,8 @@ static void brcms_ops_stop(struct ieee80211_hw *hw)
- static int
- brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
-+	struct brcms_info *wl = hw->priv;
-+
- 	/* Just STA for now */
- 	if (vif->type != NL80211_IFTYPE_AP &&
- 	    vif->type != NL80211_IFTYPE_MESH_POINT &&
-@@ -346,6 +351,9 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 		return -EOPNOTSUPP;
- 	}
- 
-+	wl->mute_tx = false;
-+	brcms_c_mute(wl->wlc, false);
-+
- 	return 0;
- }
- 
-@@ -1303,8 +1311,7 @@ void brcms_init(struct brcms_info *wl)
- {
- 	BCMMSG(wl->pub->ieee_hw->wiphy, "wl%d\n", wl->pub->unit);
- 	brcms_reset(wl);
--
--	brcms_c_init(wl->wlc);
-+	brcms_c_init(wl->wlc, wl->mute_tx);
- }
- 
- /*
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
-index 5c279c0..6242f18 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
-@@ -80,6 +80,7 @@ struct brcms_info {
- 	struct brcms_firmware fw;
- 	struct wiphy *wiphy;
- 	struct brcms_ucode ucode;
-+	bool mute_tx;
- };
- 
- /* misc callbacks */
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index cc74205..3f8a6c7 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -2396,6 +2396,7 @@ void brcms_c_intrsrestore(struct brcms_c_info *wlc, u32 macintmask)
- 	W_REG(&wlc_hw->regs->macintmask, wlc->macintmask);
- }
- 
-+/* assumes that the d11 MAC is enabled */
- static void brcms_b_tx_fifo_suspend(struct brcms_hardware *wlc_hw,
- 				    uint tx_fifo)
- {
-@@ -2487,6 +2488,12 @@ static void brcms_b_mute(struct brcms_hardware *wlc_hw, bool mute_tx)
- 		brcms_c_ucode_mute_override_clear(wlc_hw);
- }
- 
-+void
-+brcms_c_mute(struct brcms_c_info *wlc, bool mute_tx)
-+{
-+	brcms_b_mute(wlc->hw, mute_tx);
-+}
-+
- /*
-  * Read and clear macintmask and macintstatus and intstatus registers.
-  * This routine should be called with interrupts off
-@@ -8253,11 +8260,10 @@ bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded)
- 	return wlc->macintstatus != 0;
- }
- 
--void brcms_c_init(struct brcms_c_info *wlc)
-+void brcms_c_init(struct brcms_c_info *wlc, bool mute_tx)
- {
- 	struct d11regs __iomem *regs;
- 	u16 chanspec;
--	bool mute_tx = false;
- 
- 	BCMMSG(wlc->wiphy, "wl%d\n", wlc->pub->unit);
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-index 97b9cce..022523a 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-@@ -540,7 +540,7 @@ extern int brcms_c_up(struct brcms_c_info *wlc);
- extern uint brcms_c_down(struct brcms_c_info *wlc);
- 
- extern bool brcms_c_chipmatch(u16 vendor, u16 device);
--extern void brcms_c_init(struct brcms_c_info *wlc);
-+extern void brcms_c_init(struct brcms_c_info *wlc, bool mute_tx);
- extern void brcms_c_reset(struct brcms_c_info *wlc);
- 
- extern void brcms_c_intrson(struct brcms_c_info *wlc);
-@@ -597,5 +597,6 @@ extern void brcms_c_set_beacon_listen_interval(struct brcms_c_info *wlc,
- extern int brcms_c_set_tx_power(struct brcms_c_info *wlc, int txpwr);
- extern int brcms_c_get_tx_power(struct brcms_c_info *wlc);
- extern bool brcms_c_check_radio_disabled(struct brcms_c_info *wlc);
-+extern void brcms_c_mute(struct brcms_c_info *wlc, bool on);
- 
- #endif				/* _BRCM_PUB_H_ */
--- 
-1.7.4.1
-
-
+  Luis
