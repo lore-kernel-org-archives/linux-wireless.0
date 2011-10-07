@@ -1,98 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:38231 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751865Ab1JJTkH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48195 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754006Ab1JGUF1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 15:40:07 -0400
-Received: by mail-bw0-f48.google.com with SMTP id zu5so12135243bkb.21
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 12:40:05 -0700 (PDT)
-Subject: Re: [PATCH 06/29] wl12xx: add vifs list
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAB3XZEfA2woetrXDycv3xcBYGBvyYJQoLz969Rp8k8WjaG3FFw@mail.gmail.com>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-	 <1318234397-21081-7-git-send-email-eliad@wizery.com>
-	 <1318271328.9690.381.camel@cumari>
-	 <CAB3XZEfA2woetrXDycv3xcBYGBvyYJQoLz969Rp8k8WjaG3FFw@mail.gmail.com>
+	Fri, 7 Oct 2011 16:05:27 -0400
+Subject: Re: [PATCH 3/8] cfg80211: process regulatory DFS region for
+ countries
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <CAB=NE6WOvik7hJygC8cTpe+o1W==fsqw2ZgVA=_pbo6fpFhUzw@mail.gmail.com> (sfid-20111007_215756_987265_EF832A47)
+References: <1317772067-6998-1-git-send-email-mcgrof@qca.qualcomm.com>
+	 <1317772067-6998-4-git-send-email-mcgrof@qca.qualcomm.com>
+	 <1318017260.3974.9.camel@jlt3.sipsolutions.net>
+	 <CAB=NE6WOvik7hJygC8cTpe+o1W==fsqw2ZgVA=_pbo6fpFhUzw@mail.gmail.com>
+	 (sfid-20111007_215756_987265_EF832A47)
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 10 Oct 2011 22:40:02 +0300
-Message-ID: <1318275602.9690.409.camel@cumari> (sfid-20111010_214009_856776_9016A93E)
+Date: Fri, 07 Oct 2011 22:05:24 +0200
+Message-ID: <1318017924.3974.10.camel@jlt3.sipsolutions.net> (sfid-20111007_220530_844693_98D9D6B1)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-10-10 at 21:29 +0200, Eliad Peller wrote: 
-> On Mon, Oct 10, 2011 at 8:28 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote:
-> >> keep a list of all the vifs associated with our hw.
-> >> it will be later used in order to iterate through vifs.
-> >>
-> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> >> ---
+On Fri, 2011-10-07 at 12:57 -0700, Luis R. Rodriguez wrote:
+> On Fri, Oct 7, 2011 at 12:54 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Tue, 2011-10-04 at 16:47 -0700, Luis R. Rodriguez wrote:
 > >
-> > [...]
+> >>  /**
+> >> + * enum nl80211_dfs_regions - regulatory DFS regions
+> >> + *
+> >> + * @NL80211_DFS_UNSET: Country has no DFS master region specified
+> >> + * @NL80211_DFS_FCC_: Country follows DFS master rules from FCC
+> >> + * @NL80211_DFS_FCC_: Country follows DFS master rules from ETSI
+> >> + * @NL80211_DFS_JP_: Country follows DFS master rules from JP/MKK/Telec
+> >> + */
+> >> +enum nl80211_cflags {
+> >> +     NL80211_DFS_UNSET       = 0,
 > >
-> >> diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-> >> index 33ccdf8..55561c5 100644
-> >> --- a/drivers/net/wireless/wl12xx/wl12xx.h
-> >> +++ b/drivers/net/wireless/wl12xx/wl12xx.h
-> >> @@ -394,6 +394,8 @@ struct wl1271 {
-> >>       unsigned long roles_map[BITS_TO_LONGS(WL12XX_MAX_ROLES)];
-> >>       unsigned long roc_map[BITS_TO_LONGS(WL12XX_MAX_ROLES)];
-> >>
-> >> +     struct list_head wlvif_list;
-> >> +
-> >>       struct wl1271_acx_mem_map *target_mem_map;
-> >>
-> >>       /* Accounting for allocated / available TX blocks on HW */
-> >> @@ -564,6 +566,7 @@ struct wl1271_station {
-> >>
-> >>  struct wl12xx_vif {
-> >>       struct wl1271 *wl;
-> >> +     struct list_head list;
-> >
-> > I know we alredy call this kind of thing "list" struct wl1271 for the
-> > ARP stuff, but I prefer "node" so it's easier to follow when calling
-> > list_add and friends.  Mind changing?
-> >
-> i think "list" is the standard convention (e.g. see sta_info,
-> ieee80211_key, etc.) and more intuitive.
+> > That seems odd -- nl80211 convention would be to just leave out the
+> > attribute.
+> 
+> I wonder what seems more odd, having that present or looking at this:
+> 
+> +bool reg_supported_dfs_region(u8 dfs_region)
+> +{
+> +       switch (dfs_region) {
+> +       case 0:
 
-Yeah, it makes a bit of sense, because each node is actually a head of a
-list.  Still, I don't like it because it's annoying to read it a
-list_add() with two lists.  It's not intuitive to know which one is
-which.  Anyway, it's fine to leave it like this.
+Yeah I noticed later you were going to use that value internally as
+well, guess it's fine.
 
-
-> >> @@ -653,6 +656,9 @@ struct ieee80211_vif *wl12xx_wlvif_to_vif(struct wl12xx_vif *wlvif)
-> >>       return container_of((void *)wlvif, struct ieee80211_vif, drv_priv);
-> >>  }
-> >>
-> >> +#define wl12xx_for_each_wlvif(wl, wlvif) \
-> >> +             list_for_each_entry(wlvif, &wl->wlvif_list, list)
-> >> +
-> >
-> > This looks fine, but is it really necessary? I think the call to
-> > list_for_each_entry is clear enough already, isn't it?
-> >
-> i find it easier to understand this way.
-> also, future patches will add wl12xx_for_each_wlvif_sta and
-> wl12xx_for_each_wlvif_ap, so it even makes more sense to use this
-> macro.
-
-Yeah, I now saw the other macros and it now makes a bit more sense for
-the other ones.  But I dislike simple macros whose content are almost as
-easy to understand as the macro name, because one needs to go dig the
-macro out to figure out exactly what it is doing.  With no macro, it
-would be much easier to figure out that this is a simple
-list_for_each_entry(), because you would simply call that explicitly. ;)
-It's as annoying as unnecessary typedefs.
-
-But I'm in a temporary and unusual mood of accepting stuff easier than
-usual right now, so it's fine to keep it like this. ;)
-
--- 
-Cheers,
-Luca.
+johannes
 
