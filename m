@@ -1,76 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2877 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754819Ab1JUOQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 10:16:50 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH v2 00/17] fix mac80211 callback in brcmsmac and brcmfmac
- refactor
-Date: Fri, 21 Oct 2011 16:16:18 +0200
-Message-ID: <1319206595-17138-1-git-send-email-arend@broadcom.com> (sfid-20111021_161711_529327_793FB66A)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:54767 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965396Ab1JGLfM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Oct 2011 07:35:12 -0400
+Received: by mail-bw0-f52.google.com with SMTP id 5so4378321bke.25
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Oct 2011 04:35:11 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH 2/2] wl12xx: spi: use dev_err instead of wl1271_error
+Date: Fri,  7 Oct 2011 14:34:57 +0300
+Message-Id: <1317987297-18172-2-git-send-email-coelho@ti.com> (sfid-20111007_133520_649429_AA12A2E0)
+In-Reply-To: <1317987297-18172-1-git-send-email-coelho@ti.com>
+References: <1317987297-18172-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg commented on our use of the start/stop callbacks in brcmsmac
-and we changed those callbacks. In rfkill testing it revealed a problem which
-has been fixed in this series as well.
+To prevent a useless dependency between the spi module and the wl12xx
+module, we need to replace the wl1271_error macros with dev_err.
 
-The brcmfmac driver had some restructuring in preparation of USB support
-for new devices.
+At the same time, remove the SPI data hexdump, since this produces way
+too much data and is not particularly useful.  There's no
+print_hex_dump() equivalent for dynamic debug, so it's hard to control
+when the dumps are printed out.
 
-This patch series applies to the wireless-testing repository and depends on the
-series posted on Oct 18, 2011 with message id:
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/spi.c |   31 ++++++++++++-------------------
+ 1 files changed, 12 insertions(+), 19 deletions(-)
 
-Message-ID: <1318939391-19495-1-git-send-email-arend@broadcom.com> 
-
-It replaces the patch series sent earlier with message id:
-
-Message-ID: <1319205319-16891-1-git-send-email-arend@broadcom.com>
-
-Arend van Spriel (3):
-  brcm80211: smac: rename buffer endianess conversion functions
-  brcm80211: smac: use sk_buff list for handling frames in receive path
-  brcm80211: smac: change buffer endianess convert function interface
-
-Franky Lin (5):
-  brcm80211: fmac: allow wd timer to be disabled when bus down
-  brcm80211: fmac: use brcmf_del_if for all net devices
-  brcm80211: fmac: use brcmf_add_if for all net devices
-  brcm80211: fmac: store brcmf_if in net device private data
-  brcm80211: fmac: remove state from brcmf_if in fullmac
-
-Roland Vossen (9):
-  brcm80211: smac: removed MPC related code
-  brcm80211: smac: removed MPC related variables
-  brcm80211: smac: removed down-on-watchdog MPC functionality
-  brcm80211: smac: removed down-on-rf-kill functionality
-  brcm80211: smac: bugfix for tx mute in brcms_b_init()
-  brcm80211: smac: fixed inconsistency in transmit mute
-  brcm80211: smac: modified Mac80211 callback interface
-  brcm80211: smac: mute transmit on ops_start
-  brcm80211: smac: changed check to confirm STA only support
-
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    5 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    5 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |  301 +++++++-------------
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   15 +-
- drivers/net/wireless/brcm80211/brcmsmac/dma.c      |   38 ++-
- drivers/net/wireless/brcm80211/brcmsmac/dma.h      |    3 +-
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  100 +++----
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |    1 +
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |  219 ++------------
- drivers/net/wireless/brcm80211/brcmsmac/main.h     |   11 -
- drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    4 +-
- drivers/net/wireless/brcm80211/brcmsmac/srom.c     |   33 +--
- drivers/net/wireless/brcm80211/include/defs.h      |    1 -
- 13 files changed, 232 insertions(+), 504 deletions(-)
-
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index bcc7d7c..976d3d5 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -31,7 +31,6 @@
+ #include <linux/slab.h>
+ 
+ #include "wl12xx.h"
+-#include "debug.h"
+ #include "wl12xx_80211.h"
+ #include "io.h"
+ 
+@@ -85,7 +84,8 @@ static void wl12xx_spi_reset(struct device *child)
+ 
+ 	cmd = kzalloc(WSPI_INIT_CMD_LEN, GFP_KERNEL);
+ 	if (!cmd) {
+-		wl1271_error("could not allocate cmd for spi reset");
++		dev_err(child->parent,
++			"could not allocate cmd for spi reset\n");
+ 		return;
+ 	}
+ 
+@@ -100,7 +100,6 @@ static void wl12xx_spi_reset(struct device *child)
+ 
+ 	spi_sync(to_spi_device(glue->dev), &m);
+ 
+-	wl1271_dump(DEBUG_SPI, "spi reset -> ", cmd, WSPI_INIT_CMD_LEN);
+ 	kfree(cmd);
+ }
+ 
+@@ -113,7 +112,8 @@ static void wl12xx_spi_init(struct device *child)
+ 
+ 	cmd = kzalloc(WSPI_INIT_CMD_LEN, GFP_KERNEL);
+ 	if (!cmd) {
+-		wl1271_error("could not allocate cmd for spi init");
++		dev_err(child->parent,
++			"could not allocate cmd for spi init\n");
+ 		return;
+ 	}
+ 
+@@ -155,7 +155,6 @@ static void wl12xx_spi_init(struct device *child)
+ 	spi_message_add_tail(&t, &m);
+ 
+ 	spi_sync(to_spi_device(glue->dev), &m);
+-	wl1271_dump(DEBUG_SPI, "spi init -> ", cmd, WSPI_INIT_CMD_LEN);
+ 	kfree(cmd);
+ }
+ 
+@@ -192,7 +191,7 @@ static int wl12xx_spi_read_busy(struct device *child)
+ 	}
+ 
+ 	/* The SPI bus is unresponsive, the read failed. */
+-	wl1271_error("SPI read busy-word timeout!\n");
++	dev_err(child->parent, "SPI read busy-word timeout!\n");
+ 	return -ETIMEDOUT;
+ }
+ 
+@@ -254,9 +253,6 @@ static void wl12xx_spi_raw_read(struct device *child, int addr, void *buf,
+ 
+ 		spi_sync(to_spi_device(glue->dev), &m);
+ 
+-		wl1271_dump(DEBUG_SPI, "spi_read cmd -> ", cmd, sizeof(*cmd));
+-		wl1271_dump(DEBUG_SPI, "spi_read buf <- ", buf, chunk_len);
+-
+ 		if (!fixed)
+ 			addr += chunk_len;
+ 		buf += chunk_len;
+@@ -302,9 +298,6 @@ static void wl12xx_spi_raw_write(struct device *child, int addr, void *buf,
+ 		t[i].len = chunk_len;
+ 		spi_message_add_tail(&t[i++], &m);
+ 
+-		wl1271_dump(DEBUG_SPI, "spi_write cmd -> ", cmd, sizeof(*cmd));
+-		wl1271_dump(DEBUG_SPI, "spi_write buf -> ", buf, chunk_len);
+-
+ 		if (!fixed)
+ 			addr += chunk_len;
+ 		buf += chunk_len;
+@@ -332,7 +325,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 
+ 	pdata = spi->dev.platform_data;
+ 	if (!pdata) {
+-		wl1271_error("no platform data");
++		dev_err(&spi->dev, "no platform data\n");
+ 		return -ENODEV;
+ 	}
+ 
+@@ -340,7 +333,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 
+ 	glue = kzalloc(sizeof(*glue), GFP_KERNEL);
+ 	if (!glue) {
+-		wl1271_error("can't allocate glue");
++		dev_err(&spi->dev, "can't allocate glue\n");
+ 		goto out;
+ 	}
+ 
+@@ -354,13 +347,13 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 
+ 	ret = spi_setup(spi);
+ 	if (ret < 0) {
+-		wl1271_error("spi_setup failed");
++		dev_err(glue->dev, "spi_setup failed\n");
+ 		goto out_free_glue;
+ 	}
+ 
+ 	glue->core = platform_device_alloc("wl12xx-spi", -1);
+ 	if (!glue->core) {
+-		wl1271_error("can't allocate platform_device");
++		dev_err(glue->dev, "can't allocate platform_device\n");
+ 		ret = -ENOMEM;
+ 		goto out_free_glue;
+ 	}
+@@ -375,19 +368,19 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 
+ 	ret = platform_device_add_resources(glue->core, res, ARRAY_SIZE(res));
+ 	if (ret) {
+-		wl1271_error("can't add resources");
++		dev_err(glue->dev, "can't add resources\n");
+ 		goto out_dev_put;
+ 	}
+ 
+ 	ret = platform_device_add_data(glue->core, pdata, sizeof(*pdata));
+ 	if (ret) {
+-		wl1271_error("can't add platform data");
++		dev_err(glue->dev, "can't add platform data\n");
+ 		goto out_dev_put;
+ 	}
+ 
+ 	ret = platform_device_add(glue->core);
+ 	if (ret) {
+-		wl1271_error("can't register platform device");
++		dev_err(glue->dev, "can't register platform device\n");
+ 		goto out_dev_put;
+ 	}
+ 
 -- 
-1.7.4.1
-
+1.7.1
 
