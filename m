@@ -1,30 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38837 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:19321 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755391Ab1J1LTE (ORCPT
+	with ESMTP id S1752422Ab1JGLsc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 07:19:04 -0400
-To: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
-Message-ID: <4EAA8FA1.1070003@qca.qualcomm.com> (sfid-20111028_131909_160254_C4F69872)
-Date: Fri, 28 Oct 2011 14:18:57 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
+	Fri, 7 Oct 2011 07:48:32 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
 CC: <linux-wireless@vger.kernel.org>,
-	Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
-Subject: Re: [PATCH] Fix missing copy of frame contents to local buffer
-References: <1319733356-31320-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com>
-In-Reply-To: <1319733356-31320-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 10/14] ath9k_hw: Update normal/min noise floor value for AR9480
+Date: Fri, 7 Oct 2011 17:17:15 +0530
+Message-ID: <1317988039-28632-10-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111007_134834_511568_D035BFF1)
+In-Reply-To: <1317988039-28632-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1317988039-28632-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/27/2011 07:35 PM, Aarthi Thiruvengadam wrote:
-> The wpa_supplicant was receiving incorrect frame contents in the
-> callback function that indicates the status of the frame transmitted.
-> This patch fixes a missing copy of the frame contents to a local
-> buffer. The local buffer keeps track of the last sent management frame.
+To improve sensitivity for AR9480, the normal and minimum
+noise floor values of both bands are updated.
 
-Thanks, applied. But I changes the title to "ath6kl: fix missing copy of
-action frame contents".
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-Kalle
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index ef90ab7..64e9bea 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -325,10 +325,10 @@
+ 
+ #define AR_PHY_RX_OCGAIN        (AR_AGC_BASE + 0x200)
+ 
+-#define AR_PHY_CCA_NOM_VAL_9300_2GHZ          -110
+-#define AR_PHY_CCA_NOM_VAL_9300_5GHZ          -115
+-#define AR_PHY_CCA_MIN_GOOD_VAL_9300_2GHZ     -125
+-#define AR_PHY_CCA_MIN_GOOD_VAL_9300_5GHZ     -125
++#define AR_PHY_CCA_NOM_VAL_9300_2GHZ          (AR_SREV_9480(ah) ? -127 : -110)
++#define AR_PHY_CCA_NOM_VAL_9300_5GHZ          (AR_SREV_9480(ah) ? -127 : -115)
++#define AR_PHY_CCA_MIN_GOOD_VAL_9300_2GHZ     (AR_SREV_9480(ah) ? -127 : -125)
++#define AR_PHY_CCA_MIN_GOOD_VAL_9300_5GHZ     (AR_SREV_9480(ah) ? -127 : -125)
+ #define AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ     -95
+ #define AR_PHY_CCA_MAX_GOOD_VAL_9300_5GHZ     -100
+ 
+-- 
+1.7.7
+
