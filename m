@@ -1,145 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:39032 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753715Ab1JUIh1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35950 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759937Ab1JGME4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 04:37:27 -0400
-Received: by mail-yw0-f46.google.com with SMTP id 7so3652119ywf.19
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2011 01:37:27 -0700 (PDT)
-MIME-Version: 1.0
-Date: Fri, 21 Oct 2011 12:37:27 +0400
-Message-ID: <CAG5dHkT8fPodB_ejoqSmH4Dgr-ynuMzwo5r5czXfCWgJWLiS=w@mail.gmail.com> (sfid-20111021_103730_949262_32D1DC8A)
-Subject: [RFC 4/7] mac80211: setting link-specific mesh power modes when plink open
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 7 Oct 2011 08:04:56 -0400
+Message-Id: <20111007120216.631884561@sipsolutions.net> (sfid-20111007_140459_317092_B4B58EDD)
+Date: Fri, 07 Oct 2011 14:01:23 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/4] mac80211: optimise monitor xmit
+References: <20111007120122.982757001@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setting peer link-specific power mode equal to peer non-peer power mode
-value and local link-specific power mode equal to local non-peer value
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Since the only way the interface can be a monitor
+interface in ieee80211_xmit() is because the frame
+came from ieee80211_monitor_start_xmit() we can
+move all the code there.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mesh.c       |   33 +++++++++++++++++++++++++++++++++
- net/mac80211/mesh.h       |    6 ++++++
- net/mac80211/mesh_plink.c |   22 +++++++++++++++++++++-
- 3 files changed, 60 insertions(+), 1 deletions(-)
+ net/mac80211/tx.c |  108 ++++++++++++++++++++++++------------------------------
+ 1 file changed, 49 insertions(+), 59 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index c16a203..275f2cf 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -387,6 +387,39 @@ void ieee80211_mesh_root_setup(struct
-ieee80211_if_mesh *ifmsh)
- 	}
- }
-
-+void ieee80211s_set_local_ps_mode(struct sta_info *sta, u8 pm)
-+{
-+	switch (pm) {
-+	case NL80211_MESH_POWER_ACTIVE:
-+		sta->local_ps_mode = NL80211_MESH_POWER_ACTIVE;
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		printk(KERN_DEBUG "%s: local STA operates in active mode with STA %pM\n",
-+			sta->sdata->name, sta->sta.addr);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+		break;
-+	case NL80211_MESH_POWER_LIGHT_SLEEP:
-+		sta->local_ps_mode = NL80211_MESH_POWER_LIGHT_SLEEP;
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		printk(KERN_DEBUG "%s: local STA operates in light sleep mode with
-STA %pM\n",
-+				sta->sdata->name, sta->sta.addr);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+		break;
-+	case NL80211_MESH_POWER_DEEP_SLEEP:
-+		sta->local_ps_mode = NL80211_MESH_POWER_DEEP_SLEEP;
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		printk(KERN_DEBUG "%s: local STA operates in deep sleep mode with STA %pM\n",
-+				sta->sdata->name, sta->sta.addr);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+		break;
-+	default:
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		printk(KERN_DEBUG "%s: local STA used invalid power mode to operate
-with STA %pM\n",
-+				sta->sdata->name, sta->sta.addr);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+		break;
-+	}
-+}
-+
- /**
-  * ieee80211_fill_mesh_addresses - fill addresses of a locally
-originated mesh frame
-  * @hdr:    	802.11 frame header
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 188cc86..c67a9f1 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -227,6 +227,7 @@ void ieee80211_stop_mesh(struct
-ieee80211_sub_if_data *sdata);
- void ieee80211_mesh_root_setup(struct ieee80211_if_mesh *ifmsh);
- void ieee80211s_set_sta_ps_mode(struct sta_info *sta,
- 				enum nl80211_mesh_power_mode mode);
-+void ieee80211s_set_local_ps_mode(struct sta_info *sta, u8 pm);
-
- /* Mesh paths */
- int mesh_nexthop_lookup(struct sk_buff *skb,
-@@ -312,6 +313,11 @@ static inline bool mesh_path_sel_is_hwmp(struct
-ieee80211_sub_if_data *sdata)
- 	return sdata->u.mesh.mesh_pp_id == IEEE80211_PATH_PROTOCOL_HWMP;
- }
-
-+static inline bool ieee80211s_has_capab_pm(__le16 capab_info)
-+{
-+	return (capab_info & MESHCONF_CAPAB_PS_LEVEL) != 0;
-+}
-+
- void ieee80211_mesh_notify_scan_completed(struct ieee80211_local *local);
-
- void ieee80211_mesh_quiesce(struct ieee80211_sub_if_data *sdata);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 7e57f5d..a8f92f3 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -248,6 +248,8 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
- {
+--- a/net/mac80211/tx.c	2011-10-07 10:07:23.000000000 +0200
++++ b/net/mac80211/tx.c	2011-10-07 10:17:04.000000000 +0200
+@@ -1539,55 +1539,11 @@ void ieee80211_xmit(struct ieee80211_sub
  	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
-+	struct ieee80211_mgmt *mgmt = container_of(hw_addr,
-+					struct ieee80211_mgmt, sa[0]);
-
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	struct ieee80211_sub_if_data *tmp_sdata;
+ 	int headroom;
+ 	bool may_encrypt;
+ 
  	rcu_read_lock();
-
-@@ -275,8 +277,26 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
- 	if (mesh_peer_accepts_plinks(elems) &&
- 			sta->plink_state == NL80211_PLINK_LISTEN &&
- 			sdata->u.mesh.accepting_plinks &&
--			sdata->u.mesh.mshcfg.auto_open_plinks)
-+			sdata->u.mesh.mshcfg.auto_open_plinks) {
-+		if (ieee80211_has_pm(mgmt->frame_control)) {
-+			__le16 capab_info = mgmt->u.probe_resp.capab_info;
-+			if (ieee80211s_has_capab_pm(capab_info)) {
-+				ieee80211s_set_sta_ps_mode(sta,
-+					NL80211_MESH_POWER_DEEP_SLEEP);
-+			} else {
-+				ieee80211s_set_sta_ps_mode(sta,
-+					NL80211_MESH_POWER_LIGHT_SLEEP);
-+			}
-+		} else {
-+			ieee80211s_set_sta_ps_mode(sta,
-+				NL80211_MESH_POWER_ACTIVE);
+ 
+-	if (unlikely(sdata->vif.type == NL80211_IFTYPE_MONITOR)) {
+-		int hdrlen;
+-		u16 len_rthdr;
+-
+-		info->flags |= IEEE80211_TX_CTL_INJECTED |
+-			       IEEE80211_TX_INTFL_HAS_RADIOTAP;
+-
+-		len_rthdr = ieee80211_get_radiotap_len(skb->data);
+-		hdr = (struct ieee80211_hdr *)(skb->data + len_rthdr);
+-		hdrlen = ieee80211_hdrlen(hdr->frame_control);
+-
+-		/* check the header is complete in the frame */
+-		if (likely(skb->len >= len_rthdr + hdrlen)) {
+-			/*
+-			 * We process outgoing injected frames that have a
+-			 * local address we handle as though they are our
+-			 * own frames.
+-			 * This code here isn't entirely correct, the local
+-			 * MAC address is not necessarily enough to find
+-			 * the interface to use; for that proper VLAN/WDS
+-			 * support we will need a different mechanism.
+-			 */
+-
+-			list_for_each_entry_rcu(tmp_sdata, &local->interfaces,
+-						list) {
+-				if (!ieee80211_sdata_running(tmp_sdata))
+-					continue;
+-				if (tmp_sdata->vif.type ==
+-				    NL80211_IFTYPE_MONITOR ||
+-				    tmp_sdata->vif.type ==
+-				    NL80211_IFTYPE_AP_VLAN ||
+-					tmp_sdata->vif.type ==
+-				    NL80211_IFTYPE_WDS)
+-					continue;
+-				if (compare_ether_addr(tmp_sdata->vif.addr,
+-						       hdr->addr2) == 0) {
+-					sdata = tmp_sdata;
+-					break;
+-				}
+-			}
+-		}
+-	}
+-
+ 	may_encrypt = !(info->flags & IEEE80211_TX_INTFL_DONT_ENCRYPT);
+ 
+ 	headroom = local->tx_headroom;
+@@ -1628,8 +1584,9 @@ netdev_tx_t ieee80211_monitor_start_xmit
+ 		(struct ieee80211_radiotap_header *)skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr;
++	struct ieee80211_sub_if_data *tmp_sdata, *sdata;
+ 	u16 len_rthdr;
+-	u8 *payload;
++	int hdrlen;
+ 
+ 	/*
+ 	 * Frame injection is not allowed if beaconing is not allowed
+@@ -1680,30 +1637,63 @@ netdev_tx_t ieee80211_monitor_start_xmit
+ 	skb_set_network_header(skb, len_rthdr);
+ 	skb_set_transport_header(skb, len_rthdr);
+ 
++	if (skb->len < len_rthdr + 2)
++		goto fail;
++
++	hdr = (struct ieee80211_hdr *)(skb->data + len_rthdr);
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++
++	if (skb->len < len_rthdr + hdrlen)
++		goto fail;
++
+ 	/*
+ 	 * Initialize skb->protocol if the injected frame is a data frame
+ 	 * carrying a rfc1042 header
+ 	 */
+-	if (skb->len > len_rthdr + 2) {
+-		hdr = (struct ieee80211_hdr *)(skb->data + len_rthdr);
+-		if (ieee80211_is_data(hdr->frame_control) &&
+-		    skb->len >= len_rthdr +
+-				ieee80211_hdrlen(hdr->frame_control) +
+-				sizeof(rfc1042_header) + 2) {
+-			payload = (u8 *)hdr +
+-				  ieee80211_hdrlen(hdr->frame_control);
+-			if (compare_ether_addr(payload, rfc1042_header) == 0)
+-				skb->protocol = cpu_to_be16((payload[6] << 8) |
+-							    payload[7]);
+-		}
++	if (ieee80211_is_data(hdr->frame_control) &&
++	    skb->len >= len_rthdr + hdrlen + sizeof(rfc1042_header) + 2) {
++		u8 *payload = (u8 *)hdr + hdrlen;
++
++		if (compare_ether_addr(payload, rfc1042_header) == 0)
++			skb->protocol = cpu_to_be16((payload[6] << 8) |
++						    payload[7]);
+ 	}
+ 
+ 	memset(info, 0, sizeof(*info));
+ 
+-	info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
++	info->flags = IEEE80211_TX_CTL_REQ_TX_STATUS |
++		      IEEE80211_TX_CTL_INJECTED |
++		      IEEE80211_TX_INTFL_HAS_RADIOTAP;
++
++	rcu_read_lock();
++
++	/*
++	 * We process outgoing injected frames that have a local address
++	 * we handle as though they are non-injected frames.
++	 * This code here isn't entirely correct, the local MAC address
++	 * isn't always enough to find the interface to use; for proper
++	 * VLAN/WDS support we will need a different mechanism (which
++	 * likely isn't going to be monitor interfaces).
++	 */
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	list_for_each_entry_rcu(tmp_sdata, &local->interfaces, list) {
++		if (!ieee80211_sdata_running(tmp_sdata))
++			continue;
++		if (tmp_sdata->vif.type == NL80211_IFTYPE_MONITOR ||
++		    tmp_sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
++		    tmp_sdata->vif.type == NL80211_IFTYPE_WDS)
++			continue;
++		if (compare_ether_addr(tmp_sdata->vif.addr, hdr->addr2) == 0) {
++			sdata = tmp_sdata;
++			break;
 +		}
-+
-+		ieee80211s_set_local_ps_mode(sta,
-+			sdata->u.mesh.mshcfg.power_mode);
-+
- 		mesh_plink_open(sta);
 +	}
+ 
+ 	/* pass the radiotap header up to xmit */
+-	ieee80211_xmit(IEEE80211_DEV_TO_SUB_IF(dev), skb);
++	ieee80211_xmit(sdata, skb);
++	rcu_read_unlock();
++
+ 	return NETDEV_TX_OK;
+ 
+ fail:
 
- 	rcu_read_unlock();
- }
--- 
-1.7.3.4
+
