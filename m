@@ -1,88 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:57972 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932751Ab1JZMSL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 08:18:11 -0400
-Received: by mail-qw0-f41.google.com with SMTP id c11so1438742qad.28
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 05:18:10 -0700 (PDT)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51316 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759867Ab1JGLr4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Oct 2011 07:47:56 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 06/14] ath9k_hw: Add support to reuse Carrier leak calibration
+Date: Fri, 7 Oct 2011 17:17:11 +0530
+Message-ID: <1317988039-28632-6-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111007_134758_407330_A4BA90D3)
+In-Reply-To: <1317988039-28632-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1317988039-28632-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CACVrECHsEQ5fNeeZsaFUh=oHy9Kgc_ZLbnn4-fypSBhCbooq-g@mail.gmail.com>
-References: <201110251910.37638.david.goodenough@btconnect.com>
-	<4EA70429.8070505@candelatech.com>
-	<CACVrECHsEQ5fNeeZsaFUh=oHy9Kgc_ZLbnn4-fypSBhCbooq-g@mail.gmail.com>
-Date: Wed, 26 Oct 2011 14:18:10 +0200
-Message-ID: <CANJm+iAwgFEBFE32itAc0OqQaODoqTtXJ8fp2myb=wuWA46keg@mail.gmail.com> (sfid-20111026_141815_675359_9F2D3F40)
-Subject: Re: How to find the phy's associated with a wireless dev
-From: "Divinsky, Yonatan" <yoni.divinsky@ti.com>
-To: David Goodenough <david.goodenough@btconnect.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 26, 2011 at 12:32 PM, Mariana Gambande <mlgambande@gmail.com> wrote:
->
-> Hello Davis,
-> Maybe is easier for you to create an udev rule to rename your wireless
-> devices always the same way. An example:
->
-> file /etc/udev/rules.d/wireless-devices.rules:
->
-> KERNEL=="phy*", SYSFS{address}=="00:xx:xx:xx:xx:xx", NAME="phy0"
-> KERNEL=="phy*", SYSFS{address}=="00:xx:xx:xx:xx:xx", NAME="phy1"
->
-> You can see more information here
-> http://www.science.uva.nl/research/air/wiki/LogicalInterfaceNames?show_comments=1
->
-> This works fine for me :)
->
->
-> 2011/10/25 Ben Greear <greearb@candelatech.com>
-> >
-> > On 10/25/2011 11:10 AM, David Goodenough wrote:
-> >>
-> >> I notice that if I remove the kernel module for a wireless
-> >> interface and reload it, that a new phy is defined.  This is
-> >> confusing my script that sets up interfaces, in particular I
-> >> need to set the distance for a long distance link and that has
-> >> to be done on the phy not the dev.
-> >>
-> >> I am doing this from a script so I guess it has to be a query
-> >> using iw, but I can not see which one to use.
-> >
-> > On a recent kernel:
-> > cat /sys/class/net/wlan0/phy80211/name
-> >
+This patch adds support to reuse Carrier leak calibration
+during fast channel change for AR9480 chips.
 
-If your kernel does not support it you could just do:
-iw phy | grep -o -m1 -e 'phy[0-9]'
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |   46 +++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/hw.c           |    4 ++-
+ drivers/net/wireless/ath/ath9k/hw.h           |    3 ++
+ 3 files changed, 50 insertions(+), 3 deletions(-)
 
-Thanks,
-Yoni
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 6d68566..5f40638 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -905,8 +905,23 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_hw_cal_data *caldata = ah->caldata;
+-	bool txiqcal_done = false;
+-	bool is_reusable = true;
++	bool txiqcal_done = false, txclcal_done = false;
++	bool is_reusable = true, txclcal_enabled;
++	u32 cl_idx[AR9300_MAX_CHAINS] = { AR_PHY_CL_TAB_0,
++					  AR_PHY_CL_TAB_1,
++					  AR_PHY_CL_TAB_2 };
++
++	txclcal_enabled = !!(REG_READ(ah, AR_PHY_CL_CAL_CTL) &
++				      AR_PHY_CL_CAL_ENABLE);
++
++	if (txclcal_enabled) {
++		if (caldata && caldata->done_txclcal_once)
++			REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL,
++				    AR_PHY_CL_CAL_ENABLE);
++		else
++			REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL,
++				    AR_PHY_CL_CAL_ENABLE);
++	}
+ 
+ 	/* Do Tx IQ Calibration */
+ 	REG_RMW_FIELD(ah, AR_PHY_TX_IQCAL_CONTROL_1,
+@@ -950,6 +965,33 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 	else if (caldata && caldata->done_txiqcal_once)
+ 		ar9003_hw_tx_iq_cal_reload(ah);
+ 
++#define CL_TAB_ENTRY(reg_base)	(reg_base + (4 * j))
++	if (caldata && txclcal_enabled) {
++		int i, j;
++		txclcal_done = !!(REG_READ(ah, AR_PHY_AGC_CONTROL) &
++					   AR_PHY_AGC_CONTROL_CLC_SUCCESS);
++		if (caldata->done_txclcal_once) {
++			for (i = 0; i < AR9300_MAX_CHAINS; i++) {
++				if (!(ah->txchainmask & (1 << i)))
++					continue;
++				for (j = 0; j < MAX_CL_TAB_ENTRY; j++)
++					REG_WRITE(ah, CL_TAB_ENTRY(cl_idx[i]),
++						  caldata->tx_clcal[i][j]);
++			}
++		} else if (is_reusable && txclcal_done) {
++			for (i = 0; i < AR9300_MAX_CHAINS; i++) {
++				if (!(ah->txchainmask & (1 << i)))
++					continue;
++				for (j = 0; j < MAX_CL_TAB_ENTRY; j++)
++					caldata->tx_clcal[i][j] =
++						REG_READ(ah,
++						  CL_TAB_ENTRY(cl_idx[i]));
++			}
++			caldata->done_txclcal_once = true;
++		}
++	}
++#undef CL_TAB_ENTRY
++
+ 	ath9k_hw_loadnf(ah, chan);
+ 	ath9k_hw_start_nfcal(ah, true);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index a71e14a..e2cae1a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1714,8 +1714,10 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 
+ 	ath9k_hw_init_bb(ah, chan);
+ 
+-	if (caldata)
++	if (caldata) {
+ 		caldata->done_txiqcal_once = false;
++		caldata->done_txclcal_once = false;
++	}
+ 	if (!ath9k_hw_init_cal(ah, chan))
+ 		return -EIO;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 04db968..0a8aef9 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -338,6 +338,7 @@ enum ath9k_int {
+ 	 CHANNEL_HT40MINUS)
+ 
+ #define MAX_IQCAL_MEASUREMENT	8
++#define MAX_CL_TAB_ENTRY	16
+ 
+ struct ath9k_hw_cal_data {
+ 	u16 channel;
+@@ -349,10 +350,12 @@ struct ath9k_hw_cal_data {
+ 	bool nfcal_pending;
+ 	bool nfcal_interference;
+ 	bool done_txiqcal_once;
++	bool done_txclcal_once;
+ 	u16 small_signal_gain[AR9300_MAX_CHAINS];
+ 	u32 pa_table[AR9300_MAX_CHAINS][PAPRD_TABLE_SZ];
+ 	u32 num_measures[AR9300_MAX_CHAINS];
+ 	int tx_corr_coeff[MAX_IQCAL_MEASUREMENT][AR9300_MAX_CHAINS];
++	u32 tx_clcal[AR9300_MAX_CHAINS][MAX_CL_TAB_ENTRY];
+ 	struct ath9k_nfcal_hist nfCalHist[NUM_NF_READINGS];
+ };
+ 
+-- 
+1.7.7
 
->
-> > Thanks,
-> > Ben
-> >
-> >
-> >>
-> >> David
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >
-> > --
-> > Ben Greear <greearb@candelatech.com>
-> > Candela Technologies Inc  http://www.candelatech.com
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
