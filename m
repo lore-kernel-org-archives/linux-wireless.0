@@ -1,82 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41414 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934298Ab1JEJ4Y (ORCPT
+Received: from calzone.tip.net.au ([203.10.76.15]:43497 "EHLO
+	calzone.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754745Ab1JGWmU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 05:56:24 -0400
-Received: by mail-bw0-f46.google.com with SMTP id zt4so1903568bkb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:56:23 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 24/29] wl12xx: move ps_compl into wlvif
-Date: Wed,  5 Oct 2011 11:56:01 +0200
-Message-Id: <1317808566-18857-25-git-send-email-eliad@wizery.com> (sfid-20111005_115629_919187_925DD707)
-In-Reply-To: <1317808566-18857-1-git-send-email-eliad@wizery.com>
-References: <1317808566-18857-1-git-send-email-eliad@wizery.com>
+	Fri, 7 Oct 2011 18:42:20 -0400
+Date: Sat, 8 Oct 2011 09:42:12 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netfilter-devel@vger.kernel.org, sparclinux@vger.kernel.org,
+	linux-ide@vger.kernel.org
+Subject: Re: moving GIT back to kernel.org...
+Message-Id: <20111008094212.e3342930c1833f73ef602a3e@canb.auug.org.au> (sfid-20111008_004233_209456_1667950A)
+In-Reply-To: <20111007.155902.916470368193047875.davem@davemloft.net>
+References: <20111007.145703.842130763413648388.davem@davemloft.net>
+	<20111007.155902.916470368193047875.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Sat__8_Oct_2011_09_42_12_+1100_U2vpBnvvcMSJsjmr"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-move ps_compl into the per-interface data, rather than
-being global.
+--Signature=_Sat__8_Oct_2011_09_42_12_+1100_U2vpBnvvcMSJsjmr
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/event.c  |    6 +++---
- drivers/net/wireless/wl12xx/main.c   |    2 +-
- drivers/net/wireless/wl12xx/wl12xx.h |    2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+Hi Dave,
 
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index 1ea508b..fac4eae 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -149,9 +149,9 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
- 			/* enable beacon early termination */
- 			ret = wl1271_acx_bet_enable(wl, wlvif, true);
- 
--		if (wl->ps_compl) {
--			complete(wl->ps_compl);
--			wl->ps_compl = NULL;
-+		if (wlvif->ps_compl) {
-+			complete(wlvif->ps_compl);
-+			wlvif->ps_compl = NULL;
- 		}
- 		break;
- 	default:
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 4fe7662..1d3ed60 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1636,7 +1636,7 @@ static int wl1271_configure_suspend_sta(struct wl1271 *wl,
- 	if (!test_bit(WL1271_FLAG_PSM, &wl->flags)) {
- 		DECLARE_COMPLETION_ONSTACK(compl);
- 
--		wl->ps_compl = &compl;
-+		wlvif->ps_compl = &compl;
- 		ret = wl1271_ps_set_mode(wl, wlvif, STATION_POWER_SAVE_MODE,
- 				   wlvif->basic_rate, true);
- 		if (ret < 0)
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index d016509..d153b24 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -508,7 +508,6 @@ struct wl1271 {
- 	struct timer_list rx_streaming_timer;
- 
- 	struct completion *elp_compl;
--	struct completion *ps_compl;
- 	struct delayed_work elp_work;
- 
- 	/* counter for ps-poll delivery failures */
-@@ -650,6 +649,7 @@ struct wl12xx_vif {
- 	/* Session counter for the chipset */
- 	int session_counter;
- 
-+	struct completion *ps_compl;
- 	struct delayed_work pspoll_work;
- };
- 
--- 
-1.7.6.401.g6a319
+On Fri, 07 Oct 2011 15:59:02 -0400 (EDT) David Miller <davem@davemloft.net>=
+ wrote:
+>
+> Ok, they are now online, please update your URLs.
+>=20
+> git://git.kernel.org/pub/scm/linux/kernel/git/davem/net.git
+> git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git
 
+I have switched to these.
+
+> git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc.git
+> git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git
+
+You used to have sparc-next and ide-next (and the above used to be your
+"current release fixes" trees) ...
+
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Sat__8_Oct_2011_09_42_12_+1100_U2vpBnvvcMSJsjmr
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBCAAGBQJOj4BEAAoJEECxmPOUX5FEQVwP/A7oh9VbfzDWEzAuYwI/uIp/
+S2ht0Bc4xo65zFNPdXTQPzQgIfmbcLzXidUejGWQ6o45W8uxDkBdChy3vWiZltGP
+BYw1ppIL3mfocsERebdD1p8vJ6x9+Cn88bXlvV1rTyMQKQSjuF4pSHmIUzHDiGJk
+GPnsMgSYq03AzvML4eQcbHRoQGARb4S1N8tayAKnxasYyOKtnlZ5SFpwfuBmRE3l
+wVAKSW3iTelmZAHAldlLWMiT9zgU4m4PvOYFjM95QuvLxk5TjLJAz69Pw6FjhVwf
+jVeu/G7Crr7LdWlUWswTdyY9XfVbDfUpTH2TfZ+hfsszYWEOYN8n1DQ4RsIyV4xJ
+gXpWomzfWw+gozQwpUT9zwpZmHBAj2PrwFfMa1ZI44PS3PuzjrrEznh3US9RXt8K
+duXa0kfpHXGFr93l48bjMvEMXGreckWZ7CKLKgq8JRn/g4m7l4QSPvW+tJJVEfXO
+exxSXlv3piKsKUauy6b4u+55cb+Xu72mn31BvwVwaaU/ZSFoOuP/6b0YjLyyIFQ9
+3fHQFEOP3O7IxTG/TiaKwZ1eydAn1tTQ1GIju2dqNiNWDyFOPR1SRs0X0dXjXujS
+u1dVuwvp0OscmaT7WIsXHoMvfNI9OOwrZ3e1KzPPyNo9wunBrRKkZq88Q2Pes60O
+zEL/ep8769kZcOScNC6g
+=t9+U
+-----END PGP SIGNATURE-----
+
+--Signature=_Sat__8_Oct_2011_09_42_12_+1100_U2vpBnvvcMSJsjmr--
