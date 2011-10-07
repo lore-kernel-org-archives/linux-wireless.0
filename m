@@ -1,267 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:44544 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759084Ab1JFTLQ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51324 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759867Ab1JGLsG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Oct 2011 15:11:16 -0400
-Received: by mail-bw0-f53.google.com with SMTP id zt12so4794754bkb.40
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 12:11:14 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: coelho@ti.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/8] wl12xx: add an spi glue struct to keep wl and device side-by-side
-Date: Thu,  6 Oct 2011 22:10:53 +0300
-Message-Id: <1317928259-26437-3-git-send-email-coelho@ti.com> (sfid-20111006_211121_304446_5BF1F3B6)
-In-Reply-To: <1317928259-26437-1-git-send-email-coelho@ti.com>
-References: <1317928259-26437-1-git-send-email-coelho@ti.com>
+	Fri, 7 Oct 2011 07:48:06 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 07/14] ath9k_hw: Cleanup Tx calibrations for AR9003 chips
+Date: Fri, 7 Oct 2011 17:17:12 +0530
+Message-ID: <1317988039-28632-7-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111007_134810_512903_80C0C0E9)
+In-Reply-To: <1317988039-28632-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1317988039-28632-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felipe Balbi <balbi@ti.com>
+Currently Tx IQ calibration is enabled by default for all AR9003
+chips. But for AR9480, the calibration status should be read from
+chip after processing ini. And also the carrier leak calibration
+status is checked during init cal. As the init_cal is being called
+for fast channel change too, the tx_cl status only be read after
+full reset. Hence moving that into process ini function.
 
-In order to fully abstract the bus, we need to save the device
-structure *beside* wl1271, instead of inside it.
-
-This will help re-structuring the driver so that we avoid the
-duplicated code in the bus modules.
-
-Signed-off-by: Felipe Balbi <balbi@ti.com>
-[forward-ported and cleaned up and rephrased commit message]
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/wl12xx/spi.c |   67 ++++++++++++++++++++++++++-----------
- 1 files changed, 47 insertions(+), 20 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |   27 +++++++++++++------------
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c   |   12 +++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h   |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c           |    5 ++++
+ drivers/net/wireless/ath/ath9k/hw.h           |    7 ++++++
+ 5 files changed, 39 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
-index 0f97186..16f0c71 100644
---- a/drivers/net/wireless/wl12xx/spi.c
-+++ b/drivers/net/wireless/wl12xx/spi.c
-@@ -69,14 +69,19 @@
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 5f40638..3506e7b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -906,15 +906,13 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_hw_cal_data *caldata = ah->caldata;
+ 	bool txiqcal_done = false, txclcal_done = false;
+-	bool is_reusable = true, txclcal_enabled;
++	bool is_reusable = true;
++	int i, j;
+ 	u32 cl_idx[AR9300_MAX_CHAINS] = { AR_PHY_CL_TAB_0,
+ 					  AR_PHY_CL_TAB_1,
+ 					  AR_PHY_CL_TAB_2 };
  
- #define WSPI_MAX_NUM_OF_CHUNKS (WL1271_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE)
+-	txclcal_enabled = !!(REG_READ(ah, AR_PHY_CL_CAL_CTL) &
+-				      AR_PHY_CL_CAL_ENABLE);
+-
+-	if (txclcal_enabled) {
++	if (ah->enabled_cals & TX_CL_CAL) {
+ 		if (caldata && caldata->done_txclcal_once)
+ 			REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL,
+ 				    AR_PHY_CL_CAL_ENABLE);
+@@ -923,6 +921,9 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 				    AR_PHY_CL_CAL_ENABLE);
+ 	}
  
--static inline struct spi_device *wl_to_spi(struct wl1271 *wl)
-+struct wl12xx_spi_glue {
-+	struct device *dev;
-+	struct wl1271 *wl;
++	if (!(ah->enabled_cals & TX_IQ_CAL))
++		goto skip_tx_iqcal;
++
+ 	/* Do Tx IQ Calibration */
+ 	REG_RMW_FIELD(ah, AR_PHY_TX_IQCAL_CONTROL_1,
+ 		      AR_PHY_TX_IQCAL_CONTROL_1_IQCORR_I_Q_COFF_DELPT,
+@@ -932,7 +933,7 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 	 * For AR9485 or later chips, TxIQ cal runs as part of
+ 	 * AGC calibration
+ 	 */
+-	if (AR_SREV_9485_OR_LATER(ah) && !AR_SREV_9340(ah)) {
++	if (ah->enabled_cals & TX_IQ_ON_AGC_CAL) {
+ 		if (caldata && !caldata->done_txiqcal_once)
+ 			REG_SET_BIT(ah, AR_PHY_TX_IQCAL_CONTROL_0,
+ 				    AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL);
+@@ -940,13 +941,14 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 			REG_CLR_BIT(ah, AR_PHY_TX_IQCAL_CONTROL_0,
+ 				    AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL);
+ 		txiqcal_done = true;
+-	} else {
+-		txiqcal_done = ar9003_hw_tx_iq_cal_run(ah);
+-		REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
+-		udelay(5);
+-		REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
++		goto skip_tx_iqcal;
+ 	}
++	txiqcal_done = ar9003_hw_tx_iq_cal_run(ah);
++	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
++	udelay(5);
++	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
+ 
++skip_tx_iqcal:
+ 	/* Calibrate the AGC */
+ 	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
+ 		  REG_READ(ah, AR_PHY_AGC_CONTROL) |
+@@ -966,8 +968,7 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 		ar9003_hw_tx_iq_cal_reload(ah);
+ 
+ #define CL_TAB_ENTRY(reg_base)	(reg_base + (4 * j))
+-	if (caldata && txclcal_enabled) {
+-		int i, j;
++	if (caldata && (ah->enabled_cals & TX_CL_CAL)) {
+ 		txclcal_done = !!(REG_READ(ah, AR_PHY_AGC_CONTROL) &
+ 					   AR_PHY_AGC_CONTROL_CLC_SUCCESS);
+ 		if (caldata->done_txclcal_once) {
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index c01ee82..3bf7c81 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -702,6 +702,18 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
+ 				 channel->max_power * 2,
+ 				 min((u32) MAX_RATE_POWER,
+ 				 (u32) regulatory->power_limit), false);
++	if (AR_SREV_9480(ah)) {
++		if (REG_READ_FIELD(ah, AR_PHY_TX_IQCAL_CONTROL_0,
++				AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL))
++			ah->enabled_cals |= TX_IQ_CAL;
++		else
++			ah->enabled_cals &= ~TX_IQ_CAL;
++
++		if (REG_READ(ah, AR_PHY_CL_CAL_CTL) & AR_PHY_CL_CAL_ENABLE)
++			ah->enabled_cals |= TX_CL_CAL;
++		else
++			ah->enabled_cals &= ~TX_CL_CAL;
++	}
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index c6ed51f..ef90ab7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -826,6 +826,7 @@
+ #define AR_PHY_SPECTRAL_SCAN_SHORT_REPEAT_S 24
+ #define AR_PHY_CHANNEL_STATUS_RX_CLEAR      0x00000004
+ #define AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL                   0x80000000
++#define AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL_S                         31
+ #define AR_PHY_TX_IQCAL_CONTROL_1_IQCORR_I_Q_COFF_DELPT             0x01fc0000
+ #define AR_PHY_TX_IQCAL_CONTROL_1_IQCORR_I_Q_COFF_DELPT_S                   18
+ #define AR_PHY_TX_IQCAL_START_DO_CAL	    0x00000001
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index e2cae1a..067f968 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2328,6 +2328,11 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		rx_chainmask >>= 1;
+ 	}
+ 
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
++		ah->enabled_cals |= TX_IQ_CAL;
++		if (!AR_SREV_9330(ah))
++			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
++	}
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 0a8aef9..5ac013a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -642,6 +642,12 @@ struct ath_nf_limits {
+ 	s16 nominal;
+ };
+ 
++enum ath_cal_list {
++	TX_IQ_CAL         =	BIT(0),
++	TX_IQ_ON_AGC_CAL  =	BIT(1),
++	TX_CL_CAL         =	BIT(2),
 +};
 +
-+static inline struct wl12xx_spi_glue *wl_to_glue(struct wl1271 *wl)
- {
- 	return wl->if_priv;
- }
+ /* ah_flags */
+ #define AH_USE_EEPROM   0x1
+ #define AH_UNPLUGGED    0x2 /* The card has been physically removed. */
+@@ -741,6 +747,7 @@ struct ath_hw {
+ 		int32_t sign[AR5416_MAX_CHAINS];
+ 	} meas3;
+ 	u16 cal_samples;
++	u8 enabled_cals;
  
- static struct device *wl1271_spi_wl_to_dev(struct wl1271 *wl)
- {
--	return &(wl_to_spi(wl)->dev);
-+	return wl_to_glue(wl)->dev;
- }
- 
- static void wl1271_spi_disable_interrupts(struct wl1271 *wl)
-@@ -91,6 +96,7 @@ static void wl1271_spi_enable_interrupts(struct wl1271 *wl)
- 
- static void wl1271_spi_reset(struct wl1271 *wl)
- {
-+	struct wl12xx_spi_glue *glue = wl_to_glue(wl);
- 	u8 *cmd;
- 	struct spi_transfer t;
- 	struct spi_message m;
-@@ -110,7 +116,7 @@ static void wl1271_spi_reset(struct wl1271 *wl)
- 	t.len = WSPI_INIT_CMD_LEN;
- 	spi_message_add_tail(&t, &m);
- 
--	spi_sync(wl_to_spi(wl), &m);
-+	spi_sync(to_spi_device(glue->dev), &m);
- 
- 	wl1271_dump(DEBUG_SPI, "spi reset -> ", cmd, WSPI_INIT_CMD_LEN);
- 	kfree(cmd);
-@@ -118,6 +124,7 @@ static void wl1271_spi_reset(struct wl1271 *wl)
- 
- static void wl1271_spi_init(struct wl1271 *wl)
- {
-+	struct wl12xx_spi_glue *glue = wl_to_glue(wl);
- 	u8 crc[WSPI_INIT_CMD_CRC_LEN], *cmd;
- 	struct spi_transfer t;
- 	struct spi_message m;
-@@ -165,7 +172,7 @@ static void wl1271_spi_init(struct wl1271 *wl)
- 	t.len = WSPI_INIT_CMD_LEN;
- 	spi_message_add_tail(&t, &m);
- 
--	spi_sync(wl_to_spi(wl), &m);
-+	spi_sync(to_spi_device(glue->dev), &m);
- 	wl1271_dump(DEBUG_SPI, "spi init -> ", cmd, WSPI_INIT_CMD_LEN);
- 	kfree(cmd);
- }
-@@ -174,6 +181,7 @@ static void wl1271_spi_init(struct wl1271 *wl)
- 
- static int wl1271_spi_read_busy(struct wl1271 *wl)
- {
-+	struct wl12xx_spi_glue *glue = wl_to_glue(wl);
- 	struct spi_transfer t[1];
- 	struct spi_message m;
- 	u32 *busy_buf;
-@@ -194,7 +202,7 @@ static int wl1271_spi_read_busy(struct wl1271 *wl)
- 		t[0].len = sizeof(u32);
- 		t[0].cs_change = true;
- 		spi_message_add_tail(&t[0], &m);
--		spi_sync(wl_to_spi(wl), &m);
-+		spi_sync(to_spi_device(glue->dev), &m);
- 
- 		if (*busy_buf & 0x1)
- 			return 0;
-@@ -208,6 +216,7 @@ static int wl1271_spi_read_busy(struct wl1271 *wl)
- static void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
- 				size_t len, bool fixed)
- {
-+	struct wl12xx_spi_glue *glue = wl_to_glue(wl);
- 	struct spi_transfer t[2];
- 	struct spi_message m;
- 	u32 *busy_buf;
-@@ -243,7 +252,7 @@ static void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
- 		t[1].cs_change = true;
- 		spi_message_add_tail(&t[1], &m);
- 
--		spi_sync(wl_to_spi(wl), &m);
-+		spi_sync(to_spi_device(glue->dev), &m);
- 
- 		if (!(busy_buf[WL1271_BUSY_WORD_CNT - 1] & 0x1) &&
- 		    wl1271_spi_read_busy(wl)) {
-@@ -259,7 +268,7 @@ static void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
- 		t[0].cs_change = true;
- 		spi_message_add_tail(&t[0], &m);
- 
--		spi_sync(wl_to_spi(wl), &m);
-+		spi_sync(to_spi_device(glue->dev), &m);
- 
- 		wl1271_dump(DEBUG_SPI, "spi_read cmd -> ", cmd, sizeof(*cmd));
- 		wl1271_dump(DEBUG_SPI, "spi_read buf <- ", buf, chunk_len);
-@@ -274,6 +283,7 @@ static void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
- static void wl1271_spi_raw_write(struct wl1271 *wl, int addr, void *buf,
- 			  size_t len, bool fixed)
- {
-+	struct wl12xx_spi_glue *glue = wl_to_glue(wl);
- 	struct spi_transfer t[2 * WSPI_MAX_NUM_OF_CHUNKS];
- 	struct spi_message m;
- 	u32 commands[WSPI_MAX_NUM_OF_CHUNKS];
-@@ -318,7 +328,7 @@ static void wl1271_spi_raw_write(struct wl1271 *wl, int addr, void *buf,
- 		cmd++;
- 	}
- 
--	spi_sync(wl_to_spi(wl), &m);
-+	spi_sync(to_spi_device(glue->dev), &m);
- }
- 
- static irqreturn_t wl1271_hardirq(int irq, void *cookie)
-@@ -362,11 +372,12 @@ static struct wl1271_if_operations spi_ops = {
- 
- static int __devinit wl1271_probe(struct spi_device *spi)
- {
-+	struct wl12xx_spi_glue *glue;
- 	struct wl12xx_platform_data *pdata;
- 	struct ieee80211_hw *hw;
- 	struct wl1271 *wl;
- 	unsigned long irqflags;
--	int ret;
-+	int ret = -ENOMEM;
- 
- 	pdata = spi->dev.platform_data;
- 	if (!pdata) {
-@@ -374,14 +385,25 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 		return -ENODEV;
- 	}
- 
-+	glue = kzalloc(sizeof(*glue), GFP_KERNEL);
-+	if (!glue) {
-+		wl1271_error("can't allocate glue");
-+		goto out;
-+	}
-+
- 	hw = wl1271_alloc_hw();
--	if (IS_ERR(hw))
--		return PTR_ERR(hw);
-+	if (IS_ERR(hw)) {
-+		ret = PTR_ERR(hw);
-+		goto out_free_glue;
-+	}
- 
- 	wl = hw->priv;
- 
--	dev_set_drvdata(&spi->dev, wl);
--	wl->if_priv = spi;
-+	glue->dev = &spi->dev;
-+	glue->wl = wl;
-+
-+	spi_set_drvdata(spi, glue);
-+	wl->if_priv = glue;
- 
- 	wl->if_ops = &spi_ops;
- 
-@@ -392,14 +414,14 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	ret = spi_setup(spi);
- 	if (ret < 0) {
- 		wl1271_error("spi_setup failed");
--		goto out_free;
-+		goto out_free_hw;
- 	}
- 
- 	wl->set_power = pdata->set_power;
- 	if (!wl->set_power) {
- 		wl1271_error("set power function missing in platform data");
- 		ret = -ENODEV;
--		goto out_free;
-+		goto out_free_hw;
- 	}
- 
- 	wl->ref_clock = pdata->board_ref_clock;
-@@ -415,7 +437,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	if (wl->irq < 0) {
- 		wl1271_error("irq missing in platform data");
- 		ret = -ENODEV;
--		goto out_free;
-+		goto out_free_hw;
- 	}
- 
- 	ret = request_threaded_irq(wl->irq, wl1271_hardirq, wl1271_irq,
-@@ -423,7 +445,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 				   DRIVER_NAME, wl);
- 	if (ret < 0) {
- 		wl1271_error("request_irq() failed: %d", ret);
--		goto out_free;
-+		goto out_free_hw;
- 	}
- 
- 	disable_irq(wl->irq);
-@@ -438,22 +460,27 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 
- 	return 0;
- 
-- out_irq:
-+out_irq:
- 	free_irq(wl->irq, wl);
- 
-- out_free:
-+out_free_hw:
- 	wl1271_free_hw(wl);
- 
-+out_free_glue:
-+	kfree(glue);
-+out:
- 	return ret;
- }
- 
- static int __devexit wl1271_remove(struct spi_device *spi)
- {
--	struct wl1271 *wl = dev_get_drvdata(&spi->dev);
-+	struct wl12xx_spi_glue *glue = spi_get_drvdata(spi);
-+	struct wl1271 *wl = glue->wl;
- 
- 	wl1271_unregister_hw(wl);
- 	free_irq(wl->irq, wl);
- 	wl1271_free_hw(wl);
-+	kfree(glue);
- 
- 	return 0;
- }
+ 	u32 sta_id1_defaults;
+ 	u32 misc_mode;
 -- 
-1.7.1
+1.7.7
 
