@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:55307 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750923Ab1JZEeZ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52862 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752712Ab1JGM5T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 00:34:25 -0400
-Date: Wed, 26 Oct 2011 13:34:19 +0900
-From: Norbert Preining <preining@logic.at>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-Subject: Re: iwlagn is getting very shaky
-Message-ID: <20111026043419.GA30368@gamma.logic.tuwien.ac.at> (sfid-20111026_063537_785085_B2252C3B)
-References: <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111020045927.GB23044@gamma.logic.tuwien.ac.at> <1319119852.2111.2.camel@wwguy-ubuntu> <20111021012442.GB26758@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110231424500.17218@chino.kir.corp.google.com> <20111026025014.GB24956@gamma.logic.tuwien.ac.at> <1319601333.14693.19.camel@wwguy-ubuntu> <20111026040332.GF24956@gamma.logic.tuwien.ac.at> <1319601654.14693.20.camel@wwguy-ubuntu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1319601654.14693.20.camel@wwguy-ubuntu>
+	Fri, 7 Oct 2011 08:57:19 -0400
+Message-Id: <20111007125640.149058520@sipsolutions.net> (sfid-20111007_145722_656487_FF477BB9)
+Date: Fri, 07 Oct 2011 14:55:39 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] mac80211: dont adjust truesize
+References: <20111007125538.433891720@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Di, 25 Okt 2011, wwguy wrote:
-> > But *I* cannot be sure about it ;-)
-> > 
-> Are you seeing this without suspend/resume?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yes. I just shut down and started, and the same happens again. If you
-need the dmesg output let me know.
+There's no need to adjust truesize.
 
-Best wishes
+The history of this was that we always ran into
+skb_truesize_bug (via skb_truesize_check) which
+has since been removed in commit 92a0acce186cd.
+skb_truesize_check() checked that truesize  was
+bigger or equal to the actual allocation, which
+would trigger in mac80211 due to header adding.
+The check no longer exists and we shouldn't be
+messing with the truesize anwyay.
 
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-RUNCORN (n.)
-A peeble (q.v.) which is larger that a belper (q.v.)
-			--- Douglas Adams, The Meaning of Liff
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c |    3 ---
+ 1 file changed, 3 deletions(-)
+
+--- a/net/mac80211/tx.c	2011-10-07 14:50:23.000000000 +0200
++++ b/net/mac80211/tx.c	2011-10-07 14:50:27.000000000 +0200
+@@ -1402,9 +1402,6 @@ static int ieee80211_skb_resize(struct i
+ 		return -ENOMEM;
+ 	}
+ 
+-	/* update truesize too */
+-	skb->truesize += head_need + tail_need;
+-
+ 	return 0;
+ }
+ 
+
+
