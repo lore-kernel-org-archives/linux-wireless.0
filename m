@@ -1,56 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21900 "EHLO mx1.redhat.com"
+Received: from nbd.name ([46.4.11.11]:53197 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751119Ab1JLISG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 04:18:06 -0400
-Date: Wed, 12 Oct 2011 10:16:35 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] iwlagn: fix priv->cfg->ht_params NULL pointer dereference
-Message-ID: <20111012081634.GA2675@redhat.com> (sfid-20111012_101810_838663_5DCDFEF2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1751824Ab1JHSGc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Oct 2011 14:06:32 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v3 4/4] ath9k_hw: remove EEP_REG_1
+Date: Sat,  8 Oct 2011 20:06:22 +0200
+Message-Id: <1318097182-78364-4-git-send-email-nbd@openwrt.org> (sfid-20111008_200635_495907_7A19A120)
+In-Reply-To: <1318097182-78364-3-git-send-email-nbd@openwrt.org>
+References: <1318097182-78364-1-git-send-email-nbd@openwrt.org>
+ <1318097182-78364-2-git-send-email-nbd@openwrt.org>
+ <1318097182-78364-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fix regression introduced by commit:
+It was previously used for current_rd_ext
 
-commit 15b3f3b006b42a678523cad989bfd60b76bf4403
-Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Date:   Fri Jun 3 07:54:13 2011 -0700
-
-    iwlagn: set smps mode after assoc for 1000 device
-
-Also remove unneeded brackets on the way.
-
-Address:
-https://bugzilla.redhat.com/show_bug.cgi?id=744155
-
-If fix will not get 3.1 release, it should be applied in 3.1 stable.
-
-Cc: stable@kernel.org # 3.1+
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 --
+ drivers/net/wireless/ath/ath9k/eeprom.h        |    1 -
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c     |    2 --
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c   |    2 --
+ drivers/net/wireless/ath/ath9k/eeprom_def.c    |    2 --
+ 5 files changed, 0 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index ca632f9..5004342 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -296,8 +296,8 @@ static int iwlagn_rxon_connect(struct iwl_priv *priv,
- 		return ret;
- 	}
- 
--	if ((ctx->vif && ctx->vif->type == NL80211_IFTYPE_STATION) &&
--	    priv->cfg->ht_params->smps_mode)
-+	if (ctx->vif && ctx->vif->type == NL80211_IFTYPE_STATION &&
-+	    priv->cfg->ht_params && priv->cfg->ht_params->smps_mode)
- 		ieee80211_request_smps(ctx->vif,
- 				       priv->cfg->ht_params->smps_mode);
- 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index d7a5ca7..bf08acc 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -2995,8 +2995,6 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
+ 		return get_unaligned_be16(eep->macAddr + 4);
+ 	case EEP_REG_0:
+ 		return le16_to_cpu(pBase->regDmn[0]);
+-	case EEP_REG_1:
+-		return le16_to_cpu(pBase->regDmn[1]);
+ 	case EEP_OP_CAP:
+ 		return pBase->deviceCap;
+ 	case EEP_OP_MODE:
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 909a224..3721770 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -220,7 +220,6 @@ enum eeprom_param {
+ 	EEP_MAC_MID,
+ 	EEP_MAC_LSW,
+ 	EEP_REG_0,
+-	EEP_REG_1,
+ 	EEP_OP_CAP,
+ 	EEP_OP_MODE,
+ 	EEP_RF_SILENT,
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index ab6811d..9a7520f 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -322,8 +322,6 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
+ 		return get_unaligned_be16(pBase->macAddr + 4);
+ 	case EEP_REG_0:
+ 		return pBase->regDmn[0];
+-	case EEP_REG_1:
+-		return pBase->regDmn[1];
+ 	case EEP_OP_CAP:
+ 		return pBase->deviceCap;
+ 	case EEP_OP_MODE:
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index 90d771f..4f5c50a 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -308,8 +308,6 @@ static u32 ath9k_hw_ar9287_get_eeprom(struct ath_hw *ah,
+ 		return get_unaligned_be16(pBase->macAddr + 4);
+ 	case EEP_REG_0:
+ 		return pBase->regDmn[0];
+-	case EEP_REG_1:
+-		return pBase->regDmn[1];
+ 	case EEP_OP_CAP:
+ 		return pBase->deviceCap;
+ 	case EEP_OP_MODE:
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index e175e20..81e6296 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -415,8 +415,6 @@ static u32 ath9k_hw_def_get_eeprom(struct ath_hw *ah,
+ 		return get_unaligned_be16(pBase->macAddr + 4);
+ 	case EEP_REG_0:
+ 		return pBase->regDmn[0];
+-	case EEP_REG_1:
+-		return pBase->regDmn[1];
+ 	case EEP_OP_CAP:
+ 		return pBase->deviceCap;
+ 	case EEP_OP_MODE:
 -- 
-1.7.1
+1.7.3.2
 
