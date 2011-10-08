@@ -1,93 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1167 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932558Ab1JDVTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 17:19:36 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 00/26] various cleanup changes for brcmfmac and brcmsmac
-Date: Tue, 4 Oct 2011 23:18:46 +0200
-Message-ID: <1317763152-17607-1-git-send-email-arend@broadcom.com> (sfid-20111004_231940_777647_EBB4021A)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:45050 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751339Ab1JHOoR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Oct 2011 10:44:17 -0400
+Received: by mail-bw0-f44.google.com with SMTP id q10so5513551bka.3
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Oct 2011 07:44:15 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: move debugging definitions to a separate file
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1317975194-18306-1-git-send-email-coelho@ti.com>
+References: <1317975194-18306-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 08 Oct 2011 17:44:07 +0300
+Message-ID: <1318085047.9690.32.camel@cumari> (sfid-20111008_164429_422797_5B9ED52D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Third attempt as the mailer somehow did not sent these outside the
-Broadcom intranet. Another series of cleanup changes based on community
-feedback received on the mainline patch (v2) as sent August 25, 2011.
+On Fri, 2011-10-07 at 11:13 +0300, Luciano Coelho wrote: 
+> Separate the debugging macros and other definitions to a new debug.h
+> file.  This is be needed because the sdio and spi modules don't need
+> to depend on the wl12xx module anymore, but still need to include
+> wl12xx.h.  Currently they do depend on it, because of the debugging
+> global that wl12xx exports.  A future patch will remove this
+> dependency.
+> 
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
 
-This series is to be applied to the staging-next branch. There are no
-pending patches that this series depend on.
+These defines should be in debug.h as well:
 
-Alwin Beukers (15):
-  staging: brcm80211: fixed checkpatch warnings
-  staging: brcm80211: removed accessor functions for band type and
-    etheraddress.
-  staging: brcm80211: fixed function returns
-  staging: brcm80211: made NULL ethernet address const
-  staging: brcm80211: removed empty brcms_c_reset_bmac_done callback
-    function
-  staging: brcm80211: decreased indentation level of
-    brcms_c_wme_setparams function
-  staging: brcm80211: removed redundant code from brcms_c_set_gmode
-  staging: brcm80211: cleanup of shared memory related wrapper
-    functions
-  staging: brcm80211: cleanup of transmit buffer size related wrapper
-    function
-  staging: brcm80211: cleanup of several wrapper functions
-  staging: brcm80211: removed unneeded call to
-    brcms_b_tx_fifo_suspended
-  staging: brcm80211: removed synchronisation of wlc->machwcap field
-  staging: brcm80211: remove brcms_b_dotxstatus wrapper function
-  staging: brcm80211: combined if statements
-  staging: brcm80211: remove N mode validation function
+#define DRIVER_NAME "wl1271"
+#define DRIVER_PREFIX DRIVER_NAME ": "
 
-Arend van Spriel (4):
-  staging: brcm80211: remove setting ssn to zero upon AMPDU_TX_START
-  staging: brcm80211: remove filtering of received frames
-  staging: brcm80211: remove brcmu_bprintf and related functions
-  staging: brcm80211: replace brcmu_bitcount with hweight8
-
-Franky Lin (3):
-  staging: brcm80211: clean up rtnl_lock in fullmac
-  staging: brcm80211: remove fullmac module_param for intr/poll mode
-  staging: brcm80211: stop using assigned thread priority in fullmac
-
-Roland Vossen (4):
-  staging: brcm80211: cleaned up struct brcms_bss_cfg
-  staging: brcm80211: fullmac: fixed double #include
-  staging: brcm80211: softmac: added event tracing
-  staging: brcm80211: smac: fix for 64 bit systems
-
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |    3 +
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |   72 +---
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c   |   25 +-
- drivers/staging/brcm80211/brcmsmac/Makefile        |    3 +-
- drivers/staging/brcm80211/brcmsmac/aiutils.c       |   14 +-
- drivers/staging/brcm80211/brcmsmac/ampdu.c         |   14 +-
- drivers/staging/brcm80211/brcmsmac/antsel.c        |    4 +-
- .../brcm80211/brcmsmac/brcms_trace_events.c        |   23 +
- .../brcm80211/brcmsmac/brcms_trace_events.h        |   92 ++++
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c   |   19 +-
- drivers/staging/brcm80211/brcmsmac/mac80211_if.h   |    2 +
- drivers/staging/brcm80211/brcmsmac/main.c          |  525 ++++----------------
- drivers/staging/brcm80211/brcmsmac/main.h          |   50 +--
- drivers/staging/brcm80211/brcmsmac/nicpci.c        |    3 +-
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c   |    7 +-
- drivers/staging/brcm80211/brcmsmac/srom.c          |    3 +-
- drivers/staging/brcm80211/brcmsmac/stf.c           |   10 +-
- drivers/staging/brcm80211/brcmsmac/types.h         |    1 -
- drivers/staging/brcm80211/brcmsmac/ucode_loader.h  |    4 +-
- drivers/staging/brcm80211/brcmutil/utils.c         |   34 --
- drivers/staging/brcm80211/include/brcmu_utils.h    |   15 -
- 21 files changed, 252 insertions(+), 671 deletions(-)
- create mode 100644 drivers/staging/brcm80211/brcmsmac/brcms_trace_events.c
- create mode 100644 drivers/staging/brcm80211/brcmsmac/brcms_trace_events.h
+I'll move them too and rename wl1271 to wl12xx when I apply.
 
 -- 
-1.7.4.1
-
+Cheers,
+Luca.
 
