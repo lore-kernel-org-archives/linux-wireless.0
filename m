@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:48312 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754605Ab1J2IiR convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:43436 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750798Ab1JHITt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Oct 2011 04:38:17 -0400
+	Sat, 8 Oct 2011 04:19:49 -0400
+Received: by bkbzt4 with SMTP id zt4so5844093bkb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Oct 2011 01:19:48 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20111006124044.1066.7111.stgit@localhost6.localdomain6>
-References: <20111006124044.1066.7111.stgit@localhost6.localdomain6>
-Date: Sat, 29 Oct 2011 10:38:16 +0200
-Message-ID: <CAMuHMdX-V6FqSZ_mmPm5aW_bTUNMk4sz5cADryX3Xyk627wRdg@mail.gmail.com> (sfid-20111029_103841_991267_33BF8892)
-Subject: Re: [PATCH] of: include errno.h
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: grant.likely@secretlab.ca, devicetree-discuss@lists.ozlabs.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+From: matteo filippetto <matteo.filippetto@gmail.com>
+Date: Sat, 8 Oct 2011 10:19:28 +0200
+Message-ID: <CAP+0xm6nwpmbk=mh0rFGZR6gnTRSUTNK_rhkZQn24RFWP_13Pg@mail.gmail.com> (sfid-20111008_101956_031532_24927DE8)
+Subject: can't make compat-wireless-3.1-rc8-1
+To: stable@kernel.org
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 6, 2011 at 14:40, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> When compiling ath6kl for beagleboard (omap2plus_defconfig plus
-> CONFIG_ATH6KL, CONFIG_OF disable) with current linux-next compilation
-> fails:
->
-> include/linux/of.h:269: error: 'ENOSYS' undeclared (first use in this function)
-> include/linux/of.h:276: error: 'ENOSYS' undeclared (first use in this function)
-> include/linux/of.h:289: error: 'ENOSYS' undeclared (first use in this function)
+Hi
 
-And now this build failure (also on m68k) has hit Linus' tree, more
-than 3 weeks after
-its detection in -next...
+I try to make compat-wireless-3.1-rc8-1 but I get error on net/wireless/util.c
 
-> Fix this by including errno.h from of.h.
->
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+/home/matteo/Downloads/compat-wireless-3.1-rc8-1-org/net/wireless/util.c:
+In function ‘cfg80211_change_iface’:
+/home/matteo/Downloads/compat-wireless-3.1-rc8-1-org/net/wireless/util.c:804:2:
+error: implicit declaration of function ‘br_port_exists’
+make[3]: *** [/home/matteo/Downloads/compat-wireless-3.1-rc8-1-org/net/wireless/util.o]
+Error 1
+make[2]: *** [/home/matteo/Downloads/compat-wireless-3.1-rc8-1-org/net/wireless]
+Error 2
+make[1]: *** [_module_/home/matteo/Downloads/compat-wireless-3.1-rc8-1-org]
+Error 2
+make[1]: Leaving directory `/usr/src/torvalds-linux-a8062e4'
+make: *** [modules] Error 2
 
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+It' s a problem with the definition of br_port_exists. I solved inserting
 
-> ---
->  include/linux/of.h |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/include/linux/of.h b/include/linux/of.h
-> index 9180dc5..219c29d 100644
-> --- a/include/linux/of.h
-> +++ b/include/linux/of.h
-> @@ -17,6 +17,7 @@
->  */
->  #include <linux/types.h>
->  #include <linux/bitops.h>
-> +#include <linux/errno.h>
->  #include <linux/kref.h>
->  #include <linux/mod_devicetable.h>
->  #include <linux/spinlock.h>
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
+#define br_port_exists(dev)	(dev->priv_flags & IFF_BRIDGE_PORT)
+#else
+#define br_port_exists(dev)	(dev->br_port)
+#endif
 
-Gr{oetje,eeting}s,
+in net/wireless/core.h but I don't think it's the right way to solve this issue.
 
-                        Geert
+I try to include "include/linux/compat-3.1.h" in util.c but without success.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Regards
+-- 
+Matteo Filippetto
+http://www.op83.eu
