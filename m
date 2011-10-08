@@ -1,92 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:41075 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755800Ab1JDLLU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 07:11:20 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat-wireless: make patches apply again
-Date: Tue,  4 Oct 2011 13:11:09 +0200
-Message-Id: <1317726670-23319-1-git-send-email-hauke@hauke-m.de> (sfid-20111004_131124_199509_63F8F738)
+Received: from lo.gmane.org ([80.91.229.12]:56192 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751863Ab1JHQY3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Oct 2011 12:24:29 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1RCZhK-0004As-MX
+	for linux-wireless@vger.kernel.org; Sat, 08 Oct 2011 18:24:26 +0200
+Received: from p5DD2D318.dip.t-dialin.net ([93.210.211.24])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Oct 2011 18:24:26 +0200
+Received: from toddy by p5DD2D318.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Oct 2011 18:24:26 +0200
+To: linux-wireless@vger.kernel.org
+From: Toddy <toddy@fishpost.de>
+Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
+Date: Sat, 8 Oct 2011 16:24:14 +0000 (UTC)
+Message-ID: <loom.20111008T181929-517@post.gmane.org> (sfid-20111008_182432_526172_19EC56B6)
+References: <4E77F631.3030202@googlemail.com> <4E77F9FD.1020204@googlemail.com> <4E780309.9010601@lwfinger.net> <4E785DB3.5040109@googlemail.com> <4E7907D3.1020606@googlemail.com> <4E792994.1080809@lwfinger.net> <4E79B1D0.7090602@googlemail.com> <4E79F87F.1050402@lwfinger.net> <4E7A38D0.7070304@googlemail.com> <4E7A4310.30106@lwfinger.net> <4E7A48D1.8050009@googlemail.com> <4E7A4B03.4070006@lwfinger.net> <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com> <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org> <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org> <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello Larry,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/29-sdio_no_suspend.patch |   50 +++++++++++++++++++-------------------
- 1 files changed, 25 insertions(+), 25 deletions(-)
+thanks for the quick reply! Yes I know this version is a bit older, but when I
+use the newest compat-wireless (eg.
+http://www.orbit-lab.org/kernel/compat-wireless-2.6/compat-wireless-2011-10-07.tar.bz2)
+the driver loads but some features like monitor-mode and packet injection
+doesn't work. The listing of available networks (with airodump) doesn't work
+too. Usually I have 13 channels because I live in Germany but if I use the
+newest driver I have only 11 channels. But if I use the older compat-wireless
+package all works fine.
 
-diff --git a/patches/29-sdio_no_suspend.patch b/patches/29-sdio_no_suspend.patch
-index cb2fbed..5cc26a1 100644
---- a/patches/29-sdio_no_suspend.patch
-+++ b/patches/29-sdio_no_suspend.patch
-@@ -86,39 +86,39 @@ suspend and resume that are not backported.
-  
- --- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
- +++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
--@@ -45,7 +45,7 @@ static int brcmf_ops_sdio_probe(struct s
-- 				const struct sdio_device_id *id);
-- static void brcmf_ops_sdio_remove(struct sdio_func *func);
-- 
---#ifdef CONFIG_PM
--+#if defined(CONFIG_PM) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-- static int brcmf_sdio_suspend(struct device *dev);
-- static int brcmf_sdio_resume(struct device *dev);
-- #endif /* CONFIG_PM */
--@@ -58,7 +58,7 @@ static const struct sdio_device_id brcmf
-- 	{ /* end: all zeroes */ },
-- };
-- 
-+@@ -55,7 +55,7 @@ static bool
-+ brcmf_pm_resume_error(struct brcmf_sdio_dev *sdiodev)
-+ {
-+ 	bool is_err = false;
- -#ifdef CONFIG_PM_SLEEP
- +#if defined(CONFIG_PM_SLEEP) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-- static const struct dev_pm_ops brcmf_sdio_pm_ops = {
-- 	.suspend	= brcmf_sdio_suspend,
-- 	.resume		= brcmf_sdio_resume,
--@@ -70,7 +70,7 @@ static struct sdio_driver brcmf_sdmmc_dr
-- 	.remove = brcmf_ops_sdio_remove,
-- 	.name = "brcmfmac",
-- 	.id_table = brcmf_sdmmc_ids,
-+ 	is_err = atomic_read(&sdiodev->suspend);
-+ #endif
-+ 	return is_err;
-+@@ -64,7 +64,7 @@ brcmf_pm_resume_error(struct brcmf_sdio_
-+ static void
-+ brcmf_pm_resume_wait(struct brcmf_sdio_dev *sdiodev, wait_queue_head_t *wq)
-+ {
- -#ifdef CONFIG_PM_SLEEP
- +#if defined(CONFIG_PM_SLEEP) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-- 	.drv = {
-- 		.pm = &brcmf_sdio_pm_ops,
-- 	},
--@@ -623,7 +623,7 @@ static void brcmf_ops_sdio_remove(struct
-+ 	int retry = 0;
-+ 	while (atomic_read(&sdiodev->suspend) && retry++ != 30)
-+ 		wait_event_timeout(*wq, false, HZ/100);
-+@@ -564,7 +564,7 @@ static void brcmf_ops_sdio_remove(struct
-+ 	}
-  }
-  
-- 
- -#ifdef CONFIG_PM_SLEEP
- +#if defined(CONFIG_PM_SLEEP) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-  static int brcmf_sdio_suspend(struct device *dev)
-  {
-  	mmc_pm_flag_t sdio_flags;
-+@@ -617,7 +617,7 @@ static struct sdio_driver brcmf_sdmmc_dr
-+ 	.remove = brcmf_ops_sdio_remove,
-+ 	.name = "brcmfmac",
-+ 	.id_table = brcmf_sdmmc_ids,
-+-#ifdef CONFIG_PM_SLEEP
-++#if defined(CONFIG_PM_SLEEP) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-+ 	.drv = {
-+ 		.pm = &brcmf_sdio_pm_ops,
-+ 	},
--- 
-1.7.4.1
+Toddy
 
