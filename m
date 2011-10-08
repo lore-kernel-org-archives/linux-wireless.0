@@ -1,57 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40889 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042Ab1JTSLm (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:47748 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750827Ab1JHHJ0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 14:11:42 -0400
-Subject: Re: [PATCH 5/6] mac80211: add WMM IE to mesh frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, anagar6@uic.edu,
-	devel@lists.open80211s.org, linville@tuxdriver.com
-In-Reply-To: <CAG6hwVOaLp9SdPezdw=aLhKrKpPdp8m5vXf6rySTvCfriaziVw@mail.gmail.com> (sfid-20111020_200917_687301_3BF203A5)
-References: <1319072606-28291-1-git-send-email-thomas@cozybit.com>
-	 <1319072606-28291-6-git-send-email-thomas@cozybit.com>
-	 <1319109412.3959.7.camel@jlt3.sipsolutions.net>
-	 <CAG6hwVMUhJ=nV=6N+DpoagKWJxMjythPYMYCCzEb=mTr6TfytQ@mail.gmail.com>
-	 <1319133104.17101.5.camel@jlt3.sipsolutions.net>
-	 <CAG6hwVMmvu5jMQLeOWG2via0wqkHGs=nHSi_mKvgy9U2+m1FXA@mail.gmail.com>
-	 <1319133820.20837.0.camel@jlt3.sipsolutions.net>
-	 <CAG6hwVOaLp9SdPezdw=aLhKrKpPdp8m5vXf6rySTvCfriaziVw@mail.gmail.com>
-	 (sfid-20111020_200917_687301_3BF203A5)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 20 Oct 2011 20:11:38 +0200
-Message-ID: <1319134298.20837.1.camel@jlt3.sipsolutions.net> (sfid-20111020_201145_346835_6A532717)
-Mime-Version: 1.0
+	Sat, 8 Oct 2011 03:09:26 -0400
+MIME-Version: 1.0
+In-Reply-To: <4E8FF54F.1080306@gmail.com>
+References: <20111007.145703.842130763413648388.davem@davemloft.net>
+	<20111007.155902.916470368193047875.davem@davemloft.net>
+	<CAN17JHUGnAbHJmwybjJVdxq4JOgHfDxChw1P7q1yrkqH6Ci05w@mail.gmail.com>
+	<4E8FF54F.1080306@gmail.com>
+Date: Sat, 8 Oct 2011 00:09:24 -0700
+Message-ID: <CAN17JHUdg2aJmpMOD_hn61eramPPnTr0_tiy3c7w7cKa8FMtsQ@mail.gmail.com> (sfid-20111008_090937_498092_1E4F007E)
+Subject: Re: moving GIT back to kernel.org...
+From: Yinglin Sun <yinglin.s@gmail.com>
+To: jeffrey.t.kirsher@intel.com
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	sfr@canb.auug.org.au, linux-wireless@vger.kernel.org,
+	netfilter-devel@vger.kernel.org, sparclinux@vger.kernel.org,
+	linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-10-20 at 11:08 -0700, Thomas Pedersen wrote:
-> On Thu, Oct 20, 2011 at 11:03 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Thu, 2011-10-20 at 10:56 -0700, Thomas Pedersen wrote:
-> >
-> >> >> I'm not sure what you mean, this is the only way to get the WMM
-> >> >> parameters? Usually these are just set with ieee80211_set_wmm_defaul()
-> >> >> on bringing up the interface.
-> >> >
-> >> > Right, but
-> >> >  a) if you're using just the default, no need to derive from the default
-> >>
-> >> The user might wish to customize the queue parameters though.
-> >>
-> >> >  b) should they be changeable?
-> >>
-> >> Why not?
-> >
-> > Well there no API for it now, is there?
-> >
-> 
-> NL80211_ATTR_WIPHY_TXQ_PARAMS?
+On Sat, Oct 8, 2011 at 12:01 AM, Jeff Kirsher <tarbal@gmail.com> wrote:
+> On 10/07/2011 11:55 PM, Yinglin Sun wrote:
+>> On Fri, Oct 7, 2011 at 12:59 PM, David Miller <davem@davemloft.net> wrote:
+>>> From: David Miller <davem@davemloft.net>
+>>> Date: Fri, 07 Oct 2011 14:57:03 -0400 (EDT)
+>>>
+>>>> I'm about to setup my GIT trees on kernel.org, once that is complete
+>>>> I will be solely updating those trees again.
+>>>>
+>>>> I will notify everyone when this is ready to go.
+>>>>
+>>>> Just a heads up for everyone...
+>>> Ok, they are now online, please update your URLs.
+>>>
+>>> git://git.kernel.org/pub/scm/linux/kernel/git/davem/net.git
+>>> git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git
+>>> git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc.git
+>>> git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git
+>>>
+>> I'm still new to net kernel development, so a little confused about these trees.
+>> So we should submit patches based on these trees, instead of Linus'?
+>> About net and net-next, How to decide which one to use?
+>>
+>> Thanks!
+>>
+>> Yinglin
+>>
+>
+> *If* you have change against the network core/drivers then, you would
+> want to use David Miller's net or net-next trees.
+>
+> As a general rule:
+>  - net tree is only for fixes/critical fixes
+>  - net-next tree is for everything else
+>
+> There are always exceptions, but if you stick to the above general rule,
+> you will be fine.
+>
+>
 
-Oh, hmm. Ok I guess that's allowed on mesh -- but when it changes you
-won't update IEs?
+Got it. Thanks Jeff!
 
-johannes
-
-
+Yinglin
