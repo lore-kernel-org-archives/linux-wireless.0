@@ -1,64 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:52532 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754842Ab1JQHcG convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:45024 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750775Ab1JHX35 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Oct 2011 03:32:06 -0400
-From: Toralf =?iso-8859-1?q?F=F6rster?= <toralf.foerster@gmx.de>
-To: David Rientjes <rientjes@google.com>,
-	David Rientjes <rientjes@google.com>
-Subject: Re: 3.1.0-rc9+ : wlan stops working w/o any error messages
-Date: Mon, 17 Oct 2011 09:31:58 +0200
-Cc: werner <w.landgraf@ru.ru>, "Wey-Yi Guy" <wey-yi.w.guy@intel.com>,
-	ilw@linux.intel.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <201110152119.58509.toralf.foerster@gmx.de> <alpine.DEB.2.00.1110151416360.15894@chino.kir.corp.google.com>
-In-Reply-To: <alpine.DEB.2.00.1110151416360.15894@chino.kir.corp.google.com>
+	Sat, 8 Oct 2011 19:29:57 -0400
+Received: by qadb15 with SMTP id b15so3357146qad.19
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Oct 2011 16:29:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201110170931.59534.toralf.foerster@gmx.de> (sfid-20111017_093228_081291_F55BBAF3)
+In-Reply-To: <4E907FB8.1040101@lwfinger.net>
+References: <4E77F631.3030202@googlemail.com> <4E77F9FD.1020204@googlemail.com>
+ <4E780309.9010601@lwfinger.net> <4E785DB3.5040109@googlemail.com>
+ <4E7907D3.1020606@googlemail.com> <4E792994.1080809@lwfinger.net>
+ <4E79B1D0.7090602@googlemail.com> <4E79F87F.1050402@lwfinger.net>
+ <4E7A38D0.7070304@googlemail.com> <4E7A4310.30106@lwfinger.net>
+ <4E7A48D1.8050009@googlemail.com> <4E7A4B03.4070006@lwfinger.net>
+ <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com>
+ <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org>
+ <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org>
+ <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net>
+ <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sun, 9 Oct 2011 01:29:34 +0200
+Message-ID: <CA+XFjio+on2rUymoSZNxOWKMX9xOn5hutA6q01r0yBeOXz0ivw@mail.gmail.com> (sfid-20111009_013011_690198_3C9FC00E)
+Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Toddy <toddy@fishpost.de>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Oct 8, 2011 at 6:52 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 10/08/2011 11:24 AM, Toddy wrote:
+>>
+>> Hello Larry,
+>>
+>> thanks for the quick reply! Yes I know this version is a bit older, but
+>> when I
+>> use the newest compat-wireless (eg.
+>>
+>> http://www.orbit-lab.org/kernel/compat-wireless-2.6/compat-wireless-2011-10-07.tar.bz2)
+>> the driver loads but some features like monitor-mode and packet injection
+>> doesn't work. The listing of available networks (with airodump) doesn't
+>> work
+>> too. Usually I have 13 channels because I live in Germany but if I use the
+>> newest driver I have only 11 channels. But if I use the older
+>> compat-wireless
+>> package all works fine.
+>
+> The difference between 11 and 13 channels depends on your CRDA settings. Do
+> you have that package installed? Check the output of dmesg to see what
+> domain is being set. If you have CRDA installed, then you can force the use
+> of Germany in the domain by creating a file named
+> /etc/modprobe.d/50-cfg80211.conf containing a single line with "options
+> cfg80211 ieee80211_regdom=DE" (without the quote marks).
+>
+> You can get a list of available networks using iwconfig or iw. I know those
+> work.
+>
+> As I do not test, support, nor condone packet injection, I cannot speak to
+> it working on any driver.
 
-David Rientjes wrote at 23:21:59
-> What's the last kernel prior to 3.1-rc9 that worked for you?
-2.6.39.4 (in general that kernel version rocks, reliable, stable, no problems 
-AFAICS, 3.0.x have problems in the DVB-T area, 3.1 added wlan issues)
+Well, packet injection is required for Hostapd to work.
 
-> What does "iwconfig" show?
-wlan0     IEEE 802.11abgn  ESSID:"IBM"  
-          Mode:Managed  Frequency:2.462 GHz  Access Point: 00:21:55:AC:8B:80   
-          Bit Rate=54 Mb/s   Tx-Power=15 dBm   
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:off
-          Link Quality=49/70  Signal level=-61 dBm  
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+>
+> Larry
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-> What does "dmesg | grep iwlagn" show?
-n22 ~ # dmesg | grep iwlagn
-iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-iwlagn 0000:03:00.0: setting latency timer to 64
-iwlagn 0000:03:00.0: pci_resource_len = 0x00002000
-iwlagn 0000:03:00.0: pci_resource_base = f81f8000
-iwlagn 0000:03:00.0: HW Revision ID = 0x0
-iwlagn 0000:03:00.0: irq 48 for MSI/MSI-X
-iwlagn 0000:03:00.0: Detected Intel(R) WiFi Link 5100 AGN, REV=0x54
-iwlagn 0000:03:00.0: L1 Disabled; Enabling L0S
-iwlagn 0000:03:00.0: device EEPROM VER=0x11e, CALIB=0x4
-iwlagn 0000:03:00.0: Device SKU: 0Xf0
-iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
-iwlagn 0000:03:00.0: loaded firmware version 8.83.5.1 build 33692
-iwlagn 0000:03:00.0: L1 Disabled; Enabling L0S
-iwlagn 0000:03:00.0: Radio type=0x1-0x2-0x0
-iwlagn 0000:03:00.0: L1 Disabled; Enabling L0S
-iwlagn 0000:03:00.0: Radio type=0x1-0x2-0x0
 
 
 -- 
-MfG/Sincerely
-Toralf Förster
-pgp finger print: 7B1A 07F4 EC82 0F90 D4C2 8936 872A E508 7DB6 9DA3
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
