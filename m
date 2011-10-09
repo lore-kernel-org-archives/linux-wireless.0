@@ -1,25 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53274 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751715Ab1JCX0a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Oct 2011 19:26:30 -0400
-Date: Mon, 3 Oct 2011 16:23:34 -0700
-From: Greg KH <gregkh@suse.de>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/20] staging: brcm80211: code clean up
-Message-ID: <20111003232334.GB23716@suse.de> (sfid-20111004_012633_403238_9A8D0015)
-References: <1317575685-3156-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1317575685-3156-1-git-send-email-frankyl@broadcom.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:34932 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751603Ab1JITDN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Oct 2011 15:03:13 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 4886C54022F
+	for <linux-wireless@vger.kernel.org>; Sun,  9 Oct 2011 15:17:38 -0400 (EDT)
+Subject: Compat-wireless release for 2011-10-09 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111009190312.6A11540646@repository3.orbit-lab.org> (sfid-20111009_210340_402384_9C8EC37F)
+Date: Sun,  9 Oct 2011 15:03:12 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 02, 2011 at 10:14:25AM -0700, Franky Lin wrote:
-> Code clean up for both brcmfmac and brcmsmac
-> 
-> This series applies to staging-next and depends on the following patch set:
-> Message-ID: <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
 
-All applied.
+compat-wireless code metrics
+
+    811845 - Total upstream lines of code being pulled
+      2431 - backport code changes
+      2113 - backport code additions
+       318 - backport code deletions
+      8588 - backport from compat module
+     11019 - total backport code
+    1.3573 - % of code consists of backport work
