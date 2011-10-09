@@ -1,55 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:18325 "EHLO
-	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756522Ab1IIACv (ORCPT
+Received: from mms1.broadcom.com ([216.31.210.17]:4543 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750986Ab1JIJu3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 20:02:51 -0400
-Received: from g5t0030.atlanta.hp.com (g5t0030.atlanta.hp.com [16.228.8.142])
-	by g5t0006.atlanta.hp.com (Postfix) with ESMTP id CB8EDC0BE
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Sep 2011 23:54:33 +0000 (UTC)
-Received: from [16.89.244.213] (tardy.cup.hp.com [16.89.244.213])
-	by g5t0030.atlanta.hp.com (Postfix) with ESMTP id A1A961414B
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Sep 2011 23:54:33 +0000 (UTC)
-Message-ID: <4E6955B8.4000900@hp.com> (sfid-20110909_020254_299486_78DC6FF0)
-Date: Thu, 08 Sep 2011 16:54:32 -0700
-From: Rick Jones <rick.jones2@hp.com>
+	Sun, 9 Oct 2011 05:50:29 -0400
+Message-ID: <4E916E55.30101@broadcom.com> (sfid-20111009_115033_875967_193726DC)
+Date: Sun, 9 Oct 2011 11:50:13 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Question about netperf terminology in the RTL8192SE and 802.11n problem
- thread
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: =?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>
+cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
+	"John W Linville" <linville@tuxdriver.com>,
+	"Michael Buesch" <mb@bu3sch.de>,
+	"zajec5@gmail.com" <zajec5@gmail.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ssb: Convert to use crc8 code in kernel library
+References: <4e90ce9a.89uGF659NNpbpyA3%Larry.Finger@lwfinger.net>
+ <20111009005107.43a49372@milhouse>
+In-Reply-To: <20111009005107.43a49372@milhouse>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi -
+On 10/09/2011 12:51 AM, Michael Büsch wrote:
+> On Sat, 08 Oct 2011 17:28:42 -0500
+> Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> 
+>> The kernel now contains library routines to establish crc8 tables and
+>> to calculate the appropriate sums. Use them for ssb.
+> 
+>> +static u8 srom_crc8_table[CRC8_TABLE_SIZE];
+>> +
+>> +/* Polynomial:   x^8 + x^7 + x^6 + x^4 + x^2 + 1   */
+>> +#define SROM_CRC8_POLY	0xAB
+>> +
+>> +static inline void ltoh16_buf(u16 *buf, unsigned int size)
+>>  {
+>> +	size /= 2;
+>> +	while (size--)
+>> +		*(buf + size) = le16_to_cpu(*(__le16 *)(buf + size));
+>> +}
+>>  
+>> -	return crc;
+>> +static inline void htol16_buf(u16 *buf, unsigned int size)
+>> +{
+>> +	size /= 2;
+>> +	while (size--)
+>> +		*(__le16 *)(buf + size) = cpu_to_le16(*(buf + size));
+>>  }
+> 
+>>  		return -ENOMEM;
+>> +	crc8_populate_lsb(srom_crc8_table, SROM_CRC8_POLY);
+>>  	bus->sprom_size = SSB_SPROMSIZE_WORDS_R123;
+>>  	sprom_do_read(bus, buf);
+>> +	/* convert to le */
+>> +	htol16_buf(buf, 2 * bus->sprom_size);
+> 
+>>  		bus->sprom_size = SSB_SPROMSIZE_WORDS_R4;
+>>  		sprom_do_read(bus, buf);
+>> +		htol16_buf(buf, 2 * bus->sprom_size);
+>>  		err = sprom_check_crc(buf, bus->sprom_size);
+> 
+>> +	/* restore endianess */
+>> +	ltoh16_buf(buf, 2 * bus->sprom_size);
+>>  	err = sprom_extract(bus, sprom, buf, bus->sprom_size);
+> 
+> This endianness stuff is _really_ ugly.
 
- From time to time I web search for instances of netperf usage, and came 
-across http://www.spinics.net/lists/linux-wireless/msg76387.html  which 
-has verbiage like:
+It may seem ugly, but is not new. Choosing a 8-bit crc to check a 16-bit
+array is not very efficient considering host endianess. The endianess
+was also dealt with in the old version:
 
-> TCP_MAERTS TX Test:  47.33 53.94 55.19 44.24 57.74 55.44 53.74 54.63 47.87 57.82
-> TCP_MAERTS RX Test:  66.02 69.79 67.70 52.15 82.56 80.30 79.43 80.98 76.26 71.34
-> Results: TX: max 57.82, min 44.24. Mean 52.79(4.42)
->          RX: max 82.56, min 52.15. Mean 72.65(8.85)
->
-> TCP_STREAM TX Test:  71.83 80.44 72.88 26.11 40.85 58.70 58.49 58.96 59.52 59.35
-> TCP_STREAM RX Test:  46.41 52.64 43.85 48.44 52.15 49.66 52.81 50.61 43.18 52.93
-> Results: TX: max 80.44, min 26.11. Mean 58.71(14.93)
->          RX: max 52.93, min 43.18. Mean 49.27(3.51)
->
-> TCP_SENDFILE TX Test: 57.86 55.94 55.21 56.13 56.70 61.71 56.85 54.68 55.04 51.30
-> TCP_SENDFILE RX Test: 37.82 47.51 41.61 42.88 45.37 35.11 45.09 40.11 46.48 22.86
-> Results: TX: max 61.71, min 51.30. Mean 56.14(2.50)
->          RX: max 47.51, min 22.86. Mean 40.48(6.96)
+-	for (word = 0; word < size - 1; word++) {
+-		crc = ssb_crc8(crc, sprom[word] & 0x00FF);
+-		crc = ssb_crc8(crc, (sprom[word] & 0xFF00) >> 8);
+-	}
 
+It is a bit easier on the eye. I guess the ugliness comes from the fact
+that there are two calls to htol16_buf.
 
-in it. Seeing separate TX and RX lines for netperf TCP tests is 
-unfamiliar to me and I was wondering if someone (Stephan?) could explain 
-the split?  Netperf itself tends to emit only the one figure for a 
-transfer rate (measured up at the socket level). (Modulo some of the 
-recentish omni output selectors anyway, though for a TCP transfer test 
-they would/should be very very similar...)
+A better approach would be to read sprom as bytes and run the crc8 over
+the byte array. When ok do ltoh16_buf once.
 
-thanks, and happy benchmarking,
+> Does this patch decrease the code size, at least? I'll almost doubt it.
+> If it doesn't, why are we actually doing this?
 
-rick jones
+Probably for the same reason why struct list_head and related functions
+are used. Trying to use what is commonly available in the kernel.
+
+> It doesn't even decrease the .data size. Worse, it converts a .const
+> table to a .data table.
+
+True. .code size became .data size, because of the flexibility that the
+table is generated for a given polynomial. Every 'bility' comes with a
+price and this seems not too pricy.
+
+> Just my 2 cents.
+> 
+
+Gr. AvS
+
