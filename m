@@ -1,60 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:58105 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750710Ab1JTH1G (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:54801 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751139Ab1JIOrb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 03:27:06 -0400
-Received: by pzk36 with SMTP id 36so6356708pzk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 00:27:05 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v2 3/3] mac80211: select queue for fwded mesh frames
-Date: Thu, 20 Oct 2011 00:26:55 -0700
-Message-Id: <1319095615-1368-1-git-send-email-thomas@cozybit.com> (sfid-20111020_092855_071795_0ACB1285)
-In-Reply-To: <1319070203-22097-1-git-send-email-thomas@cozybit.com>
-References: <1319070203-22097-1-git-send-email-thomas@cozybit.com>
+	Sun, 9 Oct 2011 10:47:31 -0400
+Received: by ggnv2 with SMTP id v2so3859678ggn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Oct 2011 07:47:31 -0700 (PDT)
+Message-ID: <4E91B400.1020305@lwfinger.net> (sfid-20111009_164740_156477_2BF9C6E6)
+Date: Sun, 09 Oct 2011 09:47:28 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: v4mp <gaigo88@hotmail.it>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
+References: <4E77F631.3030202@googlemail.com> <4E77F9FD.1020204@googlemail.com> <4E780309.9010601@lwfinger.net> <4E785DB3.5040109@googlemail.com> <4E7907D3.1020606@googlemail.com> <4E792994.1080809@lwfinger.net> <4E79B1D0.7090602@googlemail.com> <4E79F87F.1050402@lwfinger.net> <4E7A38D0.7070304@googlemail.com> <4E7A4310.30106@lwfinger.net> <4E7A48D1.8050009@googlemail.com> <4E7A4B03.4070006@lwfinger.net> <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com> <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org> <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org> <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9xOn5hutA6q01r0yBeOXz0ivw@mail.gmail.com> <loom.20111009T161348-133@post.gmane.org>
+In-Reply-To: <loom.20111009T161348-133@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set proper queue mapping and timestamp for forwarded mesh frames.
+On 10/09/2011 09:21 AM, v4mp wrote:
+>
+> Sorry, but i can't get this Alfa product to work with the latest bleeding edge
+> compat-wireless-2011-10-08 on ubuntu 11.04, tryed with kernels 2.6.38-11,
+> 2.6.39 rc4 and 3.0
+>
+> i tryed also the 2.6.39-1 version of compat-wireless
+>
+> Don't show anything in managed and monitor mode..
 
-Thanks to Luis Rodriguez for investigating and fixing this.
+I do not know about monitor mode, but the Alfa device works in managed mode with 
+kernel 3.1-rc9 from both wireless-testing and mainline. I use NetworkManager. 
+All of this current code should be in the latest bleeding edge compat-wireless 
+version.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
+Have you installed the firmware?
 
-v2: 
-	We were already doing this for mcast frames, so don't duplicate
-	the code.
-
- net/mac80211/rx.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index b867bd5..1408472 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1952,13 +1952,15 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 			info = IEEE80211_SKB_CB(fwd_skb);
- 			memset(info, 0, sizeof(*info));
- 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
-+			info->control.jiffies = jiffies;
- 			info->control.vif = &rx->sdata->vif;
-+			skb_set_queue_mapping(fwd_skb,
-+				ieee80211_select_queue(sdata, fwd_skb));
-+			ieee80211_set_qos_hdr(sdata, fwd_skb);
-+
- 			if (is_multicast_ether_addr(fwd_hdr->addr1)) {
- 				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
- 								fwded_mcast);
--				skb_set_queue_mapping(fwd_skb,
--					ieee80211_select_queue(sdata, fwd_skb));
--				ieee80211_set_qos_hdr(sdata, fwd_skb);
- 			} else {
- 				int err;
- 				/*
--- 
-1.7.5.4
+Larry
 
