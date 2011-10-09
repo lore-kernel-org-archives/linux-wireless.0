@@ -1,173 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:43661 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753424Ab1JKQjc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 12:39:32 -0400
-Message-ID: <1318351171.1839.43.camel@Joe-Laptop> (sfid-20111011_183936_113513_EB2146D0)
-Subject: Re: [PATCH v2 1/5] ath6kl: Add endpoint_stats debugfs file
-From: Joe Perches <joe@perches.com>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Date: Tue, 11 Oct 2011 09:39:31 -0700
-In-Reply-To: <1318343517-15292-2-git-send-email-jouni@qca.qualcomm.com>
-References: <1318343517-15292-1-git-send-email-jouni@qca.qualcomm.com>
-	 <1318343517-15292-2-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:3735 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751174Ab1JIKdY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Oct 2011 06:33:24 -0400
+Message-ID: <4E91785F.6030008@broadcom.com> (sfid-20111009_123328_143848_26CE8DA0)
+Date: Sun, 9 Oct 2011 12:33:03 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"John W Linville" <linville@tuxdriver.com>,
+	"Michael Buesch" <mb@bu3sch.de>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ssb: Convert to use crc8 code in kernel library
+References: <4e90ce9a.89uGF659NNpbpyA3%Larry.Finger@lwfinger.net>
+ <20111009005107.43a49372@milhouse>
+ <CACna6rz-0TZrwctTZR-YLDHG=xdt4Oc5ShbjCZiad7Cvmh0+hQ@mail.gmail.com>
+In-Reply-To: <CACna6rz-0TZrwctTZR-YLDHG=xdt4Oc5ShbjCZiad7Cvmh0+hQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-10-11 at 17:31 +0300, Jouni Malinen wrote:
-> This file can be used to fetch endpoint statistics counters and
-> to clear them by writing 0 to it.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Hi Jouni.
+On 10/09/2011 10:48 AM, Rafał Miłecki wrote:
 
-[petty carping follows]
-
-> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/debug.c |  102 +++++++++++++++++++++++++++++++
->  1 files changed, 102 insertions(+), 0 deletions(-)
+> Agree. I already tried converting bcma to use crc8:
+> [RFC][WORTH IT?][PATCH] bcma: make use of crc8 lib
+> http://lists.infradead.org/pipermail/b43-dev/2011-June/001466.html
 > 
-> diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-> index ba3f23d..b9bf28d 100644
-> --- a/drivers/net/wireless/ath/ath6kl/debug.c
-> +++ b/drivers/net/wireless/ath/ath6kl/debug.c
-> @@ -595,6 +595,105 @@ static const struct file_operations fops_credit_dist_stats = {
->  	.llseek = default_llseek,
->  };
->  
-> +static unsigned int print_endpoint_stat(struct htc_target *target, char *buf,
-> +					unsigned int buf_len, unsigned int len,
-> +					int offset, const char *name)
+> But resigned, it was introducing some hacks or not optimal ops, I
+> decided it's not worth it.
+> 
+> Even Arend said their brcm80211 is hacky about crc8 usage:
+> 
+> W dniu 15 czerwca 2011 21:26 użytkownik Arend van Spriel
+> <arend@broadcom.com> napisał:
+>> Agree. In brcm80211 we convert the entire sprom, calculate, and convert it
+>> back. Also not perfect I think as it loops over de sprom data twice.
+> 
 
-Perhaps the function name is wrong.
-This doesn't print, it fills a buffer.
-len and offset are to me oddly used variable names.
+Hi Rafał,
 
-> +{
-> +	int i;
-> +	struct htc_endpoint_stats *ep_st;
-> +	u32 *counter;
-> +
-> +	len += scnprintf(buf + len, buf_len - len, "%s:", name);
-> +	for (i = 0; i < ENDPOINT_MAX; i++) {
-> +		ep_st = &target->endpoint[i].ep_st;
-> +		counter = ((u32 *) ep_st) + (offset / 4);
-> +		len += scnprintf(buf + len, buf_len - len, " %u", *counter);
-> +	}
-> +	len += scnprintf(buf + len, buf_len - len, "\n");
-> +
-> +	return len;
-> +
+"not perfect" == "hacky" ;-)
 
-perhaps:
+I also just replied with a less hacky approach. Reading the sprom as
+bytes will read the sprom content as is (little-endian) and you can do
+the crc8 check without any conversions. After the check there is only
+one conversion needed to move to a word array.
 
-static int endpoint_stats(struct htc_target *target,
-			  char *buf, size_t len,
-			  size_t pos, int index, const char *name)
-{
-	int i;
+Gr. AvS
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-	pos += scnprintf(buf + pos, len - pos, "%s:", name);
-	for (i = 0; i < ENDPOINT_MAX; i++) {
-		u32 *stats = (u32 *)&target->endpoint[i].ep_st;
-		offset += scnprintf(buf + pos, len - pos, " %u", stats[index]);
-	}
-	pos += scnprintf(buf + pos, len - pos, "\n");
-
-	return pos;
-}
-
-> }
-> +
-> +static ssize_t ath6kl_endpoint_stats_read(struct file *file,
-> +					  char __user *user_buf,
-> +					  size_t count, loff_t *ppos)
-> +{
-> +	struct ath6kl *ar = file->private_data;
-> +	struct htc_target *target = ar->htc_target;
-> +	char *buf;
-> +	unsigned int buf_len, len = 0;
-
-size_t len = 0;
-(or maybe pos instead)
-
-> +	ssize_t ret_cnt;
-> +
-> +	buf_len = 1000 + ENDPOINT_MAX * 100;
-
-It seems odd to start with size using 1000
-
-There's ENDPOINT_MAX rows (9)
-Each row contains:
-	up to 20 byte row name
-	20 counters * up to 10 bytes per counter
-up to 220 bytes per row
-
-Perhaps this?
-	const size_t buf_len = ENDPOINT_MAX * (20 + sizeof(struct htc_endpoint_stats) / sizeof(u32) * 10);
-
-> +	buf = kzalloc(buf_len, GFP_KERNEL);
-
-kzalloc doesn't seem necessary,
-everything is overwritten.  just kmalloc?
-
-As is, it's (barely) possible to overflow
-the buffer length and end up non-null terminated.
-Perhaps that doesn't matter.
-
-> +	if (!buf)
-> +		return -ENOMEM;
-> +
-> +#define EPSTAT(name)							\
-> +	len = print_endpoint_stat(target, buf, buf_len, len,		\
-> +				  offsetof(struct htc_endpoint_stats, name), \
-> +				  #name)
-
-perhaps
-
-#define EPSTAT(name)							\
-	len = endpoint_stat(target, buf, buf_len, len,			\
-			    offsetof(struct htc_endpoint_stats, name) / sizeof(u32), \
-			    #name)
-
- 
-> +	EPSTAT(cred_low_indicate);
-> +	EPSTAT(tx_issued);
-> +	EPSTAT(tx_pkt_bundled);
-> +	EPSTAT(tx_bundles);
-> +	EPSTAT(tx_dropped);
-> +	EPSTAT(tx_cred_rpt);
-> +	EPSTAT(cred_rpt_from_rx);
-> +	EPSTAT(cred_rpt_ep0);
-> +	EPSTAT(cred_from_rx);
-> +	EPSTAT(cred_from_other);
-> +	EPSTAT(cred_from_ep0);
-> +	EPSTAT(cred_cosumd);
-> +	EPSTAT(cred_retnd);
-> +	EPSTAT(rx_pkts);
-> +	EPSTAT(rx_lkahds);
-> +	EPSTAT(rx_bundl);
-> +	EPSTAT(rx_bundle_lkahd);
-> +	EPSTAT(rx_bundle_from_hdr);
-> +	EPSTAT(rx_alloc_thresh_hit);
-> +	EPSTAT(rxalloc_thresh_byte);
-> +#undef EPSTAT
-> +
-> +	if (len > buf_len)
-> +		len = buf_len;
-
-Maybe it's better to ensure 0 termination?
-	if (len > buf_len) {
-		len = buf_len;
-		buf[buf_len - 1] = 0;
-	}
-
-> +	ret_cnt = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-> +	kfree(buf);
-> +	return ret_cnt;
-> +}
-
+iQIcBAEBAgAGBQJOkXheAAoJELcEx/G14aEWnHwP+wZRWLladazO/zZnuMrnEuRk
+xhMzbZcIy8gJwkGs/GwuWqnHBZu+Qx/k/BC3S1CNNmLPOf7qLNbS4hgKRZn+2Tze
+FHYzXb6IPXkCE6MS5BFRi2qxnzrxam7gL00SB5NuGceS4b3LQL+wNHzPx5yPlPEW
+KsJnecyFTabclun2zxucZPB19w2xrS84Xcl2Db+2nV3wSn700REr5mr3+pmVXmvd
+ptLuWsc5ZoAnvuTQq/PUjKvQb/tA7CpDFs9+uvCeKa93Rb3JIRwTk5tAVadLEWn7
+6IWyN0VMK+pdL2LT14qc1LWJa192tn8qbmOg21lKsQFepP4egJyRGWaU7aKo9bdG
+PVSXfqme0azRl6vd+G28Q/SVdt//w5HBoPgdWlORhNdo/sov07QVl8gf80QkTn/A
+Ij3M1+LMlUFu7weuIwgKBIA+Bi6CxTR/3ozK+S3ItpVqt6gCnMlDYtEUM6pk2vVj
+8ppl0LtGHyrogFgwOrcYbxMKJGbk8Po82T+Um7wchcHuRxGLD3NuErndMiRwemMk
+zALNLYNCLLftCSypCgkM5kyfDkDf7uZMxJZbPXyIIFCP4BXm5xrgx39sYQAVx4if
+bIjW0W3OmIbBcQScZ4+KRZ5YN1g45VFRQ3+4BPyusApYqzwSmjxUj8aomfD2QhEJ
+Fh/5uq3JIrpQazyEsILz
+=JjZ0
+-----END PGP SIGNATURE-----
 
