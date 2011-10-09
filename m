@@ -1,202 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:60678 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751634Ab1J3TQq (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:48962 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975Ab1JIIsZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Oct 2011 15:16:46 -0400
-Subject: [PATCH 4/5] ath6kl: print firmware crashes always
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 30 Oct 2011 21:16:41 +0200
-Message-ID: <20111030191641.20466.36114.stgit@localhost6.localdomain6> (sfid-20111030_201651_994689_81616184)
-In-Reply-To: <20111030190922.20466.299.stgit@localhost6.localdomain6>
-References: <20111030190922.20466.299.stgit@localhost6.localdomain6>
+	Sun, 9 Oct 2011 04:48:25 -0400
+Received: by wwf22 with SMTP id 22so7790166wwf.1
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Oct 2011 01:48:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20111009005107.43a49372@milhouse>
+References: <4e90ce9a.89uGF659NNpbpyA3%Larry.Finger@lwfinger.net>
+	<20111009005107.43a49372@milhouse>
+Date: Sun, 9 Oct 2011 10:48:22 +0200
+Message-ID: <CACna6rz-0TZrwctTZR-YLDHG=xdt4Oc5ShbjCZiad7Cvmh0+hQ@mail.gmail.com> (sfid-20111009_104830_624074_FD387C8F)
+Subject: Re: [PATCH] ssb: Convert to use crc8 code in kernel library
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently firmware crash dump is printed only if debug is enabled.
-Change it so that the crash dump is always printed.
+2011/10/9 Michael Büsch <m@bues.ch>:
+> On Sat, 08 Oct 2011 17:28:42 -0500
+> Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>
+>> The kernel now contains library routines to establish crc8 tables and
+>> to calculate the appropriate sums. Use them for ssb.
+>
+>> +static u8 srom_crc8_table[CRC8_TABLE_SIZE];
+>> +
+>> +/* Polynomial:   x^8 + x^7 + x^6 + x^4 + x^2 + 1   */
+>> +#define SROM_CRC8_POLY       0xAB
+>> +
+>> +static inline void ltoh16_buf(u16 *buf, unsigned int size)
+>>  {
+>> +     size /= 2;
+>> +     while (size--)
+>> +             *(buf + size) = le16_to_cpu(*(__le16 *)(buf + size));
+>> +}
+>>
+>> -     return crc;
+>> +static inline void htol16_buf(u16 *buf, unsigned int size)
+>> +{
+>> +     size /= 2;
+>> +     while (size--)
+>> +             *(__le16 *)(buf + size) = cpu_to_le16(*(buf + size));
+>>  }
+>
+>>               return -ENOMEM;
+>> +     crc8_populate_lsb(srom_crc8_table, SROM_CRC8_POLY);
+>>       bus->sprom_size = SSB_SPROMSIZE_WORDS_R123;
+>>       sprom_do_read(bus, buf);
+>> +     /* convert to le */
+>> +     htol16_buf(buf, 2 * bus->sprom_size);
+>
+>>               bus->sprom_size = SSB_SPROMSIZE_WORDS_R4;
+>>               sprom_do_read(bus, buf);
+>> +             htol16_buf(buf, 2 * bus->sprom_size);
+>>               err = sprom_check_crc(buf, bus->sprom_size);
+>
+>> +     /* restore endianess */
+>> +     ltoh16_buf(buf, 2 * bus->sprom_size);
+>>       err = sprom_extract(bus, sprom, buf, bus->sprom_size);
+>
+> This endianness stuff is _really_ ugly.
+> Does this patch decrease the code size, at least? I'll almost doubt it.
+> If it doesn't, why are we actually doing this?
+> It doesn't even decrease the .data size. Worse, it converts a .const
+> table to a .data table.
+>
+> Just my 2 cents.
 
-Also move the code from init.c to hif.c.
+Agree. I already tried converting bcma to use crc8:
+[RFC][WORTH IT?][PATCH] bcma: make use of crc8 lib
+http://lists.infradead.org/pipermail/b43-dev/2011-June/001466.html
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.h |    1 
- drivers/net/wireless/ath/ath6kl/hif.c  |   69 ++++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath6kl/init.c |   55 --------------------------
- 3 files changed, 61 insertions(+), 64 deletions(-)
+But resigned, it was introducing some hacks or not optimal ops, I
+decided it's not worth it.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 1ac0dd1..95aed7d 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -654,7 +654,6 @@ void aggr_recv_delba_req_evt(struct ath6kl_vif *vif, u8 tid);
- void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid, u16 seq_no,
- 			     u8 win_sz);
- void ath6kl_wakeup_event(void *dev);
--void ath6kl_target_failure(struct ath6kl *ar);
- 
- void ath6kl_reset_device(struct ath6kl *ar, u32 target_type,
- 			 bool wait_fot_compltn, bool cold_reset);
-diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
-index 309be98..e57da35 100644
---- a/drivers/net/wireless/ath/ath6kl/hif.c
-+++ b/drivers/net/wireless/ath/ath6kl/hif.c
-@@ -59,26 +59,79 @@ int ath6kl_hif_rw_comp_handler(void *context, int status)
- 
- 	return 0;
- }
-+#define REG_DUMP_COUNT_AR6003   60
-+#define REGISTER_DUMP_LEN_MAX   60
-+
-+static void ath6kl_hif_dump_fw_crash(struct ath6kl *ar)
-+{
-+	__le32 regdump_val[REGISTER_DUMP_LEN_MAX];
-+	u32 i, address, regdump_addr = 0;
-+	int ret;
-+
-+	if (ar->target_type != TARGET_TYPE_AR6003)
-+		return;
-+
-+	/* the reg dump pointer is copied to the host interest area */
-+	address = ath6kl_get_hi_item_addr(ar, HI_ITEM(hi_failure_state));
-+	address = TARG_VTOP(ar->target_type, address);
-+
-+	/* read RAM location through diagnostic window */
-+	ret = ath6kl_diag_read32(ar, address, &regdump_addr);
-+
-+	if (ret || !regdump_addr) {
-+		ath6kl_warn("failed to get ptr to register dump area: %d\n",
-+			    ret);
-+		return;
-+	}
-+
-+	ath6kl_dbg(ATH6KL_DBG_IRQ, "register dump data address 0x%x\n",
-+		regdump_addr);
-+	regdump_addr = TARG_VTOP(ar->target_type, regdump_addr);
-+
-+	/* fetch register dump data */
-+	ret = ath6kl_diag_read(ar, regdump_addr, (u8 *)&regdump_val[0],
-+				  REG_DUMP_COUNT_AR6003 * (sizeof(u32)));
-+	if (ret) {
-+		ath6kl_warn("failed to get register dump: %d\n", ret);
-+		return;
-+	}
-+
-+	ath6kl_info("crash dump:\n");
-+	ath6kl_info("hw 0x%x fw %s\n", ar->wiphy->hw_version,
-+		    ar->wiphy->fw_version);
-+
-+	BUILD_BUG_ON(REG_DUMP_COUNT_AR6003 % 4);
-+
-+	for (i = 0; i < REG_DUMP_COUNT_AR6003 / 4; i++) {
-+		ath6kl_info("%d: 0x%8.8x 0x%8.8x 0x%8.8x 0x%8.8x\n",
-+			    4 * i,
-+			    le32_to_cpu(regdump_val[i]),
-+			    le32_to_cpu(regdump_val[i + 1]),
-+			    le32_to_cpu(regdump_val[i + 2]),
-+			    le32_to_cpu(regdump_val[i + 3]));
-+	}
-+
-+}
- 
- static int ath6kl_hif_proc_dbg_intr(struct ath6kl_device *dev)
- {
- 	u32 dummy;
--	int status;
-+	int ret;
- 
--	ath6kl_err("target debug interrupt\n");
--
--	ath6kl_target_failure(dev->ar);
-+	ath6kl_warn("firmware crashed\n");
- 
- 	/*
- 	 * read counter to clear the interrupt, the debug error interrupt is
- 	 * counter 0.
- 	 */
--	status = hif_read_write_sync(dev->ar, COUNT_DEC_ADDRESS,
-+	ret = hif_read_write_sync(dev->ar, COUNT_DEC_ADDRESS,
- 				     (u8 *)&dummy, 4, HIF_RD_SYNC_BYTE_INC);
--	if (status)
--		WARN_ON(1);
-+	if (ret)
-+		ath6kl_warn("Failed to clear debug interrupt: %d\n", ret);
- 
--	return status;
-+	ath6kl_hif_dump_fw_crash(dev->ar);
-+
-+	return ret;
- }
- 
- /* mailbox recv message polling */
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index c197e4c..06e5cea 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -298,61 +298,6 @@ out:
- 	return status;
- }
- 
--#define REG_DUMP_COUNT_AR6003   60
--#define REGISTER_DUMP_LEN_MAX   60
--
--static void ath6kl_dump_target_assert_info(struct ath6kl *ar)
--{
--	u32 address;
--	u32 regdump_loc = 0;
--	int status;
--	u32 regdump_val[REGISTER_DUMP_LEN_MAX];
--	u32 i;
--
--	if (ar->target_type != TARGET_TYPE_AR6003)
--		return;
--
--	/* the reg dump pointer is copied to the host interest area */
--	address = ath6kl_get_hi_item_addr(ar, HI_ITEM(hi_failure_state));
--	address = TARG_VTOP(ar->target_type, address);
--
--	/* read RAM location through diagnostic window */
--	status = ath6kl_diag_read32(ar, address, &regdump_loc);
--
--	if (status || !regdump_loc) {
--		ath6kl_err("failed to get ptr to register dump area\n");
--		return;
--	}
--
--	ath6kl_dbg(ATH6KL_DBG_TRC, "location of register dump data: 0x%X\n",
--		regdump_loc);
--	regdump_loc = TARG_VTOP(ar->target_type, regdump_loc);
--
--	/* fetch register dump data */
--	status = ath6kl_diag_read(ar, regdump_loc, (u8 *)&regdump_val[0],
--				  REG_DUMP_COUNT_AR6003 * (sizeof(u32)));
--
--	if (status) {
--		ath6kl_err("failed to get register dump\n");
--		return;
--	}
--	ath6kl_dbg(ATH6KL_DBG_TRC, "Register Dump:\n");
--
--	for (i = 0; i < REG_DUMP_COUNT_AR6003; i++)
--		ath6kl_dbg(ATH6KL_DBG_TRC, " %d :  0x%8.8X\n",
--			   i, regdump_val[i]);
--
--}
--
--void ath6kl_target_failure(struct ath6kl *ar)
--{
--	ath6kl_err("target asserted\n");
--
--	/* try dumping target assertion information (if any) */
--	ath6kl_dump_target_assert_info(ar);
--
--}
--
- static int ath6kl_target_config_wlan_params(struct ath6kl *ar, int idx)
- {
- 	int status = 0;
+Even Arend said their brcm80211 is hacky about crc8 usage:
 
+W dniu 15 czerwca 2011 21:26 użytkownik Arend van Spriel
+<arend@broadcom.com> napisał:
+> Agree. In brcm80211 we convert the entire sprom, calculate, and convert it
+> back. Also not perfect I think as it loops over de sprom data twice.
+
+-- 
+Rafał
