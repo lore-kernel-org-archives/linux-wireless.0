@@ -1,112 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1195 "EHLO mms1.broadcom.com"
+Received: from mga11.intel.com ([192.55.52.93]:34105 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933050Ab1JDVTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 17:19:36 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 05/26] staging: brcm80211: replace brcmu_bitcount with
- hweight8
-Date: Tue, 4 Oct 2011 23:18:51 +0200
-Message-ID: <1317763152-17607-6-git-send-email-arend@broadcom.com> (sfid-20111004_231950_797520_81848C70)
-In-Reply-To: <1317763152-17607-1-git-send-email-arend@broadcom.com>
-References: <1317763152-17607-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751221Ab1JJPQa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Oct 2011 11:16:30 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 29/34] iwlagn: remove 5000 hw header
+Date: Mon, 10 Oct 2011 07:27:14 -0700
+Message-Id: <1318256839-31837-30-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171637_900557_CFC35D8A)
+In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The kernel provides bit operations to replace brcmu_bitcount so
-using those instead.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+The inline function in this header is only used
+in a single file, so we can move it there.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    7 +++----
- drivers/staging/brcm80211/brcmsmac/stf.c         |   10 +++++-----
- 2 files changed, 8 insertions(+), 9 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-5000-hw.h |   88 ----------------------------
+ drivers/net/wireless/iwlwifi/iwl-5000.c    |   16 +++++-
+ 2 files changed, 15 insertions(+), 89 deletions(-)
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-5000-hw.h
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-index 45e3b4b..0d3c9d8 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -15,6 +15,7 @@
-  */
- #include <linux/kernel.h>
- #include <linux/delay.h>
-+#include <linux/bitops.h>
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000-hw.h b/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
+deleted file mode 100644
+index c013598..0000000
+--- a/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
++++ /dev/null
+@@ -1,88 +0,0 @@
+-/******************************************************************************
+- *
+- * This file is provided under a dual BSD/GPLv2 license.  When using or
+- * redistributing this file, you may do so under either license.
+- *
+- * GPL LICENSE SUMMARY
+- *
+- * Copyright(c) 2007 - 2011 Intel Corporation. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
+- * USA
+- *
+- * The full GNU General Public License is included in this distribution
+- * in the file called LICENSE.GPL.
+- *
+- * Contact Information:
+- *  Intel Linux Wireless <ilw@linux.intel.com>
+- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
+- *
+- * BSD LICENSE
+- *
+- * Copyright(c) 2005 - 2011 Intel Corporation. All rights reserved.
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- *
+- *  * Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- *  * Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in
+- *    the documentation and/or other materials provided with the
+- *    distribution.
+- *  * Neither the name Intel Corporation nor the names of its
+- *    contributors may be used to endorse or promote products derived
+- *    from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- *
+- *****************************************************************************/
+-/*
+- * Please use this file (iwl-5000-hw.h) only for hardware-related definitions.
+- * Use iwl-commands.h for uCode API definitions.
+- */
+-
+-#ifndef __iwl_5000_hw_h__
+-#define __iwl_5000_hw_h__
+-
+-/* 5150 only */
+-#define IWL_5150_VOLTAGE_TO_TEMPERATURE_COEFF	(-5)
+-
+-static inline s32 iwl_temp_calib_to_offset(struct iwl_priv *priv)
+-{
+-	u16 temperature, voltage;
+-	__le16 *temp_calib = (__le16 *)iwl_eeprom_query_addr(priv,
+-				EEPROM_KELVIN_TEMPERATURE);
+-
+-	temperature = le16_to_cpu(temp_calib[0]);
+-	voltage = le16_to_cpu(temp_calib[1]);
+-
+-	/* offset = temp - volt / coeff */
+-	return (s32)(temperature - voltage / IWL_5150_VOLTAGE_TO_TEMPERATURE_COEFF);
+-}
+-
+-#endif /* __iwl_5000_hw_h__ */
+-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index b85e80a..fdbf031 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -43,7 +43,6 @@
+ #include "iwl-helpers.h"
+ #include "iwl-agn.h"
+ #include "iwl-agn-hw.h"
+-#include "iwl-5000-hw.h"
+ #include "iwl-trans.h"
+ #include "iwl-shared.h"
+ #include "iwl-cfg.h"
+@@ -134,6 +133,21 @@ static struct iwl_sensitivity_ranges iwl5150_sensitivity = {
+ 	.nrg_th_cca = 62,
+ };
  
- #include <brcm_hw_ids.h>
- #include <chipcommon.h>
-@@ -2879,8 +2880,7 @@ void wlc_phy_stf_chain_init(struct brcms_phy_pub *pih, u8 txchain, u8 rxchain)
- 	pi->sh->hw_phyrxchain = rxchain;
- 	pi->sh->phytxchain = txchain;
- 	pi->sh->phyrxchain = rxchain;
--	pi->pubpi.phy_corenum = (u8) brcmu_bitcount((u8 *)&pi->sh->phyrxchain,
--						    sizeof(u8));
-+	pi->pubpi.phy_corenum = (u8)hweight8(pi->sh->phyrxchain);
- }
- 
- void wlc_phy_stf_chain_set(struct brcms_phy_pub *pih, u8 txchain, u8 rxchain)
-@@ -2892,8 +2892,7 @@ void wlc_phy_stf_chain_set(struct brcms_phy_pub *pih, u8 txchain, u8 rxchain)
- 	if (ISNPHY(pi))
- 		wlc_phy_rxcore_setstate_nphy(pih, rxchain);
- 
--	pi->pubpi.phy_corenum = (u8) brcmu_bitcount((u8 *)&pi->sh->phyrxchain,
--						    sizeof(u8));
-+	pi->pubpi.phy_corenum = (u8)hweight8(pi->sh->phyrxchain);
- }
- 
- void wlc_phy_stf_chain_get(struct brcms_phy_pub *pih, u8 *txchain, u8 *rxchain)
-diff --git a/drivers/staging/brcm80211/brcmsmac/stf.c b/drivers/staging/brcm80211/brcmsmac/stf.c
-index ba3c3ef..9460cd1 100644
---- a/drivers/staging/brcm80211/brcmsmac/stf.c
-+++ b/drivers/staging/brcm80211/brcmsmac/stf.c
-@@ -165,10 +165,10 @@ static int brcms_c_stf_txcore_set(struct brcms_c_info *wlc, u8 Nsts,
- 	BCMMSG(wlc->wiphy, "wl%d: Nsts %d core_mask %x\n",
- 		 wlc->pub->unit, Nsts, core_mask);
- 
--	if (BRCMS_BITSCNT(core_mask) > wlc->stf->txstreams)
-+	if (hweight8(core_mask) > wlc->stf->txstreams)
- 		core_mask = 0;
- 
--	if ((BRCMS_BITSCNT(core_mask) == wlc->stf->txstreams) &&
-+	if ((hweight8(core_mask) == wlc->stf->txstreams) &&
- 	    ((core_mask & ~wlc->stf->txchain)
- 	     || !(core_mask & wlc->stf->txchain)))
- 		core_mask = wlc->stf->txchain;
-@@ -278,7 +278,7 @@ int brcms_c_stf_txchain_set(struct brcms_c_info *wlc, s32 int_val, bool force)
- 	 * if nrate override is configured to be non-SISO STF mode, reject
- 	 * reducing txchain to 1
- 	 */
--	txstreams = (u8) BRCMS_BITSCNT(txchain);
-+	txstreams = (u8) hweight8(txchain);
- 	if (txstreams > MAX_STREAMS_SUPPORTED)
- 		return -EINVAL;
- 
-@@ -385,7 +385,7 @@ void brcms_c_stf_phy_chain_calc(struct brcms_c_info *wlc)
- 	}
- 
- 	wlc->stf->txchain = wlc->stf->hw_txchain;
--	wlc->stf->txstreams = (u8) BRCMS_BITSCNT(wlc->stf->hw_txchain);
-+	wlc->stf->txstreams = (u8) hweight8(wlc->stf->hw_txchain);
- 
- 	if (wlc->stf->hw_rxchain == 0 || wlc->stf->hw_rxchain == 0xf) {
- 		if (BRCMS_ISNPHY(wlc->band))
-@@ -395,7 +395,7 @@ void brcms_c_stf_phy_chain_calc(struct brcms_c_info *wlc)
- 	}
- 
- 	wlc->stf->rxchain = wlc->stf->hw_rxchain;
--	wlc->stf->rxstreams = (u8) BRCMS_BITSCNT(wlc->stf->hw_rxchain);
-+	wlc->stf->rxstreams = (u8) hweight8(wlc->stf->hw_rxchain);
- 
- 	/* initialize the txcore table */
- 	memcpy(wlc->stf->txcore, txcore_default, sizeof(wlc->stf->txcore));
++#define IWL_5150_VOLTAGE_TO_TEMPERATURE_COEFF	(-5)
++
++static s32 iwl_temp_calib_to_offset(struct iwl_priv *priv)
++{
++	u16 temperature, voltage;
++	__le16 *temp_calib = (__le16 *)iwl_eeprom_query_addr(priv,
++				EEPROM_KELVIN_TEMPERATURE);
++
++	temperature = le16_to_cpu(temp_calib[0]);
++	voltage = le16_to_cpu(temp_calib[1]);
++
++	/* offset = temp - volt / coeff */
++	return (s32)(temperature - voltage / IWL_5150_VOLTAGE_TO_TEMPERATURE_COEFF);
++}
++
+ static void iwl5150_set_ct_threshold(struct iwl_priv *priv)
+ {
+ 	const s32 volt2temp_coef = IWL_5150_VOLTAGE_TO_TEMPERATURE_COEFF;
 -- 
-1.7.4.1
-
+1.7.0.4
 
