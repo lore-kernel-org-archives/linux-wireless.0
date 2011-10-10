@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1205 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933158Ab1JDVTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 17:19:36 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 06/26] staging: brcm80211: fullmac: fixed double
- #include
-Date: Tue, 4 Oct 2011 23:18:52 +0200
-Message-ID: <1317763152-17607-7-git-send-email-arend@broadcom.com> (sfid-20111004_232035_618812_68E6D5C7)
-In-Reply-To: <1317763152-17607-1-git-send-email-arend@broadcom.com>
-References: <1317763152-17607-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:54112 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752773Ab1JJRwV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Oct 2011 13:52:21 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 27so1828326eye.5
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 10:52:19 -0700 (PDT)
+Subject: Re: [PATCH 02/29] wl12xx: move last_tx_hlid into wlvif
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1318234397-21081-3-git-send-email-eliad@wizery.com>
+References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+	 <1318234397-21081-3-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 10 Oct 2011 20:52:15 +0300
+Message-ID: <1318269135.9690.369.camel@cumari> (sfid-20111010_195224_340049_9B38C38A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote: 
+> move last_tx_hlid into the per-interface data, rather than
+> being global.
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
+>  drivers/net/wireless/wl12xx/debugfs.c |    1 -
+>  drivers/net/wireless/wl12xx/main.c    |    1 -
+>  drivers/net/wireless/wl12xx/tx.c      |   10 +++++-----
+>  drivers/net/wireless/wl12xx/wl12xx.h  |    6 +++---
+>  4 files changed, 8 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+> index f0398d0..bbc8004 100644
+> --- a/drivers/net/wireless/wl12xx/debugfs.c
+> +++ b/drivers/net/wireless/wl12xx/debugfs.c
+> @@ -355,7 +355,6 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+>  	DRIVER_STATE_PRINT_INT(sg_enabled);
+>  	DRIVER_STATE_PRINT_INT(enable_11a);
+>  	DRIVER_STATE_PRINT_INT(noise);
+> -	DRIVER_STATE_PRINT_INT(last_tx_hlid);
+>  	DRIVER_STATE_PRINT_HEX(ap_fw_ps_map);
+>  	DRIVER_STATE_PRINT_LHEX(ap_ps_map);
+>  	DRIVER_STATE_PRINT_HEX(quirks);
 
-Fix double include as detected by checkincludes script.
+No big deal at this point, so I'll apply this, but maybe we should print
+the last_tx_hlid from inside all the vifs as well?
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index d12aa75..f7b3077 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -21,7 +21,6 @@
- #include <linux/sched.h>
- #include <linux/kthread.h>
- #include <linux/netdevice.h>
--#include <linux/sched.h>
- #include <linux/bitops.h>
- #include <linux/etherdevice.h>
- #include <linux/ieee80211.h>
 -- 
-1.7.4.1
-
+Cheers,
+Luca.
 
