@@ -1,52 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:59260 "EHLO
-	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751776Ab1JaNKN (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:41933 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752858Ab1JJINJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Oct 2011 09:10:13 -0400
-Received: by mail-bw0-f47.google.com with SMTP id zv3so2101599bkb.6
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2011 06:10:11 -0700 (PDT)
-Subject: Re: wl1251 and NoA protocol
-From: Luciano Coelho <coelho@ti.com>
-To: =?ISO-8859-1?Q?Andr=E9s_Garc=EDa?= Saavedra
-	<andres.garcia.saavedra@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CADxqDgEvsObWbnPTViPF5g_TOS2WRJoJK4OnEzehbdQwwgzNDQ@mail.gmail.com>
-References: <CADxqDgEvsObWbnPTViPF5g_TOS2WRJoJK4OnEzehbdQwwgzNDQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 31 Oct 2011 15:10:08 +0200
-Message-ID: <1320066608.2672.15.camel@cumari> (sfid-20111031_141018_105872_3C09CB47)
-Mime-Version: 1.0
+	Mon, 10 Oct 2011 04:13:09 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 27so1109073eye.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 01:13:08 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 19/29] wl12xx: make WL1271_FLAG_PSPOLL_FAILURE flag per-vif
+Date: Mon, 10 Oct 2011 10:13:07 +0200
+Message-Id: <1318234397-21081-20-git-send-email-eliad@wizery.com> (sfid-20111010_101334_756131_CC07A474)
+In-Reply-To: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-10-18 at 11:13 +0200, Andrés García Saavedra wrote: 
-> Hi all,
-> 
-> I would like to test Notice of Absence powersaving protocol for
-> 802.11abg WLANs on some current android smartphone. My question is
-> regarding the wl1251 driver implementation for TI chipsets:
-> 
-> * Does the chipset/current implementation support sleep/awake
-> triggers? (or at least quiet elements?) -> This means, can I command
-> the NIC to stay quiet (slept) for certain duration of time?
-> 
-> My plan is to implement/test a Notice of Absence protocol where the
-> driver would trigger absent (quiet/sleep) periods according to the
-> beacon's NoA IE. Ive seen in the code the wl1251_ps_elp_sleep/wakeup
-> functions that might be reused for this purpose (?)
-> 
-> * Last (lazy) question. AFAIK only the google dev 1 phone uses this
-> chipset. Is there any 1ghz android device that could benefit of this
-> driver?
+This flag should be set per-vif, rather than globally.
 
-You should look for a device with some newer chip, like the wl1271, for
-instance.  We are currently developing the wl12xx driver (for wl127x and
-wl128x) a lot more actively than wl1251.  Besides, I don't think there's
-any newer Android phone using wl1251...
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/event.c  |    4 ++--
+ drivers/net/wireless/wl12xx/main.c   |    2 +-
+ drivers/net/wireless/wl12xx/wl12xx.h |    2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index d8b183b..1f60a1f 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -49,7 +49,7 @@ void wl1271_pspoll_work(struct work_struct *work)
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
+ 		goto out;
+ 
+-	if (!test_and_clear_bit(WL1271_FLAG_PSPOLL_FAILURE, &wl->flags))
++	if (!test_and_clear_bit(WLVIF_FLAG_PSPOLL_FAILURE, &wlvif->flags))
+ 		goto out;
+ 
+ 	if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
+@@ -89,7 +89,7 @@ static void wl1271_event_pspoll_delivery_fail(struct wl1271 *wl,
+ 					 wlvif->basic_rate, true);
+ 		if (ret < 0)
+ 			return;
+-		set_bit(WL1271_FLAG_PSPOLL_FAILURE, &wl->flags);
++		set_bit(WLVIF_FLAG_PSPOLL_FAILURE, &wlvif->flags);
+ 		ieee80211_queue_delayed_work(wl->hw, &wlvif->pspoll_work,
+ 					     msecs_to_jiffies(delay));
+ 	}
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 25599ad..c54c456 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2514,7 +2514,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	 * incorrectly changed after the pspoll failure active window.
+ 	 */
+ 	if (changed & IEEE80211_CONF_CHANGE_PS)
+-		clear_bit(WL1271_FLAG_PSPOLL_FAILURE, &wl->flags);
++		clear_bit(WLVIF_FLAG_PSPOLL_FAILURE, &wlvif->flags);
+ 
+ 	if (conf->flags & IEEE80211_CONF_PS &&
+ 	    !test_bit(WLVIF_FLAG_PSM_REQUESTED, &wlvif->flags)) {
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 88d48b1..9701784 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -320,7 +320,6 @@ enum wl12xx_flags {
+ 	WL1271_FLAG_ELP_REQUESTED,
+ 	WL1271_FLAG_IRQ_RUNNING,
+ 	WL1271_FLAG_IDLE,
+-	WL1271_FLAG_PSPOLL_FAILURE,
+ 	WL1271_FLAG_FW_TX_BUSY,
+ 	WL1271_FLAG_DUMMY_PACKET_PENDING,
+ 	WL1271_FLAG_SUSPENDED,
+@@ -339,6 +338,7 @@ enum wl12xx_vif_flags {
+ 	WLVIF_FLAG_PSM_REQUESTED,
+ 	WLVIF_FLAG_STA_STATE_SENT,
+ 	WLVIF_FLAG_RX_STREAMING_STARTED,
++	WLVIF_FLAG_PSPOLL_FAILURE,
+ };
+ 
+ struct wl1271_link {
 -- 
-Cheers,
-Luca.
+1.7.6.401.g6a319
 
