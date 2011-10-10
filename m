@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:62312 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753Ab1JGRED (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 13:04:03 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	<stable@kernel.org>
-Subject: [PATCH v2 09/14] ath9k_hw: Fix ASPM L1 issue for AR9480
-Date: Fri, 7 Oct 2011 22:34:17 +0530
-Message-ID: <1318007057-1163-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111007_190408_440633_00457C8E)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:31149 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751344Ab1JJPQa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Oct 2011 11:16:30 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 23/34] iwlagn: more info on warning for shutdown agg queue
+Date: Mon, 10 Oct 2011 07:27:08 -0700
+Message-Id: <1318256839-31837-24-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171714_234986_1F87A470)
+In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Because of not clearing Bit 14 of AR_WA, the ASPM L1 is not
-enabled when entering into sleep mode. AR9480 does not need
-bit 14 to be set.
+When detect wrong state on shutdown aggregation queue, show more
+information for debugging
 
-Cc: stable@kernel.org
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
-v2: Cc'd stable
- drivers/net/wireless/ath/ath9k/hw.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 9c60132..1da6c9d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -542,6 +542,9 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 		return -EIO;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index fec7065..2e48979 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -634,8 +634,9 @@ int iwl_trans_pcie_tx_agg_disable(struct iwl_trans *trans,
+ 	case IWL_AGG_ON:
+ 		break;
+ 	default:
+-		IWL_WARN(trans, "Stopping AGG while state not ON"
+-				"or starting\n");
++		IWL_WARN(trans, "Stopping AGG while state not ON "
++			 "or starting for %d on %d (%d)\n", sta_id, tid,
++			 trans->shrd->tid_data[sta_id][tid].agg.state);
+ 		spin_unlock_irqrestore(&trans->shrd->sta_lock, flags);
+ 		return 0;
  	}
- 
-+	if (AR_SREV_9480(ah))
-+		ah->WARegVal &= ~AR_WA_D3_L1_DISABLE;
-+
- 	ath9k_hw_init_defaults(ah);
- 	ath9k_hw_init_config(ah);
- 
-@@ -1819,8 +1822,7 @@ static void ath9k_set_power_sleep(struct ath_hw *ah, int setChip)
- 	}
- 
- 	/* Clear Bit 14 of AR_WA after putting chip into Full Sleep mode. */
--	if (!AR_SREV_9480(ah))
--		REG_WRITE(ah, AR_WA, ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
-+	REG_WRITE(ah, AR_WA, ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
- }
- 
- /*
 -- 
-1.7.7
+1.7.0.4
 
