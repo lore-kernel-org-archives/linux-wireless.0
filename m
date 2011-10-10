@@ -1,76 +1,300 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3735 "EHLO MMS3.broadcom.com"
+Received: from mga01.intel.com ([192.55.52.88]:50123 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751174Ab1JIKdY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Oct 2011 06:33:24 -0400
-Message-ID: <4E91785F.6030008@broadcom.com> (sfid-20111009_123328_143848_26CE8DA0)
-Date: Sun, 9 Oct 2011 12:33:03 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"John W Linville" <linville@tuxdriver.com>,
-	"Michael Buesch" <mb@bu3sch.de>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ssb: Convert to use crc8 code in kernel library
-References: <4e90ce9a.89uGF659NNpbpyA3%Larry.Finger@lwfinger.net>
- <20111009005107.43a49372@milhouse>
- <CACna6rz-0TZrwctTZR-YLDHG=xdt4Oc5ShbjCZiad7Cvmh0+hQ@mail.gmail.com>
-In-Reply-To: <CACna6rz-0TZrwctTZR-YLDHG=xdt4Oc5ShbjCZiad7Cvmh0+hQ@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8
+	id S1751403Ab1JJPQb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Oct 2011 11:16:31 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 32/34] iwlagn: move iwl_enable_rfkill_int and kill iwl-helpers.h
+Date: Mon, 10 Oct 2011 07:27:17 -0700
+Message-Id: <1318256839-31837-33-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171635_725376_697321D4)
+In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-On 10/09/2011 10:48 AM, Rafał Miłecki wrote:
+Move iwl_enable_rfkill_int to iwl-core.h, and remove the empty
+iwl-helpers.h
 
-> Agree. I already tried converting bcma to use crc8:
-> [RFC][WORTH IT?][PATCH] bcma: make use of crc8 lib
-> http://lists.infradead.org/pipermail/b43-dev/2011-June/001466.html
-> 
-> But resigned, it was introducing some hacks or not optimal ops, I
-> decided it's not worth it.
-> 
-> Even Arend said their brcm80211 is hacky about crc8 usage:
-> 
-> W dniu 15 czerwca 2011 21:26 użytkownik Arend van Spriel
-> <arend@broadcom.com> napisał:
->> Agree. In brcm80211 we convert the entire sprom, calculate, and convert it
->> back. Also not perfect I think as it loops over de sprom data twice.
-> 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c          |    1 -
+ drivers/net/wireless/iwlwifi/iwl-2000.c          |    1 -
+ drivers/net/wireless/iwlwifi/iwl-5000.c          |    1 -
+ drivers/net/wireless/iwlwifi/iwl-6000.c          |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c        |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c      |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c        |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn.c           |    1 -
+ drivers/net/wireless/iwlwifi/iwl-core.c          |    1 -
+ drivers/net/wireless/iwlwifi/iwl-core.h          |    7 +++
+ drivers/net/wireless/iwlwifi/iwl-helpers.h       |   44 ----------------------
+ drivers/net/wireless/iwlwifi/iwl-scan.c          |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    1 -
+ 16 files changed, 8 insertions(+), 59 deletions(-)
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-helpers.h
 
-Hi Rafał,
-
-"not perfect" == "hacky" ;-)
-
-I also just replied with a less hacky approach. Reading the sprom as
-bytes will read the sprom content as is (little-endian) and you can do
-the crc8 check without any conversions. After the check there is only
-one conversion needed to move to a word array.
-
-Gr. AvS
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iQIcBAEBAgAGBQJOkXheAAoJELcEx/G14aEWnHwP+wZRWLladazO/zZnuMrnEuRk
-xhMzbZcIy8gJwkGs/GwuWqnHBZu+Qx/k/BC3S1CNNmLPOf7qLNbS4hgKRZn+2Tze
-FHYzXb6IPXkCE6MS5BFRi2qxnzrxam7gL00SB5NuGceS4b3LQL+wNHzPx5yPlPEW
-KsJnecyFTabclun2zxucZPB19w2xrS84Xcl2Db+2nV3wSn700REr5mr3+pmVXmvd
-ptLuWsc5ZoAnvuTQq/PUjKvQb/tA7CpDFs9+uvCeKa93Rb3JIRwTk5tAVadLEWn7
-6IWyN0VMK+pdL2LT14qc1LWJa192tn8qbmOg21lKsQFepP4egJyRGWaU7aKo9bdG
-PVSXfqme0azRl6vd+G28Q/SVdt//w5HBoPgdWlORhNdo/sov07QVl8gf80QkTn/A
-Ij3M1+LMlUFu7weuIwgKBIA+Bi6CxTR/3ozK+S3ItpVqt6gCnMlDYtEUM6pk2vVj
-8ppl0LtGHyrogFgwOrcYbxMKJGbk8Po82T+Um7wchcHuRxGLD3NuErndMiRwemMk
-zALNLYNCLLftCSypCgkM5kyfDkDf7uZMxJZbPXyIIFCP4BXm5xrgx39sYQAVx4if
-bIjW0W3OmIbBcQScZ4+KRZ5YN1g45VFRQ3+4BPyusApYqzwSmjxUj8aomfD2QhEJ
-Fh/5uq3JIrpQazyEsILz
-=JjZ0
------END PGP SIGNATURE-----
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 0bf6afd..e12b48c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -40,7 +40,6 @@
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+ #include "iwl-agn.h"
+-#include "iwl-helpers.h"
+ #include "iwl-agn-hw.h"
+ #include "iwl-shared.h"
+ #include "iwl-cfg.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index f14eb0b..7943197 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -40,7 +40,6 @@
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+ #include "iwl-agn.h"
+-#include "iwl-helpers.h"
+ #include "iwl-agn-hw.h"
+ #include "iwl-shared.h"
+ #include "iwl-cfg.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index fdbf031..c511c98 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -40,7 +40,6 @@
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+-#include "iwl-helpers.h"
+ #include "iwl-agn.h"
+ #include "iwl-agn-hw.h"
+ #include "iwl-trans.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index f05f2b8..c840c78 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -40,7 +40,6 @@
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+ #include "iwl-agn.h"
+-#include "iwl-helpers.h"
+ #include "iwl-agn-hw.h"
+ #include "iwl-trans.h"
+ #include "iwl-shared.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index b1746f9..1a52ed2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -35,7 +35,6 @@
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+-#include "iwl-helpers.h"
+ #include "iwl-agn-hw.h"
+ #include "iwl-agn.h"
+ #include "iwl-trans.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+index daa3c60..5af9e62 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+@@ -3,7 +3,7 @@
+  * Copyright(c) 2003 - 2011 Intel Corporation. All rights reserved.
+  *
+  * Portions of this file are derived from the ipw3945 project, as well
+- * as portions of the ieee80211 subsystem header files.
++ * as portionhelp of the ieee80211 subsystem header files.
+  *
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms of version 2 of the GNU General Public License as
+@@ -36,7 +36,6 @@
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+-#include "iwl-helpers.h"
+ #include "iwl-agn-calib.h"
+ #include "iwl-agn.h"
+ #include "iwl-shared.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 68bdc19..a580efe 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -28,7 +28,6 @@
+ #include "iwl-agn.h"
+ #include "iwl-core.h"
+ #include "iwl-agn-calib.h"
+-#include "iwl-helpers.h"
+ #include "iwl-trans.h"
+ #include "iwl-shared.h"
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index d7e48f2..35a6b71 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -36,7 +36,6 @@
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+-#include "iwl-helpers.h"
+ #include "iwl-agn-hw.h"
+ #include "iwl-agn.h"
+ #include "iwl-trans.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+index b4e1e7c..8ba0dd5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+@@ -35,7 +35,6 @@
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+-#include "iwl-helpers.h"
+ #include "iwl-agn-hw.h"
+ #include "iwl-agn.h"
+ #include "iwl-agn-calib.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 5a78480..ccba69b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -47,7 +47,6 @@
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+-#include "iwl-helpers.h"
+ #include "iwl-agn-calib.h"
+ #include "iwl-agn.h"
+ #include "iwl-shared.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 6ecdf82..abd0de4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -40,7 +40,6 @@
+ #include "iwl-io.h"
+ #include "iwl-power.h"
+ #include "iwl-agn.h"
+-#include "iwl-helpers.h"
+ #include "iwl-shared.h"
+ #include "iwl-agn.h"
+ #include "iwl-trans.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 151cc43..137da33 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -64,6 +64,7 @@
+ #define __iwl_core_h__
+ 
+ #include "iwl-dev.h"
++#include "iwl-io.h"
+ 
+ /************************
+  * forward declarations *
+@@ -382,6 +383,12 @@ static inline bool iwl_advanced_bt_coexist(struct iwl_priv *priv)
+ 	       priv->cfg->bt_params->advanced_bt_coexist;
+ }
+ 
++static inline void iwl_enable_rfkill_int(struct iwl_priv *priv)
++{
++	IWL_DEBUG_ISR(priv, "Enabling rfkill interrupt\n");
++	iwl_write32(bus(priv), CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
++}
++
+ extern bool bt_siso_mode;
+ 
+ #endif /* __iwl_core_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+deleted file mode 100644
+index b7cf992..0000000
+--- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
++++ /dev/null
+@@ -1,44 +0,0 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2003 - 2011 Intel Corporation. All rights reserved.
+- *
+- * Portions of this file are derived from the ipw3945 project, as well
+- * as portions of the ieee80211 subsystem header files.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- *  Intel Linux Wireless <ilw@linux.intel.com>
+- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
+- *
+- *****************************************************************************/
+-
+-#ifndef __iwl_helpers_h__
+-#define __iwl_helpers_h__
+-
+-#include <linux/ctype.h>
+-#include <net/mac80211.h>
+-
+-#include "iwl-io.h"
+-
+-static inline void iwl_enable_rfkill_int(struct iwl_priv *priv)
+-{
+-	IWL_DEBUG_ISR(priv, "Enabling rfkill interrupt\n");
+-	iwl_write32(bus(priv), CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
+-}
+-
+-#endif				/* __iwl_helpers_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index bb03bf8..e5d727f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -34,7 +34,6 @@
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+-#include "iwl-helpers.h"
+ #include "iwl-agn.h"
+ #include "iwl-trans.h"
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index b4eff55..374c68c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -33,7 +33,6 @@
+ /*TODO: Remove include to iwl-core.h*/
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+-#include "iwl-helpers.h"
+ #include "iwl-trans-pcie-int.h"
+ 
+ /******************************************************************************
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 2e48979..0d7803b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -37,7 +37,6 @@
+ #include "iwl-prph.h"
+ #include "iwl-io.h"
+ #include "iwl-agn-hw.h"
+-#include "iwl-helpers.h"
+ #include "iwl-trans-pcie-int.h"
+ 
+ #define IWL_TX_CRC_SIZE 4
+-- 
+1.7.0.4
 
