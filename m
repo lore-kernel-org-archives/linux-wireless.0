@@ -1,73 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:39032 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753670Ab1JUIhV (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:55718 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752151Ab1JJTZL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 04:37:21 -0400
-Received: by ywf7 with SMTP id 7so3652119ywf.19
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2011 01:37:20 -0700 (PDT)
-MIME-Version: 1.0
-Date: Fri, 21 Oct 2011 12:37:20 +0400
-Message-ID: <CAG5dHkQTpfXvhC8w_1z5MvuKxWV32u2+PM8VKq4Lc5pZm2hAug@mail.gmail.com> (sfid-20111021_103725_207935_F2BAF542)
-Subject: [RFC 3/7] mac80211: mesh non-peer power mode indication in beacons
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 10 Oct 2011 15:25:11 -0400
+Received: by bkbzs2 with SMTP id zs2so9882411bkb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 12:25:08 -0700 (PDT)
+Subject: Re: [PATCH 10/29] wl12xx: move tx_security_seq into wlvif
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1318234397-21081-11-git-send-email-eliad@wizery.com>
+References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+	 <1318234397-21081-11-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 10 Oct 2011 22:25:05 +0300
+Message-ID: <1318274705.9690.399.camel@cumari> (sfid-20111010_212515_198039_6458D4FC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-inidicate local mesh sta non-peer power mode in beacons
+On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote: 
+> The last security seq num has to be saved across reconfigs.
+> Add a new "persistent" struct into wlvif, which won't get
+> deleted on wl12xx_init_vif_data()
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
----
- net/mac80211/mesh.c |    3 +++
- net/mac80211/mesh.h |    3 +++
- net/mac80211/tx.c   |    3 +++
- 3 files changed, 9 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index a7078fd..c16a203 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -242,6 +242,9 @@ mesh_add_meshconf_ie(struct sk_buff *skb, struct
-ieee80211_sub_if_data *sdata)
- 	/* Mesh capability */
- 	ifmsh->accepting_plinks = mesh_plink_availables(sdata);
- 	*pos = MESHCONF_CAPAB_FORWARDING;
-+	if (sdata->u.mesh.mshcfg.power_mode == NL80211_MESH_POWER_DEEP_SLEEP) {
-+		*pos |= MESHCONF_CAPAB_PS_LEVEL;
-+	}
- 	*pos++ |= ifmsh->accepting_plinks ?
- 	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
- 	*pos++ = 0x00;
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 6842453..188cc86 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -188,6 +188,9 @@ struct mesh_rmc {
- /* Maximum number of paths per interface */
- #define MESH_MAX_MPATHS		1024
 
-+/* capability power save flag mask */
-+#define MESHCONF_CAPAB_PS_LEVEL	0x80
-+
- /* Public interfaces */
- /* Various */
- int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 8f2bc51..b1b1234 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2344,6 +2344,9 @@ struct sk_buff *ieee80211_beacon_get_tim(struct
-ieee80211_hw *hw,
- 		memset(mgmt, 0, 24 + sizeof(mgmt->u.beacon));
- 		mgmt->frame_control =
- 		    cpu_to_le16(IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON);
-+		if (sdata->u.mesh.mshcfg.power_mode != NL80211_MESH_POWER_ACTIVE) {
-+			mgmt->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
-+		}
- 		memset(mgmt->da, 0xff, ETH_ALEN);
- 		memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
- 		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
+
+> @@ -1910,8 +1914,8 @@ static int wl12xx_init_vif_data(struct wl1271 *wl, struct ieee80211_vif *vif)
+>  {
+>  	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+>  
+> -	/* make sure wlvif is zeroed */
+> -	memset(wlvif, 0, sizeof(*wlvif));
+> +	/* clear everything but the persistent data */
+> +	memset(wlvif, 0, offsetof(struct wl12xx_vif, persistent));
+
+Nice trick! :)
+
+
+> diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+> index c7be151..0a5fef5 100644
+> --- a/drivers/net/wireless/wl12xx/tx.c
+> +++ b/drivers/net/wireless/wl12xx/tx.c
+> @@ -755,6 +755,8 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+>  				      struct wl1271_tx_hw_res_descr *result)
+>  {
+>  	struct ieee80211_tx_info *info;
+> +	struct ieee80211_vif *vif;
+> +	struct wl12xx_vif *wlvif;
+>  	struct sk_buff *skb;
+>  	int id = result->id;
+>  	int rate = -1;
+> @@ -774,6 +776,10 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+>  		return;
+>  	}
+>  
+> +	/* info->control is valid as long as we don't update info->status */
+> +	vif = info->control.vif;
+> +	wlvif = wl12xx_vif_to_data(vif);
+
+>From a comment in the ieee80211_tx_info struct in mac80211.h:
+
+/* NB: vif can be NULL for injected frames */
+
+Should we check the vif here...
+
+
+> 	/* update the TX status info */
+>  	if (result->status == TX_SUCCESS) {
+>  		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
+> @@ -801,14 +807,14 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+>  	     info->control.hw_key->cipher == WLAN_CIPHER_SUITE_CCMP ||
+>  	     info->control.hw_key->cipher == WL1271_CIPHER_SUITE_GEM)) {
+>  		u8 fw_lsb = result->tx_security_sequence_number_lsb;
+> -		u8 cur_lsb = wl->tx_security_last_seq_lsb;
+> +		u8 cur_lsb = wlvif->tx_security_last_seq_lsb;
+
+...because we're accessing it directly here?
+
+And don't we get TX complete events for dummy packets?
+
+> 		/*
+>  		 * update security sequence number, taking care of potential
+>  		 * wrap-around
+>  		 */
+> -		wl->tx_security_seq += (fw_lsb - cur_lsb + 256) % 256;
+> -		wl->tx_security_last_seq_lsb = fw_lsb;
+> +		wlvif->tx_security_seq += (fw_lsb - cur_lsb + 256) % 256;
+> +		wlvif->tx_security_last_seq_lsb = fw_lsb;
+
+We could change this (... + 256) % 256 here for & 0xFF as Ido suggested
+for some other code earlier.
+
+
 -- 
-1.7.3.4
+Cheers,
+Luca.
+
