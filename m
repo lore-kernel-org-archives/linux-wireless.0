@@ -1,62 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:50975 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083Ab1JTSOg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 14:14:36 -0400
-Received: by wyg36 with SMTP id 36so3173551wyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 11:14:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1319134298.20837.1.camel@jlt3.sipsolutions.net>
-References: <1319072606-28291-1-git-send-email-thomas@cozybit.com>
-	<1319072606-28291-6-git-send-email-thomas@cozybit.com>
-	<1319109412.3959.7.camel@jlt3.sipsolutions.net>
-	<CAG6hwVMUhJ=nV=6N+DpoagKWJxMjythPYMYCCzEb=mTr6TfytQ@mail.gmail.com>
-	<1319133104.17101.5.camel@jlt3.sipsolutions.net>
-	<CAG6hwVMmvu5jMQLeOWG2via0wqkHGs=nHSi_mKvgy9U2+m1FXA@mail.gmail.com>
-	<1319133820.20837.0.camel@jlt3.sipsolutions.net>
-	<CAG6hwVOaLp9SdPezdw=aLhKrKpPdp8m5vXf6rySTvCfriaziVw@mail.gmail.com>
-	<1319134298.20837.1.camel@jlt3.sipsolutions.net>
-Date: Thu, 20 Oct 2011 11:14:35 -0700
-Message-ID: <CAG6hwVNsLR0Ts1izDea8zJ8nw9FvM4c0n=nNCr0TBBQaUbkk=g@mail.gmail.com> (sfid-20111020_201440_066211_092143CA)
-Subject: Re: [PATCH 5/6] mac80211: add WMM IE to mesh frames
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, anagar6@uic.edu,
-	devel@lists.open80211s.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:61902 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751253Ab1JJPQ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Oct 2011 11:16:28 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 12/34] iwlagn: stop interrupts when suspending
+Date: Mon, 10 Oct 2011 07:26:57 -0700
+Message-Id: <1318256839-31837-13-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171729_228867_B786930C)
+In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 20, 2011 at 11:11 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2011-10-20 at 11:08 -0700, Thomas Pedersen wrote:
->> On Thu, Oct 20, 2011 at 11:03 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Thu, 2011-10-20 at 10:56 -0700, Thomas Pedersen wrote:
->> >
->> >> >> I'm not sure what you mean, this is the only way to get the WMM
->> >> >> parameters? Usually these are just set with ieee80211_set_wmm_defaul()
->> >> >> on bringing up the interface.
->> >> >
->> >> > Right, but
->> >> >  a) if you're using just the default, no need to derive from the default
->> >>
->> >> The user might wish to customize the queue parameters though.
->> >>
->> >> >  b) should they be changeable?
->> >>
->> >> Why not?
->> >
->> > Well there no API for it now, is there?
->> >
->>
->> NL80211_ATTR_WIPHY_TXQ_PARAMS?
->
-> Oh, hmm. Ok I guess that's allowed on mesh -- but when it changes you
-> won't update IEs?
->
+From: Johannes Berg <johannes.berg@intel.com>
 
-We reconstruct IEs on every beacon_get() (I know...), so it should be OK.
+Occasionally, the device will send interrupts
+while it is resuming, at a point where we are
+not set up again to handle them. This causes
+the core IRQ handling to completely disable
+the IRQ, and then the driver won't work again
+until it is reloaded/rebound.
 
-Thomas
+To fix this issue disable the IRQ on suspend,
+this will cause us to only get interrupts
+again after we've setup everything on resume.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 60a8ecc..60067c7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1377,8 +1377,13 @@ static int iwl_trans_pcie_suspend(struct iwl_trans *trans)
+ 	 * But of course ... if we have configured WoWLAN then we did other
+ 	 * things already :-)
+ 	 */
+-	if (!trans->shrd->wowlan)
++	if (!trans->shrd->wowlan) {
+ 		iwl_apm_stop(priv(trans));
++	} else {
++		iwl_disable_interrupts(trans);
++		iwl_clear_bit(bus(trans), CSR_GP_CNTRL,
++			      CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++	}
+ 
+ 	return 0;
+ }
+-- 
+1.7.0.4
+
