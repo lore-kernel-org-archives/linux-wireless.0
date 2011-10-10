@@ -1,49 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:49336 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751001Ab1JLIXq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 04:23:46 -0400
-Date: Wed, 12 Oct 2011 10:26:58 +0200
-From: Samuel Ortiz <samuel.ortiz@intel.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] iwmc3200wifi: add a range check to iwm_cfg80211_get_key()
-Message-ID: <20111012082656.GA13878@sortiz-mobl> (sfid-20111012_102350_162375_36811163)
-References: <20111012081036.GA32384@elgon.mountain>
-MIME-Version: 1.0
-In-Reply-To: <20111012081036.GA32384@elgon.mountain>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:54982 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752687Ab1JJIMf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Oct 2011 04:12:35 -0400
+Received: by wyg34 with SMTP id 34so5615227wyg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 01:12:34 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 01/29] wl12xx: refactor fw init into a new function
+Date: Mon, 10 Oct 2011 10:12:49 +0200
+Message-Id: <1318234397-21081-2-git-send-email-eliad@wizery.com> (sfid-20111010_101238_725746_AEAAFEEE)
+In-Reply-To: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+The fw boot and initialization currently happens inside the
+add_interface() callback. This is wrong, as add_interface is
+called for each new vif. However, we due to some fw limitation
+(we have to know the actual mac address on boot), we can't
+completely move it into the start() callback.
 
-On Wed, Oct 12, 2011 at 11:10:37AM +0300, Dan Carpenter wrote:
-> Smatch complains that "key_index" is capped at 5 in nl80211_get_key()
-> but iwm->keys[] only has 4 elements.  I don't know if this is really
-> needed, but the other ->get_key() implementations seemed to check
-> for overflows so I've added a check here.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+Until the fw will be fixed, refactor the fw init into
+a new function, and call it from add_interface()
 
-Cheers.
-Samuel.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |  171 +++++++++++++++++++----------------
+ 1 files changed, 93 insertions(+), 78 deletions(-)
 
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 194d7cc..3667acf 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1888,60 +1888,12 @@ static int wl12xx_init_vif_data(struct ieee80211_vif *vif)
+ 	return 0;
+ }
+ 
+-static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+-				   struct ieee80211_vif *vif)
++static bool wl12xx_init_fw(struct wl1271 *wl)
+ {
+-	struct wl1271 *wl = hw->priv;
+-	struct wiphy *wiphy = hw->wiphy;
+-	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+ 	int retries = WL1271_BOOT_RETRIES;
+-	int ret = 0;
+-	u8 role_type;
+ 	bool booted = false;
+-
+-	wl1271_debug(DEBUG_MAC80211, "mac80211 add interface type %d mac %pM",
+-		     ieee80211_vif_type_p2p(vif), vif->addr);
+-
+-	mutex_lock(&wl->mutex);
+-	if (wl->vif) {
+-		wl1271_debug(DEBUG_MAC80211,
+-			     "multiple vifs are not supported yet");
+-		ret = -EBUSY;
+-		goto out;
+-	}
+-
+-	/*
+-	 * in some very corner case HW recovery scenarios its possible to
+-	 * get here before __wl1271_op_remove_interface is complete, so
+-	 * opt out if that is the case.
+-	 */
+-	if (test_bit(WL1271_FLAG_IF_INITIALIZED, &wl->flags)) {
+-		ret = -EBUSY;
+-		goto out;
+-	}
+-
+-	ret = wl12xx_init_vif_data(vif);
+-	if (ret < 0)
+-		goto out;
+-
+-	wlvif->wl = wl;
+-	role_type = wl12xx_get_role_type(wl, wlvif);
+-	if (role_type == WL12XX_INVALID_ROLE_TYPE) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
+-	/*
+-	 * we still need this in order to configure the fw
+-	 * while uploading the nvs
+-	 */
+-	memcpy(wl->mac_addr, vif->addr, ETH_ALEN);
+-
+-	if (wl->state != WL1271_STATE_OFF) {
+-		wl1271_error("cannot start because not in off state: %d",
+-			     wl->state);
+-		ret = -EBUSY;
+-		goto out;
+-	}
++	struct wiphy *wiphy = wl->hw->wiphy;
++	int ret;
+ 
+ 	while (retries) {
+ 		retries--;
+@@ -1957,30 +1909,6 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		if (ret < 0)
+ 			goto irq_disable;
+ 
+-		if (wlvif->bss_type == BSS_TYPE_STA_BSS ||
+-		    wlvif->bss_type == BSS_TYPE_IBSS) {
+-			/*
+-			 * The device role is a special role used for
+-			 * rx and tx frames prior to association (as
+-			 * the STA role can get packets only from
+-			 * its associated bssid)
+-			 */
+-			ret = wl12xx_cmd_role_enable(wl, vif->addr,
+-							 WL1271_ROLE_DEVICE,
+-							 &wlvif->dev_role_id);
+-			if (ret < 0)
+-				goto irq_disable;
+-		}
+-
+-		ret = wl12xx_cmd_role_enable(wl, vif->addr,
+-					     role_type, &wlvif->role_id);
+-		if (ret < 0)
+-			goto irq_disable;
+-
+-		ret = wl1271_init_vif_specific(wl, vif);
+-		if (ret < 0)
+-			goto irq_disable;
+-
+ 		booted = true;
+ 		break;
+ 
+@@ -2007,9 +1935,6 @@ power_off:
+ 		goto out;
+ 	}
+ 
+-	wl->vif = vif;
+-	wl->state = WL1271_STATE_ON;
+-	set_bit(WL1271_FLAG_IF_INITIALIZED, &wl->flags);
+ 	wl1271_info("firmware booted (%s)", wl->chip.fw_ver_str);
+ 
+ 	/* update hw/fw version info in wiphy struct */
+@@ -2027,6 +1952,96 @@ power_off:
+ 	wl1271_debug(DEBUG_MAC80211, "11a is %ssupported",
+ 		     wl->enable_11a ? "" : "not ");
+ 
++	wl->state = WL1271_STATE_ON;
++out:
++	return booted;
++}
++
++static int wl1271_op_add_interface(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif)
++{
++	struct wl1271 *wl = hw->priv;
++	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
++	int ret = 0;
++	u8 role_type;
++	bool booted = false;
++
++	wl1271_debug(DEBUG_MAC80211, "mac80211 add interface type %d mac %pM",
++		     ieee80211_vif_type_p2p(vif), vif->addr);
++
++	mutex_lock(&wl->mutex);
++	if (wl->vif) {
++		wl1271_debug(DEBUG_MAC80211,
++			     "multiple vifs are not supported yet");
++		ret = -EBUSY;
++		goto out;
++	}
++
++	/*
++	 * in some very corner case HW recovery scenarios its possible to
++	 * get here before __wl1271_op_remove_interface is complete, so
++	 * opt out if that is the case.
++	 */
++	if (test_bit(WL1271_FLAG_IF_INITIALIZED, &wl->flags)) {
++		ret = -EBUSY;
++		goto out;
++	}
++
++	ret = wl12xx_init_vif_data(vif);
++	if (ret < 0)
++		goto out;
++
++	wlvif->wl = wl;
++	role_type = wl12xx_get_role_type(wl, wlvif);
++	if (role_type == WL12XX_INVALID_ROLE_TYPE) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	/*
++	 * TODO: after the nvs issue will be solved, move this block
++	 * to start(), and make sure here the driver is ON.
++	 */
++	if (wl->state == WL1271_STATE_OFF) {
++		/*
++		 * we still need this in order to configure the fw
++		 * while uploading the nvs
++		 */
++		memcpy(wl->mac_addr, vif->addr, ETH_ALEN);
++
++		booted = wl12xx_init_fw(wl);
++		if (!booted) {
++			ret = -EINVAL;
++			goto out;
++		}
++	}
++
++	if (wlvif->bss_type == BSS_TYPE_STA_BSS ||
++	    wlvif->bss_type == BSS_TYPE_IBSS) {
++		/*
++		 * The device role is a special role used for
++		 * rx and tx frames prior to association (as
++		 * the STA role can get packets only from
++		 * its associated bssid)
++		 */
++		ret = wl12xx_cmd_role_enable(wl, vif->addr,
++						 WL1271_ROLE_DEVICE,
++						 &wlvif->dev_role_id);
++		if (ret < 0)
++			goto out;
++	}
++
++	ret = wl12xx_cmd_role_enable(wl, vif->addr,
++				     role_type, &wlvif->role_id);
++	if (ret < 0)
++		goto out;
++
++	ret = wl1271_init_vif_specific(wl, vif);
++	if (ret < 0)
++		goto out;
++
++	wl->vif = vif;
++	set_bit(WL1271_FLAG_IF_INITIALIZED, &wl->flags);
+ out:
+ 	mutex_unlock(&wl->mutex);
+ 
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
----------------------------------------------------------------------
-Intel Corporation SAS (French simplified joint stock company)
-Registered headquarters: "Les Montalets"- 2, rue de Paris, 
-92196 Meudon Cedex, France
-Registration Number:  302 456 199 R.C.S. NANTERRE
-Capital: 4,572,000 Euros
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+1.7.6.401.g6a319
 
