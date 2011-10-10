@@ -1,38 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:44372 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750733Ab1J1RRw (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:41933 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752687Ab1JJIMe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 13:17:52 -0400
-Date: Fri, 28 Oct 2011 12:17:49 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>, zajec5@gmail.com,
-	Michael Buesch <mb@bu3sch.de>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43: Remove unneeded message
-Message-ID: <4eaae3bd.6dGvZRxCR5KjZSGd%Larry.Finger@lwfinger.net> (sfid-20111028_191755_803878_ADF257CA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 10 Oct 2011 04:12:34 -0400
+Received: by eye27 with SMTP id 27so1109073eye.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 01:12:32 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 00/29] make the driver ready for multi-vif support
+Date: Mon, 10 Oct 2011 10:12:48 +0200
+Message-Id: <1318234397-21081-1-git-send-email-eliad@wizery.com> (sfid-20111010_101238_173341_E5FB3F12)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver can spam the logs with "RX: Packet dropped" messages. These drops
-originate from 1. a correpted PLCP, 2. decryption errors, and 3. packet 
-size underruns. Condition #3 logs a separate message, thus no dropped message
-is needed.
+This patchset finishes adding multiple vif support to the
+wl12xx driver.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+The driver still allows only a single vif, as the current
+fw only supports a single vif.
 
-Index: wireless-testing-new/drivers/net/wireless/b43/xmit.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/b43/xmit.c
-+++ wireless-testing-new/drivers/net/wireless/b43/xmit.c
-@@ -831,7 +831,6 @@ void b43_rx(struct b43_wldev *dev, struc
- #endif
- 	return;
- drop:
--	b43dbg(dev->wl, "RX: Packet dropped\n");
- 	dev_kfree_skb_any(skb);
- }
- 
+This patchset doesn't break compatibility with the current fw.
+
+Eliad Peller (29):
+  wl12xx: refactor fw init into a new function
+  wl12xx: move last_tx_hlid into wlvif
+  wl12xx: unify STA and AP tx_queue mechanism
+  wl12xx: move some functions from remove_interface() to stop()
+  wl12xx: move bitrate_masks into wlvif
+  wl12xx: add vifs list
+  wl12xx: support multiple vifs in the tx path
+  wl12xx: configure sleep_policy according to active roles
+  wl12xx: make event handling support multirole
+  wl12xx: move tx_security_seq into wlvif
+  wl12xx: rearm rx streaming per vif
+  wl12xx: make WL1271_FLAG_STA_ASSOCIATED flag per-vif
+  wl12xx: make WL1271_FLAG_IBSS_JOINED flag per-vif
+  wl12xx: make WL1271_FLAG_AP_STARTED flag per-vif
+  wl12xx: make WL1271_FLAG_PSM flag per-vif
+  wl12xx: make WL1271_FLAG_STA_STATE_SENT flag per-vif
+  wl12xx: make WL1271_FLAG_RX_STREAMING_STARTED flag per-vif
+  wl12xx: make WL1271_FLAG_IF_INITIALIZED per-vif
+  wl12xx: make WL1271_FLAG_PSPOLL_FAILURE flag per-vif
+  wl12xx: make WL1271_FLAG_CS_PROGRESS flag per-vif
+  wl12xx: add band field to wlvif
+  wl12xx: add channel field to wlvif
+  wl12xx: add power_level field to wlvif
+  wl12xx: make op_config configure all vifs
+  wl12xx: replace all remaining wl->vif references
+  wl12xx: call stop() on recovery
+  wl12xx: use dynamic rate policies
+  wl12xx: add elp wakeup/sleep calls to add_interface
+  wl12xx: use round-robin policy for tx
+
+ drivers/net/wireless/wl12xx/acx.c     |   11 +-
+ drivers/net/wireless/wl12xx/acx.h     |    8 +-
+ drivers/net/wireless/wl12xx/cmd.c     |   70 ++--
+ drivers/net/wireless/wl12xx/cmd.h     |    8 +-
+ drivers/net/wireless/wl12xx/debugfs.c |   23 +-
+ drivers/net/wireless/wl12xx/event.c   |  137 ++++--
+ drivers/net/wireless/wl12xx/init.c    |   48 ++-
+ drivers/net/wireless/wl12xx/main.c    |  923 +++++++++++++++++++--------------
+ drivers/net/wireless/wl12xx/ps.c      |   38 +-
+ drivers/net/wireless/wl12xx/ps.h      |    5 +-
+ drivers/net/wireless/wl12xx/rx.c      |   35 +-
+ drivers/net/wireless/wl12xx/scan.c    |   29 +-
+ drivers/net/wireless/wl12xx/tx.c      |  294 ++++++-----
+ drivers/net/wireless/wl12xx/tx.h      |    8 +-
+ drivers/net/wireless/wl12xx/wl12xx.h  |  117 +++--
+ 15 files changed, 1029 insertions(+), 725 deletions(-)
+
+-- 
+1.7.6.401.g6a319
+
