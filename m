@@ -1,42 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45836 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753429Ab1JVNaH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Oct 2011 09:30:07 -0400
-Subject: Re: Setting negative value in dBm for power output (txpower)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: Patryk =?UTF-8?Q?=C5=BB=C3=B3=C5=82towski?=
-	<patryk.zoltowski@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <CA+XFjiq6EJNczcotbk3R5YQXa-iY_2FY8KK4UN69XxSTm8LtoQ@mail.gmail.com> (sfid-20111022_000241_407613_8304DCDA)
-References: <CAJ5hJZSm4P5Vpzmi6yfF3vy2XAMKH9kE-Kv=FfDLVX9DwQC4Aw@mail.gmail.com>
-	 <CA+XFjiq6EJNczcotbk3R5YQXa-iY_2FY8KK4UN69XxSTm8LtoQ@mail.gmail.com>
-	 (sfid-20111022_000241_407613_8304DCDA)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 22 Oct 2011 15:30:04 +0200
-Message-ID: <1319290204.3956.0.camel@jlt3.sipsolutions.net> (sfid-20111022_153011_517590_5B552601)
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:31149 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751276Ab1JJPQ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Oct 2011 11:16:28 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 14/34] iwlagn: set rts retry limit
+Date: Mon, 10 Oct 2011 07:26:59 -0700
+Message-Id: <1318256839-31837-15-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171736_369123_42D69EC0)
+In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-10-22 at 00:02 +0200, Gábor Stefanik wrote:
-> 2011/10/21 Patryk Żółtowski <patryk.zoltowski@gmail.com>:
-> > I'm doing a research and I'm wondering if it's possible to hack
-> > wireless drivers to allow setting  txpower to smaller value than 1mW
-> > (e.g. 0.1mW = -10dBM, or even 0.01mW). I've checked source code and in
-> > net/mac80211/cfg.c there is the following check:
-> >
-> >  if (mbm < 0 || (mbm % 100))
-> >                     return -EOPNOTSUPP;
-> 
-> The "mbm % 100" part is even weirder; why do we even use millibels if
-> we only allow whole-decibel values?
+setup the rts rety limit for tx command
 
-This is really just historic -- nobody has so far cared about TX power
-enough to clean up the APIs for it etc. The distinction between
-"automatic", "fixed" and "limited" (auto <= some value) is also not
-really done very well here.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-hw.h |    5 ++++-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   18 +++++++++---------
+ 2 files changed, 13 insertions(+), 10 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
+index 33951a1..64e3417 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
+@@ -81,7 +81,10 @@
+ /* RSSI to dBm */
+ #define IWLAGN_RSSI_OFFSET	44
+ 
+-#define IWLAGN_DEFAULT_TX_RETRY  15
++#define IWLAGN_DEFAULT_TX_RETRY			15
++#define IWLAGN_MGMT_DFAULT_RETRY_LIMIT		3
++#define IWLAGN_RTS_DFAULT_RETRY_LIMIT		60
++#define IWLAGN_BAR_DFAULT_RETRY_LIMIT		60
+ 
+ /* Limit range of txpower output target to be between these values */
+ #define IWLAGN_TX_POWER_TARGET_POWER_MIN	(0)	/* 0 dBm: 1 milliwatt */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index dcb3bd6..2584f6f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -113,8 +113,6 @@ static void iwlagn_tx_cmd_build_basic(struct iwl_priv *priv,
+ 	tx_cmd->next_frame_len = 0;
+ }
+ 
+-#define RTS_DFAULT_RETRY_LIMIT		60
+-
+ static void iwlagn_tx_cmd_build_rate(struct iwl_priv *priv,
+ 				     struct iwl_tx_cmd *tx_cmd,
+ 				     struct ieee80211_tx_info *info,
+@@ -126,17 +124,19 @@ static void iwlagn_tx_cmd_build_rate(struct iwl_priv *priv,
+ 	u8 data_retry_limit;
+ 	u8 rate_plcp;
+ 
++	/* Set retry limit on RTS packets */
++	rts_retry_limit = IWLAGN_RTS_DFAULT_RETRY_LIMIT;
++
+ 	/* Set retry limit on DATA packets and Probe Responses*/
+-	if (ieee80211_is_probe_resp(fc))
+-		data_retry_limit = 3;
++	if (ieee80211_is_probe_resp(fc)) {
++		data_retry_limit = IWLAGN_MGMT_DFAULT_RETRY_LIMIT;
++		rts_retry_limit = min(data_retry_limit, rts_retry_limit);
++	} else if (ieee80211_is_back_req(fc))
++		data_retry_limit = IWLAGN_BAR_DFAULT_RETRY_LIMIT;
+ 	else
+ 		data_retry_limit = IWLAGN_DEFAULT_TX_RETRY;
+-	tx_cmd->data_retry_limit = data_retry_limit;
+ 
+-	/* Set retry limit on RTS packets */
+-	rts_retry_limit = RTS_DFAULT_RETRY_LIMIT;
+-	if (data_retry_limit < rts_retry_limit)
+-		rts_retry_limit = data_retry_limit;
++	tx_cmd->data_retry_limit = data_retry_limit;
+ 	tx_cmd->rts_retry_limit = rts_retry_limit;
+ 
+ 	/* DATA packets will use the uCode station table for rate/antenna
+-- 
+1.7.0.4
 
