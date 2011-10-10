@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:40776 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750775Ab1JIAIH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Oct 2011 20:08:07 -0400
-Received: by iakk32 with SMTP id k32so5781425iak.19
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Oct 2011 17:08:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1317987297-18172-1-git-send-email-coelho@ti.com>
-References: <1317987297-18172-1-git-send-email-coelho@ti.com>
-Date: Sun, 9 Oct 2011 02:08:07 +0200
-Message-ID: <CAB3XZEeiyAxzE6tiqe2D71jKuusa-hPz-2fw5bqHocaw+d1xWg@mail.gmail.com> (sfid-20111009_020815_207809_AB927020)
-Subject: Re: [PATCH 1/2] wl12xx: sdio: use dev_dbg instead of wl1271_debug
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:54032 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751148Ab1JJPQ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Oct 2011 11:16:28 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 13/34] iwlagn: remove un-necessary step
+Date: Mon, 10 Oct 2011 07:26:58 -0700
+Message-Id: <1318256839-31837-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171734_430921_B7D8E38A)
+In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 7, 2011 at 1:34 PM, Luciano Coelho <coelho@ti.com> wrote:
-> To prevent a useless dependency between the sdio module and the wl12xx
-> module, we need to replace the wl1271_debug macros (and friends) for
-> dev_dbg and other equivalents.
->
-> At the same time, remove the SDIO data hexdump, since this produces
-> way too much data and is not particularly useful.  There's not
-> print_hex_dump() equivalent for dynamic debug, so it's hard to control
-> when the dumps are printed out.
->
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
-[...]
->                if (!(sdio_flags & MMC_PM_KEEP_POWER)) {
-> -                       wl1271_error("can't keep power while host "
-> +                       dev_err(dev, "can't keep power while host \n"
->                                     "is suspended");
+No need to copy twice.
 
-you missed the concatenation here :)
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 7d6a3bf..353af8f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2666,8 +2666,7 @@ lq_update:
+ 
+ out:
+ 	tbl->current_rate = rate_n_flags_from_tbl(priv, tbl, index, is_green);
+-	i = index;
+-	lq_sta->last_txrate_idx = i;
++	lq_sta->last_txrate_idx = index;
+ }
+ 
+ /**
+-- 
+1.7.0.4
+
