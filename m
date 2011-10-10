@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59702 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754324Ab1JVRjv (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:29904 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753780Ab1JJRsE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Oct 2011 13:39:51 -0400
-Subject: Re: [PATCH 1/4] nl80211: Add probe response offload attribute
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Guy Eilam <guy@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAA038468Y7T4BSAycqmNc0q+Ph1wSh07B57tV--O00kvDEp-wg@mail.gmail.com> (sfid-20111022_192728_088869_C7443530)
-References: <1319289112-21896-1-git-send-email-guy@wizery.com>
-	 <1319290457.3956.3.camel@jlt3.sipsolutions.net>
-	 <1319290618.3956.6.camel@jlt3.sipsolutions.net>
-	 <CAA038468Y7T4BSAycqmNc0q+Ph1wSh07B57tV--O00kvDEp-wg@mail.gmail.com>
-	 (sfid-20111022_192728_088869_C7443530)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 22 Oct 2011 19:39:46 +0200
-Message-ID: <1319305186.3956.11.camel@jlt3.sipsolutions.net> (sfid-20111022_193954_840410_3142181D)
-Mime-Version: 1.0
+	Mon, 10 Oct 2011 13:48:04 -0400
+Date: Mon, 10 Oct 2011 20:45:06 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Franky Lin <frankyl@broadcom.com>, devel@linuxdriverproject.org,
+	gregkh@suse.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 04/20] staging: brcm80211: various __iomem additions to
+ softmac.
+Message-ID: <20111010174506.GA18470@longonot.mountain> (sfid-20111010_194808_535681_4D91A69D)
+References: <1317575685-3156-1-git-send-email-frankyl@broadcom.com>
+ <1317575685-3156-5-git-send-email-frankyl@broadcom.com>
+ <CACna6rzFQZqed3ZfRxcd_WCvOsjKgeDd=T8EgtgpJttmTO3+cg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rzFQZqed3ZfRxcd_WCvOsjKgeDd=T8EgtgpJttmTO3+cg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-10-22 at 19:26 +0200, Guy Eilam wrote:
-
-> >> > +enum nl80211_probe_resp_offload_support_attr {
-> >> > +   NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS,
-> >> > +   NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2,
-> >> > +   NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P,
-> >> > +};
-> >>
-> >> I think doing = 1<<N here would be nicer to use in drivers & userspace.
-> >
-> > Hm, also: should we call this WPS or WSC, and do we need to distinguish
-> > WPS and WPS2? My AP mode patch called it WSC in a different context but
-> > I can change, we just should be consistent.
-> >
-> >> > + * @get_probe_resp_offload: Get probe response offload support from driver.
-> >>
-> >> and this seems unnecessary -- why not just put a u32 value into struct
-> >> wiphy?
-> >
-> > Oh, and probably a regular WIPHY flag that indicates whether the
-> > attribute should be added at all so that it can also be 0 but present
-> > (presence with 0 value indicates something other than not present).
+On Mon, Oct 10, 2011 at 04:23:28PM +0200, Rafał Miłecki wrote:
+> > -#define CCREGS_FAST(si) (((char *)((si)->curmap) + PCI_16KB0_CCREGS_OFFSET))
+> > +#define CCREGS_FAST(si) (((char __iomem *)((si)->curmap) + \
+> > +                         PCI_16KB0_CCREGS_OFFSET))
 > 
-> When this is not supported a -EOPNOTSUPP should be returned.
-> A 0 return means that it is supported.
+> I've a question (not to just you), should we prefer u8/u16/u32 types in code?
+> If so, you could think to changing this since you already touch this code.
+> 
 
-Yeah but if you add a wiphy flag and the bits into struct wiphy, then
-you can save the function pointer which seems nicer?
+The char is just so that the addition works, the caller will have to
+cast it again.  It's up to the author to decide.
 
-johannes
+If you're going to be doing bitwise operations then you can run into
+signedness bugs using char.
 
+	printf("0x%x\n", (int) 0 | (char) -1);       /* 0xffffffff */
+	printf("0x%x\n", (int) 0 | (unsigned char) -1);    /* 0xff */
+
+Also if you are going to save hex digits to it, then it should be u8.
+You occasionally see bugs like this:
+
+	char x = 0xff;
+
+	if (x == 0xff)
+		printf("dead code here.\n");
+	else
+		printf("signed chars only reach up to 0x7f\n");
+
+regards,
+dan carpenter
