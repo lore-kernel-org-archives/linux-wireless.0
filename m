@@ -1,129 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:35975 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933071Ab1JEJ4P (ORCPT
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:46908 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751310Ab1JJSv4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 05:56:15 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 28so1405752eya.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:56:15 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 19/29] wl12xx: move some logic into wl12xx_init_vif_data
-Date: Wed,  5 Oct 2011 11:55:56 +0200
-Message-Id: <1317808566-18857-20-git-send-email-eliad@wizery.com> (sfid-20111005_115621_735644_D57C5CDB)
-In-Reply-To: <1317808566-18857-1-git-send-email-eliad@wizery.com>
-References: <1317808566-18857-1-git-send-email-eliad@wizery.com>
+	Mon, 10 Oct 2011 14:51:56 -0400
+Received: by mail-ey0-f170.google.com with SMTP id 7so1624363eyg.29
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 11:51:55 -0700 (PDT)
+Subject: Re: [PATCH 08/29] wl12xx: configure sleep_policy according to
+ active roles
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1318234397-21081-9-git-send-email-eliad@wizery.com>
+References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+	 <1318234397-21081-9-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 10 Oct 2011 21:51:52 +0300
+Message-ID: <1318272712.9690.384.camel@cumari> (sfid-20111010_205229_104372_111880F4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialize the vif data according to the vif type
+On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote: 
+> If there is an active AP role, stay always on.
+> Otherwise, allow chip to enter elp.
+> 
+> (Note that this is a global configuration, so if the
+> device is already configured according to our policy,
+> we don't have to configure it again)
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   66 ++++++++++++++++++++++--------------
- 1 files changed, 40 insertions(+), 26 deletions(-)
+[...]
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 8743885..0f13dd5 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1854,20 +1854,52 @@ static u8 wl12xx_get_role_type(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	return WL12XX_INVALID_ROLE_TYPE;
- }
- 
--static void wl12xx_init_vif_data(struct wl12xx_vif *wlvif)
-+static int wl12xx_init_vif_data(struct ieee80211_vif *vif)
- {
--	wlvif->bss_type = MAX_BSS_TYPE;
-+	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
-+
-+	/* make sure wlvif is zeroed */
-+	memset(wlvif, 0, sizeof(*wlvif));
-+
-+	switch (ieee80211_vif_type_p2p(vif)) {
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		wlvif->p2p = 1;
-+		/* fall-through */
-+	case NL80211_IFTYPE_STATION:
-+		wlvif->bss_type = BSS_TYPE_STA_BSS;
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+		wlvif->bss_type = BSS_TYPE_IBSS;
-+		break;
-+	case NL80211_IFTYPE_P2P_GO:
-+		wlvif->p2p = 1;
-+		/* fall-through */
-+	case NL80211_IFTYPE_AP:
-+		wlvif->bss_type = BSS_TYPE_AP_BSS;
-+		break;
-+	default:
-+		wlvif->bss_type = MAX_BSS_TYPE;
-+		return -EOPNOTSUPP;
-+	}
-+
- 	wlvif->role_id = WL12XX_INVALID_ROLE_ID;
- 	wlvif->dev_role_id = WL12XX_INVALID_ROLE_ID;
- 
--	/* TODO: init union by type */
--	wlvif->sta.hlid = WL12XX_INVALID_LINK_ID;
--	wlvif->ap.bcast_hlid = WL12XX_INVALID_LINK_ID;
--	wlvif->ap.global_hlid = WL12XX_INVALID_LINK_ID;
-+	if (wlvif->bss_type == BSS_TYPE_STA_BSS ||
-+	    wlvif->bss_type == BSS_TYPE_IBSS) {
-+		/* init sta/ibss data */
-+		wlvif->sta.hlid = WL12XX_INVALID_LINK_ID;
-+
-+	} else {
-+		/* init ap data */
-+		wlvif->ap.bcast_hlid = WL12XX_INVALID_LINK_ID;
-+		wlvif->ap.global_hlid = WL12XX_INVALID_LINK_ID;
-+	}
- 
- 	wlvif->basic_rate_set = CONF_TX_RATE_MASK_BASIC;
- 	wlvif->basic_rate = CONF_TX_RATE_MASK_BASIC;
- 	wlvif->rate_set = CONF_TX_RATE_MASK_BASIC;
-+	return 0;
- }
- 
- static int wl1271_op_add_interface(struct ieee80211_hw *hw,
-@@ -1891,7 +1923,6 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 		ret = -EBUSY;
- 		goto out;
- 	}
--	wl12xx_init_vif_data(wlvif);
- 
- 	/*
- 	 * in some very corner case HW recovery scenarios its possible to
-@@ -1903,26 +1934,9 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 		goto out;
- 	}
- 
--	switch (ieee80211_vif_type_p2p(vif)) {
--	case NL80211_IFTYPE_P2P_CLIENT:
--		wlvif->p2p = 1;
--		/* fall-through */
--	case NL80211_IFTYPE_STATION:
--		wlvif->bss_type = BSS_TYPE_STA_BSS;
--		break;
--	case NL80211_IFTYPE_ADHOC:
--		wlvif->bss_type = BSS_TYPE_IBSS;
--		break;
--	case NL80211_IFTYPE_P2P_GO:
--		wlvif->p2p = 1;
--		/* fall-through */
--	case NL80211_IFTYPE_AP:
--		wlvif->bss_type = BSS_TYPE_AP_BSS;
--		break;
--	default:
--		ret = -EOPNOTSUPP;
-+	ret = wl12xx_init_vif_data(vif);
-+	if (ret < 0)
- 		goto out;
--	}
- 
- 	role_type = wl12xx_get_role_type(wl, wlvif);
- 	if (role_type == WL12XX_INVALID_ROLE_TYPE) {
+> @@ -573,13 +563,38 @@ static int wl12xx_init_ap_role(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+>  
+>  int wl1271_init_vif_specific(struct wl1271 *wl, struct ieee80211_vif *vif)
+>  {
+> -	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+> +	struct wl12xx_vif *iter, *wlvif = wl12xx_vif_to_data(vif);
+>  	struct conf_tx_ac_category *conf_ac;
+>  	struct conf_tx_tid *conf_tid;
+>  	bool is_ap = (wlvif->bss_type == BSS_TYPE_AP_BSS);
+> -
+> +	u8 sta_roles_cnt = 0, ap_roles_cnt = 0;
+>  	int ret, i;
+>  
+> +	wl12xx_for_each_wlvif(wl, iter) {
+> +		if (iter->bss_type == BSS_TYPE_AP_BSS)
+> +			ap_roles_cnt++;
+> +		else
+> +			sta_roles_cnt++;
+> +	}
+> +
+> +	/*
+> +	 * consider all existing roles before configuring psm.
+> +	 * TODO: reconfigure on interface removal.
+> +	 */
+> +	if (!ap_roles_cnt) {
+> +		if (is_ap) {
+> +			/* Configure for power always on */
+> +			ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
+> +			if (ret < 0)
+> +				return ret;
+> +		} else if (!sta_roles_cnt) {
+> +			/* Configure for ELP power saving */
+> +			ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_ELP);
+> +			if (ret < 0)
+> +				return ret;
+> +		}
+> +	}
+> +
+
+Wouldn't it be much simpler to have a "have_ap" element in the wl
+struct?
+
+
 -- 
-1.7.6.401.g6a319
+Cheers,
+Luca.
 
