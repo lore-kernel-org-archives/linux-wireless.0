@@ -1,68 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:47748 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750827Ab1JHHJ0 convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:41933 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752853Ab1JJINA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Oct 2011 03:09:26 -0400
-MIME-Version: 1.0
-In-Reply-To: <4E8FF54F.1080306@gmail.com>
-References: <20111007.145703.842130763413648388.davem@davemloft.net>
-	<20111007.155902.916470368193047875.davem@davemloft.net>
-	<CAN17JHUGnAbHJmwybjJVdxq4JOgHfDxChw1P7q1yrkqH6Ci05w@mail.gmail.com>
-	<4E8FF54F.1080306@gmail.com>
-Date: Sat, 8 Oct 2011 00:09:24 -0700
-Message-ID: <CAN17JHUdg2aJmpMOD_hn61eramPPnTr0_tiy3c7w7cKa8FMtsQ@mail.gmail.com> (sfid-20111008_090937_498092_1E4F007E)
-Subject: Re: moving GIT back to kernel.org...
-From: Yinglin Sun <yinglin.s@gmail.com>
-To: jeffrey.t.kirsher@intel.com
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	sfr@canb.auug.org.au, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org, sparclinux@vger.kernel.org,
-	linux-ide@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 10 Oct 2011 04:13:00 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 27so1109073eye.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 01:12:59 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 14/29] wl12xx: make WL1271_FLAG_AP_STARTED flag per-vif
+Date: Mon, 10 Oct 2011 10:13:02 +0200
+Message-Id: <1318234397-21081-15-git-send-email-eliad@wizery.com> (sfid-20111010_101305_726195_3F1144C3)
+In-Reply-To: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 8, 2011 at 12:01 AM, Jeff Kirsher <tarbal@gmail.com> wrote:
-> On 10/07/2011 11:55 PM, Yinglin Sun wrote:
->> On Fri, Oct 7, 2011 at 12:59 PM, David Miller <davem@davemloft.net> wrote:
->>> From: David Miller <davem@davemloft.net>
->>> Date: Fri, 07 Oct 2011 14:57:03 -0400 (EDT)
->>>
->>>> I'm about to setup my GIT trees on kernel.org, once that is complete
->>>> I will be solely updating those trees again.
->>>>
->>>> I will notify everyone when this is ready to go.
->>>>
->>>> Just a heads up for everyone...
->>> Ok, they are now online, please update your URLs.
->>>
->>> git://git.kernel.org/pub/scm/linux/kernel/git/davem/net.git
->>> git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git
->>> git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc.git
->>> git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git
->>>
->> I'm still new to net kernel development, so a little confused about these trees.
->> So we should submit patches based on these trees, instead of Linus'?
->> About net and net-next, How to decide which one to use?
->>
->> Thanks!
->>
->> Yinglin
->>
->
-> *If* you have change against the network core/drivers then, you would
-> want to use David Miller's net or net-next trees.
->
-> As a general rule:
->  - net tree is only for fixes/critical fixes
->  - net-next tree is for everything else
->
-> There are always exceptions, but if you stick to the above general rule,
-> you will be fine.
->
->
+This flag should be set per-vif, rather than globally.
 
-Got it. Thanks Jeff!
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c   |   14 +++++++-------
+ drivers/net/wireless/wl12xx/tx.c     |    2 +-
+ drivers/net/wireless/wl12xx/wl12xx.h |    2 +-
+ 3 files changed, 9 insertions(+), 9 deletions(-)
 
-Yinglin
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 092b3b5..4c4b34d 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1235,7 +1235,7 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 	 */
+ 	wl12xx_for_each_wlvif(wl, wlvif) {
+ 		if (test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags) ||
+-		    test_bit(WL1271_FLAG_AP_STARTED, &wl->flags))
++		    test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags))
+ 			wlvif->tx_security_seq +=
+ 				WL1271_TX_SQN_POST_RECOVERY_PADDING;
+ 	}
+@@ -1662,7 +1662,7 @@ static int wl1271_configure_suspend_ap(struct wl1271 *wl,
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+-	if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags))
++	if (!test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags))
+ 		goto out_unlock;
+ 
+ 	ret = wl1271_ps_elp_wakeup(wl);
+@@ -2758,7 +2758,7 @@ static int wl1271_set_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 			hlid = wlvif->ap.bcast_hlid;
+ 		}
+ 
+-		if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags)) {
++		if (!test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags)) {
+ 			/*
+ 			 * We do not support removing keys after AP shutdown.
+ 			 * Pretend we do to make mac80211 happy.
+@@ -3416,7 +3416,7 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
+ 
+ 	if ((changed & BSS_CHANGED_BEACON_ENABLED)) {
+ 		if (bss_conf->enable_beacon) {
+-			if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags)) {
++			if (!test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags)) {
+ 				ret = wl12xx_cmd_role_start_ap(wl, wlvif);
+ 				if (ret < 0)
+ 					goto out;
+@@ -3425,16 +3425,16 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
+ 				if (ret < 0)
+ 					goto out;
+ 
+-				set_bit(WL1271_FLAG_AP_STARTED, &wl->flags);
++				set_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags);
+ 				wl1271_debug(DEBUG_AP, "started AP");
+ 			}
+ 		} else {
+-			if (test_bit(WL1271_FLAG_AP_STARTED, &wl->flags)) {
++			if (test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags)) {
+ 				ret = wl12xx_cmd_role_stop_ap(wl, wlvif);
+ 				if (ret < 0)
+ 					goto out;
+ 
+-				clear_bit(WL1271_FLAG_AP_STARTED, &wl->flags);
++				clear_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags);
+ 				wl1271_debug(DEBUG_AP, "stopped AP");
+ 			}
+ 		}
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 5ad4173..a6bc979 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -168,7 +168,7 @@ u8 wl12xx_tx_get_hlid_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	} else {
+ 		struct ieee80211_hdr *hdr;
+ 
+-		if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags))
++		if (!test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags))
+ 			return wl->system_hlid;
+ 
+ 		hdr = (struct ieee80211_hdr *)skb->data;
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index aa198a6..042ab07 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -325,7 +325,6 @@ enum wl12xx_flags {
+ 	WL1271_FLAG_PSPOLL_FAILURE,
+ 	WL1271_FLAG_STA_STATE_SENT,
+ 	WL1271_FLAG_FW_TX_BUSY,
+-	WL1271_FLAG_AP_STARTED,
+ 	WL1271_FLAG_IF_INITIALIZED,
+ 	WL1271_FLAG_DUMMY_PACKET_PENDING,
+ 	WL1271_FLAG_SUSPENDED,
+@@ -339,6 +338,7 @@ enum wl12xx_flags {
+ enum wl12xx_vif_flags {
+ 	WLVIF_FLAG_STA_ASSOCIATED,
+ 	WLVIF_FLAG_IBSS_JOINED,
++	WLVIF_FLAG_AP_STARTED,
+ };
+ 
+ struct wl1271_link {
+-- 
+1.7.6.401.g6a319
+
