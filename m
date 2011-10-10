@@ -1,151 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:56047 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752151Ab1JKOcV (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:62854 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752687Ab1JJIMq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 10:32:21 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH v2 1/5] ath6kl: Add endpoint_stats debugfs file
-Date: Tue, 11 Oct 2011 17:31:53 +0300
-Message-ID: <1318343517-15292-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20111011_163225_169553_715FF648)
-In-Reply-To: <1318343517-15292-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1318343517-15292-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 10 Oct 2011 04:12:46 -0400
+Received: by wwf22 with SMTP id 22so8786663wwf.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 01:12:45 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 06/29] wl12xx: add vifs list
+Date: Mon, 10 Oct 2011 10:12:54 +0200
+Message-Id: <1318234397-21081-7-git-send-email-eliad@wizery.com> (sfid-20111010_101248_612345_25F9EE2E)
+In-Reply-To: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This file can be used to fetch endpoint statistics counters and
-to clear them by writing 0 to it.
+keep a list of all the vifs associated with our hw.
+it will be later used in order to iterate through vifs.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath6kl/debug.c |  102 +++++++++++++++++++++++++++++++
- 1 files changed, 102 insertions(+), 0 deletions(-)
+ drivers/net/wireless/wl12xx/main.c   |    4 ++++
+ drivers/net/wireless/wl12xx/wl12xx.h |    6 ++++++
+ 2 files changed, 10 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index ba3f23d..b9bf28d 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -595,6 +595,105 @@ static const struct file_operations fops_credit_dist_stats = {
- 	.llseek = default_llseek,
- };
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index acfc497..56d5923 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1957,6 +1957,7 @@ static int wl12xx_init_vif_data(struct wl1271 *wl, struct ieee80211_vif *vif)
+ 	wlvif->beacon_int = WL1271_DEFAULT_BEACON_INT;
  
-+static unsigned int print_endpoint_stat(struct htc_target *target, char *buf,
-+					unsigned int buf_len, unsigned int len,
-+					int offset, const char *name)
-+{
-+	int i;
-+	struct htc_endpoint_stats *ep_st;
-+	u32 *counter;
-+
-+	len += scnprintf(buf + len, buf_len - len, "%s:", name);
-+	for (i = 0; i < ENDPOINT_MAX; i++) {
-+		ep_st = &target->endpoint[i].ep_st;
-+		counter = ((u32 *) ep_st) + (offset / 4);
-+		len += scnprintf(buf + len, buf_len - len, " %u", *counter);
-+	}
-+	len += scnprintf(buf + len, buf_len - len, "\n");
-+
-+	return len;
-+}
-+
-+static ssize_t ath6kl_endpoint_stats_read(struct file *file,
-+					  char __user *user_buf,
-+					  size_t count, loff_t *ppos)
-+{
-+	struct ath6kl *ar = file->private_data;
-+	struct htc_target *target = ar->htc_target;
-+	char *buf;
-+	unsigned int buf_len, len = 0;
-+	ssize_t ret_cnt;
-+
-+	buf_len = 1000 + ENDPOINT_MAX * 100;
-+	buf = kzalloc(buf_len, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+#define EPSTAT(name)							\
-+	len = print_endpoint_stat(target, buf, buf_len, len,		\
-+				  offsetof(struct htc_endpoint_stats, name), \
-+				  #name)
-+	EPSTAT(cred_low_indicate);
-+	EPSTAT(tx_issued);
-+	EPSTAT(tx_pkt_bundled);
-+	EPSTAT(tx_bundles);
-+	EPSTAT(tx_dropped);
-+	EPSTAT(tx_cred_rpt);
-+	EPSTAT(cred_rpt_from_rx);
-+	EPSTAT(cred_rpt_ep0);
-+	EPSTAT(cred_from_rx);
-+	EPSTAT(cred_from_other);
-+	EPSTAT(cred_from_ep0);
-+	EPSTAT(cred_cosumd);
-+	EPSTAT(cred_retnd);
-+	EPSTAT(rx_pkts);
-+	EPSTAT(rx_lkahds);
-+	EPSTAT(rx_bundl);
-+	EPSTAT(rx_bundle_lkahd);
-+	EPSTAT(rx_bundle_from_hdr);
-+	EPSTAT(rx_alloc_thresh_hit);
-+	EPSTAT(rxalloc_thresh_byte);
-+#undef EPSTAT
-+
-+	if (len > buf_len)
-+		len = buf_len;
-+
-+	ret_cnt = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	kfree(buf);
-+	return ret_cnt;
-+}
-+
-+static ssize_t ath6kl_endpoint_stats_write(struct file *file,
-+					   const char __user *user_buf,
-+					   size_t count, loff_t *ppos)
-+{
-+	struct ath6kl *ar = file->private_data;
-+	struct htc_target *target = ar->htc_target;
-+	int ret, i;
-+	u32 val;
-+	struct htc_endpoint_stats *ep_st;
-+
-+	ret = kstrtou32_from_user(user_buf, count, 0, &val);
-+	if (ret)
-+		return ret;
-+	if (val == 0) {
-+		for (i = 0; i < ENDPOINT_MAX; i++) {
-+			ep_st = &target->endpoint[i].ep_st;
-+			memset(ep_st, 0, sizeof(*ep_st));
-+		}
-+	}
-+
-+	return count;
-+}
-+
-+static const struct file_operations fops_endpoint_stats = {
-+	.open = ath6kl_debugfs_open,
-+	.read = ath6kl_endpoint_stats_read,
-+	.write = ath6kl_endpoint_stats_write,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- static unsigned long ath6kl_get_num_reg(void)
- {
- 	int i;
-@@ -901,6 +1000,9 @@ int ath6kl_debug_init(struct ath6kl *ar)
- 	debugfs_create_file("credit_dist_stats", S_IRUSR, ar->debugfs_phy, ar,
- 			    &fops_credit_dist_stats);
+ 	INIT_DELAYED_WORK(&wlvif->pspoll_work, wl1271_pspoll_work);
++	INIT_LIST_HEAD(&wlvif->list);
  
-+	debugfs_create_file("endpoint_stats", S_IRUSR | S_IWUSR,
-+			    ar->debugfs_phy, ar, &fops_endpoint_stats);
-+
- 	debugfs_create_file("fwlog", S_IRUSR, ar->debugfs_phy, ar,
- 			    &fops_fwlog);
+ 	return 0;
+ }
+@@ -2114,6 +2115,7 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		goto out;
  
+ 	wl->vif = vif;
++	list_add(&wlvif->list, &wl->wlvif_list);
+ 	set_bit(WL1271_FLAG_IF_INITIALIZED, &wl->flags);
+ out:
+ 	mutex_unlock(&wl->mutex);
+@@ -2181,6 +2183,7 @@ deinit:
+ 
+ 	wl12xx_tx_reset_wlvif(wl, wlvif);
+ 	wl1271_free_ap_keys(wl, wlvif);
++	list_del(&wlvif->list);
+ 	memset(wlvif->ap.sta_hlid_map, 0, sizeof(wlvif->ap.sta_hlid_map));
+ 	wlvif->role_id = WL12XX_INVALID_ROLE_ID;
+ 	wlvif->dev_role_id = WL12XX_INVALID_ROLE_ID;
+@@ -4869,6 +4872,7 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	memset(wl, 0, sizeof(*wl));
+ 
+ 	INIT_LIST_HEAD(&wl->list);
++	INIT_LIST_HEAD(&wl->wlvif_list);
+ 
+ 	wl->hw = hw;
+ 	wl->plat_dev = plat_dev;
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 33ccdf8..55561c5 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -394,6 +394,8 @@ struct wl1271 {
+ 	unsigned long roles_map[BITS_TO_LONGS(WL12XX_MAX_ROLES)];
+ 	unsigned long roc_map[BITS_TO_LONGS(WL12XX_MAX_ROLES)];
+ 
++	struct list_head wlvif_list;
++
+ 	struct wl1271_acx_mem_map *target_mem_map;
+ 
+ 	/* Accounting for allocated / available TX blocks on HW */
+@@ -564,6 +566,7 @@ struct wl1271_station {
+ 
+ struct wl12xx_vif {
+ 	struct wl1271 *wl;
++	struct list_head list;
+ 	u8 bss_type;
+ 	u8 p2p; /* we are using p2p role */
+ 	u8 role_id;
+@@ -653,6 +656,9 @@ struct ieee80211_vif *wl12xx_wlvif_to_vif(struct wl12xx_vif *wlvif)
+ 	return container_of((void *)wlvif, struct ieee80211_vif, drv_priv);
+ }
+ 
++#define wl12xx_for_each_wlvif(wl, wlvif) \
++		list_for_each_entry(wlvif, &wl->wlvif_list, list)
++
+ int wl1271_plt_start(struct wl1271 *wl);
+ int wl1271_plt_stop(struct wl1271 *wl);
+ int wl1271_recalc_rx_streaming(struct wl1271 *wl);
 -- 
-1.7.4.1
+1.7.6.401.g6a319
 
