@@ -1,36 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:41452 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753291Ab1JGQ2L (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:63761 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752706Ab1JJThA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 12:28:11 -0400
-Date: Fri, 7 Oct 2011 21:57:17 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 09/14] ath9k_hw: Fix ASPM L1 issue for AR9480
-Message-ID: <20111007162716.GB860@vmraj-lnx.users.atheros.com> (sfid-20111007_182815_676555_339C96C1)
-References: <1317988039-28632-1-git-send-email-rmanohar@qca.qualcomm.com>
- <1317988039-28632-9-git-send-email-rmanohar@qca.qualcomm.com>
- <CAB=NE6XLSr08L3f1DFZawX+U71xuAjmwRMMMABKuYKUXdidriw@mail.gmail.com>
+	Mon, 10 Oct 2011 15:37:00 -0400
+Received: by gyg10 with SMTP id 10so5678891gyg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 12:37:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAB=NE6XLSr08L3f1DFZawX+U71xuAjmwRMMMABKuYKUXdidriw@mail.gmail.com>
+In-Reply-To: <1318273094.9690.385.camel@cumari>
+References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+	<1318234397-21081-10-git-send-email-eliad@wizery.com>
+	<1318273094.9690.385.camel@cumari>
+Date: Mon, 10 Oct 2011 21:36:56 +0200
+Message-ID: <CAB3XZEc9DcYHmph9wH=+8jQkjBPAiGqHW7P-oVcQJcBHeONNWQ@mail.gmail.com> (sfid-20111010_213705_512931_81FA83F8)
+Subject: Re: [PATCH 09/29] wl12xx: make event handling support multirole
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 07, 2011 at 08:49:35AM -0700, Luis R. Rodriguez wrote:
-> On Fri, Oct 7, 2011 at 4:47 AM, Rajkumar Manoharan
-> <rmanohar@qca.qualcomm.com> wrote:
-> > Because of not clearing Bit 14 of AR_WA, the ASPM L1 is not
-> > enabled when entering into sleep mode. AR9480 does not need
-> > bit 14 to be set.
-> >
-> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> 
-> Is this a stable fix?
+On Mon, Oct 10, 2011 at 8:58 PM, Luciano Coelho <coelho@ti.com> wrote:
+> On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote:
+>> Some events don't indicate the role they are intended for.
+>> In these cases, iterate through all the relevant vifs,
+>> and pass the event to each one of them.
+>>
+>> This is only a workaround. future fw releases should indicate
+>> the relevant role_id for such events.
+>>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> ---
 >
-Hmmm...Right it is applicable to 3.1.0+
+> Is this workaround really necessary? Are we going to have a firmware
+> that supports multi-role but does *not* pass the role_id for these
+> events?
+>
+i hope not. :)
+but in the meantime, we use this workaround to keep compatibility with
+the current (single-role) fw.
 
---
-Rajkumar
+Eliad.
