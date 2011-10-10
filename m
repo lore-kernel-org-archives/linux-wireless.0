@@ -1,65 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41955 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753706Ab1JWGWD (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:35065 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753263Ab1JJKpT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Oct 2011 02:22:03 -0400
-Received: by mail-bw0-f46.google.com with SMTP id zt19so6690457bkb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Oct 2011 23:22:02 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 2/2] wl12xx: handle idle changes per-interface
-Date: Sun, 23 Oct 2011 08:21:55 +0200
-Message-Id: <1319350915-31222-2-git-send-email-arik@wizery.com> (sfid-20111023_082208_653732_02A2B1D3)
-In-Reply-To: <1319350915-31222-1-git-send-email-arik@wizery.com>
-References: <1319350915-31222-1-git-send-email-arik@wizery.com>
+	Mon, 10 Oct 2011 06:45:19 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH 1/5] ath6kl: Add endpoint_stats debugfs file
+Date: Mon, 10 Oct 2011 13:43:27 +0300
+Message-ID: <1318243411-16110-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20111010_124523_218775_AF7BFFE3)
+In-Reply-To: <1318243411-16110-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1318243411-16110-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+This file can be used to fetch endpoint statistics counters and
+to clear them by writing 0 to it.
 
-Idle changes are currently handled per hardware.
-However, some operations should be done only per-interface.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/net/wireless/wl12xx/main.c |   13 ++++++-------
- 1 files changed, 6 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath6kl/debug.c |  102 +++++++++++++++++++++++++++++++
+ 1 files changed, 102 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 75adc76..b65816d 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2540,13 +2540,6 @@ static int wl12xx_config_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		}
- 	}
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index ba3f23d..b9bf28d 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -595,6 +595,105 @@ static const struct file_operations fops_credit_dist_stats = {
+ 	.llseek = default_llseek,
+ };
  
--	if (changed & IEEE80211_CONF_CHANGE_IDLE && !is_ap) {
--		ret = wl1271_sta_handle_idle(wl, wlvif,
--					conf->flags & IEEE80211_CONF_IDLE);
--		if (ret < 0)
--			wl1271_warning("idle mode change failed %d", ret);
--	}
--
- 	/*
- 	 * if mac80211 changes the PSM mode, make sure the mode is not
- 	 * incorrectly changed after the pspoll failure active window.
-@@ -3619,6 +3612,12 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 		do_join = true;
- 	}
- 
-+	if (changed & BSS_CHANGED_IDLE) {
-+		ret = wl1271_sta_handle_idle(wl, wlvif, bss_conf->idle);
-+		if (ret < 0)
-+			wl1271_warning("idle mode change failed %d", ret);
++static unsigned int print_endpoint_stat(struct htc_target *target, char *buf,
++					unsigned int buf_len, unsigned int len,
++					int offset, const char *name)
++{
++	int i;
++	struct htc_endpoint_stats *ep_st;
++	u32 *counter;
++
++	len += scnprintf(buf + len, buf_len - len, "%s:", name);
++	for (i = 0; i < ENDPOINT_MAX; i++) {
++		ep_st = &target->endpoint[i].ep_st;
++		counter = ((u32 *) ep_st) + (offset / 4);
++		len += scnprintf(buf + len, buf_len - len, " %u", *counter);
++	}
++	len += scnprintf(buf + len, buf_len - len, "\n");
++
++	return len;
++}
++
++static ssize_t ath6kl_endpoint_stats_read(struct file *file,
++					  char __user *user_buf,
++					  size_t count, loff_t *ppos)
++{
++	struct ath6kl *ar = file->private_data;
++	struct htc_target *target = ar->htc_target;
++	char *buf;
++	unsigned int buf_len, len = 0;
++	ssize_t ret_cnt;
++
++	buf_len = 1000 + ENDPOINT_MAX * 100;
++	buf = kzalloc(buf_len, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++#define EPSTAT(name)							\
++	len = print_endpoint_stat(target, buf, buf_len, len,		\
++				  offsetof(struct htc_endpoint_stats, name), \
++				  #name)
++	EPSTAT(cred_low_indicate);
++	EPSTAT(tx_issued);
++	EPSTAT(tx_pkt_bundled);
++	EPSTAT(tx_bundles);
++	EPSTAT(tx_dropped);
++	EPSTAT(tx_cred_rpt);
++	EPSTAT(cred_rpt_from_rx);
++	EPSTAT(cred_rpt_ep0);
++	EPSTAT(cred_from_rx);
++	EPSTAT(cred_from_other);
++	EPSTAT(cred_from_ep0);
++	EPSTAT(cred_cosumd);
++	EPSTAT(cred_retnd);
++	EPSTAT(rx_pkts);
++	EPSTAT(rx_lkahds);
++	EPSTAT(rx_bundl);
++	EPSTAT(rx_bundle_lkahd);
++	EPSTAT(rx_bundle_from_hdr);
++	EPSTAT(rx_alloc_thresh_hit);
++	EPSTAT(rxalloc_thresh_byte);
++#undef EPSTAT
++
++	if (len > buf_len)
++		len = buf_len;
++
++	ret_cnt = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	kfree(buf);
++	return ret_cnt;
++}
++
++static ssize_t ath6kl_endpoint_stats_write(struct file *file,
++					   const char __user *user_buf,
++					   size_t count, loff_t *ppos)
++{
++	struct ath6kl *ar = file->private_data;
++	struct htc_target *target = ar->htc_target;
++	int ret, i;
++	u32 val;
++	struct htc_endpoint_stats *ep_st;
++
++	ret = kstrtou32_from_user(user_buf, count, 0, &val);
++	if (ret)
++		return ret;
++	if (val == 0) {
++		for (i = 0; i < ENDPOINT_MAX; i++) {
++			ep_st = &target->endpoint[i].ep_st;
++			memset(ep_st, 0, sizeof(*ep_st));
++		}
 +	}
 +
- 	if ((changed & BSS_CHANGED_CQM)) {
- 		bool enable = false;
- 		if (bss_conf->cqm_rssi_thold)
++	return count;
++}
++
++static const struct file_operations fops_endpoint_stats = {
++	.open = ath6kl_debugfs_open,
++	.read = ath6kl_endpoint_stats_read,
++	.write = ath6kl_endpoint_stats_write,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ static unsigned long ath6kl_get_num_reg(void)
+ {
+ 	int i;
+@@ -901,6 +1000,9 @@ int ath6kl_debug_init(struct ath6kl *ar)
+ 	debugfs_create_file("credit_dist_stats", S_IRUSR, ar->debugfs_phy, ar,
+ 			    &fops_credit_dist_stats);
+ 
++	debugfs_create_file("endpoint_stats", S_IRUSR | S_IWUSR,
++			    ar->debugfs_phy, ar, &fops_endpoint_stats);
++
+ 	debugfs_create_file("fwlog", S_IRUSR, ar->debugfs_phy, ar,
+ 			    &fops_fwlog);
+ 
 -- 
-1.7.5.4
+1.7.4.1
 
