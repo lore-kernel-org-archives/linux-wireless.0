@@ -1,37 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:38125 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750713Ab1JWPM4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Oct 2011 11:12:56 -0400
-Received: by bkbzt19 with SMTP id zt19so7067243bkb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Oct 2011 08:12:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+XVXffT6pq0bKZrVmrYDqustkTFt_ot99BPK_Q5JmXU3wE0iQ@mail.gmail.com>
-References: <CA+XVXffT6pq0bKZrVmrYDqustkTFt_ot99BPK_Q5JmXU3wE0iQ@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Sun, 23 Oct 2011 17:12:40 +0200
-Message-ID: <CA+XVXfcavXZPcz=DpAmHYbUcHbBZ1YuHehn96fs=ssjJh7pR-A@mail.gmail.com> (sfid-20111023_171300_122651_C7329BEA)
-Subject: Re: lockdep in mac80211
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:54032 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751044Ab1JJPQ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Oct 2011 11:16:27 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi GUy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 08/34] iwlagn: don't assign seqno to QoS Null frames
+Date: Mon, 10 Oct 2011 07:26:53 -0700
+Message-Id: <1318256839-31837-9-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171633_579893_85C3B477)
+In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 19, 2011 at 00:12, Arik Nemtsov <arik@wizery.com> wrote:
-> http://pastebin.com/qX3SLy2H
->
-> This appears to be a legitimate lockdep (when trying to re-connect to
-> an AP whose password I just changed).
-> These take the locks in reverse order:
->
-> ieee80211_work_work() -> ieee80211_authenticate() (Inlined in the
-> lockdep print).
-> ieee80211_sta_rx_queued_mgmt() -> ieee80211_rx_mgmt_disassoc()
->
+From: Johannes Berg <johannes.berg@intel.com>
 
-Please disregard this one. The problem was with an internal patch I
-was using for testing (as can be seen in the stack trace as well).
+802.11 says:
+"Sequence numbers for QoS (+)Null frames may be
+set to any value."
 
-Arik
+However, if we use the normal counters then peers
+will get confused with aggregation since there'll
+be holes in the sequence number sequence.
+
+To avoid that, don't assign sequence numbers to
+QoS Null frames.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi GUy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 416e992..60a8ecc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1077,7 +1077,7 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 		txq_id =
+ 		    trans_pcie->ac_to_queue[ctx][skb_get_queue_mapping(skb)];
+ 
+-	if (ieee80211_is_data_qos(fc)) {
++	if (ieee80211_is_data_qos(fc) && !ieee80211_is_qos_nullfunc(fc)) {
+ 		u8 *qc = NULL;
+ 		struct iwl_tid_data *tid_data;
+ 		qc = ieee80211_get_qos_ctl(hdr);
+@@ -1206,7 +1206,7 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 	q->write_ptr = iwl_queue_inc_wrap(q->write_ptr, q->n_bd);
+ 	iwl_txq_update_write_ptr(trans, txq);
+ 
+-	if (ieee80211_is_data_qos(fc)) {
++	if (ieee80211_is_data_qos(fc) && !ieee80211_is_qos_nullfunc(fc)) {
+ 		trans->shrd->tid_data[sta_id][tid].tfds_in_queue++;
+ 		if (!ieee80211_has_morefrags(fc))
+ 			trans->shrd->tid_data[sta_id][tid].seq_number =
+-- 
+1.7.0.4
+
