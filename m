@@ -1,51 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:42970 "EHLO
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53588 "EHLO
 	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751752Ab1JLBCz (ORCPT
+	with ESMTP id S1752858Ab1JJINF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 21:02:55 -0400
-Received: by mail-bw0-f46.google.com with SMTP id zt4so235648bkb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 18:02:55 -0700 (PDT)
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-Date: Wed, 12 Oct 2011 03:02:52 +0200
-Subject: [RFC 07/07] mac80211: Do not call release_buffered_frames if not
- available.
-To: "linux-wireless.vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: "Bartosz MARKOWSKI" <bartosz.markowski@tieto.com>,
-	"Janusz DZIEDZIC" <janusz.dziedzic@tieto.com>
-MIME-Version: 1.0
-From: "Dmitry Tarnyagin" <abi.dmitryt@gmail.com>
-Message-ID: <op.v27ru2maya27un@edmitar> (sfid-20111012_030258_417331_5CE804F3)
+	Mon, 10 Oct 2011 04:13:05 -0400
+Received: by mail-bw0-f46.google.com with SMTP id zt4so8169287bkb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 01:13:05 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 17/29] wl12xx: make WL1271_FLAG_RX_STREAMING_STARTED flag per-vif
+Date: Mon, 10 Oct 2011 10:13:05 +0200
+Message-Id: <1318234397-21081-18-git-send-email-eliad@wizery.com> (sfid-20111010_101311_401148_B14DB0BA)
+In-Reply-To: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-Date: Wed, 5 Oct 2011 13:20:04 +0200
+This flag should be set per-vif, rather than globally.
 
-A new .release_buffered_frames callback was introduced recently.
-Check for the callback presence was missing in the mac80211 code,
-and PM state could get broken in some cases.
-
-Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
-  net/mac80211/sta_info.c |    4 +++-
-  1 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/net/wireless/wl12xx/main.c   |   10 +++++-----
+ drivers/net/wireless/wl12xx/tx.c     |    2 +-
+ drivers/net/wireless/wl12xx/wl12xx.h |    2 +-
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 58b1c2b..ff30fe3 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1262,7 +1262,9 @@ ieee80211_sta_ps_deliver_response(struct sta_info  
-*sta,
-  		tids = ieee80211_tids_for_ac(ac);
-
-  		if (!found) {
--			driver_release_tids = sta->driver_buffered_tids & tids;
-+			if (local->ops->release_buffered_frames)
-+				driver_release_tids =
-+					sta->driver_buffered_tids & tids;
-  			if (driver_release_tids) {
-  				found = true;
-  			} else {
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 92f38c5..36c7493 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -514,9 +514,9 @@ static int wl1271_set_rx_streaming(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		goto out;
+ 
+ 	if (enable)
+-		set_bit(WL1271_FLAG_RX_STREAMING_STARTED, &wl->flags);
++		set_bit(WLVIF_FLAG_RX_STREAMING_STARTED, &wlvif->flags);
+ 	else
+-		clear_bit(WL1271_FLAG_RX_STREAMING_STARTED, &wl->flags);
++		clear_bit(WLVIF_FLAG_RX_STREAMING_STARTED, &wlvif->flags);
+ out:
+ 	return ret;
+ }
+@@ -531,7 +531,7 @@ int wl1271_recalc_rx_streaming(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	int period = wl->conf.rx_streaming.interval;
+ 
+ 	/* don't reconfigure if rx_streaming is disabled */
+-	if (!test_bit(WL1271_FLAG_RX_STREAMING_STARTED, &wl->flags))
++	if (!test_bit(WLVIF_FLAG_RX_STREAMING_STARTED, &wlvif->flags))
+ 		goto out;
+ 
+ 	/* reconfigure/disable according to new streaming_period */
+@@ -558,7 +558,7 @@ static void wl1271_rx_streaming_enable_work(struct work_struct *work)
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+-	if (test_bit(WL1271_FLAG_RX_STREAMING_STARTED, &wl->flags) ||
++	if (test_bit(WLVIF_FLAG_RX_STREAMING_STARTED, &wlvif->flags) ||
+ 	    !test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags) ||
+ 	    (!wl->conf.rx_streaming.always &&
+ 	     !test_bit(WL1271_FLAG_SOFT_GEMINI, &wl->flags)))
+@@ -594,7 +594,7 @@ static void wl1271_rx_streaming_disable_work(struct work_struct *work)
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+-	if (!test_bit(WL1271_FLAG_RX_STREAMING_STARTED, &wl->flags))
++	if (!test_bit(WLVIF_FLAG_RX_STREAMING_STARTED, &wlvif->flags))
+ 		goto out;
+ 
+ 	ret = wl1271_ps_elp_wakeup(wl);
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index a6bc979..9589446 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -670,7 +670,7 @@ void wl12xx_rearm_rx_streaming(struct wl1271 *wl, unsigned long *active_hlids)
+ 			continue;
+ 
+ 		/* enable rx streaming */
+-		if (!test_bit(WL1271_FLAG_RX_STREAMING_STARTED, &wl->flags))
++		if (!test_bit(WLVIF_FLAG_RX_STREAMING_STARTED, &wlvif->flags))
+ 			ieee80211_queue_work(wl->hw,
+ 					     &wlvif->rx_streaming_enable_work);
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 6a1df2c..4741a4b 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -327,7 +327,6 @@ enum wl12xx_flags {
+ 	WL1271_FLAG_SUSPENDED,
+ 	WL1271_FLAG_PENDING_WORK,
+ 	WL1271_FLAG_SOFT_GEMINI,
+-	WL1271_FLAG_RX_STREAMING_STARTED,
+ 	WL1271_FLAG_RECOVERY_IN_PROGRESS,
+ 	WL1271_FLAG_CS_PROGRESS,
+ };
+@@ -339,6 +338,7 @@ enum wl12xx_vif_flags {
+ 	WLVIF_FLAG_PSM,
+ 	WLVIF_FLAG_PSM_REQUESTED,
+ 	WLVIF_FLAG_STA_STATE_SENT,
++	WLVIF_FLAG_RX_STREAMING_STARTED,
+ };
+ 
+ struct wl1271_link {
 -- 
-1.7.1
+1.7.6.401.g6a319
+
