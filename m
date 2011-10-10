@@ -1,221 +1,2222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:57612 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755005Ab1JAKND (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Oct 2011 06:13:03 -0400
-Message-ID: <4E86E7A9.9070909@qca.qualcomm.com> (sfid-20111001_121319_643216_7393B911)
-Date: Sat, 1 Oct 2011 13:12:57 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Pull request: ath6kl 20111001
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mga11.intel.com ([192.55.52.93]:15881 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751399Ab1JJPQb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Oct 2011 11:16:31 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 27/34] iwlagn: merge station management functions
+Date: Mon, 10 Oct 2011 07:27:12 -0700
+Message-Id: <1318256839-31837-28-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171641_496397_DAAAE994)
+In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+After driver split, no need to separate station management functions
+in two files, merge it
 
-here's a pretty big pull request from ath6kl.git. I was supposed to send
-this already earlier, but I wanted to have a fix for an important TCP
-corruption bug first. Even there are quite a few changes, I still ask
-you to consider this for the 3.2 release. It has received extensive
-testing and we have fixed a bunch of bugs from the current version in
-wireless-next.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/Makefile       |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-1000.c     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-2000.c     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-6000.c     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |  833 ++++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |  117 ++++-
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-rx.c       |    1 -
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |  839 ---------------------------
+ drivers/net/wireless/iwlwifi/iwl-sta.h      |  143 -----
+ 17 files changed, 940 insertions(+), 1007 deletions(-)
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-sta.c
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-sta.h
 
-New features are:
-
-o AP and P2P support
-o support of soon to be released new firmware
-o debugfs files to retrieve various stats and fw logs
-o beginnings of AR6004 support, not finished yet
-o notify user space that ath6kl manages intra-ESS roaming
-
-And also a lot of code cleanup and bugfixes.
-
-John, when you pull please note that there's a cfg80211 API change which
-affects ath6kl_mgmt_tx(). As I wasn't sure should I merge wireless-next
-and fix the API change in ath6kl.git so I decided not to do that. But if
-you want me to do it, please let me know and I can send you a new pull
-request.
-
-Here's a diff what needs to be changed, thanks to Rajkumar Manoharan:
-
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1730,7 +1730,7 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy,
-struct net_device *dev,
- 			  struct ieee80211_channel *chan, bool offchan,
- 			  enum nl80211_channel_type channel_type,
- 			  bool channel_type_valid, unsigned int wait,
--			  const u8 *buf, size_t len, u64 *cookie)
-+			  const u8 *buf, size_t len, bool no_cck, u64 *cookie)
+diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
+index bacafa4..3dfb9df 100644
+--- a/drivers/net/wireless/iwlwifi/Makefile
++++ b/drivers/net/wireless/iwlwifi/Makefile
+@@ -6,8 +6,7 @@ iwlwifi-objs		+= iwl-agn-lib.o iwl-agn-calib.o iwl-io.o
+ iwlwifi-objs		+= iwl-agn-tt.o iwl-agn-sta.o
+ 
+ iwlwifi-objs		+= iwl-core.o iwl-eeprom.o iwl-power.o
+-iwlwifi-objs		+= iwl-rx.o iwl-sta.o
+-iwlwifi-objs		+= iwl-scan.o iwl-led.o
++iwlwifi-objs		+= iwl-rx.o iwl-scan.o iwl-led.o
+ iwlwifi-objs		+= iwl-agn-rxon.o
+ iwlwifi-objs		+= iwl-5000.o
+ iwlwifi-objs		+= iwl-6000.o
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index dfd81de..0bf6afd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -39,7 +39,6 @@
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+-#include "iwl-sta.h"
+ #include "iwl-agn.h"
+ #include "iwl-helpers.h"
+ #include "iwl-agn-hw.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index c7634b2..e969c5f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -39,7 +39,6 @@
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+-#include "iwl-sta.h"
+ #include "iwl-agn.h"
+ #include "iwl-helpers.h"
+ #include "iwl-agn-hw.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index e88aca5..b85e80a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -40,7 +40,6 @@
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+-#include "iwl-sta.h"
+ #include "iwl-helpers.h"
+ #include "iwl-agn.h"
+ #include "iwl-agn-hw.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 4abfcf2..aece578 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -39,7 +39,6 @@
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+-#include "iwl-sta.h"
+ #include "iwl-agn.h"
+ #include "iwl-helpers.h"
+ #include "iwl-agn-hw.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index d30714b..b1746f9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -38,7 +38,6 @@
+ #include "iwl-helpers.h"
+ #include "iwl-agn-hw.h"
+ #include "iwl-agn.h"
+-#include "iwl-sta.h"
+ #include "iwl-trans.h"
+ #include "iwl-shared.h"
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 353af8f..66118ce 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -36,7 +36,6 @@
+ #include <linux/workqueue.h>
+ 
+ #include "iwl-dev.h"
+-#include "iwl-sta.h"
+ #include "iwl-core.h"
+ #include "iwl-agn.h"
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 8155522..68bdc19 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -26,7 +26,6 @@
+ 
+ #include "iwl-dev.h"
+ #include "iwl-agn.h"
+-#include "iwl-sta.h"
+ #include "iwl-core.h"
+ #include "iwl-agn-calib.h"
+ #include "iwl-helpers.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index c1807fa..ed62836 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -31,10 +31,823 @@
+ 
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+-#include "iwl-sta.h"
+ #include "iwl-agn.h"
+ #include "iwl-trans.h"
+ 
++/* priv->shrd->sta_lock must be held */
++static void iwl_sta_ucode_activate(struct iwl_priv *priv, u8 sta_id)
++{
++
++	if (!(priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE))
++		IWL_ERR(priv, "ACTIVATE a non DRIVER active station id %u "
++			"addr %pM\n",
++			sta_id, priv->stations[sta_id].sta.sta.addr);
++
++	if (priv->stations[sta_id].used & IWL_STA_UCODE_ACTIVE) {
++		IWL_DEBUG_ASSOC(priv,
++				"STA id %u addr %pM already present in uCode "
++				"(according to driver)\n",
++				sta_id, priv->stations[sta_id].sta.sta.addr);
++	} else {
++		priv->stations[sta_id].used |= IWL_STA_UCODE_ACTIVE;
++		IWL_DEBUG_ASSOC(priv, "Added STA id %u addr %pM to uCode\n",
++				sta_id, priv->stations[sta_id].sta.sta.addr);
++	}
++}
++
++static int iwl_process_add_sta_resp(struct iwl_priv *priv,
++				    struct iwl_addsta_cmd *addsta,
++				    struct iwl_rx_packet *pkt)
++{
++	u8 sta_id = addsta->sta.sta_id;
++	unsigned long flags;
++	int ret = -EIO;
++
++	if (pkt->hdr.flags & IWL_CMD_FAILED_MSK) {
++		IWL_ERR(priv, "Bad return from REPLY_ADD_STA (0x%08X)\n",
++			pkt->hdr.flags);
++		return ret;
++	}
++
++	IWL_DEBUG_INFO(priv, "Processing response for adding station %u\n",
++		       sta_id);
++
++	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
++
++	switch (pkt->u.add_sta.status) {
++	case ADD_STA_SUCCESS_MSK:
++		IWL_DEBUG_INFO(priv, "REPLY_ADD_STA PASSED\n");
++		iwl_sta_ucode_activate(priv, sta_id);
++		ret = 0;
++		break;
++	case ADD_STA_NO_ROOM_IN_TABLE:
++		IWL_ERR(priv, "Adding station %d failed, no room in table.\n",
++			sta_id);
++		break;
++	case ADD_STA_NO_BLOCK_ACK_RESOURCE:
++		IWL_ERR(priv, "Adding station %d failed, no block ack "
++			"resource.\n", sta_id);
++		break;
++	case ADD_STA_MODIFY_NON_EXIST_STA:
++		IWL_ERR(priv, "Attempting to modify non-existing station %d\n",
++			sta_id);
++		break;
++	default:
++		IWL_DEBUG_ASSOC(priv, "Received REPLY_ADD_STA:(0x%08X)\n",
++				pkt->u.add_sta.status);
++		break;
++	}
++
++	IWL_DEBUG_INFO(priv, "%s station id %u addr %pM\n",
++		       priv->stations[sta_id].sta.mode ==
++		       STA_CONTROL_MODIFY_MSK ?  "Modified" : "Added",
++		       sta_id, priv->stations[sta_id].sta.sta.addr);
++
++	/*
++	 * XXX: The MAC address in the command buffer is often changed from
++	 * the original sent to the device. That is, the MAC address
++	 * written to the command buffer often is not the same MAC address
++	 * read from the command buffer when the command returns. This
++	 * issue has not yet been resolved and this debugging is left to
++	 * observe the problem.
++	 */
++	IWL_DEBUG_INFO(priv, "%s station according to cmd buffer %pM\n",
++		       priv->stations[sta_id].sta.mode ==
++		       STA_CONTROL_MODIFY_MSK ? "Modified" : "Added",
++		       addsta->sta.addr);
++	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
++
++	return ret;
++}
++
++int iwl_add_sta_callback(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
++			       struct iwl_device_cmd *cmd)
++{
++	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++	struct iwl_addsta_cmd *addsta =
++		(struct iwl_addsta_cmd *) cmd->payload;
++
++	return iwl_process_add_sta_resp(priv, addsta, pkt);
++}
++
++static u16 iwlagn_build_addsta_hcmd(const struct iwl_addsta_cmd *cmd, u8 *data)
++{
++	u16 size = (u16)sizeof(struct iwl_addsta_cmd);
++	struct iwl_addsta_cmd *addsta = (struct iwl_addsta_cmd *)data;
++	memcpy(addsta, cmd, size);
++	/* resrved in 5000 */
++	addsta->rate_n_flags = cpu_to_le16(0);
++	return size;
++}
++
++int iwl_send_add_sta(struct iwl_priv *priv,
++		     struct iwl_addsta_cmd *sta, u8 flags)
++{
++	int ret = 0;
++	u8 data[sizeof(*sta)];
++	struct iwl_host_cmd cmd = {
++		.id = REPLY_ADD_STA,
++		.flags = flags,
++		.data = { data, },
++	};
++	u8 sta_id __maybe_unused = sta->sta.sta_id;
++
++	IWL_DEBUG_INFO(priv, "Adding sta %u (%pM) %ssynchronously\n",
++		       sta_id, sta->sta.addr, flags & CMD_ASYNC ?  "a" : "");
++
++	if (!(flags & CMD_ASYNC)) {
++		cmd.flags |= CMD_WANT_SKB;
++		might_sleep();
++	}
++
++	cmd.len[0] = iwlagn_build_addsta_hcmd(sta, data);
++	ret = iwl_trans_send_cmd(trans(priv), &cmd);
++
++	if (ret || (flags & CMD_ASYNC))
++		return ret;
++	/*else the command was successfully sent in SYNC mode, need to free
++	 * the reply page */
++
++	iwl_free_pages(priv->shrd, cmd.reply_page);
++
++	if (cmd.handler_status)
++		IWL_ERR(priv, "%s - error in the CMD response %d", __func__,
++			cmd.handler_status);
++
++	return cmd.handler_status;
++}
++
++static void iwl_set_ht_add_station(struct iwl_priv *priv, u8 index,
++				   struct ieee80211_sta *sta,
++				   struct iwl_rxon_context *ctx)
++{
++	struct ieee80211_sta_ht_cap *sta_ht_inf = &sta->ht_cap;
++	__le32 sta_flags;
++	u8 mimo_ps_mode;
++
++	if (!sta || !sta_ht_inf->ht_supported)
++		goto done;
++
++	mimo_ps_mode = (sta_ht_inf->cap & IEEE80211_HT_CAP_SM_PS) >> 2;
++	IWL_DEBUG_ASSOC(priv, "spatial multiplexing power save mode: %s\n",
++			(mimo_ps_mode == WLAN_HT_CAP_SM_PS_STATIC) ?
++			"static" :
++			(mimo_ps_mode == WLAN_HT_CAP_SM_PS_DYNAMIC) ?
++			"dynamic" : "disabled");
++
++	sta_flags = priv->stations[index].sta.station_flags;
++
++	sta_flags &= ~(STA_FLG_RTS_MIMO_PROT_MSK | STA_FLG_MIMO_DIS_MSK);
++
++	switch (mimo_ps_mode) {
++	case WLAN_HT_CAP_SM_PS_STATIC:
++		sta_flags |= STA_FLG_MIMO_DIS_MSK;
++		break;
++	case WLAN_HT_CAP_SM_PS_DYNAMIC:
++		sta_flags |= STA_FLG_RTS_MIMO_PROT_MSK;
++		break;
++	case WLAN_HT_CAP_SM_PS_DISABLED:
++		break;
++	default:
++		IWL_WARN(priv, "Invalid MIMO PS mode %d\n", mimo_ps_mode);
++		break;
++	}
++
++	sta_flags |= cpu_to_le32(
++	      (u32)sta_ht_inf->ampdu_factor << STA_FLG_MAX_AGG_SIZE_POS);
++
++	sta_flags |= cpu_to_le32(
++	      (u32)sta_ht_inf->ampdu_density << STA_FLG_AGG_MPDU_DENSITY_POS);
++
++	if (iwl_is_ht40_tx_allowed(priv, ctx, &sta->ht_cap))
++		sta_flags |= STA_FLG_HT40_EN_MSK;
++	else
++		sta_flags &= ~STA_FLG_HT40_EN_MSK;
++
++	priv->stations[index].sta.station_flags = sta_flags;
++ done:
++	return;
++}
++
++/**
++ * iwl_prep_station - Prepare station information for addition
++ *
++ * should be called with sta_lock held
++ */
++u8 iwl_prep_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
++		    const u8 *addr, bool is_ap, struct ieee80211_sta *sta)
++{
++	struct iwl_station_entry *station;
++	int i;
++	u8 sta_id = IWL_INVALID_STATION;
++
++	if (is_ap)
++		sta_id = ctx->ap_sta_id;
++	else if (is_broadcast_ether_addr(addr))
++		sta_id = ctx->bcast_sta_id;
++	else
++		for (i = IWL_STA_ID; i < IWLAGN_STATION_COUNT; i++) {
++			if (!compare_ether_addr(priv->stations[i].sta.sta.addr,
++						addr)) {
++				sta_id = i;
++				break;
++			}
++
++			if (!priv->stations[i].used &&
++			    sta_id == IWL_INVALID_STATION)
++				sta_id = i;
++		}
++
++	/*
++	 * These two conditions have the same outcome, but keep them
++	 * separate
++	 */
++	if (unlikely(sta_id == IWL_INVALID_STATION))
++		return sta_id;
++
++	/*
++	 * uCode is not able to deal with multiple requests to add a
++	 * station. Keep track if one is in progress so that we do not send
++	 * another.
++	 */
++	if (priv->stations[sta_id].used & IWL_STA_UCODE_INPROGRESS) {
++		IWL_DEBUG_INFO(priv, "STA %d already in process of being "
++			       "added.\n", sta_id);
++		return sta_id;
++	}
++
++	if ((priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE) &&
++	    (priv->stations[sta_id].used & IWL_STA_UCODE_ACTIVE) &&
++	    !compare_ether_addr(priv->stations[sta_id].sta.sta.addr, addr)) {
++		IWL_DEBUG_ASSOC(priv, "STA %d (%pM) already added, not "
++				"adding again.\n", sta_id, addr);
++		return sta_id;
++	}
++
++	station = &priv->stations[sta_id];
++	station->used = IWL_STA_DRIVER_ACTIVE;
++	IWL_DEBUG_ASSOC(priv, "Add STA to driver ID %d: %pM\n",
++			sta_id, addr);
++	priv->num_stations++;
++
++	/* Set up the REPLY_ADD_STA command to send to device */
++	memset(&station->sta, 0, sizeof(struct iwl_addsta_cmd));
++	memcpy(station->sta.sta.addr, addr, ETH_ALEN);
++	station->sta.mode = 0;
++	station->sta.sta.sta_id = sta_id;
++	station->sta.station_flags = ctx->station_flags;
++	station->ctxid = ctx->ctxid;
++
++	if (sta) {
++		struct iwl_station_priv *sta_priv;
++
++		sta_priv = (void *)sta->drv_priv;
++		sta_priv->ctx = ctx;
++	}
++
++	/*
++	 * OK to call unconditionally, since local stations (IBSS BSSID
++	 * STA and broadcast STA) pass in a NULL sta, and mac80211
++	 * doesn't allow HT IBSS.
++	 */
++	iwl_set_ht_add_station(priv, sta_id, sta, ctx);
++
++	return sta_id;
++
++}
++
++#define STA_WAIT_TIMEOUT (HZ/2)
++
++/**
++ * iwl_add_station_common -
++ */
++int iwl_add_station_common(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
++			   const u8 *addr, bool is_ap,
++			   struct ieee80211_sta *sta, u8 *sta_id_r)
++{
++	unsigned long flags_spin;
++	int ret = 0;
++	u8 sta_id;
++	struct iwl_addsta_cmd sta_cmd;
++
++	*sta_id_r = 0;
++	spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
++	sta_id = iwl_prep_station(priv, ctx, addr, is_ap, sta);
++	if (sta_id == IWL_INVALID_STATION) {
++		IWL_ERR(priv, "Unable to prepare station %pM for addition\n",
++			addr);
++		spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
++		return -EINVAL;
++	}
++
++	/*
++	 * uCode is not able to deal with multiple requests to add a
++	 * station. Keep track if one is in progress so that we do not send
++	 * another.
++	 */
++	if (priv->stations[sta_id].used & IWL_STA_UCODE_INPROGRESS) {
++		IWL_DEBUG_INFO(priv, "STA %d already in process of being "
++			       "added.\n", sta_id);
++		spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
++		return -EEXIST;
++	}
++
++	if ((priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE) &&
++	    (priv->stations[sta_id].used & IWL_STA_UCODE_ACTIVE)) {
++		IWL_DEBUG_ASSOC(priv, "STA %d (%pM) already added, not "
++				"adding again.\n", sta_id, addr);
++		spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
++		return -EEXIST;
++	}
++
++	priv->stations[sta_id].used |= IWL_STA_UCODE_INPROGRESS;
++	memcpy(&sta_cmd, &priv->stations[sta_id].sta,
++	       sizeof(struct iwl_addsta_cmd));
++	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
++
++	/* Add station to device's station table */
++	ret = iwl_send_add_sta(priv, &sta_cmd, CMD_SYNC);
++	if (ret) {
++		spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
++		IWL_ERR(priv, "Adding station %pM failed.\n",
++			priv->stations[sta_id].sta.sta.addr);
++		priv->stations[sta_id].used &= ~IWL_STA_DRIVER_ACTIVE;
++		priv->stations[sta_id].used &= ~IWL_STA_UCODE_INPROGRESS;
++		spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
++	}
++	*sta_id_r = sta_id;
++	return ret;
++}
++
++/**
++ * iwl_sta_ucode_deactivate - deactivate ucode status for a station
++ *
++ * priv->shrd->sta_lock must be held
++ */
++static void iwl_sta_ucode_deactivate(struct iwl_priv *priv, u8 sta_id)
++{
++	/* Ucode must be active and driver must be non active */
++	if ((priv->stations[sta_id].used &
++	     (IWL_STA_UCODE_ACTIVE | IWL_STA_DRIVER_ACTIVE)) !=
++	      IWL_STA_UCODE_ACTIVE)
++		IWL_ERR(priv, "removed non active STA %u\n", sta_id);
++
++	priv->stations[sta_id].used &= ~IWL_STA_UCODE_ACTIVE;
++
++	memset(&priv->stations[sta_id], 0, sizeof(struct iwl_station_entry));
++	IWL_DEBUG_ASSOC(priv, "Removed STA %u\n", sta_id);
++}
++
++static int iwl_send_remove_station(struct iwl_priv *priv,
++				   const u8 *addr, int sta_id,
++				   bool temporary)
++{
++	struct iwl_rx_packet *pkt;
++	int ret;
++
++	unsigned long flags_spin;
++	struct iwl_rem_sta_cmd rm_sta_cmd;
++
++	struct iwl_host_cmd cmd = {
++		.id = REPLY_REMOVE_STA,
++		.len = { sizeof(struct iwl_rem_sta_cmd), },
++		.flags = CMD_SYNC,
++		.data = { &rm_sta_cmd, },
++	};
++
++	memset(&rm_sta_cmd, 0, sizeof(rm_sta_cmd));
++	rm_sta_cmd.num_sta = 1;
++	memcpy(&rm_sta_cmd.addr, addr, ETH_ALEN);
++
++	cmd.flags |= CMD_WANT_SKB;
++
++	ret = iwl_trans_send_cmd(trans(priv), &cmd);
++
++	if (ret)
++		return ret;
++
++	pkt = (struct iwl_rx_packet *)cmd.reply_page;
++	if (pkt->hdr.flags & IWL_CMD_FAILED_MSK) {
++		IWL_ERR(priv, "Bad return from REPLY_REMOVE_STA (0x%08X)\n",
++			  pkt->hdr.flags);
++		ret = -EIO;
++	}
++
++	if (!ret) {
++		switch (pkt->u.rem_sta.status) {
++		case REM_STA_SUCCESS_MSK:
++			if (!temporary) {
++				spin_lock_irqsave(&priv->shrd->sta_lock,
++					flags_spin);
++				iwl_sta_ucode_deactivate(priv, sta_id);
++				spin_unlock_irqrestore(&priv->shrd->sta_lock,
++					flags_spin);
++			}
++			IWL_DEBUG_ASSOC(priv, "REPLY_REMOVE_STA PASSED\n");
++			break;
++		default:
++			ret = -EIO;
++			IWL_ERR(priv, "REPLY_REMOVE_STA failed\n");
++			break;
++		}
++	}
++	iwl_free_pages(priv->shrd, cmd.reply_page);
++
++	return ret;
++}
++
++/**
++ * iwl_remove_station - Remove driver's knowledge of station.
++ */
++int iwl_remove_station(struct iwl_priv *priv, const u8 sta_id,
++		       const u8 *addr)
++{
++	unsigned long flags;
++
++	if (!iwl_is_ready(priv->shrd)) {
++		IWL_DEBUG_INFO(priv,
++			"Unable to remove station %pM, device not ready.\n",
++			addr);
++		/*
++		 * It is typical for stations to be removed when we are
++		 * going down. Return success since device will be down
++		 * soon anyway
++		 */
++		return 0;
++	}
++
++	IWL_DEBUG_ASSOC(priv, "Removing STA from driver:%d  %pM\n",
++			sta_id, addr);
++
++	if (WARN_ON(sta_id == IWL_INVALID_STATION))
++		return -EINVAL;
++
++	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
++
++	if (!(priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE)) {
++		IWL_DEBUG_INFO(priv, "Removing %pM but non DRIVER active\n",
++				addr);
++		goto out_err;
++	}
++
++	if (!(priv->stations[sta_id].used & IWL_STA_UCODE_ACTIVE)) {
++		IWL_DEBUG_INFO(priv, "Removing %pM but non UCODE active\n",
++				addr);
++		goto out_err;
++	}
++
++	if (priv->stations[sta_id].used & IWL_STA_LOCAL) {
++		kfree(priv->stations[sta_id].lq);
++		priv->stations[sta_id].lq = NULL;
++	}
++
++	priv->stations[sta_id].used &= ~IWL_STA_DRIVER_ACTIVE;
++
++	priv->num_stations--;
++
++	if (WARN_ON(priv->num_stations < 0))
++		priv->num_stations = 0;
++
++	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
++
++	return iwl_send_remove_station(priv, addr, sta_id, false);
++out_err:
++	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
++	return -EINVAL;
++}
++
++/**
++ * iwl_clear_ucode_stations - clear ucode station table bits
++ *
++ * This function clears all the bits in the driver indicating
++ * which stations are active in the ucode. Call when something
++ * other than explicit station management would cause this in
++ * the ucode, e.g. unassociated RXON.
++ */
++void iwl_clear_ucode_stations(struct iwl_priv *priv,
++			      struct iwl_rxon_context *ctx)
++{
++	int i;
++	unsigned long flags_spin;
++	bool cleared = false;
++
++	IWL_DEBUG_INFO(priv, "Clearing ucode stations in driver\n");
++
++	spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
++	for (i = 0; i < IWLAGN_STATION_COUNT; i++) {
++		if (ctx && ctx->ctxid != priv->stations[i].ctxid)
++			continue;
++
++		if (priv->stations[i].used & IWL_STA_UCODE_ACTIVE) {
++			IWL_DEBUG_INFO(priv,
++				"Clearing ucode active for station %d\n", i);
++			priv->stations[i].used &= ~IWL_STA_UCODE_ACTIVE;
++			cleared = true;
++		}
++	}
++	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
++
++	if (!cleared)
++		IWL_DEBUG_INFO(priv,
++			       "No active stations found to be cleared\n");
++}
++
++/**
++ * iwl_restore_stations() - Restore driver known stations to device
++ *
++ * All stations considered active by driver, but not present in ucode, is
++ * restored.
++ *
++ * Function sleeps.
++ */
++void iwl_restore_stations(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
++{
++	struct iwl_addsta_cmd sta_cmd;
++	struct iwl_link_quality_cmd lq;
++	unsigned long flags_spin;
++	int i;
++	bool found = false;
++	int ret;
++	bool send_lq;
++
++	if (!iwl_is_ready(priv->shrd)) {
++		IWL_DEBUG_INFO(priv,
++			       "Not ready yet, not restoring any stations.\n");
++		return;
++	}
++
++	IWL_DEBUG_ASSOC(priv, "Restoring all known stations ... start.\n");
++	spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
++	for (i = 0; i < IWLAGN_STATION_COUNT; i++) {
++		if (ctx->ctxid != priv->stations[i].ctxid)
++			continue;
++		if ((priv->stations[i].used & IWL_STA_DRIVER_ACTIVE) &&
++			    !(priv->stations[i].used & IWL_STA_UCODE_ACTIVE)) {
++			IWL_DEBUG_ASSOC(priv, "Restoring sta %pM\n",
++					priv->stations[i].sta.sta.addr);
++			priv->stations[i].sta.mode = 0;
++			priv->stations[i].used |= IWL_STA_UCODE_INPROGRESS;
++			found = true;
++		}
++	}
++
++	for (i = 0; i < IWLAGN_STATION_COUNT; i++) {
++		if ((priv->stations[i].used & IWL_STA_UCODE_INPROGRESS)) {
++			memcpy(&sta_cmd, &priv->stations[i].sta,
++			       sizeof(struct iwl_addsta_cmd));
++			send_lq = false;
++			if (priv->stations[i].lq) {
++				if (priv->shrd->wowlan)
++					iwl_sta_fill_lq(priv, ctx, i, &lq);
++				else
++					memcpy(&lq, priv->stations[i].lq,
++					       sizeof(struct iwl_link_quality_cmd));
++				send_lq = true;
++			}
++			spin_unlock_irqrestore(&priv->shrd->sta_lock,
++					       flags_spin);
++			ret = iwl_send_add_sta(priv, &sta_cmd, CMD_SYNC);
++			if (ret) {
++				spin_lock_irqsave(&priv->shrd->sta_lock,
++						  flags_spin);
++				IWL_ERR(priv, "Adding station %pM failed.\n",
++					priv->stations[i].sta.sta.addr);
++				priv->stations[i].used &=
++						~IWL_STA_DRIVER_ACTIVE;
++				priv->stations[i].used &=
++						~IWL_STA_UCODE_INPROGRESS;
++				spin_unlock_irqrestore(&priv->shrd->sta_lock,
++						       flags_spin);
++			}
++			/*
++			 * Rate scaling has already been initialized, send
++			 * current LQ command
++			 */
++			if (send_lq)
++				iwl_send_lq_cmd(priv, ctx, &lq,
++						CMD_SYNC, true);
++			spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
++			priv->stations[i].used &= ~IWL_STA_UCODE_INPROGRESS;
++		}
++	}
++
++	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
++	if (!found)
++		IWL_DEBUG_INFO(priv, "Restoring all known stations .... "
++			"no stations to be restored.\n");
++	else
++		IWL_DEBUG_INFO(priv, "Restoring all known stations .... "
++			"complete.\n");
++}
++
++void iwl_reprogram_ap_sta(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
++{
++	unsigned long flags;
++	int sta_id = ctx->ap_sta_id;
++	int ret;
++	struct iwl_addsta_cmd sta_cmd;
++	struct iwl_link_quality_cmd lq;
++	bool active;
++
++	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
++	if (!(priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE)) {
++		spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
++		return;
++	}
++
++	memcpy(&sta_cmd, &priv->stations[sta_id].sta, sizeof(sta_cmd));
++	sta_cmd.mode = 0;
++	memcpy(&lq, priv->stations[sta_id].lq, sizeof(lq));
++
++	active = priv->stations[sta_id].used & IWL_STA_UCODE_ACTIVE;
++	priv->stations[sta_id].used &= ~IWL_STA_DRIVER_ACTIVE;
++	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
++
++	if (active) {
++		ret = iwl_send_remove_station(
++			priv, priv->stations[sta_id].sta.sta.addr,
++			sta_id, true);
++		if (ret)
++			IWL_ERR(priv, "failed to remove STA %pM (%d)\n",
++				priv->stations[sta_id].sta.sta.addr, ret);
++	}
++	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
++	priv->stations[sta_id].used |= IWL_STA_DRIVER_ACTIVE;
++	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
++
++	ret = iwl_send_add_sta(priv, &sta_cmd, CMD_SYNC);
++	if (ret)
++		IWL_ERR(priv, "failed to re-add STA %pM (%d)\n",
++			priv->stations[sta_id].sta.sta.addr, ret);
++	iwl_send_lq_cmd(priv, ctx, &lq, CMD_SYNC, true);
++}
++
++int iwl_get_free_ucode_key_offset(struct iwl_priv *priv)
++{
++	int i;
++
++	for (i = 0; i < priv->sta_key_max_num; i++)
++		if (!test_and_set_bit(i, &priv->ucode_key_table))
++			return i;
++
++	return WEP_INVALID_OFFSET;
++}
++
++void iwl_dealloc_bcast_stations(struct iwl_priv *priv)
++{
++	unsigned long flags;
++	int i;
++
++	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
++	for (i = 0; i < IWLAGN_STATION_COUNT; i++) {
++		if (!(priv->stations[i].used & IWL_STA_BCAST))
++			continue;
++
++		priv->stations[i].used &= ~IWL_STA_UCODE_ACTIVE;
++		priv->num_stations--;
++		if (WARN_ON(priv->num_stations < 0))
++			priv->num_stations = 0;
++		kfree(priv->stations[i].lq);
++		priv->stations[i].lq = NULL;
++	}
++	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
++}
++
++#ifdef CONFIG_IWLWIFI_DEBUG
++static void iwl_dump_lq_cmd(struct iwl_priv *priv,
++			   struct iwl_link_quality_cmd *lq)
++{
++	int i;
++	IWL_DEBUG_RATE(priv, "lq station id 0x%x\n", lq->sta_id);
++	IWL_DEBUG_RATE(priv, "lq ant 0x%X 0x%X\n",
++		       lq->general_params.single_stream_ant_msk,
++		       lq->general_params.dual_stream_ant_msk);
++
++	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++)
++		IWL_DEBUG_RATE(priv, "lq index %d 0x%X\n",
++			       i, lq->rs_table[i].rate_n_flags);
++}
++#else
++static inline void iwl_dump_lq_cmd(struct iwl_priv *priv,
++				   struct iwl_link_quality_cmd *lq)
++{
++}
++#endif
++
++/**
++ * is_lq_table_valid() - Test one aspect of LQ cmd for validity
++ *
++ * It sometimes happens when a HT rate has been in use and we
++ * loose connectivity with AP then mac80211 will first tell us that the
++ * current channel is not HT anymore before removing the station. In such a
++ * scenario the RXON flags will be updated to indicate we are not
++ * communicating HT anymore, but the LQ command may still contain HT rates.
++ * Test for this to prevent driver from sending LQ command between the time
++ * RXON flags are updated and when LQ command is updated.
++ */
++static bool is_lq_table_valid(struct iwl_priv *priv,
++			      struct iwl_rxon_context *ctx,
++			      struct iwl_link_quality_cmd *lq)
++{
++	int i;
++
++	if (ctx->ht.enabled)
++		return true;
++
++	IWL_DEBUG_INFO(priv, "Channel %u is not an HT channel\n",
++		       ctx->active.channel);
++	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++) {
++		if (le32_to_cpu(lq->rs_table[i].rate_n_flags) &
++		    RATE_MCS_HT_MSK) {
++			IWL_DEBUG_INFO(priv,
++				       "index %d of LQ expects HT channel\n",
++				       i);
++			return false;
++		}
++	}
++	return true;
++}
++
++/**
++ * iwl_send_lq_cmd() - Send link quality command
++ * @init: This command is sent as part of station initialization right
++ *        after station has been added.
++ *
++ * The link quality command is sent as the last step of station creation.
++ * This is the special case in which init is set and we call a callback in
++ * this case to clear the state indicating that station creation is in
++ * progress.
++ */
++int iwl_send_lq_cmd(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
++		    struct iwl_link_quality_cmd *lq, u8 flags, bool init)
++{
++	int ret = 0;
++	unsigned long flags_spin;
++
++	struct iwl_host_cmd cmd = {
++		.id = REPLY_TX_LINK_QUALITY_CMD,
++		.len = { sizeof(struct iwl_link_quality_cmd), },
++		.flags = flags,
++		.data = { lq, },
++	};
++
++	if (WARN_ON(lq->sta_id == IWL_INVALID_STATION))
++		return -EINVAL;
++
++
++	spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
++	if (!(priv->stations[lq->sta_id].used & IWL_STA_DRIVER_ACTIVE)) {
++		spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
++		return -EINVAL;
++	}
++	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
++
++	iwl_dump_lq_cmd(priv, lq);
++	if (WARN_ON(init && (cmd.flags & CMD_ASYNC)))
++		return -EINVAL;
++
++	if (is_lq_table_valid(priv, ctx, lq))
++		ret = iwl_trans_send_cmd(trans(priv), &cmd);
++	else
++		ret = -EINVAL;
++
++	if (cmd.flags & CMD_ASYNC)
++		return ret;
++
++	if (init) {
++		IWL_DEBUG_INFO(priv, "init LQ command complete, "
++			       "clearing sta addition status for sta %d\n",
++			       lq->sta_id);
++		spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
++		priv->stations[lq->sta_id].used &= ~IWL_STA_UCODE_INPROGRESS;
++		spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
++	}
++	return ret;
++}
++
++int iwlagn_mac_sta_remove(struct ieee80211_hw *hw,
++		       struct ieee80211_vif *vif,
++		       struct ieee80211_sta *sta)
++{
++	struct iwl_priv *priv = hw->priv;
++	struct iwl_station_priv *sta_priv = (void *)sta->drv_priv;
++	int ret;
++
++	IWL_DEBUG_MAC80211(priv, "enter: received request to remove "
++			   "station %pM\n", sta->addr);
++	mutex_lock(&priv->shrd->mutex);
++	IWL_DEBUG_INFO(priv, "proceeding to remove station %pM\n",
++			sta->addr);
++	ret = iwl_remove_station(priv, sta_priv->sta_id, sta->addr);
++	if (ret)
++		IWL_ERR(priv, "Error removing station %pM\n",
++			sta->addr);
++	mutex_unlock(&priv->shrd->mutex);
++	IWL_DEBUG_MAC80211(priv, "leave\n");
++
++	return ret;
++}
++
+ void iwl_sta_fill_lq(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 		     u8 sta_id, struct iwl_link_quality_cmd *link_cmd)
  {
- 	struct ath6kl *ar = ath6kl_priv(dev);
- 	u32 id;
-
-Also note that I had to merge wireless-next at one point to get
-WIPHY_FLAG_SUPPORTS_FW_ROAM. Please check that I didn't do anything
-stupid with that one.
-
-Kalle
-
-The following changes since commit 49a59543eb5a5d268b3d11747f9c3c557ae271a0:
-
-  mac80211: dont assign seqno to or aggregate QoS Null frames
-(2011-09-30 15:57:25 -0400)
-
-are available in the git repository at:
-  git://github.com/kvalo/ath6kl.git for-linville
-
-Edward Lu (4):
-      ath6kl: Support channel set request for startscan command
-      ath6kl: Fix a typo in ath6k context
-      ath6kl: Fix default key installation in AP mode
-      ath6kl: Do not clear CONNECT bit setting in AP mode for STA disconnect
-
-Jouni Malinen (37):
-      ath6kl: Use cfg80211_inform_bss instead of cfg80211_inform_bss_frame
-      ath6kl: Add functionality for starting AP mode
-      ath6kl: Fix AP mode (Re)AssocReq IE processing
-      ath6kl: Delay initial group key setup in AP mode
-      ath6kl: Use change_station() to authorize/unauthorize STAs
-      ath6kl: Add new WMI commands and events for P2P
-      ath6kl: Implement remain_on_channel and cancel_remain_on_channel
-      ath6kl: Implement mgmt_tx
-      ath6kl: Request P2P capabilities during target init
-      ath6kl: Add cfg80211 calls for remain-on-channel events
-      ath6kl: Use set_appie command to add Probe Request IEs
-      ath6kl: Report received Probe Request frames to cfg80211
-      ath6kl: Notify cfg80211 of TX status of mgmt_tx frames
-      ath6kl: Report received Action frames to cfg80211
-      ath6kl: Advertise supported mgmt_stypes
-      ath6kl: Add support for new P2P iftypes in mode changes
-      ath6kl: Include P2P IE(s) in GO Probe Response depending on request
-      ath6kl: Return error from wmi.c instead of -EIO in
-ath6kl_cfg80211_scan
-      ath6kl: Define __CHECK_ENDIAN__ for sparse
-      ath6kl: Do not enable Probe Request reporting by default
-      athk6l: Fix channel list processing in scan requests
-      ath6kl: Fix WMI message structure for AP_SET_PVB
-      ath6kl: Fix AP mode connect event parsing and TIM updates
-      ath6kl: Allow AP mode to be configured
-      ath6kl: Allow enabling of P2P support
-      ath6kl: Fix static WEP configuration in AP mode
-      ath6kl: Fix BSS update on roaming
-      ath6kl: Remove deprecated WMI_OPT_RX_FRAME_EVENTID processing
-      ath6kl: Remove RSSI update for internal node table
-      ath6kl: Remove unnecessary node table update on disconnect event
-      ath6kl: Replace internal node table with cfg80211 BSS table
-      ath6kl: Remove the unused node table implementation
-      ath6kl: Remove unnecessary bssinfo event header conversion
-      ath6kl: Update BSS information after connection
-      ath6kl: Export beacon interval and DTIM period through STA info
-      ath6kl: Report PMKSA candidate events through cfg80211
-      ath6kl: fix TCP corruption
-
-Kalle Valo (27):
-      ath6kl: fix indentation in htc_issued_send()
-      ath6kl: implement suspend support
-      ath6kl: add testmode support
-      ath6kl: fix compilation when NL80211_TESTMODE is disabled
-      ath6kl: add firmware log support
-      ath6kl: implement support to set firmware log parameters
-      ath6kl: cleanup diagnose window read and write functions
-      ath6kl: read fwlog from firmware ring buffer
-      ath6kl: unify tx function names in htc.c
-      ath6kl: unify rx function naming in htc.c
-      ath6kl: separate firmware fetch from upload
-      ath6kl: fix busy loop in ath6kl_bmi_get_rx_lkahd()
-      ath6kl: add support for firmware API 2 format
-      ath6kl: refactor firmware load address code
-      ath6kl: refactor firmware ext data addr and reserved ram handling size
-      ath6kl: read firmware start address from hardware
-      ath6kl: read reserved ram size from firmware file
-      ath6kl: add firmware capabilities support
-      Merge remote branch 'wireless-next/master' into ath6kl-next
-      ath6kl: pass only unicast frames for aggregation
-      ath6kl: allow firmware to override firmware patch address
-      ath6kl: silence "invalid rate" warning
-      ath6kl: add prefix parameter to ath6kl_dbg_dump()
-      ath6kl: add sdio debug messages
-      ath6kl: add debug logs for booting
-      ath6kl: improve wmi debug messages
-      ath6kl: fix size_t related warnings
-
-Kevin Fang (1):
-      ath6kl: Add beginning of AR6004 initialisation support
-
-Raja Mani (2):
-      ath6kl: Avoid finding bss presence in cfg80211 scan list
-      ath6kl: Check sme state before delivering disconnect event to cfg80211
-
-Rajkumar Manoharan (1):
-      ath6kl: Fix compilation error while compiling w/o debug
-
-Sam Leffler (1):
-      ath6kl: query device tree for firmware board-id
-
-Stephen Rothwell (1):
-      wireless/ath6kl: use of module_param requires the inclusion of
-moduleparam.h
-
-Vasanthakumar Thiagarajan (21):
-      ath6kl: Release ar->lock right afer updating net_stats in ath6kl_rx()
-      ath6kl: Minor cleanup in min_hdr_len computation
-      ath6kl: Cleanup ath6kl_wmi_data_hdr_remove()
-      ath6kl: Fix bug in computing AMSU subframe padding
-      ath6kl: Fix buffer alignment for scatter-gather I/O
-      ath6kl: Fix system freeze under heavy data load
-      ath6kl: Remove unused meta_v2 from ath6kl_data_tx()
-      ath6kl: Add wmi meta data information only it is available
-      ath6kl: Avoid rolling back of entire scatter setup in case of failure
-      ath6kl: Add initial debugfs changes
-      ath6kl: Add debugfs entry to dump target stats
-      ath6kl: Add debugfs file entry to dump credit distribution stats
-      ath6kl: Add debugfs interface to dump diagnostic registers from
-firmware
-      ath6kl: Fix endianness in requesting chip register read
-      ath6kl: Make ath6kl_diag_write32() non-static
-      ath6kl: Fix endianness in register write
-      ath6kl: Add debugfs support to write a chip register
-      ath6kl: Remove auth type fall back in auto authentication mode
-      ath6kl: Set the sme_state to disconnected in disconnect() callback
-      ath6kl: Fix disconnect event reporting
-      ath6kl: Remove unnecessary retrieval of first list entry in
-ath6kl_htc_tx_setup_scat_list()
-
-Vivek Natarajan (4):
-      ath6kl: Add debugfs entry to modify roaming parameters.
-      ath6kl: Process regulatory requests from firmware.
-      ath6kl: deinitialise wiphy on error
-      ath6kl: Indicate the roaming capability of the firmware
-
- drivers/net/wireless/ath/ath6kl/Makefile   |    4 +-
- drivers/net/wireless/ath/ath6kl/bmi.c      |   23 +-
- drivers/net/wireless/ath/ath6kl/bmi.h      |    4 +-
- drivers/net/wireless/ath/ath6kl/cfg80211.c |  894 ++++++++++++++++-------
- drivers/net/wireless/ath/ath6kl/common.h   |   83 --
- drivers/net/wireless/ath/ath6kl/core.h     |  145 +++-
- drivers/net/wireless/ath/ath6kl/debug.c    |  783 +++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/debug.h    |   49 +-
- drivers/net/wireless/ath/ath6kl/hif-ops.h  |    5 +
- drivers/net/wireless/ath/ath6kl/hif.h      |    1 +
- drivers/net/wireless/ath/ath6kl/htc.c      |  271 ++++---
- drivers/net/wireless/ath/ath6kl/init.c     |  794 +++++++++++++++-----
- drivers/net/wireless/ath/ath6kl/main.c     |  448 ++++++++----
- drivers/net/wireless/ath/ath6kl/node.c     |  234 ------
- drivers/net/wireless/ath/ath6kl/sdio.c     |   79 ++-
- drivers/net/wireless/ath/ath6kl/target.h   |   41 +-
- drivers/net/wireless/ath/ath6kl/testmode.c |  167 ++++
- drivers/net/wireless/ath/ath6kl/testmode.h |   36 +
- drivers/net/wireless/ath/ath6kl/txrx.c     |   61 +-
- drivers/net/wireless/ath/ath6kl/wmi.c      | 1126
-+++++++++++++++++++---------
- drivers/net/wireless/ath/ath6kl/wmi.h      |  350 ++++++++--
- 21 files changed, 4049 insertions(+), 1549 deletions(-)
- delete mode 100644 drivers/net/wireless/ath/ath6kl/node.c
- create mode 100644 drivers/net/wireless/ath/ath6kl/testmode.c
- create mode 100644 drivers/net/wireless/ath/ath6kl/testmode.h
+@@ -77,7 +890,8 @@ void iwl_sta_fill_lq(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 			hw_params(priv).valid_tx_ant;
+ 	}
+ 
+-	link_cmd->agg_params.agg_dis_start_th = LINK_QUAL_AGG_DISABLE_START_DEF;
++	link_cmd->agg_params.agg_dis_start_th =
++		LINK_QUAL_AGG_DISABLE_START_DEF;
+ 	link_cmd->agg_params.agg_time_limit =
+ 		cpu_to_le16(LINK_QUAL_AGG_TIME_LIMIT_DEF);
+ 
+@@ -85,7 +899,8 @@ void iwl_sta_fill_lq(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ }
+ 
+ static struct iwl_link_quality_cmd *
+-iwl_sta_alloc_lq(struct iwl_priv *priv, struct iwl_rxon_context *ctx, u8 sta_id)
++iwl_sta_alloc_lq(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
++		 u8 sta_id)
+ {
+ 	struct iwl_link_quality_cmd *link_cmd;
+ 
+@@ -105,7 +920,8 @@ iwl_sta_alloc_lq(struct iwl_priv *priv, struct iwl_rxon_context *ctx, u8 sta_id)
+  *
+  * Function sleeps.
+  */
+-int iwlagn_add_bssid_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
++int iwlagn_add_bssid_station(struct iwl_priv *priv,
++			     struct iwl_rxon_context *ctx,
+ 			     const u8 *addr, u8 *sta_id_r)
+ {
+ 	int ret;
+@@ -132,7 +948,8 @@ int iwlagn_add_bssid_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx
+ 	/* Set up default rate scaling table in device's station table */
+ 	link_cmd = iwl_sta_alloc_lq(priv, ctx, sta_id);
+ 	if (!link_cmd) {
+-		IWL_ERR(priv, "Unable to initialize rate scaling for station %pM.\n",
++		IWL_ERR(priv,
++			"Unable to initialize rate scaling for station %pM.\n",
+ 			addr);
+ 		return -ENOMEM;
+ 	}
+@@ -224,7 +1041,8 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
+ 
+ 	memset(&ctx->wep_keys[keyconf->keyidx], 0, sizeof(ctx->wep_keys[0]));
+ 	if (iwl_is_rfkill(priv->shrd)) {
+-		IWL_DEBUG_WEP(priv, "Not sending REPLY_WEPKEY command due to RFKILL.\n");
++		IWL_DEBUG_WEP(priv,
++			"Not sending REPLY_WEPKEY command due to RFKILL.\n");
+ 		/* but keys in device are clear anyway so return success */
+ 		return 0;
+ 	}
+@@ -245,7 +1063,8 @@ int iwl_set_default_wep_key(struct iwl_priv *priv,
+ 
+ 	if (keyconf->keylen != WEP_KEY_LEN_128 &&
+ 	    keyconf->keylen != WEP_KEY_LEN_64) {
+-		IWL_DEBUG_WEP(priv, "Bad WEP key length %d\n", keyconf->keylen);
++		IWL_DEBUG_WEP(priv,
++			      "Bad WEP key length %d\n", keyconf->keylen);
+ 		return -EINVAL;
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index f849097..d7e48f2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -35,7 +35,6 @@
+ 
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+-#include "iwl-sta.h"
+ #include "iwl-io.h"
+ #include "iwl-helpers.h"
+ #include "iwl-agn-hw.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 6c57199..5a78480 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -48,7 +48,6 @@
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+ #include "iwl-helpers.h"
+-#include "iwl-sta.h"
+ #include "iwl-agn-calib.h"
+ #include "iwl-agn.h"
+ #include "iwl-shared.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index a8df7eb..5b936ec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -152,10 +152,6 @@ u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant_idx, u8 valid);
+ void iwlagn_post_scan(struct iwl_priv *priv);
+ void iwlagn_disable_roc(struct iwl_priv *priv);
+ 
+-/* station mgmt */
+-int iwlagn_manage_ibss_station(struct iwl_priv *priv,
+-			       struct ieee80211_vif *vif, bool add);
+-
+ /* bt coex */
+ void iwlagn_send_advance_bt_config(struct iwl_priv *priv);
+ int iwlagn_bt_coex_profile_notif(struct iwl_priv *priv,
+@@ -175,7 +171,120 @@ static inline const char *iwl_get_tx_fail_reason(u32 status) { return ""; }
+ static inline const char *iwl_get_agg_tx_fail_reason(u16 status) { return ""; }
+ #endif
+ 
++
+ /* station management */
++int iwlagn_manage_ibss_station(struct iwl_priv *priv,
++			       struct ieee80211_vif *vif, bool add);
++#define IWL_STA_DRIVER_ACTIVE BIT(0) /* driver entry is active */
++#define IWL_STA_UCODE_ACTIVE  BIT(1) /* ucode entry is active */
++#define IWL_STA_UCODE_INPROGRESS  BIT(2) /* ucode entry is in process of
++					    being activated */
++#define IWL_STA_LOCAL BIT(3) /* station state not directed by mac80211;
++				(this is for the IBSS BSSID stations) */
++#define IWL_STA_BCAST BIT(4) /* this station is the special bcast station */
++
++
++void iwl_restore_stations(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
++void iwl_clear_ucode_stations(struct iwl_priv *priv,
++			      struct iwl_rxon_context *ctx);
++void iwl_dealloc_bcast_stations(struct iwl_priv *priv);
++int iwl_get_free_ucode_key_offset(struct iwl_priv *priv);
++int iwl_send_add_sta(struct iwl_priv *priv,
++		     struct iwl_addsta_cmd *sta, u8 flags);
++int iwl_add_station_common(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
++			   const u8 *addr, bool is_ap,
++			   struct ieee80211_sta *sta, u8 *sta_id_r);
++int iwl_remove_station(struct iwl_priv *priv, const u8 sta_id,
++		       const u8 *addr);
++int iwlagn_mac_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++		       struct ieee80211_sta *sta);
++
++u8 iwl_prep_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
++		    const u8 *addr, bool is_ap, struct ieee80211_sta *sta);
++
++void iwl_sta_fill_lq(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
++		     u8 sta_id, struct iwl_link_quality_cmd *link_cmd);
++int iwl_send_lq_cmd(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
++		    struct iwl_link_quality_cmd *lq, u8 flags, bool init);
++void iwl_reprogram_ap_sta(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
++int iwl_add_sta_callback(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
++			       struct iwl_device_cmd *cmd);
++
++
++/**
++ * iwl_clear_driver_stations - clear knowledge of all stations from driver
++ * @priv: iwl priv struct
++ *
++ * This is called during iwl_down() to make sure that in the case
++ * we're coming there from a hardware restart mac80211 will be
++ * able to reconfigure stations -- if we're getting there in the
++ * normal down flow then the stations will already be cleared.
++ */
++static inline void iwl_clear_driver_stations(struct iwl_priv *priv)
++{
++	unsigned long flags;
++	struct iwl_rxon_context *ctx;
++
++	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
++	memset(priv->stations, 0, sizeof(priv->stations));
++	priv->num_stations = 0;
++
++	priv->ucode_key_table = 0;
++
++	for_each_context(priv, ctx) {
++		/*
++		 * Remove all key information that is not stored as part
++		 * of station information since mac80211 may not have had
++		 * a chance to remove all the keys. When device is
++		 * reconfigured by mac80211 after an error all keys will
++		 * be reconfigured.
++		 */
++		memset(ctx->wep_keys, 0, sizeof(ctx->wep_keys));
++		ctx->key_mapping_keys = 0;
++	}
++
++	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
++}
++
++static inline int iwl_sta_id(struct ieee80211_sta *sta)
++{
++	if (WARN_ON(!sta))
++		return IWL_INVALID_STATION;
++
++	return ((struct iwl_station_priv *)sta->drv_priv)->sta_id;
++}
++
++/**
++ * iwl_sta_id_or_broadcast - return sta_id or broadcast sta
++ * @priv: iwl priv
++ * @context: the current context
++ * @sta: mac80211 station
++ *
++ * In certain circumstances mac80211 passes a station pointer
++ * that may be %NULL, for example during TX or key setup. In
++ * that case, we need to use the broadcast station, so this
++ * inline wraps that pattern.
++ */
++static inline int iwl_sta_id_or_broadcast(struct iwl_priv *priv,
++					  struct iwl_rxon_context *context,
++					  struct ieee80211_sta *sta)
++{
++	int sta_id;
++
++	if (!sta)
++		return context->bcast_sta_id;
++
++	sta_id = iwl_sta_id(sta);
++
++	/*
++	 * mac80211 should not be passing a partially
++	 * initialised station!
++	 */
++	WARN_ON(sta_id == IWL_INVALID_STATION);
++
++	return sta_id;
++}
++
+ int iwlagn_alloc_bcast_station(struct iwl_priv *priv,
+ 			       struct iwl_rxon_context *ctx);
+ int iwlagn_add_bssid_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index f800756..ad66150 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -39,7 +39,6 @@
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+ #include "iwl-power.h"
+-#include "iwl-sta.h"
+ #include "iwl-agn.h"
+ #include "iwl-helpers.h"
+ #include "iwl-shared.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 2581c3c..d406c72 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -35,7 +35,6 @@
+ #include "iwl-eeprom.h"
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+-#include "iwl-sta.h"
+ #include "iwl-io.h"
+ #include "iwl-helpers.h"
+ #include "iwl-agn-calib.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 55f1f86..bb03bf8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -33,7 +33,6 @@
+ #include "iwl-eeprom.h"
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+-#include "iwl-sta.h"
+ #include "iwl-io.h"
+ #include "iwl-helpers.h"
+ #include "iwl-agn.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+deleted file mode 100644
+index 586007e..0000000
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ /dev/null
+@@ -1,839 +0,0 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2003 - 2011 Intel Corporation. All rights reserved.
+- *
+- * Portions of this file are derived from the ipw3945 project, as well
+- * as portions of the ieee80211 subsystem header files.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- *  Intel Linux Wireless <ilw@linux.intel.com>
+- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
+- *
+- *****************************************************************************/
+-
+-#include <net/mac80211.h>
+-#include <linux/etherdevice.h>
+-#include <linux/sched.h>
+-#include <linux/lockdep.h>
+-
+-#include "iwl-dev.h"
+-#include "iwl-core.h"
+-#include "iwl-sta.h"
+-#include "iwl-trans.h"
+-#include "iwl-agn.h"
+-
+-/* priv->shrd->sta_lock must be held */
+-static void iwl_sta_ucode_activate(struct iwl_priv *priv, u8 sta_id)
+-{
+-
+-	if (!(priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE))
+-		IWL_ERR(priv, "ACTIVATE a non DRIVER active station id %u addr %pM\n",
+-			sta_id, priv->stations[sta_id].sta.sta.addr);
+-
+-	if (priv->stations[sta_id].used & IWL_STA_UCODE_ACTIVE) {
+-		IWL_DEBUG_ASSOC(priv,
+-				"STA id %u addr %pM already present in uCode (according to driver)\n",
+-				sta_id, priv->stations[sta_id].sta.sta.addr);
+-	} else {
+-		priv->stations[sta_id].used |= IWL_STA_UCODE_ACTIVE;
+-		IWL_DEBUG_ASSOC(priv, "Added STA id %u addr %pM to uCode\n",
+-				sta_id, priv->stations[sta_id].sta.sta.addr);
+-	}
+-}
+-
+-static int iwl_process_add_sta_resp(struct iwl_priv *priv,
+-				    struct iwl_addsta_cmd *addsta,
+-				    struct iwl_rx_packet *pkt)
+-{
+-	u8 sta_id = addsta->sta.sta_id;
+-	unsigned long flags;
+-	int ret = -EIO;
+-
+-	if (pkt->hdr.flags & IWL_CMD_FAILED_MSK) {
+-		IWL_ERR(priv, "Bad return from REPLY_ADD_STA (0x%08X)\n",
+-			pkt->hdr.flags);
+-		return ret;
+-	}
+-
+-	IWL_DEBUG_INFO(priv, "Processing response for adding station %u\n",
+-		       sta_id);
+-
+-	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
+-
+-	switch (pkt->u.add_sta.status) {
+-	case ADD_STA_SUCCESS_MSK:
+-		IWL_DEBUG_INFO(priv, "REPLY_ADD_STA PASSED\n");
+-		iwl_sta_ucode_activate(priv, sta_id);
+-		ret = 0;
+-		break;
+-	case ADD_STA_NO_ROOM_IN_TABLE:
+-		IWL_ERR(priv, "Adding station %d failed, no room in table.\n",
+-			sta_id);
+-		break;
+-	case ADD_STA_NO_BLOCK_ACK_RESOURCE:
+-		IWL_ERR(priv, "Adding station %d failed, no block ack resource.\n",
+-			sta_id);
+-		break;
+-	case ADD_STA_MODIFY_NON_EXIST_STA:
+-		IWL_ERR(priv, "Attempting to modify non-existing station %d\n",
+-			sta_id);
+-		break;
+-	default:
+-		IWL_DEBUG_ASSOC(priv, "Received REPLY_ADD_STA:(0x%08X)\n",
+-				pkt->u.add_sta.status);
+-		break;
+-	}
+-
+-	IWL_DEBUG_INFO(priv, "%s station id %u addr %pM\n",
+-		       priv->stations[sta_id].sta.mode ==
+-		       STA_CONTROL_MODIFY_MSK ?  "Modified" : "Added",
+-		       sta_id, priv->stations[sta_id].sta.sta.addr);
+-
+-	/*
+-	 * XXX: The MAC address in the command buffer is often changed from
+-	 * the original sent to the device. That is, the MAC address
+-	 * written to the command buffer often is not the same MAC address
+-	 * read from the command buffer when the command returns. This
+-	 * issue has not yet been resolved and this debugging is left to
+-	 * observe the problem.
+-	 */
+-	IWL_DEBUG_INFO(priv, "%s station according to cmd buffer %pM\n",
+-		       priv->stations[sta_id].sta.mode ==
+-		       STA_CONTROL_MODIFY_MSK ? "Modified" : "Added",
+-		       addsta->sta.addr);
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
+-
+-	return ret;
+-}
+-
+-int iwl_add_sta_callback(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
+-			       struct iwl_device_cmd *cmd)
+-{
+-	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+-	struct iwl_addsta_cmd *addsta =
+-		(struct iwl_addsta_cmd *) cmd->payload;
+-
+-	return iwl_process_add_sta_resp(priv, addsta, pkt);
+-}
+-
+-static u16 iwlagn_build_addsta_hcmd(const struct iwl_addsta_cmd *cmd, u8 *data)
+-{
+-	u16 size = (u16)sizeof(struct iwl_addsta_cmd);
+-	struct iwl_addsta_cmd *addsta = (struct iwl_addsta_cmd *)data;
+-	memcpy(addsta, cmd, size);
+-	/* resrved in 5000 */
+-	addsta->rate_n_flags = cpu_to_le16(0);
+-	return size;
+-}
+-
+-int iwl_send_add_sta(struct iwl_priv *priv,
+-		     struct iwl_addsta_cmd *sta, u8 flags)
+-{
+-	int ret = 0;
+-	u8 data[sizeof(*sta)];
+-	struct iwl_host_cmd cmd = {
+-		.id = REPLY_ADD_STA,
+-		.flags = flags,
+-		.data = { data, },
+-	};
+-	u8 sta_id __maybe_unused = sta->sta.sta_id;
+-
+-	IWL_DEBUG_INFO(priv, "Adding sta %u (%pM) %ssynchronously\n",
+-		       sta_id, sta->sta.addr, flags & CMD_ASYNC ?  "a" : "");
+-
+-	if (!(flags & CMD_ASYNC)) {
+-		cmd.flags |= CMD_WANT_SKB;
+-		might_sleep();
+-	}
+-
+-	cmd.len[0] = iwlagn_build_addsta_hcmd(sta, data);
+-	ret = iwl_trans_send_cmd(trans(priv), &cmd);
+-
+-	if (ret || (flags & CMD_ASYNC))
+-		return ret;
+-	/*else the command was successfully sent in SYNC mode, need to free
+-	 * the reply page */
+-
+-	iwl_free_pages(priv->shrd, cmd.reply_page);
+-
+-	if (cmd.handler_status)
+-		IWL_ERR(priv, "%s - error in the CMD response %d", __func__,
+-			cmd.handler_status);
+-
+-	return cmd.handler_status;
+-}
+-
+-static void iwl_set_ht_add_station(struct iwl_priv *priv, u8 index,
+-				   struct ieee80211_sta *sta,
+-				   struct iwl_rxon_context *ctx)
+-{
+-	struct ieee80211_sta_ht_cap *sta_ht_inf = &sta->ht_cap;
+-	__le32 sta_flags;
+-	u8 mimo_ps_mode;
+-
+-	if (!sta || !sta_ht_inf->ht_supported)
+-		goto done;
+-
+-	mimo_ps_mode = (sta_ht_inf->cap & IEEE80211_HT_CAP_SM_PS) >> 2;
+-	IWL_DEBUG_ASSOC(priv, "spatial multiplexing power save mode: %s\n",
+-			(mimo_ps_mode == WLAN_HT_CAP_SM_PS_STATIC) ?
+-			"static" :
+-			(mimo_ps_mode == WLAN_HT_CAP_SM_PS_DYNAMIC) ?
+-			"dynamic" : "disabled");
+-
+-	sta_flags = priv->stations[index].sta.station_flags;
+-
+-	sta_flags &= ~(STA_FLG_RTS_MIMO_PROT_MSK | STA_FLG_MIMO_DIS_MSK);
+-
+-	switch (mimo_ps_mode) {
+-	case WLAN_HT_CAP_SM_PS_STATIC:
+-		sta_flags |= STA_FLG_MIMO_DIS_MSK;
+-		break;
+-	case WLAN_HT_CAP_SM_PS_DYNAMIC:
+-		sta_flags |= STA_FLG_RTS_MIMO_PROT_MSK;
+-		break;
+-	case WLAN_HT_CAP_SM_PS_DISABLED:
+-		break;
+-	default:
+-		IWL_WARN(priv, "Invalid MIMO PS mode %d\n", mimo_ps_mode);
+-		break;
+-	}
+-
+-	sta_flags |= cpu_to_le32(
+-	      (u32)sta_ht_inf->ampdu_factor << STA_FLG_MAX_AGG_SIZE_POS);
+-
+-	sta_flags |= cpu_to_le32(
+-	      (u32)sta_ht_inf->ampdu_density << STA_FLG_AGG_MPDU_DENSITY_POS);
+-
+-	if (iwl_is_ht40_tx_allowed(priv, ctx, &sta->ht_cap))
+-		sta_flags |= STA_FLG_HT40_EN_MSK;
+-	else
+-		sta_flags &= ~STA_FLG_HT40_EN_MSK;
+-
+-	priv->stations[index].sta.station_flags = sta_flags;
+- done:
+-	return;
+-}
+-
+-/**
+- * iwl_prep_station - Prepare station information for addition
+- *
+- * should be called with sta_lock held
+- */
+-u8 iwl_prep_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+-		    const u8 *addr, bool is_ap, struct ieee80211_sta *sta)
+-{
+-	struct iwl_station_entry *station;
+-	int i;
+-	u8 sta_id = IWL_INVALID_STATION;
+-
+-	if (is_ap)
+-		sta_id = ctx->ap_sta_id;
+-	else if (is_broadcast_ether_addr(addr))
+-		sta_id = ctx->bcast_sta_id;
+-	else
+-		for (i = IWL_STA_ID; i < IWLAGN_STATION_COUNT; i++) {
+-			if (!compare_ether_addr(priv->stations[i].sta.sta.addr,
+-						addr)) {
+-				sta_id = i;
+-				break;
+-			}
+-
+-			if (!priv->stations[i].used &&
+-			    sta_id == IWL_INVALID_STATION)
+-				sta_id = i;
+-		}
+-
+-	/*
+-	 * These two conditions have the same outcome, but keep them
+-	 * separate
+-	 */
+-	if (unlikely(sta_id == IWL_INVALID_STATION))
+-		return sta_id;
+-
+-	/*
+-	 * uCode is not able to deal with multiple requests to add a
+-	 * station. Keep track if one is in progress so that we do not send
+-	 * another.
+-	 */
+-	if (priv->stations[sta_id].used & IWL_STA_UCODE_INPROGRESS) {
+-		IWL_DEBUG_INFO(priv, "STA %d already in process of being added.\n",
+-				sta_id);
+-		return sta_id;
+-	}
+-
+-	if ((priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE) &&
+-	    (priv->stations[sta_id].used & IWL_STA_UCODE_ACTIVE) &&
+-	    !compare_ether_addr(priv->stations[sta_id].sta.sta.addr, addr)) {
+-		IWL_DEBUG_ASSOC(priv, "STA %d (%pM) already added, not adding again.\n",
+-				sta_id, addr);
+-		return sta_id;
+-	}
+-
+-	station = &priv->stations[sta_id];
+-	station->used = IWL_STA_DRIVER_ACTIVE;
+-	IWL_DEBUG_ASSOC(priv, "Add STA to driver ID %d: %pM\n",
+-			sta_id, addr);
+-	priv->num_stations++;
+-
+-	/* Set up the REPLY_ADD_STA command to send to device */
+-	memset(&station->sta, 0, sizeof(struct iwl_addsta_cmd));
+-	memcpy(station->sta.sta.addr, addr, ETH_ALEN);
+-	station->sta.mode = 0;
+-	station->sta.sta.sta_id = sta_id;
+-	station->sta.station_flags = ctx->station_flags;
+-	station->ctxid = ctx->ctxid;
+-
+-	if (sta) {
+-		struct iwl_station_priv *sta_priv;
+-
+-		sta_priv = (void *)sta->drv_priv;
+-		sta_priv->ctx = ctx;
+-	}
+-
+-	/*
+-	 * OK to call unconditionally, since local stations (IBSS BSSID
+-	 * STA and broadcast STA) pass in a NULL sta, and mac80211
+-	 * doesn't allow HT IBSS.
+-	 */
+-	iwl_set_ht_add_station(priv, sta_id, sta, ctx);
+-
+-	return sta_id;
+-
+-}
+-
+-#define STA_WAIT_TIMEOUT (HZ/2)
+-
+-/**
+- * iwl_add_station_common -
+- */
+-int iwl_add_station_common(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+-			   const u8 *addr, bool is_ap,
+-			   struct ieee80211_sta *sta, u8 *sta_id_r)
+-{
+-	unsigned long flags_spin;
+-	int ret = 0;
+-	u8 sta_id;
+-	struct iwl_addsta_cmd sta_cmd;
+-
+-	*sta_id_r = 0;
+-	spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
+-	sta_id = iwl_prep_station(priv, ctx, addr, is_ap, sta);
+-	if (sta_id == IWL_INVALID_STATION) {
+-		IWL_ERR(priv, "Unable to prepare station %pM for addition\n",
+-			addr);
+-		spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
+-		return -EINVAL;
+-	}
+-
+-	/*
+-	 * uCode is not able to deal with multiple requests to add a
+-	 * station. Keep track if one is in progress so that we do not send
+-	 * another.
+-	 */
+-	if (priv->stations[sta_id].used & IWL_STA_UCODE_INPROGRESS) {
+-		IWL_DEBUG_INFO(priv, "STA %d already in process of being added.\n",
+-			       sta_id);
+-		spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
+-		return -EEXIST;
+-	}
+-
+-	if ((priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE) &&
+-	    (priv->stations[sta_id].used & IWL_STA_UCODE_ACTIVE)) {
+-		IWL_DEBUG_ASSOC(priv, "STA %d (%pM) already added, not adding again.\n",
+-				sta_id, addr);
+-		spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
+-		return -EEXIST;
+-	}
+-
+-	priv->stations[sta_id].used |= IWL_STA_UCODE_INPROGRESS;
+-	memcpy(&sta_cmd, &priv->stations[sta_id].sta, sizeof(struct iwl_addsta_cmd));
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
+-
+-	/* Add station to device's station table */
+-	ret = iwl_send_add_sta(priv, &sta_cmd, CMD_SYNC);
+-	if (ret) {
+-		spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
+-		IWL_ERR(priv, "Adding station %pM failed.\n",
+-			priv->stations[sta_id].sta.sta.addr);
+-		priv->stations[sta_id].used &= ~IWL_STA_DRIVER_ACTIVE;
+-		priv->stations[sta_id].used &= ~IWL_STA_UCODE_INPROGRESS;
+-		spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
+-	}
+-	*sta_id_r = sta_id;
+-	return ret;
+-}
+-
+-/**
+- * iwl_sta_ucode_deactivate - deactivate ucode status for a station
+- *
+- * priv->shrd->sta_lock must be held
+- */
+-static void iwl_sta_ucode_deactivate(struct iwl_priv *priv, u8 sta_id)
+-{
+-	/* Ucode must be active and driver must be non active */
+-	if ((priv->stations[sta_id].used &
+-	     (IWL_STA_UCODE_ACTIVE | IWL_STA_DRIVER_ACTIVE)) != IWL_STA_UCODE_ACTIVE)
+-		IWL_ERR(priv, "removed non active STA %u\n", sta_id);
+-
+-	priv->stations[sta_id].used &= ~IWL_STA_UCODE_ACTIVE;
+-
+-	memset(&priv->stations[sta_id], 0, sizeof(struct iwl_station_entry));
+-	IWL_DEBUG_ASSOC(priv, "Removed STA %u\n", sta_id);
+-}
+-
+-static int iwl_send_remove_station(struct iwl_priv *priv,
+-				   const u8 *addr, int sta_id,
+-				   bool temporary)
+-{
+-	struct iwl_rx_packet *pkt;
+-	int ret;
+-
+-	unsigned long flags_spin;
+-	struct iwl_rem_sta_cmd rm_sta_cmd;
+-
+-	struct iwl_host_cmd cmd = {
+-		.id = REPLY_REMOVE_STA,
+-		.len = { sizeof(struct iwl_rem_sta_cmd), },
+-		.flags = CMD_SYNC,
+-		.data = { &rm_sta_cmd, },
+-	};
+-
+-	memset(&rm_sta_cmd, 0, sizeof(rm_sta_cmd));
+-	rm_sta_cmd.num_sta = 1;
+-	memcpy(&rm_sta_cmd.addr, addr, ETH_ALEN);
+-
+-	cmd.flags |= CMD_WANT_SKB;
+-
+-	ret = iwl_trans_send_cmd(trans(priv), &cmd);
+-
+-	if (ret)
+-		return ret;
+-
+-	pkt = (struct iwl_rx_packet *)cmd.reply_page;
+-	if (pkt->hdr.flags & IWL_CMD_FAILED_MSK) {
+-		IWL_ERR(priv, "Bad return from REPLY_REMOVE_STA (0x%08X)\n",
+-			  pkt->hdr.flags);
+-		ret = -EIO;
+-	}
+-
+-	if (!ret) {
+-		switch (pkt->u.rem_sta.status) {
+-		case REM_STA_SUCCESS_MSK:
+-			if (!temporary) {
+-				spin_lock_irqsave(&priv->shrd->sta_lock,
+-					flags_spin);
+-				iwl_sta_ucode_deactivate(priv, sta_id);
+-				spin_unlock_irqrestore(&priv->shrd->sta_lock,
+-					flags_spin);
+-			}
+-			IWL_DEBUG_ASSOC(priv, "REPLY_REMOVE_STA PASSED\n");
+-			break;
+-		default:
+-			ret = -EIO;
+-			IWL_ERR(priv, "REPLY_REMOVE_STA failed\n");
+-			break;
+-		}
+-	}
+-	iwl_free_pages(priv->shrd, cmd.reply_page);
+-
+-	return ret;
+-}
+-
+-/**
+- * iwl_remove_station - Remove driver's knowledge of station.
+- */
+-int iwl_remove_station(struct iwl_priv *priv, const u8 sta_id,
+-		       const u8 *addr)
+-{
+-	unsigned long flags;
+-
+-	if (!iwl_is_ready(priv->shrd)) {
+-		IWL_DEBUG_INFO(priv,
+-			"Unable to remove station %pM, device not ready.\n",
+-			addr);
+-		/*
+-		 * It is typical for stations to be removed when we are
+-		 * going down. Return success since device will be down
+-		 * soon anyway
+-		 */
+-		return 0;
+-	}
+-
+-	IWL_DEBUG_ASSOC(priv, "Removing STA from driver:%d  %pM\n",
+-			sta_id, addr);
+-
+-	if (WARN_ON(sta_id == IWL_INVALID_STATION))
+-		return -EINVAL;
+-
+-	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
+-
+-	if (!(priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE)) {
+-		IWL_DEBUG_INFO(priv, "Removing %pM but non DRIVER active\n",
+-				addr);
+-		goto out_err;
+-	}
+-
+-	if (!(priv->stations[sta_id].used & IWL_STA_UCODE_ACTIVE)) {
+-		IWL_DEBUG_INFO(priv, "Removing %pM but non UCODE active\n",
+-				addr);
+-		goto out_err;
+-	}
+-
+-	if (priv->stations[sta_id].used & IWL_STA_LOCAL) {
+-		kfree(priv->stations[sta_id].lq);
+-		priv->stations[sta_id].lq = NULL;
+-	}
+-
+-	priv->stations[sta_id].used &= ~IWL_STA_DRIVER_ACTIVE;
+-
+-	priv->num_stations--;
+-
+-	if (WARN_ON(priv->num_stations < 0))
+-		priv->num_stations = 0;
+-
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
+-
+-	return iwl_send_remove_station(priv, addr, sta_id, false);
+-out_err:
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
+-	return -EINVAL;
+-}
+-
+-/**
+- * iwl_clear_ucode_stations - clear ucode station table bits
+- *
+- * This function clears all the bits in the driver indicating
+- * which stations are active in the ucode. Call when something
+- * other than explicit station management would cause this in
+- * the ucode, e.g. unassociated RXON.
+- */
+-void iwl_clear_ucode_stations(struct iwl_priv *priv,
+-			      struct iwl_rxon_context *ctx)
+-{
+-	int i;
+-	unsigned long flags_spin;
+-	bool cleared = false;
+-
+-	IWL_DEBUG_INFO(priv, "Clearing ucode stations in driver\n");
+-
+-	spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
+-	for (i = 0; i < IWLAGN_STATION_COUNT; i++) {
+-		if (ctx && ctx->ctxid != priv->stations[i].ctxid)
+-			continue;
+-
+-		if (priv->stations[i].used & IWL_STA_UCODE_ACTIVE) {
+-			IWL_DEBUG_INFO(priv, "Clearing ucode active for station %d\n", i);
+-			priv->stations[i].used &= ~IWL_STA_UCODE_ACTIVE;
+-			cleared = true;
+-		}
+-	}
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
+-
+-	if (!cleared)
+-		IWL_DEBUG_INFO(priv, "No active stations found to be cleared\n");
+-}
+-
+-/**
+- * iwl_restore_stations() - Restore driver known stations to device
+- *
+- * All stations considered active by driver, but not present in ucode, is
+- * restored.
+- *
+- * Function sleeps.
+- */
+-void iwl_restore_stations(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+-{
+-	struct iwl_addsta_cmd sta_cmd;
+-	struct iwl_link_quality_cmd lq;
+-	unsigned long flags_spin;
+-	int i;
+-	bool found = false;
+-	int ret;
+-	bool send_lq;
+-
+-	if (!iwl_is_ready(priv->shrd)) {
+-		IWL_DEBUG_INFO(priv, "Not ready yet, not restoring any stations.\n");
+-		return;
+-	}
+-
+-	IWL_DEBUG_ASSOC(priv, "Restoring all known stations ... start.\n");
+-	spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
+-	for (i = 0; i < IWLAGN_STATION_COUNT; i++) {
+-		if (ctx->ctxid != priv->stations[i].ctxid)
+-			continue;
+-		if ((priv->stations[i].used & IWL_STA_DRIVER_ACTIVE) &&
+-			    !(priv->stations[i].used & IWL_STA_UCODE_ACTIVE)) {
+-			IWL_DEBUG_ASSOC(priv, "Restoring sta %pM\n",
+-					priv->stations[i].sta.sta.addr);
+-			priv->stations[i].sta.mode = 0;
+-			priv->stations[i].used |= IWL_STA_UCODE_INPROGRESS;
+-			found = true;
+-		}
+-	}
+-
+-	for (i = 0; i < IWLAGN_STATION_COUNT; i++) {
+-		if ((priv->stations[i].used & IWL_STA_UCODE_INPROGRESS)) {
+-			memcpy(&sta_cmd, &priv->stations[i].sta,
+-			       sizeof(struct iwl_addsta_cmd));
+-			send_lq = false;
+-			if (priv->stations[i].lq) {
+-				if (priv->shrd->wowlan)
+-					iwl_sta_fill_lq(priv, ctx, i, &lq);
+-				else
+-					memcpy(&lq, priv->stations[i].lq,
+-					       sizeof(struct iwl_link_quality_cmd));
+-				send_lq = true;
+-			}
+-			spin_unlock_irqrestore(&priv->shrd->sta_lock,
+-					       flags_spin);
+-			ret = iwl_send_add_sta(priv, &sta_cmd, CMD_SYNC);
+-			if (ret) {
+-				spin_lock_irqsave(&priv->shrd->sta_lock,
+-						  flags_spin);
+-				IWL_ERR(priv, "Adding station %pM failed.\n",
+-					priv->stations[i].sta.sta.addr);
+-				priv->stations[i].used &= ~IWL_STA_DRIVER_ACTIVE;
+-				priv->stations[i].used &= ~IWL_STA_UCODE_INPROGRESS;
+-				spin_unlock_irqrestore(&priv->shrd->sta_lock,
+-						       flags_spin);
+-			}
+-			/*
+-			 * Rate scaling has already been initialized, send
+-			 * current LQ command
+-			 */
+-			if (send_lq)
+-				iwl_send_lq_cmd(priv, ctx, &lq, CMD_SYNC, true);
+-			spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
+-			priv->stations[i].used &= ~IWL_STA_UCODE_INPROGRESS;
+-		}
+-	}
+-
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
+-	if (!found)
+-		IWL_DEBUG_INFO(priv, "Restoring all known stations .... no stations to be restored.\n");
+-	else
+-		IWL_DEBUG_INFO(priv, "Restoring all known stations .... complete.\n");
+-}
+-
+-void iwl_reprogram_ap_sta(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+-{
+-	unsigned long flags;
+-	int sta_id = ctx->ap_sta_id;
+-	int ret;
+-	struct iwl_addsta_cmd sta_cmd;
+-	struct iwl_link_quality_cmd lq;
+-	bool active;
+-
+-	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
+-	if (!(priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE)) {
+-		spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
+-		return;
+-	}
+-
+-	memcpy(&sta_cmd, &priv->stations[sta_id].sta, sizeof(sta_cmd));
+-	sta_cmd.mode = 0;
+-	memcpy(&lq, priv->stations[sta_id].lq, sizeof(lq));
+-
+-	active = priv->stations[sta_id].used & IWL_STA_UCODE_ACTIVE;
+-	priv->stations[sta_id].used &= ~IWL_STA_DRIVER_ACTIVE;
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
+-
+-	if (active) {
+-		ret = iwl_send_remove_station(
+-			priv, priv->stations[sta_id].sta.sta.addr,
+-			sta_id, true);
+-		if (ret)
+-			IWL_ERR(priv, "failed to remove STA %pM (%d)\n",
+-				priv->stations[sta_id].sta.sta.addr, ret);
+-	}
+-	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
+-	priv->stations[sta_id].used |= IWL_STA_DRIVER_ACTIVE;
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
+-
+-	ret = iwl_send_add_sta(priv, &sta_cmd, CMD_SYNC);
+-	if (ret)
+-		IWL_ERR(priv, "failed to re-add STA %pM (%d)\n",
+-			priv->stations[sta_id].sta.sta.addr, ret);
+-	iwl_send_lq_cmd(priv, ctx, &lq, CMD_SYNC, true);
+-}
+-
+-int iwl_get_free_ucode_key_offset(struct iwl_priv *priv)
+-{
+-	int i;
+-
+-	for (i = 0; i < priv->sta_key_max_num; i++)
+-		if (!test_and_set_bit(i, &priv->ucode_key_table))
+-			return i;
+-
+-	return WEP_INVALID_OFFSET;
+-}
+-
+-void iwl_dealloc_bcast_stations(struct iwl_priv *priv)
+-{
+-	unsigned long flags;
+-	int i;
+-
+-	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
+-	for (i = 0; i < IWLAGN_STATION_COUNT; i++) {
+-		if (!(priv->stations[i].used & IWL_STA_BCAST))
+-			continue;
+-
+-		priv->stations[i].used &= ~IWL_STA_UCODE_ACTIVE;
+-		priv->num_stations--;
+-		if (WARN_ON(priv->num_stations < 0))
+-			priv->num_stations = 0;
+-		kfree(priv->stations[i].lq);
+-		priv->stations[i].lq = NULL;
+-	}
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
+-}
+-
+-#ifdef CONFIG_IWLWIFI_DEBUG
+-static void iwl_dump_lq_cmd(struct iwl_priv *priv,
+-			   struct iwl_link_quality_cmd *lq)
+-{
+-	int i;
+-	IWL_DEBUG_RATE(priv, "lq station id 0x%x\n", lq->sta_id);
+-	IWL_DEBUG_RATE(priv, "lq ant 0x%X 0x%X\n",
+-		       lq->general_params.single_stream_ant_msk,
+-		       lq->general_params.dual_stream_ant_msk);
+-
+-	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++)
+-		IWL_DEBUG_RATE(priv, "lq index %d 0x%X\n",
+-			       i, lq->rs_table[i].rate_n_flags);
+-}
+-#else
+-static inline void iwl_dump_lq_cmd(struct iwl_priv *priv,
+-				   struct iwl_link_quality_cmd *lq)
+-{
+-}
+-#endif
+-
+-/**
+- * is_lq_table_valid() - Test one aspect of LQ cmd for validity
+- *
+- * It sometimes happens when a HT rate has been in use and we
+- * loose connectivity with AP then mac80211 will first tell us that the
+- * current channel is not HT anymore before removing the station. In such a
+- * scenario the RXON flags will be updated to indicate we are not
+- * communicating HT anymore, but the LQ command may still contain HT rates.
+- * Test for this to prevent driver from sending LQ command between the time
+- * RXON flags are updated and when LQ command is updated.
+- */
+-static bool is_lq_table_valid(struct iwl_priv *priv,
+-			      struct iwl_rxon_context *ctx,
+-			      struct iwl_link_quality_cmd *lq)
+-{
+-	int i;
+-
+-	if (ctx->ht.enabled)
+-		return true;
+-
+-	IWL_DEBUG_INFO(priv, "Channel %u is not an HT channel\n",
+-		       ctx->active.channel);
+-	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++) {
+-		if (le32_to_cpu(lq->rs_table[i].rate_n_flags) & RATE_MCS_HT_MSK) {
+-			IWL_DEBUG_INFO(priv,
+-				       "index %d of LQ expects HT channel\n",
+-				       i);
+-			return false;
+-		}
+-	}
+-	return true;
+-}
+-
+-/**
+- * iwl_send_lq_cmd() - Send link quality command
+- * @init: This command is sent as part of station initialization right
+- *        after station has been added.
+- *
+- * The link quality command is sent as the last step of station creation.
+- * This is the special case in which init is set and we call a callback in
+- * this case to clear the state indicating that station creation is in
+- * progress.
+- */
+-int iwl_send_lq_cmd(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+-		    struct iwl_link_quality_cmd *lq, u8 flags, bool init)
+-{
+-	int ret = 0;
+-	unsigned long flags_spin;
+-
+-	struct iwl_host_cmd cmd = {
+-		.id = REPLY_TX_LINK_QUALITY_CMD,
+-		.len = { sizeof(struct iwl_link_quality_cmd), },
+-		.flags = flags,
+-		.data = { lq, },
+-	};
+-
+-	if (WARN_ON(lq->sta_id == IWL_INVALID_STATION))
+-		return -EINVAL;
+-
+-
+-	spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
+-	if (!(priv->stations[lq->sta_id].used & IWL_STA_DRIVER_ACTIVE)) {
+-		spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
+-		return -EINVAL;
+-	}
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
+-
+-	iwl_dump_lq_cmd(priv, lq);
+-	if (WARN_ON(init && (cmd.flags & CMD_ASYNC)))
+-		return -EINVAL;
+-
+-	if (is_lq_table_valid(priv, ctx, lq))
+-		ret = iwl_trans_send_cmd(trans(priv), &cmd);
+-	else
+-		ret = -EINVAL;
+-
+-	if (cmd.flags & CMD_ASYNC)
+-		return ret;
+-
+-	if (init) {
+-		IWL_DEBUG_INFO(priv, "init LQ command complete, clearing sta addition status for sta %d\n",
+-			       lq->sta_id);
+-		spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
+-		priv->stations[lq->sta_id].used &= ~IWL_STA_UCODE_INPROGRESS;
+-		spin_unlock_irqrestore(&priv->shrd->sta_lock, flags_spin);
+-	}
+-	return ret;
+-}
+-
+-int iwlagn_mac_sta_remove(struct ieee80211_hw *hw,
+-		       struct ieee80211_vif *vif,
+-		       struct ieee80211_sta *sta)
+-{
+-	struct iwl_priv *priv = hw->priv;
+-	struct iwl_station_priv *sta_priv = (void *)sta->drv_priv;
+-	int ret;
+-
+-	IWL_DEBUG_MAC80211(priv, "enter: received request to remove "
+-			   "station %pM\n", sta->addr);
+-	mutex_lock(&priv->shrd->mutex);
+-	IWL_DEBUG_INFO(priv, "proceeding to remove station %pM\n",
+-			sta->addr);
+-	ret = iwl_remove_station(priv, sta_priv->sta_id, sta->addr);
+-	if (ret)
+-		IWL_ERR(priv, "Error removing station %pM\n",
+-			sta->addr);
+-	mutex_unlock(&priv->shrd->mutex);
+-	IWL_DEBUG_MAC80211(priv, "leave\n");
+-
+-	return ret;
+-}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
+deleted file mode 100644
+index 73b4af2..0000000
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.h
++++ /dev/null
+@@ -1,143 +0,0 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2003 - 2011 Intel Corporation. All rights reserved.
+- *
+- * Portions of this file are derived from the ipw3945 project, as well
+- * as portions of the ieee80211 subsystem header files.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- *  Intel Linux Wireless <ilw@linux.intel.com>
+- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
+- *
+- *****************************************************************************/
+-#ifndef __iwl_sta_h__
+-#define __iwl_sta_h__
+-
+-#include "iwl-dev.h"
+-
+-#define IWL_STA_DRIVER_ACTIVE BIT(0) /* driver entry is active */
+-#define IWL_STA_UCODE_ACTIVE  BIT(1) /* ucode entry is active */
+-#define IWL_STA_UCODE_INPROGRESS  BIT(2) /* ucode entry is in process of
+-					    being activated */
+-#define IWL_STA_LOCAL BIT(3) /* station state not directed by mac80211;
+-				(this is for the IBSS BSSID stations) */
+-#define IWL_STA_BCAST BIT(4) /* this station is the special bcast station */
+-
+-
+-void iwl_restore_stations(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
+-void iwl_clear_ucode_stations(struct iwl_priv *priv,
+-			      struct iwl_rxon_context *ctx);
+-void iwl_dealloc_bcast_stations(struct iwl_priv *priv);
+-int iwl_get_free_ucode_key_offset(struct iwl_priv *priv);
+-int iwl_send_add_sta(struct iwl_priv *priv,
+-		     struct iwl_addsta_cmd *sta, u8 flags);
+-int iwl_add_station_common(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+-			   const u8 *addr, bool is_ap,
+-			   struct ieee80211_sta *sta, u8 *sta_id_r);
+-int iwl_remove_station(struct iwl_priv *priv, const u8 sta_id,
+-		       const u8 *addr);
+-int iwlagn_mac_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+-		       struct ieee80211_sta *sta);
+-
+-u8 iwl_prep_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+-		    const u8 *addr, bool is_ap, struct ieee80211_sta *sta);
+-
+-void iwl_sta_fill_lq(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+-		     u8 sta_id, struct iwl_link_quality_cmd *link_cmd);
+-int iwl_send_lq_cmd(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+-		    struct iwl_link_quality_cmd *lq, u8 flags, bool init);
+-void iwl_reprogram_ap_sta(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
+-int iwl_add_sta_callback(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
+-			       struct iwl_device_cmd *cmd);
+-
+-
+-/**
+- * iwl_clear_driver_stations - clear knowledge of all stations from driver
+- * @priv: iwl priv struct
+- *
+- * This is called during iwl_down() to make sure that in the case
+- * we're coming there from a hardware restart mac80211 will be
+- * able to reconfigure stations -- if we're getting there in the
+- * normal down flow then the stations will already be cleared.
+- */
+-static inline void iwl_clear_driver_stations(struct iwl_priv *priv)
+-{
+-	unsigned long flags;
+-	struct iwl_rxon_context *ctx;
+-
+-	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
+-	memset(priv->stations, 0, sizeof(priv->stations));
+-	priv->num_stations = 0;
+-
+-	priv->ucode_key_table = 0;
+-
+-	for_each_context(priv, ctx) {
+-		/*
+-		 * Remove all key information that is not stored as part
+-		 * of station information since mac80211 may not have had
+-		 * a chance to remove all the keys. When device is
+-		 * reconfigured by mac80211 after an error all keys will
+-		 * be reconfigured.
+-		 */
+-		memset(ctx->wep_keys, 0, sizeof(ctx->wep_keys));
+-		ctx->key_mapping_keys = 0;
+-	}
+-
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
+-}
+-
+-static inline int iwl_sta_id(struct ieee80211_sta *sta)
+-{
+-	if (WARN_ON(!sta))
+-		return IWL_INVALID_STATION;
+-
+-	return ((struct iwl_station_priv *)sta->drv_priv)->sta_id;
+-}
+-
+-/**
+- * iwl_sta_id_or_broadcast - return sta_id or broadcast sta
+- * @priv: iwl priv
+- * @context: the current context
+- * @sta: mac80211 station
+- *
+- * In certain circumstances mac80211 passes a station pointer
+- * that may be %NULL, for example during TX or key setup. In
+- * that case, we need to use the broadcast station, so this
+- * inline wraps that pattern.
+- */
+-static inline int iwl_sta_id_or_broadcast(struct iwl_priv *priv,
+-					  struct iwl_rxon_context *context,
+-					  struct ieee80211_sta *sta)
+-{
+-	int sta_id;
+-
+-	if (!sta)
+-		return context->bcast_sta_id;
+-
+-	sta_id = iwl_sta_id(sta);
+-
+-	/*
+-	 * mac80211 should not be passing a partially
+-	 * initialised station!
+-	 */
+-	WARN_ON(sta_id == IWL_INVALID_STATION);
+-
+-	return sta_id;
+-}
+-#endif /* __iwl_sta_h__ */
+-- 
+1.7.0.4
 
