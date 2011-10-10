@@ -1,82 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:56828 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753397Ab1JTCCf (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25421 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321Ab1JJFzn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Oct 2011 22:02:35 -0400
-Date: Thu, 20 Oct 2011 11:02:25 +0900
-From: Norbert Preining <preining@logic.at>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-Subject: Re: iwlagn is getting very shaky
-Message-ID: <20111020020225.GO11060@gamma.logic.tuwien.ac.at> (sfid-20111020_040252_240411_196E59D8)
-References: <20111019064818.GB14817@gamma.logic.tuwien.ac.at> <1319004938.31823.59.camel@wwguy-huron> <20111019060108.GA11588@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com> <20111019062517.GC11588@gamma.logic.tuwien.ac.at> <1319003304.31823.46.camel@wwguy-huron> <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111019124931.GC3963@gamma.logic.tuwien.ac.at> <1319038282.25023.21.camel@wwguy-ubuntu>
+	Mon, 10 Oct 2011 01:55:43 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	<stable@kernel.org>
+Subject: [PATCH] ath9k_hw: Fix ASPM L1 issue for AR9462
+Date: Mon, 10 Oct 2011 11:25:45 +0530
+Message-ID: <1318226145-7772-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111010_081655_719188_739AF551)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1319038282.25023.21.camel@wwguy-ubuntu>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mi, 19 Okt 2011, wwguy wrote:
-> instead of having you to revert the patch I ask you to do, could you
-> please just apply the patch I attach here and see if it make any
-> differences? it is also for debugging purpose, so please check the dmesg
-> log.
+Because of not clearing Bit 14 of AR_WA, the ASPM L1 is not
+enabled when entering into sleep mode. AR9462 does not need
+bit 14 to be set.
 
-Do you mean the patch you send with a strange date:
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: stable@kernel.org
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 863c43f..5a87071 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -812,8 +812,13 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct
-iwl_rx_mem_buffer *rxb,
-                        if (status == TX_STATUS_FAIL_PASSIVE_NO_RX &&
-                            iwl_is_associated_ctx(ctx) && ctx->vif &&
-                            ctx->vif->type == NL80211_IFTYPE_STATION) {
-+#if 0
-                                ctx->last_tx_rejected = true;
-                                iwl_trans_stop_queue(trans(priv), txq_id);
-+#endif
-+IWL_ERR(priv,
-+       "Encounter TX_STATUS_FAIL_PASSIVE_NO_RX, am I on 5.2G band? (%d)\n",
-+       txq_id);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index c4ae0d1..255a538 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -542,6 +542,9 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 		return -EIO;
+ 	}
+ 
++	if (AR_SREV_9462(ah))
++		ah->WARegVal &= ~AR_WA_D3_L1_DISABLE;
++
+ 	ath9k_hw_init_defaults(ah);
+ 	ath9k_hw_init_config(ah);
+ 
+@@ -1830,8 +1833,7 @@ static void ath9k_set_power_sleep(struct ath_hw *ah, int setChip)
+ 	}
+ 
+ 	/* Clear Bit 14 of AR_WA after putting chip into Full Sleep mode. */
+-	if (!AR_SREV_9480(ah))
+-		REG_WRITE(ah, AR_WA, ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
++	REG_WRITE(ah, AR_WA, ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
+ }
+ 
+ /*
+-- 
+1.7.7
 
-                                IWL_DEBUG_TX_REPLY(priv,
-                                           "TXQ %d status %s (0x%08x) "
---
-1.7.0.4
-
-It does not apply at all, I cannot even find
-	rejected
-in iwl-agn-tx.c.
-
-On which tree is that based, can you provide a patch against main
-git branch of Linus.
-
-Thanks.
-
-Best wishes
-
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-BROMPTON
-A bromton is that which is said to have been committed when you are
-convinced you are about to blow off with a resounding trumpeting noise
-in a public place and all that actually slips out is a tiny 'pfpt'.
-			--- Douglas Adams, The Meaning of Liff
