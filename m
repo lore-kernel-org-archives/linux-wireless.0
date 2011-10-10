@@ -1,43 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54086 "EHLO mx2.suse.de"
+Received: from mga11.intel.com ([192.55.52.93]:54032 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751016Ab1JLOhZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 10:37:25 -0400
-Date: Wed, 12 Oct 2011 08:36:00 -0600
-From: Greg KH <gregkh@suse.de>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] staging: brcm80211: remove brcm80211 driver from the
- staging tree
-Message-ID: <20111012143600.GA17938@suse.de> (sfid-20111012_163728_609952_D55F4BF5)
-References: <4E95A1D1.8010602@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E95A1D1.8010602@broadcom.com>
+	id S1751293Ab1JJPQ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Oct 2011 11:16:29 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 16/34] iwlagn: Add "_d" sku to 105 series of devices
+Date: Mon, 10 Oct 2011 07:27:01 -0700
+Message-Id: <1318256839-31837-17-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171718_647954_E8E25C89)
+In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 12, 2011 at 04:18:57PM +0200, Arend van Spriel wrote:
-> Hi Greg,
-> 
-> John recommended to do the delete through your staging tree. Thanks for
-> the ride. It has been a learning experience for all of us here. Apart
-> from the significant cleanup (which needs ongoing work for sure) it took
-> some time to find the right way of working in coordinating our changes
-> with community patches.
-> 
-> The removal patch was just as big as the mainline patch so it has been
-> uploaded to linuxwireless.org:
-> 
-> http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=view&target=0001-staging-brcm80211-remove-brcm80211-driver-from-the-s.patch
+Add additional sku to 105 series
 
-So I'm taking it that the driver is now in the wireless-next tree?
-That's great, I'll queue the patch up later today.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-2000.c |    6 ++++++
+ drivers/net/wireless/iwlwifi/iwl-cfg.h  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-pci.c  |    1 +
+ 3 files changed, 8 insertions(+), 0 deletions(-)
 
-And thanks so much for working with us, I know it can be hard at times,
-but I hope you will agree that the end result is much better than what
-we started out with.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index 09a6b8e..c7634b2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -340,6 +340,12 @@ struct iwl_cfg iwl105_bgn_cfg = {
+ 	.ht_params = &iwl2000_ht_params,
+ };
+ 
++struct iwl_cfg iwl105_bgn_d_cfg = {
++	.name = "105D Series 1x1 BGN",
++	IWL_DEVICE_105,
++	.ht_params = &iwl2000_ht_params,
++};
++
+ #define IWL_DEVICE_135						\
+ 	.fw_name_pre = IWL135_FW_PRE,				\
+ 	.ucode_api_max = IWL135_UCODE_API_MAX,			\
+diff --git a/drivers/net/wireless/iwlwifi/iwl-cfg.h b/drivers/net/wireless/iwlwifi/iwl-cfg.h
+index df2ff32..2a2dc45 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-cfg.h
++++ b/drivers/net/wireless/iwlwifi/iwl-cfg.h
+@@ -110,6 +110,7 @@ extern struct iwl_cfg iwl6035_2abg_cfg;
+ extern struct iwl_cfg iwl6035_2bg_cfg;
+ extern struct iwl_cfg iwl105_bg_cfg;
+ extern struct iwl_cfg iwl105_bgn_cfg;
++extern struct iwl_cfg iwl105_bgn_d_cfg;
+ extern struct iwl_cfg iwl135_bg_cfg;
+ extern struct iwl_cfg iwl135_bgn_cfg;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index 11c09e5..3b6cc66 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -355,6 +355,7 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+ 	{IWL_PCI_DEVICE(0x0894, 0x0026, iwl105_bg_cfg)},
+ 	{IWL_PCI_DEVICE(0x0895, 0x0226, iwl105_bg_cfg)},
+ 	{IWL_PCI_DEVICE(0x0894, 0x0426, iwl105_bg_cfg)},
++	{IWL_PCI_DEVICE(0x0894, 0x0822, iwl105_bgn_d_cfg)},
+ 
+ /* 135 Series */
+ 	{IWL_PCI_DEVICE(0x0892, 0x0062, iwl135_bgn_cfg)},
+-- 
+1.7.0.4
 
-greg k-h
