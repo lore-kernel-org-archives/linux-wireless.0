@@ -1,226 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:36487 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751624Ab1J3TQa (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:9533 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751669Ab1JJFuz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Oct 2011 15:16:30 -0400
-Subject: [PATCH 2/5] ath6kl: power down hardware when interface is down
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 30 Oct 2011 21:16:15 +0200
-Message-ID: <20111030191615.20466.49934.stgit@localhost6.localdomain6> (sfid-20111030_201634_879493_BB4571B4)
-In-Reply-To: <20111030190922.20466.299.stgit@localhost6.localdomain6>
-References: <20111030190922.20466.299.stgit@localhost6.localdomain6>
+	Mon, 10 Oct 2011 01:50:55 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 03/13] ath9k_hw: Updated AR9003 tx gain table for 5GHz
+Date: Mon, 10 Oct 2011 11:21:08 +0530
+Message-ID: <1318225878-7283-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111010_075058_036829_FCADC74E)
+In-Reply-To: <1318225878-7283-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1318225878-7283-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The benefit from this is that user space can control hardware's power state
-by putting interface up and down. This is handy if firmware gets to some
-weird state.
+The 5G Tx gain table w/ XPA is updated to improve spur
+performance in high_power Tx gain table.
 
-The downside will be that putting interface up takes a bit longer,
-I was measuring ~500 ms during interface up.
-
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/bmi.c  |    5 +++++
- drivers/net/wireless/ath/ath6kl/bmi.h  |    2 ++
- drivers/net/wireless/ath/ath6kl/core.h |    4 ++++
- drivers/net/wireless/ath/ath6kl/htc.c  |    3 +++
- drivers/net/wireless/ath/ath6kl/init.c |   35 +++++++++++++++++++++++++++++---
- drivers/net/wireless/ath/ath6kl/main.c |   22 ++++++++++++++++----
- 6 files changed, 64 insertions(+), 7 deletions(-)
+ .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |  164 ++++++++++----------
+ 1 files changed, 82 insertions(+), 82 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/bmi.c b/drivers/net/wireless/ath/ath6kl/bmi.c
-index 5a4c24d..a962fe4 100644
---- a/drivers/net/wireless/ath/ath6kl/bmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/bmi.c
-@@ -670,6 +670,11 @@ int ath6kl_bmi_fast_download(struct ath6kl *ar, u32 addr, u8 *buf, u32 len)
- 	return ret;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index cc54153..026f9de 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -835,107 +835,107 @@ static const u32 ar9300_2p2_baseband_core[][2] = {
  
-+void ath6kl_bmi_reset(struct ath6kl *ar)
-+{
-+	ar->bmi.done_sent = false;
-+}
-+
- int ath6kl_bmi_init(struct ath6kl *ar)
- {
- 	ar->bmi.cmd_buf = kzalloc(MAX_BMI_CMDBUF_SZ, GFP_ATOMIC);
-diff --git a/drivers/net/wireless/ath/ath6kl/bmi.h b/drivers/net/wireless/ath/ath6kl/bmi.h
-index 96851d5..009e8f6 100644
---- a/drivers/net/wireless/ath/ath6kl/bmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/bmi.h
-@@ -230,6 +230,8 @@ struct ath6kl_bmi_target_info {
- 
- int ath6kl_bmi_init(struct ath6kl *ar);
- void ath6kl_bmi_cleanup(struct ath6kl *ar);
-+void ath6kl_bmi_reset(struct ath6kl *ar);
-+
- int ath6kl_bmi_done(struct ath6kl *ar);
- int ath6kl_bmi_get_target_info(struct ath6kl *ar,
- 			       struct ath6kl_bmi_target_info *targ_info);
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 5ac415e..1ac0dd1 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -447,6 +447,7 @@ enum ath6kl_dev_state {
- 	DESTROY_IN_PROGRESS,
- 	SKIP_SCAN,
- 	ROAM_TBL_PEND,
-+	FIRST_BOOT,
+ static const u32 ar9300Modes_high_power_tx_gain_table_2p2[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+-	{0x0000a2dc, 0x00033800, 0x00033800, 0x03aaa352, 0x03aaa352},
+-	{0x0000a2e0, 0x0003c000, 0x0003c000, 0x03ccc584, 0x03ccc584},
+-	{0x0000a2e4, 0x03fc0000, 0x03fc0000, 0x03f0f800, 0x03f0f800},
++	{0x0000a2dc, 0x000cfff0, 0x000cfff0, 0x03aaa352, 0x03aaa352},
++	{0x0000a2e0, 0x000f0000, 0x000f0000, 0x03ccc584, 0x03ccc584},
++	{0x0000a2e4, 0x03f00000, 0x03f00000, 0x03f0f800, 0x03f0f800},
+ 	{0x0000a2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
+ 	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d9, 0x000050d9},
+ 	{0x0000a500, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a504, 0x06000003, 0x06000003, 0x04000002, 0x04000002},
+ 	{0x0000a508, 0x0a000020, 0x0a000020, 0x08000004, 0x08000004},
+ 	{0x0000a50c, 0x10000023, 0x10000023, 0x0b000200, 0x0b000200},
+-	{0x0000a510, 0x16000220, 0x16000220, 0x0f000202, 0x0f000202},
+-	{0x0000a514, 0x1c000223, 0x1c000223, 0x12000400, 0x12000400},
+-	{0x0000a518, 0x21002220, 0x21002220, 0x16000402, 0x16000402},
+-	{0x0000a51c, 0x27002223, 0x27002223, 0x19000404, 0x19000404},
+-	{0x0000a520, 0x2b022220, 0x2b022220, 0x1c000603, 0x1c000603},
+-	{0x0000a524, 0x2f022222, 0x2f022222, 0x21000a02, 0x21000a02},
+-	{0x0000a528, 0x34022225, 0x34022225, 0x25000a04, 0x25000a04},
+-	{0x0000a52c, 0x3a02222a, 0x3a02222a, 0x28000a20, 0x28000a20},
+-	{0x0000a530, 0x3e02222c, 0x3e02222c, 0x2c000e20, 0x2c000e20},
+-	{0x0000a534, 0x4202242a, 0x4202242a, 0x30000e22, 0x30000e22},
+-	{0x0000a538, 0x4702244a, 0x4702244a, 0x34000e24, 0x34000e24},
+-	{0x0000a53c, 0x4b02244c, 0x4b02244c, 0x38001640, 0x38001640},
+-	{0x0000a540, 0x4e02246c, 0x4e02246c, 0x3c001660, 0x3c001660},
+-	{0x0000a544, 0x52022470, 0x52022470, 0x3f001861, 0x3f001861},
+-	{0x0000a548, 0x55022490, 0x55022490, 0x43001a81, 0x43001a81},
+-	{0x0000a54c, 0x59022492, 0x59022492, 0x47001a83, 0x47001a83},
+-	{0x0000a550, 0x5d022692, 0x5d022692, 0x4a001c84, 0x4a001c84},
+-	{0x0000a554, 0x61022892, 0x61022892, 0x4e001ce3, 0x4e001ce3},
+-	{0x0000a558, 0x65024890, 0x65024890, 0x52001ce5, 0x52001ce5},
+-	{0x0000a55c, 0x69024892, 0x69024892, 0x56001ce9, 0x56001ce9},
+-	{0x0000a560, 0x6e024c92, 0x6e024c92, 0x5a001ceb, 0x5a001ceb},
+-	{0x0000a564, 0x74026e92, 0x74026e92, 0x5d001eec, 0x5d001eec},
+-	{0x0000a568, 0x74026e92, 0x74026e92, 0x5d001eec, 0x5d001eec},
+-	{0x0000a56c, 0x74026e92, 0x74026e92, 0x5d001eec, 0x5d001eec},
+-	{0x0000a570, 0x74026e92, 0x74026e92, 0x5d001eec, 0x5d001eec},
+-	{0x0000a574, 0x74026e92, 0x74026e92, 0x5d001eec, 0x5d001eec},
+-	{0x0000a578, 0x74026e92, 0x74026e92, 0x5d001eec, 0x5d001eec},
+-	{0x0000a57c, 0x74026e92, 0x74026e92, 0x5d001eec, 0x5d001eec},
++	{0x0000a510, 0x15000028, 0x15000028, 0x0f000202, 0x0f000202},
++	{0x0000a514, 0x1b00002b, 0x1b00002b, 0x12000400, 0x12000400},
++	{0x0000a518, 0x1f020028, 0x1f020028, 0x16000402, 0x16000402},
++	{0x0000a51c, 0x2502002b, 0x2502002b, 0x19000404, 0x19000404},
++	{0x0000a520, 0x2a04002a, 0x2a04002a, 0x1c000603, 0x1c000603},
++	{0x0000a524, 0x2e06002a, 0x2e06002a, 0x21000a02, 0x21000a02},
++	{0x0000a528, 0x3302202d, 0x3302202d, 0x25000a04, 0x25000a04},
++	{0x0000a52c, 0x3804202c, 0x3804202c, 0x28000a20, 0x28000a20},
++	{0x0000a530, 0x3c06202c, 0x3c06202c, 0x2c000e20, 0x2c000e20},
++	{0x0000a534, 0x4108202d, 0x4108202d, 0x30000e22, 0x30000e22},
++	{0x0000a538, 0x4506402d, 0x4506402d, 0x34000e24, 0x34000e24},
++	{0x0000a53c, 0x4906222d, 0x4906222d, 0x38001640, 0x38001640},
++	{0x0000a540, 0x4d062231, 0x4d062231, 0x3c001660, 0x3c001660},
++	{0x0000a544, 0x50082231, 0x50082231, 0x3f001861, 0x3f001861},
++	{0x0000a548, 0x5608422e, 0x5608422e, 0x43001a81, 0x43001a81},
++	{0x0000a54c, 0x5a08442e, 0x5a08442e, 0x47001a83, 0x47001a83},
++	{0x0000a550, 0x5e0a4431, 0x5e0a4431, 0x4a001c84, 0x4a001c84},
++	{0x0000a554, 0x640a4432, 0x640a4432, 0x4e001ce3, 0x4e001ce3},
++	{0x0000a558, 0x680a4434, 0x680a4434, 0x52001ce5, 0x52001ce5},
++	{0x0000a55c, 0x6c0a6434, 0x6c0a6434, 0x56001ce9, 0x56001ce9},
++	{0x0000a560, 0x6f0a6633, 0x6f0a6633, 0x5a001ceb, 0x5a001ceb},
++	{0x0000a564, 0x730c6634, 0x730c6634, 0x5d001eec, 0x5d001eec},
++	{0x0000a568, 0x730c6634, 0x730c6634, 0x5d001eec, 0x5d001eec},
++	{0x0000a56c, 0x730c6634, 0x730c6634, 0x5d001eec, 0x5d001eec},
++	{0x0000a570, 0x730c6634, 0x730c6634, 0x5d001eec, 0x5d001eec},
++	{0x0000a574, 0x730c6634, 0x730c6634, 0x5d001eec, 0x5d001eec},
++	{0x0000a578, 0x730c6634, 0x730c6634, 0x5d001eec, 0x5d001eec},
++	{0x0000a57c, 0x730c6634, 0x730c6634, 0x5d001eec, 0x5d001eec},
+ 	{0x0000a580, 0x00800000, 0x00800000, 0x00800000, 0x00800000},
+ 	{0x0000a584, 0x06800003, 0x06800003, 0x04800002, 0x04800002},
+ 	{0x0000a588, 0x0a800020, 0x0a800020, 0x08800004, 0x08800004},
+ 	{0x0000a58c, 0x10800023, 0x10800023, 0x0b800200, 0x0b800200},
+-	{0x0000a590, 0x16800220, 0x16800220, 0x0f800202, 0x0f800202},
+-	{0x0000a594, 0x1c800223, 0x1c800223, 0x12800400, 0x12800400},
+-	{0x0000a598, 0x21802220, 0x21802220, 0x16800402, 0x16800402},
+-	{0x0000a59c, 0x27802223, 0x27802223, 0x19800404, 0x19800404},
+-	{0x0000a5a0, 0x2b822220, 0x2b822220, 0x1c800603, 0x1c800603},
+-	{0x0000a5a4, 0x2f822222, 0x2f822222, 0x21800a02, 0x21800a02},
+-	{0x0000a5a8, 0x34822225, 0x34822225, 0x25800a04, 0x25800a04},
+-	{0x0000a5ac, 0x3a82222a, 0x3a82222a, 0x28800a20, 0x28800a20},
+-	{0x0000a5b0, 0x3e82222c, 0x3e82222c, 0x2c800e20, 0x2c800e20},
+-	{0x0000a5b4, 0x4282242a, 0x4282242a, 0x30800e22, 0x30800e22},
+-	{0x0000a5b8, 0x4782244a, 0x4782244a, 0x34800e24, 0x34800e24},
+-	{0x0000a5bc, 0x4b82244c, 0x4b82244c, 0x38801640, 0x38801640},
+-	{0x0000a5c0, 0x4e82246c, 0x4e82246c, 0x3c801660, 0x3c801660},
+-	{0x0000a5c4, 0x52822470, 0x52822470, 0x3f801861, 0x3f801861},
+-	{0x0000a5c8, 0x55822490, 0x55822490, 0x43801a81, 0x43801a81},
+-	{0x0000a5cc, 0x59822492, 0x59822492, 0x47801a83, 0x47801a83},
+-	{0x0000a5d0, 0x5d822692, 0x5d822692, 0x4a801c84, 0x4a801c84},
+-	{0x0000a5d4, 0x61822892, 0x61822892, 0x4e801ce3, 0x4e801ce3},
+-	{0x0000a5d8, 0x65824890, 0x65824890, 0x52801ce5, 0x52801ce5},
+-	{0x0000a5dc, 0x69824892, 0x69824892, 0x56801ce9, 0x56801ce9},
+-	{0x0000a5e0, 0x6e824c92, 0x6e824c92, 0x5a801ceb, 0x5a801ceb},
+-	{0x0000a5e4, 0x74826e92, 0x74826e92, 0x5d801eec, 0x5d801eec},
+-	{0x0000a5e8, 0x74826e92, 0x74826e92, 0x5d801eec, 0x5d801eec},
+-	{0x0000a5ec, 0x74826e92, 0x74826e92, 0x5d801eec, 0x5d801eec},
+-	{0x0000a5f0, 0x74826e92, 0x74826e92, 0x5d801eec, 0x5d801eec},
+-	{0x0000a5f4, 0x74826e92, 0x74826e92, 0x5d801eec, 0x5d801eec},
+-	{0x0000a5f8, 0x74826e92, 0x74826e92, 0x5d801eec, 0x5d801eec},
+-	{0x0000a5fc, 0x74826e92, 0x74826e92, 0x5d801eec, 0x5d801eec},
++	{0x0000a590, 0x15800028, 0x15800028, 0x0f800202, 0x0f800202},
++	{0x0000a594, 0x1b80002b, 0x1b80002b, 0x12800400, 0x12800400},
++	{0x0000a598, 0x1f820028, 0x1f820028, 0x16800402, 0x16800402},
++	{0x0000a59c, 0x2582002b, 0x2582002b, 0x19800404, 0x19800404},
++	{0x0000a5a0, 0x2a84002a, 0x2a84002a, 0x1c800603, 0x1c800603},
++	{0x0000a5a4, 0x2e86002a, 0x2e86002a, 0x21800a02, 0x21800a02},
++	{0x0000a5a8, 0x3382202d, 0x3382202d, 0x25800a04, 0x25800a04},
++	{0x0000a5ac, 0x3884202c, 0x3884202c, 0x28800a20, 0x28800a20},
++	{0x0000a5b0, 0x3c86202c, 0x3c86202c, 0x2c800e20, 0x2c800e20},
++	{0x0000a5b4, 0x4188202d, 0x4188202d, 0x30800e22, 0x30800e22},
++	{0x0000a5b8, 0x4586402d, 0x4586402d, 0x34800e24, 0x34800e24},
++	{0x0000a5bc, 0x4986222d, 0x4986222d, 0x38801640, 0x38801640},
++	{0x0000a5c0, 0x4d862231, 0x4d862231, 0x3c801660, 0x3c801660},
++	{0x0000a5c4, 0x50882231, 0x50882231, 0x3f801861, 0x3f801861},
++	{0x0000a5c8, 0x5688422e, 0x5688422e, 0x43801a81, 0x43801a81},
++	{0x0000a5cc, 0x5a88442e, 0x5a88442e, 0x47801a83, 0x47801a83},
++	{0x0000a5d0, 0x5e8a4431, 0x5e8a4431, 0x4a801c84, 0x4a801c84},
++	{0x0000a5d4, 0x648a4432, 0x648a4432, 0x4e801ce3, 0x4e801ce3},
++	{0x0000a5d8, 0x688a4434, 0x688a4434, 0x52801ce5, 0x52801ce5},
++	{0x0000a5dc, 0x6c8a6434, 0x6c8a6434, 0x56801ce9, 0x56801ce9},
++	{0x0000a5e0, 0x6f8a6633, 0x6f8a6633, 0x5a801ceb, 0x5a801ceb},
++	{0x0000a5e4, 0x738c6634, 0x738c6634, 0x5d801eec, 0x5d801eec},
++	{0x0000a5e8, 0x738c6634, 0x738c6634, 0x5d801eec, 0x5d801eec},
++	{0x0000a5ec, 0x738c6634, 0x738c6634, 0x5d801eec, 0x5d801eec},
++	{0x0000a5f0, 0x738c6634, 0x738c6634, 0x5d801eec, 0x5d801eec},
++	{0x0000a5f4, 0x738c6634, 0x738c6634, 0x5d801eec, 0x5d801eec},
++	{0x0000a5f8, 0x738c6634, 0x738c6634, 0x5d801eec, 0x5d801eec},
++	{0x0000a5fc, 0x738c6634, 0x738c6634, 0x5d801eec, 0x5d801eec},
+ 	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a60c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a610, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a614, 0x02004000, 0x02004000, 0x01404000, 0x01404000},
+-	{0x0000a618, 0x02004801, 0x02004801, 0x01404501, 0x01404501},
+-	{0x0000a61c, 0x02808a02, 0x02808a02, 0x02008501, 0x02008501},
+-	{0x0000a620, 0x0380ce03, 0x0380ce03, 0x0280ca03, 0x0280ca03},
+-	{0x0000a624, 0x04411104, 0x04411104, 0x03010c04, 0x03010c04},
+-	{0x0000a628, 0x04411104, 0x04411104, 0x04014c04, 0x04014c04},
+-	{0x0000a62c, 0x04411104, 0x04411104, 0x04015005, 0x04015005},
+-	{0x0000a630, 0x04411104, 0x04411104, 0x04015005, 0x04015005},
+-	{0x0000a634, 0x04411104, 0x04411104, 0x04015005, 0x04015005},
+-	{0x0000a638, 0x04411104, 0x04411104, 0x04015005, 0x04015005},
+-	{0x0000a63c, 0x04411104, 0x04411104, 0x04015005, 0x04015005},
+-	{0x0000b2dc, 0x00033800, 0x00033800, 0x03aaa352, 0x03aaa352},
+-	{0x0000b2e0, 0x0003c000, 0x0003c000, 0x03ccc584, 0x03ccc584},
+-	{0x0000b2e4, 0x03fc0000, 0x03fc0000, 0x03f0f800, 0x03f0f800},
++	{0x0000a608, 0x01804601, 0x01804601, 0x00000000, 0x00000000},
++	{0x0000a60c, 0x01804601, 0x01804601, 0x00000000, 0x00000000},
++	{0x0000a610, 0x01804601, 0x01804601, 0x00000000, 0x00000000},
++	{0x0000a614, 0x01804601, 0x01804601, 0x01404000, 0x01404000},
++	{0x0000a618, 0x01804601, 0x01804601, 0x01404501, 0x01404501},
++	{0x0000a61c, 0x01804601, 0x01804601, 0x02008501, 0x02008501},
++	{0x0000a620, 0x03408d02, 0x03408d02, 0x0280ca03, 0x0280ca03},
++	{0x0000a624, 0x0300cc03, 0x0300cc03, 0x03010c04, 0x03010c04},
++	{0x0000a628, 0x03410d04, 0x03410d04, 0x04014c04, 0x04014c04},
++	{0x0000a62c, 0x03410d04, 0x03410d04, 0x04015005, 0x04015005},
++	{0x0000a630, 0x03410d04, 0x03410d04, 0x04015005, 0x04015005},
++	{0x0000a634, 0x03410d04, 0x03410d04, 0x04015005, 0x04015005},
++	{0x0000a638, 0x03410d04, 0x03410d04, 0x04015005, 0x04015005},
++	{0x0000a63c, 0x03410d04, 0x03410d04, 0x04015005, 0x04015005},
++	{0x0000b2dc, 0x000cfff0, 0x000cfff0, 0x03aaa352, 0x03aaa352},
++	{0x0000b2e0, 0x000f0000, 0x000f0000, 0x03ccc584, 0x03ccc584},
++	{0x0000b2e4, 0x03f00000, 0x03f00000, 0x03f0f800, 0x03f0f800},
+ 	{0x0000b2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
+-	{0x0000c2dc, 0x00033800, 0x00033800, 0x03aaa352, 0x03aaa352},
+-	{0x0000c2e0, 0x0003c000, 0x0003c000, 0x03ccc584, 0x03ccc584},
+-	{0x0000c2e4, 0x03fc0000, 0x03fc0000, 0x03f0f800, 0x03f0f800},
++	{0x0000c2dc, 0x000cfff0, 0x000cfff0, 0x03aaa352, 0x03aaa352},
++	{0x0000c2e0, 0x000f0000, 0x000f0000, 0x03ccc584, 0x03ccc584},
++	{0x0000c2e4, 0x03f00000, 0x03f00000, 0x03f0f800, 0x03f0f800},
+ 	{0x0000c2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
+ 	{0x00016044, 0x012492d4, 0x012492d4, 0x012492d4, 0x012492d4},
+-	{0x00016048, 0x66480001, 0x66480001, 0x66480001, 0x66480001},
++	{0x00016048, 0x61200001, 0x61200001, 0x66480001, 0x66480001},
+ 	{0x00016068, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c},
+ 	{0x00016444, 0x012492d4, 0x012492d4, 0x012492d4, 0x012492d4},
+-	{0x00016448, 0x66480001, 0x66480001, 0x66480001, 0x66480001},
++	{0x00016448, 0x61200001, 0x61200001, 0x66480001, 0x66480001},
+ 	{0x00016468, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c},
+ 	{0x00016844, 0x012492d4, 0x012492d4, 0x012492d4, 0x012492d4},
+-	{0x00016848, 0x66480001, 0x66480001, 0x66480001, 0x66480001},
++	{0x00016848, 0x61200001, 0x61200001, 0x66480001, 0x66480001},
+ 	{0x00016868, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c},
  };
  
- struct ath6kl {
-@@ -662,4 +663,7 @@ void ath6kl_deinit_if_data(struct ath6kl_vif *vif);
- void ath6kl_core_free(struct ath6kl *ar);
- struct ath6kl_vif *ath6kl_vif_first(struct ath6kl *ar);
- void ath6kl_cleanup_vif(struct ath6kl_vif *vif, bool wmi_ready);
-+int ath6kl_init_hw_start(struct ath6kl *ar);
-+int ath6kl_init_hw_stop(struct ath6kl *ar);
-+
- #endif /* CORE_H */
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index 04b4070..99220d4 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -2622,6 +2622,9 @@ int ath6kl_htc_start(struct htc_target *target)
- 	struct htc_packet *packet;
- 	int status;
- 
-+	memset(&target->dev->irq_proc_reg, 0,
-+	       sizeof(target->dev->irq_proc_reg));
-+
- 	/* Disable interrupts at the chip level */
- 	ath6kl_hif_disable_intrs(target->dev);
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index a0b81c3..c197e4c 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1421,11 +1421,13 @@ static int ath6kl_init_hw_params(struct ath6kl *ar)
- 	return 0;
- }
- 
--static int ath6kl_hw_start(struct ath6kl *ar)
-+int ath6kl_init_hw_start(struct ath6kl *ar)
- {
- 	long timeleft;
- 	int ret, i;
- 
-+	ath6kl_dbg(ATH6KL_DBG_BOOT, "hw start\n");
-+
- 	ret = ath6kl_hif_power_on(ar);
- 	if (ret)
- 		return ret;
-@@ -1517,6 +1519,25 @@ err_power_off:
- 	return ret;
- }
- 
-+int ath6kl_init_hw_stop(struct ath6kl *ar)
-+{
-+	int ret;
-+
-+	ath6kl_dbg(ATH6KL_DBG_BOOT, "hw stop\n");
-+
-+	ath6kl_htc_stop(ar->htc_target);
-+
-+	ath6kl_hif_stop(ar);
-+
-+	ath6kl_bmi_reset(ar);
-+
-+	ret = ath6kl_hif_power_off(ar);
-+	if (ret)
-+		ath6kl_warn("failed to power off hif: %d\n", ret);
-+
-+	return 0;
-+}
-+
- int ath6kl_core_init(struct ath6kl *ar)
- {
- 	struct ath6kl_bmi_target_info targ_info;
-@@ -1628,9 +1649,11 @@ int ath6kl_core_init(struct ath6kl *ar)
- 
- 	ar->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
- 
--	ret = ath6kl_hw_start(ar);
-+	set_bit(FIRST_BOOT, &ar->flag);
-+
-+	ret = ath6kl_init_hw_start(ar);
- 	if (ret) {
--		ath6kl_err("Failed to boot hardware: %d\n", ret);
-+		ath6kl_err("Failed to start hardware: %d\n", ret);
- 		goto err_rxbuf_cleanup;
- 	}
- 
-@@ -1640,6 +1663,12 @@ int ath6kl_core_init(struct ath6kl *ar)
- 	 */
- 	memcpy(ndev->dev_addr, ar->mac_addr, ETH_ALEN);
- 
-+	ret = ath6kl_init_hw_stop(ar);
-+	if (ret) {
-+		ath6kl_err("Failed to stop hardware: %d\n", ret);
-+		goto err_htc_cleanup;
-+	}
-+
- 	return ret;
- 
- err_rxbuf_cleanup:
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 3b2a7e8..717ed22 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -673,10 +673,12 @@ void ath6kl_ready_event(void *devt, u8 *datap, u32 sw_ver, u32 abi_ver)
- 	set_bit(WMI_READY, &ar->flag);
- 	wake_up(&ar->event_wq);
- 
--	ath6kl_info("hw %s fw %s%s\n",
--		    get_hw_id_string(ar->wiphy->hw_version),
--		    ar->wiphy->fw_version,
--		    test_bit(TESTMODE, &ar->flag) ? " testmode" : "");
-+	if (test_and_clear_bit(FIRST_BOOT, &ar->flag)) {
-+		ath6kl_info("hw %s fw %s%s\n",
-+			    get_hw_id_string(ar->wiphy->hw_version),
-+			    ar->wiphy->fw_version,
-+			    test_bit(TESTMODE, &ar->flag) ? " testmode" : "");
-+	}
- }
- 
- void ath6kl_scan_complete_evt(struct ath6kl_vif *vif, int status)
-@@ -1112,6 +1114,12 @@ struct ath6kl_vif *ath6kl_vif_first(struct ath6kl *ar)
- static int ath6kl_open(struct net_device *dev)
- {
- 	struct ath6kl_vif *vif = netdev_priv(dev);
-+	int ret;
-+
-+	/* FIXME: how to handle multi vif support? */
-+	ret = ath6kl_init_hw_start(vif->ar);
-+	if (ret)
-+		return ret;
- 
- 	set_bit(WLAN_ENABLED, &vif->flags);
- 
-@@ -1128,6 +1136,7 @@ static int ath6kl_close(struct net_device *dev)
- {
- 	struct ath6kl *ar = ath6kl_priv(dev);
- 	struct ath6kl_vif *vif = netdev_priv(dev);
-+	int ret;
- 
- 	netif_stop_queue(dev);
- 
-@@ -1143,6 +1152,11 @@ static int ath6kl_close(struct net_device *dev)
- 
- 	ath6kl_cfg80211_scan_complete_event(vif, -ECANCELED);
- 
-+	/* FIXME: how to handle multi vif support? */
-+	ret = ath6kl_init_hw_stop(ar);
-+	if (ret)
-+		return ret;
-+
- 	return 0;
- }
- 
+-- 
+1.7.7
 
