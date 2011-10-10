@@ -1,35 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4732 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754131Ab1J1HsV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 03:48:21 -0400
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 28 Oct 2011 00:48:06 -0700
-Subject: RE: [RFC v2 13/12] cfg80211/mac80211: allow management TX to
- not wait for ACK
-Message-ID: <400C43189542CE41BC0A5B252FC90136BC0E3753AA@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20111028_094825_027926_E333759E)
-References: <20111021142322.229128720@sipsolutions.net> (
- sfid-20111021_162510_209354_8FBBB6EB)
- <1319743973.32221.4.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1319743973.32221.4.camel@jlt3.sipsolutions.net>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:60833 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834Ab1JJTbJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Oct 2011 15:31:09 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+In-Reply-To: <s5hy5wtxbmm.wl%tiwai@suse.de>
+References: <1317721043.11231.2.camel@jmachine> <CAB=NE6X81KPvx-yt33MghmoftUznoP-jYO8sBxoeW_0fzQ1pdA@mail.gmail.com>
+ <s5hy5wtxbmm.wl%tiwai@suse.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 10 Oct 2011 12:30:45 -0700
+Message-ID: <CAB=NE6UWoFVA5-Jy7v87qbSkdujpX2Oki7EhNfihV2nY3BdTCQ@mail.gmail.com> (sfid-20111010_213127_294560_99FB3C2A)
+Subject: Re: [alsa-devel] Using spdiff for backporting
+To: Takashi Iwai <tiwai@suse.de>
+Cc: Jesper Andersen <jespera@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	alsa-devel@alsa-project.org, julia@diku.dk,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBTZW50OiBkb25kZXJkYWcgMjcgb2t0b2JlciAyMDExIDIxOjMzDQo+IEZyb206IEpvaGFubmVz
-IEJlcmcgPGpvaGFubmVzLmJlcmdAaW50ZWwuY29tPg0KPiANCj4gRm9yIHByb2JlIHJlc3BvbnNl
-cyBpdCBjYW4gYmUgdXNlZnVsIHRvIG5vdCB3YWl0IGZvciBBQ0sNCj4gdG8gc2F2ZSBhaXJ0aW1l
-LCBzbyBhbGxvdyB1c2Vyc3BhY2UgdG8gcmVxdWVzdCBub3Qgd2FpdGluZw0KPiB3aXRoIGEgbmV3
-IG5sODAyMTEgZmxhZy4NCj4gDQo+IFNpbmNlIG1hYzgwMjExIG5lZWRzIHRvIGJlIHVwZGF0ZWQg
-Zm9yIHRoZSBuZXcgZnVuY3Rpb24NCj4gcHJvdG90eXBlIGFueXdheSBpbXBsZW1lbnQgaXQgcmln
-aHQgYXdheSAtLSBpdCdzIGp1c3QgYQ0KPiBmZXcgbGluZXMgb2YgY29kZS4NCj4gDQo+IFNpZ25l
-ZC1vZmYtYnk6IEpvaGFubmVzIEJlcmcgPGpvaGFubmVzLmJlcmdAaW50ZWwuY29tPg0KPiAtLS0N
-Cg0KSGkgSm9oYW5uZXMsDQoNCkkgd291bGQgZXhwZWN0IHRoaXMgdG8gYWZmZWN0IHRoZSBkdXJh
-dGlvbiBmaWVsZCBpbiB0aGUNCjgwMi4xMSBoZWFkZXIgdG8gaW5kaWNhdGUgdGhlIHNob3J0ZXIg
-dXNlIG9mIHRoZSBtZWRpdW0uDQpHb2luZyB0aHJvdWdoIHlvdXIgcGF0Y2ggSSBhbSBub3Qgc3Vy
-ZSB0aGlzIGlzIGRvbmUuDQoNCkdyLiBBdlMNCg==
+On Mon, Oct 10, 2011 at 5:41 AM, Takashi Iwai <tiwai@suse.de> wrote:
+> At Fri, 7 Oct 2011 10:41:06 -0700,
+> Luis R. Rodriguez wrote:
+>>
+>> > Also, in the slides from the plumbers-conf. I think I saw it mentioned
+>> > that there's also an alsa-compat git-tree somewhere. Maybe that is a
+>> > more compelling usecase? I was unable to find it though so I'd
+>> > appreciate a link.
+>>
+>> It was on kernel.org, but if it got rm -rf'd then its gone as I do not
+>> have a local copy.
+>
+> Oh, I didn't know of such a tree.  So you created alsa driver build
+> system with your spdiff?  That's interesting.
 
+Nope, this was pre-spdiff days. It was just a proof of concept I
+wanted to make just to see how long it would take me to do it and how
+clean it was. It was pretty trivial. I'm now working with Jesper on
+seeing how best we can use spdiff for a unified backport of the
+kernel.
+
+>> The compat-alsa stuff though was determined to be
+>> superflous with the ALSA's team's own backport work which is currently
+>> independent.
+>
+> Yes, the external alsa-driver build tree has existed since 10 years
+> ago :)  It was even possible to build with 2.2/2.4 kernels until
+> recently.
+>
+> The current tree is found in github,
+>        git://github.com/tiwai/alsa-driver-build.git
+
+That's pretty darn impressive.
+
+>> My hope though is to unify these through the compat.git /
+>> compat-kernel (currently just called compat-wireless) effort.
+>
+> The common framework would be really nice to have.
+
+Agreed!
+
+> V4L also have own build system, and possible other subsystem trees too.
+
+Heh, yeah for Video at least Ubuntu guys just backported a newer DRM
+into their distro kernel. I feel as if a generic backport would make
+more sense. I have already split out all generic kernel backport stuff
+into its own module, compat.git, and anything else that cannot be
+backported within an independent module we'e kept on compat-wireless.
+compat-wireless at this point should really be called compat-net but
+I've been lazy to rename it.
+
+At plumbers I put together slides for metrics of what goes into compat
+or compat-wireles, how many lines of code we pull and how much code
+consists of backport work. The conclusion was with compat backporting
+a new subsystem becomes proportionally easier. Then the legwork to
+keep compat-wireless up to date can benefit from spdiff as the
+spatches can eseentially generate new patches to help backport new
+drivers after just two drivers get backported for a condition which
+compat cannot address.
+
+The slides are at:
+
+http://bombadil.infradead.org/~mcgrof/presentations/backport/kernel-backport-for-good.pdf
+
+  Luis
