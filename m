@@ -1,46 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:53460 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932984Ab1JZQMA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 12:12:00 -0400
-Received: by ywm3 with SMTP id 3so1696672ywm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 09:12:00 -0700 (PDT)
-Message-ID: <4EA83160.4080405@lwfinger.net> (sfid-20111026_181205_739146_AA0AC6F7)
-Date: Wed, 26 Oct 2011 11:12:16 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.neratec.ch ([80.75.119.105]:47960 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752977Ab1JJJN5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Oct 2011 05:13:57 -0400
+Message-ID: <4E92B74F.9030901@neratec.com> (sfid-20111010_111557_159096_976E08A1)
+Date: Mon, 10 Oct 2011 11:13:51 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-To: Chiefdome <chiefdome@googlemail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
-References: <4E77F631.3030202@googlemail.com> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T1  61652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org > <4E9C42CF.5010702@lwfinger.net> <loom.20111017T190430-717@post.gmane.org> <4E9CF13A.7060102@lwf inger.net> <loom.20111018T143746-420@post.gmane.org> <loom.201110 18T150303-359@post.gmane.org> <4E9D9953.3020601@lwfinger.net> <lo om.20111018T233233-298@post.gmane.org> <4E9E052F.8090705@lwfinger.net> <loom.20111019T101621-921@post.gmane.org> <4E9EBDD3.6060907@lwfinger.net> <loom.20111019T162518-352@post.gmane.org> <4E9F97B4.5010304@lwfinger.net> <loom.20111020T114336-286@post.gmane.org> <4EA023B2.5000402@lwfinger.net> <4EA82BFE.1070105@googlemail.com>
-In-Reply-To: <4EA82BFE.1070105@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 0/8] wireless: add DFS master support
+References: <1317772067-6998-1-git-send-email-mcgrof@qca.qualcomm.com> <CAB=NE6V1gUSNc4L8sNv-NnDDVSzDB4A=cc_Z7tmZ79Q4LKtbwQ@mail.gmail.com> <CAB=NE6VxNKJPQPBbkn9ha1EC6dWawj96B6f-R1XREN1JAcrOQQ@mail.gmail.com> <CAB=NE6U6hFMBhgkjhpjpQk+FpMbDi4X6aW6i70MUWRH73K+AuQ@mail.gmail.com> <CAB=NE6Xz26oOudnyw17_1ijqe+L8qwQAGH8qjZEocgHQOY54eg@mail.gmail.com> <4E908C6D.7040703@neratec.com> <CAB=NE6UouofityugcjTvcXpBFx6cYEbAQ_FAe3gPO-GaS8Vh3w@mail.gmail.com>
+In-Reply-To: <CAB=NE6UouofityugcjTvcXpBFx6cYEbAQ_FAe3gPO-GaS8Vh3w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/26/2011 10:49 AM, Chiefdome wrote:
-> Is there a way to set the tx-power over 20dbm on the adapter?
-> I thought it is able to do 2w. There is no way for me to get it over 20 dbm.
-> When trying to to set the adapter with "iwconfig wlan1 set txpower 30" it answers
->
-> Error for wireless request "Set Tx Power" (8B26) :
-> SET failed on device wlan1 ; Invalid argument.
->
-> I think there has to be done some work in the code but where do I start?
->
-> Thanks for all replys.
+On 10/08/2011 08:26 PM, Luis R. Rodriguez wrote:
+> On Sat, Oct 8, 2011 at 10:46 AM, Zefir Kurtisi
+> <zefir.kurtisi@neratec.com> wrote:
+>> On 08.10.2011 00:32, Luis R. Rodriguez wrote:
+>>>
+>>> On Fri, Oct 7, 2011 at 3:29 PM, Luis R. Rodriguez
+>>> <mcgrof@qca.qualcomm.com>  wrote:
+>>>>
+>>>> On Fri, Oct 7, 2011 at 2:11 PM, Luis R. Rodriguez
+>>>> <mcgrof@qca.qualcomm.com>  wrote:
+>>>>>
+>>>>> On Tue, Oct 4, 2011 at 5:14 PM, Luis R. Rodriguez
+>>>>> <mcgrof@qca.qualcomm.com>  wrote:
+>>>>>>
+>>>>>> On Tue, Oct 4, 2011 at 4:47 PM, Luis R. Rodriguez
+>>>>>> <mcgrof@qca.qualcomm.com>  wrote:
+>>>>>>>
+>>>>>>> This set of 8 patches adds DFS master support to the Linux wireless
+>>>>>>> subsystem.
+>>>>>>> I've reviewed future possible changes to DFS master regions and it
+>>>>>>> seems that
+>>>>>>> we are not going to be having multiple DFS regions for one country,
+>>>>>>> instead
+>>>>>>> we'll always have one DFS region for one country.
+>>>>>>>
+>>>>>>> The changes here are spread out throughout wireless-regdb, crda the
+>>>>>>> kernel and
+>>>>>>> lastly iw. The changes made allow for older verions of CRDA to work
+>>>>>>> with new
+>>>>>>> wireless-regdb files with DFS region support. If you want DFS master
+>>>>>>> region
+>>>>>>> support you'll need to upgrade your CRDA, your kernel and then hope
+>>>>>>> someone
+>>>>>>> implements DFS master support for your respective driver.
+>>>>>>>
+>>>>>>> This patch series does not have specific driver changes, although some
+>>>>>>> seem to
+>>>>>>> be backing in the oven right now.
+>>>>>>
+>>>>>> Here's a puzzle though... If we change this series to use the other
+>>>>>> pad byte that was available, the first pad byte, instead of the last
+>>>>>> one, we loose backward compatibility support and I cannot figure out
+>>>>>> why. What I ended up seeing was that crda sends the message, and for
+>>>>>> some reason (return code is 222 from nl_wait_for_ack(), whatever that
+>>>>>> is) the kernel rejects it. I suspect it may have to do with some sort
+>>>>>> of offset to the *other* data that makes some of the rules output
+>>>>>> invalid data for the attribute policy, but at least when I hexdump the
+>>>>>> wireless-regdb the only changes I see are in the signature and the pad
+>>>>>> shift.
+>>>>>>
+>>>>>> I got tired of trying though and after seeing flipping the pad bytes
+>>>>>> things worked decided to stay with it. In my original RFC in December
+>>>>>> I had used u16 instead, but since the data was in the last pad byte
+>>>>>> things still worked. So something is fishy about only using the first
+>>>>>> pad byte. The change below, as far as I can tell, should not have any
+>>>>>> issues but it does with the older version of CRDA and even a new one.
+>>>>>
+>>>>> Johannes spotted the issue, I'll send the fix, thanks to Johannes.
+>>>>> John, Johannes the patches still apply my fix goes on top of these
+>>>>> changes, the fix is not addressing a regression introduced by this
+>>>>> patchset, instead it fixes a long standing issue which would prevent
+>>>>> us from using the next available pad byte.
+>>>>
+>>>> I'm going to respin this to make use of 2 bits:
+>>>>
+>>>> 00 unset
+>>>> 01 FCC
+>>>> 10 ETSI
+>>>> 11 JP
+>>>>
+>>>> We may need some more DFS values later but
+>>>
+>>> Sorry I did not finish this e-mail I meant that we may later have a
+>>> requirement for more DFS values but at this time we don't, we should
+>>> consider whether or not we will want to leave more bits for usage of
+>>> more DFS values and if so how many? Using two bits will give us
+>>> support for what we know today but nothing for the future.
+>>>
+>> For the future things we do not know of today we should add another bit and
+>> define
+>>
+>> 111 unknown / other
+>>
+>> to be able to mark special countrycodes that do not fully belong to the
+>> three known domains.
+> 
+> I thought about this a bit more, so we'd have to define this as a U8
+> attribute either way, so I would instead of calling NL80211_DFS_REGION
+> call it something like NL80211_CTRY_REQS and for now only use 2 bits
+> for the known DFS regions. We'd mask out the rest of the values. If we
+> ever decide we need a new DFS region we could just extend the values
+> on NL80211_CTRY_REQS after the last region. If we want to add a new
+> requirement that is country specific other than DFS we could start at
+> the end of the u8 instead of after the last DFS region. We could do
+> this without making any explicit reservations.
+> 
+>> We could use some invalid coding for those CCs (like no
+>> DFS domain set in CC
+> 
+> Sure, I should point out today every single regulatory domain will
+> have this set except US, only because I added a patch to match US to
+> DFS-FCC DFS region.
+> 
+>> but flag set for frequency band) to identify those
+>> special domains,
+> 
+> So you're saying in case later we find out we need band specific DFS data later?
+> 
+No, I guess I initially misinterpreted the meaning of '00 unset' as a flag for countrycodes not restricted by DFS at all, but in fact this is done by not setting the per-band DFS flags.
 
-The WEXT interface is deprecated. It is there as a convenience, but it will not 
-be extended. To change the power setting, you need to use the iw utility. The 
-specific commands are:
+So, if we consider the per-country DFS domain as an enabler for DFS support on top of per-band DFS restrictions (that otherwise remain disabled), we can support 'fancy' CCs by not setting the domain. The concern I brought up is therefore void.
 
-iw dev <devname> set txpower <auto|fixed|limit> [<tx power in mBm>]
+WRT band specific DFS data, we agreed that this will break backwards compatibility and therefore needs some detailed planning. Adrian already brought up some issues we will face and why he is using per-band (or even per-channel) DFS properties.
 
-or
+I opt for keeping this proposed per-country DFS domain scheme until we get DFS fully working and find its limitations significant enough to start a major revision.
 
-iw phy <phyname> set txpower <auto|fixed|limit> [<tx power in mBm>]
+>> but using an additional bit would make things easier to
+>> handle.
+> 
+> We can extend this as we go, and just ensure upon review of new code
+> that we accommodate non -DFS crap at the end of the u8. Whatdya think?
+> 
+>   Luis
 
-The maximum power will be dependent on your regulatory domain setting.
-
-Larry
+Zefir
