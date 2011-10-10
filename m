@@ -1,50 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44579 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751253Ab1J1FPG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 01:15:06 -0400
-Received: from [50.54.196.61] (50-54-196-61.evrt.wa.frontiernet.net [50.54.196.61])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p9S5F5CD028262
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Oct 2011 22:15:06 -0700
-Message-ID: <4EAA3A59.5080801@candelatech.com> (sfid-20111028_071511_642148_0F581C0A)
-Date: Thu, 27 Oct 2011 22:15:05 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: [wireless-next PATCH 1/5] mac80211: Support forcing station to
- disable 11n.
-References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:61902 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751310Ab1JJPQ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Oct 2011 11:16:29 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 21/34] iwlagn: use low retry limit for WoWLAN
+Date: Mon, 10 Oct 2011 07:27:06 -0700
+Message-Id: <1318256839-31837-22-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171654_601096_B0238118)
+In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/27/2011 10:11 PM, greearb@candelatech.com wrote:
-> From: Ben Greear<greearb@candelatech.com>
->
-> This allows a user to configure a wifi station interface
-> to disable 802.11n, even if the AP and NIC supports it.
->
-> The additional netlink bits is to allow this patch to work on 3.0
-> and should not be included in the final patch.
+When in D3 state, use low retry limit for both data and rts
 
-I have the wpa_supplicant patches for this series tested as well,
-but I figured it best to make sure these kernel patches are acceptable
-before posting the hostap patches....
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-hw.h |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   28 +++++++++++++++++-----------
+ 2 files changed, 18 insertions(+), 11 deletions(-)
 
-Tested this on ath9k.  According to the rate output seen by
-iwconfig and the debug stuff in
-cat /debug/ieee80211/wiphy0/netdev\:sta2/stations/00\:88\:99\:88\:99\:01/ht_capa
-I think I have this working pretty well.
-
-I have not yet tried verifying things with a sniffer...
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
+index 64e3417..ac039d4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
+@@ -85,6 +85,7 @@
+ #define IWLAGN_MGMT_DFAULT_RETRY_LIMIT		3
+ #define IWLAGN_RTS_DFAULT_RETRY_LIMIT		60
+ #define IWLAGN_BAR_DFAULT_RETRY_LIMIT		60
++#define IWLAGN_LOW_RETRY_LIMIT			7
+ 
+ /* Limit range of txpower output target to be between these values */
+ #define IWLAGN_TX_POWER_TARGET_POWER_MIN	(0)	/* 0 dBm: 1 milliwatt */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 2584f6f..f849097 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -124,17 +124,23 @@ static void iwlagn_tx_cmd_build_rate(struct iwl_priv *priv,
+ 	u8 data_retry_limit;
+ 	u8 rate_plcp;
+ 
+-	/* Set retry limit on RTS packets */
+-	rts_retry_limit = IWLAGN_RTS_DFAULT_RETRY_LIMIT;
+-
+-	/* Set retry limit on DATA packets and Probe Responses*/
+-	if (ieee80211_is_probe_resp(fc)) {
+-		data_retry_limit = IWLAGN_MGMT_DFAULT_RETRY_LIMIT;
+-		rts_retry_limit = min(data_retry_limit, rts_retry_limit);
+-	} else if (ieee80211_is_back_req(fc))
+-		data_retry_limit = IWLAGN_BAR_DFAULT_RETRY_LIMIT;
+-	else
+-		data_retry_limit = IWLAGN_DEFAULT_TX_RETRY;
++	if (priv->shrd->wowlan) {
++		rts_retry_limit = IWLAGN_LOW_RETRY_LIMIT;
++		data_retry_limit = IWLAGN_LOW_RETRY_LIMIT;
++	} else {
++		/* Set retry limit on RTS packets */
++		rts_retry_limit = IWLAGN_RTS_DFAULT_RETRY_LIMIT;
++
++		/* Set retry limit on DATA packets and Probe Responses*/
++		if (ieee80211_is_probe_resp(fc)) {
++			data_retry_limit = IWLAGN_MGMT_DFAULT_RETRY_LIMIT;
++			rts_retry_limit =
++				min(data_retry_limit, rts_retry_limit);
++		} else if (ieee80211_is_back_req(fc))
++			data_retry_limit = IWLAGN_BAR_DFAULT_RETRY_LIMIT;
++		else
++			data_retry_limit = IWLAGN_DEFAULT_TX_RETRY;
++	}
+ 
+ 	tx_cmd->data_retry_limit = data_retry_limit;
+ 	tx_cmd->rts_retry_limit = rts_retry_limit;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
+
