@@ -1,32 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:55769 "EHLO bues.ch"
+Received: from mga11.intel.com ([192.55.52.93]:54032 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932876Ab1JNQrt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 12:47:49 -0400
-Date: Fri, 14 Oct 2011 18:47:24 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH] ssb: Convert to use crc8 code in kernel library
-Message-ID: <20111014184724.647ecc32@milhouse> (sfid-20111014_184758_416252_6D58F59A)
-In-Reply-To: <4E986392.7020008@lwfinger.net>
-References: <4e90ce9a.89uGF659NNpbpyA3%Larry.Finger@lwfinger.net>
-	<20111014111103.5658d4aa@mj>
-	<4E986392.7020008@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1751111Ab1JJPQ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Oct 2011 11:16:26 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 02/34] iwlagn: add REPLY_ECHO host command
+Date: Mon, 10 Oct 2011 07:26:47 -0700
+Message-Id: <1318256839-31837-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171743_752392_AF278F1F)
+In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 14 Oct 2011 11:30:10 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+Add "echo" host command for testing and drebugging to make sure uCode still
+responding
 
-> I am pretty sure that the compiler would optimize out the entire htol16_buf 
-> routine. After substitution for cpu_to_le16() on a little-endian system, the 
-> statement in the while loop becomes '*(buf + size) = *(buf + size)', which is 
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-(There also is cpu_to_le16s(). Just for the record.)
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 64593aa..9a5d993 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -89,6 +89,7 @@ struct iwl_priv;
+ enum {
+ 	REPLY_ALIVE = 0x1,
+ 	REPLY_ERROR = 0x2,
++	REPLY_ECHO = 0x3,		/* test command */
+ 
+ 	/* RXON and QOS commands */
+ 	REPLY_RXON = 0x10,
 -- 
-Greetings, Michael.
+1.7.0.4
+
