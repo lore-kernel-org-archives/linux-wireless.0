@@ -1,72 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1193 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933067Ab1JDVTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 17:19:36 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 03/26] staging: brcm80211: remove filtering of received
- frames
-Date: Tue, 4 Oct 2011 23:18:49 +0200
-Message-ID: <1317763152-17607-4-git-send-email-arend@broadcom.com> (sfid-20111004_231951_388800_ED6B9ED8)
-In-Reply-To: <1317763152-17607-1-git-send-email-arend@broadcom.com>
-References: <1317763152-17607-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:33347 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754234Ab1JKNWZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Oct 2011 09:22:25 -0400
+Received: by mail-bw0-f46.google.com with SMTP id zt4so12231105bkb.33
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 06:22:24 -0700 (PDT)
+Subject: Re: [PATCH 1/2] wl12xx: sdio: use dev_dbg instead of wl1271_debug
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1317987297-18172-1-git-send-email-coelho@ti.com>
+References: <1317987297-18172-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 11 Oct 2011 16:22:15 +0300
+Message-ID: <1318339335.9690.525.camel@cumari> (sfid-20111011_152228_748449_170846B2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the receive path of the brcmsmac driver probe request frames and
-frames with invalid mac address fields are dropped. This is only
-fine for STA mode. Anticipating coming AP and monitor mode functionality
-this is unwanted behavior.
+On Fri, 2011-10-07 at 14:34 +0300, Luciano Coelho wrote: 
+> To prevent a useless dependency between the sdio module and the wl12xx
+> module, we need to replace the wl1271_debug macros (and friends) for
+> dev_dbg and other equivalents.
+> 
+> At the same time, remove the SDIO data hexdump, since this produces
+> way too much data and is not particularly useful.  There's not
+> print_hex_dump() equivalent for dynamic debug, so it's hard to control
+> when the dumps are printed out.
+> 
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/main.c |   23 +----------------------
- 1 files changed, 1 insertions(+), 22 deletions(-)
+Applied both.
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index efc6682..39b91d6 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -8238,29 +8238,8 @@ void brcms_c_recv(struct brcms_c_info *wlc, struct sk_buff *p)
- 	if (len < D11_PHY_HDR_LEN + sizeof(h->frame_control))
- 		goto toss;
- 
-+	/* not supporting A-MSDU */
- 	is_amsdu = rxh->RxStatus2 & RXS_AMSDU_MASK;
--
--	/* explicitly test bad src address to avoid sending bad deauth */
--	if (!is_amsdu) {
--		/* CTS and ACK CTL frames are w/o a2 */
--
--		if (ieee80211_is_data(h->frame_control) ||
--		    ieee80211_is_mgmt(h->frame_control)) {
--			if ((is_zero_ether_addr(h->addr2) ||
--			     is_multicast_ether_addr(h->addr2))) {
--				wiphy_err(wlc->wiphy, "wl%d: %s: dropping a "
--					  "frame with invalid src mac address,"
--					  " a2: %pM\n",
--					 wlc->pub->unit, __func__, h->addr2);
--				goto toss;
--			}
--		}
--	}
--
--	/* due to sheer numbers, toss out probe reqs for now */
--	if (ieee80211_is_probe_req(h->frame_control))
--		goto toss;
--
- 	if (is_amsdu)
- 		goto toss;
- 
 -- 
-1.7.4.1
-
+Cheers,
+Luca.
 
