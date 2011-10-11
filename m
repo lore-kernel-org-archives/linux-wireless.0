@@ -1,27 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52801 "EHLO nbd.name"
+Received: from mx1.redhat.com ([209.132.183.28]:34643 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752334Ab1JOMTf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Oct 2011 08:19:35 -0400
-Message-ID: <4E997A54.2080004@openwrt.org> (sfid-20111015_141943_539507_37550FA1)
-Date: Sat, 15 Oct 2011 14:19:32 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1752373Ab1JKNAA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Oct 2011 09:00:00 -0400
+Date: Tue, 11 Oct 2011 14:58:11 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 17/34] iwlagn: fix a race in the unmapping of the TFDs
+Message-ID: <20111011125810.GC2218@redhat.com> (sfid-20111011_150004_976051_4E964A91)
+References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1318256839-31837-18-git-send-email-wey-yi.w.guy@intel.com>
+ <20111011122216.GA2218@redhat.com>
+ <4825B8A2C4E264489E57869F0DCFB2234457A944D0@hasmsx502.ger.corp.intel.com>
+ <20111011123630.GB2218@redhat.com>
+ <4825B8A2C4E264489E57869F0DCFB2234457A944F2@hasmsx502.ger.corp.intel.com>
 MIME-Version: 1.0
-To: Stanislav Demakov <s.demakov@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Ath9k, single antenna on ar9280
-References: <CAN=pzd+TcY+n90RBMU+Cpp0Bt9d_eAGgY4yffO+PSStWSzbf-Q@mail.gmail.com> <4E9970A6.10305@openwrt.org> <CAN=pzd+ou1DXL_d_W0dvTcYrNMfH9NjSoFUa=07fE4BYJ+N7bQ@mail.gmail.com> <4E997413.8010008@openwrt.org> <CAN=pzd+R42SArWR+gEgqvJ7h1_6ZnB61xyKzOo8FqNxkRhxqrQ@mail.gmail.com>
-In-Reply-To: <CAN=pzd+R42SArWR+gEgqvJ7h1_6ZnB61xyKzOo8FqNxkRhxqrQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4825B8A2C4E264489E57869F0DCFB2234457A944F2@hasmsx502.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-10-15 2:13 PM, Stanislav Demakov wrote:
-> Ok, I've compiled and installed iw from git. Now I have this (wlan0 is down):
->
-> sudo iw phy phy0 set antenna 1 1
->
-> command failed: Operation not supported (-95)
-No idea then. It works on all of my systems.
+On Tue, Oct 11, 2011 at 02:38:52PM +0200, Grumbach, Emmanuel wrote:
+> > Why not simply take hcmd_lock?
+> 
+> Hcmd_lock is related to the host command queue only, it won't work for Tx queues.
 
-- Felix
+So you only fix reces between
+iwl_trans_pcie_tx()/iwl_tx_queue_reclaim() and iwl_tx_queue_unmap().
+Races between
+iwl_enqueue_hcmd()/iwl_cmd_queue_reclaim() and iwl_tx_queue_unmap()
+are unresolved.
+
+Stanislaw
