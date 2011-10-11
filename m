@@ -1,35 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:53519 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751240Ab1JWNKe convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52443 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750858Ab1JKUAo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Oct 2011 09:10:34 -0400
-Received: by gyb13 with SMTP id 13so4997131gyb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Oct 2011 06:10:33 -0700 (PDT)
+	Tue, 11 Oct 2011 16:00:44 -0400
+Date: Tue, 11 Oct 2011 15:51:02 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2011-10-11
+Message-ID: <20111011195102.GJ6558@tuxdriver.com> (sfid-20111011_220048_511690_B3C02558)
+References: <20111011191616.GF6558@tuxdriver.com>
+ <20111011193806.GI6558@tuxdriver.com>
+ <20111011.154526.442711861363485253.davem@davemloft.net>
 MIME-Version: 1.0
-In-Reply-To: <1319190767.3964.8.camel@jlt3.sipsolutions.net>
-References: <CAG5dHkRULKh90W1MeR3zq+-gpeNUshrHZ0qbKXsW19PMG5enoQ@mail.gmail.com>
-	<1319190767.3964.8.camel@jlt3.sipsolutions.net>
-Date: Sun, 23 Oct 2011 17:10:33 +0400
-Message-ID: <CAG5dHkQtVC-cgEWcZOC_woLGeQ75Pkg-JmETWxVKJGdHs8qoOA@mail.gmail.com> (sfid-20111023_151043_769900_C761393B)
-Subject: Re: [RFC 1/7] mac80211: mesh power mode indication in QoS frames
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111011.154526.442711861363485253.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 October 2011 13:52, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2011-10-21 at 12:36 +0400, Ivan Bezyazychnyy wrote:
->
->> +/* mesh power save level subfield mask */
->> +#define IEEE80211_QOS_CTL_PS_LEVEL      0x0200
->
-> That looks like it could use a better name?
+On Tue, Oct 11, 2011 at 03:45:26PM -0400, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Tue, 11 Oct 2011 15:38:06 -0400
+> 
+> > On Tue, Oct 11, 2011 at 03:16:16PM -0400, John W. Linville wrote:
+> >> commit bfb3780bc9b622422c1f0d3e12371a70863000da
+> >> 
+> >> Dave,
+> >> 
+> >> Here is another wireless batch intended for 3.2...  Highlights include a
+> >> bluetooth pull with some refactoring, a big pull of ath6kl updates, a
+> >> flurry of mac80211 patches from Johannes, and the usual strong ath9k
+> >> showing.
+> >> 
+> >> Please let me know if there are problems!
+> > 
+> > There was a problem -- a warning in ath6kl.  Sorry about that!
+> > 
+> > commit 094daf7db7c47861009899ce23f9177d761e20b0
+> 
+> I made sure I got the most recent changes.
 
-Do you mean something like IEEE80211_QOS_CTL_MESH_POWER_SAVE_LEVEL?
-The first half is similar to previous constants.
+Cool -- sorry for the confusion!
 
-Thanks,
-Ivan
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
