@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:65252 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751550Ab1JPCmW (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:56782 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755154Ab1JKR7m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Oct 2011 22:42:22 -0400
-Message-ID: <4E9A4496.1000906@lwfinger.net> (sfid-20111016_044243_961904_D4DAE348)
-Date: Sat, 15 Oct 2011 21:42:30 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: werner <w.landgraf@ru.ru>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	dave.taht@gmail.com, rientjes@google.com, arend@broadcom.com,
-	toralf.foerster@gmx.de, wey-yi.w.guy@intel.com, ilw@linux.intel.com
-Subject: Re: 3.1-rc9 wifi problem
-References: <web-626905859@zbackend1.aha.ru>
-In-Reply-To: <web-626905859@zbackend1.aha.ru>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 11 Oct 2011 13:59:42 -0400
+Received: by qyk7 with SMTP id 7so6852376qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 10:59:41 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH 2/2] wireless-regdb: add FCC as the DFS region for US
+Date: Tue, 11 Oct 2011 10:58:59 -0700
+Message-Id: <1318355944-24708-3-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111011_195945_471947_BDDC095E)
+In-Reply-To: <1318355944-24708-1-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1318355944-24708-1-git-send-email-mcgrof@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/15/2011 04:43 PM, werner wrote:
-> I'm very sorry that I cannot give more informations, my own computer is
-> connected with the modem via ethernet cable, a friend used in the past often
-> wifi here at me, and since 2.6.38 never with problems, also with 3.0-rcX no
-> problems, nor with 3.0.X until 3.0.4 . There were general problems with 3.1-rcX
-> until 5 , which had nothing to do with wifi but what was the reason that I only
-> late got working 3.1-rcX , so the first 3.1-rc the friend tested on his laptop
-> was 3.1-rc9, and with this his wifi didn't work, but I don't know if it would
-> have worked with -rc5. When he come back, perhaps next week , then I'll ask him
-> to try 3.1-rc5 or 6 . This is a kernel+modules problem, because with
-> re-installing 3.0.4 it returned to work as before. Anyway, I wanted to report
-> this, so that before the release of 3.1 the wifi drivers could be checked better.
+DFS master support in the US requires consideration for DFS
+requirements as defined by the FCC rules.
 
-Unless you say which driver is involved, we will n ot be able to help.
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ db.txt |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Larry
+diff --git a/db.txt b/db.txt
+index f0b46d8..4b7e879 100644
+--- a/db.txt
++++ b/db.txt
+@@ -651,7 +651,7 @@ country TR:
+ country UA:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 
+-country US:
++country US: DFS-FCC
+ 	(2402 - 2472 @ 40), (3, 27)
+ 	(5170 - 5250 @ 40), (3, 17)
+ 	(5250 - 5330 @ 40), (3, 20), DFS
+-- 
+1.7.4.15.g7811d
 
