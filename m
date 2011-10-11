@@ -1,92 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:48962 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750975Ab1JIIsZ convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:54017 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754957Ab1JKSBr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Oct 2011 04:48:25 -0400
-Received: by wwf22 with SMTP id 22so7790166wwf.1
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Oct 2011 01:48:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20111009005107.43a49372@milhouse>
-References: <4e90ce9a.89uGF659NNpbpyA3%Larry.Finger@lwfinger.net>
-	<20111009005107.43a49372@milhouse>
-Date: Sun, 9 Oct 2011 10:48:22 +0200
-Message-ID: <CACna6rz-0TZrwctTZR-YLDHG=xdt4Oc5ShbjCZiad7Cvmh0+hQ@mail.gmail.com> (sfid-20111009_104830_624074_FD387C8F)
-Subject: Re: [PATCH] ssb: Convert to use crc8 code in kernel library
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 11 Oct 2011 14:01:47 -0400
+Received: by qadb15 with SMTP id b15so4948534qad.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 11:01:47 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH 6/6] cfg80211: pass DFS region to drivers through reg_notifier()
+Date: Tue, 11 Oct 2011 10:59:03 -0700
+Message-Id: <1318355944-24708-7-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111011_200150_714274_0D69E90F)
+In-Reply-To: <1318355944-24708-1-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1318355944-24708-1-git-send-email-mcgrof@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/10/9 Michael Büsch <m@bues.ch>:
-> On Sat, 08 Oct 2011 17:28:42 -0500
-> Larry Finger <Larry.Finger@lwfinger.net> wrote:
->
->> The kernel now contains library routines to establish crc8 tables and
->> to calculate the appropriate sums. Use them for ssb.
->
->> +static u8 srom_crc8_table[CRC8_TABLE_SIZE];
->> +
->> +/* Polynomial:   x^8 + x^7 + x^6 + x^4 + x^2 + 1   */
->> +#define SROM_CRC8_POLY       0xAB
->> +
->> +static inline void ltoh16_buf(u16 *buf, unsigned int size)
->>  {
->> +     size /= 2;
->> +     while (size--)
->> +             *(buf + size) = le16_to_cpu(*(__le16 *)(buf + size));
->> +}
->>
->> -     return crc;
->> +static inline void htol16_buf(u16 *buf, unsigned int size)
->> +{
->> +     size /= 2;
->> +     while (size--)
->> +             *(__le16 *)(buf + size) = cpu_to_le16(*(buf + size));
->>  }
->
->>               return -ENOMEM;
->> +     crc8_populate_lsb(srom_crc8_table, SROM_CRC8_POLY);
->>       bus->sprom_size = SSB_SPROMSIZE_WORDS_R123;
->>       sprom_do_read(bus, buf);
->> +     /* convert to le */
->> +     htol16_buf(buf, 2 * bus->sprom_size);
->
->>               bus->sprom_size = SSB_SPROMSIZE_WORDS_R4;
->>               sprom_do_read(bus, buf);
->> +             htol16_buf(buf, 2 * bus->sprom_size);
->>               err = sprom_check_crc(buf, bus->sprom_size);
->
->> +     /* restore endianess */
->> +     ltoh16_buf(buf, 2 * bus->sprom_size);
->>       err = sprom_extract(bus, sprom, buf, bus->sprom_size);
->
-> This endianness stuff is _really_ ugly.
-> Does this patch decrease the code size, at least? I'll almost doubt it.
-> If it doesn't, why are we actually doing this?
-> It doesn't even decrease the .data size. Worse, it converts a .const
-> table to a .data table.
->
-> Just my 2 cents.
+This grants drivers access to the DFS region that a
+regulatory domain belongs to.
 
-Agree. I already tried converting bcma to use crc8:
-[RFC][WORTH IT?][PATCH] bcma: make use of crc8 lib
-http://lists.infradead.org/pipermail/b43-dev/2011-June/001466.html
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ include/net/regulatory.h |    5 +++++
+ net/wireless/reg.c       |    2 ++
+ 2 files changed, 7 insertions(+), 0 deletions(-)
 
-But resigned, it was introducing some hacks or not optimal ops, I
-decided it's not worth it.
-
-Even Arend said their brcm80211 is hacky about crc8 usage:
-
-W dniu 15 czerwca 2011 21:26 użytkownik Arend van Spriel
-<arend@broadcom.com> napisał:
-> Agree. In brcm80211 we convert the entire sprom, calculate, and convert it
-> back. Also not perfect I think as it loops over de sprom data twice.
-
+diff --git a/include/net/regulatory.h b/include/net/regulatory.h
+index 7399c93..a5f7993 100644
+--- a/include/net/regulatory.h
++++ b/include/net/regulatory.h
+@@ -48,6 +48,10 @@ enum environment_cap {
+  * 	99 - built by driver but a specific alpha2 cannot be determined
+  * 	98 - result of an intersection between two regulatory domains
+  *	97 - regulatory domain has not yet been configured
++ * @dfs_region: If CRDA responded with a regulatory domain that requires
++ *	DFS master operation on a known DFS region (NL80211_DFS_*),
++ *	dfs_region represents that region. Drivers can use this and the
++ *	@alpha2 to adjust their device's DFS parameters as required.
+  * @intersect: indicates whether the wireless core should intersect
+  * 	the requested regulatory domain with the presently set regulatory
+  * 	domain.
+@@ -67,6 +71,7 @@ struct regulatory_request {
+ 	int wiphy_idx;
+ 	enum nl80211_reg_initiator initiator;
+ 	char alpha2[2];
++	u8 dfs_region;
+ 	bool intersect;
+ 	bool processed;
+ 	enum environment_cap country_ie_env;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 69141ed..b66444d 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1121,6 +1121,8 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
+ 	if (ignore_reg_update(wiphy, initiator))
+ 		return;
+ 
++	last_request->dfs_region = cfg80211_regdomain->dfs_region;
++
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 		if (wiphy->bands[band])
+ 			handle_band(wiphy, band, initiator);
 -- 
-Rafał
+1.7.4.15.g7811d
+
