@@ -1,42 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:32794 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932798Ab1JNMxP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 08:53:15 -0400
-Received: by mail-yw0-f46.google.com with SMTP id 31so257185ywp.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2011 05:53:15 -0700 (PDT)
-From: Sangwook Lee <sangwook.lee@linaro.org>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, patches@linaro.org,
-	Sangwook Lee <sangwook.lee@linaro.org>
-Subject: [PATCH 4/5] ath6kl: Add SDIO polling file into Makefile
-Date: Fri, 14 Oct 2011 13:50:45 +0100
-Message-Id: <1318596646-19495-5-git-send-email-sangwook.lee@linaro.org> (sfid-20111014_145323_994531_F0702C70)
-In-Reply-To: <1318596646-19495-1-git-send-email-sangwook.lee@linaro.org>
-References: <1318596646-19495-1-git-send-email-sangwook.lee@linaro.org>
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:48851 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750922Ab1JKVfq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Oct 2011 17:35:46 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	"g@tuxdriver.com" <g@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Tue, 11 Oct 2011 14:32:33 -0700
+Subject: RE: [PATCH] mwifiex: add support for Marvell pcie8766 chipset
+Message-ID: <477F20668A386D41ADCC57781B1F70430817C590DC@SC-VEXCH1.marvell.com> (sfid-20111011_233549_877758_A65A96B9)
+References: <1317701303-21871-1-git-send-email-bzhao@marvell.com>
+ <1317701303-21871-2-git-send-email-bzhao@marvell.com>
+ <477F20668A386D41ADCC57781B1F704308155977E8@SC-VEXCH1.marvell.com>
+ <20111011203936.GL6558@tuxdriver.com>
+In-Reply-To: <20111011203936.GL6558@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new file into Makefile
+Hi John,
 
-Signed-off-by: Sangwook Lee <sangwook.lee@linaro.org>
----
- drivers/net/wireless/ath/ath6kl/Makefile |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+> -----Original Message-----
+> From: John W. Linville [mailto:linville@tuxdriver.com]
+> Sent: Tuesday, October 11, 2011 1:40 PM
+> To: Bing Zhao; g@tuxdriver.com
+> Cc: linux-wireless@vger.kernel.org; Amitkumar Karwar; Kiran Divekar; Yogesh Powar; Frank Huang
+> Subject: Re: [PATCH] mwifiex: add support for Marvell pcie8766 chipset
+> 
+> On Thu, Oct 06, 2011 at 08:30:53PM -0700, Bing Zhao wrote:
+> > Hi John,
+> >
+> > > -----Original Message-----
+> > > From: Bing Zhao [mailto:bzhao@marvell.com]
+> > > Sent: Monday, October 03, 2011 9:08 PM
+> > > To: linux-wireless@vger.kernel.org
+> > > Cc: John W. Linville; Amitkumar Karwar; Kiran Divekar; Yogesh Powar; Frank Huang; Bing Zhao
+> > > Subject: [PATCH] mwifiex: add support for Marvell pcie8766 chipset
+> > >
+> > > From: Amitkumar Karwar <akarwar@marvell.com>
+> > >
+> > > This patch supports 88W8766P chipset with a PCIe interface.
+> > >
+> > > The corresponding firmware image file is located at:
+> > > "mrvl/pcie8766_uapsta.bin"
+> > >
+> > > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > > Signed-off-by: Ramesh Radhakrishnan <rramesh@marvell.com>
+> > > Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+> > > Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+> > > Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> > > Signed-off-by: Frank Huang <frankh@marvell.com>
+> >
+> > Could you please apply this patch? It doesn't depend on the other patches we are working on.
+> >
+> > Thanks,
+> > Bing
+> 
+> It generates warnings...
 
-diff --git a/drivers/net/wireless/ath/ath6kl/Makefile b/drivers/net/wireless/ath/ath6kl/Makefile
-index 8f7a0d1..a8f4a55 100644
---- a/drivers/net/wireless/ath/ath6kl/Makefile
-+++ b/drivers/net/wireless/ath/ath6kl/Makefile
-@@ -32,6 +32,7 @@ ath6kl-y += main.o
- ath6kl-y += txrx.o
- ath6kl-y += wmi.o
- ath6kl-y += sdio.o
-+ath6kl-$(CONFIG_ATH6KL_SDIO_POLL) += sdio_poll.o
- ath6kl-$(CONFIG_NL80211_TESTMODE) += testmode.o
- 
- ccflags-y += -D__CHECK_ENDIAN__
--- 
-1.7.4.1
+Sorry about the warnings. I will fix them and resend v2 patch.
 
+Thanks,
+Bing
+
+> 
+>   LD [M]  drivers/net/wireless/mwifiex/mwifiex_pcie.o
+> WARNING: drivers/net/wireless/mwifiex/mwifiex_pcie.o(.data+0x18): Section mismatch in reference from
+> the variable mwifiex_pcie to the variable .devinit.rodata:mwifiex_ids
+> The variable mwifiex_pcie references
+> the variable __devinitconst mwifiex_ids
+> If the reference is valid then annotate the
+> variable with __init* or __refdata (see linux/init.h) or name the variable:
+> *driver, *_template, *_timer, *_sht, *_ops, *_probe, *_probe_one, *_console
+> 
+> WARNING: drivers/net/wireless/mwifiex/mwifiex_pcie.o(.data+0x20): Section mismatch in reference from
+> the variable mwifiex_pcie to the function .devinit.text:mwifiex_pcie_probe()
+> The variable mwifiex_pcie references
+> the function __devinit mwifiex_pcie_probe()
+> If the reference is valid then annotate the
+> variable with __init* or __refdata (see linux/init.h) or name the variable:
+> *driver, *_template, *_timer, *_sht, *_ops, *_probe, *_probe_one, *_console
+> 
+> --
+> John W. Linville		Someday the world will need a hero, and you
+> linville@tuxdriver.com			might be all we have.  Be ready.
