@@ -1,53 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:50540 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751538Ab1JWTpm (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:42523 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750942Ab1JKMjY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Oct 2011 15:45:42 -0400
-Date: Sun, 23 Oct 2011 22:45:27 +0300
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211_hwsim: Claim support for TDLS
-Message-ID: <20111023194527.GA18416@jm.kir.nu> (sfid-20111023_214545_961355_F1637FF6)
+	Tue, 11 Oct 2011 08:39:24 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 11 Oct 2011 14:38:52 +0200
+Subject: RE: [PATCH 17/34] iwlagn: fix a race in the unmapping of the TFDs
+Message-ID: <4825B8A2C4E264489E57869F0DCFB2234457A944F2@hasmsx502.ger.corp.intel.com> (sfid-20111011_143926_524096_AF5934DC)
+References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1318256839-31837-18-git-send-email-wey-yi.w.guy@intel.com>
+ <20111011122216.GA2218@redhat.com>
+ <4825B8A2C4E264489E57869F0DCFB2234457A944D0@hasmsx502.ger.corp.intel.com>
+ <20111011123630.GB2218@redhat.com>
+In-Reply-To: <20111011123630.GB2218@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
----
- drivers/net/wireless/mac80211_hwsim.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+> > > > While inspecting the code, I saw that iwl_tx_queue_unmap modifies
+> > > > the read pointer of the Tx queue without taking any locks. This means
+> > > > that it can race with the reclaim flow. This can possibly lead to
+> > > > a DMA warning complaining that we unmap the same buffer twice.
+> > > >
+> > > > This is more a W/A than a fix since it is really weird to take
+> > > > sta_lock inside iwl_tx_queue_unmap, but it can help until we revamp
+> > > > the locking model in the transport layer.
+> > > >
+> > > > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> > > > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > > > ---
+> > > >  drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    3 +++
+> > > >  1 files changed, 3 insertions(+), 0 deletions(-)
+> > > >
+> > > > diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+> > > b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+> > > > index 60067c7..f69aecb 100644
+> > > > --- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+> > > > +++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+> > > > @@ -406,6 +406,7 @@ static void iwl_tx_queue_unmap(struct iwl_trans
+> > > *trans, int txq_id)
+> > > >  	struct iwl_tx_queue *txq = &trans_pcie->txq[txq_id];
+> > > >  	struct iwl_queue *q = &txq->q;
+> > > >  	enum dma_data_direction dma_dir;
+> > > > +	unsigned long flags;
+> > > >
+> > > >  	if (!q->n_bd)
+> > > >  		return;
+> > > > @@ -418,12 +419,14 @@ static void iwl_tx_queue_unmap(struct iwl_trans
+> > > *trans, int txq_id)
+> > > >  	else
+> > > >  		dma_dir = DMA_TO_DEVICE;
+> > > >
+> > > > +	spin_lock_irqsave(&trans->shrd->sta_lock, flags);
+> > > sta_lock does not look like right lock to use.
+> > >
+> > True. And I wrote in the commit message that this is a W/A until we
+> revamp the locking model.
+> 
+> Why not simply take hcmd_lock?
 
-Note: Before even thinking of testing this, please take a look at the
-RFC patch for handling supported rates configuration unless you want to
-crash and burn your kernel.. Anyway, it is useful to get hwsim ready for
-TDLS testing and the mac80211 issue is not specific to hwsim and people
-who use hwsim are normally capable of patching kernel and familiar with
-this mailing list in the first place.. ;-)
+Hcmd_lock is related to the host command queue only, it won't work for Tx queues.
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-With the RFC "mac80211: Fix STA supported rate configuration with dummy
-entry" patch in place, I was able to get the TDLS link running in
-mac80211_hwsim environment between two WPA2 stations.
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 68455a2..477100d 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1747,6 +1747,8 @@ static int __init init_mac80211_hwsim(void)
- 			    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
- 			    IEEE80211_HW_AMPDU_AGGREGATION;
- 
-+		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
-+
- 		/* ask mac80211 to reserve space for magic */
- 		hw->vif_data_size = sizeof(struct hwsim_vif_priv);
- 		hw->sta_data_size = sizeof(struct hwsim_sta_priv);
--- 
-1.7.4.1
-
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
