@@ -1,36 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51230 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753093Ab1JLSpr (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:34824 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752266Ab1JKLYk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 14:45:47 -0400
-Date: Wed, 12 Oct 2011 14:40:44 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, stable@kernel.org
-Subject: Re: [PATCH] ath9k_hw: Fix ASPM L1 issue for AR9462
-Message-ID: <20111012184043.GG18764@tuxdriver.com> (sfid-20111012_204551_822612_E0153D69)
-References: <1318226145-7772-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Tue, 11 Oct 2011 07:24:40 -0400
+To: Kevin Fang <chienf@qca.qualcomm.com>
+Message-ID: <4E942773.6040302@qca.qualcomm.com> (sfid-20111011_132444_341769_EE0B6AC9)
+Date: Tue, 11 Oct 2011 14:24:35 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1318226145-7772-1-git-send-email-rmanohar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/1] ath6kl: Add WSC IE on the associate message
+References: <Y> <1317948679-10299-1-git-send-email-kevin.fang@qca.qualcomm.com>
+In-Reply-To: <1317948679-10299-1-git-send-email-kevin.fang@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 10, 2011 at 11:25:45AM +0530, Rajkumar Manoharan wrote:
-> Because of not clearing Bit 14 of AR_WA, the ASPM L1 is not
-> enabled when entering into sleep mode. AR9462 does not need
-> bit 14 to be set.
-> 
-> Cc: stable@kernel.org
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+On 10/07/2011 03:51 AM, Kevin Fang wrote:
+> For some WPS test items, such as item "5.1.14"
+> STAUT must include the WSC IE in the 802.11 Association Request frame.
+> Therefore, add the corresponding IE in association message.
 
-  CC [M]  drivers/net/wireless/ath/ath9k/hw.o
-drivers/net/wireless/ath/ath9k/hw.c: In function ‘__ath9k_hw_init’:
-drivers/net/wireless/ath/ath9k/hw.c:544:2: error: implicit declaration of function ‘AR_SREV_9462’
+Applied, thanks!
 
-Missing a patch dependency?
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Kalle
