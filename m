@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58835 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752354Ab1JVRoW (ORCPT
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:59419 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755010Ab1JKSCq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Oct 2011 13:44:22 -0400
-Subject: Re: [PATCH 1/4] nl80211: Add probe response offload attribute
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Guy Eilam <guy@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAA03845twSZjJHN-MygjLvK8VsQk+_S6qNqdM7JgZA9GS9LPWQ@mail.gmail.com> (sfid-20111022_194251_250668_CCEB8E51)
-References: <1319289112-21896-1-git-send-email-guy@wizery.com>
-	 <1319290457.3956.3.camel@jlt3.sipsolutions.net>
-	 <1319290618.3956.6.camel@jlt3.sipsolutions.net>
-	 <CAA038468Y7T4BSAycqmNc0q+Ph1wSh07B57tV--O00kvDEp-wg@mail.gmail.com>
-	 <1319305186.3956.11.camel@jlt3.sipsolutions.net>
-	 <CAA03845twSZjJHN-MygjLvK8VsQk+_S6qNqdM7JgZA9GS9LPWQ@mail.gmail.com>
-	 (sfid-20111022_194251_250668_CCEB8E51)
+	Tue, 11 Oct 2011 14:02:46 -0400
+Received: by mail-bw0-f47.google.com with SMTP id 11so10234663bke.6
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 11:02:44 -0700 (PDT)
+Subject: Re: [RFC] wl12xx: use the same plat dev name for both SPI and SDIO
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: balbi@ti.com
+In-Reply-To: <1317992414-30197-1-git-send-email-coelho@ti.com>
+References: <1317992414-30197-1-git-send-email-coelho@ti.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 22 Oct 2011 19:44:18 +0200
-Message-ID: <1319305458.3956.12.camel@jlt3.sipsolutions.net> (sfid-20111022_194424_551359_6ACBF921)
+Date: Tue, 11 Oct 2011 21:02:37 +0300
+Message-ID: <1318356157.9690.533.camel@cumari> (sfid-20111011_200248_810677_4B9B8511)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-10-22 at 19:42 +0200, Guy Eilam wrote:
-
-> > Yeah but if you add a wiphy flag and the bits into struct wiphy, then
-> > you can save the function pointer which seems nicer?
+On Fri, 2011-10-07 at 16:00 +0300, Luciano Coelho wrote: 
+> There's no need to have the bus name included in the platform device
+> name that we create.  The core driver doesn't need to know about the
+> type of bus it uses.  Any differences between the buses that need to
+> be handled differently in the core, can be passed in the platform data
+> (as the pwr_in_suspend boolean does).
 > 
-> You're absolutely right.
-> I'll send another version of the patch that will have a flag and
-> bitmap in the wiphy struct.
+> Use "wl12xx" for the device name in both bus drivers.  Rename the
+> platform driver name to "wl12xx_driver", just to differentiate from
+> the platform device names.
+> 
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
 
-Also I believe that means you don't need patch 2 at all so that's kinda
-nice :-)
+Nobody complained about this (except Arik, but I answered his question),
+so I decided to apply this.  I won't re-send it as PATCH, because that
+would be useless. ;)
 
-johannes
+-- 
+Cheers,
+Luca.
 
