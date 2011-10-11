@@ -1,111 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:51948 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935224Ab1JFQuH (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:33703 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755010Ab1JKSCF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Oct 2011 12:50:07 -0400
-Received: by ywb5 with SMTP id 5so2783616ywb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 09:50:07 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [ath9k-devel] [RFC 5/6] ath9k: enable DFS pulse detection
-Date: Thu, 6 Oct 2011 18:49:48 +0200
-Cc: kgiori@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org,
-	Zefir Kurtisi <zefir.kurtisi@neratec.com>
-References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com> <201110041538.12885.chunkeey@googlemail.com> <CAB=NE6VC3txpDh4SdDKDxKWKKZVtGQXKVH8opszKDnZeeZTjUQ@mail.gmail.com>
-In-Reply-To: <CAB=NE6VC3txpDh4SdDKDxKWKKZVtGQXKVH8opszKDnZeeZTjUQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201110061849.48838.chunkeey@googlemail.com> (sfid-20111006_185012_504637_4459D392)
+	Tue, 11 Oct 2011 14:02:05 -0400
+Received: by qyk30 with SMTP id 30so3796240qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 11:02:05 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH] iw: add DFS region parsing support
+Date: Tue, 11 Oct 2011 10:59:04 -0700
+Message-Id: <1318355944-24708-8-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111011_200210_694223_089A5999)
+In-Reply-To: <1318355944-24708-1-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1318355944-24708-1-git-send-email-mcgrof@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, October 06, 2011 12:27:03 AM Luis R. Rodriguez wrote:
-> On Tue, Oct 4, 2011 at 6:38 AM, Christian Lamparter
-> <chunkeey@googlemail.com> wrote:
-> > On Monday, October 03, 2011 09:31:12 PM Luis R. Rodriguez wrote:
-> >> On Mon, Oct 3, 2011 at 12:24 PM, Christian Lamparter
-> >> <chunkeey@googlemail.com> wrote:
-> >> > On Monday, October 03, 2011 08:27:39 PM Luis R. Rodriguez wrote:
-> >> >> On Mon, Oct 3, 2011 at 3:29 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
-> >> >> >
-> >> >> > Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-> >> >> > ---
-> >> >> >  drivers/net/wireless/ath/ath9k/main.c |   12 ++++++++++++
-> >> >> >  1 files changed, 12 insertions(+), 0 deletions(-)
-> >> >> >
-> >> >> > diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> >> >> > index e8aeb98..5defebe 100644
-> >> >> > --- a/drivers/net/wireless/ath/ath9k/main.c
-> >> >> > +++ b/drivers/net/wireless/ath/ath9k/main.c
-> >> >> > [...]
-> >> >> > +#ifdef CONFIG_ATH9K_DFS
-> >> >>
-> >> >> Please spare the #ifdef and just call something within dfs.c, then
-> >> >> dfs.h would wrap it to nothing if DFS is disabled.
-> >> > Why would anyone want to disable DFS driver support?
-> >> > I would say: drop the ifdefs altogether since DFS
-> >> > is and will be "required".
-> >>
-> >> Because DFS requires to be properly tested before being enabled.
-> > Testing if a driver detects a pulse is "trivial" compared to the
-> > stuff mac80211/cfg80211 and hostapd will have to do to make a
-> > channel-change as smooth as possible. I think if there's a DFS
-> > "OFF" switch, it should be in hostapd and I hope more people
-> > agree on this one.
-> 
-> You do have a good point, but I disagree that you do not need to test
-> / regress test hardware / driver code for DFS.
+This lets iw parse the DFS region passed on by the kernel
+when one is found for the currently used regulatory domain.
 
-Actually, you are sort of contradicting yourself here.
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ nl80211.h |   65 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ reg.c     |   31 +++++++++++++++++++++++++++++
+ 2 files changed, 96 insertions(+), 0 deletions(-)
 
-Take a look at your "wireless: add DFS master support" patch
-series. I don't see any IFDEFs to select between the old
-and the new "way" even though you know full well that there's
-some black magic going on.
+diff --git a/nl80211.h b/nl80211.h
+index c73582f..2dbb799 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -506,6 +506,9 @@
+  * @NL80211_CMD_PMKSA_CANDIDATE: This is used as an event to inform userspace
+  *	of PMKSA caching dandidates.
+  *
++ * @NL80211_CMD_TDLS_OPER: Perform a high-level TDLS command (e.g. link setup).
++ * @NL80211_CMD_TDLS_MGMT: Send a TDLS management frame.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -632,6 +635,9 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_PMKSA_CANDIDATE,
+ 
++	NL80211_CMD_TDLS_OPER,
++	NL80211_CMD_TDLS_MGMT,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -1089,6 +1095,24 @@ enum nl80211_commands {
+  *	This attribute is used with %NL80211_CMD_TRIGGER_SCAN and
+  *	%NL80211_CMD_FRAME commands.
+  *
++ * @NL80211_ATTR_TDLS_ACTION: Low level TDLS action code (e.g. link setup
++ *	request, link setup confirm, link teardown, etc.). Values are
++ *	described in the TDLS (802.11z) specification.
++ * @NL80211_ATTR_TDLS_DIALOG_TOKEN: Non-zero token for uniquely identifying a
++ *	TDLS conversation between two devices.
++ * @NL80211_ATTR_TDLS_OPERATION: High level TDLS operation; see
++ *	&enum nl80211_tdls_operation, represented as a u8.
++ * @NL80211_ATTR_TDLS_SUPPORT: A flag indicating the device can operate
++ *	as a TDLS peer sta.
++ * @NL80211_ATTR_TDLS_EXTERNAL_SETUP: The TDLS discovery/setup and teardown
++ *	procedures should be performed by sending TDLS packets via
++ *	%NL80211_CMD_TDLS_MGMT. Otherwise %NL80211_CMD_TDLS_OPER should be
++ *	used for asking the driver to perform a TDLS operation.
++ *
++ * @NL80211_ATTR_DFS_REGION: region for regulatory rules which this country
++ *    abides to when initiating radiation on DFS channels. A country maps
++ *    to one DFS region.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1311,6 +1335,14 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_TX_NO_CCK_RATE,
+ 
++	NL80211_ATTR_TDLS_ACTION,
++	NL80211_ATTR_TDLS_DIALOG_TOKEN,
++	NL80211_ATTR_TDLS_OPERATION,
++	NL80211_ATTR_TDLS_SUPPORT,
++	NL80211_ATTR_TDLS_EXTERNAL_SETUP,
++
++	NL80211_ATTR_DFS_REGION,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -1408,6 +1440,7 @@ enum nl80211_iftype {
+  * @NL80211_STA_FLAG_WME: station is WME/QoS capable
+  * @NL80211_STA_FLAG_MFP: station uses management frame protection
+  * @NL80211_STA_FLAG_AUTHENTICATED: station is authenticated
++ * @NL80211_STA_FLAG_TDLS_PEER: station is a TDLS peer
+  * @NL80211_STA_FLAG_MAX: highest station flag number currently defined
+  * @__NL80211_STA_FLAG_AFTER_LAST: internal use
+  */
+@@ -1418,6 +1451,7 @@ enum nl80211_sta_flags {
+ 	NL80211_STA_FLAG_WME,
+ 	NL80211_STA_FLAG_MFP,
+ 	NL80211_STA_FLAG_AUTHENTICATED,
++	NL80211_STA_FLAG_TDLS_PEER,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_FLAG_AFTER_LAST,
+@@ -1815,6 +1849,21 @@ enum nl80211_reg_rule_flags {
+ };
+ 
+ /**
++ * enum nl80211_dfs_regions - regulatory DFS regions
++ *
++ * @NL80211_DFS_UNSET: Country has no DFS master region specified
++ * @NL80211_DFS_FCC_: Country follows DFS master rules from FCC
++ * @NL80211_DFS_FCC_: Country follows DFS master rules from ETSI
++ * @NL80211_DFS_JP_: Country follows DFS master rules from JP/MKK/Telec
++ */
++enum nl80211_dfs_regions {
++	NL80211_DFS_UNSET	= 0,
++	NL80211_DFS_FCC		= 1,
++	NL80211_DFS_ETSI	= 2,
++	NL80211_DFS_JP		= 3,
++};
++
++/**
+  * enum nl80211_survey_info - survey information
+  *
+  * These attribute types are used with %NL80211_ATTR_SURVEY_INFO
+@@ -2604,4 +2653,20 @@ enum nl80211_pmksa_candidate_attr {
+ 	MAX_NL80211_PMKSA_CANDIDATE = NUM_NL80211_PMKSA_CANDIDATE - 1
+ };
+ 
++/**
++ * enum nl80211_tdls_operation - values for %NL80211_ATTR_TDLS_OPERATION
++ * @NL80211_TDLS_DISCOVERY_REQ: Send a TDLS discovery request
++ * @NL80211_TDLS_SETUP: Setup TDLS link
++ * @NL80211_TDLS_TEARDOWN: Teardown a TDLS link which is already established
++ * @NL80211_TDLS_ENABLE_LINK: Enable TDLS link
++ * @NL80211_TDLS_DISABLE_LINK: Disable TDLS link
++ */
++enum nl80211_tdls_operation {
++	NL80211_TDLS_DISCOVERY_REQ,
++	NL80211_TDLS_SETUP,
++	NL80211_TDLS_TEARDOWN,
++	NL80211_TDLS_ENABLE_LINK,
++	NL80211_TDLS_DISABLE_LINK,
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/reg.c b/reg.c
+index c4ee1c4..4fa5bec 100644
+--- a/reg.c
++++ b/reg.c
+@@ -96,6 +96,31 @@ COMMAND(reg, set, "<ISO/IEC 3166-1 alpha2>",
+ 	NL80211_CMD_REQ_SET_REG, 0, CIB_NONE, handle_reg_set,
+ 	"Notify the kernel about the current regulatory domain.");
+ 
++static void print_dfs_region(__u8 dfs_region)
++{
++	if (!dfs_region)
++		return;
++
++	printf("DFS Master region: ");
++
++	switch (dfs_region) {
++	case NL80211_DFS_FCC:
++		printf("FCC");
++		break;
++	case NL80211_DFS_ETSI:
++		printf("ETSI");
++		break;
++	case NL80211_DFS_JP:
++		printf("JP");
++		break;
++	default:
++		printf("Uknown");
++		break;
++	}
++
++	printf("\n");
++}
++
+ static int print_reg_handler(struct nl_msg *msg, void *arg)
+ 
+ {
+@@ -107,6 +132,7 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
+ 	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
+ 	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
+ 	char *alpha2;
++	__u8 dfs_region = 0;
+ 	struct nlattr *nl_rule;
+ 	int rem_rule;
+ 	static struct nla_policy reg_rule_policy[NL80211_FREQUENCY_ATTR_MAX + 1] = {
+@@ -132,7 +158,12 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
+ 	}
+ 
+ 	alpha2 = nla_data(tb_msg[NL80211_ATTR_REG_ALPHA2]);
++
++	if (tb_msg[NL80211_ATTR_DFS_REGION])
++		dfs_region = nla_get_u8(tb_msg[NL80211_ATTR_DFS_REGION]);
++
+ 	printf("country %c%c:\n", alpha2[0], alpha2[1]);
++	print_dfs_region(dfs_region);
+ 
+ 	nla_for_each_nested(nl_rule, tb_msg[NL80211_ATTR_REG_RULES], rem_rule) {
+ 		struct nlattr *tb_rule[NL80211_FREQUENCY_ATTR_MAX + 1];
+-- 
+1.7.4.15.g7811d
 
-http://permalink.gmane.org/gmane.linux.kernel.wireless.general/78455
-Quote:
-"Here's a puzzle though... If we change this series to use the other
-pad byte that was available, the first pad byte, instead of the last
-one, we loose backward compatibility support and I cannot figure out
-why."
-
-[Note: This is just an recent enough example. I do think I could come
-up with a better one, e.g.: why didn't athXk have a compile-time
-switch to disable ANI when it was introduced because it can(and has?)
-caused some regressions as well?]
-
-so, why do you want a useless compile-time for *this option* *now*?
-Is this something about politics/laws I don't know about [I'm just
-curious, because I don't really buy "testing" here, since Zefir
-obviously has a working prototype and Atheros has a working and
-certificated codebase as well which he can access and base his
-work on. So I don't think its that unstable and needs added
-ugliness.]
-> This is what I'm talking about. But yes, userspace also submits
-> itself to the same criteria.
-> >> You may also want to simply disable DFS if you do not want to
-> >> deal with the regulatory test implications of having it enabled.
-> > AFAIK you can't "simply" disable the DFS requirement: hostapd
-> > (hw_features.c), [cfg80211] (checks if tx on secondary channel
-> > is possible) and mac80211 (tx.c) all have checks. Indeed, the
-> > easiest way is to modify crda's database. So there's no need
-> > for an extra compile-time option.
-> 
-> No, DFS is set for certain channels on wireless-regdb/CRDA, I just
-> posted DFS master region support for wireless-regdb and CRDA. Apart
-> from this we then need driver support. To get DFS you need all of
-> these + hostapd part. Each one has its own set of components and does
-> deserve its own set of tests and review.
-This "deserve its own set of tests and review". Does it translate in:
-"ath9k [every driver], mac80211, cfg80211 and hostapd need extra
-DFS IFDEFS?". In fact, ifdefs make it harder to do reviews, because
-sometimes you just forget the IFDEF/ELSIF/ELSE context of the code.
-And regression testing can be done by "git bisect". In fact, isn't
-this what git bisect is for?
-
-Regards,
-	Chr
