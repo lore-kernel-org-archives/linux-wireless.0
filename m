@@ -1,96 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51311 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752408Ab1JGLrs (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:43694 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751246Ab1JKLwR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 07:47:48 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 05/14] ath9k_hw: Add support to reuse TxIQ cal measurements
-Date: Fri, 7 Oct 2011 17:17:10 +0530
-Message-ID: <1317988039-28632-5-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111007_134750_412126_6B591CA3)
-In-Reply-To: <1317988039-28632-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1317988039-28632-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Tue, 11 Oct 2011 07:52:17 -0400
+Received: by ywb5 with SMTP id 5so6427614ywb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 04:52:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1318333875.3965.10.camel@jlt3.sipsolutions.net>
+References: <1318332535-8815-1-git-send-email-helmut.schaa@googlemail.com>
+	<1318332927.3965.9.camel@jlt3.sipsolutions.net>
+	<CAGXE3d8cuBg28PfMYQcAJ96oTEqUg6rG8ExUr+Sezq51eM2J_Q@mail.gmail.com>
+	<1318333875.3965.10.camel@jlt3.sipsolutions.net>
+Date: Tue, 11 Oct 2011 13:52:16 +0200
+Message-ID: <CAGXE3d_d0RY8YNwmfdhARfKhTFDLn7pkyQGE=8h0b=8t=rY7+g@mail.gmail.com> (sfid-20111011_135219_180895_E035953C)
+Subject: Re: [PATCH] mac80211: Populate radiotap header with MCS info for
+ tx'ed frames
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pass an argument to decide whether to reuse the Tx IQ
-calibration measurements or not during fast channel change.
-This will be later used by MCI support for AR9480.
+On Tue, Oct 11, 2011 at 1:51 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>> Or should we just get rid of the whole struct and fill in the
+>> rtap header dynamically like it is done in the rx path and
+>> drop the build-bug-on thing?
+>
+> I wouldn't mind that either, but we'll want to have a WARN_ON_ONCE()
+> somewhere if we run out of space.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   15 +++++++++------
- 1 files changed, 9 insertions(+), 6 deletions(-)
+Ok, let's try it that way. John please drop this one, I'll do a v2.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 026aa5b..6d68566 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -659,7 +659,8 @@ static void ar9003_hw_detect_outlier(int *mp_coeff, int nmeasurement,
- 
- static void ar9003_hw_tx_iqcal_load_avg_2_passes(struct ath_hw *ah,
- 						 u8 num_chains,
--						 struct coeff *coeff)
-+						 struct coeff *coeff,
-+						 bool is_reusable)
- {
- 	int i, im, nmeasurement;
- 	u32 tx_corr_coeff[MAX_MEASUREMENT][AR9300_MAX_CHAINS];
-@@ -726,11 +727,11 @@ static void ar9003_hw_tx_iqcal_load_avg_2_passes(struct ath_hw *ah,
- 		      AR_PHY_TX_IQCAL_CONTROL_3_IQCORR_EN, 0x1);
- 	REG_RMW_FIELD(ah, AR_PHY_RX_IQCAL_CORR_B0,
- 		      AR_PHY_RX_IQCAL_CORR_B0_LOOPBACK_IQCORR_EN, 0x1);
-+
- 	if (caldata)
--		caldata->done_txiqcal_once = true;
-+		caldata->done_txiqcal_once = is_reusable;
- 
- 	return;
--
- }
- 
- static bool ar9003_hw_tx_iq_cal_run(struct ath_hw *ah)
-@@ -757,7 +758,7 @@ static bool ar9003_hw_tx_iq_cal_run(struct ath_hw *ah)
- 	return true;
- }
- 
--static void ar9003_hw_tx_iq_cal_post_proc(struct ath_hw *ah)
-+static void ar9003_hw_tx_iq_cal_post_proc(struct ath_hw *ah, bool is_reusable)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	const u32 txiqcal_status[AR9300_MAX_CHAINS] = {
-@@ -846,7 +847,8 @@ static void ar9003_hw_tx_iq_cal_post_proc(struct ath_hw *ah)
- 				coeff.phs_coeff[i][im] -= 128;
- 		}
- 	}
--	ar9003_hw_tx_iqcal_load_avg_2_passes(ah, num_chains, &coeff);
-+	ar9003_hw_tx_iqcal_load_avg_2_passes(ah, num_chains,
-+					     &coeff, is_reusable);
- 
- 	return;
- 
-@@ -904,6 +906,7 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_hw_cal_data *caldata = ah->caldata;
- 	bool txiqcal_done = false;
-+	bool is_reusable = true;
- 
- 	/* Do Tx IQ Calibration */
- 	REG_RMW_FIELD(ah, AR_PHY_TX_IQCAL_CONTROL_1,
-@@ -943,7 +946,7 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	}
- 
- 	if (txiqcal_done)
--		ar9003_hw_tx_iq_cal_post_proc(ah);
-+		ar9003_hw_tx_iq_cal_post_proc(ah, is_reusable);
- 	else if (caldata && caldata->done_txiqcal_once)
- 		ar9003_hw_tx_iq_cal_reload(ah);
- 
--- 
-1.7.7
-
+Helmut
