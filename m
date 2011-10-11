@@ -1,127 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:49833 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042Ab1JTSfA (ORCPT
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:38981 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751011Ab1JKMwY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 14:35:00 -0400
-Received: by mail-pz0-f42.google.com with SMTP id 36so7664119pzk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 11:35:00 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v2 3/6] mac80211: set HT capabilities for mesh peer
-Date: Thu, 20 Oct 2011 11:34:36 -0700
-Message-Id: <1319135679-6740-4-git-send-email-thomas@cozybit.com> (sfid-20111020_203504_582748_49D1696F)
-In-Reply-To: <1319135679-6740-1-git-send-email-thomas@cozybit.com>
-References: <1319135679-6740-1-git-send-email-thomas@cozybit.com>
+	Tue, 11 Oct 2011 08:52:24 -0400
+Received: by mail-bw0-f49.google.com with SMTP id c12so128684bkb.22
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 05:52:23 -0700 (PDT)
+Subject: Re: [PATCH 00/29] make the driver ready for multi-vif support
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 11 Oct 2011 15:52:19 +0300
+Message-ID: <1318337539.9690.521.camel@cumari> (sfid-20111011_145229_753713_8C5A7B81)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set peer's HT capabilities, and disallow peering if we're on a different
-channel type.
+On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote: 
+> This patchset finishes adding multiple vif support to the
+> wl12xx driver.
+> 
+> The driver still allows only a single vif, as the current
+> fw only supports a single vif.
+> 
+> This patchset doesn't break compatibility with the current fw.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-Signed-off-by: Ashok Nagarajan <anagar6@uic.edu>
----
- net/mac80211/mesh.c       |   25 +++++++++++++++++--------
- net/mac80211/mesh_plink.c |   13 ++++++++++---
- 2 files changed, 27 insertions(+), 11 deletions(-)
+Applied, thanks! With the following small changes:
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 2dc76a9..b3a125f 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -76,6 +76,7 @@ static void ieee80211_mesh_housekeeping_timer(unsigned long data)
- bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	struct ieee80211_local *local = sdata->local;
- 
- 	/*
- 	 * As support for each feature is added, check for matching
-@@ -87,15 +88,23 @@ bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_dat
- 	 *   - MDA enabled
- 	 * - Power management control on fc
- 	 */
--	if (ifmsh->mesh_id_len == ie->mesh_id_len &&
--		memcmp(ifmsh->mesh_id, ie->mesh_id, ie->mesh_id_len) == 0 &&
--		(ifmsh->mesh_pp_id == ie->mesh_config->meshconf_psel) &&
--		(ifmsh->mesh_pm_id == ie->mesh_config->meshconf_pmetric) &&
--		(ifmsh->mesh_cc_id == ie->mesh_config->meshconf_congest) &&
--		(ifmsh->mesh_sp_id == ie->mesh_config->meshconf_synch) &&
--		(ifmsh->mesh_auth_id == ie->mesh_config->meshconf_auth))
--		return true;
--
-+	if (!(ifmsh->mesh_id_len == ie->mesh_id_len &&
-+	     memcmp(ifmsh->mesh_id, ie->mesh_id, ie->mesh_id_len) == 0 &&
-+	     (ifmsh->mesh_pp_id == ie->mesh_config->meshconf_psel) &&
-+	     (ifmsh->mesh_pm_id == ie->mesh_config->meshconf_pmetric) &&
-+	     (ifmsh->mesh_cc_id == ie->mesh_config->meshconf_congest) &&
-+	     (ifmsh->mesh_sp_id == ie->mesh_config->meshconf_synch) &&
-+	     (ifmsh->mesh_auth_id == ie->mesh_config->meshconf_auth)))
-+		goto mismatch;
-+
-+	/* disallow peering with mismatched channel types for now */
-+	if (ie->ht_info_elem &&
-+	    (local->_oper_channel_type !=
-+	     ieee80211_ht_info_to_channel_type(ie->ht_info_elem)))
-+		goto mismatch;
-+
-+	return true;
-+mismatch:
- 	return false;
- }
- 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index bbfbd45..f0705e6 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -80,11 +80,15 @@ static inline void mesh_plink_fsm_restart(struct sta_info *sta)
-  *       on it in the lifecycle management section!
-  */
- static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
--					 u8 *hw_addr, u32 rates)
-+					 u8 *hw_addr, u32 rates,
-+					 struct ieee802_11_elems *elems)
- {
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
- 	struct sta_info *sta;
- 
-+	sband = local->hw.wiphy->bands[local->oper_channel->band];
-+
- 	if (local->num_sta >= MESH_MAX_PLINKS)
- 		return NULL;
- 
-@@ -96,6 +100,9 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
- 	set_sta_flag(sta, WLAN_STA_AUTHORIZED);
- 	set_sta_flag(sta, WLAN_STA_WME);
- 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
-+	if (elems->ht_cap_elem)
-+		ieee80211_ht_cap_ie_to_sta_ht_cap(sband, elems->ht_cap_elem,
-+						  &sta->sta.ht_cap);
- 	rate_control_rate_init(sta);
- 
- 	return sta;
-@@ -279,7 +286,7 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
- 					elems->ie_start, elems->total_len,
- 					GFP_KERNEL);
- 		else
--			sta = mesh_plink_alloc(sdata, hw_addr, rates);
-+			sta = mesh_plink_alloc(sdata, hw_addr, rates, elems);
- 		if (!sta)
- 			return;
- 		if (sta_info_insert_rcu(sta)) {
-@@ -570,7 +577,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		}
- 
- 		rates = ieee80211_sta_get_rates(local, &elems, rx_status->band);
--		sta = mesh_plink_alloc(sdata, mgmt->sa, rates);
-+		sta = mesh_plink_alloc(sdata, mgmt->sa, rates, &elems);
- 		if (!sta) {
- 			mpl_dbg("Mesh plink error: plink table full\n");
- 			return;
+* used v2 of 08/29;
+* used '(foo - bar) & 0xff' instead of '(foo - bar + 256) % 256'.
+
+
 -- 
-1.7.5.4
+Cheers,
+Luca.
 
