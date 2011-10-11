@@ -1,94 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from calzone.tip.net.au ([203.10.76.15]:44760 "EHLO
-	calzone.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754028Ab1JGXKk (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44031 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752957Ab1JKLzq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 19:10:40 -0400
-Date: Sat, 8 Oct 2011 10:10:18 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org, sparclinux@vger.kernel.org,
-	linux-ide@vger.kernel.org
-Subject: Re: moving GIT back to kernel.org...
-Message-Id: <20111008101018.10adfac93cebb6dd9991de78@canb.auug.org.au> (sfid-20111008_011050_707843_CE5E25F9)
-In-Reply-To: <20111007.184657.1471438956485710175.davem@davemloft.net>
-References: <20111007.145703.842130763413648388.davem@davemloft.net>
-	<20111007.155902.916470368193047875.davem@davemloft.net>
-	<20111008094212.e3342930c1833f73ef602a3e@canb.auug.org.au>
-	<20111007.184657.1471438956485710175.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA256";
- boundary="Signature=_Sat__8_Oct_2011_10_10_18_+1100_JajEPzpHpzjU2GyD"
+	Tue, 11 Oct 2011 07:55:46 -0400
+Message-ID: <4E942EBC.9030702@qca.qualcomm.com> (sfid-20111011_135549_875816_C852A49B)
+Date: Tue, 11 Oct 2011 14:55:40 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 4/5] ath6kl: Add debugfs control for keepalive and disconnection
+ timeout
+References: <1318243411-16110-1-git-send-email-jouni@qca.qualcomm.com> <1318243411-16110-5-git-send-email-jouni@qca.qualcomm.com>
+In-Reply-To: <1318243411-16110-5-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Sat__8_Oct_2011_10_10_18_+1100_JajEPzpHpzjU2GyD
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 10/10/2011 01:43 PM, Jouni Malinen wrote:
+> The new debugfs files keepalive and disconnect_timeout can be used to
+> fetch the current values and to change the values for keepalive and
+> disconnect event timeout (both in seconds).
 
-Hi Dave,
+[...]
 
-On Fri, 07 Oct 2011 18:46:57 -0400 (EDT) David Miller <davem@davemloft.net>=
- wrote:
->
-> From: Stephen Rothwell <sfr@canb.auug.org.au>
-> Date: Sat, 8 Oct 2011 09:42:12 +1100
->=20
-> > On Fri, 07 Oct 2011 15:59:02 -0400 (EDT) David Miller <davem@davemloft.=
-net> wrote:
-> >> git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc.git
-> >> git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git
-> >=20
-> > You used to have sparc-next and ide-next (and the above used to be your
-> > "current release fixes" trees) ...
->=20
-> I've made a dummy sparc-next tree for you to pull from, thanks:
->=20
-> git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc-next.git
->=20
-> As for ide, I only plan to accept real bug fixes for that subsystem
-> so I'll avoid creating an ide-next tree for now.
+> --- a/drivers/net/wireless/ath/ath6kl/wmi.c
+> +++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+> @@ -1940,6 +1940,10 @@ int ath6kl_wmi_disctimeout_cmd(struct wmi *wmi, u8 timeout)
+>  
+>  	ret = ath6kl_wmi_cmd_send(wmi, skb, WMI_SET_DISC_TIMEOUT_CMDID,
+>  				  NO_SYNC_WMIFLAG);
+> +#ifdef CONFIG_ATH6KL_DEBUG
+> +	if (ret == 0)
+> +		wmi->parent_dev->debug.disc_timeout = timeout;
+> +#endif /* CONFIG_ATH6KL_DEBUG */
+>  	return ret;
+>  }
+>  
+> @@ -2524,6 +2528,10 @@ int ath6kl_wmi_set_keepalive_cmd(struct wmi *wmi, u8 keep_alive_intvl)
+>  
+>  	ret = ath6kl_wmi_cmd_send(wmi, skb, WMI_SET_KEEPALIVE_CMDID,
+>  				  NO_SYNC_WMIFLAG);
+> +#ifdef CONFIG_ATH6KL_DEBUG
+> +	if (ret == 0)
+> +		wmi->parent_dev->debug.keepalive = keep_alive_intvl;
+> +#endif /* CONFIG_ATH6KL_DEBUG */
 
-OK, I will use those trees from now on.
+Similar comment for these two as well. It would better to have the code
+in debug.c (or .h) and add functions for providing this information.
 
-Also, I have decided to rename them in linux-next to match your names, so:
-
-Was		Now
----		---
-net-current	net
-net		net-next
-sparc-current	sparc
-sparc		sparc-next
-ide-curent	ide
-
-and I have dropped the old ide (would be ide-next) tree.
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Sat__8_Oct_2011_10_10_18_+1100_JajEPzpHpzjU2GyD
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBCAAGBQJOj4baAAoJEECxmPOUX5FEVasP+gMLmMa1BDMzFq5J10U2BlXV
-y+/orHxcEBz77U5gw6WJGFeq30EK/Z4WQdjvMspRjM9poJ+2wPoco01yugGezRAH
-+dwqOaV+ysD5loFuZYIYlW9PSvDd6889dcu5vbC5KaPjW1h/u59SswJSSdHYPwrI
-Q/E2k1zYHanOZyeOw9I+/CN/jWGRkk2SV31y8BdS9807RyFogqvgqO8d26/aaZC9
-KNbC3q46QWDkBH8gZYCwei1jsssbu+LdSqGi1Ex/URMaD9uqNBI2qjAQuonH4RYL
-Ey87To8MSjThfRpFCjPNLxZ10gnwZwybdNEc85ndeby3bczQ4LnX8qRbj4u7Hfpa
-6tDsIFGddo3vZ14Q6GE+IItgOB8X73bAO6PO9yLisKargY+5S477//taAQOK0LHE
-hDkVC0nBQFUaaSKwmgmL9huJ6ZwmktWnvmh11OB4feWExozbZtv7SENmxoRa3lFb
-teNG/N7+8BLu47SkHl+7w0tyrn/PTA8iSVkVtkay5guicm9agMLlof5yxUw5rlGt
-ELnLfZh1GgtVNkqtI/0yxgwE9mrOE025/Rk2cOgaGrkx+PtP8U/fWNhD6cdyAsA4
-h6OMI5eygIuRk7WItREpd8Bt4YpH2HIjN4b8XQv6KeWeuOjuHCTgpR5DoyeP5daw
-Y+ZV+CPy7yepCQ/KHZsn
-=60qt
------END PGP SIGNATURE-----
-
---Signature=_Sat__8_Oct_2011_10_10_18_+1100_JajEPzpHpzjU2GyD--
+Kalle
