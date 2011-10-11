@@ -1,34 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25083 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751499Ab1J1LOH (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:40100 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754933Ab1JKTqc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 07:14:07 -0400
-Message-ID: <4EAA8E70.9020308@qca.qualcomm.com> (sfid-20111028_131413_935422_6D21E8FB)
-Date: Fri, 28 Oct 2011 14:13:52 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: Report unique remain-on-channel cookie values
-References: <20111027130013.GA32096@jouni.qca.qualcomm.com>
-In-Reply-To: <20111027130013.GA32096@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Tue, 11 Oct 2011 15:46:32 -0400
+Date: Tue, 11 Oct 2011 15:45:26 -0400 (EDT)
+Message-Id: <20111011.154526.442711861363485253.davem@davemloft.net> (sfid-20111011_214640_495190_B8C3EB52)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2011-10-11
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20111011193806.GI6558@tuxdriver.com>
+References: <20111011191616.GF6558@tuxdriver.com>
+	<20111011193806.GI6558@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/27/2011 04:00 PM, Jouni Malinen wrote:
-> Even though only a single concurrent remain-on-channel operation is
-> supported, there may be two pending remain-on-channel events (one to
-> indicate end of a canceled operation and another to indicate start of a
-> new operation). User space won't be able to distinguish these events
-> unless unique cookies are used.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 11 Oct 2011 15:38:06 -0400
+
+> On Tue, Oct 11, 2011 at 03:16:16PM -0400, John W. Linville wrote:
+>> commit bfb3780bc9b622422c1f0d3e12371a70863000da
+>> 
+>> Dave,
+>> 
+>> Here is another wireless batch intended for 3.2...  Highlights include a
+>> bluetooth pull with some refactoring, a big pull of ath6kl updates, a
+>> flurry of mac80211 patches from Johannes, and the usual strong ath9k
+>> showing.
+>> 
+>> Please let me know if there are problems!
 > 
-> The previous behavior resulted in wpa_supplicant getting quite
-> confused about the driver's offchannel state in various sequences
-> and this made the P2P state machine behave incorrectly. Use of
-> more than a single remain-on-channel cookie value fixes this.
+> There was a problem -- a warning in ath6kl.  Sorry about that!
+> 
+> commit 094daf7db7c47861009899ce23f9177d761e20b0
 
-Thanks, applied.
-
-Kalle
+I made sure I got the most recent changes.
