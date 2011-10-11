@@ -1,96 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:58652 "EHLO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752531Ab1JGNAX (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:40418 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754312Ab1JKOcs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 09:00:23 -0400
-Received: by mail-bw0-f43.google.com with SMTP id s6so7026026bka.16
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Oct 2011 06:00:22 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, balbi@ti.com
-Subject: [RFC] wl12xx: use the same plat dev name for both SPI and SDIO
-Date: Fri,  7 Oct 2011 16:00:14 +0300
-Message-Id: <1317992414-30197-1-git-send-email-coelho@ti.com> (sfid-20111007_150025_775849_A1470102)
+	Tue, 11 Oct 2011 10:32:48 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v2 5/5] ath6kl: Allow CCKM AKM and KRK to be configured
+Date: Tue, 11 Oct 2011 17:31:57 +0300
+Message-ID: <1318343517-15292-6-git-send-email-jouni@qca.qualcomm.com> (sfid-20111011_163251_867401_B6A04863)
+In-Reply-To: <1318343517-15292-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1318343517-15292-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's no need to have the bus name included in the platform device
-name that we create.  The core driver doesn't need to know about the
-type of bus it uses.  Any differences between the buses that need to
-be handled differently in the core, can be passed in the platform data
-(as the pwr_in_suspend boolean does).
+Use vendor-specific suite selectors to allow CCKM to be configured.
 
-Use "wl12xx" for the device name in both bus drivers.  Rename the
-platform driver name to "wl12xx_driver", just to differentiate from
-the platform device names.
-
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-I'm sending this as RFC because I had a long discussion with Balbi
-about this.  I want to see what others think about it too.
-
-One advantage of doing this, is that the sysfs files that we create
-are always in the same location, inside the device's kobj which now
-has always the same name.  If we start supporting more than one device
-at once, at any time, then we need to use "wl12xx0", "wl12xx1" and so
-on.
-
- drivers/net/wireless/wl12xx/main.c |    5 ++---
- drivers/net/wireless/wl12xx/sdio.c |    2 +-
- drivers/net/wireless/wl12xx/spi.c  |    2 +-
- 3 files changed, 4 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 320d1f4..1ebed1c 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -5107,8 +5107,7 @@ static int __devexit wl12xx_remove(struct platform_device *pdev)
- }
- 
- static const struct platform_device_id wl12xx_id_table[] __devinitconst = {
--	{ "wl12xx-sdio", 0 },
--	{ "wl12xx-spi", 0 },
-+	{ "wl12xx", 0 },
- 	{  } /* Terminating Entry */
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index b7b2c57..6b30b75 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -121,6 +121,8 @@ static struct ieee80211_supported_band ath6kl_band_5ghz = {
+ 	.bitrates = ath6kl_a_rates,
  };
- MODULE_DEVICE_TABLE(platform, wl12xx_id_table);
-@@ -5118,7 +5117,7 @@ static struct platform_driver wl12xx_driver = {
- 	.remove		= __devexit_p(wl12xx_remove),
- 	.id_table	= wl12xx_id_table,
- 	.driver = {
--		.name	= "wl12xx",
-+		.name	= "wl12xx_driver",
- 		.owner	= THIS_MODULE,
+ 
++#define CCKM_KRK_CIPHER_SUITE 0x004096ff /* use for KRK */
++
+ static int ath6kl_set_wpa_version(struct ath6kl *ar,
+ 				  enum nl80211_wpa_versions wpa_version)
+ {
+@@ -217,6 +219,11 @@ static void ath6kl_set_key_mgmt(struct ath6kl *ar, u32 key_mgmt)
+ 			ar->auth_mode = WPA_PSK_AUTH;
+ 		else if (ar->auth_mode == WPA2_AUTH)
+ 			ar->auth_mode = WPA2_PSK_AUTH;
++	} else if (key_mgmt == 0x00409600) {
++		if (ar->auth_mode == WPA_AUTH)
++			ar->auth_mode = WPA_AUTH_CCKM;
++		else if (ar->auth_mode == WPA2_AUTH)
++			ar->auth_mode = WPA2_AUTH_CCKM;
+ 	} else if (key_mgmt != WLAN_AKM_SUITE_8021X) {
+ 		ar->auth_mode = NONE_AUTH;
  	}
+@@ -758,6 +765,12 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	if (!ath6kl_cfg80211_ready(ar))
+ 		return -EIO;
+ 
++	if (params->cipher == CCKM_KRK_CIPHER_SUITE) {
++		if (params->key_len != WMI_KRK_LEN)
++			return -EINVAL;
++		return ath6kl_wmi_add_krk_cmd(ar->wmi, params->key);
++	}
++
+ 	if (key_index < WMI_MIN_KEY_INDEX || key_index > WMI_MAX_KEY_INDEX) {
+ 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+ 			   "%s: key index %d out of bounds\n", __func__,
+@@ -1228,6 +1241,7 @@ static const u32 cipher_suites[] = {
+ 	WLAN_CIPHER_SUITE_WEP104,
+ 	WLAN_CIPHER_SUITE_TKIP,
+ 	WLAN_CIPHER_SUITE_CCMP,
++	CCKM_KRK_CIPHER_SUITE,
  };
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index 50fdd9b..1ebf6b8 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -226,7 +226,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 	/* Tell PM core that we don't need the card to be powered now */
- 	pm_runtime_put_noidle(&func->dev);
  
--	glue->core = platform_device_alloc("wl12xx-sdio", -1);
-+	glue->core = platform_device_alloc("wl12xx", -1);
- 	if (!glue->core) {
- 		dev_err(glue->dev, "can't allocate platform_device");
- 		ret = -ENOMEM;
-diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
-index 976d3d5..9e6f7fa 100644
---- a/drivers/net/wireless/wl12xx/spi.c
-+++ b/drivers/net/wireless/wl12xx/spi.c
-@@ -351,7 +351,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 		goto out_free_glue;
- 	}
- 
--	glue->core = platform_device_alloc("wl12xx-spi", -1);
-+	glue->core = platform_device_alloc("wl12xx", -1);
- 	if (!glue->core) {
- 		dev_err(glue->dev, "can't allocate platform_device\n");
- 		ret = -ENOMEM;
+ static bool is_rate_legacy(s32 rate)
 -- 
-1.7.1
+1.7.4.1
 
