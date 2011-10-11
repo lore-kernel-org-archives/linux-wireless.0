@@ -1,73 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2288 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757539Ab1JRMD2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Oct 2011 08:03:28 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 11/15] brcm80211: smac: some local function made static
- in main.c
-Date: Tue, 18 Oct 2011 14:03:07 +0200
-Message-ID: <1318939391-19495-12-git-send-email-arend@broadcom.com> (sfid-20111018_140353_818772_A918003C)
-In-Reply-To: <1318939391-19495-1-git-send-email-arend@broadcom.com>
-References: <1318939391-19495-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:52218 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754957Ab1JKSAC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Oct 2011 14:00:02 -0400
+Received: by qyk30 with SMTP id 30so3793673qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 11:00:01 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH 3/4] crda: fix null string assumption for alpha2
+Date: Tue, 11 Oct 2011 10:59:00 -0700
+Message-Id: <1318355944-24708-4-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111011_200006_711188_DFF9F8FC)
+In-Reply-To: <1318355944-24708-1-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1318355944-24708-1-git-send-email-mcgrof@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In main.c a couple of functions were not static although they
-were only locally used. Sparse gave warnings on them and these
-functions have been made static.
+The wireless-regdb only accounts for two bytes for
+the country code but CRDA defined the alpha2 to be
+as a string of length 2, and so does the nl80211 attribute
+policy:
 
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+        [NL80211_ATTR_REG_ALPHA2] = { .type = NLA_STRING, .len = 2 },
+
+The meaning of a string is it'll be null terminated, so if you
+do not add the null termination a country without the null termination
+will not match up with the nl80211 attribute policy.
+
+This has no impact for us unless we want to use the next available
+pad byte on the wireless-regdb. This fixes CRDA by using a local copy
+of the regdb's alpha2 that is properly null terminated and sending it.
+
+The implications of this change is that new wirelesss-regdb's that
+make use of the next pad byte for a country will get that country
+ignored for regulatory hints sent to the kernel. At this point we
+don't yet know what the next byte will be used for though so this
+has no impact. The second pad byte is being used for DFS and that
+is not impacted by this nor is this change required for it.
+
+Distributions should upgrade though in case we ever do decide to use
+this last precious country byte. I've tested that this indeed fixes
+the bogus issue I saw when instead of using the second pad byte we
+use the first pad byte. Thanks to Johannes for spotting the issue.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/main.c |   11 +++++------
- 1 files changed, 5 insertions(+), 6 deletions(-)
+ crda.c   |    4 ++--
+ reglib.h |   13 -------------
+ 2 files changed, 2 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 2e1a20b..abb49fc 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -618,9 +618,8 @@ static void brcms_b_update_slot_timing(struct brcms_hardware *wlc_hw,
-  * calculate frame duration of a given rate and length, return
-  * time in usec unit
-  */
--uint
--brcms_c_calc_frame_time(struct brcms_c_info *wlc, u32 ratespec,
--			u8 preamble_type, uint mac_len)
-+static uint brcms_c_calc_frame_time(struct brcms_c_info *wlc, u32 ratespec,
-+				    u8 preamble_type, uint mac_len)
- {
- 	uint nsyms, dur = 0, Ndps, kNdps;
- 	uint rate = rspec2rate(ratespec);
-@@ -4184,7 +4183,7 @@ void brcms_c_wme_setparams(struct brcms_c_info *wlc, u16 aci,
- 	}
+diff --git a/crda.c b/crda.c
+index 6857e3f..fcb0c11 100644
+--- a/crda.c
++++ b/crda.c
+@@ -149,7 +149,7 @@ int main(int argc, char **argv)
+ 	struct regdb_file_header *header;
+ 	struct regdb_file_reg_country *countries;
+ 	int dblen, siglen, num_countries, i, j, r;
+-	char alpha2[2];
++	char alpha2[3] = {}; /* NUL-terminate */
+ 	char *env_country;
+ 	struct nl80211_state nlstate;
+ 	struct nl_cb *cb = NULL;
+@@ -279,7 +279,7 @@ int main(int argc, char **argv)
+ 				sizeof(*rcoll) + num_rules * sizeof(__be32),
+ 				country->reg_collection_ptr);
+ 
+-	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2, (char *) country->alpha2);
++	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2, alpha2);
+ 
+ 	nl_reg_rules = nla_nest_start(msg, NL80211_ATTR_REG_RULES);
+ 	if (!nl_reg_rules) {
+diff --git a/reglib.h b/reglib.h
+index f3a76ef..9fe5d8b 100644
+--- a/reglib.h
++++ b/reglib.h
+@@ -53,21 +53,8 @@ static inline int is_alpha2(const char *alpha2)
+ 	return 0;
  }
  
--void brcms_c_edcf_setparams(struct brcms_c_info *wlc, bool suspend)
-+static void brcms_c_edcf_setparams(struct brcms_c_info *wlc, bool suspend)
+-/* Avoid stdlib */
+-static inline int is_len_2(const char *alpha2)
+-{
+-        if (alpha2[0] == '\0' || (alpha2[1] == '\0'))
+-                return 0;
+-        if (alpha2[2] == '\0')
+-                return 1;
+-        return 0;
+-}
+-
+ static inline int is_valid_regdom(const char *alpha2)
  {
- 	u16 aci;
- 	int i_ac;
-@@ -6100,9 +6099,9 @@ void brcms_c_print_txdesc(struct d11txh *txh)
- #endif				/* defined(BCMDBG) */
+-	if (!is_len_2(alpha2))
+-		return 0;
+-
+ 	if (!is_alpha2(alpha2) && !is_world_regdom(alpha2))
+ 		return 0;
  
- #if defined(BCMDBG)
--int
-+static int
- brcms_c_format_flags(const struct brcms_c_bit_desc *bd, u32 flags, char *buf,
--		   int len)
-+		     int len)
- {
- 	int i;
- 	char *p = buf;
 -- 
-1.7.4.1
-
+1.7.4.15.g7811d
 
