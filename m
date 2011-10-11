@@ -1,75 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:65306 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753006Ab1J0NST (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55791 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751898Ab1JKUpo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Oct 2011 09:18:19 -0400
-Received: by vws1 with SMTP id 1so2389853vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Oct 2011 06:18:19 -0700 (PDT)
+	Tue, 11 Oct 2011 16:45:44 -0400
+Date: Tue, 11 Oct 2011 16:39:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bing Zhao <bzhao@marvell.com>, g@tuxdriver.com
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Subject: Re: [PATCH] mwifiex: add support for Marvell pcie8766 chipset
+Message-ID: <20111011203936.GL6558@tuxdriver.com> (sfid-20111011_224548_354056_78678EF4)
+References: <1317701303-21871-1-git-send-email-bzhao@marvell.com>
+ <1317701303-21871-2-git-send-email-bzhao@marvell.com>
+ <477F20668A386D41ADCC57781B1F704308155977E8@SC-VEXCH1.marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <4EA89B8D.7060104@lwfinger.net>
-References: <CAF7qGM4BL10gn2786kW73sAk8f-y8CzX0rx2BQsY_Q96W=pfog@mail.gmail.com>
- <4EA89B8D.7060104@lwfinger.net>
-From: Roman Proud <setamagiga@gmail.com>
-Date: Thu, 27 Oct 2011 15:17:59 +0200
-Message-ID: <CAF7qGM7hfaz0SGiZVZ62r_nPO8viMT5F2_Kd1uRxN9Ha3mRO+Q@mail.gmail.com> (sfid-20111027_151822_982994_ED509F9C)
-Subject: Re: RTL8188RU no injection?
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <477F20668A386D41ADCC57781B1F704308155977E8@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi peops
+On Thu, Oct 06, 2011 at 08:30:53PM -0700, Bing Zhao wrote:
+> Hi John,
+> 
+> > -----Original Message-----
+> > From: Bing Zhao [mailto:bzhao@marvell.com]
+> > Sent: Monday, October 03, 2011 9:08 PM
+> > To: linux-wireless@vger.kernel.org
+> > Cc: John W. Linville; Amitkumar Karwar; Kiran Divekar; Yogesh Powar; Frank Huang; Bing Zhao
+> > Subject: [PATCH] mwifiex: add support for Marvell pcie8766 chipset
+> > 
+> > From: Amitkumar Karwar <akarwar@marvell.com>
+> > 
+> > This patch supports 88W8766P chipset with a PCIe interface.
+> > 
+> > The corresponding firmware image file is located at:
+> > "mrvl/pcie8766_uapsta.bin"
+> > 
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > Signed-off-by: Ramesh Radhakrishnan <rramesh@marvell.com>
+> > Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+> > Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+> > Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> > Signed-off-by: Frank Huang <frankh@marvell.com>
+> 
+> Could you please apply this patch? It doesn't depend on the other patches we are working on.
+> 
+> Thanks,
+> Bing
 
-thx for all youre responses!
+It generates warnings...
 
-Well i didnt really thought about g and n -.-
+  LD [M]  drivers/net/wireless/mwifiex/mwifiex_pcie.o
+WARNING: drivers/net/wireless/mwifiex/mwifiex_pcie.o(.data+0x18): Section mismatch in reference from the variable mwifiex_pcie to the variable .devinit.rodata:mwifiex_ids
+The variable mwifiex_pcie references
+the variable __devinitconst mwifiex_ids
+If the reference is valid then annotate the
+variable with __init* or __refdata (see linux/init.h) or name the variable:
+*driver, *_template, *_timer, *_sht, *_ops, *_probe, *_probe_one, *_console
 
-Im using the latest 8192cu driver from Realtek now, it works just
-fine. Also monitor mode works like a charm (yes if i use airmon-ng for
-it). My Kernel is (now the default) Arch kernel, on Linux Version
-3.0.4
+WARNING: drivers/net/wireless/mwifiex/mwifiex_pcie.o(.data+0x20): Section mismatch in reference from the variable mwifiex_pcie to the function .devinit.text:mwifiex_pcie_probe()
+The variable mwifiex_pcie references
+the function __devinit mwifiex_pcie_probe()
+If the reference is valid then annotate the
+variable with __init* or __refdata (see linux/init.h) or name the variable:
+*driver, *_template, *_timer, *_sht, *_ops, *_probe, *_probe_one, *_console
 
-My last problem is the Package injection. Im surprised you are
-thinking it could work (ive found many resources that say something
-different, but hey its an OpenSource driver ;)
-
-Pls excuse my "stupidness" but im really not sure if i am using
-"mac80211", i think so, its leaded in the System.
-
-And yes its Aircrack im trying to work with, and its Aircrack which
-tells me i cant use Packet Injection.
-I will try Packetspammer as soon as i am at home. If this works i have
-to contact Aircrack, am i right?
-
-Greetings
-Roman
-
-2011/10/27 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 10/26/2011 05:29 PM, Roman Proud wrote:
->>
->> Hi there,
->>
->> i hope you guys can help me.
->> I wanted a new Wifi card, because mine has no injection, what i need
->> sometimes.
->>
->> So i forced the Internet to find that a 8187 would be best for. So i
->> bought the 8188 (newer = better?)... i never had thought about so much
->> difference in just one number... it was horrible to even get the card
->> work, first no monitor mode works, but now it does (i dunno why
->> O_o)... The only thing i miss is Package injection.
->>
->> So my Question. Is it there? is it in the driver and i just have to do
->> some magic again like i did with the monitor mode?
->> If not, is there any Patch? (i didn't find anything...)
->> Or should i simply send the damn thing back and get me an 8187? (its
->> not that simple, and i like hacking into my linux, so one of the first
->> both, would be nicer)
->
-> I found that packetspammer works just fine with rtl8192cu.
->
-> Larry
->
->
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
