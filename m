@@ -1,36 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:52042 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752814Ab1JTNyd (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:33150 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751550Ab1JLTCr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 09:54:33 -0400
-References: <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111019124931.GC3963@gamma.logic.tuwien.ac.at> <1319038282.25023.21.camel@wwguy-ubuntu> <20111019060108.GA11588@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com> <20111019062517.GC11588@gamma.logic.tuwien.ac.at> <1319003304.31823.46.camel@wwguy-huron> <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111020045927.GB23044@gamma.logic.tuwien.ac.at> <1319096418.3959.1.camel@jlt3.sipsolutions.net> <56FBBFB3-4DC9-4CB6-939A-8F0130EBCB9B@logic.at> <1319118625.3959.16.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1319118625.3959.16.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0 (iPhone Mail 8J2)
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <C64E79BB-CD59-4ACA-9DC3-4716C06E98E4@logic.at> (sfid-20111020_155449_684314_25FB596C)
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-From: Norbert Preining <preining@logic.at>
-Subject: Re: iwlagn is getting very shaky
-Date: Thu, 20 Oct 2011 22:54:11 +0900
-To: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 12 Oct 2011 15:02:47 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 02ADE5401A6
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2011 15:17:58 -0400 (EDT)
+Subject: Compat-wireless release for 2011-10-12 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111012190246.7FB1940658@repository3.orbit-lab.org> (sfid-20111012_210250_802878_093E1496)
+Date: Wed, 12 Oct 2011 15:02:46 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-> Just "iw wlan0 scan" output or so. Basically I just want the BSSID/freq
-> to see which APs are on which band.
+compat-wireless code metrics
 
-Ok, no prob, do it Wed.
-
-Bye
-
-N
+    811841 - Total upstream lines of code being pulled
+      2431 - backport code changes
+      2113 - backport code additions
+       318 - backport code deletions
+      8588 - backport from compat module
+     11019 - total backport code
+    1.3573 - % of code consists of backport work
