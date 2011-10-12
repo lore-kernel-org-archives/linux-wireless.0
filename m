@@ -1,32 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42590 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753006Ab1JTLQ5 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:39687 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751920Ab1JLDSH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 07:16:57 -0400
-Subject: Re: [PATCH 5/6] mac80211: add WMM IE to mesh frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, anagar6@uic.edu,
-	devel@lists.open80211s.org, linville@tuxdriver.com
-In-Reply-To: <1319072606-28291-6-git-send-email-thomas@cozybit.com> (sfid-20111020_030414_127381_5EBD73AF)
-References: <1319072606-28291-1-git-send-email-thomas@cozybit.com>
-	 <1319072606-28291-6-git-send-email-thomas@cozybit.com>
-	 (sfid-20111020_030414_127381_5EBD73AF)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 20 Oct 2011 13:16:52 +0200
-Message-ID: <1319109412.3959.7.camel@jlt3.sipsolutions.net> (sfid-20111020_131700_735137_8BB8BDDB)
-Mime-Version: 1.0
+	Tue, 11 Oct 2011 23:18:07 -0400
+Received: by iaek3 with SMTP id k3so301627iae.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 20:18:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <op.v27ruwj6ya27un@edmitar>
+References: <op.v27ruwj6ya27un@edmitar>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 12 Oct 2011 14:17:47 +1100
+Message-ID: <CAGRGNgX_47M8WzEg0HkpZ6DQGqAx75+Ma_OM7zrAGctjB6+WcA@mail.gmail.com> (sfid-20111012_051811_805649_84C3E255)
+Subject: Re: [RFC 04/07] compat-wireless: p2p power save support
+To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+Cc: "linux-wireless.vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Bartosz MARKOWSKI <bartosz.markowski@tieto.com>,
+	Janusz DZIEDZIC <janusz.dziedzic@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-10-19 at 18:03 -0700, Thomas Pedersen wrote:
-> Include the WMM IE in mesh peering and beacon frames. This is needed
-> tell any potential peers what our WMM / EDCA parameters are.
+Hi Dmitry,
 
-The goal seems fine but why bother building the WMM IE out of the actual
-TX queue configuration? Shouldn't it normally be the other way around?
-But I have no idea how QoS is supposed to work in a mesh...
+Some minor comments on this patch:
 
-johannes
+Note that I'm not a maintainer and that these are comments on the
+patch itself, not the code it adds.
 
+On Wed, Oct 12, 2011 at 12:02, Dmitry Tarnyagin <abi.dmitryt@gmail.com> wrote:
+> From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> Date: Thu, 4 Aug 2011 11:42:16 +0200
+>
+> P2P power save support:
+>  - Opportunistic Power Save
+>  - Notice Of Absence
+>
+> Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+> ---
+>  include/linux/nl80211.h    |   12 +++++
+>  include/net/cfg80211.h     |   34 +++++++++++++
+>  include/net/mac80211.h     |    3 +
+>  net/mac80211/cfg.c         |   24 +++++++++
+>  net/mac80211/ieee80211_i.h |    3 +
+>  net/mac80211/mlme.c        |  114
+> ++++++++++++++++++++++++++++++++++++++++++
+>  net/wireless/nl80211.c     |  119
+> ++++++++++++++++++++++++++++++++++++++++++++
+>  net/wireless/util.c        |    9 +++
+
+Same again.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
