@@ -1,38 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:61877 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752460Ab1JRDXe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Oct 2011 23:23:34 -0400
-Received: by ggnb1 with SMTP id b1so157930ggn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2011 20:23:33 -0700 (PDT)
-Message-ID: <4E9CF13A.7060102@lwfinger.net> (sfid-20111018_052353_751632_55EA5C1F)
-Date: Mon, 17 Oct 2011 22:23:38 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:3020 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754031Ab1JLSvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Oct 2011 14:51:51 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 02/22] brcm80211: smac: decreased timer callback irq
+ level
+Date: Wed, 12 Oct 2011 20:51:12 +0200
+Message-ID: <1318445492-24207-3-git-send-email-arend@broadcom.com> (sfid-20111012_205234_028257_E8FA65D0)
+In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: v4mp <gaigo88@hotmail.it>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
-References: <4E77F631.3030202@googlemail.com> <4E792994.1080809@lwfinger.net> <4E79B1D0.7090602@googlemail.com> <4E79F87F.1050402@lwfinger.net> <4E7A38D0.7070304@googlemail.com> <4E7A4310.30106@lwfinger.net> <4E7A48D1.8050009@googlemail.com> <4E7A4B03.4070006@lwfinger.net> <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com> <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org> <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org> <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T161652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org> <4E9C42CF.5010702@lwfinger.net> <loom.20111017T190430-717@post.gmane.org>
-In-Reply-To: <loom.20111017T190430-717@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/17/2011 12:09 PM, v4mp wrote:
->
->
-> ok, i've checked the md5 checksum of the firmware and is ok,
-> i give you dmesg at pastebin.com
->
-> it has 2 parts: in the second part i can't see what is in previous of the error
->
-> the link is: http://pastebin.com/7tfcBfbD
+From: Roland Vossen <rvossen@broadcom.com>
 
-Please try blacklisting xhci-hcd by adding a line containing
-"blacklist xhci-hcd" to the end of /etc/modprobe.d/50-blacklist.conf.
+Timer functions were called at soft-irq level, leading to the limitation
+that mutexes could not be used. Lifted this limitation by migrating to
+work queues.
 
-Thanks,
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   40 ++++++++-----------
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |   12 +++--
+ 2 files changed, 24 insertions(+), 28 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index b665aaf..6ce773a 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -1409,18 +1409,22 @@ void brcms_down(struct brcms_info *wl)
+ /*
+ * precondition: perimeter lock is not acquired
+  */
+-void brcms_timer(struct brcms_timer *t)
++static void _brcms_timer(struct work_struct *work)
+ {
++	struct brcms_timer *t = container_of(work, struct brcms_timer,
++					     dly_wrk.work);
++
+ 	spin_lock_bh(&t->wl->lock);
+ 
+ 	if (t->set) {
+ 		if (t->periodic) {
+-			t->timer.expires = jiffies + t->ms * HZ / 1000;
+ 			atomic_inc(&t->wl->callbacks);
+-			add_timer(&t->timer);
+-			t->set = true;
+-		} else
++			ieee80211_queue_delayed_work(t->wl->pub->ieee_hw,
++						     &t->dly_wrk,
++						     msecs_to_jiffies(t->ms));
++		} else {
+ 			t->set = false;
++		}
+ 
+ 		t->fn(t->arg);
+ 	}
+@@ -1431,14 +1435,6 @@ void brcms_timer(struct brcms_timer *t)
+ }
+ 
+ /*
+- * is called by the kernel from software irq context
+- */
+-static void _brcms_timer(unsigned long data)
+-{
+-	brcms_timer((struct brcms_timer *) data);
+-}
+-
+-/*
+  * Adds a timer to the list. Caller supplies a timer function.
+  * Is called from wlc.
+  *
+@@ -1454,9 +1450,7 @@ struct brcms_timer *brcms_init_timer(struct brcms_info *wl,
+ 	if (!t)
+ 		return NULL;
+ 
+-	init_timer(&t->timer);
+-	t->timer.data = (unsigned long) t;
+-	t->timer.function = _brcms_timer;
++	INIT_DELAYED_WORK(&t->dly_wrk, _brcms_timer);
+ 	t->wl = wl;
+ 	t->fn = fn;
+ 	t->arg = arg;
+@@ -1478,22 +1472,22 @@ struct brcms_timer *brcms_init_timer(struct brcms_info *wl,
+  *
+  * precondition: perimeter lock has been acquired
+  */
+-void brcms_add_timer(struct brcms_timer *t, uint ms,
+-		     int periodic)
++void brcms_add_timer(struct brcms_timer *t, uint ms, int periodic)
+ {
++	struct ieee80211_hw *hw = t->wl->pub->ieee_hw;
++
+ #ifdef BCMDBG
+ 	if (t->set)
+-		wiphy_err(t->wl->wiphy, "%s: Already set. Name: %s, per %d\n",
++		wiphy_err(hw->wiphy, "%s: Already set. Name: %s, per %d\n",
+ 			  __func__, t->name, periodic);
+-
+ #endif
+ 	t->ms = ms;
+ 	t->periodic = (bool) periodic;
+ 	t->set = true;
+-	t->timer.expires = jiffies + ms * HZ / 1000;
+ 
+ 	atomic_inc(&t->wl->callbacks);
+-	add_timer(&t->timer);
++
++	ieee80211_queue_delayed_work(hw, &t->dly_wrk, msecs_to_jiffies(ms));
+ }
+ 
+ /*
+@@ -1505,7 +1499,7 @@ bool brcms_del_timer(struct brcms_timer *t)
+ {
+ 	if (t->set) {
+ 		t->set = false;
+-		if (!del_timer(&t->timer))
++		if (!cancel_delayed_work(&t->dly_wrk))
+ 			return false;
+ 
+ 		atomic_dec(&t->wl->callbacks);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
+index 91e5f2a..177f0e4 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
+@@ -19,6 +19,8 @@
+ 
+ #include <linux/timer.h>
+ #include <linux/interrupt.h>
++#include <linux/workqueue.h>
++
+ #include "ucode_loader.h"
+ /*
+  * Starting index for 5G rates in the
+@@ -30,14 +32,14 @@
+ #define BRCMS_SET_SHORTSLOT_OVERRIDE		146
+ 
+ struct brcms_timer {
+-	struct timer_list timer;
++	struct delayed_work dly_wrk;
+ 	struct brcms_info *wl;
+-	void (*fn) (void *);
+-	void *arg;		/* argument to fn */
++	void (*fn) (void *);	/* function called upon expiration */
++	void *arg;		/* fixed argument provided to called function */
+ 	uint ms;
+ 	bool periodic;
+-	bool set;
+-	struct brcms_timer *next;
++	bool set;		/* indicates if timer is active */
++	struct brcms_timer *next;	/* for freeing on unload */
+ #ifdef BCMDBG
+ 	char *name;		/* Description of the timer */
+ #endif
+-- 
+1.7.4.1
+
 
