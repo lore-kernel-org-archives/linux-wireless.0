@@ -1,72 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:34834 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754957Ab1JKR7S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 13:59:18 -0400
-Received: by gyg10 with SMTP id 10so6790986gyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 10:59:18 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH v2 0/7] wireless: add DFS master support
-Date: Tue, 11 Oct 2011 10:58:57 -0700
-Message-Id: <1318355944-24708-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111011_195922_693746_253A8A0A)
+Received: from mms2.broadcom.com ([216.31.210.18]:3032 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754040Ab1JLSvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Oct 2011 14:51:51 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 11/22] brcm80211: use endian annotations for assoc ie
+ length request
+Date: Wed, 12 Oct 2011 20:51:21 +0200
+Message-ID: <1318445492-24207-12-git-send-email-arend@broadcom.com> (sfid-20111012_205224_777917_1DD4C6D7)
+In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is v2 of my DFS master support patches. The v2 addresses only 2 bits
-on the wireless-regdb and leaves open what we do for the rest of the 6 bits.
-The nl80211 interface remains the same but I also fixed a typo I had made in
-my previous patches for the dfs region enums. I also throw in the fix for CRDA
-for the odd behaviour observed on the last pad byte.
+The driver requests the device for number of ie's in assoc request
+and response. This needed to be endian annotated.
 
-This set of 7 patches adds DFS master support to the Linux wireless subsystem.
-I've reviewed future possible changes to DFS master regions and it seems that
-we are not going to be having multiple DFS regions for one country, instead
-we'll always have one DFS region for one country.
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    9 +++++----
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    6 +++---
+ 2 files changed, 8 insertions(+), 7 deletions(-)
 
-The changes here are spread out throughout wireless-regdb, crda the kernel and
-lastly iw. The changes made allow for older verions of CRDA to work with new
-wireless-regdb files with DFS region support. If you want DFS master region
-support you'll need to upgrade your CRDA, your kernel and then hope someone
-implements DFS master support for your respective driver.
-
-This patch series does not have specific driver changes, although some seem to
-be backing in the oven right now.
-
-Luis R. Rodriguez (6):
-  wireless-regdb: Add master DFS region support
-  wireless-regdb: add FCC as the DFS region for US
-  crda: fix null string assumption for alpha2
-  crda: add support to send DFS master region
-  cfg80211: process regulatory DFS region for countries
-  cfg80211: pass DFS region to drivers through reg_notifier()
-  iw: add DFS region parsing support
-
- db.txt     |    2 +-
- db2bin.py  |    2 +-
- dbparse.py |   25 ++++++++++++++++++++-----
- 3 files changed, 22 insertions(+), 7 deletions(-)
-
- crda.c    |    5 +++--
- nl80211.h |   21 +++++++++++++++++++++
- regdb.h   |    3 ++-
- reglib.h  |   13 -------------
- 4 files changed, 26 insertions(+), 16 deletions(-)
-
- include/linux/nl80211.h  |   21 +++++++++++++++++++++
- include/net/regulatory.h |    6 ++++++
- net/wireless/nl80211.c   |   15 +++++++++++++++
- net/wireless/reg.c       |   39 +++++++++++++++++++++++++++++++++++++++
- net/wireless/reg.h       |    1 +
- 5 files changed, 82 insertions(+), 0 deletions(-)
-
- nl80211.h |   65 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- reg.c     |   31 +++++++++++++++++++++++++++++
- 2 files changed, 96 insertions(+), 0 deletions(-)
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 9e69cd7..8e20753 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -2767,7 +2767,7 @@ static void brcmf_clear_assoc_ies(struct brcmf_cfg80211_priv *cfg_priv)
+ static s32 brcmf_get_assoc_ies(struct brcmf_cfg80211_priv *cfg_priv)
+ {
+ 	struct net_device *ndev = cfg_to_ndev(cfg_priv);
+-	struct brcmf_cfg80211_assoc_ielen *assoc_info;
++	struct brcmf_cfg80211_assoc_ielen_le *assoc_info;
+ 	struct brcmf_cfg80211_connect_info *conn_info = cfg_to_conn(cfg_priv);
+ 	u32 req_len;
+ 	u32 resp_len;
+@@ -2781,9 +2781,10 @@ static s32 brcmf_get_assoc_ies(struct brcmf_cfg80211_priv *cfg_priv)
+ 		WL_ERR("could not get assoc info (%d)\n", err);
+ 		return err;
+ 	}
+-	assoc_info = (struct brcmf_cfg80211_assoc_ielen *)cfg_priv->extra_buf;
+-	req_len = assoc_info->req_len;
+-	resp_len = assoc_info->resp_len;
++	assoc_info =
++		(struct brcmf_cfg80211_assoc_ielen_le *)cfg_priv->extra_buf;
++	req_len = le32_to_cpu(assoc_info->req_len);
++	resp_len = le32_to_cpu(assoc_info->resp_len);
+ 	if (req_len) {
+ 		err = brcmf_dev_bufvar_get(ndev, "assoc_req_ies",
+ 					   cfg_priv->extra_buf,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+index e69f4f6..62dc461 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -264,9 +264,9 @@ struct brcmf_cfg80211_connect_info {
+ };
+ 
+ /* assoc ie length */
+-struct brcmf_cfg80211_assoc_ielen {
+-	u32 req_len;
+-	u32 resp_len;
++struct brcmf_cfg80211_assoc_ielen_le {
++	__le32 req_len;
++	__le32 resp_len;
+ };
+ 
+ /* wpa2 pmk list */
 -- 
-1.7.4.15.g7811d
+1.7.4.1
+
 
