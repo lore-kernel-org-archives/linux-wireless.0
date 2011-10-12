@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:57691 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932975Ab1JEGAK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 02:00:10 -0400
-Date: Wed, 5 Oct 2011 08:59:58 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: re: ath6kl: pass only unicast frames for aggregation
-Message-ID: <20111005055958.GA32513@elgon.mountain> (sfid-20111005_080014_141134_437A5F20)
+Received: from mx1.redhat.com ([209.132.183.28]:21900 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751119Ab1JLISG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Oct 2011 04:18:06 -0400
+Date: Wed, 12 Oct 2011 10:16:35 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iwlagn: fix priv->cfg->ht_params NULL pointer dereference
+Message-ID: <20111012081634.GA2675@redhat.com> (sfid-20111012_101810_838663_5DCDFEF2)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+This fix regression introduced by commit:
 
-Smatch complains that 5694f962964 "ath6kl: pass only unicast frames
-for aggregation"
+commit 15b3f3b006b42a678523cad989bfd60b76bf4403
+Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Date:   Fri Jun 3 07:54:13 2011 -0700
 
-drivers/net/wireless/ath/ath6kl/txrx.c
-  1241                          if (conn && ar->intra_bss) {
-  1242                                  skb1 = skb;
-  1243                                  skb = NULL;
-                                        ^^^^^^^^^^^
-  1244                          } else if (conn && !ar->intra_bss) {
-  1245                                  dev_kfree_skb(skb);
-  1246                                  skb = NULL;
-                                        ^^^^^^^^^^^
-  1247                          }
-  1248                  }
-  1249                  if (skb1)
-  1250                          ath6kl_data_tx(skb1, ar->net_dev);
-  1251          }
-  1252  
-  1253          datap = (struct ethhdr *) skb->data;
-                                          ^^^^^^^^^
-skb can be NULL.
+    iwlagn: set smps mode after assoc for 1000 device
 
-  1254  
+Also remove unneeded brackets on the way.
 
-regards,
-dan carpenter
+Address:
+https://bugzilla.redhat.com/show_bug.cgi?id=744155
+
+If fix will not get 3.1 release, it should be applied in 3.1 stable.
+
+Cc: stable@kernel.org # 3.1+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index ca632f9..5004342 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -296,8 +296,8 @@ static int iwlagn_rxon_connect(struct iwl_priv *priv,
+ 		return ret;
+ 	}
+ 
+-	if ((ctx->vif && ctx->vif->type == NL80211_IFTYPE_STATION) &&
+-	    priv->cfg->ht_params->smps_mode)
++	if (ctx->vif && ctx->vif->type == NL80211_IFTYPE_STATION &&
++	    priv->cfg->ht_params && priv->cfg->ht_params->smps_mode)
+ 		ieee80211_request_smps(ctx->vif,
+ 				       priv->cfg->ht_params->smps_mode);
+ 
+-- 
+1.7.1
+
