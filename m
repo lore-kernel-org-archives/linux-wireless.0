@@ -1,67 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:34933 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933860Ab1JDXsG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60314 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751001Ab1JLIZ6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 19:48:06 -0400
-Received: by mail-pz0-f42.google.com with SMTP id 1so2684409pzk.1
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 16:48:06 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH 4/8] cfg80211: pass DFS region to drivers through reg_notifier()
-Date: Tue,  4 Oct 2011 16:47:43 -0700
-Message-Id: <1317772067-6998-5-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111005_014809_244383_CF4FF11B)
-In-Reply-To: <1317772067-6998-1-git-send-email-mcgrof@qca.qualcomm.com>
-References: <1317772067-6998-1-git-send-email-mcgrof@qca.qualcomm.com>
+	Wed, 12 Oct 2011 04:25:58 -0400
+Subject: Re: [RFC 06/07] compat-wireless: UAPSD configuration in STA mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+Cc: "linux-wireless.vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Bartosz MARKOWSKI <bartosz.markowski@tieto.com>,
+	Janusz DZIEDZIC <janusz.dziedzic@tieto.com>
+In-Reply-To: <op.v27ru00wya27un@edmitar> (sfid-20111012_030257_788340_E3ADB568)
+References: <op.v27ru00wya27un@edmitar>
+	 (sfid-20111012_030257_788340_E3ADB568)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 12 Oct 2011 10:25:55 +0200
+Message-ID: <1318407955.3933.23.camel@jlt3.sipsolutions.net> (sfid-20111012_102601_133126_7506D561)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This grants drivers access to the DFS region that a
-regulatory domain belongs to.
+On Wed, 2011-10-12 at 03:02 +0200, Dmitry Tarnyagin wrote:
+> From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> Date: Wed, 3 Aug 2011 09:46:05 +0200
+> 
+> This patch adds UAPSD queues configuration as a param to assoc request.
+> With the patch it's possible to configure UAPSD from user space.
+> 
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> ---
+>   include/linux/nl80211.h |    2 ++
+>   include/net/cfg80211.h  |    1 +
+>   net/mac80211/main.c     |    3 ++-
+>   net/mac80211/mlme.c     |    2 ++
+>   net/wireless/core.h     |    6 ++++--
+>   net/wireless/mlme.c     |   10 +++++++---
+>   net/wireless/nl80211.c  |    7 ++++++-
+>   net/wireless/sme.c      |    2 +-
+>   8 files changed, 25 insertions(+), 8 deletions(-)
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- include/net/regulatory.h |    5 +++++
- net/wireless/reg.c       |    2 ++
- 2 files changed, 7 insertions(+), 0 deletions(-)
+This is a rare case where *maybe* it's OK to do both mac80211 and
+cfg80211 in one patch, but I haven't seen much evidence from all of you
+that you really understand the separation, so I'd prefer if you split it
+up and explained the changes separately.
 
-diff --git a/include/net/regulatory.h b/include/net/regulatory.h
-index 7399c93..a5f7993 100644
---- a/include/net/regulatory.h
-+++ b/include/net/regulatory.h
-@@ -48,6 +48,10 @@ enum environment_cap {
-  * 	99 - built by driver but a specific alpha2 cannot be determined
-  * 	98 - result of an intersection between two regulatory domains
-  *	97 - regulatory domain has not yet been configured
-+ * @dfs_region: If CRDA responded with a regulatory domain that requires
-+ *	DFS master operation on a known DFS region (NL80211_DFS_*),
-+ *	dfs_region represents that region. Drivers can use this and the
-+ *	@alpha2 to adjust their device's DFS parameters as required.
-  * @intersect: indicates whether the wireless core should intersect
-  * 	the requested regulatory domain with the presently set regulatory
-  * 	domain.
-@@ -67,6 +71,7 @@ struct regulatory_request {
- 	int wiphy_idx;
- 	enum nl80211_reg_initiator initiator;
- 	char alpha2[2];
-+	u8 dfs_region;
- 	bool intersect;
- 	bool processed;
- 	enum environment_cap country_ie_env;
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 69141ed..b66444d 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1121,6 +1121,8 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
- 	if (ignore_reg_update(wiphy, initiator))
- 		return;
- 
-+	last_request->dfs_region = cfg80211_regdomain->dfs_region;
-+
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 		if (wiphy->bands[band])
- 			handle_band(wiphy, band, initiator);
--- 
-1.7.4.15.g7811d
+> +++ b/include/net/cfg80211.h
+> @@ -1050,6 +1050,7 @@ struct cfg80211_assoc_request {
+>   	size_t ie_len;
+>   	struct cfg80211_crypto_settings crypto;
+>   	bool use_mfp;
+> +	int uapsd;
+
+int? explain. also you're obviously missing documentation that would
+have explained this.
+
+> -	local->uapsd_queues = IEEE80211_DEFAULT_UAPSD_QUEUES;
+> +	/* Disable all UAPSD AC by default */
+> +	local->uapsd_queues = 0;
+
+You should obviously then remove the default constant, or better yet
+just set it to 0. Also _that_ specific change needs to be a separate
+change since it modifies existing behaviour.
+
+
+> +	if (info->attrs[NL80211_ATTR_UAPSD])
+> +		uapsd = nla_get_u32(info->attrs[NL80211_ATTR_UAPSD]);
+
+clearly missing validation.
+
+> +++ b/net/wireless/sme.c
+> @@ -190,7 +190,7 @@ static int cfg80211_conn_do_work(struct wireless_dev  
+> *wdev)
+>   					    prev_bssid,
+>   					    params->ssid, params->ssid_len,
+>   					    params->ie, params->ie_len,
+> -					    false, &params->crypto);
+> +					    false, &params->crypto, -1);
+>   		if (err)
+>   			__cfg80211_mlme_deauth(rdev, wdev->netdev, params->bssid,
+>   					       NULL, 0,
+
+Really? Why should this not be able to do uapsd with the same way?
+
+johannes
 
