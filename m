@@ -1,36 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:40620 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755041Ab1J1HwK (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:48436 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751222Ab1JLC3H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 03:52:10 -0400
-Received: by ywm3 with SMTP id 3so3436980ywm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Oct 2011 00:52:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <400C43189542CE41BC0A5B252FC90136BC0E3753AA@SJEXCHCCR02.corp.ad.broadcom.com>
-References: <20111021142322.229128720@sipsolutions.net>
-	<1319743973.32221.4.camel@jlt3.sipsolutions.net>
-	<400C43189542CE41BC0A5B252FC90136BC0E3753AA@SJEXCHCCR02.corp.ad.broadcom.com>
-Date: Fri, 28 Oct 2011 09:52:09 +0200
-Message-ID: <CAGXE3d_9h-VMo3KaVThNXsXNVEAD4rVcKosMrjYVyKcfUD2=JQ@mail.gmail.com> (sfid-20111028_095218_944074_E12E9C44)
-Subject: Re: [RFC v2 13/12] cfg80211/mac80211: allow management TX to not wait
- for ACK
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Arend Van Spriel <arend@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 11 Oct 2011 22:29:07 -0400
+Received: by ggnv2 with SMTP id v2so221004ggn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 19:29:06 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 0/5 V2] Updates to match latest Realtek version and new PM framework
+Date: Tue, 11 Oct 2011 21:28:46 -0500
+Message-Id: <1318386531-5859-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20111012_042931_468192_BC1B2EBA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 28, 2011 at 9:48 AM, Arend Van Spriel <arend@broadcom.com> wrote:
-> I would expect this to affect the duration field in the
-> 802.11 header to indicate the shorter use of the medium.
-> Going through your patch I am not sure this is done.
+The latest Realtek driver for rtl8192ce, rtl8192se, and rtl8192de incorporates
+some changes. With these patches, the changes are added to the mainline
+drivers. In addition, the drivers are changed to the new PM framework.
 
-I don't think so since the frame will still be acked by the peer as it is
-a unicast management frame. But this will advise the hardware that it
-does not need to wait for the ack to happen since we're not interested
-in retrying it.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Helmut
+John,
+
+V1 of these patches had been applied to git://git.infradead.org/users/linville/wireless-testing.git.
+
+I had committed them to my local tree and let git generate the patches. For V2, I switched to
+git://git.infradead.org/users/linville/wireless-next.git. A pull on the new tree got the objects
+from the for-davem branch, but master was unchanged. I reverted all 5 from my tree, imported the
+patches with quilt and cleaned them up. They all apply cleanly with no warnings and no fuzz.
+
+If I understood your mail message correctly, patches 1, 2, 3, and 5 have already been applied,
+but I'm sending a new version just in case. Patches 4 and 5 can be applied in any order - thus
+4 will work by itself.
+
+Sorry for any problems.
+
+Larry
+---
+
+Chaoming Li (4):
+  rtlwifi: Update to new Realtek version - Part I
+  rtlwifi: rtl8192ce: Add new chip revisions
+  rtlwifi: rtl8192se: Updates from latest Realtek driver version - Part
+    II
+  rtlwifi: rtl8192de: Updates from latest Reaktek driver - Part III
+
+Larry Finger (1):
+  rtlwifi: Change PCI drivers to use the new PM framework
+
+ drivers/net/wireless/rtlwifi/base.c          |    6 +-
+ drivers/net/wireless/rtlwifi/pci.c           |   19 +---
+ drivers/net/wireless/rtlwifi/pci.h           |    4 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/def.h |   14 +++
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c  |   30 +++++--
+ drivers/net/wireless/rtlwifi/rtl8192cu/def.h |    4 -
+ drivers/net/wireless/rtlwifi/rtl8192de/def.h |  124 ++++++++++++++++----------
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c  |   19 ++---
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.c  |   16 ++--
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c  |   22 +++---
+ drivers/net/wireless/rtlwifi/rtl8192se/reg.h |    1 +
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c  |   17 +++--
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c |   53 +++++++-----
+ drivers/net/wireless/rtlwifi/wifi.h          |    1 +
+ 14 files changed, 196 insertions(+), 134 deletions(-)
+
+-- 
+1.7.6.4
+
