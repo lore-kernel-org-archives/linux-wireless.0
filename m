@@ -1,92 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:44178 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751150Ab1JYTGU (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:64830 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751222Ab1JLC3W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 15:06:20 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 4888854009C
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Oct 2011 15:24:48 -0400 (EDT)
-Subject: Compat-wireless release for 2011-10-25 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20111025190618.1AE9240656@repository3.orbit-lab.org> (sfid-20111025_210624_340510_B94ABA2C)
-Date: Tue, 25 Oct 2011 15:06:08 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 11 Oct 2011 22:29:22 -0400
+Received: by ywb5 with SMTP id 5so226869ywb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 19:29:21 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 1/5 V2] rtlwifi: Change PCI drivers to use the new PM framework
+Date: Tue, 11 Oct 2011 21:28:47 -0500
+Message-Id: <1318386531-5859-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20111012_042932_183436_4A204315)
+In-Reply-To: <1318386531-5859-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1318386531-5859-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://github.com/sfrothwell/linux-next
- + 0bb9d7e...c0ba0e9 akpm-end   -> origin/akpm-end  (forced update)
-   37cf951..c3b92c8  akpm-start -> origin/akpm-start
- + 970cc26...65a31eb master     -> origin/master  (forced update)
-   37cf951..c3b92c8  stable     -> origin/stable
- * [new tag]         next-20111025 -> next-20111025
- * [new tag]         v3.1       -> v3.1
->From git://github.com/sfrothwell/linux-next
- * [new tag]         v3.1-rc10  -> v3.1-rc10
-Checking out files:  47% (842/1765)   
-Checking out files:  48% (848/1765)   
-Checking out files:  49% (865/1765)   
-Checking out files:  50% (883/1765)   
-Checking out files:  51% (901/1765)   
-Checking out files:  52% (918/1765)   
-Checking out files:  53% (936/1765)   
-Checking out files:  54% (954/1765)   
-Checking out files:  55% (971/1765)   
-Checking out files:  56% (989/1765)   
-Checking out files:  57% (1007/1765)   
-Checking out files:  58% (1024/1765)   
-Checking out files:  59% (1042/1765)   
-Checking out files:  60% (1059/1765)   
-Checking out files:  61% (1077/1765)   
-Checking out files:  62% (1095/1765)   
-Checking out files:  63% (1112/1765)   
-Checking out files:  64% (1130/1765)   
-Checking out files:  65% (1148/1765)   
-Checking out files:  66% (1165/1765)   
-Checking out files:  67% (1183/1765)   
-Checking out files:  68% (1201/1765)   
-Checking out files:  69% (1218/1765)   
-Checking out files:  70% (1236/1765)   
-Checking out files:  71% (1254/1765)   
- Checking out files:  72% (1271/1765)   
-Checking out files:  73% (1289/1765)   
-Checking out files:  74% (1307/1765)   
-Checking out files:  75% (1324/1765)   
-Checking out files:  76% (1342/1765)   
-Checking out files:  77% (1360/1765)   
-Checking out files:  78% (1377/1765)   
-Checking out files:  79% (1395/1765)   
-Checking out files:  80% (1412/1765)   
-Checking out files:  81% (1430/1765)   
-Checking out files:  82% (1448/1765)   
-Checking out files:  83% (1465/1765)   
-Checking out files:  84% (1483/1765)   
-Checking out files:  85% (1501/1765)   
-Checking out files:  86% (1518/1765)   
-Checking out files:  87% (1536/1765)   
-Checking out files:  88% (1554/1765)   
-Checking out files:  89% (1571/1765)   
-Checking out files:  90% (1589/1765)   
-Checking out files:  91% (1607/1765)   
-Checking out files:  92% (1624/1765)   
-Checking out files:  93% (1642/1765)   
-Checking out files:  94% (1660/1765)   
-Checking out files:  95% (1677/1765)   
-Checking out files:  96% (169
- 5/1765)   
-Checking out files:  97% (1713/1765)   
-Checking out files:  98% (1730/1765)   
-Checking out files:  99% (1748/1765)   
-Checking out files: 100% (1765/1765)   
-Checking out files: 100% (1765/1765), done.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/pci.c          |   19 ++++---------------
+ drivers/net/wireless/rtlwifi/pci.h          |    4 ++--
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c |   16 ++++++++++------
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.c |   16 ++++++++++------
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c |   16 ++++++++++------
+ 5 files changed, 36 insertions(+), 35 deletions(-)
 
-compat-wireless code metrics
-
-    814862 - Total upstream lines of code being pulled
-      2431 - backport code changes
-      2113 - backport code additions
-       318 - backport code deletions
-      8588 - backport from compat module
-     11019 - total backport code
-    1.3523 - % of code consists of backport work
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
+@@ -1993,36 +1993,25 @@ call rtl_mac_stop() from the mac80211
+ suspend function first, So there is
+ no need to call hw_disable here.
+ ****************************************/
+-int rtl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
++int rtl_pci_suspend(struct device *dev)
+ {
++	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+ 	rtlpriv->cfg->ops->hw_suspend(hw);
+ 	rtl_deinit_rfkill(hw);
+ 
+-	pci_save_state(pdev);
+-	pci_disable_device(pdev);
+-	pci_set_power_state(pdev, PCI_D3hot);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(rtl_pci_suspend);
+ 
+-int rtl_pci_resume(struct pci_dev *pdev)
++int rtl_pci_resume(struct device *dev)
+ {
+-	int ret;
++	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+-	pci_set_power_state(pdev, PCI_D0);
+-	ret = pci_enable_device(pdev);
+-	if (ret) {
+-		RT_ASSERT(false, ("ERR: <======\n"));
+-		return ret;
+-	}
+-
+-	pci_restore_state(pdev);
+-
+ 	rtlpriv->cfg->ops->hw_resume(hw);
+ 	rtl_init_rfkill(hw);
+ 	return 0;
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.h
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.h
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.h
+@@ -237,8 +237,8 @@ extern struct rtl_intf_ops rtl_pci_ops;
+ int __devinit rtl_pci_probe(struct pci_dev *pdev,
+ 			    const struct pci_device_id *id);
+ void rtl_pci_disconnect(struct pci_dev *pdev);
+-int rtl_pci_suspend(struct pci_dev *pdev, pm_message_t state);
+-int rtl_pci_resume(struct pci_dev *pdev);
++int rtl_pci_suspend(struct device *dev);
++int rtl_pci_resume(struct device *dev);
+ 
+ static inline u8 pci_read8_sync(struct rtl_priv *rtlpriv, u32 addr)
+ {
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+@@ -370,17 +370,21 @@ MODULE_PARM_DESC(swlps, "Set to 1 to use
+ MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
+ MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+ 
++static const struct dev_pm_ops rtlwifi_pm_ops = {
++	.suspend = rtl_pci_suspend,
++	.resume = rtl_pci_resume,
++	.freeze = rtl_pci_suspend,
++	.thaw = rtl_pci_resume,
++	.poweroff = rtl_pci_suspend,
++	.restore = rtl_pci_resume,
++};
++
+ static struct pci_driver rtl92ce_driver = {
+ 	.name = KBUILD_MODNAME,
+ 	.id_table = rtl92ce_pci_ids,
+ 	.probe = rtl_pci_probe,
+ 	.remove = rtl_pci_disconnect,
+-
+-#ifdef CONFIG_PM
+-	.suspend = rtl_pci_suspend,
+-	.resume = rtl_pci_resume,
+-#endif
+-
++	.driver.pm = &rtlwifi_pm_ops,
+ };
+ 
+ static int __init rtl92ce_module_init(void)
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+@@ -390,17 +390,21 @@ MODULE_PARM_DESC(swlps, "Set to 1 to use
+ MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
+ MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+ 
++static const struct dev_pm_ops rtlwifi_pm_ops = {
++	.suspend = rtl_pci_suspend,
++	.resume = rtl_pci_resume,
++	.freeze = rtl_pci_suspend,
++	.thaw = rtl_pci_resume,
++	.poweroff = rtl_pci_suspend,
++	.restore = rtl_pci_resume,
++};
++
+ static struct pci_driver rtl92de_driver = {
+ 	.name = KBUILD_MODNAME,
+ 	.id_table = rtl92de_pci_ids,
+ 	.probe = rtl_pci_probe,
+ 	.remove = rtl_pci_disconnect,
+-
+-#ifdef CONFIG_PM
+-	.suspend = rtl_pci_suspend,
+-	.resume = rtl_pci_resume,
+-#endif
+-
++	.driver.pm = &rtlwifi_pm_ops,
+ };
+ 
+ /* add global spin lock to solve the problem that
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -401,17 +401,21 @@ MODULE_PARM_DESC(swlps, "Set to 1 to use
+ MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
+ MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+ 
++static const struct dev_pm_ops rtlwifi_pm_ops = {
++	.suspend = rtl_pci_suspend,
++	.resume = rtl_pci_resume,
++	.freeze = rtl_pci_suspend,
++	.thaw = rtl_pci_resume,
++	.poweroff = rtl_pci_suspend,
++	.restore = rtl_pci_resume,
++};
++
+ static struct pci_driver rtl92se_driver = {
+ 	.name = KBUILD_MODNAME,
+ 	.id_table = rtl92se_pci_ids,
+ 	.probe = rtl_pci_probe,
+ 	.remove = rtl_pci_disconnect,
+-
+-#ifdef CONFIG_PM
+-	.suspend = rtl_pci_suspend,
+-	.resume = rtl_pci_resume,
+-#endif
+-
++	.driver.pm = &rtlwifi_pm_ops,
+ };
+ 
+ static int __init rtl92se_module_init(void)
