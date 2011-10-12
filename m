@@ -1,33 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:34451 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933052Ab1JZPtW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 11:49:22 -0400
-Received: by bkbzt19 with SMTP id zt19so1715703bkb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 08:49:21 -0700 (PDT)
-Message-ID: <4EA82BFE.1070105@googlemail.com> (sfid-20111026_174925_683080_134655D3)
-Date: Wed, 26 Oct 2011 17:49:18 +0200
-From: Chiefdome <chiefdome@googlemail.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:1734 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753065Ab1JLPIa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Oct 2011 11:08:30 -0400
+Message-ID: <4E95AD66.1020002@broadcom.com> (sfid-20111012_170844_617830_0D02E944)
+Date: Wed, 12 Oct 2011 17:08:22 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
-References: <4E77F631.3030202@googlemail.com> <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T1  61652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org > <4E9C42CF.5010702@lwfinger.net> <loom.20111017T190430-717@post.gmane.org> <4E9CF13A.7060102@lwf inger.net> <loom.20111018T143746-420@post.gmane.org> <loom.201110 18T150303-359@post.gmane.org> <4E9D9953.3020601@lwfinger.net> <lo om.20111018T233233-298@post.gmane.org> <4E9E052F.8090705@lwfinger.net> <loom.20111019T101621-921@post.gmane.org> <4E9EBDD3.6060907@lwfinger.net> <loom.20111019T162518-352@post.gmane.org> <4E9F97B4.5010304@lwfinger.net> <loom.20111020T114336-286@post.gmane.org> <4EA023B2.5000402@lwfinger.net>
-In-Reply-To: <4EA023B2.5000402@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "Greg KH" <gregkh@suse.de>
+cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] staging: brcm80211: remove brcm80211 driver from
+ the staging tree
+References: <4E95A1D1.8010602@broadcom.com>
+ <20111012143600.GA17938@suse.de>
+In-Reply-To: <20111012143600.GA17938@suse.de>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is there a way to set the tx-power over 20dbm on the adapter?
-I thought it is able to do 2w. There is no way for me to get it over 20 dbm.
-When trying to to set the adapter with "iwconfig wlan1 set txpower 30" 
-it answers
+On 10/12/2011 04:36 PM, Greg KH wrote:
+> On Wed, Oct 12, 2011 at 04:18:57PM +0200, Arend van Spriel wrote:
+>> Hi Greg,
+>>
+>> John recommended to do the delete through your staging tree. Thanks for
+>> the ride. It has been a learning experience for all of us here. Apart
+>> from the significant cleanup (which needs ongoing work for sure) it took
+>> some time to find the right way of working in coordinating our changes
+>> with community patches.
+>>
+>> The removal patch was just as big as the mainline patch so it has been
+>> uploaded to linuxwireless.org:
+>>
+>> http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=view&target=0001-staging-brcm80211-remove-brcm80211-driver-from-the-s.patch
+> 
+> So I'm taking it that the driver is now in the wireless-next tree?
+> That's great, I'll queue the patch up later today.
 
-Error for wireless request "Set Tx Power" (8B26) :
-     SET failed on device wlan1 ; Invalid argument.
+It is. From the day I sent the mainline patch for wireless-next we have
+been staring at our inbox for the green light :-D
 
-I think there has to be done some work in the code but where do I start?
+> And thanks so much for working with us, I know it can be hard at times,
+> but I hope you will agree that the end result is much better than what
+> we started out with.
+> 
+> greg k-h
+> 
 
-Thanks for all replys.
+Yep. We got rid of a lot of redundant code that was not needed in the
+mac80211 framework and the different level of abstractions. The are
+still i's to dot and features to add.
 
+Thanks again.
+
+Gr. AvS
 
