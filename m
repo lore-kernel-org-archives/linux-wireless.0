@@ -1,59 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bsmtp4.bon.at ([195.3.86.186]:59464 "EHLO bsmtp.bon.at"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752280Ab1JVHVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Oct 2011 03:21:47 -0400
-Date: Sat, 22 Oct 2011 09:22:15 +0200
-From: Clemens Buchacher <drizzd@aon.at>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:56028 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751222Ab1JLC3Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Oct 2011 22:29:24 -0400
+Received: by mail-gy0-f174.google.com with SMTP id 13so222591gyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 19:29:24 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
 	linux-wireless@vger.kernel.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Subject: Re: ath9k: irq storm after suspend/resume
-Message-ID: <20111022072215.GA2524@ecki> (sfid-20111022_092151_109136_09821BFC)
-References: <CAJ-Vmok4v2+ZEpAmVaj2pQ5U2StWxxD8f20u2Ln87o4+C_ST0g@mail.gmail.com>
- <CAD2nsn1S7r2o0bqnNgzuHBd9XWYdA7uZgtmtFDTePk0SwybuCQ@mail.gmail.com>
- <20111015093902.GA23520@ecki>
- <CAJ-VmokQBcXyDByWgMfGRFvW_z_9YU4oPUrXJpfPY9J4riEuBQ@mail.gmail.com>
- <20111018064459.GA1442@ecki>
- <CAJ-Vmo=Qt3rGDbM0yOvFuz6Pksdx9bdm8HEBnhfjP6=zjGOgTA@mail.gmail.com>
- <20111021102221.GA1463@ecki.lan>
- <CAJ-Vmonaec_i5d_LGupY5uwzMUn3CzNn-rGSh6oqLOHc8ewFVg@mail.gmail.com>
- <20111021202038.GA1523@ecki.lan>
- <CAJ-Vmonu-75rtOyyqP7aWNA5NvQ7XW+0YB-G7N5gF3tS5E0EaA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJ-Vmonu-75rtOyyqP7aWNA5NvQ7XW+0YB-G7N5gF3tS5E0EaA@mail.gmail.com>
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 3/5 V2] rtlwifi: rtl8192ce: Add new chip revisions
+Date: Tue, 11 Oct 2011 21:28:49 -0500
+Message-Id: <1318386531-5859-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20111012_042933_359947_820EFFF9)
+In-Reply-To: <1318386531-5859-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1318386531-5859-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Chaoming Li <chaoming_li@realsil.com.cn>
 
-On Sat, Oct 22, 2011 at 08:47:33AM +0800, Adrian Chadd wrote:
-> 
-> At this point I'd really suggest whacking other devices into the slot
-> to see if they generate the same kind of behaviour.
+This patch incorporate the differences between the 06/20/2011 and
+08/16/2011 Realtek releases of the rtlwifi driver.
 
-Looks like you had it right from the start. After unloading the jme
-module [*1*] I cannot reproduce the IRQ storm any more. From
-looking at dmesg it should have been obvious, since it also gets
-IRQ 17 assigned. I don't know how I missed that, I was sure I had
-checked.
+The changes include:
 
-Sorry guys, for most likely wasting your time. And thanks for your
-patience.
+1. Adding new chip revisions including new firmware.
 
-Best,
-Clemens
+Signed-off-by: Chaoming Li <chaoming_li@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192ce/def.h |   14 ++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c  |   14 ++++++++++++--
+ drivers/net/wireless/rtlwifi/rtl8192cu/def.h |    4 ----
+ 3 files changed, 26 insertions(+), 6 deletions(-)
 
-[*1*]
-
-$ lspci
-06:00.5 Ethernet controller: JMicron Technology Corp. JMC250 PCI Express Gigabit Ethernet Controller (rev 03))
-
-$ dmesg|grep -i jme
-[    6.160187] jme: JMicron JMC2XX ethernet driver version 1.0.8
-[    6.160278] jme 0000:06:00.5: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-[    6.160305] jme 0000:06:00.5: setting latency timer to 64
-[    6.161154] jme 0000:06:00.5: eth0: JMC250 Gigabit Ethernet chiprev:23 pcirev:3 macaddr:bc:ae:c5:2f:91:47
-[   18.354697] jme 0000:06:00.5: PCI INT A disabled
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
+@@ -142,8 +142,22 @@ enum version_8192c {
+ 	VERSION_UNKNOWN = 0x88,
+ };
+ 
++#define CUT_VERSION_MASK		(BIT(6)|BIT(7))
++#define CHIP_VENDOR_UMC			BIT(5)
++#define CHIP_VENDOR_UMC_B_CUT		BIT(6) /* Chip version for ECO */
++#define IS_VENDOR_UMC_A_CUT(version)	((IS_CHIP_VENDOR_UMC(version)) ? \
++	((GET_CVID_CUT_VERSION(version)) ? false : true) : false)
+ #define IS_CHIP_VER_B(version)  ((version & CHIP_VER_B) ? true : false)
++#define IS_VENDOR_UMC_A_CUT(version)	((IS_CHIP_VENDOR_UMC(version)) ? \
++	((GET_CVID_CUT_VERSION(version)) ? false : true) : false)
+ #define IS_92C_SERIAL(version)  ((version & CHIP_92C_BITMASK) ? true : false)
++#define IS_CHIP_VENDOR_UMC(version)		\
++	((version & CHIP_VENDOR_UMC) ? true : false)
++#define GET_CVID_CUT_VERSION(version)	((version) & CUT_VERSION_MASK)
++#define IS_81xxC_VENDOR_UMC_B_CUT(version)		\
++	((IS_CHIP_VENDOR_UMC(version)) ? \
++	((GET_CVID_CUT_VERSION(version) == CHIP_VENDOR_UMC_B_CUT) ?	\
++	true : false) : false)
+ 
+ enum rtl819x_loopback_e {
+ 	RTL819X_NO_LOOPBACK = 0,
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+@@ -92,6 +92,8 @@ int rtl92c_init_sw_vars(struct ieee80211
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	const struct firmware *firmware;
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	char *fw_name = NULL;
+ 
+ 	rtl8192ce_bt_reg_init(hw);
+ 
+@@ -161,8 +163,14 @@ int rtl92c_init_sw_vars(struct ieee80211
+ 	}
+ 
+ 	/* request fw */
+-	err = request_firmware(&firmware, rtlpriv->cfg->fw_name,
+-			rtlpriv->io.dev);
++	if (IS_VENDOR_UMC_A_CUT(rtlhal->version) &&
++	    !IS_92C_SERIAL(rtlhal->version))
++		fw_name = "rtlwifi/rtl8192cfwU.bin";
++	else if (IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version))
++		fw_name = "rtlwifi/rtl8192cfwU_B.bin";
++	else
++		fw_name = rtlpriv->cfg->fw_name;
++	err = request_firmware(&firmware, fw_name, rtlpriv->io.dev);
+ 	if (err) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 ("Failed to request firmware!\n"));
+@@ -358,6 +366,8 @@ MODULE_AUTHOR("Larry Finger	<Larry.Finge
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Realtek 8192C/8188C 802.11n PCI wireless");
+ MODULE_FIRMWARE("rtlwifi/rtl8192cfw.bin");
++MODULE_FIRMWARE("rtlwifi/rtl8192cfwU.bin");
++MODULE_FIRMWARE("rtlwifi/rtl8192cfwU_B.bin");
+ 
+ module_param_named(swenc, rtl92ce_mod_params.sw_crypto, bool, 0444);
+ module_param_named(debug, rtl92ce_mod_params.debug, int, 0444);
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/def.h
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192cu/def.h
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/def.h
+@@ -50,10 +50,6 @@
+ #define IS_VENDOR_UMC(version)		\
+ 	(((version) & CHIP_VENDOR_UMC) ? true : false)
+ 
+-#define IS_VENDOR_UMC_A_CUT(version)	\
+-	(((version) & CHIP_VENDOR_UMC) ? (((version) & (BIT(6) | BIT(7))) ? \
+-	false : true) : false)
+-
+ #define IS_VENDOR_8723_A_CUT(version)	\
+ 	(((version) & CHIP_VENDOR_UMC) ? (((version) & (BIT(6))) ? \
+ 	false : true) : false)
