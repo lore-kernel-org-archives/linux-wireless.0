@@ -1,122 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:50913 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759093Ab1JFTLV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Oct 2011 15:11:21 -0400
-Received: by mail-bw0-f41.google.com with SMTP id zs2so4789869bkb.14
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 12:11:16 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: coelho@ti.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/8] wl12xx: add a platform device to the sdio module
-Date: Thu,  6 Oct 2011 22:10:54 +0300
-Message-Id: <1317928259-26437-4-git-send-email-coelho@ti.com> (sfid-20111006_211123_415129_7999372E)
-In-Reply-To: <1317928259-26437-1-git-send-email-coelho@ti.com>
-References: <1317928259-26437-1-git-send-email-coelho@ti.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:3033 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754046Ab1JLSvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Oct 2011 14:51:51 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 06/22] brcm80211: add endian annotation to packet filter
+ structures
+Date: Wed, 12 Oct 2011 20:51:16 +0200
+Message-ID: <1318445492-24207-7-git-send-email-arend@broadcom.com> (sfid-20111012_205211_864218_B61D54F7)
+In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felipe Balbi <balbi@ti.com>
+The packet filter structures were byte copied and transferred over the
+host bus to the device. As such they are little endian and have been
+annotated accordingly.
 
-The platform device will be used to match the platform driver that
-will be implemented by the core module.
-
-Signed-off-by: Felipe Balbi <balbi@ti.com>
-[forward-ported, cleaned-up and rephrased commit message]
-[call platform_device_add() instead of platform_device_register()]
-[store alloc'ed device platform directly in glue->core]
-[fixed the length of memset(res...)]
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/wl12xx/sdio.c |   44 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 44 insertions(+), 0 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   22 ++++++------
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   34 ++++++++++---------
+ 2 files changed, 29 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index c3ddaa6..500704f 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -24,6 +24,7 @@
- #include <linux/irq.h>
- #include <linux/module.h>
- #include <linux/vmalloc.h>
-+#include <linux/platform_device.h>
- #include <linux/mmc/sdio_func.h>
- #include <linux/mmc/sdio_ids.h>
- #include <linux/mmc/card.h>
-@@ -47,6 +48,7 @@
- struct wl12xx_sdio_glue {
- 	struct device *dev;
- 	struct wl1271 *wl;
-+	struct platform_device *core;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index f58c0eb..951910e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -330,14 +330,14 @@ enum brcmf_bus_state {
+  * start matching, the pattern to match, the size of the pattern, and a bitmask
+  * that indicates which bits within the pattern should be matched.
+  */
+-struct brcmf_pkt_filter_pattern {
++struct brcmf_pkt_filter_pattern_le {
+ 	/*
+ 	 * Offset within received packet to start pattern matching.
+ 	 * Offset '0' is the first byte of the ethernet header.
+ 	 */
+-	u32 offset;
++	__le32 offset;
+ 	/* Size of the pattern.  Bitmask must be the same size.*/
+-	u32 size_bytes;
++	__le32 size_bytes;
+ 	/*
+ 	 * Variable length mask and pattern data. mask starts at offset 0.
+ 	 * Pattern immediately follows mask.
+@@ -346,19 +346,19 @@ struct brcmf_pkt_filter_pattern {
  };
  
- static const struct sdio_device_id wl1271_devices[] __devinitconst = {
-@@ -234,6 +236,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 	const struct wl12xx_platform_data *wlan_data;
- 	struct wl1271 *wl;
- 	struct wl12xx_sdio_glue *glue;
-+	struct resource res[1];
- 	unsigned long irqflags;
- 	mmc_pm_flag_t mmcflags;
- 	int ret = -ENOMEM;
-@@ -321,8 +324,47 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 	/* Tell PM core that we don't need the card to be powered now */
- 	pm_runtime_put_noidle(&func->dev);
+ /* IOVAR "pkt_filter_add" parameter. Used to install packet filters. */
+-struct brcmf_pkt_filter {
+-	u32 id;		/* Unique filter id, specified by app. */
+-	u32 type;		/* Filter type (WL_PKT_FILTER_TYPE_xxx). */
+-	u32 negate_match;	/* Negate the result of filter matches */
++struct brcmf_pkt_filter_le {
++	__le32 id;		/* Unique filter id, specified by app. */
++	__le32 type;		/* Filter type (WL_PKT_FILTER_TYPE_xxx). */
++	__le32 negate_match;	/* Negate the result of filter matches */
+ 	union {			/* Filter definitions */
+-		struct brcmf_pkt_filter_pattern pattern; /* Filter pattern */
++		struct brcmf_pkt_filter_pattern_le pattern; /* Filter pattern */
+ 	} u;
+ };
  
-+	glue->core = platform_device_alloc("wl12xx-sdio", -1);
-+	if (!glue->core) {
-+		wl1271_error("can't allocate platform_device");
-+		ret = -ENOMEM;
-+		goto out_unreg_hw;
-+	}
-+
-+	glue->core->dev.parent = &func->dev;
-+
-+	memset(res, 0x00, sizeof(res));
-+
-+	res[0].start = wlan_data->irq;
-+	res[0].flags = IORESOURCE_IRQ;
-+	res[0].name = "irq";
-+
-+	ret = platform_device_add_resources(glue->core, res, ARRAY_SIZE(res));
-+	if (ret) {
-+		wl1271_error("can't add resources");
-+		goto out_dev_put;
-+	}
-+
-+	ret = platform_device_add_data(glue->core, wlan_data,
-+				       sizeof(*wlan_data));
-+	if (ret) {
-+		wl1271_error("can't add platform data");
-+		goto out_dev_put;
-+	}
-+
-+	ret = platform_device_add(glue->core);
-+	if (ret) {
-+		wl1271_error("can't add platform device");
-+		goto out_dev_put;
-+	}
- 	return 0;
+ /* IOVAR "pkt_filter_enable" parameter. */
+-struct brcmf_pkt_filter_enable {
+-	u32 id;		/* Unique filter id */
+-	u32 enable;		/* Enable/disable bool */
++struct brcmf_pkt_filter_enable_le {
++	__le32 id;		/* Unique filter id */
++	__le32 enable;		/* Enable/disable bool */
+ };
  
-+out_dev_put:
-+	platform_device_put(glue->core);
-+
-+out_unreg_hw:
-+	wl1271_unregister_hw(wl);
-+
- out_irq:
- 	free_irq(wl->irq, wl);
+ /* BSS info structure
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+index 4075fd7..a43b3da 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+@@ -36,9 +36,9 @@ int brcmf_msg_level;
  
-@@ -350,6 +392,8 @@ static void __devexit wl1271_remove(struct sdio_func *func)
+ #define MSGTRACE_VERSION	1
+ 
+-#define BRCMF_PKT_FILTER_FIXED_LEN	offsetof(struct brcmf_pkt_filter, u)
++#define BRCMF_PKT_FILTER_FIXED_LEN	offsetof(struct brcmf_pkt_filter_le, u)
+ #define BRCMF_PKT_FILTER_PATTERN_FIXED_LEN	\
+-	offsetof(struct brcmf_pkt_filter_pattern, mask_and_pattern)
++	offsetof(struct brcmf_pkt_filter_pattern_le, mask_and_pattern)
+ 
+ #ifdef BCMDBG
+ static const char brcmf_version[] =
+@@ -558,8 +558,9 @@ brcmf_c_pktfilter_offload_enable(struct brcmf_pub *drvr, char *arg, int enable,
+ 	char *arg_save = NULL, *arg_org = NULL;
+ 	int rc;
+ 	char buf[128];
+-	struct brcmf_pkt_filter_enable enable_parm;
+-	struct brcmf_pkt_filter_enable *pkt_filterp;
++	struct brcmf_pkt_filter_enable_le enable_parm;
++	struct brcmf_pkt_filter_enable_le *pkt_filterp;
++	__le32 mmode_le;
+ 
+ 	arg_save = kmalloc(strlen(arg) + 1, GFP_ATOMIC);
+ 	if (!arg_save)
+@@ -582,15 +583,15 @@ brcmf_c_pktfilter_offload_enable(struct brcmf_pub *drvr, char *arg, int enable,
+ 	buf[str_len] = '\0';
+ 	buf_len = str_len + 1;
+ 
+-	pkt_filterp = (struct brcmf_pkt_filter_enable *) (buf + str_len + 1);
++	pkt_filterp = (struct brcmf_pkt_filter_enable_le *) (buf + str_len + 1);
+ 
+ 	/* Parse packet filter id. */
+ 	enable_parm.id = 0;
+ 	if (!kstrtoul(argv[i], 0, &res))
+-		enable_parm.id = (u32)res;
++		enable_parm.id = cpu_to_le32((u32)res);
+ 
+ 	/* Parse enable/disable value. */
+-	enable_parm.enable = enable;
++	enable_parm.enable = cpu_to_le32(enable);
+ 
+ 	buf_len += sizeof(enable_parm);
+ 	memcpy((char *)pkt_filterp, &enable_parm, sizeof(enable_parm));
+@@ -605,7 +606,8 @@ brcmf_c_pktfilter_offload_enable(struct brcmf_pub *drvr, char *arg, int enable,
+ 		brcmf_dbg(TRACE, "successfully added pktfilter %s\n", arg);
+ 
+ 	/* Contorl the master mode */
+-	brcmu_mkiovar("pkt_filter_mode", (char *)&master_mode, 4, buf,
++	mmode_le = cpu_to_le32(master_mode);
++	brcmu_mkiovar("pkt_filter_mode", (char *)&mmode_le, 4, buf,
+ 		    sizeof(buf));
+ 	rc = brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR, buf,
+ 				       sizeof(buf));
+@@ -621,8 +623,8 @@ fail:
+ void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg)
+ {
+ 	const char *str;
+-	struct brcmf_pkt_filter pkt_filter;
+-	struct brcmf_pkt_filter *pkt_filterp;
++	struct brcmf_pkt_filter_le pkt_filter;
++	struct brcmf_pkt_filter_le *pkt_filterp;
+ 	unsigned long res;
+ 	int buf_len;
+ 	int str_len;
+@@ -658,12 +660,12 @@ void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg)
+ 	str_len = strlen(str);
+ 	buf_len = str_len + 1;
+ 
+-	pkt_filterp = (struct brcmf_pkt_filter *) (buf + str_len + 1);
++	pkt_filterp = (struct brcmf_pkt_filter_le *) (buf + str_len + 1);
+ 
+ 	/* Parse packet filter id. */
+ 	pkt_filter.id = 0;
+ 	if (!kstrtoul(argv[i], 0, &res))
+-		pkt_filter.id = (u32)res;
++		pkt_filter.id = cpu_to_le32((u32)res);
+ 
+ 	if (NULL == argv[++i]) {
+ 		brcmf_dbg(ERROR, "Polarity not provided\n");
+@@ -673,7 +675,7 @@ void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg)
+ 	/* Parse filter polarity. */
+ 	pkt_filter.negate_match = 0;
+ 	if (!kstrtoul(argv[i], 0, &res))
+-		pkt_filter.negate_match = (u32)res;
++		pkt_filter.negate_match = cpu_to_le32((u32)res);
+ 
+ 	if (NULL == argv[++i]) {
+ 		brcmf_dbg(ERROR, "Filter type not provided\n");
+@@ -683,7 +685,7 @@ void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg)
+ 	/* Parse filter type. */
+ 	pkt_filter.type = 0;
+ 	if (!kstrtoul(argv[i], 0, &res))
+-		pkt_filter.type = (u32)res;
++		pkt_filter.type = cpu_to_le32((u32)res);
+ 
+ 	if (NULL == argv[++i]) {
+ 		brcmf_dbg(ERROR, "Offset not provided\n");
+@@ -693,7 +695,7 @@ void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg)
+ 	/* Parse pattern filter offset. */
+ 	pkt_filter.u.pattern.offset = 0;
+ 	if (!kstrtoul(argv[i], 0, &res))
+-		pkt_filter.u.pattern.offset = (u32)res;
++		pkt_filter.u.pattern.offset = cpu_to_le32((u32)res);
+ 
+ 	if (NULL == argv[++i]) {
+ 		brcmf_dbg(ERROR, "Bitmask not provided\n");
+@@ -721,7 +723,7 @@ void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg)
+ 		goto fail;
  	}
- 	free_irq(wl->irq, wl);
- 	wl1271_free_hw(wl);
-+	platform_device_del(glue->core);
-+	platform_device_put(glue->core);
- 	kfree(glue);
- }
+ 
+-	pkt_filter.u.pattern.size_bytes = mask_size;
++	pkt_filter.u.pattern.size_bytes = cpu_to_le32(mask_size);
+ 	buf_len += BRCMF_PKT_FILTER_FIXED_LEN;
+ 	buf_len += (BRCMF_PKT_FILTER_PATTERN_FIXED_LEN + 2 * mask_size);
  
 -- 
-1.7.1
+1.7.4.1
+
 
