@@ -1,74 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:53588 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752858Ab1JJINE (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:58997 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751669Ab1JLHmX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 04:13:04 -0400
-Received: by mail-bw0-f46.google.com with SMTP id zt4so8169287bkb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 01:13:03 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 16/29] wl12xx: make WL1271_FLAG_STA_STATE_SENT flag per-vif
-Date: Mon, 10 Oct 2011 10:13:04 +0200
-Message-Id: <1318234397-21081-17-git-send-email-eliad@wizery.com> (sfid-20111010_101309_229885_61169560)
-In-Reply-To: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+	Wed, 12 Oct 2011 03:42:23 -0400
+Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
+	by emh06-2.mail.saunalahti.fi (Postfix) with SMTP id 5A6DCC8095
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2011 10:42:19 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-188-95.elisa-laajakaista.fi [88.115.188.95])
+	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 447FA27D89
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2011 10:42:16 +0300 (EEST)
+Subject: [PATCH] ath6kl: unbreak suspend
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Date: Wed, 12 Oct 2011 10:42:16 +0300
+Message-ID: <20111012074216.26442.87419.stgit@localhost6.localdomain6> (sfid-20111012_094227_724001_A7B1207C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This flag should be set per-vif, rather than globally.
+From: Sam Leffler <sleffler@chromium.org>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Add missing {}'s that caused ath6kl_sdio_suspend to always return -EINVAL
+causing suspend to be aborted.
+
+kvalo: I broke this in commit f7325b85e ("ath6kl: add sdio debug messages")
+
+Signed-off-by: Sam Leffler <sleffler@chromium.org>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/wl12xx/main.c   |    6 +++---
- drivers/net/wireless/wl12xx/wl12xx.h |    2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath6kl/sdio.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 9c0a1ac..92f38c5 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -408,7 +408,7 @@ static int wl1271_check_operstate(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	if (operstate != IF_OPER_UP)
- 		return 0;
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 2394c17..58e31f6 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -724,12 +724,13 @@ static int ath6kl_sdio_suspend(struct ath6kl *ar)
  
--	if (test_and_set_bit(WL1271_FLAG_STA_STATE_SENT, &wl->flags))
-+	if (test_and_set_bit(WLVIF_FLAG_STA_STATE_SENT, &wlvif->flags))
- 		return 0;
+ 	flags = sdio_get_host_pm_caps(func);
  
- 	ret = wl12xx_cmd_set_peer_state(wl, wlvif->sta.hlid);
-@@ -3614,8 +3614,8 @@ sta_not_found:
- 			    !!test_and_clear_bit(WLVIF_FLAG_STA_ASSOCIATED,
- 						 &wlvif->flags);
- 			bool was_ifup =
--			    !!test_and_clear_bit(WL1271_FLAG_STA_STATE_SENT,
--						 &wl->flags);
-+			    !!test_and_clear_bit(WLVIF_FLAG_STA_STATE_SENT,
-+						 &wlvif->flags);
- 			wlvif->aid = 0;
+-	if (!(flags & MMC_PM_KEEP_POWER))
++	if (!(flags & MMC_PM_KEEP_POWER)) {
+ 		/* as host doesn't support keep power we need to bail out */
+ 		ath6kl_dbg(ATH6KL_DBG_SDIO,
+ 			   "func %d doesn't support MMC_PM_KEEP_POWER\n",
+ 			   func->num);
+ 		return -EINVAL;
++	}
  
- 			/* free probe-request template */
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 37498f2..6a1df2c 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -321,7 +321,6 @@ enum wl12xx_flags {
- 	WL1271_FLAG_IRQ_RUNNING,
- 	WL1271_FLAG_IDLE,
- 	WL1271_FLAG_PSPOLL_FAILURE,
--	WL1271_FLAG_STA_STATE_SENT,
- 	WL1271_FLAG_FW_TX_BUSY,
- 	WL1271_FLAG_IF_INITIALIZED,
- 	WL1271_FLAG_DUMMY_PACKET_PENDING,
-@@ -339,6 +338,7 @@ enum wl12xx_vif_flags {
- 	WLVIF_FLAG_AP_STARTED,
- 	WLVIF_FLAG_PSM,
- 	WLVIF_FLAG_PSM_REQUESTED,
-+	WLVIF_FLAG_STA_STATE_SENT,
- };
- 
- struct wl1271_link {
--- 
-1.7.6.401.g6a319
+ 	ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
+ 	if (ret) {
 
