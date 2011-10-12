@@ -1,85 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail120.messagelabs.com ([216.82.250.83]:65074 "EHLO
-	mail120.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752461Ab1JQUaZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Oct 2011 16:30:25 -0400
-Received: from il27exr02.cig.mot.com (il27exr02.mot.com [10.17.196.71])
-	by motgate3.mot-solutions.com (8.14.3/8.14.3) with ESMTP id p9HKUNO9023193
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2011 13:30:24 -0700 (MST)
-Received: from il27exr02.cig.mot.com (il27vts01.cig.mot.com [10.17.196.85])
-	by il27exr02.cig.mot.com (8.13.1/Vontu) with ESMTP id p9HKTN2O013761
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2011 15:29:23 -0500 (CDT)
-Received: from ct11exm65.ds.mot.com (ct11exm65.am.mot.com [10.177.8.53])
-	by il27exr02.cig.mot.com (8.13.1/8.13.0) with ESMTP id p9HKTMfD013756
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2011 15:29:22 -0500 (CDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:4328 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753980Ab1JLSvr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Oct 2011 14:51:47 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Alwin Beukers" <alwin@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 22/22] brcm80211: removed file wifi.c
+Date: Wed, 12 Oct 2011 20:51:32 +0200
+Message-ID: <1318445492-24207-23-git-send-email-arend@broadcom.com> (sfid-20111012_205231_795177_8B760EF6)
+In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: 802.11d power control of the
-Date: Mon, 17 Oct 2011 16:29:00 -0400
-Message-ID: <4FAA3D750B50F245954503D85CC76B2D07D376A8@ct11exm65.ds.mot.com> (sfid-20111017_223029_503606_288207ED)
-In-Reply-To: <4E9C8F77.9040406@lwfinger.net>
-References: <4FAA3D750B50F245954503D85CC76B2D07D3768B@ct11exm65.ds.mot.com> <4E9C8F77.9040406@lwfinger.net>
-From: "Brown Patrick-PMH786" <Patrick.Brown@motorolasolutions.com>
-To: <linux-wireless@vger.kernel.org>,
-	"Anthony Gray" <anthonyg@ips-yes.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sirs,
+From: Alwin Beukers <alwin@broadcom.com>
 
-Larry Finger referred me your email address can you address the question
-below please.
+Wifi.c was empty after previous cleanups, so it was removed.
 
-I am looking at the code in the linux wireless driver and trying to 
- determine if the maximum transmit power from a client is read from the 
- 802.11d beacon field [the 802.11d triplet of start channel ,number of 
- channels and txpower] or is it predetermined in the software based on
-the country code.
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmutil/Makefile |    3 +--
+ drivers/net/wireless/brcm80211/brcmutil/wifi.c   |   16 ----------------
+ 2 files changed, 1 insertions(+), 18 deletions(-)
+ delete mode 100644 drivers/net/wireless/brcm80211/brcmutil/wifi.c
 
- linux-2.6.39.4\drivers\net\wireless\rtlwifi\rtl8192cu\rf.c
+diff --git a/drivers/net/wireless/brcm80211/brcmutil/Makefile b/drivers/net/wireless/brcm80211/brcmutil/Makefile
+index 720e261..6281c41 100644
+--- a/drivers/net/wireless/brcm80211/brcmutil/Makefile
++++ b/drivers/net/wireless/brcm80211/brcmutil/Makefile
+@@ -20,8 +20,7 @@ ccflags-y :=				\
+ 	-Idrivers/net/wireless/brcm80211/include
+ 
+ BRCMUTIL_OFILES := \
+-	utils.o \
+-	wifi.o
++	utils.o
+ 
+ MODULEPFX := brcmutil
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmutil/wifi.c b/drivers/net/wireless/brcm80211/brcmutil/wifi.c
+deleted file mode 100644
+index 8483f24..0000000
+--- a/drivers/net/wireless/brcm80211/brcmutil/wifi.c
++++ /dev/null
+@@ -1,16 +0,0 @@
+-/*
+- * Copyright (c) 2010 Broadcom Corporation
+- *
+- * Permission to use, copy, modify, and/or distribute this software for any
+- * purpose with or without fee is hereby granted, provided that the above
+- * copyright notice and this permission notice appear in all copies.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+- */
+-#include <brcmu_wifi.h>
+-- 
+1.7.4.1
 
- My goal is from the beacons 802.11d to directly control the output 
- transmit power of a client radio.
-
-Pat Brown,
-Motorola Solutions
-1 Motorola Plaza place
-Holtsville , New York,
-11742 
-6318801188
------Original Message-----
-From: Larry Finger [mailto:larry.finger@gmail.com] On Behalf Of Larry
-Finger
-Sent: Monday, October 17, 2011 4:27 PM
-To: Brown Patrick-PMH786
-Subject: Re: 802.11d power control of the
-
-On 10/17/2011 03:10 PM, Brown Patrick-PMH786 wrote:
-> Mr Finger,
->
-> I am looking at the code in the linux wireless driver and trying to
-determine if
-> the maximum transmit power from a client is read from the 802.11d
-beacon field
-> [the 802.11d triplet of start channel ,number of channels and txpower]
-or is it
-> predetermined in the software based on the country code.
->
-> linux-2.6.39.4\drivers\net\wireless\rtlwifi\rtl8192cu\rf.c
->
-> My goal is from the beacons 802.11d to directly control the output
-transmit
-> power of a client radio.
-
-All of the Linux wireless drivers that use mac80211 get the maximum
-power from 
-the regulatory information. To my knowledge, none of them use 802.11d
-beacons to 
-further reduce the max power, but I am not an expert on mac80211. You
-should 
-address that question to linux-wireless@vger.kernel.org.
-
-Larry
 
