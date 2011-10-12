@@ -1,67 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38981 "EHLO nbd.name"
+Received: from mms2.broadcom.com ([216.31.210.18]:3023 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755594Ab1JDKhD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 06:37:03 -0400
-Message-ID: <4E8AE1CC.5060703@openwrt.org> (sfid-20111004_123708_131331_D4A5F113)
-Date: Tue, 04 Oct 2011 12:37:00 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1754034Ab1JLSvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Oct 2011 14:51:51 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 04/22] brcm80211: remove sparse warning in fullmac debug
+ function
+Date: Wed, 12 Oct 2011 20:51:14 +0200
+Message-ID: <1318445492-24207-5-git-send-email-arend@broadcom.com> (sfid-20111012_205222_494709_F83DAAC0)
+In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kgiori@qca.qualcomm.com
-Subject: Re: [RFC 4/6] ath9k: add DFS build parameter
-References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com> <1317637758-11907-5-git-send-email-zefir.kurtisi@neratec.com> <CAB=NE6XxW_kMnWLkC4dy4naUKaTk_hZi0_F86LNyuk3RNyqNQA@mail.gmail.com> <4E8AD800.9040208@neratec.com>
-In-Reply-To: <4E8AD800.9040208@neratec.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-10-04 11:55 AM, Zefir Kurtisi wrote:
-> On 10/03/2011 08:26 PM, Luis R. Rodriguez wrote:
->>  On Mon, Oct 3, 2011 at 3:29 AM, Zefir Kurtisi<zefir.kurtisi@neratec.com>  wrote:
->>>
->>>  Signed-off-by: Zefir Kurtisi<zefir.kurtisi@neratec.com>
->>>  ---
->>>   drivers/net/wireless/ath/ath9k/Kconfig  |    7 +++++++
->>>   drivers/net/wireless/ath/ath9k/Makefile |    2 ++
->>>   2 files changed, 9 insertions(+), 0 deletions(-)
->>>
->>>  diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
->>>  index d9c08c6..adddcca 100644
->>>  --- a/drivers/net/wireless/ath/ath9k/Kconfig
->>>  +++ b/drivers/net/wireless/ath/ath9k/Kconfig
->>>  @@ -58,6 +58,13 @@ config ATH9K_RATE_CONTROL
->>>           Say Y, if you want to use the ath9k specific rate control
->>>           module instead of minstrel_ht.
->>>
->>>  +config ATH9K_DFS
->>>  +       bool "Atheros ath9k DFS support"
->>>  +       depends on ATH9K
->>>  +       default y
->>
->>  At this point selecting y does nothing. Leave this patch out until
->>  selecting "y" means something.
->>
-> What do you mean by 'nothing'? It allows you to select DFS as ath9k feature in your kernel configuration, or? Though, I agree that enabling it by default is not a good idea.
->
->>  Default should be n, and in particular Atheros itself can only likely
->>  commit to supporting DFS for AR9003 when it finds resources to do so
->>  as well as properly test it, so DFS support kconfig should state this.
->>  If someone wants to step up to completely support all bugs for older
->>  families that is their prerogative but we cannot commit to it, due to
->>  the regulatory considerations though unless this happens this cannot
->>  and should not be enabled for older families in code.
->>
-> In fact, AR9003 is the platform we are interested in. Although it
-> seems that older chipsets do also detect pulses with this patches
-> (AR9280 does, IIRC), I agree to limit DFS support to AR9003 (and later).
-> This should be easily possible by setting priv_ops->set_radar_params for
-> AR9003 only. I'll remove it for AR5008 in my v2 RFC.
-Please don't remove support code for older hardware. I'm fine with 
-adding a SREV check that prevents it from being enabled by default on 
-older hardware, but eventually I will need at least AR9280 DFS support 
-for a few devices in OpenWrt.
+The debug function did a write operation which required a different
+pointer type resulting in a sparse warning.
 
-- Felix
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    2 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index 3ec7477..f58c0eb 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -720,7 +720,7 @@ extern int brcmf_proto_cdc_query_dcmd(struct brcmf_pub *drvr, int ifidx,
+ extern int brcmf_os_proto_block(struct brcmf_pub *drvr);
+ extern int brcmf_os_proto_unblock(struct brcmf_pub *drvr);
+ #ifdef BCMDBG
+-extern int brcmf_write_to_file(struct brcmf_pub *drvr, u8 *buf, int size);
++extern int brcmf_write_to_file(struct brcmf_pub *drvr, const u8 *buf, int size);
+ #endif				/* BCMDBG */
+ 
+ extern int brcmf_ifname2idx(struct brcmf_info *drvr_priv, char *name);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 1adc3be..7f5003e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -1319,7 +1319,7 @@ int brcmf_netdev_wait_pend8021x(struct net_device *ndev)
+ }
+ 
+ #ifdef BCMDBG
+-int brcmf_write_to_file(struct brcmf_pub *drvr, u8 *buf, int size)
++int brcmf_write_to_file(struct brcmf_pub *drvr, const u8 *buf, int size)
+ {
+ 	int ret = 0;
+ 	struct file *fp;
+@@ -1339,7 +1339,7 @@ int brcmf_write_to_file(struct brcmf_pub *drvr, u8 *buf, int size)
+ 	}
+ 
+ 	/* Write buf to file */
+-	fp->f_op->write(fp, buf, size, &pos);
++	fp->f_op->write(fp, (char __user *)buf, size, &pos);
+ 
+ exit:
+ 	/* free buf before return */
+-- 
+1.7.4.1
+
+
