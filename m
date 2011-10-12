@@ -1,74 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55791 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751898Ab1JKUpo (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:56028 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383Ab1JLC3X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 16:45:44 -0400
-Date: Tue, 11 Oct 2011 16:39:36 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bing Zhao <bzhao@marvell.com>, g@tuxdriver.com
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Subject: Re: [PATCH] mwifiex: add support for Marvell pcie8766 chipset
-Message-ID: <20111011203936.GL6558@tuxdriver.com> (sfid-20111011_224548_354056_78678EF4)
-References: <1317701303-21871-1-git-send-email-bzhao@marvell.com>
- <1317701303-21871-2-git-send-email-bzhao@marvell.com>
- <477F20668A386D41ADCC57781B1F704308155977E8@SC-VEXCH1.marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <477F20668A386D41ADCC57781B1F704308155977E8@SC-VEXCH1.marvell.com>
+	Tue, 11 Oct 2011 22:29:23 -0400
+Received: by gyb13 with SMTP id 13so222591gyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 19:29:22 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 2/5 V2] rtlwifi: Update to new Realtek version - Part I
+Date: Tue, 11 Oct 2011 21:28:48 -0500
+Message-Id: <1318386531-5859-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20111012_042932_759378_82A81699)
+In-Reply-To: <1318386531-5859-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1318386531-5859-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 06, 2011 at 08:30:53PM -0700, Bing Zhao wrote:
-> Hi John,
-> 
-> > -----Original Message-----
-> > From: Bing Zhao [mailto:bzhao@marvell.com]
-> > Sent: Monday, October 03, 2011 9:08 PM
-> > To: linux-wireless@vger.kernel.org
-> > Cc: John W. Linville; Amitkumar Karwar; Kiran Divekar; Yogesh Powar; Frank Huang; Bing Zhao
-> > Subject: [PATCH] mwifiex: add support for Marvell pcie8766 chipset
-> > 
-> > From: Amitkumar Karwar <akarwar@marvell.com>
-> > 
-> > This patch supports 88W8766P chipset with a PCIe interface.
-> > 
-> > The corresponding firmware image file is located at:
-> > "mrvl/pcie8766_uapsta.bin"
-> > 
-> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> > Signed-off-by: Ramesh Radhakrishnan <rramesh@marvell.com>
-> > Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-> > Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-> > Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> > Signed-off-by: Frank Huang <frankh@marvell.com>
-> 
-> Could you please apply this patch? It doesn't depend on the other patches we are working on.
-> 
-> Thanks,
-> Bing
+From: Chaoming Li <chaoming_li@realsil.com.cn>
 
-It generates warnings...
+This patch incorporate the differences between the 06/20/2011 and
+08/16/2011 Realtek releases of the rtlwifi driver.
 
-  LD [M]  drivers/net/wireless/mwifiex/mwifiex_pcie.o
-WARNING: drivers/net/wireless/mwifiex/mwifiex_pcie.o(.data+0x18): Section mismatch in reference from the variable mwifiex_pcie to the variable .devinit.rodata:mwifiex_ids
-The variable mwifiex_pcie references
-the variable __devinitconst mwifiex_ids
-If the reference is valid then annotate the
-variable with __init* or __refdata (see linux/init.h) or name the variable:
-*driver, *_template, *_timer, *_sht, *_ops, *_probe, *_probe_one, *_console
+The changes include:
 
-WARNING: drivers/net/wireless/mwifiex/mwifiex_pcie.o(.data+0x20): Section mismatch in reference from the variable mwifiex_pcie to the function .devinit.text:mwifiex_pcie_probe()
-The variable mwifiex_pcie references
-the function __devinit mwifiex_pcie_probe()
-If the reference is valid then annotate the
-variable with __init* or __refdata (see linux/init.h) or name the variable:
-*driver, *_template, *_timer, *_sht, *_ops, *_probe, *_probe_one, *_console
+1. Handling of IEEE80211_HW_CONNECTION_MONITOR.
+2. Fix typo to get proper response to nullfunc frames.
 
+Signed-off-by: Chaoming Li <chaoming_li@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/base.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
+index eafe980..a2704fb 100644
+--- a/drivers/net/wireless/rtlwifi/base.c
++++ b/drivers/net/wireless/rtlwifi/base.c
+@@ -311,6 +311,8 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
+ 	    IEEE80211_HW_RX_INCLUDES_FCS |
+ 	    IEEE80211_HW_BEACON_FILTER |
+ 	    IEEE80211_HW_AMPDU_AGGREGATION |
++	    IEEE80211_HW_CONNECTION_MONITOR |
++	    /* IEEE80211_HW_SUPPORTS_CQM_RSSI | */
+ 	    IEEE80211_HW_REPORTS_TX_ACK_STATUS | 0;
+ 
+ 	/* swlps or hwlps has been set in diff chip in init_sw_vars */
+@@ -850,7 +852,7 @@ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
+ 		 *So tcb_desc->hw_rate is just used for
+ 		 *special data and mgt frames
+ 		 */
+-		if (info->control.rates[0].idx == 0 &&
++		if (info->control.rates[0].idx == 0 ||
+ 				ieee80211_is_nullfunc(fc)) {
+ 			tcb_desc->use_driver_rate = true;
+ 			tcb_desc->ratr_index = RATR_INX_WIRELESS_MC;
+@@ -1138,7 +1140,7 @@ void rtl_watchdog_wq_callback(void *data)
+ 	}
+ 
+ 	/*
+-	 *<3> to check if traffic busy, if
++	 *<2> to check if traffic busy, if
+ 	 * busytraffic we don't change channel
+ 	 */
+ 	if (mac->link_state >= MAC80211_LINKED) {
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.6.4
+
