@@ -1,133 +1,281 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:35081 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756006Ab1JYKNu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 06:13:50 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
-	<athiruve@qca.qualcomm.com>
-Subject: [PATCH 26/34] ath6kl: Use the other variant of netdev (un)register APIs
-Date: Tue, 25 Oct 2011 15:40:22 +0530
-Message-ID: <1319537430-12459-27-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_122050_251387_18E79EAD)
-In-Reply-To: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:4989 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754047Ab1JLSvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Oct 2011 14:51:51 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 01/22] brcm80211: smac: removed redundant timer function
+ parameters
+Date: Wed, 12 Oct 2011 20:51:11 +0200
+Message-ID: <1318445492-24207-2-git-send-email-arend@broadcom.com> (sfid-20111012_205210_304117_A5C0D3BC)
+In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use replace (un)register_netdev() with (un)register_netdevice()
-so that the same ath6kl function can be used with
-add_virtual_intf()/del_virtual_intf().
+From: Roland Vossen <rvossen@broadcom.com>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Parameter 'wl' is already stored in struct brcms_timer, so the number of
+function parameters could be decreased.
+
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   15 ++++-----------
- drivers/net/wireless/ath/ath6kl/init.c     |   12 ++++++++++--
- drivers/net/wireless/ath/ath6kl/main.c     |    1 +
- 3 files changed, 15 insertions(+), 13 deletions(-)
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   15 ++++++++-------
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |    7 +++----
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |   13 ++++++-------
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |   12 ++++++------
+ drivers/net/wireless/brcm80211/brcmsmac/phy_shim.c |   13 ++++++-------
+ drivers/net/wireless/brcm80211/brcmsmac/phy_shim.h |    9 +++------
+ 6 files changed, 32 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 51555e7..6c7d9e7 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2101,14 +2101,7 @@ void ath6kl_deinit_if_data(struct ath6kl *ar, struct net_device *ndev)
- 
- 	aggr_module_destroy(vif->aggr_cntxt);
- 
--	vif->aggr_cntxt = NULL;
--
--	if (test_bit(NETDEV_REGISTERED, &vif->flags)) {
--		unregister_netdev(ndev);
--		clear_bit(NETDEV_REGISTERED, &vif->flags);
--	}
--
--	free_netdev(ndev);
-+	unregister_netdevice(ndev);
- }
- 
- struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
-@@ -2140,7 +2133,7 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 	if (ath6kl_init_if_data(ar, ndev))
- 		goto err;
- 
--	if (register_netdev(ndev))
-+	if (register_netdevice(ndev))
- 		goto err;
- 
- 	vif->sme_state = SME_DISCONNECTED;
-@@ -2155,8 +2148,8 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 	return ndev;
- 
- err:
--	ath6kl_deinit_if_data(ar, ndev);
--
-+	aggr_module_destroy(vif->aggr_cntxt);
-+	free_netdev(ndev);
- 	return NULL;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index b629a5a..acd4455 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1416,8 +1416,13 @@ static int ath6kl_init(struct ath6kl *ar)
- 		goto err_node_cleanup;
- 	}
- 
-+	rtnl_lock();
-+
- 	/* Add an initial station interface */
- 	ndev = ath6kl_interface_add(ar, "wlan%d", NL80211_IFTYPE_STATION, 0);
-+
-+	rtnl_unlock();
-+
- 	if (!ndev) {
- 		ath6kl_err("Failed to instantiate a network device\n");
- 		status = -ENOMEM;
-@@ -1522,7 +1527,9 @@ err_rxbuf_cleanup:
- err_cleanup_scatter:
- 	ath6kl_hif_cleanup_scatter(ar);
- err_if_deinit:
-+	rtnl_lock();
- 	ath6kl_deinit_if_data(ar, ndev);
-+	rtnl_unlock();
- 	wiphy_unregister(ar->wiphy);
- err_debug_init:
- 	ath6kl_debug_cleanup(ar);
-@@ -1621,8 +1628,6 @@ static void ath6kl_cleanup_vif(struct ath6kl_vif *vif, bool wmi_ready)
- 		cfg80211_scan_done(vif->scan_req, true);
- 		vif->scan_req = NULL;
- 	}
--
--	ath6kl_deinit_if_data(vif->ar, vif->ndev);
- }
- 
- void ath6kl_stop_txrx(struct ath6kl *ar)
-@@ -1641,6 +1646,9 @@ void ath6kl_stop_txrx(struct ath6kl *ar)
- 		list_del(&vif->list);
- 		spin_unlock(&ar->list_lock);
- 		ath6kl_cleanup_vif(vif, test_bit(WMI_READY, &ar->flag));
-+		rtnl_lock();
-+		ath6kl_deinit_if_data(vif->ar, vif->ndev);
-+		rtnl_unlock();
- 		spin_lock(&ar->list_lock);
- 	}
- 	spin_unlock(&ar->list_lock);
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 766b096..3b2a7e8 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -1163,6 +1163,7 @@ static struct net_device_ops ath6kl_netdev_ops = {
- void init_netdev(struct net_device *dev)
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 4dcf9ef..b665aaf 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -1478,12 +1478,12 @@ struct brcms_timer *brcms_init_timer(struct brcms_info *wl,
+  *
+  * precondition: perimeter lock has been acquired
+  */
+-void brcms_add_timer(struct brcms_info *wl, struct brcms_timer *t, uint ms,
++void brcms_add_timer(struct brcms_timer *t, uint ms,
+ 		     int periodic)
  {
- 	dev->netdev_ops = &ath6kl_netdev_ops;
-+	dev->destructor = free_netdev;
- 	dev->watchdog_timeo = ATH6KL_TX_TIMEOUT;
+ #ifdef BCMDBG
+ 	if (t->set)
+-		wiphy_err(wl->wiphy, "%s: Already set. Name: %s, per %d\n",
++		wiphy_err(t->wl->wiphy, "%s: Already set. Name: %s, per %d\n",
+ 			  __func__, t->name, periodic);
  
- 	dev->needed_headroom = ETH_HLEN;
+ #endif
+@@ -1492,7 +1492,7 @@ void brcms_add_timer(struct brcms_info *wl, struct brcms_timer *t, uint ms,
+ 	t->set = true;
+ 	t->timer.expires = jiffies + ms * HZ / 1000;
+ 
+-	atomic_inc(&wl->callbacks);
++	atomic_inc(&t->wl->callbacks);
+ 	add_timer(&t->timer);
+ }
+ 
+@@ -1501,14 +1501,14 @@ void brcms_add_timer(struct brcms_info *wl, struct brcms_timer *t, uint ms,
+  *
+  * precondition: perimeter lock has been acquired
+  */
+-bool brcms_del_timer(struct brcms_info *wl, struct brcms_timer *t)
++bool brcms_del_timer(struct brcms_timer *t)
+ {
+ 	if (t->set) {
+ 		t->set = false;
+ 		if (!del_timer(&t->timer))
+ 			return false;
+ 
+-		atomic_dec(&wl->callbacks);
++		atomic_dec(&t->wl->callbacks);
+ 	}
+ 
+ 	return true;
+@@ -1517,12 +1517,13 @@ bool brcms_del_timer(struct brcms_info *wl, struct brcms_timer *t)
+ /*
+  * precondition: perimeter lock has been acquired
+  */
+-void brcms_free_timer(struct brcms_info *wl, struct brcms_timer *t)
++void brcms_free_timer(struct brcms_timer *t)
+ {
++	struct brcms_info *wl = t->wl;
+ 	struct brcms_timer *tmp;
+ 
+ 	/* delete the timer in case it is active */
+-	brcms_del_timer(wl, t);
++	brcms_del_timer(t);
+ 
+ 	if (wl->timers == t) {
+ 		wl->timers = wl->timers->next;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
+index 92256d0..91e5f2a 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
+@@ -96,10 +96,9 @@ extern bool brcms_rfkill_set_hw_state(struct brcms_info *wl);
+ extern struct brcms_timer *brcms_init_timer(struct brcms_info *wl,
+ 				      void (*fn) (void *arg), void *arg,
+ 				      const char *name);
+-extern void brcms_free_timer(struct brcms_info *wl, struct brcms_timer *timer);
+-extern void brcms_add_timer(struct brcms_info *wl, struct brcms_timer *timer,
+-			    uint ms, int periodic);
+-extern bool brcms_del_timer(struct brcms_info *wl, struct brcms_timer *timer);
++extern void brcms_free_timer(struct brcms_timer *timer);
++extern void brcms_add_timer(struct brcms_timer *timer, uint ms, int periodic);
++extern bool brcms_del_timer(struct brcms_timer *timer);
+ extern void brcms_msleep(struct brcms_info *wl, uint ms);
+ extern void brcms_dpc(unsigned long data);
+ extern void brcms_timer(struct brcms_timer *t);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 5fb999b..665bf80 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -4236,8 +4236,7 @@ static void brcms_c_radio_monitor_start(struct brcms_c_info *wlc)
+ 
+ 	wlc->radio_monitor = true;
+ 	brcms_b_pllreq(wlc->hw, true, BRCMS_PLLREQ_RADIO_MON);
+-	brcms_add_timer(wlc->wl, wlc->radio_timer, TIMER_INTERVAL_RADIOCHK,
+-			true);
++	brcms_add_timer(wlc->radio_timer, TIMER_INTERVAL_RADIOCHK, true);
+ }
+ 
+ void brcms_c_radio_disable(struct brcms_c_info *wlc)
+@@ -4269,7 +4268,7 @@ bool brcms_c_radio_monitor_stop(struct brcms_c_info *wlc)
+ 
+ 	wlc->radio_monitor = false;
+ 	brcms_b_pllreq(wlc->hw, false, BRCMS_PLLREQ_RADIO_MON);
+-	return brcms_del_timer(wlc->wl, wlc->radio_timer);
++	return brcms_del_timer(wlc->radio_timer);
+ }
+ 
+ /* read hwdisable state and propagate to wlc flag */
+@@ -5221,11 +5220,11 @@ static void brcms_c_timers_deinit(struct brcms_c_info *wlc)
+ {
+ 	/* free timer state */
+ 	if (wlc->wdtimer) {
+-		brcms_free_timer(wlc->wl, wlc->wdtimer);
++		brcms_free_timer(wlc->wdtimer);
+ 		wlc->wdtimer = NULL;
+ 	}
+ 	if (wlc->radio_timer) {
+-		brcms_free_timer(wlc->wl, wlc->radio_timer);
++		brcms_free_timer(wlc->radio_timer);
+ 		wlc->radio_timer = NULL;
+ 	}
+ }
+@@ -5607,7 +5606,7 @@ int brcms_c_up(struct brcms_c_info *wlc)
+ 	brcms_c_wme_retries_write(wlc);
+ 
+ 	/* start one second watchdog timer */
+-	brcms_add_timer(wlc->wl, wlc->wdtimer, TIMER_INTERVAL_WATCHDOG, true);
++	brcms_add_timer(wlc->wdtimer, TIMER_INTERVAL_WATCHDOG, true);
+ 	wlc->WDarmed = true;
+ 
+ 	/* ensure antenna config is up to date */
+@@ -5736,7 +5735,7 @@ uint brcms_c_down(struct brcms_c_info *wlc)
+ 
+ 	/* cancel the watchdog timer */
+ 	if (wlc->WDarmed) {
+-		if (!brcms_del_timer(wlc->wl, wlc->wdtimer))
++		if (!brcms_del_timer(wlc->wdtimer))
+ 			callbacks++;
+ 		wlc->WDarmed = false;
+ 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+index d54cfdb..a314925 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -442,7 +442,7 @@ static void wlc_phy_timercb_phycal(struct brcms_phy *pi)
+ 			wlc_phy_cal_perical_mphase_restart(pi);
+ 		} else
+ 			wlc_phy_cal_perical_nphy_run(pi, PHY_PERICAL_AUTO);
+-		wlapi_add_timer(pi->sh->physhim, pi->phycal_timer, delay, 0);
++		wlapi_add_timer(pi->phycal_timer, delay, 0);
+ 		return;
+ 	}
+ 
+@@ -625,7 +625,7 @@ void wlc_phy_detach(struct brcms_phy_pub *pih)
+ 			return;
+ 
+ 		if (pi->phycal_timer) {
+-			wlapi_free_timer(pi->sh->physhim, pi->phycal_timer);
++			wlapi_free_timer(pi->phycal_timer);
+ 			pi->phycal_timer = NULL;
+ 		}
+ 
+@@ -852,7 +852,7 @@ int wlc_phy_down(struct brcms_phy_pub *pih)
+ 	int callbacks = 0;
+ 
+ 	if (pi->phycal_timer
+-	    && !wlapi_del_timer(pi->sh->physhim, pi->phycal_timer))
++	    && !wlapi_del_timer(pi->phycal_timer))
+ 		callbacks++;
+ 
+ 	pi->nphy_iqcal_chanspec_2G = 0;
+@@ -2715,7 +2715,7 @@ wlc_phy_papd_decode_epsilon(u32 epsilon, s32 *eps_real, s32 *eps_imag)
+ 
+ void wlc_phy_cal_perical_mphase_reset(struct brcms_phy *pi)
+ {
+-	wlapi_del_timer(pi->sh->physhim, pi->phycal_timer);
++	wlapi_del_timer(pi->phycal_timer);
+ 
+ 	pi->cal_type_override = PHY_PERICAL_AUTO;
+ 	pi->mphase_cal_phase_id = MPHASE_CAL_STATE_IDLE;
+@@ -2730,10 +2730,10 @@ wlc_phy_cal_perical_mphase_schedule(struct brcms_phy *pi, uint delay)
+ 	    (pi->nphy_perical != PHY_PERICAL_MANUAL))
+ 		return;
+ 
+-	wlapi_del_timer(pi->sh->physhim, pi->phycal_timer);
++	wlapi_del_timer(pi->phycal_timer);
+ 
+ 	pi->mphase_cal_phase_id = MPHASE_CAL_STATE_INIT;
+-	wlapi_add_timer(pi->sh->physhim, pi->phycal_timer, delay, 0);
++	wlapi_add_timer(pi->phycal_timer, delay, 0);
+ }
+ 
+ void wlc_phy_cal_perical(struct brcms_phy_pub *pih, u8 reason)
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy_shim.c b/drivers/net/wireless/brcm80211/brcmsmac/phy_shim.c
+index 676222e..5926854 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy_shim.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy_shim.c
+@@ -65,21 +65,20 @@ struct wlapi_timer *wlapi_init_timer(struct phy_shim_info *physhim,
+ 					 arg, name);
+ }
+ 
+-void wlapi_free_timer(struct phy_shim_info *physhim, struct wlapi_timer *t)
++void wlapi_free_timer(struct wlapi_timer *t)
+ {
+-	brcms_free_timer(physhim->wl, (struct brcms_timer *)t);
++	brcms_free_timer((struct brcms_timer *)t);
+ }
+ 
+ void
+-wlapi_add_timer(struct phy_shim_info *physhim, struct wlapi_timer *t, uint ms,
+-		int periodic)
++wlapi_add_timer(struct wlapi_timer *t, uint ms, int periodic)
+ {
+-	brcms_add_timer(physhim->wl, (struct brcms_timer *)t, ms, periodic);
++	brcms_add_timer((struct brcms_timer *)t, ms, periodic);
+ }
+ 
+-bool wlapi_del_timer(struct phy_shim_info *physhim, struct wlapi_timer *t)
++bool wlapi_del_timer(struct wlapi_timer *t)
+ {
+-	return brcms_del_timer(physhim->wl, (struct brcms_timer *)t);
++	return brcms_del_timer((struct brcms_timer *)t);
+ }
+ 
+ void wlapi_intrson(struct phy_shim_info *physhim)
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy_shim.h b/drivers/net/wireless/brcm80211/brcmsmac/phy_shim.h
+index 8de549d..9168c45 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy_shim.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy_shim.h
+@@ -133,12 +133,9 @@ extern void wlc_phy_shim_detach(struct phy_shim_info *physhim);
+ extern struct wlapi_timer *wlapi_init_timer(struct phy_shim_info *physhim,
+ 					    void (*fn) (struct brcms_phy *pi),
+ 					    void *arg, const char *name);
+-extern void wlapi_free_timer(struct phy_shim_info *physhim,
+-			     struct wlapi_timer *t);
+-extern void wlapi_add_timer(struct phy_shim_info *physhim,
+-			    struct wlapi_timer *t, uint ms, int periodic);
+-extern bool wlapi_del_timer(struct phy_shim_info *physhim,
+-			    struct wlapi_timer *t);
++extern void wlapi_free_timer(struct wlapi_timer *t);
++extern void wlapi_add_timer(struct wlapi_timer *t, uint ms, int periodic);
++extern bool wlapi_del_timer(struct wlapi_timer *t);
+ extern void wlapi_intrson(struct phy_shim_info *physhim);
+ extern u32 wlapi_intrsoff(struct phy_shim_info *physhim);
+ extern void wlapi_intrsrestore(struct phy_shim_info *physhim,
 -- 
-1.7.0.4
+1.7.4.1
+
 
