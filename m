@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:32794 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752219Ab1JNMww (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51230 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753093Ab1JLSpr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 08:52:52 -0400
-Received: by ywp31 with SMTP id 31so257185ywp.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2011 05:52:52 -0700 (PDT)
-From: Sangwook Lee <sangwook.lee@linaro.org>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, patches@linaro.org,
-	Sangwook Lee <sangwook.lee@linaro.org>
-Subject: [PATCH 0/5] ath6kl: Add SDIO polling method for debugging 
-Date: Fri, 14 Oct 2011 13:50:41 +0100
-Message-Id: <1318596646-19495-1-git-send-email-sangwook.lee@linaro.org> (sfid-20111014_145256_656670_7F595329)
+	Wed, 12 Oct 2011 14:45:47 -0400
+Date: Wed, 12 Oct 2011 14:40:44 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org
+Subject: Re: [PATCH] ath9k_hw: Fix ASPM L1 issue for AR9462
+Message-ID: <20111012184043.GG18764@tuxdriver.com> (sfid-20111012_204551_822612_E0153D69)
+References: <1318226145-7772-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1318226145-7772-1-git-send-email-rmanohar@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add SDIO polling method based user defined intevals
-At initial development stage, when SDIO irqs problem happen,
-We can use this funtionality for debugging.
-This is only tested with AR6003 HW2.0
+On Mon, Oct 10, 2011 at 11:25:45AM +0530, Rajkumar Manoharan wrote:
+> Because of not clearing Bit 14 of AR_WA, the ASPM L1 is not
+> enabled when entering into sleep mode. AR9462 does not need
+> bit 14 to be set.
+> 
+> Cc: stable@kernel.org
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-Sangwook Lee (5):
-  ath6kl: Add SDIO polling function definitions
-  ath6kl: Add SDIO polling function hook into SDIO init time
-  ath6kl: Add SDIO polling method into menu
-  ath6kl: Add SDIO polling file into Makefile
-  ath6kl: Add SDIO polling function
+  CC [M]  drivers/net/wireless/ath/ath9k/hw.o
+drivers/net/wireless/ath/ath9k/hw.c: In function ‘__ath9k_hw_init’:
+drivers/net/wireless/ath/ath9k/hw.c:544:2: error: implicit declaration of function ‘AR_SREV_9462’
 
- drivers/net/wireless/ath/ath6kl/Kconfig     |    8 +
- drivers/net/wireless/ath/ath6kl/Makefile    |    1 +
- drivers/net/wireless/ath/ath6kl/debug.h     |   25 +++
- drivers/net/wireless/ath/ath6kl/sdio.c      |    7 +
- drivers/net/wireless/ath/ath6kl/sdio_poll.c |  216 +++++++++++++++++++++++++++
- 5 files changed, 257 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/sdio_poll.c
+Missing a patch dependency?
 
 -- 
-1.7.4.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
