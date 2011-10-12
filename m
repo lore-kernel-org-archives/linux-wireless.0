@@ -1,68 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47754 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932221Ab1JaJzr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Oct 2011 05:55:47 -0400
-Message-ID: <4EAE701E.5040204@qca.qualcomm.com> (sfid-20111031_105550_058719_F1D5985E)
-Date: Mon, 31 Oct 2011 15:23:34 +0530
-From: Raja Mani <rmani@qca.qualcomm.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:4985 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754042Ab1JLSvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Oct 2011 14:51:51 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 14/22] brcm80211: fmac: fixed weird indentation
+Date: Wed, 12 Oct 2011 20:51:24 +0200
+Message-ID: <1318445492-24207-15-git-send-email-arend@broadcom.com> (sfid-20111012_205209_273472_D60E554A)
+In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 4/7] ath6kl: Add new functions to handle wow suspend/resume
- operations
-References: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com> <1319539047-8756-5-git-send-email-rmani@qca.qualcomm.com> <4EAAA08F.5070905@qca.qualcomm.com>
-In-Reply-To: <4EAAA08F.5070905@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 28 October 2011 06:01 PM, Kalle Valo wrote:
-> On 10/25/2011 01:37 PM, rmani@qca.qualcomm.com wrote:
->> From: Raja Mani<rmani@qca.qualcomm.com>
->>
->> Signed-off-by: Raja Mani<rmani@qca.qualcomm.com>
->
-> Empty commit log.
->
->> +int ath6kl_pm_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
->> +{
->> +	struct wmi_set_wow_mode_cmd wakeup_filter_cmd;
->> +	struct wmi_add_wow_pattern_cmd add_pattern_cmd;
->> +	struct wmi_del_wow_pattern_cmd del_pattern_cmd;
->> +	struct wmi_set_host_sleep_mode_cmd hsleep_cmd;
->> +	int i, ret, pos, left;
->> +	u8 mask[WOW_PATTERN_SIZE];
->> +
->> +	if (WARN_ON(!wow))
->> +		return -EINVAL;
->
-> Unnecessary null check, wow is non-zero here.
->
->> +		for (pos = 0; pos<  wow->patterns[i].pattern_len;
->> +				pos++) {
->> +			if (wow->patterns[i].mask[pos / 8]&  (0x1<<  (pos % 8)))
->> +				mask[pos] = 0xFF;
->
-> This loop needs a comment.
->
->> +	if (ar->tx_pending[ar->ctrl_ep]) {
->> +		left = wait_event_interruptible_timeout(ar->event_wq,
->> +				ar->tx_pending[ar->ctrl_ep] == 0, WMI_TIMEOUT);
->> +		if (left == 0) {
->> +			ret = -ETIMEDOUT;
->> +			goto wow_setup_failed;
->> +		} else if (left<  0) {
->> +			ret = left;
->> +			goto wow_setup_failed;
->
-> A warning message for both of these error case would be nice.
->
->> +#define WOW_HOST_REQ_DELAY	500 /* 500 ms */
->
-> No point of duplicating the value, "/* ms */" is enough.
->
-> Kalle
+From: Roland Vossen <rvossen@broadcom.com>
 
-Will fix all your above comments in V2..
+And changed function name to something more appropriate.
+
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   99 ++++++++++----------
+ 1 files changed, 51 insertions(+), 48 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 1b09be0..27a748e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -1152,7 +1152,7 @@ brcmf_set_key_mgmt(struct net_device *ndev, struct cfg80211_connect_params *sme)
+ }
+ 
+ static s32
+-brcmf_set_set_sharedkey(struct net_device *ndev,
++brcmf_set_wep_sharedkey(struct net_device *ndev,
+ 		     struct cfg80211_connect_params *sme)
+ {
+ 	struct brcmf_cfg80211_priv *cfg_priv = ndev_to_cfg(ndev);
+@@ -1162,52 +1162,55 @@ brcmf_set_set_sharedkey(struct net_device *ndev,
+ 	s32 err = 0;
+ 
+ 	WL_CONN("key len (%d)\n", sme->key_len);
+-	if (sme->key_len) {
+-		sec = brcmf_read_prof(cfg_priv, WL_PROF_SEC);
+-		WL_CONN("wpa_versions 0x%x cipher_pairwise 0x%x\n",
+-		       sec->wpa_versions, sec->cipher_pairwise);
+-		if (!
+-		    (sec->wpa_versions & (NL80211_WPA_VERSION_1 |
+-					  NL80211_WPA_VERSION_2))
+-&& (sec->cipher_pairwise & (WLAN_CIPHER_SUITE_WEP40 |
+-			    WLAN_CIPHER_SUITE_WEP104))) {
+-			memset(&key, 0, sizeof(key));
+-			key.len = (u32) sme->key_len;
+-			key.index = (u32) sme->key_idx;
+-			if (key.len > sizeof(key.data)) {
+-				WL_ERR("Too long key length (%u)\n", key.len);
+-				return -EINVAL;
+-			}
+-			memcpy(key.data, sme->key, key.len);
+-			key.flags = BRCMF_PRIMARY_KEY;
+-			switch (sec->cipher_pairwise) {
+-			case WLAN_CIPHER_SUITE_WEP40:
+-				key.algo = CRYPTO_ALGO_WEP1;
+-				break;
+-			case WLAN_CIPHER_SUITE_WEP104:
+-				key.algo = CRYPTO_ALGO_WEP128;
+-				break;
+-			default:
+-				WL_ERR("Invalid algorithm (%d)\n",
+-				       sme->crypto.ciphers_pairwise[0]);
+-				return -EINVAL;
+-			}
+-			/* Set the new key/index */
+-			WL_CONN("key length (%d) key index (%d) algo (%d)\n",
+-			       key.len, key.index, key.algo);
+-			WL_CONN("key \"%s\"\n", key.data);
+-			err = send_key_to_dongle(ndev, &key);
+-			if (err)
+-				return err;
+ 
+-			if (sec->auth_type == NL80211_AUTHTYPE_OPEN_SYSTEM) {
+-				WL_CONN("set auth_type to shared key\n");
+-				val = 1;	/* shared key */
+-				err = brcmf_dev_intvar_set(ndev, "auth", val);
+-				if (err) {
+-					WL_ERR("set auth failed (%d)\n", err);
+-					return err;
+-				}
++	if (sme->key_len == 0)
++		return 0;
++
++	sec = brcmf_read_prof(cfg_priv, WL_PROF_SEC);
++	WL_CONN("wpa_versions 0x%x cipher_pairwise 0x%x\n",
++		sec->wpa_versions, sec->cipher_pairwise);
++
++	if (sec->wpa_versions & (NL80211_WPA_VERSION_1 | NL80211_WPA_VERSION_2))
++		return 0;
++
++	if (sec->cipher_pairwise &
++	    (WLAN_CIPHER_SUITE_WEP40 | WLAN_CIPHER_SUITE_WEP104)) {
++		memset(&key, 0, sizeof(key));
++		key.len = (u32) sme->key_len;
++		key.index = (u32) sme->key_idx;
++		if (key.len > sizeof(key.data)) {
++			WL_ERR("Too long key length (%u)\n", key.len);
++			return -EINVAL;
++		}
++		memcpy(key.data, sme->key, key.len);
++		key.flags = BRCMF_PRIMARY_KEY;
++		switch (sec->cipher_pairwise) {
++		case WLAN_CIPHER_SUITE_WEP40:
++			key.algo = CRYPTO_ALGO_WEP1;
++			break;
++		case WLAN_CIPHER_SUITE_WEP104:
++			key.algo = CRYPTO_ALGO_WEP128;
++			break;
++		default:
++			WL_ERR("Invalid algorithm (%d)\n",
++			       sme->crypto.ciphers_pairwise[0]);
++			return -EINVAL;
++		}
++		/* Set the new key/index */
++		WL_CONN("key length (%d) key index (%d) algo (%d)\n",
++			key.len, key.index, key.algo);
++		WL_CONN("key \"%s\"\n", key.data);
++		err = send_key_to_dongle(ndev, &key);
++		if (err)
++			return err;
++
++		if (sec->auth_type == NL80211_AUTHTYPE_OPEN_SYSTEM) {
++			WL_CONN("set auth_type to shared key\n");
++			val = 1;	/* shared key */
++			err = brcmf_dev_intvar_set(ndev, "auth", val);
++			if (err) {
++				WL_ERR("set auth failed (%d)\n", err);
++				return err;
+ 			}
+ 		}
+ 	}
+@@ -1271,9 +1274,9 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 		goto done;
+ 	}
+ 
+-	err = brcmf_set_set_sharedkey(ndev, sme);
++	err = brcmf_set_wep_sharedkey(ndev, sme);
+ 	if (err) {
+-		WL_ERR("wl_set_set_sharedkey failed (%d)\n", err);
++		WL_ERR("brcmf_set_wep_sharedkey failed (%d)\n", err);
+ 		goto done;
+ 	}
+ 
+-- 
+1.7.4.1
+
+
