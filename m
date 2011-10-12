@@ -1,145 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4992 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754053Ab1JLSvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 14:51:51 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 10/22] brcm80211: use endian annotation for pmk related
- structure
-Date: Wed, 12 Oct 2011 20:51:20 +0200
-Message-ID: <1318445492-24207-11-git-send-email-arend@broadcom.com> (sfid-20111012_205202_614995_0BF26345)
-In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
-References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:36230 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752493Ab1JLDP7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Oct 2011 23:15:59 -0400
+Received: by iaek3 with SMTP id k3so300151iae.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 20:15:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <op.v27rulkhya27un@edmitar>
+References: <op.v27rulkhya27un@edmitar>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 12 Oct 2011 14:15:39 +1100
+Message-ID: <CAGRGNgVBMHP=2RB4VFGuXP-suLAgoi_CZFLnsKKt1MX335hUQA@mail.gmail.com> (sfid-20111012_051607_342453_06C9C63A)
+Subject: Re: [RFC 02/07] compat-wireless: Connection quality monitor extensions
+To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Bartosz MARKOWSKI <bartosz.markowski@tieto.com>,
+	Janusz DZIEDZIC <janusz.dziedzic@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The pairwise master key configuration is sent to the device. The
-structure has been annotated for endianess checking.
+Hi Dmitry,
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   34 ++++++++++++-------
- .../net/wireless/brcm80211/include/brcmu_wifi.h    |    2 +-
- 2 files changed, 22 insertions(+), 14 deletions(-)
+Some minor comments on this patch:
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 1218ed7..9e69cd7 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -2467,9 +2467,12 @@ brcmf_update_pmklist(struct net_device *ndev,
- 		     struct brcmf_cfg80211_pmk_list *pmk_list, s32 err)
- {
- 	int i, j;
-+	int pmkid_len;
- 
--	WL_CONN("No of elements %d\n", pmk_list->pmkids.npmkid);
--	for (i = 0; i < pmk_list->pmkids.npmkid; i++) {
-+	pmkid_len = le32_to_cpu(pmk_list->pmkids.npmkid);
-+
-+	WL_CONN("No of elements %d\n", pmkid_len);
-+	for (i = 0; i < pmkid_len; i++) {
- 		WL_CONN("PMKID[%d]: %pM =\n", i,
- 			&pmk_list->pmkids.pmkid[i].BSSID);
- 		for (j = 0; j < WLAN_PMKID_LEN; j++)
-@@ -2491,26 +2494,30 @@ brcmf_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *ndev,
- 	struct pmkid_list *pmkids = &cfg_priv->pmk_list->pmkids;
- 	s32 err = 0;
- 	int i;
-+	int pmkid_len;
- 
- 	WL_TRACE("Enter\n");
- 	if (!check_sys_up(wiphy))
- 		return -EIO;
- 
--	for (i = 0; i < pmkids->npmkid; i++)
-+	pmkid_len = le32_to_cpu(pmkids->npmkid);
-+	for (i = 0; i < pmkid_len; i++)
- 		if (!memcmp(pmksa->bssid, pmkids->pmkid[i].BSSID, ETH_ALEN))
- 			break;
- 	if (i < WL_NUM_PMKIDS_MAX) {
- 		memcpy(pmkids->pmkid[i].BSSID, pmksa->bssid, ETH_ALEN);
- 		memcpy(pmkids->pmkid[i].PMKID, pmksa->pmkid, WLAN_PMKID_LEN);
--		if (i == pmkids->npmkid)
--			pmkids->npmkid++;
-+		if (i == pmkid_len) {
-+			pmkid_len++;
-+			pmkids->npmkid = cpu_to_le32(pmkid_len);
-+		}
- 	} else
- 		err = -EINVAL;
- 
- 	WL_CONN("set_pmksa,IW_PMKSA_ADD - PMKID: %pM =\n",
--		pmkids->pmkid[pmkids->npmkid].BSSID);
-+		pmkids->pmkid[pmkid_len].BSSID);
- 	for (i = 0; i < WLAN_PMKID_LEN; i++)
--		WL_CONN("%02x\n", pmkids->pmkid[pmkids->npmkid].PMKID[i]);
-+		WL_CONN("%02x\n", pmkids->pmkid[pmkid_len].PMKID[i]);
- 
- 	err = brcmf_update_pmklist(ndev, cfg_priv->pmk_list, err);
- 
-@@ -2525,7 +2532,7 @@ brcmf_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *ndev,
- 	struct brcmf_cfg80211_priv *cfg_priv = wiphy_to_cfg(wiphy);
- 	struct pmkid_list pmkid;
- 	s32 err = 0;
--	int i;
-+	int i, pmkid_len;
- 
- 	WL_TRACE("Enter\n");
- 	if (!check_sys_up(wiphy))
-@@ -2539,17 +2546,18 @@ brcmf_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *ndev,
- 	for (i = 0; i < WLAN_PMKID_LEN; i++)
- 		WL_CONN("%02x\n", pmkid.pmkid[0].PMKID[i]);
- 
--	for (i = 0; i < cfg_priv->pmk_list->pmkids.npmkid; i++)
-+	pmkid_len = le32_to_cpu(cfg_priv->pmk_list->pmkids.npmkid);
-+	for (i = 0; i < pmkid_len; i++)
- 		if (!memcmp
- 		    (pmksa->bssid, &cfg_priv->pmk_list->pmkids.pmkid[i].BSSID,
- 		     ETH_ALEN))
- 			break;
- 
--	if ((cfg_priv->pmk_list->pmkids.npmkid > 0)
--	    && (i < cfg_priv->pmk_list->pmkids.npmkid)) {
-+	if ((pmkid_len > 0)
-+	    && (i < pmkid_len)) {
- 		memset(&cfg_priv->pmk_list->pmkids.pmkid[i], 0,
- 		       sizeof(struct pmkid));
--		for (; i < (cfg_priv->pmk_list->pmkids.npmkid - 1); i++) {
-+		for (; i < (pmkid_len - 1); i++) {
- 			memcpy(&cfg_priv->pmk_list->pmkids.pmkid[i].BSSID,
- 			       &cfg_priv->pmk_list->pmkids.pmkid[i + 1].BSSID,
- 			       ETH_ALEN);
-@@ -2557,7 +2565,7 @@ brcmf_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *ndev,
- 			       &cfg_priv->pmk_list->pmkids.pmkid[i + 1].PMKID,
- 			       WLAN_PMKID_LEN);
- 		}
--		cfg_priv->pmk_list->pmkids.npmkid--;
-+		cfg_priv->pmk_list->pmkids.npmkid = cpu_to_le32(pmkid_len - 1);
- 	} else
- 		err = -EINVAL;
- 
-diff --git a/drivers/net/wireless/brcm80211/include/brcmu_wifi.h b/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
-index e98ed50..452bd42 100644
---- a/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
-+++ b/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
-@@ -258,7 +258,7 @@ struct pmkid {
- };
- 
- struct pmkid_list {
--	u32 npmkid;
-+	__le32 npmkid;
- 	struct pmkid pmkid[1];
- };
- 
+Note that I'm not a maintainer and that these are comments on the
+patch itself, not the code it adds.
+
+That said, it's nice to see someone updating compat-wireless when they
+update the main wireless repository.
+
+On Wed, Oct 12, 2011 at 12:02, Dmitry Tarnyagin <abi.dmitryt@gmail.com> wrote:
+> From: Bartosz Markowski <bartosz.markowski@tieto.com>
+> Date: Tue, 12 Jul 2011 13:29:03 +0200
+> Subject: [PATCH 2/7] compat-wireless: CQM STE extensions
+>
+> added:
+> * beacon miss threshold - This value specifies the threshold
+>  for the BEACON loss level
+> * tx fail - This value specifies the threshold for the TX loss level
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+> ---
+>  include/linux/compat-3.0.h |    2 +
+>  include/linux/nl80211.h    |   16 +++++
+>  include/net/cfg80211.h     |   34 ++++++++++
+>  include/net/mac80211.h     |   41 ++++++++++++
+>  net/mac80211/cfg.c         |   54 ++++++++++++++++
+>  net/mac80211/mlme.c        |   23 ++++++-
+>  net/wireless/mlme.c        |   25 +++++++
+>  net/wireless/nl80211.c     |  152
+> +++++++++++++++++++++++++++++++++++++++++++-
+>  net/wireless/nl80211.h     |    9 +++
+
+You are changing a lot of files that are not actually part of the
+compat-wireless git repository - are you sure that this patch is
+correct?
+
+> diff --git a/include/linux/compat-3.0.h b/include/linux/compat-3.0.h
+> index 8c8720e..961a3a6 100644
+> --- a/include/linux/compat-3.0.h
+> +++ b/include/linux/compat-3.0.h
+> @@ -59,6 +59,7 @@ int __must_check kstrtos16_from_user(const char __user *s,
+> size_t count, unsigne
+>  int __must_check kstrtou8_from_user(const char __user *s, size_t count,
+> unsigned int base, u8 *res);
+>  int __must_check kstrtos8_from_user(const char __user *s, size_t count,
+> unsigned int base, s8 *res);
+>
+> +/*
+>  static inline int __must_check kstrtou64_from_user(const char __user *s,
+> size_t count, unsigned int base, u64 *res)
+>  {
+>        return kstrtoull_from_user(s, count, base, res);
+> @@ -78,6 +79,7 @@ static inline int __must_check kstrtos32_from_user(const
+> char __user *s, size_t
+>  {
+>        return kstrtoint_from_user(s, count, base, res);
+>  }
+> +*/
+
+Why are you commenting out this function?
+
+Thanks,
+
 -- 
-1.7.4.1
+Julian Calaby
 
-
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
