@@ -1,50 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:43484 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014Ab1JDAav (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Oct 2011 20:30:51 -0400
-Received: by ywb5 with SMTP id 5so3985338ywb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2011 17:30:51 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:4329 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753987Ab1JLSvr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Oct 2011 14:51:47 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 13/22] brcm80211: use endian annotation for scan time
+ configuration
+Date: Wed, 12 Oct 2011 20:51:23 +0200
+Message-ID: <1318445492-24207-14-git-send-email-arend@broadcom.com> (sfid-20111012_205218_590914_D4FCABE7)
+In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Date: Tue, 4 Oct 2011 08:30:51 +0800
-Message-ID: <CAJ-VmomAP-LZdVkh1snpsTOxU18yPMxXut=KzjTwP+AkN9XidQ@mail.gmail.com> (sfid-20111004_023055_275855_F883A789)
-Subject: [patch] fix the definition of AR9170_PHY_REG_CURRENT_RSSI
-From: Adrian Chadd <adrian@freebsd.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Christian,
+For scanning several timeout parameters are configured on the device.
+These parameters have been endian annotated and converted appropriately.
 
-Although it currently isn't used anywhere, I thought it'd be
-worthwhile fixing the definition of AR9170_PHY_REG_CURRENT_RSSI.
-It's at AR_PHY(271) rather than AR_PHY(263).
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
-The carl9170 driver may also suffer the same problem. The older
-version I have lying around here doesn't seem to use
-AR9170_PHY_REG_CURRENT_RSSI anywhere but it is defined.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 8fc8173..1b09be0 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -3497,12 +3497,15 @@ dongle_rom_out:
+ 
+ static s32
+ brcmf_dongle_scantime(struct net_device *ndev, s32 scan_assoc_time,
+-		s32 scan_unassoc_time, s32 scan_passive_time)
++		      s32 scan_unassoc_time, s32 scan_passive_time)
+ {
+ 	s32 err = 0;
++	__le32 scan_assoc_tm_le = cpu_to_le32(scan_assoc_time);
++	__le32 scan_unassoc_tm_le = cpu_to_le32(scan_unassoc_time);
++	__le32 scan_passive_tm_le = cpu_to_le32(scan_passive_time);
+ 
+ 	err = brcmf_exec_dcmd(ndev, BRCMF_C_SET_SCAN_CHANNEL_TIME,
+-			   &scan_assoc_time, sizeof(scan_assoc_time));
++			   &scan_assoc_tm_le, sizeof(scan_assoc_tm_le));
+ 	if (err) {
+ 		if (err == -EOPNOTSUPP)
+ 			WL_INFO("Scan assoc time is not supported\n");
+@@ -3511,7 +3514,7 @@ brcmf_dongle_scantime(struct net_device *ndev, s32 scan_assoc_time,
+ 		goto dongle_scantime_out;
+ 	}
+ 	err = brcmf_exec_dcmd(ndev, BRCMF_C_SET_SCAN_UNASSOC_TIME,
+-			   &scan_unassoc_time, sizeof(scan_unassoc_time));
++			   &scan_unassoc_tm_le, sizeof(scan_unassoc_tm_le));
+ 	if (err) {
+ 		if (err == -EOPNOTSUPP)
+ 			WL_INFO("Scan unassoc time is not supported\n");
+@@ -3521,7 +3524,7 @@ brcmf_dongle_scantime(struct net_device *ndev, s32 scan_assoc_time,
+ 	}
+ 
+ 	err = brcmf_exec_dcmd(ndev, BRCMF_C_SET_SCAN_PASSIVE_TIME,
+-			   &scan_passive_time, sizeof(scan_passive_time));
++			   &scan_passive_tm_le, sizeof(scan_passive_tm_le));
+ 	if (err) {
+ 		if (err == -EOPNOTSUPP)
+ 			WL_INFO("Scan passive time is not supported\n");
+-- 
+1.7.4.1
 
-Thanks,
 
-
-Adrian
-
-diff --git a/include/shared/phy.h b/include/shared/phy.h
-index 024fb42..08b56eb 100644
---- a/include/shared/phy.h
-+++ b/include/shared/phy.h
-@@ -387,7 +387,7 @@
- #define        AR9170_PHY_REG_CAL_MEAS_3(_i)           (AR9170_PHY_REG_BASE + \
-                                                 0x041c + ((_i) << 12))
-
--#define        AR9170_PHY_REG_CURRENT_RSSI
-(AR9170_PHY_REG_BASE + 0x041c)
-+#define        AR9170_PHY_REG_CURRENT_RSSI
-(AR9170_PHY_REG_BASE + 0x043c)
-
- #define        AR9170_PHY_REG_RFBUS_GRANT
-(AR9170_PHY_REG_BASE + 0x0420)
- #define                AR9170_PHY_RFBUS_GRANT_EN               0x00000001
