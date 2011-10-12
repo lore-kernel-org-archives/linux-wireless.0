@@ -1,51 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:58947 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951Ab1JZVUT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 17:20:19 -0400
-Received: by ywm3 with SMTP id 3so1966561ywm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 14:20:19 -0700 (PDT)
-Message-ID: <4EA879A3.5040506@lwfinger.net> (sfid-20111026_232023_186757_407753F5)
-Date: Wed, 26 Oct 2011 16:20:35 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:4993 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754054Ab1JLSvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Oct 2011 14:51:51 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Alwin Beukers" <alwin@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 17/22] brcm80211: moved function brcmu_chipname
+Date: Wed, 12 Oct 2011 20:51:27 +0200
+Message-ID: <1318445492-24207-18-git-send-email-arend@broadcom.com> (sfid-20111012_205202_048014_C21B390A)
+In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Chiefdome <chiefdome@googlemail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
-References: <4E77F631.3030202@googlemail.com> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T1  61652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org > <4E9C42CF.5010702@lwfinger.net> <loom.20111017T190430-717@post.gmane.org> <4E9CF13A.7060102@lwf inger.net> <loom.20111018T143746-420@post.gmane.org> <loom.201110 18T150303-359@post.gmane.org> <4E9D9953.3020601@lwfinger.net> <lo om.20111018T233233-298@post.gmane.org> <4E9E052F.8090705@lwfinger.net> <loom.20111019T101621-921@post.gmane.org> <4E9EBDD3.6060907@lwfinger.net> <loom.20111019T162518-352@post.gmane.org> <4E9F97B4.5010304@lwfinger.net> <loom.20111020T114336-286@post.gmane.org> <4EA023B2.5000402@lwfinger.net> <4EA82BFE.1070105@googlemail.com> <4EA83160.4080405@lwfinger.net> <4EA861F5.4020200@googlemail.com>
-In-Reply-To: <4EA861F5.4020200@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/26/2011 02:39 PM, Chiefdome wrote:
-> Did you tested the commands you posted to me? Anyway here they do nothing. I
-> cant see any changes in iwconfig nor in in iw.
->
-> iw reg get
-> country 00:
-> (2400 - 2494 @ 40), (N/A, 33)
-> (4910 - 5895 @ 40), (N/A, 33)
->
-> so after my regulatory domain I should be able to change the adapter settings.
+From: Alwin Beukers <alwin@broadcom.com>
 
-No, I did not test them. If they don't work, then you need to debug cfg80211. 
-These things are not a part of the driver. It only does what it is told.
+Moved the brcmu_chipname function into the only file using it.
+The function name was adjusted accordingly.
 
-You need to set a proper regulatory domain. Yours says "country 00", which is 
-not right. Mine says
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   11 ++++++++++-
+ drivers/net/wireless/brcm80211/brcmutil/utils.c    |   10 ----------
+ .../net/wireless/brcm80211/include/brcmu_utils.h   |    2 --
+ 3 files changed, 10 insertions(+), 13 deletions(-)
 
-finger@larrylap:~> iw reg get
-country US:
-         (2402 - 2472 @ 40), (3, 27)
-         (5170 - 5250 @ 40), (3, 17)
-         (5250 - 5330 @ 40), (3, 20), DFS
-         (5490 - 5600 @ 40), (3, 20), DFS
-         (5650 - 5710 @ 40), (3, 20), DFS
-         (5735 - 5835 @ 40), (3, 30)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index bd9db48..313b8bf 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3992,6 +3992,15 @@ static const struct sdiod_drive_str sdiod_drive_strength_tab3[] = {
+ 
+ #define SDIOD_DRVSTR_KEY(chip, pmu)     (((chip) << 16) | (pmu))
+ 
++static char *brcmf_chipname(uint chipid, char *buf, uint len)
++{
++	const char *fmt;
++
++	fmt = ((chipid > 0xa000) || (chipid < 0x4000)) ? "%d" : "%x";
++	snprintf(buf, len, fmt, chipid);
++	return buf;
++}
++
+ static void brcmf_sdbrcm_sdiod_drive_strength_init(struct brcmf_bus *bus,
+ 						   u32 drivestrength) {
+ 	struct sdiod_drive_str *str_tab = NULL;
+@@ -4021,7 +4030,7 @@ static void brcmf_sdbrcm_sdiod_drive_strength_init(struct brcmf_bus *bus,
+ 		break;
+ 	default:
+ 		brcmf_dbg(ERROR, "No SDIO Drive strength init done for chip %s rev %d pmurev %d\n",
+-			  brcmu_chipname(bus->ci->chip, chn, 8),
++			  brcmf_chipname(bus->ci->chip, chn, 8),
+ 			  bus->ci->chiprev, bus->ci->pmurev);
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmutil/utils.c b/drivers/net/wireless/brcm80211/brcmutil/utils.c
+index 7f53a70..28480e7 100644
+--- a/drivers/net/wireless/brcm80211/brcmutil/utils.c
++++ b/drivers/net/wireless/brcm80211/brcmutil/utils.c
+@@ -470,16 +470,6 @@ int brcmu_format_hex(char *str, const void *bytes, int len)
+ EXPORT_SYMBOL(brcmu_format_hex);
+ #endif				/* defined(BCMDBG) */
+ 
+-char *brcmu_chipname(uint chipid, char *buf, uint len)
+-{
+-	const char *fmt;
+-
+-	fmt = ((chipid > 0xa000) || (chipid < 0x4000)) ? "%d" : "%x";
+-	snprintf(buf, len, fmt, chipid);
+-	return buf;
+-}
+-EXPORT_SYMBOL(brcmu_chipname);
+-
+ uint brcmu_mkiovar(char *name, char *data, uint datalen, char *buf, uint buflen)
+ {
+ 	uint len;
+diff --git a/drivers/net/wireless/brcm80211/include/brcmu_utils.h b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
+index d716cd2..e53883c 100644
+--- a/drivers/net/wireless/brcm80211/include/brcmu_utils.h
++++ b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
+@@ -207,8 +207,6 @@ extern int brcmu_format_flags(const struct brcmu_bit_desc *bd, u32 flags,
+ extern int brcmu_format_hex(char *str, const void *bytes, int len);
+ #endif
+ 
+-extern char *brcmu_chipname(uint chipid, char *buf, uint len);
+-
+ extern struct brcmu_tlv *brcmu_parse_tlvs(void *buf, int buflen,
+ 					  uint key);
+ 
+-- 
+1.7.4.1
 
-and that 27 dBm exactly matches what iwconfig says.
-
-Larry
 
