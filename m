@@ -1,191 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4060 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933576Ab1JYOGp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 10:06:45 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 05/31] ath6kl: Define an initial vif structure and use it
-Date: Tue, 25 Oct 2011 19:34:00 +0530
-Message-ID: <1319551466-29070-6-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_160657_032730_64258B36)
-In-Reply-To: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:4327 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753995Ab1JLSvr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Oct 2011 14:51:47 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 09/22] brcm80211: use endian annotations in scan related
+ function
+Date: Wed, 12 Oct 2011 20:51:19 +0200
+Message-ID: <1318445492-24207-10-git-send-email-arend@broadcom.com> (sfid-20111012_205154_958499_70FAF5F5)
+In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-vif specific information need to be moved from struct ath6kl.
+The scan related functions provide scan parameters to the device
+which need to be in little-endian. These parameters have been
+annotated and conversions were placed as needed.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   41 ++++++++++++++++-----------
- drivers/net/wireless/ath/ath6kl/core.h     |   11 ++++++-
- drivers/net/wireless/ath/ath6kl/init.c     |    4 +-
- 3 files changed, 35 insertions(+), 21 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index fcddf1a..e663d60 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2014,51 +2014,58 @@ int ath6kl_register_ieee80211_hw(struct ath6kl *ar)
- 	return 0;
- }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index fc643c1..1218ed7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -475,7 +475,7 @@ static s32 brcmf_do_iscan(struct brcmf_cfg80211_priv *cfg_priv)
+ 	struct brcmf_cfg80211_iscan_ctrl *iscan = cfg_to_iscan(cfg_priv);
+ 	struct net_device *ndev = cfg_to_ndev(cfg_priv);
+ 	struct brcmf_ssid ssid;
+-	s32 passive_scan;
++	__le32 passive_scan;
+ 	s32 err = 0;
  
--static int ath6kl_init_if_data(struct ath6kl *ar, struct net_device *ndev)
-+static int ath6kl_init_if_data(struct ath6kl_vif *vif)
- {
--	ar->aggr_cntxt = aggr_init(ndev);
-+	struct ath6kl *ar = vif->ar;
-+
-+	ar->aggr_cntxt = aggr_init(vif->ndev);
- 	if (!ar->aggr_cntxt) {
- 		ath6kl_err("failed to initialize aggr\n");
- 		return -ENOMEM;
- 	}
+ 	/* Broadcast scan by default */
+@@ -483,7 +483,7 @@ static s32 brcmf_do_iscan(struct brcmf_cfg80211_priv *cfg_priv)
  
- 	setup_timer(&ar->disconnect_timer, disconnect_timer_handler,
--		    (unsigned long) ndev);
-+		    (unsigned long) vif->ndev);
+ 	iscan->state = WL_ISCAN_STATE_SCANING;
  
- 	return 0;
- }
+-	passive_scan = cfg_priv->active_scan ? 0 : 1;
++	passive_scan = cfg_priv->active_scan ? 0 : cpu_to_le32(1);
+ 	err = brcmf_exec_dcmd(cfg_to_ndev(cfg_priv), BRCMF_C_SET_PASSIVE_SCAN,
+ 			&passive_scan, sizeof(passive_scan));
+ 	if (err) {
+@@ -511,7 +511,7 @@ __brcmf_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 	struct brcmf_cfg80211_priv *cfg_priv = ndev_to_cfg(ndev);
+ 	struct cfg80211_ssid *ssids;
+ 	struct brcmf_cfg80211_scan_req *sr = cfg_priv->scan_req_int;
+-	s32 passive_scan;
++	__le32 passive_scan;
+ 	bool iscan_req;
+ 	bool spec_scan;
+ 	s32 err = 0;
+@@ -567,7 +567,7 @@ __brcmf_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 			WL_SCAN("Broadcast scan\n");
+ 		}
  
--void ath6kl_deinit_if_data(struct ath6kl *ar, struct net_device *ndev)
-+void ath6kl_deinit_if_data(struct ath6kl_vif *vif)
- {
-+	struct ath6kl *ar = vif->ar;
-+
- 	aggr_module_destroy(ar->aggr_cntxt);
- 
- 	ar->aggr_cntxt = NULL;
- 
- 	if (test_bit(NETDEV_REGISTERED, &ar->flag)) {
--		unregister_netdev(ndev);
-+		unregister_netdev(vif->ndev);
- 		clear_bit(NETDEV_REGISTERED, &ar->flag);
- 	}
- 
--	free_netdev(ndev);
-+	free_netdev(vif->ndev);
- }
- 
- struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 					enum nl80211_iftype type)
- {
- 	struct net_device *ndev;
--	struct wireless_dev *wdev;
-+	struct ath6kl_vif *vif;
- 
--	ndev = alloc_netdev(sizeof(*wdev), "wlan%d", ether_setup);
-+	ndev = alloc_netdev(sizeof(*vif), "wlan%d", ether_setup);
- 	if (!ndev)
- 		return NULL;
- 
--	wdev = netdev_priv(ndev);
--	ndev->ieee80211_ptr = wdev;
--	wdev->wiphy = ar->wiphy;
--	SET_NETDEV_DEV(ndev, wiphy_dev(wdev->wiphy));
--	wdev->netdev = ndev;
--	wdev->iftype = type;
--	ar->wdev = wdev;
-+	vif = netdev_priv(ndev);
-+	ndev->ieee80211_ptr = &vif->wdev;
-+	vif->wdev.wiphy = ar->wiphy;
-+	vif->ar = ar;
-+	ar->vif = vif;
-+	vif->ndev = ndev;
-+	SET_NETDEV_DEV(ndev, wiphy_dev(vif->wdev.wiphy));
-+	vif->wdev.netdev = ndev;
-+	vif->wdev.iftype = type;
-+	ar->wdev = &vif->wdev;
- 	ar->net_dev = ndev;
- 
- 	init_netdev(ndev);
-@@ -2066,7 +2073,7 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 	ath6kl_init_control_info(ar);
- 
- 	/* TODO: Pass interface specific pointer instead of ar */
--	if (ath6kl_init_if_data(ar, ndev))
-+	if (ath6kl_init_if_data(vif))
- 		goto err;
- 
- 	if (register_netdev(ndev))
-@@ -2080,7 +2087,7 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 	return ndev;
- 
- err:
--	ath6kl_deinit_if_data(ar, ndev);
-+	ath6kl_deinit_if_data(vif);
- 
- 	return NULL;
- }
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index f1b3c47..0c1dee0 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -380,6 +380,12 @@ struct ath6kl_req_key {
- 	u8 key_len;
- };
- 
-+struct ath6kl_vif {
-+	struct wireless_dev wdev;
-+	struct net_device *ndev;
-+	struct ath6kl *ar;
-+};
-+
- /* Flag info */
- #define WMI_ENABLED	0
- #define WMI_READY	1
-@@ -410,6 +416,7 @@ struct ath6kl {
- 	int total_tx_data_pend;
- 	struct htc_target *htc_target;
- 	void *hif_priv;
-+	struct ath6kl_vif *vif;
- 	spinlock_t lock;
- 	struct semaphore sem;
- 	int ssid_len;
-@@ -543,7 +550,7 @@ struct ath6kl {
- 
- static inline void *ath6kl_priv(struct net_device *dev)
- {
--	return wdev_priv(dev->ieee80211_ptr);
-+	return ((struct ath6kl_vif *) netdev_priv(dev))->ar;
- }
- 
- static inline void ath6kl_deposit_credit_to_ep(struct htc_credit_state_info
-@@ -643,6 +650,6 @@ void ath6kl_wakeup_event(void *dev);
- void ath6kl_target_failure(struct ath6kl *ar);
- 
- void ath6kl_init_control_info(struct ath6kl *ar);
--void ath6kl_deinit_if_data(struct ath6kl *ar, struct net_device *ndev);
-+void ath6kl_deinit_if_data(struct ath6kl_vif *vif);
- void ath6kl_core_free(struct ath6kl *ar);
- #endif /* CORE_H */
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 7720177..246399d 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1498,7 +1498,7 @@ err_rxbuf_cleanup:
- err_cleanup_scatter:
- 	ath6kl_hif_cleanup_scatter(ar);
- err_if_deinit:
--	ath6kl_deinit_if_data(ar, ndev);
-+	ath6kl_deinit_if_data(netdev_priv(ndev));
- 	wiphy_unregister(ar->wiphy);
- err_debug_init:
- 	ath6kl_debug_cleanup(ar);
-@@ -1631,7 +1631,7 @@ void ath6kl_destroy(struct net_device *dev, unsigned int unregister)
- 
- 	ath6kl_debug_cleanup(ar);
- 
--	ath6kl_deinit_if_data(ar, dev);
-+	ath6kl_deinit_if_data(netdev_priv(dev));
- 
- 	kfree(ar->fw_board);
- 	kfree(ar->fw_otp);
+-		passive_scan = cfg_priv->active_scan ? 0 : 1;
++		passive_scan = cfg_priv->active_scan ? 0 : cpu_to_le32(1);
+ 		err = brcmf_exec_dcmd(ndev, BRCMF_C_SET_PASSIVE_SCAN,
+ 				&passive_scan, sizeof(passive_scan));
+ 		if (err) {
 -- 
-1.7.0.4
+1.7.4.1
+
 
