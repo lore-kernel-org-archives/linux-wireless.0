@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:61139 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751238Ab1JRJNY convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34303 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751715Ab1JLT26 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Oct 2011 05:13:24 -0400
-Received: by wyg36 with SMTP id 36so352378wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2011 02:13:23 -0700 (PDT)
-MIME-Version: 1.0
-From: =?ISO-8859-1?Q?Andr=E9s_Garc=EDa_Saavedra?=
-	<andres.garcia.saavedra@gmail.com>
-Date: Tue, 18 Oct 2011 11:13:03 +0200
-Message-ID: <CADxqDgEvsObWbnPTViPF5g_TOS2WRJoJK4OnEzehbdQwwgzNDQ@mail.gmail.com> (sfid-20111018_111328_123593_A097915E)
-Subject: wl1251 and NoA protocol
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 12 Oct 2011 15:28:58 -0400
+Subject: Re: [PATCH 22/22] brcm80211: removed file wifi.c
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Alwin Beukers <alwin@broadcom.com>
+In-Reply-To: <4E95E897.8090709@broadcom.com>
+References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+	 <1318445492-24207-23-git-send-email-arend@broadcom.com>
+	 ( sfid-20111012_205231_795177_8B760EF6) <1318446818.3933.45.camel@jlt3.sipsolutions.net>
+	 <4E95E897.8090709@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 12 Oct 2011 21:28:52 +0200
+Message-ID: <1318447732.3933.48.camel@jlt3.sipsolutions.net> (sfid-20111012_212914_335559_331856DA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Wed, 2011-10-12 at 21:20 +0200, Arend van Spriel wrote:
+> On 10/12/2011 09:13 PM, Johannes Berg wrote:
+> > On Wed, 2011-10-12 at 20:51 +0200, Arend van Spriel wrote:
+> > 
+> >> -#include <brcmu_wifi.h>
+> > 
+> > Does that header file have any content left?
+> > 
+> > johannes
+> > 
+> > 
+> 
+> It has, but we intend to get rid of brcmutil 
 
-I would like to test Notice of Absence powersaving protocol for
-802.11abg WLANs on some current android smartphone. My question is
-regarding the wl1251 driver implementation for TI chipsets:
+Ok, I didn't check :)
 
-* Does the chipset/current implementation support sleep/awake
-triggers? (or at least quiet elements?) -> This means, can I command
-the NIC to stay quiet (slept) for certain duration of time?
+> although the pktq functions
+> are giving me a headache or it is due to the cold I caught.
 
-My plan is to implement/test a Notice of Absence protocol where the
-driver would trigger absent (quiet/sleep) periods according to the
-beacon's NoA IE. Ive seen in the code the wl1251_ps_elp_sleep/wakeup
-functions that might be reused for this purpose (?)
+Oh. Hope you feel better soon!
 
-* Last (lazy) question. AFAIK only the google dev 1 phone uses this
-chipset. Is there any 1ghz android device that could benefit of this
-driver?
+johannes
 
-
-Thanks for your answer,
-Andrés
