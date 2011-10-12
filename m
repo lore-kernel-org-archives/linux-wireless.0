@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:54289 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751528Ab1JKUds (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 16:33:48 -0400
-Message-ID: <1318365227.8896.14.camel@Joe-Laptop> (sfid-20111011_223351_543668_3EC451A9)
-Subject: Re: [PATCH v2 1/5] ath6kl: Add endpoint_stats debugfs file
-From: Joe Perches <joe@perches.com>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Date: Tue, 11 Oct 2011 13:33:47 -0700
-In-Reply-To: <20111011185228.GA20806@jouni.qca.qualcomm.com>
-References: <1318343517-15292-1-git-send-email-jouni@qca.qualcomm.com>
-	 <1318343517-15292-2-git-send-email-jouni@qca.qualcomm.com>
-	 <1318351171.1839.43.camel@Joe-Laptop>
-	 <20111011185228.GA20806@jouni.qca.qualcomm.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:48407 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751737Ab1JLP20 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Oct 2011 11:28:26 -0400
+Subject: [PATCH] mac80211: reformat TX unauthorised check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 12 Oct 2011 17:28:21 +0200
+Message-ID: <1318433301.3933.42.camel@jlt3.sipsolutions.net> (sfid-20111012_172829_798922_6BF3EFEB)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-10-11 at 21:52 +0300, Jouni Malinen wrote:
-> On Tue, Oct 11, 2011 at 09:39:31AM -0700, Joe Perches wrote:
-> > > +static unsigned int print_endpoint_stat(struct htc_target *target, char *buf,
-> > > +					unsigned int buf_len, unsigned int len,
-> > > +					int offset, const char *name)
-> > Perhaps the function name is wrong.
-> > This doesn't print, it fills a buffer.
-> Well, it prints the stuff into a buffer just like scnprintf prints
-> things.. Feel free to send a patch if you want to try to rename
-> *print* functions ;-).
+From: Johannes Berg <johannes.berg@intel.com>
 
-OK, s/print/scnprint/
+Reformat the check, the indentation is completely strange.
+Also change the last part of the condition to make the
+code shorter.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+Yes, it runs a bit over 80 cols but is easier to read than broken up.
+
+ net/mac80211/tx.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+--- a/net/mac80211/tx.c	2011-10-12 17:11:32.000000000 +0200
++++ b/net/mac80211/tx.c	2011-10-12 17:27:00.000000000 +0200
+@@ -1896,11 +1896,10 @@ netdev_tx_t ieee80211_subif_start_xmit(s
+ 	 * Drop unicast frames to unauthorised stations unless they are
+ 	 * EAPOL frames from the local station.
+ 	 */
+-	if (!ieee80211_vif_is_mesh(&sdata->vif) &&
+-		unlikely(!is_multicast_ether_addr(hdr.addr1) && !authorized &&
+-		      !(cpu_to_be16(ethertype) == sdata->control_port_protocol &&
+-		       compare_ether_addr(sdata->vif.addr,
+-					  skb->data + ETH_ALEN) == 0))) {
++	if (unlikely(!ieee80211_vif_is_mesh(&sdata->vif) &&
++		     !is_multicast_ether_addr(hdr.addr1) && !authorized &&
++		     (cpu_to_be16(ethertype) != sdata->control_port_protocol ||
++		      compare_ether_addr(sdata->vif.addr, skb->data + ETH_ALEN)))) {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 		if (net_ratelimit())
+ 			printk(KERN_DEBUG "%s: dropped frame to %pM"
 
 
