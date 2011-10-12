@@ -1,54 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4265 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754226Ab1JCL4Y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Oct 2011 07:56:24 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/4] ath6kl: Fix htc_packet leak in ath6kl_htc_rx_process_packets()
-Date: Mon, 3 Oct 2011 17:26:24 +0530
-Message-ID: <1317642987-16026-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111003_135627_421799_ECAB874E)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga03.intel.com ([143.182.124.21]:19354 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753047Ab1JLStf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Oct 2011 14:49:35 -0400
+Subject: Re: [PATCH 00/34] update for 3.2
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20111012182440.GD18764@tuxdriver.com>
+References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <20111012182440.GD18764@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 12 Oct 2011 11:00:09 -0700
+Message-ID: <1318442409.32488.7.camel@wwguy-huron> (sfid-20111012_204939_246654_17E75EE3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Packet is not reclaimed when ath6kl_htc_rx_process_hdr() fails.
-Fix this by deferring the packet deletion from comp_pktq till
-ath6kl_htc_rx_process_hdr() returns success. This bug is found
-in code review, impact is not easily visible as the leak happens
-only in failure cases.
+Hi John,
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+On Wed, 2011-10-12 at 11:24 -0700, John W. Linville wrote:
+> On Mon, Oct 10, 2011 at 07:26:45AM -0700, Wey-Yi Guy wrote:
+> > We address the performance issue cause by earlier path which disable too many calibration.
+> > We include few more bugs fix and enhancement patches for WoWLAN operations
+> > We continue remove un-needed code and clean up after driver split
+> > We also include new SKUs for both 6005 and 105 series of devices
+> 
+> Applying: iwlagn: separate init calib and rt calib
+> error: patch failed: drivers/net/wireless/iwlwifi/iwl-agn.c:1222
+> error: drivers/net/wireless/iwlwifi/iwl-agn.c: patch does not apply
+> error: patch failed: drivers/net/wireless/iwlwifi/iwl-commands.h:3216
+> error: drivers/net/wireless/iwlwifi/iwl-commands.h: patch does not apply
+> 
 
-V2 --- Commit log change
+My mistake, I believe this patch already in the tree:
+commit#af4dc88c56559c1ebf53628ddcc18dde23924e33 iwlagn: separate init
+calib and rt calib
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index f88a7c9..7bc9884 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -1643,7 +1643,6 @@ static int ath6kl_htc_rx_process_packets(struct htc_target *target,
- 	int status = 0;
- 
- 	list_for_each_entry_safe(packet, tmp_pkt, comp_pktq, list) {
--		list_del(&packet->list);
- 		ep = &target->endpoint[packet->endpoint];
- 
- 		/* process header for each of the recv packet */
-@@ -1652,6 +1651,8 @@ static int ath6kl_htc_rx_process_packets(struct htc_target *target,
- 		if (status)
- 			return status;
- 
-+		list_del(&packet->list);
-+
- 		if (list_empty(comp_pktq)) {
- 			/*
- 			 * Last packet's more packet flag is set
--- 
-1.7.0.4
+
+Thanks
+Wey
 
