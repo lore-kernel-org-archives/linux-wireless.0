@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:50616 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751140Ab1JJXcj (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57306 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810Ab1JLIc0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 19:32:39 -0400
-Received: by ggnv2 with SMTP id v2so5041436ggn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 16:32:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6XU57NLU=Tq_eqWoUtK_ppdd-PBH=tGCbEu7vQ1cPzpyQ@mail.gmail.com>
-References: <1317772067-6998-1-git-send-email-mcgrof@qca.qualcomm.com>
- <CAB=NE6V1gUSNc4L8sNv-NnDDVSzDB4A=cc_Z7tmZ79Q4LKtbwQ@mail.gmail.com>
- <CAB=NE6VxNKJPQPBbkn9ha1EC6dWawj96B6f-R1XREN1JAcrOQQ@mail.gmail.com>
- <CAB=NE6U6hFMBhgkjhpjpQk+FpMbDi4X6aW6i70MUWRH73K+AuQ@mail.gmail.com>
- <CAB=NE6Xz26oOudnyw17_1ijqe+L8qwQAGH8qjZEocgHQOY54eg@mail.gmail.com>
- <4E908C6D.7040703@neratec.com> <CAB=NE6UouofityugcjTvcXpBFx6cYEbAQ_FAe3gPO-GaS8Vh3w@mail.gmail.com>
- <4E92B74F.9030901@neratec.com> <CAB=NE6XU57NLU=Tq_eqWoUtK_ppdd-PBH=tGCbEu7vQ1cPzpyQ@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Mon, 10 Oct 2011 16:32:18 -0700
-Message-ID: <CAB=NE6V5s64kiiPMmPbs8bnbRwtvPMGAnRFfk5zDmomzyFc_xg@mail.gmail.com> (sfid-20111011_013243_115503_C817CA11)
-Subject: Re: [PATCH 0/8] wireless: add DFS master support
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 12 Oct 2011 04:32:26 -0400
+Subject: Re: [RFC 07/07] mac80211: Do not call release_buffered_frames if
+ not available.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+Cc: "linux-wireless.vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Bartosz MARKOWSKI <bartosz.markowski@tieto.com>,
+	Janusz DZIEDZIC <janusz.dziedzic@tieto.com>
+In-Reply-To: <op.v27ru2maya27un@edmitar> (sfid-20111012_030258_417331_5CE804F3)
+References: <op.v27ru2maya27un@edmitar>
+	 (sfid-20111012_030258_417331_5CE804F3)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 12 Oct 2011 10:32:23 +0200
+Message-ID: <1318408343.3933.29.camel@jlt3.sipsolutions.net> (sfid-20111012_103229_788409_BDB7AA0C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 10, 2011 at 12:05 PM, Luis R. Rodriguez
-<mcgrof@qca.qualcomm.com> wrote:
-> Sure, I'll respin my patches to use only 2 bits for now on the
-> wireless-regdb. As far as nl80211 is concerned though since we can
-> only send U8 as a minimum I'll define this as a NL80211_CTRY_REQS and
-> we can stuff whatever we want into it later on CRDA.
+On Wed, 2011-10-12 at 03:02 +0200, Dmitry Tarnyagin wrote:
+> From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+> Date: Wed, 5 Oct 2011 13:20:04 +0200
+> 
+> A new .release_buffered_frames callback was introduced recently.
+> Check for the callback presence was missing in the mac80211 code,
+> and PM state could get broken in some cases.
 
-And more to Johannes' point, my kernel patches can go as-is, the only
-one that needs to deal with the nastiness is crda.c, not even the
-wireless-regdb patches need to be respin'd. I did make a typo on
-nl80211.h though so I will have to respin, also for the sake of
-clarity.
+Interesting, but we do check:
 
-  Luis
+drv_release_buffered_frames(struct ieee80211_local *local,
+                            struct sta_info *sta, u16 tids, int num_frames,
+                            enum ieee80211_frame_release_type reason,
+                            bool more_data)
+{
+        trace_drv_release_buffered_frames(local, &sta->sta, tids, num_frames,
+                                          reason, more_data);
+        if (local->ops->release_buffered_frames)
+                local->ops->release_buffered_frames(&local->hw, &sta->sta, tids,
+
+
+So whatever you're trying to do must be something else.
+
+johannes
+
