@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:37571 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754304Ab1JTBDc (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:42970 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751752Ab1JLBCz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Oct 2011 21:03:32 -0400
-Received: by iaek3 with SMTP id k3so2770432iae.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2011 18:03:32 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: anagar6@uic.edu, devel@lists.open80211s.org,
-	Thomas Pedersen <thomas@cozybit.com>,
-	johannes@sipsolutions.net, linville@tuxdriver.com
-Subject: [PATCH 0/6] HT support for mesh
-Date: Wed, 19 Oct 2011 18:03:20 -0700
-Message-Id: <1319072606-28291-1-git-send-email-thomas@cozybit.com> (sfid-20111020_030339_841685_6EDD5397)
+	Tue, 11 Oct 2011 21:02:55 -0400
+Received: by mail-bw0-f46.google.com with SMTP id zt4so235648bkb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 18:02:55 -0700 (PDT)
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+Date: Wed, 12 Oct 2011 03:02:52 +0200
+Subject: [RFC 07/07] mac80211: Do not call release_buffered_frames if not
+ available.
+To: "linux-wireless.vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "Bartosz MARKOWSKI" <bartosz.markowski@tieto.com>,
+	"Janusz DZIEDZIC" <janusz.dziedzic@tieto.com>
+MIME-Version: 1.0
+From: "Dmitry Tarnyagin" <abi.dmitryt@gmail.com>
+Message-ID: <op.v27ru2maya27un@edmitar> (sfid-20111012_030258_417331_5CE804F3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds basic HT support for mesh nodes. We avoid the question of
-how to negotiate channel types, by simply disallowing peering with mismatched
-HT modes. Needs the mesh fixes posted earlier today for patch context.
+From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+Date: Wed, 5 Oct 2011 13:20:04 +0200
 
-Many thanks to Luis Rodriguez for his assistance, and Ashok Nagarajan for
-co-authoring this patchset.
+A new .release_buffered_frames callback was introduced recently.
+Check for the callback presence was missing in the mac80211 code,
+and PM state could get broken in some cases.
 
-Alexander Simon (1):
-  mac80211: Add HT helper functions
+Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+---
+  net/mac80211/sta_info.c |    4 +++-
+  1 files changed, 3 insertions(+), 1 deletions(-)
 
-Thomas Pedersen (5):
-  mac80211: add HT IEs to mesh frames
-  mac80211: set HT capabilities for mesh peer
-  mac80211: allow frame aggregation for mesh
-  mac80211: add WMM IE to mesh frames
-  mac80211: check mesh peer's WMM parameters
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 58b1c2b..ff30fe3 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1262,7 +1262,9 @@ ieee80211_sta_ps_deliver_response(struct sta_info  
+*sta,
+  		tids = ieee80211_tids_for_ac(ac);
 
- include/linux/ieee80211.h  |   26 ++++++
- include/net/mac80211.h     |    4 +
- net/mac80211/agg-rx.c      |    3 +-
- net/mac80211/agg-tx.c      |    4 +-
- net/mac80211/ht.c          |    3 +-
- net/mac80211/ieee80211_i.h |    8 ++
- net/mac80211/mesh.c        |   75 ++++++++++++++--
- net/mac80211/mesh.h        |    4 +
- net/mac80211/mesh_plink.c  |   24 +++++-
- net/mac80211/rx.c          |    1 +
- net/mac80211/tx.c          |    6 ++
- net/mac80211/util.c        |  208 ++++++++++++++++++++++++++++++++++++++++----
- net/mac80211/work.c        |   29 +------
- 13 files changed, 336 insertions(+), 59 deletions(-)
-
+  		if (!found) {
+-			driver_release_tids = sta->driver_buffered_tids & tids;
++			if (local->ops->release_buffered_frames)
++				driver_release_tids =
++					sta->driver_buffered_tids & tids;
+  			if (driver_release_tids) {
+  				found = true;
+  			} else {
 -- 
-1.7.5.4
-
+1.7.1
