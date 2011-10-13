@@ -1,73 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56509 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759188Ab1JGA21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Oct 2011 20:28:27 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 3/4] ath9k: improve PS filter clearing and retry counting for A-MPDU
-Date: Fri,  7 Oct 2011 02:28:14 +0200
-Message-Id: <1317947295-52172-3-git-send-email-nbd@openwrt.org> (sfid-20111007_022831_559251_EAB7F1D8)
-In-Reply-To: <1317947295-52172-2-git-send-email-nbd@openwrt.org>
-References: <1317947295-52172-1-git-send-email-nbd@openwrt.org>
- <1317947295-52172-2-git-send-email-nbd@openwrt.org>
+Received: from H144.C72.B0.tor.eicat.ca ([72.0.72.144]:62913 "EHLO
+	marcos.anarcat.ath.cx" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751743Ab1JMB5I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Oct 2011 21:57:08 -0400
+From: Antoine =?utf-8?Q?Beaupr=C3=A9?= <anarcat@koumbit.org>
+To: Ben Hutchings <ben@decadent.org.uk>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Cc: 645055@bugs.debian.org
+Subject: Re: Bug#645055: realtek 8188CE ad-hoc mode not supported
+In-Reply-To: <1318461858.4024.197.camel@deadeye>
+References: <20111012052940.17383.59248.reportbug@localhost> <1318424918.4024.180.camel@deadeye> <87pqi2s0cg.fsf@marcos.anarcat.ath.cx> <20111012160135.GK3366@decadent.org.uk> <1318461858.4024.197.camel@deadeye>
+Date: Wed, 12 Oct 2011 21:46:07 -0400
+Message-ID: <87wrc9r7ds.fsf@marcos.anarcat.ath.cx> (sfid-20111013_035723_283263_BF12F1ED)
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not increment the retry counter if packets to a sleeping station
-were not sent because of tx failure, instead of only checking the filter
-flag.
-Clear the PS filter only after an A-MPDU was reported as filtered,
-otherwise the hardware might do some unnecessary extra retransmissions.
+--=-=-=
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c |   13 ++++++-------
- 1 files changed, 6 insertions(+), 7 deletions(-)
+On Thu, 13 Oct 2011 00:24:12 +0100, Ben Hutchings <ben@decadent.org.uk> wro=
+te:
+> I looked a little further and saw that nl80211 does support changing
+> interface type (mode).  But this driver (rtl8192ce) only supports
+> creating new interfaces, not changing their type.
+>=20
+> Should mac80211 drivers generally support changing interface type
+> (change_interface operation)?
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 37d70b2..c34bd92 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -373,7 +373,6 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	struct ath_frame_info *fi;
- 	int nframes;
- 	u8 tidno;
--	bool clear_filter;
- 
- 	skb = bf->bf_mpdu;
- 	hdr = (struct ieee80211_hdr *)skb->data;
-@@ -463,11 +462,9 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 				 */
- 				txfail = 1;
- 			} else if (fi->retries < ATH_MAX_SW_RETRIES) {
--				if (!(ts->ts_status & ATH9K_TXERR_FILT) ||
--				    !an->sleeping)
-+				if (txok || !an->sleeping)
- 					ath_tx_set_retry(sc, txq, bf->bf_mpdu);
- 
--				clear_filter = true;
- 				txpending = 1;
- 			} else {
- 				txfail = 1;
-@@ -545,11 +542,13 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 			ieee80211_sta_set_buffered(sta, tid->tidno, true);
- 
- 		spin_lock_bh(&txq->axq_lock);
--		if (clear_filter)
--			tid->ac->clear_ps_filter = true;
- 		skb_queue_splice(&bf_pending, &tid->buf_q);
--		if (!an->sleeping)
-+		if (!an->sleeping) {
- 			ath_tx_queue_tid(txq, tid);
-+
-+			if (ts->ts_status & ATH9K_TXERR_FILT)
-+				tid->ac->clear_ps_filter = true;
-+		}
- 		spin_unlock_bh(&txq->axq_lock);
- 	}
- 
--- 
-1.7.3.2
+Seems to me really counter-intuitive that it didn't work. It was the
+first time I ever see such a problem.
 
+I have seen numerous drivers not support "Master" or "Monitor" mode,
+because of limitations of the implementation or the hardware, but if
+this is purely a API problem, it seems like a problem that should be
+fixed...
+
+Is this the right place though?
+
+A.
+=2D-=20
+The idea that Bill Gates has appeared like a knight in shining armour to
+lead all customers out of a mire of technological chaos neatly ignores
+the fact that it was he who, by peddling second-rate technology, led
+them into it in the first place. - Douglas Adams (1952-2001)
+
+--=-=-=
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBCAAGBQJOlkLfAAoJEHkhUlJ7dZIe1NoP/3drk7HSFgzZrgqC/gxakscw
+P3yJ2s1RNwPARWY4fYYoW5AkJ1S5mIAF5CXvbOyH4rlJYm35BqLT64hYnR0UST9y
+TvFm7KA78493w7E3vq0lyzTnr+hGA14e85kV+ZoS+PmDrmXamIJ8ntUxAxb1MHy5
+sAyInjj6/Zj7b0JrT7/5gPYL++w4/kwTrOnmmJI1Lq56rKI9cnAdtp2qplEO5Erg
+MC/Dq/XnyxtB0vDJignYf0zjdlkqkl/t+QkzO/w4jspE5tNmTCDLp9Jr8wT55ATf
+/7pB7p9DCtSViy8f3yNx5g+CeqVTB+DvDjfjMnAwli1d1PquGzhESi/Kx6pnzadp
+XmaUpGV5YDb4OkQM3dVKg6JF9zGQrM/xm/UYwikpebn5ArjCEmne42Fm3da2jQdY
+HYlrN5d3+EFKM9JpTpUyKgHTL6lGqi6Sg73E8uC+eeXxLYwBFyNil8w7tbIGF1c4
+jI140lnUacB9ifpumtCPNQda1p09U08WrTXDa1mCUAl1G7puSU2pqb8ZmfRjp1Xs
+hxYnEsFwhvzsQsjRdPbIcjPQA4HsWdYsjtfKCN/iGJc8mp6ajcOBZPl/0arglsy6
+vnjuP1bCapzMnaZoQyrRbspzOr+V9GMNrDS8m+5/oeULHXpgVGH63nYtnZ9BmY6f
+DRD7m2WP46b+TVK703a2
+=ReWf
+-----END PGP SIGNATURE-----
+--=-=-=--
