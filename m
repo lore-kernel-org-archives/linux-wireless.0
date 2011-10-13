@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:55999 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752068Ab1JHXLe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Oct 2011 19:11:34 -0400
-Message-ID: <1318115494.1844.44.camel@Joe-Laptop> (sfid-20111009_011141_787931_EF6F9D50)
-Subject: Re: [PATCH] ssb: Convert to use crc8 code in kernel library
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, zajec5@gmail.com,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Date: Sat, 08 Oct 2011 16:11:34 -0700
-In-Reply-To: <4E90D5F7.6020005@lwfinger.net>
-References: <4e90ce9a.89uGF659NNpbpyA3%Larry.Finger@lwfinger.net>
-	 <1318113514.1844.34.camel@Joe-Laptop> <4E90D5F7.6020005@lwfinger.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:38566 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752902Ab1JMO2L (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Oct 2011 10:28:11 -0400
+Subject: Re: [PATCH] brcm80211: rename CONFIG_BRCMUMAC to CONFIG_BRCMUTIL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: arend@broadcom.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1318515949-9558-1-git-send-email-hauke@hauke-m.de> (sfid-20111013_162620_528734_10EF53D2)
+References: <1318515949-9558-1-git-send-email-hauke@hauke-m.de>
+	 (sfid-20111013_162620_528734_10EF53D2)
 Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 13 Oct 2011 16:28:04 +0200
+Message-ID: <1318516084.5612.18.camel@jlt3.sipsolutions.net> (sfid-20111013_162814_475635_4D78407F)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-10-08 at 18:00 -0500, Larry Finger wrote:
-> On 10/08/2011 05:38 PM, Joe Perches wrote:
-> > On Sat, 2011-10-08 at 17:28 -0500, Larry Finger wrote:
-> >> The kernel now contains library routines to establish crc8 tables and
-> >> to calculate the appropriate sums. Use them for ssb.
-> > []
-> >> --- wireless-testing-new.orig/drivers/ssb/pci.c
-> > []
-> >> +static inline void ltoh16_buf(u16 *buf, unsigned int size)
-> >
-> > Perhaps a rename and use le16_to_cpup?
-> >
-> >> +static inline void htol16_buf(u16 *buf, unsigned int size)
-> >
-> > and cpu_to_le16p?
+On Thu, 2011-10-13 at 16:25 +0200, Hauke Mehrtens wrote:
+> There is no config option named CONFIG_BRCMUMAC this should be
+> CONFIG_BRCMUTIL as this is missing here.
 > 
-> I'm sorry, but I don't see any advantage to using a pointer version here. Please 
-> enlighten me.
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  drivers/net/wireless/Makefile |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+> index 0a304b0..812a050 100644
+> --- a/drivers/net/wireless/Makefile
+> +++ b/drivers/net/wireless/Makefile
+> @@ -59,5 +59,5 @@ obj-$(CONFIG_IWM)	+= iwmc3200wifi/
+>  
+>  obj-$(CONFIG_MWIFIEX)	+= mwifiex/
+>  obj-$(CONFIG_BRCMFMAC) += brcm80211/
+> -obj-$(CONFIG_BRCMUMAC) += brcm80211/
+> +obj-$(CONFIG_BRCMUTIL) += brcm80211/
+>  obj-$(CONFIG_BRCMSMAC) += brcm80211/
 
-It's just a naming consistency thing,
-you already are using a pointer version,
-and maybe this should go into byteorder.h
+Shouldn't it just go away since BRCMUTIL depends on SMAC||FMAC and is
+otherwise unreachable?
 
-inline void array_cpu_to_le16p(u16 *p, size_t size)
-{
-	while (size) {
-		cpu_to_le16p(p++);
-		size--;
-	}
-}
+johannes
 
