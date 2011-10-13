@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:63518 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751639Ab1JGJxp (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50869 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754725Ab1JMLTY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 05:53:45 -0400
-Received: by eyg7 with SMTP id 7so932071eyg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Oct 2011 02:53:44 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] mac80211: Update injection documentation
-Date: Fri,  7 Oct 2011 11:53:41 +0200
-Message-Id: <1317981221-12958-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111007_115349_483155_4A479FC3)
+	Thu, 13 Oct 2011 07:19:24 -0400
+Subject: [PATCH] mac80211: fix TID for null poll response
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 13 Oct 2011 13:19:19 +0200
+Message-ID: <1318504759.5612.16.camel@jlt3.sipsolutions.net> (sfid-20111013_131928_357709_56A2397C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add documentation about NOACK tx flag usage.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+The queue mapping/TID for non-QoS null data
+responses to is never set, making it default
+to BK. Fix that.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- Documentation/networking/mac80211-injection.txt |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ net/mac80211/sta_info.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/networking/mac80211-injection.txt b/Documentation/networking/mac80211-injection.txt
-index b30e81a..3a93007 100644
---- a/Documentation/networking/mac80211-injection.txt
-+++ b/Documentation/networking/mac80211-injection.txt
-@@ -23,6 +23,10 @@ radiotap headers and used to control injection:
-    IEEE80211_RADIOTAP_F_FRAG: frame will be fragmented if longer than the
- 			      current fragmentation threshold.
+--- a/net/mac80211/sta_info.c	2011-10-07 10:43:31.000000000 +0200
++++ b/net/mac80211/sta_info.c	2011-10-13 13:16:57.000000000 +0200
+@@ -1203,11 +1203,9 @@ static void ieee80211_send_null_response
+ 	memcpy(nullfunc->addr2, sdata->vif.addr, ETH_ALEN);
+ 	memcpy(nullfunc->addr3, sdata->vif.addr, ETH_ALEN);
  
-+ * IEEE80211_RADIOTAP_TX_FLAGS
-+
-+   IEEE80211_RADIOTAP_F_TX_NOACK: frame should be sent without waiting for
-+				  an ACK even if it is a unicast frame
++	skb->priority = tid;
++	skb_set_queue_mapping(skb, ieee802_1d_to_ac[tid]);
+ 	if (qos) {
+-		skb->priority = tid;
+-
+-		skb_set_queue_mapping(skb, ieee802_1d_to_ac[tid]);
+-
+ 		nullfunc->qos_ctrl = cpu_to_le16(tid);
  
- The injection code can also skip all other currently defined radiotap fields
- facilitating replay of captured radiotap headers directly.
--- 
-1.7.3.4
+ 		if (reason == IEEE80211_FRAME_RELEASE_UAPSD)
+
 
