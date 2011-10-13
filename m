@@ -1,42 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nautica.notk.org ([91.121.71.147]:50990 "EHLO nautica.notk.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754472Ab1J2Kby (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Oct 2011 06:31:54 -0400
-Date: Sat, 29 Oct 2011 12:25:02 +0200
-From: Dominique Martinet <asmadeus@codewreck.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, Julia Lawall <julia@diku.dk>,
-	Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [PATCH] brcm80211: smac: eliminate a null pointer dereference
- in dma.c
-Message-ID: <20111029102502.GA10582@nautica> (sfid-20111029_123158_323929_C4A303AE)
-References: <1319880615-3000-1-git-send-email-arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24665 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752571Ab1JMKXF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Oct 2011 06:23:05 -0400
+Message-ID: <4E96BC01.5000404@qca.qualcomm.com> (sfid-20111013_122311_624494_ED8453D6)
+Date: Thu, 13 Oct 2011 13:22:57 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1319880615-3000-1-git-send-email-arend@broadcom.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Sam Leffler <sleffler@chromium.org>
+Subject: Re: [PATCH] ath6kl: unbreak suspend
+References: <20111012074216.26442.87419.stgit@localhost6.localdomain6>
+In-Reply-To: <20111012074216.26442.87419.stgit@localhost6.localdomain6>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 10/12/2011 10:42 AM, Kalle Valo wrote:
+> From: Sam Leffler <sleffler@chromium.org>
+> 
+> Add missing {}'s that caused ath6kl_sdio_suspend to always return -EINVAL
+> causing suspend to be aborted.
+> 
+> kvalo: I broke this in commit f7325b85e ("ath6kl: add sdio debug messages")
 
+Applied. Thanks Sam.
 
-Arend van Spriel wrote on Sat, Oct 29, 2011:
-> Though it's unlikely, di may be null, so we can't dereference
-> di->dma.dmactrlflags until we've checked it.
-
-I've got no experience whatsoever in kernel coding so feel free to tell
-me that's stupid, but if you say it's unlikely why not use the
-unlikely() macro as well for the check?
-(also, that's not the point of this patch, but can't hurt to point that
-out)
-
-
->  	if (di == NULL) {
-would change to
-if (unlikely(di == NULL)) {
-
-
-Regards,
--- 
-Asmadeus | Dominique Martinet
+Kalle
