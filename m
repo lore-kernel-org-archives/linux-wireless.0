@@ -1,36 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:62004 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753632Ab1J0Bje (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:62325 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755617Ab1JMOyJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 21:39:34 -0400
-Received: by vcge1 with SMTP id e1so2015720vcg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 18:39:34 -0700 (PDT)
+	Thu, 13 Oct 2011 10:54:09 -0400
+Received: by ggnv2 with SMTP id v2so92233ggn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Oct 2011 07:54:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAMG6FYh6dPVQuvoTQsOAqbe_WrMMj7qji8T45DWmdrk-RNb-Bw@mail.gmail.com>
-References: <CAMG6FYh6dPVQuvoTQsOAqbe_WrMMj7qji8T45DWmdrk-RNb-Bw@mail.gmail.com>
-Date: Wed, 26 Oct 2011 21:39:33 -0400
-Message-ID: <CAEKwDSDBf6kXYp6hdqgHoUORAEkQOJrJmrsqXg6BVQTQvEYwxg@mail.gmail.com> (sfid-20111027_033938_237987_98DFA698)
-Subject: Re: How to enable clock/power from a wlan device driver
-From: Bob Copeland <me@bobcopeland.com>
-To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1318516981.5612.20.camel@jlt3.sipsolutions.net>
+References: <1318516240-10033-1-git-send-email-helmut.schaa@googlemail.com>
+	<1318516981.5612.20.camel@jlt3.sipsolutions.net>
+Date: Thu, 13 Oct 2011 16:54:08 +0200
+Message-ID: <CAGXE3d-9VfBm8DdzuQQ71U=1B81g_Ga1BvmJgv-0RZ6UMOSo_A@mail.gmail.com> (sfid-20111013_165413_873916_01887311)
+Subject: Re: [PATCH 1/2] nl80211: Add sta_flags to the station info
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 26, 2011 at 8:35 AM, Dmitry Tarnyagin <abi.dmitryt@gmail.com> wrote:
-> 3. Driver can call platform callback and request platform code to
-> enable the clock.
+On Thu, Oct 13, 2011 at 4:43 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Why would we care about the mask here? Wouldn't a u32 attribute with the
+> set flags only make more sense?
 
-> For my understanding clocks and power are platform-specific.
+I though about using the mask to tell user space which flags are actually
+used/supported by the driver. There might be nl80211 drivers that can't provide
+all flags and hence want to mask out the flags. Otherwise user space cannot
+decide if a flag is not set or not supported by the driver. Does that sound
+reasonable?
 
-Beats me what is best for your needs, but in light of the above it
-seems #3 fits the bill?
-
-This is the way other wireless drivers have done it -- e.g. wl12xx has
-a set_power() callback and the platform device uses it to disable the
-clock when the device is in low power mode.
-
--- 
-Bob Copeland %% www.bobcopeland.com
+Helmut
