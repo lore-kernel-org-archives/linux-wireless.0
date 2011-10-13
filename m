@@ -1,62 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44256 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246Ab1JKLvU (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:59297 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751118Ab1JMOas (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 07:51:20 -0400
-Subject: Re: [PATCH] mac80211: Populate radiotap header with MCS info for
- tx'ed frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <CAGXE3d8cuBg28PfMYQcAJ96oTEqUg6rG8ExUr+Sezq51eM2J_Q@mail.gmail.com> (sfid-20111011_134834_133793_0F4839D3)
-References: <1318332535-8815-1-git-send-email-helmut.schaa@googlemail.com>
-	 <1318332927.3965.9.camel@jlt3.sipsolutions.net>
-	 <CAGXE3d8cuBg28PfMYQcAJ96oTEqUg6rG8ExUr+Sezq51eM2J_Q@mail.gmail.com>
-	 (sfid-20111011_134834_133793_0F4839D3)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 11 Oct 2011 13:51:15 +0200
-Message-ID: <1318333875.3965.10.camel@jlt3.sipsolutions.net> (sfid-20111011_135123_367444_9F441A94)
-Mime-Version: 1.0
+	Thu, 13 Oct 2011 10:30:48 -0400
+Received: by eye27 with SMTP id 27so65379eye.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Oct 2011 07:30:47 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 2/2] mac80211: Provide station flags to cfg80211
+Date: Thu, 13 Oct 2011 16:30:40 +0200
+Message-Id: <1318516240-10033-2-git-send-email-helmut.schaa@googlemail.com> (sfid-20111013_163052_299921_E6B2234A)
+In-Reply-To: <1318516240-10033-1-git-send-email-helmut.schaa@googlemail.com>
+References: <1318516240-10033-1-git-send-email-helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-10-11 at 13:48 +0200, Helmut Schaa wrote:
-> On Tue, Oct 11, 2011 at 1:35 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > So using something like
-> > this would allow us to save some space as well:
-> >
-> > struct ieee80211_tx_status_rtap_hdr {
-> >        struct ieee80211_radiotap_header hdr;
-> >        union {
-> >                struct {
-> >                        u8 rate;
-> >                        u8 padding_for_rate;
-> >                        __le16 tx_flags;
-> >                        u8 data_retries;
-> >                } non_mcs;
-> >                struct {
-> >                        __le16 tx_flags;
-> >                        u8 data_retries;
-> >                        u8 mcs_known, mcs_flags, mcs;
-> >                } mcs;
-> >        }
-> > } __packed;
-> 
-> I thought about the same but this means we have to fill in
-> different fields (non_mcs.tx_flags vs mcs.tx_flags) for the MCS
-> vs legacy path and set the radiotap header len differently in
-> both cases.
+Only station flags that are already defined in nl80211 are added for
+now.
 
-Good point.
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ net/mac80211/cfg.c |   20 +++++++++++++++++++-
+ 1 files changed, 19 insertions(+), 1 deletions(-)
 
-> Or should we just get rid of the whole struct and fill in the
-> rtap header dynamically like it is done in the rx path and
-> drop the build-bug-on thing?
-
-I wouldn't mind that either, but we'll want to have a WARN_ON_ONCE()
-somewhere if we run out of space.
-
-johannes
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index d0705f2..e253afa 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -344,7 +344,8 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 			STATION_INFO_RX_BITRATE |
+ 			STATION_INFO_RX_DROP_MISC |
+ 			STATION_INFO_BSS_PARAM |
+-			STATION_INFO_CONNECTED_TIME;
++			STATION_INFO_CONNECTED_TIME |
++			STATION_INFO_STA_FLAGS;
+ 
+ 	do_posix_clock_monotonic_gettime(&uptime);
+ 	sinfo->connected_time = uptime.tv_sec - sta->last_connected;
+@@ -404,6 +405,23 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 		sinfo->bss_param.flags |= BSS_PARAM_FLAGS_SHORT_SLOT_TIME;
+ 	sinfo->bss_param.dtim_period = sdata->local->hw.conf.ps_dtim_period;
+ 	sinfo->bss_param.beacon_interval = sdata->vif.bss_conf.beacon_int;
++
++	sinfo->sta_flags.set = 0;
++	sinfo->sta_flags.mask = BIT(NL80211_STA_FLAG_AUTHORIZED) |
++				BIT(NL80211_STA_FLAG_SHORT_PREAMBLE) |
++				BIT(NL80211_STA_FLAG_WME) |
++				BIT(NL80211_STA_FLAG_MFP) |
++				BIT(NL80211_STA_FLAG_AUTHENTICATED);
++	if (test_sta_flag(sta, WLAN_STA_AUTHORIZED))
++		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_AUTHORIZED);
++	if (test_sta_flag(sta, WLAN_STA_SHORT_PREAMBLE))
++		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_SHORT_PREAMBLE);
++	if (test_sta_flag(sta, WLAN_STA_WME))
++		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_WME);
++	if (test_sta_flag(sta, WLAN_STA_MFP))
++		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_MFP);
++	if (test_sta_flag(sta, WLAN_STA_AUTH))
++		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_AUTHENTICATED);
+ }
+ 
+ 
+-- 
+1.7.3.4
 
