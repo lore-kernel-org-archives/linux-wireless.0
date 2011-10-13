@@ -1,51 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([72.73.18.11]:60097 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934243Ab1JEMdw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 08:33:52 -0400
-Date: Wed, 5 Oct 2011 08:33:52 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: linux-kernel@vger.kernel.org
-cc: linux-wireless@vger.kernel.org
-Subject: 3.1-rc8: carl open src driver bug
-Message-ID: <alpine.DEB.2.02.1110050832340.17961@p34.internal.lan> (sfid-20111005_143410_273837_7F8D3FB8)
+Received: from w1.fi ([128.177.27.249]:58902 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754461Ab1JMWp4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Oct 2011 18:45:56 -0400
+Date: Fri, 14 Oct 2011 01:45:32 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: Re: [PATCH] mac80211: handle HT PHY BSS membership selector value
+ correctly
+Message-ID: <20111013224532.GA1959@jm.kir.nu> (sfid-20111014_004607_596725_AC0B14B1)
+References: <201110132108.50019.chunkeey@googlemail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201110132108.50019.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Thu, Oct 13, 2011 at 09:08:49PM +0200, Christian Lamparter wrote:
+> 802.11n-2009 extends the supported rates element with a
+> magic value which can be used to prevent legacy stations
+> from joining the BSS.
 
-3.1-rc8:
+Well, it can be used to try to make legacy stations not attempt
+connection, but no guarantees on them actually checking whether they
+support all the "basic rates".. For example, where is mac80211 (or
+wpa_supplicant) doing that check? ;-)
 
-[420204.241294] ieee80211 phy0: invalid plcp cck rate (0).
-[420204.723179] ------------[ cut here ]------------
-[420204.723205] WARNING: at drivers/net/wireless/ath/carl9170/tx.c:351 carl9170_tx_status+0x431/0x440 [carl9170]()
-[420204.723211] Hardware name: X7SPA-HF
-[420204.723214] Modules linked in: aes_generic rt2800usb rt2800lib rt2x00usb rt2x00lib carl9170 mac80211 ath cfg80211 uvcvideo videodev i2c_i801
-[420204.723239] Pid: 0, comm: kworker/0:1 Not tainted 3.1.0-rc8 #1
-[420204.723244] Call Trace:
-[420204.723248]  <IRQ>  [<ffffffff8103036c>] ? warn_slowpath_common+0x7c/0xc0
-[420204.723271]  [<ffffffffa0148fd1>] ? carl9170_tx_status+0x431/0x440 [carl9170]
-[420204.723281]  [<ffffffffa0149359>] ? __carl9170_tx_process_status+0x109/0x220 [carl9170]
-[420204.723292]  [<ffffffff8109f16d>] ? dma_pool_free+0x1d/0xf0
-[420204.723302]  [<ffffffffa01496ee>] ? carl9170_tx_process_status+0x3e/0x80 [carl9170]
-[420204.723311]  [<ffffffffa014a922>] ? carl9170_handle_command_response+0x382/0x500 [carl9170]
-[420204.723321]  [<ffffffffa014acfd>] ? __carl9170_rx+0x25d/0x820 [carl9170]
-[420204.723330]  [<ffffffff813bceb8>] ? ehci_work+0x448/0xa80
-[420204.723340]  [<ffffffffa014b343>] ? carl9170_rx_stream+0x83/0x3b0 [carl9170]
-[420204.723349]  [<ffffffffa0143248>] ? carl9170_usb_tasklet+0x98/0xc0 [carl9170]
-[420204.723358]  [<ffffffff810352ca>] ? tasklet_hi_action+0x5a/0xc0
-[420204.723366]  [<ffffffff810359c0>] ? __do_softirq+0x90/0x120
-[420204.723375]  [<ffffffff814df66c>] ? call_softirq+0x1c/0x26
-[420204.723383]  [<ffffffff81003a5d>] ? do_softirq+0x4d/0x80
-[420204.723390]  [<ffffffff8100391d>] ? do_IRQ+0x5d/0xd0
-[420204.723397]  [<ffffffff814dddab>] ? common_interrupt+0x6b/0x6b
-[420204.723401]  <EOI>  [<ffffffff81008fe1>] ? mwait_idle+0x51/0x70
-[420204.723414]  [<ffffffff81000776>] ? cpu_idle+0x96/0xb0
-[420204.723420] ---[ end trace ca84150962b52c2e ]---
-[420227.442291] ieee80211 phy0: invalid plcp cck rate (0).
-[420899.453559] ieee80211 phy0: invalid plcp cck rate (0).
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> @@ -1463,6 +1463,38 @@ ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
+> +static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
 
-Justin.
+> +	for (i = 0; i < supp_rates_len; i++) {
+> +		int rate = (supp_rates[i] & 0x7f) * 5;
+> +		bool is_basic = !!(supp_rates[i] & BSS_MEMBERSHIP_SELECTOR);
 
+This looks a bit odd since the BSS_MEMBERSHIP_SELECTOR is not exactly
+same as basic rate indicator even through they share the same bit. We
+used to have the magic 0x80 value here which could actually look less
+confusing than the mixing of basic and BSS membership terms.
+
+> +		if (rate > 110)
+> +			*have_higher_than_11mbit = true;
+
+While this is not really introduced by this patch, this looks quite
+bogus since the higher-than-11Mbps is then used to figure out whether
+this was a 802.11g network. That is not correct since a network with a
+single supported rate 6 Mbps should also get that behavior.. More robust
+mechanism would be to check for any OFDM rate being listed.
+
+> +	ieee80211_get_rates(sband, elems.supp_rates, elems.supp_rates_len,
+> +			    &rates, &basic_rates, &have_higher_than_11mbit);
+
+> +	ieee80211_get_rates(sband, elems.ext_supp_rates,
+> +			    elems.ext_supp_rates_len, &rates, &basic_rates,
+> +			    &have_higher_than_11mbit);
+
+Yay for getting rid of the duplicated loop :-).
+ 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
