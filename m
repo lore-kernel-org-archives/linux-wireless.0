@@ -1,65 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:50716 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118Ab1JKLjq (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:47804 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754842Ab1JNTFL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 07:39:46 -0400
-Message-ID: <4E942AF7.10500@qca.qualcomm.com> (sfid-20111011_133950_045589_588E0A58)
-Date: Tue, 11 Oct 2011 14:39:35 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/5] ath6kl: Add debugfs file for target roam table
-References: <1318243411-16110-1-git-send-email-jouni@qca.qualcomm.com> <1318243411-16110-3-git-send-email-jouni@qca.qualcomm.com>
-In-Reply-To: <1318243411-16110-3-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Fri, 14 Oct 2011 15:05:11 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 3C5585402CB
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2011 15:20:52 -0400 (EDT)
+Subject: Compat-wireless release for 2011-10-14 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111014190510.521E940659@repository3.orbit-lab.org> (sfid-20111014_210516_009046_14A501B1)
+Date: Fri, 14 Oct 2011 15:05:10 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/10/2011 01:43 PM, Jouni Malinen wrote:
-> The new roam_table debugfs file can be used to display the current
-> roam table from the target.
+>From git://github.com/mcgrof/compat-wireless
+   8163a60..49eb82e  master     -> origin/master
+>From git://github.com/sfrothwell/linux-next
+ + 53c998a...0bb9d7e akpm-end   -> origin/akpm-end  (forced update)
+   65112dc..37cf951  akpm-start -> origin/akpm-start
+ + 7b64d23...970cc26 master     -> origin/master  (forced update)
+   65112dc..37cf951  stable     -> origin/stable
+ * [new tag]         next-20111014 -> next-20111014
 
-One comment:
+compat-wireless code metrics
 
-> +static int ath6kl_wmi_roam_tbl_event_rx(struct wmi *wmi, u8 *datap, int len)
-> +{
-> +#ifdef CONFIG_ATH6KL_DEBUG
-> +	struct ath6kl *ar = wmi->parent_dev;
-> +	struct wmi_target_roam_tbl *tbl;
-> +	u16 num_entries;
-> +
-> +	if (len < sizeof(*tbl))
-> +		return -EINVAL;
-> +
-> +	tbl = (struct wmi_target_roam_tbl *) datap;
-> +	num_entries = le16_to_cpu(tbl->num_entries);
-> +	if (sizeof(*tbl) + num_entries * sizeof(struct wmi_bss_roam_info) > len)
-> +		return -EINVAL;
-> +
-> +	if (ar->debug.roam_tbl == NULL ||
-> +	    ar->debug.roam_tbl_len < (unsigned int) len) {
-> +		kfree(ar->debug.roam_tbl);
-> +		ar->debug.roam_tbl = kmalloc(len, GFP_ATOMIC);
-> +		if (ar->debug.roam_tbl == NULL)
-> +			return -ENOMEM;
-> +	}
-> +
-> +	memcpy(ar->debug.roam_tbl, datap, len);
-> +	ar->debug.roam_tbl_len = len;
-> +
-> +	if (test_bit(ROAM_TBL_PEND, &ar->flag)) {
-> +		clear_bit(ROAM_TBL_PEND, &ar->flag);
-> +		wake_up(&ar->event_wq);
-> +	}
-> +#endif /* CONFIG_ATH6KL_DEBUG */
-> +
-> +	return 0;
-> +}
-
-I would prefer to have the part inside ifdef in debug.c, for example
-like ath6kl_debug_fwlog_event() is implemented. That way we can get rid
-of the ifdef inside code and related functinality would be in the same file.
-
-Kalle
+    814119 - Total upstream lines of code being pulled
+      2431 - backport code changes
+      2113 - backport code additions
+       318 - backport code deletions
+      8588 - backport from compat module
+     11019 - total backport code
+    1.3535 - % of code consists of backport work
