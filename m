@@ -1,135 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:1254 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932315Ab1JYKO5 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39562 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933130Ab1JNPMr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 06:14:57 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
-	<athiruve@qca.qualcomm.com>
-Subject: [PATCH 12/34] ath6kl: Move aggregation information to vif structure
-Date: Tue, 25 Oct 2011 15:40:08 +0530
-Message-ID: <1319537430-12459-13-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_122050_008785_CBA15A34)
-In-Reply-To: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 14 Oct 2011 11:12:47 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1REjRG-0001Pt-NW
+	for linux-wireless@vger.kernel.org; Fri, 14 Oct 2011 17:12:46 +0200
+Message-Id: <20111014151151.106530680@sipsolutions.net> (sfid-20111014_171250_261517_D98DABD2)
+Date: Fri, 14 Oct 2011 17:11:24 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 05/12] nl80211: allow subscribing to unexpected class3 frames
+References: <20111014151119.246288840@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 ++++----
- drivers/net/wireless/ath/ath6kl/core.h     |    2 +-
- drivers/net/wireless/ath/ath6kl/main.c     |    4 ++--
- drivers/net/wireless/ath/ath6kl/txrx.c     |   10 +++++++---
- 4 files changed, 14 insertions(+), 10 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 092b731..1e33e79 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2063,8 +2063,8 @@ static int ath6kl_init_if_data(struct ath6kl *ar, struct net_device *ndev)
- {
- 	struct ath6kl_vif *vif = netdev_priv(ndev);
+To implement AP mode without monitor interfaces we
+need to be able to send a deauth to stations that
+send frames without being associated. Enable this
+by adding a new nl80211 event for such frames that
+an application can subscribe to.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/nl80211.h |   13 +++++++++
+ include/net/cfg80211.h  |   19 +++++++++++++
+ net/wireless/mlme.c     |   16 +++++++++++
+ net/wireless/nl80211.c  |   66 ++++++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h  |    3 ++
+ 5 files changed, 117 insertions(+)
+
+--- a/include/linux/nl80211.h	2011-09-29 17:25:23.000000000 +0200
++++ b/include/linux/nl80211.h	2011-10-11 14:46:17.000000000 +0200
+@@ -509,6 +509,17 @@
+  * @NL80211_CMD_TDLS_OPER: Perform a high-level TDLS command (e.g. link setup).
+  * @NL80211_CMD_TDLS_MGMT: Send a TDLS management frame.
+  *
++ * @NL80211_CMD_UNEXPECTED_FRAME: Used by an application controlling an AP
++ *	(or GO) interface (i.e. hostapd) to ask for unexpected frames to
++ *	implement sending deauth to stations that send unexpected class 3
++ *	frames. Also used as the event sent by the kernel when such a frame
++ *	is received. When 4 address mode is supported, it may also be used
++ *	to notify the AP controller about those frames.
++ *	For the event, the %NL80211_ATTR_MAC attribute carries TA along
++ *	with more information like the interface index.
++ *	If used as the command, must have an interface index, and you can
++ *	only unsubscribe from the event by closing the socket.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -638,6 +649,8 @@ enum nl80211_commands {
+ 	NL80211_CMD_TDLS_OPER,
+ 	NL80211_CMD_TDLS_MGMT,
  
--	ar->aggr_cntxt = aggr_init(ndev);
--	if (!ar->aggr_cntxt) {
-+	vif->aggr_cntxt = aggr_init(ndev);
-+	if (!vif->aggr_cntxt) {
- 		ath6kl_err("failed to initialize aggr\n");
- 		return -ENOMEM;
++	NL80211_CMD_UNEXPECTED_FRAME,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+--- a/include/net/cfg80211.h	2011-10-06 21:59:47.000000000 +0200
++++ b/include/net/cfg80211.h	2011-10-11 15:22:36.000000000 +0200
+@@ -2176,6 +2176,8 @@ struct wireless_dev {
+ 
+ 	int beacon_interval;
+ 
++	u32 ap_unexpected_nlpid;
++
+ #ifdef CONFIG_CFG80211_WEXT
+ 	/* wext data */
+ 	struct {
+@@ -3182,6 +3184,23 @@ void cfg80211_gtk_rekey_notify(struct ne
+ void cfg80211_pmksa_candidate_notify(struct net_device *dev, int index,
+ 				     const u8 *bssid, bool preauth, gfp_t gfp);
+ 
++/**
++ * cfg80211_rx_spurious_frame - inform userspace about a spurious frame
++ * @dev: The device the frame matched to
++ * @addr: the transmitter address
++ * @gfp: context flags
++ *
++ * This function is used in AP mode (only!) to inform userspace that
++ * a spurious class 3 frame was received, to be able to deauth the
++ * sender. If 4addr frames are supported in AP mode, these may also
++ * be passed here if they aren't yet allowed for the sender so that
++ * the userspace application can set up things properly.
++ * Returns %true if the frame was passed to userspace (or this failed
++ * for a reason other than not having a subscription.)
++ */
++bool cfg80211_rx_spurious_frame(struct net_device *dev,
++				const u8 *addr, gfp_t gfp);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+--- a/net/wireless/mlme.c	2011-09-28 17:10:13.000000000 +0200
++++ b/net/wireless/mlme.c	2011-10-11 14:46:43.000000000 +0200
+@@ -879,6 +879,9 @@ void cfg80211_mlme_unregister_socket(str
  	}
-@@ -2080,9 +2080,9 @@ void ath6kl_deinit_if_data(struct ath6kl *ar, struct net_device *ndev)
- {
- 	struct ath6kl_vif *vif = netdev_priv(ndev);
  
--	aggr_module_destroy(ar->aggr_cntxt);
-+	aggr_module_destroy(vif->aggr_cntxt);
+ 	spin_unlock_bh(&wdev->mgmt_registrations_lock);
++
++	if (nlpid == wdev->ap_unexpected_nlpid)
++		wdev->ap_unexpected_nlpid = 0;
+ }
  
--	ar->aggr_cntxt = NULL;
-+	vif->aggr_cntxt = NULL;
+ void cfg80211_mlme_purge_registrations(struct wireless_dev *wdev)
+@@ -1107,3 +1110,16 @@ void cfg80211_pmksa_candidate_notify(str
+ 	nl80211_pmksa_candidate_notify(rdev, dev, index, bssid, preauth, gfp);
+ }
+ EXPORT_SYMBOL(cfg80211_pmksa_candidate_notify);
++
++bool cfg80211_rx_spurious_frame(struct net_device *dev,
++				const u8 *addr, gfp_t gfp)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++
++	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_AP &&
++		    wdev->iftype != NL80211_IFTYPE_P2P_GO))
++		return false;
++
++	return nl80211_unexpected_frame(dev, addr, gfp);
++}
++EXPORT_SYMBOL(cfg80211_rx_spurious_frame);
+--- a/net/wireless/nl80211.c	2011-10-04 10:49:07.000000000 +0200
++++ b/net/wireless/nl80211.c	2011-10-11 14:46:55.000000000 +0200
+@@ -5823,6 +5823,23 @@ static int nl80211_set_rekey_data(struct
+ 	return err;
+ }
  
- 	if (test_bit(NETDEV_REGISTERED, &vif->flags)) {
- 		unregister_netdev(ndev);
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index d461813..cef4251 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -415,6 +415,7 @@ struct ath6kl_vif {
- 	u16 bss_ch;
- 	struct ath6kl_wep_key wep_key_list[WMI_MAX_KEY_INDEX + 1];
- 	struct ath6kl_key keys[WMI_MAX_KEY_INDEX + 1];
-+	struct aggr_info *aggr_cntxt;
++static int nl80211_register_unexpected_frame(struct sk_buff *skb,
++					     struct genl_info *info)
++{
++	struct net_device *dev = info->user_ptr[1];
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++
++	if (wdev->iftype != NL80211_IFTYPE_AP &&
++	    wdev->iftype != NL80211_IFTYPE_P2P_GO)
++		return -EINVAL;
++
++	if (wdev->ap_unexpected_nlpid)
++		return -EBUSY;
++
++	wdev->ap_unexpected_nlpid = info->snd_pid;
++	return 0;
++}
++
+ #define NL80211_FLAG_NEED_WIPHY		0x01
+ #define NL80211_FLAG_NEED_NETDEV	0x02
+ #define NL80211_FLAG_NEED_RTNL		0x04
+@@ -6378,6 +6395,14 @@ static struct genl_ops nl80211_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_UNEXPECTED_FRAME,
++		.doit = nl80211_register_unexpected_frame,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV |
++				  NL80211_FLAG_NEED_RTNL,
++	},
  };
  
- /* Flag info */
-@@ -473,7 +474,6 @@ struct ath6kl {
- 	struct sk_buff_head mcastpsq;
- 	spinlock_t mcastpsq_lock;
- 	u8 intra_bss;
--	struct aggr_info *aggr_cntxt;
- 	struct wmi_ap_mode_stat ap_stats;
- 	u8 ap_country_code[3];
- 	struct list_head amsdu_rx_buffer_queue;
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 0b70e08..48a7e57 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -792,7 +792,7 @@ void ath6kl_connect_event(struct ath6kl *ar, u16 channel, u8 *bssid,
- 	netif_carrier_on(ar->net_dev);
- 	spin_unlock_bh(&ar->lock);
+ static struct genl_multicast_group nl80211_mlme_mcgrp = {
+@@ -7198,6 +7223,47 @@ void nl80211_send_sta_del_event(struct c
+ 	nlmsg_free(msg);
+ }
  
--	aggr_reset_state(ar->aggr_cntxt);
-+	aggr_reset_state(vif->aggr_cntxt);
- 	ar->reconnect_flag = 0;
++bool nl80211_unexpected_frame(struct net_device *dev, const u8 *addr, gfp_t gfp)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	struct sk_buff *msg;
++	void *hdr;
++	int err;
++	u32 nlpid = ACCESS_ONCE(wdev->ap_unexpected_nlpid);
++
++	if (!nlpid)
++		return false;
++
++	msg = nlmsg_new(100, gfp);
++	if (!msg)
++		return true;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_UNEXPECTED_FRAME);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return true;
++	}
++
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, dev->ifindex);
++	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, addr);
++
++	err = genlmsg_end(msg, hdr);
++	if (err < 0) {
++		nlmsg_free(msg);
++		return true;
++	}
++
++	genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlpid);
++	return true;
++
++ nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++	return true;
++}
++
+ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
+ 		      struct net_device *netdev, u32 nlpid,
+ 		      int freq, const u8 *buf, size_t len, gfp_t gfp)
+--- a/net/wireless/nl80211.h	2011-09-23 10:34:28.000000000 +0200
++++ b/net/wireless/nl80211.h	2011-10-11 14:47:39.000000000 +0200
+@@ -117,4 +117,7 @@ void nl80211_pmksa_candidate_notify(stru
+ 				    struct net_device *netdev, int index,
+ 				    const u8 *bssid, bool preauth, gfp_t gfp);
  
- 	if ((vif->nw_type == ADHOC_NETWORK) && ar->ibss_ps_enable) {
-@@ -1113,7 +1113,7 @@ void ath6kl_disconnect_event(struct ath6kl *ar, u8 reason, u8 *bssid,
- 				       assoc_resp_len, assoc_info,
- 				       prot_reason_status);
- 
--	aggr_reset_state(ar->aggr_cntxt);
-+	aggr_reset_state(vif->aggr_cntxt);
- 
- 	del_timer(&ar->disconnect_timer);
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 6b1795c..ba1678e 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1268,7 +1268,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 	datap = (struct ethhdr *) skb->data;
- 
- 	if (is_unicast_ether_addr(datap->h_dest) &&
--	    aggr_process_recv_frm(ar->aggr_cntxt, tid, seq_no,
-+	    aggr_process_recv_frm(vif->aggr_cntxt, tid, seq_no,
- 				  is_amsdu, skb))
- 		/* aggregation code will handle the skb */
- 		return;
-@@ -1353,7 +1353,9 @@ static void aggr_delete_tid_state(struct aggr_info *p_aggr, u8 tid)
- 
- void aggr_recv_addba_req_evt(struct ath6kl *ar, u8 tid, u16 seq_no, u8 win_sz)
- {
--	struct aggr_info *p_aggr = ar->aggr_cntxt;
-+	/* TODO: Findout vif */
-+	struct ath6kl_vif *vif = ar->vif;
-+	struct aggr_info *p_aggr = vif->aggr_cntxt;
- 	struct rxtid *rxtid;
- 	struct rxtid_stats *stats;
- 	u16 hold_q_size;
-@@ -1422,7 +1424,9 @@ struct aggr_info *aggr_init(struct net_device *dev)
- 
- void aggr_recv_delba_req_evt(struct ath6kl *ar, u8 tid)
- {
--	struct aggr_info *p_aggr = ar->aggr_cntxt;
-+	/* TODO: Findout vif */
-+	struct ath6kl_vif *vif = ar->vif;
-+	struct aggr_info *p_aggr = vif->aggr_cntxt;
- 	struct rxtid *rxtid;
- 
- 	if (!p_aggr)
--- 
-1.7.0.4
++bool nl80211_unexpected_frame(struct net_device *dev,
++			      const u8 *addr, gfp_t gfp);
++
+ #endif /* __NET_WIRELESS_NL80211_H */
+
 
