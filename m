@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:49157 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751560Ab1JMDpx (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:50263 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932841Ab1JNMxG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 23:45:53 -0400
-Date: Thu, 13 Oct 2011 09:16:26 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <stable@kernel.org>
-Subject: Re: [PATCH] ath9k_hw: Fix ASPM L1 issue for AR9462
-Message-ID: <20111013034625.GA5302@vmraj-lnx.users.atheros.com> (sfid-20111013_054602_763846_693A5B08)
-References: <1318226145-7772-1-git-send-email-rmanohar@qca.qualcomm.com>
- <20111012184043.GG18764@tuxdriver.com>
- <20111012185034.GH18764@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20111012185034.GH18764@tuxdriver.com>
+	Fri, 14 Oct 2011 08:53:06 -0400
+Received: by gyb13 with SMTP id 13so1066116gyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2011 05:53:05 -0700 (PDT)
+From: Sangwook Lee <sangwook.lee@linaro.org>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, patches@linaro.org,
+	Sangwook Lee <sangwook.lee@linaro.org>
+Subject: [PATCH 1/5] ath6kl: Add SDIO polling function definitions
+Date: Fri, 14 Oct 2011 13:50:42 +0100
+Message-Id: <1318596646-19495-2-git-send-email-sangwook.lee@linaro.org> (sfid-20111014_145316_990652_CB3EB868)
+In-Reply-To: <1318596646-19495-1-git-send-email-sangwook.lee@linaro.org>
+References: <1318596646-19495-1-git-send-email-sangwook.lee@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 12, 2011 at 02:50:34PM -0400, John W. Linville wrote:
-> On Wed, Oct 12, 2011 at 02:40:44PM -0400, John W. Linville wrote:
-> > On Mon, Oct 10, 2011 at 11:25:45AM +0530, Rajkumar Manoharan wrote:
-> > > Because of not clearing Bit 14 of AR_WA, the ASPM L1 is not
-> > > enabled when entering into sleep mode. AR9462 does not need
-> > > bit 14 to be set.
-> > > 
-> > > Cc: stable@kernel.org
-> > > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> > 
-> >   CC [M]  drivers/net/wireless/ath/ath9k/hw.o
-> > drivers/net/wireless/ath/ath9k/hw.c: In function ???__ath9k_hw_init???:
-> > drivers/net/wireless/ath/ath9k/hw.c:544:2: error: implicit declaration of function ???AR_SREV_9462???
-> > 
-> > Missing a patch dependency?
-> 
-> I see that is defined by a series posted just before that -- one that
-> hasn't even appeared in wireless-next yet.  Cc: stable@kernel.org
-> seems a bit inappropriate...
-> 
-> That series needs rework anyway -- how about you just fold this one
-> into that earlier series?
->
-First of all sorry for the inconvenience. While splitting stable patch
-from the patchset, I made it on top of patchset that caused the dependancy.
-I will resend patch.
+Add SDIO polling function definition into debug.h
 
---
-Rajkumar
+Signed-off-by: Sangwook Lee <sangwook.lee@linaro.org>
+---
+ drivers/net/wireless/ath/ath6kl/debug.h |   25 +++++++++++++++++++++++++
+ 1 files changed, 25 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
+index 9288a3c..bbe4a39 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.h
++++ b/drivers/net/wireless/ath/ath6kl/debug.h
+@@ -133,6 +133,31 @@ static inline int ath6kl_debug_init(struct ath6kl *ar)
+ static inline void ath6kl_debug_cleanup(struct ath6kl *ar)
+ {
+ }
++#endif
++
++#ifdef CONFIG_ATH6KL_SDIO_POLL
++void ath6kl_wd_init(struct ath6kl *ar);
++
++void ath6kl_wd_cleanup(struct ath6kl *ar);
++
++static inline int ath6kl_wd_poll_is_ture(void)
++{
++	return true;
++}
++
++#else
++static inline void ath6kl_wd_init(struct ath6kl *ar)
++{
++}
++
++static inline void ath6kl_wd_cleanup(struct ath6kl *ar)
++{
++}
++
++static inline int ath6kl_wd_poll_is_ture(void)
++{
++	return false;
++}
+ 
+ #endif
+ #endif
+-- 
+1.7.4.1
+
