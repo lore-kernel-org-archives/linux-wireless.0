@@ -1,53 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:60824 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753497Ab1JYHAi (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39561 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933130Ab1JNPMo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 03:00:38 -0400
-Message-ID: <4EA65E8E.5080909@qca.qualcomm.com> (sfid-20111025_090042_541908_323453CA)
-Date: Tue, 25 Oct 2011 10:00:30 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath6kl: Implement support for background scan control
- from userspace
-References: <1318983606-8959-1-git-send-email-rpanjwan@qca.qualcomm.com> <1318983606-8959-2-git-send-email-rpanjwan@qca.qualcomm.com>
-In-Reply-To: <1318983606-8959-2-git-send-email-rpanjwan@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Fri, 14 Oct 2011 11:12:44 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1REjRD-0001PZ-AS
+	for linux-wireless@vger.kernel.org; Fri, 14 Oct 2011 17:12:43 +0200
+Message-Id: <20111014151150.852803880@sipsolutions.net> (sfid-20111014_171246_563876_A5BBCF49)
+Date: Fri, 14 Oct 2011 17:11:23 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 04/12] mac80211: add support for control port protocol in AP
+ mode
+References: <20111014151119.246288840@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/19/2011 03:20 AM, Rishi Panjwani wrote:
-> In order to allow user space based control of background scan interval,
-> we use available debugfs infrastructure. The feature has been added for
-> testing purposes. The user has to write the bgscan interval (in secs) to
-> the bgscan_interval file in ath6kl debug directory. To disable bgscan,
-> a '0' is to be written to the bgscan_interval file.
-> 
-> Example:
-> 
-> echo "2" > bgscan_interval
-> 
-> This will make the background scan interval as 2 seconds
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks, applied. But I did one change:
+This will allow us to support dynamic WEP with 802.1X
+properly in mac80211 by not encrypting outgoing and
+accepting unencrypted incoming frames.
 
-> +	if (bgscan_int)
-> +		ath6kl_wmi_scanparams_cmd(ar->wmi, 0, 0, bgscan_int, 0, 0, 0, 3,
-> +			0, 0, 0);
-> +	else
-> +		ath6kl_wmi_scanparams_cmd(ar->wmi, 0, 0, 0xffff, 0, 0, 0, 3, 0,
-> +			0, 0);
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c   |   21 ++++++++++++++++++++-
+ net/mac80211/iface.c |   13 ++++++++++++-
+ 2 files changed, 32 insertions(+), 2 deletions(-)
 
-I changed that to more simple form:
+--- a/net/mac80211/cfg.c	2011-10-13 13:16:27.000000000 +0200
++++ b/net/mac80211/cfg.c	2011-10-13 21:53:56.000000000 +0200
+@@ -576,6 +576,8 @@ static int ieee80211_add_beacon(struct w
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct beacon_data *old;
++	struct ieee80211_sub_if_data *vlan;
++	int ret;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+@@ -583,7 +585,24 @@ static int ieee80211_add_beacon(struct w
+ 	if (old)
+ 		return -EALREADY;
+ 
+-	return ieee80211_config_beacon(sdata, params);
++	ret = ieee80211_config_beacon(sdata, params);
++	if (ret)
++		return ret;
++
++	/*
++	 * Apply control port protocol, this allows us to
++	 * not encrypt dynamic WEP control frames.
++	 */
++	sdata->control_port_protocol = params->crypto.control_port_ethertype;
++	sdata->control_port_no_encrypt = params->crypto.control_port_no_encrypt;
++	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
++		vlan->control_port_protocol =
++			params->crypto.control_port_ethertype;
++		vlan->control_port_no_encrypt =
++			params->crypto.control_port_no_encrypt;
++	}
++
++	return 0;
+ }
+ 
+ static int ieee80211_set_beacon(struct wiphy *wiphy, struct net_device *dev,
+--- a/net/mac80211/iface.c	2011-10-13 13:16:27.000000000 +0200
++++ b/net/mac80211/iface.c	2011-10-13 13:45:15.000000000 +0200
+@@ -188,11 +188,22 @@ static int ieee80211_do_open(struct net_
+ 		if (!is_valid_ether_addr(sdata->u.wds.remote_addr))
+ 			return -ENOLINK;
+ 		break;
+-	case NL80211_IFTYPE_AP_VLAN:
++	case NL80211_IFTYPE_AP_VLAN: {
++		struct ieee80211_sub_if_data *master;
++
+ 		if (!sdata->bss)
+ 			return -ENOLINK;
++
+ 		list_add(&sdata->u.vlan.list, &sdata->bss->vlans);
++
++		master = container_of(sdata->bss,
++				      struct ieee80211_sub_if_data, u.ap);
++		sdata->control_port_protocol =
++			master->control_port_protocol;
++		sdata->control_port_no_encrypt =
++			master->control_port_no_encrypt;
+ 		break;
++		}
+ 	case NL80211_IFTYPE_AP:
+ 		sdata->bss = &sdata->u.ap;
+ 		break;
 
-	if (bgscan_int == 0)
-		bgscan_int = 0xffff;
 
-	ath6kl_wmi_scanparams_cmd(ar->wmi, 0, 0, bgscan_int, 0, 0, 0, 3,
-				  0, 0, 0);
-
-Please check that I didn't break anything.
-
-Kalle
