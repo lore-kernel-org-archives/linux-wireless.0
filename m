@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53831 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752431Ab1JOMjt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Oct 2011 08:39:49 -0400
-Message-ID: <4E997F13.7060602@openwrt.org> (sfid-20111015_144005_871960_99D3E335)
-Date: Sat, 15 Oct 2011 14:39:47 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:62767 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932069Ab1JNJyw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Oct 2011 05:54:52 -0400
+Received: by iaek3 with SMTP id k3so2391781iae.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2011 02:54:52 -0700 (PDT)
 MIME-Version: 1.0
-To: Stanislav Demakov <s.demakov@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Ath9k, single antenna on ar9280
-References: <CAN=pzd+TcY+n90RBMU+Cpp0Bt9d_eAGgY4yffO+PSStWSzbf-Q@mail.gmail.com> <4E9970A6.10305@openwrt.org> <CAN=pzd+ou1DXL_d_W0dvTcYrNMfH9NjSoFUa=07fE4BYJ+N7bQ@mail.gmail.com> <4E997413.8010008@openwrt.org> <CAN=pzd+R42SArWR+gEgqvJ7h1_6ZnB61xyKzOo8FqNxkRhxqrQ@mail.gmail.com> <4E997A54.2080004@openwrt.org> <CAN=pzdLBxCB7U1+ig+ctPJKZMgC3D2V0KHOXXZH8ZVBgi67BQg@mail.gmail.com>
-In-Reply-To: <CAN=pzdLBxCB7U1+ig+ctPJKZMgC3D2V0KHOXXZH8ZVBgi67BQg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1318433496.3933.44.camel@jlt3.sipsolutions.net>
+References: <1317543352-29019-1-git-send-email-eliad@wizery.com>
+	<1318433496.3933.44.camel@jlt3.sipsolutions.net>
+Date: Fri, 14 Oct 2011 11:54:51 +0200
+Message-ID: <CAB3XZEe2ZjJk97N13gNTmtBpKDNJ2WPEpG7H-RssC1f9SOxNJQ@mail.gmail.com> (sfid-20111014_115456_799195_9425F08A)
+Subject: Re: [PATCH v2] mac80211: pass vif param to conf_tx() callback
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-10-15 2:24 PM, Stanislav Demakov wrote:
-> I'm running Ubuntu Server 11.10 - (kernel:  Linux server
-> 3.0.0-12-generic x86_64)
+On Wed, Oct 12, 2011 at 5:31 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2011-10-02 at 10:15 +0200, Eliad Peller wrote:
+>> tx params should be configured per interface.
+>> add ieee80211_vif param to the conf_tx callback,
+>> and change all the drivers that use this callback.
 >
-> ath9k from compat-wireless-2011-10-12 and current iw from git compiled
-> with libnl1.
+> For the record, I said this to you on IRC but you weren't around I
+> guess. This patch (with the other ones) is now passing a bogus sdata/vif
+> pointer to drivers -- e.g. for monitor mode interfaces from
+> ieee80211_do_open -> ieee80211_set_wmm_default -> drv_conf_tx.
 >
-> The wireless chip is AR9280. (2x2 MIMO)
+> I suspect the way to fix this would be to move the call to
+> ieee80211_set_wmm_default into the last switch statement in do_open,
+> could you please look into it?
 >
-> Also
-> echo 1>  /sys/kernel/debug/ieee80211/phy0/ath9k/rx_chainmask
-> echo 1>  /sys/kernel/debug/ieee80211/phy0/ath9k/tx_chainmask
-> is written at boot.
->
-> Is something wrong above?
-Do not mess with the rx_chainmask/tx_chainmask parameters, that may be 
-the reason why it's not working for you.
+thanks for the info.
+i'll look into it.
 
-- Felix
+Eliad.
