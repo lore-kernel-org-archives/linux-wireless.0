@@ -1,82 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:50174 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932689Ab1JaKZV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39574 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933146Ab1JNPNJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Oct 2011 06:25:21 -0400
-Received: by mail-bw0-f45.google.com with SMTP id zu5so604157bkb.4
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2011 03:25:20 -0700 (PDT)
-Subject: Re: [PATCH v2 1/3] nl80211: Add probe response offload attribute
-From: Luciano Coelho <coelho@ti.com>
-To: Guy Eilam <guy@wizery.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-In-Reply-To: <1319313081-28722-1-git-send-email-guy@wizery.com>
-References: <1319313081-28722-1-git-send-email-guy@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 31 Oct 2011 12:04:58 +0200
-Message-ID: <1320055498.2672.10.camel@cumari> (sfid-20111031_112525_240345_6736E8C2)
+	Fri, 14 Oct 2011 11:13:09 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1REjRb-0001Ri-Ux
+	for linux-wireless@vger.kernel.org; Fri, 14 Oct 2011 17:13:08 +0200
+Message-Id: <20111014151152.613576600@sipsolutions.net> (sfid-20111014_171749_468277_F04DADB6)
+Date: Fri, 14 Oct 2011 17:11:30 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 11/12] nl80211: advertise socket TX status capability
+References: <20111014151119.246288840@sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-10-22 at 21:51 +0200, Guy Eilam wrote: 
-> Notify the userspace of the probe response offloading
-> support by the driver.
-> 
-> Signed-off-by: Guy Eilam <guy@wizery.com>
-> ---
-> v2:
-> use struct wiphy instead of a function pointer
-> this change made the previous second PATCH:
-> "Get the probe response offloading support from the driver" irrelevant
-> changed WPS to WSC
-> 
->  include/linux/nl80211.h |   24 ++++++++++++++++++++++++
->  include/net/cfg80211.h  |    5 +++++
->  net/wireless/nl80211.c  |    5 +++++
->  3 files changed, 34 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-> index 9d797f2..c1f0a3d 100644
-> --- a/include/linux/nl80211.h
-> +++ b/include/linux/nl80211.h
-> @@ -1109,6 +1109,11 @@ enum nl80211_commands {
->   *	%NL80211_CMD_TDLS_MGMT. Otherwise %NL80211_CMD_TDLS_OPER should be
->   *	used for asking the driver to perform a TDLS operation.
->   *
-> + * @NL80211_ATTR_PROBE_RESP_OFFLOAD_SUPPORT: Indicates the support
-> + *	of probe response offloading by the driver/firmware.
-> + *	In addition this attribute holds a bitmap of the supported protocols
-> + *	for offloading using &enum nl80211_probe_resp_offload_support_attr.
-> + *
->   * @NL80211_ATTR_MAX: highest attribute number currently defined
->   * @__NL80211_ATTR_AFTER_LAST: internal use
->   */
-> @@ -1337,6 +1342,8 @@ enum nl80211_attrs {
->  	NL80211_ATTR_TDLS_SUPPORT,
->  	NL80211_ATTR_TDLS_EXTERNAL_SETUP,
->  
-> +	NL80211_ATTR_PROBE_RESP_OFFLOAD_SUPPORT,
-> +
+From: Johannes Berg <johannes.berg@intel.com>
 
-I'm not sure I understand why we need this.  Why aren't the flags
-themselves enough?
+The new wifi socket TX capability should be
+supported by wifi drivers, let them advertise
+whether they do or not.
 
-Johannes wrote, on a separate thread:
-> Oh, and probably a regular WIPHY flag that indicates whether the
-> attribute should be added at all so that it can also be 0 but present
-> (presence with 0 value indicates something other than not present).
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/nl80211.h |   15 +++++++++++++++
+ include/net/cfg80211.h  |    3 ++-
+ net/wireless/nl80211.c  |    2 ++
+ 3 files changed, 19 insertions(+), 1 deletion(-)
 
-What would be the meaning when the WIPHY flag is set but the attributes
-are all 0? Wouldn't it mean that we don't support probe_resp offload at
-all? Or would it mean that we support probe_resp offloading in normal
-cases (ie. not WCS nor P2P)? If the latter is the case, why not add a
-bit in the attributes to indicate that "normal" probe_resp offloading is
-supported? I think this would be cleaner because there wouldn't be any
-implicit semantics.
+--- a/include/linux/nl80211.h	2011-10-13 13:45:18.000000000 +0200
++++ b/include/linux/nl80211.h	2011-10-13 13:52:09.000000000 +0200
+@@ -1136,6 +1136,9 @@ enum nl80211_commands {
+  *	with support for the features listed in this attribute, see
+  *	&enum nl80211_ap_sme_features.
+  *
++ * @NL80211_ATTR_FEATURE_FLAGS: This u32 attribute contains flags from
++ *	&enum nl80211_feature_flags and is advertised in wiphy information.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1366,6 +1369,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_DEVICE_AP_MLME,
+ 
++	NL80211_ATTR_FEATURE_FLAGS,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -2690,4 +2695,14 @@ enum nl80211_ap_sme_features {
+ 	NL80211_AP_SME_WSC	= 1 << 0,
+ };
+ 
++/**
++ * enum nl80211_feature_flags - device/driver features
++ * @NL80211_FEATURE_SK_TX_STATUS: This driver supports reflecting back
++ *	TX status to the socket error queue when requested with the
++ *	socket option.
++ */
++enum nl80211_feature_flags {
++	NL80211_FEATURE_SK_TX_STATUS	= 1 << 0,
++};
++
+ #endif /* __LINUX_NL80211_H */
+--- a/include/net/cfg80211.h	2011-10-13 13:45:18.000000000 +0200
++++ b/include/net/cfg80211.h	2011-10-13 13:52:50.000000000 +0200
+@@ -1870,6 +1870,7 @@ struct wiphy_wowlan_support {
+  * @software_iftypes: bitmask of software interface types, these are not
+  *	subject to any restrictions since they are purely managed in SW.
+  * @flags: wiphy flags, see &enum wiphy_flags
++ * @features: features advertised to nl80211, see &enum nl80211_feature_flags.
+  * @bss_priv_size: each BSS struct has private data allocated with it,
+  *	this variable determines its size
+  * @max_scan_ssids: maximum number of SSIDs the device can scan for in
+@@ -1931,7 +1932,7 @@ struct wiphy {
+ 	/* Supported interface modes, OR together BIT(NL80211_IFTYPE_...) */
+ 	u16 interface_modes;
+ 
+-	u32 flags;
++	u32 flags, features;
+ 
+ 	u32 ap_sme_capa;
+ 
+--- a/net/wireless/nl80211.c	2011-10-13 13:45:18.000000000 +0200
++++ b/net/wireless/nl80211.c	2011-10-13 13:53:22.000000000 +0200
+@@ -1013,6 +1013,8 @@ static int nl80211_send_wiphy(struct sk_
+ 		NLA_PUT_U32(msg, NL80211_ATTR_DEVICE_AP_MLME,
+ 			    dev->wiphy.ap_sme_capa);
+ 
++	NLA_PUT_U32(msg, NL80211_ATTR_FEATURE_FLAGS, dev->wiphy.features);
++
+ 	return genlmsg_end(msg, hdr);
+ 
+  nla_put_failure:
 
-
--- 
-Cheers,
-Luca.
 
