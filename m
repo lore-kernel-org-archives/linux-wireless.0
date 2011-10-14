@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26967 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754606Ab1J0ILN (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:32794 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932798Ab1JNMxP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Oct 2011 04:11:13 -0400
-Message-ID: <4EA9121A.1090109@qca.qualcomm.com> (sfid-20111027_101118_541744_B152D971)
-Date: Thu, 27 Oct 2011 11:11:06 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] ath6kl: Implement support for listen interval from
- userspace
-References: <1319588789-17632-1-git-send-email-rpanjwan@qca.qualcomm.com> <1319588789-17632-2-git-send-email-rpanjwan@qca.qualcomm.com>
-In-Reply-To: <1319588789-17632-2-git-send-email-rpanjwan@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Fri, 14 Oct 2011 08:53:15 -0400
+Received: by mail-yw0-f46.google.com with SMTP id 31so257185ywp.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2011 05:53:15 -0700 (PDT)
+From: Sangwook Lee <sangwook.lee@linaro.org>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, patches@linaro.org,
+	Sangwook Lee <sangwook.lee@linaro.org>
+Subject: [PATCH 4/5] ath6kl: Add SDIO polling file into Makefile
+Date: Fri, 14 Oct 2011 13:50:45 +0100
+Message-Id: <1318596646-19495-5-git-send-email-sangwook.lee@linaro.org> (sfid-20111014_145323_994531_F0702C70)
+In-Reply-To: <1318596646-19495-1-git-send-email-sangwook.lee@linaro.org>
+References: <1318596646-19495-1-git-send-email-sangwook.lee@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/26/2011 03:26 AM, Rishi Panjwani wrote:
-> In order to allow user space based control of listen interval, we use
-> available debugfs infrastructure. Listen interval implies how frequently
-> we want the WLAN chip to wake up and synchronize the beacons in case it
-> is in sleep mode. The command requires two parameters in the following order:
-> 
-> 1) listen_interval_time
-> 2) listen_interval_beacons
-> 
-> The user has to write the listen interval_time (in msecs) and
-> listen_interval_beacons (in no. of beacons) to the listen_interval file in
-> ath6kl debug directory.
-> 
-> Example:
-> 
-> echo "30 1" > listen_interval
+Add new file into Makefile
 
-Applied, thanks. I had to add vif index to the wmi call due to multi vif
-changes. Please check my changes.
+Signed-off-by: Sangwook Lee <sangwook.lee@linaro.org>
+---
+ drivers/net/wireless/ath/ath6kl/Makefile |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Kalle
+diff --git a/drivers/net/wireless/ath/ath6kl/Makefile b/drivers/net/wireless/ath/ath6kl/Makefile
+index 8f7a0d1..a8f4a55 100644
+--- a/drivers/net/wireless/ath/ath6kl/Makefile
++++ b/drivers/net/wireless/ath/ath6kl/Makefile
+@@ -32,6 +32,7 @@ ath6kl-y += main.o
+ ath6kl-y += txrx.o
+ ath6kl-y += wmi.o
+ ath6kl-y += sdio.o
++ath6kl-$(CONFIG_ATH6KL_SDIO_POLL) += sdio_poll.o
+ ath6kl-$(CONFIG_NL80211_TESTMODE) += testmode.o
+ 
+ ccflags-y += -D__CHECK_ENDIAN__
+-- 
+1.7.4.1
+
