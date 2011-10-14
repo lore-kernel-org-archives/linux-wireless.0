@@ -1,42 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:48227 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757226Ab1JFUa6 (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:64275 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754693Ab1JNHnC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Oct 2011 16:30:58 -0400
-Received: by mail-bw0-f42.google.com with SMTP id r4so8098434bka.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 13:30:56 -0700 (PDT)
-Subject: wl12xx: tired of the sdio_test module
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 06 Oct 2011 23:30:53 +0300
-Message-ID: <1317933053.3549.66.camel@cumari> (sfid-20111006_223101_897576_FF6B334A)
-Mime-Version: 1.0
+	Fri, 14 Oct 2011 03:43:02 -0400
+Received: by bkbzt4 with SMTP id zt4so2483923bkb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2011 00:43:01 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Jouni Malinen <j@w1.fi>
+Subject: Re: [PATCH] mac80211: handle HT PHY BSS membership selector value correctly
+Date: Fri, 14 Oct 2011 09:42:36 +0200
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+References: <201110132108.50019.chunkeey@googlemail.com> <20111013224532.GA1959@jm.kir.nu>
+In-Reply-To: <20111013224532.GA1959@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201110140942.37085.chunkeey@googlemail.com> (sfid-20111014_094308_105579_E81DD304)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Friday, October 14, 2011 12:45:32 AM Jouni Malinen wrote:
+> On Thu, Oct 13, 2011 at 09:08:49PM +0200, Christian Lamparter wrote:
+> > 802.11n-2009 extends the supported rates element with a
+> > magic value which can be used to prevent legacy stations
+> > from joining the BSS.
+> 
+> Well, it can be used to try to make legacy stations not attempt
+> connection, but no guarantees on them actually checking whether they
+> support all the "basic rates".. For example, where is mac80211 (or
+> wpa_supplicant) doing that check? ;-)
 
-Again, I've made some changes in the main wl12xx modules and the
-sdio_test module broke.  Now I'm getting tired of it.  Whenever we make
-changes in the main modules, we need to change it accordingly.  My
-current changes in the way the bus modules work, has broken it
-completely and I don't want to spend too much time fixing it.
+Actually, you have already implemented the check elsewhere :)
 
-So there are two options:
 
-1) remove the sdio_test module completely;
-2) copy the header files it uses so that changes in the real headers
-won't break it;
-
-I'll send one patch for each option and, tomorrow when I continue my
-integration round, depending on my mood, I'll choose one to apply. :)
-
-Maybe if I do 2) the driver should be moved to staging? ;)
-
--- 
-Cheers,
-Luca.
-
+> 
+> > diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> > @@ -1463,6 +1463,38 @@ ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
+> > +static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
+> 
+> > +	for (i = 0; i < supp_rates_len; i++) {
+> > +		int rate = (supp_rates[i] & 0x7f) * 5;
+> > +		bool is_basic = !!(supp_rates[i] & BSS_MEMBERSHIP_SELECTOR);
+> 
+> This looks a bit odd since the BSS_MEMBERSHIP_SELECTOR is not exactly
+> same as basic rate indicator even through they share the same bit. We
+> used to have the magic 0x80 value here which could actually look less
+> confusing than the mixing of basic and BSS membership terms.
+> 
+> > +		if (rate > 110)
+> > +			*have_higher_than_11mbit = true;
+> 
+> While this is not really introduced by this patch, this looks quite
+> bogus since the higher-than-11Mbps is then used to figure out whether
+> this was a 802.11g network. That is not correct since a network with a
+> single supported rate 6 Mbps should also get that behavior.. More robust
+> mechanism would be to check for any OFDM rate being listed.
+> 
+> > +	ieee80211_get_rates(sband, elems.supp_rates, elems.supp_rates_len,
+> > +			    &rates, &basic_rates, &have_higher_than_11mbit);
+> 
+> > +	ieee80211_get_rates(sband, elems.ext_supp_rates,
+> > +			    elems.ext_supp_rates_len, &rates, &basic_rates,
+> > +			    &have_higher_than_11mbit);
+> 
+> Yay for getting rid of the duplicated loop :-).
+>  
+> 
