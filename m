@@ -1,41 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:58825 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756055Ab1JQOf5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Oct 2011 10:35:57 -0400
-Received: by wyg36 with SMTP id 36so2268164wyg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2011 07:35:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20111017162727.388624fc@milhouse>
-References: <1318800649-5609-1-git-send-email-zajec5@gmail.com>
-	<20111017162727.388624fc@milhouse>
-Date: Mon, 17 Oct 2011 16:35:55 +0200
-Message-ID: <CACna6ryM-08U+Ohtm6LYTuoDqy1uFfFd4jP5PmD-X=CuNT7omA@mail.gmail.com> (sfid-20111017_163605_281359_6CB5D1B1)
-Subject: Re: [PATCH 3.2 REQUEST] b43: HT-PHY: report signal to mac80211
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Received: from mga01.intel.com ([192.55.52.88]:58717 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932624Ab1JNUoh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Oct 2011 16:44:37 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 5/6] iwlagn: fix the race in the unmapping of the HCMD
+Date: Fri, 14 Oct 2011 12:54:47 -0700
+Message-Id: <1318622088-14679-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111014_224442_253361_CC3B62CE)
+In-Reply-To: <1318622088-14679-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1318622088-14679-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 17 października 2011 16:27 użytkownik Michael Büsch <m@bues.ch> napisał:
-> On Sun, 16 Oct 2011 23:30:49 +0200
-> Rafał Miłecki <zajec5@gmail.com> wrote:
->> +     case B43_PHYTYPE_HT:
->> +             /* TODO: is max the right choice? */
->> +             status.signal = max(
->> +                     (__s8) max(rxhdr->phy_ht_power0, rxhdr->phy_ht_power1),
->
-> Hm, why is this cast needed? Does it throw a warning?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-warning: comparison of distinct pointer types lacks a cast
+As Stanislaw pointed out, my patch
 
-gcc 4.5.1
+	iwlagn: fix a race in the unmapping of the TFDs
 
+solved only part of the problem. The race still exists for TFDs of
+the host commands. Fix that too.
+
+Reported-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 8e8c75c..da34110 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -407,6 +407,7 @@ static void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id)
+ 	struct iwl_queue *q = &txq->q;
+ 	enum dma_data_direction dma_dir;
+ 	unsigned long flags;
++	spinlock_t *lock;
+ 
+ 	if (!q->n_bd)
+ 		return;
+@@ -414,19 +415,22 @@ static void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id)
+ 	/* In the command queue, all the TBs are mapped as BIDI
+ 	 * so unmap them as such.
+ 	 */
+-	if (txq_id == trans->shrd->cmd_queue)
++	if (txq_id == trans->shrd->cmd_queue) {
+ 		dma_dir = DMA_BIDIRECTIONAL;
+-	else
++		lock = &trans->hcmd_lock;
++	} else {
+ 		dma_dir = DMA_TO_DEVICE;
++		lock = &trans->shrd->sta_lock;
++	}
+ 
+-	spin_lock_irqsave(&trans->shrd->sta_lock, flags);
++	spin_lock_irqsave(lock, flags);
+ 	while (q->write_ptr != q->read_ptr) {
+ 		/* The read_ptr needs to bound by q->n_window */
+ 		iwlagn_txq_free_tfd(trans, txq, get_cmd_index(q, q->read_ptr),
+ 				    dma_dir);
+ 		q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd);
+ 	}
+-	spin_unlock_irqrestore(&trans->shrd->sta_lock, flags);
++	spin_unlock_irqrestore(lock, flags);
+ }
+ 
+ /**
 -- 
-Rafał
+1.7.0.4
+
