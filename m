@@ -1,94 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:35710 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:29238 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750891Ab1JHHBh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Oct 2011 03:01:37 -0400
-Message-ID: <4E8FF54F.1080306@gmail.com> (sfid-20111008_090156_150304_2D10A381)
-Date: Sat, 08 Oct 2011 00:01:35 -0700
-From: Jeff Kirsher <tarbal@gmail.com>
-Reply-To: jeffrey.t.kirsher@intel.com
-MIME-Version: 1.0
-To: Yinglin Sun <yinglin.s@gmail.com>
-CC: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	sfr@canb.auug.org.au, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org, sparclinux@vger.kernel.org,
-	linux-ide@vger.kernel.org
-Subject: Re: moving GIT back to kernel.org...
-References: <20111007.145703.842130763413648388.davem@davemloft.net> <20111007.155902.916470368193047875.davem@davemloft.net> <CAN17JHUGnAbHJmwybjJVdxq4JOgHfDxChw1P7q1yrkqH6Ci05w@mail.gmail.com>
-In-Reply-To: <CAN17JHUGnAbHJmwybjJVdxq4JOgHfDxChw1P7q1yrkqH6Ci05w@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha512;
- protocol="application/pgp-signature";
- boundary="------------enigCCC69D638E5E846D4C83EC23"
+	id S1751412Ab1JNPAt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Oct 2011 11:00:49 -0400
+Subject: Re: [PATCH] libertas: fix changing interface type when interface is
+ down
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Drake <dsd@laptop.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+Date: Fri, 14 Oct 2011 10:00:35 -0500
+In-Reply-To: <20111014110526.74BCC9D401E@zog.reactivated.net>
+References: <20111014110526.74BCC9D401E@zog.reactivated.net>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1318604437.2196.3.camel@dcbw.foobar.com> (sfid-20111014_170052_875797_AFEC9852)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigCCC69D638E5E846D4C83EC23
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Fri, 2011-10-14 at 12:05 +0100, Daniel Drake wrote:
+> The recent changes to only power the device when the interface up
+> introduced a bug: changing interface type, legal when the interface
+> is down, performs device I/O.
+> 
+> Fix this functionality by validating and recording the interface
+> type when the change is requested, but only applying the change
+> if/when the interface is brought up.
+> 
+> Signed-off-by: Daniel Drake <dsd@laptop.org>
 
-On 10/07/2011 11:55 PM, Yinglin Sun wrote:
-> On Fri, Oct 7, 2011 at 12:59 PM, David Miller <davem@davemloft.net> wro=
-te:
->> From: David Miller <davem@davemloft.net>
->> Date: Fri, 07 Oct 2011 14:57:03 -0400 (EDT)
->>
->>> I'm about to setup my GIT trees on kernel.org, once that is complete
->>> I will be solely updating those trees again.
->>>
->>> I will notify everyone when this is ready to go.
->>>
->>> Just a heads up for everyone...
->> Ok, they are now online, please update your URLs.
->>
->> git://git.kernel.org/pub/scm/linux/kernel/git/davem/net.git
->> git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git
->> git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc.git
->> git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git
->>
-> I'm still new to net kernel development, so a little confused about the=
-se trees.
-> So we should submit patches based on these trees, instead of Linus'?
-> About net and net-next, How to decide which one to use?
->
-> Thanks!
->
-> Yinglin
->
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-*If* you have change against the network core/drivers then, you would
-want to use David Miller's net or net-next trees.
+> ---
+>  drivers/net/wireless/libertas/cfg.c  |   20 ++++++--------------
+>  drivers/net/wireless/libertas/decl.h |    2 ++
+>  drivers/net/wireless/libertas/main.c |   32 ++++++++++++++++++++++++++++++++
+>  3 files changed, 40 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+> index 610bfce..ff63782 100644
+> --- a/drivers/net/wireless/libertas/cfg.c
+> +++ b/drivers/net/wireless/libertas/cfg.c
+> @@ -1666,28 +1666,20 @@ static int lbs_change_intf(struct wiphy *wiphy, struct net_device *dev,
+>  	if (dev == priv->mesh_dev)
+>  		return -EOPNOTSUPP;
+>  
+> -	lbs_deb_enter(LBS_DEB_CFG80211);
+> -
+>  	switch (type) {
+>  	case NL80211_IFTYPE_MONITOR:
+> -		ret = lbs_set_monitor_mode(priv, 1);
+> -		break;
+>  	case NL80211_IFTYPE_STATION:
+> -		if (priv->wdev->iftype == NL80211_IFTYPE_MONITOR)
+> -			ret = lbs_set_monitor_mode(priv, 0);
+> -		if (!ret)
+> -			ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_BSS_TYPE, 1);
+> -		break;
+>  	case NL80211_IFTYPE_ADHOC:
+> -		if (priv->wdev->iftype == NL80211_IFTYPE_MONITOR)
+> -			ret = lbs_set_monitor_mode(priv, 0);
+> -		if (!ret)
+> -			ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_BSS_TYPE, 2);
+>  		break;
+>  	default:
+> -		ret = -ENOTSUPP;
+> +		return -EOPNOTSUPP;
+>  	}
+>  
+> +	lbs_deb_enter(LBS_DEB_CFG80211);
+> +
+> +	if (priv->iface_running)
+> +		ret = lbs_set_iface_type(priv, type);
+> +
+>  	if (!ret)
+>  		priv->wdev->iftype = type;
+>  
+> diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
+> index 9304e6f..bc951ab 100644
+> --- a/drivers/net/wireless/libertas/decl.h
+> +++ b/drivers/net/wireless/libertas/decl.h
+> @@ -9,6 +9,7 @@
+>  
+>  #include <linux/netdevice.h>
+>  #include <linux/firmware.h>
+> +#include <linux/nl80211.h>
+>  
+>  /* Should be terminated by a NULL entry */
+>  struct lbs_fw_table {
+> @@ -45,6 +46,7 @@ void lbs_host_to_card_done(struct lbs_private *priv);
+>  
+>  int lbs_start_iface(struct lbs_private *priv);
+>  int lbs_stop_iface(struct lbs_private *priv);
+> +int lbs_set_iface_type(struct lbs_private *priv, enum nl80211_iftype type);
+>  
+>  int lbs_rtap_supported(struct lbs_private *priv);
+>  
+> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+> index 6a32623..f78afd7 100644
+> --- a/drivers/net/wireless/libertas/main.c
+> +++ b/drivers/net/wireless/libertas/main.c
+> @@ -99,6 +99,32 @@ u8 lbs_data_rate_to_fw_index(u32 rate)
+>  	return 0;
+>  }
+>  
+> +int lbs_set_iface_type(struct lbs_private *priv, enum nl80211_iftype type)
+> +{
+> +	int ret = 0;
+> +
+> +	switch (type) {
+> +	case NL80211_IFTYPE_MONITOR:
+> +		ret = lbs_set_monitor_mode(priv, 1);
+> +		break;
+> +	case NL80211_IFTYPE_STATION:
+> +		if (priv->wdev->iftype == NL80211_IFTYPE_MONITOR)
+> +			ret = lbs_set_monitor_mode(priv, 0);
+> +		if (!ret)
+> +			ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_BSS_TYPE, 1);
+> +		break;
+> +	case NL80211_IFTYPE_ADHOC:
+> +		if (priv->wdev->iftype == NL80211_IFTYPE_MONITOR)
+> +			ret = lbs_set_monitor_mode(priv, 0);
+> +		if (!ret)
+> +			ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_BSS_TYPE, 2);
+> +		break;
+> +	default:
+> +		ret = -ENOTSUPP;
+> +	}
+> +	return ret;
+> +}
+> +
+>  int lbs_start_iface(struct lbs_private *priv)
+>  {
+>  	struct cmd_ds_802_11_mac_address cmd;
+> @@ -120,6 +146,12 @@ int lbs_start_iface(struct lbs_private *priv)
+>  		goto err;
+>  	}
+>  
+> +	ret = lbs_set_iface_type(priv, priv->wdev->iftype);
+> +	if (ret) {
+> +		lbs_deb_net("set iface type failed\n");
+> +		goto err;
+> +	}
+> +
+>  	lbs_update_channel(priv);
+>  
+>  	priv->iface_running = true;
 
-As a general rule:
- - net tree is only for fixes/critical fixes
- - net-next tree is for everything else
 
-There are always exceptions, but if you stick to the above general rule,
-you will be fine.
-
-
---------------enigCCC69D638E5E846D4C83EC23
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iQIcBAEBCgAGBQJOj/VPAAoJEOVv75VaS+3OK24P/AudAzx4kltWyzTQHcuBFgOu
-TgeM3OQhOSle1Gm+KS26kUrC9zQjtH4gpyoAYLCp4r2cR6OZqbgBvWCE+xkpxuWw
-jUKWG5+S1KSTk3kcFwxVFPqgMVosq7dNhZGmFEX49M7SvH5ixfIejYT7u8ZpKyxb
-i9rSuH9b/1mATXwc1e5H02HLA4+vKxRcBvKuGnON4YQeXb5mfb1ONtSCpplav53B
-Qzns1xL2ylwQh4IHPXKFZa+VJce4DjmUrMgNP7UWAZN9bCrEv9iJ6Pj1itYalDKo
-AXx2XSlqOtSj6Mp/bWrMXJlYuijzgE0iYSsoex8WObhIZt0PopocUvdcND6QMBuv
-RcSR7mG5uNBN2gVNj8hWFpZkH75nCidqvoeNqdgYZe7rJK+KbB8xKFizblthlHwA
-rNVXPft2bAsCUfQOx4EWHZeeYC8VCmThXHsyKbtksrVHFyKpgwQT6RrZupk980gd
-/OBYVIOYRdpE1FkxcRKhxpePZmEqz+/KAkgllCKPtVX4ict7958n/550UB5kIbje
-chfSTXs4v1MxunN5ItgQ9mr3JW0lcG0ztQo1j9q3u8TVdETKemoLJM9mwyFKyqb7
-KP9CCRlrvhb/bdAfk655RT/kvI/A6mreCXk8y1piITUwcjgXO+bvOZC+u087SCqp
-5FfliczHfufbUI+DWqOB
-=IX+q
------END PGP SIGNATURE-----
-
---------------enigCCC69D638E5E846D4C83EC23--
