@@ -1,193 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4692 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933607Ab1JYOJF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 10:09:05 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 19/31] ath6kl: Remove net_device from ath6kl
-Date: Tue, 25 Oct 2011 19:34:14 +0530
-Message-ID: <1319551466-29070-20-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_160909_390590_C490F3DE)
-In-Reply-To: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
+Received: from rere.qmqm.pl ([89.167.52.164]:58646 "EHLO rere.qmqm.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751412Ab1JNPCX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Oct 2011 11:02:23 -0400
+Date: Fri, 14 Oct 2011 17:02:20 +0200
+From: =?iso-8859-2?Q?Micha=B3_Miros=B3aw?= <mirq-linux@rere.qmqm.pl>
+To: Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: iwlagn: WARN_ON() in iwl_get_idle_rx_chain_count()
+Message-ID: <20111014150219.GA20672@rere.qmqm.pl> (sfid-20111014_170233_173058_977D7076)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use one which is available in vif structure instead.
+WARN_ON() in iwl_get_idle_rx_chain_count() gets triggered on system shutdown
+when WiFi card is associated to an AP. This is on kernel built from
+Linus' tree, commit 37cf95162af4036b4198756a590aab8126fa2ce4 (3.1.0-rc9+).
+It looks HT-related, I can't reproduce this on 802.11g network.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    1 -
- drivers/net/wireless/ath/ath6kl/core.h     |    1 -
- drivers/net/wireless/ath/ath6kl/init.c     |    6 +++---
- drivers/net/wireless/ath/ath6kl/main.c     |    6 +++---
- drivers/net/wireless/ath/ath6kl/txrx.c     |   16 ++++++++--------
- 5 files changed, 14 insertions(+), 16 deletions(-)
+Best Regards,
+Micha³ Miros³aw
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index e870c9c..636b64e 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2115,7 +2115,6 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 	vif->wdev.iftype = type;
- 	vif->fw_vif_idx = fw_vif_idx;
- 	ar->wdev = &vif->wdev;
--	ar->net_dev = ndev;
- 
- 	init_netdev(ndev);
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 3fb8898..4db0b15 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -446,7 +446,6 @@ enum ath6kl_dev_state {
- 
- struct ath6kl {
- 	struct device *dev;
--	struct net_device *net_dev;
- 	struct wiphy *wiphy;
- 	struct ath6kl_bmi bmi;
- 	const struct ath6kl_hif_ops *hif_ops;
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index fb78a2a..a874665 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -521,7 +521,7 @@ void ath6kl_core_free(struct ath6kl *ar)
- 
- int ath6kl_unavail_ev(struct ath6kl *ar)
- {
--	ath6kl_destroy(ar->net_dev, 1);
-+	ath6kl_destroy(ar->vif->ndev, 1);
- 
- 	return 0;
- }
-@@ -1417,7 +1417,7 @@ static int ath6kl_init(struct ath6kl *ar)
- 
- 
- 	ath6kl_dbg(ATH6KL_DBG_TRC, "%s: name=%s dev=0x%p, ar=0x%p\n",
--			__func__, ar->net_dev->name, ar->net_dev, ar);
-+			__func__, ndev->name, ndev, ar);
- 
- 	/*
- 	 * The reason we have to wait for the target here is that the
-@@ -1579,8 +1579,8 @@ err_wq:
- 
- void ath6kl_stop_txrx(struct ath6kl *ar)
- {
--	struct net_device *ndev = ar->net_dev;
- 	struct ath6kl_vif *vif = ar->vif;
-+	struct net_device *ndev = vif->ndev;
- 
- 	if (!ndev)
- 		return;
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 19b64ae..023624d 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -938,7 +938,7 @@ void ath6kl_deep_sleep_enable(struct ath6kl *ar)
- 
- 	switch (vif->sme_state) {
- 	case SME_CONNECTING:
--		cfg80211_connect_result(ar->net_dev, vif->bssid, NULL, 0,
-+		cfg80211_connect_result(vif->ndev, vif->bssid, NULL, 0,
- 					NULL, 0,
- 					WLAN_STATUS_UNSPECIFIED_FAILURE,
- 					GFP_KERNEL);
-@@ -950,7 +950,7 @@ void ath6kl_deep_sleep_enable(struct ath6kl *ar)
- 		 * suspend, why? Need to send disconnected event in that
- 		 * state.
- 		 */
--		cfg80211_disconnected(ar->net_dev, 0, NULL, 0, GFP_KERNEL);
-+		cfg80211_disconnected(vif->ndev, 0, NULL, 0, GFP_KERNEL);
- 		break;
- 	}
- 
-@@ -995,7 +995,7 @@ static const char *get_hw_id_string(u32 id)
- void ath6kl_ready_event(void *devt, u8 *datap, u32 sw_ver, u32 abi_ver)
- {
- 	struct ath6kl *ar = devt;
--	struct net_device *dev = ar->net_dev;
-+	struct net_device *dev = ar->vif->ndev;
- 
- 	memcpy(dev->dev_addr, datap, ETH_ALEN);
- 	ath6kl_dbg(ATH6KL_DBG_TRC, "%s: mac addr = %pM\n",
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 50ff9a4..7e2d601 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -478,7 +478,7 @@ stop_net_queues:
- 	spin_lock_bh(&ar->lock);
- 	set_bit(NETQ_STOPPED, &vif->flags);
- 	spin_unlock_bh(&ar->lock);
--	netif_stop_queue(ar->net_dev);
-+	netif_stop_queue(vif->ndev);
- 
- 	return HTC_SEND_FULL_KEEP;
- }
-@@ -619,7 +619,7 @@ void ath6kl_tx_complete(void *context, struct list_head *packet_queue)
- 
- 	if (test_bit(CONNECTED, &vif->flags)) {
- 		if (!flushing)
--			netif_wake_queue(ar->net_dev);
-+			netif_wake_queue(vif->ndev);
- 	}
- 
- 	if (wake_event)
-@@ -1086,12 +1086,12 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, __func__, "rx ",
- 			skb->data, skb->len);
- 
--	skb->dev = ar->net_dev;
-+	skb->dev = vif->ndev;
- 
- 	if (!test_bit(WMI_ENABLED, &ar->flag)) {
- 		if (EPPING_ALIGNMENT_PAD > 0)
- 			skb_pull(skb, EPPING_ALIGNMENT_PAD);
--		ath6kl_deliver_frames_to_nw_stack(ar->net_dev, skb);
-+		ath6kl_deliver_frames_to_nw_stack(vif->ndev, skb);
- 		return;
- 	}
- 
-@@ -1174,7 +1174,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 				while ((skbuff = skb_dequeue(&conn->psq))
- 				       != NULL) {
- 					spin_unlock_bh(&conn->psq_lock);
--					ath6kl_data_tx(skbuff, ar->net_dev);
-+					ath6kl_data_tx(skbuff, vif->ndev);
- 					spin_lock_bh(&conn->psq_lock);
- 				}
- 				spin_unlock_bh(&conn->psq_lock);
-@@ -1230,7 +1230,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 		return;
- 	}
- 
--	if (!(ar->net_dev->flags & IFF_UP)) {
-+	if (!(vif->ndev->flags & IFF_UP)) {
- 		dev_kfree_skb(skb);
- 		return;
- 	}
-@@ -1261,7 +1261,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 			}
- 		}
- 		if (skb1)
--			ath6kl_data_tx(skb1, ar->net_dev);
-+			ath6kl_data_tx(skb1, vif->ndev);
- 
- 		if (skb == NULL) {
- 			/* nothing to deliver up the stack */
-@@ -1277,7 +1277,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 		/* aggregation code will handle the skb */
- 		return;
- 
--	ath6kl_deliver_frames_to_nw_stack(ar->net_dev, skb);
-+	ath6kl_deliver_frames_to_nw_stack(vif->ndev, skb);
- }
- 
- static void aggr_timeout(unsigned long arg)
--- 
-1.7.0.4
 
+09:00.0 Network controller: Intel Corporation Centrino Wireless-N 1030 (rev 34)
+        Subsystem: Intel Corporation Centrino Wireless-N 1030 BGN
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 52
+        Region 0: Memory at f7a00000 (64-bit, non-prefetchable) [size=8K]
+        Capabilities: <access denied>
+        Kernel driver in use: iwlagn
+
+Oct 14 00:04:26 oko kernel: [ 2796.354030] ------------[ cut here ]------------
+Oct 14 00:04:26 oko kernel: [ 2796.354996] WARNING: at /usr/src/linux-git/drivers/net/wireless/iwlwifi/iwl-agn-lib.c:1766 iwlagn_set_rxon_chain+0x107/0x1b2 [iwlagn]()
+Oct 14 00:04:26 oko kernel: [ 2796.355955] Hardware name: Vostro 3350
+Oct 14 00:04:26 oko kernel: [ 2796.356906] invalid SMPS mode 0
+Oct 14 00:04:26 oko kernel: [ 2796.356920] Modules linked in: acpi_cpufreq mperf cpufreq_conservative autofs4 rfcomm cpufreq_stats bnep cpufreq_powersave cpufreq_userspace pci_stub binfmt_misc microcode uinput nfs lockd auth_rpcgss nfs_acl sunrpc ext2 coretemp loop kvm_intel kvm aesni_intel cryptd aes_x86_64 aes_generic ecb btusb radeon bluetooth uvcvideo usb_storage videodev arc4 media uas iwlagn v4l2_compat_ioctl32 i915 crc16 snd_hda_codec_idt ttm drm_kms_helper mac80211 drm snd_hda_intel snd_hda_codec ehci_hcd snd_hwdep xhci_hcd snd_pcm snd_seq usbcore joydev sg cfg80211 snd_timer sr_mod snd_seq_device snd r8169 psmouse dell_wmi cdrom dell_laptop soundcore i2c_algo_bit pcspkr evdev sparse_keymap processor snd_page_alloc video cfbcopyarea mii dcdbas button cfbimgblt cfbfillrect wmi ac battery ext3 jbd mbcache dm_mod sd_mod crc_t10dif ahci libahci libata scsi_mod thermal thermal_sys [last unloaded: vboxdrv]
+Oct 14 00:04:26 oko kernel: [ 2796.365031] Pid: 3017, comm: wpa_supplicant Not tainted 3.1.0-rc9+ #12
+Oct 14 00:04:26 oko kernel: [ 2796.366263] Call Trace:
+Oct 14 00:04:26 oko kernel: [ 2796.367490]  [<ffffffff8103437f>] ? warn_slowpath_common+0x78/0x8c
+Oct 14 00:04:26 oko kernel: [ 2796.368673]  [<ffffffff8103442b>] ? warn_slowpath_fmt+0x45/0x4a
+Oct 14 00:04:26 oko kernel: [ 2796.369836]  [<ffffffffa0310733>] ? __sta_info_destroy+0x267/0x2af [mac80211]
+Oct 14 00:04:26 oko kernel: [ 2796.371046]  [<ffffffffa03a93f1>] ? iwlagn_set_rxon_chain+0x107/0x1b2 [iwlagn]
+Oct 14 00:04:26 oko kernel: [ 2796.372274]  [<ffffffffa03b2f9e>] ? iwlagn_bss_info_changed+0x245/0x4b3 [iwlagn]
+Oct 14 00:04:26 oko kernel: [ 2796.373753]  [<ffffffff8102c1e5>] ? get_parent_ip+0x9/0x1b
+Oct 14 00:04:26 oko kernel: [ 2796.374990]  [<ffffffffa031c03a>] ? __ieee80211_recalc_idle+0xef/0x194 [mac80211]
+Oct 14 00:04:26 oko kernel: [ 2796.376272]  [<ffffffffa031cbee>] ? ieee80211_recalc_idle+0x1e/0x42 [mac80211]
+Oct 14 00:04:26 oko kernel: [ 2796.377506]  [<ffffffffa0319690>] ? ieee80211_mgd_deauth+0x19c/0x1c0 [mac80211]
+Oct 14 00:04:26 oko kernel: [ 2796.378771]  [<ffffffff812e96ed>] ? sub_preempt_count+0x83/0x94
+Oct 14 00:04:26 oko kernel: [ 2796.380083]  [<ffffffffa01ca76c>] ? __cfg80211_mlme_deauth+0x107/0x116 [cfg80211]
+Oct 14 00:04:26 oko kernel: [ 2796.381293]  [<ffffffff812e64d9>] ? schedule_hrtimeout_range_clock+0xc8/0x103
+Oct 14 00:04:26 oko kernel: [ 2796.382550]  [<ffffffff8102c1e5>] ? get_parent_ip+0x9/0x1b
+Oct 14 00:04:26 oko kernel: [ 2796.383803]  [<ffffffffa01ca7e4>] ? cfg80211_mlme_deauth+0x69/0x82 [cfg80211]
+Oct 14 00:04:26 oko kernel: [ 2796.385039]  [<ffffffff81023735>] ? __wake_up_common+0x40/0x77
+Oct 14 00:04:26 oko kernel: [ 2796.386309]  [<ffffffffa01c15ed>] ? nl80211_deauthenticate+0xbc/0xc7 [cfg80211]
+Oct 14 00:04:26 oko kernel: [ 2796.387607]  [<ffffffffa01c35cb>] ? nl80211_pre_doit+0x85/0xfb [cfg80211]
+Oct 14 00:04:26 oko kernel: [ 2796.389171]  [<ffffffff81250f71>] ? genl_rcv_msg+0x1cb/0x1f9
+Oct 14 00:04:26 oko kernel: [ 2796.390753]  [<ffffffff81250da6>] ? genl_rcv+0x28/0x28
+Oct 14 00:04:26 oko kernel: [ 2796.392295]  [<ffffffff81250a06>] ? netlink_rcv_skb+0x36/0x7a
+Oct 14 00:04:26 oko kernel: [ 2796.393896]  [<ffffffff81250d9d>] ? genl_rcv+0x1f/0x28
+Oct 14 00:04:26 oko kernel: [ 2796.395521]  [<ffffffff81250537>] ? netlink_unicast+0xe6/0x14e
+Oct 14 00:04:26 oko kernel: [ 2796.397095]  [<ffffffff81250819>] ? netlink_sendmsg+0x27a/0x2b2
+Oct 14 00:04:26 oko kernel: [ 2796.398741]  [<ffffffff810f45dc>] ? __pollwait+0xce/0xce
+Oct 14 00:04:26 oko kernel: [ 2796.400378]  [<ffffffff8122172d>] ? sock_sendmsg+0xc1/0xde
+Oct 14 00:04:26 oko kernel: [ 2796.402042]  [<ffffffff8122160e>] ? sock_recvmsg+0xcd/0xec
+Oct 14 00:04:26 oko kernel: [ 2796.403645]  [<ffffffff8102c1e5>] ? get_parent_ip+0x9/0x1b
+Oct 14 00:04:26 oko kernel: [ 2796.405148]  [<ffffffff8122160e>] ? sock_recvmsg+0xcd/0xec
+Oct 14 00:04:26 oko kernel: [ 2796.406650]  [<ffffffff812228d4>] ? move_addr_to_kernel+0x24/0x46
+Oct 14 00:04:26 oko kernel: [ 2796.408098]  [<ffffffff812219c5>] ? __sys_sendmsg+0x1e8/0x288
+Oct 14 00:04:26 oko kernel: [ 2796.408102]  [<ffffffff812e9798>] ? add_preempt_count+0x9a/0x9c
+Oct 14 00:04:26 oko kernel: [ 2796.408107]  [<ffffffff8102c1e5>] ? get_parent_ip+0x9/0x1b
+Oct 14 00:04:26 oko kernel: [ 2796.408109]  [<ffffffff812e96ed>] ? sub_preempt_count+0x83/0x94
+Oct 14 00:04:26 oko kernel: [ 2796.408112]  [<ffffffff812e6f14>] ? _raw_spin_unlock_irq+0x23/0x2f
+Oct 14 00:04:26 oko kernel: [ 2796.408115]  [<ffffffff810022e1>] ? do_signal+0x51d/0x5f3
+Oct 14 00:04:26 oko kernel: [ 2796.408119]  [<ffffffff81008f1b>] ? init_fpu+0x72/0x7f
+Oct 14 00:04:26 oko kernel: [ 2796.408122]  [<ffffffff8100969f>] ? check_for_xstate+0x1c/0x6f
+Oct 14 00:04:26 oko kernel: [ 2796.408124]  [<ffffffff81009966>] ? restore_i387_xstate+0x9e/0x17c
+Oct 14 00:04:26 oko kernel: [ 2796.408128]  [<ffffffff81044e92>] ? do_sigaltstack+0xaa/0x13e
+Oct 14 00:04:26 oko kernel: [ 2796.408131]  [<ffffffff812233c5>] ? sys_sendmsg+0x39/0x58
+Oct 14 00:04:26 oko kernel: [ 2796.408134]  [<ffffffff812ec17b>] ? system_call_fastpath+0x16/0x1b
+Oct 14 00:04:26 oko kernel: [ 2796.408176] ---[ end trace 634279251cfb99d1 ]---
+Oct 14 00:04:26 oko kernel: [ 2796.409026] ------------[ cut here ]------------
+Oct 14 00:04:26 oko kernel: [ 2796.409046] WARNING: at /usr/src/linux-git/drivers/net/wireless/iwlwifi/iwl-agn-lib.c:1766 iwlagn_set_rxon_chain+0x107/0x1b2 [iwlagn]()
+Oct 14 00:04:26 oko kernel: [ 2796.409048] Hardware name: Vostro 3350
+Oct 14 00:04:26 oko kernel: [ 2796.409049] invalid SMPS mode 0
+Oct 14 00:04:26 oko kernel: [ 2796.409050] Modules linked in: acpi_cpufreq mperf cpufreq_conservative autofs4 rfcomm cpufreq_stats bnep cpufreq_powersave cpufreq_userspace pci_stub binfmt_misc microcode uinput nfs lockd auth_rpcgss nfs_acl sunrpc ext2 coretemp loop kvm_intel kvm aesni_intel cryptd aes_x86_64 aes_generic ecb btusb radeon bluetooth uvcvideo usb_storage videodev arc4 media uas iwlagn v4l2_compat_ioctl32 i915 crc16 snd_hda_codec_idt ttm drm_kms_helper mac80211 drm snd_hda_intel snd_hda_codec ehci_hcd snd_hwdep xhci_hcd snd_pcm snd_seq usbcore joydev sg cfg80211 snd_timer sr_mod snd_seq_device snd r8169 psmouse dell_wmi cdrom dell_laptop soundcore i2c_algo_bit pcspkr evdev sparse_keymap processor snd_page_alloc video cfbcopyarea mii dcdbas button cfbimgblt cfbfillrect wmi ac battery ext3 jbd mbcache dm_mod sd_mod crc_t10dif ahci libahci libata scsi_mod thermal thermal_sys [last unloaded: vboxdrv]
+Oct 14 00:04:26 oko kernel: [ 2796.409109] Pid: 3017, comm: wpa_supplicant Tainted: G        W   3.1.0-rc9+ #12
+Oct 14 00:04:26 oko kernel: [ 2796.409110] Call Trace:
+Oct 14 00:04:26 oko kernel: [ 2796.409116]  [<ffffffff8103437f>] ? warn_slowpath_common+0x78/0x8c
+Oct 14 00:04:26 oko kernel: [ 2796.409119]  [<ffffffff8103442b>] ? warn_slowpath_fmt+0x45/0x4a
+Oct 14 00:04:26 oko kernel: [ 2796.409133]  [<ffffffffa03b78e7>] ? iwl_send_cmd+0x1a4/0x303 [iwlagn]
+Oct 14 00:04:26 oko kernel: [ 2796.409140]  [<ffffffffa03a93f1>] ? iwlagn_set_rxon_chain+0x107/0x1b2 [iwlagn]
+Oct 14 00:04:26 oko kernel: [ 2796.409145]  [<ffffffffa03a276d>] ? iwl_update_chain_flags+0x32/0x58 [iwlagn]
+Oct 14 00:04:26 oko kernel: [ 2796.409156]  [<ffffffffa03af7cd>] ? iwl_power_set_mode+0xf4/0x157 [iwlagn]
+Oct 14 00:04:26 oko kernel: [ 2796.409163]  [<ffffffffa03af9e0>] ? iwl_power_update_mode+0x1b0/0x1b9 [iwlagn]
+Oct 14 00:04:26 oko kernel: [ 2796.409170]  [<ffffffffa03b2cd8>] ? iwlagn_mac_config+0x206/0x287 [iwlagn]
+Oct 14 00:04:26 oko kernel: [ 2796.409185]  [<ffffffffa0319690>] ? ieee80211_mgd_deauth+0x19c/0x1c0 [mac80211]
+Oct 14 00:04:26 oko kernel: [ 2796.409188]  [<ffffffff812e96ed>] ? sub_preempt_count+0x83/0x94
+Oct 14 00:04:26 oko kernel: [ 2796.409201]  [<ffffffffa01ca76c>] ? __cfg80211_mlme_deauth+0x107/0x116 [cfg80211]
+Oct 14 00:04:26 oko kernel: [ 2796.409206]  [<ffffffff812e64d9>] ? schedule_hrtimeout_range_clock+0xc8/0x103
+Oct 14 00:04:26 oko kernel: [ 2796.409208]  [<ffffffff8102c1e5>] ? get_parent_ip+0x9/0x1b
+Oct 14 00:04:26 oko kernel: [ 2796.409216]  [<ffffffffa01ca7e4>] ? cfg80211_mlme_deauth+0x69/0x82 [cfg80211]
+Oct 14 00:04:26 oko kernel: [ 2796.409220]  [<ffffffff81023735>] ? __wake_up_common+0x40/0x77
+Oct 14 00:04:26 oko kernel: [ 2796.409228]  [<ffffffffa01c15ed>] ? nl80211_deauthenticate+0xbc/0xc7 [cfg80211]
+Oct 14 00:04:26 oko kernel: [ 2796.409238]  [<ffffffffa01c35cb>] ? nl80211_pre_doit+0x85/0xfb [cfg80211]
+Oct 14 00:04:26 oko kernel: [ 2796.409244]  [<ffffffff81250f71>] ? genl_rcv_msg+0x1cb/0x1f9
+Oct 14 00:04:26 oko kernel: [ 2796.409246]  [<ffffffff81250da6>] ? genl_rcv+0x28/0x28
+Oct 14 00:04:26 oko kernel: [ 2796.409249]  [<ffffffff81250a06>] ? netlink_rcv_skb+0x36/0x7a
+Oct 14 00:04:26 oko kernel: [ 2796.409251]  [<ffffffff81250d9d>] ? genl_rcv+0x1f/0x28
+Oct 14 00:04:26 oko kernel: [ 2796.409253]  [<ffffffff81250537>] ? netlink_unicast+0xe6/0x14e
+Oct 14 00:04:26 oko kernel: [ 2796.409256]  [<ffffffff81250819>] ? netlink_sendmsg+0x27a/0x2b2
+Oct 14 00:04:26 oko kernel: [ 2796.409262]  [<ffffffff810f45dc>] ? __pollwait+0xce/0xce
+Oct 14 00:04:26 oko kernel: [ 2796.409266]  [<ffffffff8122172d>] ? sock_sendmsg+0xc1/0xde
+Oct 14 00:04:26 oko kernel: [ 2796.409268]  [<ffffffff8122160e>] ? sock_recvmsg+0xcd/0xec
+Oct 14 00:04:26 oko kernel: [ 2796.409271]  [<ffffffff8102c1e5>] ? get_parent_ip+0x9/0x1b
+Oct 14 00:04:26 oko kernel: [ 2796.409273]  [<ffffffff8122160e>] ? sock_recvmsg+0xcd/0xec
+Oct 14 00:04:26 oko kernel: [ 2796.409276]  [<ffffffff812228d4>] ? move_addr_to_kernel+0x24/0x46
+Oct 14 00:04:26 oko kernel: [ 2796.409279]  [<ffffffff812219c5>] ? __sys_sendmsg+0x1e8/0x288
+Oct 14 00:04:26 oko kernel: [ 2796.409282]  [<ffffffff812e9798>] ? add_preempt_count+0x9a/0x9c
+Oct 14 00:04:26 oko kernel: [ 2796.409284]  [<ffffffff8102c1e5>] ? get_parent_ip+0x9/0x1b
+Oct 14 00:04:26 oko kernel: [ 2796.409286]  [<ffffffff812e96ed>] ? sub_preempt_count+0x83/0x94
+Oct 14 00:04:26 oko kernel: [ 2796.409289]  [<ffffffff812e6f14>] ? _raw_spin_unlock_irq+0x23/0x2f
+Oct 14 00:04:26 oko kernel: [ 2796.409294]  [<ffffffff810022e1>] ? do_signal+0x51d/0x5f3
+Oct 14 00:04:26 oko kernel: [ 2796.409297]  [<ffffffff81008f1b>] ? init_fpu+0x72/0x7f
+Oct 14 00:04:26 oko kernel: [ 2796.409300]  [<ffffffff8100969f>] ? check_for_xstate+0x1c/0x6f
+Oct 14 00:04:26 oko kernel: [ 2796.409303]  [<ffffffff81009966>] ? restore_i387_xstate+0x9e/0x17c
+Oct 14 00:04:26 oko kernel: [ 2796.409305]  [<ffffffff81044e92>] ? do_sigaltstack+0xaa/0x13e
+Oct 14 00:04:26 oko kernel: [ 2796.409308]  [<ffffffff812233c5>] ? sys_sendmsg+0x39/0x58
+Oct 14 00:04:26 oko kernel: [ 2796.409312]  [<ffffffff812ec17b>] ? system_call_fastpath+0x16/0x1b
+Oct 14 00:04:26 oko kernel: [ 2796.409314] ---[ end trace 634279251cfb99d2 ]---
+Oct 14 00:04:26 oko kernel: [ 2796.409315] ------------[ cut here ]------------
+Oct 14 00:04:26 oko kernel: [ 2796.409325] WARNING: at /usr/src/linux-git/drivers/net/wireless/iwlwifi/iwl-agn-lib.c:1766 iwlagn_set_rxon_chain+0x107/0x1b2 [iwlagn]()
+Oct 14 00:04:26 oko kernel: [ 2796.409327] Hardware name: Vostro 3350
+Oct 14 00:04:26 oko kernel: [ 2796.409328] invalid SMPS mode 0
+Oct 14 00:04:26 oko kernel: [ 2796.409329] Modules linked in: acpi_cpufreq mperf cpufreq_conservative autofs4 rfcomm cpufreq_stats bnep cpufreq_powersave cpufreq_userspace pci_stub binfmt_misc microcode uinput nfs lockd auth_rpcgss nfs_acl sunrpc ext2 coretemp loop kvm_intel kvm aesni_intel cryptd aes_x86_64 aes_generic ecb btusb radeon bluetooth uvcvideo usb_storage videodev arc4 media uas iwlagn v4l2_compat_ioctl32 i915 crc16 snd_hda_codec_idt ttm drm_kms_helper mac80211 drm snd_hda_intel snd_hda_codec ehci_hcd snd_hwdep xhci_hcd snd_pcm snd_seq usbcore joydev sg cfg80211 snd_timer sr_mod snd_seq_device snd r8169 psmouse dell_wmi cdrom dell_laptop soundcore i2c_algo_bit pcspkr evdev sparse_keymap processor snd_page_alloc video cfbcopyarea mii dcdbas button cfbimgblt cfbfillrect wmi ac battery ext3 jbd mbcache dm_mod sd_mod crc_t10dif ahci libahci libata scsi_mod thermal thermal_sys [last unloaded: vboxdrv]
+Oct 14 00:04:26 oko kernel: [ 2796.409371] Pid: 3017, comm: wpa_supplicant Tainted: G        W   3.1.0-rc9+ #12
+Oct 14 00:04:26 oko kernel: [ 2796.409372] Call Trace:
+Oct 14 00:04:26 oko kernel: [ 2796.409381]  [<ffffffff8103437f>] ? warn_slowpath_common+0x78/0x8c
+Oct 14 00:04:26 oko kernel: [ 2796.409384]  [<ffffffff8103442b>] ? warn_slowpath_fmt+0x45/0x4a
+Oct 14 00:04:26 oko kernel: [ 2796.409392]  [<ffffffffa03b78e7>] ? iwl_send_cmd+0x1a4/0x303 [iwlagn]
+Oct 14 00:04:26 oko kernel: [ 2796.409399]  [<ffffffffa03a93f1>] ? iwlagn_set_rxon_chain+0x107/0x1b2 [iwlagn]
+Oct 14 00:04:26 oko kernel: [ 2796.409408]  [<ffffffffa03a276d>] ? iwl_update_chain_flags+0x32/0x58 [iwlagn]
+Oct 14 00:04:26 oko kernel: [ 2796.409415]  [<ffffffffa03af7cd>] ? iwl_power_set_mode+0xf4/0x157 [iwlagn]
+Oct 14 00:04:26 oko kernel: [ 2796.409421]  [<ffffffffa03af9e0>] ? iwl_power_update_mode+0x1b0/0x1b9 [iwlagn]
+Oct 14 00:04:26 oko kernel: [ 2796.409429]  [<ffffffffa03b2cd8>] ? iwlagn_mac_config+0x206/0x287 [iwlagn]
+Oct 14 00:04:26 oko kernel: [ 2796.409439]  [<ffffffffa0319690>] ? ieee80211_mgd_deauth+0x19c/0x1c0 [mac80211]
+Oct 14 00:04:26 oko kernel: [ 2796.409442]  [<ffffffff812e96ed>] ? sub_preempt_count+0x83/0x94
+Oct 14 00:04:26 oko kernel: [ 2796.409457]  [<ffffffffa01ca76c>] ? __cfg80211_mlme_deauth+0x107/0x116 [cfg80211]
+Oct 14 00:04:26 oko kernel: [ 2796.409460]  [<ffffffff812e64d9>] ? schedule_hrtimeout_range_clock+0xc8/0x103
+Oct 14 00:04:26 oko kernel: [ 2796.409463]  [<ffffffff8102c1e5>] ? get_parent_ip+0x9/0x1b
+Oct 14 00:04:26 oko kernel: [ 2796.409477]  [<ffffffffa01ca7e4>] ? cfg80211_mlme_deauth+0x69/0x82 [cfg80211]
+Oct 14 00:04:26 oko kernel: [ 2796.409479]  [<ffffffff81023735>] ? __wake_up_common+0x40/0x77
+Oct 14 00:04:26 oko kernel: [ 2796.409490]  [<ffffffffa01c15ed>] ? nl80211_deauthenticate+0xbc/0xc7 [cfg80211]
+Oct 14 00:04:26 oko kernel: [ 2796.409498]  [<ffffffffa01c35cb>] ? nl80211_pre_doit+0x85/0xfb [cfg80211]
+Oct 14 00:04:26 oko kernel: [ 2796.409502]  [<ffffffff81250f71>] ? genl_rcv_msg+0x1cb/0x1f9
+Oct 14 00:04:26 oko kernel: [ 2796.409505]  [<ffffffff81250da6>] ? genl_rcv+0x28/0x28
+Oct 14 00:04:26 oko kernel: [ 2796.409507]  [<ffffffff81250a06>] ? netlink_rcv_skb+0x36/0x7a
+Oct 14 00:04:26 oko kernel: [ 2796.409509]  [<ffffffff81250d9d>] ? genl_rcv+0x1f/0x28
+Oct 14 00:04:26 oko kernel: [ 2796.409511]  [<ffffffff81250537>] ? netlink_unicast+0xe6/0x14e
+Oct 14 00:04:26 oko kernel: [ 2796.409514]  [<ffffffff81250819>] ? netlink_sendmsg+0x27a/0x2b2
+Oct 14 00:04:26 oko kernel: [ 2796.409517]  [<ffffffff810f45dc>] ? __pollwait+0xce/0xce
+Oct 14 00:04:26 oko kernel: [ 2796.409519]  [<ffffffff8122172d>] ? sock_sendmsg+0xc1/0xde
+Oct 14 00:04:26 oko kernel: [ 2796.409521]  [<ffffffff8122160e>] ? sock_recvmsg+0xcd/0xec
+Oct 14 00:04:26 oko kernel: [ 2796.409526]  [<ffffffff8102c1e5>] ? get_parent_ip+0x9/0x1b
+Oct 14 00:04:26 oko kernel: [ 2796.409529]  [<ffffffff8122160e>] ? sock_recvmsg+0xcd/0xec
+Oct 14 00:04:26 oko kernel: [ 2796.409532]  [<ffffffff812228d4>] ? move_addr_to_kernel+0x24/0x46
+Oct 14 00:04:26 oko kernel: [ 2796.409534]  [<ffffffff812219c5>] ? __sys_sendmsg+0x1e8/0x288
+Oct 14 00:04:26 oko kernel: [ 2796.409537]  [<ffffffff812e9798>] ? add_preempt_count+0x9a/0x9c
+Oct 14 00:04:26 oko kernel: [ 2796.409539]  [<ffffffff8102c1e5>] ? get_parent_ip+0x9/0x1b
+Oct 14 00:04:26 oko kernel: [ 2796.409542]  [<ffffffff812e96ed>] ? sub_preempt_count+0x83/0x94
+Oct 14 00:04:26 oko kernel: [ 2796.409544]  [<ffffffff812e6f14>] ? _raw_spin_unlock_irq+0x23/0x2f
+Oct 14 00:04:26 oko kernel: [ 2796.409548]  [<ffffffff810022e1>] ? do_signal+0x51d/0x5f3
+Oct 14 00:04:26 oko kernel: [ 2796.409551]  [<ffffffff81008f1b>] ? init_fpu+0x72/0x7f
+Oct 14 00:04:26 oko kernel: [ 2796.409554]  [<ffffffff8100969f>] ? check_for_xstate+0x1c/0x6f
+Oct 14 00:04:26 oko kernel: [ 2796.409556]  [<ffffffff81009966>] ? restore_i387_xstate+0x9e/0x17c
+Oct 14 00:04:26 oko kernel: [ 2796.409559]  [<ffffffff81044e92>] ? do_sigaltstack+0xaa/0x13e
+Oct 14 00:04:26 oko kernel: [ 2796.409564]  [<ffffffff812233c5>] ? sys_sendmsg+0x39/0x58
+Oct 14 00:04:26 oko kernel: [ 2796.409568]  [<ffffffff812ec17b>] ? system_call_fastpath+0x16/0x1b
+Oct 14 00:04:26 oko kernel: [ 2796.409570] ---[ end trace 634279251cfb99d3 ]---
+Oct 14 00:04:26 oko kernel: [ 2796.409586] cfg80211: Calling CRDA for country: PL
+Oct 14 00:04:27 oko kernel: [ 2796.573759] ------------[ cut here ]------------
+Oct 14 00:04:27 oko kernel: [ 2796.575276] WARNING: at /usr/src/linux-git/drivers/net/wireless/iwlwifi/iwl-agn-lib.c:1766 iwlagn_set_rxon_chain+0x107/0x1b2 [iwlagn]()
+Oct 14 00:04:27 oko kernel: [ 2796.576866] Hardware name: Vostro 3350
+Oct 14 00:04:27 oko kernel: [ 2796.578449] invalid SMPS mode 0
+Oct 14 00:04:27 oko kernel: [ 2796.578488] Modules linked in: acpi_cpufreq mperf cpufreq_conservative autofs4 rfcomm cpufreq_stats bnep cpufreq_powersave cpufreq_userspace pci_stub binfmt_misc microcode uinput nfs lockd auth_rpcgss nfs_acl sunrpc ext2 coretemp loop kvm_intel kvm aesni_intel cryptd aes_x86_64 aes_generic ecb btusb radeon bluetooth uvcvideo usb_storage videodev arc4 media uas iwlagn v4l2_compat_ioctl32 i915 crc16 snd_hda_codec_idt ttm drm_kms_helper mac80211 drm snd_hda_intel snd_hda_codec ehci_hcd snd_hwdep xhci_hcd snd_pcm snd_seq usbcore joydev sg cfg80211 snd_timer sr_mod snd_seq_device snd r8169 psmouse dell_wmi cdrom dell_laptop soundcore i2c_algo_bit pcspkr evdev sparse_keymap processor snd_page_alloc video cfbcopyarea mii dcdbas button cfbimgblt cfbfillrect wmi ac battery ext3 jbd mbcache dm_mod sd_mod crc_t10dif ahci libahci libata scsi_mod thermal thermal_sys [last unloaded: vboxdrv]
+Oct 14 00:04:27 oko kernel: [ 2796.591110] Pid: 2973, comm: NetworkManager Tainted: G        W   3.1.0-rc9+ #12
+Oct 14 00:04:27 oko kernel: [ 2796.592295] Call Trace:
+Oct 14 00:04:27 oko kernel: [ 2796.593474]  [<ffffffff8103437f>] ? warn_slowpath_common+0x78/0x8c
+Oct 14 00:04:27 oko kernel: [ 2796.594693]  [<ffffffff8103442b>] ? warn_slowpath_fmt+0x45/0x4a
+Oct 14 00:04:27 oko kernel: [ 2796.595910]  [<ffffffff812e96ed>] ? sub_preempt_count+0x83/0x94
+Oct 14 00:04:27 oko kernel: [ 2796.597087]  [<ffffffffa03a93f1>] ? iwlagn_set_rxon_chain+0x107/0x1b2 [iwlagn]
+Oct 14 00:04:27 oko kernel: [ 2796.598296]  [<ffffffff812e6f14>] ? _raw_spin_unlock_irq+0x23/0x2f
+Oct 14 00:04:27 oko kernel: [ 2796.599507]  [<ffffffffa03adc8c>] ? iwl_teardown_interface+0x4a/0x7e [iwlagn]
+Oct 14 00:04:27 oko kernel: [ 2796.600697]  [<ffffffffa03ae569>] ? iwl_mac_remove_interface+0x4e/0x5e [iwlagn]
+Oct 14 00:04:27 oko kernel: [ 2796.601914]  [<ffffffffa031c3f3>] ? ieee80211_do_stop+0x314/0x465 [mac80211]
+Oct 14 00:04:27 oko kernel: [ 2796.603133]  [<ffffffff81039618>] ? _local_bh_enable_ip.isra.12+0x94/0xa2
+Oct 14 00:04:27 oko kernel: [ 2796.604328]  [<ffffffffa031c557>] ? ieee80211_stop+0x13/0x17 [mac80211]
+Oct 14 00:04:27 oko kernel: [ 2796.605523]  [<ffffffff8122f754>] ? __dev_close_many+0x7f/0xab
+Oct 14 00:04:27 oko kernel: [ 2796.606752]  [<ffffffff8122f7b0>] ? __dev_close+0x30/0x47
+Oct 14 00:04:27 oko kernel: [ 2796.607981]  [<ffffffff812e96ed>] ? sub_preempt_count+0x83/0x94
+Oct 14 00:04:27 oko kernel: [ 2796.609179]  [<ffffffff81233e6a>] ? __dev_change_flags+0x9d/0x118
+Oct 14 00:04:27 oko kernel: [ 2796.610406]  [<ffffffff81233f4b>] ? dev_change_flags+0x12/0x42
+Oct 14 00:04:27 oko kernel: [ 2796.611639]  [<ffffffff8123da18>] ? do_setlink+0x287/0x6f8
+Oct 14 00:04:27 oko kernel: [ 2796.612848]  [<ffffffff810da6a2>] ? __kmalloc_node_track_caller+0xcb/0x105
+Oct 14 00:04:27 oko kernel: [ 2796.614089]  [<ffffffff812263ef>] ? sock_rmalloc+0x2b/0x4b
+Oct 14 00:04:27 oko kernel: [ 2796.615338]  [<ffffffff8123e20a>] ? __rtnl_unlock+0xc/0xc
+Oct 14 00:04:27 oko kernel: [ 2796.616549]  [<ffffffff8123e0d2>] ? rtnl_setlink+0xc4/0xe6
+Oct 14 00:04:27 oko kernel: [ 2796.617799]  [<ffffffff81250a06>] ? netlink_rcv_skb+0x36/0x7a
+Oct 14 00:04:27 oko kernel: [ 2796.619042]  [<ffffffff8123d64d>] ? rtnetlink_rcv+0x1f/0x28
+Oct 14 00:04:27 oko kernel: [ 2796.620261]  [<ffffffff81250537>] ? netlink_unicast+0xe6/0x14e
+Oct 14 00:04:27 oko kernel: [ 2796.621476]  [<ffffffff81250819>] ? netlink_sendmsg+0x27a/0x2b2
+Oct 14 00:04:27 oko kernel: [ 2796.622718]  [<ffffffff8122172d>] ? sock_sendmsg+0xc1/0xde
+Oct 14 00:04:27 oko kernel: [ 2796.623961]  [<ffffffff8122160e>] ? sock_recvmsg+0xcd/0xec
+Oct 14 00:04:27 oko kernel: [ 2796.625173]  [<ffffffff8122172d>] ? sock_sendmsg+0xc1/0xde
+Oct 14 00:04:27 oko kernel: [ 2796.626407]  [<ffffffff8116d88c>] ? cpumask_any_but+0x24/0x34
+Oct 14 00:04:27 oko kernel: [ 2796.627641]  [<ffffffff812228d4>] ? move_addr_to_kernel+0x24/0x46
+Oct 14 00:04:27 oko kernel: [ 2796.628853]  [<ffffffff812219c5>] ? __sys_sendmsg+0x1e8/0x288
+Oct 14 00:04:27 oko kernel: [ 2796.630089]  [<ffffffff812df81a>] ? __bad_area_nosemaphore+0x87/0x1f0
+Oct 14 00:04:27 oko kernel: [ 2796.631335]  [<ffffffff810e79c6>] ? fget_light+0x85/0x8d
+Oct 14 00:04:27 oko kernel: [ 2796.632537]  [<ffffffff812230a0>] ? sys_sendto+0x108/0x137
+Oct 14 00:04:27 oko kernel: [ 2796.633768]  [<ffffffff810f6c44>] ? dput+0xe6/0xf3
+Oct 14 00:04:27 oko kernel: [ 2796.634992]  [<ffffffff812233c5>] ? sys_sendmsg+0x39/0x58
+Oct 14 00:04:27 oko kernel: [ 2796.636194]  [<ffffffff812ec17b>] ? system_call_fastpath+0x16/0x1b
+Oct 14 00:04:27 oko kernel: [ 2796.637398] ---[ end trace 634279251cfb99d4 ]---
