@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:49097 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933370Ab1JZPao (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:41827 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932076Ab1JNQaD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 11:30:44 -0400
-Received: by faan17 with SMTP id n17so1656357faa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 08:30:43 -0700 (PDT)
-From: Sangwook Lee <sangwook.lee@linaro.org>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@qca.qualcomm.com, patches@linaro.org,
-	Sangwook Lee <sangwook.lee@linaro.org>
-Subject: =?UTF-8?q?=5BPATCH=5D=20ath6kl=3A=20Fix=20compile=20error=20for=20ARM?=
-Date: Wed, 26 Oct 2011 16:28:38 +0100
-Message-Id: <1319642918-27076-1-git-send-email-sangwook.lee@linaro.org> (sfid-20111026_173053_800200_E80246AD)
+	Fri, 14 Oct 2011 12:30:03 -0400
+Received: by gyb13 with SMTP id 13so1287740gyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2011 09:30:03 -0700 (PDT)
+Message-ID: <4E986392.7020008@lwfinger.net> (sfid-20111014_183012_489581_467A16FE)
+Date: Fri, 14 Oct 2011 11:30:10 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Pavel Roskin <proski@gnu.org>
+CC: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, zajec5@gmail.com,
+	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ssb: Convert to use crc8 code in kernel library
+References: <4e90ce9a.89uGF659NNpbpyA3%Larry.Finger@lwfinger.net> <20111014111103.5658d4aa@mj>
+In-Reply-To: <20111014111103.5658d4aa@mj>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix the compile error for ARM Platform.
+On 10/14/2011 10:11 AM, Pavel Roskin wrote:
+> On Sat, 08 Oct 2011 17:28:42 -0500
+> Larry Finger<Larry.Finger@lwfinger.net>  wrote:
+>
+>> +static inline void htol16_buf(u16 *buf, unsigned int size)
+>> +{
+>> +	size /= 2;
+>> +	while (size--)
+>> +		*(__le16 *)(buf + size) = cpu_to_le16(*(buf + size));
+>>   }
+>
+> I'm not not sure compilers would optimize it out on little-endian
+> systems.  Perhaps you want a define that uses this code on
+> big-endian systems and does nothing on little endian systems.
+>
+> Also, it would be nice to have a compile-time check that size is even.
+> Or maybe size should be the number of 16-bit words, but then it would be
+> better to call the argument "count" or something like that.
 
-Signed-off-by: Sangwook Lee <sangwook.lee@linaro.org>
----
+The patch was dropped. Even so, as this routine is found in brcmsmac, your 
+comments warrant further discussion.
 
-Compile errors come from ARM plaform:
-In file included from drivers/net/wireless/ath/ath6kl/init.c:19:0:
-include/linux/of.h: In function ‘of_property_read_u32_array’:
-include/linux/of.h:249:10: error: ‘ENOSYS’ undeclared 
+I am pretty sure that the compiler would optimize out the entire htol16_buf 
+routine. After substitution for cpu_to_le16() on a little-endian system, the 
+statement in the while loop becomes '*(buf + size) = *(buf + size)', which is 
+certainly optimized away, as will the now empty while loop. The entire routine 
+is reduced to 'size /= 2'. As this will have no effect on the external world, it 
+will also be dropped leaving an empty htol16_buf(). I don't think any "#ifdef 
+__BIG_ENDIAN ... #endif" statements are needed.
 
- drivers/net/wireless/ath/ath6kl/init.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Your suggestion that the argument be renamed is good, but there is no need to 
+check for an even number as the data in question come from 16-bit reads of the
+SPROM on the b43 device. That number of 16-bit quantities was multiplied by 2 to 
+get the byte count before calling this routine. Of course, the routine should 
+have been passed the number of 16-bit words, not the byte count. My second 
+version would have done this.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 4c0c314..64975a9 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -16,6 +16,7 @@
-  */
- 
- #include <linux/moduleparam.h>
-+#include <linux/errno.h>
- #include <linux/of.h>
- #include <linux/mmc/sdio_func.h>
- #include "core.h"
--- 
-1.7.4.1
-
+Larry
