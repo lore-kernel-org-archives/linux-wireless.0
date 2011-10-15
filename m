@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:64566 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932820Ab1JDTDh (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:64125 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751053Ab1JOL3N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 15:03:37 -0400
-Received: by ywb5 with SMTP id 5so810588ywb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 12:03:37 -0700 (PDT)
-Message-ID: <4E8B5886.3010103@lwfinger.net> (sfid-20111004_210340_777693_D2FAD555)
-Date: Tue, 04 Oct 2011 14:03:34 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 15 Oct 2011 07:29:13 -0400
+Received: by yxp4 with SMTP id 4so2037456yxp.5
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Oct 2011 04:29:13 -0700 (PDT)
 MIME-Version: 1.0
-To: Jamie Kitson <jamie@kitten-x.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: BUG: Soft lockup CPU#0 stuck for 22s! [wpa_supplicant:756]
-References: <CA+z-pWFvBfvqY9_km8t3Xbmt=2Pw7eJo8T+SyFp=Lv=d1+ZOPw@mail.gmail.com>
-In-Reply-To: <CA+z-pWFvBfvqY9_km8t3Xbmt=2Pw7eJo8T+SyFp=Lv=d1+ZOPw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CAN=pzdJiBp742nrgb4eGwRDQO_nBgKNU1v405D_4SwBYPJ3S=A@mail.gmail.com>
+References: <CAN=pzd+TcY+n90RBMU+Cpp0Bt9d_eAGgY4yffO+PSStWSzbf-Q@mail.gmail.com>
+	<CAJ-Vmomy-LGg=mh5=GqmqWuj7T8b1+oV3oaBSZpf6orJSGPTQg@mail.gmail.com>
+	<CAN=pzd+8wq4Mw3Ww8jTOYNk-Q2EYOvtdgHPi=RMQqbJvJRZtdw@mail.gmail.com>
+	<CAJ-VmonaBUTEKLghg8DJsqUpp6iR-R=pPuejUWwq=ukxt+utzg@mail.gmail.com>
+	<CAN=pzdJiBp742nrgb4eGwRDQO_nBgKNU1v405D_4SwBYPJ3S=A@mail.gmail.com>
+Date: Sat, 15 Oct 2011 19:29:12 +0800
+Message-ID: <CAJ-Vmo=PFEzagWG9ddR5dYoDej7yJyHCXCVTX_67W4QNYaqihg@mail.gmail.com> (sfid-20111015_132917_764489_0878E7B9)
+Subject: Re: Ath9k, single antenna on ar9280
+From: Adrian Chadd <adrian@freebsd.org>
+To: Stanislav Demakov <s.demakov@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/04/2011 01:03 PM, Jamie Kitson wrote:
-> Hi,
+On 15 October 2011 18:02, Stanislav Demakov <s.demakov@gmail.com> wrote:
+> Thanks. I'll ask him.
 >
-> I get the following error when cold booting, it doesn't seem to happen
-> after a restart:
+>>>both the second and third are connected to chain 1 via
+> an antenna switch.
 >
-> http://www.flickr.com/photos/jamiekitson/6211329161/
->
-> I have just moved my installation to a new machine with a:
->
-> 03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8188CE
-> 802.11b/g/n WiFi Adapter (rev 01)
->          Subsystem: Realtek Semiconductor Co., Ltd. Device 8195
->          Kernel driver in use: rtl8192ce
->          Kernel modules: rtl8192ce
->
-> Linux jamie-laptop 3.0-ARCH #1 SMP PREEMPT Tue Aug 30 08:53:25 CEST
-> 2011 x86_64 Intel(R) Core(TM) i5-2410M CPU @ 2.30GHz GenuineIntel
-> GNU/Linux
->
-> I am reporting it here as I assume it's a rtl8192ce bug, but if not I
-> can report it to the wpa_supplicant guys.
+> That's interesting. Could you give me a clue how to implement this?
+> Also after doing that, will it be enough to use only one physical
+> antenna connector?
 
-The bug is not necessarily caused by rtl8192ce. I have never seen this problem 
-on my system. I would also expect a stack dump. Anyone know what is needed to 
-get one here?
+It depends on how it's all wired up. And yes, once you know how it's
+wired up and which antenna configuration words to program in, you can
+run just one of three antennas.
 
-I do have some further questions.
 
-Which variant of the RTL8188CE do you have? Use 'lspci -nn' to tell.
 
-Does ARCH have an updated kernel later than 3.0?
-
-What version of wpa-supplicant?
-
-Are you using NetworkManager? If so, what version? Is your desktop KDE, Gnome, 
-or something else? If NM, what applet and version?
-
-If not NM, how do you connect?
-
-Larry
+adrian
