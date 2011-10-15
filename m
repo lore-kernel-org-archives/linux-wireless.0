@@ -1,62 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:49802 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754406Ab1JTRsb convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:56494 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751412Ab1JONla convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 13:48:31 -0400
-Received: by wyg36 with SMTP id 36so3146494wyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 10:48:30 -0700 (PDT)
+	Sat, 15 Oct 2011 09:41:30 -0400
+Received: by wwe6 with SMTP id 6so182322wwe.1
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Oct 2011 06:41:29 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1319109210.3959.6.camel@jlt3.sipsolutions.net>
-References: <1319070203-22097-1-git-send-email-thomas@cozybit.com>
-	<1319070203-22097-2-git-send-email-thomas@cozybit.com>
-	<1319109210.3959.6.camel@jlt3.sipsolutions.net>
-Date: Thu, 20 Oct 2011 10:48:30 -0700
-Message-ID: <CAG6hwVOVHSN_-vfvVNQsGrZZtipArNs9UoPQb-gy1ZhC0owC=w@mail.gmail.com> (sfid-20111020_194834_972875_7E33FF62)
-Subject: Re: [PATCH 2/3] mac80211: find correct IE offset in mesh beacons
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <CAN=pzd+8b9cqc6BgvaF8vdq-CywJ7mNTVpeXz92ZvwJwefJOkA@mail.gmail.com>
+References: <CAN=pzd+TcY+n90RBMU+Cpp0Bt9d_eAGgY4yffO+PSStWSzbf-Q@mail.gmail.com>
+	<4E9970A6.10305@openwrt.org>
+	<CAN=pzd+ou1DXL_d_W0dvTcYrNMfH9NjSoFUa=07fE4BYJ+N7bQ@mail.gmail.com>
+	<4E997413.8010008@openwrt.org>
+	<CAN=pzd+R42SArWR+gEgqvJ7h1_6ZnB61xyKzOo8FqNxkRhxqrQ@mail.gmail.com>
+	<4E997A54.2080004@openwrt.org>
+	<CAN=pzdLBxCB7U1+ig+ctPJKZMgC3D2V0KHOXXZH8ZVBgi67BQg@mail.gmail.com>
+	<4E997F13.7060602@openwrt.org>
+	<CAN=pzd+8b9cqc6BgvaF8vdq-CywJ7mNTVpeXz92ZvwJwefJOkA@mail.gmail.com>
+Date: Sat, 15 Oct 2011 17:41:28 +0400
+Message-ID: <CAN=pzdJgba-mdJHLDC+_LpgSiMwff4vbB-oUp2VDwYsSouedPA@mail.gmail.com> (sfid-20111015_154141_751722_CD51D59E)
+Subject: Re: Ath9k, single antenna on ar9280
+From: Stanislav Demakov <s.demakov@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 20, 2011 at 4:13 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+And the last question...
+Can you confirm that after setting antenna configuration to 1x1 I can
+safely detach 2nd physical connector from the adapter? I mean is there
+a guarantees that device will only use the 1st antenna.
+
+2011/10/15 Stanislav Demakov <s.demakov@gmail.com>:
+> I've found it. Hostapd was the reason. After killing it set antenna works.
+> Thanks. :)
 >
->> -     baselen = (u8 *) mgmt->u.probe_resp.variable - (u8 *) mgmt;
->> +     switch (stype) {
->> +     case IEEE80211_STYPE_PROBE_RESP:
->> +             ies = (u8 *) mgmt->u.probe_resp.variable;
->> +             break;
->> +     case IEEE80211_STYPE_BEACON:
->> +             ies = (u8 *) mgmt->u.beacon.variable;
->> +             break;
->> +     default:
->> +             return;
->> +     }
->> +
+> 2011/10/15 Felix Fietkau <nbd@openwrt.org>:
+>> On 2011-10-15 2:24 PM, Stanislav Demakov wrote:
+>>>
+>>> I'm running Ubuntu Server 11.10 - (kernel:  Linux server
+>>> 3.0.0-12-generic x86_64)
+>>>
+>>> ath9k from compat-wireless-2011-10-12 and current iw from git compiled
+>>> with libnl1.
+>>>
+>>> The wireless chip is AR9280. (2x2 MIMO)
+>>>
+>>> Also
+>>> echo 1>  /sys/kernel/debug/ieee80211/phy0/ath9k/rx_chainmask
+>>> echo 1>  /sys/kernel/debug/ieee80211/phy0/ath9k/tx_chainmask
+>>> is written at boot.
+>>>
+>>> Is something wrong above?
+>>
+>> Do not mess with the rx_chainmask/tx_chainmask parameters, that may be the
+>> reason why it's not working for you.
+>>
+>> - Felix
+>>
 >
-> Does that really make sense? the offset is the same anyway and we don't
-> get here with other frames.
-
-I don't think so:
-
-                struct {
-                        __le64 timestamp;
-                        __le16 beacon_int;
-                        __le16 capab_info;
-                        /* followed by some of SSID, Supported rates,
-                         * FH Params, DS Params, CF Params, IBSS Params, TIM */
-                        u8 variable[0];
-                } __attribute__ ((packed)) beacon;
-                struct {
-                        /* only variable items: SSID, Supported rates */
-                        u8 variable[0];
-                } __attribute__ ((packed)) probe_req;
-
-True, we don't currently get probe responses in a mesh, but the
-function _is_ named "_rx_bcn_presp" so we should be ready to handle
-these in the future. Previously we always getting the wrong offset.
-
-Thomas
