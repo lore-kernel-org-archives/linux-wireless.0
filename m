@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:39342 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755022Ab1JDHmH convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:37918 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751283Ab1JOKCC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 03:42:07 -0400
-Received: by gyg10 with SMTP id 10so190312gyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 00:42:06 -0700 (PDT)
+	Sat, 15 Oct 2011 06:02:02 -0400
+Received: by wwe6 with SMTP id 6so28169wwe.1
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Oct 2011 03:02:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20111001145007.GA2094@loiseau.cc>
-References: <20111001145007.GA2094@loiseau.cc>
-Date: Tue, 4 Oct 2011 09:42:06 +0200
-Message-ID: <CAGXE3d-4Oqvyt8gS0WPsu1uyTyjoodTJ_fi=HdABkF2Jti_aLw@mail.gmail.com> (sfid-20111004_094211_878494_772469C4)
-Subject: Re: rt2800pci - ksoftirq takes 100% CPU
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Loiseau Lucien <loiseau.lucien@gmail.com>
+In-Reply-To: <CAJ-VmonaBUTEKLghg8DJsqUpp6iR-R=pPuejUWwq=ukxt+utzg@mail.gmail.com>
+References: <CAN=pzd+TcY+n90RBMU+Cpp0Bt9d_eAGgY4yffO+PSStWSzbf-Q@mail.gmail.com>
+	<CAJ-Vmomy-LGg=mh5=GqmqWuj7T8b1+oV3oaBSZpf6orJSGPTQg@mail.gmail.com>
+	<CAN=pzd+8wq4Mw3Ww8jTOYNk-Q2EYOvtdgHPi=RMQqbJvJRZtdw@mail.gmail.com>
+	<CAJ-VmonaBUTEKLghg8DJsqUpp6iR-R=pPuejUWwq=ukxt+utzg@mail.gmail.com>
+Date: Sat, 15 Oct 2011 14:02:00 +0400
+Message-ID: <CAN=pzdJiBp742nrgb4eGwRDQO_nBgKNU1v405D_4SwBYPJ3S=A@mail.gmail.com> (sfid-20111015_120209_803194_C4AE29F2)
+Subject: Re: Ath9k, single antenna on ar9280
+From: Stanislav Demakov <s.demakov@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
 Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 1, 2011 at 4:50 PM, Loiseau Lucien <loiseau.lucien@gmail.com> wrote:
-> Hi there,
->
-> I experience some trouble with my RaLink RT3090 Wireless 802.11n 1T/1R
-> PCIe card. I'm trying to set a wireless access point with it. I'm
-> running a Debian Squeeze with kernel 2.6.32-5-686.
->
-> at first i was using the shipped rt2860sta but since it's not a mac80211
-> driver, i couldn't use hostapd and iwconfig mode master was not working.
-> I eventually installed different stable version of compat-wireless and
-> ran the driver rt2800pci. If i could set a running access  point, i
-> often end with an unloadable module whith a ksoftirq taking 100% of my
-> CPU. Once this "ksoftirq" problem arises, there is no way to  unload the
-> module.
->
-> does anyone ever experience this card and make it work fine ?
-> I can provide more information if needed.
+Thanks. I'll ask him.
 
-Could you please check if you have [1] applied?
+>>both the second and third are connected to chain 1 via
+an antenna switch.
 
-Thanks,
-Helmut
+That's interesting. Could you give me a clue how to implement this?
+Also after doing that, will it be enough to use only one physical
+antenna connector?
 
-[1] http://permalink.gmane.org/gmane.linux.kernel.wireless.general/74494
+2011/10/15 Adrian Chadd <adrian@freebsd.org>:
+> You'll have to ask Felix and others, but I think they're more generic
+> APIs to support things like AR9285 (and the relevant AR9300/AR9400
+> series NICs) which implement 1x1 but have "classic" style antenna
+> diversity.
+>
+> Also, as I've discovered, you _can_ glue an antenna switch onto the
+> side of a MIMO NIC. Eg, I have an AR9220 based NIC (2x2:2) which has
+> three antennas, both the second and third are connected to chain 1 via
+> an antenna switch.
+>
+>
+>
+> Adrian
+>
