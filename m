@@ -1,122 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:53565 "EHLO
-	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759159Ab1JFTLV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Oct 2011 15:11:21 -0400
-Received: by mail-bw0-f53.google.com with SMTP id zt12so4381156bkb.26
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 12:11:18 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: coelho@ti.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/8] wl12xx: add a platform device to the spi module
-Date: Thu,  6 Oct 2011 22:10:55 +0300
-Message-Id: <1317928259-26437-5-git-send-email-coelho@ti.com> (sfid-20111006_211125_334821_2FDB1EB8)
-In-Reply-To: <1317928259-26437-1-git-send-email-coelho@ti.com>
-References: <1317928259-26437-1-git-send-email-coelho@ti.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:3019 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751678Ab1JOI1Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Oct 2011 04:27:24 -0400
+Message-ID: <4E9943D5.1060607@broadcom.com> (sfid-20111015_102740_791159_84DC415E)
+Date: Sat, 15 Oct 2011 10:27:01 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+cc: "Pavel Roskin" <proski@gnu.org>,
+	"John W Linville" <linville@tuxdriver.com>,
+	"Michael Buesch" <mb@bu3sch.de>,
+	"zajec5@gmail.com" <zajec5@gmail.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ssb: Convert to use crc8 code in kernel library
+References: <4e90ce9a.89uGF659NNpbpyA3%Larry.Finger@lwfinger.net>
+ <20111014111103.5658d4aa@mj> <4E986392.7020008@lwfinger.net>
+In-Reply-To: <4E986392.7020008@lwfinger.net>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felipe Balbi <balbi@ti.com>
+On 10/14/2011 06:30 PM, Larry Finger wrote:
+> On 10/14/2011 10:11 AM, Pavel Roskin wrote:
+>> On Sat, 08 Oct 2011 17:28:42 -0500
+>> Larry Finger<Larry.Finger@lwfinger.net>  wrote:
+>>
+>>> +static inline void htol16_buf(u16 *buf, unsigned int size)
+>>> +{
+>>> +	size /= 2;
+>>> +	while (size--)
+>>> +		*(__le16 *)(buf + size) = cpu_to_le16(*(buf + size));
+>>>   }
+>>
+>> I'm not not sure compilers would optimize it out on little-endian
+>> systems.  Perhaps you want a define that uses this code on
+>> big-endian systems and does nothing on little endian systems.
+>>
+>> Also, it would be nice to have a compile-time check that size is even.
+>> Or maybe size should be the number of 16-bit words, but then it would be
+>> better to call the argument "count" or something like that.
+> 
+> The patch was dropped. Even so, as this routine is found in brcmsmac, your 
+> comments warrant further discussion.
 
-The platform device will be used to match the platform driver that
-will be implemented by the core module.
+Following the thread over here ;-)
 
-Signed-off-by: Felipe Balbi <balbi@ti.com>
-[forward-ported, cleaned-up and rephrased commit message]
-[call platform_device_add() instead of platform_device_register()]
-[store alloc'ed device platform directly in glue->core]
-[fixed the length of memset(res...)]
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/spi.c |   44 +++++++++++++++++++++++++++++++++++++
- 1 files changed, 44 insertions(+), 0 deletions(-)
+> I am pretty sure that the compiler would optimize out the entire htol16_buf 
+> routine. After substitution for cpu_to_le16() on a little-endian system, the 
+> statement in the while loop becomes '*(buf + size) = *(buf + size)', which is 
+> certainly optimized away, as will the now empty while loop. The entire routine 
+> is reduced to 'size /= 2'. As this will have no effect on the external world, it 
+> will also be dropped leaving an empty htol16_buf(). I don't think any "#ifdef 
+> __BIG_ENDIAN ... #endif" statements are needed.
 
-diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
-index 16f0c71..e075d69 100644
---- a/drivers/net/wireless/wl12xx/spi.c
-+++ b/drivers/net/wireless/wl12xx/spi.c
-@@ -27,6 +27,7 @@
- #include <linux/crc7.h>
- #include <linux/spi/spi.h>
- #include <linux/wl12xx.h>
-+#include <linux/platform_device.h>
- #include <linux/slab.h>
- 
- #include "wl12xx.h"
-@@ -72,6 +73,7 @@
- struct wl12xx_spi_glue {
- 	struct device *dev;
- 	struct wl1271 *wl;
-+	struct platform_device *core;
- };
- 
- static inline struct wl12xx_spi_glue *wl_to_glue(struct wl1271 *wl)
-@@ -376,6 +378,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	struct wl12xx_platform_data *pdata;
- 	struct ieee80211_hw *hw;
- 	struct wl1271 *wl;
-+	struct resource res[1];
- 	unsigned long irqflags;
- 	int ret = -ENOMEM;
- 
-@@ -458,8 +461,47 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	if (ret)
- 		goto out_irq;
- 
-+	glue->core = platform_device_alloc("wl12xx-spi", -1);
-+	if (!glue->core) {
-+		dev_err(&spi->dev, "can't allocate platform_device\n");
-+		ret = -ENOMEM;
-+		goto out_unreg_hw;
-+	}
-+
-+	glue->core->dev.parent = &spi->dev;
-+
-+	memset(res, 0x00, sizeof(res));
-+
-+	res[0].start = spi->irq;
-+	res[0].flags = IORESOURCE_IRQ;
-+	res[0].name = "irq";
-+
-+	ret = platform_device_add_resources(glue->core, res, ARRAY_SIZE(res));
-+	if (ret) {
-+		wl1271_error("can't add resources");
-+		goto out_dev_put;
-+	}
-+
-+	ret = platform_device_add_data(glue->core, pdata, sizeof(*pdata));
-+	if (ret) {
-+		wl1271_error("can't add platform data");
-+		goto out_dev_put;
-+	}
-+
-+	ret = platform_device_add(glue->core);
-+	if (ret) {
-+		wl1271_error("can't register platform device");
-+		goto out_dev_put;
-+	}
-+
- 	return 0;
- 
-+out_dev_put:
-+	platform_device_put(glue->core);
-+
-+out_unreg_hw:
-+	wl1271_unregister_hw(wl);
-+
- out_irq:
- 	free_irq(wl->irq, wl);
- 
-@@ -480,6 +522,8 @@ static int __devexit wl1271_remove(struct spi_device *spi)
- 	wl1271_unregister_hw(wl);
- 	free_irq(wl->irq, wl);
- 	wl1271_free_hw(wl);
-+	platform_device_del(glue->core);
-+	platform_device_put(glue->core);
- 	kfree(glue);
- 
- 	return 0;
--- 
-1.7.1
+Agree.
+
+> Your suggestion that the argument be renamed is good, but there is no need to 
+> check for an even number as the data in question come from 16-bit reads of the
+> SPROM on the b43 device. That number of 16-bit quantities was multiplied by 2 to 
+> get the byte count before calling this routine. Of course, the routine should 
+> have been passed the number of 16-bit words, not the byte count. My second 
+> version would have done this.
+> 
+> Larry
+
+Feedback on the renaming is indeed valid. Passing the word count is
+better here. For brcmsmac I plan to fill the buffer using 8-bit reads
+from SPROM, verify the crc8, and perform the endianess conversion from
+le16 to cpu when crc is ok (actually under review internally).
+
+Gr. AvS
 
