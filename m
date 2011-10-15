@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:60320 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752964Ab1JMSIg convert rfc822-to-8bit (ORCPT
+Received: from smtp-out.google.com ([216.239.44.51]:14255 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750789Ab1JOVWF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Oct 2011 14:08:36 -0400
-Received: by vws1 with SMTP id 1so310381vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Oct 2011 11:08:35 -0700 (PDT)
+	Sat, 15 Oct 2011 17:22:05 -0400
+Received: from wpaz21.hot.corp.google.com (wpaz21.hot.corp.google.com [172.24.198.85])
+	by smtp-out.google.com with ESMTP id p9FLM3np031502
+	for <linux-wireless@vger.kernel.org>; Sat, 15 Oct 2011 14:22:03 -0700
+Received: from pzk4 (pzk4.prod.google.com [10.243.19.132])
+	by wpaz21.hot.corp.google.com with ESMTP id p9FLM1OF015255
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Sat, 15 Oct 2011 14:22:02 -0700
+Received: by pzk4 with SMTP id 4so3553079pzk.10
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Oct 2011 14:22:01 -0700 (PDT)
+Date: Sat, 15 Oct 2011 14:21:59 -0700 (PDT)
+From: David Rientjes <rientjes@google.com>
+To: =?UTF-8?Q?Toralf_F=C3=B6rster?= <toralf.foerster@gmx.de>
+cc: werner <w.landgraf@ru.ru>, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	ilw@linux.intel.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: 3.1.0-rc9+ : wlan stops working w/o any error messages
+In-Reply-To: <201110152119.58509.toralf.foerster@gmx.de>
+Message-ID: <alpine.DEB.2.00.1110151416360.15894@chino.kir.corp.google.com> (sfid-20111015_232305_783785_3F1E403A)
+References: <201110152119.58509.toralf.foerster@gmx.de>
 MIME-Version: 1.0
-In-Reply-To: <4E96A696.9040607@broadcom.com>
-References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
- <1318445492-24207-23-git-send-email-arend@broadcom.com> <CAB=NE6XYFB4uWcRR1kSNKLaJC4W1E3uLZOd3hGEArjzsmNG4PQ@mail.gmail.com>
- <4E96A696.9040607@broadcom.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 13 Oct 2011 11:08:15 -0700
-Message-ID: <CAB=NE6XiXc=TsjQ0bCphqaprDAjrXMfoKaQTwyNu-hX2d0issA@mail.gmail.com> (sfid-20111013_200839_410471_97C476DE)
-Subject: Re: [PATCH 22/22] brcm80211: removed file wifi.c
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Alwin Beukers <alwin@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: MULTIPART/MIXED; BOUNDARY="397155492-252661854-1318713541=:15894"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 13, 2011 at 1:51 AM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 10/12/2011 11:54 PM, Luis R. Rodriguez wrote:
->> On Wed, Oct 12, 2011 at 11:51 AM, Arend van Spriel <arend@broadcom.com> wrote:
->>> From: Alwin Beukers <alwin@broadcom.com>
->>>
->>> Wifi.c was empty after previous cleanups, so it was removed.
->>>
->>> Reviewed-by: Arend van Spriel <arend@broadcom.com>
->>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
->>
->> Heh, remove Reviewed-by dude.
->>
->>   Luis
->>
->
-> I had a remark on this in earlier commits. So I am clearly missing the
-> point here. The author submitted this change and others for review to me
-> and I reviewed it as requested. Hence the Reviewed-by: entry.
->
-> I have been given the task to publish these patches and I sign them off
-> for the "Developer's Certificate of Origin". Hence the Signed-off-by: entry.
->
-> Is there something wrong with this reasoning?
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Yeah this all makes no sense. If someone submits you a patch for you
-to review *and* push upstream you simply add *their* SOB first, and
-then after that your own.
+--397155492-252661854-1318713541=:15894
+Content-Type: TEXT/PLAIN; CHARSET=UTF-8
+Content-Transfer-Encoding: 8BIT
+Content-ID: <alpine.DEB.2.00.1110151419091.15894@chino.kir.corp.google.com>
 
-  Luis
+On Sat, 15 Oct 2011, Toralf Förster wrote:
+
+> With a ThinkPad T400 with "Intel Corporation PRO/Wireless 5100 AGN [Shiloh] 
+> Network Connection" I experienced few times in the last week that the suddenly 
+> the network stops to work - no messages in /var/log/messages nor any other 
+> outout. Only  a restart of the network services helped
+> 
+> n22 ~ # uname -a
+> Linux n22 3.1.0-rc9+ #1 SMP Fri Oct 14 19:21:56 CEST 2011 i686 Intel(R) 
+> Core(TM)2 Duo CPU P8600 @ 2.40GHz GenuineIntel GNU/Linux
+> 
+> It is an almost stable Gentoo.
+> 
+> Anybody else made similar experiences ?
+> 
+
+It looks like werner is reporting a similar problem in 
+https://lkml.org/lkml/2011/10/15/67 but with a different laptop, 
+information is vague in that regression report.
+
+Adding him, Wey-Yi Guy from Intel, and linux-wireless mailing list to the 
+cc.
+
+What's the last kernel prior to 3.1-rc9 that worked for you?
+
+What does "iwconfig" show?
+
+What does "dmesg | grep iwlagn" show?
+--397155492-252661854-1318713541=:15894--
