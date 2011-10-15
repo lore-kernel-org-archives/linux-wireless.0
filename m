@@ -1,27 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:48902 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932752Ab1JDTbi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 15:31:38 -0400
-Received: by qyk30 with SMTP id 30so3610530qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 12:31:37 -0700 (PDT)
+Received: from bsmtp4.bon.at ([195.3.86.186]:52854 "EHLO bsmtp.bon.at"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751151Ab1JOJic (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Oct 2011 05:38:32 -0400
+Date: Sat, 15 Oct 2011 11:39:02 +0200
+From: Clemens Buchacher <drizzd@aon.at>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Adrian Chadd <adrian@freebsd.org>, linux-wireless@vger.kernel.org
+Subject: Re: ath9k: irq storm after suspend/resume
+Message-ID: <20111015093902.GA23520@ecki> (sfid-20111015_113838_028184_7F5723D6)
+References: <CAJ-Vmok8FvrYtT2QwXY0NowLSogfkZYNbGLFbVR8Uzv507FrdA@mail.gmail.com>
+ <CAD2nsn0Z2J4r4tN_fLjx5bbvz2bg6NVcQ8vppJbbNcgOF8pFew@mail.gmail.com>
+ <CAJ-VmokcM4KmzV7Rn9PA68iEiTJiPw=ffYgNFLDAHShxD0HNAg@mail.gmail.com>
+ <20111003084823.GA1521@ecki.lan>
+ <CAJ-Vmo=sE4KeOp1CKAR5v+Rzm1bm0R=ZvtMvJaE_8Sjn1dOdsw@mail.gmail.com>
+ <20111004181534.GA1502@ecki>
+ <CAJ-Vmo=5z6EEZBtb2_7e6wvU39ZvLSmAxEPKwP_MDQCzdkPGyA@mail.gmail.com>
+ <20111005062528.GA1403@ecki>
+ <CAJ-Vmok4v2+ZEpAmVaj2pQ5U2StWxxD8f20u2Ln87o4+C_ST0g@mail.gmail.com>
+ <CAD2nsn1S7r2o0bqnNgzuHBd9XWYdA7uZgtmtFDTePk0SwybuCQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6VjmEhmKqdwWqHz_YxD_iKu9msqDSih3OKh4SYVQXAvjg@mail.gmail.com>
-References: <CAB=NE6VjmEhmKqdwWqHz_YxD_iKu9msqDSih3OKh4SYVQXAvjg@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 4 Oct 2011 12:31:17 -0700
-Message-ID: <CAB=NE6XmLboQY3xD8yQbj7T81SvvQ_2rwx1x6zbJ=yr67x48kA@mail.gmail.com> (sfid-20111004_213141_377878_BD76E5B3)
-Subject: Re: iwlagn master-2011-10-03 warning on iwl_trans_pcie_tx()
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAD2nsn1S7r2o0bqnNgzuHBd9XWYdA7uZgtmtFDTePk0SwybuCQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 4, 2011 at 12:23 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> My iwlagn is pretty useless with my WRT610n
+Hi Mohammed,
 
-Sorry my AP is actually a E3000 which I think is the next generation
-followup of the WRT610n.
+On Wed, Oct 12, 2011 at 06:40:06PM +0530, Mohammed Shafi wrote:
+> 
+> please try this in case it helps anything
+> to debug the issue.
 
-  Luis
+With this, the previous instaces of 0xdeadbeaf are replaced with
+zeroes, and I do not get any non-zero traces for SYNC_CAUSE or
+ASYNC_CAUSE any more.
+
+>  this should avoid dead beef and the interrupt when we access MAC
+> registers when the MAC is asleep. also i did not see MAC irq being not
+> triggerred in your case(AR_INTR_ASYNC_CAUSE should be 0x2) or may be
+> its not an interrupt triggered by the chip itself. thanks
+
+If it's not triggered by ath9k, I do wonder why it works if I
+suspend in connected mode, and why reloading the driver usually
+fixes the issue. Maybe there is something in the driver unloading
+code that we could look at?
+
+Clemens
