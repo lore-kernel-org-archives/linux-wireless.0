@@ -1,31 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out5.smtp.messagingengine.com ([66.111.4.29]:51290 "EHLO
-	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755909Ab1JEUs6 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:60205 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751873Ab1JOLpq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 16:48:58 -0400
-Date: Wed, 5 Oct 2011 13:40:52 -0700
-From: Greg KH <greg@kroah.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/26] various cleanup changes for brcmfmac and brcmsmac
-Message-ID: <20111005204052.GA18165@kroah.com> (sfid-20111005_224901_885703_ED452034)
-References: <1317763152-17607-1-git-send-email-arend@broadcom.com>
+	Sat, 15 Oct 2011 07:45:46 -0400
+Received: by wwe6 with SMTP id 6so98304wwe.1
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Oct 2011 04:45:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1317763152-17607-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <4E9970A6.10305@openwrt.org>
+References: <CAN=pzd+TcY+n90RBMU+Cpp0Bt9d_eAGgY4yffO+PSStWSzbf-Q@mail.gmail.com>
+	<4E9970A6.10305@openwrt.org>
+Date: Sat, 15 Oct 2011 15:45:45 +0400
+Message-ID: <CAN=pzd+ou1DXL_d_W0dvTcYrNMfH9NjSoFUa=07fE4BYJ+N7bQ@mail.gmail.com> (sfid-20111015_134551_354044_417F1305)
+Subject: Re: Ath9k, single antenna on ar9280
+From: Stanislav Demakov <s.demakov@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 04, 2011 at 11:18:46PM +0200, Arend van Spriel wrote:
-> Third attempt as the mailer somehow did not sent these outside the
-> Broadcom intranet. Another series of cleanup changes based on community
-> feedback received on the mainline patch (v2) as sent August 25, 2011.
-> 
-> This series is to be applied to the staging-next branch. There are no
-> pending patches that this series depend on.
+Ok, just have tried:
 
-Applied, thanks.
+ifconfig wlan0 down
 
-greg k-h
+and then tested it:
+
+iw phy phy0 set antenna all all
+
+but it's only showing iw help as before.
+I'm using the latest compiled compat-wireless.
+
+2011/10/15 Felix Fietkau <nbd@openwrt.org>:
+> On 2011-10-14 5:46 PM, Stanislav Demakov wrote:
+>>
+>> I've noticed that set_antenna and get_antenna functionality was added
+>> to the ath9k driver. But iw phy set antenna command still isn't
+>> working.
+>
+> Did you try bringing down all active wlanX interfaces belonging to that phy
+> before running that command?
+>
+> - Felix
+>
