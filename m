@@ -1,45 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:60910 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932812Ab1JESJj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 14:09:39 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1RBVuT-0003Ii-UE
-	for linux-wireless@vger.kernel.org; Wed, 05 Oct 2011 20:09:37 +0200
-Received: from 207.59.80.172 ([207.59.80.172])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 20:09:37 +0200
-Received: from viscous.liquid by 207.59.80.172 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 20:09:37 +0200
-To: linux-wireless@vger.kernel.org
-From: Daniel Smith <viscous.liquid@gmail.com>
-Subject: Re: [PATCH v13 5/5] ath9k: implement .get_antenna and .set_antenna
-Date: Wed, 05 Oct 2011 14:09:23 -0400
-Message-ID: <4E8C9D53.1080307@gmail.com> (sfid-20111005_200943_274180_B66824C4)
-References: <1315006827-81443-1-git-send-email-nbd@openwrt.org> <1315006827-81443-2-git-send-email-nbd@openwrt.org> <1315006827-81443-3-git-send-email-nbd@openwrt.org> <1315006827-81443-4-git-send-email-nbd@openwrt.org> <1315006827-81443-5-git-send-email-nbd@openwrt.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Cc: Felix Fietkau <public-nbd-p3rKhJxN3npAfugRpC6u6w@lo.gmane.org>
-In-Reply-To: <1315006827-81443-5-git-send-email-nbd@openwrt.org>
+Received: from w1.fi ([128.177.27.249]:37361 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751054Ab1JOIuY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Oct 2011 04:50:24 -0400
+Date: Sat, 15 Oct 2011 11:50:02 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: Re: [PATCH] mac80211: handle HT PHY BSS membership selector value
+ correctly
+Message-ID: <20111015085002.GA2642@jm.kir.nu> (sfid-20111015_105031_835359_4A3BB201)
+References: <201110132108.50019.chunkeey@googlemail.com>
+ <20111013224532.GA1959@jm.kir.nu>
+ <201110140942.37085.chunkeey@googlemail.com>
+ <201110141012.21010.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201110141012.21010.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/2/2011 7:40 PM, Felix Fietkau wrote:
-> On MIMO chips this can be used to enable/disable hardware chains, ensuring
-> that the MCS information is updated accordingly.
-> On non-MIMO chips with rx diversity (e.g. 9285), this configures the rx
-> input antenna.
+On Fri, Oct 14, 2011 at 10:12:20AM +0200, Christian Lamparter wrote:
+> > On Friday, October 14, 2011 12:45:32 AM Jouni Malinen wrote:
+> > > Well, it can be used to try to make legacy stations not attempt
+> > > connection, but no guarantees on them actually checking whether they
+> > > support all the "basic rates".. For example, where is mac80211 (or
+> > > wpa_supplicant) doing that check? ;-)
+> > 
+> Actually, you have already implemented the check in hostapd :)
 
-I have been working with this patch as I needed the ability to select 
-the rx chain/antenna on an AR9820.. A problem I have ran into is that 
-regardless of what I set the antenna chain to, the radiotap header 
-always reports antenna 1. I know this originates from the rx status 
-descriptor, but is this really what should be used to report the antenna 
-when using chains to select the antenna?
+That's for AP mode which does not really use the BSS membership selector
+in any way. The point of this mechanism is that it is supposed to allow
+legacy stations to not even try to associate with the AP that requires
+some new functionality that the station is not even aware of. For this
+to have any real benefit, the station would need verify whether they
+support all "basic rates" (i.e., these would look like basic rates for
+them, but BSS membership selectors for any station that is aware of the
+new functionality). This would allow mandating this type of new
+requirement on BSS by BSS basis in an ESS without causing problems to
+the legacy stations.
 
-V/r,
-Daniel
+> So, what's the exact difference between then BasicRate and a MembershipRate
+> in this context then? Is a rate called "basic rate" when it's one of the
+> legacy e.g.: 6, 12, 24 Mbit rates [And likewise: is a rate called a MembershipRate
+> when only in the magic 127 HT PHY case?] 
 
+More or less (though, I would not call the membership selector a
+"rate"). This is not really that clearly described, but I would indeed
+split the values in Supported Rates element (and Extended Supported
+Rates elements) in that way. This obviously depends on knowing
+the full list of rates or full list of membership selectors (which may
+be the easier thing to know in full).
+
+The exact definition of what the value is does not really matter for a
+legacy station since the rule for them is that they would need to
+support any rate (& 0x7f) that has the 0x80 bit set.
+
+> Also, there's 22mbit 8-PSK PBCC [I think mwl8k supports it and some TI
+> stuff could support it as well]. The check is questionable, but fixing
+> it may no be trivial either. [Anyway, it's a bit outside the scope and
+> requires another patch]
+
+Agreed.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
