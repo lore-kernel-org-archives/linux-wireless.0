@@ -1,32 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53268 "EHLO mx2.suse.de"
+Received: from nbd.name ([46.4.11.11]:53831 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750761Ab1JCX00 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Oct 2011 19:26:26 -0400
-Date: Mon, 3 Oct 2011 16:23:27 -0700
-From: Greg KH <gregkh@suse.de>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 00/25] staging: brcm80211: 8th reaction for mainline
- patch #2
-Message-ID: <20111003232327.GA23716@suse.de> (sfid-20111004_012630_598197_F94D2C79)
-References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
- <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
+	id S1752431Ab1JOMjt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Oct 2011 08:39:49 -0400
+Message-ID: <4E997F13.7060602@openwrt.org> (sfid-20111015_144005_871960_99D3E335)
+Date: Sat, 15 Oct 2011 14:39:47 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
+To: Stanislav Demakov <s.demakov@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Ath9k, single antenna on ar9280
+References: <CAN=pzd+TcY+n90RBMU+Cpp0Bt9d_eAGgY4yffO+PSStWSzbf-Q@mail.gmail.com> <4E9970A6.10305@openwrt.org> <CAN=pzd+ou1DXL_d_W0dvTcYrNMfH9NjSoFUa=07fE4BYJ+N7bQ@mail.gmail.com> <4E997413.8010008@openwrt.org> <CAN=pzd+R42SArWR+gEgqvJ7h1_6ZnB61xyKzOo8FqNxkRhxqrQ@mail.gmail.com> <4E997A54.2080004@openwrt.org> <CAN=pzdLBxCB7U1+ig+ctPJKZMgC3D2V0KHOXXZH8ZVBgi67BQg@mail.gmail.com>
+In-Reply-To: <CAN=pzdLBxCB7U1+ig+ctPJKZMgC3D2V0KHOXXZH8ZVBgi67BQg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 29, 2011 at 03:34:11PM -0700, Franky Lin wrote:
-> Code clean up for softmac.
-> 
-> This patch series is in order to replace the following one:
-> Message-ID: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+On 2011-10-15 2:24 PM, Stanislav Demakov wrote:
+> I'm running Ubuntu Server 11.10 - (kernel:  Linux server
+> 3.0.0-12-generic x86_64)
+>
+> ath9k from compat-wireless-2011-10-12 and current iw from git compiled
+> with libnl1.
+>
+> The wireless chip is AR9280. (2x2 MIMO)
+>
+> Also
+> echo 1>  /sys/kernel/debug/ieee80211/phy0/ath9k/rx_chainmask
+> echo 1>  /sys/kernel/debug/ieee80211/phy0/ath9k/tx_chainmask
+> is written at boot.
+>
+> Is something wrong above?
+Do not mess with the rx_chainmask/tx_chainmask parameters, that may be 
+the reason why it's not working for you.
 
-All applied.
-
-Please note that my staging git tree moved, and is now public at
-git.kernel.org, just drop the "-2.6" from your old address.
-
-greg k-h
+- Felix
