@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:37819 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932366Ab1JCS17 convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:36027 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751972Ab1JPCtf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Oct 2011 14:27:59 -0400
-Received: by qadb15 with SMTP id b15so1790110qad.19
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2011 11:27:59 -0700 (PDT)
+	Sat, 15 Oct 2011 22:49:35 -0400
+Received: by iaek3 with SMTP id k3so4451053iae.19
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Oct 2011 19:49:34 -0700 (PDT)
+Message-ID: <4E9A4647.60901@lwfinger.net> (sfid-20111016_044952_123803_604CFD36)
+Date: Sat, 15 Oct 2011 21:49:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1317637758-11907-6-git-send-email-zefir.kurtisi@neratec.com>
-References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com> <1317637758-11907-6-git-send-email-zefir.kurtisi@neratec.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Mon, 3 Oct 2011 11:27:39 -0700
-Message-ID: <CAB=NE6VO4W=ZJcgb3G5Gh=YM-jdkJ3ey5Ppka2Rn0XGmpx8=Gg@mail.gmail.com> (sfid-20111003_202808_974636_5AE91ECE)
-Subject: Re: [RFC 5/6] ath9k: enable DFS pulse detection
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kgiori@qca.qualcomm.com, nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+To: v4mp <gaigo88@hotmail.it>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
+References: <4E77F631.3030202@googlemail.com> <4E77F9FD.1020204@googlemail.com> <4E780309.9010601@lwfinger.net> <4E785DB3.5040109@googlemail.com> <4E7907D3.1020606@googlemail.com> <4E792994.1080809@lwfinger.net> <4E79B1D0.7090602@googlemail.com> <4E79F87F.1050402@lwfinger.net> <4E7A38D0.7070304@googlemail.com> <4E7A4310.30106@lwfinger.net> <4E7A48D1.8050009@googlemail.com> <4E7A4B03.4070006@lwfinger.net> <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com> <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org> <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org> <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9 xOn5hutA6q01r0yBeOXz0ivw@mail.gmail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T161652-440@post.gmane.org>
+In-Reply-To: <loom.20111015T161652-440@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 3, 2011 at 3:29 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+On 10/15/2011 09:22 AM, v4mp wrote:
 >
-> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-> ---
->  drivers/net/wireless/ath/ath9k/main.c |   12 ++++++++++++
->  1 files changed, 12 insertions(+), 0 deletions(-)
 >
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index e8aeb98..5defebe 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -344,6 +344,18 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
->                        "Unable to reset channel, reset status %d\n", r);
->                goto out;
->        }
-> +#ifdef CONFIG_ATH9K_DFS
-> +       /**
-> +        * enable radar pulse detection
-> +        *
-> +        * TODO: do this only for DFS channels
-> +        */
-> +       ah->private_ops.set_radar_params(ah, &ah->radar_conf);
-> +       ath9k_hw_setrxfilter(ah,
-> +                       ath9k_hw_getrxfilter(ah) | ATH9K_RX_FILTER_PHYRADAR);
-> +       ath_dbg(common, ATH_DBG_DFS,
-> +               "DFS enabled for channel %d\n", hchan->chan->center_freq);
-> +#endif
+> i've tried also kernel 3.1-rc9 with latest compat wireless 14-10-2011 and still
+> don't work...it was recognized but no APs can be detected..the led of the alfa
+> is off..seems that it is power off..
+>
+> i don't know about firmware, i see that there are .bin on lib/firmware/rtlwifi..
+>   how can i update them?
 
-Please spare the #ifdef and just call something within dfs.c, then
-dfs.h would wrap it to nothing if DFS is disabled.
+That depends on your distro, but please look at the output of the dmesg command 
+to see if there is an error loading the firmware.
 
-  Luis
+You also need to install rfkill and look at the output of 'rfkill list'. If you 
+have another wireless device that is being hard blocked, or if there is a soft 
+block active, then rtl8192cu cannot work.
+
+Note that the device works on my system. There should not be a problem with the 
+driver on your device once we clean up these questions. Once the device gets the 
+proper firmware and the RF is unblocked, the LED will light.
+
+Larry
+
