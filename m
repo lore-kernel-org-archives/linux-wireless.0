@@ -1,280 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:48937 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752738Ab1JLU7M (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:43842 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750818Ab1JPVX5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 16:59:12 -0400
-Date: Wed, 12 Oct 2011 15:59:09 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [PATCH 4/5 V3] rtlwifi: rtl8192se: Updates from latest Realtek
- driver version - Part II
-Message-ID: <4e95ff9d.+7i9D/y6/Jm8agZv%Larry.Finger@lwfinger.net> (sfid-20111012_225916_048605_51C6A798)
+	Sun, 16 Oct 2011 17:23:57 -0400
+Received: by bkbzt19 with SMTP id zt19so2777984bkb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Oct 2011 14:23:55 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3.2] b43: fill ctl1 word on all new PHYs, fix PHY errors
+Date: Sun, 16 Oct 2011 23:23:56 +0200
+Message-Id: <1318800236-5329-1-git-send-email-zajec5@gmail.com> (sfid-20111016_232400_329274_76E552AB)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaoming Li <chaoming_li@realsil.com.cn>
+This fixes PHY transmission errors reported on some LP-PHY and HT-PHY
+cards. For LP-PHY they were quite rare and not really noticable. On
+HT-PHY they were critical, OFDM rates were not available at all.
 
-This patch incorporate the differences between the 06/20/2011 and
-08/16/2011 Realtek releases of the rtl8192se driver.
-
-The changes include:
-
-1. Fixing some typos in register usage.
-2. A change in the handling of decryption status for 802.11w packets.
-
-Signed-off-by: Chaoming Li <chaoming_li@realsil.com.cn>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-
-V3 - sync patch with wireless-next
-
-John,
-
-The problem was a patch in my tree that had never been submitted to you. I pulled
-a fresh copy of your wireless-next tree and fixed this one. The other patch
-can wait for 3.3.
-
-Larry
+I've this patch since August or earlier, just didn't submit it yet. It
+was succesfully tested on LP-PHY cards and fixed performance for every
+tested HT-PHY case.
 ---
+ drivers/net/wireless/b43/xmit.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
- rtl8192se/hw.c  |   22 +++++++++++-----------
- rtl8192se/reg.h |    1 +
- rtl8192se/sw.c  |    1 +
- rtl8192se/trx.c |   55 +++++++++++++++++++++++++++++++++----------------------
- wifi.h          |    2 ++
- 5 files changed, 48 insertions(+), 33 deletions(-)
-
-Index: wireless-next/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-===================================================================
---- wireless-next.orig/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-+++ wireless-next/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-@@ -1382,7 +1382,7 @@ static void _rtl92se_power_domain_init(s
- 	rtl_write_byte(rtlpriv, LDOA15_CTRL, 0x34);
+diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+index c73e860..390c234 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -175,6 +175,7 @@ void b43_generate_plcp_hdr(struct b43_plcp_hdr4 *plcp,
+ 	}
+ }
  
- 	/* Reset MAC-IO and CPU and Core Digital BIT10/11/15 */
--	tmpu1b = rtl_read_byte(rtlpriv, SYS_FUNC_EN + 1);
-+	tmpu1b = rtl_read_byte(rtlpriv, REG_SYS_FUNC_EN + 1);
++/* TODO: verify for SSLPN and LCN if support is implemented */
+ static u16 b43_generate_tx_phy_ctl1(struct b43_wldev *dev, u8 bitrate)
+ {
+ 	const struct b43_phy *phy = &dev->phy;
+@@ -531,7 +532,7 @@ int b43_generate_txhdr(struct b43_wldev *dev,
+ 			extra_ft |= B43_TXH_EFT_RTSFB_CCK;
  
- 	/* If IPS we need to turn LED on. So we not
- 	 * not disable BIT 3/7 of reg3. */
-@@ -1391,7 +1391,7 @@ static void _rtl92se_power_domain_init(s
- 	else
- 		tmpu1b &= 0x73;
- 
--	rtl_write_byte(rtlpriv, SYS_FUNC_EN + 1, tmpu1b);
-+	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN + 1, tmpu1b);
- 	/* wait for BIT 10/11/15 to pull high automatically!! */
- 	mdelay(1);
- 
-@@ -1428,15 +1428,15 @@ static void _rtl92se_power_domain_init(s
- 	rtl_write_byte(rtlpriv, LDOA15_CTRL, (tmpu1b | BIT(0)));
- 
- 	/* Set Digital Vdd to Retention isolation Path. */
--	tmpu2b = rtl_read_word(rtlpriv, SYS_ISO_CTRL);
--	rtl_write_word(rtlpriv, SYS_ISO_CTRL, (tmpu2b | BIT(11)));
-+	tmpu2b = rtl_read_word(rtlpriv, REG_SYS_ISO_CTRL);
-+	rtl_write_word(rtlpriv, REG_SYS_ISO_CTRL, (tmpu2b | BIT(11)));
- 
- 
- 	/* For warm reboot NIC disappera bug. */
--	tmpu2b = rtl_read_word(rtlpriv, SYS_FUNC_EN);
--	rtl_write_word(rtlpriv, SYS_FUNC_EN, (tmpu2b | BIT(13)));
-+	tmpu2b = rtl_read_word(rtlpriv, REG_SYS_FUNC_EN);
-+	rtl_write_word(rtlpriv, REG_SYS_FUNC_EN, (tmpu2b | BIT(13)));
- 
--	rtl_write_byte(rtlpriv, SYS_ISO_CTRL + 1, 0x68);
-+	rtl_write_byte(rtlpriv, REG_SYS_ISO_CTRL + 1, 0x68);
- 
- 	/* Enable AFE PLL Macro Block */
- 	tmpu1b = rtl_read_byte(rtlpriv, AFE_PLL_CTRL);
-@@ -1447,17 +1447,17 @@ static void _rtl92se_power_domain_init(s
- 	mdelay(1);
- 
- 	/* Release isolation AFE PLL & MD */
--	rtl_write_byte(rtlpriv, SYS_ISO_CTRL, 0xA6);
-+	rtl_write_byte(rtlpriv, REG_SYS_ISO_CTRL, 0xA6);
- 
- 	/* Enable MAC clock */
- 	tmpu2b = rtl_read_word(rtlpriv, SYS_CLKR);
- 	rtl_write_word(rtlpriv, SYS_CLKR, (tmpu2b | BIT(12) | BIT(11)));
- 
- 	/* Enable Core digital and enable IOREG R/W */
--	tmpu2b = rtl_read_word(rtlpriv, SYS_FUNC_EN);
--	rtl_write_word(rtlpriv, SYS_FUNC_EN, (tmpu2b | BIT(11)));
-+	tmpu2b = rtl_read_word(rtlpriv, REG_SYS_FUNC_EN);
-+	rtl_write_word(rtlpriv, REG_SYS_FUNC_EN, (tmpu2b | BIT(11)));
- 	/* enable REG_EN */
--	rtl_write_word(rtlpriv, SYS_FUNC_EN, (tmpu2b | BIT(11) | BIT(15)));
-+	rtl_write_word(rtlpriv, REG_SYS_FUNC_EN, (tmpu2b | BIT(11) | BIT(15)));
- 
- 	/* Switch the control path. */
- 	tmpu2b = rtl_read_word(rtlpriv, SYS_CLKR);
-Index: wireless-next/drivers/net/wireless/rtlwifi/rtl8192se/reg.h
-===================================================================
---- wireless-next.orig/drivers/net/wireless/rtlwifi/rtl8192se/reg.h
-+++ wireless-next/drivers/net/wireless/rtlwifi/rtl8192se/reg.h
-@@ -735,6 +735,7 @@
- #define	HWSET_MAX_SIZE_92S			128
- #define EFUSE_MAX_SECTION			16
- #define EFUSE_REAL_CONTENT_LEN			512
-+#define EFUSE_OOB_PROTECT_BYTES			15
- 
- #define RTL8190_EEPROM_ID			0x8129
- #define EEPROM_HPON				0x02
-Index: wireless-next/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-===================================================================
---- wireless-next.orig/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-+++ wireless-next/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-@@ -307,6 +307,7 @@ static struct rtl_hal_cfg rtl92se_hal_cf
- 	.maps[EFUSE_HWSET_MAX_SIZE] = HWSET_MAX_SIZE_92S,
- 	.maps[EFUSE_MAX_SECTION_MAP] = EFUSE_MAX_SECTION,
- 	.maps[EFUSE_REAL_CONTENT_SIZE] = EFUSE_REAL_CONTENT_LEN,
-+	.maps[EFUSE_OOB_PROTECT_BYTES_LEN] = EFUSE_OOB_PROTECT_BYTES,
- 
- 	.maps[RWCAM] = REG_RWCAM,
- 	.maps[WCAMI] = REG_WCAMI,
-Index: wireless-next/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-===================================================================
---- wireless-next.orig/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-+++ wireless-next/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-@@ -124,18 +124,15 @@ static void _rtl92se_query_rxphystatus(s
- 	u8 i, max_spatial_stream;
- 	u32 rssi, total_rssi = 0;
- 	bool in_powersavemode = false;
--	bool is_cck_rate;
-+	bool is_cck = pstats->is_cck;
- 
--	is_cck_rate = SE_RX_HAL_IS_CCK_RATE(pdesc);
- 	pstats->packet_matchbssid = packet_match_bssid;
- 	pstats->packet_toself = packet_toself;
--	pstats->is_cck = is_cck_rate;
- 	pstats->packet_beacon = packet_beacon;
--	pstats->is_cck = is_cck_rate;
- 	pstats->rx_mimo_signalquality[0] = -1;
- 	pstats->rx_mimo_signalquality[1] = -1;
- 
--	if (is_cck_rate) {
-+	if (is_cck) {
- 		u8 report, cck_highpwr;
- 		cck_buf = (struct phy_sts_cck_8192s_t *)p_drvinfo;
- 
-@@ -246,9 +243,8 @@ static void _rtl92se_query_rxphystatus(s
- 		pstats->rxpower = rx_pwr_all;
- 		pstats->recvsignalpower = rx_pwr_all;
- 
--		if (GET_RX_STATUS_DESC_RX_HT(pdesc) &&
--			GET_RX_STATUS_DESC_RX_MCS(pdesc) >= DESC92_RATEMCS8 &&
--		    GET_RX_STATUS_DESC_RX_MCS(pdesc) <= DESC92_RATEMCS15)
-+		if (pstats->is_ht && pstats->rate >= DESC92_RATEMCS8 &&
-+		    pstats->rate <= DESC92_RATEMCS15)
- 			max_spatial_stream = 2;
- 		else
- 			max_spatial_stream = 1;
-@@ -266,7 +262,7 @@ static void _rtl92se_query_rxphystatus(s
- 		}
+ 		if (rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS &&
+-		    phy->type == B43_PHYTYPE_N) {
++		    phy->type >= B43_PHYTYPE_N) {
+ 			txhdr->phy_ctl1_rts = cpu_to_le16(
+ 				b43_generate_tx_phy_ctl1(dev, rts_rate));
+ 			txhdr->phy_ctl1_rts_fb = cpu_to_le16(
+@@ -552,7 +553,7 @@ int b43_generate_txhdr(struct b43_wldev *dev,
+ 		break;
  	}
  
--	if (is_cck_rate)
-+	if (is_cck)
- 		pstats->signalstrength = (u8)(_rtl92se_signal_scale_mapping(hw,
- 					 pwdb_all));
- 	else if (rf_rx_num != 0)
-@@ -518,6 +514,8 @@ bool rtl92se_rx_query_desc(struct ieee80
- {
- 	struct rx_fwinfo *p_drvinfo;
- 	u32 phystatus = (u32)GET_RX_STATUS_DESC_PHY_STATUS(pdesc);
-+	struct ieee80211_hdr *hdr;
-+	bool first_ampdu = false;
- 
- 	stats->length = (u16)GET_RX_STATUS_DESC_PKT_LEN(pdesc);
- 	stats->rx_drvinfo_size = (u8)GET_RX_STATUS_DESC_DRVINFO_SIZE(pdesc) * 8;
-@@ -530,8 +528,12 @@ bool rtl92se_rx_query_desc(struct ieee80
- 	stats->rate = (u8)GET_RX_STATUS_DESC_RX_MCS(pdesc);
- 	stats->shortpreamble = (u16)GET_RX_STATUS_DESC_SPLCP(pdesc);
- 	stats->isampdu = (bool)(GET_RX_STATUS_DESC_PAGGR(pdesc) == 1);
-+	stats->isfirst_ampdu = (bool) ((GET_RX_STATUS_DESC_PAGGR(pdesc) == 1)
-+			       && (GET_RX_STATUS_DESC_FAGGR(pdesc) == 1));
- 	stats->timestamp_low = GET_RX_STATUS_DESC_TSFL(pdesc);
- 	stats->rx_is40Mhzpacket = (bool)GET_RX_STATUS_DESC_BW(pdesc);
-+	stats->is_ht = (bool)GET_RX_STATUS_DESC_RX_HT(pdesc);
-+	stats->is_cck = SE_RX_HAL_IS_CCK_RATE(pdesc);
- 
- 	if (stats->hwerror)
- 		return false;
-@@ -539,30 +541,39 @@ bool rtl92se_rx_query_desc(struct ieee80
- 	rx_status->freq = hw->conf.channel->center_freq;
- 	rx_status->band = hw->conf.channel->band;
- 
--	if (GET_RX_STATUS_DESC_CRC32(pdesc))
--		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
-+	hdr = (struct ieee80211_hdr *)(skb->data + stats->rx_drvinfo_size
-+	      + stats->rx_bufshift);
- 
--	if (!GET_RX_STATUS_DESC_SWDEC(pdesc))
--		rx_status->flag |= RX_FLAG_DECRYPTED;
-+	if (stats->crc)
-+		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
- 
--	if (GET_RX_STATUS_DESC_BW(pdesc))
-+	if (stats->rx_is40Mhzpacket)
- 		rx_status->flag |= RX_FLAG_40MHZ;
- 
--	if (GET_RX_STATUS_DESC_RX_HT(pdesc))
-+	if (stats->is_ht)
- 		rx_status->flag |= RX_FLAG_HT;
- 
- 	rx_status->flag |= RX_FLAG_MACTIME_MPDU;
- 
--	if (stats->decrypted)
--		rx_status->flag |= RX_FLAG_DECRYPTED;
-+	/* hw will set stats->decrypted true, if it finds the
-+	 * frame is open data frame or mgmt frame,
-+	 * hw will not decrypt robust managment frame
-+	 * for IEEE80211w but still set stats->decrypted
-+	 * true, so here we should set it back to undecrypted
-+	 * for IEEE80211w frame, and mac80211 sw will help
-+	 * to decrypt it */
-+	if (stats->decrypted) {
-+		if ((ieee80211_is_robust_mgmt_frame(hdr)) &&
-+			(ieee80211_has_protected(hdr->frame_control)))
-+			rx_status->flag &= ~RX_FLAG_DECRYPTED;
-+		else
-+			rx_status->flag |= RX_FLAG_DECRYPTED;
-+	}
- 
- 	rx_status->rate_idx = rtlwifi_rate_mapping(hw,
--				(bool)GET_RX_STATUS_DESC_RX_HT(pdesc),
--				(u8)GET_RX_STATUS_DESC_RX_MCS(pdesc),
--				(bool)GET_RX_STATUS_DESC_PAGGR(pdesc));
--
-+			      stats->is_ht, stats->rate, first_ampdu);
- 
--	rx_status->mactime = GET_RX_STATUS_DESC_TSFL(pdesc);
-+	rx_status->mactime = stats->timestamp_low;
- 	if (phystatus) {
- 		p_drvinfo = (struct rx_fwinfo *)(skb->data +
- 						 stats->rx_bufshift);
-Index: wireless-next/drivers/net/wireless/rtlwifi/wifi.h
-===================================================================
---- wireless-next.orig/drivers/net/wireless/rtlwifi/wifi.h
-+++ wireless-next/drivers/net/wireless/rtlwifi/wifi.h
-@@ -450,6 +450,7 @@ enum rtl_var_map {
- 	EFUSE_HWSET_MAX_SIZE,
- 	EFUSE_MAX_SECTION_MAP,
- 	EFUSE_REAL_CONTENT_SIZE,
-+	EFUSE_OOB_PROTECT_BYTES_LEN,
- 
- 	/*CAM map */
- 	RWCAM,
-@@ -1324,6 +1325,7 @@ struct rtl_stats {
- 	s8 rx_mimo_signalquality[2];
- 	bool packet_matchbssid;
- 	bool is_cck;
-+	bool is_ht;
- 	bool packet_toself;
- 	bool packet_beacon;	/*for rssi */
- 	char cck_adc_pwdb[4];	/*for rx path selection */
+-	if (phy->type == B43_PHYTYPE_N) {
++	if (phy->type >= B43_PHYTYPE_N) {
+ 		txhdr->phy_ctl1 =
+ 			cpu_to_le16(b43_generate_tx_phy_ctl1(dev, rate));
+ 		txhdr->phy_ctl1_fb =
+-- 
+1.7.3.4
+
