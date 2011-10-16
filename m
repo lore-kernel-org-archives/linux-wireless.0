@@ -1,114 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:46428 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752459Ab1JGVQV (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:46373 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753984Ab1JPK6r convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 17:16:21 -0400
-Received: by gyg10 with SMTP id 10so4002517gyg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Oct 2011 14:16:21 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH v2] crda: fix null string assumption for alpha2
-Date: Fri,  7 Oct 2011 14:16:13 -0700
-Message-Id: <1318022173-17441-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111007_231624_872674_51375439)
+	Sun, 16 Oct 2011 06:58:47 -0400
+Received: by iaek3 with SMTP id k3so4807101iae.19
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Oct 2011 03:58:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1318710223-29285-1-git-send-email-guy@wizery.com>
+References: <1318710223-29285-1-git-send-email-guy@wizery.com>
+Date: Sun, 16 Oct 2011 12:58:46 +0200
+Message-ID: <CAB3XZEdk2pxH4k4tYXn44Sdb8STdXEh7VVsE85__e=M2Fk9s7A@mail.gmail.com> (sfid-20111016_125851_006460_DEADB846)
+Subject: Re: [PATCH] wl12xx: set scan probe requests rate according to the
+ no_cck flag
+From: Eliad Peller <eliad@wizery.com>
+To: Guy Eilam <guy@wizery.com>
+Cc: coelho@ti.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wireless-regdb only accounts for two bytes for
-the country code but CRDA defined the alpha2 to be
-as a string of length 2, and so does the nl80211 attribute
-policy:
+hi Guy,
 
-        [NL80211_ATTR_REG_ALPHA2] = { .type = NLA_STRING, .len = 2 },
+On Sat, Oct 15, 2011 at 10:23 PM, Guy Eilam <guy@wizery.com> wrote:
+> Set the TX rate of probe requests during scanning according to the
+> no_cck flag in the scan request struct.
+>
+> Signed-off-by: Guy Eilam <guy@wizery.com>
+> ---
+[...]
 
-The meaning of a string is it'll be null terminated, so if you
-do not add the null termination a country without the null termination
-will not match up with the nl80211 attribute policy.
+> @@ -243,7 +242,12 @@ void wl1271_scan_stm(struct wl1271 *wl)
+>
+>        case WL1271_SCAN_STATE_2GHZ_ACTIVE:
+>                band = IEEE80211_BAND_2GHZ;
+> -               rate = wl1271_tx_min_rate_get(wl, wl->bitrate_masks[band]);
+> +               if (wl->scan.req->no_cck)
+> +                       rate = wl1271_tx_min_rate_get(wl,
+> +                                                CONF_TX_RATE_MASK_BASIC_P2P);
+> +               else
+> +                       rate = wl1271_tx_min_rate_get(wl,
+> +                                                CONF_TX_RATE_MASK_BASIC);
 
-This has no impact for us unless we want to use the next available
-pad byte on the wireless-regdb. This fixes CRDA by using a local copy
-of the regdb's alpha2 that is properly null terminated and sending it.
+on a second thought, this seems a bit wrong.
+i think we should consider the configured bitrate_masks when scanning.
+maybe just mask-out the cck rates?
 
-The implications of this change is that new wirelesss-regdb's that
-make use of the next pad byte for a country will get that country
-ignored for regulatory hints sent to the kernel. At this point we
-don't yet know what the next byte will be used for though so this
-has no impact. The second pad byte is being used for DFS and that
-is not impacted by this nor is this change required for it.
-
-Distributions should upgrade though in case we ever do decide to use
-this last precious country byte. I've tested that this indeed fixes
-the bogus issue I saw when instead of using the second pad byte we
-use the first pad byte. Thanks to Johannes for spotting the issue.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
-
-This corrects language in the commit log, as I stated at first we
-alread did have a use case for the next pad byte but this is not
-true as I assumed we could use the next pad byte for TPC but if
-TPC gain values can vary depending on the band then we cannot use
-this country specific byte and instead will need another set of
-values.
-
-This goes on top of my DFS master patch. I'll push the change out
-once and if Linville integrates my DFS changes to wireless-regdb.
-
- crda.c   |    4 ++--
- reglib.h |   13 -------------
- 2 files changed, 2 insertions(+), 15 deletions(-)
-
-diff --git a/crda.c b/crda.c
-index dfc5353..63ebfff 100644
---- a/crda.c
-+++ b/crda.c
-@@ -149,7 +149,7 @@ int main(int argc, char **argv)
- 	struct regdb_file_header *header;
- 	struct regdb_file_reg_country *countries;
- 	int dblen, siglen, num_countries, i, j, r;
--	char alpha2[2];
-+	char alpha2[3] = {}; /* NUL-terminate */
- 	char *env_country;
- 	struct nl80211_state nlstate;
- 	struct nl_cb *cb = NULL;
-@@ -279,7 +279,7 @@ int main(int argc, char **argv)
- 				sizeof(*rcoll) + num_rules * sizeof(__be32),
- 				country->reg_collection_ptr);
- 
--	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2, (char *) country->alpha2);
-+	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2, (char *) alpha2);
- 	NLA_PUT_U8(msg, NL80211_ATTR_DFS_REGION, country->dfs_region);
- 
- 	nl_reg_rules = nla_nest_start(msg, NL80211_ATTR_REG_RULES);
-diff --git a/reglib.h b/reglib.h
-index f3a76ef..9fe5d8b 100644
---- a/reglib.h
-+++ b/reglib.h
-@@ -53,21 +53,8 @@ static inline int is_alpha2(const char *alpha2)
- 	return 0;
- }
- 
--/* Avoid stdlib */
--static inline int is_len_2(const char *alpha2)
--{
--        if (alpha2[0] == '\0' || (alpha2[1] == '\0'))
--                return 0;
--        if (alpha2[2] == '\0')
--                return 1;
--        return 0;
--}
--
- static inline int is_valid_regdom(const char *alpha2)
- {
--	if (!is_len_2(alpha2))
--		return 0;
--
- 	if (!is_alpha2(alpha2) && !is_world_regdom(alpha2))
- 		return 0;
- 
--- 
-1.7.4.15.g7811d
-
+Eliad.
