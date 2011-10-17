@@ -1,86 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:64751 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757241Ab1JRHXt (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.22]:52532 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754842Ab1JQHcG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Oct 2011 03:23:49 -0400
-Received: by bkbzt19 with SMTP id zt19so452366bkb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2011 00:23:48 -0700 (PDT)
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, stable@kernel.org
-Subject: [PATCH 1/2] wl12xx: Validate FEM index from ini file and FW
-Date: Tue, 18 Oct 2011 09:23:41 +0200
-Message-Id: <1318922622-8356-2-git-send-email-pontus.fuchs@gmail.com> (sfid-20111018_092358_166684_1E407A18)
-In-Reply-To: <1318922622-8356-1-git-send-email-pontus.fuchs@gmail.com>
-References: <1318922622-8356-1-git-send-email-pontus.fuchs@gmail.com>
+	Mon, 17 Oct 2011 03:32:06 -0400
+From: Toralf =?iso-8859-1?q?F=F6rster?= <toralf.foerster@gmx.de>
+To: David Rientjes <rientjes@google.com>,
+	David Rientjes <rientjes@google.com>
+Subject: Re: 3.1.0-rc9+ : wlan stops working w/o any error messages
+Date: Mon, 17 Oct 2011 09:31:58 +0200
+Cc: werner <w.landgraf@ru.ru>, "Wey-Yi Guy" <wey-yi.w.guy@intel.com>,
+	ilw@linux.intel.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <201110152119.58509.toralf.foerster@gmx.de> <alpine.DEB.2.00.1110151416360.15894@chino.kir.corp.google.com>
+In-Reply-To: <alpine.DEB.2.00.1110151416360.15894@chino.kir.corp.google.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201110170931.59534.toralf.foerster@gmx.de> (sfid-20111017_093228_081291_F55BBAF3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check for out of bound FEM index to prevent reading beyond ini
-memory end.
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Cc: stable@kernel.org
-Reviewed-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/cmd.c |   22 ++++++++++++++++++++++
- 1 files changed, 22 insertions(+), 0 deletions(-)
+David Rientjes wrote at 23:21:59
+> What's the last kernel prior to 3.1-rc9 that worked for you?
+2.6.39.4 (in general that kernel version rocks, reliable, stable, no problems 
+AFAICS, 3.0.x have problems in the DVB-T area, 3.1 added wlan issues)
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 2413c43..38a21a3 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -121,6 +121,11 @@ int wl1271_cmd_general_parms(struct wl1271 *wl)
- 	if (!wl->nvs)
- 		return -ENODEV;
- 
-+	if (gp->tx_bip_fem_manufacturer >= WL1271_INI_FEM_MODULE_COUNT) {
-+		wl1271_warning("FEM index from INI out of bounds");
-+		return -EINVAL;
-+	}
-+
- 	gen_parms = kzalloc(sizeof(*gen_parms), GFP_KERNEL);
- 	if (!gen_parms)
- 		return -ENOMEM;
-@@ -144,6 +149,12 @@ int wl1271_cmd_general_parms(struct wl1271 *wl)
- 	gp->tx_bip_fem_manufacturer =
- 		gen_parms->general_params.tx_bip_fem_manufacturer;
- 
-+	if (gp->tx_bip_fem_manufacturer >= WL1271_INI_FEM_MODULE_COUNT) {
-+		wl1271_warning("FEM index from FW out of bounds");
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
- 	wl1271_debug(DEBUG_CMD, "FEM autodetect: %s, manufacturer: %d\n",
- 		     answer ? "auto" : "manual", gp->tx_bip_fem_manufacturer);
- 
-@@ -163,6 +174,11 @@ int wl128x_cmd_general_parms(struct wl1271 *wl)
- 	if (!wl->nvs)
- 		return -ENODEV;
- 
-+	if (gp->tx_bip_fem_manufacturer >= WL1271_INI_FEM_MODULE_COUNT) {
-+		wl1271_warning("FEM index from ini out of bounds");
-+		return -EINVAL;
-+	}
-+
- 	gen_parms = kzalloc(sizeof(*gen_parms), GFP_KERNEL);
- 	if (!gen_parms)
- 		return -ENOMEM;
-@@ -187,6 +203,12 @@ int wl128x_cmd_general_parms(struct wl1271 *wl)
- 	gp->tx_bip_fem_manufacturer =
- 		gen_parms->general_params.tx_bip_fem_manufacturer;
- 
-+	if (gp->tx_bip_fem_manufacturer >= WL1271_INI_FEM_MODULE_COUNT) {
-+		wl1271_warning("FEM index from FW out of bounds");
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
- 	wl1271_debug(DEBUG_CMD, "FEM autodetect: %s, manufacturer: %d\n",
- 		     answer ? "auto" : "manual", gp->tx_bip_fem_manufacturer);
- 
+> What does "iwconfig" show?
+wlan0     IEEE 802.11abgn  ESSID:"IBM"  
+          Mode:Managed  Frequency:2.462 GHz  Access Point: 00:21:55:AC:8B:80   
+          Bit Rate=54 Mb/s   Tx-Power=15 dBm   
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          Link Quality=49/70  Signal level=-61 dBm  
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+> What does "dmesg | grep iwlagn" show?
+n22 ~ # dmesg | grep iwlagn
+iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+iwlagn 0000:03:00.0: setting latency timer to 64
+iwlagn 0000:03:00.0: pci_resource_len = 0x00002000
+iwlagn 0000:03:00.0: pci_resource_base = f81f8000
+iwlagn 0000:03:00.0: HW Revision ID = 0x0
+iwlagn 0000:03:00.0: irq 48 for MSI/MSI-X
+iwlagn 0000:03:00.0: Detected Intel(R) WiFi Link 5100 AGN, REV=0x54
+iwlagn 0000:03:00.0: L1 Disabled; Enabling L0S
+iwlagn 0000:03:00.0: device EEPROM VER=0x11e, CALIB=0x4
+iwlagn 0000:03:00.0: Device SKU: 0Xf0
+iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
+iwlagn 0000:03:00.0: loaded firmware version 8.83.5.1 build 33692
+iwlagn 0000:03:00.0: L1 Disabled; Enabling L0S
+iwlagn 0000:03:00.0: Radio type=0x1-0x2-0x0
+iwlagn 0000:03:00.0: L1 Disabled; Enabling L0S
+iwlagn 0000:03:00.0: Radio type=0x1-0x2-0x0
+
+
 -- 
-1.7.4.1
-
+MfG/Sincerely
+Toralf Förster
+pgp finger print: 7B1A 07F4 EC82 0F90 D4C2 8936 872A E508 7DB6 9DA3
