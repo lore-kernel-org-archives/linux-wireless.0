@@ -1,177 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37756 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753928Ab1JYKiU (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:4006 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751511Ab1JQU0X convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 06:38:20 -0400
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH 4/7] ath6kl: Add new functions to handle wow suspend/resume operations
-Date: Tue, 25 Oct 2011 16:07:24 +0530
-Message-ID: <1319539047-8756-5-git-send-email-rmani@qca.qualcomm.com> (sfid-20111025_123822_650184_AC493316)
-In-Reply-To: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com>
-References: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com>
+	Mon, 17 Oct 2011 16:26:23 -0400
+Message-ID: <4E9C8F60.1030209@broadcom.com> (sfid-20111017_222627_617177_88C24009)
+Date: Mon, 17 Oct 2011 13:26:08 -0700
+From: "Franky Lin" <frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?ISO-8859-1?Q?Andr=E9s_Garc=EDa_Saavedra?=
+	<andres.garcia.saavedra@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: brcmfmac driver implementation: Questions
+References: <CADxqDgHYu51DQXOLT3eA=6PckSmXc42BFUF=Z7qZ_Cs45T1GjQ@mail.gmail.com>
+In-Reply-To: <CADxqDgHYu51DQXOLT3eA=6PckSmXc42BFUF=Z7qZ_Cs45T1GjQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+Hi Andres,
 
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |  121 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/core.h     |    3 +
- 2 files changed, 124 insertions(+), 0 deletions(-)
+On 10/17/2011 10:59 AM, Andrés García Saavedra wrote:
+> Hi all,
+>
+> I would like to test some custom powersaving algorithms for 802.11abg
+> WLANs on some current android smartphone (e.g., nexus one). My
+> question is regarding the brcmfmac driver implementation for BCM4329
+> chipsets:
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 0680d2b..aaf8d0f 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1481,6 +1481,127 @@ static int ath6kl_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
- }
- 
- #ifdef CONFIG_PM
-+
-+int ath6kl_pm_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
-+{
-+	struct wmi_set_wow_mode_cmd wakeup_filter_cmd;
-+	struct wmi_add_wow_pattern_cmd add_pattern_cmd;
-+	struct wmi_del_wow_pattern_cmd del_pattern_cmd;
-+	struct wmi_set_host_sleep_mode_cmd hsleep_cmd;
-+	int i, ret, pos, left;
-+	u8 mask[WOW_PATTERN_SIZE];
-+
-+	if (WARN_ON(!wow))
-+		return -EINVAL;
-+
-+	if (ar->wow_state != ATH6KL_WOW_STATE_NONE)
-+		return -EINVAL;
-+
-+	ar->wow_state = ATH6KL_WOW_STATE_SUSPENDING;
-+
-+	/* Clear existing WOW patterns */
-+	for (i = 0; i < WOW_MAX_FILTERS_PER_LIST; i++) {
-+		del_pattern_cmd.filter_list_id = cpu_to_le16(WOW_LIST_ID);
-+		del_pattern_cmd.filter_id = cpu_to_le16(i);
-+		ath6kl_wmi_del_wow_pattern_cmd(ar->wmi, &del_pattern_cmd);
-+	}
-+
-+	/* Configure new WOW patterns */
-+	memset(&wakeup_filter_cmd, 0, sizeof(wakeup_filter_cmd));
-+	wakeup_filter_cmd.enable_wow = cpu_to_le32(0x1);
-+	wakeup_filter_cmd.host_req_delay = cpu_to_le32(WOW_HOST_REQ_DELAY);
-+
-+	if (wow->disconnect)
-+		wakeup_filter_cmd.filter |=
-+			cpu_to_le32(WOW_FILTER_OPTION_NWK_DISASSOC);
-+
-+	if (wow->magic_pkt)
-+		wakeup_filter_cmd.filter |=
-+			cpu_to_le32(WOW_FILTER_OPTION_MAGIC_PACKET);
-+
-+	if (wow->gtk_rekey_failure)
-+		wakeup_filter_cmd.filter |=
-+			cpu_to_le32(WOW_FILTER_OPTION_GTK_ERROR);
-+
-+	if (wow->eap_identity_req)
-+		wakeup_filter_cmd.filter |=
-+			cpu_to_le32(WOW_FILTER_OPTION_EAP_REQ);
-+
-+	if (wow->four_way_handshake)
-+		wakeup_filter_cmd.filter |=
-+			cpu_to_le32(WOW_FILTER_OPTION_8021X_4WAYHS);
-+
-+	for (i = 0; i < wow->n_patterns; i++) {
-+		memset(&add_pattern_cmd, 0, sizeof(add_pattern_cmd));
-+		add_pattern_cmd.filter_list_id = WOW_LIST_ID;
-+		add_pattern_cmd.filter_offset = 0;
-+		add_pattern_cmd.filter_size = wow->patterns[i].pattern_len;
-+
-+		memset(&mask, 0, sizeof(mask));
-+		for (pos = 0; pos < wow->patterns[i].pattern_len;
-+				pos++) {
-+			if (wow->patterns[i].mask[pos / 8] & (0x1 << (pos % 8)))
-+				mask[pos] = 0xFF;
-+		}
-+
-+		ret = ath6kl_wmi_add_wow_pattern_cmd(ar->wmi,
-+				&add_pattern_cmd,
-+				wow->patterns[i].pattern, mask);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	if (wakeup_filter_cmd.filter || wow->n_patterns) {
-+		ret = ath6kl_wmi_set_wow_mode_cmd(ar->wmi, &wakeup_filter_cmd);
-+		if (ret)
-+			goto wow_setup_failed;
-+	}
-+
-+	hsleep_cmd.awake  = cpu_to_le32(0);
-+	hsleep_cmd.asleep = cpu_to_le32(1);
-+	ret = ath6kl_wmi_set_host_sleep_mode_cmd(ar->wmi, &hsleep_cmd);
-+	if (ret)
-+		goto wow_setup_failed;
-+
-+	if (ar->tx_pending[ar->ctrl_ep]) {
-+		left = wait_event_interruptible_timeout(ar->event_wq,
-+				ar->tx_pending[ar->ctrl_ep] == 0, WMI_TIMEOUT);
-+		if (left == 0) {
-+			ret = -ETIMEDOUT;
-+			goto wow_setup_failed;
-+		} else if (left < 0) {
-+			ret = left;
-+			goto wow_setup_failed;
-+		}
-+	}
-+
-+	ar->wow_state = ATH6KL_WOW_STATE_SUSPENDED;
-+	return 0;
-+
-+wow_setup_failed:
-+	ar->wow_state = ATH6KL_WOW_STATE_NONE;
-+	return ret;
-+}
-+
-+int ath6kl_pm_wow_resume(struct ath6kl *ar)
-+{
-+	struct wmi_set_host_sleep_mode_cmd hsleep_cmd;
-+	int ret;
-+
-+	if (ar->wow_state == ATH6KL_WOW_STATE_NONE)
-+		return -EINVAL;
-+
-+	hsleep_cmd.awake  = cpu_to_le32(1);
-+	hsleep_cmd.asleep = cpu_to_le32(0);
-+	ret = ath6kl_wmi_set_host_sleep_mode_cmd(ar->wmi, &hsleep_cmd);
-+	if (ret)
-+		return ret;
-+
-+	ar->wow_state = ATH6KL_WOW_STATE_NONE;
-+
-+	return 0;
-+}
-+
- static int ar6k_cfg80211_suspend(struct wiphy *wiphy,
- 				 struct cfg80211_wowlan *wow)
- {
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 706443c..cefb233 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -386,6 +386,9 @@ enum ath6kl_wow_state {
- 	ATH6KL_WOW_STATE_SUSPENDED
- };
- 
-+#define WOW_LIST_ID		0
-+#define WOW_HOST_REQ_DELAY	500 /* 500 ms */
-+
- /* Flag info */
- #define WMI_ENABLED	0
- #define WMI_READY	1
--- 
-1.7.0.4
+Android drive is a little different from brcmfmac. We do have plan to 
+add android support on a fullmac based code. But it's not going to 
+happen in short time. I would suggest you could start with the android 
+driver to save the time of porting fullmac to Android.
+
+> * The current open source implementation of the driver, brcmfmac, does
+> ONLY support 11n PHY?
+
+No. 11g is supported as well.
+
+> * Does this driver interfaces the mac80211 operations or "acts as" a
+> mac80211 driver itself talking to cfg80211/nl80211?
+
+We implement the callback and talk to cfg80211 directly.
+
+> * Does the chipset/current implementation support sleep/awake
+> triggers? (or at least quiet elements?)
+
+I don't think there is any interface available to bypass the firmware 
+and control the RF directly.
+
+Hope this can help.
+
+Regards,
+Franky
+
+
+
 
