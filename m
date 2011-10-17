@@ -1,139 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4335 "EHLO MMS3.broadcom.com"
+Received: from lo.gmane.org ([80.91.229.12]:38208 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754014Ab1JLSvr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 14:51:47 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Alwin Beukers" <alwin@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 19/22] brcm80211: moved function brcmu_chspec_malformed
-Date: Wed, 12 Oct 2011 20:51:29 +0200
-Message-ID: <1318445492-24207-20-git-send-email-arend@broadcom.com> (sfid-20111012_205155_517652_32339A1D)
-In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
-References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1756568Ab1JQRKB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Oct 2011 13:10:01 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1RFqhL-0006l7-CH
+	for linux-wireless@vger.kernel.org; Mon, 17 Oct 2011 19:09:59 +0200
+Received: from host206-183-dynamic.11-87-r.retail.telecomitalia.it ([87.11.183.206])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2011 19:09:59 +0200
+Received: from gaigo88 by host206-183-dynamic.11-87-r.retail.telecomitalia.it with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2011 19:09:59 +0200
+To: linux-wireless@vger.kernel.org
+From: v4mp <gaigo88@hotmail.it>
+Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
+Date: Mon, 17 Oct 2011 17:09:46 +0000 (UTC)
+Message-ID: <loom.20111017T190430-717@post.gmane.org> (sfid-20111017_191005_766219_9EA93163)
+References: <4E77F631.3030202@googlemail.com> <4E780309.9010601@lwfinger.net> <4E785DB3.5040109@googlemail.com> <4E7907D3.1020606@googlemail.com> <4E792994.1080809@lwfinger.net> <4E79B1D0.7090602@googlemail.com> <4E79F87F.1050402@lwfinger.net> <4E7A38D0.7070304@googlemail.com> <4E7A4310.30106@lwfinger.net> <4E7A48D1.8050009@googlemail.com> <4E7A4B03.4070006@lwfinger.net> <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com> <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org> <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org> <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T161652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org> <4E9C42CF.5010702@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alwin Beukers <alwin@broadcom.com>
 
-Moved brcmu_chspec_malformed into the only file using it. The
-function name was adjusted accordingly.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/channel.c  |   28 +++++++++++++++++++-
- drivers/net/wireless/brcm80211/brcmutil/wifi.c     |   27 -------------------
- .../net/wireless/brcm80211/include/brcmu_wifi.h    |    8 -----
- 3 files changed, 27 insertions(+), 36 deletions(-)
+ok, i've checked the md5 checksum of the firmware and is ok,
+i give you dmesg at pastebin.com
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index a1b415d..89ad1b7 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -1485,6 +1485,32 @@ brcms_c_channel_reg_limits(struct brcms_cm_info *wlc_cm, u16 chanspec,
- }
- 
- /*
-+ * Verify the chanspec is using a legal set of parameters, i.e. that the
-+ * chanspec specified a band, bw, ctl_sb and channel and that the
-+ * combination could be legal given any set of circumstances.
-+ * RETURNS: true is the chanspec is malformed, false if it looks good.
-+ */
-+static bool brcms_c_chspec_malformed(u16 chanspec)
-+{
-+	/* must be 2G or 5G band */
-+	if (!CHSPEC_IS5G(chanspec) && !CHSPEC_IS2G(chanspec))
-+		return true;
-+	/* must be 20 or 40 bandwidth */
-+	if (!CHSPEC_IS40(chanspec) && !CHSPEC_IS20(chanspec))
-+		return true;
-+
-+	/* 20MHZ b/w must have no ctl sb, 40 must have a ctl sb */
-+	if (CHSPEC_IS20(chanspec)) {
-+		if (!CHSPEC_SB_NONE(chanspec))
-+			return true;
-+	} else if (!CHSPEC_SB_UPPER(chanspec) && !CHSPEC_SB_LOWER(chanspec)) {
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
-+/*
-  * Validate the chanspec for this locale, for 40MHZ we need to also
-  * check that the sidebands are valid 20MZH channels in this locale
-  * and they are also a legal HT combination
-@@ -1497,7 +1523,7 @@ brcms_c_valid_chanspec_ext(struct brcms_cm_info *wlc_cm, u16 chspec,
- 	u8 channel = CHSPEC_CHANNEL(chspec);
- 
- 	/* check the chanspec */
--	if (brcmu_chspec_malformed(chspec)) {
-+	if (brcms_c_chspec_malformed(chspec)) {
- 		wiphy_err(wlc->wiphy, "wl%d: malformed chanspec 0x%x\n",
- 			wlc->pub->unit, chspec);
- 		return false;
-diff --git a/drivers/net/wireless/brcm80211/brcmutil/wifi.c b/drivers/net/wireless/brcm80211/brcmutil/wifi.c
-index e8d3bf2..8483f24 100644
---- a/drivers/net/wireless/brcm80211/brcmutil/wifi.c
-+++ b/drivers/net/wireless/brcm80211/brcmutil/wifi.c
-@@ -14,30 +14,3 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- #include <brcmu_wifi.h>
--
--/*
-- * Verify the chanspec is using a legal set of parameters, i.e. that the
-- * chanspec specified a band, bw, ctl_sb and channel and that the
-- * combination could be legal given any set of circumstances.
-- * RETURNS: true is the chanspec is malformed, false if it looks good.
-- */
--bool brcmu_chspec_malformed(u16 chanspec)
--{
--	/* must be 2G or 5G band */
--	if (!CHSPEC_IS5G(chanspec) && !CHSPEC_IS2G(chanspec))
--		return true;
--	/* must be 20 or 40 bandwidth */
--	if (!CHSPEC_IS40(chanspec) && !CHSPEC_IS20(chanspec))
--		return true;
--
--	/* 20MHZ b/w must have no ctl sb, 40 must have a ctl sb */
--	if (CHSPEC_IS20(chanspec)) {
--		if (!CHSPEC_SB_NONE(chanspec))
--			return true;
--	} else if (!CHSPEC_SB_UPPER(chanspec) && !CHSPEC_SB_LOWER(chanspec)) {
--		return true;
--	}
--
--	return false;
--}
--EXPORT_SYMBOL(brcmu_chspec_malformed);
-diff --git a/drivers/net/wireless/brcm80211/include/brcmu_wifi.h b/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
-index 5b1aca7..f10d302 100644
---- a/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
-+++ b/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
-@@ -168,14 +168,6 @@ static inline bool ac_bitmap_tst(u8 bitmap, int prec)
- 	return (bitmap & (1 << (prec))) != 0;
- }
- 
--/*
-- * Verify the chanspec is using a legal set of parameters, i.e. that the
-- * chanspec specified a band, bw, ctl_sb and channel and that the
-- * combination could be legal given any set of circumstances.
-- * RETURNS: true is the chanspec is malformed, false if it looks good.
-- */
--extern bool brcmu_chspec_malformed(u16 chanspec);
--
- /* Enumerate crypto algorithms */
- #define	CRYPTO_ALGO_OFF			0
- #define	CRYPTO_ALGO_WEP1		1
--- 
-1.7.4.1
+it has 2 parts: in the second part i can't see what is in previous of the error
+
+the link is: http://pastebin.com/7tfcBfbD
+
+
 
 
