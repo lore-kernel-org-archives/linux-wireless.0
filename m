@@ -1,96 +1,532 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:41198 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932466Ab1JDQ0U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 12:26:20 -0400
-Message-ID: <4E8B33A6.9050104@neratec.com> (sfid-20111004_182624_154422_4A948811)
-Date: Tue, 04 Oct 2011 18:26:14 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42240 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753144Ab1JQTax (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Oct 2011 15:30:53 -0400
+Date: Mon, 17 Oct 2011 15:19:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next 2011-10-17
+Message-ID: <20111017191945.GD8948@tuxdriver.com> (sfid-20111017_213100_733410_E45706A9)
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kgiori@qca.qualcomm.com, nbd@openwrt.org
-Subject: Re: [RFC 5/6] ath9k: enable DFS pulse detection
-References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com> <201110041538.12885.chunkeey@googlemail.com> <4E8B157F.2080203@neratec.com> <201110041642.54453.chunkeey@googlemail.com>
-In-Reply-To: <201110041642.54453.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/04/2011 04:42 PM, Christian Lamparter wrote:
-> On Tuesday, October 04, 2011 04:17:35 PM Zefir Kurtisi wrote:
->> On 10/04/2011 03:38 PM, Christian Lamparter wrote:
->>> On Monday, October 03, 2011 09:31:12 PM Luis R. Rodriguez wrote:
->>>> On Mon, Oct 3, 2011 at 12:24 PM, Christian Lamparter
->>>> <chunkeey@googlemail.com> wrote:
->>>>> On Monday, October 03, 2011 08:27:39 PM Luis R. Rodriguez wrote:
->>>>>> On Mon, Oct 3, 2011 at 3:29 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
->>>>>>>
->>>>>>> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
->>>>>>> ---
->>>>>>>  drivers/net/wireless/ath/ath9k/main.c |   12 ++++++++++++
->>>>>>>  1 files changed, 12 insertions(+), 0 deletions(-)
->>>>>>>
->>>>>>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->>>>>>> index e8aeb98..5defebe 100644
->>>>>>> --- a/drivers/net/wireless/ath/ath9k/main.c
->>>>>>> +++ b/drivers/net/wireless/ath/ath9k/main.c
->>>>>>> @@ -344,6 +344,18 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
->>>>>>>                        "Unable to reset channel, reset status %d\n", r);
->>>>>>>                goto out;
->>>>>>>        }
->>>>>>> +#ifdef CONFIG_ATH9K_DFS
->>>>>>
->>>>>> Please spare the #ifdef and just call something within dfs.c, then
->>>>>> dfs.h would wrap it to nothing if DFS is disabled.
->>>>> Why would anyone want to disable DFS driver support?
->>>>> I would say: drop the ifdefs altogether since DFS
->>>>> is and will be "required".
->>>>
->>>> Because DFS requires to be properly tested before being enabled.
->>> Testing if a driver detects a pulse is "trivial" compared to the
->>> stuff mac80211/cfg80211 and hostapd will have to do to make a
->>> channel-change as smooth as possible. I think if there's a DFS
->>> "OFF" switch, it should be in hostapd and I hope more people
->>> agree on this one.  
->>>
->> Yes on both. Work on the management part of the DFS module has just
->> been started by TI guys. When this is in, hostapd will be able to
->> query the driver's DFS detection capabilities and leave DFS channels
->> disabled for those devices with no (or insufficient) support
->> (like it is generally done today for DFS channels).
->>
->> The proper way for a driver's OFF switch would then be to just
->> announce missing DFS capabilities.
-> Actually, I think we already have a flag for such a
-> purpose:
->  * @IEEE80211_HW_SPECTRUM_MGMT:
->  *      Hardware supports spectrum management defined in 802.11h
-> AFAIK 802.11h[now integrated in 802.11-2007] included DFS, right? 
-> 
-Yes, 802.11h includes DFS and TPC.
+Dave,
 
-But this flag is already used (i.e. is set by ath9k) without having DFS support so far. Either it is having some different interpretation, or it is just set wrong. This was irrelevant so far, since there is no DFS support in mac80211 yet and might require to clarify the specs for this flag.
+Here is one more (last?) wireless pull request intended for 3.2.
 
->>>> You may also want to simply disable DFS if you do not want to
->>>> deal with the regulatory test implications of having it enabled.
->>> AFAIK you can't "simply" disable the DFS requirement: hostapd
->>> (hw_features.c), [cfg80211] (checks if tx on secondary channel
->>> is possible) and mac80211 (tx.c) all have checks. Indeed, the
->>> easiest way is to modify crda's database. So there's no need
->>> for an extra compile-time option.
->>>
->> There might be a demand for conditional compiling in addition to
->> DFS capabilities announcements to reduce memory footprint, since
->> (especially) pattern matching algorithms will increase it significantly.
-> I don't think memory footprint is such a big problem. After all ath9k
-> has around 170 kb [please correct me if I'm wrong here] of initvals
-> for all supported solutions since AR5008.
-> 
-It might be even more. But this does not imply that it is not worth to save some bytes, IMHO.
+The most notable bits of this request are the long awaited brcm80211
+drivers.  Along with those come the usual strong showings from the
+iwlwifi and ath9k teams and some mac80211 updates from Johannes
+and others.  There are also updates for mwifiex, rtlwifi, wl12xx,
+and b43, as well as a few other random bits.
 
-> Regards,
-> 	Chr
+Please let me know if there are problems!
 
-Zefir
+Thanks,
+
+JOhn
+
+---
+
+The following changes since commit fd38f734cb8200529e281338514945fcbff2364b:
+
+  igbvf: convert to ndo_fix_features (2011-10-16 13:18:47 -0700)
+
+are available in the git repository at:
+  git://git.infradead.org/users/linville/wireless-next.git for-davem
+
+Alwin Beukers (9):
+      brcm80211: cleanup function prototypes
+      brcm80211: removed unused functions
+      brcm80211: moved power conversion functions
+      brcm80211: moved function brcmu_chipname
+      brcm80211: moved function brcmu_parse_tlvs
+      brcm80211: moved function brcmu_chspec_malformed
+      brcm80211: moved function brcmu_mkiovar
+      brcm80211: moved function brcmu_format_flags
+      brcm80211: removed file wifi.c
+
+Amitkumar Karwar (3):
+      mwifiex: add support for Marvell pcie8766 chipset
+      mwifiex: use separate wait condition for each command node
+      mwifiex: fix make namespacecheck warnings
+
+Arend van Spriel (11):
+      net: wireless: add brcm80211 drivers
+      brcm80211: remove sparse warning in fullmac debug function
+      brcm80211: fix sparse endianess error in mac80211_if.c
+      brcm80211: add endian annotation to packet filter structures
+      brcm80211: rename variable in _brcmf_set_multicast_list()
+      brcm80211: fix annotations in TOE configuration functions
+      brcm80211: use endian annotations in scan related function
+      brcm80211: use endian annotation for pmk related structure
+      brcm80211: use endian annotations for assoc ie length request
+      brcm80211: use endian annotation for roaming related parameters
+      brcm80211: use endian annotation for scan time configuration
+
+Chaoming Li (4):
+      rtlwifi: Update to new Realtek version - Part I
+      rtlwifi: rtl8192ce: Add new chip revisions
+      rtlwifi: rtl8192se: Updates from latest Realtek driver version - Part II
+      rtlwifi: rtl8192de: Updates from latest Reaktek driver - Part III
+
+Dan Carpenter (3):
+      ath5k: remove some unneeded error handling code
+      ath9k: remove some bogus error handling code
+      iwmc3200wifi: add a range check to iwm_cfg80211_get_key()
+
+Daniel Drake (1):
+      libertas: fix changing interface type when interface is down
+
+Don Fry (1):
+      iwlagn: eliminate bus pointer from iwl_priv structure
+
+Eliad Peller (2):
+      wl12xx: configure rate policy for p2p operations
+      wl12xx: disable AP-mode-specific quirks
+
+Emmanuel Grumbach (7):
+      iwlagn: kill hw_params.max_stations
+      iwlagn: fix a race in the unmapping of the TFDs
+      iwlagn: warn only once if AGG state is wrong
+      iwlagn: move iwl_beacon_time_mask_XXX near to usage
+      iwlagn: move iwl_enable_rfkill_int and kill iwl-helpers.h
+      iwlagn: remove uneeded include to iwl-dev.h
+      iwlagn: add missing include to iwl-agn-rs.h
+
+Felix Fietkau (11):
+      ath9k: indicate which queues are blocked when stopping tx fails
+      ath9k: keep track of what's triggering hardware resets
+      ath9k: improve PS filter clearing and retry counting for A-MPDU
+      ath9k: fix retry counting / BAR handling during queue flush
+      ath9k: disable unnecessary PHY error reporting
+      ath9k_hw: make ath9k_hw_set_interrupts use ah->imask by default
+      ath9k_hw: clean up tx power handling
+      ath: remove ath_regulatory::current_rd_ext
+      ath9k_hw: remove EEP_REG_1
+      ath9k_hw: fix a regression in key miss handling
+      ath9k: only send FCS-fail packets to mac80211 if requested
+
+Helmut Schaa (5):
+      mac80211: Update injection documentation
+      mac80211: Build TX radiotap header dynamically
+      mac80211: Populate radiotap header with MCS info for TX frames
+      nl80211: Add sta_flags to the station info
+      mac80211: Provide station flags to cfg80211
+
+Javier Cardona (1):
+      mac80211: Fix regression that allowed mpaths between non-peers.
+
+Johannes Berg (16):
+      mac80211: pass no-CCK flag through to HW scan
+      mac80211: fix offchannel TX cookie matching
+      mac80211: optimise monitor xmit
+      mac80211: remove tx_data ethertype
+      mac80211: move fragment flag to info flag as dont-fragment
+      mac80211: parse radiotap header earlier
+      mac80211: dont adjust truesize
+      mac80211: dont orphan TX skb
+      iwlagn: update beacon smarter
+      iwlagn: don't assign seqno to QoS Null frames
+      iwlagn: send simple LQ command for WoWLAN
+      iwlagn: stop interrupts when suspending
+      iwlagn: remove 5000 hw header
+      iwlagn: remove 6000 hw header
+      mac80211: reformat TX unauthorised check
+      mac80211: fix TID for null poll response
+
+John W. Linville (2):
+      Merge branch 'for-linville' of git://github.com/lucacoelho/wl12xx
+      Merge branch 'master' of git://git.infradead.org/users/linville/wireless-next into for-davem
+
+Larry Finger (2):
+      rtlwifi: Change debug parameter to apply to individual drivers
+      rtlwifi: Change PCI drivers to use the new PM framework
+
+Luciano Coelho (1):
+      wl12xx: set max_sched_scan_ie_len correctly
+
+Rafał Miłecki (3):
+      b43: trivial: do not report any link quality instead of invalid one
+      Revert "b43: trivial: do not report any link quality instead of invalid one"
+      b43: N-PHY: report signal to mac80211
+
+Rajkumar Manoharan (14):
+      ath9k_hw: Fix ASPM L1 issue for AR9480
+      ath9k_hw: Updated ar9003 initval table for AR9380
+      ath9k_hw: Update AR9003 initval to improve phase noise
+      ath9k_hw: Updated AR9003 tx gain table for 5GHz
+      ath9k_hw: Improve fast channel change for AR9003 chips
+      ath9k_hw: Add support to reuse TxIQ cal measurements
+      ath9k_hw: Add support to reuse Carrier leak calibration
+      ath9k_hw: Cleanup Tx calibrations for AR9003 chips
+      ath9k_hw: Support fast channel change on 5GHz for AR9003 chips
+      ath9k_hw: Update normal/min noise floor value for AR9480
+      ath9k_hw: Add radio retention support for AR9480
+      ath9k_hw: Do fast channel change based on reusable calibration results
+      ath9k_hw: Rename AR9480 -> AR9462 initvals
+      ath9k: Rename AR9480 into AR9462
+
+Roland Vossen (3):
+      brcm80211: smac: removed redundant timer function parameters
+      brcm80211: smac: decreased timer callback irq level
+      brcm80211: fmac: fixed weird indentation
+
+Shahar Levi (1):
+      wl12xx: Add support for HW channel switch
+
+Stanislaw Gruszka (1):
+      iwlagn: fix priv->cfg->ht_params NULL pointer dereference
+
+Stephen Rothwell (2):
+      net: wireless: brcm80211: replace ndo_set_multicast_list  with ndo_set_rx_mode
+      net: wireless: brcm80210: include module.h
+
+Wey-Yi Guy (20):
+      iwlagn: separate init calib and rt calib
+      iwlagn: add cmd queue pointer info when timeout
+      iwlagn: add REPLY_ECHO host command
+      iwlagn: add WARN if tx cmd complete come back late
+      iwlagn: add "echo" test when command queue stuck
+      iwlagn: check rf kill in queue stuck
+      iwlagn: add "echo test" command to debugfs
+      iwlagn: remove un-necessary step
+      iwlagn: set rts retry limit
+      iwlagn: add "_d" sku to 6005 series of devices
+      iwlagn: Add "_d" sku to 105 series of devices
+      iwlagn: do nothing when disable agg in wrong state
+      iwlagn: use low retry limit for WoWLAN
+      iwlwifi: update comments on how to enable debug flag
+      iwlagn: more info on warning for shutdown agg queue
+      iwlagn: don't stop rts/cts until last aggregation queue close
+      iwlagn: add debug for mac80211 callback
+      iwlagn: rename all the mac80211 callback functions
+      iwlagn: merge station management functions
+      iwlagn: rename iwl-rx.c to iwl-agn-rx.c
+
+Yogesh Ashok Powar (1):
+      mwifiex: fix smatch errors
+
+ Documentation/networking/mac80211-injection.txt    |    4 +
+ drivers/net/wireless/Kconfig                       |    1 +
+ drivers/net/wireless/Makefile                      |    3 +
+ drivers/net/wireless/ath/ath.h                     |    2 -
+ drivers/net/wireless/ath/ath5k/base.c              |    6 -
+ drivers/net/wireless/ath/ath9k/Makefile            |    1 +
+ drivers/net/wireless/ath/ath9k/ani.c               |    5 -
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c        |   11 +-
+ .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |  172 +-
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c      |  250 +-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     |   59 +-
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c         |  186 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c        |    4 +-
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c      |   15 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c        |   97 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h        |   52 +-
+ drivers/net/wireless/ath/ath9k/ar9003_rtt.c        |  153 +
+ drivers/net/wireless/ath/ath9k/ar9003_rtt.h        |   28 +
+ ...ar9480_1p0_initvals.h => ar9462_1p0_initvals.h} |   62 +-
+ ...ar9480_2p0_initvals.h => ar9462_2p0_initvals.h} |   68 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h             |    2 +-
+ drivers/net/wireless/ath/ath9k/beacon.c            |   10 +-
+ drivers/net/wireless/ath/ath9k/common.c            |    6 +-
+ drivers/net/wireless/ath/ath9k/debug.c             |   19 +-
+ drivers/net/wireless/ath/ath9k/debug.h             |   13 +
+ drivers/net/wireless/ath/ath9k/eeprom.h            |   10 +-
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c         |   29 +-
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c       |   35 +-
+ drivers/net/wireless/ath/ath9k/eeprom_def.c        |   45 +-
+ drivers/net/wireless/ath/ath9k/gpio.c              |    8 +-
+ drivers/net/wireless/ath/ath9k/hw-ops.h            |    7 +
+ drivers/net/wireless/ath/ath9k/hw.c                |  158 +-
+ drivers/net/wireless/ath/ath9k/hw.h                |   39 +-
+ drivers/net/wireless/ath/ath9k/init.c              |    2 -
+ drivers/net/wireless/ath/ath9k/mac.c               |   10 +-
+ drivers/net/wireless/ath/ath9k/mac.h               |    6 +-
+ drivers/net/wireless/ath/ath9k/main.c              |   25 +-
+ drivers/net/wireless/ath/ath9k/pci.c               |    2 +-
+ drivers/net/wireless/ath/ath9k/recv.c              |   35 +-
+ drivers/net/wireless/ath/ath9k/reg.h               |   29 +-
+ drivers/net/wireless/ath/ath9k/xmit.c              |   40 +-
+ drivers/net/wireless/ath/carl9170/main.c           |    1 -
+ drivers/net/wireless/b43/xmit.c                    |   18 +-
+ drivers/net/wireless/b43/xmit.h                    |   10 +-
+ drivers/net/wireless/brcm80211/Kconfig             |   35 +
+ drivers/net/wireless/brcm80211/Makefile            |   23 +
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile   |   33 +
+ drivers/net/wireless/brcm80211/brcmfmac/bcmchip.h  |   32 +
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  371 +
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |  626 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |  776 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |   57 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c  |  498 +
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |  895 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h  |   58 +
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    | 1356 +
+ .../net/wireless/brcm80211/brcmfmac/dhd_proto.h    |   60 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c | 4591 ++++
+ .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |  252 +
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  | 3868 +++
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |  375 +
+ drivers/net/wireless/brcm80211/brcmsmac/Makefile   |   51 +
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.c  | 2079 ++
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.h  |  378 +
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c    | 1241 +
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.h    |   30 +
+ drivers/net/wireless/brcm80211/brcmsmac/antsel.c   |  307 +
+ drivers/net/wireless/brcm80211/brcmsmac/antsel.h   |   29 +
+ .../brcm80211/brcmsmac/brcms_trace_events.c        |   23 +
+ .../brcm80211/brcmsmac/brcms_trace_events.h        |   92 +
+ drivers/net/wireless/brcm80211/brcmsmac/channel.c  | 1591 ++
+ drivers/net/wireless/brcm80211/brcmsmac/channel.h  |   53 +
+ drivers/net/wireless/brcm80211/brcmsmac/d11.h      | 1898 ++
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c      | 1425 +
+ drivers/net/wireless/brcm80211/brcmsmac/dma.h      |  120 +
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  | 1696 ++
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |  108 +
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     | 8775 ++++++
+ drivers/net/wireless/brcm80211/brcmsmac/main.h     |  735 +
+ drivers/net/wireless/brcm80211/brcmsmac/nicpci.c   |  835 +
+ drivers/net/wireless/brcm80211/brcmsmac/nicpci.h   |   82 +
+ drivers/net/wireless/brcm80211/brcmsmac/otp.c      |  426 +
+ drivers/net/wireless/brcm80211/brcmsmac/otp.h      |   36 +
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  | 2988 ++
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_hal.h  |  301 +
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_int.h  | 1169 +
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  | 5154 ++++
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.h  |  121 +
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |28876 ++++++++++++++++++++
+ .../wireless/brcm80211/brcmsmac/phy/phy_qmath.c    |  308 +
+ .../wireless/brcm80211/brcmsmac/phy/phy_qmath.h    |   42 +
+ .../wireless/brcm80211/brcmsmac/phy/phy_radio.h    | 1533 ++
+ .../net/wireless/brcm80211/brcmsmac/phy/phyreg_n.h |  167 +
+ .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c   | 3250 +++
+ .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.h   |   54 +
+ .../net/wireless/brcm80211/brcmsmac/phy/phytbl_n.c |10630 +++++++
+ .../net/wireless/brcm80211/brcmsmac/phy/phytbl_n.h |   50 +
+ drivers/net/wireless/brcm80211/brcmsmac/phy_shim.c |  225 +
+ drivers/net/wireless/brcm80211/brcmsmac/phy_shim.h |  182 +
+ drivers/net/wireless/brcm80211/brcmsmac/pmu.c      |  458 +
+ drivers/net/wireless/brcm80211/brcmsmac/pmu.h      |   38 +
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h      |  634 +
+ drivers/net/wireless/brcm80211/brcmsmac/rate.c     |  514 +
+ drivers/net/wireless/brcm80211/brcmsmac/rate.h     |  250 +
+ drivers/net/wireless/brcm80211/brcmsmac/scb.h      |   82 +
+ drivers/net/wireless/brcm80211/brcmsmac/srom.c     | 1298 +
+ drivers/net/wireless/brcm80211/brcmsmac/srom.h     |   34 +
+ drivers/net/wireless/brcm80211/brcmsmac/stf.c      |  436 +
+ drivers/net/wireless/brcm80211/brcmsmac/stf.h      |   42 +
+ drivers/net/wireless/brcm80211/brcmsmac/types.h    |  352 +
+ .../net/wireless/brcm80211/brcmsmac/ucode_loader.c |  109 +
+ .../net/wireless/brcm80211/brcmsmac/ucode_loader.h |   58 +
+ drivers/net/wireless/brcm80211/brcmutil/Makefile   |   28 +
+ drivers/net/wireless/brcm80211/brcmutil/utils.c    |  386 +
+ .../net/wireless/brcm80211/include/brcm_hw_ids.h   |   59 +
+ .../net/wireless/brcm80211/include/brcmu_utils.h   |  195 +
+ .../net/wireless/brcm80211/include/brcmu_wifi.h    |  239 +
+ .../net/wireless/brcm80211/include/chipcommon.h    |  284 +
+ drivers/net/wireless/brcm80211/include/defs.h      |  104 +
+ drivers/net/wireless/brcm80211/include/soc.h       |   90 +
+ drivers/net/wireless/iwlwifi/Kconfig               |    4 +-
+ drivers/net/wireless/iwlwifi/Makefile              |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-1000.c            |    3 -
+ drivers/net/wireless/iwlwifi/iwl-2000.c            |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-5000-hw.h         |   88 -
+ drivers/net/wireless/iwlwifi/iwl-5000.c            |   22 +-
+ drivers/net/wireless/iwlwifi/iwl-6000-hw.h         |   81 -
+ drivers/net/wireless/iwlwifi/iwl-6000.c            |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-hw.h          |   15 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c         |    2 -
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c          |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.h          |    4 +
+ .../wireless/iwlwifi/{iwl-rx.c => iwl-agn-rx.c}    |  112 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c        |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c         |  861 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c          |   32 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c       |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn.c             |  126 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.h             |  131 +-
+ drivers/net/wireless/iwlwifi/iwl-cfg.h             |    2 +
+ drivers/net/wireless/iwlwifi/iwl-commands.h        |   11 +
+ drivers/net/wireless/iwlwifi/iwl-core.c            |   83 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h            |   20 +-
+ drivers/net/wireless/iwlwifi/iwl-debug.h           |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c         |   22 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h             |    3 -
+ drivers/net/wireless/iwlwifi/iwl-helpers.h         |   72 -
+ drivers/net/wireless/iwlwifi/iwl-led.c             |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-pci.c             |    2 +
+ drivers/net/wireless/iwlwifi/iwl-power.c           |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c            |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-shared.h          |    2 -
+ drivers/net/wireless/iwlwifi/iwl-sta.c             |  835 -
+ drivers/net/wireless/iwlwifi/iwl-sta.h             |  141 -
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c         |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c   |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c   |   23 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c      |   21 +-
+ drivers/net/wireless/iwmc3200wifi/cfg80211.c       |    6 +-
+ drivers/net/wireless/libertas/cfg.c                |   20 +-
+ drivers/net/wireless/libertas/decl.h               |    2 +
+ drivers/net/wireless/libertas/main.c               |   32 +
+ drivers/net/wireless/mwifiex/11n_aggr.c            |    3 +-
+ drivers/net/wireless/mwifiex/Kconfig               |   11 +
+ drivers/net/wireless/mwifiex/Makefile              |    3 +
+ drivers/net/wireless/mwifiex/cfp.c                 |   10 +-
+ drivers/net/wireless/mwifiex/cmdevt.c              |   34 +-
+ drivers/net/wireless/mwifiex/decl.h                |    1 -
+ drivers/net/wireless/mwifiex/fw.h                  |   36 +-
+ drivers/net/wireless/mwifiex/init.c                |   73 +-
+ drivers/net/wireless/mwifiex/main.c                |   10 +-
+ drivers/net/wireless/mwifiex/main.h                |   35 +-
+ drivers/net/wireless/mwifiex/pcie.c                | 1948 ++
+ drivers/net/wireless/mwifiex/pcie.h                |  148 +
+ drivers/net/wireless/mwifiex/scan.c                |   56 +-
+ drivers/net/wireless/mwifiex/sdio.c                |   19 +-
+ drivers/net/wireless/mwifiex/sdio.h                |   24 +-
+ drivers/net/wireless/mwifiex/sta_cmd.c             |   64 +
+ drivers/net/wireless/mwifiex/sta_cmdresp.c         |    2 +
+ drivers/net/wireless/mwifiex/sta_ioctl.c           |   12 +-
+ drivers/net/wireless/mwifiex/sta_tx.c              |    2 +-
+ drivers/net/wireless/mwifiex/txrx.c                |   45 +-
+ drivers/net/wireless/mwifiex/util.c                |    5 +-
+ drivers/net/wireless/mwifiex/util.h                |    9 +-
+ drivers/net/wireless/mwifiex/wmm.c                 |    4 +-
+ drivers/net/wireless/rtlwifi/base.c                |    6 +-
+ drivers/net/wireless/rtlwifi/debug.c               |    6 -
+ drivers/net/wireless/rtlwifi/pci.c                 |   19 +-
+ drivers/net/wireless/rtlwifi/pci.h                 |    4 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/def.h       |   14 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c        |   35 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/def.h       |    4 -
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c        |    7 +
+ drivers/net/wireless/rtlwifi/rtl8192de/def.h       |  135 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c        |   15 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.c        |   21 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |   22 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/reg.h       |    1 +
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c        |   22 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |   55 +-
+ drivers/net/wireless/rtlwifi/wifi.h                |    5 +
+ drivers/net/wireless/wl12xx/acx.c                  |   16 +
+ drivers/net/wireless/wl12xx/acx.h                  |    1 +
+ drivers/net/wireless/wl12xx/boot.c                 |    6 +-
+ drivers/net/wireless/wl12xx/cmd.c                  |   63 +-
+ drivers/net/wireless/wl12xx/cmd.h                  |   20 +
+ drivers/net/wireless/wl12xx/conf.h                 |    6 +-
+ drivers/net/wireless/wl12xx/event.c                |   15 +
+ drivers/net/wireless/wl12xx/main.c                 |   48 +-
+ drivers/net/wireless/wl12xx/wl12xx.h               |    7 +-
+ drivers/staging/Kconfig                            |    2 +-
+ drivers/staging/Makefile                           |    4 +-
+ include/linux/nl80211.h                            |    2 +
+ include/net/cfg80211.h                             |    5 +-
+ include/net/mac80211.h                             |   10 +-
+ net/mac80211/cfg.c                                 |   22 +-
+ net/mac80211/ieee80211_i.h                         |   15 +-
+ net/mac80211/main.c                                |    6 +-
+ net/mac80211/mesh_hwmp.c                           |    9 +
+ net/mac80211/scan.c                                |    1 +
+ net/mac80211/sta_info.c                            |    6 +-
+ net/mac80211/status.c                              |  137 +-
+ net/mac80211/tx.c                                  |  360 +-
+ net/mac80211/work.c                                |    2 +-
+ net/mac80211/wpa.c                                 |    3 +-
+ net/wireless/nl80211.c                             |    4 +
+ 226 files changed, 102247 insertions(+), 2686 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_rtt.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_rtt.h
+ rename drivers/net/wireless/ath/ath9k/{ar9480_1p0_initvals.h => ar9462_1p0_initvals.h} (97%)
+ rename drivers/net/wireless/ath/ath9k/{ar9480_2p0_initvals.h => ar9462_2p0_initvals.h} (97%)
+ create mode 100644 drivers/net/wireless/brcm80211/Kconfig
+ create mode 100644 drivers/net/wireless/brcm80211/Makefile
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/Makefile
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/bcmchip.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/Makefile
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/ampdu.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/antsel.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/antsel.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/channel.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/channel.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/d11.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/dma.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/dma.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/main.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/main.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/nicpci.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/nicpci.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/otp.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/otp.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy/phy_hal.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy/phy_int.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy/phy_qmath.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy/phy_qmath.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy/phy_radio.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy/phyreg_n.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_n.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_n.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy_shim.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/phy_shim.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/pmu.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/pmu.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/pub.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/rate.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/rate.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/scb.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/srom.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/srom.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/stf.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/stf.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/types.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/ucode_loader.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/ucode_loader.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmutil/Makefile
+ create mode 100644 drivers/net/wireless/brcm80211/brcmutil/utils.c
+ create mode 100644 drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+ create mode 100644 drivers/net/wireless/brcm80211/include/brcmu_utils.h
+ create mode 100644 drivers/net/wireless/brcm80211/include/brcmu_wifi.h
+ create mode 100644 drivers/net/wireless/brcm80211/include/chipcommon.h
+ create mode 100644 drivers/net/wireless/brcm80211/include/defs.h
+ create mode 100644 drivers/net/wireless/brcm80211/include/soc.h
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-5000-hw.h
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-6000-hw.h
+ rename drivers/net/wireless/iwlwifi/{iwl-rx.c => iwl-agn-rx.c} (91%)
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-helpers.h
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-sta.c
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-sta.h
+ create mode 100644 drivers/net/wireless/mwifiex/pcie.c
+ create mode 100644 drivers/net/wireless/mwifiex/pcie.h
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
