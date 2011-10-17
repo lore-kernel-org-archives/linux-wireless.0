@@ -1,45 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39223 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752427Ab1JTSDp (ORCPT
+Received: from bues.ch ([80.190.117.144]:44734 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755782Ab1JQO1d convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 14:03:45 -0400
-Subject: Re: [PATCH 5/6] mac80211: add WMM IE to mesh frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, anagar6@uic.edu,
-	devel@lists.open80211s.org, linville@tuxdriver.com
-In-Reply-To: <CAG6hwVMmvu5jMQLeOWG2via0wqkHGs=nHSi_mKvgy9U2+m1FXA@mail.gmail.com> (sfid-20111020_195704_079546_F15AC6E2)
-References: <1319072606-28291-1-git-send-email-thomas@cozybit.com>
-	 <1319072606-28291-6-git-send-email-thomas@cozybit.com>
-	 <1319109412.3959.7.camel@jlt3.sipsolutions.net>
-	 <CAG6hwVMUhJ=nV=6N+DpoagKWJxMjythPYMYCCzEb=mTr6TfytQ@mail.gmail.com>
-	 <1319133104.17101.5.camel@jlt3.sipsolutions.net>
-	 <CAG6hwVMmvu5jMQLeOWG2via0wqkHGs=nHSi_mKvgy9U2+m1FXA@mail.gmail.com>
-	 (sfid-20111020_195704_079546_F15AC6E2)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 20 Oct 2011 20:03:40 +0200
-Message-ID: <1319133820.20837.0.camel@jlt3.sipsolutions.net> (sfid-20111020_200348_778154_1B6C99DC)
+	Mon, 17 Oct 2011 10:27:33 -0400
+Date: Mon, 17 Oct 2011 16:27:27 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH 3.2 REQUEST] b43: HT-PHY: report signal to mac80211
+Message-ID: <20111017162727.388624fc@milhouse> (sfid-20111017_162736_674563_4740EF3F)
+In-Reply-To: <1318800649-5609-1-git-send-email-zajec5@gmail.com>
+References: <1318800649-5609-1-git-send-email-zajec5@gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-10-20 at 10:56 -0700, Thomas Pedersen wrote:
+On Sun, 16 Oct 2011 23:30:49 +0200
+Rafał Miłecki <zajec5@gmail.com> wrote:
+> +	case B43_PHYTYPE_HT:
+> +		/* TODO: is max the right choice? */
+> +		status.signal = max(
+> +			(__s8) max(rxhdr->phy_ht_power0, rxhdr->phy_ht_power1),
 
-> >> I'm not sure what you mean, this is the only way to get the WMM
-> >> parameters? Usually these are just set with ieee80211_set_wmm_defaul()
-> >> on bringing up the interface.
-> >
-> > Right, but
-> >  a) if you're using just the default, no need to derive from the default
-> 
-> The user might wish to customize the queue parameters though.
-> 
-> >  b) should they be changeable?
-> 
-> Why not?
+Hm, why is this cast needed? Does it throw a warning?
 
-Well there no API for it now, is there?
-
-johannes
-
+-- 
+Greetings, Michael.
