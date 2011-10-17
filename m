@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:19860 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754833Ab1JKOoc convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:32873 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753636Ab1JQCQt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 10:44:32 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 11 Oct 2011 16:43:27 +0200
-Subject: RE: [PATCH 17/34] iwlagn: fix a race in the unmapping of the TFDs
-Message-ID: <4825B8A2C4E264489E57869F0DCFB2234457A94631@hasmsx502.ger.corp.intel.com> (sfid-20111011_164439_775541_C493F103)
-References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
- <1318256839-31837-18-git-send-email-wey-yi.w.guy@intel.com>
- <20111011122216.GA2218@redhat.com>
- <4825B8A2C4E264489E57869F0DCFB2234457A944D0@hasmsx502.ger.corp.intel.com>
- <20111011123630.GB2218@redhat.com>
- <4825B8A2C4E264489E57869F0DCFB2234457A944F2@hasmsx502.ger.corp.intel.com>
- <20111011125810.GC2218@redhat.com>
-In-Reply-To: <20111011125810.GC2218@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 16 Oct 2011 22:16:49 -0400
+Message-ID: <4E9B9018.1000002@lwfinger.net> (sfid-20111017_041722_525439_94C72619)
+Date: Sun, 16 Oct 2011 21:16:56 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: werner <w.landgraf@ru.ru>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	dave.taht@gmail.com, rientjes@google.com, arend@broadcom.com,
+	toralf.foerster@gmx.de, wey-yi.w.guy@intel.com,
+	ilw@linux.intel.com, larry.finger@gmail.com
+Subject: Re: 3.1-rc9 wifi problem
+References: <web-626905859@zbackend1.aha.ru> <4E9A4496.1000906@lwfinger.net> <web-627302724@zbackend1.aha.ru>
+In-Reply-To: <web-627302724@zbackend1.aha.ru>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> On Tue, Oct 11, 2011 at 02:38:52PM +0200, Grumbach, Emmanuel wrote:
-> > > Why not simply take hcmd_lock?
-> >
-> > Hcmd_lock is related to the host command queue only, it won't work for Tx
-> queues.
-> 
-> So you only fix reces between
-> iwl_trans_pcie_tx()/iwl_tx_queue_reclaim() and iwl_tx_queue_unmap().
-> Races between
-> iwl_enqueue_hcmd()/iwl_cmd_queue_reclaim() and iwl_tx_queue_unmap()
-> are unresolved.
-> 
+On 10/16/2011 08:33 PM, werner wrote:
+> I have to wait until the friend with the laptop comes back, perhaps this week.
+> Then I can look what wireless card is in it.
+>
+> However, now I remember me: that laptop worked only good since 2.6.39 with the
+> new kernel-embedded modules. Before, it didn't work normally, i.e. on booting
+> the wireless almost never didn't switch on; only ocasionally .
+>
+>
+> And, beside of kernel 2.6.39, and the normal wifi software, I still had him to
+> install a file iwlwifi-1000-3.ucode or .5 ucode (i'm not sure, the number can
+> also be 5000), and I had the problem to search long time for that file because
+> one find only .2 or .4 in internet but what don't work at that wifi card. You
+> could improve the kernel-module so that everything is included so that one don't
+> need to search such files.
 
-Thanks. Patch is on the way (has been submitted internally).
+That will not happen. In fact, the trend is from having firmware be a part of 
+the driver to having it be external.
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+I don't know what distro you use, but mine (openSUSE) maintains a package called 
+kernel-firmware that contains all the redistributable firmware that is available 
+from tne linux-firmware git tree. If that package is installed, then you do not 
+have to search for firmware in most cases. If your distro does not have such a 
+package, then complain or find another distro.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+> Then, with this kernel and that file however, it worked without any problem.
+>
+> I hope from these informations you can find out what wifi card or what driver is
+> in the laptop.
+
+We can tell that you have an Intel card, but not much more.
+
+Larry
 
