@@ -1,33 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:50794 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754613Ab1JTNfi (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.22]:56027 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752649Ab1JQHws convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 09:35:38 -0400
-Received: by iaek3 with SMTP id k3so3419629iae.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 06:35:38 -0700 (PDT)
-Message-ID: <4EA023B2.5000402@lwfinger.net> (sfid-20111020_153543_336028_79C0D995)
-Date: Thu, 20 Oct 2011 08:35:46 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 17 Oct 2011 03:52:48 -0400
+From: Toralf =?iso-8859-1?q?F=F6rster?= <toralf.foerster@gmx.de>
+To: David Rientjes <rientjes@google.com>
+Subject: Re: 3.1.0-rc9+ : wlan stops working w/o any error messages
+Date: Mon, 17 Oct 2011 09:52:43 +0200
+Cc: werner <w.landgraf@ru.ru>, "Wey-Yi Guy" <wey-yi.w.guy@intel.com>,
+	ilw@linux.intel.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <201110152119.58509.toralf.foerster@gmx.de> <alpine.DEB.2.00.1110151416360.15894@chino.kir.corp.google.com> <201110170931.59534.toralf.foerster@gmx.de>
+In-Reply-To: <201110170931.59534.toralf.foerster@gmx.de>
 MIME-Version: 1.0
-To: v4mp <gaigo88@hotmail.it>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
-References: <4E77F631.3030202@googlemail.com> <loom.20110930T195810-426@post.gmane.org> <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T1  61652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org > <4E9C42CF.5010702@lwfinger.net> <loom.20111017T190430-717@post.gmane.org> <4E9CF13A.7060102@lwf inger.net> <loom.20111018T143746-420@post.gmane.org> <loom.201110 18T150303-359@post.gmane.org> <4E9D9953.3020601@lwfinger.net> <lo om.20111018T233233-298@post.gmane.org> <4E9E052F.8090705@lwfinger.net> <loom.20111019T101621-921@post.gmane.org> <4E9EBDD3.6060907@lwfinger.net> <loom.20111019T162518-352@post.gmane.org> <4E9F97B4.5010304@lwfinger.net> <loom.20111020T114336-286@post.gmane.org>
-In-Reply-To: <loom.20111020T114336-286@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201110170952.43916.toralf.foerster@gmx.de> (sfid-20111017_095253_430111_13A2F382)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/20/2011 04:47 AM, v4mp wrote:
->
->
-> i'm sorry but i don't know how to recompile kernel to apply this patch,
-> i'm using the 3.1.oneric.rc9 for ubuntu precompiled
-> can u recompile it with this patch,
->   and then send me the compiled kernel to install?
 
-I do not use Ubuntu, thus I cannot compile the kernel for you.
+Toralf Förster wrote at 09:31:58
+> > What does "iwconfig" show?
 
-Larry
+And this is the state if the netwerk stops working :
 
+wlan0     IEEE 802.11abgn  ESSID:"IBM"  
+          Mode:Managed  Frequency:2.462 GHz  Access Point: 00:21:55:AC:8B:80   
+          Bit Rate=54 Mb/s   Tx-Power=15 dBm   
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          Link Quality=45/70  Signal level=-65 dBm  
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:77   Missed beacon:0
+
+
+-- 
+MfG/Sincerely
+Toralf Förster
+pgp finger print: 7B1A 07F4 EC82 0F90 D4C2 8936 872A E508 7DB6 9DA3
