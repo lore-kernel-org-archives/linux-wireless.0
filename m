@@ -1,27 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:34824 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752266Ab1JKLYk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 07:24:40 -0400
-To: Kevin Fang <chienf@qca.qualcomm.com>
-Message-ID: <4E942773.6040302@qca.qualcomm.com> (sfid-20111011_132444_341769_EE0B6AC9)
-Date: Tue, 11 Oct 2011 14:24:35 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from zfrontend2.aha.ru ([195.2.83.148]:37011 "EHLO aha.ru"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751341Ab1JQBdv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Oct 2011 21:33:51 -0400
+From: "werner" <w.landgraf@ru.ru>
+Subject: Re: 3.1-rc9 wifi problem
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	dave.taht@gmail.com, rientjes@google.com, arend@broadcom.com,
+	toralf.foerster@gmx.de, wey-yi.w.guy@intel.com,
+	ilw@linux.intel.com, larry.finger@gmail.com
+Date: Sun, 16 Oct 2011 21:33:46 -0400
+Message-ID: <web-627302724@zbackend1.aha.ru> (sfid-20111017_033410_682670_BCC6A881)
+In-Reply-To: <4E9A4496.1000906@lwfinger.net>
+References: <web-626905859@zbackend1.aha.ru>
+ <4E9A4496.1000906@lwfinger.net>
 MIME-Version: 1.0
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/1] ath6kl: Add WSC IE on the associate message
-References: <Y> <1317948679-10299-1-git-send-email-kevin.fang@qca.qualcomm.com>
-In-Reply-To: <1317948679-10299-1-git-send-email-kevin.fang@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="utf-8"; format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/07/2011 03:51 AM, Kevin Fang wrote:
-> For some WPS test items, such as item "5.1.14"
-> STAUT must include the WSC IE in the 802.11 Association Request frame.
-> Therefore, add the corresponding IE in association message.
+I have to wait until the friend with the laptop comes 
+back, perhaps this week. Then I can look what wireless 
+card is in it.
 
-Applied, thanks!
+However, now I remember me:  that laptop worked only good 
+since 2.6.39 with the new kernel-embedded modules. 
+  Before, it didn't work normally, i.e. on booting the 
+wireless almost never didn't switch on; only ocasionally .
 
-Kalle
+
+And, beside of kernel 2.6.39, and the normal wifi 
+software, I still had him to install a file 
+iwlwifi-1000-3.ucode or .5 ucode (i'm not sure, the number 
+can also be 5000), and I had the problem to search long 
+time for that file because one find only .2 or .4 in 
+internet but what don't work at that wifi card.   You 
+could improve the kernel-module so that everything is 
+included so that one don't need to search such files.
+
+Then, with this kernel and that file however, it worked 
+without any problem.
+
+I hope from these informations you can find out what wifi 
+card or what driver is in the laptop.
+
+W.Landgraf
+---
+Professional hosting for everyone - http://www.host.ru
