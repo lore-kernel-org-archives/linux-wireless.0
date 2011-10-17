@@ -1,78 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:47509 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964813Ab1JGDGd (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27646 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756442Ab1JQQWl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Oct 2011 23:06:33 -0400
-Received: by ywb5 with SMTP id 5so3245142ywb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 20:06:32 -0700 (PDT)
+	Mon, 17 Oct 2011 12:22:41 -0400
+Message-ID: <4E9C564D.9010007@qca.qualcomm.com> (sfid-20111017_182245_317711_13962B0C)
+Date: Mon, 17 Oct 2011 19:22:37 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <4E8E18DB.5070002@neratec.com>
-References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com>
-	<201110041538.12885.chunkeey@googlemail.com>
-	<CAB=NE6VC3txpDh4SdDKDxKWKKZVtGQXKVH8opszKDnZeeZTjUQ@mail.gmail.com>
-	<201110061849.48838.chunkeey@googlemail.com>
-	<CAB=NE6WbMi2GYJyFfvsdH-NSXn8dPBsgxgfdGXO_RHiJxwz2Fw@mail.gmail.com>
-	<4E8E1062.1070206@neratec.com>
-	<CAB=NE6XwNDc8v-qtQuQQZdh2ST-skpcZM7wqD32qHn3CgN-5Dw@mail.gmail.com>
-	<4E8E18DB.5070002@neratec.com>
-Date: Fri, 7 Oct 2011 11:06:32 +0800
-Message-ID: <CAJ-VmonYaTW3xX7CKzU4Okb1nW86mJMV0RRDnqkMSJ-mASJ+4Q@mail.gmail.com> (sfid-20111007_050637_677124_CAC5ADEC)
-Subject: Re: [ath9k-devel] [RFC 5/6] ath9k: enable DFS pulse detection
-From: Adrian Chadd <adrian@freebsd.org>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	kgiori@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Panjwani, Rishi" <rpanjwan@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: Implement support for QOS-enable and QOS-disable
+ from userspace
+References: <1318639687-28457-1-git-send-email-rpanjwan@qca.qualcomm.com> <1318639687-28457-2-git-send-email-rpanjwan@qca.qualcomm.com> <278E1D5A6E59CE43BFCE41F2BC5946C917664695@nasanexd02a.na.qualcomm.com>
+In-Reply-To: <278E1D5A6E59CE43BFCE41F2BC5946C917664695@nasanexd02a.na.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just FYI, that's what I'm likely to do for FreeBSD 10 (as I just don't
-have time to try and make all the required regulatory changes before
-the upcoming 9.0 release.)
+Hi Rishi,
 
-Ie:
+On 10/15/2011 03:52 AM, Panjwani, Rishi wrote:
 
-* DFS station mode (net80211) is going to be compiled and enabled by default;
-* DFS master mode (net80211) is going to be compiled and enabled by default;
-* The drivers which support radar detection in firmware (currently
-only if_mwl) will set the DFS net80211 flag (ie, for master mode radar
-detection);
-* ath won't ship with the DFS enable flag (for master mode);
-* I'll modify the regulatory database code to include per-band DFS
-information (DFS domain, CAC/NOL timeout, interference timeout, etc)
-and some device information (eg whether it supports HT20/HT40/etc DFS
-detection);
-* I'll then flip on the DFS channel enforcement in the net80211 code
-so disables master mode on channels requiring DFS.
+> Kindly ignore the previous patch I had sent out. This is the patch I
+> am looking forward to get publically reviewed and committed :
 
-The radar detection code and channel interference code will live in
-the ath driver but the DFS machinery (CAC, NOL, CSA, etc) is in
-net80211. That way other NICs (eg if_mwl Marvell NICs) with DFS radar
-detection support can leverage this.
+Then you send a new version, add a version number (v2, v3, v4 and so on)
+to the title. That way it's easy to find the latest version.
 
-I'll then likely ship two DFS modules - dfs_null (no DFS support, just
-a placeholder for the API) and whatever code is ported from the
-reference driver. Maybe I'll also include the code from Neratec if
-it's dual-licenced. But I won't include radar patterns by default -
-I'll include those on a documentation page which explains the how and
-why of regulatory domain stuff.
+If you use git format-patch you can use --subject-prefix to add that.
 
-Once FreeBSD ships DFS radar detection code, I'll make sure it isn't
-compiled by default and even if enabled, it won't advertise DFS
-channel support unless a valid radar pattern and radar parameter
-configuration is loaded in. That way users won't inadvertently enable
-it without being compliant.
-
-Finally, I'm hoping to get all of this documented as much as possible
-so the community can pick this stuff up and run with it. I was hoping
-someone would throw me a 5ghz SDR (software defined radio) so I could
-prototype up some open source radar pulse generation code, just to
-lower the entry barrier to all of this.
-
-HTH,
-
-
-Adrian
+Kalle
