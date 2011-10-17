@@ -1,76 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:40418 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754312Ab1JKOcs (ORCPT
+Received: from bues.ch ([80.190.117.144]:53382 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751250Ab1JQOYw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 10:32:48 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH v2 5/5] ath6kl: Allow CCKM AKM and KRK to be configured
-Date: Tue, 11 Oct 2011 17:31:57 +0300
-Message-ID: <1318343517-15292-6-git-send-email-jouni@qca.qualcomm.com> (sfid-20111011_163251_867401_B6A04863)
-In-Reply-To: <1318343517-15292-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1318343517-15292-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 17 Oct 2011 10:24:52 -0400
+Date: Mon, 17 Oct 2011 16:24:47 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH 3.2] b43: fill ctl1 word on all new PHYs, fix PHY errors
+Message-ID: <20111017162447.5a758fda@milhouse> (sfid-20111017_162456_414015_9E9CE029)
+In-Reply-To: <1318800236-5329-1-git-send-email-zajec5@gmail.com>
+References: <1318800236-5329-1-git-send-email-zajec5@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use vendor-specific suite selectors to allow CCKM to be configured.
+On Sun, 16 Oct 2011 23:23:56 +0200
+Rafał Miłecki <zajec5@gmail.com> wrote:
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+> +	if (phy->type >= B43_PHYTYPE_N) {
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index b7b2c57..6b30b75 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -121,6 +121,8 @@ static struct ieee80211_supported_band ath6kl_band_5ghz = {
- 	.bitrates = ath6kl_a_rates,
- };
- 
-+#define CCKM_KRK_CIPHER_SUITE 0x004096ff /* use for KRK */
-+
- static int ath6kl_set_wpa_version(struct ath6kl *ar,
- 				  enum nl80211_wpa_versions wpa_version)
- {
-@@ -217,6 +219,11 @@ static void ath6kl_set_key_mgmt(struct ath6kl *ar, u32 key_mgmt)
- 			ar->auth_mode = WPA_PSK_AUTH;
- 		else if (ar->auth_mode == WPA2_AUTH)
- 			ar->auth_mode = WPA2_PSK_AUTH;
-+	} else if (key_mgmt == 0x00409600) {
-+		if (ar->auth_mode == WPA_AUTH)
-+			ar->auth_mode = WPA_AUTH_CCKM;
-+		else if (ar->auth_mode == WPA2_AUTH)
-+			ar->auth_mode = WPA2_AUTH_CCKM;
- 	} else if (key_mgmt != WLAN_AKM_SUITE_8021X) {
- 		ar->auth_mode = NONE_AUTH;
- 	}
-@@ -758,6 +765,12 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 	if (!ath6kl_cfg80211_ready(ar))
- 		return -EIO;
- 
-+	if (params->cipher == CCKM_KRK_CIPHER_SUITE) {
-+		if (params->key_len != WMI_KRK_LEN)
-+			return -EINVAL;
-+		return ath6kl_wmi_add_krk_cmd(ar->wmi, params->key);
-+	}
-+
- 	if (key_index < WMI_MIN_KEY_INDEX || key_index > WMI_MAX_KEY_INDEX) {
- 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
- 			   "%s: key index %d out of bounds\n", __func__,
-@@ -1228,6 +1241,7 @@ static const u32 cipher_suites[] = {
- 	WLAN_CIPHER_SUITE_WEP104,
- 	WLAN_CIPHER_SUITE_TKIP,
- 	WLAN_CIPHER_SUITE_CCMP,
-+	CCKM_KRK_CIPHER_SUITE,
- };
- 
- static bool is_rate_legacy(s32 rate)
+I must say that I really dislike this. It's error prone (previous patch got it wrong)
+and it's hard to read. Just spell out all types or use a switch statement, as appropriate.
+It also makes grepping the sources a lot harder.
+I don't see any real advantage.
+
 -- 
-1.7.4.1
-
+Greetings, Michael.
