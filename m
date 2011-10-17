@@ -1,180 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:60533 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042Ab1JTSaO (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:10747 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751349Ab1JQQuF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 14:30:14 -0400
-Received: by pzk36 with SMTP id 36so7654640pzk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 11:30:13 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v2 1/2] mac80211: comment allocation of mesh frames
-Date: Thu, 20 Oct 2011 11:30:06 -0700
-Message-Id: <1319135408-6370-1-git-send-email-thomas@cozybit.com> (sfid-20111020_203021_875777_356CD2CC)
+	Mon, 17 Oct 2011 12:50:05 -0400
+Message-ID: <4E9C5CB4.3070204@qca.qualcomm.com> (sfid-20111017_185010_468004_8E855390)
+Date: Mon, 17 Oct 2011 19:49:56 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Sangwook Lee <sangwook.lee@linaro.org>
+CC: <linux-wireless@vger.kernel.org>, <patches@linaro.org>
+Subject: Re: [PATCH 0/5] ath6kl: Add SDIO polling method for debugging
+References: <1318596646-19495-1-git-send-email-sangwook.lee@linaro.org>
+In-Reply-To: <1318596646-19495-1-git-send-email-sangwook.lee@linaro.org>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove most references to magic numbers, save a few bytes and hopefully
-improve readability.
+On 10/14/2011 03:50 PM, Sangwook Lee wrote:
+> Add SDIO polling method based user defined intevals
+> At initial development stage, when SDIO irqs problem happen,
+> We can use this funtionality for debugging.
+> This is only tested with AR6003 HW2.0
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh_hwmp.c  |   36 ++++++++++++++++++------------------
- net/mac80211/mesh_plink.c |   28 +++++++++++++++++-----------
- net/mac80211/tx.c         |   19 +++++++++++++------
- 3 files changed, 48 insertions(+), 35 deletions(-)
+Thank you for the patches. Unfortunately I can't take them to ath6kl.git
+because this is just a workaround for the problem of interrupts
+disappearing. Instead we need to find the real fix, be it in ath6kl,
+sdio controller or hardware.
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 174040a..9a1f8bb 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -113,20 +113,20 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
- 		struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400);
-+	struct sk_buff *skb;
- 	struct ieee80211_mgmt *mgmt;
--	u8 *pos;
--	int ie_len;
-+	u8 *pos, ie_len;
-+	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.mesh_action) +
-+		      sizeof(mgmt->u.action.u.mesh_action);
- 
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
-+			    hdr_len +
-+			    2 + 37); /* max HWMP IE */
- 	if (!skb)
- 		return -1;
- 	skb_reserve(skb, local->hw.extra_tx_headroom);
--	/* 25 is the size of the common mgmt part (24) plus the size of the
--	 * common action part (1)
--	 */
--	mgmt = (struct ieee80211_mgmt *)
--		skb_put(skb, 25 + sizeof(mgmt->u.action.u.mesh_action));
--	memset(mgmt, 0, 25 + sizeof(mgmt->u.action.u.mesh_action));
-+	mgmt = (struct ieee80211_mgmt *) skb_put(skb, hdr_len);
-+	memset(mgmt, 0, hdr_len);
- 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
- 					  IEEE80211_STYPE_ACTION);
- 
-@@ -240,20 +240,20 @@ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
- 		       struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400);
-+	struct sk_buff *skb;
- 	struct ieee80211_mgmt *mgmt;
--	u8 *pos;
--	int ie_len;
-+	u8 *pos, ie_len;
-+	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.mesh_action) +
-+		      sizeof(mgmt->u.action.u.mesh_action);
- 
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
-+			    hdr_len +
-+			    2 + 15 /* PERR IE */);
- 	if (!skb)
- 		return -1;
- 	skb_reserve(skb, local->tx_headroom + local->hw.extra_tx_headroom);
--	/* 25 is the size of the common mgmt part (24) plus the size of the
--	 * common action part (1)
--	 */
--	mgmt = (struct ieee80211_mgmt *)
--		skb_put(skb, 25 + sizeof(mgmt->u.action.u.mesh_action));
--	memset(mgmt, 0, 25 + sizeof(mgmt->u.action.u.mesh_action));
-+	mgmt = (struct ieee80211_mgmt *) skb_put(skb, hdr_len);
-+	memset(mgmt, 0, hdr_len);
- 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
- 					  IEEE80211_STYPE_ACTION);
- 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 7e57f5d..351e48c 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -153,23 +153,29 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		enum ieee80211_self_protected_actioncode action,
- 		u8 *da, __le16 llid, __le16 plid, __le16 reason) {
- 	struct ieee80211_local *local = sdata->local;
--	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400 +
--			sdata->u.mesh.ie_len);
-+	struct sk_buff *skb;
- 	struct ieee80211_mgmt *mgmt;
- 	bool include_plid = false;
--	int ie_len = 4;
- 	u16 peering_proto = 0;
--	u8 *pos;
--
-+	u8 *pos, ie_len = 4;
-+	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.self_prot) +
-+		      sizeof(mgmt->u.action.u.self_prot);
-+
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
-+			    hdr_len +
-+			    2 + /* capability info */
-+			    2 + /* AID */
-+			    2 + 8 + /* supported rates */
-+			    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
-+			    2 + sdata->u.mesh.mesh_id_len +
-+			    2 + sizeof(struct ieee80211_meshconf_ie) +
-+			    2 + 8 + /* peering IE */
-+			    sdata->u.mesh.ie_len);
- 	if (!skb)
- 		return -1;
- 	skb_reserve(skb, local->hw.extra_tx_headroom);
--	/* 25 is the size of the common mgmt part (24) plus the size of the
--	 * common action part (1)
--	 */
--	mgmt = (struct ieee80211_mgmt *)
--		skb_put(skb, 25 + sizeof(mgmt->u.action.u.self_prot));
--	memset(mgmt, 0, 25 + sizeof(mgmt->u.action.u.self_prot));
-+	mgmt = (struct ieee80211_mgmt *) skb_put(skb, hdr_len);
-+	memset(mgmt, 0, hdr_len);
- 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
- 					  IEEE80211_STYPE_ACTION);
- 	memcpy(mgmt->da, da, ETH_ALEN);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 48bbb96..f4dd339 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2278,22 +2278,29 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 	} else if (ieee80211_vif_is_mesh(&sdata->vif)) {
- 		struct ieee80211_mgmt *mgmt;
- 		u8 *pos;
-+		int hdr_len = offsetof(struct ieee80211_mgmt, u.beacon) +
-+			      sizeof(mgmt->u.beacon);
- 
- #ifdef CONFIG_MAC80211_MESH
- 		if (!sdata->u.mesh.mesh_id_len)
- 			goto out;
- #endif
- 
--		/* headroom, head length, tail length and maximum TIM length */
--		skb = dev_alloc_skb(local->tx_headroom + 400 +
--				sdata->u.mesh.ie_len);
-+		skb = dev_alloc_skb(local->tx_headroom +
-+				    hdr_len +
-+				    2 + /* NULL SSID */
-+				    2 + 8 + /* supported rates */
-+				    2 + 3 + /* DS params */
-+				    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
-+				    2 + sdata->u.mesh.mesh_id_len +
-+				    2 + sizeof(struct ieee80211_meshconf_ie) +
-+				    sdata->u.mesh.ie_len);
- 		if (!skb)
- 			goto out;
- 
- 		skb_reserve(skb, local->hw.extra_tx_headroom);
--		mgmt = (struct ieee80211_mgmt *)
--			skb_put(skb, 24 + sizeof(mgmt->u.beacon));
--		memset(mgmt, 0, 24 + sizeof(mgmt->u.beacon));
-+		mgmt = (struct ieee80211_mgmt *) skb_put(skb, hdr_len);
-+		memset(mgmt, 0, hdr_len);
- 		mgmt->frame_control =
- 		    cpu_to_le16(IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON);
- 		memset(mgmt->da, 0xff, ETH_ALEN);
--- 
-1.7.5.4
-
+Kalle
