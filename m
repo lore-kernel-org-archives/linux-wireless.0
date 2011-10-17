@@ -1,102 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4993 "EHLO mms1.broadcom.com"
+Received: from smtp01.uc3m.es ([163.117.176.131]:38525 "EHLO smtp01.uc3m.es"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754054Ab1JLSvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 14:51:51 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Alwin Beukers" <alwin@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 17/22] brcm80211: moved function brcmu_chipname
-Date: Wed, 12 Oct 2011 20:51:27 +0200
-Message-ID: <1318445492-24207-18-git-send-email-arend@broadcom.com> (sfid-20111012_205202_048014_C21B390A)
-In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
-References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+	id S1751710Ab1JQOtV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Oct 2011 10:49:21 -0400
+Received: from mail-dy0-f46.google.com (mail-dy0-f46.google.com [209.85.220.46])
+	(using TLSv1 with cipher RC4-SHA (128/128 bits))
+	(No client certificate requested)
+	by smtp01.uc3m.es (Postfix) with ESMTP id E9FF6BAEB57
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2011 16:49:18 +0200 (CEST)
+Received: by dyf17 with SMTP id 17so25988dyf.19
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2011 07:49:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: =?ISO-8859-1?Q?Andr=E9s_Garc=EDa_Saavedra?= <agsaaved@it.uc3m.es>
+Date: Mon, 17 Oct 2011 16:48:58 +0200
+Message-ID: <CADxqDgGcZRgwda6cKs0mfmZnFRoVhvmSoeYWiNapNcgQ9BtV3Q@mail.gmail.com> (sfid-20111017_164923_941292_83E9B115)
+Subject: [ BCM4329 ] Sleep/Quiet commands
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alwin Beukers <alwin@broadcom.com>
+Hi all,
 
-Moved the brcmu_chipname function into the only file using it.
-The function name was adjusted accordingly.
+I am looking for a way of commanding the NIC to go sleep (or stay
+quiet) for a certain duration of time (within the bcm4329 GPL driver).
+Could anyone could give some pointer to start looking into this?
+My final goal is to use this driver with an android phone (e.g., nexus one)
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   11 ++++++++++-
- drivers/net/wireless/brcm80211/brcmutil/utils.c    |   10 ----------
- .../net/wireless/brcm80211/include/brcmu_utils.h   |    2 --
- 3 files changed, 10 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index bd9db48..313b8bf 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3992,6 +3992,15 @@ static const struct sdiod_drive_str sdiod_drive_strength_tab3[] = {
- 
- #define SDIOD_DRVSTR_KEY(chip, pmu)     (((chip) << 16) | (pmu))
- 
-+static char *brcmf_chipname(uint chipid, char *buf, uint len)
-+{
-+	const char *fmt;
-+
-+	fmt = ((chipid > 0xa000) || (chipid < 0x4000)) ? "%d" : "%x";
-+	snprintf(buf, len, fmt, chipid);
-+	return buf;
-+}
-+
- static void brcmf_sdbrcm_sdiod_drive_strength_init(struct brcmf_bus *bus,
- 						   u32 drivestrength) {
- 	struct sdiod_drive_str *str_tab = NULL;
-@@ -4021,7 +4030,7 @@ static void brcmf_sdbrcm_sdiod_drive_strength_init(struct brcmf_bus *bus,
- 		break;
- 	default:
- 		brcmf_dbg(ERROR, "No SDIO Drive strength init done for chip %s rev %d pmurev %d\n",
--			  brcmu_chipname(bus->ci->chip, chn, 8),
-+			  brcmf_chipname(bus->ci->chip, chn, 8),
- 			  bus->ci->chiprev, bus->ci->pmurev);
- 		break;
- 	}
-diff --git a/drivers/net/wireless/brcm80211/brcmutil/utils.c b/drivers/net/wireless/brcm80211/brcmutil/utils.c
-index 7f53a70..28480e7 100644
---- a/drivers/net/wireless/brcm80211/brcmutil/utils.c
-+++ b/drivers/net/wireless/brcm80211/brcmutil/utils.c
-@@ -470,16 +470,6 @@ int brcmu_format_hex(char *str, const void *bytes, int len)
- EXPORT_SYMBOL(brcmu_format_hex);
- #endif				/* defined(BCMDBG) */
- 
--char *brcmu_chipname(uint chipid, char *buf, uint len)
--{
--	const char *fmt;
--
--	fmt = ((chipid > 0xa000) || (chipid < 0x4000)) ? "%d" : "%x";
--	snprintf(buf, len, fmt, chipid);
--	return buf;
--}
--EXPORT_SYMBOL(brcmu_chipname);
--
- uint brcmu_mkiovar(char *name, char *data, uint datalen, char *buf, uint buflen)
- {
- 	uint len;
-diff --git a/drivers/net/wireless/brcm80211/include/brcmu_utils.h b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-index d716cd2..e53883c 100644
---- a/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-+++ b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-@@ -207,8 +207,6 @@ extern int brcmu_format_flags(const struct brcmu_bit_desc *bd, u32 flags,
- extern int brcmu_format_hex(char *str, const void *bytes, int len);
- #endif
- 
--extern char *brcmu_chipname(uint chipid, char *buf, uint len);
--
- extern struct brcmu_tlv *brcmu_parse_tlvs(void *buf, int buflen,
- 					  uint key);
- 
--- 
-1.7.4.1
-
-
+Thanks in advance,
+Andrés
