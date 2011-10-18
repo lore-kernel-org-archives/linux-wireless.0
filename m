@@ -1,27 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:40015 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932507Ab1J1TCw (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:58417 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757240Ab1JRHXs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 15:02:52 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 67C015401F9
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Oct 2011 15:22:05 -0400 (EDT)
-Subject: Compat-wireless release for 2011-10-28 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20111028190250.48E3140656@repository3.orbit-lab.org> (sfid-20111028_210309_422140_F86A61C7)
-Date: Fri, 28 Oct 2011 15:02:50 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 18 Oct 2011 03:23:48 -0400
+Received: by bkbzt19 with SMTP id zt19so452354bkb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2011 00:23:47 -0700 (PDT)
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH 0/2] wl12xx: Fix problems in nvs file parsing
+Date: Tue, 18 Oct 2011 09:23:40 +0200
+Message-Id: <1318922622-8356-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20111018_092356_979136_6C8C6023)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+A crafted nvs file could trick the driver into reading and writing
+beyond end of buffers.
 
-compat-wireless code metrics
+Pontus Fuchs (2):
+  wl12xx: Validate FEM index from ini file and FW
+  wl12xx: Check buffer bound when processing nvs data
 
-    814862 - Total upstream lines of code being pulled
-      2431 - backport code changes
-      2113 - backport code additions
-       318 - backport code deletions
-      8588 - backport from compat module
-     11019 - total backport code
-    1.3523 - % of code consists of backport work
+ drivers/net/wireless/wl12xx/boot.c |   14 ++++++++++++++
+ drivers/net/wireless/wl12xx/cmd.c  |   22 ++++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 0 deletions(-)
+
+-- 
+1.7.4.1
+
