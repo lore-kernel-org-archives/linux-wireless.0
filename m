@@ -1,43 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:61333 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932092Ab1JDNxa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 09:53:30 -0400
-Received: by mail-yw0-f46.google.com with SMTP id 5so487490ywb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 06:53:30 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Subject: Re: [patch] fix the definition of AR9170_PHY_REG_CURRENT_RSSI
-Date: Tue, 4 Oct 2011 15:47:50 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <CAJ-VmomAP-LZdVkh1snpsTOxU18yPMxXut=KzjTwP+AkN9XidQ@mail.gmail.com>
-In-Reply-To: <CAJ-VmomAP-LZdVkh1snpsTOxU18yPMxXut=KzjTwP+AkN9XidQ@mail.gmail.com>
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:40068 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751902Ab1JRSVP convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Oct 2011 14:21:15 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Date: Tue, 18 Oct 2011 11:19:12 -0700
+Subject: RE: [patch 3/4] mwifiex: prevent corruption instead of just warning
+Message-ID: <477F20668A386D41ADCC57781B1F70430817F59764@SC-VEXCH1.marvell.com> (sfid-20111018_202134_304312_48DE1FDF)
+References: <20111018061514.GI27732@elgon.mountain>
+In-Reply-To: <20111018061514.GI27732@elgon.mountain>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201110041547.50175.chunkeey@googlemail.com> (sfid-20111004_155333_640722_63A5EB5A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, October 04, 2011 02:30:51 AM Adrian Chadd wrote:
-> Hi Christian,
-> 
-> Although it currently isn't used anywhere, I thought it'd be
-> worthwhile fixing the definition of AR9170_PHY_REG_CURRENT_RSSI.
-> It's at AR_PHY(271) rather than AR_PHY(263).
-> 
-> The carl9170 driver may also suffer the same problem. The older
-> version I have lying around here doesn't seem to use
-> AR9170_PHY_REG_CURRENT_RSSI anywhere but it is defined.
-> 
-> Thanks,
-	Adrian
-I have to thank you :). I've commited your change and I hope
-I get around to restore carl9170fw.git tree anytime "soon".
+Hi Dan,
 
-BTW, do you have any technical docs about the phy as well?
-Or how do you know about the mix-up?
+> -----Original Message-----
+> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+> Sent: Monday, October 17, 2011 11:15 PM
+> To: Bing Zhao
+> Cc: John W. Linville; linux-wireless@vger.kernel.org; kernel-janitors@vger.kernel.org
+> Subject: [patch 3/4] mwifiex: prevent corruption instead of just warning
+> 
+> We may as well put a return here instead of just printing a warning
+> message and then corrupting memory.  The caller doesn't check the
+> return code.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+> index d12d440..40b154d 100644
+> --- a/drivers/net/wireless/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/mwifiex/pcie.c
+> @@ -1228,9 +1228,11 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
+>  	if (!skb)
+>  		return 0;
+> 
+> -	if (rdptr >= MWIFIEX_MAX_EVT_BD)
+> +	if (rdptr >= MWIFIEX_MAX_EVT_BD) {
+>  		dev_err(adapter->dev, "event_complete: Invalid rdptr 0x%x\n",
+>  					rdptr);
+> +		return -EINVAL;
 
-Regards,
-	Christian
+Instead of returning directly, we should set the error code and go through the error handling:
+		ret = -EINVAL;
+		goto done;
+
+Could you please resend v2?
+
+Thanks,
+Bing
+
+> +	}
+> 
+>  	/* Read the event ring write pointer set by firmware */
+>  	if (mwifiex_read_reg(adapter, REG_EVTBD_WRPTR, &wrptr)) {
