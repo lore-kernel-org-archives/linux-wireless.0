@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:41827 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932076Ab1JNQaD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 12:30:03 -0400
-Received: by gyb13 with SMTP id 13so1287740gyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2011 09:30:03 -0700 (PDT)
-Message-ID: <4E986392.7020008@lwfinger.net> (sfid-20111014_183012_489581_467A16FE)
-Date: Fri, 14 Oct 2011 11:30:10 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:3427 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755256Ab1JROUL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Oct 2011 10:20:11 -0400
+Date: Tue, 18 Oct 2011 16:19:22 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [RFC] mac80211: properly go back to operational channel?
+Message-ID: <20111018141922.GA6204@redhat.com> (sfid-20111018_162015_236369_F8599FC4)
+References: <1317121970-3638-1-git-send-email-sgruszka@redhat.com>
+ <1317123289.4082.12.camel@jlt3.sipsolutions.net>
+ <20110929150018.GA4554@redhat.com>
+ <1317740824.6741.22.camel@jlt3.sipsolutions.net>
+ <20111005111507.GA2184@redhat.com>
+ <1317813762.4839.7.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, zajec5@gmail.com,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ssb: Convert to use crc8 code in kernel library
-References: <4e90ce9a.89uGF659NNpbpyA3%Larry.Finger@lwfinger.net> <20111014111103.5658d4aa@mj>
-In-Reply-To: <20111014111103.5658d4aa@mj>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1317813762.4839.7.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/14/2011 10:11 AM, Pavel Roskin wrote:
-> On Sat, 08 Oct 2011 17:28:42 -0500
-> Larry Finger<Larry.Finger@lwfinger.net>  wrote:
->
->> +static inline void htol16_buf(u16 *buf, unsigned int size)
->> +{
->> +	size /= 2;
->> +	while (size--)
->> +		*(__le16 *)(buf + size) = cpu_to_le16(*(buf + size));
->>   }
->
-> I'm not not sure compilers would optimize it out on little-endian
-> systems.  Perhaps you want a define that uses this code on
-> big-endian systems and does nothing on little endian systems.
->
-> Also, it would be nice to have a compile-time check that size is even.
-> Or maybe size should be the number of 16-bit words, but then it would be
-> better to call the argument "count" or something like that.
+For local->tmp_channel == NULL and local->scan_channel == NULL
+ieee80211_cfg_on_oper_channel() will return false if
+local->oper_channel != local->hw.conf.channel,
+hece we do not properly go back to oper_channel from tmp_channel.
 
-The patch was dropped. Even so, as this routine is found in brcmsmac, your 
-comments warrant further discussion.
+Does patch have sense? Could it fixes problems we are talking
+in this thread?
 
-I am pretty sure that the compiler would optimize out the entire htol16_buf 
-routine. After substitution for cpu_to_le16() on a little-endian system, the 
-statement in the while loop becomes '*(buf + size) = *(buf + size)', which is 
-certainly optimized away, as will the now empty while loop. The entire routine 
-is reduced to 'size /= 2'. As this will have no effect on the external world, it 
-will also be dropped leaving an empty htol16_buf(). I don't think any "#ifdef 
-__BIG_ENDIAN ... #endif" statements are needed.
-
-Your suggestion that the argument be renamed is good, but there is no need to 
-check for an even number as the data in question come from 16-bit reads of the
-SPROM on the b43 device. That number of 16-bit quantities was multiplied by 2 to 
-get the byte count before calling this routine. Of course, the routine should 
-have been passed the number of 16-bit words, not the byte count. My second 
-version would have done this.
-
-Larry
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index af374fa..98bf1fa 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -1101,7 +1101,7 @@ static void ieee80211_work_work(struct work_struct *work)
+ 		 * we still need to do a hardware config.  Currently,
+ 		 * we cannot be here while scanning, however.
+ 		 */
+-		if (ieee80211_cfg_on_oper_channel(local) && !on_oper_chan)
++		if (!on_oper_chan)
+ 			ieee80211_hw_config(local, 0);
+ 
+ 		/* At the least, we need to disable offchannel_ps,
