@@ -1,108 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3503 "EHLO mms1.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:1251 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935068Ab1JEQ5D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 12:57:03 -0400
-Message-ID: <4E8C8C56.1090700@broadcom.com> (sfid-20111005_185710_828937_29DC94ED)
-Date: Wed, 5 Oct 2011 18:56:54 +0200
+	id S1754980Ab1JRMD2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Oct 2011 08:03:28 -0400
 From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 15/15] brcm80211: fmac: use sk_buff list for handling
+ frames in receive path
+Date: Tue, 18 Oct 2011 14:03:11 +0200
+Message-ID: <1318939391-19495-16-git-send-email-arend@broadcom.com> (sfid-20111018_140352_080240_0C45DC7C)
+In-Reply-To: <1318939391-19495-1-git-send-email-arend@broadcom.com>
+References: <1318939391-19495-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: "gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/15] staging: brcm80211: cleanup fullmac structs
- and softmac srom lookup
-References: <1317820814-7083-1-git-send-email-arend@broadcom.com>
- <4E8C6C77.9000402@hauke-m.de>
-In-Reply-To: <4E8C6C77.9000402@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/05/2011 04:40 PM, Hauke Mehrtens wrote:
-> On 10/05/2011 03:19 PM, Arend van Spriel wrote:
->> This series addresses more community feedback items received on mainline
->> patch (v2) posted August 25, 2011. The driver structures in brcmfmac could
->> do with some tidying and in the brcmsmac variables loaded from srom were
->> accessed by string identifiers. This has been replaced by enumerated
->> identifiers and the entries are stored in kernel standard linked list.
->>
->> This series applies to staging-next and depends on the patch series posted
->> on Oct 4, 2011 (see Message-ID below).
->>
->> Message-ID:<1317763152-17607-1-git-send-email-arend@broadcom.com>
->>
->> Arend van Spriel (11):
->>    staging: brcm80211: move driver variable functions to srom.c
->>    staging: brcm80211: remove code duplication for driver variable
->>      lookup
->>    staging: brcm80211: change parameter in driver variable lookup
->>    staging: brcm80211: remove locking macro definitions
->>    staging: brcm80211: fix thread blocking issue in
->>      brcmf_sdbrcm_bus_stop()
->>    staging: brcm80211: remove invalid variable lookup from srom
->>    staging: brcm80211: use identifiers instead of string for srom lookup
->>    staging: brcm80211: use enum identifiers in srom variable tables
->>    staging: brcm80211: replace string based variable storage by linked
->>      list
->>    staging: brcm80211: remove parameter 'off' from _initvars_srom_pci()
->>    staging: brcm80211: cleanup driver variable references
->>
->> Franky Lin (4):
->>    staging: brcm80211: remove threads_only code from fullmac
->>    staging: brcm80211: remove redundant bus register layer from fullmac
->>    staging: brcm80211: clean up struct brcmf_if in fullmac
->>    staging: brcm80211: remove brcmf_op_if from fullmac
->>
->>   drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |   10 -
->>   drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   16 +-
->>   drivers/staging/brcm80211/brcmfmac/dhd_linux.c    |  134 +--
->>   drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |  133 +--
->>   drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    4 -
->>   drivers/staging/brcm80211/brcmsmac/aiutils.c      |   32 +-
->>   drivers/staging/brcm80211/brcmsmac/aiutils.h      |    6 +-
->>   drivers/staging/brcm80211/brcmsmac/antsel.c       |   15 +-
->>   drivers/staging/brcm80211/brcmsmac/channel.c      |    2 +-
->>   drivers/staging/brcm80211/brcmsmac/mac80211_if.c  |  157 ++--
->>   drivers/staging/brcm80211/brcmsmac/main.c         |  144 +---
->>   drivers/staging/brcm80211/brcmsmac/main.h         |    5 -
->>   drivers/staging/brcm80211/brcmsmac/nicpci.c       |    5 +-
->>   drivers/staging/brcm80211/brcmsmac/nicpci.h       |    2 +-
->>   drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c  |   42 +-
->>   drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h  |    4 +-
->>   drivers/staging/brcm80211/brcmsmac/phy/phy_int.h  |    7 -
->>   drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c  |   64 +-
->>   drivers/staging/brcm80211/brcmsmac/phy/phy_n.c    |  330 ++++--
->>   drivers/staging/brcm80211/brcmsmac/phy_shim.c     |    9 +
->>   drivers/staging/brcm80211/brcmsmac/phy_shim.h     |    4 +
->>   drivers/staging/brcm80211/brcmsmac/pub.h          |  263 +++++-
->>   drivers/staging/brcm80211/brcmsmac/srom.c         | 1124 +++++++++++----------
->>   drivers/staging/brcm80211/brcmsmac/srom.h         |    4 +-
->>   drivers/staging/brcm80211/brcmsmac/stf.c          |    4 +-
->>   25 files changed, 1342 insertions(+), 1178 deletions(-)
->>
-> Hi Arend,
->
-> the code handling sprom looks better that before, but why don't you use
-> a struct for the sprom and put all the stuff into it like it is done in
-> ssb/bcma? We have haven't observance any problem using structs in b43 on
-> pci bus and SoCs with a nvram storing the sprom variables.
+The functions in the receive patch of the fullmac now use sk_buff
+list and skb_queue_xx() functions instead of dealing with list pointers
+in the sk_buff directly.
 
-If all lookup is done during driver initialization I guess it is not 
-such a problem. I do not know how much cycles are involved in sprom or 
-nvram access so it may not even matter.
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   61 ++++++++++---------
+ 1 files changed, 32 insertions(+), 29 deletions(-)
 
-> I found some references to SROM4_ and other older version, but I think
-> this driver only supports devices with sprom 8 and 9.
->
-> Hauke
-
-Older sprom revisions can indeed go.
-
-Thanks,
-Arend
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 5ca7ae2..ec978c7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -574,7 +574,7 @@ struct brcmf_bus {
+ 	uint txminmax;
+ 
+ 	struct sk_buff *glomd;	/* Packet containing glomming descriptor */
+-	struct sk_buff *glom;	/* Packet chain for glommed superframe */
++	struct sk_buff_head glom; /* Packet list for glommed superframe */
+ 	uint glomerr;		/* Glom packet read errors */
+ 
+ 	u8 *rxbuf;		/* Buffer for receiving control packets */
+@@ -1229,16 +1229,17 @@ static uint brcmf_sdbrcm_glom_from_buf(struct brcmf_bus *bus, uint len)
+ 	struct sk_buff *p;
+ 	u8 *buf;
+ 
+-	p = bus->glom;
+ 	buf = bus->dataptr;
+ 
+ 	/* copy the data */
+-	for (; p && len; p = p->next) {
++	skb_queue_walk(&bus->glom, p) {
+ 		n = min_t(uint, p->len, len);
+ 		memcpy(p->data, buf, n);
+ 		buf += n;
+ 		len -= n;
+ 		ret += n;
++		if (!len)
++			break;
+ 	}
+ 
+ 	return ret;
+@@ -1262,7 +1263,8 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
+ 	/* If packets, issue read(s) and send up packet chain */
+ 	/* Return sequence numbers consumed? */
+ 
+-	brcmf_dbg(TRACE, "start: glomd %p glom %p\n", bus->glomd, bus->glom);
++	brcmf_dbg(TRACE, "start: glomd %p glom %p\n",
++		  bus->glomd, skb_peek(&bus->glom));
+ 
+ 	/* If there's a descriptor, generate the packet chain */
+ 	if (bus->glomd) {
+@@ -1309,12 +1311,7 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
+ 					  num, sublen);
+ 				break;
+ 			}
+-			if (!pfirst) {
+-				pfirst = plast = pnext;
+-			} else {
+-				plast->next = pnext;
+-				plast = pnext;
+-			}
++			skb_queue_tail(&bus->glom, pnext);
+ 
+ 			/* Adhere to start alignment requirements */
+ 			pkt_align(pnext, sublen, BRCMF_SDALIGN);
+@@ -1330,12 +1327,13 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
+ 				brcmf_dbg(GLOM, "glomdesc mismatch: nextlen %d glomdesc %d rxseq %d\n",
+ 					  bus->nextlen, totlen, rxseq);
+ 			}
+-			bus->glom = pfirst;
+ 			pfirst = pnext = NULL;
+ 		} else {
+-			if (pfirst)
+-				brcmu_pkt_buf_free_skb(pfirst);
+-			bus->glom = NULL;
++			if (!skb_queue_empty(&bus->glom))
++				skb_queue_walk_safe(&bus->glom, pfirst, pnext) {
++					skb_unlink(pfirst, &bus->glom);
++					brcmu_pkt_buf_free_skb(pfirst);
++				}
+ 			num = 0;
+ 		}
+ 
+@@ -1347,17 +1345,17 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
+ 
+ 	/* Ok -- either we just generated a packet chain,
+ 		 or had one from before */
+-	if (bus->glom) {
++	if (!skb_queue_empty(&bus->glom)) {
+ 		if (BRCMF_GLOM_ON()) {
+ 			brcmf_dbg(GLOM, "try superframe read, packet chain:\n");
+-			for (pnext = bus->glom; pnext; pnext = pnext->next) {
++			skb_queue_walk(&bus->glom, pnext) {
+ 				brcmf_dbg(GLOM, "    %p: %p len 0x%04x (%d)\n",
+ 					  pnext, (u8 *) (pnext->data),
+ 					  pnext->len, pnext->len);
+ 			}
+ 		}
+ 
+-		pfirst = bus->glom;
++		pfirst = skb_peek(&bus->glom);
+ 		dlen = (u16) brcmu_pkttotlen(pfirst);
+ 
+ 		/* Do an SDIO read for the superframe.  Configurable iovar to
+@@ -1401,9 +1399,11 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
+ 			} else {
+ 				bus->glomerr = 0;
+ 				brcmf_sdbrcm_rxfail(bus, true, false);
+-				brcmu_pkt_buf_free_skb(bus->glom);
+ 				bus->rxglomfail++;
+-				bus->glom = NULL;
++				skb_queue_walk_safe(&bus->glom, pfirst, pnext) {
++					skb_unlink(pfirst, &bus->glom);
++					brcmu_pkt_buf_free_skb(pfirst);
++				}
+ 			}
+ 			return 0;
+ 		}
+@@ -1524,9 +1524,11 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
+ 			} else {
+ 				bus->glomerr = 0;
+ 				brcmf_sdbrcm_rxfail(bus, true, false);
+-				brcmu_pkt_buf_free_skb(bus->glom);
+ 				bus->rxglomfail++;
+-				bus->glom = NULL;
++				skb_queue_walk_safe(&bus->glom, pfirst, pnext) {
++					skb_unlink(pfirst, &bus->glom);
++					brcmu_pkt_buf_free_skb(pfirst);
++				}
+ 			}
+ 			bus->nextlen = 0;
+ 			return 0;
+@@ -1534,7 +1536,6 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
+ 
+ 		/* Basic SD framing looks ok - process each packet (header) */
+ 		save_pfirst = pfirst;
+-		bus->glom = NULL;
+ 		plast = NULL;
+ 
+ 		for (num = 0; pfirst; rxseq++, pfirst = pnext) {
+@@ -1871,10 +1872,10 @@ brcmf_sdbrcm_readframes(struct brcmf_bus *bus, uint maxframes, bool *finished)
+ 	     rxseq++, rxleft--) {
+ 
+ 		/* Handle glomming separately */
+-		if (bus->glom || bus->glomd) {
++		if (bus->glomd || !skb_queue_empty(&bus->glom)) {
+ 			u8 cnt;
+ 			brcmf_dbg(GLOM, "calling rxglom: glomd %p, glom %p\n",
+-				  bus->glomd, bus->glom);
++				  bus->glomd, skb_peek(&bus->glom));
+ 			cnt = brcmf_sdbrcm_rxglom(bus, rxseq);
+ 			brcmf_dbg(GLOM, "rxglom returned %d\n", cnt);
+ 			rxseq += cnt - 1;
+@@ -3623,6 +3624,8 @@ void brcmf_sdbrcm_bus_stop(struct brcmf_bus *bus)
+ 	u8 saveclk;
+ 	uint retries;
+ 	int err;
++	struct sk_buff *cur;
++	struct sk_buff *next;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -3682,11 +3685,11 @@ void brcmf_sdbrcm_bus_stop(struct brcmf_bus *bus)
+ 	/* Clear any held glomming stuff */
+ 	if (bus->glomd)
+ 		brcmu_pkt_buf_free_skb(bus->glomd);
+-
+-	if (bus->glom)
+-		brcmu_pkt_buf_free_skb(bus->glom);
+-
+-	bus->glom = bus->glomd = NULL;
++	if (!skb_queue_empty(&bus->glom))
++		skb_queue_walk_safe(&bus->glom, cur, next) {
++			skb_unlink(cur, &bus->glom);
++			brcmu_pkt_buf_free_skb(cur);
++		}
+ 
+ 	/* Clear rx control and wake any waiters */
+ 	bus->rxlen = 0;
+-- 
+1.7.4.1
 
 
