@@ -1,99 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37135 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754390Ab1JUOZK (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:44985 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754412Ab1JRPUo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 10:25:10 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1RHG21-0008TG-3m
-	for linux-wireless@vger.kernel.org; Fri, 21 Oct 2011 16:25:09 +0200
-Message-Id: <20111021142427.712390639@sipsolutions.net> (sfid-20111021_162515_972723_0CCC6FD9)
-Date: Fri, 21 Oct 2011 16:23:24 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC v2 02/12] mac80211: add support for control port protocol in
- AP mode
-References: <20111021142322.229128720@sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 18 Oct 2011 11:20:44 -0400
+Received: by yxp4 with SMTP id 4so689980yxp.19
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2011 08:20:44 -0700 (PDT)
+Message-ID: <4E9D9953.3020601@lwfinger.net> (sfid-20111018_172055_262271_1E3C52C2)
+Date: Tue, 18 Oct 2011 10:20:51 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: v4mp <gaigo88@hotmail.it>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
+References: <4E77F631.3030202@googlemail.com> <4E7A38D0.7070304@googlemail.com> <4E7A4310.30106@lwfinger.net> <4E7A48D1.8050009@googlemail.com> <4E7A4B03.4070006@lwfinger.net> <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com> <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org> <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org> <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T1  61652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org> <4E9C42CF.5010702@lwfinger.net> <loom.20111017T190430-717@post.gmane.org> <4E9CF13A.7060102@lwfinger.net> <loom.20111018T143746-420@post.gmane.org> <loom.20111018T150303-359@post.gmane.org>
+In-Reply-To: <loom.20111018T150303-359@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 10/18/2011 08:07 AM, v4mp wrote:
+> i tested the compat wireless drivers with another alfa awus036h and it works
+> well, i tested also the realtek linux drivers 8192cu and the alfa awus036nhr
+> works with them in the same distro and same kernel
+> with rtl8192cu and xhci_hcd there are these no room on ep ring errors :(
 
-This will allow us to support dynamic WEP with 802.1X
-properly in mac80211 by not encrypting outgoing and
-accepting unencrypted incoming frames.
+I'm confused about what you did.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c   |   21 ++++++++++++++++++++-
- net/mac80211/iface.c |   13 ++++++++++++-
- 2 files changed, 32 insertions(+), 2 deletions(-)
+The Alfa AWUS036H uses a completely different driver (rtl8187) than does the 
+AWUS036NHR (rtl8192cu). It has been in the kernel for several years, thus using 
+compat-wireless would not be necessary.
 
---- a/net/mac80211/cfg.c	2011-10-21 10:20:42.000000000 +0200
-+++ b/net/mac80211/cfg.c	2011-10-21 12:07:38.000000000 +0200
-@@ -594,6 +594,8 @@ static int ieee80211_add_beacon(struct w
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	struct beacon_data *old;
-+	struct ieee80211_sub_if_data *vlan;
-+	int ret;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
-@@ -601,7 +603,24 @@ static int ieee80211_add_beacon(struct w
- 	if (old)
- 		return -EALREADY;
- 
--	return ieee80211_config_beacon(sdata, params);
-+	ret = ieee80211_config_beacon(sdata, params);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * Apply control port protocol, this allows us to
-+	 * not encrypt dynamic WEP control frames.
-+	 */
-+	sdata->control_port_protocol = params->crypto.control_port_ethertype;
-+	sdata->control_port_no_encrypt = params->crypto.control_port_no_encrypt;
-+	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
-+		vlan->control_port_protocol =
-+			params->crypto.control_port_ethertype;
-+		vlan->control_port_no_encrypt =
-+			params->crypto.control_port_no_encrypt;
-+	}
-+
-+	return 0;
- }
- 
- static int ieee80211_set_beacon(struct wiphy *wiphy, struct net_device *dev,
---- a/net/mac80211/iface.c	2011-10-21 12:07:37.000000000 +0200
-+++ b/net/mac80211/iface.c	2011-10-21 12:07:38.000000000 +0200
-@@ -188,11 +188,22 @@ static int ieee80211_do_open(struct net_
- 		if (!is_valid_ether_addr(sdata->u.wds.remote_addr))
- 			return -ENOLINK;
- 		break;
--	case NL80211_IFTYPE_AP_VLAN:
-+	case NL80211_IFTYPE_AP_VLAN: {
-+		struct ieee80211_sub_if_data *master;
-+
- 		if (!sdata->bss)
- 			return -ENOLINK;
-+
- 		list_add(&sdata->u.vlan.list, &sdata->bss->vlans);
-+
-+		master = container_of(sdata->bss,
-+				      struct ieee80211_sub_if_data, u.ap);
-+		sdata->control_port_protocol =
-+			master->control_port_protocol;
-+		sdata->control_port_no_encrypt =
-+			master->control_port_no_encrypt;
- 		break;
-+		}
- 	case NL80211_IFTYPE_AP:
- 		sdata->bss = &sdata->u.ap;
- 		break;
+Are you saying that driver 8192cu from Realtek's web site works with your 
+system, but that the kernel version from compat-wireless does not? If that is 
+true, what is the exact file name of the driver you downloaded?
 
+Larry
 
