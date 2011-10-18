@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:44985 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754412Ab1JRPUo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Oct 2011 11:20:44 -0400
-Received: by yxp4 with SMTP id 4so689980yxp.19
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2011 08:20:44 -0700 (PDT)
-Message-ID: <4E9D9953.3020601@lwfinger.net> (sfid-20111018_172055_262271_1E3C52C2)
-Date: Tue, 18 Oct 2011 10:20:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:52567 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750784Ab1JRSAA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Oct 2011 14:00:00 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Date: Tue, 18 Oct 2011 10:57:50 -0700
+Subject: RE: [patch 1/4] mwifiex: remove unneeded kfree(NULL);
+Message-ID: <477F20668A386D41ADCC57781B1F70430817F59758@SC-VEXCH1.marvell.com> (sfid-20111018_200007_061087_A3C598B3)
+References: <20111018061306.GG27732@elgon.mountain>
+In-Reply-To: <20111018061306.GG27732@elgon.mountain>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: v4mp <gaigo88@hotmail.it>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
-References: <4E77F631.3030202@googlemail.com> <4E7A38D0.7070304@googlemail.com> <4E7A4310.30106@lwfinger.net> <4E7A48D1.8050009@googlemail.com> <4E7A4B03.4070006@lwfinger.net> <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com> <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org> <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org> <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T1  61652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org> <4E9C42CF.5010702@lwfinger.net> <loom.20111017T190430-717@post.gmane.org> <4E9CF13A.7060102@lwfinger.net> <loom.20111018T143746-420@post.gmane.org> <loom.20111018T150303-359@post.gmane.org>
-In-Reply-To: <loom.20111018T150303-359@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/18/2011 08:07 AM, v4mp wrote:
-> i tested the compat wireless drivers with another alfa awus036h and it works
-> well, i tested also the realtek linux drivers 8192cu and the alfa awus036nhr
-> works with them in the same distro and same kernel
-> with rtl8192cu and xhci_hcd there are these no room on ep ring errors :(
+Hi Dan,
 
-I'm confused about what you did.
+Thanks for your patch series.
 
-The Alfa AWUS036H uses a completely different driver (rtl8187) than does the 
-AWUS036NHR (rtl8192cu). It has been in the kernel for several years, thus using 
-compat-wireless would not be necessary.
+> -----Original Message-----
+> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+> Sent: Monday, October 17, 2011 11:13 PM
+> To: Bing Zhao
+> Cc: John W. Linville; linux-wireless@vger.kernel.org; kernel-janitors@vger.kernel.org
+> Subject: [patch 1/4] mwifiex: remove unneeded kfree(NULL);
+> 
+> The previous if statement means this that pointer is NULL so there
+> is no need to free it.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Are you saying that driver 8192cu from Realtek's web site works with your 
-system, but that the kernel version from compat-wireless does not? If that is 
-true, what is the exact file name of the driver you downloaded?
+Acked-by: Bing Zhao <bzhao@marvell.com>
 
-Larry
+Regards,
+Bing
 
+> 
+> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+> index d34acf0..4466976 100644
+> --- a/drivers/net/wireless/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/mwifiex/pcie.c
+> @@ -386,7 +386,6 @@ static int mwifiex_pcie_create_txbd_ring(struct mwifiex_adapter *adapter)
+>  	card->txbd_ring_vbase = kzalloc(card->txbd_ring_size, GFP_KERNEL);
+>  	if (!card->txbd_ring_vbase) {
+>  		dev_err(adapter->dev, "Unable to allocate buffer for txbd ring.\n");
+> -		kfree(card->txbd_ring_vbase);
+>  		return -1;
+>  	}
+>  	card->txbd_ring_pbase = virt_to_phys(card->txbd_ring_vbase);
