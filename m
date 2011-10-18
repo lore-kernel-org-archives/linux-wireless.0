@@ -1,67 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22140 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750942Ab1JKMiU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 08:38:20 -0400
-Date: Tue, 11 Oct 2011 14:36:30 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 17/34] iwlagn: fix a race in the unmapping of the TFDs
-Message-ID: <20111011123630.GB2218@redhat.com> (sfid-20111011_143823_022368_070C21F7)
-References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
- <1318256839-31837-18-git-send-email-wey-yi.w.guy@intel.com>
- <20111011122216.GA2218@redhat.com>
- <4825B8A2C4E264489E57869F0DCFB2234457A944D0@hasmsx502.ger.corp.intel.com>
+Received: from acsinet15.oracle.com ([141.146.126.227]:63366 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750964Ab1JRGr6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Oct 2011 02:47:58 -0400
+Date: Tue, 18 Oct 2011 09:47:29 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] rndis_wlan: add range check in del_key()
+Message-ID: <20111018064729.GQ27732@elgon.mountain> (sfid-20111018_084803_556321_DCB3993A)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4825B8A2C4E264489E57869F0DCFB2234457A944D0@hasmsx502.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 11, 2011 at 02:26:30PM +0200, Grumbach, Emmanuel wrote:
-> > 
-> > On Mon, Oct 10, 2011 at 07:27:02AM -0700, Wey-Yi Guy wrote:
-> > > While inspecting the code, I saw that iwl_tx_queue_unmap modifies
-> > > the read pointer of the Tx queue without taking any locks. This means
-> > > that it can race with the reclaim flow. This can possibly lead to
-> > > a DMA warning complaining that we unmap the same buffer twice.
-> > >
-> > > This is more a W/A than a fix since it is really weird to take
-> > > sta_lock inside iwl_tx_queue_unmap, but it can help until we revamp
-> > > the locking model in the transport layer.
-> > >
-> > > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> > > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > > ---
-> > >  drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    3 +++
-> > >  1 files changed, 3 insertions(+), 0 deletions(-)
-> > >
-> > > diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-> > b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-> > > index 60067c7..f69aecb 100644
-> > > --- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-> > > +++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-> > > @@ -406,6 +406,7 @@ static void iwl_tx_queue_unmap(struct iwl_trans
-> > *trans, int txq_id)
-> > >  	struct iwl_tx_queue *txq = &trans_pcie->txq[txq_id];
-> > >  	struct iwl_queue *q = &txq->q;
-> > >  	enum dma_data_direction dma_dir;
-> > > +	unsigned long flags;
-> > >
-> > >  	if (!q->n_bd)
-> > >  		return;
-> > > @@ -418,12 +419,14 @@ static void iwl_tx_queue_unmap(struct iwl_trans
-> > *trans, int txq_id)
-> > >  	else
-> > >  		dma_dir = DMA_TO_DEVICE;
-> > >
-> > > +	spin_lock_irqsave(&trans->shrd->sta_lock, flags);
-> > sta_lock does not look like right lock to use.
-> > 
-> True. And I wrote in the commit message that this is a W/A until we revamp the locking model.
+Wifi drivers can have up to 6 keys but the rndis_wlan only has 4 so
+it needs to have its own checks to make sure we don't go out of
+bounds.  The add_key() function already checks but I added some
+checks to del_key() and set_default_key().
 
-Why not simply take hcmd_lock?
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 0c13840..da78369 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -414,6 +414,7 @@ struct ndis_80211_pmkid {
+ #define RNDIS_WLAN_ALG_TKIP	(1<<1)
+ #define RNDIS_WLAN_ALG_CCMP	(1<<2)
+ 
++#define RNDIS_WLAN_NUM_KEYS		4
+ #define RNDIS_WLAN_KEY_MGMT_NONE	0
+ #define RNDIS_WLAN_KEY_MGMT_802_1X	(1<<0)
+ #define RNDIS_WLAN_KEY_MGMT_PSK		(1<<1)
+@@ -516,7 +517,7 @@ struct rndis_wlan_private {
+ 
+ 	/* encryption stuff */
+ 	int  encr_tx_key_index;
+-	struct rndis_wlan_encr_key encr_keys[4];
++	struct rndis_wlan_encr_key encr_keys[RNDIS_WLAN_NUM_KEYS];
+ 	int  wpa_version;
+ 
+ 	u8 command_buffer[COMMAND_BUFFER_SIZE];
+@@ -1535,6 +1536,9 @@ static int remove_key(struct usbnet *usbdev, int index, const u8 *bssid)
+ 	bool is_wpa;
+ 	int ret;
+ 
++	if (index >= RNDIS_WLAN_NUM_KEYS)
++		return -ENOENT;
++
+ 	if (priv->encr_keys[index].len == 0)
+ 		return 0;
+ 
+@@ -2451,6 +2455,9 @@ static int rndis_set_default_key(struct wiphy *wiphy, struct net_device *netdev,
+ 
+ 	netdev_dbg(usbdev->net, "%s(%i)\n", __func__, key_index);
+ 
++	if (key_index >= RNDIS_WLAN_NUM_KEYS)
++		return -ENOENT;
++
+ 	priv->encr_tx_key_index = key_index;
+ 
+ 	if (is_wpa_key(priv, key_index))
