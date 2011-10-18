@@ -1,156 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:47631 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932689Ab1JaKYw (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:63875 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752339Ab1JRJSh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Oct 2011 06:24:52 -0400
-Received: by wyg36 with SMTP id 36so5684549wyg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2011 03:24:51 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: add vifs_state debugfs key
-Date: Mon, 31 Oct 2011 12:24:49 +0200
-Message-Id: <1320056689-19953-1-git-send-email-eliad@wizery.com> (sfid-20111031_112456_105205_8AEDB2D1)
+	Tue, 18 Oct 2011 05:18:37 -0400
+Received: by wwe6 with SMTP id 6so591576wwe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2011 02:18:36 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 1/2] iw: Update nl80211.h
+Date: Tue, 18 Oct 2011 11:18:26 +0200
+Message-Id: <1318929507-11447-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111018_111840_558713_48664334)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add debugfs key to dump information regarding the
-active vifs (similar to the driver_state debugfs key)
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- drivers/net/wireless/wl12xx/debugfs.c |  110 +++++++++++++++++++++++++++++++++
- 1 files changed, 110 insertions(+), 0 deletions(-)
+ nl80211.h |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 46 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index a9e0b73..2e14b43 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -385,6 +385,115 @@ static const struct file_operations driver_state_ops = {
- 	.llseek = default_llseek,
+diff --git a/nl80211.h b/nl80211.h
+index c73582f..013ec4b 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -506,6 +506,9 @@
+  * @NL80211_CMD_PMKSA_CANDIDATE: This is used as an event to inform userspace
+  *	of PMKSA caching dandidates.
+  *
++ * @NL80211_CMD_TDLS_OPER: Perform a high-level TDLS command (e.g. link setup).
++ * @NL80211_CMD_TDLS_MGMT: Send a TDLS management frame.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -632,6 +635,9 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_PMKSA_CANDIDATE,
+ 
++	NL80211_CMD_TDLS_OPER,
++	NL80211_CMD_TDLS_MGMT,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -1089,6 +1095,20 @@ enum nl80211_commands {
+  *	This attribute is used with %NL80211_CMD_TRIGGER_SCAN and
+  *	%NL80211_CMD_FRAME commands.
+  *
++ * @NL80211_ATTR_TDLS_ACTION: Low level TDLS action code (e.g. link setup
++ *	request, link setup confirm, link teardown, etc.). Values are
++ *	described in the TDLS (802.11z) specification.
++ * @NL80211_ATTR_TDLS_DIALOG_TOKEN: Non-zero token for uniquely identifying a
++ *	TDLS conversation between two devices.
++ * @NL80211_ATTR_TDLS_OPERATION: High level TDLS operation; see
++ *	&enum nl80211_tdls_operation, represented as a u8.
++ * @NL80211_ATTR_TDLS_SUPPORT: A flag indicating the device can operate
++ *	as a TDLS peer sta.
++ * @NL80211_ATTR_TDLS_EXTERNAL_SETUP: The TDLS discovery/setup and teardown
++ *	procedures should be performed by sending TDLS packets via
++ *	%NL80211_CMD_TDLS_MGMT. Otherwise %NL80211_CMD_TDLS_OPER should be
++ *	used for asking the driver to perform a TDLS operation.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1311,6 +1331,12 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_TX_NO_CCK_RATE,
+ 
++	NL80211_ATTR_TDLS_ACTION,
++	NL80211_ATTR_TDLS_DIALOG_TOKEN,
++	NL80211_ATTR_TDLS_OPERATION,
++	NL80211_ATTR_TDLS_SUPPORT,
++	NL80211_ATTR_TDLS_EXTERNAL_SETUP,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -1408,6 +1434,7 @@ enum nl80211_iftype {
+  * @NL80211_STA_FLAG_WME: station is WME/QoS capable
+  * @NL80211_STA_FLAG_MFP: station uses management frame protection
+  * @NL80211_STA_FLAG_AUTHENTICATED: station is authenticated
++ * @NL80211_STA_FLAG_TDLS_PEER: station is a TDLS peer
+  * @NL80211_STA_FLAG_MAX: highest station flag number currently defined
+  * @__NL80211_STA_FLAG_AFTER_LAST: internal use
+  */
+@@ -1418,6 +1445,7 @@ enum nl80211_sta_flags {
+ 	NL80211_STA_FLAG_WME,
+ 	NL80211_STA_FLAG_MFP,
+ 	NL80211_STA_FLAG_AUTHENTICATED,
++	NL80211_STA_FLAG_TDLS_PEER,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_FLAG_AFTER_LAST,
+@@ -1520,6 +1548,7 @@ enum nl80211_sta_bss_param {
+  * @NL80211_STA_INFO_BSS_PARAM: current station's view of BSS, nested attribute
+  *     containing info as possible, see &enum nl80211_sta_bss_param
+  * @NL80211_STA_INFO_CONNECTED_TIME: time since the station is last connected
++ * @NL80211_STA_INFO_STA_FLAGS: Contains a struct nl80211_sta_flag_update. 
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -1541,6 +1570,7 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_RX_BITRATE,
+ 	NL80211_STA_INFO_BSS_PARAM,
+ 	NL80211_STA_INFO_CONNECTED_TIME,
++	NL80211_STA_INFO_STA_FLAGS,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+@@ -2604,4 +2634,20 @@ enum nl80211_pmksa_candidate_attr {
+ 	MAX_NL80211_PMKSA_CANDIDATE = NUM_NL80211_PMKSA_CANDIDATE - 1
  };
  
-+static ssize_t vifs_state_read(struct file *file, char __user *user_buf,
-+				 size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	struct wl12xx_vif *wlvif;
-+	int ret, res = 0;
-+	const int buf_size = 4096;
-+	char *buf;
-+	char tmp_buf[64];
-+
-+	buf = kzalloc(buf_size, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	mutex_lock(&wl->mutex);
-+
-+#define VIF_STATE_PRINT(x, fmt)				\
-+	(res += scnprintf(buf + res, buf_size - res,	\
-+			  #x " = " fmt "\n", wlvif->x))
-+
-+#define VIF_STATE_PRINT_LONG(x)  VIF_STATE_PRINT(x, "%ld")
-+#define VIF_STATE_PRINT_INT(x)   VIF_STATE_PRINT(x, "%d")
-+#define VIF_STATE_PRINT_STR(x)   VIF_STATE_PRINT(x, "%s")
-+#define VIF_STATE_PRINT_LHEX(x)  VIF_STATE_PRINT(x, "0x%lx")
-+#define VIF_STATE_PRINT_LLHEX(x) VIF_STATE_PRINT(x, "0x%llx")
-+#define VIF_STATE_PRINT_HEX(x)   VIF_STATE_PRINT(x, "0x%x")
-+
-+#define VIF_STATE_PRINT_NSTR(x, len)				\
-+	do {							\
-+		memset(tmp_buf, 0, sizeof(tmp_buf));		\
-+		memcpy(tmp_buf, wlvif->x,			\
-+		       min_t(u8, len, sizeof(tmp_buf) - 1));	\
-+		res += scnprintf(buf + res, buf_size - res,	\
-+				 #x " = %s\n", tmp_buf);	\
-+	} while (0)
-+
-+	wl12xx_for_each_wlvif(wl, wlvif) {
-+		VIF_STATE_PRINT_INT(role_id);
-+		VIF_STATE_PRINT_INT(bss_type);
-+		VIF_STATE_PRINT_LHEX(flags);
-+		VIF_STATE_PRINT_INT(p2p);
-+		VIF_STATE_PRINT_INT(dev_role_id);
-+		VIF_STATE_PRINT_INT(dev_hlid);
-+
-+		if (wlvif->bss_type == BSS_TYPE_STA_BSS ||
-+		    wlvif->bss_type == BSS_TYPE_IBSS) {
-+			VIF_STATE_PRINT_INT(sta.hlid);
-+			VIF_STATE_PRINT_INT(sta.ba_rx_bitmap);
-+			VIF_STATE_PRINT_INT(sta.basic_rate_idx);
-+			VIF_STATE_PRINT_INT(sta.ap_rate_idx);
-+			VIF_STATE_PRINT_INT(sta.p2p_rate_idx);
-+		} else {
-+			VIF_STATE_PRINT_INT(ap.global_hlid);
-+			VIF_STATE_PRINT_INT(ap.bcast_hlid);
-+			VIF_STATE_PRINT_LHEX(ap.sta_hlid_map[0]);
-+			VIF_STATE_PRINT_INT(ap.mgmt_rate_idx);
-+			VIF_STATE_PRINT_INT(ap.bcast_rate_idx);
-+			VIF_STATE_PRINT_INT(ap.ucast_rate_idx[0]);
-+			VIF_STATE_PRINT_INT(ap.ucast_rate_idx[1]);
-+			VIF_STATE_PRINT_INT(ap.ucast_rate_idx[2]);
-+			VIF_STATE_PRINT_INT(ap.ucast_rate_idx[3]);
-+		}
-+		VIF_STATE_PRINT_INT(last_tx_hlid);
-+		VIF_STATE_PRINT_LHEX(links_map[0]);
-+		VIF_STATE_PRINT_NSTR(ssid, wlvif->ssid_len);
-+		VIF_STATE_PRINT_INT(band);
-+		VIF_STATE_PRINT_INT(channel);
-+		VIF_STATE_PRINT_HEX(bitrate_masks[0]);
-+		VIF_STATE_PRINT_HEX(bitrate_masks[1]);
-+		VIF_STATE_PRINT_HEX(basic_rate_set);
-+		VIF_STATE_PRINT_HEX(basic_rate);
-+		VIF_STATE_PRINT_HEX(rate_set);
-+		VIF_STATE_PRINT_INT(beacon_int);
-+		VIF_STATE_PRINT_INT(default_key);
-+		VIF_STATE_PRINT_INT(aid);
-+		VIF_STATE_PRINT_INT(session_counter);
-+		VIF_STATE_PRINT_INT(ps_poll_failures);
-+		VIF_STATE_PRINT_INT(psm_entry_retry);
-+		VIF_STATE_PRINT_INT(power_level);
-+		VIF_STATE_PRINT_INT(rssi_thold);
-+		VIF_STATE_PRINT_INT(last_rssi_event);
-+		VIF_STATE_PRINT_INT(ba_support);
-+		VIF_STATE_PRINT_INT(ba_allowed);
-+		VIF_STATE_PRINT_LLHEX(tx_security_seq);
-+		VIF_STATE_PRINT_INT(tx_security_last_seq_lsb);
-+	}
-+
-+#undef VIF_STATE_PRINT_INT
-+#undef VIF_STATE_PRINT_LONG
-+#undef VIF_STATE_PRINT_HEX
-+#undef VIF_STATE_PRINT_LHEX
-+#undef VIF_STATE_PRINT_LLHEX
-+#undef VIF_STATE_PRINT_STR
-+#undef VIF_STATE_PRINT_NSTR
-+#undef VIF_STATE_PRINT
-+
-+	mutex_unlock(&wl->mutex);
-+
-+	ret = simple_read_from_buffer(user_buf, count, ppos, buf, res);
-+	kfree(buf);
-+	return ret;
-+}
-+
-+static const struct file_operations vifs_state_ops = {
-+	.read = vifs_state_read,
-+	.open = wl1271_open_file_generic,
-+	.llseek = default_llseek,
++/**
++ * enum nl80211_tdls_operation - values for %NL80211_ATTR_TDLS_OPERATION
++ * @NL80211_TDLS_DISCOVERY_REQ: Send a TDLS discovery request
++ * @NL80211_TDLS_SETUP: Setup TDLS link
++ * @NL80211_TDLS_TEARDOWN: Teardown a TDLS link which is already established
++ * @NL80211_TDLS_ENABLE_LINK: Enable TDLS link
++ * @NL80211_TDLS_DISABLE_LINK: Disable TDLS link
++ */
++enum nl80211_tdls_operation {
++	NL80211_TDLS_DISCOVERY_REQ,
++	NL80211_TDLS_SETUP,
++	NL80211_TDLS_TEARDOWN,
++	NL80211_TDLS_ENABLE_LINK,
++	NL80211_TDLS_DISABLE_LINK,
 +};
 +
- static ssize_t dtim_interval_read(struct file *file, char __user *user_buf,
- 				  size_t count, loff_t *ppos)
- {
-@@ -765,6 +874,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
- 	DEBUGFS_ADD(gpio_power, rootdir);
- 	DEBUGFS_ADD(start_recovery, rootdir);
- 	DEBUGFS_ADD(driver_state, rootdir);
-+	DEBUGFS_ADD(vifs_state, rootdir);
- 	DEBUGFS_ADD(dtim_interval, rootdir);
- 	DEBUGFS_ADD(beacon_interval, rootdir);
- 	DEBUGFS_ADD(beacon_filtering, rootdir);
+ #endif /* __LINUX_NL80211_H */
 -- 
-1.7.6.401.g6a319
+1.7.3.4
 
