@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4447 "EHLO mms1.broadcom.com"
+Received: from mga09.intel.com ([134.134.136.24]:42353 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751292Ab1JVINw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Oct 2011 04:13:52 -0400
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: "Nico Schottelius" <nico-linux-20111017@schottelius.org>,
-	"gregkh@suse.de" <gregkh@suse.de>
-cc: "Eric Dumazet" <eric.dumazet@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Sat, 22 Oct 2011 01:13:34 -0700
-Subject: RE: BUG: All network processes hang (brcmsmac/wpa_supplicant)
-Message-ID: <400C43189542CE41BC0A5B252FC90136BC0E147BCB@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20111022_101409_060529_9B249FC3)
-References: <20111019123602.GA11883@schottelius.org>
- <1319028563.8416.1.camel@edumazet-laptop>
- <20111019130749.GD11883@schottelius.org>
- <20111019142837.GA1414@schottelius.org> <4E9EE20F.1030403@broadcom.com>
- <20111019145501.GB1414@schottelius.org> <4E9EFF51.6000104@broadcom.com>
- <20111019214250.GC2432@schottelius.org> <4E9FBFA7.4040502@broadcom.com>
- <20111022015945.GC26186@ethz.ch>
-In-Reply-To: <20111022015945.GC26186@ethz.ch>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
+	id S1755265Ab1JRRTU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Oct 2011 13:19:20 -0400
+Subject: Re: 3.1.0-rc9+ : wlan stops working w/o any error messages
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Toralf =?ISO-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>
+Cc: werner <w.landgraf@ru.ru>, David Rientjes <rientjes@google.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <201110181847.02971.toralf.foerster@gmx.de>
+References: <201110152119.58509.toralf.foerster@gmx.de>
+	 <201110170952.43916.toralf.foerster@gmx.de>
+	 <1318879847.17584.3.camel@wwguy-ubuntu>
+	 <201110181847.02971.toralf.foerster@gmx.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 18 Oct 2011 10:13:33 -0700
+Message-ID: <1318958013.25023.16.camel@wwguy-ubuntu> (sfid-20111018_191956_763588_239D7BDD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Nico Schottelius [mailto:nico-linux-20111017@schottelius.org]
-> Sent: zaterdag 22 oktober 2011 4:00
+On Tue, 2011-10-18 at 09:47 -0700, Toralf Förster wrote:
+> wwguy wrote at 21:30:47
+> > In order to dump the the tx_queue, please do the following
+> > 1. make sure you compile your kernel with CONFIG_IWLWIFI_DEBUGFS=y
+> I'm unable to select that config option .
 > 
-> Hey Arend,
+> I double checked my config file - with the information from "make menuconfig" :
 > 
-> it seems that your patch really solves this problem.
-
-Great. This fix is in linux-next tree.
-
-Greg,
-
-This problem causes packets to get dropped on 5GHz. Should I
-sent a patch for 3.1 (staging-linus) for this? It is already
-fixed in wireless-next.
- 
-> I've got a new one now, though :-)
-
-Ok. Not sure which universal law this is, but let's have a look.
-
-> After several suspend/resume cycles, my card often reconnects to my AP
-> that is only several meters (2) away. If the connection is established,
-> I've a very laggy connection to the AP:
+>  Symbol: IWLWIFI_DEBUGFS [=n]
+>  Type  : boolean
+>  Prompt: iwlagn debugfs support
+>    Defined at drivers/net/wireless/iwlwifi/Kconfig:72
+>    Depends on: NETDEVICES [=y] && WLAN [=y] && IWLAGN [=m] && MAC80211_DEBUGFS [=n]
+>    Location:
+>      -> Device Drivers
+>        -> Network device support (NETDEVICES [=y])
+>          -> Wireless LAN (WLAN [=y])
+>            -> Intel Wireless WiFi Next Gen AGN - Wireless-N/Advanced-N/Ultimate-N (iwlagn)  (IWLAGN [=m])
+>              -> Debugging Options
 > 
-> 64 bytes from 192.168.42.1: icmp_req=1154 ttl=64 time=10839 ms
-> 64 bytes from 192.168.42.1: icmp_req=1155 ttl=64 time=9841 ms
-> ...
-> 64 bytes from 192.168.42.1: icmp_req=1164 ttl=64 time=2814 ms
-> 64 bytes from 192.168.42.1: icmp_req=1165 ttl=64 time=16785 ms
-> 64 bytes from 192.168.42.1: icmp_req=1166 ttl=64 time=20767 ms
 > 
-> Attached are the usual suspect outputs.
-> This time I'm on 2.432 Ghz.
+> it looks all good (.config attached) - but the option itself isn't included in the kernel config file nor I can select it :-(
+> 
+hmm, something broken there, it should be in the .config file, what tree
+you are using?
 
-I will dig into it.
+Thanks
+Wey
 
-Gr. AvS
 
