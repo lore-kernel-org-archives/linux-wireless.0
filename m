@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55810 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752092Ab1JTNuf (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:53713 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753412Ab1JRHZl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 09:50:35 -0400
-Subject: Re: iwlagn is getting very shaky
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Norbert Preining <preining@logic.at>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-In-Reply-To: <56FBBFB3-4DC9-4CB6-939A-8F0130EBCB9B@logic.at>
-References: <20111019064628.GA14817@gamma.logic.tuwien.ac.at>
-	 <1319004836.31823.57.camel@wwguy-huron>
-	 <20111019124931.GC3963@gamma.logic.tuwien.ac.at>
-	 <1319038282.25023.21.camel@wwguy-ubuntu>
-	 <20111019060108.GA11588@gamma.logic.tuwien.ac.at>
-	 <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com>
-	 <20111019062517.GC11588@gamma.logic.tuwien.ac.at>
-	 <1319003304.31823.46.camel@wwguy-huron>
-	 <20111019064628.GA14817@gamma.logic.tuwien.ac.at>
-	 <1319004836.31823.57.camel@wwguy-huron>
-	 <20111020045927.GB23044@gamma.logic.tuwien.ac.at>
-	 <1319096418.3959.1.camel@jlt3.sipsolutions.net>
-	 <56FBBFB3-4DC9-4CB6-939A-8F0130EBCB9B@logic.at>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 20 Oct 2011 15:50:25 +0200
-Message-ID: <1319118625.3959.16.camel@jlt3.sipsolutions.net> (sfid-20111020_155055_599642_515B0D6D)
-Mime-Version: 1.0
+	Tue, 18 Oct 2011 03:25:41 -0400
+Date: Tue, 18 Oct 2011 10:22:01 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] rndis_wlan: add range check in del_key()
+Message-ID: <20111018072201.GC25814@longonot.mountain> (sfid-20111018_092546_107135_F7DDD9BD)
+References: <20111018064729.GQ27732@elgon.mountain>
+ <1318920887.3958.0.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1318920887.3958.0.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-10-20 at 22:45 +0900, Norbert Preining wrote:
-> Hi Johannes,
+On Tue, Oct 18, 2011 at 08:54:47AM +0200, Johannes Berg wrote:
+> On Tue, 2011-10-18 at 09:47 +0300, Dan Carpenter wrote:
+> > Wifi drivers can have up to 6 keys but the rndis_wlan only has 4 so
+> > it needs to have its own checks to make sure we don't go out of
+> > bounds.  The add_key() function already checks but I added some
+> > checks to del_key() and set_default_key().
 > 
-> > did you have scan information for these APs?
+> Semantically, that shouldn't be possible unless it advertises support
+> for WLAN_CIPHER_SUITE_AES_CMAC. Is there a bug in those checks?
 > 
-> Unfortunately not, but I can get them when I am back on Wednesday, if you want.
-> 
-> Just let me know what exactely.
 
-Just "iw wlan0 scan" output or so. Basically I just want the BSSID/freq
-to see which APs are on which band.
+You know I'm a newbie at this networking...  I obviously had no idea
+about WLAN_CIPHER_SUITE_AES_CMAC until you mentioned it.  I just
+looked at the other implementations of del_key() etc and they checked
+it.  Monkey see, monkey do.
 
-johannes
+My concern when I wrote this patch was places like __cfg80211_clear_ibss()
+which just do:
 
+	for (i = 0; i < 6; i++)
+		rdev->ops->del_key(wdev->wiphy, dev, i, false, NULL);
+
+That's what triggers the Smatch warning as well.  But as I said, I'm
+quite a newbie at this code.
+
+regards,
+dan carpenter
