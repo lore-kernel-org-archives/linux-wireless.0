@@ -1,69 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:48645 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751506Ab1JARwk (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:61360 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750957Ab1JRXA4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Oct 2011 13:52:40 -0400
-Received: by gyg10 with SMTP id 10so2364661gyg.19
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Oct 2011 10:52:40 -0700 (PDT)
-Message-ID: <4E875365.50206@lwfinger.net> (sfid-20111001_195243_815492_C7D155E7)
-Date: Sat, 01 Oct 2011 12:52:37 -0500
+	Tue, 18 Oct 2011 19:00:56 -0400
+Received: by yxp4 with SMTP id 4so1103072yxp.19
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2011 16:00:56 -0700 (PDT)
+Message-ID: <4E9E052F.8090705@lwfinger.net> (sfid-20111019_010100_350301_469BEB68)
+Date: Tue, 18 Oct 2011 18:01:03 -0500
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Ian Jeffray <ian@emobix.co.uk>, linux-wireless@vger.kernel.org
-Subject: Re: r8712u driver - on ARM
-References: <4E81ED65.7060703@emobix.co.uk> <201109302106.12028.chunkeey@googlemail.com> <4E873944.70104@lwfinger.net> <201110011822.00637.chunkeey@googlemail.com>
-In-Reply-To: <201110011822.00637.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+To: v4mp <gaigo88@hotmail.it>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
+References: <4E77F631.3030202@googlemail.com> <4E7A4B03.4070006@lwfinger.net> <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com> <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org> <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org> <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T1  61652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org > <4E9C42CF.5010702@lwfinger.net> <loom.20111017T190430-717@post.gmane.org> <4E9CF13A.7060102@lwfinger.net> <loom.20111018T143746-420@post.gmane.org> <loom.20111018T150303-359@post.gmane.org> <4E9D9953.3020601@lwfinger.net> <loom.20111018T233233-298@post.gmane.org>
+In-Reply-To: <loom.20111018T233233-298@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/01/2011 11:22 AM, Christian Lamparter wrote:
-> On Saturday 01 October 2011 18:01:08 Larry Finger wrote:
->> Ian,
->>
->> Most of the skb assignments in r8712u are aligned OK and most aligned on
->> 512-byte boundaries, but there was one that had the minimal offset of 14 bytes.
->> The attached patch should fix it. Does it help?
-> Interesting, this "patch" goes in a completely different direction.
-> Can you tell me where the driver aligns the frames which will be
-> xmitted by the device [i.e.: which is passed to the usb subsystem
-> by usb_submit_urb]? Because that's what actually matters.
+On 10/18/2011 04:50 PM, v4mp wrote:
+>
+>
+> yes, i know that the awus036h uses a different driver,
+> i just wanna say that it
+> has no conflicts with xhci_hcd as happen when loading
+> the rtl8192cu driver for the 036nhr
+>
+> the driver i downloaded from realtek is what you can find here
+> http://www.alfa.com.tw /in/front/bin/ ptlist.phtml?Category=105397
+> for the awus036nhr, and it works fine without any kind of errors,
+>   detection of APs and connections
+>
+> every compat wireless i download does not with rtl8192cu and my alfa,
+> i tested all the specific kernel version of compat-wireless and the latest
+> bleeding edge compat wireless, i'm hating this fuckin errors :)
 
-In this driver, all references are to _usb_submit_urb(), which is defined to be 
-usb_submit_urb() in one of the header files. That made it easy to insert a test 
-for misalignment of the DMA buffer as follows:
-
-Index: wireless-testing-new/drivers/staging/rtl8712/osdep_service.h
-===================================================================
---- wireless-testing-new.orig/drivers/staging/rtl8712/osdep_service.h
-+++ wireless-testing-new/drivers/staging/rtl8712/osdep_service.h
-@@ -34,7 +34,7 @@
-  #include <linux/if_arp.h>
-  #include <linux/firmware.h>
-  #define   _usb_alloc_urb(x, y)       usb_alloc_urb(x, y)
--#define   _usb_submit_urb(x, y)     usb_submit_urb(x, y)
-+//#define   _usb_submit_urb(x, y)     usb_submit_urb(x, y)
-
-  struct __queue {
-         struct  list_head       queue;
-@@ -232,5 +232,13 @@ static inline u32 _RND512(u32 sz)
-         return ((sz >> 9) + ((sz & 511) ? 1 : 0)) << 9;
-  }
-
-+static inline int _usb_submit_urb(struct urb *urb, gfp_t mem_flags)
-+{
-+       if (urb->transfer_dma & 3) {
-+               pr_info("Transfer_dma 0x%x not on 4-byte boundary\n", 
-(uint)urb->transfer_dma);
-+               dump_stack();
-+       }
-+       return usb_submit_urb(urb, mem_flags);
-+}
-  #endif
-
-I never hit the pr_info() and the associated dump_stack(). If that test is 
-sufficient, then buffer misalignment is not the source of the problem.
+And I get really pissed off at people that have bleeding-edge hardware and get 
+mad because a driver doesn't work. Do you want to debug this issue by yourself? 
+If not, then you had better control your temper and your language. I am just a 
+volunteer. From what I see on my computer, the device, which I bought with my 
+own money, works fine. Thus - no problem.
 
 Larry
+
