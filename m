@@ -1,81 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4443 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751351Ab1JEOJG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 10:09:06 -0400
-Message-ID: <4E8C64EF.3070203@broadcom.com> (sfid-20111005_160911_496386_985D7509)
-Date: Wed, 5 Oct 2011 16:08:47 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mx3.schottelius.org ([77.109.138.221]:59917 "EHLO
+	mx3.schottelius.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755229Ab1JRNkx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Oct 2011 09:40:53 -0400
+Date: Tue, 18 Oct 2011 15:34:08 +0200
+From: Nico Schottelius <nico-linux-20111017@schottelius.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Nico Schottelius <nico-linux-20111017@schottelius.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: BUG: All network processes hang (brcmsmac/wpa_supplicant)
+Message-ID: <20111018133408.GA16341@schottelius.org> (sfid-20111018_154056_656248_1C812245)
+References: <20111018111422.GA1979@schottelius.org>
+ <4E9D7BCD.1050104@broadcom.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Alwin Beukers" <alwin@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>
-Subject: [PATCH v3] move brcm80211 drivers to mainline
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E9D7BCD.1050104@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With number of cleanup patch series merged in by Greg KH, I'd like to
-once again propose moving brcm80211 out of staging and into mainline.
+Hey Arend,
 
-I've put together a patch to add a copy of the current sources from
-staging-next into drivers/net/wireless/brcm80211 of the wireless-next
-repository.
+Arend van Spriel [Tue, Oct 18, 2011 at 03:14:53PM +0200]:
+> On 10/18/2011 01:14 PM, Nico Schottelius wrote:
+> > Dear LKML,
+> 
+> In this case linux-wireless list may be more appropriate, adding it.
+> 
+> > The hardware is again the (in)famous MacBook Air 4,2, so I imagine this may be
+> > related to brcmsmac.
+> > 
+> > Attached are config, dmesg, lsmod.
+> 
+> In the dmesg I see a lot of PM messages. Did you do a suspend/resume or
+> hibernate? Trying to determine the scenario so any more info is appreciated.
 
-The patch is somewhat large, so I've posted the patch at:
+I think there was one suspend & resume cycle in between, triggered by
+echo mem > /sys/power/state.
 
-http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=view&target=0001-net-wireless-add-brcm80211-drivers-v3.patch
+Cheers,
 
-Changes from the previous version:
+Nico
 
-V3:
-- remove -D line from Makefiles
-- use endian annotated structures
-- enable sparse endian checking
-- remove use of (static) global variables
-- remove own buffer printing implementation
-- remove static function prototypes
-- replace macros by inline functions
-- reduce sparse warnings
-- remove using string-based iovars
-- remove driver internal use of ioctls
-- remove (un)likely
-- remove uncoditional curly braces for variable scoping
-- remove error messages upon alloc failures
-- reduced code indentation levels
-- cleanup in brcmutil module
-- remove changing lock state which is acquired by other layer 
-(wpa_supplicant)
-- brcmfmac:
-     - use ffs() instead of brcmf_find_msb()
-     - replace threads with work queues
-     - cleanup module parameters
-- brcmsmac:
-     - not modifying ssn value upon AMPDU start
-     - use hweight8() instead of brcmu_bitcount()
-     - remove unnecessary mac80211 callbacks
-     - remove brcms_c_set_par and get_par functions
-     - remove bmac wrapper functions
-     - remove lock related macros
-     - add debugfs based event tracing (not functional in staging)
-
-The brcmsmac driver has been verified to work on x86 (both 32- and 
-64-bit), PPC
-(64-bit), SPARC, MIPS BE, and ARM.  The brcmfmac driver has been verified to
-work on x86 32-bit and ARM (additional testing is in progress, but getting a
-working sdio controller on some of the other platforms remains challenging).
-
-The drivers compile cleanly for x86 (32- and 64-bit), PPC (32- and 64-bit),
-SPARC, MIPS BE, MIPS LE, and ARM.
-
-Thanks,
-Arend van Spriel
-
-
+-- 
+PGP key: 7ED9 F7D3 6B10 81D7 0EC5  5C09 D7DC C8E4 3187 7DF0
