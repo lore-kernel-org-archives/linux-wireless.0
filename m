@@ -1,53 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42493 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751586Ab1J1JQC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 05:16:02 -0400
-Subject: RE: [RFC v2 13/12] cfg80211/mac80211: allow management TX to not
- wait for ACK
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend@broadcom.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <400C43189542CE41BC0A5B252FC90136BC0E375417@SJEXCHCCR02.corp.ad.broadcom.com>
-References: <20111021142322.229128720@sipsolutions.net>
-	 <1319743973.32221.4.camel@jlt3.sipsolutions.net>
-	 <400C43189542CE41BC0A5B252FC90136BC0E3753AA@SJEXCHCCR02.corp.ad.broadcom.com>
-	 <CAGXE3d_9h-VMo3KaVThNXsXNVEAD4rVcKosMrjYVyKcfUD2=JQ@mail.gmail.com>
-	 <400C43189542CE41BC0A5B252FC90136BC0E375417@SJEXCHCCR02.corp.ad.broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 28 Oct 2011 11:15:55 +0200
-Message-ID: <1319793355.8931.4.camel@jlt3.sipsolutions.net> (sfid-20111028_111607_341374_1D21C1F9)
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:2289 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757538Ab1JRMD2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Oct 2011 08:03:28 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 08/15] brcm80211: smac: indicate severe problems to
+ Mac80211
+Date: Tue, 18 Oct 2011 14:03:04 +0200
+Message-ID: <1318939391-19495-9-git-send-email-arend@broadcom.com> (sfid-20111018_140339_929937_90B9BD45)
+In-Reply-To: <1318939391-19495-1-git-send-email-arend@broadcom.com>
+References: <1318939391-19495-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-10-28 at 02:07 -0700, Arend Van Spriel wrote:
-> > From: Helmut Schaa [mailto:helmut.schaa@googlemail.com]
-> > Sent: vrijdag 28 oktober 2011 9:52
-> > 
-> > On Fri, Oct 28, 2011 at 9:48 AM, Arend Van Spriel <arend@broadcom.com>
-> > wrote:
-> > > I would expect this to affect the duration field in the
-> > > 802.11 header to indicate the shorter use of the medium.
-> > > Going through your patch I am not sure this is done.
-> > 
-> > I don't think so since the frame will still be acked by the peer as it
-> > is
-> > a unicast management frame. But this will advise the hardware that it
-> > does not need to wait for the ack to happen since we're not interested
-> > in retrying it.
+From: Roland Vossen <rvossen@broadcom.com>
 
-> I understand. However, the commit message of this patch suggests we are
-> saving airtime, which does not seem the case if the duration field is
-> not taken into account. If the ACK is still transmitted we should not
-> touch the duration field so I guess my comment is only on the commit
-> message itself.
+In case the hardware crashes, a reinitialization internal to the driver
+was performed. Since Mac80211 must be in the know of such an event as
+well, ieee80211_restart_hw() is now called.
 
-Oh good points ...
-The reason we save airtime is that often the frame will be retransmitted
-a lot if the station is no longer paying attention.
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    8 ++++++++
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |    1 +
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |   14 +++-----------
+ 3 files changed, 12 insertions(+), 11 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 538b504..7a24a83 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -1334,6 +1334,14 @@ uint brcms_reset(struct brcms_info *wl)
+ 	return 0;
+ }
+ 
++void brcms_fatal_error(struct brcms_info *wl)
++{
++	wiphy_err(wl->wlc->wiphy, "wl%d: fatal error, reinitializing\n",
++		  wl->wlc->pub->unit);
++	brcms_reset(wl);
++	ieee80211_restart_hw(wl->pub->ieee_hw);
++}
++
+ /*
+  * These are interrupt on/off entry points. Disable interrupts
+  * during interrupt state transition.
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
+index 177f0e4..5c279c0 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
+@@ -104,5 +104,6 @@ extern bool brcms_del_timer(struct brcms_timer *timer);
+ extern void brcms_msleep(struct brcms_info *wl, uint ms);
+ extern void brcms_dpc(unsigned long data);
+ extern void brcms_timer(struct brcms_timer *t);
++extern void brcms_fatal_error(struct brcms_info *wl);
+ 
+ #endif				/* _BRCM_MAC80211_IF_H_ */
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 84f32b6..2e1a20b 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -2301,13 +2301,6 @@ void brcms_b_antsel_type_set(struct brcms_hardware *wlc_hw, u8 antsel_type)
+ 	wlc_phy_antsel_type_set(wlc_hw->band->pi, antsel_type);
+ }
+ 
+-static void brcms_c_fatal_error(struct brcms_c_info *wlc)
+-{
+-	wiphy_err(wlc->wiphy, "wl%d: fatal error, reinitializing\n",
+-		  wlc->pub->unit);
+-	brcms_init(wlc->wl);
+-}
+-
+ static void brcms_b_fifoerrors(struct brcms_hardware *wlc_hw)
+ {
+ 	bool fatal = false;
+@@ -2363,7 +2356,7 @@ static void brcms_b_fifoerrors(struct brcms_hardware *wlc_hw)
+ 		}
+ 
+ 		if (fatal) {
+-			brcms_c_fatal_error(wlc_hw->wlc);	/* big hammer */
++			brcms_fatal_error(wlc_hw->wlc->wl); /* big hammer */
+ 			break;
+ 		} else
+ 			W_REG(&regs->intctrlregs[idx].intstatus,
+@@ -8397,8 +8390,7 @@ bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded)
+ 		printk_once("%s : PSM Watchdog, chipid 0x%x, chiprev 0x%x\n",
+ 					__func__, wlc_hw->sih->chip,
+ 					wlc_hw->sih->chiprev);
+-		/* big hammer */
+-		brcms_init(wlc->wl);
++		brcms_fatal_error(wlc_hw->wlc->wl);
+ 	}
+ 
+ 	/* gptimer timeout */
+@@ -8419,7 +8411,7 @@ bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded)
+ 	return wlc->macintstatus != 0;
+ 
+  fatal:
+-	brcms_init(wlc->wl);
++	brcms_fatal_error(wlc_hw->wlc->wl);
+ 	return wlc->macintstatus != 0;
+ }
+ 
+-- 
+1.7.4.1
+
 
