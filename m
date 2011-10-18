@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:45421 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756073Ab1JSM7t (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:61877 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752460Ab1JRDXe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Oct 2011 08:59:49 -0400
-Received: by vcge1 with SMTP id e1so1442479vcg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2011 05:59:48 -0700 (PDT)
+	Mon, 17 Oct 2011 23:23:34 -0400
+Received: by ggnb1 with SMTP id b1so157930ggn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2011 20:23:33 -0700 (PDT)
+Message-ID: <4E9CF13A.7060102@lwfinger.net> (sfid-20111018_052353_751632_55EA5C1F)
+Date: Mon, 17 Oct 2011 22:23:38 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <F099D0EF3989304DBA09D2E81781FF0B049E41F9@BLR-SJP-MBX4.wipro.com>
-References: <F099D0EF3989304DBA09D2E81781FF0B049E41F9@BLR-SJP-MBX4.wipro.com>
-Date: Wed, 19 Oct 2011 14:59:46 +0200
-Message-ID: <CAOZOX0XfeX4_JqoXg_Z8VFrfhtR8BrpuoR+rDbE34_dXY4fDgw@mail.gmail.com> (sfid-20111019_145952_817416_2EB4130B)
-Subject: Re: Ralink RT3070: absolute transmit power information
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: raghunathan.kailasanathan@wipro.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: v4mp <gaigo88@hotmail.it>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
+References: <4E77F631.3030202@googlemail.com> <4E792994.1080809@lwfinger.net> <4E79B1D0.7090602@googlemail.com> <4E79F87F.1050402@lwfinger.net> <4E7A38D0.7070304@googlemail.com> <4E7A4310.30106@lwfinger.net> <4E7A48D1.8050009@googlemail.com> <4E7A4B03.4070006@lwfinger.net> <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com> <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org> <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org> <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T161652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org> <4E9C42CF.5010702@lwfinger.net> <loom.20111017T190430-717@post.gmane.org>
+In-Reply-To: <loom.20111017T190430-717@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 19, 2011 at 2:40 PM,  <raghunathan.kailasanathan@wipro.com> wrote:
-> Hi all,
-> On my ubuntu machine I can view transmit power used by RT3070 driver using "iwpriv ra0 show TxPower".
-> It looks like this returns results in percentage - I got 75 (implying 75%).
+On 10/17/2011 12:09 PM, v4mp wrote:
 >
-> How do I get the absolute transmit power used (in dBm or mW) ?
+>
+> ok, i've checked the md5 checksum of the firmware and is ok,
+> i give you dmesg at pastebin.com
+>
+> it has 2 parts: in the second part i can't see what is in previous of the error
+>
+> the link is: http://pastebin.com/7tfcBfbD
 
-You are using a driver not supported by this project,
-so you have to manually change the Ralink driver source code yourself.
-When you use the rt2x00 drivers, you automatically get the dBm/mW value.
+Please try blacklisting xhci-hcd by adding a line containing
+"blacklist xhci-hcd" to the end of /etc/modprobe.d/50-blacklist.conf.
 
-Ivo
+Thanks,
+
+Larry
+
