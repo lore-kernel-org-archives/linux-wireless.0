@@ -1,73 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm24-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.161]:24370 "HELO
-	nm24-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751470Ab1JTLqd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 07:46:33 -0400
-References: <1319109568.26974.YahooMailNeo@web161206.mail.bf1.yahoo.com> <CA+icZUXyYSVUA-PTCQB7z167iLAnh83DEJxOGoYB4qxaFkTZog@mail.gmail.com>
-Message-ID: <1319111192.54460.YahooMailNeo@web161206.mail.bf1.yahoo.com> (sfid-20111020_134637_008105_F64E7B10)
-Date: Thu, 20 Oct 2011 04:46:32 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Reply-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Re: ath5k: controlling powersave with iw or iwconfig fails
-To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath5k-users@lists.ath5k.org" <ath5k-users@lists.ath5k.org>
-In-Reply-To: <CA+icZUXyYSVUA-PTCQB7z167iLAnh83DEJxOGoYB4qxaFkTZog@mail.gmail.com>
+Received: from nbd.name ([46.4.11.11]:45084 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932197Ab1JROyH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Oct 2011 10:54:07 -0400
+Message-ID: <4E9D9306.1060005@openwrt.org> (sfid-20111018_165411_515345_F5C0D93C)
+Date: Tue, 18 Oct 2011 16:53:58 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>, Jouni Malinen <j@w1.fi>,
+	reinette chatre <reinette.chatre@intel.com>
+Subject: Re: [RFC] mac80211: properly go back to operational channel?
+References: <1317121970-3638-1-git-send-email-sgruszka@redhat.com>  <1317123289.4082.12.camel@jlt3.sipsolutions.net>  <20110929150018.GA4554@redhat.com>  <1317740824.6741.22.camel@jlt3.sipsolutions.net>  <20111005111507.GA2184@redhat.com>  <1317813762.4839.7.camel@jlt3.sipsolutions.net>  <20111018141922.GA6204@redhat.com> <1318948251.3958.29.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1318948251.3958.29.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iw is 0.9.22, but I just found part of the answer myself. Controlling PS in 
-
-IBSS mode is not supported (I failed to mention the IBSS part in my previous 
-
-mail).
-
-Question: Is any power saving going on in IBSS mode at all? I'm seeing lots 
-
-of Probe-Requests that I thought were related to PS.
-
- 
--- 
-Regards 
-Joerg 
-
-
-
------ Ursprüngliche Message -----
-> Von: Sedat Dilek <sedat.dilek@googlemail.com>
-> An: Joerg Pommnitz <pommnitz@yahoo.com>
-> Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>; "ath5k-users@lists.ath5k.org" <ath5k-users@lists.ath5k.org>
-> Gesendet: 13:33 Donnerstag, 20.Oktober 2011 
-> Betreff: Re: ath5k: controlling powersave with iw or iwconfig fails
+On 2011-10-18 4:30 PM, Johannes Berg wrote:
+> On Tue, 2011-10-18 at 16:19 +0200, Stanislaw Gruszka wrote:
+>>  For local->tmp_channel == NULL and local->scan_channel == NULL
+>>  ieee80211_cfg_on_oper_channel() will return false if
+>>  local->oper_channel != local->hw.conf.channel,
+>>  hece we do not properly go back to oper_channel from tmp_channel.
 > 
-> Which iw version?
+> Huh, good catch.
 > 
-> - Sedat -
+>>  Does patch have sense?
 > 
-> On Thu, Oct 20, 2011 at 1:19 PM, Joerg Pommnitz <pommnitz@yahoo.com> 
-> wrote:
->>  Hello all,
->>  trying to disable PS on ath5k (Linux 3.0) gives:
->> 
->>  iw dev wlan0 set power_save off
->>  command failed: Operation not supported (-95)
->> 
->> 
->>  Is there any special magic required to disable power saving?
->>  It seems to interfere with our amplifier...
->> 
->> 
->>  --
->>  Regards
->>  Joerg
->> 
->>  --
->>  To unsubscribe from this list: send the line "unsubscribe 
-> linux-wireless" in
->>  the body of a message to majordomo@vger.kernel.org
->>  More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> 
->
+> Let's see what Ben says. It seems a bit like the
+> ieee80211_cfg_on_oper_channel() test there should be inverted instead of
+> removed?
+> 
+>>  Could it fixes problems we are talking
+>>  in this thread?
+> 
+> Yes, could be related, also some issue Jouni and Reinette have been
+> seeing with P2P might be related as well.
+Just remembered this old patch, also related to this part:
+http://news.gmane.org/find-root.php?message_id=%3c1311607763%2d12603%2d3%2dgit%2dsend%2demail%2deliad%40wizery.com%3e
+
+- Felix
