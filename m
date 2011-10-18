@@ -1,40 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:59894 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752143Ab1JCOXg (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:57123 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752496Ab1JRSiQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Oct 2011 10:23:36 -0400
-Received: by yxl31 with SMTP id 31so3521038yxl.19
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2011 07:23:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4E89C4F1.2090708@neratec.com>
-References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com>
-	<1317637758-11907-4-git-send-email-zefir.kurtisi@neratec.com>
-	<CAJ-VmonP5V2dL8aYiMRrkNcQR19kKAy2PCWHSkxb1biyJS7pow@mail.gmail.com>
-	<4E89A941.8060208@neratec.com>
-	<CAJ-Vmomx8eSBTEZ3A_vnw8GaWh2dO3CFD-MZ6zzBDmWKZx7=xw@mail.gmail.com>
-	<4E89C4F1.2090708@neratec.com>
-Date: Mon, 3 Oct 2011 22:23:35 +0800
-Message-ID: <CAJ-VmokCgNM650p7JRrka_5U-OqZzpcKewfPqqEudc5DNxhR0g@mail.gmail.com> (sfid-20111003_162339_252829_2F56C7E3)
-Subject: Re: [RFC 3/6] ath9k: initial radar pulse detection for DFS
-From: Adrian Chadd <adrian@freebsd.org>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kgiori@qca.qualcomm.com, rodrigue@qca.qualcomm.com, nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 18 Oct 2011 14:38:16 -0400
+Received: by bkbzt19 with SMTP id zt19so1105327bkb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2011 11:38:15 -0700 (PDT)
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH V2] Set IEEE80211_TX_RC_MCS on MCS rates on TX complete.
+Date: Tue, 18 Oct 2011 20:38:02 +0200
+Message-Id: <1318963082-31888-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20111018_203820_136993_203448FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 October 2011 22:21, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+IEEE80211_TX_RC_MCS was not set correctly leading to incorrect link
+speed calculation.
 
+Reviewed-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+---
+Version 2: Added missing sign-off.
 
-> Most probably it'll end being added to the lengthy TODO list.
+ drivers/net/wireless/wl12xx/conf.h |    4 ++++
+ drivers/net/wireless/wl12xx/tx.c   |   12 +++++++++++-
+ 2 files changed, 15 insertions(+), 1 deletions(-)
 
-:) No worries. I've just added the freebsd version of this to
-FreeBSD-HEAD. I'll add in the duration calculation function soon.
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index 04bb8fb..b3f9592 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -91,6 +91,10 @@ enum {
+ 	CONF_HW_RXTX_RATE_UNSUPPORTED = 0xff
+ };
+ 
++/* Rates between and including these are MCS rates */
++#define CONF_HW_RXTX_RATE_MCS_MIN CONF_HW_RXTX_RATE_MCS7
++#define CONF_HW_RXTX_RATE_MCS_MAX CONF_HW_RXTX_RATE_MCS0
++
+ enum {
+ 	CONF_SG_DISABLE = 0,
+ 	CONF_SG_PROTECTIVE,
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index c7ad4f5..40c5669 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -798,6 +798,14 @@ out:
+ 	mutex_unlock(&wl->mutex);
+ }
+ 
++static u8 wl1271_tx_get_rate_flags(u8 rate_class_index)
++{
++	if (rate_class_index >= CONF_HW_RXTX_RATE_MCS_MIN &&
++	    rate_class_index <= CONF_HW_RXTX_RATE_MCS_MAX)
++		return IEEE80211_TX_RC_MCS;
++	return 0;
++}
++
+ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+ 				      struct wl1271_tx_hw_res_descr *result)
+ {
+@@ -807,6 +815,7 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+ 	struct sk_buff *skb;
+ 	int id = result->id;
+ 	int rate = -1;
++	u8 rate_flags = 0;
+ 	u8 retries = 0;
+ 
+ 	/* check for id legality */
+@@ -833,6 +842,7 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+ 			info->flags |= IEEE80211_TX_STAT_ACK;
+ 		rate = wl1271_rate_to_idx(result->rate_class_index,
+ 					  wlvif->band);
++		rate_flags = wl1271_tx_get_rate_flags(result->rate_class_index);
+ 		retries = result->ack_failures;
+ 	} else if (result->status == TX_RETRY_EXCEEDED) {
+ 		wl->stats.excessive_retries++;
+@@ -841,7 +851,7 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+ 
+ 	info->status.rates[0].idx = rate;
+ 	info->status.rates[0].count = retries;
+-	info->status.rates[0].flags = 0;
++	info->status.rates[0].flags = rate_flags;
+ 	info->status.ack_signal = -1;
+ 
+ 	wl->stats.retry_count += result->ack_failures;
+-- 
+1.7.4.1
 
-Now all we need is an ISC/GPL dual licenced packet classification
-module. *wink* :)
-
-
-Adrian
