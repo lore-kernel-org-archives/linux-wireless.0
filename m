@@ -1,151 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:35065 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753263Ab1JJKpT (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.23]:40604 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750866Ab1JRR5z convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 06:45:19 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH 1/5] ath6kl: Add endpoint_stats debugfs file
-Date: Mon, 10 Oct 2011 13:43:27 +0300
-Message-ID: <1318243411-16110-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20111010_124523_218775_AF7BFFE3)
-In-Reply-To: <1318243411-16110-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1318243411-16110-1-git-send-email-jouni@qca.qualcomm.com>
+	Tue, 18 Oct 2011 13:57:55 -0400
+From: Toralf =?utf-8?q?F=C3=B6rster?= <toralf.foerster@gmx.de>
+To: wwguy <wey-yi.w.guy@intel.com>
+Subject: Re: 3.1.0-rc9+ : wlan stops working w/o any error messages
+Date: Tue, 18 Oct 2011 19:57:49 +0200
+Cc: werner <w.landgraf@ru.ru>, David Rientjes <rientjes@google.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <201110152119.58509.toralf.foerster@gmx.de> <201110181847.02971.toralf.foerster@gmx.de> <1318958013.25023.16.camel@wwguy-ubuntu>
+In-Reply-To: <1318958013.25023.16.camel@wwguy-ubuntu>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201110181957.49894.toralf.foerster@gmx.de> (sfid-20111018_195827_568243_98FD36DB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This file can be used to fetch endpoint statistics counters and
-to clear them by writing 0 to it.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/debug.c |  102 +++++++++++++++++++++++++++++++
- 1 files changed, 102 insertions(+), 0 deletions(-)
+wwguy wrote at 19:13:33
+> hmm, something broken there, it should be in the .config file, what tree
+> you are using?
+> 
+tfoerste@n22 ~/devel/linux $ git describe
+v3.1-rc10
+tfoerste@n22 ~/devel/linux $ grep -B2 url .git/config 
+[remote "origin"]
+        fetch = +refs/heads/*:refs/remotes/origin/*
+        url = git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+--
+        merge = refs/heads/master
+[remote "remote_stable"]
+        url = git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-
+stable.git
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index ba3f23d..b9bf28d 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -595,6 +595,105 @@ static const struct file_operations fops_credit_dist_stats = {
- 	.llseek = default_llseek,
- };
- 
-+static unsigned int print_endpoint_stat(struct htc_target *target, char *buf,
-+					unsigned int buf_len, unsigned int len,
-+					int offset, const char *name)
-+{
-+	int i;
-+	struct htc_endpoint_stats *ep_st;
-+	u32 *counter;
-+
-+	len += scnprintf(buf + len, buf_len - len, "%s:", name);
-+	for (i = 0; i < ENDPOINT_MAX; i++) {
-+		ep_st = &target->endpoint[i].ep_st;
-+		counter = ((u32 *) ep_st) + (offset / 4);
-+		len += scnprintf(buf + len, buf_len - len, " %u", *counter);
-+	}
-+	len += scnprintf(buf + len, buf_len - len, "\n");
-+
-+	return len;
-+}
-+
-+static ssize_t ath6kl_endpoint_stats_read(struct file *file,
-+					  char __user *user_buf,
-+					  size_t count, loff_t *ppos)
-+{
-+	struct ath6kl *ar = file->private_data;
-+	struct htc_target *target = ar->htc_target;
-+	char *buf;
-+	unsigned int buf_len, len = 0;
-+	ssize_t ret_cnt;
-+
-+	buf_len = 1000 + ENDPOINT_MAX * 100;
-+	buf = kzalloc(buf_len, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+#define EPSTAT(name)							\
-+	len = print_endpoint_stat(target, buf, buf_len, len,		\
-+				  offsetof(struct htc_endpoint_stats, name), \
-+				  #name)
-+	EPSTAT(cred_low_indicate);
-+	EPSTAT(tx_issued);
-+	EPSTAT(tx_pkt_bundled);
-+	EPSTAT(tx_bundles);
-+	EPSTAT(tx_dropped);
-+	EPSTAT(tx_cred_rpt);
-+	EPSTAT(cred_rpt_from_rx);
-+	EPSTAT(cred_rpt_ep0);
-+	EPSTAT(cred_from_rx);
-+	EPSTAT(cred_from_other);
-+	EPSTAT(cred_from_ep0);
-+	EPSTAT(cred_cosumd);
-+	EPSTAT(cred_retnd);
-+	EPSTAT(rx_pkts);
-+	EPSTAT(rx_lkahds);
-+	EPSTAT(rx_bundl);
-+	EPSTAT(rx_bundle_lkahd);
-+	EPSTAT(rx_bundle_from_hdr);
-+	EPSTAT(rx_alloc_thresh_hit);
-+	EPSTAT(rxalloc_thresh_byte);
-+#undef EPSTAT
-+
-+	if (len > buf_len)
-+		len = buf_len;
-+
-+	ret_cnt = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	kfree(buf);
-+	return ret_cnt;
-+}
-+
-+static ssize_t ath6kl_endpoint_stats_write(struct file *file,
-+					   const char __user *user_buf,
-+					   size_t count, loff_t *ppos)
-+{
-+	struct ath6kl *ar = file->private_data;
-+	struct htc_target *target = ar->htc_target;
-+	int ret, i;
-+	u32 val;
-+	struct htc_endpoint_stats *ep_st;
-+
-+	ret = kstrtou32_from_user(user_buf, count, 0, &val);
-+	if (ret)
-+		return ret;
-+	if (val == 0) {
-+		for (i = 0; i < ENDPOINT_MAX; i++) {
-+			ep_st = &target->endpoint[i].ep_st;
-+			memset(ep_st, 0, sizeof(*ep_st));
-+		}
-+	}
-+
-+	return count;
-+}
-+
-+static const struct file_operations fops_endpoint_stats = {
-+	.open = ath6kl_debugfs_open,
-+	.read = ath6kl_endpoint_stats_read,
-+	.write = ath6kl_endpoint_stats_write,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- static unsigned long ath6kl_get_num_reg(void)
- {
- 	int i;
-@@ -901,6 +1000,9 @@ int ath6kl_debug_init(struct ath6kl *ar)
- 	debugfs_create_file("credit_dist_stats", S_IRUSR, ar->debugfs_phy, ar,
- 			    &fops_credit_dist_stats);
- 
-+	debugfs_create_file("endpoint_stats", S_IRUSR | S_IWUSR,
-+			    ar->debugfs_phy, ar, &fops_endpoint_stats);
-+
- 	debugfs_create_file("fwlog", S_IRUSR, ar->debugfs_phy, ar,
- 			    &fops_fwlog);
- 
+
+
 -- 
-1.7.4.1
-
+MfG/Sincerely
+Toralf Förster
+pgp finger print: 7B1A 07F4 EC82 0F90 D4C2 8936 872A E508 7DB6 9DA3
