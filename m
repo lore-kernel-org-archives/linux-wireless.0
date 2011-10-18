@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36507 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756482Ab1JDNHh (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:36518 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750784Ab1JRQl2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 09:07:37 -0400
-Subject: [PATCH] mac80211: pass no-CCK flag through to HW scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 04 Oct 2011 15:07:33 +0200
-Message-ID: <1317733653.6741.10.camel@jlt3.sipsolutions.net> (sfid-20111004_150741_298694_2C5933E1)
-Mime-Version: 1.0
+	Tue, 18 Oct 2011 12:41:28 -0400
+Received: by bkbzt19 with SMTP id zt19so993769bkb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2011 09:41:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1318929507-11447-2-git-send-email-helmut.schaa@googlemail.com>
+References: <1318929507-11447-1-git-send-email-helmut.schaa@googlemail.com> <1318929507-11447-2-git-send-email-helmut.schaa@googlemail.com>
+From: Arik Nemtsov <anamtsov@gmail.com>
+Date: Tue, 18 Oct 2011 18:41:11 +0200
+Message-ID: <CA+XVXfdKPdwXubpnX50zJRCXaxHpubAd3tDgWrCnQQggXKKhPQ@mail.gmail.com> (sfid-20111018_184131_768846_D04C2DE5)
+Subject: Re: [PATCH 2/2] iw: show STA flags in station dump
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, Oct 18, 2011 at 11:18, Helmut Schaa <helmut.schaa@googlemail.com> wrote:
+>
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> ---
+>
+> Couldn't come up with a nice/short wording for "Managment frame
+> protection" and "Wireless Multimedia Extension" so I just used MFP
+> and WME/WMM instead.
+>
 
-This is needed so that offloaded scan can do the
-right thing. Without this patch, the no_cck flag
-contains random values from the kernel heap.
+Printing the NL80211_STA_FLAG_TDLS_PEER flag would be nice as well.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/scan.c |    1 +
- 1 file changed, 1 insertion(+)
-
---- a/net/mac80211/scan.c	2011-09-28 17:10:13.000000000 +0200
-+++ b/net/mac80211/scan.c	2011-10-04 15:06:01.000000000 +0200
-@@ -254,6 +254,7 @@ static bool ieee80211_prep_hw_scan(struc
- 					 req->ie, req->ie_len, band,
- 					 req->rates[band], 0);
- 	local->hw_scan_req->ie_len = ielen;
-+	local->hw_scan_req->no_cck = req->no_cck;
- 
- 	return true;
- }
-
-
+Arik
