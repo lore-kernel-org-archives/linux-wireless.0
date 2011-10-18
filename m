@@ -1,217 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1374 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754695Ab1JUOQr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 10:16:47 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH v2 05/17] brcm80211: smac: removed down-on-watchdog MPC
- functionality
-Date: Fri, 21 Oct 2011 16:16:23 +0200
-Message-ID: <1319206595-17138-6-git-send-email-arend@broadcom.com> (sfid-20111021_161702_856514_D1F707E1)
-In-Reply-To: <1319206595-17138-1-git-send-email-arend@broadcom.com>
-References: <1319206595-17138-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.candelatech.com ([208.74.158.172]:33767 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752821Ab1JRTWx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Oct 2011 15:22:53 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [RFC] mac80211:  Support forcing station to disable 11n.
+Date: Tue, 18 Oct 2011 12:22:49 -0700
+Message-Id: <1318965769-5588-1-git-send-email-greearb@candelatech.com> (sfid-20111018_212257_275439_1101F2CB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+From: Ben Greear <greearb@candelatech.com>
 
-Softmac would bring its interface down on a certain Minimum Power Save
-related condition, without Mac80211 intervention. Because Mac80211 should
-be the only party initiating interfaces going up and down, this functionality
-has been removed. All notions of 'MPC' have been removed in the code as
-well.
+This allows a user to configure a wifi station interface
+to disable 802.11n, even if the AP and NIC supports it.
 
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    3 +-
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |   45 +++----------------
- drivers/net/wireless/brcm80211/brcmsmac/main.h     |    3 -
- drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    2 +-
- drivers/net/wireless/brcm80211/include/defs.h      |    1 -
- 5 files changed, 9 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 1781157..fe8f1ec 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -1078,8 +1078,7 @@ static struct brcms_info *brcms_attach(u16 vendor, u16 device,
+Is this of any interest?  If so, I can post a patch against the
+wireless-testing kernel and the matching hostap patch.
+
+NOTE:  The additional netlink bits is to allow this patch to work on 3.0
+with the latest hostap and should not be included in the final patch.
+
+
+:100644 100644 c7ccaae... ef65049... M	include/linux/nl80211.h
+:100644 100644 069b048... df3d71c... M	include/net/cfg80211.h
+:100644 100644 a8f25cc... 8a3e6f9... M	net/mac80211/cfg.c
+:100644 100644 090b0ec... b42dfb4... M	net/mac80211/ieee80211_i.h
+:100644 100644 d5ebae7... a12cf4d... M	net/mac80211/mlme.c
+:100644 100644 b3650af... 9fe4a28... M	net/wireless/nl80211.c
+ include/linux/nl80211.h    |   34 ++++++++++++++++++++++++++++++++++
+ include/net/cfg80211.h     |    4 +++-
+ net/mac80211/cfg.c         |    3 +++
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/mlme.c        |    3 +++
+ net/wireless/nl80211.c     |    8 ++++++++
+ 6 files changed, 53 insertions(+), 1 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index c7ccaae..ef65049 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -996,6 +996,9 @@ enum nl80211_commands {
+  *	are managed in software: interfaces of these types aren't subject to
+  *	any restrictions in their number or combinations.
+  *
++ * @NL80211_ATTR_DISABLE_80211N:  Force /n capable stations to instead
++ *      function as /a/b/g stations.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1193,6 +1196,37 @@ enum nl80211_attrs {
  
- 	wl->pub->ieee_hw = hw;
+ 	NL80211_ATTR_INTERFACE_COMBINATIONS,
+ 	NL80211_ATTR_SOFTWARE_IFTYPES,
++	NL80211_ATTR_REKEY_DATA,
++
++	NL80211_ATTR_MAX_NUM_SCHED_SCAN_SSIDS,
++	NL80211_ATTR_MAX_SCHED_SCAN_IE_LEN,
++
++	NL80211_ATTR_SCAN_SUPP_RATES,
++
++	NL80211_ATTR_HIDDEN_SSID,
++
++	NL80211_ATTR_IE_PROBE_RESP,
++	NL80211_ATTR_IE_ASSOC_RESP,
++
++	NL80211_ATTR_STA_WME,
++	NL80211_ATTR_SUPPORT_AP_UAPSD,
++
++	NL80211_ATTR_ROAM_SUPPORT,
++
++	NL80211_ATTR_SCHED_SCAN_MATCH,
++	NL80211_ATTR_MAX_MATCH_SETS,
++
++	NL80211_ATTR_PMKSA_CANDIDATE,
++
++	NL80211_ATTR_TX_NO_CCK_RATE,
++
++	NL80211_ATTR_TDLS_ACTION,
++	NL80211_ATTR_TDLS_DIALOG_TOKEN,
++	NL80211_ATTR_TDLS_OPERATION,
++	NL80211_ATTR_TDLS_SUPPORT,
++	NL80211_ATTR_TDLS_EXTERNAL_SETUP,
++
++	NL80211_ATTR_DISABLE_11N,
  
--	/* disable mpc */
--	brcms_c_set_radio_mpc(wl->wlc);
-+	brcms_c_set_radio_mon(wl->wlc);
+ 	/* add attributes here, update the policy in nl80211.c */
  
- 	/* register our interrupt handler */
- 	if (request_irq(irq, brcms_isr, IRQF_SHARED, KBUILD_MODNAME, wl)) {
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index e7d14e4..d185eed 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -43,16 +43,6 @@
- /* radio monitor timer, in unit of ms */
- #define TIMER_INTERVAL_RADIOCHK		800
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 069b048..df3d71c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -259,9 +259,11 @@ struct ieee80211_supported_band {
+ /**
+  * struct vif_params - describes virtual interface parameters
+  * @use_4addr: use 4-address frames
++ * @disable_11n:  Don't use 11n features (HT, etc)
+  */
+ struct vif_params {
+-       int use_4addr;
++	int use_4addr;
++	int disable_11n;
+ };
  
--/* Max MPC timeout, in unit of watchdog */
--#ifndef BRCMS_MPC_MAX_DELAYCNT
--#define BRCMS_MPC_MAX_DELAYCNT		10
--#endif
--
--/* Min MPC timeout, in unit of watchdog */
--#define BRCMS_MPC_MIN_DELAYCNT		1
--/* MPC count threshold level */
--#define BRCMS_MPC_THRESHOLD		3
--
- /* beacon interval, in unit of 1024TU */
- #define BEACON_INTERVAL_DEFAULT		100
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a8f25cc..8a3e6f9 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -56,6 +56,9 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	int ret;
  
-@@ -4330,17 +4320,13 @@ static void brcms_b_watchdog(void *arg)
- 	wlc_phy_watchdog(wlc_hw->band->pi);
- }
++	if (params->disable_11n != -1)
++		sdata->cfg_disable_11n = params->disable_11n;
++
+ 	ret = ieee80211_if_change_type(sdata, type);
+ 	if (ret)
+ 		return ret;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 090b0ec..b42dfb4 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -564,6 +564,8 @@ struct ieee80211_sub_if_data {
+ 	/* to detect idle changes */
+ 	bool old_idle;
  
--static void brcms_c_radio_mpc_upd(struct brcms_c_info *wlc)
-+static void brcms_c_radio_mon_upd(struct brcms_c_info *wlc)
- {
- 	/*
--	 * Clear the WL_RADIO_MPC_DISABLE bit when mpc feature is disabled
--	 * in case the WL_RADIO_MPC_DISABLE bit was set. Stop the radio
--	 * monitor also when WL_RADIO_MPC_DISABLE is the only reason that
--	 * the radio is going down.
-+	 * Stop the radio monitor when the radio is going down.
- 	 */
- 	if (!wlc->pub->radio_disabled)
- 		return;
--	mboolclr(wlc->pub->radio_disabled, WL_RADIO_MPC_DISABLE);
- 	brcms_c_radio_upd(wlc);
- 	if (!wlc->pub->radio_disabled)
- 		brcms_c_radio_monitor_stop(wlc);
-@@ -4366,17 +4352,8 @@ static void brcms_c_watchdog(void *arg)
- 	/* increment second count */
- 	wlc->pub->now++;
++	bool cfg_disable_11n; /* configured to disable 11n? */
++
+ 	/* Fragment table for host-based reassembly */
+ 	struct ieee80211_fragment_entry	fragments[IEEE80211_FRAGMENT_MAX];
+ 	unsigned int fragment_next;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d5ebae7..a12cf4d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2450,6 +2450,9 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 			ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
  
--	/* delay radio disable */
--	if (wlc->mpc_delay_off) {
--		if (--wlc->mpc_delay_off == 0) {
--			mboolset(wlc->pub->radio_disabled,
--				 WL_RADIO_MPC_DISABLE);
--		}
--	}
--
--	/* mpc sync */
--	brcms_c_radio_mpc_upd(wlc);
--	/* radio sync: sw/hw/mpc --> radio_disable/radio_enable */
-+	brcms_c_radio_mon_upd(wlc);
-+	/* radio sync: sw/hw --> radio_disable/radio_enable */
- 	brcms_c_radio_hwdisable_upd(wlc);
- 	brcms_c_radio_upd(wlc);
- 	/* if radio is disable, driver may be down, quit here */
-@@ -4482,9 +4459,6 @@ static void brcms_c_info_init(struct brcms_c_info *wlc, int unit)
- 	/* WME QoS mode is Auto by default */
- 	wlc->pub->_ampdu = AMPDU_AGG_HOST;
- 	wlc->pub->bcmerror = 0;
--
--	/* initialize mpc delay */
--	wlc->mpc_delay_off = BRCMS_MPC_MIN_DELAYCNT;
- }
  
- static uint brcms_c_attach_module(struct brcms_c_info *wlc)
-@@ -5455,7 +5429,6 @@ uint brcms_c_down(struct brcms_c_info *wlc)
- 	if (!wlc->pub->up)
- 		return callbacks;
- 
--	/* in between, mpc could try to bring down again.. */
- 	wlc->going_down = true;
- 
- 	callbacks += brcms_b_bmac_down_prep(wlc->hw);
-@@ -8131,9 +8104,9 @@ int brcms_c_get_tx_power(struct brcms_c_info *wlc)
- 	return (int)(qdbm / BRCMS_TXPWR_DB_FACTOR);
- }
- 
--void brcms_c_set_radio_mpc(struct brcms_c_info *wlc)
-+void brcms_c_set_radio_mon(struct brcms_c_info *wlc)
- {
--	brcms_c_radio_mpc_upd(wlc);
-+	brcms_c_radio_mon_upd(wlc);
- }
- 
- /* Process received frames */
-@@ -8442,9 +8415,6 @@ void brcms_c_init(struct brcms_c_info *wlc)
- 	/* enable the RF Disable Delay timer */
- 	W_REG(&wlc->regs->rfdisabledly, RFDISABLE_DEFAULT);
- 
--	/* initialize mpc delay */
--	wlc->mpc_delay_off = BRCMS_MPC_MIN_DELAYCNT;
--
- 	/*
- 	 * Initialize WME parameters; if they haven't been set by some other
- 	 * mechanism (IOVar, etc) then read them from the hardware.
-@@ -8630,8 +8600,7 @@ brcms_c_attach(struct brcms_info *wl, u16 vendor, u16 device, uint unit,
- 		brcms_c_ht_update_sgi_rx(wlc, 0);
++	if (sdata->cfg_disable_11n)
++		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
++
+ 	if (req->ie && req->ie_len) {
+ 		memcpy(wk->ie, req->ie, req->ie_len);
+ 		wk->ie_len = req->ie_len;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b3650af..9fe4a28 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1569,6 +1569,14 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 		change = true;
  	}
  
--	/* initialize radio_mpc_disable according to wlc->mpc */
--	brcms_c_radio_mpc_upd(wlc);
-+	brcms_c_radio_mon_upd(wlc);
- 	brcms_b_antsel_set(wlc->hw, wlc->asi->antsel_avail);
- 
- 	if (perr)
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-index fc5852f..9a7535d 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-@@ -427,7 +427,6 @@ struct brcms_txq_info {
-  * bandinit_pending: track band init in auto band.
-  * radio_monitor: radio timer is running.
-  * going_down: down path intermediate variable.
-- * mpc_delay_off: delay radio disable by # of watchdog cnt.
-  * wdtimer: timer for watchdog routine.
-  * radio_timer: timer for hw radio button monitor routine.
-  * monitor: monitor (MPDU sniffing) mode.
-@@ -518,8 +517,6 @@ struct brcms_c_info {
- 	bool radio_monitor;
- 	bool going_down;
- 
--	u8 mpc_delay_off;
--
- 	struct brcms_timer *wdtimer;
- 	struct brcms_timer *radio_timer;
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-index 2e09216..4f8e859 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-@@ -596,7 +596,7 @@ extern void brcms_c_set_beacon_listen_interval(struct brcms_c_info *wlc,
- 					u8 interval);
- extern int brcms_c_set_tx_power(struct brcms_c_info *wlc, int txpwr);
- extern int brcms_c_get_tx_power(struct brcms_c_info *wlc);
--extern void brcms_c_set_radio_mpc(struct brcms_c_info *wlc);
-+extern void brcms_c_set_radio_mon(struct brcms_c_info *wlc);
- extern bool brcms_c_check_radio_disabled(struct brcms_c_info *wlc);
- 
- #endif				/* _BRCM_PUB_H_ */
-diff --git a/drivers/net/wireless/brcm80211/include/defs.h b/drivers/net/wireless/brcm80211/include/defs.h
-index 1e5f310..f0d8c04 100644
---- a/drivers/net/wireless/brcm80211/include/defs.h
-+++ b/drivers/net/wireless/brcm80211/include/defs.h
-@@ -62,7 +62,6 @@
- 
- #define WL_RADIO_SW_DISABLE		(1<<0)
- #define WL_RADIO_HW_DISABLE		(1<<1)
--#define WL_RADIO_MPC_DISABLE		(1<<2)
- /* some countries don't support any channel */
- #define WL_RADIO_COUNTRY_DISABLE	(1<<3)
- 
++	if (info->attrs[NL80211_ATTR_DISABLE_11N]) {
++		params.disable_11n = !!nla_get_u8(info->attrs[NL80211_ATTR_DISABLE_11N]);
++		change = true;
++	}
++	else {
++		params.disable_11n = -1;
++	}
++
+ 	if (change)
+ 		err = cfg80211_change_iface(rdev, dev, ntype, flags, &params);
+ 	else
 -- 
-1.7.4.1
-
+1.7.3.4
 
