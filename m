@@ -1,86 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2285 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757531Ab1JRMD2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Oct 2011 08:03:28 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 06/15] brmc80211: fmac: reworked next_bss()
-Date: Tue, 18 Oct 2011 14:03:02 +0200
-Message-ID: <1318939391-19495-7-git-send-email-arend@broadcom.com> (sfid-20111018_140346_293667_081937DA)
-In-Reply-To: <1318939391-19495-1-git-send-email-arend@broadcom.com>
-References: <1318939391-19495-1-git-send-email-arend@broadcom.com>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:62458 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755885Ab1JRRZ1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Oct 2011 13:25:27 -0400
+Received: by eye27 with SMTP id 27so786553eye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2011 10:25:26 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Arik Nemtsov <anamtsov@gmail.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: Re: [PATCH 2/2] iw: show STA flags in station dump
+Date: Tue, 18 Oct 2011 19:23:30 +0200
+Message-ID: <4758903.33HQxio52G@helmutmobil.site> (sfid-20111018_192530_975844_3E04D71A)
+In-Reply-To: <CA+XVXfdKPdwXubpnX50zJRCXaxHpubAd3tDgWrCnQQggXKKhPQ@mail.gmail.com>
+References: <1318929507-11447-1-git-send-email-helmut.schaa@googlemail.com> <1318929507-11447-2-git-send-email-helmut.schaa@googlemail.com> <CA+XVXfdKPdwXubpnX50zJRCXaxHpubAd3tDgWrCnQQggXKKhPQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Am Dienstag, 18. Oktober 2011, 18:41:11 schrieb Arik Nemtsov:
+> On Tue, Oct 18, 2011 at 11:18, Helmut Schaa <helmut.schaa@googlemail.com> wrote:
+> >
+> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> > ---
+> >
+> > Couldn't come up with a nice/short wording for "Managment frame
+> > protection" and "Wireless Multimedia Extension" so I just used MFP
+> > and WME/WMM instead.
+> >
+> 
+> Printing the NL80211_STA_FLAG_TDLS_PEER flag would be nice as well.
 
-Moved function to where it is called and made it more readable.
+Agreed, I somehow missed the (new) TDLS flag, also in the according
+nl80211/mac80211 patches :(
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   11 ++++++++++-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    9 ---------
- 2 files changed, 10 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 7f89bad..73be2c8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -2057,6 +2057,15 @@ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_priv *cfg_priv,
- 	return err;
- }
- 
-+static struct brcmf_bss_info_le *
-+next_bss_le(struct brcmf_scan_results *list, struct brcmf_bss_info_le *bss)
-+{
-+	if (bss == NULL)
-+		return list->bss_info_le;
-+	return (struct brcmf_bss_info_le *)((unsigned long)bss +
-+					    le32_to_cpu(bss->length));
-+}
-+
- static s32 brcmf_inform_bss(struct brcmf_cfg80211_priv *cfg_priv)
- {
- 	struct brcmf_scan_results *bss_list;
-@@ -2072,7 +2081,7 @@ static s32 brcmf_inform_bss(struct brcmf_cfg80211_priv *cfg_priv)
- 	}
- 	WL_SCAN("scanned AP count (%d)\n", bss_list->count);
- 	for (i = 0; i < bss_list->count && i < WL_AP_MAX; i++) {
--		bi = next_bss(bss_list, bi);
-+		bi = next_bss_le(bss_list, bi);
- 		err = brcmf_inform_single_bss(cfg_priv, bi);
- 		if (err)
- 			break;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-index bec30e3..a613b49 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -352,15 +352,6 @@ brcmf_cfg80211_connect_info *cfg_to_conn(struct brcmf_cfg80211_priv *cfg)
- 	return &cfg->conn_info;
- }
- 
--static inline struct brcmf_bss_info_le *
--next_bss(struct brcmf_scan_results *list, struct brcmf_bss_info_le *bss)
--{
--	return bss = bss ?
--		(struct brcmf_bss_info_le *)((unsigned long)bss +
--				       le32_to_cpu(bss->length)) :
--		list->bss_info_le;
--}
--
- extern struct brcmf_cfg80211_dev *brcmf_cfg80211_attach(struct net_device *ndev,
- 							struct device *busdev,
- 							void *data);
--- 
-1.7.4.1
-
-
+Thanks,
+Helmut
