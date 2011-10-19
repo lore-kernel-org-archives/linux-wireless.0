@@ -1,35 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46559 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751170Ab1JCLn0 (ORCPT
+Received: from mx3.schottelius.org ([77.109.138.221]:43033 "EHLO
+	mx3.schottelius.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932191Ab1JSOzF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Oct 2011 07:43:26 -0400
-Date: Mon, 3 Oct 2011 17:11:35 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/4] ath6kl: Avoid processing failed rx packets
-Message-ID: <20111003114134.GC24335@vasanth-laptop> (sfid-20111003_134329_991112_37D727EE)
-References: <1317308476-16204-1-git-send-email-vthiagar@qca.qualcomm.com> <1317308476-16204-3-git-send-email-vthiagar@qca.qualcomm.com> <4E8999E9.4090904@qca.qualcomm.com>
+	Wed, 19 Oct 2011 10:55:05 -0400
+Date: Wed, 19 Oct 2011 16:55:01 +0200
+From: Nico Schottelius <nico-linux-20111017@schottelius.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Nico Schottelius <nico-linux-20111017@schottelius.org>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, wey-yi.w.guy@intel.com
+Subject: Re: BUG: All network processes hang (brcmsmac/wpa_supplicant)
+Message-ID: <20111019145501.GB1414@schottelius.org> (sfid-20111019_165553_201672_0D6A917F)
+References: <20111019123602.GA11883@schottelius.org>
+ <1319028563.8416.1.camel@edumazet-laptop>
+ <20111019130749.GD11883@schottelius.org>
+ <20111019142837.GA1414@schottelius.org>
+ <4E9EE20F.1030403@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E8999E9.4090904@qca.qualcomm.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="aVD9QWMuhilNxW9f"
+In-Reply-To: <4E9EE20F.1030403@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 03, 2011 at 02:18:01PM +0300, Kalle Valo wrote:
-> On 09/29/2011 06:01 PM, Vasanthakumar Thiagarajan wrote:
-> > It is not necessary to process an htc_packet which is allocated for rx
-> > but failed in sdio rx.
-> 
-> Same question here: does it fix a visible bug or is it more like a
-> theoretical issue?
-> 
-> I would prefer that fixes would also state the impact of the bug: is it
-> a theoretical issue, a random bug which almost nobody sees or really bad
-> bug visible almost everywhere? That way it's easier to decide which
-> trees it should be sent.
 
-Ok, I can add this to commit log. I'll resend everything with V2.
+--aVD9QWMuhilNxW9f
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Vasanth
+Hey Arend,
+
+
+Arend van Spriel [Wed, Oct 19, 2011 at 04:43:27PM +0200]:
+> I actually don't see the rtnl_lock or mutex_lock that was listed in your
+> original dmesg. There are a lot of warning traces from mac80211.c.
+
+Oh, sorry, ip r was stuck already and I didn't wait 120 seconds!
+
+
+> The other interesting thing is the following:
+>=20
+> [  367.389096] wlan0: deauthenticating from 00:03:52:e3:0e:10 by local
+> choice (reason=3D3)
+> [  367.416312] cfg80211: Calling CRDA to update world regulatory domain
+> [  369.367667] wlan0: direct probe to 00:03:52:2c:01:00 (try 1/3)
+> [  369.565008] wlan0: direct probe to 00:03:52:2c:01:00 (try 2/3)
+> [  369.764891] wlan0: direct probe to 00:03:52:2c:01:00 (try 3/3)
+> [  369.964768] wlan0: direct probe to 00:03:52:2c:01:00 timed out
+> [  381.310339] wlan0: direct probe to 00:0f:61:1a:0c:50 (try 1/3)
+> [  381.508071] wlan0: direct probe to 00:0f:61:1a:0c:50 (try 2/3)
+> [  381.707955] wlan0: direct probe to 00:0f:61:1a:0c:50 (try 3/3)
+> [  381.907788] wlan0: direct probe to 00:0f:61:1a:0c:50 timed out
+> [  393.250073] wlan0: direct probe to 00:03:52:2c:01:00 (try 1/3)
+> [  393.447810] wlan0: direct probe to 00:03:52:2c:01:00 (try 2/3)
+> [  393.647700] wlan0: direct probe to 00:03:52:2c:01:00 (try 3/3)
+> [  393.847576] wlan0: direct probe to 00:03:52:2c:01:00 timed out
+> [  405.183177] wlan0: direct probe to 00:0f:61:1a:1d:30 (try 1/3)
+> [  405.380906] wlan0: direct probe to 00:0f:61:1a:1d:30 (try 2/3)
+> [  405.580773] wlan0: direct probe to 00:0f:61:1a:1d:30 (try 3/3)
+> [  405.780658] wlan0: direct probe to 00:0f:61:1a:1d:30 timed out
+>=20
+> There is another thread title "iwlagn is getting very shaky". It makes
+> me wonder.
+>=20
+> Where did you get your kernel from. From you dmesg I see:
+
+It's a mix of Keith's and Jiri's branches:
+
+http://www.nico.schottelius.org/blog/macbook-air-42-touchpad-keyboard-corre=
+ct-screen-resolution/
+
+Those two are needed to get screen/keyboard/mouse working on the MacBook Ai=
+r.
+
+You can pull the merged result directly from
+
+  git://git.schottelius.org/foreign/linux-keith-jiri-mba
+
+Cheers,
+
+Nico
+
+--=20
+PGP key: 7ED9 F7D3 6B10 81D7 0EC5  5C09 D7DC C8E4 3187 7DF0
+
+--aVD9QWMuhilNxW9f
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk6e5MUACgkQ19zI5DGHffBr0wCeM96ozFmOYLKh1B+U0EaeIy3p
+JXkAnim2zo3iXin25eIHBdvHPGLpQ1Jc
+=9rDo
+-----END PGP SIGNATURE-----
+
+--aVD9QWMuhilNxW9f--
