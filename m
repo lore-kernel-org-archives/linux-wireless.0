@@ -1,60 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1478 "EHLO MMS3.broadcom.com"
+Received: from mga14.intel.com ([143.182.124.37]:31844 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753112Ab1JVIpD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Oct 2011 04:45:03 -0400
-Message-ID: <4EA2827E.1030502@broadcom.com> (sfid-20111022_104507_209539_46DB00A3)
-Date: Sat, 22 Oct 2011 10:44:46 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Greg KH" <gregkh@suse.de>
-cc: "Nico Schottelius" <nico-linux-20111017@schottelius.org>,
-	"Eric Dumazet" <eric.dumazet@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>,
+	id S1750750Ab1JSHGH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Oct 2011 03:06:07 -0400
+Subject: Re: iwlagn is getting very shaky
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Norbert Preining <preining@logic.at>
+Cc: Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: BUG: All network processes hang (brcmsmac/wpa_supplicant)
-References: <1319028563.8416.1.camel@edumazet-laptop>
- <20111019130749.GD11883@schottelius.org>
- <20111019142837.GA1414@schottelius.org> <4E9EE20F.1030403@broadcom.com>
- <20111019145501.GB1414@schottelius.org> <4E9EFF51.6000104@broadcom.com>
- <20111019214250.GC2432@schottelius.org> <4E9FBFA7.4040502@broadcom.com>
- <20111022015945.GC26186@ethz.ch>
- <400C43189542CE41BC0A5B252FC90136BC0E147BCB@SJEXCHCCR02.corp.ad.broadcom.com>
- <20111022083005.GA6032@suse.de>
-In-Reply-To: <20111022083005.GA6032@suse.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+In-Reply-To: <20111019064818.GB14817@gamma.logic.tuwien.ac.at>
+References: <20111019060108.GA11588@gamma.logic.tuwien.ac.at>
+	 <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com>
+	 <CAOJsxLFXBQXDtjGkuHV8fpxSy4U0dOdzBm6=4xfy2dMQo7NvOg@mail.gmail.com>
+	 <1319003710.31823.53.camel@wwguy-huron>
+	 <20111019064818.GB14817@gamma.logic.tuwien.ac.at>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 18 Oct 2011 23:15:38 -0700
+Message-ID: <1319004938.31823.59.camel@wwguy-huron> (sfid-20111019_090624_956787_41D24ED9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/22/2011 10:30 AM, Greg KH wrote:
-> On Sat, Oct 22, 2011 at 01:13:34AM -0700, Arend Van Spriel wrote:
->>> From: Nico Schottelius [mailto:nico-linux-20111017@schottelius.org]
->>> Sent: zaterdag 22 oktober 2011 4:00
->>>
->>> Hey Arend,
->>>
->>> it seems that your patch really solves this problem.
->>
->> Great. This fix is in linux-next tree.
->>
->> Greg,
->>
->> This problem causes packets to get dropped on 5GHz. Should I
->> sent a patch for 3.1 (staging-linus) for this? It is already
->> fixed in wireless-next.
+On Tue, 2011-10-18 at 23:48 -0700, Norbert Preining wrote:
+> On Di, 18 Okt 2011, Guy, Wey-Yi wrote:
+> > > >> loaded firmware version 8.83.5.1 build 33692 (EXP)
+> > > >>
+> > 
+> > looks like you are using experimental version of uCode, but by saying
+> > that, I don't think i will make much differences
+> > 
+> > so could you dump the tx queue to see if it is the similar problem what
+> > Norbert point out
 > 
-> No, just wait for it to get into Linus's tree for 3.2-rc1, and then
-> email the git commit id to stable@vger.kernel.org so it will be added to
-> the 3.1-stable releases.
+> Not sure what you mean Wey, should *I* Norbert use the default firmware
+> and try to reproduce it? Ir should Pekka try to reproduce it with
+> normal firmware? Or with both?
 > 
-> greg k-h
+Sorry, I was thinking ask Pekka to use the officialfirmware. But more
+important, I will like to find out is Pekka has the same issue as you
+have which is tx queue stopped.
+
+Thanks
+Wey
+ 
+> Best wishes
 > 
+> Norbert
+> ------------------------------------------------------------------------
+> Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+> JAIST, Japan                                 TeX Live & Debian Developer
+> DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+> ------------------------------------------------------------------------
+> WROOT (n.)
+> A short little berk who thinks that by pulling on his pipe and gazing
+> shrewdly at you he will give the impression that he is infinitely wise
+> and 5 ft 11 in.
+> 			--- Douglas Adams, The Meaning of Liff
 
-Thanks, Greg
-
-Saw you email regarding staging-next so I was not sure about
-staging-linus. Will be patient ;-)
-
-Gr. AvS
 
