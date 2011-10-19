@@ -1,64 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:35645 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752888Ab1JKNFx (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:30856 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422Ab1JSAgc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 09:05:53 -0400
-Received: by mail-bw0-f45.google.com with SMTP id zv15so10345529bkb.32
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 06:05:44 -0700 (PDT)
-Subject: Re: [PATCH 0/8] wl12xx: forward ported Balbi's bus driver refactor
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <1317928259-26437-1-git-send-email-coelho@ti.com>
-References: <1317928259-26437-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 11 Oct 2011 16:05:40 +0300
-Message-ID: <1318338340.9690.522.camel@cumari> (sfid-20111011_150557_821835_9B20CE7F)
-Mime-Version: 1.0
+	Tue, 18 Oct 2011 20:36:32 -0400
+From: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rishi Panjwani <rpanjwan@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: Implement support for listen interval from userspace
+Date: Tue, 18 Oct 2011 17:36:31 -0700
+Message-ID: <1318984591-10037-2-git-send-email-rpanjwan@qca.qualcomm.com> (sfid-20111019_023636_586020_3F2C22FD)
+In-Reply-To: <1318984591-10037-1-git-send-email-rpanjwan@qca.qualcomm.com>
+References: <1318984591-10037-1-git-send-email-rpanjwan@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-10-06 at 22:10 +0300, Luciano Coelho wrote: 
-> Hi,
-> 
-> Felipe sent this series of patches a long time ago with very good
-> suggestion on how to avoid the duplicate code we have in the sdio and
-> spi drivers.
-> 
-> With this, we create a platform device that is handled by a platform
-> driver.  The bus-specific module, creates a platform device and the
-> core module implements the driver that supports both platform devices
-> (namely "wl12xx-sdio" and "wl12xx-spi").
-> 
-> I didn't apply this earlier because I had concerns about the change in
-> the platform data, but now I'm convinced it's not a real problem.  It
-> may affect compat-wireless, but it's easy to solve.
-> 
-> I have now forward-ported the patches, fixed some bugs, removed some
-> style changes and moved some other things around.  For the changes I
-> made, see the commit message of each patch.  Some changes are not in
-> the commit message, but are explained in the patch emails, after the
-> Signed-off-by area.
-> 
-> I'm keeping Felipe as the author, since most of the work is his.  I
-> have just tested and fixed it up.
-> 
-> Cheers,
-> Luca.
-> 
-> Felipe Balbi (8):
->   wl12xx: add an sdio glue struct to keep wl and device side-by-side
->   wl12xx: add an spi glue struct to keep wl and device side-by-side
->   wl12xx: add a platform device to the sdio module
->   wl12xx: add a platform device to the spi module
->   wl12xx: add platform driver to the core module
->   wl12xx: move common init code from bus modules to main
->   wl12xx: mark some symbols static
->   wl12xx: drop unneeded plat_dev
+In order to allow user space based control of listen interval, we use
+available debugfs infrastructure. Listen interval implies how frequently
+we want the WLAN chip to wake up and synchronize the beacons in case it
+is in sleep mode. The user has to write the listen interval (in msecs) to
+the listen_interval file in ath6kl debug directory. The minimum value is
+15 and maximum is 5000.
 
-Applied the whole series.
+Example:
 
+echo "30" > listen_interval
+
+This will make the listen interval approximately 30 msecs.
+
+Signed-off-by: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/debug.c |   50 +++++++++++++++++++++++++++++++
+ 1 files changed, 50 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 3eaa291..41f36d2 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -1488,6 +1488,53 @@ static const struct file_operations fops_bgscan_int = {
+ 	.owner = THIS_MODULE,
+ 	.llseek = default_llseek,
+ };
++static ssize_t ath6kl_listen_int_write(struct file *file,
++						const char __user *user_buf,
++						size_t count, loff_t *ppos)
++{
++	struct ath6kl *ar = file->private_data;
++	u16 listen_int;
++	char buf[32];
++	ssize_t len;
++
++	len = min(count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, len))
++		return -EFAULT;
++
++	buf[len] = '\0';
++	if (kstrtou16(buf, 0, &listen_int))
++		return -EINVAL;
++
++	if ((listen_int >= 15) && (listen_int <= 5000)) {
++		ar->listen_intvl_t = listen_int;
++		ath6kl_wmi_listeninterval_cmd(ar->wmi, ar->listen_intvl_t, 0);
++	} else {
++		return -EINVAL;
++	}
++
++	return count;
++}
++
++static ssize_t ath6kl_listen_int_read(struct file *file,
++						char __user *user_buf,
++						size_t count, loff_t *ppos)
++{
++	struct ath6kl *ar = file->private_data;
++	char buf[16];
++	int len;
++
++	len = snprintf(buf, sizeof(buf), "%u\n", ar->listen_intvl_t);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static const struct file_operations fops_listen_int = {
++	.read = ath6kl_listen_int_read,
++	.write = ath6kl_listen_int_write,
++	.open = ath6kl_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
+ 
+ int ath6kl_debug_init(struct ath6kl *ar)
+ {
+@@ -1571,6 +1618,9 @@ int ath6kl_debug_init(struct ath6kl *ar)
+ 	debugfs_create_file("bgscan_interval", S_IWUSR,
+ 				ar->debugfs_phy, ar, &fops_bgscan_int);
+ 
++	debugfs_create_file("listen_interval", S_IWUSR, ar->debugfs_phy, ar,
++						&fops_listen_int);
++
+ 	return 0;
+ }
+ 
 -- 
-Cheers,
-Luca.
+1.7.0.4
 
