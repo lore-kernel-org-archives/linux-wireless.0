@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:63404 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752217Ab1JOMNV (ORCPT
+Received: from mx3.schottelius.org ([77.109.138.221]:60415 "EHLO
+	mx3.schottelius.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751999Ab1JSO6F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Oct 2011 08:13:21 -0400
-Received: by wyg36 with SMTP id 36so858503wyg.19
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Oct 2011 05:13:20 -0700 (PDT)
+	Wed, 19 Oct 2011 10:58:05 -0400
+Date: Wed, 19 Oct 2011 16:58:00 +0200
+From: Nico Schottelius <nico-linux-20111017@schottelius.org>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Nico Schottelius <nico-linux-20111017@schottelius.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: BUG: All network processes hang (brcmsmac/wpa_supplicant)
+Message-ID: <20111019145800.GC1414@schottelius.org> (sfid-20111019_165827_279998_190F8B3C)
+References: <20111019123602.GA11883@schottelius.org>
+ <1319028563.8416.1.camel@edumazet-laptop>
+ <20111019130749.GD11883@schottelius.org>
+ <20111019142837.GA1414@schottelius.org>
+ <1319035584.8416.34.camel@edumazet-laptop>
 MIME-Version: 1.0
-In-Reply-To: <4E997413.8010008@openwrt.org>
-References: <CAN=pzd+TcY+n90RBMU+Cpp0Bt9d_eAGgY4yffO+PSStWSzbf-Q@mail.gmail.com>
-	<4E9970A6.10305@openwrt.org>
-	<CAN=pzd+ou1DXL_d_W0dvTcYrNMfH9NjSoFUa=07fE4BYJ+N7bQ@mail.gmail.com>
-	<4E997413.8010008@openwrt.org>
-Date: Sat, 15 Oct 2011 16:13:19 +0400
-Message-ID: <CAN=pzd+R42SArWR+gEgqvJ7h1_6ZnB61xyKzOo8FqNxkRhxqrQ@mail.gmail.com> (sfid-20111015_141329_571062_9CD34535)
-Subject: Re: Ath9k, single antenna on ar9280
-From: Stanislav Demakov <s.demakov@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1319035584.8416.34.camel@edumazet-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok, I've compiled and installed iw from git. Now I have this (wlan0 is down):
+Eric Dumazet [Wed, Oct 19, 2011 at 04:46:24PM +0200]:
+> Le mercredi 19 octobre 2011 à 16:28 +0200, Nico Schottelius a écrit :
+> > Triggered it! 
+> > 
+> > And also got the traceback!
+> > 
+> > Dmesg + log attached, let me know when I can pull the fix from
+> > somewhere.
+> > 
+> 
+> Sorry, I cant see same messages in your dmesg, no mention of stuck
+> processes (blocked for more than 120 seconds.)
+> 
+> By the way, please update to latest 3.1.rc10
+ 
+I can rebuild Linus' tree if you want, but only use it temporarily due
+to the other errors mentioned in the previous message.
 
-sudo iw phy phy0 set antenna 1 1
+If you've a tree somewhere that merges on top of Keith+Jiri,
+I'd try to merge that one as well, to make the mba more usable.
 
-command failed: Operation not supported (-95)
+Cheers,
 
+Nico
 
-2011/10/15 Felix Fietkau <nbd@openwrt.org>:
-> On 2011-10-15 1:45 PM, Stanislav Demakov wrote:
->>
->> Ok, just have tried:
->>
->> ifconfig wlan0 down
->>
->> and then tested it:
->>
->> iw phy phy0 set antenna all all
->>
->> but it's only showing iw help as before.
->> I'm using the latest compiled compat-wireless.
->
-> Try using "1 1" instead of "all all".
-> Are you using the latest iw version?
->
-> - Felix
->
+-- 
+PGP key: 7ED9 F7D3 6B10 81D7 0EC5  5C09 D7DC C8E4 3187 7DF0
