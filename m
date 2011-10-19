@@ -1,55 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3108 "EHLO mms2.broadcom.com"
+Received: from mga02.intel.com ([134.134.136.20]:45101 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754371Ab1JUNzh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 09:55:37 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 11/17] brcm80211: smac: changed check to confirm STA
- only support
-Date: Fri, 21 Oct 2011 15:55:13 +0200
-Message-ID: <1319205319-16891-12-git-send-email-arend@broadcom.com> (sfid-20111021_161149_186906_D2EE2EC0)
-In-Reply-To: <1319205319-16891-1-git-send-email-arend@broadcom.com>
-References: <1319205319-16891-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751142Ab1JSHaA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Oct 2011 03:30:00 -0400
+Subject: Re: iwlagn is getting very shaky
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Norbert Preining <preining@logic.at>
+Cc: Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20111019064818.GB14817@gamma.logic.tuwien.ac.at>
+References: <20111019060108.GA11588@gamma.logic.tuwien.ac.at>
+	 <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com>
+	 <CAOJsxLFXBQXDtjGkuHV8fpxSy4U0dOdzBm6=4xfy2dMQo7NvOg@mail.gmail.com>
+	 <1319003710.31823.53.camel@wwguy-huron>
+	 <20111019064818.GB14817@gamma.logic.tuwien.ac.at>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 18 Oct 2011 23:39:32 -0700
+Message-ID: <1319006372.31823.61.camel@wwguy-huron> (sfid-20111019_093026_554345_BCD3E329)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+On Tue, 2011-10-18 at 23:48 -0700, Norbert Preining wrote:
+> On Di, 18 Okt 2011, Guy, Wey-Yi wrote:
+> > > >> loaded firmware version 8.83.5.1 build 33692 (EXP)
+> > > >>
+> > 
+> > looks like you are using experimental version of uCode, but by saying
+> > that, I don't think i will make much differences
+> > 
+> > so could you dump the tx queue to see if it is the similar problem what
+> > Norbert point out
+> 
+> Not sure what you mean Wey, should *I* Norbert use the default firmware
+> and try to reproduce it? Ir should Pekka try to reproduce it with
+> normal firmware? Or with both?
+> 
+just got a idea, could you try to revert
+commit#68b993118f715cc631b62b6a50574e4701fe9ace
 
-The driver currently only supports STA operation. However, in
-brcms_ops_add_interface() also AP and SSID mode were accepted.
+not sure you can cleanly revert it, please let me know if you got
+problem
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 824c608..8e35c62 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -341,11 +341,7 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	struct brcms_info *wl = hw->priv;
- 
- 	/* Just STA for now */
--	if (vif->type != NL80211_IFTYPE_AP &&
--	    vif->type != NL80211_IFTYPE_MESH_POINT &&
--	    vif->type != NL80211_IFTYPE_STATION &&
--	    vif->type != NL80211_IFTYPE_WDS &&
--	    vif->type != NL80211_IFTYPE_ADHOC) {
-+	if (vif->type != NL80211_IFTYPE_STATION) {
- 		wiphy_err(hw->wiphy, "%s: Attempt to add type %d, only"
- 			  " STA for now\n", __func__, vif->type);
- 		return -EOPNOTSUPP;
--- 
-1.7.4.1
+Thanks
+Wey
+> 
+> Norbert
+> ------------------------------------------------------------------------
+> Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+> JAIST, Japan                                 TeX Liot sure yu ve & Debian Developer
+> DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+> ------------------------------------------------------------------------
+> WROOT (n.)
+> A short little berk who thinks that by pulling on his pipe and gazing
+> shrewdly at you he will give the impression that he is infinitely wise
+> and 5 ft 11 in.
+> 			--- Douglas Adams, The Meaning of Liff
 
 
