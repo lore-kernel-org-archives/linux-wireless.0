@@ -1,153 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1730 "EHLO mms1.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1847 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753706Ab1JBRPC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Oct 2011 13:15:02 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 19/20] staging: brcm80211: cleaned up buffer len defines
- in fullmac
-Date: Sun, 2 Oct 2011 10:14:44 -0700
-Message-ID: <1317575685-3156-20-git-send-email-frankyl@broadcom.com> (sfid-20111002_191545_441355_C61F049A)
-In-Reply-To: <1317575685-3156-1-git-send-email-frankyl@broadcom.com>
-References: <1317575685-3156-1-git-send-email-frankyl@broadcom.com>
+	id S1751363Ab1JSQsf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Oct 2011 12:48:35 -0400
+Message-ID: <4E9EFF51.6000104@broadcom.com> (sfid-20111019_184905_580304_0AE821C8)
+Date: Wed, 19 Oct 2011 18:48:17 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Nico Schottelius" <nico-linux-20111017@schottelius.org>,
+	"Eric Dumazet" <eric.dumazet@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: BUG: All network processes hang (brcmsmac/wpa_supplicant)
+References: <20111019123602.GA11883@schottelius.org>
+ <1319028563.8416.1.camel@edumazet-laptop>
+ <20111019130749.GD11883@schottelius.org>
+ <20111019142837.GA1414@schottelius.org> <4E9EE20F.1030403@broadcom.com>
+ <20111019145501.GB1414@schottelius.org>
+In-Reply-To: <20111019145501.GB1414@schottelius.org>
+Content-Type: multipart/signed;
+ boundary=------------enigA07F9DB473624253F0F2E7DF;
+ micalg=pgp-sha1;
+ protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
 
-Code cleanup. Replaced identical definition BRCMF_C_DCMD_MAXLEN
-by BRCMF_DCMD_MAXLEN. Renamed related buffer len definitions.
+--------------enigA07F9DB473624253F0F2E7DF
+Content-Type: multipart/mixed;
+ boundary="------------050700030803050803080209"
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+This is a multi-part message in MIME format.
+--------------050700030803050803080209
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+On 10/19/2011 04:55 PM, Nico Schottelius wrote:
+> Hey Arend,
+>=20
+>=20
+> Arend van Spriel [Wed, Oct 19, 2011 at 04:43:27PM +0200]:
+>> I actually don't see the rtnl_lock or mutex_lock that was listed in yo=
+ur
+>> original dmesg. There are a lot of warning traces from mac80211.c.
+
+The warnings are probably a diversion. This is the warning in
+ieee80211_rx():
+
+			if (WARN_ON(status->rate_idx < 0 ||
+				    status->rate_idx >=3D sband->n_bitrates))
+				goto drop;
+			rate =3D &sband->bitrates[status->rate_idx];
+
+This means that the driver (brcmsmac) provides a data packet with an
+out-of-range rate index. This reminded me of a fix I made about a month
+ago. Could you apply the attached patch file. It is based on:
+
+commit bee709ab1d390afe69e4407bc86bb706c6fb2965
+Merge: ad1c761 1f2c7e9
+Author: Nico Schottelius <nico@kr.ethz.ch>
+Date:   Tue Oct 18 00:04:05 2011 +0200
+
+    Merge branch 'fix-edp-vdd-power' of ../keithp/linux
+
+As it drops receive packets it may be your problem. Is your AP on 5GHz?
+
+Gr. AvS
+
+--------------050700030803050803080209
+Content-Type: text/x-patch;
+ name="0001-staging-brcm80211-fix-for-rate-index-in-receive-stat.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+ filename*0="0001-staging-brcm80211-fix-for-rate-index-in-receive-stat.pa";
+ filename*1="tch"
+
+=46rom 7d14bd6cbfbf26369c5958e56a468fd8429841d7 Mon Sep 17 00:00:00 2001
+From: Arend van Spriel <arend@broadcom.com>
+Date: Wed, 19 Oct 2011 18:42:45 +0200
+Subject: [PATCH] staging: brcm80211: fix for rate index in receive status=
+
+
+Made a patch for Nico to try whether this resolves his issue.
+
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd.h         |    6 ++----
- drivers/staging/brcm80211/brcmfmac/dhd_cdc.c     |    6 +++---
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    8 ++++----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h |    4 ++--
- 4 files changed, 11 insertions(+), 13 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/main.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index 501faed..3ec7477 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -23,10 +23,6 @@
- 
- #define BRCMF_VERSION_STR		"4.218.248.5"
- 
--#define	BRCMF_C_DCMD_SMLEN	256	/* "small" cmd buffer required */
--#define BRCMF_C_DCMD_MEDLEN	1536	/* "med" cmd buffer required */
--#define	BRCMF_C_DCMD_MAXLEN	8192
--
- /*******************************************************************************
-  * IO codes that are interpreted by dongle firmware
-  ******************************************************************************/
-@@ -749,6 +745,8 @@ extern void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg);
- extern void brcmf_c_pktfilter_offload_enable(struct brcmf_pub *drvr, char *arg,
- 					     int enable, int master_mode);
- 
-+#define	BRCMF_DCMD_SMLEN	256	/* "small" cmd buffer required */
-+#define BRCMF_DCMD_MEDLEN	1536	/* "med" cmd buffer required */
- #define	BRCMF_DCMD_MAXLEN	8192	/* max length cmd buffer required */
- 
- /* message levels */
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-index ec0a057..e34c5c3 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-@@ -97,7 +97,7 @@ struct brcmf_proto {
- 	u32 lastcmd;
- 	u8 bus_header[BUS_HEADER_LEN];
- 	struct brcmf_proto_cdc_dcmd msg;
--	unsigned char buf[BRCMF_C_DCMD_MAXLEN + ROUND_UP_MARGIN];
-+	unsigned char buf[BRCMF_DCMD_MAXLEN + ROUND_UP_MARGIN];
- };
- 
- static int brcmf_proto_cdc_msg(struct brcmf_pub *drvr)
-@@ -288,7 +288,7 @@ brcmf_proto_dcmd(struct brcmf_pub *drvr, int ifidx, struct brcmf_dcmd *dcmd,
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
--	if (len > BRCMF_C_DCMD_MAXLEN)
-+	if (len > BRCMF_DCMD_MAXLEN)
- 		goto done;
- 
- 	if (prot->pending == true) {
-@@ -435,7 +435,7 @@ int brcmf_proto_attach(struct brcmf_pub *drvr)
- 
- 	drvr->prot = cdc;
- 	drvr->hdrlen += BDC_HEADER_LEN;
--	drvr->maxctl = BRCMF_C_DCMD_MAXLEN +
-+	drvr->maxctl = BRCMF_DCMD_MAXLEN +
- 			sizeof(struct brcmf_proto_cdc_dcmd) + ROUND_UP_MARGIN;
- 	return 0;
- 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 42e7642..d12aa75 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -342,7 +342,7 @@ done:
- 
- static s32 brcmf_dev_intvar_set(struct net_device *ndev, s8 *name, s32 val)
- {
--	s8 buf[BRCMF_C_DCMD_SMLEN];
-+	s8 buf[BRCMF_DCMD_SMLEN];
- 	u32 len;
- 	s32 err = 0;
- 	__le32 val_le;
-@@ -363,7 +363,7 @@ static s32
- brcmf_dev_intvar_get(struct net_device *ndev, s8 *name, s32 *retval)
- {
- 	union {
--		s8 buf[BRCMF_C_DCMD_SMLEN];
-+		s8 buf[BRCMF_DCMD_SMLEN];
- 		__le32 val;
- 	} var;
- 	u32 len;
-@@ -451,7 +451,7 @@ brcmf_run_iscan(struct brcmf_cfg80211_iscan_ctrl *iscan,
- 	params = kzalloc(params_size, GFP_KERNEL);
- 	if (!params)
- 		return -ENOMEM;
--	BUG_ON(params_size >= BRCMF_C_DCMD_SMLEN);
-+	BUG_ON(params_size >= BRCMF_DCMD_SMLEN);
- 
- 	wl_iscan_prep(&params->params_le, ssid);
- 
-@@ -460,7 +460,7 @@ brcmf_run_iscan(struct brcmf_cfg80211_iscan_ctrl *iscan,
- 	params->scan_duration = cpu_to_le16(0);
- 
- 	err = brcmf_dev_iovar_setbuf(iscan->ndev, "iscan", params, params_size,
--				     iscan->dcmd_buf, BRCMF_C_DCMD_SMLEN);
-+				     iscan->dcmd_buf, BRCMF_DCMD_SMLEN);
- 	if (err) {
- 		if (err == -EBUSY)
- 			WL_INFO("system busy : iscan canceled\n");
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-index 21c8f8e..e69f4f6 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -106,7 +106,7 @@ do {								\
- #define WL_DCMD_LEN_MAX	1024
- #define WL_EXTRA_BUF_MAX	2048
- #define WL_ISCAN_BUF_MAX	2048	/*
--				 * the buf length can be BRCMF_C_DCMD_MAXLEN
-+				 * the buf length can be BRCMF_DCMD_MAXLEN
- 				 * to reduce iteration
- 				 */
- #define WL_ISCAN_TIMER_INTERVAL_MS	3000
-@@ -251,7 +251,7 @@ struct brcmf_cfg80211_iscan_ctrl {
- 	struct work_struct work;
- 	struct brcmf_cfg80211_iscan_eloop el;
- 	void *data;
--	s8 dcmd_buf[BRCMF_C_DCMD_SMLEN];
-+	s8 dcmd_buf[BRCMF_DCMD_SMLEN];
- 	s8 scan_buf[WL_ISCAN_BUF_MAX];
- };
- 
--- 
-1.7.1
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/=
+brcm80211/brcmsmac/main.c
+index 1763c45..49c8eb9 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -4608,6 +4608,10 @@ prep_mac80211_status(struct brcms_c_info *wlc, str=
+uct d11rxhdr *rxh,
+ 			wiphy_err(wlc->wiphy, "%s: Unknown rate\n", __func__);
+ 		}
+=20
++		/* DEBUG: fix rate index in receive status */
++		if (rx_status->band =3D=3D IEEE80211_BAND_5GHZ)
++			rx_status->rate_idx -=3D 4;
++
+ 		/* Determine short preamble and rate_idx */
+ 		preamble =3D 0;
+ 		if (IS_CCK(rspec)) {
+--=20
+1.7.4.1
 
+
+--------------050700030803050803080209--
+
+--------------enigA07F9DB473624253F0F2E7DF
+Content-Type: application/pgp-signature;
+ name=signature.asc
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment;
+ filename=signature.asc
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQIcBAEBAgAGBQJOnv9VAAoJELcEx/G14aEWmocQAKMxRi2iV1qeli1CWe5ehupH
+QjYI2u8n2a4uNhlBi0W29BYTaxngF0ukdcnck1026oZrSEnW9POEnk+cN4kFxDWA
+lV52DeKJuQ/RRY+BPK+uy1XVl1ZhRf/xp7EKwEphTs2iElHE7BxOGd/52G3vLJys
+ggSq6bzfbVQGarsNhPdztmdrwSoNVh5L2y3Dt5vKtWKNc8hbs2oAoxjxt3Otdke1
+zX6rkWnqKLy6tWBwU+xckBV8cf5XSF3cxFVNiHnzOAFisLjXbTHIAqe0F7J3dqUW
+2diWMo9C8vAp8WCntmP4NDn729JRQXXL61cfysE8MxiRUQd2/7OMVRhtvXUDI/DU
+qPxfyYuZSXgp+ch5qSxwPb9QN7Sm4uDkfU8tMIJTvClF9Ff/PRnpE/IQoqK7jVWL
+JObNrCXZMWpDo6KnBTU/7i3Pr7ayZu/hTzbWuM1lafiAgEdLzcDqgJ7PwwUs+5Ne
+TZMZ4V2KK1r4DW+yHUiEGdTPTS04mDr/MOPwXSgKHtRsmO7XUlGmNtt0G2F2FMO6
+RIKbREpCR57Zd5q07x98cBEe7FOsjVuQ2dslH95mKfo8NmjfbDREoWdl24iMxcti
+7DhuC9EJhWLM76MHt4+3M+IZIJOyrA89ITTdCKWeXWKFfdPcVpbgTW5xw4aswRR2
+3cuxlCwS7r4TGzTRm/K7
+=0p/5
+-----END PGP SIGNATURE-----
+
+--------------enigA07F9DB473624253F0F2E7DF--
 
