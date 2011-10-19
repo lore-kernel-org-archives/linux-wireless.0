@@ -1,184 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54032 "EHLO mga11.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:36930 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751180Ab1JJPQ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 11:16:28 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 10/34] iwlagn: kill hw_params.max_stations
-Date: Mon, 10 Oct 2011 07:26:55 -0700
-Message-Id: <1318256839-31837-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171732_055866_6779AADF)
-In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751142Ab1JSHf2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Oct 2011 03:35:28 -0400
+Subject: Re: iwlagn is getting very shaky
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Pekka Enberg <penberg@cs.helsinki.fi>
+Cc: Norbert Preining <preining@logic.at>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAOJsxLHLmtYAR1c34Kkn+hzGeOSwhU646PP04pvTFx2e5M0NfA@mail.gmail.com>
+References: <20111019060108.GA11588@gamma.logic.tuwien.ac.at>
+	 <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com>
+	 <CAOJsxLFXBQXDtjGkuHV8fpxSy4U0dOdzBm6=4xfy2dMQo7NvOg@mail.gmail.com>
+	 <1319003710.31823.53.camel@wwguy-huron>
+	 <20111019064818.GB14817@gamma.logic.tuwien.ac.at>
+	 <1319004938.31823.59.camel@wwguy-huron>
+	 <CAOJsxLHLmtYAR1c34Kkn+hzGeOSwhU646PP04pvTFx2e5M0NfA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 18 Oct 2011 23:44:59 -0700
+Message-ID: <1319006699.31823.65.camel@wwguy-huron> (sfid-20111019_093614_528262_160B5916)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Wed, 2011-10-19 at 00:19 -0700, Pekka Enberg wrote:
+> Hi Wey,
+> 
+> On Wed, Oct 19, 2011 at 9:15 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> > Sorry, I was thinking ask Pekka to use the officialfirmware. But more
+> > important, I will like to find out is Pekka has the same issue as you
+> > have which is tx queue stopped.
+> 
+> I'm happy to help but I have no idea what you want me to do :-). When
+> my internet connection dies the next time, what do you want me to
+> capture for you? What's official firmware? I'm using Fedora 15 with
+> 3.1-rc9 built from sources here. Do you want to see my lspci, .config,
+> dmesg, something else?
 
-Not needed since driver split.
+I don't think it is firmware problem, so please ignore :-)
+> 
+> As for the problems, I'm using iPhone 3G internet via WiFi sharing and
+> connection seems to die few times a day or if I take the phone far
+> enough from the laptop. I usually turn off the AP for a while and use
+> NetworkManager on the laptop to disable/enable networking to make it
+> come back up.
+> 
+> I haven't tested anything but 3.1-rcX kernels on this machine but I
+> can do git bisect too if it comes to that.
+> 
+I am just try to understand if you encounter the same problem as
+Norbert. if you can dump the tx_queue
+in /sys/kernel/debug/ieee80211/phX/iwlagn/debug folder and send me the
+log, thsat will be great.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-1000.c    |    1 -
- drivers/net/wireless/iwlwifi/iwl-2000.c    |    1 -
- drivers/net/wireless/iwlwifi/iwl-5000.c    |    2 --
- drivers/net/wireless/iwlwifi/iwl-6000.c    |    1 -
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |    3 +--
- drivers/net/wireless/iwlwifi/iwl-shared.h  |    2 --
- drivers/net/wireless/iwlwifi/iwl-sta.c     |   11 +++++------
- 7 files changed, 6 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 887f9ac..dfd81de 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -130,7 +130,6 @@ static int iwl1000_hw_set_hw_params(struct iwl_priv *priv)
- 			iwlagn_mod_params.num_of_queues;
- 
- 	hw_params(priv).max_txq_num = priv->cfg->base_params->num_of_queues;
--	hw_params(priv).max_stations = IWLAGN_STATION_COUNT;
- 	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
- 
- 	hw_params(priv).max_data_size = IWLAGN_RTC_DATA_SIZE;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index db88958..09a6b8e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -127,7 +127,6 @@ static int iwl2000_hw_set_hw_params(struct iwl_priv *priv)
- 			iwlagn_mod_params.num_of_queues;
- 
- 	hw_params(priv).max_txq_num = priv->cfg->base_params->num_of_queues;
--	hw_params(priv).max_stations = IWLAGN_STATION_COUNT;
- 	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
- 
- 	hw_params(priv).max_data_size = IWL60_RTC_DATA_SIZE;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 2907016..14b4c5a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -158,7 +158,6 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 			iwlagn_mod_params.num_of_queues;
- 
- 	hw_params(priv).max_txq_num = priv->cfg->base_params->num_of_queues;
--	hw_params(priv).max_stations = IWLAGN_STATION_COUNT;
- 	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
- 
- 	hw_params(priv).max_data_size = IWLAGN_RTC_DATA_SIZE;
-@@ -195,7 +194,6 @@ static int iwl5150_hw_set_hw_params(struct iwl_priv *priv)
- 			iwlagn_mod_params.num_of_queues;
- 
- 	hw_params(priv).max_txq_num = priv->cfg->base_params->num_of_queues;
--	hw_params(priv).max_stations = IWLAGN_STATION_COUNT;
- 	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
- 
- 	hw_params(priv).max_data_size = IWLAGN_RTC_DATA_SIZE;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 37837f7..d81c87d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -147,7 +147,6 @@ static int iwl6000_hw_set_hw_params(struct iwl_priv *priv)
- 			iwlagn_mod_params.num_of_queues;
- 
- 	hw_params(priv).max_txq_num = priv->cfg->base_params->num_of_queues;
--	hw_params(priv).max_stations = IWLAGN_STATION_COUNT;
- 	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
- 
- 	hw_params(priv).max_data_size = IWL60_RTC_DATA_SIZE;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index ea1452c..a1670e3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -349,7 +349,6 @@ static ssize_t iwl_dbgfs_stations_read(struct file *file, char __user *user_buf,
- 	struct iwl_priv *priv = file->private_data;
- 	struct iwl_station_entry *station;
- 	struct iwl_tid_data *tid_data;
--	int max_sta = hw_params(priv).max_stations;
- 	char *buf;
- 	int i, j, pos = 0;
- 	ssize_t ret;
-@@ -363,7 +362,7 @@ static ssize_t iwl_dbgfs_stations_read(struct file *file, char __user *user_buf,
- 	pos += scnprintf(buf + pos, bufsz - pos, "num of stations: %d\n\n",
- 			priv->num_stations);
- 
--	for (i = 0; i < max_sta; i++) {
-+	for (i = 0; i < IWLAGN_STATION_COUNT; i++) {
- 		station = &priv->stations[i];
- 		if (!station->used)
- 			continue;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 3a24b47..1f7a93c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -165,7 +165,6 @@ struct iwl_mod_params {
-  * @rx_chains_num: Number of RX chains
-  * @valid_tx_ant: usable antennas for TX
-  * @valid_rx_ant: usable antennas for RX
-- * @max_stations: the maximal number of stations
-  * @ht40_channel: is 40MHz width possible: BIT(IEEE80211_BAND_XXX)
-  * @sku: sku read from EEPROM
-  * @rx_page_order: Rx buffer page order
-@@ -186,7 +185,6 @@ struct iwl_hw_params {
- 	u8  rx_chains_num;
- 	u8  valid_tx_ant;
- 	u8  valid_rx_ant;
--	u8  max_stations;
- 	u8  ht40_channel;
- 	bool shadow_reg_enable;
- 	u16 sku;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 30bfdd3..23a9364 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -248,8 +248,7 @@ u8 iwl_prep_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 	else if (is_broadcast_ether_addr(addr))
- 		sta_id = ctx->bcast_sta_id;
- 	else
--		for (i = IWL_STA_ID;
--		     i < hw_params(priv).max_stations; i++) {
-+		for (i = IWL_STA_ID; i < IWLAGN_STATION_COUNT; i++) {
- 			if (!compare_ether_addr(priv->stations[i].sta.sta.addr,
- 						addr)) {
- 				sta_id = i;
-@@ -535,7 +534,7 @@ void iwl_clear_ucode_stations(struct iwl_priv *priv,
- 	IWL_DEBUG_INFO(priv, "Clearing ucode stations in driver\n");
- 
- 	spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
--	for (i = 0; i < hw_params(priv).max_stations; i++) {
-+	for (i = 0; i < IWLAGN_STATION_COUNT; i++) {
- 		if (ctx && ctx->ctxid != priv->stations[i].ctxid)
- 			continue;
- 
-@@ -576,7 +575,7 @@ void iwl_restore_stations(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 
- 	IWL_DEBUG_ASSOC(priv, "Restoring all known stations ... start.\n");
- 	spin_lock_irqsave(&priv->shrd->sta_lock, flags_spin);
--	for (i = 0; i < hw_params(priv).max_stations; i++) {
-+	for (i = 0; i < IWLAGN_STATION_COUNT; i++) {
- 		if (ctx->ctxid != priv->stations[i].ctxid)
- 			continue;
- 		if ((priv->stations[i].used & IWL_STA_DRIVER_ACTIVE) &&
-@@ -589,7 +588,7 @@ void iwl_restore_stations(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 		}
- 	}
- 
--	for (i = 0; i < hw_params(priv).max_stations; i++) {
-+	for (i = 0; i < IWLAGN_STATION_COUNT; i++) {
- 		if ((priv->stations[i].used & IWL_STA_UCODE_INPROGRESS)) {
- 			memcpy(&sta_cmd, &priv->stations[i].sta,
- 			       sizeof(struct iwl_addsta_cmd));
-@@ -692,7 +691,7 @@ void iwl_dealloc_bcast_stations(struct iwl_priv *priv)
- 	int i;
- 
- 	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
--	for (i = 0; i < hw_params(priv).max_stations; i++) {
-+	for (i = 0; i < IWLAGN_STATION_COUNT; i++) {
- 		if (!(priv->stations[i].used & IWL_STA_BCAST))
- 			continue;
- 
--- 
-1.7.0.4
+p.s. you will need to enable CONFIG_IWLWIFI_DEBUGFS option in
+your .config
+
+Thanks
+Wey
+>                         Pekka
+
 
