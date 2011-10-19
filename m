@@ -1,124 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:41933 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752853Ab1JJINA (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:44532 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753699Ab1JSGyH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 04:13:00 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 27so1109073eye.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 01:12:59 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 14/29] wl12xx: make WL1271_FLAG_AP_STARTED flag per-vif
-Date: Mon, 10 Oct 2011 10:13:02 +0200
-Message-Id: <1318234397-21081-15-git-send-email-eliad@wizery.com> (sfid-20111010_101305_726195_3F1144C3)
-In-Reply-To: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+	Wed, 19 Oct 2011 02:54:07 -0400
+Date: Wed, 19 Oct 2011 15:25:17 +0900
+From: Norbert Preining <preining@logic.at>
+To: David Rientjes <rientjes@google.com>
+Cc: linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>, ilw@linux.intel.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwlagn is getting very shaky
+Message-ID: <20111019062517.GC11588@gamma.logic.tuwien.ac.at> (sfid-20111019_085418_026394_B23E487B)
+References: <20111019060108.GA11588@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This flag should be set per-vif, rather than globally.
+Hi David, hi all
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c   |   14 +++++++-------
- drivers/net/wireless/wl12xx/tx.c     |    2 +-
- drivers/net/wireless/wl12xx/wl12xx.h |    2 +-
- 3 files changed, 9 insertions(+), 9 deletions(-)
+On Di, 18 Okt 2011, David Rientjes wrote:
+> There have been recent issues in 3.1-rc9 reported with iwlagn, see the 
+> thread at https://lkml.org/lkml/2011/10/15/107 even though you have 
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 092b3b5..4c4b34d 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1235,7 +1235,7 @@ static void wl1271_recovery_work(struct work_struct *work)
- 	 */
- 	wl12xx_for_each_wlvif(wl, wlvif) {
- 		if (test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags) ||
--		    test_bit(WL1271_FLAG_AP_STARTED, &wl->flags))
-+		    test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags))
- 			wlvif->tx_security_seq +=
- 				WL1271_TX_SQN_POST_RECOVERY_PADDING;
- 	}
-@@ -1662,7 +1662,7 @@ static int wl1271_configure_suspend_ap(struct wl1271 *wl,
- 
- 	mutex_lock(&wl->mutex);
- 
--	if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags))
-+	if (!test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags))
- 		goto out_unlock;
- 
- 	ret = wl1271_ps_elp_wakeup(wl);
-@@ -2758,7 +2758,7 @@ static int wl1271_set_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			hlid = wlvif->ap.bcast_hlid;
- 		}
- 
--		if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags)) {
-+		if (!test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags)) {
- 			/*
- 			 * We do not support removing keys after AP shutdown.
- 			 * Pretend we do to make mac80211 happy.
-@@ -3416,7 +3416,7 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
- 
- 	if ((changed & BSS_CHANGED_BEACON_ENABLED)) {
- 		if (bss_conf->enable_beacon) {
--			if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags)) {
-+			if (!test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags)) {
- 				ret = wl12xx_cmd_role_start_ap(wl, wlvif);
- 				if (ret < 0)
- 					goto out;
-@@ -3425,16 +3425,16 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
- 				if (ret < 0)
- 					goto out;
- 
--				set_bit(WL1271_FLAG_AP_STARTED, &wl->flags);
-+				set_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags);
- 				wl1271_debug(DEBUG_AP, "started AP");
- 			}
- 		} else {
--			if (test_bit(WL1271_FLAG_AP_STARTED, &wl->flags)) {
-+			if (test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags)) {
- 				ret = wl12xx_cmd_role_stop_ap(wl, wlvif);
- 				if (ret < 0)
- 					goto out;
- 
--				clear_bit(WL1271_FLAG_AP_STARTED, &wl->flags);
-+				clear_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags);
- 				wl1271_debug(DEBUG_AP, "stopped AP");
- 			}
- 		}
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 5ad4173..a6bc979 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -168,7 +168,7 @@ u8 wl12xx_tx_get_hlid_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	} else {
- 		struct ieee80211_hdr *hdr;
- 
--		if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags))
-+		if (!test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags))
- 			return wl->system_hlid;
- 
- 		hdr = (struct ieee80211_hdr *)skb->data;
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index aa198a6..042ab07 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -325,7 +325,6 @@ enum wl12xx_flags {
- 	WL1271_FLAG_PSPOLL_FAILURE,
- 	WL1271_FLAG_STA_STATE_SENT,
- 	WL1271_FLAG_FW_TX_BUSY,
--	WL1271_FLAG_AP_STARTED,
- 	WL1271_FLAG_IF_INITIALIZED,
- 	WL1271_FLAG_DUMMY_PACKET_PENDING,
- 	WL1271_FLAG_SUSPENDED,
-@@ -339,6 +338,7 @@ enum wl12xx_flags {
- enum wl12xx_vif_flags {
- 	WLVIF_FLAG_STA_ASSOCIATED,
- 	WLVIF_FLAG_IBSS_JOINED,
-+	WLVIF_FLAG_AP_STARTED,
- };
- 
- struct wl1271_link {
--- 
-1.7.6.401.g6a319
+Interesting. I read through the thread and activated the debugfs 
+option.
 
+I could get my hardware back by
+	echo 1 > /sys/kernel/debug/ieee80211/phy0/iwlagn/debug/force_reset
+
+[ 2761.352629] ieee80211 phy0: Hardware restart was requested
+[ 2761.352714] iwlagn 0000:06:00.0: L1 Enabled; Disabling L0S
+[ 2761.355763] iwlagn 0000:06:00.0: Radio type=0x1-0x2-0x0
+[ 2779.484308] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
+[ 2779.684128] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
+[ 2779.884087] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
+[ 2780.084079] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
+[ 2788.051381] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
+[ 2788.248079] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
+[ 2788.448083] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
+[ 2788.648140] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
+[ 2796.614710] wlan0: authenticate with 00:24:c4:ab:bd:ef (try 1)
+[ 2796.615623] wlan0: authenticated
+[ 2796.618046] wlan0: associate with 00:24:c4:ab:bd:ef (try 1)
+[ 2796.622748] wlan0: RX AssocResp from 00:24:c4:ab:bd:ef (capab=0x1 status=0 aid=1)
+[ 2796.622751] wlan0: associated
+[ 2871.224192] e1000e: eth0 NIC Link is Down
+
+I unplugged the cable and could ping the world still, nice....
+
+After a short time I got:
+[ 2895.575964] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
+[ 2895.772067] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
+[ 2895.972101] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
+[ 2896.172054] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
+[ 2905.316968] wlan0: deauthenticating from 00:24:c4:ab:bd:ef by local choice (reason=2)
+[ 2905.356316] cfg80211: Calling CRDA to update world regulatory domain
+[ 2905.361965] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 1)
+[ 2905.560063] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 2)
+[ 2905.760091] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 3)
+[ 2905.960077] wlan0: authentication with 00:24:c4:ab:bd:e0 timed out
+[ 2913.908984] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
+[ 2914.108116] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
+[ 2914.308116] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
+[ 2914.508103] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
+[ 2922.473062] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
+[ 2922.672109] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
+[ 2922.872106] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
+[ 2923.072103] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
+
+And at this time the tx_queue showed me:
+------------------------------------------------------------
+hwq 00: read=91 write=91 stop=1 swq_id=0x00 (ac 0/hwq 0)
+        stop-count: 1
+hwq 01: read=0 write=0 stop=0 swq_id=0x05 (ac 1/hwq 1)
+        stop-count: 0
+hwq 02: read=127 write=127 stop=0 swq_id=0x0a (ac 2/hwq 2)
+        stop-count: 0
+hwq 03: read=0 write=0 stop=0 swq_id=0x0f (ac 3/hwq 3)
+        stop-count: 0
+hwq 04: read=13 write=13 stop=0 swq_id=0x00 (ac 0/hwq 0)
+hwq 05: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
+hwq 06: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
+hwq 07: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
+hwq 08: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
+hwq 09: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
+hwq 10: read=0 write=0 stop=0 swq_id=0x2a (ac 2/hwq 10)
+hwq 11: read=0 write=0 stop=0 swq_id=0x2c (ac 0/hwq 11)
+hwq 12: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
+hwq 13: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
+hwq 14: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
+hwq 15: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
+hwq 16: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
+hwq 17: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
+hwq 18: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
+hwq 19: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
+-------------------------------------------------
+
+Hope that helps. Anyone let me know if you need more testing.
+
+Once more, be reminded the the firmware of the iwlagn is from
+an experimental build that should solve the AGN stopped working
+problem.
+
+Best wishes
+
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+SCRAMOGE (vb.)
+To cut oneself whilst licking envelopes.
+			--- Douglas Adams, The Meaning of Liff
