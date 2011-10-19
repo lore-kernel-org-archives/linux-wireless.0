@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39720 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753015Ab1JHNuL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Oct 2011 09:50:11 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH] ath9k: disable unnecessary PHY error reporting
-Date: Sat,  8 Oct 2011 15:49:57 +0200
-Message-Id: <1318081797-77919-1-git-send-email-nbd@openwrt.org> (sfid-20111008_155020_392758_ECEA0FA0)
+Received: from mx3.schottelius.org ([77.109.138.221]:46699 "EHLO
+	mx3.schottelius.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752559Ab1JSNHy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Oct 2011 09:07:54 -0400
+Date: Wed, 19 Oct 2011 15:07:49 +0200
+From: Nico Schottelius <nico-linux-20111017@schottelius.org>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Nico Schottelius <nico-linux-20111017@schottelius.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: BUG: All network processes hang (brcmsmac/wpa_supplicant)
+Message-ID: <20111019130749.GD11883@schottelius.org> (sfid-20111019_150812_460609_383F9F20)
+References: <20111019123602.GA11883@schottelius.org>
+ <1319028563.8416.1.camel@edumazet-laptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1319028563.8416.1.camel@edumazet-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PHY errors relevant for ANI are always tracked by hardware counters, the
-bits that allow them to pass through the rx filter are independent of that.
-Enabling PHY errors in the rx filter often creates lots of useless DMA traffic
-and might be responsible for some of the rx dma stop failure warnings.
+Hey Eric,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
- drivers/net/wireless/ath/ath9k/ani.c  |    5 -----
- drivers/net/wireless/ath/ath9k/recv.c |    5 +----
- 2 files changed, 1 insertions(+), 9 deletions(-)
+Eric Dumazet [Wed, Oct 19, 2011 at 02:49:23PM +0200]:
+> 
+> Sorry, no CONFIG_LOCKDEP in your config or dmesg. Maybe you sent a
+> previous dmesg/config file ?
+> 
+> Note that you have "CONFIG_LOCKDEP_SUPPORT=y", not "CONFIG_LOCKDEP=y"
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 01240d6..2776c3c 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -504,9 +504,6 @@ static void ath9k_ani_reset_old(struct ath_hw *ah, bool is_scanning)
- 		ath9k_hw_ani_control(ah, ATH9K_ANI_CCK_WEAK_SIGNAL_THR,
- 				     ATH9K_ANI_CCK_WEAK_SIG_THR);
- 
--		ath9k_hw_setrxfilter(ah, ath9k_hw_getrxfilter(ah) |
--				     ATH9K_RX_FILTER_PHYERR);
--
- 		ath9k_ani_restart(ah);
- 		return;
- 	}
-@@ -527,8 +524,6 @@ static void ath9k_ani_reset_old(struct ath_hw *ah, bool is_scanning)
- 		ath9k_hw_ani_control(ah, ATH9K_ANI_FIRSTEP_LEVEL,
- 				     aniState->firstepLevel);
- 
--	ath9k_hw_setrxfilter(ah, ath9k_hw_getrxfilter(ah) &
--			     ~ATH9K_RX_FILTER_PHYERR);
- 	ath9k_ani_restart(ah);
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index f658ec6..d28a5dd 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -433,12 +433,9 @@ void ath_rx_cleanup(struct ath_softc *sc)
- 
- u32 ath_calcrxfilter(struct ath_softc *sc)
- {
--#define	RX_FILTER_PRESERVE (ATH9K_RX_FILTER_PHYERR | ATH9K_RX_FILTER_PHYRADAR)
--
- 	u32 rfilt;
- 
--	rfilt = (ath9k_hw_getrxfilter(sc->sc_ah) & RX_FILTER_PRESERVE)
--		| ATH9K_RX_FILTER_UCAST | ATH9K_RX_FILTER_BCAST
-+	rfilt = ATH9K_RX_FILTER_UCAST | ATH9K_RX_FILTER_BCAST
- 		| ATH9K_RX_FILTER_MCAST;
- 
- 	if (sc->rx.rxfilter & FIF_PROBE_REQ)
+Right, make all told me to setup CONFIG_LOCKDEP_SUPPORT=y, but I've
+setup CONFIG_LOCKDEP=y manually in .config as I haven't found the entry
+in menuconfig.
+
+It seems that this option was removed from .config in the build process,
+though.
+
+Should I set it up via
+
+  make -j5 CONFIG_LOCKDEP=y CONFIG_LOCKDEP_SUPPORT=y 
+
+?
+
+Cheers,
+
+Nico
+
 -- 
-1.7.3.2
-
+PGP key: 7ED9 F7D3 6B10 81D7 0EC5  5C09 D7DC C8E4 3187 7DF0
