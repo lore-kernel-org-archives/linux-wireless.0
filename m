@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:43812 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752291Ab1J0UM5 (ORCPT
+Received: from mx3.schottelius.org ([77.109.138.221]:58529 "EHLO
+	mx3.schottelius.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752559Ab1JSNJ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Oct 2011 16:12:57 -0400
-Received: from wpaz1.hot.corp.google.com (wpaz1.hot.corp.google.com [172.24.198.65])
-	by smtp-out.google.com with ESMTP id p9RKCuXo024590
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Oct 2011 13:12:56 -0700
-Received: from pzk1 (pzk1.prod.google.com [10.243.19.129])
-	by wpaz1.hot.corp.google.com with ESMTP id p9RK5Zt5024457
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Oct 2011 13:12:55 -0700
-Received: by pzk1 with SMTP id 1so11667766pzk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Oct 2011 13:12:55 -0700 (PDT)
-Date: Thu, 27 Oct 2011 13:12:52 -0700 (PDT)
-From: David Rientjes <rientjes@google.com>
-To: werner <w.landgraf@ru.ru>
-cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	dave.taht@gmail.com, arend@broadcom.com, toralf.foerster@gmx.de,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com, larry.finger@gmail.com
-Subject: Re: 3.1-rc9 and 3.1 wifi problem , problem continues with 3.1
-In-Reply-To: <web-634287632@zbackend1.aha.ru>
-Message-ID: <alpine.DEB.2.00.1110271312280.7639@chino.kir.corp.google.com> (sfid-20111027_221301_122455_A457934D)
-References: <web-634287632@zbackend1.aha.ru>
+	Wed, 19 Oct 2011 09:09:28 -0400
+Date: Wed, 19 Oct 2011 15:09:23 +0200
+From: Nico Schottelius <nico-linux-20111017@schottelius.org>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Nico Schottelius <nico-linux-20111017@schottelius.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: BUG: All network processes hang (brcmsmac/wpa_supplicant)
+Message-ID: <20111019130923.GA5382@schottelius.org> (sfid-20111019_150946_756952_7B6A54BA)
+References: <20111019123602.GA11883@schottelius.org>
+ <1319028563.8416.1.camel@edumazet-laptop>
+ <4E9EC96E.8020303@broadcom.com>
+ <1319029529.8416.3.camel@edumazet-laptop>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1319029529.8416.3.camel@edumazet-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 27 Oct 2011, werner wrote:
+Eric Dumazet [Wed, Oct 19, 2011 at 03:05:29PM +0200]:
+> [...]
+> make menuconfig
+>  -> Kernel hacking
+>    -> Lock debugging: prove locking correctness
 
-> With the patch sent by Guy, Wey-Yi W , now wifi works at that laptop.
-> 
+Alright, rebuilding.
 
-Could you send a pointer to the exact patch(es) that you applied so we can 
-add your tested-by?
+Nico
 
-Thanks for testing!
+-- 
+PGP key: 7ED9 F7D3 6B10 81D7 0EC5  5C09 D7DC C8E4 3187 7DF0
