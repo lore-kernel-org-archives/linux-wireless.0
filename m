@@ -1,181 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3106 "EHLO mms2.broadcom.com"
+Received: from mga14.intel.com ([143.182.124.37]:17242 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754363Ab1JUNzc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 09:55:32 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 09/17] brcm80211: smac: modified Mac80211 callback
- interface
-Date: Fri, 21 Oct 2011 15:55:11 +0200
-Message-ID: <1319205319-16891-10-git-send-email-arend@broadcom.com> (sfid-20111021_155540_668331_0CC1D420)
-In-Reply-To: <1319205319-16891-1-git-send-email-arend@broadcom.com>
-References: <1319205319-16891-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751704Ab1JSGpj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Oct 2011 02:45:39 -0400
+Subject: Re: iwlagn is getting very shaky
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Pekka Enberg <penberg@cs.helsinki.fi>
+Cc: David Rientjes <rientjes@google.com>,
+	Norbert Preining <preining@logic.at>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAOJsxLFXBQXDtjGkuHV8fpxSy4U0dOdzBm6=4xfy2dMQo7NvOg@mail.gmail.com>
+References: <20111019060108.GA11588@gamma.logic.tuwien.ac.at>
+	 <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com>
+	 <CAOJsxLFXBQXDtjGkuHV8fpxSy4U0dOdzBm6=4xfy2dMQo7NvOg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 18 Oct 2011 22:55:10 -0700
+Message-ID: <1319003710.31823.53.camel@wwguy-huron> (sfid-20111019_084605_063994_B77C9E86)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+hi,
 
-Upon ops_start(), a Mac80211 driver should enable receive functionality to
-support monitor mode. Also, upon ops_stop(), it should disable rx.
+On Tue, 2011-10-18 at 23:11 -0700, Pekka Enberg wrote:
+> On Wed, Oct 19, 2011 at 9:09 AM, David Rientjes <rientjes@google.com> wrote:
+> > On Wed, 19 Oct 2011, Norbert Preining wrote:
+> >
+> >> Hi everyone
+> >>
+> >> (please Cc),
+> >>
+> >> I am currently running 3.1.0-rc10, and I am having a hard time with
+> >> the wlan network here at the university.
+> >>
+> >> For quite some time, like 10min, it is fine, then suddently the
+> >> iwlagn driver gives up on me and connection is dropped.
+> >>
+> >> In the log file I see:
+> >> [  172.137011] iwlagn 0000:06:00.0: Tx aggregation enabled on ra = 00:24:c4:ab:bd:ef tid = 0
+> >> [  821.841016] iwlagn 0000:06:00.0: Tx aggregation enabled on ra = 00:24:c4:ab:bd:ef tid = 6
+> >> [ 1095.580735] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
+> >> [ 1095.780076] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
+> >> [ 1095.980101] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
+> >> [ 1096.180117] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
+> >> [ 1105.255464] wlan0: deauthenticating from 00:24:c4:ab:bd:ef by local choice (reason=2)
+> >> [ 1105.255519] iwlagn 0000:06:00.0: Stopping AGG while state not ON or starting
+> >> [ 1105.265581] cfg80211: Calling CRDA for country: JP
+> >> [ 1105.271476] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 1)
+> >> [ 1105.468105] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 2)
+> >> [ 1105.668110] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 3)
+> >> [ 1105.868090] wlan0: authentication with 00:24:c4:ab:bd:e0 timed out
+> >> [ 1113.667890] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
+> >> [ 1113.864116] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
+> >> [ 1114.064095] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
+> >> [ 1114.264109] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
+> >>
+> >> Somewhere around 1100 the connection is gone and never comes back again.
+> >>
+> >> I tried removing the driver module from the kernel and reinserting it,
+> >> tried to turn on and off the hardware swithc (rfkill), all without
+> >> no success, the wlan connection remains dead until I reboot.
+> >>
+> >> I am not sure exactely when it started, I guess somewhere in the
+> >> 3.1 cycle, before I was permanently working wiht wlan, now I always
+> >> plug in the cable.
+> >>
+> >> If there is any way to track down this, or any suggestions how I can
+> >> debug it, please let me know.
+> >>
+> >> Hardware: Sony VGN-Z11, Intel(R) WiFi Link 5100 AGN, REV=0x54
+> >> L1 Enabled; Disabling L0S
+> >> device EEPROM VER=0x11e, CALIB=0x4
+> >> Device SKU: 0Xf0
+> >> Tunable channels: 13 802.11bg, 24 802.11a channels
+> >> loaded firmware version 8.83.5.1 build 33692 (EXP)
+> >>
 
-Driver did not follow this rule so code has been changed.
+looks like you are using experimental version of uCode, but by saying
+that, I don't think i will make much differences
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   84 +++++++++-----------
- 1 files changed, 37 insertions(+), 47 deletions(-)
+so could you dump the tx queue to see if it is the similar problem what
+Norbert point out
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 915b741..f38ba17 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -284,6 +284,7 @@ static int brcms_ops_start(struct ieee80211_hw *hw)
- {
- 	struct brcms_info *wl = hw->priv;
- 	bool blocked;
-+	int err;
- 
- 	ieee80211_wake_queues(hw);
- 	spin_lock_bh(&wl->lock);
-@@ -292,20 +293,48 @@ static int brcms_ops_start(struct ieee80211_hw *hw)
- 	if (!blocked)
- 		wiphy_rfkill_stop_polling(wl->pub->ieee_hw->wiphy);
- 
--	return 0;
-+	spin_lock_bh(&wl->lock);
-+	if (!wl->pub->up)
-+		err = brcms_up(wl);
-+	else
-+		err = -ENODEV;
-+	spin_unlock_bh(&wl->lock);
-+
-+	if (err != 0)
-+		wiphy_err(hw->wiphy, "%s: brcms_up() returned %d\n", __func__,
-+			  err);
-+	return err;
- }
- 
- static void brcms_ops_stop(struct ieee80211_hw *hw)
- {
-+	struct brcms_info *wl = hw->priv;
-+	int status;
-+
- 	ieee80211_stop_queues(hw);
-+
-+	if (wl->wlc == NULL)
-+		return;
-+
-+	spin_lock_bh(&wl->lock);
-+	status = brcms_c_chipmatch(wl->wlc->hw->vendorid,
-+				   wl->wlc->hw->deviceid);
-+	spin_unlock_bh(&wl->lock);
-+	if (!status) {
-+		wiphy_err(wl->wiphy,
-+			  "wl: brcms_ops_stop: chipmatch failed\n");
-+		return;
-+	}
-+
-+	/* put driver in down state */
-+	spin_lock_bh(&wl->lock);
-+	brcms_down(wl);
-+	spin_unlock_bh(&wl->lock);
- }
- 
- static int
- brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
--	struct brcms_info *wl;
--	int err;
--
- 	/* Just STA for now */
- 	if (vif->type != NL80211_IFTYPE_AP &&
- 	    vif->type != NL80211_IFTYPE_MESH_POINT &&
-@@ -317,32 +346,12 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 		return -EOPNOTSUPP;
- 	}
- 
--	wl = hw->priv;
--	spin_lock_bh(&wl->lock);
--	if (!wl->pub->up)
--		err = brcms_up(wl);
--	else
--		err = -ENODEV;
--	spin_unlock_bh(&wl->lock);
--
--	if (err != 0)
--		wiphy_err(hw->wiphy, "%s: brcms_up() returned %d\n", __func__,
--			  err);
--
--	return err;
-+	return 0;
- }
- 
- static void
- brcms_ops_remove_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
--	struct brcms_info *wl;
--
--	wl = hw->priv;
--
--	/* put driver in down state */
--	spin_lock_bh(&wl->lock);
--	brcms_down(wl);
--	spin_unlock_bh(&wl->lock);
- }
- 
- static int brcms_ops_config(struct ieee80211_hw *hw, u32 changed)
-@@ -874,37 +883,18 @@ static void brcms_free(struct brcms_info *wl)
- }
- 
- /*
--* called from both kernel as from this kernel module.
-+* called from both kernel as from this kernel module (error flow on attach)
- * precondition: perimeter lock is not acquired.
- */
- static void brcms_remove(struct pci_dev *pdev)
- {
--	struct brcms_info *wl;
--	struct ieee80211_hw *hw;
--	int status;
--
--	hw = pci_get_drvdata(pdev);
--	wl = hw->priv;
--	if (!wl) {
--		pr_err("wl: brcms_remove: pci_get_drvdata failed\n");
--		return;
--	}
-+	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
-+	struct brcms_info *wl = hw->priv;
- 
--	spin_lock_bh(&wl->lock);
--	status = brcms_c_chipmatch(pdev->vendor, pdev->device);
--	spin_unlock_bh(&wl->lock);
--	if (!status) {
--		wiphy_err(wl->wiphy, "wl: brcms_remove: chipmatch "
--				     "failed\n");
--		return;
--	}
- 	if (wl->wlc) {
- 		wiphy_rfkill_set_hw_state(wl->pub->ieee_hw->wiphy, false);
- 		wiphy_rfkill_stop_polling(wl->pub->ieee_hw->wiphy);
- 		ieee80211_unregister_hw(hw);
--		spin_lock_bh(&wl->lock);
--		brcms_down(wl);
--		spin_unlock_bh(&wl->lock);
- 	}
- 	pci_disable_device(pdev);
- 
--- 
-1.7.4.1
+thanks
+Wey
+
+> >>
+> >> On the other hand, the same laptop with the very same configuration
+> >> works very nicely in my flat's wlan, which is some dirt cheap Japanese
+> >> only wlan router.
+> >>
+> >
+> > There have been recent issues in 3.1-rc9 reported with iwlagn, see the
+> > thread at https://lkml.org/lkml/2011/10/15/107 even though you have
+> > different hardware.  Adding Wey-Yi Guy from Intel and the linux-wireless
+> > mailing list to the cc.
+> 
+> I'm seeing very similar problems with 3.1-rc9 when my laptop is
+> connected to an iPhone WiFi hotspot. Works just fine at home where I
+> use Airport Express.
+> 
+>                         Pekka
 
 
