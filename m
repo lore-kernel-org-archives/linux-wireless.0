@@ -1,77 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:57016 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751070Ab1JGT5Z convert rfc822-to-8bit (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:65405 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753353Ab1JSHfq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 15:57:25 -0400
-Received: by qyk30 with SMTP id 30so977556qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Oct 2011 12:57:25 -0700 (PDT)
+	Wed, 19 Oct 2011 03:35:46 -0400
+Date: Wed, 19 Oct 2011 10:32:28 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: [patch 3/4 v2] mwifiex: prevent corruption instead of just warning
+Message-ID: <20111019073228.GS30887@longonot.mountain> (sfid-20111019_093557_909708_46976C9E)
+References: <20111018061514.GI27732@elgon.mountain>
+ <477F20668A386D41ADCC57781B1F70430817F59764@SC-VEXCH1.marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <1318017260.3974.9.camel@jlt3.sipsolutions.net>
-References: <1317772067-6998-1-git-send-email-mcgrof@qca.qualcomm.com>
- <1317772067-6998-4-git-send-email-mcgrof@qca.qualcomm.com> <1318017260.3974.9.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Fri, 7 Oct 2011 12:57:05 -0700
-Message-ID: <CAB=NE6WOvik7hJygC8cTpe+o1W==fsqw2ZgVA=_pbo6fpFhUzw@mail.gmail.com> (sfid-20111007_215729_182970_23C63E6F)
-Subject: Re: [PATCH 3/8] cfg80211: process regulatory DFS region for countries
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430817F59764@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 7, 2011 at 12:54 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2011-10-04 at 16:47 -0700, Luis R. Rodriguez wrote:
->
->>  /**
->> + * enum nl80211_dfs_regions - regulatory DFS regions
->> + *
->> + * @NL80211_DFS_UNSET: Country has no DFS master region specified
->> + * @NL80211_DFS_FCC_: Country follows DFS master rules from FCC
->> + * @NL80211_DFS_FCC_: Country follows DFS master rules from ETSI
->> + * @NL80211_DFS_JP_: Country follows DFS master rules from JP/MKK/Telec
->> + */
->> +enum nl80211_cflags {
->> +     NL80211_DFS_UNSET       = 0,
->
-> That seems odd -- nl80211 convention would be to just leave out the
-> attribute.
+Probably we never hit this condition, but in case we do, we may as
+well put a return here instead of just printing a warning message and
+then corrupting memory.  The caller doesn't check the return code.
 
-I wonder what seems more odd, having that present or looking at this:
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+v2: Use the error handling code to free the skb before returning.
 
-+bool reg_supported_dfs_region(u8 dfs_region)
-+{
-+       switch (dfs_region) {
-+       case 0:
-+       case NL80211_DFS_FCC:
-+       case NL80211_DFS_ETSI:
-+       case NL80211_DFS_JP:
-+               return true;
-+       default:
-+               REG_DBG_PRINT("Ignoring uknown DFS master region: %d\n",
-+                             dfs_region);
-+               return false;
-+       }
-+}
-
-Vs:
-
-+bool reg_supported_dfs_region(u8 dfs_region)
-+{
-+       switch (dfs_region) {
-+       case NL80211_DFS_UNSET:
-+       case NL80211_DFS_FCC:
-+       case NL80211_DFS_ETSI:
-+       case NL80211_DFS_JP:
-+               return true;
-+       default:
-+               REG_DBG_PRINT("Ignoring uknown DFS master region: %d\n",
-+                             dfs_region);
-+               return false;
-+       }
-+}
-
-You pick, you're the maintainer.
-
-  Luis
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index d12d440..a2f3200 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1228,9 +1228,12 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
+ 	if (!skb)
+ 		return 0;
+ 
+-	if (rdptr >= MWIFIEX_MAX_EVT_BD)
++	if (rdptr >= MWIFIEX_MAX_EVT_BD) {
+ 		dev_err(adapter->dev, "event_complete: Invalid rdptr 0x%x\n",
+ 					rdptr);
++		ret = -EINVAL;
++		goto done;
++	}
+ 
+ 	/* Read the event ring write pointer set by firmware */
+ 	if (mwifiex_read_reg(adapter, REG_EVTBD_WRPTR, &wrptr)) {
