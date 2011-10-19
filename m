@@ -1,44 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:26311 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934819Ab1JETzQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 15:55:16 -0400
-Date: Wed, 5 Oct 2011 22:52:28 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: Yogesh Powar <yogeshp@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mwifiex: add cfg80211 handlers add/del_virtual_intf
-Message-ID: <20111005195228.GG30887@longonot.mountain> (sfid-20111005_215521_557191_FFD958AD)
-References: <20111005060744.GB32513@elgon.mountain>
- <477F20668A386D41ADCC57781B1F70430815597445@SC-VEXCH1.marvell.com>
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:51275 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754355Ab1JSV3V convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Oct 2011 17:29:21 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Date: Wed, 19 Oct 2011 14:29:02 -0700
+Subject: RE: [patch 3/4 v2] mwifiex: prevent corruption instead of just
+ warning
+Message-ID: <477F20668A386D41ADCC57781B1F70430817F59AC7@SC-VEXCH1.marvell.com> (sfid-20111019_232926_676272_BEF69F5E)
+References: <20111018061514.GI27732@elgon.mountain>
+ <477F20668A386D41ADCC57781B1F70430817F59764@SC-VEXCH1.marvell.com>
+ <20111019073228.GS30887@longonot.mountain>
+In-Reply-To: <20111019073228.GS30887@longonot.mountain>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430815597445@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 05, 2011 at 12:08:36PM -0700, Bing Zhao wrote:
-> Since the first element of priv[] cannot be NULL. How about this fix?
+Hi Dan,
+
+Thanks for the patch.
+
+> -----Original Message-----
+> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+> Sent: Wednesday, October 19, 2011 12:32 AM
+> To: Bing Zhao
+> Cc: John W. Linville; linux-wireless@vger.kernel.org; kernel-janitors@vger.kernel.org
+> Subject: [patch 3/4 v2] mwifiex: prevent corruption instead of just warning
 > 
-> +       priv = adapter->priv[0];
-> +       BUG_ON(!priv);
-> +
->         wiphy_unregister(priv->wdev->wiphy);
+> Probably we never hit this condition, but in case we do, we may as
+> well put a return here instead of just printing a warning message and
+> then corrupting memory.  The caller doesn't check the return code.
 > 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-I don't know the code at all, so I'll trust you on that.  :)
+Acked-by: Bing Zhao <bzhao@marvell.com>
 
-But please don't add the BUG_ON().  Calls to BUG_ON() make the code
-messier, and they are more painful than needed for the user.  If we
-don't have the BUG_ON() then we get an Oops and the driver will die,
-but we can still can close our documents and reboot the system.
+Regards,
+Bing
 
-Debugging NULL dereference bugs is normally super easy.  Just compile
-with CONFIG_DEBUG_INFO=y, run gdb on the .ko file and type:
-"list *(function_name+0x63)" at the gdb prompt.  Done.
-
-regards,
-dan carpenter
-
+> ---
+> v2: Use the error handling code to free the skb before returning.
+> 
+> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+> index d12d440..a2f3200 100644
+> --- a/drivers/net/wireless/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/mwifiex/pcie.c
+> @@ -1228,9 +1228,12 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
+>  	if (!skb)
+>  		return 0;
+> 
+> -	if (rdptr >= MWIFIEX_MAX_EVT_BD)
+> +	if (rdptr >= MWIFIEX_MAX_EVT_BD) {
+>  		dev_err(adapter->dev, "event_complete: Invalid rdptr 0x%x\n",
+>  					rdptr);
+> +		ret = -EINVAL;
+> +		goto done;
+> +	}
+> 
+>  	/* Read the event ring write pointer set by firmware */
+>  	if (mwifiex_read_reg(adapter, REG_EVTBD_WRPTR, &wrptr)) {
