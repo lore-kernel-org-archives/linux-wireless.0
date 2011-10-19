@@ -1,78 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from calzone.tip.net.au ([203.10.76.15]:55664 "EHLO
-	calzone.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751261Ab1JDIOR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 04:14:17 -0400
-Date: Tue, 4 Oct 2011 19:14:08 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	<linux-next@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: build failure after merge of the moduleh tree
-Message-Id: <20111004191408.8f211d359d9e5d7b65129c4c@canb.auug.org.au> (sfid-20111004_101438_748583_77F1E5EC)
-In-Reply-To: <4E8AB741.9030707@qca.qualcomm.com>
-References: <20111004180333.44f741dc08063a918c9b581f@canb.auug.org.au>
-	<4E8AB741.9030707@qca.qualcomm.com>
+Received: from mga11.intel.com ([192.55.52.93]:23496 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754157Ab1JSPhK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Oct 2011 11:37:10 -0400
+Subject: Re: iwlagn is getting very shaky
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Norbert Preining <preining@logic.at>
+Cc: David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+In-Reply-To: <20111019124931.GC3963@gamma.logic.tuwien.ac.at>
+References: <CAOJsxLFXBQXDtjGkuHV8fpxSy4U0dOdzBm6=4xfy2dMQo7NvOg@mail.gmail.com>
+	 <1319003710.31823.53.camel@wwguy-huron>
+	 <20111019064818.GB14817@gamma.logic.tuwien.ac.at>
+	 <1319004938.31823.59.camel@wwguy-huron>
+	 <20111019060108.GA11588@gamma.logic.tuwien.ac.at>
+	 <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com>
+	 <20111019062517.GC11588@gamma.logic.tuwien.ac.at>
+	 <1319003304.31823.46.camel@wwguy-huron>
+	 <20111019064628.GA14817@gamma.logic.tuwien.ac.at>
+	 <1319004836.31823.57.camel@wwguy-huron>
+	 <20111019124931.GC3963@gamma.logic.tuwien.ac.at>
+Content-Type: multipart/mixed; boundary="=-cUDhd+zcP0UnhbzSAkY6"
+Date: Wed, 19 Oct 2011 08:31:22 -0700
+Message-ID: <1319038282.25023.21.camel@wwguy-ubuntu> (sfid-20111019_173733_866551_4FBEB7F2)
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA256";
- boundary="Signature=_Tue__4_Oct_2011_19_14_08_+1100_OgMS7/LWXgk_Z5.d"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Tue__4_Oct_2011_19_14_08_+1100_OgMS7/LWXgk_Z5.d
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-Hi Kalle,
+--=-cUDhd+zcP0UnhbzSAkY6
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-On Tue, 4 Oct 2011 10:35:29 +0300 Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->
-> On 10/04/2011 10:03 AM, Stephen Rothwell wrote:
-> > After merging the moduleh tree, today's linux-next build (x86_64
-> > allmodconfig) failed like this:
-> >=20
-> > drivers/net/wireless/ath/ath6kl/debug.c:237:11: error: 'THIS_MODULE' un=
-declared here (not in a function)
-> >=20
-> > Caused by commit 9a7308341b71 ("ath6kl: silence "invalid rate" warning")
-> > from the wireless tree interacting with the module.h split.
-> >=20
-> > I added this patch:
->=20
-> John&Paul, how do we handle this patch?
+Hi Norbert,
 
-Since it adds an include of export.h (which only exists in Paul's tree),
-it goes into Paul's post merge patch series.
+On Wed, 2011-10-19 at 05:49 -0700, Norbert Preining wrote:
+> Hi Wey,
+> 
+> On Di, 18 Okt 2011, Guy, Wey-Yi wrote:
+> > Could you please let me know the brand/model of the AP which having
+> > problem. Also the configuration of your NIC also help.
+> 
+> I will try to find out as many information as possible tomorrow
+> when I am back at university. I think the routers are hanging on
+> the ceiling, so I can somehow check what they are.
+> 
+> > also, when you say you don't have problem with other router, could you
+> > please be more clear, are those APs having the similar functions as the
+> > one you have in university, or different? 
+> 
+> Well, at home I have a normal WLAN router, one where you plug on
+> the one side some upstream cable and then you have several downstream
+> cable (eth) and wlan.
+> 
+> On the university there is probably much more system since there are many
+> APs and one can easily wander around. I will try to find out as
+> much as possible.
+> 
+> Anything one can to wiht iwconfig, ethercap or similar tools?
+> 
+> > just got a idea, could you try to revert
+> > commit#68b993118f715cc631b62b6a50574e4701fe9ace
+> 
+> I try it tomorrow and let you know. I tried for now to revert it
+> directly without success, but I will try to do it by hand. If
+> I have problems I let you know. Tomorrow, now is break time ;-)
+> 
+Are you connect on 5.2GHz? looks to me there were only one place can
+stop the queue which is for radar channel detection.
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+instead of having you to revert the patch I ask you to do, could you
+please just apply the patch I attach here and see if it make any
+differences? it is also for debugging purpose, so please check the dmesg
+log.
 
---Signature=_Tue__4_Oct_2011_19_14_08_+1100_OgMS7/LWXgk_Z5.d
-Content-Type: application/pgp-signature
+Thanks
+Wey 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+--=-cUDhd+zcP0UnhbzSAkY6
+Content-Disposition: attachment; filename="0001-iwlwifi-stop-queue-testing.patch"
+Content-Type: text/x-patch; name="0001-iwlwifi-stop-queue-testing.patch"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-iQIcBAEBCAAGBQJOisBQAAoJEECxmPOUX5FErDsQAJCQd4pGKKw8Eca6rXZajN4t
-oxUUM1s/LEPChhI/sUcB6mpXaQB70dOU+wxI2IamCE+eFXCzUZWTQ6V+fTC3/Fgt
-GRsbDVIOfMgtrSJYuvJC78N7/dlvYK84cYkf2XFJCB2J/PNnunrMELxIn17yZbBr
-pcVeoLdD46wHRHN9lKFAFwOFdEKtCNyfG30yYvcwybfO0oPICmJOPUHtFtnv8krS
-p8KF6PM54TDKPe09yyP0ljf+R5oS+jrCmIa1TM2wRH6vD3yS5iHLwDMhpClxWcel
-5i1i2Wp3XpxX614ov+hz6CeKl2xI1lhmnftCX+C4FhlwzsAxzlYxkOh5QoyETub4
-2lvOUjSXtKL/SQm/RTC2gjK9f/bvAIGaarYF8hQfvv9sI6kXaPAmDHttoooqbhSX
-sAk8DBAW5XeCVel3SlHZ7z4Unlrp9wavzwwtVYkyN2vEtsuSmCmD7D9qgvUZqFho
-kj4c0nBajtt66tRsvUUP59WtTueVYmOu+uWho4NIIulaX7Z0YJjDabm2QM/LdamZ
-UU6Tjpr7GeB6H1EjQ2N0NrwibD48imxR4ViG8EXo83Wup/r1BvCsuKT7NWkdvuhY
-3M3MrPW4yqikPXGmzasMiZuCDckqKFao1U155RvB3ylTxhCFw1sDCZAyex08ulk9
-Wg+eHsDMYnM2eoX5ZPro
-=w/T1
------END PGP SIGNATURE-----
+>From 2a5d4b0e917948b403957b57d053d74063a2b8ff Mon Sep 17 00:00:00 2001
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Date: Wed, 19 Oct 2011 08:28:02 -0700
+Subject: [PATCH 1/1] iwlwifi: stop queue testing
 
---Signature=_Tue__4_Oct_2011_19_14_08_+1100_OgMS7/LWXgk_Z5.d--
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 863c43f..5a87071 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -812,8 +812,13 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
+ 			if (status == TX_STATUS_FAIL_PASSIVE_NO_RX &&
+ 			    iwl_is_associated_ctx(ctx) && ctx->vif &&
+ 			    ctx->vif->type == NL80211_IFTYPE_STATION) {
++#if 0
+ 				ctx->last_tx_rejected = true;
+ 				iwl_trans_stop_queue(trans(priv), txq_id);
++#endif
++IWL_ERR(priv,
++	"Encounter TX_STATUS_FAIL_PASSIVE_NO_RX, am I on 5.2G band? (%d)\n",
++	txq_id);
+ 
+ 				IWL_DEBUG_TX_REPLY(priv,
+ 					   "TXQ %d status %s (0x%08x) "
+-- 
+1.7.0.4
+
+
+--=-cUDhd+zcP0UnhbzSAkY6--
+
