@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54155 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754820Ab1JXL1x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Oct 2011 07:27:53 -0400
-Date: Mon, 24 Oct 2011 13:27:46 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Eliad Peller <eliad@wizery.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] mac80211: fix remain_off_channel regression
-Message-ID: <20111024112745.GB2573@redhat.com> (sfid-20111024_132757_374588_EE7312F2)
-References: <1319130350-15514-1-git-send-email-eliad@wizery.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1319130350-15514-1-git-send-email-eliad@wizery.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:39655 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753506Ab1JSOqb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Oct 2011 10:46:31 -0400
+Message-ID: <1319035584.8416.34.camel@edumazet-laptop> (sfid-20111019_164645_798582_6DF299B9)
+Subject: Re: BUG: All network processes hang (brcmsmac/wpa_supplicant)
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Nico Schottelius <nico-linux-20111017@schottelius.org>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Date: Wed, 19 Oct 2011 16:46:24 +0200
+In-Reply-To: <20111019142837.GA1414@schottelius.org>
+References: <20111019123602.GA11883@schottelius.org>
+	 <1319028563.8416.1.camel@edumazet-laptop>
+	 <20111019130749.GD11883@schottelius.org>
+	 <20111019142837.GA1414@schottelius.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 20, 2011 at 07:05:49PM +0200, Eliad Peller wrote:
-> The offchannel code is currently broken - we should
-> remain_off_channel if the work was started, and
-> the work's channel and channel_type are the same
-> as local->tmp_channel and local->tmp_channel_type.
+Le mercredi 19 octobre 2011 à 16:28 +0200, Nico Schottelius a écrit :
+> Triggered it! 
 > 
-> However, if wk->chan_type and local->tmp_channel_type
-> coexist (e.g. have the same channel type), we won't
-> remain_off_channel.
+> And also got the traceback!
 > 
-> This behavior was introduced by commit da2fd1f
-> ("mac80211: Allow work items to use existing
-> channel type.")
+> Dmesg + log attached, let me know when I can pull the fix from
+> somewhere.
 > 
-> Tested-by: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
 
-Both patches fixes serious bugs, should be marked
-Cc: stable@kernel.org # 2.6.39+
+Sorry, I cant see same messages in your dmesg, no mention of stuck
+processes (blocked for more than 120 seconds.)
 
-I believe there is no need to repost, once informed
-John would take care of process patches properly.
+By the way, please update to latest 3.1.rc10
 
-Stanislaw
+
+
