@@ -1,65 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:31844 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750750Ab1JSHGH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Oct 2011 03:06:07 -0400
-Subject: Re: iwlagn is getting very shaky
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Norbert Preining <preining@logic.at>
-Cc: Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20111019064818.GB14817@gamma.logic.tuwien.ac.at>
-References: <20111019060108.GA11588@gamma.logic.tuwien.ac.at>
-	 <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com>
-	 <CAOJsxLFXBQXDtjGkuHV8fpxSy4U0dOdzBm6=4xfy2dMQo7NvOg@mail.gmail.com>
-	 <1319003710.31823.53.camel@wwguy-huron>
-	 <20111019064818.GB14817@gamma.logic.tuwien.ac.at>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 18 Oct 2011 23:15:38 -0700
-Message-ID: <1319004938.31823.59.camel@wwguy-huron> (sfid-20111019_090624_956787_41D24ED9)
-Mime-Version: 1.0
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:34483 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755341Ab1JSNgw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Oct 2011 09:36:52 -0400
+Received: by vws1 with SMTP id 1so1203093vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2011 06:36:51 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <F099D0EF3989304DBA09D2E81781FF0B049E423D@BLR-SJP-MBX4.wipro.com>
+References: <F099D0EF3989304DBA09D2E81781FF0B049E41F9@BLR-SJP-MBX4.wipro.com>
+	<CAOZOX0XfeX4_JqoXg_Z8VFrfhtR8BrpuoR+rDbE34_dXY4fDgw@mail.gmail.com>
+	<F099D0EF3989304DBA09D2E81781FF0B049E423D@BLR-SJP-MBX4.wipro.com>
+Date: Wed, 19 Oct 2011 15:36:51 +0200
+Message-ID: <CAOZOX0V7iQs4H1ofRtpRgsVEpTqSnHjCOc7juM7gCX47CCGWRA@mail.gmail.com> (sfid-20111019_153655_639650_452F2C56)
+Subject: Re: Ralink RT3070: absolute transmit power information
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: raghunathan.kailasanathan@wipro.com
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-10-18 at 23:48 -0700, Norbert Preining wrote:
-> On Di, 18 Okt 2011, Guy, Wey-Yi wrote:
-> > > >> loaded firmware version 8.83.5.1 build 33692 (EXP)
-> > > >>
-> > 
-> > looks like you are using experimental version of uCode, but by saying
-> > that, I don't think i will make much differences
-> > 
-> > so could you dump the tx queue to see if it is the similar problem what
-> > Norbert point out
-> 
-> Not sure what you mean Wey, should *I* Norbert use the default firmware
-> and try to reproduce it? Ir should Pekka try to reproduce it with
-> normal firmware? Or with both?
-> 
-Sorry, I was thinking ask Pekka to use the officialfirmware. But more
-important, I will like to find out is Pekka has the same issue as you
-have which is tx queue stopped.
+On Wed, Oct 19, 2011 at 3:29 PM,  <raghunathan.kailasanathan@wipro.com> wrote:
+>>You are using a driver not supported by this project,
+>>so you have to manually change the Ralink driver source code yourself.
+>>When you use the rt2x00 drivers, you automatically get the dBm/mW value.
+>
+> Is there a source tarball of rt2x00 available somewhere ? git ports are blocked by firewall and
+> this link does not work :
+> http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=summary
 
-Thanks
-Wey
- 
-> Best wishes
-> 
-> Norbert
-> ------------------------------------------------------------------------
-> Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-> JAIST, Japan                                 TeX Live & Debian Developer
-> DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-> ------------------------------------------------------------------------
-> WROOT (n.)
-> A short little berk who thinks that by pulling on his pipe and gazing
-> shrewdly at you he will give the impression that he is infinitely wise
-> and 5 ft 11 in.
-> 			--- Douglas Adams, The Meaning of Liff
+You can use compat-wireless tarball,
+or the wireless-testing, or linux-2.6 GIT trees.
 
-
+Ivo
