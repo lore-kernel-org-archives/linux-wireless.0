@@ -1,158 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:28348 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754611Ab1JYKOl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 06:14:41 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
-	<athiruve@qca.qualcomm.com>
-Subject: [PATCH 32/34] ath6kl: Cleanup few function parametrs in cfg80211.c
-Date: Tue, 25 Oct 2011 15:40:28 +0530
-Message-ID: <1319537430-12459-33-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_122050_176360_47EF6EF1)
-In-Reply-To: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from c60.cesmail.net ([216.154.195.49]:40420 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754721Ab1JSPzk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Oct 2011 11:55:40 -0400
+Date: Wed, 19 Oct 2011 11:55:20 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Joerg Pommnitz <pommnitz@yahoo.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>
+Subject: Re: [ath5k-devel] Performance regression between Madwifi/net80211
+ and ath5k/mac80211
+Message-ID: <20111019115520.79cfaef8@mj> (sfid-20111019_175543_563437_37F52320)
+In-Reply-To: <CAJ-VmokZibCys+9ZLg6yEbauJfbgErbezMcTZ2SjPmR9SMgQ7w@mail.gmail.com>
+References: <loom.20110621T215346-191@post.gmane.org>
+ <BANLkTik0umam7S+E1oog0LTEErMz-dZamg@mail.gmail.com>
+ <1308750102.64154.YahooMailRC@web161214.mail.bf1.yahoo.com>
+ <1308750416.29571.10.camel@jlt3.sipsolutions.net>
+ <1308753669.17439.YahooMailRC@web161208.mail.bf1.yahoo.com>
+ <1308754204.29571.15.camel@jlt3.sipsolutions.net>
+ <1308755270.21489.YahooMailRC@web161204.mail.bf1.yahoo.com>
+ <BANLkTi=Ob1H7XdG5-21SnjkuyVF9xw+xBA@mail.gmail.com>
+ <1319018802.31281.YahooMailNeo@web161205.mail.bf1.yahoo.com>
+ <CAJ-VmokZibCys+9ZLg6yEbauJfbgErbezMcTZ2SjPmR9SMgQ7w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are few functions getting called with ath6kl and vif->fw_if_idx
-as two of the paramers. Passing a respective vif should be enough
-to get those information. Also couple of functions are called with
-unused wiphy parametr, remove them as well.
+On Wed, 19 Oct 2011 19:33:53 +0800
+Adrian Chadd <adrian@freebsd.org> wrote:
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   38 ++++++++++++++--------------
- 1 files changed, 19 insertions(+), 19 deletions(-)
+> .. does madwifi have that net80211 "aggressive mode" by default, where
+> it overrides the best-effort WME queue parameters to allow for
+> bursting?
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index ddf53f3..b5d14fa 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -259,9 +259,10 @@ static bool ath6kl_is_rsn_ie(const u8 *pos)
- 	return pos[0] == WLAN_EID_RSN;
- }
- 
--static int ath6kl_set_assoc_req_ies(struct ath6kl *ar, u8 if_idx, const u8 *ies,
-+static int ath6kl_set_assoc_req_ies(struct ath6kl_vif *vif, const u8 *ies,
- 				    size_t ies_len)
- {
-+	struct ath6kl *ar = vif->ar;
- 	const u8 *pos;
- 	u8 *buf = NULL;
- 	size_t len = 0;
-@@ -288,8 +289,8 @@ static int ath6kl_set_assoc_req_ies(struct ath6kl *ar, u8 if_idx, const u8 *ies,
- 		}
- 	}
- 
--	ret = ath6kl_wmi_set_appie_cmd(ar->wmi, if_idx, WMI_FRAME_ASSOC_REQ,
--				       buf, len);
-+	ret = ath6kl_wmi_set_appie_cmd(ar->wmi, vif->fw_vif_idx,
-+				       WMI_FRAME_ASSOC_REQ, buf, len);
- 	kfree(buf);
- 	return ret;
- }
-@@ -405,8 +406,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 	}
- 
- 	if (sme->ie && (sme->ie_len > 0)) {
--		status = ath6kl_set_assoc_req_ies(ar, vif->fw_vif_idx, sme->ie,
--						  sme->ie_len);
-+		status = ath6kl_set_assoc_req_ies(vif, sme->ie, sme->ie_len);
- 		if (status)
- 			return status;
- 	}
-@@ -1677,9 +1677,10 @@ static bool ath6kl_is_p2p_ie(const u8 *pos)
- 		pos[4] == 0x9a && pos[5] == 0x09;
- }
- 
--static int ath6kl_set_ap_probe_resp_ies(struct ath6kl *ar, u8 if_idex,
--					const u8 *ies, size_t ies_len)
-+static int ath6kl_set_ap_probe_resp_ies(struct ath6kl_vif *vif, const u8 *ies,
-+					size_t ies_len)
- {
-+	struct ath6kl *ar = vif->ar;
- 	const u8 *pos;
- 	u8 *buf = NULL;
- 	size_t len = 0;
-@@ -1706,13 +1707,13 @@ static int ath6kl_set_ap_probe_resp_ies(struct ath6kl *ar, u8 if_idex,
- 		}
- 	}
- 
--	ret = ath6kl_wmi_set_appie_cmd(ar->wmi, if_idex, WMI_FRAME_PROBE_RESP,
--				       buf, len);
-+	ret = ath6kl_wmi_set_appie_cmd(ar->wmi, vif->fw_vif_idx,
-+				       WMI_FRAME_PROBE_RESP, buf, len);
- 	kfree(buf);
- 	return ret;
- }
- 
--static int ath6kl_ap_beacon(struct wiphy *wiphy, struct net_device *dev,
-+static int ath6kl_ap_beacon(struct net_device *dev,
- 			    struct beacon_parameters *info, bool add)
- {
- 	struct ath6kl *ar = ath6kl_priv(dev);
-@@ -1741,8 +1742,7 @@ static int ath6kl_ap_beacon(struct wiphy *wiphy, struct net_device *dev,
- 			return res;
- 	}
- 	if (info->proberesp_ies) {
--		res = ath6kl_set_ap_probe_resp_ies(ar, vif->fw_vif_idx,
--						   info->proberesp_ies,
-+		res = ath6kl_set_ap_probe_resp_ies(vif, info->proberesp_ies,
- 						   info->proberesp_ies_len);
- 		if (res)
- 			return res;
-@@ -1860,13 +1860,13 @@ static int ath6kl_ap_beacon(struct wiphy *wiphy, struct net_device *dev,
- static int ath6kl_add_beacon(struct wiphy *wiphy, struct net_device *dev,
- 			     struct beacon_parameters *info)
- {
--	return ath6kl_ap_beacon(wiphy, dev, info, true);
-+	return ath6kl_ap_beacon(dev, info, true);
- }
- 
- static int ath6kl_set_beacon(struct wiphy *wiphy, struct net_device *dev,
- 			     struct beacon_parameters *info)
- {
--	return ath6kl_ap_beacon(wiphy, dev, info, false);
-+	return ath6kl_ap_beacon(dev, info, false);
- }
- 
- static int ath6kl_del_beacon(struct wiphy *wiphy, struct net_device *dev)
-@@ -1936,10 +1936,10 @@ static int ath6kl_cancel_remain_on_channel(struct wiphy *wiphy,
- 	return ath6kl_wmi_cancel_remain_on_chnl_cmd(ar->wmi, vif->fw_vif_idx);
- }
- 
--static int ath6kl_send_go_probe_resp(struct ath6kl *ar, u8 if_idx,
--				     const u8 *buf, size_t len,
--				     unsigned int freq)
-+static int ath6kl_send_go_probe_resp(struct ath6kl_vif *vif, const u8 *buf,
-+				     size_t len, unsigned int freq)
- {
-+	struct ath6kl *ar = vif->ar;
- 	const u8 *pos;
- 	u8 *p2p;
- 	int p2p_len;
-@@ -1966,7 +1966,7 @@ static int ath6kl_send_go_probe_resp(struct ath6kl *ar, u8 if_idx,
- 		pos += 2 + pos[1];
- 	}
- 
--	ret = ath6kl_wmi_send_probe_response_cmd(ar->wmi, if_idx, freq,
-+	ret = ath6kl_wmi_send_probe_response_cmd(ar->wmi, vif->fw_vif_idx, freq,
- 						 mgmt->da, p2p, p2p_len);
- 	kfree(p2p);
- 	return ret;
-@@ -1992,7 +1992,7 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
- 		 * command to allow the target to fill in the generic IEs.
- 		 */
- 		*cookie = 0; /* TX status not supported */
--		return ath6kl_send_go_probe_resp(ar, vif->fw_vif_idx, buf, len,
-+		return ath6kl_send_go_probe_resp(vif, buf, len,
- 						 chan->center_freq);
- 	}
- 
+I tried madwifi-0.9.4 snapshot on a CM9 card, and I got:
+
+# iwpriv ath0 get_abolt
+ath0      get_abolt:218  
+
+218 is 0xda, which means that the following capabilities are enabled:
+
+IEEE80211_ABOLT_TURBO_PRIME
+IEEE80211_ABOLT_FAST_FRAME
+IEEE80211_ABOLT_BURST
+IEEE80211_ABOLT_XR
+IEEE80211_ABOLT_AR
+
+And those are not enabled:
+
+IEEE80211_ABOLT_TURBO_G
+IEEE80211_ABOLT_COMPRESSION
+IEEE80211_ABOLT_WME_ELE
+
+I would just unset all capabilities and retry.
+
+> I see exactly that difference in FreeBSD (33mbit vs 22mbit) when I
+> disable that aggressive mode code.
+
 -- 
-1.7.0.4
-
+Regards,
+Pavel Roskin
