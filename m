@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1925 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754639Ab1JQUiI convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40889 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042Ab1JTSLm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Oct 2011 16:38:08 -0400
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: =?iso-8859-1?Q?Andr=E9s_Garc=EDa_Saavedra?=
-	<andres.garcia.saavedra@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 17 Oct 2011 13:37:56 -0700
-Subject: RE: brcmfmac driver implementation: Questions
-Message-ID: <400C43189542CE41BC0A5B252FC90136BC0DF4A03E@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20111017_223811_945261_89A96023)
-References: <CADxqDgHYu51DQXOLT3eA=6PckSmXc42BFUF=Z7qZ_Cs45T1GjQ@mail.gmail.com>
-In-Reply-To: <CADxqDgHYu51DQXOLT3eA=6PckSmXc42BFUF=Z7qZ_Cs45T1GjQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=iso-8859-1
+	Thu, 20 Oct 2011 14:11:42 -0400
+Subject: Re: [PATCH 5/6] mac80211: add WMM IE to mesh frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, anagar6@uic.edu,
+	devel@lists.open80211s.org, linville@tuxdriver.com
+In-Reply-To: <CAG6hwVOaLp9SdPezdw=aLhKrKpPdp8m5vXf6rySTvCfriaziVw@mail.gmail.com> (sfid-20111020_200917_687301_3BF203A5)
+References: <1319072606-28291-1-git-send-email-thomas@cozybit.com>
+	 <1319072606-28291-6-git-send-email-thomas@cozybit.com>
+	 <1319109412.3959.7.camel@jlt3.sipsolutions.net>
+	 <CAG6hwVMUhJ=nV=6N+DpoagKWJxMjythPYMYCCzEb=mTr6TfytQ@mail.gmail.com>
+	 <1319133104.17101.5.camel@jlt3.sipsolutions.net>
+	 <CAG6hwVMmvu5jMQLeOWG2via0wqkHGs=nHSi_mKvgy9U2+m1FXA@mail.gmail.com>
+	 <1319133820.20837.0.camel@jlt3.sipsolutions.net>
+	 <CAG6hwVOaLp9SdPezdw=aLhKrKpPdp8m5vXf6rySTvCfriaziVw@mail.gmail.com>
+	 (sfid-20111020_200917_687301_3BF203A5)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 20 Oct 2011 20:11:38 +0200
+Message-ID: <1319134298.20837.1.camel@jlt3.sipsolutions.net> (sfid-20111020_201145_346835_6A532717)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Sent: maandag 17 oktober 2011 19:59
+On Thu, 2011-10-20 at 11:08 -0700, Thomas Pedersen wrote:
+> On Thu, Oct 20, 2011 at 11:03 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Thu, 2011-10-20 at 10:56 -0700, Thomas Pedersen wrote:
+> >
+> >> >> I'm not sure what you mean, this is the only way to get the WMM
+> >> >> parameters? Usually these are just set with ieee80211_set_wmm_defaul()
+> >> >> on bringing up the interface.
+> >> >
+> >> > Right, but
+> >> >  a) if you're using just the default, no need to derive from the default
+> >>
+> >> The user might wish to customize the queue parameters though.
+> >>
+> >> >  b) should they be changeable?
+> >>
+> >> Why not?
+> >
+> > Well there no API for it now, is there?
+> >
 > 
-> Hi all,
-> 
-> I would like to test some custom powersaving algorithms for 802.11abg
-> WLANs on some current android smartphone (e.g., nexus one). My
-> question is regarding the brcmfmac driver implementation for BCM4329
-> chipsets:
-> 
-> * The current open source implementation of the driver, brcmfmac, does
-> ONLY support 11n PHY?
+> NL80211_ATTR_WIPHY_TXQ_PARAMS?
 
-Yes. It supports the bcm4329 device which comes with a 11n phy, which
-can connect to a non-11n AP without problems.
+Oh, hmm. Ok I guess that's allowed on mesh -- but when it changes you
+won't update IEs?
 
-> * Does this driver interfaces the mac80211 operations or "acts as" a
-> mac80211 driver itself talking to cfg80211/nl80211?
+johannes
 
-The brcmfmac does not require mac80211, but interfaces with cfg80211.
-
-> * Does the chipset/current implementation support sleep/awake
-> triggers? (or at least quiet elements?)
-
-Nope. All powersaving the device does is done on the device as it
-knows best what parts of the device can be put to sleep. Who or what
-is going to fire those triggers?
-
-> Thanks for your answer,
-> Andrés
-
-Hope that helps. 
-
-Gr. AvS
 
