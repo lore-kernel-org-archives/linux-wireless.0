@@ -1,81 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52746 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753348Ab1JYKKR (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:60418 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322Ab1JTDO1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 06:10:17 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
-	<athiruve@qca.qualcomm.com>
-Subject: [PATCH 00/34] ath6kl Add multiple vif support
-Date: Tue, 25 Oct 2011 15:39:56 +0530
-Message-ID: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_121022_241770_4231A951)
+	Wed, 19 Oct 2011 23:14:27 -0400
+Date: Thu, 20 Oct 2011 12:14:21 +0900
+From: Norbert Preining <preining@logic.at>
+To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+Cc: David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+Subject: Re: iwlagn is getting very shaky
+Message-ID: <20111020031421.GS11060@gamma.logic.tuwien.ac.at> (sfid-20111020_051450_680682_2956407E)
+References: <20111019062517.GC11588@gamma.logic.tuwien.ac.at> <1319003304.31823.46.camel@wwguy-huron> <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111019124931.GC3963@gamma.logic.tuwien.ac.at> <1319038282.25023.21.camel@wwguy-ubuntu> <20111020020225.GO11060@gamma.logic.tuwien.ac.at> <1319074339.31823.68.camel@wwguy-huron> <20111020025123.GR11060@gamma.logic.tuwien.ac.at> <E9954878DD1FB34FAE5187FB88C58A3501A0D0992E@orsmsx506.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <E9954878DD1FB34FAE5187FB88C58A3501A0D0992E@orsmsx506.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch set adds basic infrastructure for multiple
-virtual interface. As configuring the firmware with more than one
-vif causes random target assert, the number of supported vifs is
-restricted to 1 for now. I would like to thank Vivek Natarajan
-(nataraja@qca.qualcomm.com) for his inital work in this area and
-Arthi Thiruvengadam (athiruve@qca.qualcomm.com) for finding some
-critical bugs. These patches are rebased over Kalle's recent 9-patch
-series.
+On Mi, 19 Okt 2011, Guy, Wey-Yi W wrote:
+> Hmm, I am sure I have the attachment, but here I attach again.
+> 
+> Also, the patch is simple. Only few lines
 
+No attachment again ... something is filtering here???
 
-Vasanthakumar Thiagarajan (34):
-  ath6kl: Pass ath6kl structure to ath6kl_init() instead of net_device
-  ath6kl: Keep wiphy reference in ath6kl structure
-  ath6kl: Refactor wiphy dev and net dev init functions
-  ath6kl: Cleanup fw interface type setting
-  ath6kl: Define an initial vif structure and use it
-  ath6kl: Define interface specific states
-  ath6kl: Move ssid and crypto information to vif structure
-  ath6kl: Move nw_type to vif structure
-  ath6kl: Move bssid information to vif structure
-  ath6kl: Move channel information to vif structure
-  ath6kl: Move key information to vif structure
-  ath6kl: Move aggregation information to vif structure
-  ath6kl: Move disconnect timer to vif structure
-  ath6kl: Move scan_req info and sme_state to vif
-  ath6kl: Move few more vif specific information to struct ath6kl_vif
-  ath6kl: Make net and target stats vif specific
-  ath6kl: Maintain firmware interface index in struct ath6kl_vif
-  ath6kl: Take vif information from wmi event
-  ath6kl: Remove net_device from ath6kl
-  ath6kl: Cleanup parameters in ath6kl_init_control_info() and
-    ath6kl_init_profile_info()
-  ath6kl: Refactor ath6kl_destroy()
-  ath6kl: Use interface index from wmi data headr
-  ath6kl: Store hw mac address in struct ath6kl
-  ath6kl: Introduce spinlock to protect vif specific information
-  ath6kl: Maintain virtual interface in a list
-  ath6kl: Use the other variant of netdev (un)register APIs
-  ath6kl: Configure inteface information for multi vif support
-  ath6kl: Implement add_virtual_intf() and del_virtual_intf()
-  ath6kl: Add a modparam to enable multi normal interface support
-  ath6kl: Initialize target wlan values for every vif
-  ath6kl: Use appropriate wdev from vif
-  ath6kl: Cleanup few function parametrs in cfg80211.c
-  ath6kl: Cleanup function parameters in
-    ath6kl_init_if_data()/ath6kl_deinit_if_data()
-  ath6kl: Enable only one interface to as a workaround for target
-    assert
+Please include it directly in the email
 
- drivers/net/wireless/ath/ath6kl/cfg80211.c |  978 ++++++++++++++++++----------
- drivers/net/wireless/ath/ath6kl/cfg80211.h |   16 +-
- drivers/net/wireless/ath/ath6kl/common.h   |    2 +-
- drivers/net/wireless/ath/ath6kl/core.h     |  161 +++--
- drivers/net/wireless/ath/ath6kl/debug.c    |   36 +-
- drivers/net/wireless/ath/ath6kl/init.c     |  420 ++++++-------
- drivers/net/wireless/ath/ath6kl/main.c     |  366 +++++------
- drivers/net/wireless/ath/ath6kl/sdio.c     |   12 +-
- drivers/net/wireless/ath/ath6kl/target.h   |    3 +
- drivers/net/wireless/ath/ath6kl/txrx.c     |  198 ++++--
- drivers/net/wireless/ath/ath6kl/wmi.c      |  426 +++++++-----
- drivers/net/wireless/ath/ath6kl/wmi.h      |  122 +++--
- 12 files changed, 1602 insertions(+), 1138 deletions(-)
+Best wishes
 
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+`How do you feel?' he asked him.
+bits of me keep
+passing out.' ....
+`We're safe,' he said.
+`Oh good,' said Arthur.
+in one of the
+spaceships of the Vogon Constructor Fleet.'
+this is obviously some strange usage of
+the word "safe" that I wasn't previously aware of.'
+                 --- Arthur after his first ever teleport ride.
+                 --- Douglas Adams, The Hitchhikers Guide to the Galaxy
