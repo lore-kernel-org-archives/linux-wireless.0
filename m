@@ -1,32 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:42450 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754560Ab1JFUpm (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:37571 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754304Ab1JTBDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Oct 2011 16:45:42 -0400
-Received: by qyk30 with SMTP id 30so33671qyk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 13:45:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1317931539.3945.9.camel@jlt3.sipsolutions.net>
-References: <1317931539.3945.9.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 6 Oct 2011 13:45:22 -0700
-Message-ID: <CAB=NE6X0FcQ-+Y_uBVsxLGbHsDWEj57jK3UNLGQQfkmyZJRrWQ@mail.gmail.com> (sfid-20111006_224546_225964_1BC4E8F3)
-Subject: Re: [PATCH] compat-wireless: add struct padding to fix wext issue
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 19 Oct 2011 21:03:32 -0400
+Received: by iaek3 with SMTP id k3so2770432iae.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2011 18:03:32 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: anagar6@uic.edu, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH 0/6] HT support for mesh
+Date: Wed, 19 Oct 2011 18:03:20 -0700
+Message-Id: <1319072606-28291-1-git-send-email-thomas@cozybit.com> (sfid-20111020_030339_841685_6EDD5397)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 6, 2011 at 1:05 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> See description in the patch :-)
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This patchset adds basic HT support for mesh nodes. We avoid the question of
+how to negotiate channel types, by simply disallowing peering with mismatched
+HT modes. Needs the mesh fixes posted earlier today for patch context.
 
-Applied and pushed, thanks!
+Many thanks to Luis Rodriguez for his assistance, and Ashok Nagarajan for
+co-authoring this patchset.
 
-  Luis
+Alexander Simon (1):
+  mac80211: Add HT helper functions
+
+Thomas Pedersen (5):
+  mac80211: add HT IEs to mesh frames
+  mac80211: set HT capabilities for mesh peer
+  mac80211: allow frame aggregation for mesh
+  mac80211: add WMM IE to mesh frames
+  mac80211: check mesh peer's WMM parameters
+
+ include/linux/ieee80211.h  |   26 ++++++
+ include/net/mac80211.h     |    4 +
+ net/mac80211/agg-rx.c      |    3 +-
+ net/mac80211/agg-tx.c      |    4 +-
+ net/mac80211/ht.c          |    3 +-
+ net/mac80211/ieee80211_i.h |    8 ++
+ net/mac80211/mesh.c        |   75 ++++++++++++++--
+ net/mac80211/mesh.h        |    4 +
+ net/mac80211/mesh_plink.c  |   24 +++++-
+ net/mac80211/rx.c          |    1 +
+ net/mac80211/tx.c          |    6 ++
+ net/mac80211/util.c        |  208 ++++++++++++++++++++++++++++++++++++++++----
+ net/mac80211/work.c        |   29 +------
+ 13 files changed, 336 insertions(+), 59 deletions(-)
+
+-- 
+1.7.5.4
+
