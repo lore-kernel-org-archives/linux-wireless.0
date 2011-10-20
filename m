@@ -1,78 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:62832 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750998Ab1JYI0g (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:52042 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752814Ab1JTNyd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 04:26:36 -0400
-Received: by wyg36 with SMTP id 36so229727wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Oct 2011 01:26:35 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
+	Thu, 20 Oct 2011 09:54:33 -0400
+References: <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111019124931.GC3963@gamma.logic.tuwien.ac.at> <1319038282.25023.21.camel@wwguy-ubuntu> <20111019060108.GA11588@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com> <20111019062517.GC11588@gamma.logic.tuwien.ac.at> <1319003304.31823.46.camel@wwguy-huron> <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111020045927.GB23044@gamma.logic.tuwien.ac.at> <1319096418.3959.1.camel@jlt3.sipsolutions.net> <56FBBFB3-4DC9-4CB6-939A-8F0130EBCB9B@logic.at> <1319118625.3959.16.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1319118625.3959.16.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0 (iPhone Mail 8J2)
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <C64E79BB-CD59-4ACA-9DC3-4716C06E98E4@logic.at> (sfid-20111020_155449_684314_25FB596C)
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+From: Norbert Preining <preining@logic.at>
+Subject: Re: iwlagn is getting very shaky
+Date: Thu, 20 Oct 2011 22:54:11 +0900
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: use min rate as basic rate for buggy APs
-Date: Tue, 25 Oct 2011 10:26:34 +0200
-Message-Id: <1319531194-26839-1-git-send-email-eliad@wizery.com> (sfid-20111025_102641_751110_23F8ECB4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some buggy APs (and even P2P_GO) don't advertise their
-basic rates in the association response.
 
-In such case, use the min supported rate as the
-basic rate.
+> Just "iw wlan0 scan" output or so. Basically I just want the BSSID/freq
+> to see which APs are on which band.
 
-Reported-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/mlme.c |   16 ++++++++++++++++
- 1 files changed, 16 insertions(+), 0 deletions(-)
+Ok, no prob, do it Wed.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0e5d8da..064df37 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1482,6 +1482,7 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 	int i, j, err;
- 	bool have_higher_than_11mbit = false;
- 	u16 ap_ht_cap_flags;
-+	int min_rate = INT_MAX, min_rate_index = -1;
- 
- 	/* AssocResp and ReassocResp have identical structure */
- 
-@@ -1537,6 +1538,10 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 				rates |= BIT(j);
- 				if (is_basic)
- 					basic_rates |= BIT(j);
-+				if (rate < min_rate) {
-+					min_rate = rate;
-+					min_rate_index = j;
-+				}
- 				break;
- 			}
- 		}
-@@ -1554,11 +1559,22 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 				rates |= BIT(j);
- 				if (is_basic)
- 					basic_rates |= BIT(j);
-+				if (rate < min_rate) {
-+					min_rate = rate;
-+					min_rate_index = j;
-+				}
- 				break;
- 			}
- 		}
- 	}
- 
-+	/*
-+	 * some buggy APs don't advertise basic_rates. use the lowest
-+	 * supported rate instead.
-+	 */
-+	if (unlikely(!basic_rates) && min_rate_index >= 0)
-+		basic_rates = BIT(min_rate_index);
-+
- 	sta->sta.supp_rates[wk->chan->band] = rates;
- 	sdata->vif.bss_conf.basic_rates = basic_rates;
- 
--- 
-1.7.6.401.g6a319
+Bye
 
+N
