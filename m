@@ -1,122 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:3966 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933531Ab1JYOGg (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:36085 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756848Ab1JTRFx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 10:06:36 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 20/31] ath6kl: Cleanup parameters in ath6kl_init_control_info() and ath6kl_init_profile_info()
-Date: Tue, 25 Oct 2011 19:34:15 +0530
-Message-ID: <1319551466-29070-21-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_160640_698974_3D874548)
-In-Reply-To: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 20 Oct 2011 13:05:53 -0400
+Received: by bkbzt19 with SMTP id zt19so3778812bkb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 10:05:52 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] mac80211: config hw when going back on-channel
+Date: Thu, 20 Oct 2011 19:05:50 +0200
+Message-Id: <1319130350-15514-2-git-send-email-eliad@wizery.com> (sfid-20111020_190557_741868_5A123F1B)
+In-Reply-To: <1319130350-15514-1-git-send-email-eliad@wizery.com>
+References: <1319130350-15514-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pass vif structure to those functions instead of ath6kl because these
-functions do vif specific information initialization.
+When going back on-channel, we should reconfigure
+the hw iff the hardware is not already configured
+to the operational channel.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    2 +-
- drivers/net/wireless/ath/ath6kl/core.h     |    4 ++--
- drivers/net/wireless/ath/ath6kl/init.c     |   12 +++---------
- drivers/net/wireless/ath/ath6kl/main.c     |    4 ++--
- 4 files changed, 8 insertions(+), 14 deletions(-)
+ net/mac80211/work.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 636b64e..0d02ba0 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2118,7 +2118,7 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index b4de5dc..92ad8d6 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -1091,7 +1091,6 @@ static void ieee80211_work_work(struct work_struct *work)
+ 	}
  
- 	init_netdev(ndev);
+ 	if (!remain_off_channel && local->tmp_channel) {
+-		bool on_oper_chan = ieee80211_cfg_on_oper_channel(local);
+ 		local->tmp_channel = NULL;
+ 		/* If tmp_channel wasn't operating channel, then
+ 		 * we need to go back on-channel.
+@@ -1101,7 +1100,7 @@ static void ieee80211_work_work(struct work_struct *work)
+ 		 * we still need to do a hardware config.  Currently,
+ 		 * we cannot be here while scanning, however.
+ 		 */
+-		if (ieee80211_cfg_on_oper_channel(local) && !on_oper_chan)
++		if (!ieee80211_cfg_on_oper_channel(local))
+ 			ieee80211_hw_config(local, 0);
  
--	ath6kl_init_control_info(ar);
-+	ath6kl_init_control_info(vif);
- 
- 	/* TODO: Pass interface specific pointer instead of ar */
- 	if (ath6kl_init_if_data(vif))
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 4db0b15..de288ff 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -602,7 +602,7 @@ int ath6kl_diag_write(struct ath6kl *ar, u32 address, void *data, u32 length);
- int ath6kl_diag_read32(struct ath6kl *ar, u32 address, u32 *value);
- int ath6kl_diag_read(struct ath6kl *ar, u32 address, void *data, u32 length);
- int ath6kl_read_fwlogs(struct ath6kl *ar);
--void ath6kl_init_profile_info(struct ath6kl *ar);
-+void ath6kl_init_profile_info(struct ath6kl_vif *vif);
- void ath6kl_tx_data_cleanup(struct ath6kl *ar);
- void ath6kl_stop_endpoint(struct net_device *dev, bool keep_profile,
- 			  bool get_dbglogs);
-@@ -657,7 +657,7 @@ void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid, u16 seq_no,
- void ath6kl_wakeup_event(void *dev);
- void ath6kl_target_failure(struct ath6kl *ar);
- 
--void ath6kl_init_control_info(struct ath6kl *ar);
-+void ath6kl_init_control_info(struct ath6kl_vif *vif);
- void ath6kl_deinit_if_data(struct ath6kl_vif *vif);
- void ath6kl_core_free(struct ath6kl *ar);
- #endif /* CORE_H */
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index a874665..4bb348e 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -73,11 +73,8 @@ struct sk_buff *ath6kl_buf_alloc(int size)
- 	return skb;
- }
- 
--void ath6kl_init_profile_info(struct ath6kl *ar)
-+void ath6kl_init_profile_info(struct ath6kl_vif *vif)
- {
--	/* TODO: Findout vif */
--	struct ath6kl_vif *vif = ar->vif;
--
- 	vif->ssid_len = 0;
- 	memset(vif->ssid, 0, sizeof(vif->ssid));
- 
-@@ -246,12 +243,9 @@ static int ath6kl_init_service_ep(struct ath6kl *ar)
- 	return 0;
- }
- 
--void ath6kl_init_control_info(struct ath6kl *ar)
-+void ath6kl_init_control_info(struct ath6kl_vif *vif)
- {
--	/* TODO: Findout vif */
--	struct ath6kl_vif *vif = ar->vif;
--
--	ath6kl_init_profile_info(ar);
-+	ath6kl_init_profile_info(vif);
- 	vif->def_txkey_index = 0;
- 	memset(vif->wep_key_list, 0, sizeof(vif->wep_key_list));
- 	vif->ch_hint = 0;
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 023624d..08af257 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -443,7 +443,7 @@ void ath6kl_stop_endpoint(struct net_device *dev, bool keep_profile,
- 				 test_bit(CONNECT_PEND, &vif->flags));
- 		ath6kl_disconnect(vif);
- 		if (!keep_profile)
--			ath6kl_init_profile_info(ar);
-+			ath6kl_init_profile_info(vif);
- 
- 		del_timer(&vif->disconnect_timer);
- 
-@@ -913,7 +913,7 @@ void disconnect_timer_handler(unsigned long ptr)
- 	struct net_device *dev = (struct net_device *)ptr;
- 	struct ath6kl_vif *vif = netdev_priv(dev);
- 
--	ath6kl_init_profile_info(vif->ar);
-+	ath6kl_init_profile_info(vif);
- 	ath6kl_disconnect(vif);
- }
- 
+ 		/* At the least, we need to disable offchannel_ps,
 -- 
-1.7.0.4
+1.7.6.401.g6a319
 
