@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:58308 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754605Ab1JKKq0 convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:53569 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751724Ab1JTNw6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 06:46:26 -0400
-Received: by iaek3 with SMTP id k3so479497iae.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 03:46:25 -0700 (PDT)
+	Thu, 20 Oct 2011 09:52:58 -0400
+Received: by gyb13 with SMTP id 13so2798041gyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 06:52:57 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CA+XVXfdM7=G1YdWVYpzfKajRYu+sAJcfKSFkbtgneUPTPabQ=w@mail.gmail.com>
-References: <1318326555-13905-1-git-send-email-eliad@wizery.com>
-	<CA+XVXfdM7=G1YdWVYpzfKajRYu+sAJcfKSFkbtgneUPTPabQ=w@mail.gmail.com>
-Date: Tue, 11 Oct 2011 12:46:25 +0200
-Message-ID: <CAB3XZEeYm6k6ux-j1LiKNzHzAZq0ERcjiXb89_kX0jnmmLHCzA@mail.gmail.com> (sfid-20111011_124632_917795_610F6891)
-Subject: Re: [PATCH v2 08/29] wl12xx: configure sleep_policy according to
- active roles
-From: Eliad Peller <eliad@wizery.com>
-To: Arik Nemtsov <anamtsov@gmail.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+From: =?ISO-8859-1?Q?Andr=E9s_Garc=EDa_Saavedra?=
+	<andres.garcia.saavedra@gmail.com>
+Date: Thu, 20 Oct 2011 15:52:37 +0200
+Message-ID: <CADxqDgEmJ_+=WcmvYRV_H6t4Ac_Ouvf9yaB1ecU65-Ws=FZPaA@mail.gmail.com> (sfid-20111020_155301_142746_FF4F482E)
+Subject: Commanding sleep/awake from mac80211
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 11, 2011 at 12:16 PM, Arik Nemtsov <anamtsov@gmail.com> wrote:
-> On Tue, Oct 11, 2011 at 11:49, Eliad Peller <eliad@wizery.com> wrote:
->> If there is an active AP role, stay always on.
->> Otherwise, allow chip to enter elp.
->>
->> (Note that this is a global configuration, so if the
->> device is already configured according to our policy,
->> we don't have to configure it again)
->>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> ---
->> v2: use ap_count/sta_count instead of iterating
->> +       if (!wl->ap_count) {
->> +               if (is_ap) {
->> +                       /* Configure for power always on */
->> +                       ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
->> +                       if (ret < 0)
->> +                               return ret;
->> +               } else if (!wl->sta_count) {
->> +                       /* Configure for ELP power saving */
->> +                       ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_ELP);
->> +                       if (ret < 0)
->> +                               return ret;
->> +               }
->> +       }
->
-> Probably need to add a symmetric part on remove_interface(). If ap was
-> shutdown we can return to normal ELP.
->
-right. that's why i added:
-+       /*
-+        * consider all existing roles before configuring psm.
-+        * TODO: reconfigure on interface removal.
-+        */
+Hi all,
 
-> btw, elp_work() still gets called even in AP-mode. I'm guessing it has
-> no effect, but if you want to prevent the SDIO transaction from taking
-> place (like you said on IRC), you can check for it :)
-> (Just nitpicking here)
+I am testing a custom algorithm whereby I'd like to adaptively command
+a STA to sleep/awake. Of course I would like to do so in the higher
+level possible (for simplicity). The following is a sort of a summary
+of my conclusions on the "state-of-art" on the implementation of such
+a thing. I would like to ask you whether i am totally misleaded here.
+Thanks in advance!
 
-we are not in idle-on while beaconing, so elp_work should return
-before configuring the chip.
 
-Eliad.
+* mac80211: I can see in mac80211 that the function
+ap_sta_ps_start/end() is defined to notify drivers of such transitions
+using drv_sta_notify(STA_NOTIFY_AWAKE/SLEEP) callback. This looked
+promising but... reading ath5k/ath9k/b43 driver codes, the atheros
+ones do not implement these notification handlers at all, and b43 does
+not do anything important eventually with them.
+
+So, my guess is that actually the drivers themselves are the ones in
+commanding the powersaving mode transitions awake/sleep regardless of
+what mac80211 "could say".
+
+* ath5k: seems to not command HW to sleep ever. (Only implemented the
+"hw on hold" which is not used within ath5k).
+* ath9k: Indeed it schedules sleep/awake timers. This way, it  is
+ath9k decision regardless what mac80211 say.
+* b43: seems to not command HW to sleep ever...
+
+Again, I'd appreciate if someone would point me out whether my
+conclusions are correct.
+
+Thanks!
