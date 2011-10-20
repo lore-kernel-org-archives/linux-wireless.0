@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:19354 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753047Ab1JLStf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 14:49:35 -0400
-Subject: Re: [PATCH 00/34] update for 3.2
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20111012182440.GD18764@tuxdriver.com>
-References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <20111012182440.GD18764@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Oct 2011 11:00:09 -0700
-Message-ID: <1318442409.32488.7.camel@wwguy-huron> (sfid-20111012_204939_246654_17E75EE3)
-Mime-Version: 1.0
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:44681 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755Ab1JTSIr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Oct 2011 14:08:47 -0400
+Received: by wwn22 with SMTP id 22so8184418wwn.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 11:08:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1319133820.20837.0.camel@jlt3.sipsolutions.net>
+References: <1319072606-28291-1-git-send-email-thomas@cozybit.com>
+	<1319072606-28291-6-git-send-email-thomas@cozybit.com>
+	<1319109412.3959.7.camel@jlt3.sipsolutions.net>
+	<CAG6hwVMUhJ=nV=6N+DpoagKWJxMjythPYMYCCzEb=mTr6TfytQ@mail.gmail.com>
+	<1319133104.17101.5.camel@jlt3.sipsolutions.net>
+	<CAG6hwVMmvu5jMQLeOWG2via0wqkHGs=nHSi_mKvgy9U2+m1FXA@mail.gmail.com>
+	<1319133820.20837.0.camel@jlt3.sipsolutions.net>
+Date: Thu, 20 Oct 2011 11:08:46 -0700
+Message-ID: <CAG6hwVOaLp9SdPezdw=aLhKrKpPdp8m5vXf6rySTvCfriaziVw@mail.gmail.com> (sfid-20111020_200850_986757_2705B277)
+Subject: Re: [PATCH 5/6] mac80211: add WMM IE to mesh frames
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, anagar6@uic.edu,
+	devel@lists.open80211s.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Thu, Oct 20, 2011 at 11:03 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2011-10-20 at 10:56 -0700, Thomas Pedersen wrote:
+>
+>> >> I'm not sure what you mean, this is the only way to get the WMM
+>> >> parameters? Usually these are just set with ieee80211_set_wmm_defaul()
+>> >> on bringing up the interface.
+>> >
+>> > Right, but
+>> >  a) if you're using just the default, no need to derive from the default
+>>
+>> The user might wish to customize the queue parameters though.
+>>
+>> >  b) should they be changeable?
+>>
+>> Why not?
+>
+> Well there no API for it now, is there?
+>
 
-On Wed, 2011-10-12 at 11:24 -0700, John W. Linville wrote:
-> On Mon, Oct 10, 2011 at 07:26:45AM -0700, Wey-Yi Guy wrote:
-> > We address the performance issue cause by earlier path which disable too many calibration.
-> > We include few more bugs fix and enhancement patches for WoWLAN operations
-> > We continue remove un-needed code and clean up after driver split
-> > We also include new SKUs for both 6005 and 105 series of devices
-> 
-> Applying: iwlagn: separate init calib and rt calib
-> error: patch failed: drivers/net/wireless/iwlwifi/iwl-agn.c:1222
-> error: drivers/net/wireless/iwlwifi/iwl-agn.c: patch does not apply
-> error: patch failed: drivers/net/wireless/iwlwifi/iwl-commands.h:3216
-> error: drivers/net/wireless/iwlwifi/iwl-commands.h: patch does not apply
-> 
-
-My mistake, I believe this patch already in the tree:
-commit#af4dc88c56559c1ebf53628ddcc18dde23924e33 iwlagn: separate init
-calib and rt calib
-
-
-Thanks
-Wey
-
+NL80211_ATTR_WIPHY_TXQ_PARAMS?
