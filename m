@@ -1,59 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:56601 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753509Ab1JHT3p (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58620 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751724Ab1JTTS7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Oct 2011 15:29:45 -0400
-Date: Sat, 8 Oct 2011 22:29:13 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: mb@bu3sch.de
-Cc: linux-wireless@vger.kernel.org
-Subject: problem in b43_nrssi_hw_update()?
-Message-ID: <20111008192913.GA1585@elgon.mountain> (sfid-20111008_212954_969612_3D45D8FD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 20 Oct 2011 15:18:59 -0400
+Subject: Re: [PATCH v2 0/6] HT support for mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Xianghua Xiao <xiaoxianghua@gmail.com>
+Cc: Thomas Pedersen <thomas@cozybit.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <CAP7cwtsB0jckz_WVFJuibKiewuOQZ_BMHTHBDfCTMNt_ge9buw@mail.gmail.com> (sfid-20111020_211733_441908_CA487AC0)
+References: <1319135679-6740-1-git-send-email-thomas@cozybit.com>
+	 <CAP7cwtsB0jckz_WVFJuibKiewuOQZ_BMHTHBDfCTMNt_ge9buw@mail.gmail.com>
+	 (sfid-20111020_211733_441908_CA487AC0)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 20 Oct 2011 21:18:54 +0200
+Message-ID: <1319138334.20837.3.camel@jlt3.sipsolutions.net> (sfid-20111020_211902_424242_5BE96CA1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My latest testing version of Smatch complains about the wrapping in
-b43_nrssi_hw_update() when val is 0xffff. The function is defined
-like this:
+On Thu, 2011-10-20 at 14:17 -0500, Xianghua Xiao wrote:
+> how does this relate to Alex HT patches? Alex's patch addresses IBSS
+> but there seems to be some overlaps between Mesh/IBSS HT patches.
 
-/* http://bcm-specs.sipsolutions.net/NRSSILookupTable */
-static void b43_nrssi_hw_update(struct b43_wldev *dev, u16 val)
-{
-        u16 i;
-        s16 tmp;
+He just uses one of Alex's refactoring patches here :)
 
-	for (i = 0; i < 64; i++) {
-                tmp = b43_nrssi_hw_read(dev, i);
-                tmp -= val;
-                tmp = clamp_val(tmp, -32, 31);
-                b43_nrssi_hw_write(dev, i, tmp);
-        }
-}
+johannes
 
-It's only called from one place like this:
-
-                /* The specs state to update the NRSSI LT with
-                 * the value 0x7FFFFFFF here. I think that is some weird
-                 * compiler optimization in the original driver.
-                 * Essentially, what we do here is resetting all NRSSI LT
-                 * entries to -32 (see the clamp_val() in nrssi_hw_update())
-                 */
-                b43_nrssi_hw_update(dev, 0xFFFF);       //FIXME?
-
-Since tmp in b43_nrssi_hw_update() is s16 and val is always
-(u16)0xFFFF, that means that:
-	tmp -= val;
-is always the same just tmp += 1;
-
-This code has a fixme, and it seems like an overly complicated way
-of adding 1 to a variable, plus it doesn't seem to match the
-documentation very well.  :P
-
-I know you've looked at this before and that's why it has the FIXME
-comment...  I'm not sure what to do...
-
-regards,
-dan carpenter
