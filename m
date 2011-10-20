@@ -1,90 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:5152 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751896Ab1JZUCE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 16:02:04 -0400
-Subject: Re: [Ilw] Re: iwlagn is getting very shaky
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Richard Yao <ryao@cs.stonybrook.edu>
-Cc: Norbert Preining <preining@logic.at>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+Received: from he.sipsolutions.net ([78.46.109.217]:55810 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752092Ab1JTNuf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Oct 2011 09:50:35 -0400
+Subject: Re: iwlagn is getting very shaky
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Norbert Preining <preining@logic.at>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	David Rientjes <rientjes@google.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"ipw3945-devel@lists.sourceforge.net"
 	<ipw3945-devel@lists.sourceforge.net>,
 	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Rientjes <rientjes@google.com>
-In-Reply-To: <CABDyM6T-_UWjQtb9E8Yie1kj5UpDHZNRTb13xJBt=YFczbwxZA@mail.gmail.com>
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+In-Reply-To: <56FBBFB3-4DC9-4CB6-939A-8F0130EBCB9B@logic.at>
 References: <20111019064628.GA14817@gamma.logic.tuwien.ac.at>
 	 <1319004836.31823.57.camel@wwguy-huron>
+	 <20111019124931.GC3963@gamma.logic.tuwien.ac.at>
+	 <1319038282.25023.21.camel@wwguy-ubuntu>
+	 <20111019060108.GA11588@gamma.logic.tuwien.ac.at>
+	 <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com>
+	 <20111019062517.GC11588@gamma.logic.tuwien.ac.at>
+	 <1319003304.31823.46.camel@wwguy-huron>
+	 <20111019064628.GA14817@gamma.logic.tuwien.ac.at>
+	 <1319004836.31823.57.camel@wwguy-huron>
 	 <20111020045927.GB23044@gamma.logic.tuwien.ac.at>
-	 <1319119852.2111.2.camel@wwguy-ubuntu>
-	 <20111021012442.GB26758@gamma.logic.tuwien.ac.at>
-	 <alpine.DEB.2.00.1110231424500.17218@chino.kir.corp.google.com>
-	 <20111026025014.GB24956@gamma.logic.tuwien.ac.at>
-	 <1319601333.14693.19.camel@wwguy-ubuntu>
-	 <20111026040332.GF24956@gamma.logic.tuwien.ac.at>
-	 <1319601654.14693.20.camel@wwguy-ubuntu>
-	 <20111026043419.GA30368@gamma.logic.tuwien.ac.at>
-	 <CABDyM6T-_UWjQtb9E8Yie1kj5UpDHZNRTb13xJBt=YFczbwxZA@mail.gmail.com>
+	 <1319096418.3959.1.camel@jlt3.sipsolutions.net>
+	 <56FBBFB3-4DC9-4CB6-939A-8F0130EBCB9B@logic.at>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 26 Oct 2011 12:56:05 -0700
-Message-ID: <1319658965.14693.25.camel@wwguy-ubuntu> (sfid-20111026_220225_187794_875A8D7C)
+Date: Thu, 20 Oct 2011 15:50:25 +0200
+Message-ID: <1319118625.3959.16.camel@jlt3.sipsolutions.net> (sfid-20111020_155055_599642_515B0D6D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-10-25 at 21:54 -0700, Richard Yao wrote:
-> Dear Norbert,
+On Thu, 2011-10-20 at 22:45 +0900, Norbert Preining wrote:
+> Hi Johannes,
 > 
-> Try doing "iwconfig wlan0 rts 0". As I said less than an hour ago in
-> my rather lengthy post to the Linux mailing list, that made things
-> better for me, but not perfect.
+> > did you have scan information for these APs?
 > 
-> Speaking of which, that post described my findings on why I was having
-> wireless issues that I did not post several weeks ago because I didn't
-> think anyone would care. Since people do seem to care, I probably
-> should have CCed that email to everyone else that was on people's CC
-> lists, but I am new to mailing lists (and to Linux), so I did not
-> think of it until now.
+> Unfortunately not, but I can get them when I am back on Wednesday, if you want.
 > 
-yes we care, sorry to miss your email thread. please provide  more
-information about your issue.
+> Just let me know what exactely.
 
-Thanks
-Wey
+Just "iw wlan0 scan" output or so. Basically I just want the BSSID/freq
+to see which APs are on which band.
 
-> 
-> On Wed, Oct 26, 2011 at 12:34 AM, Norbert Preining <preining@logic.at> wrote:
-> > On Di, 25 Okt 2011, wwguy wrote:
-> >> > But *I* cannot be sure about it ;-)
-> >> >
-> >> Are you seeing this without suspend/resume?
-> >
-> > Yes. I just shut down and started, and the same happens again. If you
-> > need the dmesg output let me know.
-> >
-> > Best wishes
-> >
-> > Norbert
-> > ------------------------------------------------------------------------
-> > Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-> > JAIST, Japan                                 TeX Live & Debian Developer
-> > DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-> > ------------------------------------------------------------------------
-> > RUNCORN (n.)
-> > A peeble (q.v.) which is larger that a belper (q.v.)
-> >                        --- Douglas Adams, The Meaning of Liff
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> >
-> 
-> _______________________________________________
-> ilw mailing list
-> ilw@linux.intel.com
-> http://linux.intel.com/mailman/listinfo/ilw
-
+johannes
 
