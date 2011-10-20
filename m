@@ -1,33 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:64924 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751358Ab1JLVya (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:58105 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750710Ab1JTH1G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 17:54:30 -0400
-Received: by qadb15 with SMTP id b15so984748qad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2011 14:54:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1318445492-24207-23-git-send-email-arend@broadcom.com>
-References: <1318445492-24207-1-git-send-email-arend@broadcom.com> <1318445492-24207-23-git-send-email-arend@broadcom.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Wed, 12 Oct 2011 14:54:09 -0700
-Message-ID: <CAB=NE6XYFB4uWcRR1kSNKLaJC4W1E3uLZOd3hGEArjzsmNG4PQ@mail.gmail.com> (sfid-20111012_235433_412437_B5C33B91)
-Subject: Re: [PATCH 22/22] brcm80211: removed file wifi.c
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Alwin Beukers <alwin@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 20 Oct 2011 03:27:06 -0400
+Received: by pzk36 with SMTP id 36so6356708pzk.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 00:27:05 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH v2 3/3] mac80211: select queue for fwded mesh frames
+Date: Thu, 20 Oct 2011 00:26:55 -0700
+Message-Id: <1319095615-1368-1-git-send-email-thomas@cozybit.com> (sfid-20111020_092855_071795_0ACB1285)
+In-Reply-To: <1319070203-22097-1-git-send-email-thomas@cozybit.com>
+References: <1319070203-22097-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 12, 2011 at 11:51 AM, Arend van Spriel <arend@broadcom.com> wrote:
-> From: Alwin Beukers <alwin@broadcom.com>
->
-> Wifi.c was empty after previous cleanups, so it was removed.
->
-> Reviewed-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Set proper queue mapping and timestamp for forwarded mesh frames.
 
-Heh, remove Reviewed-by dude.
+Thanks to Luis Rodriguez for investigating and fixing this.
 
-  Luis
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+
+v2: 
+	We were already doing this for mcast frames, so don't duplicate
+	the code.
+
+ net/mac80211/rx.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b867bd5..1408472 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1952,13 +1952,15 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 			info = IEEE80211_SKB_CB(fwd_skb);
+ 			memset(info, 0, sizeof(*info));
+ 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++			info->control.jiffies = jiffies;
+ 			info->control.vif = &rx->sdata->vif;
++			skb_set_queue_mapping(fwd_skb,
++				ieee80211_select_queue(sdata, fwd_skb));
++			ieee80211_set_qos_hdr(sdata, fwd_skb);
++
+ 			if (is_multicast_ether_addr(fwd_hdr->addr1)) {
+ 				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
+ 								fwded_mcast);
+-				skb_set_queue_mapping(fwd_skb,
+-					ieee80211_select_queue(sdata, fwd_skb));
+-				ieee80211_set_qos_hdr(sdata, fwd_skb);
+ 			} else {
+ 				int err;
+ 				/*
+-- 
+1.7.5.4
+
