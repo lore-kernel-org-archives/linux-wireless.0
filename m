@@ -1,30 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:47537 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756471Ab1JCT6C (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:49168 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042Ab1JTSey (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Oct 2011 15:58:02 -0400
-Received: by qyk30 with SMTP id 30so2545691qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2011 12:58:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1317465174-2685-1-git-send-email-hauke@hauke-m.de>
-References: <1317465174-2685-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 3 Oct 2011 12:57:41 -0700
-Message-ID: <CAB=NE6UauNcyLQ5-9zdJ=bE9Rnat-cAOnUYOgPOT=1uSAOfKNw@mail.gmail.com> (sfid-20111003_215807_163478_CEB1C44C)
-Subject: Re: [PATCH] compat: add skb_tx_timestamp() and skb_defer_rx_timestamp()
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 20 Oct 2011 14:34:54 -0400
+Received: by gyb13 with SMTP id 13so3086542gyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 11:34:53 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH v2 0/6] HT support for mesh
+Date: Thu, 20 Oct 2011 11:34:33 -0700
+Message-Id: <1319135679-6740-1-git-send-email-thomas@cozybit.com> (sfid-20111020_203457_551126_927EB3A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 1, 2011 at 3:32 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> Just add an empty implementation of these functions to do the same as
-> when timestamping is deactivated.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+This patchset adds basic HT support for mesh nodes. We avoid the question of
+how to negotiate channel types, by simply disallowing peering with mismatched
+HT modes. Needs the mesh fixes posted earlier today for patch context.
 
-Applied and pushed, thanks!
+Many thanks to Luis Rodriguez for his assistance, and Ashok Nagarajan for
+co-authoring this patchset.
 
-  Luis
+v2: 
+	Remove outdated BA comments (Christian)
+
+Alexander Simon (1):
+  mac80211: Add HT helper functions
+
+Thomas Pedersen (5):
+  mac80211: add HT IEs to mesh frames
+  mac80211: set HT capabilities for mesh peer
+  mac80211: allow frame aggregation for mesh
+  mac80211: add WMM IE to mesh frames
+  mac80211: check mesh peer's WMM parameters
+
+ include/linux/ieee80211.h  |   26 ++++++
+ include/net/mac80211.h     |    4 +
+ net/mac80211/agg-rx.c      |    3 +-
+ net/mac80211/agg-tx.c      |   10 +--
+ net/mac80211/ht.c          |    3 +-
+ net/mac80211/ieee80211_i.h |    8 ++
+ net/mac80211/mesh.c        |   75 ++++++++++++++--
+ net/mac80211/mesh.h        |    4 +
+ net/mac80211/mesh_plink.c  |   24 +++++-
+ net/mac80211/rx.c          |    7 +--
+ net/mac80211/tx.c          |    6 ++
+ net/mac80211/util.c        |  208 ++++++++++++++++++++++++++++++++++++++++----
+ net/mac80211/work.c        |   29 +------
+ 13 files changed, 336 insertions(+), 71 deletions(-)
+
+-- 
+1.7.5.4
+
