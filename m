@@ -1,80 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:45501 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758587Ab1JGIsr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 04:48:47 -0400
-Message-ID: <4E8EBCEB.80705@neratec.com> (sfid-20111007_104851_431349_97E35798)
-Date: Fri, 07 Oct 2011 10:48:43 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:49328 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751864Ab1JTDiW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Oct 2011 23:38:22 -0400
+Received: by iaek3 with SMTP id k3so2897609iae.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2011 20:38:21 -0700 (PDT)
+Message-ID: <4E9F97B4.5010304@lwfinger.net> (sfid-20111020_053827_050299_1E35F272)
+Date: Wed, 19 Oct 2011 22:38:28 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	kgiori@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [RFC 5/6] ath9k: enable DFS pulse detection
-References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com>	<201110041538.12885.chunkeey@googlemail.com>	<CAB=NE6VC3txpDh4SdDKDxKWKKZVtGQXKVH8opszKDnZeeZTjUQ@mail.gmail.com>	<201110061849.48838.chunkeey@googlemail.com>	<CAB=NE6WbMi2GYJyFfvsdH-NSXn8dPBsgxgfdGXO_RHiJxwz2Fw@mail.gmail.com>	<4E8E1062.1070206@neratec.com>	<CAB=NE6XwNDc8v-qtQuQQZdh2ST-skpcZM7wqD32qHn3CgN-5Dw@mail.gmail.com>	<4E8E18DB.5070002@neratec.com> <CAJ-VmonYaTW3xX7CKzU4Okb1nW86mJMV0RRDnqkMSJ-mASJ+4Q@mail.gmail.com>
-In-Reply-To: <CAJ-VmonYaTW3xX7CKzU4Okb1nW86mJMV0RRDnqkMSJ-mASJ+4Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: v4mp <gaigo88@hotmail.it>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
+References: <4E77F631.3030202@googlemail.com> <loom.20110930T160704-310@post.gmane.org> <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org> <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T1  61652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org > <4E9C42CF.5010702@lwfinger.net> <loom.20111017T190430-717@post.gmane.org> <4E9CF13A.7060102@lwf inger.net> <loom.20111018T143746-420@post.gmane.org> <loom.201110 18T150303-359@post.gmane.org> <4E9D9953.3020601@lwfinger.net> <loom.20111018T233233-298@post.gmane.org> <4E9E052F.8090705@lwfinger.net> <loom.20111019T101621-921@post.gmane.org> <4E9EBDD3.6060907@lwfinger.net> <loom.20111019T162518-352@post.gmane.org>
+In-Reply-To: <loom.20111019T162518-352@post.gmane.org>
+Content-Type: multipart/mixed;
+ boundary="------------030306040105090502060304"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/07/2011 05:06 AM, Adrian Chadd wrote:
-> Just FYI, that's what I'm likely to do for FreeBSD 10 (as I just don't
-> have time to try and make all the required regulatory changes before
-> the upcoming 9.0 release.)
-> 
-> Ie:
-> 
-> * DFS station mode (net80211) is going to be compiled and enabled by default;
-> * DFS master mode (net80211) is going to be compiled and enabled by default;
-> * The drivers which support radar detection in firmware (currently
-> only if_mwl) will set the DFS net80211 flag (ie, for master mode radar
-> detection);
-> * ath won't ship with the DFS enable flag (for master mode);
-> * I'll modify the regulatory database code to include per-band DFS
-> information (DFS domain, CAC/NOL timeout, interference timeout, etc)
-> and some device information (eg whether it supports HT20/HT40/etc DFS
-> detection);
-> * I'll then flip on the DFS channel enforcement in the net80211 code
-> so disables master mode on channels requiring DFS.
-> 
-> The radar detection code and channel interference code will live in
-> the ath driver but the DFS machinery (CAC, NOL, CSA, etc) is in
-> net80211. That way other NICs (eg if_mwl Marvell NICs) with DFS radar
-> detection support can leverage this.
-> 
-Quite some work ahead. Good luck on that!
+This is a multi-part message in MIME format.
+--------------030306040105090502060304
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-So you are confident to get existing code re-factored and split into multiple layers?
+On 10/19/2011 09:37 AM, v4mp wrote:
+>
+>
+> ok, i've done what you asked me with usbmon,
+> but i'm not sure that is what you want
+>
+> i've redone dumping dmesg trying to grab the information you are lookin for
+>
+> i can't upload it on pastebin cause it's too large, i uploaded logs on megaupload
+>
+> http://www.megaupload.com/?d=3D0QS1MX
 
-> I'll then likely ship two DFS modules - dfs_null (no DFS support, just
-> a placeholder for the API) and whatever code is ported from the
-> reference driver. Maybe I'll also include the code from Neratec if
-> it's dual-licenced. But I won't include radar patterns by default -
-> I'll include those on a documentation page which explains the how and
-> why of regulatory domain stuff.
-> 
-Initially we planned to have common pattern detectors in mac80211 to handle pulses reported by all drivers, but so far only TI is working on DFS -- with pattern matching done in firmware. So, no need yet for common detectors, we might end up going the other way around, i.e. taking your port and integrate in into ath9k -- if licensing allowed us to do.
+I got the data. Thanks. It will take a while to analyze the usbmon data, but 
+there is something I would like you to try. It will involve getting the kernel 
+source for some recent kernel, and applying the attached patch. With it, 
+xhci-hcd will dump the stack whenever the "short transfer on control ep" or "no 
+room on ep ring" errors occur. Send me those parts of the dmesg output, but 
+again do the dump early before the buffer wrap around happens.
 
-> Once FreeBSD ships DFS radar detection code, I'll make sure it isn't
-> compiled by default and even if enabled, it won't advertise DFS
-> channel support unless a valid radar pattern and radar parameter
-> configuration is loaded in. That way users won't inadvertently enable
-> it without being compliant.
-> 
-> Finally, I'm hoping to get all of this documented as much as possible
-> so the community can pick this stuff up and run with it. I was hoping
-> someone would throw me a 5ghz SDR (software defined radio) so I could
-> prototype up some open source radar pulse generation code, just to
-> lower the entry barrier to all of this.
-> 
-Yeah, an AR9003 card used as cheap radar generator is on top of my wish list for DFS testing without our always otherwise occupied vector signal generator. But fur obvious reasons we wont get the required documentation for such unofficial hacks.
+Larry
 
-> HTH,
-> 
-> 
-> Adrian
 
-Thanks
-Zefir
+--------------030306040105090502060304
+Content-Type: text/plain;
+ name="xhci_debug"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="xhci_debug"
+
+Index: wireless-testing-new/drivers/usb/host/xhci-ring.c
+===================================================================
+--- wireless-testing-new.orig/drivers/usb/host/xhci-ring.c
++++ wireless-testing-new/drivers/usb/host/xhci-ring.c
+@@ -1616,6 +1616,7 @@ static int process_ctrl_td(struct xhci_h
+ 	int ep_index;
+ 	struct xhci_ep_ctx *ep_ctx;
+ 	u32 trb_comp_code;
++	static int count;
+ 
+ 	slot_id = TRB_TO_SLOT_ID(le32_to_cpu(event->flags));
+ 	xdev = xhci->devs[slot_id];
+@@ -1641,6 +1642,8 @@ static int process_ctrl_td(struct xhci_h
+ 		break;
+ 	case COMP_SHORT_TX:
+ 		xhci_warn(xhci, "WARN: short transfer on control ep\n");
++		if (count++ < 5)
++			dump_stack();
+ 		if (td->urb->transfer_flags & URB_SHORT_NOT_OK)
+ 			*status = -EREMOTEIO;
+ 		else
+@@ -2429,6 +2432,7 @@ static void queue_trb(struct xhci_hcd *x
+ static int prepare_ring(struct xhci_hcd *xhci, struct xhci_ring *ep_ring,
+ 		u32 ep_state, unsigned int num_trbs, gfp_t mem_flags)
+ {
++	static int count;
+ 	/* Make sure the endpoint has been added to xHC schedule */
+ 	switch (ep_state) {
+ 	case EP_STATE_DISABLED:
+@@ -2459,6 +2463,8 @@ static int prepare_ring(struct xhci_hcd
+ 	if (!room_on_ring(xhci, ep_ring, num_trbs)) {
+ 		/* FIXME allocate more room */
+ 		xhci_err(xhci, "ERROR no room on ep ring\n");
++		if (count++ < 5)
++			dump_stack();
+ 		return -ENOMEM;
+ 	}
+ 
+
+--------------030306040105090502060304--
