@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52864 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760025Ab1JGM5X (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:60863 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752331Ab1JTOY7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 08:57:23 -0400
-Message-Id: <20111007125640.484954800@sipsolutions.net> (sfid-20111007_145725_633041_376F14D2)
-Date: Fri, 07 Oct 2011 14:55:40 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+	Thu, 20 Oct 2011 10:24:59 -0400
+Received: by qyk4 with SMTP id 4so5592404qyk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 07:24:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1319092629.45912.YahooMailNeo@web29720.mail.ird.yahoo.com>
+References: <1319092629.45912.YahooMailNeo@web29720.mail.ird.yahoo.com>
+Date: Thu, 20 Oct 2011 10:24:58 -0400
+Message-ID: <CAEKwDSCfzzTWhRk9dAWg64TECGA4sur=ZnkYoxNSDBD24n3rwQ@mail.gmail.com> (sfid-20111020_162503_204565_F4921544)
+Subject: Re: [ath5k-devel] Support for Linux WiFi stack (+wpa_supplicant) in Android
+From: Bob Copeland <me@bobcopeland.com>
+To: Dani Camps <danicamps81@yahoo.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] mac80211: dont orphan TX skb
-References: <20111007125538.433891720@sipsolutions.net>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+[trimmed CC because none of the mailing lists are the proper place for
+this query, and added l-w back]
 
-This was another workaround for truesize "bugs".
-The reason we did this was that when we orphaned
-the SKB it wouldn't be truesize-checked later.
-Now that the check is gone (and we just charge
-the former smaller size to the socket) there's
-no longer a reason to orphan the skb here.
+On Thu, Oct 20, 2011 at 2:37 AM, Dani Camps <danicamps81@yahoo.com> wrote:
+> Dear all,
+> I would like to ask whether there is support for the Linux Wi-Fi stack (+
+> wpa_supplicant) in Android. In http://bobcopeland.com/android_wifi.html it
+> is mentioned that the first Android developer phone uses a driver from TI
+> that is GPLd and included within mac80211 (wl12xx).
 
-Keep the skb charged to the socket until it is
-really freed (or orphaned in TX status). This
-helps flow control and allows us to get at the
-socket later for other purposes.
+This is not what my (dated) webpage says -- it says that it is
+possible to use wl12xx *instead* of the vendor driver with Android.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c |    5 -----
- 1 file changed, 5 deletions(-)
+Have a look at the AOSP code to know for yourself which drivers
+Android uses.  Source for drivers is generally available but last time
+I looked (and it was quite a while ago) the two main drivers, TI and
+broadcom, used their own WEXT ioctls and not cfg80211 etc.  Maybe this
+has changed since, I don't know.
 
---- a/net/mac80211/tx.c	2011-10-07 14:50:27.000000000 +0200
-+++ b/net/mac80211/tx.c	2011-10-07 14:50:30.000000000 +0200
-@@ -1384,11 +1384,6 @@ static int ieee80211_skb_resize(struct i
- 		tail_need = max_t(int, tail_need, 0);
- 	}
- 
--	if (head_need || tail_need) {
--		/* Sorry. Can't account for this any more */
--		skb_orphan(skb);
--	}
--
- 	if (skb_cloned(skb))
- 		I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
- 	else if (head_need || tail_need)
+> PS: Apologies if this is not the best mailing list for this topic, but
+> linux-wireless was returning my emails
 
+Try disabling HTML email.
 
+-- 
+Bob Copeland %% www.bobcopeland.com
