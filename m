@@ -1,164 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41414 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934210Ab1JEJzx (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:60655 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042Ab1JTSfF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 05:55:53 -0400
-Received: by mail-bw0-f46.google.com with SMTP id zt4so1903568bkb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:55:52 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 07/29] wl12xx: replace wl->bssid with vif->bss_conf.bssid
-Date: Wed,  5 Oct 2011 11:55:44 +0200
-Message-Id: <1317808566-18857-8-git-send-email-eliad@wizery.com> (sfid-20111005_115556_451437_DB9911F2)
-In-Reply-To: <1317808566-18857-1-git-send-email-eliad@wizery.com>
-References: <1317808566-18857-1-git-send-email-eliad@wizery.com>
+	Thu, 20 Oct 2011 14:35:05 -0400
+Received: by mail-qw0-f46.google.com with SMTP id j40so2413126qab.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 11:35:05 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH v2 5/6] mac80211: add WMM IE to mesh frames
+Date: Thu, 20 Oct 2011 11:34:38 -0700
+Message-Id: <1319135679-6740-6-git-send-email-thomas@cozybit.com> (sfid-20111020_203513_644069_C169D5F5)
+In-Reply-To: <1319135679-6740-1-git-send-email-thomas@cozybit.com>
+References: <1319135679-6740-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the per-interface vif->bss_conf instead of the global wl->bssid.
+Include the WMM IE in mesh peering and beacon frames. This is needed
+tell any potential peers what our WMM / EDCA parameters are.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/net/wireless/wl12xx/cmd.c    |   13 ++++++++-----
- drivers/net/wireless/wl12xx/event.c  |    2 +-
- drivers/net/wireless/wl12xx/main.c   |   15 ++-------------
- drivers/net/wireless/wl12xx/wl12xx.h |    1 -
- 4 files changed, 11 insertions(+), 20 deletions(-)
+ include/linux/ieee80211.h |   26 +++++++++++++
+ include/net/mac80211.h    |    4 ++
+ net/mac80211/mesh_plink.c |    4 +-
+ net/mac80211/tx.c         |    2 +
+ net/mac80211/util.c       |   92 +++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 127 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index ccc3571..5f4d31d 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -557,6 +557,7 @@ out:
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 48363c3..ec6f396 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -152,6 +152,11 @@
+ #define IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK	0x03
+ #define IEEE80211_WMM_IE_STA_QOSINFO_SP_SHIFT	5
  
- int wl12xx_cmd_role_start_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- {
-+	struct ieee80211_vif *vif = wl12xx_wlvif_to_vif(wlvif);
- 	struct wl12xx_cmd_role_start *cmd;
- 	int ret;
++#define IEEE80211_WMM_IE_ECWMIN_MASK		0x0f
++#define IEEE80211_WMM_IE_ECWMIN_SHIFT		0
++#define IEEE80211_WMM_IE_ECWMAX_MASK		0xf0
++#define IEEE80211_WMM_IE_ECWMAX_SHIFT		4
++
+ #define IEEE80211_HT_CTL_LEN		4
  
-@@ -577,7 +578,7 @@ int wl12xx_cmd_role_start_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	cmd->sta.ssid_type = WL12XX_SSID_TYPE_ANY;
- 	cmd->sta.ssid_len = wl->ssid_len;
- 	memcpy(cmd->sta.ssid, wl->ssid, wl->ssid_len);
--	memcpy(cmd->sta.bssid, wl->bssid, ETH_ALEN);
-+	memcpy(cmd->sta.bssid, vif->bss_conf.bssid, ETH_ALEN);
- 	cmd->sta.local_rates = cpu_to_le32(wlvif->rate_set);
+ struct ieee80211_hdr {
+@@ -605,6 +610,27 @@ struct ieee80211_tim_ie {
+ 	u8 virtual_map[1];
+ } __attribute__ ((packed));
  
- 	if (wl->sta_hlid == WL12XX_INVALID_LINK_ID) {
-@@ -769,6 +770,7 @@ out:
++struct ieee80211_wmm_ac_param {
++	u8 ac_aci_acm_aifsn;
++	u8 ac_ecwmin_ecwmax;
++	__le16 ac_txop_limit;
++} __attribute__ ((packed));
++
++/**
++ * struct ieee80211_wmm_param
++ *
++ * This structure refers to "WMM parameter information element"
++ */
++struct ieee80211_wmm_param_ie {
++	u8 oui[3];
++	u8 oui_type;
++	u8 oui_subtype;
++	u8 version;
++	u8 qos_info;
++	u8 reserved;
++	struct ieee80211_wmm_ac_param ac[4];
++} __attribute__ ((packed));
++
+ /**
+  * struct ieee80211_meshconf_ie
+  *
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index dc1123a..fd28b2b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3649,4 +3649,8 @@ int ieee80211_add_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb);
  
- int wl12xx_cmd_role_start_ibss(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- {
-+	struct ieee80211_vif *vif = wl12xx_wlvif_to_vif(wlvif);
- 	struct wl12xx_cmd_role_start *cmd;
- 	struct ieee80211_bss_conf *bss_conf = &wl->vif->bss_conf;
- 	int ret;
-@@ -791,7 +793,7 @@ int wl12xx_cmd_role_start_ibss(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	cmd->ibss.ssid_type = WL12XX_SSID_TYPE_ANY;
- 	cmd->ibss.ssid_len = wl->ssid_len;
- 	memcpy(cmd->ibss.ssid, wl->ssid, wl->ssid_len);
--	memcpy(cmd->ibss.bssid, wl->bssid, ETH_ALEN);
-+	memcpy(cmd->ibss.bssid, vif->bss_conf.bssid, ETH_ALEN);
- 	cmd->sta.local_rates = cpu_to_le32(wlvif->rate_set);
+ int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif,
+ 				struct sk_buff *skb);
++int ieee80211_build_wmm_ie(struct ieee80211_vif *vif,
++			   u8 *ie_data);
++int ieee80211_add_wmm_ie(struct ieee80211_vif *vif,
++			 struct sk_buff *skb);
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index f0705e6..069e5dc 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -177,6 +177,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 			    2 + sizeof(struct ieee80211_meshconf_ie) +
+ 			    2 + sizeof(struct ieee80211_ht_cap) +
+ 			    2 + sizeof(struct ieee80211_ht_info) +
++			    2 + sizeof(struct ieee80211_wmm_param_ie) +
+ 			    2 + 8 + /* peering IE */
+ 			    sdata->u.mesh.ie_len);
+ 	if (!skb)
+@@ -256,7 +257,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
  
- 	if (wl->sta_hlid == WL12XX_INVALID_LINK_ID) {
-@@ -807,7 +809,8 @@ int wl12xx_cmd_role_start_ibss(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 		     wl->role_id, cmd->sta.hlid, cmd->sta.session,
- 		     wlvif->basic_rate_set, wlvif->rate_set);
- 
--	wl1271_debug(DEBUG_CMD, "wl->bssid = %pM", wl->bssid);
-+	wl1271_debug(DEBUG_CMD, "vif->bss_conf.bssid = %pM",
-+		     vif->bss_conf.bssid);
- 
- 	ret = wl1271_cmd_send(wl, CMD_ROLE_START, cmd, sizeof(*cmd), 0);
- 	if (ret < 0) {
-@@ -1213,9 +1216,9 @@ int wl1271_build_qos_null_data(struct wl1271 *wl, struct ieee80211_vif *vif)
- 
- 	memset(&template, 0, sizeof(template));
- 
--	memcpy(template.addr1, wl->bssid, ETH_ALEN);
-+	memcpy(template.addr1, vif->bss_conf.bssid, ETH_ALEN);
- 	memcpy(template.addr2, vif->addr, ETH_ALEN);
--	memcpy(template.addr3, wl->bssid, ETH_ALEN);
-+	memcpy(template.addr3, vif->bss_conf.bssid, ETH_ALEN);
- 
- 	template.frame_control = cpu_to_le16(IEEE80211_FTYPE_DATA |
- 					     IEEE80211_STYPE_QOS_NULLFUNC |
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index 3cee847..2066c91 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -184,7 +184,7 @@ static void wl1271_stop_ba_event(struct wl1271 *wl)
- 		if (!wl->ba_rx_bitmap)
- 			return;
- 		ieee80211_stop_rx_ba_session(wl->vif, wl->ba_rx_bitmap,
--					     wl->bssid);
-+					     wl->vif->bss_conf.bssid);
- 	} else {
- 		int i;
- 		struct wl1271_link *lnk;
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 59a6040..ad8a324 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2098,7 +2098,6 @@ deinit:
- 	wl1271_tx_reset(wl, reset_tx_queues);
- 	wl1271_power_off(wl);
- 
--	memset(wl->bssid, 0, ETH_ALEN);
- 	memset(wl->ssid, 0, IEEE80211_MAX_SSID_LEN + 1);
- 	wl->ssid_len = 0;
- 	wl->bss_type = MAX_BSS_TYPE;
-@@ -2244,8 +2243,6 @@ static int wl1271_unjoin(struct wl1271 *wl)
- 	if (ret < 0)
- 		goto out;
- 
--	memset(wl->bssid, 0, ETH_ALEN);
--
- 	/* reset TX security counters on a clean disconnect */
- 	wl->tx_security_last_seq_lsb = 0;
- 	wl->tx_security_seq = 0;
-@@ -3444,15 +3441,8 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 		wl->rssi_thold = bss_conf->cqm_rssi_thold;
+ 	if (action != WLAN_SP_MESH_PEERING_CLOSE) {
+ 		if (mesh_add_ht_cap_ie(skb, sdata) ||
+-		    mesh_add_ht_info_ie(skb, sdata))
++		    mesh_add_ht_info_ie(skb, sdata) ||
++		    ieee80211_add_wmm_ie(&sdata->vif, skb))
+ 			return -1;
  	}
  
--	if ((changed & BSS_CHANGED_BSSID) &&
--	    /*
--	     * Now we know the correct bssid, so we send a new join command
--	     * and enable the BSSID filter
--	     */
--	    memcmp(wl->bssid, bss_conf->bssid, ETH_ALEN)) {
--		memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
--
--		if (!is_zero_ether_addr(wl->bssid)) {
-+	if (changed & BSS_CHANGED_BSSID)
-+		if (!is_zero_ether_addr(bss_conf->bssid)) {
- 			ret = wl12xx_cmd_build_null_data(wl, wlvif);
- 			if (ret < 0)
- 				goto out;
-@@ -3464,7 +3454,6 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 			/* Need to update the BSSID (for filtering etc) */
- 			do_join = true;
- 		}
--	}
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index faca189..dfb6bb9 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2294,6 +2294,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 				    2 + sizeof(struct ieee80211_ht_info) +
+ 				    2 + sdata->u.mesh.mesh_id_len +
+ 				    2 + sizeof(struct ieee80211_meshconf_ie) +
++				    2 + sizeof(struct ieee80211_wmm_param_ie) +
+ 				    sdata->u.mesh.ie_len);
+ 		if (!skb)
+ 			goto out;
+@@ -2324,6 +2325,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 		    mesh_add_ht_info_ie(skb, sdata) ||
+ 		    mesh_add_meshid_ie(skb, sdata) ||
+ 		    mesh_add_meshconf_ie(skb, sdata) ||
++		    ieee80211_add_wmm_ie(&sdata->vif, skb) ||
+ 		    mesh_add_vendor_ies(skb, sdata)) {
+ 			pr_err("o11s: couldn't add ies!\n");
+ 			goto out;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 72b3a2e..071b425 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1419,6 +1419,98 @@ u8 *ieee80211_ie_build_ht_info(u8 *pos,
+ 	return pos + sizeof(struct ieee80211_ht_info);
+ }
  
- 	if (changed & (BSS_CHANGED_ASSOC | BSS_CHANGED_HT)) {
- 		rcu_read_lock();
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 4af4f24..efa4720 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -398,7 +398,6 @@ struct wl1271 {
- 
- 	s8 hw_pg_ver;
- 
--	u8 bssid[ETH_ALEN];
- 	u8 mac_addr[ETH_ALEN];
- 	u8 bss_type;
- 	u8 set_bss_type;
++static inline u8 ieee80211_wmm_ecw(struct ieee80211_tx_queue_params *txq)
++{
++	u8 cw_min, cw_max, n = 0;
++
++	/* cw_min and cw_max are transmitted as n in 2^n - 1 */
++	while ((txq->cw_min >> n) & 0x01)
++		n++;
++	cw_min = n;
++
++	n = 0;
++	while ((txq->cw_max >> n) & 0x01)
++		n++;
++	cw_max = n;
++
++	return ((cw_min << IEEE80211_WMM_IE_ECWMIN_SHIFT) &
++				IEEE80211_WMM_IE_ECWMIN_MASK) |
++		((cw_max << IEEE80211_WMM_IE_ECWMAX_SHIFT) &
++				IEEE80211_WMM_IE_ECWMAX_MASK);
++}
++
++static inline u8 ieee80211_aci_to_q(u8 aci)
++{
++	u8 q;
++
++	switch (aci) {
++	case 1:		/* BK */
++		q = 3;
++		break;
++	default:
++	case 0:		/* BE */
++		q = 2;
++		break;
++	case 2:		/* VI */
++		q = 1;
++		break;
++	case 3:		/* VO */
++		q = 0;
++		break;
++	}
++
++	return q;
++}
++
++int ieee80211_build_wmm_ie(struct ieee80211_vif *vif, u8 *data)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_wmm_param_ie *wmm;
++	struct ieee80211_wmm_ac_param *ac;
++	struct ieee80211_tx_queue_params *txconf;
++	u8 aci;
++
++	wmm = (struct ieee80211_wmm_param_ie *) data;
++	wmm->oui[0] = 0x00;
++	wmm->oui[1] = 0x50;
++	wmm->oui[2] = 0xf2;
++	wmm->oui_type = 2; /* WMM */
++	wmm->oui_subtype = 1; /* WMM param */
++	wmm->version = 1;
++	wmm->qos_info = 0;
++	wmm->reserved = 0;
++
++	for (aci = 0; aci < 4; aci++) {
++		ac = &wmm->ac[aci];
++		txconf = &sdata->tx_conf[ieee80211_aci_to_q(aci)];
++
++		ac->ac_aci_acm_aifsn = (aci << 5) | txconf->aifs;
++		ac->ac_ecwmin_ecwmax = ieee80211_wmm_ecw(txconf);
++		ac->ac_txop_limit = cpu_to_le16(txconf->txop);
++	}
++
++	return 0;
++}
++
++int ieee80211_add_wmm_ie(struct ieee80211_vif *vif,
++			 struct sk_buff *skb)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	u8 *pos;
++
++	if (sdata->local->hw.queues < 4)
++		return 0;
++
++	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_wmm_param_ie))
++		return -ENOMEM;
++
++	pos = skb_put(skb, 2 + sizeof(struct ieee80211_wmm_param_ie));
++	*pos++ = WLAN_EID_VENDOR_SPECIFIC;
++	*pos++ = sizeof(struct ieee80211_wmm_param_ie);
++
++	return ieee80211_build_wmm_ie(vif, pos);
++}
++
+ enum nl80211_channel_type
+ ieee80211_ht_info_to_channel_type(struct ieee80211_ht_info *ht_info)
+ {
 -- 
-1.7.6.401.g6a319
+1.7.5.4
 
