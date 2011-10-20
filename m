@@ -1,88 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:35975 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753139Ab1JEJzk (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:37571 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754249Ab1JTBDk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 05:55:40 -0400
-Received: by eya28 with SMTP id 28so1405752eya.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:55:39 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 00/29] wl12xx: start preparing the driver for multi-vif support
-Date: Wed,  5 Oct 2011 11:55:37 +0200
-Message-Id: <1317808566-18857-1-git-send-email-eliad@wizery.com> (sfid-20111005_115543_550084_8647D273)
+	Wed, 19 Oct 2011 21:03:40 -0400
+Received: by mail-iy0-f174.google.com with SMTP id k3so2770432iae.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2011 18:03:40 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: anagar6@uic.edu, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH 4/6] mac80211: allow frame aggregation for mesh
+Date: Wed, 19 Oct 2011 18:03:24 -0700
+Message-Id: <1319072606-28291-5-git-send-email-thomas@cozybit.com> (sfid-20111020_030343_946122_F793A161)
+In-Reply-To: <1319072606-28291-1-git-send-email-thomas@cozybit.com>
+References: <1319072606-28291-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wl12xx fw currently supports only a single vif at a time.
-Upcoming fw versions are going to support concurrentl vifs.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Signed-off-by: Ashok Nagarajan <anagar6@uic.edu>
+---
+ net/mac80211/agg-rx.c |    3 ++-
+ net/mac80211/agg-tx.c |    4 +++-
+ net/mac80211/ht.c     |    3 ++-
+ net/mac80211/rx.c     |    1 +
+ 4 files changed, 8 insertions(+), 3 deletions(-)
 
-While mac80211 works well with multiple vifs, the wl12xx
-driver assumes it handles only a single interface.
-
-This is the first patchset in order to make the driver ready
-for multiple vifs support. The main action here is defining
-a new per-interface data struct (wlvif), and moving the
-currently-global fields into it.
-
-(Additional global fields/flags will be addressed by further patchsets)
-
-Note that this patchset only adds functionality - it doesn't
-break compatability with the current fw.
-
-Eliad Peller (29):
-  wl12xx: disable AP-mode-specific quirks
-  wl12xx: replace wl->mac_addr with vif->addr
-  wl12xx: start reworking the init sequence
-  wl12xx: define wl12xx_vif
-  wl12xx: move rate_set into wlvif
-  wl12xx: move basic_rate into wlvif
-  wl12xx: replace wl->bssid with vif->bss_conf.bssid
-  wl12xx: move bss_type into wlvif
-  wl12xx: remove set_bss_type field
-  wl12xx: move p2p into wlvif
-  wl12xx: move ssid and ssid_len into wlvif
-  wl12xx: move probereq into wlvif
-  wl12xx: move aid into wlvif
-  wl12xx: move role_id into wlvif
-  wl12xx: move dev_role_id into wlvif
-  wl12xx: move sta_hlid into wlvif
-  wl12xx: move ap_global_hlid and ap_bcast_hlid into wlvif
-  wl12xx: move session_counter into wlvif
-  wl12xx: move some logic into wl12xx_init_vif_data
-  wl12xx: move dev_hlid into wlvif
-  wl12xx: move beacon_int into wlvif
-  wl12xx: move default_key into wlvif
-  wl12xx: move pspoll_work into wlvif
-  wl12xx: move ps_compl into wlvif
-  wl12xx: move ps_poll_failures and psm_entry_retry into wlvif
-  wl12xx: move rssi_thold and last_rssi_event into wlvif
-  wl12xx: move ba fields into wlvif
-  wl12xx: move ap_hlid_map into wlvif.ap
-  wl12xx: move recorded_ap_keys into wlvif
-
- drivers/net/wireless/wl12xx/acx.c     |  138 ++++---
- drivers/net/wireless/wl12xx/acx.h     |   75 ++--
- drivers/net/wireless/wl12xx/boot.c    |    3 -
- drivers/net/wireless/wl12xx/cmd.c     |  231 ++++++-----
- drivers/net/wireless/wl12xx/cmd.h     |   42 ++-
- drivers/net/wireless/wl12xx/debugfs.c |   23 +-
- drivers/net/wireless/wl12xx/event.c   |  103 +++--
- drivers/net/wireless/wl12xx/event.h   |    3 -
- drivers/net/wireless/wl12xx/init.c    |  413 ++++++++++---------
- drivers/net/wireless/wl12xx/init.h    |    7 +-
- drivers/net/wireless/wl12xx/main.c    |  754 +++++++++++++++++---------------
- drivers/net/wireless/wl12xx/ps.c      |   14 +-
- drivers/net/wireless/wl12xx/ps.h      |    4 +-
- drivers/net/wireless/wl12xx/rx.c      |    4 +-
- drivers/net/wireless/wl12xx/scan.c    |   59 ++-
- drivers/net/wireless/wl12xx/scan.h    |    8 +-
- drivers/net/wireless/wl12xx/tx.c      |  165 ++++---
- drivers/net/wireless/wl12xx/tx.h      |    7 +-
- drivers/net/wireless/wl12xx/wl12xx.h  |  170 ++++----
- 19 files changed, 1204 insertions(+), 1019 deletions(-)
-
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 0cde8df..e8af4b0 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -176,7 +176,8 @@ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *d
+ 	memcpy(mgmt->da, da, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP ||
+-	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
++	    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
+ 		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
+ 	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		memcpy(mgmt->bssid, sdata->u.mgd.bssid, ETH_ALEN);
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 2ac0339..36c2836 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -77,7 +77,8 @@ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
+ 	memcpy(mgmt->da, da, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP ||
+-	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
++	    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
+ 		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
+ 	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		memcpy(mgmt->bssid, sdata->u.mgd.bssid, ETH_ALEN);
+@@ -378,6 +379,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 	 * by drivers or the standard.
+ 	 */
+ 	if (sdata->vif.type != NL80211_IFTYPE_STATION &&
++	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT &&
+ 	    sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+ 	    sdata->vif.type != NL80211_IFTYPE_AP)
+ 		return -EINVAL;
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index f80a35c..988c7ec 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -195,7 +195,8 @@ void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
+ 	memcpy(mgmt->da, da, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP ||
+-	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
++	    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
+ 		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
+ 	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		memcpy(mgmt->bssid, sdata->u.mgd.bssid, ETH_ALEN);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 8c03d6e..554b5b7 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2215,6 +2215,7 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 		 * by drivers or the standard.
+ 		 */
+ 		if (sdata->vif.type != NL80211_IFTYPE_STATION &&
++		    sdata->vif.type != NL80211_IFTYPE_MESH_POINT &&
+ 		    sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+ 		    sdata->vif.type != NL80211_IFTYPE_AP)
+ 			break;
 -- 
-1.7.6.401.g6a319
+1.7.5.4
 
