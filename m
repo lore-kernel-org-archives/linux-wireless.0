@@ -1,41 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:46217 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750851Ab1JLJNc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56631 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752254Ab1JTRvW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 05:13:32 -0400
-Received: by qyk30 with SMTP id 30so4495687qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2011 02:13:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1318408634.3933.32.camel@jlt3.sipsolutions.net>
-References: <1318355944-24708-1-git-send-email-mcgrof@qca.qualcomm.com>
- <1318355944-24708-8-git-send-email-mcgrof@qca.qualcomm.com>
- <1318363042.15357.0.camel@jlt3.sipsolutions.net> <CAB=NE6WtkokxWg4zJtjyKVZmhZAhzArfoJuOOqhuKSw940hxqg@mail.gmail.com>
- <1318408634.3933.32.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Wed, 12 Oct 2011 02:13:11 -0700
-Message-ID: <CAB=NE6XBwgxP+v5mK_XLfTZp+8Zgqah-RpF1dCy+rpGxgdp+2w@mail.gmail.com> (sfid-20111012_111335_680630_0B97931C)
-Subject: Re: [PATCH] iw: add DFS region parsing support
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 20 Oct 2011 13:51:22 -0400
+Subject: Re: [PATCH 2/3] mac80211: find correct IE offset in mesh beacons
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <CAG6hwVOVHSN_-vfvVNQsGrZZtipArNs9UoPQb-gy1ZhC0owC=w@mail.gmail.com> (sfid-20111020_194901_127802_6503536C)
+References: <1319070203-22097-1-git-send-email-thomas@cozybit.com>
+	 <1319070203-22097-2-git-send-email-thomas@cozybit.com>
+	 <1319109210.3959.6.camel@jlt3.sipsolutions.net>
+	 <CAG6hwVOVHSN_-vfvVNQsGrZZtipArNs9UoPQb-gy1ZhC0owC=w@mail.gmail.com>
+	 (sfid-20111020_194901_127802_6503536C)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 20 Oct 2011 19:51:15 +0200
+Message-ID: <1319133075.17101.4.camel@jlt3.sipsolutions.net> (sfid-20111020_195125_366272_A65FC7DC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 12, 2011 at 1:37 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2011-10-11 at 13:25 -0700, Luis R. Rodriguez wrote:
->
->> > Also, I prefer patches w/o nl80211.h updates.
->>
->> In my RFC on December the stars aligned differently and you preferred
->> it together I think.
->
-> Really? I must've been confused. The reason I don't want them is that
-> then I can never merge something that isn't upstream yet. :)
+On Thu, 2011-10-20 at 10:48 -0700, Thomas Pedersen wrote:
+> On Thu, Oct 20, 2011 at 4:13 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> >
+> >> -     baselen = (u8 *) mgmt->u.probe_resp.variable - (u8 *) mgmt;
+> >> +     switch (stype) {
+> >> +     case IEEE80211_STYPE_PROBE_RESP:
+> >> +             ies = (u8 *) mgmt->u.probe_resp.variable;
+> >> +             break;
+> >> +     case IEEE80211_STYPE_BEACON:
+> >> +             ies = (u8 *) mgmt->u.beacon.variable;
+> >> +             break;
+> >> +     default:
+> >> +             return;
+> >> +     }
+> >> +
+> >
+> > Does that really make sense? the offset is the same anyway and we don't
+> > get here with other frames.
+> 
+> I don't think so:
+> 
+>                 struct {
+>                         __le64 timestamp;
+>                         __le16 beacon_int;
+>                         __le16 capab_info;
+>                         /* followed by some of SSID, Supported rates,
+>                          * FH Params, DS Params, CF Params, IBSS Params, TIM */
+>                         u8 variable[0];
+>                 } __attribute__ ((packed)) beacon;
+>                 struct {
+>                         /* only variable items: SSID, Supported rates */
+>                         u8 variable[0];
+>                 } __attribute__ ((packed)) probe_req;
 
-That's fine, I also like to split it. I'll resend the iw patches.
-John, let me know if the other ones look peachy, once and if you merge
-to wireless-regdb, wireless-next I'll push to CRDA too.
+Err, probe_req != probe_resp.
 
-  Luis
+johannes
+
