@@ -1,30 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:5597 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752977Ab1JKL0D (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:55891 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755799Ab1JTO3F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 07:26:03 -0400
-Message-ID: <4E942747.8050906@qca.qualcomm.com> (sfid-20111011_132608_475647_E9F72408)
-Date: Tue, 11 Oct 2011 14:23:51 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Thu, 20 Oct 2011 10:29:05 -0400
+Received: by qyk27 with SMTP id 27so2854274qyk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 07:29:04 -0700 (PDT)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: fix null skb dereference in ath6kl_rx()
-References: <20111006113232.24700.12168.stgit@localhost6.localdomain6>
-In-Reply-To: <20111006113232.24700.12168.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAD2nsn3zkAgCf=_Y1CUt0X1qw7py4oEJ5sqaod_KYJxo68G1nQ@mail.gmail.com>
+References: <1319109568.26974.YahooMailNeo@web161206.mail.bf1.yahoo.com>
+	<CA+icZUXyYSVUA-PTCQB7z167iLAnh83DEJxOGoYB4qxaFkTZog@mail.gmail.com>
+	<CAD2nsn3zkAgCf=_Y1CUt0X1qw7py4oEJ5sqaod_KYJxo68G1nQ@mail.gmail.com>
+Date: Thu, 20 Oct 2011 10:29:04 -0400
+Message-ID: <CAEKwDSCQbNunBmxcD0bXUANRyG2Gz1F8Nt_ocppBaJYfJGMOpw@mail.gmail.com> (sfid-20111020_162910_838223_56281741)
+Subject: Re: ath5k: controlling powersave with iw or iwconfig fails
+From: Bob Copeland <me@bobcopeland.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: sedat.dilek@gmail.com, Joerg Pommnitz <pommnitz@yahoo.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath5k-users@lists.ath5k.org" <ath5k-users@lists.ath5k.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/06/2011 02:32 PM, Kalle Valo wrote:
-> smatch found that skb might be null in some cases in ath6kl_rx():
-> 
-> ath6kl/txrx.c +1252 ath6kl_rx(222) error: potential null derefence 'skb'.
-> 
-> This will happen when ath6kl is in AP mode and two clients send traffic
-> to each other.
+On Thu, Oct 20, 2011 at 7:46 AM, Mohammed Shafi
+<shafi.wireless@gmail.com> wrote:
+> On Thu, Oct 20, 2011 at 5:03 PM, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
+>> Which iw version?
+>
+> looks like its ath5k does not supports station power save.
 
-Applied to ath6kl.git.
+Yes, that is the reason.
 
-Kalle
+-- 
+Bob Copeland %% www.bobcopeland.com
