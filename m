@@ -1,201 +1,238 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44940 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751979Ab1JYXsp (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:37571 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755774Ab1JTBDm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 19:48:45 -0400
-From: greearb@candelatech.com
+	Wed, 19 Oct 2011 21:03:42 -0400
+Received: by mail-iy0-f174.google.com with SMTP id k3so2770432iae.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2011 18:03:42 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
 To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [RFC] wifi:  Allow forcing lower mcs (/n) rates.
-Date: Tue, 25 Oct 2011 16:48:39 -0700
-Message-Id: <1319586519-11190-1-git-send-email-greearb@candelatech.com> (sfid-20111026_014849_098472_74130E00)
+Cc: anagar6@uic.edu, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH 5/6] mac80211: add WMM IE to mesh frames
+Date: Wed, 19 Oct 2011 18:03:25 -0700
+Message-Id: <1319072606-28291-6-git-send-email-thomas@cozybit.com> (sfid-20111020_030345_916865_9978AD0F)
+In-Reply-To: <1319072606-28291-1-git-send-email-thomas@cozybit.com>
+References: <1319072606-28291-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Include the WMM IE in mesh peering and beacon frames. This is needed
+tell any potential peers what our WMM / EDCA parameters are.
 
-Allow user to set the HT information and mask.  This
-can be used to remove rates from consideration, ie to
-force use of lower rates.
-
-Probably still need some work, as I think all of the rates
-are advertised, and probably they should be masked out as
-well.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
-:100644 100644 2397bfb... 270fab3... M	include/linux/nl80211.h
-:100644 100644 8d6e90e... 4a71d18... M	include/net/cfg80211.h
-:100644 100644 d514f5c... fefd4c4... M	net/mac80211/cfg.c
-:100644 100644 aebc697... e5b54ea... M	net/mac80211/ieee80211_i.h
-:100644 100644 58e5e1b... c4a25a2... M	net/mac80211/mlme.c
-:100644 100644 37f35fe... f4f4397... M	net/wireless/nl80211.c
- include/linux/nl80211.h    |    3 +++
- include/net/cfg80211.h     |    4 ++++
- net/mac80211/cfg.c         |   28 ++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |    3 +++
- net/mac80211/mlme.c        |   23 ++++++++++++++++++++++-
- net/wireless/nl80211.c     |   14 ++++++++++++++
- 6 files changed, 74 insertions(+), 1 deletions(-)
+ include/linux/ieee80211.h |   26 +++++++++++++
+ include/net/mac80211.h    |    4 ++
+ net/mac80211/mesh_plink.c |    4 +-
+ net/mac80211/tx.c         |    2 +
+ net/mac80211/util.c       |   92 +++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 127 insertions(+), 1 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 2397bfb..270fab3 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1000,6 +1000,8 @@ enum nl80211_commands {
-  *      function as /a/b/g stations.
-  * @NL80211_ATTR_DISABLE_HT40:  Disable HT-40 even if AP and hardware
-  *      support it.
-+ * @NL80211_ATTR_HT_CAPABILITY_MASK: Specify which bits of the HT_CAPs
-+ *      to pay attention to.
-  *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -1230,6 +1232,7 @@ enum nl80211_attrs {
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 48363c3..ec6f396 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -152,6 +152,11 @@
+ #define IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK	0x03
+ #define IEEE80211_WMM_IE_STA_QOSINFO_SP_SHIFT	5
  
- 	NL80211_ATTR_DISABLE_11N,
- 	NL80211_ATTR_DISABLE_HT40,
-+	NL80211_ATTR_HT_CAPABILITY_MASK,
++#define IEEE80211_WMM_IE_ECWMIN_MASK		0x0f
++#define IEEE80211_WMM_IE_ECWMIN_SHIFT		0
++#define IEEE80211_WMM_IE_ECWMAX_MASK		0xf0
++#define IEEE80211_WMM_IE_ECWMAX_SHIFT		4
++
+ #define IEEE80211_HT_CTL_LEN		4
  
- 	/* add attributes here, update the policy in nl80211.c */
+ struct ieee80211_hdr {
+@@ -605,6 +610,27 @@ struct ieee80211_tim_ie {
+ 	u8 virtual_map[1];
+ } __attribute__ ((packed));
  
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8d6e90e..4a71d18 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -261,11 +261,15 @@ struct ieee80211_supported_band {
-  * @use_4addr: use 4-address frames
-  * @disable_11n:  Don't use 11n features (HT, etc)
-  * @disable_ht40:  Don't use HT40, even if hardware & AP support it.
-+ * @ht_capa:  HT Capabilities for this interface.
-+ * @ht_capa_mask:  Bits of ht_capa that are to be used.
-  */
- struct vif_params {
- 	int use_4addr;
- 	int disable_11n;
- 	int disable_ht40;
-+	struct ieee80211_ht_cap *ht_capa;
-+	struct ieee80211_ht_cap *ht_capa_mask;
- };
- 
++struct ieee80211_wmm_ac_param {
++	u8 ac_aci_acm_aifsn;
++	u8 ac_ecwmin_ecwmax;
++	__le16 ac_txop_limit;
++} __attribute__ ((packed));
++
++/**
++ * struct ieee80211_wmm_param
++ *
++ * This structure refers to "WMM parameter information element"
++ */
++struct ieee80211_wmm_param_ie {
++	u8 oui[3];
++	u8 oui_type;
++	u8 oui_subtype;
++	u8 version;
++	u8 qos_info;
++	u8 reserved;
++	struct ieee80211_wmm_ac_param ac[4];
++} __attribute__ ((packed));
++
  /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index d514f5c..fefd4c4 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -104,6 +104,34 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
- 		}
+  * struct ieee80211_meshconf_ie
+  *
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index dc1123a..fd28b2b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3649,4 +3649,8 @@ int ieee80211_add_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb);
+ 
+ int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif,
+ 				struct sk_buff *skb);
++int ieee80211_build_wmm_ie(struct ieee80211_vif *vif,
++			   u8 *ie_data);
++int ieee80211_add_wmm_ie(struct ieee80211_vif *vif,
++			 struct sk_buff *skb);
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index f0705e6..069e5dc 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -177,6 +177,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 			    2 + sizeof(struct ieee80211_meshconf_ie) +
+ 			    2 + sizeof(struct ieee80211_ht_cap) +
+ 			    2 + sizeof(struct ieee80211_ht_info) +
++			    2 + sizeof(struct ieee80211_wmm_param_ie) +
+ 			    2 + 8 + /* peering IE */
+ 			    sdata->u.mesh.ie_len);
+ 	if (!skb)
+@@ -256,7 +257,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (action != WLAN_SP_MESH_PEERING_CLOSE) {
+ 		if (mesh_add_ht_cap_ie(skb, sdata) ||
+-		    mesh_add_ht_info_ie(skb, sdata))
++		    mesh_add_ht_info_ie(skb, sdata) ||
++		    ieee80211_add_wmm_ie(&sdata->vif, skb))
+ 			return -1;
  	}
  
-+	if (params->ht_capa) {
-+		u8 *caps = (u8*)(params->ht_capa);
-+		u8 *mask = (u8*)(params->ht_capa_mask);
-+		u8 *scaps = (u8*)(&sdata->ht_capa);
-+		u8 *smask = (u8*)(&sdata->ht_capa_mask);
-+		int i;
-+
-+		BUILD_BUG_ON(sizeof(*(params->ht_capa)) != sizeof(sdata->ht_capa));
-+
-+		for (i = 0; i<sizeof(sdata->ht_capa); i++) {
-+			if (mask[i]) {
-+				int q;
-+				smask[i] |= mask[i];
-+				for (q = 0; q<8; q++) {
-+					if (mask[i] & (1<<q)) {
-+						if (caps[i] & (1<<q))
-+							scaps[i] |= (1<<q);
-+						else
-+							scaps[i] &= ~(1<<q);
-+					}
-+				}
-+			}
-+		}
-+	}
-+	else if (params->ht_capa_mask) {
-+		memcpy(&sdata->ht_capa_mask, params->ht_capa_mask, sizeof(sdata->ht_capa_mask));
-+	}
-+
- 	return 0;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index faca189..dfb6bb9 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2294,6 +2294,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 				    2 + sizeof(struct ieee80211_ht_info) +
+ 				    2 + sdata->u.mesh.mesh_id_len +
+ 				    2 + sizeof(struct ieee80211_meshconf_ie) +
++				    2 + sizeof(struct ieee80211_wmm_param_ie) +
+ 				    sdata->u.mesh.ie_len);
+ 		if (!skb)
+ 			goto out;
+@@ -2324,6 +2325,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 		    mesh_add_ht_info_ie(skb, sdata) ||
+ 		    mesh_add_meshid_ie(skb, sdata) ||
+ 		    mesh_add_meshconf_ie(skb, sdata) ||
++		    ieee80211_add_wmm_ie(&sdata->vif, skb) ||
+ 		    mesh_add_vendor_ies(skb, sdata)) {
+ 			pr_err("o11s: couldn't add ies!\n");
+ 			goto out;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 72b3a2e..071b425 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1419,6 +1419,98 @@ u8 *ieee80211_ie_build_ht_info(u8 *pos,
+ 	return pos + sizeof(struct ieee80211_ht_info);
  }
  
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index aebc697..e5b54ea 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -567,6 +567,9 @@ struct ieee80211_sub_if_data {
- 	bool cfg_disable_11n; /* configured to disable 11n? */
- 	bool cfg_disable_ht40; /* configured to not use HT-40 */
- 
-+	struct ieee80211_ht_cap ht_capa; /* configured ht-cap over-rides */
-+	struct ieee80211_ht_cap ht_capa_mask; /* What parts of ht_capa are valid */
-+	
- 	/* Fragment table for host-based reassembly */
- 	struct ieee80211_fragment_entry	fragments[IEEE80211_FRAGMENT_MAX];
- 	unsigned int fragment_next;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 58e5e1b..c4a25a2 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1553,10 +1553,31 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 	else
- 		sdata->flags &= ~IEEE80211_SDATA_OPERATING_GMODE;
- 
--	if (elems.ht_cap_elem && !(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
-+	if (elems.ht_cap_elem && !(ifmgd->flags & IEEE80211_STA_DISABLE_11N)) {
-+		u8 *scaps = (u8*)(&sdata->ht_capa.mcs.rx_mask);
-+		u8 *smask = (u8*)(&sdata->ht_capa_mask.mcs.rx_mask);
-+		int i;
++static inline u8 ieee80211_wmm_ecw(struct ieee80211_tx_queue_params *txq)
++{
++	u8 cw_min, cw_max, n = 0;
 +
- 		ieee80211_ht_cap_ie_to_sta_ht_cap(sband,
- 				elems.ht_cap_elem, &sta->sta.ht_cap);
- 
-+		/* check for HT over-rides, mcs rates only at this time,
-+		 * and can only disable them, not force new ones to be
-+		 * made available.
-+		 */
-+		for (i = 0; i<IEEE80211_HT_MCS_MASK_LEN; i++) {
-+			int q;
-+			for (q = 0; q<8; q++) {
-+				if (smask[i] & (1<<q)) {
-+					if (!(scaps[i] & (1<<q))) {
-+						/* can only disable rates, not force new ones */
-+						sta->sta.ht_cap.mcs.rx_mask[i] &= ~(1<<q);
-+					}
-+				}
-+			}
-+		}
++	/* cw_min and cw_max are transmitted as n in 2^n - 1 */
++	while ((txq->cw_min >> n) & 0x01)
++		n++;
++	cw_min = n;
++
++	n = 0;
++	while ((txq->cw_max >> n) & 0x01)
++		n++;
++	cw_max = n;
++
++	return ((cw_min << IEEE80211_WMM_IE_ECWMIN_SHIFT) &
++				IEEE80211_WMM_IE_ECWMIN_MASK) |
++		((cw_max << IEEE80211_WMM_IE_ECWMAX_SHIFT) &
++				IEEE80211_WMM_IE_ECWMAX_MASK);
++}
++
++static inline u8 ieee80211_aci_to_q(u8 aci)
++{
++	u8 q;
++
++	switch (aci) {
++	case 1:		/* BK */
++		q = 3;
++		break;
++	default:
++	case 0:		/* BE */
++		q = 2;
++		break;
++	case 2:		/* VI */
++		q = 1;
++		break;
++	case 3:		/* VO */
++		q = 0;
++		break;
 +	}
 +
- 	ap_ht_cap_flags = sta->sta.ht_cap.cap;
- 
- 	rate_control_rate_init(sta);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 37f35fe..f4f4397 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1584,7 +1584,21 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
- 	else {
- 		params.disable_ht40 = -1;
- 	}
++	return q;
++}
 +
-+	if (info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]) {
-+		params.ht_capa_mask =
-+			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]);
-+		change = true;
-+	}
- 	
-+	if (info->attrs[NL80211_ATTR_HT_CAPABILITY]) {
-+		if (!params.ht_capa_mask)
-+			return -EINVAL;
-+		params.ht_capa =
-+			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
-+		change = true;
++int ieee80211_build_wmm_ie(struct ieee80211_vif *vif, u8 *data)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_wmm_param_ie *wmm;
++	struct ieee80211_wmm_ac_param *ac;
++	struct ieee80211_tx_queue_params *txconf;
++	u8 aci;
++
++	wmm = (struct ieee80211_wmm_param_ie *) data;
++	wmm->oui[0] = 0x00;
++	wmm->oui[1] = 0x50;
++	wmm->oui[2] = 0xf2;
++	wmm->oui_type = 2; /* WMM */
++	wmm->oui_subtype = 1; /* WMM param */
++	wmm->version = 1;
++	wmm->qos_info = 0;
++	wmm->reserved = 0;
++
++	for (aci = 0; aci < 4; aci++) {
++		ac = &wmm->ac[aci];
++		txconf = &sdata->tx_conf[ieee80211_aci_to_q(aci)];
++
++		ac->ac_aci_acm_aifsn = (aci << 5) | txconf->aifs;
++		ac->ac_ecwmin_ecwmax = ieee80211_wmm_ecw(txconf);
++		ac->ac_txop_limit = cpu_to_le16(txconf->txop);
 +	}
 +
- 	if (change)
- 		err = cfg80211_change_iface(rdev, dev, ntype, flags, &params);
- 	else
++	return 0;
++}
++
++int ieee80211_add_wmm_ie(struct ieee80211_vif *vif,
++			 struct sk_buff *skb)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	u8 *pos;
++
++	if (sdata->local->hw.queues < 4)
++		return 0;
++
++	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_wmm_param_ie))
++		return -ENOMEM;
++
++	pos = skb_put(skb, 2 + sizeof(struct ieee80211_wmm_param_ie));
++	*pos++ = WLAN_EID_VENDOR_SPECIFIC;
++	*pos++ = sizeof(struct ieee80211_wmm_param_ie);
++
++	return ieee80211_build_wmm_ie(vif, pos);
++}
++
+ enum nl80211_channel_type
+ ieee80211_ht_info_to_channel_type(struct ieee80211_ht_info *ht_info)
+ {
 -- 
-1.7.3.4
+1.7.5.4
 
