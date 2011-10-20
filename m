@@ -1,47 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56792 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932384Ab1JFIpc (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:60923 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755153Ab1JTJBp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Oct 2011 04:45:32 -0400
-Subject: [PATCH] compat: fix warning in alloc_netdev_mqs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 06 Oct 2011 10:45:26 +0200
-Message-ID: <1317890726.3945.0.camel@jlt3.sipsolutions.net> (sfid-20111006_104536_245695_B061E061)
-Mime-Version: 1.0
+	Thu, 20 Oct 2011 05:01:45 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k_hw: Fix radio retention for AR9462
+Date: Thu, 20 Oct 2011 14:29:38 +0530
+Message-ID: <1319101178-9843-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111020_110149_072081_40A7060E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+IQ calibration during fast channel change sometimes failed
+with RTT. And also restoring invalid radio retention readings
+during init cal could cause failure to set the channel properly.
+This patch counts the valid rtt history readings and clears
+rtt mask.
 
-Depending on the arguments to alloc_netdev_mqs(),
-it may give a warning due to the use of max().
-Fix the warning with max_t().
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- include/linux/compat-2.6.38.h |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/compat-2.6.38.h b/include/linux/compat-2.6.38.h
-index 1f9ab52..06bbd9d 100644
---- a/include/linux/compat-2.6.38.h
-+++ b/include/linux/compat-2.6.38.h
-@@ -73,7 +73,8 @@ static inline int skb_checksum_start_offset(const struct sk_buff *skb)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 16851cb..a4cd161 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -908,12 +908,15 @@ static bool ar9003_hw_rtt_restore(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	int i;
+ 	bool restore;
  
- /* include/linux/netdevice.h */
- #define alloc_netdev_mqs(sizeof_priv, name, setup, txqs, rxqs) \
--	alloc_netdev_mq(sizeof_priv, name, setup, max(txqs, rxqs))
-+	alloc_netdev_mq(sizeof_priv, name, setup, \
-+			max_t(unsigned int, txqs, rxqs))
+-	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_RTT) || !ah->caldata)
++	if (!ah->caldata)
+ 		return false;
  
- #define ETH_P_LINK_CTL	0x886c		/* HPNA, wlan link local tunnel */
+ 	hist = &ah->caldata->rtt_hist;
++	if (!hist->num_readings)
++		return false;
++
+ 	ar9003_hw_rtt_enable(ah);
+-	ar9003_hw_rtt_set_mask(ah, 0x10);
++	ar9003_hw_rtt_set_mask(ah, 0x00);
+ 	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
+ 		if (!(ah->rxchainmask & (1 << i)))
+ 			continue;
+@@ -1070,6 +1073,7 @@ skip_tx_iqcal:
+ 		if (is_reusable && (hist->num_readings < RTT_HIST_MAX)) {
+ 			u32 *table;
  
++			hist->num_readings++;
+ 			for (i = 0; i < AR9300_MAX_CHAINS; i++) {
+ 				if (!(ah->rxchainmask & (1 << i)))
+ 					continue;
 -- 
-1.7.6.3
-
-
+1.7.7
 
