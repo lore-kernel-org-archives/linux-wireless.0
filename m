@@ -1,87 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:33441 "HELO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S934884Ab1JEV7M (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:49745 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753123Ab1JTGCj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 17:59:12 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH] mwifiex: fix smatch errors
-Date: Wed,  5 Oct 2011 14:58:24 -0700
-Message-Id: <1317851904-26004-1-git-send-email-bzhao@marvell.com> (sfid-20111005_235916_168456_C9B8A05B)
+	Thu, 20 Oct 2011 02:02:39 -0400
+From: "Panjwani, Rishi" <rpanjwan@qca.qualcomm.com>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] ath6kl: Implement support for listen interval from
+ userspace
+Date: Thu, 20 Oct 2011 06:02:38 +0000
+Message-ID: <278E1D5A6E59CE43BFCE41F2BC5946C9176719AE@nasanexd02c.na.qualcomm.com> (sfid-20111020_080243_126857_53EF85F6)
+References: <1318984591-10037-1-git-send-email-rpanjwan@qca.qualcomm.com>
+ <1318984591-10037-2-git-send-email-rpanjwan@qca.qualcomm.com>
+In-Reply-To: <1318984591-10037-2-git-send-email-rpanjwan@qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-
-drivers/net/wireless/mwifiex/main.c +828 mwifiex_remove_card(52)
-  error: potential null derefence 'priv'.
-drivers/net/wireless/mwifiex/main.c +828 mwifiex_remove_card(52)
-  error: we previously assumed 'priv' could be null (see line 820)
-drivers/net/wireless/mwifiex/txrx.c +90 mwifiex_process_tx(24)
-  error: potential null derefence 'local_tx_pd'.
-drivers/net/wireless/mwifiex/sta_ioctl.c +766
-mwifiex_rate_ioctl_set_rate_value(30)
-  error: buffer overflow 'rate' 14 <= 14
-
-Cc: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/main.c      |    4 ++++
- drivers/net/wireless/mwifiex/sta_ioctl.c |    2 +-
- drivers/net/wireless/mwifiex/txrx.c      |    3 ++-
- 3 files changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 8486451..277ea84 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -825,6 +825,10 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter, struct semaphore *sem)
- 		rtnl_unlock();
- 	}
+Kalle,
  
-+	priv = adapter->priv[0];
-+	if (!priv)
-+		goto exit_remove;
+Please drop this patch as I need to make some changes to it. I will send v2 soon.
+
+Regards,
+Rishi
+
+-----Original Message-----
+From: Panjwani, Rishi 
+Sent: Tuesday, October 18, 2011 5:37 PM
+To: Valo, Kalle
+Cc: linux-wireless@vger.kernel.org; Panjwani, Rishi
+Subject: [PATCH] ath6kl: Implement support for listen interval from userspace
+
+In order to allow user space based control of listen interval, we use available debugfs infrastructure. Listen interval implies how frequently we want the WLAN chip to wake up and synchronize the beacons in case it is in sleep mode. The user has to write the listen interval (in msecs) to the listen_interval file in ath6kl debug directory. The minimum value is
+15 and maximum is 5000.
+
+Example:
+
+echo "30" > listen_interval
+
+This will make the listen interval approximately 30 msecs.
+
+Signed-off-by: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/debug.c |   50 +++++++++++++++++++++++++++++++
+ 1 files changed, 50 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 3eaa291..41f36d2 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -1488,6 +1488,53 @@ static const struct file_operations fops_bgscan_int = {
+ 	.owner = THIS_MODULE,
+ 	.llseek = default_llseek,
+ };
++static ssize_t ath6kl_listen_int_write(struct file *file,
++						const char __user *user_buf,
++						size_t count, loff_t *ppos)
++{
++	struct ath6kl *ar = file->private_data;
++	u16 listen_int;
++	char buf[32];
++	ssize_t len;
 +
- 	wiphy_unregister(priv->wdev->wiphy);
- 	wiphy_free(priv->wdev->wiphy);
- 	kfree(priv->wdev);
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 520800b..f20550a 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -763,7 +763,7 @@ static int mwifiex_rate_ioctl_set_rate_value(struct mwifiex_private *priv,
- 			if ((rate[i] & 0x7f) == (rate_cfg->rate & 0x7f))
- 				break;
- 		}
--		if (!rate[i] || (i == MWIFIEX_SUPPORTED_RATES)) {
-+		if ((i == MWIFIEX_SUPPORTED_RATES) || !rate[i]) {
- 			dev_err(adapter->dev, "fixed data rate %#x is out "
- 			       "of range\n", rate_cfg->rate);
- 			return -1;
-diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
-index 6190b2f..5d95c4b 100644
---- a/drivers/net/wireless/mwifiex/txrx.c
-+++ b/drivers/net/wireless/mwifiex/txrx.c
-@@ -87,7 +87,8 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
- 			(adapter->pps_uapsd_mode) &&
- 			(adapter->tx_lock_flag)) {
- 				priv->adapter->tx_lock_flag = false;
--				local_tx_pd->flags = 0;
-+				if (local_tx_pd)
-+					local_tx_pd->flags = 0;
- 		}
- 		dev_dbg(adapter->dev, "data: -EBUSY is returned\n");
- 		break;
--- 
-1.7.0.2
++	len = min(count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, len))
++		return -EFAULT;
++
++	buf[len] = '\0';
++	if (kstrtou16(buf, 0, &listen_int))
++		return -EINVAL;
++
++	if ((listen_int >= 15) && (listen_int <= 5000)) {
++		ar->listen_intvl_t = listen_int;
++		ath6kl_wmi_listeninterval_cmd(ar->wmi, ar->listen_intvl_t, 0);
++	} else {
++		return -EINVAL;
++	}
++
++	return count;
++}
++
++static ssize_t ath6kl_listen_int_read(struct file *file,
++						char __user *user_buf,
++						size_t count, loff_t *ppos)
++{
++	struct ath6kl *ar = file->private_data;
++	char buf[16];
++	int len;
++
++	len = snprintf(buf, sizeof(buf), "%u\n", ar->listen_intvl_t);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len); }
++
++static const struct file_operations fops_listen_int = {
++	.read = ath6kl_listen_int_read,
++	.write = ath6kl_listen_int_write,
++	.open = ath6kl_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
+ 
+ int ath6kl_debug_init(struct ath6kl *ar)  { @@ -1571,6 +1618,9 @@ int ath6kl_debug_init(struct ath6kl *ar)
+ 	debugfs_create_file("bgscan_interval", S_IWUSR,
+ 				ar->debugfs_phy, ar, &fops_bgscan_int);
+ 
++	debugfs_create_file("listen_interval", S_IWUSR, ar->debugfs_phy, ar,
++						&fops_listen_int);
++
+ 	return 0;
+ }
+ 
+--
+1.7.0.4
 
