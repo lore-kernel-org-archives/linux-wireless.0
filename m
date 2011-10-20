@@ -1,54 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:38586 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932903Ab1JECz3 (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:47986 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754077Ab1JTNqz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 22:55:29 -0400
-Received: by gyg10 with SMTP id 10so1147567gyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 19:55:28 -0700 (PDT)
-Message-ID: <4E8BC71C.3010901@lwfinger.net> (sfid-20111005_045533_767634_6DA3749C)
-Date: Tue, 04 Oct 2011 21:55:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Jamie Kitson <jamie@kitten-x.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: BUG: Soft lockup CPU#0 stuck for 22s! [wpa_supplicant:756]
-References: <CA+z-pWFvBfvqY9_km8t3Xbmt=2Pw7eJo8T+SyFp=Lv=d1+ZOPw@mail.gmail.com> <4E8B5886.3010103@lwfinger.net> <CA+z-pWE32ui3nL-NMs5xERiqET6BJ=DkTK7DtkG_pFDt_=YAAg@mail.gmail.com>
-In-Reply-To: <CA+z-pWE32ui3nL-NMs5xERiqET6BJ=DkTK7DtkG_pFDt_=YAAg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 20 Oct 2011 09:46:55 -0400
+References: <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111019124931.GC3963@gamma.logic.tuwien.ac.at> <1319038282.25023.21.camel@wwguy-ubuntu> <20111019060108.GA11588@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com> <20111019062517.GC11588@gamma.logic.tuwien.ac.at> <1319003304.31823.46.camel@wwguy-huron> <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111020045927.GB23044@gamma.logic.tuwien.ac.at> <1319096418.3959.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1319096418.3959.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0 (iPhone Mail 8J2)
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <56FBBFB3-4DC9-4CB6-939A-8F0130EBCB9B@logic.at> (sfid-20111020_154713_201762_0E7BE138)
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+From: Norbert Preining <preining@logic.at>
+Subject: Re: iwlagn is getting very shaky
+Date: Thu, 20 Oct 2011 22:45:55 +0900
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/04/2011 03:59 PM, Jamie Kitson wrote:
->> Which variant of the RTL8188CE do you have? Use 'lspci -nn' to tell.
->
-> 03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd.
-> RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
->
->> Does ARCH have an updated kernel later than 3.0?
->
-> Looks like I am using the latest core of 3.0.4, there's 3.0.6 in testing:
->
-> http://www.archlinux.org/packages/testing/x86_64/linux/
->
-> Might that help?
+Hi Johannes,
 
-Probably not. I think all the changes in the mainline 3.1-rc8 are in 3.0.4.
->
->> What version of wpa-supplicant?
->
-> wpa_supplicant v0.7.3
+> did you have scan information for these APs?
 
-That is what I use.
+Unfortunately not, but I can get them when I am back on Wednesday, if you want.
 
->> Are you using NetworkManager? If so, what version? Is your desktop KDE,
->> Gnome, or something else? If NM, what applet and version?
->>
->> If not NM, how do you connect?
->
-> I use dwm and wpa_supplicant, no manager.
+Just let me know what exactely.
 
-I know nothing of dwm, but the driver works on my system with both NM and with ifup.
+Best wishes
 
-Larry
+Norbert
 
