@@ -1,79 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42321 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753503Ab1JTQND (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:50975 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751083Ab1JTSOg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 12:13:03 -0400
-Message-ID: <4EA04883.6010805@candelatech.com> (sfid-20111020_181309_167018_F2A18592)
-Date: Thu, 20 Oct 2011 09:12:51 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 20 Oct 2011 14:14:36 -0400
+Received: by wyg36 with SMTP id 36so3173551wyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 11:14:35 -0700 (PDT)
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211:  Fix off-channel problem in work task.
-References: <1319049876-16243-1-git-send-email-greearb@candelatech.com> <20111020145852.GB2293@redhat.com> <4EA03CCF.6090604@candelatech.com> <20111020160859.GC2293@redhat.com>
-In-Reply-To: <20111020160859.GC2293@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1319134298.20837.1.camel@jlt3.sipsolutions.net>
+References: <1319072606-28291-1-git-send-email-thomas@cozybit.com>
+	<1319072606-28291-6-git-send-email-thomas@cozybit.com>
+	<1319109412.3959.7.camel@jlt3.sipsolutions.net>
+	<CAG6hwVMUhJ=nV=6N+DpoagKWJxMjythPYMYCCzEb=mTr6TfytQ@mail.gmail.com>
+	<1319133104.17101.5.camel@jlt3.sipsolutions.net>
+	<CAG6hwVMmvu5jMQLeOWG2via0wqkHGs=nHSi_mKvgy9U2+m1FXA@mail.gmail.com>
+	<1319133820.20837.0.camel@jlt3.sipsolutions.net>
+	<CAG6hwVOaLp9SdPezdw=aLhKrKpPdp8m5vXf6rySTvCfriaziVw@mail.gmail.com>
+	<1319134298.20837.1.camel@jlt3.sipsolutions.net>
+Date: Thu, 20 Oct 2011 11:14:35 -0700
+Message-ID: <CAG6hwVNsLR0Ts1izDea8zJ8nw9FvM4c0n=nNCr0TBBQaUbkk=g@mail.gmail.com> (sfid-20111020_201440_066211_092143CA)
+Subject: Re: [PATCH 5/6] mac80211: add WMM IE to mesh frames
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, anagar6@uic.edu,
+	devel@lists.open80211s.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/20/2011 09:09 AM, Stanislaw Gruszka wrote:
-> On Thu, Oct 20, 2011 at 08:22:55AM -0700, Ben Greear wrote:
->> On 10/20/2011 07:58 AM, Stanislaw Gruszka wrote:
->>> On Wed, Oct 19, 2011 at 11:44:36AM -0700, greearb@candelatech.com wrote:
->>>> From: Ben Greear<greearb@candelatech.com>
->>>>
->>>> The ieee80211_cfg_on_oper_channel method compared the
->>>> current hardware config as well as the desired hardware
->>>> config.  In most cases, this is proper, but when deciding
->>>> whether to go back on-channel, if the hardware is not
->>>> configured on-channel, but logically it *should* be
->>>> on-channel, then we must go on-channel.
->>>>
->>>> This patch adds a flag to the ieee80211_cfg_on_oper_channel
->>>> logic to disable comparing the actual hardware so we do not
->>>> have to create another tricky method with similar logic.
->>>>
->>>> Reported-by: Eliad Peller<eliad@wizery.com>
->>>> Signed-off-by: Ben Greear<greearb@candelatech.com>
->>>
->>> I much more prefer previous one-line patch from Eliad
->>> http://news.gmane.org/find-root.php?message_id=%3c1311607763%2d12603%2d3%2dgit%2dsend%2demail%2deliad%40wizery.com%3e
->>>
->>> this one seems to provide unneeded code complexity, but
->>> behaviour i.e. number of channel switches in hardware
->>> is the same.
+On Thu, Oct 20, 2011 at 11:11 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2011-10-20 at 11:08 -0700, Thomas Pedersen wrote:
+>> On Thu, Oct 20, 2011 at 11:03 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Thu, 2011-10-20 at 10:56 -0700, Thomas Pedersen wrote:
+>> >
+>> >> >> I'm not sure what you mean, this is the only way to get the WMM
+>> >> >> parameters? Usually these are just set with ieee80211_set_wmm_defaul()
+>> >> >> on bringing up the interface.
+>> >> >
+>> >> > Right, but
+>> >> >  a) if you're using just the default, no need to derive from the default
+>> >>
+>> >> The user might wish to customize the queue parameters though.
+>> >>
+>> >> >  b) should they be changeable?
+>> >>
+>> >> Why not?
+>> >
+>> > Well there no API for it now, is there?
+>> >
 >>
->> I believe it's possible to set tmp_channel to NULL and not actually
->> change the on/off channel configuration, and my patch should allow us to
->> skip a hardware config in that case.
->>
->> However, this might only be possible if we are in this code while
->> scanning, and currently, I don't believe we can be in this work
->> code while scanning.
+>> NL80211_ATTR_WIPHY_TXQ_PARAMS?
 >
-> So you want to optimize a case that is not even possible at present.
-> Do you know that "premature optimization is the root of all evil" ? :-)
+> Oh, hmm. Ok I guess that's allowed on mesh -- but when it changes you
+> won't update IEs?
+>
 
-I was trying to clean out some of the sloppiness in the on/off channel
-logic, but in this case, I don't think the extra parania helped much,
-and my attempt at cleverness obviously introduced some bugs...
+We reconstruct IEs on every beacon_get() (I know...), so it should be OK.
 
-> I'm not quite against by that change, but I would like to have -stable
-> fixes, since bug we are talking about not only annoys people by warning,
-> but also disallow to associate to wireless network. I prefer that we
-> apply Eliad patches and cc -stable and do possible further optimization
-> on top of that (ideally if some measurement will be available that show
-> optimization really works).
-
-That is fine with me.
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Thomas
