@@ -1,130 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42874 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755462Ab1JTCWz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Oct 2011 22:22:55 -0400
-Subject: Re: iwlagn is getting very shaky
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Norbert Preining <preining@logic.at>
-Cc: David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-In-Reply-To: <20111020020225.GO11060@gamma.logic.tuwien.ac.at>
-References: <20111019064818.GB14817@gamma.logic.tuwien.ac.at>
-	 <1319004938.31823.59.camel@wwguy-huron>
-	 <20111019060108.GA11588@gamma.logic.tuwien.ac.at>
-	 <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com>
-	 <20111019062517.GC11588@gamma.logic.tuwien.ac.at>
-	 <1319003304.31823.46.camel@wwguy-huron>
-	 <20111019064628.GA14817@gamma.logic.tuwien.ac.at>
-	 <1319004836.31823.57.camel@wwguy-huron>
-	 <20111019124931.GC3963@gamma.logic.tuwien.ac.at>
-	 <1319038282.25023.21.camel@wwguy-ubuntu>
-	 <20111020020225.GO11060@gamma.logic.tuwien.ac.at>
-Content-Type: multipart/mixed; boundary="=-Ne6W6dbUGApePatbqTax"
-Date: Wed, 19 Oct 2011 18:32:19 -0700
-Message-ID: <1319074339.31823.68.camel@wwguy-huron> (sfid-20111020_042314_284522_2FA62FFA)
-Mime-Version: 1.0
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:37571 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755673Ab1JTBDo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Oct 2011 21:03:44 -0400
+Received: by mail-iy0-f174.google.com with SMTP id k3so2770432iae.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2011 18:03:44 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: anagar6@uic.edu, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH 6/6] mac80211: check mesh peer's WMM parameters
+Date: Wed, 19 Oct 2011 18:03:26 -0700
+Message-Id: <1319072606-28291-7-git-send-email-thomas@cozybit.com> (sfid-20111020_030347_570724_19044D15)
+In-Reply-To: <1319072606-28291-1-git-send-email-thomas@cozybit.com>
+References: <1319072606-28291-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+For now, disallow peering if our WMM parameters don't match our peer's.
 
---=-Ne6W6dbUGApePatbqTax
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-
-On Wed, 2011-10-19 at 19:02 -0700, Norbert Preining wrote:
-> On Mi, 19 Okt 2011, wwguy wrote:
-> > instead of having you to revert the patch I ask you to do, could you
-> > please just apply the patch I attach here and see if it make any
-> > differences? it is also for debugging purpose, so please check the dmesg
-> > log.
-> 
-> Do you mean the patch you send with a strange date:
-> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-> b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-> index 863c43f..5a87071 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-> @@ -812,8 +812,13 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct
-> iwl_rx_mem_buffer *rxb,
->                         if (status == TX_STATUS_FAIL_PASSIVE_NO_RX &&
->                             iwl_is_associated_ctx(ctx) && ctx->vif &&
->                             ctx->vif->type == NL80211_IFTYPE_STATION) {
-> +#if 0
->                                 ctx->last_tx_rejected = true;
->                                 iwl_trans_stop_queue(trans(priv), txq_id);
-> +#endif
-> +IWL_ERR(priv,
-> +       "Encounter TX_STATUS_FAIL_PASSIVE_NO_RX, am I on 5.2G band? (%d)\n",
-> +       txq_id);
-> 
->                                 IWL_DEBUG_TX_REPLY(priv,
->                                            "TXQ %d status %s (0x%08x) "
-> --
-> 1.7.0.4
-> 
-> It does not apply at all, I cannot even find
-> 	rejected
-> in iwl-agn-tx.c.
-> 
-> On which tree is that based, can you provide a patch against main
-> git branch of Linus.
-> 
-> Thanks.
-> 
-Let's try this and see if apply. btw, are you on 5GHz?
-
-Thanks
-Wey
-
-
---=-Ne6W6dbUGApePatbqTax
-Content-Disposition: attachment; filename="0001-iwlagn-stop-queue-testing.patch"
-Content-Type: text/x-patch; name="0001-iwlagn-stop-queue-testing.patch"; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-
->From 78e955b90a8e259d180bfb962ef4558645d74a91 Mon Sep 17 00:00:00 2001
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Date: Wed, 19 Oct 2011 18:27:41 -0700
-Subject: [PATCH 1/1] iwlagn: stop queue testing
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ net/mac80211/mesh.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 3bee0f1..d543686 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -191,8 +191,14 @@ static void iwlagn_set_tx_status(struct iwl_priv *priv,
- 	if (status == TX_STATUS_FAIL_PASSIVE_NO_RX &&
- 	    iwl_is_associated_ctx(ctx) && ctx->vif &&
- 	    ctx->vif->type == NL80211_IFTYPE_STATION) {
-+#if 0
- 		ctx->last_tx_rejected = true;
- 		iwl_stop_queue(priv, &priv->txq[txq_id]);
-+#endif
-+IWL_ERR(priv,
-+       "Encounter TX_STATUS_FAIL_PASSIVE_NO_RX, am I on 5.2G band? (%d)\n",
-+       txq_id);
-+
- 	}
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index b3a125f..dd83c8f7 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -103,6 +103,13 @@ bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_dat
+ 	     ieee80211_ht_info_to_channel_type(ie->ht_info_elem)))
+ 		goto mismatch;
  
- 	IWL_DEBUG_TX_REPLY(priv, "TXQ %d status %s (0x%08x) rate_n_flags "
++	if (ie->wmm_param) {
++		u8 wmm_local[sizeof(struct ieee80211_wmm_param_ie)];
++		ieee80211_build_wmm_ie(&sdata->vif, wmm_local);
++		if (memcmp(ie->wmm_param, wmm_local, sizeof(wmm_local)))
++			goto mismatch;
++	}
++
+ 	return true;
+ mismatch:
+ 	return false;
 -- 
-1.7.0.4
-
-
---=-Ne6W6dbUGApePatbqTax--
+1.7.5.4
 
