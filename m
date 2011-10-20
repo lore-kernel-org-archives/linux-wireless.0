@@ -1,97 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:61401 "EHLO
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:43392 "EHLO
 	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932963Ab1JEJ7Z (ORCPT
+	with ESMTP id S1751425Ab1JTQsZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 05:59:25 -0400
-Received: by wwf22 with SMTP id 22so2268431wwf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:59:24 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/29] wl12xx: move p2p into wlvif
-Date: Wed,  5 Oct 2011 11:55:47 +0200
-Message-Id: <1317808566-18857-11-git-send-email-eliad@wizery.com> (sfid-20111005_121655_597205_B77E74C6)
-In-Reply-To: <1317808566-18857-1-git-send-email-eliad@wizery.com>
-References: <1317808566-18857-1-git-send-email-eliad@wizery.com>
+	Thu, 20 Oct 2011 12:48:25 -0400
+Received: by wwe6 with SMTP id 6so4462638wwe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 09:48:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201110201146.00505.chunkeey@googlemail.com>
+References: <1319072606-28291-1-git-send-email-thomas@cozybit.com>
+	<1319072606-28291-5-git-send-email-thomas@cozybit.com>
+	<201110201146.00505.chunkeey@googlemail.com>
+Date: Thu, 20 Oct 2011 09:48:24 -0700
+Message-ID: <CAG6hwVN8XipeDT979nei7XEQ8vOsy1jVwuvyRbi1fTCDgRgR0Q@mail.gmail.com> (sfid-20111020_184827_899169_0C5C1B25)
+Subject: Re: [PATCH 4/6] mac80211: allow frame aggregation for mesh
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, anagar6@uic.edu,
+	devel@lists.open80211s.org, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-move p2p field into the per-interface data, rather than
-being global.
+On Thu, Oct 20, 2011 at 2:46 AM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> On Thursday, October 20, 2011 03:03:24 AM Thomas Pedersen wrote:
+>> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+>> Signed-off-by: Ashok Nagarajan <anagar6@uic.edu>
+>> ---
+>>  net/mac80211/agg-rx.c |    3 ++-
+>>  net/mac80211/agg-tx.c |    4 +++-
+>>  net/mac80211/ht.c     |    3 ++-
+>>  net/mac80211/rx.c     |    1 +
+>>  4 files changed, 8 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+>> index 2ac0339..36c2836 100644
+>> --- a/net/mac80211/agg-tx.c
+>> +++ b/net/mac80211/agg-tx.c
+>> @@ -378,6 +379,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+>>        * by drivers or the standard.
+>>        */
+>>       if (sdata->vif.type != NL80211_IFTYPE_STATION &&
+>> +         sdata->vif.type != NL80211_IFTYPE_MESH_POINT &&
+>>           sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+>>           sdata->vif.type != NL80211_IFTYPE_AP)
+>>               return -EINVAL;
+>
+> just a nitpick, but it looks like the comment in agg-tx.c
+> seems to be a little out of date. Hence, would you mind
+> removing it as well?
+>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c   |    9 ++++-----
- drivers/net/wireless/wl12xx/wl12xx.h |    2 +-
- 2 files changed, 5 insertions(+), 6 deletions(-)
+No problem :)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index f57a133..28e53a9 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1827,13 +1827,13 @@ static u8 wl12xx_get_role_type(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- {
- 	switch (wlvif->bss_type) {
- 	case BSS_TYPE_AP_BSS:
--		if (wl->p2p)
-+		if (wlvif->p2p)
- 			return WL1271_ROLE_P2P_GO;
- 		else
- 			return WL1271_ROLE_AP;
- 
- 	case BSS_TYPE_STA_BSS:
--		if (wl->p2p)
-+		if (wlvif->p2p)
- 			return WL1271_ROLE_P2P_CL;
- 		else
- 			return WL1271_ROLE_STA;
-@@ -1890,7 +1890,7 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 
- 	switch (ieee80211_vif_type_p2p(vif)) {
- 	case NL80211_IFTYPE_P2P_CLIENT:
--		wl->p2p = 1;
-+		wlvif->p2p = 1;
- 		/* fall-through */
- 	case NL80211_IFTYPE_STATION:
- 		wlvif->bss_type = BSS_TYPE_STA_BSS;
-@@ -1899,7 +1899,7 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 		wlvif->bss_type = BSS_TYPE_IBSS;
- 		break;
- 	case NL80211_IFTYPE_P2P_GO:
--		wl->p2p = 1;
-+		wlvif->p2p = 1;
- 		/* fall-through */
- 	case NL80211_IFTYPE_AP:
- 		wlvif->bss_type = BSS_TYPE_AP_BSS;
-@@ -2105,7 +2105,6 @@ deinit:
- 
- 	memset(wl->ssid, 0, IEEE80211_MAX_SSID_LEN + 1);
- 	wl->ssid_len = 0;
--	wl->p2p = 0;
- 	wl->band = IEEE80211_BAND_2GHZ;
- 
- 	wl->rx_counter = 0;
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 6269c08..61f3658 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -399,7 +399,6 @@ struct wl1271 {
- 	s8 hw_pg_ver;
- 
- 	u8 mac_addr[ETH_ALEN];
--	u8 p2p; /* we are using p2p role */
- 	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
- 	u8 ssid_len;
- 	int channel;
-@@ -628,6 +627,7 @@ struct wl1271_station {
- 
- struct wl12xx_vif {
- 	u8 bss_type;
-+	u8 p2p; /* we are using p2p role */
- 
- 	u32 basic_rate_set;
- 
--- 
-1.7.6.401.g6a319
-
+>        /*
+>         * The aggregation code is not prepared to handle
+>         * anything but STA/AP due to the BSSID handling.
+>         * IBSS could work in the code but isn't supported
+>         * by drivers or the standard.
+>         */
+>        if (sdata->vif.type != NL80211_IFTYPE_STATION &&
+>            sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+>            sdata->vif.type != NL80211_IFTYPE_AP)
+>                return -EINVAL;
+>
+> Regards,
+>        Chr
+>
