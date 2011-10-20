@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:38081 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757353Ab1JFVyb (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:52295 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750759Ab1JTCv2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Oct 2011 17:54:31 -0400
-Received: by qadb15 with SMTP id b15so2393095qad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 14:54:30 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Subject: [PATCH] mac80211: Fix regression that allowed mpaths between non-peers.
-Date: Thu,  6 Oct 2011 14:54:22 -0700
-Message-Id: <1317938062-1226-1-git-send-email-javier@cozybit.com> (sfid-20111006_235434_659805_F7FA4F4E)
+	Wed, 19 Oct 2011 22:51:28 -0400
+Date: Thu, 20 Oct 2011 11:51:23 +0900
+From: Norbert Preining <preining@logic.at>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+Subject: Re: iwlagn is getting very shaky
+Message-ID: <20111020025123.GR11060@gamma.logic.tuwien.ac.at> (sfid-20111020_045146_204148_97F52CA3)
+References: <20111019060108.GA11588@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com> <20111019062517.GC11588@gamma.logic.tuwien.ac.at> <1319003304.31823.46.camel@wwguy-huron> <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111019124931.GC3963@gamma.logic.tuwien.ac.at> <1319038282.25023.21.camel@wwguy-ubuntu> <20111020020225.GO11060@gamma.logic.tuwien.ac.at> <1319074339.31823.68.camel@wwguy-huron>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1319074339.31823.68.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mesh paths should only exist over established peer links.
+On Mi, 19 Okt 2011, Guy, Wey-Yi wrote:
+> > Do you mean the patch you send with a strange date:
+...
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_hwmp.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+> > It does not apply at all, I cannot even find
+> > 	rejected
+> > in iwl-agn-tx.c.
+> > 
+> > On which tree is that based, can you provide a patch against main
+> > git branch of Linus.
+> > 
+> > Thanks.
+> > 
+> Let's try this and see if apply. btw, are you on 5GHz?
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 6df7913..174040a 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -789,11 +789,20 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
- 	struct ieee802_11_elems elems;
- 	size_t baselen;
- 	u32 last_hop_metric;
-+	struct sta_info *sta;
- 
- 	/* need action_code */
- 	if (len < IEEE80211_MIN_ACTION_SIZE + 1)
- 		return;
- 
-+	rcu_read_lock();
-+	sta = sta_info_get(sdata, mgmt->sa);
-+	if (!sta || sta->plink_state != NL80211_PLINK_ESTAB) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+	rcu_read_unlock();
-+
- 	baselen = (u8 *) mgmt->u.action.u.mesh_action.variable - (u8 *) mgmt;
- 	ieee802_11_parse_elems(mgmt->u.action.u.mesh_action.variable,
- 			len - baselen, &elems);
--- 
-1.7.6
+Which one??? Nothing attached, nothing received, and the patch
+you sent before does not apply .... not even with manual
+intervention ... at least I am not able.
 
+5GHz: I don't know by now, not at university by now.
+
+Best wishes
+
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+`Ford, you're turning into a penguin. Stop it.'
+                 --- Arthur experiences the improbability drive at work.
+                 --- Douglas Adams, The Hitchhikers Guide to the Galaxy
