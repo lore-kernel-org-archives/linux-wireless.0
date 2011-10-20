@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1204 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933126Ab1JDVTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 17:19:36 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 02/26] staging: brcm80211: remove setting ssn to zero
- upon AMPDU_TX_START
-Date: Tue, 4 Oct 2011 23:18:48 +0200
-Message-ID: <1317763152-17607-3-git-send-email-arend@broadcom.com> (sfid-20111004_231946_501771_B0DF257F)
-In-Reply-To: <1317763152-17607-1-git-send-email-arend@broadcom.com>
-References: <1317763152-17607-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:60533 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042Ab1JTSaP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Oct 2011 14:30:15 -0400
+Received: by mail-pz0-f42.google.com with SMTP id 36so7654640pzk.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 11:30:15 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH v2 2/2] mac80211: select queue for fwded mesh frames
+Date: Thu, 20 Oct 2011 11:30:07 -0700
+Message-Id: <1319135408-6370-2-git-send-email-thomas@cozybit.com> (sfid-20111020_203022_489327_11D7CF56)
+In-Reply-To: <1319135408-6370-1-git-send-email-thomas@cozybit.com>
+References: <1319135408-6370-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ssn should be given a valid value by the driver or it should not
-override the value. Removed override to zero from the driver.
+Set proper queue mapping and timestamp for forwarded mesh frames.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Thanks to Luis Rodriguez for investigating and fixing this.
+
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+
 ---
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
+v2:
+	We were already doing this for mcast frames, so don't duplicate
+	the code.
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-index 6787498..c5afeaf 100644
---- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-@@ -669,11 +669,6 @@ brcms_ops_ampdu_action(struct ieee80211_hw *hw,
- 				  tid);
- 			return -EINVAL;
- 		}
--		/*
--		 * Future improvement:
--		 *   Use the starting sequence number provided ...
--		 */
--		*ssn = 0;
- 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		break;
- 
+ net/mac80211/rx.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b867bd5..1408472 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1952,13 +1952,15 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 			info = IEEE80211_SKB_CB(fwd_skb);
+ 			memset(info, 0, sizeof(*info));
+ 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++			info->control.jiffies = jiffies;
+ 			info->control.vif = &rx->sdata->vif;
++			skb_set_queue_mapping(fwd_skb,
++				ieee80211_select_queue(sdata, fwd_skb));
++			ieee80211_set_qos_hdr(sdata, fwd_skb);
++
+ 			if (is_multicast_ether_addr(fwd_hdr->addr1)) {
+ 				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
+ 								fwded_mcast);
+-				skb_set_queue_mapping(fwd_skb,
+-					ieee80211_select_queue(sdata, fwd_skb));
+-				ieee80211_set_qos_hdr(sdata, fwd_skb);
+ 			} else {
+ 				int err;
+ 				/*
 -- 
-1.7.4.1
-
+1.7.5.4
 
