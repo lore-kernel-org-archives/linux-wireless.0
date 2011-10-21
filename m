@@ -1,53 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:39419 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752501Ab1JTR4e convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 13:56:34 -0400
-Received: by wyg36 with SMTP id 36so3155836wyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 10:56:33 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:2904 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754831Ab1JUOQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Oct 2011 10:16:50 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH v2 16/17] brcm80211: fmac: remove state from brcmf_if in
+ fullmac
+Date: Fri, 21 Oct 2011 16:16:34 +0200
+Message-ID: <1319206595-17138-17-git-send-email-arend@broadcom.com> (sfid-20111021_161704_552464_27626F7F)
+In-Reply-To: <1319206595-17138-1-git-send-email-arend@broadcom.com>
+References: <1319206595-17138-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1319133104.17101.5.camel@jlt3.sipsolutions.net>
-References: <1319072606-28291-1-git-send-email-thomas@cozybit.com>
-	<1319072606-28291-6-git-send-email-thomas@cozybit.com>
-	<1319109412.3959.7.camel@jlt3.sipsolutions.net>
-	<CAG6hwVMUhJ=nV=6N+DpoagKWJxMjythPYMYCCzEb=mTr6TfytQ@mail.gmail.com>
-	<1319133104.17101.5.camel@jlt3.sipsolutions.net>
-Date: Thu, 20 Oct 2011 10:56:33 -0700
-Message-ID: <CAG6hwVMmvu5jMQLeOWG2via0wqkHGs=nHSi_mKvgy9U2+m1FXA@mail.gmail.com> (sfid-20111020_195637_414761_7BB271D7)
-Subject: Re: [PATCH 5/6] mac80211: add WMM IE to mesh frames
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, anagar6@uic.edu,
-	devel@lists.open80211s.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 20, 2011 at 10:51 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2011-10-20 at 10:41 -0700, Thomas Pedersen wrote:
->> On Thu, Oct 20, 2011 at 4:16 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Wed, 2011-10-19 at 18:03 -0700, Thomas Pedersen wrote:
->> >> Include the WMM IE in mesh peering and beacon frames. This is needed
->> >> tell any potential peers what our WMM / EDCA parameters are.
->> >
->> > The goal seems fine but why bother building the WMM IE out of the actual
->> > TX queue configuration? Shouldn't it normally be the other way around?
->> > But I have no idea how QoS is supposed to work in a mesh...
->>
->> I'm not sure what you mean, this is the only way to get the WMM
->> parameters? Usually these are just set with ieee80211_set_wmm_defaul()
->> on bringing up the interface.
->
-> Right, but
->  a) if you're using just the default, no need to derive from the default
+From: Franky Lin <frankyl@broadcom.com>
 
-The user might wish to customize the queue parameters though.
+The usage of state decrease readability. Optimize the code flow to
+get rid of it
 
->  b) should they be changeable?
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    1 -
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   10 ++--------
+ 2 files changed, 2 insertions(+), 9 deletions(-)
 
-Why not?
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index a96a91f..6da519e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -122,7 +122,6 @@
+ 
+ /* For supporting multiple interfaces */
+ #define BRCMF_MAX_IFS	16
+-#define BRCMF_DEL_IF	-0xe
+ 
+ #define DOT11_BSSTYPE_ANY			2
+ #define DOT11_MAX_DEFAULT_KEYS	4
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 394577a..719fd93 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -58,7 +58,6 @@ struct brcmf_if {
+ 	struct net_device *ndev;
+ 	struct net_device_stats stats;
+ 	int idx;		/* iface idx in dongle */
+-	int state;		/* interface state */
+ 	u8 mac_addr[ETH_ALEN];	/* assigned MAC address */
+ };
+ 
+@@ -456,12 +455,10 @@ void brcmf_rx_frame(struct brcmf_pub *drvr, int ifidx, struct sk_buff *skb,
+ 					  skb_mac_header(skb),
+ 					  &event, &data);
+ 
+-		if (drvr_priv->iflist[ifidx] &&
+-		    !drvr_priv->iflist[ifidx]->state)
++		if (drvr_priv->iflist[ifidx]) {
+ 			ifp = drvr_priv->iflist[ifidx];
+-
+-		if (ifp->ndev)
+ 			ifp->ndev->last_rx = jiffies;
++		}
+ 
+ 		drvr->dstats.rx_bytes += skb->len;
+ 		drvr->rx_packets++;	/* Local count */
+@@ -896,7 +893,6 @@ brcmf_add_if(struct brcmf_info *drvr_priv, int ifidx, char *name, u8 *mac_addr)
+ 	ifp->ndev = ndev;
+ 	ifp->info = drvr_priv;
+ 	drvr_priv->iflist[ifidx] = ifp;
+-	ifp->state = BRCMF_E_IF_ADD;
+ 	ifp->idx = ifidx;
+ 	if (mac_addr != NULL)
+ 		memcpy(&ifp->mac_addr, mac_addr, ETH_ALEN);
+@@ -910,7 +906,6 @@ brcmf_add_if(struct brcmf_info *drvr_priv, int ifidx, char *name, u8 *mac_addr)
+ 
+ 	brcmf_dbg(TRACE, " ==== pid:%x, net_device for if:%s created ===\n",
+ 		  current->pid, ifp->ndev->name);
+-	ifp->state = 0;
+ 
+ 	return 0;
+ }
+@@ -926,7 +921,6 @@ void brcmf_del_if(struct brcmf_info *drvr_priv, int ifidx)
+ 		brcmf_dbg(ERROR, "Null interface\n");
+ 		return;
+ 	}
+-	ifp->state = BRCMF_E_IF_DEL;
+ 	if (ifp->ndev) {
+ 		if (ifidx == 0) {
+ 			if (ifp->ndev->netdev_ops == &brcmf_netdev_ops_pri) {
+-- 
+1.7.4.1
 
-Thomas
+
