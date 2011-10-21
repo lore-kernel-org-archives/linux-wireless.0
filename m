@@ -1,64 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:32819 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750758Ab1JZTjr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 15:39:47 -0400
-Received: by faan17 with SMTP id n17so1899212faa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 12:39:45 -0700 (PDT)
-Message-ID: <4EA861F5.4020200@googlemail.com> (sfid-20111026_213950_534838_B87FD74A)
-Date: Wed, 26 Oct 2011 21:39:33 +0200
-From: Chiefdome <chiefdome@googlemail.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:2849 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754756Ab1JUNze (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Oct 2011 09:55:34 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 05/17] brcm80211: smac: removed down-on-watchdog MPC
+ functionality
+Date: Fri, 21 Oct 2011 15:55:07 +0200
+Message-ID: <1319205319-16891-6-git-send-email-arend@broadcom.com> (sfid-20111021_155542_355519_5D7D2563)
+In-Reply-To: <1319205319-16891-1-git-send-email-arend@broadcom.com>
+References: <1319205319-16891-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
-References: <4E77F631.3030202@googlemail.com> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T1  61652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org > <4E9C42CF.5010702@lwfinger.net> <loom.20111017T190430-717@post.gmane.org> <4E9CF13A.7060102@lwf inger.net> <loom.20111018T143746-420@post.gmane.org> <loom.201110 18T150303-359@post.gmane.org> <4E9D9953.3020601@lwfinger.net> <lo om.20111018T233233-298@post.gmane.org> <4E9E052F.8090705@lwfinger.net> <loom.20111019T101621-921@post.gmane.org> <4E9EBDD3.6060907@lwfinger.net> <loom.20111019T162518-352@post.gmane.org> <4E9F97B4.5010304@lwfinger.net> <loom.20111020T114336-286@post.gmane.org> <4EA023B2.5000402@lwfinger.net> <4EA82BFE.1070105@googlemail.com> <4EA83160.4080405@lwfinger.net>
-In-Reply-To: <4EA83160.4080405@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/26/2011 06:12 PM, Larry Finger wrote:
-> On 10/26/2011 10:49 AM, Chiefdome wrote:
->> Is there a way to set the tx-power over 20dbm on the adapter?
->> I thought it is able to do 2w. There is no way for me to get it over 
->> 20 dbm.
->> When trying to to set the adapter with "iwconfig wlan1 set txpower 
->> 30" it answers
->>
->> Error for wireless request "Set Tx Power" (8B26) :
->> SET failed on device wlan1 ; Invalid argument.
->>
->> I think there has to be done some work in the code but where do I start?
->>
->> Thanks for all replys.
->
-> The WEXT interface is deprecated. It is there as a convenience, but it 
-> will not be extended. To change the power setting, you need to use the 
-> iw utility. The specific commands are:
->
-> iw dev <devname> set txpower <auto|fixed|limit> [<tx power in mBm>]
->
-> or
->
-> iw phy <phyname> set txpower <auto|fixed|limit> [<tx power in mBm>]
->
-> The maximum power will be dependent on your regulatory domain setting.
->
-> Larry
+From: Roland Vossen <rvossen@broadcom.com>
 
-Did you tested the commands you posted to me? Anyway here they do 
-nothing. I cant see any changes in iwconfig nor in in iw.
+Softmac would bring its interface down on a certain Minimum Power Save
+related condition, without Mac80211 intervention. Because Mac80211 should
+be the only party initiating interfaces going up and down, this functionality
+has been removed. All notions of 'MPC' have been removed in the code as
+well.
 
-iw reg get
-country 00:
-     (2400 - 2494 @ 40), (N/A, 33)
-     (4910 - 5895 @ 40), (N/A, 33)
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    3 +-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |   45 +++----------------
+ drivers/net/wireless/brcm80211/brcmsmac/main.h     |    3 -
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    2 +-
+ drivers/net/wireless/brcm80211/include/defs.h      |    1 -
+ 5 files changed, 9 insertions(+), 45 deletions(-)
 
-so after my regulatory domain I should be able to change the adapter 
-settings.
-
-Chiefdome
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 1781157..fe8f1ec 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -1078,8 +1078,7 @@ static struct brcms_info *brcms_attach(u16 vendor, u16 device,
+ 
+ 	wl->pub->ieee_hw = hw;
+ 
+-	/* disable mpc */
+-	brcms_c_set_radio_mpc(wl->wlc);
++	brcms_c_set_radio_mon(wl->wlc);
+ 
+ 	/* register our interrupt handler */
+ 	if (request_irq(irq, brcms_isr, IRQF_SHARED, KBUILD_MODNAME, wl)) {
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index e7d14e4..d185eed 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -43,16 +43,6 @@
+ /* radio monitor timer, in unit of ms */
+ #define TIMER_INTERVAL_RADIOCHK		800
+ 
+-/* Max MPC timeout, in unit of watchdog */
+-#ifndef BRCMS_MPC_MAX_DELAYCNT
+-#define BRCMS_MPC_MAX_DELAYCNT		10
+-#endif
+-
+-/* Min MPC timeout, in unit of watchdog */
+-#define BRCMS_MPC_MIN_DELAYCNT		1
+-/* MPC count threshold level */
+-#define BRCMS_MPC_THRESHOLD		3
+-
+ /* beacon interval, in unit of 1024TU */
+ #define BEACON_INTERVAL_DEFAULT		100
+ 
+@@ -4330,17 +4320,13 @@ static void brcms_b_watchdog(void *arg)
+ 	wlc_phy_watchdog(wlc_hw->band->pi);
+ }
+ 
+-static void brcms_c_radio_mpc_upd(struct brcms_c_info *wlc)
++static void brcms_c_radio_mon_upd(struct brcms_c_info *wlc)
+ {
+ 	/*
+-	 * Clear the WL_RADIO_MPC_DISABLE bit when mpc feature is disabled
+-	 * in case the WL_RADIO_MPC_DISABLE bit was set. Stop the radio
+-	 * monitor also when WL_RADIO_MPC_DISABLE is the only reason that
+-	 * the radio is going down.
++	 * Stop the radio monitor when the radio is going down.
+ 	 */
+ 	if (!wlc->pub->radio_disabled)
+ 		return;
+-	mboolclr(wlc->pub->radio_disabled, WL_RADIO_MPC_DISABLE);
+ 	brcms_c_radio_upd(wlc);
+ 	if (!wlc->pub->radio_disabled)
+ 		brcms_c_radio_monitor_stop(wlc);
+@@ -4366,17 +4352,8 @@ static void brcms_c_watchdog(void *arg)
+ 	/* increment second count */
+ 	wlc->pub->now++;
+ 
+-	/* delay radio disable */
+-	if (wlc->mpc_delay_off) {
+-		if (--wlc->mpc_delay_off == 0) {
+-			mboolset(wlc->pub->radio_disabled,
+-				 WL_RADIO_MPC_DISABLE);
+-		}
+-	}
+-
+-	/* mpc sync */
+-	brcms_c_radio_mpc_upd(wlc);
+-	/* radio sync: sw/hw/mpc --> radio_disable/radio_enable */
++	brcms_c_radio_mon_upd(wlc);
++	/* radio sync: sw/hw --> radio_disable/radio_enable */
+ 	brcms_c_radio_hwdisable_upd(wlc);
+ 	brcms_c_radio_upd(wlc);
+ 	/* if radio is disable, driver may be down, quit here */
+@@ -4482,9 +4459,6 @@ static void brcms_c_info_init(struct brcms_c_info *wlc, int unit)
+ 	/* WME QoS mode is Auto by default */
+ 	wlc->pub->_ampdu = AMPDU_AGG_HOST;
+ 	wlc->pub->bcmerror = 0;
+-
+-	/* initialize mpc delay */
+-	wlc->mpc_delay_off = BRCMS_MPC_MIN_DELAYCNT;
+ }
+ 
+ static uint brcms_c_attach_module(struct brcms_c_info *wlc)
+@@ -5455,7 +5429,6 @@ uint brcms_c_down(struct brcms_c_info *wlc)
+ 	if (!wlc->pub->up)
+ 		return callbacks;
+ 
+-	/* in between, mpc could try to bring down again.. */
+ 	wlc->going_down = true;
+ 
+ 	callbacks += brcms_b_bmac_down_prep(wlc->hw);
+@@ -8131,9 +8104,9 @@ int brcms_c_get_tx_power(struct brcms_c_info *wlc)
+ 	return (int)(qdbm / BRCMS_TXPWR_DB_FACTOR);
+ }
+ 
+-void brcms_c_set_radio_mpc(struct brcms_c_info *wlc)
++void brcms_c_set_radio_mon(struct brcms_c_info *wlc)
+ {
+-	brcms_c_radio_mpc_upd(wlc);
++	brcms_c_radio_mon_upd(wlc);
+ }
+ 
+ /* Process received frames */
+@@ -8442,9 +8415,6 @@ void brcms_c_init(struct brcms_c_info *wlc)
+ 	/* enable the RF Disable Delay timer */
+ 	W_REG(&wlc->regs->rfdisabledly, RFDISABLE_DEFAULT);
+ 
+-	/* initialize mpc delay */
+-	wlc->mpc_delay_off = BRCMS_MPC_MIN_DELAYCNT;
+-
+ 	/*
+ 	 * Initialize WME parameters; if they haven't been set by some other
+ 	 * mechanism (IOVar, etc) then read them from the hardware.
+@@ -8630,8 +8600,7 @@ brcms_c_attach(struct brcms_info *wl, u16 vendor, u16 device, uint unit,
+ 		brcms_c_ht_update_sgi_rx(wlc, 0);
+ 	}
+ 
+-	/* initialize radio_mpc_disable according to wlc->mpc */
+-	brcms_c_radio_mpc_upd(wlc);
++	brcms_c_radio_mon_upd(wlc);
+ 	brcms_b_antsel_set(wlc->hw, wlc->asi->antsel_avail);
+ 
+ 	if (perr)
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+index fc5852f..9a7535d 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+@@ -427,7 +427,6 @@ struct brcms_txq_info {
+  * bandinit_pending: track band init in auto band.
+  * radio_monitor: radio timer is running.
+  * going_down: down path intermediate variable.
+- * mpc_delay_off: delay radio disable by # of watchdog cnt.
+  * wdtimer: timer for watchdog routine.
+  * radio_timer: timer for hw radio button monitor routine.
+  * monitor: monitor (MPDU sniffing) mode.
+@@ -518,8 +517,6 @@ struct brcms_c_info {
+ 	bool radio_monitor;
+ 	bool going_down;
+ 
+-	u8 mpc_delay_off;
+-
+ 	struct brcms_timer *wdtimer;
+ 	struct brcms_timer *radio_timer;
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+index 2e09216..4f8e859 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+@@ -596,7 +596,7 @@ extern void brcms_c_set_beacon_listen_interval(struct brcms_c_info *wlc,
+ 					u8 interval);
+ extern int brcms_c_set_tx_power(struct brcms_c_info *wlc, int txpwr);
+ extern int brcms_c_get_tx_power(struct brcms_c_info *wlc);
+-extern void brcms_c_set_radio_mpc(struct brcms_c_info *wlc);
++extern void brcms_c_set_radio_mon(struct brcms_c_info *wlc);
+ extern bool brcms_c_check_radio_disabled(struct brcms_c_info *wlc);
+ 
+ #endif				/* _BRCM_PUB_H_ */
+diff --git a/drivers/net/wireless/brcm80211/include/defs.h b/drivers/net/wireless/brcm80211/include/defs.h
+index 1e5f310..f0d8c04 100644
+--- a/drivers/net/wireless/brcm80211/include/defs.h
++++ b/drivers/net/wireless/brcm80211/include/defs.h
+@@ -62,7 +62,6 @@
+ 
+ #define WL_RADIO_SW_DISABLE		(1<<0)
+ #define WL_RADIO_HW_DISABLE		(1<<1)
+-#define WL_RADIO_MPC_DISABLE		(1<<2)
+ /* some countries don't support any channel */
+ #define WL_RADIO_COUNTRY_DISABLE	(1<<3)
+ 
+-- 
+1.7.4.1
 
 
