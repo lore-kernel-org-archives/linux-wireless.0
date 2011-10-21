@@ -1,82 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:39426 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754003Ab1JVNQc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Oct 2011 09:16:32 -0400
-Received: by bkbzt19 with SMTP id zt19so5989302bkb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Oct 2011 06:16:30 -0700 (PDT)
-From: Guy Eilam <guy@wizery.com>
-To: coelho@ti.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] wl12xx: configure the probe response offloading support
-Date: Sat, 22 Oct 2011 15:14:38 +0200
-Message-Id: <1319289279-21950-1-git-send-email-guy@wizery.com> (sfid-20111022_151635_228491_9E185E1E)
+Received: from mms1.broadcom.com ([216.31.210.17]:1340 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754806Ab1JUOQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Oct 2011 10:16:48 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH v2 13/17] brcm80211: smac: use sk_buff list for handling
+ frames in receive path
+Date: Fri, 21 Oct 2011 16:16:31 +0200
+Message-ID: <1319206595-17138-14-git-send-email-arend@broadcom.com> (sfid-20111021_161723_872645_00EC1953)
+In-Reply-To: <1319206595-17138-1-git-send-email-arend@broadcom.com>
+References: <1319206595-17138-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Configure and respond to a probe response offload query with
-the relevant protocols supported currently by the driver.
+In the receive path the frames are obtained from the dma using
+multiple sk_buff that were linked using the skb next pointer.
+This has been changed and it now used sk_buff lists and skb_queue
+functions instead.
 
-Signed-off-by: Guy Eilam <guy@wizery.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/wl12xx/conf.h |    2 ++
- drivers/net/wireless/wl12xx/main.c |   15 +++++++++++++++
- 2 files changed, 17 insertions(+), 0 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c  |   38 ++++++++++++++----------
+ drivers/net/wireless/brcm80211/brcmsmac/dma.h  |    3 +-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   21 +++++--------
+ 3 files changed, 32 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index 04bb8fb..714f9d4 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -1264,6 +1264,8 @@ struct conf_drv_settings {
- 	struct conf_rate_policy_settings rate;
- 	struct conf_hangover_settings hangover;
- 	u8 hci_io_ds;
-+	/* a bitmap of supported protocols for probe response offloading */
-+	u32 probe_resp_offload;
- };
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+index 08960ce..ae541fb 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+@@ -14,7 +14,6 @@
+  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ #include <linux/slab.h>
+-#include <linux/skbuff.h>
+ #include <linux/delay.h>
+ #include <linux/pci.h>
  
- #endif
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index f76be5a..0a7d020 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -373,6 +373,10 @@ static struct conf_drv_settings default_conf = {
- 		.increase_time              = 1,
- 		.window_size                = 16,
- 	},
-+	.probe_resp_offload =
-+		BIT(NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS) |
-+		BIT(NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2) |
-+		BIT(NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P),
- };
+@@ -901,7 +900,7 @@ static struct sk_buff *_dma_getnextrxp(struct dma_info *di, bool forceall)
  
- static char *fwlog_param;
-@@ -4081,6 +4085,16 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
- 	return 0;
+ /*
+  * !! rx entry routine
+- * returns a pointer to the next frame received, or NULL if there are no more
++ * returns the number packages in the next frame, or 0 if there are no more
+  *   if DMA_CTRL_RXMULTI is defined, DMA scattering(multiple buffers) is
+  *   supported with pkts chain
+  *   otherwise, it's treated as giant pkt and will be tossed.
+@@ -909,38 +908,40 @@ static struct sk_buff *_dma_getnextrxp(struct dma_info *di, bool forceall)
+  *   buffer data. After it reaches the max size of buffer, the data continues
+  *   in next DMA descriptor buffer WITHOUT DMA header
+  */
+-struct sk_buff *dma_rx(struct dma_pub *pub)
++int dma_rx(struct dma_pub *pub, struct sk_buff_head *skb_list)
+ {
+ 	struct dma_info *di = (struct dma_info *)pub;
+-	struct sk_buff *p, *head, *tail;
++	struct sk_buff_head dma_frames;
++	struct sk_buff *p, *next;
+ 	uint len;
+ 	uint pkt_len;
+ 	int resid = 0;
++	int pktcnt = 1;
+ 
++	skb_queue_head_init(&dma_frames);
+  next_frame:
+-	head = _dma_getnextrxp(di, false);
+-	if (head == NULL)
+-		return NULL;
++	p = _dma_getnextrxp(di, false);
++	if (p == NULL)
++		return 0;
+ 
+-	len = le16_to_cpu(*(__le16 *) (head->data));
++	len = le16_to_cpu(*(__le16 *) (p->data));
+ 	DMA_TRACE(("%s: dma_rx len %d\n", di->name, len));
+-	dma_spin_for_len(len, head);
++	dma_spin_for_len(len, p);
+ 
+ 	/* set actual length */
+ 	pkt_len = min((di->rxoffset + len), di->rxbufsize);
+-	__skb_trim(head, pkt_len);
++	__skb_trim(p, pkt_len);
++	skb_queue_tail(&dma_frames, p);
+ 	resid = len - (di->rxbufsize - di->rxoffset);
+ 
+ 	/* check for single or multi-buffer rx */
+ 	if (resid > 0) {
+-		tail = head;
+ 		while ((resid > 0) && (p = _dma_getnextrxp(di, false))) {
+-			tail->next = p;
+ 			pkt_len = min_t(uint, resid, di->rxbufsize);
+ 			__skb_trim(p, pkt_len);
+-
+-			tail = p;
++			skb_queue_tail(&dma_frames, p);
+ 			resid -= di->rxbufsize;
++			pktcnt++;
+ 		}
+ 
+ #ifdef BCMDBG
+@@ -959,13 +960,18 @@ struct sk_buff *dma_rx(struct dma_pub *pub)
+ 		if ((di->dma.dmactrlflags & DMA_CTRL_RXMULTI) == 0) {
+ 			DMA_ERROR(("%s: dma_rx: bad frame length (%d)\n",
+ 				   di->name, len));
+-			brcmu_pkt_buf_free_skb(head);
++			skb_queue_walk_safe(&dma_frames, p, next) {
++				skb_unlink(p, &dma_frames);
++				brcmu_pkt_buf_free_skb(p);
++			}
+ 			di->dma.rxgiants++;
++			pktcnt = 1;
+ 			goto next_frame;
+ 		}
+ 	}
+ 
+-	return head;
++	skb_queue_splice_tail(&dma_frames, skb_list);
++	return pktcnt;
  }
  
-+static int wl1271_op_get_probe_resp_offload(struct ieee80211_hw *hw,
-+				u32 *supp_protocols)
-+{
-+	struct wl1271 *wl = hw->priv;
+ static bool dma64_rxidle(struct dma_info *di)
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.h b/drivers/net/wireless/brcm80211/brcmsmac/dma.h
+index ebc5bc5..d317c7c 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/dma.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.h
+@@ -18,6 +18,7 @@
+ #define	_BRCM_DMA_H_
+ 
+ #include <linux/delay.h>
++#include <linux/skbuff.h>
+ #include "types.h"		/* forward structure declarations */
+ 
+ /* map/unmap direction */
+@@ -80,7 +81,7 @@ extern struct dma_pub *dma_attach(char *name, struct si_pub *sih,
+ 			    uint nrxpost, uint rxoffset, uint *msg_level);
+ 
+ void dma_rxinit(struct dma_pub *pub);
+-struct sk_buff *dma_rx(struct dma_pub *pub);
++int dma_rx(struct dma_pub *pub, struct sk_buff_head *skb_list);
+ bool dma_rxfill(struct dma_pub *pub);
+ bool dma_rxreset(struct dma_pub *pub);
+ bool dma_txreset(struct dma_pub *pub);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 3f8a6c7..f193fab 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -8115,21 +8115,17 @@ static bool
+ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+ {
+ 	struct sk_buff *p;
+-	struct sk_buff *head = NULL;
+-	struct sk_buff *tail = NULL;
++	struct sk_buff *next = NULL;
++	struct sk_buff_head recv_frames;
 +
-+	*supp_protocols = wl->conf.probe_resp_offload;
-+
-+	return 0;
-+}
-+
- static int wl1271_allocate_sta(struct wl1271 *wl,
- 			     struct wl12xx_vif *wlvif,
- 			     struct ieee80211_sta *sta)
-@@ -4666,6 +4680,7 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.tx_frames_pending = wl1271_tx_frames_pending,
- 	.set_bitrate_mask = wl12xx_set_bitrate_mask,
- 	.channel_switch = wl12xx_op_channel_switch,
-+	.get_probe_resp_offload = wl1271_op_get_probe_resp_offload,
- 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
- };
+ 	uint n = 0;
+ 	uint bound_limit = bound ? RXBND : -1;
+ 
+ 	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
+-	/* gather received frames */
+-	while ((p = dma_rx(wlc_hw->di[fifo]))) {
++	skb_queue_head_init(&recv_frames);
+ 
+-		if (!tail)
+-			head = tail = p;
+-		else {
+-			tail->prev = p;
+-			tail = p;
+-		}
++	/* gather received frames */
++	while (dma_rx(wlc_hw->di[fifo], &recv_frames)) {
+ 
+ 		/* !give others some time to run! */
+ 		if (++n >= bound_limit)
+@@ -8140,12 +8136,11 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+ 	dma_rxfill(wlc_hw->di[fifo]);
+ 
+ 	/* process each frame */
+-	while ((p = head) != NULL) {
++	skb_queue_walk_safe(&recv_frames, p, next) {
+ 		struct d11rxhdr_le *rxh_le;
+ 		struct d11rxhdr *rxh;
+-		head = head->prev;
+-		p->prev = NULL;
+ 
++		skb_unlink(p, &recv_frames);
+ 		rxh_le = (struct d11rxhdr_le *)p->data;
+ 		rxh = (struct d11rxhdr *)p->data;
  
 -- 
 1.7.4.1
+
 
