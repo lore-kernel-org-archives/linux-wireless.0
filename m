@@ -1,61 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:62530 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103Ab1JAQBM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Oct 2011 12:01:12 -0400
-Received: by ywb5 with SMTP id 5so2327164ywb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Oct 2011 09:01:11 -0700 (PDT)
-Message-ID: <4E873944.70104@lwfinger.net> (sfid-20111001_180121_461520_6AA18BB4)
-Date: Sat, 01 Oct 2011 11:01:08 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:3196 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754770Ab1JUNzi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Oct 2011 09:55:38 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 17/17] brcm80211: smac: change buffer endianess convert
+ function interface
+Date: Fri, 21 Oct 2011 15:55:19 +0200
+Message-ID: <1319205319-16891-18-git-send-email-arend@broadcom.com> (sfid-20111021_155545_755950_93EC6B9F)
+In-Reply-To: <1319205319-16891-1-git-send-email-arend@broadcom.com>
+References: <1319205319-16891-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Ian Jeffray <ian@emobix.co.uk>
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: r8712u driver - on ARM
-References: <4E81ED65.7060703@emobix.co.uk> <4E81F8C8.4010909@lwfinger.net> <4E860CDB.9040207@emobix.co.uk> <201109302106.12028.chunkeey@googlemail.com>
-In-Reply-To: <201109302106.12028.chunkeey@googlemail.com>
-Content-Type: multipart/mixed;
- boundary="------------030007060405000608070101"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------030007060405000608070101
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+The buffer endianess conversion functions in srom.c had a size
+argument giving number of bytes but the function converts words.
+Providing the number of words to the function is more sensible
+so that is done in this patch.
 
-Ian,
+Reported-by: Pavel Roskin <proski@gnu.org>
+Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/srom.c |   33 +++++++++++-------------
+ 1 files changed, 15 insertions(+), 18 deletions(-)
 
-Most of the skb assignments in r8712u are aligned OK and most aligned on 
-512-byte boundaries, but there was one that had the minimal offset of 14 bytes. 
-The attached patch should fix it. Does it help?
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/srom.c b/drivers/net/wireless/brcm80211/brcmsmac/srom.c
+index 8f1cf2f..0539a6a 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/srom.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/srom.c
+@@ -617,18 +617,16 @@ static uint mask_width(u16 mask)
+ 	return 0;
+ }
+ 
+-static inline void le16_to_cpu_buf(u16 *buf, unsigned int size)
++static inline void le16_to_cpu_buf(u16 *buf, uint nwords)
+ {
+-	size /= 2;
+-	while (size--)
+-		*(buf + size) = le16_to_cpu(*(__le16 *)(buf + size));
++	while (nwords--)
++		*(buf + nwords) = le16_to_cpu(*(__le16 *)(buf + nwords));
+ }
+ 
+-static inline void cpu_to_le16_buf(u16 *buf, unsigned int size)
++static inline void cpu_to_le16_buf(u16 *buf, uint nwords)
+ {
+-	size /= 2;
+-	while (size--)
+-		*(__le16 *)(buf + size) = cpu_to_le16(*(buf + size));
++	while (nwords--)
++		*(__le16 *)(buf + nwords) = cpu_to_le16(*(buf + nwords));
+ }
+ 
+ /*
+@@ -807,12 +805,12 @@ sprom_read_pci(struct si_pub *sih, u8 __iomem *sprom, uint wordoff,
+ 		err = -EIO;
+ 	else
+ 		/* now correct the endianness of the byte array */
+-		le16_to_cpu_buf(buf, nbytes);
++		le16_to_cpu_buf(buf, nwords);
+ 
+ 	return err;
+ }
+ 
+-static int otp_read_pci(struct si_pub *sih, u16 *buf, uint bufsz)
++static int otp_read_pci(struct si_pub *sih, u16 *buf, uint nwords)
+ {
+ 	u8 *otp;
+ 	uint sz = OTP_SZ_MAX / 2;	/* size in words */
+@@ -824,7 +822,8 @@ static int otp_read_pci(struct si_pub *sih, u16 *buf, uint bufsz)
+ 
+ 	err = otp_read_region(sih, OTP_HW_RGN, (u16 *) otp, &sz);
+ 
+-	memcpy(buf, otp, bufsz);
++	sz = min_t(uint, sz, nwords);
++	memcpy(buf, otp, sz * 2);
+ 
+ 	kfree(otp);
+ 
+@@ -836,14 +835,12 @@ static int otp_read_pci(struct si_pub *sih, u16 *buf, uint bufsz)
+ 		 */
+ 		return -ENODATA;
+ 
+-	/* fixup the endianness so crc8 will pass */
+-	cpu_to_le16_buf(buf, bufsz);
+-	if (crc8(brcms_srom_crc8_table, (u8 *) buf, SROM4_WORDS * 2,
++	if (crc8(brcms_srom_crc8_table, (u8 *) buf, sz * 2,
+ 		 CRC8_INIT_VALUE) != CRC8_GOOD_VALUE(brcms_srom_crc8_table))
+ 		err = -EIO;
+-
+-	/* now correct the endianness of the byte array */
+-	le16_to_cpu_buf(buf, bufsz);
++	else
++		/* now correct the endianness of the byte array */
++		le16_to_cpu_buf(buf, sz);
+ 
+ 	return err;
+ }
+@@ -880,7 +877,7 @@ static int initvars_srom_pci(struct si_pub *sih, void __iomem *curmap)
+ 			sromrev = srom[SROM4_CRCREV] & 0xff;
+ 	} else {
+ 		/* Use OTP if SPROM not available */
+-		err = otp_read_pci(sih, srom, SROM_MAX);
++		err = otp_read_pci(sih, srom, SROM4_WORDS);
+ 		if (err == 0)
+ 			/* OTP only contain SROM rev8/rev9 for now */
+ 			sromrev = srom[SROM4_CRCREV] & 0xff;
+-- 
+1.7.4.1
 
-Larry
 
-
---------------030007060405000608070101
-Content-Type: text/plain;
- name="r8712u_align_skb_data"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="r8712u_align_skb_data"
-
-Index: wireless-testing-new/drivers/staging/rtl8712/rtl8712_recv.c
-===================================================================
---- wireless-testing-new.orig/drivers/staging/rtl8712/rtl8712_recv.c
-+++ wireless-testing-new/drivers/staging/rtl8712/rtl8712_recv.c
-@@ -372,8 +372,8 @@ static int amsdu_to_msdu(struct _adapter
- 		pdata += ETH_HLEN;
- 		a_len -= ETH_HLEN;
- 		/* Allocate new skb for releasing to upper layer */
--		sub_skb = dev_alloc_skb(nSubframe_Length + 12);
--		skb_reserve(sub_skb, 12);
-+		sub_skb = dev_alloc_skb(nSubframe_Length + 16);
-+		skb_reserve(sub_skb, 16);
- 		data_ptr = (u8 *)skb_put(sub_skb, nSubframe_Length);
- 		memcpy(data_ptr, pdata, nSubframe_Length);
- 		subframes[nr_subframes++] = sub_skb;
-
---------------030007060405000608070101--
