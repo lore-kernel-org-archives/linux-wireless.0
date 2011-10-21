@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:59855 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756723Ab1JFTkJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Oct 2011 15:40:09 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1RBtna-0005c4-RS
-	for linux-wireless@vger.kernel.org; Thu, 06 Oct 2011 21:40:06 +0200
-Received: from s660-4.noc.RWTH-Aachen.DE ([134.130.4.244])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 21:40:06 +0200
-Received: from toddy by s660-4.noc.RWTH-Aachen.DE with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 21:40:06 +0200
-To: linux-wireless@vger.kernel.org
-From: Toddy <toddy@fishpost.de>
-Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
-Date: Thu, 6 Oct 2011 16:25:25 +0000 (UTC)
-Message-ID: <loom.20111006T181210-236@post.gmane.org> (sfid-20111006_214013_455580_13208323)
-References: <4E77F631.3030202@googlemail.com> <4E77F9FD.1020204@googlemail.com> <4E780309.9010601@lwfinger.net> <4E785DB3.5040109@googlemail.com> <4E7907D3.1020606@googlemail.com> <4E792994.1080809@lwfinger.net> <4E79B1D0.7090602@googlemail.com> <4E79F87F.1050402@lwfinger.net> <4E7A38D0.7070304@googlemail.com> <4E7A4310.30106@lwfinger.net> <4E7A48D1.8050009@googlemail.com> <4E7A4B03.4070006@lwfinger.net> <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com> <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org> <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:33844 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753234Ab1JUH0W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Oct 2011 03:26:22 -0400
+Subject: Re: iwlagn is getting very shaky
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Norbert Preining <preining@logic.at>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+In-Reply-To: <20111021012354.GA26758@gamma.logic.tuwien.ac.at>
+References: <20111019124931.GC3963@gamma.logic.tuwien.ac.at>
+	 <1319038282.25023.21.camel@wwguy-ubuntu>
+	 <20111019060108.GA11588@gamma.logic.tuwien.ac.at>
+	 <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com>
+	 <20111019062517.GC11588@gamma.logic.tuwien.ac.at>
+	 <1319003304.31823.46.camel@wwguy-huron>
+	 <20111019064628.GA14817@gamma.logic.tuwien.ac.at>
+	 <1319004836.31823.57.camel@wwguy-huron>
+	 <20111020045927.GB23044@gamma.logic.tuwien.ac.at>
+	 <1319096418.3959.1.camel@jlt3.sipsolutions.net>
+	 <20111021012354.GA26758@gamma.logic.tuwien.ac.at>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 21 Oct 2011 09:26:13 +0200
+Message-ID: <1319181973.3964.4.camel@jlt3.sipsolutions.net> (sfid-20111021_092643_566423_08E889CC)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Fri, 2011-10-21 at 10:23 +0900, Norbert Preining wrote:
 
-I also have the AWUS036NHR device and I got it working on Ubuntu 11.04
-2.6.38-11-generic x64. The only thing I did is to compile&install
-compat-wireless-2.6.39-1 (same as beini!) which can be found here:
-http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.39/
+> > > [17419.285141] iwlagn 0000:06:00.0: Encounter TX_STATUS_FAIL_PASSIVE_NO_RX, am I on 5.2G band? (0)
+> > > [17419.286583] wlan0: deauthenticating from 00:24:c4:ab:bd:ef by local choice (reason=2)
+> > > [17419.300296] cfg80211: Calling CRDA for country: JP
+> > > [17419.309278] wlan0: authenticate with 00:24:c4:ab:bd:ef (try 1)
+> > > [17419.310105] wlan0: authenticated
+> > > [17419.317900] wlan0: associate with 00:24:c4:ab:bd:ef (try 1)
+> > 
+> > It seems a bit like the 5 GHz AP (:e0) just fails, and wpa_supplicant
+> > selects a 2.4 GHz AP (:ef) now? Pure conjecture, I guess the AP could
+> > also be on the same channel -- did you have scan information for these
+> > APs?
+> 
+> BSS 00:24:c4:ab:bd:e0 (on wlan0)
+>         freq: 2412
 
-There was only one strange thing: In drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-there is no entry for the AWUS036NHR so that no driver is loaded when I plugged
-the USB in, but in older versions of compat-wireless (e.g. 2.6.38) there IS one
-entry for this device. The entry looks like this:
+> And the one I am on:
+> BSS 00:24:c4:ab:bd:ef (on wlan0) -- associated
+>         freq: 5200
 
-/* 8188RU in Alfa AWUS036NHR */
-{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x817f, rtl92cu_hal_cfg)}
+> No idea if that helps you.
 
-So I patched the file, compiled&installed it and everything worked! Could
-someone patch the sources and add this device? Thanks!
+Yes, thanks. So it's actually the other way around I guess.
 
-Toddy
+I'm wondering if this too is related to the channel mess in mac80211.
 
-
+johannes
 
