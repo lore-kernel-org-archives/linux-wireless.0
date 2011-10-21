@@ -1,30 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47115 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932065Ab1JKT53 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 15:57:29 -0400
-Subject: Re: [PATCH] iw: add DFS region parsing support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1318355944-24708-8-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111011_200236_974718_4C26AE14)
-References: <1318355944-24708-1-git-send-email-mcgrof@qca.qualcomm.com>
-	 <1318355944-24708-8-git-send-email-mcgrof@qca.qualcomm.com>
-	 (sfid-20111011_200236_974718_4C26AE14)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 11 Oct 2011 21:57:22 +0200
-Message-ID: <1318363042.15357.0.camel@jlt3.sipsolutions.net> (sfid-20111011_215736_293115_C5730D9E)
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:2877 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754819Ab1JUOQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Oct 2011 10:16:50 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH v2 00/17] fix mac80211 callback in brcmsmac and brcmfmac
+ refactor
+Date: Fri, 21 Oct 2011 16:16:18 +0200
+Message-ID: <1319206595-17138-1-git-send-email-arend@broadcom.com> (sfid-20111021_161711_529327_793FB66A)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-10-11 at 10:59 -0700, Luis R. Rodriguez wrote:
+Johannes Berg commented on our use of the start/stop callbacks in brcmsmac
+and we changed those callbacks. In rfkill testing it revealed a problem which
+has been fixed in this series as well.
 
-> +	default:
-> +		printf("Uknown");
+The brcmfmac driver had some restructuring in preparation of USB support
+for new devices.
 
-typo. Also, I prefer patches w/o nl80211.h updates.
+This patch series applies to the wireless-testing repository and depends on the
+series posted on Oct 18, 2011 with message id:
 
-johannes
+Message-ID: <1318939391-19495-1-git-send-email-arend@broadcom.com> 
+
+It replaces the patch series sent earlier with message id:
+
+Message-ID: <1319205319-16891-1-git-send-email-arend@broadcom.com>
+
+Arend van Spriel (3):
+  brcm80211: smac: rename buffer endianess conversion functions
+  brcm80211: smac: use sk_buff list for handling frames in receive path
+  brcm80211: smac: change buffer endianess convert function interface
+
+Franky Lin (5):
+  brcm80211: fmac: allow wd timer to be disabled when bus down
+  brcm80211: fmac: use brcmf_del_if for all net devices
+  brcm80211: fmac: use brcmf_add_if for all net devices
+  brcm80211: fmac: store brcmf_if in net device private data
+  brcm80211: fmac: remove state from brcmf_if in fullmac
+
+Roland Vossen (9):
+  brcm80211: smac: removed MPC related code
+  brcm80211: smac: removed MPC related variables
+  brcm80211: smac: removed down-on-watchdog MPC functionality
+  brcm80211: smac: removed down-on-rf-kill functionality
+  brcm80211: smac: bugfix for tx mute in brcms_b_init()
+  brcm80211: smac: fixed inconsistency in transmit mute
+  brcm80211: smac: modified Mac80211 callback interface
+  brcm80211: smac: mute transmit on ops_start
+  brcm80211: smac: changed check to confirm STA only support
+
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    5 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    5 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |  301 +++++++-------------
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   15 +-
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c      |   38 ++-
+ drivers/net/wireless/brcm80211/brcmsmac/dma.h      |    3 +-
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  100 +++----
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |    1 +
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |  219 ++------------
+ drivers/net/wireless/brcm80211/brcmsmac/main.h     |   11 -
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    4 +-
+ drivers/net/wireless/brcm80211/brcmsmac/srom.c     |   33 +--
+ drivers/net/wireless/brcm80211/include/defs.h      |    1 -
+ 13 files changed, 232 insertions(+), 504 deletions(-)
+
+-- 
+1.7.4.1
+
 
