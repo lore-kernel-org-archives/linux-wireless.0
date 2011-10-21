@@ -1,34 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:62325 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755617Ab1JMOyJ (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:48538 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751095Ab1JUBYp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Oct 2011 10:54:09 -0400
-Received: by ggnv2 with SMTP id v2so92233ggn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Oct 2011 07:54:09 -0700 (PDT)
+	Thu, 20 Oct 2011 21:24:45 -0400
+Date: Fri, 21 Oct 2011 10:24:42 +0900
+From: Norbert Preining <preining@logic.at>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+Subject: Re: iwlagn is getting very shaky
+Message-ID: <20111021012442.GB26758@gamma.logic.tuwien.ac.at> (sfid-20111021_032500_620671_3FAEDE41)
+References: <20111019124931.GC3963@gamma.logic.tuwien.ac.at> <1319038282.25023.21.camel@wwguy-ubuntu> <20111019060108.GA11588@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com> <20111019062517.GC11588@gamma.logic.tuwien.ac.at> <1319003304.31823.46.camel@wwguy-huron> <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111020045927.GB23044@gamma.logic.tuwien.ac.at> <1319119852.2111.2.camel@wwguy-ubuntu>
 MIME-Version: 1.0
-In-Reply-To: <1318516981.5612.20.camel@jlt3.sipsolutions.net>
-References: <1318516240-10033-1-git-send-email-helmut.schaa@googlemail.com>
-	<1318516981.5612.20.camel@jlt3.sipsolutions.net>
-Date: Thu, 13 Oct 2011 16:54:08 +0200
-Message-ID: <CAGXE3d-9VfBm8DdzuQQ71U=1B81g_Ga1BvmJgv-0RZ6UMOSo_A@mail.gmail.com> (sfid-20111013_165413_873916_01887311)
-Subject: Re: [PATCH 1/2] nl80211: Add sta_flags to the station info
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1319119852.2111.2.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 13, 2011 at 4:43 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Why would we care about the mask here? Wouldn't a u32 attribute with the
-> set flags only make more sense?
+On Do, 20 Okt 2011, wwguy wrote:
+> Great, this is just a test patch, we will figure out what is the correct
+> way to handle this and fix the issue for good :-)
 
-I though about using the mask to tell user space which flags are actually
-used/supported by the driver. There might be nl80211 drivers that can't provide
-all flags and hence want to mask out the flags. Otherwise user space cannot
-decide if a flag is not set or not supported by the driver. Does that sound
-reasonable?
+Thanks. If you need more testing just let me know.
 
-Helmut
+Best wishes
+
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+HODDLESDEN (n.)
+An 'injured' footballer's limb back into the game which draws applause
+but doesn't fool anybody.
+			--- Douglas Adams, The Meaning of Liff
