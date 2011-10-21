@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:64552 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754312Ab1JKOc3 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:57000 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751325Ab1JUNXu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 10:32:29 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH v2 0/5] ath6kl: Debugging and roaming
-Date: Tue, 11 Oct 2011 17:31:52 +0300
-Message-ID: <1318343517-15292-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20111011_163232_549423_D0007F8B)
+	Fri, 21 Oct 2011 09:23:50 -0400
+Received: by wyg36 with SMTP id 36so3965980wyg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2011 06:23:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CA+icZUVGi9t6Prawqz4jDqChFR+w8X9xmc_wRgPmHG3BwUVEpw@mail.gmail.com>
+References: <CAN4ACka-egrr=GnBomT0Yc_r_mzS-+v8OE=D0vBoH+jFQJwX8w@mail.gmail.com>
+ <4EA0EE26.8010107@lwfinger.net> <CA+icZUVGi9t6Prawqz4jDqChFR+w8X9xmc_wRgPmHG3BwUVEpw@mail.gmail.com>
+From: Alan Pater <alan.pater@gmail.com>
+Date: Fri, 21 Oct 2011 07:23:29 -0600
+Message-ID: <CAN4ACkYVXQ-SF5ZHYukKLkK1SOjRO6rofdFTQgskOjMLVp-tcw@mail.gmail.com> (sfid-20111021_152353_650472_16F0DA4B)
+Subject: Re: rtl8192cu - fails to maintain connection to some Access Points
+To: sedat.dilek@gmail.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	George0505 <george0505@realtek.com>,
+	georgia <georgia@realtek.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of patches adds some more ath6kl debugging information and
-control to debugfs and enables additional roaming functionality.
+On Fri, Oct 21, 2011 at 1:28 AM, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
+> Asking as a non-native speaker/writer: What do you mean by "Meraki"?
+>
+> - Sedat -
+>
+> [1] http://meraki.com/products/wireless/wifi-stumbler
 
-v2 addresses the comments from Kalle to move debug functionality in
-patches 2 and 4 to debug.c.
+Two of their hardware access points linked together in what they call
+a multi-radio mesh.
 
-Jouni Malinen (5):
-  ath6kl: Add endpoint_stats debugfs file
-  ath6kl: Add debugfs file for target roam table
-  ath6kl: Add debugfs files for roaming control
-  ath6kl: Add debugfs control for keepalive and disconnection timeout
-  ath6kl: Allow CCKM AKM and KRK to be configured
+Like these: http://meraki.com/products/wireless/mr62
 
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   14 +
- drivers/net/wireless/ath/ath6kl/core.h     |    7 +
- drivers/net/wireless/ath/ath6kl/debug.c    |  390 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/debug.h    |   19 ++
- drivers/net/wireless/ath/ath6kl/wmi.c      |   55 ++++
- drivers/net/wireless/ath/ath6kl/wmi.h      |   28 ++-
- 6 files changed, 507 insertions(+), 6 deletions(-)
+Perhaps it is the multi-radio setup that the rtl8192cu does not like?
 
--- 
-1.7.4.1
-
+Alan
