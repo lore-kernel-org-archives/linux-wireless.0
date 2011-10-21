@@ -1,28 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:39630 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752353Ab1J0Hxl (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:43291 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750767Ab1JUELe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Oct 2011 03:53:41 -0400
-To: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
-Message-ID: <4EA90DFF.3070902@qca.qualcomm.com> (sfid-20111027_095353_630549_05E1BB32)
-Date: Thu, 27 Oct 2011 10:53:35 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Fri, 21 Oct 2011 00:11:34 -0400
+Message-ID: <4EA0F0F2.6020506@candelatech.com> (sfid-20111021_061141_822855_272DA3FB)
+Date: Thu, 20 Oct 2011 21:11:30 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: add support for WPS
-References: <1319567152-19789-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com>
-In-Reply-To: <1319567152-19789-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: hostap@lists.shmoo.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Question on channel 44 and HT40+
+References: <4EA09874.3010006@candelatech.com>
+In-Reply-To: <4EA09874.3010006@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/25/2011 09:25 PM, Aarthi Thiruvengadam wrote:
-> Add control flag CONNECT_WPS_FLAG if a WPS IE is present in the
-> Association Request IEs. This flag is needed when the station must
-> connect to a WPS-enabled AP.
+On 10/20/2011 02:53 PM, Ben Greear wrote:
+>
+> I configured hostapd for channel 44, and gave it option for HT40+
+> That seems to work fine:
+>
+> [root@ct520-6157 ]# cat /debug/ieee80211/wiphy0/ath9k/wiphy
+> wiphy0 (chan=44  center-freq: 5220 MHz  channel-type: 3 (ht40+))
+> addr: 00:0e:8e:32:12:cf
+> addrmask: ff:79:e8:45:74:31
+> rfilt: 0x4497 UCAST MCAST BCAST BEACON PROBEREQ COMP_BAR PSPOLL
+> [root@ct520-6157 ]#
 
-Thanks, applied. There was a conflict due to multivif patches which I
-fixed manually, please check that I didn't break anything.
+Gah, user-error.  The client NIC had country-code of AM (Armenia..really??)
+and I had forgotten to enable the over-ride.
 
-Kalle
+Once I force the NIC's country-code to 0 then it will do HT-40+- just
+fine.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
