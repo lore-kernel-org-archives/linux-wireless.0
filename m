@@ -1,98 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:35377 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751240Ab1JIOf4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37140 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754859Ab1JUOZa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Oct 2011 10:35:56 -0400
-Received: by ywb5 with SMTP id 5so4727612ywb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Oct 2011 07:35:55 -0700 (PDT)
-Message-ID: <4E91B147.8020808@lwfinger.net> (sfid-20111009_163607_364454_8FE83551)
-Date: Sun, 09 Oct 2011 09:35:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: John W Linville <linville@tuxdriver.com>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	=?UTF-8?B?TWljaGE=?= =?UTF-8?B?ZWwgQsO8c2No?= <m@bues.ch>,
-	Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ssb: Convert to use crc8 code in kernel library
-References: <4e90ce9a.89uGF659NNpbpyA3%Larry.Finger@lwfinger.net> <20111009005107.43a49372@milhouse> <CACna6rz-0TZrwctTZR-YLDHG=xdt4Oc5ShbjCZiad7Cvmh0+hQ@mail.gmail.com>
-In-Reply-To: <CACna6rz-0TZrwctTZR-YLDHG=xdt4Oc5ShbjCZiad7Cvmh0+hQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 21 Oct 2011 10:25:30 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1RHG2M-0008VC-06
+	for linux-wireless@vger.kernel.org; Fri, 21 Oct 2011 16:25:30 +0200
+Message-Id: <20111021142429.002962879@sipsolutions.net> (sfid-20111021_162538_302866_0EACF483)
+Date: Fri, 21 Oct 2011 16:23:29 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC v2 07/12] mac80211: support client probe
+References: <20111021142322.229128720@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/09/2011 03:48 AM, Rafał Miłecki wrote:
-> 2011/10/9 Michael Büsch<m@bues.ch>:
->> On Sat, 08 Oct 2011 17:28:42 -0500
->> Larry Finger<Larry.Finger@lwfinger.net>  wrote:
->>
->>> The kernel now contains library routines to establish crc8 tables and
->>> to calculate the appropriate sums. Use them for ssb.
->>
->>> +static u8 srom_crc8_table[CRC8_TABLE_SIZE];
->>> +
->>> +/* Polynomial:   x^8 + x^7 + x^6 + x^4 + x^2 + 1   */
->>> +#define SROM_CRC8_POLY       0xAB
->>> +
->>> +static inline void ltoh16_buf(u16 *buf, unsigned int size)
->>>   {
->>> +     size /= 2;
->>> +     while (size--)
->>> +             *(buf + size) = le16_to_cpu(*(__le16 *)(buf + size));
->>> +}
->>>
->>> -     return crc;
->>> +static inline void htol16_buf(u16 *buf, unsigned int size)
->>> +{
->>> +     size /= 2;
->>> +     while (size--)
->>> +             *(__le16 *)(buf + size) = cpu_to_le16(*(buf + size));
->>>   }
->>
->>>                return -ENOMEM;
->>> +     crc8_populate_lsb(srom_crc8_table, SROM_CRC8_POLY);
->>>        bus->sprom_size = SSB_SPROMSIZE_WORDS_R123;
->>>        sprom_do_read(bus, buf);
->>> +     /* convert to le */
->>> +     htol16_buf(buf, 2 * bus->sprom_size);
->>
->>>                bus->sprom_size = SSB_SPROMSIZE_WORDS_R4;
->>>                sprom_do_read(bus, buf);
->>> +             htol16_buf(buf, 2 * bus->sprom_size);
->>>                err = sprom_check_crc(buf, bus->sprom_size);
->>
->>> +     /* restore endianess */
->>> +     ltoh16_buf(buf, 2 * bus->sprom_size);
->>>        err = sprom_extract(bus, sprom, buf, bus->sprom_size);
->>
->> This endianness stuff is _really_ ugly.
->> Does this patch decrease the code size, at least? I'll almost doubt it.
->> If it doesn't, why are we actually doing this?
->> It doesn't even decrease the .data size. Worse, it converts a .const
->> table to a .data table.
->>
->> Just my 2 cents.
->
-> Agree. I already tried converting bcma to use crc8:
-> [RFC][WORTH IT?][PATCH] bcma: make use of crc8 lib
-> http://lists.infradead.org/pipermail/b43-dev/2011-June/001466.html
->
-> But resigned, it was introducing some hacks or not optimal ops, I
-> decided it's not worth it.
->
-> Even Arend said their brcm80211 is hacky about crc8 usage:
->
-> W dniu 15 czerwca 2011 21:26 użytkownik Arend van Spriel
-> <arend@broadcom.com>  napisał:
->> Agree. In brcm80211 we convert the entire sprom, calculate, and convert it
->> back. Also not perfect I think as it loops over de sprom data twice.
+From: Johannes Berg <johannes.berg@intel.com>
 
-John,
+Support probing clients with null data frames
+in AP mode.
 
-Please drop this patch. The amount of code churning is not worth the 100 byte 
-saving in the size of the generated code.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+v2: update to use cfg80211_probe_status
 
-Larry
+ net/mac80211/cfg.c    |   68 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/status.c |   45 +++++++++++++++++++--------------
+ 2 files changed, 95 insertions(+), 18 deletions(-)
+
+--- a/net/mac80211/cfg.c	2011-10-21 12:07:38.000000000 +0200
++++ b/net/mac80211/cfg.c	2011-10-21 12:07:42.000000000 +0200
+@@ -2507,6 +2507,73 @@ static int ieee80211_tdls_oper(struct wi
+ 	return 0;
+ }
+ 
++static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
++				  const u8 *peer, u64 *cookie)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_qos_hdr *nullfunc;
++	struct sk_buff *skb;
++	int size = sizeof(*nullfunc);
++	__le16 fc;
++	bool qos;
++	struct ieee80211_tx_info *info;
++	struct sta_info *sta;
++
++	rcu_read_lock();
++	sta = sta_info_get(sdata, peer);
++	if (sta)
++		qos = test_sta_flag(sta, WLAN_STA_WME);
++	rcu_read_unlock();
++
++	if (!sta)
++		return -ENOLINK;
++
++	if (qos) {
++		fc = cpu_to_le16(IEEE80211_FTYPE_DATA |
++				 IEEE80211_STYPE_QOS_NULLFUNC |
++				 IEEE80211_FCTL_FROMDS);
++	} else {
++		size -= 2;
++		fc = cpu_to_le16(IEEE80211_FTYPE_DATA |
++				 IEEE80211_STYPE_NULLFUNC |
++				 IEEE80211_FCTL_FROMDS);
++	}
++
++	skb = dev_alloc_skb(local->hw.extra_tx_headroom + size);
++	if (!skb)
++		return -ENOMEM;
++
++	skb->dev = dev;
++
++	skb_reserve(skb, local->hw.extra_tx_headroom);
++
++	nullfunc = (void *) skb_put(skb, size);
++	nullfunc->frame_control = fc;
++	nullfunc->duration_id = 0;
++	memcpy(nullfunc->addr1, sta->sta.addr, ETH_ALEN);
++	memcpy(nullfunc->addr2, sdata->vif.addr, ETH_ALEN);
++	memcpy(nullfunc->addr3, sdata->vif.addr, ETH_ALEN);
++	nullfunc->seq_ctrl = 0;
++
++	info = IEEE80211_SKB_CB(skb);
++
++	info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS |
++		       IEEE80211_TX_INTFL_NL80211_FRAME_TX;
++
++	skb_set_queue_mapping(skb, IEEE80211_AC_VO);
++	skb->priority = 7;
++	if (qos)
++		nullfunc->qos_ctrl = cpu_to_le16(7);
++
++	local_bh_disable();
++	ieee80211_xmit(sdata, skb);
++	local_bh_enable();
++
++	*cookie = (unsigned long) skb;
++	return 0;
++}
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -2572,4 +2639,5 @@ struct cfg80211_ops mac80211_config_ops
+ 	.set_rekey_data = ieee80211_set_rekey_data,
+ 	.tdls_oper = ieee80211_tdls_oper,
+ 	.tdls_mgmt = ieee80211_tdls_mgmt,
++	.probe_client = ieee80211_probe_client,
+ };
+--- a/net/mac80211/status.c	2011-10-21 12:07:38.000000000 +0200
++++ b/net/mac80211/status.c	2011-10-21 12:07:42.000000000 +0200
+@@ -516,27 +516,36 @@ void ieee80211_tx_status(struct ieee8021
+ 	}
+ 
+ 	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX) {
+-		struct ieee80211_work *wk;
+ 		u64 cookie = (unsigned long)skb;
+ 
+-		rcu_read_lock();
+-		list_for_each_entry_rcu(wk, &local->work_list, list) {
+-			if (wk->type != IEEE80211_WORK_OFFCHANNEL_TX)
+-				continue;
+-			if (wk->offchan_tx.frame != skb)
+-				continue;
+-			wk->offchan_tx.status = true;
+-			break;
+-		}
+-		rcu_read_unlock();
+-		if (local->hw_roc_skb_for_status == skb) {
+-			cookie = local->hw_roc_cookie ^ 2;
+-			local->hw_roc_skb_for_status = NULL;
+-		}
++		if (ieee80211_is_nullfunc(hdr->frame_control) ||
++		    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
++		    	bool acked = info->flags & IEEE80211_TX_STAT_ACK;
++			cfg80211_probe_status(skb->dev, hdr->addr1,
++					      cookie, acked, GFP_ATOMIC);
++		} else {
++			struct ieee80211_work *wk;
+ 
+-		cfg80211_mgmt_tx_status(
+-			skb->dev, cookie, skb->data, skb->len,
+-			!!(info->flags & IEEE80211_TX_STAT_ACK), GFP_ATOMIC);
++			rcu_read_lock();
++			list_for_each_entry_rcu(wk, &local->work_list, list) {
++				if (wk->type != IEEE80211_WORK_OFFCHANNEL_TX)
++					continue;
++				if (wk->offchan_tx.frame != skb)
++					continue;
++				wk->offchan_tx.status = true;
++				break;
++			}
++			rcu_read_unlock();
++			if (local->hw_roc_skb_for_status == skb) {
++				cookie = local->hw_roc_cookie ^ 2;
++				local->hw_roc_skb_for_status = NULL;
++			}
++
++			cfg80211_mgmt_tx_status(
++				skb->dev, cookie, skb->data, skb->len,
++				!!(info->flags & IEEE80211_TX_STAT_ACK),
++				GFP_ATOMIC);
++		}
+ 	}
+ 
+ 	/* this was a transmitted frame, but now we want to reuse it */
 
 
