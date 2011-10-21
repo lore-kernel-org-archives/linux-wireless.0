@@ -1,85 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2121 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934702Ab1JENUj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 09:20:39 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 07/15] staging: brcm80211: fix thread blocking issue in
- brcmf_sdbrcm_bus_stop()
-Date: Wed, 5 Oct 2011 15:20:06 +0200
-Message-ID: <1317820814-7083-8-git-send-email-arend@broadcom.com> (sfid-20111005_152043_133265_A4D6B85C)
-In-Reply-To: <1317820814-7083-1-git-send-email-arend@broadcom.com>
-References: <1317820814-7083-1-git-send-email-arend@broadcom.com>
+Received: from mailrelay1.uni-rostock.de ([139.30.8.201]:3414 "EHLO
+	mailrelay1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752600Ab1JUOim (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Oct 2011 10:38:42 -0400
+Message-ID: <4EA182A8.2060801@uni-rostock.de> (sfid-20111021_163846_295719_0902A8C0)
+Date: Fri, 21 Oct 2011 16:33:12 +0200
+From: Till Wollenberg <till.wollenberg@uni-rostock.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: <linux-wireless@vger.kernel.org>
+Subject: Obtaining channel measurements from current chipsets
+Content-Type: text/plain; charset="ISO-8859-15"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function brcmf_sdbrcm_bus_stop() terminates the watchdog and dpc
-thread, but this function can be called from the dpc thread itself.
-Stopping the dpc thread is only done when it is not the 'current'
-thread.
+Hi!
 
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   19 +++++++++++--------
- 1 files changed, 11 insertions(+), 8 deletions(-)
+I'm very interested in obtaining channel measurements from current
+802.11a/g/n chipsets. I know that there are indicators for signal
+strength, noise floor, RSSI etc., but I'd like to get more fine-grained
+measurements such as magnitude/phase of the OFDM sub-carriers.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 0f7b80d..6885755 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2694,7 +2694,10 @@ static int brcmf_sdbrcm_dpc_thread(void *data)
- 				if (brcmf_sdbrcm_dpc(bus))
- 					complete(&bus->dpc_wait);
- 			} else {
-+				/* after stopping the bus, exit thread */
- 				brcmf_sdbrcm_bus_stop(bus);
-+				bus->dpc_tsk = NULL;
-+				break;
- 			}
- 		} else
- 			break;
-@@ -3601,25 +3604,25 @@ void brcmf_sdbrcm_bus_stop(struct brcmf_bus *bus)
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
--	down(&bus->sdsem);
--
--	bus_wake(bus);
--
--	/* Enable clock for device interrupts */
--	brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
--
- 	if (bus->watchdog_tsk) {
- 		send_sig(SIGTERM, bus->watchdog_tsk, 1);
- 		kthread_stop(bus->watchdog_tsk);
- 		bus->watchdog_tsk = NULL;
- 	}
- 
--	if (bus->dpc_tsk) {
-+	if (bus->dpc_tsk && bus->dpc_tsk != current) {
- 		send_sig(SIGTERM, bus->dpc_tsk, 1);
- 		kthread_stop(bus->dpc_tsk);
- 		bus->dpc_tsk = NULL;
- 	}
- 
-+	down(&bus->sdsem);
-+
-+	bus_wake(bus);
-+
-+	/* Enable clock for device interrupts */
-+	brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
-+
- 	/* Disable and clear interrupts at the chip level also */
- 	w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, hostintmask), &retries);
- 	local_hostintmask = bus->hostintmask;
--- 
-1.7.4.1
+Such information is also needed for the (optional) 802.11n "channel
+state information" feature, so I suppose that the vendors include
+support for it in their chipsets.
 
+Can someone give me a hint where to look at? So far I found that
+other people are interested as well [1], but I did not find any
+hints in the source code of the wireless drivers or any public
+available spec. [2] shows how it could look like, but unfortunately
+it depends mainly on modifications to the binary-only NIC firmware.
 
+Best Regards
+Till
+
+[1] http://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg03875.html
+[2] http://dhalperi.github.com/linux-80211n-csitool/
