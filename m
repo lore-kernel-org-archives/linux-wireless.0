@@ -1,30 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58620 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751724Ab1JTTS7 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:36778 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751210Ab1JUSiC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 15:18:59 -0400
-Subject: Re: [PATCH v2 0/6] HT support for mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Xianghua Xiao <xiaoxianghua@gmail.com>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <CAP7cwtsB0jckz_WVFJuibKiewuOQZ_BMHTHBDfCTMNt_ge9buw@mail.gmail.com> (sfid-20111020_211733_441908_CA487AC0)
-References: <1319135679-6740-1-git-send-email-thomas@cozybit.com>
-	 <CAP7cwtsB0jckz_WVFJuibKiewuOQZ_BMHTHBDfCTMNt_ge9buw@mail.gmail.com>
-	 (sfid-20111020_211733_441908_CA487AC0)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 20 Oct 2011 21:18:54 +0200
-Message-ID: <1319138334.20837.3.camel@jlt3.sipsolutions.net> (sfid-20111020_211902_424242_5BE96CA1)
-Mime-Version: 1.0
+	Fri, 21 Oct 2011 14:38:02 -0400
+Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p9LIc1fY009183
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2011 11:38:01 -0700
+Message-ID: <4EA1BC09.7030603@candelatech.com> (sfid-20111021_203806_819498_EFB8730D)
+Date: Fri, 21 Oct 2011 11:38:01 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Is there a way to set the HT rate for a station?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-10-20 at 14:17 -0500, Xianghua Xiao wrote:
-> how does this relate to Alex HT patches? Alex's patch addresses IBSS
-> but there seems to be some overlaps between Mesh/IBSS HT patches.
+I'm trying to figure out how to force a station to use a particular
+rate (say, MCS7 v/s MCS15).
 
-He just uses one of Alex's refactoring patches here :)
+Off to dig in the code in the meantime...
 
-johannes
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
