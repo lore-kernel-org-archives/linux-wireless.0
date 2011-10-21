@@ -1,59 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43437 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751817Ab1JJFwI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 01:52:08 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 12/13] ath9k_hw: Rename AR9480 -> AR9462 initvals
-Date: Mon, 10 Oct 2011 11:21:17 +0530
-Message-ID: <1318225878-7283-12-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111010_081655_614055_6366391D)
-In-Reply-To: <1318225878-7283-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1318225878-7283-1-git-send-email-rmanohar@qca.qualcomm.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:2844 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751541Ab1JUNze (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Oct 2011 09:55:34 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 00/17] fix mac80211 callback in brcmsmac and brcmfmac
+ refactor
+Date: Fri, 21 Oct 2011 15:55:02 +0200
+Message-ID: <1319205319-16891-1-git-send-email-arend@broadcom.com> (sfid-20111021_161149_258924_F9DCE4D0)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The AR946/8x chips are 2x2 Dual band with BT support. In order
-to avoid misleading with other chips and to be in sync with
-marketing team's term, AR9480 is renamed as AR9462.
+Johannes Berg commented on our use of the start/stop callbacks in brcmsmac
+and we changed those callbacks. In rfkill testing it revealed a problem which
+has been fixed in this series as well.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c         |    4 ++--
- ...ar9480_1p0_initvals.h => ar9462_1p0_initvals.h} |    0
- ...ar9480_2p0_initvals.h => ar9462_2p0_initvals.h} |    0
- 3 files changed, 2 insertions(+), 2 deletions(-)
- rename drivers/net/wireless/ath/ath9k/{ar9480_1p0_initvals.h => ar9462_1p0_initvals.h} (100%)
- rename drivers/net/wireless/ath/ath9k/{ar9480_2p0_initvals.h => ar9462_2p0_initvals.h} (100%)
+The brcmfmac driver had some restructuring in preparation of USB support
+for new devices.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 901f417..6b2a4d0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -22,8 +22,8 @@
- #include "ar9330_1p1_initvals.h"
- #include "ar9330_1p2_initvals.h"
- #include "ar9580_1p0_initvals.h"
--#include "ar9480_1p0_initvals.h"
--#include "ar9480_2p0_initvals.h"
-+#include "ar9462_1p0_initvals.h"
-+#include "ar9462_2p0_initvals.h"
- 
- /* General hardware code for the AR9003 hadware family */
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9480_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_1p0_initvals.h
-similarity index 100%
-rename from drivers/net/wireless/ath/ath9k/ar9480_1p0_initvals.h
-rename to drivers/net/wireless/ath/ath9k/ar9462_1p0_initvals.h
-diff --git a/drivers/net/wireless/ath/ath9k/ar9480_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-similarity index 100%
-rename from drivers/net/wireless/ath/ath9k/ar9480_2p0_initvals.h
-rename to drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+This patch series applies to the wireless-testing repository and depends on the
+series posted on Oct 18, 2011 with message id:
+
+Message-ID: <1318939391-19495-1-git-send-email-arend@broadcom.com> 
+
+Arend van Spriel (3):
+  brcm80211: smac: rename buffer endianess conversion functions
+  brcm80211: smac: use sk_buff list for handling frames in receive path
+  brcm80211: smac: change buffer endianess convert function interface
+
+Franky Lin (5):
+  brcm80211: fmac: allow wd timer to be disabled when bus down
+  brcm80211: fmac: use brcmf_del_if for all net devices
+  brcm80211: fmac: use brcmf_add_if for all net devices
+  brcm80211: fmac: store brcmf_if in net device private data
+  brcm80211: fmac: remove state from brcmf_if in fullmac
+
+Roland Vossen (9):
+  brcm80211: smac: removed MPC related code
+  brcm80211: smac: removed MPC related variables
+  brcm80211: smac: removed down-on-watchdog MPC functionality
+  brcm80211: smac: removed down-on-rf-kill functionality
+  brcm80211: smac: bugfix for tx mute in brcms_b_init()
+  brcm80211: smac: fixed inconsistency in transmit mute
+  brcm80211: smac: modified Mac80211 callback interface
+  brcm80211: smac: mute transmit on ops_start
+  brcm80211: smac: changed check to confirm STA only support
+
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    5 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    5 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |  301 +++++++-------------
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   15 +-
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c      |   38 ++-
+ drivers/net/wireless/brcm80211/brcmsmac/dma.h      |    3 +-
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  100 +++----
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |    1 +
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |  219 ++------------
+ drivers/net/wireless/brcm80211/brcmsmac/main.h     |   11 -
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    4 +-
+ drivers/net/wireless/brcm80211/brcmsmac/srom.c     |   33 +--
+ drivers/net/wireless/brcm80211/include/defs.h      |    1 -
+ 13 files changed, 232 insertions(+), 504 deletions(-)
+
 -- 
-1.7.7
+1.7.4.1
+
 
