@@ -1,55 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:54547 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754133Ab1JNRTh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 13:19:37 -0400
-Received: by qyk27 with SMTP id 27so83134qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2011 10:19:36 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:1351 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754810Ab1JUOQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Oct 2011 10:16:48 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH v2 08/17] brcm80211: smac: fixed inconsistency in
+ transmit mute
+Date: Fri, 21 Oct 2011 16:16:26 +0200
+Message-ID: <1319206595-17138-9-git-send-email-arend@broadcom.com> (sfid-20111021_161719_320347_BAF28FDA)
+In-Reply-To: <1319206595-17138-1-git-send-email-arend@broadcom.com>
+References: <1319206595-17138-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <4E985579.9010401@gmail.com>
-References: <1317543352-29019-1-git-send-email-eliad@wizery.com>
-	<1318433496.3933.44.camel@jlt3.sipsolutions.net>
-	<4E985579.9010401@gmail.com>
-Date: Fri, 14 Oct 2011 13:19:36 -0400
-Message-ID: <CAEKwDSA0UjuDvq-=YfO_CJaQGmOPVGMp1AqNx1Fkrv6crf4oAg@mail.gmail.com> (sfid-20111014_191940_251238_27418498)
-Subject: Re: [PATCH] patch on comment
-From: Bob Copeland <me@bobcopeland.com>
-To: Loiseau Lucien <loiseau.lucien@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 14, 2011 at 11:30 AM, Loiseau Lucien
-<loiseau.lucien@gmail.com> wrote:
-> Digging into the source code, i noticed that the documentation tells that
-> the tx function from ieee80211_ops should return NETDEV_TX_OK while the tx
-> function is now a void function.
+From: Roland Vossen <rvossen@broadcom.com>
 
-This is good, but as presented, you've left the job for others to make
-the patch suitable for applying to the kernel.  Please see
-Documentation/SubmittingPatches for more info.  For example, a better
-email / commit message might be:
+Transmit was muted in two ways: full mute and a partial mute called
+'pre ism cac time' mute. But, this 'pre ism cac time' mute was done at
+one place in the code (when tx_mute == false), and overridden later
+on in another place in code.
 
-[PATCH] mac80211: remove reference to NETDEV_TX_OK
+To fix this, the 'pre ism cac time' mute has been replaced by a non
+mute.
 
-The kerneldoc states that ieee80211_ops.tx must return NETDEV_TX_OK,
-but tx is now a void function.  Remove the stale comment.
-
-Signed-off-by: <your-s-o-b-here>
-
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
-[patch goes here]
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-It's almost the same as what you wrote, but there is a Signed-off-by,
-and the subject and description are fit for the long term kernel
-history.
-
-If you perform these few extra steps when submitting, John can just
-queue your patch directly from his inbox, and you get to keep all the
-credit.  If you make the maintainer's job hard, he might drop it on
-the floor until someone else does the work.
-
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 8eb665e..cc74205 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -2453,11 +2453,11 @@ static void brcms_b_tx_fifo_resume(struct brcms_hardware *wlc_hw,
+ }
+ 
+ /* precondition: requires the mac core to be enabled */
+-static void brcms_b_mute(struct brcms_hardware *wlc_hw, bool on, u32 flags)
++static void brcms_b_mute(struct brcms_hardware *wlc_hw, bool mute_tx)
+ {
+ 	static const u8 null_ether_addr[ETH_ALEN] = {0, 0, 0, 0, 0, 0};
+ 
+-	if (on) {
++	if (mute_tx) {
+ 		/* suspend tx fifos */
+ 		brcms_b_tx_fifo_suspend(wlc_hw, TX_DATA_FIFO);
+ 		brcms_b_tx_fifo_suspend(wlc_hw, TX_CTL_FIFO);
+@@ -2479,9 +2479,9 @@ static void brcms_b_mute(struct brcms_hardware *wlc_hw, bool on, u32 flags)
+ 				       wlc_hw->etheraddr);
+ 	}
+ 
+-	wlc_phy_mute_upd(wlc_hw->band->pi, on, flags);
++	wlc_phy_mute_upd(wlc_hw->band->pi, mute_tx, 0);
+ 
+-	if (on)
++	if (mute_tx)
+ 		brcms_c_ucode_mute_override_set(wlc_hw);
+ 	else
+ 		brcms_c_ucode_mute_override_clear(wlc_hw);
+@@ -3892,7 +3892,7 @@ static void brcms_c_set_home_chanspec(struct brcms_c_info *wlc, u16 chanspec)
+ 
+ void
+ brcms_b_set_chanspec(struct brcms_hardware *wlc_hw, u16 chanspec,
+-		      bool mute, struct txpwr_limits *txpwr)
++		      bool mute_tx, struct txpwr_limits *txpwr)
+ {
+ 	uint bandunit;
+ 
+@@ -3918,7 +3918,7 @@ brcms_b_set_chanspec(struct brcms_hardware *wlc_hw, u16 chanspec,
+ 		}
+ 	}
+ 
+-	wlc_phy_initcal_enable(wlc_hw->band->pi, !mute);
++	wlc_phy_initcal_enable(wlc_hw->band->pi, !mute_tx);
+ 
+ 	if (!wlc_hw->up) {
+ 		if (wlc_hw->clk)
+@@ -3930,7 +3930,7 @@ brcms_b_set_chanspec(struct brcms_hardware *wlc_hw, u16 chanspec,
+ 		wlc_phy_txpower_limit_set(wlc_hw->band->pi, txpwr, chanspec);
+ 
+ 		/* Update muting of the channel */
+-		brcms_b_mute(wlc_hw, mute, 0);
++		brcms_b_mute(wlc_hw, mute_tx);
+ 	}
+ }
+ 
+@@ -8341,7 +8341,7 @@ void brcms_c_init(struct brcms_c_info *wlc)
+ 
+ 	/* suspend the tx fifos and mute the phy for preism cac time */
+ 	if (mute_tx)
+-		brcms_b_mute(wlc->hw, ON, PHY_MUTE_FOR_PREISM);
++		brcms_b_mute(wlc->hw, true);
+ 
+ 	/* clear tx flow control */
+ 	brcms_c_txflowcontrol_reset(wlc);
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.4.1
+
+
