@@ -1,97 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:43804 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751872Ab1J2FFo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Oct 2011 01:05:44 -0400
-Received: by gyb13 with SMTP id 13so4264788gyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Oct 2011 22:05:44 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: devel@lists.open80211s.org, Javier Cardona <javier@cozybit.com>,
-	johannes@sipsolutions.net, linville@tuxdriver.com
-Subject: [PATCH 4/4] mac80211: Populate QoS header on mesh frames sent to gates.
-Date: Fri, 28 Oct 2011 22:05:32 -0700
-Message-Id: <1319864732-11286-4-git-send-email-thomas@cozybit.com> (sfid-20111029_070548_330202_B214C242)
-In-Reply-To: <1319864732-11286-1-git-send-email-thomas@cozybit.com>
-References: <1319864732-11286-1-git-send-email-thomas@cozybit.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:3184 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754768Ab1JUNzi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Oct 2011 09:55:38 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 13/17] brcm80211: smac: use sk_buff list for handling
+ frames in receive path
+Date: Fri, 21 Oct 2011 15:55:15 +0200
+Message-ID: <1319205319-16891-14-git-send-email-arend@broadcom.com> (sfid-20111021_155546_319633_7CAC63A3)
+In-Reply-To: <1319205319-16891-1-git-send-email-arend@broadcom.com>
+References: <1319205319-16891-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+In the receive path the frames are obtained from the dma using
+multiple sk_buff that were linked using the skb next pointer.
+This has been changed and it now used sk_buff lists and skb_queue
+functions instead.
 
-Also set correct skb queue mapping once next hop is known, and set
-txinfo jiffies when forwarding.
-
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/mesh_hwmp.c    |    5 ++++-
- net/mac80211/mesh_pathtbl.c |    5 +++++
- net/mac80211/rx.c           |    8 +++++---
- 3 files changed, 14 insertions(+), 4 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c  |   38 ++++++++++++++----------
+ drivers/net/wireless/brcm80211/brcmsmac/dma.h  |    3 +-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   21 +++++--------
+ 3 files changed, 32 insertions(+), 30 deletions(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index b7d9dfd..d46109b 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -1028,8 +1028,11 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
- 					PREQ_Q_F_START | PREQ_Q_F_REFRESH);
- 		}
- 		next_hop = rcu_dereference(mpath->next_hop);
--		if (next_hop)
-+		if (next_hop) {
- 			memcpy(hdr->addr1, next_hop->sta.addr, ETH_ALEN);
-+			skb_set_queue_mapping(skb,
-+				ieee80211_select_queue(sdata, skb));
-+		}
- 		else
- 			err = -ENOENT;
- 	} else {
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 332b5ff1..9d2f55f 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -270,6 +270,11 @@ static void prepare_for_gate(struct sk_buff *skb, char *dst_addr,
- 	memcpy(hdr->addr1, next_hop, ETH_ALEN);
- 	rcu_read_unlock();
- 	memcpy(hdr->addr3, dst_addr, ETH_ALEN);
-+
-+	/*  once next hop is set we can set qos header */
-+	skb_set_queue_mapping(skb,
-+			ieee80211_select_queue(gate_mpath->sdata, skb));
-+	ieee80211_set_qos_hdr(gate_mpath->sdata, skb);
- }
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+index 08960ce..ae541fb 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+@@ -14,7 +14,6 @@
+  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ #include <linux/slab.h>
+-#include <linux/skbuff.h>
+ #include <linux/delay.h>
+ #include <linux/pci.h>
  
- /**
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index ad39216..dc60a19 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1963,12 +1963,10 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 			memset(info, 0, sizeof(*info));
- 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
- 			info->control.vif = &rx->sdata->vif;
-+			info->control.jiffies = jiffies;
- 			if (is_multicast_ether_addr(fwd_hdr->addr1)) {
- 				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
- 								fwded_mcast);
--				skb_set_queue_mapping(fwd_skb,
--					ieee80211_select_queue(sdata, fwd_skb));
--				ieee80211_set_qos_hdr(sdata, fwd_skb);
- 			} else {
- 				int err;
- 				/*
-@@ -1989,6 +1987,10 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 			}
- 			IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
- 						     fwded_frames);
-+
-+			/* next hop is now known, update the queue mapping */
-+			skb_set_queue_mapping(fwd_skb,
-+				ieee80211_select_queue(sdata, fwd_skb));
- 			ieee80211_add_pending_skb(local, fwd_skb);
+@@ -901,7 +900,7 @@ static struct sk_buff *_dma_getnextrxp(struct dma_info *di, bool forceall)
+ 
+ /*
+  * !! rx entry routine
+- * returns a pointer to the next frame received, or NULL if there are no more
++ * returns the number packages in the next frame, or 0 if there are no more
+  *   if DMA_CTRL_RXMULTI is defined, DMA scattering(multiple buffers) is
+  *   supported with pkts chain
+  *   otherwise, it's treated as giant pkt and will be tossed.
+@@ -909,38 +908,40 @@ static struct sk_buff *_dma_getnextrxp(struct dma_info *di, bool forceall)
+  *   buffer data. After it reaches the max size of buffer, the data continues
+  *   in next DMA descriptor buffer WITHOUT DMA header
+  */
+-struct sk_buff *dma_rx(struct dma_pub *pub)
++int dma_rx(struct dma_pub *pub, struct sk_buff_head *skb_list)
+ {
+ 	struct dma_info *di = (struct dma_info *)pub;
+-	struct sk_buff *p, *head, *tail;
++	struct sk_buff_head dma_frames;
++	struct sk_buff *p, *next;
+ 	uint len;
+ 	uint pkt_len;
+ 	int resid = 0;
++	int pktcnt = 1;
+ 
++	skb_queue_head_init(&dma_frames);
+  next_frame:
+-	head = _dma_getnextrxp(di, false);
+-	if (head == NULL)
+-		return NULL;
++	p = _dma_getnextrxp(di, false);
++	if (p == NULL)
++		return 0;
+ 
+-	len = le16_to_cpu(*(__le16 *) (head->data));
++	len = le16_to_cpu(*(__le16 *) (p->data));
+ 	DMA_TRACE(("%s: dma_rx len %d\n", di->name, len));
+-	dma_spin_for_len(len, head);
++	dma_spin_for_len(len, p);
+ 
+ 	/* set actual length */
+ 	pkt_len = min((di->rxoffset + len), di->rxbufsize);
+-	__skb_trim(head, pkt_len);
++	__skb_trim(p, pkt_len);
++	skb_queue_tail(&dma_frames, p);
+ 	resid = len - (di->rxbufsize - di->rxoffset);
+ 
+ 	/* check for single or multi-buffer rx */
+ 	if (resid > 0) {
+-		tail = head;
+ 		while ((resid > 0) && (p = _dma_getnextrxp(di, false))) {
+-			tail->next = p;
+ 			pkt_len = min_t(uint, resid, di->rxbufsize);
+ 			__skb_trim(p, pkt_len);
+-
+-			tail = p;
++			skb_queue_tail(&dma_frames, p);
+ 			resid -= di->rxbufsize;
++			pktcnt++;
+ 		}
+ 
+ #ifdef BCMDBG
+@@ -959,13 +960,18 @@ struct sk_buff *dma_rx(struct dma_pub *pub)
+ 		if ((di->dma.dmactrlflags & DMA_CTRL_RXMULTI) == 0) {
+ 			DMA_ERROR(("%s: dma_rx: bad frame length (%d)\n",
+ 				   di->name, len));
+-			brcmu_pkt_buf_free_skb(head);
++			skb_queue_walk_safe(&dma_frames, p, next) {
++				skb_unlink(p, &dma_frames);
++				brcmu_pkt_buf_free_skb(p);
++			}
+ 			di->dma.rxgiants++;
++			pktcnt = 1;
+ 			goto next_frame;
  		}
  	}
+ 
+-	return head;
++	skb_queue_splice_tail(&dma_frames, skb_list);
++	return pktcnt;
+ }
+ 
+ static bool dma64_rxidle(struct dma_info *di)
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.h b/drivers/net/wireless/brcm80211/brcmsmac/dma.h
+index ebc5bc5..d317c7c 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/dma.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.h
+@@ -18,6 +18,7 @@
+ #define	_BRCM_DMA_H_
+ 
+ #include <linux/delay.h>
++#include <linux/skbuff.h>
+ #include "types.h"		/* forward structure declarations */
+ 
+ /* map/unmap direction */
+@@ -80,7 +81,7 @@ extern struct dma_pub *dma_attach(char *name, struct si_pub *sih,
+ 			    uint nrxpost, uint rxoffset, uint *msg_level);
+ 
+ void dma_rxinit(struct dma_pub *pub);
+-struct sk_buff *dma_rx(struct dma_pub *pub);
++int dma_rx(struct dma_pub *pub, struct sk_buff_head *skb_list);
+ bool dma_rxfill(struct dma_pub *pub);
+ bool dma_rxreset(struct dma_pub *pub);
+ bool dma_txreset(struct dma_pub *pub);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 3f8a6c7..f193fab 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -8115,21 +8115,17 @@ static bool
+ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+ {
+ 	struct sk_buff *p;
+-	struct sk_buff *head = NULL;
+-	struct sk_buff *tail = NULL;
++	struct sk_buff *next = NULL;
++	struct sk_buff_head recv_frames;
++
+ 	uint n = 0;
+ 	uint bound_limit = bound ? RXBND : -1;
+ 
+ 	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
+-	/* gather received frames */
+-	while ((p = dma_rx(wlc_hw->di[fifo]))) {
++	skb_queue_head_init(&recv_frames);
+ 
+-		if (!tail)
+-			head = tail = p;
+-		else {
+-			tail->prev = p;
+-			tail = p;
+-		}
++	/* gather received frames */
++	while (dma_rx(wlc_hw->di[fifo], &recv_frames)) {
+ 
+ 		/* !give others some time to run! */
+ 		if (++n >= bound_limit)
+@@ -8140,12 +8136,11 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+ 	dma_rxfill(wlc_hw->di[fifo]);
+ 
+ 	/* process each frame */
+-	while ((p = head) != NULL) {
++	skb_queue_walk_safe(&recv_frames, p, next) {
+ 		struct d11rxhdr_le *rxh_le;
+ 		struct d11rxhdr *rxh;
+-		head = head->prev;
+-		p->prev = NULL;
+ 
++		skb_unlink(p, &recv_frames);
+ 		rxh_le = (struct d11rxhdr_le *)p->data;
+ 		rxh = (struct d11rxhdr *)p->data;
+ 
 -- 
-1.7.5.4
+1.7.4.1
+
 
