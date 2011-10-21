@@ -1,45 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40512 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755673Ab1JaWe4 (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:36060 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752506Ab1JUIgK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Oct 2011 18:34:56 -0400
-Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p9VMYtZJ001698
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2011 15:34:55 -0700
-Message-ID: <4EAF228F.6030104@candelatech.com> (sfid-20111031_233459_465667_F36C4610)
-Date: Mon, 31 Oct 2011 15:34:55 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 21 Oct 2011 04:36:10 -0400
+Received: by yxl42 with SMTP id 42so1072169yxl.19
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2011 01:36:10 -0700 (PDT)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: problem clearing bit-rates with 'iw'
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Fri, 21 Oct 2011 12:36:10 +0400
+Message-ID: <CAG5dHkTg0JQK7d3jc1hO_A8xsPyogaufOnvvvas8Hx5GgFbskA@mail.gmail.com> (sfid-20111021_103614_209633_4C5A0FFE)
+Subject: [RFC 0/7] mesh power saving implementation: indication
+From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to the help, it seems I should be able to pass no rates and
-have it clear the mask.  But, it seems that is not actually working:
+Hello!
 
-[root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw dev sta4 set bitrates legacy-2.4
-command failed: Invalid argument (-22)
-[root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw dev sta4 set bitrates legacy-2.4 ""
-Usage:	./local/sbin/iw [options] dev <devname> set bitrates [legacy-<2.4|5> <legacy rate in Mbps>*]
-
-Sets up the specified rate masks.
-Not passing any arguments would clear the existing mask (if any).
-
-Options:
-	--debug		enable netlink debugging
-[root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw dev sta4 set bitrates
-command failed: Invalid argument (-22)
-
+We have started implementation of power saving modes in mesh according
+to chapter 11C.13 of the IEEE802.11s standard. We divided the work in
+several phases and the first is indication of mesh STA's power save
+modes in frames according to 11C.13.2 and 11C.13.3. We are very keen
+to receive comments.
 
 Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Ivan
