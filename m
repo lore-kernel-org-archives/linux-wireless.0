@@ -1,39 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:38208 "EHLO lo.gmane.org"
+Received: from mms1.broadcom.com ([216.31.210.17]:1347 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756568Ab1JQRKB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Oct 2011 13:10:01 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1RFqhL-0006l7-CH
-	for linux-wireless@vger.kernel.org; Mon, 17 Oct 2011 19:09:59 +0200
-Received: from host206-183-dynamic.11-87-r.retail.telecomitalia.it ([87.11.183.206])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2011 19:09:59 +0200
-Received: from gaigo88 by host206-183-dynamic.11-87-r.retail.telecomitalia.it with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2011 19:09:59 +0200
-To: linux-wireless@vger.kernel.org
-From: v4mp <gaigo88@hotmail.it>
-Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
-Date: Mon, 17 Oct 2011 17:09:46 +0000 (UTC)
-Message-ID: <loom.20111017T190430-717@post.gmane.org> (sfid-20111017_191005_766219_9EA93163)
-References: <4E77F631.3030202@googlemail.com> <4E780309.9010601@lwfinger.net> <4E785DB3.5040109@googlemail.com> <4E7907D3.1020606@googlemail.com> <4E792994.1080809@lwfinger.net> <4E79B1D0.7090602@googlemail.com> <4E79F87F.1050402@lwfinger.net> <4E7A38D0.7070304@googlemail.com> <4E7A4310.30106@lwfinger.net> <4E7A48D1.8050009@googlemail.com> <4E7A4B03.4070006@lwfinger.net> <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com> <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org> <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org> <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T161652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org> <4E9C42CF.5010702@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1754805Ab1JUOQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Oct 2011 10:16:48 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH v2 12/17] brcm80211: smac: rename buffer endianess
+ conversion functions
+Date: Fri, 21 Oct 2011 16:16:30 +0200
+Message-ID: <1319206595-17138-13-git-send-email-arend@broadcom.com> (sfid-20111021_161724_443081_E46F17A8)
+In-Reply-To: <1319206595-17138-1-git-send-email-arend@broadcom.com>
+References: <1319206595-17138-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The functions ltoh16_buf() and htol16_buf() have been renamed
+to le16_to_cpu_buf() and cpu_to_le16_buf() for more clarity
+what it does.
 
+Reported-by: Joe Perches <joe@perches.com>
+Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/srom.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-ok, i've checked the md5 checksum of the firmware and is ok,
-i give you dmesg at pastebin.com
-
-it has 2 parts: in the second part i can't see what is in previous of the error
-
-the link is: http://pastebin.com/7tfcBfbD
-
-
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/srom.c b/drivers/net/wireless/brcm80211/brcmsmac/srom.c
+index 66aa0e7..8f1cf2f 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/srom.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/srom.c
+@@ -617,14 +617,14 @@ static uint mask_width(u16 mask)
+ 	return 0;
+ }
+ 
+-static inline void ltoh16_buf(u16 *buf, unsigned int size)
++static inline void le16_to_cpu_buf(u16 *buf, unsigned int size)
+ {
+ 	size /= 2;
+ 	while (size--)
+ 		*(buf + size) = le16_to_cpu(*(__le16 *)(buf + size));
+ }
+ 
+-static inline void htol16_buf(u16 *buf, unsigned int size)
++static inline void cpu_to_le16_buf(u16 *buf, unsigned int size)
+ {
+ 	size /= 2;
+ 	while (size--)
+@@ -807,7 +807,7 @@ sprom_read_pci(struct si_pub *sih, u8 __iomem *sprom, uint wordoff,
+ 		err = -EIO;
+ 	else
+ 		/* now correct the endianness of the byte array */
+-		ltoh16_buf(buf, nbytes);
++		le16_to_cpu_buf(buf, nbytes);
+ 
+ 	return err;
+ }
+@@ -837,13 +837,13 @@ static int otp_read_pci(struct si_pub *sih, u16 *buf, uint bufsz)
+ 		return -ENODATA;
+ 
+ 	/* fixup the endianness so crc8 will pass */
+-	htol16_buf(buf, bufsz);
++	cpu_to_le16_buf(buf, bufsz);
+ 	if (crc8(brcms_srom_crc8_table, (u8 *) buf, SROM4_WORDS * 2,
+ 		 CRC8_INIT_VALUE) != CRC8_GOOD_VALUE(brcms_srom_crc8_table))
+ 		err = -EIO;
+ 
+ 	/* now correct the endianness of the byte array */
+-	ltoh16_buf(buf, bufsz);
++	le16_to_cpu_buf(buf, bufsz);
+ 
+ 	return err;
+ }
+-- 
+1.7.4.1
 
 
