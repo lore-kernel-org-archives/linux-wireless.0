@@ -1,73 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:39806 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754141Ab1JKJ4v (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:40208 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751608Ab1JVT5T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 05:56:51 -0400
-Received: by wyg34 with SMTP id 34so6803972wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 02:56:50 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: reconfigure rate policies on set_bitrate_mask
-Date: Tue, 11 Oct 2011 11:57:39 +0200
-Message-Id: <1318327059-14158-1-git-send-email-eliad@wizery.com> (sfid-20111011_115653_363459_55F75500)
+	Sat, 22 Oct 2011 15:57:19 -0400
+Received: by bkbzt19 with SMTP id zt19so6314189bkb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Oct 2011 12:57:18 -0700 (PDT)
+From: Guy Eilam <guy@wizery.com>
+To: coelho@ti.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 1/2] wl12xx: configure the probe response offloading support
+Date: Sat, 22 Oct 2011 21:55:05 +0200
+Message-Id: <1319313305-28847-1-git-send-email-guy@wizery.com> (sfid-20111022_215726_174118_1A9FA7EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rate policies are configured only after association,
-resulting in auth req being sent in wrong rates.
+Configure the probe response offload wiphy struct with
+the relevant protocols supported currently by the driver.
 
-Reconfigure rate policies on bitrate mask change.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Guy Eilam <guy@wizery.com>
 ---
- drivers/net/wireless/wl12xx/main.c |   23 +++++++++++++++++++++--
- 1 files changed, 21 insertions(+), 2 deletions(-)
+v2:
+now using the wiphy struct instead of a function and the conf_drv_settings
+
+ drivers/net/wireless/wl12xx/main.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 2037208..d2b13ca 100644
+index f76be5a..833f3e7 100644
 --- a/drivers/net/wireless/wl12xx/main.c
 +++ b/drivers/net/wireless/wl12xx/main.c
-@@ -4330,7 +4330,7 @@ static int wl12xx_set_bitrate_mask(struct ieee80211_hw *hw,
- {
- 	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
- 	struct wl1271 *wl = hw->priv;
--	int i;
-+	int i, ret = 0;
+@@ -4965,6 +4965,12 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
  
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 set_bitrate_mask 0x%x 0x%x",
- 		mask->control[NL80211_BAND_2GHZ].legacy,
-@@ -4343,9 +4343,28 @@ static int wl12xx_set_bitrate_mask(struct ieee80211_hw *hw,
- 			wl1271_tx_enabled_rates_get(wl,
- 						    mask->control[i].legacy,
- 						    i);
-+
-+	if (unlikely(wl->state == WL1271_STATE_OFF))
-+		goto out;
-+
-+	if (wlvif->bss_type == BSS_TYPE_STA_BSS &&
-+	    !test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags)) {
-+
-+		ret = wl1271_ps_elp_wakeup(wl);
-+		if (ret < 0)
-+			goto out;
-+
-+		wl1271_set_band_rate(wl, wlvif);
-+		wlvif->basic_rate =
-+			wl1271_tx_min_rate_get(wl, wlvif->basic_rate_set);
-+		ret = wl1271_acx_sta_rate_policies(wl, wlvif);
-+
-+		wl1271_ps_elp_sleep(wl);
-+	}
-+out:
- 	mutex_unlock(&wl->mutex);
+ 	wl->hw->wiphy->reg_notifier = wl1271_reg_notify;
  
--	return 0;
-+	return ret;
- }
++	wl->hw->wiphy->flags |= WIPHY_FLAG_SUPPORT_PROBE_RESP_OFFLOAD;
++	wl->hw->wiphy->probe_resp_offload =
++		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WSC |
++		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WSC2 |
++		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P;
++
+ 	SET_IEEE80211_DEV(wl->hw, wl->dev);
  
- static void wl12xx_op_channel_switch(struct ieee80211_hw *hw,
+ 	wl->hw->sta_data_size = sizeof(struct wl1271_station);
 -- 
-1.7.6.401.g6a319
+1.7.4.1
 
