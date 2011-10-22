@@ -1,64 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:65356 "EHLO
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:39426 "EHLO
 	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752571Ab1JKLPk (ORCPT
+	with ESMTP id S1754003Ab1JVNQc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 07:15:40 -0400
-Received: by bkbzt4 with SMTP id zt4so9641912bkb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 04:15:39 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] iw: fix HT PHY BSS Membership selector value encoding
-Date: Tue, 11 Oct 2011 13:15:25 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201110111315.25405.chunkeey@googlemail.com> (sfid-20111011_131543_574134_A819F2FB)
+	Sat, 22 Oct 2011 09:16:32 -0400
+Received: by bkbzt19 with SMTP id zt19so5989302bkb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Oct 2011 06:16:30 -0700 (PDT)
+From: Guy Eilam <guy@wizery.com>
+To: coelho@ti.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] wl12xx: configure the probe response offloading support
+Date: Sat, 22 Oct 2011 15:14:38 +0200
+Message-Id: <1319289279-21950-1-git-send-email-guy@wizery.com> (sfid-20111022_151635_228491_9E185E1E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IEEE 802.11n 7.3.2.2 extended the supported rate IE to
-support a special encoding for HT rate support.
+Configure and respond to a probe response offload query with
+the relevant protocols supported currently by the driver.
 
-iw needs to be updated in order to recognize
-the magic value and parse it accordingly.
-
-e.g.:
-
-> Extended supported rates: 63.5* 
-
-now becomes:
-
-> Extended supported rates: HT* 
-
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Guy Eilam <guy@wizery.com>
 ---
-diff --git a/scan.c b/scan.c
-index d083591..2220f26 100644
---- a/scan.c
-+++ b/scan.c
-@@ -158,6 +158,8 @@ static void print_ssid(const uint8_t type, uint8_t len, const uint8_t *data)
- 	printf("\n");
+ drivers/net/wireless/wl12xx/conf.h |    2 ++
+ drivers/net/wireless/wl12xx/main.c |   15 +++++++++++++++
+ 2 files changed, 17 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index 04bb8fb..714f9d4 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -1264,6 +1264,8 @@ struct conf_drv_settings {
+ 	struct conf_rate_policy_settings rate;
+ 	struct conf_hangover_settings hangover;
+ 	u8 hci_io_ds;
++	/* a bitmap of supported protocols for probe response offloading */
++	u32 probe_resp_offload;
+ };
+ 
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index f76be5a..0a7d020 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -373,6 +373,10 @@ static struct conf_drv_settings default_conf = {
+ 		.increase_time              = 1,
+ 		.window_size                = 16,
+ 	},
++	.probe_resp_offload =
++		BIT(NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS) |
++		BIT(NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2) |
++		BIT(NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P),
+ };
+ 
+ static char *fwlog_param;
+@@ -4081,6 +4085,16 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
+ 	return 0;
  }
  
-+#define BSS_MEMBERSHIP_SELECTOR_HT_PHY 127
++static int wl1271_op_get_probe_resp_offload(struct ieee80211_hw *hw,
++				u32 *supp_protocols)
++{
++	struct wl1271 *wl = hw->priv;
 +
- static void print_supprates(const uint8_t type, uint8_t len, const uint8_t *data)
- {
- 	int i;
-@@ -166,7 +168,13 @@ static void print_supprates(const uint8_t type, uint8_t len, const uint8_t *data
++	*supp_protocols = wl->conf.probe_resp_offload;
++
++	return 0;
++}
++
+ static int wl1271_allocate_sta(struct wl1271 *wl,
+ 			     struct wl12xx_vif *wlvif,
+ 			     struct ieee80211_sta *sta)
+@@ -4666,6 +4680,7 @@ static const struct ieee80211_ops wl1271_ops = {
+ 	.tx_frames_pending = wl1271_tx_frames_pending,
+ 	.set_bitrate_mask = wl12xx_set_bitrate_mask,
+ 	.channel_switch = wl12xx_op_channel_switch,
++	.get_probe_resp_offload = wl1271_op_get_probe_resp_offload,
+ 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
+ };
  
- 	for (i = 0; i < len; i++) {
- 		int r = data[i] & 0x7f;
--		printf("%d.%d%s ", r/2, 5*(r&1), data[i] & 0x80 ? "*":"");
-+
-+		if (r == BSS_MEMBERSHIP_SELECTOR_HT_PHY)
-+			printf("HT");
-+		else
-+			printf("%d.%d", r/2, 5*(r&1));
-+
-+		printf("%s ", data[i] & 0x80 ? "*" : "");
- 	}
- 	printf("\n");
- }
+-- 
+1.7.4.1
+
