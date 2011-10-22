@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37929 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:41665 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755073Ab1J1IJc (ORCPT
+	with ESMTP id S1751608Ab1JVUAg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 04:09:32 -0400
-Subject: Re: [wireless-next PATCH 2/5] wifi: Support disabling ht40.
+	Sat, 22 Oct 2011 16:00:36 -0400
+Subject: Re: [PATCH v2 1/3] nl80211: Add probe response offload attribute
 From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
+To: Guy Eilam <guy@wizery.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1319778680-11405-2-git-send-email-greearb@candelatech.com> (sfid-20111028_071139_530762_135DB41A)
-References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
-	 <1319778680-11405-2-git-send-email-greearb@candelatech.com>
-	 (sfid-20111028_071139_530762_135DB41A)
+In-Reply-To: <1319313081-28722-1-git-send-email-guy@wizery.com> (sfid-20111022_215339_003667_2685C94A)
+References: <1319313081-28722-1-git-send-email-guy@wizery.com>
+	 (sfid-20111022_215339_003667_2685C94A)
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 28 Oct 2011 10:09:30 +0200
-Message-ID: <1319789370.3914.11.camel@jlt3.sipsolutions.net> (sfid-20111028_100936_714241_254914EB)
+Date: Sat, 22 Oct 2011 22:00:32 +0200
+Message-ID: <1319313632.24918.0.camel@jlt3.sipsolutions.net> (sfid-20111022_220040_852878_C13BA571)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-10-27 at 22:11 -0700, greearb@candelatech.com wrote:
+On Sat, 2011-10-22 at 21:51 +0200, Guy Eilam wrote:
 
->  struct vif_params {
->  	int use_4addr;
->  	int disable_11n;
-> +	int disable_ht40;
->  };
+> +/**
+> + * enum nl80211_probe_resp_offload_support_attr - definition of optional
+> + *	supported protocols for probe response offloading by the driver/firmware
+> + *	to be used with the %NL80211_ATTR_PROBE_RESP_OFFLOAD_SUPPORT
+> + *	attribute. Each enum value represents a bit in the bitmap of
+> + *	supported protocols.
 
-All the comments on patch 1 apply -- per connection parameter,
-capability flag etc.
+Oops I should have pointed that out before -- that's not valid
+kernel-doc.
 
-I do wonder if it would be worthwhile to make it a u32 "connection
-flags" or so instead of defining them separately.
+Also, maybe this should say how it'll be supported (i.e. by passing the
+frame up for userspace to reply to, I think?)
 
 johannes
 
