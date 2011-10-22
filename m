@@ -1,27 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:56222 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S933789Ab1J2TCs (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:36881 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751325Ab1JVRmV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Oct 2011 15:02:48 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 096BA5401F9
-	for <linux-wireless@vger.kernel.org>; Sat, 29 Oct 2011 15:22:17 -0400 (EDT)
-Subject: Compat-wireless release for 2011-10-29 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20111029190246.A0A5540656@repository3.orbit-lab.org> (sfid-20111029_210256_959002_2E6692D0)
-Date: Sat, 29 Oct 2011 15:02:46 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Sat, 22 Oct 2011 13:42:21 -0400
+Received: by wwe6 with SMTP id 6so7110185wwe.1
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Oct 2011 10:42:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1319305186.3956.11.camel@jlt3.sipsolutions.net>
+References: <1319289112-21896-1-git-send-email-guy@wizery.com>
+	<1319290457.3956.3.camel@jlt3.sipsolutions.net>
+	<1319290618.3956.6.camel@jlt3.sipsolutions.net>
+	<CAA038468Y7T4BSAycqmNc0q+Ph1wSh07B57tV--O00kvDEp-wg@mail.gmail.com>
+	<1319305186.3956.11.camel@jlt3.sipsolutions.net>
+Date: Sat, 22 Oct 2011 19:42:20 +0200
+Message-ID: <CAA03845twSZjJHN-MygjLvK8VsQk+_S6qNqdM7JgZA9GS9LPWQ@mail.gmail.com> (sfid-20111022_194223_640758_2A3C0ED1)
+Subject: Re: [PATCH 1/4] nl80211: Add probe response offload attribute
+From: Guy Eilam <guy@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Oct 22, 2011 at 7:39 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sat, 2011-10-22 at 19:26 +0200, Guy Eilam wrote:
+>
+>> >> > +enum nl80211_probe_resp_offload_support_attr {
+>> >> > +   NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS,
+>> >> > +   NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2,
+>> >> > +   NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P,
+>> >> > +};
+>> >>
+>> >> I think doing = 1<<N here would be nicer to use in drivers & userspace.
+>> >
+>> > Hm, also: should we call this WPS or WSC, and do we need to distinguish
+>> > WPS and WPS2? My AP mode patch called it WSC in a different context but
+>> > I can change, we just should be consistent.
+>> >
+>> >> > + * @get_probe_resp_offload: Get probe response offload support from driver.
+>> >>
+>> >> and this seems unnecessary -- why not just put a u32 value into struct
+>> >> wiphy?
+>> >
+>> > Oh, and probably a regular WIPHY flag that indicates whether the
+>> > attribute should be added at all so that it can also be 0 but present
+>> > (presence with 0 value indicates something other than not present).
+>>
+>> When this is not supported a -EOPNOTSUPP should be returned.
+>> A 0 return means that it is supported.
+>
+> Yeah but if you add a wiphy flag and the bits into struct wiphy, then
+> you can save the function pointer which seems nicer?
 
-compat-wireless code metrics
+You're absolutely right.
+I'll send another version of the patch that will have a flag and
+bitmap in the wiphy struct.
 
-    814862 - Total upstream lines of code being pulled
-      2431 - backport code changes
-      2113 - backport code additions
-       318 - backport code deletions
-      8588 - backport from compat module
-     11019 - total backport code
-    1.3523 - % of code consists of backport work
+>
+> johannes
+>
+>
+
+Guy.
