@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52862 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45836 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752712Ab1JGM5T (ORCPT
+	with ESMTP id S1753429Ab1JVNaH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 08:57:19 -0400
-Message-Id: <20111007125640.149058520@sipsolutions.net> (sfid-20111007_145722_656487_FF477BB9)
-Date: Fri, 07 Oct 2011 14:55:39 +0200
+	Sat, 22 Oct 2011 09:30:07 -0400
+Subject: Re: Setting negative value in dBm for power output (txpower)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] mac80211: dont adjust truesize
-References: <20111007125538.433891720@sipsolutions.net>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Patryk =?UTF-8?Q?=C5=BB=C3=B3=C5=82towski?=
+	<patryk.zoltowski@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <CA+XFjiq6EJNczcotbk3R5YQXa-iY_2FY8KK4UN69XxSTm8LtoQ@mail.gmail.com> (sfid-20111022_000241_407613_8304DCDA)
+References: <CAJ5hJZSm4P5Vpzmi6yfF3vy2XAMKH9kE-Kv=FfDLVX9DwQC4Aw@mail.gmail.com>
+	 <CA+XFjiq6EJNczcotbk3R5YQXa-iY_2FY8KK4UN69XxSTm8LtoQ@mail.gmail.com>
+	 (sfid-20111022_000241_407613_8304DCDA)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 22 Oct 2011 15:30:04 +0200
+Message-ID: <1319290204.3956.0.camel@jlt3.sipsolutions.net> (sfid-20111022_153011_517590_5B552601)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sat, 2011-10-22 at 00:02 +0200, Gábor Stefanik wrote:
+> 2011/10/21 Patryk Żółtowski <patryk.zoltowski@gmail.com>:
+> > I'm doing a research and I'm wondering if it's possible to hack
+> > wireless drivers to allow setting  txpower to smaller value than 1mW
+> > (e.g. 0.1mW = -10dBM, or even 0.01mW). I've checked source code and in
+> > net/mac80211/cfg.c there is the following check:
+> >
+> >  if (mbm < 0 || (mbm % 100))
+> >                     return -EOPNOTSUPP;
+> 
+> The "mbm % 100" part is even weirder; why do we even use millibels if
+> we only allow whole-decibel values?
 
-There's no need to adjust truesize.
+This is really just historic -- nobody has so far cared about TX power
+enough to clean up the APIs for it etc. The distinction between
+"automatic", "fixed" and "limited" (auto <= some value) is also not
+really done very well here.
 
-The history of this was that we always ran into
-skb_truesize_bug (via skb_truesize_check) which
-has since been removed in commit 92a0acce186cd.
-skb_truesize_check() checked that truesize  was
-bigger or equal to the actual allocation, which
-would trigger in mac80211 due to header adding.
-The check no longer exists and we shouldn't be
-messing with the truesize anwyay.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c |    3 ---
- 1 file changed, 3 deletions(-)
-
---- a/net/mac80211/tx.c	2011-10-07 14:50:23.000000000 +0200
-+++ b/net/mac80211/tx.c	2011-10-07 14:50:27.000000000 +0200
-@@ -1402,9 +1402,6 @@ static int ieee80211_skb_resize(struct i
- 		return -ENOMEM;
- 	}
- 
--	/* update truesize too */
--	skb->truesize += head_need + tail_need;
--
- 	return 0;
- }
- 
-
+johannes
 
