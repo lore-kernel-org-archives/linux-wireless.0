@@ -1,30 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2343 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932166Ab1J1LWK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48189 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753841Ab1JVNhA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 07:22:10 -0400
-Message-ID: <4EAA905B.8080705@qca.qualcomm.com> (sfid-20111028_132218_916824_CB3193DF)
-Date: Fri, 28 Oct 2011 14:22:03 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 01/10] ath6kl: don't use cfg80211_scan_request after	cfg80211_scan_done()
-References: <20111027154746.23519.39680.stgit@localhost6.localdomain6>
-In-Reply-To: <20111027154746.23519.39680.stgit@localhost6.localdomain6>
+	Sat, 22 Oct 2011 09:37:00 -0400
+Subject: Re: [PATCH 1/4] nl80211: Add probe response offload attribute
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Guy Eilam <guy@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1319290457.3956.3.camel@jlt3.sipsolutions.net> (sfid-20111022_153423_374925_A537397F)
+References: <1319289112-21896-1-git-send-email-guy@wizery.com>
+	 (sfid-20111022_151410_304888_4D10E8E6)  <1319290457.3956.3.camel@jlt3.sipsolutions.net>
+	 (sfid-20111022_153423_374925_A537397F)
 Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 22 Oct 2011 15:36:58 +0200
+Message-ID: <1319290618.3956.6.camel@jlt3.sipsolutions.net> (sfid-20111022_153702_514653_A76D066A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/27/2011 06:47 PM, Kalle Valo wrote:
-> Use of cfg80211_scan_request is not valid after calling cfg80211_scan_done()
-> but ath6kl_cfg80211_scan_complete_event() was doing exactly that. Change
-> the function to call cfg80211_scan_done() last.
+On Sat, 2011-10-22 at 15:34 +0200, Johannes Berg wrote:
+> On Sat, 2011-10-22 at 15:11 +0200, Guy Eilam wrote:
 > 
-> This was found during code review, I didn't see any visible problems
-> due to this bug.
+> > +enum nl80211_probe_resp_offload_support_attr {
+> > +	NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS,
+> > +	NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2,
+> > +	NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P,
+> > +};
+> 
+> I think doing = 1<<N here would be nicer to use in drivers & userspace.
 
-All 10 applied.
+Hm, also: should we call this WPS or WSC, and do we need to distinguish
+WPS and WPS2? My AP mode patch called it WSC in a different context but
+I can change, we just should be consistent.
 
-Kalle
+> > + * @get_probe_resp_offload: Get probe response offload support from driver.
+> 
+> and this seems unnecessary -- why not just put a u32 value into struct
+> wiphy?
+
+Oh, and probably a regular WIPHY flag that indicates whether the
+attribute should be added at all so that it can also be 0 but present
+(presence with 0 value indicates something other than not present).
+
+johannes
+
