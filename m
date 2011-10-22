@@ -1,67 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:53584 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752061Ab1JZVri (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:36481 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751958Ab1JVBot (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 17:47:38 -0400
-Received: by qabj40 with SMTP id j40so1925819qab.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 14:47:37 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
-	johannes@sipsolutions.net, linville@tuxdriver.com
-Subject: =?UTF-8?q?=5BPATCH=200/5=5D=20v3=20HT=20support=20for=20mesh?=
-Date: Wed, 26 Oct 2011 14:47:24 -0700
-Message-Id: <1319665649-21784-1-git-send-email-thomas@cozybit.com> (sfid-20111026_234752_491390_04061A7C)
+	Fri, 21 Oct 2011 21:44:49 -0400
+Received: by ggnb1 with SMTP id b1so4375712ggn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2011 18:44:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAJ5hJZSm4P5Vpzmi6yfF3vy2XAMKH9kE-Kv=FfDLVX9DwQC4Aw@mail.gmail.com>
+References: <CAJ5hJZSm4P5Vpzmi6yfF3vy2XAMKH9kE-Kv=FfDLVX9DwQC4Aw@mail.gmail.com>
+Date: Sat, 22 Oct 2011 09:44:49 +0800
+Message-ID: <CAJ-Vmo=ji4VeKfYptt0S=g6LKeFqX-V0J_tRDWX-a6dR6B6O_g@mail.gmail.com> (sfid-20111022_034457_768131_9796B17A)
+Subject: Re: Setting negative value in dBm for power output (txpower)
+From: Adrian Chadd <adrian@freebsd.org>
+To: =?ISO-8859-2?Q?Patryk_=AF=F3=B3towski?=
+	<patryk.zoltowski@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds basic HT support for mesh nodes. We avoid the question of
-how to negotiate channel types, by simply disallowing peering with mismatched
-HT modes.
+Hi,
 
-Many thanks to Luis Rodriguez for his assistance, and Ashok Nagarajan for
-co-authoring this patchset.
+The AR9280 and later atheros NICs support a minimum TX power of -5 dBm.
+It depends on what the actual NIC manufacturer does (if they glue an
+amplifier on the end, then all bets are off) but the chipsets are
+capable of it.
 
-v2: 
-	Remove outdated BA comments (Christian)
+It's also possible someone's glued attenuators to pre-AR9280 series
+NICs to achieve the same output. Or you could do the same.
+But at that point you're not communicating < 0 dBm to the NIC, and I
+don't think cfg80211 has the idea of a TX power offset (ie, that the
+NIC output is +/- x dBm different to the programmed value.)
 
-v3:
-	Guido R. Hiertz was kind enough to point out:
+HTH,
 
-	"IEEE 802.11s-2011 states that mesh STAs use the default EDCA parameter
-	set only. Clause 9.1.3.1 in 802.11s-2011 reads: "When communicating
-	within a BSS, the EDCA parameters used are […] from the default values
-	for the parameters […] when the STA is a mesh STA." Thus, all mesh STAs
-	use the same (default) EDCA parameter set."
 
-	So resubmitting without the WMM patches.
-
-Alexander Simon (1):
-  mac80211: Add HT helper functions
-
-Thomas Pedersen (4):
-  mac80211: comment allocation of mesh frames
-  mac80211: add HT IEs to mesh frames
-  mac80211: set HT capabilities for mesh peer
-  mac80211: allow frame aggregation for mesh
-
- net/mac80211/agg-rx.c      |    3 +-
- net/mac80211/agg-tx.c      |   10 +---
- net/mac80211/ht.c          |    3 +-
- net/mac80211/ieee80211_i.h |    8 +++
- net/mac80211/mesh.c        |   70 +++++++++++++++++++++++---
- net/mac80211/mesh.h        |    4 ++
- net/mac80211/mesh_hwmp.c   |   36 +++++++-------
- net/mac80211/mesh_plink.c  |   50 ++++++++++++++-----
- net/mac80211/rx.c          |    7 +--
- net/mac80211/tx.c          |   23 ++++++--
- net/mac80211/util.c        |  116 +++++++++++++++++++++++++++++++++++++------
- net/mac80211/work.c        |   29 +-----------
- 12 files changed, 252 insertions(+), 107 deletions(-)
-
--- 
-1.7.5.4
-
+Adrian
