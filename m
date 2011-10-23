@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:60270 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753388Ab1J0IWs (ORCPT
+Received: from smtp-out.google.com ([74.125.121.67]:5102 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752099Ab1JWV0b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Oct 2011 04:22:48 -0400
-Message-ID: <4EA914D2.9090601@qca.qualcomm.com> (sfid-20111027_102253_689202_984DCD48)
-Date: Thu, 27 Oct 2011 11:22:42 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Sun, 23 Oct 2011 17:26:31 -0400
+Received: from hpaq2.eem.corp.google.com (hpaq2.eem.corp.google.com [172.25.149.2])
+	by smtp-out.google.com with ESMTP id p9NLQS0p022792
+	for <linux-wireless@vger.kernel.org>; Sun, 23 Oct 2011 14:26:28 -0700
+Received: from pzk4 (pzk4.prod.google.com [10.243.19.132])
+	by hpaq2.eem.corp.google.com with ESMTP id p9NLQ7T0016307
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Sun, 23 Oct 2011 14:26:27 -0700
+Received: by pzk4 with SMTP id 4so19503860pzk.10
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Oct 2011 14:26:27 -0700 (PDT)
+Date: Sun, 23 Oct 2011 14:26:25 -0700 (PDT)
+From: David Rientjes <rientjes@google.com>
+To: Norbert Preining <preining@logic.at>
+cc: wwguy <wey-yi.w.guy@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+Subject: Re: iwlagn is getting very shaky
+In-Reply-To: <20111021012442.GB26758@gamma.logic.tuwien.ac.at>
+Message-ID: <alpine.DEB.2.00.1110231424500.17218@chino.kir.corp.google.com> (sfid-20111023_232645_570336_E5CB801A)
+References: <20111019124931.GC3963@gamma.logic.tuwien.ac.at> <1319038282.25023.21.camel@wwguy-ubuntu> <20111019060108.GA11588@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com> <20111019062517.GC11588@gamma.logic.tuwien.ac.at>
+ <1319003304.31823.46.camel@wwguy-huron> <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111020045927.GB23044@gamma.logic.tuwien.ac.at> <1319119852.2111.2.camel@wwguy-ubuntu>
+ <20111021012442.GB26758@gamma.logic.tuwien.ac.at>
 MIME-Version: 1.0
-To: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath6kl: Implement support for power parameter control
- from userspace
-References: <1319597561-20454-1-git-send-email-rpanjwan@qca.qualcomm.com> <1319597561-20454-2-git-send-email-rpanjwan@qca.qualcomm.com>
-In-Reply-To: <1319597561-20454-2-git-send-email-rpanjwan@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/26/2011 05:52 AM, Rishi Panjwani wrote:
-> In order to allow user space based control of power parameters, we use
-> available debugfs infrastructure. With these features user can control
-> power consumption by adjusting various sleep/wake up related parameters.
-> The feature has been added for testing purposes. All 5 parameters are
-> mandatory in correct order. They have to be written to the power_params
-> file. These are:
-> 
-> 1) idle_period
-> 2) no_of_pspoll
-> 3) dtim_policy
-> 4) tx_wakeup_policy
-> 5) no_tx_to_wakeup
-> 
-> Example:
-> 
-> echo "200 1 0 1 1" > power_params
+On Fri, 21 Oct 2011, Norbert Preining wrote:
 
-Applied, thanks. Again I added a vif index to the wmi call, please check
-that.
+> > Great, this is just a test patch, we will figure out what is the correct
+> > way to handle this and fix the issue for good :-)
+> 
+> Thanks. If you need more testing just let me know.
+> 
 
-Kalle
+It'd be interesting to see if this problem still exists in linux-next 
+since some wireless changes went into that recently.  Please try the tree 
+at git://github.com/sfrothwell/linux-next.git
