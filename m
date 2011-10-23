@@ -1,340 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:50875 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754948Ab1JOAif (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:64217 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057Ab1JWKXa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 20:38:35 -0400
-From: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rishi Panjwani <rpanjwan@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: Implement support for QOS-enable and QOS-disable from userspace
-Date: Fri, 14 Oct 2011 17:38:06 -0700
-Message-ID: <1318639086-28236-2-git-send-email-rpanjwan@qca.qualcomm.com> (sfid-20111015_023839_121356_B319F82D)
-In-Reply-To: <1318639086-28236-1-git-send-email-rpanjwan@qca.qualcomm.com>
-References: <1318639086-28236-1-git-send-email-rpanjwan@qca.qualcomm.com>
+	Sun, 23 Oct 2011 06:23:30 -0400
+Received: by wyg36 with SMTP id 36so5278941wyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Oct 2011 03:23:29 -0700 (PDT)
+Message-ID: <4EA3EB1D.9060001@gmail.com> (sfid-20111023_125617_140105_9A51156D)
+Date: Sun, 23 Oct 2011 12:23:25 +0200
+From: =?ISO-8859-1?Q?David_T=E4ht?= <dave.taht@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: bloat-devel@lists.bufferbloat.net,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [RFC] ipv6 over wireless classification issue?
+Content-Type: multipart/mixed;
+ boundary="------------090600010605090908040405"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to allow user space based QOS control we use the available debugfs
-infrastructure. With this feature, user can make changes to qos parameters,
-thereby allowing creation and deletion of user defined priority streams and
-features like uapsd. This feature has been added for testing purposes.
+This is a multi-part message in MIME format.
+--------------090600010605090908040405
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 8bit
 
-All 21 parameters for the create_qos command are mandatory in the correct
-order. They have to be written to the create_qos file in
-the ath6kl debug directory. These parameters(in order) are:
-1)user priority
-2)direction
-3)traffic class
-4)traffic type
-5)voice PS capability
-6)min service intvl
-7)max service intvl
-8)inactivity intvl
-9)suspension intvl
-10)serv start time
-11)tsid
-12)nominal msdu
-13)max msdu
-14)min data rate
-15)mean data rate
-16)peak data rate
-17)max burst size
-18)delay bound
-19)min phy rate
-20)surplus bw allowance
-21)medium time
-For eg :
-echo "6 2 3 1 1 9999999 9999999 9999999 7777777 0 6 45000 200 56789000
-56789000 5678900 0 0 9999999 20000 0" > create_qos
+After slowly working my way down from verifying the apps to ECN handling 
+and up from the drivers... I've been (also) slowly working on getting 
+wireless qos/aqms to work better, on ipv6. (I need to get to having a 
+spectrum analyzer or better instrumentation...) I was puzzled about dscp 
+marked ipv6 packets responding differently.
 
-delete_qos requires 2 parameters:
-1)traffic class
-2)tsid
-For eg :
-echo "3 1" > delete_qos
+Perhaps this is it. I'm not making this a commit yet (untested code!)
 
-Signed-off-by: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/debug.c |  250 +++++++++++++++++++++++++++++--
- 1 files changed, 236 insertions(+), 14 deletions(-)
+d@cruithne:~/git/linux-2.6/include$ git diff
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index be75a3a..a11c5f2 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -658,6 +658,12 @@ unsigned int cfg80211_classify8021d(struct sk_buff 
+*skb)
+         case htons(ETH_P_IP):
+                 dscp = ip_hdr(skb)->tos & 0xfc;
+                 break;
++       case htons(ETH_P_IPV6):
++               dscp = ipv6_get_dsfield(ipv6_hdr(skb)) & 0xfc;
++               break;
++       case htons(ETH_P_ARP):
++               dscp = 4<<5;
++               break;
+         default:
+                 return 0;
+         }
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index dd37785..383a3c7 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -1,18 +1,18 @@
- /*
-- * Copyright (c) 2004-2011 Atheros Communications Inc.
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
-+* Copyright (c) 2004-2011 Atheros Communications Inc.
-+*
-+* Permission to use, copy, modify, and/or distribute this software for any
-+* purpose with or without fee is hereby granted, provided that the above
-+* copyright notice and this permission notice appear in all copies.
-+*
-+* THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+* WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+* MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+* ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+* WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+* ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+* OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+*/
- 
- #include "core.h"
- 
-@@ -1240,6 +1240,222 @@ static const struct file_operations fops_disconnect_timeout = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t ath6kl_create_qos_write(struct file *file,
-+						const char __user *user_buf,
-+						size_t count, loff_t *ppos)
-+{
-+
-+	struct ath6kl *ar = file->private_data;
-+	char buf[100];
-+	ssize_t len;
-+	char *sptr, *token;
-+	struct wmi_create_pstream_cmd pstream;
-+	u32 val32;
-+	u16 val16;
-+
-+	len = min(count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, len))
-+		return -EFAULT;
-+	buf[len] = '\0';
-+	sptr = buf;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &pstream.user_pri))
-+		return -EINVAL;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &pstream.traffic_direc))
-+		return -EINVAL;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &pstream.traffic_class))
-+		return -EINVAL;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &pstream.traffic_type))
-+		return -EINVAL;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &pstream.voice_psc_cap))
-+		return -EINVAL;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.min_service_int = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.max_service_int = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.inactivity_int = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.suspension_int = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.service_start_time = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &pstream.tsid))
-+		return -EINVAL;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou16(token, 0, &val16))
-+		return -EINVAL;
-+	pstream.nominal_msdu = cpu_to_le16(val16);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou16(token, 0, &val16))
-+		return -EINVAL;
-+	pstream.max_msdu = cpu_to_le16(val16);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.min_data_rate = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.mean_data_rate = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.peak_data_rate = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.max_burst_size = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.delay_bound = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.min_phy_rate = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.sba = cpu_to_le32(val32);
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou32(token, 0, &val32))
-+		return -EINVAL;
-+	pstream.medium_time = cpu_to_le32(val32);
-+
-+	ath6kl_wmi_create_pstream_cmd(ar->wmi, &pstream);
-+
-+	return count;
-+}
-+
-+
-+static const struct file_operations fops_create_qos = {
-+	.write = ath6kl_create_qos_write,
-+	.open = ath6kl_debugfs_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
-+static ssize_t ath6kl_delete_qos_write(struct file *file,
-+				const char __user *user_buf,
-+				size_t count, loff_t *ppos)
-+{
-+
-+	struct ath6kl *ar = file->private_data;
-+	char buf[100];
-+	ssize_t len;
-+	char *sptr, *token;
-+	u8 traffic_class;
-+	u8 tsid;
-+
-+	len = min(count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, len))
-+		return -EFAULT;
-+	buf[len] = '\0';
-+	sptr = buf;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &traffic_class))
-+		return -EINVAL;
-+
-+	token = strsep(&sptr, " ");
-+	if (!token)
-+		return -EINVAL;
-+	if (kstrtou8(token, 0, &tsid))
-+		return -EINVAL;
-+
-+	ath6kl_wmi_delete_pstream_cmd(ar->wmi, traffic_class, tsid);
-+
-+	return count;
-+}
-+
-+
-+static const struct file_operations fops_delete_qos = {
-+	.write = ath6kl_delete_qos_write,
-+	.open = ath6kl_debugfs_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- int ath6kl_debug_init(struct ath6kl *ar)
- {
- 	ar->debug.fwlog_buf.buf = vmalloc(ATH6KL_FWLOG_SIZE);
-@@ -1313,6 +1529,12 @@ int ath6kl_debug_init(struct ath6kl *ar)
- 	debugfs_create_file("disconnect_timeout", S_IRUSR | S_IWUSR,
- 			    ar->debugfs_phy, ar, &fops_disconnect_timeout);
- 
-+	debugfs_create_file("create_qos", S_IWUSR, ar->debugfs_phy, ar,
-+				&fops_create_qos);
-+
-+	debugfs_create_file("delete_qos", S_IWUSR, ar->debugfs_phy, ar,
-+				&fops_delete_qos);
-+
- 	return 0;
- }
- 
+
+A) Elsewhere in the stack ipv4_get_dsfield is the equivalent of the 
+ip_hdr(skb)->tos & 0xfc line
+B) It appears ipv6_get_dsfield is safe to call from non-ipv6 enabled 
+systems
+
+So my thought would be to also harmonize this with ipv4_get_dsfield...
+
+C) And I doubt that slamming arp packets into the VI queue would be 
+acceptable yet (as per the ANTs discussion of a few months back, ARP, 
+ND, RA, RS, DHCP, and possibly DNS, ssh (marked interactive), etc might 
+do better in the VI queue)
+(however this part of the patch is not relevant to the IPv6 issue, it's 
+just the patch I wanted to try)
+
+D) Lastly, Later on in this function only dscp's first 3 bits (CS0 - 
+CS7) are used to classify packets into the queues, where a mildly saner 
+version would use a lookup table to also do sane things with the 
+'immediate' bit, perhaps settable via userspace from via sysfs, sysctl, 
+or proc.
+
 -- 
-1.7.0.4
+Dave Täht
 
+
+--------------090600010605090908040405
+Content-Type: text/x-vcard; charset=utf-8;
+ name="dave_taht.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="dave_taht.vcf"
+
+begin:vcard
+fn;quoted-printable:Dave T=C3=A4ht
+n;quoted-printable:T=C3=A4ht;Dave
+email;internet:dave.taht@gmail.com
+tel;home:1-239-829-5608
+tel;cell:0638645374
+x-mozilla-html:FALSE
+version:2.1
+end:vcard
+
+
+--------------090600010605090908040405--
