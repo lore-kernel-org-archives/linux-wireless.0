@@ -1,44 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53894 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757279Ab1JDOAV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 10:00:21 -0400
-Date: Tue, 4 Oct 2011 15:57:59 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Stefan Zwanenburg <stefanhetzwaantje@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Subject: Re: RTL8192SE blank EFUSE readout after suspend resume cycle
-Message-ID: <20111004135757.GA6207@redhat.com> (sfid-20111004_160025_980879_553E8146)
-References: <4E8AFBCB.8070100@gmail.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:53519 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751240Ab1JWNKe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Oct 2011 09:10:34 -0400
+Received: by gyb13 with SMTP id 13so4997131gyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Oct 2011 06:10:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E8AFBCB.8070100@gmail.com>
+In-Reply-To: <1319190767.3964.8.camel@jlt3.sipsolutions.net>
+References: <CAG5dHkRULKh90W1MeR3zq+-gpeNUshrHZ0qbKXsW19PMG5enoQ@mail.gmail.com>
+	<1319190767.3964.8.camel@jlt3.sipsolutions.net>
+Date: Sun, 23 Oct 2011 17:10:33 +0400
+Message-ID: <CAG5dHkQtVC-cgEWcZOC_woLGeQ75Pkg-JmETWxVKJGdHs8qoOA@mail.gmail.com> (sfid-20111023_151043_769900_C761393B)
+Subject: Re: [RFC 1/7] mac80211: mesh power mode indication in QoS frames
+From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 04, 2011 at 02:27:55PM +0200, Stefan Zwanenburg wrote:
-> I recently discussed this with Larry Finger and Chaomin Li, but every
-> once in a while, after having resumed from suspending to RAM, my NIC
-> (10ec:8172) doesn't work anymore, even after reloading the module. Even
-> worse, after reloading the module, my NIC's name gets changed (because
-> of udev rules) as a result of the MAC address changing, which means I
-> have to temporarily reconfigure whatever I'm using to make a connection
-> (wicd in my case).
+On 21 October 2011 13:52, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2011-10-21 at 12:36 +0400, Ivan Bezyazychnyy wrote:
+>
+>> +/* mesh power save level subfield mask */
+>> +#define IEEE80211_QOS_CTL_PS_LEVEL      0x0200
+>
+> That looks like it could use a better name?
 
-You might try configure pm-utils to unload module before suspend, by
-something like this:
+Do you mean something like IEEE80211_QOS_CTL_MESH_POWER_SAVE_LEVEL?
+The first half is similar to previous constants.
 
-echo 'SUSPEND_MODULES="rtl8192se rtlwifi"' >> /etc/pm/config.d/modules.conf 
-
-Other than that, would be good to try if converting to new PM framework
-helps. It can be done quite simply, similar way like in this ath9k commit:
-
-commit f0e94b479c987abef17eb18e5c8e0ed178d00cd4
-Author: Rafael J. Wysocki <rjw@sisk.pl>
-Date:   Sat Oct 16 00:36:17 2010 +0200
-
-    ath9k: Convert to new PCI PM framework
-
-Stanislaw 
+Thanks,
+Ivan
