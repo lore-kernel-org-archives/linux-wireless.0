@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:36027 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751972Ab1JPCtf (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:41955 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752543Ab1JWGWA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Oct 2011 22:49:35 -0400
-Received: by iaek3 with SMTP id k3so4451053iae.19
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Oct 2011 19:49:34 -0700 (PDT)
-Message-ID: <4E9A4647.60901@lwfinger.net> (sfid-20111016_044952_123803_604CFD36)
-Date: Sat, 15 Oct 2011 21:49:43 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: v4mp <gaigo88@hotmail.it>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
-References: <4E77F631.3030202@googlemail.com> <4E77F9FD.1020204@googlemail.com> <4E780309.9010601@lwfinger.net> <4E785DB3.5040109@googlemail.com> <4E7907D3.1020606@googlemail.com> <4E792994.1080809@lwfinger.net> <4E79B1D0.7090602@googlemail.com> <4E79F87F.1050402@lwfinger.net> <4E7A38D0.7070304@googlemail.com> <4E7A4310.30106@lwfinger.net> <4E7A48D1.8050009@googlemail.com> <4E7A4B03.4070006@lwfinger.net> <4E7A4B9C.5040000@googlemail.com> <4E7A4BFB.2080102@googlemail.com> <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org> <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org> <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9 xOn5hutA6q01r0yBeOXz0ivw@mail.gmail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T161652-440@post.gmane.org>
-In-Reply-To: <loom.20111015T161652-440@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 23 Oct 2011 02:22:00 -0400
+Received: by mail-bw0-f46.google.com with SMTP id zt19so6690457bkb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Oct 2011 23:22:00 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 1/2] wl12xx: leave IV calculation to HW for CCMP
+Date: Sun, 23 Oct 2011 08:21:54 +0200
+Message-Id: <1319350915-31222-1-git-send-email-arik@wizery.com> (sfid-20111023_082206_652181_7FC72D69)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/15/2011 09:22 AM, v4mp wrote:
->
->
-> i've tried also kernel 3.1-rc9 with latest compat wireless 14-10-2011 and still
-> don't work...it was recognized but no APs can be detected..the led of the alfa
-> is off..seems that it is power off..
->
-> i don't know about firmware, i see that there are .bin on lib/firmware/rtlwifi..
->   how can i update them?
+Use an appropriate mac80211 flags in CCMP keys to indicate we are
+calculating the CCMP IV in HW, but require room for the IV to be reserved
+in the skb. The space is reserved by mac80211.
 
-That depends on your distro, but please look at the output of the dmesg command 
-to see if there is an error loading the firmware.
+depends on "mac80211: support adding IV-room in the skb for CCMP keys".
 
-You also need to install rfkill and look at the output of 'rfkill list'. If you 
-have another wireless device that is being hard blocked, or if there is a soft 
-block active, then rtl8192cu cannot work.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Note that the device works on my system. There should not be a problem with the 
-driver on your device once we clean up these questions. Once the device gets the 
-proper firmware and the RF is unblocked, the LED will light.
-
-Larry
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index f76be5a..75adc76 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2992,7 +2992,7 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	case WLAN_CIPHER_SUITE_CCMP:
+ 		key_type = KEY_AES;
+ 
+-		key_conf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
++		key_conf->flags |= IEEE80211_KEY_FLAG_PUT_IV_SPACE;
+ 		tx_seq_32 = WL1271_TX_SECURITY_HI32(wlvif->tx_security_seq);
+ 		tx_seq_16 = WL1271_TX_SECURITY_LO16(wlvif->tx_security_seq);
+ 		break;
+-- 
+1.7.5.4
 
