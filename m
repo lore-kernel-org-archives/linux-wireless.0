@@ -1,52 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2269 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752671Ab1J1JKT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 05:10:19 -0400
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 28 Oct 2011 02:10:03 -0700
-Subject: RE: [RFC v2 13/12] cfg80211/mac80211: allow management TX to
- not wait for ACK
-Message-ID: <400C43189542CE41BC0A5B252FC90136BC0E37541B@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20111028_111024_273101_CF9E1946)
-References: <20111021142322.229128720@sipsolutions.net> (
- sfid-20111021_162510_209354_8FBBB6EB)
- <1319743973.32221.4.camel@jlt3.sipsolutions.net>
- <400C43189542CE41BC0A5B252FC90136BC0E3753AA@SJEXCHCCR02.corp.ad.broadcom.com>
- <1319788880.3914.4.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1319788880.3914.4.camel@jlt3.sipsolutions.net>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:57239 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755784Ab1JXMiG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Oct 2011 08:38:06 -0400
+Received: by bkbzt19 with SMTP id zt19so8140145bkb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2011 05:38:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+In-Reply-To: <20111024121559.GA4821@jm.kir.nu>
+References: <20111023194059.GA18385@jm.kir.nu> <CA+XVXfdP5VjMLaYxh6Saa+SM+cDUG+h18L0ixheQmaAo+yQX+Q@mail.gmail.com>
+ <20111024121559.GA4821@jm.kir.nu>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 24 Oct 2011 14:37:50 +0200
+Message-ID: <CA+XVXffbAHQg-9PVa3V3rnNxVqdi898JX1ex7M2ZKA1KLgV1Gw@mail.gmail.com> (sfid-20111024_143811_094103_08AC5990)
+Subject: Re: [RFC] mac80211: Fix STA supported rate configuration with dummy entry
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0N
-Cj4gU2VudDogdnJpamRhZyAyOCBva3RvYmVyIDIwMTEgMTA6MDENCj4gDQo+IE9uIEZyaSwgMjAx
-MS0xMC0yOCBhdCAwMDo0OCAtMDcwMCwgQXJlbmQgVmFuIFNwcmllbCB3cm90ZToNCj4gPiA+IFNl
-bnQ6IGRvbmRlcmRhZyAyNyBva3RvYmVyIDIwMTEgMjE6MzMNCj4gPiA+IEZyb206IEpvaGFubmVz
-IEJlcmcgPGpvaGFubmVzLmJlcmdAaW50ZWwuY29tPg0KPiA+ID4NCj4gPiA+IEZvciBwcm9iZSBy
-ZXNwb25zZXMgaXQgY2FuIGJlIHVzZWZ1bCB0byBub3Qgd2FpdCBmb3IgQUNLDQo+ID4gPiB0byBz
-YXZlIGFpcnRpbWUsIHNvIGFsbG93IHVzZXJzcGFjZSB0byByZXF1ZXN0IG5vdCB3YWl0aW5nDQo+
-ID4gPiB3aXRoIGEgbmV3IG5sODAyMTEgZmxhZy4NCj4gPiA+DQo+ID4gPiBTaW5jZSBtYWM4MDIx
-MSBuZWVkcyB0byBiZSB1cGRhdGVkIGZvciB0aGUgbmV3IGZ1bmN0aW9uDQo+ID4gPiBwcm90b3R5
-cGUgYW55d2F5IGltcGxlbWVudCBpdCByaWdodCBhd2F5IC0tIGl0J3MganVzdCBhDQo+ID4gPiBm
-ZXcgbGluZXMgb2YgY29kZS4NCj4gDQo+ID4gSSB3b3VsZCBleHBlY3QgdGhpcyB0byBhZmZlY3Qg
-dGhlIGR1cmF0aW9uIGZpZWxkIGluIHRoZQ0KPiA+IDgwMi4xMSBoZWFkZXIgdG8gaW5kaWNhdGUg
-dGhlIHNob3J0ZXIgdXNlIG9mIHRoZSBtZWRpdW0uDQo+ID4gR29pbmcgdGhyb3VnaCB5b3VyIHBh
-dGNoIEkgYW0gbm90IHN1cmUgdGhpcyBpcyBkb25lLg0KPiANCj4gSG1tbS4gWW91J3JlIHJpZ2h0
-LCBidXQgdGhhdCdzIHNvbWV0aGluZyB3ZSBhbHJlYWR5IG5lZWQgdG8gZml4IGluIG1hbnkNCj4g
-Y2FzZXMgLS0gYXMgdGhlIGR1cmF0aW9uIGZpZWxkIGlzIG92ZXJ3cml0dGVuIGJ5IG1vc3QgaGFy
-ZHdhcmUgdGhlc2UNCj4gZGF5cywgd2UgaGF2ZW4ndCBhbHdheXMgbWFpbnRhaW5lZCBpdCB2ZXJ5
-IHdlbGwuDQoNCklmIHRoZSBzdGF0aW9uIHN0aWxsIGRvZXMgdGhlIEFDSyB3ZSBzaG91bGQgbm90
-IHRvdWNoIHRoZSBkdXJhdGlvbiBmaWVsZA0KaW4gdGhpcyBjYXNlIChzZWUgbXkgcmVwbHkgdG8g
-SGVsbXV0KS4NCg0KPiBZb3VyIGRyaXZlciBzZWVtcyB0byBiZSB0aGUgZXhjZXB0aW9uIHRvIHRo
-aXMgLS0gbWF5YmUgeW91IGNhbiBsb29rDQo+IGludG8NCj4gZml4aW5nIHVwIHRoZSBkdXJhdGlv
-biBjYWxjdWxhdGlvbnM/IEFsc28gZm9yIDExbiB3aGljaCBpc24ndCB0YWtlbg0KPiBpbnRvDQo+
-IGFjY291bnQgYXQgYWxsIHRvZGF5Lg0KPiANCj4gam9oYW5uZXMNCj4gDQoNCkkgd2lsbCBzZWUg
-d2hldGhlciB3ZSBjYW4gY29udHJpYnV0ZSB0byBtYWM4MDIxMSBmb3IgdGhpcy4gQnV0IHRoZXJl
-DQphcmUgb25seSB0d28gb2YgdXMgd29ya2luZyBvbiB0aGlzIGFuZCB0aGVyZSBhcmUgc29tZSBt
-b3JlIGl0ZW1zIG9uDQpvdXIgdG9kbyBsaXN0LiBXaGVuIHdlIHdpbGwgYWRkcmVzcyBpdCB3ZSBz
-dXJlIHdpbGwgdGFrZSAxMW4gaW50bw0KYWNjb3VudC4NCg0KR3IuIEF2Uw0K
+On Mon, Oct 24, 2011 at 14:15, Jouni Malinen <j@w1.fi> wrote:
+> On Mon, Oct 24, 2011 at 01:59:45PM +0200, Arik Nemtsov wrote:
+>> Note that the sta-rates are not really required before second addition
+>> (which also sets them). Initially the STA is not authorized for direct
+>> Tx (as determined by the WLAN_STA_TDLS_PEER_AUTH bit).
+>> We don't expect direct frames during link setup.
+>
+> OK.. Though, there can still be some direct frames like TDLS Discovery
+> Response.
 
+You have a point there - this one is not related to link setup. At
+this point we really have no idea about peer supported rates (and no
+STA entry).
+
+I just tested this with hwsim and it seems to work. The rate chosen is
+the the smallest non-basic rate (haven't looked at why that happens).
+With cards that use HW rate control (like wl12xx), this will of course
+be implementation defined.
+
+>
+>> The STA is added to let us know we should drop all non-setup packets
+>> between TDLS peers currently in link setup. We could have used a
+>> different indication, but the STA entry is make the most sense here
+>> since it is automatically cleaned up when we are disconnected from the
+>> AP (as all TDLS state should be).
+>
+> When you say "drop", I hope you mean "buffer for later delivery" and
+> when you say "non-setup packets", I hope you mean "non-setup Data
+> frames" ;-).
+
+No I mean "drop". Initially a buffer was planned, but in reality the
+setup process is extremely fast. I setup iperf between two regular
+stations (about 15mb/s) and proceeded to setup TDLS. I managed to lose
+only about 3-4 frames each time.
+Of course there may be anomalies (bad link quality etc.), but IMHO for
+real-world situations the extra complexity of a buffering mechanism is
+not warranted. Also higher level protocols (like TCP) will generally
+make up for any loss.
+
+I'll change the second one to "non-setup Data frames" :)
+
+>
+>> How about this one instead (tested hwsim with it):
+>> Subject: [RFC] mac80211: init rate-control for TDLS sta when supp-rates are
+>>  known
+>>
+>> Initialize rate control algorithms only when supported rates are known
+>> for a TDLS peer sta. Direct Tx between peers is not allowed before the
+>> link is enabled. In turn, this only occurs after a change_station()
+>> call that sets supported rates.
+>
+> I guess this could be fine, too, assuming TDLS is the only use case for
+> this type of changing of STA supported rates.
+
+Currently it is - we even check this explicitly higher up in
+nl80211_set_station().
+
+Arik
