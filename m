@@ -1,57 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:47054 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751631Ab1JOMY6 (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:51255 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754163Ab1JXJQw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Oct 2011 08:24:58 -0400
-Received: by wwn22 with SMTP id 22so1798050wwn.1
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Oct 2011 05:24:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4E997A54.2080004@openwrt.org>
-References: <CAN=pzd+TcY+n90RBMU+Cpp0Bt9d_eAGgY4yffO+PSStWSzbf-Q@mail.gmail.com>
-	<4E9970A6.10305@openwrt.org>
-	<CAN=pzd+ou1DXL_d_W0dvTcYrNMfH9NjSoFUa=07fE4BYJ+N7bQ@mail.gmail.com>
-	<4E997413.8010008@openwrt.org>
-	<CAN=pzd+R42SArWR+gEgqvJ7h1_6ZnB61xyKzOo8FqNxkRhxqrQ@mail.gmail.com>
-	<4E997A54.2080004@openwrt.org>
-Date: Sat, 15 Oct 2011 16:24:57 +0400
-Message-ID: <CAN=pzdLBxCB7U1+ig+ctPJKZMgC3D2V0KHOXXZH8ZVBgi67BQg@mail.gmail.com> (sfid-20111015_142506_735869_712D09EE)
-Subject: Re: Ath9k, single antenna on ar9280
-From: Stanislav Demakov <s.demakov@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
+	Mon, 24 Oct 2011 05:16:52 -0400
+Subject: [PATCH 1/9] ath6kl: remove unused A_CACHE_LINE_PAD
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Mon, 24 Oct 2011 12:16:44 +0300
+Message-ID: <20111024091644.5004.2767.stgit@localhost6.localdomain6> (sfid-20111024_111655_179521_A3E013E3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm running Ubuntu Server 11.10 - (kernel:  Linux server
-3.0.0-12-generic x86_64)
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/common.h |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-ath9k from compat-wireless-2011-10-12 and current iw from git compiled
-with libnl1.
+diff --git a/drivers/net/wireless/ath/ath6kl/common.h b/drivers/net/wireless/ath/ath6kl/common.h
+index b92f0e5..d2efa19 100644
+--- a/drivers/net/wireless/ath/ath6kl/common.h
++++ b/drivers/net/wireless/ath/ath6kl/common.h
+@@ -23,8 +23,6 @@
+ 
+ extern int ath6kl_printk(const char *level, const char *fmt, ...);
+ 
+-#define A_CACHE_LINE_PAD            128
+-
+ /*
+  * Reflects the version of binary interface exposed by ATH6KL target
+  * firmware. Needs to be incremented by 1 for any change in the firmware
 
-The wireless chip is AR9280. (2x2 MIMO)
-
-Also
-echo 1 > /sys/kernel/debug/ieee80211/phy0/ath9k/rx_chainmask
-echo 1 > /sys/kernel/debug/ieee80211/phy0/ath9k/tx_chainmask
-is written at boot.
-
-Is something wrong above?
-
-
-
-2011/10/15 Felix Fietkau <nbd@openwrt.org>:
-> On 2011-10-15 2:13 PM, Stanislav Demakov wrote:
->>
->> Ok, I've compiled and installed iw from git. Now I have this (wlan0 is
->> down):
->>
->> sudo iw phy phy0 set antenna 1 1
->>
->> command failed: Operation not supported (-95)
->
-> No idea then. It works on all of my systems.
->
-> - Felix
->
