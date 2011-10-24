@@ -1,65 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2054 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755034Ab1JZSgJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 14:36:09 -0400
-Message-ID: <4EA8530E.1050204@broadcom.com> (sfid-20111026_203614_373268_9C267A2F)
-Date: Wed, 26 Oct 2011 20:35:58 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:51827 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754325Ab1JXJSL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Oct 2011 05:18:11 -0400
+Subject: [PATCH 9/9] ath6kl: add more boot debug messages
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 24 Oct 2011 12:18:07 +0300
+Message-ID: <20111024091807.5004.7813.stgit@localhost6.localdomain6> (sfid-20111024_111819_259422_114FA841)
+In-Reply-To: <20111024091644.5004.2767.stgit@localhost6.localdomain6>
+References: <20111024091644.5004.2767.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-To: "Piotr Karbowski" <piotr.karbowski@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-Subject: Re: brcm80211 in linux-next git.
-References: <4EA82F9A.6000709@gmail.com>
-In-Reply-To: <4EA82F9A.6000709@gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/26/2011 06:04 PM, Piotr Karbowski wrote:
-> Hi there,
-> 
-> The question is, when the brcm80211 changes from linux-next will hit 
-> normal kernel? Using compat-wireless is not quite cool, I don't like 
-> idea of building modules instead of using regular kernel one, I also 
-> tried copy drivers/net/wireless/brcm80211 to my kernel's 
-> drivers/staging/brcm80211 but after compilation and loading modules I 
-> tried to connect to my network but then my system was frozen, music 
-> stopped, everything stopped.
+Move some of the debug logs to boot level because they are more
+interesting when debugging boot issues.
 
-linux-next is a normal kernel, but with the next best/bad stuff.
-However, your 'normal' kernel will probably mean a kernel coming from
-linus (posted on kernel.org).
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/htc.c  |    8 ++++----
+ drivers/net/wireless/ath/ath6kl/sdio.c |   22 +++++++++++++---------
+ 2 files changed, 17 insertions(+), 13 deletions(-)
 
-I think compat-wireless is pretty cool. It provides the 'regular' kernel
-modules of a new kernel in an older kernel. Especially manufacturers who
-are not so eager to use the latest kernels
-Bottom line is that until kernel 3.1 the brcm80211 drivers exist in
-drivers/staging and we made a move to drivers/net/brcm80211 couple of
-weeks ago. This means that it will pop-up in 3.2 kernels. Merge window
-is now active so in about 2 weeks 3.2-rc1 will be there with
-drivers/net/wireless/brcm80211.
-
-> I wonder how I could port the brcm80211 code from linux-next to normal 
-> kernel, is there any tutorial on how should looks like the workflow when 
-> you want pull *some* code from linux-next git? I didn't find any.
-
-Not sure how familiar you are with git, but it all starts with a 'git
-clone' command. On git.kernel.org you can find the linux-next url.
-
-$ git clone
-git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
-
-et voila. You will have a linux-next folder pretty much like you would
-have when untar-ring a .tar.gz file and you can build your kernel from
-there.
-
-> Anyway, thanks for working on this driver! ;-)
-> 
-> -- Piotr.
-> 
-
-Gr. AvS
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index a971c2f..976e352 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -2499,7 +2499,7 @@ static void htc_setup_msg_bndl(struct htc_target *target)
+ 	target->msg_per_bndl_max = min(target->max_scat_entries,
+ 				       target->msg_per_bndl_max);
+ 
+-	ath6kl_dbg(ATH6KL_DBG_HTC,
++	ath6kl_dbg(ATH6KL_DBG_BOOT,
+ 		   "htc bundling allowed msg_per_bndl_max %d\n",
+ 		   target->msg_per_bndl_max);
+ 
+@@ -2509,7 +2509,7 @@ static void htc_setup_msg_bndl(struct htc_target *target)
+ 	target->max_tx_bndl_sz = min(HIF_MBOX0_EXT_WIDTH,
+ 				     target->max_xfer_szper_scatreq);
+ 
+-	ath6kl_dbg(ATH6KL_DBG_HTC, "htc max_rx_bndl_sz %d max_tx_bndl_sz %d\n",
++	ath6kl_dbg(ATH6KL_DBG_BOOT, "htc max_rx_bndl_sz %d max_tx_bndl_sz %d\n",
+ 		   target->max_rx_bndl_sz, target->max_tx_bndl_sz);
+ 
+ 	if (target->max_tx_bndl_sz)
+@@ -2563,7 +2563,7 @@ int ath6kl_htc_wait_target(struct htc_target *target)
+ 	target->tgt_creds = le16_to_cpu(rdy_msg->ver2_0_info.cred_cnt);
+ 	target->tgt_cred_sz = le16_to_cpu(rdy_msg->ver2_0_info.cred_sz);
+ 
+-	ath6kl_dbg(ATH6KL_DBG_HTC,
++	ath6kl_dbg(ATH6KL_DBG_BOOT,
+ 		   "htc target ready credits %d size %d\n",
+ 		   target->tgt_creds, target->tgt_cred_sz);
+ 
+@@ -2578,7 +2578,7 @@ int ath6kl_htc_wait_target(struct htc_target *target)
+ 		target->msg_per_bndl_max = 0;
+ 	}
+ 
+-	ath6kl_dbg(ATH6KL_DBG_HTC, "htc using protocol %s (%d)\n",
++	ath6kl_dbg(ATH6KL_DBG_BOOT, "htc using protocol %s (%d)\n",
+ 		  (target->htc_tgt_ver == HTC_VERSION_2P0) ? "2.0" : ">= 2.1",
+ 		  target->htc_tgt_ver);
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 58e31f6..b7bbe56 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -471,6 +471,8 @@ static int ath6kl_sdio_power_on(struct ath6kl_sdio *ar_sdio)
+ 	if (!ar_sdio->is_disabled)
+ 		return 0;
+ 
++	ath6kl_dbg(ATH6KL_DBG_BOOT, "sdio power on\n");
++
+ 	sdio_claim_host(func);
+ 
+ 	ret = sdio_enable_func(func);
+@@ -500,6 +502,8 @@ static int ath6kl_sdio_power_off(struct ath6kl_sdio *ar_sdio)
+ 	if (ar_sdio->is_disabled)
+ 		return 0;
+ 
++	ath6kl_dbg(ATH6KL_DBG_BOOT, "sdio power off\n");
++
+ 	/* Disable the card */
+ 	sdio_claim_host(ar_sdio->func);
+ 	ret = sdio_disable_func(ar_sdio->func);
+@@ -678,8 +682,8 @@ static int ath6kl_sdio_enable_scatter(struct ath6kl *ar)
+ 				MAX_SCATTER_REQUESTS, virt_scat);
+ 
+ 		if (!ret) {
+-			ath6kl_dbg(ATH6KL_DBG_SCATTER,
+-				   "hif-scatter enabled: max scatter req : %d entries: %d\n",
++			ath6kl_dbg(ATH6KL_DBG_BOOT,
++				   "hif-scatter enabled requests %d entries %d\n",
+ 				   MAX_SCATTER_REQUESTS,
+ 				   MAX_SCATTER_ENTRIES_PER_REQ);
+ 
+@@ -703,8 +707,8 @@ static int ath6kl_sdio_enable_scatter(struct ath6kl *ar)
+ 			return ret;
+ 		}
+ 
+-		ath6kl_dbg(ATH6KL_DBG_SCATTER,
+-			   "Vitual scatter enabled, max_scat_req:%d, entries:%d\n",
++		ath6kl_dbg(ATH6KL_DBG_BOOT,
++			   "virtual scatter enabled requests %d entries %d\n",
+ 			   ATH6KL_SCATTER_REQS, ATH6KL_SCATTER_ENTRIES_PER_REQ);
+ 
+ 		target->max_scat_entries = ATH6KL_SCATTER_ENTRIES_PER_REQ;
+@@ -778,8 +782,8 @@ static int ath6kl_sdio_probe(struct sdio_func *func,
+ 	struct ath6kl *ar;
+ 	int count;
+ 
+-	ath6kl_dbg(ATH6KL_DBG_SDIO,
+-		   "new func %d vendor 0x%x device 0x%x block 0x%x/0x%x\n",
++	ath6kl_dbg(ATH6KL_DBG_BOOT,
++		   "sdio new func %d vendor 0x%x device 0x%x block 0x%x/0x%x\n",
+ 		   func->num, func->vendor, func->device,
+ 		   func->max_blksize, func->cur_blksize);
+ 
+@@ -840,7 +844,7 @@ static int ath6kl_sdio_probe(struct sdio_func *func,
+ 			goto err_cfg80211;
+ 		}
+ 
+-		ath6kl_dbg(ATH6KL_DBG_SDIO, "4-bit async irq mode enabled\n");
++		ath6kl_dbg(ATH6KL_DBG_BOOT, "4-bit async irq mode enabled\n");
+ 	}
+ 
+ 	/* give us some time to enable, in ms */
+@@ -888,8 +892,8 @@ static void ath6kl_sdio_remove(struct sdio_func *func)
+ {
+ 	struct ath6kl_sdio *ar_sdio;
+ 
+-	ath6kl_dbg(ATH6KL_DBG_SDIO,
+-		   "removed func %d vendor 0x%x device 0x%x\n",
++	ath6kl_dbg(ATH6KL_DBG_BOOT,
++		   "sdio removed func %d vendor 0x%x device 0x%x\n",
+ 		   func->num, func->vendor, func->device);
+ 
+ 	ar_sdio = sdio_get_drvdata(func);
 
