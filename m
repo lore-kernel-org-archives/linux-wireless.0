@@ -1,65 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:40420 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754721Ab1JSPzk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Oct 2011 11:55:40 -0400
-Date: Wed, 19 Oct 2011 11:55:20 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Joerg Pommnitz <pommnitz@yahoo.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>
-Subject: Re: [ath5k-devel] Performance regression between Madwifi/net80211
- and ath5k/mac80211
-Message-ID: <20111019115520.79cfaef8@mj> (sfid-20111019_175543_563437_37F52320)
-In-Reply-To: <CAJ-VmokZibCys+9ZLg6yEbauJfbgErbezMcTZ2SjPmR9SMgQ7w@mail.gmail.com>
-References: <loom.20110621T215346-191@post.gmane.org>
- <BANLkTik0umam7S+E1oog0LTEErMz-dZamg@mail.gmail.com>
- <1308750102.64154.YahooMailRC@web161214.mail.bf1.yahoo.com>
- <1308750416.29571.10.camel@jlt3.sipsolutions.net>
- <1308753669.17439.YahooMailRC@web161208.mail.bf1.yahoo.com>
- <1308754204.29571.15.camel@jlt3.sipsolutions.net>
- <1308755270.21489.YahooMailRC@web161204.mail.bf1.yahoo.com>
- <BANLkTi=Ob1H7XdG5-21SnjkuyVF9xw+xBA@mail.gmail.com>
- <1319018802.31281.YahooMailNeo@web161205.mail.bf1.yahoo.com>
- <CAJ-VmokZibCys+9ZLg6yEbauJfbgErbezMcTZ2SjPmR9SMgQ7w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:51957 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755720Ab1JXMAE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Oct 2011 08:00:04 -0400
+Received: by bkbzt19 with SMTP id zt19so8104604bkb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2011 05:00:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20111023194059.GA18385@jm.kir.nu>
+References: <20111023194059.GA18385@jm.kir.nu>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 24 Oct 2011 13:59:45 +0200
+Message-ID: <CA+XVXfdP5VjMLaYxh6Saa+SM+cDUG+h18L0ixheQmaAo+yQX+Q@mail.gmail.com> (sfid-20111024_140009_039885_E67FDF92)
+Subject: Re: [RFC] mac80211: Fix STA supported rate configuration with dummy entry
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 19 Oct 2011 19:33:53 +0800
-Adrian Chadd <adrian@freebsd.org> wrote:
+On Sun, Oct 23, 2011 at 21:40, Jouni Malinen <j@w1.fi> wrote:
+>
+> Are all rate control algorithms fine with the second
+> rate_control_rate_init() call? That is needed in the TDLS use case where
+> the supported rate set is known only after the STA entry has been
 
-> .. does madwifi have that net80211 "aggressive mode" by default, where
-> it overrides the best-effort WME queue parameters to allow for
-> bursting?
+Note that the sta-rates are not really required before second addition
+(which also sets them). Initially the STA is not authorized for direct
+Tx (as determined by the WLAN_STA_TDLS_PEER_AUTH bit).
+We don't expect direct frames during link setup.
 
-I tried madwifi-0.9.4 snapshot on a CM9 card, and I got:
+> added. I guess it would be possible to delay addition of the STA entry
+> for TDLS until the supported rates are known, but I did not look at the
+> details on what exactly that would require.
 
-# iwpriv ath0 get_abolt
-ath0      get_abolt:218  
+The STA is added to let us know we should drop all non-setup packets
+between TDLS peers currently in link setup. We could have used a
+different indication, but the STA entry is make the most sense here
+since it is automatically cleaned up when we are disconnected from the
+AP (as all TDLS state should be).
 
-218 is 0xda, which means that the following capabilities are enabled:
+How about this one instead (tested hwsim with it):
 
-IEEE80211_ABOLT_TURBO_PRIME
-IEEE80211_ABOLT_FAST_FRAME
-IEEE80211_ABOLT_BURST
-IEEE80211_ABOLT_XR
-IEEE80211_ABOLT_AR
+>From d8b7acc16073e50f4fda3365d98ad01b21e2c631 Mon Sep 17 00:00:00 2001
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 24 Oct 2011 13:44:07 +0200
+Subject: [RFC] mac80211: init rate-control for TDLS sta when supp-rates are
+ known
 
-And those are not enabled:
+Initialize rate control algorithms only when supported rates are known
+for a TDLS peer sta. Direct Tx between peers is not allowed before the
+link is enabled. In turn, this only occurs after a change_station()
+call that sets supported rates.
+---
+ net/mac80211/cfg.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
-IEEE80211_ABOLT_TURBO_G
-IEEE80211_ABOLT_COMPRESSION
-IEEE80211_ABOLT_WME_ELE
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 1309bb9..9f05416d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -829,7 +829,12 @@ static int ieee80211_add_station(struct wiphy
+*wiphy, struct net_device *dev,
+ 	      sdata->vif.type == NL80211_IFTYPE_STATION))
+ 		return -ENOTSUPP;
 
-I would just unset all capabilities and retry.
+-	rate_control_rate_init(sta);
++	/*
++	 * for TDLS, rate control should be initialized only when supported
++	 * rates are known.
++	 */
++	if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER))
++		rate_control_rate_init(sta);
 
-> I see exactly that difference in FreeBSD (33mbit vs 22mbit) when I
-> disable that aggressive mode code.
+ 	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+ 		sdata->vif.type == NL80211_IFTYPE_AP;
+@@ -913,6 +918,9 @@ static int ieee80211_change_station(struct wiphy *wiphy,
 
+ 	sta_apply_parameters(local, sta, params);
+
++	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) && params->supported_rates)
++		rate_control_rate_init(sta);
++
+ 	rcu_read_unlock();
+
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
 -- 
-Regards,
-Pavel Roskin
+1.7.5.4
