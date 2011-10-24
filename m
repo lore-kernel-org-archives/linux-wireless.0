@@ -1,162 +1,247 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4985 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754042Ab1JLSvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 14:51:51 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 14/22] brcm80211: fmac: fixed weird indentation
-Date: Wed, 12 Oct 2011 20:51:24 +0200
-Message-ID: <1318445492-24207-15-git-send-email-arend@broadcom.com> (sfid-20111012_205209_273472_D60E554A)
-In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
-References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:59939 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754198Ab1JXJSE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Oct 2011 05:18:04 -0400
+Subject: [PATCH 8/9] ath6kl: add debug messages for credit handling
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 24 Oct 2011 12:17:59 +0300
+Message-ID: <20111024091759.5004.68796.stgit@localhost6.localdomain6> (sfid-20111024_111807_072155_98531DDA)
+In-Reply-To: <20111024091644.5004.2767.stgit@localhost6.localdomain6>
+References: <20111024091644.5004.2767.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Also take few from htc debug level which are more suitable for credit.
 
-And changed function name to something more appropriate.
-
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   99 ++++++++++----------
- 1 files changed, 51 insertions(+), 48 deletions(-)
+ drivers/net/wireless/ath/ath6kl/debug.c |   33 +++++++++++-----------
+ drivers/net/wireless/ath/ath6kl/debug.h |    2 +
+ drivers/net/wireless/ath/ath6kl/htc.c   |   46 ++++++++++++++++---------------
+ 3 files changed, 41 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 1b09be0..27a748e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -1152,7 +1152,7 @@ brcmf_set_key_mgmt(struct net_device *ndev, struct cfg80211_connect_params *sme)
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 324fdb3..7bc2656 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -142,47 +142,46 @@ void ath6kl_dump_registers(struct ath6kl_device *dev,
+ 
+ static void dump_cred_dist(struct htc_endpoint_credit_dist *ep_dist)
+ {
+-	ath6kl_dbg(ATH6KL_DBG_ANY,
++	ath6kl_dbg(ATH6KL_DBG_CREDIT,
+ 		   "--- endpoint: %d  svc_id: 0x%X ---\n",
+ 		   ep_dist->endpoint, ep_dist->svc_id);
+-	ath6kl_dbg(ATH6KL_DBG_ANY, " dist_flags     : 0x%X\n",
++	ath6kl_dbg(ATH6KL_DBG_CREDIT, " dist_flags     : 0x%X\n",
+ 		   ep_dist->dist_flags);
+-	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_norm      : %d\n",
++	ath6kl_dbg(ATH6KL_DBG_CREDIT, " cred_norm      : %d\n",
+ 		   ep_dist->cred_norm);
+-	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_min       : %d\n",
++	ath6kl_dbg(ATH6KL_DBG_CREDIT, " cred_min       : %d\n",
+ 		   ep_dist->cred_min);
+-	ath6kl_dbg(ATH6KL_DBG_ANY, " credits        : %d\n",
++	ath6kl_dbg(ATH6KL_DBG_CREDIT, " credits        : %d\n",
+ 		   ep_dist->credits);
+-	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_assngd    : %d\n",
++	ath6kl_dbg(ATH6KL_DBG_CREDIT, " cred_assngd    : %d\n",
+ 		   ep_dist->cred_assngd);
+-	ath6kl_dbg(ATH6KL_DBG_ANY, " seek_cred      : %d\n",
++	ath6kl_dbg(ATH6KL_DBG_CREDIT, " seek_cred      : %d\n",
+ 		   ep_dist->seek_cred);
+-	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_sz        : %d\n",
++	ath6kl_dbg(ATH6KL_DBG_CREDIT, " cred_sz        : %d\n",
+ 		   ep_dist->cred_sz);
+-	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_per_msg   : %d\n",
++	ath6kl_dbg(ATH6KL_DBG_CREDIT, " cred_per_msg   : %d\n",
+ 		   ep_dist->cred_per_msg);
+-	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_to_dist   : %d\n",
++	ath6kl_dbg(ATH6KL_DBG_CREDIT, " cred_to_dist   : %d\n",
+ 		   ep_dist->cred_to_dist);
+-	ath6kl_dbg(ATH6KL_DBG_ANY, " txq_depth      : %d\n",
++	ath6kl_dbg(ATH6KL_DBG_CREDIT, " txq_depth      : %d\n",
+ 		   get_queue_depth(&ep_dist->htc_ep->txq));
+-	ath6kl_dbg(ATH6KL_DBG_ANY,
++	ath6kl_dbg(ATH6KL_DBG_CREDIT,
+ 		   "----------------------------------\n");
  }
  
- static s32
--brcmf_set_set_sharedkey(struct net_device *ndev,
-+brcmf_set_wep_sharedkey(struct net_device *ndev,
- 		     struct cfg80211_connect_params *sme)
++/* FIXME: move to htc.c */
+ void dump_cred_dist_stats(struct htc_target *target)
  {
- 	struct brcmf_cfg80211_priv *cfg_priv = ndev_to_cfg(ndev);
-@@ -1162,52 +1162,55 @@ brcmf_set_set_sharedkey(struct net_device *ndev,
- 	s32 err = 0;
+ 	struct htc_endpoint_credit_dist *ep_list;
  
- 	WL_CONN("key len (%d)\n", sme->key_len);
--	if (sme->key_len) {
--		sec = brcmf_read_prof(cfg_priv, WL_PROF_SEC);
--		WL_CONN("wpa_versions 0x%x cipher_pairwise 0x%x\n",
--		       sec->wpa_versions, sec->cipher_pairwise);
--		if (!
--		    (sec->wpa_versions & (NL80211_WPA_VERSION_1 |
--					  NL80211_WPA_VERSION_2))
--&& (sec->cipher_pairwise & (WLAN_CIPHER_SUITE_WEP40 |
--			    WLAN_CIPHER_SUITE_WEP104))) {
--			memset(&key, 0, sizeof(key));
--			key.len = (u32) sme->key_len;
--			key.index = (u32) sme->key_idx;
--			if (key.len > sizeof(key.data)) {
--				WL_ERR("Too long key length (%u)\n", key.len);
--				return -EINVAL;
--			}
--			memcpy(key.data, sme->key, key.len);
--			key.flags = BRCMF_PRIMARY_KEY;
--			switch (sec->cipher_pairwise) {
--			case WLAN_CIPHER_SUITE_WEP40:
--				key.algo = CRYPTO_ALGO_WEP1;
--				break;
--			case WLAN_CIPHER_SUITE_WEP104:
--				key.algo = CRYPTO_ALGO_WEP128;
--				break;
--			default:
--				WL_ERR("Invalid algorithm (%d)\n",
--				       sme->crypto.ciphers_pairwise[0]);
--				return -EINVAL;
--			}
--			/* Set the new key/index */
--			WL_CONN("key length (%d) key index (%d) algo (%d)\n",
--			       key.len, key.index, key.algo);
--			WL_CONN("key \"%s\"\n", key.data);
--			err = send_key_to_dongle(ndev, &key);
--			if (err)
--				return err;
+-	if (!AR_DBG_LVL_CHECK(ATH6KL_DBG_TRC))
++	if (!AR_DBG_LVL_CHECK(ATH6KL_DBG_CREDIT))
+ 		return;
  
--			if (sec->auth_type == NL80211_AUTHTYPE_OPEN_SYSTEM) {
--				WL_CONN("set auth_type to shared key\n");
--				val = 1;	/* shared key */
--				err = brcmf_dev_intvar_set(ndev, "auth", val);
--				if (err) {
--					WL_ERR("set auth failed (%d)\n", err);
--					return err;
--				}
-+	if (sme->key_len == 0)
-+		return 0;
+ 	list_for_each_entry(ep_list, &target->cred_dist_list, list)
+ 		dump_cred_dist(ep_list);
+ 
+-	ath6kl_dbg(ATH6KL_DBG_HTC, "ctxt:%p dist:%p\n",
+-		   target->credit_info, NULL);
+-	ath6kl_dbg(ATH6KL_DBG_HTC,
+-		   "credit distribution, total : %d, free : %d\n",
++	ath6kl_dbg(ATH6KL_DBG_CREDIT,
++		   "credit distribution total %d free %d\n",
+ 		   target->credit_info->total_avail_credits,
+ 		   target->credit_info->cur_free_credits);
+ }
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
+index afb747b..491485e 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.h
++++ b/drivers/net/wireless/ath/ath6kl/debug.h
+@@ -20,7 +20,7 @@
+ #include "hif.h"
+ 
+ enum ATH6K_DEBUG_MASK {
+-	/* hole */
++	ATH6KL_DBG_CREDIT	= BIT(0),
+ 	/* hole */
+ 	ATH6KL_DBG_WLAN_TX      = BIT(2),     /* wlan tx */
+ 	ATH6KL_DBG_WLAN_RX      = BIT(3),     /* wlan rx */
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index 511eebd..a971c2f 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -27,6 +27,9 @@ static void ath6kl_credit_deposit(struct ath6kl_htc_credit_info *cred_info,
+ 				  struct htc_endpoint_credit_dist *ep_dist,
+ 				  int credits)
+ {
++	ath6kl_dbg(ATH6KL_DBG_CREDIT, "credit deposit ep %d credits %d\n",
++		   ep_dist->endpoint, credits);
 +
-+	sec = brcmf_read_prof(cfg_priv, WL_PROF_SEC);
-+	WL_CONN("wpa_versions 0x%x cipher_pairwise 0x%x\n",
-+		sec->wpa_versions, sec->cipher_pairwise);
+ 	ep_dist->credits += credits;
+ 	ep_dist->cred_assngd += credits;
+ 	cred_info->cur_free_credits -= credits;
+@@ -39,6 +42,8 @@ static void ath6kl_credit_init(struct ath6kl_htc_credit_info *cred_info,
+ 	struct htc_endpoint_credit_dist *cur_ep_dist;
+ 	int count;
+ 
++	ath6kl_dbg(ATH6KL_DBG_CREDIT, "credit init total %d\n", tot_credits);
 +
-+	if (sec->wpa_versions & (NL80211_WPA_VERSION_1 | NL80211_WPA_VERSION_2))
-+		return 0;
+ 	cred_info->cur_free_credits = tot_credits;
+ 	cred_info->total_avail_credits = tot_credits;
+ 
+@@ -108,6 +113,15 @@ static void ath6kl_credit_init(struct ath6kl_htc_credit_info *cred_info,
+ 			cur_ep_dist->cred_norm = count;
+ 
+ 		}
 +
-+	if (sec->cipher_pairwise &
-+	    (WLAN_CIPHER_SUITE_WEP40 | WLAN_CIPHER_SUITE_WEP104)) {
-+		memset(&key, 0, sizeof(key));
-+		key.len = (u32) sme->key_len;
-+		key.index = (u32) sme->key_idx;
-+		if (key.len > sizeof(key.data)) {
-+			WL_ERR("Too long key length (%u)\n", key.len);
-+			return -EINVAL;
-+		}
-+		memcpy(key.data, sme->key, key.len);
-+		key.flags = BRCMF_PRIMARY_KEY;
-+		switch (sec->cipher_pairwise) {
-+		case WLAN_CIPHER_SUITE_WEP40:
-+			key.algo = CRYPTO_ALGO_WEP1;
-+			break;
-+		case WLAN_CIPHER_SUITE_WEP104:
-+			key.algo = CRYPTO_ALGO_WEP128;
-+			break;
-+		default:
-+			WL_ERR("Invalid algorithm (%d)\n",
-+			       sme->crypto.ciphers_pairwise[0]);
-+			return -EINVAL;
-+		}
-+		/* Set the new key/index */
-+		WL_CONN("key length (%d) key index (%d) algo (%d)\n",
-+			key.len, key.index, key.algo);
-+		WL_CONN("key \"%s\"\n", key.data);
-+		err = send_key_to_dongle(ndev, &key);
-+		if (err)
-+			return err;
++		ath6kl_dbg(ATH6KL_DBG_CREDIT,
++			   "credit ep %d svc_id %d credits %d per_msg %d norm %d min %d\n",
++			   cur_ep_dist->endpoint,
++			   cur_ep_dist->svc_id,
++			   cur_ep_dist->credits,
++			   cur_ep_dist->cred_per_msg,
++			   cur_ep_dist->cred_norm,
++			   cur_ep_dist->cred_min);
+ 	}
+ }
+ 
+@@ -138,6 +152,9 @@ static void ath6kl_credit_reduce(struct ath6kl_htc_credit_info *cred_info,
+ {
+ 	int credits;
+ 
++	ath6kl_dbg(ATH6KL_DBG_CREDIT, "credit reduce ep %d limit %d\n",
++		   ep_dist->endpoint, limit);
 +
-+		if (sec->auth_type == NL80211_AUTHTYPE_OPEN_SYSTEM) {
-+			WL_CONN("set auth_type to shared key\n");
-+			val = 1;	/* shared key */
-+			err = brcmf_dev_intvar_set(ndev, "auth", val);
-+			if (err) {
-+				WL_ERR("set auth failed (%d)\n", err);
-+				return err;
- 			}
+ 	ep_dist->cred_assngd = limit;
+ 
+ 	if (ep_dist->credits <= limit)
+@@ -515,7 +532,7 @@ static int htc_check_credits(struct htc_target *target,
+ 	*req_cred = (len > target->tgt_cred_sz) ?
+ 		     DIV_ROUND_UP(len, target->tgt_cred_sz) : 1;
+ 
+-	ath6kl_dbg(ATH6KL_DBG_HTC, "htc creds required %d got %d\n",
++	ath6kl_dbg(ATH6KL_DBG_CREDIT, "credit check need %d got %d\n",
+ 		   *req_cred, ep->cred_dist.credits);
+ 
+ 	if (ep->cred_dist.credits < *req_cred) {
+@@ -525,16 +542,13 @@ static int htc_check_credits(struct htc_target *target,
+ 		/* Seek more credits */
+ 		ep->cred_dist.seek_cred = *req_cred - ep->cred_dist.credits;
+ 
+-		ath6kl_dbg(ATH6KL_DBG_HTC, "htc creds ctxt 0x%p dist 0x%p\n",
+-			   target->credit_info, &ep->cred_dist);
+-
+ 		ath6kl_credit_seek(target->credit_info, &ep->cred_dist);
+ 
+ 		ep->cred_dist.seek_cred = 0;
+ 
+ 		if (ep->cred_dist.credits < *req_cred) {
+-			ath6kl_dbg(ATH6KL_DBG_HTC,
+-				   "htc creds not enough credits for ep %d\n",
++			ath6kl_dbg(ATH6KL_DBG_CREDIT,
++				   "credit not found for ep %d\n",
+ 				   eid);
+ 			return -EINVAL;
+ 		}
+@@ -548,9 +562,6 @@ static int htc_check_credits(struct htc_target *target,
+ 		ep->cred_dist.seek_cred =
+ 		ep->cred_dist.cred_per_msg - ep->cred_dist.credits;
+ 
+-		ath6kl_dbg(ATH6KL_DBG_HTC, "htc creds ctxt 0x%p dist 0x%p\n",
+-			   target->credit_info, &ep->cred_dist);
+-
+ 		ath6kl_credit_seek(target->credit_info, &ep->cred_dist);
+ 
+ 		/* see if we were successful in getting more */
+@@ -558,7 +569,8 @@ static int htc_check_credits(struct htc_target *target,
+ 			/* tell the target we need credits ASAP! */
+ 			*flags |= HTC_FLAGS_NEED_CREDIT_UPDATE;
+ 			ep->ep_st.cred_low_indicate += 1;
+-			ath6kl_dbg(ATH6KL_DBG_HTC, "htc creds host needs credits\n");
++			ath6kl_dbg(ATH6KL_DBG_CREDIT,
++				   "credit we need credits asap\n");
  		}
  	}
-@@ -1271,9 +1274,9 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
- 		goto done;
+ 
+@@ -1495,9 +1507,6 @@ static void htc_proc_cred_rpt(struct htc_target *target,
+ 	int tot_credits = 0, i;
+ 	bool dist = false;
+ 
+-	ath6kl_dbg(ATH6KL_DBG_HTC,
+-		   "htc creds report entries %d\n", n_entries);
+-
+ 	spin_lock_bh(&target->tx_lock);
+ 
+ 	for (i = 0; i < n_entries; i++, rpt++) {
+@@ -1509,8 +1518,8 @@ static void htc_proc_cred_rpt(struct htc_target *target,
+ 
+ 		endpoint = &target->endpoint[rpt->eid];
+ 
+-		ath6kl_dbg(ATH6KL_DBG_HTC,
+-			   "htc creds report ep %d credits %d\n",
++		ath6kl_dbg(ATH6KL_DBG_CREDIT,
++			   "credit report ep %d credits %d\n",
+ 			   rpt->eid, rpt->credits);
+ 
+ 		endpoint->ep_st.tx_cred_rpt += 1;
+@@ -1551,18 +1560,11 @@ static void htc_proc_cred_rpt(struct htc_target *target,
+ 		tot_credits += rpt->credits;
  	}
  
--	err = brcmf_set_set_sharedkey(ndev, sme);
-+	err = brcmf_set_wep_sharedkey(ndev, sme);
- 	if (err) {
--		WL_ERR("wl_set_set_sharedkey failed (%d)\n", err);
-+		WL_ERR("brcmf_set_wep_sharedkey failed (%d)\n", err);
- 		goto done;
- 	}
- 
--- 
-1.7.4.1
-
+-	ath6kl_dbg(ATH6KL_DBG_HTC,
+-		   "htc creds report tot_credits %d\n",
+-		   tot_credits);
+-
+ 	if (dist) {
+ 		/*
+ 		 * This was a credit return based on a completed send
+ 		 * operations note, this is done with the lock held
+ 		 */
+-		ath6kl_dbg(ATH6KL_DBG_HTC, "htc creds ctxt 0x%p dist 0x%p\n",
+-			   target->credit_info, &target->cred_dist_list);
+-
+ 		ath6kl_credit_distribute(target->credit_info,
+ 					 &target->cred_dist_list,
+ 					 HTC_CREDIT_DIST_SEND_COMPLETE);
 
