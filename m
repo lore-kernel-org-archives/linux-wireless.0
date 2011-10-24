@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3782 "EHLO MMS3.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54155 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754715Ab1JUNzd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 09:55:33 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 01/17] brcm80211: fmac: allow wd timer to be disabled
- when bus down
-Date: Fri, 21 Oct 2011 15:55:03 +0200
-Message-ID: <1319205319-16891-2-git-send-email-arend@broadcom.com> (sfid-20111021_155602_160592_155FDEA7)
-In-Reply-To: <1319205319-16891-1-git-send-email-arend@broadcom.com>
-References: <1319205319-16891-1-git-send-email-arend@broadcom.com>
+	id S1754820Ab1JXL1x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Oct 2011 07:27:53 -0400
+Date: Mon, 24 Oct 2011 13:27:46 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Eliad Peller <eliad@wizery.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] mac80211: fix remain_off_channel regression
+Message-ID: <20111024112745.GB2573@redhat.com> (sfid-20111024_132757_374588_EE7312F2)
+References: <1319130350-15514-1-git-send-email-eliad@wizery.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1319130350-15514-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On Thu, Oct 20, 2011 at 07:05:49PM +0200, Eliad Peller wrote:
+> The offchannel code is currently broken - we should
+> remain_off_channel if the work was started, and
+> the work's channel and channel_type are the same
+> as local->tmp_channel and local->tmp_channel_type.
+> 
+> However, if wk->chan_type and local->tmp_channel_type
+> coexist (e.g. have the same channel type), we won't
+> remain_off_channel.
+> 
+> This behavior was introduced by commit da2fd1f
+> ("mac80211: Allow work items to use existing
+> channel type.")
+> 
+> Tested-by: Ben Greear <greearb@candelatech.com>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
 
-Watchdog timer should be able to be stopped even firmware is not
-loaded.
+Both patches fixes serious bugs, should be marked
+Cc: stable@kernel.org # 2.6.39+
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+I believe there is no need to repost, once informed
+John would take care of process patches properly.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index c6825f2..785ab08 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -4579,10 +4579,6 @@ struct device *brcmf_bus_get_device(struct brcmf_bus *bus)
- void
- brcmf_sdbrcm_wd_timer(struct brcmf_bus *bus, uint wdtick)
- {
--	/* don't start the wd until fw is loaded */
--	if (bus->drvr->busstate == BRCMF_BUS_DOWN)
--		return;
--
- 	/* Totally stop the timer */
- 	if (!wdtick && bus->wd_timer_valid == true) {
- 		del_timer_sync(&bus->timer);
-@@ -4591,6 +4587,10 @@ brcmf_sdbrcm_wd_timer(struct brcmf_bus *bus, uint wdtick)
- 		return;
- 	}
- 
-+	/* don't start the wd until fw is loaded */
-+	if (bus->drvr->busstate == BRCMF_BUS_DOWN)
-+		return;
-+
- 	if (wdtick) {
- 		if (bus->save_ms != BRCMF_WD_POLL_MS) {
- 			if (bus->wd_timer_valid == true)
--- 
-1.7.4.1
-
-
+Stanislaw
