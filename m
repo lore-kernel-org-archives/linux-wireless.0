@@ -1,140 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:58823 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751102Ab1JSGix (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Oct 2011 02:38:53 -0400
-Subject: Re: iwlagn is getting very shaky
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Norbert Preining <preining@logic.at>
-Cc: David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20111019062517.GC11588@gamma.logic.tuwien.ac.at>
-References: <20111019060108.GA11588@gamma.logic.tuwien.ac.at>
-	 <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com>
-	 <20111019062517.GC11588@gamma.logic.tuwien.ac.at>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 18 Oct 2011 22:48:24 -0700
-Message-ID: <1319003304.31823.46.camel@wwguy-huron> (sfid-20111019_083913_086337_0F66717D)
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8499 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756050Ab1JYLnQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Oct 2011 07:43:16 -0400
+Message-ID: <4EA6A0CF.70806@qca.qualcomm.com> (sfid-20111025_134321_510324_6F55725D)
+Date: Tue, 25 Oct 2011 14:43:11 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
+	<athiruve@qca.qualcomm.com>
+Subject: Re: [PATCH 34/34] ath6kl: Enable not more than one interface to workaround
+ target assert
+References: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com> <1319537430-12459-35-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1319537430-12459-35-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi all,
+On 10/25/2011 01:10 PM, Vasanthakumar Thiagarajan wrote:
+> Configuring the firmware for three interfaces causes random
+> target assert. So restrict the number of vifs to just 1
+> to avoid this issue for now. Once it is fixed in firmware,
+> this patch would be reverted.
 
-On Tue, 2011-10-18 at 23:25 -0700, Norbert Preining wrote:
-> Hi David, hi all
-> 
-> On Di, 18 Okt 2011, David Rientjes wrote:
-> > There have been recent issues in 3.1-rc9 reported with iwlagn, see the 
-> > thread at https://lkml.org/lkml/2011/10/15/107 even though you have 
-> 
-> Interesting. I read through the thread and activated the debugfs 
-> option.
-> 
-> I could get my hardware back by
-> 	echo 1 > /sys/kernel/debug/ieee80211/phy0/iwlagn/debug/force_reset
-> 
-> [ 2761.352629] ieee80211 phy0: Hardware restart was requested
-> [ 2761.352714] iwlagn 0000:06:00.0: L1 Enabled; Disabling L0S
-> [ 2761.355763] iwlagn 0000:06:00.0: Radio type=0x1-0x2-0x0
-> [ 2779.484308] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
-> [ 2779.684128] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
-> [ 2779.884087] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
-> [ 2780.084079] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
-> [ 2788.051381] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
-> [ 2788.248079] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
-> [ 2788.448083] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
-> [ 2788.648140] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
-> [ 2796.614710] wlan0: authenticate with 00:24:c4:ab:bd:ef (try 1)
-> [ 2796.615623] wlan0: authenticated
-> [ 2796.618046] wlan0: associate with 00:24:c4:ab:bd:ef (try 1)
-> [ 2796.622748] wlan0: RX AssocResp from 00:24:c4:ab:bd:ef (capab=0x1 status=0 aid=1)
-> [ 2796.622751] wlan0: associated
-> [ 2871.224192] e1000e: eth0 NIC Link is Down
-> 
-> I unplugged the cable and could ping the world still, nice....
-> 
-> After a short time I got:
-> [ 2895.575964] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
-> [ 2895.772067] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
-> [ 2895.972101] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
-> [ 2896.172054] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
-> [ 2905.316968] wlan0: deauthenticating from 00:24:c4:ab:bd:ef by local choice (reason=2)
-> [ 2905.356316] cfg80211: Calling CRDA to update world regulatory domain
-> [ 2905.361965] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 1)
-> [ 2905.560063] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 2)
-> [ 2905.760091] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 3)
-> [ 2905.960077] wlan0: authentication with 00:24:c4:ab:bd:e0 timed out
-> [ 2913.908984] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
-> [ 2914.108116] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
-> [ 2914.308116] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
-> [ 2914.508103] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
-> [ 2922.473062] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
-> [ 2922.672109] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
-> [ 2922.872106] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
-> [ 2923.072103] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
-> 
-> And at this time the tx_queue showed me:
-> -----------------------------------------------------------
-> hwq 00: read=91 write=91 stop=1 swq_id=0x00 (ac 0/hwq 0)s.
+Patches 32-34 are problematic. They are changing functionality of
+patches earlier in the series. (I guess you created those patches
+later.) Instead you should edit the original patches, not just add extra
+patches on top.
 
->         stop-count: 1
+For example, having this patch will break bisect as ath6kl will be
+broken between the patch enabling multi interface functionality
+(whatever patch that is) and this patch.
 
-it is very interesting, for sure there is a bug here which cause NIC
-stop working, if you look at the tx queue, hwq 0 is stop, which mean
-nothing go out. I am not sure how we get into this? yes, most likely
-force_reset will fix it by reload the firmware and reset all the queues
-
-Could you help me how to repro this problem?
-
-Thanks
-Wey
-
-
-> hwq 01: read=0 write=0 stop=0 swq_id=0x05 (ac 1/hwq 1)
->         stop-count: 0
-> hwq 02: read=127 write=127 stop=0 swq_id=0x0a (ac 2/hwq 2)
->         stop-count: 0
-> hwq 03: read=0 write=0 stop=0 swq_id=0x0f (ac 3/hwq 3)
->         stop-count: 0
-> hwq 04: read=13 write=13 stop=0 swq_id=0x00 (ac 0/hwq 0)
-> hwq 05: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
-> hwq 06: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
-> hwq 07: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
-> hwq 08: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
-> hwq 09: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
-> hwq 10: read=0 write=0 stop=0 swq_id=0x2a (ac 2/hwq 10)
-> hwq 11: read=0 write=0 stop=0 swq_id=0x2c (ac 0/hwq 11)
-> hwq 12: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
-> hwq 13: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
-> hwq 14: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
-> hwq 15: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
-> hwq 16: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
-> hwq 17: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
-> hwq 18: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
-> hwq 19: read=0 write=0 stop=0 swq_id=0x00 (ac 0/hwq 0)
-> -------------------------------------------------
-> 
-> Hope that helps. Anyone let me know if you need more testing.
-> 
-> Once more, be reminded the the firmware of the iwlagn is from
-> an experimental build that should solve the AGN stopped working
-> problem.
-> 
-> Best wishes
-> 
-> Norbert
-> ------------------------------------------------------------------------
-> Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-> JAIST, Japan                                 TeX Live & Debian Developer
-> DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-> ------------------------------------------------------------------------
-> SCRAMOGE (vb.)
-> To cut oneself whilst licking envelopes.
-> 			--- Douglas Adams, The Meaning of Liff
-
-
+Kalle
