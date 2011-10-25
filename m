@@ -1,151 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:65205 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752683Ab1JMTJE (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:37218 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754762Ab1JYKLh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Oct 2011 15:09:04 -0400
-Received: by bkbzt4 with SMTP id zt4so1844155bkb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Oct 2011 12:09:02 -0700 (PDT)
-Subject: [PATCH] mac80211: handle HT PHY BSS membership selector value correctly
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Thu, 13 Oct 2011 21:08:49 +0200
+	Tue, 25 Oct 2011 06:11:37 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
+	<athiruve@qca.qualcomm.com>
+Subject: [PATCH 10/34] ath6kl: Move channel information to vif structure
+Date: Tue, 25 Oct 2011 15:40:06 +0530
+Message-ID: <1319537430-12459-11-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_121142_269407_0B96ADF5)
+In-Reply-To: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201110132108.50019.chunkeey@googlemail.com> (sfid-20111013_210908_209655_E2C31CD4)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-802.11n-2009 extends the supported rates element with a
-magic value which can be used to prevent legacy stations
-from joining the BSS.
-
-However, this magic value is not a rate like the others
-and the magic can simply be ignored/skipped at this late
-stage.
-
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
-pending... still testing.
----
- include/linux/ieee80211.h |    4 ++
- net/mac80211/mlme.c       |   71 ++++++++++++++++++++++++--------------------
- 2 files changed, 42 insertions(+), 33 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   14 +++++++-------
+ drivers/net/wireless/ath/ath6kl/core.h     |    4 ++--
+ drivers/net/wireless/ath/ath6kl/init.c     |    4 ++--
+ drivers/net/wireless/ath/ath6kl/main.c     |    4 ++--
+ 4 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 48363c3..7d2c72d 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -770,6 +770,10 @@ struct ieee80211_mgmt {
- 	} u;
- } __attribute__ ((packed));
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 98d7673..e48a8c0 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -364,7 +364,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	    !memcmp(vif->ssid, sme->ssid, vif->ssid_len)) {
+ 		ar->reconnect_flag = true;
+ 		status = ath6kl_wmi_reconnect_cmd(ar->wmi, vif->req_bssid,
+-						  ar->ch_hint);
++						  vif->ch_hint);
  
-+/* Supported Rates flags and value encodings in 802.11n-2009 7.3.2.2 */
-+#define BSS_MEMBERSHIP_SELECTOR		BIT(7)
-+#define BSS_MEMBERSHIP_SELECTOR_HT_PHY	127
-+
- /* mgmt header + 1 byte category code */
- #define IEEE80211_MIN_ACTION_SIZE offsetof(struct ieee80211_mgmt, u.action.u)
+ 		up(&ar->sem);
+ 		if (status) {
+@@ -382,7 +382,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	memcpy(vif->ssid, sme->ssid, sme->ssid_len);
  
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0e5d8da..5619fd5 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1463,6 +1463,38 @@ ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
- 	return RX_MGMT_CFG80211_DISASSOC;
+ 	if (sme->channel)
+-		ar->ch_hint = sme->channel->center_freq;
++		vif->ch_hint = sme->channel->center_freq;
+ 
+ 	memset(vif->req_bssid, 0, sizeof(vif->req_bssid));
+ 	if (sme->bssid && !is_broadcast_ether_addr(sme->bssid))
+@@ -452,7 +452,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 		   __func__,
+ 		   vif->auth_mode, vif->dot11_auth_mode, vif->prwise_crypto,
+ 		   vif->prwise_crypto_len, vif->grp_crypto,
+-		   vif->grp_crypto_len, ar->ch_hint);
++		   vif->grp_crypto_len, vif->ch_hint);
+ 
+ 	ar->reconnect_flag = 0;
+ 	status = ath6kl_wmi_connect_cmd(ar->wmi, vif->nw_type,
+@@ -461,7 +461,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 					vif->prwise_crypto_len,
+ 					vif->grp_crypto, vif->grp_crypto_len,
+ 					vif->ssid_len, vif->ssid,
+-					vif->req_bssid, ar->ch_hint,
++					vif->req_bssid, vif->ch_hint,
+ 					ar->connect_ctrl_flags);
+ 
+ 	up(&ar->sem);
+@@ -1252,7 +1252,7 @@ static int ath6kl_cfg80211_join_ibss(struct wiphy *wiphy,
+ 	memcpy(vif->ssid, ibss_param->ssid, vif->ssid_len);
+ 
+ 	if (ibss_param->channel)
+-		ar->ch_hint = ibss_param->channel->center_freq;
++		vif->ch_hint = ibss_param->channel->center_freq;
+ 
+ 	if (ibss_param->channel_fixed) {
+ 		/*
+@@ -1292,7 +1292,7 @@ static int ath6kl_cfg80211_join_ibss(struct wiphy *wiphy,
+ 		   __func__,
+ 		   vif->auth_mode, vif->dot11_auth_mode, vif->prwise_crypto,
+ 		   vif->prwise_crypto_len, vif->grp_crypto,
+-		   vif->grp_crypto_len, ar->ch_hint);
++		   vif->grp_crypto_len, vif->ch_hint);
+ 
+ 	status = ath6kl_wmi_connect_cmd(ar->wmi, vif->nw_type,
+ 					vif->dot11_auth_mode, vif->auth_mode,
+@@ -1300,7 +1300,7 @@ static int ath6kl_cfg80211_join_ibss(struct wiphy *wiphy,
+ 					vif->prwise_crypto_len,
+ 					vif->grp_crypto, vif->grp_crypto_len,
+ 					vif->ssid_len, vif->ssid,
+-					vif->req_bssid, ar->ch_hint,
++					vif->req_bssid, vif->ch_hint,
+ 					ar->connect_ctrl_flags);
+ 	set_bit(CONNECT_PEND, &vif->flags);
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index f830b2d..843d639 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -411,6 +411,8 @@ struct ath6kl_vif {
+ 	u8 nw_type;
+ 	u8 bssid[ETH_ALEN];
+ 	u8 req_bssid[ETH_ALEN];
++	u16 ch_hint;
++	u16 bss_ch;
+ };
+ 
+ /* Flag info */
+@@ -440,8 +442,6 @@ struct ath6kl {
+ 	spinlock_t lock;
+ 	struct semaphore sem;
+ 	struct ath6kl_wep_key wep_key_list[WMI_MAX_KEY_INDEX + 1];
+-	u16 ch_hint;
+-	u16 bss_ch;
+ 	u16 listen_intvl_b;
+ 	u16 listen_intvl_t;
+ 	u8 lrssi_roam_threshold;
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index bea337a..a662d78 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -90,7 +90,7 @@ void ath6kl_init_profile_info(struct ath6kl *ar)
+ 	memset(ar->wep_key_list, 0, sizeof(ar->wep_key_list));
+ 	memset(vif->req_bssid, 0, sizeof(vif->req_bssid));
+ 	memset(vif->bssid, 0, sizeof(vif->bssid));
+-	ar->bss_ch = 0;
++	vif->bss_ch = 0;
+ 	vif->nw_type = vif->next_mode = INFRA_NETWORK;
  }
  
-+static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
-+				u8 *supp_rates, unsigned int supp_rates_len,
-+				u32 *rates, u32 *basic_rates,
-+				bool *have_higher_than_11mbit)
-+{
-+	int i, j;
-+
-+	for (i = 0; i < supp_rates_len; i++) {
-+		int rate = (supp_rates[i] & 0x7f) * 5;
-+		bool is_basic = !!(supp_rates[i] & BSS_MEMBERSHIP_SELECTOR);
-+
-+		if (rate > 110)
-+			*have_higher_than_11mbit = true;
-+
-+		/*
-+		 * BSS_MEMBERSHIP_SELECTOR_HT_PHY is defined in 802.11n-2009
-+		 * 7.3.2.2 as a magic value instead of a rate. Hence, skip it.
-+		 */
-+		if (is_basic &&
-+		    (supp_rates[i] & 0x7f) == BSS_MEMBERSHIP_SELECTOR_HT_PHY)
-+			continue;
-+
-+		for (j = 0; j < sband->n_bitrates; j++) {
-+			if (sband->bitrates[j].bitrate == rate) {
-+				*rates |= BIT(j);
-+				if (is_basic)
-+					*basic_rates |= BIT(j);
-+				break;
-+			}
-+		}
-+	}
-+}
+@@ -253,7 +253,7 @@ void ath6kl_init_control_info(struct ath6kl *ar)
+ 	ath6kl_init_profile_info(ar);
+ 	vif->def_txkey_index = 0;
+ 	memset(ar->wep_key_list, 0, sizeof(ar->wep_key_list));
+-	ar->ch_hint = 0;
++	vif->ch_hint = 0;
+ }
  
- static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 				    struct ieee80211_mgmt *mgmt, size_t len)
-@@ -1479,7 +1511,7 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 	struct ieee802_11_elems elems;
- 	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
- 	u32 changed = 0;
--	int i, j, err;
-+	int err;
- 	bool have_higher_than_11mbit = false;
- 	u16 ap_ht_cap_flags;
+ /*
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 620679a..e60f663 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -777,7 +777,7 @@ void ath6kl_connect_event(struct ath6kl *ar, u16 channel, u8 *bssid,
+ 				      assoc_info);
  
-@@ -1525,39 +1557,12 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 	basic_rates = 0;
- 	sband = local->hw.wiphy->bands[wk->chan->band];
+ 	memcpy(vif->bssid, bssid, sizeof(vif->bssid));
+-	ar->bss_ch = channel;
++	vif->bss_ch = channel;
  
--	for (i = 0; i < elems.supp_rates_len; i++) {
--		int rate = (elems.supp_rates[i] & 0x7f) * 5;
--		bool is_basic = !!(elems.supp_rates[i] & 0x80);
--
--		if (rate > 110)
--			have_higher_than_11mbit = true;
--
--		for (j = 0; j < sband->n_bitrates; j++) {
--			if (sband->bitrates[j].bitrate == rate) {
--				rates |= BIT(j);
--				if (is_basic)
--					basic_rates |= BIT(j);
--				break;
--			}
--		}
--	}
--
--	for (i = 0; i < elems.ext_supp_rates_len; i++) {
--		int rate = (elems.ext_supp_rates[i] & 0x7f) * 5;
--		bool is_basic = !!(elems.ext_supp_rates[i] & 0x80);
-+	ieee80211_get_rates(sband, elems.supp_rates, elems.supp_rates_len,
-+			    &rates, &basic_rates, &have_higher_than_11mbit);
+ 	if ((vif->nw_type == INFRA_NETWORK))
+ 		ath6kl_wmi_listeninterval_cmd(ar->wmi, ar->listen_intvl_t,
+@@ -1152,7 +1152,7 @@ void ath6kl_disconnect_event(struct ath6kl *ar, u8 reason, u8 *bssid,
  
--		if (rate > 110)
--			have_higher_than_11mbit = true;
--
--		for (j = 0; j < sband->n_bitrates; j++) {
--			if (sband->bitrates[j].bitrate == rate) {
--				rates |= BIT(j);
--				if (is_basic)
--					basic_rates |= BIT(j);
--				break;
--			}
--		}
--	}
-+	ieee80211_get_rates(sband, elems.ext_supp_rates,
-+			    elems.ext_supp_rates_len, &rates, &basic_rates,
-+			    &have_higher_than_11mbit);
+ 	netif_stop_queue(ar->net_dev);
+ 	memset(vif->bssid, 0, sizeof(vif->bssid));
+-	ar->bss_ch = 0;
++	vif->bss_ch = 0;
  
- 	sta->sta.supp_rates[wk->chan->band] = rates;
- 	sdata->vif.bss_conf.basic_rates = basic_rates;
+ 	ath6kl_tx_data_cleanup(ar);
+ }
 -- 
-1.7.7
+1.7.0.4
 
