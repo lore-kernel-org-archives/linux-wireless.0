@@ -1,162 +1,221 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:34105 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751221Ab1JJPQa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 11:16:30 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 29/34] iwlagn: remove 5000 hw header
-Date: Mon, 10 Oct 2011 07:27:14 -0700
-Message-Id: <1318256839-31837-30-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171637_900557_CFC35D8A)
-In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12216 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933413Ab1JYOFs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Oct 2011 10:05:48 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2 14/31] ath6kl: Move scan_req info and sme_state to vif
+Date: Tue, 25 Oct 2011 19:34:09 +0530
+Message-ID: <1319551466-29070-15-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_160604_831234_DFC3F428)
+In-Reply-To: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-The inline function in this header is only used
-in a single file, so we can move it there.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-5000-hw.h |   88 ----------------------------
- drivers/net/wireless/iwlwifi/iwl-5000.c    |   16 +++++-
- 2 files changed, 15 insertions(+), 89 deletions(-)
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-5000-hw.h
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   49 +++++++++++++++------------
+ drivers/net/wireless/ath/ath6kl/core.h     |    4 +-
+ drivers/net/wireless/ath/ath6kl/main.c     |    4 +-
+ 3 files changed, 31 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000-hw.h b/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
-deleted file mode 100644
-index c013598..0000000
---- a/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
-+++ /dev/null
-@@ -1,88 +0,0 @@
--/******************************************************************************
-- *
-- * This file is provided under a dual BSD/GPLv2 license.  When using or
-- * redistributing this file, you may do so under either license.
-- *
-- * GPL LICENSE SUMMARY
-- *
-- * Copyright(c) 2007 - 2011 Intel Corporation. All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-- * USA
-- *
-- * The full GNU General Public License is included in this distribution
-- * in the file called LICENSE.GPL.
-- *
-- * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-- *
-- * BSD LICENSE
-- *
-- * Copyright(c) 2005 - 2011 Intel Corporation. All rights reserved.
-- * All rights reserved.
-- *
-- * Redistribution and use in source and binary forms, with or without
-- * modification, are permitted provided that the following conditions
-- * are met:
-- *
-- *  * Redistributions of source code must retain the above copyright
-- *    notice, this list of conditions and the following disclaimer.
-- *  * Redistributions in binary form must reproduce the above copyright
-- *    notice, this list of conditions and the following disclaimer in
-- *    the documentation and/or other materials provided with the
-- *    distribution.
-- *  * Neither the name Intel Corporation nor the names of its
-- *    contributors may be used to endorse or promote products derived
-- *    from this software without specific prior written permission.
-- *
-- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-- *
-- *****************************************************************************/
--/*
-- * Please use this file (iwl-5000-hw.h) only for hardware-related definitions.
-- * Use iwl-commands.h for uCode API definitions.
-- */
--
--#ifndef __iwl_5000_hw_h__
--#define __iwl_5000_hw_h__
--
--/* 5150 only */
--#define IWL_5150_VOLTAGE_TO_TEMPERATURE_COEFF	(-5)
--
--static inline s32 iwl_temp_calib_to_offset(struct iwl_priv *priv)
--{
--	u16 temperature, voltage;
--	__le16 *temp_calib = (__le16 *)iwl_eeprom_query_addr(priv,
--				EEPROM_KELVIN_TEMPERATURE);
--
--	temperature = le16_to_cpu(temp_calib[0]);
--	voltage = le16_to_cpu(temp_calib[1]);
--
--	/* offset = temp - volt / coeff */
--	return (s32)(temperature - voltage / IWL_5150_VOLTAGE_TO_TEMPERATURE_COEFF);
--}
--
--#endif /* __iwl_5000_hw_h__ */
--
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index b85e80a..fdbf031 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -43,7 +43,6 @@
- #include "iwl-helpers.h"
- #include "iwl-agn.h"
- #include "iwl-agn-hw.h"
--#include "iwl-5000-hw.h"
- #include "iwl-trans.h"
- #include "iwl-shared.h"
- #include "iwl-cfg.h"
-@@ -134,6 +133,21 @@ static struct iwl_sensitivity_ranges iwl5150_sensitivity = {
- 	.nrg_th_cca = 62,
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index d55c396..acc5c86 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -311,7 +311,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	struct ath6kl_vif *vif = netdev_priv(dev);
+ 	int status;
+ 
+-	ar->sme_state = SME_CONNECTING;
++	vif->sme_state = SME_CONNECTING;
+ 
+ 	if (!ath6kl_cfg80211_ready(ar))
+ 		return -EIO;
+@@ -601,14 +601,14 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
+ 		return;
+ 	}
+ 
+-	if (ar->sme_state == SME_CONNECTING) {
++	if (vif->sme_state == SME_CONNECTING) {
+ 		/* inform connect result to cfg80211 */
+-		ar->sme_state = SME_CONNECTED;
++		vif->sme_state = SME_CONNECTED;
+ 		cfg80211_connect_result(ar->net_dev, bssid,
+ 					assoc_req_ie, assoc_req_len,
+ 					assoc_resp_ie, assoc_resp_len,
+ 					WLAN_STATUS_SUCCESS, GFP_KERNEL);
+-	} else if (ar->sme_state == SME_CONNECTED) {
++	} else if (vif->sme_state == SME_CONNECTED) {
+ 		/* inform roam event to cfg80211 */
+ 		cfg80211_roamed(ar->net_dev, chan, bssid,
+ 				assoc_req_ie, assoc_req_len,
+@@ -648,7 +648,7 @@ static int ath6kl_cfg80211_disconnect(struct wiphy *wiphy,
+ 
+ 	up(&ar->sem);
+ 
+-	ar->sme_state = SME_DISCONNECTED;
++	vif->sme_state = SME_DISCONNECTED;
+ 
+ 	return 0;
+ }
+@@ -660,9 +660,9 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
+ 	/* TODO: Findout vif */
+ 	struct ath6kl_vif *vif = ar->vif;
+ 
+-	if (ar->scan_req) {
+-		cfg80211_scan_done(ar->scan_req, true);
+-		ar->scan_req = NULL;
++	if (vif->scan_req) {
++		cfg80211_scan_done(vif->scan_req, true);
++		vif->scan_req = NULL;
+ 	}
+ 
+ 	if (vif->nw_type & ADHOC_NETWORK) {
+@@ -701,18 +701,18 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
+ 
+ 	clear_bit(CONNECT_PEND, &vif->flags);
+ 
+-	if (ar->sme_state == SME_CONNECTING) {
++	if (vif->sme_state == SME_CONNECTING) {
+ 		cfg80211_connect_result(ar->net_dev,
+ 				bssid, NULL, 0,
+ 				NULL, 0,
+ 				WLAN_STATUS_UNSPECIFIED_FAILURE,
+ 				GFP_KERNEL);
+-	} else if (ar->sme_state == SME_CONNECTED) {
++	} else if (vif->sme_state == SME_CONNECTED) {
+ 		cfg80211_disconnected(ar->net_dev, reason,
+ 				NULL, 0, GFP_KERNEL);
+ 	}
+ 
+-	ar->sme_state = SME_DISCONNECTED;
++	vif->sme_state = SME_DISCONNECTED;
+ }
+ 
+ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+@@ -793,7 +793,7 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 	if (ret)
+ 		ath6kl_err("wmi_startscan_cmd failed\n");
+ 	else
+-		ar->scan_req = request;
++		vif->scan_req = request;
+ 
+ 	kfree(channels);
+ 
+@@ -802,22 +802,24 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 
+ void ath6kl_cfg80211_scan_complete_event(struct ath6kl *ar, int status)
+ {
++	/* TODO: Findout vif */
++	struct ath6kl_vif *vif = ar->vif;
+ 	int i;
+ 
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: status %d\n", __func__, status);
+ 
+-	if (!ar->scan_req)
++	if (!vif->scan_req)
+ 		return;
+ 
+ 	if ((status == -ECANCELED) || (status == -EBUSY)) {
+-		cfg80211_scan_done(ar->scan_req, true);
++		cfg80211_scan_done(vif->scan_req, true);
+ 		goto out;
+ 	}
+ 
+-	cfg80211_scan_done(ar->scan_req, false);
++	cfg80211_scan_done(vif->scan_req, false);
+ 
+-	if (ar->scan_req->n_ssids && ar->scan_req->ssids[0].ssid_len) {
+-		for (i = 0; i < ar->scan_req->n_ssids; i++) {
++	if (vif->scan_req->n_ssids && vif->scan_req->ssids[0].ssid_len) {
++		for (i = 0; i < vif->scan_req->n_ssids; i++) {
+ 			ath6kl_wmi_probedssid_cmd(ar->wmi, i + 1,
+ 						  DISABLE_SSID_FLAG,
+ 						  0, NULL);
+@@ -825,7 +827,7 @@ void ath6kl_cfg80211_scan_complete_event(struct ath6kl *ar, int status)
+ 	}
+ 
+ out:
+-	ar->scan_req = NULL;
++	vif->scan_req = NULL;
+ }
+ 
+ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+@@ -2121,7 +2123,7 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
+ 	if (register_netdev(ndev))
+ 		goto err;
+ 
+-	ar->sme_state = SME_DISCONNECTED;
++	vif->sme_state = SME_DISCONNECTED;
+ 	set_bit(WLAN_ENABLED, &vif->flags);
+ 	ar->wlan_pwr_state = WLAN_POWER_STATE_ON;
+ 	set_bit(NETDEV_REGISTERED, &vif->flags);
+@@ -2136,9 +2138,12 @@ err:
+ 
+ void ath6kl_deinit_ieee80211_hw(struct ath6kl *ar)
+ {
+-	if (ar->scan_req) {
+-		cfg80211_scan_done(ar->scan_req, true);
+-		ar->scan_req = NULL;
++	/* TODO: Findout vif */
++	struct ath6kl_vif *vif = ar->vif;
++
++	if (vif->scan_req) {
++		cfg80211_scan_done(vif->scan_req, true);
++		vif->scan_req = NULL;
+ 	}
+ 
+ 	wiphy_unregister(ar->wiphy);
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 5403116..e949a3b 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -417,6 +417,8 @@ struct ath6kl_vif {
+ 	struct ath6kl_key keys[WMI_MAX_KEY_INDEX + 1];
+ 	struct aggr_info *aggr_cntxt;
+ 	struct timer_list disconnect_timer;
++	struct cfg80211_scan_request *scan_req;
++	enum sme_state sme_state;
  };
  
-+#define IWL_5150_VOLTAGE_TO_TEMPERATURE_COEFF	(-5)
-+
-+static s32 iwl_temp_calib_to_offset(struct iwl_priv *priv)
-+{
-+	u16 temperature, voltage;
-+	__le16 *temp_calib = (__le16 *)iwl_eeprom_query_addr(priv,
-+				EEPROM_KELVIN_TEMPERATURE);
-+
-+	temperature = le16_to_cpu(temp_calib[0]);
-+	voltage = le16_to_cpu(temp_calib[1]);
-+
-+	/* offset = temp - volt / coeff */
-+	return (s32)(temperature - voltage / IWL_5150_VOLTAGE_TO_TEMPERATURE_COEFF);
-+}
-+
- static void iwl5150_set_ct_threshold(struct iwl_priv *priv)
- {
- 	const s32 volt2temp_coef = IWL_5150_VOLTAGE_TO_TEMPERATURE_COEFF;
+ /* Flag info */
+@@ -480,8 +482,6 @@ struct ath6kl {
+ 	struct list_head amsdu_rx_buffer_queue;
+ 	u8 rx_meta_ver;
+ 	struct wireless_dev *wdev;
+-	struct cfg80211_scan_request *scan_req;
+-	enum sme_state sme_state;
+ 	enum wlan_low_pwr_state wlan_pwr_state;
+ 	struct wmi_scan_params_cmd sc_params;
+ #define AR_MCAST_FILTER_MAC_ADDR_SIZE  4
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index d292e17..204901d 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -941,7 +941,7 @@ void ath6kl_deep_sleep_enable(struct ath6kl *ar)
+ 	/* TODO: Pass vif instead of taking it from ar */
+ 	struct ath6kl_vif *vif = ar->vif;
+ 
+-	switch (ar->sme_state) {
++	switch (vif->sme_state) {
+ 	case SME_CONNECTING:
+ 		cfg80211_connect_result(ar->net_dev, vif->bssid, NULL, 0,
+ 					NULL, 0,
+@@ -963,7 +963,7 @@ void ath6kl_deep_sleep_enable(struct ath6kl *ar)
+ 	    test_bit(CONNECT_PEND, &vif->flags))
+ 		ath6kl_wmi_disconnect_cmd(ar->wmi);
+ 
+-	ar->sme_state = SME_DISCONNECTED;
++	vif->sme_state = SME_DISCONNECTED;
+ 
+ 	/* disable scanning */
+ 	if (ath6kl_wmi_scanparams_cmd(ar->wmi, 0xFFFF, 0, 0, 0, 0, 0, 0, 0,
 -- 
 1.7.0.4
 
