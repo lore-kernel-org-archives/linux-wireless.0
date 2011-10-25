@@ -1,32 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:52915 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752767Ab1J0XMs (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:53342 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753928Ab1JYKie (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Oct 2011 19:12:48 -0400
-Received: by ywm3 with SMTP id 3so3121137ywm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Oct 2011 16:12:48 -0700 (PDT)
-Message-ID: <4EA9E56D.5080300@lwfinger.net> (sfid-20111028_011251_280577_1FBDC666)
-Date: Thu, 27 Oct 2011 18:12:45 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 25 Oct 2011 06:38:34 -0400
+From: <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH 6/7] ath6kl: Perform WOW resume in RX path in case of SDIO IRQ wakeup
+Date: Tue, 25 Oct 2011 16:07:26 +0530
+Message-ID: <1319539047-8756-7-git-send-email-rmani@qca.qualcomm.com> (sfid-20111025_123836_689192_1A42AE20)
+In-Reply-To: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com>
+References: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: Roman Proud <setamagiga@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: RTL8188RU no injection?
-References: <CAF7qGM4BL10gn2786kW73sAk8f-y8CzX0rx2BQsY_Q96W=pfog@mail.gmail.com> <4EA89B8D.7060104@lwfinger.net> <CAF7qGM7hfaz0SGiZVZ62r_nPO8viMT5F2_Kd1uRxN9Ha3mRO+Q@mail.gmail.com> <4EA97323.50004@lwfinger.net> <CA+XFjipvGBsWCCWt5OvFfeCiOpsH28Txvui4A+d8sVCaACQ57Q@mail.gmail.com>
-In-Reply-To: <CA+XFjipvGBsWCCWt5OvFfeCiOpsH28Txvui4A+d8sVCaACQ57Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/27/2011 05:00 PM, Gábor Stefanik wrote:
+From: Raja Mani <rmani@qca.qualcomm.com>
 
-> As a former Aircrack developer, I can definitely state that Aircrack
-> uses the same injection method as packetspammer.
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   12 ++++++++++++
+ drivers/net/wireless/ath/ath6kl/core.h     |    2 +-
+ drivers/net/wireless/ath/ath6kl/txrx.c     |    2 ++
+ 3 files changed, 15 insertions(+), 1 deletions(-)
 
-I just built Aircrack and tested it with rtl8192cu on an ALFA AWUS036NHR, which 
-has the RTL8188RU chip. It works just as you expected.
-
-Larry
-
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index ddef445..241b13d 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1602,6 +1602,12 @@ int ath6kl_pm_wow_resume(struct ath6kl *ar)
+ 	return 0;
+ }
+ 
++void ath6kl_pm_check_wow_status(struct ath6kl *ar)
++{
++	if (ar->wow_state == ATH6KL_WOW_STATE_SUSPENDED)
++		ath6kl_pm_wow_resume(ar);
++}
++
+ static int ar6k_cfg80211_suspend(struct wiphy *wiphy,
+ 				 struct cfg80211_wowlan *wow)
+ {
+@@ -1636,6 +1642,12 @@ static int ar6k_cfg80211_resume(struct wiphy *wiphy)
+ 
+ 	return ath6kl_hif_resume(ar);
+ }
++
++#else
++
++void ath6kl_pm_check_wow_status(struct ath6kl *ar)
++{
++}
+ #endif
+ 
+ static int ath6kl_set_channel(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index cefb233..4684933 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -651,5 +651,5 @@ void aggr_recv_addba_req_evt(struct ath6kl *ar, u8 tid, u16 seq_no,
+ 			     u8 win_sz);
+ void ath6kl_wakeup_event(void *dev);
+ void ath6kl_target_failure(struct ath6kl *ar);
+-
++void ath6kl_pm_check_wow_status(struct ath6kl *ar);
+ #endif /* CORE_H */
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index a9dff01..704ed50 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -1081,6 +1081,8 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 		return;
+ 	}
+ 
++	ath6kl_pm_check_wow_status(ar);
++
+ 	if (ept == ar->ctrl_ep) {
+ 		ath6kl_wmi_control_rx(ar->wmi, skb);
+ 		return;
+-- 
+1.7.0.4
 
