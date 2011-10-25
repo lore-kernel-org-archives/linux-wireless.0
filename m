@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ukfsn.org ([77.75.108.3]:60533 "EHLO mail.ukfsn.org"
+Received: from purkki.adurom.net ([80.68.90.206]:52488 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753369Ab1JYS2M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 14:28:12 -0400
-Received: from localhost (smtp-filter.ukfsn.org [192.168.54.205])
-	by mail.ukfsn.org (Postfix) with ESMTP id A0FA4DEBA2
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Oct 2011 19:10:39 +0100 (BST)
-Received: from mail.ukfsn.org ([192.168.54.25])
-	by localhost (smtp-filter.ukfsn.org [192.168.54.205]) (amavisd-new, port 10024)
-	with ESMTP id 6JwJ0mOfYYHw for <linux-wireless@vger.kernel.org>;
-	Tue, 25 Oct 2011 19:26:09 +0100 (BST)
-Received: from stargate.localnet (unknown [84.45.236.142])
-	by mail.ukfsn.org (Postfix) with ESMTP id 749ECDEB9E
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Oct 2011 19:10:39 +0100 (BST)
-From: David Goodenough <david.goodenough@btconnect.com>
-To: linux-wireless@vger.kernel.org
-Subject: How to find the phy's associated with a wireless dev
-Date: Tue, 25 Oct 2011 19:10:37 +0100
+	id S1756462Ab1JYMFw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Oct 2011 08:05:52 -0400
+To: ilanelias78@gmail.com
+Cc: aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	samuel@sortiz.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
+Subject: Re: [PATCH] NFC: update to NCI spec 1.0 draft 18
+References: <1319355971-14757-1-git-send-email-ilane@ti.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 25 Oct 2011 15:05:48 +0300
+In-Reply-To: <1319355971-14757-1-git-send-email-ilane@ti.com> (ilanelias's message of "Sun\, 23 Oct 2011 09\:46\:11 +0200")
+Message-ID: <87sjmhb7j7.fsf@purkki.adurom.net> (sfid-20111025_140555_958815_B3A1FC87)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201110251910.37638.david.goodenough@btconnect.com> (sfid-20111025_202816_801838_1C968992)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I notice that if I remove the kernel module for a wireless 
-interface and reload it, that a new phy is defined.  This is 
-confusing my script that sets up interfaces, in particular I 
-need to set the distance for a long distance link and that has
-to be done on the phy not the dev.
+ilanelias78@gmail.com writes:
 
-I am doing this from a script so I guess it has to be a query
-using iw, but I can not see which one to use.
+> From: Ilan Elias <ilane@ti.com>
+>
+> Signed-off-by: Ilan Elias <ilane@ti.com>
+> ---
+>  include/net/nfc/nci.h      |  208 ++++++++++++++++++++++---------------------
+>  include/net/nfc/nci_core.h |   13 +--
+>  net/nfc/nci/core.c         |   17 ++--
+>  net/nfc/nci/data.c         |    5 +-
+>  net/nfc/nci/lib.c          |    8 +--
+>  net/nfc/nci/ntf.c          |  152 +++++++++++++++++++-------------
+>  net/nfc/nci/rsp.c          |  149 ++++++++++++++-----------------
+>  7 files changed, 281 insertions(+), 271 deletions(-)
 
-David
+That's quite a big patch having no commit log. You could at least
+summarise what has been changed and impact of the changes.
+
+-- 
+Kalle Valo
