@@ -1,37 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48416 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752330Ab1JLPbq (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25573 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933413Ab1JYOEf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 11:31:46 -0400
-Subject: Re: [PATCH v2] mac80211: pass vif param to conf_tx() callback
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1317543352-29019-1-git-send-email-eliad@wizery.com> (sfid-20111002_101552_130579_7FDA5164)
-References: <1317543352-29019-1-git-send-email-eliad@wizery.com>
-	 (sfid-20111002_101552_130579_7FDA5164)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Oct 2011 17:31:36 +0200
-Message-ID: <1318433496.3933.44.camel@jlt3.sipsolutions.net> (sfid-20111012_173148_359999_61EE8004)
-Mime-Version: 1.0
+	Tue, 25 Oct 2011 10:04:35 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2 04/31] ath6kl: Cleanup fw interface type setting
+Date: Tue, 25 Oct 2011 19:33:59 +0530
+Message-ID: <1319551466-29070-5-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_160439_462749_507EB4AE)
+In-Reply-To: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-10-02 at 10:15 +0200, Eliad Peller wrote:
-> tx params should be configured per interface.
-> add ieee80211_vif param to the conf_tx callback,
-> and change all the drivers that use this callback.
+It is not necessary to use ath6kl_get_fw_iftype() to find out the
+firmware interface type during initialization because the type
+of the initial interface in INFRA_NETWORK. Hardcode the fw interface
+type corresponding to INFRA_BSS instead of using ath6kl_get_fw_iftype().
 
-For the record, I said this to you on IRC but you weren't around I
-guess. This patch (with the other ones) is now passing a bogus sdata/vif
-pointer to drivers -- e.g. for monitor mode interfaces from
-ieee80211_do_open -> ieee80211_set_wmm_default -> drv_conf_tx.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c |   19 +------------------
+ 1 files changed, 1 insertions(+), 18 deletions(-)
 
-I suspect the way to fix this would be to move the call to
-ieee80211_set_wmm_default into the last switch statement in do_open,
-could you please look into it?
-
-Thx,
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 6bbfe6f..7720177 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -91,21 +91,6 @@ void ath6kl_init_profile_info(struct ath6kl *ar)
+ 	ar->nw_type = ar->next_mode = INFRA_NETWORK;
+ }
+ 
+-static u8 ath6kl_get_fw_iftype(struct ath6kl *ar)
+-{
+-	switch (ar->nw_type) {
+-	case INFRA_NETWORK:
+-		return HI_OPTION_FW_MODE_BSS_STA;
+-	case ADHOC_NETWORK:
+-		return HI_OPTION_FW_MODE_IBSS;
+-	case AP_NETWORK:
+-		return HI_OPTION_FW_MODE_AP;
+-	default:
+-		ath6kl_err("Unsupported interface type :%d\n", ar->nw_type);
+-		return 0xff;
+-	}
+-}
+-
+ static int ath6kl_set_host_app_area(struct ath6kl *ar)
+ {
+ 	u32 address, data;
+@@ -446,9 +431,7 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 	u32 param, ram_reserved_size;
+ 	u8 fw_iftype;
+ 
+-	fw_iftype = ath6kl_get_fw_iftype(ar);
+-	if (fw_iftype == 0xff)
+-		return -EINVAL;
++	fw_iftype = HI_OPTION_FW_MODE_BSS_STA;
+ 
+ 	/* Tell target which HTC version it is used*/
+ 	param = HTC_PROTOCOL_VERSION;
+-- 
+1.7.0.4
 
