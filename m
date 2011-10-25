@@ -1,32 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:51267 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752495Ab1JJUH0 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32064 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754513Ab1JYKMq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 16:07:26 -0400
-Received: by gyg10 with SMTP id 10so5704454gyg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 13:07:25 -0700 (PDT)
+	Tue, 25 Oct 2011 06:12:46 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
+	<athiruve@qca.qualcomm.com>
+Subject: [PATCH 04/34] ath6kl: Cleanup fw interface type setting
+Date: Tue, 25 Oct 2011 15:40:00 +0530
+Message-ID: <1319537430-12459-5-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_121249_035190_763407A5)
+In-Reply-To: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1318277096.4001.1.camel@jlt3.sipsolutions.net>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-	<1318234397-21081-7-git-send-email-eliad@wizery.com>
-	<1318277096.4001.1.camel@jlt3.sipsolutions.net>
-Date: Mon, 10 Oct 2011 22:07:25 +0200
-Message-ID: <CAB3XZEd_YMQ=pkdyo_FkAD6ivsqhFR-S08EDNcCoWL6JKcvVJA@mail.gmail.com> (sfid-20111010_220735_165101_B09A732A)
-Subject: Re: [PATCH 06/29] wl12xx: add vifs list
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 10, 2011 at 10:04 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote:
->> keep a list of all the vifs associated with our hw.
->> it will be later used in order to iterate through vifs.
->
-> What's wrong with ieee80211_iterate_active_interfaces() :-)
+It is not necessary to use ath6kl_get_fw_iftype() to find out the
+firmware interface type during initialization because the type
+of the initial interface in INFRA_NETWORK. Hardcode the fw interface
+type corresponding to INFRA_BSS instead of using ath6kl_get_fw_iftype().
 
-defining iterator for each time we want to iterate is pretty cumbersome :)
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c |   19 +------------------
+ 1 files changed, 1 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 33c1584..5f32e97 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -91,21 +91,6 @@ void ath6kl_init_profile_info(struct ath6kl *ar)
+ 	ar->nw_type = ar->next_mode = INFRA_NETWORK;
+ }
+ 
+-static u8 ath6kl_get_fw_iftype(struct ath6kl *ar)
+-{
+-	switch (ar->nw_type) {
+-	case INFRA_NETWORK:
+-		return HI_OPTION_FW_MODE_BSS_STA;
+-	case ADHOC_NETWORK:
+-		return HI_OPTION_FW_MODE_IBSS;
+-	case AP_NETWORK:
+-		return HI_OPTION_FW_MODE_AP;
+-	default:
+-		ath6kl_err("Unsupported interface type :%d\n", ar->nw_type);
+-		return 0xff;
+-	}
+-}
+-
+ static int ath6kl_set_host_app_area(struct ath6kl *ar)
+ {
+ 	u32 address, data;
+@@ -446,9 +431,7 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 	u32 param, ram_reserved_size;
+ 	u8 fw_iftype;
+ 
+-	fw_iftype = ath6kl_get_fw_iftype(ar);
+-	if (fw_iftype == 0xff)
+-		return -EINVAL;
++	fw_iftype = HI_OPTION_FW_MODE_BSS_STA;
+ 
+ 	/* Tell target which HTC version it is used*/
+ 	param = HTC_PROTOCOL_VERSION;
+-- 
+1.7.0.4
+
