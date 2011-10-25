@@ -1,115 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:39712 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754051Ab1JaHMu (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4060 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933582Ab1JYOGq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Oct 2011 03:12:50 -0400
-Received: by pzk36 with SMTP id 36so17635694pzk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2011 00:12:49 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v2 1/4] mac80211: Avoid filling up mesh preq queue with redundant requests
-Date: Mon, 31 Oct 2011 00:12:38 -0700
-Message-Id: <1320045161-16144-1-git-send-email-thomas@cozybit.com> (sfid-20111031_081256_069810_203A582C)
+	Tue, 25 Oct 2011 10:06:46 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2 10/31] ath6kl: Move channel information to vif structure
+Date: Tue, 25 Oct 2011 19:34:05 +0530
+Message-ID: <1319551466-29070-11-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_160654_631939_46A3A4D2)
+In-Reply-To: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
-
-Don't accept redundant PREQs for a given destination. This fixes a
-problem under high load:
-
-kernel: [20386.250913] mesh_queue_preq: 235 callbacks suppressed
-kernel: [20386.253335] Mesh HWMP (mesh0): PREQ node queue full
-kernel: [20386.253352] Mesh HWMP (mesh0): PREQ node queue full
-(...)
-
-The 802.11s protocol has a provision to limit the rate of path requests
-(PREQs) are transmitted (dot11MeshHWMPpreqMinInterval) but there was no
-limit on the rate at which PREQs were being queued up.  There is a valid
-reason for queuing PREQs: this way we can even out PREQ bursts.  But
-queueing multiple PREQs for the same destination is useless.
-
-Reported-by: Pedro Larbig <pedro.larbig@carhs.de>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- net/mac80211/mesh.h      |    3 +++
- net/mac80211/mesh_hwmp.c |   15 +++++++++++++--
- 2 files changed, 16 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   14 +++++++-------
+ drivers/net/wireless/ath/ath6kl/core.h     |    4 ++--
+ drivers/net/wireless/ath/ath6kl/init.c     |    4 ++--
+ drivers/net/wireless/ath/ath6kl/main.c     |    4 ++--
+ 4 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 8c00e2d..b3745e8 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -31,6 +31,8 @@
-  * @MESH_PATH_FIXED: the mesh path has been manually set and should not be
-  * 	modified
-  * @MESH_PATH_RESOLVED: the mesh path can has been resolved
-+ * @MESH_PATH_REQ_QUEUED: there is an unsent path request for this destination
-+ * already queued up, waiting for the discovery process to start.
-  *
-  * MESH_PATH_RESOLVED is used by the mesh path timer to
-  * decide when to stop or cancel the mesh path discovery.
-@@ -41,6 +43,7 @@ enum mesh_path_flags {
- 	MESH_PATH_SN_VALID =	BIT(2),
- 	MESH_PATH_FIXED	=	BIT(3),
- 	MESH_PATH_RESOLVED =	BIT(4),
-+	MESH_PATH_REQ_QUEUED =	BIT(5),
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 4861fd7..76a6116 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -364,7 +364,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	    !memcmp(vif->ssid, sme->ssid, vif->ssid_len)) {
+ 		ar->reconnect_flag = true;
+ 		status = ath6kl_wmi_reconnect_cmd(ar->wmi, vif->req_bssid,
+-						  ar->ch_hint);
++						  vif->ch_hint);
+ 
+ 		up(&ar->sem);
+ 		if (status) {
+@@ -382,7 +382,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	memcpy(vif->ssid, sme->ssid, sme->ssid_len);
+ 
+ 	if (sme->channel)
+-		ar->ch_hint = sme->channel->center_freq;
++		vif->ch_hint = sme->channel->center_freq;
+ 
+ 	memset(vif->req_bssid, 0, sizeof(vif->req_bssid));
+ 	if (sme->bssid && !is_broadcast_ether_addr(sme->bssid))
+@@ -452,7 +452,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 		   __func__,
+ 		   vif->auth_mode, vif->dot11_auth_mode, vif->prwise_crypto,
+ 		   vif->prwise_crypto_len, vif->grp_crypto,
+-		   vif->grp_crypto_len, ar->ch_hint);
++		   vif->grp_crypto_len, vif->ch_hint);
+ 
+ 	ar->reconnect_flag = 0;
+ 	status = ath6kl_wmi_connect_cmd(ar->wmi, vif->nw_type,
+@@ -461,7 +461,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 					vif->prwise_crypto_len,
+ 					vif->grp_crypto, vif->grp_crypto_len,
+ 					vif->ssid_len, vif->ssid,
+-					vif->req_bssid, ar->ch_hint,
++					vif->req_bssid, vif->ch_hint,
+ 					ar->connect_ctrl_flags);
+ 
+ 	up(&ar->sem);
+@@ -1252,7 +1252,7 @@ static int ath6kl_cfg80211_join_ibss(struct wiphy *wiphy,
+ 	memcpy(vif->ssid, ibss_param->ssid, vif->ssid_len);
+ 
+ 	if (ibss_param->channel)
+-		ar->ch_hint = ibss_param->channel->center_freq;
++		vif->ch_hint = ibss_param->channel->center_freq;
+ 
+ 	if (ibss_param->channel_fixed) {
+ 		/*
+@@ -1292,7 +1292,7 @@ static int ath6kl_cfg80211_join_ibss(struct wiphy *wiphy,
+ 		   __func__,
+ 		   vif->auth_mode, vif->dot11_auth_mode, vif->prwise_crypto,
+ 		   vif->prwise_crypto_len, vif->grp_crypto,
+-		   vif->grp_crypto_len, ar->ch_hint);
++		   vif->grp_crypto_len, vif->ch_hint);
+ 
+ 	status = ath6kl_wmi_connect_cmd(ar->wmi, vif->nw_type,
+ 					vif->dot11_auth_mode, vif->auth_mode,
+@@ -1300,7 +1300,7 @@ static int ath6kl_cfg80211_join_ibss(struct wiphy *wiphy,
+ 					vif->prwise_crypto_len,
+ 					vif->grp_crypto, vif->grp_crypto_len,
+ 					vif->ssid_len, vif->ssid,
+-					vif->req_bssid, ar->ch_hint,
++					vif->req_bssid, vif->ch_hint,
+ 					ar->connect_ctrl_flags);
+ 	set_bit(CONNECT_PEND, &vif->flags);
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 298b339..ab33244 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -411,6 +411,8 @@ struct ath6kl_vif {
+ 	u8 nw_type;
+ 	u8 bssid[ETH_ALEN];
+ 	u8 req_bssid[ETH_ALEN];
++	u16 ch_hint;
++	u16 bss_ch;
  };
  
- /**
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 9a1f8bb..b7d9dfd 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -867,9 +867,19 @@ static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
- 		return;
- 	}
+ /* Flag info */
+@@ -440,8 +442,6 @@ struct ath6kl {
+ 	spinlock_t lock;
+ 	struct semaphore sem;
+ 	struct ath6kl_wep_key wep_key_list[WMI_MAX_KEY_INDEX + 1];
+-	u16 ch_hint;
+-	u16 bss_ch;
+ 	u16 listen_intvl_b;
+ 	u16 listen_intvl_t;
+ 	u8 lrssi_roam_threshold;
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index a43bb29..09125cc 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -90,7 +90,7 @@ void ath6kl_init_profile_info(struct ath6kl *ar)
+ 	memset(ar->wep_key_list, 0, sizeof(ar->wep_key_list));
+ 	memset(vif->req_bssid, 0, sizeof(vif->req_bssid));
+ 	memset(vif->bssid, 0, sizeof(vif->bssid));
+-	ar->bss_ch = 0;
++	vif->bss_ch = 0;
+ 	vif->nw_type = vif->next_mode = INFRA_NETWORK;
+ }
  
-+	spin_lock_bh(&mpath->state_lock);
-+	if (mpath->flags & MESH_PATH_REQ_QUEUED) {
-+		spin_unlock_bh(&mpath->state_lock);
-+		spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
-+		return;
-+	}
-+
- 	memcpy(preq_node->dst, mpath->dst, ETH_ALEN);
- 	preq_node->flags = flags;
+@@ -253,7 +253,7 @@ void ath6kl_init_control_info(struct ath6kl *ar)
+ 	ath6kl_init_profile_info(ar);
+ 	vif->def_txkey_index = 0;
+ 	memset(ar->wep_key_list, 0, sizeof(ar->wep_key_list));
+-	ar->ch_hint = 0;
++	vif->ch_hint = 0;
+ }
  
-+	mpath->flags |= MESH_PATH_REQ_QUEUED;
-+	spin_unlock_bh(&mpath->state_lock);
-+
- 	list_add_tail(&preq_node->list, &ifmsh->preq_queue.list);
- 	++ifmsh->preq_queue_len;
- 	spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
-@@ -921,6 +931,7 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
- 		goto enddiscovery;
+ /*
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index bdefb89..15838de 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -1058,7 +1058,7 @@ void ath6kl_connect_event(struct ath6kl *ar, u16 channel, u8 *bssid,
+ 				      assoc_info);
  
- 	spin_lock_bh(&mpath->state_lock);
-+	mpath->flags &= ~MESH_PATH_REQ_QUEUED;
- 	if (preq_node->flags & PREQ_Q_F_START) {
- 		if (mpath->flags & MESH_PATH_RESOLVING) {
- 			spin_unlock_bh(&mpath->state_lock);
-@@ -1028,8 +1039,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
- 			mesh_queue_preq(mpath, PREQ_Q_F_START);
- 		}
+ 	memcpy(vif->bssid, bssid, sizeof(vif->bssid));
+-	ar->bss_ch = channel;
++	vif->bss_ch = channel;
  
--		if (skb_queue_len(&mpath->frame_queue) >=
--				MESH_FRAME_QUEUE_LEN)
-+		if (skb_queue_len(&mpath->frame_queue) >= MESH_FRAME_QUEUE_LEN)
- 			skb_to_free = skb_dequeue(&mpath->frame_queue);
+ 	if ((vif->nw_type == INFRA_NETWORK))
+ 		ath6kl_wmi_listeninterval_cmd(ar->wmi, ar->listen_intvl_t,
+@@ -1434,7 +1434,7 @@ void ath6kl_disconnect_event(struct ath6kl *ar, u8 reason, u8 *bssid,
  
- 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
-@@ -1062,6 +1072,7 @@ void mesh_path_timer(unsigned long data)
- 		++mpath->discovery_retries;
- 		mpath->discovery_timeout *= 2;
- 		spin_unlock_bh(&mpath->state_lock);
-+		mpath->flags &= ~MESH_PATH_REQ_QUEUED;
- 		mesh_queue_preq(mpath, 0);
- 	} else {
- 		mpath->flags = 0;
+ 	netif_stop_queue(ar->net_dev);
+ 	memset(vif->bssid, 0, sizeof(vif->bssid));
+-	ar->bss_ch = 0;
++	vif->bss_ch = 0;
+ 
+ 	ath6kl_tx_data_cleanup(ar);
+ }
 -- 
-1.7.5.4
+1.7.0.4
 
