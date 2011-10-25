@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:58552 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756250Ab1JCTbc convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:54676 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751222Ab1JYSrH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Oct 2011 15:31:32 -0400
-Received: by qadb15 with SMTP id b15so1850864qad.19
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2011 12:31:32 -0700 (PDT)
+	Tue, 25 Oct 2011 14:47:07 -0400
+Message-ID: <4EA70429.8070505@candelatech.com> (sfid-20111025_204735_044718_5D391E24)
+Date: Tue, 25 Oct 2011 11:47:05 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <201110032124.53937.chunkeey@googlemail.com>
-References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com>
- <1317637758-11907-6-git-send-email-zefir.kurtisi@neratec.com>
- <CAB=NE6VO4W=ZJcgb3G5Gh=YM-jdkJ3ey5Ppka2Rn0XGmpx8=Gg@mail.gmail.com> <201110032124.53937.chunkeey@googlemail.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Mon, 3 Oct 2011 12:31:12 -0700
-Message-ID: <CAB=NE6XBkisvFmj6F7wS6i8XV7WEsM6bQ5zsXFWXm9XM8z0pwA@mail.gmail.com> (sfid-20111003_213136_133780_2A0B3CB9)
-Subject: Re: [RFC 5/6] ath9k: enable DFS pulse detection
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kgiori@qca.qualcomm.com, nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+To: David Goodenough <david.goodenough@btconnect.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: How to find the phy's associated with a wireless dev
+References: <201110251910.37638.david.goodenough@btconnect.com>
+In-Reply-To: <201110251910.37638.david.goodenough@btconnect.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 3, 2011 at 12:24 PM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> On Monday, October 03, 2011 08:27:39 PM Luis R. Rodriguez wrote:
->> On Mon, Oct 3, 2011 at 3:29 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
->> >
->> > Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
->> > ---
->> >  drivers/net/wireless/ath/ath9k/main.c |   12 ++++++++++++
->> >  1 files changed, 12 insertions(+), 0 deletions(-)
->> >
->> > diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->> > index e8aeb98..5defebe 100644
->> > --- a/drivers/net/wireless/ath/ath9k/main.c
->> > +++ b/drivers/net/wireless/ath/ath9k/main.c
->> > @@ -344,6 +344,18 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
->> >                        "Unable to reset channel, reset status %d\n", r);
->> >                goto out;
->> >        }
->> > +#ifdef CONFIG_ATH9K_DFS
->> > +       /**
->> > +        * enable radar pulse detection
->> > +        *
->> > +        * TODO: do this only for DFS channels
->> > +        */
->> > +       ah->private_ops.set_radar_params(ah, &ah->radar_conf);
->> > +       ath9k_hw_setrxfilter(ah,
->> > +                       ath9k_hw_getrxfilter(ah) | ATH9K_RX_FILTER_PHYRADAR);
->> > +       ath_dbg(common, ATH_DBG_DFS,
->> > +               "DFS enabled for channel %d\n", hchan->chan->center_freq);
->> > +#endif
->>
->> Please spare the #ifdef and just call something within dfs.c, then
->> dfs.h would wrap it to nothing if DFS is disabled.
-> Why would anyone want to disable DFS driver support?
-> I would say: drop the ifdefs altogether since DFS
-> is and will be "required".
+On 10/25/2011 11:10 AM, David Goodenough wrote:
+> I notice that if I remove the kernel module for a wireless
+> interface and reload it, that a new phy is defined.  This is
+> confusing my script that sets up interfaces, in particular I
+> need to set the distance for a long distance link and that has
+> to be done on the phy not the dev.
+>
+> I am doing this from a script so I guess it has to be a query
+> using iw, but I can not see which one to use.
 
-Because DFS requires to be properly tested before being enabled. You
-may also want to simply disable DFS if you do not want to deal with
-the regulatory test implications of having it enabled.
+On a recent kernel:
+cat /sys/class/net/wlan0/phy80211/name
 
-  Luis
+Thanks,
+Ben
+
+
+>
+> David
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
