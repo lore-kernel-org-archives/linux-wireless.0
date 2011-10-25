@@ -1,70 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:51583 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753798Ab1JQCYd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Oct 2011 22:24:33 -0400
-Subject: Re: 3.1-rc9 wifi problem
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: werner <w.landgraf@ru.ru>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"dave.taht@gmail.com" <dave.taht@gmail.com>,
-	"rientjes@google.com" <rientjes@google.com>,
-	"arend@broadcom.com" <arend@broadcom.com>,
-	"toralf.foerster@gmx.de" <toralf.foerster@gmx.de>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"larry.finger@gmail.com" <larry.finger@gmail.com>
-In-Reply-To: <4E9B9018.1000002@lwfinger.net>
-References: <web-626905859@zbackend1.aha.ru> <4E9A4496.1000906@lwfinger.net>
-	 <web-627302724@zbackend1.aha.ru>  <4E9B9018.1000002@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 16 Oct 2011 18:34:26 -0700
-Message-ID: <1318815266.31823.31.camel@wwguy-huron> (sfid-20111017_042450_173911_0DD0D80C)
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48448 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756251Ab1JYKQk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Oct 2011 06:16:40 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
+	<athiruve@qca.qualcomm.com>
+Subject: [PATCH 34/34] ath6kl: Enable not more than one interface to workaround target assert
+Date: Tue, 25 Oct 2011 15:40:30 +0530
+Message-ID: <1319537430-12459-35-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_121813_985742_93878B79)
+In-Reply-To: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-10-16 at 19:16 -0700, Larry Finger wrote:
-> On 10/16/2011 08:33 PM, werner wrote:
-> > I have to wait until the friend with the laptop comes back, perhaps this week.
-> > Then I can look what wireless card is in it.
-> >
-> > However, now I remember me: that laptop worked only good since 2.6.39 with the
-> > new kernel-embedded modules. Before, it didn't work normally, i.e. on booting
-> > the wireless almost never didn't switch on; only ocasionally .
-> >
-> >
-> > And, beside of kernel 2.6.39, and the normal wifi software, I still had him to
-> > install a file iwlwifi-1000-3.ucode or .5 ucode (i'm not sure, the number can
-> > also be 5000), and I had the problem to search long time for that file because
-> > one find only .2 or .4 in internet but what don't work at that wifi card. You
-> > could improve the kernel-module so that everything is included so that one don't
-> > need to search such files.
-> 
-> That will not happen. In fact, the trend is from having firmware be a part of 
-> the driver to having it be external.
-> 
-> I don't know what distro you use, but mine (openSUSE) maintains a package called 
-> kernel-firmware that contains all the redistributable firmware that is available 
-> from tne linux-firmware git tree. If that package is installed, then you do not 
-> have to search for firmware in most cases. If your distro does not have such a 
-> package, then complain or find another distro.
-> 
-> > Then, with this kernel and that file however, it worked without any problem.
-> >
-> > I hope from these informations you can find out what wifi card or what driver is
-> > in the laptop.
-> 
-> We can tell that you have an Intel card, but not much more.
-> 
-> Larry
-> 
+Configuring the firmware for three interfaces causes random
+target assert. So restrict the number of vifs to just 1
+to avoid this issue for now. Once it is fixed in firmware,
+this patch would be reverted.
 
-Not knowing much about what problem you  encounter, but you can find all
-the latest intel WiFi firmware at
-http://www.intellinuxwireless.org/?n=Downloads
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/core.h |    2 +-
+ drivers/net/wireless/ath/ath6kl/init.c |   15 +++++++++++++--
+ 2 files changed, 14 insertions(+), 3 deletions(-)
 
-Thanks
-Wey
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 8702a9c..97d7f11 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -380,7 +380,7 @@ struct ath6kl_req_key {
+ 	u8 key_len;
+ };
+ 
+-#define MAX_NUM_VIF	3
++#define MAX_NUM_VIF	1
+ 
+ /* vif flags info */
+ enum ath6kl_vif_state {
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 89234d8..eb51947 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -400,7 +400,11 @@ static int ath6kl_target_config_wlan_params(struct ath6kl *ar, int idx)
+ 			status = -EIO;
+ 		}
+ 
+-	if (ar->p2p && idx) {
++	/*
++	 * FIXME: Make sure p2p configuration is not applied on other
++	 * non-p2p capable interfaces when multiple vif support is enabled.
++	 */
++	if (ar->p2p) {
+ 		ret = ath6kl_wmi_info_req_cmd(ar->wmi, idx,
+ 					      P2P_FLAG_CAPABILITIES_REQ |
+ 					      P2P_FLAG_MACADDR_REQ |
+@@ -413,7 +417,7 @@ static int ath6kl_target_config_wlan_params(struct ath6kl *ar, int idx)
+ 		}
+ 	}
+ 
+-	if (ar->p2p && idx) {
++	if (ar->p2p) {
+ 		/* Enable Probe Request reporting for P2P */
+ 		ret = ath6kl_wmi_probe_report_req_cmd(ar->wmi, idx, true);
+ 		if (ret) {
+@@ -457,6 +461,13 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 		fw_submode |= HI_OPTION_FW_SUBMODE_P2PDEV <<
+ 			      (i * HI_OPTION_FW_SUBMODE_BITS);
+ 
++	/*
++	 * FIXME: This needs to be removed once multi vif
++	 * support is enabled.
++	 */
++	if (ar->p2p)
++		fw_submode = HI_OPTION_FW_SUBMODE_P2PDEV;
++
+ 	/* Tell target which HTC version it is used*/
+ 	param = HTC_PROTOCOL_VERSION;
+ 	if (ath6kl_bmi_write(ar,
+-- 
+1.7.0.4
 
