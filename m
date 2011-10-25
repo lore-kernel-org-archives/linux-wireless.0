@@ -1,64 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:58902 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754461Ab1JMWp4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:11758 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932370Ab1JYKO6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Oct 2011 18:45:56 -0400
-Date: Fri, 14 Oct 2011 01:45:32 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: Re: [PATCH] mac80211: handle HT PHY BSS membership selector value
- correctly
-Message-ID: <20111013224532.GA1959@jm.kir.nu> (sfid-20111014_004607_596725_AC0B14B1)
-References: <201110132108.50019.chunkeey@googlemail.com>
+	Tue, 25 Oct 2011 06:14:58 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
+	<athiruve@qca.qualcomm.com>
+Subject: [PATCH 33/34] ath6kl: Cleanup function parameters in ath6kl_init_if_data()/ath6kl_deinit_if_data()
+Date: Tue, 25 Oct 2011 15:40:29 +0530
+Message-ID: <1319537430-12459-34-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_121739_618238_F9A7F16A)
+In-Reply-To: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201110132108.50019.chunkeey@googlemail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 13, 2011 at 09:08:49PM +0200, Christian Lamparter wrote:
-> 802.11n-2009 extends the supported rates element with a
-> magic value which can be used to prevent legacy stations
-> from joining the BSS.
+It makes sense to pass only vif to these functions.
 
-Well, it can be used to try to make legacy stations not attempt
-connection, but no guarantees on them actually checking whether they
-support all the "basic rates".. For example, where is mac80211 (or
-wpa_supplicant) doing that check? ;-)
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   19 ++++++++-----------
+ drivers/net/wireless/ath/ath6kl/core.h     |    2 +-
+ drivers/net/wireless/ath/ath6kl/init.c     |    4 ++--
+ 3 files changed, 11 insertions(+), 14 deletions(-)
 
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> @@ -1463,6 +1463,38 @@ ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
-> +static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
-
-> +	for (i = 0; i < supp_rates_len; i++) {
-> +		int rate = (supp_rates[i] & 0x7f) * 5;
-> +		bool is_basic = !!(supp_rates[i] & BSS_MEMBERSHIP_SELECTOR);
-
-This looks a bit odd since the BSS_MEMBERSHIP_SELECTOR is not exactly
-same as basic rate indicator even through they share the same bit. We
-used to have the magic 0x80 value here which could actually look less
-confusing than the mixing of basic and BSS membership terms.
-
-> +		if (rate > 110)
-> +			*have_higher_than_11mbit = true;
-
-While this is not really introduced by this patch, this looks quite
-bogus since the higher-than-11Mbps is then used to figure out whether
-this was a 802.11g network. That is not correct since a network with a
-single supported rate 6 Mbps should also get that behavior.. More robust
-mechanism would be to check for any OFDM rate being listed.
-
-> +	ieee80211_get_rates(sband, elems.supp_rates, elems.supp_rates_len,
-> +			    &rates, &basic_rates, &have_higher_than_11mbit);
-
-> +	ieee80211_get_rates(sband, elems.ext_supp_rates,
-> +			    elems.ext_supp_rates_len, &rates, &basic_rates,
-> +			    &have_higher_than_11mbit);
-
-Yay for getting rid of the duplicated loop :-).
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index b5d14fa..699589e 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1310,7 +1310,7 @@ static int ath6kl_cfg80211_del_iface(struct wiphy *wiphy,
  
+ 	ath6kl_cleanup_vif(vif, test_bit(WMI_READY, &ar->flag));
+ 
+-	ath6kl_deinit_if_data(vif->ar, vif->ndev);
++	ath6kl_deinit_if_data(vif);
+ 
+ 	return 0;
+ }
+@@ -2192,27 +2192,25 @@ int ath6kl_register_ieee80211_hw(struct ath6kl *ar)
+ 	return 0;
+ }
+ 
+-static int ath6kl_init_if_data(struct ath6kl *ar, struct net_device *ndev)
++static int ath6kl_init_if_data(struct ath6kl_vif *vif)
+ {
+-	struct ath6kl_vif *vif = netdev_priv(ndev);
+-
+-	vif->aggr_cntxt = aggr_init(ndev);
++	vif->aggr_cntxt = aggr_init(vif->ndev);
+ 	if (!vif->aggr_cntxt) {
+ 		ath6kl_err("failed to initialize aggr\n");
+ 		return -ENOMEM;
+ 	}
+ 
+ 	setup_timer(&vif->disconnect_timer, disconnect_timer_handler,
+-		    (unsigned long) ndev);
++		    (unsigned long) vif->ndev);
+ 	set_bit(WMM_ENABLED, &vif->flags);
+ 	spin_lock_init(&vif->if_lock);
+ 
+ 	return 0;
+ }
+ 
+-void ath6kl_deinit_if_data(struct ath6kl *ar, struct net_device *ndev)
++void ath6kl_deinit_if_data(struct ath6kl_vif *vif)
+ {
+-	struct ath6kl_vif *vif = netdev_priv(ndev);
++	struct ath6kl *ar = vif->ar;
+ 
+ 	aggr_module_destroy(vif->aggr_cntxt);
+ 
+@@ -2221,7 +2219,7 @@ void ath6kl_deinit_if_data(struct ath6kl *ar, struct net_device *ndev)
+ 	if (vif->nw_type == ADHOC_NETWORK)
+ 		ar->ibss_if_active = false;
+ 
+-	unregister_netdevice(ndev);
++	unregister_netdevice(vif->ndev);
+ 
+ 	ar->num_vif--;
+ }
+@@ -2257,8 +2255,7 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
+ 
+ 	ath6kl_init_control_info(vif);
+ 
+-	/* TODO: Pass interface specific pointer instead of ar */
+-	if (ath6kl_init_if_data(ar, ndev))
++	if (ath6kl_init_if_data(vif))
+ 		goto err;
+ 
+ 	if (register_netdevice(ndev))
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 7a2ee37..8702a9c 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -656,7 +656,7 @@ void ath6kl_target_failure(struct ath6kl *ar);
+ void ath6kl_reset_device(struct ath6kl *ar, u32 target_type,
+ 			 bool wait_fot_compltn, bool cold_reset);
+ void ath6kl_init_control_info(struct ath6kl_vif *vif);
+-void ath6kl_deinit_if_data(struct ath6kl *ar, struct net_device *ndev);
++void ath6kl_deinit_if_data(struct ath6kl_vif *vif);
+ void ath6kl_core_free(struct ath6kl *ar);
+ struct ath6kl_vif *ath6kl_vif_first(struct ath6kl *ar);
+ void ath6kl_cleanup_vif(struct ath6kl_vif *vif, bool wmi_ready);
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 33bf74f..89234d8 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1557,7 +1557,7 @@ err_cleanup_scatter:
+ 	ath6kl_hif_cleanup_scatter(ar);
+ err_if_deinit:
+ 	rtnl_lock();
+-	ath6kl_deinit_if_data(ar, ndev);
++	ath6kl_deinit_if_data(netdev_priv(ndev));
+ 	rtnl_unlock();
+ 	wiphy_unregister(ar->wiphy);
+ err_debug_init:
+@@ -1676,7 +1676,7 @@ void ath6kl_stop_txrx(struct ath6kl *ar)
+ 		spin_unlock(&ar->list_lock);
+ 		ath6kl_cleanup_vif(vif, test_bit(WMI_READY, &ar->flag));
+ 		rtnl_lock();
+-		ath6kl_deinit_if_data(vif->ar, vif->ndev);
++		ath6kl_deinit_if_data(vif);
+ 		rtnl_unlock();
+ 		spin_lock(&ar->list_lock);
+ 	}
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.0.4
+
