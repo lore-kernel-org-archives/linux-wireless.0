@@ -1,177 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:49789 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932264Ab1JCS3A convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:64719 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750713Ab1JYHQx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Oct 2011 14:29:00 -0400
-Received: by qyk30 with SMTP id 30so2441619qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2011 11:29:00 -0700 (PDT)
+	Tue, 25 Oct 2011 03:16:53 -0400
+Message-ID: <4EA661F6.1000706@qca.qualcomm.com> (sfid-20111025_091657_193684_1E1641AB)
+Date: Tue, 25 Oct 2011 10:15:02 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1317637758-11907-2-git-send-email-zefir.kurtisi@neratec.com>
-References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com> <1317637758-11907-2-git-send-email-zefir.kurtisi@neratec.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Mon, 3 Oct 2011 11:14:54 -0700
-Message-ID: <CAB=NE6UUspgQtFeVr+dfFtHEHxW6wMue+PS1RrwmJO1rqroW7A@mail.gmail.com> (sfid-20111003_202906_098330_D724992C)
-Subject: Re: [RFC 1/6] ath9k: add DFS statistics to debugfs
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kgiori@qca.qualcomm.com, nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+To: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath6kl: Implement support for listen interval from
+ userspace
+References: <1319150111-5647-1-git-send-email-rpanjwan@qca.qualcomm.com> <1319150111-5647-2-git-send-email-rpanjwan@qca.qualcomm.com>
+In-Reply-To: <1319150111-5647-2-git-send-email-rpanjwan@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 3, 2011 at 3:29 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
->
-> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-> ---
->  drivers/net/wireless/ath/ath9k/debug.c |   51 ++++++++++++++++++++++++++++++++
->  drivers/net/wireless/ath/ath9k/debug.h |   29 ++++++++++++++++++
->  2 files changed, 80 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-> index cdece82..6ad2266 100644
-> --- a/drivers/net/wireless/ath/ath9k/debug.c
-> +++ b/drivers/net/wireless/ath/ath9k/debug.c
-> @@ -89,6 +89,53 @@ static const struct file_operations fops_debug = {
->
->  #endif
->
-> +
-> +#ifdef CONFIG_ATH9K_DFS
+On 10/21/2011 01:35 AM, Rishi Panjwani wrote:
+> In order to allow user space based control of listen interval, we use
+> available debugfs infrastructure. Listen interval implies how frequently
+> we want the WLAN chip to wake up and synchronize the beacons in case it
+> is in sleep mode. The feature has been added for testing purposes. The
+> command requires two parameters in the following order:
 
-This kconfig entry doesn't exist yet, so no point in referring to it
-yet, you can add a patch that adds this but describe it as work in
-progress or something like that and later correct the text as you move
-on.
+An empty line here.
 
-> +
-> +#define DFS_STAT(s, p) \
-> +       len += snprintf(buf + len, size - len, "%28s : %10u\n", s, \
-> +                       sc->debug.stats.dfs_stats.p);
-> +
+> 1) listen_interval_time
+> 2) listen_interval_beacons
+> 
+> The user has to write the listen interval_time (in msecs) and
+> listen_interval_beacons (in no. of beacons) to the listen_interval file in
+> ath6kl debug directory.
+> 
+> Example:
+> 
+> echo "30 1" > listen_interval
 
-Either rename DFS_STAT to ATH9K_DFS_STAT or undef DFS_STAT after its usage.
+[...]
 
-> +static ssize_t read_file_dfs(struct file *file, char __user *user_buf,
-> +                            size_t count, loff_t *ppos)
-> +{
-> +       struct ath_softc *sc = file->private_data;
-> +       char *buf;
-> +       unsigned int len = 0, size = 8000;
-> +       ssize_t retval = 0;
-> +
-> +       buf = kzalloc(size, GFP_KERNEL);
-> +       if (buf == NULL)
-> +               return -ENOMEM;
-> +
-> +       DFS_STAT("DFS pulses detected     ", pulses_detected);
-> +       DFS_STAT("Datalen discards        ", datalen_discards);
-> +       DFS_STAT("RSSI discards           ", rssi_discards);
-> +       DFS_STAT("BW info discards        ", bwinfo_discards);
-> +       DFS_STAT("Primary channel pulses  ", pri_phy_errors);
-> +       DFS_STAT("Secondary channel pulses", ext_phy_errors);
-> +       DFS_STAT("Dual channel pulses     ", dc_phy_errors);
-> +
-> +       if (len > size)
-> +               len = size;
-> +
-> +       retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-> +       kfree(buf);
-> +
-> +       return retval;
-> +}
-> +
-> +
-> +static const struct file_operations fops_dfs_stats = {
-> +       .read = read_file_dfs,
-> +       .open = ath9k_debugfs_open,
-> +       .owner = THIS_MODULE,
-> +       .llseek = default_llseek,
-> +};
-> +#endif /* CONFIG_ATH9K_DFS */
+> +	token = strsep(&sptr, " ");
+> +	if (!token)
+> +		return -EINVAL;
+> +	if (kstrtou16(token, 0, &listen_int_t) ||
+> +		kstrtou16(sptr, 0, &listen_int_b))
+> +		return -EINVAL;
 
-I'd prefer to keep this apart into a debugfs_dfs.c but that's just me,
-I would like to ensure to keep *all* DFS stat as easy to review as
-possible and am not a fan of the ifdef sprinkle.
+Just to improve readability separate these to two if clauses:
 
-> +
-> +
->  #define DMA_BUF_LEN 1024
->
->  static ssize_t read_file_tx_chainmask(struct file *file, char __user *user_buf,
-> @@ -1385,6 +1432,10 @@ int ath9k_init_debug(struct ath_hw *ah)
->        debugfs_create_u32("chanbw", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
->                           &sc->chan_bw);
->
-> +#ifdef CONFIG_ATH9K_DFS
-> +       debugfs_create_file("dfs_stats", S_IRUSR, sc->debug.debugfs_phy, sc,
-> +                           &fops_dfs_stats);
-> +#endif
+if (kstrtou16(token, 0, &listen_int_t))
+	return -EINVAL;
 
-If you stuff the code into a file here you'd just need a caller to
-ath9k_debugfs_dfs_create() or something like that.
+if (kstrtou16(sptr, 0, &listen_int_b))
+	return -EINVAL;
 
->        sc->debug.regidx = 0;
->        return 0;
->  }
-> diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-> index 4a04510..3a3c3b7 100644
-> --- a/drivers/net/wireless/ath/ath9k/debug.h
-> +++ b/drivers/net/wireless/ath/ath9k/debug.h
-> @@ -25,8 +25,10 @@ struct ath_buf;
->
->  #ifdef CONFIG_ATH9K_DEBUGFS
->  #define TX_STAT_INC(q, c) sc->debug.stats.txstats[q].c++
-> +#define DFS_STAT_INC(sc, c) (sc->debug.stats.dfs_stats.c++)
->  #else
->  #define TX_STAT_INC(q, c) do { } while (0)
-> +#define DFS_STAT_INC(sc, c) do { } while (0)
+> +	if ((listen_int_t >= 15) && (listen_int_t <= 5000) &&
+> +		(listen_int_b >= 1) && (listen_int_b <= 50)) {
+> +		ar->listen_intvl_t = listen_int_t;
+> +		ar->listen_intvl_b = listen_int_b;
+> +		ath6kl_wmi_listeninterval_cmd(ar->wmi, ar->listen_intvl_t,
+> +							ar->listen_intvl_b);
+> +	} else {
+> +		return -EINVAL;
+> +	}
 
-Who's using this? If no one, then why add it? That is add it only when
-its in code.
+The style in kernel usually is that we handle the errors in the if
+blocks and the normal code flow is without any indentation. Easier to
+follow code path that way. So you could change this to:
 
->  #endif
->
->  #ifdef CONFIG_ATH9K_DEBUGFS
-> @@ -171,10 +173,37 @@ struct ath_rx_stats {
->        u8 rs_antenna;
->  };
->
-> +#ifdef CONFIG_ATH9K_DFS
-> +/**
-> + * struct ath_dfs_stats - DFS Statistics
-> + *
-> + * @pulses_detected: No. of pulses detected so far
-> + * @datalen_discards:  No. of pulses discarded due to invalid datalen
-> + * @rssi_discards: No. of pulses discarded due to invalid RSSI
-> + * @bwinfo_discards: No. of pulses discarded due to invalid BW info
-> + * @pri_phy_errors: No. of pulses reported for primary channel
-> + * @ext_phy_errors: No. of pulses reported for extension channel
-> + * @dc_phy_errors: No. of pulses reported for primary + extension channel
-> + */
-> +struct ath_dfs_stats {
-> +       u32 pulses_detected;
-> +       u32 datalen_discards;
-> +       u32 rssi_discards;
-> +       u32 bwinfo_discards;
-> +       u32 pri_phy_errors;
-> +       u32 ext_phy_errors;
-> +       u32 dc_phy_errors;
-> +};
-> +#endif
-> +
-> +
->  struct ath_stats {
->        struct ath_interrupt_stats istats;
->        struct ath_tx_stats txstats[ATH9K_NUM_TX_QUEUES];
->        struct ath_rx_stats rxstats;
-> +#ifdef CONFIG_ATH9K_DFS
-> +       struct ath_dfs_stats dfs_stats;
-> +#endif
+if ((listen_int_t < 15) || (listen_int_t > 5000))
+	return -EINVAL;
 
-If code used this set of stats this would give a compile error if
-CONFIG_ATH9K_DEBUGFS is enabled but CONFIG_ATH9K_DFS was disabled as
-the ifdef over the increment stat stuff is over CONFIG_ATH9K_DEBUGFS
-and not CONFIG_ATH9K_DFS, but again, no one uses this code yet.
+if ((listen_int_b < 1) > (listen_int_b > 50))
+	return -EINVAL;
 
-  Luis
+ar->listen_intvl_t = listen_int_t;
+ar->listen_intvl_b = listen_int_b;
+
+ath6kl_wmi_listeninterval_cmd(ar->wmi, ar->listen_intvl_t,
+				ar->listen_intvl_b);
+
+A lot easier to read that way.
+
+Kalle
