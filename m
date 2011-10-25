@@ -1,90 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:51957 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755720Ab1JXMAE (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5446 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754337Ab1JYHJu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Oct 2011 08:00:04 -0400
-Received: by bkbzt19 with SMTP id zt19so8104604bkb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2011 05:00:02 -0700 (PDT)
+	Tue, 25 Oct 2011 03:09:50 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k_hw: Updated AR9462 initval table to improve rx performance
+Date: Tue, 25 Oct 2011 12:40:38 +0530
+Message-ID: <1319526638-12910-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111025_091005_437488_2792D663)
 MIME-Version: 1.0
-In-Reply-To: <20111023194059.GA18385@jm.kir.nu>
-References: <20111023194059.GA18385@jm.kir.nu>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 24 Oct 2011 13:59:45 +0200
-Message-ID: <CA+XVXfdP5VjMLaYxh6Saa+SM+cDUG+h18L0ixheQmaAo+yQX+Q@mail.gmail.com> (sfid-20111024_140009_039885_E67FDF92)
-Subject: Re: [RFC] mac80211: Fix STA supported rate configuration with dummy entry
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 23, 2011 at 21:40, Jouni Malinen <j@w1.fi> wrote:
->
-> Are all rate control algorithms fine with the second
-> rate_control_rate_init() call? That is needed in the TDLS use case where
-> the supported rate set is known only after the STA entry has been
+The initval tables are updated as per system team input to improve
+rx performance and power accuracy at 5GHz.
 
-Note that the sta-rates are not really required before second addition
-(which also sets them). Initially the STA is not authorized for direct
-Tx (as determined by the WLAN_STA_TDLS_PEER_AUTH bit).
-We don't expect direct frames during link setup.
-
-> added. I guess it would be possible to delay addition of the STA entry
-> for TDLS until the supported rates are known, but I did not look at the
-> details on what exactly that would require.
-
-The STA is added to let us know we should drop all non-setup packets
-between TDLS peers currently in link setup. We could have used a
-different indication, but the STA entry is make the most sense here
-since it is automatically cleaned up when we are disconnected from the
-AP (as all TDLS state should be).
-
-How about this one instead (tested hwsim with it):
-
->From d8b7acc16073e50f4fda3365d98ad01b21e2c631 Mon Sep 17 00:00:00 2001
-From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 24 Oct 2011 13:44:07 +0200
-Subject: [RFC] mac80211: init rate-control for TDLS sta when supp-rates are
- known
-
-Initialize rate control algorithms only when supported rates are known
-for a TDLS peer sta. Direct Tx between peers is not allowed before the
-link is enabled. In turn, this only occurs after a change_station()
-call that sets supported rates.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- net/mac80211/cfg.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
+ .../net/wireless/ath/ath9k/ar9462_2p0_initvals.h   |   26 ++++++++++----------
+ 1 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 1309bb9..9f05416d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -829,7 +829,12 @@ static int ieee80211_add_station(struct wiphy
-*wiphy, struct net_device *dev,
- 	      sdata->vif.type == NL80211_IFTYPE_STATION))
- 		return -ENOTSUPP;
-
--	rate_control_rate_init(sta);
-+	/*
-+	 * for TDLS, rate control should be initialized only when supported
-+	 * rates are known.
-+	 */
-+	if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER))
-+		rate_control_rate_init(sta);
-
- 	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
- 		sdata->vif.type == NL80211_IFTYPE_AP;
-@@ -913,6 +918,9 @@ static int ieee80211_change_station(struct wiphy *wiphy,
-
- 	sta_apply_parameters(local, sta, params);
-
-+	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) && params->supported_rates)
-+		rate_control_rate_init(sta);
-+
- 	rcu_read_unlock();
-
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+index 9c51b39..259a6f3 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+@@ -43,16 +43,16 @@ static const u32 ar9462_2p0_baseband_postamble[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8011, 0xd00a8011},
+ 	{0x00009820, 0x206a022e, 0x206a022e, 0x206a012e, 0x206a012e},
+-	{0x00009824, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0},
+-	{0x00009828, 0x06903081, 0x06903081, 0x06903881, 0x06903881},
++	{0x00009824, 0x5ac640de, 0x5ac640d0, 0x5ac640d0, 0x5ac640de},
++	{0x00009828, 0x0796be89, 0x0696b081, 0x0696b881, 0x0796be89},
+ 	{0x0000982c, 0x05eea6d4, 0x05eea6d4, 0x05eea6d4, 0x05eea6d4},
+ 	{0x00009830, 0x0000059c, 0x0000059c, 0x0000119c, 0x0000119c},
+ 	{0x00009c00, 0x000000c4, 0x000000c4, 0x000000c4, 0x000000c4},
+ 	{0x00009e00, 0x0372111a, 0x0372111a, 0x037216a0, 0x037216a0},
+ 	{0x00009e04, 0x001c2020, 0x001c2020, 0x001c2020, 0x001c2020},
+ 	{0x00009e0c, 0x6c4000e2, 0x6d4000e2, 0x6d4000e2, 0x6c4000e2},
+-	{0x00009e10, 0x7ec88d2e, 0x7ec88d2e, 0x7ec84d2e, 0x7ec84d2e},
+-	{0x00009e14, 0x37b95d5e, 0x37b9605e, 0x3039605e, 0x33795d5e},
++	{0x00009e10, 0x92c88d2e, 0x7ec88d2e, 0x7ec84d2e, 0x92c84d2e},
++	{0x00009e14, 0x37b95d5e, 0x37b9605e, 0x3379605e, 0x33795d5e},
+ 	{0x00009e18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
+ 	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
+@@ -688,8 +688,8 @@ static const u32 ar9462_2p0_mac_postamble_emulation[][5] = {
+ static const u32 ar9462_2p0_radio_postamble_sys3ant[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x000160ac, 0xa4646c08, 0xa4646c08, 0x24645808, 0x24645808},
+-	{0x00016140, 0x10804008, 0x10804008, 0x90804008, 0x90804008},
+-	{0x00016540, 0x10804008, 0x10804008, 0x90804008, 0x90804008},
++	{0x00016140, 0x10804008, 0x10804008, 0x50804008, 0x50804008},
++	{0x00016540, 0x10804008, 0x10804008, 0x50804008, 0x50804008},
+ };
+ 
+ static const u32 ar9462_2p0_baseband_postamble_emulation[][5] = {
+@@ -717,8 +717,8 @@ static const u32 ar9462_2p0_baseband_postamble_emulation[][5] = {
+ static const u32 ar9462_2p0_radio_postamble_sys2ant[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x000160ac, 0xa4646c08, 0xa4646c08, 0x24645808, 0x24645808},
+-	{0x00016140, 0x10804008, 0x10804008, 0x90804008, 0x90804008},
+-	{0x00016540, 0x10804008, 0x10804008, 0x90804008, 0x90804008},
++	{0x00016140, 0x10804008, 0x10804008, 0x50804008, 0x50804008},
++	{0x00016540, 0x10804008, 0x10804008, 0x50804008, 0x50804008},
+ };
+ 
+ static const u32 ar9462_common_wo_xlna_rx_gain_table_2p0[][2] = {
+@@ -1059,7 +1059,7 @@ static const u32 ar9462_modes_low_ob_db_tx_gain_table_2p0[][5] = {
+ 
+ static const u32 ar9462_2p0_soc_postamble[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+-	{0x00007010, 0x00002233, 0x00002233, 0x00002233, 0x00002233},
++	{0x00007010, 0x00000033, 0x00000033, 0x00000033, 0x00000033},
+ };
+ 
+ static const u32 ar9462_2p0_baseband_core[][2] = {
+@@ -1257,8 +1257,8 @@ static const u32 ar9462_modes_high_ob_db_tx_gain_table_2p0[][5] = {
+ 	{0x0000a540, 0x48025e6c, 0x48025e6c, 0x38001660, 0x38001660},
+ 	{0x0000a544, 0x4e025e8e, 0x4e025e8e, 0x3b001861, 0x3b001861},
+ 	{0x0000a548, 0x53025eb2, 0x53025eb2, 0x3e001a81, 0x3e001a81},
+-	{0x0000a54c, 0x59025eb2, 0x59025eb2, 0x42001a83, 0x42001a83},
+-	{0x0000a550, 0x5f025ef6, 0x5f025ef6, 0x44001c84, 0x44001c84},
++	{0x0000a54c, 0x59025eb6, 0x59025eb6, 0x42001a83, 0x42001a83},
++	{0x0000a550, 0x5d025ef6, 0x5d025ef6, 0x44001c84, 0x44001c84},
+ 	{0x0000a554, 0x62025f56, 0x62025f56, 0x48001ce3, 0x48001ce3},
+ 	{0x0000a558, 0x66027f56, 0x66027f56, 0x4c001ce5, 0x4c001ce5},
+ 	{0x0000a55c, 0x6a029f56, 0x6a029f56, 0x50001ce9, 0x50001ce9},
+@@ -1850,8 +1850,8 @@ static const u32 ar9462_modes_green_ob_db_tx_gain_table_2p0[][5] = {
+ 	{0x0000a540, 0x48025e6c, 0x48025e6c, 0x38001660, 0x38001660},
+ 	{0x0000a544, 0x4e025e8e, 0x4e025e8e, 0x3b001861, 0x3b001861},
+ 	{0x0000a548, 0x53025eb2, 0x53025eb2, 0x3e001a81, 0x3e001a81},
+-	{0x0000a54c, 0x59025eb2, 0x59025eb2, 0x42001a83, 0x42001a83},
+-	{0x0000a550, 0x5f025ef6, 0x5f025ef6, 0x44001c84, 0x44001c84},
++	{0x0000a54c, 0x59025eb6, 0x59025eb6, 0x42001a83, 0x42001a83},
++	{0x0000a550, 0x5d025ef6, 0x5d025ef6, 0x44001c84, 0x44001c84},
+ 	{0x0000a554, 0x62025f56, 0x62025f56, 0x48001ce3, 0x48001ce3},
+ 	{0x0000a558, 0x66027f56, 0x66027f56, 0x4c001ce5, 0x4c001ce5},
+ 	{0x0000a55c, 0x6a029f56, 0x6a029f56, 0x50001ce9, 0x50001ce9},
 -- 
-1.7.5.4
+1.7.7
+
