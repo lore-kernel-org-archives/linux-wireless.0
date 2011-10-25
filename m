@@ -1,301 +1,352 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:35234 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933533Ab1JYOHg (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39625 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932645Ab1JYKRJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 10:07:36 -0400
+	Tue, 25 Oct 2011 06:17:09 -0400
 From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 28/31] ath6kl: Implement add_virtual_intf() and del_virtual_intf()
-Date: Tue, 25 Oct 2011 19:34:23 +0530
-Message-ID: <1319551466-29070-29-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_160740_567138_A22CF1AF)
-In-Reply-To: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
+	<athiruve@qca.qualcomm.com>
+Subject: [PATCH 30/34] ath6kl: Initialize target wlan values for every vif
+Date: Tue, 25 Oct 2011 15:40:26 +0530
+Message-ID: <1319537430-12459-31-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_121721_971667_2C6BCE8D)
+In-Reply-To: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Wlan parameters need to be configured for every vif
+in target.
+
 Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |  123 +++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath6kl/cfg80211.h |    2 +-
- drivers/net/wireless/ath/ath6kl/core.h     |    4 +
- drivers/net/wireless/ath/ath6kl/init.c     |   10 ++-
- 4 files changed, 133 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath6kl/debug.c |    4 +-
+ drivers/net/wireless/ath/ath6kl/init.c  |   30 ++++++++++++++------------
+ drivers/net/wireless/ath/ath6kl/wmi.c   |   35 ++++++++++++++++--------------
+ drivers/net/wireless/ath/ath6kl/wmi.h   |   18 ++++++++-------
+ 4 files changed, 47 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 7cdd893..7713ab4 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -293,6 +293,57 @@ static int ath6kl_set_assoc_req_ies(struct ath6kl_vif *vif, const u8 *ies,
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index cc8ea3d..fd68641 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -1185,7 +1185,7 @@ static ssize_t ath6kl_keepalive_write(struct file *file,
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = ath6kl_wmi_set_keepalive_cmd(ar->wmi, val);
++	ret = ath6kl_wmi_set_keepalive_cmd(ar->wmi, 0, val);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -1230,7 +1230,7 @@ static ssize_t ath6kl_disconnect_timeout_write(struct file *file,
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = ath6kl_wmi_disctimeout_cmd(ar->wmi, val);
++	ret = ath6kl_wmi_disctimeout_cmd(ar->wmi, 0, val);
+ 	if (ret)
+ 		return ret;
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 236e78b..33bf74f 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -352,7 +352,7 @@ void ath6kl_target_failure(struct ath6kl *ar)
+ 
+ }
+ 
+-static int ath6kl_target_config_wlan_params(struct ath6kl *ar)
++static int ath6kl_target_config_wlan_params(struct ath6kl *ar, int idx)
+ {
+ 	int status = 0;
+ 	int ret;
+@@ -362,46 +362,46 @@ static int ath6kl_target_config_wlan_params(struct ath6kl *ar)
+ 	 * default values. Required if checksum offload is needed. Set
+ 	 * RxMetaVersion to 2.
+ 	 */
+-	if (ath6kl_wmi_set_rx_frame_format_cmd(ar->wmi,
++	if (ath6kl_wmi_set_rx_frame_format_cmd(ar->wmi, idx,
+ 					       ar->rx_meta_ver, 0, 0)) {
+ 		ath6kl_err("unable to set the rx frame format\n");
+ 		status = -EIO;
+ 	}
+ 
+ 	if (ar->conf_flags & ATH6KL_CONF_IGNORE_PS_FAIL_EVT_IN_SCAN)
+-		if ((ath6kl_wmi_pmparams_cmd(ar->wmi, 0, 1, 0, 0, 1,
++		if ((ath6kl_wmi_pmparams_cmd(ar->wmi, idx, 0, 1, 0, 0, 1,
+ 		     IGNORE_POWER_SAVE_FAIL_EVENT_DURING_SCAN)) != 0) {
+ 			ath6kl_err("unable to set power save fail event policy\n");
+ 			status = -EIO;
+ 		}
+ 
+ 	if (!(ar->conf_flags & ATH6KL_CONF_IGNORE_ERP_BARKER))
+-		if ((ath6kl_wmi_set_lpreamble_cmd(ar->wmi, 0,
++		if ((ath6kl_wmi_set_lpreamble_cmd(ar->wmi, idx, 0,
+ 		     WMI_DONOT_IGNORE_BARKER_IN_ERP)) != 0) {
+ 			ath6kl_err("unable to set barker preamble policy\n");
+ 			status = -EIO;
+ 		}
+ 
+-	if (ath6kl_wmi_set_keepalive_cmd(ar->wmi,
++	if (ath6kl_wmi_set_keepalive_cmd(ar->wmi, idx,
+ 			WLAN_CONFIG_KEEP_ALIVE_INTERVAL)) {
+ 		ath6kl_err("unable to set keep alive interval\n");
+ 		status = -EIO;
+ 	}
+ 
+-	if (ath6kl_wmi_disctimeout_cmd(ar->wmi,
++	if (ath6kl_wmi_disctimeout_cmd(ar->wmi, idx,
+ 			WLAN_CONFIG_DISCONNECT_TIMEOUT)) {
+ 		ath6kl_err("unable to set disconnect timeout\n");
+ 		status = -EIO;
+ 	}
+ 
+ 	if (!(ar->conf_flags & ATH6KL_CONF_ENABLE_TX_BURST))
+-		if (ath6kl_wmi_set_wmm_txop(ar->wmi, WMI_TXOP_DISABLED)) {
++		if (ath6kl_wmi_set_wmm_txop(ar->wmi, idx, WMI_TXOP_DISABLED)) {
+ 			ath6kl_err("unable to set txop bursting\n");
+ 			status = -EIO;
+ 		}
+ 
+-	if (ar->p2p) {
+-		ret = ath6kl_wmi_info_req_cmd(ar->wmi,
++	if (ar->p2p && idx) {
++		ret = ath6kl_wmi_info_req_cmd(ar->wmi, idx,
+ 					      P2P_FLAG_CAPABILITIES_REQ |
+ 					      P2P_FLAG_MACADDR_REQ |
+ 					      P2P_FLAG_HMODEL_REQ);
+@@ -413,9 +413,9 @@ static int ath6kl_target_config_wlan_params(struct ath6kl *ar)
+ 		}
+ 	}
+ 
+-	if (ar->p2p) {
++	if (ar->p2p && idx) {
+ 		/* Enable Probe Request reporting for P2P */
+-		ret = ath6kl_wmi_probe_report_req_cmd(ar->wmi, true);
++		ret = ath6kl_wmi_probe_report_req_cmd(ar->wmi, idx, true);
+ 		if (ret) {
+ 			ath6kl_dbg(ATH6KL_DBG_TRC, "failed to enable Probe "
+ 				   "Request reporting (%d)\n", ret);
+@@ -1534,9 +1534,11 @@ static int ath6kl_init(struct ath6kl *ar)
+ 
+ 	ar->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
+ 
+-	status = ath6kl_target_config_wlan_params(ar);
+-	if (status)
+-		goto err_htc_stop;
++	for (i = 0; i < MAX_NUM_VIF; i++) {
++		status = ath6kl_target_config_wlan_params(ar, i);
++		if (status)
++			goto err_htc_stop;
++	}
+ 
+ 	/*
+ 	 * Set mac address which is received in ready event
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 1fada31..e6b0960 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -1940,7 +1940,7 @@ int ath6kl_wmi_powermode_cmd(struct wmi *wmi, u8 if_idx, u8 pwr_mode)
  	return ret;
  }
  
-+static int ath6kl_nliftype_to_drv_iftype(enum nl80211_iftype type, u8 *nw_type)
-+{
-+	switch (type) {
-+	case NL80211_IFTYPE_STATION:
-+		*nw_type = INFRA_NETWORK;
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+		*nw_type = ADHOC_NETWORK;
-+		break;
-+	case NL80211_IFTYPE_AP:
-+		*nw_type = AP_NETWORK;
-+		break;
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		*nw_type = INFRA_NETWORK;
-+		break;
-+	case NL80211_IFTYPE_P2P_GO:
-+		*nw_type = AP_NETWORK;
-+		break;
-+	default:
-+		ath6kl_err("invalid interface type %u\n", type);
-+		return -ENOTSUPP;
-+	}
-+
-+	return 0;
-+}
-+
-+static bool ath6kl_is_valid_iftype(struct ath6kl *ar, enum nl80211_iftype type,
-+				   u8 *if_idx, u8 *nw_type)
-+{
-+	int i;
-+
-+	if (ath6kl_nliftype_to_drv_iftype(type, nw_type))
-+		return false;
-+
-+	if (ar->ibss_if_active || ((type == NL80211_IFTYPE_ADHOC) &&
-+	    ar->num_vif))
-+		return false;
-+
-+	if (type == NL80211_IFTYPE_STATION ||
-+	    type == NL80211_IFTYPE_AP || type == NL80211_IFTYPE_ADHOC) {
-+		for (i = 0; i < MAX_NUM_VIF; i++) {
-+			if ((ar->avail_idx_map >> i) & BIT(0)) {
-+				*if_idx = i;
-+				return true;
-+			}
-+		}
-+	}
-+
-+	return false;
-+}
-+
- static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 				   struct cfg80211_connect_params *sme)
+-int ath6kl_wmi_pmparams_cmd(struct wmi *wmi, u16 idle_period,
++int ath6kl_wmi_pmparams_cmd(struct wmi *wmi, u8 if_idx, u16 idle_period,
+ 			    u16 ps_poll_num, u16 dtim_policy,
+ 			    u16 tx_wakeup_policy, u16 num_tx_to_wakeup,
+ 			    u16 ps_fail_event_policy)
+@@ -1961,12 +1961,12 @@ int ath6kl_wmi_pmparams_cmd(struct wmi *wmi, u16 idle_period,
+ 	pm->num_tx_to_wakeup = cpu_to_le16(num_tx_to_wakeup);
+ 	pm->ps_fail_event_policy = cpu_to_le16(ps_fail_event_policy);
+ 
+-	ret = ath6kl_wmi_cmd_send(wmi, 0, skb, WMI_SET_POWER_PARAMS_CMDID,
++	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_SET_POWER_PARAMS_CMDID,
+ 				  NO_SYNC_WMIFLAG);
+ 	return ret;
+ }
+ 
+-int ath6kl_wmi_disctimeout_cmd(struct wmi *wmi, u8 timeout)
++int ath6kl_wmi_disctimeout_cmd(struct wmi *wmi, u8 if_idx, u8 timeout)
  {
-@@ -1206,6 +1257,52 @@ static int ath6kl_cfg80211_set_power_mgmt(struct wiphy *wiphy,
+ 	struct sk_buff *skb;
+ 	struct wmi_disc_timeout_cmd *cmd;
+@@ -1979,7 +1979,7 @@ int ath6kl_wmi_disctimeout_cmd(struct wmi *wmi, u8 timeout)
+ 	cmd = (struct wmi_disc_timeout_cmd *) skb->data;
+ 	cmd->discon_timeout = timeout;
+ 
+-	ret = ath6kl_wmi_cmd_send(wmi, 0, skb, WMI_SET_DISC_TIMEOUT_CMDID,
++	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_SET_DISC_TIMEOUT_CMDID,
+ 				  NO_SYNC_WMIFLAG);
+ 
+ 	if (ret == 0)
+@@ -2500,7 +2500,8 @@ int ath6kl_wmi_get_roam_tbl_cmd(struct wmi *wmi)
+ 	return ath6kl_wmi_simple_cmd(wmi, 0, WMI_GET_ROAM_TBL_CMDID);
+ }
+ 
+-int ath6kl_wmi_set_lpreamble_cmd(struct wmi *wmi, u8 status, u8 preamble_policy)
++int ath6kl_wmi_set_lpreamble_cmd(struct wmi *wmi, u8 if_idx, u8 status,
++				 u8 preamble_policy)
+ {
+ 	struct sk_buff *skb;
+ 	struct wmi_set_lpreamble_cmd *cmd;
+@@ -2514,7 +2515,7 @@ int ath6kl_wmi_set_lpreamble_cmd(struct wmi *wmi, u8 status, u8 preamble_policy)
+ 	cmd->status = status;
+ 	cmd->preamble_policy = preamble_policy;
+ 
+-	ret = ath6kl_wmi_cmd_send(wmi, 0, skb, WMI_SET_LPREAMBLE_CMDID,
++	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_SET_LPREAMBLE_CMDID,
+ 				  NO_SYNC_WMIFLAG);
+ 	return ret;
+ }
+@@ -2537,7 +2538,7 @@ int ath6kl_wmi_set_rts_cmd(struct wmi *wmi, u16 threshold)
+ 	return ret;
+ }
+ 
+-int ath6kl_wmi_set_wmm_txop(struct wmi *wmi, enum wmi_txop_cfg cfg)
++int ath6kl_wmi_set_wmm_txop(struct wmi *wmi, u8 if_idx, enum wmi_txop_cfg cfg)
+ {
+ 	struct sk_buff *skb;
+ 	struct wmi_set_wmm_txop_cmd *cmd;
+@@ -2553,12 +2554,13 @@ int ath6kl_wmi_set_wmm_txop(struct wmi *wmi, enum wmi_txop_cfg cfg)
+ 	cmd = (struct wmi_set_wmm_txop_cmd *) skb->data;
+ 	cmd->txop_enable = cfg;
+ 
+-	ret = ath6kl_wmi_cmd_send(wmi, 0, skb, WMI_SET_WMM_TXOP_CMDID,
++	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_SET_WMM_TXOP_CMDID,
+ 				  NO_SYNC_WMIFLAG);
+ 	return ret;
+ }
+ 
+-int ath6kl_wmi_set_keepalive_cmd(struct wmi *wmi, u8 keep_alive_intvl)
++int ath6kl_wmi_set_keepalive_cmd(struct wmi *wmi, u8 if_idx,
++				 u8 keep_alive_intvl)
+ {
+ 	struct sk_buff *skb;
+ 	struct wmi_set_keepalive_cmd *cmd;
+@@ -2571,7 +2573,7 @@ int ath6kl_wmi_set_keepalive_cmd(struct wmi *wmi, u8 keep_alive_intvl)
+ 	cmd = (struct wmi_set_keepalive_cmd *) skb->data;
+ 	cmd->keep_alive_intvl = keep_alive_intvl;
+ 
+-	ret = ath6kl_wmi_cmd_send(wmi, 0, skb, WMI_SET_KEEPALIVE_CMDID,
++	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_SET_KEEPALIVE_CMDID,
+ 				  NO_SYNC_WMIFLAG);
+ 
+ 	if (ret == 0)
+@@ -2734,7 +2736,8 @@ int ath6kl_wmi_set_pvb_cmd(struct wmi *wmi, u8 if_idx, u16 aid,
  	return 0;
  }
  
-+static struct net_device *ath6kl_cfg80211_add_iface(struct wiphy *wiphy,
-+						    char *name,
-+						    enum nl80211_iftype type,
-+						    u32 *flags,
-+						    struct vif_params *params)
-+{
-+	struct ath6kl *ar = wiphy_priv(wiphy);
-+	struct net_device *ndev;
-+	u8 if_idx, nw_type;
-+
-+	if (ar->num_vif == MAX_NUM_VIF) {
-+		ath6kl_err("Reached maximum number of supported vif\n");
-+		return ERR_PTR(-EINVAL);
-+	}
-+
-+	if (!ath6kl_is_valid_iftype(ar, type, &if_idx, &nw_type)) {
-+		ath6kl_err("Not a supported interface type\n");
-+		return ERR_PTR(-EINVAL);
-+	}
-+
-+	ndev = ath6kl_interface_add(ar, name, type, if_idx, nw_type);
-+	if (!ndev)
-+		return ERR_PTR(-ENOMEM);
-+
-+	ar->num_vif++;
-+
-+	return ndev;
-+}
-+
-+static int ath6kl_cfg80211_del_iface(struct wiphy *wiphy,
-+				     struct net_device *ndev)
-+{
-+	struct ath6kl *ar = wiphy_priv(wiphy);
-+	struct ath6kl_vif *vif = netdev_priv(ndev);
-+
-+	spin_lock(&ar->list_lock);
-+	list_del(&vif->list);
-+	spin_unlock(&ar->list_lock);
-+
-+	ath6kl_cleanup_vif(vif, test_bit(WMI_READY, &ar->flag));
-+
-+	ath6kl_deinit_if_data(vif);
-+
-+	return 0;
-+}
-+
- static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
- 					struct net_device *ndev,
- 					enum nl80211_iftype type, u32 *flags,
-@@ -1946,6 +2043,8 @@ ath6kl_mgmt_stypes[NUM_NL80211_IFTYPES] = {
- };
- 
- static struct cfg80211_ops ath6kl_cfg80211_ops = {
-+	.add_virtual_intf = ath6kl_cfg80211_add_iface,
-+	.del_virtual_intf = ath6kl_cfg80211_del_iface,
- 	.change_virtual_intf = ath6kl_cfg80211_change_iface,
- 	.scan = ath6kl_cfg80211_scan,
- 	.connect = ath6kl_cfg80211_connect,
-@@ -2096,18 +2195,28 @@ static int ath6kl_init_if_data(struct ath6kl_vif *vif)
- 
- void ath6kl_deinit_if_data(struct ath6kl_vif *vif)
+-int ath6kl_wmi_set_rx_frame_format_cmd(struct wmi *wmi, u8 rx_meta_ver,
++int ath6kl_wmi_set_rx_frame_format_cmd(struct wmi *wmi, u8 if_idx,
++				       u8 rx_meta_ver,
+ 				       bool rx_dot11_hdr, bool defrag_on_host)
  {
-+	struct ath6kl *ar = vif->ar;
-+
- 	aggr_module_destroy(vif->aggr_cntxt);
+ 	struct sk_buff *skb;
+@@ -2751,7 +2754,7 @@ int ath6kl_wmi_set_rx_frame_format_cmd(struct wmi *wmi, u8 rx_meta_ver,
+ 	cmd->meta_ver = rx_meta_ver;
  
-+	ar->avail_idx_map |= BIT(vif->fw_vif_idx);
-+
-+	if (vif->nw_type == ADHOC_NETWORK)
-+		ar->ibss_if_active = false;
-+
- 	unregister_netdevice(vif->ndev);
-+
-+	ar->num_vif--;
- }
+ 	/* Delete the local aggr state, on host */
+-	ret = ath6kl_wmi_cmd_send(wmi, 0, skb, WMI_RX_FRAME_FORMAT_CMDID,
++	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_RX_FRAME_FORMAT_CMDID,
+ 				  NO_SYNC_WMIFLAG);
  
- struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
--					enum nl80211_iftype type, u8 fw_vif_idx)
-+					enum nl80211_iftype type, u8 fw_vif_idx,
-+					u8 nw_type)
- {
- 	struct net_device *ndev;
- 	struct ath6kl_vif *vif;
- 
--	ndev = alloc_netdev(sizeof(*vif), "wlan%d", ether_setup);
-+	ndev = alloc_netdev(sizeof(*vif), name, ether_setup);
- 	if (!ndev)
- 		return NULL;
- 
-@@ -2120,8 +2229,14 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 	vif->wdev.netdev = ndev;
- 	vif->wdev.iftype = type;
- 	vif->fw_vif_idx = fw_vif_idx;
-+	vif->nw_type = vif->next_mode = nw_type;
- 	ar->wdev = &vif->wdev;
- 
-+	memcpy(ndev->dev_addr, ar->mac_addr, ETH_ALEN);
-+	if (fw_vif_idx != 0)
-+		ndev->dev_addr[0] = (ndev->dev_addr[0] ^ (1 << fw_vif_idx)) |
-+				     0x2;
-+
- 	init_netdev(ndev);
- 
- 	ath6kl_init_control_info(vif);
-@@ -2133,11 +2248,15 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 	if (register_netdevice(ndev))
- 		goto err;
- 
-+	ar->avail_idx_map &= ~BIT(fw_vif_idx);
- 	vif->sme_state = SME_DISCONNECTED;
- 	set_bit(WLAN_ENABLED, &vif->flags);
- 	ar->wlan_pwr_state = WLAN_POWER_STATE_ON;
- 	set_bit(NETDEV_REGISTERED, &vif->flags);
- 
-+	if (type == NL80211_IFTYPE_ADHOC)
-+		ar->ibss_if_active = true;
-+
- 	spin_lock(&ar->list_lock);
- 	list_add_tail(&vif->list, &ar->vif_list);
- 	spin_unlock(&ar->list_lock);
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-index 66042f2..d1a0216 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-@@ -19,7 +19,7 @@
- 
- struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 					enum nl80211_iftype type,
--					u8 fw_vif_idx);
-+					u8 fw_vif_idx, u8 nw_type);
- int ath6kl_register_ieee80211_hw(struct ath6kl *ar);
- struct ath6kl *ath6kl_core_alloc(struct device *dev);
- void ath6kl_deinit_ieee80211_hw(struct ath6kl *ar);
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 29bb235..6933fb6 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -460,6 +460,8 @@ struct ath6kl {
- 	struct list_head vif_list;
- 	/* Lock to avoid race in vif_list entries among add/del/traverse */
- 	spinlock_t list_lock;
-+	u8 num_vif;
-+	u8 avail_idx_map;
- 	spinlock_t lock;
- 	struct semaphore sem;
- 	u16 listen_intvl_b;
-@@ -470,6 +472,7 @@ struct ath6kl {
- 	u8 tx_pwr;
- 	struct ath6kl_node_mapping node_map[MAX_NODE_NUM];
- 	u8 ibss_ps_enable;
-+	bool ibss_if_active;
- 	u8 node_num;
- 	u8 next_ep_id;
- 	struct ath6kl_cookie *cookie_list;
-@@ -666,4 +669,5 @@ void ath6kl_init_control_info(struct ath6kl_vif *vif);
- void ath6kl_deinit_if_data(struct ath6kl_vif *vif);
- void ath6kl_core_free(struct ath6kl *ar);
- struct ath6kl_vif *ath6kl_vif_first(struct ath6kl *ar);
-+void ath6kl_cleanup_vif(struct ath6kl_vif *vif, bool wmi_ready);
- #endif /* CORE_H */
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index e76d118..2780170 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -88,7 +88,6 @@ void ath6kl_init_profile_info(struct ath6kl_vif *vif)
- 	memset(vif->req_bssid, 0, sizeof(vif->req_bssid));
- 	memset(vif->bssid, 0, sizeof(vif->bssid));
- 	vif->bss_ch = 0;
--	vif->nw_type = vif->next_mode = INFRA_NETWORK;
- }
- 
- static int ath6kl_set_host_app_area(struct ath6kl *ar)
-@@ -1414,6 +1413,7 @@ static int ath6kl_init(struct ath6kl *ar)
- 	int status = 0;
- 	s32 timeleft;
- 	struct net_device *ndev;
-+	int i;
- 
- 	if (!ar)
- 		return -EIO;
-@@ -1445,10 +1445,14 @@ static int ath6kl_init(struct ath6kl *ar)
- 		goto err_node_cleanup;
- 	}
- 
-+	for (i = 0; i < MAX_NUM_VIF; i++)
-+		ar->avail_idx_map |= BIT(i);
-+
- 	rtnl_lock();
- 
- 	/* Add an initial station interface */
--	ndev = ath6kl_interface_add(ar, "wlan%d", NL80211_IFTYPE_STATION, 0);
-+	ndev = ath6kl_interface_add(ar, "wlan%d", NL80211_IFTYPE_STATION, 0,
-+				    INFRA_NETWORK);
- 
- 	rtnl_unlock();
- 
-@@ -1631,7 +1635,7 @@ err_wq:
  	return ret;
+@@ -2872,7 +2875,7 @@ int ath6kl_wmi_send_probe_response_cmd(struct wmi *wmi, u8 if_idx, u32 freq,
+ 				   NO_SYNC_WMIFLAG);
  }
  
--static void ath6kl_cleanup_vif(struct ath6kl_vif *vif, bool wmi_ready)
-+void ath6kl_cleanup_vif(struct ath6kl_vif *vif, bool wmi_ready)
+-int ath6kl_wmi_probe_report_req_cmd(struct wmi *wmi, bool enable)
++int ath6kl_wmi_probe_report_req_cmd(struct wmi *wmi, u8 if_idx, bool enable)
  {
- 	static u8 bcast_mac[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
- 	bool discon_issued;
+ 	struct sk_buff *skb;
+ 	struct wmi_probe_req_report_cmd *p;
+@@ -2885,11 +2888,11 @@ int ath6kl_wmi_probe_report_req_cmd(struct wmi *wmi, bool enable)
+ 		   enable);
+ 	p = (struct wmi_probe_req_report_cmd *) skb->data;
+ 	p->enable = enable ? 1 : 0;
+-	return ath6kl_wmi_cmd_send(wmi, 0, skb, WMI_PROBE_REQ_REPORT_CMDID,
++	return ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_PROBE_REQ_REPORT_CMDID,
+ 				   NO_SYNC_WMIFLAG);
+ }
+ 
+-int ath6kl_wmi_info_req_cmd(struct wmi *wmi, u32 info_req_flags)
++int ath6kl_wmi_info_req_cmd(struct wmi *wmi, u8 if_idx, u32 info_req_flags)
+ {
+ 	struct sk_buff *skb;
+ 	struct wmi_get_p2p_info *p;
+@@ -2902,7 +2905,7 @@ int ath6kl_wmi_info_req_cmd(struct wmi *wmi, u32 info_req_flags)
+ 		   info_req_flags);
+ 	p = (struct wmi_get_p2p_info *) skb->data;
+ 	p->info_req_flags = cpu_to_le32(info_req_flags);
+-	return ath6kl_wmi_cmd_send(wmi, 0, skb, WMI_GET_P2P_INFO_CMDID,
++	return ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_GET_P2P_INFO_CMDID,
+ 				   NO_SYNC_WMIFLAG);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index e2f3304..495d2e5 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -2230,18 +2230,18 @@ int ath6kl_wmi_listeninterval_cmd(struct wmi *wmi, u8 if_idx,
+ 				  u16 listen_interval,
+ 				  u16 listen_beacons);
+ int ath6kl_wmi_powermode_cmd(struct wmi *wmi, u8 if_idx, u8 pwr_mode);
+-int ath6kl_wmi_pmparams_cmd(struct wmi *wmi, u16 idle_period,
++int ath6kl_wmi_pmparams_cmd(struct wmi *wmi, u8 if_idx, u16 idle_period,
+ 			    u16 ps_poll_num, u16 dtim_policy,
+ 			    u16 tx_wakup_policy, u16 num_tx_to_wakeup,
+ 			    u16 ps_fail_event_policy);
+-int ath6kl_wmi_disctimeout_cmd(struct wmi *wmi, u8 timeout);
+ int ath6kl_wmi_create_pstream_cmd(struct wmi *wmi, u8 if_idx,
+ 				  struct wmi_create_pstream_cmd *pstream);
+ int ath6kl_wmi_delete_pstream_cmd(struct wmi *wmi, u8 if_idx, u8 traffic_class,
+ 				  u8 tsid);
++int ath6kl_wmi_disctimeout_cmd(struct wmi *wmi, u8 if_idx, u8 timeout);
+ 
+ int ath6kl_wmi_set_rts_cmd(struct wmi *wmi, u16 threshold);
+-int ath6kl_wmi_set_lpreamble_cmd(struct wmi *wmi, u8 status,
++int ath6kl_wmi_set_lpreamble_cmd(struct wmi *wmi, u8 if_idx, u8 status,
+ 				 u8 preamble_policy);
+ 
+ int ath6kl_wmi_get_challenge_resp_cmd(struct wmi *wmi, u32 cookie, u32 source);
+@@ -2262,8 +2262,9 @@ int ath6kl_wmi_set_tx_pwr_cmd(struct wmi *wmi, u8 if_idx, u8 dbM);
+ int ath6kl_wmi_get_tx_pwr_cmd(struct wmi *wmi, u8 if_idx);
+ int ath6kl_wmi_get_roam_tbl_cmd(struct wmi *wmi);
+ 
+-int ath6kl_wmi_set_wmm_txop(struct wmi *wmi, enum wmi_txop_cfg cfg);
+-int ath6kl_wmi_set_keepalive_cmd(struct wmi *wmi, u8 keep_alive_intvl);
++int ath6kl_wmi_set_wmm_txop(struct wmi *wmi, u8 if_idx, enum wmi_txop_cfg cfg);
++int ath6kl_wmi_set_keepalive_cmd(struct wmi *wmi, u8 if_idx,
++				 u8 keep_alive_intvl);
+ int ath6kl_wmi_test_cmd(struct wmi *wmi, void *buf, size_t len);
+ 
+ s32 ath6kl_wmi_get_rate(s8 rate_index);
+@@ -2282,7 +2283,8 @@ int ath6kl_wmi_ap_set_mlme(struct wmi *wmip, u8 if_idx, u8 cmd,
+ 
+ int ath6kl_wmi_set_pvb_cmd(struct wmi *wmi, u8 if_idx, u16 aid, bool flag);
+ 
+-int ath6kl_wmi_set_rx_frame_format_cmd(struct wmi *wmi, u8 rx_meta_version,
++int ath6kl_wmi_set_rx_frame_format_cmd(struct wmi *wmi, u8 if_idx,
++				       u8 rx_meta_version,
+ 				       bool rx_dot11_hdr, bool defrag_on_host);
+ 
+ int ath6kl_wmi_set_appie_cmd(struct wmi *wmi, u8 if_idx, u8 mgmt_frm_type,
+@@ -2301,9 +2303,9 @@ int ath6kl_wmi_send_probe_response_cmd(struct wmi *wmi, u8 if_idx, u32 freq,
+ 				       const u8 *dst, const u8 *data,
+ 				       u16 data_len);
+ 
+-int ath6kl_wmi_probe_report_req_cmd(struct wmi *wmi, bool enable);
++int ath6kl_wmi_probe_report_req_cmd(struct wmi *wmi, u8 if_idx, bool enable);
+ 
+-int ath6kl_wmi_info_req_cmd(struct wmi *wmi, u32 info_req_flags);
++int ath6kl_wmi_info_req_cmd(struct wmi *wmi, u8 if_idx, u32 info_req_flags);
+ 
+ int ath6kl_wmi_cancel_remain_on_chnl_cmd(struct wmi *wmi, u8 if_idx);
+ 
 -- 
 1.7.0.4
 
