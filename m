@@ -1,34 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from frontend-2.servers.ua.pt ([193.136.173.3]:52702 "EHLO
-	cgpmail.ua.pt" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752639Ab1JSTbM convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17557 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754745Ab1JYLQq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Oct 2011 15:31:12 -0400
-Received: from mail-bw0-f46.google.com (account andreprata@ua.pt [209.85.214.46] verified)
-  by frontend-2.cgpmail.ua.pt (CommuniGate Pro SMTP 5.1.13)
-  with ESMTPSA id 360752192 for linux-wireless@vger.kernel.org; Wed, 19 Oct 2011 20:31:11 +0100
-Received: by bkbzt19 with SMTP id zt19so2506549bkb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2011 12:31:10 -0700 (PDT)
+	Tue, 25 Oct 2011 07:16:46 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k_hw: Fix noise floor calibration timeout on fast channel change
+Date: Tue, 25 Oct 2011 16:47:36 +0530
+Message-ID: <1319541456-2147-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111025_131651_033172_A5602682)
 MIME-Version: 1.0
-From: =?UTF-8?B?QW5kcsOpIFByYXRh?= <andreprata@ua.pt>
-Date: Wed, 19 Oct 2011 20:30:50 +0100
-Message-ID: <CAGEq-jBnU4gmb+A7ox3O0vwSr0HFkccEqBydH5cqNChZ_hTkDQ@mail.gmail.com> (sfid-20111019_213118_071850_6AC04F5E)
-Subject: Available nl80211 multicast groups
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+During the fast channel change noise floor values are being loaded
+twice at init_cal and after channel_change. The commit "ath9k_hw:
+Improve fast channel change for AR9003 chips" overlooked it that
+caused failure to load nf while doing bgscan. This patch performs noise
+floor calibration after the fast and full reset.
 
-I saw on your code that you resolve the multicas id of several groups
-for the nl80211 family /online/, like "scan" and "mlme". I'd like to
-know if there are defined constants for those IDs (i'm guessing
-they're not).
-Also I wanted to know what other groups exist and what messages I
-should expect from them (no docs, or my bad search skills?).
-Is there a multicast group to get reports on link quality changes, or
-similar, or is that only available through polling?
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c |    4 ----
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |    3 ---
+ drivers/net/wireless/ath/ath9k/hw.c           |    3 +++
+ 3 files changed, 3 insertions(+), 7 deletions(-)
 
-Thanks,
-André Prata
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+index e0ab065..88279e3 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+@@ -868,10 +868,6 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	/* Do PA Calibration */
+ 	ar9002_hw_pa_cal(ah, true);
+ 
+-	/* Do NF Calibration after DC offset and other calibrations */
+-	ath9k_hw_loadnf(ah, chan);
+-	ath9k_hw_start_nfcal(ah, true);
+-
+ 	if (ah->caldata)
+ 		ah->caldata->nfcal_pending = true;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index a4cd161..12a730d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -1085,9 +1085,6 @@ skip_tx_iqcal:
+ 		ar9003_hw_rtt_disable(ah);
+ 	}
+ 
+-	ath9k_hw_loadnf(ah, chan);
+-	ath9k_hw_start_nfcal(ah, true);
+-
+ 	/* Initialize list pointers */
+ 	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
+ 	ah->supp_cals = IQ_MISMATCH_CAL;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8c36938..a67c456 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1724,6 +1724,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (!ath9k_hw_init_cal(ah, chan))
+ 		return -EIO;
+ 
++	ath9k_hw_loadnf(ah, chan);
++	ath9k_hw_start_nfcal(ah, true);
++
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 
+ 	ath9k_hw_restore_chainmask(ah);
+-- 
+1.7.7
+
