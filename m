@@ -1,60 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:48491 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754744Ab1JAStH (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:62832 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998Ab1JYI0g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Oct 2011 14:49:07 -0400
-Received: by yxl31 with SMTP id 31so2472079yxl.19
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Oct 2011 11:49:05 -0700 (PDT)
-Message-ID: <4E87609E.5030002@lwfinger.net> (sfid-20111001_204912_147289_72AB2B02)
-Date: Sat, 01 Oct 2011 13:49:02 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Ian Jeffray <ian@emobix.co.uk>
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: r8712u driver - on ARM
-References: <4E81ED65.7060703@emobix.co.uk> <201110011822.00637.chunkeey@googlemail.com> <4E875365.50206@lwfinger.net> <201110012001.05111.chunkeey@googlemail.com> <4E8757A8.1010302@emobix.co.uk>
-In-Reply-To: <4E8757A8.1010302@emobix.co.uk>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+	Tue, 25 Oct 2011 04:26:36 -0400
+Received: by wyg36 with SMTP id 36so229727wyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Oct 2011 01:26:35 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: use min rate as basic rate for buggy APs
+Date: Tue, 25 Oct 2011 10:26:34 +0200
+Message-Id: <1319531194-26839-1-git-send-email-eliad@wizery.com> (sfid-20111025_102641_751110_23F8ECB4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/01/2011 01:10 PM, Ian Jeffray wrote:
-> On 01/10/2011 19:01, Christian Lamparter wrote:
->> On Saturday 01 October 2011 19:52:37 Larry Finger wrote:
->>> On 10/01/2011 11:22 AM, Christian Lamparter wrote:
->>>> On Saturday 01 October 2011 18:01:08 Larry Finger wrote:
->>>>> Ian,
->>>>>
->>>>> Most of the skb assignments in r8712u are aligned OK and most aligned on
->>>>> 512-byte boundaries, but there was one that had the minimal offset of 14
->>>>> bytes.
->>>>> The attached patch should fix it. Does it help?
->>>> Interesting, this "patch" goes in a completely different direction.
->>>> Can you tell me where the driver aligns the frames which will be
->>>> xmitted by the device [i.e.: which
+Some buggy APs (and even P2P_GO) don't advertise their
+basic rates in the association response.
 
-is passed to the usb subsystem
->>>> by usb_submit_urb]? Because that's what actually matters.
->>>
->>> In this driver, all references are to _usb_submit_urb(), which is defined to be
->>> usb_submit_urb() in one of the header files. That made it easy to insert a test
->>> for misalignment of the DMA buffer as follows:
->
-> <snip>
->
->>> +static inline int _usb_submit_urb(struct urb *urb, gfp_t mem_flags)
->>> +{
->>> + if (urb->transfer_dma& 3) {
->
-> <snip>
->
->> I think you need to check transfer_buffer and not transfer_dma.
->
-> I tried checking both transfer_buffer and transfer_dma and all
-> were always word aligned. (At least on Blackfin)
+In such case, use the min supported rate as the
+basic rate.
 
-The same with x86_64.
+Reported-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ net/mac80211/mlme.c |   16 ++++++++++++++++
+ 1 files changed, 16 insertions(+), 0 deletions(-)
 
-Larry
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0e5d8da..064df37 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1482,6 +1482,7 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+ 	int i, j, err;
+ 	bool have_higher_than_11mbit = false;
+ 	u16 ap_ht_cap_flags;
++	int min_rate = INT_MAX, min_rate_index = -1;
+ 
+ 	/* AssocResp and ReassocResp have identical structure */
+ 
+@@ -1537,6 +1538,10 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+ 				rates |= BIT(j);
+ 				if (is_basic)
+ 					basic_rates |= BIT(j);
++				if (rate < min_rate) {
++					min_rate = rate;
++					min_rate_index = j;
++				}
+ 				break;
+ 			}
+ 		}
+@@ -1554,11 +1559,22 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+ 				rates |= BIT(j);
+ 				if (is_basic)
+ 					basic_rates |= BIT(j);
++				if (rate < min_rate) {
++					min_rate = rate;
++					min_rate_index = j;
++				}
+ 				break;
+ 			}
+ 		}
+ 	}
+ 
++	/*
++	 * some buggy APs don't advertise basic_rates. use the lowest
++	 * supported rate instead.
++	 */
++	if (unlikely(!basic_rates) && min_rate_index >= 0)
++		basic_rates = BIT(min_rate_index);
++
+ 	sta->sta.supp_rates[wk->chan->band] = rates;
+ 	sdata->vif.bss_conf.basic_rates = basic_rates;
+ 
+-- 
+1.7.6.401.g6a319
+
