@@ -1,108 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2419 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753688Ab1JBRPA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Oct 2011 13:15:00 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 07/20] staging: brcm80211: added __iomem qualifier to
- softmac dma.c
-Date: Sun, 2 Oct 2011 10:14:32 -0700
-Message-ID: <1317575685-3156-8-git-send-email-frankyl@broadcom.com> (sfid-20111002_191523_710580_B44FA21F)
-In-Reply-To: <1317575685-3156-1-git-send-email-frankyl@broadcom.com>
-References: <1317575685-3156-1-git-send-email-frankyl@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:62397 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932324Ab1JYKON (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Oct 2011 06:14:13 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
+	<athiruve@qca.qualcomm.com>
+Subject: [PATCH 29/34] ath6kl: Add a modparam to enable multi normal interface support
+Date: Tue, 25 Oct 2011 15:40:25 +0530
+Message-ID: <1319537430-12459-30-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_122050_371904_3D3256BA)
+In-Reply-To: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+By default, only one normal interface (AP/STA/IBSS). To work
+with two such interfaces a module paramer (modprobe ath6kl multi_norm_if_support=1)
+is introduced.
 
-Code cleanup. Makes it clear when an address is mapped IO space.
-
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/staging/brcm80211/brcmsmac/dma.c |   17 +++++++++--------
- drivers/staging/brcm80211/brcmsmac/dma.h |    5 +++--
- 2 files changed, 12 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   20 +++++++++++++++++++-
+ drivers/net/wireless/ath/ath6kl/core.h     |    1 +
+ drivers/net/wireless/ath/ath6kl/init.c     |   22 +++++++++++++---------
+ 3 files changed, 33 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
-index ef856ce..b56a302 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.c
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.c
-@@ -224,9 +224,9 @@ struct dma_info {
- 	bool addrext;	/* this dma engine supports DmaExtendedAddrChanges */
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 69f8fd3..845ebc5 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -21,8 +21,10 @@
+ #include "testmode.h"
  
- 	/* 64-bit dma tx engine registers */
--	struct dma64regs *d64txregs;
-+	struct dma64regs __iomem *d64txregs;
- 	/* 64-bit dma rx engine registers */
--	struct dma64regs *d64rxregs;
-+	struct dma64regs __iomem *d64rxregs;
- 	/* pointer to dma64 tx descriptor ring */
- 	struct dma64desc *txd64;
- 	/* pointer to dma64 rx descriptor ring */
-@@ -391,7 +391,7 @@ static uint _dma_ctrlflags(struct dma_info *di, uint mask, uint flags)
- 	return dmactrlflags;
+ static unsigned int ath6kl_p2p;
++static unsigned int multi_norm_if_support;
+ 
+ module_param(ath6kl_p2p, uint, 0644);
++module_param(multi_norm_if_support, uint, 0644);
+ 
+ #define RATETAB_ENT(_rate, _rateid, _flags) {   \
+ 	.bitrate    = (_rate),                  \
+@@ -340,6 +342,16 @@ static bool ath6kl_is_valid_iftype(struct ath6kl *ar, enum nl80211_iftype type,
+ 		}
+ 	}
+ 
++	if (type == NL80211_IFTYPE_P2P_CLIENT ||
++	    type == NL80211_IFTYPE_P2P_GO) {
++		for (i = ar->max_norm_iface; i < MAX_NUM_VIF; i++) {
++			if ((ar->avail_idx_map >> i) & BIT(0)) {
++				*if_idx = i;
++				return true;
++			}
++		}
++	}
++
+ 	return false;
  }
  
--static bool _dma64_addrext(struct dma64regs *dma64regs)
-+static bool _dma64_addrext(struct dma64regs __iomem *dma64regs)
- {
- 	u32 w;
- 	OR_REG(&dma64regs->control, D64_XC_AE);
-@@ -553,8 +553,9 @@ static bool _dma_alloc(struct dma_info *di, uint direction)
- }
+@@ -2093,10 +2105,16 @@ struct ath6kl *ath6kl_core_alloc(struct device *dev)
+ 	}
  
- struct dma_pub *dma_attach(char *name, struct si_pub *sih,
--		     void *dmaregstx, void *dmaregsrx, uint ntxd,
--		     uint nrxd, uint rxbufsize, int rxextheadroom,
-+		     void __iomem *dmaregstx, void __iomem *dmaregsrx,
-+		     uint ntxd, uint nrxd,
-+		     uint rxbufsize, int rxextheadroom,
- 		     uint nrxpost, uint rxoffset, uint *msg_level)
- {
- 	struct dma_info *di;
-@@ -571,8 +572,8 @@ struct dma_pub *dma_attach(char *name, struct si_pub *sih,
- 	di->dma64 = ((ai_core_sflags(sih, 0, 0) & SISF_DMA64) == SISF_DMA64);
+ 	ar = wiphy_priv(wiphy);
+-	ar->p2p = !!ath6kl_p2p;
++	if (!multi_norm_if_support)
++		ar->p2p = !!ath6kl_p2p;
+ 	ar->wiphy = wiphy;
+ 	ar->dev = dev;
  
- 	/* init dma reg pointer */
--	di->d64txregs = (struct dma64regs *) dmaregstx;
--	di->d64rxregs = (struct dma64regs *) dmaregsrx;
-+	di->d64txregs = (struct dma64regs __iomem *) dmaregstx;
-+	di->d64rxregs = (struct dma64regs __iomem *) dmaregsrx;
++	if (multi_norm_if_support)
++		ar->max_norm_iface = 2;
++	else
++		ar->max_norm_iface = 1;
++
+ 	spin_lock_init(&ar->lock);
+ 	spin_lock_init(&ar->mcastpsq_lock);
+ 	spin_lock_init(&ar->list_lock);
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 081df62..e92ecd7 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -461,6 +461,7 @@ struct ath6kl {
+ 	/* Lock to avoid race in vif_list entries among add/del/traverse */
+ 	spinlock_t list_lock;
+ 	u8 num_vif;
++	u8 max_norm_iface;
+ 	u8 avail_idx_map;
+ 	spinlock_t lock;
+ 	struct semaphore sem;
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 2cde0a2..236e78b 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -428,7 +428,7 @@ static int ath6kl_target_config_wlan_params(struct ath6kl *ar)
+ int ath6kl_configure_target(struct ath6kl *ar)
+ {
+ 	u32 param, ram_reserved_size;
+-	u8 fw_iftype, fw_mode = 0, fw_submode;
++	u8 fw_iftype, fw_mode = 0, fw_submode = 0;
+ 	int i;
  
  	/*
- 	 * Default flags (which can be changed by the driver calling
-@@ -1344,7 +1345,7 @@ struct sk_buff *dma_getnexttxp(struct dma_pub *pub, enum txd_range range)
- 	if (range == DMA_RANGE_ALL)
- 		end = di->txout;
- 	else {
--		struct dma64regs *dregs = di->d64txregs;
-+		struct dma64regs __iomem *dregs = di->d64txregs;
+@@ -443,15 +443,19 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 		fw_mode |= fw_iftype << (i * HI_OPTION_FW_MODE_BITS);
  
- 		end = (u16) (B2I(((R_REG(&dregs->status0) &
- 				 D64_XS0_CD_MASK) -
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.h b/drivers/staging/brcm80211/brcmsmac/dma.h
-index 4075dc9..ebc5bc5 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.h
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.h
-@@ -74,8 +74,9 @@ struct dma_pub {
- };
+ 	/*
+-	 * submodes : vif[0] - AP/STA/IBSS
+-	 *	      vif[1] - "P2P dev"/"P2P GO"/"P2P Client"
+-	 *	      vif[2] - "P2P dev"/"P2P GO"/"P2P Client"
++	 * By default, submodes :
++	 *		vif[0] - AP/STA/IBSS
++	 *		vif[1] - "P2P dev"/"P2P GO"/"P2P Client"
++	 *		vif[2] - "P2P dev"/"P2P GO"/"P2P Client"
+ 	 */
+-	fw_submode = HI_OPTION_FW_SUBMODE_NONE |
+-		     (HI_OPTION_FW_SUBMODE_P2PDEV <<
+-		      (1 * HI_OPTION_FW_SUBMODE_BITS)) |
+-		      (HI_OPTION_FW_SUBMODE_P2PDEV <<
+-		      (2 * HI_OPTION_FW_SUBMODE_BITS));
++
++	for (i = 0; i < ar->max_norm_iface; i++)
++		fw_submode |= HI_OPTION_FW_SUBMODE_NONE <<
++			      (i * HI_OPTION_FW_SUBMODE_BITS);
++
++	for (i = ar->max_norm_iface; i < MAX_NUM_VIF; i++)
++		fw_submode |= HI_OPTION_FW_SUBMODE_P2PDEV <<
++			      (i * HI_OPTION_FW_SUBMODE_BITS);
  
- extern struct dma_pub *dma_attach(char *name, struct si_pub *sih,
--			    void *dmaregstx, void *dmaregsrx, uint ntxd,
--			    uint nrxd, uint rxbufsize, int rxextheadroom,
-+			    void __iomem *dmaregstx, void __iomem *dmaregsrx,
-+			    uint ntxd, uint nrxd,
-+			    uint rxbufsize, int rxextheadroom,
- 			    uint nrxpost, uint rxoffset, uint *msg_level);
- 
- void dma_rxinit(struct dma_pub *pub);
+ 	/* Tell target which HTC version it is used*/
+ 	param = HTC_PROTOCOL_VERSION;
 -- 
-1.7.1
-
+1.7.0.4
 
