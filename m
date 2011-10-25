@@ -1,84 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bsmtp4.bon.at ([195.3.86.186]:55475 "EHLO bsmtp.bon.at"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753750Ab1JEG2N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 02:28:13 -0400
-Date: Wed, 5 Oct 2011 08:28:43 +0200
-From: Clemens Buchacher <drizzd@aon.at>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath9k: irq storm after suspend/resume
-Message-ID: <20111005062528.GA1403@ecki> (sfid-20111005_082816_913540_468E52B4)
-References: <CAD2nsn1+WVaLR_TR37Z6YRCFnQH1hJkSOri=nxc8Ff3pa9N8dw@mail.gmail.com>
- <20110927214245.GA1416@ecki>
- <CAD2nsn3ZwUJsFRLyjKenO6Pm3+jr9gfmAMRDQPStEcC1hN_mkw@mail.gmail.com>
- <CAJ-Vmok8FvrYtT2QwXY0NowLSogfkZYNbGLFbVR8Uzv507FrdA@mail.gmail.com>
- <CAD2nsn0Z2J4r4tN_fLjx5bbvz2bg6NVcQ8vppJbbNcgOF8pFew@mail.gmail.com>
- <CAJ-VmokcM4KmzV7Rn9PA68iEiTJiPw=ffYgNFLDAHShxD0HNAg@mail.gmail.com>
- <20111003084823.GA1521@ecki.lan>
- <CAJ-Vmo=sE4KeOp1CKAR5v+Rzm1bm0R=ZvtMvJaE_8Sjn1dOdsw@mail.gmail.com>
- <20111004181534.GA1502@ecki>
- <CAJ-Vmo=5z6EEZBtb2_7e6wvU39ZvLSmAxEPKwP_MDQCzdkPGyA@mail.gmail.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:53887 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756006Ab1JYKNx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Oct 2011 06:13:53 -0400
+Received: by iaby12 with SMTP id y12so384184iab.19
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Oct 2011 03:13:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJ-Vmo=5z6EEZBtb2_7e6wvU39ZvLSmAxEPKwP_MDQCzdkPGyA@mail.gmail.com>
+In-Reply-To: <20111021142428.470831999@sipsolutions.net>
+References: <20111021142322.229128720@sipsolutions.net>
+	<20111021142428.470831999@sipsolutions.net>
+Date: Tue, 25 Oct 2011 12:13:53 +0200
+Message-ID: <CAB3XZEf3LXek34LprEts0m0EZb5nHwDDE40PKQ32Q6aoczR=AQ@mail.gmail.com> (sfid-20111025_122049_806844_45F46A46)
+Subject: Re: [RFC v2 05/12] nl80211: advertise device AP SME
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 05, 2011 at 05:11:00AM +0800, Adrian Chadd wrote:
-> 
-> Well, the question now is whether the device itself is actually firing
-> off interrupts.
-> 
-> From what you've shown there, the device _isn't_ firing off interrupts
-> the normal way.
-> So I wonder if it's the card or whether it's something else (eg the
-> PCI bus glue.)
-> 
-> Here, you could try inserting this in the SC_OP_INVALID bit, right
-> after you do some logging. I'm still assuming your AR9285 is somehow
-> firing off interrupts.
-> At this point however I'm all just guessing here. It'd be nice to know
-> whether the device is _really_ sending interrupts or not.
+On Fri, Oct 21, 2011 at 4:23 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Add the ability to advertise that the device
+> contains the AP SME and what features it can
+> support.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+[...]
+> --- a/include/linux/nl80211.h   2011-10-21 12:07:39.000000000 +0200
+> +++ b/include/linux/nl80211.h   2011-10-21 12:07:41.000000000 +0200
+> @@ -1122,6 +1122,11 @@ enum nl80211_commands {
+>  *     %NL80211_CMD_TDLS_MGMT. Otherwise %NL80211_CMD_TDLS_OPER should be
+>  *     used for asking the driver to perform a TDLS operation.
+>  *
+> + * @NL80211_ATTR_DEVICE_AP_SME: This u32 attribute may be listed for devices
+> + *     that have AP support to indicate that the have the AP SME integrated
+s/the/they
 
-No change with the code below, except that the timing is slightly
-different.
+> + *     with support for the features listed in this attribute, see
+> + *     &enum nl80211_ap_sme_features.
+> + *
 
-> /* Mark _all_ async interrupts as serviced */
-> REG_WRITE(ah, AR_INTR_ASYNC_CAUSE, 0xffffffff);
-> REG_READ(ah, AR_INTR_ASYNC_CAUSE);
-> 
-> /* Disable sync interrupt sources */
-> REG_WRITE(ah, AR_INTR_SYNC_ENABLE, 0);
-> /* Mark _all_ sync interrupts as serviced */
-> REG_WRITE(ah, AR_INTR_SYNC_CAUSE, 0xffffffff);
-> REG_READ(ah, AR_INTR_SYNC_CAUSE);
-> 
-> /* Do a reset of the AHB and host interface */
-> REG_WRITE(ah, AR_RC, AR_RC_AHB | AR_RC_HOSTIF);
-> DELAY(100);
+>  * @NL80211_ATTR_MAX: highest attribute number currently defined
+>  * @__NL80211_ATTR_AFTER_LAST: internal use
+>  */
+> @@ -1350,6 +1355,8 @@ enum nl80211_attrs {
+>        NL80211_ATTR_TDLS_SUPPORT,
+>        NL80211_ATTR_TDLS_EXTERNAL_SETUP,
+>
+> +       NL80211_ATTR_DEVICE_AP_MLME,
+> +
 
-Since I could not find a suitable DELAY macro, I used this instead:
+the attribute name is different from the documented one (SME/MLME)
 
- int delay = 100;
- DO_DELAY(delay);
-
-> REG_WRITE(ah, AR_RC, 0);
-
-For the record, instead of going to full sleep, I can reproduce the
-issue with
-
- echo devices >/sys/power/pm_test
- echo mem >/sys/power/state
-
-but not with
-
- echo freezer >/sys/power/pm_test
- echo mem >/sys/power/state
-
-So it could still be a different device that's causing the issue? I
-can try unloading all kinds of modules. Or is there an option to
-suspend just one device?
-
-Clemens
+Eliad.
