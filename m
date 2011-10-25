@@ -1,113 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:55488 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:53314 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751108Ab1JYOJw (ORCPT
+	with ESMTP id S1754062Ab1JYKiF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 10:09:52 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+	Tue, 25 Oct 2011 06:38:05 -0400
+From: <rmani@qca.qualcomm.com>
 To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 27/31] ath6kl: Configure inteface information at init time
-Date: Tue, 25 Oct 2011 19:34:22 +0530
-Message-ID: <1319551466-29070-28-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_160954_896442_D428BB45)
-In-Reply-To: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH 2/7] ath6kl: Add wmi functions to configure wow mode and host sleep mode
+Date: Tue, 25 Oct 2011 16:07:22 +0530
+Message-ID: <1319539047-8756-3-git-send-email-rmani@qca.qualcomm.com> (sfid-20111025_123809_545081_E6AD8304)
+In-Reply-To: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com>
+References: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Virtual interface information need to be configured during
-init time to the target. With MAX_NUM_VIF is restricted to
-1, currently only a single vif is being configured.
+From: Raja Mani <rmani@qca.qualcomm.com>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/init.c   |   45 ++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath6kl/target.h |    3 ++
- 2 files changed, 40 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath6kl/wmi.c |   88 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/wmi.h |   30 +++++++++++
+ 2 files changed, 118 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index d541dc9..e76d118 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -429,11 +429,42 @@ static int ath6kl_target_config_wlan_params(struct ath6kl *ar)
- int ath6kl_configure_target(struct ath6kl *ar)
- {
- 	u32 param, ram_reserved_size;
--	u8 fw_iftype;
-+	u8 fw_iftype, fw_mode = 0, fw_submode;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index f38b30e..fceb801 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -2356,6 +2356,94 @@ int ath6kl_wmi_set_ip_cmd(struct wmi *wmi, struct wmi_set_ip_cmd *ip_cmd)
+ 	return ret;
+ }
+ 
++static void ath6kl_wmi_relinquish_implicit_pstream_credits(struct wmi *wmi)
++{
++	u16 active_tsids;
++	u8 stream_exist;
 +	int i;
- 
-+	/*
-+	 * Note: Even though the firmware interface type is
-+	 * chosen as BSS_STA for all three interfaces, can
-+	 * be configured to IBSS/AP as long as the fw submode
-+	 * remains normal mode (0 - AP, STA and IBSS). But
-+	 * due to an target assert in firmware only one interface is
-+	 * configured for now.
-+	 */
- 	fw_iftype = HI_OPTION_FW_MODE_BSS_STA;
- 
--	/* Tell target which HTC version it is used*/
-+	for (i = 0; i < MAX_NUM_VIF; i++)
-+		fw_mode |= fw_iftype << (i * HI_OPTION_FW_MODE_BITS);
 +
 +	/*
-+	 * submodes : vif[0] - AP/STA/IBSS
-+	 *	      vif[1] - "P2P dev"/"P2P GO"/"P2P Client"
-+	 *	      vif[2] - "P2P dev"/"P2P GO"/"P2P Client"
++	 * Relinquish credits from all implicitly created pstreams
++	 * since when we go to sleep. If user created explicit
++	 * thinstreams exists with in a fatpipe leave them intact
++	 * for the user to delete.
 +	 */
-+	fw_submode = HI_OPTION_FW_SUBMODE_NONE |
-+		     (HI_OPTION_FW_SUBMODE_P2PDEV <<
-+		      (1 * HI_OPTION_FW_SUBMODE_BITS)) |
-+		      (HI_OPTION_FW_SUBMODE_P2PDEV <<
-+		      (2 * HI_OPTION_FW_SUBMODE_BITS));
++	spin_lock_bh(&wmi->lock);
++	stream_exist = wmi->fat_pipe_exist;
++	spin_unlock_bh(&wmi->lock);
 +
-+	/*
-+	 * FIXME: This needs to be removed once the multivif
-+	 * support is enabled.
-+	 */
-+	if (ar->p2p)
-+		fw_submode = HI_OPTION_FW_SUBMODE_P2PDEV;
-+	else
-+		fw_submode = HI_OPTION_FW_SUBMODE_NONE;
++	for (i = 0; i < WMM_NUM_AC; i++) {
++		if (stream_exist & (1 << i)) {
 +
- 	param = HTC_PROTOCOL_VERSION;
- 	if (ath6kl_bmi_write(ar,
- 			     ath6kl_get_hi_item_addr(ar,
-@@ -454,12 +485,10 @@ int ath6kl_configure_target(struct ath6kl *ar)
- 		return -EIO;
- 	}
++			spin_lock_bh(&wmi->lock);
++			active_tsids = wmi->stream_exist_for_ac[i];
++			spin_unlock_bh(&wmi->lock);
++
++			/*
++			 * If there are no user created thin streams
++			 * delete the fatpipe
++			 */
++			if (!active_tsids) {
++				stream_exist &= ~(1 << i);
++				/*
++				 * Indicate inactivity to driver layer for
++				 * this fatpipe (pstream)
++				 */
++				ath6kl_indicate_tx_activity(wmi->parent_dev,
++							    i, false);
++			}
++		}
++	}
++
++	spin_lock_bh(&wmi->lock);
++	wmi->fat_pipe_exist = stream_exist;
++	spin_unlock_bh(&wmi->lock);
++}
++
++int ath6kl_wmi_set_host_sleep_mode_cmd(struct wmi *wmi,
++				  struct wmi_set_host_sleep_mode_cmd *host_mode)
++{
++	struct sk_buff *skb;
++	struct wmi_set_host_sleep_mode_cmd *cmd;
++	int ret;
++
++	if (host_mode->awake == host_mode->asleep)
++		return -EINVAL;
++
++	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_set_host_sleep_mode_cmd *) skb->data;
++	memcpy(cmd, host_mode, sizeof(*cmd));
++
++	if (host_mode->asleep)
++		ath6kl_wmi_relinquish_implicit_pstream_credits(wmi);
++
++	ret = ath6kl_wmi_cmd_send(wmi, skb, WMI_SET_HOST_SLEEP_MODE_CMDID,
++				  NO_SYNC_WMIFLAG);
++	return ret;
++}
++
++int ath6kl_wmi_set_wow_mode_cmd(struct wmi *wmi,
++				struct wmi_set_wow_mode_cmd *wow_mode)
++{
++	struct sk_buff *skb;
++	struct wmi_set_wow_mode_cmd *cmd;
++	int ret;
++
++	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_set_wow_mode_cmd *) skb->data;
++	memcpy(cmd, wow_mode, sizeof(*cmd));
++
++	ret = ath6kl_wmi_cmd_send(wmi, skb, WMI_SET_WOW_MODE_CMDID,
++				  NO_SYNC_WMIFLAG);
++	return ret;
++}
++
+ int ath6kl_wmi_add_wow_pattern_cmd(struct wmi *wmi,
+ 				   struct wmi_add_wow_pattern_cmd *add_wow_cmd,
+ 				   u8 *pattern, u8 *mask)
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 3a54933..2ca3a18 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -1796,6 +1796,32 @@ struct wmi_set_ip_cmd {
+ 	__le32 ips[MAX_IP_ADDRS];
+ } __packed;
  
--	param |= (1 << HI_OPTION_NUM_DEV_SHIFT);
--	param |= (fw_iftype << HI_OPTION_FW_MODE_SHIFT);
--	if (ar->p2p && fw_iftype == HI_OPTION_FW_MODE_BSS_STA) {
--		param |= HI_OPTION_FW_SUBMODE_P2PDEV <<
--			HI_OPTION_FW_SUBMODE_SHIFT;
--	}
-+	param |= (MAX_NUM_VIF << HI_OPTION_NUM_DEV_SHIFT);
-+	param |= fw_mode << HI_OPTION_FW_MODE_SHIFT;
-+	param |= fw_submode << HI_OPTION_FW_SUBMODE_SHIFT;
++enum ath6kl_wow_filters {
++	WOW_FILTER_SSID			= BIT(0),
++	WOW_FILTER_OPTION_MAGIC_PACKET  = BIT(2),
++	WOW_FILTER_OPTION_EAP_REQ	= BIT(3),
++	WOW_FILTER_OPTION_PATTERNS	= BIT(4),
++	WOW_FILTER_OPTION_OFFLOAD_ARP	= BIT(5),
++	WOW_FILTER_OPTION_OFFLOAD_NS	= BIT(6),
++	WOW_FILTER_OPTION_OFFLOAD_GTK	= BIT(7),
++	WOW_FILTER_OPTION_8021X_4WAYHS	= BIT(8),
++	WOW_FILTER_OPTION_NLO_DISCVRY	= BIT(9),
++	WOW_FILTER_OPTION_NWK_DISASSOC	= BIT(10),
++	WOW_FILTER_OPTION_GTK_ERROR	= BIT(11),
++	WOW_FILTER_OPTION_TEST_MODE	= BIT(15),
++};
 +
- 	param |= (0 << HI_OPTION_MAC_ADDR_METHOD_SHIFT);
- 	param |= (0 << HI_OPTION_FW_BRIDGE_SHIFT);
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
-index c9a7605..687e2b3 100644
---- a/drivers/net/wireless/ath/ath6kl/target.h
-+++ b/drivers/net/wireless/ath/ath6kl/target.h
-@@ -320,7 +320,10 @@ struct host_interest {
- |   (2)   |   (2)   |   (2)   |   (2)   |   (2)   |   (2)   |   (2)   |   (2)
- |------------------------------------------------------------------------------|
- */
-+#define HI_OPTION_FW_MODE_BITS	       0x2
- #define HI_OPTION_FW_MODE_SHIFT        0xC
++struct wmi_set_host_sleep_mode_cmd {
++	__le32 awake;
++	__le32 asleep;
++} __packed;
 +
-+#define HI_OPTION_FW_SUBMODE_BITS      0x2
- #define HI_OPTION_FW_SUBMODE_SHIFT     0x14
++struct wmi_set_wow_mode_cmd {
++	__le32 enable_wow;
++	__le32 filter;
++	__le16 host_req_delay;
++} __packed;
++
+ struct wmi_add_wow_pattern_cmd {
+ 	u8 filter_list_id;
+ 	u8 filter_size;
+@@ -2255,6 +2281,10 @@ int ath6kl_wmi_test_cmd(struct wmi *wmi, void *buf, size_t len);
+ s32 ath6kl_wmi_get_rate(s8 rate_index);
  
- /* Convert a Target virtual address into a Target physical address */
+ int ath6kl_wmi_set_ip_cmd(struct wmi *wmi, struct wmi_set_ip_cmd *ip_cmd);
++int ath6kl_wmi_set_host_sleep_mode_cmd(struct wmi *wmi,
++				struct wmi_set_host_sleep_mode_cmd *host_mode);
++int ath6kl_wmi_set_wow_mode_cmd(struct wmi *wmi,
++				struct wmi_set_wow_mode_cmd *wow_mode);
+ int ath6kl_wmi_add_wow_pattern_cmd(struct wmi *wmi,
+ 				   struct wmi_add_wow_pattern_cmd *add_wow_cmd,
+ 				   u8 *pattern, u8 *mask);
 -- 
 1.7.0.4
 
