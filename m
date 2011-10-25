@@ -1,77 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:63519 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751924Ab1JJT3X convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:1428 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933413Ab1JYOFJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 15:29:23 -0400
-Received: by ywb5 with SMTP id 5so5701858ywb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 12:29:23 -0700 (PDT)
+	Tue, 25 Oct 2011 10:05:09 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2 00/31] ath6kl Add multiple vif support
+Date: Tue, 25 Oct 2011 19:33:55 +0530
+Message-ID: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_160513_772013_079D0E47)
 MIME-Version: 1.0
-In-Reply-To: <1318271328.9690.381.camel@cumari>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-	<1318234397-21081-7-git-send-email-eliad@wizery.com>
-	<1318271328.9690.381.camel@cumari>
-Date: Mon, 10 Oct 2011 21:29:23 +0200
-Message-ID: <CAB3XZEfA2woetrXDycv3xcBYGBvyYJQoLz969Rp8k8WjaG3FFw@mail.gmail.com> (sfid-20111010_212927_011194_D4400CBE)
-Subject: Re: [PATCH 06/29] wl12xx: add vifs list
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 10, 2011 at 8:28 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote:
->> keep a list of all the vifs associated with our hw.
->> it will be later used in order to iterate through vifs.
->>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> ---
->
-> [...]
->
->> diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
->> index 33ccdf8..55561c5 100644
->> --- a/drivers/net/wireless/wl12xx/wl12xx.h
->> +++ b/drivers/net/wireless/wl12xx/wl12xx.h
->> @@ -394,6 +394,8 @@ struct wl1271 {
->>       unsigned long roles_map[BITS_TO_LONGS(WL12XX_MAX_ROLES)];
->>       unsigned long roc_map[BITS_TO_LONGS(WL12XX_MAX_ROLES)];
->>
->> +     struct list_head wlvif_list;
->> +
->>       struct wl1271_acx_mem_map *target_mem_map;
->>
->>       /* Accounting for allocated / available TX blocks on HW */
->> @@ -564,6 +566,7 @@ struct wl1271_station {
->>
->>  struct wl12xx_vif {
->>       struct wl1271 *wl;
->> +     struct list_head list;
->
-> I know we alredy call this kind of thing "list" struct wl1271 for the
-> ARP stuff, but I prefer "node" so it's easier to follow when calling
-> list_add and friends.  Mind changing?
->
-i think "list" is the standard convention (e.g. see sta_info,
-ieee80211_key, etc.) and more intuitive.
+This patch set adds basic infrastructure for multiple
+virtual interface. As configuring the firmware with more than one
+vif causes random target assert, the number of supported vifs is
+restricted to 1 for now. I would like to thank Vivek Natarajan
+(nataraja@qca.qualcomm.com) for his inital work in this area and
+Arthi Thiruvengadam (athiruve@qca.qualcomm.com) for finding some
+critical bugs.
 
->
->> @@ -653,6 +656,9 @@ struct ieee80211_vif *wl12xx_wlvif_to_vif(struct wl12xx_vif *wlvif)
->>       return container_of((void *)wlvif, struct ieee80211_vif, drv_priv);
->>  }
->>
->> +#define wl12xx_for_each_wlvif(wl, wlvif) \
->> +             list_for_each_entry(wlvif, &wl->wlvif_list, list)
->> +
->
-> This looks fine, but is it really necessary? I think the call to
-> list_for_each_entry is clear enough already, isn't it?
->
-i find it easier to understand this way.
-also, future patches will add wl12xx_for_each_wlvif_sta and
-wl12xx_for_each_wlvif_ap, so it even makes more sense to use this
-macro.
+Vasanth
 
-Eliad.
+V2 -- Rebased to top of ath6kl.git not Kalle's 9-patch series
+    - Fold patches from 32 to 34 into the original patches (kalle's comment)
+
+Vasanthakumar Thiagarajan (31):
+  ath6kl: Pass ath6kl structure to ath6kl_init() instead of net_device
+  ath6kl: Keep wiphy reference in ath6kl structure
+  ath6kl: Refactor wiphy dev and net dev init functions
+  ath6kl: Cleanup fw interface type setting
+  ath6kl: Define an initial vif structure and use it
+  ath6kl: Define interface specific states
+  ath6kl: Move ssid and crypto information to vif structure
+  ath6kl: Move nw_type to vif structure
+  ath6kl: Move bssid information to vif structure
+  ath6kl: Move channel information to vif structure
+  ath6kl: Move key information to vif structure
+  ath6kl: Move aggregation information to vif structure
+  ath6kl: Move disconnect timer to vif structure
+  ath6kl: Move scan_req info and sme_state to vif
+  ath6kl: Move few more vif specific information to struct ath6kl_vif
+  ath6kl: Make net and target stats vif specific
+  ath6kl: Maintain firmware interface index in struct ath6kl_vif
+  ath6kl: Take vif information from wmi event
+  ath6kl: Remove net_device from ath6kl
+  ath6kl: Cleanup parameters in ath6kl_init_control_info() and
+    ath6kl_init_profile_info()
+  ath6kl: Refactor ath6kl_destroy()
+  ath6kl: Use interface index from wmi data headr
+  ath6kl: Store hw mac address in struct ath6kl
+  ath6kl: Introduce spinlock to protect vif specific information
+  ath6kl: Maintain virtual interface in a list
+  ath6kl: Use the other variant of netdev (un)register APIs
+  ath6kl: Configure inteface information at init time
+  ath6kl: Implement add_virtual_intf() and del_virtual_intf()
+  ath6kl: Add a modparam to enable multi normal interface support
+  ath6kl: Initialize target wlan values for every vif
+  ath6kl: Use appropriate wdev from vif
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |  981 ++++++++++++++++++----------
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |   16 +-
+ drivers/net/wireless/ath/ath6kl/common.h   |    2 +-
+ drivers/net/wireless/ath/ath6kl/core.h     |  161 +++--
+ drivers/net/wireless/ath/ath6kl/debug.c    |   38 +-
+ drivers/net/wireless/ath/ath6kl/init.c     |  434 ++++++-------
+ drivers/net/wireless/ath/ath6kl/main.c     |  366 +++++------
+ drivers/net/wireless/ath/ath6kl/sdio.c     |   12 +-
+ drivers/net/wireless/ath/ath6kl/target.h   |    3 +
+ drivers/net/wireless/ath/ath6kl/txrx.c     |  198 ++++--
+ drivers/net/wireless/ath/ath6kl/wmi.c      |  426 +++++++-----
+ drivers/net/wireless/ath/ath6kl/wmi.h      |  122 +++--
+ 12 files changed, 1622 insertions(+), 1137 deletions(-)
+
