@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35817 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932085Ab1J1IBZ (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:36104 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932455Ab1JYKSq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 04:01:25 -0400
-Subject: RE: [RFC v2 13/12] cfg80211/mac80211: allow management TX to not
- wait for ACK
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <400C43189542CE41BC0A5B252FC90136BC0E3753AA@SJEXCHCCR02.corp.ad.broadcom.com>
-References: <20111021142322.229128720@sipsolutions.net>
-	 ( sfid-20111021_162510_209354_8FBBB6EB) <1319743973.32221.4.camel@jlt3.sipsolutions.net>
-	 <400C43189542CE41BC0A5B252FC90136BC0E3753AA@SJEXCHCCR02.corp.ad.broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 28 Oct 2011 10:01:20 +0200
-Message-ID: <1319788880.3914.4.camel@jlt3.sipsolutions.net> (sfid-20111028_100128_417197_BD2DC968)
-Mime-Version: 1.0
+	Tue, 25 Oct 2011 06:18:46 -0400
+Received: by wwe6 with SMTP id 6so553020wwe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Oct 2011 03:18:44 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 25 Oct 2011 12:18:44 +0200
+Message-ID: <CACVrECFG2ND-yEZAZq2n2Y2nU=71ZUz8UNiqwbdU+N+c_hvcsw@mail.gmail.com> (sfid-20111025_121849_588113_5D71A165)
+Subject: Ath5k driver. /sys/class/net/$interface/statistics - not updated
+From: Mariana Gambande <mlgambande@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-10-28 at 00:48 -0700, Arend Van Spriel wrote:
-> > Sent: donderdag 27 oktober 2011 21:33
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > For probe responses it can be useful to not wait for ACK
-> > to save airtime, so allow userspace to request not waiting
-> > with a new nl80211 flag.
-> > 
-> > Since mac80211 needs to be updated for the new function
-> > prototype anyway implement it right away -- it's just a
-> > few lines of code.
+Hello to all,
 
-> I would expect this to affect the duration field in the
-> 802.11 header to indicate the shorter use of the medium.
-> Going through your patch I am not sure this is done.
+I've been working with ad-hoc mode and master/station mode on several
+machines trying to test the Layer 2 performance over wireless links.
+I'm working with driver ath5k.
+After various tests with simple pings and using iperf (for hours) I
+see I never get a value different to 0 in the following variables
+according to /sys/class/net/$interface/statistics directory:
 
-Hmmm. You're right, but that's something we already need to fix in many
-cases -- as the duration field is overwritten by most hardware these
-days, we haven't always maintained it very well.
+rx_errors 	rx_length_errors	tx_aborted_errors	tx_compressed
+tx_errors 	rx_over_errors		tx_carrier_errors
+rx_dropped 	rx_crc_errors		tx_fifo_errors
+tx_dropped 	rx_frame_errors		tx_heartbeat_errors
+multicast 	rx_fifo_errors		tx_window_errors
+collisions      rx_missed_errors      	rx_compressed
 
-Your driver seems to be the exception to this -- maybe you can look into
-fixing up the duration calculations? Also for 11n which isn't taken into
-account at all today.
+This has been so for nodes in mode ad-hoc, managed and master. Is it
+possible that this directory is not being updated properly?
 
-johannes
+I've been using:
+- compat-wireless-2.6.35-1 (kernel 2.6.35), compat-wireless-2.6.38.2-2
+(kernel 2.6.38).
+- driver ath5k.
+- all tests where performed using channel 1 for ad-hoc mode and
+channel 36 for master/station mode.
+- devices AR5413 802.11abg and AR5001X+ Wireless Network Adapter.
 
+Thanks in advance,
+Mariana.
