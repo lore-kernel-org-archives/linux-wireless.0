@@ -1,83 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:31149 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751276Ab1JJPQ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 11:16:28 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 14/34] iwlagn: set rts retry limit
-Date: Mon, 10 Oct 2011 07:26:59 -0700
-Message-Id: <1318256839-31837-15-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171736_369123_42D69EC0)
-In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5218 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754942Ab1JYKkr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Oct 2011 06:40:47 -0400
+From: <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH 5/7] ath6kl: Invoke wow suspend/resume calls during PM operations
+Date: Tue, 25 Oct 2011 16:07:25 +0530
+Message-ID: <1319539047-8756-6-git-send-email-rmani@qca.qualcomm.com> (sfid-20111025_124051_531545_EB488555)
+In-Reply-To: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com>
+References: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-setup the rts rety limit for tx command
+From: Raja Mani <rmani@qca.qualcomm.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+ Link ath6kl's wow suspend/resume functions with the callback functions
+ registered with the CFG layer for suspend and resume operation.
+
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-hw.h |    5 ++++-
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   18 +++++++++---------
- 2 files changed, 13 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   20 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/hif-ops.h  |    5 +++++
+ drivers/net/wireless/ath/ath6kl/hif.h      |    1 +
+ drivers/net/wireless/ath/ath6kl/sdio.c     |   18 +++++++++++++++++-
+ 4 files changed, 43 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
-index 33951a1..64e3417 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
-@@ -81,7 +81,10 @@
- /* RSSI to dBm */
- #define IWLAGN_RSSI_OFFSET	44
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index aaf8d0f..ddef445 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1606,6 +1606,19 @@ static int ar6k_cfg80211_suspend(struct wiphy *wiphy,
+ 				 struct cfg80211_wowlan *wow)
+ {
+ 	struct ath6kl *ar = wiphy_priv(wiphy);
++	int ret;
++
++	if (wow && ath6kl_cfg80211_ready(ar) &&
++	    test_bit(CONNECTED, &ar->flag) &&
++	    ath6kl_hif_keep_pwr_caps(ar)) {
++
++		/* Flush all non control pkts in Tx path */
++		ath6kl_tx_data_cleanup(ar);
++
++		ret = ath6kl_pm_wow_suspend(ar, wow);
++		if (ret)
++			return ret;
++	}
  
--#define IWLAGN_DEFAULT_TX_RETRY  15
-+#define IWLAGN_DEFAULT_TX_RETRY			15
-+#define IWLAGN_MGMT_DFAULT_RETRY_LIMIT		3
-+#define IWLAGN_RTS_DFAULT_RETRY_LIMIT		60
-+#define IWLAGN_BAR_DFAULT_RETRY_LIMIT		60
+ 	return ath6kl_hif_suspend(ar);
+ }
+@@ -1613,6 +1626,13 @@ static int ar6k_cfg80211_suspend(struct wiphy *wiphy,
+ static int ar6k_cfg80211_resume(struct wiphy *wiphy)
+ {
+ 	struct ath6kl *ar = wiphy_priv(wiphy);
++	int ret;
++
++	if (ar->wow_state == ATH6KL_WOW_STATE_SUSPENDED) {
++		ret = ath6kl_pm_wow_resume(ar);
++		if (ret)
++			return ret;
++	}
  
- /* Limit range of txpower output target to be between these values */
- #define IWLAGN_TX_POWER_TARGET_POWER_MIN	(0)	/* 0 dBm: 1 milliwatt */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index dcb3bd6..2584f6f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -113,8 +113,6 @@ static void iwlagn_tx_cmd_build_basic(struct iwl_priv *priv,
- 	tx_cmd->next_frame_len = 0;
+ 	return ath6kl_hif_resume(ar);
+ }
+diff --git a/drivers/net/wireless/ath/ath6kl/hif-ops.h b/drivers/net/wireless/ath/ath6kl/hif-ops.h
+index 95e7303..ab1140d 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif-ops.h
++++ b/drivers/net/wireless/ath/ath6kl/hif-ops.h
+@@ -96,4 +96,9 @@ static inline int ath6kl_hif_resume(struct ath6kl *ar)
+ 
+ 	return ar->hif_ops->resume(ar);
+ }
++
++static inline int ath6kl_hif_keep_pwr_caps(struct ath6kl *ar)
++{
++	return ar->hif_ops->keep_pwr_caps(ar);
++}
+ #endif
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.h b/drivers/net/wireless/ath/ath6kl/hif.h
+index 93d2912..fbe3622 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.h
++++ b/drivers/net/wireless/ath/ath6kl/hif.h
+@@ -242,6 +242,7 @@ struct ath6kl_hif_ops {
+ 	void (*cleanup_scatter)(struct ath6kl *ar);
+ 	int (*suspend)(struct ath6kl *ar);
+ 	int (*resume)(struct ath6kl *ar);
++	bool (*keep_pwr_caps)(struct ath6kl *ar);
+ };
+ 
+ int ath6kl_hif_setup(struct ath6kl_device *dev);
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 58e31f6..ec0e58c 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -739,7 +739,8 @@ static int ath6kl_sdio_suspend(struct ath6kl *ar)
+ 		return ret;
+ 	}
+ 
+-	ath6kl_deep_sleep_enable(ar);
++	if (ar->wow_state != ATH6KL_WOW_STATE_SUSPENDED)
++		ath6kl_deep_sleep_enable(ar);
+ 
+ 	return 0;
+ }
+@@ -756,6 +757,20 @@ static int ath6kl_sdio_resume(struct ath6kl *ar)
+ 	return 0;
  }
  
--#define RTS_DFAULT_RETRY_LIMIT		60
--
- static void iwlagn_tx_cmd_build_rate(struct iwl_priv *priv,
- 				     struct iwl_tx_cmd *tx_cmd,
- 				     struct ieee80211_tx_info *info,
-@@ -126,17 +124,19 @@ static void iwlagn_tx_cmd_build_rate(struct iwl_priv *priv,
- 	u8 data_retry_limit;
- 	u8 rate_plcp;
- 
-+	/* Set retry limit on RTS packets */
-+	rts_retry_limit = IWLAGN_RTS_DFAULT_RETRY_LIMIT;
++static bool ath6kl_sdio_keep_pwr_caps(struct ath6kl *ar)
++{
++	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
++	struct sdio_func *func = ar_sdio->func;
++	mmc_pm_flag_t flags;
 +
- 	/* Set retry limit on DATA packets and Probe Responses*/
--	if (ieee80211_is_probe_resp(fc))
--		data_retry_limit = 3;
-+	if (ieee80211_is_probe_resp(fc)) {
-+		data_retry_limit = IWLAGN_MGMT_DFAULT_RETRY_LIMIT;
-+		rts_retry_limit = min(data_retry_limit, rts_retry_limit);
-+	} else if (ieee80211_is_back_req(fc))
-+		data_retry_limit = IWLAGN_BAR_DFAULT_RETRY_LIMIT;
- 	else
- 		data_retry_limit = IWLAGN_DEFAULT_TX_RETRY;
--	tx_cmd->data_retry_limit = data_retry_limit;
++	flags = sdio_get_host_pm_caps(func);
++
++	if (!(flags & MMC_PM_KEEP_POWER))
++		return false;
++
++	return true;
++}
++
+ static const struct ath6kl_hif_ops ath6kl_sdio_ops = {
+ 	.read_write_sync = ath6kl_sdio_read_write_sync,
+ 	.write_async = ath6kl_sdio_write_async,
+@@ -768,6 +783,7 @@ static const struct ath6kl_hif_ops ath6kl_sdio_ops = {
+ 	.cleanup_scatter = ath6kl_sdio_cleanup_scatter,
+ 	.suspend = ath6kl_sdio_suspend,
+ 	.resume = ath6kl_sdio_resume,
++	.keep_pwr_caps = ath6kl_sdio_keep_pwr_caps,
+ };
  
--	/* Set retry limit on RTS packets */
--	rts_retry_limit = RTS_DFAULT_RETRY_LIMIT;
--	if (data_retry_limit < rts_retry_limit)
--		rts_retry_limit = data_retry_limit;
-+	tx_cmd->data_retry_limit = data_retry_limit;
- 	tx_cmd->rts_retry_limit = rts_retry_limit;
- 
- 	/* DATA packets will use the uCode station table for rate/antenna
+ static int ath6kl_sdio_probe(struct sdio_func *func,
 -- 
 1.7.0.4
 
