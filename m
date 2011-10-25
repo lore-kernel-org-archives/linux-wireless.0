@@ -1,74 +1,213 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from calzone.tip.net.au ([203.10.76.15]:43497 "EHLO
-	calzone.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754745Ab1JGWmU (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:1254 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932308Ab1JYKO5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 18:42:20 -0400
-Date: Sat, 8 Oct 2011 09:42:12 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org, sparclinux@vger.kernel.org,
-	linux-ide@vger.kernel.org
-Subject: Re: moving GIT back to kernel.org...
-Message-Id: <20111008094212.e3342930c1833f73ef602a3e@canb.auug.org.au> (sfid-20111008_004233_209456_1667950A)
-In-Reply-To: <20111007.155902.916470368193047875.davem@davemloft.net>
-References: <20111007.145703.842130763413648388.davem@davemloft.net>
-	<20111007.155902.916470368193047875.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA256";
- boundary="Signature=_Sat__8_Oct_2011_09_42_12_+1100_U2vpBnvvcMSJsjmr"
+	Tue, 25 Oct 2011 06:14:57 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
+	<athiruve@qca.qualcomm.com>
+Subject: [PATCH 11/34] ath6kl: Move key information to vif structure
+Date: Tue, 25 Oct 2011 15:40:07 +0530
+Message-ID: <1319537430-12459-12-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_121739_777688_51371F87)
+In-Reply-To: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Sat__8_Oct_2011_09_42_12_+1100_U2vpBnvvcMSJsjmr
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   21 ++++++++++++---------
+ drivers/net/wireless/ath/ath6kl/core.h     |    4 ++--
+ drivers/net/wireless/ath/ath6kl/init.c     |    5 +++--
+ drivers/net/wireless/ath/ath6kl/main.c     |    8 ++++----
+ 4 files changed, 21 insertions(+), 17 deletions(-)
 
-Hi Dave,
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index e48a8c0..092b731 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -419,7 +419,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 			return -ENOENT;
+ 		}
+ 
+-		key = &ar->keys[sme->key_idx];
++		key = &vif->keys[sme->key_idx];
+ 		key->key_len = sme->key_len;
+ 		memcpy(key->key, sme->key, key->key_len);
+ 		key->cipher = vif->prwise_crypto;
+@@ -856,7 +856,7 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 		return -ENOENT;
+ 	}
+ 
+-	key = &ar->keys[key_index];
++	key = &vif->keys[key_index];
+ 	memset(key, 0, sizeof(struct ath6kl_key));
+ 
+ 	if (pairwise)
+@@ -934,8 +934,9 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 		 */
+ 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "Delay WEP key configuration "
+ 			   "until AP mode has been started\n");
+-		ar->wep_key_list[key_index].key_len = key->key_len;
+-		memcpy(ar->wep_key_list[key_index].key, key->key, key->key_len);
++		vif->wep_key_list[key_index].key_len = key->key_len;
++		memcpy(vif->wep_key_list[key_index].key, key->key,
++		       key->key_len);
+ 		return 0;
+ 	}
+ 
+@@ -955,6 +956,7 @@ static int ath6kl_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
+ 				   const u8 *mac_addr)
+ {
+ 	struct ath6kl *ar = (struct ath6kl *)ath6kl_priv(ndev);
++	struct ath6kl_vif *vif = netdev_priv(ndev);
+ 
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: index %d\n", __func__, key_index);
+ 
+@@ -968,13 +970,13 @@ static int ath6kl_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
+ 		return -ENOENT;
+ 	}
+ 
+-	if (!ar->keys[key_index].key_len) {
++	if (!vif->keys[key_index].key_len) {
+ 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+ 			   "%s: index %d is empty\n", __func__, key_index);
+ 		return 0;
+ 	}
+ 
+-	ar->keys[key_index].key_len = 0;
++	vif->keys[key_index].key_len = 0;
+ 
+ 	return ath6kl_wmi_deletekey_cmd(ar->wmi, key_index);
+ }
+@@ -986,6 +988,7 @@ static int ath6kl_cfg80211_get_key(struct wiphy *wiphy, struct net_device *ndev,
+ 						     struct key_params *))
+ {
+ 	struct ath6kl *ar = (struct ath6kl *)ath6kl_priv(ndev);
++	struct ath6kl_vif *vif = netdev_priv(ndev);
+ 	struct ath6kl_key *key = NULL;
+ 	struct key_params params;
+ 
+@@ -1001,7 +1004,7 @@ static int ath6kl_cfg80211_get_key(struct wiphy *wiphy, struct net_device *ndev,
+ 		return -ENOENT;
+ 	}
+ 
+-	key = &ar->keys[key_index];
++	key = &vif->keys[key_index];
+ 	memset(&params, 0, sizeof(params));
+ 	params.cipher = key->cipher;
+ 	params.key_len = key->key_len;
+@@ -1038,14 +1041,14 @@ static int ath6kl_cfg80211_set_default_key(struct wiphy *wiphy,
+ 		return -ENOENT;
+ 	}
+ 
+-	if (!ar->keys[key_index].key_len) {
++	if (!vif->keys[key_index].key_len) {
+ 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: invalid key index %d\n",
+ 			   __func__, key_index);
+ 		return -EINVAL;
+ 	}
+ 
+ 	vif->def_txkey_index = key_index;
+-	key = &ar->keys[vif->def_txkey_index];
++	key = &vif->keys[vif->def_txkey_index];
+ 	key_usage = GROUP_USAGE;
+ 	if (vif->prwise_crypto == WEP_CRYPT)
+ 		key_usage |= TX_USAGE;
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 843d639..d461813 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -413,6 +413,8 @@ struct ath6kl_vif {
+ 	u8 req_bssid[ETH_ALEN];
+ 	u16 ch_hint;
+ 	u16 bss_ch;
++	struct ath6kl_wep_key wep_key_list[WMI_MAX_KEY_INDEX + 1];
++	struct ath6kl_key keys[WMI_MAX_KEY_INDEX + 1];
+ };
+ 
+ /* Flag info */
+@@ -441,7 +443,6 @@ struct ath6kl {
+ 	struct ath6kl_vif *vif;
+ 	spinlock_t lock;
+ 	struct semaphore sem;
+-	struct ath6kl_wep_key wep_key_list[WMI_MAX_KEY_INDEX + 1];
+ 	u16 listen_intvl_b;
+ 	u16 listen_intvl_t;
+ 	u8 lrssi_roam_threshold;
+@@ -480,7 +481,6 @@ struct ath6kl {
+ 	u8 rx_meta_ver;
+ 	struct wireless_dev *wdev;
+ 	struct cfg80211_scan_request *scan_req;
+-	struct ath6kl_key keys[WMI_MAX_KEY_INDEX + 1];
+ 	enum sme_state sme_state;
+ 	enum wlan_low_pwr_state wlan_pwr_state;
+ 	struct wmi_scan_params_cmd sc_params;
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index a662d78..dd05ea3 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -87,7 +87,7 @@ void ath6kl_init_profile_info(struct ath6kl *ar)
+ 	vif->prwise_crypto_len = 0;
+ 	vif->grp_crypto = NONE_CRYPT;
+ 	vif->grp_crypto_len = 0;
+-	memset(ar->wep_key_list, 0, sizeof(ar->wep_key_list));
++	memset(vif->wep_key_list, 0, sizeof(vif->wep_key_list));
+ 	memset(vif->req_bssid, 0, sizeof(vif->req_bssid));
+ 	memset(vif->bssid, 0, sizeof(vif->bssid));
+ 	vif->bss_ch = 0;
+@@ -248,11 +248,12 @@ static int ath6kl_init_service_ep(struct ath6kl *ar)
+ 
+ void ath6kl_init_control_info(struct ath6kl *ar)
+ {
++	/* TODO: Findout vif */
+ 	struct ath6kl_vif *vif = ar->vif;
+ 
+ 	ath6kl_init_profile_info(ar);
+ 	vif->def_txkey_index = 0;
+-	memset(ar->wep_key_list, 0, sizeof(ar->wep_key_list));
++	memset(vif->wep_key_list, 0, sizeof(vif->wep_key_list));
+ 	vif->ch_hint = 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index e60f663..0b70e08 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -506,7 +506,7 @@ static void ath6kl_install_static_wep_keys(struct ath6kl *ar)
+ 	u8 keyusage;
+ 
+ 	for (index = WMI_MIN_KEY_INDEX; index <= WMI_MAX_KEY_INDEX; index++) {
+-		if (ar->wep_key_list[index].key_len) {
++		if (vif->wep_key_list[index].key_len) {
+ 			keyusage = GROUP_USAGE;
+ 			if (index == vif->def_txkey_index)
+ 				keyusage |= TX_USAGE;
+@@ -515,9 +515,9 @@ static void ath6kl_install_static_wep_keys(struct ath6kl *ar)
+ 					      index,
+ 					      WEP_CRYPT,
+ 					      keyusage,
+-					      ar->wep_key_list[index].key_len,
++					      vif->wep_key_list[index].key_len,
+ 					      NULL,
+-					      ar->wep_key_list[index].key,
++					      vif->wep_key_list[index].key,
+ 					      KEY_OP_INIT_VAL, NULL,
+ 					      NO_SYNC_WMIFLAG);
+ 		}
+@@ -1103,7 +1103,7 @@ void ath6kl_disconnect_event(struct ath6kl *ar, u8 reason, u8 *bssid,
+ 		}
+ 
+ 		if (memcmp(ar->net_dev->dev_addr, bssid, ETH_ALEN) == 0) {
+-			memset(ar->wep_key_list, 0, sizeof(ar->wep_key_list));
++			memset(vif->wep_key_list, 0, sizeof(vif->wep_key_list));
+ 			clear_bit(CONNECTED, &vif->flags);
+ 		}
+ 		return;
+-- 
+1.7.0.4
 
-On Fri, 07 Oct 2011 15:59:02 -0400 (EDT) David Miller <davem@davemloft.net>=
- wrote:
->
-> Ok, they are now online, please update your URLs.
->=20
-> git://git.kernel.org/pub/scm/linux/kernel/git/davem/net.git
-> git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git
-
-I have switched to these.
-
-> git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc.git
-> git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git
-
-You used to have sparc-next and ide-next (and the above used to be your
-"current release fixes" trees) ...
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Sat__8_Oct_2011_09_42_12_+1100_U2vpBnvvcMSJsjmr
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBCAAGBQJOj4BEAAoJEECxmPOUX5FEQVwP/A7oh9VbfzDWEzAuYwI/uIp/
-S2ht0Bc4xo65zFNPdXTQPzQgIfmbcLzXidUejGWQ6o45W8uxDkBdChy3vWiZltGP
-BYw1ppIL3mfocsERebdD1p8vJ6x9+Cn88bXlvV1rTyMQKQSjuF4pSHmIUzHDiGJk
-GPnsMgSYq03AzvML4eQcbHRoQGARb4S1N8tayAKnxasYyOKtnlZ5SFpwfuBmRE3l
-wVAKSW3iTelmZAHAldlLWMiT9zgU4m4PvOYFjM95QuvLxk5TjLJAz69Pw6FjhVwf
-jVeu/G7Crr7LdWlUWswTdyY9XfVbDfUpTH2TfZ+hfsszYWEOYN8n1DQ4RsIyV4xJ
-gXpWomzfWw+gozQwpUT9zwpZmHBAj2PrwFfMa1ZI44PS3PuzjrrEznh3US9RXt8K
-duXa0kfpHXGFr93l48bjMvEMXGreckWZ7CKLKgq8JRn/g4m7l4QSPvW+tJJVEfXO
-exxSXlv3piKsKUauy6b4u+55cb+Xu72mn31BvwVwaaU/ZSFoOuP/6b0YjLyyIFQ9
-3fHQFEOP3O7IxTG/TiaKwZ1eydAn1tTQ1GIju2dqNiNWDyFOPR1SRs0X0dXjXujS
-u1dVuwvp0OscmaT7WIsXHoMvfNI9OOwrZ3e1KzPPyNo9wunBrRKkZq88Q2Pes60O
-zEL/ep8769kZcOScNC6g
-=t9+U
------END PGP SIGNATURE-----
-
---Signature=_Sat__8_Oct_2011_09_42_12_+1100_U2vpBnvvcMSJsjmr--
