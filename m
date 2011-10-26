@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:21732 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933075Ab1JNOmr convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42632 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932879Ab1JZRWi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 10:42:47 -0400
-Date: Fri, 14 Oct 2011 10:42:29 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: How to create library module with callbacks?
-Message-ID: <20111014104229.7738c6cc@mj> (sfid-20111014_164301_821803_E26D6B57)
-In-Reply-To: <CACna6ryphLSrh5vtOEDXek7s9DGxWKSSgQB-KJVLyzfmBCP3KA@mail.gmail.com>
-References: <CACna6ryphLSrh5vtOEDXek7s9DGxWKSSgQB-KJVLyzfmBCP3KA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 26 Oct 2011 13:22:38 -0400
+Message-ID: <4EA7D98E.2000408@sipsolutions.net> (sfid-20111026_192240_888069_ED9F4413)
+Date: Wed, 26 Oct 2011 11:57:34 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+To: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 1/7] mac80211: mesh power mode indication in QoS frames
+References: <CAG5dHkRULKh90W1MeR3zq+-gpeNUshrHZ0qbKXsW19PMG5enoQ@mail.gmail.com> <1319190767.3964.8.camel@jlt3.sipsolutions.net> <CAG5dHkQtVC-cgEWcZOC_woLGeQ75Pkg-JmETWxVKJGdHs8qoOA@mail.gmail.com> (sfid-20111023_151105_679810_72556443)
+In-Reply-To: <CAG5dHkQtVC-cgEWcZOC_woLGeQ75Pkg-JmETWxVKJGdHs8qoOA@mail.gmail.com> (sfid-20111023_151105_679810_72556443)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 14 Oct 2011 15:21:16 +0200
-Rafał Miłecki <zajec5@gmail.com> wrote:
+On 10/23/2011 3:10 PM, Ivan Bezyazychnyy wrote:
+> On 21 October 2011 13:52, Johannes Berg<johannes@sipsolutions.net>  wrote:
+>> On Fri, 2011-10-21 at 12:36 +0400, Ivan Bezyazychnyy wrote:
+>>
+>>> +/* mesh power save level subfield mask */
+>>> +#define IEEE80211_QOS_CTL_PS_LEVEL      0x0200
+>>
+>> That looks like it could use a better name?
+>
+> Do you mean something like IEEE80211_QOS_CTL_MESH_POWER_SAVE_LEVEL?
+> The first half is similar to previous constants.
 
-> I want to create module library, which will handle PHY operations on
-> Broadcom card. For most of the time, I'm going to call library
-> functions from b43.
-> 
-> However, there are places where I need to call some (b43) driver
-> function from library module.
-> 
-> How can I handle that? Should I pass some functions pointers to the
-> library? Is that going to work? Or is there a better approach?
+Not really .. I mean, it's like you have two levels, 0 and 1, but you 
+say this is the level. Why not say this is the 1 level, and the 0 level 
+is implied otherwise?
 
-Yes, that should work.  All modules and the kernel live in the same
-address space.  But you should make sure that those pointers won't be
-used if the calling module is unloaded.
+For example, typically, if we have something like a bit in a field that 
+indicates the device is getting too hot, we'll call it
+FOOBAR_DEVICE_TOO_HOT
+and not
+FOOBAR_DEVICE_TEMPERATURE_LEVEL
 
-In fact, b43 does it already with mac80211, ssb and bcma.  See
-b43_hw_ops, b43_ssb_driver and b43_bcma_driver in the code.
+Basically I think that the constant name you have now tells me nothing 
+about what it means when the bit is set and I think it'd be better if it 
+did. That might not even be possible, but I think in that case you 
+really should add a comment, e.g.:
 
--- 
-Regards,
-Pavel Roskin
+/*
+  * mesh power save level:
+  * set - the device is doing ...
+  * unset - the device is doing ...
+  */
+#define ...
+
+johannes
