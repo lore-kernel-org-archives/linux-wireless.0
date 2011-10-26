@@ -1,86 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:41933 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752858Ab1JJINJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 04:13:09 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 27so1109073eye.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 01:13:08 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 19/29] wl12xx: make WL1271_FLAG_PSPOLL_FAILURE flag per-vif
-Date: Mon, 10 Oct 2011 10:13:07 +0200
-Message-Id: <1318234397-21081-20-git-send-email-eliad@wizery.com> (sfid-20111010_101334_756131_CC07A474)
-In-Reply-To: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+Received: from mga09.intel.com ([134.134.136.24]:25284 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753181Ab1JZW1R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Oct 2011 18:27:17 -0400
+Subject: Re: 3.1-rc9 and 3.1 wifi problem , problem continues with 3.1
+From: wwguy <wey-yi.w.guy@intel.com>
+To: werner <w.landgraf@ru.ru>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"dave.taht@gmail.com" <dave.taht@gmail.com>,
+	"rientjes@google.com" <rientjes@google.com>,
+	"arend@broadcom.com" <arend@broadcom.com>,
+	"toralf.foerster@gmx.de" <toralf.foerster@gmx.de>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"larry.finger@gmail.com" <larry.finger@gmail.com>
+In-Reply-To: <web-633781994@zbackend1.aha.ru>
+References: <web-633781994@zbackend1.aha.ru>
+Content-Type: multipart/mixed; boundary="=-ifsGQZZ21yoKllp1JE/N"
+Date: Wed, 26 Oct 2011 15:21:22 -0700
+Message-ID: <1319667682.14693.29.camel@wwguy-ubuntu> (sfid-20111027_002734_168728_BF990E67)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This flag should be set per-vif, rather than globally.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+--=-ifsGQZZ21yoKllp1JE/N
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+On Wed, 2011-10-26 at 14:47 -0700, werner wrote:
+> As reported, with 3.1-rc9 the wifi of a friend's laptop 
+> didnt work at all.  With 3.0.4 it's working normally.
+> 
+> The problem continues with 3.1
+> 
+> Now I take some files for identify the problem.  Below see 
+> lsmod and dmesg , and enclosed is hwinfo and syslog of 
+> that laptop as it was running with 3.1 just as wifi didn't 
+> work.      For comparison, on syslog you can see the 
+> previous boots (I separated them by blank lines), all with 
+> 3.0.4 , when wifi was working.
+> 
+> I hope that's now enough information to fix that problem.
+> 
+> 
+> Werner Landgraf
+
+
+could you try this test patch
+
+Thanks
+Wey
+
+--=-ifsGQZZ21yoKllp1JE/N
+Content-Disposition: attachment; filename="0001-iwlwifi-allow-pci_enable_msi-fail.patch"
+Content-Type: text/x-patch; name="0001-iwlwifi-allow-pci_enable_msi-fail.patch"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+>From 64a1b22cc9d179d69c66b23619691ba2a13ee646 Mon Sep 17 00:00:00 2001
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Date: Wed, 26 Oct 2011 15:15:38 -0700
+Subject: [PATCH 1/1] iwlwifi: allow pci_enable_msi fail
+
+Continue the init process even fail to enable msi
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/wl12xx/event.c  |    4 ++--
- drivers/net/wireless/wl12xx/main.c   |    2 +-
- drivers/net/wireless/wl12xx/wl12xx.h |    2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-pci.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index d8b183b..1f60a1f 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -49,7 +49,7 @@ void wl1271_pspoll_work(struct work_struct *work)
- 	if (unlikely(wl->state == WL1271_STATE_OFF))
- 		goto out;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index 35d4551..911186f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -429,10 +429,9 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	pci_write_config_byte(pdev, PCI_CFG_RETRY_TIMEOUT, 0x00);
  
--	if (!test_and_clear_bit(WL1271_FLAG_PSPOLL_FAILURE, &wl->flags))
-+	if (!test_and_clear_bit(WLVIF_FLAG_PSPOLL_FAILURE, &wlvif->flags))
- 		goto out;
+ 	err = pci_enable_msi(pdev);
+-	if (err) {
+-		dev_printk(KERN_ERR, &pdev->dev, "pci_enable_msi failed");
+-		goto out_iounmap;
+-	}
++	if (err)
++		dev_printk(KERN_ERR, &pdev->dev,
++			"pci_enable_msi failed(0X%x)", err);
  
- 	if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
-@@ -89,7 +89,7 @@ static void wl1271_event_pspoll_delivery_fail(struct wl1271 *wl,
- 					 wlvif->basic_rate, true);
- 		if (ret < 0)
- 			return;
--		set_bit(WL1271_FLAG_PSPOLL_FAILURE, &wl->flags);
-+		set_bit(WLVIF_FLAG_PSPOLL_FAILURE, &wlvif->flags);
- 		ieee80211_queue_delayed_work(wl->hw, &wlvif->pspoll_work,
- 					     msecs_to_jiffies(delay));
- 	}
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 25599ad..c54c456 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2514,7 +2514,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 	 * incorrectly changed after the pspoll failure active window.
- 	 */
- 	if (changed & IEEE80211_CONF_CHANGE_PS)
--		clear_bit(WL1271_FLAG_PSPOLL_FAILURE, &wl->flags);
-+		clear_bit(WLVIF_FLAG_PSPOLL_FAILURE, &wlvif->flags);
- 
- 	if (conf->flags & IEEE80211_CONF_PS &&
- 	    !test_bit(WLVIF_FLAG_PSM_REQUESTED, &wlvif->flags)) {
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 88d48b1..9701784 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -320,7 +320,6 @@ enum wl12xx_flags {
- 	WL1271_FLAG_ELP_REQUESTED,
- 	WL1271_FLAG_IRQ_RUNNING,
- 	WL1271_FLAG_IDLE,
--	WL1271_FLAG_PSPOLL_FAILURE,
- 	WL1271_FLAG_FW_TX_BUSY,
- 	WL1271_FLAG_DUMMY_PACKET_PENDING,
- 	WL1271_FLAG_SUSPENDED,
-@@ -339,6 +338,7 @@ enum wl12xx_vif_flags {
- 	WLVIF_FLAG_PSM_REQUESTED,
- 	WLVIF_FLAG_STA_STATE_SENT,
- 	WLVIF_FLAG_RX_STREAMING_STARTED,
-+	WLVIF_FLAG_PSPOLL_FAILURE,
- };
- 
- struct wl1271_link {
+ 	/* TODO: Move this away, not needed if not MSI */
+ 	/* enable rfkill interrupt: hw bug w/a */
 -- 
-1.7.6.401.g6a319
+1.7.0.4
+
+
+--=-ifsGQZZ21yoKllp1JE/N--
 
