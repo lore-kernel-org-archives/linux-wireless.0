@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:64081 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754581Ab1JSMSy (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:45855 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753014Ab1JZWaP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Oct 2011 08:18:54 -0400
-Received: by qabj40 with SMTP id j40so1184479qab.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2011 05:18:53 -0700 (PDT)
+	Wed, 26 Oct 2011 18:30:15 -0400
+Received: by wwn22 with SMTP id 22so24747wwn.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 15:30:14 -0700 (PDT)
 MIME-Version: 1.0
-Date: Wed, 19 Oct 2011 14:18:53 +0200
-Message-ID: <CAFED-jn-b914FHogzb+ad76XrYaXe+aY4_U1o_Qd2mo6bx4Cog@mail.gmail.com> (sfid-20111019_141858_071819_AAEA490F)
-Subject: mac80211: ROC timeout and back to oper channel when associated
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+From: Roman Proud <setamagiga@gmail.com>
+Date: Thu, 27 Oct 2011 00:29:54 +0200
+Message-ID: <CAF7qGM4BL10gn2786kW73sAk8f-y8CzX0rx2BQsY_Q96W=pfog@mail.gmail.com> (sfid-20111027_003019_263035_A2B7A8E5)
+Subject: RTL8188RU no injection?
 To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Hi there,
 
-I am doing such test with wpa_supplicant:
-1) p2p_connect to GO (GO oper channel different than our listen
-channel) - connected state
-2) p2p_find
-3) p2p_stop_find (we left on listen channel and didn't back oper channel).
+i hope you guys can help me.
+I wanted a new Wifi card, because mine has no injection, what i need sometimes.
 
-Seems in case we have empty work queue in mac80211 we will not back to
-oper channel (we are connected with GO).
-In case after step 3 I will trigger some action,  eg. scan we will
-back to oper channel correctly.
+So i forced the Internet to find that a 8187 would be best for. So i
+bought the 8188 (newer = better?)... i never had thought about so much
+difference in just one number... it was horrible to even get the card
+work, first no monitor mode works, but now it does (i dunno why
+O_o)... The only thing i miss is Package injection.
 
-My driver don't have HW_ROC callbacks.
+So my Question. Is it there? is it in the driver and i just have to do
+some magic again like i did with the monitor mode?
+If not, is there any Patch? (i didn't find anything...)
+Or should i simply send the damn thing back and get me an 8187? (its
+not that simple, and i like hacking into my linux, so one of the first
+both, would be nicer)
 
-I don't know ieee80211_work_work() code well and all flags we have
-inside, so probably this patch don't cover all cases but generally
-works.
-Could you help with fix for that problem?
-
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -1089,6 +1089,8 @@ static void ieee80211_work_work(struct work_struct *work)
-                        list_del_rcu(&wk->list);
-                        synchronize_rcu();
-                        list_add(&wk->list, &free_work);
-+                       if (!ieee80211_cfg_on_oper_channel(local))
-+                               ieee80211_hw_config(local, 0);
-                        break;
-                default:
-
-
-BR
-Janusz
+Greetings
+Roman
