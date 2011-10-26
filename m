@@ -1,40 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:56832 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750748Ab1J2EfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Oct 2011 00:35:06 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1RK0dN-0005cw-E3
-	for linux-wireless@vger.kernel.org; Sat, 29 Oct 2011 06:35:05 +0200
-Received: from 24-158-184-117.dhcp.jcsn.tn.charter.com ([24.158.184.117])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Oct 2011 06:35:05 +0200
-Received: from gds by 24-158-184-117.dhcp.jcsn.tn.charter.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Oct 2011 06:35:05 +0200
-To: linux-wireless@vger.kernel.org
-From: Gene Smith <gds@chartertn.net>
-Subject: Re: wifi iwlagn fails to authenticate after wake from suspend
-Date: Sat, 29 Oct 2011 00:32:09 -0400
-Message-ID: <j8fvka$fu0$1@dough.gmane.org> (sfid-20111029_063515_062862_CABEBFC8)
-References: <j881g5$tdf$1@dough.gmane.org> <alpine.DEB.2.00.1110252325090.20273@chino.kir.corp.google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-In-Reply-To: <alpine.DEB.2.00.1110252325090.20273@chino.kir.corp.google.com>
-Cc: linux-kernel@vger.kernel.org
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:51116 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932755Ab1JZNrz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Oct 2011 09:47:55 -0400
+Received: by wwe6 with SMTP id 6so2464623wwe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 06:47:54 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] mac80211: init rate-control for TDLS sta when supp-rates are known
+Date: Wed, 26 Oct 2011 15:47:46 +0200
+Message-Id: <1319636866-12171-1-git-send-email-arik@wizery.com> (sfid-20111026_154759_463490_721BFD6C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Rientjes wrote, On 10/26/2011 02:27 AM:
+Initialize rate control algorithms only when supported rates are known
+for a TDLS peer sta. Direct Tx between peers is not allowed before the
+link is enabled. In turn, this only occurs after a change_station()
+call that sets supported rates.
 
->
-> So we need to bisect between 2.4.38 and 3.0.0? :)  I'm running ubuntu
-> 11.10 on a home laptop so I'll give this a try as well when I can if I can
-> put up with unity for that long.
->
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ net/mac80211/cfg.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
-Hi,
-Any results on this home laptop test yet? (Running kde-ubuntu here :) ).
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 1309bb9..9f05416d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -829,7 +829,12 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	      sdata->vif.type == NL80211_IFTYPE_STATION))
+ 		return -ENOTSUPP;
+ 
+-	rate_control_rate_init(sta);
++	/*
++	 * for TDLS, rate control should be initialized only when supported
++	 * rates are known.
++	 */
++	if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER))
++		rate_control_rate_init(sta);
+ 
+ 	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+ 		sdata->vif.type == NL80211_IFTYPE_AP;
+@@ -913,6 +918,9 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 
+ 	sta_apply_parameters(local, sta, params);
+ 
++	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) && params->supported_rates)
++		rate_control_rate_init(sta);
++
+ 	rcu_read_unlock();
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+-- 
+1.7.5.4
 
