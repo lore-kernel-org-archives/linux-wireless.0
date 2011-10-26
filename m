@@ -1,108 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:64022 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752168Ab1JGVNi (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:46766 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753334Ab1JZXpA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 17:13:38 -0400
-Received: by gyg10 with SMTP id 10so4000546gyg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Oct 2011 14:13:37 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH] crda: fix null string assumption for alpha2
-Date: Fri,  7 Oct 2011 14:13:33 -0700
-Message-Id: <1318022013-17378-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111007_231341_264286_8A5A9A7F)
+	Wed, 26 Oct 2011 19:45:00 -0400
+Received: by ywm3 with SMTP id 3so2066261ywm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 16:45:00 -0700 (PDT)
+Message-ID: <4EA89B8D.7060104@lwfinger.net> (sfid-20111027_014505_453251_34C43421)
+Date: Wed, 26 Oct 2011 18:45:17 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Roman Proud <setamagiga@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: RTL8188RU no injection?
+References: <CAF7qGM4BL10gn2786kW73sAk8f-y8CzX0rx2BQsY_Q96W=pfog@mail.gmail.com>
+In-Reply-To: <CAF7qGM4BL10gn2786kW73sAk8f-y8CzX0rx2BQsY_Q96W=pfog@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wireless-regdb only accounts for two bytes for
-the country code but CRDA defined the alpha2 to be
-as a string of length 2, and so does the nl80211 attribute
-policy:
+On 10/26/2011 05:29 PM, Roman Proud wrote:
+> Hi there,
+>
+> i hope you guys can help me.
+> I wanted a new Wifi card, because mine has no injection, what i need sometimes.
+>
+> So i forced the Internet to find that a 8187 would be best for. So i
+> bought the 8188 (newer = better?)... i never had thought about so much
+> difference in just one number... it was horrible to even get the card
+> work, first no monitor mode works, but now it does (i dunno why
+> O_o)... The only thing i miss is Package injection.
+>
+> So my Question. Is it there? is it in the driver and i just have to do
+> some magic again like i did with the monitor mode?
+> If not, is there any Patch? (i didn't find anything...)
+> Or should i simply send the damn thing back and get me an 8187? (its
+> not that simple, and i like hacking into my linux, so one of the first
+> both, would be nicer)
 
-        [NL80211_ATTR_REG_ALPHA2] = { .type = NLA_STRING, .len = 2 },
+I found that packetspammer works just fine with rtl8192cu.
 
-The meaning of a string is it'll be null terminated, so if you
-do not add the null termination a country without the null termination
-will not match up with the nl80211 attribute policy.
-
-This has no impact for us unless we want to use the next available
-pad byte on the wireless-regdb. We now want to use it so fix
-CRDA by using a local copy of the regdb's alpha2 that is properly
-null terminated and sending it.
-
-The implications of this change is that new wirelesss-regdb's that
-make use of the next pad byte for a country will get that country
-ignored for regulatory hints sent to the kernel. At this point we
-don't yet know what the next byte will be used for though so this
-has no impact. The second pad byte is being used for DFS and that
-is not impacted by this nor is this change required for it.
-
-Distributions should upgrade though in case we ever do decide to use
-this last precious country byte. I've tested that this indeed fixes
-the bogus issue I saw when instead of using the second pad byte we
-use the first pad byte. Thanks to Johannes for spotting the issue.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
-
-This goes on top of my DFS master patch. I'll push the change out
-once and if Linville integrates my DFS changes to wireless-regdb.
-
- crda.c   |    4 ++--
- reglib.h |   13 -------------
- 2 files changed, 2 insertions(+), 15 deletions(-)
-
-diff --git a/crda.c b/crda.c
-index dfc5353..63ebfff 100644
---- a/crda.c
-+++ b/crda.c
-@@ -149,7 +149,7 @@ int main(int argc, char **argv)
- 	struct regdb_file_header *header;
- 	struct regdb_file_reg_country *countries;
- 	int dblen, siglen, num_countries, i, j, r;
--	char alpha2[2];
-+	char alpha2[3] = {}; /* NUL-terminate */
- 	char *env_country;
- 	struct nl80211_state nlstate;
- 	struct nl_cb *cb = NULL;
-@@ -279,7 +279,7 @@ int main(int argc, char **argv)
- 				sizeof(*rcoll) + num_rules * sizeof(__be32),
- 				country->reg_collection_ptr);
- 
--	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2, (char *) country->alpha2);
-+	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2, (char *) alpha2);
- 	NLA_PUT_U8(msg, NL80211_ATTR_DFS_REGION, country->dfs_region);
- 
- 	nl_reg_rules = nla_nest_start(msg, NL80211_ATTR_REG_RULES);
-diff --git a/reglib.h b/reglib.h
-index f3a76ef..9fe5d8b 100644
---- a/reglib.h
-+++ b/reglib.h
-@@ -53,21 +53,8 @@ static inline int is_alpha2(const char *alpha2)
- 	return 0;
- }
- 
--/* Avoid stdlib */
--static inline int is_len_2(const char *alpha2)
--{
--        if (alpha2[0] == '\0' || (alpha2[1] == '\0'))
--                return 0;
--        if (alpha2[2] == '\0')
--                return 1;
--        return 0;
--}
--
- static inline int is_valid_regdom(const char *alpha2)
- {
--	if (!is_len_2(alpha2))
--		return 0;
--
- 	if (!is_alpha2(alpha2) && !is_world_regdom(alpha2))
- 		return 0;
- 
--- 
-1.7.4.15.g7811d
+Larry
 
