@@ -1,162 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29978 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752449Ab1J0DsG convert rfc822-to-8bit (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:46112 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751864Ab1JZCuY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 23:48:06 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: Richard Yao <ryao@cs.stonybrook.edu>
-CC: Norbert Preining <preining@logic.at>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Tue, 25 Oct 2011 22:50:24 -0400
+Date: Wed, 26 Oct 2011 11:50:14 +0900
+From: Norbert Preining <preining@logic.at>
+To: David Rientjes <rientjes@google.com>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"ipw3945-devel@lists.sourceforge.net"
 	<ipw3945-devel@lists.sourceforge.net>,
 	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Rientjes <rientjes@google.com>
-Date: Wed, 26 Oct 2011 20:48:01 -0700
-Subject: RE: iwlagn is getting very shaky
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A3501A1108A86@orsmsx506.amr.corp.intel.com> (sfid-20111027_054819_372204_ACFA1D16)
-References: <20111019060108.GA11588@gamma.logic.tuwien.ac.at>
-	<CABDyM6S9XK64n374AKCu5YUq4PBAmaB0jCgE9+snnM9XeQo1yg@mail.gmail.com>
- <CABDyM6R-BBV1_oci2vMoxcybT=0cxPRfHELvtrQTRfSf6WO9Eg@mail.gmail.com>
-In-Reply-To: <CABDyM6R-BBV1_oci2vMoxcybT=0cxPRfHELvtrQTRfSf6WO9Eg@mail.gmail.com>
-Content-Type: text/plain; charset="iso-8859-1"
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+Subject: Re: iwlagn is getting very shaky
+Message-ID: <20111026025014.GB24956@gamma.logic.tuwien.ac.at> (sfid-20111026_045043_637920_06179C52)
+References: <20111019060108.GA11588@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com> <20111019062517.GC11588@gamma.logic.tuwien.ac.at> <1319003304.31823.46.camel@wwguy-huron> <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111020045927.GB23044@gamma.logic.tuwien.ac.at> <1319119852.2111.2.camel@wwguy-ubuntu> <20111021012442.GB26758@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110231424500.17218@chino.kir.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.00.1110231424500.17218@chino.kir.corp.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Richard,
+Hi David,
 
-Thanks so much for the information, we will look into it asap and get back to you.
+On So, 23 Okt 2011, David Rientjes wrote:
+> It'd be interesting to see if this problem still exists in linux-next 
+> since some wireless changes went into that recently.  Please try the tree 
+> at git://github.com/sfrothwell/linux-next.git
 
-Thanks
-Wey
+I didn't try that by now, but I tried current linux git where 
+a lot of things went into, I am running on top of 7670c7010c.
+With that I get:
+- two different kernel bugs, the first one actually appearing several
+  times
+- after a short time no package goes out, but the addapter still believes
+  to be associated.
 
------Original Message-----
-From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Richard Yao
-Sent: Thursday, October 27, 2011 2:06 AM
-To: Guy, Wey-Yi W
-Cc: Norbert Preining; linux-wireless@vger.kernel.org; linux-kernel@vger.kernel.org; ipw3945-devel@lists.sourceforge.net; ilw@linux.intel.com; Pekka Enberg; David Rientjes
-Subject: Fwd: iwlagn is getting very shaky
+Here is the dmesg output of the two kernel bugs and the following
+hard reset.
 
-Dear Wey,
-
-Here is the message that I sent earlier.
-
-Yours truly,
-Richard Yao
-
----------- Forwarded message ----------
-From: Richard Yao <ryao@cs.stonybrook.edu>
-Date: Wed, Oct 26, 2011 at 12:19 AM
-Subject: Re: iwlagn is getting very shaky
-To: linux-kernel@vger.kernel.org
-Cc: preining@logic.at
+BTW, that happened at the *critical* access point at the university.
+At home I was before running hte same kernel without problem.
+BUt it might be a suspend/resume problem, too, as I suspended the
+computer and woke it up here.
 
 
-Dear Everyone,
+[ 3279.808204] ------------[ cut here ]------------
+[ 3279.808246] WARNING: at include/net/mac80211.h:3570 rate_control_send_low+0xa5/0x165 [mac80211]()
+[ 3279.808254] Hardware name: VGN-Z11VN_B
+[ 3279.808258] Modules linked in: rfcomm bnep vboxpci vboxnetadp vboxnetflt vboxdrv snd_hrtimer binfmt_misc dm_crypt dm_mod isofs btrfs zlib_deflate crc32c libcrc32c vfat fat fuse loop uinput snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm arc4 snd_seq_dummy snd_seq_oss iwlwifi snd_seq_midi snd_rawmidi snd_seq_midi_event snd_seq mac80211 btusb snd_timer bluetooth snd_seq_device firewire_ohci snd firewire_core sony_laptop crc16 soundcore mxm_wmi cfg80211 snd_page_alloc crc_itu_t rfkill joydev tpm_infineon
+[ 3279.808379] Pid: 4956, comm: kworker/u:11 Tainted: G        W   3.1.0+ #40
+[ 3279.808385] Call Trace:
+[ 3279.808400]  [<ffffffff810376c1>] warn_slowpath_common+0x83/0x9b
+[ 3279.808411]  [<ffffffff810376f3>] warn_slowpath_null+0x1a/0x1c
+[ 3279.808438]  [<ffffffffa0158149>] rate_control_send_low+0xa5/0x165 [mac80211]
+[ 3279.808459]  [<ffffffffa01b01c2>] rs_get_rate+0x146/0x254 [iwlwifi]
+[ 3279.808486]  [<ffffffffa01585b1>] rate_control_get_rate+0x86/0x14c [mac80211]
+[ 3279.808516]  [<ffffffffa015f632>] ieee80211_tx_h_rate_ctrl+0x1cb/0x3e4 [mac80211]
+[ 3279.808546]  [<ffffffffa015fac9>] invoke_tx_handlers+0x69/0xf5 [mac80211]
+[ 3279.808575]  [<ffffffffa015fcd2>] ieee80211_tx+0x7f/0xaf [mac80211]
+[ 3279.808605]  [<ffffffffa0160172>] ieee80211_xmit+0x89/0x97 [mac80211]
+[ 3279.808634]  [<ffffffffa0160d10>] ieee80211_tx_skb+0x57/0x5f [mac80211]
+[ 3279.808659]  [<ffffffffa0152098>] ieee80211_send_nullfunc+0x5f/0x64 [mac80211]
+[ 3279.808684]  [<ffffffffa01520ff>] ieee80211_mgd_probe_ap_send+0x62/0xe6 [mac80211]
+[ 3279.808709]  [<ffffffffa01522fb>] ? ieee80211_recalc_ps+0x10/0x250 [mac80211]
+[ 3279.808734]  [<ffffffffa0152960>] ieee80211_mgd_probe_ap+0xc9/0xd9 [mac80211]
+[ 3279.808759]  [<ffffffffa0152a6b>] ieee80211_beacon_connection_loss_work+0xe2/0xed [mac80211]
+[ 3279.808785]  [<ffffffffa0152989>] ? ieee80211_sta_monitor_work+0x19/0x19 [mac80211]
+[ 3279.808797]  [<ffffffff8104d9cc>] process_one_work+0x17b/0x2bd
+[ 3279.808807]  [<ffffffff8104c011>] ? need_to_create_worker+0x12/0x26
+[ 3279.808818]  [<ffffffff8104eac7>] worker_thread+0xdb/0x15f
+[ 3279.808829]  [<ffffffff8104e9ec>] ? manage_workers.isra.24+0x171/0x171
+[ 3279.808839]  [<ffffffff81051ef2>] kthread+0x84/0x8c
+[ 3279.808851]  [<ffffffff81401394>] kernel_thread_helper+0x4/0x10
+[ 3279.808862]  [<ffffffff81051e6e>] ? kthread_worker_fn+0x148/0x148
+[ 3279.808872]  [<ffffffff81401390>] ? gs_change+0xb/0xb
+[ 3279.808879] ---[ end trace b7620f873182e7e3 ]---
+[ 3284.284925] wlan0: deauthenticating from 00:24:c4:ab:bd:ef by local choice (reason=2)
+[ 3284.344356] cfg80211: Calling CRDA to update world regulatory domain
+[ 3284.351319] wlan0: authenticate with 00:24:c4:ab:bd:ef (try 1)
+[ 3284.445310] wlan0: authenticated
+[ 3284.447486] wlan0: associate with 00:24:c4:ab:bd:ef (try 1)
+[ 3284.449486] wlan0: RX ReassocResp from 00:24:c4:ab:bd:ef (capab=0x1 status=0 aid=2)
+[ 3284.449489] wlan0: associated
+[ 3314.515741] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:24:c4:ab:bd:ef tid = 0
+[ 3314.515762] ------------[ cut here ]------------
+[ 3314.515800] WARNING: at drivers/net/wireless/iwlwifi/iwl-trans-pcie.c:1101 iwl_trans_pcie_tx+0x180/0x661 [iwlwifi]()
+[ 3314.515808] Hardware name: VGN-Z11VN_B
+[ 3314.515813] Modules linked in: rfcomm bnep vboxpci vboxnetadp vboxnetflt vboxdrv snd_hrtimer binfmt_misc dm_crypt dm_mod isofs btrfs zlib_deflate crc32c libcrc32c vfat fat fuse loop uinput snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm arc4 snd_seq_dummy snd_seq_oss iwlwifi snd_seq_midi snd_rawmidi snd_seq_midi_event snd_seq mac80211 btusb snd_timer bluetooth snd_seq_device firewire_ohci snd firewire_core sony_laptop crc16 soundcore mxm_wmi cfg80211 snd_page_alloc crc_itu_t rfkill joydev tpm_infineon
+[ 3314.515937] Pid: 4954, comm: kworker/u:9 Tainted: G        W   3.1.0+ #40
+[ 3314.515943] Call Trace:
+[ 3314.515948]  <IRQ>  [<ffffffff810376c1>] warn_slowpath_common+0x83/0x9b
+[ 3314.515973]  [<ffffffff810376f3>] warn_slowpath_null+0x1a/0x1c
+[ 3314.515996]  [<ffffffffa01cdb0e>] iwl_trans_pcie_tx+0x180/0x661 [iwlwifi]
+[ 3314.516009]  [<ffffffff810d14b3>] ? kmem_cache_alloc+0x44/0xb9
+[ 3314.516030]  [<ffffffffa01b59f8>] iwlagn_tx_skb+0x862/0x901 [iwlwifi]
+[ 3314.516048]  [<ffffffffa01abf8c>] iwlagn_mac_tx+0x131/0x1a2 [iwlwifi]
+[ 3314.516069]  [<ffffffffa016abd6>] ? ieee80211_tx_h_fragment+0x16/0x22c [mac80211]
+[ 3314.516098]  [<ffffffffa015ef24>] __ieee80211_tx+0x176/0x1cf [mac80211]
+[ 3314.516117]  [<ffffffffa016ab48>] ? ieee80211_tx_h_calculate_duration+0x4c/0x65 [mac80211]
+[ 3314.516147]  [<ffffffffa015fcea>] ieee80211_tx+0x97/0xaf [mac80211]
+[ 3314.516178]  [<ffffffffa0160be6>] ieee80211_tx_pending+0xf0/0x1c3 [mac80211]
+[ 3314.516191]  [<ffffffff8103cdd2>] tasklet_action+0x77/0xc2
+[ 3314.516201]  [<ffffffff8103cf13>] __do_softirq+0xbc/0x1a5
+[ 3314.516212]  [<ffffffff8103cb4f>] ? test_ti_thread_flag.constprop.16+0x9/0x16
+[ 3314.516225]  [<ffffffff8140148c>] call_softirq+0x1c/0x30
+[ 3314.516230]  <EOI>  [<ffffffff8100371a>] do_softirq+0x38/0x6e
+[ 3314.516248]  [<ffffffff8103cbd9>] _local_bh_enable_ip.isra.12+0x7d/0xa0
+[ 3314.516259]  [<ffffffff8103cc0a>] local_bh_enable_ip+0xe/0x10
+[ 3314.516268]  [<ffffffff813ff657>] _raw_spin_unlock_bh+0x23/0x25
+[ 3314.516291]  [<ffffffffa014ec70>] ieee80211_agg_tx_operational+0x99/0xa4 [mac80211]
+[ 3314.516316]  [<ffffffffa014f7bf>] ieee80211_process_addba_resp+0xb8/0xf1 [mac80211]
+[ 3314.516329]  [<ffffffff81064040>] ? arch_read_unlock+0xe/0xe
+[ 3314.516355]  [<ffffffffa0156a38>] ieee80211_iface_work+0x130/0x2b5 [mac80211]
+[ 3314.516381]  [<ffffffffa0156908>] ? ieee80211_teardown_sdata+0xcc/0xcc [mac80211]
+[ 3314.516394]  [<ffffffff8104d9cc>] process_one_work+0x17b/0x2bd
+[ 3314.516404]  [<ffffffff8104c011>] ? need_to_create_worker+0x12/0x26
+[ 3314.516415]  [<ffffffff8104eac7>] worker_thread+0xdb/0x15f
+[ 3314.516426]  [<ffffffff8104e9ec>] ? manage_workers.isra.24+0x171/0x171
+[ 3314.516436]  [<ffffffff81051ef2>] kthread+0x84/0x8c
+[ 3314.516447]  [<ffffffff81401394>] kernel_thread_helper+0x4/0x10
+[ 3314.516458]  [<ffffffff81051e6e>] ? kthread_worker_fn+0x148/0x148
+[ 3314.516467]  [<ffffffff81401390>] ? gs_change+0xb/0xb
+[ 3314.516474] ---[ end trace b7620f873182e7e4 ]---
+[ 3324.128094] iwlwifi 0000:06:00.0: Queue 11 stuck for 10000 ms.
+[ 3324.128105] iwlwifi 0000:06:00.0: Current read_ptr 14 write_ptr 31
+[ 3324.128113] iwlwifi 0000:06:00.0: On demand firmware reload
+[ 3324.128548] ieee80211 phy0: Hardware restart was requested
+[ 3324.128657] iwlwifi 0000:06:00.0: L1 Enabled; Disabling L0S
+[ 3324.131680] iwlwifi 0000:06:00.0: Radio type=0x1-0x2-0x0
 
-I have always had issues with Wi-Fi at my university, although they became particularly acute. The problem is characterized by an inordinate number of Tx excessive retries like what Norbert posted. I had been holding off on reporting this out of fear that my report wouldn't be good enough, but now that I see Norbert reported it, I thought I would contribute my findings.
 
-When I looked into this, I found that the wireless spectrum on my university is absurdly crowded. "iwlist wlan0 scan" reveals roughly
-100 access points at any given time, many of which have the same SSID.
-It is worst in the library, which probably one of the most densely populated buildings. This appears to be linked to the hidden node
-problem:
+Best wishes
 
-http://en.wikipedia.org/wiki/Hidden_node_problem
-
-I found a few issues in the wireless stack that appear to exacerbate this problem. The first of which is a kernel problem. The iwlagn driver does not support "auto" for the rts and frag settings, so they default to off. I tried fiddling with various settings, but the only one that seems to make a difference is rts, which at the moment I have set to 0, which should turn it on and transmit a request to send for all traffic. I configured my laptop to set rts to 0 on boot and the results were remarkable. I went from having to wait 30 minutes to an hour to get a connection that would only last for 2 minutes if I was lucky to being able to obtain a relatively stable connection within a few minutes.
-
-I also encountered another kernel issue, but I haven't seen it in a while. That issue was characterized by "iwlagn 0000:03:00.0: Stopping AGG while state not ON or starting". After that went into the dmesg output, it looked like I was transmitting, but I never saw a single response from the outside world until I did "modprobe -r iwlagn && modprobe iwlagn". I believe that this issue was present in kernel 3.1.0-rc4, but I could be off by an rc or two. It normally occurred within 5 to 15 mnutes and only occurred if I had passed 11n_disable=1 to the kernel module. I don't pass that anymore, so I don't know if it is still a problem.
-
-With that said, I discovered issues in other areas of the wireless stack. One is that Network Manager has a 25-second hard-coded timeout (in nm-device-wifi.c) when controlling WPA Supplicant. Ignoring the hard-coded part, having the time-out isn't so bad until you consider that WPA Supplicant will enter an infinite retry loop whenever Network Manager asks it to try connecting to an access point that is either malfunctioning or cannot hear your wireless NIC. Furthermore, if you are in an area where multiple access points use the same SSID, WPA supplicant will try to connect to each one with its own 9 second timeout, so Network Manager will kill it before it has gone through the entire list. I don't know if the 9 second timeout is hard coded, but the kernel lists 3 direct probe attempts in the dmesg output and if all 3 fail, WPA Supplicant will wait precisely 9 seconds (from the first one) before it tries something else. I imgaine that if someone patched the stack to implements some callbacks, things would become much better when they don't work the first time. With that said, WPA Supplicant needs a callback from the kernel when association fails and either WPA Supplicant, Network Manager or both need to be patched so that WPA Supplicant will not enter an infinite retry loop and instead it will give Network Manager a failure callback so that it can try something else.
-
-This might be the wrong mailing list to discuss issues that reside entirely in userland, but since I described a few other issues that were sort of a mix of both, I think I will throw in the other two that I found for completeness. With that said, another issue that sometimes happens is that the kernel loses the wireless access point association. If I do this manually, I can just use iwconfig to make the kerenl reassociate, but if that happens with Network Manager, it kills the entire connection and starts from scratch. This leads us to the last issue I identified, which is that dhclient can be horribly slow at times such that even if things work perfectly, getting a DHCP lease takes what feels like ages. This can be fixed by implementing RFC 4436 like Apple did in its products. It can also be worked around by configuring it to make an attempt every few seconds rather than every minute, which coincidentally, is the exact time that it takes for dhclient to time itself out and quit, making Network Manager kill an otherwise good connection. I reported this last year to my distribution, which has since changed the default config file, but in the course of diagnosing this year's problems, I managed to find various LUG mailing lists discussing this problem. Their workaround was to run dhclient manually, which causes zombie processes to be made and it really doesn't seem like the right solution to this issue.
-
-Anyway, that is everything that I know about this issue. I am right now sitting on as many as three other issues in other parts of the kernel, but I don't plan to report them until I understand them well enough to either write patches or post how to reliably reproduce them.
-The last time I posted something on the mailing list, someone named Ted yelled at me for asking a stupid question. If that happens again, I will probably just unsubscribe and let that be the end of it. I have only used Linux for less than 2 years and I am not paid to do this, so please be nice.
-
-Yours truly,
-Richard Yao
-
-On Wed, Oct 19, 2011 at 2:01 AM, Norbert Preining <preining@logic.at> wrote:
-> Hi everyone
->
-> (please Cc),
->
-> I am currently running 3.1.0-rc10, and I am having a hard time with 
-> the wlan network here at the university.
->
-> For quite some time, like 10min, it is fine, then suddently the iwlagn 
-> driver gives up on me and connection is dropped.
->
-> In the log file I see:
-> [  172.137011] iwlagn 0000:06:00.0: Tx aggregation enabled on ra = 
-> 00:24:c4:ab:bd:ef tid = 0 [  821.841016] iwlagn 0000:06:00.0: Tx 
-> aggregation enabled on ra = 00:24:c4:ab:bd:ef tid = 6 [ 1095.580735] 
-> wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3) [ 1095.780076] 
-> wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3) [ 1095.980101] 
-> wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3) [ 1096.180117] 
-> wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out [ 1105.255464] 
-> wlan0: deauthenticating from 00:24:c4:ab:bd:ef by local choice 
-> (reason=2) [ 1105.255519] iwlagn 0000:06:00.0: Stopping AGG while 
-> state not ON or starting [ 1105.265581] cfg80211: Calling CRDA for 
-> country: JP [ 1105.271476] wlan0: authenticate with 00:24:c4:ab:bd:e0 
-> (try 1) [ 1105.468105] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 
-> 2) [ 1105.668110] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 3) [ 
-> 1105.868090] wlan0: authentication with 00:24:c4:ab:bd:e0 timed out [ 
-> 1113.667890] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3) [ 
-> 1113.864116] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3) [ 
-> 1114.064095] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3) [ 
-> 1114.264109] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
->
-> Somewhere around 1100 the connection is gone and never comes back again.
->
-> I tried removing the driver module from the kernel and reinserting it, 
-> tried to turn on and off the hardware swithc (rfkill), all without no 
-> success, the wlan connection remains dead until I reboot.
->
-> I am not sure exactely when it started, I guess somewhere in the
-> 3.1 cycle, before I was permanently working wiht wlan, now I always 
-> plug in the cable.
->
-> If there is any way to track down this, or any suggestions how I can 
-> debug it, please let me know.
->
-> Hardware: Sony VGN-Z11, Intel(R) WiFi Link 5100 AGN, REV=0x54
-> L1 Enabled; Disabling L0S
-> device EEPROM VER=0x11e, CALIB=0x4
-> Device SKU: 0Xf0
-> Tunable channels: 13 802.11bg, 24 802.11a channels loaded firmware 
-> version 8.83.5.1 build 33692 (EXP)
->
->
-> On the other hand, the same laptop with the very same configuration 
-> works very nicely in my flat's wlan, which is some dirt cheap Japanese 
-> only wlan router.
->
-> Best wishes and thanks a lot
->
-> Norbert
-> ----------------------------------------------------------------------
-> -- Norbert Preining            preining@{jaist.ac.jp, logic.at, 
-> debian.org} JAIST, Japan                                 TeX Live & 
-> Debian Developer
-> DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 
-> B094
-> ----------------------------------------------------------------------
-> --
-> DITHERINGTON (n)
-> Sudden access to panic experienced by one who realises that he is 
-> being drawn inexorably into a clabby (q.v.) conversation, i.e. one he 
-> has no hope of enjoying, benefiting from or understanding.
->                        --- Douglas Adams, The Meaning of Liff
-> --
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-kernel" in the body of a message to majordomo@vger.kernel.org 
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+PODE HOLE (n.)
+A hole drilled in chipboard lavatory walls by homosexuals for any one
+of a number of purposes.
+			--- Douglas Adams, The Meaning of Liff
