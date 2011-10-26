@@ -1,54 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:49387 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932747Ab1JDP0y (ORCPT
+Received: from gn237.zone.eu ([217.146.67.237]:40555 "EHLO gn237.zone.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754992Ab1JZOJx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 11:26:54 -0400
-Received: by gyg10 with SMTP id 10so589094gyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 08:26:54 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Subject: Re: [RFC 5/6] ath9k: enable DFS pulse detection
-Date: Tue, 4 Oct 2011 17:26:40 +0200
-Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kgiori@qca.qualcomm.com, nbd@openwrt.org
-References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com> <201110041642.54453.chunkeey@googlemail.com> <CAJ-VmomWYUtd84APvEg7mKC-sevT3UVaX2qKBn3KiVriPZybgQ@mail.gmail.com>
-In-Reply-To: <CAJ-VmomWYUtd84APvEg7mKC-sevT3UVaX2qKBn3KiVriPZybgQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201110041726.40722.chunkeey@googlemail.com> (sfid-20111004_172708_579919_C376E3C6)
+	Wed, 26 Oct 2011 10:09:53 -0400
+Received: from wow (127-174-131-46.internet.emt.ee [46.131.174.127])
+	(Authenticated sender: plaes@plaes.org)
+	by gn237.zone.eu (Postfix) with ESMTPSA id 93DC9E4E9932
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 17:09:48 +0300 (EEST)
+From: plaes@plaes.org
+Subject: ipw2200 fails to load firmware when returning from suspend
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 Oct 2011 12:38:19 +0300
+Message-ID: <1319621899.29639.7.camel@localhost.localdomain> (sfid-20111026_160956_246359_3560604A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, October 04, 2011 04:50:42 PM Adrian Chadd wrote:
-> Also whilst I'm at it, "SPECTRUM_MANAGEMENT" is a very broad flag to set.
+Heya!
 
-Hm, 802.11-2007 5.4.4 "Spectrum management services" explicitly
-mentions that both services TPC and DFS are required in some
-regulatory domains for operation in the 5 GHz band.
+I've been running into following issue with recent kernels fairly often
+when waking up Dell Latitude D610 laptop from suspend:
 
-> For example: you may not want to do DFS on the AR5416 NICs because
-> (as documented in the open hal and earlier ath9k bits) there isn't
-> support for radar pulses on the ext channel. So even if you had a
-> successful DFS algorithm for this NIC, you'd have to somehow tell
-> the DFS machinery that HT40+DFS channels aren't supported but
-> HT20+DFS channels are.
-well, that's a pity. We do have seperated HT feature sets for each
-band but they are not seperated by operation mode...
+[snip]
+[347767.844024] pci 0000:00:1e.0: setting latency timer to 64
+[347767.844046] eth1: Coming out of suspend...
+[347767.844060] ipw2200 0000:03:03.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[347767.884092] ------------[ cut here ]------------
+[347767.884107] WARNING: at drivers/base/firmware_class.c:537 _request_firmware+0xb5/0x31b()
+[347767.884113] Hardware name: Latitude D610                   
+[347767.884117] Modules linked in: lib80211_crypt_ccmp ipw2200 tg3 libipw libphy lib80211
+[347767.884134] Pid: 17562, comm: kworker/0:0 Not tainted 3.1.0-rc8+ #50
+[347767.884139] Call Trace:
+[347767.884150]  [<c1027fce>] ? warn_slowpath_common+0x7c/0x8f
+[347767.884159]  [<c1287e1c>] ? _request_firmware+0xb5/0x31b
+[347767.884167]  [<c1287e1c>] ? _request_firmware+0xb5/0x31b
+[347767.884176]  [<c1027ffc>] ? warn_slowpath_null+0x1b/0x1f
+[347767.884184]  [<c1287e1c>] ? _request_firmware+0xb5/0x31b
+[347767.884194]  [<c12880f8>] ? request_firmware+0x17/0x1b
+[347767.884211]  [<f83900a8>] ? ipw_up+0xf9/0x133f [ipw2200]
+[347767.884222]  [<c101ee71>] ? set_next_entity+0xb4/0x122
+[347767.884230]  [<c1001a9b>] ? __switch_to+0x34/0x10f
+[347767.884239]  [<c101f6b7>] ? finish_task_switch.clone.124.clone.138+0x3e/0x76
+[347767.884247]  [<c101e963>] ? need_resched+0x11/0x1a
+[347767.884258]  [<c13f13b1>] ? __schedule+0x471/0x4e7
+[347767.884274]  [<f83914d3>] ? ipw_bg_up+0x1c/0x25 [ipw2200]
+[347767.884283]  [<c1037370>] ? process_one_work+0xfd/0x1af
+[347767.884298]  [<f83914b7>] ? ipw_net_init+0x32/0x32 [ipw2200]
+[347767.884307]  [<c1038437>] ? worker_thread+0xbd/0x134
+[347767.884316]  [<c103837a>] ? manage_workers.clone.30+0x19f/0x19f
+[347767.884324]  [<c103aaaf>] ? kthread+0x62/0x67
+[347767.884332]  [<c103aa4d>] ? flush_kthread_worker+0x7a/0x7a
+[347767.884341]  [<c13f3076>] ? kernel_thread_helper+0x6/0xd
+[347767.884347] ---[ end trace 4141d0bfaee985bf ]---
+[347767.884353] ipw2200 0000:03:03.0: firmware: ipw2200-bss.fw will not be loaded
+[347767.884360] ipw2200: ipw2200-bss.fw request_firmware failed: Reason -16
+[347767.884365] ipw2200: Unable to load firmware: -16
+...
+[347769.850709] Restarting tasks ... done.
+[347770.870138] ipw2200: No space for Tx
+[347770.870143] ipw2200: Failed to send POWER_MODE: Reason -16
+[/snip]
 
-[ Just for fun: Do you know how the AR5418 handled radars in
-the proprietary turbo mode in the 5 GHz band? And how does
-Atheros own driver/stack/etc. deals with this limitation?
-After all Unex sold/sells the DNBA-81 on their product page
-as: <http://www.unex.com.tw/product/dnba-81>
+After rmmod/insmod cycle card works fine again:
 
-"DNBA-81 is a 802.11n 2x3 2-stream a/b/g dual band wifi
-Cardbus designed specifically for laptops and *access points*/
-home gateways/consumer electronics/multimedia entertainment
-devices/peripherals with standard Cardbus slot." ]
+[snip]
+[347824.614542] ipw2200 0000:03:03.0: PCI INT A disabled
+[347832.294216] ipw2200: Intel(R) PRO/Wireless 2200/2915 Network Driver, 1.2.2kmprq
+[347832.294221] ipw2200: Copyright(c) 2003-2006 Intel Corporation
+[347832.294353] ipw2200 0000:03:03.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[347832.294382] ipw2200: Detected Intel PRO/Wireless 2200BG Network Connection
+[347832.503972] cfg80211: failed to add phy80211 symlink to netdev!
+[347832.505049] ipw2200: Detected geography ZZD (13 802.11bg channels, 0 802.11a channels)
+[/snip]
 
-Regards,
-	Chr
+[snip]
+03:03.0 Network controller: Intel Corporation PRO/Wireless 2200BG [Calexico2] Network Connection (rev 05)
+	Subsystem: Intel Corporation Dell Latitude D600
+	Flags: bus master, medium devsel, latency 64, IRQ 17
+	Memory at dfbff000 (32-bit, non-prefetchable) [size=4K]
+	Capabilities: [dc] Power Management version 2
+	Kernel driver in use: ipw2200
+	Kernel modules: ipw2200
+[/snip]
+
+
+Any ideas where to look further?
+
+Päikest,
+Priit Laes ;)
