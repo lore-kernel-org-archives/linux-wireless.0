@@ -1,42 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:43923 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756193Ab1JSOhQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Oct 2011 10:37:16 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1RGXGb-0000kg-Vf
-	for linux-wireless@vger.kernel.org; Wed, 19 Oct 2011 16:37:14 +0200
-Received: from host56-181-dynamic.19-87-r.retail.telecomitalia.it ([host56-181-dynamic.19-87-r.retail.telecomitalia.it])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2011 16:37:13 +0200
-Received: from gaigo88 by host56-181-dynamic.19-87-r.retail.telecomitalia.it with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2011 16:37:13 +0200
-To: linux-wireless@vger.kernel.org
-From: v4mp <gaigo88@hotmail.it>
-Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
-Date: Wed, 19 Oct 2011 14:37:00 +0000 (UTC)
-Message-ID: <loom.20111019T162518-352@post.gmane.org> (sfid-20111019_163721_725389_6BEFC46B)
-References: <4E77F631.3030202@googlemail.com> <4E7A4BFB.2080102@googlemail.com> <4E7A529E.1040808@lwfinger.net> <loom.20110930T160704-310@post.gmane.org> <4E85DDA9.3090300@lwfinger.net> <loom.20110930T195810-426@post.gmane.org> <loom.20111006T181210-236@post.gmane.org> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T1  61652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org > <4E9C42CF.5010702@lwfinger.net> <loom.20111017T190430-717@post.gmane.org> <4E9CF13A.7060102@lwf inger.net> <loom.20111018T143746-420@post.gmane.org> <loom.201110 18T150303-359@post.gmane.org> <4E9D9953.3020601@lwfinger.net> <loom.20111018T233233-298@post.gmane.org> <4E9E052F.8090705@lwfinger.net> <loom.20111019T101621-921@post.gmane.org> <4E9EBDD3.6060907@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:57729 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753317Ab1JZXW6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Oct 2011 19:22:58 -0400
+Received: by ggnb1 with SMTP id b1so2058490ggn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 16:22:57 -0700 (PDT)
+Message-ID: <4EA8965D.2030207@lwfinger.net> (sfid-20111027_012302_358517_0460C5B7)
+Date: Wed, 26 Oct 2011 18:23:09 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Roman Proud <setamagiga@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: RTL8188RU no injection?
+References: <CAF7qGM4BL10gn2786kW73sAk8f-y8CzX0rx2BQsY_Q96W=pfog@mail.gmail.com>
+In-Reply-To: <CAF7qGM4BL10gn2786kW73sAk8f-y8CzX0rx2BQsY_Q96W=pfog@mail.gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------030907010202070501060000"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------030907010202070501060000
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+On 10/26/2011 05:29 PM, Roman Proud wrote:
+> Hi there,
+>
+> i hope you guys can help me.
+> I wanted a new Wifi card, because mine has no injection, what i need sometimes.
+>
+> So i forced the Internet to find that a 8187 would be best for. So i
+> bought the 8188 (newer = better?)... i never had thought about so much
+> difference in just one number... it was horrible to even get the card
+> work, first no monitor mode works, but now it does (i dunno why
+> O_o)... The only thing i miss is Package injection.
+
+Well, your research should have shown that the 8187 chip is an 802.11g version, 
+while the 8188 works with 802.11n. That should have given you a clue that the 
+driver would be VERY different.
+
+> So my Question. Is it there? is it in the driver and i just have to do
+> some magic again like i did with the monitor mode?
+> If not, is there any Patch? (i didn't find anything...)
+> Or should i simply send the damn thing back and get me an 8187? (its
+> not that simple, and i like hacking into my linux, so one of the first
+> both, would be nicer)
+
+What kernel are you using? If you want the latest version of wireless code, you 
+should be running the version found in the git repo at
+git://git.infradead.org/users/linville/wireless-next.git. Your next-best option 
+would be to get the bleeding-edge version of compat-wireless and build it for 
+your current kernel.
+
+There is a bug in rtlwifi that affects monitor mode in rtl8192cu, rtl8192ce, 
+rtl8192se, and rtl8192de. I think it is fixed by the attached patch. At least 
+monitor mode works here after the patch is applied. Please let me know if it 
+works for you.
+
+Larry
 
 
-ok, i've done what you asked me with usbmon, 
-but i'm not sure that is what you want
-
-i've redone dumping dmesg trying to grab the information you are lookin for
-
-i can't upload it on pastebin cause it's too large, i uploaded logs on megaupload
-
-http://www.megaupload.com/?d=3D0QS1MX
 
 
+--------------030907010202070501060000
+Content-Type: text/plain;
+ name="rtl8192cu_monitor"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="rtl8192cu_monitor"
 
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/core.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/core.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/core.c
+@@ -375,6 +375,7 @@ static void rtl_op_configure_filter(stru
+ 					  rtlpriv->cfg->maps[MAC_RCR_AB]);
+ 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+ 				 ("Disable receive multicast frame.\n"));
++			*new_flags |= FIF_ALLMULTI;
+ 		}
+ 	}
+ 
+@@ -387,6 +388,7 @@ static void rtl_op_configure_filter(stru
+ 			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACRC32];
+ 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+ 				 ("Disable receive FCS error frame.\n"));
++			*new_flags |= FIF_FCSFAIL;
+ 		}
+ 	}
+ 
+@@ -400,6 +402,7 @@ static void rtl_op_configure_filter(stru
+ 				rtlpriv->cfg->ops->set_chk_bssid(hw, false);
+ 			} else {
+ 				rtlpriv->cfg->ops->set_chk_bssid(hw, true);
++				*new_flags |= FIF_BCN_PRBRESP_PROMISC;
+ 			}
+ 		}
+ 	}
+@@ -414,6 +417,7 @@ static void rtl_op_configure_filter(stru
+ 			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACF];
+ 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+ 				 ("Disable receive control frame.\n"));
++			*new_flags |= FIF_CONTROL;
+ 		}
+ 	}
+ 
+@@ -426,6 +430,7 @@ static void rtl_op_configure_filter(stru
+ 			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_AAP];
+ 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+ 				 ("Disable receive other BSS's frame.\n"));
++			*new_flags |= FIF_OTHER_BSS;
+ 		}
+ 	}
+ }
 
-
+--------------030907010202070501060000--
