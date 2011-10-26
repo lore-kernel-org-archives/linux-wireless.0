@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:56158 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755720Ab1JFHML (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48310 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751389Ab1JZTIr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Oct 2011 03:12:11 -0400
-Received: by ggnv2 with SMTP id v2so1433834ggn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 00:12:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <loom.20111005T122216-407@post.gmane.org>
-References: <loom.20111005T122216-407@post.gmane.org>
-Date: Thu, 6 Oct 2011 09:12:09 +0200
-Message-ID: <CAGXE3d_3NBVta6+QZKN+_c7H+f5fwq+zvfAaFTA7KDugVq6L8A@mail.gmail.com> (sfid-20111006_091214_796836_8F27D74F)
-Subject: Re: hostapd with Ralink3060, SSID not visible to STA
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Manish Verma <mail.manishverma@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 26 Oct 2011 15:08:47 -0400
+Subject: Re: a-MSDU question (bug in debugfs?)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4EA8597A.50609@candelatech.com> (sfid-20111026_210325_886708_85470263)
+References: <4EA8597A.50609@candelatech.com>
+	 (sfid-20111026_210325_886708_85470263)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 Oct 2011 21:08:43 +0200
+Message-ID: <1319656123.4229.11.camel@jlt3.sipsolutions.net> (sfid-20111026_210850_199147_75E1309A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 5, 2011 at 12:47 PM, Manish Verma
-<mail.manishverma@gmail.com> wrote:
-> I'm not able to see the SSID configured on my x86 PC using hostapd-0.7.3 with a
-> DWA-525 (Dlink N-150) wifi adapter.
-> This card has a Ralink's 3060 chipset that is using rt2800pci drivers.
->
-> Although hostapd is able to configure the card in AP mode but its SSID is not
-> visible to other STAs to connect.
->
->
-> I'm using FC15 shipped kernel 2.6.28.6-26.rc1.fc15.i686
+On Wed, 2011-10-26 at 12:03 -0700, Ben Greear wrote:
+> This code from net/mac80211/debugfs_sta.c appears to say that
+> if the IEEE80211_HT_CAP_MAX_AMSDU is set, we are at value 3839,
+> but elsewhere on the web it appears the opposite.
+> 
+> Anyone know what is correct?  I'm having no good luck finding
+> an official document about this...
+> 
+>                 PRINT_HT_CAP((htc->cap & BIT(11)), "Max AMSDU length: "
+>                               "3839 bytes");
+>                  PRINT_HT_CAP(!(htc->cap & BIT(11)), "Max AMSDU length: "
+>                               "7935 bytes");
 
-2.6.28 is quite old, you could try to use a newer driver version
-by using compat-wireless [1].
+iw also has the other way around and I probably would have checked
+against 802.11n. If you can't find that google for getieee
 
-Helmut
+johannes
 
-[1] http://linuxwireless.org/en/users/Download
