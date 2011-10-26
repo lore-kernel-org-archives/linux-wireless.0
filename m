@@ -1,140 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40971 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751942Ab1J1FL1 (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:32819 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750758Ab1JZTjr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 01:11:27 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [wireless-next PATCH 1/5] mac80211: Support forcing station to disable 11n.
-Date: Thu, 27 Oct 2011 22:11:16 -0700
-Message-Id: <1319778680-11405-1-git-send-email-greearb@candelatech.com> (sfid-20111028_071135_777672_88A08497)
+	Wed, 26 Oct 2011 15:39:47 -0400
+Received: by faan17 with SMTP id n17so1899212faa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 12:39:45 -0700 (PDT)
+Message-ID: <4EA861F5.4020200@googlemail.com> (sfid-20111026_213950_534838_B87FD74A)
+Date: Wed, 26 Oct 2011 21:39:33 +0200
+From: Chiefdome <chiefdome@googlemail.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
+References: <4E77F631.3030202@googlemail.com> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T1  61652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org > <4E9C42CF.5010702@lwfinger.net> <loom.20111017T190430-717@post.gmane.org> <4E9CF13A.7060102@lwf inger.net> <loom.20111018T143746-420@post.gmane.org> <loom.201110 18T150303-359@post.gmane.org> <4E9D9953.3020601@lwfinger.net> <lo om.20111018T233233-298@post.gmane.org> <4E9E052F.8090705@lwfinger.net> <loom.20111019T101621-921@post.gmane.org> <4E9EBDD3.6060907@lwfinger.net> <loom.20111019T162518-352@post.gmane.org> <4E9F97B4.5010304@lwfinger.net> <loom.20111020T114336-286@post.gmane.org> <4EA023B2.5000402@lwfinger.net> <4EA82BFE.1070105@googlemail.com> <4EA83160.4080405@lwfinger.net>
+In-Reply-To: <4EA83160.4080405@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 10/26/2011 06:12 PM, Larry Finger wrote:
+> On 10/26/2011 10:49 AM, Chiefdome wrote:
+>> Is there a way to set the tx-power over 20dbm on the adapter?
+>> I thought it is able to do 2w. There is no way for me to get it over 
+>> 20 dbm.
+>> When trying to to set the adapter with "iwconfig wlan1 set txpower 
+>> 30" it answers
+>>
+>> Error for wireless request "Set Tx Power" (8B26) :
+>> SET failed on device wlan1 ; Invalid argument.
+>>
+>> I think there has to be done some work in the code but where do I start?
+>>
+>> Thanks for all replys.
+>
+> The WEXT interface is deprecated. It is there as a convenience, but it 
+> will not be extended. To change the power setting, you need to use the 
+> iw utility. The specific commands are:
+>
+> iw dev <devname> set txpower <auto|fixed|limit> [<tx power in mBm>]
+>
+> or
+>
+> iw phy <phyname> set txpower <auto|fixed|limit> [<tx power in mBm>]
+>
+> The maximum power will be dependent on your regulatory domain setting.
+>
+> Larry
 
-This allows a user to configure a wifi station interface
-to disable 802.11n, even if the AP and NIC supports it.
+Did you tested the commands you posted to me? Anyway here they do 
+nothing. I cant see any changes in iwconfig nor in in iw.
 
-The additional netlink bits is to allow this patch to work on 3.0
-and should not be included in the final patch.
+iw reg get
+country 00:
+     (2400 - 2494 @ 40), (N/A, 33)
+     (4910 - 5895 @ 40), (N/A, 33)
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 8049bf7... d9c2cdb... M	include/linux/nl80211.h
-:100644 100644 92cf1c2... 1331a5b... M	include/net/cfg80211.h
-:100644 100644 e253afa... 8221a3a... M	net/mac80211/cfg.c
-:100644 100644 4c3d1f5... 72c6726... M	net/mac80211/ieee80211_i.h
-:100644 100644 0e5d8da... 393b480... M	net/mac80211/mlme.c
-:100644 100644 48260c2... cb2eb67... M	net/wireless/nl80211.c
- include/linux/nl80211.h    |    4 ++++
- include/net/cfg80211.h     |    4 +++-
- net/mac80211/cfg.c         |    3 +++
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/mlme.c        |    3 +++
- net/wireless/nl80211.c     |    7 +++++++
- 6 files changed, 22 insertions(+), 1 deletions(-)
+so after my regulatory domain I should be able to change the adapter 
+settings.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 8049bf7..d9c2cdb 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1109,6 +1109,9 @@ enum nl80211_commands {
-  *	%NL80211_CMD_TDLS_MGMT. Otherwise %NL80211_CMD_TDLS_OPER should be
-  *	used for asking the driver to perform a TDLS operation.
-  *
-+ * @NL80211_ATTR_DISABLE_80211N:  Force /n capable stations to instead
-+ *      function as /a/b/g stations.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1337,6 +1340,7 @@ enum nl80211_attrs {
- 	NL80211_ATTR_TDLS_SUPPORT,
- 	NL80211_ATTR_TDLS_EXTERNAL_SETUP,
- 
-+	NL80211_ATTR_DISABLE_11N,
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 92cf1c2..1331a5b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -254,9 +254,11 @@ struct ieee80211_supported_band {
- /**
-  * struct vif_params - describes virtual interface parameters
-  * @use_4addr: use 4-address frames
-+ * @disable_11n:  Don't use 11n features (HT, etc)
-  */
- struct vif_params {
--       int use_4addr;
-+	int use_4addr;
-+	int disable_11n;
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index e253afa..8221a3a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -57,6 +57,9 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	int ret;
- 
-+	if (params->disable_11n != -1)
-+		sdata->cfg_disable_11n = params->disable_11n;
-+
- 	ret = ieee80211_if_change_type(sdata, type);
- 	if (ret)
- 		return ret;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 4c3d1f5..72c6726 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -595,6 +595,8 @@ struct ieee80211_sub_if_data {
- 	/* to detect idle changes */
- 	bool old_idle;
- 
-+	bool cfg_disable_11n; /* configured to disable 11n? */
-+
- 	/* Fragment table for host-based reassembly */
- 	struct ieee80211_fragment_entry	fragments[IEEE80211_FRAGMENT_MAX];
- 	unsigned int fragment_next;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0e5d8da..393b480 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2597,6 +2597,9 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 			ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
- 
- 
-+	if (sdata->cfg_disable_11n)
-+		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
-+
- 	if (req->ie && req->ie_len) {
- 		memcpy(wk->ie, req->ie, req->ie_len);
- 		wk->ie_len = req->ie_len;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 48260c2..cb2eb67 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1641,6 +1641,13 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
- 		change = true;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_DISABLE_11N]) {
-+		params.disable_11n = !!nla_get_u8(info->attrs[NL80211_ATTR_DISABLE_11N]);
-+		change = true;
-+	} else {
-+		params.disable_11n = -1;
-+	}
-+
- 	if (change)
- 		err = cfg80211_change_iface(rdev, dev, ntype, flags, &params);
- 	else
--- 
-1.7.3.4
+Chiefdome
+
 
