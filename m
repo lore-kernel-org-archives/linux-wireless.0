@@ -1,376 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40980 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752564Ab1J1FLm (ORCPT
+Received: from smtp-out.google.com ([216.239.44.51]:14148 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754199Ab1JZG1K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 01:11:42 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [wireless-next PATCH 3/5] wifi: Allow overriding some HT information.
-Date: Thu, 27 Oct 2011 22:11:18 -0700
-Message-Id: <1319778680-11405-3-git-send-email-greearb@candelatech.com> (sfid-20111028_071147_787476_DBCC8CCF)
-In-Reply-To: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
-References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
+	Wed, 26 Oct 2011 02:27:10 -0400
+Received: from hpaq3.eem.corp.google.com (hpaq3.eem.corp.google.com [172.25.149.3])
+	by smtp-out.google.com with ESMTP id p9Q6R9gW020147
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Oct 2011 23:27:09 -0700
+Received: from pzk1 (pzk1.prod.google.com [10.243.19.129])
+	by hpaq3.eem.corp.google.com with ESMTP id p9Q6QVk7000903
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Oct 2011 23:27:07 -0700
+Received: by pzk1 with SMTP id 1so5291913pzk.1
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Oct 2011 23:27:07 -0700 (PDT)
+Date: Tue, 25 Oct 2011 23:27:05 -0700 (PDT)
+From: David Rientjes <rientjes@google.com>
+To: Gene Smith <gds@chartertn.net>
+cc: wwguy <wey-yi.w.guy@intel.com>, ilw@linux.intel.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: wifi iwlagn fails to authenticate after wake from suspend
+In-Reply-To: <j881g5$tdf$1@dough.gmane.org>
+Message-ID: <alpine.DEB.2.00.1110252325090.20273@chino.kir.corp.google.com> (sfid-20111026_082726_564721_A8922147)
+References: <j881g5$tdf$1@dough.gmane.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Wed, 26 Oct 2011, Gene Smith wrote:
 
-* Allow configuring the mcs (/n) rates available.
-* Allow configuration of MAX-A-MSDU
-* Allow configuration of A-MPDU factor & density.
+> Now after upgrade to Ubuntu 11.10 when resume from suspend, wifi fails to
+> reconnect saying waiting for authentication. When I use older kernel, 2.4.38
+> instead of the new 3.0.0, it still works OK. If using ethernet, after wake
+> from suspend it always works OK.
+> 
 
-Users can only remove existing rates.  The MSDU and MPDU
-values can be set to any value allowed by the 802.11n
-specification.
+So we need to bisect between 2.4.38 and 3.0.0? :)  I'm running ubuntu 
+11.10 on a home laptop so I'll give this a try as well when I can if I can 
+put up with unity for that long.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 ae50ade... 7f269cd... M	include/linux/nl80211.h
-:100644 100644 9d7a5e0... 802ff5f... M	include/net/cfg80211.h
-:100644 100644 c63d7f0... dde541f... M	net/mac80211/cfg.c
-:100644 100644 f80a35c... 0753c96... M	net/mac80211/ht.c
-:100644 100644 f4a7618... f279ee9... M	net/mac80211/ieee80211_i.h
-:100644 100644 164cdb1... 681ba4e... M	net/mac80211/mlme.c
-:100644 100644 94472eb... 2f546be... M	net/mac80211/work.c
-:100644 100644 5696621... 2cbb7c6... M	net/wireless/nl80211.c
- include/linux/nl80211.h    |    3 ++
- include/net/cfg80211.h     |    4 ++
- net/mac80211/cfg.c         |   28 +++++++++++++++++-
- net/mac80211/ht.c          |   70 +++++++++++++++++++++++++++++++++++++++++++-
- net/mac80211/ieee80211_i.h |    9 +++++-
- net/mac80211/mlme.c        |    4 +-
- net/mac80211/work.c        |   34 +++++++++++++++------
- net/wireless/nl80211.c     |   14 +++++++++
- 8 files changed, 151 insertions(+), 15 deletions(-)
+> More details on this bug are here
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/880648
+> and here
+> https://bugzilla.redhat.com/show_bug.cgi?id=7374
+> 
+> Tried new Ubuntu kernel 3.1-rc10 did not help. Did not try an alternate kernel
+> with Fedora 15.
+> 
+> The common failure messages seen with Ubuntu and Fedora is this:
+> 
+> <info> (wlan0): device state change: need-auth -> failed (reason 'no-secrets')
+> [60 120 7]
+> Oct 24 01:20:00 hplt NetworkManager[1016]: <warn> Activation (wlan0) failed
+> for access point (dbnet)
+> 
+> After this occurs, no further attempt to authenticate wifi occur and a red X
+> appears over the wifi icon. I must then use ethernet (or reboot).
+> 
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index ae50ade..7f269cd 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1113,6 +1113,8 @@ enum nl80211_commands {
-  *      function as /a/b/g stations.
-  * @NL80211_ATTR_DISABLE_HT40:  Disable HT-40 even if AP and hardware
-  *      support it.
-+ * @NL80211_ATTR_HT_CAPABILITY_MASK: Specify which bits of the HT_CAPs
-+ *      to pay attention to.
-  *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -1344,6 +1346,7 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_DISABLE_11N,
- 	NL80211_ATTR_DISABLE_HT40,
-+	NL80211_ATTR_HT_CAPABILITY_MASK,
- 
- 	/* add attributes here, update the policy in nl80211.c */
- 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9d7a5e0..802ff5f 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -256,11 +256,15 @@ struct ieee80211_supported_band {
-  * @use_4addr: use 4-address frames
-  * @disable_11n:  Don't use 11n features (HT, etc)
-  * @disable_ht40:  Don't use HT40, even if hardware & AP support it.
-+ * @ht_capa:  HT Capabilities for this interface.
-+ * @ht_capa_mask:  Bits of ht_capa that are to be used.
-  */
- struct vif_params {
- 	int use_4addr;
- 	int disable_11n;
- 	int disable_ht40;
-+	struct ieee80211_ht_cap *ht_capa;
-+	struct ieee80211_ht_cap *ht_capa_mask;
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index c63d7f0..dde541f 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -105,6 +105,32 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
- 		}
- 	}
- 
-+	if (params->ht_capa) {
-+		u8 *caps = (u8 *)(params->ht_capa);
-+		u8 *mask = (u8 *)(params->ht_capa_mask);
-+		u8 *scaps = (u8 *)(&sdata->ht_capa);
-+		u8 *smask = (u8 *)(&sdata->ht_capa_mask);
-+		int i;
-+
-+		for (i = 0; i < sizeof(sdata->ht_capa); i++) {
-+			if (mask[i]) {
-+				int q;
-+				smask[i] |= mask[i];
-+				for (q = 0; q < 8; q++) {
-+					if (mask[i] & (1<<q)) {
-+						if (caps[i] & (1<<q))
-+							scaps[i] |= (1<<q);
-+						else
-+							scaps[i] &= ~(1<<q);
-+					}
-+				}
-+			}
-+		}
-+	} else if (params->ht_capa_mask) {
-+		memcpy(&sdata->ht_capa_mask, params->ht_capa_mask,
-+		       sizeof(sdata->ht_capa_mask));
-+	}
-+
- 	return 0;
- }
- 
-@@ -784,7 +810,7 @@ static void sta_apply_parameters(struct ieee80211_local *local,
- 	}
- 
- 	if (params->ht_capa)
--		ieee80211_ht_cap_ie_to_sta_ht_cap(sband,
-+		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
- 						  params->ht_capa,
- 						  &sta->sta.ht_cap);
- 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index f80a35c..0753c96 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -18,7 +18,70 @@
- #include "ieee80211_i.h"
- #include "rate.h"
- 
--void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
-+void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
-+				     struct ieee80211_sta_ht_cap *ht_cap,
-+				     int min_rates)
-+{
-+	u8 *scaps = (u8 *)(&sdata->ht_capa.mcs.rx_mask);
-+	u8 *smask = (u8 *)(&sdata->ht_capa_mask.mcs.rx_mask);
-+	int i;
-+
-+	/* check for HT over-rides, mcs rates only at this time,
-+	 * and can only disable them, not force new ones to be
-+	 * made available.
-+	 */
-+	for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++) {
-+		int q;
-+		for (q = 0; q < 8; q++) {
-+			/*
-+			 * We always need to advert at least MCS0-7, to
-+			 * be a compliant HT station, for instance
-+			 */
-+			if (((i * 8 + q) >= min_rates) &&
-+			    (smask[i] & (1<<q))) {
-+				if (!(scaps[i] & (1<<q))) {
-+					/*
-+					 * Can only disable rates, not force
-+					 * new ones
-+					 */
-+					ht_cap->mcs.rx_mask[i] &= ~(1<<q);
-+				}
-+			}
-+		}
-+	}
-+
-+	/* Force removal of HT-40 capabilities? */
-+	if (sdata->cfg_disable_ht40) {
-+		ht_cap->cap &= ~(IEEE80211_HT_CAP_SUP_WIDTH_20_40
-+				 | IEEE80211_HT_CAP_SGI_40);
-+	}
-+
-+	/* Allow user to set max AMDSU bit. */
-+	if (sdata->ht_capa_mask.cap_info & IEEE80211_HT_CAP_MAX_AMSDU) {
-+		if (sdata->ht_capa.cap_info & IEEE80211_HT_CAP_MAX_AMSDU)
-+			ht_cap->cap |= IEEE80211_HT_CAP_MAX_AMSDU;
-+		else
-+			ht_cap->cap &= ~IEEE80211_HT_CAP_MAX_AMSDU;
-+	}
-+
-+	/* Set the AMPDU factor */
-+	if (sdata->ht_capa_mask.ampdu_params_info &
-+	    IEEE80211_HT_AMPDU_PARM_FACTOR)
-+		ht_cap->ampdu_factor = sdata->ht_capa.ampdu_params_info &
-+			IEEE80211_HT_AMPDU_PARM_FACTOR;
-+
-+	/* Set the AMPDU density */
-+	if (sdata->ht_capa_mask.ampdu_params_info &
-+	    IEEE80211_HT_AMPDU_PARM_DENSITY)
-+		ht_cap->ampdu_density =
-+			(sdata->ht_capa.ampdu_params_info &
-+			 IEEE80211_HT_AMPDU_PARM_DENSITY)
-+			>> IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT;
-+}
-+
-+
-+void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
-+				       struct ieee80211_supported_band *sband,
- 				       struct ieee80211_ht_cap *ht_cap_ie,
- 				       struct ieee80211_sta_ht_cap *ht_cap)
- {
-@@ -102,6 +165,11 @@ void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
- 	/* handle MCS rate 32 too */
- 	if (sband->ht_cap.mcs.rx_mask[32/8] & ht_cap_ie->mcs.rx_mask[32/8] & 1)
- 		ht_cap->mcs.rx_mask[32/8] |= 1;
-+
-+	/* If user has specified capability over-rides, take care
-+	 * of that here.
-+	 */
-+	ieee80211_apply_htcap_overrides(sdata, ht_cap, 0);
- }
- 
- void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta, bool tx)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index f4a7618..f279ee9 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -598,6 +598,9 @@ struct ieee80211_sub_if_data {
- 	bool cfg_disable_11n; /* configured to disable 11n? */
- 	bool cfg_disable_ht40; /* configured to not use HT-40 */
- 
-+	struct ieee80211_ht_cap ht_capa; /* configured ht-cap over-rides */
-+	struct ieee80211_ht_cap ht_capa_mask; /* Valid parts of ht_capa */
-+
- 	/* Fragment table for host-based reassembly */
- 	struct ieee80211_fragment_entry	fragments[IEEE80211_FRAGMENT_MAX];
- 	unsigned int fragment_next;
-@@ -1181,7 +1184,11 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 				       struct net_device *dev);
- 
- /* HT */
--void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
-+void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
-+				     struct ieee80211_sta_ht_cap *ht_cap,
-+				     int min_rates);
-+void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
-+				       struct ieee80211_supported_band *sband,
- 				       struct ieee80211_ht_cap *ht_cap_ie,
- 				       struct ieee80211_sta_ht_cap *ht_cap);
- void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 164cdb1..681ba4e 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1571,7 +1571,7 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 		sdata->flags &= ~IEEE80211_SDATA_OPERATING_GMODE;
- 
- 	if (elems.ht_cap_elem && !(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
--		ieee80211_ht_cap_ie_to_sta_ht_cap(sband,
-+		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
- 				elems.ht_cap_elem, &sta->sta.ht_cap);
- 
- 	ap_ht_cap_flags = sta->sta.ht_cap.cap;
-@@ -1940,7 +1940,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 
- 		sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
- 
--		ieee80211_ht_cap_ie_to_sta_ht_cap(sband,
-+		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
- 				elems.ht_cap_elem, &sta->sta.ht_cap);
- 
- 		ap_ht_cap_flags = sta->sta.ht_cap.cap;
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 94472eb..2f546be 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -94,7 +94,8 @@ static int ieee80211_compatible_rates(const u8 *supp_rates, int supp_rates_len,
- 
- /* frame sending functions */
- 
--static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
-+static void ieee80211_add_ht_ie(struct ieee80211_sub_if_data *sdata,
-+				struct sk_buff *skb, const u8 *ht_info_ie,
- 				struct ieee80211_supported_band *sband,
- 				struct ieee80211_channel *channel,
- 				enum ieee80211_smps_mode smps)
-@@ -102,11 +103,11 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
- 	struct ieee80211_ht_info *ht_info;
- 	u8 *pos;
- 	u32 flags = channel->flags;
--	u16 cap = sband->ht_cap.cap;
-+	u16 cap;
- 	__le16 tmp;
-+	struct ieee80211_sta_ht_cap ht_cap;
- 
--	if (!sband->ht_cap.ht_supported)
--		return;
-+	BUILD_BUG_ON(sizeof(ht_cap) != sizeof(sband->ht_cap));
- 
- 	if (!ht_info_ie)
- 		return;
-@@ -114,6 +115,19 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
- 	if (ht_info_ie[1] < sizeof(struct ieee80211_ht_info))
- 		return;
- 
-+	memcpy(&ht_cap, &sband->ht_cap, sizeof(ht_cap));
-+	/*
-+	 * This is for an association attempt, and we must
-+	 * advert at least the first 8 rates, even if we
-+	 * will later force the rate control to a lower rate.
-+	 */
-+	ieee80211_apply_htcap_overrides(sdata, &ht_cap, 8);
-+
-+	cap = ht_cap.cap;
-+
-+	if (!ht_cap.ht_supported)
-+		return;
-+
- 	ht_info = (struct ieee80211_ht_info *)(ht_info_ie + 2);
- 
- 	/* determine capability flags */
-@@ -166,13 +180,13 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
- 	pos += sizeof(u16);
- 
- 	/* AMPDU parameters */
--	*pos++ = sband->ht_cap.ampdu_factor |
--		 (sband->ht_cap.ampdu_density <<
--			IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
-+	*pos++ = ht_cap.ampdu_factor |
-+		 (ht_cap.ampdu_density <<
-+		  IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
- 
- 	/* MCS set */
--	memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
--	pos += sizeof(sband->ht_cap.mcs);
-+	memcpy(pos, &ht_cap.mcs, sizeof(ht_cap.mcs));
-+	pos += sizeof(ht_cap.mcs);
- 
- 	/* extended capabilities */
- 	pos += sizeof(__le16);
-@@ -356,7 +370,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
- 
- 	if (wk->assoc.use_11n && wk->assoc.wmm_used &&
- 	    local->hw.queues >= 4)
--		ieee80211_add_ht_ie(skb, wk->assoc.ht_information_ie,
-+		ieee80211_add_ht_ie(sdata, skb, wk->assoc.ht_information_ie,
- 				    sband, wk->chan, wk->assoc.smps);
- 
- 	/* if present, add any custom non-vendor IEs that go after HT */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5696621..2cbb7c6 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1655,6 +1655,20 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
- 		params.disable_ht40 = -1;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]) {
-+		params.ht_capa_mask =
-+			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]);
-+		change = true;
-+	}
-+
-+	if (info->attrs[NL80211_ATTR_HT_CAPABILITY]) {
-+		if (!params.ht_capa_mask)
-+			return -EINVAL;
-+		params.ht_capa =
-+			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
-+		change = true;
-+	}
-+
- 	if (change)
- 		err = cfg80211_change_iface(rdev, dev, ntype, flags, &params);
- 	else
--- 
-1.7.3.4
-
+Adding wireless folks to the cc.
