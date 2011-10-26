@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37008 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752413Ab1JGLrM (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:44434 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750708Ab1JZEDi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 07:47:12 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 01/14] ath9k_hw: Updated ar9003 initval table for AR9380
-Date: Fri, 7 Oct 2011 17:17:06 +0530
-Message-ID: <1317988039-28632-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111007_134715_023405_025BC3B0)
+	Wed, 26 Oct 2011 00:03:38 -0400
+Date: Wed, 26 Oct 2011 13:03:33 +0900
+From: Norbert Preining <preining@logic.at>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+Subject: Re: iwlagn is getting very shaky
+Message-ID: <20111026040332.GF24956@gamma.logic.tuwien.ac.at> (sfid-20111026_060354_170009_B2524102)
+References: <20111019062517.GC11588@gamma.logic.tuwien.ac.at> <1319003304.31823.46.camel@wwguy-huron> <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111020045927.GB23044@gamma.logic.tuwien.ac.at> <1319119852.2111.2.camel@wwguy-ubuntu> <20111021012442.GB26758@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110231424500.17218@chino.kir.corp.google.com> <20111026025014.GB24956@gamma.logic.tuwien.ac.at> <1319601333.14693.19.camel@wwguy-ubuntu>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1319601333.14693.19.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ar9003 table is updated to increase XLNA BIAS
-output driver strengh.
+On Di, 25 Okt 2011, wwguy wrote:
+> so this is different problem, right? it looks different compare to what
+> you described before which is cause by queue stopped.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+I assume that this is a different regression concerning 3.1.0 released.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index 08e9341..02be24e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -24,11 +24,11 @@ static const u32 ar9300_2p2_radio_postamble[][5] = {
- 	{0x0001609c, 0x0dd08f29, 0x0dd08f29, 0x0b283f31, 0x0b283f31},
- 	{0x000160ac, 0xa4653c00, 0xa4653c00, 0x24652800, 0x24652800},
- 	{0x000160b0, 0x03284f3e, 0x03284f3e, 0x05d08f20, 0x05d08f20},
--	{0x0001610c, 0x08000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0001610c, 0xc8000000, 0xc0000000, 0xc0000000, 0xc0000000},
- 	{0x00016140, 0x10804008, 0x10804008, 0x50804008, 0x50804008},
--	{0x0001650c, 0x08000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0001650c, 0xc8000000, 0xc0000000, 0xc0000000, 0xc0000000},
- 	{0x00016540, 0x10804008, 0x10804008, 0x50804008, 0x50804008},
--	{0x0001690c, 0x08000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0001690c, 0xc8000000, 0xc0000000, 0xc0000000, 0xc0000000},
- 	{0x00016940, 0x10804008, 0x10804008, 0x50804008, 0x50804008},
- };
- 
--- 
-1.7.7
+But *I* cannot be sure about it ;-)
 
+Best wishes
+
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+ROCHESTER (n.)
+One who is able to gain occupation of the armrest on both sides of
+their cinema or aircraft seat.
+			--- Douglas Adams, The Meaning of Liff
