@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48195 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754006Ab1JGUF1 (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:53584 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752061Ab1JZVri (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 16:05:27 -0400
-Subject: Re: [PATCH 3/8] cfg80211: process regulatory DFS region for
- countries
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <CAB=NE6WOvik7hJygC8cTpe+o1W==fsqw2ZgVA=_pbo6fpFhUzw@mail.gmail.com> (sfid-20111007_215756_987265_EF832A47)
-References: <1317772067-6998-1-git-send-email-mcgrof@qca.qualcomm.com>
-	 <1317772067-6998-4-git-send-email-mcgrof@qca.qualcomm.com>
-	 <1318017260.3974.9.camel@jlt3.sipsolutions.net>
-	 <CAB=NE6WOvik7hJygC8cTpe+o1W==fsqw2ZgVA=_pbo6fpFhUzw@mail.gmail.com>
-	 (sfid-20111007_215756_987265_EF832A47)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 07 Oct 2011 22:05:24 +0200
-Message-ID: <1318017924.3974.10.camel@jlt3.sipsolutions.net> (sfid-20111007_220530_844693_98D9D6B1)
-Mime-Version: 1.0
+	Wed, 26 Oct 2011 17:47:38 -0400
+Received: by qabj40 with SMTP id j40so1925819qab.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 14:47:37 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: =?UTF-8?q?=5BPATCH=200/5=5D=20v3=20HT=20support=20for=20mesh?=
+Date: Wed, 26 Oct 2011 14:47:24 -0700
+Message-Id: <1319665649-21784-1-git-send-email-thomas@cozybit.com> (sfid-20111026_234752_491390_04061A7C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-10-07 at 12:57 -0700, Luis R. Rodriguez wrote:
-> On Fri, Oct 7, 2011 at 12:54 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Tue, 2011-10-04 at 16:47 -0700, Luis R. Rodriguez wrote:
-> >
-> >>  /**
-> >> + * enum nl80211_dfs_regions - regulatory DFS regions
-> >> + *
-> >> + * @NL80211_DFS_UNSET: Country has no DFS master region specified
-> >> + * @NL80211_DFS_FCC_: Country follows DFS master rules from FCC
-> >> + * @NL80211_DFS_FCC_: Country follows DFS master rules from ETSI
-> >> + * @NL80211_DFS_JP_: Country follows DFS master rules from JP/MKK/Telec
-> >> + */
-> >> +enum nl80211_cflags {
-> >> +     NL80211_DFS_UNSET       = 0,
-> >
-> > That seems odd -- nl80211 convention would be to just leave out the
-> > attribute.
-> 
-> I wonder what seems more odd, having that present or looking at this:
-> 
-> +bool reg_supported_dfs_region(u8 dfs_region)
-> +{
-> +       switch (dfs_region) {
-> +       case 0:
+This patchset adds basic HT support for mesh nodes. We avoid the question of
+how to negotiate channel types, by simply disallowing peering with mismatched
+HT modes.
 
-Yeah I noticed later you were going to use that value internally as
-well, guess it's fine.
+Many thanks to Luis Rodriguez for his assistance, and Ashok Nagarajan for
+co-authoring this patchset.
 
-johannes
+v2: 
+	Remove outdated BA comments (Christian)
+
+v3:
+	Guido R. Hiertz was kind enough to point out:
+
+	"IEEE 802.11s-2011 states that mesh STAs use the default EDCA parameter
+	set only. Clause 9.1.3.1 in 802.11s-2011 reads: "When communicating
+	within a BSS, the EDCA parameters used are […] from the default values
+	for the parameters […] when the STA is a mesh STA." Thus, all mesh STAs
+	use the same (default) EDCA parameter set."
+
+	So resubmitting without the WMM patches.
+
+Alexander Simon (1):
+  mac80211: Add HT helper functions
+
+Thomas Pedersen (4):
+  mac80211: comment allocation of mesh frames
+  mac80211: add HT IEs to mesh frames
+  mac80211: set HT capabilities for mesh peer
+  mac80211: allow frame aggregation for mesh
+
+ net/mac80211/agg-rx.c      |    3 +-
+ net/mac80211/agg-tx.c      |   10 +---
+ net/mac80211/ht.c          |    3 +-
+ net/mac80211/ieee80211_i.h |    8 +++
+ net/mac80211/mesh.c        |   70 +++++++++++++++++++++++---
+ net/mac80211/mesh.h        |    4 ++
+ net/mac80211/mesh_hwmp.c   |   36 +++++++-------
+ net/mac80211/mesh_plink.c  |   50 ++++++++++++++-----
+ net/mac80211/rx.c          |    7 +--
+ net/mac80211/tx.c          |   23 ++++++--
+ net/mac80211/util.c        |  116 +++++++++++++++++++++++++++++++++++++------
+ net/mac80211/work.c        |   29 +-----------
+ 12 files changed, 252 insertions(+), 107 deletions(-)
+
+-- 
+1.7.5.4
 
