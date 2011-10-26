@@ -1,157 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:58717 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932503Ab1JNUog (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 16:44:36 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 2/6] iwlagn: remove unnecessary type for tracing operations
-Date: Fri, 14 Oct 2011 12:54:44 -0700
-Message-Id: <1318622088-14679-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111014_224446_826790_A91793D4)
-In-Reply-To: <1318622088-14679-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1318622088-14679-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:58947 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751951Ab1JZVUT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Oct 2011 17:20:19 -0400
+Received: by ywm3 with SMTP id 3so1966561ywm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 14:20:19 -0700 (PDT)
+Message-ID: <4EA879A3.5040506@lwfinger.net> (sfid-20111026_232023_186757_407753F5)
+Date: Wed, 26 Oct 2011 16:20:35 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Chiefdome <chiefdome@googlemail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
+References: <4E77F631.3030202@googlemail.com> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T1  61652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org > <4E9C42CF.5010702@lwfinger.net> <loom.20111017T190430-717@post.gmane.org> <4E9CF13A.7060102@lwf inger.net> <loom.20111018T143746-420@post.gmane.org> <loom.201110 18T150303-359@post.gmane.org> <4E9D9953.3020601@lwfinger.net> <lo om.20111018T233233-298@post.gmane.org> <4E9E052F.8090705@lwfinger.net> <loom.20111019T101621-921@post.gmane.org> <4E9EBDD3.6060907@lwfinger.net> <loom.20111019T162518-352@post.gmane.org> <4E9F97B4.5010304@lwfinger.net> <loom.20111020T114336-286@post.gmane.org> <4EA023B2.5000402@lwfinger.net> <4EA82BFE.1070105@googlemail.com> <4EA83160.4080405@lwfinger.net> <4EA861F5.4020200@googlemail.com>
+In-Reply-To: <4EA861F5.4020200@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Don Fry <donald.h.fry@intel.com>
+On 10/26/2011 02:39 PM, Chiefdome wrote:
+> Did you tested the commands you posted to me? Anyway here they do nothing. I
+> cant see any changes in iwconfig nor in in iw.
+>
+> iw reg get
+> country 00:
+> (2400 - 2494 @ 40), (N/A, 33)
+> (4910 - 5895 @ 40), (N/A, 33)
+>
+> so after my regulatory domain I should be able to change the adapter settings.
 
-The device tracing routines only use the priv pointer as an opaque
-value.  Change from a typed iwl_priv pointer to a null pointer and
-eliminate the need to include iwl_priv.h.  CMD_ASYNC is defined in
-iwl_shared.h which is the only reason it is included.
+No, I did not test them. If they don't work, then you need to debug cfg80211. 
+These things are not a part of the driver. It only does what it is told.
 
-Signed-off-by: Don Fry <donald.h.fry@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-devtrace.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-devtrace.h |   23 +++++++++++------------
- 2 files changed, 12 insertions(+), 13 deletions(-)
+You need to set a proper regulatory domain. Yours says "country 00", which is 
+not right. Mine says
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace.c b/drivers/net/wireless/iwlwifi/iwl-devtrace.c
-index a635a7e..2a2c8de 100644
---- a/drivers/net/wireless/iwlwifi/iwl-devtrace.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.c
-@@ -28,7 +28,7 @@
- 
- /* sparse doesn't like tracepoint macros */
- #ifndef __CHECKER__
--#include "iwl-dev.h"
-+#include "iwl-trans.h"
- 
- #define CREATE_TRACE_POINTS
- #include "iwl-devtrace.h"
-diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace.h b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-index 8a51c5c..f9d3319 100644
---- a/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-@@ -29,7 +29,6 @@
- 
- #include <linux/tracepoint.h>
- 
--struct iwl_priv;
- 
- #if !defined(CONFIG_IWLWIFI_DEVICE_TRACING) || defined(__CHECKER__)
- #undef TRACE_EVENT
-@@ -37,14 +36,14 @@ struct iwl_priv;
- static inline void trace_ ## name(proto) {}
- #endif
- 
--#define PRIV_ENTRY	__field(struct iwl_priv *, priv)
-+#define PRIV_ENTRY	__field(void *, priv)
- #define PRIV_ASSIGN	__entry->priv = priv
- 
- #undef TRACE_SYSTEM
- #define TRACE_SYSTEM iwlwifi_io
- 
- TRACE_EVENT(iwlwifi_dev_ioread32,
--	TP_PROTO(struct iwl_priv *priv, u32 offs, u32 val),
-+	TP_PROTO(void *priv, u32 offs, u32 val),
- 	TP_ARGS(priv, offs, val),
- 	TP_STRUCT__entry(
- 		PRIV_ENTRY
-@@ -60,7 +59,7 @@ TRACE_EVENT(iwlwifi_dev_ioread32,
- );
- 
- TRACE_EVENT(iwlwifi_dev_iowrite8,
--	TP_PROTO(struct iwl_priv *priv, u32 offs, u8 val),
-+	TP_PROTO(void *priv, u32 offs, u8 val),
- 	TP_ARGS(priv, offs, val),
- 	TP_STRUCT__entry(
- 		PRIV_ENTRY
-@@ -76,7 +75,7 @@ TRACE_EVENT(iwlwifi_dev_iowrite8,
- );
- 
- TRACE_EVENT(iwlwifi_dev_iowrite32,
--	TP_PROTO(struct iwl_priv *priv, u32 offs, u32 val),
-+	TP_PROTO(void *priv, u32 offs, u32 val),
- 	TP_ARGS(priv, offs, val),
- 	TP_STRUCT__entry(
- 		PRIV_ENTRY
-@@ -95,7 +94,7 @@ TRACE_EVENT(iwlwifi_dev_iowrite32,
- #define TRACE_SYSTEM iwlwifi_ucode
- 
- TRACE_EVENT(iwlwifi_dev_ucode_cont_event,
--	TP_PROTO(struct iwl_priv *priv, u32 time, u32 data, u32 ev),
-+	TP_PROTO(void *priv, u32 time, u32 data, u32 ev),
- 	TP_ARGS(priv, time, data, ev),
- 	TP_STRUCT__entry(
- 		PRIV_ENTRY
-@@ -115,7 +114,7 @@ TRACE_EVENT(iwlwifi_dev_ucode_cont_event,
- );
- 
- TRACE_EVENT(iwlwifi_dev_ucode_wrap_event,
--	TP_PROTO(struct iwl_priv *priv, u32 wraps, u32 n_entry, u32 p_entry),
-+	TP_PROTO(void *priv, u32 wraps, u32 n_entry, u32 p_entry),
- 	TP_ARGS(priv, wraps, n_entry, p_entry),
- 	TP_STRUCT__entry(
- 		PRIV_ENTRY
-@@ -139,7 +138,7 @@ TRACE_EVENT(iwlwifi_dev_ucode_wrap_event,
- #define TRACE_SYSTEM iwlwifi
- 
- TRACE_EVENT(iwlwifi_dev_hcmd,
--	TP_PROTO(struct iwl_priv *priv, u32 flags,
-+	TP_PROTO(void *priv, u32 flags,
- 		 const void *hcmd0, size_t len0,
- 		 const void *hcmd1, size_t len1,
- 		 const void *hcmd2, size_t len2),
-@@ -164,7 +163,7 @@ TRACE_EVENT(iwlwifi_dev_hcmd,
- );
- 
- TRACE_EVENT(iwlwifi_dev_rx,
--	TP_PROTO(struct iwl_priv *priv, void *rxbuf, size_t len),
-+	TP_PROTO(void *priv, void *rxbuf, size_t len),
- 	TP_ARGS(priv, rxbuf, len),
- 	TP_STRUCT__entry(
- 		PRIV_ENTRY
-@@ -179,7 +178,7 @@ TRACE_EVENT(iwlwifi_dev_rx,
- );
- 
- TRACE_EVENT(iwlwifi_dev_tx,
--	TP_PROTO(struct iwl_priv *priv, void *tfd, size_t tfdlen,
-+	TP_PROTO(void *priv, void *tfd, size_t tfdlen,
- 		 void *buf0, size_t buf0_len,
- 		 void *buf1, size_t buf1_len),
- 	TP_ARGS(priv, tfd, tfdlen, buf0, buf0_len, buf1, buf1_len),
-@@ -211,7 +210,7 @@ TRACE_EVENT(iwlwifi_dev_tx,
- );
- 
- TRACE_EVENT(iwlwifi_dev_ucode_error,
--	TP_PROTO(struct iwl_priv *priv, u32 desc, u32 tsf_low,
-+	TP_PROTO(void *priv, u32 desc, u32 tsf_low,
- 		 u32 data1, u32 data2, u32 line, u32 blink1,
- 		 u32 blink2, u32 ilink1, u32 ilink2, u32 bcon_time,
- 		 u32 gp1, u32 gp2, u32 gp3, u32 ucode_ver, u32 hw_ver,
-@@ -271,7 +270,7 @@ TRACE_EVENT(iwlwifi_dev_ucode_error,
- );
- 
- TRACE_EVENT(iwlwifi_dev_ucode_event,
--	TP_PROTO(struct iwl_priv *priv, u32 time, u32 data, u32 ev),
-+	TP_PROTO(void *priv, u32 time, u32 data, u32 ev),
- 	TP_ARGS(priv, time, data, ev),
- 	TP_STRUCT__entry(
- 		PRIV_ENTRY
--- 
-1.7.0.4
+finger@larrylap:~> iw reg get
+country US:
+         (2402 - 2472 @ 40), (3, 27)
+         (5170 - 5250 @ 40), (3, 17)
+         (5250 - 5330 @ 40), (3, 20), DFS
+         (5490 - 5600 @ 40), (3, 20), DFS
+         (5650 - 5710 @ 40), (3, 20), DFS
+         (5735 - 5835 @ 40), (3, 30)
+
+and that 27 dBm exactly matches what iwconfig says.
+
+Larry
 
