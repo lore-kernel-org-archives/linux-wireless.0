@@ -1,77 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54032 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750850Ab1JJPQ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 11:16:26 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 04/34] iwlagn: add "echo" test when command queue stuck
-Date: Mon, 10 Oct 2011 07:26:49 -0700
-Message-Id: <1318256839-31837-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171740_814313_5AC7F000)
-In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from lunge.queued.net ([173.255.254.236]:58952 "EHLO
+	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932885Ab1JZR2O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Oct 2011 13:28:14 -0400
+Date: Wed, 26 Oct 2011 10:19:26 -0700
+From: Andres Salomon <dilinger@queued.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linville@tuxdriver.com, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dsd@laptop.org
+Subject: [PATCH] libertas: ensure we clean up a scan request properly
+Message-ID: <20111026101926.48109373@queued.net> (sfid-20111026_192823_535837_B9F87AAD)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When detect command queue stuck, instead of reload the firmware
-do the "echo" test to make sure it is really stuck before reload
+Commit 2e30168b ("libertas: terminate scan when stopping interface")
+adds cleanup code to lbs_eth_stop to call cfg80211_scan_done if there's
+an outstanding cfg80211_scan_request.  However, it assumes that the
+scan request was allocated via the cfg80211 stack.  Libertas has
+its own internal allocation method, kept track of with
+priv->internal_scan.  This doesn't set scan_req->wiphy, amongst other
+things, which results in hitting a BUG() when we call cfg80211_scan_done
+on the request.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+This provides a function to take care of the low-level scan_req cleanup
+details.  We simply call that to deal with finishing up scan requests.
+
+The bug we were hitting was:
+
+[  964.321495] kernel BUG at net/wireless/core.h:87!
+[  964.329970] Unable to handle kernel NULL pointer dereference at virtual address 00000000
+[  964.341963] pgd = dcf80000
+...
+[  964.849998] 9fe0: 00000000 beb417b8 4018e280 401e822c 60000010 00000004 00000000 00000000
+[  964.865007] [<c003104c>] (__bug+0x1c/0x28) from [<c0384ffc>] (cfg80211_scan_done+0x54/0x6c)
+[  964.895324] [<c0384ffc>] (cfg80211_scan_done+0x54/0x6c) from [<bf028bac>] (lbs_eth_stop+0x10c/0x188 [libertas])
+[  964.895324] [<bf028bac>] (lbs_eth_stop+0x10c/0x188 [libertas]) from [<c03002a0>] (__dev_close_many+0x94/0xc4)
+[  964.918995] [<c03002a0>] (__dev_close_many+0x94/0xc4) from [<c030037c>] (dev_close_many+0x78/0xe0)
+
+Signed-off-by: Andres Salomon <dilinger@queued.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |   23 ++++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-core.h |    1 +
- 2 files changed, 23 insertions(+), 1 deletions(-)
+ drivers/net/wireless/libertas/cfg.c  |   25 +++++++++++++++++--------
+ drivers/net/wireless/libertas/cfg.h  |    1 +
+ drivers/net/wireless/libertas/main.c |    6 ++----
+ 3 files changed, 20 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 0725603..59d1968 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1732,10 +1732,31 @@ int iwl_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	return err;
+diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+index ff63782..4fcd653 100644
+--- a/drivers/net/wireless/libertas/cfg.c
++++ b/drivers/net/wireless/libertas/cfg.c
+@@ -728,15 +728,9 @@ static void lbs_scan_worker(struct work_struct *work)
+ 		le16_to_cpu(scan_cmd->hdr.size),
+ 		lbs_ret_scan, 0);
+ 
+-	if (priv->scan_channel >= priv->scan_req->n_channels) {
++	if (priv->scan_channel >= priv->scan_req->n_channels)
+ 		/* Mark scan done */
+-		if (priv->internal_scan)
+-			kfree(priv->scan_req);
+-		else
+-			cfg80211_scan_done(priv->scan_req, false);
+-
+-		priv->scan_req = NULL;
+-	}
++		lbs_scan_done(priv);
+ 
+ 	/* Restart network */
+ 	if (carrier)
+@@ -774,6 +768,21 @@ static void _internal_start_scan(struct lbs_private *priv, bool internal,
+ 	lbs_deb_leave(LBS_DEB_CFG80211);
  }
  
-+int iwl_cmd_echo_test(struct iwl_priv *priv)
++/*
++ * Clean up priv->scan_req.  Should be used to handle the allocation details.
++ */
++void lbs_scan_done(struct lbs_private *priv)
 +{
-+	struct iwl_host_cmd cmd = {
-+		.id = REPLY_ECHO,
-+		.flags = CMD_SYNC,
-+	};
++	WARN_ON(!priv->scan_req);
 +
-+	return iwl_trans_send_cmd(trans(priv), &cmd);
++	if (priv->internal_scan)
++		kfree(priv->scan_req);
++	else
++		cfg80211_scan_done(priv->scan_req, false);
++
++	priv->scan_req = NULL;
 +}
 +
- static inline int iwl_check_stuck_queue(struct iwl_priv *priv, int txq)
- {
- 	if (iwl_trans_check_stuck_queue(trans(priv), txq)) {
--		int ret = iwl_force_reset(priv, IWL_FW_RESET, false);
-+		int ret;
-+		if (txq == priv->shrd->cmd_queue) {
-+			/*
-+			 * validate command queue still working
-+			 * by sending "ECHO" command
-+			 */
-+			if (!iwl_cmd_echo_test(priv))
-+				return 0;
-+			else
-+				IWL_DEBUG_HC(priv, "echo testing fail\n");
-+		}
-+		ret = iwl_force_reset(priv, IWL_FW_RESET, false);
- 		return (ret == -EAGAIN) ? 0 : 1;
- 	}
- 	return 0;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index db50b65..080c355 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -266,6 +266,7 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
- int iwl_mac_change_interface(struct ieee80211_hw *hw,
- 			     struct ieee80211_vif *vif,
- 			     enum nl80211_iftype newtype, bool newp2p);
-+int iwl_cmd_echo_test(struct iwl_priv *priv);
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- int iwl_alloc_traffic_mem(struct iwl_priv *priv);
- void iwl_free_traffic_mem(struct iwl_priv *priv);
+ static int lbs_cfg_scan(struct wiphy *wiphy,
+ 	struct net_device *dev,
+ 	struct cfg80211_scan_request *request)
+diff --git a/drivers/net/wireless/libertas/cfg.h b/drivers/net/wireless/libertas/cfg.h
+index a02ee15..558168c 100644
+--- a/drivers/net/wireless/libertas/cfg.h
++++ b/drivers/net/wireless/libertas/cfg.h
+@@ -16,6 +16,7 @@ int lbs_reg_notifier(struct wiphy *wiphy,
+ void lbs_send_disconnect_notification(struct lbs_private *priv);
+ void lbs_send_mic_failureevent(struct lbs_private *priv, u32 event);
+ 
++void lbs_scan_done(struct lbs_private *priv);
+ void lbs_scan_deinit(struct lbs_private *priv);
+ int lbs_disconnect(struct lbs_private *priv, u16 reason);
+ 
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index b03779b..39a6a7a 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -255,10 +255,8 @@ static int lbs_eth_stop(struct net_device *dev)
+ 
+ 	lbs_update_mcast(priv);
+ 	cancel_delayed_work_sync(&priv->scan_work);
+-	if (priv->scan_req) {
+-		cfg80211_scan_done(priv->scan_req, false);
+-		priv->scan_req = NULL;
+-	}
++	if (priv->scan_req)
++		lbs_scan_done(priv);
+ 
+ 	netif_carrier_off(priv->dev);
+ 
 -- 
-1.7.0.4
+1.7.2.5
 
