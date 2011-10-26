@@ -1,102 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37142 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754859Ab1JUOZj (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:53460 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932984Ab1JZQMA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 10:25:39 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1RHG2U-0008VZ-F5
-	for linux-wireless@vger.kernel.org; Fri, 21 Oct 2011 16:25:38 +0200
-Message-Id: <20111021142429.504139119@sipsolutions.net> (sfid-20111021_162542_707397_79279E0C)
-Date: Fri, 21 Oct 2011 16:23:31 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC v2 09/12] nl80211: advertise socket TX status capability
-References: <20111021142322.229128720@sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 26 Oct 2011 12:12:00 -0400
+Received: by ywm3 with SMTP id 3so1696672ywm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 09:12:00 -0700 (PDT)
+Message-ID: <4EA83160.4080405@lwfinger.net> (sfid-20111026_181205_739146_AA0AC6F7)
+Date: Wed, 26 Oct 2011 11:12:16 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Chiefdome <chiefdome@googlemail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Alfa AWUS036NHR with RTL8188RU chipset
+References: <4E77F631.3030202@googlemail.com> <4E8E2659.3060808@lwfinger.net> <loom.20111008T181929-517@post.gmane.org> <4E907FB8.1040101@lwfinger.net> <CA+XFjio+on2rUymoSZNxOWKMX9  xOn5hutA6q01r0yBeOXz0ivw@mail.gm ail.com> <loom.20111009T161348-133@post.gmane.org> <4E91B400.1020305@lwfinger.net> <loom.20111015T1  61652-440@post.gmane.org> <4E9A4647.60901@lwfinger.net> <loom.20111017T115802-634@post.gmane.org > <4E9C42CF.5010702@lwfinger.net> <loom.20111017T190430-717@post.gmane.org> <4E9CF13A.7060102@lwf inger.net> <loom.20111018T143746-420@post.gmane.org> <loom.201110 18T150303-359@post.gmane.org> <4E9D9953.3020601@lwfinger.net> <lo om.20111018T233233-298@post.gmane.org> <4E9E052F.8090705@lwfinger.net> <loom.20111019T101621-921@post.gmane.org> <4E9EBDD3.6060907@lwfinger.net> <loom.20111019T162518-352@post.gmane.org> <4E9F97B4.5010304@lwfinger.net> <loom.20111020T114336-286@post.gmane.org> <4EA023B2.5000402@lwfinger.net> <4EA82BFE.1070105@googlemail.com>
+In-Reply-To: <4EA82BFE.1070105@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 10/26/2011 10:49 AM, Chiefdome wrote:
+> Is there a way to set the tx-power over 20dbm on the adapter?
+> I thought it is able to do 2w. There is no way for me to get it over 20 dbm.
+> When trying to to set the adapter with "iwconfig wlan1 set txpower 30" it answers
+>
+> Error for wireless request "Set Tx Power" (8B26) :
+> SET failed on device wlan1 ; Invalid argument.
+>
+> I think there has to be done some work in the code but where do I start?
+>
+> Thanks for all replys.
 
-The new wifi socket TX capability should be
-supported by wifi drivers, let them advertise
-whether they do or not.
+The WEXT interface is deprecated. It is there as a convenience, but it will not 
+be extended. To change the power setting, you need to use the iw utility. The 
+specific commands are:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/nl80211.h |   15 +++++++++++++++
- include/net/cfg80211.h  |    3 ++-
- net/wireless/nl80211.c  |    2 ++
- 3 files changed, 19 insertions(+), 1 deletion(-)
+iw dev <devname> set txpower <auto|fixed|limit> [<tx power in mBm>]
 
---- a/include/linux/nl80211.h	2011-10-21 12:07:42.000000000 +0200
-+++ b/include/linux/nl80211.h	2011-10-21 12:07:45.000000000 +0200
-@@ -1137,6 +1137,9 @@ enum nl80211_commands {
-  *	with support for the features listed in this attribute, see
-  *	&enum nl80211_ap_sme_features.
-  *
-+ * @NL80211_ATTR_FEATURE_FLAGS: This u32 attribute contains flags from
-+ *	&enum nl80211_feature_flags and is advertised in wiphy information.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1367,6 +1370,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_DEVICE_AP_MLME,
- 
-+	NL80211_ATTR_FEATURE_FLAGS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -2693,4 +2698,14 @@ enum nl80211_ap_sme_features {
- 	NL80211_AP_SME_WSC	= 1 << 0,
- };
- 
-+/**
-+ * enum nl80211_feature_flags - device/driver features
-+ * @NL80211_FEATURE_SK_TX_STATUS: This driver supports reflecting back
-+ *	TX status to the socket error queue when requested with the
-+ *	socket option.
-+ */
-+enum nl80211_feature_flags {
-+	NL80211_FEATURE_SK_TX_STATUS	= 1 << 0,
-+};
-+
- #endif /* __LINUX_NL80211_H */
---- a/include/net/cfg80211.h	2011-10-21 12:07:42.000000000 +0200
-+++ b/include/net/cfg80211.h	2011-10-21 12:07:45.000000000 +0200
-@@ -1873,6 +1873,7 @@ struct wiphy_wowlan_support {
-  * @software_iftypes: bitmask of software interface types, these are not
-  *	subject to any restrictions since they are purely managed in SW.
-  * @flags: wiphy flags, see &enum wiphy_flags
-+ * @features: features advertised to nl80211, see &enum nl80211_feature_flags.
-  * @bss_priv_size: each BSS struct has private data allocated with it,
-  *	this variable determines its size
-  * @max_scan_ssids: maximum number of SSIDs the device can scan for in
-@@ -1934,7 +1935,7 @@ struct wiphy {
- 	/* Supported interface modes, OR together BIT(NL80211_IFTYPE_...) */
- 	u16 interface_modes;
- 
--	u32 flags;
-+	u32 flags, features;
- 
- 	u32 ap_sme_capa;
- 
---- a/net/wireless/nl80211.c	2011-10-21 12:07:42.000000000 +0200
-+++ b/net/wireless/nl80211.c	2011-10-21 12:07:45.000000000 +0200
-@@ -1013,6 +1013,8 @@ static int nl80211_send_wiphy(struct sk_
- 		NLA_PUT_U32(msg, NL80211_ATTR_DEVICE_AP_MLME,
- 			    dev->wiphy.ap_sme_capa);
- 
-+	NLA_PUT_U32(msg, NL80211_ATTR_FEATURE_FLAGS, dev->wiphy.features);
-+
- 	return genlmsg_end(msg, hdr);
- 
-  nla_put_failure:
+or
 
+iw phy <phyname> set txpower <auto|fixed|limit> [<tx power in mBm>]
 
+The maximum power will be dependent on your regulatory domain setting.
+
+Larry
