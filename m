@@ -1,36 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out5.smtp.messagingengine.com ([66.111.4.29]:34861 "EHLO
-	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755909Ab1JEUuO (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:61247 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753014Ab1JZVrr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 16:50:14 -0400
-Date: Wed, 5 Oct 2011 13:47:05 -0700
-From: Greg KH <greg@kroah.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/15] staging: brcm80211: cleanup fullmac structs and
- softmac srom lookup
-Message-ID: <20111005204705.GA2467@kroah.com> (sfid-20111005_225018_603533_5C832DA5)
-References: <1317820814-7083-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1317820814-7083-1-git-send-email-arend@broadcom.com>
+	Wed, 26 Oct 2011 17:47:47 -0400
+Received: by qyk27 with SMTP id 27so2345465qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 14:47:46 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH 4/5] mac80211: set HT capabilities for mesh peer
+Date: Wed, 26 Oct 2011 14:47:28 -0700
+Message-Id: <1319665649-21784-5-git-send-email-thomas@cozybit.com> (sfid-20111026_234754_797162_A7EBDFF5)
+In-Reply-To: <1319665649-21784-1-git-send-email-thomas@cozybit.com>
+References: <1319665649-21784-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 05, 2011 at 03:19:59PM +0200, Arend van Spriel wrote:
-> This series addresses more community feedback items received on mainline
-> patch (v2) posted August 25, 2011. The driver structures in brcmfmac could
-> do with some tidying and in the brcmsmac variables loaded from srom were
-> accessed by string identifiers. This has been replaced by enumerated
-> identifiers and the entries are stored in kernel standard linked list.
-> 
-> This series applies to staging-next and depends on the patch series posted
-> on Oct 4, 2011 (see Message-ID below).
-> 
-> Message-ID: <1317763152-17607-1-git-send-email-arend@broadcom.com>
+Set peer's HT capabilities, and disallow peering if we're on a different
+channel type.
 
-All applied, thanks.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Signed-off-by: Ashok Nagarajan <anagar6@uic.edu>
+---
+ net/mac80211/mesh.c       |   25 +++++++++++++++++--------
+ net/mac80211/mesh_plink.c |   13 ++++++++++---
+ 2 files changed, 27 insertions(+), 11 deletions(-)
 
-greg k-h
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 2dc76a9..b3a125f 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -76,6 +76,7 @@ static void ieee80211_mesh_housekeeping_timer(unsigned long data)
+ bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++	struct ieee80211_local *local = sdata->local;
+ 
+ 	/*
+ 	 * As support for each feature is added, check for matching
+@@ -87,15 +88,23 @@ bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_dat
+ 	 *   - MDA enabled
+ 	 * - Power management control on fc
+ 	 */
+-	if (ifmsh->mesh_id_len == ie->mesh_id_len &&
+-		memcmp(ifmsh->mesh_id, ie->mesh_id, ie->mesh_id_len) == 0 &&
+-		(ifmsh->mesh_pp_id == ie->mesh_config->meshconf_psel) &&
+-		(ifmsh->mesh_pm_id == ie->mesh_config->meshconf_pmetric) &&
+-		(ifmsh->mesh_cc_id == ie->mesh_config->meshconf_congest) &&
+-		(ifmsh->mesh_sp_id == ie->mesh_config->meshconf_synch) &&
+-		(ifmsh->mesh_auth_id == ie->mesh_config->meshconf_auth))
+-		return true;
+-
++	if (!(ifmsh->mesh_id_len == ie->mesh_id_len &&
++	     memcmp(ifmsh->mesh_id, ie->mesh_id, ie->mesh_id_len) == 0 &&
++	     (ifmsh->mesh_pp_id == ie->mesh_config->meshconf_psel) &&
++	     (ifmsh->mesh_pm_id == ie->mesh_config->meshconf_pmetric) &&
++	     (ifmsh->mesh_cc_id == ie->mesh_config->meshconf_congest) &&
++	     (ifmsh->mesh_sp_id == ie->mesh_config->meshconf_synch) &&
++	     (ifmsh->mesh_auth_id == ie->mesh_config->meshconf_auth)))
++		goto mismatch;
++
++	/* disallow peering with mismatched channel types for now */
++	if (ie->ht_info_elem &&
++	    (local->_oper_channel_type !=
++	     ieee80211_ht_info_to_channel_type(ie->ht_info_elem)))
++		goto mismatch;
++
++	return true;
++mismatch:
+ 	return false;
+ }
+ 
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 986af8a..0140e88 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -80,11 +80,15 @@ static inline void mesh_plink_fsm_restart(struct sta_info *sta)
+  *       on it in the lifecycle management section!
+  */
+ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+-					 u8 *hw_addr, u32 rates)
++					 u8 *hw_addr, u32 rates,
++					 struct ieee802_11_elems *elems)
+ {
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_supported_band *sband;
+ 	struct sta_info *sta;
+ 
++	sband = local->hw.wiphy->bands[local->oper_channel->band];
++
+ 	if (local->num_sta >= MESH_MAX_PLINKS)
+ 		return NULL;
+ 
+@@ -96,6 +100,9 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+ 	set_sta_flag(sta, WLAN_STA_AUTHORIZED);
+ 	set_sta_flag(sta, WLAN_STA_WME);
+ 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
++	if (elems->ht_cap_elem)
++		ieee80211_ht_cap_ie_to_sta_ht_cap(sband, elems->ht_cap_elem,
++						  &sta->sta.ht_cap);
+ 	rate_control_rate_init(sta);
+ 
+ 	return sta;
+@@ -276,7 +283,7 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
+ 					elems->ie_start, elems->total_len,
+ 					GFP_KERNEL);
+ 		else
+-			sta = mesh_plink_alloc(sdata, hw_addr, rates);
++			sta = mesh_plink_alloc(sdata, hw_addr, rates, elems);
+ 		if (!sta)
+ 			return;
+ 		if (sta_info_insert_rcu(sta)) {
+@@ -567,7 +574,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		}
+ 
+ 		rates = ieee80211_sta_get_rates(local, &elems, rx_status->band);
+-		sta = mesh_plink_alloc(sdata, mgmt->sa, rates);
++		sta = mesh_plink_alloc(sdata, mgmt->sa, rates, &elems);
+ 		if (!sta) {
+ 			mpl_dbg("Mesh plink error: plink table full\n");
+ 			return;
+-- 
+1.7.5.4
+
