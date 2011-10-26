@@ -1,73 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:38991 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754194Ab1JDORj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 10:17:39 -0400
-Message-ID: <4E8B157F.2080203@neratec.com> (sfid-20111004_161742_433341_2E9DF477)
-Date: Tue, 04 Oct 2011 16:17:35 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kgiori@qca.qualcomm.com, nbd@openwrt.org
-Subject: Re: [RFC 5/6] ath9k: enable DFS pulse detection
-References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com> <201110032124.53937.chunkeey@googlemail.com> <CAB=NE6XBkisvFmj6F7wS6i8XV7WEsM6bQ5zsXFWXm9XM8z0pwA@mail.gmail.com> <201110041538.12885.chunkeey@googlemail.com>
-In-Reply-To: <201110041538.12885.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:53584 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752813Ab1JZVrt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Oct 2011 17:47:49 -0400
+Received: by mail-qw0-f46.google.com with SMTP id j40so1925819qab.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 14:47:49 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH 5/5] mac80211: allow frame aggregation for mesh
+Date: Wed, 26 Oct 2011 14:47:29 -0700
+Message-Id: <1319665649-21784-6-git-send-email-thomas@cozybit.com> (sfid-20111026_234755_394610_47CB19BD)
+In-Reply-To: <1319665649-21784-1-git-send-email-thomas@cozybit.com>
+References: <1319665649-21784-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/04/2011 03:38 PM, Christian Lamparter wrote:
-> On Monday, October 03, 2011 09:31:12 PM Luis R. Rodriguez wrote:
->> On Mon, Oct 3, 2011 at 12:24 PM, Christian Lamparter
->> <chunkeey@googlemail.com> wrote:
->>> On Monday, October 03, 2011 08:27:39 PM Luis R. Rodriguez wrote:
->>>> On Mon, Oct 3, 2011 at 3:29 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
->>>>>
->>>>> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
->>>>> ---
->>>>>  drivers/net/wireless/ath/ath9k/main.c |   12 ++++++++++++
->>>>>  1 files changed, 12 insertions(+), 0 deletions(-)
->>>>>
->>>>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->>>>> index e8aeb98..5defebe 100644
->>>>> --- a/drivers/net/wireless/ath/ath9k/main.c
->>>>> +++ b/drivers/net/wireless/ath/ath9k/main.c
->>>>> @@ -344,6 +344,18 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
->>>>>                        "Unable to reset channel, reset status %d\n", r);
->>>>>                goto out;
->>>>>        }
->>>>> +#ifdef CONFIG_ATH9K_DFS
->>>>
->>>> Please spare the #ifdef and just call something within dfs.c, then
->>>> dfs.h would wrap it to nothing if DFS is disabled.
->>> Why would anyone want to disable DFS driver support?
->>> I would say: drop the ifdefs altogether since DFS
->>> is and will be "required".
->>
->> Because DFS requires to be properly tested before being enabled.
-> Testing if a driver detects a pulse is "trivial" compared to the
-> stuff mac80211/cfg80211 and hostapd will have to do to make a
-> channel-change as smooth as possible. I think if there's a DFS
-> "OFF" switch, it should be in hostapd and I hope more people
-> agree on this one.  
-> 
-Yes on both. Work on the management part of the DFS module has just been started by TI guys. When this is in, hostapd will be able to query the driver's DFS detection capabilities and leave DFS channels disabled for those devices with no (or insufficient) support (like it is generally done today for DFS channels).
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Signed-off-by: Ashok Nagarajan <anagar6@uic.edu>
 
-The proper way for a driver's OFF switch would then be to just announce missing DFS capabilities.
+v2:
+	Remove outdated comments (Christian)
+---
+ net/mac80211/agg-rx.c |    3 ++-
+ net/mac80211/agg-tx.c |   10 +++-------
+ net/mac80211/ht.c     |    3 ++-
+ net/mac80211/rx.c     |    7 +------
+ 4 files changed, 8 insertions(+), 15 deletions(-)
 
->> You may also want to simply disable DFS if you do not want to
->> deal with the regulatory test implications of having it enabled.
-> AFAIK you can't "simply" disable the DFS requirement: hostapd
-> (hw_features.c), [cfg80211] (checks if tx on secondary channel
-> is possible) and mac80211 (tx.c) all have checks. Indeed, the
-> easiest way is to modify crda's database. So there's no need
-> for an extra compile-time option.
-> 
-There might be a demand for conditional compiling in addition to DFS capabilities announcements to reduce memory footprint, since (especially) pattern matching algorithms will increase it significantly.
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 0cde8df..e8af4b0 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -176,7 +176,8 @@ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *d
+ 	memcpy(mgmt->da, da, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP ||
+-	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
++	    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
+ 		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
+ 	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		memcpy(mgmt->bssid, sdata->u.mgd.bssid, ETH_ALEN);
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 2ac0339..fefc7e5 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -77,7 +77,8 @@ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
+ 	memcpy(mgmt->da, da, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP ||
+-	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
++	    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
+ 		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
+ 	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		memcpy(mgmt->bssid, sdata->u.mgd.bssid, ETH_ALEN);
+@@ -371,13 +372,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 	       pubsta->addr, tid);
+ #endif /* CONFIG_MAC80211_HT_DEBUG */
+ 
+-	/*
+-	 * The aggregation code is not prepared to handle
+-	 * anything but STA/AP due to the BSSID handling.
+-	 * IBSS could work in the code but isn't supported
+-	 * by drivers or the standard.
+-	 */
+ 	if (sdata->vif.type != NL80211_IFTYPE_STATION &&
++	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT &&
+ 	    sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+ 	    sdata->vif.type != NL80211_IFTYPE_AP)
+ 		return -EINVAL;
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index f80a35c..988c7ec 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -195,7 +195,8 @@ void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
+ 	memcpy(mgmt->da, da, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP ||
+-	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
++	    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
+ 		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
+ 	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		memcpy(mgmt->bssid, sdata->u.mgd.bssid, ETH_ALEN);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b867bd5..77d3881 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2203,13 +2203,8 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 
+ 	switch (mgmt->u.action.category) {
+ 	case WLAN_CATEGORY_BACK:
+-		/*
+-		 * The aggregation code is not prepared to handle
+-		 * anything but STA/AP due to the BSSID handling;
+-		 * IBSS could work in the code but isn't supported
+-		 * by drivers or the standard.
+-		 */
+ 		if (sdata->vif.type != NL80211_IFTYPE_STATION &&
++		    sdata->vif.type != NL80211_IFTYPE_MESH_POINT &&
+ 		    sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+ 		    sdata->vif.type != NL80211_IFTYPE_AP)
+ 			break;
+-- 
+1.7.5.4
 
-> Regards,
-> 	Chr
-
-Zefir
