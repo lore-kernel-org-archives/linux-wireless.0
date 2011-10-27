@@ -1,89 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:47702 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751078Ab1JNIMp (ORCPT
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:43721 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752916Ab1J0Pr4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 04:12:45 -0400
-Received: by bkbzt4 with SMTP id zt4so2510893bkb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2011 01:12:44 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Jouni Malinen <j@w1.fi>
-Subject: Re: [PATCH] mac80211: handle HT PHY BSS membership selector value correctly
-Date: Fri, 14 Oct 2011 10:12:20 +0200
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-References: <201110132108.50019.chunkeey@googlemail.com> <20111013224532.GA1959@jm.kir.nu> <201110140942.37085.chunkeey@googlemail.com>
-In-Reply-To: <201110140942.37085.chunkeey@googlemail.com>
+	Thu, 27 Oct 2011 11:47:56 -0400
+Subject: [PATCH 01/10] ath6kl: don't use cfg80211_scan_request after
+	cfg80211_scan_done()
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 27 Oct 2011 18:47:46 +0300
+Message-ID: <20111027154746.23519.39680.stgit@localhost6.localdomain6> (sfid-20111027_174800_195025_4B13DBA1)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201110141012.21010.chunkeey@googlemail.com> (sfid-20111014_101250_606662_AC776151)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[Hit 'sent' by accident]
+Use of cfg80211_scan_request is not valid after calling cfg80211_scan_done()
+but ath6kl_cfg80211_scan_complete_event() was doing exactly that. Change
+the function to call cfg80211_scan_done() last.
 
-On Friday, October 14, 2011 09:42:36 AM Christian Lamparter wrote:
-> On Friday, October 14, 2011 12:45:32 AM Jouni Malinen wrote:
-> > On Thu, Oct 13, 2011 at 09:08:49PM +0200, Christian Lamparter wrote:
-> > > 802.11n-2009 extends the supported rates element with a
-> > > magic value which can be used to prevent legacy stations
-> > > from joining the BSS.
-> > 
-> > Well, it can be used to try to make legacy stations not attempt
-> > connection, but no guarantees on them actually checking whether they
-> > support all the "basic rates".. For example, where is mac80211 (or
-> > wpa_supplicant) doing that check? ;-)
-> 
-Actually, you have already implemented the check in hostapd :)
+This was found during code review, I didn't see any visible problems
+due to this bug.
 
-commit 2944824315b7c74838c551ef08c9843e02de1d46
-Author: Jouni Malinen <jouni.malinen@atheros.com>
-Date:   Wed Feb 9 15:08:47 2011 +0200
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-line 682:
-        if (hapd->iconf->ieee80211n && hapd->iconf->require_ht &&
-            !(sta->flags & WLAN_STA_HT)) {
-                hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE80211,
-                               HOSTAPD_LEVEL_INFO, "Station does not support "
-                               "mandatory HT PHY - reject association");
-                return WLAN_STATUS_ASSOC_DENIED_NO_HT;
-        }
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 0b044aa..f5f4a1d 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -874,6 +874,7 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ void ath6kl_cfg80211_scan_complete_event(struct ath6kl_vif *vif, int status)
+ {
+ 	struct ath6kl *ar = vif->ar;
++	bool aborted;
+ 	int i;
+ 
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: status %d\n", __func__, status);
+@@ -882,11 +883,11 @@ void ath6kl_cfg80211_scan_complete_event(struct ath6kl_vif *vif, int status)
+ 		return;
+ 
+ 	if ((status == -ECANCELED) || (status == -EBUSY)) {
+-		cfg80211_scan_done(vif->scan_req, true);
++		aborted = true;
+ 		goto out;
+ 	}
+ 
+-	cfg80211_scan_done(vif->scan_req, false);
++	aborted = false;
+ 
+ 	if (vif->scan_req->n_ssids && vif->scan_req->ssids[0].ssid_len) {
+ 		for (i = 0; i < vif->scan_req->n_ssids; i++) {
+@@ -897,6 +898,7 @@ void ath6kl_cfg80211_scan_complete_event(struct ath6kl_vif *vif, int status)
+ 	}
+ 
+ out:
++	cfg80211_scan_done(vif->scan_req, aborted);
+ 	vif->scan_req = NULL;
+ }
+ 
 
-so if a legacy station decides to join a require_ht = 1 BSS
-then the AP will refuse it with WLAN_STATUS_ASSOC_DENIED_NO_HT
-and the wpa_supp client will blacklist the AP because of that
-and it will choose a different AP for the next try.
-
-> > > diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> > > @@ -1463,6 +1463,38 @@ ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
-> > > +static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
-> > 
-> > > +	for (i = 0; i < supp_rates_len; i++) {
-> > > +		int rate = (supp_rates[i] & 0x7f) * 5;
-> > > +		bool is_basic = !!(supp_rates[i] & BSS_MEMBERSHIP_SELECTOR);
-> > 
-> > This looks a bit odd since the BSS_MEMBERSHIP_SELECTOR is not exactly
-> > same as basic rate indicator even through they share the same bit. We
-> > used to have the magic 0x80 value here which could actually look less
-> > confusing than the mixing of basic and BSS membership terms.
-So, what's the exact difference between then BasicRate and a MembershipRate
-in this context then? Is a rate called "basic rate" when it's one of the
-legacy e.g.: 6, 12, 24 Mbit rates [And likewise: is a rate called a MembershipRate
-when only in the magic 127 HT PHY case?] 
-
-> > 
-> > > +		if (rate > 110)
-> > > +			*have_higher_than_11mbit = true;
-> > While this is not really introduced by this patch, this looks quite
-> > bogus since the higher-than-11Mbps is then used to figure out whether
-> > this was a 802.11g network. That is not correct since a network with a
-> > single supported rate 6 Mbps should also get that behavior.. More robust
-> > mechanism would be to check for any OFDM rate being listed.
-Also, there's 22mbit 8-PSK PBCC [I think mwl8k supports it and some TI
-stuff could support it as well]. The check is questionable, but fixing
-it may no be trivial either. [Anyway, it's a bit outside the scope and
-requires another patch]
-
-Regards,
-	Chr
