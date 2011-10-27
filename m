@@ -1,769 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25588 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933413Ab1JYOEu (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:36097 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753414Ab1J0AFr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 10:04:50 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 06/31] ath6kl: Define interface specific states
-Date: Tue, 25 Oct 2011 19:34:01 +0530
-Message-ID: <1319551466-29070-7-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_160453_369489_F2472A8C)
-In-Reply-To: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Wed, 26 Oct 2011 20:05:47 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CABDyM6S9XK64n374AKCu5YUq4PBAmaB0jCgE9+snnM9XeQo1yg@mail.gmail.com>
+References: <20111019060108.GA11588@gamma.logic.tuwien.ac.at>
+	<CABDyM6S9XK64n374AKCu5YUq4PBAmaB0jCgE9+snnM9XeQo1yg@mail.gmail.com>
+Date: Wed, 26 Oct 2011 20:05:47 -0400
+Message-ID: <CABDyM6R-BBV1_oci2vMoxcybT=0cxPRfHELvtrQTRfSf6WO9Eg@mail.gmail.com> (sfid-20111027_020605_308964_A5287C3D)
+Subject: Fwd: iwlagn is getting very shaky
+From: Richard Yao <ryao@cs.stonybrook.edu>
+To: wey-yi.w.guy@intel.com
+Cc: Norbert Preining <preining@logic.at>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Rientjes <rientjes@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently ar->flag maintains interface stats. Move interface
-specific states from ar->flag to vif->flags.
+Dear Wey,
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   66 ++++++++++++++++++----------
- drivers/net/wireless/ath/ath6kl/core.h     |   41 ++++++++++-------
- drivers/net/wireless/ath/ath6kl/init.c     |    3 +-
- drivers/net/wireless/ath/ath6kl/main.c     |   64 ++++++++++++++++++---------
- drivers/net/wireless/ath/ath6kl/txrx.c     |   23 ++++++---
- drivers/net/wireless/ath/ath6kl/wmi.c      |   12 +++--
- 6 files changed, 133 insertions(+), 76 deletions(-)
+Here is the message that I sent earlier.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index e663d60..fed31cf 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -231,12 +231,14 @@ static void ath6kl_set_key_mgmt(struct ath6kl *ar, u32 key_mgmt)
- 
- static bool ath6kl_cfg80211_ready(struct ath6kl *ar)
- {
-+	struct ath6kl_vif *vif = ar->vif;
-+
- 	if (!test_bit(WMI_READY, &ar->flag)) {
- 		ath6kl_err("wmi is not ready\n");
- 		return false;
- 	}
- 
--	if (!test_bit(WLAN_ENABLED, &ar->flag)) {
-+	if (!test_bit(WLAN_ENABLED, &vif->flags)) {
- 		ath6kl_err("wlan disabled\n");
- 		return false;
- 	}
-@@ -295,6 +297,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 				   struct cfg80211_connect_params *sme)
- {
- 	struct ath6kl *ar = ath6kl_priv(dev);
-+	struct ath6kl_vif *vif = netdev_priv(dev);
- 	int status;
- 
- 	ar->sme_state = SME_CONNECTING;
-@@ -345,7 +348,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 			return status;
- 	}
- 
--	if (test_bit(CONNECTED, &ar->flag) &&
-+	if (test_bit(CONNECTED, &vif->flags) &&
- 	    ar->ssid_len == sme->ssid_len &&
- 	    !memcmp(ar->ssid, sme->ssid, ar->ssid_len)) {
- 		ar->reconnect_flag = true;
-@@ -420,7 +423,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 	}
- 
- 	if (!ar->usr_bss_filter) {
--		clear_bit(CLEAR_BSSFILTER_ON_BEACON, &ar->flag);
-+		clear_bit(CLEAR_BSSFILTER_ON_BEACON, &vif->flags);
- 		if (ath6kl_wmi_bssfilter_cmd(ar->wmi, ALL_BSS_FILTER, 0) != 0) {
- 			ath6kl_err("couldn't set bss filtering\n");
- 			up(&ar->sem);
-@@ -469,7 +472,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 	}
- 
- 	ar->connect_ctrl_flags &= ~CONNECT_DO_WPA_OFFLOAD;
--	set_bit(CONNECT_PEND, &ar->flag);
-+	set_bit(CONNECT_PEND, &vif->flags);
- 
- 	return 0;
- }
-@@ -529,6 +532,8 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
- 				   u8 assoc_resp_len, u8 *assoc_info)
- {
- 	struct ieee80211_channel *chan;
-+	/* TODO: Findout vif */
-+	struct ath6kl_vif *vif = ar->vif;
- 
- 	/* capinfo + listen interval */
- 	u8 assoc_req_ie_offset = sizeof(u16) + sizeof(u16);
-@@ -548,7 +553,7 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
- 	 * a Beacon frame from the AP is seen.
- 	 */
- 	ar->assoc_bss_beacon_int = beacon_intvl;
--	clear_bit(DTIM_PERIOD_AVAIL, &ar->flag);
-+	clear_bit(DTIM_PERIOD_AVAIL, &vif->flags);
- 
- 	if (nw_type & ADHOC_NETWORK) {
- 		if (ar->wdev->iftype != NL80211_IFTYPE_ADHOC) {
-@@ -637,6 +642,9 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
- 				      u8 *bssid, u8 assoc_resp_len,
- 				      u8 *assoc_info, u16 proto_reason)
- {
-+	/* TODO: Findout vif */
-+	struct ath6kl_vif *vif = ar->vif;
-+
- 	if (ar->scan_req) {
- 		cfg80211_scan_done(ar->scan_req, true);
- 		ar->scan_req = NULL;
-@@ -676,7 +684,7 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
- 		return;
- 	}
- 
--	clear_bit(CONNECT_PEND, &ar->flag);
-+	clear_bit(CONNECT_PEND, &vif->flags);
- 
- 	if (ar->sme_state == SME_CONNECTING) {
- 		cfg80211_connect_result(ar->net_dev,
-@@ -696,6 +704,7 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
- 				struct cfg80211_scan_request *request)
- {
- 	struct ath6kl *ar = (struct ath6kl *)ath6kl_priv(ndev);
-+	struct ath6kl_vif *vif = netdev_priv(ndev);
- 	s8 n_channels = 0;
- 	u16 *channels = NULL;
- 	int ret = 0;
-@@ -705,10 +714,10 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
- 		return -EIO;
- 
- 	if (!ar->usr_bss_filter) {
--		clear_bit(CLEAR_BSSFILTER_ON_BEACON, &ar->flag);
-+		clear_bit(CLEAR_BSSFILTER_ON_BEACON, &vif->flags);
- 		ret = ath6kl_wmi_bssfilter_cmd(
- 			ar->wmi,
--			(test_bit(CONNECTED, &ar->flag) ?
-+			(test_bit(CONNECTED, &vif->flags) ?
- 			 ALL_BUT_BSS_FILTER : ALL_BSS_FILTER), 0);
- 		if (ret) {
- 			ath6kl_err("couldn't set bss filtering\n");
-@@ -761,7 +770,7 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
- 			channels[i] = request->channels[i]->center_freq;
- 	}
- 
--	if (test_bit(CONNECTED, &ar->flag))
-+	if (test_bit(CONNECTED, &vif->flags))
- 		force_fg_scan = 1;
- 
- 	ret = ath6kl_wmi_startscan_cmd(ar->wmi, WMI_LONG_SCAN, force_fg_scan,
-@@ -810,6 +819,7 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 				   struct key_params *params)
- {
- 	struct ath6kl *ar = (struct ath6kl *)ath6kl_priv(ndev);
-+	struct ath6kl_vif *vif = netdev_priv(ndev);
- 	struct ath6kl_key *key = NULL;
- 	u8 key_usage;
- 	u8 key_type;
-@@ -888,7 +898,7 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 		ar->ap_mode_bkey.key_type = key_type;
- 		ar->ap_mode_bkey.key_len = key->key_len;
- 		memcpy(ar->ap_mode_bkey.key, key->key, key->key_len);
--		if (!test_bit(CONNECTED, &ar->flag)) {
-+		if (!test_bit(CONNECTED, &vif->flags)) {
- 			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "Delay initial group "
- 				   "key configuration until AP mode has been "
- 				   "started\n");
-@@ -901,7 +911,7 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 	}
- 
- 	if (ar->next_mode == AP_NETWORK && key_type == WEP_CRYPT &&
--	    !test_bit(CONNECTED, &ar->flag)) {
-+	    !test_bit(CONNECTED, &vif->flags)) {
- 		/*
- 		 * Store the key locally so that it can be re-configured after
- 		 * the AP mode has properly started
-@@ -995,6 +1005,7 @@ static int ath6kl_cfg80211_set_default_key(struct wiphy *wiphy,
- 					   bool multicast)
- {
- 	struct ath6kl *ar = (struct ath6kl *)ath6kl_priv(ndev);
-+	struct ath6kl_vif *vif = netdev_priv(ndev);
- 	struct ath6kl_key *key = NULL;
- 	int status = 0;
- 	u8 key_usage;
-@@ -1028,7 +1039,7 @@ static int ath6kl_cfg80211_set_default_key(struct wiphy *wiphy,
- 	if (multicast)
- 		key_type = ar->grp_crypto;
- 
--	if (ar->next_mode == AP_NETWORK && !test_bit(CONNECTED, &ar->flag))
-+	if (ar->next_mode == AP_NETWORK && !test_bit(CONNECTED, &vif->flags))
- 		return 0; /* Delay until AP mode has been started */
- 
- 	status = ath6kl_wmi_addkey_cmd(ar->wmi, ar->def_txkey_index,
-@@ -1113,11 +1124,12 @@ static int ath6kl_cfg80211_set_txpower(struct wiphy *wiphy,
- static int ath6kl_cfg80211_get_txpower(struct wiphy *wiphy, int *dbm)
- {
- 	struct ath6kl *ar = (struct ath6kl *)wiphy_priv(wiphy);
-+	struct ath6kl_vif *vif = ar->vif;
- 
- 	if (!ath6kl_cfg80211_ready(ar))
- 		return -EIO;
- 
--	if (test_bit(CONNECTED, &ar->flag)) {
-+	if (test_bit(CONNECTED, &vif->flags)) {
- 		ar->tx_pwr = 0;
- 
- 		if (ath6kl_wmi_get_tx_pwr_cmd(ar->wmi) != 0) {
-@@ -1211,6 +1223,7 @@ static int ath6kl_cfg80211_join_ibss(struct wiphy *wiphy,
- 				     struct cfg80211_ibss_params *ibss_param)
- {
- 	struct ath6kl *ar = ath6kl_priv(dev);
-+	struct ath6kl_vif *vif = netdev_priv(dev);
- 	int status;
- 
- 	if (!ath6kl_cfg80211_ready(ar))
-@@ -1269,7 +1282,7 @@ static int ath6kl_cfg80211_join_ibss(struct wiphy *wiphy,
- 					ar->ssid_len, ar->ssid,
- 					ar->req_bssid, ar->ch_hint,
- 					ar->connect_ctrl_flags);
--	set_bit(CONNECT_PEND, &ar->flag);
-+	set_bit(CONNECT_PEND, &vif->flags);
- 
- 	return 0;
- }
-@@ -1362,6 +1375,7 @@ static int ath6kl_get_station(struct wiphy *wiphy, struct net_device *dev,
- 			      u8 *mac, struct station_info *sinfo)
- {
- 	struct ath6kl *ar = ath6kl_priv(dev);
-+	struct ath6kl_vif *vif = netdev_priv(dev);
- 	long left;
- 	bool sgi;
- 	s32 rate;
-@@ -1444,8 +1458,8 @@ static int ath6kl_get_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 	sinfo->filled |= STATION_INFO_TX_BITRATE;
- 
--	if (test_bit(CONNECTED, &ar->flag) &&
--	    test_bit(DTIM_PERIOD_AVAIL, &ar->flag) &&
-+	if (test_bit(CONNECTED, &vif->flags) &&
-+	    test_bit(DTIM_PERIOD_AVAIL, &vif->flags) &&
- 	    ar->nw_type == INFRA_NETWORK) {
- 		sinfo->filled |= STATION_INFO_BSS_PARAM;
- 		sinfo->bss_param.flags = 0;
-@@ -1475,7 +1489,9 @@ static int ath6kl_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
- static int ath6kl_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
- {
- 	struct ath6kl *ar = ath6kl_priv(netdev);
--	if (test_bit(CONNECTED, &ar->flag))
-+	struct ath6kl_vif *vif = netdev_priv(netdev);
-+
-+	if (test_bit(CONNECTED, &vif->flags))
- 		return ath6kl_wmi_setpmkid_cmd(ar->wmi, ar->bssid, NULL, false);
- 	return 0;
- }
-@@ -1711,14 +1727,15 @@ static int ath6kl_set_beacon(struct wiphy *wiphy, struct net_device *dev,
- static int ath6kl_del_beacon(struct wiphy *wiphy, struct net_device *dev)
- {
- 	struct ath6kl *ar = ath6kl_priv(dev);
-+	struct ath6kl_vif *vif = netdev_priv(dev);
- 
- 	if (ar->nw_type != AP_NETWORK)
- 		return -EOPNOTSUPP;
--	if (!test_bit(CONNECTED, &ar->flag))
-+	if (!test_bit(CONNECTED, &vif->flags))
- 		return -ENOTCONN;
- 
- 	ath6kl_wmi_disconnect_cmd(ar->wmi);
--	clear_bit(CONNECTED, &ar->flag);
-+	clear_bit(CONNECTED, &vif->flags);
- 
- 	return 0;
- }
-@@ -1813,12 +1830,13 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
- 			  const u8 *buf, size_t len, bool no_cck, u64 *cookie)
- {
- 	struct ath6kl *ar = ath6kl_priv(dev);
-+	struct ath6kl_vif *vif = netdev_priv(dev);
- 	u32 id;
- 	const struct ieee80211_mgmt *mgmt;
- 
- 	mgmt = (const struct ieee80211_mgmt *) buf;
- 	if (buf + len >= mgmt->u.probe_resp.variable &&
--	    ar->nw_type == AP_NETWORK && test_bit(CONNECTED, &ar->flag) &&
-+	    ar->nw_type == AP_NETWORK && test_bit(CONNECTED, &vif->flags) &&
- 	    ieee80211_is_probe_resp(mgmt->frame_control)) {
- 		/*
- 		 * Send Probe Response frame in AP mode using a separate WMI
-@@ -2038,9 +2056,9 @@ void ath6kl_deinit_if_data(struct ath6kl_vif *vif)
- 
- 	ar->aggr_cntxt = NULL;
- 
--	if (test_bit(NETDEV_REGISTERED, &ar->flag)) {
-+	if (test_bit(NETDEV_REGISTERED, &vif->flags)) {
- 		unregister_netdev(vif->ndev);
--		clear_bit(NETDEV_REGISTERED, &ar->flag);
-+		clear_bit(NETDEV_REGISTERED, &vif->flags);
- 	}
- 
- 	free_netdev(vif->ndev);
-@@ -2080,9 +2098,9 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 		goto err;
- 
- 	ar->sme_state = SME_DISCONNECTED;
--	set_bit(WLAN_ENABLED, &ar->flag);
-+	set_bit(WLAN_ENABLED, &vif->flags);
- 	ar->wlan_pwr_state = WLAN_POWER_STATE_ON;
--	set_bit(NETDEV_REGISTERED, &ar->flag);
-+	set_bit(NETDEV_REGISTERED, &vif->flags);
- 
- 	return ndev;
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 0c1dee0..4777171 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -380,30 +380,37 @@ struct ath6kl_req_key {
- 	u8 key_len;
- };
- 
-+/* vif flags info */
-+enum ath6kl_vif_state {
-+	CONNECTED,
-+	CONNECT_PEND,
-+	WMM_ENABLED,
-+	NETQ_STOPPED,
-+	DTIM_EXPIRED,
-+	NETDEV_REGISTERED,
-+	CLEAR_BSSFILTER_ON_BEACON,
-+	DTIM_PERIOD_AVAIL,
-+	WLAN_ENABLED,
-+};
-+
- struct ath6kl_vif {
- 	struct wireless_dev wdev;
- 	struct net_device *ndev;
- 	struct ath6kl *ar;
-+	unsigned long flags;
- };
- 
- /* Flag info */
--#define WMI_ENABLED	0
--#define WMI_READY	1
--#define CONNECTED	2
--#define STATS_UPDATE_PEND 3
--#define CONNECT_PEND	  4
--#define WMM_ENABLED	  5
--#define NETQ_STOPPED	  6
--#define WMI_CTRL_EP_FULL  7
--#define DTIM_EXPIRED	  8
--#define DESTROY_IN_PROGRESS  9
--#define NETDEV_REGISTERED    10
--#define SKIP_SCAN	     11
--#define WLAN_ENABLED	     12
--#define TESTMODE	     13
--#define CLEAR_BSSFILTER_ON_BEACON 14
--#define DTIM_PERIOD_AVAIL    15
--#define ROAM_TBL_PEND        16
-+enum ath6kl_dev_state {
-+	WMI_ENABLED,
-+	WMI_READY,
-+	WMI_CTRL_EP_FULL,
-+	TESTMODE,
-+	DESTROY_IN_PROGRESS,
-+	SKIP_SCAN,
-+	STATS_UPDATE_PEND,
-+	ROAM_TBL_PEND,
-+};
- 
- struct ath6kl {
- 	struct device *dev;
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 246399d..91c2783 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1574,6 +1574,7 @@ err_wq:
- void ath6kl_stop_txrx(struct ath6kl *ar)
- {
- 	struct net_device *ndev = ar->net_dev;
-+	struct ath6kl_vif *vif = ar->vif;
- 
- 	if (!ndev)
- 		return;
-@@ -1588,7 +1589,7 @@ void ath6kl_stop_txrx(struct ath6kl *ar)
- 	if (ar->wlan_pwr_state != WLAN_POWER_STATE_CUT_PWR)
- 		ath6kl_stop_endpoint(ndev, false, true);
- 
--	clear_bit(WLAN_ENABLED, &ar->flag);
-+	clear_bit(WLAN_ENABLED, &vif->flags);
- }
- 
- /*
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 4470f6e..6a0eaea 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -429,6 +429,7 @@ void ath6kl_stop_endpoint(struct net_device *dev, bool keep_profile,
- 			  bool get_dbglogs)
- {
- 	struct ath6kl *ar = ath6kl_priv(dev);
-+	struct ath6kl_vif *vif = netdev_priv(dev);
- 	static u8 bcast_mac[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
- 	bool discon_issued;
- 
-@@ -436,8 +437,8 @@ void ath6kl_stop_endpoint(struct net_device *dev, bool keep_profile,
- 
- 	/* disable the target and the interrupts associated with it */
- 	if (test_bit(WMI_READY, &ar->flag)) {
--		discon_issued = (test_bit(CONNECTED, &ar->flag) ||
--				 test_bit(CONNECT_PEND, &ar->flag));
-+		discon_issued = (test_bit(CONNECTED, &vif->flags) ||
-+				 test_bit(CONNECT_PEND, &vif->flags));
- 		ath6kl_disconnect(ar);
- 		if (!keep_profile)
- 			ath6kl_init_profile_info(ar);
-@@ -524,6 +525,8 @@ void ath6kl_connect_ap_mode_bss(struct ath6kl *ar, u16 channel)
- 	struct ath6kl_req_key *ik;
- 	int res;
- 	u8 key_rsc[ATH6KL_KEY_SEQ_LEN];
-+	/* TODO: Pass vif instead of taking it from ar */
-+	struct ath6kl_vif *vif = ar->vif;
- 
- 	ik = &ar->ap_mode_bkey;
- 
-@@ -555,7 +558,7 @@ void ath6kl_connect_ap_mode_bss(struct ath6kl *ar, u16 channel)
- 	}
- 
- 	ath6kl_wmi_bssfilter_cmd(ar->wmi, NONE_BSS_FILTER, 0);
--	set_bit(CONNECTED, &ar->flag);
-+	set_bit(CONNECTED, &vif->flags);
- 	netif_carrier_on(ar->net_dev);
- }
- 
-@@ -914,20 +917,26 @@ void disconnect_timer_handler(unsigned long ptr)
- 
- void ath6kl_disconnect(struct ath6kl *ar)
- {
--	if (test_bit(CONNECTED, &ar->flag) ||
--	    test_bit(CONNECT_PEND, &ar->flag)) {
-+	/* TODO: Pass vif instead of taking it from ar */
-+	struct ath6kl_vif *vif = ar->vif;
-+
-+	if (test_bit(CONNECTED, &vif->flags) ||
-+	    test_bit(CONNECT_PEND, &vif->flags)) {
- 		ath6kl_wmi_disconnect_cmd(ar->wmi);
- 		/*
- 		 * Disconnect command is issued, clear the connect pending
- 		 * flag. The connected flag will be cleared in
- 		 * disconnect event notification.
- 		 */
--		clear_bit(CONNECT_PEND, &ar->flag);
-+		clear_bit(CONNECT_PEND, &vif->flags);
- 	}
- }
- 
- void ath6kl_deep_sleep_enable(struct ath6kl *ar)
- {
-+	/* TODO: Pass vif instead of taking it from ar */
-+	struct ath6kl_vif *vif = ar->vif;
-+
- 	switch (ar->sme_state) {
- 	case SME_CONNECTING:
- 		cfg80211_connect_result(ar->net_dev, ar->bssid, NULL, 0,
-@@ -946,8 +955,8 @@ void ath6kl_deep_sleep_enable(struct ath6kl *ar)
- 		break;
- 	}
- 
--	if (test_bit(CONNECTED, &ar->flag) ||
--	    test_bit(CONNECT_PEND, &ar->flag))
-+	if (test_bit(CONNECTED, &vif->flags) ||
-+	    test_bit(CONNECT_PEND, &vif->flags))
- 		ath6kl_wmi_disconnect_cmd(ar->wmi);
- 
- 	ar->sme_state = SME_DISCONNECTED;
-@@ -1016,10 +1025,13 @@ void ath6kl_ready_event(void *devt, u8 *datap, u32 sw_ver, u32 abi_ver)
- 
- void ath6kl_scan_complete_evt(struct ath6kl *ar, int status)
- {
-+	/* TODO: Pass vif instead of taking it from ar */
-+	struct ath6kl_vif *vif = ar->vif;
-+
- 	ath6kl_cfg80211_scan_complete_event(ar, status);
- 
- 	if (!ar->usr_bss_filter) {
--		clear_bit(CLEAR_BSSFILTER_ON_BEACON, &ar->flag);
-+		clear_bit(CLEAR_BSSFILTER_ON_BEACON, &vif->flags);
- 		ath6kl_wmi_bssfilter_cmd(ar->wmi, NONE_BSS_FILTER, 0);
- 	}
- 
-@@ -1032,6 +1044,9 @@ void ath6kl_connect_event(struct ath6kl *ar, u16 channel, u8 *bssid,
- 			  u8 assoc_req_len, u8 assoc_resp_len,
- 			  u8 *assoc_info)
- {
-+	/* TODO: findout  vif instead of taking it from ar */
-+	struct ath6kl_vif *vif = ar->vif;
-+
- 	ath6kl_cfg80211_connect_event(ar, channel, bssid,
- 				      listen_int, beacon_int,
- 				      net_type, beacon_ie_len,
-@@ -1049,8 +1064,8 @@ void ath6kl_connect_event(struct ath6kl *ar, u16 channel, u8 *bssid,
- 
- 	/* Update connect & link status atomically */
- 	spin_lock_bh(&ar->lock);
--	set_bit(CONNECTED, &ar->flag);
--	clear_bit(CONNECT_PEND, &ar->flag);
-+	set_bit(CONNECTED, &vif->flags);
-+	clear_bit(CONNECT_PEND, &vif->flags);
- 	netif_carrier_on(ar->net_dev);
- 	spin_unlock_bh(&ar->lock);
- 
-@@ -1064,7 +1079,7 @@ void ath6kl_connect_event(struct ath6kl *ar, u16 channel, u8 *bssid,
- 	}
- 
- 	if (!ar->usr_bss_filter) {
--		set_bit(CLEAR_BSSFILTER_ON_BEACON, &ar->flag);
-+		set_bit(CLEAR_BSSFILTER_ON_BEACON, &vif->flags);
- 		ath6kl_wmi_bssfilter_cmd(ar->wmi, CURRENT_BSS_FILTER, 0);
- 	}
- }
-@@ -1292,6 +1307,8 @@ void ath6kl_dtimexpiry_event(struct ath6kl *ar)
- {
- 	bool mcastq_empty = false;
- 	struct sk_buff *skb;
-+	/* TODO: Pass vif instead of taking it from ar */
-+	struct ath6kl_vif *vif = ar->vif;
- 
- 	/*
- 	 * If there are no associated STAs, ignore the DTIM expiry event.
-@@ -1313,7 +1330,7 @@ void ath6kl_dtimexpiry_event(struct ath6kl *ar)
- 		return;
- 
- 	/* set the STA flag to dtim_expired for the frame to go out */
--	set_bit(DTIM_EXPIRED, &ar->flag);
-+	set_bit(DTIM_EXPIRED, &vif->flags);
- 
- 	spin_lock_bh(&ar->mcastpsq_lock);
- 	while ((skb = skb_dequeue(&ar->mcastpsq)) != NULL) {
-@@ -1325,7 +1342,7 @@ void ath6kl_dtimexpiry_event(struct ath6kl *ar)
- 	}
- 	spin_unlock_bh(&ar->mcastpsq_lock);
- 
--	clear_bit(DTIM_EXPIRED, &ar->flag);
-+	clear_bit(DTIM_EXPIRED, &vif->flags);
- 
- 	/* clear the LSB of the BitMapCtl field of the TIM IE */
- 	ath6kl_wmi_set_pvb_cmd(ar->wmi, MCAST_AID, 0);
-@@ -1335,6 +1352,9 @@ void ath6kl_disconnect_event(struct ath6kl *ar, u8 reason, u8 *bssid,
- 			     u8 assoc_resp_len, u8 *assoc_info,
- 			     u16 prot_reason_status)
- {
-+	/* TODO: Findout vif instead of taking it from ar */
-+	struct ath6kl_vif *vif = ar->vif;
-+
- 	if (ar->nw_type == AP_NETWORK) {
- 		if (!ath6kl_remove_sta(ar, bssid, prot_reason_status))
- 			return;
-@@ -1357,7 +1377,7 @@ void ath6kl_disconnect_event(struct ath6kl *ar, u8 reason, u8 *bssid,
- 
- 		if (memcmp(ar->net_dev->dev_addr, bssid, ETH_ALEN) == 0) {
- 			memset(ar->wep_key_list, 0, sizeof(ar->wep_key_list));
--			clear_bit(CONNECTED, &ar->flag);
-+			clear_bit(CONNECTED, &vif->flags);
- 		}
- 		return;
- 	}
-@@ -1382,19 +1402,19 @@ void ath6kl_disconnect_event(struct ath6kl *ar, u8 reason, u8 *bssid,
- 		if (!ar->usr_bss_filter && test_bit(WMI_READY, &ar->flag))
- 			ath6kl_wmi_bssfilter_cmd(ar->wmi, NONE_BSS_FILTER, 0);
- 	} else {
--		set_bit(CONNECT_PEND, &ar->flag);
-+		set_bit(CONNECT_PEND, &vif->flags);
- 		if (((reason == ASSOC_FAILED) &&
- 		    (prot_reason_status == 0x11)) ||
- 		    ((reason == ASSOC_FAILED) && (prot_reason_status == 0x0)
- 		     && (ar->reconnect_flag == 1))) {
--			set_bit(CONNECTED, &ar->flag);
-+			set_bit(CONNECTED, &vif->flags);
- 			return;
- 		}
- 	}
- 
- 	/* update connect & link status atomically */
- 	spin_lock_bh(&ar->lock);
--	clear_bit(CONNECTED, &ar->flag);
-+	clear_bit(CONNECTED, &vif->flags);
- 	netif_carrier_off(ar->net_dev);
- 	spin_unlock_bh(&ar->lock);
- 
-@@ -1414,12 +1434,13 @@ void ath6kl_disconnect_event(struct ath6kl *ar, u8 reason, u8 *bssid,
- static int ath6kl_open(struct net_device *dev)
- {
- 	struct ath6kl *ar = ath6kl_priv(dev);
-+	struct ath6kl_vif *vif = netdev_priv(dev);
- 
- 	spin_lock_bh(&ar->lock);
- 
--	set_bit(WLAN_ENABLED, &ar->flag);
-+	set_bit(WLAN_ENABLED, &vif->flags);
- 
--	if (test_bit(CONNECTED, &ar->flag)) {
-+	if (test_bit(CONNECTED, &vif->flags)) {
- 		netif_carrier_on(dev);
- 		netif_wake_queue(dev);
- 	} else
-@@ -1433,6 +1454,7 @@ static int ath6kl_open(struct net_device *dev)
- static int ath6kl_close(struct net_device *dev)
- {
- 	struct ath6kl *ar = ath6kl_priv(dev);
-+	struct ath6kl_vif *vif = netdev_priv(dev);
- 
- 	netif_stop_queue(dev);
- 
-@@ -1443,7 +1465,7 @@ static int ath6kl_close(struct net_device *dev)
- 					      0, 0, 0))
- 			return -EIO;
- 
--		clear_bit(WLAN_ENABLED, &ar->flag);
-+		clear_bit(WLAN_ENABLED, &vif->flags);
- 	}
- 
- 	ath6kl_cfg80211_scan_complete_event(ar, -ECANCELED);
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index a9dff01..d1652bd 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -83,6 +83,8 @@ static bool ath6kl_powersave_ap(struct ath6kl *ar, struct sk_buff *skb,
- 	struct ethhdr *datap = (struct ethhdr *) skb->data;
- 	struct ath6kl_sta *conn = NULL;
- 	bool ps_queued = false, is_psq_empty = false;
-+	/* TODO: Findout vif */
-+	struct ath6kl_vif *vif = ar->vif;
- 
- 	if (is_multicast_ether_addr(datap->h_dest)) {
- 		u8 ctr = 0;
-@@ -100,7 +102,7 @@ static bool ath6kl_powersave_ap(struct ath6kl *ar, struct sk_buff *skb,
- 			 * If this transmit is not because of a Dtim Expiry
- 			 * q it.
- 			 */
--			if (!test_bit(DTIM_EXPIRED, &ar->flag)) {
-+			if (!test_bit(DTIM_EXPIRED, &vif->flags)) {
- 				bool is_mcastq_empty = false;
- 
- 				spin_lock_bh(&ar->mcastpsq_lock);
-@@ -235,6 +237,7 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 	struct ath6kl *ar = ath6kl_priv(dev);
- 	struct ath6kl_cookie *cookie = NULL;
- 	enum htc_endpoint_id eid = ENDPOINT_UNUSED;
-+	struct ath6kl_vif *vif = netdev_priv(dev);
- 	u32 map_no = 0;
- 	u16 htc_tag = ATH6KL_DATA_PKT_TAG;
- 	u8 ac = 99 ; /* initialize to unmapped ac */
-@@ -246,7 +249,7 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 		   skb, skb->data, skb->len);
- 
- 	/* If target is not associated */
--	if (!test_bit(CONNECTED, &ar->flag)) {
-+	if (!test_bit(CONNECTED, &vif->flags)) {
- 		dev_kfree_skb(skb);
- 		return 0;
- 	}
-@@ -278,12 +281,12 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 		}
- 
- 		if ((ar->nw_type == ADHOC_NETWORK) &&
--		     ar->ibss_ps_enable && test_bit(CONNECTED, &ar->flag))
-+		     ar->ibss_ps_enable && test_bit(CONNECTED, &vif->flags))
- 			chk_adhoc_ps_mapping = true;
- 		else {
- 			/* get the stream mapping */
- 			ret = ath6kl_wmi_implicit_create_pstream(ar->wmi, skb,
--				    0, test_bit(WMM_ENABLED, &ar->flag), &ac);
-+				    0, test_bit(WMM_ENABLED, &vif->flags), &ac);
- 			if (ret)
- 				goto fail_tx;
- 		}
-@@ -426,6 +429,8 @@ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
- 					       struct htc_packet *packet)
- {
- 	struct ath6kl *ar = target->dev->ar;
-+	/* TODO: Findout vif properly */
-+	struct ath6kl_vif *vif = ar->vif;
- 	enum htc_endpoint_id endpoint = packet->endpoint;
- 
- 	if (endpoint == ar->ctrl_ep) {
-@@ -468,7 +473,7 @@ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
- 
- stop_net_queues:
- 	spin_lock_bh(&ar->lock);
--	set_bit(NETQ_STOPPED, &ar->flag);
-+	set_bit(NETQ_STOPPED, &vif->flags);
- 	spin_unlock_bh(&ar->lock);
- 	netif_stop_queue(ar->net_dev);
- 
-@@ -524,6 +529,8 @@ void ath6kl_tx_complete(void *context, struct list_head *packet_queue)
- 	enum htc_endpoint_id eid;
- 	bool wake_event = false;
- 	bool flushing = false;
-+	/* TODO: Findout vif */
-+	struct ath6kl_vif *vif = ar->vif;
- 
- 	skb_queue_head_init(&skb_queue);
- 
-@@ -597,15 +604,15 @@ void ath6kl_tx_complete(void *context, struct list_head *packet_queue)
- 
- 		ath6kl_free_cookie(ar, ath6kl_cookie);
- 
--		if (test_bit(NETQ_STOPPED, &ar->flag))
--			clear_bit(NETQ_STOPPED, &ar->flag);
-+		if (test_bit(NETQ_STOPPED, &vif->flags))
-+			clear_bit(NETQ_STOPPED, &vif->flags);
- 	}
- 
- 	spin_unlock_bh(&ar->lock);
- 
- 	__skb_queue_purge(&skb_queue);
- 
--	if (test_bit(CONNECTED, &ar->flag)) {
-+	if (test_bit(CONNECTED, &vif->flags)) {
- 		if (!flushing)
- 			netif_wake_queue(ar->net_dev);
- 	}
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 7f4c2c2..a71d773 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -950,6 +950,8 @@ static int ath6kl_wmi_bssinfo_event_rx(struct wmi *wmi, u8 *datap, int len)
- 	struct ath6kl *ar = wmi->parent_dev;
- 	struct ieee80211_mgmt *mgmt;
- 	struct cfg80211_bss *bss;
-+	/*TODO: Findout vif properly */
-+	struct ath6kl_vif *vif = ar->vif;
- 
- 	if (len <= sizeof(struct wmi_bss_info_hdr2))
- 		return -EINVAL;
-@@ -969,8 +971,8 @@ static int ath6kl_wmi_bssinfo_event_rx(struct wmi *wmi, u8 *datap, int len)
- 		return 0; /* Only update BSS table for now */
- 
- 	if (bih->frame_type == BEACON_FTYPE &&
--	    test_bit(CLEAR_BSSFILTER_ON_BEACON, &ar->flag)) {
--		clear_bit(CLEAR_BSSFILTER_ON_BEACON, &ar->flag);
-+	    test_bit(CLEAR_BSSFILTER_ON_BEACON, &vif->flags)) {
-+		clear_bit(CLEAR_BSSFILTER_ON_BEACON, &vif->flags);
- 		ath6kl_wmi_bssfilter_cmd(ar->wmi, NONE_BSS_FILTER, 0);
- 	}
- 
-@@ -981,14 +983,14 @@ static int ath6kl_wmi_bssinfo_event_rx(struct wmi *wmi, u8 *datap, int len)
- 	if (len < 8 + 2 + 2)
- 		return -EINVAL;
- 
--	if (bih->frame_type == BEACON_FTYPE && test_bit(CONNECTED, &ar->flag) &&
--	    memcmp(bih->bssid, ar->bssid, ETH_ALEN) == 0) {
-+	if (bih->frame_type == BEACON_FTYPE && test_bit(CONNECTED, &vif->flags)
-+	    && memcmp(bih->bssid, ar->bssid, ETH_ALEN) == 0) {
- 		const u8 *tim;
- 		tim = cfg80211_find_ie(WLAN_EID_TIM, buf + 8 + 2 + 2,
- 				       len - 8 - 2 - 2);
- 		if (tim && tim[1] >= 2) {
- 			ar->assoc_bss_dtim_period = tim[3];
--			set_bit(DTIM_PERIOD_AVAIL, &ar->flag);
-+			set_bit(DTIM_PERIOD_AVAIL, &vif->flags);
- 		}
- 	}
- 
--- 
-1.7.0.4
+Yours truly,
+Richard Yao
 
+---------- Forwarded message ----------
+From: Richard Yao <ryao@cs.stonybrook.edu>
+Date: Wed, Oct 26, 2011 at 12:19 AM
+Subject: Re: iwlagn is getting very shaky
+To: linux-kernel@vger.kernel.org
+Cc: preining@logic.at
+
+
+Dear Everyone,
+
+I have always had issues with Wi-Fi at my university, although they
+became particularly acute. The problem is characterized by an
+inordinate number of Tx excessive retries like what Norbert posted. I
+had been holding off on reporting this out of fear that my report
+wouldn't be good enough, but now that I see Norbert reported it, I
+thought I would contribute my findings.
+
+When I looked into this, I found that the wireless spectrum on my
+university is absurdly crowded. "iwlist wlan0 scan" reveals roughly
+100 access points at any given time, many of which have the same SSID.
+It is worst in the library, which probably one of the most densely
+populated buildings. This appears to be linked to the hidden node
+problem:
+
+http://en.wikipedia.org/wiki/Hidden_node_problem
+
+I found a few issues in the wireless stack that appear to exacerbate
+this problem. The first of which is a kernel problem. The iwlagn
+driver does not support "auto" for the rts and frag settings, so they
+default to off. I tried fiddling with various settings, but the only
+one that seems to make a difference is rts, which at the moment I have
+set to 0, which should turn it on and transmit a request to send for
+all traffic. I configured my laptop to set rts to 0 on boot and the
+results were remarkable. I went from having to wait 30 minutes to an
+hour to get a connection that would only last for 2 minutes if I was
+lucky to being able to obtain a relatively stable connection within a
+few minutes.
+
+I also encountered another kernel issue, but I haven't seen it in a
+while. That issue was characterized by "iwlagn 0000:03:00.0: Stopping
+AGG while state not ON or starting". After that went into the dmesg
+output, it looked like I was transmitting, but I never saw a single
+response from the outside world until I did "modprobe -r iwlagn &&
+modprobe iwlagn". I believe that this issue was present in kernel
+3.1.0-rc4, but I could be off by an rc or two. It normally occurred
+within 5 to 15 mnutes and only occurred if I had passed 11n_disable=1
+to the kernel module. I don't pass that anymore, so I don't know if it
+is still a problem.
+
+With that said, I discovered issues in other areas of the wireless
+stack. One is that Network Manager has a 25-second hard-coded timeout
+(in nm-device-wifi.c) when controlling WPA Supplicant. Ignoring the
+hard-coded part, having the time-out isn't so bad until you consider
+that WPA Supplicant will enter an infinite retry loop whenever Network
+Manager asks it to try connecting to an access point that is either
+malfunctioning or cannot hear your wireless NIC. Furthermore, if you
+are in an area where multiple access points use the same SSID, WPA
+supplicant will try to connect to each one with its own 9 second
+timeout, so Network Manager will kill it before it has gone through
+the entire list. I don't know if the 9 second timeout is hard coded,
+but the kernel lists 3 direct probe attempts in the dmesg output and
+if all 3 fail, WPA Supplicant will wait precisely 9 seconds (from the
+first one) before it tries something else. I imgaine that if someone
+patched the stack to implements some callbacks, things would become
+much better when they don't work the first time. With that said, WPA
+Supplicant needs a callback from the kernel when association fails and
+either WPA Supplicant, Network Manager or both need to be patched so
+that WPA Supplicant will not enter an infinite retry loop and instead
+it will give Network Manager a failure callback so that it can try
+something else.
+
+This might be the wrong mailing list to discuss issues that reside
+entirely in userland, but since I described a few other issues that
+were sort of a mix of both, I think I will throw in the other two that
+I found for completeness. With that said, another issue that sometimes
+happens is that the kernel loses the wireless access point
+association. If I do this manually, I can just use iwconfig to make
+the kerenl reassociate, but if that happens with Network Manager, it
+kills the entire connection and starts from scratch. This leads us to
+the last issue I identified, which is that dhclient can be horribly
+slow at times such that even if things work perfectly, getting a DHCP
+lease takes what feels like ages. This can be fixed by implementing
+RFC 4436 like Apple did in its products. It can also be worked around
+by configuring it to make an attempt every few seconds rather than
+every minute, which coincidentally, is the exact time that it takes
+for dhclient to time itself out and quit, making Network Manager kill
+an otherwise good connection. I reported this last year to my
+distribution, which has since changed the default config file, but in
+the course of diagnosing this year's problems, I managed to find
+various LUG mailing lists discussing this problem. Their workaround
+was to run dhclient manually, which causes zombie processes to be made
+and it really doesn't seem like the right solution to this issue.
+
+Anyway, that is everything that I know about this issue. I am right
+now sitting on as many as three other issues in other parts of the
+kernel, but I don't plan to report them until I understand them well
+enough to either write patches or post how to reliably reproduce them.
+The last time I posted something on the mailing list, someone named
+Ted yelled at me for asking a stupid question. If that happens again,
+I will probably just unsubscribe and let that be the end of it. I have
+only used Linux for less than 2 years and I am not paid to do this, so
+please be nice.
+
+Yours truly,
+Richard Yao
+
+On Wed, Oct 19, 2011 at 2:01 AM, Norbert Preining <preining@logic.at> wrote:
+> Hi everyone
+>
+> (please Cc),
+>
+> I am currently running 3.1.0-rc10, and I am having a hard time with
+> the wlan network here at the university.
+>
+> For quite some time, like 10min, it is fine, then suddently the
+> iwlagn driver gives up on me and connection is dropped.
+>
+> In the log file I see:
+> [  172.137011] iwlagn 0000:06:00.0: Tx aggregation enabled on ra = 00:24:c4:ab:bd:ef tid = 0
+> [  821.841016] iwlagn 0000:06:00.0: Tx aggregation enabled on ra = 00:24:c4:ab:bd:ef tid = 6
+> [ 1095.580735] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
+> [ 1095.780076] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
+> [ 1095.980101] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
+> [ 1096.180117] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
+> [ 1105.255464] wlan0: deauthenticating from 00:24:c4:ab:bd:ef by local choice (reason=2)
+> [ 1105.255519] iwlagn 0000:06:00.0: Stopping AGG while state not ON or starting
+> [ 1105.265581] cfg80211: Calling CRDA for country: JP
+> [ 1105.271476] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 1)
+> [ 1105.468105] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 2)
+> [ 1105.668110] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 3)
+> [ 1105.868090] wlan0: authentication with 00:24:c4:ab:bd:e0 timed out
+> [ 1113.667890] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
+> [ 1113.864116] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3)
+> [ 1114.064095] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3)
+> [ 1114.264109] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
+>
+> Somewhere around 1100 the connection is gone and never comes back again.
+>
+> I tried removing the driver module from the kernel and reinserting it,
+> tried to turn on and off the hardware swithc (rfkill), all without
+> no success, the wlan connection remains dead until I reboot.
+>
+> I am not sure exactely when it started, I guess somewhere in the
+> 3.1 cycle, before I was permanently working wiht wlan, now I always
+> plug in the cable.
+>
+> If there is any way to track down this, or any suggestions how I can
+> debug it, please let me know.
+>
+> Hardware: Sony VGN-Z11, Intel(R) WiFi Link 5100 AGN, REV=0x54
+> L1 Enabled; Disabling L0S
+> device EEPROM VER=0x11e, CALIB=0x4
+> Device SKU: 0Xf0
+> Tunable channels: 13 802.11bg, 24 802.11a channels
+> loaded firmware version 8.83.5.1 build 33692 (EXP)
+>
+>
+> On the other hand, the same laptop with the very same configuration
+> works very nicely in my flat's wlan, which is some dirt cheap Japanese
+> only wlan router.
+>
+> Best wishes and thanks a lot
+>
+> Norbert
+> ------------------------------------------------------------------------
+> Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+> JAIST, Japan                                 TeX Live & Debian Developer
+> DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+> ------------------------------------------------------------------------
+> DITHERINGTON (n)
+> Sudden access to panic experienced by one who realises that he is
+> being drawn inexorably into a clabby (q.v.) conversation, i.e. one he
+> has no hope of enjoying, benefiting from or understanding.
+>                        --- Douglas Adams, The Meaning of Liff
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
