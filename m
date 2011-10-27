@@ -1,55 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52755 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753298Ab1JYKKY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 06:10:24 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
-	<athiruve@qca.qualcomm.com>
-Subject: [PATCH 01/34] ath6kl: Pass ath6kl structure to ath6kl_init() instead of net_device
-Date: Tue, 25 Oct 2011 15:39:57 +0530
-Message-ID: <1319537430-12459-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_121028_840131_89AEFACC)
-In-Reply-To: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
+Received: from zfrontend1.aha.ru ([195.2.83.147]:44221 "EHLO aha.ru"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750895Ab1J0MxP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Oct 2011 08:53:15 -0400
+From: "werner" <w.landgraf@ru.ru>
+Subject: 3.1-rc9 and 3.1 wifi problem , problem continues with 3.1
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	dave.taht@gmail.com, rientjes@google.com, arend@broadcom.com,
+	toralf.foerster@gmx.de, wey-yi.w.guy@intel.com,
+	ilw@linux.intel.com, larry.finger@gmail.com
+Date: Thu, 27 Oct 2011 08:53:10 -0400
+Message-ID: <web-634287632@zbackend1.aha.ru> (sfid-20111027_145329_654088_86089A35)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"; format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ar is again taken from private area of net_device in ath6kl_init(), pass
-ar directly.
+With the patch sent by Guy, Wey-Yi W , now wifi works at 
+that laptop.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Werner Landgraf
 ---
- drivers/net/wireless/ath/ath6kl/init.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index d161862..34f8b78 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1461,9 +1461,8 @@ static int ath6kl_init_hw_params(struct ath6kl *ar)
- 	return 0;
- }
- 
--static int ath6kl_init(struct net_device *dev)
-+static int ath6kl_init(struct ath6kl *ar)
- {
--	struct ath6kl *ar = ath6kl_priv(dev);
- 	int status = 0;
- 	s32 timeleft;
- 
-@@ -1631,7 +1630,7 @@ int ath6kl_core_init(struct ath6kl *ar)
- 	if (ret)
- 		goto err_htc_cleanup;
- 
--	ret = ath6kl_init(ar->net_dev);
-+	ret = ath6kl_init(ar);
- 	if (ret)
- 		goto err_htc_cleanup;
- 
--- 
-1.7.0.4
-
+Professional hosting for everyone - http://www.host.ru
