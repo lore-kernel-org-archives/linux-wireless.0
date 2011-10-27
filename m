@@ -1,150 +1,265 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:60954 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753921Ab1JAJCA (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:38784 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753216Ab1J0Pse (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Oct 2011 05:02:00 -0400
-Subject: Re: [PATCH 1/1] linux-firmware: Add new firmware image for ath6kl
- driver
-From: David Woodhouse <dwmw2@infradead.org>
-To: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Sat, 01 Oct 2011 10:01:51 +0100
-In-Reply-To: <1317455234-2416-1-git-send-email-senthilb@qca.qualcomm.com>
-References: <1317455234-2416-1-git-send-email-senthilb@qca.qualcomm.com>
-Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature";
-	boundary="=-gnLRRyix/V3KOVka92L4"
-Message-ID: <1317459713.18433.42.camel@shinybook.infradead.org> (sfid-20111001_110213_846882_02ED8A35)
-Mime-Version: 1.0
+	Thu, 27 Oct 2011 11:48:34 -0400
+Subject: [PATCH 05/10] ath6kl: merge ath6kl_init() to ath6kl_core_init()
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 27 Oct 2011 18:48:29 +0300
+Message-ID: <20111027154829.23519.93667.stgit@localhost6.localdomain6> (sfid-20111027_174837_407560_C8134BFB)
+In-Reply-To: <20111027154746.23519.39680.stgit@localhost6.localdomain6>
+References: <20111027154746.23519.39680.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In preparation for splitting module initialisation and hardware boot
+code from each other.
 
---=-gnLRRyix/V3KOVka92L4
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c |  148 ++++++++++++++------------------
+ 1 files changed, 65 insertions(+), 83 deletions(-)
 
-On Sat, 2011-10-01 at 13:17 +0530, Senthil Balasubramanian wrote:
-> This patch adds the inital version of newly formatted firmware
-> for ath6kl driver.
->=20
-> Signed-off-by: Senthil Balasubramanian <senthilb@qca.qualcomm.com>=20
-
-Pushed to the tree at git.infradead.org/users/dwmw2/linux-firmware.git
-(until kernel.org is running again). Thanks.
-
---=20
-dwmw2
-
---=-gnLRRyix/V3KOVka92L4
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIITvzCCBi0w
-ggQVoAMCAQICAwCtOTANBgkqhkiG9w0BAQUFADBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwG
-A1UECxMVaHR0cDovL3d3dy5DQWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290
-MB4XDTEwMDYxMjEwMDMwMFoXDTEyMDYxMTEwMDMwMFowgegxGDAWBgNVBAMTD0RhdmlkIFdvb2Ro
-b3VzZTEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzEfMB0GCSqGSIb3DQEJARYQ
-ZGF2aWRAd29vZGhvdS5zZTEoMCYGCSqGSIb3DQEJARYZZGF2aWQud29vZGhvdXNlQGludGVsLmNv
-bTEkMCIGCSqGSIb3DQEJARYVZHdtdzJAbGludXguaW50ZWwuY29tMTcwNQYJKoZIhvcNAQkBFigx
-MDg3MmEwN2Y2ZDdlMWUwN2Y1NWZmMTcyYTAzYjMwMGVlYWFkMjAzMIIBIjANBgkqhkiG9w0BAQEF
-AAOCAQ8AMIIBCgKCAQEA29OPhNvMxBMW83psWdVhZDtmJvgN+tBEp1r6MZamONsR0k81a6fDFwJz
-M0fEzEbV/bDG102QyX/xXC/0IpKV4acnqESC+sTHUmRwxfRKGNmR6t2iwEs2Y5kQDF31JxbCt49w
-AlhLMAa+e1MBZ7vO0uDmRuJpS7+ZdHboq7cdk6dyoeumGv5sl6U/SPK9rL4KzULtqQaw6Wucd6MJ
-irIggEHfCNqeT5a+TyuH4zKCwv9nblIGXq9wt+yqu5t/RicGaKPnXSqo/WpJAGggaO8g92mnYlVl
-Wu/b9bYVISwQ8LI0sEtjN1WnP5AQO2f59bdPAVk4Rn25HceOO4NvlG47LwIDAQABo4IBcTCCAW0w
-DAYDVR0TAQH/BAIwADBWBglghkgBhvhCAQ0ESRZHVG8gZ2V0IHlvdXIgb3duIGNlcnRpZmljYXRl
-IGZvciBGUkVFIGhlYWQgb3ZlciB0byBodHRwOi8vd3d3LkNBY2VydC5vcmcwQAYDVR0lBDkwNwYI
-KwYBBQUHAwQGCCsGAQUFBwMCBgorBgEEAYI3CgMEBgorBgEEAYI3CgMDBglghkgBhvhCBAEwMgYI
-KwYBBQUHAQEEJjAkMCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5jYWNlcnQub3JnMIGOBgNVHREE
-gYYwgYOBE2R3bXcyQGluZnJhZGVhZC5vcmeBEGRhdmlkQHdvb2Rob3Uuc2WBGWRhdmlkLndvb2Ro
-b3VzZUBpbnRlbC5jb22BFWR3bXcyQGxpbnV4LmludGVsLmNvbYEoMTA4NzJhMDdmNmQ3ZTFlMDdm
-NTVmZjE3MmEwM2IzMDBlZWFhZDIwMzANBgkqhkiG9w0BAQUFAAOCAgEAXm+SUO1/TSeGJK0D9pAm
-E9LTFkdlgbaD6HXGbS0TNUDyfLFkacc2F1JLoWcoFwcL6Rup5o/Rt4QYDBPWgF9EXFvqsc9SLrSe
-X6VwRj7vI40x19ThE2A1Y8DzBJ9+2MzIR6hd5n9axATCOIRhmZVjX1cRkwshEGvAn8mTYGhWttkx
-WhBcaAuCd9OOQqUwfxTUXiSfVumPUNrrbuvaH6MjrNjDrXdvicL26Y+AzFSJn3o8DShjjMhkUx9l
-qV46BpjSGIuvkHhcLkGJ3Y1YmtOX1hwT+Z+d/10WJh8ZG2FqIlJtPtqvHK5ol/KvdzMwmMBd4qFj
-YAO32vf7zde+jdTHNp2Mb15bJHhNdGOsZicpGue42fg3deZQFe1E2KBl9VO09fjncjt9YdhCUtxO
-buDnoOixY6YSJgSmGJB2Xs+TE5gps4UiiOYen+NeJkuwg5x9vmyraU061Uc0csfc/E5IoxhTX/Pc
-H+zXiER8aSjA/9MXQfrJM2xkY6UNKlDbCYSLKnH/O02eu7Hma6lB4wtcY8ECu7LJuFY2448Quolv
-SQfQLRvKauGFGUAhbPClOxObuv/fNzA+lfg8DX2y5jXDutnpvBGgsplKxoah01SZfR9zNqxodPx2
-srKhujBNB+WiAZntMf0xp4e0JPMlTFxm3tbY9wuBSyTJyueO9hUkbN4wggYtMIIEFaADAgECAgMA
-rTkwDQYJKoZIhvcNAQEFBQAwVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6
-Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdDAeFw0xMDA2MTIx
-MDAzMDBaFw0xMjA2MTExMDAzMDBaMIHoMRgwFgYDVQQDEw9EYXZpZCBXb29kaG91c2UxIjAgBgkq
-hkiG9w0BCQEWE2R3bXcyQGluZnJhZGVhZC5vcmcxHzAdBgkqhkiG9w0BCQEWEGRhdmlkQHdvb2Ro
-b3Uuc2UxKDAmBgkqhkiG9w0BCQEWGWRhdmlkLndvb2Rob3VzZUBpbnRlbC5jb20xJDAiBgkqhkiG
-9w0BCQEWFWR3bXcyQGxpbnV4LmludGVsLmNvbTE3MDUGCSqGSIb3DQEJARYoMTA4NzJhMDdmNmQ3
-ZTFlMDdmNTVmZjE3MmEwM2IzMDBlZWFhZDIwMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
-ggEBANvTj4TbzMQTFvN6bFnVYWQ7Zib4DfrQRKda+jGWpjjbEdJPNWunwxcCczNHxMxG1f2wxtdN
-kMl/8Vwv9CKSleGnJ6hEgvrEx1JkcMX0ShjZkerdosBLNmOZEAxd9ScWwrePcAJYSzAGvntTAWe7
-ztLg5kbiaUu/mXR26Ku3HZOncqHrphr+bJelP0jyvay+Cs1C7akGsOlrnHejCYqyIIBB3wjank+W
-vk8rh+MygsL/Z25SBl6vcLfsqrubf0YnBmij510qqP1qSQBoIGjvIPdpp2JVZVrv2/W2FSEsEPCy
-NLBLYzdVpz+QEDtn+fW3TwFZOEZ9uR3HjjuDb5RuOy8CAwEAAaOCAXEwggFtMAwGA1UdEwEB/wQC
-MAAwVgYJYIZIAYb4QgENBEkWR1RvIGdldCB5b3VyIG93biBjZXJ0aWZpY2F0ZSBmb3IgRlJFRSBo
-ZWFkIG92ZXIgdG8gaHR0cDovL3d3dy5DQWNlcnQub3JnMEAGA1UdJQQ5MDcGCCsGAQUFBwMEBggr
-BgEFBQcDAgYKKwYBBAGCNwoDBAYKKwYBBAGCNwoDAwYJYIZIAYb4QgQBMDIGCCsGAQUFBwEBBCYw
-JDAiBggrBgEFBQcwAYYWaHR0cDovL29jc3AuY2FjZXJ0Lm9yZzCBjgYDVR0RBIGGMIGDgRNkd213
-MkBpbmZyYWRlYWQub3JngRBkYXZpZEB3b29kaG91LnNlgRlkYXZpZC53b29kaG91c2VAaW50ZWwu
-Y29tgRVkd213MkBsaW51eC5pbnRlbC5jb22BKDEwODcyYTA3ZjZkN2UxZTA3ZjU1ZmYxNzJhMDNi
-MzAwZWVhYWQyMDMwDQYJKoZIhvcNAQEFBQADggIBAF5vklDtf00nhiStA/aQJhPS0xZHZYG2g+h1
-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
-AAAAAA==
-
-
---=-gnLRRyix/V3KOVka92L4--
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 0564add..f5d0b99 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1421,20 +1421,62 @@ static int ath6kl_init_hw_params(struct ath6kl *ar)
+ 	return 0;
+ }
+ 
+-static int ath6kl_init(struct ath6kl *ar)
++int ath6kl_core_init(struct ath6kl *ar)
+ {
+-	int status = 0;
++	struct ath6kl_bmi_target_info targ_info;
+ 	s32 timeleft;
+ 	struct net_device *ndev;
+-	int i;
++	int i, ret = 0;
+ 
+-	if (!ar)
+-		return -EIO;
++	ar->ath6kl_wq = create_singlethread_workqueue("ath6kl");
++	if (!ar->ath6kl_wq)
++		return -ENOMEM;
++
++	ret = ath6kl_bmi_init(ar);
++	if (ret)
++		goto err_wq;
++
++	ret = ath6kl_hif_power_on(ar);
++	if (ret)
++		goto err_bmi_cleanup;
++
++	ret = ath6kl_bmi_get_target_info(ar, &targ_info);
++	if (ret)
++		goto err_power_off;
++
++	ar->version.target_ver = le32_to_cpu(targ_info.version);
++	ar->target_type = le32_to_cpu(targ_info.type);
++	ar->wiphy->hw_version = le32_to_cpu(targ_info.version);
++
++	ret = ath6kl_init_hw_params(ar);
++	if (ret)
++		goto err_power_off;
++
++	ret = ath6kl_configure_target(ar);
++	if (ret)
++		goto err_power_off;
++
++	ar->htc_target = ath6kl_htc_create(ar);
++
++	if (!ar->htc_target) {
++		ret = -ENOMEM;
++		goto err_power_off;
++	}
++
++	ret = ath6kl_fetch_firmwares(ar);
++	if (ret)
++		goto err_htc_cleanup;
++
++	/* FIXME: we should free all firmwares in the error cases below */
++
++	ret = ath6kl_init_upload(ar);
++	if (ret)
++		goto err_htc_cleanup;
+ 
+ 	/* Do we need to finish the BMI phase */
+ 	if (ath6kl_bmi_done(ar)) {
+-		status = -EIO;
+-		goto ath6kl_init_done;
++		ret = -EIO;
++		goto err_htc_cleanup;
+ 	}
+ 
+ 	/* Indicate that WMI is enabled (although not ready yet) */
+@@ -1442,18 +1484,18 @@ static int ath6kl_init(struct ath6kl *ar)
+ 	ar->wmi = ath6kl_wmi_init(ar);
+ 	if (!ar->wmi) {
+ 		ath6kl_err("failed to initialize wmi\n");
+-		status = -EIO;
+-		goto ath6kl_init_done;
++		ret = -EIO;
++		goto err_htc_cleanup;
+ 	}
+ 
+ 	ath6kl_dbg(ATH6KL_DBG_TRC, "%s: got wmi @ 0x%p.\n", __func__, ar->wmi);
+ 
+-	status = ath6kl_register_ieee80211_hw(ar);
+-	if (status)
++	ret = ath6kl_register_ieee80211_hw(ar);
++	if (ret)
+ 		goto err_node_cleanup;
+ 
+-	status = ath6kl_debug_init(ar);
+-	if (status) {
++	ret = ath6kl_debug_init(ar);
++	if (ret) {
+ 		wiphy_unregister(ar->wiphy);
+ 		goto err_node_cleanup;
+ 	}
+@@ -1471,7 +1513,7 @@ static int ath6kl_init(struct ath6kl *ar)
+ 
+ 	if (!ndev) {
+ 		ath6kl_err("Failed to instantiate a network device\n");
+-		status = -ENOMEM;
++		ret = -ENOMEM;
+ 		wiphy_unregister(ar->wiphy);
+ 		goto err_debug_init;
+ 	}
+@@ -1486,12 +1528,12 @@ static int ath6kl_init(struct ath6kl *ar)
+ 	 * size.
+ 	 */
+ 	if (ath6kl_htc_wait_target(ar->htc_target)) {
+-		status = -EIO;
++		ret = -EIO;
+ 		goto err_if_deinit;
+ 	}
+ 
+ 	if (ath6kl_init_service_ep(ar)) {
+-		status = -EIO;
++		ret = -EIO;
+ 		goto err_cleanup_scatter;
+ 	}
+ 
+@@ -1514,9 +1556,8 @@ static int ath6kl_init(struct ath6kl *ar)
+ 	ath6kl_cookie_init(ar);
+ 
+ 	/* start HTC */
+-	status = ath6kl_htc_start(ar->htc_target);
+-
+-	if (status) {
++	ret = ath6kl_htc_start(ar->htc_target);
++	if (ret) {
+ 		ath6kl_cookie_cleanup(ar);
+ 		goto err_rxbuf_cleanup;
+ 	}
+@@ -1532,13 +1573,13 @@ static int ath6kl_init(struct ath6kl *ar)
+ 	if (ar->version.abi_ver != ATH6KL_ABI_VERSION) {
+ 		ath6kl_err("abi version mismatch: host(0x%x), target(0x%x)\n",
+ 			   ATH6KL_ABI_VERSION, ar->version.abi_ver);
+-		status = -EIO;
++		ret = -EIO;
+ 		goto err_htc_stop;
+ 	}
+ 
+ 	if (!timeleft || signal_pending(current)) {
+ 		ath6kl_err("wmi is not ready or wait was interrupted\n");
+-		status = -EIO;
++		ret = -EIO;
+ 		goto err_htc_stop;
+ 	}
+ 
+@@ -1554,8 +1595,8 @@ static int ath6kl_init(struct ath6kl *ar)
+ 	ar->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
+ 
+ 	for (i = 0; i < MAX_NUM_VIF; i++) {
+-		status = ath6kl_target_config_wlan_params(ar, i);
+-		if (status)
++		ret = ath6kl_target_config_wlan_params(ar, i);
++		if (ret)
+ 			goto err_htc_stop;
+ 	}
+ 
+@@ -1565,7 +1606,7 @@ static int ath6kl_init(struct ath6kl *ar)
+ 	 */
+ 	memcpy(ndev->dev_addr, ar->mac_addr, ETH_ALEN);
+ 
+-	return status;
++	return ret;
+ 
+ err_htc_stop:
+ 	ath6kl_htc_stop(ar->htc_target);
+@@ -1585,65 +1626,6 @@ err_node_cleanup:
+ 	ath6kl_wmi_shutdown(ar->wmi);
+ 	clear_bit(WMI_ENABLED, &ar->flag);
+ 	ar->wmi = NULL;
+-
+-ath6kl_init_done:
+-	return status;
+-}
+-
+-int ath6kl_core_init(struct ath6kl *ar)
+-{
+-	int ret = 0;
+-	struct ath6kl_bmi_target_info targ_info;
+-
+-	ar->ath6kl_wq = create_singlethread_workqueue("ath6kl");
+-	if (!ar->ath6kl_wq)
+-		return -ENOMEM;
+-
+-	ret = ath6kl_bmi_init(ar);
+-	if (ret)
+-		goto err_wq;
+-
+-	ret = ath6kl_hif_power_on(ar);
+-	if (ret)
+-		goto err_bmi_cleanup;
+-
+-	ret = ath6kl_bmi_get_target_info(ar, &targ_info);
+-	if (ret)
+-		goto err_power_off;
+-
+-	ar->version.target_ver = le32_to_cpu(targ_info.version);
+-	ar->target_type = le32_to_cpu(targ_info.type);
+-	ar->wiphy->hw_version = le32_to_cpu(targ_info.version);
+-
+-	ret = ath6kl_init_hw_params(ar);
+-	if (ret)
+-		goto err_power_off;
+-
+-	ret = ath6kl_configure_target(ar);
+-	if (ret)
+-		goto err_power_off;
+-
+-	ar->htc_target = ath6kl_htc_create(ar);
+-
+-	if (!ar->htc_target) {
+-		ret = -ENOMEM;
+-		goto err_power_off;
+-	}
+-
+-	ret = ath6kl_fetch_firmwares(ar);
+-	if (ret)
+-		goto err_htc_cleanup;
+-
+-	ret = ath6kl_init_upload(ar);
+-	if (ret)
+-		goto err_htc_cleanup;
+-
+-	ret = ath6kl_init(ar);
+-	if (ret)
+-		goto err_htc_cleanup;
+-
+-	return ret;
+-
+ err_htc_cleanup:
+ 	ath6kl_htc_cleanup(ar->htc_target);
+ err_power_off:
 
