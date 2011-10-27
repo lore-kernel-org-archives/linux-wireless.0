@@ -1,226 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4324 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753442Ab1JLSvr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 14:51:47 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Alwin Beukers" <alwin@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 15/22] brcm80211: removed unused functions
-Date: Wed, 12 Oct 2011 20:51:25 +0200
-Message-ID: <1318445492-24207-16-git-send-email-arend@broadcom.com> (sfid-20111012_205153_538636_94F5ABCB)
-In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
-References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:33887 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993Ab1J0Tcz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Oct 2011 15:32:55 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1RJVh8-0005p2-Kt
+	for linux-wireless@vger.kernel.org; Thu, 27 Oct 2011 21:32:54 +0200
+Subject: [RFC v2 13/12] cfg80211/mac80211: allow management TX to not wait
+ for ACK
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <20111021142322.229128720@sipsolutions.net> (sfid-20111021_162510_209354_8FBBB6EB)
+References: <20111021142322.229128720@sipsolutions.net>
+	 (sfid-20111021_162510_209354_8FBBB6EB)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 Oct 2011 21:32:53 +0200
+Message-ID: <1319743973.32221.4.camel@jlt3.sipsolutions.net> (sfid-20111027_213258_839064_E81CD577)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alwin Beukers <alwin@broadcom.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Removed brcmu_bitcount, brcmu_mhz2channel, brcmu_chspec_ctlchan.
+For probe responses it can be useful to not wait for ACK
+to save airtime, so allow userspace to request not waiting
+with a new nl80211 flag.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Since mac80211 needs to be updated for the new function
+prototype anyway implement it right away -- it's just a
+few lines of code.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/stf.c      |    2 -
- drivers/net/wireless/brcm80211/brcmutil/utils.c    |   14 ---
- drivers/net/wireless/brcm80211/brcmutil/wifi.c     |   93 --------------------
- .../net/wireless/brcm80211/include/brcmu_utils.h   |    1 -
- .../net/wireless/brcm80211/include/brcmu_wifi.h    |   28 ------
- 5 files changed, 0 insertions(+), 138 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 +-
+ include/linux/nl80211.h                    |    7 ++++
+ include/net/cfg80211.h                     |    2 -
+ net/mac80211/cfg.c                         |   11 +++++--
+ net/wireless/core.h                        |    2 -
+ net/wireless/mlme.c                        |    5 ++-
+ net/wireless/nl80211.c                     |   43 +++++++++++++++++------------
+ 7 files changed, 48 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/stf.c b/drivers/net/wireless/brcm80211/brcmsmac/stf.c
-index f1bd1bf..d8f528e 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/stf.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/stf.c
-@@ -30,8 +30,6 @@
- #define BRCMS_STF_SS_STBC_RX(wlc) (BRCMS_ISNPHY(wlc->band) && \
- 	NREV_GT(wlc->band->phyrev, 3) && NREV_LE(wlc->band->phyrev, 6))
- 
--#define BRCMS_BITSCNT(x)	brcmu_bitcount((u8 *)&(x), sizeof(u8))
--
- #define NSTS_1	1
- #define NSTS_2	2
- #define NSTS_3	3
-diff --git a/drivers/net/wireless/brcm80211/brcmutil/utils.c b/drivers/net/wireless/brcm80211/brcmutil/utils.c
-index e96bdbf..990cb2e 100644
---- a/drivers/net/wireless/brcm80211/brcmutil/utils.c
-+++ b/drivers/net/wireless/brcm80211/brcmutil/utils.c
-@@ -585,17 +585,3 @@ u8 brcmu_mw_to_qdbm(u16 mw)
- }
- EXPORT_SYMBOL(brcmu_mw_to_qdbm);
- 
--uint brcmu_bitcount(u8 *bitmap, uint length)
--{
--	uint bitcount = 0, i;
--	u8 tmp;
--	for (i = 0; i < length; i++) {
--		tmp = bitmap[i];
--		while (tmp) {
--			bitcount++;
--			tmp &= (tmp - 1);
--		}
--	}
--	return bitcount;
--}
--EXPORT_SYMBOL(brcmu_bitcount);
-diff --git a/drivers/net/wireless/brcm80211/brcmutil/wifi.c b/drivers/net/wireless/brcm80211/brcmutil/wifi.c
-index 509e25c..e8d3bf2 100644
---- a/drivers/net/wireless/brcm80211/brcmutil/wifi.c
-+++ b/drivers/net/wireless/brcm80211/brcmutil/wifi.c
-@@ -41,96 +41,3 @@ bool brcmu_chspec_malformed(u16 chanspec)
- 	return false;
- }
- EXPORT_SYMBOL(brcmu_chspec_malformed);
--
--/*
-- * This function returns the channel number that control traffic is being sent
-- * on, for legacy channels this is just the channel number, for 40MHZ channels
-- * it is the upper or lower 20MHZ sideband depending on the chanspec selected.
-- */
--u8 brcmu_chspec_ctlchan(u16 chspec)
--{
--	u8 ctl_chan;
--
--	/* Is there a sideband ? */
--	if (CHSPEC_CTL_SB(chspec) == WL_CHANSPEC_CTL_SB_NONE) {
--		return CHSPEC_CHANNEL(chspec);
--	} else {
--		/*
--		 * we only support 40MHZ with sidebands. chanspec channel holds
--		 * the centre frequency, use that and the side band information
--		 * to reconstruct the control channel number
--		 */
--		if (CHSPEC_CTL_SB(chspec) == WL_CHANSPEC_CTL_SB_UPPER)
--			/*
--			 * control chan is the upper 20 MHZ SB of the
--			 * 40MHZ channel
--			 */
--			ctl_chan = upper_20_sb(CHSPEC_CHANNEL(chspec));
--		else
--			/*
--			 * control chan is the lower 20 MHZ SB of the
--			 * 40MHZ channel
--			 */
--			ctl_chan = lower_20_sb(CHSPEC_CHANNEL(chspec));
--	}
--
--	return ctl_chan;
--}
--EXPORT_SYMBOL(brcmu_chspec_ctlchan);
--
--/*
-- * Return the channel number for a given frequency and base frequency.
-- * The returned channel number is relative to the given base frequency.
-- * If the given base frequency is zero, a base frequency of 5 GHz is assumed for
-- * frequencies from 5 - 6 GHz, and 2.407 GHz is assumed for 2.4 - 2.5 GHz.
-- *
-- * Frequency is specified in MHz.
-- * The base frequency is specified as (start_factor * 500 kHz).
-- * Constants WF_CHAN_FACTOR_2_4_G, WF_CHAN_FACTOR_5_G are defined for
-- * 2.4 GHz and 5 GHz bands.
-- *
-- * The returned channel will be in the range [1, 14] in the 2.4 GHz band
-- * and [0, 200] otherwise.
-- * -1 is returned if the start_factor is WF_CHAN_FACTOR_2_4_G and the
-- * frequency is not a 2.4 GHz channel, or if the frequency is not and even
-- * multiple of 5 MHz from the base frequency to the base plus 1 GHz.
-- *
-- * Reference 802.11 REVma, section 17.3.8.3, and 802.11B section 18.4.6.2
-- */
--int brcmu_mhz2channel(uint freq, uint start_factor)
--{
--	int ch = -1;
--	uint base;
--	int offset;
--
--	/* take the default channel start frequency */
--	if (start_factor == 0) {
--		if (freq >= 2400 && freq <= 2500)
--			start_factor = WF_CHAN_FACTOR_2_4_G;
--		else if (freq >= 5000 && freq <= 6000)
--			start_factor = WF_CHAN_FACTOR_5_G;
--	}
--
--	if (freq == 2484 && start_factor == WF_CHAN_FACTOR_2_4_G)
--		return 14;
--
--	base = start_factor / 2;
--
--	/* check that the frequency is in 1GHz range of the base */
--	if ((freq < base) || (freq > base + 1000))
--		return -1;
--
--	offset = freq - base;
--	ch = offset / 5;
--
--	/* check that frequency is a 5MHz multiple from the base */
--	if (offset != (ch * 5))
--		return -1;
--
--	/* restricted channel range check for 2.4G */
--	if (start_factor == WF_CHAN_FACTOR_2_4_G && (ch < 1 || ch > 13))
--		return -1;
--
--	return ch;
--}
--EXPORT_SYMBOL(brcmu_mhz2channel);
-diff --git a/drivers/net/wireless/brcm80211/include/brcmu_utils.h b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-index a7d3df2..96f05d7 100644
---- a/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-+++ b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-@@ -218,6 +218,5 @@ extern u8 brcmu_mw_to_qdbm(u16 mw);
- 
- extern uint brcmu_mkiovar(char *name, char *data, uint datalen,
- 			  char *buf, uint len);
--extern uint brcmu_bitcount(u8 *bitmap, uint bytelength);
- 
- #endif				/* _BRCMU_UTILS_H_ */
-diff --git a/drivers/net/wireless/brcm80211/include/brcmu_wifi.h b/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
-index 452bd42..5b1aca7 100644
---- a/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
-+++ b/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
-@@ -176,34 +176,6 @@ static inline bool ac_bitmap_tst(u8 bitmap, int prec)
+--- a/include/linux/nl80211.h	2011-10-27 21:08:01.000000000 +0200
++++ b/include/linux/nl80211.h	2011-10-27 21:13:13.000000000 +0200
+@@ -1147,6 +1147,11 @@ enum nl80211_commands {
+  * @NL80211_ATTR_FEATURE_FLAGS: This u32 attribute contains flags from
+  *	&enum nl80211_feature_flags and is advertised in wiphy information.
+  *
++ * @NL80211_ATTR_DONT_WAIT_FOR_ACK: Used with %NL80211_CMD_FRAME, this tells
++ *	the driver to not wait for an acknowledgement. Note that due to this,
++ *	it will also not give a status callback nor return a cookie. This is
++ *	mostly useful for probe responses to save airtime.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
   */
- extern bool brcmu_chspec_malformed(u16 chanspec);
+@@ -1379,6 +1384,8 @@ enum nl80211_attrs {
  
--/*
-- * This function returns the channel number that control traffic is being sent
-- * on, for legacy channels this is just the channel number, for 40MHZ channels
-- * it is the upper or lower 20MHZ sideband depending on the chanspec selected.
-- */
--extern u8 brcmu_chspec_ctlchan(u16 chspec);
+ 	NL80211_ATTR_FEATURE_FLAGS,
+ 
++	NL80211_ATTR_DONT_WAIT_FOR_ACK,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+--- a/net/wireless/core.h	2011-10-27 21:08:01.000000000 +0200
++++ b/net/wireless/core.h	2011-10-27 21:12:23.000000000 +0200
+@@ -378,7 +378,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg8021
+ 			  enum nl80211_channel_type channel_type,
+ 			  bool channel_type_valid, unsigned int wait,
+ 			  const u8 *buf, size_t len, bool no_cck,
+-			  u64 *cookie);
++			  bool dont_wait_for_ack, u64 *cookie);
+ 
+ /* SME */
+ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+--- a/net/wireless/mlme.c	2011-10-27 21:08:01.000000000 +0200
++++ b/net/wireless/mlme.c	2011-10-27 21:13:52.000000000 +0200
+@@ -904,7 +904,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg8021
+ 			  enum nl80211_channel_type channel_type,
+ 			  bool channel_type_valid, unsigned int wait,
+ 			  const u8 *buf, size_t len, bool no_cck,
+-			  u64 *cookie)
++			  bool dont_wait_for_ack, u64 *cookie)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	const struct ieee80211_mgmt *mgmt;
+@@ -995,7 +995,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg8021
+ 	/* Transmit the Action frame as requested by user space */
+ 	return rdev->ops->mgmt_tx(&rdev->wiphy, dev, chan, offchan,
+ 				  channel_type, channel_type_valid,
+-				  wait, buf, len, no_cck, cookie);
++				  wait, buf, len, no_cck, dont_wait_for_ack,
++				  cookie);
+ }
+ 
+ bool cfg80211_rx_mgmt(struct net_device *dev, int freq, const u8 *buf,
+--- a/net/wireless/nl80211.c	2011-10-27 21:08:01.000000000 +0200
++++ b/net/wireless/nl80211.c	2011-10-27 21:14:45.000000000 +0200
+@@ -197,6 +197,7 @@ static const struct nla_policy nl80211_p
+ 	[NL80211_ATTR_TDLS_OPERATION] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_TDLS_SUPPORT] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_TDLS_EXTERNAL_SETUP] = { .type = NLA_FLAG },
++	[NL80211_ATTR_DONT_WAIT_FOR_ACK] = { .type = NLA_FLAG },
+ };
+ 
+ /* policy for the key attributes */
+@@ -5279,10 +5280,11 @@ static int nl80211_tx_mgmt(struct sk_buf
+ 	int err;
+ 	void *hdr;
+ 	u64 cookie;
+-	struct sk_buff *msg;
++	struct sk_buff *msg = NULL;
+ 	unsigned int wait = 0;
+-	bool offchan;
+-	bool no_cck;
++	bool offchan, no_cck, dont_wait_for_ack;
++
++	dont_wait_for_ack = info->attrs[NL80211_ATTR_DONT_WAIT_FOR_ACK];
+ 
+ 	if (!info->attrs[NL80211_ATTR_FRAME] ||
+ 	    !info->attrs[NL80211_ATTR_WIPHY_FREQ])
+@@ -5326,29 +5328,36 @@ static int nl80211_tx_mgmt(struct sk_buf
+ 	if (chan == NULL)
+ 		return -EINVAL;
+ 
+-	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+-	if (!msg)
+-		return -ENOMEM;
 -
--/*
-- * Return the channel number for a given frequency and base frequency.
-- * The returned channel number is relative to the given base frequency.
-- * If the given base frequency is zero, a base frequency of 5 GHz is assumed for
-- * frequencies from 5 - 6 GHz, and 2.407 GHz is assumed for 2.4 - 2.5 GHz.
-- *
-- * Frequency is specified in MHz.
-- * The base frequency is specified as (start_factor * 500 kHz).
-- * Constants WF_CHAN_FACTOR_2_4_G, WF_CHAN_FACTOR_5_G are defined for
-- * 2.4 GHz and 5 GHz bands.
-- *
-- * The returned channel will be in the range [1, 14] in the 2.4 GHz band
-- * and [0, 200] otherwise.
-- * -1 is returned if the start_factor is WF_CHAN_FACTOR_2_4_G and the
-- * frequency is not a 2.4 GHz channel, or if the frequency is not and even
-- * multiple of 5 MHz from the base frequency to the base plus 1 GHz.
-- *
-- * Reference 802.11 REVma, section 17.3.8.3, and 802.11B section 18.4.6.2
-- */
--extern int brcmu_mhz2channel(uint freq, uint start_factor);
+-	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
+-			     NL80211_CMD_FRAME);
 -
- /* Enumerate crypto algorithms */
- #define	CRYPTO_ALGO_OFF			0
- #define	CRYPTO_ALGO_WEP1		1
--- 
-1.7.4.1
+-	if (IS_ERR(hdr)) {
+-		err = PTR_ERR(hdr);
+-		goto free_msg;
++	if (!dont_wait_for_ack) {
++		msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++		if (!msg)
++			return -ENOMEM;
++
++		hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
++				     NL80211_CMD_FRAME);
++
++		if (IS_ERR(hdr)) {
++			err = PTR_ERR(hdr);
++			goto free_msg;
++		}
+ 	}
++
+ 	err = cfg80211_mlme_mgmt_tx(rdev, dev, chan, offchan, channel_type,
+ 				    channel_type_valid, wait,
+ 				    nla_data(info->attrs[NL80211_ATTR_FRAME]),
+ 				    nla_len(info->attrs[NL80211_ATTR_FRAME]),
+-				    no_cck, &cookie);
++				    no_cck, dont_wait_for_ack, &cookie);
+ 	if (err)
+ 		goto free_msg;
+ 
+-	NLA_PUT_U64(msg, NL80211_ATTR_COOKIE, cookie);
++	if (msg) {
++		NLA_PUT_U64(msg, NL80211_ATTR_COOKIE, cookie);
+ 
+-	genlmsg_end(msg, hdr);
+-	return genlmsg_reply(msg, info);
++		genlmsg_end(msg, hdr);
++		return genlmsg_reply(msg, info);
++	}
++
++	return 0;
+ 
+  nla_put_failure:
+ 	err = -ENOBUFS;
+--- a/include/net/cfg80211.h	2011-10-27 21:08:01.000000000 +0200
++++ b/include/net/cfg80211.h	2011-10-27 21:15:55.000000000 +0200
+@@ -1584,7 +1584,7 @@ struct cfg80211_ops {
+ 			  enum nl80211_channel_type channel_type,
+ 			  bool channel_type_valid, unsigned int wait,
+ 			  const u8 *buf, size_t len, bool no_cck,
+-			  u64 *cookie);
++			  bool dont_wait_for_ack, u64 *cookie);
+ 	int	(*mgmt_tx_cancel_wait)(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+ 				       u64 cookie);
+--- a/net/mac80211/cfg.c	2011-10-27 21:08:01.000000000 +0200
++++ b/net/mac80211/cfg.c	2011-10-27 21:23:44.000000000 +0200
+@@ -1936,7 +1936,7 @@ static int ieee80211_mgmt_tx(struct wiph
+ 			     enum nl80211_channel_type channel_type,
+ 			     bool channel_type_valid, unsigned int wait,
+ 			     const u8 *buf, size_t len, bool no_cck,
+-			     u64 *cookie)
++			     bool dont_wait_for_ack, u64 *cookie)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+@@ -1944,10 +1944,15 @@ static int ieee80211_mgmt_tx(struct wiph
+ 	struct sta_info *sta;
+ 	struct ieee80211_work *wk;
+ 	const struct ieee80211_mgmt *mgmt = (void *)buf;
+-	u32 flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
+-		    IEEE80211_TX_CTL_REQ_TX_STATUS;
++	u32 flags;
+ 	bool is_offchan = false;
+ 
++	if (!dont_wait_for_ack)
++		flags = IEEE80211_TX_CTL_NO_ACK;
++	else
++		flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
++			IEEE80211_TX_CTL_REQ_TX_STATUS;
++
+ 	/* Check that we are on the requested channel for transmission */
+ 	if (chan != local->tmp_channel &&
+ 	    chan != local->oper_channel)
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c	2011-10-12 19:22:47.000000000 +0200
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c	2011-10-27 21:21:11.000000000 +0200
+@@ -1732,7 +1732,8 @@ static int ath6kl_mgmt_tx(struct wiphy *
+ 			  struct ieee80211_channel *chan, bool offchan,
+ 			  enum nl80211_channel_type channel_type,
+ 			  bool channel_type_valid, unsigned int wait,
+-			  const u8 *buf, size_t len, bool no_cck, u64 *cookie)
++			  const u8 *buf, size_t len, bool no_cck,
++			  bool dont_wait_for_ack, u64 *cookie)
+ {
+ 	struct ath6kl *ar = ath6kl_priv(dev);
+ 	u32 id;
 
 
