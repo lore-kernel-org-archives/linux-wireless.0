@@ -1,75 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37927 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:58290 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755073Ab1J1IIr (ORCPT
+	with ESMTP id S1751754Ab1J0ThG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 04:08:47 -0400
-Subject: Re: [wireless-next PATCH 1/5] mac80211: Support forcing station to
- disable 11n.
+	Thu, 27 Oct 2011 15:37:06 -0400
+Subject: Re: Re: [PATCH 2/2] iw: show STA flags in station dump
 From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1319778680-11405-1-git-send-email-greearb@candelatech.com> (sfid-20111028_071135_777672_88A08497)
-References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20111028_071135_777672_88A08497)
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Arik Nemtsov <anamtsov@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <4758903.33HQxio52G@helmutmobil.site> (sfid-20111018_192557_977316_266036F5)
+References: <1318929507-11447-1-git-send-email-helmut.schaa@googlemail.com>
+	 <1318929507-11447-2-git-send-email-helmut.schaa@googlemail.com>
+	 <CA+XVXfdKPdwXubpnX50zJRCXaxHpubAd3tDgWrCnQQggXKKhPQ@mail.gmail.com>
+	 <4758903.33HQxio52G@helmutmobil.site>
+	 (sfid-20111018_192557_977316_266036F5)
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 28 Oct 2011 10:08:38 +0200
-Message-ID: <1319789318.3914.10.camel@jlt3.sipsolutions.net> (sfid-20111028_100851_693151_4602C870)
+Date: Thu, 27 Oct 2011 21:37:03 +0200
+Message-ID: <1319744223.32221.5.camel@jlt3.sipsolutions.net> (sfid-20111027_213710_585870_97115AA2)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-10-27 at 22:11 -0700, greearb@candelatech.com wrote:
+On Tue, 2011-10-18 at 19:23 +0200, Helmut Schaa wrote:
+> Am Dienstag, 18. Oktober 2011, 18:41:11 schrieb Arik Nemtsov:
+> > On Tue, Oct 18, 2011 at 11:18, Helmut Schaa <helmut.schaa@googlemail.com> wrote:
+> > >
+> > > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> > > ---
+> > >
+> > > Couldn't come up with a nice/short wording for "Managment frame
+> > > protection" and "Wireless Multimedia Extension" so I just used MFP
+> > > and WME/WMM instead.
+> > >
+> > 
+> > Printing the NL80211_STA_FLAG_TDLS_PEER flag would be nice as well.
+> 
+> Agreed, I somehow missed the (new) TDLS flag, also in the according
+> nl80211/mac80211 patches :(
 
-> The additional netlink bits is to allow this patch to work on 3.0
-> and should not be included in the final patch.
-
-What additional bit?
-
-
-> + * @NL80211_ATTR_DISABLE_80211N:  Force /n capable stations to instead
-> + *      function as /a/b/g stations.
-
-IMHO this should be called DISABLE_HT -- "11n" will not exist for much
-longer.
-
-> +++ b/net/mac80211/cfg.c
-> @@ -57,6 +57,9 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
->  	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->  	int ret;
->  
-> +	if (params->disable_11n != -1)
-> +		sdata->cfg_disable_11n = params->disable_11n;
-
-This doesn't seem right -- why change the iface for it? It's a per
-connection parameter.
-
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -595,6 +595,8 @@ struct ieee80211_sub_if_data {
->  	/* to detect idle changes */
->  	bool old_idle;
->  
-> +	bool cfg_disable_11n; /* configured to disable 11n? */
-
-That should be in the u.mgd part of the struct.
-
-> +++ b/net/wireless/nl80211.c
-> @@ -1641,6 +1641,13 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
->  		change = true;
->  	}
->  
-> +	if (info->attrs[NL80211_ATTR_DISABLE_11N]) {
-> +		params.disable_11n = !!nla_get_u8(info->attrs[NL80211_ATTR_DISABLE_11N]);
-> +		change = true;
-> +	} else {
-> +		params.disable_11n = -1;
-> +	}
-
-This should be a parameter to connect() and assoc(), not a generic
-netdev parameter, since it applies to the connection.
-
-Also, it would be good to have a capability check for it etc. since a
-lot of fullmac drivers will likely never implement this.
+I'll apply this to iw fixed up but please send patches to the kernel.
 
 johannes
 
