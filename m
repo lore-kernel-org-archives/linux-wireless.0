@@ -1,67 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:36760 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751249Ab1JGF7v (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:48955 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752650Ab1J0PsL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 01:59:51 -0400
-Received: by bkbc12 with SMTP id c12so206180bkb.29
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2011 22:59:48 -0700 (PDT)
-Subject: pull request: wl12xx 2011-10-07
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
+	Thu, 27 Oct 2011 11:48:11 -0400
+Subject: [PATCH 02/10] ath6kl: rename ath6kl_wmi_qos_state_init() to
+	_wmi_reset()
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 07 Oct 2011 08:59:45 +0300
-Message-ID: <1317967185.3549.74.camel@cumari> (sfid-20111007_080000_220081_CBE655EC)
-Mime-Version: 1.0
+Date: Thu, 27 Oct 2011 18:48:00 +0300
+Message-ID: <20111027154800.23519.20467.stgit@localhost6.localdomain6> (sfid-20111027_174813_361285_1C001466)
+In-Reply-To: <20111027154746.23519.39680.stgit@localhost6.localdomain6>
+References: <20111027154746.23519.39680.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Just to make it more clear that this function is supposed to
+reset wmi related variables.
 
-One more pull-request intended for 3.2.  I hope it makes it in time for
-the merge window.  Just a few small things.  First, we use HW-offloaded
-channel switch, which solves some FW problems in specific cases.  Then
-one missing value in the sched_scan configuration.  One of Eliad's patch
-removes an AP-mode quirk, which is not used anymore with the latest FW
-we published and one fix to make sure that P2P packets are sent with
-OFDM rates. 
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/wmi.c |    7 ++-----
+ drivers/net/wireless/ath/ath6kl/wmi.h |    1 +
+ 2 files changed, 3 insertions(+), 5 deletions(-)
 
-Please pull or let me know if there's any problem. This tree is based on
-wireless-next/master.
-
-Thanks! 
-
-The following changes since commit d6222fb0d669307a49e2a96aad86c156a9bb9551:
-
-  Merge branch 'master' of git://github.com/padovan/bluetooth-next (2011-10-04 14:06:47 -0400)
-
-are available in the git repository at:
-
-  git://github.com/lucacoelho/wl12xx.git for-linville
-
-Eliad Peller (2):
-      wl12xx: configure rate policy for p2p operations
-      wl12xx: disable AP-mode-specific quirks
-
-Luciano Coelho (1):
-      wl12xx: set max_sched_scan_ie_len correctly
-
-Shahar Levi (1):
-      wl12xx: Add support for HW channel switch
-
- drivers/net/wireless/wl12xx/acx.c    |   16 ++++++++
- drivers/net/wireless/wl12xx/acx.h    |    1 +
- drivers/net/wireless/wl12xx/boot.c   |    6 +--
- drivers/net/wireless/wl12xx/cmd.c    |   63 +++++++++++++++++++++++++++++++---
- drivers/net/wireless/wl12xx/cmd.h    |   20 +++++++++++
- drivers/net/wireless/wl12xx/conf.h   |    6 +++-
- drivers/net/wireless/wl12xx/event.c  |   15 ++++++++
- drivers/net/wireless/wl12xx/main.c   |   48 +++++++++++++++++++++----
- drivers/net/wireless/wl12xx/wl12xx.h |    7 +---
- 9 files changed, 158 insertions(+), 24 deletions(-)
-
--- 
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index e6b0960..3921c2c 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -3201,11 +3201,8 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
+ 	return ret;
+ }
+ 
+-static void ath6kl_wmi_qos_state_init(struct wmi *wmi)
++void ath6kl_wmi_reset(struct wmi *wmi)
+ {
+-	if (!wmi)
+-		return;
+-
+ 	spin_lock_bh(&wmi->lock);
+ 
+ 	wmi->fat_pipe_exist = 0;
+@@ -3228,7 +3225,7 @@ void *ath6kl_wmi_init(struct ath6kl *dev)
+ 
+ 	wmi->pwr_mode = REC_POWER;
+ 
+-	ath6kl_wmi_qos_state_init(wmi);
++	ath6kl_wmi_reset(wmi);
+ 
+ 	return wmi;
+ }
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 9055c75..ae514cb 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -2316,5 +2316,6 @@ int ath6kl_wmi_set_appie_cmd(struct wmi *wmi, u8 if_idx, u8 mgmt_frm_type,
+ struct ath6kl_vif *ath6kl_get_vif_by_index(struct ath6kl *ar, u8 if_idx);
+ void *ath6kl_wmi_init(struct ath6kl *devt);
+ void ath6kl_wmi_shutdown(struct wmi *wmi);
++void ath6kl_wmi_reset(struct wmi *wmi);
+ 
+ #endif /* WMI_H */
 
