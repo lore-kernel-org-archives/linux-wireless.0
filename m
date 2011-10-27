@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:19521 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932390Ab1JXOhF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Oct 2011 10:37:05 -0400
-Subject: Re: problem with intel 5300
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1110240746530.11931@uplift.swm.pp.se>
-References: <alpine.DEB.2.00.1109100736280.13538@uplift.swm.pp.se>
-	 <1315667365.3547.20.camel@wwguy-huron>
-	 <alpine.DEB.2.00.1109102219380.13829@uplift.swm.pp.se>
-	 <alpine.DEB.2.00.1109170753250.13829@uplift.swm.pp.se>
-	 <1316379720.29243.29.camel@wwguy-ubuntu>
-	 <alpine.DEB.2.00.1109201730450.13829@uplift.swm.pp.se>
-	 <alpine.DEB.2.00.1110240746530.11931@uplift.swm.pp.se>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 Oct 2011 06:45:44 -0700
-Message-ID: <1319463944.31823.79.camel@wwguy-huron> (sfid-20111024_163709_303173_5E2DACB2)
-Mime-Version: 1.0
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:49181 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753216Ab1J0PtL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Oct 2011 11:49:11 -0400
+Subject: [PATCH 10/10] ath6kl: don't print an error for canceled packets
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 27 Oct 2011 18:49:08 +0300
+Message-ID: <20111027154908.23519.25779.stgit@localhost6.localdomain6> (sfid-20111027_174915_423695_1C42B407)
+In-Reply-To: <20111027154746.23519.39680.stgit@localhost6.localdomain6>
+References: <20111027154746.23519.39680.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-10-23 at 22:48 -0700, Mikael Abrahamsson wrote:
-> On Tue, 20 Sep 2011, Mikael Abrahamsson wrote:
-> 
-> Hi,
-> 
-> just wanted to say that I have now upgraded to ubuntu 11.10 with its 3.0.x 
-> kernel, and I'm now running it with .11n enabled and it's been ok for 20 
-> hours. So whatever problem there was in 2.6.38, it seems to have been 
-> fixed in 3.0.x, or at least it's working much better.
-> 
-very happy to hear that, thank you very much for reporting
+ath6kl_tx_complete() was printing an error when packet was canceled.
+That causes unnecessary errors when hardware is powered off.
 
-Wey
+Also change the error to a warning and cleanup the message.
+
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/txrx.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index ab9a5c1..9dfd7f5 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -606,8 +606,9 @@ void ath6kl_tx_complete(void *context, struct list_head *packet_queue)
+ 
+ 			vif->net_stats.tx_errors++;
+ 
+-			if (status != -ENOSPC)
+-				ath6kl_err("tx error, status: 0x%x\n", status);
++			if (status != -ENOSPC && status != -ECANCELED)
++				ath6kl_warn("tx complete error: %d\n", status);
++
+ 			ath6kl_dbg(ATH6KL_DBG_WLAN_TX,
+ 				   "%s: skb=0x%p data=0x%p len=0x%x eid=%d %s\n",
+ 				   __func__, skb, packet->buf, packet->act_len,
 
