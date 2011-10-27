@@ -1,530 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51394 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752422Ab1JGLsk (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:29978 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752449Ab1J0DsG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 07:48:40 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 11/14] ath9k_hw: Add radio retention support for AR9480
-Date: Fri, 7 Oct 2011 17:17:16 +0530
-Message-ID: <1317988039-28632-11-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111007_141655_789965_66AB340A)
-In-Reply-To: <1317988039-28632-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1317988039-28632-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Wed, 26 Oct 2011 23:48:06 -0400
+From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+To: Richard Yao <ryao@cs.stonybrook.edu>
+CC: Norbert Preining <preining@logic.at>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Rientjes <rientjes@google.com>
+Date: Wed, 26 Oct 2011 20:48:01 -0700
+Subject: RE: iwlagn is getting very shaky
+Message-ID: <E9954878DD1FB34FAE5187FB88C58A3501A1108A86@orsmsx506.amr.corp.intel.com> (sfid-20111027_054819_372204_ACFA1D16)
+References: <20111019060108.GA11588@gamma.logic.tuwien.ac.at>
+	<CABDyM6S9XK64n374AKCu5YUq4PBAmaB0jCgE9+snnM9XeQo1yg@mail.gmail.com>
+ <CABDyM6R-BBV1_oci2vMoxcybT=0cxPRfHELvtrQTRfSf6WO9Eg@mail.gmail.com>
+In-Reply-To: <CABDyM6R-BBV1_oci2vMoxcybT=0cxPRfHELvtrQTRfSf6WO9Eg@mail.gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Supported calibrations of radio retention table (RTT) are
-	- DC offset
-	- Filter
-	- Peak detect
+Hi Richard,
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/Makefile       |    1 +
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |  112 ++++++++++++++++--
- drivers/net/wireless/ath/ath9k/ar9003_phy.h   |   20 +++-
- drivers/net/wireless/ath/ath9k/ar9003_rtt.c   |  153 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_rtt.h   |   28 +++++
- drivers/net/wireless/ath/ath9k/hw.c           |    4 +
- drivers/net/wireless/ath/ath9k/hw.h           |    9 ++
- drivers/net/wireless/ath/ath9k/reg.h          |    1 +
- 8 files changed, 314 insertions(+), 14 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_rtt.c
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_rtt.h
+Thanks so much for the information, we will look into it asap and get back to you.
 
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index 05a6fad..36ed3c4 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -21,6 +21,7 @@ ath9k_hw-y:=	\
- 		ar5008_phy.o \
- 		ar9002_calib.o \
- 		ar9003_calib.o \
-+		ar9003_rtt.o \
- 		calib.o \
- 		eeprom.o \
- 		eeprom_def.o \
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 3506e7b..d5b671a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -17,6 +17,7 @@
- #include "hw.h"
- #include "hw-ops.h"
- #include "ar9003_phy.h"
-+#include "ar9003_rtt.h"
- 
- #define MAX_MEASUREMENT	MAX_IQCAL_MEASUREMENT
- #define MAX_MAG_DELTA	11
-@@ -900,25 +901,80 @@ static void ar9003_hw_tx_iq_cal_reload(struct ath_hw *ah)
- 		      AR_PHY_RX_IQCAL_CORR_B0_LOOPBACK_IQCORR_EN, 0x1);
- }
- 
-+static bool ar9003_hw_rtt_restore(struct ath_hw *ah, struct ath9k_channel *chan)
-+{
-+	struct ath9k_rtt_hist *hist = &ah->caldata->rtt_hist;
-+	u32 *table;
-+	int i;
-+	bool restore;
-+
-+	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_RTT))
-+		return false;
-+
-+	ar9003_hw_rtt_enable(ah);
-+	ar9003_hw_rtt_set_mask(ah, 0x10);
-+	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
-+		if (!(ah->rxchainmask & (1 << i)))
-+			continue;
-+		table = &hist->table[i][hist->num_readings][0];
-+		ar9003_hw_rtt_load_hist(ah, i, table);
-+	}
-+	restore = ar9003_hw_rtt_force_restore(ah);
-+	ar9003_hw_rtt_disable(ah);
-+
-+	return restore;
-+}
-+
- static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 			       struct ath9k_channel *chan)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_hw_cal_data *caldata = ah->caldata;
- 	bool txiqcal_done = false, txclcal_done = false;
--	bool is_reusable = true;
-+	bool is_reusable = true, status = true;
-+	bool run_rtt_cal = false, run_agc_cal;
-+	bool rtt = !!(ah->caps.hw_caps & ATH9K_HW_CAP_RTT);
-+	u32 agc_ctrl = 0, agc_supp_cals = AR_PHY_AGC_CONTROL_OFFSET_CAL |
-+					  AR_PHY_AGC_CONTROL_FLTR_CAL   |
-+					  AR_PHY_AGC_CONTROL_PKDET_CAL;
- 	int i, j;
- 	u32 cl_idx[AR9300_MAX_CHAINS] = { AR_PHY_CL_TAB_0,
- 					  AR_PHY_CL_TAB_1,
- 					  AR_PHY_CL_TAB_2 };
- 
-+	if (rtt) {
-+		if (!ar9003_hw_rtt_restore(ah, chan))
-+			run_rtt_cal = true;
-+
-+		ath_dbg(common, ATH_DBG_CALIBRATE, "RTT restore %s\n",
-+			run_rtt_cal ? "failed" : "succeed");
-+	}
-+	run_agc_cal = run_rtt_cal;
-+
-+	if (run_rtt_cal) {
-+		ar9003_hw_rtt_enable(ah);
-+		ar9003_hw_rtt_set_mask(ah, 0x00);
-+		ar9003_hw_rtt_clear_hist(ah);
-+	}
-+
-+	if (rtt && !run_rtt_cal) {
-+		agc_ctrl = REG_READ(ah, AR_PHY_AGC_CONTROL);
-+		agc_supp_cals &= agc_ctrl;
-+		agc_ctrl &= ~(AR_PHY_AGC_CONTROL_OFFSET_CAL |
-+			     AR_PHY_AGC_CONTROL_FLTR_CAL |
-+			     AR_PHY_AGC_CONTROL_PKDET_CAL);
-+		REG_WRITE(ah, AR_PHY_AGC_CONTROL, agc_ctrl);
-+	}
-+
- 	if (ah->enabled_cals & TX_CL_CAL) {
- 		if (caldata && caldata->done_txclcal_once)
- 			REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL,
- 				    AR_PHY_CL_CAL_ENABLE);
--		else
-+		else {
- 			REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL,
- 				    AR_PHY_CL_CAL_ENABLE);
-+			run_agc_cal = true;
-+		}
- 	}
- 
- 	if (!(ah->enabled_cals & TX_IQ_CAL))
-@@ -940,25 +996,41 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 		else
- 			REG_CLR_BIT(ah, AR_PHY_TX_IQCAL_CONTROL_0,
- 				    AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL);
--		txiqcal_done = true;
-+		txiqcal_done = run_agc_cal = true;
- 		goto skip_tx_iqcal;
--	}
-+	} else if (caldata && !caldata->done_txiqcal_once)
-+		run_agc_cal = true;
-+
- 	txiqcal_done = ar9003_hw_tx_iq_cal_run(ah);
- 	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
- 	udelay(5);
- 	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
- 
- skip_tx_iqcal:
--	/* Calibrate the AGC */
--	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
--		  REG_READ(ah, AR_PHY_AGC_CONTROL) |
--		  AR_PHY_AGC_CONTROL_CAL);
- 
--	/* Poll for offset calibration complete */
--	if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
--			   0, AH_WAIT_TIMEOUT)) {
-+	if (run_agc_cal) {
-+		/* Calibrate the AGC */
-+		REG_WRITE(ah, AR_PHY_AGC_CONTROL,
-+			  REG_READ(ah, AR_PHY_AGC_CONTROL) |
-+			  AR_PHY_AGC_CONTROL_CAL);
-+
-+		/* Poll for offset calibration complete */
-+		status = ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
-+				       AR_PHY_AGC_CONTROL_CAL,
-+				       0, AH_WAIT_TIMEOUT);
-+	}
-+	if (rtt && !run_rtt_cal) {
-+		agc_ctrl |= agc_supp_cals;
-+		REG_WRITE(ah, AR_PHY_AGC_CONTROL, agc_ctrl);
-+	}
-+
-+	if (!status) {
-+		if (run_rtt_cal)
-+			ar9003_hw_rtt_disable(ah);
-+
- 		ath_dbg(common, ATH_DBG_CALIBRATE,
--			"offset calibration failed to complete in 1ms; noisy environment?\n");
-+			"offset calibration failed to complete in 1ms;"
-+			"noisy environment?\n");
- 		return false;
- 	}
- 
-@@ -993,6 +1065,22 @@ skip_tx_iqcal:
- 	}
- #undef CL_TAB_ENTRY
- 
-+	if (run_rtt_cal) {
-+		struct ath9k_rtt_hist *hist = &ah->caldata->rtt_hist;
-+		if (is_reusable && (hist->num_readings < RTT_HIST_MAX)) {
-+			u32 *table;
-+
-+			for (i = 0; i < AR9300_MAX_CHAINS; i++) {
-+				if (!(ah->rxchainmask & (1 << i)))
-+					continue;
-+				table = &hist->table[i][hist->num_readings][0];
-+				ar9003_hw_rtt_fill_hist(ah, i, table);
-+			}
-+		}
-+
-+		ar9003_hw_rtt_disable(ah);
-+	}
-+
- 	ath9k_hw_loadnf(ah, chan);
- 	ath9k_hw_start_nfcal(ah, true);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 64e9bea..9fe6fbe 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -584,8 +584,6 @@
- 					     (AR_SREV_9485(ah) ? \
- 					      0x3d0 : 0x450) + ((_i) << 2))
- #define AR_PHY_RTT_CTRL			(AR_SM_BASE + 0x380)
--#define AR_PHY_RTT_TABLE_SW_INTF_B	(AR_SM_BASE + 0x384)
--#define AR_PHY_RTT_TABLE_SW_INTF_1_B0	(AR_SM_BASE + 0x388)
- 
- #define AR_PHY_WATCHDOG_STATUS      (AR_SM_BASE + 0x5c0)
- #define AR_PHY_WATCHDOG_CTL_1       (AR_SM_BASE + 0x5c4)
-@@ -825,6 +823,20 @@
- #define AR_PHY_SPECTRAL_SCAN_SHORT_REPEAT   0x01000000
- #define AR_PHY_SPECTRAL_SCAN_SHORT_REPEAT_S 24
- #define AR_PHY_CHANNEL_STATUS_RX_CLEAR      0x00000004
-+#define AR_PHY_RTT_CTRL_ENA_RADIO_RETENTION     0x00000001
-+#define AR_PHY_RTT_CTRL_ENA_RADIO_RETENTION_S   0
-+#define AR_PHY_RTT_CTRL_RESTORE_MASK            0x0000007E
-+#define AR_PHY_RTT_CTRL_RESTORE_MASK_S          1
-+#define AR_PHY_RTT_CTRL_FORCE_RADIO_RESTORE     0x00000080
-+#define AR_PHY_RTT_CTRL_FORCE_RADIO_RESTORE_S   7
-+#define AR_PHY_RTT_SW_RTT_TABLE_ACCESS          0x00000001
-+#define AR_PHY_RTT_SW_RTT_TABLE_ACCESS_S        0
-+#define AR_PHY_RTT_SW_RTT_TABLE_WRITE           0x00000002
-+#define AR_PHY_RTT_SW_RTT_TABLE_WRITE_S         1
-+#define AR_PHY_RTT_SW_RTT_TABLE_ADDR            0x0000001C
-+#define AR_PHY_RTT_SW_RTT_TABLE_ADDR_S          2
-+#define AR_PHY_RTT_SW_RTT_TABLE_DATA            0xFFFFFFF0
-+#define AR_PHY_RTT_SW_RTT_TABLE_DATA_S          4
- #define AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL                   0x80000000
- #define AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL_S                         31
- #define AR_PHY_TX_IQCAL_CONTROL_1_IQCORR_I_Q_COFF_DELPT             0x01fc0000
-@@ -919,6 +931,10 @@
- #define AR_PHY_AIC_SRAM_ADDR_B1	(AR_SM1_BASE + 0x5f0)
- #define AR_PHY_AIC_SRAM_DATA_B1	(AR_SM1_BASE + 0x5f4)
- 
-+#define AR_PHY_RTT_TABLE_SW_INTF_B(i)	(0x384 + (i) ? \
-+					AR_SM1_BASE : AR_SM_BASE)
-+#define AR_PHY_RTT_TABLE_SW_INTF_1_B(i)	(0x388 + (i) ? \
-+					AR_SM1_BASE : AR_SM_BASE)
- /*
-  * Channel 2 Register Map
-  */
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_rtt.c b/drivers/net/wireless/ath/ath9k/ar9003_rtt.c
-new file mode 100644
-index 0000000..48803ee
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_rtt.c
-@@ -0,0 +1,153 @@
-+/*
-+ * Copyright (c) 2010-2011 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "hw.h"
-+#include "ar9003_phy.h"
-+
-+#define RTT_RESTORE_TIMEOUT          1000
-+#define RTT_ACCESS_TIMEOUT           100
-+#define RTT_BAD_VALUE                0x0bad0bad
-+
-+/*
-+ * RTT (Radio Retention Table) hardware implementation information
-+ *
-+ * There is an internal table (i.e. the rtt) for each chain (or bank).
-+ * Each table contains 6 entries and each entry is corresponding to
-+ * a specific calibration parameter as depicted below.
-+ *  0~2 - DC offset DAC calibration: loop, low, high (offsetI/Q_...)
-+ *  3   - Filter cal (filterfc)
-+ *  4   - RX gain settings
-+ *  5   - Peak detector offset calibration (agc_caldac)
-+ */
-+
-+void ar9003_hw_rtt_enable(struct ath_hw *ah)
-+{
-+	REG_WRITE(ah, AR_PHY_RTT_CTRL, 1);
-+}
-+
-+void ar9003_hw_rtt_disable(struct ath_hw *ah)
-+{
-+	REG_WRITE(ah, AR_PHY_RTT_CTRL, 0);
-+}
-+
-+void ar9003_hw_rtt_set_mask(struct ath_hw *ah, u32 rtt_mask)
-+{
-+	REG_RMW_FIELD(ah, AR_PHY_RTT_CTRL,
-+		      AR_PHY_RTT_CTRL_RESTORE_MASK, rtt_mask);
-+}
-+
-+bool ar9003_hw_rtt_force_restore(struct ath_hw *ah)
-+{
-+	if (!ath9k_hw_wait(ah, AR_PHY_RTT_CTRL,
-+			   AR_PHY_RTT_CTRL_FORCE_RADIO_RESTORE,
-+			   0, RTT_RESTORE_TIMEOUT))
-+		return false;
-+
-+	REG_RMW_FIELD(ah, AR_PHY_RTT_CTRL,
-+		      AR_PHY_RTT_CTRL_FORCE_RADIO_RESTORE, 1);
-+
-+	if (!ath9k_hw_wait(ah, AR_PHY_RTT_CTRL,
-+			   AR_PHY_RTT_CTRL_FORCE_RADIO_RESTORE,
-+			   0, RTT_RESTORE_TIMEOUT))
-+		return false;
-+
-+	return true;
-+}
-+
-+static void ar9003_hw_rtt_load_hist_entry(struct ath_hw *ah, u8 chain,
-+		u32 index, u32 data28)
-+{
-+	u32 val;
-+
-+	val = SM(data28, AR_PHY_RTT_SW_RTT_TABLE_DATA);
-+	REG_WRITE(ah, AR_PHY_RTT_TABLE_SW_INTF_1_B(chain), val);
-+
-+	val = SM(0, AR_PHY_RTT_SW_RTT_TABLE_ACCESS) |
-+	      SM(1, AR_PHY_RTT_SW_RTT_TABLE_WRITE) |
-+	      SM(index, AR_PHY_RTT_SW_RTT_TABLE_ADDR);
-+	REG_WRITE(ah, AR_PHY_RTT_TABLE_SW_INTF_B(chain), val);
-+	udelay(1);
-+
-+	val |= SM(1, AR_PHY_RTT_SW_RTT_TABLE_ACCESS);
-+	REG_WRITE(ah, AR_PHY_RTT_TABLE_SW_INTF_B(chain), val);
-+	udelay(1);
-+
-+	if (!ath9k_hw_wait(ah, AR_PHY_RTT_TABLE_SW_INTF_B(chain),
-+			   AR_PHY_RTT_SW_RTT_TABLE_ACCESS, 0,
-+			   RTT_ACCESS_TIMEOUT))
-+		return;
-+
-+	val &= ~SM(1, AR_PHY_RTT_SW_RTT_TABLE_WRITE);
-+	REG_WRITE(ah, AR_PHY_RTT_TABLE_SW_INTF_B(chain), val);
-+	udelay(1);
-+
-+	ath9k_hw_wait(ah, AR_PHY_RTT_TABLE_SW_INTF_B(chain),
-+		      AR_PHY_RTT_SW_RTT_TABLE_ACCESS, 0,
-+		      RTT_ACCESS_TIMEOUT);
-+}
-+
-+void ar9003_hw_rtt_load_hist(struct ath_hw *ah, u8 chain, u32 *table)
-+{
-+	int i;
-+
-+	for (i = 0; i < MAX_RTT_TABLE_ENTRY; i++)
-+		ar9003_hw_rtt_load_hist_entry(ah, chain, i, table[i]);
-+}
-+
-+static int ar9003_hw_rtt_fill_hist_entry(struct ath_hw *ah, u8 chain, u32 index)
-+{
-+	u32 val;
-+
-+	val = SM(0, AR_PHY_RTT_SW_RTT_TABLE_ACCESS) |
-+	      SM(0, AR_PHY_RTT_SW_RTT_TABLE_WRITE) |
-+	      SM(index, AR_PHY_RTT_SW_RTT_TABLE_ADDR);
-+
-+	REG_WRITE(ah, AR_PHY_RTT_TABLE_SW_INTF_B(chain), val);
-+	udelay(1);
-+
-+	val |= SM(1, AR_PHY_RTT_SW_RTT_TABLE_ACCESS);
-+	REG_WRITE(ah, AR_PHY_RTT_TABLE_SW_INTF_B(chain), val);
-+	udelay(1);
-+
-+	if (!ath9k_hw_wait(ah, AR_PHY_RTT_TABLE_SW_INTF_B(chain),
-+			   AR_PHY_RTT_SW_RTT_TABLE_ACCESS, 0,
-+			   RTT_ACCESS_TIMEOUT))
-+		return RTT_BAD_VALUE;
-+
-+	val = REG_READ(ah, AR_PHY_RTT_TABLE_SW_INTF_1_B(chain));
-+
-+	return val;
-+}
-+
-+void ar9003_hw_rtt_fill_hist(struct ath_hw *ah, u8 chain, u32 *table)
-+{
-+	int i;
-+
-+	for (i = 0; i < MAX_RTT_TABLE_ENTRY; i++)
-+		table[i] = ar9003_hw_rtt_fill_hist_entry(ah, chain, i);
-+}
-+
-+void ar9003_hw_rtt_clear_hist(struct ath_hw *ah)
-+{
-+	int i, j;
-+
-+	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
-+		if (!(ah->rxchainmask & (1 << i)))
-+			continue;
-+		for (j = 0; j < MAX_RTT_TABLE_ENTRY; j++)
-+			ar9003_hw_rtt_load_hist_entry(ah, i, j, 0);
-+	}
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_rtt.h b/drivers/net/wireless/ath/ath9k/ar9003_rtt.h
-new file mode 100644
-index 0000000..030758d
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_rtt.h
-@@ -0,0 +1,28 @@
-+/*
-+ * Copyright (c) 2010-2011 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef AR9003_RTT_H
-+#define AR9003_RTT_H
-+
-+void ar9003_hw_rtt_enable(struct ath_hw *ah);
-+void ar9003_hw_rtt_disable(struct ath_hw *ah);
-+void ar9003_hw_rtt_set_mask(struct ath_hw *ah, u32 rtt_mask);
-+bool ar9003_hw_rtt_force_restore(struct ath_hw *ah);
-+void ar9003_hw_rtt_load_hist(struct ath_hw *ah, u8 chain, u32 *table);
-+void ar9003_hw_rtt_fill_hist(struct ath_hw *ah, u8 chain, u32 *table);
-+void ar9003_hw_rtt_clear_hist(struct ath_hw *ah);
-+
-+#endif
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1da6c9d..96dc730 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1719,6 +1719,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (caldata) {
- 		caldata->done_txiqcal_once = false;
- 		caldata->done_txclcal_once = false;
-+		caldata->rtt_hist.num_readings = 0;
- 	}
- 	if (!ath9k_hw_init_cal(ah, chan))
- 		return -EIO;
-@@ -2334,6 +2335,9 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 		if (!AR_SREV_9330(ah))
- 			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
- 	}
-+	if (AR_SREV_9480(ah))
-+		pCap->hw_caps |= ATH9K_HW_CAP_RTT;
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 5ac013a..64f5a92 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -202,6 +202,7 @@ enum ath9k_hw_caps {
- 	ATH9K_HW_CAP_2GHZ			= BIT(13),
- 	ATH9K_HW_CAP_5GHZ			= BIT(14),
- 	ATH9K_HW_CAP_APM			= BIT(15),
-+	ATH9K_HW_CAP_RTT			= BIT(16),
- };
- 
- struct ath9k_hw_capabilities {
-@@ -337,6 +338,13 @@ enum ath9k_int {
- 	 CHANNEL_HT40PLUS |			\
- 	 CHANNEL_HT40MINUS)
- 
-+#define MAX_RTT_TABLE_ENTRY     6
-+#define RTT_HIST_MAX            3
-+struct ath9k_rtt_hist {
-+	u32 table[AR9300_MAX_CHAINS][RTT_HIST_MAX][MAX_RTT_TABLE_ENTRY];
-+	u8 num_readings;
-+};
-+
- #define MAX_IQCAL_MEASUREMENT	8
- #define MAX_CL_TAB_ENTRY	16
- 
-@@ -357,6 +365,7 @@ struct ath9k_hw_cal_data {
- 	int tx_corr_coeff[MAX_IQCAL_MEASUREMENT][AR9300_MAX_CHAINS];
- 	u32 tx_clcal[AR9300_MAX_CHAINS][MAX_CL_TAB_ENTRY];
- 	struct ath9k_nfcal_hist nfCalHist[NUM_NF_READINGS];
-+	struct ath9k_rtt_hist rtt_hist;
- };
- 
- struct ath9k_channel {
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index b76c49d..87a1245 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1933,6 +1933,7 @@ enum {
- #define AR_PHY_AGC_CONTROL_NO_UPDATE_NF		0x00020000  /* don't update noise floor automatically */
- #define AR_PHY_AGC_CONTROL_EXT_NF_PWR_MEAS	0x00040000  /* extend noise floor power measurement */
- #define AR_PHY_AGC_CONTROL_CLC_SUCCESS		0x00080000  /* carrier leak calibration done */
-+#define AR_PHY_AGC_CONTROL_PKDET_CAL		0x00100000
- #define AR_PHY_AGC_CONTROL_YCOK_MAX		0x000003c0
- #define AR_PHY_AGC_CONTROL_YCOK_MAX_S		6
- 
--- 
-1.7.7
+Thanks
+Wey
 
+-----Original Message-----
+From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Richard Yao
+Sent: Thursday, October 27, 2011 2:06 AM
+To: Guy, Wey-Yi W
+Cc: Norbert Preining; linux-wireless@vger.kernel.org; linux-kernel@vger.kernel.org; ipw3945-devel@lists.sourceforge.net; ilw@linux.intel.com; Pekka Enberg; David Rientjes
+Subject: Fwd: iwlagn is getting very shaky
+
+Dear Wey,
+
+Here is the message that I sent earlier.
+
+Yours truly,
+Richard Yao
+
+---------- Forwarded message ----------
+From: Richard Yao <ryao@cs.stonybrook.edu>
+Date: Wed, Oct 26, 2011 at 12:19 AM
+Subject: Re: iwlagn is getting very shaky
+To: linux-kernel@vger.kernel.org
+Cc: preining@logic.at
+
+
+Dear Everyone,
+
+I have always had issues with Wi-Fi at my university, although they became particularly acute. The problem is characterized by an inordinate number of Tx excessive retries like what Norbert posted. I had been holding off on reporting this out of fear that my report wouldn't be good enough, but now that I see Norbert reported it, I thought I would contribute my findings.
+
+When I looked into this, I found that the wireless spectrum on my university is absurdly crowded. "iwlist wlan0 scan" reveals roughly
+100 access points at any given time, many of which have the same SSID.
+It is worst in the library, which probably one of the most densely populated buildings. This appears to be linked to the hidden node
+problem:
+
+http://en.wikipedia.org/wiki/Hidden_node_problem
+
+I found a few issues in the wireless stack that appear to exacerbate this problem. The first of which is a kernel problem. The iwlagn driver does not support "auto" for the rts and frag settings, so they default to off. I tried fiddling with various settings, but the only one that seems to make a difference is rts, which at the moment I have set to 0, which should turn it on and transmit a request to send for all traffic. I configured my laptop to set rts to 0 on boot and the results were remarkable. I went from having to wait 30 minutes to an hour to get a connection that would only last for 2 minutes if I was lucky to being able to obtain a relatively stable connection within a few minutes.
+
+I also encountered another kernel issue, but I haven't seen it in a while. That issue was characterized by "iwlagn 0000:03:00.0: Stopping AGG while state not ON or starting". After that went into the dmesg output, it looked like I was transmitting, but I never saw a single response from the outside world until I did "modprobe -r iwlagn && modprobe iwlagn". I believe that this issue was present in kernel 3.1.0-rc4, but I could be off by an rc or two. It normally occurred within 5 to 15 mnutes and only occurred if I had passed 11n_disable=1 to the kernel module. I don't pass that anymore, so I don't know if it is still a problem.
+
+With that said, I discovered issues in other areas of the wireless stack. One is that Network Manager has a 25-second hard-coded timeout (in nm-device-wifi.c) when controlling WPA Supplicant. Ignoring the hard-coded part, having the time-out isn't so bad until you consider that WPA Supplicant will enter an infinite retry loop whenever Network Manager asks it to try connecting to an access point that is either malfunctioning or cannot hear your wireless NIC. Furthermore, if you are in an area where multiple access points use the same SSID, WPA supplicant will try to connect to each one with its own 9 second timeout, so Network Manager will kill it before it has gone through the entire list. I don't know if the 9 second timeout is hard coded, but the kernel lists 3 direct probe attempts in the dmesg output and if all 3 fail, WPA Supplicant will wait precisely 9 seconds (from the first one) before it tries something else. I imgaine that if someone patched the stack to implements some callbacks, things would become much better when they don't work the first time. With that said, WPA Supplicant needs a callback from the kernel when association fails and either WPA Supplicant, Network Manager or both need to be patched so that WPA Supplicant will not enter an infinite retry loop and instead it will give Network Manager a failure callback so that it can try something else.
+
+This might be the wrong mailing list to discuss issues that reside entirely in userland, but since I described a few other issues that were sort of a mix of both, I think I will throw in the other two that I found for completeness. With that said, another issue that sometimes happens is that the kernel loses the wireless access point association. If I do this manually, I can just use iwconfig to make the kerenl reassociate, but if that happens with Network Manager, it kills the entire connection and starts from scratch. This leads us to the last issue I identified, which is that dhclient can be horribly slow at times such that even if things work perfectly, getting a DHCP lease takes what feels like ages. This can be fixed by implementing RFC 4436 like Apple did in its products. It can also be worked around by configuring it to make an attempt every few seconds rather than every minute, which coincidentally, is the exact time that it takes for dhclient to time itself out and quit, making Network Manager kill an otherwise good connection. I reported this last year to my distribution, which has since changed the default config file, but in the course of diagnosing this year's problems, I managed to find various LUG mailing lists discussing this problem. Their workaround was to run dhclient manually, which causes zombie processes to be made and it really doesn't seem like the right solution to this issue.
+
+Anyway, that is everything that I know about this issue. I am right now sitting on as many as three other issues in other parts of the kernel, but I don't plan to report them until I understand them well enough to either write patches or post how to reliably reproduce them.
+The last time I posted something on the mailing list, someone named Ted yelled at me for asking a stupid question. If that happens again, I will probably just unsubscribe and let that be the end of it. I have only used Linux for less than 2 years and I am not paid to do this, so please be nice.
+
+Yours truly,
+Richard Yao
+
+On Wed, Oct 19, 2011 at 2:01 AM, Norbert Preining <preining@logic.at> wrote:
+> Hi everyone
+>
+> (please Cc),
+>
+> I am currently running 3.1.0-rc10, and I am having a hard time with 
+> the wlan network here at the university.
+>
+> For quite some time, like 10min, it is fine, then suddently the iwlagn 
+> driver gives up on me and connection is dropped.
+>
+> In the log file I see:
+> [  172.137011] iwlagn 0000:06:00.0: Tx aggregation enabled on ra = 
+> 00:24:c4:ab:bd:ef tid = 0 [  821.841016] iwlagn 0000:06:00.0: Tx 
+> aggregation enabled on ra = 00:24:c4:ab:bd:ef tid = 6 [ 1095.580735] 
+> wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3) [ 1095.780076] 
+> wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3) [ 1095.980101] 
+> wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3) [ 1096.180117] 
+> wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out [ 1105.255464] 
+> wlan0: deauthenticating from 00:24:c4:ab:bd:ef by local choice 
+> (reason=2) [ 1105.255519] iwlagn 0000:06:00.0: Stopping AGG while 
+> state not ON or starting [ 1105.265581] cfg80211: Calling CRDA for 
+> country: JP [ 1105.271476] wlan0: authenticate with 00:24:c4:ab:bd:e0 
+> (try 1) [ 1105.468105] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 
+> 2) [ 1105.668110] wlan0: authenticate with 00:24:c4:ab:bd:e0 (try 3) [ 
+> 1105.868090] wlan0: authentication with 00:24:c4:ab:bd:e0 timed out [ 
+> 1113.667890] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3) [ 
+> 1113.864116] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 2/3) [ 
+> 1114.064095] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 3/3) [ 
+> 1114.264109] wlan0: direct probe to 00:24:c4:ab:bd:e0 timed out
+>
+> Somewhere around 1100 the connection is gone and never comes back again.
+>
+> I tried removing the driver module from the kernel and reinserting it, 
+> tried to turn on and off the hardware swithc (rfkill), all without no 
+> success, the wlan connection remains dead until I reboot.
+>
+> I am not sure exactely when it started, I guess somewhere in the
+> 3.1 cycle, before I was permanently working wiht wlan, now I always 
+> plug in the cable.
+>
+> If there is any way to track down this, or any suggestions how I can 
+> debug it, please let me know.
+>
+> Hardware: Sony VGN-Z11, Intel(R) WiFi Link 5100 AGN, REV=0x54
+> L1 Enabled; Disabling L0S
+> device EEPROM VER=0x11e, CALIB=0x4
+> Device SKU: 0Xf0
+> Tunable channels: 13 802.11bg, 24 802.11a channels loaded firmware 
+> version 8.83.5.1 build 33692 (EXP)
+>
+>
+> On the other hand, the same laptop with the very same configuration 
+> works very nicely in my flat's wlan, which is some dirt cheap Japanese 
+> only wlan router.
+>
+> Best wishes and thanks a lot
+>
+> Norbert
+> ----------------------------------------------------------------------
+> -- Norbert Preining            preining@{jaist.ac.jp, logic.at, 
+> debian.org} JAIST, Japan                                 TeX Live & 
+> Debian Developer
+> DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 
+> B094
+> ----------------------------------------------------------------------
+> --
+> DITHERINGTON (n)
+> Sudden access to panic experienced by one who realises that he is 
+> being drawn inexorably into a clabby (q.v.) conversation, i.e. one he 
+> has no hope of enjoying, benefiting from or understanding.
+>                        --- Douglas Adams, The Meaning of Liff
+> --
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-kernel" in the body of a message to majordomo@vger.kernel.org 
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
