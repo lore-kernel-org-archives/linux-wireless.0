@@ -1,28 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:43149 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752889Ab1JUWpm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 18:45:42 -0400
-Received: by bkbzt19 with SMTP id zt19so5351875bkb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2011 15:45:40 -0700 (PDT)
-MIME-Version: 1.0
-Date: Fri, 21 Oct 2011 18:45:40 -0400
-Message-ID: <CALVkfMpoyY9j3g3GjnWAdvZSuWMjDQT-m1HAMtJJMJXy2pot+A@mail.gmail.com> (sfid-20111022_004546_030464_2E0BE968)
-Subject: where to find ipw2200 driver files for backtrac 5
-From: =?ISO-8859-1?Q?Patrick_Tr=E9panier=2DGravelle?=
-	<ptrepanierg@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:24605 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752929Ab1J0ND1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Oct 2011 09:03:27 -0400
+Subject: Re: 3.1-rc9 and 3.1 wifi problem , problem continues with 3.1
+From: wwguy <wey-yi.w.guy@intel.com>
+To: werner <w.landgraf@ru.ru>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"dave.taht@gmail.com" <dave.taht@gmail.com>,
+	"rientjes@google.com" <rientjes@google.com>,
+	"arend@broadcom.com" <arend@broadcom.com>,
+	"toralf.foerster@gmx.de" <toralf.foerster@gmx.de>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"larry.finger@gmail.com" <larry.finger@gmail.com>
+In-Reply-To: <web-634287632@zbackend1.aha.ru>
+References: <web-634287632@zbackend1.aha.ru>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 Oct 2011 05:57:31 -0700
+Message-ID: <1319720251.3718.4.camel@wwguy-ubuntu> (sfid-20111027_150345_569619_D0762DB7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I cant find the driver for my dell inspiron 700m laptop I tried the
-NDISSwrapper method but I cant extract the .inf file from the .EXE
-seems it isn't the right type of file.
-I would like to know where I could find the linux native drivers for
-ipw2200bg card.
+On Thu, 2011-10-27 at 05:53 -0700, werner wrote:
+> With the patch sent by Guy, Wey-Yi W , now wifi works at 
+> that laptop.
+> 
 
-Thank you,
+thanks for reporting and testing
 
-Patrick
+Wey
+
