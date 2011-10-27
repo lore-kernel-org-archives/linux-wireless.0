@@ -1,27 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:50636 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752250Ab1JSTC5 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:57923 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993Ab1J0TdE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Oct 2011 15:02:57 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 505FA5401F9
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2011 15:19:54 -0400 (EDT)
-Subject: Compat-wireless release for 2011-10-19 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20111019190256.561E940651@repository3.orbit-lab.org> (sfid-20111019_210300_887670_065B1E44)
-Date: Wed, 19 Oct 2011 15:02:56 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 27 Oct 2011 15:33:04 -0400
+Message-ID: <4EA9B1E5.9080500@candelatech.com> (sfid-20111027_213307_767467_FE431CDD)
+Date: Thu, 27 Oct 2011 12:32:53 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Temporary(?) relocation of wireless git trees...
+References: <20110912181351.GD2689@tuxdriver.com>
+In-Reply-To: <20110912181351.GD2689@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 09/12/2011 11:13 AM, John W. Linville wrote:
+> With no news on when the kernel.org trees will be accessible again
+> (which could be 10 minutes from now for all I know), I have pushed
+> my local copies to Infradead.  This should be equivalent to what was
+> last pushed to kernel.org almost two weeks ago.
 
-compat-wireless code metrics
+Is this still the current development tree for wireless?
 
-    814119 - Total upstream lines of code being pulled
-      2431 - backport code changes
-      2113 - backport code additions
-       318 - backport code deletions
-      8588 - backport from compat module
-     11019 - total backport code
-    1.3535 - % of code consists of backport work
+I've some patches to clean up and post, but want to do it against
+the right tree!
+
+Thanks,
+Ben
+
+>
+> The "current" wireless tree is here:
+>
+> 	git://git.infradead.org/users/linville/wireless.git
+>
+> The "next" wireless tree is here:
+>
+> 	git://git.infradead.org/users/linville/wireless-next.git
+>
+> The "testing" wireless tree is here:
+>
+> 	git://git.infradead.org/users/linville/wireless-testing.git
+>
+> I don't know how long these trees will be on Infradead or when (or
+> if) they will return to kernel.org.  Such changes will be determined
+> as conditions change.  Please be flexible.
+>
+> Thanks,
+>
+> John
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
