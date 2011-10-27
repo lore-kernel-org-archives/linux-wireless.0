@@ -1,129 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31252 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932920Ab1JZRfY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 13:35:24 -0400
-Subject: Re: [PATCH] libertas: ensure we clean up a scan request properly
-From: Dan Williams <dcbw@redhat.com>
-To: Andres Salomon <dilinger@queued.net>
-Cc: dsd@laptop.org, libertas-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, linux-kernel@vger.kernel.org
-Date: Wed, 26 Oct 2011 12:35:23 -0500
-In-Reply-To: <20111026101926.48109373@queued.net>
-References: <20111026101926.48109373@queued.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:50668 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751036Ab1J0MpM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Oct 2011 08:45:12 -0400
+Subject: [PATCH] cfg80211: annotate cfg80211_inform_bss
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Bing Zhao <bzhao@marvell.com>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	Dan Williams <dcbw@redhat.com>,
+	Arend Van Spriel <arend@broadcom.com>
 Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1319650525.8698.11.camel@dcbw.foobar.com> (sfid-20111026_193542_255386_476E844F)
+Date: Thu, 27 Oct 2011 14:45:02 +0200
+Message-ID: <1319719502.3944.5.camel@jlt3.sipsolutions.net> (sfid-20111027_144516_718621_80550823)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-10-26 at 10:19 -0700, Andres Salomon wrote:
-> Commit 2e30168b ("libertas: terminate scan when stopping interface")
-> adds cleanup code to lbs_eth_stop to call cfg80211_scan_done if there's
-> an outstanding cfg80211_scan_request.  However, it assumes that the
-> scan request was allocated via the cfg80211 stack.  Libertas has
-> its own internal allocation method, kept track of with
-> priv->internal_scan.  This doesn't set scan_req->wiphy, amongst other
-> things, which results in hitting a BUG() when we call cfg80211_scan_done
-> on the request.
-> 
-> This provides a function to take care of the low-level scan_req cleanup
-> details.  We simply call that to deal with finishing up scan requests.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+This function returns a referenced BSS struct
+(or NULL), annotate with __must_check. It seems
+that a lot of drivers get this completely wrong
+and leak all BSS structs as a result.
 
-> The bug we were hitting was:
-> 
-> [  964.321495] kernel BUG at net/wireless/core.h:87!
-> [  964.329970] Unable to handle kernel NULL pointer dereference at virtual address 00000000
-> [  964.341963] pgd = dcf80000
-> ...
-> [  964.849998] 9fe0: 00000000 beb417b8 4018e280 401e822c 60000010 00000004 00000000 00000000
-> [  964.865007] [<c003104c>] (__bug+0x1c/0x28) from [<c0384ffc>] (cfg80211_scan_done+0x54/0x6c)
-> [  964.895324] [<c0384ffc>] (cfg80211_scan_done+0x54/0x6c) from [<bf028bac>] (lbs_eth_stop+0x10c/0x188 [libertas])
-> [  964.895324] [<bf028bac>] (lbs_eth_stop+0x10c/0x188 [libertas]) from [<c03002a0>] (__dev_close_many+0x94/0xc4)
-> [  964.918995] [<c03002a0>] (__dev_close_many+0x94/0xc4) from [<c030037c>] (dev_close_many+0x78/0xe0)
-> 
-> Signed-off-by: Andres Salomon <dilinger@queued.net>
-> ---
->  drivers/net/wireless/libertas/cfg.c  |   25 +++++++++++++++++--------
->  drivers/net/wireless/libertas/cfg.h  |    1 +
->  drivers/net/wireless/libertas/main.c |    6 ++----
->  3 files changed, 20 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-> index ff63782..4fcd653 100644
-> --- a/drivers/net/wireless/libertas/cfg.c
-> +++ b/drivers/net/wireless/libertas/cfg.c
-> @@ -728,15 +728,9 @@ static void lbs_scan_worker(struct work_struct *work)
->  		le16_to_cpu(scan_cmd->hdr.size),
->  		lbs_ret_scan, 0);
->  
-> -	if (priv->scan_channel >= priv->scan_req->n_channels) {
-> +	if (priv->scan_channel >= priv->scan_req->n_channels)
->  		/* Mark scan done */
-> -		if (priv->internal_scan)
-> -			kfree(priv->scan_req);
-> -		else
-> -			cfg80211_scan_done(priv->scan_req, false);
-> -
-> -		priv->scan_req = NULL;
-> -	}
-> +		lbs_scan_done(priv);
->  
->  	/* Restart network */
->  	if (carrier)
-> @@ -774,6 +768,21 @@ static void _internal_start_scan(struct lbs_private *priv, bool internal,
->  	lbs_deb_leave(LBS_DEB_CFG80211);
->  }
->  
-> +/*
-> + * Clean up priv->scan_req.  Should be used to handle the allocation details.
-> + */
-> +void lbs_scan_done(struct lbs_private *priv)
-> +{
-> +	WARN_ON(!priv->scan_req);
-> +
-> +	if (priv->internal_scan)
-> +		kfree(priv->scan_req);
-> +	else
-> +		cfg80211_scan_done(priv->scan_req, false);
-> +
-> +	priv->scan_req = NULL;
-> +}
-> +
->  static int lbs_cfg_scan(struct wiphy *wiphy,
->  	struct net_device *dev,
->  	struct cfg80211_scan_request *request)
-> diff --git a/drivers/net/wireless/libertas/cfg.h b/drivers/net/wireless/libertas/cfg.h
-> index a02ee15..558168c 100644
-> --- a/drivers/net/wireless/libertas/cfg.h
-> +++ b/drivers/net/wireless/libertas/cfg.h
-> @@ -16,6 +16,7 @@ int lbs_reg_notifier(struct wiphy *wiphy,
->  void lbs_send_disconnect_notification(struct lbs_private *priv);
->  void lbs_send_mic_failureevent(struct lbs_private *priv, u32 event);
->  
-> +void lbs_scan_done(struct lbs_private *priv);
->  void lbs_scan_deinit(struct lbs_private *priv);
->  int lbs_disconnect(struct lbs_private *priv, u16 reason);
->  
-> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-> index b03779b..39a6a7a 100644
-> --- a/drivers/net/wireless/libertas/main.c
-> +++ b/drivers/net/wireless/libertas/main.c
-> @@ -255,10 +255,8 @@ static int lbs_eth_stop(struct net_device *dev)
->  
->  	lbs_update_mcast(priv);
->  	cancel_delayed_work_sync(&priv->scan_work);
-> -	if (priv->scan_req) {
-> -		cfg80211_scan_done(priv->scan_req, false);
-> -		priv->scan_req = NULL;
-> -	}
-> +	if (priv->scan_req)
-> +		lbs_scan_done(priv);
->  
->  	netif_carrier_off(priv->dev);
->  
+Reported-by: Adam Mikuta <Adam.Mikuta@tieto.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+CC lots of driver maintainers who need to fix this bug.
+
+ include/net/cfg80211.h |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+--- a/include/net/cfg80211.h	2011-10-27 14:05:17.000000000 +0200
++++ b/include/net/cfg80211.h	2011-10-27 14:42:51.000000000 +0200
+@@ -2651,8 +2651,10 @@ void cfg80211_sched_scan_stopped(struct
+  *
+  * This informs cfg80211 that BSS information was found and
+  * the BSS should be updated/added.
++ *
++ * NOTE: Returns a referenced struct, must be released with cfg80211_put_bss()!
+  */
+-struct cfg80211_bss*
++struct cfg80211_bss * __must_check
+ cfg80211_inform_bss_frame(struct wiphy *wiphy,
+ 			  struct ieee80211_channel *channel,
+ 			  struct ieee80211_mgmt *mgmt, size_t len,
+@@ -2674,8 +2676,10 @@ cfg80211_inform_bss_frame(struct wiphy *
+  *
+  * This informs cfg80211 that BSS information was found and
+  * the BSS should be updated/added.
++ *
++ * NOTE: Returns a referenced struct, must be released with cfg80211_put_bss()!
+  */
+-struct cfg80211_bss*
++struct cfg80211_bss * __must_check
+ cfg80211_inform_bss(struct wiphy *wiphy,
+ 		    struct ieee80211_channel *channel,
+ 		    const u8 *bssid,
 
 
