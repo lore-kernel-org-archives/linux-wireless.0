@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44271 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751715Ab1JLTaq (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26967 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754606Ab1J0ILN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 15:30:46 -0400
-Date: Wed, 12 Oct 2011 15:26:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: build failure after merge of the moduleh tree
-Message-ID: <20111012192634.GI18764@tuxdriver.com> (sfid-20111012_213049_915901_3BF01281)
-References: <20111012172954.4d5a638ef2a399b72bce5bf1@canb.auug.org.au>
- <4E95E9C5.6060006@broadcom.com>
+	Thu, 27 Oct 2011 04:11:13 -0400
+Message-ID: <4EA9121A.1090109@qca.qualcomm.com> (sfid-20111027_101118_541744_B152D971)
+Date: Thu, 27 Oct 2011 11:11:06 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E95E9C5.6060006@broadcom.com>
+To: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] ath6kl: Implement support for listen interval from
+ userspace
+References: <1319588789-17632-1-git-send-email-rpanjwan@qca.qualcomm.com> <1319588789-17632-2-git-send-email-rpanjwan@qca.qualcomm.com>
+In-Reply-To: <1319588789-17632-2-git-send-email-rpanjwan@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 12, 2011 at 09:25:57PM +0200, Arend van Spriel wrote:
-> On 10/12/2011 08:29 AM, Stephen Rothwell wrote:
-> > Hi Paul,
-> > 
-> > After merging the moduleh tree, today's linux-next build (x86_64
-> > allmodconfig) failed like this:
-> > 
-> > drivers/net/wireless/brcm80211/brcmutil/utils.c:20:15: error: expected declaration specifiers or '...' before string constant
-> > drivers/net/wireless/brcm80211/brcmutil/utils.c:21:20: error: expected declaration specifiers or '...' before string constant
-> > drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c:51:1: warning: type defaults to 'int' in declaration of 'MODULE_DEVICE_TABLE' [-Wimplicit-int]
-> > drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c:51:1: warning: parameter names (without types) in function declaration [enabled by default]
-> > 
-> > Caused by commit 5b435de0d786 ("net: wireless: add brcm80211 drivers")
-> > from the wireless tree interacting with the module.h split up.
-> > 
-> > These files clearly should include module.h (John, please apply this to the
-> > wireless tree):
-> > 
-> > From d89b14ffc84a2b8a54ffe89453b8bbf9cabf1468 Mon Sep 17 00:00:00 2001
-> > From: Stephen Rothwell <sfr@canb.auug.org.au>
-> > Date: Wed, 12 Oct 2011 17:07:06 +1100
-> > Subject: [PATCH] net: wireless: brcm80211: include module.h
-> > 
-> > Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+On 10/26/2011 03:26 AM, Rishi Panjwani wrote:
+> In order to allow user space based control of listen interval, we use
+> available debugfs infrastructure. Listen interval implies how frequently
+> we want the WLAN chip to wake up and synchronize the beacons in case it
+> is in sleep mode. The command requires two parameters in the following order:
 > 
-> Hi John,
+> 1) listen_interval_time
+> 2) listen_interval_beacons
 > 
-> Do you intend to take this patch as well. I used it to prepare the patch
-> series I sent earlier titled "[PATCH 00/22] brcm80211: mainline patch
-> related cleanup" identified by:
+> The user has to write the listen interval_time (in msecs) and
+> listen_interval_beacons (in no. of beacons) to the listen_interval file in
+> ath6kl debug directory.
 > 
-> Message-ID: <1318445492-24207-1-git-send-email-arend@broadcom.com>
+> Example:
 > 
-> Gr. AvS
-> 
-> ps: If you want the bare patch file, I still have it on disk here.
+> echo "30 1" > listen_interval
 
-Please send it to me -- I missed the original.
+Applied, thanks. I had to add vif index to the wmi call due to multi vif
+changes. Please check my changes.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Kalle
