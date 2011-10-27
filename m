@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:62767 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932069Ab1JNJyw (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:53763 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750795Ab1J0PEv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 05:54:52 -0400
-Received: by iaek3 with SMTP id k3so2391781iae.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2011 02:54:52 -0700 (PDT)
+	Thu, 27 Oct 2011 11:04:51 -0400
+Received: by ggnb1 with SMTP id b1so2725162ggn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Oct 2011 08:04:50 -0700 (PDT)
+Message-ID: <4EA97323.50004@lwfinger.net> (sfid-20111027_170454_411318_64442BD2)
+Date: Thu, 27 Oct 2011 10:05:07 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1318433496.3933.44.camel@jlt3.sipsolutions.net>
-References: <1317543352-29019-1-git-send-email-eliad@wizery.com>
-	<1318433496.3933.44.camel@jlt3.sipsolutions.net>
-Date: Fri, 14 Oct 2011 11:54:51 +0200
-Message-ID: <CAB3XZEe2ZjJk97N13gNTmtBpKDNJ2WPEpG7H-RssC1f9SOxNJQ@mail.gmail.com> (sfid-20111014_115456_799195_9425F08A)
-Subject: Re: [PATCH v2] mac80211: pass vif param to conf_tx() callback
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Roman Proud <setamagiga@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: RTL8188RU no injection?
+References: <CAF7qGM4BL10gn2786kW73sAk8f-y8CzX0rx2BQsY_Q96W=pfog@mail.gmail.com> <4EA89B8D.7060104@lwfinger.net> <CAF7qGM7hfaz0SGiZVZ62r_nPO8viMT5F2_Kd1uRxN9Ha3mRO+Q@mail.gmail.com>
+In-Reply-To: <CAF7qGM7hfaz0SGiZVZ62r_nPO8viMT5F2_Kd1uRxN9Ha3mRO+Q@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 12, 2011 at 5:31 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2011-10-02 at 10:15 +0200, Eliad Peller wrote:
->> tx params should be configured per interface.
->> add ieee80211_vif param to the conf_tx callback,
->> and change all the drivers that use this callback.
+On 10/27/2011 08:17 AM, Roman Proud wrote:
+> Hi peops
 >
-> For the record, I said this to you on IRC but you weren't around I
-> guess. This patch (with the other ones) is now passing a bogus sdata/vif
-> pointer to drivers -- e.g. for monitor mode interfaces from
-> ieee80211_do_open -> ieee80211_set_wmm_default -> drv_conf_tx.
+> thx for all youre responses!
 >
-> I suspect the way to fix this would be to move the call to
-> ieee80211_set_wmm_default into the last switch statement in do_open,
-> could you please look into it?
+> Well i didnt really thought about g and n -.-
 >
-thanks for the info.
-i'll look into it.
+> Im using the latest 8192cu driver from Realtek now, it works just
+> fine. Also monitor mode works like a charm (yes if i use airmon-ng for
+> it). My Kernel is (now the default) Arch kernel, on Linux Version
+> 3.0.4
+>
+> My last problem is the Package injection. Im surprised you are
+> thinking it could work (ive found many resources that say something
+> different, but hey its an OpenSource driver ;)
 
-Eliad.
+Well, I tested with Packetspammer and it worked. As in many cases, the resources 
+that say otherwise are wrong.
+
+> Pls excuse my "stupidness" but im really not sure if i am using
+> "mac80211", i think so, its leaded in the System.
+
+The drivers for most devices without a hardware MAC use mac80211 and friends. In 
+fact, it is a prerequisite for getting a driver included in the mainline 
+drivers/net/wireless/ tree. If the driver implements its own MAC layer, then it 
+resides in drivers/staging/. Yes, it is loaded on your system, and it handles a 
+lot of things for the drivers that use it.
+
+> And yes its Aircrack im trying to work with, and its Aircrack which
+> tells me i cant use Packet Injection.
+> I will try Packetspammer as soon as i am at home. If this works i have
+> to contact Aircrack, am i right?
+
+If Aircrack adds the socket method used by Packetspammer, it will work with 
+nearly every driver in the kernel that supports monitor mode. Whether they want 
+to do that will be their decision, of course.
+
+Larry
