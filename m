@@ -1,70 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53195 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753390Ab1JHSGc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Oct 2011 14:06:32 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v3 3/4] ath: remove ath_regulatory::current_rd_ext
-Date: Sat,  8 Oct 2011 20:06:21 +0200
-Message-Id: <1318097182-78364-3-git-send-email-nbd@openwrt.org> (sfid-20111008_200637_190616_ED19A789)
-In-Reply-To: <1318097182-78364-2-git-send-email-nbd@openwrt.org>
-References: <1318097182-78364-1-git-send-email-nbd@openwrt.org>
- <1318097182-78364-2-git-send-email-nbd@openwrt.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60442 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752480Ab1J0Qfw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Oct 2011 12:35:52 -0400
+From: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>,
+	Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+Subject: [PATCH] Fix missing copy of frame contents to local buffer
+Date: Thu, 27 Oct 2011 09:35:56 -0700
+Message-ID: <1319733356-31320-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com> (sfid-20111027_183556_859458_CF12DAD1)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is unused since the previous dead code that was using it had been
-removed earlier.
+The wpa_supplicant was receiving incorrect frame contents in the
+callback function that indicates the status of the frame transmitted.
+This patch fixes a missing copy of the frame contents to a local
+buffer. The local buffer keeps track of the last sent management frame.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath.h           |    1 -
- drivers/net/wireless/ath/ath9k/hw.c      |    5 -----
- drivers/net/wireless/ath/carl9170/main.c |    1 -
- 3 files changed, 0 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath6kl/wmi.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index bb71b4f..908fdbc 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -72,7 +72,6 @@ struct ath_regulatory {
- 	u16 country_code;
- 	u16 max_power_level;
- 	u16 current_rd;
--	u16 current_rd_ext;
- 	int16_t power_limit;
- 	struct reg_dmn_pair_mapping *regpair;
- };
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 949656d..fd7c207 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2072,11 +2072,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	eeval = ah->eep_ops->get_eeprom(ah, EEP_REG_0);
- 	regulatory->current_rd = eeval;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index e6b0960..6a1916a 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -2837,6 +2837,7 @@ int ath6kl_wmi_send_action_cmd(struct wmi *wmi, u8 if_idx, u32 id, u32 freq,
+ 	}
  
--	eeval = ah->eep_ops->get_eeprom(ah, EEP_REG_1);
--	if (AR_SREV_9285_12_OR_LATER(ah))
--		eeval |= AR9285_RDEXT_DEFAULT;
--	regulatory->current_rd_ext = eeval;
--
- 	if (ah->opmode != NL80211_IFTYPE_AP &&
- 	    ah->hw_version.subvendorid == AR_SUBVENDOR_ID_NEW_A) {
- 		if (regulatory->current_rd == 0x64 ||
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index beca710..f06e069 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -1896,7 +1896,6 @@ static int carl9170_parse_eeprom(struct ar9170 *ar)
- 		ar->hw->channel_change_time = 80 * 1000;
+ 	kfree(wmi->last_mgmt_tx_frame);
++	memcpy(buf, data, data_len);
+ 	wmi->last_mgmt_tx_frame = buf;
+ 	wmi->last_mgmt_tx_frame_len = data_len;
  
- 	regulatory->current_rd = le16_to_cpu(ar->eeprom.reg_domain[0]);
--	regulatory->current_rd_ext = le16_to_cpu(ar->eeprom.reg_domain[1]);
- 
- 	/* second part of wiphy init */
- 	SET_IEEE80211_PERM_ADDR(ar->hw, ar->eeprom.mac_address);
 -- 
-1.7.3.2
+1.7.0.4
 
