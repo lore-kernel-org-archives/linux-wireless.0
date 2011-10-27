@@ -1,72 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1731 "EHLO mms1.broadcom.com"
+Received: from mail.ukfsn.org ([77.75.108.3]:51593 "EHLO mail.ukfsn.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753659Ab1JBRO6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Oct 2011 13:14:58 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 01/20] staging: brmc80211: removed some unused fmac
- variable declarations
-Date: Sun, 2 Oct 2011 10:14:26 -0700
-Message-ID: <1317575685-3156-2-git-send-email-frankyl@broadcom.com> (sfid-20111002_191504_929864_670D44BE)
-In-Reply-To: <1317575685-3156-1-git-send-email-frankyl@broadcom.com>
-References: <1317575685-3156-1-git-send-email-frankyl@broadcom.com>
+	id S1753000Ab1J0JqJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Oct 2011 05:46:09 -0400
+Received: from localhost (smtp-filter.ukfsn.org [192.168.54.205])
+	by mail.ukfsn.org (Postfix) with ESMTP id 9A89CDEB9A
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Oct 2011 10:46:06 +0100 (BST)
+Received: from mail.ukfsn.org ([192.168.54.25])
+	by localhost (smtp-filter.ukfsn.org [192.168.54.205]) (amavisd-new, port 10024)
+	with ESMTP id KTKmOffw5QDc for <linux-wireless@vger.kernel.org>;
+	Thu, 27 Oct 2011 11:01:57 +0100 (BST)
+Received: from stargate.localnet (unknown [84.45.236.142])
+	by mail.ukfsn.org (Postfix) with ESMTP id 58A70DEB67
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Oct 2011 10:46:06 +0100 (BST)
+From: David Goodenough <david.goodenough@btconnect.com>
+To: linux-wireless@vger.kernel.org
+Subject: does the creation of a mesh interface trigger a udev event?
+Date: Thu, 27 Oct 2011 10:46:04 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <201110271046.04592.david.goodenough@btconnect.com> (sfid-20111027_114614_749347_35689F19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+When I create a mesh interface:-
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd.h |   29 -----------------------------
- 1 files changed, 0 insertions(+), 29 deletions(-)
+iw dev wlan0 interface add mesh0 type mp ...
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index 514f779..be6c620 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -683,36 +683,7 @@ struct bcmevent_name {
- 	const char *name;
- };
- 
--/* Override to force tx queueing all the time */
--extern uint brcmf_force_tx_queueing;
--
- extern const struct bcmevent_name bcmevent_names[];
--extern const int bcmevent_names_size;
--
--
--static inline void MUTEX_LOCK_INIT(struct brcmf_pub *drvr)
--{
--}
--
--static inline void MUTEX_LOCK(struct brcmf_pub *drvr)
--{
--}
--
--static inline void MUTEX_UNLOCK(struct brcmf_pub *drvr)
--{
--}
--
--static inline void MUTEX_LOCK_WL_SCAN_SET_INIT(void)
--{
--}
--
--static inline void MUTEX_LOCK_WL_SCAN_SET(void)
--{
--}
--
--static inline void MUTEX_UNLOCK_WL_SCAN_SET(void)
--{
--}
- 
- /* Indication from bus module regarding presence/insertion of dongle.
-  * Return struct brcmf_pub pointer, used as handle to OS module in later calls.
--- 
-1.7.1
+does a device creation event appear through udev?  Similarly while
+the creation of wlan0 for a wireless card does create such an event,
+do the monitor interfaces and phy's also create such events?
 
+As far as I can see they do not, but I may be wrong - I may just be
+listening for them wrongly.  If they do, any clues as to how to spot
+them?
 
+I ask for two reasons:-
+
+1) It would seem consistent if they did.
+
+2) For a configuration system like the one Debian uses, it is those
+events that cause configuration to happen and so it would be easier 
+to configure things like a mesh network if the events occur.
+
+David
