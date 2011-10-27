@@ -1,30 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40417 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752205Ab1JLTNo (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.23]:53964 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755229Ab1J0KrU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 15:13:44 -0400
-Subject: Re: [PATCH 22/22] brcm80211: removed file wifi.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Alwin Beukers <alwin@broadcom.com>
-In-Reply-To: <1318445492-24207-23-git-send-email-arend@broadcom.com> (sfid-20111012_205231_795177_8B760EF6)
-References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
-	 <1318445492-24207-23-git-send-email-arend@broadcom.com>
-	 (sfid-20111012_205231_795177_8B760EF6)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Oct 2011 21:13:38 +0200
-Message-ID: <1318446818.3933.45.camel@jlt3.sipsolutions.net> (sfid-20111012_211347_468444_84A2A240)
-Mime-Version: 1.0
+	Thu, 27 Oct 2011 06:47:20 -0400
+Content-Type: text/plain; charset="utf-8"
+Date: Thu, 27 Oct 2011 12:47:16 +0200
+From: "Louis" <louis.m@gmx.net>
+Message-ID: <20111027104716.268490@gmx.net> (sfid-20111027_124724_657674_34B72205)
+MIME-Version: 1.0
+Subject: carl9170: fast channel change
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-10-12 at 20:51 +0200, Arend van Spriel wrote:
+Hello, 
 
-> -#include <brcmu_wifi.h>
+I want to analyze the spectrum with an carl9710 device. (Fritz!WLAN USB Stick N) 
 
-Does that header file have any content left?
+Therefor I require to monitor all channels.
+Does someone know if the carl9170-device is principally capable of performing a fast channel change ?
 
-johannes
-
+Best regards, 
+Louis
+-- 
+NEU: FreePhone - 0ct/min Handyspartarif mit Geld-zurück-Garantie!		
+Jetzt informieren: http://www.gmx.net/de/go/freephone
