@@ -1,26 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:39191 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753701Ab1JOBpe (ORCPT
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:42264 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750899Ab1J0Tmo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 21:45:34 -0400
-Received: by vws1 with SMTP id 1so1484112vws.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2011 18:45:34 -0700 (PDT)
+	Thu, 27 Oct 2011 15:42:44 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	Dan Williams <dcbw@redhat.com>,
+	Arend Van Spriel <arend@broadcom.com>
+Date: Thu, 27 Oct 2011 12:40:20 -0700
+Subject: RE: [PATCH] cfg80211: annotate cfg80211_inform_bss
+Message-ID: <477F20668A386D41ADCC57781B1F704308180815FD@SC-VEXCH1.marvell.com> (sfid-20111027_214247_750430_640F9B6F)
+References: <1319719502.3944.5.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1319719502.3944.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CAN=pzd+TcY+n90RBMU+Cpp0Bt9d_eAGgY4yffO+PSStWSzbf-Q@mail.gmail.com>
-References: <CAN=pzd+TcY+n90RBMU+Cpp0Bt9d_eAGgY4yffO+PSStWSzbf-Q@mail.gmail.com>
-Date: Sat, 15 Oct 2011 09:45:34 +0800
-Message-ID: <CAJ-Vmomy-LGg=mh5=GqmqWuj7T8b1+oV3oaBSZpf6orJSGPTQg@mail.gmail.com> (sfid-20111015_034544_007172_E8A88D72)
-Subject: Re: Ath9k, single antenna on ar9280
-From: Adrian Chadd <adrian@freebsd.org>
-To: Stanislav Demakov <s.demakov@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-.. well, that's basically how you convince the MIMO radios to work in 1x1 mode.
-
-
-
-Adrian
+SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
+dXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mt
+b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YNCj4gSm9oYW5uZXMgQmVyZw0KPiBT
+ZW50OiBUaHVyc2RheSwgT2N0b2JlciAyNywgMjAxMSA1OjQ1IEFNDQo+IFRvOiBKb2huIExpbnZp
+bGxlDQo+IENjOiBsaW51eC13aXJlbGVzczsgU2FtdWVsIE9ydGl6OyBCaW5nIFpoYW87IEp1c3Np
+IEtpdmlsaW5uYTsgRGFuIFdpbGxpYW1zOyBBcmVuZCBWYW4gU3ByaWVsDQo+IFN1YmplY3Q6IFtQ
+QVRDSF0gY2ZnODAyMTE6IGFubm90YXRlIGNmZzgwMjExX2luZm9ybV9ic3MNCj4gDQo+IEZyb206
+IEpvaGFubmVzIEJlcmcgPGpvaGFubmVzLmJlcmdAaW50ZWwuY29tPg0KPiANCj4gVGhpcyBmdW5j
+dGlvbiByZXR1cm5zIGEgcmVmZXJlbmNlZCBCU1Mgc3RydWN0DQo+IChvciBOVUxMKSwgYW5ub3Rh
+dGUgd2l0aCBfX211c3RfY2hlY2suIEl0IHNlZW1zDQo+IHRoYXQgYSBsb3Qgb2YgZHJpdmVycyBn
+ZXQgdGhpcyBjb21wbGV0ZWx5IHdyb25nDQo+IGFuZCBsZWFrIGFsbCBCU1Mgc3RydWN0cyBhcyBh
+IHJlc3VsdC4NCj4gDQo+IFJlcG9ydGVkLWJ5OiBBZGFtIE1pa3V0YSA8QWRhbS5NaWt1dGFAdGll
+dG8uY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJnQGlu
+dGVsLmNvbT4NCj4gLS0tDQo+IENDIGxvdHMgb2YgZHJpdmVyIG1haW50YWluZXJzIHdobyBuZWVk
+IHRvIGZpeCB0aGlzIGJ1Zy4NCg0KSSB3aWxsIHdvcmsgb24gdGhlIG13aWZpZXggZHJpdmVyIHBh
+cnQuDQoNClRoYW5rcywNCkJpbmcNCg0KPiANCj4gIGluY2x1ZGUvbmV0L2NmZzgwMjExLmggfCAg
+ICA4ICsrKysrKy0tDQo+ICAxIGZpbGUgY2hhbmdlZCwgNiBpbnNlcnRpb25zKCspLCAyIGRlbGV0
+aW9ucygtKQ0KPiANCj4gLS0tIGEvaW5jbHVkZS9uZXQvY2ZnODAyMTEuaAkyMDExLTEwLTI3IDE0
+OjA1OjE3LjAwMDAwMDAwMCArMDIwMA0KPiArKysgYi9pbmNsdWRlL25ldC9jZmc4MDIxMS5oCTIw
+MTEtMTAtMjcgMTQ6NDI6NTEuMDAwMDAwMDAwICswMjAwDQo+IEBAIC0yNjUxLDggKzI2NTEsMTAg
+QEAgdm9pZCBjZmc4MDIxMV9zY2hlZF9zY2FuX3N0b3BwZWQoc3RydWN0DQo+ICAgKg0KPiAgICog
+VGhpcyBpbmZvcm1zIGNmZzgwMjExIHRoYXQgQlNTIGluZm9ybWF0aW9uIHdhcyBmb3VuZCBhbmQN
+Cj4gICAqIHRoZSBCU1Mgc2hvdWxkIGJlIHVwZGF0ZWQvYWRkZWQuDQo+ICsgKg0KPiArICogTk9U
+RTogUmV0dXJucyBhIHJlZmVyZW5jZWQgc3RydWN0LCBtdXN0IGJlIHJlbGVhc2VkIHdpdGggY2Zn
+ODAyMTFfcHV0X2JzcygpIQ0KPiAgICovDQo+IC1zdHJ1Y3QgY2ZnODAyMTFfYnNzKg0KPiArc3Ry
+dWN0IGNmZzgwMjExX2JzcyAqIF9fbXVzdF9jaGVjaw0KPiAgY2ZnODAyMTFfaW5mb3JtX2Jzc19m
+cmFtZShzdHJ1Y3Qgd2lwaHkgKndpcGh5LA0KPiAgCQkJICBzdHJ1Y3QgaWVlZTgwMjExX2NoYW5u
+ZWwgKmNoYW5uZWwsDQo+ICAJCQkgIHN0cnVjdCBpZWVlODAyMTFfbWdtdCAqbWdtdCwgc2l6ZV90
+IGxlbiwNCj4gQEAgLTI2NzQsOCArMjY3NiwxMCBAQCBjZmc4MDIxMV9pbmZvcm1fYnNzX2ZyYW1l
+KHN0cnVjdCB3aXBoeSAqDQo+ICAgKg0KPiAgICogVGhpcyBpbmZvcm1zIGNmZzgwMjExIHRoYXQg
+QlNTIGluZm9ybWF0aW9uIHdhcyBmb3VuZCBhbmQNCj4gICAqIHRoZSBCU1Mgc2hvdWxkIGJlIHVw
+ZGF0ZWQvYWRkZWQuDQo+ICsgKg0KPiArICogTk9URTogUmV0dXJucyBhIHJlZmVyZW5jZWQgc3Ry
+dWN0LCBtdXN0IGJlIHJlbGVhc2VkIHdpdGggY2ZnODAyMTFfcHV0X2JzcygpIQ0KPiAgICovDQo+
+IC1zdHJ1Y3QgY2ZnODAyMTFfYnNzKg0KPiArc3RydWN0IGNmZzgwMjExX2JzcyAqIF9fbXVzdF9j
+aGVjaw0KPiAgY2ZnODAyMTFfaW5mb3JtX2JzcyhzdHJ1Y3Qgd2lwaHkgKndpcGh5LA0KPiAgCQkg
+ICAgc3RydWN0IGllZWU4MDIxMV9jaGFubmVsICpjaGFubmVsLA0KPiAgCQkgICAgY29uc3QgdTgg
+KmJzc2lkLA0KPiANCj4gDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBz
+ZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC13aXJlbGVzcyIgaW4NCj4gdGhlIGJvZHkg
+b2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gTW9yZSBtYWpvcmRv
+bW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo=
