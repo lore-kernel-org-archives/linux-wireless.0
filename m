@@ -1,139 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3779 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754614Ab1JUNzd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 09:55:33 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 02/17] brcm80211: fmac: use brcmf_del_if for all net
- devices
-Date: Fri, 21 Oct 2011 15:55:04 +0200
-Message-ID: <1319205319-16891-3-git-send-email-arend@broadcom.com> (sfid-20111021_155601_500274_C6B0E46A)
-In-Reply-To: <1319205319-16891-1-git-send-email-arend@broadcom.com>
-References: <1319205319-16891-1-git-send-email-arend@broadcom.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:65306 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753006Ab1J0NST (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Oct 2011 09:18:19 -0400
+Received: by vws1 with SMTP id 1so2389853vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Oct 2011 06:18:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4EA89B8D.7060104@lwfinger.net>
+References: <CAF7qGM4BL10gn2786kW73sAk8f-y8CzX0rx2BQsY_Q96W=pfog@mail.gmail.com>
+ <4EA89B8D.7060104@lwfinger.net>
+From: Roman Proud <setamagiga@gmail.com>
+Date: Thu, 27 Oct 2011 15:17:59 +0200
+Message-ID: <CAF7qGM7hfaz0SGiZVZ62r_nPO8viMT5F2_Kd1uRxN9Ha3mRO+Q@mail.gmail.com> (sfid-20111027_151822_982994_ED509F9C)
+Subject: Re: RTL8188RU no injection?
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+Hi peops
 
-Use brcmf_del_if for primary and virtual net device interfaces. This
-is part of the net device interface clean up for fullmac.
+thx for all youre responses!
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   55 +++++++++----------
- 1 files changed, 26 insertions(+), 29 deletions(-)
+Well i didnt really thought about g and n -.-
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 4acbac5..6739ece 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -893,6 +893,16 @@ static int brcmf_netdev_open(struct net_device *ndev)
- 	return ret;
- }
- 
-+static const struct net_device_ops brcmf_netdev_ops_pri = {
-+	.ndo_open = brcmf_netdev_open,
-+	.ndo_stop = brcmf_netdev_stop,
-+	.ndo_get_stats = brcmf_netdev_get_stats,
-+	.ndo_do_ioctl = brcmf_netdev_ioctl_entry,
-+	.ndo_start_xmit = brcmf_netdev_start_xmit,
-+	.ndo_set_mac_address = brcmf_netdev_set_mac_address,
-+	.ndo_set_rx_mode = brcmf_netdev_set_multicast_list
-+};
-+
- int
- brcmf_add_if(struct brcmf_info *drvr_priv, int ifidx, struct net_device *ndev,
- 	     char *name, u8 *mac_addr, u32 flags, u8 bssidx)
-@@ -977,14 +987,23 @@ void brcmf_del_if(struct brcmf_info *drvr_priv, int ifidx)
- 		brcmf_dbg(ERROR, "Null interface\n");
- 		return;
- 	}
--
- 	ifp->state = BRCMF_E_IF_DEL;
--	ifp->idx = ifidx;
--	if (ifp->ndev != NULL) {
--		netif_stop_queue(ifp->ndev);
-+	if (ifp->ndev) {
-+		if (ifidx == 0) {
-+			if (ifp->ndev->netdev_ops == &brcmf_netdev_ops_pri) {
-+				rtnl_lock();
-+				brcmf_netdev_stop(ifp->ndev);
-+				rtnl_unlock();
-+			}
-+		} else {
-+			netif_stop_queue(ifp->ndev);
-+		}
-+
- 		unregister_netdev(ifp->ndev);
--		free_netdev(ifp->ndev);
- 		drvr_priv->iflist[ifidx] = NULL;
-+		if (ifidx == 0)
-+			brcmf_cfg80211_detach(drvr_priv->pub.config);
-+		free_netdev(ifp->ndev);
- 		kfree(ifp);
- 	}
- }
-@@ -1123,16 +1142,6 @@ int brcmf_bus_start(struct brcmf_pub *drvr)
- 	return 0;
- }
- 
--static struct net_device_ops brcmf_netdev_ops_pri = {
--	.ndo_open = brcmf_netdev_open,
--	.ndo_stop = brcmf_netdev_stop,
--	.ndo_get_stats = brcmf_netdev_get_stats,
--	.ndo_do_ioctl = brcmf_netdev_ioctl_entry,
--	.ndo_start_xmit = brcmf_netdev_start_xmit,
--	.ndo_set_mac_address = brcmf_netdev_set_mac_address,
--	.ndo_set_rx_mode = brcmf_netdev_set_multicast_list
--};
--
- int brcmf_net_attach(struct brcmf_pub *drvr, int ifidx)
- {
- 	struct brcmf_info *drvr_priv = drvr->info;
-@@ -1210,21 +1219,13 @@ void brcmf_detach(struct brcmf_pub *drvr)
- 	if (drvr) {
- 		drvr_priv = drvr->info;
- 		if (drvr_priv) {
--			struct brcmf_if *ifp;
- 			int i;
- 
--			for (i = 1; i < BRCMF_MAX_IFS; i++)
-+			/* make sure primary interface removed last */
-+			for (i = BRCMF_MAX_IFS-1; i > -1; i--)
- 				if (drvr_priv->iflist[i])
- 					brcmf_del_if(drvr_priv, i);
- 
--			ifp = drvr_priv->iflist[0];
--			if (ifp->ndev->netdev_ops == &brcmf_netdev_ops_pri) {
--				rtnl_lock();
--				brcmf_netdev_stop(ifp->ndev);
--				rtnl_unlock();
--				unregister_netdev(ifp->ndev);
--			}
--
- 			cancel_work_sync(&drvr_priv->setmacaddr_work);
- 			cancel_work_sync(&drvr_priv->multicast_work);
- 
-@@ -1233,10 +1234,6 @@ void brcmf_detach(struct brcmf_pub *drvr)
- 			if (drvr->prot)
- 				brcmf_proto_detach(drvr);
- 
--			brcmf_cfg80211_detach(drvr->config);
--
--			free_netdev(ifp->ndev);
--			kfree(ifp);
- 			kfree(drvr_priv);
- 		}
- 	}
--- 
-1.7.4.1
+Im using the latest 8192cu driver from Realtek now, it works just
+fine. Also monitor mode works like a charm (yes if i use airmon-ng for
+it). My Kernel is (now the default) Arch kernel, on Linux Version
+3.0.4
 
+My last problem is the Package injection. Im surprised you are
+thinking it could work (ive found many resources that say something
+different, but hey its an OpenSource driver ;)
 
+Pls excuse my "stupidness" but im really not sure if i am using
+"mac80211", i think so, its leaded in the System.
+
+And yes its Aircrack im trying to work with, and its Aircrack which
+tells me i cant use Packet Injection.
+I will try Packetspammer as soon as i am at home. If this works i have
+to contact Aircrack, am i right?
+
+Greetings
+Roman
+
+2011/10/27 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 10/26/2011 05:29 PM, Roman Proud wrote:
+>>
+>> Hi there,
+>>
+>> i hope you guys can help me.
+>> I wanted a new Wifi card, because mine has no injection, what i need
+>> sometimes.
+>>
+>> So i forced the Internet to find that a 8187 would be best for. So i
+>> bought the 8188 (newer = better?)... i never had thought about so much
+>> difference in just one number... it was horrible to even get the card
+>> work, first no monitor mode works, but now it does (i dunno why
+>> O_o)... The only thing i miss is Package injection.
+>>
+>> So my Question. Is it there? is it in the driver and i just have to do
+>> some magic again like i did with the monitor mode?
+>> If not, is there any Patch? (i didn't find anything...)
+>> Or should i simply send the damn thing back and get me an 8187? (its
+>> not that simple, and i like hacking into my linux, so one of the first
+>> both, would be nicer)
+>
+> I found that packetspammer works just fine with rtl8192cu.
+>
+> Larry
+>
+>
