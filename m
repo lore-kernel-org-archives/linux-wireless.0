@@ -1,52 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:34299 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751241Ab1JIGJ4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2343 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932166Ab1J1LWK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Oct 2011 02:09:56 -0400
-Received: by mail-bw0-f50.google.com with SMTP id zt19so7865623bkb.37
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Oct 2011 23:09:55 -0700 (PDT)
-Subject: Re: [PATCH 1/2] wl12xx: sdio: use dev_dbg instead of wl1271_debug
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAB3XZEeiyAxzE6tiqe2D71jKuusa-hPz-2fw5bqHocaw+d1xWg@mail.gmail.com>
-References: <1317987297-18172-1-git-send-email-coelho@ti.com>
-	 <CAB3XZEeiyAxzE6tiqe2D71jKuusa-hPz-2fw5bqHocaw+d1xWg@mail.gmail.com>
+	Fri, 28 Oct 2011 07:22:10 -0400
+Message-ID: <4EAA905B.8080705@qca.qualcomm.com> (sfid-20111028_132218_916824_CB3193DF)
+Date: Fri, 28 Oct 2011 14:22:03 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 01/10] ath6kl: don't use cfg80211_scan_request after	cfg80211_scan_done()
+References: <20111027154746.23519.39680.stgit@localhost6.localdomain6>
+In-Reply-To: <20111027154746.23519.39680.stgit@localhost6.localdomain6>
 Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 09 Oct 2011 09:09:52 +0300
-Message-ID: <1318140592.9690.55.camel@cumari> (sfid-20111009_081002_005954_3905654A)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-10-09 at 02:08 +0200, Eliad Peller wrote: 
-> On Fri, Oct 7, 2011 at 1:34 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > To prevent a useless dependency between the sdio module and the wl12xx
-> > module, we need to replace the wl1271_debug macros (and friends) for
-> > dev_dbg and other equivalents.
-> >
-> > At the same time, remove the SDIO data hexdump, since this produces
-> > way too much data and is not particularly useful.  There's not
-> > print_hex_dump() equivalent for dynamic debug, so it's hard to control
-> > when the dumps are printed out.
-> >
-> > Signed-off-by: Luciano Coelho <coelho@ti.com>
-> > ---
-> [...]
-> >                if (!(sdio_flags & MMC_PM_KEEP_POWER)) {
-> > -                       wl1271_error("can't keep power while host "
-> > +                       dev_err(dev, "can't keep power while host \n"
-> >                                     "is suspended");
+On 10/27/2011 06:47 PM, Kalle Valo wrote:
+> Use of cfg80211_scan_request is not valid after calling cfg80211_scan_done()
+> but ath6kl_cfg80211_scan_complete_event() was doing exactly that. Change
+> the function to call cfg80211_scan_done() last.
 > 
-> you missed the concatenation here :)
+> This was found during code review, I didn't see any visible problems
+> due to this bug.
 
-Ouch! Et tu Brutus?! :)
+All 10 applied.
 
-My regex didn't spread across lines.  I'll fix it, thanks for checking.
-
-
--- 
-Cheers,
-Luca.
-
+Kalle
