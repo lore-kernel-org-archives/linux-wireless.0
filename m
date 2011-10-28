@@ -1,46 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4200 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752225Ab1JaV24 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Oct 2011 17:28:56 -0400
-Message-ID: <4EAF1310.6030006@broadcom.com> (sfid-20111031_222859_975605_861EA696)
-Date: Mon, 31 Oct 2011 14:28:48 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
-MIME-Version: 1.0
-To: "Daniel Wolstenholme" <daniel@wolstenholme.net>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: cfg80211 events
-References: <CAB1eQC7cXz0GpGrX7d8_nL_8d8ZAgxSzXUxqDhR7PiSSJysOoQ@mail.gmail.com>
-In-Reply-To: <CAB1eQC7cXz0GpGrX7d8_nL_8d8ZAgxSzXUxqDhR7PiSSJysOoQ@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from external1.orbit-lab.org ([128.6.192.131]:40015 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932507Ab1J1TCw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Oct 2011 15:02:52 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 67C015401F9
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Oct 2011 15:22:05 -0400 (EDT)
+Subject: Compat-wireless release for 2011-10-28 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111028190250.48E3140656@repository3.orbit-lab.org> (sfid-20111028_210309_422140_F86A61C7)
+Date: Fri, 28 Oct 2011 15:02:50 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/27/2011 03:27 PM, Daniel Wolstenholme wrote:
-> Hi all,
->
-> I'm working with the Broadcom brcmfmac driver, and I'm attempting to improve
-> event reporting, but I'm finding there's not that much documentation on
-> wireless events.  One big problem I'm having is that I'm using the cfg80211
-> interface, but when I run "iw event -t -f", I don't see the events showing
-> up.  Another question I have is: is there a way to send events with
-> arbitrary strings from the driver through to userspace?
->
-> Any pointers would be greatly appreciated.
->
-> Dan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
-Hi Dan,
+compat-wireless code metrics
 
-Just curious, on what kind of hardware platform are you using brcmfmac?
-
-Thanks,
-Franky
-
+    814862 - Total upstream lines of code being pulled
+      2431 - backport code changes
+      2113 - backport code additions
+       318 - backport code deletions
+      8588 - backport from compat module
+     11019 - total backport code
+    1.3523 - % of code consists of backport work
