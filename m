@@ -1,107 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:53588 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752858Ab1JJINF (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:33093 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754175Ab1J1WVb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 04:13:05 -0400
-Received: by mail-bw0-f46.google.com with SMTP id zt4so8169287bkb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 01:13:05 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 17/29] wl12xx: make WL1271_FLAG_RX_STREAMING_STARTED flag per-vif
-Date: Mon, 10 Oct 2011 10:13:05 +0200
-Message-Id: <1318234397-21081-18-git-send-email-eliad@wizery.com> (sfid-20111010_101311_401148_B14DB0BA)
-In-Reply-To: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
+	Fri, 28 Oct 2011 18:21:31 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [wireless-next PATCH v2 2/4] wifi: Support disabling ht40.
+Date: Fri, 28 Oct 2011 15:21:12 -0700
+Message-Id: <1319840474-2618-2-git-send-email-greearb@candelatech.com> (sfid-20111029_002134_922694_AE4482C2)
+In-Reply-To: <1319840474-2618-1-git-send-email-greearb@candelatech.com>
+References: <1319840474-2618-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This flag should be set per-vif, rather than globally.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Allows users to forceably disable HT40 support in station
+interfaces.
+
+Other interface types may be supported later.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/wl12xx/main.c   |   10 +++++-----
- drivers/net/wireless/wl12xx/tx.c     |    2 +-
- drivers/net/wireless/wl12xx/wl12xx.h |    2 +-
- 3 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 92f38c5..36c7493 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -514,9 +514,9 @@ static int wl1271_set_rx_streaming(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		goto out;
+* Tweaked patch description, no other significant changes.
+
+:100644 100644 8a317c9... 9f50f90... M	include/linux/nl80211.h
+:100644 100644 1331a5b... 9d7a5e0... M	include/net/cfg80211.h
+:100644 100644 8221a3a... c63d7f0... M	net/mac80211/cfg.c
+:100644 100644 72c6726... f4a7618... M	net/mac80211/ieee80211_i.h
+:100644 100644 393b480... 164cdb1... M	net/mac80211/mlme.c
+:100644 100644 db24d25... 404378d... M	net/wireless/nl80211.c
+ include/linux/nl80211.h    |    4 ++++
+ include/net/cfg80211.h     |    2 ++
+ net/mac80211/cfg.c         |    3 +++
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |    1 +
+ net/wireless/nl80211.c     |    7 +++++++
+ 6 files changed, 18 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 8a317c9..9f50f90 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1111,6 +1111,8 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_DISABLE_HT:  Force /n capable interfaces to instead
+  *      function as /a/b/g interfaces.
++ * @NL80211_ATTR_DISABLE_HT40:  Disable HT-40 even if AP and hardware
++ *      support it.
+  *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -1341,6 +1343,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_TDLS_EXTERNAL_SETUP,
  
- 	if (enable)
--		set_bit(WL1271_FLAG_RX_STREAMING_STARTED, &wl->flags);
-+		set_bit(WLVIF_FLAG_RX_STREAMING_STARTED, &wlvif->flags);
+ 	NL80211_ATTR_DISABLE_HT,
++	NL80211_ATTR_DISABLE_HT40,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 1331a5b..9d7a5e0 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -255,10 +255,12 @@ struct ieee80211_supported_band {
+  * struct vif_params - describes virtual interface parameters
+  * @use_4addr: use 4-address frames
+  * @disable_11n:  Don't use 11n features (HT, etc)
++ * @disable_ht40:  Don't use HT40, even if hardware & AP support it.
+  */
+ struct vif_params {
+ 	int use_4addr;
+ 	int disable_11n;
++	int disable_ht40;
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 8221a3a..c63d7f0 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -60,6 +60,9 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 	if (params->disable_11n != -1)
+ 		sdata->cfg_disable_11n = params->disable_11n;
+ 
++	if (params->disable_ht40 != -1)
++		sdata->cfg_disable_ht40 = params->disable_ht40;
++
+ 	ret = ieee80211_if_change_type(sdata, type);
+ 	if (ret)
+ 		return ret;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 72c6726..f4a7618 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -596,6 +596,7 @@ struct ieee80211_sub_if_data {
+ 	bool old_idle;
+ 
+ 	bool cfg_disable_11n; /* configured to disable 11n? */
++	bool cfg_disable_ht40; /* configured to not use HT-40 */
+ 
+ 	/* Fragment table for host-based reassembly */
+ 	struct ieee80211_fragment_entry	fragments[IEEE80211_FRAGMENT_MAX];
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 393b480..164cdb1 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -207,6 +207,7 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ 		channel_type = NL80211_CHAN_HT20;
+ 
+ 		if (!(ap_ht_cap_flags & IEEE80211_HT_CAP_40MHZ_INTOLERANT) &&
++		    !sdata->cfg_disable_ht40 &&
+ 		    (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
+ 		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
+ 			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index db24d25..404378d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1648,6 +1648,13 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 		params.disable_11n = -1;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_DISABLE_HT40]) {
++		params.disable_ht40 = !!nla_get_u8(info->attrs[NL80211_ATTR_DISABLE_HT40]);
++		change = true;
++	} else {
++		params.disable_ht40 = -1;
++	}
++
+ 	if (change)
+ 		err = cfg80211_change_iface(rdev, dev, ntype, flags, &params);
  	else
--		clear_bit(WL1271_FLAG_RX_STREAMING_STARTED, &wl->flags);
-+		clear_bit(WLVIF_FLAG_RX_STREAMING_STARTED, &wlvif->flags);
- out:
- 	return ret;
- }
-@@ -531,7 +531,7 @@ int wl1271_recalc_rx_streaming(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	int period = wl->conf.rx_streaming.interval;
- 
- 	/* don't reconfigure if rx_streaming is disabled */
--	if (!test_bit(WL1271_FLAG_RX_STREAMING_STARTED, &wl->flags))
-+	if (!test_bit(WLVIF_FLAG_RX_STREAMING_STARTED, &wlvif->flags))
- 		goto out;
- 
- 	/* reconfigure/disable according to new streaming_period */
-@@ -558,7 +558,7 @@ static void wl1271_rx_streaming_enable_work(struct work_struct *work)
- 
- 	mutex_lock(&wl->mutex);
- 
--	if (test_bit(WL1271_FLAG_RX_STREAMING_STARTED, &wl->flags) ||
-+	if (test_bit(WLVIF_FLAG_RX_STREAMING_STARTED, &wlvif->flags) ||
- 	    !test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags) ||
- 	    (!wl->conf.rx_streaming.always &&
- 	     !test_bit(WL1271_FLAG_SOFT_GEMINI, &wl->flags)))
-@@ -594,7 +594,7 @@ static void wl1271_rx_streaming_disable_work(struct work_struct *work)
- 
- 	mutex_lock(&wl->mutex);
- 
--	if (!test_bit(WL1271_FLAG_RX_STREAMING_STARTED, &wl->flags))
-+	if (!test_bit(WLVIF_FLAG_RX_STREAMING_STARTED, &wlvif->flags))
- 		goto out;
- 
- 	ret = wl1271_ps_elp_wakeup(wl);
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index a6bc979..9589446 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -670,7 +670,7 @@ void wl12xx_rearm_rx_streaming(struct wl1271 *wl, unsigned long *active_hlids)
- 			continue;
- 
- 		/* enable rx streaming */
--		if (!test_bit(WL1271_FLAG_RX_STREAMING_STARTED, &wl->flags))
-+		if (!test_bit(WLVIF_FLAG_RX_STREAMING_STARTED, &wlvif->flags))
- 			ieee80211_queue_work(wl->hw,
- 					     &wlvif->rx_streaming_enable_work);
- 
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 6a1df2c..4741a4b 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -327,7 +327,6 @@ enum wl12xx_flags {
- 	WL1271_FLAG_SUSPENDED,
- 	WL1271_FLAG_PENDING_WORK,
- 	WL1271_FLAG_SOFT_GEMINI,
--	WL1271_FLAG_RX_STREAMING_STARTED,
- 	WL1271_FLAG_RECOVERY_IN_PROGRESS,
- 	WL1271_FLAG_CS_PROGRESS,
- };
-@@ -339,6 +338,7 @@ enum wl12xx_vif_flags {
- 	WLVIF_FLAG_PSM,
- 	WLVIF_FLAG_PSM_REQUESTED,
- 	WLVIF_FLAG_STA_STATE_SENT,
-+	WLVIF_FLAG_RX_STREAMING_STARTED,
- };
- 
- struct wl1271_link {
 -- 
-1.7.6.401.g6a319
+1.7.3.4
 
