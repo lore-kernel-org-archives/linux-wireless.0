@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59933 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750957Ab1JQRjp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Oct 2011 13:39:45 -0400
-Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p9HHdhux024338
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2011 10:39:43 -0700
-Message-ID: <4E9C685E.8000504@candelatech.com> (sfid-20111017_193949_170093_C284FD94)
-Date: Mon, 17 Oct 2011 10:39:42 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:2269 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752671Ab1J1JKT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Oct 2011 05:10:19 -0400
+From: "Arend Van Spriel" <arend@broadcom.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 28 Oct 2011 02:10:03 -0700
+Subject: RE: [RFC v2 13/12] cfg80211/mac80211: allow management TX to
+ not wait for ACK
+Message-ID: <400C43189542CE41BC0A5B252FC90136BC0E37541B@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20111028_111024_273101_CF9E1946)
+References: <20111021142322.229128720@sipsolutions.net> (
+ sfid-20111021_162510_209354_8FBBB6EB)
+ <1319743973.32221.4.camel@jlt3.sipsolutions.net>
+ <400C43189542CE41BC0A5B252FC90136BC0E3753AA@SJEXCHCCR02.corp.ad.broadcom.com>
+ <1319788880.3914.4.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1319788880.3914.4.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Question on forcing stations to be in particular a/b/g/n & HT mode.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
-
-We've had good luck with virtualizing lots of stations
-and having them talk to various APs.  Now, I'd like to
-improve on this a bit and be able to control some of
-the options for individual clients such as HT-40 v/s HT-20,
-Limit to /g even if /a/b/g/n is supported, etc.  The kernel
-side of this will be the ath9k driver.
-
-I would be grateful for pointers if any of this can
-currently be done, or to areas in the hostapd and/or kernel
-code that would need modifying to support this.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+PiBGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0N
+Cj4gU2VudDogdnJpamRhZyAyOCBva3RvYmVyIDIwMTEgMTA6MDENCj4gDQo+IE9uIEZyaSwgMjAx
+MS0xMC0yOCBhdCAwMDo0OCAtMDcwMCwgQXJlbmQgVmFuIFNwcmllbCB3cm90ZToNCj4gPiA+IFNl
+bnQ6IGRvbmRlcmRhZyAyNyBva3RvYmVyIDIwMTEgMjE6MzMNCj4gPiA+IEZyb206IEpvaGFubmVz
+IEJlcmcgPGpvaGFubmVzLmJlcmdAaW50ZWwuY29tPg0KPiA+ID4NCj4gPiA+IEZvciBwcm9iZSBy
+ZXNwb25zZXMgaXQgY2FuIGJlIHVzZWZ1bCB0byBub3Qgd2FpdCBmb3IgQUNLDQo+ID4gPiB0byBz
+YXZlIGFpcnRpbWUsIHNvIGFsbG93IHVzZXJzcGFjZSB0byByZXF1ZXN0IG5vdCB3YWl0aW5nDQo+
+ID4gPiB3aXRoIGEgbmV3IG5sODAyMTEgZmxhZy4NCj4gPiA+DQo+ID4gPiBTaW5jZSBtYWM4MDIx
+MSBuZWVkcyB0byBiZSB1cGRhdGVkIGZvciB0aGUgbmV3IGZ1bmN0aW9uDQo+ID4gPiBwcm90b3R5
+cGUgYW55d2F5IGltcGxlbWVudCBpdCByaWdodCBhd2F5IC0tIGl0J3MganVzdCBhDQo+ID4gPiBm
+ZXcgbGluZXMgb2YgY29kZS4NCj4gDQo+ID4gSSB3b3VsZCBleHBlY3QgdGhpcyB0byBhZmZlY3Qg
+dGhlIGR1cmF0aW9uIGZpZWxkIGluIHRoZQ0KPiA+IDgwMi4xMSBoZWFkZXIgdG8gaW5kaWNhdGUg
+dGhlIHNob3J0ZXIgdXNlIG9mIHRoZSBtZWRpdW0uDQo+ID4gR29pbmcgdGhyb3VnaCB5b3VyIHBh
+dGNoIEkgYW0gbm90IHN1cmUgdGhpcyBpcyBkb25lLg0KPiANCj4gSG1tbS4gWW91J3JlIHJpZ2h0
+LCBidXQgdGhhdCdzIHNvbWV0aGluZyB3ZSBhbHJlYWR5IG5lZWQgdG8gZml4IGluIG1hbnkNCj4g
+Y2FzZXMgLS0gYXMgdGhlIGR1cmF0aW9uIGZpZWxkIGlzIG92ZXJ3cml0dGVuIGJ5IG1vc3QgaGFy
+ZHdhcmUgdGhlc2UNCj4gZGF5cywgd2UgaGF2ZW4ndCBhbHdheXMgbWFpbnRhaW5lZCBpdCB2ZXJ5
+IHdlbGwuDQoNCklmIHRoZSBzdGF0aW9uIHN0aWxsIGRvZXMgdGhlIEFDSyB3ZSBzaG91bGQgbm90
+IHRvdWNoIHRoZSBkdXJhdGlvbiBmaWVsZA0KaW4gdGhpcyBjYXNlIChzZWUgbXkgcmVwbHkgdG8g
+SGVsbXV0KS4NCg0KPiBZb3VyIGRyaXZlciBzZWVtcyB0byBiZSB0aGUgZXhjZXB0aW9uIHRvIHRo
+aXMgLS0gbWF5YmUgeW91IGNhbiBsb29rDQo+IGludG8NCj4gZml4aW5nIHVwIHRoZSBkdXJhdGlv
+biBjYWxjdWxhdGlvbnM/IEFsc28gZm9yIDExbiB3aGljaCBpc24ndCB0YWtlbg0KPiBpbnRvDQo+
+IGFjY291bnQgYXQgYWxsIHRvZGF5Lg0KPiANCj4gam9oYW5uZXMNCj4gDQoNCkkgd2lsbCBzZWUg
+d2hldGhlciB3ZSBjYW4gY29udHJpYnV0ZSB0byBtYWM4MDIxMSBmb3IgdGhpcy4gQnV0IHRoZXJl
+DQphcmUgb25seSB0d28gb2YgdXMgd29ya2luZyBvbiB0aGlzIGFuZCB0aGVyZSBhcmUgc29tZSBt
+b3JlIGl0ZW1zIG9uDQpvdXIgdG9kbyBsaXN0LiBXaGVuIHdlIHdpbGwgYWRkcmVzcyBpdCB3ZSBz
+dXJlIHdpbGwgdGFrZSAxMW4gaW50bw0KYWNjb3VudC4NCg0KR3IuIEF2Uw0K
 
