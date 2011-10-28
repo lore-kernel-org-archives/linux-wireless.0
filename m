@@ -1,123 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2543 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754745Ab1JYKNA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 06:13:00 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
-	<athiruve@qca.qualcomm.com>
-Subject: [PATCH 20/34] ath6kl: Cleanup parameters in ath6kl_init_control_info() and ath6kl_init_profile_info()
-Date: Tue, 25 Oct 2011 15:40:16 +0530
-Message-ID: <1319537430-12459-21-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111025_121303_711613_0A82AC3D)
-In-Reply-To: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com>
+Received: from purkki.adurom.net ([80.68.90.206]:53400 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753106Ab1J1NeN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Oct 2011 09:34:13 -0400
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Arend Van Spriel <arend@broadcom.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v2 13/12] cfg80211/mac80211: allow management TX to not wait for ACK
+References: <20111021142322.229128720@sipsolutions.net>
+	<1319743973.32221.4.camel@jlt3.sipsolutions.net>
+	<400C43189542CE41BC0A5B252FC90136BC0E3753AA@SJEXCHCCR02.corp.ad.broadcom.com>
+	<1319788880.3914.4.camel@jlt3.sipsolutions.net>
+	<400C43189542CE41BC0A5B252FC90136BC0E37541B@SJEXCHCCR02.corp.ad.broadcom.com>
+	<CAGXE3d9NiHgmE_ABc_red7MeNnhUGG+fOgbL19B9U3e9Fx9Vxw@mail.gmail.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Fri, 28 Oct 2011 16:34:10 +0300
+In-Reply-To: <CAGXE3d9NiHgmE_ABc_red7MeNnhUGG+fOgbL19B9U3e9Fx9Vxw@mail.gmail.com> (Helmut Schaa's message of "Fri\, 28 Oct 2011 11\:28\:03 +0200")
+Message-ID: <877h3pb5pp.fsf@purkki.adurom.net> (sfid-20111028_153417_657892_CFE13E9E)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pass vif structure to those functions instead of ath6kl because these
-functions do vif specific information initialization.
+Helmut Schaa <helmut.schaa@googlemail.com> writes:
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    2 +-
- drivers/net/wireless/ath/ath6kl/core.h     |    4 ++--
- drivers/net/wireless/ath/ath6kl/init.c     |   12 +++---------
- drivers/net/wireless/ath/ath6kl/main.c     |    4 ++--
- 4 files changed, 8 insertions(+), 14 deletions(-)
+> The reason is the following: if you're running a mac80211 AP with multiple
+> bssids, hostapd will answer to broadcast probe requests sent by STAs with
+> one probe response per bssid (unicast of course). And since some clients
+> stay only for a short amount of time on the scan-channel (a few ms) under
+> some circumstances the probe responses aren't sent out yet before the
+> scanning STA leaves the channel and thus retried till the maximum retry
+> limit is reached. And these retries consume quite a lot of airtime. And to
+> avoid this we just don't want to retry the probe responses in that case.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index d471906..3b67b6a 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2121,7 +2121,7 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 
- 	init_netdev(ndev);
- 
--	ath6kl_init_control_info(ar);
-+	ath6kl_init_control_info(vif);
- 
- 	/* TODO: Pass interface specific pointer instead of ar */
- 	if (ath6kl_init_if_data(ar, ndev))
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 2a788e6..9b47b56 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -592,7 +592,7 @@ int ath6kl_diag_write(struct ath6kl *ar, u32 address, void *data, u32 length);
- int ath6kl_diag_read32(struct ath6kl *ar, u32 address, u32 *value);
- int ath6kl_diag_read(struct ath6kl *ar, u32 address, void *data, u32 length);
- int ath6kl_read_fwlogs(struct ath6kl *ar);
--void ath6kl_init_profile_info(struct ath6kl *ar);
-+void ath6kl_init_profile_info(struct ath6kl_vif *vif);
- void ath6kl_tx_data_cleanup(struct ath6kl *ar);
- void ath6kl_stop_endpoint(struct net_device *dev, bool keep_profile,
- 			  bool get_dbglogs);
-@@ -647,7 +647,7 @@ void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid, u16 seq_no,
- void ath6kl_wakeup_event(void *dev);
- void ath6kl_target_failure(struct ath6kl *ar);
- 
--void ath6kl_init_control_info(struct ath6kl *ar);
-+void ath6kl_init_control_info(struct ath6kl_vif *vif);
- void ath6kl_deinit_if_data(struct ath6kl *ar, struct net_device *ndev);
- void ath6kl_core_free(struct ath6kl *ar);
- #endif /* CORE_H */
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 656b588..8dff1ca 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -73,11 +73,8 @@ struct sk_buff *ath6kl_buf_alloc(int size)
- 	return skb;
- }
- 
--void ath6kl_init_profile_info(struct ath6kl *ar)
-+void ath6kl_init_profile_info(struct ath6kl_vif *vif)
- {
--	/* TODO: Findout vif */
--	struct ath6kl_vif *vif = ar->vif;
--
- 	vif->ssid_len = 0;
- 	memset(vif->ssid, 0, sizeof(vif->ssid));
- 
-@@ -246,12 +243,9 @@ static int ath6kl_init_service_ep(struct ath6kl *ar)
- 	return 0;
- }
- 
--void ath6kl_init_control_info(struct ath6kl *ar)
-+void ath6kl_init_control_info(struct ath6kl_vif *vif)
- {
--	/* TODO: Findout vif */
--	struct ath6kl_vif *vif = ar->vif;
--
--	ath6kl_init_profile_info(ar);
-+	ath6kl_init_profile_info(vif);
- 	vif->def_txkey_index = 0;
- 	memset(vif->wep_key_list, 0, sizeof(vif->wep_key_list));
- 	vif->ch_hint = 0;
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index ae67a46..6b06c1c 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -443,7 +443,7 @@ void ath6kl_stop_endpoint(struct net_device *dev, bool keep_profile,
- 				 test_bit(CONNECT_PEND, &vif->flags));
- 		ath6kl_disconnect(vif);
- 		if (!keep_profile)
--			ath6kl_init_profile_info(ar);
-+			ath6kl_init_profile_info(vif);
- 
- 		del_timer(&vif->disconnect_timer);
- 
-@@ -632,7 +632,7 @@ void disconnect_timer_handler(unsigned long ptr)
- 	struct net_device *dev = (struct net_device *)ptr;
- 	struct ath6kl_vif *vif = netdev_priv(dev);
- 
--	ath6kl_init_profile_info(vif->ar);
-+	ath6kl_init_profile_info(vif);
- 	ath6kl_disconnect(vif);
- }
- 
+This is all good. But doesn't it also mean that this change increases
+probability that the client doesn't receive the probe response, for
+example due to interference where retransmission would help, and hence
+the AP isn't included in the client's scan results?
+
 -- 
-1.7.0.4
-
+Kalle Valo
