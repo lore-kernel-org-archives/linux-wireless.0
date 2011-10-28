@@ -1,46 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4317 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750990Ab1JLOPa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 10:15:30 -0400
-Subject: Re: [PATCH] iwlagn: fix priv->cfg->ht_params NULL pointer
- dereference
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20111012081634.GA2675@redhat.com>
-References: <20111012081634.GA2675@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Oct 2011 06:26:06 -0700
-Message-ID: <1318425966.32488.2.camel@wwguy-huron> (sfid-20111012_161533_432097_23FC6675)
-Mime-Version: 1.0
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:40091 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752175Ab1J1KIv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Oct 2011 06:08:51 -0400
+Received: by wwn22 with SMTP id 22so2075421wwn.1
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Oct 2011 03:08:49 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
+Cc: David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH] orinoco: release BSS structures returned by cfg80211_inform_bss()
+Date: Fri, 28 Oct 2011 11:00:03 +0100
+Message-Id: <1319796003-404-1-git-send-email-kilroyd@googlemail.com> (sfid-20111028_120854_823825_84190D26)
+In-Reply-To: <1319719502.3944.5.camel@jlt3.sipsolutions.net>
+References: <1319719502.3944.5.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-10-12 at 01:16 -0700, Stanislaw Gruszka wrote:
-> This fix regression introduced by commit:
-> 
-> commit 15b3f3b006b42a678523cad989bfd60b76bf4403
-> Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> Date:   Fri Jun 3 07:54:13 2011 -0700
-> 
->     iwlagn: set smps mode after assoc for 1000 device
-> 
-> Also remove unneeded brackets on the way.
-> 
-> Address:
-> https://bugzilla.redhat.com/show_bug.cgi?id=744155
-> 
-> If fix will not get 3.1 release, it should be applied in 3.1 stable.
-> 
-> Cc: stable@kernel.org # 3.1+
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-Thanks a lot
-Wey
+The pointer returned by cfg80211_inform_bss is a referenced
+struct. The orinoco driver does not need to keep the struct, so
+we just release it.
+
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+---
+ drivers/net/wireless/orinoco/scan.c |   18 ++++++++++++------
+ 1 files changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/orinoco/scan.c b/drivers/net/wireless/orinoco/scan.c
+index e99ca1c..93674d9 100644
+--- a/drivers/net/wireless/orinoco/scan.c
++++ b/drivers/net/wireless/orinoco/scan.c
+@@ -76,6 +76,7 @@ static void orinoco_add_hostscan_result(struct orinoco_private *priv,
+ {
+ 	struct wiphy *wiphy = priv_to_wiphy(priv);
+ 	struct ieee80211_channel *channel;
++	struct cfg80211_bss *cbss;
+ 	u8 *ie;
+ 	u8 ie_buf[46];
+ 	u64 timestamp;
+@@ -121,9 +122,11 @@ static void orinoco_add_hostscan_result(struct orinoco_private *priv,
+ 	beacon_interval = le16_to_cpu(bss->a.beacon_interv);
+ 	signal = SIGNAL_TO_MBM(le16_to_cpu(bss->a.level));
+ 
+-	cfg80211_inform_bss(wiphy, channel, bss->a.bssid, timestamp,
+-			    capability, beacon_interval, ie_buf, ie_len,
+-			    signal, GFP_KERNEL);
++	cbss = cfg80211_inform_bss(wiphy, channel, bss->a.bssid, timestamp,
++				   capability, beacon_interval, ie_buf, ie_len,
++				   signal, GFP_KERNEL);
++	if (cbss)
++		cfg80211_put_bss(cbss);
+ }
+ 
+ void orinoco_add_extscan_result(struct orinoco_private *priv,
+@@ -132,6 +135,7 @@ void orinoco_add_extscan_result(struct orinoco_private *priv,
+ {
+ 	struct wiphy *wiphy = priv_to_wiphy(priv);
+ 	struct ieee80211_channel *channel;
++	struct cfg80211_bss *cbss;
+ 	const u8 *ie;
+ 	u64 timestamp;
+ 	s32 signal;
+@@ -152,9 +156,11 @@ void orinoco_add_extscan_result(struct orinoco_private *priv,
+ 	ie = bss->data;
+ 	signal = SIGNAL_TO_MBM(bss->level);
+ 
+-	cfg80211_inform_bss(wiphy, channel, bss->bssid, timestamp,
+-			    capability, beacon_interval, ie, ie_len,
+-			    signal, GFP_KERNEL);
++	cbss = cfg80211_inform_bss(wiphy, channel, bss->bssid, timestamp,
++				   capability, beacon_interval, ie, ie_len,
++				   signal, GFP_KERNEL);
++	if (cbss)
++		cfg80211_put_bss(cbss);
+ }
+ 
+ void orinoco_add_hostscan_results(struct orinoco_private *priv,
+-- 
+1.7.4.1
 
