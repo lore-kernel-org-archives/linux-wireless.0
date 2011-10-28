@@ -1,63 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:46715 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751837Ab1JWTgQ (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59598 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755833Ab1J1WWC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Oct 2011 15:36:16 -0400
-Date: Sun, 23 Oct 2011 22:36:04 +0300
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] mac80211: Fix TDLS support validation in add_station handler
-Message-ID: <20111023193604.GA18257@jm.kir.nu> (sfid-20111023_213631_551869_0AD4E53C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 28 Oct 2011 18:22:02 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [wireless-next PATCH v2 4/4] ath9k:  Support modifying AMSDU and AMPDU settings.
+Date: Fri, 28 Oct 2011 15:21:14 -0700
+Message-Id: <1319840474-2618-4-git-send-email-greearb@candelatech.com> (sfid-20111029_002206_458273_61D9712D)
+In-Reply-To: <1319840474-2618-1-git-send-email-greearb@candelatech.com>
+References: <1319840474-2618-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We need to verify whether the command is successful before allocating
-the station entry to avoid extra processing. This also fixes a memory
-leak on the error path.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+The driver appears to function properly with these
+values modified from defaults, so add the feature
+definitions.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- net/mac80211/cfg.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+:100644 100644 af1b325... 3f4e679... M	drivers/net/wireless/ath/ath9k/init.c
+ drivers/net/wireless/ath/ath9k/init.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index e253afa..a9ded52 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -832,6 +832,12 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 	if (is_multicast_ether_addr(mac))
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index af1b325..3f4e679 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -673,6 +673,8 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		IEEE80211_HW_SUPPORTS_PS |
+ 		IEEE80211_HW_PS_NULLFUNC_STACK |
+ 		IEEE80211_HW_SPECTRUM_MGMT |
++		IEEE80211_HW_SUPPORTS_AMPDU_MOD |
++		IEEE80211_HW_SUPPORTS_AMSDU_MOD |
+ 		IEEE80211_HW_REPORTS_TX_ACK_STATUS;
  
-+	/* Only TDLS-supporting stations can add TDLS peers */
-+	if ((params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) &&
-+	    !((wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS) &&
-+	      sdata->vif.type == NL80211_IFTYPE_STATION))
-+		return -ENOTSUPP;
-+
- 	sta = sta_info_alloc(sdata, mac, GFP_KERNEL);
- 	if (!sta)
- 		return -ENOMEM;
-@@ -841,12 +847,6 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 	sta_apply_parameters(local, sta, params);
- 
--	/* Only TDLS-supporting stations can add TDLS peers */
--	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) &&
--	    !((wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS) &&
--	      sdata->vif.type == NL80211_IFTYPE_STATION))
--		return -ENOTSUPP;
--
- 	rate_control_rate_init(sta);
- 
- 	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
 -- 
-1.7.4.1
+1.7.3.4
 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
