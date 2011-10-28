@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:36085 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756848Ab1JTRFx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54499 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932085Ab1J1ICJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 13:05:53 -0400
-Received: by bkbzt19 with SMTP id zt19so3778812bkb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2011 10:05:52 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] mac80211: config hw when going back on-channel
-Date: Thu, 20 Oct 2011 19:05:50 +0200
-Message-Id: <1319130350-15514-2-git-send-email-eliad@wizery.com> (sfid-20111020_190557_741868_5A123F1B)
-In-Reply-To: <1319130350-15514-1-git-send-email-eliad@wizery.com>
-References: <1319130350-15514-1-git-send-email-eliad@wizery.com>
+	Fri, 28 Oct 2011 04:02:09 -0400
+Subject: Re: [RFC v2 13/12] cfg80211/mac80211: allow management TX to not
+ wait for ACK
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAB3XZEd1Mg6sYiW4tfaeaoAL8OoRRysKg-U6RU1SucE08hdfJQ@mail.gmail.com> (sfid-20111028_004455_347747_E16D85A4)
+References: <20111021142322.229128720@sipsolutions.net>
+	 <1319743973.32221.4.camel@jlt3.sipsolutions.net>
+	 <CAB3XZEd1Mg6sYiW4tfaeaoAL8OoRRysKg-U6RU1SucE08hdfJQ@mail.gmail.com>
+	 (sfid-20111028_004455_347747_E16D85A4)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 Oct 2011 10:02:06 +0200
+Message-ID: <1319788926.3914.5.camel@jlt3.sipsolutions.net> (sfid-20111028_100213_633270_D84B3B98)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When going back on-channel, we should reconfigure
-the hw iff the hardware is not already configured
-to the operational channel.
+On Fri, 2011-10-28 at 00:44 +0200, Eliad Peller wrote:
+> On Thu, Oct 27, 2011 at 9:32 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> >
+> > For probe responses it can be useful to not wait for ACK
+> > to save airtime, so allow userspace to request not waiting
+> > with a new nl80211 flag.
+> >
+> > Since mac80211 needs to be updated for the new function
+> > prototype anyway implement it right away -- it's just a
+> > few lines of code.
+> >
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/work.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+> [RFC v2 13/12] ? :)
 
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index b4de5dc..92ad8d6 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -1091,7 +1091,6 @@ static void ieee80211_work_work(struct work_struct *work)
- 	}
- 
- 	if (!remain_off_channel && local->tmp_channel) {
--		bool on_oper_chan = ieee80211_cfg_on_oper_channel(local);
- 		local->tmp_channel = NULL;
- 		/* If tmp_channel wasn't operating channel, then
- 		 * we need to go back on-channel.
-@@ -1101,7 +1100,7 @@ static void ieee80211_work_work(struct work_struct *work)
- 		 * we still need to do a hardware config.  Currently,
- 		 * we cannot be here while scanning, however.
- 		 */
--		if (ieee80211_cfg_on_oper_channel(local) && !on_oper_chan)
-+		if (!ieee80211_cfg_on_oper_channel(local))
- 			ieee80211_hw_config(local, 0);
- 
- 		/* At the least, we need to disable offchannel_ps,
--- 
-1.7.6.401.g6a319
+Too lazy to send a new patchset and it really belonged with this :-)
+
+> > +       if (!dont_wait_for_ack)
+> > +               flags = IEEE80211_TX_CTL_NO_ACK;
+> > +       else
+> > +               flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
+> > +                       IEEE80211_TX_CTL_REQ_TX_STATUS;
+> > +
+> 
+> shouldn't it be the other way around? (i.e. set NO_ACK if dont_wait_for_ack)
+
+Doh, of course, thanks. I was editing this code a few times -- guess I
+lost track.
+
+johannes
 
