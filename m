@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:56300 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754583Ab1JJTrR (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35817 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932085Ab1J1IBZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 15:47:17 -0400
-Received: by bkbzu5 with SMTP id zu5so9187242bkb.7
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 12:47:14 -0700 (PDT)
-Subject: Re: [PATCH 09/29] wl12xx: make event handling support multirole
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAB3XZEc9DcYHmph9wH=+8jQkjBPAiGqHW7P-oVcQJcBHeONNWQ@mail.gmail.com>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-	 <1318234397-21081-10-git-send-email-eliad@wizery.com>
-	 <1318273094.9690.385.camel@cumari>
-	 <CAB3XZEc9DcYHmph9wH=+8jQkjBPAiGqHW7P-oVcQJcBHeONNWQ@mail.gmail.com>
+	Fri, 28 Oct 2011 04:01:25 -0400
+Subject: RE: [RFC v2 13/12] cfg80211/mac80211: allow management TX to not
+ wait for ACK
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <400C43189542CE41BC0A5B252FC90136BC0E3753AA@SJEXCHCCR02.corp.ad.broadcom.com>
+References: <20111021142322.229128720@sipsolutions.net>
+	 ( sfid-20111021_162510_209354_8FBBB6EB) <1319743973.32221.4.camel@jlt3.sipsolutions.net>
+	 <400C43189542CE41BC0A5B252FC90136BC0E3753AA@SJEXCHCCR02.corp.ad.broadcom.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 10 Oct 2011 22:47:11 +0300
-Message-ID: <1318276031.9690.415.camel@cumari> (sfid-20111010_214720_561431_3BA9D536)
+Date: Fri, 28 Oct 2011 10:01:20 +0200
+Message-ID: <1319788880.3914.4.camel@jlt3.sipsolutions.net> (sfid-20111028_100128_417197_BD2DC968)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-10-10 at 21:36 +0200, Eliad Peller wrote: 
-> On Mon, Oct 10, 2011 at 8:58 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote:
-> >> Some events don't indicate the role they are intended for.
-> >> In these cases, iterate through all the relevant vifs,
-> >> and pass the event to each one of them.
-> >>
-> >> This is only a workaround. future fw releases should indicate
-> >> the relevant role_id for such events.
-> >>
-> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> >> ---
-> >
-> > Is this workaround really necessary? Are we going to have a firmware
-> > that supports multi-role but does *not* pass the role_id for these
-> > events?
-> >
-> i hope not. :)
-> but in the meantime, we use this workaround to keep compatibility with
-> the current (single-role) fw.
+On Fri, 2011-10-28 at 00:48 -0700, Arend Van Spriel wrote:
+> > Sent: donderdag 27 oktober 2011 21:33
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > For probe responses it can be useful to not wait for ACK
+> > to save airtime, so allow userspace to request not waiting
+> > with a new nl80211 flag.
+> > 
+> > Since mac80211 needs to be updated for the new function
+> > prototype anyway implement it right away -- it's just a
+> > few lines of code.
 
-What I meant is that you could keep this global, without moving it
-temporarily to the wlvif and traversing the list, which has always only
-a single element anyway.  But now I see that you want to get rid of the
-global wl->vif, so it's fine.  It's only the list traversal that is
-actually a workaround, the rest of the changes are actually fine.
+> I would expect this to affect the duration field in the
+> 802.11 header to indicate the shorter use of the medium.
+> Going through your patch I am not sure this is done.
 
--- 
-Cheers,
-Luca.
+Hmmm. You're right, but that's something we already need to fix in many
+cases -- as the duration field is overwritten by most hardware these
+days, we haven't always maintained it very well.
+
+Your driver seems to be the exception to this -- maybe you can look into
+fixing up the duration calculations? Also for 11n which isn't taken into
+account at all today.
+
+johannes
 
