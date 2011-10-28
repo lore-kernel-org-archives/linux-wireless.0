@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:35643 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932751Ab1JZMfH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54507 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753464Ab1J1IEe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Oct 2011 08:35:07 -0400
-Received: by pzk36 with SMTP id 36so4303365pzk.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2011 05:35:06 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 26 Oct 2011 14:35:06 +0200
-Message-ID: <CAMG6FYh6dPVQuvoTQsOAqbe_WrMMj7qji8T45DWmdrk-RNb-Bw@mail.gmail.com> (sfid-20111026_143512_029933_B08076E9)
-Subject: How to enable clock/power from a wlan device driver
-From: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 28 Oct 2011 04:04:34 -0400
+Subject: Re: cfg80211 events
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Daniel Wolstenholme <daniel@wolstenholme.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1319756980.4490.6.camel@dcbw.foobar.com> (sfid-20111028_010926_967933_D78AFAE6)
+References: <CAB1eQC7cXz0GpGrX7d8_nL_8d8ZAgxSzXUxqDhR7PiSSJysOoQ@mail.gmail.com>
+	 <1319756980.4490.6.camel@dcbw.foobar.com>
+	 (sfid-20111028_010926_967933_D78AFAE6)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 Oct 2011 10:04:29 +0200
+Message-ID: <1319789069.3914.7.camel@jlt3.sipsolutions.net> (sfid-20111028_100438_877593_78B5693E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear community,
+On Thu, 2011-10-27 at 18:09 -0500, Dan Williams wrote:
+> On Thu, 2011-10-27 at 15:27 -0700, Daniel Wolstenholme wrote:
+> > Hi all,
+> > 
+> > I'm working with the Broadcom brcmfmac driver, and I'm attempting to improve
+> > event reporting, but I'm finding there's not that much documentation on
+> > wireless events.  One big problem I'm having is that I'm using the cfg80211
+> > interface, but when I run "iw event -t -f", I don't see the events showing
+> > up.  Another question I have is: is there a way to send events with
+> > arbitrary strings from the driver through to userspace?
+> 
+> I'd be careful of that; we don't want a repeat of IWPRIV events, we'd
+> rather have stuff standardized.  Unless you're doing this for testing,
+> of course.
 
-Could you please give me an advise how to implement properly (in terms
-of architecture design)
-enabling / disabling of external functional clock and power of a WLAN
-device from a (mac80211-based)
-device driver?
+Indeed. You can use testmode events for in-house testing, qualification,
+calibration, etc. but it will be compiled out in distro kernels.
 
-We have a device on a board which needs to be powered on and clocked
-before driver can use it.
-There are several options:
-1. Driver can call clk_get()/clk_enable() itself using name of the clock.
-2. Driver can get struct clk* from platform data and call clk_enable()
-3. Driver can call platform callback and request platform code to
-enable the clock.
+Arbitrary string events will never exist.
 
-What is preferable way of doing it? I see there is no
-clk_get()/regulator_get() calls from the
-drivers/net/wireless/ code, nor *_enable(). For my understanding
-clocks and power are platform-specific.
-Other boards/platform using the same chip can require other clocks or
-not require them at all in case
-of self-clocked design. Same with power.
+johannes
 
-Thank you and with best regards,
-Dmitry Tarnyagin
