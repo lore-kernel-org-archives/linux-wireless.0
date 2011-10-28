@@ -1,40 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:38981 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751011Ab1JKMwY (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40974 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752564Ab1J1FLe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Oct 2011 08:52:24 -0400
-Received: by mail-bw0-f49.google.com with SMTP id c12so128684bkb.22
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2011 05:52:23 -0700 (PDT)
-Subject: Re: [PATCH 00/29] make the driver ready for multi-vif support
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 11 Oct 2011 15:52:19 +0300
-Message-ID: <1318337539.9690.521.camel@cumari> (sfid-20111011_145229_753713_8C5A7B81)
-Mime-Version: 1.0
+	Fri, 28 Oct 2011 01:11:34 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [wireless-next PATCH 2/5] wifi: Support disabling ht40.
+Date: Thu, 27 Oct 2011 22:11:17 -0700
+Message-Id: <1319778680-11405-2-git-send-email-greearb@candelatech.com> (sfid-20111028_071139_530762_135DB41A)
+In-Reply-To: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
+References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote: 
-> This patchset finishes adding multiple vif support to the
-> wl12xx driver.
-> 
-> The driver still allows only a single vif, as the current
-> fw only supports a single vif.
-> 
-> This patchset doesn't break compatibility with the current fw.
+From: Ben Greear <greearb@candelatech.com>
 
-Applied, thanks! With the following small changes:
+Allows users to forceably disable HT40 support in station
+interfaces.
 
-* used v2 of 08/29;
-* used '(foo - bar) & 0xff' instead of '(foo - bar + 256) % 256'.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 d9c2cdb... ae50ade... M	include/linux/nl80211.h
+:100644 100644 1331a5b... 9d7a5e0... M	include/net/cfg80211.h
+:100644 100644 8221a3a... c63d7f0... M	net/mac80211/cfg.c
+:100644 100644 72c6726... f4a7618... M	net/mac80211/ieee80211_i.h
+:100644 100644 393b480... 164cdb1... M	net/mac80211/mlme.c
+:100644 100644 cb2eb67... 5696621... M	net/wireless/nl80211.c
+ include/linux/nl80211.h    |    4 ++++
+ include/net/cfg80211.h     |    2 ++
+ net/mac80211/cfg.c         |    3 +++
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |    1 +
+ net/wireless/nl80211.c     |    7 +++++++
+ 6 files changed, 18 insertions(+), 0 deletions(-)
 
-
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index d9c2cdb..ae50ade 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1111,6 +1111,8 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_DISABLE_80211N:  Force /n capable stations to instead
+  *      function as /a/b/g stations.
++ * @NL80211_ATTR_DISABLE_HT40:  Disable HT-40 even if AP and hardware
++ *      support it.
+  *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -1341,6 +1343,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_TDLS_EXTERNAL_SETUP,
+ 
+ 	NL80211_ATTR_DISABLE_11N,
++	NL80211_ATTR_DISABLE_HT40,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 1331a5b..9d7a5e0 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -255,10 +255,12 @@ struct ieee80211_supported_band {
+  * struct vif_params - describes virtual interface parameters
+  * @use_4addr: use 4-address frames
+  * @disable_11n:  Don't use 11n features (HT, etc)
++ * @disable_ht40:  Don't use HT40, even if hardware & AP support it.
+  */
+ struct vif_params {
+ 	int use_4addr;
+ 	int disable_11n;
++	int disable_ht40;
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 8221a3a..c63d7f0 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -60,6 +60,9 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 	if (params->disable_11n != -1)
+ 		sdata->cfg_disable_11n = params->disable_11n;
+ 
++	if (params->disable_ht40 != -1)
++		sdata->cfg_disable_ht40 = params->disable_ht40;
++
+ 	ret = ieee80211_if_change_type(sdata, type);
+ 	if (ret)
+ 		return ret;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 72c6726..f4a7618 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -596,6 +596,7 @@ struct ieee80211_sub_if_data {
+ 	bool old_idle;
+ 
+ 	bool cfg_disable_11n; /* configured to disable 11n? */
++	bool cfg_disable_ht40; /* configured to not use HT-40 */
+ 
+ 	/* Fragment table for host-based reassembly */
+ 	struct ieee80211_fragment_entry	fragments[IEEE80211_FRAGMENT_MAX];
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 393b480..164cdb1 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -207,6 +207,7 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ 		channel_type = NL80211_CHAN_HT20;
+ 
+ 		if (!(ap_ht_cap_flags & IEEE80211_HT_CAP_40MHZ_INTOLERANT) &&
++		    !sdata->cfg_disable_ht40 &&
+ 		    (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
+ 		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
+ 			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index cb2eb67..5696621 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1648,6 +1648,13 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 		params.disable_11n = -1;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_DISABLE_HT40]) {
++		params.disable_ht40 = !!nla_get_u8(info->attrs[NL80211_ATTR_DISABLE_HT40]);
++		change = true;
++	} else {
++		params.disable_ht40 = -1;
++	}
++
+ 	if (change)
+ 		err = cfg80211_change_iface(rdev, dev, ntype, flags, &params);
+ 	else
 -- 
-Cheers,
-Luca.
+1.7.3.4
 
