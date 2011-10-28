@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:8499 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756050Ab1JYLnQ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25083 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751499Ab1J1LOH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 07:43:16 -0400
-Message-ID: <4EA6A0CF.70806@qca.qualcomm.com> (sfid-20111025_134321_510324_6F55725D)
-Date: Tue, 25 Oct 2011 14:43:11 +0300
+	Fri, 28 Oct 2011 07:14:07 -0400
+Message-ID: <4EAA8E70.9020308@qca.qualcomm.com> (sfid-20111028_131413_935422_6D21E8FB)
+Date: Fri, 28 Oct 2011 14:13:52 +0300
 From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <nataraja@qca.qualcomm.com>,
-	<athiruve@qca.qualcomm.com>
-Subject: Re: [PATCH 34/34] ath6kl: Enable not more than one interface to workaround
- target assert
-References: <1319537430-12459-1-git-send-email-vthiagar@qca.qualcomm.com> <1319537430-12459-35-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1319537430-12459-35-git-send-email-vthiagar@qca.qualcomm.com>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: Report unique remain-on-channel cookie values
+References: <20111027130013.GA32096@jouni.qca.qualcomm.com>
+In-Reply-To: <20111027130013.GA32096@jouni.qca.qualcomm.com>
 Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/25/2011 01:10 PM, Vasanthakumar Thiagarajan wrote:
-> Configuring the firmware for three interfaces causes random
-> target assert. So restrict the number of vifs to just 1
-> to avoid this issue for now. Once it is fixed in firmware,
-> this patch would be reverted.
+On 10/27/2011 04:00 PM, Jouni Malinen wrote:
+> Even though only a single concurrent remain-on-channel operation is
+> supported, there may be two pending remain-on-channel events (one to
+> indicate end of a canceled operation and another to indicate start of a
+> new operation). User space won't be able to distinguish these events
+> unless unique cookies are used.
+> 
+> The previous behavior resulted in wpa_supplicant getting quite
+> confused about the driver's offchannel state in various sequences
+> and this made the P2P state machine behave incorrectly. Use of
+> more than a single remain-on-channel cookie value fixes this.
 
-Patches 32-34 are problematic. They are changing functionality of
-patches earlier in the series. (I guess you created those patches
-later.) Instead you should edit the original patches, not just add extra
-patches on top.
-
-For example, having this patch will break bisect as ath6kl will be
-broken between the patch enabling multi interface functionality
-(whatever patch that is) and this patch.
+Thanks, applied.
 
 Kalle
