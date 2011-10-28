@@ -1,103 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2893 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754834Ab1JUOQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 10:16:50 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH v2 07/17] brcm80211: smac: bugfix for tx mute in
- brcms_b_init()
-Date: Fri, 21 Oct 2011 16:16:25 +0200
-Message-ID: <1319206595-17138-8-git-send-email-arend@broadcom.com> (sfid-20111021_161704_001183_0BB63BB9)
-In-Reply-To: <1319206595-17138-1-git-send-email-arend@broadcom.com>
-References: <1319206595-17138-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:50761 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962Ab1J1KBZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Oct 2011 06:01:25 -0400
+Subject: Re: [PATCH] mac80211: disable powersave for broken APs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Bill C Riemers <briemers@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1319795987.8931.7.camel@jlt3.sipsolutions.net> (sfid-20111028_115958_723700_DB411019)
+References: <1319795987.8931.7.camel@jlt3.sipsolutions.net>
+	 (sfid-20111028_115958_723700_DB411019)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 Oct 2011 12:01:19 +0200
+Message-ID: <1319796079.8931.8.camel@jlt3.sipsolutions.net> (sfid-20111028_120128_591657_A8155354)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+On Fri, 2011-10-28 at 11:59 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Only AID values 1-2007 are valid, but some APs have been
+> found to send random bogus values, in the reported case an
+> AP that was sending the AID field value 0xffff, an AID of
+> 0x3fff (16383).
+> 
+> There isn't much we can do but disable powersave since
+> there's no way it can work properly in this case.
+> 
+> Cc: stable@vger.kernel.org
+> Reported-by: Bill C Riemers <briemers@redhat.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> Bill, please test this patch and see if you still see the
+> warnings, or you can revert your iwlwifi changes and test
+> then, it should work.
+> 
+> John, please wait for Bill to test before you apply, just
+> to confirm it fixes the issue.
 
-Transmit can only be muted if the mac core is enabled. When brcms_b_init()
-is called, the mac core is suspended. Brcms_b_init() calls a transmit mute
-function that requires an enabled mac core. This code path is never taken,
-but would have been taken in subsequent patches.
+I should also point out that this is intended to fix
+https://bugzilla.redhat.com/show_bug.cgi?id=748548
 
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 2fecf06..8eb665e 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -2452,6 +2452,7 @@ static void brcms_b_tx_fifo_resume(struct brcms_hardware *wlc_hw,
- 	}
- }
- 
-+/* precondition: requires the mac core to be enabled */
- static void brcms_b_mute(struct brcms_hardware *wlc_hw, bool on, u32 flags)
- {
- 	static const u8 null_ether_addr[ETH_ALEN] = {0, 0, 0, 0, 0, 0};
-@@ -3354,8 +3355,7 @@ static void brcms_b_coreinit(struct brcms_c_info *wlc)
- }
- 
- void
--static brcms_b_init(struct brcms_hardware *wlc_hw, u16 chanspec,
--			  bool mute) {
-+static brcms_b_init(struct brcms_hardware *wlc_hw, u16 chanspec) {
- 	u32 macintmask;
- 	bool fastclk;
- 	struct brcms_c_info *wlc = wlc_hw->wlc;
-@@ -3380,10 +3380,6 @@ static brcms_b_init(struct brcms_hardware *wlc_hw, u16 chanspec,
- 	/* core-specific initialization */
- 	brcms_b_coreinit(wlc);
- 
--	/* suspend the tx fifos and mute the phy for preism cac time */
--	if (mute)
--		brcms_b_mute(wlc_hw, ON, PHY_MUTE_FOR_PREISM);
--
- 	/* band-specific inits */
- 	brcms_b_bsinit(wlc, chanspec);
- 
-@@ -8261,7 +8257,7 @@ void brcms_c_init(struct brcms_c_info *wlc)
- {
- 	struct d11regs __iomem *regs;
- 	u16 chanspec;
--	bool mute = false;
-+	bool mute_tx = false;
- 
- 	BCMMSG(wlc->wiphy, "wl%d\n", wlc->pub->unit);
- 
-@@ -8277,7 +8273,7 @@ void brcms_c_init(struct brcms_c_info *wlc)
- 	else
- 		chanspec = brcms_c_init_chanspec(wlc);
- 
--	brcms_b_init(wlc->hw, chanspec, mute);
-+	brcms_b_init(wlc->hw, chanspec);
- 
- 	/* update beacon listen interval */
- 	brcms_c_bcn_li_upd(wlc);
-@@ -8343,6 +8339,10 @@ void brcms_c_init(struct brcms_c_info *wlc)
- 	/* ..now really unleash hell (allow the MAC out of suspend) */
- 	brcms_c_enable_mac(wlc);
- 
-+	/* suspend the tx fifos and mute the phy for preism cac time */
-+	if (mute_tx)
-+		brcms_b_mute(wlc->hw, ON, PHY_MUTE_FOR_PREISM);
-+
- 	/* clear tx flow control */
- 	brcms_c_txflowcontrol_reset(wlc);
- 
--- 
-1.7.4.1
-
+johannes
 
