@@ -1,54 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:64233 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753329Ab1JGQnz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 12:43:55 -0400
-Received: by yxl31 with SMTP id 31so3804061yxl.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Oct 2011 09:43:55 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mga01.intel.com ([192.55.52.88]:18899 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752964Ab1J1C2O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Oct 2011 22:28:14 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 0/5] Updates to match latest Realtek version and new PM framework
-Date: Fri,  7 Oct 2011 11:43:17 -0500
-Message-Id: <1318005802-29057-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20111007_184359_368437_5B2747F3)
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 3.1] iwlwifi: remove un-needed out_iounmap label
+Date: Thu, 27 Oct 2011 18:36:18 -0700
+Message-Id: <1319765778-8868-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111028_042818_074644_138BAFD0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The latest Realtek driver for rtl8192ce, rtl8192se, and rtl8192de incorporates
-some changes. With these patches, the changes are added to the mainline
-drivers. In addition, the drivers are changed to the new PM framework.
+out_iounmap is no longer used, remove it
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+apply this patch after "iwlwifi-allow-pci_enable_msi-fail.patch"
 
+hese patches will be also available later from wireless branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git once iwlwifi
+account available
 
-Chaoming Li (1):
-  rtlwifi: Update to new Realtek version - Part I
+ drivers/net/wireless/iwlwifi/iwl-pci.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Larry Finger (4):
-  rtlwifi: Change PCI drivers to use the new PM framework
-  rtlwifi: rtl8192ce: Add new chip revisions
-  rtlwifi: rtl8192se: Updates from latest Realtek driver version - Part
-    II
-  rtlwifi: rtl8192de: Updates from latest Reaktek driver - Part III
-
- drivers/net/wireless/rtlwifi/base.c          |    6 +-
- drivers/net/wireless/rtlwifi/pci.c           |   19 +---
- drivers/net/wireless/rtlwifi/pci.h           |    4 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/def.h |   14 +++
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c  |   30 +++++--
- drivers/net/wireless/rtlwifi/rtl8192cu/def.h |    4 -
- drivers/net/wireless/rtlwifi/rtl8192de/def.h |  124 ++++++++++++++++----------
- drivers/net/wireless/rtlwifi/rtl8192de/hw.c  |   19 ++---
- drivers/net/wireless/rtlwifi/rtl8192de/sw.c  |   16 ++--
- drivers/net/wireless/rtlwifi/rtl8192se/hw.c  |   22 +++---
- drivers/net/wireless/rtlwifi/rtl8192se/reg.h |    1 +
- drivers/net/wireless/rtlwifi/rtl8192se/sw.c  |   17 +++--
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c |   53 +++++++-----
- drivers/net/wireless/rtlwifi/wifi.h          |    1 +
- 14 files changed, 196 insertions(+), 134 deletions(-)
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index 718a722..32d64e7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -465,7 +465,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ out_disable_msi:
+ 	pci_disable_msi(pdev);
+-out_iounmap:
+ 	pci_iounmap(pdev, pci_bus->hw_base);
+ out_pci_release_regions:
+ 	pci_set_drvdata(pdev, NULL);
 -- 
-1.7.6.4
+1.7.0.4
 
