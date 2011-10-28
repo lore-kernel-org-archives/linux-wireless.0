@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:49051 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753237Ab1JJS6U (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:44579 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751253Ab1J1FPG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 14:58:20 -0400
-Received: by mail-ey0-f182.google.com with SMTP id 10so1598816eyd.41
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 11:58:17 -0700 (PDT)
-Subject: Re: [PATCH 09/29] wl12xx: make event handling support multirole
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1318234397-21081-10-git-send-email-eliad@wizery.com>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-	 <1318234397-21081-10-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 10 Oct 2011 21:58:14 +0300
-Message-ID: <1318273094.9690.385.camel@cumari> (sfid-20111010_205824_856634_F4BF0F2B)
-Mime-Version: 1.0
+	Fri, 28 Oct 2011 01:15:06 -0400
+Received: from [50.54.196.61] (50-54-196-61.evrt.wa.frontiernet.net [50.54.196.61])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p9S5F5CD028262
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Oct 2011 22:15:06 -0700
+Message-ID: <4EAA3A59.5080801@candelatech.com> (sfid-20111028_071511_642148_0F581C0A)
+Date: Thu, 27 Oct 2011 22:15:05 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Re: [wireless-next PATCH 1/5] mac80211: Support forcing station to
+ disable 11n.
+References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote: 
-> Some events don't indicate the role they are intended for.
-> In these cases, iterate through all the relevant vifs,
-> and pass the event to each one of them.
-> 
-> This is only a workaround. future fw releases should indicate
-> the relevant role_id for such events.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+On 10/27/2011 10:11 PM, greearb@candelatech.com wrote:
+> From: Ben Greear<greearb@candelatech.com>
+>
+> This allows a user to configure a wifi station interface
+> to disable 802.11n, even if the AP and NIC supports it.
+>
+> The additional netlink bits is to allow this patch to work on 3.0
+> and should not be included in the final patch.
 
-Is this workaround really necessary? Are we going to have a firmware
-that supports multi-role but does *not* pass the role_id for these
-events?
+I have the wpa_supplicant patches for this series tested as well,
+but I figured it best to make sure these kernel patches are acceptable
+before posting the hostap patches....
 
+Tested this on ath9k.  According to the rate output seen by
+iwconfig and the debug stuff in
+cat /debug/ieee80211/wiphy0/netdev\:sta2/stations/00\:88\:99\:88\:99\:01/ht_capa
+I think I have this working pretty well.
+
+I have not yet tried verifying things with a sniffer...
+
+Thanks,
+Ben
 
 -- 
-Cheers,
-Luca.
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
