@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:40944 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758737Ab1JGWtE (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:40620 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755041Ab1J1HwK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Oct 2011 18:49:04 -0400
-Date: Fri, 07 Oct 2011 18:46:57 -0400 (EDT)
-Message-Id: <20111007.184657.1471438956485710175.davem@davemloft.net> (sfid-20111008_004913_639139_499404B5)
-To: sfr@canb.auug.org.au
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org, sparclinux@vger.kernel.org,
-	linux-ide@vger.kernel.org
-Subject: Re: moving GIT back to kernel.org...
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20111008094212.e3342930c1833f73ef602a3e@canb.auug.org.au>
-References: <20111007.145703.842130763413648388.davem@davemloft.net>
-	<20111007.155902.916470368193047875.davem@davemloft.net>
-	<20111008094212.e3342930c1833f73ef602a3e@canb.auug.org.au>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 28 Oct 2011 03:52:10 -0400
+Received: by ywm3 with SMTP id 3so3436980ywm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Oct 2011 00:52:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <400C43189542CE41BC0A5B252FC90136BC0E3753AA@SJEXCHCCR02.corp.ad.broadcom.com>
+References: <20111021142322.229128720@sipsolutions.net>
+	<1319743973.32221.4.camel@jlt3.sipsolutions.net>
+	<400C43189542CE41BC0A5B252FC90136BC0E3753AA@SJEXCHCCR02.corp.ad.broadcom.com>
+Date: Fri, 28 Oct 2011 09:52:09 +0200
+Message-ID: <CAGXE3d_9h-VMo3KaVThNXsXNVEAD4rVcKosMrjYVyKcfUD2=JQ@mail.gmail.com> (sfid-20111028_095218_944074_E12E9C44)
+Subject: Re: [RFC v2 13/12] cfg80211/mac80211: allow management TX to not wait
+ for ACK
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Arend Van Spriel <arend@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Date: Sat, 8 Oct 2011 09:42:12 +1100
+On Fri, Oct 28, 2011 at 9:48 AM, Arend Van Spriel <arend@broadcom.com> wrote:
+> I would expect this to affect the duration field in the
+> 802.11 header to indicate the shorter use of the medium.
+> Going through your patch I am not sure this is done.
 
-> On Fri, 07 Oct 2011 15:59:02 -0400 (EDT) David Miller <davem@davemloft.net> wrote:
->> git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc.git
->> git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git
-> 
-> You used to have sparc-next and ide-next (and the above used to be your
-> "current release fixes" trees) ...
+I don't think so since the frame will still be acked by the peer as it is
+a unicast management frame. But this will advise the hardware that it
+does not need to wait for the ack to happen since we're not interested
+in retrying it.
 
-I've made a dummy sparc-next tree for you to pull from, thanks:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc-next.git
-
-As for ide, I only plan to accept real bug fixes for that subsystem
-so I'll avoid creating an ide-next tree for now.
+Helmut
