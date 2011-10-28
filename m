@@ -1,76 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1255 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755000Ab1JRMD2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Oct 2011 08:03:28 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 12/15] brcm80211: smac: remove phy api bypass in rate.h
-Date: Tue, 18 Oct 2011 14:03:08 +0200
-Message-ID: <1318939391-19495-13-git-send-email-arend@broadcom.com> (sfid-20111018_140358_379896_47599235)
-In-Reply-To: <1318939391-19495-1-git-send-email-arend@broadcom.com>
-References: <1318939391-19495-1-git-send-email-arend@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:22385 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932267Ab1J1MUD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Oct 2011 08:20:03 -0400
+Message-ID: <4EAA9DDC.5090909@qca.qualcomm.com> (sfid-20111028_142008_413740_631CBF87)
+Date: Fri, 28 Oct 2011 15:19:40 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/7] ath6kl: Add wmi functions to configure wow mode and
+ host sleep mode
+References: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com> <1319539047-8756-3-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1319539047-8756-3-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Obviously the phy api should be used to interface with the phy. In
-rate.h a table within phy was accessed directly by declaring the
-table extern in rate.h itself. This patch fixes this using the
-provided api function to obtain the table reference. This bypass
-was found by a sparse warning on the table not being defined static.
+On 10/25/2011 01:37 PM, rmani@qca.qualcomm.com wrote:
+> From: Raja Mani <rmani@qca.qualcomm.com>
+> 
+> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |    2 +-
- drivers/net/wireless/brcm80211/brcmsmac/rate.h     |    5 ++---
- 2 files changed, 3 insertions(+), 4 deletions(-)
+Empty commit log.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-index a314925..2faea50 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -112,7 +112,7 @@ static const struct chan_info_basic chan_info_all[] = {
- 	{216, 50800}
- };
- 
--const u8 ofdm_rate_lookup[] = {
-+static const u8 ofdm_rate_lookup[] = {
- 
- 	BRCM_RATE_48M,
- 	BRCM_RATE_24M,
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/rate.h b/drivers/net/wireless/brcm80211/brcmsmac/rate.h
-index e7b9dc2..980d578 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/rate.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/rate.h
-@@ -19,6 +19,7 @@
- 
- #include "types.h"
- #include "d11.h"
-+#include "phy_hal.h"
- 
- extern const u8 rate_info[];
- extern const struct brcms_c_rateset cck_ofdm_mimo_rates;
-@@ -198,11 +199,9 @@ static inline u8 cck_rspec(u8 cck)
- 
- /* Convert encoded rate value in plcp header to numerical rates in 500 KHz
-  * increments */
--extern const u8 ofdm_rate_lookup[];
--
- static inline u8 ofdm_phy2mac_rate(u8 rlpt)
- {
--	return ofdm_rate_lookup[rlpt & 0x7];
-+	return wlc_phy_get_ofdm_rate_lookup()[rlpt & 0x7];
- }
- 
- static inline u8 cck_phy2mac_rate(u8 signal)
--- 
-1.7.4.1
+> +static void ath6kl_wmi_relinquish_implicit_pstream_credits(struct wmi *wmi)
+> +{
+> +	u16 active_tsids;
+> +	u8 stream_exist;
+> +	int i;
+> +
+> +	/*
+> +	 * Relinquish credits from all implicitly created pstreams
+> +	 * since when we go to sleep. If user created explicit
+> +	 * thinstreams exists with in a fatpipe leave them intact
+> +	 * for the user to delete.
+> +	 */
+> +	spin_lock_bh(&wmi->lock);
+> +	stream_exist = wmi->fat_pipe_exist;
+> +	spin_unlock_bh(&wmi->lock);
+> +
+> +	for (i = 0; i < WMM_NUM_AC; i++) {
+> +		if (stream_exist & (1 << i)) {
+> +
+> +			spin_lock_bh(&wmi->lock);
+> +			active_tsids = wmi->stream_exist_for_ac[i];
+> +			spin_unlock_bh(&wmi->lock);
+> +
+> +			/*
+> +			 * If there are no user created thin streams
+> +			 * delete the fatpipe
+> +			 */
+> +			if (!active_tsids) {
+> +				stream_exist &= ~(1 << i);
+> +				/*
+> +				 * Indicate inactivity to driver layer for
+> +				 * this fatpipe (pstream)
+> +				 */
+> +				ath6kl_indicate_tx_activity(wmi->parent_dev,
+> +							    i, false);
+> +			}
+> +		}
+> +	}
+> +
+> +	spin_lock_bh(&wmi->lock);
+> +	wmi->fat_pipe_exist = stream_exist;
+> +	spin_unlock_bh(&wmi->lock);
 
+The locking here doesn't really make sense. For example, any changes to
+wmi->fat_pipe_exist during the for loop will be overwritten. Also lock
+handling with wmi->stream_exist_for_ac[i] looks fishy.
 
+> +int ath6kl_wmi_set_host_sleep_mode_cmd(struct wmi *wmi,
+> +				  struct wmi_set_host_sleep_mode_cmd *host_mode)
+
+Don't use the struct as a parameter, you could instead provide an enum
+like this:
+
+enum ath6kl_host_mode {
+	ATH6KL_HOST_MODE_AWAKE,
+	ATH6KL_HOST_MODE_ASLEEP,
+};
+
+> +{
+> +	struct sk_buff *skb;
+> +	struct wmi_set_host_sleep_mode_cmd *cmd;
+> +	int ret;
+> +
+> +	if (host_mode->awake == host_mode->asleep)
+> +		return -EINVAL;
+
+...and then you can remove this test.
+
+> +int ath6kl_wmi_set_wow_mode_cmd(struct wmi *wmi,
+> +				struct wmi_set_wow_mode_cmd *wow_mode)
+
+I'm sure you can guess what I'm about to say here ;)
+
+Kalle
