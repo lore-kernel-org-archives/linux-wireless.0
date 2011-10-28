@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:47804 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754842Ab1JNTFL (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47371 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754255Ab1J1KJx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 15:05:11 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 3C5585402CB
-	for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2011 15:20:52 -0400 (EDT)
-Subject: Compat-wireless release for 2011-10-14 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20111014190510.521E940659@repository3.orbit-lab.org> (sfid-20111014_210516_009046_14A501B1)
-Date: Fri, 14 Oct 2011 15:05:10 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 28 Oct 2011 06:09:53 -0400
+Subject: Re: [PATCH] orinoco: release BSS structures returned by
+ cfg80211_inform_bss()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Kilroy <kilroyd@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1319796003-404-1-git-send-email-kilroyd@googlemail.com> (sfid-20111028_120854_823825_84190D26)
+References: <1319719502.3944.5.camel@jlt3.sipsolutions.net>
+	 <1319796003-404-1-git-send-email-kilroyd@googlemail.com>
+	 (sfid-20111028_120854_823825_84190D26)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 Oct 2011 12:09:48 +0200
+Message-ID: <1319796588.8931.9.camel@jlt3.sipsolutions.net> (sfid-20111028_120956_586939_C9CF2C35)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://github.com/mcgrof/compat-wireless
-   8163a60..49eb82e  master     -> origin/master
->From git://github.com/sfrothwell/linux-next
- + 53c998a...0bb9d7e akpm-end   -> origin/akpm-end  (forced update)
-   65112dc..37cf951  akpm-start -> origin/akpm-start
- + 7b64d23...970cc26 master     -> origin/master  (forced update)
-   65112dc..37cf951  stable     -> origin/stable
- * [new tag]         next-20111014 -> next-20111014
+On Fri, 2011-10-28 at 11:00 +0100, David Kilroy wrote:
+> The pointer returned by cfg80211_inform_bss is a referenced
+> struct. The orinoco driver does not need to keep the struct, so
+> we just release it.
 
-compat-wireless code metrics
+Thanks!
 
-    814119 - Total upstream lines of code being pulled
-      2431 - backport code changes
-      2113 - backport code additions
-       318 - backport code deletions
-      8588 - backport from compat module
-     11019 - total backport code
-    1.3535 - % of code consists of backport work
+
+> +	cbss = cfg80211_inform_bss(wiphy, channel, bss->a.bssid, timestamp,
+> +				   capability, beacon_interval, ie_buf, ie_len,
+> +				   signal, GFP_KERNEL);
+> +	if (cbss)
+> +		cfg80211_put_bss(cbss);
+
+Obviously doesn't hurt, but cfg80211_put_bss(NULL) is acceptable, if
+you'd prefer the code that way.
+
+johannes
+
