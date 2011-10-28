@@ -1,61 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:51050 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750917Ab1JVGDD (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:44777 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752388Ab1J1QN3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Oct 2011 02:03:03 -0400
-Received: by yxl42 with SMTP id 42so1896028yxl.19
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2011 23:03:01 -0700 (PDT)
+	Fri, 28 Oct 2011 12:13:29 -0400
+Message-ID: <4EAAD4A5.3070308@candelatech.com> (sfid-20111028_181334_527189_74B6FF3B)
+Date: Fri, 28 Oct 2011 09:13:25 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <2764633066252075767@unknownmsgid>
-References: <2764633066252075767@unknownmsgid>
-Date: Sat, 22 Oct 2011 14:03:01 +0800
-Message-ID: <CAJ-VmokUpC82BBJq9_vcyn9vPA_-0txvCR9_xo=JfkA5jLaaPA@mail.gmail.com> (sfid-20111022_080336_229797_31B2B78E)
-Subject: Re: Any wireless cards with this debug capability?
-From: Adrian Chadd <adrian@freebsd.org>
-To: George Nychis <gnychis@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Eric Rozner <erozner@cs.utexas.edu>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [wireless-next PATCH 4/5] wifi: Warn if cannot add station debugfs
+ entries.
+References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>  <1319778680-11405-4-git-send-email-greearb@candelatech.com>  (sfid-20111028_071154_398499_47BB01A2) <1319789588.3914.16.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1319789588.3914.16.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 October 2011 05:09, George Nychis <gnychis@gmail.com> wrote:
-> We are finding that under certain scenarios, various WiFi cards
-> (Atheros, Intel, ...) fail to decode incoming packets for certain
-> periods of time on the order of 5->20ms. We are trying to enable a
-> low-latency wireless link in which losses during this window break our
-> requirement. A retransmission would essentially be too late.
+On 10/28/2011 01:13 AM, Johannes Berg wrote:
+> On Thu, 2011-10-27 at 22:11 -0700, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+>> ---
+>> :100644 100644 c5f3417... 1ceec86... M	net/mac80211/debugfs_sta.c
+>>   net/mac80211/debugfs_sta.c |   10 ++++++++--
+>>   1 files changed, 8 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+>> index c5f3417..1ceec86 100644
+>> --- a/net/mac80211/debugfs_sta.c
+>> +++ b/net/mac80211/debugfs_sta.c
+>> @@ -337,8 +337,11 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+>>
+>>   	sta->debugfs.add_has_run = true;
+>>
+>> -	if (!stations_dir)
+>> +	if (!stations_dir) {
+>> +		printk(KERN_DEBUG "%s: sta_debugfs_add: stations_dir is NULL\n",
+>> +			sta->sdata->name);
+>>   		return;
+>> +	}
 >
-> During this period, we are trying to determine the reason for loss.
-> Whether it is fading, improper tuning of AGC, failure to account for
-> frequency offset, etc. Ideally, what we would like to know is whether
-> the card *tried* to acquire the carrier and if so, where it failed. I
-> have noticed several Atheros kernel debug counters which show things
-> such as a PHY error, but it's not clear at what stage it failed.
+> I honestly don't see any point in this.
 
-If you're not doing stupidly-high RX throughput, you could enable PHY
-errors on the Atheros NICs instead of Just relying on the counters.
-That way you can get reason values for the failed RX frames.
+Ok, I wasn't sure if this was wanted, so please just
+drop it.  I did see a case where the debugfs files didn't
+exist, and was trying to figure out why..but never reproduced
+the problem after this printk was in, so not sure if this
+was the issue or not.
 
-It may not be the -exact- reason (having the AGC get upset at you for
-20ms? That seems a bit unlikely, considering how quick it needs to
-adjust at the beginning of every RX'ed signal that may be a data
-frame..) but it could be something like ANI interfering with RX.
-There's been at least one reproducable report of that occuring w/
-ath9k + AR5416 however I've not seen it happen on my FreeBSD/Linux
-setups. For atheros, it could also be the periodic calibration code
-kicking in.
+Thanks,
+Ben
 
-I'd start by enabling PHY errors and watching the values of counters
-whenever the error condition occurs. Under FreeBSD the 'athstats' tool
-(and all the data exported by the HAL and driver) has allowed me to
-leverage some basic correlational techniques to find/fix issues. You
-may be able to do the same with a bit of hackery and the debugfs
-export of these counters with ath5k/ath9k.
-
-I think you can also enable receiving frames which fail the CRC check.
-I forget if that is enabled by default.
+>
+> johannes
 
 
-Adrian
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
