@@ -1,79 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:58417 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757249Ab1JRHXu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Oct 2011 03:23:50 -0400
-Received: by mail-bw0-f46.google.com with SMTP id zt19so452354bkb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2011 00:23:49 -0700 (PDT)
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, stable@kernel.org
-Subject: [PATCH 2/2] wl12xx: Check buffer bound when processing nvs data
-Date: Tue, 18 Oct 2011 09:23:42 +0200
-Message-Id: <1318922622-8356-3-git-send-email-pontus.fuchs@gmail.com> (sfid-20111018_092357_569545_99FA8EAD)
-In-Reply-To: <1318922622-8356-1-git-send-email-pontus.fuchs@gmail.com>
-References: <1318922622-8356-1-git-send-email-pontus.fuchs@gmail.com>
+Received: from mgw2.diku.dk ([130.225.96.92]:42341 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754798Ab1J1X66 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Oct 2011 19:58:58 -0400
+From: Julia Lawall <julia@diku.dk>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/5] drivers/net/wireless/brcm80211/brcmsmac/dma.c: eliminate a null pointer dereference
+Date: Sat, 29 Oct 2011 01:58:14 +0200
+Message-Id: <1319846297-2985-2-git-send-email-julia@diku.dk> (sfid-20111029_020020_851902_67B37C19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-An nvs with malformed contents could cause the processing of the
-calibration data to read beyond the end of the buffer. Prevent this
-from happening by adding bound checking.
+From: Julia Lawall <julia@diku.dk>
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Cc: stable@kernel.org
-Reviewed-by: Luciano Coelho <coelho@ti.com>
+Delete di->name from the error reporting code, as it is meaningless if di
+is NULL.
+
+The semantic match that finds this problem is as follows:
+(http://coccinelle.lip6.fr/)
+
+// <smpl>
+@r@
+expression E, E1;
+identifier f;
+statement S1,S2,S3;
+@@
+
+if (E == NULL)
+{
+  ... when != if (E == NULL || ...) S1 else S2
+      when != E = E1
+*E->f
+  ... when any
+  return ...;
+}
+else S3
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
 ---
- drivers/net/wireless/wl12xx/boot.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
-index 4ce634b..c9c8b69 100644
---- a/drivers/net/wireless/wl12xx/boot.c
-+++ b/drivers/net/wireless/wl12xx/boot.c
-@@ -347,6 +347,9 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
- 		nvs_ptr += 3;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+index b56a302..1d66f53 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+@@ -361,7 +361,7 @@ static uint _dma_ctrlflags(struct dma_info *di, uint mask, uint flags)
+ 	uint dmactrlflags = di->dma.dmactrlflags;
  
- 		for (i = 0; i < burst_len; i++) {
-+			if (nvs_ptr + 3 >= (u8 *) wl->nvs + nvs_len)
-+				goto out_badnvs;
-+
- 			val = (nvs_ptr[0] | (nvs_ptr[1] << 8)
- 			       | (nvs_ptr[2] << 16) | (nvs_ptr[3] << 24));
- 
-@@ -358,6 +361,9 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
- 			nvs_ptr += 4;
- 			dest_addr += 4;
- 		}
-+
-+		if (nvs_ptr >= (u8 *) wl->nvs + nvs_len)
-+			goto out_badnvs;
+ 	if (di == NULL) {
+-		DMA_ERROR(("%s: _dma_ctrlflags: NULL dma handle\n", di->name));
++		DMA_ERROR(("_dma_ctrlflags: NULL dma handle\n"));
+ 		return 0;
  	}
  
- 	/*
-@@ -369,6 +375,10 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
- 	 */
- 	nvs_ptr = (u8 *)wl->nvs +
- 			ALIGN(nvs_ptr - (u8 *)wl->nvs + 7, 4);
-+
-+	if (nvs_ptr >= (u8 *) wl->nvs + nvs_len)
-+		goto out_badnvs;
-+
- 	nvs_len -= nvs_ptr - (u8 *)wl->nvs;
- 
- 	/* Now we must set the partition correctly */
-@@ -384,6 +394,10 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
- 
- 	kfree(nvs_aligned);
- 	return 0;
-+
-+out_badnvs:
-+	wl1271_error("nvs data is malformed");
-+	return -EILSEQ;
- }
- 
- static void wl1271_boot_enable_interrupts(struct wl1271 *wl)
--- 
-1.7.4.1
 
