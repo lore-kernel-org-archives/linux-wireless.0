@@ -1,149 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41414 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934315Ab1JEJ40 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52242 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915Ab1J1JSn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 05:56:26 -0400
-Received: by mail-bw0-f46.google.com with SMTP id zt4so1903568bkb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:56:25 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 25/29] wl12xx: move ps_poll_failures and psm_entry_retry into wlvif
-Date: Wed,  5 Oct 2011 11:56:02 +0200
-Message-Id: <1317808566-18857-26-git-send-email-eliad@wizery.com> (sfid-20111005_115634_347887_10F80244)
-In-Reply-To: <1317808566-18857-1-git-send-email-eliad@wizery.com>
-References: <1317808566-18857-1-git-send-email-eliad@wizery.com>
+	Fri, 28 Oct 2011 05:18:43 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1RJiaI-0007eB-Md
+	for linux-wireless@vger.kernel.org; Fri, 28 Oct 2011 11:18:42 +0200
+Subject: [RFC v3 13/12] cfg80211/mac80211: allow management TX to not wait
+ for ACK
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1319743973.32221.4.camel@jlt3.sipsolutions.net> (sfid-20111027_213258_839064_E81CD577)
+References: <20111021142322.229128720@sipsolutions.net>
+	 (sfid-20111021_162510_209354_8FBBB6EB)  <1319743973.32221.4.camel@jlt3.sipsolutions.net>
+	 (sfid-20111027_213258_839064_E81CD577)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 Oct 2011 11:18:39 +0200
+Message-ID: <1319793519.8931.5.camel@jlt3.sipsolutions.net> (sfid-20111028_111847_852625_C1A072E7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-move ps_poll_failures and psm_entry_retries into the per-interface
-data, rather than being global.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+For probe responses it can be useful to not wait for ACK to
+avoid retransmissions if the station that sent the probe is
+already on the next channel, so allow userspace to request
+not caring about the ACK with a new nl80211 flag.
+
+Since mac80211 needs to be updated for the new function
+prototype anyway implement it right away -- it's just a
+few lines of code.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/wl12xx/debugfs.c |    2 --
- drivers/net/wireless/wl12xx/event.c   |   14 +++++++-------
- drivers/net/wireless/wl12xx/main.c    |    4 +---
- drivers/net/wireless/wl12xx/wl12xx.h  |   12 ++++++------
- 4 files changed, 14 insertions(+), 18 deletions(-)
+v2: accidentally sent as v2 instead of v1
+v3: update commit log (Arend) and fix bug (Eliad)
 
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 439db1f..cd390e0 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -351,8 +351,6 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- 	DRIVER_STATE_PRINT_INT(state);
- 	DRIVER_STATE_PRINT_INT(channel);
- 	DRIVER_STATE_PRINT_INT(band);
--	DRIVER_STATE_PRINT_INT(psm_entry_retry);
--	DRIVER_STATE_PRINT_INT(ps_poll_failures);
- 	DRIVER_STATE_PRINT_INT(power_level);
- 	DRIVER_STATE_PRINT_INT(rssi_thold);
- 	DRIVER_STATE_PRINT_INT(last_rssi_event);
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index fac4eae..31cb43e 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -78,8 +78,8 @@ static void wl1271_event_pspoll_delivery_fail(struct wl1271 *wl,
- 	int delay = wl->conf.conn.ps_poll_recovery_period;
- 	int ret;
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 +-
+ include/linux/nl80211.h                    |    7 ++++
+ include/net/cfg80211.h                     |    2 -
+ net/mac80211/cfg.c                         |   11 +++++--
+ net/wireless/core.h                        |    2 -
+ net/wireless/mlme.c                        |    5 ++-
+ net/wireless/nl80211.c                     |   43 +++++++++++++++++------------
+ 7 files changed, 48 insertions(+), 25 deletions(-)
+
+--- a/include/linux/nl80211.h	2011-10-28 11:03:50.000000000 +0200
++++ b/include/linux/nl80211.h	2011-10-28 11:08:02.000000000 +0200
+@@ -1147,6 +1147,11 @@ enum nl80211_commands {
+  * @NL80211_ATTR_FEATURE_FLAGS: This u32 attribute contains flags from
+  *	&enum nl80211_feature_flags and is advertised in wiphy information.
+  *
++ * @NL80211_ATTR_DONT_WAIT_FOR_ACK: Used with %NL80211_CMD_FRAME, this tells
++ *	the driver to not wait for an acknowledgement. Note that due to this,
++ *	it will also not give a status callback nor return a cookie. This is
++ *	mostly useful for probe responses to save airtime.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1379,6 +1384,8 @@ enum nl80211_attrs {
  
--	wl->ps_poll_failures++;
--	if (wl->ps_poll_failures == 1)
-+	wlvif->ps_poll_failures++;
-+	if (wlvif->ps_poll_failures == 1)
- 		wl1271_info("AP with dysfunctional ps-poll, "
- 			    "trying to work around it.");
+ 	NL80211_ATTR_FEATURE_FLAGS,
  
-@@ -118,23 +118,23 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
- 
- 		if (!test_bit(WL1271_FLAG_PSM, &wl->flags)) {
- 			/* remain in active mode */
--			wl->psm_entry_retry = 0;
-+			wlvif->psm_entry_retry = 0;
- 			break;
- 		}
- 
--		if (wl->psm_entry_retry < total_retries) {
--			wl->psm_entry_retry++;
-+		if (wlvif->psm_entry_retry < total_retries) {
-+			wlvif->psm_entry_retry++;
- 			ret = wl1271_ps_set_mode(wl, wlvif,
- 						 STATION_POWER_SAVE_MODE,
- 						 wlvif->basic_rate, true);
- 		} else {
- 			wl1271_info("No ack to nullfunc from AP.");
--			wl->psm_entry_retry = 0;
-+			wlvif->psm_entry_retry = 0;
- 			*beacon_loss = true;
- 		}
- 		break;
- 	case EVENT_ENTER_POWER_SAVE_SUCCESS:
--		wl->psm_entry_retry = 0;
-+		wlvif->psm_entry_retry = 0;
- 
- 		/* enable beacon filtering */
- 		ret = wl1271_acx_beacon_filter_opt(wl, wlvif, true);
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 1d3ed60..20ad35d 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2141,7 +2141,6 @@ deinit:
- 	wl->band = IEEE80211_BAND_2GHZ;
- 
- 	wl->rx_counter = 0;
--	wl->psm_entry_retry = 0;
- 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
- 	wl->tx_blocks_available = 0;
- 	wl->tx_allocated_blocks = 0;
-@@ -3535,7 +3534,7 @@ sta_not_found:
- 			wlvif->aid = bss_conf->aid;
- 			set_assoc = true;
- 
--			wl->ps_poll_failures = 0;
-+			wlvif->ps_poll_failures = 0;
- 
- 			/*
- 			 * use basic rates from AP, and determine lowest rate
-@@ -4853,7 +4852,6 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
- 
- 	wl->channel = WL1271_DEFAULT_CHANNEL;
- 	wl->rx_counter = 0;
--	wl->psm_entry_retry = 0;
- 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
- 	wl->band = IEEE80211_BAND_2GHZ;
- 	wl->vif = NULL;
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index d153b24..5e976ae 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -510,12 +510,6 @@ struct wl1271 {
- 	struct completion *elp_compl;
- 	struct delayed_work elp_work;
- 
--	/* counter for ps-poll delivery failures */
--	int ps_poll_failures;
--
--	/* retry counter for PSM entries */
--	u8 psm_entry_retry;
--
- 	/* in dBm */
- 	int power_level;
- 
-@@ -651,6 +645,12 @@ struct wl12xx_vif {
- 
- 	struct completion *ps_compl;
- 	struct delayed_work pspoll_work;
++	NL80211_ATTR_DONT_WAIT_FOR_ACK,
 +
-+	/* counter for ps-poll delivery failures */
-+	int ps_poll_failures;
-+
-+	/* retry counter for PSM entries */
-+	u8 psm_entry_retry;
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+--- a/net/wireless/core.h	2011-10-28 11:03:50.000000000 +0200
++++ b/net/wireless/core.h	2011-10-28 11:03:51.000000000 +0200
+@@ -378,7 +378,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg8021
+ 			  enum nl80211_channel_type channel_type,
+ 			  bool channel_type_valid, unsigned int wait,
+ 			  const u8 *buf, size_t len, bool no_cck,
+-			  u64 *cookie);
++			  bool dont_wait_for_ack, u64 *cookie);
+ 
+ /* SME */
+ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+--- a/net/wireless/mlme.c	2011-10-28 11:03:42.000000000 +0200
++++ b/net/wireless/mlme.c	2011-10-28 11:03:51.000000000 +0200
+@@ -904,7 +904,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg8021
+ 			  enum nl80211_channel_type channel_type,
+ 			  bool channel_type_valid, unsigned int wait,
+ 			  const u8 *buf, size_t len, bool no_cck,
+-			  u64 *cookie)
++			  bool dont_wait_for_ack, u64 *cookie)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	const struct ieee80211_mgmt *mgmt;
+@@ -995,7 +995,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg8021
+ 	/* Transmit the Action frame as requested by user space */
+ 	return rdev->ops->mgmt_tx(&rdev->wiphy, dev, chan, offchan,
+ 				  channel_type, channel_type_valid,
+-				  wait, buf, len, no_cck, cookie);
++				  wait, buf, len, no_cck, dont_wait_for_ack,
++				  cookie);
+ }
+ 
+ bool cfg80211_rx_mgmt(struct net_device *dev, int freq, const u8 *buf,
+--- a/net/wireless/nl80211.c	2011-10-28 11:03:50.000000000 +0200
++++ b/net/wireless/nl80211.c	2011-10-28 11:03:51.000000000 +0200
+@@ -197,6 +197,7 @@ static const struct nla_policy nl80211_p
+ 	[NL80211_ATTR_TDLS_OPERATION] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_TDLS_SUPPORT] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_TDLS_EXTERNAL_SETUP] = { .type = NLA_FLAG },
++	[NL80211_ATTR_DONT_WAIT_FOR_ACK] = { .type = NLA_FLAG },
  };
  
- static inline struct wl12xx_vif *wl12xx_vif_to_data(struct ieee80211_vif *vif)
--- 
-1.7.6.401.g6a319
+ /* policy for the key attributes */
+@@ -5279,10 +5280,11 @@ static int nl80211_tx_mgmt(struct sk_buf
+ 	int err;
+ 	void *hdr;
+ 	u64 cookie;
+-	struct sk_buff *msg;
++	struct sk_buff *msg = NULL;
+ 	unsigned int wait = 0;
+-	bool offchan;
+-	bool no_cck;
++	bool offchan, no_cck, dont_wait_for_ack;
++
++	dont_wait_for_ack = info->attrs[NL80211_ATTR_DONT_WAIT_FOR_ACK];
+ 
+ 	if (!info->attrs[NL80211_ATTR_FRAME] ||
+ 	    !info->attrs[NL80211_ATTR_WIPHY_FREQ])
+@@ -5326,29 +5328,36 @@ static int nl80211_tx_mgmt(struct sk_buf
+ 	if (chan == NULL)
+ 		return -EINVAL;
+ 
+-	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+-	if (!msg)
+-		return -ENOMEM;
+-
+-	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
+-			     NL80211_CMD_FRAME);
+-
+-	if (IS_ERR(hdr)) {
+-		err = PTR_ERR(hdr);
+-		goto free_msg;
++	if (!dont_wait_for_ack) {
++		msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++		if (!msg)
++			return -ENOMEM;
++
++		hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
++				     NL80211_CMD_FRAME);
++
++		if (IS_ERR(hdr)) {
++			err = PTR_ERR(hdr);
++			goto free_msg;
++		}
+ 	}
++
+ 	err = cfg80211_mlme_mgmt_tx(rdev, dev, chan, offchan, channel_type,
+ 				    channel_type_valid, wait,
+ 				    nla_data(info->attrs[NL80211_ATTR_FRAME]),
+ 				    nla_len(info->attrs[NL80211_ATTR_FRAME]),
+-				    no_cck, &cookie);
++				    no_cck, dont_wait_for_ack, &cookie);
+ 	if (err)
+ 		goto free_msg;
+ 
+-	NLA_PUT_U64(msg, NL80211_ATTR_COOKIE, cookie);
++	if (msg) {
++		NLA_PUT_U64(msg, NL80211_ATTR_COOKIE, cookie);
+ 
+-	genlmsg_end(msg, hdr);
+-	return genlmsg_reply(msg, info);
++		genlmsg_end(msg, hdr);
++		return genlmsg_reply(msg, info);
++	}
++
++	return 0;
+ 
+  nla_put_failure:
+ 	err = -ENOBUFS;
+--- a/include/net/cfg80211.h	2011-10-28 11:03:50.000000000 +0200
++++ b/include/net/cfg80211.h	2011-10-28 11:03:51.000000000 +0200
+@@ -1584,7 +1584,7 @@ struct cfg80211_ops {
+ 			  enum nl80211_channel_type channel_type,
+ 			  bool channel_type_valid, unsigned int wait,
+ 			  const u8 *buf, size_t len, bool no_cck,
+-			  u64 *cookie);
++			  bool dont_wait_for_ack, u64 *cookie);
+ 	int	(*mgmt_tx_cancel_wait)(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+ 				       u64 cookie);
+--- a/net/mac80211/cfg.c	2011-10-28 11:03:45.000000000 +0200
++++ b/net/mac80211/cfg.c	2011-10-28 11:03:51.000000000 +0200
+@@ -1936,7 +1936,7 @@ static int ieee80211_mgmt_tx(struct wiph
+ 			     enum nl80211_channel_type channel_type,
+ 			     bool channel_type_valid, unsigned int wait,
+ 			     const u8 *buf, size_t len, bool no_cck,
+-			     u64 *cookie)
++			     bool dont_wait_for_ack, u64 *cookie)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+@@ -1944,10 +1944,15 @@ static int ieee80211_mgmt_tx(struct wiph
+ 	struct sta_info *sta;
+ 	struct ieee80211_work *wk;
+ 	const struct ieee80211_mgmt *mgmt = (void *)buf;
+-	u32 flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
+-		    IEEE80211_TX_CTL_REQ_TX_STATUS;
++	u32 flags;
+ 	bool is_offchan = false;
+ 
++	if (dont_wait_for_ack)
++		flags = IEEE80211_TX_CTL_NO_ACK;
++	else
++		flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
++			IEEE80211_TX_CTL_REQ_TX_STATUS;
++
+ 	/* Check that we are on the requested channel for transmission */
+ 	if (chan != local->tmp_channel &&
+ 	    chan != local->oper_channel)
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c	2011-10-28 11:02:13.000000000 +0200
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c	2011-10-28 11:03:51.000000000 +0200
+@@ -1732,7 +1732,8 @@ static int ath6kl_mgmt_tx(struct wiphy *
+ 			  struct ieee80211_channel *chan, bool offchan,
+ 			  enum nl80211_channel_type channel_type,
+ 			  bool channel_type_valid, unsigned int wait,
+-			  const u8 *buf, size_t len, bool no_cck, u64 *cookie)
++			  const u8 *buf, size_t len, bool no_cck,
++			  bool dont_wait_for_ack, u64 *cookie)
+ {
+ 	struct ath6kl *ar = ath6kl_priv(dev);
+ 	u32 id;
+
 
