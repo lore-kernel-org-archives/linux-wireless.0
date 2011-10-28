@@ -1,87 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:65014 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754170Ab1JRI2d (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41715 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755034Ab1J1IM4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Oct 2011 04:28:33 -0400
-Received: by bkbzt19 with SMTP id zt19so508601bkb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2011 01:28:31 -0700 (PDT)
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] Set IEEE80211_TX_RC_MCS on MCS rates on TX complete.
-Date: Tue, 18 Oct 2011 10:28:28 +0200
-Message-Id: <1318926508-2008-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20111018_102939_732794_1332F6DC)
+	Fri, 28 Oct 2011 04:12:56 -0400
+Subject: Re: [wireless-next PATCH 3/5] wifi: Allow overriding some HT
+ information.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1319778680-11405-3-git-send-email-greearb@candelatech.com> (sfid-20111028_071147_787476_DBCC8CCF)
+References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
+	 <1319778680-11405-3-git-send-email-greearb@candelatech.com>
+	 (sfid-20111028_071147_787476_DBCC8CCF)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 Oct 2011 10:12:53 +0200
+Message-ID: <1319789573.3914.15.camel@jlt3.sipsolutions.net> (sfid-20111028_101259_311268_2036FAA8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IEEE80211_TX_RC_MCS was not set correctly leading to incorrect link
-speed calculation.
+On Thu, 2011-10-27 at 22:11 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> * Allow configuring the mcs (/n) rates available.
+> * Allow configuration of MAX-A-MSDU
+> * Allow configuration of A-MPDU factor & density.
+> 
+> Users can only remove existing rates.  The MSDU and MPDU
+> values can be set to any value allowed by the 802.11n
+> specification.
 
-Reviewed-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/conf.h |    4 ++++
- drivers/net/wireless/wl12xx/tx.c   |   12 +++++++++++-
- 2 files changed, 15 insertions(+), 1 deletions(-)
+That can't work -- the device might not support it.
 
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index 04bb8fb..b3f9592 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -91,6 +91,10 @@ enum {
- 	CONF_HW_RXTX_RATE_UNSUPPORTED = 0xff
- };
- 
-+/* Rates between and including these are MCS rates */
-+#define CONF_HW_RXTX_RATE_MCS_MIN CONF_HW_RXTX_RATE_MCS7
-+#define CONF_HW_RXTX_RATE_MCS_MAX CONF_HW_RXTX_RATE_MCS0
-+
- enum {
- 	CONF_SG_DISABLE = 0,
- 	CONF_SG_PROTECTIVE,
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index c7ad4f5..40c5669 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -798,6 +798,14 @@ out:
- 	mutex_unlock(&wl->mutex);
- }
- 
-+static u8 wl1271_tx_get_rate_flags(u8 rate_class_index)
-+{
-+	if (rate_class_index >= CONF_HW_RXTX_RATE_MCS_MIN &&
-+	    rate_class_index <= CONF_HW_RXTX_RATE_MCS_MAX)
-+		return IEEE80211_TX_RC_MCS;
-+	return 0;
-+}
-+
- static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 				      struct wl1271_tx_hw_res_descr *result)
- {
-@@ -807,6 +815,7 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 	struct sk_buff *skb;
- 	int id = result->id;
- 	int rate = -1;
-+	u8 rate_flags = 0;
- 	u8 retries = 0;
- 
- 	/* check for id legality */
-@@ -833,6 +842,7 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 			info->flags |= IEEE80211_TX_STAT_ACK;
- 		rate = wl1271_rate_to_idx(result->rate_class_index,
- 					  wlvif->band);
-+		rate_flags = wl1271_tx_get_rate_flags(result->rate_class_index);
- 		retries = result->ack_failures;
- 	} else if (result->status == TX_RETRY_EXCEEDED) {
- 		wl->stats.excessive_retries++;
-@@ -841,7 +851,7 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 
- 	info->status.rates[0].idx = rate;
- 	info->status.rates[0].count = retries;
--	info->status.rates[0].flags = 0;
-+	info->status.rates[0].flags = rate_flags;
- 	info->status.ack_signal = -1;
- 
- 	wl->stats.retry_count += result->ack_failures;
--- 
-1.7.4.1
+I also don't really like the way you pass in some binary "mask" when
+it's not really a binary masking operation.
+
+>  struct vif_params {
+>  	int use_4addr;
+>  	int disable_11n;
+>  	int disable_ht40;
+> +	struct ieee80211_ht_cap *ht_capa;
+> +	struct ieee80211_ht_cap *ht_capa_mask;
+
+Same comments as before again -- this is per connection right?
+
+> @@ -114,6 +115,19 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
+>  	if (ht_info_ie[1] < sizeof(struct ieee80211_ht_info))
+>  		return;
+>  
+> +	memcpy(&ht_cap, &sband->ht_cap, sizeof(ht_cap));
+> +	/*
+> +	 * This is for an association attempt, and we must
+> +	 * advert at least the first 8 rates, even if we
+> +	 * will later force the rate control to a lower rate.
+> +	 */
+> +	ieee80211_apply_htcap_overrides(sdata, &ht_cap, 8);
+
+Yuck, why, why hard-code 8, etc.
+
+johannes
 
