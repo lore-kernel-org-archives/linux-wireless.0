@@ -1,164 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:36586 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752254Ab1JMMV5 (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:44790 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751176Ab1J2FFi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Oct 2011 08:21:57 -0400
-Subject: [PATCH 4/4] ath6kl: add debug level for hif
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 13 Oct 2011 15:21:53 +0300
-Message-ID: <20111013122153.30551.80262.stgit@localhost6.localdomain6> (sfid-20111013_142201_789946_B246D9F2)
-In-Reply-To: <20111013122115.30551.94.stgit@localhost6.localdomain6>
-References: <20111013122115.30551.94.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sat, 29 Oct 2011 01:05:38 -0400
+Received: by pzk36 with SMTP id 36so12352067pzk.1
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Oct 2011 22:05:38 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, Javier Cardona <javier@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH 1/4] mac80211: Avoid filling up mesh preq queue with redundant requests
+Date: Fri, 28 Oct 2011 22:05:29 -0700
+Message-Id: <1319864732-11286-1-git-send-email-thomas@cozybit.com> (sfid-20111029_070542_640178_713EC88C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-That way we htc level debug messages can be removed from hif files. Also
-add few new messages and remove useless debug message about using
-synchrous irq processing (we don't support anything else).
+From: Javier Cardona <javier@cozybit.com>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Don't accept redundant PREQs for a given destination. This fixes a
+problem under high load:
+
+kernel: [20386.250913] mesh_queue_preq: 235 callbacks suppressed
+kernel: [20386.253335] Mesh HWMP (mesh0): PREQ node queue full
+kernel: [20386.253352] Mesh HWMP (mesh0): PREQ node queue full
+(...)
+
+The 802.11s protocol has a provision to limit the rate of path requests
+(PREQs) are transmitted (dot11MeshHWMPpreqMinInterval) but there was no
+limit on the rate at which PREQs were being queued up.  There is a valid
+reason for queuing PREQs: this way we can even out PREQ bursts.  But
+queueing multiple PREQs for the same destination is useless.
+
+Reported-by: Pedro Larbig <pedro.larbig@carhs.de>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/ath/ath6kl/debug.h   |    2 +-
- drivers/net/wireless/ath/ath6kl/hif-ops.h |   18 ++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/hif.c     |   17 ++++++++---------
- 3 files changed, 27 insertions(+), 10 deletions(-)
+v2: fix merge conflict
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
-index 01f4015..cbabc25 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.h
-+++ b/drivers/net/wireless/ath/ath6kl/debug.h
-@@ -26,7 +26,7 @@ enum ATH6K_DEBUG_MASK {
- 	ATH6KL_DBG_WLAN_RX      = BIT(3),     /* wlan rx */
- 	ATH6KL_DBG_BMI		= BIT(4),     /* bmi tracing */
- 	ATH6KL_DBG_HTC		= BIT(5),
--	/* hole */
-+	ATH6KL_DBG_HIF		= BIT(6),
- 	ATH6KL_DBG_IRQ		= BIT(7),     /* interrupt processing */
- 	ATH6KL_DBG_PM           = BIT(8),     /* power management */
- 	ATH6KL_DBG_WLAN_NODE    = BIT(9),     /* general wlan node tracing */
-diff --git a/drivers/net/wireless/ath/ath6kl/hif-ops.h b/drivers/net/wireless/ath/ath6kl/hif-ops.h
-index 21b1575..95e7303 100644
---- a/drivers/net/wireless/ath/ath6kl/hif-ops.h
-+++ b/drivers/net/wireless/ath/ath6kl/hif-ops.h
-@@ -18,10 +18,16 @@
- #define HIF_OPS_H
+ net/mac80211/mesh.h      |    3 +++
+ net/mac80211/mesh_hwmp.c |   15 +++++++++++++--
+ 2 files changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 8c00e2d..b3745e8 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -31,6 +31,8 @@
+  * @MESH_PATH_FIXED: the mesh path has been manually set and should not be
+  * 	modified
+  * @MESH_PATH_RESOLVED: the mesh path can has been resolved
++ * @MESH_PATH_REQ_QUEUED: there is an unsent path request for this destination
++ * already queued up, waiting for the discovery process to start.
+  *
+  * MESH_PATH_RESOLVED is used by the mesh path timer to
+  * decide when to stop or cancel the mesh path discovery.
+@@ -41,6 +43,7 @@ enum mesh_path_flags {
+ 	MESH_PATH_SN_VALID =	BIT(2),
+ 	MESH_PATH_FIXED	=	BIT(3),
+ 	MESH_PATH_RESOLVED =	BIT(4),
++	MESH_PATH_REQ_QUEUED =	BIT(5),
+ };
  
- #include "hif.h"
-+#include "debug.h"
- 
- static inline int hif_read_write_sync(struct ath6kl *ar, u32 addr, u8 *buf,
- 				      u32 len, u32 request)
- {
-+	ath6kl_dbg(ATH6KL_DBG_HIF,
-+		   "hif %s sync addr 0x%x buf 0x%p len %d request 0x%x\n",
-+		   (request & HIF_WRITE) ? "write" : "read",
-+		   addr, buf, len, request);
-+
- 	return ar->hif_ops->read_write_sync(ar, addr, buf, len, request);
- }
- 
-@@ -29,16 +35,24 @@ static inline int hif_write_async(struct ath6kl *ar, u32 address, u8 *buffer,
- 				  u32 length, u32 request,
- 				  struct htc_packet *packet)
- {
-+	ath6kl_dbg(ATH6KL_DBG_HIF,
-+		   "hif write async addr 0x%x buf 0x%p len %d request 0x%x\n",
-+		   address, buffer, length, request);
-+
- 	return ar->hif_ops->write_async(ar, address, buffer, length,
- 					request, packet);
- }
- static inline void ath6kl_hif_irq_enable(struct ath6kl *ar)
- {
-+	ath6kl_dbg(ATH6KL_DBG_HIF, "hif irq enable\n");
-+
- 	return ar->hif_ops->irq_enable(ar);
- }
- 
- static inline void ath6kl_hif_irq_disable(struct ath6kl *ar)
- {
-+	ath6kl_dbg(ATH6KL_DBG_HIF, "hif irq disable\n");
-+
- 	return ar->hif_ops->irq_disable(ar);
- }
- 
-@@ -71,11 +85,15 @@ static inline void ath6kl_hif_cleanup_scatter(struct ath6kl *ar)
- 
- static inline int ath6kl_hif_suspend(struct ath6kl *ar)
- {
-+	ath6kl_dbg(ATH6KL_DBG_HIF, "hif suspend\n");
-+
- 	return ar->hif_ops->suspend(ar);
- }
- 
- static inline int ath6kl_hif_resume(struct ath6kl *ar)
- {
-+	ath6kl_dbg(ATH6KL_DBG_HIF, "hif resume\n");
-+
- 	return ar->hif_ops->resume(ar);
- }
- #endif
-diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
-index 7cc6cec..e2d8088 100644
---- a/drivers/net/wireless/ath/ath6kl/hif.c
-+++ b/drivers/net/wireless/ath/ath6kl/hif.c
-@@ -51,8 +51,7 @@ int ath6kl_hif_rw_comp_handler(void *context, int status)
- {
- 	struct htc_packet *packet = context;
- 
--	ath6kl_dbg(ATH6KL_DBG_HTC,
--		   "ath6kl_hif_rw_comp_handler (pkt:0x%p , status: %d\n",
-+	ath6kl_dbg(ATH6KL_DBG_HIF, "hif rw completion pkt 0x%p status %d\n",
- 		   packet, status);
- 
- 	packet->status = status;
-@@ -119,7 +118,7 @@ int ath6kl_hif_poll_mboxmsg_rx(struct ath6kl_device *dev, u32 *lk_ahd,
- 
- 		/* delay a little  */
- 		mdelay(ATH6KL_TIME_QUANTUM);
--		ath6kl_dbg(ATH6KL_DBG_HTC, "retry mbox poll : %d\n", i);
-+		ath6kl_dbg(ATH6KL_DBG_HIF, "hif retry mbox poll try %d\n", i);
+ /**
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 9a1f8bb..b7d9dfd 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -867,9 +867,19 @@ static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
+ 		return;
  	}
  
- 	if (i == 0) {
-@@ -147,6 +146,9 @@ int ath6kl_hif_rx_control(struct ath6kl_device *dev, bool enable_rx)
- 	struct ath6kl_irq_enable_reg regs;
- 	int status = 0;
- 
-+	ath6kl_dbg(ATH6KL_DBG_HIF, "hif rx %s\n",
-+		   enable_rx ? "enable" : "disable");
++	spin_lock_bh(&mpath->state_lock);
++	if (mpath->flags & MESH_PATH_REQ_QUEUED) {
++		spin_unlock_bh(&mpath->state_lock);
++		spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
++		return;
++	}
 +
- 	/* take the lock to protect interrupt enable shadows */
- 	spin_lock_bh(&dev->lock);
+ 	memcpy(preq_node->dst, mpath->dst, ETH_ALEN);
+ 	preq_node->flags = flags;
  
-@@ -186,8 +188,8 @@ int ath6kl_hif_submit_scat_req(struct ath6kl_device *dev,
- 			dev->ar->mbox_info.htc_addr;
- 	}
++	mpath->flags |= MESH_PATH_REQ_QUEUED;
++	spin_unlock_bh(&mpath->state_lock);
++
+ 	list_add_tail(&preq_node->list, &ifmsh->preq_queue.list);
+ 	++ifmsh->preq_queue_len;
+ 	spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
+@@ -921,6 +931,7 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
+ 		goto enddiscovery;
  
--	ath6kl_dbg(ATH6KL_DBG_HTC,
--		   "ath6kl_hif_submit_scat_req, entries: %d, total len: %d mbox:0x%X (mode: %s : %s)\n",
-+	ath6kl_dbg(ATH6KL_DBG_HIF,
-+		   "hif submit scatter request entries %d len %d mbox 0x%x %s %s\n",
- 		   scat_req->scat_entries, scat_req->len,
- 		   scat_req->addr, !read ? "async" : "sync",
- 		   (read) ? "rd" : "wr");
-@@ -629,12 +631,9 @@ int ath6kl_hif_setup(struct ath6kl_device *dev)
- 	/* assemble mask, used for padding to a block */
- 	dev->htc_cnxt->block_mask = dev->htc_cnxt->block_sz - 1;
+ 	spin_lock_bh(&mpath->state_lock);
++	mpath->flags &= ~MESH_PATH_REQ_QUEUED;
+ 	if (preq_node->flags & PREQ_Q_F_START) {
+ 		if (mpath->flags & MESH_PATH_RESOLVING) {
+ 			spin_unlock_bh(&mpath->state_lock);
+@@ -1028,8 +1039,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
+ 			mesh_queue_preq(mpath, PREQ_Q_F_START);
+ 		}
  
--	ath6kl_dbg(ATH6KL_DBG_TRC, "block size: %d, mbox addr:0x%X\n",
-+	ath6kl_dbg(ATH6KL_DBG_HIF, "hif block size %d mbox addr 0x%x\n",
- 		   dev->htc_cnxt->block_sz, dev->ar->mbox_info.htc_addr);
+-		if (skb_queue_len(&mpath->frame_queue) >=
+-				MESH_FRAME_QUEUE_LEN)
++		if (skb_queue_len(&mpath->frame_queue) >= MESH_FRAME_QUEUE_LEN)
+ 			skb_to_free = skb_dequeue(&mpath->frame_queue);
  
--	ath6kl_dbg(ATH6KL_DBG_TRC,
--		   "hif interrupt processing is sync only\n");
--
- 	status = ath6kl_hif_disable_intrs(dev);
- 
- fail_setup:
+ 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+@@ -1062,6 +1072,7 @@ void mesh_path_timer(unsigned long data)
+ 		++mpath->discovery_retries;
+ 		mpath->discovery_timeout *= 2;
+ 		spin_unlock_bh(&mpath->state_lock);
++		mpath->flags &= ~MESH_PATH_REQ_QUEUED;
+ 		mesh_queue_preq(mpath, 0);
+ 	} else {
+ 		mpath->flags = 0;
+-- 
+1.7.5.4
 
