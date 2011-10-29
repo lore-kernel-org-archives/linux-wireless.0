@@ -1,76 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:58717 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932624Ab1JNUoh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 16:44:37 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 5/6] iwlagn: fix the race in the unmapping of the HCMD
-Date: Fri, 14 Oct 2011 12:54:47 -0700
-Message-Id: <1318622088-14679-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111014_224442_253361_CC3B62CE)
-In-Reply-To: <1318622088-14679-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1318622088-14679-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:47378 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932178Ab1J2JkS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Oct 2011 05:40:18 -0400
+Received: by faan17 with SMTP id n17so4263910faa.19
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Oct 2011 02:40:17 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Thomas Pedersen <thomas@cozybit.com>
+Subject: Re: [PATCH 2/4] mac80211: QoS multicast frames have No Ack policy
+Date: Sat, 29 Oct 2011 11:40:11 +0200
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+References: <1319864732-11286-1-git-send-email-thomas@cozybit.com> <1319864732-11286-2-git-send-email-thomas@cozybit.com>
+In-Reply-To: <1319864732-11286-2-git-send-email-thomas@cozybit.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201110291140.12311.chunkeey@googlemail.com> (sfid-20111029_114022_477911_33A48182)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Saturday 29 October 2011 07:05:30 Thomas Pedersen wrote:
+> Previously QoS multicast frames had the Normal Acknowledgment QoS
+> control bits set. This would cause broadcast frames to be discarded by
+> peers with which we have a BA session, since their sequence number would
+> fall outside the allowed range. Set No Ack QoS control bits on multicast
+> QoS frames and filter these in de-aggregation code.
+> 
+> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+> ---
+>  net/mac80211/rx.c  |    8 +++++++-
+>  net/mac80211/wme.c |    3 ++-
+>  2 files changed, 9 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index b867bd5..ee9e71b 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -747,7 +747,7 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+>  	struct sta_info *sta = rx->sta;
+>  	struct tid_ampdu_rx *tid_agg_rx;
+>  	u16 sc;
+> -	int tid;
+> +	u8 tid, ack_policy;
+>  
+>  	if (!ieee80211_is_data_qos(hdr->frame_control))
+>  		goto dont_reorder;
+> @@ -760,6 +760,7 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+>  	if (!sta)
+>  		goto dont_reorder;
+>  
+> +	ack_policy = *ieee80211_get_qos_ctl(hdr) & ~IEEE80211_QOS_CTL_TID_MASK;
+uh, while it might be a bit far fetched, but ack_policy might now clash with
+frames that have set:
 
-As Stanislaw pointed out, my patch
+IEEE80211_QOS_CTL_EOSP (0x10)
+IEEE80211_QOS_CTL_A_MSDU_PRESENT (0x80)
+IEEE80211_QOS_CTL_MESH_CONTROL_PRESENT (0x100)
 
-	iwlagn: fix a race in the unmapping of the TFDs
+so I think we would be better of with something like:
 
-solved only part of the problem. The race still exists for TFDs of
-the host commands. Fix that too.
+(in include/linux/ieee80211.h)
+#define IEEE80211_QOS_CTL_ACK_POLICY_MASK 0x0060
 
-Reported-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   12 ++++++++----
- 1 files changed, 8 insertions(+), 4 deletions(-)
+ack_policy = *ieee80211_get_qos_ctl(hdr) & ~IEEE80211_QOS_CTL_ACK_POLICY_MASK;
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 8e8c75c..da34110 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -407,6 +407,7 @@ static void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id)
- 	struct iwl_queue *q = &txq->q;
- 	enum dma_data_direction dma_dir;
- 	unsigned long flags;
-+	spinlock_t *lock;
- 
- 	if (!q->n_bd)
- 		return;
-@@ -414,19 +415,22 @@ static void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id)
- 	/* In the command queue, all the TBs are mapped as BIDI
- 	 * so unmap them as such.
- 	 */
--	if (txq_id == trans->shrd->cmd_queue)
-+	if (txq_id == trans->shrd->cmd_queue) {
- 		dma_dir = DMA_BIDIRECTIONAL;
--	else
-+		lock = &trans->hcmd_lock;
-+	} else {
- 		dma_dir = DMA_TO_DEVICE;
-+		lock = &trans->shrd->sta_lock;
-+	}
- 
--	spin_lock_irqsave(&trans->shrd->sta_lock, flags);
-+	spin_lock_irqsave(lock, flags);
- 	while (q->write_ptr != q->read_ptr) {
- 		/* The read_ptr needs to bound by q->n_window */
- 		iwlagn_txq_free_tfd(trans, txq, get_cmd_index(q, q->read_ptr),
- 				    dma_dir);
- 		q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd);
- 	}
--	spin_unlock_irqrestore(&trans->shrd->sta_lock, flags);
-+	spin_unlock_irqrestore(lock, flags);
- }
- 
- /**
--- 
-1.7.0.4
+> @@ -770,6 +771,11 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+>  	if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
+>  		goto dont_reorder;
+>  
+> +	/* not part of a BA session */
+> +	if (!((ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK) ||
+> +	      (ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_NORMAL)))
+> +		goto dont_reorder;
+> +
 
+Regards,
+	Chr
