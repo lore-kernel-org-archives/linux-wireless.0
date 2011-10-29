@@ -1,85 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:49815 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752706Ab1JJTct convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:33526 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754774Ab1J2MG1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 15:32:49 -0400
-Received: by iabz25 with SMTP id z25so685637iab.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2011 12:32:49 -0700 (PDT)
+	Sat, 29 Oct 2011 08:06:27 -0400
+Received: by wwe6 with SMTP id 6so6960162wwe.1
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Oct 2011 05:06:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1318272712.9690.384.camel@cumari>
-References: <1318234397-21081-1-git-send-email-eliad@wizery.com>
-	<1318234397-21081-9-git-send-email-eliad@wizery.com>
-	<1318272712.9690.384.camel@cumari>
-Date: Mon, 10 Oct 2011 21:32:48 +0200
-Message-ID: <CAB3XZEcXGyia5r1jrfjYTwrNvFDpxpckY=jX6qYyWuHg-iBYvg@mail.gmail.com> (sfid-20111010_213253_033657_EAD4D391)
-Subject: Re: [PATCH 08/29] wl12xx: configure sleep_policy according to active roles
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
+In-Reply-To: <4EA9E56D.5080300@lwfinger.net>
+References: <CAF7qGM4BL10gn2786kW73sAk8f-y8CzX0rx2BQsY_Q96W=pfog@mail.gmail.com>
+ <4EA89B8D.7060104@lwfinger.net> <CAF7qGM7hfaz0SGiZVZ62r_nPO8viMT5F2_Kd1uRxN9Ha3mRO+Q@mail.gmail.com>
+ <4EA97323.50004@lwfinger.net> <CA+XFjipvGBsWCCWt5OvFfeCiOpsH28Txvui4A+d8sVCaACQ57Q@mail.gmail.com>
+ <4EA9E56D.5080300@lwfinger.net>
+From: Roman Proud <setamagiga@gmail.com>
+Date: Sat, 29 Oct 2011 14:06:05 +0200
+Message-ID: <CAF7qGM5Zmd55B6VPWfEwACgCHuAOyhCYRXwNwi8TTOQ-BD-pmA@mail.gmail.com> (sfid-20111029_140633_035471_042A148B)
+Subject: Re: RTL8188RU no injection?
+To: Larry Finger <Larry.Finger@lwfinger.net>
 Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 10, 2011 at 8:51 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Mon, 2011-10-10 at 10:12 +0200, Eliad Peller wrote:
->> If there is an active AP role, stay always on.
->> Otherwise, allow chip to enter elp.
->>
->> (Note that this is a global configuration, so if the
->> device is already configured according to our policy,
->> we don't have to configure it again)
->>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> ---
->
-> [...]
->
->> @@ -573,13 +563,38 @@ static int wl12xx_init_ap_role(struct wl1271 *wl, struct wl12xx_vif *wlvif)
->>
->>  int wl1271_init_vif_specific(struct wl1271 *wl, struct ieee80211_vif *vif)
->>  {
->> -     struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
->> +     struct wl12xx_vif *iter, *wlvif = wl12xx_vif_to_data(vif);
->>       struct conf_tx_ac_category *conf_ac;
->>       struct conf_tx_tid *conf_tid;
->>       bool is_ap = (wlvif->bss_type == BSS_TYPE_AP_BSS);
->> -
->> +     u8 sta_roles_cnt = 0, ap_roles_cnt = 0;
->>       int ret, i;
->>
->> +     wl12xx_for_each_wlvif(wl, iter) {
->> +             if (iter->bss_type == BSS_TYPE_AP_BSS)
->> +                     ap_roles_cnt++;
->> +             else
->> +                     sta_roles_cnt++;
->> +     }
->> +
->> +     /*
->> +      * consider all existing roles before configuring psm.
->> +      * TODO: reconfigure on interface removal.
->> +      */
->> +     if (!ap_roles_cnt) {
->> +             if (is_ap) {
->> +                     /* Configure for power always on */
->> +                     ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
->> +                     if (ret < 0)
->> +                             return ret;
->> +             } else if (!sta_roles_cnt) {
->> +                     /* Configure for ELP power saving */
->> +                     ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_ELP);
->> +                     if (ret < 0)
->> +                             return ret;
->> +             }
->> +     }
->> +
->
-> Wouldn't it be much simpler to have a "have_ap" element in the wl
-> struct?
->
->
-have_ap is not enough, because there might be multiple aps, and we
-need to consider it on removal.
-we can use ap_count, if you prefer it that way.
+I really thank you guys for helping me.
+I really learned a lot in this thread xD
 
-Eliad.
+Its an ALFA AWUS036NHR so i guess its me... but yeah, i also found
+that there are many drivers already in the main kernel, but i didnt
+know there is a difference between rtl and r and nothing ...
+
+Btw i tried many drivers, not only directly from Realtek. I think my
+netbook kernel, was the problem, since i'm on Orginal Arch im getting
+straight forward to get this thing working :D
+
+Now where i know that it should work, i can try and try without
+worrying that it never will work, so really thx for testing this!
+
+Greetings,
+Roman
+
+2011/10/28 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 10/27/2011 05:00 PM, Gábor Stefanik wrote:
+>
+>> As a former Aircrack developer, I can definitely state that Aircrack
+>> uses the same injection method as packetspammer.
+>
+> I just built Aircrack and tested it with rtl8192cu on an ALFA AWUS036NHR,
+> which has the RTL8188RU chip. It works just as you expected.
+>
+> Larry
+>
+>
+>
