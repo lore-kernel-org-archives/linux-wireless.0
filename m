@@ -1,58 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.schottelius.org ([77.109.138.221]:48685 "EHLO
-	mx3.schottelius.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752702Ab1JYGlx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 02:41:53 -0400
-Date: Tue, 25 Oct 2011 08:41:40 +0200
-From: Nico Schottelius <nico-linux-20111017@schottelius.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Nico Schottelius <nico-linux-20111017@schottelius.org>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: BUG: All network processes hang (brcmsmac/wpa_supplicant)
-Message-ID: <20111025064140.GB20334@schottelius.org> (sfid-20111025_084157_385471_AA9D0B3E)
-References: <4E9EE20F.1030403@broadcom.com>
- <20111019145501.GB1414@schottelius.org>
- <4E9EFF51.6000104@broadcom.com>
- <20111019214250.GC2432@schottelius.org>
- <4E9FBFA7.4040502@broadcom.com>
- <20111022015945.GC26186@ethz.ch>
- <4EA3E6AD.4030701@broadcom.com>
- <20111023105305.GA2489@schottelius.org>
- <20111023194823.GB2489@schottelius.org>
- <4EA55F13.5020300@broadcom.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:3562 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754095Ab1J2Ja1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Oct 2011 05:30:27 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linux-wireless@vger.kernel.org
+cc: "Julia Lawall" <julia@diku.dk>,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"Julian Calaby" <julian.calaby@gmail.com>
+Subject: [PATCH] brcm80211: smac: eliminate a null pointer dereference
+ in dma.c
+Date: Sat, 29 Oct 2011 11:30:15 +0200
+Message-ID: <1319880615-3000-1-git-send-email-arend@broadcom.com> (sfid-20111029_113030_856482_0107CF00)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4EA55F13.5020300@broadcom.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Arend,
+Though it's unlikely, di may be null, so we can't dereference
+di->dma.dmactrlflags until we've checked it.
 
-Arend van Spriel [Mon, Oct 24, 2011 at 02:50:27PM +0200]:
-> On 10/23/2011 09:48 PM, Nico Schottelius wrote:
-> I tried to make sense of the dmesg log you sent me. Not sure what is
-> happening so could do the following:
-> 
-> 1. Determine wpa_supplicant version using -v option.
+Move this de-reference after the check, and adjust the error
+message to not require de-referencing di.
 
-wpa_supplicant v0.7.3
+This is based upon Julia's original patch:
+<1319846297-2985-2-git-send-email-julia@diku.dk>
 
-> 2. Add '-ddt' option in DBus service file:
-> 	wpa_supplicant >= 0.7: fi.w1.wpa_supplicant1.service
-> 	wpa_supplicant < 0.7:  fi.epitest.hostap.WPASupplicant.service
->    (located in /usr/share/dbus-1/system-services/).
-> 3. Reproduce the problem and sent /var/log/syslog.
+Reported-by: Julia Lawall <julia@diku.dk>
+Acked-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-I'll have to postpone these two, because I've to exchange the physical
-device, as the vendor supplied the wrong version (i5 instead of i7).
-
-As soon as I've the i7 version setup, I'll reply to this mail!
-
-Cheers,
-
-Nico
-
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+index ae541fb..e286fb4 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+@@ -358,13 +358,14 @@ static uint nrxdactive(struct dma_info *di, uint h, uint t)
+ 
+ static uint _dma_ctrlflags(struct dma_info *di, uint mask, uint flags)
+ {
+-	uint dmactrlflags = di->dma.dmactrlflags;
++	uint dmactrlflags;
+ 
+ 	if (di == NULL) {
+-		DMA_ERROR(("%s: _dma_ctrlflags: NULL dma handle\n", di->name));
++		DMA_ERROR(("_dma_ctrlflags: NULL dma handle\n"));
+ 		return 0;
+ 	}
+ 
++	dmactrlflags = di->dma.dmactrlflags;
+ 	dmactrlflags &= ~mask;
+ 	dmactrlflags |= flags;
+ 
 -- 
-PGP key: 7ED9 F7D3 6B10 81D7 0EC5  5C09 D7DC C8E4 3187 7DF0
+1.7.4.1
+
+
