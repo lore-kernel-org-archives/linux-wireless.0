@@ -1,120 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:59195 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933039Ab1J2C1l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 22:27:41 -0400
-Message-ID: <4EAB6495.40707@gmail.com> (sfid-20111029_042807_799977_56488945)
-Date: Sat, 29 Oct 2011 13:27:33 +1100
-From: Julian Calaby <julian.calaby@gmail.com>
+Received: from nautica.notk.org ([91.121.71.147]:50990 "EHLO nautica.notk.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754472Ab1J2Kby (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Oct 2011 06:31:54 -0400
+Date: Sat, 29 Oct 2011 12:25:02 +0200
+From: Dominique Martinet <asmadeus@codewreck.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, Julia Lawall <julia@diku.dk>,
+	Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH] brcm80211: smac: eliminate a null pointer dereference
+ in dma.c
+Message-ID: <20111029102502.GA10582@nautica> (sfid-20111029_123158_323929_C4A303AE)
+References: <1319880615-3000-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Julia Lawall <julia@diku.dk>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/5] drivers/net/wireless/brcm80211/brcmsmac/dma.c: eliminate
- a null pointer dereference
-References: <1319846297-2985-2-git-send-email-julia@diku.dk>
-In-Reply-To: <1319846297-2985-2-git-send-email-julia@diku.dk>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1319880615-3000-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29/10/11 10:58, Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> Delete di->name from the error reporting code, as it is meaningless if di
-> is NULL.
-> 
-> The semantic match that finds this problem is as follows:
-> (http://coccinelle.lip6.fr/)
-> 
-> // <smpl>
-> @r@
-> expression E, E1;
-> identifier f;
-> statement S1,S2,S3;
-> @@
-> 
-> if (E == NULL)
-> {
->   ... when != if (E == NULL || ...) S1 else S2
->       when != E = E1
-> *E->f
->   ... when any
->   return ...;
-> }
-> else S3
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <julia@diku.dk>
-> 
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/dma.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-> index b56a302..1d66f53 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-> @@ -361,7 +361,7 @@ static uint _dma_ctrlflags(struct dma_info *di, uint mask, uint flags)
->  	uint dmactrlflags = di->dma.dmactrlflags;
+Hi,
 
-If di is null, we've already failed as it's dereferenced here.
+
+Arend van Spriel wrote on Sat, Oct 29, 2011:
+> Though it's unlikely, di may be null, so we can't dereference
+> di->dma.dmactrlflags until we've checked it.
+
+I've got no experience whatsoever in kernel coding so feel free to tell
+me that's stupid, but if you say it's unlikely why not use the
+unlikely() macro as well for the check?
+(also, that's not the point of this patch, but can't hurt to point that
+out)
+
 
 >  	if (di == NULL) {
-> -		DMA_ERROR(("%s: _dma_ctrlflags: NULL dma handle\n", di->name));
-> +		DMA_ERROR(("_dma_ctrlflags: NULL dma handle\n"));
->  		return 0;
->  	}
-
-So, a better patch would be something like this:
-
-(apologies if this doesn't apply - I've pretty much built it manually)
-
----
-
-Though it's unlikely, di may be null, so we can't dereference
-di->dma.dmactrlflags until we've checked it.
-
-Move this de-reference after the check, and adjust the error
-message to not require de-referencing di.
-
-This is based upon Julia's original patch:
-<1319846297-2985-2-git-send-email-julia@diku.dk>
-
-Reported-by: Julia Lawall <julia@diku.dk>
-Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
-CC: Julia Lawall <julia@diku.dk>
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-index b56a302..6ebec8f 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-@@ -358,13 +358,14 @@ static uint nrxdactive(struct dma_info *di, uint h, uint t
- 
- static uint _dma_ctrlflags(struct dma_info *di, uint mask, uint flags)
- {
--       uint dmactrlflags = di->dma.dmactrlflags;
-+       uint dmactrlflags;
- 
-        if (di == NULL) {
--               DMA_ERROR(("%s: _dma_ctrlflags: NULL dma handle\n", di->name));
-+               DMA_ERROR(("_dma_ctrlflags: NULL dma handle\n"));
-                return 0;
-        }
- 
-+       dmactrlflags = di->dma.dmactrlflags;
-        dmactrlflags &= ~mask;
-        dmactrlflags |= flags;
- 
+would change to
+if (unlikely(di == NULL)) {
 
 
-
-
+Regards,
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby
+Asmadeus | Dominique Martinet
