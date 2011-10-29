@@ -1,54 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:57340 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932141Ab1JDOum (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48312 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754605Ab1J2IiR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 10:50:42 -0400
-Received: by ywb5 with SMTP id 5so553651ywb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 07:50:42 -0700 (PDT)
+	Sat, 29 Oct 2011 04:38:17 -0400
 MIME-Version: 1.0
-In-Reply-To: <201110041642.54453.chunkeey@googlemail.com>
-References: <1317637758-11907-1-git-send-email-zefir.kurtisi@neratec.com>
-	<201110041538.12885.chunkeey@googlemail.com>
-	<4E8B157F.2080203@neratec.com>
-	<201110041642.54453.chunkeey@googlemail.com>
-Date: Tue, 4 Oct 2011 22:50:42 +0800
-Message-ID: <CAJ-VmomWYUtd84APvEg7mKC-sevT3UVaX2qKBn3KiVriPZybgQ@mail.gmail.com> (sfid-20111004_165047_305022_A3BD5373)
-Subject: Re: [RFC 5/6] ath9k: enable DFS pulse detection
-From: Adrian Chadd <adrian@freebsd.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kgiori@qca.qualcomm.com, nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20111006124044.1066.7111.stgit@localhost6.localdomain6>
+References: <20111006124044.1066.7111.stgit@localhost6.localdomain6>
+Date: Sat, 29 Oct 2011 10:38:16 +0200
+Message-ID: <CAMuHMdX-V6FqSZ_mmPm5aW_bTUNMk4sz5cADryX3Xyk627wRdg@mail.gmail.com> (sfid-20111029_103841_991267_33BF8892)
+Subject: Re: [PATCH] of: include errno.h
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: grant.likely@secretlab.ca, devicetree-discuss@lists.ozlabs.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also whilst I'm at it, "SPECTRUM_MANAGEMENT" is a very broad flag to set.
+On Thu, Oct 6, 2011 at 14:40, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> When compiling ath6kl for beagleboard (omap2plus_defconfig plus
+> CONFIG_ATH6KL, CONFIG_OF disable) with current linux-next compilation
+> fails:
+>
+> include/linux/of.h:269: error: 'ENOSYS' undeclared (first use in this function)
+> include/linux/of.h:276: error: 'ENOSYS' undeclared (first use in this function)
+> include/linux/of.h:289: error: 'ENOSYS' undeclared (first use in this function)
 
-For example: you may not want to do DFS on the AR5416 NICs because (as
-documented in the open hal and earlier ath9k bits) there isn't support
-for radar pulses on the ext channel. So even if you had a successful
-DFS algorithm for this NIC, you'd have to somehow tell the DFS
-machinery that HT40+DFS channels aren't supported but HT20+DFS
-channels are.
+And now this build failure (also on m68k) has hit Linus' tree, more
+than 3 weeks after
+its detection in -next...
 
-But then, the AR5416 supports per-packet TPC, so you could use it in
-STA mode perfectly fine and it'd support that part of spectrum
-management. Since you get per-frame RSSI of RX'ed frames, you can
-support the spectrum power histogram IE.
+> Fix this by including errno.h from of.h.
+>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-And since it supports quiet time stuff, you can use it in STA and
-hostap mode for supporting the quiet time IE.
+Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
-(Yes, I'm looking at how to make all of this work in FreeBSD net80211,
-as some patches have been supplied to start fleshing out these
-functions. :)
+> ---
+>  include/linux/of.h |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+>
+> diff --git a/include/linux/of.h b/include/linux/of.h
+> index 9180dc5..219c29d 100644
+> --- a/include/linux/of.h
+> +++ b/include/linux/of.h
+> @@ -17,6 +17,7 @@
+>  */
+>  #include <linux/types.h>
+>  #include <linux/bitops.h>
+> +#include <linux/errno.h>
+>  #include <linux/kref.h>
+>  #include <linux/mod_devicetable.h>
+>  #include <linux/spinlock.h>
 
-I'm not saying this needs to be solved now, but I think it's worth
-thinking about how to encapsulate exactly what it is that NICs
-support, rather than simply saying "yup, 11h is here, all good mate."
+Gr{oetje,eeting}s,
 
+                        Geert
 
-Adrian
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
