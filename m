@@ -1,103 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41414 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932909Ab1JEJzm (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:59195 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933039Ab1J2C1l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 05:55:42 -0400
-Received: by bkbzt4 with SMTP id zt4so1903568bkb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 02:55:41 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/29] wl12xx: disable AP-mode-specific quirks
-Date: Wed,  5 Oct 2011 11:55:38 +0200
-Message-Id: <1317808566-18857-2-git-send-email-eliad@wizery.com> (sfid-20111005_115545_577285_8524AE32)
-In-Reply-To: <1317808566-18857-1-git-send-email-eliad@wizery.com>
-References: <1317808566-18857-1-git-send-email-eliad@wizery.com>
+	Fri, 28 Oct 2011 22:27:41 -0400
+Message-ID: <4EAB6495.40707@gmail.com> (sfid-20111029_042807_799977_56488945)
+Date: Sat, 29 Oct 2011 13:27:33 +1100
+From: Julian Calaby <julian.calaby@gmail.com>
+MIME-Version: 1.0
+To: Julia Lawall <julia@diku.dk>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/5] drivers/net/wireless/brcm80211/brcmsmac/dma.c: eliminate
+ a null pointer dereference
+References: <1319846297-2985-2-git-send-email-julia@diku.dk>
+In-Reply-To: <1319846297-2985-2-git-send-email-julia@diku.dk>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current wl12xx fw supports both STA and AP
-mode, and we no longer use AP-mode-specific quirks.
+On 29/10/11 10:58, Julia Lawall wrote:
+> From: Julia Lawall <julia@diku.dk>
+> 
+> Delete di->name from the error reporting code, as it is meaningless if di
+> is NULL.
+> 
+> The semantic match that finds this problem is as follows:
+> (http://coccinelle.lip6.fr/)
+> 
+> // <smpl>
+> @r@
+> expression E, E1;
+> identifier f;
+> statement S1,S2,S3;
+> @@
+> 
+> if (E == NULL)
+> {
+>   ... when != if (E == NULL || ...) S1 else S2
+>       when != E = E1
+> *E->f
+>   ... when any
+>   return ...;
+> }
+> else S3
+> // </smpl>
+> 
+> Signed-off-by: Julia Lawall <julia@diku.dk>
+> 
+> ---
+>  drivers/net/wireless/brcm80211/brcmsmac/dma.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+> index b56a302..1d66f53 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+> @@ -361,7 +361,7 @@ static uint _dma_ctrlflags(struct dma_info *di, uint mask, uint flags)
+>  	uint dmactrlflags = di->dma.dmactrlflags;
 
-WL12XX_QUIRK_END_OF_TRANSACTION is still used for
-certain HWs, while WL12XX_QUIRK_LPD_MODE is not
-used anymore.
+If di is null, we've already failed as it's dereferenced here.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+>  	if (di == NULL) {
+> -		DMA_ERROR(("%s: _dma_ctrlflags: NULL dma handle\n", di->name));
+> +		DMA_ERROR(("_dma_ctrlflags: NULL dma handle\n"));
+>  		return 0;
+>  	}
+
+So, a better patch would be something like this:
+
+(apologies if this doesn't apply - I've pretty much built it manually)
+
 ---
- drivers/net/wireless/wl12xx/boot.c   |    3 ---
- drivers/net/wireless/wl12xx/cmd.c    |    5 -----
- drivers/net/wireless/wl12xx/main.c   |    8 --------
- drivers/net/wireless/wl12xx/wl12xx.h |    6 ------
- 4 files changed, 0 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
-index 6d5664b..e5b7009 100644
---- a/drivers/net/wireless/wl12xx/boot.c
-+++ b/drivers/net/wireless/wl12xx/boot.c
-@@ -769,9 +769,6 @@ int wl1271_load_firmware(struct wl1271 *wl)
- 		clk |= (wl->ref_clock << 1) << 4;
- 	}
+Though it's unlikely, di may be null, so we can't dereference
+di->dma.dmactrlflags until we've checked it.
+
+Move this de-reference after the check, and adjust the error
+message to not require de-referencing di.
+
+This is based upon Julia's original patch:
+<1319846297-2985-2-git-send-email-julia@diku.dk>
+
+Reported-by: Julia Lawall <julia@diku.dk>
+Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+CC: Julia Lawall <julia@diku.dk>
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+index b56a302..6ebec8f 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+@@ -358,13 +358,14 @@ static uint nrxdactive(struct dma_info *di, uint h, uint t
  
--	if (wl->quirks & WL12XX_QUIRK_LPD_MODE)
--		clk |= SCRATCH_ENABLE_LPD;
--
- 	wl1271_write32(wl, DRPW_SCRATCH_START, clk);
+ static uint _dma_ctrlflags(struct dma_info *di, uint mask, uint flags)
+ {
+-       uint dmactrlflags = di->dma.dmactrlflags;
++       uint dmactrlflags;
  
- 	wl1271_set_partition(wl, &part_table[PART_WORK]);
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 287fe95..53eb858 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -134,11 +134,6 @@ int wl1271_cmd_general_parms(struct wl1271 *wl)
- 	/* Override the REF CLK from the NVS with the one from platform data */
- 	gen_parms->general_params.ref_clock = wl->ref_clock;
+        if (di == NULL) {
+-               DMA_ERROR(("%s: _dma_ctrlflags: NULL dma handle\n", di->name));
++               DMA_ERROR(("_dma_ctrlflags: NULL dma handle\n"));
+                return 0;
+        }
  
--	/* LPD mode enable (bits 6-7) in WL1271 AP mode only */
--	if (wl->quirks & WL12XX_QUIRK_LPD_MODE)
--		gen_parms->general_params.general_settings |=
--			GENERAL_SETTINGS_DRPW_LPD;
--
- 	ret = wl1271_cmd_test(wl, gen_parms, sizeof(*gen_parms), answer);
- 	if (ret < 0) {
- 		wl1271_warning("CMD_INI_FILE_GENERAL_PARAM failed");
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 60e2869..0aac62f 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1333,14 +1333,6 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 		wl1271_debug(DEBUG_BOOT, "chip id 0x%x (1271 PG20)",
- 			     wl->chip.id);
++       dmactrlflags = di->dma.dmactrlflags;
+        dmactrlflags &= ~mask;
+        dmactrlflags |= flags;
  
--		/*
--		 * 'end-of-transaction flag' and 'LPD mode flag'
--		 * should be set in wl127x AP mode only
--		 */
--		if (wl->bss_type == BSS_TYPE_AP_BSS)
--			wl->quirks |= (WL12XX_QUIRK_END_OF_TRANSACTION |
--				       WL12XX_QUIRK_LPD_MODE);
--
- 		ret = wl1271_setup(wl);
- 		if (ret < 0)
- 			goto out;
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 997f532..781ab3a 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -671,12 +671,6 @@ size_t wl12xx_copy_fwlog(struct wl1271 *wl, u8 *memblock, size_t maxlen);
- /* WL128X requires aggregated packets to be aligned to the SDIO block size */
- #define WL12XX_QUIRK_BLOCKSIZE_ALIGNMENT	BIT(2)
- 
--/*
-- * WL127X AP mode requires Low Power DRPw (LPD) enable to reduce power
-- * consumption
-- */
--#define WL12XX_QUIRK_LPD_MODE                   BIT(3)
--
- /* Older firmwares did not implement the FW logger over bus feature */
- #define WL12XX_QUIRK_FWLOG_NOT_IMPLEMENTED	BIT(4)
- 
+
+
+
+
 -- 
-1.7.6.401.g6a319
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby
