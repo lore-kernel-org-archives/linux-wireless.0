@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54032 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751114Ab1JJPQ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Oct 2011 11:16:26 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:56146 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751604Ab1J3GsA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Oct 2011 02:48:00 -0400
+Received: by faan17 with SMTP id n17so4693010faa.19
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Oct 2011 23:47:58 -0700 (PDT)
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 03/34] iwlagn: add WARN if tx cmd complete come back late
-Date: Mon, 10 Oct 2011 07:26:48 -0700
-Message-Id: <1318256839-31837-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111010_171745_132519_3AD25578)
-In-Reply-To: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1318256839-31837-1-git-send-email-wey-yi.w.guy@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Subject: [PATCH] ipw2x00: remove unused function libipw_ratelimit_debug.
+Date: Sun, 30 Oct 2011 02:47:50 -0400
+Message-Id: <1319957270-1406-1-git-send-email-stas.yakovlev@gmail.com> (sfid-20111030_074826_797310_DFF3FC9C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For error condition, STATUS_HCMD_ACTIVE already got clear before receive
-tx cmd complete, give warning
+Looks like no one uses it.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ipw2x00/libipw.h |    8 --------
+ 1 files changed, 0 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-index f57b868..fa2ce39 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-@@ -950,6 +950,11 @@ void iwl_tx_cmd_complete(struct iwl_trans *trans, struct iwl_rx_mem_buffer *rxb,
- 	iwl_hcmd_queue_reclaim(trans, txq_id, index);
+diff --git a/drivers/net/wireless/ipw2x00/libipw.h b/drivers/net/wireless/ipw2x00/libipw.h
+index 70f5586..3d5821e 100644
+--- a/drivers/net/wireless/ipw2x00/libipw.h
++++ b/drivers/net/wireless/ipw2x00/libipw.h
+@@ -66,16 +66,8 @@ extern u32 libipw_debug_level;
+ do { if (libipw_debug_level & (level)) \
+   printk(KERN_DEBUG "libipw: %c %s " fmt, \
+          in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
+-static inline bool libipw_ratelimit_debug(u32 level)
+-{
+-	return (libipw_debug_level & level) && net_ratelimit();
+-}
+ #else
+ #define LIBIPW_DEBUG(level, fmt, args...) do {} while (0)
+-static inline bool libipw_ratelimit_debug(u32 level)
+-{
+-	return false;
+-}
+ #endif				/* CONFIG_LIBIPW_DEBUG */
  
- 	if (!(meta->flags & CMD_ASYNC)) {
-+		if (!test_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status)) {
-+			IWL_WARN(trans,
-+				 "HCMD_ACTIVE already clear for command %s\n",
-+				 get_cmd_string(cmd->hdr.cmd));
-+		}
- 		clear_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status);
- 		IWL_DEBUG_INFO(trans, "Clearing HCMD_ACTIVE for command %s\n",
- 			       get_cmd_string(cmd->hdr.cmd));
+ /*
 -- 
-1.7.0.4
+1.7.2.5
 
