@@ -1,44 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:42640 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014Ab1JLV60 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:59096 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933424Ab1J3NmH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 17:58:26 -0400
-Received: by iaek3 with SMTP id k3so497208iae.19
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2011 14:58:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAFvH45QeG7DQeLORkf4io=gfVAhuiKh1KtWGEwZscg1LY7hM8Q@mail.gmail.com>
-References: <CAFvH45QeG7DQeLORkf4io=gfVAhuiKh1KtWGEwZscg1LY7hM8Q@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 13 Oct 2011 08:58:06 +1100
-Message-ID: <CAGRGNgURsjPqAOeBgxPu3R6S6g-nbjxmX3OR2ggoLp_NXWmqgQ@mail.gmail.com> (sfid-20111012_235829_162844_1D85345C)
-Subject: Re: Driver for Intel Pro/Wireless 2200BG
-To: Jayanthi Venugopal <jay.venug@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 30 Oct 2011 09:42:07 -0400
+Received: by wyg36 with SMTP id 36so5143973wyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Oct 2011 06:42:05 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] mac80211: use min rate as basic rate for buggy APs
+Date: Sun, 30 Oct 2011 15:41:59 +0200
+Message-Id: <1319982119-17803-1-git-send-email-eliad@wizery.com> (sfid-20111030_144214_190024_48DF25C4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Some buggy APs (and even P2P_GO) don't advertise their
+basic rates in the association response.
 
-On Wed, Oct 12, 2011 at 23:58, Jayanthi Venugopal <jay.venug@gmail.com> wrote:
-> Hi,
-> I would like to download and install the above driver .I am not able
-> to download the driver from
-> http://ipw2200.sourceforge.net/index.php
->
-> I would like the driver and the installation instruction as well.
+In such case, use the min supported rate as the
+basic rate.
 
-This driver should be part of your existing Linux Kernel. It should
-automatically load when the card is detected, and you should be able
-to use your wireless card with the standard wireless / networking
-tools.
+Reported-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+v2: add debug print (Johannes)
 
-Thanks,
+ net/mac80211/mlme.c |   19 +++++++++++++++++++
+ 1 files changed, 19 insertions(+), 0 deletions(-)
 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0e5d8da..d3672e9 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1482,6 +1482,7 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+ 	int i, j, err;
+ 	bool have_higher_than_11mbit = false;
+ 	u16 ap_ht_cap_flags;
++	int min_rate = INT_MAX, min_rate_index = -1;
+ 
+ 	/* AssocResp and ReassocResp have identical structure */
+ 
+@@ -1537,6 +1538,10 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+ 				rates |= BIT(j);
+ 				if (is_basic)
+ 					basic_rates |= BIT(j);
++				if (rate < min_rate) {
++					min_rate = rate;
++					min_rate_index = j;
++				}
+ 				break;
+ 			}
+ 		}
+@@ -1554,11 +1559,25 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+ 				rates |= BIT(j);
+ 				if (is_basic)
+ 					basic_rates |= BIT(j);
++				if (rate < min_rate) {
++					min_rate = rate;
++					min_rate_index = j;
++				}
+ 				break;
+ 			}
+ 		}
+ 	}
+ 
++	/*
++	 * some buggy APs don't advertise basic_rates. use the lowest
++	 * supported rate instead.
++	 */
++	if (unlikely(!basic_rates) && min_rate_index >= 0) {
++		printk(KERN_DEBUG "%s: No basic rates in AssocResp. "
++		       "Using min supported rate instead.\n", sdata->name);
++		basic_rates = BIT(min_rate_index);
++	}
++
+ 	sta->sta.supp_rates[wk->chan->band] = rates;
+ 	sdata->vif.bss_conf.basic_rates = basic_rates;
+ 
 -- 
-Julian Calaby
+1.7.6.401.g6a319
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
