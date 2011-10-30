@@ -1,94 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:43096 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754909Ab1JDH6J (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:36487 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751624Ab1J3TQa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 03:58:09 -0400
-Received: by ywb5 with SMTP id 5so202488ywb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 00:58:09 -0700 (PDT)
+	Sun, 30 Oct 2011 15:16:30 -0400
+Subject: [PATCH 2/5] ath6kl: power down hardware when interface is down
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 30 Oct 2011 21:16:15 +0200
+Message-ID: <20111030191615.20466.49934.stgit@localhost6.localdomain6> (sfid-20111030_201634_879493_BB4571B4)
+In-Reply-To: <20111030190922.20466.299.stgit@localhost6.localdomain6>
+References: <20111030190922.20466.299.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <20111003084823.GA1521@ecki.lan>
-References: <CAD2nsn1roVNB5+H1CYHVnerLN3pjGB5KmEX1mJZ4yJhHqFGOVA@mail.gmail.com>
-	<20110830064137.GA4719@ecki>
-	<CAD2nsn2Reu+T=g6HwdQT5cdkD0C-06y7GJ_B2q-UzpRnshxAWw@mail.gmail.com>
-	<14be9f3b-4c91-481d-9e52-f3119659fd59@email.android.com>
-	<CAD2nsn1+WVaLR_TR37Z6YRCFnQH1hJkSOri=nxc8Ff3pa9N8dw@mail.gmail.com>
-	<20110927214245.GA1416@ecki>
-	<CAD2nsn3ZwUJsFRLyjKenO6Pm3+jr9gfmAMRDQPStEcC1hN_mkw@mail.gmail.com>
-	<CAJ-Vmok8FvrYtT2QwXY0NowLSogfkZYNbGLFbVR8Uzv507FrdA@mail.gmail.com>
-	<CAD2nsn0Z2J4r4tN_fLjx5bbvz2bg6NVcQ8vppJbbNcgOF8pFew@mail.gmail.com>
-	<CAJ-VmokcM4KmzV7Rn9PA68iEiTJiPw=ffYgNFLDAHShxD0HNAg@mail.gmail.com>
-	<20111003084823.GA1521@ecki.lan>
-Date: Tue, 4 Oct 2011 15:58:09 +0800
-Message-ID: <CAJ-Vmo=sE4KeOp1CKAR5v+Rzm1bm0R=ZvtMvJaE_8Sjn1dOdsw@mail.gmail.com> (sfid-20111004_095813_775148_4C3FB1E1)
-Subject: Re: ath9k: irq storm after suspend/resume
-From: Adrian Chadd <adrian@freebsd.org>
-To: Clemens Buchacher <drizzd@aon.at>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Right, this looks a bit evil. ;)
+The benefit from this is that user space can control hardware's power state
+by putting interface up and down. This is handy if firmware gets to some
+weird state.
 
-On 3 October 2011 16:48, Clemens Buchacher <drizzd@aon.at> wrote:
+The downside will be that putting interface up takes a bit longer,
+I was measuring ~500 ms during interface up.
 
-> for 1, 2, ..., 99, 128, 256:
-> AR_INTR_SYNC_CAUSE: 0x00000000, AR_INTR_ASYNC_CAUSE: 0x00000000
-> AR_IMR: 0xdeadbeef, AR_ISR: 0xdeadbeef
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/bmi.c  |    5 +++++
+ drivers/net/wireless/ath/ath6kl/bmi.h  |    2 ++
+ drivers/net/wireless/ath/ath6kl/core.h |    4 ++++
+ drivers/net/wireless/ath/ath6kl/htc.c  |    3 +++
+ drivers/net/wireless/ath/ath6kl/init.c |   35 +++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath6kl/main.c |   22 ++++++++++++++++----
+ 6 files changed, 64 insertions(+), 7 deletions(-)
 
-.. that says some part of the MAC is very asleep. But no interrupt
-cause bits are set. So I bet it's a shared interrupt.
+diff --git a/drivers/net/wireless/ath/ath6kl/bmi.c b/drivers/net/wireless/ath/ath6kl/bmi.c
+index 5a4c24d..a962fe4 100644
+--- a/drivers/net/wireless/ath/ath6kl/bmi.c
++++ b/drivers/net/wireless/ath/ath6kl/bmi.c
+@@ -670,6 +670,11 @@ int ath6kl_bmi_fast_download(struct ath6kl *ar, u32 addr, u8 *buf, u32 len)
+ 	return ret;
+ }
+ 
++void ath6kl_bmi_reset(struct ath6kl *ar)
++{
++	ar->bmi.done_sent = false;
++}
++
+ int ath6kl_bmi_init(struct ath6kl *ar)
+ {
+ 	ar->bmi.cmd_buf = kzalloc(MAX_BMI_CMDBUF_SZ, GFP_ATOMIC);
+diff --git a/drivers/net/wireless/ath/ath6kl/bmi.h b/drivers/net/wireless/ath/ath6kl/bmi.h
+index 96851d5..009e8f6 100644
+--- a/drivers/net/wireless/ath/ath6kl/bmi.h
++++ b/drivers/net/wireless/ath/ath6kl/bmi.h
+@@ -230,6 +230,8 @@ struct ath6kl_bmi_target_info {
+ 
+ int ath6kl_bmi_init(struct ath6kl *ar);
+ void ath6kl_bmi_cleanup(struct ath6kl *ar);
++void ath6kl_bmi_reset(struct ath6kl *ar);
++
+ int ath6kl_bmi_done(struct ath6kl *ar);
+ int ath6kl_bmi_get_target_info(struct ath6kl *ar,
+ 			       struct ath6kl_bmi_target_info *targ_info);
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 5ac415e..1ac0dd1 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -447,6 +447,7 @@ enum ath6kl_dev_state {
+ 	DESTROY_IN_PROGRESS,
+ 	SKIP_SCAN,
+ 	ROAM_TBL_PEND,
++	FIRST_BOOT,
+ };
+ 
+ struct ath6kl {
+@@ -662,4 +663,7 @@ void ath6kl_deinit_if_data(struct ath6kl_vif *vif);
+ void ath6kl_core_free(struct ath6kl *ar);
+ struct ath6kl_vif *ath6kl_vif_first(struct ath6kl *ar);
+ void ath6kl_cleanup_vif(struct ath6kl_vif *vif, bool wmi_ready);
++int ath6kl_init_hw_start(struct ath6kl *ar);
++int ath6kl_init_hw_stop(struct ath6kl *ar);
++
+ #endif /* CORE_H */
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index 04b4070..99220d4 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -2622,6 +2622,9 @@ int ath6kl_htc_start(struct htc_target *target)
+ 	struct htc_packet *packet;
+ 	int status;
+ 
++	memset(&target->dev->irq_proc_reg, 0,
++	       sizeof(target->dev->irq_proc_reg));
++
+ 	/* Disable interrupts at the chip level */
+ 	ath6kl_hif_disable_intrs(target->dev);
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index a0b81c3..c197e4c 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1421,11 +1421,13 @@ static int ath6kl_init_hw_params(struct ath6kl *ar)
+ 	return 0;
+ }
+ 
+-static int ath6kl_hw_start(struct ath6kl *ar)
++int ath6kl_init_hw_start(struct ath6kl *ar)
+ {
+ 	long timeleft;
+ 	int ret, i;
+ 
++	ath6kl_dbg(ATH6KL_DBG_BOOT, "hw start\n");
++
+ 	ret = ath6kl_hif_power_on(ar);
+ 	if (ret)
+ 		return ret;
+@@ -1517,6 +1519,25 @@ err_power_off:
+ 	return ret;
+ }
+ 
++int ath6kl_init_hw_stop(struct ath6kl *ar)
++{
++	int ret;
++
++	ath6kl_dbg(ATH6KL_DBG_BOOT, "hw stop\n");
++
++	ath6kl_htc_stop(ar->htc_target);
++
++	ath6kl_hif_stop(ar);
++
++	ath6kl_bmi_reset(ar);
++
++	ret = ath6kl_hif_power_off(ar);
++	if (ret)
++		ath6kl_warn("failed to power off hif: %d\n", ret);
++
++	return 0;
++}
++
+ int ath6kl_core_init(struct ath6kl *ar)
+ {
+ 	struct ath6kl_bmi_target_info targ_info;
+@@ -1628,9 +1649,11 @@ int ath6kl_core_init(struct ath6kl *ar)
+ 
+ 	ar->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
+ 
+-	ret = ath6kl_hw_start(ar);
++	set_bit(FIRST_BOOT, &ar->flag);
++
++	ret = ath6kl_init_hw_start(ar);
+ 	if (ret) {
+-		ath6kl_err("Failed to boot hardware: %d\n", ret);
++		ath6kl_err("Failed to start hardware: %d\n", ret);
+ 		goto err_rxbuf_cleanup;
+ 	}
+ 
+@@ -1640,6 +1663,12 @@ int ath6kl_core_init(struct ath6kl *ar)
+ 	 */
+ 	memcpy(ndev->dev_addr, ar->mac_addr, ETH_ALEN);
+ 
++	ret = ath6kl_init_hw_stop(ar);
++	if (ret) {
++		ath6kl_err("Failed to stop hardware: %d\n", ret);
++		goto err_htc_cleanup;
++	}
++
+ 	return ret;
+ 
+ err_rxbuf_cleanup:
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 3b2a7e8..717ed22 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -673,10 +673,12 @@ void ath6kl_ready_event(void *devt, u8 *datap, u32 sw_ver, u32 abi_ver)
+ 	set_bit(WMI_READY, &ar->flag);
+ 	wake_up(&ar->event_wq);
+ 
+-	ath6kl_info("hw %s fw %s%s\n",
+-		    get_hw_id_string(ar->wiphy->hw_version),
+-		    ar->wiphy->fw_version,
+-		    test_bit(TESTMODE, &ar->flag) ? " testmode" : "");
++	if (test_and_clear_bit(FIRST_BOOT, &ar->flag)) {
++		ath6kl_info("hw %s fw %s%s\n",
++			    get_hw_id_string(ar->wiphy->hw_version),
++			    ar->wiphy->fw_version,
++			    test_bit(TESTMODE, &ar->flag) ? " testmode" : "");
++	}
+ }
+ 
+ void ath6kl_scan_complete_evt(struct ath6kl_vif *vif, int status)
+@@ -1112,6 +1114,12 @@ struct ath6kl_vif *ath6kl_vif_first(struct ath6kl *ar)
+ static int ath6kl_open(struct net_device *dev)
+ {
+ 	struct ath6kl_vif *vif = netdev_priv(dev);
++	int ret;
++
++	/* FIXME: how to handle multi vif support? */
++	ret = ath6kl_init_hw_start(vif->ar);
++	if (ret)
++		return ret;
+ 
+ 	set_bit(WLAN_ENABLED, &vif->flags);
+ 
+@@ -1128,6 +1136,7 @@ static int ath6kl_close(struct net_device *dev)
+ {
+ 	struct ath6kl *ar = ath6kl_priv(dev);
+ 	struct ath6kl_vif *vif = netdev_priv(dev);
++	int ret;
+ 
+ 	netif_stop_queue(dev);
+ 
+@@ -1143,6 +1152,11 @@ static int ath6kl_close(struct net_device *dev)
+ 
+ 	ath6kl_cfg80211_scan_complete_event(vif, -ECANCELED);
+ 
++	/* FIXME: how to handle multi vif support? */
++	ret = ath6kl_init_hw_stop(ar);
++	if (ret)
++		return ret;
++
+ 	return 0;
+ }
+ 
 
-> for 512:
-> AR_INTR_SYNC_CAUSE: 0x00000000, AR_INTR_ASYNC_CAUSE: 0x00000000
-> AR_IMR: 0x00000000, AR_ISR: 0x00000208
-
-That looks valid, but why are you receiving an interrupt here? Is it
-some other device on a shared irq? Or a non-acked interrupt?
-Ie - there's no sync/async cause bits set and IMR is 0, the status
-bits are no tx pkt / no rx pkt. So that looks fine. You shouldn't have
-received an interrupt.
-
-> for 1024:
-> AR_INTR_SYNC_CAUSE: 0x00000000, AR_INTR_ASYNC_CAUSE: 0x00000000
-> AR_IMR: 0x81800964, AR_ISR: 0x00000008
-
-.. hm,  why'd you receive an interrupt here? the ISR bits aren't set that way.
-Again, I think this is another shared or non-acked interrupt coming in.
-
-> for 2048:
-> AR_INTR_SYNC_CAUSE: 0x00000000, AR_INTR_ASYNC_CAUSE: 0x00000000
-> AR_IMR: 0xdeadbeef, AR_ISR: 0xdeadbeef
->
-> for 2^12, 2^13, ..., 2^16
-> AR_INTR_SYNC_CAUSE: 0x00020000, AR_INTR_ASYNC_CAUSE: 0x00000000
-> AR_IMR: 0xdeadbeef, AR_ISR: 0xdeadbeef
->
-> The last ones indeed correspond to AR_INTR_SYNC_MAC_SLEEP_ACCESS
-> that you mentioned. Note that this output is interleaved with
-> device initialization. So I don't know if that causes the register
-> contents to become valid, or if it changes the contents.
->
-> If I suspend/resume first, then load the module, then wait for 500
-> ms after request_irq I get only zeroes, repeated 109 times:
->
-> for 1, 2, ..., 99, 2^7, 2^8, ..., 2^16:
-> AR_IMR: 0x00000000, AR_ISR: 0x00000000
-> AR_INTR_SYNC_CAUSE: 0x00000000, AR_INTR_ASYNC_CAUSE: 0x00000000
-
-Would you mind also printing the contents of AR_IER there? I wonder if
-AR_IER is incorrectly being enabled.
-
-I think this may be a shared interrupt. What else is using the same
-IRQ line? What about only printing out those lines if the interrupt is
-actually generated by the NIC? There's a function further down in the
-isr routine which checks whether the NIC itself posted the interrupt
-(it checks SYNC_CAUSE/ASYNC_CAUSE.) That should cut down the spam
-quite a bit and only log the relevant entries for ath9k.
-
-
-
-
-Adrian
