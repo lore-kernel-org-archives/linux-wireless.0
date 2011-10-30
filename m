@@ -1,152 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:44251 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752138Ab1JUBYN (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:43979 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751260Ab1J3TQN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Oct 2011 21:24:13 -0400
-Date: Fri, 21 Oct 2011 10:23:54 +0900
-From: Norbert Preining <preining@logic.at>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-Subject: Re: iwlagn is getting very shaky
-Message-ID: <20111021012354.GA26758@gamma.logic.tuwien.ac.at> (sfid-20111021_032500_022139_156C4AD9)
-References: <20111019124931.GC3963@gamma.logic.tuwien.ac.at> <1319038282.25023.21.camel@wwguy-ubuntu> <20111019060108.GA11588@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110182305110.7719@chino.kir.corp.google.com> <20111019062517.GC11588@gamma.logic.tuwien.ac.at> <1319003304.31823.46.camel@wwguy-huron> <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111020045927.GB23044@gamma.logic.tuwien.ac.at> <1319096418.3959.1.camel@jlt3.sipsolutions.net>
+	Sun, 30 Oct 2011 15:16:13 -0400
+Subject: [PATCH 1/5] ath6kl: create ath6kl_hif_stop()
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 30 Oct 2011 21:15:57 +0200
+Message-ID: <20111030191556.20466.19407.stgit@localhost6.localdomain6> (sfid-20111030_201622_727387_90FCEB72)
+In-Reply-To: <20111030190922.20466.299.stgit@localhost6.localdomain6>
+References: <20111030190922.20466.299.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1319096418.3959.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Do, 20 Okt 2011, Johannes Berg wrote:
-> > [17409.616748] wlan0: direct probe to 00:24:c4:ab:bd:e0 (try 1/3)
-..
-> > [17419.285141] iwlagn 0000:06:00.0: Encounter TX_STATUS_FAIL_PASSIVE_NO_RX, am I on 5.2G band? (0)
-> > [17419.286583] wlan0: deauthenticating from 00:24:c4:ab:bd:ef by local choice (reason=2)
-> > [17419.300296] cfg80211: Calling CRDA for country: JP
-> > [17419.309278] wlan0: authenticate with 00:24:c4:ab:bd:ef (try 1)
-> > [17419.310105] wlan0: authenticated
-> > [17419.317900] wlan0: associate with 00:24:c4:ab:bd:ef (try 1)
-> 
-> It seems a bit like the 5 GHz AP (:e0) just fails, and wpa_supplicant
-> selects a 2.4 GHz AP (:ef) now? Pure conjecture, I guess the AP could
-> also be on the same channel -- did you have scan information for these
-> APs?
+This is to reset hif layer for powering down hw.
 
-BSS 00:24:c4:ab:bd:e0 (on wlan0)
-        TSF: 8728607601135 usec (101d, 00:36:47)
-        freq: 2412
-        beacon interval: 102
-        capability: ESS ShortPreamble ShortSlotTime (0x0421)
-        signal: -62.00 dBm
-        last seen: 6012 ms ago
-        SSID: XXXXXX
-        Supported rates: 1.0* 2.0* 5.5* 6.0 9.0 11.0* 12.0 18.0 
-        DS Parameter set: channel 1
-        TIM: DTIM Count 0 DTIM Period 1 Bitmap Control 0x0 Bitmap[0] 0x0
-        Country: JP     Environment: Indoor/Outdoor
-                Channels [1 - 13] @ 20 dBm
-        ERP: Use_Protection
-        HT capabilities:
-                Capabilities: 0x182c
-                        HT20
-                        SM Power Save disabled
-                        RX HT20 SGI
-                        No RX STBC
-                        Max AMSDU length: 7935 bytes
-                        DSSS/CCK HT40
-                Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
-                Minimum RX AMPDU time spacing: 8 usec (0x06)
-                HT RX MCS rate indexes supported: 0-15
-                HT TX MCS rate indexes are undefined
-        Extended supported rates: 24.0 36.0 48.0 54.0 
-        HT operation:
-                 * primary channel: 1
-                 * secondary channel offset: no secondary
-                 * STA channel width: 20 MHz
-                 * RIFS: 0
-                 * HT protection: non-HT mixed
-                 * non-GF present: 1
-                 * OBSS non-GF present: 0
-                 * dual beacon: 0
-                 * dual CTS protection: 0
-                 * STBC beacon: 0
-                 * L-SIG TXOP Prot: 0
-                 * PCO active: 0
-                 * PCO phase: 0
-        WMM:     * Parameter version 1
-                 * u-APSD
-                 * BE: CW 15-1023, AIFSN 3
-                 * BK: CW 15-1023, AIFSN 7
-                 * VI: CW 7-15, AIFSN 2, TXOP 3008 usec
-                 * VO: acm CW 3-7, AIFSN 2, TXOP 1504 usec
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/hif-ops.h |    7 +++++
+ drivers/net/wireless/ath/ath6kl/hif.h     |    1 +
+ drivers/net/wireless/ath/ath6kl/sdio.c    |   45 +++++++++++++++++++++++++++++
+ 3 files changed, 53 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath6kl/hif-ops.h b/drivers/net/wireless/ath/ath6kl/hif-ops.h
+index 34adc77..50fd3e9 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif-ops.h
++++ b/drivers/net/wireless/ath/ath6kl/hif-ops.h
+@@ -111,4 +111,11 @@ static inline int ath6kl_hif_power_off(struct ath6kl *ar)
+ 	return ar->hif_ops->power_off(ar);
+ }
+ 
++static inline void ath6kl_hif_stop(struct ath6kl *ar)
++{
++	ath6kl_dbg(ATH6KL_DBG_HIF, "hif stop\n");
++
++	ar->hif_ops->stop(ar);
++}
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.h b/drivers/net/wireless/ath/ath6kl/hif.h
+index 78a6c79..814386d 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.h
++++ b/drivers/net/wireless/ath/ath6kl/hif.h
+@@ -246,6 +246,7 @@ struct ath6kl_hif_ops {
+ 	int (*resume)(struct ath6kl *ar);
+ 	int (*power_on)(struct ath6kl *ar);
+ 	int (*power_off)(struct ath6kl *ar);
++	void (*stop)(struct ath6kl *ar);
+ };
+ 
+ int ath6kl_hif_setup(struct ath6kl_device *dev);
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 682c47c..c61c512 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -45,6 +45,8 @@ struct ath6kl_sdio {
+ 	struct list_head scat_req;
+ 
+ 	spinlock_t scat_lock;
++	bool scatter_enabled;
++
+ 	bool is_disabled;
+ 	atomic_t irq_handling;
+ 	const struct sdio_device_id *id;
+@@ -651,6 +653,11 @@ static void ath6kl_sdio_cleanup_scatter(struct ath6kl *ar)
+ 		list_del(&s_req->list);
+ 		spin_unlock_bh(&ar_sdio->scat_lock);
+ 
++		/*
++		 * FIXME: should we also call completion handler with
++		 * ath6kl_hif_rw_comp_handler() with status -ECANCELED so
++		 * that the packet is properly freed?
++		 */
+ 		if (s_req->busrequest)
+ 			ath6kl_sdio_free_bus_req(ar_sdio, s_req->busrequest);
+ 		kfree(s_req->virt_dma_buf);
+@@ -670,6 +677,11 @@ static int ath6kl_sdio_enable_scatter(struct ath6kl *ar)
+ 	int ret;
+ 	bool virt_scat = false;
+ 
++	if (ar_sdio->scatter_enabled)
++		return 0;
++
++	ar_sdio->scatter_enabled = true;
++
+ 	/* check if host supports scatter and it meets our requirements */
+ 	if (ar_sdio->func->card->host->max_segs < MAX_SCATTER_ENTRIES_PER_REQ) {
+ 		ath6kl_err("host only supports scatter of :%d entries, need: %d\n",
+@@ -762,6 +774,38 @@ static int ath6kl_sdio_resume(struct ath6kl *ar)
+ 	return 0;
+ }
+ 
++static void ath6kl_sdio_stop(struct ath6kl *ar)
++{
++	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
++	struct bus_request *req, *tmp_req;
++	void *context;
++
++	/* FIXME: make sure that wq is not queued again */
++
++	cancel_work_sync(&ar_sdio->wr_async_work);
++
++	spin_lock_bh(&ar_sdio->wr_async_lock);
++
++	list_for_each_entry_safe(req, tmp_req, &ar_sdio->wr_asyncq, list) {
++		list_del(&req->list);
++
++		if (req->scat_req) {
++			/* this is a scatter gather request */
++			req->scat_req->status = -ECANCELED;
++			req->scat_req->complete(ar_sdio->ar->htc_target,
++						req->scat_req);
++		} else {
++			context = req->packet;
++			ath6kl_sdio_free_bus_req(ar_sdio, req);
++			ath6kl_hif_rw_comp_handler(context, -ECANCELED);
++		}
++	}
++
++	spin_unlock_bh(&ar_sdio->wr_async_lock);
++
++	WARN_ON(get_queue_depth(&ar_sdio->scat_req) != 4);
++}
++
+ static const struct ath6kl_hif_ops ath6kl_sdio_ops = {
+ 	.read_write_sync = ath6kl_sdio_read_write_sync,
+ 	.write_async = ath6kl_sdio_write_async,
+@@ -776,6 +820,7 @@ static const struct ath6kl_hif_ops ath6kl_sdio_ops = {
+ 	.resume = ath6kl_sdio_resume,
+ 	.power_on = ath6kl_sdio_power_on,
+ 	.power_off = ath6kl_sdio_power_off,
++	.stop = ath6kl_sdio_stop,
+ };
+ 
+ static int ath6kl_sdio_probe(struct sdio_func *func,
 
-And the one I am on:
-BSS 00:24:c4:ab:bd:ef (on wlan0) -- associated
-        TSF: 8728558719143 usec (101d, 00:35:58)
-        freq: 5200
-        beacon interval: 102
-        capability: ESS (0x0001)
-        signal: -69.00 dBm
-        last seen: 96 ms ago
-        Information elements from Probe Response frame:
-        SSID: XXXXXX
-        Supported rates: 6.0* 9.0 12.0* 18.0 24.0* 36.0 48.0 54.0 
-        Country: JP     Environment: Indoor/Outdoor
-                Channels [36 - 64] @ 22 dBm
-        HT capabilities:
-                Capabilities: 0x186e
-                        HT20/HT40
-                        SM Power Save disabled
-                        RX HT20 SGI
-                        RX HT40 SGI
-                        No RX STBC
-                        Max AMSDU length: 7935 bytes
-                        DSSS/CCK HT40
-                Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
-                Minimum RX AMPDU time spacing: 8 usec (0x06)
-                HT RX MCS rate indexes supported: 0-15
-                HT TX MCS rate indexes are undefined
-        HT operation:
-                 * primary channel: 40
-                 * secondary channel offset: below
-                 * STA channel width: any
-                 * RIFS: 1
-                 * HT protection: no
-                 * non-GF present: 1
-                 * OBSS non-GF present: 0
-                 * dual beacon: 0
-                 * dual CTS protection: 0
-                 * STBC beacon: 0
-                 * L-SIG TXOP Prot: 0
-                 * PCO active: 0
-                 * PCO phase: 0
-        WMM:     * Parameter version 1
-                 * u-APSD
-                 * BE: CW 15-1023, AIFSN 3
-                 * BK: CW 15-1023, AIFSN 7
-                 * VI: CW 7-15, AIFSN 2, TXOP 3008 usec
-                 * VO: acm CW 3-7, AIFSN 2, TXOP 1504 usec
-
-
-No idea if that helps you.
-
-Best wishes
-
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-SCREGGAN (n. banking)
-The crossed-out bit caused by people putting the wrong year on their
-cheques all through January.
-			--- Douglas Adams, The Meaning of Liff
