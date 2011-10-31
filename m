@@ -1,210 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:61557 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753633Ab1JUIge (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:38372 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932221Ab1JaJ4G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 04:36:34 -0400
-Received: by ywf7 with SMTP id 7so3651635ywf.19
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2011 01:36:33 -0700 (PDT)
+	Mon, 31 Oct 2011 05:56:06 -0400
+Subject: [PATCH 2/5] ath6kl: create ath6kl_cfg80211_stop()
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 31 Oct 2011 11:56:02 +0200
+Message-ID: <20111031095602.3598.40105.stgit@localhost6.localdomain6> (sfid-20111031_105617_057310_B7E880F0)
+In-Reply-To: <20111031095550.3598.52653.stgit@localhost6.localdomain6>
+References: <20111031095550.3598.52653.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Date: Fri, 21 Oct 2011 12:36:33 +0400
-Message-ID: <CAG5dHkRULKh90W1MeR3zq+-gpeNUshrHZ0qbKXsW19PMG5enoQ@mail.gmail.com> (sfid-20111021_103637_877411_FF47FAB4)
-Subject: [RFC 1/7] mac80211: mesh power mode indication in QoS frames
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-indicate non-peer mesh power mode in multicast and local
-link-specific power mode in unicast QoS frames
+Just take code from deep sleep for now, will be improved later. No
+functional changes.
 
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- include/linux/ieee80211.h |    3 ++
- include/linux/nl80211.h   |   29 ++++++++++++++++++++++++++
- include/net/cfg80211.h    |    2 +
- net/mac80211/sta_info.h   |    2 +
- net/mac80211/tx.c         |   50 ++++++++++++++++++++++++++++++++++++++++++++-
- net/wireless/mesh.c       |    1 +
- 6 files changed, 86 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   49 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |    2 +
+ drivers/net/wireless/ath/ath6kl/main.c     |   46 +-------------------------
+ 3 files changed, 52 insertions(+), 45 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 48363c3..b206b94 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -133,6 +133,9 @@
- /* Mesh Control 802.11s */
- #define IEEE80211_QOS_CTL_MESH_CONTROL_PRESENT  0x0100
-
-+/* mesh power save level subfield mask */
-+#define IEEE80211_QOS_CTL_PS_LEVEL      0x0200
-+
- /* U-APSD queue for WMM IEs sent by AP */
- #define IEEE80211_WMM_IE_AP_QOSINFO_UAPSD	(1<<7)
- #define IEEE80211_WMM_IE_AP_QOSINFO_PARAM_SET_CNT_MASK	0x0f
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 8049bf7..001e9e3 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1915,6 +1915,35 @@ enum nl80211_mntr_flags {
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 188fded..94038cb 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2112,6 +2112,55 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
+ 	.mgmt_frame_register = ath6kl_mgmt_frame_register,
  };
-
- /**
-+ * enum nl80211_mesh_power_mode - mesh power save modes
-+ *
-+ * @__NL80211_MESH_POWER_INVALID - internal use
-+ *
-+ * @NL80211_MESH_POWER_ACTIVE - active mesh power mode, mesh STA
-+ *                            in Awake state all the time
-+ * @NL80211_MESH_POWER_LIGHT_SLEEP - light sleep mode, mesh STA
-+ *                            alternate between Active and Doze states,
-+ *                            mesh STA should listen to all the beacons
-+ * @NL80211_MESH_POWER_DEEP_SLEEP - deep sleep mode, mesh STA
-+ *                            alternates between Active and Doze states,
-+ *                            may choose not listen to the beacons
-+ *
-+ * @__NL80211_MESH_POWER_AFTER_LAST - internal use
-+ * @NL80211_MESH_POWER_MAX - highest possible power save level
-+ */
-+
-+enum nl80211_mesh_power_mode {
-+	__NL80211_MESH_POWER_INVALID,
-+
-+	NL80211_MESH_POWER_ACTIVE,
-+	NL80211_MESH_POWER_LIGHT_SLEEP,
-+	NL80211_MESH_POWER_DEEP_SLEEP,
-+
-+	__NL80211_MESH_POWER_AFTER_LAST,
-+	NL80211_MESH_POWER_MAX = __NL80211_MESH_POWER_AFTER_LAST - 1
-+};
-+
-+/**
-  * enum nl80211_meshconf_params - mesh configuration parameters
-  *
-  * Mesh configuration parameters. These can be changed while the mesh is
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 92cf1c2..e00e04e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -765,6 +765,8 @@ struct mesh_config {
- 	u16 dot11MeshMaxPeerLinks;
- 	u8  dot11MeshMaxRetries;
- 	u8  dot11MeshTTL;
-+	/* non-peer mesh power save mode */
-+	u8 power_mode;
- 	/* ttl used in path selection information elements */
- 	u8  element_ttl;
- 	bool auto_open_plinks;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 8c8ce05..8742668 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -250,6 +250,7 @@ struct sta_ampdu_mlme {
-  * @plink_retries: Retries in establishment
-  * @ignore_plink_timer: ignore the peer-link timer (used internally)
-  * @plink_state: peer link state
-+ * @local_ps_mode: local link-specific power save mode
-  * @plink_timeout: timeout of peer link
-  * @plink_timer: peer link watch timer
-  * @plink_timer_was_running: used by suspend/resume to restore timers
-@@ -338,6 +339,7 @@ struct sta_info {
- 	bool ignore_plink_timer;
- 	bool plink_timer_was_running;
- 	enum nl80211_plink_state plink_state;
-+	enum nl80211_mesh_power_mode local_ps_mode;
- 	u32 plink_timeout;
- 	struct timer_list plink_timer;
- #endif
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 48bbb96..8f2bc51 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1033,6 +1033,48 @@ ieee80211_tx_h_calculate_duration(struct
-ieee80211_tx_data *tx)
- 	return TX_CONTINUE;
- }
-
-+#ifdef CONFIG_MAC80211_MESH
-+static enum nl80211_mesh_power_mode
-+ieee80211s_get_ps_mode(struct ieee80211_sub_if_data *sdata,
-+			struct ieee80211_hdr *hdr)
+ 
++void ath6kl_cfg80211_stop(struct ath6kl *ar)
 +{
-+	enum nl80211_mesh_power_mode pm = NL80211_MESH_POWER_ACTIVE;
-+	struct mesh_path *mpath;
++	struct ath6kl_vif *vif;
 +
-+	if (is_multicast_ether_addr(hdr->addr1)) {
-+		pm = (enum nl80211_mesh_power_mode)
-+				sdata->u.mesh.mshcfg.power_mode;
-+	} else {
-+		rcu_read_lock();
-+		mpath = mesh_path_lookup(hdr->addr3, sdata);
-+		if (mpath) {
-+			pm = mpath->next_hop->local_ps_mode;
-+		}
-+		rcu_read_unlock();
++	/* FIXME: for multi vif */
++	vif = ath6kl_vif_first(ar);
++	if (!vif) {
++		/* save the current power mode before enabling power save */
++		ar->wmi->saved_pwr_mode = ar->wmi->pwr_mode;
++
++		if (ath6kl_wmi_powermode_cmd(ar->wmi, 0, REC_POWER) != 0)
++			ath6kl_warn("ath6kl_deep_sleep_enable: "
++				    "wmi_powermode_cmd failed\n");
++		return;
 +	}
 +
-+	return pm;
-+}
-+
-+static void ieee80211_set_mesh_ps_fields(struct ieee80211_sub_if_data *sdata,
-+					struct ieee80211_hdr *hdr)
-+{
-+	if (ieee80211_vif_is_mesh(&sdata->vif) &&
-+	    (ieee80211_is_data_qos(hdr->frame_control)
-+	     || ieee80211_is_qos_nullfunc(hdr->frame_control))) {
-+		enum nl80211_mesh_power_mode
-+				pm = ieee80211s_get_ps_mode(sdata, hdr);
-+		if (pm != NL80211_MESH_POWER_ACTIVE) {
-+			__le16 *qc = (__le16 *) ieee80211_get_qos_ctl(hdr);
-+			hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
-+			if (pm == NL80211_MESH_POWER_DEEP_SLEEP) {
-+				*qc |= cpu_to_le16(IEEE80211_QOS_CTL_PS_LEVEL);
-+			}
-+		}
++	switch (vif->sme_state) {
++	case SME_CONNECTING:
++		cfg80211_connect_result(vif->ndev, vif->bssid, NULL, 0,
++					NULL, 0,
++					WLAN_STATUS_UNSPECIFIED_FAILURE,
++					GFP_KERNEL);
++		break;
++	case SME_CONNECTED:
++	default:
++		/*
++		 * FIXME: oddly enough smeState is in DISCONNECTED during
++		 * suspend, why? Need to send disconnected event in that
++		 * state.
++		 */
++		cfg80211_disconnected(vif->ndev, 0, NULL, 0, GFP_KERNEL);
++		break;
 +	}
-+}
-+#endif /* CONFIG_MAC80211_MESH*/
 +
- /* actual transmit path */
++	if (test_bit(CONNECTED, &vif->flags) ||
++	    test_bit(CONNECT_PEND, &vif->flags))
++		ath6kl_wmi_disconnect_cmd(ar->wmi, vif->fw_vif_idx);
++
++	vif->sme_state = SME_DISCONNECTED;
++
++	/* disable scanning */
++	if (ath6kl_wmi_scanparams_cmd(ar->wmi, vif->fw_vif_idx, 0xFFFF, 0, 0,
++				      0, 0, 0, 0, 0, 0, 0) != 0)
++		printk(KERN_WARNING "ath6kl: failed to disable scan "
++		       "during suspend\n");
++
++	ath6kl_cfg80211_scan_complete_event(vif, true);
++}
++
+ struct ath6kl *ath6kl_core_alloc(struct device *dev)
+ {
+ 	struct ath6kl *ar;
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+index f323a49..bb0ac22 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+@@ -40,4 +40,6 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl_vif *vif, u8 reason,
+ void ath6kl_cfg80211_tkip_micerr_event(struct ath6kl_vif *vif, u8 keyid,
+ 				     bool ismcast);
+ 
++void ath6kl_cfg80211_stop(struct ath6kl *ar);
++
+ #endif /* ATH6KL_CFG80211_H */
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index d2822d0..378dc8d 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -580,51 +580,7 @@ void ath6kl_disconnect(struct ath6kl_vif *vif)
+ 
+ void ath6kl_deep_sleep_enable(struct ath6kl *ar)
+ {
+-	struct ath6kl_vif *vif;
+-
+-	/* FIXME: for multi vif */
+-	vif = ath6kl_vif_first(ar);
+-	if (!vif) {
+-		/* save the current power mode before enabling power save */
+-		ar->wmi->saved_pwr_mode = ar->wmi->pwr_mode;
+-
+-		if (ath6kl_wmi_powermode_cmd(ar->wmi, 0, REC_POWER) != 0)
+-			ath6kl_warn("ath6kl_deep_sleep_enable: "
+-				    "wmi_powermode_cmd failed\n");
+-		return;
+-	}
+-
+-	switch (vif->sme_state) {
+-	case SME_CONNECTING:
+-		cfg80211_connect_result(vif->ndev, vif->bssid, NULL, 0,
+-					NULL, 0,
+-					WLAN_STATUS_UNSPECIFIED_FAILURE,
+-					GFP_KERNEL);
+-		break;
+-	case SME_CONNECTED:
+-	default:
+-		/*
+-		 * FIXME: oddly enough smeState is in DISCONNECTED during
+-		 * suspend, why? Need to send disconnected event in that
+-		 * state.
+-		 */
+-		cfg80211_disconnected(vif->ndev, 0, NULL, 0, GFP_KERNEL);
+-		break;
+-	}
+-
+-	if (test_bit(CONNECTED, &vif->flags) ||
+-	    test_bit(CONNECT_PEND, &vif->flags))
+-		ath6kl_wmi_disconnect_cmd(ar->wmi, vif->fw_vif_idx);
+-
+-	vif->sme_state = SME_DISCONNECTED;
+-
+-	/* disable scanning */
+-	if (ath6kl_wmi_scanparams_cmd(ar->wmi, vif->fw_vif_idx, 0xFFFF, 0, 0,
+-				      0, 0, 0, 0, 0, 0, 0) != 0)
+-		printk(KERN_WARNING "ath6kl: failed to disable scan "
+-		       "during suspend\n");
+-
+-	ath6kl_cfg80211_scan_complete_event(vif, true);
++	ath6kl_cfg80211_stop(ar);
+ 
+ 	/* save the current power mode before enabling power save */
+ 	ar->wmi->saved_pwr_mode = ar->wmi->pwr_mode;
 
- static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
-@@ -1437,6 +1479,9 @@ void ieee80211_xmit(struct ieee80211_sub_if_data
-*sdata, struct sk_buff *skb)
- 			}
-
- 	ieee80211_set_qos_hdr(sdata, skb);
-+#ifdef CONFIG_MAC80211_MESH
-+	ieee80211_set_mesh_ps_fields(sdata, hdr);
-+#endif /* CONFIG_MAC80211_MESH */
- 	ieee80211_tx(sdata, skb, false);
- 	rcu_read_unlock();
- }
-@@ -1887,7 +1932,10 @@ netdev_tx_t ieee80211_subif_start_xmit(struct
-sk_buff *skb,
- 		wme_sta = true;
-
- 	/* receiver and we are QoS enabled, use a QoS type frame */
--	if (wme_sta && local->hw.queues >= 4) {
-+	if ((wme_sta && local->hw.queues >= 4) ||
-+	    (ieee80211_vif_is_mesh(&sdata->vif) &&
-+	     (ieee80211s_get_ps_mode(sdata, &hdr) !=
-+			NL80211_MESH_POWER_ACTIVE))) {
- 		fc |= cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
- 		hdrlen += 2;
- 	}
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 4423e64..5febd0b 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -52,6 +52,7 @@ const struct mesh_config default_mesh_config = {
- 	.min_discovery_timeout = MESH_MIN_DISCOVERY_TIMEOUT,
- 	.dot11MeshHWMPRannInterval = MESH_RANN_INTERVAL,
- 	.dot11MeshGateAnnouncementProtocol = false,
-+	.power_mode = NL80211_MESH_POWER_ACTIVE,
- };
-
- const struct mesh_setup default_mesh_setup = {
--- 
-1.7.3.4
