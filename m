@@ -1,35 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46500 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762Ab1JRGy6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Oct 2011 02:54:58 -0400
-Subject: Re: [patch] rndis_wlan: add range check in del_key()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-In-Reply-To: <20111018064729.GQ27732@elgon.mountain> (sfid-20111018_084803_556321_DCB3993A)
-References: <20111018064729.GQ27732@elgon.mountain>
-	 (sfid-20111018_084803_556321_DCB3993A)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 18 Oct 2011 08:54:47 +0200
-Message-ID: <1318920887.3958.0.camel@jlt3.sipsolutions.net> (sfid-20111018_085502_908939_5676BADE)
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:4200 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752225Ab1JaV24 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Oct 2011 17:28:56 -0400
+Message-ID: <4EAF1310.6030006@broadcom.com> (sfid-20111031_222859_975605_861EA696)
+Date: Mon, 31 Oct 2011 14:28:48 -0700
+From: "Franky Lin" <frankyl@broadcom.com>
+MIME-Version: 1.0
+To: "Daniel Wolstenholme" <daniel@wolstenholme.net>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: cfg80211 events
+References: <CAB1eQC7cXz0GpGrX7d8_nL_8d8ZAgxSzXUxqDhR7PiSSJysOoQ@mail.gmail.com>
+In-Reply-To: <CAB1eQC7cXz0GpGrX7d8_nL_8d8ZAgxSzXUxqDhR7PiSSJysOoQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-10-18 at 09:47 +0300, Dan Carpenter wrote:
-> Wifi drivers can have up to 6 keys but the rndis_wlan only has 4 so
-> it needs to have its own checks to make sure we don't go out of
-> bounds.  The add_key() function already checks but I added some
-> checks to del_key() and set_default_key().
+On 10/27/2011 03:27 PM, Daniel Wolstenholme wrote:
+> Hi all,
+>
+> I'm working with the Broadcom brcmfmac driver, and I'm attempting to improve
+> event reporting, but I'm finding there's not that much documentation on
+> wireless events.  One big problem I'm having is that I'm using the cfg80211
+> interface, but when I run "iw event -t -f", I don't see the events showing
+> up.  Another question I have is: is there a way to send events with
+> arbitrary strings from the driver through to userspace?
+>
+> Any pointers would be greatly appreciated.
+>
+> Dan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Semantically, that shouldn't be possible unless it advertises support
-for WLAN_CIPHER_SUITE_AES_CMAC. Is there a bug in those checks?
+Hi Dan,
 
-The checks don't hurt, obviously.
+Just curious, on what kind of hardware platform are you using brcmfmac?
 
-johannes
+Thanks,
+Franky
 
