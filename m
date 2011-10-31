@@ -1,47 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:36497 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932670Ab1JNUoh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Oct 2011 16:44:37 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 6/6] iwlagn: use 6 Mbps rate for no-CCK scans
-Date: Fri, 14 Oct 2011 12:54:48 -0700
-Message-Id: <1318622088-14679-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111014_224443_968471_90302734)
-In-Reply-To: <1318622088-14679-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1318622088-14679-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:39712 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754051Ab1JaHMz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Oct 2011 03:12:55 -0400
+Received: by mail-pz0-f42.google.com with SMTP id 36so17635694pzk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2011 00:12:55 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH v2 4/4] mac80211: Populate QoS header on mesh frames sent to gates.
+Date: Mon, 31 Oct 2011 00:12:41 -0700
+Message-Id: <1320045161-16144-4-git-send-email-thomas@cozybit.com> (sfid-20111031_081258_888240_05CBFD97)
+In-Reply-To: <1320045161-16144-1-git-send-email-thomas@cozybit.com>
+References: <1320045161-16144-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Javier Cardona <javier@cozybit.com>
 
-When userspace requested that a scan not be
-done with CCK rates, use 6 Mbps. This is used
-for example for P2P scanning.
+Also set correct skb queue mapping once next hop is known, and set
+txinfo jiffies when forwarding.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-scan.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ net/mac80211/mesh_hwmp.c    |    5 ++++-
+ net/mac80211/mesh_pathtbl.c |    5 +++++
+ net/mac80211/rx.c           |    8 +++++---
+ 3 files changed, 14 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index e5d727f..a26fbd3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -678,7 +678,8 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 			priv->contexts[IWL_RXON_CTX_BSS].active.flags &
- 						RXON_FLG_CHANNEL_MODE_MSK)
- 				       >> RXON_FLG_CHANNEL_MODE_POS;
--		if (chan_mod == CHANNEL_MODE_PURE_40) {
-+		if ((priv->scan_request && priv->scan_request->no_cck) ||
-+		    chan_mod == CHANNEL_MODE_PURE_40) {
- 			rate = IWL_RATE_6M_PLCP;
- 		} else {
- 			rate = IWL_RATE_1M_PLCP;
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index b7d9dfd..d46109b 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -1028,8 +1028,11 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
+ 					PREQ_Q_F_START | PREQ_Q_F_REFRESH);
+ 		}
+ 		next_hop = rcu_dereference(mpath->next_hop);
+-		if (next_hop)
++		if (next_hop) {
+ 			memcpy(hdr->addr1, next_hop->sta.addr, ETH_ALEN);
++			skb_set_queue_mapping(skb,
++				ieee80211_select_queue(sdata, skb));
++		}
+ 		else
+ 			err = -ENOENT;
+ 	} else {
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 332b5ff1..9d2f55f 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -270,6 +270,11 @@ static void prepare_for_gate(struct sk_buff *skb, char *dst_addr,
+ 	memcpy(hdr->addr1, next_hop, ETH_ALEN);
+ 	rcu_read_unlock();
+ 	memcpy(hdr->addr3, dst_addr, ETH_ALEN);
++
++	/*  once next hop is set we can set qos header */
++	skb_set_queue_mapping(skb,
++			ieee80211_select_queue(gate_mpath->sdata, skb));
++	ieee80211_set_qos_hdr(gate_mpath->sdata, skb);
+ }
+ 
+ /**
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 0995685..00b3db7 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1964,12 +1964,10 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 			memset(info, 0, sizeof(*info));
+ 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+ 			info->control.vif = &rx->sdata->vif;
++			info->control.jiffies = jiffies;
+ 			if (is_multicast_ether_addr(fwd_hdr->addr1)) {
+ 				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
+ 								fwded_mcast);
+-				skb_set_queue_mapping(fwd_skb,
+-					ieee80211_select_queue(sdata, fwd_skb));
+-				ieee80211_set_qos_hdr(sdata, fwd_skb);
+ 			} else {
+ 				int err;
+ 				/*
+@@ -1990,6 +1988,10 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 			}
+ 			IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
+ 						     fwded_frames);
++
++			/* next hop is now known, update the queue mapping */
++			skb_set_queue_mapping(fwd_skb,
++				ieee80211_select_queue(sdata, fwd_skb));
+ 			ieee80211_add_pending_skb(local, fwd_skb);
+ 		}
+ 	}
 -- 
-1.7.0.4
+1.7.5.4
 
