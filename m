@@ -1,175 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37140 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754859Ab1JUOZa (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:38310 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932221Ab1JaJz6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Oct 2011 10:25:30 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1RHG2M-0008VC-06
-	for linux-wireless@vger.kernel.org; Fri, 21 Oct 2011 16:25:30 +0200
-Message-Id: <20111021142429.002962879@sipsolutions.net> (sfid-20111021_162538_302866_0EACF483)
-Date: Fri, 21 Oct 2011 16:23:29 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC v2 07/12] mac80211: support client probe
-References: <20111021142322.229128720@sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 31 Oct 2011 05:55:58 -0400
+Subject: [PATCH 1/5] ath6kl: add aborted parameter to
+	ath6kl_cfg80211_scan_complete_event()
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 31 Oct 2011 11:55:50 +0200
+Message-ID: <20111031095550.3598.52653.stgit@localhost6.localdomain6> (sfid-20111031_105600_796984_3B3C5B4F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Currently it takes error code as status, but what we really want to
+tell is if the scan was aborted or not.
 
-Support probing clients with null data frames
-in AP mode.
+Also fix a bug where we were comparing firmware scan status values
+with kernel error codes, which is naturally wrong. This meant
+that ath6kl didn't detect when firmware informed about failed scans. I
+doubt that this fix doesn't make any difference in practise but it
+still needs to be fixed. This is fixed by adding an enum for the success
+status code and checking for that.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
-v2: update to use cfg80211_probe_status
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   12 ++++--------
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |    2 +-
+ drivers/net/wireless/ath/ath6kl/main.c     |   10 +++++++---
+ drivers/net/wireless/ath/ath6kl/wmi.h      |    4 ++++
+ 4 files changed, 16 insertions(+), 12 deletions(-)
 
- net/mac80211/cfg.c    |   68 ++++++++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/status.c |   45 +++++++++++++++++++--------------
- 2 files changed, 95 insertions(+), 18 deletions(-)
-
---- a/net/mac80211/cfg.c	2011-10-21 12:07:38.000000000 +0200
-+++ b/net/mac80211/cfg.c	2011-10-21 12:07:42.000000000 +0200
-@@ -2507,6 +2507,73 @@ static int ieee80211_tdls_oper(struct wi
- 	return 0;
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 994c646..188fded 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -871,23 +871,19 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 	return ret;
  }
  
-+static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
-+				  const u8 *peer, u64 *cookie)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_qos_hdr *nullfunc;
-+	struct sk_buff *skb;
-+	int size = sizeof(*nullfunc);
-+	__le16 fc;
-+	bool qos;
-+	struct ieee80211_tx_info *info;
-+	struct sta_info *sta;
+-void ath6kl_cfg80211_scan_complete_event(struct ath6kl_vif *vif, int status)
++void ath6kl_cfg80211_scan_complete_event(struct ath6kl_vif *vif, bool aborted)
+ {
+ 	struct ath6kl *ar = vif->ar;
+-	bool aborted;
+ 	int i;
+ 
+-	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: status %d\n", __func__, status);
++	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: status%s\n", __func__,
++		   aborted ? " aborted" : "");
+ 
+ 	if (!vif->scan_req)
+ 		return;
+ 
+-	if ((status == -ECANCELED) || (status == -EBUSY)) {
+-		aborted = true;
++	if (aborted)
+ 		goto out;
+-	}
+-
+-	aborted = false;
+ 
+ 	if (vif->scan_req->n_ssids && vif->scan_req->ssids[0].ssid_len) {
+ 		for (i = 0; i < vif->scan_req->n_ssids; i++) {
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+index d1a0216..f323a49 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+@@ -24,7 +24,7 @@ int ath6kl_register_ieee80211_hw(struct ath6kl *ar);
+ struct ath6kl *ath6kl_core_alloc(struct device *dev);
+ void ath6kl_deinit_ieee80211_hw(struct ath6kl *ar);
+ 
+-void ath6kl_cfg80211_scan_complete_event(struct ath6kl_vif *vif, int status);
++void ath6kl_cfg80211_scan_complete_event(struct ath6kl_vif *vif, bool aborted);
+ 
+ void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
+ 				   u8 *bssid, u16 listen_intvl,
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index def0b7f..d2822d0 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -624,7 +624,7 @@ void ath6kl_deep_sleep_enable(struct ath6kl *ar)
+ 		printk(KERN_WARNING "ath6kl: failed to disable scan "
+ 		       "during suspend\n");
+ 
+-	ath6kl_cfg80211_scan_complete_event(vif, -ECANCELED);
++	ath6kl_cfg80211_scan_complete_event(vif, true);
+ 
+ 	/* save the current power mode before enabling power save */
+ 	ar->wmi->saved_pwr_mode = ar->wmi->pwr_mode;
+@@ -684,8 +684,12 @@ void ath6kl_ready_event(void *devt, u8 *datap, u32 sw_ver, u32 abi_ver)
+ void ath6kl_scan_complete_evt(struct ath6kl_vif *vif, int status)
+ {
+ 	struct ath6kl *ar = vif->ar;
++	bool aborted = false;
+ 
+-	ath6kl_cfg80211_scan_complete_event(vif, status);
++	if (status != WMI_SCAN_STATUS_SUCCESS)
++		aborted = true;
 +
-+	rcu_read_lock();
-+	sta = sta_info_get(sdata, peer);
-+	if (sta)
-+		qos = test_sta_flag(sta, WLAN_STA_WME);
-+	rcu_read_unlock();
-+
-+	if (!sta)
-+		return -ENOLINK;
-+
-+	if (qos) {
-+		fc = cpu_to_le16(IEEE80211_FTYPE_DATA |
-+				 IEEE80211_STYPE_QOS_NULLFUNC |
-+				 IEEE80211_FCTL_FROMDS);
-+	} else {
-+		size -= 2;
-+		fc = cpu_to_le16(IEEE80211_FTYPE_DATA |
-+				 IEEE80211_STYPE_NULLFUNC |
-+				 IEEE80211_FCTL_FROMDS);
-+	}
-+
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom + size);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb->dev = dev;
-+
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+
-+	nullfunc = (void *) skb_put(skb, size);
-+	nullfunc->frame_control = fc;
-+	nullfunc->duration_id = 0;
-+	memcpy(nullfunc->addr1, sta->sta.addr, ETH_ALEN);
-+	memcpy(nullfunc->addr2, sdata->vif.addr, ETH_ALEN);
-+	memcpy(nullfunc->addr3, sdata->vif.addr, ETH_ALEN);
-+	nullfunc->seq_ctrl = 0;
-+
-+	info = IEEE80211_SKB_CB(skb);
-+
-+	info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS |
-+		       IEEE80211_TX_INTFL_NL80211_FRAME_TX;
-+
-+	skb_set_queue_mapping(skb, IEEE80211_AC_VO);
-+	skb->priority = 7;
-+	if (qos)
-+		nullfunc->qos_ctrl = cpu_to_le16(7);
-+
-+	local_bh_disable();
-+	ieee80211_xmit(sdata, skb);
-+	local_bh_enable();
-+
-+	*cookie = (unsigned long) skb;
-+	return 0;
-+}
-+
- struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -2572,4 +2639,5 @@ struct cfg80211_ops mac80211_config_ops
- 	.set_rekey_data = ieee80211_set_rekey_data,
- 	.tdls_oper = ieee80211_tdls_oper,
- 	.tdls_mgmt = ieee80211_tdls_mgmt,
-+	.probe_client = ieee80211_probe_client,
- };
---- a/net/mac80211/status.c	2011-10-21 12:07:38.000000000 +0200
-+++ b/net/mac80211/status.c	2011-10-21 12:07:42.000000000 +0200
-@@ -516,27 +516,36 @@ void ieee80211_tx_status(struct ieee8021
++	ath6kl_cfg80211_scan_complete_event(vif, aborted);
+ 
+ 	if (!ar->usr_bss_filter) {
+ 		clear_bit(CLEAR_BSSFILTER_ON_BEACON, &vif->flags);
+@@ -1149,7 +1153,7 @@ static int ath6kl_close(struct net_device *dev)
+ 
  	}
  
- 	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX) {
--		struct ieee80211_work *wk;
- 		u64 cookie = (unsigned long)skb;
+-	ath6kl_cfg80211_scan_complete_event(vif, -ECANCELED);
++	ath6kl_cfg80211_scan_complete_event(vif, true);
  
--		rcu_read_lock();
--		list_for_each_entry_rcu(wk, &local->work_list, list) {
--			if (wk->type != IEEE80211_WORK_OFFCHANNEL_TX)
--				continue;
--			if (wk->offchan_tx.frame != skb)
--				continue;
--			wk->offchan_tx.status = true;
--			break;
--		}
--		rcu_read_unlock();
--		if (local->hw_roc_skb_for_status == skb) {
--			cookie = local->hw_roc_cookie ^ 2;
--			local->hw_roc_skb_for_status = NULL;
--		}
-+		if (ieee80211_is_nullfunc(hdr->frame_control) ||
-+		    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
-+		    	bool acked = info->flags & IEEE80211_TX_STAT_ACK;
-+			cfg80211_probe_status(skb->dev, hdr->addr1,
-+					      cookie, acked, GFP_ATOMIC);
-+		} else {
-+			struct ieee80211_work *wk;
+ 	/* FIXME: how to handle multi vif support? */
+ 	ret = ath6kl_init_hw_stop(ar);
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index ae514cb..cf0462a 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -1472,6 +1472,10 @@ struct wmi_tkip_micerr_event {
+ 	u8 is_mcast;
+ } __packed;
  
--		cfg80211_mgmt_tx_status(
--			skb->dev, cookie, skb->data, skb->len,
--			!!(info->flags & IEEE80211_TX_STAT_ACK), GFP_ATOMIC);
-+			rcu_read_lock();
-+			list_for_each_entry_rcu(wk, &local->work_list, list) {
-+				if (wk->type != IEEE80211_WORK_OFFCHANNEL_TX)
-+					continue;
-+				if (wk->offchan_tx.frame != skb)
-+					continue;
-+				wk->offchan_tx.status = true;
-+				break;
-+			}
-+			rcu_read_unlock();
-+			if (local->hw_roc_skb_for_status == skb) {
-+				cookie = local->hw_roc_cookie ^ 2;
-+				local->hw_roc_skb_for_status = NULL;
-+			}
++enum wmi_scan_status {
++	WMI_SCAN_STATUS_SUCCESS = 0,
++};
 +
-+			cfg80211_mgmt_tx_status(
-+				skb->dev, cookie, skb->data, skb->len,
-+				!!(info->flags & IEEE80211_TX_STAT_ACK),
-+				GFP_ATOMIC);
-+		}
- 	}
- 
- 	/* this was a transmitted frame, but now we want to reuse it */
-
+ /* WMI_SCAN_COMPLETE_EVENTID */
+ struct wmi_scan_complete_event {
+ 	a_sle32 status;
 
