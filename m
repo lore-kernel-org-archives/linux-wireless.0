@@ -1,77 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17557 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754745Ab1JYLQq (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51143 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752647Ab1JaNLR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Oct 2011 07:16:46 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH] ath9k_hw: Fix noise floor calibration timeout on fast channel change
-Date: Tue, 25 Oct 2011 16:47:36 +0530
-Message-ID: <1319541456-2147-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111025_131651_033172_A5602682)
+	Mon, 31 Oct 2011 09:11:17 -0400
+Message-ID: <4EAE9E30.1080403@qca.qualcomm.com> (sfid-20111031_141120_242018_300658A3)
+Date: Mon, 31 Oct 2011 15:10:08 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Raja Mani <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/7] ath6kl: Add wmi functions to configure wow mode and
+ host sleep mode
+References: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com> <1319539047-8756-3-git-send-email-rmani@qca.qualcomm.com> <4EAA9DDC.5090909@qca.qualcomm.com> <4EAE6FFD.6090403@qca.qualcomm.com>
+In-Reply-To: <4EAE6FFD.6090403@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During the fast channel change noise floor values are being loaded
-twice at init_cal and after channel_change. The commit "ath9k_hw:
-Improve fast channel change for AR9003 chips" overlooked it that
-caused failure to load nf while doing bgscan. This patch performs noise
-floor calibration after the fast and full reset.
+On 10/31/2011 11:53 AM, Raja Mani wrote:
+>>> +static void ath6kl_wmi_relinquish_implicit_pstream_credits(struct wmi *wmi)
+>>> >> +{
+>>> >> +	u16 active_tsids;
+>>> >> +	u8 stream_exist;
+>>> >> +	int i;
+>>> >> +
+>>> >> +	/*
+>>> >> +	 * Relinquish credits from all implicitly created pstreams
+>>> >> +	 * since when we go to sleep. If user created explicit
+>>> >> +	 * thinstreams exists with in a fatpipe leave them intact
+>>> >> +	 * for the user to delete.
+>>> >> +	 */
+>>> >> +	spin_lock_bh(&wmi->lock);
+>>> >> +	stream_exist = wmi->fat_pipe_exist;
+>>> >> +	spin_unlock_bh(&wmi->lock);
+>>> >> +
+>>> >> +	for (i = 0; i<  WMM_NUM_AC; i++) {
+>>> >> +		if (stream_exist&  (1<<  i)) {
+>>> >> +
+>>> >> +			spin_lock_bh(&wmi->lock);
+>>> >> +			active_tsids = wmi->stream_exist_for_ac[i];
+>>> >> +			spin_unlock_bh(&wmi->lock);
+>>> >> +
+>>> >> +			/*
+>>> >> +			 * If there are no user created thin streams
+>>> >> +			 * delete the fatpipe
+>>> >> +			 */
+>>> >> +			if (!active_tsids) {
+>>> >> +				stream_exist&= ~(1<<  i);
+>>> >> +				/*
+>>> >> +				 * Indicate inactivity to driver layer for
+>>> >> +				 * this fatpipe (pstream)
+>>> >> +				 */
+>>> >> +				ath6kl_indicate_tx_activity(wmi->parent_dev,
+>>> >> +							    i, false);
+>>> >> +			}
+>>> >> +		}
+>>> >> +	}
+>>> >> +
+>>> >> +	spin_lock_bh(&wmi->lock);
+>>> >> +	wmi->fat_pipe_exist = stream_exist;
+>>> >> +	spin_unlock_bh(&wmi->lock);
+>> >
+>> > The locking here doesn't really make sense. For example, any changes to
+>> > wmi->fat_pipe_exist during the for loop will be overwritten. Also lock
+>> > handling with wmi->stream_exist_for_ac[i] looks fishy.
+>
+> Is it fine just removal of both locking (For "active_tsids = 
+> wmi->stream_exist_for_ac[i]" and "wmi->fat_pipe_exist = stream_exist") ?
+> 
+> I am sure about the impact..Could you please give some point how above 
+> locking can be improved ?
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_calib.c |    4 ----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |    3 ---
- drivers/net/wireless/ath/ath9k/hw.c           |    3 +++
- 3 files changed, 3 insertions(+), 7 deletions(-)
+I haven't reviewed the locking in detail so it's difficult to say. For
+example, you could hold the lock the entire duration of for loop. But
+that might create deadlocks. Another option is take it into account the
+changes happening to fat_pipe_exist while lock is not held.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index e0ab065..88279e3 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -868,10 +868,6 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
- 	/* Do PA Calibration */
- 	ar9002_hw_pa_cal(ah, true);
- 
--	/* Do NF Calibration after DC offset and other calibrations */
--	ath9k_hw_loadnf(ah, chan);
--	ath9k_hw_start_nfcal(ah, true);
--
- 	if (ah->caldata)
- 		ah->caldata->nfcal_pending = true;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index a4cd161..12a730d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -1085,9 +1085,6 @@ skip_tx_iqcal:
- 		ar9003_hw_rtt_disable(ah);
- 	}
- 
--	ath9k_hw_loadnf(ah, chan);
--	ath9k_hw_start_nfcal(ah, true);
--
- 	/* Initialize list pointers */
- 	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
- 	ah->supp_cals = IQ_MISMATCH_CAL;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8c36938..a67c456 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1724,6 +1724,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (!ath9k_hw_init_cal(ah, chan))
- 		return -EIO;
- 
-+	ath9k_hw_loadnf(ah, chan);
-+	ath9k_hw_start_nfcal(ah, true);
-+
- 	ENABLE_REGWRITE_BUFFER(ah);
- 
- 	ath9k_hw_restore_chainmask(ah);
--- 
-1.7.7
-
+Kalle
