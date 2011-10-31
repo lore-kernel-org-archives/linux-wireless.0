@@ -1,93 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3025 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754037Ab1JLSvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 14:51:51 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 08/22] brcm80211: fix annotations in TOE configuration
- functions
-Date: Wed, 12 Oct 2011 20:51:18 +0200
-Message-ID: <1318445492-24207-9-git-send-email-arend@broadcom.com> (sfid-20111012_205220_372017_17DF9A34)
-In-Reply-To: <1318445492-24207-1-git-send-email-arend@broadcom.com>
-References: <1318445492-24207-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:50174 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932689Ab1JaKZV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Oct 2011 06:25:21 -0400
+Received: by mail-bw0-f45.google.com with SMTP id zu5so604157bkb.4
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2011 03:25:20 -0700 (PDT)
+Subject: Re: [PATCH v2 1/3] nl80211: Add probe response offload attribute
+From: Luciano Coelho <coelho@ti.com>
+To: Guy Eilam <guy@wizery.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+In-Reply-To: <1319313081-28722-1-git-send-email-guy@wizery.com>
+References: <1319313081-28722-1-git-send-email-guy@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 31 Oct 2011 12:04:58 +0200
+Message-ID: <1320055498.2672.10.camel@cumari> (sfid-20111031_112525_240345_6736E8C2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The configuration function for the TCP offload engine were not
-taking CPU endianess into account. Proper annotations and conversions
-have been added.
+On Sat, 2011-10-22 at 21:51 +0200, Guy Eilam wrote: 
+> Notify the userspace of the probe response offloading
+> support by the driver.
+> 
+> Signed-off-by: Guy Eilam <guy@wizery.com>
+> ---
+> v2:
+> use struct wiphy instead of a function pointer
+> this change made the previous second PATCH:
+> "Get the probe response offloading support from the driver" irrelevant
+> changed WPS to WSC
+> 
+>  include/linux/nl80211.h |   24 ++++++++++++++++++++++++
+>  include/net/cfg80211.h  |    5 +++++
+>  net/wireless/nl80211.c  |    5 +++++
+>  3 files changed, 34 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+> index 9d797f2..c1f0a3d 100644
+> --- a/include/linux/nl80211.h
+> +++ b/include/linux/nl80211.h
+> @@ -1109,6 +1109,11 @@ enum nl80211_commands {
+>   *	%NL80211_CMD_TDLS_MGMT. Otherwise %NL80211_CMD_TDLS_OPER should be
+>   *	used for asking the driver to perform a TDLS operation.
+>   *
+> + * @NL80211_ATTR_PROBE_RESP_OFFLOAD_SUPPORT: Indicates the support
+> + *	of probe response offloading by the driver/firmware.
+> + *	In addition this attribute holds a bitmap of the supported protocols
+> + *	for offloading using &enum nl80211_probe_resp_offload_support_attr.
+> + *
+>   * @NL80211_ATTR_MAX: highest attribute number currently defined
+>   * @__NL80211_ATTR_AFTER_LAST: internal use
+>   */
+> @@ -1337,6 +1342,8 @@ enum nl80211_attrs {
+>  	NL80211_ATTR_TDLS_SUPPORT,
+>  	NL80211_ATTR_TDLS_EXTERNAL_SETUP,
+>  
+> +	NL80211_ATTR_PROBE_RESP_OFFLOAD_SUPPORT,
+> +
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   15 ++++++++-------
- 1 files changed, 8 insertions(+), 7 deletions(-)
+I'm not sure I understand why we need this.  Why aren't the flags
+themselves enough?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index fb9f808..b05f177 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -560,6 +560,7 @@ static struct net_device_stats *brcmf_netdev_get_stats(struct net_device *ndev)
- static int brcmf_toe_get(struct brcmf_info *drvr_priv, int ifidx, u32 *toe_ol)
- {
- 	struct brcmf_dcmd dcmd;
-+	__le32 toe_le;
- 	char buf[32];
- 	int ret;
- 
-@@ -585,7 +586,8 @@ static int brcmf_toe_get(struct brcmf_info *drvr_priv, int ifidx, u32 *toe_ol)
- 		return ret;
- 	}
- 
--	memcpy(toe_ol, buf, sizeof(u32));
-+	memcpy(&toe_le, buf, sizeof(u32));
-+	*toe_ol = le32_to_cpu(toe_le);
- 	return 0;
- }
- 
-@@ -595,7 +597,8 @@ static int brcmf_toe_set(struct brcmf_info *drvr_priv, int ifidx, u32 toe_ol)
- {
- 	struct brcmf_dcmd dcmd;
- 	char buf[32];
--	int toe, ret;
-+	int ret;
-+	__le32 toe_le = cpu_to_le32(toe_ol);
- 
- 	memset(&dcmd, 0, sizeof(dcmd));
- 
-@@ -605,9 +608,8 @@ static int brcmf_toe_set(struct brcmf_info *drvr_priv, int ifidx, u32 toe_ol)
- 	dcmd.set = true;
- 
- 	/* Set toe_ol as requested */
--
- 	strcpy(buf, "toe_ol");
--	memcpy(&buf[sizeof("toe_ol")], &toe_ol, sizeof(u32));
-+	memcpy(&buf[sizeof("toe_ol")], &toe_le, sizeof(u32));
- 
- 	ret = brcmf_proto_dcmd(&drvr_priv->pub, ifidx, &dcmd, dcmd.len);
- 	if (ret < 0) {
-@@ -617,11 +619,10 @@ static int brcmf_toe_set(struct brcmf_info *drvr_priv, int ifidx, u32 toe_ol)
- 	}
- 
- 	/* Enable toe globally only if any components are enabled. */
--
--	toe = (toe_ol != 0);
-+	toe_le = cpu_to_le32(toe_ol != 0);
- 
- 	strcpy(buf, "toe");
--	memcpy(&buf[sizeof("toe")], &toe, sizeof(u32));
-+	memcpy(&buf[sizeof("toe")], &toe_le, sizeof(u32));
- 
- 	ret = brcmf_proto_dcmd(&drvr_priv->pub, ifidx, &dcmd, dcmd.len);
- 	if (ret < 0) {
+Johannes wrote, on a separate thread:
+> Oh, and probably a regular WIPHY flag that indicates whether the
+> attribute should be added at all so that it can also be 0 but present
+> (presence with 0 value indicates something other than not present).
+
+What would be the meaning when the WIPHY flag is set but the attributes
+are all 0? Wouldn't it mean that we don't support probe_resp offload at
+all? Or would it mean that we support probe_resp offloading in normal
+cases (ie. not WCS nor P2P)? If the latter is the case, why not add a
+bit in the attributes to indicate that "normal" probe_resp offloading is
+supported? I think this would be cleaner because there wouldn't be any
+implicit semantics.
+
+
 -- 
-1.7.4.1
-
+Cheers,
+Luca.
 
