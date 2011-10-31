@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:53496 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758002Ab1JEPoz (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:38162 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932221Ab1JaJyF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Oct 2011 11:44:55 -0400
-Received: by yxl31 with SMTP id 31so1699371yxl.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2011 08:44:55 -0700 (PDT)
-Message-ID: <4E8C7B72.8070106@lwfinger.net> (sfid-20111005_174458_921364_3E5EF610)
-Date: Wed, 05 Oct 2011 10:44:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 31 Oct 2011 05:54:05 -0400
+Message-ID: <4EAE7038.7010306@qca.qualcomm.com> (sfid-20111031_105408_440920_0E2B3305)
+Date: Mon, 31 Oct 2011 15:24:00 +0530
+From: Raja Mani <rmani@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Arend Van Spriel <arend@broadcom.com>
-CC: Hauke Mehrtens <hauke@hauke-m.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Alwin Beukers <alwin@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>
-Subject: Re: [PATCH v3] move brcm80211 drivers to mainline
-References: <4E8C64EF.3070203@broadcom.com> <4E8C7289.50706@hauke-m.de> <400C43189542CE41BC0A5B252FC90136BC0D574E7D@SJEXCHCCR02.corp.ad.broadcom.com>
-In-Reply-To: <400C43189542CE41BC0A5B252FC90136BC0D574E7D@SJEXCHCCR02.corp.ad.broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 5/7] ath6kl: Invoke wow suspend/resume calls during PM
+ operations
+References: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com> <1319539047-8756-6-git-send-email-rmani@qca.qualcomm.com> <4EAAAAF6.3090906@qca.qualcomm.com>
+In-Reply-To: <4EAAAAF6.3090906@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/05/2011 10:40 AM, Arend Van Spriel wrote:
->> From: Hauke Mehrtens [mailto:hauke@hauke-m.de]
->> Sent: woensdag 5 oktober 2011 17:07
+On Friday 28 October 2011 06:45 PM, Kalle Valo wrote:
+> On 10/25/2011 01:37 PM, rmani@qca.qualcomm.com wrote:
+>> From: Raja Mani<rmani@qca.qualcomm.com>
 >>
->> Hi Arend,
->>
->> Most of the things defined in
->> drivers/net/wireless/brcm80211/include/soc.h are also defined in
->> drivers/net/wireless/brcm80211/brcmsmac/aiutils.h.
->>
->> Hauke
+>>   Link ath6kl's wow suspend/resume functions with the callback functions
+>>   registered with the CFG layer for suspend and resume operation.
 >
-> Thanks, Hauke
+> [..]
 >
-> One of the reasons we wanted to move to mainline is that bcma
-> is worked on from John's repo and we want our brcmsmac driver
-> to use that. The aiutils.h file is going away when we are
-> using bcma.
+>> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+>> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+>> @@ -1606,6 +1606,19 @@ static int ar6k_cfg80211_suspend(struct wiphy *wiphy,
+>>   				 struct cfg80211_wowlan *wow)
+>>   {
+>>   	struct ath6kl *ar = wiphy_priv(wiphy);
+>> +	int ret;
+>> +
+>> +	if (wow&&  ath6kl_cfg80211_ready(ar)&&
+>> +	    test_bit(CONNECTED,&ar->flag)&&
+>> +	    ath6kl_hif_keep_pwr_caps(ar)) {
+>> +
+>> +		/* Flush all non control pkts in Tx path */
+>> +		ath6kl_tx_data_cleanup(ar);
+>> +
+>> +		ret = ath6kl_pm_wow_suspend(ar, wow);
+>> +		if (ret)
+>> +			return ret;
+>> +	}
+>
+> This is now confusing. Some of the suspend logic is now in sdio.c and
+> some here. It's better to have everything in one place, that is in
+> sdio.c. We just need to add an interface so that sdio.c can request the
+> correct suspend mode.
 
-Good to hear that patches to switch to bcma will be coming soon.
+Do you want me to keep ath6kl_pm_wow_suspend() implementation in 
+cfg80211.c file and move only above code to ath6kl_sdio_suspend() ?
 
-Larry
-
+>
+> Kalle
