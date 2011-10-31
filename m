@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57923 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750993Ab1J0TdE (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:45768 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932221Ab1JaJyl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Oct 2011 15:33:04 -0400
-Message-ID: <4EA9B1E5.9080500@candelatech.com> (sfid-20111027_213307_767467_FE431CDD)
-Date: Thu, 27 Oct 2011 12:32:53 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 31 Oct 2011 05:54:41 -0400
+Message-ID: <4EAE705C.3090704@qca.qualcomm.com> (sfid-20111031_105443_864429_9371A212)
+Date: Mon, 31 Oct 2011 15:24:36 +0530
+From: Raja Mani <rmani@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Temporary(?) relocation of wireless git trees...
-References: <20110912181351.GD2689@tuxdriver.com>
-In-Reply-To: <20110912181351.GD2689@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 5/7] ath6kl: Invoke wow suspend/resume calls during PM
+ operations
+References: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com> <1319539047-8756-6-git-send-email-rmani@qca.qualcomm.com> <4EAAAC61.405@qca.qualcomm.com>
+In-Reply-To: <4EAAAC61.405@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/12/2011 11:13 AM, John W. Linville wrote:
-> With no news on when the kernel.org trees will be accessible again
-> (which could be 10 minutes from now for all I know), I have pushed
-> my local copies to Infradead.  This should be equivalent to what was
-> last pushed to kernel.org almost two weeks ago.
+On Friday 28 October 2011 06:51 PM, Kalle Valo wrote:
+> On 10/25/2011 01:37 PM, rmani@qca.qualcomm.com wrote:
+>
+>> +	if (wow&&  ath6kl_cfg80211_ready(ar)&&
+>> +	    test_bit(CONNECTED,&ar->flag)&&
+>> +	    ath6kl_hif_keep_pwr_caps(ar)) {
+>> +
+>> +		/* Flush all non control pkts in Tx path */
+>> +		ath6kl_tx_data_cleanup(ar);
+>> +
+>> +		ret = ath6kl_pm_wow_suspend(ar, wow);
+>> +		if (ret)
+>> +			return ret;
+>> +	}
+>
+> Forgot to mention: don't you also need to check for MMC_PM_WAKE_SDIO_IRQ
+> and also set it with sdio_set_host_pm_flags()?
 
-Is this still the current development tree for wireless?
-
-I've some patches to clean up and post, but want to do it against
-the right tree!
-
-Thanks,
-Ben
+I tested it in x86 machine. Wow suspend/resume works even without 
+setting MMC_PM_WAKE_SDIO_IRQ. Should i really handle it ?
 
 >
-> The "current" wireless tree is here:
->
-> 	git://git.infradead.org/users/linville/wireless.git
->
-> The "next" wireless tree is here:
->
-> 	git://git.infradead.org/users/linville/wireless-next.git
->
-> The "testing" wireless tree is here:
->
-> 	git://git.infradead.org/users/linville/wireless-testing.git
->
-> I don't know how long these trees will be on Infradead or when (or
-> if) they will return to kernel.org.  Such changes will be determined
-> as conditions change.  Please be flexible.
->
-> Thanks,
->
-> John
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+> Kalle
