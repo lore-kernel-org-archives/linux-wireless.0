@@ -1,72 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:34933 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933860Ab1JDXrx (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5061 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750736Ab1JaNDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Oct 2011 19:47:53 -0400
-Received: by pzk1 with SMTP id 1so2684409pzk.1
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2011 16:47:52 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH 0/8] wireless: add DFS master support
-Date: Tue,  4 Oct 2011 16:47:39 -0700
-Message-Id: <1317772067-6998-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111005_014756_976694_CC6C210F)
+	Mon, 31 Oct 2011 09:03:32 -0400
+Message-ID: <4EAE9C9D.6080201@qca.qualcomm.com> (sfid-20111031_140336_524220_25DF6750)
+Date: Mon, 31 Oct 2011 15:03:25 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Raja Mani <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 6/7] ath6kl: Perform WOW resume in RX path in case of
+ SDIO IRQ wakeup
+References: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com> <1319539047-8756-7-git-send-email-rmani@qca.qualcomm.com> <4EAAABB8.3030309@qca.qualcomm.com> <4EAE707D.6070806@qca.qualcomm.com>
+In-Reply-To: <4EAE707D.6070806@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of 8 patches adds DFS master support to the Linux wireless subsystem.
-I've reviewed future possible changes to DFS master regions and it seems that
-we are not going to be having multiple DFS regions for one country, instead
-we'll always have one DFS region for one country.
+On 10/31/2011 11:55 AM, Raja Mani wrote:
+> On Friday 28 October 2011 06:48 PM, Kalle Valo wrote:
+>> On 10/25/2011 01:37 PM, rmani@qca.qualcomm.com wrote:
+>>> --- a/drivers/net/wireless/ath/ath6kl/txrx.c
+>>> +++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+>>> @@ -1081,6 +1081,8 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+>>>   		return;
+>>>   	}
+>>>
+>>> +	ath6kl_pm_check_wow_status(ar);
+>>
+>> Now we resume from two places, cfg80211 resume handler and here. Why do
+>> we need to do that? Why isn't cfg80211 resume handler enough?
+> 
+> This path hits when the target wants to wake up the host. When given WOW 
+> pattern matches, the target will pull SDIO data line to wake up the 
+> host. During that time , the control will reach here (sdio irq handler 
+> -> ath6kl_rx function), not to cfg80211 resume.
 
-The changes here are spread out throughout wireless-regdb, crda the kernel and
-lastly iw. The changes made allow for older verions of CRDA to work with new
-wireless-regdb files with DFS region support. If you want DFS master region
-support you'll need to upgrade your CRDA, your kernel and then hope someone
-implements DFS master support for your respective driver.
+I don't understand this. Are you saying that host resumes but cfg80211
+resume handler is not called? It doesn't make sense, every suspend call
+should have an equivalent resume call. If that doesn't happen, something
+is broken somewhere.
 
-This patch series does not have specific driver changes, although some seem to
-be backing in the oven right now.
-
-Luis R. Rodriguez (8):
-  wireless-regdb: Add master DFS region support
-  wireless-regdb: add FCC as the DFS region for US
-  crda: synch up nl80211.h
-  crda: add support to send DFS master region
-  cfg80211: process regulatory DFS region for countries
-  cfg80211: pass DFS region to drivers through reg_notifier()
-  iw: synch nl80211.h
-  iw: add DFS region parsing support
-
-wireless-regdb:
-
- db.txt     |    2 +-
- db2bin.py  |    2 +-
- dbparse.py |   25 ++++++++++++++++++++-----
- 3 files changed, 22 insertions(+), 7 deletions(-)
-
-crda:
-
- crda.c    |    1 +
- nl80211.h |   21 +++++++++++++++++++++
- regdb.h   |    3 ++-
- 3 files changed, 24 insertions(+), 1 deletions(-)
-
-kernel:
-
- include/linux/nl80211.h  |   21 +++++++++++++++++++++
- include/net/regulatory.h |    6 ++++++
- net/wireless/nl80211.c   |   15 +++++++++++++++
- net/wireless/reg.c       |   39 +++++++++++++++++++++++++++++++++++++++
- net/wireless/reg.h       |    1 +
- 5 files changed, 82 insertions(+), 0 deletions(-)
-
-iw:
-
- nl80211.h |  168 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- reg.c     |   31 +++++++++++
- 2 files changed, 197 insertions(+), 2 deletions(-)
-
--- 
-1.7.4.15.g7811d
+Kalle
