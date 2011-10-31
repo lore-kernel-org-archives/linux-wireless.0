@@ -1,33 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:53382 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751250Ab1JQOYw convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:59784 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932260Ab1JaJQY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Oct 2011 10:24:52 -0400
-Date: Mon, 17 Oct 2011 16:24:47 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH 3.2] b43: fill ctl1 word on all new PHYs, fix PHY errors
-Message-ID: <20111017162447.5a758fda@milhouse> (sfid-20111017_162456_414015_9E9CE029)
-In-Reply-To: <1318800236-5329-1-git-send-email-zajec5@gmail.com>
-References: <1318800236-5329-1-git-send-email-zajec5@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 31 Oct 2011 05:16:24 -0400
+Received: by bkbzt4 with SMTP id zt4so1915366bkb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2011 02:16:22 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Thomas Pedersen <thomas@cozybit.com>
+Subject: Re: [PATCH 2/4] mac80211: QoS multicast frames have No Ack policy
+Date: Mon, 31 Oct 2011 10:16:17 +0100
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+References: <1319864732-11286-1-git-send-email-thomas@cozybit.com> <201110291140.12311.chunkeey@googlemail.com> <CAG6hwVPNfqriCij5p3Lia2+=ob0AwQjPQFXUssumvBMvu51qTg@mail.gmail.com>
+In-Reply-To: <CAG6hwVPNfqriCij5p3Lia2+=ob0AwQjPQFXUssumvBMvu51qTg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201110311016.17604.chunkeey@googlemail.com> (sfid-20111031_101634_987385_E135B04E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 16 Oct 2011 23:23:56 +0200
-Rafał Miłecki <zajec5@gmail.com> wrote:
+On Monday, October 31, 2011 08:03:12 AM Thomas Pedersen wrote:
+> On Sat, Oct 29, 2011 at 2:40 AM, Christian Lamparter <chunkeey@googlemail.com> wrote:
+> > ack_policy = *ieee80211_get_qos_ctl(hdr) & ~IEEE80211_QOS_CTL_ACK_POLICY_MASK;
+> 
+> Good idea. Will fix and resubmit.
 
-> +	if (phy->type >= B43_PHYTYPE_N) {
+hmpf, make that: (stupid c&p typo :) )
+ack_policy = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_ACK_POLICY_MASK;
 
-I must say that I really dislike this. It's error prone (previous patch got it wrong)
-and it's hard to read. Just spell out all types or use a switch statement, as appropriate.
-It also makes grepping the sources a lot harder.
-I don't see any real advantage.
-
--- 
-Greetings, Michael.
+Regards,
+	Chr
