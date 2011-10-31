@@ -1,82 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:60303 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752177Ab1J1LsM (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18713 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932221Ab1JaJwl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Oct 2011 07:48:12 -0400
-Received: by wyg36 with SMTP id 36so3792230wyg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Oct 2011 04:48:11 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
-Cc: David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH v2] orinoco: release BSS structures returned by cfg80211_inform_bss()
-Date: Fri, 28 Oct 2011 12:47:56 +0100
-Message-Id: <1319802476-4588-1-git-send-email-kilroyd@googlemail.com> (sfid-20111028_134818_842639_D005EBF5)
-In-Reply-To: <1319796588.8931.9.camel@jlt3.sipsolutions.net>
-References: <1319796588.8931.9.camel@jlt3.sipsolutions.net>
+	Mon, 31 Oct 2011 05:52:41 -0400
+Message-ID: <4EAE6FDE.4060105@qca.qualcomm.com> (sfid-20111031_105245_546439_FA6DDF53)
+Date: Mon, 31 Oct 2011 15:22:30 +0530
+From: Raja Mani <rmani@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/7] ath6kl: Add wmi functions to add/delete wow patterns
+References: <1319539047-8756-1-git-send-email-rmani@qca.qualcomm.com> <1319539047-8756-2-git-send-email-rmani@qca.qualcomm.com> <4EAA9BE2.7050808@qca.qualcomm.com>
+In-Reply-To: <4EAA9BE2.7050808@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The pointer returned by cfg80211_inform_bss is a referenced
-struct. The orinoco driver does not need to keep the struct, so
-we just release it.
+On Friday 28 October 2011 05:41 PM, Kalle Valo wrote:
+> On 10/25/2011 01:37 PM, rmani@qca.qualcomm.com wrote:
+>> From: Raja Mani<rmani@qca.qualcomm.com>
+>>
+>> Signed-off-by: Raja Mani<rmani@qca.qualcomm.com>
+>
+> Try to avoid empty commit logs. You could just say that these commands
+> will be used by the following patch if nothing else.
+>
+>> +int ath6kl_wmi_add_wow_pattern_cmd(struct wmi *wmi,
+>> +				   struct wmi_add_wow_pattern_cmd *add_wow_cmd,
+>> +				   u8 *pattern, u8 *mask)
+>> +{
+>
+> Don't use a struct as the parameter, instead add individual parameters.
+> So something like this:
+>
+> int ath6kl_wmi_add_wow_pattern_cmd(struct wmi *wmi,
+> 	u8 id, u8 size, 8 offset,				
+> 	u8 *pattern, u8 *mask)
+>
+> This is easier for the caller and you get to handle the endian in the
+> callee which simplifies the code.
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
-v2: Avoid unnecessary NULL checks
----
- drivers/net/wireless/orinoco/scan.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
+Agree.. I'll take care in V2.
+>
+>> +	size = sizeof(*cmd) +
+>> +		((2 * add_wow_cmd->filter_size) * sizeof(u8));
+>
+> This can fit into line. And sizeof(u8) really doesn't make any sense.
+>
+> And is this correct? The struct is defined like this:
+>
+> +struct wmi_add_wow_pattern_cmd {
+> +	u8 filter_list_id;
+> +	u8 filter_size;
+> +	u8 filter_offset;
+> +	u8 filter[1];
+> +} __packed;
+>
+> So there's one extra byte for the filter and above you include also that
+> byte. But if the sctruct is defined like this the extra byte is not
+> included:
+>
+> +struct wmi_add_wow_pattern_cmd {
+> +	u8 filter_list_id;
+> +	u8 filter_size;
+> +	u8 filter_offset;
+> +	u8 filter[0];
+> +} __packed;
+>
 
-diff --git a/drivers/net/wireless/orinoco/scan.c b/drivers/net/wireless/orinoco/scan.c
-index e99ca1c..96e39ed 100644
---- a/drivers/net/wireless/orinoco/scan.c
-+++ b/drivers/net/wireless/orinoco/scan.c
-@@ -76,6 +76,7 @@ static void orinoco_add_hostscan_result(struct orinoco_private *priv,
- {
- 	struct wiphy *wiphy = priv_to_wiphy(priv);
- 	struct ieee80211_channel *channel;
-+	struct cfg80211_bss *cbss;
- 	u8 *ie;
- 	u8 ie_buf[46];
- 	u64 timestamp;
-@@ -121,9 +122,10 @@ static void orinoco_add_hostscan_result(struct orinoco_private *priv,
- 	beacon_interval = le16_to_cpu(bss->a.beacon_interv);
- 	signal = SIGNAL_TO_MBM(le16_to_cpu(bss->a.level));
- 
--	cfg80211_inform_bss(wiphy, channel, bss->a.bssid, timestamp,
--			    capability, beacon_interval, ie_buf, ie_len,
--			    signal, GFP_KERNEL);
-+	cbss = cfg80211_inform_bss(wiphy, channel, bss->a.bssid, timestamp,
-+				   capability, beacon_interval, ie_buf, ie_len,
-+				   signal, GFP_KERNEL);
-+	cfg80211_put_bss(cbss);
- }
- 
- void orinoco_add_extscan_result(struct orinoco_private *priv,
-@@ -132,6 +134,7 @@ void orinoco_add_extscan_result(struct orinoco_private *priv,
- {
- 	struct wiphy *wiphy = priv_to_wiphy(priv);
- 	struct ieee80211_channel *channel;
-+	struct cfg80211_bss *cbss;
- 	const u8 *ie;
- 	u64 timestamp;
- 	s32 signal;
-@@ -152,9 +155,10 @@ void orinoco_add_extscan_result(struct orinoco_private *priv,
- 	ie = bss->data;
- 	signal = SIGNAL_TO_MBM(bss->level);
- 
--	cfg80211_inform_bss(wiphy, channel, bss->bssid, timestamp,
--			    capability, beacon_interval, ie, ie_len,
--			    signal, GFP_KERNEL);
-+	cbss = cfg80211_inform_bss(wiphy, channel, bss->bssid, timestamp,
-+				   capability, beacon_interval, ie, ie_len,
-+				   signal, GFP_KERNEL);
-+	cfg80211_put_bss(cbss);
- }
- 
- void orinoco_add_hostscan_results(struct orinoco_private *priv,
--- 
-1.7.4.1
+Good catch.. I'll correct it.
 
+>> +int ath6kl_wmi_del_wow_pattern_cmd(struct wmi *wmi,
+>> +				   struct wmi_del_wow_pattern_cmd *del_wow_cmd)
+>
+> Same here as earlier, don't use the struct as a parameter.
+
+Okay..
+
+>
+> Kalle
