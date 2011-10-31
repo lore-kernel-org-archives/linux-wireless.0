@@ -1,50 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48407 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751737Ab1JLP20 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:45948 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933569Ab1JaTCs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Oct 2011 11:28:26 -0400
-Subject: [PATCH] mac80211: reformat TX unauthorised check
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Oct 2011 17:28:21 +0200
-Message-ID: <1318433301.3933.42.camel@jlt3.sipsolutions.net> (sfid-20111012_172829_798922_6BF3EFEB)
-Mime-Version: 1.0
+	Mon, 31 Oct 2011 15:02:48 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 6F05854033B
+	for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2011 15:22:48 -0400 (EDT)
+Subject: Compat-wireless release for 2011-10-31 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111031190247.8CFD940656@repository3.orbit-lab.org> (sfid-20111031_200252_419885_5EE83125)
+Date: Mon, 31 Oct 2011 15:02:47 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Reformat the check, the indentation is completely strange.
-Also change the last part of the condition to make the
-code shorter.
+compat-wireless code metrics
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
-Yes, it runs a bit over 80 cols but is easier to read than broken up.
-
- net/mac80211/tx.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
-
---- a/net/mac80211/tx.c	2011-10-12 17:11:32.000000000 +0200
-+++ b/net/mac80211/tx.c	2011-10-12 17:27:00.000000000 +0200
-@@ -1896,11 +1896,10 @@ netdev_tx_t ieee80211_subif_start_xmit(s
- 	 * Drop unicast frames to unauthorised stations unless they are
- 	 * EAPOL frames from the local station.
- 	 */
--	if (!ieee80211_vif_is_mesh(&sdata->vif) &&
--		unlikely(!is_multicast_ether_addr(hdr.addr1) && !authorized &&
--		      !(cpu_to_be16(ethertype) == sdata->control_port_protocol &&
--		       compare_ether_addr(sdata->vif.addr,
--					  skb->data + ETH_ALEN) == 0))) {
-+	if (unlikely(!ieee80211_vif_is_mesh(&sdata->vif) &&
-+		     !is_multicast_ether_addr(hdr.addr1) && !authorized &&
-+		     (cpu_to_be16(ethertype) != sdata->control_port_protocol ||
-+		      compare_ether_addr(sdata->vif.addr, skb->data + ETH_ALEN)))) {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 		if (net_ratelimit())
- 			printk(KERN_DEBUG "%s: dropped frame to %pM"
-
-
+    814862 - Total upstream lines of code being pulled
+      2431 - backport code changes
+      2113 - backport code additions
+       318 - backport code deletions
+      8588 - backport from compat module
+     11019 - total backport code
+    1.3523 - % of code consists of backport work
