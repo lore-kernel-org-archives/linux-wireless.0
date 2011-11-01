@@ -1,33 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:35449 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751376Ab1K3DBB (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:42121 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751814Ab1KANMv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 22:01:01 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 7D0D154038F
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2011 22:00:59 -0500 (EST)
-Subject: Compat-wireless release for 2011-11-29 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20111130030059.6329F4062C@repository3.orbit-lab.org> (sfid-20111130_040106_796672_C0D54159)
-Date: Tue, 29 Nov 2011 22:00:59 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 1 Nov 2011 09:12:51 -0400
+Received: by wyh15 with SMTP id 15so387918wyh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2011 06:12:50 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] wl12xx: clear wl->vif on remove_interface
+Date: Tue,  1 Nov 2011 15:12:50 +0200
+Message-Id: <1320153170-5301-1-git-send-email-eliad@wizery.com> (sfid-20111101_141303_124404_D14D42FD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://github.com/mcgrof/compat-wireless
-   8cd266f..e394d4d  master     -> origin/master
- * [new tag]         compat-wireless-2011-11-29 -> compat-wireless-2011-11-29
- * [new tag]         compat-wireless-v3.0.9-1 -> compat-wireless-v3.0.9-1
- * [new tag]         compat-wireless-v3.1.1-1 -> compat-wireless-v3.1.1-1
- * [new tag]         compat-wireless-v3.2-rc1-1 -> compat-wireless-v3.2-rc1-1
+wl->vif should be cleared on remove_interface()
+(rather than on stop()) even when only a single
+vif is supported, because during vif mode change
+stop() might not get called (e.g. because of
+monitor interface existence)
 
-compat-wireless code metrics
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+v2: clear wl->vif in __wl1271_op_remove_interface, so it will
+    happen also on recovery
 
-    819671 - Total upstream lines of code being pulled
-      2449 - backport code changes
-      2107 - backport code additions
-       342 - backport code deletions
-      8780 - backport from compat module
-     11229 - total backport code
-    1.3699 - % of code consists of backport work
+ drivers/net/wireless/wl12xx/main.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index f76be5a..42489bf 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1859,7 +1859,6 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
+ 	wl->tx_results_count = 0;
+ 	wl->tx_packets_count = 0;
+ 	wl->time_offset = 0;
+-	wl->vif = NULL;
+ 	wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
+ 	wl->ap_fw_ps_map = 0;
+ 	wl->ap_ps_map = 0;
+@@ -2211,6 +2210,8 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 	if (!test_and_clear_bit(WLVIF_FLAG_INITIALIZED, &wlvif->flags))
+ 		return;
+ 
++	wl->vif = NULL;
++
+ 	/* because of hardware recovery, we may get here twice */
+ 	if (wl->state != WL1271_STATE_ON)
+ 		return;
+-- 
+1.7.6.401.g6a319
+
