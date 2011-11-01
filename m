@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37366 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757105Ab1KRIXW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 03:23:22 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Greg Dietsche <Gregory.Dietsche@cuw.edu>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 73/77] iwlegacy: 4965-rs: remove unnecessary null check for sta and lq_sta
-Date: Fri, 18 Nov 2011 09:22:35 +0100
-Message-Id: <1321604559-10707-73-git-send-email-sgruszka@redhat.com> (sfid-20111118_092339_608727_B98C4441)
-In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
-References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:48919 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751215Ab1KAGnx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Nov 2011 02:43:53 -0400
+Subject: [PATCH v2 0/7] ath6kl: suspend cutpower mode
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 01 Nov 2011 08:43:45 +0200
+Message-ID: <20111101064140.6798.7006.stgit@localhost6.localdomain6> (sfid-20111101_074356_534570_D41FE45D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+Here's my v2 of suspend cutpower patches.
 
-both sta and lq_sta are guaranteed to be not null in the calling
-function so we don't need to check them here.
+v2:
 
-Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+o fix ath6kl_cfg80211_stop() to clear connect flags
+o refactor sdio configuration to a separate function
+
 ---
- drivers/net/wireless/iwlegacy/4965-rs.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-rs.c b/drivers/net/wireless/iwlegacy/4965-rs.c
-index b0946a1..2ec808e 100644
---- a/drivers/net/wireless/iwlegacy/4965-rs.c
-+++ b/drivers/net/wireless/iwlegacy/4965-rs.c
-@@ -1793,9 +1793,6 @@ il4965_rs_rate_scale_perform(struct il_priv *il, struct sk_buff *skb,
- 	    (info->flags & IEEE80211_TX_CTL_NO_ACK))
- 		return;
- 
--	if (!sta || !lq_sta)
--		return;
--
- 	lq_sta->supp_rates = sta->supp_rates[lq_sta->band];
- 
- 	tid = il4965_rs_tl_add_packet(lq_sta, hdr);
--- 
-1.7.1
+Kalle Valo (7):
+      ath6kl: add aborted parameter to ath6kl_cfg80211_scan_complete_event()
+      ath6kl: create ath6kl_cfg80211_stop()
+      ath6kl: reset CONNECT_PEND and CONNECTED flags in ath6kl_cfg80211_stop()
+      ath6kl: implement ath6kl_cfg80211_suspend()
+      ath6kl: add state variable depicting hw/fw state
+      ath6kl: refactor sdio configuration to a separate function
+      ath6kl: cut power during suspend
+
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |  158 ++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |   13 ++
+ drivers/net/wireless/ath/ath6kl/core.h     |   11 ++
+ drivers/net/wireless/ath/ath6kl/debug.h    |    1 
+ drivers/net/wireless/ath/ath6kl/init.c     |    4 +
+ drivers/net/wireless/ath/ath6kl/main.c     |   64 +----------
+ drivers/net/wireless/ath/ath6kl/sdio.c     |  146 ++++++++++++++++++--------
+ drivers/net/wireless/ath/ath6kl/wmi.h      |    4 +
+ 8 files changed, 283 insertions(+), 118 deletions(-)
 
