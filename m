@@ -1,67 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:42543 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752786Ab1KPM35 (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:33866 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754481Ab1KAMzu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 07:29:57 -0500
-Date: Wed, 16 Nov 2011 13:29:54 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [PATCH] mac80211: Add NoAck per WMM Queue Support
-Message-ID: <20111116122954.GA8106@pandem0nium> (sfid-20111116_133001_583857_AEDC5035)
-References: <1321399276-3585-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1321429935.4773.10.camel@jlt3.sipsolutions.net>
- <20111116105120.GA6139@pandem0nium>
- <1321441067.4773.26.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Nq2Wo0NMKNjxTN9z"
-In-Reply-To: <1321441067.4773.26.camel@jlt3.sipsolutions.net>
+	Tue, 1 Nov 2011 08:55:50 -0400
+Received: by gyb13 with SMTP id 13so6988330gyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2011 05:55:50 -0700 (PDT)
+From: ilanelias78@gmail.com
+To: aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	samuel@sortiz.org, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
+Subject: [PATCH v3 0/3] NFC: update to NCI spec 1.0 draft 18
+Date: Tue,  1 Nov 2011 14:54:54 +0200
+Message-Id: <1320152097-2711-1-git-send-email-ilane@ti.com> (sfid-20111101_135554_097666_2F745FEB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ilan Elias <ilane@ti.com>
 
---Nq2Wo0NMKNjxTN9z
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This version split the patch in v2 to a set of 3 patches.
 
-Hi Johannes,
+This series of patches update the supported features according to 
+NCI spec 1.0 draft 18. No new features were introduced.
+The changes are related only to the NCI protocol layer.
 
-On Wed, Nov 16, 2011 at 11:57:47AM +0100, Johannes Berg wrote:
-> >=20
-> > I'm not sure what you mean by "per connection" - do you mean per AP/Sta
-> > connection? We need definitely need it per queue as explained above.
->=20
-> No, I mean ... it could be a parameter to connect() or associate(),
-> which would get a bitmap of ACs to use no-ack policy for, instead of an
-> explicit new configuration.
->=20
+Summary of the main changes:
+- Addition, deletion, and modification of NCI constants
+- Changes in NCI commands, responses and notifications structures
+- Check if data flow control is used in nci_tx_work
+- No need to create the static rf connection anymore
+- Set available credits to initial value when target is deactivated
 
-One requirement we had was to change this feature at runtime with iw - this
-would be difficult to do when we put it as parameter into connect() or
-associate() ...
+Ilan Elias (3):
+  NFC: Update names and structs to NCI spec 1.0 d18
+  NFC: Removal of unused operations for NCI spec 1.0 d18
+  NFC: Check if NCI data flow control is used
 
-I'll resend v2 in a few minutes.
+ include/net/nfc/nci.h      |  208 ++++++++++++++++++++++---------------------
+ include/net/nfc/nci_core.h |   13 +--
+ net/nfc/nci/core.c         |   17 ++--
+ net/nfc/nci/data.c         |    5 +-
+ net/nfc/nci/lib.c          |    8 +--
+ net/nfc/nci/ntf.c          |  152 +++++++++++++++++++-------------
+ net/nfc/nci/rsp.c          |   83 ++++++++----------
+ 7 files changed, 248 insertions(+), 238 deletions(-)
 
-best regards,
-	Simon
-
---Nq2Wo0NMKNjxTN9z
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk7DrMIACgkQrzg/fFk7axa4xwCfWuKpN6SpY7K23Z/KXKvlEIbM
-DqMAoIaLibD23vV7ULSE4W3laO5mip0u
-=EvSV
------END PGP SIGNATURE-----
-
---Nq2Wo0NMKNjxTN9z--
