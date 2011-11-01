@@ -1,37 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14855 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753645Ab1KWQ6F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 11:58:05 -0500
-Date: Wed, 23 Nov 2011 18:00:38 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Amir Hedayaty <hedayaty@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
-Message-ID: <20111123170037.GE13460@redhat.com> (sfid-20111123_175811_102144_80E168B0)
-References: <20111116100915.GA2191@redhat.com>
- <20111122214940.GH8452@tuxdriver.com>
- <20111123080506.GB9833@redhat.com>
- <CAGXE3d-HE8MWV5Xv9e407iDn83UFvjua52mYGEJuJnQuQvnyog@mail.gmail.com>
- <20111123105106.GA7943@redhat.com>
- <CAN6fvj2=EhimZUy-DKtpzAKq1mpvBt03KtX9vCi0dBTCXWVsRg@mail.gmail.com>
- <20111123151414.GC7943@redhat.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:63892 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754165Ab1KARXI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Nov 2011 13:23:08 -0400
+Date: Tue, 1 Nov 2011 15:23:41 -0200
+From: Gustavo Padovan <padovan@profusion.mobi>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2011-11-01
+Message-ID: <20111101172341.GL2580@joana> (sfid-20111101_182326_559048_E85C2AB0)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111123151414.GC7943@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 23, 2011 at 04:14:14PM +0100, Stanislaw Gruszka wrote:
-> I'll do koji kernel build with the patch, that would be easiest, I'll
-> provide link shortly.
+Hi John,
 
-Is here:
-http://koji.fedoraproject.org/koji/taskinfo?taskID=3535123
-it still compile, so I hope there will be no errors during
-compilation.
+Some fixes for the 3.2 release, there are four fixes in our drivers code
+by David Hermann. Szymon Janc fixed a bug that was making some dongles not
+work well and a sleep in invalid context. And finally a bug fix in the mgmt
+code by Johan Hedberg.
 
-Stanislaw
+Please pull, thanks!
+
+	Gustavo
+
+The following changes since commit ba54238552625aad2d75f455a4d3db18ea7dec68:
+
+  ath9k: Fix a dma warning/memory leak (2011-09-26 14:55:51 -0400)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth.git master
+
+David Herrmann (4):
+      Bluetooth: ath3k: Use GFP_KERNEL instead of GFP_ATOMIC
+      Bluetooth: bcm203x: Fix race condition on disconnect
+      Bluetooth: bcm203x: Use GFP_KERNEL in workqueue
+      Bluetooth: bfusb: Fix error path on firmware load
+
+Johan Hedberg (1):
+      Bluetooth: Set HCI_MGMT flag only in read_controller_info
+
+Szymon Janc (2):
+      Bluetooth: rfcomm: Fix sleep in invalid context in rfcomm_security_cfm
+      Bluetooth: Increase HCI reset timeout in hci_dev_do_close
+
+ drivers/bluetooth/ath3k.c      |    4 ++--
+ drivers/bluetooth/bcm203x.c    |   12 +++++++++++-
+ drivers/bluetooth/bfusb.c      |   13 +++++++------
+ include/net/bluetooth/rfcomm.h |    1 +
+ net/bluetooth/hci_core.c       |    2 +-
+ net/bluetooth/mgmt.c           |    2 --
+ net/bluetooth/rfcomm/core.c    |    9 +++++++--
+ 7 files changed, 29 insertions(+), 14 deletions(-)
