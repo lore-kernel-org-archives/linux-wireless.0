@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58493 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754403Ab1KYL3Q (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:48996 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933375Ab1KBQeQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 06:29:16 -0500
-Subject: Re: [RFT/FYI] mac80211: revert on-channel work optimisations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20111125112732.GA19885@redhat.com> (sfid-20111125_122507_960511_AA3BCEDE)
-References: <1320772222.24797.22.camel@jlt3.sipsolutions.net>
-	 <4EB96416.5040700@candelatech.com>
-	 <1320772727.24797.23.camel@jlt3.sipsolutions.net>
-	 <4EB9661F.9040901@candelatech.com>
-	 <1320775001.24797.26.camel@jlt3.sipsolutions.net>
-	 <4EB9703B.6030006@candelatech.com>
-	 <1320777531.24797.35.camel@jlt3.sipsolutions.net>
-	 <20111125112732.GA19885@redhat.com> (sfid-20111125_122507_960511_AA3BCEDE)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 25 Nov 2011 12:29:09 +0100
-Message-ID: <1322220549.4123.7.camel@jlt3.sipsolutions.net> (sfid-20111125_122920_824626_03174F27)
-Mime-Version: 1.0
+	Wed, 2 Nov 2011 12:34:16 -0400
+Message-ID: <4EB17103.70506@candelatech.com> (sfid-20111102_173421_916822_20314BAF)
+Date: Wed, 02 Nov 2011 09:34:11 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [wireless-next PATCH 1/5] mac80211: Support forcing station to
+ disable 11n.
+References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>  (sfid-20111028_071135_777672_88A08497) <1319789318.3914.10.camel@jlt3.sipsolutions.net>  <4EAAFAA7.8090403@candelatech.com> (sfid-20111028_205543_472872_4928ADE0) <1320220415.3950.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1320220415.3950.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-11-25 at 12:27 +0100, Stanislaw Gruszka wrote:
-> On Tue, Nov 08, 2011 at 07:38:51PM +0100, Johannes Berg wrote:
-> > I was looking at RH bug 731365 but I think Eliad's patches should have
-> > fixed that. But generally, that code just makes me nervous, in
-> > particular ieee80211_cfg_on_oper_channel(). I think all of this should
-> > be a lot simpler, and if it isn't that's probably due to *other* bugs
-> > this is working around.
-> 
-> So, can proceed with that revert? We just get confirmation in 
-> RH bug 731365, that it fix reproducible rate_control_send_low
-> WARNING issue (also is probable that it fix some rtlwifi problems,
-> but I do not have clear confirmation about that yet).
+On 11/02/2011 12:53 AM, Johannes Berg wrote:
+> On Fri, 2011-10-28 at 11:55 -0700, Ben Greear wrote:
+>
+>>> This should be a parameter to connect() and assoc(), not a generic
+>>> netdev parameter, since it applies to the connection.
+>>>
+>>> Also, it would be good to have a capability check for it etc. since a
+>>> lot of fullmac drivers will likely never implement this.
+>>
+>> The existing code always sets the IEEE80211_STA_DISABLE_11N flag in u.mgd if
+>> WEP or TKIP is configured, without any capability checks, and my patch
+>> sets that flag in the same location.
+>>
+>> So, maybe it is OK as is?
+>>
+>> If not, I will add a new capability bit and just enable
+>> it in ath9k (and let others enable it in their drivers as they wish).
+>
+> You misunderstood -- I said fullmac drivers, not differences between
+> ath9k, iwlwifi etc. Other cfg80211 drivers, not other mac80211 drivers.
 
-Ok let's do it -- I have this patch for upstream, can you later provide
-the one for stable?
+Can you at least point me to some existing code that does a similar
+check?  I have no idea of what a fullmac driver even does.  I can test
+and eventually somewhat understand the paths for ath9k, but I have no
+ability to test fullmac (as far as I know).
 
-johannes
+If you don't have time to explain in more detail, then I will just
+carry these patches in my own tree.  That is a total pain in
+the arse when dealing with new netlink commands, but I just do not
+have enough understanding of the entire wifi stack to make much
+progress with a lot of your suggestions.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
