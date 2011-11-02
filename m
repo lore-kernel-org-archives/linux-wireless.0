@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:52767 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751991Ab1KCRST (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22226 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751111Ab1KBVgH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 13:18:19 -0400
-Message-ID: <4EB2CCD7.3010907@candelatech.com> (sfid-20111103_181822_429484_F41F0D8D)
-Date: Thu, 03 Nov 2011 10:18:15 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 2 Nov 2011 17:36:07 -0400
+Date: Wed, 2 Nov 2011 23:34:56 +0200
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ieee80211: Define cipher suite selector for WPI-SMS4
+Message-ID: <20111102213456.GA21460@jouni.qca.qualcomm.com> (sfid-20111102_223612_433280_323897C8)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] mac80211: Support forcing station to disable HT
- (802.11n).
-References: <1320299722-30113-1-git-send-email-greearb@candelatech.com>  (sfid-20111103_065534_192366_EF6ABFB6) <1320309465.3950.14.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1320309465.3950.14.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/03/2011 01:37 AM, Johannes Berg wrote:
-> On Wed, 2011-11-02 at 22:55 -0700, greearb@candelatech.com wrote:
->> From: Ben Greear<greearb@candelatech.com>
->>
->> This allows a user to configure a wifi station interface
->> to disable the HT features, even if the AP and NIC supports it.
->
-> I like this version much better. Some nitpicks:
->
->
->> +#define ASSOC_REQ_DISABLE_HT	(1<<0) /* Disable HT (802.11n) */
->
-> You could use an enum to use kernel-doc notation here.
+This value is used for WPI-SMS4 in ISO/IEC JTC 1 N 9880.
 
-Sure, will do.
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ include/linux/ieee80211.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 48363c3..80cba03 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1552,6 +1552,8 @@ enum ieee80211_sa_query_action {
+ #define WLAN_CIPHER_SUITE_WEP104	0x000FAC05
+ #define WLAN_CIPHER_SUITE_AES_CMAC	0x000FAC06
+ 
++#define WLAN_CIPHER_SUITE_SMS4		0x00147201
++
+ /* AKM suite selectors */
+ #define WLAN_AKM_SUITE_8021X		0x000FAC01
+ #define WLAN_AKM_SUITE_PSK		0x000FAC02
+-- 
+1.7.4.1
 
->> @@ -1053,6 +1056,7 @@ struct cfg80211_assoc_request {
->>   	size_t ie_len;
->>   	struct cfg80211_crypto_settings crypto;
->>   	bool use_mfp;
->> +	u32 flags;
->
-> Seems like it might be good for use_mfp to become a flag? Anyway,
-> internal APIs are easy to change.
-
-Yes, but I've been beat over the head enough to know not to mix
-this kind of cleanup into my patches :)
-
-Will do a follow-on patch after I get my changes in.
-
->> --- a/net/mac80211/mlme.c
->> +++ b/net/mac80211/mlme.c
->
-> I'd rather split this up into cfg80211/mac80211. In fact, maybe
-> splitting it into one cfg80211 and one mac80211 patch, instead of three
-> different patches that span both might be worthwhile?
-
-I really don't care either way.  Just let me know how you want it
-and I'll split it up thus.  Just please do not change your mind later,
-splitting patches is nothing but work :P
-
-Thanks,
-Ben
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Jouni Malinen                                            PGP id EFC895FA
