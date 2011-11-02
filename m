@@ -1,85 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:39625 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753680Ab1K2Ozt (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44393 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751703Ab1KBKSD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 09:55:49 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Russell Hu <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 00/17] Add support for MCI BT coex
-Date: Tue, 29 Nov 2011 20:25:21 +0530
-Message-ID: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111129_155553_443452_59018770)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 2 Nov 2011 06:18:03 -0400
+Subject: Re: [PATCH 2/4] mac80211: QoS multicast frames have No Ack policy
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	linville@tuxdriver.com
+In-Reply-To: <1319864732-11286-2-git-send-email-thomas@cozybit.com> (sfid-20111029_070612_354228_603C12F5)
+References: <1319864732-11286-1-git-send-email-thomas@cozybit.com>
+	 <1319864732-11286-2-git-send-email-thomas@cozybit.com>
+	 (sfid-20111029_070612_354228_603C12F5)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Nov 2011 11:17:57 +0100
+Message-ID: <1320229077.3950.40.camel@jlt3.sipsolutions.net> (sfid-20111102_111808_986548_5F8B8E76)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Fri, 2011-10-28 at 22:05 -0700, Thomas Pedersen wrote:
+> Previously QoS multicast frames had the Normal Acknowledgment QoS
+> control bits set. This would cause broadcast frames to be discarded by
+> peers with which we have a BA session, since their sequence number would
+> fall outside the allowed range. Set No Ack QoS control bits on multicast
+> QoS frames and filter these in de-aggregation code.
 
-Add support for MCI BT-Coex for AR9462. with AR9462 we have
-WLAN and BT coexists via MCI protocol(Message Coexistence Interface)
-WLAN and BT exchanges GPM, SCHED messages and few other messages
-for coexistence.
+I'm not sure why you would attempt to deaggregate broadcast frames but I
+guess mesh is a bit special.
 
-*thanks to Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-for his technical support
+> @@ -770,6 +771,11 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+>  	if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
+>  		goto dont_reorder;
+>  
+> +	/* not part of a BA session */
+> +	if (!((ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK) ||
+> +	      (ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_NORMAL)))
+> +		goto dont_reorder;
 
-*thanks to Wilson Tsao <wtsao@qca.qualcomm.com> who being the core
-author of MCI, for his valuable help and documents
+Maybe ack_policy != BA && ack_policy != NORMAl would be easier to read?
 
-*thanks a lot to Rajkumar Manoharan <rmanohar@qca.qualcomm.com> for
-his suggestions, review comments, code cleanups, and modifications
-in design.
+> --- a/net/mac80211/wme.c
+> +++ b/net/mac80211/wme.c
+> @@ -147,7 +147,8 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
+>  
+>  		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+>  
+> -		if (unlikely(sdata->local->wifi_wme_noack_test))
+> +		if (unlikely(sdata->local->wifi_wme_noack_test) ||
+> +		    is_multicast_ether_addr(hdr->addr1))
+>  			ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
 
-bug fixes and few miscellaneous cleanups will be added then and there
+Interestingly, this seems to have been a bug for a long time --
+7.1.3.5.3 indicates this is supposed to be done.
 
-Mohammed Shafi Shajakhan (17):
-  ath9k_hw: add definitions to support MCI h/w code
-  ath9k_hw: add GPIO output MUX related macros
-  ath9k_hw: Add MCI h/w specific structure
-  ath9k_hw: initialize MCI parameters
-  ath9k_hw: Add MCI h/w code and state machine
-  ath9k: Add MCI interrupt to interrupt mask
-  ath9k_hw: take care of enabling MCI interrupts
-  ath9k_hw: check for asynchronous MCI interrupt pending
-  ath9k_hw: check for MCI interrupt in get_isr
-  ath9k: add MCI specific definitions and structures
-  ath9k: Add functions to allocate/free buffers for MCI
-  ath9k_hw: MCI related changes in chip management
-  ath9k_hw: MCI related changes in set_reset_reg
-  ath9k_hw: Add support for MCI WLAN calibration
-  ath9k_hw: Add MCI related changes in chip reset
-  ath9k: MCI state machine based on MCI interrupt
-  ath9k: fix a typo
-
- drivers/net/wireless/ath/ath9k/Makefile       |    3 +-
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   43 +
- drivers/net/wireless/ath/ath9k/ar9003_mac.c   |   36 +-
- drivers/net/wireless/ath/ath9k/ar9003_mci.c   | 1464 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_mci.h   |  102 ++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h   |    3 +
- drivers/net/wireless/ath/ath9k/ath9k.h        |    1 +
- drivers/net/wireless/ath/ath9k/btcoex.c       |    2 +-
- drivers/net/wireless/ath/ath9k/btcoex.h       |   31 +
- drivers/net/wireless/ath/ath9k/hw.c           |  174 +++-
- drivers/net/wireless/ath/ath9k/hw.h           |  182 +++
- drivers/net/wireless/ath/ath9k/init.c         |   33 +
- drivers/net/wireless/ath/ath9k/mac.c          |   17 +-
- drivers/net/wireless/ath/ath9k/main.c         |    9 +-
- drivers/net/wireless/ath/ath9k/mci.c          |  419 +++++++
- drivers/net/wireless/ath/ath9k/mci.h          |   20 +
- drivers/net/wireless/ath/ath9k/reg.h          |  306 +++++-
- 17 files changed, 2805 insertions(+), 40 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_mci.c
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_mci.h
+johannes
 
