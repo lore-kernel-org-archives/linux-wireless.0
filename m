@@ -1,85 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29204 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753332Ab1K2O6l (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:39469 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754077Ab1KBTCv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 09:58:41 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Russell Hu <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Wilson Tsao <wtsao@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 04/17] ath9k_hw: initialize MCI parameters
-Date: Tue, 29 Nov 2011 20:25:25 +0530
-Message-ID: <1322578538-18912-5-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111129_155853_611336_B6347993)
-In-Reply-To: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 2 Nov 2011 15:02:51 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 8783454033B
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Nov 2011 15:23:21 -0400 (EDT)
+Subject: Compat-wireless release for 2011-11-02 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111102190250.1ED4840640@repository3.orbit-lab.org> (sfid-20111102_200254_809078_652EFD09)
+Date: Wed,  2 Nov 2011 15:02:50 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-these parameter will be utilized and modified in the MCI hardware codes
-state machine
+compat-wireless code metrics
 
-Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/init.c |   22 ++++++++++++++++++++++
- 1 files changed, 22 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index e046de9..34b922b 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -408,6 +408,7 @@ fail:
- static int ath9k_init_btcoex(struct ath_softc *sc)
- {
- 	struct ath_txq *txq;
-+	struct ath_hw *ah = sc->sc_ah;
- 	int r;
- 
- 	switch (sc->sc_ah->btcoex_hw.scheme) {
-@@ -426,6 +427,27 @@ static int ath9k_init_btcoex(struct ath_softc *sc)
- 		sc->btcoex.bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
- 		sc->btcoex.duty_cycle = ATH_BTCOEX_DEF_DUTY_CYCLE;
- 		INIT_LIST_HEAD(&sc->btcoex.mci.info);
-+		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI) {
-+			ah->btcoex_hw.mci.ready = false;
-+			ah->btcoex_hw.mci.bt_state = 0;
-+			ah->btcoex_hw.mci.bt_ver_major = 3;
-+			ah->btcoex_hw.mci.bt_ver_minor = 0;
-+			ah->btcoex_hw.mci.bt_version_known = false;
-+			ah->btcoex_hw.mci.update_2g5g = true;
-+			ah->btcoex_hw.mci.is_2g = true;
-+			ah->btcoex_hw.mci.wlan_channels_update = false;
-+			ah->btcoex_hw.mci.wlan_channels[0] = 0x00000000;
-+			ah->btcoex_hw.mci.wlan_channels[1] = 0xffffffff;
-+			ah->btcoex_hw.mci.wlan_channels[2] = 0xffffffff;
-+			ah->btcoex_hw.mci.wlan_channels[3] = 0x7fffffff;
-+			ah->btcoex_hw.mci.query_bt = true;
-+			ah->btcoex_hw.mci.unhalt_bt_gpm = true;
-+			ah->btcoex_hw.mci.halted_bt_gpm = false;
-+			ah->btcoex_hw.mci.need_flush_btinfo = false;
-+			ah->btcoex_hw.mci.wlan_cal_seq = 0;
-+			ah->btcoex_hw.mci.wlan_cal_done = 0;
-+			ah->btcoex_hw.mci.config = 0x2201;
-+		}
- 		break;
- 	default:
- 		WARN_ON(1);
--- 
-1.7.0.4
-
+    814862 - Total upstream lines of code being pulled
+      2431 - backport code changes
+      2113 - backport code additions
+       318 - backport code deletions
+      8588 - backport from compat module
+     11019 - total backport code
+    1.3523 - % of code consists of backport work
