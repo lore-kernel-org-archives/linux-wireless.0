@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:51678 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753782Ab1KVGsV (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:44446 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932194Ab1KBT1i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 01:48:21 -0500
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P2aFn84uSqgZA2gTBN7E4+0jGmJQTkx4eug4Ls0hK0==Q@mail.gmail.com>
-References: <20111104045817.GA25778@gamma.logic.tuwien.ac.at>
-	<20111107123812.GB23508@gamma.logic.tuwien.ac.at>
-	<1320709047.31823.188.camel@wwguy-huron>
-	<20111108043233.GA21171@gamma.logic.tuwien.ac.at>
-	<CANUX_P0Q0wve4D6fZPsMv2Zw=02gb9u+3C2cjRv7UAmWqXnjzw@mail.gmail.com>
-	<CANUX_P06ww42p6N1k_P-Y1KMKOd1QgR_DxVWe19qtsEX2rfWpw@mail.gmail.com>
-	<20111109051152.GA16006@gamma.logic.tuwien.ac.at>
-	<CANUX_P2Yz9bWP_EmU1Acs7Mu2w78CXxO-njhiMt97b0TJHFYiQ@mail.gmail.com>
-	<20111121030640.GI32505@gamma.logic.tuwien.ac.at>
-	<CANUX_P2AA5stHwjegKdFhFGg7jxwdVU2Xr8OUtXUdEOKz_6E5A@mail.gmail.com>
-	<20111122051310.GA23705@gamma.logic.tuwien.ac.at>
-	<CANUX_P2aFn84uSqgZA2gTBN7E4+0jGmJQTkx4eug4Ls0hK0==Q@mail.gmail.com>
-Date: Tue, 22 Nov 2011 08:48:19 +0200
-Message-ID: <CANUX_P1RjcRD2tW1A6YYSEV9+aUZyTEro7tZXJWRoxk6gx-2jA@mail.gmail.com> (sfid-20111122_074836_135754_7C53FE74)
-Subject: Re: iwlagn is getting very shaky
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Norbert Preining <preining@logic.at>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 2 Nov 2011 15:27:38 -0400
+Received: by qabj40 with SMTP id j40so483600qab.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2011 12:27:37 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH v3 3/4] mac80211: check if frame is really part of this BA
+Date: Wed,  2 Nov 2011 12:27:26 -0700
+Message-Id: <1320262047-5389-3-git-send-email-thomas@cozybit.com> (sfid-20111102_202743_469659_FEBC585A)
+In-Reply-To: <1320262047-5389-1-git-send-email-thomas@cozybit.com>
+References: <1320262047-5389-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 22, 2011 at 08:46, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Tue, Nov 22, 2011 at 07:13, Norbert Preining <preining@logic.at> wrote:
->> On Mo, 21 Nov 2011, Emmanuel Grumbach wrote:
->>> > If you think I shouuld turn on power debug again and see hope that
->>> > it happens again, let me know.
->>>
->>> No, I don't think it is needed. Thanks.
->>
->
-> Hi Norbert,
->
-> Please apply the patch attached. It has been submitted upstream but
-> hasn't been merged in the tree you use apparently.
-> Then please run with set the TXQUEUES debug flag: 0x8000000.
-> This will give us a better understanding regarding what happens with
-> the queues and how they are mapped.
-> Do you use any SoftAP / P2P feature ? HW queues can be stalled
-> sometimes when using such configuration. Can it also be that the AP
-> that we can't work with has any kind of power save feature (I know
-> that this one is hard to answer though :-)) ?
->
-> Thanks !
->
+There was an an implicit assumption that any QoS data frame received
+from a STA/TID with an active BA session was sent to this vif as part of
+a BA.  This is not true if IFF_PROMISC is enabled and the frame was
+destined for a different peer, for example. Don't treat these frames as
+part of a BA from the sending STA.
 
-Forgot to reply on the WARN_ON you saw. Yes I know about it. We seem
-to have a race between mac80211 and the driver somewhere. I will look
-at it when I will have time for that one. Hopefully before Armageddon.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+v3: use RX_RA_MATCH instead of checking the address directly (Johannes)
+ net/mac80211/rx.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index bbe7b50..45ace14 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -744,6 +744,7 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+ 	struct ieee80211_local *local = rx->local;
+ 	struct ieee80211_hw *hw = &local->hw;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	struct sta_info *sta = rx->sta;
+ 	struct tid_ampdu_rx *tid_agg_rx;
+ 	u16 sc;
+@@ -777,6 +778,10 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+ 	    ack_policy != IEEE80211_QOS_CTL_ACK_POLICY_NORMAL)
+ 		goto dont_reorder;
+ 
++	/* not actually part of this BA session */
++	if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
++		goto dont_reorder;
++
+ 	/* new, potentially un-ordered, ampdu frame - process it */
+ 
+ 	/* reset session timer */
+-- 
+1.7.5.4
+
