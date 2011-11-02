@@ -1,102 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:58523 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753000Ab1KUOlk (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41352 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752449Ab1KBSQ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 09:41:40 -0500
-Received: by mail-bw0-f46.google.com with SMTP id 11so6626611bke.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 06:41:39 -0800 (PST)
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+	Wed, 2 Nov 2011 14:16:29 -0400
+Date: Wed, 2 Nov 2011 14:09:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Cc: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>
-Subject: [RFC v2 1/8] cfg80211 and nl80211: mesh power mode config parameter
-Date: Mon, 21 Nov 2011 18:40:09 +0400
-Message-Id: <1321886416-12597-2-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154143_503349_E0664691)
-In-Reply-To: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
-References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: wireless git trees returning to kernel.org
+Message-ID: <20111102180946.GC12168@tuxdriver.com> (sfid-20111102_191654_162941_5DFC4D38)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to IEEE80211s standard a mesh STA maintains a mesh power mode
-for non-peer mesh STAs. Non-peer mesh power mode is a mesh configuration
-parameter so it should be presented in mesh_config structure. Possible
-values for mesh power mode are presented in nl80211_mesh_power_mode
-enumeration. These modes are active, light sleep and deep sleep.
+FYI...
 
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
----
- include/linux/nl80211.h |   29 +++++++++++++++++++++++++++++
- include/net/cfg80211.h  |    2 ++
- net/wireless/mesh.c     |    1 +
- 3 files changed, 32 insertions(+), 0 deletions(-)
+I have migrated the wireless git trees back to the kernel.org
+infrastructure.  As of right now, the trees are identical between
+kernel.org and infradead.org.  Further updates likely will only go
+to kernel.org, so plan accordingly.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 8049bf7..001e9e3 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1915,6 +1915,35 @@ enum nl80211_mntr_flags {
- };
- 
- /**
-+ * enum nl80211_mesh_power_mode - mesh power save modes
-+ *
-+ * @__NL80211_MESH_POWER_INVALID - internal use
-+ *
-+ * @NL80211_MESH_POWER_ACTIVE - active mesh power mode, mesh STA
-+ *                            in Awake state all the time
-+ * @NL80211_MESH_POWER_LIGHT_SLEEP - light sleep mode, mesh STA
-+ *                            alternate between Active and Doze states,
-+ *                            mesh STA should listen to all the beacons
-+ * @NL80211_MESH_POWER_DEEP_SLEEP - deep sleep mode, mesh STA
-+ *                            alternates between Active and Doze states,
-+ *                            may choose not listen to the beacons
-+ *
-+ * @__NL80211_MESH_POWER_AFTER_LAST - internal use
-+ * @NL80211_MESH_POWER_MAX - highest possible power save level
-+ */
-+
-+enum nl80211_mesh_power_mode {
-+	__NL80211_MESH_POWER_INVALID,
-+
-+	NL80211_MESH_POWER_ACTIVE,
-+	NL80211_MESH_POWER_LIGHT_SLEEP,
-+	NL80211_MESH_POWER_DEEP_SLEEP,
-+
-+	__NL80211_MESH_POWER_AFTER_LAST,
-+	NL80211_MESH_POWER_MAX = __NL80211_MESH_POWER_AFTER_LAST - 1
-+};
-+
-+/**
-  * enum nl80211_meshconf_params - mesh configuration parameters
-  *
-  * Mesh configuration parameters. These can be changed while the mesh is
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 92cf1c2..e00e04e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -765,6 +765,8 @@ struct mesh_config {
- 	u16 dot11MeshMaxPeerLinks;
- 	u8  dot11MeshMaxRetries;
- 	u8  dot11MeshTTL;
-+	/* non-peer mesh power save mode */
-+	u8 power_mode;
- 	/* ttl used in path selection information elements */
- 	u8  element_ttl;
- 	bool auto_open_plinks;
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 4423e64..5febd0b 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -52,6 +52,7 @@ const struct mesh_config default_mesh_config = {
- 	.min_discovery_timeout = MESH_MIN_DISCOVERY_TIMEOUT,
- 	.dot11MeshHWMPRannInterval = MESH_RANN_INTERVAL,
- 	.dot11MeshGateAnnouncementProtocol = false,
-+	.power_mode = NL80211_MESH_POWER_ACTIVE,
- };
- 
- const struct mesh_setup default_mesh_setup = {
+The "current" wireless tree is here:
+
+	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git
+
+The "next" wireless tree is here:
+
+	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git
+
+The "testing" wireless tree is here:
+
+	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+
+Please do the needful!
+
+John
 -- 
-1.7.3.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
