@@ -1,135 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:40350 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934229Ab1KJPZ1 convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:56162 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932601Ab1KBQkR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 10:25:27 -0500
+	Wed, 2 Nov 2011 12:40:17 -0400
+Message-ID: <4EB1726E.5010503@candelatech.com> (sfid-20111102_174021_755410_8F15DCE2)
+Date: Wed, 02 Nov 2011 09:40:14 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <7be02f26a67fac4c7448a74f1f17aa01@visp.net.lb>
-References: <1320933501.3967.68.camel@jlt3.sipsolutions.net>
-	<CAGXE3d-_RFgW_zwfX2vTBe1psXmgoBFO5pd5cAgtYo=Jwpddhw@mail.gmail.com>
-	<7be02f26a67fac4c7448a74f1f17aa01@visp.net.lb>
-Date: Thu, 10 Nov 2011 16:25:25 +0100
-Message-ID: <CAA93jw7ECQegWj6rpd48sbmDQUjorCYzXANXJSj0baHtxzC7EA@mail.gmail.com> (sfid-20111110_162536_074536_24D446E7)
-Subject: Re: creating netdev queues on the fly?
-From: Dave Taht <dave.taht@gmail.com>
-To: Denys Fedoryshchenko <denys@wbc.net.sa>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [wireless-next PATCH v2 1/4] mac80211: Support forcing station
+ to disable 11n.
+References: <1319840474-2618-1-git-send-email-greearb@candelatech.com>  (sfid-20111029_002128_214854_3ACBE979) <1320220666.3950.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1320220666.3950.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 10, 2011 at 3:55 PM, Denys Fedoryshchenko <denys@wbc.net.sa> wrote:
-> On Thu, 10 Nov 2011 15:40:01 +0100, Helmut Schaa wrote:
->>>
->>> I think this might also make implementing reservation (tspec) easier.
->>> Not sure if anyone wants/needs that though.
+On 11/02/2011 12:57 AM, Johannes Berg wrote:
+> On Fri, 2011-10-28 at 15:21 -0700, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
 >>
->> Wouldn't it be possible to implement something like this as a qdisc on top
->> of
->> mq that makes use of the current tx rate per station to distribute
->> the airtime
->> equitably?
->>
->> Of course this would require the qdisc to know the tx rate a priori but
->> for
->> mac80211 drivers we could just use last_tx_rate as an estimate ...
-
-Need last_aggregation_depth bytes and packets and last feasible
-versions of those for an estimate with n. completion rate, perhaps...
-
->>
->> Helmut
->> --
->> To unsubscribe from this list: send the line "unsubscribe netdev" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> This allows a user to configure a wifi station interface
+>> to disable 802.11n, even if the AP and NIC supports it.
 >
-> Maybe someone will make something like "tfifo" in future :)
+> You really should've waited for the review on v1 to finish -- this v2 is
+> worthless. That makes John think that you addressed all review feedback,
+> when really we didn't even finish discussing some points; eventually
+> that'll just force me to have my own tree so John isn't confused all the
+> time.
 
-Did some of it last weekend. Code doesn't work yet - I mixed in too
-many of the ideas mentioned in
-my earlier, longer, more difficult to read missive. Time based queue
-limits are an important part of the answer, however.
+I explicitly noted in the comments for several of the patches
+that I did not address all of your comments.  I re-posted because
+I thought I could at least fix some of your concerns and hopefully
+get the patches closer to right and make further reviews easier.
 
-Our current fixed packet queue limits are merely a proxy for time. At
-100Mbit ethernet, they were 100ms - which is conus distances...
-
- and I'd hope that someone more knowledgable than I at these layers
-take all this on...
-
-Two notes:
-
-1) Getting 'time' from the kernel is expensive. And: System time wanders.
-
-mac80211 Wifi devices however do export a get_tsf function which could
-be used as a relative-to-the-queue clock - and we actually don't need
-accuracy down to the level of get_tsf (25ns)
-
-2) You need to get a timestamp on entry to the first queue and check
-against the allowable latency on exit from the last. So to construct a
-tc chain you'd want a tfifo (timestamp on entry), fifot (check
-timestamp against limit on dequeue), and for the simplest of
-applications : tfifot (timestamp on entry, check on exit)
-
-
-> And when clients are connected, each have his own queue.
-
-Needed, yes. Particularly with mixed g/n, but also to optimize
-aggregation AND fairness.
+Thanks,
+Ben
 
 >
-> then, for example qdisc add dev wlan0 parent 1:10 handle 10 tfifo limit
-> 100ms
-> If packet are older than 100ms will be dropped, or new packets are not
-> added, if
-> there is packet older than 100ms are not sent yet.
-
-Aside from me calling it 'tfifot last weekend, yes. Though I prefer
-using 'timelimit' as the key name, to distinguish between previous
-overloaded uses of the word limit.
-
-
->
-> I am not sure that bandwidth will be distributed fairly, it is different
-> question,
-> probably each queue should have some "limited chunk of time" to send data.
-
-Round robin with random starting points for each cycle through the
-stations in what I was calling a 'grouper' in the previous mail.
-
-> And again, 802.11a/b/g at least are half-duplex and CSMA, and without
-> polling/TDMA or CTS/RTS tricks
-> it will be complicated to give guaranteed chunks of time.
-
-I *think* but am not sure that what I have described interacts with
-the EDCA reasonably well.
-
->
-> P.S. That's just a dream :)
->
-> ---
-> Network engineer
-> Denys Fedoryshchenko
->
-> P.O.Box 41553 Jeddah 21531
-> Tel:   920023422
-> Fax:  +966 26501784
-> E-Mail: denys@wbc.net.sa
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+> johannes
 
 
 -- 
-Dave Täht
-SKYPE: davetaht
-US Tel: 1-239-829-5608
-FR Tel: 0638645374
-http://www.bufferbloat.net
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
