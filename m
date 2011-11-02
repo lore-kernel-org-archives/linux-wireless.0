@@ -1,195 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58470 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754857Ab1KRIVP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 03:21:15 -0500
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAI8LEvi026051
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 03:21:15 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 12/77] iwlegacy: mark il_{grab,release}_nic_access as unlocked
-Date: Fri, 18 Nov 2011 09:21:34 +0100
-Message-Id: <1321604559-10707-12-git-send-email-sgruszka@redhat.com> (sfid-20111118_092121_486942_908EA938)
-In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
-References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:52793 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754276Ab1KBLyv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Nov 2011 07:54:51 -0400
+Received: by mail-bw0-f44.google.com with SMTP id t8so63653bka.3
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2011 04:54:48 -0700 (PDT)
+Subject: Re: [PATCH v2 1/3] nl80211: Add probe response offload attribute
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Guy Eilam <guy@wizery.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1320228817.3950.38.camel@jlt3.sipsolutions.net>
+References: <1319313081-28722-1-git-send-email-guy@wizery.com>
+	 <1320055498.2672.10.camel@cumari>
+	 <1320228817.3950.38.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Nov 2011 13:54:45 +0200
+Message-ID: <1320234885.6647.14.camel@cumari> (sfid-20111102_125454_844335_51B536D8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/iwl-io.h       |   42 ++++++++++++-------------
- drivers/net/wireless/iwlegacy/iwl4965-base.c |    4 +-
- 2 files changed, 22 insertions(+), 24 deletions(-)
+On Wed, 2011-11-02 at 11:13 +0100, Johannes Berg wrote: 
+> On Mon, 2011-10-31 at 12:04 +0200, Luciano Coelho wrote:
+> 
+> > > + * @NL80211_ATTR_PROBE_RESP_OFFLOAD_SUPPORT: Indicates the support
+> > > + *	of probe response offloading by the driver/firmware.
+> > > + *	In addition this attribute holds a bitmap of the supported protocols
+> > > + *	for offloading using &enum nl80211_probe_resp_offload_support_attr.
+> > > + *
+> 
+> > I'm not sure I understand why we need this.  Why aren't the flags
+> > themselves enough?
+> 
+> Not sure I understand the question?
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-io.h b/drivers/net/wireless/iwlegacy/iwl-io.h
-index 7ad262e..c2e32ed 100644
---- a/drivers/net/wireless/iwlegacy/iwl-io.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-io.h
-@@ -137,14 +137,12 @@ static inline int _il_grab_nic_access(struct il_priv *il)
- 
- 	return 0;
- }
--#define il_grab_nic_access(il) _il_grab_nic_access(il)
- 
- static inline void _il_release_nic_access(struct il_priv *il)
- {
- 	_il_clear_bit(il, CSR_GP_CNTRL,
- 			CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
- }
--#define il_release_nic_access(il) _il_release_nic_access(il)
- 
- static inline u32 _il_read_direct32(struct il_priv *il, u32 reg)
- {
-@@ -157,9 +155,9 @@ static inline u32 il_read_direct32(struct il_priv *il, u32 reg)
- 	unsigned long reg_flags;
- 
- 	spin_lock_irqsave(&il->reg_lock, reg_flags);
--	il_grab_nic_access(il);
-+	_il_grab_nic_access(il);
- 	value = _il_read_direct32(il, reg);
--	il_release_nic_access(il);
-+	_il_release_nic_access(il);
- 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
- 	return value;
- 
-@@ -176,9 +174,9 @@ il_write_direct32(struct il_priv *il, u32 reg, u32 value)
- 	unsigned long reg_flags;
- 
- 	spin_lock_irqsave(&il->reg_lock, reg_flags);
--	if (!il_grab_nic_access(il)) {
-+	if (!_il_grab_nic_access(il)) {
- 		_il_write_direct32(il, reg, value);
--		il_release_nic_access(il);
-+		_il_release_nic_access(il);
- 	}
- 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
- }
-@@ -222,9 +220,9 @@ static inline u32 il_read_prph(struct il_priv *il, u32 reg)
- 	u32 val;
- 
- 	spin_lock_irqsave(&il->reg_lock, reg_flags);
--	il_grab_nic_access(il);
-+	_il_grab_nic_access(il);
- 	val = _il_read_prph(il, reg);
--	il_release_nic_access(il);
-+	_il_release_nic_access(il);
- 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
- 	return val;
- }
-@@ -244,9 +242,9 @@ il_write_prph(struct il_priv *il, u32 addr, u32 val)
- 	unsigned long reg_flags;
- 
- 	spin_lock_irqsave(&il->reg_lock, reg_flags);
--	if (!il_grab_nic_access(il)) {
-+	if (!_il_grab_nic_access(il)) {
- 		_il_write_prph(il, addr, val);
--		il_release_nic_access(il);
-+		_il_release_nic_access(il);
- 	}
- 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
- }
-@@ -260,9 +258,9 @@ il_set_bits_prph(struct il_priv *il, u32 reg, u32 mask)
- 	unsigned long reg_flags;
- 
- 	spin_lock_irqsave(&il->reg_lock, reg_flags);
--	il_grab_nic_access(il);
-+	_il_grab_nic_access(il);
- 	_il_set_bits_prph(il, reg, mask);
--	il_release_nic_access(il);
-+	_il_release_nic_access(il);
- 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
- }
- 
-@@ -276,9 +274,9 @@ static inline void il_set_bits_mask_prph(struct il_priv *il, u32 reg,
- 	unsigned long reg_flags;
- 
- 	spin_lock_irqsave(&il->reg_lock, reg_flags);
--	il_grab_nic_access(il);
-+	_il_grab_nic_access(il);
- 	_il_set_bits_mask_prph(il, reg, bits, mask);
--	il_release_nic_access(il);
-+	_il_release_nic_access(il);
- 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
- }
- 
-@@ -289,10 +287,10 @@ static inline void il_clear_bits_prph(struct il_priv
- 	u32 val;
- 
- 	spin_lock_irqsave(&il->reg_lock, reg_flags);
--	il_grab_nic_access(il);
-+	_il_grab_nic_access(il);
- 	val = _il_read_prph(il, reg);
- 	_il_write_prph(il, reg, (val & ~mask));
--	il_release_nic_access(il);
-+	_il_release_nic_access(il);
- 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
- }
- 
-@@ -302,13 +300,13 @@ static inline u32 il_read_targ_mem(struct il_priv *il, u32 addr)
- 	u32 value;
- 
- 	spin_lock_irqsave(&il->reg_lock, reg_flags);
--	il_grab_nic_access(il);
-+	_il_grab_nic_access(il);
- 
- 	_il_write_direct32(il, HBUS_TARG_MEM_RADDR, addr);
- 	rmb();
- 	value = _il_read_direct32(il, HBUS_TARG_MEM_RDAT);
- 
--	il_release_nic_access(il);
-+	_il_release_nic_access(il);
- 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
- 	return value;
- }
-@@ -319,11 +317,11 @@ il_write_targ_mem(struct il_priv *il, u32 addr, u32 val)
- 	unsigned long reg_flags;
- 
- 	spin_lock_irqsave(&il->reg_lock, reg_flags);
--	if (!il_grab_nic_access(il)) {
-+	if (!_il_grab_nic_access(il)) {
- 		_il_write_direct32(il, HBUS_TARG_MEM_WADDR, addr);
- 		wmb();
- 		_il_write_direct32(il, HBUS_TARG_MEM_WDAT, val);
--		il_release_nic_access(il);
-+		_il_release_nic_access(il);
- 	}
- 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
- }
-@@ -335,14 +333,14 @@ il_write_targ_mem_buf(struct il_priv *il, u32 addr,
- 	unsigned long reg_flags;
- 
- 	spin_lock_irqsave(&il->reg_lock, reg_flags);
--	if (!il_grab_nic_access(il)) {
-+	if (!_il_grab_nic_access(il)) {
- 		_il_write_direct32(il, HBUS_TARG_MEM_WADDR, addr);
- 		wmb();
- 		for (; 0 < len; len -= sizeof(u32), values++)
- 			_il_write_direct32(il,
- 					HBUS_TARG_MEM_WDAT, *values);
- 
--		il_release_nic_access(il);
-+		_il_release_nic_access(il);
- 	}
- 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
- }
-diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-index f3ec8bb..f4eb037 100644
---- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-@@ -522,8 +522,8 @@ static void il4965_perform_ct_kill_task(struct il_priv *il)
- 	_il_rd(il, CSR_UCODE_DRV_GP1);
- 
- 	spin_lock_irqsave(&il->reg_lock, flags);
--	if (!il_grab_nic_access(il))
--		il_release_nic_access(il);
-+	if (!_il_grab_nic_access(il))
-+		_il_release_nic_access(il);
- 	spin_unlock_irqrestore(&il->reg_lock, flags);
- }
- 
+It was what I meant (and you answered) below. :)
+
+
+> > Johannes wrote, on a separate thread:
+> > > Oh, and probably a regular WIPHY flag that indicates whether the
+> > > attribute should be added at all so that it can also be 0 but present
+> > > (presence with 0 value indicates something other than not present).
+> > 
+> > What would be the meaning when the WIPHY flag is set but the attributes
+> > are all 0? Wouldn't it mean that we don't support probe_resp offload at
+> > all? Or would it mean that we support probe_resp offloading in normal
+> > cases (ie. not WCS nor P2P)? If the latter is the case, why not add a
+> > bit in the attributes to indicate that "normal" probe_resp offloading is
+> > supported? I think this would be cleaner because there wouldn't be any
+> > implicit semantics.
+> 
+> It would mean we don't support probe response offload at all, and as a
+> consequence would be more or less equivalent to having 0xfffffff as the
+> flags mask (everything is "supported").
+> 
+> Adding a flag for "normal" doesn't make sense: you can only ever reply
+> to "normal" probe requests, you need to send any "special" ones up to
+> the host. So each bit in this bitfield essentially says "I support this
+> by passing it to the host" -- a bit for "normal" doesn't make sense in
+> that context.
+
+Okay, I get it now.  So the flags are actually telling which types of
+probe responses the hardware can pass up to the host when probe_resp
+offload is in use.
+
+My confusion was because I thought the flags were actually telling which
+type of probe_resps the HW could offload.
+
+Thanks for clarifying.
+
 -- 
-1.7.1
+Cheers,
+Luca.
 
