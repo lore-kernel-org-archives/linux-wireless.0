@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:52749 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752882Ab1KXO5A (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22310 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750817Ab1KBVgp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 09:57:00 -0500
-Received: by faas1 with SMTP id s1so1647292faa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2011 06:56:59 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: call skb_put() before copying the data (trivial)
-Date: Thu, 24 Nov 2011 16:50:00 +0200
-Message-Id: <1322146200-2819-1-git-send-email-eliad@wizery.com> (sfid-20111124_155705_349809_A7645334)
+	Wed, 2 Nov 2011 17:36:45 -0400
+Date: Wed, 2 Nov 2011 23:36:31 +0200
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] nl80211: Increase maximum NL80211_ATTR_KEY_SEQ length to 16
+Message-ID: <20111102213631.GA21477@jouni.qca.qualcomm.com> (sfid-20111102_223647_966534_77AEE22A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't have any actual effect here, but we should
-skb_put() *before* copying the data.
+WPI-SMS4 uses 16-octet PN field, so we need to allow longer key
+sequence values to be configured.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- net/mac80211/tx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/wireless/nl80211.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 6b86f77..b1661ba 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2177,10 +2177,10 @@ static void ieee80211_beacon_add_tim(struct ieee80211_if_ap *bss,
- 		/* Bitmap control */
- 		*pos++ = n1 | aid0;
- 		/* Part Virt Bitmap */
-+		skb_put(skb, n2 - n1);
- 		memcpy(pos, bss->tim + n1, n2 - n1 + 1);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 48260c2..09fe0bf 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -98,7 +98,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_KEY_IDX] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_KEY_CIPHER] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_KEY_DEFAULT] = { .type = NLA_FLAG },
+-	[NL80211_ATTR_KEY_SEQ] = { .type = NLA_BINARY, .len = 8 },
++	[NL80211_ATTR_KEY_SEQ] = { .type = NLA_BINARY, .len = 16 },
+ 	[NL80211_ATTR_KEY_TYPE] = { .type = NLA_U32 },
  
- 		tim[1] = n2 - n1 + 4;
--		skb_put(skb, n2 - n1);
- 	} else {
- 		*pos++ = aid0; /* Bitmap control */
- 		*pos++ = 0; /* Part Virt Bitmap */
+ 	[NL80211_ATTR_BEACON_INTERVAL] = { .type = NLA_U32 },
+@@ -204,7 +204,7 @@ static const struct nla_policy nl80211_key_policy[NL80211_KEY_MAX + 1] = {
+ 	[NL80211_KEY_DATA] = { .type = NLA_BINARY, .len = WLAN_MAX_KEY_LEN },
+ 	[NL80211_KEY_IDX] = { .type = NLA_U8 },
+ 	[NL80211_KEY_CIPHER] = { .type = NLA_U32 },
+-	[NL80211_KEY_SEQ] = { .type = NLA_BINARY, .len = 8 },
++	[NL80211_KEY_SEQ] = { .type = NLA_BINARY, .len = 16 },
+ 	[NL80211_KEY_DEFAULT] = { .type = NLA_FLAG },
+ 	[NL80211_KEY_DEFAULT_MGMT] = { .type = NLA_FLAG },
+ 	[NL80211_KEY_TYPE] = { .type = NLA_U32 },
 -- 
-1.7.6.401.g6a319
+1.7.4.1
 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
