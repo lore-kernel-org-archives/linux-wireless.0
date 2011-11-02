@@ -1,62 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32739 "EHLO mga02.intel.com"
+Received: from mail.neratec.ch ([80.75.119.105]:53608 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935504Ab1KJPtn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 10:49:43 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 25/27] iwlwifi: fix rate-scaling algorithm for BT combo devices
-Date: Thu, 10 Nov 2011 06:55:25 -0800
-Message-Id: <1320936927-9078-26-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_164952_346218_8B16B748)
-In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1752969Ab1KBMKu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Nov 2011 08:10:50 -0400
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Cc: rodrigue@qca.qualcomm.com, nbd@openwrt.org, linville@tuxdriver.com,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [PATCH] ath9k: preserve DFS flags in calcrxfilter
+Date: Wed,  2 Nov 2011 13:10:03 +0100
+Message-Id: <1320235803-12190-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20111102_131054_050715_ED335C6C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Venkataraman, Meenakshi <meenakshi.venkataraman@intel.com>
+RX filter flags previously set for DFS radar detection were not
+preserved after "ath9k: disable unnecessary PHY error reporting".
 
-iwlwifi tries to avoid using antenna B in BT combo devices when BT
-is active. A bug in the rate-scaling algorithm was causing the combo
-device to never attempt MIMO rates. Fix the algorithm to
-opportunistically try MIMO rates when BT traffic is low.
+This patch ensures that the flags required for DFS support are
+kept set.
 
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    8 ++------
- 1 files changed, 2 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 66118ce..359c47a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -1458,10 +1458,8 @@ static int rs_move_legacy_other(struct iwl_priv *priv,
- 		break;
- 	case IWL_BT_COEX_TRAFFIC_LOAD_LOW:
- 		/* avoid antenna B unless MIMO */
--		valid_tx_ant =
--			first_antenna(hw_params(priv).valid_tx_ant);
- 		if (tbl->action == IWL_LEGACY_SWITCH_ANTENNA2)
--			tbl->action = IWL_LEGACY_SWITCH_ANTENNA1;
-+			tbl->action = IWL_LEGACY_SWITCH_SISO;
- 		break;
- 	case IWL_BT_COEX_TRAFFIC_LOAD_HIGH:
- 	case IWL_BT_COEX_TRAFFIC_LOAD_CONTINUOUS:
-@@ -1636,10 +1634,8 @@ static int rs_move_siso_to_other(struct iwl_priv *priv,
- 		break;
- 	case IWL_BT_COEX_TRAFFIC_LOAD_LOW:
- 		/* avoid antenna B unless MIMO */
--		valid_tx_ant =
--			first_antenna(hw_params(priv).valid_tx_ant);
- 		if (tbl->action == IWL_SISO_SWITCH_ANTENNA2)
--			tbl->action = IWL_SISO_SWITCH_ANTENNA1;
-+			tbl->action = IWL_SISO_SWITCH_MIMO2_AB;
- 		break;
- 	case IWL_BT_COEX_TRAFFIC_LOAD_HIGH:
- 	case IWL_BT_COEX_TRAFFIC_LOAD_CONTINUOUS:
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 592ae5b..02c8dc3 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -417,6 +417,7 @@ void ath_rx_cleanup(struct ath_softc *sc)
+  * Calculate the receive filter according to the
+  * operating mode and state:
+  *
++ * o preserve DFS (phyerror, phyradar)
+  * o always accept unicast, broadcast, and multicast traffic
+  * o maintain current state of phy error reception (the hal
+  *   may enable phy error frames for noise immunity work)
+@@ -434,10 +435,15 @@ void ath_rx_cleanup(struct ath_softc *sc)
+ 
+ u32 ath_calcrxfilter(struct ath_softc *sc)
+ {
++	const u32 rx_filter_preserve =
++		(ATH9K_RX_FILTER_PHYERR | ATH9K_RX_FILTER_PHYRADAR);
++	const u32 rx_filter_accept =
++		(ATH9K_RX_FILTER_UCAST | ATH9K_RX_FILTER_BCAST
++				| ATH9K_RX_FILTER_MCAST);
+ 	u32 rfilt;
+ 
+-	rfilt = ATH9K_RX_FILTER_UCAST | ATH9K_RX_FILTER_BCAST
+-		| ATH9K_RX_FILTER_MCAST;
++	rfilt = (ath9k_hw_getrxfilter(sc->sc_ah) & rx_filter_preserve);
++	rfilt |= rx_filter_accept;
+ 
+ 	if (sc->rx.rxfilter & FIF_PROBE_REQ)
+ 		rfilt |= ATH9K_RX_FILTER_PROBEREQ;
+@@ -475,8 +481,6 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+ 	}
+ 
+ 	return rfilt;
+-
+-#undef RX_FILTER_PRESERVE
+ }
+ 
+ int ath_startrecv(struct ath_softc *sc)
 -- 
-1.7.0.4
+1.7.4.1
 
