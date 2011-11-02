@@ -1,52 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:11488 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752007Ab1KUSek (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 13:34:40 -0500
-Subject: Re: pci: Rework ASPM disable code patch
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Greg KH <gregkh@suse.de>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"mjg@redhat.com" <mjg@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20111121182634.GA7037@suse.de>
-References: <1321896029.11647.50.camel@wwguy-huron>
-	 <20111121182634.GA7037@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 21 Nov 2011 09:38:33 -0800
-Message-ID: <1321897113.11647.52.camel@wwguy-huron> (sfid-20111121_193443_412641_DD81DEDA)
-Mime-Version: 1.0
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:44263 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932194Ab1KBT1g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Nov 2011 15:27:36 -0400
+Received: by mail-vw0-f46.google.com with SMTP id 1so230966vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2011 12:27:36 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH v3 2/4] mac80211: QoS multicast frames have No Ack policy
+Date: Wed,  2 Nov 2011 12:27:25 -0700
+Message-Id: <1320262047-5389-2-git-send-email-thomas@cozybit.com> (sfid-20111102_202740_985007_CD26F46D)
+In-Reply-To: <1320262047-5389-1-git-send-email-thomas@cozybit.com>
+References: <1320262047-5389-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-11-21 at 10:26 -0800, Greg KH wrote:
-> On Mon, Nov 21, 2011 at 09:20:29AM -0800, Guy, Wey-Yi wrote:
-> > Hi John/Garrett/Greg,
-> > 
-> > We test the ASPM patch with the Intel WiFi devices on number of
-> > platforms and the improvement is huge.
-> 
-> What "ASPM patch"?
+Previously QoS multicast frames had the Normal Acknowledgment QoS
+control bits set. This would cause broadcast frames to be discarded by
+peers with which we have a BA session, since their sequence number would
+fall outside the allowed range. Set No Ack QoS control bits on multicast
+QoS frames and filter these in de-aggregation code.
 
-https://lkml.org/lkml/2011/11/11/212
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
 
-> 
-> > In the "idle associated" mode, the power consumption number for our new
-> > devices down to ~40mW range from over 120mW.
-> > 
-> > We will do more testing but I will suggest to apply this patch to the
-> > stable release.
-> 
-> What is the git commit id of this patch?  Have you read
-> Documentation/stable_kernel_rules.txt for how to properly submit a patch
-> to the stable kernel trees?
-> 
-> thanks,
-> 
-> greg k-h
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+v2: Use proper QoS Ack Policy ctl field mask (Christian)
 
+v3: Clean up conditional (Johannes)
+
+ include/linux/ieee80211.h |    1 +
+ net/mac80211/rx.c         |    9 ++++++++-
+ net/mac80211/wme.c        |    3 ++-
+ 3 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 48363c3..bc61e69 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -128,6 +128,7 @@
+ #define IEEE80211_QOS_CTL_ACK_POLICY_NOACK	0x0020
+ #define IEEE80211_QOS_CTL_ACK_POLICY_NO_EXPL	0x0040
+ #define IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK	0x0060
++#define IEEE80211_QOS_CTL_ACK_POLICY_MASK	0x0060
+ /* A-MSDU 802.11n */
+ #define IEEE80211_QOS_CTL_A_MSDU_PRESENT	0x0080
+ /* Mesh Control 802.11s */
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b867bd5..bbe7b50 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -747,7 +747,7 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+ 	struct sta_info *sta = rx->sta;
+ 	struct tid_ampdu_rx *tid_agg_rx;
+ 	u16 sc;
+-	int tid;
++	u8 tid, ack_policy;
+ 
+ 	if (!ieee80211_is_data_qos(hdr->frame_control))
+ 		goto dont_reorder;
+@@ -760,6 +760,8 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+ 	if (!sta)
+ 		goto dont_reorder;
+ 
++	ack_policy = *ieee80211_get_qos_ctl(hdr) &
++		     IEEE80211_QOS_CTL_ACK_POLICY_MASK;
+ 	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
+ 
+ 	tid_agg_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[tid]);
+@@ -770,6 +772,11 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+ 	if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
+ 		goto dont_reorder;
+ 
++	/* not part of a BA session */
++	if (ack_policy != IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK &&
++	    ack_policy != IEEE80211_QOS_CTL_ACK_POLICY_NORMAL)
++		goto dont_reorder;
++
+ 	/* new, potentially un-ordered, ampdu frame - process it */
+ 
+ 	/* reset session timer */
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index fd52e69..a440a4a 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -147,7 +147,8 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
+ 
+ 		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+ 
+-		if (unlikely(sdata->local->wifi_wme_noack_test))
++		if (unlikely(sdata->local->wifi_wme_noack_test) ||
++		    is_multicast_ether_addr(hdr->addr1))
+ 			ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
+ 		/* qos header is 2 bytes */
+ 		*p++ = ack_policy | tid;
+-- 
+1.7.5.4
 
