@@ -1,31 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51860 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934175Ab1KCRAO (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:44263 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932194Ab1KBT1f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 13:00:14 -0400
-Message-ID: <4EB2C83E.8000205@qca.qualcomm.com> (sfid-20111103_180020_839194_AA33F898)
-Date: Thu, 3 Nov 2011 18:58:38 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: add suspend_cutpower module parameter
-References: <20111103101831.15206.39020.stgit@localhost6.localdomain6>
-In-Reply-To: <20111103101831.15206.39020.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset="UTF-8"
+	Wed, 2 Nov 2011 15:27:35 -0400
+Received: by vws1 with SMTP id 1so230966vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2011 12:27:34 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH v3 1/4] mac80211: Avoid filling up mesh preq queue with redundant requests
+Date: Wed,  2 Nov 2011 12:27:24 -0700
+Message-Id: <1320262047-5389-1-git-send-email-thomas@cozybit.com> (sfid-20111102_202738_787802_050E909A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/03/2011 12:18 PM, Kalle Valo wrote:
-> This is to force ath6kl to power off hardware during suspend even if
-> sdio support keep power. This is needed, for example, when sdio
-> controller is buggy or maximum powersaving is desired.
-> 
-> Usage:
-> 
-> insmod ath6kl.ko suspend_cutpower=1
+From: Javier Cardona <javier@cozybit.com>
 
-Applied.
+Don't accept redundant PREQs for a given destination. This fixes a
+problem under high load:
 
-Kalle
+kernel: [20386.250913] mesh_queue_preq: 235 callbacks suppressed
+kernel: [20386.253335] Mesh HWMP (mesh0): PREQ node queue full
+kernel: [20386.253352] Mesh HWMP (mesh0): PREQ node queue full
+(...)
+
+The 802.11s protocol has a provision to limit the rate of path requests
+(PREQs) are transmitted (dot11MeshHWMPpreqMinInterval) but there was no
+limit on the rate at which PREQs were being queued up.  There is a valid
+reason for queuing PREQs: this way we can even out PREQ bursts.  But
+queueing multiple PREQs for the same destination is useless.
+
+Reported-by: Pedro Larbig <pedro.larbig@carhs.de>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+
+---
+v3:
+	move mpath flag update inside state_lock (Johannes)
+
+ net/mac80211/mesh.h      |    3 +++
+ net/mac80211/mesh_hwmp.c |   15 +++++++++++++--
+ 2 files changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 8c00e2d..b3745e8 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -31,6 +31,8 @@
+  * @MESH_PATH_FIXED: the mesh path has been manually set and should not be
+  * 	modified
+  * @MESH_PATH_RESOLVED: the mesh path can has been resolved
++ * @MESH_PATH_REQ_QUEUED: there is an unsent path request for this destination
++ * already queued up, waiting for the discovery process to start.
+  *
+  * MESH_PATH_RESOLVED is used by the mesh path timer to
+  * decide when to stop or cancel the mesh path discovery.
+@@ -41,6 +43,7 @@ enum mesh_path_flags {
+ 	MESH_PATH_SN_VALID =	BIT(2),
+ 	MESH_PATH_FIXED	=	BIT(3),
+ 	MESH_PATH_RESOLVED =	BIT(4),
++	MESH_PATH_REQ_QUEUED =	BIT(5),
+ };
+ 
+ /**
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 9a1f8bb..b22b223 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -867,9 +867,19 @@ static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
+ 		return;
+ 	}
+ 
++	spin_lock_bh(&mpath->state_lock);
++	if (mpath->flags & MESH_PATH_REQ_QUEUED) {
++		spin_unlock_bh(&mpath->state_lock);
++		spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
++		return;
++	}
++
+ 	memcpy(preq_node->dst, mpath->dst, ETH_ALEN);
+ 	preq_node->flags = flags;
+ 
++	mpath->flags |= MESH_PATH_REQ_QUEUED;
++	spin_unlock_bh(&mpath->state_lock);
++
+ 	list_add_tail(&preq_node->list, &ifmsh->preq_queue.list);
+ 	++ifmsh->preq_queue_len;
+ 	spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
+@@ -921,6 +931,7 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
+ 		goto enddiscovery;
+ 
+ 	spin_lock_bh(&mpath->state_lock);
++	mpath->flags &= ~MESH_PATH_REQ_QUEUED;
+ 	if (preq_node->flags & PREQ_Q_F_START) {
+ 		if (mpath->flags & MESH_PATH_RESOLVING) {
+ 			spin_unlock_bh(&mpath->state_lock);
+@@ -1028,8 +1039,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
+ 			mesh_queue_preq(mpath, PREQ_Q_F_START);
+ 		}
+ 
+-		if (skb_queue_len(&mpath->frame_queue) >=
+-				MESH_FRAME_QUEUE_LEN)
++		if (skb_queue_len(&mpath->frame_queue) >= MESH_FRAME_QUEUE_LEN)
+ 			skb_to_free = skb_dequeue(&mpath->frame_queue);
+ 
+ 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+@@ -1061,6 +1071,7 @@ void mesh_path_timer(unsigned long data)
+ 	} else if (mpath->discovery_retries < max_preq_retries(sdata)) {
+ 		++mpath->discovery_retries;
+ 		mpath->discovery_timeout *= 2;
++		mpath->flags &= ~MESH_PATH_REQ_QUEUED;
+ 		spin_unlock_bh(&mpath->state_lock);
+ 		mesh_queue_preq(mpath, 0);
+ 	} else {
+-- 
+1.7.5.4
+
