@@ -1,40 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34318 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751345Ab1KQWWP (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50040 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752530Ab1KBHwi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 17:22:15 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2 1/4] compat-wireless: add CONFIG_COMPAT_KFIFO setting to config.mk
-Date: Thu, 17 Nov 2011 17:21:08 -0500
-Message-Id: <1321568471-23068-1-git-send-email-linville@tuxdriver.com> (sfid-20111117_232237_855715_DCE6E1A4)
+	Wed, 2 Nov 2011 03:52:38 -0400
+Subject: Re: problem clearing bit-rates with 'iw'
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4EAF228F.6030104@candelatech.com> (sfid-20111031_233459_465667_F36C4610)
+References: <4EAF228F.6030104@candelatech.com>
+	 (sfid-20111031_233459_465667_F36C4610)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Nov 2011 08:52:29 +0100
+Message-ID: <1320220349.3950.0.camel@jlt3.sipsolutions.net> (sfid-20111102_085241_186673_C5F29BBC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- config.mk |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+On Mon, 2011-10-31 at 15:34 -0700, Ben Greear wrote:
+> According to the help, it seems I should be able to pass no rates and
+> have it clear the mask.  But, it seems that is not actually working:
+> 
+> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw dev sta4 set bitrates legacy-2.4
+> command failed: Invalid argument (-22)
 
-diff --git a/config.mk b/config.mk
-index a71de4e..1bb2799 100644
---- a/config.mk
-+++ b/config.mk
-@@ -120,6 +120,10 @@ ifdef CONFIG_FW_LOADER
- endif #CONFIG_FW_LOADER
- endif #CONFIG_COMPAT_KERNEL_2_6_33
- 
-+ifdef CONFIG_COMPAT_KERNEL_2_6_36
-+ CONFIG_COMPAT_KFIFO=y
-+endif #CONFIG_COMPAT_KERNEL_2_6_36
-+
- # Wireless subsystem stuff
- CONFIG_MAC80211=m
- 
--- 
-1.7.4.4
+remove the "legacy-2.4" thing.
+
+johannes
 
