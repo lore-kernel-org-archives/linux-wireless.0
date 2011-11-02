@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:33062 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756431Ab1KWP1c (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50050 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752059Ab1KBH4W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 10:27:32 -0500
-Received: by vcbfk14 with SMTP id fk14so426522vcb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 07:27:32 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [RFC 1/5] cfg80211: clarify set tx power mBm documentation
-Date: Wed, 23 Nov 2011 10:27:20 -0500
-Message-Id: <1322062044-14831-2-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111123_162736_399987_B03D67E4)
-In-Reply-To: <1322062044-14831-1-git-send-email-mcgrof@qca.qualcomm.com>
-References: <1322062044-14831-1-git-send-email-mcgrof@qca.qualcomm.com>
+	Wed, 2 Nov 2011 03:56:22 -0400
+Subject: Re: [wireless-next PATCH 1/5] mac80211: Support forcing station to
+ disable 11n.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4EAAD734.10501@candelatech.com> (sfid-20111028_182428_876939_0D798225)
+References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
+	 (sfid-20111028_071135_777672_88A08497) <1319789318.3914.10.camel@jlt3.sipsolutions.net>
+	 <4EAAD734.10501@candelatech.com> (sfid-20111028_182428_876939_0D798225)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Nov 2011 08:56:17 +0100
+Message-ID: <1320220577.3950.4.camel@jlt3.sipsolutions.net> (sfid-20111102_085624_436019_7EF6F613)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tons of drivers missed that we use mBm and not dBm...
+On Fri, 2011-10-28 at 09:24 -0700, Ben Greear wrote:
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- include/net/cfg80211.h |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+> >> +++ b/net/mac80211/cfg.c
+> >> @@ -57,6 +57,9 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+> >>   	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> >>   	int ret;
+> >>
+> >> +	if (params->disable_11n != -1)
+> >> +		sdata->cfg_disable_11n = params->disable_11n;
+> >
+> > This doesn't seem right -- why change the iface for it? It's a per
+> > connection parameter.
+> 
+> I wanted it to be an interface parameter, or at least I think
+> that is what I want.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d5e1891..a992782 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1399,7 +1399,8 @@ struct cfg80211_gtk_rekey_data {
-  *	have changed. The actual parameter values are available in
-  *	struct wiphy. If returning an error, no value should be changed.
-  *
-- * @set_tx_power: set the transmit power according to the parameters
-+ * @set_tx_power: set the transmit power according to the parameters,
-+ *	the power passed is in mBm, to get dBm use MBM_TO_DBM().
-  * @get_tx_power: store the current TX power into the dbm variable;
-  *	return 0 if successful
-  *
--- 
-1.7.4.15.g7811d
+Why? I'm thinking that it's better as a connection parameter as then
+it's more temporal. I know we have interface parameters like RTS/CTS
+settings etc, but I like connection parameters better as they go away
+with each new connection, so the behaviour is less surprising to most
+users. Imagine your wpa_supplicant crashes, and then the user who was
+restricting it to no-HT starts the regular wpa_supplicant; now his
+interface will be in no-HT until he reboots or figures out the right
+magic to change it. I think that kind of situation is undesirable.
+
+
+> I would like eventually to support this same feature for AP
+> interfaces, and probably other types.  Would it still be in
+> the u.mgd struct in that case?
+
+No, but again there I'd argue that it should be a "connection" parameter
+as well.
+
+johannes
 
