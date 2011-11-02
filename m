@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:35888 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751700Ab1KIK3S (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:59755 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752335Ab1KBDNz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 05:29:18 -0500
-Received: by faan17 with SMTP id n17so1483811faa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Nov 2011 02:29:16 -0800 (PST)
-From: Eyal Shapira <eyal@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: add recalc PS in ieee80211_reconfig()
-Date: Wed,  9 Nov 2011 12:29:06 +0200
-Message-Id: <1320834546-1586-1-git-send-email-eyal@wizery.com> (sfid-20111109_112921_521961_26B8F723)
+	Tue, 1 Nov 2011 23:13:55 -0400
+Date: Wed, 2 Nov 2011 12:13:45 +0900
+From: Norbert Preining <preining@logic.at>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+Subject: Re: iwlagn is getting very shaky
+Message-ID: <20111102031345.GA10851@gamma.logic.tuwien.ac.at> (sfid-20111102_041402_099207_43B0B68A)
+References: <1319003304.31823.46.camel@wwguy-huron> <20111019064628.GA14817@gamma.logic.tuwien.ac.at> <1319004836.31823.57.camel@wwguy-huron> <20111020045927.GB23044@gamma.logic.tuwien.ac.at> <1319119852.2111.2.camel@wwguy-ubuntu> <20111021012442.GB26758@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110231424500.17218@chino.kir.corp.google.com> <20111026025014.GB24956@gamma.logic.tuwien.ac.at> <1319601333.14693.19.camel@wwguy-ubuntu> <20111026040332.GF24956@gamma.logic.tuwien.ac.at>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111026040332.GF24956@gamma.logic.tuwien.ac.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver should be instructed to enter PS AFTER
-reconfiguring ASSOCIATED (in STA case) using ieee80211_bss_info_change_notify
-same as it's being done in ieee80211_set_associated()
+Hi all,
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
----
- net/mac80211/util.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+On Mi, 26 Okt 2011, Norbert Preining wrote:
+> On Di, 25 Okt 2011, wwguy wrote:
+> > so this is different problem, right? it looks different compare to what
+> > you described before which is cause by queue stopped.
+> 
+> I assume that this is a different regression concerning 3.1.0 released.
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 7439d26..ad6d7a1 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1107,6 +1107,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		}
- 	}
- 
-+	ieee80211_recalc_ps(local, -1);
-+
- 	/*
- 	 * Clear the WLAN_STA_BLOCK_BA flag so new aggregation
- 	 * sessions can be established after a resume.
--- 
-1.7.4.1
+Is there any progress on that? Currently linux git status is unusable
+with respect to iwlwifi?
 
+Are there any changes planned before rc1?
+
+Best wishes
+
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+BOSEMAN
+One who spends all day loafing about near pedestrian crossing looking
+as if he's about to cross.
+			--- Douglas Adams, The Meaning of Liff
