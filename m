@@ -1,63 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:53201 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751642Ab1KOGGo (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:35635 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932097Ab1KBRyy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 01:06:44 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-CC: Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [RFC 10/18] ath9k: add MCI specific definitions and structures
-Date: Tue, 15 Nov 2011 11:34:05 +0530
-Message-ID: <1321337045-12735-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111115_070648_149749_5B50D84C)
+	Wed, 2 Nov 2011 13:54:54 -0400
+Received: by wwi36 with SMTP id 36so606125wwi.1
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2011 10:54:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAG6hwVOqyb6Oi63vjD0j6KLAc70cpiWsb9MOR2mZjqPqnVNAcQ@mail.gmail.com>
+References: <1319864732-11286-1-git-send-email-thomas@cozybit.com>
+	<1319864732-11286-2-git-send-email-thomas@cozybit.com>
+	<1320229077.3950.40.camel@jlt3.sipsolutions.net>
+	<CAG6hwVOqyb6Oi63vjD0j6KLAc70cpiWsb9MOR2mZjqPqnVNAcQ@mail.gmail.com>
+Date: Wed, 2 Nov 2011 10:54:53 -0700
+Message-ID: <CAG6hwVNsjnk2r6d2bW1WHzT3CJhkscGvCX5b3XBHn3EMEO-D5Q@mail.gmail.com> (sfid-20111102_185459_070065_C388403A)
+Subject: Re: [PATCH 2/4] mac80211: QoS multicast frames have No Ack policy
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Wed, Nov 2, 2011 at 10:35 AM, Thomas Pedersen <thomas@cozybit.com> wrote:
+> On Wed, Nov 2, 2011 at 3:17 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> On Fri, 2011-10-28 at 22:05 -0700, Thomas Pedersen wrote:
+>>> Previously QoS multicast frames had the Normal Acknowledgment QoS
+>>> control bits set. This would cause broadcast frames to be discarded by
+>>> peers with which we have a BA session, since their sequence number would
+>>> fall outside the allowed range. Set No Ack QoS control bits on multicast
+>>> QoS frames and filter these in de-aggregation code.
+>>
+>> I'm not sure why you would attempt to deaggregate broadcast frames but I
+>> guess mesh is a bit special.
+>>
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/mci.h |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
+I don't think it's a mesh specific thing, broadcast frames are just
+not being sent out as QoS data in the infrastructure case and
+therefore not caught by the de-aggregation code. According to 7.2.2,
+broadcast and multicast data frames should go out as QoS if all STAs
+in the BSS are QoS STAs. I don't know if this really matters in
+practice though.
 
-diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
-index 9590c61..5df0d60 100644
---- a/drivers/net/wireless/ath/ath9k/mci.h
-+++ b/drivers/net/wireless/ath/ath9k/mci.h
-@@ -17,6 +17,9 @@
- #ifndef MCI_H
- #define MCI_H
- 
-+#define ATH_MCI_SCHED_BUF_SIZE		(16 * 16) /* 16 entries, 4 dword each */
-+#define ATH_MCI_GPM_MAX_ENTRY		16
-+#define ATH_MCI_GPM_BUF_SIZE		(ATH_MCI_GPM_MAX_ENTRY * 16)
- #define ATH_MCI_DEF_BT_PERIOD		40
- #define ATH_MCI_BDR_DUTY_CYCLE		20
- #define ATH_MCI_MAX_DUTY_CYCLE		90
-@@ -110,6 +113,20 @@ struct ath_mci_profile {
- 	u8 num_bdr;
- };
- 
-+
-+struct ath_mci_buf {
-+	void *bf_addr;		/* virtual addr of desc */
-+	dma_addr_t bf_paddr;    /* physical addr of buffer */
-+	u32 bf_len;		/* len of data */
-+};
-+
-+struct ath_mci_coex {
-+	atomic_t mci_cal_flag;
-+	struct ath_mci_buf sched_buf;
-+	struct ath_mci_buf gpm_buf;
-+	u32 bt_cal_start;
-+};
-+
- void ath_mci_flush_profile(struct ath_mci_profile *mci);
- void ath_mci_process_profile(struct ath_softc *sc,
- 			     struct ath_mci_profile_info *info);
--- 
-1.7.0.4
-
+>>> @@ -770,6 +771,11 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+>>>       if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
+>>>               goto dont_reorder;
+>>>
+>>> +     /* not part of a BA session */
+>>> +     if (!((ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK) ||
+>>> +           (ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_NORMAL)))
+>>> +             goto dont_reorder;
+>>
+>> Maybe ack_policy != BA && ack_policy != NORMAl would be easier to read?
+>
+> OK.
+>>
+>>> --- a/net/mac80211/wme.c
+>>> +++ b/net/mac80211/wme.c
+>>> @@ -147,7 +147,8 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
+>>>
+>>>               tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+>>>
+>>> -             if (unlikely(sdata->local->wifi_wme_noack_test))
+>>> +             if (unlikely(sdata->local->wifi_wme_noack_test) ||
+>>> +                 is_multicast_ether_addr(hdr->addr1))
+>>>                       ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
+>>
+>> Interestingly, this seems to have been a bug for a long time --
+>> 7.1.3.5.3 indicates this is supposed to be done.
+>
+> I'll fix up the other patches as well and resubmit.
+>
+> Thanks!
+> Thomas
+>
