@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout7.freenet.de ([195.4.92.97]:41036 "EHLO mout7.freenet.de"
+Received: from mail.neratec.ch ([80.75.119.105]:53685 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755468Ab1KYOsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 09:48:54 -0500
-Received: from [195.4.92.140] (helo=mjail0.freenet.de)
-	by mout7.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #5)
-	id 1RTx59-0002PS-C3
-	for linux-wireless@vger.kernel.org; Fri, 25 Nov 2011 15:48:51 +0100
-Received: from localhost ([::1]:43833 helo=mjail0.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1RTx59-0001vO-9D
-	for linux-wireless@vger.kernel.org; Fri, 25 Nov 2011 15:48:51 +0100
-Received: from [195.4.92.22] (port=38559 helo=12.mx.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1RTx3A-0006Gp-No
-	for linux-wireless@vger.kernel.org; Fri, 25 Nov 2011 15:46:48 +0100
-Received: from p4fde0b80.dip0.t-ipconnect.de ([79.222.11.128]:56156 helo=mail.maya.org)
-	by 12.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1RTx3A-0000Rh-8Y
-	for linux-wireless@vger.kernel.org; Fri, 25 Nov 2011 15:46:48 +0100
-Message-ID: <4ECFAAC2.9070005@01019freenet.de> (sfid-20111125_154857_494194_C471FAB9)
-Date: Fri, 25 Nov 2011 15:48:34 +0100
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+	id S932431Ab1KBQXM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Nov 2011 12:23:12 -0400
+Message-ID: <4EB16E6B.7080301@neratec.com> (sfid-20111102_172316_552775_0FA5CE01)
+Date: Wed, 02 Nov 2011 17:23:07 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: spamm of cfg80211: Calling CRDA to update world regulatory domain
-References: <4EB00DD3.7090701@gmail.com>
-In-Reply-To: <4EB00DD3.7090701@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, linville@tuxdriver.com
+Subject: Re: [PATCH] ath9k: preserve DFS flags in calcrxfilter
+References: <1320235803-12190-1-git-send-email-zefir.kurtisi@neratec.com> <4EB14365.6000505@openwrt.org>
+In-Reply-To: <4EB14365.6000505@openwrt.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-Justin P. Mattock schrieb:
-> is there a way to get rid of this annoying spamming of the regulatory?
+On 11/02/2011 02:19 PM, Felix Fietkau wrote:
+> On 2011-11-02 1:10 PM, Zefir Kurtisi wrote:
+>> RX filter flags previously set for DFS radar detection were not
+>> preserved after "ath9k: disable unnecessary PHY error reporting".
+>>
+>> This patch ensures that the flags required for DFS support are
+>> kept set.
+>>
+>> Signed-off-by: Zefir Kurtisi<zefir.kurtisi@neratec.com>
+> I think preserving the existing register values is a bit fragile wrt. hardware resets, register clobbering, etc.
+> How about just adding an internal flag or bool in the softc?
 > 
-> 
-> [  338.519037] cfg80211: Calling CRDA to update world regulatory domain
-> [  338.523266] cfg80211: World regulatory domain updated:
-> [  338.523269] cfg80211:     (start_freq - end_freq @ bandwidth),
-> (max_antenna_gain, max_eirp)
-> [  338.523272] cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz),
-> (300 mBi, 2000 mBm)
-> [  338.523276] cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz),
-> (300 mBi, 2000 mBm)
-> [  338.523279] cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz),
-> (300 mBi, 2000 mBm)
-> [  338.523281] cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz),
-> (300 mBi, 2000 mBm)
-> [  338.523284] cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz),
-> (300 mBi, 2000 mBm)
+> - Felix
 
-I can see these messages with compat-wireless-2011-11-22, two. They are
-sent out every 3 or 4 seconds. compat-wireless-2011-10-31 doesn't show
-the problem.
+Hm, need to dig deeper.
+
+Ideally, the DFS rx filter flags are set at reset along with the channel setup and remain untouched until the chip is stopped (and set-up again).
+
+In fact, currently ath9k_hw_setrxfilter() is called only when the chip is stopped (clearing all flags in ath_stoprecv()) and from ath_opmode_init() and ieee80211_configure_filter() with the flags returned by ath_calcrxfilter().
+
+Since ath_calcrxfilter() provides static initial filter settings for the current opmode, all rx filter flags set internally are reset each time ieee80211_configure_filter() is called.
+
+With your proposal, we need to mirror each rx filter bit set in softc to be reset in ath_calcrxfilter(), right?.
+
+My thinking is, if it is assured that the chip is always reset after a stop, we can ignore potential register clobbering and preserve those bits set in ath_calcrxfilter().
 
 
-Andreas
+Thanks
+Zefir
