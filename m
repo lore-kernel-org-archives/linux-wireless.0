@@ -1,120 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:46400 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753231Ab1KHWd1 (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:55038 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932119Ab1KCItk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 17:33:27 -0500
-Received: by qyk2 with SMTP id 2so1134017qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 14:33:26 -0800 (PST)
+	Thu, 3 Nov 2011 04:49:40 -0400
+Received: by qabj40 with SMTP id j40so831585qab.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2011 01:49:40 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1320152097-2711-2-git-send-email-ilane@ti.com>
-References: <1320152097-2711-1-git-send-email-ilane@ti.com>
-	<1320152097-2711-2-git-send-email-ilane@ti.com>
-Date: Tue, 8 Nov 2011 19:33:25 -0300
-Message-ID: <CAK3JMAYq62VuPQGdwv=Qu6QnakG6biOQfYDj=kOKaOzW6QdT1Q@mail.gmail.com> (sfid-20111108_233331_166911_41038D54)
-Subject: Re: [PATCH v3 1/3] NFC: Update names and structs to NCI spec 1.0 d18
-From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-To: ilanelias78@gmail.com
-Cc: aloisio.almeida@openbossa.org, samuel@sortiz.org,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ilan Elias <ilane@ti.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1320308142.3950.3.camel@jlt3.sipsolutions.net>
+References: <CAFED-jkVtVFBJfDc-18a+RogAFoTVudS9_POjZHFZ=AtBu1p0g@mail.gmail.com>
+	<1320306440.3950.0.camel@jlt3.sipsolutions.net>
+	<CAFED-j=sP7PSD8yv1U4RA9-NGnjJ9CE5C6qWOQxZ=rzGMdt+2w@mail.gmail.com>
+	<1320307683.3950.2.camel@jlt3.sipsolutions.net>
+	<1320308142.3950.3.camel@jlt3.sipsolutions.net>
+Date: Thu, 3 Nov 2011 09:49:39 +0100
+Message-ID: <CAFED-jkx-_2r_T4GBAG46XbxzcpQ-RNqmEF7PuQem3zyEdrrBA@mail.gmail.com> (sfid-20111103_094944_643003_4ACDA9BB)
+Subject: Re: mac80211: UAPSD - EOSP bit seems to be not set when send qos null frame
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSWxhbiwKCjIwMTEvMTEvMSAgPGlsYW5lbGlhczc4QGdtYWlsLmNvbT46Cj4gRnJvbTogSWxh
-biBFbGlhcyA8aWxhbmVAdGkuY29tPgo+Cj4gQWRkaXRpb24sIGRlbGV0aW9uIGFuZCBtb2RpZmlj
-YXRpb24gb2YgTkNJIGNvbnN0YW50cy4KPiBDaGFuZ2VzIGluIE5DSSBjb21tYW5kcywgcmVzcG9u
-c2VzIGFuZCBub3RpZmljYXRpb25zIHN0cnVjdHVyZXMuCj4KPiBTaWduZWQtb2ZmLWJ5OiBJbGFu
-IEVsaWFzIDxpbGFuZUB0aS5jb20+Cj4gLS0tCj4gwqBpbmNsdWRlL25ldC9uZmMvbmNpLmggwqAg
-wqAgwqB8IMKgMTgzICsrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0t
-Cj4gwqBpbmNsdWRlL25ldC9uZmMvbmNpX2NvcmUuaCB8IMKgIDExICsrLQo+IMKgbmV0L25mYy9u
-Y2kvY29yZS5jIMKgIMKgIMKgIMKgIHwgwqAgwqA3ICstCj4gwqBuZXQvbmZjL25jaS9kYXRhLmMg
-wqAgwqAgwqAgwqAgfCDCoCDCoDUgKy0KPiDCoG5ldC9uZmMvbmNpL2xpYi5jIMKgIMKgIMKgIMKg
-IMKgfCDCoCDCoDggKy0tCj4gwqBuZXQvbmZjL25jaS9udGYuYyDCoCDCoCDCoCDCoCDCoHwgwqAx
-MzcgKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tCj4gwqBuZXQvbmZjL25jaS9yc3Au
-YyDCoCDCoCDCoCDCoCDCoHwgwqAgNTggKysrKysrKysrLS0tLS0tCj4gwqA3IGZpbGVzIGNoYW5n
-ZWQsIDI0NCBpbnNlcnRpb25zKCspLCAxNjUgZGVsZXRpb25zKC0pCj4KPiBkaWZmIC0tZ2l0IGEv
-aW5jbHVkZS9uZXQvbmZjL25jaS5oIGIvaW5jbHVkZS9uZXQvbmZjL25jaS5oCj4gaW5kZXggMzli
-ODViYy4uMzdmZThiMyAxMDA2NDQKPiAtLS0gYS9pbmNsdWRlL25ldC9uZmMvbmNpLmgKPiArKysg
-Yi9pbmNsdWRlL25ldC9uZmMvbmNpLmgKPiBAQCAtMzMsNDcgKzMzLDQ5IEBACj4gwqAjZGVmaW5l
-IE5DSV9NQVhfTlVNX1JGX0NPTkZJR1MgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgMTAKPiDCoCNkZWZpbmUgTkNJX01BWF9OVU1fQ09OTiDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAxMAo+Cj4gLS8q
-IE5DSSBTdGF0dXMgQ29kZXMgKi8KPiAtI2RlZmluZSDCoCDCoCDCoCDCoE5DSV9TVEFUVVNfT0sg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgMHgwMAo+IC0jZGVmaW5lIMKgIMKgIMKgIMKgTkNJX1NUQVRVU19SRUpFQ1RFRCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAweDAxCj4g
-LSNkZWZpbmUgwqAgwqAgwqAgwqBOQ0lfU1RBVFVTX01FU1NBR0VfQ09SUlVQVEVEIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgMHgwMgo+IC0jZGVmaW5lIMKgIMKgIMKg
-IMKgTkNJX1NUQVRVU19CVUZGRVJfRlVMTCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoDB4MDMKPiAtI2RlZmluZSDCoCDCoCDCoCDCoE5DSV9TVEFUVVNf
-RkFJTEVEIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIDB4MDQKPiAtI2RlZmluZSDCoCDCoCDCoCDCoE5DSV9TVEFUVVNfTk9UX0lOSVRJQUxJ
-WkVEIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgMHgwNQo+IC0j
-ZGVmaW5lIMKgIMKgIMKgIMKgTkNJX1NUQVRVU19TWU5UQVhfRVJST1IgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMHgwNgo+IC0jZGVmaW5lIMKgIMKgIMKg
-IMKgTkNJX1NUQVRVU19TRU1BTlRJQ19FUlJPUiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCAweDA3Cj4gLSNkZWZpbmUgwqAgwqAgwqAgwqBOQ0lfU1RBVFVTX1VO
-S05PV05fR0lEIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgMHgwOAo+IC0jZGVmaW5lIMKgIMKgIMKgIMKgTkNJX1NUQVRVU19VTktOT1dOX09JRCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDB4MDkKPiAtI2Rl
-ZmluZSDCoCDCoCDCoCDCoE5DSV9TVEFUVVNfSU5WQUxJRF9QQVJBTSDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDB4MGEKPiAtI2RlZmluZSDCoCDCoCDCoCDC
-oE5DSV9TVEFUVVNfTUVTU0FHRV9TSVpFX0VYQ0VFREVEIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgMHgwYgo+IC0vKiBEaXNjb3ZlcnkgU3BlY2lmaWMgU3RhdHVzIENvZGVzICov
-Cj4gLSNkZWZpbmUgwqAgwqAgwqAgwqBOQ0lfU1RBVFVTX0RJU0NPVkVSWV9BTFJFQURZX1NUQVJU
-RUQgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAweGEwCj4gLSNkZWZpbmUgwqAgwqAgwqAg
-wqBOQ0lfU1RBVFVTX0RJU0NPVkVSWV9UQVJHRVRfQUNUSVZBVElPTl9GQUlMRUQgwqAgwqAgwqAg
-wqAgwqAgMHhhMQo+ICsvKiBHZW5lcmljIFN0YXR1cyBDb2RlcyAqLwo+ICsjZGVmaW5lIE5DSV9T
-VEFUVVNfT0sgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAweDAwCj4gKyNkZWZpbmUgTkNJX1NUQVRVU19SRUpFQ1RFRCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDB4MDEKPiArI2Rl
-ZmluZSBOQ0lfU1RBVFVTX1JGX0ZSQU1FX0NPUlJVUFRFRCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoDB4MDIKPiArI2RlZmluZSBOQ0lfU1RBVFVTX0ZBSUxFRCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDB4MDMKPiAr
-I2RlZmluZSBOQ0lfU1RBVFVTX05PVF9JTklUSUFMSVpFRCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCAweDA0Cj4gKyNkZWZpbmUgTkNJX1NUQVRVU19TWU5UQVhfRVJS
-T1IgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAweDA1Cj4gKyNkZWZpbmUgTkNJX1NUQVRVU19TRU1BTlRJQ19FUlJPUiDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDB4MDYKPiArI2RlZmluZSBOQ0lfU1RB
-VFVTX1VOS05PV05fR0lEIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIDB4MDcKPiArI2RlZmluZSBOQ0lfU1RBVFVTX1VOS05PV05fT0lEIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDB4MDgKPiArI2RlZmluZSBOQ0lf
-U1RBVFVTX0lOVkFMSURfUEFSQU0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgMHgwOQo+ICsjZGVmaW5lIE5DSV9TVEFUVVNfTUVTU0FHRV9TSVpFX0VYQ0VFREVE
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDB4MGEKPiArLyogUkYgRGlzY292ZXJ5
-IFNwZWNpZmljIFN0YXR1cyBDb2RlcyAqLwo+ICsjZGVmaW5lIE5DSV9TVEFUVVNfRElTQ09WRVJZ
-X0FMUkVBRFlfU1RBUlRFRCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAweGEwCj4gKyNkZWZp
-bmUgTkNJX1NUQVRVU19ESVNDT1ZFUllfVEFSR0VUX0FDVElWQVRJT05fRkFJTEVEIMKgIMKgIMKg
-IMKgIMKgMHhhMQo+ICsjZGVmaW5lIE5DSV9TVEFUVVNfRElTQ09WRVJZX1RFQVJfRE9XTiDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAweGEyCj4gwqAvKiBSRiBJbnRlcmZhY2Ug
-U3BlY2lmaWMgU3RhdHVzIENvZGVzICovCj4gLSNkZWZpbmUgwqAgwqAgwqAgwqBOQ0lfU1RBVFVT
-X1JGX1RSQU5TTUlTU0lPTl9FUlJPUiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oDB4YjAKPiAtI2RlZmluZSDCoCDCoCDCoCDCoE5DSV9TVEFUVVNfUkZfUFJPVE9DT0xfRVJST1Ig
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAweGIxCj4gLSNkZWZpbmUg
-wqAgwqAgwqAgwqBOQ0lfU1RBVFVTX1JGX1RJTUVPVVRfRVJST1IgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMHhiMgo+IC0jZGVmaW5lIMKgIMKgIMKgIMKgTkNJX1NU
-QVRVU19SRl9MSU5LX0xPU1NfRVJST1IgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgMHhiMwo+ICsjZGVmaW5lIE5DSV9TVEFUVVNfUkZfVFJBTlNNSVNTSU9OX0VSUk9SIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDB4YjAKPiArI2RlZmluZSBOQ0lfU1RBVFVT
-X1JGX1BST1RPQ09MX0VSUk9SIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IDB4YjEKPiArI2RlZmluZSBOQ0lfU1RBVFVTX1JGX1RJTUVPVVRfRVJST1IgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAweGIyCj4gwqAvKiBORkNFRSBJbnRlcmZhY2Ug
-U3BlY2lmaWMgU3RhdHVzIENvZGVzICovCj4gLSNkZWZpbmUgwqAgwqAgwqAgwqBOQ0lfU1RBVFVT
-X01BWF9BQ1RJVkVfTkZDRUVfSU5URVJGQUNFU19SRUFDSEVEIMKgIMKgIMKgIMKgIMKgMHhjMAo+
-IC0jZGVmaW5lIMKgIMKgIMKgIMKgTkNJX1NUQVRVU19ORkNFRV9JTlRFUkZBQ0VfQUNUSVZBVElP
-Tl9GQUlMRUQgwqAgwqAgwqAgwqAgwqAgwqAweGMxCj4gLSNkZWZpbmUgwqAgwqAgwqAgwqBOQ0lf
-U1RBVFVTX05GQ0VFX1RSQU5TTUlTU0lPTl9FUlJPUiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCAweGMyCj4gLSNkZWZpbmUgwqAgwqAgwqAgwqBOQ0lfU1RBVFVTX05GQ0VFX1BST1RPQ09M
-X0VSUk9SIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDB4YzMKPiArI2RlZmlu
-ZSBOQ0lfU1RBVFVTX01BWF9BQ1RJVkVfTkZDRUVfSU5URVJGQUNFU19SRUFDSEVEIMKgIMKgIMKg
-IMKgIDB4YzAKPiArI2RlZmluZSBOQ0lfU1RBVFVTX05GQ0VFX0lOVEVSRkFDRV9BQ1RJVkFUSU9O
-X0ZBSUxFRCDCoCDCoCDCoCDCoCDCoCAweGMxCj4gKyNkZWZpbmUgTkNJX1NUQVRVU19ORkNFRV9U
-UkFOU01JU1NJT05fRVJST1IgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAweGMyCj4gKyNk
-ZWZpbmUgTkNJX1NUQVRVU19ORkNFRV9QUk9UT0NPTF9FUlJPUiDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDB4YzMKPiDCoCNkZWZpbmUgTkNJX1NUQVRVU19O
-RkNFRV9USU1FT1VUX0VSUk9SIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDB4
-YzQKCllvdSBhcmUgbWl4aW5nIGluZGVudGF0aW9uIGNoYW5nZXMgd2l0aCBjaGFuZ2VzIGluIGNv
-bnN0YW50cy4gSXQgd291bGQKYmUgYmV0dGVyIHRvIHB1dCB0aGUgaW5kZW50YXRpb24gY2hhbmdl
-cyBpbiBhIGFub3RoZXIgcGF0Y2guCgoKCkxhdXJvCg==
+2011/11/3 Johannes Berg <johannes@sipsolutions.net>:
+> On Thu, 2011-11-03 at 09:08 +0100, Johannes Berg wrote:
+>
+>> > Yes, I see this is set correctly before we call ieee80211_set_qos_hdr().
+>> > Next ieee80211_set_qos_hdr() fuction seems not care about EOSP bit and
+>> > we have this bit cleared before ieee80211_tx() call.
+>>
+>> Oh, WTH. Somebody had posted a patch that fixed that, I thought that
+>> went in but in my testing this didn't show up since my device always
+>> sets/clears it according to what I told it.
+>
+> Try this please.
+>
+> johannes
+>
+> --- wireless-testing.orig/net/mac80211/wme.c    2011-11-02 11:05:29.000000000 +0100
+> +++ wireless-testing/net/mac80211/wme.c 2011-11-03 09:14:30.000000000 +0100
+> @@ -143,10 +143,13 @@ void ieee80211_set_qos_hdr(struct ieee80
+>        /* Fill in the QoS header if there is one. */
+>        if (ieee80211_is_data_qos(hdr->frame_control)) {
+>                u8 *p = ieee80211_get_qos_ctl(hdr);
+> -               u8 ack_policy = 0, tid;
+> +               u8 ack_policy, tid;
+>
+>                tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+>
+> +               /* preserve EOSP bit */
+> +               ack_policy = *p & IEEE80211_QOS_CTL_EOSP;
+> +
+>                if (unlikely(sdata->local->wifi_wme_noack_test))
+>                        ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
+>                /* qos header is 2 bytes */
+>
+>
+>
+
+Verified. Now works correctly.
+Thanks.
+
+BR
+Janusz
