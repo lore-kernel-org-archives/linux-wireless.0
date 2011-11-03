@@ -1,74 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:37985 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751668Ab1KKKSl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Nov 2011 05:18:41 -0500
-Subject: [PATCH 09/10] ath6kl: disable HTC for USB devices
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 11 Nov 2011 12:18:37 +0200
-Message-ID: <20111111101837.12075.38773.stgit@localhost6.localdomain6> (sfid-20111111_111844_496709_5ED12434)
-In-Reply-To: <20111111101551.12075.94865.stgit@localhost6.localdomain6>
-References: <20111111101551.12075.94865.stgit@localhost6.localdomain6>
+Received: from mail.neratec.ch ([80.75.119.105]:34883 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933454Ab1KCQ0y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Nov 2011 12:26:54 -0400
+Message-ID: <4EB2C0CC.8030506@neratec.com> (sfid-20111103_172658_662764_11C4EC6C)
+Date: Thu, 03 Nov 2011 17:26:52 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, nbd@openwrt.org
+Subject: Re: [RFC v2 1/2] ath9k: add DFS radar pulse processing
+References: <1320328553-28066-1-git-send-email-zefir.kurtisi@neratec.com>	<1320328553-28066-2-git-send-email-zefir.kurtisi@neratec.com> <CAD2nsn0PJqm3gCOiReUhJ3UGChWJZuy_pUnpu_rDUcshAcQWfQ@mail.gmail.com>
+In-Reply-To: <CAD2nsn0PJqm3gCOiReUhJ3UGChWJZuy_pUnpu_rDUcshAcQWfQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As HTC layer doesn't support USB devices return an error if that happens.
-USB support will be added to HTC in the future, this is just a temporary
-solution.
+On 11/03/2011 04:56 PM, Mohammed Shafi wrote:
+> On Thu, Nov 3, 2011 at 7:25 PM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+>> [...]
+>> +       switch (are->pulse_bw_info) {
+>> +       case 0:
+> 
+> can we define some macro for this. thanks!
+> 
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/hif.c |    5 +++++
- drivers/net/wireless/ath/ath6kl/htc.c |   10 +++++++++-
- 2 files changed, 14 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
-index e57da35..0772ef6 100644
---- a/drivers/net/wireless/ath/ath6kl/hif.c
-+++ b/drivers/net/wireless/ath/ath6kl/hif.c
-@@ -689,6 +689,11 @@ int ath6kl_hif_setup(struct ath6kl_device *dev)
- 	ath6kl_dbg(ATH6KL_DBG_HIF, "hif block size %d mbox addr 0x%x\n",
- 		   dev->htc_cnxt->block_sz, dev->ar->mbox_info.htc_addr);
- 
-+	/* usb doesn't support enabling interrupts */
-+	/* FIXME: remove check once USB support is implemented */
-+	if (dev->ar->hif_type == ATH6KL_HIF_TYPE_USB)
-+		return 0;
-+
- 	status = ath6kl_hif_disable_intrs(dev);
- 
- fail_setup:
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index f3b63ca..b017022 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -2543,6 +2543,12 @@ int ath6kl_htc_wait_target(struct htc_target *target)
- 	struct htc_service_connect_resp resp;
- 	int status;
- 
-+	/* FIXME: remove once USB support is implemented */
-+	if (target->dev->ar->hif_type == ATH6KL_HIF_TYPE_USB) {
-+		ath6kl_err("HTC doesn't support USB yet. Patience!\n");
-+		return -EOPNOTSUPP;
-+	}
-+
- 	/* we should be getting 1 control message that the target is ready */
- 	packet = htc_wait_for_ctrl_msg(target);
- 
-@@ -2772,7 +2778,9 @@ void ath6kl_htc_cleanup(struct htc_target *target)
- {
- 	struct htc_packet *packet, *tmp_packet;
- 
--	ath6kl_hif_cleanup_scatter(target->dev->ar);
-+	/* FIXME: remove check once USB support is implemented */
-+	if (target->dev->ar->hif_type != ATH6KL_HIF_TYPE_USB)
-+		ath6kl_hif_cleanup_scatter(target->dev->ar);
- 
- 	list_for_each_entry_safe(packet, tmp_packet,
- 			&target->free_ctrl_txbuf, list) {
-
+Ok.
