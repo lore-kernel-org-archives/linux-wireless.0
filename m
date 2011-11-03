@@ -1,48 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2015 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753281Ab1KURMb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51579 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750748Ab1KCIIG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 12:12:31 -0500
-Message-ID: <4ECA861A.4040906@qca.qualcomm.com> (sfid-20111121_181234_890884_949F9007)
-Date: Mon, 21 Nov 2011 19:10:50 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Raja Mani <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: Use mutex to protect dma buffer in sync read
- write
-References: <1321858611-2729-1-git-send-email-rmani@qca.qualcomm.com>
-In-Reply-To: <1321858611-2729-1-git-send-email-rmani@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Thu, 3 Nov 2011 04:08:06 -0400
+Subject: Re: mac80211: UAPSD - EOSP bit seems to be not set when send qos
+ null frame
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAFED-j=sP7PSD8yv1U4RA9-NGnjJ9CE5C6qWOQxZ=rzGMdt+2w@mail.gmail.com> (sfid-20111103_090606_495560_51D06706)
+References: <CAFED-jkVtVFBJfDc-18a+RogAFoTVudS9_POjZHFZ=AtBu1p0g@mail.gmail.com>
+	 <1320306440.3950.0.camel@jlt3.sipsolutions.net>
+	 <CAFED-j=sP7PSD8yv1U4RA9-NGnjJ9CE5C6qWOQxZ=rzGMdt+2w@mail.gmail.com>
+	 (sfid-20111103_090606_495560_51D06706)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 03 Nov 2011 09:08:03 +0100
+Message-ID: <1320307683.3950.2.camel@jlt3.sipsolutions.net> (sfid-20111103_090811_283339_BC65CFF7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/21/2011 08:56 AM, Raja Mani wrote:
-> Firmware crashes while starting Soft AP in 32 bit x86 platform.
-> The reason is that the single dma buffer (ar_sdio->dma_buffer)
-> is used in ath6kl_sdio_read_write_sync() for unaligned buffer
-> handling and this function is called in the multiple context
-> at the same time. So, finally hits dma buffer corruption and
-> firmware crash.
+On Thu, 2011-11-03 at 09:05 +0100, Janusz Dziedzic wrote:
+> 2011/11/3 Johannes Berg <johannes@sipsolutions.net>:
+> > On Thu, 2011-11-03 at 08:36 +0100, Janusz Dziedzic wrote:
+> >> Hello,
+> >>
+> >> I have a question connected with UAPSD implementation.
+> >> Seems, mac80211 always clear EOSP bit in ieee80211_set_qos_hdr() fuction.
+> >> Is that a problem in mac80211 or this should be handled in different place/way?
+> >
+> > It should be set:
+> >
+> >        if (qos) {
+> >                nullfunc->qos_ctrl = cpu_to_le16(tid);
+> >
+> >                if (reason == IEEE80211_FRAME_RELEASE_UAPSD)
+> >                        nullfunc->qos_ctrl |=
+> >                                cpu_to_le16(IEEE80211_QOS_CTL_EOSP);
+> >        }
+> >
 > 
-> Mutex is used to protect dma buffer to avoid data corruption.
-> Spin lock can not used to fix this issue since mmc stack
-> read/write calls may for sleep.
-> 
-> Observed this issue with recently commited patch
-> "ath6kl: Claim sdio function only at appropriate places"
-> 861dd058f495973c7ad2a44b8f68f3cc05733eab
-> 
-> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+> Yes, I see this is set correctly before we call ieee80211_set_qos_hdr().
+> Next ieee80211_set_qos_hdr() fuction seems not care about EOSP bit and
+> we have this bit cleared before ieee80211_tx() call.
 
-I really would not like to add yet another lock (or mutex) to ath6kl,
-but I don't see any other quick fix for this. So I have applied this for
-now, but I hope that in the future we get to remove the ugly bounce
-buffer altogether.
+Oh, WTH. Somebody had posted a patch that fixed that, I thought that
+went in but in my testing this didn't show up since my device always
+sets/clears it according to what I told it.
 
-But I did minor changes in the patch: I added a comment to the mutex
-(which I now require for all new locks), renamed the lock to something
-easier and moved it after the buffer.
+johannes
 
-Kalle
