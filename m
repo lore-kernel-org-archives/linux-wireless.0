@@ -1,39 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:46849 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751842Ab1KUSr0 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56998 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751346Ab1KCJjH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 13:47:26 -0500
-Received: by vbbfc21 with SMTP id fc21so2862117vbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 10:47:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4ECA8908.7070304@broadcom.com>
-References: <CADrAYBnwWEaigcgQYYk6V3VEuEYyrmzJQXegKVk6TgOTPh5N8A@mail.gmail.com>
-	<4ECA8908.7070304@broadcom.com>
-Date: Mon, 21 Nov 2011 19:47:25 +0100
-Message-ID: <CADrAYBnaL67Vo7i8yKwVoJwyRy+3tmeCRh0Cb6ok83F1d=29UQ@mail.gmail.com> (sfid-20111121_194729_862931_9C3C1A50)
-Subject: Re: brcm80211 (with bcm4329-chip)
-From: =?ISO-8859-1?Q?Thomas_Lang=E5s?= <thomas.langas@fxitech.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 3 Nov 2011 05:39:07 -0400
+Subject: Re: [PATCH] cfg80211: merge in beacon ies of hidden bss.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAMG6FYhgeNg3CbDZg7GkJkq1ArJ=5n+bD=zPx=6ZFe7-Kj4Jmw@mail.gmail.com> (sfid-20111103_101806_675539_162704BA)
+References: <CAMG6FYiV8F=MFBeUQCGSj__h=REVLMvTZCvLEvDPT7GP2KWsWw@mail.gmail.com>
+	 <1320310524.3950.29.camel@jlt3.sipsolutions.net>
+	 <CAMG6FYhgeNg3CbDZg7GkJkq1ArJ=5n+bD=zPx=6ZFe7-Kj4Jmw@mail.gmail.com>
+	 (sfid-20111103_101806_675539_162704BA)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 03 Nov 2011 10:39:01 +0100
+Message-ID: <1320313141.3950.35.camel@jlt3.sipsolutions.net> (sfid-20111103_103921_040397_A763AD6A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 21, 2011 at 6:23 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> Could you provide some information on the board you are using. Type of
-> processor, kernel version, and anything else you can/want to share. In
-> /sys/bus/sdio/devices/ you may find the location of the bcm4329.
+Hi Dmitry,
 
+> >> +     if (!ie1 && !ie2)
+> >> +             return 0;
+> > I don't think it's valid to leave out the SSID IE, so I'd rather not
+> > have that test here. It might interact badly with other uses (mesh?)
+> >
+> ie1 and ie2 could not NULL at the same time, otherwise the bss
+> would be found in the first search attempt. However, I would prefer
+> to have some water-proof check here. WARN_ON? BUG_ON?
 
-Kernel version: 3.2.0-rc1 (from linux-samsung tree)
-Processor:   Samsung Exynos 4210
+Maybe a warning? But I don't see why it'll just fall through to the next
+line and return -1 if one of them is missing.
 
-* uSD-reader is on mmc 0
-* bcm4329 is on mmc 2
+> >> +             if (ie2[i + 2])
+> >> +                     return -1;
+> > I don't understand this loop. Why check that ie2 is zeroed, but check
+> > only to the minlen of ie1, ie2?
+> >
+> Check that ie2 is zeroed is a check for hidden SSID.
+> Check only to minlent to be in-line with cmp_ies().
+> 
+> >> +     return ie2[1] - ie1[1];
+> > I'd error out much earlier if the length is different instead of
+> > comparing to the minlen first.
+> >
+> Key comparator must use same algorithm in any rb-tree search function
+> (order is important), otherwise ordering of items in the tree is broken
+> and search gives incorrect results.
+> This code uses same order as cmp_ies() does.
 
-Any more details you want to know, please feel free to ask.
+Oh. Good point. Add a comment?
 
-Regards,
-Thomas
+> >> @@ -494,6 +578,13 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+> >>       spin_lock_bh(&dev->bss_lock);
+> >>
+> >>       found = rb_find_bss(dev, res);
+> >> +     if (!found) {
+> >> +             struct cfg80211_internal_bss *hidden;
+> >> +
+> >> +             hidden = rb_find_hidden_bss(dev, res);
+> >> +             if (hidden)
+> >> +                     merge_hidden_ies(res, hidden);
+> >> +     }
+> > I was going to complain that I don't understand why this works -- but
+> > then I think now I do. If you move the code down into the else branch
+> > it'll be much easier to follow.
+> >
+> Ok.
+> 
+> Thank you for review!
+
+Eliad pointed out another thing: It is possible to have multiple SSIDs
+hidden behind a single hidden SSID. Therefore, this should update all of
+those BSS structs. Also, I'm a tad confused about the matching code
+here, this code path executes for both received beacons and probe
+responses, but probe responses would typically have found the BSS
+already? But what if we only have a beacon and then receive a probe
+response? Or vice versa? Some comments would be good outlining how that
+works.
+
+johannes
+
