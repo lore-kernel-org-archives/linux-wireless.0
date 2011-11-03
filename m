@@ -1,110 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:54818 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751029Ab1KYRAH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 12:00:07 -0500
-Message-ID: <4ECFC992.6020706@gmail.com> (sfid-20111125_180012_102332_A2F8B07E)
-Date: Fri, 25 Nov 2011 09:00:02 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+Received: from mail.neratec.ch ([80.75.119.105]:34832 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933814Ab1KCQZ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Nov 2011 12:25:27 -0400
+Message-ID: <4EB2C073.7080101@neratec.com> (sfid-20111103_172531_578028_79B617D4)
+Date: Thu, 03 Nov 2011 17:25:23 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: spamm of cfg80211: Calling CRDA to update world regulatory domain
-References: <4EB00DD3.7090701@gmail.com> <4ECFAAC2.9070005@01019freenet.de>
-In-Reply-To: <4ECFAAC2.9070005@01019freenet.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, nbd@openwrt.org
+Subject: Re: [RFC v2 1/2] ath9k: add DFS radar pulse processing
+References: <1320328553-28066-1-git-send-email-zefir.kurtisi@neratec.com>	<1320328553-28066-2-git-send-email-zefir.kurtisi@neratec.com> <CAD2nsn32rYs4ikwkJOwqfw5gtBU_o8wVGF2WG5-kjFGcTW-rjQ@mail.gmail.com>
+In-Reply-To: <CAD2nsn32rYs4ikwkJOwqfw5gtBU_o8wVGF2WG5-kjFGcTW-rjQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/25/2011 06:48 AM, Andreas Hartmann wrote:
-> Hi,
->
-> Justin P. Mattock schrieb:
->> is there a way to get rid of this annoying spamming of the regulatory?
->>
->>
->> [  338.519037] cfg80211: Calling CRDA to update world regulatory domain
->> [  338.523266] cfg80211: World regulatory domain updated:
->> [  338.523269] cfg80211:     (start_freq - end_freq @ bandwidth),
->> (max_antenna_gain, max_eirp)
->> [  338.523272] cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz),
->> (300 mBi, 2000 mBm)
->> [  338.523276] cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz),
->> (300 mBi, 2000 mBm)
->> [  338.523279] cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz),
->> (300 mBi, 2000 mBm)
->> [  338.523281] cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz),
->> (300 mBi, 2000 mBm)
->> [  338.523284] cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz),
->> (300 mBi, 2000 mBm)
->
-> I can see these messages with compat-wireless-2011-11-22, two. They are
-> sent out every 3 or 4 seconds. compat-wireless-2011-10-31 doesn't show
-> the problem.
->
->
-> Andreas
->
+On 11/03/2011 04:54 PM, Mohammed Shafi wrote:
+> On Thu, Nov 3, 2011 at 7:25 PM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+>> [...]
+>> +static bool postprocess_radar_event(struct ath_softc *sc,
+>> +               struct ath_radar_data *are, struct dfs_radar_pulse *drp)
+> 
+> ath9k_postprocess_radar_event would be better?
+> 
 
-
-yep! usually if I go to starbucks to do things this message shows 
-up(think most public areas I get this a lot).
-if I connect to a home router this does not spamm the syslog that 
-much(still does, just not as easily).
-attached is dmesg of syslog at starbucks, within 10mins I already have 
-like 3/4 of this..
-
-http://fpaste.org/xzaz/
-
-looking through the kernel I see mixed areas in of which this is 
-triggered..:
-
-
-
-net/wireless/reg.c:381
-
-static int call_crda(const char *alpha2)
-{
-     if (!is_world_regdom((char *) alpha2))
-         pr_info("Calling CRDA for country: %c%c\n",
-             alpha2[0], alpha2[1]);
-     else
-         pr_info("Calling CRDA to update world regulatory domain\n");
-
-     /* query internal regulatory database (if it exists) */
-     reg_regdb_query(alpha2);
-
-     return kobject_uevent(&reg_pdev->dev.kobj, KOBJ_CHANGE);
-}
-
-
-net/mac80211/work.c:498:
-
-static enum work_action __must_check
-ieee80211_authenticate(struct ieee80211_work *wk)
-{
-
-<----- lots of code --------->
-
-     printk(KERN_DEBUG "%s: authenticate with %pM (try %d)\n",
-            sdata->name, wk->filter_ta, wk->probe_auth.tries);
-
-
-now not sure how this mechanism works, but there are _two_ approaches 
-for the regulatory domain:
-
-1) have the kernel use something like alpha2 that automatically 
-finds/search _query's_ for the country or something.
-or
-2) manually add your country to net/wireless/db.txt with the country 
-causing alpha1 to be used, which I think causes the kernel to not query 
-for CRDA.
-
-NOTE: I only spent a little time reading up on this, and trying it out 
-so I might have got this wrong. all of this is on
-http://linuxwireless.org/en/developers/Regulatory
-
-Justin P. Mattock
-
-
+Ok (I don't mind, as it's static anyhow.).
