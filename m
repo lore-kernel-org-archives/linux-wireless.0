@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43640 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750916Ab1KDCBH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 22:01:07 -0400
-Subject: Re: A new driver is going to be released
-From: Dan Williams <dcbw@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Dmitry Tarnyagin <abi.dmitryt@gmail.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 03 Nov 2011 21:01:27 -0500
-In-Reply-To: <4EB33B67.6080806@lwfinger.net>
-References: <CAMG6FYiNW-1ijghpgQ6R_9HujVEp8d53DQ-vjfJrw_hZamM8Jw@mail.gmail.com>
-	 <4EB33B67.6080806@lwfinger.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:51051 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755083Ab1KCIhs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Nov 2011 04:37:48 -0400
+Subject: Re: [PATCH v3 1/3] mac80211: Support forcing station to disable HT
+ (802.11n).
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1320299722-30113-1-git-send-email-greearb@candelatech.com> (sfid-20111103_065534_192366_EF6ABFB6)
+References: <1320299722-30113-1-git-send-email-greearb@candelatech.com>
+	 (sfid-20111103_065534_192366_EF6ABFB6)
 Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1320372088.29008.0.camel@dcbw.foobar.com> (sfid-20111104_030111_763697_FD515C80)
+Date: Thu, 03 Nov 2011 09:37:45 +0100
+Message-ID: <1320309465.3950.14.camel@jlt3.sipsolutions.net> (sfid-20111103_093753_210769_DC31D0B7)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-11-03 at 20:09 -0500, Larry Finger wrote:
-> On 11/03/2011 05:40 PM, Dmitry Tarnyagin wrote:
-> > Hi,
-> >
-> > I'm about to release cw1200 driver to the community (more or less
-> > latest code is available here:
-> > http://www.igloocommunity.org/gitweb/?p=kernel/igloo-kernel.git;a=shortlog;h=refs/heads/linux-3.0-ux500
-> > as well).
-> >
-> > Technical question: how is it usually done in terms of commit history?
-> > Should I preserve the history and release all the changes in the
-> > driver separately or should I squash everything to a single commit
-> > or...?
+On Wed, 2011-11-02 at 22:55 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
 > 
-> The details of what it took to get your driver to this point are not going to be 
-> of much interest in the future. The "official" history starts with acceptance 
-> into the kernel. Two things to keep in mind: (1) the kernel source must compile 
-> at each step of the way to allow for bisection, thus any changes to Kconfig and 
-> Makefile must be in the last patch, and (2) each commit should be small enough 
-> that it is relatively easy to review.
-> 
-> As I do not know the complexity of the driver, it is a little difficult to make 
-> suggestions; however, one way to accomplish the above is to add each source file 
-> in a separate patch. The maintainer may submit the final version as a single 
-> commit, but that is their choice.
-> 
-> Your sending this mail to the wireless ML indicates that you plan to submit the 
-> driver to the drivers/net/wireless/ part of the source tree. As long as the 
-> driver employs mac80211, that is appropriate. The other option is 
-> drivers/staging/. Drivers for that section of the source tree usually are not 
-> held to standards as high as the wireless section.
+> This allows a user to configure a wifi station interface
+> to disable the HT features, even if the AP and NIC supports it.
 
-It looks like it's mac80211-based and already in drivers/staging/
-according to the git tree Dmitry pointed to.
+I like this version much better. Some nitpicks:
 
-Dan
+
+> +#define ASSOC_REQ_DISABLE_HT	(1<<0) /* Disable HT (802.11n) */
+
+You could use an enum to use kernel-doc notation here.
+
+> @@ -1046,6 +1048,7 @@ struct cfg80211_auth_request {
+>   * @use_mfp: Use management frame protection (IEEE 802.11w) in this association
+>   * @crypto: crypto settings
+>   * @prev_bssid: previous BSSID, if not %NULL use reassociate frame
+> + * @flags:  See ASSOC_REQ_* flags above.
+
+and then say "See &enum cfg80211_assoc_req_flags" or so should even
+create the correct link in kernel-doc output.
+
+> @@ -1053,6 +1056,7 @@ struct cfg80211_assoc_request {
+>  	size_t ie_len;
+>  	struct cfg80211_crypto_settings crypto;
+>  	bool use_mfp;
+> +	u32 flags;
+
+Seems like it might be good for use_mfp to become a flag? Anyway,
+internal APIs are easy to change.
+
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+
+I'd rather split this up into cfg80211/mac80211. In fact, maybe
+splitting it into one cfg80211 and one mac80211 patch, instead of three
+different patches that span both might be worthwhile?
+
+johannes
 
