@@ -1,86 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.unitix.de ([176.9.2.175]:35391 "EHLO mail2.unitix.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752498Ab1KXVzk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 16:55:40 -0500
-Message-ID: <4ECEBD5A.9090307@arndnet.de> (sfid-20111124_225558_204404_2A031E53)
-Date: Thu, 24 Nov 2011 22:55:38 +0100
-From: Arnd Hannemann <arnd@arndnet.de>
-MIME-Version: 1.0
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: 3.2.0-rc2: WARNING: at iwlwifi/wl-trans-pcie.c:1105
-References: <4EC6DE6B.3080603@arndnet.de> <4ECB65A5.3010009@arndnet.de> <CANUX_P1RXxRuybzj0gavVOkN-a3H_qRO45S1nc3oPq1aZe5V3g@mail.gmail.com> <4ECD5CA7.4080606@arndnet.de> <CANUX_P29L-o8-KQ_G9i1b8NzJtHcmRBbDS_88-oKMVU_jiMY8Q@mail.gmail.com>
-In-Reply-To: <CANUX_P29L-o8-KQ_G9i1b8NzJtHcmRBbDS_88-oKMVU_jiMY8Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:49039 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755083Ab1KCIr1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Nov 2011 04:47:27 -0400
+Subject: Re: [PATCH v3 3/3] mac80211: Allow overriding some HT information.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1320299722-30113-3-git-send-email-greearb@candelatech.com> (sfid-20111103_065549_863747_7FFD5818)
+References: <1320299722-30113-1-git-send-email-greearb@candelatech.com>
+	 <1320299722-30113-3-git-send-email-greearb@candelatech.com>
+	 (sfid-20111103_065549_863747_7FFD5818)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 03 Nov 2011 09:47:25 +0100
+Message-ID: <1320310045.3950.23.camel@jlt3.sipsolutions.net> (sfid-20111103_094731_958535_12EB3358)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, 2011-11-02 at 22:55 -0700, greearb@candelatech.com wrote:
 
-Am 24.11.2011 07:23, schrieb Emmanuel Grumbach:
->>
->> I applied the QUEUE_DEBUG.patch you posted in the other thread, not sure if I'm experiencing the same problem:
-> 
-> Yes, it looks similar. Please enable the MAC80211_HT_DEBUG compilation flag too.
-> In any case now that I more the less see what is happening, I am
-> working now on another debug patch.
+> -void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
+> +void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
+> +				     struct ieee80211_sta_ht_cap *ht_cap,
+> +				     int min_rates)
+> +{
+> +	u8 *scaps = (u8 *)(&sdata->u.mgd.ht_capa.mcs.rx_mask);
+> +	u8 *smask = (u8 *)(&sdata->u.mgd.ht_capa_mask.mcs.rx_mask);
+> +	int i;
+> +
+> +	/* check for HT over-rides, MCS rates first. */
+> +	for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++) {
+> +		int q;
+> +		for (q = 0; q < 8; q++) {
+> +			/*
+> +			 * We always need to advert at least MCS0-7, to
+> +			 * be a compliant HT station, for instance
+> +			 */
+> +			if (((i * 8 + q) >= min_rates) &&
+> +			    (smask[i] & (1<<q))) {
+> +				if (!(scaps[i] & (1<<q))) {
+> +					/*
+> +					 * Can only disable rates, not force
+> +					 * new ones
+> +					 */
+> +					ht_cap->mcs.rx_mask[i] &= ~(1<<q);
+> +				}
+> +			}
+> +		}
+> +	}
+> +
+> +	/* Force removal of HT-40 capabilities? */
+> +	if (sdata->u.mgd.flags & IEEE80211_STA_DISABLE_HT40) {
+> +		ht_cap->cap &= ~(IEEE80211_HT_CAP_SUP_WIDTH_20_40
+> +				 | IEEE80211_HT_CAP_SGI_40);
+> +	}
 
-Here you are, 3.2.0-rc3 with enabled MAC80211_HT_DEBUG and your QUEUE_DEBUG.patch:
+Here's another argument for splitting the patches differently -- this
+ought to be part of the disable HT40 patch.
 
-[  396.963871] switched off addBA timer for tid 0
-[  396.963877] Aggregation is on for tid 0
-[  396.964022] iwlwifi 0000:03:00.0: U iwl_trans_tx_queue_set_status Deactivate BA Queue 11 on FIFO 1
-[  396.964037] iwlwifi 0000:03:00.0: Tx aggregation enabled on ra = 30:46:9a:XX:XX:XX tid = 0
-[  396.964052] ------------[ cut here ]------------
-[  396.964079] WARNING: at /home/arnd/Projekte/kernel/linux-2.6/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c:1106 iwl_trans_pcie_tx+0xb71/0xb90 [iwlwifi]()
-[  396.964086] Hardware name: 4384GEG
-[  396.964090] Modules linked in: iwlwifi ufs qnx4 hfsplus hfs minix ntfs vfat msdos fat jfs xfs reiserfs ip6table_filter ip6_tables bnep rfcomm ipt_MASQUERADE iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack ipt_REJECT xt_CHECKSUM iptable_mangle xt_tcpudp iptable_filter ip_tables x_tables bridge stp llc kvm_intel kvm joydev dm_crypt arc4 qcserial usb_wwan usbserial btusb bluetooth snd_hda_codec_hdmi snd_hda_codec_conexant binfmt_misc thinkpad_acpi snd_hda_intel snd_hda_codec snd_hwdep snd_seq_midi snd_pcm snd_rawmidi psmouse serio_raw snd_seq_midi_event snd_seq snd_timer snd_seq_device intel_ips mac80211 snd cfg80211 snd_page_alloc soundcore tpm_tis nvram mei(C) btrfs zlib_deflate libcrc32c mxm_wmi firewire_ohci wmi firewire_core crc_itu_t sdhci_pci sdhci ahci libahci i915 drm_kms_helper drm e1000e i2c_algo_bit video [last unloaded: iwlwifi]
-[  396.964231] Pid: 308, comm: kworker/u:4 Tainted: G         C   3.2.0-rc3-aha+ #8
-[  396.964237] Call Trace:
-[  396.964241]  <IRQ>  [<ffffffff81062b7f>] warn_slowpath_common+0x7f/0xc0
-[  396.964259]  [<ffffffff81062bda>] warn_slowpath_null+0x1a/0x20
-[  396.964279]  [<ffffffffa0762fd1>] iwl_trans_pcie_tx+0xb71/0xb90 [iwlwifi]
-[  396.964304]  [<ffffffffa026b0c8>] ? ccmp_encrypt_skb.isra.4+0x108/0x230 [mac80211]
-[  396.964321]  [<ffffffffa07443e1>] ? iwlagn_tx_skb+0x161/0xb90 [iwlwifi]
-[  396.964336]  [<ffffffffa074477f>] iwlagn_tx_skb+0x4ff/0xb90 [iwlwifi]
-[  396.964348]  [<ffffffffa073b491>] iwlagn_mac_tx+0x121/0x1c0 [iwlwifi]
-[  396.964356]  [<ffffffff8103aa39>] ? default_spin_lock_flags+0x9/0x10
-[  396.964376]  [<ffffffffa0283806>] __ieee80211_tx+0x76/0x230 [mac80211]
-[  396.964394]  [<ffffffffa028581c>] ieee80211_tx+0x8c/0xc0 [mac80211]
-[  396.964412]  [<ffffffffa02866fd>] ieee80211_tx_pending+0x7d/0x220 [mac80211]
-[  396.964420]  [<ffffffff8104a13c>] ? resched_task+0x2c/0x80
-[  396.964426]  [<ffffffff81069b58>] tasklet_action+0x78/0x140
-[  396.964432]  [<ffffffff8106a198>] __do_softirq+0xa8/0x210
-[  396.964439]  [<ffffffff8160e5ec>] call_softirq+0x1c/0x30
-[  396.964441]  <EOI>  [<ffffffff81015195>] do_softirq+0x65/0xa0
-[  396.964451]  [<ffffffff8106a0e4>] local_bh_enable_ip+0x94/0xa0
-[  396.964456]  [<ffffffff81604439>] _raw_spin_unlock_bh+0x19/0x20
-[  396.964471]  [<ffffffffa026e9a9>] ieee80211_agg_tx_operational+0xc9/0xe0 [mac80211]
-[  396.964486]  [<ffffffffa026f2a4>] ieee80211_process_addba_resp+0x114/0x150 [mac80211]
-[  396.964503]  [<ffffffffa0277f6f>] ieee80211_iface_work+0x2ff/0x350 [mac80211]
-[  396.964520]  [<ffffffffa0277c70>] ? ieee80211_teardown_sdata+0xe0/0xe0 [mac80211]
-[  396.964527]  [<ffffffff8108021a>] process_one_work+0x11a/0x480
-[  396.964533]  [<ffffffff814f2ab7>] ? __kfree_skb+0x47/0xa0
-[  396.964538]  [<ffffffff81080fa4>] worker_thread+0x164/0x370
-[  396.964543]  [<ffffffff81080e40>] ? manage_workers.isra.30+0x230/0x230
-[  396.964548]  [<ffffffff8108571c>] kthread+0x8c/0xa0
-[  396.964553]  [<ffffffff8160e4f4>] kernel_thread_helper+0x4/0x10
-[  396.964558]  [<ffffffff81085690>] ? flush_kthread_worker+0xa0/0xa0
-[  396.964563]  [<ffffffff8160e4f0>] ? gs_change+0x13/0x13
-[  396.964566] ---[ end trace d76891b9559c3dcc ]---
-[  396.964741] Stopping Tx BA session for 30:46:9a:XX:XX:XX tid 0
-[  397.804618] Open BA session requested for 30:46:9a:XX:XX:XX tid 0
-[  397.844951] iwlwifi 0000:03:00.0: U iwl_trans_pcie_tx_agg_alloc HW queue is NOT empty: 44 packets in HW queue
-[  397.844964] activated addBA response timer on tid 0
-[  397.847025] switched off addBA timer for tid 0
-[  399.230074] iwlwifi 0000:03:00.0: Queue 11 stuck for 2000 ms.
-[  399.230081] iwlwifi 0000:03:00.0: Current read_ptr 12 write_ptr 57
-[  399.230086] iwlwifi 0000:03:00.0: On demand firmware reload
-[  399.230449] ieee80211 phy1: Hardware restart was requested
-[  399.230536] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
-[  399.237213] iwlwifi 0000:03:00.0: Radio type=0x0-0x3-0x1
+> +	/* Allow user to decrease AMPDU factor */
+> +	if (sdata->u.mgd.ht_capa_mask.ampdu_params_info &
+> +	    IEEE80211_HT_AMPDU_PARM_FACTOR) {
+> +		u16 n = sdata->u.mgd.ht_capa.ampdu_params_info
+> +			& IEEE80211_HT_AMPDU_PARM_FACTOR;
+> +		if (n < ht_cap->ampdu_factor)
+> +			ht_cap->ampdu_factor = n;
+> +	}
+> +
+> +	/* Set the AMPDU density. */
+> +	if (sdata->u.mgd.ht_capa_mask.ampdu_params_info &
+> +	    IEEE80211_HT_AMPDU_PARM_DENSITY)
+> +		ht_cap->ampdu_density =
+> +			(sdata->u.mgd.ht_capa.ampdu_params_info &
+> +			 IEEE80211_HT_AMPDU_PARM_DENSITY)
+> +			>> IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT;
+> +}
 
-Best regards
-Arnd
+The AMPDU density should only allow increasing.
+
+I think a lot of this validation should live in cfg80211 so if another
+driver wants to implement it, this kind of thing is already covered.
+
+> +	memcpy(&ht_cap, &sband->ht_cap, sizeof(ht_cap));
+> +	/*
+> +	 * This is for an association attempt, and stations must
+> +	 * support at least the first 8 MCS rates.  See section 20.1.1
+> +	 * of the 802.11n spec for details.
+> +	 */
+
+I think cfg80211 should probably just reject other configuration
+attempts.
+
+> +       [NL80211_ATTR_HT_CAPABILITY_MASK] = {
+> +               .type = NLA_BINARY,
+> +               .len = NL80211_HT_CAPABILITY_LEN
+> +       },
+
+My mistake -- remove the type, it should be just the length for proper
+checking.
+
+
+I think there's a lot of data in the ht_cap struct that you don't use,
+is that right? If so you should reject it being configured. I'm also not
+quite sure why you support both disable-HT40, and then this setting here
+that has SUP_WIDTH_20_40 too.
+
+I'm more and more coming to the conclusion that it would be clearer to
+make separate configuration items for the various things. Most
+capabilities you could only disable (greenfield, ...) except for maybe
+40mhz-intol, so maybe that would be easier as a separate u16 attribute
+"disable these HT capabilities"?
+
+johannes
 
