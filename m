@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews10.kpnxchange.com ([213.75.39.15]:2749 "EHLO
-	cpsmtpb-ews10.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752111Ab1KPWQc (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:40249 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932517Ab1KCPMI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 17:16:32 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.org>
-Cc: <linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] rt2x00: Fix efuse EEPROM reading on PPC32.
-Date: Wed, 16 Nov 2011 23:16:15 +0100
-Message-Id: <1321481775-10853-1-git-send-email-gwingerde@gmail.com> (sfid-20111116_231640_730656_D310E44D)
+	Thu, 3 Nov 2011 11:12:08 -0400
+Received: by ggnb2 with SMTP id b2so1418174ggn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2011 08:12:07 -0700 (PDT)
+Message-ID: <4EB2AF44.7090102@lwfinger.net> (sfid-20111103_161212_014346_C112079E)
+Date: Thu, 03 Nov 2011 10:12:04 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: roman-vl@meta.ua
+CC: linux-wireless@vger.kernel.org
+Subject: Re: b43 scans wifi networks with old firmware only.
+References: <48883.148.106.128.38.1320319313.metamail@webmail.meta.ua>
+In-Reply-To: <48883.148.106.128.38.1320319313.metamail@webmail.meta.ua>
+Content-Type: text/plain; charset=windows-1251; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix __le32 to __le16 conversion of the first word of an 8-word block
-of EEPROM read via the efuse method.
+On 11/03/2011 06:21 AM, Roman V.Leon. wrote:
+> Hello Gents.
+> I have problem with b43 driver 5.100.138, it's not scanning networks for
+> unknown reason. I have broadcom wifi card PCIID is 14e4:4315, linux kern
+> ver. is 3.0. When i'm trying to launch iwlist scan, i'm getting "no scan
+> results".
+>
+> for example:
+> sudo ifconfig wlan0 up
+> sudo iwlist wlan0 scan
+>      No scan results.
+>
+> With the older driver 5.10.56.2808, i see normal scan results. If you need
+> any more information, i will send.
 
-Reported-and-tested-by: Ingvar Hagelund <ingvar@redpill-linpro.com>
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-CC: <stable@vger.kernel.org>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+The condition you report is known. Broadcom changed the TX/RX header structure 
+with firmware versions greater than 600, as shown by a 'dmesg | grep firmware'. 
+Those changes are not implemented in b43 until kernel 3.2.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 3f183a1..1ba079d 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -3771,7 +3771,7 @@ static void rt2800_efuse_read(struct rt2x00_dev *rt2x00dev, unsigned int i)
- 	/* Apparently the data is read from end to start */
- 	rt2800_register_read_lock(rt2x00dev, EFUSE_DATA3, &reg);
- 	/* The returned value is in CPU order, but eeprom is le */
--	rt2x00dev->eeprom[i] = cpu_to_le32(reg);
-+	*(u32 *)&rt2x00dev->eeprom[i] = cpu_to_le32(reg);
- 	rt2800_register_read_lock(rt2x00dev, EFUSE_DATA2, &reg);
- 	*(u32 *)&rt2x00dev->eeprom[i + 2] = cpu_to_le32(reg);
- 	rt2800_register_read_lock(rt2x00dev, EFUSE_DATA1, &reg);
--- 
-1.7.7
+These numbers are not b43 driver numbers, nor are they firmware numbers reported 
+by b43. They are the versions of Broadcom drivers.
 
+If you look at 
+http://wireless.kernel.org/en/users/Drivers/b43#firmwareinstallation, you will 
+see that firmware should be extracted from Broadcom driver 5.100.138 "if you are 
+using kernel 3.2 or newer". For older kernels you should extract firmware from 
+the 5.10.56.27.3 of the Broadcom proprietary driver. Of course, 5.10.56.2808 
+will also work.
+
+  You could also get those changes by employing a bleeding-edge version of 
+compat-wireless. In that case, firmware from 5.100.138 would work.
+
+Larry
