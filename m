@@ -1,70 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:50097 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755898Ab1KDQ1a (ORCPT
+Received: from calzone.tip.net.au ([203.10.76.15]:54109 "EHLO
+	calzone.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752897Ab1KCBPI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 12:27:30 -0400
-Message-ID: <4EB4126E.1020802@candelatech.com> (sfid-20111104_172734_236559_0184BD8C)
-Date: Fri, 04 Nov 2011 09:27:26 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 3/3] mac80211: Allow overriding some HT information.
-References: <1320299722-30113-1-git-send-email-greearb@candelatech.com>  <1320299722-30113-3-git-send-email-greearb@candelatech.com>  (sfid-20111103_065549_863747_7FFD5818) <1320310045.3950.23.camel@jlt3.sipsolutions.net>  <4EB2CBCC.6080709@candelatech.com>  <1320417690.3969.88.camel@jlt3.sipsolutions.net>  <4EB41014.6000002@candelatech.com> <1320423893.3969.104.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1320423893.3969.104.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 2 Nov 2011 21:15:08 -0400
+Date: Thu, 3 Nov 2011 12:15:00 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: wireless git trees returning to kernel.org
+Message-Id: <20111103121500.9860d492843915cc21bcfdab@canb.auug.org.au> (sfid-20111103_021527_518652_8F9E6FA9)
+In-Reply-To: <20111102180946.GC12168@tuxdriver.com>
+References: <20111102180946.GC12168@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Thu__3_Nov_2011_12_15_00_+1100_CWfh6kjizqrlHXFC"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/04/2011 09:24 AM, Johannes Berg wrote:
-> On Fri, 2011-11-04 at 09:17 -0700, Ben Greear wrote:
+--Signature=_Thu__3_Nov_2011_12_15_00_+1100_CWfh6kjizqrlHXFC
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi John,
+
+On Wed, 2 Nov 2011 14:09:46 -0400 "John W. Linville" <linville@tuxdriver.co=
+m> wrote:
 >
->>>>> The AMPDU density should only allow increasing.
->>>>>
->>>>> I think a lot of this validation should live in cfg80211 so if another
->>>>> driver wants to implement it, this kind of thing is already covered.
->>>>
->>>> The ath9k driver supports 0, and then every value that corresponds to 1us or higher.
->>>> If you set it to 1/2us, for instance, it just quietly rounds up to 1us.  It defaults
->>>> to 8, so it appears valid to decrease or increase this value.
->>>
->>> What quietly rounds up?
->>>
->>> If it defaults to 8 then I'm sure there's a reason for it, such as the
->>> crypto engine not being fast enough and needing 8us buffer between
->>> frames. As such, I really don't think decreasing it is valid.
->>
->> See this code in ath9k, top of main.c.  It appears to support more
->> than the default of 8.  I tested it out, and it appears to work
->> when set to lower values.  I am disabling hw-crypt since I need
->> multiple VIFS, but not sure that matters or not.
->>
->> static u8 parse_mpdudensity(u8 mpdudensity)
->
-> Well, this is used for TX. You're advertising the value for RX.
-> Advertising a smaller value may work for you -- but only if the AP uses
-> something larger anyway. It's free to do this. The code you quoted
-> implements this -- it looks at what the min spacing is the peer wants,
-> and then uses something bigger.
->
-> So I still stand by what I said earlier -- you should not allow
-> advertising a smaller value than the hardware wanted to use initially.
-> If the AP doesn't use that smaller value, all is well, but if it
-> actually uses a smaller value then the hardware might fall over.
+> I have migrated the wireless git trees back to the kernel.org
+> infrastructure.  As of right now, the trees are identical between
+> kernel.org and infradead.org.  Further updates likely will only go
+> to kernel.org, so plan accordingly.
+>=20
+> The "current" wireless tree is here:
+>=20
+> 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git
+>=20
+> The "next" wireless tree is here:
+>=20
+> 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git=
+\\
 
-Ok, I'll add that restriction.  When this all settles, maybe I
-can get some info from the ath9k folks about what their hardware
-can actually support.
+I have switched to using these.  I also renamed the tres in linux-next to
+match your names (so "wireless-current" has become "wireless" and
+"wireless" has become "wireless-next").
 
-Thanks,
-Ben
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
->
-> johannes
+--Signature=_Thu__3_Nov_2011_12_15_00_+1100_CWfh6kjizqrlHXFC
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+iQIcBAEBCAAGBQJOsesUAAoJEECxmPOUX5FEuFIP/A1tB55F5auHv0qMAdkpPHtv
+FSNVw234OGcoTxrUqm6sZC7xWvTgnzbsDrPsXlz/cRdKonMuVVHs1MPbfmWkDjTP
+UgPG1RhI5hF0TYWH/qU27fiFWTdGmRAzfkJLd5VKAlRsFSIQTJ//FSKTwRXCp3v4
+8vnk5a5B0PkdgEuPn8fXGscxvACkiFXwap7+qBxAebyX7ONda2vFWjT9NfqNu4de
+pYf8MhrvafAl8kFQnxJbWlY1Ry0JyH+k0fu2wrRnq7BDRu+H7G3oR9BEbqkMkQbT
+/Bl8UNw3RcVDgHcSkQ/UnQXMLhc1qEjBH2O+7U/TMazbcJ2mnkDj5ayCPMXr6d0a
+y4tep+5NadYN/SLh3/5W1kFnYLzRxi76Sfd7mBL+x9A+daUBP5idrqi+Cxcssht5
+/ysEvBSoIDY/7+ILy+Cpt9aB1//3nr9hlR7zQx2Bohy1CK2/bK1AxcSf/We9DJ1w
+VbzPCbiKFcHhGigbkBu6qhl1QaDMwEAsqABXDrhlaVXN74S0CZZc0nlOUYjm0z3Q
+OBiwEOvLJ2CJ2s0hRajuhDEZ5miZwy9y3pIQgYtx7DhhhEw4SaNdnC+cZhMZBhZE
+JAEHCCnpZKnxbjJhZBPghMH8MmeTnFf9JgnzevLGscwxVhlOCSbLHz3z/5hmySKT
+LJWF1ylcthXpRTfpT8gI
+=tBTX
+-----END PGP SIGNATURE-----
 
+--Signature=_Thu__3_Nov_2011_12_15_00_+1100_CWfh6kjizqrlHXFC--
