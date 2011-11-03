@@ -1,79 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52852 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752222Ab1K0LxX (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:46597 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750880Ab1KCFzh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Nov 2011 06:53:23 -0500
-Subject: [PATCH v3] mac80211: fix race condition caused by late addBA
- response
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Norbert Preining <preining@logic.at>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-In-Reply-To: <1322394638.4044.32.camel@jlt3.sipsolutions.net> (sfid-20111127_125046_228715_1E6D1B75)
-References: <1322378621-14647-1-git-send-email-mar.kolya@gmail.com>
-	 <1322378621-14647-2-git-send-email-mar.kolya@gmail.com>
-	 (sfid-20111127_082402_823149_B8E64ABA)  <1322394638.4044.32.camel@jlt3.sipsolutions.net>
-	 (sfid-20111127_125046_228715_1E6D1B75)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 27 Nov 2011 12:53:20 +0100
-Message-ID: <1322394800.4044.33.camel@jlt3.sipsolutions.net> (sfid-20111127_125325_960390_524B9CCE)
-Mime-Version: 1.0
+	Thu, 3 Nov 2011 01:55:37 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v3 2/3] mac80211: Support disabling ht40.
+Date: Wed,  2 Nov 2011 22:55:21 -0700
+Message-Id: <1320299722-30113-2-git-send-email-greearb@candelatech.com> (sfid-20111103_065541_391567_435879C5)
+In-Reply-To: <1320299722-30113-1-git-send-email-greearb@candelatech.com>
+References: <1320299722-30113-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Nikolay Martynov <mar.kolya@gmail.com>
+From: Ben Greear <greearb@candelatech.com>
 
-If addBA responses comes in just after addba_resp_timer has
-expired mac80211 will still accept it and try to open the
-aggregation session. This causes drivers to be confused and
-in some cases even crash.
+Allows users to forceably disable HT40 support in station
+interfaces.
 
-This patch fixes the race condition and makes sure that if
-addba_resp_timer has expired addBA response is not longer
-accepted and we do not try to open half-closed session.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
-[some adjustments]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
-v3: adjust message
+:100644 100644 499a5a4... 61b45aa... M	include/linux/nl80211.h
+:100644 100644 d2168c0... eeeef41... M	include/net/cfg80211.h
+:100644 100644 ea10a51... e4cfeda... M	net/mac80211/ieee80211_i.h
+:100644 100644 d4092e8... 149fb1d... M	net/mac80211/mlme.c
+:100644 100644 3c4dab1... 7924e28... M	net/wireless/nl80211.c
+ include/linux/nl80211.h    |    4 ++++
+ include/net/cfg80211.h     |    1 +
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |    5 +++++
+ net/wireless/nl80211.c     |    7 +++++++
+ 5 files changed, 18 insertions(+), 0 deletions(-)
 
- net/mac80211/agg-tx.c |   18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
-
---- a/net/mac80211/agg-tx.c	2011-11-27 12:51:16.000000000 +0100
-+++ b/net/mac80211/agg-tx.c	2011-11-27 12:52:30.000000000 +0100
-@@ -762,11 +762,27 @@ void ieee80211_process_addba_resp(struct
- 		goto out;
- 	}
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 499a5a4..61b45aa 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1111,6 +1111,8 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_DISABLE_HT:  Force HT capable interfaces to disable
+  *      this feature.
++ * @NL80211_ATTR_DISABLE_HT40:  Disable HT-40 even if AP and hardware
++ *      support it.
+  *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -1341,6 +1343,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_TDLS_EXTERNAL_SETUP,
  
--	del_timer(&tid_tx->addba_resp_timer);
-+	del_timer_sync(&tid_tx->addba_resp_timer);
+ 	NL80211_ATTR_DISABLE_HT,
++	NL80211_ATTR_DISABLE_HT40,
++
+ 	/* add attributes here, update the policy in nl80211.c */
  
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 	printk(KERN_DEBUG "switched off addBA timer for tid %d\n", tid);
- #endif
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d2168c0..eeeef41 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1036,6 +1036,7 @@ struct cfg80211_auth_request {
+ };
+ 
+ #define ASSOC_REQ_DISABLE_HT	(1<<0) /* Disable HT (802.11n) */
++#define ASSOC_REQ_DISABLE_HT40	(1<<1) /* Disable HT40 (802.11n) */
+ 
+ /**
+  * struct cfg80211_assoc_request - (Re)Association request data
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ea10a51..e4cfeda 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -364,6 +364,7 @@ enum ieee80211_sta_flags {
+ 	IEEE80211_STA_UAPSD_ENABLED	= BIT(7),
+ 	IEEE80211_STA_NULLFUNC_ACKED	= BIT(8),
+ 	IEEE80211_STA_RESET_SIGNAL_AVE	= BIT(9),
++	IEEE80211_STA_DISABLE_HT40	= BIT(10),
+ };
+ 
+ struct ieee80211_if_managed {
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d4092e8..149fb1d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -207,6 +207,7 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ 		channel_type = NL80211_CHAN_HT20;
+ 
+ 		if (!(ap_ht_cap_flags & IEEE80211_HT_CAP_40MHZ_INTOLERANT) &&
++		    !(sdata->u.mgd.flags & IEEE80211_STA_DISABLE_HT40) &&
+ 		    (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
+ 		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
+ 			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
+@@ -2601,6 +2602,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ifmgd->flags &= ~IEEE80211_STA_DISABLE_11N;
+ 	ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
++	ifmgd->flags &= ~IEEE80211_STA_DISABLE_HT40;
+ 
+ 	ifmgd->beacon_crc_valid = false;
+ 
+@@ -2614,6 +2616,9 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	if (req->flags & ASSOC_REQ_DISABLE_HT)
+ 		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
+ 
++	if (req->flags & ASSOC_REQ_DISABLE_HT40)
++		ifmgd->flags |= IEEE80211_STA_DISABLE_HT40;
 +
-+	/*
-+	 * addba_resp_timer may have fired before we got here, and
-+	 * caused WANT_STOP to be set. STOPPING should not be set
-+	 * as we're under the mutex, but check it anyway.
-+	 */
-+	if (test_bit(HT_AGG_STATE_WANT_STOP, &tid_tx->state) ||
-+	    test_bit(HT_AGG_STATE_STOPPING, &tid_tx->state)) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		printk(KERN_DEBUG
-+		       "got addBA resp for tid %d but we already gave up\n",
-+		       tid);
-+#endif
-+		goto out;
-+	}
+ 	if (req->ie && req->ie_len) {
+ 		memcpy(wk->ie, req->ie, req->ie_len);
+ 		wk->ie_len = req->ie_len;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 3c4dab1..7924e28 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -198,6 +198,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_TDLS_SUPPORT] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_TDLS_EXTERNAL_SETUP] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_DISABLE_HT] = { .type = NLA_FLAG },
++	[NL80211_ATTR_DISABLE_HT40] = { .type = NLA_FLAG },
+ };
+ 
+ /* policy for the key attributes */
+@@ -4402,6 +4403,9 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
+ 	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_HT]))
+ 		flags |= ASSOC_REQ_DISABLE_HT;
+ 
++	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_HT40]))
++		flags |= ASSOC_REQ_DISABLE_HT40;
 +
- 	/*
- 	 * IEEE 802.11-2007 7.3.1.14:
- 	 * In an ADDBA Response frame, when the Status Code field
-
+ 	err = nl80211_crypto_settings(rdev, info, &crypto, 1);
+ 	if (!err)
+ 		err = cfg80211_mlme_assoc(rdev, dev, chan, bssid, prev_bssid,
+@@ -4899,6 +4903,9 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_HT]))
+ 		connect.flags |= ASSOC_REQ_DISABLE_HT;
+ 
++	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_HT40]))
++		connect.flags |= ASSOC_REQ_DISABLE_HT40;
++
+ 	err = cfg80211_connect(rdev, dev, &connect, connkeys);
+ 	if (err)
+ 		kfree(connkeys);
+-- 
+1.7.3.4
 
