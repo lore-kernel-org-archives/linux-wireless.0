@@ -1,176 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51447 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932709Ab1KIVPP (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51860 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934175Ab1KCRAO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 16:15:15 -0500
-From: y@tuxdriver.com
-To: linux-wireless@vger.kernel.org
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Jouni Malinen <j@w1.fi>,
-	Johannes Berge <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v3] mac80211: handle HT PHY BSS membership selector value correctly
-Date: Wed,  9 Nov 2011 16:04:05 -0500
-Message-Id: <1320872645-29202-1-git-send-email-y> (sfid-20111109_221524_329660_60E55922)
-In-Reply-To: <201110150014.50136.chunkeey@googlemail.com>
-References: <201110150014.50136.chunkeey@googlemail.com>
+	Thu, 3 Nov 2011 13:00:14 -0400
+Message-ID: <4EB2C83E.8000205@qca.qualcomm.com> (sfid-20111103_180020_839194_AA33F898)
+Date: Thu, 3 Nov 2011 18:58:38 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: add suspend_cutpower module parameter
+References: <20111103101831.15206.39020.stgit@localhost6.localdomain6>
+In-Reply-To: <20111103101831.15206.39020.stgit@localhost6.localdomain6>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Christian Lamparter <chunkeey@googlemail.com>
+On 11/03/2011 12:18 PM, Kalle Valo wrote:
+> This is to force ath6kl to power off hardware during suspend even if
+> sdio support keep power. This is needed, for example, when sdio
+> controller is buggy or maximum powersaving is desired.
+> 
+> Usage:
+> 
+> insmod ath6kl.ko suspend_cutpower=1
 
-802.11n-2009 extends the supported rates element with a
-magic value which can be used to prevent legacy stations
-from joining the BSS.
+Applied.
 
-However, this magic value is not a rate like the others
-and the magic can simply be ignored/skipped at this late
-stage.
-
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>---
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-This is the version I've merged.  The v2 version conflicted with
-"mac80211: use min rate as basic rate for buggy APs" (commit
-3432f9233704a66e6067944339a311744243707d).
-
-Please take a close look to make sure I didn't mess it up!
-
- include/linux/ieee80211.h |    3 +
- net/mac80211/mlme.c       |   90 ++++++++++++++++++++++++--------------------
- 2 files changed, 52 insertions(+), 41 deletions(-)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 48363c3..9789aed 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -770,6 +770,9 @@ struct ieee80211_mgmt {
- 	} u;
- } __attribute__ ((packed));
- 
-+/* Supported Rates value encodings in 802.11n-2009 7.3.2.2 */
-+#define BSS_MEMBERSHIP_SELECTOR_HT_PHY	127
-+
- /* mgmt header + 1 byte category code */
- #define IEEE80211_MIN_ACTION_SIZE offsetof(struct ieee80211_mgmt, u.action.u)
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index d3b408c..b25567a 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1466,6 +1466,47 @@ ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
- 	return RX_MGMT_CFG80211_DISASSOC;
- }
- 
-+static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
-+				u8 *supp_rates, unsigned int supp_rates_len,
-+				u32 *rates, u32 *basic_rates,
-+				bool *have_higher_than_11mbit,
-+				int *min_rate, int *min_rate_index)
-+{
-+	int i, j;
-+
-+	for (i = 0; i < supp_rates_len; i++) {
-+		int rate = (supp_rates[i] & 0x7f) * 5;
-+		bool is_basic = !!(supp_rates[i] & 0x80);
-+
-+		if (rate > 110)
-+			*have_higher_than_11mbit = true;
-+
-+		/*
-+		 * BSS_MEMBERSHIP_SELECTOR_HT_PHY is defined in 802.11n-2009
-+		 * 7.3.2.2 as a magic value instead of a rate. Hence, skip it.
-+		 *
-+		 * Note: Even through the membership selector and the basic
-+		 *	 rate flag share the same bit, they are not exactly
-+		 *	 the same.
-+		 */
-+		if (!!(supp_rates[i] & 0x80) &&
-+		    (supp_rates[i] & 0x7f) == BSS_MEMBERSHIP_SELECTOR_HT_PHY)
-+			continue;
-+
-+		for (j = 0; j < sband->n_bitrates; j++) {
-+			if (sband->bitrates[j].bitrate == rate) {
-+				*rates |= BIT(j);
-+				if (is_basic)
-+					*basic_rates |= BIT(j);
-+				if (rate < *min_rate) {
-+					*min_rate = rate;
-+					*min_rate_index = j;
-+				}
-+				break;
-+			}
-+		}
-+	}
-+}
- 
- static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 				    struct ieee80211_mgmt *mgmt, size_t len)
-@@ -1482,7 +1523,7 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 	struct ieee802_11_elems elems;
- 	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
- 	u32 changed = 0;
--	int i, j, err;
-+	int err;
- 	bool have_higher_than_11mbit = false;
- 	u16 ap_ht_cap_flags;
- 	int min_rate = INT_MAX, min_rate_index = -1;
-@@ -1540,47 +1581,14 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 	basic_rates = 0;
- 	sband = local->hw.wiphy->bands[wk->chan->band];
- 
--	for (i = 0; i < elems.supp_rates_len; i++) {
--		int rate = (elems.supp_rates[i] & 0x7f) * 5;
--		bool is_basic = !!(elems.supp_rates[i] & 0x80);
--
--		if (rate > 110)
--			have_higher_than_11mbit = true;
-+	ieee80211_get_rates(sband, elems.supp_rates, elems.supp_rates_len,
-+			    &rates, &basic_rates, &have_higher_than_11mbit,
-+			    &min_rate, &min_rate_index);
- 
--		for (j = 0; j < sband->n_bitrates; j++) {
--			if (sband->bitrates[j].bitrate == rate) {
--				rates |= BIT(j);
--				if (is_basic)
--					basic_rates |= BIT(j);
--				if (rate < min_rate) {
--					min_rate = rate;
--					min_rate_index = j;
--				}
--				break;
--			}
--		}
--	}
--
--	for (i = 0; i < elems.ext_supp_rates_len; i++) {
--		int rate = (elems.ext_supp_rates[i] & 0x7f) * 5;
--		bool is_basic = !!(elems.ext_supp_rates[i] & 0x80);
--
--		if (rate > 110)
--			have_higher_than_11mbit = true;
--
--		for (j = 0; j < sband->n_bitrates; j++) {
--			if (sband->bitrates[j].bitrate == rate) {
--				rates |= BIT(j);
--				if (is_basic)
--					basic_rates |= BIT(j);
--				if (rate < min_rate) {
--					min_rate = rate;
--					min_rate_index = j;
--				}
--				break;
--			}
--		}
--	}
-+	ieee80211_get_rates(sband, elems.ext_supp_rates,
-+			    elems.ext_supp_rates_len, &rates, &basic_rates,
-+			    &have_higher_than_11mbit,
-+			    &min_rate, &min_rate_index);
- 
- 	/*
- 	 * some buggy APs don't advertise basic_rates. use the lowest
--- 
-1.7.4.4
-
+Kalle
