@@ -1,105 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:55704 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932774Ab1KGQTq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 11:19:46 -0500
-Message-ID: <4EB8051D.5010704@candelatech.com> (sfid-20111107_171955_875512_C4EAFF7F)
-Date: Mon, 07 Nov 2011 08:19:41 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from smtp.meta.ua ([194.0.131.41]:55227 "EHLO smtp.meta.ua"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751035Ab1KCUU1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Nov 2011 16:20:27 -0400
+Message-ID: <4EB2F800.5080204@meta.ua> (sfid-20111103_212030_970573_B2DD23F6)
+Date: Fri, 04 Nov 2011 00:22:24 +0400
+From: "Roman V.Leon." <roman-vl@meta.ua>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
 CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 2/2] mac80211:  Support ht-cap over-rides.
-References: <1320437440-6463-1-git-send-email-greearb@candelatech.com>  <1320437440-6463-2-git-send-email-greearb@candelatech.com>  (sfid-20111104_211114_679516_4CC16ABF) <1320657208.3993.29.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1320657208.3993.29.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: b43 scans wifi networks with old firmware only.
+References: <48883.148.106.128.38.1320319313.metamail@webmail.meta.ua> <4EB2AF44.7090102@lwfinger.net>
+In-Reply-To: <4EB2AF44.7090102@lwfinger.net>
+Content-Type: text/plain; charset=windows-1251; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/07/2011 01:13 AM, Johannes Berg wrote:
-> On Fri, 2011-11-04 at 13:10 -0700, greearb@candelatech.com wrote:
+> On 11/03/2011 06:21 AM, Roman V.Leon. wrote:
+>> Hello Gents.
+>> I have problem with b43 driver 5.100.138, it's not scanning networks for
+>> unknown reason. I have broadcom wifi card PCIID is 14e4:4315, linux kern
+>> ver. is 3.0. When i'm trying to launch iwlist scan, i'm getting "no scan
+>> results".
+>>
+>> for example:
+>> sudo ifconfig wlan0 up
+>> sudo iwlist wlan0 scan
+>> No scan results.
+>>
+>> With the older driver 5.10.56.2808, i see normal scan results. If you
+>> need
+>> any more information, i will send.
 >
->> +/*
->> + * Stations supporting 802.11n are required to support
->> + * at least the first 8 MCS rates.  See section 7.3.2.56.4
->> + * and 20.1.1 of the 802.11n spec.
->> + */
->> +#define IEEE80211_HT_MCS_REQ_RATES_STA		8
+> The condition you report is known. Broadcom changed the TX/RX header
+> structure with firmware versions greater than 600, as shown by a 'dmesg
+> | grep firmware'. Those changes are not implemented in b43 until kernel
+> 3.2.
 >
-> I'd prefer if this was a validation on the input from userspace directly
-> in cfg80211, that way other drivers that want to implement this don't
-> have to bother.
+> These numbers are not b43 driver numbers, nor are they firmware numbers
+> reported by b43. They are the versions of Broadcom drivers.
 >
-> That probably goes well with the validation of the supported mask that I
-> asked for.
-
-It is valid to request that the station use a lesser rate, it just
-needs to advertise that it supports the first 8 rates.  So, for the
-rate-control logic, we use exactly what is passed in from user-space,
-but when generating the HT-caps objects, we set a minimum of 8 MCS
-rates.
-
-So, if you want validation, then I'm going to have to add a second
-mcs argument and mask to distinguish between what we should advertise
-v/s what we should use to over-ride the local rate-control mechanism.
-
-I will do this if you ask, but in my opinion, the current functionality
-is good enough.
-
->> +	/* mac80211 allows over-riding some of the ht-capabilities */
->> +	local->hw.wiphy->ht_capa_mod_mask =
->> +		kzalloc(sizeof(*local->hw.wiphy->ht_capa_mod_mask),
->> +			GFP_KERNEL);
->> +	if (local->hw.wiphy->ht_capa_mod_mask) {
->> +		struct ieee80211_ht_cap *cm = local->hw.wiphy->ht_capa_mod_mask;
->> +		u8 *r = (u8 *)(&cm->mcs.rx_mask);
->> +		memset(r, 0xff, IEEE80211_HT_MCS_MASK_LEN);
->> +		cm->cap_info |= IEEE80211_HT_CAP_MAX_AMSDU;
->> +		cm->ampdu_params_info |= IEEE80211_HT_AMPDU_PARM_FACTOR;
->> +		cm->ampdu_params_info |= IEEE80211_HT_AMPDU_PARM_DENSITY;
->> +	}
+> If you look at
+> http://wireless.kernel.org/en/users/Drivers/b43#firmwareinstallation,
+> you will see that firmware should be extracted from Broadcom driver
+> 5.100.138 "if you are using kernel 3.2 or newer". For older kernels you
+> should extract firmware from the 5.10.56.27.3 of the Broadcom
+> proprietary driver. Of course, 5.10.56.2808 will also work.
 >
-> Why is this not just a static const that you fill manually? There's
-> nothing that's not constant here. So e.g.
+> You could also get those changes by employing a bleeding-edge version of
+> compat-wireless. In that case, firmware from 5.100.138 would work.
 >
-> static const struct ieee80211_ht_cap mac80211_ht_capa_mod_mask = {
-> 	.ampdu_params_info = IEEE80211_HT_AMPDU_PARM_FACTOR |
-> 			     IEEE80211_HT_AMPDU_PARM_DENSITY,
-> 	.mcs = {
-> 		.rx_mask = { 0xff, 0xff, 0xff, 0xff, 0xff,
-> 			     0xff, 0xff, 0xff, 0xff, 0xff, },
-> 	},
-> 	/* etc */
-> };
-
-Well, you suggested a pointer in the wiphy struct that was null
-for non mac80211 interfaces.  I'm not sure how to distinguish between
-mac80211 and other wiphys when reporting the capabilities if I use
-this global static.  I also like that the non-static logic lets
-us tweak this for individual drivers if that becomes an issue.
-
->> @@ -988,6 +1001,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->>    fail_wiphy_register:
->>   	if (local->wiphy_ciphers_allocated)
->>   		kfree(local->hw.wiphy->cipher_suites);
->> +	kfree(local->hw.wiphy->ht_capa_mod_mask);
->> +	local->hw.wiphy->ht_capa_mod_mask = NULL;
+> Larry
 >
-> No need for this then obviously.
->
->
-> Looks pretty good overall. This is _much_ more readable than the
-> previous series. :-)
-
-Thanks...making progress :)
-
-Ben
-
->
-> johannes
-
+OK, Larry. Now I see. Thank you very much!
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Cheers,
+Roman V.Leon.
