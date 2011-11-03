@@ -1,52 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ackle.nomi.cz ([81.31.33.35]:54165 "EHLO ackle.nomi.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752585Ab1KKPBJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Nov 2011 10:01:09 -0500
-Date: Fri, 11 Nov 2011 16:01:05 +0100
-From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: iwlagn: memory corruption with WPA enterprise
-Message-ID: <20111111150105.GA25437@nomi.cz> (sfid-20111111_160140_734085_F71C48E0)
-References: <20111029171554.GA16596@nomi.cz> <20111031160342.GB2225@redhat.com> <20111109155411.GA1669@nomi.cz> <20111109165158.GA2254@redhat.com> <20111110091816.GA2247@nomi.cz> <20111110114732.GA2217@redhat.com> <20111110125347.GA29415@nomi.cz> <20111110160703.GA2775@redhat.com> <20111110163051.GA24533@nomi.cz> <20111111054731.GA2292@redhat.com>
+Received: from mail.candelatech.com ([208.74.158.172]:59093 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933640Ab1KCSRz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Nov 2011 14:17:55 -0400
+Message-ID: <4EB2DACE.2000707@candelatech.com> (sfid-20111103_191758_518226_B3159FB2)
+Date: Thu, 03 Nov 2011 11:17:50 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20111111054731.GA2292@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [wireless-next PATCH 1/5] mac80211: Support forcing station to
+ disable 11n.
+References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>  (sfid-20111028_071135_777672_88A08497) <1319789318.3914.10.camel@jlt3.sipsolutions.net>  <4EAAFAA7.8090403@candelatech.com>  (sfid-20111028_205543_472872_4928ADE0) <1320220415.3950.1.camel@jlt3.sipsolutions.net>  <4EB17103.70506@candelatech.com>  <1320256263.7846.3.camel@jlt3.sipsolutions.net>  <4EB22EE6.3030100@candelatech.com> <1320309058.3950.7.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1320309058.3950.7.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-
-On Fri, Nov 11, 2011 at 06:47:31AM +0100, Stanislaw Gruszka wrote:
-> On Thu, Nov 10, 2011 at 05:30:51PM +0100, Tomáš Janoušek wrote:
-> > I think all those T520 and T420s models have exactly the same wireless card. I
-> > don't see why they wouldn't have. :-)
+On 11/03/2011 01:30 AM, Johannes Berg wrote:
+> On Wed, 2011-11-02 at 23:04 -0700, Ben Greear wrote:
 >
-> Well, laptops models have common mainboards, but peripheral components
-> might not be identical. Especially wireless card might vary from unit
-> to unit. For example:
-> 
-> T520 with iwl6300:
-> http://smolt.fedoraproject.org/client/show/pub_0cbc8731-47d3-4ecf-8add-aa832b34edcd
-> T520 with iwl1000:
-> http://smolt.fedoraproject.org/client/show/pub_02f601d6-7a93-4c0e-bc01-a4a95db36086 
-> T520 with iwl6205:
-> http://smolt.fedoraproject.org/client/show/pub_0232252f-75a9-4050-a69b-c8e95e00eaf2
+>> I think I made at least most of the other changes you were asking
+>> for, but I'm still baffled about what to do about fullmac drivers.
+>>
+>> Based on the comment above, if I simply left out the mac80211 stuff
+>> then the new values passed in to the associate/connect logic will just
+>> be ignored.
+>>
+>> So, I suppose the fullmac drivers will just silently ignore the new
+>> variables as well.  I looked, but didn't figure out where fullmac
+>> connects into the cfg80211 logic.  If I can find it, then I could
+>> add explicit checks for the new variables and return failure if
+>> they are set..but I'm not sure that is any better than just silently
+>> ignoring them anyway.
+>
+> So I think just ignoring it would be a bad idea, because you have no way
+> to know whether or not the values were used afterwards. That might be
+> sufficient for you right now, but typically becomes a support problem at
+> some point because people try it and can't figure out what part broke.
+> That's why I think silently ignoring something like that is not a good
+> idea.
+>
+> Hence the typical handling of this with a wiphy flag that you set and if
+> it's unset but userspace is requesting this you reject the command.
 
-These links don't work, but my colleagues indeed do have iwl6205. They are,
-however, running 64-bit kernels, so I tried doing the same and I haven't been
-able to reproduce the issue for the past few hours. So it seems like it
-happens on 32-bit kernels only. This looks like a good workaround (better than
-getting a different wireless card), so I can run 64-bit during working days
-and experiment with 32-bit when I have time to debug this.
+So back to the capabilities flag like I added in the -v2 patch?
+Do you want one flag for each thing (set-mcs, disable-ht,
+disable-ht40, set-mpdu, set-msdu), or maybe one flag for all of
+this:  set-ht-cap
 
-Could you please elaborate on that thing with enabling IOMMU? The only thing I
-know about IOMMU is that it is somehow related to VT-d (passing whole PCI
-devices to virtual guests), and that I have to pass intel_iommu=off to kernel
-command line, otherwise the machine doesn't even boot. Is that a problem?
+My opinion remains that we should silently ignore un-supported
+values..this way user-space works with the same config on old and new
+kernels.  In future patches, we can report the actual settings via
+netlink or similar.
 
-Kind regards,
+But, I can add logic in user-space to detect kernel versions and
+such and deal with this.
+
+So, please tell me how you want it done.  If it's capabilities flags,
+that is fine with me.
+
+Thanks,
+Ben
+
 -- 
-Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
