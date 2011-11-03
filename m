@@ -1,49 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31978 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754675Ab1KPHwo (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:52767 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751991Ab1KCRST (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 02:52:44 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath6kl: Fix AP mode operation after interface down/up
-Date: Wed, 16 Nov 2011 13:21:34 +0530
-Message-ID: <1321429894-10845-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111116_085246_832949_D93A9641)
+	Thu, 3 Nov 2011 13:18:19 -0400
+Message-ID: <4EB2CCD7.3010907@candelatech.com> (sfid-20111103_181822_429484_F41F0D8D)
+Date: Thu, 03 Nov 2011 10:18:15 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] mac80211: Support forcing station to disable HT
+ (802.11n).
+References: <1320299722-30113-1-git-send-email-greearb@candelatech.com>  (sfid-20111103_065534_192366_EF6ABFB6) <1320309465.3950.14.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1320309465.3950.14.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When operating AP interface is brough down the mode is reset to
-STA. This STA will be reconfigured into AP mode when the interface
-is brought up again. This sequence will be successful only when
-change_virtual_intf() returns with no error, but there is a
-check in this callback which does the type change only when
-that interface is active. This callback does nothing more
-than saving the new interface type to vif and wdev, so the
-sanity check for interface state and wmi state is not necessary.
-This makes the AP interface functional again after interface down/up.
+On 11/03/2011 01:37 AM, Johannes Berg wrote:
+> On Wed, 2011-11-02 at 22:55 -0700, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> This allows a user to configure a wifi station interface
+>> to disable the HT features, even if the AP and NIC supports it.
+>
+> I like this version much better. Some nitpicks:
+>
+>
+>> +#define ASSOC_REQ_DISABLE_HT	(1<<0) /* Disable HT (802.11n) */
+>
+> You could use an enum to use kernel-doc notation here.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+Sure, will do.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 08708bd..733cff0 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1353,9 +1353,6 @@ static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
- 
- 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: type %u\n", __func__, type);
- 
--	if (!ath6kl_cfg80211_ready(vif))
--		return -EIO;
--
- 	switch (type) {
- 	case NL80211_IFTYPE_STATION:
- 		vif->next_mode = INFRA_NETWORK;
+
+>> @@ -1053,6 +1056,7 @@ struct cfg80211_assoc_request {
+>>   	size_t ie_len;
+>>   	struct cfg80211_crypto_settings crypto;
+>>   	bool use_mfp;
+>> +	u32 flags;
+>
+> Seems like it might be good for use_mfp to become a flag? Anyway,
+> internal APIs are easy to change.
+
+Yes, but I've been beat over the head enough to know not to mix
+this kind of cleanup into my patches :)
+
+Will do a follow-on patch after I get my changes in.
+
+>> --- a/net/mac80211/mlme.c
+>> +++ b/net/mac80211/mlme.c
+>
+> I'd rather split this up into cfg80211/mac80211. In fact, maybe
+> splitting it into one cfg80211 and one mac80211 patch, instead of three
+> different patches that span both might be worthwhile?
+
+I really don't care either way.  Just let me know how you want it
+and I'll split it up thus.  Just please do not change your mind later,
+splitting patches is nothing but work :P
+
+Thanks,
+Ben
+
 -- 
-1.7.0.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
