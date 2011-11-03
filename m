@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53442 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751241Ab1K0JqY (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:54279 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751346Ab1KCJk3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Nov 2011 04:46:24 -0500
-Subject: Re: iwlagn is getting very shaky
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Norbert Preining <preining@logic.at>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	Dave Jones <davej@redhat.com>
-In-Reply-To: <CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com> (sfid-20111127_104334_556605_64D24A69)
-References: <20111122072730.GA32225@gamma.logic.tuwien.ac.at>
-	 <CANUX_P15En9bHVx4bhq6=XKPZnC2u+QyVJ+jnm4ns=39DrOBtg@mail.gmail.com>
-	 <2D0C7905-AEB2-4DE4-89B1-945D89F2B5D6@logic.at>
-	 <CANUX_P21PDdyo4u-x_1A0Lcqf-33yHgzUxddAoc3juGRNnrcDg@mail.gmail.com>
-	 <20111122124357.GA32440@gamma.logic.tuwien.ac.at>
-	 <CANUX_P0uyyuK4netV6srYCh9FsC4cpGzxobHE3T38n5RvvA0RQ@mail.gmail.com>
-	 <20111123015503.GC23203@gamma.logic.tuwien.ac.at>
-	 <CANUX_P1zDDzMy5yrFXSZAkMQ-87uu-fE1e-2sCEgHJi4dh5eiw@mail.gmail.com>
-	 <20111125122143.GA30404@gamma.logic.tuwien.ac.at>
-	 <CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com>
-	 <20111125123720.GA31564@gamma.logic.tuwien.ac.at>
-	 <CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com>
-	 <CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com>
-	 (sfid-20111127_104334_556605_64D24A69)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 27 Nov 2011 10:46:15 +0100
-Message-ID: <1322387175.4044.16.camel@jlt3.sipsolutions.net> (sfid-20111127_104640_947748_A035555C)
-Mime-Version: 1.0
+	Thu, 3 Nov 2011 05:40:29 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Dai Shuibing <shuibing@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH 2/3] ath6kl: Allow SMS4 to be configured in AP mode
+Date: Thu, 3 Nov 2011 11:39:38 +0200
+Message-ID: <1320313179-9259-3-git-send-email-jouni@qca.qualcomm.com> (sfid-20111103_104032_332577_FB83CF7A)
+In-Reply-To: <1320313179-9259-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1320313179-9259-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-11-27 at 11:43 +0200, Emmanuel Grumbach wrote:
-> Hi again
-> 
-> Can you please try the attached patch ?
-> I would like to know if it helps.
+From: Dai Shuibing <shuibing@qca.qualcomm.com>
 
-As in the patch that Nikolay sent to the list earlier today, this should
-also check STOPPING since WANT_STOP may get cleared as soon as it is
-processed.
+Signed-off-by: Dai Shuibing <shuibing@qca.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 42eeed1..095a378 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1923,6 +1923,9 @@ static int ath6kl_ap_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 		case WLAN_CIPHER_SUITE_CCMP:
+ 			p.prwise_crypto_type |= AES_CRYPT;
+ 			break;
++		case WLAN_CIPHER_SUITE_SMS4:
++			p.prwise_crypto_type |= WAPI_CRYPT;
++			break;
+ 		}
+ 	}
+ 	if (p.prwise_crypto_type == 0) {
+@@ -1942,6 +1945,9 @@ static int ath6kl_ap_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 	case WLAN_CIPHER_SUITE_CCMP:
+ 		p.grp_crypto_type = AES_CRYPT;
+ 		break;
++	case WLAN_CIPHER_SUITE_SMS4:
++		p.grp_crypto_type = WAPI_CRYPT;
++		break;
+ 	default:
+ 		p.grp_crypto_type = NONE_CRYPT;
+ 		break;
+-- 
+1.7.4.1
 
