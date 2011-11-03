@@ -1,55 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:42121 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751814Ab1KANMv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Nov 2011 09:12:51 -0400
-Received: by wyh15 with SMTP id 15so387918wyh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2011 06:12:50 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] wl12xx: clear wl->vif on remove_interface
-Date: Tue,  1 Nov 2011 15:12:50 +0200
-Message-Id: <1320153170-5301-1-git-send-email-eliad@wizery.com> (sfid-20111101_141303_124404_D14D42FD)
+Received: from purkki.adurom.net ([80.68.90.206]:43837 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751673Ab1KCH3U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Nov 2011 03:29:20 -0400
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: wireless git trees returning to kernel.org
+References: <20111102180946.GC12168@tuxdriver.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Thu, 03 Nov 2011 09:29:18 +0200
+In-Reply-To: <20111102180946.GC12168@tuxdriver.com> (John W. Linville's message of "Wed\, 2 Nov 2011 14\:09\:46 -0400")
+Message-ID: <8739e5br5d.fsf@purkki.adurom.net> (sfid-20111103_082931_022495_7D61945F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wl->vif should be cleared on remove_interface()
-(rather than on stop()) even when only a single
-vif is supported, because during vif mode change
-stop() might not get called (e.g. because of
-monitor interface existence)
+"John W. Linville" <linville@tuxdriver.com> writes:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-v2: clear wl->vif in __wl1271_op_remove_interface, so it will
-    happen also on recovery
+> FYI...
+>
+> I have migrated the wireless git trees back to the kernel.org
+> infrastructure.  As of right now, the trees are identical between
+> kernel.org and infradead.org.  Further updates likely will only go
+> to kernel.org, so plan accordingly.
 
- drivers/net/wireless/wl12xx/main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Once you stop updating infradead.org please remove the trees from the
+server. Otherwise people might be accidentally still using the old
+tree and not getting the latest updates. I have quite a few clones on
+my machines which follow your trees and most likely I don't remember
+to update all of them.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index f76be5a..42489bf 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1859,7 +1859,6 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
- 	wl->tx_results_count = 0;
- 	wl->tx_packets_count = 0;
- 	wl->time_offset = 0;
--	wl->vif = NULL;
- 	wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
- 	wl->ap_fw_ps_map = 0;
- 	wl->ap_ps_map = 0;
-@@ -2211,6 +2210,8 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
- 	if (!test_and_clear_bit(WLVIF_FLAG_INITIALIZED, &wlvif->flags))
- 		return;
- 
-+	wl->vif = NULL;
-+
- 	/* because of hardware recovery, we may get here twice */
- 	if (wl->state != WL1271_STATE_ON)
- 		return;
 -- 
-1.7.6.401.g6a319
-
+Kalle Valo
