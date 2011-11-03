@@ -1,38 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41202 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932271Ab1KGOnE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37711 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932431Ab1KCH4s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 09:43:04 -0500
-Received: by bke11 with SMTP id 11so3640752bke.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Nov 2011 06:43:03 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1319313081-28722-1-git-send-email-guy@wizery.com>
-References: <1319313081-28722-1-git-send-email-guy@wizery.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 7 Nov 2011 16:42:46 +0200
-Message-ID: <CA+XVXffQgYtS-0-YOzFxD1ppVbWEeNjnUch_5nPxPqmzJb86+Q@mail.gmail.com> (sfid-20111107_154309_633500_2E412272)
-Subject: Re: [PATCH v2 1/3] nl80211: Add probe response offload attribute
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Guy Eilam <guy@wizery.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 3 Nov 2011 03:56:48 -0400
+Subject: Re: [PATCH] ieee80211: Define cipher suite selector for WPI-SMS4
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1320282954.20617.1.camel@dcbw.foobar.com> (sfid-20111103_021545_085394_28C95151)
+References: <20111102213456.GA21460@jouni.qca.qualcomm.com>
+	 <1320282954.20617.1.camel@dcbw.foobar.com>
+	 (sfid-20111103_021545_085394_28C95151)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 03 Nov 2011 08:56:40 +0100
+Message-ID: <1320307000.3950.1.camel@jlt3.sipsolutions.net> (sfid-20111103_085651_590509_D630565A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 22, 2011 at 21:51, Guy Eilam <guy@wizery.com> wrote:
-> Notify the userspace of the probe response offloading
-> support by the driver.
->
-> Signed-off-by: Guy Eilam <guy@wizery.com>
-> ---
-> v2:
-> use struct wiphy instead of a function pointer
-> this change made the previous second PATCH:
-> "Get the probe response offloading support from the driver" irrelevant
-> changed WPS to WSC
+On Wed, 2011-11-02 at 20:15 -0500, Dan Williams wrote:
+> On Wed, 2011-11-02 at 23:34 +0200, Jouni Malinen wrote:
+> > This value is used for WPI-SMS4 in ISO/IEC JTC 1 N 9880.
+> 
+> Does that mean WAPI at some point? :)
 
-I'll revert the WSC wording to WPS in the v3 of the probe-resp
-patches. Seems more appropriate in light of the new defunct AP_SME
-attribute, and the naming conventions for this in hostap
+If somebody decides they can publish a supplicant for it, we already
+have it in a few drivers that have HW crypto. No SW crypto, so there
+won't be generic support.
 
-Arik
+johannes
+
