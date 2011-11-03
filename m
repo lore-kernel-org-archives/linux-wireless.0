@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14990 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751001Ab1KRHoL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 02:44:11 -0500
-Date: Fri, 18 Nov 2011 08:45:53 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Christoph Anton Mitterer <calestyo@scientia.net>
-Cc: Jonathan Nieder <jrnieder@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Dietsche <Gregory.Dietsche@cuw.edu>,
-	linux-kernel@vger.kernel.org
-Subject: Re: iwl4965: "MAC is in deep sleep!" freezes
-Message-ID: <20111118074552.GB2203@redhat.com> (sfid-20111118_084439_574130_893DC755)
-References: <bbdbd01d4965ae789384bc1f9d0a2426@imap.dd24.net>
- <20110902233806.GA22157@elie>
- <20110905091918.GC2221@redhat.com>
- <265f56a4dc9f5d3edeca3d101e445353@imap.dd24.net>
- <20110908084913.GB2195@redhat.com>
- <1321228952.3362.15.camel@fermat.scientia.net>
- <20111114014615.GC16508@elie.hsd1.il.comcast.net>
- <1321466933.3364.16.camel@fermat.scientia.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1321466933.3364.16.camel@fermat.scientia.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:40292 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751870Ab1KCI1K (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Nov 2011 04:27:10 -0400
+Subject: [PATCH] nl80211: fix HT capability attribute validation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 03 Nov 2011 09:27:01 +0100
+Message-ID: <1320308821.3950.4.camel@jlt3.sipsolutions.net> (sfid-20111103_092716_362338_3AF0AF8B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 16, 2011 at 07:08:53PM +0100, Christoph Anton Mitterer wrote:
-> Which logs do you want,... then ones with the patch applied? Or without
-Without patch
+From: Johannes Berg <johannes.berg@intel.com>
 
-> and just from current 3.1?
-Yes (I lose your old logs). But I also need verbose log for 2.6.38
-(assuming 2.6.38 is the lates version where driver works for you)
-to see what we do different regarding communication with firmware.
-Capture good kernel log for about the same amout of time as bad
-kernel log.
+Since the NL80211_ATTR_HT_CAPABILITY attribute is
+used as a struct, it needs a minimum, not maximum
+length. Enforce that properly. Not doing so could
+potentially lead to reading after the buffer.
 
-In summary: please provide logs as described previously here
-http://article.gmane.org/gmane.linux.kernel/1187953
-for 3.1 and 2.6.38.
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Thanks
-Stanislaw
+--- a/net/wireless/nl80211.c	2011-11-03 09:00:25.000000000 +0100
++++ b/net/wireless/nl80211.c	2011-11-03 09:16:21.000000000 +0100
+@@ -132,8 +132,7 @@ static const struct nla_policy nl80211_p
+ 	[NL80211_ATTR_MESH_CONFIG] = { .type = NLA_NESTED },
+ 	[NL80211_ATTR_SUPPORT_MESH_AUTH] = { .type = NLA_FLAG },
+ 
+-	[NL80211_ATTR_HT_CAPABILITY] = { .type = NLA_BINARY,
+-					 .len = NL80211_HT_CAPABILITY_LEN },
++	[NL80211_ATTR_HT_CAPABILITY] = { .len = NL80211_HT_CAPABILITY_LEN },
+ 
+ 	[NL80211_ATTR_MGMT_SUBTYPE] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_IE] = { .type = NLA_BINARY,
+
+
