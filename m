@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:47531 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751475Ab1KTH5e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Nov 2011 02:57:34 -0500
-Received: by bke11 with SMTP id 11so5187743bke.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 23:57:33 -0800 (PST)
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	nbd@openwrt.org, jirislaby@gmail.com,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: [PATCH 03/13] ath5k: Add TXNOFRM to INT_TX_ALL
-Date: Sun, 20 Nov 2011 09:56:18 +0200
-Message-Id: <1321775788-12520-4-git-send-email-mickflemm@gmail.com> (sfid-20111120_085737_707096_D3D69E9E)
-In-Reply-To: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
-References: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
+Received: from mail.neratec.ch ([80.75.119.105]:59512 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933891Ab1KCQpN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Nov 2011 12:45:13 -0400
+Message-ID: <4EB2C516.1020703@neratec.com> (sfid-20111103_174517_526422_823A4088)
+Date: Thu, 03 Nov 2011 17:45:10 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+MIME-Version: 1.0
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, nbd@openwrt.org
+Subject: Re: [RFC v2 2/2] ath9k: integrate initial DFS module
+References: <1320328553-28066-1-git-send-email-zefir.kurtisi@neratec.com>	<1320328553-28066-3-git-send-email-zefir.kurtisi@neratec.com> <CAD2nsn2SBVnQF4oTP4X3HR7O=uBKAViW+w-fV67YjbVN1j=3PQ@mail.gmail.com>
+In-Reply-To: <CAD2nsn2SBVnQF4oTP4X3HR7O=uBKAViW+w-fV67YjbVN1j=3PQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add TXNOFRM to INT_TX_ALL since it's a TX interrupt too.
+On 11/03/2011 04:27 PM, Mohammed Shafi wrote:
+> Hi Zefir,
+> 
+Hello Mohammed,
 
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+> On Thu, Nov 3, 2011 at 7:25 PM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+>> [...]
+>>
+>> +       if (ah->caps.hw_caps && ATH9K_HW_CAP_DFS) {
+>> +               /**
+>> +                * enable radar pulse detection
+>> +                *
+>> +                * TODO: do this only for DFS channels
+>> +                */
+>> +               ah->private_ops.set_radar_params(ah, &ah->radar_conf);
+> 
+> can we do this something like ath9k_hw_set_radar_params?
+> why we need a seperate debug file for dfs, had i missed something?
+> 
+My first proposal included the DFS statistics in debug.c, but Luis asked me to keep it separated (see http://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg06821.html). I'm fine with both approaches, just let me know.
 
----
- drivers/net/wireless/ath/ath5k/ath5k.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+I'll add a ath9k_hw_set_radar_params() in v3.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 0f42a57..b8abdbc 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -856,6 +856,7 @@ enum ath5k_int {
- 	AR5K_INT_TX_ALL = AR5K_INT_TXOK
- 		| AR5K_INT_TXDESC
- 		| AR5K_INT_TXERR
-+		| AR5K_INT_TXNOFRM
- 		| AR5K_INT_TXEOL
- 		| AR5K_INT_TXURN,
- 
--- 
-1.7.8.rc1
 
+Thanks,
+Zefir
