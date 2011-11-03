@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56893 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045Ab1KHPmQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 10:42:16 -0500
-Received: by iage36 with SMTP id e36so654138iag.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 07:42:16 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1320766054.24797.2.camel@jlt3.sipsolutions.net>
-References: <1320759419-20743-1-git-send-email-eliad@wizery.com>
-	<1320766054.24797.2.camel@jlt3.sipsolutions.net>
-Date: Tue, 8 Nov 2011 17:42:15 +0200
-Message-ID: <CAB3XZEcGPTzvnTg7DtG8q0E3pGT8KH+tozaO4ZtMGHyQNks_8A@mail.gmail.com> (sfid-20111108_164221_895098_B514E92C)
-Subject: Re: [PATCH] mac80211: set carrier_on for ibss vifs only while joined
-From: Eliad Peller <eliad@wizery.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60520 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754321Ab1KCJl0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Nov 2011 05:41:26 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 2/3] mac80211: remove useless brackets in ieee80211_cfg_on_oper_channel
+Date: Thu,  3 Nov 2011 10:40:46 +0100
+Message-Id: <1320313247-23167-2-git-send-email-sgruszka@redhat.com> (sfid-20111103_104128_854523_1EEFF4DC)
+In-Reply-To: <1320313247-23167-1-git-send-email-sgruszka@redhat.com>
+References: <1320313247-23167-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 8, 2011 at 5:27 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2011-11-08 at 15:36 +0200, Eliad Peller wrote:
->> mac80211 should set carrier_on for ibss vifs
->> only while they are joined (similar to sta vifs)
->
->> --- a/net/mac80211/ibss.c
->> +++ b/net/mac80211/ibss.c
->> @@ -97,6 +97,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
->>       /* if merging, indicate to driver that we leave the old IBSS */
->>       if (sdata->vif.bss_conf.ibss_joined) {
->>               sdata->vif.bss_conf.ibss_joined = false;
->> +             netif_carrier_off(sdata->dev);
->>               ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IBSS);
->>       }
->>
->> @@ -207,6 +208,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
->>       bss = cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
->>                                       mgmt, skb->len, 0, GFP_KERNEL);
->>       cfg80211_put_bss(bss);
->> +     netif_carrier_on(sdata->dev);
->>       cfg80211_ibss_joined(sdata->dev, ifibss->bssid, GFP_KERNEL);
->
-> Do we really need to toggle the carrier here? While we merge, shouldn't
-> we just keep it up, just maybe stop the queues?
->
-technically, we leave the ibss and then rejoin (unlike roaming). so i
-guess setting the carrier on/off makes sense as well.
-do you prefer stopping the queues instead?
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/mac80211/main.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Eliad.
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 7710b10..cd87fd9 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -126,8 +126,8 @@ bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local)
+ 		return false;
+ 
+ 	/* Check current hardware-config against oper_channel. */
+-	if ((local->oper_channel != local->hw.conf.channel) ||
+-	    (local->_oper_channel_type != local->hw.conf.channel_type))
++	if (local->oper_channel != local->hw.conf.channel ||
++	    local->_oper_channel_type != local->hw.conf.channel_type)
+ 		return false;
+ 
+ 	return true;
+-- 
+1.7.1
+
