@@ -1,79 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:38003 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756306Ab1K2TiV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 14:38:21 -0500
-From: Joe Perches <joe@perches.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/4] nfc: Remove unused nfc_printk and nfc_<level> macros
-Date: Tue, 29 Nov 2011 11:37:34 -0800
-Message-Id: <759af9f0fd066ef1dcf7ad928940f68883d2ff13.1322595343.git.joe@perches.com> (sfid-20111129_203901_959194_DB6A55A7)
-In-Reply-To: <cover.1322595343.git.joe@perches.com>
-References: <cover.1322595343.git.joe@perches.com>
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:61685 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934046Ab1KCQ6Z convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Nov 2011 12:58:25 -0400
+Received: by wwf22 with SMTP id 22so930861wwf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2011 09:58:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4EB2C516.1020703@neratec.com>
+References: <1320328553-28066-1-git-send-email-zefir.kurtisi@neratec.com>
+	<1320328553-28066-3-git-send-email-zefir.kurtisi@neratec.com>
+	<CAD2nsn2SBVnQF4oTP4X3HR7O=uBKAViW+w-fV67YjbVN1j=3PQ@mail.gmail.com>
+	<4EB2C516.1020703@neratec.com>
+Date: Thu, 3 Nov 2011 22:27:25 +0530
+Message-ID: <CAD2nsn0Qh722tt4NCaMit27XL+uPNsXnxk8tqddoBaK9dA8pXQ@mail.gmail.com> (sfid-20111103_175828_902399_86306398)
+Subject: Re: [RFC v2 2/2] ath9k: integrate initial DFS module
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, nbd@openwrt.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All uses have been removed, so killing what's not necessary.
+On Thu, Nov 3, 2011 at 10:15 PM, Zefir Kurtisi
+<zefir.kurtisi@neratec.com> wrote:
+> On 11/03/2011 04:27 PM, Mohammed Shafi wrote:
+>> Hi Zefir,
+>>
+> Hello Mohammed,
+>
+>> On Thu, Nov 3, 2011 at 7:25 PM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+>>> [...]
+>>>
+>>> +       if (ah->caps.hw_caps && ATH9K_HW_CAP_DFS) {
+>>> +               /**
+>>> +                * enable radar pulse detection
+>>> +                *
+>>> +                * TODO: do this only for DFS channels
+>>> +                */
+>>> +               ah->private_ops.set_radar_params(ah, &ah->radar_conf);
+>>
+>> can we do this something like ath9k_hw_set_radar_params?
+>> why we need a seperate debug file for dfs, had i missed something?
+>>
+> My first proposal included the DFS statistics in debug.c, but Luis asked me to keep it separated (see http://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg06821.html). I'm fine with both approaches, just let me know.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- net/nfc/core.c |   19 -------------------
- net/nfc/nfc.h  |    7 -------
- 2 files changed, 0 insertions(+), 26 deletions(-)
+oh ok. please follow up with Luis's approach. thanks.
 
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index c922adb..3ebc6b3aa 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -35,25 +35,6 @@
- int nfc_devlist_generation;
- DEFINE_MUTEX(nfc_devlist_mutex);
- 
--int nfc_printk(const char *level, const char *format, ...)
--{
--	struct va_format vaf;
--	va_list args;
--	int r;
--
--	va_start(args, format);
--
--	vaf.fmt = format;
--	vaf.va = &args;
--
--	r = printk("%sNFC: %pV\n", level, &vaf);
--
--	va_end(args);
--
--	return r;
--}
--EXPORT_SYMBOL(nfc_printk);
--
- /**
-  * nfc_dev_up - turn on the NFC device
-  *
-diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
-index d86583f..67d6050 100644
---- a/net/nfc/nfc.h
-+++ b/net/nfc/nfc.h
-@@ -27,13 +27,6 @@
- #include <net/nfc/nfc.h>
- #include <net/sock.h>
- 
--__printf(2, 3)
--int nfc_printk(const char *level, const char *fmt, ...);
--
--#define nfc_info(fmt, arg...) nfc_printk(KERN_INFO, fmt, ##arg)
--#define nfc_err(fmt, arg...) nfc_printk(KERN_ERR, fmt, ##arg)
--#define nfc_dbg(fmt, arg...) pr_debug(fmt "\n", ##arg)
--
- struct nfc_protocol {
- 	int id;
- 	struct proto *proto;
+>
+> I'll add a ath9k_hw_set_radar_params() in v3.
+>
+>
+> Thanks,
+> Zefir
+>
+
+
+
 -- 
-1.7.6.405.gc1be0
-
+shafi
