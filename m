@@ -1,32 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:38794 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752266Ab1KRW0W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 17:26:22 -0500
-Message-ID: <1321655181.2367.1.camel@Joe-Laptop> (sfid-20111118_232633_000954_89604409)
-Subject: Re: [PATCH] compat-wireless: avoid pr_fmt build SPAM
-From: Joe Perches <joe@perches.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
-Date: Fri, 18 Nov 2011 14:26:21 -0800
-In-Reply-To: <1321649673-15874-1-git-send-email-linville@tuxdriver.com>
-References: <1321649673-15874-1-git-send-email-linville@tuxdriver.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:60616 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752451Ab1KDIMX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Nov 2011 04:12:23 -0400
+Subject: Re: A new driver is going to be released
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <CAMG6FYgD9DDa+eJgALi3LLF1yQO3ujaxAskpEf1kvcJ19rYwxA@mail.gmail.com> (sfid-20111104_063306_997180_C17EC10D)
+References: <CAMG6FYiNW-1ijghpgQ6R_9HujVEp8d53DQ-vjfJrw_hZamM8Jw@mail.gmail.com>
+	 <4EB33B67.6080806@lwfinger.net> <1320372088.29008.0.camel@dcbw.foobar.com>
+	 <CAMG6FYgD9DDa+eJgALi3LLF1yQO3ujaxAskpEf1kvcJ19rYwxA@mail.gmail.com>
+	 (sfid-20111104_063306_997180_C17EC10D)
 Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Nov 2011 09:12:16 +0100
+Message-ID: <1320394336.3969.0.camel@jlt3.sipsolutions.net> (sfid-20111104_091227_641234_0EE307C3)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-11-18 at 15:54 -0500, John W. Linville wrote:
-> The way the compat-* header files are included causes the default
-> pr_fmt definition from <linux/kernel.h> to be evaluated for every file.
-> Files that define pr_fmt then generate a lot of build SPAM about
-> pr_fmt being redefined.
-> 
-> Eliminate the build noise by preemptively undefining pr_fmt in those
-> files that define it.  This is accomplished by adding a patch to the
-> patches directory.
+On Fri, 2011-11-04 at 06:32 +0100, Dmitry Tarnyagin wrote:
+> On Fri, Nov 4, 2011 at 3:01 AM, Dan Williams <dcbw@redhat.com> wrote:
+> > It looks like it's mac80211-based and already in drivers/staging/
+> > according to the git tree Dmitry pointed to.
+> >
+> Correct. But I would move it to drivers/net/wireless during submission.
 
-Why not undef pr_fmt after the compat-* headers?
+A word of caution: don't attempt that in its current state.
 
+johannes
 
