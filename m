@@ -1,69 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:60217 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751615Ab1KUDGp (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53686 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754798Ab1KDQun (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Nov 2011 22:06:45 -0500
-Date: Mon, 21 Nov 2011 12:06:40 +0900
-From: Norbert Preining <preining@logic.at>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-Subject: Re: iwlagn is getting very shaky
-Message-ID: <20111121030640.GI32505@gamma.logic.tuwien.ac.at> (sfid-20111121_040651_812317_7908892A)
-References: <20111102031345.GA10851@gamma.logic.tuwien.ac.at> <1320204101.31823.140.camel@wwguy-huron> <20111104045817.GA25778@gamma.logic.tuwien.ac.at> <20111107123812.GB23508@gamma.logic.tuwien.ac.at> <1320709047.31823.188.camel@wwguy-huron> <20111108043233.GA21171@gamma.logic.tuwien.ac.at> <CANUX_P0Q0wve4D6fZPsMv2Zw=02gb9u+3C2cjRv7UAmWqXnjzw@mail.gmail.com> <CANUX_P06ww42p6N1k_P-Y1KMKOd1QgR_DxVWe19qtsEX2rfWpw@mail.gmail.com> <20111109051152.GA16006@gamma.logic.tuwien.ac.at> <CANUX_P2Yz9bWP_EmU1Acs7Mu2w78CXxO-njhiMt97b0TJHFYiQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANUX_P2Yz9bWP_EmU1Acs7Mu2w78CXxO-njhiMt97b0TJHFYiQ@mail.gmail.com>
+	Fri, 4 Nov 2011 12:50:43 -0400
+Subject: Re: [PATCH v3] cfg80211: merge in beacon ies of hidden bss.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1320425330.3969.115.camel@jlt3.sipsolutions.net> (sfid-20111104_174857_877054_38C92B1F)
+References: <CAMG6FYhbX+zKRw823RmPzwXqVzP7c+5W8pAaR4DGsOm0qnZGpA@mail.gmail.com>
+	 (sfid-20111104_171212_230697_F4323BFB)  <1320425330.3969.115.camel@jlt3.sipsolutions.net>
+	 (sfid-20111104_174857_877054_38C92B1F)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Nov 2011 17:50:38 +0100
+Message-ID: <1320425438.3969.116.camel@jlt3.sipsolutions.net> (sfid-20111104_175046_392816_1F215AA7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Emmanuel, hi all,
+On Fri, 2011-11-04 at 17:48 +0100, Johannes Berg wrote:
 
-sorry for the long silence. I was a bit travelling and off,
+> (I'm also thinking that maybe hashing the SSID into the tree was a bad
+> idea?)
 
+OTOH we don't have a choice unless we make the data structure more like
+a hash table which seems more complex.
 
-On Mi, 09 Nov 2011, Emmanuel Grumbach wrote:
-> > On Di, 08 Nov 2011, Emmanuel Grumbach wrote:
-> > > I would like to see what happens in terms or power.
-> > > Please set the power debug flag: modprobe iwlwifi debug=0x100
-> >
-> > > It may be worth to disable Link Power save too. I would be glad if you
-> > > could try this patch (attached and inlined), with the power debug flag
-> > > set.
+johannes
 
-I have now disabled the debug option again. And rebuild some new kernels
-(3.2.0-rc1 and top git).
-
-And what I stil see is that the tx-queue gets stuck and does not
-recover without rmmod iwlwif.
-
-hwq 11: read=0 write=0 stop=1 swq_id=0x2e (ac 2/hwq 11)
-
-But I still am using the patch that you sent to disable power save,
-so it is not only this one.
-
-If you think I shouuld turn on power debug again and see hope that
-it happens again, let me know.
-
-Furthermore, I have now seen hiccups on my home router, too, at
-times. There is recovers normally by itself, but still.
-
-Best wishes
-
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-Program aborting:
-Close all that you have worked on.
-You ask far too much.
-                       --- Windows Error Haiku
