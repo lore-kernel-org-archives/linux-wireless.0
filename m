@@ -1,172 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1629 "EHLO MMS3.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:2036 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759477Ab1KWBWK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 20:22:10 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
+	id S1753413Ab1KDVX7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Nov 2011 17:23:59 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
 To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 09/24] brcm80211: fmac: remove alignment check from
- brcmf_sdioh_request_buffer()
-Date: Tue, 22 Nov 2011 17:21:44 -0800
-Message-ID: <1322011319-24863-10-git-send-email-frankyl@broadcom.com> (sfid-20111123_022245_495007_D7DA49B9)
-In-Reply-To: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
-References: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
+cc: linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 15/16] brcm80211: fmac: replace private SB macros with
+ ssb_regs version
+Date: Fri, 4 Nov 2011 22:23:41 +0100
+Message-ID: <1320441822-4615-16-git-send-email-arend@broadcom.com> (sfid-20111104_222408_935797_FE2B4403)
+In-Reply-To: <1320441822-4615-1-git-send-email-arend@broadcom.com>
+References: <1320441822-4615-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+From: Franky Lin <frankyl@broadcom.com>
 
-The check for alignment is not valid anymore and can be removed. The
-function is collapsed with brcmf_sdioh_request_packet() as a consequence
-because it did not add much functionality any longer.
+Use SSB macros in order to clean up brcmfmac code
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
 Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |  100 ++++----------------
- 1 files changed, 18 insertions(+), 82 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   66 ++++++++-----------
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |   25 --------
+ 2 files changed, 28 insertions(+), 63 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 2263d3c..ccb32c0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -229,44 +229,6 @@ brcmf_sdioh_request_data(struct brcmf_sdio_dev *sdiodev, uint write, bool fifo,
- 	return err_ret;
- }
- 
--static int
--brcmf_sdioh_request_packet(struct brcmf_sdio_dev *sdiodev, uint fix_inc,
--			   uint write, uint func, uint addr,
--			   struct sk_buff *pkt)
--{
--	bool fifo = (fix_inc == SDIOH_DATA_FIX);
--	int err_ret = 0;
--	uint pkt_len = pkt->len;
--
--	brcmf_dbg(TRACE, "Enter\n");
--
--	brcmf_pm_resume_wait(sdiodev, &sdiodev->request_packet_wait);
--	if (brcmf_pm_resume_error(sdiodev))
--		return -EIO;
--
--	/* Claim host controller */
--	sdio_claim_host(sdiodev->func[func]);
--
--	pkt_len += 3;
--	pkt_len &= 0xFFFFFFFC;
--
--	err_ret = brcmf_sdioh_request_data(sdiodev, write, fifo, func,
--					   addr, pkt, pkt_len);
--	if (err_ret) {
--		brcmf_dbg(ERROR, "%s FAILED %p, addr=0x%05x, pkt_len=%d, ERR=0x%08x\n",
--			  write ? "TX" : "RX", pkt, addr, pkt_len, err_ret);
--	} else {
--		brcmf_dbg(TRACE, "%s xfr'd %p, addr=0x%05x, len=%d\n",
--			  write ? "TX" : "RX", pkt, addr, pkt_len);
--	}
--
--	/* Release host controller */
--	sdio_release_host(sdiodev->func[func]);
--
--	brcmf_dbg(TRACE, "Exit\n");
--	return err_ret;
--}
--
- int
- brcmf_sdioh_request_chain(struct brcmf_sdio_dev *sdiodev, uint fix_inc,
- 			  uint write, uint func, uint addr,
-@@ -317,26 +279,15 @@ brcmf_sdioh_request_chain(struct brcmf_sdio_dev *sdiodev, uint fix_inc,
- }
- 
- /*
-- * This function takes a buffer or packet, and fixes everything up
-- * so that in the end, a DMA-able packet is created.
-- *
-- * A buffer does not have an associated packet pointer,
-- * and may or may not be aligned.
-- * A packet may consist of a single packet, or a packet chain.
-- * If it is a packet chain, then all the packets in the chain
-- * must be properly aligned.
-- *
-- * If the packet data is not aligned, then there may only be
-- * one packet, and in this case,  it is copied to a new
-- * aligned packet.
-- *
-+ * This function takes a single DMA-able packet.
-  */
- int brcmf_sdioh_request_buffer(struct brcmf_sdio_dev *sdiodev,
- 			       uint fix_inc, uint write, uint func, uint addr,
- 			       struct sk_buff *pkt)
- {
- 	int status;
--	struct sk_buff *mypkt = NULL;
-+	uint pkt_len = pkt->len;
-+	bool fifo = (fix_inc == SDIOH_DATA_FIX);
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -347,40 +298,25 @@ int brcmf_sdioh_request_buffer(struct brcmf_sdio_dev *sdiodev,
- 	if (brcmf_pm_resume_error(sdiodev))
- 		return -EIO;
- 
--	if (((ulong) (pkt->data) & DMA_ALIGN_MASK) != 0) {
--		/*
--		 * Case 2: We have a packet, but it is unaligned.
--		 * In this case, we cannot have a chain (pkt->next == NULL)
--		 */
--		brcmf_dbg(DATA, "Creating aligned %s Packet, len=%d\n",
--			  write ? "TX" : "RX", pkt->len);
--		mypkt = brcmu_pkt_buf_get_skb(pkt->len);
--		if (!mypkt) {
--			brcmf_dbg(ERROR, "brcmu_pkt_buf_get_skb failed: len %d\n",
--				  pkt->len);
--			return -EIO;
--		}
--
--		/* For a write, copy the buffer data into the packet. */
--		if (write)
--			memcpy(mypkt->data, pkt->data, pkt->len);
--
--		status = brcmf_sdioh_request_packet(sdiodev, fix_inc, write,
--						    func, addr, mypkt);
-+	/* Claim host controller */
-+	sdio_claim_host(sdiodev->func[func]);
- 
--		/* For a read, copy the packet data back to the buffer. */
--		if (!write)
--			memcpy(pkt->data, mypkt->data, mypkt->len);
-+	pkt_len += 3;
-+	pkt_len &= (uint)~3;
- 
--		brcmu_pkt_buf_free_skb(mypkt);
--	} else {		/* case 3: We have a packet and
--				 it is aligned. */
--		brcmf_dbg(DATA, "Aligned %s Packet, direct DMA\n",
--			  write ? "Tx" : "Rx");
--		status = brcmf_sdioh_request_packet(sdiodev, fix_inc, write,
--						    func, addr, pkt);
-+	status = brcmf_sdioh_request_data(sdiodev, write, fifo, func,
-+					   addr, pkt, pkt_len);
-+	if (status) {
-+		brcmf_dbg(ERROR, "%s FAILED %p, addr=0x%05x, pkt_len=%d, ERR=0x%08x\n",
-+			  write ? "TX" : "RX", pkt, addr, pkt_len, status);
-+	} else {
-+		brcmf_dbg(TRACE, "%s xfr'd %p, addr=0x%05x, len=%d\n",
-+			  write ? "TX" : "RX", pkt, addr, pkt_len);
- 	}
- 
-+	/* Release host controller */
-+	sdio_release_host(sdiodev->func[func]);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+index e068107..62c4621 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+@@ -18,6 +18,8 @@
+ #include <linux/types.h>
+ #include <linux/netdevice.h>
+ #include <linux/mmc/card.h>
++#include <linux/ssb/ssb_regs.h>
 +
- 	return status;
+ #include <chipcommon.h>
+ #include <brcm_hw_ids.h>
+ #include <brcmu_wifi.h>
+@@ -38,19 +40,9 @@
+ #define BCM4329_CORE_ARM_BASE		0x18002000
+ #define BCM4329_RAMSIZE			0x48000
+ 
+-
+-/* SB regs */
+-/* sbidhigh */
+-#define	SBIDH_RC_MASK		0x000f	/* revision code */
+-#define	SBIDH_RCE_MASK		0x7000	/* revision code extension field */
+-#define	SBIDH_RCE_SHIFT		8
+ #define	SBCOREREV(sbidh) \
+-	((((sbidh) & SBIDH_RCE_MASK) >> SBIDH_RCE_SHIFT) | \
+-	  ((sbidh) & SBIDH_RC_MASK))
+-#define	SBIDH_CC_MASK		0x8ff0	/* core code */
+-#define	SBIDH_CC_SHIFT		4
+-#define	SBIDH_VC_MASK		0xffff0000	/* vendor code */
+-#define	SBIDH_VC_SHIFT		16
++	((((sbidh) & SSB_IDHIGH_RCHI) >> SSB_IDHIGH_RCHI_SHIFT) | \
++	  ((sbidh) & SSB_IDHIGH_RCLO))
+ 
+ #define SDIOD_DRVSTR_KEY(chip, pmu)     (((chip) << 16) | (pmu))
+ /* SDIO Pad drive strength to select value mappings */
+@@ -109,9 +101,9 @@ brcmf_sdio_chip_iscoreup(struct brcmf_sdio_dev *sdiodev,
+ 
+ 	regdata = brcmf_sdcard_reg_read(sdiodev,
+ 			CORE_SB(corebase, sbtmstatelow), 4);
+-	regdata &= (SBTML_RESET | SBTML_REJ_MASK |
+-			(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
+-	return ((SICF_CLOCK_EN << SBTML_SICF_SHIFT) == regdata);
++	regdata &= (SSB_TMSLOW_RESET | SSB_TMSLOW_REJECT |
++		    SSB_IMSTATE_REJECT | SSB_TMSLOW_CLOCK);
++	return (SSB_TMSLOW_CLOCK == regdata);
  }
  
+ void
+@@ -121,12 +113,12 @@ brcmf_sdio_chip_coredisable(struct brcmf_sdio_dev *sdiodev, u32 corebase)
+ 
+ 	regdata = brcmf_sdcard_reg_read(sdiodev,
+ 		CORE_SB(corebase, sbtmstatelow), 4);
+-	if (regdata & SBTML_RESET)
++	if (regdata & SSB_TMSLOW_RESET)
+ 		return;
+ 
+ 	regdata = brcmf_sdcard_reg_read(sdiodev,
+ 		CORE_SB(corebase, sbtmstatelow), 4);
+-	if ((regdata & (SICF_CLOCK_EN << SBTML_SICF_SHIFT)) != 0) {
++	if ((regdata & SSB_TMSLOW_CLOCK) != 0) {
+ 		/*
+ 		 * set target reject and spin until busy is clear
+ 		 * (preserve core-specific bits)
+@@ -134,26 +126,26 @@ brcmf_sdio_chip_coredisable(struct brcmf_sdio_dev *sdiodev, u32 corebase)
+ 		regdata = brcmf_sdcard_reg_read(sdiodev,
+ 			CORE_SB(corebase, sbtmstatelow), 4);
+ 		brcmf_sdcard_reg_write(sdiodev, CORE_SB(corebase, sbtmstatelow),
+-				       4, regdata | SBTML_REJ);
++				       4, regdata | SSB_TMSLOW_REJECT);
+ 
+ 		regdata = brcmf_sdcard_reg_read(sdiodev,
+ 			CORE_SB(corebase, sbtmstatelow), 4);
+ 		udelay(1);
+ 		SPINWAIT((brcmf_sdcard_reg_read(sdiodev,
+ 			CORE_SB(corebase, sbtmstatehigh), 4) &
+-			SBTMH_BUSY), 100000);
++			SSB_TMSHIGH_BUSY), 100000);
+ 
+ 		regdata = brcmf_sdcard_reg_read(sdiodev,
+ 			CORE_SB(corebase, sbtmstatehigh), 4);
+-		if (regdata & SBTMH_BUSY)
++		if (regdata & SSB_TMSHIGH_BUSY)
+ 			brcmf_dbg(ERROR, "core state still busy\n");
+ 
+ 		regdata = brcmf_sdcard_reg_read(sdiodev,
+ 			CORE_SB(corebase, sbidlow), 4);
+-		if (regdata & SBIDL_INIT) {
++		if (regdata & SSB_IDLOW_INITIATOR) {
+ 			regdata = brcmf_sdcard_reg_read(sdiodev,
+ 				CORE_SB(corebase, sbimstate), 4) |
+-				SBIM_RJ;
++				SSB_IMSTATE_REJECT;
+ 			brcmf_sdcard_reg_write(sdiodev,
+ 				CORE_SB(corebase, sbimstate), 4,
+ 				regdata);
+@@ -162,14 +154,14 @@ brcmf_sdio_chip_coredisable(struct brcmf_sdio_dev *sdiodev, u32 corebase)
+ 			udelay(1);
+ 			SPINWAIT((brcmf_sdcard_reg_read(sdiodev,
+ 				CORE_SB(corebase, sbimstate), 4) &
+-				SBIM_BY), 100000);
++				SSB_IMSTATE_BUSY), 100000);
+ 		}
+ 
+ 		/* set reset and reject while enabling the clocks */
+ 		brcmf_sdcard_reg_write(sdiodev,
+ 			CORE_SB(corebase, sbtmstatelow), 4,
+-			(((SICF_FGC | SICF_CLOCK_EN) << SBTML_SICF_SHIFT) |
+-			SBTML_REJ | SBTML_RESET));
++			(SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK |
++			SSB_TMSLOW_REJECT | SSB_TMSLOW_RESET));
+ 		regdata = brcmf_sdcard_reg_read(sdiodev,
+ 			CORE_SB(corebase, sbtmstatelow), 4);
+ 		udelay(10);
+@@ -177,10 +169,10 @@ brcmf_sdio_chip_coredisable(struct brcmf_sdio_dev *sdiodev, u32 corebase)
+ 		/* clear the initiator reject bit */
+ 		regdata = brcmf_sdcard_reg_read(sdiodev,
+ 			CORE_SB(corebase, sbidlow), 4);
+-		if (regdata & SBIDL_INIT) {
++		if (regdata & SSB_IDLOW_INITIATOR) {
+ 			regdata = brcmf_sdcard_reg_read(sdiodev,
+ 				CORE_SB(corebase, sbimstate), 4) &
+-				~SBIM_RJ;
++				~SSB_IMSTATE_REJECT;
+ 			brcmf_sdcard_reg_write(sdiodev,
+ 				CORE_SB(corebase, sbimstate), 4,
+ 				regdata);
+@@ -189,7 +181,7 @@ brcmf_sdio_chip_coredisable(struct brcmf_sdio_dev *sdiodev, u32 corebase)
+ 
+ 	/* leave reset and reject asserted */
+ 	brcmf_sdcard_reg_write(sdiodev, CORE_SB(corebase, sbtmstatelow), 4,
+-		(SBTML_REJ | SBTML_RESET));
++		(SSB_TMSLOW_REJECT | SSB_TMSLOW_RESET));
+ 	udelay(1);
+ }
+ 
+@@ -210,31 +202,29 @@ brcmf_sdio_chip_resetcore(struct brcmf_sdio_dev *sdiodev, u32 corebase)
+ 	 * forcing them on throughout the core
+ 	 */
+ 	brcmf_sdcard_reg_write(sdiodev, CORE_SB(corebase, sbtmstatelow), 4,
+-		((SICF_FGC | SICF_CLOCK_EN) << SBTML_SICF_SHIFT) |
+-		SBTML_RESET);
++		SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK | SSB_TMSLOW_RESET);
+ 	udelay(1);
+ 
+ 	regdata = brcmf_sdcard_reg_read(sdiodev,
+ 					CORE_SB(corebase, sbtmstatehigh), 4);
+-	if (regdata & SBTMH_SERR)
++	if (regdata & SSB_TMSHIGH_SERR)
+ 		brcmf_sdcard_reg_write(sdiodev,
+ 				       CORE_SB(corebase, sbtmstatehigh), 4, 0);
+ 
+ 	regdata = brcmf_sdcard_reg_read(sdiodev,
+ 					CORE_SB(corebase, sbimstate), 4);
+-	if (regdata & (SBIM_IBE | SBIM_TO))
++	if (regdata & (SSB_IMSTATE_IBE | SSB_IMSTATE_TO))
+ 		brcmf_sdcard_reg_write(sdiodev, CORE_SB(corebase, sbimstate), 4,
+-			regdata & ~(SBIM_IBE | SBIM_TO));
++			regdata & ~(SSB_IMSTATE_IBE | SSB_IMSTATE_TO));
+ 
+ 	/* clear reset and allow it to propagate throughout the core */
+ 	brcmf_sdcard_reg_write(sdiodev, CORE_SB(corebase, sbtmstatelow), 4,
+-		(SICF_FGC << SBTML_SICF_SHIFT) |
+-		(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
++		SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK);
+ 	udelay(1);
+ 
+ 	/* leave clock enabled */
+-	brcmf_sdcard_reg_write(sdiodev, CORE_SB(corebase, sbtmstatelow), 4,
+-		(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
++	brcmf_sdcard_reg_write(sdiodev, CORE_SB(corebase, sbtmstatelow),
++			       4, SSB_TMSLOW_CLOCK);
+ 	udelay(1);
+ }
+ 
+@@ -345,7 +335,7 @@ brcmf_sdio_chip_buscoresetup(struct brcmf_sdio_dev *sdiodev,
+ 	ci->buscorerev = brcmf_sdio_chip_corerev(sdiodev, ci->buscorebase);
+ 	regdata = brcmf_sdcard_reg_read(sdiodev,
+ 					CORE_SB(ci->buscorebase, sbidhigh), 4);
+-	ci->buscoretype = (regdata & SBIDH_CC_MASK) >> SBIDH_CC_SHIFT;
++	ci->buscoretype = (regdata & SSB_IDHIGH_CC) >> SSB_IDHIGH_CC_SHIFT;
+ 
+ 	brcmf_dbg(INFO, "ccrev=%d, pmurev=%d, buscore rev/type=%d/0x%x\n",
+ 		  ci->ccrev, ci->pmurev, ci->buscorerev, ci->buscoretype);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
+index e816bb6..6383746 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
+@@ -52,31 +52,6 @@
+ #define SBSDIO_CLKAV(regval, alponly) \
+ 	(SBSDIO_ALPAV(regval) && (alponly ? 1 : SBSDIO_HTAV(regval)))
+ 
+-/* sbimstate */
+-#define	SBIM_IBE		0x20000	/* inbanderror */
+-#define	SBIM_TO			0x40000	/* timeout */
+-#define	SBIM_BY			0x01800000	/* busy (sonics >= 2.3) */
+-#define	SBIM_RJ			0x02000000	/* reject (sonics >= 2.3) */
+-
+-/* sbtmstatelow */
+-#define	SBTML_RESET		0x0001	/* reset */
+-#define	SBTML_REJ_MASK		0x0006	/* reject field */
+-#define	SBTML_REJ		0x0002	/* reject */
+-#define	SBTML_TMPREJ		0x0004	/* temporary reject(error recovery) */
+-/* Shift to locate the SI control flags in sbtml */
+-#define	SBTML_SICF_SHIFT	16
+-
+-/* sbtmstatehigh */
+-#define	SBTMH_SERR		0x0001	/* serror */
+-#define	SBTMH_INT		0x0002	/* interrupt */
+-#define	SBTMH_BUSY		0x0004	/* busy */
+-#define	SBTMH_TO		0x0020	/* timeout (sonics >= 2.3) */
+-/* Shift to locate the SI status flags in sbtmh */
+-#define	SBTMH_SISF_SHIFT	16
+-
+-/* sbidlow */
+-#define	SBIDL_INIT		0x80	/* initiator */
+-
+ struct chip_info {
+ 	u32 chip;
+ 	u32 chiprev;
 -- 
-1.7.5.4
+1.7.4.1
 
 
