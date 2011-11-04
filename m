@@ -1,77 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:41899 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751065Ab1KPOkC convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44786 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751230Ab1KDNEX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 09:40:02 -0500
-Received: by vcbfk1 with SMTP id fk1so416343vcb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 06:40:01 -0800 (PST)
+	Fri, 4 Nov 2011 09:04:23 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath6kl: Fix error in writing create_qos debugfs
+Date: Fri, 4 Nov 2011 18:34:55 +0530
+Message-ID: <1320411895-4828-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111104_140426_670234_CF49C4D8)
 MIME-Version: 1.0
-In-Reply-To: <20111116142911.501655161@sipsolutions.net>
-References: <20111116142854.518391560@sipsolutions.net>
-	<20111116142911.501655161@sipsolutions.net>
-Date: Wed, 16 Nov 2011 15:40:01 +0100
-Message-ID: <CAOZOX0VkGezQcijrEMiQSiuY=yadgSva7w9-SfrvYYW_UG+0LQ@mail.gmail.com> (sfid-20111116_154007_086166_B9B26D94)
-Subject: Re: [PATCH 4/4] mac80211: transmit fragment list to drivers
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+100 bytes are allocated to store the parameters which are needed
+to create a priority stream. These 100 bytes are not sufficiant and
+throws error when running the following command.
 
-> --- a/include/net/mac80211.h    2011-11-16 15:19:31.000000000 +0100
-> +++ b/include/net/mac80211.h    2011-11-16 15:20:03.000000000 +0100
-> @@ -1760,11 +1760,20 @@ enum ieee80211_frame_release_type {
->  *     skb contains the buffer starting from the IEEE 802.11 header.
->  *     The low-level driver should send the frame out based on
->  *     configuration in the TX control data. This handler should,
-> - *     preferably, never fail and stop queues appropriately, more
-> - *     importantly, however, it must never fail for A-MPDU-queues.
-> - *     This function should return NETDEV_TX_OK except in very
-> - *     limited cases.
-> - *     Must be implemented and atomic.
-> + *     preferably, never fail and stop queues appropriately.
-> + *     This needs only be implemented if @tx_frags is set to the
-> + *     ieee80211_generic_tx_frags handler.
-> + *     Must be atomic.
-> + *
-> + * @tx_frags: Called to transmit multiple fragments of a single MSDU.
-> + *     This handler must consume all fragments, sending out some of
-> + *     them only is useless and it can't ask for some of them to be
-> + *     queued again. If the frame is not fragmented the queue has a
-> + *     single SKB only.
-> + *     If this is called, the tx_info @vif and @sta pointer will be
-> + *     invalid -- you must not use them in that case.
-> + *     Must be implemented and atomic. If the driver implements @tx
-> + *     only then this must be set to ieee80211_generic_tx_frags().
+echo "6 2 3 1 1 9999999 9999999 9999999 7777777 0 6 45000 200 56789000
+ 56789000 5678900 0 0 9999999 20000 0" > create_qos
 
-<..snip..>
+179 bytes are needed when the following vlaues are given so that
+a maximum possible value in that data type can be given in decimal.
 
-> --- a/net/mac80211/driver-ops.h 2011-11-16 15:19:31.000000000 +0100
-> +++ b/net/mac80211/driver-ops.h 2011-11-16 15:20:03.000000000 +0100
-> @@ -15,6 +15,18 @@ static inline void drv_tx(struct ieee802
->        local->ops->tx(&local->hw, skb);
->  }
->
-> +static inline void drv_tx_frags(struct ieee80211_local *local,
-> +                               struct ieee80211_sub_if_data *sdata,
-> +                               struct sta_info *sta,
-> +                               struct sk_buff_head *skbs,
-> +                               void *internal)
-> +{
-> +       local->ops->tx_frags(&local->hw,
-> +                            sdata ? &sdata->vif : NULL,
-> +                            sta ? &sta->sta : NULL,
-> +                            skbs, internal);
-> +}
+echo "255 255 255 255 255 4294967295 4294967295 4294967295 4294967295
+ 4294967295 255 65535 65535 4294967295 4294967295 4294967295 4294967295
+ 4294967295 4294967295 4294967295 4294967295" > create_qos
 
-Instead of changing every driver and making .tx_frags callback mandatory,
-isn't it easier to have a if-else here?
-Then it is much easier for the drivers as you can document that either
-.tx or .tx_frags is mandatory but never both.
+Following takes 187 bytes when given in hex
 
-Ivo
+echo "0xff 0xff 0xff 0xff 0xff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+ 0xff 0xffff 0xffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+ 0xffffffff 0xffffffff" > create_qos
+
+Increase the size to 200 bytes so that it can hold upto the maximum
+value possible for that data type.
+
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/debug.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 70ea137..370664a 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -1252,7 +1252,7 @@ static ssize_t ath6kl_create_qos_write(struct file *file,
+ 
+ 	struct ath6kl *ar = file->private_data;
+ 	struct ath6kl_vif *vif;
+-	char buf[100];
++	char buf[200];
+ 	ssize_t len;
+ 	char *sptr, *token;
+ 	struct wmi_create_pstream_cmd pstream;
+-- 
+1.7.0.4
+
