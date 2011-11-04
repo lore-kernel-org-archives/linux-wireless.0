@@ -1,32 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:51983 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753565Ab1KNUjW (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:47927 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753149Ab1KDWag convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 15:39:22 -0500
-Received: by vws1 with SMTP id 1so5468850vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2011 12:39:21 -0800 (PST)
+	Fri, 4 Nov 2011 18:30:36 -0400
 MIME-Version: 1.0
-In-Reply-To: <1321289887.10264.17.camel@jlt3.sipsolutions.net>
-References: <1321287289.10264.16.camel@jlt3.sipsolutions.net> <1321289887.10264.17.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 14 Nov 2011 12:39:00 -0800
-Message-ID: <CAB=NE6Vvp7wqr0sW=LMVxFzETgSPggDGE_zvXzpEBe2hr7aA2g@mail.gmail.com> (sfid-20111114_213925_121093_6449F2E4)
-Subject: Re: [PATCH 2/2] compat: add skb_complete_wifi_ack & feature flag
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20111104191343.GB13505@tuxdriver.com>
+References: <20111104191343.GB13505@tuxdriver.com>
+Date: Fri, 4 Nov 2011 23:30:34 +0100
+Message-ID: <CACna6ryikPeppgrUvdhCYGjbi7hBOOcaX6YAz6CgFwd6dbsmfA@mail.gmail.com> (sfid-20111104_233057_028826_B40C3440)
+Subject: Re: pull request: wireless 2011-11-04
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 14, 2011 at 8:58 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> This just needs to be empty -- older kernels don't
-> have the necessary infrastructure for this.
+2011/11/4 John W. Linville <linville@tuxdriver.com>:
+> commit 22097fd297c85ec6c2e700d506f231f7cae442e1
 >
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Dave,
+>
+> Here is the first batch of wireless fixes intended for 3.2 -- hooray!
 
-Applied and pushed, thanks!
+John, could you take a look at 2 patches?
+[PATCH 3.2 REQ V2] b43: HT-PHY: report signal to mac80211
+[PATCH V2 3.2] b43: fill ctl1 word on all newer PHYs, fix PHY errors
+I don't think there were commited for 3.2 or rejected by you.
 
-  Luis
+Were there any problems with that 2 patches?
+
+-- 
+Rafał
