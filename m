@@ -1,81 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18017 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756001Ab1KWERd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 23:17:33 -0500
-Date: Tue, 22 Nov 2011 23:17:28 -0500
-From: Dave Jones <davej@redhat.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 3.1+ iwlwifi lockup
-Message-ID: <20111123041728.GA11864@redhat.com> (sfid-20111123_051753_717485_3C3B59E5)
-References: <20111031143408.GA17152@redhat.com>
- <1321992902.8072.7.camel@wwguy-ubuntu>
- <20111123024545.GA9703@redhat.com>
- <1322015380.11647.82.camel@wwguy-huron>
- <20111123033446.GB9703@redhat.com>
- <1322016965.11647.95.camel@wwguy-huron>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1322016965.11647.95.camel@wwguy-huron>
+Received: from he.sipsolutions.net ([78.46.109.217]:54768 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754953Ab1KDKV3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Nov 2011 06:21:29 -0400
+Message-Id: <20111104101944.274354520@sipsolutions.net> (sfid-20111104_112131_659195_7847A4F2)
+Date: Fri, 04 Nov 2011 11:18:16 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 07/12] mac80211: support client probe
+References: <20111104101809.711636760@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 22, 2011 at 06:56:05PM -0800, Guy, Wey-Yi wrote:
- > Agree, that is why I could not re-produce here after many try. Could you
- > share your configuration, such as 
+From: Johannes Berg <johannes.berg@intel.com>
 
- > band/channel
+Support probing clients with null data frames
+in AP mode.
 
-Channel:1
-Frequency:2.412 GHz (Channel 1)
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+v2: update to use cfg80211_probe_status
 
- > 32/64 bit system
+ net/mac80211/cfg.c    |   68 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/status.c |   45 +++++++++++++++++++--------------
+ 2 files changed, 95 insertions(+), 18 deletions(-)
 
-64bit. It's a Dell Adamo laptop.
+--- a/net/mac80211/cfg.c	2011-11-03 11:52:48.000000000 +0100
++++ b/net/mac80211/cfg.c	2011-11-03 11:52:52.000000000 +0100
+@@ -2507,6 +2507,73 @@ static int ieee80211_tdls_oper(struct wi
+ 	return 0;
+ }
+ 
++static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
++				  const u8 *peer, u64 *cookie)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_qos_hdr *nullfunc;
++	struct sk_buff *skb;
++	int size = sizeof(*nullfunc);
++	__le16 fc;
++	bool qos;
++	struct ieee80211_tx_info *info;
++	struct sta_info *sta;
++
++	rcu_read_lock();
++	sta = sta_info_get(sdata, peer);
++	if (sta)
++		qos = test_sta_flag(sta, WLAN_STA_WME);
++	rcu_read_unlock();
++
++	if (!sta)
++		return -ENOLINK;
++
++	if (qos) {
++		fc = cpu_to_le16(IEEE80211_FTYPE_DATA |
++				 IEEE80211_STYPE_QOS_NULLFUNC |
++				 IEEE80211_FCTL_FROMDS);
++	} else {
++		size -= 2;
++		fc = cpu_to_le16(IEEE80211_FTYPE_DATA |
++				 IEEE80211_STYPE_NULLFUNC |
++				 IEEE80211_FCTL_FROMDS);
++	}
++
++	skb = dev_alloc_skb(local->hw.extra_tx_headroom + size);
++	if (!skb)
++		return -ENOMEM;
++
++	skb->dev = dev;
++
++	skb_reserve(skb, local->hw.extra_tx_headroom);
++
++	nullfunc = (void *) skb_put(skb, size);
++	nullfunc->frame_control = fc;
++	nullfunc->duration_id = 0;
++	memcpy(nullfunc->addr1, sta->sta.addr, ETH_ALEN);
++	memcpy(nullfunc->addr2, sdata->vif.addr, ETH_ALEN);
++	memcpy(nullfunc->addr3, sdata->vif.addr, ETH_ALEN);
++	nullfunc->seq_ctrl = 0;
++
++	info = IEEE80211_SKB_CB(skb);
++
++	info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS |
++		       IEEE80211_TX_INTFL_NL80211_FRAME_TX;
++
++	skb_set_queue_mapping(skb, IEEE80211_AC_VO);
++	skb->priority = 7;
++	if (qos)
++		nullfunc->qos_ctrl = cpu_to_le16(7);
++
++	local_bh_disable();
++	ieee80211_xmit(sdata, skb);
++	local_bh_enable();
++
++	*cookie = (unsigned long) skb;
++	return 0;
++}
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -2572,4 +2639,5 @@ struct cfg80211_ops mac80211_config_ops
+ 	.set_rekey_data = ieee80211_set_rekey_data,
+ 	.tdls_oper = ieee80211_tdls_oper,
+ 	.tdls_mgmt = ieee80211_tdls_mgmt,
++	.probe_client = ieee80211_probe_client,
+ };
+--- a/net/mac80211/status.c	2011-11-03 11:52:48.000000000 +0100
++++ b/net/mac80211/status.c	2011-11-03 11:52:52.000000000 +0100
+@@ -516,27 +516,36 @@ void ieee80211_tx_status(struct ieee8021
+ 	}
+ 
+ 	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX) {
+-		struct ieee80211_work *wk;
+ 		u64 cookie = (unsigned long)skb;
+ 
+-		rcu_read_lock();
+-		list_for_each_entry_rcu(wk, &local->work_list, list) {
+-			if (wk->type != IEEE80211_WORK_OFFCHANNEL_TX)
+-				continue;
+-			if (wk->offchan_tx.frame != skb)
+-				continue;
+-			wk->offchan_tx.status = true;
+-			break;
+-		}
+-		rcu_read_unlock();
+-		if (local->hw_roc_skb_for_status == skb) {
+-			cookie = local->hw_roc_cookie ^ 2;
+-			local->hw_roc_skb_for_status = NULL;
+-		}
++		if (ieee80211_is_nullfunc(hdr->frame_control) ||
++		    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
++		    	bool acked = info->flags & IEEE80211_TX_STAT_ACK;
++			cfg80211_probe_status(skb->dev, hdr->addr1,
++					      cookie, acked, GFP_ATOMIC);
++		} else {
++			struct ieee80211_work *wk;
+ 
+-		cfg80211_mgmt_tx_status(
+-			skb->dev, cookie, skb->data, skb->len,
+-			!!(info->flags & IEEE80211_TX_STAT_ACK), GFP_ATOMIC);
++			rcu_read_lock();
++			list_for_each_entry_rcu(wk, &local->work_list, list) {
++				if (wk->type != IEEE80211_WORK_OFFCHANNEL_TX)
++					continue;
++				if (wk->offchan_tx.frame != skb)
++					continue;
++				wk->offchan_tx.status = true;
++				break;
++			}
++			rcu_read_unlock();
++			if (local->hw_roc_skb_for_status == skb) {
++				cookie = local->hw_roc_cookie ^ 2;
++				local->hw_roc_skb_for_status = NULL;
++			}
++
++			cfg80211_mgmt_tx_status(
++				skb->dev, cookie, skb->data, skb->len,
++				!!(info->flags & IEEE80211_TX_STAT_ACK),
++				GFP_ATOMIC);
++		}
+ 	}
+ 
+ 	/* this was a transmitted frame, but now we want to reuse it */
 
- > 20/40 MHz
-
-not sure how to find out what you're looking for.
-
- > traffic type
-
-last triggered it with just ssh.
-
- > open/security
-
-IE: IEEE 802.11i/WPA2 Version 1
-    Group Cipher : CCMP
-    Pairwise Ciphers (1) : CCMP
-    Authentication Suites (1) : PSK
-
- > power management
-
-nothing special. everything is default.
-
-all messages related to iwlwifi in dmesg are below..
-
-	Dave
-
-[   24.423300] Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
-[   24.425560] Copyright(c) 2003-2011 Intel Corporation
-[   24.428667] iwlwifi 0000:04:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-[   24.437959] iwlwifi 0000:04:00.0: setting latency timer to 64
-[   24.438108] iwlwifi 0000:04:00.0: pci_resource_len = 0x00002000
-[   24.444058] iwlwifi 0000:04:00.0: pci_resource_base = ffffc90011574000
-[   24.445823] iwlwifi 0000:04:00.0: HW Revision ID = 0x0
-[   24.447695] iwlwifi 0000:04:00.0: irq 46 for MSI/MSI-X
-[   24.447896] iwlwifi 0000:04:00.0: Detected Intel(R) Ultimate N WiFi Link 5300 AGN, REV=0x24
-[   24.453070] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
-[   24.486217] iwlwifi 0000:04:00.0: device EEPROM VER=0x120, CALIB=0x4
-[   24.489176] iwlwifi 0000:04:00.0: Device SKU: 0Xf0
-[   24.490778] iwlwifi 0000:04:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
-[   24.520548] iwlwifi 0000:04:00.0: loaded firmware version 8.83.5.1 build 33692
-[   39.229498] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
-[   39.240818] iwlwifi 0000:04:00.0: Radio type=0x0-0x2-0x0
-[   39.607327] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
-[   39.613424] iwlwifi 0000:04:00.0: Radio type=0x0-0x2-0x0
-[  210.248807] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra = b8:c7:5d:0c:39:87 tid = 6
 
