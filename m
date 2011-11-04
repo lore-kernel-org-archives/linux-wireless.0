@@ -1,55 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:17930 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751551Ab1K3FOU (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53809 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750815Ab1KDTc3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 00:14:20 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Russell Hu <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Wilson Tsao <wtsao@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 17/17] ath9k: fix a typo
-Date: Wed, 30 Nov 2011 10:41:29 +0530
-Message-ID: <1322629889-19961-18-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_061424_027924_3EDF5E9A)
-In-Reply-To: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 4 Nov 2011 15:32:29 -0400
+Subject: Re: crash in wireless-next
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4EB42C0C.40101@candelatech.com> (sfid-20111104_191656_642276_99C645ED)
+References: <4EB42C0C.40101@candelatech.com>
+	 (sfid-20111104_191656_642276_99C645ED)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Nov 2011 20:32:26 +0100
+Message-ID: <1320435146.3969.125.camel@jlt3.sipsolutions.net> (sfid-20111104_203233_422852_33ADA66F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Fri, 2011-11-04 at 11:16 -0700, Ben Greear wrote:
+> Anyone seen a crash like this?  I was restarting my user-space
+> tools, and had just unloaded the drivers that had,
+> around 135 virtual stations created.  Just my disable-ht
+> patch series applied on top of yesterday's wireless-testing.
+> 
+> I'll dig into it more when I get a chance, but let me know
+> if someone is already working on this...
 
-Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/btcoex.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+The only crash in wext I ever saw was recently with compat but I don't
+think that looked similar.
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index 9ac28d9..bbb2081 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -21,7 +21,7 @@ enum ath_bt_mode {
- 	ATH_BT_COEX_MODE_LEGACY,        /* legacy rx_clear mode */
- 	ATH_BT_COEX_MODE_UNSLOTTED,     /* untimed/unslotted mode */
- 	ATH_BT_COEX_MODE_SLOTTED,       /* slotted mode */
--	ATH_BT_COEX_MODE_DISALBED,      /* coexistence disabled */
-+	ATH_BT_COEX_MODE_DISABLED,      /* coexistence disabled */
- };
- 
- struct ath_btcoex_config {
--- 
-1.7.0.4
+johannes
 
