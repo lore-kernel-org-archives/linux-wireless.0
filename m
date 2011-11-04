@@ -1,72 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:43967 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753795Ab1KNRbm (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:40086 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750924Ab1KDELb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 12:31:42 -0500
-Subject: [PATCH 10/10] ath6kl: add firmware IE for maximum number of vifs
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 14 Nov 2011 19:31:38 +0200
-Message-ID: <20111114173138.29925.77938.stgit@localhost6.localdomain6> (sfid-20111114_183145_534130_9EAFCFC0)
-In-Reply-To: <20111114172836.29925.4134.stgit@localhost6.localdomain6>
-References: <20111114172836.29925.4134.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Fri, 4 Nov 2011 00:11:31 -0400
+Received: by mail-yw0-f46.google.com with SMTP id 7so2077492ywf.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2011 21:11:30 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH v4 3/4] mac80211: check if frame is really part of this BA
+Date: Thu,  3 Nov 2011 21:11:12 -0700
+Message-Id: <1320379873-30884-3-git-send-email-thomas@cozybit.com> (sfid-20111104_051135_363003_C75F5E1E)
+In-Reply-To: <1320379873-30884-1-git-send-email-thomas@cozybit.com>
+References: <1320379873-30884-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not all firmwares support multiple vifs and we need to read the limit from
-the firmware image.
+There was an an implicit assumption that any QoS data frame received
+from a STA/TID with an active BA session was sent to this vif as part of
+a BA.  This is not true if IFF_PROMISC is enabled and the frame was
+destined for a different peer, for example. Don't treat these frames as
+part of a BA from the sending STA.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+
 ---
- drivers/net/wireless/ath/ath6kl/core.h |    3 ++-
- drivers/net/wireless/ath/ath6kl/init.c |   11 +++++++++++
- 2 files changed, 13 insertions(+), 1 deletions(-)
+v3: use RX_RA_MATCH instead of checking the address directly (Johannes)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 6fdaaf7..b185564 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -71,6 +71,7 @@ enum ath6kl_fw_ie_type {
- 	ATH6KL_FW_IE_CAPABILITIES = 6,
- 	ATH6KL_FW_IE_PATCH_ADDR = 7,
- 	ATH6KL_FW_IE_BOARD_ADDR = 8,
-+	ATH6KL_FW_IE_VIF_MAX = 9,
- };
+ net/mac80211/rx.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index bbe7b50..45ace14 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -744,6 +744,7 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+ 	struct ieee80211_local *local = rx->local;
+ 	struct ieee80211_hw *hw = &local->hw;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	struct sta_info *sta = rx->sta;
+ 	struct tid_ampdu_rx *tid_agg_rx;
+ 	u16 sc;
+@@ -777,6 +778,10 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+ 	    ack_policy != IEEE80211_QOS_CTL_ACK_POLICY_NORMAL)
+ 		goto dont_reorder;
  
- enum ath6kl_fw_capability {
-@@ -502,7 +503,7 @@ struct ath6kl {
- 	/* Lock to avoid race in vif_list entries among add/del/traverse */
- 	spinlock_t list_lock;
- 	u8 num_vif;
--	int vif_max;
-+	unsigned int vif_max;
- 	u8 max_norm_iface;
- 	u8 avail_idx_map;
- 	spinlock_t lock;
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 0f72461..6c4f6a9 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -963,6 +963,17 @@ static int ath6kl_fetch_fw_api2(struct ath6kl *ar)
- 				   "found board address ie 0x%x\n",
- 				   ar->hw.board_addr);
- 			break;
-+		case ATH6KL_FW_IE_VIF_MAX:
-+			if (ie_len != sizeof(*val))
-+				break;
++	/* not actually part of this BA session */
++	if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
++		goto dont_reorder;
 +
-+			val = (__le32 *) data;
-+			ar->vif_max = min_t(unsigned int, le32_to_cpup(val),
-+					    ATH6KL_VIF_MAX);
-+
-+			ath6kl_dbg(ATH6KL_DBG_BOOT,
-+				   "found vif max ie %d\n", ar->vif_max);
-+			break;
- 		default:
- 			ath6kl_dbg(ATH6KL_DBG_BOOT, "Unknown fw ie: %u\n",
- 				   le32_to_cpup(&hdr->id));
+ 	/* new, potentially un-ordered, ampdu frame - process it */
+ 
+ 	/* reset session timer */
+-- 
+1.7.5.4
 
