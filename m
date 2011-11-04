@@ -1,86 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from csmtp1.one.com ([195.47.247.21]:30246 "EHLO csmtp1.one.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751345Ab1KQU44 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 15:56:56 -0500
-Date: Thu, 17 Nov 2011 21:56:31 +0100
-From: Daniel Kuehn <daniel@kuehn.se>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: [PATCH] Seeing as alot of ath9k devices is PCI/PCIe or their
- mini equivalent it makes sense to set ATH9K_PCI to y by default
-Message-ID: <20111117215631.2c2064b1@Artemis> (sfid-20111117_215700_771105_CB2DBA51)
-In-Reply-To: <4EC5562B.4050001@openwrt.org>
-References: <20111109235757.79821a20@Artemis>
-	<4EC524B1.2070200@openwrt.org>
-	<20111117163947.1749dfb1@Artemis>
-	<4EC5562B.4050001@openwrt.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/s/GGj0CndH6K/peJa.hVR5L"; protocol="application/pgp-signature"
+Received: from mail.candelatech.com ([208.74.158.172]:45674 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755840Ab1KDQLu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Nov 2011 12:11:50 -0400
+Message-ID: <4EB40EBB.9010402@candelatech.com> (sfid-20111104_171154_061670_4174DCC6)
+Date: Fri, 04 Nov 2011 09:11:39 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [wireless-next PATCH 1/5] mac80211: Support forcing station to
+ disable 11n.
+References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>  (sfid-20111028_071135_777672_88A08497) <1319789318.3914.10.camel@jlt3.sipsolutions.net>  <4EAAFAA7.8090403@candelatech.com>  (sfid-20111028_205543_472872_4928ADE0) <1320220415.3950.1.camel@jlt3.sipsolutions.net>  <4EB17103.70506@candelatech.com>  <1320256263.7846.3.camel@jlt3.sipsolutions.net>  <4EB22EE6.3030100@candelatech.com>  <1320309058.3950.7.camel@jlt3.sipsolutions.net>  <4EB2DACE.2000707@candelatech.com> <1320417771.3969.90.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1320417771.3969.90.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/s/GGj0CndH6K/peJa.hVR5L
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On 11/04/2011 07:42 AM, Johannes Berg wrote:
+> On Thu, 2011-11-03 at 11:17 -0700, Ben Greear wrote:
+>
+>> So back to the capabilities flag like I added in the -v2 patch?
+>> Do you want one flag for each thing (set-mcs, disable-ht,
+>> disable-ht40, set-mpdu, set-msdu), or maybe one flag for all of
+>> this:  set-ht-cap
+>
+> I think maybe a single one would be sufficient, but you'd still have no
+> way of knowing what is actually supported for changing. Maybe you could
+> advertise an ht_mask of things that can be changed?
 
-On Thu, 17 Nov 2011 19:44:59 +0100
-Gabor Juhos <juhosg@openwrt.org> wrote:
+That seems feasible, though it still won't help with the valid ranges
+for mpdu-density, for instance.
 
-> 2011.11.17. 16:39 keltez=C3=A9ssel, Daniel Kuehn =C3=ADrta:
->=20
-> > I agree with you there if it was removed before, maybe then only the he=
-lp=20
-> > section of ath9k should be changed to say that you have to enable eithe=
-r=20
-> > PCI/PCIe or AHB support for it to work?
->=20
-> Yes, adding a comment there would make sense, although that does not prev=
-ent
-> to build ath9k without bus support.
+How about if I add some way to query this, but leave the code loose
+in that it won't fail if someone tries to set a value that isn't
+supported.  That way, user-space can be lazy if it wants, but
+can also get the details if it cares.
 
-Yeah, that is the initial problem I found that I wanted to try and patch, b=
-ut
-seeing as it only stands between either always enabling it, or forcing one =
-or
-the other bus always on if you choose ath9k I don't know what else could be
-done except note in the help that you also need to enable bus support.
+To get this info, I'm going to have to add a new driver API, as far
+as I can tell, and I only have the ability to deal with ath9k, so
+that will be the only driver that reports the mask.  Of course,
+others could modify their drivers as they wish.
 
-I haven't poked around that much with Kconfig but it clearly seems like the=
-re
-isn't a way to default select y but make it possible to disable it...
+Thanks,
+Ben
 
-So there doesn't seem to be a clear way to automagically include the most
-common bus support for ath9k.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
->=20
-> -Gabor
-
-Kind regards,
-Daniel Kuehn
-
---Sig_/s/GGj0CndH6K/peJa.hVR5L
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIcBAEBAgAGBQJOxXUWAAoJEOYWIJmjnr1S0YEP/RJrcb1S+hGJOtsibrbV5W1X
-fZiPlROWVIJ/ytXfhtansSNFvBxycVgCLlqSXiorsJ43l0ebHQlK/vAJSw6ta7Qs
-31WSnI5oVFTmkv6/v7oVKdWaOIKm0hXzCpbzJPIgLjQbH5Iumi7PY63cfVEIqTJT
-X1jOt+PiGCFPvjru3US9bveLC/7A0lNsvozKsiMPbYFnVMCjZFLh8jejcuR1wDVu
-17sfjVCyT0mJYoe4WtmpcAOKSLp/V86awKHMhlSJErIbIGSl+XqOFCx9CChrM1WY
-bBv01uhw9fBne/MMbdYJof9/ifDcxQB+FnV/4rbaYyWOjyUutYtQ6tscb708C2C5
-LqyRxUn4x1gftLGUIU8oiq5LM44fMjzwejGtKDR8KUzOFniXqj+hkfSAmM6fvkoE
-KPjkYGEjfZMQhlM8eKpXiqjcHZY8A0OTiV1HSA65ZhWGSFwdjt/K1pMqcshN7vSL
-qbE7gddvfniMkl5fEi9g583b9idr31i/rwA57dsFGe1pDx1ceWQavnqZFxAU21YF
-wsyVHv+z/8kE1PGUFUl8HrhflKhu0ftg/Gjb9YPH4osGiPXYzxPFh3a30liLlN9s
-cOnrKmcFa6i5pNB5yvtlF+KVwAKQh8hXxQ/SGLrU6J0KNmFrmHcfJzjSKt3V0+A1
-NBfrEyNl81nafV2wDDcu
-=e5cL
------END PGP SIGNATURE-----
-
---Sig_/s/GGj0CndH6K/peJa.hVR5L--
