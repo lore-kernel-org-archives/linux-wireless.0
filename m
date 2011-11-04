@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:40320 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752307Ab1KOGou (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53815 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751093Ab1KDTeA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 01:44:50 -0500
-Received: by mail-bw0-f52.google.com with SMTP id s6so1147045bka.39
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2011 22:44:49 -0800 (PST)
-Subject: Re: [RFC 00/18] ath9k: Add support for MCI BT coex
-From: Luciano Coelho <coelho@ti.com>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>
-In-Reply-To: <1321336840-12366-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1321336840-12366-1-git-send-email-mohammed@qca.qualcomm.com>
+	Fri, 4 Nov 2011 15:34:00 -0400
+Subject: Re: crash in wireless-next
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1320435146.3969.125.camel@jlt3.sipsolutions.net> (sfid-20111104_203233_422852_33ADA66F)
+References: <4EB42C0C.40101@candelatech.com>
+	 (sfid-20111104_191656_642276_99C645ED)  <1320435146.3969.125.camel@jlt3.sipsolutions.net>
+	 (sfid-20111104_203233_422852_33ADA66F)
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 15 Nov 2011 08:44:45 +0200
-Message-ID: <1321339485.2408.85.camel@cumari> (sfid-20111115_074454_219844_BEFAFAFB)
+Date: Fri, 04 Nov 2011 20:33:58 +0100
+Message-ID: <1320435238.3969.126.camel@jlt3.sipsolutions.net> (sfid-20111104_203404_837744_1CD2A241)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mohammed,
-
-On Tue, 2011-11-15 at 11:30 +0530, Mohammed Shafi Shajakhan wrote: 
-> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Fri, 2011-11-04 at 20:32 +0100, Johannes Berg wrote:
+> On Fri, 2011-11-04 at 11:16 -0700, Ben Greear wrote:
+> > Anyone seen a crash like this?  I was restarting my user-space
+> > tools, and had just unloaded the drivers that had,
+> > around 135 virtual stations created.  Just my disable-ht
+> > patch series applied on top of yesterday's wireless-testing.
+> > 
+> > I'll dig into it more when I get a chance, but let me know
+> > if someone is already working on this...
 > 
-> Add support for MCI BT-Coex for AR9462. with AR9462 we have
-> WLAN and BT coexists via MCI protocol(Message Coexistence Interface)
-> WLAN and BT exchanges GPM, SCHED messages and few other messages
-> for coexistence.
-> 
-> this is not yet tested and need some more review, few misc cleanups. 
-> please add your review comments. 
-> 
-> thanks a lot to Rajkumar Manoharan <rmanohar@qca.qualcomm.com> for
-> his suggestions, review comments, code cleanups, and modifications 
-> in design. 
+> The only crash in wext I ever saw was recently with compat but I don't
+> think that looked similar.
 
-[...]
+I guess you don't have CONFIG_COMPAT, but in that case I think so much
+gets inlined into wext_handle_ioctl() that I have no idea what could
+possibly crash. Disassembly of the place that crashed (preferably with
+-S if you have it) would be useful.
 
-Your patch emails are not being sent in a threaded form, which is a bit
-annoying.  Can you fix it? Maybe you are using --no-thread or you have
-sendemail.thread set to false in your .gitconfig?
-
--- 
-Cheers,
-Luca.
+johannes
 
