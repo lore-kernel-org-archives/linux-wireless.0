@@ -1,37 +1,362 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46467 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754848Ab1KUNgb (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40850 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750931Ab1KDUKw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 08:36:31 -0500
-Subject: Re: [RFC v2 0/8] mesh power saving implementation: indication
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAG5dHkSLvG2mbsxGAzQ9SwFrFNwEhiCxTLjn9RvpRQwwsny5+g@mail.gmail.com> (sfid-20111121_141328_183782_F6BD333D)
-References: <CAG5dHkSLvG2mbsxGAzQ9SwFrFNwEhiCxTLjn9RvpRQwwsny5+g@mail.gmail.com>
-	 (sfid-20111121_141328_183782_F6BD333D)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 21 Nov 2011 14:36:27 +0100
-Message-ID: <1321882587.3999.48.camel@jlt3.sipsolutions.net> (sfid-20111121_143642_811852_EBD7509B)
-Mime-Version: 1.0
+	Fri, 4 Nov 2011 16:10:52 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v4 1/2] wireless:  Support ht-capabilities over-rides.
+Date: Fri,  4 Nov 2011 13:10:39 -0700
+Message-Id: <1320437440-6463-1-git-send-email-greearb@candelatech.com> (sfid-20111104_211056_032573_0C709B20)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-11-21 at 17:13 +0400, Ivan Bezyazychnyy wrote:
-> Hi!
-> 
-> We have updated our patches and also we would like to add some words
-> what our work is about.
+From: Ben Greear <greearb@candelatech.com>
 
-Nice. Please repost, making sure that the patches are all posted as
-replies to 0/8 (if you're using git, I think the right options are
---no-chain-reply-to --thread).
+This allows users to disable features such as HT, HT40,
+and to modify the MCS, AMPDU, and AMSDU settings for
+drivers that support it.
 
-However, I'd look at your patches even without that obviously, but they
-are hopelessly mangled, looks almost like all newlines were lost in
-transit. There's no way anyone can review them. Did you paste them into
-the gmail web interface or something like that?!
+The MCS, AMPDU, and AMSDU features that may be disabled are
+are reported in the phy-info netlink message as a mask.
 
-johannes
+Attemping to disable features that are not supported will
+take no affect, but will not return errors.  This is to aid
+backwards compatibility in user-space apps that may not be
+clever enough to deal with parsing the the capabilities mask.
+
+This patch only enables the infrastructure.  An additional
+patch will enable the feature in mac80211.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 8049bf7... 9e9ed9d... M	include/linux/nl80211.h
+:100644 100644 92cf1c2... 9ae1122... M	include/net/cfg80211.h
+:100644 100644 220f3bd... 3db837b... M	net/wireless/core.c
+:100644 100644 b9ec306... dd6feda... M	net/wireless/core.h
+:100644 100644 21fc970... a37e4bc... M	net/wireless/mlme.c
+:100644 100644 48260c2... 3d5d9ae... M	net/wireless/nl80211.c
+:100644 100644 6e86d5a... d144e2d... M	net/wireless/sme.c
+ include/linux/nl80211.h |   11 ++++++++++
+ include/net/cfg80211.h  |   32 +++++++++++++++++++++++++++++
+ net/wireless/core.c     |    3 ++
+ net/wireless/core.h     |    8 +++++-
+ net/wireless/mlme.c     |   17 ++++++++++++--
+ net/wireless/nl80211.c  |   51 ++++++++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/sme.c      |    4 ++-
+ 7 files changed, 119 insertions(+), 7 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 8049bf7..9e9ed9d 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1109,6 +1109,13 @@ enum nl80211_commands {
+  *	%NL80211_CMD_TDLS_MGMT. Otherwise %NL80211_CMD_TDLS_OPER should be
+  *	used for asking the driver to perform a TDLS operation.
+  *
++ * @NL80211_ATTR_DISABLE_HT:  Force HT capable interfaces to disable
++ *      this feature.
++ * @NL80211_ATTR_DISABLE_HT40:  Disable HT-40 even if AP and hardware
++ *      support it.
++ * @NL80211_ATTR_HT_CAPABILITY_MASK: Specify which bits of the HT_CAPs
++ *      to pay attention to.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1337,6 +1344,10 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_TDLS_SUPPORT,
+ 	NL80211_ATTR_TDLS_EXTERNAL_SETUP,
+ 
++	NL80211_ATTR_DISABLE_HT,
++	NL80211_ATTR_DISABLE_HT40,
++	NL80211_ATTR_HT_CAPABILITY_MASK,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 92cf1c2..9ae1122 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1036,6 +1036,17 @@ struct cfg80211_auth_request {
+ };
+ 
+ /**
++ * enum cfg80211_assoc_req_flags - Over-ride default behaviour in association.
++ *
++ * @ASSOC_REQ_DISABLE_HT:  Disable HT (802.11n)
++ * @ASSOC_REQ_DISABLE_HT40:  Disable HT40 (802.11n)
++ */
++enum cfg80211_assoc_req_flags {
++	ASSOC_REQ_DISABLE_HT		= BIT(0),
++	ASSOC_REQ_DISABLE_HT40		= BIT(1),
++};
++
++/**
+  * struct cfg80211_assoc_request - (Re)Association request data
+  *
+  * This structure provides information needed to complete IEEE 802.11
+@@ -1046,6 +1057,11 @@ struct cfg80211_auth_request {
+  * @use_mfp: Use management frame protection (IEEE 802.11w) in this association
+  * @crypto: crypto settings
+  * @prev_bssid: previous BSSID, if not %NULL use reassociate frame
++ * @flags:  See &enum cfg80211_assoc_req_flags
++ * @ht_capa:  HT Capabilities over-rides.  Values set in ht_capa_mask
++ *   will be used in ht_capa.  Only the MCS rates, MPDU and MSDU
++ *   are currently supported.
++ * @ht_capa_mask:  The bits of ht_capa which are to be used.
+  */
+ struct cfg80211_assoc_request {
+ 	struct cfg80211_bss *bss;
+@@ -1053,6 +1069,9 @@ struct cfg80211_assoc_request {
+ 	size_t ie_len;
+ 	struct cfg80211_crypto_settings crypto;
+ 	bool use_mfp;
++	u32 flags;
++	struct ieee80211_ht_cap ht_capa;
++	struct ieee80211_ht_cap ht_capa_mask;
+ };
+ 
+ /**
+@@ -1151,6 +1170,11 @@ struct cfg80211_ibss_params {
+  * @key_len: length of WEP key for shared key authentication
+  * @key_idx: index of WEP key for shared key authentication
+  * @key: WEP key for shared key authentication
++ * @flags:  See &enum cfg80211_assoc_req_flags
++ * @ht_capa:  HT Capabilities over-rides.  Values set in ht_capa_mask
++ *   will be used in ht_capa.  Only the MCS rates, MPDU and MSDU
++ *   are currently supported.
++ * @ht_capa_mask:  The bits of ht_capa which are to be used.
+  */
+ struct cfg80211_connect_params {
+ 	struct ieee80211_channel *channel;
+@@ -1164,6 +1188,9 @@ struct cfg80211_connect_params {
+ 	struct cfg80211_crypto_settings crypto;
+ 	const u8 *key;
+ 	u8 key_len, key_idx;
++	u32 flags;
++	struct ieee80211_ht_cap ht_capa;
++	struct ieee80211_ht_cap ht_capa_mask;
+ };
+ 
+ /**
+@@ -1903,6 +1930,9 @@ struct wiphy_wowlan_support {
+  *	may request, if implemented.
+  *
+  * @wowlan: WoWLAN support information
++ *
++ * @ht_capa_mod_msk:  Specify what ht_cap values can be over-ridden.
++ *	If null, then none can be over-ridden.
+  */
+ struct wiphy {
+ 	/* assign these fields before you register the wiphy */
+@@ -1983,6 +2013,8 @@ struct wiphy {
+ 	/* dir in debugfs: ieee80211/<wiphyname> */
+ 	struct dentry *debugfsdir;
+ 
++	struct ieee80211_ht_cap *ht_capa_mod_mask;
++
+ #ifdef CONFIG_NET_NS
+ 	/* the network namespace this phy lives in currently */
+ 	struct net *_net;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 220f3bd..3db837b 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -704,6 +704,9 @@ void wiphy_unregister(struct wiphy *wiphy)
+ 	flush_work(&rdev->scan_done_wk);
+ 	cancel_work_sync(&rdev->conn_work);
+ 	flush_work(&rdev->event_work);
++
++	kfree(rdev->wiphy.ht_capa_mod_mask);
++	rdev->wiphy.ht_capa_mod_mask = NULL;
+ }
+ EXPORT_SYMBOL(wiphy_unregister);
+ 
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index b9ec306..dd6feda 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -339,13 +339,17 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			  const u8 *bssid, const u8 *prev_bssid,
+ 			  const u8 *ssid, int ssid_len,
+ 			  const u8 *ie, int ie_len, bool use_mfp,
+-			  struct cfg80211_crypto_settings *crypt);
++			  struct cfg80211_crypto_settings *crypt,
++			  u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
++			  struct ieee80211_ht_cap *ht_capa_mask);
+ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			struct net_device *dev, struct ieee80211_channel *chan,
+ 			const u8 *bssid, const u8 *prev_bssid,
+ 			const u8 *ssid, int ssid_len,
+ 			const u8 *ie, int ie_len, bool use_mfp,
+-			struct cfg80211_crypto_settings *crypt);
++			struct cfg80211_crypto_settings *crypt,
++			u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
++			struct ieee80211_ht_cap *ht_capa_mask);
+ int __cfg80211_mlme_deauth(struct cfg80211_registered_device *rdev,
+ 			   struct net_device *dev, const u8 *bssid,
+ 			   const u8 *ie, int ie_len, u16 reason,
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 21fc970..a37e4bc 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -507,7 +507,9 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			  const u8 *bssid, const u8 *prev_bssid,
+ 			  const u8 *ssid, int ssid_len,
+ 			  const u8 *ie, int ie_len, bool use_mfp,
+-			  struct cfg80211_crypto_settings *crypt)
++			  struct cfg80211_crypto_settings *crypt,
++			  u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
++			  struct ieee80211_ht_cap *ht_capa_mask)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_assoc_request req;
+@@ -537,6 +539,12 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 	memcpy(&req.crypto, crypt, sizeof(req.crypto));
+ 	req.use_mfp = use_mfp;
+ 	req.prev_bssid = prev_bssid;
++	req.flags = assoc_flags;
++	if (ht_capa)
++		memcpy(&req.ht_capa, ht_capa, sizeof(req.ht_capa));
++	if (ht_capa_mask)
++		memcpy(&req.ht_capa_mask, ht_capa_mask,
++		       sizeof(req.ht_capa_mask));
+ 	req.bss = cfg80211_get_bss(&rdev->wiphy, chan, bssid, ssid, ssid_len,
+ 				   WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
+ 	if (!req.bss) {
+@@ -574,14 +582,17 @@ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			const u8 *bssid, const u8 *prev_bssid,
+ 			const u8 *ssid, int ssid_len,
+ 			const u8 *ie, int ie_len, bool use_mfp,
+-			struct cfg80211_crypto_settings *crypt)
++			struct cfg80211_crypto_settings *crypt,
++			u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
++			struct ieee80211_ht_cap *ht_capa_mask)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	int err;
+ 
+ 	wdev_lock(wdev);
+ 	err = __cfg80211_mlme_assoc(rdev, dev, chan, bssid, prev_bssid,
+-				    ssid, ssid_len, ie, ie_len, use_mfp, crypt);
++				    ssid, ssid_len, ie, ie_len, use_mfp, crypt,
++				    assoc_flags, ht_capa, ht_capa_mask);
+ 	wdev_unlock(wdev);
+ 
+ 	return err;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 48260c2..3d5d9ae 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -197,6 +197,11 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_TDLS_OPERATION] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_TDLS_SUPPORT] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_TDLS_EXTERNAL_SETUP] = { .type = NLA_FLAG },
++	[NL80211_ATTR_DISABLE_HT] = { .type = NLA_FLAG },
++	[NL80211_ATTR_DISABLE_HT40] = { .type = NLA_FLAG },
++	[NL80211_ATTR_HT_CAPABILITY_MASK] = {
++		.len = NL80211_HT_CAPABILITY_LEN
++	},
+ };
+ 
+ /* policy for the key attributes */
+@@ -1008,6 +1013,11 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 	if (nl80211_put_iface_combinations(&dev->wiphy, msg))
+ 		goto nla_put_failure;
+ 
++	if (dev->wiphy.ht_capa_mod_mask)
++		NLA_PUT(msg, NL80211_ATTR_HT_CAPABILITY_MASK,
++			sizeof(*dev->wiphy.ht_capa_mod_mask),
++			dev->wiphy.ht_capa_mod_mask);
++
+ 	return genlmsg_end(msg, hdr);
+ 
+  nla_put_failure:
+@@ -4354,6 +4364,9 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
+ 	const u8 *bssid, *ssid, *ie = NULL, *prev_bssid = NULL;
+ 	int err, ssid_len, ie_len = 0;
+ 	bool use_mfp = false;
++	u32 flags = 0;
++	struct ieee80211_ht_cap *ht_capa = NULL;
++	struct ieee80211_ht_cap *ht_capa_mask = NULL;
+ 
+ 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+ 		return -EINVAL;
+@@ -4397,11 +4410,28 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
+ 	if (info->attrs[NL80211_ATTR_PREV_BSSID])
+ 		prev_bssid = nla_data(info->attrs[NL80211_ATTR_PREV_BSSID]);
+ 
++	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_HT]))
++		flags |= ASSOC_REQ_DISABLE_HT;
++
++	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_HT40]))
++		flags |= ASSOC_REQ_DISABLE_HT40;
++
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
++		ht_capa_mask =
++			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]);
++
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY]) {
++		if (!ht_capa_mask)
++			return -EINVAL;
++		ht_capa = nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
++	}
++
+ 	err = nl80211_crypto_settings(rdev, info, &crypto, 1);
+ 	if (!err)
+ 		err = cfg80211_mlme_assoc(rdev, dev, chan, bssid, prev_bssid,
+ 					  ssid, ssid_len, ie, ie_len, use_mfp,
+-					  &crypto);
++					  &crypto, flags, ht_capa,
++					  ht_capa_mask);
+ 
+ 	return err;
+ }
+@@ -4891,6 +4921,25 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 			return PTR_ERR(connkeys);
+ 	}
+ 
++	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_HT]))
++		connect.flags |= ASSOC_REQ_DISABLE_HT;
++
++	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_HT40]))
++		connect.flags |= ASSOC_REQ_DISABLE_HT40;
++
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
++		memcpy(&connect.ht_capa_mask,
++		       nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]),
++		       sizeof(connect.ht_capa_mask));
++
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY]) {
++		if (!info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
++			return -EINVAL;
++		memcpy(&connect.ht_capa,
++		       nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]),
++		       sizeof(connect.ht_capa));
++	}
++
+ 	err = cfg80211_connect(rdev, dev, &connect, connkeys);
+ 	if (err)
+ 		kfree(connkeys);
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 6e86d5a..d144e2d 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -189,7 +189,9 @@ static int cfg80211_conn_do_work(struct wireless_dev *wdev)
+ 					    prev_bssid,
+ 					    params->ssid, params->ssid_len,
+ 					    params->ie, params->ie_len,
+-					    false, &params->crypto);
++					    false, &params->crypto,
++					    params->flags, &params->ht_capa,
++					    &params->ht_capa_mask);
+ 		if (err)
+ 			__cfg80211_mlme_deauth(rdev, wdev->netdev, params->bssid,
+ 					       NULL, 0,
+-- 
+1.7.3.4
 
