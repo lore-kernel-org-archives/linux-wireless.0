@@ -1,57 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27104 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756792Ab1KRIW7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 03:22:59 -0500
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAI8MxUr032507
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 03:22:59 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 61/77] iwlegacy: use FH39_ prefix in 3945 code
-Date: Fri, 18 Nov 2011 09:22:23 +0100
-Message-Id: <1321604559-10707-61-git-send-email-sgruszka@redhat.com> (sfid-20111118_092304_159577_22E03213)
-In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
-References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:35406 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754967Ab1KDKVd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Nov 2011 06:21:33 -0400
+Message-Id: <20111104101944.565166560@sipsolutions.net> (sfid-20111104_112135_475168_6C51BB32)
+Date: Fri, 04 Nov 2011 11:18:17 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 08/12] cfg80211: allow registering to beacons
+References: <20111104101809.711636760@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/3945-mac.c |    2 +-
- drivers/net/wireless/iwlegacy/3945.h     |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index 3c89999..ffd6ddf 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -1528,7 +1528,7 @@ static void il3945_irq_tasklet(struct il_priv *il)
- 	if (inta & ~il->inta_mask) {
- 		IL_WARN("Disabled INTA bits 0x%08x were pending\n",
- 			 inta & ~il->inta_mask);
--		IL_WARN("   with FH_INT = 0x%08x\n", inta_fh);
-+		IL_WARN("   with inta_fh = 0x%08x\n", inta_fh);
- 	}
+Add the ability to register to received beacon frames
+to allow implementing OLBC logic in userspace. The
+registration is per wiphy since there's no point in
+receiving the same frame multiple times.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/nl80211.h |    7 ++++
+ include/net/cfg80211.h  |   20 +++++++++++++
+ net/wireless/core.h     |    2 +
+ net/wireless/nl80211.c  |   70 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 4 files changed, 98 insertions(+), 1 deletion(-)
+
+--- a/net/wireless/core.h	2011-11-03 13:48:30.000000000 +0100
++++ b/net/wireless/core.h	2011-11-03 14:02:32.000000000 +0100
+@@ -54,6 +54,8 @@ struct cfg80211_registered_device {
+ 	int opencount; /* also protected by devlist_mtx */
+ 	wait_queue_head_t dev_wait;
  
- 	/* Re-enable all interrupts */
-diff --git a/drivers/net/wireless/iwlegacy/3945.h b/drivers/net/wireless/iwlegacy/3945.h
-index 33233ab..ed367bb 100644
---- a/drivers/net/wireless/iwlegacy/3945.h
-+++ b/drivers/net/wireless/iwlegacy/3945.h
-@@ -481,8 +481,8 @@ static inline int il3945_hw_valid_rtc_data_addr(u32 addr)
- 		addr < IL39_RTC_DATA_UPPER_BOUND);
++	u32 ap_beacons_nlpid;
++
+ 	/* BSSes/scanning */
+ 	spinlock_t bss_lock;
+ 	struct list_head bss_list;
+--- a/include/linux/nl80211.h	2011-11-03 14:02:28.000000000 +0100
++++ b/include/linux/nl80211.h	2011-11-03 14:02:32.000000000 +0100
+@@ -528,6 +528,11 @@
+  *	up the event with the request. The event includes the same data and
+  *	has %NL80211_ATTR_ACK set if the frame was ACKed.
+  *
++ * @NL80211_CMD_REGISTER_BEACONS: Register this socket to receive beacons from
++ *	other BSSes when any interfaces are in AP mode. This helps implement
++ *	OLBC handling in hostapd. Beacons are reported in %NL80211_CMD_FRAME
++ *	messages. Note that per PHY only one application may register.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -661,6 +666,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_PROBE_CLIENT,
+ 
++	NL80211_CMD_REGISTER_BEACONS,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+--- a/net/wireless/nl80211.c	2011-11-03 14:02:28.000000000 +0100
++++ b/net/wireless/nl80211.c	2011-11-03 14:02:32.000000000 +0100
+@@ -891,6 +891,10 @@ static int nl80211_send_wiphy(struct sk_
+ 	if (dev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
+ 		CMD(sched_scan_start, START_SCHED_SCAN);
+ 	CMD(probe_client, PROBE_CLIENT);
++	if (dev->wiphy.flags & WIPHY_FLAG_REPORTS_OBSS) {
++		i++;
++		NLA_PUT_U32(msg, i, NL80211_CMD_REGISTER_BEACONS);
++	}
+ 
+ #undef CMD
+ 
+@@ -5901,6 +5905,21 @@ static int nl80211_probe_client(struct s
+ 	return err;
  }
  
--/* Base physical address of il3945_shared is provided to FH_TSSR_CBB_BASE
-- * and &il3945_shared.rx_read_ptr[0] is provided to FH_RCSR_RPTR_ADDR(0) */
-+/* Base physical address of il3945_shared is provided to FH39_TSSR_CBB_BASE
-+ * and &il3945_shared.rx_read_ptr[0] is provided to FH39_RCSR_RPTR_ADDR(0) */
- struct il3945_shared {
- 	__le32 tx_base_ptr[8];
- } __packed;
--- 
-1.7.1
++static int nl80211_register_beacons(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++
++	if (!(rdev->wiphy.flags & WIPHY_FLAG_REPORTS_OBSS))
++		return -EOPNOTSUPP;
++
++	if (rdev->ap_beacons_nlpid)
++		return -EBUSY;
++
++	rdev->ap_beacons_nlpid = info->snd_pid;
++
++	return 0;
++}
++
+ #define NL80211_FLAG_NEED_WIPHY		0x01
+ #define NL80211_FLAG_NEED_NETDEV	0x02
+ #define NL80211_FLAG_NEED_RTNL		0x04
+@@ -6472,6 +6491,14 @@ static struct genl_ops nl80211_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_REGISTER_BEACONS,
++		.doit = nl80211_register_beacons,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_WIPHY |
++				  NL80211_FLAG_NEED_RTNL,
++	},
+ };
+ 
+ static struct genl_multicast_group nl80211_mlme_mcgrp = {
+@@ -7576,6 +7603,44 @@ void cfg80211_probe_status(struct net_de
+ }
+ EXPORT_SYMBOL(cfg80211_probe_status);
+ 
++void cfg80211_report_obss_beacon(struct wiphy *wiphy,
++				 const u8 *frame, size_t len,
++				 int freq, gfp_t gfp)
++{
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++	struct sk_buff *msg;
++	void *hdr;
++	u32 nlpid = ACCESS_ONCE(rdev->ap_beacons_nlpid);
++
++	if (!nlpid)
++		return;
++
++	msg = nlmsg_new(len + 100, gfp);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_FRAME);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
++	if (freq)
++		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
++	NLA_PUT(msg, NL80211_ATTR_FRAME, len, frame);
++
++	genlmsg_end(msg, hdr);
++
++	genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlpid);
++	return;
++
++ nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++EXPORT_SYMBOL(cfg80211_report_obss_beacon);
++
+ static int nl80211_netlink_notify(struct notifier_block * nb,
+ 				  unsigned long state,
+ 				  void *_notify)
+@@ -7589,9 +7654,12 @@ static int nl80211_netlink_notify(struct
+ 
+ 	rcu_read_lock();
+ 
+-	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list)
++	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list) {
+ 		list_for_each_entry_rcu(wdev, &rdev->netdev_list, list)
+ 			cfg80211_mlme_unregister_socket(wdev, notify->pid);
++		if (rdev->ap_beacons_nlpid == notify->pid)
++			rdev->ap_beacons_nlpid = 0;
++	}
+ 
+ 	rcu_read_unlock();
+ 
+--- a/include/net/cfg80211.h	2011-11-03 14:02:28.000000000 +0100
++++ b/include/net/cfg80211.h	2011-11-03 14:02:32.000000000 +0100
+@@ -1682,6 +1682,9 @@ struct cfg80211_ops {
+  *	command. When this flag is not set, @NL80211_CMD_TDLS_OPER should be
+  *	used for asking the driver/firmware to perform a TDLS operation.
+  * @WIPHY_FLAG_HAVE_AP_SME: device integrates AP SME
++ * @WIPHY_FLAG_REPORTS_OBSS: the device will report beacons from other BSSes
++ *	when there are virtual interfaces in AP mode by calling
++ *	cfg80211_report_obss_beacon().
+  */
+ enum wiphy_flags {
+ 	WIPHY_FLAG_CUSTOM_REGULATORY		= BIT(0),
+@@ -1701,6 +1704,7 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_SUPPORTS_TDLS		= BIT(15),
+ 	WIPHY_FLAG_TDLS_EXTERNAL_SETUP		= BIT(16),
+ 	WIPHY_FLAG_HAVE_AP_SME			= BIT(17),
++	WIPHY_FLAG_REPORTS_OBSS			= BIT(18),
+ };
+ 
+ /**
+@@ -3231,6 +3235,22 @@ bool cfg80211_rx_spurious_frame(struct n
+ void cfg80211_probe_status(struct net_device *dev, const u8 *addr,
+ 			   u64 cookie, bool acked, gfp_t gfp);
+ 
++/**
++ * cfg80211_report_obss_beacon - report beacon from other APs
++ * @wiphy: The wiphy that received the beacon
++ * @frame: the frame
++ * @len: length of the frame
++ * @freq: frequency the frame was received on
++ * @gfp: allocation flags
++ *
++ * Use this function to report to userspace when a beacon was
++ * received. It is not useful to call this when there is no
++ * netdev that is in AP/GO mode.
++ */
++void cfg80211_report_obss_beacon(struct wiphy *wiphy,
++				 const u8 *frame, size_t len,
++				 int freq, gfp_t gfp);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+
 
