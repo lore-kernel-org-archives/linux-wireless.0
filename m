@@ -1,48 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41549 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752067Ab1KCNuR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 09:50:17 -0400
-Subject: [PATCH 3.2] cfg80211: allow setting TXQ parameters only in AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Eliad Peller <eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 Nov 2011 14:50:13 +0100
-Message-ID: <1320328213.3950.46.camel@jlt3.sipsolutions.net> (sfid-20111103_145021_205885_76C6F2E4)
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:3675 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753733Ab1KDVYC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Nov 2011 17:24:02 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 01/16] brcm80211: fmac: remove unnecessary 4329 chip
+ specific code
+Date: Fri, 4 Nov 2011 22:23:27 +0100
+Message-ID: <1320441822-4615-2-git-send-email-arend@broadcom.com> (sfid-20111104_222438_163169_AB41575B)
+In-Reply-To: <1320441822-4615-1-git-send-email-arend@broadcom.com>
+References: <1320441822-4615-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Franky Lin <frankyl@broadcom.com>
 
-In other modes the parameters should not be set.
-Right now, mac80211 will set them, even if the
-user asked for setting them on VLANs which the
-driver doesn't know about, causing all kinds of
-trouble.
+4329 with chiprev 0 can not be found on any product. The code can
+be removed.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/wireless/nl80211.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   12 +++---------
+ 1 files changed, 3 insertions(+), 9 deletions(-)
 
---- a/net/wireless/nl80211.c	2011-11-03 14:41:42.000000000 +0100
-+++ b/net/wireless/nl80211.c	2011-11-03 14:47:23.000000000 +0100
-@@ -1252,6 +1252,12 @@ static int nl80211_set_wiphy(struct sk_b
- 			goto bad_res;
- 		}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 6de489b..2c409ca 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -812,10 +812,6 @@ static int brcmf_sdbrcm_htclk(struct brcmf_bus *bus, bool on, bool pendok)
+ 		clkreq =
+ 		    bus->alp_only ? SBSDIO_ALP_AVAIL_REQ : SBSDIO_HT_AVAIL_REQ;
  
-+		if (netdev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
-+		    netdev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO) {
-+			result = -EINVAL;
-+			goto bad_res;
-+		}
-+
- 		nla_for_each_nested(nl_txq_params,
- 				    info->attrs[NL80211_ATTR_WIPHY_TXQ_PARAMS],
- 				    rem_txq_params) {
+-		if ((bus->ci->chip == BCM4329_CHIP_ID)
+-		    && (bus->ci->chiprev == 0))
+-			clkreq |= SBSDIO_FORCE_ALP;
+-
+ 		brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
+ 				       SBSDIO_FUNC1_CHIPCLKCSR, clkreq, &err);
+ 		if (err) {
+@@ -1034,11 +1030,9 @@ static int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
+ 			SBSDIO_FORCE_HW_CLKREQ_OFF, NULL);
+ 
+ 		/* Isolate the bus */
+-		if (bus->ci->chip != BCM4329_CHIP_ID) {
+-			brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
+-				SBSDIO_DEVICE_CTL,
+-				SBSDIO_DEVCTL_PADS_ISO, NULL);
+-		}
++		brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
++			SBSDIO_DEVICE_CTL,
++			SBSDIO_DEVCTL_PADS_ISO, NULL);
+ 
+ 		/* Change state */
+ 		bus->sleeping = true;
+-- 
+1.7.4.1
 
 
