@@ -1,59 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.meta.ua ([194.0.131.41]:55227 "EHLO smtp.meta.ua"
+Received: from mms1.broadcom.com ([216.31.210.17]:3687 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751035Ab1KCUU1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 16:20:27 -0400
-Message-ID: <4EB2F800.5080204@meta.ua> (sfid-20111103_212030_970573_B2DD23F6)
-Date: Fri, 04 Nov 2011 00:22:24 +0400
-From: "Roman V.Leon." <roman-vl@meta.ua>
+	id S1754011Ab1KDVYC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Nov 2011 17:24:02 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 00/16] brcm80211: fmac: refactoring for coming new chip
+ support
+Date: Fri, 4 Nov 2011 22:23:26 +0100
+Message-ID: <1320441822-4615-1-git-send-email-arend@broadcom.com> (sfid-20111104_222420_270984_6494E4D8)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: b43 scans wifi networks with old firmware only.
-References: <48883.148.106.128.38.1320319313.metamail@webmail.meta.ua> <4EB2AF44.7090102@lwfinger.net>
-In-Reply-To: <4EB2AF44.7090102@lwfinger.net>
-Content-Type: text/plain; charset=windows-1251; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 11/03/2011 06:21 AM, Roman V.Leon. wrote:
->> Hello Gents.
->> I have problem with b43 driver 5.100.138, it's not scanning networks for
->> unknown reason. I have broadcom wifi card PCIID is 14e4:4315, linux kern
->> ver. is 3.0. When i'm trying to launch iwlist scan, i'm getting "no scan
->> results".
->>
->> for example:
->> sudo ifconfig wlan0 up
->> sudo iwlist wlan0 scan
->> No scan results.
->>
->> With the older driver 5.10.56.2808, i see normal scan results. If you
->> need
->> any more information, i will send.
->
-> The condition you report is known. Broadcom changed the TX/RX header
-> structure with firmware versions greater than 600, as shown by a 'dmesg
-> | grep firmware'. Those changes are not implemented in b43 until kernel
-> 3.2.
->
-> These numbers are not b43 driver numbers, nor are they firmware numbers
-> reported by b43. They are the versions of Broadcom drivers.
->
-> If you look at
-> http://wireless.kernel.org/en/users/Drivers/b43#firmwareinstallation,
-> you will see that firmware should be extracted from Broadcom driver
-> 5.100.138 "if you are using kernel 3.2 or newer". For older kernels you
-> should extract firmware from the 5.10.56.27.3 of the Broadcom
-> proprietary driver. Of course, 5.10.56.2808 will also work.
->
-> You could also get those changes by employing a bleeding-edge version of
-> compat-wireless. In that case, firmware from 5.100.138 would work.
->
-> Larry
->
-OK, Larry. Now I see. Thank you very much!
+Working on adding support for bcm4330 in brcmfmac. This series is paving the
+way for that.
+
+This series applies to master branch in wireless-testing and depends on
+patch sent on Oct 29, 2011 with following ID:
+
+Message-ID: <1319880615-3000-1-git-send-email-arend@broadcom.com>
+
+Franky Lin (16):
+  brcm80211: fmac: remove unnecessary 4329 chip specific code
+  brcm80211: fmac: move chip recognition function to sdio_chip.c
+  brcm80211: fmac: move bus core prep code to sdio_chip.c
+  brcm80211: fmac: abstract chip buscore setup function
+  brcm80211: fmac: move core disable function to sdio_chip.c
+  brcm80211: fmac: disable dongle arm core in bus core setup function
+  brcm80211: fmac: move dongle gpio reset code to chip attach function
+  brcm80211: fmac: remove duplicate regiter set in chip attach path
+  brcm80211: fmac: chip attach code flow clean up
+  brcm80211: fmac: abstract chip iscoreup function
+  brcm80211: fmac: abstract chip core revision function
+  brcm80211: fmac: move chip reset core function to sdio_chip.c
+  brcm80211: fmac: move chip detach function to sdio_chip.c
+  brcm80211: fmac: move chip drive strength related code to sdio_chip.c
+  brcm80211: fmac: replace private SB macros with ssb_regs version
+  brcm80211: fmac: optimize chip core info management
+
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile   |    3 +-
+ drivers/net/wireless/brcm80211/brcmfmac/bcmchip.h  |    7 -
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  602 ++------------------
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |  488 ++++++++++++++++
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |  131 +++++
+ 5 files changed, 656 insertions(+), 575 deletions(-)
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
 
 -- 
-Cheers,
-Roman V.Leon.
+1.7.4.1
+
+
