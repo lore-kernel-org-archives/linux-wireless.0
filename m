@@ -1,56 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2612 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753923Ab1KJSuv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 13:50:51 -0500
-Message-ID: <4EBC1CF8.8080704@broadcom.com> (sfid-20111110_195108_551536_14F976E4)
-Date: Thu, 10 Nov 2011 19:50:32 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Greg KH" <gregkh@suse.de>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH 3.1-stable] staging: brcm80211: fix for rate index
- in receive status
-References: <1320918514-5916-1-git-send-email-arend@broadcom.com>
- <20111110151746.GB29104@suse.de> <4EBC19D6.2070806@broadcom.com>
- <20111110184457.GA8010@suse.de>
-In-Reply-To: <20111110184457.GA8010@suse.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:35414 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755002Ab1KDKVr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Nov 2011 06:21:47 -0400
+Message-Id: <20111104101945.803176720@sipsolutions.net> (sfid-20111104_112929_465173_CBFB6C6F)
+Date: Fri, 04 Nov 2011 11:18:21 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 12/12] cfg80211/mac80211: allow management TX to not wait
+ for ACK
+References: <20111104101809.711636760@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/10/2011 07:44 PM, Greg KH wrote:
-> On Thu, Nov 10, 2011 at 07:37:10PM +0100, Arend van Spriel wrote:
->> On 11/10/2011 04:17 PM, Greg KH wrote:
->>
->> Here it is:
->>
->> commit 5a84d6ad4c9306afb467a600a4c6d7b50da49440
->> Author: Arend van Spriel <arend@broadcom.com>
->> Date:   Tue Aug 23 14:14:00 2011 +0200
->>
->>     staging: brcm80211: fill in proper rx rate in mac80211 rx status
->>
->>     The brcmsmac driver supports different rates on 5GHz but this is not
->>     taken into account when providing the rate index in the receive
->>     status information passed to mac80211.
->>
->>     Reviewed-by: Roland Vossen <rvossen@broadcom.com>
->>     Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
->>     Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
->>     Signed-off-by: Arend van Spriel <arend@broadcom.com>
->>     Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-> 
-> Thanks, that's what I need.  I'll queue this up for the next 3.1 kernel
-> after this one gets out later this week.
-> 
-> greg k-h
-> 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Fine by me.
+For probe responses it can be useful to not wait for ACK to
+avoid retransmissions if the station that sent the probe is
+already on the next channel, so allow userspace to request
+not caring about the ACK with a new nl80211 flag.
 
-Gr. AvS
+Since mac80211 needs to be updated for the new function
+prototype anyway implement it right away -- it's just a
+few lines of code.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+v2: accidentally sent as v2 instead of v1
+v3: update commit log (Arend) and fix bug (Eliad)
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 +-
+ include/linux/nl80211.h                    |    7 ++++
+ include/net/cfg80211.h                     |    2 -
+ net/mac80211/cfg.c                         |   11 +++++--
+ net/wireless/core.h                        |    2 -
+ net/wireless/mlme.c                        |    5 ++-
+ net/wireless/nl80211.c                     |   43 +++++++++++++++++------------
+ 7 files changed, 48 insertions(+), 25 deletions(-)
+
+--- a/include/linux/nl80211.h	2011-11-03 14:02:32.000000000 +0100
++++ b/include/linux/nl80211.h	2011-11-03 14:02:44.000000000 +0100
+@@ -1144,6 +1144,11 @@ enum nl80211_commands {
+  *	with support for the features listed in this attribute, see
+  *	&enum nl80211_ap_sme_features.
+  *
++ * @NL80211_ATTR_DONT_WAIT_FOR_ACK: Used with %NL80211_CMD_FRAME, this tells
++ *	the driver to not wait for an acknowledgement. Note that due to this,
++ *	it will also not give a status callback nor return a cookie. This is
++ *	mostly useful for probe responses to save airtime.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1374,6 +1379,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_DEVICE_AP_SME,
+ 
++	NL80211_ATTR_DONT_WAIT_FOR_ACK,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+--- a/net/wireless/core.h	2011-11-03 14:02:32.000000000 +0100
++++ b/net/wireless/core.h	2011-11-03 14:02:44.000000000 +0100
+@@ -378,7 +378,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg8021
+ 			  enum nl80211_channel_type channel_type,
+ 			  bool channel_type_valid, unsigned int wait,
+ 			  const u8 *buf, size_t len, bool no_cck,
+-			  u64 *cookie);
++			  bool dont_wait_for_ack, u64 *cookie);
+ 
+ /* SME */
+ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+--- a/net/wireless/mlme.c	2011-11-03 14:02:28.000000000 +0100
++++ b/net/wireless/mlme.c	2011-11-03 14:02:44.000000000 +0100
+@@ -904,7 +904,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg8021
+ 			  enum nl80211_channel_type channel_type,
+ 			  bool channel_type_valid, unsigned int wait,
+ 			  const u8 *buf, size_t len, bool no_cck,
+-			  u64 *cookie)
++			  bool dont_wait_for_ack, u64 *cookie)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	const struct ieee80211_mgmt *mgmt;
+@@ -995,7 +995,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg8021
+ 	/* Transmit the Action frame as requested by user space */
+ 	return rdev->ops->mgmt_tx(&rdev->wiphy, dev, chan, offchan,
+ 				  channel_type, channel_type_valid,
+-				  wait, buf, len, no_cck, cookie);
++				  wait, buf, len, no_cck, dont_wait_for_ack,
++				  cookie);
+ }
+ 
+ bool cfg80211_rx_mgmt(struct net_device *dev, int freq, const u8 *buf,
+--- a/net/wireless/nl80211.c	2011-11-03 14:02:32.000000000 +0100
++++ b/net/wireless/nl80211.c	2011-11-03 14:02:44.000000000 +0100
+@@ -196,6 +196,7 @@ static const struct nla_policy nl80211_p
+ 	[NL80211_ATTR_TDLS_OPERATION] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_TDLS_SUPPORT] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_TDLS_EXTERNAL_SETUP] = { .type = NLA_FLAG },
++	[NL80211_ATTR_DONT_WAIT_FOR_ACK] = { .type = NLA_FLAG },
+ };
+ 
+ /* policy for the key attributes */
+@@ -5276,10 +5277,11 @@ static int nl80211_tx_mgmt(struct sk_buf
+ 	int err;
+ 	void *hdr;
+ 	u64 cookie;
+-	struct sk_buff *msg;
++	struct sk_buff *msg = NULL;
+ 	unsigned int wait = 0;
+-	bool offchan;
+-	bool no_cck;
++	bool offchan, no_cck, dont_wait_for_ack;
++
++	dont_wait_for_ack = info->attrs[NL80211_ATTR_DONT_WAIT_FOR_ACK];
+ 
+ 	if (!info->attrs[NL80211_ATTR_FRAME] ||
+ 	    !info->attrs[NL80211_ATTR_WIPHY_FREQ])
+@@ -5323,29 +5325,36 @@ static int nl80211_tx_mgmt(struct sk_buf
+ 	if (chan == NULL)
+ 		return -EINVAL;
+ 
+-	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+-	if (!msg)
+-		return -ENOMEM;
+-
+-	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
+-			     NL80211_CMD_FRAME);
+-
+-	if (IS_ERR(hdr)) {
+-		err = PTR_ERR(hdr);
+-		goto free_msg;
++	if (!dont_wait_for_ack) {
++		msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++		if (!msg)
++			return -ENOMEM;
++
++		hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
++				     NL80211_CMD_FRAME);
++
++		if (IS_ERR(hdr)) {
++			err = PTR_ERR(hdr);
++			goto free_msg;
++		}
+ 	}
++
+ 	err = cfg80211_mlme_mgmt_tx(rdev, dev, chan, offchan, channel_type,
+ 				    channel_type_valid, wait,
+ 				    nla_data(info->attrs[NL80211_ATTR_FRAME]),
+ 				    nla_len(info->attrs[NL80211_ATTR_FRAME]),
+-				    no_cck, &cookie);
++				    no_cck, dont_wait_for_ack, &cookie);
+ 	if (err)
+ 		goto free_msg;
+ 
+-	NLA_PUT_U64(msg, NL80211_ATTR_COOKIE, cookie);
++	if (msg) {
++		NLA_PUT_U64(msg, NL80211_ATTR_COOKIE, cookie);
+ 
+-	genlmsg_end(msg, hdr);
+-	return genlmsg_reply(msg, info);
++		genlmsg_end(msg, hdr);
++		return genlmsg_reply(msg, info);
++	}
++
++	return 0;
+ 
+  nla_put_failure:
+ 	err = -ENOBUFS;
+--- a/include/net/cfg80211.h	2011-11-03 14:02:32.000000000 +0100
++++ b/include/net/cfg80211.h	2011-11-03 14:02:44.000000000 +0100
+@@ -1584,7 +1584,7 @@ struct cfg80211_ops {
+ 			  enum nl80211_channel_type channel_type,
+ 			  bool channel_type_valid, unsigned int wait,
+ 			  const u8 *buf, size_t len, bool no_cck,
+-			  u64 *cookie);
++			  bool dont_wait_for_ack, u64 *cookie);
+ 	int	(*mgmt_tx_cancel_wait)(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+ 				       u64 cookie);
+--- a/net/mac80211/cfg.c	2011-11-03 14:02:28.000000000 +0100
++++ b/net/mac80211/cfg.c	2011-11-03 14:02:44.000000000 +0100
+@@ -1936,7 +1936,7 @@ static int ieee80211_mgmt_tx(struct wiph
+ 			     enum nl80211_channel_type channel_type,
+ 			     bool channel_type_valid, unsigned int wait,
+ 			     const u8 *buf, size_t len, bool no_cck,
+-			     u64 *cookie)
++			     bool dont_wait_for_ack, u64 *cookie)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+@@ -1944,10 +1944,15 @@ static int ieee80211_mgmt_tx(struct wiph
+ 	struct sta_info *sta;
+ 	struct ieee80211_work *wk;
+ 	const struct ieee80211_mgmt *mgmt = (void *)buf;
+-	u32 flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
+-		    IEEE80211_TX_CTL_REQ_TX_STATUS;
++	u32 flags;
+ 	bool is_offchan = false;
+ 
++	if (dont_wait_for_ack)
++		flags = IEEE80211_TX_CTL_NO_ACK;
++	else
++		flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
++			IEEE80211_TX_CTL_REQ_TX_STATUS;
++
+ 	/* Check that we are on the requested channel for transmission */
+ 	if (chan != local->tmp_channel &&
+ 	    chan != local->oper_channel)
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c	2011-11-03 13:48:08.000000000 +0100
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c	2011-11-03 14:02:44.000000000 +0100
+@@ -1732,7 +1732,8 @@ static int ath6kl_mgmt_tx(struct wiphy *
+ 			  struct ieee80211_channel *chan, bool offchan,
+ 			  enum nl80211_channel_type channel_type,
+ 			  bool channel_type_valid, unsigned int wait,
+-			  const u8 *buf, size_t len, bool no_cck, u64 *cookie)
++			  const u8 *buf, size_t len, bool no_cck,
++			  bool dont_wait_for_ack, u64 *cookie)
+ {
+ 	struct ath6kl *ar = ath6kl_priv(dev);
+ 	u32 id;
+
 
