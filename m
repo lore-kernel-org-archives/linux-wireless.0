@@ -1,33 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25976 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751399Ab1KGVFF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 16:05:05 -0500
-Message-ID: <4EB847FC.9040209@qca.qualcomm.com> (sfid-20111107_220510_431867_CC543B1D)
-Date: Mon, 7 Nov 2011 23:05:00 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:3703 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754075Ab1KDVYC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Nov 2011 17:24:02 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 06/16] brcm80211: fmac: disable dongle arm core in bus
+ core setup function
+Date: Fri, 4 Nov 2011 22:23:32 +0100
+Message-ID: <1320441822-4615-7-git-send-email-arend@broadcom.com> (sfid-20111104_222411_744423_B139487B)
+In-Reply-To: <1320441822-4615-1-git-send-email-arend@broadcom.com>
+References: <1320441822-4615-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Raja Mani <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 10/11] ath6kl: Remove WARN_ON msg in Suspend path
-References: <1320643547-3578-1-git-send-email-rmani@qca.qualcomm.com> <1320643547-3578-11-git-send-email-rmani@qca.qualcomm.com>
-In-Reply-To: <1320643547-3578-11-git-send-email-rmani@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/07/2011 07:25 AM, Raja Mani wrote:
-> In the current code, WOW resume is executed first from RX path
-> and ar->state is moved to ATH6KL_STATE_ON. When platform calls
-> ath6kl_sdio_resume() in CFG resume context, that time ar->state
-> could have moved to ON state. Printing WARN_ON(1) is void in
-> this context. Hence removing this.
-> 
-> Once WOW resume is removed from RX path, This WARN_ON msg can be
-> reverted.
+From: Franky Lin <frankyl@broadcom.com>
 
-I changed places with this and patch 9. This is to avoid useless
-warnings during bisect.
+This will provide a better code flow that fits the logic
 
-Kalle
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    6 ------
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |    6 ++++++
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index af0d5c9..c98986f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3885,12 +3885,6 @@ brcmf_sdbrcm_chip_attach(struct brcmf_bus *bus, u32 regs)
+ 	if (err)
+ 		goto fail;
+ 
+-	/*
+-	 * Make sure any on-chip ARM is off (in case strapping is wrong),
+-	 * or downloaded code was already running.
+-	 */
+-	brcmf_sdio_chip_coredisable(bus->sdiodev, ci->armcorebase);
+-
+ 	brcmf_sdcard_reg_write(bus->sdiodev,
+ 		CORE_CC_REG(ci->cccorebase, gpiopullup), 4, 0);
+ 	brcmf_sdcard_reg_write(bus->sdiodev,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+index f198a48..486f145 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+@@ -243,6 +243,12 @@ brcmf_sdio_chip_buscoresetup(struct brcmf_sdio_dev *sdiodev,
+ 
+ 	brcmf_dbg(INFO, "ccrev=%d, pmurev=%d, buscore rev/type=%d/0x%x\n",
+ 		  ci->ccrev, ci->pmurev, ci->buscorerev, ci->buscoretype);
++
++	/*
++	 * Make sure any on-chip ARM is off (in case strapping is wrong),
++	 * or downloaded code was already running.
++	 */
++	brcmf_sdio_chip_coredisable(sdiodev, ci->armcorebase);
+ }
+ 
+ int brcmf_sdio_chip_attach(struct brcmf_sdio_dev *sdiodev,
+-- 
+1.7.4.1
+
+
