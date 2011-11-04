@@ -1,61 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39307 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751427Ab1KIIhQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 03:37:16 -0500
-Subject: Re: [PATCH v8 2/2] mac80211:  Support ht-cap over-rides.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4EB9B70B.6000406@candelatech.com>
-References: <1320780995-30483-1-git-send-email-greearb@candelatech.com>
-	 <1320780995-30483-2-git-send-email-greearb@candelatech.com>
-	 (sfid-20111108_203659_989707_E33ECA13) <1320783128.24797.48.camel@jlt3.sipsolutions.net>
-	 <4EB99812.3000507@candelatech.com>
-	 <1320786130.24797.78.camel@jlt3.sipsolutions.net>
-	 <4EB9B70B.6000406@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 09 Nov 2011 09:37:12 +0100
-Message-ID: <1320827832.3845.8.camel@jlt3.sipsolutions.net> (sfid-20111109_093720_440669_B0A4D87D)
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:2037 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753202Ab1KDVX7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Nov 2011 17:23:59 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 04/16] brcm80211: fmac: abstract chip buscore setup
+ function
+Date: Fri, 4 Nov 2011 22:23:30 +0100
+Message-ID: <1320441822-4615-5-git-send-email-arend@broadcom.com> (sfid-20111104_222406_075092_266EFF53)
+In-Reply-To: <1320441822-4615-1-git-send-email-arend@broadcom.com>
+References: <1320441822-4615-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-11-08 at 15:11 -0800, Ben Greear wrote:
+From: Franky Lin <frankyl@broadcom.com>
 
-> > Please. I'd rather go over a bit than read the above :-)
-> 
-> I just fixed this by using a tmp variable.  Hopefully the
-> compiler is smart enough to make it disappear.
+This patch is part of the abstracting chip backplane handle code
+series.
 
-That works, yeah.
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   53 ++++++++++++-------
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |    1 +
+ 2 files changed, 34 insertions(+), 20 deletions(-)
 
-> > I really think that'd be much nicer. As it is now we have to add all
-> > these checks everywhere, if we just calculate it once and then change
-> > places to use it we just have to remember to use the right thing.
-> 
-> I'm quite nervous about attempting this change.  I'm pretty
-> confident my current patch works as designed, and over all,
-> it's pretty non-intrusive.  I am afraid that if I start trying
-> to substitute something for sband->ht_cap that I'm going
-> to end up changing a lot of code and possibly adding all sorts
-> of strange bugs.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+index 7bf9778..1e01ae2 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+@@ -83,26 +83,6 @@ static int brcmf_sdio_chip_recognition(struct brcmf_sdio_dev *sdiodev,
+ 		return -ENODEV;
+ 	}
+ 
+-	regdata = brcmf_sdcard_reg_read(sdiodev,
+-		CORE_SB(ci->cccorebase, sbidhigh), 4);
+-	ci->ccrev = SBCOREREV(regdata);
+-
+-	regdata = brcmf_sdcard_reg_read(sdiodev,
+-		CORE_CC_REG(ci->cccorebase, pmucapabilities), 4);
+-	ci->pmurev = regdata & PCAP_REV_MASK;
+-
+-	regdata = brcmf_sdcard_reg_read(sdiodev,
+-					CORE_SB(ci->buscorebase, sbidhigh), 4);
+-	ci->buscorerev = SBCOREREV(regdata);
+-	ci->buscoretype = (regdata & SBIDH_CC_MASK) >> SBIDH_CC_SHIFT;
+-
+-	brcmf_dbg(INFO, "ccrev=%d, pmurev=%d, buscore rev/type=%d/0x%x\n",
+-		  ci->ccrev, ci->pmurev, ci->buscorerev, ci->buscoretype);
+-
+-	/* get chipcommon capabilites */
+-	ci->cccaps = brcmf_sdcard_reg_read(sdiodev,
+-		CORE_CC_REG(ci->cccorebase, capabilities), 4);
+-
+ 	return 0;
+ }
+ 
+@@ -154,6 +134,37 @@ brcmf_sdio_chip_buscoreprep(struct brcmf_sdio_dev *sdiodev)
+ 	return 0;
+ }
+ 
++static void
++brcmf_sdio_chip_buscoresetup(struct brcmf_sdio_dev *sdiodev,
++			     struct chip_info *ci)
++{
++	u32 regdata;
++
++	/* get chipcommon rev */
++	regdata = brcmf_sdcard_reg_read(sdiodev,
++		CORE_SB(ci->cccorebase, sbidhigh), 4);
++	ci->ccrev = SBCOREREV(regdata);
++
++	/* get chipcommon capabilites */
++	ci->cccaps = brcmf_sdcard_reg_read(sdiodev,
++		CORE_CC_REG(ci->cccorebase, capabilities), 4);
++
++	/* get pmu caps & rev */
++	if (ci->cccaps & CC_CAP_PMU) {
++		ci->pmucaps = brcmf_sdcard_reg_read(sdiodev,
++			CORE_CC_REG(ci->cccorebase, pmucapabilities), 4);
++		ci->pmurev = ci->pmucaps & PCAP_REV_MASK;
++	}
++
++	regdata = brcmf_sdcard_reg_read(sdiodev,
++					CORE_SB(ci->buscorebase, sbidhigh), 4);
++	ci->buscorerev = SBCOREREV(regdata);
++	ci->buscoretype = (regdata & SBIDH_CC_MASK) >> SBIDH_CC_SHIFT;
++
++	brcmf_dbg(INFO, "ccrev=%d, pmurev=%d, buscore rev/type=%d/0x%x\n",
++		  ci->ccrev, ci->pmurev, ci->buscorerev, ci->buscoretype);
++}
++
+ int brcmf_sdio_chip_attach(struct brcmf_sdio_dev *sdiodev,
+ 			   struct chip_info *ci, u32 regs)
+ {
+@@ -167,5 +178,7 @@ int brcmf_sdio_chip_attach(struct brcmf_sdio_dev *sdiodev,
+ 	if (ret != 0)
+ 		return ret;
+ 
++	brcmf_sdio_chip_buscoresetup(sdiodev, ci);
++
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
+index 2d75b8c5..1985e36 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
+@@ -64,6 +64,7 @@ struct chip_info {
+ 	u32 ramcorebase;
+ 	u32 armcorebase;
+ 	u32 pmurev;
++	u32 pmucaps;
+ 	u32 ramsize;
+ };
+ 
+-- 
+1.7.4.1
 
-You should only have to change the places where you now added the
-overrides, no?
-
-> Out of curiousity, if one is doing off-channel work, wouldn't
-> sband be different from when we associated and possibly different
-> in it's ht-capabilities?  If so, the used-ht-caps would not
-> be valid for that work?
-
-Well the off-channel work will be on the channel that you're going to be
-using after a successful connection, so that should be OK.
-
-I'd at least like to try. If it ends up a disaster maybe we shouldn't,
-but the way you go back to the mask & set all the time makes me a bit
-nervous.
-
-johannes
 
