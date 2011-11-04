@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:56366 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751541Ab1KSIvg (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:41784 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750807Ab1KDJN2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Nov 2011 03:51:36 -0500
-Received: by wwe5 with SMTP id 5so6787741wwe.1
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 00:51:34 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] mac80211: dereference RCU protected probe_resp pointer correctly
-Date: Sat, 19 Nov 2011 10:51:26 +0200
-Message-Id: <1321692686-9530-1-git-send-email-arik@wizery.com> (sfid-20111119_095148_861226_ECDE0F30)
+	Fri, 4 Nov 2011 05:13:28 -0400
+Received: by ggnb2 with SMTP id b2so2287929ggn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Nov 2011 02:13:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87vcr09urr.fsf@purkki.adurom.net>
+References: <CAMG6FYiNW-1ijghpgQ6R_9HujVEp8d53DQ-vjfJrw_hZamM8Jw@mail.gmail.com>
+	<87vcr09urr.fsf@purkki.adurom.net>
+Date: Fri, 4 Nov 2011 10:13:27 +0100
+Message-ID: <CAMJBoFMiRh6CD_WTrWq9DOWPBYj92eDZBjNkWDA99qWAQ5mhGA@mail.gmail.com> (sfid-20111104_101331_728064_328BAEBF)
+Subject: Re: A new driver is going to be released
+From: Vitaly Wool <vitalywool@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Dmitry Tarnyagin <abi.dmitryt@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a sparse warning:
+Hi Kalle,
 
-cfg.c:502:13: warning: incorrect type in assignment (different address spaces)
-cfg.c:502:13:    expected struct sk_buff *old
-cfg.c:502:13:    got struct sk_buff [noderef] <asn:4>*probe_resp
+On Fri, Nov 4, 2011 at 9:06 AM, Kalle Valo <kvalo@adurom.com> wrote:
+>> (more or less latest code is available here:
+>> http://www.igloocommunity.org/gitweb/?p=kernel/igloo-kernel.git;a=shortlog;h=refs/heads/linux-3.0-ux500
+>> as well).
+>
+> I can't access it. I get "404 - Reading tree failed" when I try to
+> access the tree through gitweb:
+>
+> http://www.igloocommunity.org/gitweb/?p=kernel/igloo-kernel.git;a=tree;h=%5Crefs/heads/linux-3.0-ux500;hb=%5Crefs/heads/linux-3.0-ux500
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- net/mac80211/cfg.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I have a feeling that your mailer screws up the links because I can
+access the tree using the one above but not the one that you get.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 1063a7e..abc8386 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -499,7 +499,7 @@ static int ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
- 	if (!resp || !resp_len)
- 		return -EINVAL;
- 
--	old = sdata->u.ap.probe_resp;
-+	old = rtnl_dereference(sdata->u.ap.probe_resp);
- 
- 	new = dev_alloc_skb(resp_len);
- 	if (!new)
--- 
-1.7.5.4
-
+Thanks,
+   Vitaly
