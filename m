@@ -1,83 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43792 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935349Ab1KJPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 10:49:38 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 05/27] iwlagn: fix NULL ptr deref when reprogramming sta w/o LQ
-Date: Thu, 10 Nov 2011 06:55:05 -0800
-Message-Id: <1320936927-9078-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_165046_636235_CF03FB4C)
-In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:52937 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750916Ab1KDBKC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Nov 2011 21:10:02 -0400
+Received: by ggnb2 with SMTP id b2so1933370ggn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2011 18:10:02 -0700 (PDT)
+Message-ID: <4EB33B67.6080806@lwfinger.net> (sfid-20111104_021013_807068_A5373433)
+Date: Thu, 03 Nov 2011 20:09:59 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: A new driver is going to be released
+References: <CAMG6FYiNW-1ijghpgQ6R_9HujVEp8d53DQ-vjfJrw_hZamM8Jw@mail.gmail.com>
+In-Reply-To: <CAMG6FYiNW-1ijghpgQ6R_9HujVEp8d53DQ-vjfJrw_hZamM8Jw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 11/03/2011 05:40 PM, Dmitry Tarnyagin wrote:
+> Hi,
+>
+> I'm about to release cw1200 driver to the community (more or less
+> latest code is available here:
+> http://www.igloocommunity.org/gitweb/?p=kernel/igloo-kernel.git;a=shortlog;h=refs/heads/linux-3.0-ux500
+> as well).
+>
+> Technical question: how is it usually done in terms of commit history?
+> Should I preserve the history and release all the changes in the
+> driver separately or should I squash everything to a single commit
+> or...?
 
-Reinette reports a crash in iwl_reprogram_ap_sta(). The
-debugging shows:
+The details of what it took to get your driver to this point are not going to be 
+of much interest in the future. The "official" history starts with acceptance 
+into the kernel. Two things to keep in mind: (1) the kernel source must compile 
+at each step of the way to allow for bisection, thus any changes to Kconfig and 
+Makefile must be in the last patch, and (2) each commit should be small enough 
+that it is relatively easy to review.
 
-  b1 16    mov    $0x16,%cl
- *f3 a5    rep movsl %ds     <-- trapping instruction:(%rsi),%es:(%rdi)
+As I do not know the complexity of the driver, it is a little difficult to make 
+suggestions; however, one way to accomplish the above is to add each source file 
+in a separate patch. The maintainer may submit the final version as a single 
+commit, but that is their choice.
 
-which is a memcpy of 22 (0x16) words (movsl). this points
-to "priv->stations[sta_id].lq" being NULL since that is
-the memcpy() of that size here.
+Your sending this mail to the wireless ML indicates that you plan to submit the 
+driver to the drivers/net/wireless/ part of the source tree. As long as the 
+driver employs mac80211, that is appropriate. The other option is 
+drivers/staging/. Drivers for that section of the source tree usually are not 
+held to standards as high as the wireless section.
 
-The only way I see for this to happen is if we try to
-do some RXON reprogramming while connecting to an AP,
-after tx_sync() but before full setup, but that seems
-like something that might very well happen.
+Please be certain that all code submitted passes all tests cleanly including 
+checkpatch, sparse including endianess, and smatch.
 
-Fix this by checking if the LQ is present and only then
-reprogramming it.
+Good luck,
 
-Reported-by: Reinette Chatre <reinette.chatre@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-index 9306768..1b112df 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-@@ -647,7 +647,7 @@ void iwl_reprogram_ap_sta(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	int ret;
- 	struct iwl_addsta_cmd sta_cmd;
- 	struct iwl_link_quality_cmd lq;
--	bool active;
-+	bool active, have_lq = false;
- 
- 	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
- 	if (!(priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE)) {
-@@ -657,7 +657,10 @@ void iwl_reprogram_ap_sta(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 
- 	memcpy(&sta_cmd, &priv->stations[sta_id].sta, sizeof(sta_cmd));
- 	sta_cmd.mode = 0;
--	memcpy(&lq, priv->stations[sta_id].lq, sizeof(lq));
-+	if (priv->stations[sta_id].lq) {
-+		memcpy(&lq, priv->stations[sta_id].lq, sizeof(lq));
-+		have_lq = true;
-+	}
- 
- 	active = priv->stations[sta_id].used & IWL_STA_UCODE_ACTIVE;
- 	priv->stations[sta_id].used &= ~IWL_STA_DRIVER_ACTIVE;
-@@ -679,7 +682,8 @@ void iwl_reprogram_ap_sta(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	if (ret)
- 		IWL_ERR(priv, "failed to re-add STA %pM (%d)\n",
- 			priv->stations[sta_id].sta.sta.addr, ret);
--	iwl_send_lq_cmd(priv, ctx, &lq, CMD_SYNC, true);
-+	if (have_lq)
-+		iwl_send_lq_cmd(priv, ctx, &lq, CMD_SYNC, true);
- }
- 
- int iwl_get_free_ucode_key_offset(struct iwl_priv *priv)
--- 
-1.7.0.4
-
+Larry
