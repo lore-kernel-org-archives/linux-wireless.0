@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:60231 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753962Ab1KQAFJ convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56001 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884Ab1KDKBu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 19:05:09 -0500
-Received: by pzk36 with SMTP id 36so928398pzk.1
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 16:05:09 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201111170007.58457.chunkeey@googlemail.com>
-References: <20111116235546.096975f6@milhouse> <201111170007.58457.chunkeey@googlemail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 17 Nov 2011 11:04:49 +1100
-Message-ID: <CAGRGNgVOmK+O7hifSuaKAL4vJCN1fkCZwZun4kchDpdLSLPZ7Q@mail.gmail.com> (sfid-20111117_010515_014811_23252532)
-Subject: Re: [PATCH] p54spi: Fix workqueue deadlock
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: =?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>,
-	"John W. Linville" <linville@tuxdriver.com>,
+	Fri, 4 Nov 2011 06:01:50 -0400
+Subject: [PATCH] cfg80211: fix cmp_ies
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dmitry Tarnyagin <abi.dmitryt@gmail.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Nov 2011 11:01:46 +0100
+Message-ID: <1320400906.3969.70.camel@jlt3.sipsolutions.net> (sfid-20111104_110155_529872_2BCA6083)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian, Michael,
+From: Johannes Berg <johannes.berg@intel.com>
 
-I'm not sure these patches made it to the list.
+When comparing two items by IE, the sort order
+wasn't stable, which could lead to issues in the
+rbtree. Make it stable by making a missing IE
+sort before a present IE.
 
-Thanks,
+Also sort by length first if it differs and then
+by contents.
 
-Julian Calaby
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/scan.c |   13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-On Thu, Nov 17, 2011 at 10:07, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> On Wednesday, November 16, 2011 11:55:46 PM Michael Büsch wrote:
->> priv->work must not be synced while priv->mutex is locked, because
->> the mutex is taken in the work handler.
->> Move cancel_work_sync down to after the device shutdown code.
->> This is safe, because the work handler checks fw_state and bails out
->> early in case of a race.
->>
->> Signed-off-by: Michael Buesch <m@bues.ch>
-> Cc: <stable@kernel.org>
-> Acked-by: Christian Lamparter <chunkeey@googlemail.com>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+--- a/net/wireless/scan.c	2011-11-03 13:48:30.000000000 +0100
++++ b/net/wireless/scan.c	2011-11-04 09:38:25.000000000 +0100
+@@ -259,17 +259,20 @@ static int cmp_ies(u8 num, u8 *ies1, siz
+ {
+ 	const u8 *ie1 = cfg80211_find_ie(num, ies1, len1);
+ 	const u8 *ie2 = cfg80211_find_ie(num, ies2, len2);
+-	int r;
+ 
++	/* equal if both missing */
+ 	if (!ie1 && !ie2)
+ 		return 0;
+-	if (!ie1 || !ie2)
++	/* sort missing IE before (left of) present IE */
++	if (!ie1)
+ 		return -1;
++	if (!ie2)
++		return 1;
+ 
+-	r = memcmp(ie1 + 2, ie2 + 2, min(ie1[1], ie2[1]));
+-	if (r == 0 && ie1[1] != ie2[1])
++	/* sort by length first, then by contents */
++	if (ie1[1] != ie2[1])
+ 		return ie2[1] - ie1[1];
+-	return r;
++	return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
+ }
+ 
+ static bool is_bss(struct cfg80211_bss *a,
 
 
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
