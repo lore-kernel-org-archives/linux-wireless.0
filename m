@@ -1,90 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:6095 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752536Ab1K0N3s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Nov 2011 08:29:48 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: stable@kernel.org, Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH v2] mac80211: fix race between the AGG SM and the Tx data path
-Date: Sun, 27 Nov 2011 15:29:44 +0200
-Message-Id: <1322400584-10964-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20111127_142959_845534_A4ABDBBA)
-Content-Type: text/plain; charset="us-ascii"
+Received: from he.sipsolutions.net ([78.46.109.217]:45068 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755285Ab1KDOmz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Nov 2011 10:42:55 -0400
+Subject: Re: [wireless-next PATCH 1/5] mac80211: Support forcing station to
+ disable 11n.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4EB2DACE.2000707@candelatech.com>
+References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
+	 (sfid-20111028_071135_777672_88A08497) <1319789318.3914.10.camel@jlt3.sipsolutions.net>
+	 <4EAAFAA7.8090403@candelatech.com>
+	 (sfid-20111028_205543_472872_4928ADE0) <1320220415.3950.1.camel@jlt3.sipsolutions.net>
+	 <4EB17103.70506@candelatech.com>
+	 <1320256263.7846.3.camel@jlt3.sipsolutions.net>
+	 <4EB22EE6.3030100@candelatech.com>
+	 <1320309058.3950.7.camel@jlt3.sipsolutions.net>
+	 <4EB2DACE.2000707@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Nov 2011 15:42:51 +0100
+Message-ID: <1320417771.3969.90.camel@jlt3.sipsolutions.net> (sfid-20111104_154257_724298_B074BE2A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a packet is supposed to sent be as an a-MPDU, mac80211 sets
-IEEE80211_TX_CTL_AMPDU to let the driver know. On the other
-hand, mac80211 configures the driver for aggregration with the
-ampdu_action callback.
-There is race between these two mechanisms since the following
-scenario can occur when the BA agreement is torn down:
+On Thu, 2011-11-03 at 11:17 -0700, Ben Greear wrote:
 
-Tx softIRQ	 			drv configuration
-==========				=================
+> So back to the capabilities flag like I added in the -v2 patch?
+> Do you want one flag for each thing (set-mcs, disable-ht,
+> disable-ht40, set-mpdu, set-msdu), or maybe one flag for all of
+> this:  set-ht-cap
 
-check OPERATIONAL bit
-Set the TX_CTL_AMPDU bit in the packet
+I think maybe a single one would be sufficient, but you'd still have no
+way of knowing what is actually supported for changing. Maybe you could
+advertise an ht_mask of things that can be changed?
 
-					clear OPERATIONAL bit
-					stop Tx AGG
-Pass Tx packet to the driver.
+> My opinion remains that we should silently ignore un-supported
+> values..this way user-space works with the same config on old and new
+> kernels.  In future patches, we can report the actual settings via
+> netlink or similar.
+> 
+> But, I can add logic in user-space to detect kernel versions and
+> such and deal with this.
 
-In that case the driver would get a packet with TX_CTL_AMPDU set
-although it has already been notified that the BA session has been
-torn down.
+Then you also wouldn't have to muck around with kernel version detection
+etc. you could just query the mask of things that can be changed.
 
-To fix this, we need to synchronize all the Qdisc activity after we
-cleared the OPERATIONAL bit. After that step, all the following
-packets will be buffered until the driver reports it is ready to get
-new packets for this RA / TID. This buffering allows not to run into
-another race that would send packets with TX_CTL_AMPDU unset while
-the driver hasn't been requested to tear down the BA session yet.
-
-This race occurs in practice and iwlwifi complains with a WARN_ON
-when it happens.
-
-Cc: stable@kernel.org
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
-v2: Update the comment in the code - Thanks Johannes
----
- net/mac80211/agg-tx.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 39d72cc..e8813bd 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -188,6 +188,20 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 	 */
- 	clear_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state);
- 
-+	/*
-+	 * There might be a few packets being processed right now (on
-+	 * another CPU) that have already gotten past the aggregation
-+	 * check when it was still OPERATIONAL and consequently have
-+	 * IEEE80211_TX_CTL_AMPDU set. In that case, this code might
-+	 * call into the driver at the same time or even before the
-+	 * TX paths calls into it, which could confuse the driver.
-+	 *
-+	 * Wait for all currently running TX paths to finish before
-+	 * telling the driver. New packets will not go through since
-+	 * the aggregation session is no longer OPERATIONAL.
-+	 */
-+	synchronize_net();
-+
- 	tid_tx->stop_initiator = initiator;
- 	tid_tx->tx_stop = tx;
- 
--- 
-1.7.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+johannes
 
