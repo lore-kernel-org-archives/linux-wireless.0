@@ -1,51 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:55947 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756646Ab1KWPlQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44180 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751901Ab1KFNKL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 10:41:16 -0500
-Received: by mail-vw0-f46.google.com with SMTP id fc26so572756vbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 07:41:15 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [RFC 4/5] ath6kl: add support for NL80211_TX_POWER_REG
-Date: Wed, 23 Nov 2011 10:40:57 -0500
-Message-Id: <1322062858-15276-5-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111123_164120_432672_2877B6EB)
-In-Reply-To: <1322062858-15276-1-git-send-email-mcgrof@qca.qualcomm.com>
-References: <1322062858-15276-1-git-send-email-mcgrof@qca.qualcomm.com>
+	Sun, 6 Nov 2011 08:10:11 -0500
+Subject: Re: 802.11p implementation...
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAFtRNNwXdeBfa-mFNyAVALgTxM-wrUthgMLS18VokqOSSiWPqg@mail.gmail.com> (sfid-20111106_015359_593392_B23322E1)
+References: <CAFtRNNwXdeBfa-mFNyAVALgTxM-wrUthgMLS18VokqOSSiWPqg@mail.gmail.com>
+	 (sfid-20111106_015359_593392_B23322E1)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 06 Nov 2011 14:10:06 +0100
+Message-ID: <1320585006.11133.2.camel@jlt3.sipsolutions.net> (sfid-20111106_142706_508829_A4BD4C3F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+On Sun, 2011-11-06 at 02:53 +0200, Nick Kossifidis wrote:
+> It seems a group of people have released an 802.11p implementation on
+> top of 2.6.31.
+> 
+> http://www.gcdc.net/mainmenu/Home/downloads/Technology
+> 
+> From a quick look changes on the kernel part are minimal, they moved
+> most of their work on userspace.
+> Also the ath5k related part is already upstream (half/quarter rate support).
+> 
+> Could we get this upstream and merge it with current tools ? How does it look ?
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 9f3d3f0..983c3e9 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1187,6 +1187,7 @@ static int ath6kl_cfg80211_set_txpower(struct wiphy *wiphy,
- 	struct ath6kl_vif *vif;
- 	u8 ath6kl_dbm;
- 	int dbm = MBM_TO_DBM(mbm);
-+	struct ieee80211_channel *chan;
- 
- 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: type 0x%x, dbm %d\n", __func__,
- 		   type, dbm);
-@@ -1204,6 +1205,11 @@ static int ath6kl_cfg80211_set_txpower(struct wiphy *wiphy,
- 	case NL80211_TX_POWER_LIMITED:
- 		ar->tx_pwr = ath6kl_dbm = dbm;
- 		break;
-+	case NL80211_TX_POWER_REG:
-+		chan = ieee80211_get_channel(wiphy, vif->next_chan);
-+		if (!chan)
-+			return -EIO;
-+		ar->tx_pwr = ath6kl_dbm = chan->max_power;
- 	default:
- 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: type 0x%x not supported\n",
- 			   __func__, type);
--- 
-1.7.4.15.g7811d
+It looks like a website with tarballs, we can't put that into the
+kernel :-)
+
+johannes
+
 
