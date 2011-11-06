@@ -1,86 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29241 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754087Ab1K2O6w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 09:58:52 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Russell Hu <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Wilson Tsao <wtsao@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 03/17] ath9k_hw: Add MCI h/w specific structure
-Date: Tue, 29 Nov 2011 20:25:24 +0530
-Message-ID: <1322578538-18912-4-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111129_155855_555563_89F400D1)
-In-Reply-To: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55261 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752148Ab1KFVZP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Nov 2011 16:25:15 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] comapt: add skb_frag_size() and hex_byte_pack()
+Date: Sun,  6 Nov 2011 22:25:04 +0100
+Message-Id: <1320614704-28855-2-git-send-email-hauke@hauke-m.de> (sfid-20111106_222520_636207_D5794B35)
+In-Reply-To: <1320614704-28855-1-git-send-email-hauke@hauke-m.de>
+References: <1320614704-28855-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath9k/btcoex.h |   31 +++++++++++++++++++++++++++++++
- 1 files changed, 31 insertions(+), 0 deletions(-)
+ include/linux/compat-2.6.26.h |    3 +++
+ include/linux/compat-3.2.h    |   12 ++++++++++++
+ 2 files changed, 15 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index d5e5db1..278361c 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -54,8 +54,39 @@ enum ath_btcoex_scheme {
- 	ATH_BTCOEX_CFG_MCI,
- };
+diff --git a/include/linux/compat-2.6.26.h b/include/linux/compat-2.6.26.h
+index 9a67e9d..177792a 100644
+--- a/include/linux/compat-2.6.26.h
++++ b/include/linux/compat-2.6.26.h
+@@ -447,6 +447,9 @@ static inline u64 div_u64(u64 dividend, u32 divisor)
+ #endif
+ /* source: include/math64.h */
  
-+struct ath9k_hw_mci {
-+	u32 raw_intr;
-+	u32 rx_msg_intr;
-+	u32 cont_status;
-+	u32 gpm_addr;
-+	u32 gpm_len;
-+	u32 gpm_idx;
-+	u32 sched_addr;
-+	u32 wlan_channels[4];
-+	u32 wlan_cal_seq;
-+	u32 wlan_cal_done;
-+	u32 config;
-+	u8 *gpm_buf;
-+	u8 *sched_buf;
-+	bool ready;
-+	bool update_2g5g;
-+	bool is_2g;
-+	bool query_bt;
-+	bool unhalt_bt_gpm; /* need send UNHALT */
-+	bool halted_bt_gpm; /* HALT sent */
-+	bool need_flush_btinfo;
-+	bool bt_version_known;
-+	bool wlan_channels_update;
-+	u8 wlan_ver_major;
-+	u8 wlan_ver_minor;
-+	u8 bt_ver_major;
-+	u8 bt_ver_minor;
-+	u8 bt_state;
-+};
++#define hex_asc_lo(x)	hex_asc((x) & 0x0f)
++#define hex_asc_hi(x)	hex_asc(((x) & 0xf0) >> 4)
 +
- struct ath_btcoex_hw {
- 	enum ath_btcoex_scheme scheme;
-+	struct ath9k_hw_mci mci;
- 	bool enabled;
- 	u8 wlanactive_gpio;
- 	u8 btactive_gpio;
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)) */
+ 
+ #endif /* LINUX_26_26_COMPAT_H */
+diff --git a/include/linux/compat-3.2.h b/include/linux/compat-3.2.h
+index 859a2e3..ceaaecc 100644
+--- a/include/linux/compat-3.2.h
++++ b/include/linux/compat-3.2.h
+@@ -60,6 +60,18 @@ static inline dma_addr_t skb_frag_dma_map(struct device *dev,
+ 
+ #define ETH_P_TDLS	0x890D          /* TDLS */
+ 
++static inline unsigned int skb_frag_size(const skb_frag_t *frag)
++{
++	return frag->size;
++}
++
++static inline char *hex_byte_pack(char *buf, u8 byte)
++{
++	*buf++ = hex_asc_hi(byte);
++	*buf++ = hex_asc_lo(byte);
++	return buf;
++}
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,2,0)) */
+ 
+ #endif /* LINUX_3_2_COMPAT_H */
 -- 
-1.7.0.4
+1.7.4.1
 
