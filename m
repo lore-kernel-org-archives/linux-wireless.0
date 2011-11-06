@@ -1,82 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:63229 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754740Ab1KCKDc convert rfc822-to-8bit (ORCPT
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:16767 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750939Ab1KFVxM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 06:03:32 -0400
-Received: by qyk27 with SMTP id 27so164728qyk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2011 03:03:31 -0700 (PDT)
+	Sun, 6 Nov 2011 16:53:12 -0500
+Date: Sun, 6 Nov 2011 22:58:31 +0100 (CET)
+From: Jesper Juhl <jj@chaosbits.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] net, wireless, mwifiex: Fix mem leak in
+ mwifiex_update_curr_bss_params()
+Message-ID: <alpine.LNX.2.00.1111062255310.5763@swampdragon.chaosbits.net> (sfid-20111106_225322_863092_D3E7DB30)
 MIME-Version: 1.0
-In-Reply-To: <1320313141.3950.35.camel@jlt3.sipsolutions.net>
-References: <CAMG6FYiV8F=MFBeUQCGSj__h=REVLMvTZCvLEvDPT7GP2KWsWw@mail.gmail.com>
-	<1320310524.3950.29.camel@jlt3.sipsolutions.net>
-	<CAMG6FYhgeNg3CbDZg7GkJkq1ArJ=5n+bD=zPx=6ZFe7-Kj4Jmw@mail.gmail.com>
-	<1320313141.3950.35.camel@jlt3.sipsolutions.net>
-Date: Thu, 3 Nov 2011 11:03:31 +0100
-Message-ID: <CAMG6FYjQWc2fXDM8eWpEi7OqS+tVfjh5onf_332R3pzq8ks0aQ@mail.gmail.com> (sfid-20111103_110335_527153_BDC6C784)
-Subject: Re: [PATCH] cfg80211: merge in beacon ies of hidden bss.
-From: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+If kmemdup() fails we leak the memory allocated to bss_desc.
+This patch fixes the leak.
+I also removed the pointless default assignment of 'NULL' to 'bss_desc' 
+while I was there anyway.
 
-On Thu, Nov 3, 2011 at 10:39 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Hi Dmitry,
->
->> >> +     if (!ie1 && !ie2)
->> >> +             return 0;
->> > I don't think it's valid to leave out the SSID IE, so I'd rather not
->> > have that test here. It might interact badly with other uses (mesh?)
->> ie1 and ie2 could not NULL at the same time, otherwise the bss
->> would be found in the first search attempt. However, I would prefer
->> to have some water-proof check here. WARN_ON? BUG_ON?
-> Maybe a warning? But I don't see why it'll just fall through to the next
-> line and return -1 if one of them is missing.
->
--1 means "lesser", which is not true if both of ies are absent.
-0 means "equal", which is correct (but logically impossible with the
-current usage of the comparator). Now I think even WARN_ON is a bad
-idea, the comparator can be reused for other purposes when both
-SSID ies are missing.
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ drivers/net/wireless/mwifiex/scan.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
->> Key comparator must use same algorithm in any rb-tree search function
->> (order is important), otherwise ordering of items in the tree is broken
->> and search gives incorrect results.
->> This code uses same order as cmp_ies() does.
-> Oh. Good point. Add a comment?
->
-Yes, I will.
+ note: patch is compile tested only since I don't have the hardware.
 
-> Eliad pointed out another thing: It is possible to have multiple SSIDs
-> hidden behind a single hidden SSID. Therefore, this should update all of
-> those BSS structs. Also, I'm a tad confused about the matching code
-> here, this code path executes for both received beacons and probe
-> responses, but probe responses would typically have found the BSS
-> already? But what if we only have a beacon and then receive a probe
-> response? Or vice versa? Some comments would be good outlining how that
-> works.
->
-I will add some comments in the code. Is a word, the code searches for a beacon
-of the hidden BSS and copies beacon IEs (with nullified SSID) into the probe
-response bss entry (with real SSID). It works fine in case of multi-SSID hidden
-BSS too.
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index dae8dbb..8a3f959 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1469,7 +1469,7 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv, u8 *bssid,
+ 			       s32 rssi, const u8 *ie_buf, size_t ie_len,
+ 			       u16 beacon_period, u16 cap_info_bitmap, u8 band)
+ {
+-	struct mwifiex_bssdescriptor *bss_desc = NULL;
++	struct mwifiex_bssdescriptor *bss_desc;
+ 	int ret;
+ 	unsigned long flags;
+ 	u8 *beacon_ie;
+@@ -1484,6 +1484,7 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv, u8 *bssid,
+ 
+ 	beacon_ie = kmemdup(ie_buf, ie_len, GFP_KERNEL);
+ 	if (!beacon_ie) {
++		kfree(bss_desc);
+ 		dev_err(priv->adapter->dev, " failed to alloc beacon_ie\n");
+ 		return -ENOMEM;
+ 	}
+-- 
+1.7.7.2
 
-> what if we only have a beacon and then receive a probe response?
-It's the typical usecase for association with hidden BSS.  The probe
-response will
-be updated with beacon IEs.
 
-> Or vice versa?
-It will not work. Update of beacon IEs of probe response is not implemented.
-The code is not trying to update existing probe response bss entries when beacon
-IEs are getting changed. Technically it's possible to update them, but
-I think it's a bit
-overkill, I'm addressing only PSM in this commit.
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
 
-Thank you and with best regards,
-Dmitry
