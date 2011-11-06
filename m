@@ -1,41 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:39769 "EHLO purkki.adurom.net"
+Received: from mgw2.diku.dk ([130.225.96.92]:41024 "EHLO mgw2.diku.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751830Ab1KDJSb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 05:18:31 -0400
-To: Vitaly Wool <vitalywool@gmail.com>
-Cc: Dmitry Tarnyagin <abi.dmitryt@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: A new driver is going to be released
-References: <CAMG6FYiNW-1ijghpgQ6R_9HujVEp8d53DQ-vjfJrw_hZamM8Jw@mail.gmail.com>
-	<87vcr09urr.fsf@purkki.adurom.net>
-	<CAMJBoFMiRh6CD_WTrWq9DOWPBYj92eDZBjNkWDA99qWAQ5mhGA@mail.gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Fri, 04 Nov 2011 11:18:30 +0200
-In-Reply-To: <CAMJBoFMiRh6CD_WTrWq9DOWPBYj92eDZBjNkWDA99qWAQ5mhGA@mail.gmail.com> (Vitaly Wool's message of "Fri\, 4 Nov 2011 10\:13\:27 +0100")
-Message-ID: <87r51o9rfd.fsf@purkki.adurom.net> (sfid-20111104_101834_830512_13E2CF61)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1752239Ab1KFN05 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Nov 2011 08:26:57 -0500
+From: Julia Lawall <julia@diku.dk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 4/5] net/rfkill/core.c: use kstrtoul, etc
+Date: Sun,  6 Nov 2011 14:26:49 +0100
+Message-Id: <1320586010-21931-5-git-send-email-julia@diku.dk> (sfid-20111106_142855_648731_77A0DB4C)
+In-Reply-To: <1320586010-21931-1-git-send-email-julia@diku.dk>
+References: <1320586010-21931-1-git-send-email-julia@diku.dk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vitaly Wool <vitalywool@gmail.com> writes:
+From: Julia Lawall <julia@diku.dk>
 
-> On Fri, Nov 4, 2011 at 9:06 AM, Kalle Valo <kvalo@adurom.com> wrote:
->>> (more or less latest code is available here:
->>> http://www.igloocommunity.org/gitweb/?p=kernel/igloo-kernel.git;a=shortlog;h=refs/heads/linux-3.0-ux500
->>> as well).
->>
->> I can't access it. I get "404 - Reading tree failed" when I try to
->> access the tree through gitweb:
->>
->> http://www.igloocommunity.org/gitweb/?p=kernel/igloo-kernel.git;a=tree;h=%5Crefs/heads/linux-3.0-ux500;hb=%5Crefs/heads/linux-3.0-ux500
->
-> I have a feeling that your mailer screws up the links because I can
-> access the tree using the one above but not the one that you get.
+Use kstrtoul, etc instead of the now deprecated strict_strtoul, etc.
 
-That was it, there was one extra '\'. Should have figured out that
-myself, thanks.
+A semantic patch rule for the kstrtoul case is as follows:
+(http://coccinelle.lip6.fr/)
 
--- 
-Kalle Valo
+// <smpl>
+@@
+expression a,b;
+{int,long} *c;
+@@
+
+-strict_strtoul
++kstrtoul
+ (a,b,c)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ net/rfkill/core.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff -u -p a/net/rfkill/core.c b/net/rfkill/core.c
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -644,7 +644,7 @@ static ssize_t rfkill_soft_store(struct
+ 	if (!capable(CAP_NET_ADMIN))
+ 		return -EPERM;
+ 
+-	err = strict_strtoul(buf, 0, &state);
++	err = kstrtoul(buf, 0, &state);
+ 	if (err)
+ 		return err;
+ 
+@@ -688,7 +688,7 @@ static ssize_t rfkill_state_store(struct
+ 	if (!capable(CAP_NET_ADMIN))
+ 		return -EPERM;
+ 
+-	err = strict_strtoul(buf, 0, &state);
++	err = kstrtoul(buf, 0, &state);
+ 	if (err)
+ 		return err;
+ 
+
