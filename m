@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53815 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751093Ab1KDTeA (ORCPT
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:56141 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752148Ab1KFWZ4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 15:34:00 -0400
-Subject: Re: crash in wireless-next
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1320435146.3969.125.camel@jlt3.sipsolutions.net> (sfid-20111104_203233_422852_33ADA66F)
-References: <4EB42C0C.40101@candelatech.com>
-	 (sfid-20111104_191656_642276_99C645ED)  <1320435146.3969.125.camel@jlt3.sipsolutions.net>
-	 (sfid-20111104_203233_422852_33ADA66F)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 04 Nov 2011 20:33:58 +0100
-Message-ID: <1320435238.3969.126.camel@jlt3.sipsolutions.net> (sfid-20111104_203404_837744_1CD2A241)
-Mime-Version: 1.0
+	Sun, 6 Nov 2011 17:25:56 -0500
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-wireless@vger.kernel.org> from <srivatsa.bhat@linux.vnet.ibm.com>;
+	Sun, 6 Nov 2011 22:14:27 +1000
+Message-ID: <4EB70920.80905@linux.vnet.ibm.com> (sfid-20111106_232619_552805_C2E1E8A4)
+Date: Mon, 07 Nov 2011 03:54:32 +0530
+From: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+MIME-Version: 1.0
+To: Jesper Juhl <jj@chaosbits.net>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: Re: [PATCH] net, wireless, mwifiex: Fix mem leak in mwifiex_update_curr_bss_params()
+References: <alpine.LNX.2.00.1111062255310.5763@swampdragon.chaosbits.net>
+In-Reply-To: <alpine.LNX.2.00.1111062255310.5763@swampdragon.chaosbits.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-11-04 at 20:32 +0100, Johannes Berg wrote:
-> On Fri, 2011-11-04 at 11:16 -0700, Ben Greear wrote:
-> > Anyone seen a crash like this?  I was restarting my user-space
-> > tools, and had just unloaded the drivers that had,
-> > around 135 virtual stations created.  Just my disable-ht
-> > patch series applied on top of yesterday's wireless-testing.
-> > 
-> > I'll dig into it more when I get a chance, but let me know
-> > if someone is already working on this...
+On 11/07/2011 03:28 AM, Jesper Juhl wrote:
+> If kmemdup() fails we leak the memory allocated to bss_desc.
+> This patch fixes the leak.
+> I also removed the pointless default assignment of 'NULL' to 'bss_desc' 
+> while I was there anyway.
 > 
-> The only crash in wext I ever saw was recently with compat but I don't
-> think that looked similar.
+> Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 
-I guess you don't have CONFIG_COMPAT, but in that case I think so much
-gets inlined into wext_handle_ioctl() that I have no idea what could
-possibly crash. Disassembly of the place that crashed (preferably with
--S if you have it) would be useful.
+Looks good to me.
+Reviewed-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
 
-johannes
+Thanks,
+Srivatsa S. Bhat
+
+> ---
+>  drivers/net/wireless/mwifiex/scan.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+>  note: patch is compile tested only since I don't have the hardware.
+> 
+> diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+> index dae8dbb..8a3f959 100644
+> --- a/drivers/net/wireless/mwifiex/scan.c
+> +++ b/drivers/net/wireless/mwifiex/scan.c
+> @@ -1469,7 +1469,7 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv, u8 *bssid,
+>  			       s32 rssi, const u8 *ie_buf, size_t ie_len,
+>  			       u16 beacon_period, u16 cap_info_bitmap, u8 band)
+>  {
+> -	struct mwifiex_bssdescriptor *bss_desc = NULL;
+> +	struct mwifiex_bssdescriptor *bss_desc;
+>  	int ret;
+>  	unsigned long flags;
+>  	u8 *beacon_ie;
+> @@ -1484,6 +1484,7 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv, u8 *bssid,
+> 
+>  	beacon_ie = kmemdup(ie_buf, ie_len, GFP_KERNEL);
+>  	if (!beacon_ie) {
+> +		kfree(bss_desc);
+>  		dev_err(priv->adapter->dev, " failed to alloc beacon_ie\n");
+>  		return -ENOMEM;
+>  	}
 
