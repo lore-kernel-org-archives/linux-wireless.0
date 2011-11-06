@@ -1,46 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:53828 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753195Ab1K2PPC (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:36219 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752478Ab1KFUCv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 10:15:02 -0500
-Received: by vcbfk14 with SMTP id fk14so4694773vcb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2011 07:15:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <877h2jh1ux.fsf@purkki.adurom.net>
-References: <1322516330-4007-1-git-send-email-mcgrof@qca.qualcomm.com> <877h2jh1ux.fsf@purkki.adurom.net>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Tue, 29 Nov 2011 10:14:38 -0500
-Message-ID: <CAB=NE6VxhGoczNxocUpvPdLYpcP7ionisQytW61O-e7pMjp7vw@mail.gmail.com> (sfid-20111129_161509_561172_84CB6618)
-Subject: Re: [PATCH 0/5] wireless: fix set tx power
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sun, 6 Nov 2011 15:02:51 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 2D1ED540126
+	for <linux-wireless@vger.kernel.org>; Sun,  6 Nov 2011 15:24:23 -0500 (EST)
+Subject: Compat-wireless release for 2011-11-06 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111106200250.0A46040658@repository3.orbit-lab.org> (sfid-20111106_210255_072151_86F0117F)
+Date: Sun,  6 Nov 2011 15:02:49 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 29, 2011 at 1:36 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com> writes:
->
->> The driver maintainers have approved of these now except for brcm80211.
->> I should note that Kalle indicated he was going to queue up the ath6kl
->> patch though so not sure if you want to wait for his patch or just suck
->> mine in.
->
-> John, please don't take the ath6kl patch as it's already in ath6kl.git:
->
-> https://github.com/kvalo/ath6kl/commit/b992a28557afdcabcee7d8af88471dddfe791c11
->
->> I think it makes sense to roll these in together as a series,
->
-> I don't see any benefit from this.
->
->> the rebase that Kalle would do shouldn't be impacted by this I think.
->
-> I don't rebase ath6kl.git unless absolutely necessary. And I prefer that
-> ath6kl patches would go through ath6kl.git, I get less conflicts that
-> way.
 
-Alrighty, then the others can be sucked in.
+compat-wireless code metrics
 
-  Luis
+    814862 - Total upstream lines of code being pulled
+      2431 - backport code changes
+      2113 - backport code additions
+       318 - backport code deletions
+      8588 - backport from compat module
+     11019 - total backport code
+    1.3523 - % of code consists of backport work
