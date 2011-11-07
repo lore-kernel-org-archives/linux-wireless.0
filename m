@@ -1,131 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:44009 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751742Ab1KAGok (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:39687 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755374Ab1KGMiY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Nov 2011 02:44:40 -0400
-Subject: [PATCH v2 6/7] ath6kl: refactor sdio configuration to a separate
-	function
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 01 Nov 2011 08:44:36 +0200
-Message-ID: <20111101064436.6798.86981.stgit@localhost6.localdomain6> (sfid-20111101_074443_804469_5517770C)
-In-Reply-To: <20111101064140.6798.7006.stgit@localhost6.localdomain6>
-References: <20111101064140.6798.7006.stgit@localhost6.localdomain6>
+	Mon, 7 Nov 2011 07:38:24 -0500
+Date: Mon, 7 Nov 2011 21:38:12 +0900
+From: Norbert Preining <preining@logic.at>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+Subject: Re: iwlagn is getting very shaky
+Message-ID: <20111107123812.GB23508@gamma.logic.tuwien.ac.at> (sfid-20111107_133840_243332_7604222A)
+References: <20111020045927.GB23044@gamma.logic.tuwien.ac.at> <1319119852.2111.2.camel@wwguy-ubuntu> <20111021012442.GB26758@gamma.logic.tuwien.ac.at> <alpine.DEB.2.00.1110231424500.17218@chino.kir.corp.google.com> <20111026025014.GB24956@gamma.logic.tuwien.ac.at> <1319601333.14693.19.camel@wwguy-ubuntu> <20111026040332.GF24956@gamma.logic.tuwien.ac.at> <20111102031345.GA10851@gamma.logic.tuwien.ac.at> <1320204101.31823.140.camel@wwguy-huron> <20111104045817.GA25778@gamma.logic.tuwien.ac.at>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <20111104045817.GA25778@gamma.logic.tuwien.ac.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These commands are also needed after cutpower suspend so create
-a function for them. Also fix memory leaks in ath6kl_sdio_probe() error
-path.
+Hi Wey, hi all,
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/sdio.c |   77 ++++++++++++++++++--------------
- 1 files changed, 44 insertions(+), 33 deletions(-)
+On Fr, 04 Nov 2011, Norbert Preining wrote:
+> > after the firmware reloaded, is the traffic resume? or it is continuous
+> > without traffic?
+> 
+> Ok, I compiled a new kernel from todays git, and I see that there 
+> are kernel bugs, but after the hardware restart traffic gets through.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 75b1eaa..b02ecea 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -733,6 +733,46 @@ static int ath6kl_sdio_enable_scatter(struct ath6kl *ar)
- 	return 0;
- }
- 
-+static int ath6kl_sdio_config(struct ath6kl *ar)
-+{
-+	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
-+	struct sdio_func *func = ar_sdio->func;
-+	int ret;
-+
-+	sdio_claim_host(func);
-+
-+	if ((ar_sdio->id->device & MANUFACTURER_ID_ATH6KL_BASE_MASK) >=
-+	    MANUFACTURER_ID_AR6003_BASE) {
-+		/* enable 4-bit ASYNC interrupt on AR6003 or later */
-+		ret = ath6kl_sdio_func0_cmd52_wr_byte(func->card,
-+						CCCR_SDIO_IRQ_MODE_REG,
-+						SDIO_IRQ_MODE_ASYNC_4BIT_IRQ);
-+		if (ret) {
-+			ath6kl_err("Failed to enable 4-bit async irq mode %d\n",
-+				   ret);
-+			goto out;
-+		}
-+
-+		ath6kl_dbg(ATH6KL_DBG_BOOT, "4-bit async irq mode enabled\n");
-+	}
-+
-+	/* give us some time to enable, in ms */
-+	func->enable_timeout = 100;
-+
-+	ret = sdio_set_block_size(func, HIF_MBOX_BLOCK_SIZE);
-+	if (ret) {
-+		ath6kl_err("Set sdio block size %d failed: %d)\n",
-+			   HIF_MBOX_BLOCK_SIZE, ret);
-+		sdio_release_host(func);
-+		goto out;
-+	}
-+
-+out:
-+	sdio_release_host(func);
-+
-+	return ret;
-+}
-+
- static int ath6kl_sdio_suspend(struct ath6kl *ar)
- {
- 	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
-@@ -873,45 +913,16 @@ static int ath6kl_sdio_probe(struct sdio_func *func,
- 
- 	ath6kl_sdio_set_mbox_info(ar);
- 
--	sdio_claim_host(func);
--
--	if ((ar_sdio->id->device & MANUFACTURER_ID_ATH6KL_BASE_MASK) >=
--	    MANUFACTURER_ID_AR6003_BASE) {
--		/* enable 4-bit ASYNC interrupt on AR6003 or later */
--		ret = ath6kl_sdio_func0_cmd52_wr_byte(func->card,
--						CCCR_SDIO_IRQ_MODE_REG,
--						SDIO_IRQ_MODE_ASYNC_4BIT_IRQ);
--		if (ret) {
--			ath6kl_err("Failed to enable 4-bit async irq mode %d\n",
--				   ret);
--			sdio_release_host(func);
--			goto err_core_alloc;
--		}
--
--		ath6kl_dbg(ATH6KL_DBG_BOOT, "4-bit async irq mode enabled\n");
--	}
--
--	/* give us some time to enable, in ms */
--	func->enable_timeout = 100;
--
--	sdio_release_host(func);
--
--	sdio_claim_host(func);
--
--	ret = sdio_set_block_size(func, HIF_MBOX_BLOCK_SIZE);
-+	ret = ath6kl_sdio_config(ar);
- 	if (ret) {
--		ath6kl_err("Set sdio block size %d failed: %d)\n",
--			   HIF_MBOX_BLOCK_SIZE, ret);
--		sdio_release_host(func);
--		goto err_hif;
-+		ath6kl_err("Failed to config sdio: %d\n", ret);
-+		goto err_core_alloc;
- 	}
- 
--	sdio_release_host(func);
--
- 	ret = ath6kl_core_init(ar);
- 	if (ret) {
- 		ath6kl_err("Failed to init ath6kl core\n");
--		goto err_hif;
-+		goto err_core_alloc;
- 	}
- 
- 	return ret;
+Well, not always actually. I just had *at*home*, were it used to work
+without any flaws till 3.1, I saw that after resume it worked for a 
+short time, then the queue got stuck, then not even forcing a reset via
+the /ss/kernel/debug/..../iwlwifi/debug/force_reset did work. Only 
+an unload and reload of the module, followed by a few more hickups,
+restarted the wlan card:
 
+[ 6564.905884] PM: Finishing wakeup.
+[ 6564.905889] Restarting tasks ... done.
+[ 6564.924087] video LNXVIDEO:00: Restoring backlight state
+[ 6566.045358] e1000e 0000:00:19.0: irq 45 for MSI/MSI-X
+[ 6566.100108] e1000e 0000:00:19.0: irq 45 for MSI/MSI-X
+[ 6566.101277] iwlwifi 0000:06:00.0: L1 Enabled; Disabling L0S
+[ 6566.105210] iwlwifi 0000:06:00.0: Radio type=0x1-0x2-0x0
+[ 6573.822081] wlan0: authenticate with 00:0a:79:eb:56:10 (try 1)
+[ 6573.829824] wlan0: authenticated
+[ 6573.835543] wlan0: associate with 00:0a:79:eb:56:10 (try 1)
+[ 6573.841527] wlan0: RX AssocResp from 00:0a:79:eb:56:10 (capab=0x411 status=0 aid=2)
+[ 6573.841537] wlan0: associated
+
+Here it worked for a bit, 20secs
+
+[ 6593.731625] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 0
+[ 6603.704072] iwlwifi 0000:06:00.0: Queue 11 stuck for 10000 ms.
+[ 6603.704084] iwlwifi 0000:06:00.0: Current read_ptr 249 write_ptr 14
+[ 6603.704092] iwlwifi 0000:06:00.0: On demand firmware reload
+[ 6603.704566] ieee80211 phy0: Hardware restart was requested
+[ 6603.704680] iwlwifi 0000:06:00.0: L1 Enabled; Disabling L0S
+[ 6603.707700] iwlwifi 0000:06:00.0: Radio type=0x1-0x2-0x0
+
+Here I forced the reset
+
+[ 6774.772656] iwlwifi 0000:06:00.0: On demand firmware reload
+[ 6774.773868] ieee80211 phy0: Hardware restart was requested
+[ 6774.773958] iwlwifi 0000:06:00.0: L1 Enabled; Disabling L0S
+[ 6774.777053] iwlwifi 0000:06:00.0: Radio type=0x1-0x2-0x0
+
+unloading and reloading
+
+[ 6823.909282] wlan0: deauthenticating from 00:0a:79:eb:56:10 by local choice (reason=3)
+[ 6823.976417] cfg80211: Calling CRDA for country: JP
+[ 6824.037466] iwlwifi 0000:06:00.0: PCI INT A disabled
+[ 6830.344831] Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
+[ 6830.344835] Copyright(c) 2003-2011 Intel Corporation
+[ 6830.344941] iwlwifi 0000:06:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[ 6830.344974] iwlwifi 0000:06:00.0: setting latency timer to 64
+[ 6830.345174] iwlwifi 0000:06:00.0: pci_resource_len = 0x00002000
+[ 6830.345176] iwlwifi 0000:06:00.0: pci_resource_base = ffffc90000048000
+[ 6830.345179] iwlwifi 0000:06:00.0: HW Revision ID = 0x0
+[ 6830.345292] iwlwifi 0000:06:00.0: irq 46 for MSI/MSI-X
+[ 6830.345369] iwlwifi 0000:06:00.0: Detected Intel(R) WiFi Link 5100 AGN, REV=0x54
+[ 6830.345467] iwlwifi 0000:06:00.0: L1 Enabled; Disabling L0S
+[ 6830.367544] iwlwifi 0000:06:00.0: device EEPROM VER=0x11e, CALIB=0x4
+[ 6830.367547] iwlwifi 0000:06:00.0: Device SKU: 0Xf0
+[ 6830.367557] iwlwifi 0000:06:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
+[ 6830.425994] iwlwifi 0000:06:00.0: loaded firmware version 8.83.5.1 build 33692 (EXP)
+[ 6830.426214] Registered led device: phy1-led
+[ 6830.426519] ieee80211 phy1: Selected rate control algorithm 'iwl-agn-rs'
+
+more hickups
+
+[ 6830.518627] iwlwifi 0000:06:00.0: L1 Enabled; Disabling L0S
+[ 6830.522336] iwlwifi 0000:06:00.0: Radio type=0x1-0x2-0x0
+[ 6830.636966] iwlwifi 0000:06:00.0: L1 Enabled; Disabling L0S
+[ 6830.640324] iwlwifi 0000:06:00.0: Radio type=0x1-0x2-0x0
+[ 6838.327066] wlan0: authenticate with 00:0a:79:eb:56:10 (try 1)
+[ 6838.330447] wlan0: authenticated
+[ 6838.335890] wlan0: associate with 00:0a:79:eb:56:10 (try 1)
+[ 6838.341503] wlan0: RX AssocResp from 00:0a:79:eb:56:10 (capab=0x411 status=0 aid=2)
+[ 6838.341507] wlan0: associated
+
+finally got it working, one more final hickup
+
+[ 6860.602423] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 0
+
+from now on working
+
+Would be great to fix that for 3.2
+
+Herzliche Grüße
+
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+PEEBLES (pl.n.)
+Small, carefully rolled pellets of skegness (q.v.)
+			--- Douglas Adams, The Meaning of Liff
