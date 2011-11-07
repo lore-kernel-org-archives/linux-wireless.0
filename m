@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34706 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751795Ab1K1Pyt (ORCPT
+Received: from ebb05.tieto.com ([131.207.168.36]:53656 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750816Ab1KGHrU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 10:54:49 -0500
-Subject: Re: [PATCH 0/2] mac80211: use timeout from addba resp
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <CALGY4ftDBArahTTQAoy07Q+qjR2UtXJ7KETPk-rR33u+f0Radw@mail.gmail.com> (sfid-20111128_164510_312868_5C276B9E)
-References: <1322432153-17425-1-git-send-email-mar.kolya@gmail.com>
-	 <1322469030.4060.4.camel@jlt3.sipsolutions.net>
-	 <CALGY4ftDBArahTTQAoy07Q+qjR2UtXJ7KETPk-rR33u+f0Radw@mail.gmail.com>
-	 (sfid-20111128_164510_312868_5C276B9E)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 28 Nov 2011 16:54:45 +0100
-Message-ID: <1322495685.4060.7.camel@jlt3.sipsolutions.net> (sfid-20111128_165452_254549_EAD8BA10)
-Mime-Version: 1.0
+	Mon, 7 Nov 2011 02:47:20 -0500
+From: <Janusz.Dziedzic@tieto.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <johannes@sipsolutions.net>
+Date: Mon, 7 Nov 2011 09:47:47 +0200
+Subject: [PATCH] mac80211: uAPSD - fix IEEE80211_FCTL_MOREDATA bit setting
+Message-ID: <3078A9B976EF864C8DDD0C499FFD07911E3B56E1EC@EXMB01.eu.tieto.com> (sfid-20111107_084724_135704_2E1482A3)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-11-28 at 10:44 -0500, Nikolay Martynov wrote:
 
->  Sorry, about this. I just though that if addba resp contains timeout
-> then there should be some use of it. If this goes against standard
-> just disregard this patch.
+Set IEEE80211_FCTL_MOREDATA bit also in case we have buffered
+frames (more than one) only for one AC.
 
-Well, ok, I thought you checked and found we were doing it wrong :)
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ net/mac80211/sta_info.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
->  BTW, is it possible to download a copy of the standard or is it
-> something I need to pay for/subscribe to?
-
-Google for getieee 802.11.
-
-johannes
-
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index ce962d2..8eaa746 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1354,12 +1354,12 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
+ 			 * Use MoreData flag to indicate whether there are
+ 			 * more buffered frames for this STA
+ 			 */
+-			if (!more_data)
+-				hdr->frame_control &=
+-					cpu_to_le16(~IEEE80211_FCTL_MOREDATA);
+-			else
++			if (more_data || !skb_queue_empty(&frames))
+ 				hdr->frame_control |=
+ 					cpu_to_le16(IEEE80211_FCTL_MOREDATA);
++			else
++				hdr->frame_control &=
++					cpu_to_le16(~IEEE80211_FCTL_MOREDATA);
+ 
+ 			if (ieee80211_is_data_qos(hdr->frame_control) ||
+ 			    ieee80211_is_qos_nullfunc(hdr->frame_control))
+-- 
+1.7.0.4
