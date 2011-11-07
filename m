@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:61861 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753370Ab1KNO22 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45753 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752002Ab1KGPky (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 09:28:28 -0500
-Received: by bke11 with SMTP id 11so5946855bke.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2011 06:28:27 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, nbd@openwrt.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH 1/3] mac80211: Minor optimization in minstrel_ht tx status path
-Date: Mon, 14 Nov 2011 15:28:18 +0100
-Message-Id: <1321280900-24006-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111114_152832_367826_DC90A0F6)
+	Mon, 7 Nov 2011 10:40:54 -0500
+Subject: Re: ifconfig down and mac80211 issue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: voncken <cedric.voncken@acksys.fr>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1320677698.1687.13.camel@voncken-desktop> (sfid-20111107_161533_878983_7E7F3261)
+References: <1320677698.1687.13.camel@voncken-desktop>
+	 (sfid-20111107_161533_878983_7E7F3261)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Nov 2011 16:40:43 +0100
+Message-ID: <1320680443.3993.45.camel@jlt3.sipsolutions.net> (sfid-20111107_164057_759864_F64BDC0C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Under the assumption that minstrel_ht most likely picks a suitable rate
-it makes sense to reorder the check for the "last" rate since in most
-cases we won't hit the maximum number of tried rates.
+On Mon, 2011-11-07 at 15:54 +0100, voncken wrote:
+> Hi,
+> 
+>     I am currently trying to use rstp protocol (using rstpd ) over
+> wireless interfaces (ath9k) and I've noticed some strange hostapd
+> behaviour.
+> 
+>     Everything seems to work great with wired Ethernet devices.
+> 
+>     this is what I do : 
+> 	- I have configured an AP (with hostapd), and it works perfectly
+> (beacons were sent)
+>     	- ifconfig wlanx down
+> 	- ifconfig wlanx up
+> 
+>     after the ifconfig up, the wlanx does not send any beacons although
+> clients are perfectly able to associate with (WPA-SUPPLICANT does an
+> active scan).
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- net/mac80211/rc80211_minstrel_ht.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+You can't do that. If you set down everything is unconfigured. If you
+need to take it down/up then you need to do that before you start
+hostapd.
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index cdb2853..63f1821 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -421,8 +421,8 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 		mi->sample_packets += info->status.ampdu_len;
- 
- 	for (i = 0; !last; i++) {
--		last = (i == IEEE80211_TX_MAX_RATES - 1) ||
--		       !minstrel_ht_txstat_valid(&ar[i + 1]);
-+		last = !minstrel_ht_txstat_valid(&ar[i + 1]) ||
-+		       (i == IEEE80211_TX_MAX_RATES - 1);
- 
- 		if (!minstrel_ht_txstat_valid(&ar[i]))
- 			break;
--- 
-1.7.3.4
+johannes
 
