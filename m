@@ -1,72 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:48405 "EHLO
-	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754501Ab1KIWzu (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:48618 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751870Ab1KGV4V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 17:55:50 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 9 Nov 2011 14:55:41 -0800
-Subject: RE: New wireless-testing has grown some warnings -- please fix ASAP!
-Message-ID: <477F20668A386D41ADCC57781B1F7043081825859C@SC-VEXCH1.marvell.com> (sfid-20111109_235553_510922_0FA2A9F1)
-References: <20111109215007.GD10712@tuxdriver.com>
-In-Reply-To: <20111109215007.GD10712@tuxdriver.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Mon, 7 Nov 2011 16:56:21 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] iw: Support ht-capability overrides mask.
+Date: Mon,  7 Nov 2011 13:56:16 -0800
+Message-Id: <1320702976-14090-1-git-send-email-greearb@candelatech.com> (sfid-20111107_225624_157905_D430530F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9obiwNCg0KPiAgIENDIFtNXSAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9jZmc4
-MDIxMS5vDQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY2ZnODAyMTEuYzogSW4gZnVu
-Y3Rpb24g4oCYbXdpZmlleF9jZmc4MDIxMV9pbmZvcm1faWJzc19ic3PigJk6DQo+IGRyaXZlcnMv
-bmV0L3dpcmVsZXNzL213aWZpZXgvY2ZnODAyMTEuYzo4MDM6MjE6IHdhcm5pbmc6IGlnbm9yaW5n
-IHJldHVybiB2YWx1ZSBvZg0KPiDigJhjZmc4MDIxMV9pbmZvcm1fYnNz4oCZLCBkZWNsYXJlZCB3
-aXRoIGF0dHJpYnV0ZSB3YXJuX3VudXNlZF9yZXN1bHQNCg0KVGhlIFtQQVRDSCA3LzddIEkgc2Vu
-dCB5ZXN0ZXJkYXkgKGNvcGllZCAmIHBhc3RlZCBiZWxvdykgZml4ZWQgdGhlIHdhcm5pbmcgaW4g
-bXdpZmlleC4NCg0KVGhhbmtzLA0KQmluZw0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0K
-RnJvbTogQmluZyBaaGFvIFttYWlsdG86YnpoYW9AbWFydmVsbC5jb21dIA0KU2VudDogTW9uZGF5
-LCBOb3ZlbWJlciAwNywgMjAxMSA5OjQxIFBNDQpUbzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
-ZWwub3JnDQpDYzogSm9obiBXLiBMaW52aWxsZTsgQW1pdGt1bWFyIEthcndhcjsgS2lyYW4gRGl2
-ZWthcjsgWW9nZXNoIFBvd2FyOyBGcmFuayBIdWFuZzsgQmluZyBaaGFvOyBKb2hhbm5lcyBCZXJn
-DQpTdWJqZWN0OiBbUEFUQ0ggNy83XSBtd2lmaWV4OiByZWxlYXNlIGJzcyBzdHJ1Y3R1cmUgcmV0
-dXJuZWQgYnkgY2ZnODAyMTFfaW5mb3JtX2JzcygpDQoNCkZyb206IEFtaXRrdW1hciBLYXJ3YXIg
-PGFrYXJ3YXJAbWFydmVsbC5jb20+DQoNCkZvbGxvd2luZyBjb21waWxhdGlvbiB3YXJuaW5nIGlz
-IGZpeGVkIGJ5IHJlbGVhc2luZyByZWZlcmVuY2VkIEJTUw0Kc3RydWN0dXJlIHJldHVybmVkIGJ5
-IGNmZzgwMjExX2luZm9ybV9ic3MoKS4NCg0KIndhcm5pbmc6IGlnbm9yaW5nIHJldHVybiB2YWx1
-ZSBvZiBjZmc4MDIxMV9pbmZvcm1fYnNzLA0KZGVjbGFyZWQgd2l0aCBhdHRyaWJ1dGUgd2Fybl91
-bnVzZWRfcmVzdWx0Ig0KDQpDYzogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXMuYmVyZ0BpbnRlbC5j
-b20+DQpTaWduZWQtb2ZmLWJ5OiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29t
-Pg0KU2lnbmVkLW9mZi1ieTogQmluZyBaaGFvIDxiemhhb0BtYXJ2ZWxsLmNvbT4NCi0tLQ0KVGhp
-cyBwYXRjaCBmaXhlcyB0aGUgYnVnIG1lbnRpb25lZCBieSBKb2hhbm5lcyBCZXJnOg0KU2VlICJb
-UEFUQ0hdIGNmZzgwMjExOiBhbm5vdGF0ZSBjZmc4MDIxMV9pbmZvcm1fYnNzIg0KDQogZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvbXdpZmlleC9jZmc4MDIxMS5jIHwgICAgNCArKystDQogZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvbXdpZmlleC9zY2FuLmMgICAgIHwgICAgMSArDQogMiBmaWxlcyBjaGFuZ2Vk
-LCA0IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJz
-L25ldC93aXJlbGVzcy9td2lmaWV4L2NmZzgwMjExLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9t
-d2lmaWV4L2NmZzgwMjExLmMNCmluZGV4IDQ2MmM3MTAuLmU5YWI5YTMgMTAwNjQ0DQotLS0gYS9k
-cml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NmZzgwMjExLmMNCisrKyBiL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL213aWZpZXgvY2ZnODAyMTEuYw0KQEAgLTc4MCw2ICs3ODAsNyBAQCBzdGF0aWMg
-aW50IG13aWZpZXhfY2ZnODAyMTFfaW5mb3JtX2lic3NfYnNzKHN0cnVjdCBtd2lmaWV4X3ByaXZh
-dGUgKnByaXYpDQogew0KIAlzdHJ1Y3QgaWVlZTgwMjExX2NoYW5uZWwgKmNoYW47DQogCXN0cnVj
-dCBtd2lmaWV4X2Jzc19pbmZvIGJzc19pbmZvOw0KKwlzdHJ1Y3QgY2ZnODAyMTFfYnNzICpic3M7
-DQogCWludCBpZV9sZW47DQogCXU4IGllX2J1ZltJRUVFODAyMTFfTUFYX1NTSURfTEVOICsgc2l6
-ZW9mKHN0cnVjdCBpZWVlX3R5cGVzX2hlYWRlcildOw0KIAllbnVtIGllZWU4MDIxMV9iYW5kIGJh
-bmQ7DQpAQCAtODAwLDkgKzgwMSwxMCBAQCBzdGF0aWMgaW50IG13aWZpZXhfY2ZnODAyMTFfaW5m
-b3JtX2lic3NfYnNzKHN0cnVjdCBtd2lmaWV4X3ByaXZhdGUgKnByaXYpDQogCQkJaWVlZTgwMjEx
-X2NoYW5uZWxfdG9fZnJlcXVlbmN5KGJzc19pbmZvLmJzc19jaGFuLA0KIAkJCQkJCSAgICAgICBi
-YW5kKSk7DQogDQotCWNmZzgwMjExX2luZm9ybV9ic3MocHJpdi0+d2Rldi0+d2lwaHksIGNoYW4s
-DQorCWJzcyA9IGNmZzgwMjExX2luZm9ybV9ic3MocHJpdi0+d2Rldi0+d2lwaHksIGNoYW4sDQog
-CQlic3NfaW5mby5ic3NpZCwgMCwgV0xBTl9DQVBBQklMSVRZX0lCU1MsDQogCQkwLCBpZV9idWYs
-IGllX2xlbiwgMCwgR0ZQX0tFUk5FTCk7DQorCWNmZzgwMjExX3B1dF9ic3MoYnNzKTsNCiAJbWVt
-Y3B5KHByaXYtPmNmZ19ic3NpZCwgYnNzX2luZm8uYnNzaWQsIEVUSF9BTEVOKTsNCiANCiAJcmV0
-dXJuIDA7DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zY2FuLmMg
-Yi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3NjYW4uYw0KaW5kZXggYzY1MGU2MC4uOGEx
-OGJjYyAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Nhbi5jDQor
-KysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3NjYW4uYw0KQEAgLTE3NjAsNiArMTc2
-MCw3IEBAIGludCBtd2lmaWV4X3JldF84MDJfMTFfc2NhbihzdHJ1Y3QgbXdpZmlleF9wcml2YXRl
-ICpwcml2LA0KIAkJCQkJICAgICAgY2FwX2luZm9fYml0bWFwLCBiZWFjb25fcGVyaW9kLA0KIAkJ
-CQkJICAgICAgaWVfYnVmLCBpZV9sZW4sIHJzc2ksIEdGUF9LRVJORUwpOw0KIAkJCQkqKHU4ICop
-YnNzLT5wcml2ID0gYmFuZDsNCisJCQkJY2ZnODAyMTFfcHV0X2Jzcyhic3MpOw0KIA0KIAkJCQlp
-ZiAocHJpdi0+bWVkaWFfY29ubmVjdGVkICYmICFtZW1jbXAoYnNzaWQsDQogCQkJCQlwcml2LT5j
-dXJyX2Jzc19wYXJhbXMuYnNzX2Rlc2NyaXB0b3INCi0tIA0KMS43LjAuMg0K
+From: Ben Greear <greearb@candelatech.com>
+
+Let user know which capabilities are supported.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+
+NOTE:  This should not be applied until the kernel portions
+are accepted.
+
+:100644 100644 b55b282... fdb523d... M	info.c
+:100644 100644 8049bf7... 20710b1... M	nl80211.h
+ info.c    |   32 ++++++++++++++++++++++++++++++++
+ nl80211.h |   53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 85 insertions(+), 0 deletions(-)
+
+diff --git a/info.c b/info.c
+index b55b282..fdb523d 100644
+--- a/info.c
++++ b/info.c
+@@ -400,6 +400,38 @@ broken_combination:
+ 	if (tb_msg[NL80211_ATTR_SUPPORT_AP_UAPSD])
+ 		printf("\tDevice supports AP-side u-APSD.\n");
+ 
++	if (tb_msg[NL80211_ATTR_HT_CAPABILITY_MASK]) {
++		struct ieee80211_ht_cap *cm;
++		printf("\tHT Capabilities over-rides:\n");
++		if (nla_len(tb_msg[NL80211_ATTR_HT_CAPABILITY_MASK]) >=
++		    sizeof(*cm)) {
++			cm = nla_data(tb_msg[NL80211_ATTR_HT_CAPABILITY_MASK]);
++			printf("\t\t* MCS: %02hx %02hx %02hx %02hx %02hx %02hx"
++			       " %02hx %02hx %02hx %02hx\n",
++			       cm->mcs.rx_mask[0], cm->mcs.rx_mask[1],
++			       cm->mcs.rx_mask[2], cm->mcs.rx_mask[3],
++			       cm->mcs.rx_mask[4], cm->mcs.rx_mask[5],
++			       cm->mcs.rx_mask[6], cm->mcs.rx_mask[7],
++			       cm->mcs.rx_mask[8], cm->mcs.rx_mask[9]);
++			printf("\t\t* MAX-AMSDU:     %s\n"
++			       "\t\t* WIDTH-20-40:   %s\n"
++			       "\t\t* SGI-40:        %s\n"
++			       "\t\t* AMPDU-Factor:  %s\n"
++			       "\t\t* AMPDU-Density: %s\n",
++			       cm->cap_info & IEEE80211_HT_CAP_MAX_AMSDU ? "Yes" : "No",
++			       cm->cap_info & IEEE80211_HT_CAP_SUP_WIDTH_20_40 ? "Yes" : "No",
++			       cm->cap_info & IEEE80211_HT_CAP_SGI_40 ? "Yes" : "No",
++			       cm->ampdu_params_info & IEEE80211_HT_AMPDU_PARM_FACTOR ? "Yes" : "No",
++			       cm->ampdu_params_info & IEEE80211_HT_AMPDU_PARM_DENSITY ? "Yes" : "No");
++		} else {
++			printf("\tERROR:  capabilities mask is too short, expected: %d"
++			       ", received: %d\n",
++			       sizeof(*cm), nla_len(tb_msg[NL80211_ATTR_HT_CAPABILITY_MASK]));
++		}
++	} else {
++		printf("\tHT Capabilities over-rides are NOT supported.\n");
++	}
++
+ 	return NL_SKIP;
+ }
+ 
+diff --git a/nl80211.h b/nl80211.h
+index 8049bf7..20710b1 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -1109,6 +1109,10 @@ enum nl80211_commands {
+  *	%NL80211_CMD_TDLS_MGMT. Otherwise %NL80211_CMD_TDLS_OPER should be
+  *	used for asking the driver to perform a TDLS operation.
+  *
++ * @NL80211_ATTR_DISABLE_HT:  Force HT capable interfaces to disable
++ *      this feature.
++ * @NL80211_ATTR_HT_CAPABILITY_MASK: Specify which bits of the HT_CAPs
++ *      to pay attention to.
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1337,6 +1341,9 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_TDLS_SUPPORT,
+ 	NL80211_ATTR_TDLS_EXTERNAL_SETUP,
+ 
++	NL80211_ATTR_DISABLE_HT,
++	NL80211_ATTR_HT_CAPABILITY_MASK,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -1421,6 +1428,52 @@ enum nl80211_iftype {
+ 	NL80211_IFTYPE_MAX = NUM_NL80211_IFTYPES - 1
+ };
+ 
++/* 802.11n HT capability AMPDU settings (for ampdu_params_info) */
++#define IEEE80211_HT_AMPDU_PARM_FACTOR          0x03
++#define IEEE80211_HT_AMPDU_PARM_DENSITY         0x1C
++
++#define IEEE80211_HT_CAP_SUP_WIDTH_20_40        0x0002
++#define IEEE80211_HT_CAP_SGI_40                 0x0040
++#define IEEE80211_HT_CAP_MAX_AMSDU              0x0800
++
++#define IEEE80211_HT_MCS_MASK_LEN               10
++
++/**
++ * struct ieee80211_mcs_info - MCS information
++ * @rx_mask: RX mask
++ * @rx_highest: highest supported RX rate. If set represents
++ *      the highest supported RX data rate in units of 1 Mbps.
++ *      If this field is 0 this value should not be used to
++ *      consider the highest RX data rate supported.
++ * @tx_params: TX parameters
++ */
++struct ieee80211_mcs_info {
++	__u8 rx_mask[IEEE80211_HT_MCS_MASK_LEN];
++	__u16 rx_highest;
++	__u8 tx_params;
++	__u8 reserved[3];
++} __attribute__ ((packed));
++
++
++/**
++ * struct ieee80211_ht_cap - HT capabilities
++ *
++ * This structure is the "HT capabilities element" as
++ * described in 802.11n D5.0 7.3.2.57
++ */
++struct ieee80211_ht_cap {
++	__u16 cap_info;
++	__u8 ampdu_params_info;
++
++	/* 16 bytes MCS information */
++	struct ieee80211_mcs_info mcs;
++
++	__u16 extended_ht_cap_info;
++	__u32 tx_BF_cap_info;
++	__u8 antenna_selection_info;
++} __attribute__ ((packed));
++
++
+ /**
+  * enum nl80211_sta_flags - station flags
+  *
+-- 
+1.7.3.4
+
