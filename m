@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from imr-da02.mx.aol.com ([205.188.105.144]:49500 "EHLO
-	imr-da02.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753395Ab1K2Sy2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38852 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752640Ab1KGJ4B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 13:54:28 -0500
-Message-ID: <4ED52A56.3030804@aol.com> (sfid-20111129_195432_069669_C3C4FBA4)
-Date: Tue, 29 Nov 2011 13:54:14 -0500
-From: AndrewL733 <AndrewL733@aol.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Making Progress Re: Trouble with Macbook Pro 8,2 (broadcom 4331)
- and latest b43
-References: <4ED3A6E8.4050000@aol.com> <CACna6ryNkHeVXWXxFfod1-KQs8HQVv7wF-xpY5MA-Qs6fCypCg@mail.gmail.com> <CACna6rzRJgfddE4jPivxBJCCZEyKSHsdRX7cE15rRxk2nhiRkA@mail.gmail.com> <4ED3B33E.8020309@lwfinger.net> <4ED3FA65.7010104@aol.com> <CACna6rw1gEjd_hcX=5hLHt0YwUqDaVBs7_MO50GLKeok57YtVw@mail.gmail.com> <4ED51DB5.5090202@aol.com>
-In-Reply-To: <4ED51DB5.5090202@aol.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 7 Nov 2011 04:56:01 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.77)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1RNLvs-0006HU-1i
+	for linux-wireless@vger.kernel.org; Mon, 07 Nov 2011 10:56:00 +0100
+Subject: Re: [ANN] iw: v3.2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <E1RNLZe-0005kI-RP@sipsolutions.net>
+References: <E1RNLZe-0005kI-RP@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Nov 2011 10:55:55 +0100
+Message-ID: <1320659755.3993.33.camel@jlt3.sipsolutions.net> (sfid-20111107_105611_042860_E299639A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2011-11-07 at 10:34 +0100, wireless@sipsolutions.net wrote:
+> A new release of iw (v3.2) is available at:
+> 
+> http://wireless.kernel.org/download/iw/iw-3.2.tar.bz2
+> 
+> SHA1 sum: 2871d58ab1f8d5b2b8d548d57489873f21c085be
+> 
+> Here is the short log of the changes (since v0.9.22)
+> included in this release:
 
->>> Hi,
->>>
->>> Thanks for the suggestions.  Nothing solving the problem so far.
->>>
->>> I meant
->>> find /lib/modules -name "b43.ko"
->>>
->>>
->>> What is the point of looking for b43.ko?  It exists for my running 
->>> kernel.
->> I believe b43.ko from compat-wireless should be put in some specific
->> subdirectory, probably "extra". AFAIR it's
->> /lib/modules/SOMEKERNEL/extra/...
->>
->> If you can see only default b43.ko, it means compat-wireless didn't
->> install successfully.
->>
-> Thanks for your reply.
->
-> You are absolutely right.  My Mandriva kernel's name is 
-> 3.1.2-1.1-desktop but the compat-wireless "make install" is installing 
-> everything in the directory /lib/modules/3.1.2-1-desktop/updates.  The 
-> install path is missing the ".1" before the "-desktop".
-> .....
->
-> How can I instruct "make install" to put the drivers in the correct 
-> path?  I'm going to try to just copy everything to the correct place 
-> and run depmod  and see what happens.  Maybe that'll work??
->
-> Andy
-Okay, I copied the contents of /lib/modules/3.1.2-1-desktop/updates to 
-/lib/modules/3.1.2-1.1-desktop/.  I then renamed "updates" to "extra" 
-and ran depmod.  Now when I run "modinfo b43" it points to the new 
-compat-wireless version of b43 instead of pointing to the distro 
-version.   When I LOAD b43, iwconfig shows a wlan0.  So, we are making 
-progress.
+This is an artifact of how I created 3.0 and 3.1, the log since 3.1 is
+shorter:
 
-But now, to do things the "Mandriva way", I am supposed to launch the 
-"Mandriva Control Center"  (drakconf), go to the "Manage you network 
-devices" section and "add" the wlan0 interface to my system. (The idea 
-is to then allow Network Manager to manage the connection moving 
-forward, but first you have to enable the connection.) When I try to add 
-wlan0 to my network configuration, I get a dialog box asking me which 
-firmware file to use?  Basically, it wants me to navigate to 
-/lib/firmware/b43/ and select one of the "ucode" files.  With the 
-previous Macbook Pro 8,2, I think I selected ucode13.fw and it worked 
-fine.  But what is the correct way to select the proper firmware without 
-guessing?
+Christian Lamparter (1):
+      iw: fix HT PHY BSS Membership selector value encoding
 
-When I was trying to load the "distro b43" driver, dmesg was telling me 
-the driver needed "FW13".  Does that mean anything?
+Helmut Schaa (1):
+      iw: show STA flags in station dump
 
-Andy
+Javier Cardona (1):
+      support for setting RANN interval and mesh gate
+
+Johannes Berg (11):
+      update nl80211.h
+      update nl80211.h
+      print roam capability
+      show supported ciphers
+      print PHY membership selector only for membership rates
+      SSID printing: escape space at beginning end, backslash
+      print wiphy idx in iface info
+      update nl80211.h
+      print PMKSA candidate event
+      print out AP-side uAPSD support
+      update version to 3.2
+
+Yegor Yefremov (1):
+      iw: add libnl-3.0 support
+
+
+johannes
+
