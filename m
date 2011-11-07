@@ -1,34 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:16429 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750880Ab1KBT5g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 15:57:36 -0400
-Subject: Re: [PATCH 3.1] iwlwifi: remove un-needed out_iounmap label
-From: wwguy <wey-yi.w.guy@intel.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:55099 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750741Ab1KGVW2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Nov 2011 16:22:28 -0500
+Received: by bke11 with SMTP id 11so4024925bke.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Nov 2011 13:22:27 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20111107181135.GD2798@tuxdriver.com>
+References: <1319636866-12171-1-git-send-email-arik@wizery.com>
+ <20111027142248.GA3972@jm.kir.nu> <20111107181135.GD2798@tuxdriver.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 7 Nov 2011 23:22:11 +0200
+Message-ID: <CA+XVXffLpuw-3R3xtcbbJNDgv9LBLO=C4_FKZ2+6beCUJ0D91g@mail.gmail.com> (sfid-20111107_222232_428322_2A534263)
+Subject: Re: [PATCH] mac80211: init rate-control for TDLS sta when supp-rates
+ are known
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20111102194433.GA16597@tuxdriver.com>
-References: <1319765778-8868-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <20111102194433.GA16597@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 02 Nov 2011 12:51:34 -0700
-Message-ID: <1320263494.13578.13.camel@wwguy-ubuntu> (sfid-20111102_205739_866948_9F922D35)
-Mime-Version: 1.0
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-11-02 at 12:44 -0700, John W. Linville wrote:
-> On Thu, Oct 27, 2011 at 06:36:18PM -0700, Wey-Yi Guy wrote:
-> > out_iounmap is no longer used, remove it
-> > 
-> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > ---
-> > apply this patch after "iwlwifi-allow-pci_enable_msi-fail.patch"
-> 
-> FWIW, I combined this patch with the earlier one.
-> 
-thank you, should do that at the first place :-)
+On Mon, Nov 7, 2011 at 20:11, John W. Linville <linville@tuxdriver.com> wrote:
+> I merged this patch from Jouni:
+>
+>        commit e3a4cc2f073739c9c9c2e97efc774703061f034a
+>        Author: Jouni Malinen <j@w1.fi>
+>        Date:   Sun Oct 23 22:36:04 2011 +0300
+>
+>            mac80211: Fix TDLS support validation in add_station handler
+>
+>            We need to verify whether the command is successful before allocating
+>            the station entry to avoid extra processing. This also fixes a memory
+>            leak on the error path.
+>
+>            Signed-off-by: Jouni Malinen <j@w1.fi>
+>            Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>
+> I'm not sure what to do with this patch now.  I think I will just drop
+> it, and you can send me a new patch that applies on top of Jouni's
+> (perhaps even reverting it) as appropriate?
 
-Wey
+Actually the merged patch from Jouni is unrelated to this fix (and
+should have been merged). There's a different patch from Jouni that
+should not be applied - "mac80211: Fix STA supported rate
+configuration with dummy entry".
 
+I'll resend this one after rebasing to the latest wireless-testing
+(there was a conflict).
 
+Arik
