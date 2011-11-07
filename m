@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2580 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751172Ab1K3FMi (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:44984 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754167Ab1KGLr3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 00:12:38 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Russell Hu <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Wilson Tsao <wtsao@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 06/17] ath9k: Add MCI interrupt to interrupt mask
-Date: Wed, 30 Nov 2011 10:41:18 +0530
-Message-ID: <1322629889-19961-7-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_061240_586675_6C27ABB1)
-In-Reply-To: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
+	Mon, 7 Nov 2011 06:47:29 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1320586010-21931-4-git-send-email-julia@diku.dk>
+References: <1320586010-21931-1-git-send-email-julia@diku.dk>
+	<1320586010-21931-4-git-send-email-julia@diku.dk>
+Date: Mon, 7 Nov 2011 13:47:27 +0200
+Message-ID: <CAB3XZEfHV+sO=+vJdZUQVqXFtHvZyhJQ1Cm8LJ8Puyz9eqq9Kg@mail.gmail.com> (sfid-20111107_124748_386623_7AC17141)
+Subject: Re: [PATCH 3/5] net/mac80211/debugfs.c: use kstrtoul, etc
+From: Eliad Peller <eliad@wizery.com>
+To: Julia Lawall <julia@diku.dk>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	kernel-janitors@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Sun, Nov 6, 2011 at 3:26 PM, Julia Lawall <julia@diku.dk> wrote:
+> From: Julia Lawall <julia@diku.dk>
+>
+> Use kstrtoul, etc instead of the now deprecated strict_strtoul, etc.
+>
+> A semantic patch rule for the kstrtoul case is as follows:
+> (http://coccinelle.lip6.fr/)
+>
+> // <smpl>
+> @@
+> expression a,b;
+> {int,long} *c;
+> @@
+>
+> -strict_strtoul
+> +kstrtoul
+>  (a,b,c)
+> // </smpl>
+>
+> Signed-off-by: Julia Lawall <julia@diku.dk>
+>
+> ---
+>  net/mac80211/debugfs.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff -u -p a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+> --- a/net/mac80211/debugfs.c
+> +++ b/net/mac80211/debugfs.c
+> @@ -190,7 +190,7 @@ static ssize_t uapsd_max_sp_len_write(st
+>                return -EFAULT;
+>        buf[len] = '\0';
+>
+> -       ret = strict_strtoul(buf, 0, &val);
+> +       ret = kstrtoul(buf, 0, &val);
+>
+>        if (ret)
+>                return -EINVAL;
+>
 
-Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+maybe while cleaning it up change copy_from_user +
+strict_stroul/kstroul -> kstroul_from_user?
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index e43c41c..90d35f2 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -764,7 +764,8 @@ irqreturn_t ath_isr(int irq, void *dev)
- 		ATH9K_INT_BMISS |		\
- 		ATH9K_INT_CST |			\
- 		ATH9K_INT_TSFOOR |		\
--		ATH9K_INT_GENTIMER)
-+		ATH9K_INT_GENTIMER |		\
-+		ATH9K_INT_MCI)
- 
- 	struct ath_softc *sc = dev;
- 	struct ath_hw *ah = sc->sc_ah;
-@@ -1119,6 +1120,9 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_HT)
- 		ah->imask |= ATH9K_INT_CST;
- 
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
-+		ah->imask |= ATH9K_INT_MCI;
-+
- 	sc->sc_flags &= ~SC_OP_INVALID;
- 	sc->sc_ah->is_monitoring = false;
- 
--- 
-1.7.0.4
-
+Eliad.
