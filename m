@@ -1,61 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:55241 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751840Ab1KHOH5 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42556 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750771Ab1KGF1p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 09:07:57 -0500
-Received: by wwi36 with SMTP id 36so796692wwi.1
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 06:07:56 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: don't explicitly check for unjoined ibss
-Date: Tue,  8 Nov 2011 16:07:52 +0200
-Message-Id: <1320761272-20915-1-git-send-email-eliad@wizery.com> (sfid-20111108_150800_412316_917266DE)
+	Mon, 7 Nov 2011 00:27:45 -0500
+From: Raja Mani <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH v2 08/11] ath6kl: Perform WOW resume in RX path in case of SDIO IRQ wake up
+Date: Mon, 7 Nov 2011 10:55:44 +0530
+Message-ID: <1320643547-3578-9-git-send-email-rmani@qca.qualcomm.com> (sfid-20111107_062747_474832_04EFF5C0)
+In-Reply-To: <1320643547-3578-1-git-send-email-rmani@qca.qualcomm.com>
+References: <1320643547-3578-1-git-send-email-rmani@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After the ibss carrier issue was fixed, we can revert
-the following patch:
+The target triggers sdio data line to wake up the host when
+WOW pattern matches. This causes sdio irq handler is being
+executed in the host side which internally hits ath6kl's RX path.
 
-commit 48309fd477ef867babb6819f67fe082c133a5fa9
-Author: Shahar Lev <shahar@wizery.com>
-Date:   Fri Oct 7 18:17:25 2011 +0200
+WOW resume should happen before start processing any data from
+the target. So it's required to perform WOW resume in RX path.
 
-    wl12xx: remove warning message during IBSS Tx
+This area needs bit rework to avoid WOW resume in RX path,
+As of now it's fine to have this model, rework will be done later.
 
-    mac80211 sets the carrier on an IBSS interface even when no network is
-    joined. Ignore garbage frames transmitted on a disconnected IBSS
-    interface without printing warnings.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 ---
-depends on "mac80211: set carrier_on for ibss vifs only while joined"
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   28 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/core.h     |    1 +
+ drivers/net/wireless/ath/ath6kl/txrx.c     |    2 ++
+ 3 files changed, 31 insertions(+), 0 deletions(-)
 
- drivers/net/wireless/wl12xx/tx.c |   10 +---------
- 1 files changed, 1 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 3a9d2a6..c12645c 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -425,15 +425,7 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	}
- 	hlid = wl12xx_tx_get_hlid(wl, wlvif, skb);
- 	if (hlid == WL12XX_INVALID_LINK_ID) {
--		if (wlvif->bss_type == BSS_TYPE_IBSS &&
--		    !test_bit(WLVIF_FLAG_IBSS_JOINED, &wlvif->flags)) {
--			/* It's ok to drop packets when not joined to IBSS */
--			wl1271_debug(DEBUG_TX, "dropping skb while IBSS not "
--				     " joined");
--		} else {
--			wl1271_error("invalid hlid. dropping skb 0x%p", skb);
--		}
--
-+		wl1271_error("invalid hlid. dropping skb 0x%p", skb);
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 42dcbea..f524276 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1886,6 +1886,34 @@ static int __ath6kl_cfg80211_resume(struct wiphy *wiphy)
+ 
+ 	return ath6kl_hif_resume(ar);
+ }
++
++/*
++ * FIXME: WOW suspend mode is selected if the host sdio controller supports
++ * both sdio irq wake up and keep power. The target pulls sdio data line to
++ * wake up the host when WOW pattern matches. This causes sdio irq handler
++ * is being called in the host side which internally hits ath6kl's RX path.
++ *
++ * Since sdio interrupt is not disabled, RX path executes even before
++ * the host executes the actual resume operation from PM module.
++ *
++ * In the current scenario, WOW resume should happen before start processing
++ * any data from the target. So It's required to perform WOW resume in RX path.
++ * Ideally we should perform WOW resume only in the actual platform
++ * resume path. This area needs bit rework to avoid WOW resume in RX path.
++ *
++ * ath6kl_check_wow_status() is called from ath6kl_rx().
++ */
++void ath6kl_check_wow_status(struct ath6kl *ar)
++{
++	if (ar->state == ATH6KL_STATE_WOW)
++		ath6kl_cfg80211_resume(ar);
++}
++
++#else
++
++void ath6kl_check_wow_status(struct ath6kl *ar)
++{
++}
+ #endif
+ 
+ static int ath6kl_set_channel(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 9e8b8e3..e7e095e 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -678,5 +678,6 @@ struct ath6kl_vif *ath6kl_vif_first(struct ath6kl *ar);
+ void ath6kl_cleanup_vif(struct ath6kl_vif *vif, bool wmi_ready);
+ int ath6kl_init_hw_start(struct ath6kl *ar);
+ int ath6kl_init_hw_stop(struct ath6kl *ar);
++void ath6kl_check_wow_status(struct ath6kl *ar);
+ 
+ #endif /* CORE_H */
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 06e4912..6f1de44 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -1134,6 +1134,8 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 		return;
  	}
  
++	ath6kl_check_wow_status(ar);
++
+ 	if (ept == ar->ctrl_ep) {
+ 		ath6kl_wmi_control_rx(ar->wmi, skb);
+ 		return;
 -- 
-1.7.6.401.g6a319
+1.7.1
 
