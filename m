@@ -1,45 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:51055 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751294Ab1KNRaK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39046 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082Ab1KGIuC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 12:30:10 -0500
-Subject: [PATCH 00/10] ath6kl: configurable board address and multivif
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 14 Nov 2011 19:29:54 +0200
-Message-ID: <20111114172836.29925.4134.stgit@localhost6.localdomain6> (sfid-20111114_183017_044392_8559F8AF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 7 Nov 2011 03:50:02 -0500
+Subject: Re: [PATCH 05/12] nl80211: advertise device AP SME
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <anamtsov@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <CA+XVXfemN4dZC2GkKqpvGsFxs81dST4Mth0rEDd-MQrXc8rnXw@mail.gmail.com> (sfid-20111107_093026_977912_651FE7AA)
+References: <20111104101809.711636760@sipsolutions.net>
+	 <20111104101943.704950080@sipsolutions.net>
+	 <CA+XVXfemN4dZC2GkKqpvGsFxs81dST4Mth0rEDd-MQrXc8rnXw@mail.gmail.com>
+	 (sfid-20111107_093026_977912_651FE7AA)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Nov 2011 09:49:57 +0100
+Message-ID: <1320655797.3993.12.camel@jlt3.sipsolutions.net> (sfid-20111107_095006_842508_74ACBABE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Read board address and max number of vif interfaces from firmware.
-Also some cleanup in init.c.
+On Mon, 2011-11-07 at 10:29 +0200, Arik Nemtsov wrote:
 
----
+> > +/**
+> > + * enum nl80211_ap_sme_features - device-integrated AP features
+> > + * @NL80211_AP_SME_WSC: The driver is capable of indicating received probe
+> > + *     request frames to userspace via management frame subscription events
+> > + *     if the payload includes the WSC IE. The driver is capable of adding
+> > + *     the WSC IE as configured from userspace into beacons, probe responses
+> > + *     and (re)association reponse frame and allows userspace to update them
+> > + *     during the lifetime of the BSS.
+> > + */
+> > +enum nl80211_ap_sme_features {
+> > +       NL80211_AP_SME_WSC      = 1 << 0,
+> > +};
+> 
+> Perhaps we should break up this feature into two? With the upcoming
+> probe-resp patches a wl12xx card will be able to indicate
+> probe-requests with WSC IE up, but won't be able to add a userspace
+> provided WSC IE into beacons.
 
-Kalle Valo (10):
-      ath6kl: remove hw version related parameter defines
-      ath6kl: move hw version related to parameters to struct
-      ath6kl: add board address to struct ath6kl_hw
-      ath6kl: add firmware IE for board data address
-      ath6kl: add name field to struct ath6kl_hw
-      ath6kl: use hardware version names consistently
-      ath6kl: add ar6004 firmwares to sdio module
-      ath6kl: add firmware filename info to struct ath6kl_hw
-      ath6kl: make maximum number of vifs runtime configurable
-      ath6kl: add firmware IE for maximum number of vifs
+Break up how? wl12xx obviously wouldn't say it has AP SME included.
+Also, I think here it is actually still doing this by reporting probe
+requests up, but it's somewhat different.
+
+> Also I'm wondering what this is used for. For instance this contains
+> no indication about WPS1 and p2p. Pretty sure ath6kl handles these in
+> a similar fashion (at least for the put-IE-from-userspace-in-beacon
+> part).
+
+Yeah. This was more or less a placeholder, I guess we need more info
+from the ath6kl people.
+
+> And as a final nit-pick, I think WPS2 is more appropriate, as this is
+> also the name of the option in the hostapd code and config file.
+
+Good point. Let's discuss the bits & the behaviour a bit more, although
+I hate having to postpone the patchset for it :-)
 
 
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 -
- drivers/net/wireless/ath/ath6kl/core.h     |   82 +++++---
- drivers/net/wireless/ath/ath6kl/init.c     |  299 +++++++++++++++-------------
- drivers/net/wireless/ath/ath6kl/main.c     |   21 --
- drivers/net/wireless/ath/ath6kl/sdio.c     |   26 +-
- drivers/net/wireless/ath/ath6kl/target.h   |   17 --
- drivers/net/wireless/ath/ath6kl/txrx.c     |    2 
- drivers/net/wireless/ath/ath6kl/usb.c      |   12 +
- drivers/net/wireless/ath/ath6kl/wmi.c      |    6 -
- 9 files changed, 247 insertions(+), 226 deletions(-)
+I think the thing here is that we approach a middle ground from two
+different sides. With mac80211, we typically handle everything on the
+host, so things like replying to probe requests is an offload. With
+AP_SME, we initially expect everything to be handled on the device and
+approach middle ground by not replying to WPS probe requests. I thought
+it makes sense to put these into different attributes rather than use
+the same probe response offload attribute you have for wl12xx, but I'll
+admit that the semantics are pretty similar.
+However, I could see much more features come into play here, for example
+FT would probably not be a feature an AP_SME device has, but for
+mac80211 based drivers it's obviously just implemented in hostapd. So
+such a feature might also need a bit in this new bitfield.
+
+johannes
+
