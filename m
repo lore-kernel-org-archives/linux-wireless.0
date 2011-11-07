@@ -1,478 +1,361 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:42521 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755915Ab1KDRTp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 13:19:45 -0400
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Cc: rodrigue@qca.qualcomm.com, nbd@openwrt.org,
-	shafi.wireless@gmail.com, chunkeey@googlemail.com, peter@stuge.se,
-	Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Subject: [RFC v3 1/2] ath9k: add DFS radar pulse processing
-Date: Fri,  4 Nov 2011 18:19:18 +0100
-Message-Id: <1320427159-18509-2-git-send-email-zefir.kurtisi@neratec.com> (sfid-20111104_181951_255265_E99806F5)
-In-Reply-To: <1320427159-18509-1-git-send-email-zefir.kurtisi@neratec.com>
-References: <1320427159-18509-1-git-send-email-zefir.kurtisi@neratec.com>
+Received: from mail.candelatech.com ([208.74.158.172]:51716 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751750Ab1KGXOp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Nov 2011 18:14:45 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v6 1/2] wireless:  Support ht-capabilities over-rides.
+Date: Mon,  7 Nov 2011 15:14:35 -0800
+Message-Id: <1320707676-17255-1-git-send-email-greearb@candelatech.com> (sfid-20111108_001449_233997_95FF19FA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This initial DFS module provides basic functionality to deal with
-radar pulses reported by the DFS HW pulse detector.
+From: Ben Greear <greearb@candelatech.com>
 
-The reported data is evaluated and basic plausibility checks are
-performed to filter false pulses. Passing radar pulses are
-forwarded to pattern detectors (not part of this patch).
+This allows users to disable features such as HT, HT40,
+and to modify the MCS, AMPDU, and AMSDU settings for
+drivers that support it.
 
-The patch also includes
- * new debug level ATH_DBG_DFS
- * debugfs DFS radar statistics
+The MCS, AMPDU, and AMSDU features that may be disabled are
+are reported in the phy-info netlink message as a mask.
 
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Attemping to disable features that are not supported will
+take no affect, but will not return errors.  This is to aid
+backwards compatibility in user-space apps that may not be
+clever enough to deal with parsing the the capabilities mask.
+
+This patch only enables the infrastructure.  An additional
+patch will enable the feature in mac80211.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/ath/ath.h             |    2 +
- drivers/net/wireless/ath/ath9k/dfs.c       |  203 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/dfs.h       |   38 +++++
- drivers/net/wireless/ath/ath9k/dfs_debug.c |   89 ++++++++++++
- drivers/net/wireless/ath/ath9k/dfs_debug.h |   59 ++++++++
- 5 files changed, 391 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/dfs.c
- create mode 100644 drivers/net/wireless/ath/ath9k/dfs.h
- create mode 100644 drivers/net/wireless/ath/ath9k/dfs_debug.c
- create mode 100644 drivers/net/wireless/ath/ath9k/dfs_debug.h
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 46d6926..e38fcad 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -215,6 +215,7 @@ do {								\
-  * @ATH_DBG_HWTIMER: hardware timer handling
-  * @ATH_DBG_BTCOEX: bluetooth coexistance
-  * @ATH_DBG_BSTUCK: stuck beacons
-+ * @ATH_DBG_DFS: radar datection
-  * @ATH_DBG_ANY: enable all debugging
+v6:  Fix const issue, fix typo in comment.
+
+:100644 100644 8049bf7... 5b86a3b... M	include/linux/nl80211.h
+:100644 100644 92cf1c2... 5598b91... M	include/net/cfg80211.h
+:100644 100644 b9ec306... dd6feda... M	net/wireless/core.h
+:100644 100644 21fc970... 54d9071... M	net/wireless/mlme.c
+:100644 100644 48260c2... 80e5144... M	net/wireless/nl80211.c
+:100644 100644 6e86d5a... d144e2d... M	net/wireless/sme.c
+ include/linux/nl80211.h |    8 ++++++++
+ include/net/cfg80211.h  |   28 ++++++++++++++++++++++++++++
+ net/wireless/core.h     |    8 ++++++--
+ net/wireless/mlme.c     |   37 ++++++++++++++++++++++++++++++++++---
+ net/wireless/nl80211.c  |   44 +++++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/sme.c      |    4 +++-
+ 6 files changed, 122 insertions(+), 7 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 8049bf7..5b86a3b 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1109,6 +1109,11 @@ enum nl80211_commands {
+  *	%NL80211_CMD_TDLS_MGMT. Otherwise %NL80211_CMD_TDLS_OPER should be
+  *	used for asking the driver to perform a TDLS operation.
   *
-  * The debug level is used to control the amount and type of debugging output
-@@ -240,6 +241,7 @@ enum ATH_DEBUG {
- 	ATH_DBG_BTCOEX		= 0x00002000,
- 	ATH_DBG_WMI		= 0x00004000,
- 	ATH_DBG_BSTUCK		= 0x00008000,
-+	ATH_DBG_DFS		= 0x00010000,
- 	ATH_DBG_ANY		= 0xffffffff
++ * @NL80211_ATTR_DISABLE_HT:  Force HT capable interfaces to disable
++ *      this feature.
++ * @NL80211_ATTR_HT_CAPABILITY_MASK: Specify which bits of the HT_CAPs
++ *      to pay attention to.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1337,6 +1342,9 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_TDLS_SUPPORT,
+ 	NL80211_ATTR_TDLS_EXTERNAL_SETUP,
+ 
++	NL80211_ATTR_DISABLE_HT,
++	NL80211_ATTR_HT_CAPABILITY_MASK,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 92cf1c2..5598b91 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1036,6 +1036,15 @@ struct cfg80211_auth_request {
  };
  
-diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
-new file mode 100644
-index 0000000..c6d2eea
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/dfs.c
-@@ -0,0 +1,203 @@
-+/*
-+ * Copyright (c) 2008-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011 Neratec Solutions AG
+ /**
++ * enum cfg80211_assoc_req_flags - Over-ride default behaviour in association.
 + *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ * @ASSOC_REQ_DISABLE_HT:  Disable HT (802.11n)
 + */
-+
-+#include "hw.h"
-+#include "hw-ops.h"
-+#include "ath9k.h"
-+#include "dfs.h"
-+#include "dfs_debug.h"
-+
-+/* convert pulse duration to usecs, considering clock mode */
-+static u32 dur_to_usecs(struct ath_hw *ah, u32 dur)
-+{
-+	const u32 AR93X_NSECS_PER_DUR = 800;
-+	const u32 AR93X_NSECS_PER_DUR_FAST = (8000 / 11);
-+	u32 nsecs;
-+	if (IS_CHAN_A_FAST_CLOCK(ah, ah->curchan))
-+		nsecs = dur * AR93X_NSECS_PER_DUR_FAST;
-+	else
-+		nsecs = dur * AR93X_NSECS_PER_DUR;
-+
-+	return (nsecs + 500) / 1000;
-+}
-+
-+/* internal struct to pass radar data */
-+struct ath_radar_data {
-+	u8 pulse_bw_info;
-+	u8 rssi;
-+	u8 ext_rssi;
-+	u8 pulse_length_ext;
-+	u8 pulse_length_pri;
++enum cfg80211_assoc_req_flags {
++	ASSOC_REQ_DISABLE_HT		= BIT(0),
 +};
 +
-+/* TODO: move into or synchronize this with generic header
-+ *       as soon as IF is defined */
-+struct dfs_radar_pulse {
-+	u16 freq;
-+	u64 ts;
-+	u32 width;
-+	u8 rssi;
-+};
++/**
+  * struct cfg80211_assoc_request - (Re)Association request data
+  *
+  * This structure provides information needed to complete IEEE 802.11
+@@ -1046,6 +1055,10 @@ struct cfg80211_auth_request {
+  * @use_mfp: Use management frame protection (IEEE 802.11w) in this association
+  * @crypto: crypto settings
+  * @prev_bssid: previous BSSID, if not %NULL use reassociate frame
++ * @flags:  See &enum cfg80211_assoc_req_flags
++ * @ht_capa:  HT Capabilities over-rides.  Values set in ht_capa_mask
++ *   will be used in ht_capa.  Un-supported values will be ignored.
++ * @ht_capa_mask:  The bits of ht_capa which are to be used.
+  */
+ struct cfg80211_assoc_request {
+ 	struct cfg80211_bss *bss;
+@@ -1053,6 +1066,9 @@ struct cfg80211_assoc_request {
+ 	size_t ie_len;
+ 	struct cfg80211_crypto_settings crypto;
+ 	bool use_mfp;
++	u32 flags;
++	struct ieee80211_ht_cap ht_capa;
++	struct ieee80211_ht_cap ht_capa_mask;
+ };
+ 
+ /**
+@@ -1151,6 +1167,10 @@ struct cfg80211_ibss_params {
+  * @key_len: length of WEP key for shared key authentication
+  * @key_idx: index of WEP key for shared key authentication
+  * @key: WEP key for shared key authentication
++ * @flags:  See &enum cfg80211_assoc_req_flags
++ * @ht_capa:  HT Capabilities over-rides.  Values set in ht_capa_mask
++ *   will be used in ht_capa.  Un-supported values will be ignored.
++ * @ht_capa_mask:  The bits of ht_capa which are to be used.
+  */
+ struct cfg80211_connect_params {
+ 	struct ieee80211_channel *channel;
+@@ -1164,6 +1184,9 @@ struct cfg80211_connect_params {
+ 	struct cfg80211_crypto_settings crypto;
+ 	const u8 *key;
+ 	u8 key_len, key_idx;
++	u32 flags;
++	struct ieee80211_ht_cap ht_capa;
++	struct ieee80211_ht_cap ht_capa_mask;
+ };
+ 
+ /**
+@@ -1903,6 +1926,9 @@ struct wiphy_wowlan_support {
+  *	may request, if implemented.
+  *
+  * @wowlan: WoWLAN support information
++ *
++ * @ht_capa_mod_mask:  Specify what ht_cap values can be over-ridden.
++ *	If null, then none can be over-ridden.
+  */
+ struct wiphy {
+ 	/* assign these fields before you register the wiphy */
+@@ -1983,6 +2009,8 @@ struct wiphy {
+ 	/* dir in debugfs: ieee80211/<wiphyname> */
+ 	struct dentry *debugfsdir;
+ 
++	const struct ieee80211_ht_cap *ht_capa_mod_mask;
 +
-+#define PRI_CH_RADAR_FOUND 0x01
-+#define EXT_CH_RADAR_FOUND 0x02
-+static bool ath9k_postprocess_radar_event(struct ath_softc *sc,
-+		struct ath_radar_data *are, struct dfs_radar_pulse *drp)
+ #ifdef CONFIG_NET_NS
+ 	/* the network namespace this phy lives in currently */
+ 	struct net *_net;
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index b9ec306..dd6feda 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -339,13 +339,17 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			  const u8 *bssid, const u8 *prev_bssid,
+ 			  const u8 *ssid, int ssid_len,
+ 			  const u8 *ie, int ie_len, bool use_mfp,
+-			  struct cfg80211_crypto_settings *crypt);
++			  struct cfg80211_crypto_settings *crypt,
++			  u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
++			  struct ieee80211_ht_cap *ht_capa_mask);
+ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			struct net_device *dev, struct ieee80211_channel *chan,
+ 			const u8 *bssid, const u8 *prev_bssid,
+ 			const u8 *ssid, int ssid_len,
+ 			const u8 *ie, int ie_len, bool use_mfp,
+-			struct cfg80211_crypto_settings *crypt);
++			struct cfg80211_crypto_settings *crypt,
++			u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
++			struct ieee80211_ht_cap *ht_capa_mask);
+ int __cfg80211_mlme_deauth(struct cfg80211_registered_device *rdev,
+ 			   struct net_device *dev, const u8 *bssid,
+ 			   const u8 *ie, int ie_len, u16 reason,
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 21fc970..54d9071 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -501,13 +501,32 @@ int cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+ 	return err;
+ }
+ 
++/*  Do a logical ht_capa &= ht_capa_mask.  */
++static void cfg80211_oper_and_ht_capa(struct ieee80211_ht_cap *ht_capa,
++			const struct ieee80211_ht_cap *ht_capa_mask)
 +{
-+	u8 rssi;
-+	u16 dur;
-+
-+	ath_dbg(ath9k_hw_common(sc->sc_ah), ATH_DBG_DFS,
-+		"pulse_bw_info=0x%x, pri,ext len/rssi=(%u/%u, %u/%u)\n",
-+		are->pulse_bw_info,
-+		are->pulse_length_pri, are->rssi,
-+		are->pulse_length_ext, are->ext_rssi);
-+
-+	/* Only the last 2 bits of the BW info are relevant, they indicate
-+	 which channel the radar was detected in.*/
-+	are->pulse_bw_info &= 0x03;
-+
-+	switch (are->pulse_bw_info) {
-+	case PRI_CH_RADAR_FOUND:
-+		/* radar in ctrl channel */
-+		dur = are->pulse_length_pri;
-+		DFS_STAT_INC(sc, pri_phy_errors);
-+		/* cannot use ctrl channel RSSI
-+		 * if extension channel is stronger */
-+		rssi = (are->ext_rssi >= (are->rssi + 3)) ? 0 : are->rssi;
-+		break;
-+	case EXT_CH_RADAR_FOUND:
-+		/* radar in extension channel */
-+		dur = are->pulse_length_ext;
-+		DFS_STAT_INC(sc, ext_phy_errors);
-+		/* cannot use extension channel RSSI
-+		 * if control channel is stronger */
-+		rssi = (are->rssi >= (are->ext_rssi + 12)) ? 0 : are->ext_rssi;
-+		break;
-+	case (PRI_CH_RADAR_FOUND | EXT_CH_RADAR_FOUND):
-+		/*
-+		 * Conducted testing, when pulse is on DC, both pri and ext
-+		 * durations are reported to be same
-+		 *
-+		 * Radiated testing, when pulse is on DC, different pri and
-+		 * ext durations are reported, so take the larger of the two
-+		 * */
-+		if (are->pulse_length_ext >= are->pulse_length_pri)
-+			dur = are->pulse_length_ext;
-+		else
-+			dur = are->pulse_length_pri;
-+		DFS_STAT_INC(sc, dc_phy_errors);
-+
-+		/* when both are present use stronger one */
-+		rssi = (are->rssi < are->ext_rssi) ? are->ext_rssi : are->rssi;
-+		break;
-+	default:
-+		/* Bogus bandwidth info received in descriptor,
-+		 so ignore this PHY error */
-+		DFS_STAT_INC(sc, bwinfo_discards);
-+		return false;
-+	}
-+
-+	if (rssi == 0) {
-+		DFS_STAT_INC(sc, rssi_discards);
-+		return false;
-+	}
-+
-+	/*
-+	 * TODO: check chirping pulses
-+	 *   checks for chirping are dependent on the DFS regulatory domain
-+	 *   used, which is yet TBD
-+	 */
-+
-+	/* convert duration to usecs */
-+	drp->width = dur_to_usecs(sc->sc_ah, dur);
-+	drp->rssi = rssi;
-+
-+	DFS_STAT_INC(sc, pulses_detected);
-+	return true;
-+}
-+#undef PRI_CH_RADAR_FOUND
-+#undef EXT_CH_RADAR_FOUND
-+
-+
-+/*
-+ * DFS: check PHY-error for radar pulse and feed the detector
-+ */
-+void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
-+		struct ath_rx_status *rs, u64 mactime)
-+{
-+	struct ath_radar_data ard;
-+	u16 datalen;
-+	char *vdata_end;
-+	struct dfs_radar_pulse drp;
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	if ((!(rs->rs_phyerr != ATH9K_PHYERR_RADAR)) &&
-+		(!(rs->rs_phyerr != ATH9K_PHYERR_FALSE_RADAR_EXT))) {
-+		ath_dbg(common, ATH_DBG_DFS,
-+			"Error: rs_phyer=0x%x not a radar error\n",
-+			rs->rs_phyerr);
++	int i;
++	u8 *p1, *p2;
++	if (!ht_capa_mask) {
++		memset(ht_capa, 0, sizeof(*ht_capa));
 +		return;
 +	}
 +
-+	datalen = rs->rs_datalen;
-+	if (datalen == 0) {
-+		DFS_STAT_INC(sc, datalen_discards);
-+		return;
++	p1 = (u8*)(ht_capa);
++	p2 = (u8*)(ht_capa_mask);
++	for (i = 0; i<sizeof(*ht_capa); i++)
++		p1[i] &= p2[i];
++}
++
+ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			  struct net_device *dev,
+ 			  struct ieee80211_channel *chan,
+ 			  const u8 *bssid, const u8 *prev_bssid,
+ 			  const u8 *ssid, int ssid_len,
+ 			  const u8 *ie, int ie_len, bool use_mfp,
+-			  struct cfg80211_crypto_settings *crypt)
++			  struct cfg80211_crypto_settings *crypt,
++			  u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
++			  struct ieee80211_ht_cap *ht_capa_mask)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_assoc_request req;
+@@ -537,6 +556,15 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 	memcpy(&req.crypto, crypt, sizeof(req.crypto));
+ 	req.use_mfp = use_mfp;
+ 	req.prev_bssid = prev_bssid;
++	req.flags = assoc_flags;
++	if (ht_capa)
++		memcpy(&req.ht_capa, ht_capa, sizeof(req.ht_capa));
++	if (ht_capa_mask)
++		memcpy(&req.ht_capa_mask, ht_capa_mask,
++		       sizeof(req.ht_capa_mask));
++	cfg80211_oper_and_ht_capa(&req.ht_capa_mask,
++				  rdev->wiphy.ht_capa_mod_mask);
++	
+ 	req.bss = cfg80211_get_bss(&rdev->wiphy, chan, bssid, ssid, ssid_len,
+ 				   WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
+ 	if (!req.bss) {
+@@ -574,14 +602,17 @@ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			const u8 *bssid, const u8 *prev_bssid,
+ 			const u8 *ssid, int ssid_len,
+ 			const u8 *ie, int ie_len, bool use_mfp,
+-			struct cfg80211_crypto_settings *crypt)
++			struct cfg80211_crypto_settings *crypt,
++			u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
++			struct ieee80211_ht_cap *ht_capa_mask)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	int err;
+ 
+ 	wdev_lock(wdev);
+ 	err = __cfg80211_mlme_assoc(rdev, dev, chan, bssid, prev_bssid,
+-				    ssid, ssid_len, ie, ie_len, use_mfp, crypt);
++				    ssid, ssid_len, ie, ie_len, use_mfp, crypt,
++				    assoc_flags, ht_capa, ht_capa_mask);
+ 	wdev_unlock(wdev);
+ 
+ 	return err;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 48260c2..80e5144 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -197,6 +197,10 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_TDLS_OPERATION] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_TDLS_SUPPORT] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_TDLS_EXTERNAL_SETUP] = { .type = NLA_FLAG },
++	[NL80211_ATTR_DISABLE_HT] = { .type = NLA_FLAG },
++	[NL80211_ATTR_HT_CAPABILITY_MASK] = {
++		.len = NL80211_HT_CAPABILITY_LEN
++	},
+ };
+ 
+ /* policy for the key attributes */
+@@ -1008,6 +1012,11 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 	if (nl80211_put_iface_combinations(&dev->wiphy, msg))
+ 		goto nla_put_failure;
+ 
++	if (dev->wiphy.ht_capa_mod_mask)
++		NLA_PUT(msg, NL80211_ATTR_HT_CAPABILITY_MASK,
++			sizeof(*dev->wiphy.ht_capa_mod_mask),
++			dev->wiphy.ht_capa_mod_mask);
++
+ 	return genlmsg_end(msg, hdr);
+ 
+  nla_put_failure:
+@@ -4354,6 +4363,9 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
+ 	const u8 *bssid, *ssid, *ie = NULL, *prev_bssid = NULL;
+ 	int err, ssid_len, ie_len = 0;
+ 	bool use_mfp = false;
++	u32 flags = 0;
++	struct ieee80211_ht_cap *ht_capa = NULL;
++	struct ieee80211_ht_cap *ht_capa_mask = NULL;
+ 
+ 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+ 		return -EINVAL;
+@@ -4397,11 +4409,25 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
+ 	if (info->attrs[NL80211_ATTR_PREV_BSSID])
+ 		prev_bssid = nla_data(info->attrs[NL80211_ATTR_PREV_BSSID]);
+ 
++	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_HT]))
++		flags |= ASSOC_REQ_DISABLE_HT;
++
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
++		ht_capa_mask =
++			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]);
++
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY]) {
++		if (!ht_capa_mask)
++			return -EINVAL;
++		ht_capa = nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
 +	}
 +
-+	ard.rssi = rs->rs_rssi_ctl0;
-+	ard.ext_rssi = rs->rs_rssi_ext0;
+ 	err = nl80211_crypto_settings(rdev, info, &crypto, 1);
+ 	if (!err)
+ 		err = cfg80211_mlme_assoc(rdev, dev, chan, bssid, prev_bssid,
+ 					  ssid, ssid_len, ie, ie_len, use_mfp,
+-					  &crypto);
++					  &crypto, flags, ht_capa,
++					  ht_capa_mask);
+ 
+ 	return err;
+ }
+@@ -4891,6 +4917,22 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 			return PTR_ERR(connkeys);
+ 	}
+ 
++	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_HT]))
++		connect.flags |= ASSOC_REQ_DISABLE_HT;
 +
-+	/* hardware stores this as 8 bit signed value.
-+	 * we will cap it at 0 if it is a negative number
-+	 */
-+	if (ard.rssi & 0x80)
-+		ard.rssi = 0;
-+	if (ard.ext_rssi & 0x80)
-+		ard.ext_rssi = 0;
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
++		memcpy(&connect.ht_capa_mask,
++		       nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]),
++		       sizeof(connect.ht_capa_mask));
 +
-+	vdata_end = (char *)data + datalen;
-+	ard.pulse_bw_info = vdata_end[-1];
-+	ard.pulse_length_ext = vdata_end[-2];
-+	ard.pulse_length_pri = vdata_end[-3];
-+
-+	ath_dbg(common, ATH_DBG_DFS,
-+		"bw_info=%d, length_pri=%d, length_ext=%d, "
-+		"rssi_pri=%d, rssi_ext=%d\n",
-+		ard.pulse_bw_info, ard.pulse_length_pri, ard.pulse_length_ext,
-+		ard.rssi, ard.ext_rssi);
-+
-+	drp.freq = ah->curchan->channel;
-+	drp.ts = mactime;
-+	if (ath9k_postprocess_radar_event(sc, &ard, &drp)) {
-+		static u64 last_ts;
-+		ath_dbg(common, ATH_DBG_DFS,
-+			"ath9k_dfs_process_phyerr: channel=%d, ts=%llu, "
-+			"width=%d, rssi=%d, delta_ts=%llu\n",
-+			drp.freq, drp.ts, drp.width, drp.rssi, drp.ts-last_ts);
-+		last_ts = drp.ts;
-+		/*
-+		 * TODO: forward pulse to pattern detector
-+		 *
-+		 * ieee80211_add_radar_pulse(drp.freq, drp.ts,
-+		 *                           drp.width, drp.rssi);
-+		 */
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY]) {
++		if (!info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
++			return -EINVAL;
++		memcpy(&connect.ht_capa,
++		       nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]),
++		       sizeof(connect.ht_capa));
 +	}
-+}
-+EXPORT_SYMBOL(ath9k_dfs_process_phyerr);
-diff --git a/drivers/net/wireless/ath/ath9k/dfs.h b/drivers/net/wireless/ath/ath9k/dfs.h
-new file mode 100644
-index 0000000..c73c175
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/dfs.h
-@@ -0,0 +1,38 @@
-+/*
-+ * Copyright (c) 2008-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011 Neratec Solutions AG
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
 +
-+#ifndef ATH9K_DFS_H
-+#define ATH9K_DFS_H
-+
-+/**
-+ * ath9k_dfs_process_phyerr - process radar PHY error
-+ * @sc: ath_softc
-+ * @data: RX payload data
-+ * @rs: RX status after processing descriptor
-+ * @mactime: receive time
-+ *
-+ * This function is called whenever the HW DFS module detects a radar
-+ * pulse and reports it as a PHY error.
-+ *
-+ * The radar information provided as raw payload data is validated and
-+ * filtered for false pulses. Events passing all tests are forwarded to
-+ * the upper layer for pattern detection.
-+ */
-+void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
-+		struct ath_rx_status *rs, u64 mactime);
-+
-+#endif /* ATH9K_DFS_H */
-diff --git a/drivers/net/wireless/ath/ath9k/dfs_debug.c b/drivers/net/wireless/ath/ath9k/dfs_debug.c
-new file mode 100644
-index 0000000..3c03552
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/dfs_debug.c
-@@ -0,0 +1,89 @@
-+/*
-+ * Copyright (c) 2008-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011 Neratec Solutions AG
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+
-+#include <linux/debugfs.h>
-+
-+#include "ath9k.h"
-+#include "dfs_debug.h"
-+
-+
-+#if defined(CONFIG_ATH9K_DEBUGFS)
-+
-+#define ATH9K_DFS_STAT(s, p) \
-+	len += snprintf(buf + len, size - len, "%28s : %10u\n", s, \
-+			sc->debug.stats.dfs_stats.p);
-+
-+static ssize_t read_file_dfs(struct file *file, char __user *user_buf,
-+			     size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath9k_hw_version *hw_ver = &sc->sc_ah->hw_version;
-+	char *buf;
-+	unsigned int len = 0, size = 8000;
-+	ssize_t retval = 0;
-+
-+	buf = kzalloc(size, GFP_KERNEL);
-+	if (buf == NULL)
-+		return -ENOMEM;
-+
-+	len += snprintf(buf + len, size - len, "DFS support for "
-+			"macVersion = 0x%x, macRev = 0x%x: %s\n",
-+			hw_ver->macVersion, hw_ver->macRev,
-+			(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_DFS) ?
-+					"enabled" : "disabled");
-+	ATH9K_DFS_STAT("DFS pulses detected     ", pulses_detected);
-+	ATH9K_DFS_STAT("Datalen discards        ", datalen_discards);
-+	ATH9K_DFS_STAT("RSSI discards           ", rssi_discards);
-+	ATH9K_DFS_STAT("BW info discards        ", bwinfo_discards);
-+	ATH9K_DFS_STAT("Primary channel pulses  ", pri_phy_errors);
-+	ATH9K_DFS_STAT("Secondary channel pulses", ext_phy_errors);
-+	ATH9K_DFS_STAT("Dual channel pulses     ", dc_phy_errors);
-+
-+	if (len > size)
-+		len = size;
-+
-+	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	kfree(buf);
-+
-+	return retval;
-+}
-+
-+static int ath9k_dfs_debugfs_open(struct inode *inode, struct file *file)
-+{
-+	file->private_data = inode->i_private;
-+	return 0;
-+}
-+
-+
-+static const struct file_operations fops_dfs_stats = {
-+	.read = read_file_dfs,
-+	.open = ath9k_dfs_debugfs_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
-+
-+void ath9k_dfs_init_debug(struct ath_softc *sc)
-+{
-+	debugfs_create_file("dfs_stats", S_IRUSR,
-+			sc->debug.debugfs_phy, sc, &fops_dfs_stats);
-+}
-+EXPORT_SYMBOL(ath9k_dfs_init_debug);
-+
-+#endif /* CONFIG_ATH9K_DEBUGFS */
-+
-diff --git a/drivers/net/wireless/ath/ath9k/dfs_debug.h b/drivers/net/wireless/ath/ath9k/dfs_debug.h
-new file mode 100644
-index 0000000..079cf53
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/dfs_debug.h
-@@ -0,0 +1,59 @@
-+/*
-+ * Copyright (c) 2008-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011 Neratec Solutions AG
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+
-+#ifndef DFS_DEBUG_H
-+#define DFS_DEBUG_H
-+
-+#include "hw.h"
-+
-+/**
-+ * struct ath_dfs_stats - DFS Statistics
-+ *
-+ * @pulses_detected:  No. of pulses detected so far
-+ * @datalen_discards: No. of pulses discarded due to invalid datalen
-+ * @rssi_discards:    No. of pulses discarded due to invalid RSSI
-+ * @bwinfo_discards:  No. of pulses discarded due to invalid BW info
-+ * @pri_phy_errors:   No. of pulses reported for primary channel
-+ * @ext_phy_errors:   No. of pulses reported for extension channel
-+ * @dc_phy_errors:    No. of pulses reported for primary + extension channel
-+ */
-+struct ath_dfs_stats {
-+	u32 pulses_detected;
-+	u32 datalen_discards;
-+	u32 rssi_discards;
-+	u32 bwinfo_discards;
-+	u32 pri_phy_errors;
-+	u32 ext_phy_errors;
-+	u32 dc_phy_errors;
-+};
-+
-+
-+#if defined(CONFIG_ATH9K_DEBUGFS)
-+
-+#define DFS_STAT_INC(sc, c) (sc->debug.stats.dfs_stats.c++)
-+void ath9k_dfs_init_debug(struct ath_softc *sc);
-+
-+#else
-+
-+#define DFS_STAT_INC(sc, c) do { } while (0)
-+static inline void ath9k_dfs_init_debug(struct ath_softc *sc) { }
-+
-+#endif
-+
-+
-+#endif /* DFS_DEBUG_H */
+ 	err = cfg80211_connect(rdev, dev, &connect, connkeys);
+ 	if (err)
+ 		kfree(connkeys);
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 6e86d5a..d144e2d 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -189,7 +189,9 @@ static int cfg80211_conn_do_work(struct wireless_dev *wdev)
+ 					    prev_bssid,
+ 					    params->ssid, params->ssid_len,
+ 					    params->ie, params->ie_len,
+-					    false, &params->crypto);
++					    false, &params->crypto,
++					    params->flags, &params->ht_capa,
++					    &params->ht_capa_mask);
+ 		if (err)
+ 			__cfg80211_mlme_deauth(rdev, wdev->netdev, params->bssid,
+ 					       NULL, 0,
 -- 
-1.7.4.1
+1.7.3.4
 
