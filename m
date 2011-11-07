@@ -1,95 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54758 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753783Ab1KDKVL (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54756 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755817Ab1KGSQe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 06:21:11 -0400
-Message-Id: <20111104101942.789686440@sipsolutions.net> (sfid-20111104_112114_233736_0C07C8AC)
-Date: Fri, 04 Nov 2011 11:18:11 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 02/12] mac80211: add support for control port protocol in
- AP mode
-References: <20111104101809.711636760@sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 7 Nov 2011 13:16:34 -0500
+Date: Mon, 7 Nov 2011 13:11:35 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: init rate-control for TDLS sta when supp-rates
+ are known
+Message-ID: <20111107181135.GD2798@tuxdriver.com> (sfid-20111107_191638_165011_C7839BB6)
+References: <1319636866-12171-1-git-send-email-arik@wizery.com>
+ <20111027142248.GA3972@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111027142248.GA3972@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Oct 27, 2011 at 05:22:48PM +0300, Jouni Malinen wrote:
+> On Wed, Oct 26, 2011 at 03:47:46PM +0200, Arik Nemtsov wrote:
+> > Initialize rate control algorithms only when supported rates are known
+> > for a TDLS peer sta. Direct Tx between peers is not allowed before the
+> > link is enabled. In turn, this only occurs after a change_station()
+> > call that sets supported rates.
+> 
+> Thanks - this seems to fix the issues I saw previously. I tested ath9k
+> with this instead of my earlier patch and was able to run successfully
+> through my TDLS test scripts against another implementation.
 
-This will allow us to support dynamic WEP with 802.1X
-properly in mac80211 by not encrypting outgoing and
-accepting unencrypted incoming frames.
+I merged this patch from Jouni:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c   |   21 ++++++++++++++++++++-
- net/mac80211/iface.c |   13 ++++++++++++-
- 2 files changed, 32 insertions(+), 2 deletions(-)
+	commit e3a4cc2f073739c9c9c2e97efc774703061f034a
+	Author: Jouni Malinen <j@w1.fi>
+	Date:   Sun Oct 23 22:36:04 2011 +0300
 
---- a/net/mac80211/cfg.c	2011-11-03 11:52:40.000000000 +0100
-+++ b/net/mac80211/cfg.c	2011-11-03 11:52:48.000000000 +0100
-@@ -594,6 +594,8 @@ static int ieee80211_add_beacon(struct w
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	struct beacon_data *old;
-+	struct ieee80211_sub_if_data *vlan;
-+	int ret;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
-@@ -601,7 +603,24 @@ static int ieee80211_add_beacon(struct w
- 	if (old)
- 		return -EALREADY;
- 
--	return ieee80211_config_beacon(sdata, params);
-+	ret = ieee80211_config_beacon(sdata, params);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * Apply control port protocol, this allows us to
-+	 * not encrypt dynamic WEP control frames.
-+	 */
-+	sdata->control_port_protocol = params->crypto.control_port_ethertype;
-+	sdata->control_port_no_encrypt = params->crypto.control_port_no_encrypt;
-+	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
-+		vlan->control_port_protocol =
-+			params->crypto.control_port_ethertype;
-+		vlan->control_port_no_encrypt =
-+			params->crypto.control_port_no_encrypt;
-+	}
-+
-+	return 0;
- }
- 
- static int ieee80211_set_beacon(struct wiphy *wiphy, struct net_device *dev,
---- a/net/mac80211/iface.c	2011-11-03 11:52:47.000000000 +0100
-+++ b/net/mac80211/iface.c	2011-11-03 11:52:48.000000000 +0100
-@@ -188,11 +188,22 @@ static int ieee80211_do_open(struct net_
- 		if (!is_valid_ether_addr(sdata->u.wds.remote_addr))
- 			return -ENOLINK;
- 		break;
--	case NL80211_IFTYPE_AP_VLAN:
-+	case NL80211_IFTYPE_AP_VLAN: {
-+		struct ieee80211_sub_if_data *master;
-+
- 		if (!sdata->bss)
- 			return -ENOLINK;
-+
- 		list_add(&sdata->u.vlan.list, &sdata->bss->vlans);
-+
-+		master = container_of(sdata->bss,
-+				      struct ieee80211_sub_if_data, u.ap);
-+		sdata->control_port_protocol =
-+			master->control_port_protocol;
-+		sdata->control_port_no_encrypt =
-+			master->control_port_no_encrypt;
- 		break;
-+		}
- 	case NL80211_IFTYPE_AP:
- 		sdata->bss = &sdata->u.ap;
- 		break;
+	    mac80211: Fix TDLS support validation in add_station handler
+    
+	    We need to verify whether the command is successful before allocating
+	    the station entry to avoid extra processing. This also fixes a memory
+	    leak on the error path.
+    
+	    Signed-off-by: Jouni Malinen <j@w1.fi>
+	    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
+I'm not sure what to do with this patch now.  I think I will just drop
+it, and you can send me a new patch that applies on top of Jouni's
+(perhaps even reverting it) as appropriate?
 
+Thanks,
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
