@@ -1,79 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:58523 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753954Ab1KUOlt (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33321 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755836Ab1KGRm4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 09:41:49 -0500
-Received: by mail-bw0-f46.google.com with SMTP id 11so6626611bke.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 06:41:48 -0800 (PST)
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>,
-	Max Filippov <jcmvbkbc@gmail.com>
-Subject: [RFC v2 4/8] mac80211: mesh non-peer power mode indication in beacons
-Date: Mon, 21 Nov 2011 18:40:12 +0400
-Message-Id: <1321886416-12597-5-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154152_768951_CB211A03)
-In-Reply-To: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
-References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
+	Mon, 7 Nov 2011 12:42:56 -0500
+Subject: Re: [PATCH v4 1/2] wireless:  Support ht-capabilities over-rides.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4EB81817.9060300@candelatech.com>
+References: <1320437440-6463-1-git-send-email-greearb@candelatech.com>
+	 (sfid-20111104_211056_032573_0C709B20) <1320656776.3993.21.camel@jlt3.sipsolutions.net>
+	 <4EB81817.9060300@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Nov 2011 18:42:53 +0100
+Message-ID: <1320687773.3993.53.camel@jlt3.sipsolutions.net> (sfid-20111107_184300_314396_05D68574)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to IEEE80211s standard a mesh STA shall indicate its
-non-peer mesh power mode with the Power Management field in the Frame
-Control field and the Mesh Power Save Level field in the Mesh
-Capability field in Beacon and Probe Response frames.
+On Mon, 2011-11-07 at 09:40 -0800, Ben Greear wrote:
+> On 11/07/2011 01:06 AM, Johannes Berg wrote:
+> 
+> >> @@ -537,6 +539,12 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+> >>   	memcpy(&req.crypto, crypt, sizeof(req.crypto));
+> >>   	req.use_mfp = use_mfp;
+> >>   	req.prev_bssid = prev_bssid;
+> >> +	req.flags = assoc_flags;
+> >> +	if (ht_capa)
+> >> +		memcpy(&req.ht_capa, ht_capa, sizeof(req.ht_capa));
+> >> +	if (ht_capa_mask)
+> >> +		memcpy(&req.ht_capa_mask, ht_capa_mask,
+> >> +		       sizeof(req.ht_capa_mask));
+> >
+> > I think somewhere here you should mask this mask with the
+> > ht_capa_mod_mask. That way, you force drivers to advertise a correct
+> > ht_capa_mod_mask, if you don't do that we will certainly see drivers use
+> > more of ht_capa than contained in ht_capa_mod_mask. Probably should be a
+> > helper function since I think you might need it in more places.
+> 
+> This goes back to how hard we want to be on user-space.  If we are lax,
+> and just ignore settings that are not (yet?) supported by the kernel,
+> then user-space becomes much easier to make backwards/forwards
+> compat.  That is my preferred approach.
 
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
-Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
----
- net/mac80211/mesh.c |    2 ++
- net/mac80211/mesh.h |    3 +++
- net/mac80211/tx.c   |    3 +++
- 3 files changed, 8 insertions(+), 0 deletions(-)
+No, not really -- I'm not saying reject it, I'm just saying don't let
+userspace configure more than the driver said it could configure. if you
+just do essentially "configured_masked &= advertised_mask" you still
+keep this property you want, but you force drivers to advertise
+everything users will be able to change otherwise it just doesn't take
+effect.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index a7078fd..5b8c5d3 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -242,6 +242,8 @@ mesh_add_meshconf_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 	/* Mesh capability */
- 	ifmsh->accepting_plinks = mesh_plink_availables(sdata);
- 	*pos = MESHCONF_CAPAB_FORWARDING;
-+	if (sdata->u.mesh.mshcfg.power_mode == NL80211_MESH_POWER_DEEP_SLEEP)
-+		*pos |= MESHCONF_CAPAB_POWER_SAVE_LEVEL;
- 	*pos++ |= ifmsh->accepting_plinks ?
- 	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
- 	*pos++ = 0x00;
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 6842453..e62c53b 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -188,6 +188,9 @@ struct mesh_rmc {
- /* Maximum number of paths per interface */
- #define MESH_MAX_MPATHS		1024
- 
-+/* capability power save flag mask */
-+#define MESHCONF_CAPAB_POWER_SAVE_LEVEL	0x80
-+
- /* Public interfaces */
- /* Various */
- int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 500c3ce..aeb2968 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2339,6 +2339,9 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 		memset(mgmt, 0, 24 + sizeof(mgmt->u.beacon));
- 		mgmt->frame_control =
- 		    cpu_to_le16(IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON);
-+		if (sdata->u.mesh.mshcfg.power_mode != 
-+		    NL80211_MESH_POWER_ACTIVE)
-+			mgmt->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
- 		memset(mgmt->da, 0xff, ETH_ALEN);
- 		memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
- 		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
--- 
-1.7.3.4
+johannes
 
