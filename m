@@ -1,43 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:36472 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754666Ab1KRVNM convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39533 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751734Ab1KGJdD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 16:13:12 -0500
-Received: by yenq3 with SMTP id q3so2936238yen.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 13:13:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1321650012.10266.78.camel@jlt3.sipsolutions.net>
-References: <1321649673-15874-1-git-send-email-linville@tuxdriver.com> <1321650012.10266.78.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
-Date: Fri, 18 Nov 2011 13:12:51 -0800
-Message-ID: <CAB=NE6Urei3NSQ05d_4MOUEoBb=tAvy9WE+_5zyc1-j_S+VnDg@mail.gmail.com> (sfid-20111118_221315_826218_992A1874)
-Subject: Re: [PATCH] compat-wireless: avoid pr_fmt build SPAM
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Julia Lawall <julia@diku.dk>,
-	Jesper Andersen <jespera@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 7 Nov 2011 04:33:03 -0500
+Received: from wireless by sipsolutions.net with local (Exim 4.77)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1RNLZe-0005kI-RP
+	for linux-wireless@vger.kernel.org; Mon, 07 Nov 2011 10:33:02 +0100
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] iw: v3.2
+Reply-to: linux-wireless@vger.kernel.org
+Message-Id: <E1RNLZe-0005kI-RP@sipsolutions.net>
+From: wireless@sipsolutions.net
+Date: Mon, 07 Nov 2011 10:33:02 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 18, 2011 at 1:00 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2011-11-18 at 15:54 -0500, John W. Linville wrote:
->> The way the compat-* header files are included causes the default
->> pr_fmt definition from <linux/kernel.h> to be evaluated for every file.
->> Files that define pr_fmt then generate a lot of build SPAM about
->> pr_fmt being redefined.
->>
->> Eliminate the build noise by preemptively undefining pr_fmt in those
->> files that define it.  This is accomplished by adding a patch to the
->> patches directory.
->
-> This patch is going to be relatively painful when files move etc -- is
-> that really worth it? I for one will just drop it in our compat version
-> if it goes in since I don't even have all the files it patches :-)
 
-This may be a good use case for spatch magic?
+A new release of iw (v3.2) is available at:
 
-  Luis
+http://wireless.kernel.org/download/iw/iw-3.2.tar.bz2
+
+SHA1 sum: 2871d58ab1f8d5b2b8d548d57489873f21c085be
+
+Here is the short log of the changes (since v0.9.22)
+included in this release:
+
+Christian Lamparter (1):
+      iw: fix HT PHY BSS Membership selector value encoding
+
+Helmut Schaa (1):
+      iw: show STA flags in station dump
+
+Javier Cardona (1):
+      support for setting RANN interval and mesh gate
+
+Jo-Philipp Wich (1):
+      iw: Fix calculation of fractional multicast rates
+
+Johannes Berg (30):
+      use nla_type
+      report IBSS RSN
+      fix frequency parsing
+      print frame TX status event
+      update nl80211.h
+      validate tx power argument is a number
+      update nl80211.h
+      wowlan support
+      update nl80211.h
+      show interface combinations
+      scan: print WPS UUID
+      scan: print MS OUI as what it is
+      a little bit of P2P parsing
+      more verbose output for interface combinations
+      update nl80211.h
+      add set_rekey_offload cmd
+      new wowlan triggers/info
+      add remain-on-channel
+      fix bug in version.sh
+      update nl80211.h
+      update nl80211.h
+      print roam capability
+      show supported ciphers
+      print PHY membership selector only for membership rates
+      SSID printing: escape space at beginning end, backslash
+      print wiphy idx in iface info
+      update nl80211.h
+      print PMKSA candidate event
+      print out AP-side uAPSD support
+      update version to 3.2
+
+Paul Stewart (1):
+      Add station BSS params to iw output
+
+Sean Robinson (1):
+      Add send callbacks with optional debug handler
+
+Sujith Manoharan (1):
+      iw: Clarify bitrate mask documentation
+
+Yegor Yefremov (1):
+      iw: add libnl-3.0 support
+
