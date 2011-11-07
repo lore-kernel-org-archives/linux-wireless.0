@@ -1,50 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:45924 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753177Ab1KHIH1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 03:07:27 -0500
-MIME-Version: 1.0
-In-Reply-To: <20111108043233.GA21171@gamma.logic.tuwien.ac.at>
-References: <20111021012442.GB26758@gamma.logic.tuwien.ac.at>
-	<alpine.DEB.2.00.1110231424500.17218@chino.kir.corp.google.com>
-	<20111026025014.GB24956@gamma.logic.tuwien.ac.at>
-	<1319601333.14693.19.camel@wwguy-ubuntu>
-	<20111026040332.GF24956@gamma.logic.tuwien.ac.at>
-	<20111102031345.GA10851@gamma.logic.tuwien.ac.at>
-	<1320204101.31823.140.camel@wwguy-huron>
-	<20111104045817.GA25778@gamma.logic.tuwien.ac.at>
-	<20111107123812.GB23508@gamma.logic.tuwien.ac.at>
-	<1320709047.31823.188.camel@wwguy-huron>
-	<20111108043233.GA21171@gamma.logic.tuwien.ac.at>
-Date: Tue, 8 Nov 2011 10:07:26 +0200
-Message-ID: <CANUX_P06ww42p6N1k_P-Y1KMKOd1QgR_DxVWe19qtsEX2rfWpw@mail.gmail.com> (sfid-20111108_090749_085252_4B5CAD53)
-Subject: Re: iwlagn is getting very shaky
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Norbert Preining <preining@logic.at>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	David Rientjes <rientjes@google.com>,
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:36165 "EHLO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752186Ab1KGT1h convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Nov 2011 14:27:37 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Jesper Juhl <jj@chaosbits.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 7 Nov 2011 11:27:25 -0800
+Subject: RE: [PATCH] net, wireless, mwifiex: Fix mem leak in
+ mwifiex_update_curr_bss_params()
+Message-ID: <477F20668A386D41ADCC57781B1F7043081814452B@SC-VEXCH1.marvell.com> (sfid-20111107_202757_618073_97C6FAA9)
+References: <alpine.LNX.2.00.1111062255310.5763@swampdragon.chaosbits.net>
+ <4EB70920.80905@linux.vnet.ibm.com>
+In-Reply-To: <4EB70920.80905@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> In short, this is the output of your patch:
-> [  215.872090] iwlwifi 0000:06:00.0: Queue 11 stuck for 10000 ms.
-> [  215.872101] iwlwifi 0000:06:00.0: Current SW read_ptr 105 write_ptr 115
-> [  215.872156] iwlwifi 0000:06:00.0: Current HW read_ptr 105 write_ptr 115
-> [  215.872164] iwlwifi 0000:06:00.0: On demand firmware reload
->
->
-Ok thanks for that. The HW and the SW agree then...
+> On 11/07/2011 03:28 AM, Jesper Juhl wrote:
+> > If kmemdup() fails we leak the memory allocated to bss_desc.
+> > This patch fixes the leak.
+> > I also removed the pointless default assignment of 'NULL' to 'bss_desc'
+> > while I was there anyway.
+> >
+> > Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 
-I would like to see what happens in terms or power.
-Please set the power debug flag: modprobe iwlwifi debug=0x100
+Hi Jesper,
 
-Thanks.
+Thanks for the patch.
+
+> 
+> Looks good to me.
+> Reviewed-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
+
+Hi Srivatsa,
+
+Thanks for your review.
+
+Acked-by: Bing Zhao <bzhao@marvell.com>
+
+Thanks,
+Bing
+
+> 
+> Thanks,
+> Srivatsa S. Bhat
+> 
+> > ---
+> >  drivers/net/wireless/mwifiex/scan.c |    3 ++-
+> >  1 files changed, 2 insertions(+), 1 deletions(-)
+> >
+> >  note: patch is compile tested only since I don't have the hardware.
+> >
+> > diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+> > index dae8dbb..8a3f959 100644
+> > --- a/drivers/net/wireless/mwifiex/scan.c
+> > +++ b/drivers/net/wireless/mwifiex/scan.c
+> > @@ -1469,7 +1469,7 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv, u8 *bssid,
+> >  			       s32 rssi, const u8 *ie_buf, size_t ie_len,
+> >  			       u16 beacon_period, u16 cap_info_bitmap, u8 band)
+> >  {
+> > -	struct mwifiex_bssdescriptor *bss_desc = NULL;
+> > +	struct mwifiex_bssdescriptor *bss_desc;
+> >  	int ret;
+> >  	unsigned long flags;
+> >  	u8 *beacon_ie;
+> > @@ -1484,6 +1484,7 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv, u8 *bssid,
+> >
+> >  	beacon_ie = kmemdup(ie_buf, ie_len, GFP_KERNEL);
+> >  	if (!beacon_ie) {
+> > +		kfree(bss_desc);
+> >  		dev_err(priv->adapter->dev, " failed to alloc beacon_ie\n");
+> >  		return -ENOMEM;
+> >  	}
