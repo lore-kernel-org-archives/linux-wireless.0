@@ -1,77 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36455 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752607Ab1K2Ie1 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:10363 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750771Ab1KGF1X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 03:34:27 -0500
-Subject: Re: iwlagn is getting very shaky
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Norbert Preining <preining@logic.at>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dave Jones <davej@redhat.com>,
-	David Rientjes <rientjes@google.com>
-In-Reply-To: <CANUX_P2b_ZYr4hHigA+tGa9uakcq3hQXnOiP5isQtfcYxCaxcw@mail.gmail.com> (sfid-20111129_075940_672404_AD87EAAF)
-References: <20111125122143.GA30404@gamma.logic.tuwien.ac.at>
-	 <CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com>
-	 <20111125123720.GA31564@gamma.logic.tuwien.ac.at>
-	 <CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com>
-	 <CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com>
-	 <1322387175.4044.16.camel@jlt3.sipsolutions.net>
-	 <CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com>
-	 <20111128035627.GH1422@gamma.logic.tuwien.ac.at>
-	 <CANUX_P2kYiFCP8uAhLZC_kVEjoyxabRBx3Pn+ndtFus=6hJN7Q@mail.gmail.com>
-	 <20111128042343.GA4619@gamma.logic.tuwien.ac.at>
-	 <20111128232525.GA12719@gamma.logic.tuwien.ac.at>
-	 <CANUX_P2b_ZYr4hHigA+tGa9uakcq3hQXnOiP5isQtfcYxCaxcw@mail.gmail.com>
-	 (sfid-20111129_075940_672404_AD87EAAF)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 29 Nov 2011 09:31:12 +0100
-Message-ID: <1322555472.4110.8.camel@jlt3.sipsolutions.net> (sfid-20111129_093443_181189_32FE6B42)
-Mime-Version: 1.0
+	Mon, 7 Nov 2011 00:27:23 -0500
+From: Raja Mani <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH v2 05/11] ath6kl: Add new state for WOW mode
+Date: Mon, 7 Nov 2011 10:55:41 +0530
+Message-ID: <1320643547-3578-6-git-send-email-rmani@qca.qualcomm.com> (sfid-20111107_062727_182190_F2364AAA)
+In-Reply-To: <1320643547-3578-1-git-send-email-rmani@qca.qualcomm.com>
+References: <1320643547-3578-1-git-send-email-rmani@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I noticed that the logs are a bit odd wrt. timing.
+In addition to existing deep sleep and cut pwr mode, new state
+is added in ath6kl_cfg_suspend_mode as well as in ath6kl_state for WOW.
 
-> > Intersperesed I see some other messages that are new to me:
-> > [ 4019.443129] Open BA session requested for 00:0a:79:eb:56:10 tid 0
-> > [ 4019.500149] activated addBA response timer on tid 0
-> > [ 4020.500033] addBA response timer expired on tid 0
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |    1 +
+ drivers/net/wireless/ath/ath6kl/core.h     |    1 +
+ 2 files changed, 2 insertions(+), 0 deletions(-)
 
-I guess the delay here is due to the synchronize_net()? That can take a
-while, 57ms seems a lot but I suppose it's possible.
-
-> > [ 4020.501626] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
-> > [ 4023.740570] switched off addBA timer for tid 0
-> > [ 4023.740578] got addBA resp for tid 0 but we already gave up
-> 
-> Here is the AP is finally replying
-
-It's kinda hard to believe that the AP took 4 seconds (!) to reply to
-the frame. Where could the frame get stuck? I don't see any other work
-processing happening etc. either. It's also curious that in those 3
-seconds between these messages, we didn't actually get around to
-stopping the session, that only happens just after:
-
-> > [ 4023.740619] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 0
-
-(here)
-
-> > [ 4023.768544] Open BA session requested for 00:0a:79:eb:56:10 tid 0
-> 
-> Here we are trying again
-> 
-> > [ 4023.784292] activated addBA response timer on tid 0
-> > [ 4023.786294] switched off addBA timer for tid 0
-
-20ms response time here, that's much more reasonable.
-
-
-Could something be hogging the workqueues?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+index b4781e5..59fa9d8 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+@@ -20,6 +20,7 @@
+ enum ath6kl_cfg_suspend_mode {
+ 	ATH6KL_CFG_SUSPEND_DEEPSLEEP,
+ 	ATH6KL_CFG_SUSPEND_CUTPOWER,
++	ATH6KL_CFG_SUSPEND_WOW
+ };
+ 
+ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index b6442c1..9e8b8e3 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -459,6 +459,7 @@ enum ath6kl_state {
+ 	ATH6KL_STATE_ON,
+ 	ATH6KL_STATE_DEEPSLEEP,
+ 	ATH6KL_STATE_CUTPOWER,
++	ATH6KL_STATE_WOW,
+ };
+ 
+ struct ath6kl {
+-- 
+1.7.1
 
