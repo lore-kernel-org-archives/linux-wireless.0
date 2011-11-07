@@ -1,42 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:49680 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752866Ab1K2Jce convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56588 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752084Ab1KGJGU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 04:32:34 -0500
-References: <20111125122143.GA30404@gamma.logic.tuwien.ac.at> <CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com> <20111125123720.GA31564@gamma.logic.tuwien.ac.at> <CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com> <CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com> <1322387175.4044.16.camel@jlt3.sipsolutions.net> <CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com> <20111128035627.GH1422@gamma.logic.tuwien.ac.at> <CANUX_P2kYiFCP8uAhLZC_kVEjoyxabRBx3Pn+ndtFus=6hJN7Q@mail.gmail.com> <20111128042343.GA4619@gamma.logic.tuwien.ac.at> <20111128232525.GA12719@gamma.logic.tuwien.ac.at> <CANUX_P2b_ZYr4hHigA+tGa9uakcq3hQXnOiP5isQtfcYxCaxcw@mail.gmail.com> <1322555472.4110.8.camel@jlt3.sipsolutions.net> <CANUX_P0z9HmZSj_13Fv0LHUgy2UDXWMaj8L2Tgqz2jQC2mbpZw@mail.gmail.com>
-In-Reply-To: <CANUX_P0z9HmZSj_13Fv0LHUgy2UDXWMaj8L2Tgqz2jQC2mbpZw@mail.gmail.com>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <F72258A2-71A1-4F82-B5ED-31FD2E837F3A@logic.at> (sfid-20111129_103240_239989_F1E20DEF)
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dave Jones <davej@redhat.com>,
-	David Rientjes <rientjes@google.com>
-From: Norbert Preining <preining@logic.at>
-Subject: Re: iwlagn is getting very shaky
-Date: Tue, 29 Nov 2011 18:32:13 +0900
-To: Emmanuel Grumbach <egrumbach@gmail.com>
+	Mon, 7 Nov 2011 04:06:20 -0500
+Subject: Re: [PATCH v4 1/2] wireless:  Support ht-capabilities over-rides.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1320437440-6463-1-git-send-email-greearb@candelatech.com> (sfid-20111104_211056_032573_0C709B20)
+References: <1320437440-6463-1-git-send-email-greearb@candelatech.com>
+	 (sfid-20111104_211056_032573_0C709B20)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Nov 2011 10:06:16 +0100
+Message-ID: <1320656776.3993.21.camel@jlt3.sipsolutions.net> (sfid-20111107_100625_216025_23A117B7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Fri, 2011-11-04 at 13:10 -0700, greearb@candelatech.com wrote:
 
-> It might that we are holding the mac80211 workqueue in the driver too...
-> I guess we could try to enable MAC80211 debug flag with timestamps to check.
+> + * @NL80211_ATTR_DISABLE_HT:  Force HT capable interfaces to disable
+> + *      this feature.
 
-Actually I got some strange behaviour today at work, but that might be a university temporary problem.
+I can see this, but
 
-Let me know what I can send you?
-I am currently using stock git plus that one patch.
+> + * @NL80211_ATTR_DISABLE_HT40:  Disable HT-40 even if AP and hardware
+> + *      support it.
+> + * @NL80211_ATTR_HT_CAPABILITY_MASK: Specify which bits of the HT_CAPs
+> + *      to pay attention to.
 
-If you want more patches send me them, and which module parameters.
+if you have the mask why do you still need the HT40? Isn't HT40 a flag
+in the mask? Or do you want this to affect TX/RX separately? You should
+spell that out more explicitly then.
 
-All the best
+> --- a/net/wireless/core.c
+> +++ b/net/wireless/core.c
+> @@ -704,6 +704,9 @@ void wiphy_unregister(struct wiphy *wiphy)
+>  	flush_work(&rdev->scan_done_wk);
+>  	cancel_work_sync(&rdev->conn_work);
+>  	flush_work(&rdev->event_work);
+> +
+> +	kfree(rdev->wiphy.ht_capa_mod_mask);
+> +	rdev->wiphy.ht_capa_mod_mask = NULL;
 
-Norbert
+That doesn't seem right -- drivers should typically assign a static
+const variable to this pointer that can't be freed.
+
+> @@ -537,6 +539,12 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+>  	memcpy(&req.crypto, crypt, sizeof(req.crypto));
+>  	req.use_mfp = use_mfp;
+>  	req.prev_bssid = prev_bssid;
+> +	req.flags = assoc_flags;
+> +	if (ht_capa)
+> +		memcpy(&req.ht_capa, ht_capa, sizeof(req.ht_capa));
+> +	if (ht_capa_mask)
+> +		memcpy(&req.ht_capa_mask, ht_capa_mask,
+> +		       sizeof(req.ht_capa_mask));
+
+I think somewhere here you should mask this mask with the
+ht_capa_mod_mask. That way, you force drivers to advertise a correct
+ht_capa_mod_mask, if you don't do that we will certainly see drivers use
+more of ht_capa than contained in ht_capa_mod_mask. Probably should be a
+helper function since I think you might need it in more places.
+
+johannes
 
