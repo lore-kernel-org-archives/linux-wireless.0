@@ -1,58 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33742 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755745Ab1KHOPO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45415 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750907Ab1KHVCM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 09:15:14 -0500
-Date: Tue, 8 Nov 2011 09:09:41 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: Eyal Shapira <eyal@wizery.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wl12xx: fix wl12xx_scan_sched_scan_ssid_list() check
- that all given ssids are in filters
-Message-ID: <20111108140941.GB2776@tuxdriver.com> (sfid-20111108_151519_420889_CE0BE1FB)
-References: <1320760486-19700-1-git-send-email-eyal@wizery.com>
- <1320761188.19479.10.camel@cumari>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1320761188.19479.10.camel@cumari>
+	Tue, 8 Nov 2011 16:02:12 -0500
+Subject: Re: [PATCH v8 2/2] mac80211:  Support ht-cap over-rides.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4EB99812.3000507@candelatech.com>
+References: <1320780995-30483-1-git-send-email-greearb@candelatech.com>
+	 <1320780995-30483-2-git-send-email-greearb@candelatech.com>
+	 (sfid-20111108_203659_989707_E33ECA13) <1320783128.24797.48.camel@jlt3.sipsolutions.net>
+	 <4EB99812.3000507@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Nov 2011 22:02:10 +0100
+Message-ID: <1320786130.24797.78.camel@jlt3.sipsolutions.net> (sfid-20111108_220215_674252_F8310E1B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 08, 2011 at 04:06:28PM +0200, Luciano Coelho wrote:
-> On Tue, 2011-11-08 at 15:54 +0200, Eyal Shapira wrote: 
-> > A minor fix for the check that verifies that all given SSIDs (in req) exist
-> > in the filters (the match sets)
-> > 
-> > Signed-off-by: Eyal Shapira <eyal@wizery.com>
-> > ---
-> >  drivers/net/wireless/wl12xx/scan.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
-> > index 128ccb7..fc29c67 100644
-> > --- a/drivers/net/wireless/wl12xx/scan.c
-> > +++ b/drivers/net/wireless/wl12xx/scan.c
-> > @@ -559,7 +559,7 @@ wl12xx_scan_sched_scan_ssid_list(struct wl1271 *wl,
-> >  						break;
-> >  					}
-> >  				/* Fail if SSID isn't present in the filters */
-> > -				if (j == req->n_ssids) {
-> > +				if (j == cmd->n_ssids) {
-> >  					ret = -EINVAL;
-> >  					goto out_free;
-> >  				}
-> 
-> Just to clarify.  My comment:
-> > Acked-by: Luciano Coelho <coelho@ti.com>
-> > 
-> > John, can you apply this to 3.2, please?
-> 
-> ...was about this patch.  Eyal's email was delivered to me, but vger
-> rejected it, so he had to resend it.
+On Tue, 2011-11-08 at 12:58 -0800, Ben Greear wrote:
 
-OK, I got it. :-)
+> >> +bool ieee80111_cfg_override_disables_ht40(struct ieee80211_sub_if_data *sdata)
+> >> +{
+> >> +	if ((sdata->u.mgd.ht_capa_mask.cap_info&
+> >> +	     IEEE80211_HT_CAP_SUP_WIDTH_20_40)&&
+> >> +	    !(sdata->u.mgd.ht_capa.cap_info&
+> >> +	      IEEE80211_HT_CAP_SUP_WIDTH_20_40))
+> >> +		return true;
+> >> +	return false;
+> >
+> > Would it really go above 80 cols if you didn't line-wrap it? Maybe
+> > remove the extra sets of parentheses? And even if it goes to a little
+> > bit above 80 it's still be more readable without the wrapping ...
+> 
+> It is more readable w/out the wrapping, but hard to know when
+> patches get rejected about that or not, so I tried to keep
+> checkpatch happy.  If you'll take slightly longer lines I'll
+> happily un-wrap it.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Please. I'd rather go over a bit than read the above :-)
+
+> > One thing I don't quite understand: Why don't you calculate the HT caps
+> > to use upon assoc request, and then store *those* instead, then you
+> > wouldn't have to check the overrides every time.
+> 
+> Adding more state just gives more places to mess up that
+> state or forget to update it somehow.  Think of the channel
+> pointers in the scan & work code :)
+> Not to mention the extra bloat in RAM.
+> Since this is not hot-path code, I think having less state
+> is well worth the effort.
+
+You don't have more state though, you actually should end up with less
+since you can throw away the configured ht_caps & ht_mask? And you
+really just shift the access from sband->... to calculated_... stuff.
+
+
+> > For example here:
+> >
+> >>   		if (!(ap_ht_cap_flags&  IEEE80211_HT_CAP_40MHZ_INTOLERANT)&&
+> >> +		    !ieee80111_cfg_override_disables_ht40(sdata)&&
+> >>   		(sband->ht_cap.cap&  IEEE80211_HT_CAP_SUP_WIDTH_20_40)&&
+> >>   		(hti->ht_param&  IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
+> >>   			switch(hti->ht_param&  IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
+> >
+> > This just adds complexity. If you calculate sdata->used_ht_caps first
+> > then you can replace the sband->ht_cap.cap check with an
+> > sdata->used_ht_caps.cap check and be done with it, instead of having to
+> > check both.
+> 
+> I think that's a bad idea, but will change it if you insist.
+
+I really think that'd be much nicer. As it is now we have to add all
+these checks everywhere, if we just calculate it once and then change
+places to use it we just have to remember to use the right thing.
+
+johannes
+
