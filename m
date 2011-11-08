@@ -1,167 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.allnet.de ([212.18.29.59]:20112 "EHLO mail.allnet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753020Ab1K1QSZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 11:18:25 -0500
-Date: Mon, 28 Nov 2011 17:13:59 +0100
-From: Daniel Golle <dgolle@allnet.de>
-To: <linux-wireless@vger.kernel.org>
-CC: Daniel Golle <dgolle@allnet.de>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v1 -1/3] support for antenna configuration profiles
-Message-ID: <20111128161359.GA25519@localhost> (sfid-20111128_171827_712254_1485AEF3)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48983 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750863Ab1KHIxc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Nov 2011 03:53:32 -0500
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>
+Subject: [PATCH 4/4] ath9k_hw: Fix tx power settings for AR9003
+Date: Tue, 8 Nov 2011 14:22:48 +0530
+Message-ID: <1320742368-11343-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111108_095336_293994_554995FA)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="0OAP2g/MAC+5xKAE"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---0OAP2g/MAC+5xKAE
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Retriving tx power for 2x2 and 3x3 chainmask is not handled
+properly. While calculating tx power for 2x2, 3 dBm was reduced
+and for 3x3, 5 dBm was reduced which should be added back when
+retriving.
 
-This is a patch against the iw userspace tool.
-Antenna switch configuration profiles are printed out in info.c, marking the
-currently selected profile.
-An operation to select the profile is added to phy.c.
-
-Signed-off-by: Daniel Golle <dgolle@allnet.de>
+Cc: Paul Stewart <pstew@google.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
---- a/info.c
-+++ b/info.c
-@@ -180,6 +180,58 @@ static int print_phy_handler(struct nl_m
- 		       nla_get_u32(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_TX]),
- 		       nla_get_u32(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_RX]));
-=20
-+	if (tb_msg[NL80211_ATTR_WIPHY_EXTANT]) {
-+		static struct nla_policy extant_policy[NL80211_EXTANT_ATTR_MAX + 1] =3D {
-+			[NL80211_EXTANT_ATTR_STATE] =3D { .type =3D NLA_U32 },
-+			[NL80211_EXTANT_ATTR_PROFILES] =3D { .type =3D NLA_NESTED },
-+		};
-+		struct nlattr *tb_extant[NL80211_EXTANT_ATTR_MAX + 1];
-+		struct nlattr *nl_easp, *tb_easp[NL80211_EASP_ATTR_MAX + 1];
-+		int err, rem_easp;
-+		int current_profile, num_profiles =3D 0;
-+		int id;
-+		int i;
-+		static struct nla_policy easp_policy[NL80211_EASP_ATTR_MAX + 1] =3D {
-+			[NL80211_EASP_ATTR_ID] =3D { .type =3D NLA_U32 },
-+			[NL80211_EASP_ATTR_NAME] =3D { },
-+			[NL80211_EASP_ATTR_DESC] =3D { },
-+		};
-+
-+		printf("\tDevice supports antenna configuration profiles.\n");
-+		err =3D nla_parse_nested(tb_extant, NL80211_EXTANT_ATTR_MAX, tb_msg[NL80=
-211_ATTR_WIPHY_EXTANT], extant_policy);
-+		if (err)
-+			goto broken_extant;
-+
-+		if (tb_extant[NL80211_EXTANT_ATTR_STATE])
-+			current_profile =3D nla_get_u32(tb_extant[NL80211_EXTANT_ATTR_STATE]);
-+		else
-+			current_profile =3D -1;
-+
-+		nla_for_each_nested(nl_easp, tb_extant[NL80211_EXTANT_ATTR_PROFILES], re=
-m_easp) {
-+			num_profiles++;
-+		}
-+
-+		nla_for_each_nested(nl_easp, tb_extant[NL80211_EXTANT_ATTR_PROFILES], re=
-m_easp)
-+		{
-+			err =3D nla_parse(tb_easp, NL80211_EASP_ATTR_MAX, nla_data(nl_easp), nl=
-a_len(nl_easp), easp_policy);
-+
-+			if (err || !tb_easp[NL80211_EASP_ATTR_ID] || !tb_easp[NL80211_EASP_ATTR=
-_NAME] || !tb_easp[NL80211_EASP_ATTR_DESC]) {
-+				printf("cannot parse antenna switch profile, err %x\n", err);
-+				goto broken_extant;
-+			}
-+			id =3D nla_get_u32(tb_easp[NL80211_EASP_ATTR_ID]);
-+			if ( id =3D=3D current_profile )
-+				printf("\t\t (*)");
-+			else
-+				printf("\t\t ( )");
-+			printf(" %u\t%s\t(%s)", id, nla_get_string(tb_easp[NL80211_EASP_ATTR_NA=
-ME]),
-+				nla_get_string(tb_easp[NL80211_EASP_ATTR_DESC]));
-+			printf("\n");
-+		}
-+broken_extant:
-+		;
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index ee9c09b..d2e4f28 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -5059,6 +5059,21 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
+ 			regulatory->max_power_level = targetPowerValT2[i];
+ 	}
+ 
++	switch (ar5416_get_ntxchains(ah->txchainmask)) {
++	case 1:
++		break;
++	case 2:
++		regulatory->max_power_level += INCREASE_MAXPOW_BY_TWO_CHAIN;
++		break;
++	case 3:
++		regulatory->max_power_level += INCREASE_MAXPOW_BY_THREE_CHAIN;
++		break;
++	default:
++		ath_dbg(ath9k_hw_common(ah), ATH_DBG_EEPROM,
++			"Invalid chainmask configuration\n");
++		break;
 +	}
 +
- 	if (tb_msg[NL80211_ATTR_SUPPORTED_IFTYPES]) {
- 		printf("\tSupported interface modes:\n");
- 		nla_for_each_nested(nl_mode, tb_msg[NL80211_ATTR_SUPPORTED_IFTYPES], rem=
-_mode)
-@@ -219,6 +271,9 @@ static int print_phy_handler(struct nl_m
- 				have_combinations =3D true;
- 			}
-=20
-+
-+
-+
- 			printf("\t\t * ");
-=20
- 			err =3D nla_parse_nested(tb_comb, MAX_NL80211_IFACE_COMB,
---- a/phy.c
-+++ b/phy.c
-@@ -333,3 +333,30 @@ COMMAND(set, antenna, "<bitmap> | all |
- 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_antenna,
- 	"Set a bitmap of allowed antennas to use for TX and RX.\n"
- 	"The driver may reject antenna configurations it cannot support.");
-+
-+static int handle_extant(struct nl80211_state *state,
-+			  struct nl_cb *cb,
-+			  struct nl_msg *msg,
-+			  int argc, char **argv)
-+{
-+	char *end;
-+	__u32 extant;
-+
-+	if (argc =3D=3D 1) {
-+		extant =3D strtoul(argv[0], &end, 0);
-+		if (*end)
-+			return 1;
-+	} else
-+		return 1;
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_EXTANT_SELECT, extant);
-+
-+	return 0;
-+
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND(set, extant, "<profile>",
-+	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_extant,
-+	"Select the external antenna switch configuration profile.\n"
-+	"The driver accepts only profiles defined for the hardware.");
+ 	if (test)
+ 		return;
+ 
+-- 
+1.7.7.2
 
---0OAP2g/MAC+5xKAE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJO07NHAAoJEDy9cKN/1Et0mMoQAJsQ1PPGYYxGuYS7ypEonCTH
-BGpcDUbobFG4fQ7pPcvz9qeXVAs8G977bIBMQ+SNZiaz7vaCey+sgb/lRruVGwMb
-75bJmgCAskOHMpUScuNGiorSjgJdXUy6fGY5K4zFlUcY+FGtRobborOuaN9OlmOV
-gmfVMiYKk2D3IN7a2ZhLto31MV2ffT+xcnze+jdB26a787m+DKC1vBVElTEBbQ3c
-P4Pt0MPdRxHvmHCJ01xhLbFQaZ9Mljjn3FbWDW2JkgGT+1aK9rAtd+NMB9R+33xn
-mUt+rGhk1TgB60PCHViQfdZYOWAKi65V229wRdlVIm4ymuulXQZBf8YD/6GZWikg
-Uf5fBXMjQZMPcAx+3R6GoItolG6mLd6ISrxI7Ecl/Q1yk+lX/3yaB8VrerBn55Ff
-8VOxpeneC2vP0SGQ6dwzhoEr5P19nweerxBUQJ+HPUQy+b4JNofkaqJqB0GWbrJM
-P3sT/LwlFajZtAH12W7xqZqOtpK86WinR/V62jFW1wl578f0Hs7iNMq0IqljC7mH
-RleyXWigXDTXqEM0Rje+RMTrJxfCzXju2eWoQLK7MI1vSpUQnBFeBdQ3dsvvmu4z
-vs7d0SPP31J+cmcM7x8om70VINZwlusRIQ8FNpSjMNphLtYaNpBZDEuJnY3kMUQu
-4b1d9PAIKvJe0Id82Fej
-=F+h8
------END PGP SIGNATURE-----
-
---0OAP2g/MAC+5xKAE--
