@@ -1,47 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ackle.nomi.cz ([81.31.33.35]:46943 "EHLO ackle.nomi.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751471Ab1KTUkL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Nov 2011 15:40:11 -0500
-Date: Sun, 20 Nov 2011 21:40:07 +0100
-From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn: memory corruption with WPA enterprise
-Message-ID: <20111120204007.GA7273@nomi.cz> (sfid-20111120_214031_561856_FA16359E)
-References: <20111110125347.GA29415@nomi.cz> <20111110160703.GA2775@redhat.com> <20111110163051.GA24533@nomi.cz> <20111111054731.GA2292@redhat.com> <20111111150105.GA25437@nomi.cz> <20111114140714.GD2513@redhat.com> <20111119181106.GA5515@nomi.cz> <1321755233.22510.1.camel@wwguy-ubuntu> <20111120032016.GA14520@nomi.cz> <1321763314.22510.4.camel@wwguy-ubuntu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1321763314.22510.4.camel@wwguy-ubuntu>
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:33934 "HELO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750957Ab1KHFld (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Nov 2011 00:41:33 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/7] mwifiex: fix ht_cap_info in ibss beacons
+Date: Mon,  7 Nov 2011 21:41:06 -0800
+Message-Id: <1320730872-25619-2-git-send-email-bzhao@marvell.com> (sfid-20111108_064135_513219_B65E4E79)
+In-Reply-To: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
+References: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-On Sat, Nov 19, 2011 at 08:28:34PM -0800, wwguy wrote:
-> On Sat, 2011-11-19 at 19:20 -0800, Tomáš Janoušek wrote:
-> > Anyway, did you have time to try to reproduce it with the .config I sent?
-> > (It may take hours, sometimes. :-/)
->
-> Yes, I will try your configuration when I get back  to the office Monday
+A local variable is used to calculate ht_cap_info.
+Erroneously ht_cap.cap_info isn't updated in the ibss beacons
+after the calculation. This patch fixes it.
 
-Okay, thank you. I managed to test 2.6.38.8 and 2.6.39.4 today and the issue
-is reproducible on both. Shall I test further in the past?
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/join.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-I also got a reply from the Ubuntu bugreport where someone claims he doesn't
-experience the issue on current 32-bit Ubuntu 11.10, even though he did
-experience it in older versions. I have no idea why that may be so, as they
-have the same firmware as I have, and the kernel is 3.0 with almost no
-modifications to the iwlagn driver.
-
-I hope that you'll be able to reproduce the issue and fix it. Sadly, I still
-haven't got a better reproducer. What I was doing today was running make clean
-&& make -j4 in a while loop, having an active Skype videocall and browsing the
-web while waiting for it to crash. Sometimes it took a few minutes, sometimes
-more than an hour.
-
-Regards,
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 62b4c29..062716c 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -922,15 +922,15 @@ mwifiex_cmd_802_11_ad_hoc_start(struct mwifiex_private *priv,
+ 				cpu_to_le16(WLAN_EID_HT_CAPABILITY);
+ 			ht_cap->header.len =
+ 			       cpu_to_le16(sizeof(struct ieee80211_ht_cap));
+-			ht_cap_info = le16_to_cpu(ht_cap->ht_cap.cap_info);
+ 
+-			ht_cap_info |= IEEE80211_HT_CAP_SGI_20;
++			ht_cap_info = IEEE80211_HT_CAP_SGI_20;
+ 			if (adapter->chan_offset) {
+ 				ht_cap_info |= IEEE80211_HT_CAP_SGI_40;
+ 				ht_cap_info |= IEEE80211_HT_CAP_DSSSCCK40;
+ 				ht_cap_info |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 				SETHT_MCS32(ht_cap->ht_cap.mcs.rx_mask);
+ 			}
++			ht_cap->ht_cap.cap_info = cpu_to_le16(ht_cap_info);
+ 
+ 			ht_cap->ht_cap.ampdu_params_info
+ 					= IEEE80211_HT_MAX_AMPDU_64K;
 -- 
-Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
+1.7.0.2
+
