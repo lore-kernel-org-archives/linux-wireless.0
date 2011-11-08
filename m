@@ -1,108 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52363 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754149Ab1KIJaZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 04:30:25 -0500
-Subject: [PATCH v3] mac80211/cfg80211: report monitor channel in wireless
- extensions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1320778887.24797.38.camel@jlt3.sipsolutions.net> (sfid-20111108_200133_998551_FF45D33D)
-References: <1320778327.24797.36.camel@jlt3.sipsolutions.net>
-	 (sfid-20111108_195213_970616_E8AF4017)  <1320778887.24797.38.camel@jlt3.sipsolutions.net>
-	 (sfid-20111108_200133_998551_FF45D33D)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 09 Nov 2011 10:30:21 +0100
-Message-ID: <1320831021.3845.14.camel@jlt3.sipsolutions.net> (sfid-20111109_103029_704765_95EE2FE3)
-Mime-Version: 1.0
+Received: from smtp3-g21.free.fr ([212.27.42.3]:39069 "EHLO smtp3-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751013Ab1KHVXc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Nov 2011 16:23:32 -0500
+Message-ID: <018001cc9e5b$e1cb2060$f9b5a8c0@pii350> (sfid-20111108_222354_243197_76D41855)
+From: "Gilles Espinasse" <g.esp@free.fr>
+To: <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+References: <1320739783-3415-1-git-send-email-g.esp@free.fr>
+Subject: Re: [PATCH] Fix linking with libnl-3
+Date: Tue, 8 Nov 2011 22:17:53 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Just add API to get the channel & report it. Trivial really.
+----- Original Message ----- 
+From: "Gilles Espinasse" <g.esp@free.fr>
+To: <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>; "Gilles Espinasse" <g.esp@free.fr>
+Sent: Tuesday, November 08, 2011 9:09 AM
+Subject: [PATCH] Fix linking with libnl-3
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
-So trivial it didn't even work ;-)
 
- include/net/cfg80211.h     |    5 +++++
- net/mac80211/cfg.c         |    9 +++++++++
- net/wireless/wext-compat.c |   12 ++++++++++++
- 3 files changed, 26 insertions(+)
+> iw3.2 fail to link libnl-3.2.2 with this error
+> /usr/bin/ld: cannot find -lnl-genl
+>
+> Contrary to previous libnl version, on v3 there is a dedicated
+libnl-genl-3.0.pc file
+> Simply use that.
+>
+> Signed-off-by: Gilles Espinasse <g.esp@free.fr>
+> ---
+>  Makefile |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/Makefile b/Makefile
+> index 8443ee6..fb46324 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -36,10 +36,11 @@ LIBS += -lnl-genl
+>  NLLIBNAME = libnl-2.0
+>  endif
+>
+> +# libnl-3 has a separate libnl-genl-3.0.pc
+>  ifeq ($(NL3FOUND),Y)
+>  CFLAGS += -DCONFIG_LIBNL30
+> -LIBS += -lnl-genl
+> -NLLIBNAME = libnl-3.0
+> +LIBS =
+> +NLLIBNAME = libnl-genl-3.0
+>  endif
+>
+>  ifeq ($(NLLIBNAME),)
+> -- 
+> 1.5.6.5
+>
+I had a bit of doubt and checked libnl-3.0, libnl-3.1, libnl-3.2.0
+While the patch perfectly work for libnl-3.2.0..3.2.2 :
+- it break libnl-3.0 where previous code would have work (no
+libnl-genl-3.0.pc)
+- libnl-3.1 had a libnl-genl-3.1.pc, so Makefile is broken with previous and
+new code
 
---- a/include/net/cfg80211.h	2011-11-09 10:13:05.000000000 +0100
-+++ b/include/net/cfg80211.h	2011-11-09 10:27:47.000000000 +0100
-@@ -1342,6 +1342,9 @@ struct cfg80211_gtk_rekey_data {
-  *	doesn't verify much. Note, however, that the passed netdev may be
-  *	%NULL as well if the user requested changing the channel for the
-  *	device itself, or for a monitor interface.
-+ * @get_channel: Get the current operating channel, should return %NULL if
-+ *	there's no single defined operating channel if for example the
-+ *	device implements channel hopping for multi-channel virtual interfaces.
-  *
-  * @scan: Request to do a scan. If returning zero, the scan request is given
-  *	the driver, and will be valid until passed to cfg80211_scan_done().
-@@ -1627,6 +1630,8 @@ struct cfg80211_ops {
- 
- 	int	(*probe_client)(struct wiphy *wiphy, struct net_device *dev,
- 				const u8 *peer, u64 *cookie);
-+
-+	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy);
- };
- 
- /*
---- a/net/wireless/wext-compat.c	2011-11-09 10:07:35.000000000 +0100
-+++ b/net/wireless/wext-compat.c	2011-11-09 10:13:18.000000000 +0100
-@@ -819,12 +819,24 @@ static int cfg80211_wext_giwfreq(struct
- 				 struct iw_freq *freq, char *extra)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	struct ieee80211_channel *chan;
- 
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_STATION:
- 		return cfg80211_mgd_wext_giwfreq(dev, info, freq, extra);
- 	case NL80211_IFTYPE_ADHOC:
- 		return cfg80211_ibss_wext_giwfreq(dev, info, freq, extra);
-+	case NL80211_IFTYPE_MONITOR:
-+		if (!rdev->ops->get_channel)
-+			return -EINVAL;
-+
-+		chan = rdev->ops->get_channel(wdev->wiphy);
-+		if (!chan)
-+			return -EINVAL;
-+		freq->m = chan->center_freq;
-+		freq->e = 6;
-+		return 0;
- 	default:
- 		if (!wdev->channel)
- 			return -EINVAL;
---- a/net/mac80211/cfg.c	2011-11-09 10:10:56.000000000 +0100
-+++ b/net/mac80211/cfg.c	2011-11-09 10:29:40.000000000 +0100
-@@ -2579,6 +2579,14 @@ static int ieee80211_probe_client(struct
- 	return 0;
- }
- 
-+static struct ieee80211_channel *
-+ieee80211_wiphy_get_channel(struct wiphy *wiphy)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+
-+	return local->oper_channel;
-+}
-+
- struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -2645,4 +2653,5 @@ struct cfg80211_ops mac80211_config_ops
- 	.tdls_oper = ieee80211_tdls_oper,
- 	.tdls_mgmt = ieee80211_tdls_mgmt,
- 	.probe_client = ieee80211_probe_client,
-+	.get_channel = ieee80211_wiphy_get_channel,
- };
+Unsure there is a need to support 3.0 and 3.1 when three 3.2.<x> versions
+exist?
 
+Gilles
 
