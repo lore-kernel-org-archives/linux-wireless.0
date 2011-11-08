@@ -1,158 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32739 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964833Ab1KJPto (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 10:49:44 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 27/27] iwlagn: move nvm_device_type from iwl_priv to iwl_trans
-Date: Thu, 10 Nov 2011 06:55:27 -0800
-Message-Id: <1320936927-9078-28-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_164956_703465_36D6CC7E)
-In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:46487 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751822Ab1KHSA4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Nov 2011 13:00:56 -0500
+Subject: Re: [PATCH v6 1/2] wireless:  Support ht-capabilities over-rides.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4EB96A5C.8040606@candelatech.com>
+References: <1320707676-17255-1-git-send-email-greearb@candelatech.com>
+	 (sfid-20111108_001449_233997_95FF19FA) <1320740099.4304.5.camel@jlt3.sipsolutions.net>
+	 <4EB96A5C.8040606@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Nov 2011 19:00:51 +0100
+Message-ID: <1320775251.24797.31.camel@jlt3.sipsolutions.net> (sfid-20111108_190059_779636_D3937BE4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Don Fry <donald.h.fry@intel.com>
+On Tue, 2011-11-08 at 09:43 -0800, Ben Greear wrote:
 
-The nvm_device_type is eeprom related and does not need to be part
-of the iwl_priv structure.  Move it and eliminate access to the iwl_priv
-structure.
+> >> +/*  Do a logical ht_capa&= ht_capa_mask.  */
+> >> +static void cfg80211_oper_and_ht_capa(struct ieee80211_ht_cap *ht_capa,
+> >> +			const struct ieee80211_ht_cap *ht_capa_mask)
 
-Signed-off-by: Don Fry <donald.h.fry@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-eeprom.c  |   28 ++++++++++++++--------------
- drivers/net/wireless/iwlwifi/iwl-trans.h   |    3 +++
- 4 files changed, 18 insertions(+), 16 deletions(-)
+> > I think you also need to call this in the cfg80211_connect() path.
+> 
+> I'll double check that...for some reason I thought everything
+> eventually went through this code path.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 42871ba..68b04f5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -430,7 +430,7 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
- 	eeprom_ver = iwl_eeprom_query16(priv, EEPROM_VERSION);
- 	pos += scnprintf(buf + pos, buf_size - pos, "NVM Type: %s, "
- 			"version: 0x%x\n",
--			(priv->nvm_device_type == NVM_DEVICE_TYPE_OTP)
-+			(trans(priv)->nvm_device_type == NVM_DEVICE_TYPE_OTP)
- 			 ? "OTP" : "EEPROM", eeprom_ver);
- 	for (ofs = 0 ; ofs < eeprom_len ; ofs += 16) {
- 		pos += scnprintf(buf + pos, buf_size - pos, "0x%.4x ", ofs);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 2c68b9b..556e4a2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -944,7 +944,6 @@ struct iwl_priv {
- 
- 	/* eeprom -- this is in the card's little endian byte order */
- 	u8 *eeprom;
--	int    nvm_device_type;
- 	struct iwl_eeprom_calib_info *calib_info;
- 
- 	enum nl80211_iftype iw_mode;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index 2fcde58..dcada08 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -182,32 +182,32 @@ static void iwl_eeprom_release_semaphore(struct iwl_bus *bus)
- 
- }
- 
--static int iwl_eeprom_verify_signature(struct iwl_priv *priv)
-+static int iwl_eeprom_verify_signature(struct iwl_trans *trans)
- {
--	u32 gp = iwl_read32(bus(priv), CSR_EEPROM_GP) & CSR_EEPROM_GP_VALID_MSK;
-+	u32 gp = iwl_read32(bus(trans), CSR_EEPROM_GP) & CSR_EEPROM_GP_VALID_MSK;
- 	int ret = 0;
- 
--	IWL_DEBUG_EEPROM(priv, "EEPROM signature=0x%08x\n", gp);
-+	IWL_DEBUG_EEPROM(trans, "EEPROM signature=0x%08x\n", gp);
- 	switch (gp) {
- 	case CSR_EEPROM_GP_BAD_SIG_EEP_GOOD_SIG_OTP:
--		if (priv->nvm_device_type != NVM_DEVICE_TYPE_OTP) {
--			IWL_ERR(priv, "EEPROM with bad signature: 0x%08x\n",
-+		if (trans->nvm_device_type != NVM_DEVICE_TYPE_OTP) {
-+			IWL_ERR(trans, "EEPROM with bad signature: 0x%08x\n",
- 				gp);
- 			ret = -ENOENT;
- 		}
- 		break;
- 	case CSR_EEPROM_GP_GOOD_SIG_EEP_LESS_THAN_4K:
- 	case CSR_EEPROM_GP_GOOD_SIG_EEP_MORE_THAN_4K:
--		if (priv->nvm_device_type != NVM_DEVICE_TYPE_EEPROM) {
--			IWL_ERR(priv, "OTP with bad signature: 0x%08x\n", gp);
-+		if (trans->nvm_device_type != NVM_DEVICE_TYPE_EEPROM) {
-+			IWL_ERR(trans, "OTP with bad signature: 0x%08x\n", gp);
- 			ret = -ENOENT;
- 		}
- 		break;
- 	case CSR_EEPROM_GP_BAD_SIGNATURE_BOTH_EEP_AND_OTP:
- 	default:
--		IWL_ERR(priv, "bad EEPROM/OTP signature, type=%s, "
-+		IWL_ERR(trans, "bad EEPROM/OTP signature, type=%s, "
- 			"EEPROM_GP=0x%08x\n",
--			(priv->nvm_device_type == NVM_DEVICE_TYPE_OTP)
-+			(trans->nvm_device_type == NVM_DEVICE_TYPE_OTP)
- 			? "OTP" : "EEPROM", gp);
- 		ret = -ENOENT;
- 		break;
-@@ -660,8 +660,8 @@ int iwl_eeprom_init(struct iwl_priv *priv, u32 hw_rev)
- 	u16 validblockaddr = 0;
- 	u16 cache_addr = 0;
- 
--	priv->nvm_device_type = iwl_get_nvm_type(bus(priv), hw_rev);
--	if (priv->nvm_device_type == -ENOENT)
-+	trans(priv)->nvm_device_type = iwl_get_nvm_type(bus(priv), hw_rev);
-+	if (trans(priv)->nvm_device_type == -ENOENT)
- 		return -ENOENT;
- 	/* allocate eeprom */
- 	sz = priv->cfg->base_params->eeprom_size;
-@@ -675,7 +675,7 @@ int iwl_eeprom_init(struct iwl_priv *priv, u32 hw_rev)
- 
- 	iwl_apm_init(priv);
- 
--	ret = iwl_eeprom_verify_signature(priv);
-+	ret = iwl_eeprom_verify_signature(trans(priv));
- 	if (ret < 0) {
- 		IWL_ERR(priv, "EEPROM not found, EEPROM_GP=0x%08x\n", gp);
- 		ret = -ENOENT;
-@@ -690,7 +690,7 @@ int iwl_eeprom_init(struct iwl_priv *priv, u32 hw_rev)
- 		goto err;
- 	}
- 
--	if (priv->nvm_device_type == NVM_DEVICE_TYPE_OTP) {
-+	if (trans(priv)->nvm_device_type == NVM_DEVICE_TYPE_OTP) {
- 
- 		ret = iwl_init_otp_access(bus(priv));
- 		if (ret) {
-@@ -744,7 +744,7 @@ int iwl_eeprom_init(struct iwl_priv *priv, u32 hw_rev)
- 	}
- 
- 	IWL_DEBUG_EEPROM(priv, "NVM Type: %s, version: 0x%x\n",
--		       (priv->nvm_device_type == NVM_DEVICE_TYPE_OTP)
-+		       (trans(priv)->nvm_device_type == NVM_DEVICE_TYPE_OTP)
- 		       ? "OTP" : "EEPROM",
- 		       iwl_eeprom_query16(priv, EEPROM_VERSION));
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 7839362..50227eb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -247,6 +247,9 @@ struct iwl_trans {
- 	struct fw_img ucode_init;
- 	struct fw_img ucode_wowlan;
- 
-+	/* eeprom related variables */
-+	int    nvm_device_type;
-+
- 	/* pointer to trans specific struct */
- 	/*Ensure that this pointer will always be aligned to sizeof pointer */
- 	char trans_specific[0] __attribute__((__aligned__(sizeof(void *))));
--- 
-1.7.0.4
+Not for full-mac drivers, e.g. iwm.
+
+> > Also, maybe we should reject this configuration if the device didn't
+> > support it at all, ie. ht_capa_mask was NULL? It also seems a bit odd to
+> > allow this on a device that doesn't even support HT.
+> 
+> I really don't like that.  It would mean that supplicant will
+> have to selectively not add certain netlink attributes based on the
+> driver and/or kernel version.  That means either probing
+> to determine what the phy supports (and returning errors on
+> up to user if they configure it for something not supported?)
+> or just forcing the user to make all the decisions when writing
+> the supplicant config file.
+> 
+> The truth is, my app auto-generates the supplicant config files,
+> and I know what wifi driver I'm using etc, so it would be easy enough
+> for me to live with this.  But, it seems like it will make life
+> painful for anyone with less knowledge of the system.
+> 
+> > Also how would you feel about rejecting, instead of silently ignoring,
+> > things that we do look at but don't support, e.g. a wrong A-MSDU
+> > setting? Alternatively, cfg80211 could modify the settings in a way that
+> > drivers don't have to worry about the "downgrade only" part.
+> 
+> I dislike that as well, for similar reasons.  Getting an -EINVAL back
+> from a netlink call gives very little info to the user anyway...who
+> knows what exactly was invalid?  Perhaps a printk warning coming out
+> of mac80211 when it checks for the restrictions against what the
+> driver supports would be more useful?
+
+Fair enough. I think what I'm really after is having a way to know wtf
+we're using when you requested something. That would probably be more
+useful overall.
+
+FWIW, I did talk to some people at the kernel summit about the -EINVAL
+thing and maybe there's an idea to send back the invalid attribute at
+least, but doesn't really matter here. I'm OK with just allowing it all
+since it's not going to be used a lot anyway.
+
+> > Finally, I think we need a tad more documentation about how this is
+> > supposed to work in case somebody wants to implement it on non-mac80211.
+> > The way it's done right now it seems fairly error prone, with all
+> > restrictions that the driver needs to implement like not allowing the
+> > a-MSDU size to be increased.
+> 
+> Well, who knows...in their driver maybe the restrictions are not
+> the same.  I think that adding more info about what fields are
+> currently supported for mac80211 might be useful, but trying to
+> generalize restrictions for drivers that have not even implemented
+> any of this seems like useless overhead.
+
+Well, it goes both ways though, having more validation up front will
+make it a lot easier for new drivers to implement it because they don't
+have to bother with the validation, and I really don't see any way that
+a driver might allow making the a-MPDU spacing *smaller*, if it could
+deal with smaller it'd advertise that to start with.
+
+OTOH, if you request a connect(), you don't even know the band and
+technically a driver could have different capabilities on different
+bands.
+
+johannes
 
