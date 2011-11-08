@@ -1,50 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:49526 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753277Ab1KEMRX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35833 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756032Ab1KHPeZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Nov 2011 08:17:23 -0400
-Received: by faao14 with SMTP id o14so3511601faa.19
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Nov 2011 05:17:22 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	anamtsov@gmail.com, Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] mac80211: Also report the STA's TDLS flag via nl80211
-Date: Sat,  5 Nov 2011 14:15:24 +0100
-Message-Id: <1320498924-7205-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111105_131728_028038_71C4D4FA)
+	Tue, 8 Nov 2011 10:34:25 -0500
+Subject: Re: [PATCH v3 3/3] mac80211: Save probe response data for bss
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1320762928-6782-3-git-send-email-arik@wizery.com> (sfid-20111108_153610_339823_2D311245)
+References: <1320762928-6782-1-git-send-email-arik@wizery.com>
+	 <1320762928-6782-3-git-send-email-arik@wizery.com>
+	 (sfid-20111108_153610_339823_2D311245)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Nov 2011 16:34:22 +0100
+Message-ID: <1320766462.24797.7.camel@jlt3.sipsolutions.net> (sfid-20111108_163427_911513_3B6EA075)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2011-11-08 at 16:35 +0200, Arik Nemtsov wrote:
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- net/mac80211/cfg.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+> +	new = dev_alloc_skb(resp_len);
+> +	if (!new) {
+> +		printk(KERN_DEBUG "%s: failed to allocate buffer for probe "
+> +		       "response template\n", sdata->name);
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a9ded52..e83791d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -411,7 +411,8 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 				BIT(NL80211_STA_FLAG_SHORT_PREAMBLE) |
- 				BIT(NL80211_STA_FLAG_WME) |
- 				BIT(NL80211_STA_FLAG_MFP) |
--				BIT(NL80211_STA_FLAG_AUTHENTICATED);
-+				BIT(NL80211_STA_FLAG_AUTHENTICATED) |
-+				BIT(NL80211_STA_FLAG_TDLS_PEER);
- 	if (test_sta_flag(sta, WLAN_STA_AUTHORIZED))
- 		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_AUTHORIZED);
- 	if (test_sta_flag(sta, WLAN_STA_SHORT_PREAMBLE))
-@@ -422,6 +423,8 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_MFP);
- 	if (test_sta_flag(sta, WLAN_STA_AUTH))
- 		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_AUTHENTICATED);
-+	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER))
-+		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
- }
- 
- 
--- 
-1.7.3.4
+I'm pretty sure that will already warn so the message is probably not
+very useful.
+
+johannes
 
