@@ -1,127 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:52568 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751153Ab1K0JnR (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:59695 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753131Ab1KHOfi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Nov 2011 04:43:17 -0500
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com>
-References: <20111122072730.GA32225@gamma.logic.tuwien.ac.at>
-	<CANUX_P15En9bHVx4bhq6=XKPZnC2u+QyVJ+jnm4ns=39DrOBtg@mail.gmail.com>
-	<2D0C7905-AEB2-4DE4-89B1-945D89F2B5D6@logic.at>
-	<CANUX_P21PDdyo4u-x_1A0Lcqf-33yHgzUxddAoc3juGRNnrcDg@mail.gmail.com>
-	<20111122124357.GA32440@gamma.logic.tuwien.ac.at>
-	<CANUX_P0uyyuK4netV6srYCh9FsC4cpGzxobHE3T38n5RvvA0RQ@mail.gmail.com>
-	<20111123015503.GC23203@gamma.logic.tuwien.ac.at>
-	<CANUX_P1zDDzMy5yrFXSZAkMQ-87uu-fE1e-2sCEgHJi4dh5eiw@mail.gmail.com>
-	<20111125122143.GA30404@gamma.logic.tuwien.ac.at>
-	<CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com>
-	<20111125123720.GA31564@gamma.logic.tuwien.ac.at>
-	<CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com>
-Date: Sun, 27 Nov 2011 11:43:16 +0200
-Message-ID: <CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com> (sfid-20111127_104334_556605_64D24A69)
-Subject: Re: iwlagn is getting very shaky
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Norbert Preining <preining@logic.at>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	Dave Jones <davej@redhat.com>
-Content-Type: multipart/mixed; boundary=0016e6de03e22c1a1a04b2b4373f
+	Tue, 8 Nov 2011 09:35:38 -0500
+Received: by mail-ey0-f174.google.com with SMTP id 27so395520eye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 06:35:37 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v3 2/3] nl80211: Pass probe response data to drivers
+Date: Tue,  8 Nov 2011 16:35:27 +0200
+Message-Id: <1320762928-6782-2-git-send-email-arik@wizery.com> (sfid-20111108_153542_033103_7643452E)
+In-Reply-To: <1320762928-6782-1-git-send-email-arik@wizery.com>
+References: <1320762928-6782-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---0016e6de03e22c1a1a04b2b4373f
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Pass probe-response data from usermode via beacon parameters.
 
-Hi again
+Signed-off-by: Guy Eilam <guy@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+v1->3:
+Set the probe response data as part of the addset_beacon function, instead
+of set_bss. This makes more sense since the probe response is always
+updated with the beacon.
 
-Can you please try the attached patch ?
-I would like to know if it helps.
+include/linux/nl80211.h |    4 ++++
+ include/net/cfg80211.h  |    4 ++++
+ net/wireless/nl80211.c  |    9 +++++++++
+ 3 files changed, 17 insertions(+), 0 deletions(-)
 
-Thanks !
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index e74afc4..3fa03b3 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1114,6 +1114,8 @@ enum nl80211_commands {
+  *	In addition this attribute holds a bitmap of the supported protocols
+  *	for offloading using &enum nl80211_probe_resp_offload_support_attr.
+  *
++ * @NL80211_ATTR_PROBE_RESP: Probe Response template data
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1344,6 +1346,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_PROBE_RESP_OFFLOAD_SUPPORT,
+ 
++	NL80211_ATTR_PROBE_RESP,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7939495..97f3e85 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -391,6 +391,8 @@ struct cfg80211_crypto_settings {
+  * @assocresp_ies: extra information element(s) to add into (Re)Association
+  *	Response frames or %NULL
+  * @assocresp_ies_len: length of assocresp_ies in octets
++ * @probe_resp_len: length of probe response template (@probe_resp)
++ * @probe_resp: probe response template (AP mode only)
+  */
+ struct beacon_parameters {
+ 	u8 *head, *tail;
+@@ -408,6 +410,8 @@ struct beacon_parameters {
+ 	size_t proberesp_ies_len;
+ 	const u8 *assocresp_ies;
+ 	size_t assocresp_ies_len;
++	int probe_resp_len;
++	u8 *probe_resp;
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 9800f8d..10d5b1f 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -196,6 +196,8 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_TDLS_OPERATION] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_TDLS_SUPPORT] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_TDLS_EXTERNAL_SETUP] = { .type = NLA_FLAG },
++	[NL80211_ATTR_PROBE_RESP] = { .type = NLA_BINARY,
++				      .len = IEEE80211_MAX_DATA_LEN },
+ };
+ 
+ /* policy for the key attributes */
+@@ -2160,6 +2162,13 @@ static int nl80211_addset_beacon(struct sk_buff *skb, struct genl_info *info)
+ 			nla_len(info->attrs[NL80211_ATTR_IE_ASSOC_RESP]);
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_PROBE_RESP]) {
++		params.probe_resp =
++			nla_data(info->attrs[NL80211_ATTR_PROBE_RESP]);
++		params.probe_resp_len =
++			nla_len(info->attrs[NL80211_ATTR_PROBE_RESP]);
++	}
++
+ 	err = call(&rdev->wiphy, dev, &params);
+ 	if (!err && params.interval)
+ 		wdev->beacon_interval = params.interval;
+-- 
+1.7.5.4
 
-On Sun, Nov 27, 2011 at 08:38, Emmanuel Grumbach <egrumbach@gmail.com> wrot=
-e:
->> Yeah, that was my impression too, but still, I wanted to mention it.
->>
->>> I am already on week-end here and will look at it more carefully
->>> later. First impression is that things are messy here. I guess we are
->>> getting in a bad failure path that wasn't checked...
->>
->> No problem, I can cope with it.
->>
->
-> you can always disable 11n: modprobe 11n_disable=3D1.
->
-> Well... Something is really weird here:
-> mac80211 requests from us to:
-> * start agg
-> * stop agg
-> * agg operational
->
-> this is not a legal sequence
->
-> BTW - I am under this impression that mac80211 hasn't been compiled
-> with HT debug flag. Can you please set this compilation flag ?
->
-> I also would like you to add this line in iwlagn_mac_ampdu_action:
->
->
-> static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 struc=
-t ieee80211_vif *vif,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 enum =
-ieee80211_ampdu_mlme_action action,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 struc=
-t ieee80211_sta *sta, u16 tid, u16 *ssn,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 u8 bu=
-f_size)
-> {
-> =A0 =A0 =A0 =A0struct iwl_priv *priv =3D hw->priv;
-> =A0 =A0 =A0 =A0int ret =3D -EINVAL;
-> =A0 =A0 =A0 =A0struct iwl_station_priv *sta_priv =3D (void *) sta->drv_pr=
-iv;
->
-> =A0 =A0 =A0 =A0IWL_DEBUG_HT(priv, "A-MPDU action on addr %pM tid %d\n",
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sta->addr, tid);
->
-> dump_stack(); =A0 <<<<=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D ne=
-w line
->
-> =A0 =A0 =A0 =A0if (!(priv->cfg->sku & EEPROM_SKU_CAP_11N_ENABLE))
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EACCES;
->
->
->
-> This will give an insight at why is mac80211 calling the driver and
-> better point me to the bug.
->
->
-> Thanks !
->
-
---0016e6de03e22c1a1a04b2b4373f
-Content-Type: text/x-patch; charset=US-ASCII; name="addba_timer_fix.patch"
-Content-Disposition: attachment; filename="addba_timer_fix.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gvhv0cv60
-
-ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9hZ2ctdHguYyBiL25ldC9tYWM4MDIxMS9hZ2ctdHgu
-YwppbmRleCBkOWI1MzQwLi5mNjQzNmI5IDEwMDY0NAotLS0gYS9uZXQvbWFjODAyMTEvYWdnLXR4
-LmMKKysrIGIvbmV0L21hYzgwMjExL2FnZy10eC5jCkBAIC03NzgsNiArNzc4LDkgQEAgdm9pZCBp
-ZWVlODAyMTFfcHJvY2Vzc19hZGRiYV9yZXNwKHN0cnVjdCBpZWVlODAyMTFfbG9jYWwgKmxvY2Fs
-LAogCSAqLwogCWlmIChsZTE2X3RvX2NwdShtZ210LT51LmFjdGlvbi51LmFkZGJhX3Jlc3Auc3Rh
-dHVzKQogCQkJPT0gV0xBTl9TVEFUVVNfU1VDQ0VTUyAmJiBidWZfc2l6ZSkgeworCQlpZiAodGVz
-dF9iaXQoSFRfQUdHX1NUQVRFX1dBTlRfU1RPUCwgJnRpZF90eC0+c3RhdGUpKQorCQkJLyogdGhl
-IGFkZEJBIHJlc3AgY2FtZSB0b28gbGF0ZSAqLworCQkJZ290byBvdXQ7CiAJCWlmICh0ZXN0X2Fu
-ZF9zZXRfYml0KEhUX0FHR19TVEFURV9SRVNQT05TRV9SRUNFSVZFRCwKIAkJCQkgICAgICZ0aWRf
-dHgtPnN0YXRlKSkgewogCQkJLyogaWdub3JlIGR1cGxpY2F0ZSByZXNwb25zZSAqLwo=
---0016e6de03e22c1a1a04b2b4373f--
