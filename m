@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:61184 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751048Ab1K1VbP (ORCPT
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:49083 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932538Ab1KHOOB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 16:31:15 -0500
-Received: by vbbfc26 with SMTP id fc26so4187503vbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 13:31:14 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH v2 0/2] cfg80211: reg fixes
-Date: Mon, 28 Nov 2011 16:31:08 -0500
-Message-Id: <1322515870-3392-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111128_223123_127288_41EF7D3F)
+	Tue, 8 Nov 2011 09:14:01 -0500
+Received: by mail-bw0-f54.google.com with SMTP id zs8so797016bkb.27
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 06:13:59 -0800 (PST)
+Subject: Re: [PATCH 0/3] wl12xx: improve firmware transfer efficiency
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1320302683-23403-1-git-send-email-coelho@ti.com>
+References: <1320302683-23403-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Nov 2011 16:13:56 +0200
+Message-ID: <1320761636.19479.16.camel@cumari> (sfid-20111108_151415_760446_351C8784)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here are a series of reg fixes, I'm sending these separate from the
-other patches given that we need these fixes merged soon. I'm sending
-this on top of what I see right now on wireless-testing which is
-that Johannes' patch is not yet reverted so ammending his fix.
+On Thu, 2011-11-03 at 08:44 +0200, Luciano Coelho wrote: 
+> Hello,
+> 
+> These patches increase the FW upload efficiency by using multiple SDIO
+> blocks in a single write.  After a lot of measurements, studies and
+> discussions, I came to the conclusion that 16K chunks is the optimal
+> size to use.  This reduces the upload time by a factor of 0.43 on
+> wl127x and by a factor of 0.17 on wl128x.  In absolute numbers this
+> means 75ms and 179ms respectively.
+> 
+> The first patch changes the semantics and name of the blocksize
+> alignment quirk to negative, to simplify the code in the next two
+> patches.
 
-I address the issue pointed out by Timo by passing a parameter
-for reset_regdomains() and only do a full reset on
-restore_regulatory_settings() and on __exit().
-
-Luis R. Rodriguez (2):
-  cfg80211: fix race on init and driver registration
-  cfg80211: amend regulatory NULL dereference fix
-
- net/wireless/reg.c |   53 ++++++++++++++++++++++++++++++++++-----------------
- 1 files changed, 35 insertions(+), 18 deletions(-)
+Applied this series.
 
 -- 
-1.7.4.15.g7811d
+Cheers,
+Luca.
 
