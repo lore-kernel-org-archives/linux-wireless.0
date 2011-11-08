@@ -1,79 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43060 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755043Ab1KIVaM (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:33962 "HELO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751601Ab1KHFoq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 16:30:12 -0500
-Date: Wed, 9 Nov 2011 16:25:05 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2011-11-09
-Message-ID: <20111109212505.GC10712@tuxdriver.com> (sfid-20111109_223036_770587_701B64EE)
-References: <20111109193504.GA32400@tuxdriver.com>
- <20111109.162015.2261725491621555303.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="BOKacYhQ+x31HxR3"
-In-Reply-To: <20111109.162015.2261725491621555303.davem@davemloft.net>
+	Tue, 8 Nov 2011 00:44:46 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 6/7] mwifiex: remove unnecessary free_priv handler
+Date: Mon,  7 Nov 2011 21:41:11 -0800
+Message-Id: <1320730872-25619-7-git-send-email-bzhao@marvell.com> (sfid-20111108_064449_480252_261F7018)
+In-Reply-To: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
+References: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Amitkumar Karwar <akarwar@marvell.com>
 
---BOKacYhQ+x31HxR3
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Cfg80211 stack allocates private area for driver use in
+struct cfg80211_bss. It will be freed by stack in bss_release().
+Driver don't need to worry about it.
 
-On Wed, Nov 09, 2011 at 04:20:15PM -0500, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Wed, 9 Nov 2011 14:35:04 -0500
->=20
-> > Regarding the Bluetooth fixes, Gustavo says this:
-> >=20
-> > Please let me know if there are problems!
->=20
-> Gustavo says what? :-)
+In mwifiex driver, we use the private area just to store band
+information(u8). We don't allocate memory explicitly and store
+it's pointer in bss->priv. Hence we don't have any cleanup work
+to do in free_priv handler. Currently we try to free the allocated
+private area in free_priv handler which is not correct.
 
-Hmmm...obviously not my best day...
+This patch removes unnecessary free_priv handler.
 
-Gustavo says:
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/scan.c |    6 ------
+ 1 files changed, 0 insertions(+), 6 deletions(-)
 
-"3 more fixes to linux 3.2. One is USB device id addition and the other two
-patches combined fixes a connection issue. The first one from Arek Lichwa
-revert the wrong fix and a second commit from Andrzej Kaczmarek fix the iss=
-ue
-properly."
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index 8a3f959..c650e60 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1535,11 +1535,6 @@ done:
+ 	return 0;
+ }
+ 
+-static void mwifiex_free_bss_priv(struct cfg80211_bss *bss)
+-{
+-	kfree(bss->priv);
+-}
+-
+ /*
+  * This function handles the command response of scan.
+  *
+@@ -1765,7 +1760,6 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 					      cap_info_bitmap, beacon_period,
+ 					      ie_buf, ie_len, rssi, GFP_KERNEL);
+ 				*(u8 *)bss->priv = band;
+-				bss->free_priv = mwifiex_free_bss_priv;
+ 
+ 				if (priv->media_connected && !memcmp(bssid,
+ 					priv->curr_bss_params.bss_descriptor
+-- 
+1.7.0.2
 
-Hth! :-)
-
-John
-
-P.S.  Pull request head is commit e29ec6247053ad60bd0b36f155b647364a615097.
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-
---BOKacYhQ+x31HxR3
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJOuu+xAAoJEJctW/TcYTgGQUAP+wfBT9FFB/oB3lNqu2j3GgEs
-b4TfFi716y+kJJfRBrJuliz9UaO0k483e+hZ8a7fhaMgoMmPMWWKvLFqQLY/ldNJ
-+/iSDQSWgbZ8MPsd9GmwRih9FCpdmS4sGizPbaZL/twqEcSUrP+VfhRhI93KZsLE
-s2YWdm7di1kzaSvrT3+/GD67Hj9NXVhy5x/RhYemiqEbb7w9jP1uxo6Ywk7/5V4S
-DtwYqxNqE4vAl2GZ5Au/kJnSAf6DDGVBMwenlGQPwJhHq1eRAtCNTujsrJGf/RUo
-rFvbVQhX+LhyHiMudCJrHmNpLGAlHowis/W2veV9uUEJXlHeAgMiLeC7aYtEV/Lp
-RJ20xy1C0XxsZ91jKf7imv/vpgA7YNHjuqZcQvvfmyVYwH98U/5v5fgRKhaJ6RBd
-FLekA32cm3Ew5Ns+r1QkJHj43tJceu/kDfmGmIBPkn6KHaeYIECKczoS8qTmxMBX
-jimF9cGK2lMHFdTuksKnx6Avj1g2teZraX5dj1Qr0QBP1nmh45+aGk4/E2u59sy3
-4gHmFoaS48HJvtpszEnQ3r18YxV48W3mMEe9MCfaRi2KXvotz80JnUSSRkTPsu7j
-VojCim4DCCaA6fMHlVPPF7bFpv7NWVvdlUFDfRKewP4WLTsQMGTXG6b01jMzZTrm
-UadbLQi3b1jJAlB+T3cb
-=mfb8
------END PGP SIGNATURE-----
-
---BOKacYhQ+x31HxR3--
