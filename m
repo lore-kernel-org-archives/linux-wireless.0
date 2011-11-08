@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36895 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:57263 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751034Ab1K0JiJ (ORCPT
+	with ESMTP id S1751501Ab1KHSVS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Nov 2011 04:38:09 -0500
-Subject: Re: [PATCH] mac80211: fix race condition caused by late addBA resp
+	Tue, 8 Nov 2011 13:21:18 -0500
+Subject: Re: [PATCH v6 1/2] wireless:  Support ht-capabilities over-rides.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1322378621-14647-2-git-send-email-mar.kolya@gmail.com> (sfid-20111127_082402_823149_B8E64ABA)
-References: <1322378621-14647-1-git-send-email-mar.kolya@gmail.com>
-	 <1322378621-14647-2-git-send-email-mar.kolya@gmail.com>
-	 (sfid-20111127_082402_823149_B8E64ABA)
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4EB9720B.8080704@candelatech.com>
+References: <1320707676-17255-1-git-send-email-greearb@candelatech.com>
+	 (sfid-20111108_001449_233997_95FF19FA) <1320740099.4304.5.camel@jlt3.sipsolutions.net>
+	 <4EB96A5C.8040606@candelatech.com>
+	 <1320775251.24797.31.camel@jlt3.sipsolutions.net>
+	 <4EB9720B.8080704@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 27 Nov 2011 10:38:05 +0100
-Message-ID: <1322386685.4044.8.camel@jlt3.sipsolutions.net> (sfid-20111127_103814_275863_26FE29A9)
+Date: Tue, 08 Nov 2011 19:21:14 +0100
+Message-ID: <1320776474.24797.32.camel@jlt3.sipsolutions.net> (sfid-20111108_192121_613081_4DA2F8D5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-11-27 at 02:23 -0500, Nikolay Martynov wrote:
-> Currently if addBA respones comes in just after addba_resp_timer has
-> expired we still accept addBA response and (try to) open agg
-> session. This patch fixes this race condition and makes sure that if
-> addba_resp_timer has expired addBA response is not longer accepted and
-> we do not try to open half-closed session.
+On Tue, 2011-11-08 at 10:16 -0800, Ben Greear wrote:
 
-I wonder what happened that we hit all these races now ... kinda
-strange.
+> > Fair enough. I think what I'm really after is having a way to know wtf
+> > we're using when you requested something. That would probably be more
+> > useful overall.
 
+ok.
 
-> +	del_timer_sync(&tid_tx->addba_resp_timer);
-> +
-> +	/*
-> +	 * Test that we are not stopping agg session now.
-> +	 * Since addba_resp_timer may have just finished we need to
-> +	 * check HT_AGG_STATE_STOPPING too.
-> +	 */
-> +	if (test_bit(HT_AGG_STATE_WANT_STOP, &tid_tx->state)
-> +	    || test_bit(HT_AGG_STATE_STOPPING, &tid_tx->state)) {
-> +#ifdef CONFIG_MAC80211_HT_DEBUG
-> +		printk(KERN_DEBUG "got addBA resp for tid %d but we are not "
-> +				"(or no longer) expecting expecting it\n",
-> +			tid);
-> +#endif
-> +		goto out;
-> +	}
-> +
->  	if (mgmt->u.action.u.addba_resp.dialog_token != tid_tx->dialog_token) {
->  #ifdef CONFIG_MAC80211_HT_DEBUG
->  		printk(KERN_DEBUG "wrong addBA response token, tid %d\n", tid);
+> The current ht_cap settings for each station are in debugfs, so hopefully it
+> would not be that difficult to add it to a netlink response.  Perhaps
+> it's already there..I haven't looked yet.
+> 
+> > FWIW, I did talk to some people at the kernel summit about the -EINVAL
+> > thing and maybe there's an idea to send back the invalid attribute at
+> > least, but doesn't really matter here. I'm OK with just allowing it all
+> > since it's not going to be used a lot anyway.
+> 
+> Ok, I'll add some printks.
 
-You can't do this -- if this happens and the dialog token is bad the
-session will linger forever since the timer is now dead.
+I really don't think you should add printks here for this.
 
-Also please move the bool operators to the end of the line rather than
-the start:
-	if (test_bit(...) ||
-	    test_bit(...)) {
+> > OTOH, if you request a connect(), you don't even know the band and
+> > technically a driver could have different capabilities on different
+> > bands.
+> 
+> Lets see if any other drivers try to support these features.  Anyone
+> doing that work will likely see some ways to make use of common code
+> and things can be shuffled then.  As written, the patches are not overly
+> invasive, so I think we can move stuff around later without too much
+> trouble.
 
-Other than that the patch looks fine.
+Ok, fair enough.
 
 johannes
 
