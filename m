@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39945 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752288Ab1KKN0n (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:59628 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756262Ab1KHSkj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Nov 2011 08:26:43 -0500
-Subject: Re: off- & multi-channel operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20111111131632.GA2331@redhat.com>
-References: <1320844134.3845.61.camel@jlt3.sipsolutions.net>
-	 <20111111131632.GA2331@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 11 Nov 2011 14:26:33 +0100
-Message-ID: <1321017993.3977.206.camel@jlt3.sipsolutions.net> (sfid-20111111_142646_299566_14E769B8)
-Mime-Version: 1.0
+	Tue, 8 Nov 2011 13:40:39 -0500
+Date: Tue, 8 Nov 2011 16:41:10 -0200
+From: Gustavo Padovan <padovan@profusion.mobi>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2011-11-08
+Message-ID: <20111108183937.GF25584@joana> (sfid-20111108_194056_246910_FE86034E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-11-11 at 14:16 +0100, Stanislaw Gruszka wrote:
-> On Wed, Nov 09, 2011 at 02:08:54PM +0100, Johannes Berg wrote:
-> > How do we want to handle these things? I'm sure I want the drivers to
-> > handle multi-channel operation fairly transparently, with multiple
-> > (hardware) queues (in the driver), so mac80211 doesn't have to
-> > start/stop the queues continuously and can just transmit on that
-> > interface, the frame might only go out a bit later.
-> 
-> I do not quite understand how separate tx queues could help here, because
-> we not only have to transmit off-channel but also receive data. For me
-> simple solution would be adding new functions on top of
-> ieee80211_tx_skb, which will just queue skb's if we are not on operating
-> channel at present, and send them lately when we come back.
-> 
-> Or perhaps you are talking about separate tx and rx queues, that could
-> eventually work, but driver still should know how long to stay off-channel
-> to receive all needed frames. 
+Hi John,
 
-Well, so usually you'd schedule NoA, or use null data frames to not
-receive, etc. Using multiple TX queues would help schedule the TX,
-scheduling the RX is a different issue.
+3 more fixes to linux 3.2. One is USB device id addition and the other two
+patches combined fixes a connection issue. The first one from Arek Lichwa
+revert the wrong fix and a second commit from Andrzej Kaczmarek fix the issue
+properly.
 
-johannes
+Please pull, or let me know any problem with this.
+
+	Gustavo
+
+
+The following changes since commit 24b9c373ab787ccacfa2c46736153708796f5cd6:
+
+  mac80211: uAPSD - fix IEEE80211_FCTL_MOREDATA bit setting (2011-11-07 13:19:15 -0500)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth master
+
+Andrzej Kaczmarek (1):
+      Bluetooth: Use miliseconds for L2CAP channel timeouts
+
+Arek Lichwa (1):
+      Bluetooth: Revert: Fix L2CAP connection establishment
+
+Wen-chien Jesse Sung (1):
+      Bluetooth: Add support for Broadcom BCM20702A0
+
+ drivers/bluetooth/btusb.c     |    3 +++
+ include/net/bluetooth/l2cap.h |    7 +++++--
+ net/bluetooth/hci_conn.c      |    2 +-
+ net/bluetooth/l2cap_core.c    |   16 ++++++++--------
+ 4 files changed, 17 insertions(+), 11 deletions(-)
 
