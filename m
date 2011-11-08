@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:59592 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752064Ab1KYUIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 15:08:19 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 5/7] iwlwifi: show command string for REPLY_D3_CONFIG
-Date: Fri, 25 Nov 2011 11:11:46 -0800
-Message-Id: <1322248308-5113-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111125_210823_968844_0DE33A92)
-In-Reply-To: <1322248308-5113-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1322248308-5113-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:53897 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754420Ab1KHNOP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Nov 2011 08:14:15 -0500
+Subject: Re: [PATCH 2/3] mac80211: remove useless brackets in
+ ieee80211_cfg_on_oper_channel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1320313247-23167-2-git-send-email-sgruszka@redhat.com>
+References: <1320313247-23167-1-git-send-email-sgruszka@redhat.com>
+	 <1320313247-23167-2-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Nov 2011 14:14:11 +0100
+Message-ID: <1320758051.4304.31.camel@jlt3.sipsolutions.net> (sfid-20111108_141417_568342_3E5CBA16)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-missing the string, add it
+On Thu, 2011-11-03 at 10:40 +0100, Stanislaw Gruszka wrote:
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-index fdb4c37..087fd52 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-@@ -117,6 +117,7 @@ const char *get_cmd_string(u8 cmd)
- 		IWL_CMD(REPLY_WOWLAN_TKIP_PARAMS);
- 		IWL_CMD(REPLY_WOWLAN_KEK_KCK_MATERIAL);
- 		IWL_CMD(REPLY_WOWLAN_GET_STATUS);
-+		IWL_CMD(REPLY_D3_CONFIG);
- 	default:
- 		return "UNKNOWN";
- 
--- 
-1.7.0.4
+> ---
+>  net/mac80211/main.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index 7710b10..cd87fd9 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -126,8 +126,8 @@ bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local)
+>  		return false;
+>  
+>  	/* Check current hardware-config against oper_channel. */
+> -	if ((local->oper_channel != local->hw.conf.channel) ||
+> -	    (local->_oper_channel_type != local->hw.conf.channel_type))
+> +	if (local->oper_channel != local->hw.conf.channel ||
+> +	    local->_oper_channel_type != local->hw.conf.channel_type)
+>  		return false;
+>  
+>  	return true;
+
 
