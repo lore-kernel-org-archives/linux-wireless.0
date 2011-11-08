@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:45222 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753915Ab1KXJEH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 04:04:07 -0500
-Message-ID: <4ECE0884.70005@neratec.com> (sfid-20111124_100413_482107_A66C6A80)
-Date: Thu, 24 Nov 2011 10:04:04 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	shafi.wireless@gmail.com, nbd@openwrt.org
-Subject: Re: [PATCH 0/2] ath9k: DFS radar detection
-References: <1320770044-12271-1-git-send-email-zefir.kurtisi@neratec.com>	<20111115143755.GB2483@tuxdriver.com>	<CAB=NE6WLvLc2UpuQ2RYagN2OhwvEZZuYTUY+Ak+wFmBPH9EfUQ@mail.gmail.com>	<4ECD1B40.1050203@neratec.com> <CAJ-Vmon=VWhPQHJ9LJAy6YA9ER-rGRpWD8oKLf9Nd+DCirF0Eg@mail.gmail.com>
-In-Reply-To: <CAJ-Vmon=VWhPQHJ9LJAy6YA9ER-rGRpWD8oKLf9Nd+DCirF0Eg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:46478 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754448Ab1KHR4o (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Nov 2011 12:56:44 -0500
+Subject: Re: [RFT/FYI] mac80211: revert on-channel work optimisations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4EB9661F.9040901@candelatech.com>
+References: <1320772222.24797.22.camel@jlt3.sipsolutions.net>
+	 <4EB96416.5040700@candelatech.com>
+	 <1320772727.24797.23.camel@jlt3.sipsolutions.net>
+	 <4EB9661F.9040901@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Nov 2011 18:56:41 +0100
+Message-ID: <1320775001.24797.26.camel@jlt3.sipsolutions.net> (sfid-20111108_185647_894624_9B868ED1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/24/2011 09:40 AM, Adrian Chadd wrote:
-> On 24 November 2011 00:11, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
->> Luis,
->>
->> any pending concerns or feedback before I start working on v2?
-> 
-> What's your ETA for getting the radar classification stuff done?
-> 
-> I'd like to evaluate the radar classification code and how it all ties
-> together. :)
-> 
-> Thanks,
-> 
-> 
-> adrian
+On Tue, 2011-11-08 at 09:25 -0800, Ben Greear wrote:
 
-Hi Adrian,
+> That's fine by me, I found the code complex as well.  All the tmp
+> and scan and active channel pointers makes for a real mess.  
 
-I'm stuck in my step-by-step approach, i.e. to get the pulse detection upstream first and then get back to the detection stuff. Just under-estimated how long it takes to get those few lines accepted...
+Indeed.
 
-Hopefully we'll have something to evaluate soon.
+> But if
+> you want multiple vifs to work well, then you really need to be able
+> to continue to function on-channel when some other vif is scanning
+> on that channel.  My use of the wifi stack requires this to work,
+> so if it takes any significant time to get the new code in I'm going
+> to have to stick with my complex crap.
 
+And I'm not saying you shouldn't, but I think for upstream right now
+it's not really a good thing. I wish I could say otherwise but given the
+bugs we have here etc. I don't really feel very confident.
 
+Now with multi-channel stuff it's all going to change anyway, each vif
+will have its own channel and the device will have to mostly sort out
+the scheduling by itself, ath9k will have to do some tricks in the
+driver, maybe with some help in mac80211, and off-channel stuff will be
+interesting too ...
 
-Zefir
+johannes
 
