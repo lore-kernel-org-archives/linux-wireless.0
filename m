@@ -1,55 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26010 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750990Ab1KWKH2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35035 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755386Ab1KHU6M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 05:07:28 -0500
-Date: Wed, 23 Nov 2011 15:37:19 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>, <mcgrof@gmail.com>
-CC: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>, <compat@orbit-lab.org>,
-	Paul Stewart <pstew@google.com>,
-	Senthilkumar Balasubramanian <senthilb@qca.qualcomm.com>
-Subject: Re: [PATCH 1/3] cfg80211: allow following country IE power for
- custom regdom cards
-Message-ID: <20111123100717.GA1761@vmraj-lnx.users.atheros.com> (sfid-20111123_110732_260952_8A6AC942)
-References: <1321985402-14257-1-git-send-email-mcgrof@qca.qualcomm.com>
- <1321985402-14257-2-git-send-email-mcgrof@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1321985402-14257-2-git-send-email-mcgrof@qca.qualcomm.com>
+	Tue, 8 Nov 2011 15:58:12 -0500
+Subject: Re: [PATCH v8 2/2] mac80211:  Support ht-cap over-rides.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4EB994A1.1020808@candelatech.com>
+References: <1320780995-30483-1-git-send-email-greearb@candelatech.com>
+	 <1320780995-30483-2-git-send-email-greearb@candelatech.com>
+	 (sfid-20111108_203659_989707_E33ECA13) <1320782949.24797.45.camel@jlt3.sipsolutions.net>
+	 <4EB994A1.1020808@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Nov 2011 21:58:09 +0100
+Message-ID: <1320785889.24797.75.camel@jlt3.sipsolutions.net> (sfid-20111108_215815_206338_233E9EBD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 22, 2011 at 10:10:00AM -0800, Luis R. Rodriguez wrote:
-> By definition WIPHY_FLAG_STRICT_REGULATORY was intended to allow the
-> wiphy to adjust itself to the country IE power information if the
-> card had no regulatory data but we had no way to tell cfg80211 that if
-> the card also had its own custom regulatory domain (these are typically
-> custom world regulatory domains) that we want to follow the country IE's
-> noted values for power for each channel. We add support for this and
-> document it.
+On Tue, 2011-11-08 at 12:44 -0800, Ben Greear wrote:
+> On 11/08/2011 12:09 PM, Johannes Berg wrote:
+> > On Tue, 2011-11-08 at 11:36 -0800, greearb@candelatech.com wrote:
+> >
+> >> +			/*
+> >> +			 * We always need to advert at least MCS0-7, to
+> >> +			 * be a compliant HT station, for instance
+> >> +			 */
+> >> +			if (((i * 8 + q)>= min_rates)&&
+> >
+> > This is a little misleading -- why min_rates when the comment says
+> > MCS0-7?
 > 
-> This is not a critical fix but a performance optimization for cards
-> with custom regulatory domains that associate to an AP with sends
-> out country IEs with a higher EIRP than the one on the custom
-> regulatory domain. In practice the only driver affected right now
-> are the Atheros drivers as they are the only drivers using both
-> WIPHY_FLAG_STRICT_REGULATORY and WIPHY_FLAG_CUSTOM_REGULATORY --
-> used on cards that have an Atheros world regulatory domain. Cards
-> that have been programmed to follow a country specifically will not
-> follow the country IE power. So although not a stable fix distributions
-> should consider cherry picking this.
+> I let caller determine the min, but comment was to tell why
+> the min might be set.  In APs, the min supported rates are 16, evidently...not
+> that this code supports APs at the moment...
+
+About APs: that can't be right, there certainly will be 1x1 APs.
+
+> When this is about local use instead of advertising, then any minimum
+> is OK.
 > 
-Luis,
+> Want me to just remove the comment entirely?
 
-After some testing, I noticed that the incresed power value seems to be
-remained after the disconnection. So while falling back to world
-regulatory domain the band updations are ignored at ignore_reg_update.
-If the driver follows STRICT_REGULATORY, the it should not be ignored.
-isn't it?
+Well, so, I think the logic there is a little odd anyway -- why aren't
+you doing it byte-wise, if the only thing that can possibly happen is
+that the first byte is masked or not? Maybe change the parameter to
+"bool allow_single_stream_mask" or something like that and adjust the
+algorithm like:
 
---
-Rajkumar
+start = allow_single_stream_mask ? 0 : 1;
+
+for (i = start; i < IEEE80211_HT_MCS_MASK_LEN; i++) {
+	u8 val = smask[i] & scaps[i];
+	val |= ht_cap->mcs.rx_mask[i] & ~smask[i];
+	ht_cap->mcs.rx_mask[i] val;
+}
+
+or so. right? Much simpler?
+
+johannes
 
