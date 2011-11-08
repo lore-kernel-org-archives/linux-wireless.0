@@ -1,65 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:8626 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751677Ab1KMJW2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60410 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755158Ab1KHP6y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Nov 2011 04:22:28 -0500
-Message-ID: <4EBF8C47.2080907@qca.qualcomm.com> (sfid-20111113_102237_214064_1EBBCAB3)
-Date: Sun, 13 Nov 2011 11:22:15 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: Fix accessing wrong skb->data in ath6kl_tx_complete()
-References: <1320650417-11954-1-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1320650417-11954-1-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Tue, 8 Nov 2011 10:58:54 -0500
+Subject: Re: [PATCH v3 1/3] nl80211: Add probe response offload attribute
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+In-Reply-To: <CA+XVXfcrbfVvs+PQCjyrW_QZSKZiAzKUvrqbjqJr47dU73=n2A@mail.gmail.com> (sfid-20111108_165440_062522_2707F77D)
+References: <1320762928-6782-1-git-send-email-arik@wizery.com>
+	 <1320766291.24797.4.camel@jlt3.sipsolutions.net>
+	 <CA+XVXfcrbfVvs+PQCjyrW_QZSKZiAzKUvrqbjqJr47dU73=n2A@mail.gmail.com>
+	 (sfid-20111108_165440_062522_2707F77D)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Nov 2011 16:58:48 +0100
+Message-ID: <1320767928.24797.14.camel@jlt3.sipsolutions.net> (sfid-20111108_165857_732994_E8049B8D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/07/2011 09:20 AM, Vasanthakumar Thiagarajan wrote:
-> When buffer alignmnet is applied, the data pointer of skb taken from
-> cookie will no longer point to the first byte of the actual data.
-> But the skb->data pointer is used in ath6kl_tx_complete() to get
-> the index of the virtual interface which will not give the correct
-> interface index and sometimes may give the following WARN_ON() message.
-> Use packet->buf instead of skb->data to fix this.
+On Tue, 2011-11-08 at 17:53 +0200, Arik Nemtsov wrote:
+> On Tue, Nov 8, 2011 at 17:31, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Tue, 2011-11-08 at 16:35 +0200, Arik Nemtsov wrote:
+> >> Notify user-space about probe-response offloading support in the driver.
+> >>
+> >> A wiphy flag is used to indicate support and a bitmap of protocols
+> >> determines which protocols are supported.
+> >
+> >> + * @NL80211_ATTR_PROBE_RESP_OFFLOAD_SUPPORT: Indicates support for probe
+> >> + *   response offloading by the driver/firmware.
+> >> + *   In addition this attribute holds a bitmap of the supported protocols
+> >> + *   for offloading using &enum nl80211_probe_resp_offload_support_attr.
+> >
+> > I wonder if this should make it more clear that probe requests will be
+> > replied to, and this is not optional?
 > 
-> WARNING: at drivers/net/wireless/ath/ath6kl/wmi.c:88 ath6kl_get_vif_by_index+0x5b/0x60 [ath6kl]()
-> Hardware name: 2842K3U
-> Modules linked in: ath6kl mmc_block cfg80211 binfmt_misc ppdev nfs nfsd lockd nfs_acl auth_rpcgss sunrpc exportfs snd_hda_codec_hdmi snd_hda_codec_realtek snd_hda_intel
-> +snd_hda_codec snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm snd_seq_dummy thinkpad_acpi snd_seq_oss snd_seq_midi snd_rawmidi joydev fbcon tileblit font bitblit softcursor
-> +snd_seq_midi_event snd_seq snd_timer snd_seq_device i915 uvcvideo drm_kms_helper drm psmouse serio_raw snd i2c_algo_bit sdhci_pci videodev intel_agp soundcore intel_gtt jmb38x_ms
-> +memstick sdhci snd_page_alloc nvram lp parport agpgart video ahci r8169 mii libahci [last unloaded: ath6kl]
-> Pid: 15482, comm: kworker/u:1 Tainted: G        W   3.1.0-rc10-wl+ #2
-> Call Trace:
->  [<c0144d72>] warn_slowpath_common+0x72/0xa0
->  [<fb7c94fb>] ? ath6kl_get_vif_by_index+0x5b/0x60 [ath6kl]
->  [<fb7c94fb>] ? ath6kl_get_vif_by_index+0x5b/0x60 [ath6kl]
->  [<c0144dc2>] warn_slowpath_null+0x22/0x30
->  [<fb7c94fb>] ath6kl_get_vif_by_index+0x5b/0x60 [ath6kl]
->  [<fb7c7028>] ath6kl_tx_complete+0x128/0x4d0 [ath6kl]
->  [<c04df920>] ? mmc_request_done+0x80/0x80
->  [<fb7b9e2e>] htc_tx_complete+0x5e/0x70 [ath6kl]
->  [<c05e4cf6>] ? _raw_spin_unlock_bh+0x16/0x20
->  [<fb7ce588>] ? ath6kl_sdio_scatter_req_add+0x48/0x60 [ath6kl]
->  [<fb7b9f42>] htc_async_tx_scat_complete+0xb2/0x120 [ath6kl]
->  [<fb7ce9e7>] ath6kl_sdio_scat_rw+0x87/0x370 [ath6kl]
->  [<c0101e12>] ? __switch_to+0xd2/0x190
->  [<c01397b5>] ? finish_task_switch+0x45/0xd0
->  [<c05e272e>] ? __schedule+0x3ae/0x8b0
->  [<fb7cf00a>] ath6kl_sdio_write_async_work+0x4a/0xf0 [ath6kl]
->  [<c015d266>] process_one_work+0x116/0x3c0
->  [<fb7cefc0>] ? ath6kl_sdio_read_write_sync+0xb0/0xb0 [ath6kl]
->  [<c015f5b0>] worker_thread+0x140/0x3b0
->  [<c015f470>] ? manage_workers+0x1f0/0x1f0
->  [<c0163424>] kthread+0x74/0x80
->  [<c01633b0>] ? kthread_worker_fn+0x160/0x160
->  [<c05ebdc6>] kernel_thread_helper+0x6/0x10
+> Actually wl12xx "supports" the legacy way as well. We can operate
+> without wpa_s explicitly setting the probe-resp (even though we just
+> piece it together in other ways).
+> In this sense, it's not a mandatory feature. If wpa_s fails to
+> generate it for some reason, we don't want it to fail the AP load. The
+> AP will operate just fine.
+
+It'll operate, not sure about "just fine" :-) The way I see it that's
+mostly a backward compatibility feature, no?
+
+> >> +++ b/include/net/cfg80211.h
+> >> @@ -1693,6 +1693,7 @@ enum wiphy_flags {
+> >>       WIPHY_FLAG_AP_UAPSD                     = BIT(14),
+> >>       WIPHY_FLAG_SUPPORTS_TDLS                = BIT(15),
+> >>       WIPHY_FLAG_TDLS_EXTERNAL_SETUP          = BIT(16),
+> >> +     WIPHY_FLAG_SUPPORT_PROBE_RESP_OFFLOAD   = BIT(17),
+> >
+> > Ditto here, maybe WIPHY_FLAG_HAS_PROBE_RESP_OFFLOAD?
+> >
+> > As we discussed, ath6kl & similar full-mac drivers with AP SME in the
+> > device should set this to advertise the probe protocol feature set they
+> > support (by passing up), and even for wl12xx it's not optional.
 > 
-> Reported-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+> All this has to do with user-space semantics. Currently hostap always
+> sets the probe-resp IEs, without checking offloading support.
 
-Thanks, applied.
+Which is fine too, but I think ath6kl should set this value right?
 
-Kalle
+johannes
+
