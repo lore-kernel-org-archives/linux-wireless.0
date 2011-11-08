@@ -1,57 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:35624 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951Ab1KSTKm (ORCPT
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:33087 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755730Ab1KHOOn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Nov 2011 14:10:42 -0500
-Received: by bke11 with SMTP id 11so4790760bke.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 11:10:40 -0800 (PST)
-Message-Id: <b30e06a145950db50eb9d8c0a2e3a699faf08772.1321729714.git.chunkeey@googlemail.com> (sfid-20111119_201046_358441_E8F7E36D)
-In-Reply-To: <6fa261d3570aa403491add7399e1b8b8c4fac143.1321729714.git.chunkeey@googlemail.com>
-References: <6fa261d3570aa403491add7399e1b8b8c4fac143.1321729714.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sat, 19 Nov 2011 19:30:20 +0100
-Subject: [PATCH 2/2] carl9170: use ieee80211_free_txskb
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+	Tue, 8 Nov 2011 09:14:43 -0500
+Received: by mail-bw0-f51.google.com with SMTP id t8so412045bka.38
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 06:14:41 -0800 (PST)
+Subject: Re: [PATCH] wl12xx: fix SDIO suspend/resume
+From: Luciano Coelho <coelho@ti.com>
+To: Eyal Shapira <eyal@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1320760615-19794-1-git-send-email-eyal@wizery.com>
+References: <1320760615-19794-1-git-send-email-eyal@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Nov 2011 16:14:38 +0200
+Message-ID: <1320761678.19479.18.camel@cumari> (sfid-20111108_151447_128461_FCD041B0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the past, it was fine to simply call
-dev_kfree_skb when it was impossible to
-transmit a skb. However, with the new
-tx status API:
-"mac80211: implement wifi TX status"
-Every loose skb needs to be handed back
-to mac80211.
+On Tue, 2011-11-08 at 15:56 +0200, Eyal Shapira wrote: 
+> wl1271_suspend/resume() accessed the wrong struct and not wl1271
+> which caused it to think that wow was enabled when it wasn't.
+> 
+> Signed-off-by: Eyal Shapira <eyal@wizery.com>
+> ---
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/net/wireless/ath/carl9170/tx.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Applied.  Thanks Eyal!
 
-diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
-index 59472e1..d19a9ee 100644
---- a/drivers/net/wireless/ath/carl9170/tx.c
-+++ b/drivers/net/wireless/ath/carl9170/tx.c
-@@ -314,7 +314,7 @@ static void carl9170_tx_release(struct kref *ref)
- 			 *    feedback either [CTL_REQ_TX_STATUS not set]
- 			 */
- 
--			dev_kfree_skb_any(skb);
-+			ieee80211_free_txskb(ar->hw, skb);
- 			return;
- 		} else {
- 			/*
-@@ -1432,7 +1432,7 @@ void carl9170_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- err_free:
- 	ar->tx_dropped++;
--	dev_kfree_skb_any(skb);
-+	ieee80211_free_txskb(ar->hw, skb);
- }
- 
- void carl9170_tx_scheduler(struct ar9170 *ar)
 -- 
-1.7.7.3
+Cheers,
+Luca.
 
