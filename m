@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34049 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934550Ab1KJNhq (ORCPT
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:36821 "HELO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752174Ab1KHDcG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 08:37:46 -0500
-Subject: Re: rewriting powersave
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 7 Nov 2011 22:32:06 -0500
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kalle.valo@iki.fi>
-In-Reply-To: <1320929045.3967.52.camel@jlt3.sipsolutions.net> (sfid-20111110_134417_015524_7F885E2A)
-References: <1320929045.3967.52.camel@jlt3.sipsolutions.net>
-	 (sfid-20111110_134417_015524_7F885E2A)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 10 Nov 2011 14:37:41 +0100
-Message-ID: <1320932261.3967.53.camel@jlt3.sipsolutions.net> (sfid-20111110_143752_720251_ED6AA78E)
-Mime-Version: 1.0
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH RESEND 2/4] mwifiex: remove an unneeded NULL check
+Date: Mon,  7 Nov 2011 19:31:45 -0800
+Message-Id: <1320723107-24202-3-git-send-email-bzhao@marvell.com> (sfid-20111108_043209_038874_B5BC7A45)
+In-Reply-To: <1320723107-24202-1-git-send-email-bzhao@marvell.com>
+References: <1320723107-24202-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-11-10 at 13:44 +0100, Johannes Berg wrote:
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-> Since clearly it is possible to implement this in the lower layers, I'm
-> thinking we should provide an implementation that the drivers can use to
-> implement powersave and be in category 4 from mac80211's POV.
-> 
-> I think the API for case 3 could look something like this:
-> 
-> struct powersave {
-> 	...
-> };
-> 
-> struct powersave_ops {
-> 	void (*tx_nulldata)(void *ctx, ...);
-> 	void (*set_radio)(void *ctx, bool on);
-> 	void (*timeout_radio_off)(void *ctx);
-> };
+We dereference adapter in the error handling code so this needed to
+be fixed.  This function is always called like:
+	adapter->if_ops.host_to_card(adapter, ...);
+so adapter can never be NULL and I've removed the NULL check.
 
-[...]
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Acked-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-Also, the stick will be I'm going to remove the existing implementation
-eventually, and the carrot will be that you'll get PS for multiple
-virtual interfaces with this and I'm not going to take it directly into
-mac80211 :-)
-
-johannes
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 4466976..d12d440 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1671,9 +1671,8 @@ static int mwifiex_pcie_host_to_card(struct mwifiex_adapter *adapter, u8 type,
+ 				     struct sk_buff *skb,
+ 				     struct mwifiex_tx_param *tx_param)
+ {
+-	if (!adapter || !skb) {
+-		dev_err(adapter->dev, "Invalid parameter in %s <%p, %p>\n",
+-				__func__, adapter, skb);
++	if (!skb) {
++		dev_err(adapter->dev, "Passed NULL skb to %s\n", __func__);
+ 		return -1;
+ 	}
+ 
+-- 
+1.7.0.2
 
