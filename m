@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:51117 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750920Ab1K1AWf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42513 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755419Ab1KHP1h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Nov 2011 19:22:35 -0500
-Received: by mail-vw0-f46.google.com with SMTP id fc26so3356107vbb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2011 16:22:35 -0800 (PST)
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	rodrigue@qca.qualcomm.com, Nikolay Martynov <mar.kolya@gmail.com>
-Subject: [PATCH v2 1/4] ath9k: trivial: cosmetic fix in calibration debug log
-Date: Sun, 27 Nov 2011 19:22:11 -0500
-Message-Id: <1322439734-14520-2-git-send-email-mar.kolya@gmail.com> (sfid-20111128_012238_121831_3A8294EC)
-In-Reply-To: <1322439734-14520-1-git-send-email-mar.kolya@gmail.com>
-References: <1322439734-14520-1-git-send-email-mar.kolya@gmail.com>
+	Tue, 8 Nov 2011 10:27:37 -0500
+Subject: Re: [PATCH] mac80211: set carrier_on for ibss vifs only while
+ joined
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1320759419-20743-1-git-send-email-eliad@wizery.com> (sfid-20111108_143735_222438_9B54C70A)
+References: <1320759419-20743-1-git-send-email-eliad@wizery.com>
+	 (sfid-20111108_143735_222438_9B54C70A)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Nov 2011 16:27:34 +0100
+Message-ID: <1320766054.24797.2.camel@jlt3.sipsolutions.net> (sfid-20111108_162801_866215_533FAD84)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  Add missed space and change typo in calibration debugging log.
+On Tue, 2011-11-08 at 15:36 +0200, Eliad Peller wrote:
+> mac80211 should set carrier_on for ibss vifs
+> only while they are joined (similar to sta vifs)
 
-Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_calib.c |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -97,6 +97,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+>  	/* if merging, indicate to driver that we leave the old IBSS */
+>  	if (sdata->vif.bss_conf.ibss_joined) {
+>  		sdata->vif.bss_conf.ibss_joined = false;
+> +		netif_carrier_off(sdata->dev);
+>  		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IBSS);
+>  	}
+>  
+> @@ -207,6 +208,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+>  	bss = cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
+>  					mgmt, skb->len, 0, GFP_KERNEL);
+>  	cfg80211_put_bss(bss);
+> +	netif_carrier_on(sdata->dev);
+>  	cfg80211_ibss_joined(sdata->dev, ifibss->bssid, GFP_KERNEL);
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 88279e3..157337f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -203,7 +203,7 @@ static void ar9002_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
- 			i);
- 
- 		ath_dbg(common, ATH_DBG_CALIBRATE,
--			"Orignal: Chn %diq_corr_meas = 0x%08x\n",
-+			"Original: Chn %d iq_corr_meas = 0x%08x\n",
- 			i, ah->totalIqCorrMeas[i]);
- 
- 		iqCorrNeg = 0;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 12a730d..4b3c70a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -225,7 +225,7 @@ static void ar9003_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
- 			i);
- 
- 		ath_dbg(common, ATH_DBG_CALIBRATE,
--			"Orignal: Chn %diq_corr_meas = 0x%08x\n",
-+			"Original: Chn %diq_corr_meas = 0x%08x\n",
- 			i, ah->totalIqCorrMeas[i]);
- 
- 		iqCorrNeg = 0;
--- 
-1.7.4.1
+Do we really need to toggle the carrier here? While we merge, shouldn't
+we just keep it up, just maybe stop the queues?
+
+johannes
 
