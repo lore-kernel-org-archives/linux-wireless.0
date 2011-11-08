@@ -1,65 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:43547 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755393Ab1KVAGA (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:36691 "HELO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751678Ab1KHFmE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 19:06:00 -0500
-Received: by yenq3 with SMTP id q3so5316649yen.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 16:06:00 -0800 (PST)
-Message-ID: <4ECAE764.4000407@lwfinger.net> (sfid-20111122_010605_152034_597AF29F)
-Date: Mon, 21 Nov 2011 18:05:56 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Subject: Re: [PATCH] rtlwifi: squash warning in _usb_read_sync
-References: <1321911446-11564-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1321911446-11564-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 8 Nov 2011 00:42:04 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 7/7] mwifiex: release bss structure returned by cfg80211_inform_bss()
+Date: Mon,  7 Nov 2011 21:41:12 -0800
+Message-Id: <1320730872-25619-8-git-send-email-bzhao@marvell.com> (sfid-20111108_064208_104975_7AA313A1)
+In-Reply-To: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
+References: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/21/2011 03:37 PM, John W. Linville wrote:
-> drivers/net/wireless/rtlwifi/usb.c: In function ‘_usb_read_sync’:
-> drivers/net/wireless/rtlwifi/usb.c:102:6: warning: ‘status’ may be used uninitialized in this function
-> drivers/net/wireless/rtlwifi/usb.c:102:6: note: ‘status’ was declared here
->
-> My compiler is dumb, but better to eliminate the warning then to have
-> anyone waste time evaluating this again...
->
-> Signed-off-by: John W. Linville<linville@tuxdriver.com>
-> ---
->   drivers/net/wireless/rtlwifi/usb.c |    5 +++--
->   1 files changed, 3 insertions(+), 2 deletions(-)
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-I like this fix a lot better than initializing 'status' to zero.
+Following compilation warning is fixed by releasing referenced BSS
+structure returned by cfg80211_inform_bss().
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+"warning: ignoring return value of cfg80211_inform_bss,
+declared with attribute warn_unused_result"
 
+Cc: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+This patch fixes the bug mentioned by Johannes Berg:
+See "[PATCH] cfg80211: annotate cfg80211_inform_bss"
 
->
-> diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-> index 79889b8..20f4403 100644
-> --- a/drivers/net/wireless/rtlwifi/usb.c
-> +++ b/drivers/net/wireless/rtlwifi/usb.c
-> @@ -107,7 +107,7 @@ static int _usbctrl_vendorreq_sync_read(struct usb_device *udev, u8 request,
->   	pipe = usb_rcvctrlpipe(udev, 0); /* read_in */
->   	reqtype =  REALTEK_USB_VENQT_READ;
->
-> -	while (++vendorreq_times<= MAX_USBCTRL_VENDORREQ_TIMES) {
-> +	do {
->   		status = usb_control_msg(udev, pipe, request, reqtype, value,
->   					 index, pdata, len, 0); /*max. timeout*/
->   		if (status<  0) {
-> @@ -118,7 +118,8 @@ static int _usbctrl_vendorreq_sync_read(struct usb_device *udev, u8 request,
->   		} else {
->   			break;
->   		}
-> -	}
-> +	} while (++vendorreq_times<  MAX_USBCTRL_VENDORREQ_TIMES);
-> +
->   	if (status<  0&&  count++<  4)
->   		pr_err("reg 0x%x, usbctrl_vendorreq TimeOut! status:0x%x value=0x%x\n",
->   		       value, status, le32_to_cpu(*(u32 *)pdata));
+ drivers/net/wireless/mwifiex/cfg80211.c |    4 +++-
+ drivers/net/wireless/mwifiex/scan.c     |    1 +
+ 2 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 462c710..e9ab9a3 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -780,6 +780,7 @@ static int mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
+ {
+ 	struct ieee80211_channel *chan;
+ 	struct mwifiex_bss_info bss_info;
++	struct cfg80211_bss *bss;
+ 	int ie_len;
+ 	u8 ie_buf[IEEE80211_MAX_SSID_LEN + sizeof(struct ieee_types_header)];
+ 	enum ieee80211_band band;
+@@ -800,9 +801,10 @@ static int mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
+ 			ieee80211_channel_to_frequency(bss_info.bss_chan,
+ 						       band));
+ 
+-	cfg80211_inform_bss(priv->wdev->wiphy, chan,
++	bss = cfg80211_inform_bss(priv->wdev->wiphy, chan,
+ 		bss_info.bssid, 0, WLAN_CAPABILITY_IBSS,
+ 		0, ie_buf, ie_len, 0, GFP_KERNEL);
++	cfg80211_put_bss(bss);
+ 	memcpy(priv->cfg_bssid, bss_info.bssid, ETH_ALEN);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index c650e60..8a18bcc 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1760,6 +1760,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 					      cap_info_bitmap, beacon_period,
+ 					      ie_buf, ie_len, rssi, GFP_KERNEL);
+ 				*(u8 *)bss->priv = band;
++				cfg80211_put_bss(bss);
+ 
+ 				if (priv->media_connected && !memcmp(bssid,
+ 					priv->curr_bss_params.bss_descriptor
+-- 
+1.7.0.2
 
