@@ -1,175 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32739 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932822Ab1KJPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 10:49:38 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 06/27] iwlwifi: remove un-supported SKUs
-Date: Thu, 10 Nov 2011 06:55:06 -0800
-Message-Id: <1320936927-9078-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_165027_182149_426AFA6A)
-In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:56828 "HELO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751576Ab1KHFlg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Nov 2011 00:41:36 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/7] mwifiex: change return types to void
+Date: Mon,  7 Nov 2011 21:41:08 -0800
+Message-Id: <1320730872-25619-4-git-send-email-bzhao@marvell.com> (sfid-20111108_064139_138458_5EA999DC)
+In-Reply-To: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
+References: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BG only SKUs are no longer supported by 2000 and 1x5 series. Remove it
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Functions mwifiex_11n_dispatch_pkt_until_start_win and
+mwifiex_11n_scan_and_dispatch used to always return value
+zero for all inputs. Changing these functions to void.
+
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-2000.c |   20 --------------------
- drivers/net/wireless/iwlwifi/iwl-6000.c |   10 ----------
- drivers/net/wireless/iwlwifi/iwl-cfg.h  |    6 ------
- drivers/net/wireless/iwlwifi/iwl-pci.c  |   18 ------------------
- 4 files changed, 0 insertions(+), 54 deletions(-)
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |   18 ++++++------------
+ 1 files changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index 7943197..b319357 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -270,11 +270,6 @@ struct iwl_cfg iwl2000_2bgn_cfg = {
- 	.ht_params = &iwl2000_ht_params,
- };
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index 7aa9aa0..681d3f2 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -33,7 +33,7 @@
+  * Since the buffer is linear, the function uses rotation to simulate
+  * circular buffer.
+  */
+-static int
++static void
+ mwifiex_11n_dispatch_pkt_until_start_win(struct mwifiex_private *priv,
+ 					 struct mwifiex_rx_reorder_tbl
+ 					 *rx_reor_tbl_ptr, int start_win)
+@@ -71,8 +71,6 @@ mwifiex_11n_dispatch_pkt_until_start_win(struct mwifiex_private *priv,
  
--struct iwl_cfg iwl2000_2bg_cfg = {
--	.name = "2000 Series 2x2 BG",
--	IWL_DEVICE_2000,
--};
+ 	rx_reor_tbl_ptr->start_win = start_win;
+ 	spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
 -
- struct iwl_cfg iwl2000_2bgn_d_cfg = {
- 	.name = "2000D Series 2x2 BGN",
- 	IWL_DEVICE_2000,
-@@ -304,11 +299,6 @@ struct iwl_cfg iwl2030_2bgn_cfg = {
- 	.ht_params = &iwl2000_ht_params,
- };
+-	return 0;
+ }
  
--struct iwl_cfg iwl2030_2bg_cfg = {
--	.name = "2000 Series 2x2 BG/BT",
--	IWL_DEVICE_2030,
--};
+ /*
+@@ -83,7 +81,7 @@ mwifiex_11n_dispatch_pkt_until_start_win(struct mwifiex_private *priv,
+  * Since the buffer is linear, the function uses rotation to simulate
+  * circular buffer.
+  */
+-static int
++static void
+ mwifiex_11n_scan_and_dispatch(struct mwifiex_private *priv,
+ 			      struct mwifiex_rx_reorder_tbl *rx_reor_tbl_ptr)
+ {
+@@ -119,7 +117,6 @@ mwifiex_11n_scan_and_dispatch(struct mwifiex_private *priv,
+ 	rx_reor_tbl_ptr->start_win = (rx_reor_tbl_ptr->start_win + i)
+ 		&(MAX_TID_VALUE - 1);
+ 	spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+-	return 0;
+ }
+ 
+ /*
+@@ -405,7 +402,7 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
+ 				u8 *ta, u8 pkt_type, void *payload)
+ {
+ 	struct mwifiex_rx_reorder_tbl *rx_reor_tbl_ptr;
+-	int start_win, end_win, win_size, ret;
++	int start_win, end_win, win_size;
+ 	u16 pkt_index;
+ 
+ 	rx_reor_tbl_ptr =
+@@ -452,11 +449,8 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
+ 			start_win = (end_win - win_size) + 1;
+ 		else
+ 			start_win = (MAX_TID_VALUE - (win_size - seq_num)) + 1;
+-		ret = mwifiex_11n_dispatch_pkt_until_start_win(priv,
++		mwifiex_11n_dispatch_pkt_until_start_win(priv,
+ 						rx_reor_tbl_ptr, start_win);
 -
- #define IWL_DEVICE_105						\
- 	.fw_name_pre = IWL105_FW_PRE,				\
- 	.ucode_api_max = IWL105_UCODE_API_MAX,			\
-@@ -326,11 +316,6 @@ struct iwl_cfg iwl2030_2bg_cfg = {
- 	.rx_with_siso_diversity = true,				\
- 	.iq_invert = true					\
+-		if (ret)
+-			return ret;
+ 	}
  
--struct iwl_cfg iwl105_bg_cfg = {
--	.name = "105 Series 1x1 BG",
--	IWL_DEVICE_105,
--};
--
- struct iwl_cfg iwl105_bgn_cfg = {
- 	.name = "105 Series 1x1 BGN",
- 	IWL_DEVICE_105,
-@@ -361,11 +346,6 @@ struct iwl_cfg iwl105_bgn_d_cfg = {
- 	.rx_with_siso_diversity = true,				\
- 	.iq_invert = true					\
+ 	if (pkt_type != PKT_TYPE_BAR) {
+@@ -475,9 +469,9 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
+ 	 * Dispatch all packets sequentially from start_win until a
+ 	 * hole is found and adjust the start_win appropriately
+ 	 */
+-	ret = mwifiex_11n_scan_and_dispatch(priv, rx_reor_tbl_ptr);
++	mwifiex_11n_scan_and_dispatch(priv, rx_reor_tbl_ptr);
  
--struct iwl_cfg iwl135_bg_cfg = {
--	.name = "135 Series 1x1 BG/BT",
--	IWL_DEVICE_135,
--};
--
- struct iwl_cfg iwl135_bgn_cfg = {
- 	.name = "135 Series 1x1 BGN/BT",
- 	IWL_DEVICE_135,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index c840c78..ee3363f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -439,16 +439,6 @@ struct iwl_cfg iwl6035_2agn_cfg = {
- 	.ht_params = &iwl6000_ht_params,
- };
+-	return ret;
++	return 0;
+ }
  
--struct iwl_cfg iwl6035_2abg_cfg = {
--	.name = "6035 Series 2x2 ABG/BT",
--	IWL_DEVICE_6030,
--};
--
--struct iwl_cfg iwl6035_2bg_cfg = {
--	.name = "6035 Series 2x2 BG/BT",
--	IWL_DEVICE_6030,
--};
--
- struct iwl_cfg iwl1030_bgn_cfg = {
- 	.name = "Intel(R) Centrino(R) Wireless-N 1030 BGN",
- 	IWL_DEVICE_6030,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-cfg.h b/drivers/net/wireless/iwlwifi/iwl-cfg.h
-index 2a2dc45..e1d7825 100644
---- a/drivers/net/wireless/iwlwifi/iwl-cfg.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-cfg.h
-@@ -101,17 +101,11 @@ extern struct iwl_cfg iwl100_bg_cfg;
- extern struct iwl_cfg iwl130_bgn_cfg;
- extern struct iwl_cfg iwl130_bg_cfg;
- extern struct iwl_cfg iwl2000_2bgn_cfg;
--extern struct iwl_cfg iwl2000_2bg_cfg;
- extern struct iwl_cfg iwl2000_2bgn_d_cfg;
- extern struct iwl_cfg iwl2030_2bgn_cfg;
--extern struct iwl_cfg iwl2030_2bg_cfg;
- extern struct iwl_cfg iwl6035_2agn_cfg;
--extern struct iwl_cfg iwl6035_2abg_cfg;
--extern struct iwl_cfg iwl6035_2bg_cfg;
--extern struct iwl_cfg iwl105_bg_cfg;
- extern struct iwl_cfg iwl105_bgn_cfg;
- extern struct iwl_cfg iwl105_bgn_d_cfg;
--extern struct iwl_cfg iwl135_bg_cfg;
- extern struct iwl_cfg iwl135_bgn_cfg;
- 
- #endif /* __iwl_pci_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
-index 9ecfbd7..86d6a23 100644
---- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-@@ -326,46 +326,28 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x0890, 0x4022, iwl2000_2bgn_cfg)},
- 	{IWL_PCI_DEVICE(0x0891, 0x4222, iwl2000_2bgn_cfg)},
- 	{IWL_PCI_DEVICE(0x0890, 0x4422, iwl2000_2bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0890, 0x4026, iwl2000_2bg_cfg)},
--	{IWL_PCI_DEVICE(0x0891, 0x4226, iwl2000_2bg_cfg)},
--	{IWL_PCI_DEVICE(0x0890, 0x4426, iwl2000_2bg_cfg)},
- 	{IWL_PCI_DEVICE(0x0890, 0x4822, iwl2000_2bgn_d_cfg)},
- 
- /* 2x30 Series */
- 	{IWL_PCI_DEVICE(0x0887, 0x4062, iwl2030_2bgn_cfg)},
- 	{IWL_PCI_DEVICE(0x0888, 0x4262, iwl2030_2bgn_cfg)},
- 	{IWL_PCI_DEVICE(0x0887, 0x4462, iwl2030_2bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0887, 0x4066, iwl2030_2bg_cfg)},
--	{IWL_PCI_DEVICE(0x0888, 0x4266, iwl2030_2bg_cfg)},
--	{IWL_PCI_DEVICE(0x0887, 0x4466, iwl2030_2bg_cfg)},
- 
- /* 6x35 Series */
- 	{IWL_PCI_DEVICE(0x088E, 0x4060, iwl6035_2agn_cfg)},
- 	{IWL_PCI_DEVICE(0x088F, 0x4260, iwl6035_2agn_cfg)},
- 	{IWL_PCI_DEVICE(0x088E, 0x4460, iwl6035_2agn_cfg)},
--	{IWL_PCI_DEVICE(0x088E, 0x4064, iwl6035_2abg_cfg)},
--	{IWL_PCI_DEVICE(0x088F, 0x4264, iwl6035_2abg_cfg)},
--	{IWL_PCI_DEVICE(0x088E, 0x4464, iwl6035_2abg_cfg)},
--	{IWL_PCI_DEVICE(0x088E, 0x4066, iwl6035_2bg_cfg)},
--	{IWL_PCI_DEVICE(0x088F, 0x4266, iwl6035_2bg_cfg)},
--	{IWL_PCI_DEVICE(0x088E, 0x4466, iwl6035_2bg_cfg)},
- 
- /* 105 Series */
- 	{IWL_PCI_DEVICE(0x0894, 0x0022, iwl105_bgn_cfg)},
- 	{IWL_PCI_DEVICE(0x0895, 0x0222, iwl105_bgn_cfg)},
- 	{IWL_PCI_DEVICE(0x0894, 0x0422, iwl105_bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0894, 0x0026, iwl105_bg_cfg)},
--	{IWL_PCI_DEVICE(0x0895, 0x0226, iwl105_bg_cfg)},
--	{IWL_PCI_DEVICE(0x0894, 0x0426, iwl105_bg_cfg)},
- 	{IWL_PCI_DEVICE(0x0894, 0x0822, iwl105_bgn_d_cfg)},
- 
- /* 135 Series */
- 	{IWL_PCI_DEVICE(0x0892, 0x0062, iwl135_bgn_cfg)},
- 	{IWL_PCI_DEVICE(0x0893, 0x0262, iwl135_bgn_cfg)},
- 	{IWL_PCI_DEVICE(0x0892, 0x0462, iwl135_bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0892, 0x0066, iwl135_bg_cfg)},
--	{IWL_PCI_DEVICE(0x0893, 0x0266, iwl135_bg_cfg)},
--	{IWL_PCI_DEVICE(0x0892, 0x0466, iwl135_bg_cfg)},
- 
- 	{0}
- };
+ /*
 -- 
-1.7.0.4
+1.7.0.2
 
