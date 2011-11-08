@@ -1,32 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:34680 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752795Ab1KXVC3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33624 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933103Ab1KHTjR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 16:02:29 -0500
-Date: Thu, 24 Nov 2011 23:02:22 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 5/5] wireless: annotate drivers that do not support
- NL80211_TX_POWER_REG
-Message-ID: <20111124210222.GA9929@jm.kir.nu> (sfid-20111124_220232_548432_5C6084D1)
-References: <1322062858-15276-1-git-send-email-mcgrof@qca.qualcomm.com>
- <1322062858-15276-6-git-send-email-mcgrof@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1322062858-15276-6-git-send-email-mcgrof@qca.qualcomm.com>
+	Tue, 8 Nov 2011 14:39:17 -0500
+Subject: [PATCH] cfg80211: deprecate CFG80211_WEXT
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Nov 2011 20:39:13 +0100
+Message-ID: <1320781153.24797.41.camel@jlt3.sipsolutions.net> (sfid-20111108_203921_397122_5BD3C2BF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 23, 2011 at 10:40:58AM -0500, Luis R. Rodriguez wrote:
-> brcm80211, iwmc3200wifi and mwifiex lack support for
-> NL80211_TX_POWER_REG.
+From: Johannes Berg <johannes.berg@intel.com>
 
-> diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-> +	case NL80211_TX_REG:
+Almost all wireless tools have transitioned to
+or at least added compatibility with nl80211 so
+there's no real need for CONFIG_CFG80211_WEXT
+any more. Mark it for removal, and also change
+the default to not be enabled.
 
-That would benefit from a test run with a compiler..
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ Documentation/feature-removal-schedule.txt |   13 +++++++++++++
+ net/wireless/Kconfig                       |    1 -
+ 2 files changed, 13 insertions(+), 1 deletion(-)
+
+--- a/Documentation/feature-removal-schedule.txt	2011-11-08 20:01:41.000000000 +0100
++++ b/Documentation/feature-removal-schedule.txt	2011-11-08 20:35:51.000000000 +0100
+@@ -565,6 +565,19 @@ Who:	Hans Verkuil <hans.verkuil@cisco.co
  
--- 
-Jouni Malinen                                            PGP id EFC895FA
+ ----------------------------
+ 
++What:	CONFIG_CFG80211_WEXT
++When:	as soon as distributions ship new wireless tools, ie. wpa_supplicant 1.0
++	and NetworkManager/connman/etc. that are able to use nl80211
++Why:	Wireless extensions are deprecated, and userland tools are moving to
++	using nl80211. New drivers are no longer using wireless extensions,
++	and while there might still be old drivers, both new drivers and new
++	userland no longer needs them and they can't be used for an feature
++	developed in the past couple of years. As such, compatibility with
++	wireless extensions in new drivers will be removed.
++Who:	Johannes Berg <johannes@sipsolutions.net>
++
++----------------------------
++
+ What:	g_file_storage driver
+ When:	3.8
+ Why:	This driver has been superseded by g_mass_storage.
+--- a/net/wireless/Kconfig	2011-11-08 20:36:57.000000000 +0100
++++ b/net/wireless/Kconfig	2011-11-08 20:37:04.000000000 +0100
+@@ -114,7 +114,6 @@ config CFG80211_WEXT
+ 	bool "cfg80211 wireless extensions compatibility"
+ 	depends on CFG80211
+ 	select WEXT_CORE
+-	default y
+ 	help
+ 	  Enable this option if you need old userspace for wireless
+ 	  extensions with cfg80211-based drivers.
+
+
