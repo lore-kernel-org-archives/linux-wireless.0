@@ -1,700 +1,347 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56484 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756829Ab1KJBde (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 20:33:34 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 14/28] iwlwifi: move more mac80211 callback function
-Date: Wed,  9 Nov 2011 16:39:17 -0800
-Message-Id: <1320885571-19122-15-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023423_753627_9942B196)
-In-Reply-To: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:52108 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754128Ab1KHIsn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Nov 2011 03:48:43 -0500
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 1/4] ath9k_hw: Read and configure quick drop for AR9003
+Date: Tue, 8 Nov 2011 14:19:32 +0530
+Message-ID: <1320742175-10962-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111108_094847_642641_E9B49014)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move more mac80211 related functions to _mac80211 file
+Read and configure quick drop feild from AR9003 eeprom
+inorder to help with strong signal. This patch also removes
+obsolate parameters ob, db_stage2, db_stage_3, db_stage4
+from the eeprom templates.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c     |  304 --------------------------
- drivers/net/wireless/iwlwifi/iwl-core.h     |   11 -
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |  308 +++++++++++++++++++++++++++
- 3 files changed, 308 insertions(+), 315 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  108 +++++++++++-------------
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |   10 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h    |    2 +
+ drivers/net/wireless/ath/ath9k/eeprom.h        |    3 +-
+ 4 files changed, 59 insertions(+), 64 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 989f9f3..f7b0048 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1120,227 +1120,8 @@ int iwl_send_statistics_request(struct iwl_priv *priv, u8 flags, bool clear)
- 					&statistics_cmd);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 3b262ba..de103ef 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -121,10 +121,8 @@ static const struct ar9300_eeprom ar9300_default = {
+ 		 * if the register is per chain
+ 		 */
+ 		.noiseFloorThreshCh = {-1, 0, 0},
+-		.ob = {1, 1, 1},/* 3 chain */
+-		.db_stage2 = {1, 1, 1}, /* 3 chain  */
+-		.db_stage3 = {0, 0, 0},
+-		.db_stage4 = {0, 0, 0},
++		.reserved = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
++		.quick_drop = 0,
+ 		.xpaBiasLvl = 0,
+ 		.txFrameToDataStart = 0x0e,
+ 		.txFrameToPaOn = 0x0e,
+@@ -144,7 +142,7 @@ static const struct ar9300_eeprom ar9300_default = {
+ 	 },
+ 	.base_ext1 = {
+ 		.ant_div_control = 0,
+-		.future = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
++		.future = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+ 	},
+ 	.calFreqPier2G = {
+ 		FREQ2FBIN(2412, 1),
+@@ -323,10 +321,8 @@ static const struct ar9300_eeprom ar9300_default = {
+ 		.spurChans = {0, 0, 0, 0, 0},
+ 		/* noiseFloorThreshCh Check if the register is per chain */
+ 		.noiseFloorThreshCh = {-1, 0, 0},
+-		.ob = {3, 3, 3}, /* 3 chain */
+-		.db_stage2 = {3, 3, 3}, /* 3 chain */
+-		.db_stage3 = {3, 3, 3}, /* doesn't exist for 2G */
+-		.db_stage4 = {3, 3, 3},	 /* don't exist for 2G */
++		.reserved = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
++		.quick_drop = 0,
+ 		.xpaBiasLvl = 0,
+ 		.txFrameToDataStart = 0x0e,
+ 		.txFrameToPaOn = 0x0e,
+@@ -698,10 +694,8 @@ static const struct ar9300_eeprom ar9300_x113 = {
+ 		 * if the register is per chain
+ 		 */
+ 		.noiseFloorThreshCh = {-1, 0, 0},
+-		.ob = {1, 1, 1},/* 3 chain */
+-		.db_stage2 = {1, 1, 1}, /* 3 chain  */
+-		.db_stage3 = {0, 0, 0},
+-		.db_stage4 = {0, 0, 0},
++		.reserved = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
++		.quick_drop = 0,
+ 		.xpaBiasLvl = 0,
+ 		.txFrameToDataStart = 0x0e,
+ 		.txFrameToPaOn = 0x0e,
+@@ -721,7 +715,7 @@ static const struct ar9300_eeprom ar9300_x113 = {
+ 	 },
+ 	 .base_ext1 = {
+ 		.ant_div_control = 0,
+-		.future = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
++		.future = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+ 	 },
+ 	.calFreqPier2G = {
+ 		FREQ2FBIN(2412, 1),
+@@ -900,10 +894,8 @@ static const struct ar9300_eeprom ar9300_x113 = {
+ 		.spurChans = {FREQ2FBIN(5500, 0), 0, 0, 0, 0},
+ 		/* noiseFloorThreshCh Check if the register is per chain */
+ 		.noiseFloorThreshCh = {-1, 0, 0},
+-		.ob = {3, 3, 3}, /* 3 chain */
+-		.db_stage2 = {3, 3, 3}, /* 3 chain */
+-		.db_stage3 = {3, 3, 3}, /* doesn't exist for 2G */
+-		.db_stage4 = {3, 3, 3},	 /* don't exist for 2G */
++		.reserved = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
++		.quick_drop = 0,
+ 		.xpaBiasLvl = 0xf,
+ 		.txFrameToDataStart = 0x0e,
+ 		.txFrameToPaOn = 0x0e,
+@@ -1276,10 +1268,8 @@ static const struct ar9300_eeprom ar9300_h112 = {
+ 		 * if the register is per chain
+ 		 */
+ 		.noiseFloorThreshCh = {-1, 0, 0},
+-		.ob = {1, 1, 1},/* 3 chain */
+-		.db_stage2 = {1, 1, 1}, /* 3 chain  */
+-		.db_stage3 = {0, 0, 0},
+-		.db_stage4 = {0, 0, 0},
++		.reserved = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
++		.quick_drop = 0,
+ 		.xpaBiasLvl = 0,
+ 		.txFrameToDataStart = 0x0e,
+ 		.txFrameToPaOn = 0x0e,
+@@ -1299,7 +1289,7 @@ static const struct ar9300_eeprom ar9300_h112 = {
+ 	},
+ 	.base_ext1 = {
+ 		.ant_div_control = 0,
+-		.future = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
++		.future = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+ 	},
+ 	.calFreqPier2G = {
+ 		FREQ2FBIN(2412, 1),
+@@ -1478,10 +1468,8 @@ static const struct ar9300_eeprom ar9300_h112 = {
+ 		.spurChans = {0, 0, 0, 0, 0},
+ 		/* noiseFloorThreshCh Check if the register is per chain */
+ 		.noiseFloorThreshCh = {-1, 0, 0},
+-		.ob = {3, 3, 3}, /* 3 chain */
+-		.db_stage2 = {3, 3, 3}, /* 3 chain */
+-		.db_stage3 = {3, 3, 3}, /* doesn't exist for 2G */
+-		.db_stage4 = {3, 3, 3},	 /* don't exist for 2G */
++		.reserved = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
++		.quick_drop = 0,
+ 		.xpaBiasLvl = 0,
+ 		.txFrameToDataStart = 0x0e,
+ 		.txFrameToPaOn = 0x0e,
+@@ -1854,10 +1842,8 @@ static const struct ar9300_eeprom ar9300_x112 = {
+ 		 * if the register is per chain
+ 		 */
+ 		.noiseFloorThreshCh = {-1, 0, 0},
+-		.ob = {1, 1, 1},/* 3 chain */
+-		.db_stage2 = {1, 1, 1}, /* 3 chain  */
+-		.db_stage3 = {0, 0, 0},
+-		.db_stage4 = {0, 0, 0},
++		.reserved = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
++		.quick_drop = 0,
+ 		.xpaBiasLvl = 0,
+ 		.txFrameToDataStart = 0x0e,
+ 		.txFrameToPaOn = 0x0e,
+@@ -1877,7 +1863,7 @@ static const struct ar9300_eeprom ar9300_x112 = {
+ 	},
+ 	.base_ext1 = {
+ 		.ant_div_control = 0,
+-		.future = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
++		.future = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+ 	},
+ 	.calFreqPier2G = {
+ 		FREQ2FBIN(2412, 1),
+@@ -2056,10 +2042,8 @@ static const struct ar9300_eeprom ar9300_x112 = {
+ 		.spurChans = {0, 0, 0, 0, 0},
+ 		/* noiseFloorThreshch check if the register is per chain */
+ 		.noiseFloorThreshCh = {-1, 0, 0},
+-		.ob = {3, 3, 3}, /* 3 chain */
+-		.db_stage2 = {3, 3, 3}, /* 3 chain */
+-		.db_stage3 = {3, 3, 3}, /* doesn't exist for 2G */
+-		.db_stage4 = {3, 3, 3},	 /* don't exist for 2G */
++		.reserved = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
++		.quick_drop = 0,
+ 		.xpaBiasLvl = 0,
+ 		.txFrameToDataStart = 0x0e,
+ 		.txFrameToPaOn = 0x0e,
+@@ -2431,10 +2415,8 @@ static const struct ar9300_eeprom ar9300_h116 = {
+ 		 * if the register is per chain
+ 		 */
+ 		.noiseFloorThreshCh = {-1, 0, 0},
+-		.ob = {1, 1, 1},/* 3 chain */
+-		.db_stage2 = {1, 1, 1}, /* 3 chain  */
+-		.db_stage3 = {0, 0, 0},
+-		.db_stage4 = {0, 0, 0},
++		.reserved = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
++		.quick_drop = 0,
+ 		.xpaBiasLvl = 0,
+ 		.txFrameToDataStart = 0x0e,
+ 		.txFrameToPaOn = 0x0e,
+@@ -2454,7 +2436,7 @@ static const struct ar9300_eeprom ar9300_h116 = {
+ 	 },
+ 	 .base_ext1 = {
+ 		.ant_div_control = 0,
+-		.future = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
++		.future = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+ 	 },
+ 	.calFreqPier2G = {
+ 		FREQ2FBIN(2412, 1),
+@@ -2633,10 +2615,8 @@ static const struct ar9300_eeprom ar9300_h116 = {
+ 		.spurChans = {0, 0, 0, 0, 0},
+ 		/* noiseFloorThreshCh Check if the register is per chain */
+ 		.noiseFloorThreshCh = {-1, 0, 0},
+-		.ob = {3, 3, 3}, /* 3 chain */
+-		.db_stage2 = {3, 3, 3}, /* 3 chain */
+-		.db_stage3 = {3, 3, 3}, /* doesn't exist for 2G */
+-		.db_stage4 = {3, 3, 3},	 /* don't exist for 2G */
++		.reserved = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
++		.quick_drop = 0,
+ 		.xpaBiasLvl = 0,
+ 		.txFrameToDataStart = 0x0e,
+ 		.txFrameToPaOn = 0x0e,
+@@ -3023,6 +3003,8 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
+ 		return eep->modalHeader5G.antennaGain;
+ 	case EEP_ANTENNA_GAIN_2G:
+ 		return eep->modalHeader2G.antennaGain;
++	case EEP_QUICK_DROP:
++		return pBase->miscConfiguration & BIT(1);
+ 	default:
+ 		return 0;
+ 	}
+@@ -3428,25 +3410,13 @@ static u32 ar9003_dump_modal_eeprom(char *buf, u32 len, u32 size,
+ 	PR_EEP("Chain0 NF Threshold", modal_hdr->noiseFloorThreshCh[0]);
+ 	PR_EEP("Chain1 NF Threshold", modal_hdr->noiseFloorThreshCh[1]);
+ 	PR_EEP("Chain2 NF Threshold", modal_hdr->noiseFloorThreshCh[2]);
++	PR_EEP("Quick Drop", modal_hdr->quick_drop);
+ 	PR_EEP("xPA Bias Level", modal_hdr->xpaBiasLvl);
+ 	PR_EEP("txFrameToDataStart", modal_hdr->txFrameToDataStart);
+ 	PR_EEP("txFrameToPaOn", modal_hdr->txFrameToPaOn);
+ 	PR_EEP("txFrameToXpaOn", modal_hdr->txFrameToXpaOn);
+ 	PR_EEP("txClip", modal_hdr->txClip);
+ 	PR_EEP("ADC Desired size", modal_hdr->adcDesiredSize);
+-	PR_EEP("Chain0 ob", modal_hdr->ob[0]);
+-	PR_EEP("Chain1 ob", modal_hdr->ob[1]);
+-	PR_EEP("Chain2 ob", modal_hdr->ob[2]);
+-
+-	PR_EEP("Chain0 db_stage2", modal_hdr->db_stage2[0]);
+-	PR_EEP("Chain1 db_stage2", modal_hdr->db_stage2[1]);
+-	PR_EEP("Chain2 db_stage2", modal_hdr->db_stage2[2]);
+-	PR_EEP("Chain0 db_stage3", modal_hdr->db_stage3[0]);
+-	PR_EEP("Chain1 db_stage3", modal_hdr->db_stage3[1]);
+-	PR_EEP("Chain2 db_stage3", modal_hdr->db_stage3[2]);
+-	PR_EEP("Chain0 db_stage4", modal_hdr->db_stage4[0]);
+-	PR_EEP("Chain1 db_stage4", modal_hdr->db_stage4[1]);
+-	PR_EEP("Chain2 db_stage4", modal_hdr->db_stage4[2]);
+ 
+ 	return len;
+ }
+@@ -3503,6 +3473,7 @@ static u32 ath9k_hw_ar9003_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 	PR_EEP("Internal regulator", !!(pBase->featureEnable & BIT(4)));
+ 	PR_EEP("Enable Paprd", !!(pBase->featureEnable & BIT(5)));
+ 	PR_EEP("Driver Strength", !!(pBase->miscConfiguration & BIT(0)));
++	PR_EEP("Quick Drop", !!(pBase->miscConfiguration & BIT(1)));
+ 	PR_EEP("Chain mask Reduce", (pBase->miscConfiguration >> 0x3) & 0x1);
+ 	PR_EEP("Write enable Gpio", pBase->eepromWriteEnableGpio);
+ 	PR_EEP("WLAN Disable Gpio", pBase->wlanDisableGpio);
+@@ -3965,6 +3936,26 @@ static void ar9003_hw_apply_tuning_caps(struct ath_hw *ah)
+ 	}
  }
  
--int iwlagn_mac_conf_tx(struct ieee80211_hw *hw,
--		    struct ieee80211_vif *vif, u16 queue,
--		    const struct ieee80211_tx_queue_params *params)
--{
--	struct iwl_priv *priv = hw->priv;
--	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
--	struct iwl_rxon_context *ctx = vif_priv->ctx;
--	unsigned long flags;
--	int q;
--
--	if (WARN_ON(!ctx))
--		return -EINVAL;
--
--	IWL_DEBUG_MAC80211(priv, "enter\n");
--
--	if (!iwl_is_ready_rf(priv->shrd)) {
--		IWL_DEBUG_MAC80211(priv, "leave - RF not ready\n");
--		return -EIO;
--	}
--
--	if (queue >= AC_NUM) {
--		IWL_DEBUG_MAC80211(priv, "leave - queue >= AC_NUM %d\n", queue);
--		return 0;
--	}
--
--	q = AC_NUM - 1 - queue;
--
--	spin_lock_irqsave(&priv->shrd->lock, flags);
--
--	ctx->qos_data.def_qos_parm.ac[q].cw_min =
--		cpu_to_le16(params->cw_min);
--	ctx->qos_data.def_qos_parm.ac[q].cw_max =
--		cpu_to_le16(params->cw_max);
--	ctx->qos_data.def_qos_parm.ac[q].aifsn = params->aifs;
--	ctx->qos_data.def_qos_parm.ac[q].edca_txop =
--			cpu_to_le16((params->txop * 32));
--
--	ctx->qos_data.def_qos_parm.ac[q].reserved1 = 0;
--
--	spin_unlock_irqrestore(&priv->shrd->lock, flags);
--
--	IWL_DEBUG_MAC80211(priv, "leave\n");
--	return 0;
--}
--
--int iwlagn_mac_tx_last_beacon(struct ieee80211_hw *hw)
--{
--	struct iwl_priv *priv = hw->priv;
--
--	return priv->ibss_manager == IWL_IBSS_MANAGER;
--}
--
--static int iwl_set_mode(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
--{
--	iwl_connection_init_rx_config(priv, ctx);
--
--	iwlagn_set_rxon_chain(priv, ctx);
--
--	return iwlagn_commit_rxon(priv, ctx);
--}
--
--static int iwl_setup_interface(struct iwl_priv *priv,
--			       struct iwl_rxon_context *ctx)
--{
--	struct ieee80211_vif *vif = ctx->vif;
--	int err;
- 
--	lockdep_assert_held(&priv->shrd->mutex);
--
--	/*
--	 * This variable will be correct only when there's just
--	 * a single context, but all code using it is for hardware
--	 * that supports only one context.
--	 */
--	priv->iw_mode = vif->type;
--
--	ctx->is_active = true;
--
--	err = iwl_set_mode(priv, ctx);
--	if (err) {
--		if (!ctx->always_active)
--			ctx->is_active = false;
--		return err;
--	}
--
--	if (priv->cfg->bt_params && priv->cfg->bt_params->advanced_bt_coexist &&
--	    vif->type == NL80211_IFTYPE_ADHOC) {
--		/*
--		 * pretend to have high BT traffic as long as we
--		 * are operating in IBSS mode, as this will cause
--		 * the rate scaling etc. to behave as intended.
--		 */
--		priv->bt_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_HIGH;
--	}
--
--	return 0;
--}
--
--int iwlagn_mac_add_interface(struct ieee80211_hw *hw,
--			     struct ieee80211_vif *vif)
--{
--	struct iwl_priv *priv = hw->priv;
--	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
--	struct iwl_rxon_context *tmp, *ctx = NULL;
--	int err;
--	enum nl80211_iftype viftype = ieee80211_vif_type_p2p(vif);
- 
--	IWL_DEBUG_MAC80211(priv, "enter: type %d, addr %pM\n",
--			   viftype, vif->addr);
--
--	cancel_delayed_work_sync(&priv->hw_roc_disable_work);
--
--	mutex_lock(&priv->shrd->mutex);
--
--	iwlagn_disable_roc(priv);
--
--	if (!iwl_is_ready_rf(priv->shrd)) {
--		IWL_WARN(priv, "Try to add interface when device not ready\n");
--		err = -EINVAL;
--		goto out;
--	}
--
--	for_each_context(priv, tmp) {
--		u32 possible_modes =
--			tmp->interface_modes | tmp->exclusive_interface_modes;
--
--		if (tmp->vif) {
--			/* check if this busy context is exclusive */
--			if (tmp->exclusive_interface_modes &
--						BIT(tmp->vif->type)) {
--				err = -EINVAL;
--				goto out;
--			}
--			continue;
--		}
--
--		if (!(possible_modes & BIT(viftype)))
--			continue;
--
--		/* have maybe usable context w/o interface */
--		ctx = tmp;
--		break;
--	}
--
--	if (!ctx) {
--		err = -EOPNOTSUPP;
--		goto out;
--	}
--
--	vif_priv->ctx = ctx;
--	ctx->vif = vif;
--
--	err = iwl_setup_interface(priv, ctx);
--	if (!err)
--		goto out;
--
--	ctx->vif = NULL;
--	priv->iw_mode = NL80211_IFTYPE_STATION;
-- out:
--	mutex_unlock(&priv->shrd->mutex);
--
--	IWL_DEBUG_MAC80211(priv, "leave\n");
--	return err;
--}
--
--static void iwl_teardown_interface(struct iwl_priv *priv,
--				   struct ieee80211_vif *vif,
--				   bool mode_change)
--{
--	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
--
--	lockdep_assert_held(&priv->shrd->mutex);
--
--	if (priv->scan_vif == vif) {
--		iwl_scan_cancel_timeout(priv, 200);
--		iwl_force_scan_end(priv);
--	}
--
--	if (!mode_change) {
--		iwl_set_mode(priv, ctx);
--		if (!ctx->always_active)
--			ctx->is_active = false;
--	}
--
--	/*
--	 * When removing the IBSS interface, overwrite the
--	 * BT traffic load with the stored one from the last
--	 * notification, if any. If this is a device that
--	 * doesn't implement this, this has no effect since
--	 * both values are the same and zero.
--	 */
--	if (vif->type == NL80211_IFTYPE_ADHOC)
--		priv->bt_traffic_load = priv->last_bt_traffic_load;
--}
--
--void iwlagn_mac_remove_interface(struct ieee80211_hw *hw,
--			      struct ieee80211_vif *vif)
--{
--	struct iwl_priv *priv = hw->priv;
--	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
--
--	IWL_DEBUG_MAC80211(priv, "enter\n");
--
--	mutex_lock(&priv->shrd->mutex);
--
--	if (WARN_ON(ctx->vif != vif)) {
--		struct iwl_rxon_context *tmp;
--		IWL_ERR(priv, "ctx->vif = %p, vif = %p\n", ctx->vif, vif);
--		for_each_context(priv, tmp)
--			IWL_ERR(priv, "\tID = %d:\tctx = %p\tctx->vif = %p\n",
--				tmp->ctxid, tmp, tmp->vif);
--	}
--	ctx->vif = NULL;
--
--	iwl_teardown_interface(priv, vif, false);
--
--	mutex_unlock(&priv->shrd->mutex);
--
--	IWL_DEBUG_MAC80211(priv, "leave\n");
--
--}
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 
-@@ -1647,91 +1428,6 @@ int iwl_force_reset(struct iwl_priv *priv, int mode, bool external)
- 	return 0;
- }
- 
--int iwlagn_mac_change_interface(struct ieee80211_hw *hw,
--				struct ieee80211_vif *vif,
--				enum nl80211_iftype newtype, bool newp2p)
--{
--	struct iwl_priv *priv = hw->priv;
--	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
--	struct iwl_rxon_context *bss_ctx = &priv->contexts[IWL_RXON_CTX_BSS];
--	struct iwl_rxon_context *tmp;
--	enum nl80211_iftype newviftype = newtype;
--	u32 interface_modes;
--	int err;
--
--	IWL_DEBUG_MAC80211(priv, "enter\n");
--
--	newtype = ieee80211_iftype_p2p(newtype, newp2p);
--
--	mutex_lock(&priv->shrd->mutex);
--
--	if (!ctx->vif || !iwl_is_ready_rf(priv->shrd)) {
--		/*
--		 * Huh? But wait ... this can maybe happen when
--		 * we're in the middle of a firmware restart!
--		 */
--		err = -EBUSY;
--		goto out;
--	}
--
--	interface_modes = ctx->interface_modes | ctx->exclusive_interface_modes;
--
--	if (!(interface_modes & BIT(newtype))) {
--		err = -EBUSY;
--		goto out;
--	}
--
--	/*
--	 * Refuse a change that should be done by moving from the PAN
--	 * context to the BSS context instead, if the BSS context is
--	 * available and can support the new interface type.
--	 */
--	if (ctx->ctxid == IWL_RXON_CTX_PAN && !bss_ctx->vif &&
--	    (bss_ctx->interface_modes & BIT(newtype) ||
--	     bss_ctx->exclusive_interface_modes & BIT(newtype))) {
--		BUILD_BUG_ON(NUM_IWL_RXON_CTX != 2);
--		err = -EBUSY;
--		goto out;
--	}
--
--	if (ctx->exclusive_interface_modes & BIT(newtype)) {
--		for_each_context(priv, tmp) {
--			if (ctx == tmp)
--				continue;
--
--			if (!tmp->vif)
--				continue;
--
--			/*
--			 * The current mode switch would be exclusive, but
--			 * another context is active ... refuse the switch.
--			 */
--			err = -EBUSY;
--			goto out;
--		}
--	}
--
--	/* success */
--	iwl_teardown_interface(priv, vif, true);
--	vif->type = newviftype;
--	vif->p2p = newp2p;
--	err = iwl_setup_interface(priv, ctx);
--	WARN_ON(err);
--	/*
--	 * We've switched internally, but submitting to the
--	 * device may have failed for some reason. Mask this
--	 * error, because otherwise mac80211 will not switch
--	 * (and set the interface type back) and we'll be
--	 * out of sync with it.
--	 */
--	err = 0;
--
-- out:
--	mutex_unlock(&priv->shrd->mutex);
--	IWL_DEBUG_MAC80211(priv, "leave\n");
--
--	return err;
--}
- 
- int iwl_cmd_echo_test(struct iwl_priv *priv)
++static void ar9003_hw_quick_drop_apply(struct ath_hw *ah, u16 freq)
++{
++	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
++	int quick_drop = ath9k_hw_ar9300_get_eeprom(ah, EEP_QUICK_DROP);
++	s32 t[3], f[3] = {5180, 5500, 5785};
++
++	if (!quick_drop)
++		return;
++
++	if (freq < 4000)
++		quick_drop = eep->modalHeader2G.quick_drop;
++	else {
++		t[0] = eep->base_ext1.quick_drop_low;
++		t[1] = eep->modalHeader5G.quick_drop;
++		t[2] = eep->base_ext1.quick_drop_high;
++		quick_drop = ar9003_hw_power_interpolate(freq, f, t, 3);
++	}
++	REG_RMW_FIELD(ah, AR_PHY_AGC, AR_PHY_AGC_QUICK_DROP, quick_drop);
++}
++
+ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 					     struct ath9k_channel *chan)
  {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 137da33..ee3692a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -237,10 +237,6 @@ struct iwl_cfg {
-  *   L i b                 *
-  ***************************/
+@@ -3972,6 +3963,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 	ar9003_hw_ant_ctrl_apply(ah, IS_CHAN_2GHZ(chan));
+ 	ar9003_hw_drive_strength_apply(ah);
+ 	ar9003_hw_atten_apply(ah, chan);
++	ar9003_hw_quick_drop_apply(ah, chan->channel);
+ 	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah))
+ 		ar9003_hw_internal_regulator_apply(ah);
+ 	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index 6335a86..bb223fe 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -216,10 +216,8 @@ struct ar9300_modal_eep_header {
+ 	u8 spurChans[AR_EEPROM_MODAL_SPURS];
+ 	/* 3  Check if the register is per chain */
+ 	int8_t noiseFloorThreshCh[AR9300_MAX_CHAINS];
+-	u8 ob[AR9300_MAX_CHAINS];
+-	u8 db_stage2[AR9300_MAX_CHAINS];
+-	u8 db_stage3[AR9300_MAX_CHAINS];
+-	u8 db_stage4[AR9300_MAX_CHAINS];
++	u8 reserved[11];
++	int8_t quick_drop;
+ 	u8 xpaBiasLvl;
+ 	u8 txFrameToDataStart;
+ 	u8 txFrameToPaOn;
+@@ -269,7 +267,9 @@ struct cal_ctl_data_5g {
  
--int iwlagn_mac_conf_tx(struct ieee80211_hw *hw,
--		    struct ieee80211_vif *vif, u16 queue,
--		    const struct ieee80211_tx_queue_params *params);
--int iwlagn_mac_tx_last_beacon(struct ieee80211_hw *hw);
- void iwl_set_rxon_hwcrypto(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 			   int hw_decrypt);
- int iwl_check_rxon_cmd(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
-@@ -260,13 +256,6 @@ bool iwl_is_ht40_tx_allowed(struct iwl_priv *priv,
- void iwl_connection_init_rx_config(struct iwl_priv *priv,
- 				   struct iwl_rxon_context *ctx);
- void iwl_set_rate(struct iwl_priv *priv);
--int iwlagn_mac_add_interface(struct ieee80211_hw *hw,
--			  struct ieee80211_vif *vif);
--void iwlagn_mac_remove_interface(struct ieee80211_hw *hw,
--			      struct ieee80211_vif *vif);
--int iwlagn_mac_change_interface(struct ieee80211_hw *hw,
--			     struct ieee80211_vif *vif,
--			     enum nl80211_iftype newtype, bool newp2p);
- int iwl_cmd_echo_test(struct iwl_priv *priv);
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- int iwl_alloc_traffic_mem(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index c06bfe4..1b2dbb0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -1493,6 +1493,314 @@ static int iwlagn_mac_set_tim(struct ieee80211_hw *hw,
- 	return 0;
- }
+ struct ar9300_BaseExtension_1 {
+ 	u8 ant_div_control;
+-	u8 future[13];
++	u8 future[11];
++	int8_t quick_drop_low;
++	int8_t quick_drop_high;
+ } __packed;
  
-+static int iwlagn_mac_conf_tx(struct ieee80211_hw *hw,
-+		    struct ieee80211_vif *vif, u16 queue,
-+		    const struct ieee80211_tx_queue_params *params)
-+{
-+	struct iwl_priv *priv = hw->priv;
-+	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
-+	struct iwl_rxon_context *ctx = vif_priv->ctx;
-+	unsigned long flags;
-+	int q;
-+
-+	if (WARN_ON(!ctx))
-+		return -EINVAL;
-+
-+	IWL_DEBUG_MAC80211(priv, "enter\n");
-+
-+	if (!iwl_is_ready_rf(priv->shrd)) {
-+		IWL_DEBUG_MAC80211(priv, "leave - RF not ready\n");
-+		return -EIO;
-+	}
-+
-+	if (queue >= AC_NUM) {
-+		IWL_DEBUG_MAC80211(priv, "leave - queue >= AC_NUM %d\n", queue);
-+		return 0;
-+	}
-+
-+	q = AC_NUM - 1 - queue;
-+
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
-+
-+	ctx->qos_data.def_qos_parm.ac[q].cw_min =
-+		cpu_to_le16(params->cw_min);
-+	ctx->qos_data.def_qos_parm.ac[q].cw_max =
-+		cpu_to_le16(params->cw_max);
-+	ctx->qos_data.def_qos_parm.ac[q].aifsn = params->aifs;
-+	ctx->qos_data.def_qos_parm.ac[q].edca_txop =
-+			cpu_to_le16((params->txop * 32));
-+
-+	ctx->qos_data.def_qos_parm.ac[q].reserved1 = 0;
-+
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
-+
-+	IWL_DEBUG_MAC80211(priv, "leave\n");
-+	return 0;
-+}
-+
-+static int iwlagn_mac_tx_last_beacon(struct ieee80211_hw *hw)
-+{
-+	struct iwl_priv *priv = hw->priv;
-+
-+	return priv->ibss_manager == IWL_IBSS_MANAGER;
-+}
-+
-+static int iwl_set_mode(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
-+{
-+	iwl_connection_init_rx_config(priv, ctx);
-+
-+	iwlagn_set_rxon_chain(priv, ctx);
-+
-+	return iwlagn_commit_rxon(priv, ctx);
-+}
-+
-+static int iwl_setup_interface(struct iwl_priv *priv,
-+			       struct iwl_rxon_context *ctx)
-+{
-+	struct ieee80211_vif *vif = ctx->vif;
-+	int err;
-+
-+	lockdep_assert_held(&priv->shrd->mutex);
-+
-+	/*
-+	 * This variable will be correct only when there's just
-+	 * a single context, but all code using it is for hardware
-+	 * that supports only one context.
-+	 */
-+	priv->iw_mode = vif->type;
-+
-+	ctx->is_active = true;
-+
-+	err = iwl_set_mode(priv, ctx);
-+	if (err) {
-+		if (!ctx->always_active)
-+			ctx->is_active = false;
-+		return err;
-+	}
-+
-+	if (priv->cfg->bt_params && priv->cfg->bt_params->advanced_bt_coexist &&
-+	    vif->type == NL80211_IFTYPE_ADHOC) {
-+		/*
-+		 * pretend to have high BT traffic as long as we
-+		 * are operating in IBSS mode, as this will cause
-+		 * the rate scaling etc. to behave as intended.
-+		 */
-+		priv->bt_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_HIGH;
-+	}
-+
-+	return 0;
-+}
-+
-+static int iwlagn_mac_add_interface(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif)
-+{
-+	struct iwl_priv *priv = hw->priv;
-+	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
-+	struct iwl_rxon_context *tmp, *ctx = NULL;
-+	int err;
-+	enum nl80211_iftype viftype = ieee80211_vif_type_p2p(vif);
-+
-+	IWL_DEBUG_MAC80211(priv, "enter: type %d, addr %pM\n",
-+			   viftype, vif->addr);
-+
-+	cancel_delayed_work_sync(&priv->hw_roc_disable_work);
-+
-+	mutex_lock(&priv->shrd->mutex);
-+
-+	iwlagn_disable_roc(priv);
-+
-+	if (!iwl_is_ready_rf(priv->shrd)) {
-+		IWL_WARN(priv, "Try to add interface when device not ready\n");
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
-+	for_each_context(priv, tmp) {
-+		u32 possible_modes =
-+			tmp->interface_modes | tmp->exclusive_interface_modes;
-+
-+		if (tmp->vif) {
-+			/* check if this busy context is exclusive */
-+			if (tmp->exclusive_interface_modes &
-+						BIT(tmp->vif->type)) {
-+				err = -EINVAL;
-+				goto out;
-+			}
-+			continue;
-+		}
-+
-+		if (!(possible_modes & BIT(viftype)))
-+			continue;
-+
-+		/* have maybe usable context w/o interface */
-+		ctx = tmp;
-+		break;
-+	}
-+
-+	if (!ctx) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	vif_priv->ctx = ctx;
-+	ctx->vif = vif;
-+
-+	err = iwl_setup_interface(priv, ctx);
-+	if (!err)
-+		goto out;
-+
-+	ctx->vif = NULL;
-+	priv->iw_mode = NL80211_IFTYPE_STATION;
-+ out:
-+	mutex_unlock(&priv->shrd->mutex);
-+
-+	IWL_DEBUG_MAC80211(priv, "leave\n");
-+	return err;
-+}
-+
-+static void iwl_teardown_interface(struct iwl_priv *priv,
-+				   struct ieee80211_vif *vif,
-+				   bool mode_change)
-+{
-+	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
-+
-+	lockdep_assert_held(&priv->shrd->mutex);
-+
-+	if (priv->scan_vif == vif) {
-+		iwl_scan_cancel_timeout(priv, 200);
-+		iwl_force_scan_end(priv);
-+	}
-+
-+	if (!mode_change) {
-+		iwl_set_mode(priv, ctx);
-+		if (!ctx->always_active)
-+			ctx->is_active = false;
-+	}
-+
-+	/*
-+	 * When removing the IBSS interface, overwrite the
-+	 * BT traffic load with the stored one from the last
-+	 * notification, if any. If this is a device that
-+	 * doesn't implement this, this has no effect since
-+	 * both values are the same and zero.
-+	 */
-+	if (vif->type == NL80211_IFTYPE_ADHOC)
-+		priv->bt_traffic_load = priv->last_bt_traffic_load;
-+}
-+
-+static void iwlagn_mac_remove_interface(struct ieee80211_hw *hw,
-+			      struct ieee80211_vif *vif)
-+{
-+	struct iwl_priv *priv = hw->priv;
-+	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
-+
-+	IWL_DEBUG_MAC80211(priv, "enter\n");
-+
-+	mutex_lock(&priv->shrd->mutex);
-+
-+	if (WARN_ON(ctx->vif != vif)) {
-+		struct iwl_rxon_context *tmp;
-+		IWL_ERR(priv, "ctx->vif = %p, vif = %p\n", ctx->vif, vif);
-+		for_each_context(priv, tmp)
-+			IWL_ERR(priv, "\tID = %d:\tctx = %p\tctx->vif = %p\n",
-+				tmp->ctxid, tmp, tmp->vif);
-+	}
-+	ctx->vif = NULL;
-+
-+	iwl_teardown_interface(priv, vif, false);
-+
-+	mutex_unlock(&priv->shrd->mutex);
-+
-+	IWL_DEBUG_MAC80211(priv, "leave\n");
-+
-+}
-+
-+static int iwlagn_mac_change_interface(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				enum nl80211_iftype newtype, bool newp2p)
-+{
-+	struct iwl_priv *priv = hw->priv;
-+	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
-+	struct iwl_rxon_context *bss_ctx = &priv->contexts[IWL_RXON_CTX_BSS];
-+	struct iwl_rxon_context *tmp;
-+	enum nl80211_iftype newviftype = newtype;
-+	u32 interface_modes;
-+	int err;
-+
-+	IWL_DEBUG_MAC80211(priv, "enter\n");
-+
-+	newtype = ieee80211_iftype_p2p(newtype, newp2p);
-+
-+	mutex_lock(&priv->shrd->mutex);
-+
-+	if (!ctx->vif || !iwl_is_ready_rf(priv->shrd)) {
-+		/*
-+		 * Huh? But wait ... this can maybe happen when
-+		 * we're in the middle of a firmware restart!
-+		 */
-+		err = -EBUSY;
-+		goto out;
-+	}
-+
-+	interface_modes = ctx->interface_modes | ctx->exclusive_interface_modes;
-+
-+	if (!(interface_modes & BIT(newtype))) {
-+		err = -EBUSY;
-+		goto out;
-+	}
-+
-+	/*
-+	 * Refuse a change that should be done by moving from the PAN
-+	 * context to the BSS context instead, if the BSS context is
-+	 * available and can support the new interface type.
-+	 */
-+	if (ctx->ctxid == IWL_RXON_CTX_PAN && !bss_ctx->vif &&
-+	    (bss_ctx->interface_modes & BIT(newtype) ||
-+	     bss_ctx->exclusive_interface_modes & BIT(newtype))) {
-+		BUILD_BUG_ON(NUM_IWL_RXON_CTX != 2);
-+		err = -EBUSY;
-+		goto out;
-+	}
-+
-+	if (ctx->exclusive_interface_modes & BIT(newtype)) {
-+		for_each_context(priv, tmp) {
-+			if (ctx == tmp)
-+				continue;
-+
-+			if (!tmp->vif)
-+				continue;
-+
-+			/*
-+			 * The current mode switch would be exclusive, but
-+			 * another context is active ... refuse the switch.
-+			 */
-+			err = -EBUSY;
-+			goto out;
-+		}
-+	}
-+
-+	/* success */
-+	iwl_teardown_interface(priv, vif, true);
-+	vif->type = newviftype;
-+	vif->p2p = newp2p;
-+	err = iwl_setup_interface(priv, ctx);
-+	WARN_ON(err);
-+	/*
-+	 * We've switched internally, but submitting to the
-+	 * device may have failed for some reason. Mask this
-+	 * error, because otherwise mac80211 will not switch
-+	 * (and set the interface type back) and we'll be
-+	 * out of sync with it.
-+	 */
-+	err = 0;
-+
-+ out:
-+	mutex_unlock(&priv->shrd->mutex);
-+	IWL_DEBUG_MAC80211(priv, "leave\n");
-+
-+	return err;
-+}
-+
- struct ieee80211_ops iwlagn_hw_ops = {
- 	.tx = iwlagn_mac_tx,
- 	.start = iwlagn_mac_start,
+ struct ar9300_BaseExtension_2 {
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 4114fe7..497d746 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -389,6 +389,8 @@
+ #define AR_PHY_DAG_CTRLCCK_RSSI_THR_S   10
+ 
+ #define AR_PHY_RIFS_INIT_DELAY         0x3ff0000
++#define AR_PHY_AGC_QUICK_DROP       0x03c00000
++#define AR_PHY_AGC_QUICK_DROP_S     22
+ #define AR_PHY_AGC_COARSE_LOW       0x00007F80
+ #define AR_PHY_AGC_COARSE_LOW_S     7
+ #define AR_PHY_AGC_COARSE_HIGH      0x003F8000
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 49abd34..5ff7ab9 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -249,7 +249,8 @@ enum eeprom_param {
+ 	EEP_ANT_DIV_CTL1,
+ 	EEP_CHAIN_MASK_REDUCE,
+ 	EEP_ANTENNA_GAIN_2G,
+-	EEP_ANTENNA_GAIN_5G
++	EEP_ANTENNA_GAIN_5G,
++	EEP_QUICK_DROP
+ };
+ 
+ enum ar5416_rates {
 -- 
-1.7.0.4
+1.7.7.2
 
