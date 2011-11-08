@@ -1,112 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:56821 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752782Ab1KHW2Q (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37858 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751509Ab1KHMEq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 17:28:16 -0500
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: keybuk@google.com, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	stable@vger.kernel.org
-Subject: [PATCH] cfg80211: fix bug on regulatory core exit on access to last_request
-Date: Tue,  8 Nov 2011 14:28:06 -0800
-Message-Id: <1320791286-14871-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111108_232821_039129_0B817B1F)
+	Tue, 8 Nov 2011 07:04:46 -0500
+Subject: [PATCH] mac80211: fix bug in ieee80211_build_probe_req
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Nov 2011 13:04:41 +0100
+Message-ID: <1320753881.4304.28.camel@jlt3.sipsolutions.net> (sfid-20111108_130449_320433_34C6C605)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 4d9d88d1 by Scott James Remnant <keybuk@google.com> added
-the .uevent() callback for the regulatory device used during
-the platform device registration. The change was done to account
-for queuing up udev change requests through udevadm triggers.
-The change also meant that upon regulatory core exit we will now
-send a uevent() but the uevent() callback, reg_device_uevent(),
-also accessed last_request. Right before commiting device suicide
-we free'd last_request but never set it to NULL so
-platform_device_unregister() would lead to bogus kernel paging
-request. Fix this and also simply supress uevents right before
-we commit suicide as they are pointless.
+From: Johannes Berg <johannes.berg@intel.com>
 
-This fix is required for kernels >= v2.6.39
+ieee80211_probereq_get() can return NULL in
+which case we should clean up & return NULL
+in ieee80211_build_probe_req() as well.
 
-$ git describe --contains 4d9d88d1
-v2.6.39-rc1~468^2~25^2^2~21
-
-The impact of not having this present is that a bogus paging
-access may occur (only read) upon cfg80211 unload time. You
-may also get this BUG complaint below. Although Johannes
-could not reproduce the issue this fix is theoretically correct.
-
-mac80211_hwsim: unregister radios
-mac80211_hwsim: closing netlink
-BUG: unable to handle kernel paging request at ffff88001a06b5ab
-IP: [<ffffffffa030df9a>] reg_device_uevent+0x1a/0x50 [cfg80211]
-PGD 1836063 PUD 183a063 PMD 1ffcb067 PTE 1a06b160
-Oops: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
-CPU 0
-Modules linked in: cfg80211(-) [last unloaded: mac80211]
-
-Pid: 2279, comm: rmmod Tainted: G        W   3.1.0-wl+ #663 Bochs Bochs
-RIP: 0010:[<ffffffffa030df9a>]  [<ffffffffa030df9a>] reg_device_uevent+0x1a/0x50 [cfg80211]
-RSP: 0000:ffff88001c5f9d58  EFLAGS: 00010286
-RAX: 0000000000000000 RBX: ffff88001d2eda88 RCX: ffff88001c7468fc
-RDX: ffff88001a06b5a0 RSI: ffff88001c7467b0 RDI: ffff88001c7467b0
-RBP: ffff88001c5f9d58 R08: 000000000000ffff R09: 000000000000ffff
-R10: 0000000000000000 R11: 0000000000000001 R12: ffff88001c7467b0
-R13: ffff88001d2eda78 R14: ffffffff8164a840 R15: 0000000000000001
-FS:  00007f8a91d8a6e0(0000) GS:ffff88001fc00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: ffff88001a06b5ab CR3: 000000001c62e000 CR4: 00000000000006f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process rmmod (pid: 2279, threadinfo ffff88001c5f8000, task ffff88000023c780)
-Stack:
- ffff88001c5f9d98 ffffffff812ff7e5 ffffffff8176ab3d ffff88001c7468c2
- 000000000000ffff ffff88001d2eda88 ffff88001c7467b0 ffff880000114820
- ffff88001c5f9e38 ffffffff81241dc7 ffff88001c5f9db8 ffffffff81040189
-Call Trace:
- [<ffffffff812ff7e5>] dev_uevent+0xc5/0x170
- [<ffffffff81241dc7>] kobject_uevent_env+0x1f7/0x490
- [<ffffffff81040189>] ? sub_preempt_count+0x29/0x60
- [<ffffffff814cab1a>] ? _raw_spin_unlock_irqrestore+0x4a/0x90
- [<ffffffff81305307>] ? devres_release_all+0x27/0x60
- [<ffffffff8124206b>] kobject_uevent+0xb/0x10
- [<ffffffff812fee27>] device_del+0x157/0x1b0
- [<ffffffff8130377d>] platform_device_del+0x1d/0x90
- [<ffffffff81303b76>] platform_device_unregister+0x16/0x30
- [<ffffffffa030fffd>] regulatory_exit+0x5d/0x180 [cfg80211]
- [<ffffffffa032bec3>] cfg80211_exit+0x2b/0x45 [cfg80211]
- [<ffffffff8109a84c>] sys_delete_module+0x16c/0x220
- [<ffffffff8108a23e>] ? trace_hardirqs_on_caller+0x7e/0x120
- [<ffffffff814cba02>] system_call_fastpath+0x16/0x1b
-Code: <all your base are belong to me>
-RIP  [<ffffffffa030df9a>] reg_device_uevent+0x1a/0x50 [cfg80211]
- RSP <ffff88001c5f9d58>
-CR2: ffff88001a06b5ab
----[ end trace 147c5099a411e8c0 ]---
-
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Scott James Remnant <keybuk@google.com>
 Cc: stable@vger.kernel.org
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/reg.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ net/mac80211/util.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 2520a1b..bc1ec2c 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2263,6 +2263,9 @@ void /* __init_or_exit */ regulatory_exit(void)
+--- a/net/mac80211/util.c	2011-11-08 09:24:02.000000000 +0100
++++ b/net/mac80211/util.c	2011-11-08 12:50:12.000000000 +0100
+@@ -880,6 +880,8 @@ struct sk_buff *ieee80211_build_probe_re
+ 	skb = ieee80211_probereq_get(&local->hw, &sdata->vif,
+ 				     ssid, ssid_len,
+ 				     buf, buf_len);
++	if (!skb)
++		goto out;
  
- 	kfree(last_request);
+ 	if (dst) {
+ 		mgmt = (struct ieee80211_mgmt *) skb->data;
+@@ -888,6 +890,8 @@ struct sk_buff *ieee80211_build_probe_re
+ 	}
  
-+	last_request = NULL;
-+	dev_set_uevent_suppress(&reg_pdev->dev, true);
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
 +
- 	platform_device_unregister(reg_pdev);
++ out:
+ 	kfree(buf);
  
- 	spin_lock_bh(&reg_pending_beacons_lock);
--- 
-1.7.4.15.g7811d
+ 	return skb;
+
 
