@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54930 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754464Ab1KWCpv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 21:45:51 -0500
-Date: Tue, 22 Nov 2011 21:45:45 -0500
-From: Dave Jones <davej@redhat.com>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 3.1+ iwlwifi lockup
-Message-ID: <20111123024545.GA9703@redhat.com> (sfid-20111123_034617_336905_A511274E)
-References: <20111031143408.GA17152@redhat.com>
- <1321992902.8072.7.camel@wwguy-ubuntu>
+Received: from mail.candelatech.com ([208.74.158.172]:50620 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751620Ab1KHSJD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Nov 2011 13:09:03 -0500
+Message-ID: <4EB9703B.6030006@candelatech.com> (sfid-20111108_190908_775782_C887C516)
+Date: Tue, 08 Nov 2011 10:08:59 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1321992902.8072.7.camel@wwguy-ubuntu>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFT/FYI] mac80211: revert on-channel work optimisations
+References: <1320772222.24797.22.camel@jlt3.sipsolutions.net>  <4EB96416.5040700@candelatech.com>  <1320772727.24797.23.camel@jlt3.sipsolutions.net>  <4EB9661F.9040901@candelatech.com> <1320775001.24797.26.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1320775001.24797.26.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 22, 2011 at 12:15:02PM -0800, wwguy wrote:
- > Hi Dave,
- > 
- > Sorry for taking so long.
- > it is a bogus command from the firmware which driver try to process it
- > and cause problem. I am not sure how it happen. But could you please try
- > the patch I attach here.
- > 
- > For now I am just ignore the command, but not sure it is good enough,
- > might has to reload the firmware, but not sure.
+On 11/08/2011 09:56 AM, Johannes Berg wrote:
+> On Tue, 2011-11-08 at 09:25 -0800, Ben Greear wrote:
+>
+>> That's fine by me, I found the code complex as well.  All the tmp
+>> and scan and active channel pointers makes for a real mess.
+>
+> Indeed.
+>
+>> But if
+>> you want multiple vifs to work well, then you really need to be able
+>> to continue to function on-channel when some other vif is scanning
+>> on that channel.  My use of the wifi stack requires this to work,
+>> so if it takes any significant time to get the new code in I'm going
+>> to have to stick with my complex crap.
+>
+> And I'm not saying you shouldn't, but I think for upstream right now
+> it's not really a good thing. I wish I could say otherwise but given the
+> bugs we have here etc. I don't really feel very confident.
 
-With Linus' current tree and this patch, I got a panic pretty quickly,
-but with a different trace.
+Are there any open bugs right now that seem to be because of the
+scanning and work optimizations, or are you just paranoid that
+there are more that are not found or well understood yet?
 
-https://twitpic.com/7i4o10
+If there is something reported, I'll make a try at fixing it.
 
-	Dave
+> Now with multi-channel stuff it's all going to change anyway, each vif
+> will have its own channel and the device will have to mostly sort out
+> the scheduling by itself, ath9k will have to do some tricks in the
+> driver, maybe with some help in mac80211, and off-channel stuff will be
+> interesting too ...
+
+Is someone already working on this, or planning to do so soon?  At least
+to me, the multi-channel stuff appears fundamentally broken since I'm
+not aware of any NIC that can listen in two channels at once.  Flipping
+from channel to channel seems like at best it is going to give bad latency,
+and probably lots of packet loss as well.  What is the use-case for this
+feature, anyway?
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
