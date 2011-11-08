@@ -1,74 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57687 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548Ab1KDSQr (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:36038 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751927Ab1KHNhF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 14:16:47 -0400
-Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id pA4IGiGl001762
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Fri, 4 Nov 2011 11:16:44 -0700
-Message-ID: <4EB42C0C.40101@candelatech.com> (sfid-20111104_191656_642276_99C645ED)
-Date: Fri, 04 Nov 2011 11:16:44 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: crash in wireless-next
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 8 Nov 2011 08:37:05 -0500
+Received: by wyh15 with SMTP id 15so474141wyh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 05:37:04 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: set carrier_on for ibss vifs only while joined
+Date: Tue,  8 Nov 2011 15:36:59 +0200
+Message-Id: <1320759419-20743-1-git-send-email-eliad@wizery.com> (sfid-20111108_143710_502423_252973B8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Anyone seen a crash like this?  I was restarting my user-space
-tools, and had just unloaded the drivers that had,
-around 135 virtual stations created.  Just my disable-ht
-patch series applied on top of yesterday's wireless-testing.
+mac80211 should set carrier_on for ibss vifs
+only while they are joined (similar to sta vifs)
 
-I'll dig into it more when I get a chance, but let me know
-if someone is already working on this...
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ net/mac80211/ibss.c  |    3 +++
+ net/mac80211/iface.c |    3 ++-
+ 2 files changed, 5 insertions(+), 1 deletions(-)
 
-BUG: unable to handle kernel NULL pointer dereference at 00000006
-IP: [<c076b7e7>] wext_handle_ioctl+0xd9/0x17e
-*pde = 00000000
-Oops: 0000 [#1] SMP
-Modules linked in: ath5k arc4 ath9k mac80211 ath9k_common ath9k_hw ath cfg80211 xt_CT iptable_raw bridge ]
-
-Pid: 1335, comm: hald Tainted: G        W   3.1.0-wl+ #3 To Be Filled By O.E.M. To Be Filled By O.E.M./To.
-EIP: 0060:[<c076b7e7>] EFLAGS: 00010297 CPU: 0
-EIP is at wext_handle_ioctl+0xd9/0x17e
-EAX: f06a5000 EBX: 00000001 ECX: 00008b01 EDX: 00000002
-ESI: f40b1ed4 EDI: 000008d3 EBP: f40b1e8c ESP: f40b1e74
-  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-Process hald (pid: 1335, ti=f40b0000 task=f48fb340 task.ti=f40b0000)
-Stack:
-  00008b01 00000001 00008b01 00000000 00008b01 c0a9c140 f40b1f08 c06f9523
-  bfdc339c 0017a0b9 c06ecfaa 000000d0 f40b1eb0 c0556c1d f0477440 bfdc339c
-  c06ed007 f40b1ee4 c04ad561 f15a2180 1b96bccf c0a3d9e4 00000020 00000000
-Call Trace:
-  [<c06f9523>] dev_ioctl+0x529/0x561
-  [<c06ecfaa>] ? sk_prot_alloc+0x23/0xd1
-  [<c0556c1d>] ? security_sk_alloc+0x10/0x13
-  [<c06ed007>] ? sk_prot_alloc+0x80/0xd1
-  [<c04ad561>] ? kmem_cache_alloc+0x24/0x9d
-  [<c06e8e25>] ? kernel_sendmsg+0x37/0x37
-  [<c06e9000>] sock_ioctl+0x1db/0x1e7
-  [<c06e8e25>] ? kernel_sendmsg+0x37/0x37
-  [<c04c5996>] do_vfs_ioctl+0x464/0x4a9
-  [<c07919ac>] ? _raw_spin_unlock+0x8/0xa
-  [<c04b86a4>] ? fd_install+0x44/0x4a
-  [<c06e9d75>] ? sock_map_fd+0x1f/0x25
-  [<c06ea637>] ? sys_socket+0x43/0x5a
-  [<c06ea6c5>] ? sys_socketcall+0x77/0x1b6
-  [<c04c5a1c>] sys_ioctl+0x41/0x61
-  [<c07962d8>] sysenter_do_call+0x12/0x28
-Code: 75 06 85 db 74 51 89 da 0f b7 7a 04 8d 99 00 75 ff ff 39 fb 73 04 8b 12 eb 11 0f b7 7a 06 8d 99 20
-EIP: [<c076b7e7>] wext_handle_ioctl+0xd9/0x17e SS:ESP 0068:f40b1e74
-CR2: 0000000000000006
-
-Thanks,
-Ben
-
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 2da3040..ecf24ec 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -97,6 +97,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	/* if merging, indicate to driver that we leave the old IBSS */
+ 	if (sdata->vif.bss_conf.ibss_joined) {
+ 		sdata->vif.bss_conf.ibss_joined = false;
++		netif_carrier_off(sdata->dev);
+ 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IBSS);
+ 	}
+ 
+@@ -207,6 +208,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	bss = cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
+ 					mgmt, skb->len, 0, GFP_KERNEL);
+ 	cfg80211_put_bss(bss);
++	netif_carrier_on(sdata->dev);
+ 	cfg80211_ibss_joined(sdata->dev, ifibss->bssid, GFP_KERNEL);
+ }
+ 
+@@ -990,6 +992,7 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
+ 	}
+ 
+ 	sta_info_flush(sdata->local, sdata);
++	netif_carrier_off(sdata->dev);
+ 
+ 	/* remove beacon */
+ 	kfree(sdata->u.ibss.ie);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index ef741e8..ce372ea 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -282,7 +282,8 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 		changed |= ieee80211_reset_erp_info(sdata);
+ 		ieee80211_bss_info_change_notify(sdata, changed);
+ 
+-		if (sdata->vif.type == NL80211_IFTYPE_STATION)
++		if (sdata->vif.type == NL80211_IFTYPE_STATION ||
++		    sdata->vif.type == NL80211_IFTYPE_ADHOC)
+ 			netif_carrier_off(dev);
+ 		else
+ 			netif_carrier_on(dev);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.6.401.g6a319
 
