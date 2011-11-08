@@ -1,182 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2036 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753413Ab1KDVYE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 17:24:04 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 12/16] brcm80211: fmac: move chip reset core function to
- sdio_chip.c
-Date: Fri, 4 Nov 2011 22:23:38 +0100
-Message-ID: <1320441822-4615-13-git-send-email-arend@broadcom.com> (sfid-20111104_222434_893208_CB72A3A9)
-In-Reply-To: <1320441822-4615-1-git-send-email-arend@broadcom.com>
-References: <1320441822-4615-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:48956 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754497Ab1KHROQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Nov 2011 12:14:16 -0500
+Received: by eye27 with SMTP id 27so573929eye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 09:14:15 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] ath6kl: indicate probe-resp offload support
+Date: Tue,  8 Nov 2011 19:14:08 +0200
+Message-Id: <1320772448-20467-1-git-send-email-arik@wizery.com> (sfid-20111108_181419_877458_6C620174)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+The ath6kl responds to probe-requests in HW while operating as an AP. It
+supports offloading exclusions to support the WPS, WPS2, P2P and
+802.11u protocols.
 
-This patch is part of the abstracting chip backplane handle code
-series.
-
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   49 +-------------------
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   45 ++++++++++++++++++
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |    2 +
- 3 files changed, 49 insertions(+), 47 deletions(-)
+I haven't added validation in hostap that check for these flags before
+sending down the probe-resp IEs. This is still useful for tools such as
+iw, that can print out device characteristics.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 84b10f1..af6f3a4 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3090,51 +3090,6 @@ static int brcmf_sdbrcm_write_vars(struct brcmf_bus *bus)
- 	return bcmerror;
- }
+I'm not sure 802.11u is actually supported, just seemed so from the
+hostap code sending down the IEs.
+
+The patch of course depends on
+"nl80211: Add probe response offload attribute"
+
+drivers/net/wireless/ath/ath6kl/init.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index b277111..075d904 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1549,7 +1549,13 @@ static int ath6kl_init(struct net_device *dev)
+ 	ar->conf_flags = ATH6KL_CONF_IGNORE_ERP_BARKER |
+ 			 ATH6KL_CONF_ENABLE_11N | ATH6KL_CONF_ENABLE_TX_BURST;
  
--static void
--brcmf_sdbrcm_chip_resetcore(struct brcmf_sdio_dev *sdiodev, u32 corebase)
--{
--	u32 regdata;
--
--	/*
--	 * Must do the disable sequence first to work for
--	 * arbitrary current core state.
--	 */
--	brcmf_sdio_chip_coredisable(sdiodev, corebase);
--
--	/*
--	 * Now do the initialization sequence.
--	 * set reset while enabling the clock and
--	 * forcing them on throughout the core
--	 */
--	brcmf_sdcard_reg_write(sdiodev, CORE_SB(corebase, sbtmstatelow), 4,
--		((SICF_FGC | SICF_CLOCK_EN) << SBTML_SICF_SHIFT) |
--		SBTML_RESET);
--	udelay(1);
--
--	regdata = brcmf_sdcard_reg_read(sdiodev,
--					CORE_SB(corebase, sbtmstatehigh), 4);
--	if (regdata & SBTMH_SERR)
--		brcmf_sdcard_reg_write(sdiodev,
--				       CORE_SB(corebase, sbtmstatehigh), 4, 0);
--
--	regdata = brcmf_sdcard_reg_read(sdiodev,
--					CORE_SB(corebase, sbimstate), 4);
--	if (regdata & (SBIM_IBE | SBIM_TO))
--		brcmf_sdcard_reg_write(sdiodev, CORE_SB(corebase, sbimstate), 4,
--			regdata & ~(SBIM_IBE | SBIM_TO));
--
--	/* clear reset and allow it to propagate throughout the core */
--	brcmf_sdcard_reg_write(sdiodev, CORE_SB(corebase, sbtmstatelow), 4,
--		(SICF_FGC << SBTML_SICF_SHIFT) |
--		(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
--	udelay(1);
--
--	/* leave clock enabled */
--	brcmf_sdcard_reg_write(sdiodev, CORE_SB(corebase, sbtmstatelow), 4,
--		(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
--	udelay(1);
--}
--
- static int brcmf_sdbrcm_download_state(struct brcmf_bus *bus, bool enter)
- {
- 	uint retries;
-@@ -3149,7 +3104,7 @@ static int brcmf_sdbrcm_download_state(struct brcmf_bus *bus, bool enter)
- 		brcmf_sdio_chip_coredisable(bus->sdiodev,
- 					      bus->ci->armcorebase);
+-	ar->wdev->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
++	ar->wdev->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM |
++				  WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
++	ar->wdev->wiphy->probe_resp_offload =
++		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS |
++		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2 |
++		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P |
++		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_80211U;
  
--		brcmf_sdbrcm_chip_resetcore(bus->sdiodev, bus->ci->ramcorebase);
-+		brcmf_sdio_chip_resetcore(bus->sdiodev, bus->ci->ramcorebase);
- 
- 		/* Clear the top bit of memory */
- 		if (bus->ramsize) {
-@@ -3174,7 +3129,7 @@ static int brcmf_sdbrcm_download_state(struct brcmf_bus *bus, bool enter)
- 		w_sdreg32(bus, 0xFFFFFFFF,
- 			  offsetof(struct sdpcmd_regs, intstatus), &retries);
- 
--		brcmf_sdbrcm_chip_resetcore(bus->sdiodev, bus->ci->armcorebase);
-+		brcmf_sdio_chip_resetcore(bus->sdiodev, bus->ci->armcorebase);
- 
- 		/* Allow HT Clock now that the ARM is running. */
- 		bus->alp_only = false;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-index 5d788a6..4acdda1 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-@@ -155,6 +155,51 @@ brcmf_sdio_chip_coredisable(struct brcmf_sdio_dev *sdiodev, u32 corebase)
- 	udelay(1);
- }
- 
-+void
-+brcmf_sdio_chip_resetcore(struct brcmf_sdio_dev *sdiodev, u32 corebase)
-+{
-+	u32 regdata;
-+
-+	/*
-+	 * Must do the disable sequence first to work for
-+	 * arbitrary current core state.
-+	 */
-+	brcmf_sdio_chip_coredisable(sdiodev, corebase);
-+
-+	/*
-+	 * Now do the initialization sequence.
-+	 * set reset while enabling the clock and
-+	 * forcing them on throughout the core
-+	 */
-+	brcmf_sdcard_reg_write(sdiodev, CORE_SB(corebase, sbtmstatelow), 4,
-+		((SICF_FGC | SICF_CLOCK_EN) << SBTML_SICF_SHIFT) |
-+		SBTML_RESET);
-+	udelay(1);
-+
-+	regdata = brcmf_sdcard_reg_read(sdiodev,
-+					CORE_SB(corebase, sbtmstatehigh), 4);
-+	if (regdata & SBTMH_SERR)
-+		brcmf_sdcard_reg_write(sdiodev,
-+				       CORE_SB(corebase, sbtmstatehigh), 4, 0);
-+
-+	regdata = brcmf_sdcard_reg_read(sdiodev,
-+					CORE_SB(corebase, sbimstate), 4);
-+	if (regdata & (SBIM_IBE | SBIM_TO))
-+		brcmf_sdcard_reg_write(sdiodev, CORE_SB(corebase, sbimstate), 4,
-+			regdata & ~(SBIM_IBE | SBIM_TO));
-+
-+	/* clear reset and allow it to propagate throughout the core */
-+	brcmf_sdcard_reg_write(sdiodev, CORE_SB(corebase, sbtmstatelow), 4,
-+		(SICF_FGC << SBTML_SICF_SHIFT) |
-+		(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
-+	udelay(1);
-+
-+	/* leave clock enabled */
-+	brcmf_sdcard_reg_write(sdiodev, CORE_SB(corebase, sbtmstatelow), 4,
-+		(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
-+	udelay(1);
-+}
-+
- static int brcmf_sdio_chip_recognition(struct brcmf_sdio_dev *sdiodev,
- 				       struct chip_info *ci, u32 regs)
- {
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-index 9c43e1d..6ad5ea6 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-@@ -133,6 +133,8 @@ struct sbconfig {
- 	u32 sbidhigh;	/* identification */
- };
- 
-+extern void brcmf_sdio_chip_resetcore(struct brcmf_sdio_dev *sdiodev,
-+				      u32 corebase);
- extern bool brcmf_sdio_chip_iscoreup(struct brcmf_sdio_dev *sdiodev,
- 				     u32 corebase);
- extern void brcmf_sdio_chip_coredisable(struct brcmf_sdio_dev *sdiodev,
+ 	status = ath6kl_target_config_wlan_params(ar);
+ 	if (!status)
 -- 
-1.7.4.1
-
+1.7.5.4
 
