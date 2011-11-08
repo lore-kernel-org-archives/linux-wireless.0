@@ -1,88 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:43378 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754596Ab1KCJyG (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40637 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755896Ab1KHU7D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 05:54:06 -0400
-Subject: [PATCH] ath6kl: don't power down hardware when interface is down
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 03 Nov 2011 11:53:57 +0200
-Message-ID: <20111103095357.10733.85983.stgit@localhost6.localdomain6> (sfid-20111103_105410_349290_5FEF77D9)
+	Tue, 8 Nov 2011 15:59:03 -0500
+Message-ID: <4EB99812.3000507@candelatech.com> (sfid-20111108_215907_274479_1D13CDED)
+Date: Tue, 08 Nov 2011 12:58:58 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v8 2/2] mac80211:  Support ht-cap over-rides.
+References: <1320780995-30483-1-git-send-email-greearb@candelatech.com>  <1320780995-30483-2-git-send-email-greearb@candelatech.com>  (sfid-20111108_203659_989707_E33ECA13) <1320783128.24797.48.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1320783128.24797.48.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni reported that my patch "ath6kl: power down hardware when interface
-is down" caused a regression on his x86 boxes and scan didn't work anymore.
-I was able to reproduce the problem by disabling all debug messages.
+On 11/08/2011 12:12 PM, Johannes Berg wrote:
+> On Tue, 2011-11-08 at 11:36 -0800, greearb@candelatech.com wrote:
+>
+>> +bool ieee80111_cfg_override_disables_ht40(struct ieee80211_sub_if_data *sdata)
+>> +{
+>> +	if ((sdata->u.mgd.ht_capa_mask.cap_info&
+>> +	     IEEE80211_HT_CAP_SUP_WIDTH_20_40)&&
+>> +	    !(sdata->u.mgd.ht_capa.cap_info&
+>> +	      IEEE80211_HT_CAP_SUP_WIDTH_20_40))
+>> +		return true;
+>> +	return false;
+>
+> Would it really go above 80 cols if you didn't line-wrap it? Maybe
+> remove the extra sets of parentheses? And even if it goes to a little
+> bit above 80 it's still be more readable without the wrapping ...
 
-So there has to be a race condition somewhere in the code and disable the
-functionality until the race is fixed. Now hardware is powered from the
-point where module is loaded until it's removed.
+It is more readable w/out the wrapping, but hard to know when
+patches get rejected about that or not, so I tried to keep
+checkpatch happy.  If you'll take slightly longer lines I'll
+happily un-wrap it.
 
-Reported-by: Jouni Malinen <jouni@qca.qualcomm.com>
-Tested-by: Jouni Malinen <jouni@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/init.c |    6 ------
- drivers/net/wireless/ath/ath6kl/main.c |   12 ------------
- 2 files changed, 0 insertions(+), 18 deletions(-)
+>
+> One thing I don't quite understand: Why don't you calculate the HT caps
+> to use upon assoc request, and then store *those* instead, then you
+> wouldn't have to check the overrides every time.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 909e2e9..363fb3d 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1612,12 +1612,6 @@ int ath6kl_core_init(struct ath6kl *ar)
- 	 */
- 	memcpy(ndev->dev_addr, ar->mac_addr, ETH_ALEN);
- 
--	ret = ath6kl_init_hw_stop(ar);
--	if (ret) {
--		ath6kl_err("Failed to stop hardware: %d\n", ret);
--		goto err_htc_cleanup;
--	}
--
- 	return ret;
- 
- err_rxbuf_cleanup:
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index f9410e4..021b2f6 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -1062,12 +1062,6 @@ struct ath6kl_vif *ath6kl_vif_first(struct ath6kl *ar)
- static int ath6kl_open(struct net_device *dev)
- {
- 	struct ath6kl_vif *vif = netdev_priv(dev);
--	int ret;
--
--	/* FIXME: how to handle multi vif support? */
--	ret = ath6kl_init_hw_start(vif->ar);
--	if (ret)
--		return ret;
- 
- 	set_bit(WLAN_ENABLED, &vif->flags);
- 
-@@ -1084,7 +1078,6 @@ static int ath6kl_close(struct net_device *dev)
- {
- 	struct ath6kl *ar = ath6kl_priv(dev);
- 	struct ath6kl_vif *vif = netdev_priv(dev);
--	int ret;
- 
- 	netif_stop_queue(dev);
- 
-@@ -1099,11 +1092,6 @@ static int ath6kl_close(struct net_device *dev)
- 
- 	ath6kl_cfg80211_scan_complete_event(vif, true);
- 
--	/* FIXME: how to handle multi vif support? */
--	ret = ath6kl_init_hw_stop(ar);
--	if (ret)
--		return ret;
--
- 	clear_bit(WLAN_ENABLED, &vif->flags);
- 
- 	return 0;
+Adding more state just gives more places to mess up that
+state or forget to update it somehow.  Think of the channel
+pointers in the scan & work code :)
+Not to mention the extra bloat in RAM.
+Since this is not hot-path code, I think having less state
+is well worth the effort.
+
+> For example here:
+>
+>>   		if (!(ap_ht_cap_flags&  IEEE80211_HT_CAP_40MHZ_INTOLERANT)&&
+>> +		    !ieee80111_cfg_override_disables_ht40(sdata)&&
+>>   		(sband->ht_cap.cap&  IEEE80211_HT_CAP_SUP_WIDTH_20_40)&&
+>>   		(hti->ht_param&  IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
+>>   			switch(hti->ht_param&  IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
+>
+> This just adds complexity. If you calculate sdata->used_ht_caps first
+> then you can replace the sband->ht_cap.cap check with an
+> sdata->used_ht_caps.cap check and be done with it, instead of having to
+> check both.
+
+I think that's a bad idea, but will change it if you insist.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
