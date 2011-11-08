@@ -1,262 +1,248 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:61980 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751262Ab1KLJpx (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:59695 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753131Ab1KHOfk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Nov 2011 04:45:53 -0500
-Message-ID: <1321091146.12394.8.camel@edumazet-laptop> (sfid-20111112_104622_626200_4C2D77F3)
-Subject: Re: creating netdev queues on the fly?
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Dave Taht <dave.taht@gmail.com>
-Cc: Denys Fedoryshchenko <denys@wbc.net.sa>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Sat, 12 Nov 2011 10:45:46 +0100
-In-Reply-To: <1321009374.2548.31.camel@edumazet-laptop>
-References: <1320933501.3967.68.camel@jlt3.sipsolutions.net>
-	 <CAGXE3d-_RFgW_zwfX2vTBe1psXmgoBFO5pd5cAgtYo=Jwpddhw@mail.gmail.com>
-	 <7be02f26a67fac4c7448a74f1f17aa01@visp.net.lb>
-	 <CAA93jw7ECQegWj6rpd48sbmDQUjorCYzXANXJSj0baHtxzC7EA@mail.gmail.com>
-	 <1321009374.2548.31.camel@edumazet-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 8 Nov 2011 09:35:40 -0500
+Received: by mail-ey0-f174.google.com with SMTP id 27so395520eye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 06:35:39 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v3 3/3] mac80211: Save probe response data for bss
+Date: Tue,  8 Nov 2011 16:35:28 +0200
+Message-Id: <1320762928-6782-3-git-send-email-arik@wizery.com> (sfid-20111108_153544_445902_727117EB)
+In-Reply-To: <1320762928-6782-1-git-send-email-arik@wizery.com>
+References: <1320762928-6782-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le vendredi 11 novembre 2011 à 12:02 +0100, Eric Dumazet a écrit :
+Allow setting a probe response template for an interface operating in
+AP mode. Low level drivers are notified about changes in the probe
+response template and are able to retrieve a copy of the current probe
+response. This data can, for example, be uploaded to hardware as a
+template.
 
-> I would see a new Qdisc/Class property, like the rate estimator, that we
-> can attach to any Qdisc/Class with a new tc option.
-> 
-> Even without any limit enforcing (might be Random Early Detection by the
-> way), it could be used to get a Queue Delay estimation, using EWMA
-> 
-> avqdelay = avqdelay*(1-W) + qdelay*W;
-> W = 2^(-ewma_log);
-> 
-> tc [ qdisc | class] add [...] [est 1sec 8sec] [delayest ewma_log ] ..
-> 
-> tc -s -d qdisc ...
-> qdisc htb 1: root refcnt 2 r2q 10 default 1 direct_packets_stat 0 ver 3.17
->  Sent 3596219 bytes 2567 pkt (dropped 238, overlimits 3797 requeues 0) 
->  rate 2557Kbit 215pps backlog 0b 0p requeues 0 
->  delay 91ms
-> 
-> 
+Signed-off-by: Guy Eilam <guy@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+v1->3:
+save the probe response in mac80211 when configuring the new beacon,
+not part of a BSS change.
 
+include/net/mac80211.h     |   15 +++++++++++++++
+ net/mac80211/cfg.c         |   44 +++++++++++++++++++++++++++++++++++++++++---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/iface.c       |    6 +++++-
+ net/mac80211/tx.c          |   31 +++++++++++++++++++++++++++++++
+ net/mac80211/util.c        |    3 ++-
+ 6 files changed, 95 insertions(+), 5 deletions(-)
 
-I coded the thing (delayest at qdisc level) and got interesting values,
-for example with following HTB setup :
-
-DEV=eth3
-MTU=1500
-rate=10mbit
-EST="est 1sec 8sec delayest 6"
-
-tc qdisc del dev $DEV root
-tc qdisc add dev $DEV root handle 1: ${EST} \
-	htb default 1 
-tc class add dev $DEV parent 1: classid 1:1 htb \
-	rate ${rate} mtu 40000 quantum 80000
-tc qdisc add dev $DEV parent 1:1 handle 10: ${EST} pfifo limit 3
-
-
-With light trafic on my x86_64 machine I have :
-
-# tcnew -s -d qdisc show dev eth3
-qdisc htb 1: root refcnt 17 r2q 10 default 1 direct_packets_stat 0 ver 3.17
- Sent 78216 bytes 569 pkt (dropped 0, overlimits 0 requeues 0) 
- rate 9040bit 13pps backlog 0b 0p requeues 0 
- delay 1126 ns log 6
-qdisc pfifo 10: parent 1:1 limit 3p
- Sent 78216 bytes 569 pkt (dropped 0, overlimits 0 requeues 0) 
- rate 9040bit 13pps backlog 0b 0p requeues 0 
- delay 731 ns log 6
-
-Wow, 1126ns of overhead per packet...
-
-This is the prototype kernel patch I used on top of net-next :
-
-diff --git a/include/linux/gen_stats.h b/include/linux/gen_stats.h
-index 552c8a0..5ad57a6 100644
---- a/include/linux/gen_stats.h
-+++ b/include/linux/gen_stats.h
-@@ -63,5 +63,16 @@ struct gnet_estimator {
- 	unsigned char	ewma_log;
- };
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 72eddd1..0f1d784 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -166,6 +166,7 @@ struct ieee80211_low_level_stats {
+  *	that it is only ever disabled for station mode.
+  * @BSS_CHANGED_IDLE: Idle changed for this BSS/interface.
+  * @BSS_CHANGED_SSID: SSID changed for this BSS (AP mode)
++ * @BSS_CHANGED_AP_PROBE_RESP: Probe Response changed for this BSS (AP mode)
+  */
+ enum ieee80211_bss_change {
+ 	BSS_CHANGED_ASSOC		= 1<<0,
+@@ -184,6 +185,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_QOS			= 1<<13,
+ 	BSS_CHANGED_IDLE		= 1<<14,
+ 	BSS_CHANGED_SSID		= 1<<15,
++	BSS_CHANGED_AP_PROBE_RESP	= 1<<16,
  
-+/**
-+ * struct gnet_qdelay - queue delay configuration / reports
-+ * @avdelay: average queue delay in ns
-+ * @limit: packets delayed more than this value are dropped
-+ * @avdelaylog: the log of measurement window weight
-+ */
-+struct gnet_qdelay {
-+	__u64 avdelay;
-+	__u64 limit;
-+	__u32 avdelaylog;
-+};
- 
- #endif /* __LINUX_GEN_STATS_H */
-diff --git a/include/linux/rtnetlink.h b/include/linux/rtnetlink.h
-index 8e872ea..61c66ec 100644
---- a/include/linux/rtnetlink.h
-+++ b/include/linux/rtnetlink.h
-@@ -484,6 +484,7 @@ enum {
- 	TCA_FCNT,
- 	TCA_STATS2,
- 	TCA_STAB,
-+	TCA_QDELAY,
- 	__TCA_MAX
+ 	/* when adding here, make sure to change ieee80211_reconfig */
  };
- 
-diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
-index f6bb08b..e293228 100644
---- a/include/net/sch_generic.h
-+++ b/include/net/sch_generic.h
-@@ -42,6 +42,13 @@ struct qdisc_size_table {
- 	u16			data[];
- };
- 
-+/*
-+ * qdisc/class avdelay is computed using EWMA, with a fixed factor of 16
-+ * Only the weight is a parameter (avdelaylog)
-+ * With u64 values, this leaves 48 bits, a max of 281474 seconds.
-+ */
-+#define TCQ_AVDELAY_FACTOR 16
-+
- struct Qdisc {
- 	int 			(*enqueue)(struct sk_buff *skb, struct Qdisc *dev);
- 	struct sk_buff *	(*dequeue)(struct Qdisc *dev);
-@@ -50,8 +57,11 @@ struct Qdisc {
- #define TCQ_F_INGRESS		2
- #define TCQ_F_CAN_BYPASS	4
- #define TCQ_F_MQROOT		8
-+#define TCQ_F_QDELAY		0x10
- #define TCQ_F_WARN_NONWC	(1 << 16)
--	int			padded;
-+	u8			padded;
-+	u8			avdelaylog; /* avdelay EWMA weight */
-+	u8			_pad[2];
- 	const struct Qdisc_ops	*ops;
- 	struct qdisc_size_table	__rcu *stab;
- 	struct list_head	list;
-@@ -80,6 +90,10 @@ struct Qdisc {
- 	struct gnet_stats_basic_packed bstats;
- 	unsigned int		__state;
- 	struct gnet_stats_queue	qstats;
-+
-+	/* average queue delay in ns << TCQ_AVDELAY_FACTOR */
-+	u64			avdelay;
-+
- 	struct rcu_head		rcu_head;
- 	spinlock_t		busylock;
- 	u32			limit;
-@@ -219,6 +233,9 @@ struct tcf_proto {
- };
- 
- struct qdisc_skb_cb {
-+#ifdef CONFIG_NET_SCHED_QDELAY
-+	ktime_t			enqueue_time;
-+#endif
- 	unsigned int		pkt_len;
- 	long			data[];
- };
-@@ -467,6 +484,14 @@ static inline void qdisc_bstats_update(struct Qdisc *sch,
- 				       const struct sk_buff *skb)
- {
- 	bstats_update(&sch->bstats, skb);
-+#ifdef CONFIG_NET_SCHED_QDELAY
-+	if (sch->flags & TCQ_F_QDELAY) {
-+		u64 delay = ktime_to_ns(ktime_sub(ktime_get(),
-+					qdisc_skb_cb(skb)->enqueue_time));
-+		delay <<= TCQ_AVDELAY_FACTOR;
-+		sch->avdelay += (delay >> sch->avdelaylog) - (sch->avdelay >> sch->avdelaylog);
-+	}
-+#endif
+@@ -2661,6 +2663,19 @@ static inline struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
  }
  
- static inline int __qdisc_enqueue_tail(struct sk_buff *skb, struct Qdisc *sch,
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 6ba50a1..587534d 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -2402,6 +2402,13 @@ static inline int __dev_xmit_skb(struct sk_buff *skb, struct Qdisc *q,
- 	int rc;
+ /**
++ * ieee80211_proberesp_get - retrieve a Probe Response template
++ * @hw: pointer obtained from ieee80211_alloc_hw().
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ *
++ * Creates a Probe Response template which can, for example, be uploaded to
++ * hardware. The destination address should be set by the caller.
++ *
++ * Can only be called in AP mode.
++ */
++struct sk_buff *ieee80211_proberesp_get(struct ieee80211_hw *hw,
++					struct ieee80211_vif *vif);
++
++/**
+  * ieee80211_pspoll_get - retrieve a PS Poll template
+  * @hw: pointer obtained from ieee80211_alloc_hw().
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a9ded52..a06e695 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -488,6 +488,37 @@ static void ieee80211_config_ap_ssid(struct ieee80211_sub_if_data *sdata,
+ 		(params->hidden_ssid != NL80211_HIDDEN_SSID_NOT_IN_USE);
+ }
  
- 	qdisc_skb_cb(skb)->pkt_len = skb->len;
++static int ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
++				    u8 *resp, size_t resp_len)
++{
++	struct sk_buff *new, *old;
 +
-+#ifdef CONFIG_NET_SCHED_QDELAY
-+	qdisc_skb_cb(skb)->enqueue_time.tv64 = 0;
-+	if (q->flags & TCQ_F_QDELAY)
-+		qdisc_skb_cb(skb)->enqueue_time = ktime_get();
-+#endif
++	if (resp_len == 0)
++		return -EINVAL;
 +
- 	qdisc_calculate_pkt_len(skb, q);
- 	/*
- 	 * Heuristic to force contended enqueues to serialize on a
-diff --git a/net/sched/Kconfig b/net/sched/Kconfig
-index 2590e91..028f882 100644
---- a/net/sched/Kconfig
-+++ b/net/sched/Kconfig
-@@ -470,6 +470,17 @@ config NET_CLS_ACT
- 	  A recent version of the iproute2 package is required to use
- 	  extended matches.
- 
-+config NET_SCHED_QDELAY
-+	bool "QDISC/CLASS queue delay Estimators and Limits"
-+	---help---
-+	  Say Y here if you want to be able to track queue delays, and
-+	  be able to drop packets if they stay in a queue a too long time.
-+	  It adds some overhead per packet, since it needs to get precise
-+	  time at enqueue and dequeue time.
++	old = sdata->u.ap.probe_resp;
 +
-+	  A recent version of the iproute2 package is required to use
-+	  extended matches.
++	if (!resp || !resp_len)
++		return -EINVAL;
 +
- config NET_ACT_POLICE
- 	tristate "Traffic Policing"
-         depends on NET_CLS_ACT 
-diff --git a/net/sched/sch_api.c b/net/sched/sch_api.c
-index dca6c1a..212fba9 100644
---- a/net/sched/sch_api.c
-+++ b/net/sched/sch_api.c
-@@ -842,6 +842,17 @@ qdisc_create(struct net_device *dev, struct netdev_queue *dev_queue,
- 			}
- 			rcu_assign_pointer(sch->stab, stab);
- 		}
-+		if (tca[TCA_QDELAY]) {
-+			struct gnet_qdelay *parm = nla_data(tca[TCA_QDELAY]);
-+			err = -EINVAL;
-+			if (nla_len(tca[TCA_QDELAY]) < sizeof(*parm))
-+				goto err_out4;
-+			sch->avdelaylog = parm->avdelaylog;
-+			sch->flags |= TCQ_F_QDELAY;
-+		} else { /* temporary testing */
-+			sch->avdelaylog = 6;
-+			sch->flags |= TCQ_F_QDELAY;
-+		}
- 		if (tca[TCA_RATE]) {
- 			spinlock_t *root_lock;
- 
-@@ -1206,6 +1217,16 @@ static int tc_fill_qdisc(struct sk_buff *skb, struct Qdisc *q, u32 clid,
- 	if (stab && qdisc_dump_stab(skb, stab) < 0)
- 		goto nla_put_failure;
- 
-+#ifdef CONFIG_NET_SCHED_QDELAY
-+	if (q->flags & TCQ_F_QDELAY) {
-+		struct gnet_qdelay qdelay;
-+
-+		memset(&qdelay, 0, sizeof(qdelay));	
-+		qdelay.avdelay = q->avdelay >> TCQ_AVDELAY_FACTOR;
-+		qdelay.avdelaylog = q->avdelaylog;
-+		NLA_PUT(skb, TCA_QDELAY, sizeof(qdelay), &qdelay);
++	new = dev_alloc_skb(resp_len);
++	if (!new) {
++		printk(KERN_DEBUG "%s: failed to allocate buffer for probe "
++		       "response template\n", sdata->name);
++		return -ENOMEM;
 +	}
-+#endif
- 	if (gnet_stats_start_copy_compat(skb, TCA_STATS2, TCA_STATS, TCA_XSTATS,
- 					 qdisc_root_sleeping_lock(q), &d) < 0)
- 		goto nla_put_failure;
-
++
++	memcpy(skb_put(new, resp_len), resp, resp_len);
++
++	rcu_assign_pointer(sdata->u.ap.probe_resp, new);
++	synchronize_rcu();
++
++	if (old)
++		dev_kfree_skb(old);
++
++	return 0;
++}
++
+ /*
+  * This handles both adding a beacon and setting new beacon info
+  */
+@@ -498,6 +529,7 @@ static int ieee80211_config_beacon(struct ieee80211_sub_if_data *sdata,
+ 	int new_head_len, new_tail_len;
+ 	int size;
+ 	int err = -EINVAL;
++	u32 changed = 0;
+ 
+ 	old = rtnl_dereference(sdata->u.ap.beacon);
+ 
+@@ -581,11 +613,17 @@ static int ieee80211_config_beacon(struct ieee80211_sub_if_data *sdata,
+ 
+ 	kfree(old);
+ 
++	err = ieee80211_set_probe_resp(sdata, params->probe_resp,
++				       params->probe_resp_len);
++	if (!err)
++		changed |= BSS_CHANGED_AP_PROBE_RESP;
++
+ 	ieee80211_config_ap_ssid(sdata, params);
++	changed |= BSS_CHANGED_BEACON_ENABLED |
++		   BSS_CHANGED_BEACON |
++		   BSS_CHANGED_SSID;
+ 
+-	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED |
+-						BSS_CHANGED_BEACON |
+-						BSS_CHANGED_SSID);
++	ieee80211_bss_info_change_notify(sdata, changed);
+ 	return 0;
+ }
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ea10a51..5a351cc 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -228,6 +228,7 @@ struct beacon_data {
+ 
+ struct ieee80211_if_ap {
+ 	struct beacon_data __rcu *beacon;
++	struct sk_buff __rcu *probe_resp;
+ 
+ 	struct list_head vlans;
+ 
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index ef741e8..74d6f79 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -450,15 +450,19 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		struct ieee80211_sub_if_data *vlan, *tmpsdata;
+ 		struct beacon_data *old_beacon =
+ 			rtnl_dereference(sdata->u.ap.beacon);
++		struct sk_buff *old_probe_resp =
++			rtnl_dereference(sdata->u.ap.probe_resp);
+ 
+ 		/* sdata_running will return false, so this will disable */
+ 		ieee80211_bss_info_change_notify(sdata,
+ 						 BSS_CHANGED_BEACON_ENABLED);
+ 
+-		/* remove beacon */
++		/* remove beacon and probe response */
+ 		rcu_assign_pointer(sdata->u.ap.beacon, NULL);
++		rcu_assign_pointer(sdata->u.ap.probe_resp, NULL);
+ 		synchronize_rcu();
+ 		kfree(old_beacon);
++		kfree(old_probe_resp);
+ 
+ 		/* down all dependent devices, that is VLANs */
+ 		list_for_each_entry_safe(vlan, tmpsdata, &sdata->u.ap.vlans,
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 48bbb96..6b86f77 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2354,6 +2354,37 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(ieee80211_beacon_get_tim);
+ 
++struct sk_buff *ieee80211_proberesp_get(struct ieee80211_hw *hw,
++					struct ieee80211_vif *vif)
++{
++	struct ieee80211_if_ap *ap = NULL;
++	struct sk_buff *presp = NULL, *skb = NULL;
++	struct ieee80211_hdr *hdr;
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++
++	if (sdata->vif.type != NL80211_IFTYPE_AP)
++		return NULL;
++
++	rcu_read_lock();
++
++	ap = &sdata->u.ap;
++	presp = rcu_dereference(ap->probe_resp);
++	if (!presp)
++		goto out;
++
++	skb = skb_copy(presp, GFP_ATOMIC);
++	if (!skb)
++		goto out;
++
++	hdr = (struct ieee80211_hdr *) skb->data;
++	memset(hdr->addr1, 0, sizeof(hdr->addr1));
++
++out:
++	rcu_read_unlock();
++	return skb;
++}
++EXPORT_SYMBOL(ieee80211_proberesp_get);
++
+ struct sk_buff *ieee80211_pspoll_get(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif)
+ {
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 7439d26..d6d3ef4 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1085,7 +1085,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 			changed |= BSS_CHANGED_IBSS;
+ 			/* fall through */
+ 		case NL80211_IFTYPE_AP:
+-			changed |= BSS_CHANGED_SSID;
++			changed |= BSS_CHANGED_SSID |
++				   BSS_CHANGED_AP_PROBE_RESP;
+ 			/* fall through */
+ 		case NL80211_IFTYPE_MESH_POINT:
+ 			changed |= BSS_CHANGED_BEACON |
+-- 
+1.7.5.4
 
