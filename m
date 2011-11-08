@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56565 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756894Ab1KJBdf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 20:33:35 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 20/28] iwlwifi: fix unused label in iwl_send_cmd_sync
-Date: Wed,  9 Nov 2011 16:39:23 -0800
-Message-Id: <1320885571-19122-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023418_506160_60C1AB4F)
-In-Reply-To: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:50768 "HELO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752689Ab1KHDc2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Nov 2011 22:32:28 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH RESEND 1/4] mwifiex: remove unneeded kfree(NULL);
+Date: Mon,  7 Nov 2011 19:31:44 -0800
+Message-Id: <1320723107-24202-2-git-send-email-bzhao@marvell.com> (sfid-20111108_043230_543807_5486F261)
+In-Reply-To: <1320723107-24202-1-git-send-email-bzhao@marvell.com>
+References: <1320723107-24202-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-Warning introduced by c847474b7dfdda304d0d8ffcc5a9db546b1cb3e9
+The previous if statement means this that pointer is NULL so there
+is no need to free it.
 
-iwlwifi: check status before send command
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Acked-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/mwifiex/pcie.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-index 09a31dc..a6d898b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-@@ -1075,7 +1075,7 @@ cancel:
- 		trans_pcie->txq[trans->shrd->cmd_queue].meta[cmd_idx].flags &=
- 							~CMD_WANT_SKB;
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index d34acf0..4466976 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -386,7 +386,6 @@ static int mwifiex_pcie_create_txbd_ring(struct mwifiex_adapter *adapter)
+ 	card->txbd_ring_vbase = kzalloc(card->txbd_ring_size, GFP_KERNEL);
+ 	if (!card->txbd_ring_vbase) {
+ 		dev_err(adapter->dev, "Unable to allocate buffer for txbd ring.\n");
+-		kfree(card->txbd_ring_vbase);
+ 		return -1;
  	}
--fail:
-+
- 	if (cmd->reply_page) {
- 		iwl_free_pages(trans->shrd, cmd->reply_page);
- 		cmd->reply_page = 0;
+ 	card->txbd_ring_pbase = virt_to_phys(card->txbd_ring_vbase);
 -- 
-1.7.0.4
+1.7.0.2
 
