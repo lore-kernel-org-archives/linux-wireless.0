@@ -1,71 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:55407 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752432Ab1KUT5p (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:56772 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755731Ab1KHOGd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 14:57:45 -0500
-Date: Mon, 21 Nov 2011 22:58:23 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] ath6kl: use a larger buffer for debug output
-Message-ID: <20111121195823.GN29436@mwanda> (sfid-20111121_205750_399413_2F3D2438)
-References: <20111118140906.GA9685@elgon.mountain>
- <1321625461.10266.57.camel@jlt3.sipsolutions.net>
- <4ECA826F.8010605@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="iwjEIfU64POCkTAH"
-In-Reply-To: <4ECA826F.8010605@qca.qualcomm.com>
+	Tue, 8 Nov 2011 09:06:33 -0500
+Received: by mail-bw0-f50.google.com with SMTP id zu17so522587bkb.23
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 06:06:31 -0800 (PST)
+Subject: Re: [PATCH] wl12xx: fix wl12xx_scan_sched_scan_ssid_list() check
+ that all given ssids are in filters
+From: Luciano Coelho <coelho@ti.com>
+To: Eyal Shapira <eyal@wizery.com>, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1320760486-19700-1-git-send-email-eyal@wizery.com>
+References: <1320760486-19700-1-git-send-email-eyal@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Nov 2011 16:06:28 +0200
+Message-ID: <1320761188.19479.10.camel@cumari> (sfid-20111108_150636_531693_D6D54BD7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2011-11-08 at 15:54 +0200, Eyal Shapira wrote: 
+> A minor fix for the check that verifies that all given SSIDs (in req) exist
+> in the filters (the match sets)
+> 
+> Signed-off-by: Eyal Shapira <eyal@wizery.com>
+> ---
+>  drivers/net/wireless/wl12xx/scan.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+> index 128ccb7..fc29c67 100644
+> --- a/drivers/net/wireless/wl12xx/scan.c
+> +++ b/drivers/net/wireless/wl12xx/scan.c
+> @@ -559,7 +559,7 @@ wl12xx_scan_sched_scan_ssid_list(struct wl1271 *wl,
+>  						break;
+>  					}
+>  				/* Fail if SSID isn't present in the filters */
+> -				if (j == req->n_ssids) {
+> +				if (j == cmd->n_ssids) {
+>  					ret = -EINVAL;
+>  					goto out_free;
+>  				}
 
---iwjEIfU64POCkTAH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Just to clarify.  My comment:
+> Acked-by: Luciano Coelho <coelho@ti.com>
+> 
+> John, can you apply this to 3.2, please?
 
-On Mon, Nov 21, 2011 at 06:55:11PM +0200, Kalle Valo wrote:
-> >>  	len =3D snprintf(buf, sizeof(buf), "%u %u\n", ar->listen_intvl_t,
-> >>  					ar->listen_intvl_b);
-> >> +	len =3D min(sizeof(buf), len);
-> >=20
-> > Maybe that should be scnprintf instead then?
->=20
-> Yeah, I agree. And most likely debug.c has even more cases where
-> scnprintf() is needed.
->=20
+...was about this patch.  Eyal's email was delivered to me, but vger
+rejected it, so he had to resend it.
 
-Yes yes.  Obviously.  I sent the patch at 5 pm on Friday and lost
-track of it for a bit.  I'll send a fixed version tomorrow morning.
+-- 
+Cheers,
+Luca.
 
-regards,
-dan carpenter
-
-
---iwjEIfU64POCkTAH
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJOyq1eAAoJEOnZkXI/YHqRWr4QAILJWyuKGnhNL7DilqvGYNHS
-r+hDsdrNdQ/q+4Ln2/rFaH58ebWLHMExFglRj4to374Ok6TdndYOS4EUcbobuzZw
-LaCxzbl58aPX66Po1fvCQizxOKsNC5t70eiFCPzJS15U1iTirHOq5X0NagRvgSqo
-EjUpo/QeGYIavGAH2Ej2TuCJA7p959lrbQ5g8PpO8dpsB0nayNJNhQ8fTWBnlDvE
-eushXUtXc/4Woq28whbb0hKk/r5tWrwxV4E4860xmT79YTNdAwKnJi3vqCqvnJBi
-BdoYneWMczmtgIMZygYdonHkp/364LxyMBj4lanvadBlfU3UoHccLwZsYEvQ1vmK
-dnEvbZ1X+zuKLJNZJE2ojRY/RV/PoJusXAxQucZCk81+xKFUiTIGnVDiQ/DtCpoL
-vN0b04lh0UHAWyadAOcSzaonJnZ4ZZHzAqcSuAvnHXI5BIrxc3xGqINYPRzGqYLv
-4NbQ7BiwXP3a+it4LWVCHkeQYFlNXZ77XBCtGd6QUJxB1weXYEsF/wMOVHjHOi2t
-iHUWaPTdngmJmhGtCJhjCUqPkRxB7rzPl8cdS2xgcG1OqbQHUv7PfwSjvQnzPcMe
-e4PqQCxE9ROC113h0isQuH5cSBau3hfrmzwPhIqlcLEjVI1Ivv++KJEXB/ysP/3E
-JJXQeAQdgrdCtBI8G9Hx
-=gUDp
------END PGP SIGNATURE-----
-
---iwjEIfU64POCkTAH--
