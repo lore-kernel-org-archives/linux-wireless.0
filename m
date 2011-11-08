@@ -1,58 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21562 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751506Ab1K2LoR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 06:44:17 -0500
-Date: Tue, 29 Nov 2011 12:46:04 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] Poor performance and lockup with rt2800usb and
- Asus USB-N13 adapter
-Message-ID: <20111129114603.GB7299@redhat.com> (sfid-20111129_124437_300183_E6518A7A)
-References: <4ED43A5C.9000102@gmail.com>
+Received: from mail.candelatech.com ([208.74.158.172]:46822 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756181Ab1KHRoC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Nov 2011 12:44:02 -0500
+Message-ID: <4EB96A5C.8040606@candelatech.com> (sfid-20111108_184410_734869_01E6FE3D)
+Date: Tue, 08 Nov 2011 09:43:56 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4ED43A5C.9000102@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v6 1/2] wireless:  Support ht-capabilities over-rides.
+References: <1320707676-17255-1-git-send-email-greearb@candelatech.com>  (sfid-20111108_001449_233997_95FF19FA) <1320740099.4304.5.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1320740099.4304.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 28, 2011 at 07:50:20PM -0600, Robert Hancock wrote:
-> I recently got an Asus USB-N13 USB Wireless-N adapter which
-> apparently uses a Ralink RT3072 chip. I'm using it with an Asus
-> RT-N16 access point running TomatoUSB. When running Windows the
-> performance is reasonable (about 80 Mbps in both directions).
-> However under Fedora 16 (currently kernel 3.1.2) the performance is
-> abysmal (10 Mbps or less with lots of packet loss). I'll post some
-> debug information below.
-rt2800usb needs fixing. I'm able to reproduce these performance
-problems locally. They are quite hard to debug, and need some
-experiments. But I hope I will provide patches soon or leter.
+On 11/08/2011 12:14 AM, Johannes Berg wrote:
+> On Mon, 2011-11-07 at 15:14 -0800, greearb@candelatech.com wrote:
+>
+>> +++ b/net/wireless/mlme.c
+>> @@ -501,13 +501,32 @@ int cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+>>   	return err;
+>>   }
+>>
+>> +/*  Do a logical ht_capa&= ht_capa_mask.  */
+>> +static void cfg80211_oper_and_ht_capa(struct ieee80211_ht_cap *ht_capa,
+>> +			const struct ieee80211_ht_cap *ht_capa_mask)
+>> +{
+>> +	int i;
+>> +	u8 *p1, *p2;
+>> +	if (!ht_capa_mask) {
+>> +		memset(ht_capa, 0, sizeof(*ht_capa));
+>> +		return;
+>> +	}
+>> +
+>> +	p1 = (u8*)(ht_capa);
+>> +	p2 = (u8*)(ht_capa_mask);
+>> +	for (i = 0; i<sizeof(*ht_capa); i++)
+>> +		p1[i]&= p2[i];
+>> +}
+>
+> I think you also need to call this in the cfg80211_connect() path.
 
-> While debugging this I also noticed that doing an rmmod on rt2800usb
-> with the adapter plugged in locks up the machine and then spews out
-> soft lockup stack traces on the console. I was only able to capture
-> it off the screen with a camera, but it basically is:
-> 
-> rt2x00usb_work_rxdone
-> process_one_work
-> worker_thread
-> kthread
-> kernel_thread_helper
-Another thing to investigate. Can yo try to reproduce that with
-CONFIG_DEBUG_OBJECTS=y
-CONFIG_DEBUG_OBJECTS_FREE=y
-CONFIG_DEBUG_OBJECTS_TIMERS=y
-CONFIG_DEBUG_OBJECTS_WORK=y
-CONFIG_DEBUG_OBJECTS_RCU_HEAD=y
-CONFIG_DEBUG_SPINLOCK=y
-CONFIG_DEBUG_MUTEXES=y
-CONFIG_DEBUG_LOCK_ALLOC=y
-CONFIG_PROVE_LOCKING=y
-CONFIG_LOCKDEP=y
-and see if these options print some aditional message when rmmod.
+I'll double check that...for some reason I thought everything
+eventually went through this code path.
 
-Thanks
-Stanislaw
+>
+> Also, maybe we should reject this configuration if the device didn't
+> support it at all, ie. ht_capa_mask was NULL? It also seems a bit odd to
+> allow this on a device that doesn't even support HT.
+
+I really don't like that.  It would mean that supplicant will
+have to selectively not add certain netlink attributes based on the
+driver and/or kernel version.  That means either probing
+to determine what the phy supports (and returning errors on
+up to user if they configure it for something not supported?)
+or just forcing the user to make all the decisions when writing
+the supplicant config file.
+
+The truth is, my app auto-generates the supplicant config files,
+and I know what wifi driver I'm using etc, so it would be easy enough
+for me to live with this.  But, it seems like it will make life
+painful for anyone with less knowledge of the system.
+
+> Also how would you feel about rejecting, instead of silently ignoring,
+> things that we do look at but don't support, e.g. a wrong A-MSDU
+> setting? Alternatively, cfg80211 could modify the settings in a way that
+> drivers don't have to worry about the "downgrade only" part.
+
+I dislike that as well, for similar reasons.  Getting an -EINVAL back
+from a netlink call gives very little info to the user anyway...who
+knows what exactly was invalid?  Perhaps a printk warning coming out
+of mac80211 when it checks for the restrictions against what the
+driver supports would be more useful?
+
+> Finally, I think we need a tad more documentation about how this is
+> supposed to work in case somebody wants to implement it on non-mac80211.
+> The way it's done right now it seems fairly error prone, with all
+> restrictions that the driver needs to implement like not allowing the
+> a-MSDU size to be increased.
+
+Well, who knows...in their driver maybe the restrictions are not
+the same.  I think that adding more info about what fields are
+currently supported for mac80211 might be useful, but trying to
+generalize restrictions for drivers that have not even implemented
+any of this seems like useless overhead.
+
+Thanks,
+Ben
+
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
