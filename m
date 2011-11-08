@@ -1,25 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54795 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754003Ab1KUHoO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 02:44:14 -0500
-Date: Mon, 21 Nov 2011 08:46:28 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 43/77] iwlegacy: rename REPLY_ to N_ or C_
-Message-ID: <20111121074601.GB2787@redhat.com> (sfid-20111121_084418_145900_6DC22334)
-References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
- <1321604559-10707-43-git-send-email-sgruszka@redhat.com>
- <20111118180306.144dfa1f@mj>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111118180306.144dfa1f@mj>
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:55588 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752302Ab1KHOO3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Nov 2011 09:14:29 -0500
+Received: by mail-bw0-f48.google.com with SMTP id r19so430387bka.7
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 06:14:27 -0800 (PST)
+Subject: Re: [PATCH 2/2] wl12xx: handle idle changes per-interface
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
+In-Reply-To: <1319350915-31222-2-git-send-email-arik@wizery.com>
+References: <1319350915-31222-1-git-send-email-arik@wizery.com>
+	 <1319350915-31222-2-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Nov 2011 16:14:24 +0200
+Message-ID: <1320761664.19479.17.camel@cumari> (sfid-20111108_151432_896731_68D8C9B5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 18, 2011 at 06:03:06PM -0500, Pavel Roskin wrote:
-> The explanation for the change is missing.
-I believe topic + patch contents are self explanatory.
+On Sun, 2011-10-23 at 08:21 +0200, Arik Nemtsov wrote: 
+> From: Eliad Peller <eliad@wizery.com>
+> 
+> Idle changes are currently handled per hardware.
+> However, some operations should be done only per-interface.
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
-Stanislaw
+Applied this patch.  1/2 from this same set is still pending a
+dependency and will be applied later.
+
+-- 
+Cheers,
+Luca.
+
