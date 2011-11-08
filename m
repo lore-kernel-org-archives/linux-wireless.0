@@ -1,106 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50785 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756005Ab1K3ODU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 09:03:20 -0500
-Date: Wed, 30 Nov 2011 15:03:16 +0100
-From: Michal Hocko <mhocko@suse.cz>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
- iwl3945_rs_free_sta
-Message-ID: <20111130140316.GA4153@tiehlicka.suse.cz> (sfid-20111130_150336_626548_5B2D2564)
-References: <20111129100727.GD2675@tiehlicka.suse.cz>
- <20111129113906.GA7299@redhat.com>
- <20111130101028.GA2906@tiehlicka.suse.cz>
- <20111130142316.GA2466@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111130142316.GA2466@redhat.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:57906 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751506Ab1KHQrB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Nov 2011 11:47:01 -0500
+Received: by wwi36 with SMTP id 36so1044850wwi.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 08:47:00 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v4 1/2] wl12xx: configure probe-resp template according to notification
+Date: Tue,  8 Nov 2011 18:46:54 +0200
+Message-Id: <1320770815-23332-1-git-send-email-arik@wizery.com> (sfid-20111108_174706_847927_C8E517E9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed 30-11-11 15:23:16, Stanislaw Gruszka wrote:
-> On Wed, Nov 30, 2011 at 11:10:28AM +0100, Michal Hocko wrote:
-> > On Tue 29-11-11 12:39:07, Stanislaw Gruszka wrote:
-> > > On Tue, Nov 29, 2011 at 11:07:27AM +0100, Michal Hocko wrote:
-> > > > [I am not sure whether this is ieee80211 or iwl3945 issue so put both
-> > > > maintainers into loop]
-> > > The only changed we had in iwlegacy between 3.1 and 3.2-rc, was only 
-> > > adjustment to mac80211 changes. However I think this is iwlegacy issue,
-> > > just for some reason bug did not trigger before.
-> > 
-> > I have double checked 3.1 and cannot reproduce it.
-> > Anyway, I have put:
-> > 
-> > diff --git a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-> > index 8faeaf2..9221ed4 100644
-> > --- a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-> > +++ b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-> > @@ -432,6 +432,7 @@ static void iwl3945_rs_free_sta(void *iwl_priv, struct ieee80211_sta *sta,
-> >  	 * to use iwl_priv to print out debugging) since it may not be fully
-> >  	 * initialized at this point.
-> >  	 */
-> > +	printk("XXX: deleting time: %x\n", rs_sta->rate_scale_flush.base);
-> >  	del_timer_sync(&rs_sta->rate_scale_flush);
-> >  }
-> >  
-> > And the timer base is really NULL when the issue happens. So, somebody
-> > probably removed the timer already?
-> 
-> I think we call rs_ops->free_sta without rs_ops->alloc_sta, otherwise
-> I don't know how it could be NULL in iwl3945_rs_free_sta (excluding memory
-> corruption or bug in timer internals).
-> 
-> I suspect this could be a regression introduced by commit:
-> 
-> commit 07ba55d7f1d0da174c9bc545c713b44cee760197
-> Author: Arik Nemtsov <arik@wizery.com>
-> Date:   Wed Sep 28 14:12:53 2011 +0300
-> 
->     nl80211/mac80211: allow adding TDLS peers as stations
-> 
-> I'm attaching patch with revert of relevant hunk, because full revert
-> would be hard currently. Does it workaround problem for you?
+When operating in AP-mode, replace our probe-response template when a
+notification is recieved from mac80211. We preserve the "legacy" way of
+configuring a probe-response according to beacon for IBSS mode and for
+versions of hostapd that do not support this feature.
 
-No, didn't help unfortunately...
+Signed-off-by: Guy Eilam <guy@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+v3->4: no changes
 
-> 
-> > > Is this problem 100% reproducible for you ? 
-> > 
-> > Yes, it seems to be sufficient to suspend to RAM while associated and
-> > turn off the AP before waking up the machine.
-> > I wasn't able to reproduce just by turning of the AP while associated
-> > without suspend.
-> 
-> I'm not able to recreate, but I'm not using your config as my system
-> user-space has problem to startup with it :-(
-> 
-> Stanislaw
+drivers/net/wireless/wl12xx/main.c   |   57 +++++++++++++++++++++++++++++----
+ drivers/net/wireless/wl12xx/wl12xx.h |    1 +
+ 2 files changed, 51 insertions(+), 7 deletions(-)
 
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index b1b1bb3..f773dbb 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -1144,9 +1144,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
->  	changed |= BSS_CHANGED_BSSID | BSS_CHANGED_HT;
->  	ieee80211_bss_info_change_notify(sdata, changed);
->  
-> -	/* remove AP and TDLS peers */
->  	if (remove_sta)
-> -		sta_info_flush(local, sdata);
-> +		sta_info_destroy_addr(sdata, bssid);
->  
->  	del_timer_sync(&sdata->u.mgd.conn_mon_timer);
->  	del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
-
-
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index dbb088e..3750a6e 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -3299,11 +3299,30 @@ static void wl12xx_remove_vendor_ie(struct sk_buff *skb,
+ 	skb_trim(skb, skb->len - len);
+ }
+ 
+-static int wl1271_ap_set_probe_resp_tmpl(struct wl1271 *wl,
+-					 struct ieee80211_vif *vif,
+-					 u8 *probe_rsp_data,
+-					 size_t probe_rsp_len,
+-					 u32 rates)
++static int wl1271_ap_set_probe_resp_tmpl(struct wl1271 *wl, u32 rates)
++{
++	struct sk_buff *skb;
++	int ret;
++
++	skb = ieee80211_proberesp_get(wl->hw, wl->vif);
++	if (!skb)
++		return -EINVAL;
++
++	ret = wl1271_cmd_template_set(wl,
++				      CMD_TEMPL_AP_PROBE_RESPONSE,
++				      skb->data,
++				      skb->len, 0,
++				      rates);
++
++	dev_kfree_skb(skb);
++	return ret;
++}
++
++static int wl1271_ap_set_probe_resp_tmpl_legacy(struct wl1271 *wl,
++					     struct ieee80211_vif *vif,
++					     u8 *probe_rsp_data,
++					     size_t probe_rsp_len,
++					     u32 rates)
+ {
+ 	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+ 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+@@ -3416,6 +3435,16 @@ static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
+ 		wlvif->beacon_int = bss_conf->beacon_int;
+ 	}
+ 
++	if ((changed & BSS_CHANGED_AP_PROBE_RESP) && is_ap) {
++		u32 rate = wl1271_tx_min_rate_get(wl, wlvif->basic_rate_set);
++		ret = wl1271_ap_set_probe_resp_tmpl(wl, rate);
++		if (ret < 0)
++			goto out;
++
++		wl1271_debug(DEBUG_AP, "probe response updated");
++		set_bit(WLVIF_FLAG_AP_PROBE_RESP_SET, &wlvif->flags);
++	}
++
+ 	if ((changed & BSS_CHANGED_BEACON)) {
+ 		struct ieee80211_hdr *hdr;
+ 		u32 min_rate;
+@@ -3424,8 +3453,10 @@ static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
+ 		struct sk_buff *beacon = ieee80211_beacon_get(wl->hw, vif);
+ 		u16 tmpl_id;
+ 
+-		if (!beacon)
++		if (!beacon) {
++			ret = -EINVAL;
+ 			goto out;
++		}
+ 
+ 		wl1271_debug(DEBUG_MASTER, "beacon updated");
+ 
+@@ -3446,6 +3477,13 @@ static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
+ 			goto out;
+ 		}
+ 
++		/*
++		 * In case we already have a probe-resp beacon set explicitly
++		 * by usermode, don't use the beacon data.
++		 */
++		if (test_bit(WLVIF_FLAG_AP_PROBE_RESP_SET, &wlvif->flags))
++			goto end_bcn;
++
+ 		/* remove TIM ie from probe response */
+ 		wl12xx_remove_ie(beacon, WLAN_EID_TIM, ieoffset);
+ 
+@@ -3464,7 +3502,7 @@ static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
+ 		hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+ 						 IEEE80211_STYPE_PROBE_RESP);
+ 		if (is_ap)
+-			ret = wl1271_ap_set_probe_resp_tmpl(wl, vif,
++			ret = wl1271_ap_set_probe_resp_tmpl_legacy(wl, vif,
+ 						beacon->data,
+ 						beacon->len,
+ 						min_rate);
+@@ -3474,12 +3512,15 @@ static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
+ 						beacon->data,
+ 						beacon->len, 0,
+ 						min_rate);
++end_bcn:
+ 		dev_kfree_skb(beacon);
+ 		if (ret < 0)
+ 			goto out;
+ 	}
+ 
+ out:
++	if (ret != 0)
++		wl1271_error("beacon info change failed: %d", ret);
+ 	return ret;
+ }
+ 
+@@ -3536,6 +3577,8 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
+ 					goto out;
+ 
+ 				clear_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags);
++				clear_bit(WLVIF_FLAG_AP_PROBE_RESP_SET,
++					  &wlvif->flags);
+ 				wl1271_debug(DEBUG_AP, "stopped AP");
+ 			}
+ 		}
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index e58e801..f1c9117 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -268,6 +268,7 @@ enum wl12xx_vif_flags {
+ 	WLVIF_FLAG_RX_STREAMING_STARTED,
+ 	WLVIF_FLAG_PSPOLL_FAILURE,
+ 	WLVIF_FLAG_CS_PROGRESS,
++	WLVIF_FLAG_AP_PROBE_RESP_SET,
+ };
+ 
+ struct wl1271_link {
 -- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+1.7.5.4
+
