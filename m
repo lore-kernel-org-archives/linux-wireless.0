@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from defg500.nifty.com ([202.248.238.127]:41273 "EHLO
-	defg500.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753343Ab1KKE4N (ORCPT
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:42075 "HELO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751298Ab1KHDce (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 23:56:13 -0500
-Received: from pbsg501.nifty.com (pbsg501p.nifty.com [172.22.128.71])by defg500.nifty.com with ESMTP id pAB4pIwZ000426
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Nov 2011 13:51:18 +0900
-Received: from [127.0.0.1] (himob2-p192.iem.hi-ho.ne.jp [203.180.25.192]) (authenticated)
-	by pbsg501.nifty.com with ESMTP id pAB4olPY026602
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Nov 2011 13:50:52 +0900
-Date: Fri, 11 Nov 2011 13:49:53 +0900
-From: Masahiro Inoue <miyabi.-.inoue@nifty.com>
+	Mon, 7 Nov 2011 22:32:34 -0500
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Subject: Build Error Report
-Message-Id: <20111111134952.D36A.2E210E2F@nifty.com> (sfid-20111111_055617_848052_C195082C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH RESEND 4/4] mwifiex: prevent corruption instead of just warning
+Date: Mon,  7 Nov 2011 19:31:47 -0800
+Message-Id: <1320723107-24202-5-git-send-email-bzhao@marvell.com> (sfid-20111108_043236_458230_1F489011)
+In-Reply-To: <1320723107-24202-1-git-send-email-bzhao@marvell.com>
+References: <1320723107-24202-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-The build error occurs by compat-wireless-2011-11-10.
-My kernel is 2.6.27.
+Probably we never hit this condition, but in case we do, we may as
+well put a return here instead of just printing a warning message and
+then corrupting memory.  The caller doesn't check the return code.
 
-  CC [M]  /home/miyabi/test/compat-wireless/compat-wireless-2011-11-10/net/mac80211/status.o
-/home/miyabi/test/compat-wireless/compat-wireless-2011-11-10/net/mac80211/status.c: In function 'ieee80211_tx_status':
-/home/miyabi/test/compat-wireless/compat-wireless-2011-11-10/net/mac80211/status.c:566: error: implicit declaration of function 'skb_complete_wifi_ack'
-make[3]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2011-11-10/net/mac80211/status.o] Error 1
-make[2]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2011-11-10/net/mac80211] Error 2
-make[1]: *** [_module_/home/miyabi/test/compat-wireless/compat-wireless-2011-11-10] Error 2
-make[1]: Leaving directory `/usr/src/kernels/2.6.27-71vl5-x86_64'
-make: *** [modules] Error 2
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Acked-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index d12d440..a2f3200 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1228,9 +1228,12 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
+ 	if (!skb)
+ 		return 0;
+ 
+-	if (rdptr >= MWIFIEX_MAX_EVT_BD)
++	if (rdptr >= MWIFIEX_MAX_EVT_BD) {
+ 		dev_err(adapter->dev, "event_complete: Invalid rdptr 0x%x\n",
+ 					rdptr);
++		ret = -EINVAL;
++		goto done;
++	}
+ 
+ 	/* Read the event ring write pointer set by firmware */
+ 	if (mwifiex_read_reg(adapter, REG_EVTBD_WRPTR, &wrptr)) {
+-- 
+1.7.0.2
 
