@@ -1,45 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:41593 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751890Ab1KYBD4 convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:37792 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750876Ab1KHK7p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 20:03:56 -0500
-Received: by wwp14 with SMTP id 14so2667833wwp.1
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2011 17:03:55 -0800 (PST)
+	Tue, 8 Nov 2011 05:59:45 -0500
+Received: by ywf7 with SMTP id 7so400721ywf.19
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 02:59:44 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1322147800.5366.24.camel@jlt3.sipsolutions.net>
-References: <1322080347-7644-1-git-send-email-thomas@cozybit.com>
- <1322080347-7644-5-git-send-email-thomas@cozybit.com> <1322147800.5366.24.camel@jlt3.sipsolutions.net>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Thu, 24 Nov 2011 17:03:34 -0800
-Message-ID: <CAG6hwVNrOcfjx8HVEz=-mmMCp0QZjuyQKRS2YWUBNzD-kXJLxg@mail.gmail.com> (sfid-20111125_020359_261532_7DD2582B)
-Subject: Re: [PATCH 4/7] mac80211: fix forwarded mesh frame queue mapping
+In-Reply-To: <1320740407.4304.6.camel@jlt3.sipsolutions.net>
+References: <1320740407.4304.6.camel@jlt3.sipsolutions.net>
+Date: Tue, 8 Nov 2011 11:59:44 +0100
+Message-ID: <CAGXE3d_7W5xbGJAEH1tB1jVZHPehnYVu-cnQXjMRATJHxuD4ow@mail.gmail.com> (sfid-20111108_115950_687411_F35640B6)
+Subject: Re: [PATCH] cfg80211: fix missing kernel-doc
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	linville@tuxdriver.com
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 24, 2011 at 7:16 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+On Tue, Nov 8, 2011 at 9:20 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
->> +/* Indicate which queue to use for this fully formed 802.11 frame */
->> +u16 ieee80211_select_queue_cooked(struct ieee80211_local *local,
->> +                               struct sk_buff *skb,
->> +                               struct ieee80211_hdr *hdr) {
->
-> Where's that opening brace? ;-)
+> Two new struct members were not documented, fix that.
 
-Good catch, looked fine to me :)
->
-> Can't say I like the name -- maybe select_queue_80211 or so would be
-> better? The "cooked" term is really only relevant for the special case
-> of monitor interfaces for AP mode that I'm even trying to get rid of ...
->
-
-OK, I understood "cooked" to be analogous to "802.11 frame", but
-_80211 is probably clearer. v2 coming shortly.
-
-Thanks!
-Thomas
+Thanks for fixing this up!
+Helmut
