@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59928 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755795Ab1KBRvH (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42584 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753564Ab1KHNy5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 13:51:07 -0400
-Subject: Re: [wireless-next PATCH 1/5] mac80211: Support forcing station to
- disable 11n.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4EB17103.70506@candelatech.com>
-References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20111028_071135_777672_88A08497) <1319789318.3914.10.camel@jlt3.sipsolutions.net>
-	 <4EAAFAA7.8090403@candelatech.com>
-	 (sfid-20111028_205543_472872_4928ADE0) <1320220415.3950.1.camel@jlt3.sipsolutions.net>
-	 <4EB17103.70506@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 02 Nov 2011 18:51:03 +0100
-Message-ID: <1320256263.7846.3.camel@jlt3.sipsolutions.net> (sfid-20111102_185112_125896_4098A33D)
-Mime-Version: 1.0
+	Tue, 8 Nov 2011 08:54:57 -0500
+Received: by mail-fx0-f46.google.com with SMTP id n17so524450faa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 05:54:56 -0800 (PST)
+From: Eyal Shapira <eyal@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: fix wl12xx_scan_sched_scan_ssid_list() check that all given ssids are in filters
+Date: Tue,  8 Nov 2011 15:54:46 +0200
+Message-Id: <1320760486-19700-1-git-send-email-eyal@wizery.com> (sfid-20111108_145520_175553_FAE345B1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-11-02 at 09:34 -0700, Ben Greear wrote:
+A minor fix for the check that verifies that all given SSIDs (in req) exist
+in the filters (the match sets)
 
-> > You misunderstood -- I said fullmac drivers, not differences between
-> > ath9k, iwlwifi etc. Other cfg80211 drivers, not other mac80211 drivers.
-> 
-> Can you at least point me to some existing code that does a similar
-> check?  I have no idea of what a fullmac driver even does.  I can test
-> and eventually somewhat understand the paths for ath9k, but I have no
-> ability to test fullmac (as far as I know).
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+---
+ drivers/net/wireless/wl12xx/scan.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Well ideally you have two patches -- one for cfg80211, and one for
-mac80211. Then you can test the cfg80211 one w/o mac80211 patches, so it
-behaves as though it didn't support it, and with the mac80211 patch it
-sets the flag to support it. Just think about drivers like ath6kl.
-
-johannes
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index 128ccb7..fc29c67 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -559,7 +559,7 @@ wl12xx_scan_sched_scan_ssid_list(struct wl1271 *wl,
+ 						break;
+ 					}
+ 				/* Fail if SSID isn't present in the filters */
+-				if (j == req->n_ssids) {
++				if (j == cmd->n_ssids) {
+ 					ret = -EINVAL;
+ 					goto out_free;
+ 				}
+-- 
+1.7.4.1
 
