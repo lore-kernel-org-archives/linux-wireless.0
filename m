@@ -1,42 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:64091 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752050Ab1KUWU6 convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:32770 "HELO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750978Ab1KHFlz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 17:20:58 -0500
-MIME-Version: 1.0
-In-Reply-To: <201111212249.31196.rjw@sisk.pl>
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera> <201111212249.31196.rjw@sisk.pl>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 21 Nov 2011 14:20:35 -0800
-Message-ID: <CA+55aFyceMKgS-YRv=r=FrHQ1P9=z7=2PC5gvZcCHoYKnzn_Aw@mail.gmail.com> (sfid-20111121_232124_340189_BFECE9E3)
-Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
-To: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Ari Savolainen <ari.m.savolainen@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 8 Nov 2011 00:41:55 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 4/7] mwifiex: fix coding style
+Date: Mon,  7 Nov 2011 21:41:09 -0800
+Message-Id: <1320730872-25619-5-git-send-email-bzhao@marvell.com> (sfid-20111108_064157_449825_2EFDE84F)
+In-Reply-To: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
+References: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 21, 2011 at 1:49 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->
-> Subject    : lockdep warning after aa6afca5bcab: "proc: fix races against execve() of /proc/PID/fd**"
-> Submitter  : Ari Savolainen <ari.m.savolainen@gmail.com>
-> Date       : 2011-11-08 3:47
-> Message-ID : CAEbykaXYZEFhTgWMm2AfaWQ2SaXYuO_ypTnw+6AVWScOYSCuuw@mail.gmail.com
-> References : http://marc.info/?l=linux-kernel&m=132072413125099&w=2
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-Commit aa6afca5bcab was reverted by commit 5e442a493fc5, so this one
-is presumably stale.
+Rename DataRate to data_rate and arrange 'for' loop
+for better readability.
 
-                      Linus
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h   |    2 +-
+ drivers/net/wireless/mwifiex/join.c |   17 ++++++++---------
+ 2 files changed, 9 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 0cc5d73..35cb29c 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -673,7 +673,7 @@ struct host_cmd_ds_802_11_ad_hoc_start {
+ 	union ieee_types_phy_param_set phy_param_set;
+ 	u16 reserved1;
+ 	__le16 cap_info_bitmap;
+-	u8 DataRate[HOSTCMD_SUPPORTED_RATES];
++	u8 data_rate[HOSTCMD_SUPPORTED_RATES];
+ } __packed;
+ 
+ struct host_cmd_ds_802_11_ad_hoc_result {
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index b27bd33..1c49813 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -837,8 +837,8 @@ mwifiex_cmd_802_11_ad_hoc_start(struct mwifiex_private *priv,
+ 		bss_desc->privacy = MWIFIEX_802_11_PRIV_FILTER_ACCEPT_ALL;
+ 	}
+ 
+-	memset(adhoc_start->DataRate, 0, sizeof(adhoc_start->DataRate));
+-	mwifiex_get_active_data_rates(priv, adhoc_start->DataRate);
++	memset(adhoc_start->data_rate, 0, sizeof(adhoc_start->data_rate));
++	mwifiex_get_active_data_rates(priv, adhoc_start->data_rate);
+ 	if ((adapter->adhoc_start_band & BAND_G) &&
+ 	    (priv->curr_pkt_filter & HostCmd_ACT_MAC_ADHOC_G_PROTECTION_ON)) {
+ 		if (mwifiex_send_cmd_async(priv, HostCmd_CMD_MAC_CONTROL,
+@@ -850,20 +850,19 @@ mwifiex_cmd_802_11_ad_hoc_start(struct mwifiex_private *priv,
+ 		}
+ 	}
+ 	/* Find the last non zero */
+-	for (i = 0; i < sizeof(adhoc_start->DataRate) &&
+-			adhoc_start->DataRate[i];
+-			i++)
+-			;
++	for (i = 0; i < sizeof(adhoc_start->data_rate); i++)
++		if (!adhoc_start->data_rate[i])
++			break;
+ 
+ 	priv->curr_bss_params.num_of_rates = i;
+ 
+ 	/* Copy the ad-hoc creating rates into Current BSS rate structure */
+ 	memcpy(&priv->curr_bss_params.data_rates,
+-	       &adhoc_start->DataRate, priv->curr_bss_params.num_of_rates);
++	       &adhoc_start->data_rate, priv->curr_bss_params.num_of_rates);
+ 
+ 	dev_dbg(adapter->dev, "info: ADHOC_S_CMD: rates=%02x %02x %02x %02x\n",
+-	       adhoc_start->DataRate[0], adhoc_start->DataRate[1],
+-	       adhoc_start->DataRate[2], adhoc_start->DataRate[3]);
++	       adhoc_start->data_rate[0], adhoc_start->data_rate[1],
++	       adhoc_start->data_rate[2], adhoc_start->data_rate[3]);
+ 
+ 	dev_dbg(adapter->dev, "info: ADHOC_S_CMD: AD-HOC Start command is ready\n");
+ 
+-- 
+1.7.0.2
+
