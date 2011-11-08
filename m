@@ -1,163 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:52699 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755300Ab1K2SGT (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60406 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755433Ab1KHP5L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 13:06:19 -0500
-Date: Tue, 29 Nov 2011 13:04:14 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, x86@kernel.org,
-	borislav.petkov@amd.com
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	deepthi@linux.vnet.ibm.com
-Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
-Message-ID: <20111129180414.GA11459@phenom.dumpdata.com> (sfid-20111129_190643_590426_E943B9AC)
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera>
- <201111212249.31196.rjw@sisk.pl>
- <20111122135412.GA29905@phenom.dumpdata.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111122135412.GA29905@phenom.dumpdata.com>
+	Tue, 8 Nov 2011 10:57:11 -0500
+Subject: Re: [PATCH] mac80211: set carrier_on for ibss vifs only while
+ joined
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAB3XZEcGPTzvnTg7DtG8q0E3pGT8KH+tozaO4ZtMGHyQNks_8A@mail.gmail.com> (sfid-20111108_164248_475276_2CC7F1B7)
+References: <1320759419-20743-1-git-send-email-eliad@wizery.com>
+	 <1320766054.24797.2.camel@jlt3.sipsolutions.net>
+	 <CAB3XZEcGPTzvnTg7DtG8q0E3pGT8KH+tozaO4ZtMGHyQNks_8A@mail.gmail.com>
+	 (sfid-20111108_164248_475276_2CC7F1B7)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Nov 2011 16:57:07 +0100
+Message-ID: <1320767827.24797.12.camel@jlt3.sipsolutions.net> (sfid-20111108_165714_875227_2A5B5A59)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 22, 2011 at 08:54:12AM -0500, Konrad Rzeszutek Wilk wrote:
-> > Subject    : Regression in 3.1 causes Xen to use wrong idle routine
-> > Submitter  : Stefan Bader <stefan.bader@canonical.com>
-> > Date       : 2011-10-26 10:24
-> > Message-ID : 4EA7DFD1.9060608@canonical.com
-> > References : http://marc.info/?l=linux-acpi&m=131962467924564&w=2
-> 
-> The patch mentioned in http://mid.gmane.org/20111115144004.GE22675@phenom.dumpdata.com 
-> should do it. But the patch needs an Ack from ACPI/x86 folks.
+On Tue, 2011-11-08 at 17:42 +0200, Eliad Peller wrote:
+> On Tue, Nov 8, 2011 at 5:27 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Tue, 2011-11-08 at 15:36 +0200, Eliad Peller wrote:
+> >> mac80211 should set carrier_on for ibss vifs
+> >> only while they are joined (similar to sta vifs)
+> >
+> >> --- a/net/mac80211/ibss.c
+> >> +++ b/net/mac80211/ibss.c
+> >> @@ -97,6 +97,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+> >>       /* if merging, indicate to driver that we leave the old IBSS */
+> >>       if (sdata->vif.bss_conf.ibss_joined) {
+> >>               sdata->vif.bss_conf.ibss_joined = false;
+> >> +             netif_carrier_off(sdata->dev);
+> >>               ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IBSS);
+> >>       }
+> >>
+> >> @@ -207,6 +208,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+> >>       bss = cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
+> >>                                       mgmt, skb->len, 0, GFP_KERNEL);
+> >>       cfg80211_put_bss(bss);
+> >> +     netif_carrier_on(sdata->dev);
+> >>       cfg80211_ibss_joined(sdata->dev, ifibss->bssid, GFP_KERNEL);
+> >
+> > Do we really need to toggle the carrier here? While we merge, shouldn't
+> > we just keep it up, just maybe stop the queues?
+> >
+> technically, we leave the ibss and then rejoin (unlike roaming). so i
+> guess setting the carrier on/off makes sense as well.
+> do you prefer stopping the queues instead?
 
-This patch (mentioned in the URL above) fixes the issue. Could it be
-applied to the x86 tree for 3.2 or get an Ack, please?
+No, I don't really know :)
 
->From 4f10ec7a7b9ff24657696aa98f25bcecde247373 Mon Sep 17 00:00:00 2001
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Date: Mon, 21 Nov 2011 18:02:02 -0500
-Subject: [PATCH] xen/pm_idle: Make pm_idle be default_idle under Xen.
-
-This patch:
-
-commit d91ee5863b71e8c90eaf6035bff3078a85e2e7b5
-Author: Len Brown <len.brown@intel.com>
-Date:   Fri Apr 1 18:28:35 2011 -0400
-
-    cpuidle: replace xen access to x86 pm_idle and default_idle
-
-    ..scribble on pm_idle and access default_idle,
-   have it simply disable_cpuidle() so acpi_idle will not load and
-   architecture default HLT will be used.
-
-idea was to have one call - disable_cpuidle() which would make
-pm_idle not be molested by other code. It disallows cpuidle_idle_call
-and acpi_idle_call to not set pm_idle (which is excellent). But the
-amd_e400_idle and mwait_idle can still setup pm_idle which we really
-do not want. In case of mwait_idle we can hit some instances where:
-
-Brought up 2 CPUs
-invalid opcode: 0000 [#1] SMP
-CPU 1
-Modules linked in:
-
-Pid: 0, comm: swapper Not tainted 3.1.0-0.rc6.git0.3.fc16.x86_64 #1
-RIP: e030:[<ffffffff81015d1d>]  [<ffffffff81015d1d>] mwait_idle+0x6f/0xb4
-RSP: e02b:ffff8801d28ddf10  EFLAGS: 00010082
-RAX: ffff8801d28dc010 RBX: ffff8801d28ddfd8 RCX: 0000000000000000
-RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000001
-RBP: ffff8801d28ddf10 R08: 0000000000000000 R09: 0000000000000001
-R10: 0000000000000001 R11: ffff8801d28ddfd8 R12: ffffffff81b590d0
-R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
-FS:  0000000000000000(0000) GS:ffff8801dff81000(0000) knlGS:0000000000000000
-CS:  e033 DS: 002b ES: 002b CR0: 000000008005003b
-CR2: 0000000000000000 CR3: 0000000001a05000 CR4: 0000000000002660
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000000
-Process swapper (pid: 0, threadinfo ffff8801d28dc000, task ffff8801d28cae60)
-Stack:
- ffff8801d28ddf40 ffffffff8100e2ed ffff8801dff8e390 c136dfe72feab515
- 0000000000000000 0000000000000000 ffff8801d28ddf50 ffffffff8149ee78
- 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-Call Trace:
- [<ffffffff8100e2ed>] cpu_idle+0xae/0xe8
- [<ffffffff8149ee78>] cpu_bringup_and_idle+0xe/0x10
-RIP  [<ffffffff81015d1d>] mwait_idle+0x6f/0xb4
- RSP <ffff8801d28ddf10>
-
-RH BZ #739499 and Ubuntu #881076
-
-In case of amd_e400_idle we don't get so spectacular crashes, but
-we do end up making an MSR which is trapped in the hypervisor,
-and then follow it up with a yield hypercall. Meaning we end up
-going to hypervisor twice instead of just once.
-
-Lets make pm_idle be default_idle to take care of that.
-
-Reported-by: Stefan Bader <stefan.bader@canonical.com>
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
----
- arch/x86/include/asm/system.h |    1 +
- arch/x86/kernel/process.c     |    8 ++++++++
- arch/x86/xen/setup.c          |    2 +-
- 3 files changed, 10 insertions(+), 1 deletions(-)
-
-diff --git a/arch/x86/include/asm/system.h b/arch/x86/include/asm/system.h
-index c2ff2a1..2d2f01c 100644
---- a/arch/x86/include/asm/system.h
-+++ b/arch/x86/include/asm/system.h
-@@ -401,6 +401,7 @@ extern unsigned long arch_align_stack(unsigned long sp);
- extern void free_init_pages(char *what, unsigned long begin, unsigned long end);
- 
- void default_idle(void);
-+bool set_pm_idle_to_default(void);
- 
- void stop_this_cpu(void *dummy);
- 
-diff --git a/arch/x86/kernel/process.c b/arch/x86/kernel/process.c
-index 1f7f8c8..336b299 100644
---- a/arch/x86/kernel/process.c
-+++ b/arch/x86/kernel/process.c
-@@ -404,6 +404,14 @@ void default_idle(void)
- EXPORT_SYMBOL(default_idle);
- #endif
- 
-+bool set_pm_idle_to_default()
-+{
-+	if (!pm_idle) {
-+		pm_idle = default_idle;
-+		return true;
-+	}
-+	return false;
-+}
- void stop_this_cpu(void *dummy)
- {
- 	local_irq_disable();
-diff --git a/arch/x86/xen/setup.c b/arch/x86/xen/setup.c
-index 46d6d21..7506181 100644
---- a/arch/x86/xen/setup.c
-+++ b/arch/x86/xen/setup.c
-@@ -448,6 +448,6 @@ void __init xen_arch_setup(void)
- #endif
- 	disable_cpuidle();
- 	boot_option_idle_override = IDLE_HALT;
--
-+	WARN_ON(!set_pm_idle_to_default());
- 	fiddle_vdso();
- }
--- 
-1.7.7.3
+johannes
 
