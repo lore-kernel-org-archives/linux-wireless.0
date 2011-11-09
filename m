@@ -1,166 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:34598 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751791Ab1KGF3o (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33621 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751231Ab1KINI6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 00:29:44 -0500
-From: Raja Mani <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH v2 03/11] ath6kl: Add WOW suspend/resume implementation
-Date: Mon, 7 Nov 2011 10:55:39 +0530
-Message-ID: <1320643547-3578-4-git-send-email-rmani@qca.qualcomm.com> (sfid-20111107_062958_574201_4F26377C)
-In-Reply-To: <1320643547-3578-1-git-send-email-rmani@qca.qualcomm.com>
-References: <1320643547-3578-1-git-send-email-rmani@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 9 Nov 2011 08:08:58 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.77)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1RO7th-0001UE-Cu
+	for linux-wireless@vger.kernel.org; Wed, 09 Nov 2011 14:08:57 +0100
+Subject: off- & multi-channel operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 09 Nov 2011 14:08:54 +0100
+Message-ID: <1320844134.3845.61.camel@jlt3.sipsolutions.net> (sfid-20111109_140902_212963_943EDBDE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the core WOW suspend/resume functions will be called
-in PM suspend/resume path.
+All,
 
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |  109 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/core.h     |    3 +
- 2 files changed, 112 insertions(+), 0 deletions(-)
+I'm thinking about all the off-channel bugs and multi-channel operation.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 04d24d4..68cfb81 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1644,6 +1644,115 @@ static int ath6kl_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
- 	return 0;
- }
- 
-+static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
-+{
-+	struct ath6kl_vif *vif;
-+	int ret, pos, left;
-+	u32 filter = 0;
-+	u16 i;
-+	u8 mask[WOW_MASK_SIZE];
-+
-+	vif = ath6kl_vif_first(ar);
-+	if (!vif)
-+		return -EIO;
-+
-+	if (!ath6kl_cfg80211_ready(vif))
-+		return -EIO;
-+
-+	if (!test_bit(CONNECTED, &vif->flags))
-+		return -EINVAL;
-+
-+	/* Clear existing WOW patterns */
-+	for (i = 0; i < WOW_MAX_FILTERS_PER_LIST; i++)
-+		ath6kl_wmi_del_wow_pattern_cmd(ar->wmi, vif->fw_vif_idx,
-+					       WOW_LIST_ID, i);
-+	/* Configure new WOW patterns */
-+	for (i = 0; i < wow->n_patterns; i++) {
-+
-+		/*
-+		 * Convert given nl80211 specific mask value to equivalent
-+		 * driver specific mask value and send it to the chip along
-+		 * with patterns. For example, If the mask value defined in
-+		 * struct cfg80211_wowlan is 0xA (equivalent binary is 1010),
-+		 * then equivalent driver specific mask value is
-+		 * "0xFF 0x00 0xFF 0x00".
-+		 */
-+		memset(&mask, 0, sizeof(mask));
-+		for (pos = 0; pos < wow->patterns[i].pattern_len; pos++) {
-+			if (wow->patterns[i].mask[pos / 8] & (0x1 << (pos % 8)))
-+				mask[pos] = 0xFF;
-+		}
-+		/*
-+		 * Note: Pattern's offset is not passed as part of wowlan
-+		 * parameter from CFG layer. So it's always passed as ZERO
-+		 * to the firmware. It means, given WOW patterns are always
-+		 * matched from the first byte of received pkt in the firmware.
-+		 */
-+		ret = ath6kl_wmi_add_wow_pattern_cmd(ar->wmi,
-+					vif->fw_vif_idx, WOW_LIST_ID,
-+					wow->patterns[i].pattern_len,
-+					0 /* pattern offset */,
-+					wow->patterns[i].pattern, mask);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	if (wow->disconnect)
-+		filter |= WOW_FILTER_OPTION_NWK_DISASSOC;
-+
-+	if (wow->magic_pkt)
-+		filter |= WOW_FILTER_OPTION_MAGIC_PACKET;
-+
-+	if (wow->gtk_rekey_failure)
-+		filter |= WOW_FILTER_OPTION_GTK_ERROR;
-+
-+	if (wow->eap_identity_req)
-+		filter |= WOW_FILTER_OPTION_EAP_REQ;
-+
-+	if (wow->four_way_handshake)
-+		filter |= WOW_FILTER_OPTION_8021X_4WAYHS;
-+
-+	ret = ath6kl_wmi_set_wow_mode_cmd(ar->wmi, vif->fw_vif_idx,
-+					  ATH6KL_WOW_MODE_ENABLE,
-+					  filter,
-+					  WOW_HOST_REQ_DELAY);
-+	if (ret)
-+		return ret;
-+
-+	ret = ath6kl_wmi_set_host_sleep_mode_cmd(ar->wmi, vif->fw_vif_idx,
-+						 ATH6KL_HOST_MODE_ASLEEP);
-+	if (ret)
-+		return ret;
-+
-+	if (ar->tx_pending[ar->ctrl_ep]) {
-+		left = wait_event_interruptible_timeout(ar->event_wq,
-+				ar->tx_pending[ar->ctrl_ep] == 0, WMI_TIMEOUT);
-+		if (left == 0) {
-+			ath6kl_warn("clear wmi ctrl data timeout\n");
-+			ret = -ETIMEDOUT;
-+		} else if (left < 0) {
-+			ath6kl_warn("clear wmi ctrl data failed: %d\n", left);
-+			ret = left;
-+		}
-+	}
-+
-+	return ret;
-+}
-+
-+static int ath6kl_wow_resume(struct ath6kl *ar)
-+{
-+	struct ath6kl_vif *vif;
-+	int ret;
-+
-+	vif = ath6kl_vif_first(ar);
-+	if (!vif)
-+		return -EIO;
-+
-+	ret = ath6kl_wmi_set_host_sleep_mode_cmd(ar->wmi, vif->fw_vif_idx,
-+						 ATH6KL_HOST_MODE_AWAKE);
-+	return ret;
-+}
-+
- int ath6kl_cfg80211_suspend(struct ath6kl *ar,
- 			    enum ath6kl_cfg_suspend_mode mode)
- {
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index c30642e..b6442c1 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -439,6 +439,9 @@ struct ath6kl_vif {
- 	struct target_stats target_stats;
- };
- 
-+#define WOW_LIST_ID		0
-+#define WOW_HOST_REQ_DELAY	500 /* ms */
-+
- /* Flag info */
- enum ath6kl_dev_state {
- 	WMI_ENABLED,
--- 
-1.7.1
+We currently have at least one rather important bug: Almost every call
+to ieee80211_tx_skb()/ieee80211_xmit() is wrong because it assumes we
+are on the operating channel. This leads to bugs such as
+https://bugzilla.redhat.com/attachment.cgi?id=530264
+(https://bugzilla.redhat.com/show_bug.cgi?id=749125) where I'd say we
+are sending a frame for connection monitoring while doing some work on
+another channel.
+
+The other thing is more of a design issue: we have multiple ways to
+leave the operating channel: scanning & work. Soon we'll have to deal
+with multi-channel *operation* so we'll have multiple operating
+channels. I don't even want to have to handle that in mac80211, and I
+think we'll have to push it into devices (or drivers in some cases). In
+my opinion, these two ways should be consolidated.
+
+Also, as devices (or drivers) get more complex, we find ourselves
+further and further away from a model where mac80211 is truly fully
+controlling the device. Given the differences in hardware we support
+now, I think that it obvious now that we need drivers to be smarter in
+many cases.
+
+How do we want to handle these things? I'm sure I want the drivers to
+handle multi-channel operation fairly transparently, with multiple
+(hardware) queues (in the driver), so mac80211 doesn't have to
+start/stop the queues continuously and can just transmit on that
+interface, the frame might only go out a bit later.
+
+But then what about scanning? Can we, and should we, force such drivers
+to implement hw_scan? I think maybe we should, and maybe drivers such as
+brcmsmac & ath9k can share a common scan implementation they call into?
+
+Authenticating & associating seems fairly easy, we create a new vif and
+set it to the right channel and then do everything there -- simpler than
+what we have now -- but what about FT-OTA? What if the device supports
+only two channels and is a P2P GO on channel 1 and now wants to roam on
+the infrastructure connection, say from channel 36 to channel 11? How
+can we handle that?
+
+Has anyone else started thinking about this?
+
+johannes
 
