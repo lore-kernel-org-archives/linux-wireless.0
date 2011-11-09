@@ -1,103 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47429 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752709Ab1K3NWj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 08:22:39 -0500
-Date: Wed, 30 Nov 2011 15:23:16 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Michal Hocko <mhocko@suse.cz>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
- iwl3945_rs_free_sta
-Message-ID: <20111130142316.GA2466@redhat.com> (sfid-20111130_142243_863912_80B3CC03)
-References: <20111129100727.GD2675@tiehlicka.suse.cz>
- <20111129113906.GA7299@redhat.com>
- <20111130101028.GA2906@tiehlicka.suse.cz>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36486 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753916Ab1KIJj3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 04:39:29 -0500
+Message-ID: <4EBA4A4B.2020804@hauke-m.de> (sfid-20111109_103933_284839_11196E25)
+Date: Wed, 09 Nov 2011 10:39:23 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="OgqxwSJOaUobr8KG"
-In-Reply-To: <20111130101028.GA2906@tiehlicka.suse.cz>
+To: Harald Freitag <harald.freitag@gmx.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Compability Issue regarding Freescale i.MX356 and Marvell 88w8688
+ Wifi-Module
+References: <20111109091341.83440@gmx.net>
+In-Reply-To: <20111109091341.83440@gmx.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---OgqxwSJOaUobr8KG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Wed, Nov 30, 2011 at 11:10:28AM +0100, Michal Hocko wrote:
-> On Tue 29-11-11 12:39:07, Stanislaw Gruszka wrote:
-> > On Tue, Nov 29, 2011 at 11:07:27AM +0100, Michal Hocko wrote:
-> > > [I am not sure whether this is ieee80211 or iwl3945 issue so put both
-> > > maintainers into loop]
-> > The only changed we had in iwlegacy between 3.1 and 3.2-rc, was only 
-> > adjustment to mac80211 changes. However I think this is iwlegacy issue,
-> > just for some reason bug did not trigger before.
+On 11/09/2011 10:13 AM, Harald Freitag wrote:
+> Hello!
 > 
-> I have double checked 3.1 and cannot reproduce it.
-> Anyway, I have put:
+> I am a student from Germany currently working on a solution to combine the Freescale i.MX356 application processor with the Marvell 88w8688 Wifi-Module over the SDIO interface of the processor.
 > 
-> diff --git a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-> index 8faeaf2..9221ed4 100644
-> --- a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-> +++ b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-> @@ -432,6 +432,7 @@ static void iwl3945_rs_free_sta(void *iwl_priv, struct ieee80211_sta *sta,
->  	 * to use iwl_priv to print out debugging) since it may not be fully
->  	 * initialized at this point.
->  	 */
-> +	printk("XXX: deleting time: %x\n", rs_sta->rate_scale_flush.base);
->  	del_timer_sync(&rs_sta->rate_scale_flush);
->  }
->  
-> And the timer base is really NULL when the issue happens. So, somebody
-> probably removed the timer already?
-
-I think we call rs_ops->free_sta without rs_ops->alloc_sta, otherwise
-I don't know how it could be NULL in iwl3945_rs_free_sta (excluding memory
-corruption or bug in timer internals).
-
-I suspect this could be a regression introduced by commit:
-
-commit 07ba55d7f1d0da174c9bc545c713b44cee760197
-Author: Arik Nemtsov <arik@wizery.com>
-Date:   Wed Sep 28 14:12:53 2011 +0300
-
-    nl80211/mac80211: allow adding TDLS peers as stations
-
-I'm attaching patch with revert of relevant hunk, because full revert
-would be hard currently. Does it workaround problem for you?
-
-> > Is this problem 100% reproducible for you ? 
+> My main problem is that the application processor of Freescale got an embedded linux 2.6.31 system including the necessary driver support (specially for the SDIO interface) implemented and the driver for the Marvell 88w8688 Wifi-Module is coming with a linux 2.6.35 firmware/driver support.
 > 
-> Yes, it seems to be sufficient to suspend to RAM while associated and
-> turn off the AP before waking up the machine.
-> I wasn't able to reproduce just by turning of the AP while associated
-> without suspend.
+> Now the question is, how do I get them both working together? (I am still a novice on that field of expertise!)
+> 
+> Option 1: Backporting the Marvell 88w8688 SDIO driver from linux 2.6.35 to 2.6.31
+> Option 2: Finding an older Marvell 88w8688 SDIO compatible with linux 2.6.31
+> 
+> I already did some research (on http://kernelnewbies.org/) trying to figure out what general differences and changes in the libertas driver support have been made (with moderate success, since I am still lacking quite alot of the necessary coding understanding). 
+> I also downloaded the latest software/firmware packages from Freescale and Marvell in order to learn something about the functionality of SDIO interface drivers (pretty much hitting a wall though...).
+> After some time looking through the archives here on "http://linuxwireless.org/" and on "http://lists.infradead.org/mailman/listinfo/libertas-dev" I saw a few articles that could be partially helpful for my problem, but that didnt got me very far yet...
+> 
+> Since the embedded linux 2.6.31 system on the application processor got already adapted and configured for the intended feature support, it is not an option to upgrade/patch the linux system on the application processor. 
+> 
+> I would be most grateful for any helpful information regarding this issue or hint towards the right place to look, if there have been similar problems solved/delt with in the past.
+> 
+> Thank you very much and I appreciate that you took some time reading through this...
+> 
+> Regards Harald
+Hi Harald,
 
-I'm not able to recreate, but I'm not using your config as my system
-user-space has problem to startup with it :-(
+we have compat-wireless [0] which backports a recent wireless subsystem
+to older kernel versions. This seams to be exactly what you are
+searching for, but libertas_sdio is just working for kernel >= 2.6.32,
+because of some changes in the power management API in recent kernel
+versions. You could implement a backport for the power management
+interface into compat-wireless or just backport the new power management
+API into your kernel.
 
-Stanislaw
+Hauke
 
---OgqxwSJOaUobr8KG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="mac80211_use_sta_info_destroy_addr.patch"
+[0]: http://linuxwireless.org/en/users/Download
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index b1b1bb3..f773dbb 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1144,9 +1144,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	changed |= BSS_CHANGED_BSSID | BSS_CHANGED_HT;
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 
--	/* remove AP and TDLS peers */
- 	if (remove_sta)
--		sta_info_flush(local, sdata);
-+		sta_info_destroy_addr(sdata, bssid);
- 
- 	del_timer_sync(&sdata->u.mgd.conn_mon_timer);
- 	del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
-
---OgqxwSJOaUobr8KG--
+--
+Now with mailing list in CC
