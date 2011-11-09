@@ -1,72 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39585 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751856Ab1KXSXU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 13:23:20 -0500
-Subject: Re: [RFC v2 2/8] mac80211: mesh power mode indication in QoS frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Mike Krinkin <krinkin.m.u@gmail.com>,
-	Max Filippov <jcmvbkbc@gmail.com>,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-In-Reply-To: <1321886416-12597-3-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154146_911104_5CCCA53C)
-References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
-	 <1321886416-12597-3-git-send-email-ivan.bezyazychnyy@gmail.com>
-	 (sfid-20111121_154146_911104_5CCCA53C)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Nov 2011 19:23:17 +0100
-Message-ID: <1322158997.5366.29.camel@jlt3.sipsolutions.net> (sfid-20111124_192323_584042_6345F03F)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:34875 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751285Ab1KIQvT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 11:51:19 -0500
+Date: Wed, 9 Nov 2011 17:51:59 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20111109165158.GA2254@redhat.com> (sfid-20111109_175142_306399_47B44228)
+References: <20111029171554.GA16596@nomi.cz>
+ <20111031160342.GB2225@redhat.com>
+ <20111109155411.GA1669@nomi.cz>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="ReaqsoxgOBHFXBhH"
+In-Reply-To: <20111109155411.GA1669@nomi.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-11-21 at 18:40 +0400, Ivan Bezyazychnyy wrote:
 
-> +static enum nl80211_mesh_power_mode
-> +ieee80211s_get_ps_mode(struct ieee80211_sub_if_data *sdata,
-> +			struct ieee80211_hdr *hdr)
-> +{
-> +	enum nl80211_mesh_power_mode pm = NL80211_MESH_POWER_ACTIVE;
-> +	struct mesh_path *mpath;
-> +
-> +	if (is_multicast_ether_addr(hdr->addr1)) {
-> +		pm = (enum nl80211_mesh_power_mode)
-> +				sdata->u.mesh.mshcfg.power_mode;
+--ReaqsoxgOBHFXBhH
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-I mean here.
+Hi
 
-> +	} else {
-> +		rcu_read_lock();
-> +		mpath = mesh_path_lookup(hdr->addr3, sdata);
-> +		if (mpath) {
-> +			pm = mpath->next_hop->local_ps_mode;
-> +		}
+On Wed, Nov 09, 2011 at 04:54:11PM +0100, Tomáš Janoušek wrote:
+> On Mon, Oct 31, 2011 at 05:03:43PM +0100, Stanislaw Gruszka wrote:
+> > You may try debugging patches I posted a while ago:
+> > http://marc.info/?l=linux-mm&m=131914560820378&w=2
+> > http://marc.info/?l=linux-mm&m=131914560820293&w=2
+> > http://marc.info/?l=linux-mm&m=131914560820317&w=2
+> > 
+> > With a bit of luck, kernel should panic and dump call-trace when
+> > bad code start to write at memory addresses where is not suppose
+> > to.
+> 
+> Thanks for your suggestions. I did as you told me, applied those 3 patches on
+> top of 3.1 + net-next (the one from 29 Oct 2011), enabled all those things in
+> config and passed corrupt_dbg=1 on cmdline, but the problem happens without
+> anything being written to dmesg.
 
-No need for braces.
+I just discovered that CONFIG_DEBUG_PAGEALLOC does not work as expected.
+It leave most of free pages unprotected, hence unintentional write to
+them is not discovered. I'm attaching additional patch, which should
+make detection actually work.
 
-> +static void ieee80211_set_mesh_ps_fields(struct ieee80211_sub_if_data *sdata,
-> +					struct ieee80211_hdr *hdr)
-> +{
-> +	if (ieee80211_vif_is_mesh(&sdata->vif) &&
-> +	    (ieee80211_is_data_qos(hdr->frame_control)
-> +	     || ieee80211_is_qos_nullfunc(hdr->frame_control))) {
-> +		enum nl80211_mesh_power_mode
-> +				pm = ieee80211s_get_ps_mode(sdata, hdr);
-> +		if (pm != NL80211_MESH_POWER_ACTIVE) {
-> +			__le16 *qc = (__le16 *) ieee80211_get_qos_ctl(hdr);
-> +			hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
-> +			if (pm == NL80211_MESH_POWER_DEEP_SLEEP) {
-> +				*qc |= cpu_to_le16(
-> +					IEEE80211_QOS_CTL_MESH_PS_LEVEL);
-> +			}
-> +		}
-> +	}
-> +}
+If kernel will does not boot with corrupt_dbg=1, you may try to catch
+corruption without that option. Attached patch should make it possible,
+however having corrupt_dbg=1 increase probability of the catch.
 
-I'm sure you can write this in a more readable way, e.g. by returning
-from the function if the conditions aren't met etc.
+Thanks
+Stanislaw
 
-johannes
 
+--ReaqsoxgOBHFXBhH
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="0001-mm-remove-debug_pagealloc_enabled.patch"
+
+>From 744ddd37f7d61c46e755a7304d791ba0542428a0 Mon Sep 17 00:00:00 2001
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+Date: Wed, 9 Nov 2011 14:21:58 +0100
+Subject: [PATCH 1/4] mm: remove debug_pagealloc_enabled
+
+After we finish (no)bootmem, pages are passed to buddy allocator. Since
+debug_pagealloc_enabled is not set, we do not protect pages, what is
+not what we want with CONFIG_DEBUG_PAGEALLOC=y. That could be fixed by
+calling enable_debug_pagealloc() before free_all_bootmem(), but actually
+I do not see any reason why we need that global variable. Hence patch
+remove it.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ arch/x86/mm/pageattr.c |    6 ------
+ include/linux/mm.h     |   10 ----------
+ init/main.c            |    5 -----
+ mm/debug-pagealloc.c   |    3 ---
+ 4 files changed, 0 insertions(+), 24 deletions(-)
+
+diff --git a/arch/x86/mm/pageattr.c b/arch/x86/mm/pageattr.c
+index f9e5267..5031eef 100644
+--- a/arch/x86/mm/pageattr.c
++++ b/arch/x86/mm/pageattr.c
+@@ -1334,12 +1334,6 @@ void kernel_map_pages(struct page *page, int numpages, int enable)
+ 	}
+ 
+ 	/*
+-	 * If page allocator is not up yet then do not call c_p_a():
+-	 */
+-	if (!debug_pagealloc_enabled)
+-		return;
+-
+-	/*
+ 	 * The return value is ignored as the calls cannot fail.
+ 	 * Large pages for identity mappings are not used at boot time
+ 	 * and hence no memory allocations during large page split.
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 3dc3a8c..0a22db1 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1537,23 +1537,13 @@ static inline void vm_stat_account(struct mm_struct *mm,
+ #endif /* CONFIG_PROC_FS */
+ 
+ #ifdef CONFIG_DEBUG_PAGEALLOC
+-extern int debug_pagealloc_enabled;
+-
+ extern void kernel_map_pages(struct page *page, int numpages, int enable);
+-
+-static inline void enable_debug_pagealloc(void)
+-{
+-	debug_pagealloc_enabled = 1;
+-}
+ #ifdef CONFIG_HIBERNATION
+ extern bool kernel_page_present(struct page *page);
+ #endif /* CONFIG_HIBERNATION */
+ #else
+ static inline void
+ kernel_map_pages(struct page *page, int numpages, int enable) {}
+-static inline void enable_debug_pagealloc(void)
+-{
+-}
+ #ifdef CONFIG_HIBERNATION
+ static inline bool kernel_page_present(struct page *page) { return true; }
+ #endif /* CONFIG_HIBERNATION */
+diff --git a/init/main.c b/init/main.c
+index 217ed23..99c4ba3 100644
+--- a/init/main.c
++++ b/init/main.c
+@@ -282,10 +282,6 @@ static int __init unknown_bootoption(char *param, char *val)
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_DEBUG_PAGEALLOC
+-int __read_mostly debug_pagealloc_enabled = 0;
+-#endif
+-
+ static int __init init_setup(char *str)
+ {
+ 	unsigned int i;
+@@ -597,7 +593,6 @@ asmlinkage void __init start_kernel(void)
+ 	}
+ #endif
+ 	page_cgroup_init();
+-	enable_debug_pagealloc();
+ 	debug_objects_mem_init();
+ 	kmemleak_init();
+ 	setup_per_cpu_pageset();
+diff --git a/mm/debug-pagealloc.c b/mm/debug-pagealloc.c
+index 7cea557..789ff70 100644
+--- a/mm/debug-pagealloc.c
++++ b/mm/debug-pagealloc.c
+@@ -95,9 +95,6 @@ static void unpoison_pages(struct page *page, int n)
+ 
+ void kernel_map_pages(struct page *page, int numpages, int enable)
+ {
+-	if (!debug_pagealloc_enabled)
+-		return;
+-
+ 	if (enable)
+ 		unpoison_pages(page, numpages);
+ 	else
+-- 
+1.7.1
+
+
+--ReaqsoxgOBHFXBhH--
