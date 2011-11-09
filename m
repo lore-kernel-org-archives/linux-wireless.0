@@ -1,180 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3755 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751649Ab1KJTau (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 14:30:50 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 09/19] brcm80211: fmac: add resetcore function for
- bcm4330 chip
-Date: Thu, 10 Nov 2011 20:30:24 +0100
-Message-ID: <1320953434-16859-11-git-send-email-arend@broadcom.com> (sfid-20111110_203108_723235_6476B4F0)
-In-Reply-To: <1320953434-16859-1-git-send-email-arend@broadcom.com>
-References: <1320953434-16859-1-git-send-email-arend@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:35592 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751396Ab1KILfp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 06:35:45 -0500
+From: Raja Mani <rmani@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: Fix call trace while starting IBSS mode
+Date: Wed, 9 Nov 2011 17:02:23 +0530
+Message-ID: <1320838343-5708-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20111109_123555_975762_CDF460FC)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+When the connect event is received from the target in IBSS mode,
+cfg80211_ibss_joined() is called without informing BSS info to
+cfg80211 layer which internally hits the below WARN_ON message.
 
-This patch is part of the series of adding new backplane support
+WARNING: at net/wireless/ibss.c:33 __cfg80211_ibss_joined+0x153/0x180 [cfg80211]()
+[..]
+[ 4916.845878] Call Trace:
+[ 4916.845889]  [<c10427d2>] warn_slowpath_common+0x72/0xa0
+[ 4916.845905]  [<f8bccc63>] ? __cfg80211_ibss_joined+0x153/0x180 [cfg80211]
+[ 4916.845918]  [<f8bccc63>] ? __cfg80211_ibss_joined+0x153/0x180 [cfg80211]
+[ 4916.845923]  [<c1042822>] warn_slowpath_null+0x22/0x30
+[ 4916.845934]  [<f8bccc63>] __cfg80211_ibss_joined+0x153/0x180 [cfg80211]
+[ 4916.845941]  [<c1025108>] ? default_spin_lock_flags+0x8/0x10
+[ 4916.845952]  [<f8bb7fcd>] cfg80211_process_rdev_events+0x19d/0x220 [cfg80211]
+[ 4916.845962]  [<f8bb669b>] cfg80211_event_work+0x2b/0x50 [cfg80211]
+[ 4916.845968]  [<c105aae6>] process_one_work+0x116/0x3c0
+[ 4916.845977]  [<f8bb6670>] ? cfg80211_get_dev_from_info+0x40/0x40 [cfg80211]
+[ 4916.845982]  [<c105cdf0>] worker_thread+0x140/0x3b0
+[ 4916.845986]  [<c105ccb0>] ? manage_workers+0x1f0/0x1f0
+[ 4916.845991]  [<c1060c64>] kthread+0x74/0x80
+[ 4916.845995]  [<c1060bf0>] ? kthread_worker_fn+0x160/0x160
+[ 4916.846001]  [<c14e7bbe>] kernel_thread_helper+0x6/0x10
+[ 4916.846005] ---[ end trace 769254924e409367 ]---
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+This patch make sures that BSS info is delivered via cfg80211_inform_bss()
+to cfg80211 in advance before intimating IBSS status to cfg80211.
+
+In addition to this, one debug message is also added to know
+ad-hoc mode status (creator/joiner).
+
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    5 +-
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   45 ++++++++++++++++++--
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |    4 +-
- 3 files changed, 45 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   38 +++++++++++++++++----------
+ 1 files changed, 24 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 0d0e283..a5d1c35 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3108,8 +3108,7 @@ static int brcmf_sdbrcm_download_state(struct brcmf_bus *bus, bool enter)
- 
- 		ci->coredisable(bus->sdiodev, ci, BCMA_CORE_ARM_CM3);
- 
--		brcmf_sdio_chip_resetcore(bus->sdiodev, ci,
--					  BCMA_CORE_INTERNAL_MEM);
-+		ci->resetcore(bus->sdiodev, ci, BCMA_CORE_INTERNAL_MEM);
- 
- 		/* Clear the top bit of memory */
- 		if (bus->ramsize) {
-@@ -3133,7 +3132,7 @@ static int brcmf_sdbrcm_download_state(struct brcmf_bus *bus, bool enter)
- 		w_sdreg32(bus, 0xFFFFFFFF,
- 			  offsetof(struct sdpcmd_regs, intstatus), &retries);
- 
--		brcmf_sdio_chip_resetcore(bus->sdiodev, ci, BCMA_CORE_ARM_CM3);
-+		ci->resetcore(bus->sdiodev, ci, BCMA_CORE_ARM_CM3);
- 
- 		/* Allow HT Clock now that the ARM is running. */
- 		bus->alp_only = false;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-index d2cf8c6..cef9abb 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-@@ -278,9 +278,9 @@ brcmf_sdio_ai_coredisable(struct brcmf_sdio_dev *sdiodev,
- 	udelay(1);
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 603dbda..6da5c9e 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -561,17 +561,28 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
  }
  
--void
--brcmf_sdio_chip_resetcore(struct brcmf_sdio_dev *sdiodev,
--			  struct chip_info *ci, u16 coreid)
-+static void
-+brcmf_sdio_sb_resetcore(struct brcmf_sdio_dev *sdiodev,
-+			struct chip_info *ci, u16 coreid)
+-static int ath6kl_add_bss_if_needed(struct ath6kl_vif *vif, const u8 *bssid,
++static int ath6kl_add_bss_if_needed(struct ath6kl_vif *vif,
++				    enum network_type nw_type,
++				    const u8 *bssid,
+ 				    struct ieee80211_channel *chan,
+ 				    const u8 *beacon_ie, size_t beacon_ie_len)
  {
- 	u32 regdata;
- 	u8 idx;
-@@ -291,7 +291,7 @@ brcmf_sdio_chip_resetcore(struct brcmf_sdio_dev *sdiodev,
- 	 * Must do the disable sequence first to work for
- 	 * arbitrary current core state.
- 	 */
--	ci->coredisable(sdiodev, ci, coreid);
-+	brcmf_sdio_sb_coredisable(sdiodev, ci, coreid);
+ 	struct ath6kl *ar = vif->ar;
+ 	struct cfg80211_bss *bss;
++	u16 cap_mask, cap_val;
+ 	u8 *ie;
  
- 	/*
- 	 * Now do the initialization sequence.
-@@ -301,8 +301,11 @@ brcmf_sdio_chip_resetcore(struct brcmf_sdio_dev *sdiodev,
- 	brcmf_sdcard_reg_write(sdiodev,
- 			CORE_SB(ci->c_inf[idx].base, sbtmstatelow), 4,
- 			SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK | SSB_TMSLOW_RESET);
-+	regdata = brcmf_sdcard_reg_read(sdiodev,
-+				CORE_SB(ci->c_inf[idx].base, sbtmstatelow), 4);
- 	udelay(1);
- 
-+	/* clear any serror */
- 	regdata = brcmf_sdcard_reg_read(sdiodev,
- 				CORE_SB(ci->c_inf[idx].base, sbtmstatehigh), 4);
- 	if (regdata & SSB_TMSHIGH_SERR)
-@@ -320,12 +323,44 @@ brcmf_sdio_chip_resetcore(struct brcmf_sdio_dev *sdiodev,
- 	brcmf_sdcard_reg_write(sdiodev,
- 		CORE_SB(ci->c_inf[idx].base, sbtmstatelow), 4,
- 		SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK);
-+	regdata = brcmf_sdcard_reg_read(sdiodev,
-+				CORE_SB(ci->c_inf[idx].base, sbtmstatelow), 4);
- 	udelay(1);
- 
- 	/* leave clock enabled */
- 	brcmf_sdcard_reg_write(sdiodev,
- 			       CORE_SB(ci->c_inf[idx].base, sbtmstatelow),
- 			       4, SSB_TMSLOW_CLOCK);
-+	regdata = brcmf_sdcard_reg_read(sdiodev,
-+				CORE_SB(ci->c_inf[idx].base, sbtmstatelow), 4);
-+	udelay(1);
-+}
++	if (nw_type & ADHOC_NETWORK) {
++		cap_mask = WLAN_CAPABILITY_IBSS;
++		cap_val = WLAN_CAPABILITY_IBSS;
++	} else {
++		cap_mask = WLAN_CAPABILITY_ESS;
++		cap_val = WLAN_CAPABILITY_ESS;
++	}
 +
-+static void
-+brcmf_sdio_ai_resetcore(struct brcmf_sdio_dev *sdiodev,
-+			struct chip_info *ci, u16 coreid)
-+{
-+	u8 idx;
-+	u32 regdata;
-+
-+	idx = brcmf_sdio_chip_getinfidx(ci, coreid);
-+
-+	/* must disable first to work for arbitrary current core state */
-+	brcmf_sdio_ai_coredisable(sdiodev, ci, coreid);
-+
-+	/* now do initialization sequence */
-+	brcmf_sdcard_reg_write(sdiodev, ci->c_inf[idx].wrapbase+BCMA_IOCTL,
-+			       4, BCMA_IOCTL_FGC | BCMA_IOCTL_CLK);
-+	regdata = brcmf_sdcard_reg_read(sdiodev,
-+					ci->c_inf[idx].wrapbase+BCMA_IOCTL, 4);
-+	brcmf_sdcard_reg_write(sdiodev, ci->c_inf[idx].wrapbase+BCMA_RESET_CTL,
-+			       4, 0);
-+	udelay(1);
-+
-+	brcmf_sdcard_reg_write(sdiodev, ci->c_inf[idx].wrapbase+BCMA_IOCTL,
-+			       4, BCMA_IOCTL_CLK);
-+	regdata = brcmf_sdcard_reg_read(sdiodev,
-+					ci->c_inf[idx].wrapbase+BCMA_IOCTL, 4);
- 	udelay(1);
- }
+ 	bss = cfg80211_get_bss(ar->wiphy, chan, bssid,
+-			       vif->ssid, vif->ssid_len, WLAN_CAPABILITY_ESS,
+-			       WLAN_CAPABILITY_ESS);
++			       vif->ssid, vif->ssid_len,
++			       cap_mask, cap_val);
+ 	if (bss == NULL) {
+ 		/*
+ 		 * Since cfg80211 may not yet know about the BSS,
+@@ -589,13 +600,12 @@ static int ath6kl_add_bss_if_needed(struct ath6kl_vif *vif, const u8 *bssid,
+ 		memcpy(ie + 2, vif->ssid, vif->ssid_len);
+ 		memcpy(ie + 2 + vif->ssid_len, beacon_ie, beacon_ie_len);
+ 		bss = cfg80211_inform_bss(ar->wiphy, chan,
+-					  bssid, 0, WLAN_CAPABILITY_ESS, 100,
++					  bssid, 0, cap_val, 100,
+ 					  ie, 2 + vif->ssid_len + beacon_ie_len,
+ 					  0, GFP_KERNEL);
+ 		if (bss)
+-			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "added dummy bss for "
+-				   "%pM prior to indicating connect/roamed "
+-				   "event\n", bssid);
++			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "added bss %pM to "
++				   "cfg80211\n", bssid);
+ 		kfree(ie);
+ 	} else
+ 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "cfg80211 already has a bss "
+@@ -658,16 +668,16 @@ void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
  
-@@ -371,11 +406,13 @@ static int brcmf_sdio_chip_recognition(struct brcmf_sdio_dev *sdiodev,
- 		ci->iscoreup = brcmf_sdio_sb_iscoreup;
- 		ci->corerev = brcmf_sdio_sb_corerev;
- 		ci->coredisable = brcmf_sdio_sb_coredisable;
-+		ci->resetcore = brcmf_sdio_sb_resetcore;
- 		break;
- 	case SOCI_AI:
- 		ci->iscoreup = brcmf_sdio_ai_iscoreup;
- 		ci->corerev = brcmf_sdio_ai_corerev;
- 		ci->coredisable = brcmf_sdio_ai_coredisable;
-+		ci->resetcore = brcmf_sdio_ai_resetcore;
- 		break;
- 	default:
- 		brcmf_dbg(ERROR, "socitype %u not supported\n", ci->socitype);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-index 22232a8..ce974d7 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-@@ -80,6 +80,8 @@ struct chip_info {
- 			 u16 coreid);
- 	void (*coredisable)(struct brcmf_sdio_dev *sdiodev,
- 			struct chip_info *ci, u16 coreid);
-+	void (*resetcore)(struct brcmf_sdio_dev *sdiodev,
-+			struct chip_info *ci, u16 coreid);
- };
+ 	chan = ieee80211_get_channel(ar->wiphy, (int) channel);
  
- struct sbconfig {
-@@ -122,8 +124,6 @@ struct sbconfig {
- 	u32 sbidhigh;	/* identification */
- };
+-
+-	if (nw_type & ADHOC_NETWORK) {
+-		cfg80211_ibss_joined(vif->ndev, bssid, GFP_KERNEL);
++	if (ath6kl_add_bss_if_needed(vif, nw_type, bssid, chan, assoc_info,
++				     beacon_ie_len) < 0) {
++		ath6kl_err("could not add cfg80211 bss entry\n");
+ 		return;
+ 	}
  
--extern void brcmf_sdio_chip_resetcore(struct brcmf_sdio_dev *sdiodev,
--				      struct chip_info *ci, u16 coreid);
- extern int brcmf_sdio_chip_attach(struct brcmf_sdio_dev *sdiodev,
- 				  struct chip_info **ci_ptr, u32 regs);
- extern void brcmf_sdio_chip_detach(struct chip_info **ci_ptr);
+-	if (ath6kl_add_bss_if_needed(vif, bssid, chan, assoc_info,
+-				     beacon_ie_len) < 0) {
+-		ath6kl_err("could not add cfg80211 bss entry for "
+-			   "connect/roamed notification\n");
++	if (nw_type & ADHOC_NETWORK) {
++		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "ad-hoc %s selected\n",
++			   nw_type & ADHOC_CREATOR ? "creator" : "joiner");
++		cfg80211_ibss_joined(vif->ndev, bssid, GFP_KERNEL);
+ 		return;
+ 	}
+ 
 -- 
-1.7.5.4
-
+1.7.0.4
 
