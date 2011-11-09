@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:49741 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750784Ab1KNKmq convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59866 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932707Ab1KIUds (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 05:42:46 -0500
-Received: by bke11 with SMTP id 11so5757526bke.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2011 02:42:45 -0800 (PST)
-MIME-Version: 1.0
-From: =?ISO-8859-1?Q?Andr=E9s_Garc=EDa_Saavedra?=
-	<andres.garcia.saavedra@gmail.com>
-Date: Mon, 14 Nov 2011 11:42:24 +0100
-Message-ID: <CADxqDgFoO63RG67McnxUJSmxZ9ZPPnE7obKkn+MZAsoJ4UMQtg@mail.gmail.com> (sfid-20111114_114250_597140_DB6484C5)
-Subject: force AR5212 to sleep
-To: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 9 Nov 2011 15:33:48 -0500
+Subject: [PATCH] wireless: move ieee80211chan2mhz macro
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 09 Nov 2011 21:33:45 +0100
+Message-ID: <1320870825.3845.92.camel@jlt3.sipsolutions.net> (sfid-20111109_213403_062831_EE68F53A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+From: Johannes Berg <johannes.berg@intel.com>
 
-I am testing some custom algorithms for powersaving using
-mac80211/ath5k. I am using  Dlink DWL-AG660 PCMCIA cards for my
-experiments. For these algorithms I am notifying sleep/awake events
-from mac80211 down to the driver whenever I want to. For the case of
-ath5k I followed that code madwifi was using to force the chipset to
-sleep (full sleep mode), find the piece of code below:
+The macro is only used in ipw2200 and we certainly
+don't want to encourage its use, so move it out of
+the radiotap header file and into the driver.
 
-The problem is, the card (and the laptop) totally freezes whenever
-this is done. According to
-http://madwifi-project.org/wiki/Compatibility/D-Link this card uses a
-AR5212, and madwifi driver does use this piece of code to force the
-chip to sleep (in that case when resetting or stopping an interface).
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ipw2x00/ipw2200.c |    8 ++++++++
+ include/net/ieee80211_radiotap.h       |    8 --------
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-Undoubtedly, I am missing something I should take care of. I'd
-appreciate any "clue" you could give me.
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c	2011-11-09 10:07:12.000000000 +0100
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c	2011-11-09 21:32:19.000000000 +0100
+@@ -131,6 +131,14 @@ static struct ieee80211_rate ipw2200_rat
+ #define ipw2200_bg_rates	(ipw2200_rates + 0)
+ #define ipw2200_num_bg_rates	12
+ 
++/* Ugly macro to convert literal channel numbers into their mhz equivalents
++ * There are certianly some conditions that will break this (like feeding it '30')
++ * but they shouldn't arise since nothing talks on channel 30. */
++#define ieee80211chan2mhz(x) \
++	(((x) <= 14) ? \
++	(((x) == 14) ? 2484 : ((x) * 5) + 2407) : \
++	((x) + 1000) * 5)
++
+ #ifdef CONFIG_IPW2200_QOS
+ static int qos_enable = 0;
+ static int qos_burst_enable = 0;
+--- a/include/net/ieee80211_radiotap.h	2011-11-08 18:04:29.000000000 +0100
++++ b/include/net/ieee80211_radiotap.h	2011-11-09 21:32:20.000000000 +0100
+@@ -271,14 +271,6 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_MCS_FEC_LDPC		0x10
+ 
+ 
+-/* Ugly macro to convert literal channel numbers into their mhz equivalents
+- * There are certianly some conditions that will break this (like feeding it '30')
+- * but they shouldn't arise since nothing talks on channel 30. */
+-#define ieee80211chan2mhz(x) \
+-	(((x) <= 14) ? \
+-	(((x) == 14) ? 2484 : ((x) * 5) + 2407) : \
+-	((x) + 1000) * 5)
+-
+ /* helpers */
+ static inline int ieee80211_get_radiotap_len(unsigned char *data)
+ {
 
 
-/**** CODE *****/
-
-    struct ath5k_softc *sc = hw->priv;
-    struct ath5k_hw *ah = sc->ah;
-    unsigned int i;
-    u32 staid, data;
-
-    staid = ath5k_hw_reg_read(ah, AR5K_STA_ID1);
-
-    ath5k_hw_reg_write(ah, AR5K_SLEEP_CTL_SLE_ALLOW, AR5K_SLEEP_CTL);
-
-    staid |= AR5K_STA_ID1_PWR_SV;
-
-    ath5k_hw_reg_write(ah, staid, AR5K_STA_ID1);
-
-/**** CODE *****/
-
-
-Thanks in advance,
-Andrés
