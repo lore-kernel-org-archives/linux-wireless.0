@@ -1,50 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:54613 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755569Ab1KPLB7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 06:01:59 -0500
-Received: by ywt32 with SMTP id 32so4617002ywt.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 03:01:59 -0800 (PST)
+Received: from purkki.adurom.net ([80.68.90.206]:57443 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751400Ab1KIHt6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 02:49:58 -0500
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: deprecate CFG80211_WEXT
+References: <1320781153.24797.41.camel@jlt3.sipsolutions.net>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 09 Nov 2011 09:49:54 +0200
+In-Reply-To: <1320781153.24797.41.camel@jlt3.sipsolutions.net> (Johannes Berg's message of "Tue\, 08 Nov 2011 20\:39\:13 +0100")
+Message-ID: <87ehxhag65.fsf@purkki.adurom.net> (sfid-20111109_085001_175917_AFE02259)
 MIME-Version: 1.0
-In-Reply-To: <CAOZOX0Wa4gquXeMrh_1U2kJvJQttQDQ9pWNVT5jjoHOxZxL4jg@mail.gmail.com>
-References: <20111116100915.GA2191@redhat.com>
-	<CAGXE3d8oPL9POJEZdb4urFVQXjPY2W8HYePLc2F804=W7nCfSw@mail.gmail.com>
-	<CAOZOX0Wa4gquXeMrh_1U2kJvJQttQDQ9pWNVT5jjoHOxZxL4jg@mail.gmail.com>
-Date: Wed, 16 Nov 2011 12:01:59 +0100
-Message-ID: <CAGXE3d-O7vn+cZJ-Z-jYwt_oyiRTA01uz+70j7cy9xCkWAi1Gw@mail.gmail.com> (sfid-20111116_120203_062168_13F3EA53)
-Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Amir Hedayaty <hedayaty@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 16, 2011 at 11:52 AM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
-> On Wed, Nov 16, 2011 at 11:46 AM, Helmut Schaa
-> <helmut.schaa@googlemail.com> wrote:
->> On Wed, Nov 16, 2011 at 11:09 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->>> +       /*
->>> +        * Some devices can generate interrupts with empty CSR register, we
->>> +        * "handle" such irq's to prevent interrupt controller treat them as
->>> +        * spurious interrupts and disable irq line.
->>> +        */
->>>        if (!reg)
->>> -               return IRQ_NONE;
->>> +               return IRQ_HANDLED;
->>
->> What if this interrupt belongs to a different device on a shared interrupt line?
->> In case reg is zero we can't be sure our device generated this interrupt, right?
->
-> In the bugzilla report  Stanislaw indicated that even when rt2800pci
-> indicates IRQ_HANDLED,
-> all other drivers on the same interruptline will still get the interrupt event.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Ah, ok. Should be fine with me then ...
+> Almost all wireless tools have transitioned to
+> or at least added compatibility with nl80211 so
+> there's no real need for CONFIG_CFG80211_WEXT
+> any more. Mark it for removal, and also change
+> the default to not be enabled.
 
-Thanks.
+Maybe CC lkml for more visibility?
+
+-- 
+Kalle Valo
