@@ -1,68 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:40771 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751500Ab1KILwH convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:62708 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933113Ab1KIVi5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 06:52:07 -0500
-Received: by qyk27 with SMTP id 27so4585726qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Nov 2011 03:52:07 -0800 (PST)
+	Wed, 9 Nov 2011 16:38:57 -0500
+Received: by ywf7 with SMTP id 7so2189104ywf.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Nov 2011 13:38:57 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CA+XFjir0yGWWUdt5YD8DuSjFk0pi0yEhzqQR020d5G06ah7XgQ@mail.gmail.com>
-References: <1294426085.18385.8.camel@maggie> <1320837297.1926.6.camel@shinybook.infradead.org>
- <CA+XFjir0yGWWUdt5YD8DuSjFk0pi0yEhzqQR020d5G06ah7XgQ@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Wed, 9 Nov 2011 12:51:46 +0100
-Message-ID: <CA+XFjip8ithvfY_zdQbY0SogJfJyBv4nXyugPSjudYJcuQfa_Q@mail.gmail.com> (sfid-20111109_125211_706605_5E4B9DAD)
-Subject: Re: [PATCH] ssb: Ignore dangling ethernet cores on wireless devices
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1320833356-19132-3-git-send-email-ilane@ti.com>
+References: <1320833356-19132-1-git-send-email-ilane@ti.com>
+	<1320833356-19132-3-git-send-email-ilane@ti.com>
+Date: Wed, 9 Nov 2011 18:38:56 -0300
+Message-ID: <CAK3JMAbFS1b_2=EcUH_JBdrwt2H8cnN98DwJKTNMkz7U1C6Miw@mail.gmail.com> (sfid-20111109_223901_380865_E2D0CE75)
+Subject: Re: [PATCH v4 2/3] NFC: Removal of unused operations for NCI spec 1.0 d18
+From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+To: ilanelias78@gmail.com
+Cc: aloisio.almeida@openbossa.org, samuel@sortiz.org,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Ilan Elias <ilane@ti.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 9, 2011 at 12:50 PM, Gábor Stefanik <netrolller.3d@gmail.com> wrote:
-> On Wed, Nov 9, 2011 at 12:14 PM, David Woodhouse <dwmw2@infradead.org> wrote:
->> On Fri, 2011-01-07 at 19:48 +0100, Michael Büsch wrote:
->>>
->>> +               case SSB_DEV_ETHERNET:
->>> +                       if (bus->bustype == SSB_BUSTYPE_PCI) {
->>> +                               if (bus->host_pci->vendor == PCI_VENDOR_ID_BROADCOM &&
->>> +                                   (bus->host_pci->device & 0xFF00) == 0x4300) {
->>> +                                       /* This is a dangling ethernet core on a
->>> +                                        * wireless device. Ignore it. */
->>> +                                       continue;
->>> +                               }
->>> +                       }
->>> +                       break;
->>
->> Do you also need to check for (bus->host_pci->device / 1000) == 43?
->> Or do the chips with 5-digit 'decimal' IDs not have the Ethernet cores?
->>
->> Would it be better to invert the test and check for != 0x4400?
+2011/11/9  <ilanelias78@gmail.com>:
+> From: Ilan Elias <ilane@ti.com>
 >
-> I do not know of any Broadcom wireless device with a decimal PCI ID
-> (as opposed to a decimal Chip ID).
-
-Edit: However, 0x4700 should also be checked, as some BCM43xx chips
-use 0x47xx PCI IDs.
-
+> Remove unused NCI operations, e.g. create static rf connection.
 >
->>
->> --
->> dwmw2
->>
->
->
->
-> --
-> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
->
-
-
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+> Signed-off-by: Ilan Elias <ilane@ti.com>
+Acked-by: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
