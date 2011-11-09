@@ -1,64 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:45429 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754494Ab1KTCUO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Nov 2011 21:20:14 -0500
-Subject: Re: iwlagn: memory corruption with WPA enterprise
-From: wwguy <wey-yi.w.guy@intel.com>
-To: =?UTF-8?Q?Tom=C3=A1=C5=A1_Janou=C5=A1ek?= <tomi@nomi.cz>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20111119181106.GA5515@nomi.cz>
-References: <20111109155411.GA1669@nomi.cz>
-	 <20111109165158.GA2254@redhat.com> <20111110091816.GA2247@nomi.cz>
-	 <20111110114732.GA2217@redhat.com> <20111110125347.GA29415@nomi.cz>
-	 <20111110160703.GA2775@redhat.com> <20111110163051.GA24533@nomi.cz>
-	 <20111111054731.GA2292@redhat.com> <20111111150105.GA25437@nomi.cz>
-	 <20111114140714.GD2513@redhat.com>  <20111119181106.GA5515@nomi.cz>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 19 Nov 2011 18:13:53 -0800
-Message-ID: <1321755233.22510.1.camel@wwguy-ubuntu> (sfid-20111120_032040_202510_6FBAE3DC)
-Mime-Version: 1.0
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:40771 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751500Ab1KILwH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 06:52:07 -0500
+Received: by qyk27 with SMTP id 27so4585726qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Nov 2011 03:52:07 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CA+XFjir0yGWWUdt5YD8DuSjFk0pi0yEhzqQR020d5G06ah7XgQ@mail.gmail.com>
+References: <1294426085.18385.8.camel@maggie> <1320837297.1926.6.camel@shinybook.infradead.org>
+ <CA+XFjir0yGWWUdt5YD8DuSjFk0pi0yEhzqQR020d5G06ah7XgQ@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 9 Nov 2011 12:51:46 +0100
+Message-ID: <CA+XFjip8ithvfY_zdQbY0SogJfJyBv4nXyugPSjudYJcuQfa_Q@mail.gmail.com> (sfid-20111109_125211_706605_5E4B9DAD)
+Subject: Re: [PATCH] ssb: Ignore dangling ethernet cores on wireless devices
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-11-19 at 10:11 -0800, TomÃ¡Å¡ JanouÅ¡ek wrote:
-> Hello,
-> 
-> On Mon, Nov 14, 2011 at 03:07:15PM +0100, Stanislaw Gruszka wrote:
-> > On Fri, Nov 11, 2011 at 04:01:05PM +0100, TomÃ¡Å¡ JanouÅ¡ek wrote:
-> > > Could you please elaborate on that thing with enabling IOMMU? The only thing I
-> > > know about IOMMU is that it is somehow related to VT-d (passing whole PCI
-> > > devices to virtual guests), and that I have to pass intel_iommu=off to kernel
-> > > command line, otherwise the machine doesn't even boot. Is that a problem?
-> > Yes. That mean iommu software or hardware is broken on your system.
-> >
-> > I have no other ideas how to track this down. I think now, this is
-> > a firwmare issue. BTW, you suspected that from very beginning :-)
-> > This could be also a driver issue, but AFAICT programing DMA do not
-> > differ on 6205 from other devices, so bug in firmware is much more
-> > probable reason of corruption.
-> 
-> I have some news. I got IOMMU to work, because I identified the problem [1]
-> and disabled firewire-ohci for the time being completely, but I'm not sure
-> what do I need to do to make it catch the problem. I assumed that all I need
-> is to intel_iommu=on and then all devices do DMA stuff in isolation, but I can
-> still reproduce the issue without the smallest hint of an error in dmesg. Does
-> it tell us anything, or shall I enable some more debugging stuff?
-> 
-> [1] http://thread.gmane.org/gmane.linux.kernel.pci/8765/focus=1217800
-> 
-> Anyway, I didn't get to trying 2.6.38/39 yet, but I will do that soon. It is
-> also safe to say now that x86_64 is completely unaffected, as I was running
-> various 64bit kernels the whole week without a single failure.
-> 
+On Wed, Nov 9, 2011 at 12:50 PM, Gábor Stefanik <netrolller.3d@gmail.com> wrote:
+> On Wed, Nov 9, 2011 at 12:14 PM, David Woodhouse <dwmw2@infradead.org> wrote:
+>> On Fri, 2011-01-07 at 19:48 +0100, Michael Büsch wrote:
+>>>
+>>> +               case SSB_DEV_ETHERNET:
+>>> +                       if (bus->bustype == SSB_BUSTYPE_PCI) {
+>>> +                               if (bus->host_pci->vendor == PCI_VENDOR_ID_BROADCOM &&
+>>> +                                   (bus->host_pci->device & 0xFF00) == 0x4300) {
+>>> +                                       /* This is a dangling ethernet core on a
+>>> +                                        * wireless device. Ignore it. */
+>>> +                                       continue;
+>>> +                               }
+>>> +                       }
+>>> +                       break;
+>>
+>> Do you also need to check for (bus->host_pci->device / 1000) == 43?
+>> Or do the chips with 5-digit 'decimal' IDs not have the Ethernet cores?
+>>
+>> Would it be better to invert the test and check for != 0x4400?
+>
+> I do not know of any Broadcom wireless device with a decimal PCI ID
+> (as opposed to a decimal Chip ID).
+
+Edit: However, 0x4700 should also be checked, as some BCM43xx chips
+use 0x47xx PCI IDs.
+
+>
+>>
+>> --
+>> dwmw2
+>>
+>
+>
+>
+> --
+> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+>
 
 
-hmm, I don't have any IOMMU supported system, I guess it is the time to
-get one :-)
 
-Wey
-
-
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
