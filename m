@@ -1,60 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:50169 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755504Ab1KWO12 (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:43731 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752693Ab1KIMQ3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 09:27:28 -0500
-Received: by vcbfk14 with SMTP id fk14so356163vcb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 06:27:28 -0800 (PST)
+	Wed, 9 Nov 2011 07:16:29 -0500
+Received: by faan17 with SMTP id n17so1567634faa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Nov 2011 04:16:28 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20111123100717.GA1761@vmraj-lnx.users.atheros.com>
-References: <1321985402-14257-1-git-send-email-mcgrof@qca.qualcomm.com>
- <1321985402-14257-2-git-send-email-mcgrof@qca.qualcomm.com> <20111123100717.GA1761@vmraj-lnx.users.atheros.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 23 Nov 2011 06:27:07 -0800
-Message-ID: <CAB=NE6WVVTQZ9N8rhZCUduCq8Vw-Pn7rCCmg61LBLtibWVTEcQ@mail.gmail.com> (sfid-20111123_152732_561208_07F4431B)
-Subject: Re: [PATCH 1/3] cfg80211: allow following country IE power for custom
- regdom cards
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, compat@orbit-lab.org,
-	Paul Stewart <pstew@google.com>,
-	Senthilkumar Balasubramanian <senthilb@qca.qualcomm.com>
+In-Reply-To: <CA+XFjip8ithvfY_zdQbY0SogJfJyBv4nXyugPSjudYJcuQfa_Q@mail.gmail.com>
+References: <1294426085.18385.8.camel@maggie> <1320837297.1926.6.camel@shinybook.infradead.org>
+ <CA+XFjir0yGWWUdt5YD8DuSjFk0pi0yEhzqQR020d5G06ah7XgQ@mail.gmail.com> <CA+XFjip8ithvfY_zdQbY0SogJfJyBv4nXyugPSjudYJcuQfa_Q@mail.gmail.com>
+From: Jonas Gorski <jonas.gorski@gmail.com>
+Date: Wed, 9 Nov 2011 13:16:07 +0100
+Message-ID: <CAOiHx=kVL3dewGR=utxfKMVmJ4zEbzXmSXEnCH_8ypwkQ5WhmQ@mail.gmail.com> (sfid-20111109_131632_801397_F815BD5F)
+Subject: Re: [PATCH] ssb: Ignore dangling ethernet cores on wireless devices
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 23, 2011 at 2:07 AM, Rajkumar Manoharan
-<rmanohar@qca.qualcomm.com> wrote:
-> On Tue, Nov 22, 2011 at 10:10:00AM -0800, Luis R. Rodriguez wrote:
->> By definition WIPHY_FLAG_STRICT_REGULATORY was intended to allow the
->> wiphy to adjust itself to the country IE power information if the
->> card had no regulatory data but we had no way to tell cfg80211 that if
->> the card also had its own custom regulatory domain (these are typically
->> custom world regulatory domains) that we want to follow the country IE's
->> noted values for power for each channel. We add support for this and
->> document it.
+On 9 November 2011 12:51, Gábor Stefanik <netrolller.3d@gmail.com> wrote:
+> On Wed, Nov 9, 2011 at 12:50 PM, Gábor Stefanik <netrolller.3d@gmail.com> wrote:
+>> On Wed, Nov 9, 2011 at 12:14 PM, David Woodhouse <dwmw2@infradead.org> wrote:
+>>> On Fri, 2011-01-07 at 19:48 +0100, Michael Büsch wrote:
+>>>>
+>>>> +               case SSB_DEV_ETHERNET:
+>>>> +                       if (bus->bustype == SSB_BUSTYPE_PCI) {
+>>>> +                               if (bus->host_pci->vendor == PCI_VENDOR_ID_BROADCOM &&
+>>>> +                                   (bus->host_pci->device & 0xFF00) == 0x4300) {
+>>>> +                                       /* This is a dangling ethernet core on a
+>>>> +                                        * wireless device. Ignore it. */
+>>>> +                                       continue;
+>>>> +                               }
+>>>> +                       }
+>>>> +                       break;
+>>>
+>>> Do you also need to check for (bus->host_pci->device / 1000) == 43?
+>>> Or do the chips with 5-digit 'decimal' IDs not have the Ethernet cores?
+>>>
+>>> Would it be better to invert the test and check for != 0x4400?
 >>
->> This is not a critical fix but a performance optimization for cards
->> with custom regulatory domains that associate to an AP with sends
->> out country IEs with a higher EIRP than the one on the custom
->> regulatory domain. In practice the only driver affected right now
->> are the Atheros drivers as they are the only drivers using both
->> WIPHY_FLAG_STRICT_REGULATORY and WIPHY_FLAG_CUSTOM_REGULATORY --
->> used on cards that have an Atheros world regulatory domain. Cards
->> that have been programmed to follow a country specifically will not
->> follow the country IE power. So although not a stable fix distributions
->> should consider cherry picking this.
->>
-> Luis,
+>> I do not know of any Broadcom wireless device with a decimal PCI ID
+>> (as opposed to a decimal Chip ID).
 >
-> After some testing, I noticed that the incresed power value seems to be
-> remained after the disconnection. So while falling back to world
-> regulatory domain the band updations are ignored at ignore_reg_update.
-> If the driver follows STRICT_REGULATORY, the it should not be ignored.
-> isn't it?
+> Edit: However, 0x4700 should also be checked, as some BCM43xx chips
+> use 0x47xx PCI IDs.
 
-I'll look into this, thanks for testing. John please hold off on these
-patches, I will respin them along with my stable fixes.
+As far as I can tell from this snippet (I'm missing the original
+message), this code is SSB, and the only 0x47xx I know of is the
+BCM4313, and that's a BCMA card. So this doesn't apply here.
 
- Luis
+Same for the five digit Chip IDs (which might leak into the PCI ID, if
+the card has no SPROM), AFAIK these are also BCMA exclusive.
+
+
+A check for != 0x44xx would probably still the safest way.
+
+
+Regards
+Jonas
