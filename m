@@ -1,69 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:34480 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750886Ab1KUFTB convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43060 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755043Ab1KIVaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 00:19:01 -0500
-Received: by wwe5 with SMTP id 5so9803471wwe.1
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 21:19:00 -0800 (PST)
+	Wed, 9 Nov 2011 16:30:12 -0500
+Date: Wed, 9 Nov 2011 16:25:05 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2011-11-09
+Message-ID: <20111109212505.GC10712@tuxdriver.com> (sfid-20111109_223036_770587_701B64EE)
+References: <20111109193504.GA32400@tuxdriver.com>
+ <20111109.162015.2261725491621555303.davem@davemloft.net>
 MIME-Version: 1.0
-In-Reply-To: <1321836540-5325-5-git-send-email-mar.kolya@gmail.com>
-References: <1321836540-5325-1-git-send-email-mar.kolya@gmail.com>
-	<1321836540-5325-5-git-send-email-mar.kolya@gmail.com>
-Date: Mon, 21 Nov 2011 10:48:59 +0530
-Message-ID: <CAD2nsn0uUH0HxnOmF9A0hJ8RVjmacb2Xn1277CNbyY7YUpNgMw@mail.gmail.com> (sfid-20111121_061905_953529_F994E0F1)
-Subject: Re: [PATCH 4/4] ath9k: enable ani for 9100
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="BOKacYhQ+x31HxR3"
+In-Reply-To: <20111109.162015.2261725491621555303.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 21, 2011 at 6:19 AM, Nikolay Martynov <mar.kolya@gmail.com> wrote:
-> ---
->  drivers/net/wireless/ath/ath9k/hw.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-> index d6a2568..79c4a0f 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/hw.c
-> @@ -610,8 +610,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
->        if (!AR_SREV_9300_20_OR_LATER(ah))
->                ah->ani_function &= ~ATH9K_ANI_MRC_CCK;
->
-> -        //disable ANI for 9100 and 9340
-> -        if (AR_SREV_9100(ah) || AR_SREV_9340(ah))
-> +        //disable ANI for 9340
 
-please change the comment style to
-/*
-*
-*/
+--BOKacYhQ+x31HxR3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> +        if (AR_SREV_9340(ah))
->                 ah->config.enable_ani = false;
+On Wed, Nov 09, 2011 at 04:20:15PM -0500, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Wed, 9 Nov 2011 14:35:04 -0500
+>=20
+> > Regarding the Bluetooth fixes, Gustavo says this:
+> >=20
+> > Please let me know if there are problems!
+>=20
+> Gustavo says what? :-)
 
-please mention in the commit log why we are enabling ANI for AR9100,
-if there is some improvement performance in noisy environment, please
-do mention it.
-i assume if it is disabled we may not  have ANI support for AR9100
-(or) the hardware code changes are missing.
+Hmmm...obviously not my best day...
 
->
->        ath9k_hw_init_mode_regs(ah);
-> --
-> 1.7.4.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Gustavo says:
 
+"3 more fixes to linux 3.2. One is USB device id addition and the other two
+patches combined fixes a connection issue. The first one from Arek Lichwa
+revert the wrong fix and a second commit from Andrzej Kaczmarek fix the iss=
+ue
+properly."
 
+Hth! :-)
 
--- 
-shafi
+John
+
+P.S.  Pull request head is commit e29ec6247053ad60bd0b36f155b647364a615097.
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+
+--BOKacYhQ+x31HxR3
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJOuu+xAAoJEJctW/TcYTgGQUAP+wfBT9FFB/oB3lNqu2j3GgEs
+b4TfFi716y+kJJfRBrJuliz9UaO0k483e+hZ8a7fhaMgoMmPMWWKvLFqQLY/ldNJ
++/iSDQSWgbZ8MPsd9GmwRih9FCpdmS4sGizPbaZL/twqEcSUrP+VfhRhI93KZsLE
+s2YWdm7di1kzaSvrT3+/GD67Hj9NXVhy5x/RhYemiqEbb7w9jP1uxo6Ywk7/5V4S
+DtwYqxNqE4vAl2GZ5Au/kJnSAf6DDGVBMwenlGQPwJhHq1eRAtCNTujsrJGf/RUo
+rFvbVQhX+LhyHiMudCJrHmNpLGAlHowis/W2veV9uUEJXlHeAgMiLeC7aYtEV/Lp
+RJ20xy1C0XxsZ91jKf7imv/vpgA7YNHjuqZcQvvfmyVYwH98U/5v5fgRKhaJ6RBd
+FLekA32cm3Ew5Ns+r1QkJHj43tJceu/kDfmGmIBPkn6KHaeYIECKczoS8qTmxMBX
+jimF9cGK2lMHFdTuksKnx6Avj1g2teZraX5dj1Qr0QBP1nmh45+aGk4/E2u59sy3
+4gHmFoaS48HJvtpszEnQ3r18YxV48W3mMEe9MCfaRi2KXvotz80JnUSSRkTPsu7j
+VojCim4DCCaA6fMHlVPPF7bFpv7NWVvdlUFDfRKewP4WLTsQMGTXG6b01jMzZTrm
+UadbLQi3b1jJAlB+T3cb
+=mfb8
+-----END PGP SIGNATURE-----
+
+--BOKacYhQ+x31HxR3--
