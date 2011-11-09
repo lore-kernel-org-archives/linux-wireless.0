@@ -1,43 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65523 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757095Ab1KRIXV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 03:23:21 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Greg Dietsche <Gregory.Dietsche@cuw.edu>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 72/77] iwlegacy: 4965-rs: remove null check on sta in il4965_rs_tx_status
-Date: Fri, 18 Nov 2011 09:22:34 +0100
-Message-Id: <1321604559-10707-72-git-send-email-sgruszka@redhat.com> (sfid-20111118_092340_208528_F31FCE2B)
-In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
-References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:48405 "EHLO
+	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754501Ab1KIWzu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 17:55:50 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 9 Nov 2011 14:55:41 -0800
+Subject: RE: New wireless-testing has grown some warnings -- please fix ASAP!
+Message-ID: <477F20668A386D41ADCC57781B1F7043081825859C@SC-VEXCH1.marvell.com> (sfid-20111109_235553_510922_0FA2A9F1)
+References: <20111109215007.GD10712@tuxdriver.com>
+In-Reply-To: <20111109215007.GD10712@tuxdriver.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
-
-the null check on sta in il4965_rs_tx_status is not necessary
-
-Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/4965-rs.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlegacy/4965-rs.c b/drivers/net/wireless/iwlegacy/4965-rs.c
-index 93c3a4d..b0946a1 100644
---- a/drivers/net/wireless/iwlegacy/4965-rs.c
-+++ b/drivers/net/wireless/iwlegacy/4965-rs.c
-@@ -991,7 +991,7 @@ il4965_rs_tx_status(void *il_r, struct ieee80211_supported_band *sband,
- 	lq_sta->last_rate_n_flags = tx_rate;
- done:
- 	/* See if there's a better rate or modulation mode to try. */
--	if (sta && sta->supp_rates[sband->band])
-+	if (sta->supp_rates[sband->band])
- 		il4965_rs_rate_scale_perform(il, skb, sta, lq_sta);
- }
- 
--- 
-1.7.1
-
+SGkgSm9obiwNCg0KPiAgIENDIFtNXSAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9jZmc4
+MDIxMS5vDQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY2ZnODAyMTEuYzogSW4gZnVu
+Y3Rpb24g4oCYbXdpZmlleF9jZmc4MDIxMV9pbmZvcm1faWJzc19ic3PigJk6DQo+IGRyaXZlcnMv
+bmV0L3dpcmVsZXNzL213aWZpZXgvY2ZnODAyMTEuYzo4MDM6MjE6IHdhcm5pbmc6IGlnbm9yaW5n
+IHJldHVybiB2YWx1ZSBvZg0KPiDigJhjZmc4MDIxMV9pbmZvcm1fYnNz4oCZLCBkZWNsYXJlZCB3
+aXRoIGF0dHJpYnV0ZSB3YXJuX3VudXNlZF9yZXN1bHQNCg0KVGhlIFtQQVRDSCA3LzddIEkgc2Vu
+dCB5ZXN0ZXJkYXkgKGNvcGllZCAmIHBhc3RlZCBiZWxvdykgZml4ZWQgdGhlIHdhcm5pbmcgaW4g
+bXdpZmlleC4NCg0KVGhhbmtzLA0KQmluZw0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0K
+RnJvbTogQmluZyBaaGFvIFttYWlsdG86YnpoYW9AbWFydmVsbC5jb21dIA0KU2VudDogTW9uZGF5
+LCBOb3ZlbWJlciAwNywgMjAxMSA5OjQxIFBNDQpUbzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
+ZWwub3JnDQpDYzogSm9obiBXLiBMaW52aWxsZTsgQW1pdGt1bWFyIEthcndhcjsgS2lyYW4gRGl2
+ZWthcjsgWW9nZXNoIFBvd2FyOyBGcmFuayBIdWFuZzsgQmluZyBaaGFvOyBKb2hhbm5lcyBCZXJn
+DQpTdWJqZWN0OiBbUEFUQ0ggNy83XSBtd2lmaWV4OiByZWxlYXNlIGJzcyBzdHJ1Y3R1cmUgcmV0
+dXJuZWQgYnkgY2ZnODAyMTFfaW5mb3JtX2JzcygpDQoNCkZyb206IEFtaXRrdW1hciBLYXJ3YXIg
+PGFrYXJ3YXJAbWFydmVsbC5jb20+DQoNCkZvbGxvd2luZyBjb21waWxhdGlvbiB3YXJuaW5nIGlz
+IGZpeGVkIGJ5IHJlbGVhc2luZyByZWZlcmVuY2VkIEJTUw0Kc3RydWN0dXJlIHJldHVybmVkIGJ5
+IGNmZzgwMjExX2luZm9ybV9ic3MoKS4NCg0KIndhcm5pbmc6IGlnbm9yaW5nIHJldHVybiB2YWx1
+ZSBvZiBjZmc4MDIxMV9pbmZvcm1fYnNzLA0KZGVjbGFyZWQgd2l0aCBhdHRyaWJ1dGUgd2Fybl91
+bnVzZWRfcmVzdWx0Ig0KDQpDYzogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXMuYmVyZ0BpbnRlbC5j
+b20+DQpTaWduZWQtb2ZmLWJ5OiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29t
+Pg0KU2lnbmVkLW9mZi1ieTogQmluZyBaaGFvIDxiemhhb0BtYXJ2ZWxsLmNvbT4NCi0tLQ0KVGhp
+cyBwYXRjaCBmaXhlcyB0aGUgYnVnIG1lbnRpb25lZCBieSBKb2hhbm5lcyBCZXJnOg0KU2VlICJb
+UEFUQ0hdIGNmZzgwMjExOiBhbm5vdGF0ZSBjZmc4MDIxMV9pbmZvcm1fYnNzIg0KDQogZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvbXdpZmlleC9jZmc4MDIxMS5jIHwgICAgNCArKystDQogZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvbXdpZmlleC9zY2FuLmMgICAgIHwgICAgMSArDQogMiBmaWxlcyBjaGFuZ2Vk
+LCA0IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJz
+L25ldC93aXJlbGVzcy9td2lmaWV4L2NmZzgwMjExLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9t
+d2lmaWV4L2NmZzgwMjExLmMNCmluZGV4IDQ2MmM3MTAuLmU5YWI5YTMgMTAwNjQ0DQotLS0gYS9k
+cml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NmZzgwMjExLmMNCisrKyBiL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL213aWZpZXgvY2ZnODAyMTEuYw0KQEAgLTc4MCw2ICs3ODAsNyBAQCBzdGF0aWMg
+aW50IG13aWZpZXhfY2ZnODAyMTFfaW5mb3JtX2lic3NfYnNzKHN0cnVjdCBtd2lmaWV4X3ByaXZh
+dGUgKnByaXYpDQogew0KIAlzdHJ1Y3QgaWVlZTgwMjExX2NoYW5uZWwgKmNoYW47DQogCXN0cnVj
+dCBtd2lmaWV4X2Jzc19pbmZvIGJzc19pbmZvOw0KKwlzdHJ1Y3QgY2ZnODAyMTFfYnNzICpic3M7
+DQogCWludCBpZV9sZW47DQogCXU4IGllX2J1ZltJRUVFODAyMTFfTUFYX1NTSURfTEVOICsgc2l6
+ZW9mKHN0cnVjdCBpZWVlX3R5cGVzX2hlYWRlcildOw0KIAllbnVtIGllZWU4MDIxMV9iYW5kIGJh
+bmQ7DQpAQCAtODAwLDkgKzgwMSwxMCBAQCBzdGF0aWMgaW50IG13aWZpZXhfY2ZnODAyMTFfaW5m
+b3JtX2lic3NfYnNzKHN0cnVjdCBtd2lmaWV4X3ByaXZhdGUgKnByaXYpDQogCQkJaWVlZTgwMjEx
+X2NoYW5uZWxfdG9fZnJlcXVlbmN5KGJzc19pbmZvLmJzc19jaGFuLA0KIAkJCQkJCSAgICAgICBi
+YW5kKSk7DQogDQotCWNmZzgwMjExX2luZm9ybV9ic3MocHJpdi0+d2Rldi0+d2lwaHksIGNoYW4s
+DQorCWJzcyA9IGNmZzgwMjExX2luZm9ybV9ic3MocHJpdi0+d2Rldi0+d2lwaHksIGNoYW4sDQog
+CQlic3NfaW5mby5ic3NpZCwgMCwgV0xBTl9DQVBBQklMSVRZX0lCU1MsDQogCQkwLCBpZV9idWYs
+IGllX2xlbiwgMCwgR0ZQX0tFUk5FTCk7DQorCWNmZzgwMjExX3B1dF9ic3MoYnNzKTsNCiAJbWVt
+Y3B5KHByaXYtPmNmZ19ic3NpZCwgYnNzX2luZm8uYnNzaWQsIEVUSF9BTEVOKTsNCiANCiAJcmV0
+dXJuIDA7DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zY2FuLmMg
+Yi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3NjYW4uYw0KaW5kZXggYzY1MGU2MC4uOGEx
+OGJjYyAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Nhbi5jDQor
+KysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3NjYW4uYw0KQEAgLTE3NjAsNiArMTc2
+MCw3IEBAIGludCBtd2lmaWV4X3JldF84MDJfMTFfc2NhbihzdHJ1Y3QgbXdpZmlleF9wcml2YXRl
+ICpwcml2LA0KIAkJCQkJICAgICAgY2FwX2luZm9fYml0bWFwLCBiZWFjb25fcGVyaW9kLA0KIAkJ
+CQkJICAgICAgaWVfYnVmLCBpZV9sZW4sIHJzc2ksIEdGUF9LRVJORUwpOw0KIAkJCQkqKHU4ICop
+YnNzLT5wcml2ID0gYmFuZDsNCisJCQkJY2ZnODAyMTFfcHV0X2Jzcyhic3MpOw0KIA0KIAkJCQlp
+ZiAocHJpdi0+bWVkaWFfY29ubmVjdGVkICYmICFtZW1jbXAoYnNzaWQsDQogCQkJCQlwcml2LT5j
+dXJyX2Jzc19wYXJhbXMuYnNzX2Rlc2NyaXB0b3INCi0tIA0KMS43LjAuMg0K
