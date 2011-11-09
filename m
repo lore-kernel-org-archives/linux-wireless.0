@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:60200 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753500Ab1K3Ofq (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:42550 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751617Ab1KIWcK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 09:35:46 -0500
-Received: by lagw12 with SMTP id w12so122016lag.19
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2011 06:35:44 -0800 (PST)
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl12xx: Print nvs/fw file name if loading fails.
-Date: Wed, 30 Nov 2011 15:35:09 +0100
-Message-Id: <1322663709-28128-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20111130_153549_624240_4ECA2812)
+	Wed, 9 Nov 2011 17:32:10 -0500
+Received: by bke11 with SMTP id 11so1793215bke.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Nov 2011 14:32:09 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1320874522.3845.109.camel@jlt3.sipsolutions.net>
+References: <4EBAF088.2040406@broadcom.com> <1320874522.3845.109.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 10 Nov 2011 00:31:52 +0200
+Message-ID: <CA+XVXfcUvRfqECfyH8yvkKmA06VpZXSjYAEMLDR_kHEDdt5q3A@mail.gmail.com> (sfid-20111109_233214_018461_8CB0D9BE)
+Subject: Re: 3.2-rc1: system locks up upon inserting brcmsmac
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Print the name of nvs/fw if request_firmware fails. This will make
-troubleshooting a bit easier.
+On Wed, Nov 9, 2011 at 23:35, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2011-11-09 at 22:28 +0100, Arend van Spriel wrote:
+>> Hi John,
+>>
+>> I merged wireless-testing master with our main development branch and
+>> got a hanging system. So I tested your master branch after that and the
+>> same result. Given the kernel log it may be the commit mentioned below
+>> although I did not bisect it yet.
+>>
+>> 077a91548 mac80211: support adding IV-room in the skb for CCMP keys
+>
+> Yeah that commit looks like it would add the bug -- it should check
+> info->control.hw_key before the second test of
+> IEEE80211_KEY_FLAG_PUT_IV_SPACE in ccmp_encrypt_skb.
+>
+> Try
+>
+> -       if (info->control.hw_key->flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)
+> +       if (info->control.hw_key && info->control.hw_key->flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)
+>
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
----
- drivers/net/wireless/wl12xx/main.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+Ah sorry about that :)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index dbb088e..392dba4 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1055,7 +1055,7 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
- 	ret = request_firmware(&fw, fw_name, wl->dev);
- 
- 	if (ret < 0) {
--		wl1271_error("could not get firmware: %d", ret);
-+		wl1271_error("could not get firmware %s: %d", fw_name, ret);
- 		return ret;
- 	}
- 
-@@ -1093,7 +1093,8 @@ static int wl1271_fetch_nvs(struct wl1271 *wl)
- 	ret = request_firmware(&fw, WL12XX_NVS_NAME, wl->dev);
- 
- 	if (ret < 0) {
--		wl1271_error("could not get nvs file: %d", ret);
-+		wl1271_error("could not get nvs file %s: %d", WL12XX_NVS_NAME,
-+			     ret);
- 		return ret;
- 	}
- 
--- 
-1.7.5.4
+Johannes - would you like me to send a proper patch or are you taking
+care of this?
 
+Arik
