@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:38177 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755783Ab1KXQN1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 11:13:27 -0500
-Received: by faas1 with SMTP id s1so1719456faa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2011 08:13:26 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] nl80211: fix MAC address validation
-Date: Thu, 24 Nov 2011 18:13:56 +0200
-Message-Id: <1322151236-5960-1-git-send-email-eliad@wizery.com> (sfid-20111124_171331_035630_642AE6AC)
+Received: from ackle.nomi.cz ([81.31.33.35]:47857 "EHLO ackle.nomi.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751176Ab1KIPyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 10:54:15 -0500
+Date: Wed, 9 Nov 2011 16:54:11 +0100
+From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20111109155411.GA1669@nomi.cz> (sfid-20111109_165436_075439_8EF39AF5)
+References: <20111029171554.GA16596@nomi.cz> <20111031160342.GB2225@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20111031160342.GB2225@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MAC addresses have a fixed length. The current
-policy allows passing < ETH_ALEN bytes, which
-might result in reading beyond the buffer.
+Hello Stanislaw,
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-NL80211_ATTR_REG_ALPHA2 also seems to have a similar issue.
-however, it seems that we currently can't set NLA_STRING
-type with exact length?
+On Mon, Oct 31, 2011 at 05:03:43PM +0100, Stanislaw Gruszka wrote:
+> You may try debugging patches I posted a while ago:
+> http://marc.info/?l=linux-mm&m=131914560820378&w=2
+> http://marc.info/?l=linux-mm&m=131914560820293&w=2
+> http://marc.info/?l=linux-mm&m=131914560820317&w=2
+> 
+> With a bit of luck, kernel should panic and dump call-trace when
+> bad code start to write at memory addresses where is not suppose
+> to.
 
- net/wireless/nl80211.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Thanks for your suggestions. I did as you told me, applied those 3 patches on
+top of 3.1 + net-next (the one from 29 Oct 2011), enabled all those things in
+config and passed corrupt_dbg=1 on cmdline, but the problem happens without
+anything being written to dmesg.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b3a476f..ffafda5 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -89,8 +89,8 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_IFINDEX] = { .type = NLA_U32 },
- 	[NL80211_ATTR_IFNAME] = { .type = NLA_NUL_STRING, .len = IFNAMSIZ-1 },
- 
--	[NL80211_ATTR_MAC] = { .type = NLA_BINARY, .len = ETH_ALEN },
--	[NL80211_ATTR_PREV_BSSID] = { .type = NLA_BINARY, .len = ETH_ALEN },
-+	[NL80211_ATTR_MAC] = { .len = ETH_ALEN },
-+	[NL80211_ATTR_PREV_BSSID] = { .len = ETH_ALEN },
- 
- 	[NL80211_ATTR_KEY] = { .type = NLA_NESTED, },
- 	[NL80211_ATTR_KEY_DATA] = { .type = NLA_BINARY,
+Am I just lacking a bit of luck, or could it mean something (like that the
+error is in hardware, the microcode, or something like that)?
+
+Regards,
 -- 
-1.7.6.401.g6a319
-
+Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
