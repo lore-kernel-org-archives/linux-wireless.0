@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:45307 "EHLO mout0.freenet.de"
+Received: from mga09.intel.com ([134.134.136.24]:45689 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752378Ab1K2Msu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 07:48:50 -0500
-Message-ID: <4ED4D47B.5000005@01019freenet.de> (sfid-20111129_134908_041419_7CA2B8AB)
-Date: Tue, 29 Nov 2011 13:47:55 +0100
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Robert Hancock <hancockrwd@gmail.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] Poor performance and lockup with rt2800usb and
- Asus USB-N13 adapter
-References: <4ED43A5C.9000102@gmail.com> <20111129114603.GB7299@redhat.com>
-In-Reply-To: <20111129114603.GB7299@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1752301Ab1KIKx6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 05:53:58 -0500
+Subject: re: iwlagn: use 6 Mbps rate for no-CCK scans
+From: Johannes Berg <johannes.berg@intel.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20111109104926.GA19993@elgon.mountain> (sfid-20111109_114956_885304_81137F1F)
+References: <20111109104926.GA19993@elgon.mountain>
+	 (sfid-20111109_114956_885304_81137F1F)
+Date: Wed, 09 Nov 2011 11:53:55 +0100
+Message-ID: <1320836035.3845.29.camel@jlt3.sipsolutions.net> (sfid-20111109_115401_964586_1E8FA9EF)
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka schrieb:
-> On Mon, Nov 28, 2011 at 07:50:20PM -0600, Robert Hancock wrote:
->> I recently got an Asus USB-N13 USB Wireless-N adapter which
->> apparently uses a Ralink RT3072 chip. I'm using it with an Asus
->> RT-N16 access point running TomatoUSB. When running Windows the
->> performance is reasonable (about 80 Mbps in both directions).
->> However under Fedora 16 (currently kernel 3.1.2) the performance is
->> abysmal (10 Mbps or less with lots of packet loss). I'll post some
->> debug information below.
-> rt2800usb needs fixing. I'm able to reproduce these performance
-> problems locally. They are quite hard to debug, and need some
-> experiments. But I hope I will provide patches soon or leter.
+SGkgRGFuLAoKPiBUaGlzIGlzIGEgc2VtaS1hdXRvbWF0aWMgZW1haWwgYWJvdXQgbmV3IHN0YXRp
+YyBjaGVja2VyIHdhcm5pbmdzLgoKOi0pCgo+IFRoZSBwYXRjaCAzYThhZWEwOThjOGU6ICJpd2xh
+Z246IHVzZSA2IE1icHMgcmF0ZSBmb3Igbm8tQ0NLIHNjYW5zIiAKPiBmcm9tIE9jdCAxNCwgMjAx
+MSwgbGVhZHMgdG8gdGhlIGZvbGxvd2luZyBTbWF0Y2ggY29tcGxhaW50Ogo+IAo+IGRyaXZlcnMv
+bmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXNjYW4uYyArNzgyIGl3bGFnbl9yZXF1ZXN0X3NjYW4o
+KQo+IAkgZXJyb3I6IHdlIHByZXZpb3VzbHkgYXNzdW1lZCAncHJpdi0+c2Nhbl9yZXF1ZXN0JyBj
+b3VsZCBiZSBudWxsIChzZWUgbGluZSA2ODEpCj4gCj4gZHJpdmVycy9uZXQvd2lyZWxlc3MvaXds
+d2lmaS9pd2wtc2Nhbi5jCj4gICAgNjgwCQkJCQkgICAgICAgPj4gUlhPTl9GTEdfQ0hBTk5FTF9N
+T0RFX1BPUzsKPiAgICA2ODEJCQlpZiAoKHByaXYtPnNjYW5fcmVxdWVzdCAmJiBwcml2LT5zY2Fu
+X3JlcXVlc3QtPm5vX2NjaykgfHwKPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIF5eXl5e
+Xl5eXl5eXl5eXl5eXgo+IG5ld2x5IGludHJvZHVjZWQgY2hlY2suICAoUHJvYmFibHkgbm90IG5l
+ZWRlZC4gIE5vdGhpbmcgZWxzZSBpbiB0aGlzCj4gZnVuY3Rpb24gY2hlY2tzIHRoaXMpLgoKLi4u
+Cgo+ICAgIDc3NwkJc3dpdGNoIChwcml2LT5zY2FuX3R5cGUpIHsKPiAgICA3NzgJCWNhc2UgSVdM
+X1NDQU5fTk9STUFMOgo+ICAgIDc3OQkJCWNtZF9sZW4gPSBpd2xfZmlsbF9wcm9iZV9yZXEocHJp
+diwKPiAgICA3ODAJCQkJCQkoc3RydWN0IGllZWU4MDIxMV9tZ210ICopc2Nhbi0+ZGF0YSwKPiAg
+ICA3ODEJCQkJCQl2aWYtPmFkZHIsCj4gICAgNzgyCQkJCQkJcHJpdi0+c2Nhbl9yZXF1ZXN0LT5p
+ZSwKPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBeXl5e
+Xl5eXl5eXl5eXl5eXl5eXgo+IHVuY2hlY2tlZCBkZXJlZmVyZW5jZS4KClJpZ2h0LCB3ZWxsIC4u
+LiBpZiBzY2FuX3R5cGUgPT0gSVdMX1NDQU5fTk9STUFMLCBwcml2LT5zY2FuX3JlcXVlc3QgbXVz
+dApleGlzdCwgYnV0IGlmIGl0J3MgYW5vdGhlciBzY2FuIHR5cGUsIHByaXYtPnNjYW5fcmVxdWVz
+dCB3aWxsIG5vdCBleGlzdCwKYW5kIHRoZSBuZXdseSBpbnRyb2R1Y2VkIGNoZWNrIGlzIGV4ZWN1
+dGVkIGluIGFsbCBjYXNlcy4KCmpvaGFubmVzCgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LQpJbnRlbCBHbWJICkRvcm5hY2hlciBTdHJhc3NlIDEKODU2MjIgRmVsZGtpcmNoZW4vTXVlbmNo
+ZW4sIERldXRzY2hsYW5kIApTaXR6IGRlciBHZXNlbGxzY2hhZnQ6IEZlbGRraXJjaGVuIGJlaSBN
+dWVuY2hlbgpHZXNjaGFlZnRzZnVlaHJlcjogRG91Z2xhcyBMdXNrLCBQZXRlciBHbGVpc3NuZXIs
+IEhhbm5lcyBTY2h3YWRlcmVyClJlZ2lzdGVyZ2VyaWNodDogTXVlbmNoZW4gSFJCIDQ3NDU2IApV
+c3QuLUlkTnIuL1ZBVCBSZWdpc3RyYXRpb24gTm8uOiBERTEyOTM4NTg5NQpDaXRpYmFuayBGcmFu
+a2Z1cnQgYS5NLiAoQkxaIDUwMiAxMDkgMDApIDYwMDExOTA1Mgo=
 
-I really appreciate your work! If you want, I can do some tests for you.
-I've a rt3572 based USB WiFi dongle, which could be tested with a single
-threaded machine and a multi threaded one.
-
-
-Good luck!
-Andreas
