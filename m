@@ -1,34 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:60814 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755158Ab1KHQHa convert rfc822-to-8bit (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.22]:45546 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750999Ab1KIJNp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 11:07:30 -0500
-Received: by bke11 with SMTP id 11so535507bke.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 08:07:29 -0800 (PST)
+	Wed, 9 Nov 2011 04:13:45 -0500
+Content-Type: text/plain; charset="utf-8"
+Date: Wed, 09 Nov 2011 10:13:41 +0100
+From: "Harald Freitag" <harald.freitag@gmx.net>
+Message-ID: <20111109091341.83440@gmx.net> (sfid-20111109_101351_090451_1D401D02)
 MIME-Version: 1.0
-In-Reply-To: <1320766462.24797.7.camel@jlt3.sipsolutions.net>
-References: <1320762928-6782-1-git-send-email-arik@wizery.com>
- <1320762928-6782-3-git-send-email-arik@wizery.com> <1320766462.24797.7.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 8 Nov 2011 18:07:13 +0200
-Message-ID: <CA+XVXfeY+emYFLSx7qRy=ec2oXs=ZnF9KesvE8mcWD9=vYj-wg@mail.gmail.com> (sfid-20111108_170734_014346_C8ED72A6)
-Subject: Re: [PATCH v3 3/3] mac80211: Save probe response data for bss
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Compability Issue regarding Freescale i.MX356 and Marvell 88w8688
+ Wifi-Module
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 8, 2011 at 17:34, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2011-11-08 at 16:35 +0200, Arik Nemtsov wrote:
->
->> +     new = dev_alloc_skb(resp_len);
->> +     if (!new) {
->> +             printk(KERN_DEBUG "%s: failed to allocate buffer for probe "
->> +                    "response template\n", sdata->name);
->
-> I'm pretty sure that will already warn so the message is probably not
-> very useful.
+Hello!
 
-Sure. I'll remove it.
+I am a student from Germany currently working on a solution to combine the Freescale i.MX356 application processor with the Marvell 88w8688 Wifi-Module over the SDIO interface of the processor.
+
+My main problem is that the application processor of Freescale got an embedded linux 2.6.31 system including the necessary driver support (specially for the SDIO interface) implemented and the driver for the Marvell 88w8688 Wifi-Module is coming with a linux 2.6.35 firmware/driver support.
+
+Now the question is, how do I get them both working together? (I am still a novice on that field of expertise!)
+
+Option 1: Backporting the Marvell 88w8688 SDIO driver from linux 2.6.35 to 2.6.31
+Option 2: Finding an older Marvell 88w8688 SDIO compatible with linux 2.6.31
+
+I already did some research (on http://kernelnewbies.org/) trying to figure out what general differences and changes in the libertas driver support have been made (with moderate success, since I am still lacking quite alot of the necessary coding understanding). 
+I also downloaded the latest software/firmware packages from Freescale and Marvell in order to learn something about the functionality of SDIO interface drivers (pretty much hitting a wall though...).
+After some time looking through the archives here on "http://linuxwireless.org/" and on "http://lists.infradead.org/mailman/listinfo/libertas-dev" I saw a few articles that could be partially helpful for my problem, but that didnt got me very far yet...
+
+Since the embedded linux 2.6.31 system on the application processor got already adapted and configured for the intended feature support, it is not an option to upgrade/patch the linux system on the application processor. 
+
+I would be most grateful for any helpful information regarding this issue or hint towards the right place to look, if there have been similar problems solved/delt with in the past.
+
+Thank you very much and I appreciate that you took some time reading through this...
+
+Regards Harald
+
+
+-- 
+Empfehlen Sie GMX DSL Ihren Freunden und Bekannten und wir
+belohnen Sie mit bis zu 50,- Euro! https://freundschaftswerbung.gmx.de
