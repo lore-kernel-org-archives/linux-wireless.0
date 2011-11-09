@@ -1,26 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44203 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751232Ab1KCRNj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 13:13:39 -0400
-Message-ID: <4EB2CA84.8080707@qca.qualcomm.com> (sfid-20111103_181343_520827_43D76A02)
-Date: Thu, 3 Nov 2011 19:08:20 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: Do not hide ath6kl_wmi_addkey_cmd() error values
-References: <20111102214647.GA31265@jouni.qca.qualcomm.com>
-In-Reply-To: <20111102214647.GA31265@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mga11.intel.com ([192.55.52.93]:33352 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751457Ab1KIQFl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 11:05:41 -0500
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+From: wwguy <wey-yi.w.guy@intel.com>
+To: =?UTF-8?Q?Tom=C3=A1=C5=A1_Janou=C5=A1ek?= <tomi@nomi.cz>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20111109155411.GA1669@nomi.cz>
+References: <20111029171554.GA16596@nomi.cz>
+	 <20111031160342.GB2225@redhat.com>  <20111109155411.GA1669@nomi.cz>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 09 Nov 2011 07:59:31 -0800
+Message-ID: <1320854371.13578.26.camel@wwguy-ubuntu> (sfid-20111109_170557_687312_E61D508C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/02/2011 11:46 PM, Jouni Malinen wrote:
-> Instead of converting any error to EIO, just return the real error
-> value to upper layers.
+On Wed, 2011-11-09 at 07:54 -0800, Tomáš Janoušek wrote:
+> Hello Stanislaw,
+> 
+> On Mon, Oct 31, 2011 at 05:03:43PM +0100, Stanislaw Gruszka wrote:
+> > You may try debugging patches I posted a while ago:
+> > http://marc.info/?l=linux-mm&m=131914560820378&w=2
+> > http://marc.info/?l=linux-mm&m=131914560820293&w=2
+> > http://marc.info/?l=linux-mm&m=131914560820317&w=2
+> > 
+> > With a bit of luck, kernel should panic and dump call-trace when
+> > bad code start to write at memory addresses where is not suppose
+> > to.
+> 
+> Thanks for your suggestions. I did as you told me, applied those 3 patches on
+> top of 3.1 + net-next (the one from 29 Oct 2011), enabled all those things in
+> config and passed corrupt_dbg=1 on cmdline, but the problem happens without
+> anything being written to dmesg.
+> 
+> Am I just lacking a bit of luck, or could it mean something (like that the
+> error is in hardware, the microcode, or something like that)?
+> 
+I am not sure it is uCode related, is there any chance you can bisect
+the problem?
 
-Thanks, applied.
+we have a major code re-structure around .38/.39 time and not sure it
+cause some un-expected problem. 
 
-Kalle
+at the meantime, we will following your instruction and see if we can
+re-produce the problem you are seeing
+
+Thanks
+Wey
+
+
