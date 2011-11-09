@@ -1,28 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:54676 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754789Ab1KXQ7i (ORCPT
+Received: from comal.ext.ti.com ([198.47.26.152]:44676 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751427Ab1KIHzK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 11:59:38 -0500
-Received: by iage36 with SMTP id e36so3228133iag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2011 08:59:38 -0800 (PST)
-Message-ID: <4ECE77F7.6000903@lwfinger.net> (sfid-20111124_175946_155860_4ABE1BDC)
-Date: Thu, 24 Nov 2011 10:59:35 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 9 Nov 2011 02:55:10 -0500
+From: "Elias, Ilan" <ilane@ti.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+CC: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
+	"samuel@sortiz.org" <samuel@sortiz.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v3 3/3] NFC: Check if NCI data flow control is used
+Date: Wed, 9 Nov 2011 07:54:52 +0000
+Message-ID: <B30D1FD582D6484ABF57420512E58035F74B@DNCE03.ent.ti.com> (sfid-20111109_085513_970943_AFAABF2F)
+References: <1320152097-2711-1-git-send-email-ilane@ti.com>
+	<1320152097-2711-4-git-send-email-ilane@ti.com>
+ <CAK3JMAbtL1wmsY3d9phV+nCKRnH8sFdpPgKybxcAKmsfu1DDSA@mail.gmail.com>
+In-Reply-To: <CAK3JMAbtL1wmsY3d9phV+nCKRnH8sFdpPgKybxcAKmsfu1DDSA@mail.gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-To: =?UTF-8?B?SmFuIER2b8WZw6Fr?= <dvorakj@cngroup.dk>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rtl8192cu not working with Edimax EW-7811Un
-References: <20111122113427.3d332b00776546d5ebac11de@cngroup.dk> <20111122140139.GA3891@redhat.com> <20111123112301.f5e523ff743f86dae539fdf3@cngroup.dk> <20111123143304.GA13460@redhat.com> <20111123162426.9a30d25585fa54507c1c864e@cngroup.dk> <4ECD13D0.6010500@lwfinger.net> <20111123155108.GD13460@redhat.com> <20111123175210.fd0ac6b0b66885b3deaecfc0@cngroup.dk> <4ECD3E5E.6010109@lwfinger.net> <20111124140350.06e9644056a9b4993bc093cb@cngroup.dk>
-In-Reply-To: <20111124140350.06e9644056a9b4993bc093cb@cngroup.dk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I was able to form an AP using my RT2870 device, thus my script is OK.
+Hi Lauro, 
 
-I'm trying to find the differences between the data flow in rt2800usb and rtl8192cu.
+> > -               atomic_dec(&ndev->credits_cnt);
+> > +               /* Check if data flow control is used */
+> > +               if (atomic_read(&ndev->credits_cnt) != 0xff)
+> > +                       atomic_dec(&ndev->credits_cnt);
+> 
+> It would be better to replace the 0xff by a define.
+OK, I'll use a define instead of 0xff.
 
-Larry
+> 
+> Lauro
+> 
 
+Thanks & BR,
+Ilan
