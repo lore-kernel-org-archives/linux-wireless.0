@@ -1,31 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:37628 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755851Ab1K2OpM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 09:45:12 -0500
-Received: by qadc14 with SMTP id c14so2030757qad.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2011 06:45:12 -0800 (PST)
-MIME-Version: 1.0
-Date: Tue, 29 Nov 2011 15:45:12 +0100
-Message-ID: <CAFED-jkrFehfyfwCjYxO=1r0Bu_A7KoQD4oPXvGinVSZoK3HFQ@mail.gmail.com> (sfid-20111129_154526_459350_B4B5CB55)
-Subject: [question] - UAPSD QOS NULL frame seems to be queued??
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:29433 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754118Ab1KIReT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 12:34:19 -0500
+Message-ID: <1320860080.24903.2.camel@dcbw.foobar.com> (sfid-20111109_183436_832500_812C75EE)
+Subject: Re: [PATCH] wireless: libertas: fix unaligned le64 accesses
+From: Dan Williams <dcbw@redhat.com>
+To: Steven Miao <realmz6@gmail.com>
+Cc: "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	"open list:NETWORKING [WIREL..." <linux-wireless@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Date: Wed, 09 Nov 2011 11:34:40 -0600
+In-Reply-To: <1320827440-16904-1-git-send-email-realmz6@gmail.com>
+References: <1320827440-16904-1-git-send-email-realmz6@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Wed, 2011-11-09 at 16:30 +0800, Steven Miao wrote:
+> use get_unaligned_le64() to get timestamp
+> 
+> Signed-off-by: Steven Miao <realmz6@gmail.com>
 
-I see mac80211 send this null frame using ieee8011_send_null_response()
-I am not sure I track this call correctly, but seems:
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-we queue this frame ( invoke_tx_handlers() != 0 ) instead of sending
-directly via __ieee80211_tx(...).
-Did I track this call correctly?
-If yes why we queue this NULL frame?
+> ---
+>  drivers/net/wireless/libertas/cfg.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+> index b456a53..f23c2b1 100644
+> --- a/drivers/net/wireless/libertas/cfg.c
+> +++ b/drivers/net/wireless/libertas/cfg.c
+> @@ -630,7 +630,7 @@ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
+>  			if (channel &&
+>  			    !(channel->flags & IEEE80211_CHAN_DISABLED))
+>  				cfg80211_inform_bss(wiphy, channel,
+> -					bssid, le64_to_cpu(*(__le64 *)tsfdesc),
+> +					bssid, get_unaligned_le64(tsfdesc),
+>  					capa, intvl, ie, ielen,
+>  					LBS_SCAN_RSSI_TO_MBM(rssi),
+>  					GFP_KERNEL);
 
-BR
-Janusz
+
