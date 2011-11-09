@@ -1,100 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63234 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751023Ab1KBVrx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41504 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751171Ab1KISPe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 17:47:53 -0400
-Date: Wed, 2 Nov 2011 23:46:47 +0200
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath6kl: Do not hide ath6kl_wmi_addkey_cmd() error values
-Message-ID: <20111102214647.GA31265@jouni.qca.qualcomm.com> (sfid-20111102_224756_498719_981083D9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 9 Nov 2011 13:15:34 -0500
+Subject: Re: off- & multi-channel operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4EBABCE2.5000007@candelatech.com>
+References: <1320844134.3845.61.camel@jlt3.sipsolutions.net>
+	 <4EBABCE2.5000007@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 09 Nov 2011 19:15:29 +0100
+Message-ID: <1320862529.3845.90.camel@jlt3.sipsolutions.net> (sfid-20111109_191537_062875_2C7EB40D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of converting any error to EIO, just return the real error
-value to upper layers.
+On Wed, 2011-11-09 at 09:48 -0800, Ben Greear wrote:
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   37 ++++++++++------------------
- 1 files changed, 13 insertions(+), 24 deletions(-)
+> > The other thing is more of a design issue: we have multiple ways to
+> > leave the operating channel: scanning&  work. Soon we'll have to deal
+> > with multi-channel *operation* so we'll have multiple operating
+> > channels. I don't even want to have to handle that in mac80211, and I
+> > think we'll have to push it into devices (or drivers in some cases). In
+> > my opinion, these two ways should be consolidated.
+> 
+> Seems like you could move the scanning into the work logic.  That might
+> be a good first step to simplify the off-channel stuff.  And, once you get
+> the off-channel stuff working better, it would seem to me that just using
+> that for your off-channel interfaces might be better than trying to re-write
+> everything and force a bunch of new functionality down into drivers.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 3b9511a..04d24d4 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -908,7 +908,6 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 	struct ath6kl_key *key = NULL;
- 	u8 key_usage;
- 	u8 key_type;
--	int status = 0;
- 
- 	if (!ath6kl_cfg80211_ready(vif))
- 		return -EIO;
-@@ -1011,17 +1010,12 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 		return 0;
- 	}
- 
--	status = ath6kl_wmi_addkey_cmd(ar->wmi, vif->fw_vif_idx,
--				       vif->def_txkey_index,
--				       key_type, key_usage, key->key_len,
--				       key->seq, key->seq_len, key->key,
--				       KEY_OP_INIT_VAL,
--				       (u8 *) mac_addr, SYNC_BOTH_WMIFLAG);
--
--	if (status)
--		return -EIO;
--
--	return 0;
-+	return ath6kl_wmi_addkey_cmd(ar->wmi, vif->fw_vif_idx,
-+				     vif->def_txkey_index,
-+				     key_type, key_usage, key->key_len,
-+				     key->seq, key->seq_len, key->key,
-+				     KEY_OP_INIT_VAL,
-+				     (u8 *) mac_addr, SYNC_BOTH_WMIFLAG);
- }
- 
- static int ath6kl_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
-@@ -1097,7 +1091,6 @@ static int ath6kl_cfg80211_set_default_key(struct wiphy *wiphy,
- 	struct ath6kl *ar = (struct ath6kl *)ath6kl_priv(ndev);
- 	struct ath6kl_vif *vif = netdev_priv(ndev);
- 	struct ath6kl_key *key = NULL;
--	int status = 0;
- 	u8 key_usage;
- 	enum crypto_type key_type = NONE_CRYPT;
- 
-@@ -1132,17 +1125,13 @@ static int ath6kl_cfg80211_set_default_key(struct wiphy *wiphy,
- 	if (vif->next_mode == AP_NETWORK && !test_bit(CONNECTED, &vif->flags))
- 		return 0; /* Delay until AP mode has been started */
- 
--	status = ath6kl_wmi_addkey_cmd(ar->wmi, vif->fw_vif_idx,
--				       vif->def_txkey_index,
--				       key_type, key_usage,
--				       key->key_len, key->seq, key->seq_len,
--				       key->key,
--				       KEY_OP_INIT_VAL, NULL,
--				       SYNC_BOTH_WMIFLAG);
--	if (status)
--		return -EIO;
--
--	return 0;
-+	return ath6kl_wmi_addkey_cmd(ar->wmi, vif->fw_vif_idx,
-+				     vif->def_txkey_index,
-+				     key_type, key_usage,
-+				     key->key_len, key->seq, key->seq_len,
-+				     key->key,
-+				     KEY_OP_INIT_VAL, NULL,
-+				     SYNC_BOTH_WMIFLAG);
- }
- 
- void ath6kl_cfg80211_tkip_micerr_event(struct ath6kl_vif *vif, u8 keyid,
--- 
-1.7.4.1
+Yeah, I had that thought a long time ago, it just never happened :-)
 
+However, it's not really going to work well for multi-channel capable
+drivers: say the driver is continually switching between channels 1 and
+11 for multi-channel operation, but now you want to do a p2p listen
+phase on channel 6. That needs to interact with the driver since it has
+to stop switching, and it'd be much easier to have the driver manage
+that interaction.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> For drivers/NICS that can handle off-channel stuff themselves, hopefully
+> you can add some new API or new arguments to existing API to help
+> leverage that.
+
+We have some APIs already, but they aren't actually used for things like
+auth/assoc etc. and are optional at this point so we can't start using
+them either.
+
+> > Also, as devices (or drivers) get more complex, we find ourselves
+> > further and further away from a model where mac80211 is truly fully
+> > controlling the device. Given the differences in hardware we support
+> > now, I think that it obvious now that we need drivers to be smarter in
+> > many cases.
+> >
+> > How do we want to handle these things? I'm sure I want the drivers to
+> > handle multi-channel operation fairly transparently, with multiple
+> > (hardware) queues (in the driver), so mac80211 doesn't have to
+> > start/stop the queues continuously and can just transmit on that
+> > interface, the frame might only go out a bit later.
+> 
+> This sounds like a very big change.  I think it will somehow have
+> to be done in stages, maintaining support for the existing API
+> for a while so that drivers can be migrated to the new
+> framework at leisure.
+
+I agree, and in fact I think support for devices that can only handle a
+single channel (or where nobody can be bothered to write driver support)
+needs to be done in a very easy way, possibly completely integrated in
+mac80211.
+
+> > But then what about scanning? Can we, and should we, force such drivers
+> > to implement hw_scan? I think maybe we should, and maybe drivers such as
+> > brcmsmac&  ath9k can share a common scan implementation they call into?
+> 
+> Last thing we need is each driver having it's own complicated off-channel
+> scan logic.  It's bad enough having it in one place in mac80211.
+
+Well, so ... each driver will have to have its own channel switching
+logic for implementing multi-channel operation, and off-channel logic
+for scanning sorta falls into that. The scan logic could be similar to
+now, but I think essentially "remain_on_channel" will have to be
+supported by drivers.
+
+> > Authenticating&  associating seems fairly easy, we create a new vif and
+> > set it to the right channel and then do everything there -- simpler than
+> > what we have now -- but what about FT-OTA? What if the device supports
+> > only two channels and is a P2P GO on channel 1 and now wants to roam on
+> > the infrastructure connection, say from channel 36 to channel 11? How
+> > can we handle that?
+> 
+> With just an improved off-channel work logic, and as much smarts as possible
+> to keep un-necessary channel flops and power-saving changes (and driver resets
+> in general) from happening?
+
+Thing is that this doesn't really work too well even today with a lot of
+devices we support, e.g. iwlwifi or even iwlegacy isn't really built to
+do this. You're mostly looking at it from an ath9k perspective I suppose
+where all of this is really quite simple :-)
+
+johannes
+
