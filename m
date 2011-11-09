@@ -1,84 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1650 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759501Ab1KWBWL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 20:22:11 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 10/24] brcm80211: fmac: rename wait queue name to match
- using function
-Date: Tue, 22 Nov 2011 17:21:45 -0800
-Message-ID: <1322011319-24863-11-git-send-email-frankyl@broadcom.com> (sfid-20111123_022259_855887_888C29C6)
-In-Reply-To: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
-References: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2463 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751243Ab1KISGp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 13:06:45 -0500
+From: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>,
+	Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: Fix target minimum length requirement for WMI_SEND_PROBE_RESPONSE_CMDID
+Date: Wed, 9 Nov 2011 10:05:56 -0800
+Message-ID: <1320861956-15533-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com> (sfid-20111109_190649_757018_08B04A2A)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+The firmware expects the minimum length of
+WMI_SEND_PROBE_RESPONSE_CMDID to be 13. However, when the device is a
+P2P GO and it needs to send a probe response to a non-P2P client,
+there are no P2P IEs to be added, and therefore the length of the WMI
+command is 12. This command gets rejected by the firmware. To fix
+this, add an extra byte to satisfy the minimum length requirement.
 
-The wait queue request_packet_wait was used in request_chain function
-and for sake of consistency it has been renamed to request_chain_wait.
+Signed-off-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
 
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    8 ++++++--
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    2 +-
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath6kl/wmi.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index ccb32c0..adee305 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -229,6 +229,10 @@ brcmf_sdioh_request_data(struct brcmf_sdio_dev *sdiodev, uint write, bool fifo,
- 	return err_ret;
- }
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 922344d..4b7856d 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -3024,8 +3024,12 @@ int ath6kl_wmi_send_probe_response_cmd(struct wmi *wmi, u8 if_idx, u32 freq,
+ {
+ 	struct sk_buff *skb;
+ 	struct wmi_p2p_probe_response_cmd *p;
++	size_t cmd_len = sizeof(*p) + data_len;
  
-+/*
-+ * This function takes a queue of packets. The packets on the queue
-+ * are assumed to be properly aligned by the caller.
-+ */
- int
- brcmf_sdioh_request_chain(struct brcmf_sdio_dev *sdiodev, uint fix_inc,
- 			  uint write, uint func, uint addr,
-@@ -242,7 +246,7 @@ brcmf_sdioh_request_chain(struct brcmf_sdio_dev *sdiodev, uint fix_inc,
+-	skb = ath6kl_wmi_get_new_buf(sizeof(*p) + data_len);
++	if (data_len == 0)
++		cmd_len++; /* work around target minimum length requirement */
++
++	skb = ath6kl_wmi_get_new_buf(cmd_len);
+ 	if (!skb)
+ 		return -ENOMEM;
  
- 	brcmf_dbg(TRACE, "Enter\n");
- 
--	brcmf_pm_resume_wait(sdiodev, &sdiodev->request_packet_wait);
-+	brcmf_pm_resume_wait(sdiodev, &sdiodev->request_chain_wait);
- 	if (brcmf_pm_resume_error(sdiodev))
- 		return -EIO;
- 
-@@ -478,7 +482,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 		atomic_set(&sdiodev->suspend, false);
- 		init_waitqueue_head(&sdiodev->request_byte_wait);
- 		init_waitqueue_head(&sdiodev->request_word_wait);
--		init_waitqueue_head(&sdiodev->request_packet_wait);
-+		init_waitqueue_head(&sdiodev->request_chain_wait);
- 		init_waitqueue_head(&sdiodev->request_buffer_wait);
- 	}
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-index 1e4a0bb..4e501f8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-@@ -132,7 +132,7 @@ struct brcmf_sdio_dev {
- 	atomic_t suspend;		/* suspend flag */
- 	wait_queue_head_t request_byte_wait;
- 	wait_queue_head_t request_word_wait;
--	wait_queue_head_t request_packet_wait;
-+	wait_queue_head_t request_chain_wait;
- 	wait_queue_head_t request_buffer_wait;
- 
- };
 -- 
-1.7.5.4
-
+1.7.0.4
 
