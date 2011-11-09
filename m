@@ -1,32 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:56454 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753937Ab1KUIB6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52363 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754149Ab1KIJaZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 03:01:58 -0500
-Received: by vcbfk1 with SMTP id fk1so5294161vcb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 00:01:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAFtRNNxH-7kU-Pq939aFupdOHW0ofeU7Ddqwg5pBoCu2JQp1wg@mail.gmail.com>
-References: <CAFtRNNz6YEVp2efHqnh0aQ8DEdWm9-ztp8vRTmdorUjf8tJs5w@mail.gmail.com>
-	<CAJ-Vmon3SsyQxOxpZxiCkbTJ60j-z7sXNgGUgiyAX9+-JzFMqQ@mail.gmail.com>
-	<CAFtRNNxH-7kU-Pq939aFupdOHW0ofeU7Ddqwg5pBoCu2JQp1wg@mail.gmail.com>
-Date: Mon, 21 Nov 2011 16:01:57 +0800
-Message-ID: <CAJ-Vmo=o5=yqzp7+z2=aDe+4TqUAJ5yCCT_EP12o=CEJQqz-Vg@mail.gmail.com> (sfid-20111121_090206_938236_72F7B928)
-Subject: Re: A weird hw crypto bug...
-From: Adrian Chadd <adrian@freebsd.org>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 9 Nov 2011 04:30:25 -0500
+Subject: [PATCH v3] mac80211/cfg80211: report monitor channel in wireless
+ extensions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1320778887.24797.38.camel@jlt3.sipsolutions.net> (sfid-20111108_200133_998551_FF45D33D)
+References: <1320778327.24797.36.camel@jlt3.sipsolutions.net>
+	 (sfid-20111108_195213_970616_E8AF4017)  <1320778887.24797.38.camel@jlt3.sipsolutions.net>
+	 (sfid-20111108_200133_998551_FF45D33D)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 09 Nov 2011 10:30:21 +0100
+Message-ID: <1320831021.3845.14.camel@jlt3.sipsolutions.net> (sfid-20111109_103029_704765_95EE2FE3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Well, unless that vendor spun their own silicon, or there's something
-funky on the board that'd change crypto behaviour, the only thing I
-can really think of are EEPROM settings.
-Or maybe the MAC revision is slightly different, I dunno.
+From: Johannes Berg <johannes.berg@intel.com>
+
+Just add API to get the channel & report it. Trivial really.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+So trivial it didn't even work ;-)
+
+ include/net/cfg80211.h     |    5 +++++
+ net/mac80211/cfg.c         |    9 +++++++++
+ net/wireless/wext-compat.c |   12 ++++++++++++
+ 3 files changed, 26 insertions(+)
+
+--- a/include/net/cfg80211.h	2011-11-09 10:13:05.000000000 +0100
++++ b/include/net/cfg80211.h	2011-11-09 10:27:47.000000000 +0100
+@@ -1342,6 +1342,9 @@ struct cfg80211_gtk_rekey_data {
+  *	doesn't verify much. Note, however, that the passed netdev may be
+  *	%NULL as well if the user requested changing the channel for the
+  *	device itself, or for a monitor interface.
++ * @get_channel: Get the current operating channel, should return %NULL if
++ *	there's no single defined operating channel if for example the
++ *	device implements channel hopping for multi-channel virtual interfaces.
+  *
+  * @scan: Request to do a scan. If returning zero, the scan request is given
+  *	the driver, and will be valid until passed to cfg80211_scan_done().
+@@ -1627,6 +1630,8 @@ struct cfg80211_ops {
+ 
+ 	int	(*probe_client)(struct wiphy *wiphy, struct net_device *dev,
+ 				const u8 *peer, u64 *cookie);
++
++	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy);
+ };
+ 
+ /*
+--- a/net/wireless/wext-compat.c	2011-11-09 10:07:35.000000000 +0100
++++ b/net/wireless/wext-compat.c	2011-11-09 10:13:18.000000000 +0100
+@@ -819,12 +819,24 @@ static int cfg80211_wext_giwfreq(struct
+ 				 struct iw_freq *freq, char *extra)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	struct ieee80211_channel *chan;
+ 
+ 	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_STATION:
+ 		return cfg80211_mgd_wext_giwfreq(dev, info, freq, extra);
+ 	case NL80211_IFTYPE_ADHOC:
+ 		return cfg80211_ibss_wext_giwfreq(dev, info, freq, extra);
++	case NL80211_IFTYPE_MONITOR:
++		if (!rdev->ops->get_channel)
++			return -EINVAL;
++
++		chan = rdev->ops->get_channel(wdev->wiphy);
++		if (!chan)
++			return -EINVAL;
++		freq->m = chan->center_freq;
++		freq->e = 6;
++		return 0;
+ 	default:
+ 		if (!wdev->channel)
+ 			return -EINVAL;
+--- a/net/mac80211/cfg.c	2011-11-09 10:10:56.000000000 +0100
++++ b/net/mac80211/cfg.c	2011-11-09 10:29:40.000000000 +0100
+@@ -2579,6 +2579,14 @@ static int ieee80211_probe_client(struct
+ 	return 0;
+ }
+ 
++static struct ieee80211_channel *
++ieee80211_wiphy_get_channel(struct wiphy *wiphy)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	return local->oper_channel;
++}
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -2645,4 +2653,5 @@ struct cfg80211_ops mac80211_config_ops
+ 	.tdls_oper = ieee80211_tdls_oper,
+ 	.tdls_mgmt = ieee80211_tdls_mgmt,
+ 	.probe_client = ieee80211_probe_client,
++	.get_channel = ieee80211_wiphy_get_channel,
+ };
 
 
-
-Adrian
