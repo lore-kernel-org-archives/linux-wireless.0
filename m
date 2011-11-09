@@ -1,79 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7362 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755865Ab1K2O45 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:38742 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752423Ab1KIHPu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 09:56:57 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Russell Hu <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Wilson Tsao <wtsao@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 07/17] ath9k_hw: take care of enabling MCI interrupts
-Date: Tue, 29 Nov 2011 20:25:28 +0530
-Message-ID: <1322578538-18912-8-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111129_155702_527436_B5FD49E3)
-In-Reply-To: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
+	Wed, 9 Nov 2011 02:15:50 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20111109051152.GA16006@gamma.logic.tuwien.ac.at>
+References: <20111026025014.GB24956@gamma.logic.tuwien.ac.at>
+	<1319601333.14693.19.camel@wwguy-ubuntu>
+	<20111026040332.GF24956@gamma.logic.tuwien.ac.at>
+	<20111102031345.GA10851@gamma.logic.tuwien.ac.at>
+	<1320204101.31823.140.camel@wwguy-huron>
+	<20111104045817.GA25778@gamma.logic.tuwien.ac.at>
+	<20111107123812.GB23508@gamma.logic.tuwien.ac.at>
+	<1320709047.31823.188.camel@wwguy-huron>
+	<20111108043233.GA21171@gamma.logic.tuwien.ac.at>
+	<CANUX_P0Q0wve4D6fZPsMv2Zw=02gb9u+3C2cjRv7UAmWqXnjzw@mail.gmail.com>
+	<CANUX_P06ww42p6N1k_P-Y1KMKOd1QgR_DxVWe19qtsEX2rfWpw@mail.gmail.com>
+	<20111109051152.GA16006@gamma.logic.tuwien.ac.at>
+Date: Wed, 9 Nov 2011 09:15:48 +0200
+Message-ID: <CANUX_P2Yz9bWP_EmU1Acs7Mu2w78CXxO-njhiMt97b0TJHFYiQ@mail.gmail.com> (sfid-20111109_081608_511162_6A3D5150)
+Subject: Re: iwlagn is getting very shaky
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Norbert Preining <preining@logic.at>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> On Di, 08 Nov 2011, Emmanuel Grumbach wrote:
+> > I would like to see what happens in terms or power.
+> > Please set the power debug flag: modprobe iwlwifi debug=0x100
+>
+> > It may be worth to disable Link Power save too. I would be glad if you
+> > could try this patch (attached and inlined), with the power debug flag
+> > set.
+>
+> With both done, I see things like that:
+> [  690.597221] iwlwifi 0000:06:00.0: L1 Enabled; Disabling L0S
+> [  690.601979] iwlwifi 0000:06:00.0: Radio type=0x1-0x2-0x0
+> [  690.644716] iwlwifi 0000:06:00.0: U iwl_power_sleep_cam_cmd Sleep command for CAM
+> [  690.644721] iwlwifi 0000:06:00.0: U iwl_set_power Sending power/sleep command
+> [  690.644724] iwlwifi 0000:06:00.0: U iwl_set_power Flags value = 0x00000000
+> [  690.644726] iwlwifi 0000:06:00.0: U iwl_set_power Tx timeout = 0
+> [  690.644728] iwlwifi 0000:06:00.0: U iwl_set_power Rx timeout = 0
+> [  690.644731] iwlwifi 0000:06:00.0: U iwl_set_power Sleep interval vector = { 0 , 0 , 0 , 0 , 0 }
+> [  690.645649] iwlwifi 0000:06:00.0: U iwl_power_sleep_cam_cmd Sleep command for CAM
+>
+> Does this help you, or do you need more?
+>
 
-enable MCI interrupt when ath9k_hw_enable_interrupts is called,
-like during the completion of chip_reset before which the interrupts
-are disabled
+This look fine, thanks. I now would like to now if the bug reproduces
+with these settings :-)
+With these settings the NIC will stay up all the times, it can help.
 
-Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/mac.c |   12 ++++++++----
- 1 files changed, 8 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index ecdb6fd..9d69320 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -798,6 +798,7 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 sync_default = AR_INTR_SYNC_DEFAULT;
-+	u32 async_mask;
- 
- 	if (!(ah->imask & ATH9K_INT_GLOBAL))
- 		return;
-@@ -812,13 +813,16 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
- 	if (AR_SREV_9340(ah))
- 		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
- 
-+	async_mask = AR_INTR_MAC_IRQ;
-+
-+	if (ah->imask & ATH9K_INT_MCI)
-+		async_mask |= AR_INTR_ASYNC_MASK_MCI;
-+
- 	ath_dbg(common, ATH_DBG_INTERRUPT, "enable IER\n");
- 	REG_WRITE(ah, AR_IER, AR_IER_ENABLE);
- 	if (!AR_SREV_9100(ah)) {
--		REG_WRITE(ah, AR_INTR_ASYNC_ENABLE,
--			  AR_INTR_MAC_IRQ);
--		REG_WRITE(ah, AR_INTR_ASYNC_MASK, AR_INTR_MAC_IRQ);
--
-+		REG_WRITE(ah, AR_INTR_ASYNC_ENABLE, async_mask);
-+		REG_WRITE(ah, AR_INTR_ASYNC_MASK, async_mask);
- 
- 		REG_WRITE(ah, AR_INTR_SYNC_ENABLE, sync_default);
- 		REG_WRITE(ah, AR_INTR_SYNC_MASK, sync_default);
--- 
-1.7.0.4
-
+Thanks !
