@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:54109 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753413Ab1KDVwM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49416 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751346Ab1KIWMt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 17:52:12 -0400
-Date: Fri, 04 Nov 2011 17:51:08 -0400 (EDT)
-Message-Id: <20111104.175108.472681560571826562.davem@davemloft.net> (sfid-20111104_225221_281320_2AA22131)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] net: add wireless TX status socket option
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1320317796.3950.43.camel@jlt3.sipsolutions.net>
-References: <1320317796.3950.43.camel@jlt3.sipsolutions.net>
+	Wed, 9 Nov 2011 17:12:49 -0500
+Subject: Re: New wireless-testing has grown some warnings -- please fix
+ ASAP!
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20111109215007.GD10712@tuxdriver.com> (sfid-20111109_230016_428309_0817D10D)
+References: <20111109215007.GD10712@tuxdriver.com>
+	 (sfid-20111109_230016_428309_0817D10D)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 09 Nov 2011 23:12:43 +0100
+Message-ID: <1320876763.3845.148.camel@jlt3.sipsolutions.net> (sfid-20111109_231253_039649_2EFA6D99)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 03 Nov 2011 11:56:36 +0100
+On Wed, 2011-11-09 at 16:50 -0500, John W. Linville wrote:
 
- ...
-> To get rid of that hack, introduce a real wifi TX
-> status option for data frame transmissions.
-> 
-> This works similar to the existing TX timestamping
-> in that it reflects the SKB back to the socket's
-> error queue with a SCM_WIFI_STATUS cmsg that has
-> an int indicating ACK status (0/1).
- ...
-> I'd like to merge this through the wireless tree since
-> some new features sort of depend on it. Thoughts?
+>   CC [M]  net/wireless/nl80211.o
+> net/wireless/nl80211.c: In function ‘nl80211_tx_mgmt’:
+> net/wireless/nl80211.c:5286:8: warning: ‘hdr’ may be used uninitialized in this function
 
-No objections, feel free to put this into the wireless tree.
+Hm, my compiler is smarter than yours ;-)
+
+Not quite sure how to fix this best, I'll figure out something. Thanks
+for the heads-up.
+
+johannes
+
+
