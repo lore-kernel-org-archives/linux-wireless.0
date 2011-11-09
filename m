@@ -1,59 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48996 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933375Ab1KBQeQ (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:33126 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751421Ab1KILum convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 12:34:16 -0400
-Message-ID: <4EB17103.70506@candelatech.com> (sfid-20111102_173421_916822_20314BAF)
-Date: Wed, 02 Nov 2011 09:34:11 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 9 Nov 2011 06:50:42 -0500
+Received: by qyk27 with SMTP id 27so4584586qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Nov 2011 03:50:42 -0800 (PST)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [wireless-next PATCH 1/5] mac80211: Support forcing station to
- disable 11n.
-References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>  (sfid-20111028_071135_777672_88A08497) <1319789318.3914.10.camel@jlt3.sipsolutions.net>  <4EAAFAA7.8090403@candelatech.com> (sfid-20111028_205543_472872_4928ADE0) <1320220415.3950.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1320220415.3950.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1320837297.1926.6.camel@shinybook.infradead.org>
+References: <1294426085.18385.8.camel@maggie> <1320837297.1926.6.camel@shinybook.infradead.org>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 9 Nov 2011 12:50:21 +0100
+Message-ID: <CA+XFjir0yGWWUdt5YD8DuSjFk0pi0yEhzqQR020d5G06ah7XgQ@mail.gmail.com> (sfid-20111109_125046_301548_A2FF2307)
+Subject: Re: [PATCH] ssb: Ignore dangling ethernet cores on wireless devices
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/02/2011 12:53 AM, Johannes Berg wrote:
-> On Fri, 2011-10-28 at 11:55 -0700, Ben Greear wrote:
+On Wed, Nov 9, 2011 at 12:14 PM, David Woodhouse <dwmw2@infradead.org> wrote:
+> On Fri, 2011-01-07 at 19:48 +0100, Michael Büsch wrote:
+>>
+>> +               case SSB_DEV_ETHERNET:
+>> +                       if (bus->bustype == SSB_BUSTYPE_PCI) {
+>> +                               if (bus->host_pci->vendor == PCI_VENDOR_ID_BROADCOM &&
+>> +                                   (bus->host_pci->device & 0xFF00) == 0x4300) {
+>> +                                       /* This is a dangling ethernet core on a
+>> +                                        * wireless device. Ignore it. */
+>> +                                       continue;
+>> +                               }
+>> +                       }
+>> +                       break;
 >
->>> This should be a parameter to connect() and assoc(), not a generic
->>> netdev parameter, since it applies to the connection.
->>>
->>> Also, it would be good to have a capability check for it etc. since a
->>> lot of fullmac drivers will likely never implement this.
->>
->> The existing code always sets the IEEE80211_STA_DISABLE_11N flag in u.mgd if
->> WEP or TKIP is configured, without any capability checks, and my patch
->> sets that flag in the same location.
->>
->> So, maybe it is OK as is?
->>
->> If not, I will add a new capability bit and just enable
->> it in ath9k (and let others enable it in their drivers as they wish).
+> Do you also need to check for (bus->host_pci->device / 1000) == 43?
+> Or do the chips with 5-digit 'decimal' IDs not have the Ethernet cores?
 >
-> You misunderstood -- I said fullmac drivers, not differences between
-> ath9k, iwlwifi etc. Other cfg80211 drivers, not other mac80211 drivers.
+> Would it be better to invert the test and check for != 0x4400?
 
-Can you at least point me to some existing code that does a similar
-check?  I have no idea of what a fullmac driver even does.  I can test
-and eventually somewhat understand the paths for ath9k, but I have no
-ability to test fullmac (as far as I know).
+I do not know of any Broadcom wireless device with a decimal PCI ID
+(as opposed to a decimal Chip ID).
 
-If you don't have time to explain in more detail, then I will just
-carry these patches in my own tree.  That is a total pain in
-the arse when dealing with new netlink commands, but I just do not
-have enough understanding of the entire wifi stack to make much
-progress with a lot of your suggestions.
+>
+> --
+> dwmw2
+>
 
-Thanks,
-Ben
+
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
