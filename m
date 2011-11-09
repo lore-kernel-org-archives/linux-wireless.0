@@ -1,61 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:41018 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750798Ab1KTFa7 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51447 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932709Ab1KIVPP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Nov 2011 00:30:59 -0500
-Received: by ghbz2 with SMTP id z2so1829969ghb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 21:30:59 -0800 (PST)
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	rodrigue@qca.qualcomm.com, kolya <mar.kolya@gmail.com>
-Subject: [PATCH v2] ath9k: Improve ath_tx_aggr_stop to avoid TID stuck in cleanup state.
-Date: Sun, 20 Nov 2011 00:30:35 -0500
-Message-Id: <1321767035-3263-1-git-send-email-mar.kolya@gmail.com> (sfid-20111120_063106_844821_374E87EB)
+	Wed, 9 Nov 2011 16:15:15 -0500
+From: y@tuxdriver.com
+To: linux-wireless@vger.kernel.org
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Jouni Malinen <j@w1.fi>,
+	Johannes Berge <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v3] mac80211: handle HT PHY BSS membership selector value correctly
+Date: Wed,  9 Nov 2011 16:04:05 -0500
+Message-Id: <1320872645-29202-1-git-send-email-y> (sfid-20111109_221524_329660_60E55922)
+In-Reply-To: <201110150014.50136.chunkeey@googlemail.com>
+References: <201110150014.50136.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: kolya <mar.kolya@gmail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
 
-  When tx agg is being stopped TID is flushed using ath_tx_flush_tid. It is possible that ath_tx_flush_tid completelly flushes TID (if all packets in this TID have already been retried). If this happened ath_tx_aggr_stop would leave TID in cleanup state permanently. Fix this by making ath_tx_flush_tid remove AGGR_ADDBA_COMPLETE and AGGR_CLEANUP flags from TID status if TID is empty.
+802.11n-2009 extends the supported rates element with a
+magic value which can be used to prevent legacy stations
+from joining the BSS.
+
+However, this magic value is not a rate like the others
+and the magic can simply be ignored/skipped at this late
+stage.
+
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>---
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c |   13 ++++++-------
- 1 files changed, 6 insertions(+), 7 deletions(-)
+This is the version I've merged.  The v2 version conflicted with
+"mac80211: use min rate as basic rate for buggy APs" (commit
+3432f9233704a66e6067944339a311744243707d).
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 55d077e..80639e3 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -179,6 +179,11 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
- 		spin_lock_bh(&txq->axq_lock);
- 	}
+Please take a close look to make sure I didn't mess it up!
+
+ include/linux/ieee80211.h |    3 +
+ net/mac80211/mlme.c       |   90 ++++++++++++++++++++++++--------------------
+ 2 files changed, 52 insertions(+), 41 deletions(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 48363c3..9789aed 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -770,6 +770,9 @@ struct ieee80211_mgmt {
+ 	} u;
+ } __attribute__ ((packed));
  
-+	if (tid->baw_head == tid->baw_tail) {
-+		tid->state &= ~AGGR_ADDBA_COMPLETE;
-+		tid->state &= ~AGGR_CLEANUP;
-+	}
++/* Supported Rates value encodings in 802.11n-2009 7.3.2.2 */
++#define BSS_MEMBERSHIP_SELECTOR_HT_PHY	127
 +
- 	spin_unlock_bh(&txq->axq_lock);
+ /* mgmt header + 1 byte category code */
+ #define IEEE80211_MIN_ACTION_SIZE offsetof(struct ieee80211_mgmt, u.action.u)
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d3b408c..b25567a 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1466,6 +1466,47 @@ ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	return RX_MGMT_CFG80211_DISASSOC;
  }
  
-@@ -556,15 +561,9 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		spin_unlock_bh(&txq->axq_lock);
- 	}
++static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
++				u8 *supp_rates, unsigned int supp_rates_len,
++				u32 *rates, u32 *basic_rates,
++				bool *have_higher_than_11mbit,
++				int *min_rate, int *min_rate_index)
++{
++	int i, j;
++
++	for (i = 0; i < supp_rates_len; i++) {
++		int rate = (supp_rates[i] & 0x7f) * 5;
++		bool is_basic = !!(supp_rates[i] & 0x80);
++
++		if (rate > 110)
++			*have_higher_than_11mbit = true;
++
++		/*
++		 * BSS_MEMBERSHIP_SELECTOR_HT_PHY is defined in 802.11n-2009
++		 * 7.3.2.2 as a magic value instead of a rate. Hence, skip it.
++		 *
++		 * Note: Even through the membership selector and the basic
++		 *	 rate flag share the same bit, they are not exactly
++		 *	 the same.
++		 */
++		if (!!(supp_rates[i] & 0x80) &&
++		    (supp_rates[i] & 0x7f) == BSS_MEMBERSHIP_SELECTOR_HT_PHY)
++			continue;
++
++		for (j = 0; j < sband->n_bitrates; j++) {
++			if (sband->bitrates[j].bitrate == rate) {
++				*rates |= BIT(j);
++				if (is_basic)
++					*basic_rates |= BIT(j);
++				if (rate < *min_rate) {
++					*min_rate = rate;
++					*min_rate_index = j;
++				}
++				break;
++			}
++		}
++	}
++}
  
--	if (tid->state & AGGR_CLEANUP) {
-+	if (tid->state & AGGR_CLEANUP)
- 		ath_tx_flush_tid(sc, tid);
+ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+ 				    struct ieee80211_mgmt *mgmt, size_t len)
+@@ -1482,7 +1523,7 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+ 	struct ieee802_11_elems elems;
+ 	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
+ 	u32 changed = 0;
+-	int i, j, err;
++	int err;
+ 	bool have_higher_than_11mbit = false;
+ 	u16 ap_ht_cap_flags;
+ 	int min_rate = INT_MAX, min_rate_index = -1;
+@@ -1540,47 +1581,14 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+ 	basic_rates = 0;
+ 	sband = local->hw.wiphy->bands[wk->chan->band];
  
--		if (tid->baw_head == tid->baw_tail) {
--			tid->state &= ~AGGR_ADDBA_COMPLETE;
--			tid->state &= ~AGGR_CLEANUP;
+-	for (i = 0; i < elems.supp_rates_len; i++) {
+-		int rate = (elems.supp_rates[i] & 0x7f) * 5;
+-		bool is_basic = !!(elems.supp_rates[i] & 0x80);
+-
+-		if (rate > 110)
+-			have_higher_than_11mbit = true;
++	ieee80211_get_rates(sband, elems.supp_rates, elems.supp_rates_len,
++			    &rates, &basic_rates, &have_higher_than_11mbit,
++			    &min_rate, &min_rate_index);
+ 
+-		for (j = 0; j < sband->n_bitrates; j++) {
+-			if (sband->bitrates[j].bitrate == rate) {
+-				rates |= BIT(j);
+-				if (is_basic)
+-					basic_rates |= BIT(j);
+-				if (rate < min_rate) {
+-					min_rate = rate;
+-					min_rate_index = j;
+-				}
+-				break;
+-			}
 -		}
 -	}
 -
- 	rcu_read_unlock();
+-	for (i = 0; i < elems.ext_supp_rates_len; i++) {
+-		int rate = (elems.ext_supp_rates[i] & 0x7f) * 5;
+-		bool is_basic = !!(elems.ext_supp_rates[i] & 0x80);
+-
+-		if (rate > 110)
+-			have_higher_than_11mbit = true;
+-
+-		for (j = 0; j < sband->n_bitrates; j++) {
+-			if (sband->bitrates[j].bitrate == rate) {
+-				rates |= BIT(j);
+-				if (is_basic)
+-					basic_rates |= BIT(j);
+-				if (rate < min_rate) {
+-					min_rate = rate;
+-					min_rate_index = j;
+-				}
+-				break;
+-			}
+-		}
+-	}
++	ieee80211_get_rates(sband, elems.ext_supp_rates,
++			    elems.ext_supp_rates_len, &rates, &basic_rates,
++			    &have_higher_than_11mbit,
++			    &min_rate, &min_rate_index);
  
- 	if (needreset) {
+ 	/*
+ 	 * some buggy APs don't advertise basic_rates. use the lowest
 -- 
-1.7.4.1
+1.7.4.4
 
