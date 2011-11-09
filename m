@@ -1,141 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:58523 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753954Ab1KUOl5 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:41363 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750875Ab1KILMs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 09:41:57 -0500
-Received: by mail-bw0-f46.google.com with SMTP id 11so6626611bke.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 06:41:56 -0800 (PST)
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>
-Subject: [RFC v2 7/8] cfg80211 and nl80211: getting local and peer mesh power modes
-Date: Mon, 21 Nov 2011 18:40:15 +0400
-Message-Id: <1321886416-12597-8-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154200_869030_6C31831B)
-In-Reply-To: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
-References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
+	Wed, 9 Nov 2011 06:12:48 -0500
+Received: by wyh15 with SMTP id 15so1475415wyh.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Nov 2011 03:12:47 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: init CMD_TEMPL_KLV to sizeof(ieee80211_qos_hdr)
+Date: Wed,  9 Nov 2011 13:12:45 +0200
+Message-Id: <1320837165-11935-1-git-send-email-eliad@wizery.com> (sfid-20111109_121251_739193_F3694FA2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Link-specific power mode defines a mesh power mode in which it
-operates for the mesh peering with the station. Possibility of getting
-local link-specific power mode and peer link-specific power mode is
-added.
+The keep alive template should have a max size of
+sizeof(struct ieee80211_qos_hdr).
 
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
+Additionally, Remove the redundant wl12xx_qos_null_data_template
+struct.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- include/linux/nl80211.h |    6 ++++++
- include/net/cfg80211.h  |   10 +++++++++-
- net/mac80211/cfg.c      |    6 +++++-
- net/wireless/nl80211.c  |    6 ++++++
- 4 files changed, 26 insertions(+), 2 deletions(-)
+ drivers/net/wireless/wl12xx/init.c         |    6 +++---
+ drivers/net/wireless/wl12xx/wl12xx_80211.h |    5 -----
+ 2 files changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index ce789ce..4f4bfb8 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1552,6 +1552,10 @@ enum nl80211_sta_bss_param {
-  *     containing info as possible, see &enum nl80211_sta_bss_param
-  * @NL80211_STA_INFO_CONNECTED_TIME: time since the station is last connected
-  * @NL80211_STA_INFO_STA_FLAGS: Contains a struct nl80211_sta_flag_update.
-+ * @NL80211_STA_INFO_LOCAL_MESH_PS_MODE: local mesh STA link-specific power
-+ * 	save mode
-+ * @NL80211_STA_INFO_PEER_MESH_PS_MODE: peer mesh STA link-specific power
-+ * 	save mode
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -1574,6 +1578,8 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_BSS_PARAM,
- 	NL80211_STA_INFO_CONNECTED_TIME,
- 	NL80211_STA_INFO_STA_FLAGS,
-+	NL80211_STA_INFO_LOCAL_MESH_PS_MODE,
-+	NL80211_STA_INFO_PEER_MESH_PS_MODE,
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index c413abd..88891cd 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -65,7 +65,7 @@ int wl1271_init_templates_config(struct wl1271 *wl)
  
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2204222..845937c 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -500,6 +500,8 @@ struct station_parameters {
-  * @STATION_INFO_CONNECTED_TIME: @connected_time filled
-  * @STATION_INFO_ASSOC_REQ_IES: @assoc_req_ies filled
-  * @STATION_INFO_STA_FLAGS: @sta_flags filled
-+ * @STATION_INFO_LOCAL_MESH_PS_MODE: @local_ps_mode filled
-+ * @STATION_INFO_PEER_MESH_PS_MODE: @peer_ps_mode filled
-  */
- enum station_info_flags {
- 	STATION_INFO_INACTIVE_TIME	= 1<<0,
-@@ -520,7 +522,9 @@ enum station_info_flags {
- 	STATION_INFO_BSS_PARAM          = 1<<15,
- 	STATION_INFO_CONNECTED_TIME	= 1<<16,
- 	STATION_INFO_ASSOC_REQ_IES	= 1<<17,
--	STATION_INFO_STA_FLAGS		= 1<<18
-+	STATION_INFO_STA_FLAGS		= 1<<18,
-+	STATION_INFO_LOCAL_MESH_PS_MODE = 1<<17,
-+	STATION_INFO_PEER_MESH_PS_MODE  = 1<<18
- };
+ 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_QOS_NULL_DATA, NULL,
+ 				      sizeof
+-				      (struct wl12xx_qos_null_data_template),
++				      (struct ieee80211_qos_hdr),
+ 				      0, WL1271_RATE_AUTOMATIC);
+ 	if (ret < 0)
+ 		return ret;
+@@ -114,8 +114,8 @@ int wl1271_init_templates_config(struct wl1271 *wl)
  
- /**
-@@ -608,6 +612,8 @@ struct sta_bss_parameters {
-  * @tx_failed: number of failed transmissions (retries exceeded, no ACK)
-  * @rx_dropped_misc:  Dropped for un-specified reason.
-  * @bss_param: current BSS parameters
-+ * @local_ps_mode: local mesh STA power save mode
-+ * @peer_ps_mode: peer mesh STA power save mode
-  * @generation: generation number for nl80211 dumps.
-  *	This number should increase every time the list of stations
-  *	changes, i.e. when a station is added or removed, so that
-@@ -638,6 +644,8 @@ struct station_info {
- 	u32 rx_dropped_misc;
- 	struct sta_bss_parameters bss_param;
- 	struct nl80211_sta_flag_update sta_flags;
-+	u8 local_ps_mode;
-+	u8 peer_ps_mode;
- 
- 	int generation;
- 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 78c61ee..2b0cc2c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -388,11 +388,15 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- #ifdef CONFIG_MAC80211_MESH
- 		sinfo->filled |= STATION_INFO_LLID |
- 				 STATION_INFO_PLID |
--				 STATION_INFO_PLINK_STATE;
-+				 STATION_INFO_PLINK_STATE |
-+				 STATION_INFO_LOCAL_MESH_PS_MODE |
-+				 STATION_INFO_PEER_MESH_PS_MODE;
- 
- 		sinfo->llid = le16_to_cpu(sta->llid);
- 		sinfo->plid = le16_to_cpu(sta->plid);
- 		sinfo->plink_state = sta->plink_state;
-+		sinfo->local_ps_mode = sta->local_ps_mode;
-+		sinfo->peer_ps_mode = sta->peer_ps_mode;
- #endif
+ 	for (i = 0; i < CMD_TEMPL_KLV_IDX_MAX; i++) {
+ 		ret = wl1271_cmd_template_set(wl, CMD_TEMPL_KLV, NULL,
+-					      WL1271_CMD_TEMPL_DFLT_SIZE, i,
+-					      WL1271_RATE_AUTOMATIC);
++					      sizeof(struct ieee80211_qos_hdr),
++					      i, WL1271_RATE_AUTOMATIC);
+ 		if (ret < 0)
+ 			return ret;
  	}
+diff --git a/drivers/net/wireless/wl12xx/wl12xx_80211.h b/drivers/net/wireless/wl12xx/wl12xx_80211.h
+index f7971d3..8f0ffaf 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx_80211.h
++++ b/drivers/net/wireless/wl12xx/wl12xx_80211.h
+@@ -116,11 +116,6 @@ struct wl12xx_ps_poll_template {
+ 	u8 ta[ETH_ALEN];
+ } __packed;
  
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 80bc2a7..c53c8bb 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2325,6 +2325,12 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
- 	if (sinfo->filled & STATION_INFO_TX_FAILED)
- 		NLA_PUT_U32(msg, NL80211_STA_INFO_TX_FAILED,
- 			    sinfo->tx_failed);
-+	if (sinfo->filled & STATION_INFO_LOCAL_MESH_PS_MODE)
-+		NLA_PUT_U8(msg, NL80211_STA_INFO_LOCAL_MESH_PS_MODE,
-+			sinfo->local_ps_mode);
-+	if (sinfo->filled & STATION_INFO_PEER_MESH_PS_MODE)
-+		NLA_PUT_U8(msg, NL80211_STA_INFO_PEER_MESH_PS_MODE,
-+			sinfo->peer_ps_mode);
- 	if (sinfo->filled & STATION_INFO_BSS_PARAM) {
- 		bss_param = nla_nest_start(msg, NL80211_STA_INFO_BSS_PARAM);
- 		if (!bss_param)
+-struct wl12xx_qos_null_data_template {
+-	struct ieee80211_header header;
+-	__le16 qos_ctl;
+-} __packed;
+-
+ struct wl12xx_arp_rsp_template {
+ 	struct ieee80211_hdr_3addr hdr;
+ 
 -- 
-1.7.3.4
+1.7.6.401.g6a319
 
