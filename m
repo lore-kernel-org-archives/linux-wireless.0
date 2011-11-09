@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:50482 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754921Ab1KUCXN (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:46945 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752566Ab1KIX6N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Nov 2011 21:23:13 -0500
-Received: by yenq3 with SMTP id q3so4209472yen.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 18:23:12 -0800 (PST)
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, kolya <mar.kolya@gmail.com>
-Subject: [PATCH 2/3] mac80211: use WLAN_BACK_RECIPIENT instead of hardcoded 0
-Date: Sun, 20 Nov 2011 21:22:51 -0500
-Message-Id: <1321842172-6732-3-git-send-email-mar.kolya@gmail.com> (sfid-20111121_032317_379708_83A50D25)
-In-Reply-To: <1321842172-6732-1-git-send-email-mar.kolya@gmail.com>
-References: <1321842172-6732-1-git-send-email-mar.kolya@gmail.com>
+	Wed, 9 Nov 2011 18:58:13 -0500
+Received: by gyc15 with SMTP id 15so2300691gyc.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Nov 2011 15:58:13 -0800 (PST)
+Message-ID: <4EBB1392.20105@lwfinger.net> (sfid-20111110_005818_358526_32ECBEDE)
+Date: Wed, 09 Nov 2011 17:58:10 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: New wireless-testing has grown some warnings -- please fix ASAP!
+References: <20111109215007.GD10712@tuxdriver.com>
+In-Reply-To: <20111109215007.GD10712@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: kolya <mar.kolya@gmail.com>
+On 11/09/2011 03:50 PM, John W. Linville wrote:
+> commit befdbc51cc69c01cd412ad2429960b9c3042f97c is the current
+> wireless-testing head.
+>
+> This iteration of wireless-testing seems to have grown some
+> warnings.  Some of them come from a new __must_check annotation of
+> cfg80211_inform_bss, while others are simply unused or uninitialized
+> variables.  In any case, I would prefer not to see them.
+>
+> Please check the wireless-testing build and attempt to squash any
+> warnings that can be reasonably squashed.  Those who do not do so
+> will be subject to irritated sighs over IRC, drunken emails about
+> my new DVD rental service, and accusations of making unwanted sexual
+> advances toward me.  You've been warned.
+>
+> John
 
----
- net/mac80211/agg-rx.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+For the record, what compiler are you using?
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 476b106..449d77b 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -73,8 +73,9 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- 	RCU_INIT_POINTER(sta->ampdu_mlme.tid_rx[tid], NULL);
- 
- #ifdef CONFIG_MAC80211_HT_DEBUG
--	printk(KERN_DEBUG "Rx BA session stop requested for %pM tid %u\n",
--	       sta->sta.addr, tid);
-+	printk(KERN_DEBUG "Rx BA session stop requested for %pM tid %u %s reason: %d\n",
-+	       sta->sta.addr, tid, initiator == WLAN_BACK_RECIPIENT ? "recipient" : "inititator",
-+               (int)reason);
- #endif /* CONFIG_MAC80211_HT_DEBUG */
- 
- 	if (drv_ampdu_action(local, sta->sdata, IEEE80211_AMPDU_RX_STOP,
-@@ -85,7 +86,7 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- 	/* check if this is a self generated aggregation halt */
- 	if (initiator == WLAN_BACK_RECIPIENT && tx)
- 		ieee80211_send_delba(sta->sdata, sta->sta.addr,
--				     tid, 0, reason);
-+				     tid, WLAN_BACK_RECIPIENT, reason);
- 
- 	del_timer_sync(&tid_rx->session_timer);
- 	del_timer_sync(&tid_rx->reorder_timer);
--- 
-1.7.4.1
+Larry
 
