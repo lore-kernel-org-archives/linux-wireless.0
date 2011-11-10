@@ -1,150 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2605 "EHLO mms2.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4624 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752189Ab1KQXDi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 18:03:38 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: dwmw2@infradead.org
-cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: [PATCH v2 3/3] linux-firmware: remove nvram file for bcm4329
- development board
-Date: Thu, 17 Nov 2011 15:03:25 -0800
-Message-ID: <1321571005-22601-4-git-send-email-frankyl@broadcom.com> (sfid-20111118_000342_508501_FA4E8B06)
-In-Reply-To: <1321571005-22601-1-git-send-email-frankyl@broadcom.com>
-References: <1321569101-19568-1-git-send-email-frankyl@broadcom.com>
- <1321571005-22601-1-git-send-email-frankyl@broadcom.com>
+	id S1756273Ab1KJTaz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 14:30:55 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 10/19] brcm80211: fmac: remove id retrieve code
+Date: Thu, 10 Nov 2011 20:30:25 +0100
+Message-ID: <1320953434-16859-12-git-send-email-arend@broadcom.com> (sfid-20111110_203110_661232_FB92A537)
+In-Reply-To: <1320953434-16859-1-git-send-email-arend@broadcom.com>
+References: <1320953434-16859-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The nvram file contains configuration info for firmware which varies
-with different hardware designs. The version currently in the
-repository is for a Broadcom-internal development board that is not
-available on the market. This file is not applicable for any exsisting
-end-user product. Users should use the nvram file that was
-shipped with their device to avoid unexpected or incorrect behavior.
-Remove the file from repository to avoid confusion.
+From: Franky Lin <frankyl@broadcom.com>
 
+sdio_chip.c is dedicated to sdio bus chip. No need to retrieve id
+for bus core
+
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
 Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- WHENCE                     |    1 -
- brcm/bcm4329-fullmac-4.txt |   94 --------------------------------------------
- 2 files changed, 0 insertions(+), 95 deletions(-)
- delete mode 100644 brcm/bcm4329-fullmac-4.txt
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
 
-diff --git a/WHENCE b/WHENCE
-index 6b7fa0e..5dd60c3 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -1521,7 +1521,6 @@ Licence: Redistributable. See LICENCE.broadcom_bcm43xx for details.
- Driver: brcmfmac - Broadcom 802.11n fullmac wireless LAN driver.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+index cef9abb..f6b1822 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+@@ -474,8 +474,6 @@ static void
+ brcmf_sdio_chip_buscoresetup(struct brcmf_sdio_dev *sdiodev,
+ 			     struct chip_info *ci)
+ {
+-	u32 regdata;
+-
+ 	/* get chipcommon rev */
+ 	ci->c_inf[0].rev = ci->corerev(sdiodev, ci, ci->c_inf[0].id);
  
- File: brcm/bcm4329-fullmac-4.bin
--File: brcm/bcm4329-fullmac-4.txt
- File: brcm/brcmfmac4329.bin
- File: brcm/brcmfmac4330.bin
+@@ -492,9 +490,6 @@ brcmf_sdio_chip_buscoresetup(struct brcmf_sdio_dev *sdiodev,
+ 	}
  
-diff --git a/brcm/bcm4329-fullmac-4.txt b/brcm/bcm4329-fullmac-4.txt
-deleted file mode 100644
-index f757f55..0000000
---- a/brcm/bcm4329-fullmac-4.txt
-+++ /dev/null
-@@ -1,94 +0,0 @@
--# bcm94329sdagb board
--# $Copyright (C) 2008 Broadcom Corporation$
--# $id$
--
--sromrev=3
--vendid=0x14e4
--devid=0x432e
--# board type
--boardtype=0x4ff
--
--# board revision 1.1
--boardrev=0x19
--
--# boardflags
--boardflags=0x1200
--
--####### IMP ########
--# Specify the xtalfreq if it is otherthan 38.4MHz
--xtalfreq=38400
--
--aa2g=1
--aa5g=1
--
--ag0=255
--
--# 11g paparams
--pa0b0=6003,6003,5112
--pa0b1=64086,64086,64229
--pa0b2=65195,65195,65081
--pa0itssit=62
--pa0maxpwr=66
--opo=0
--mcs2gpo0=0x2222
--mcs2gpo1=0x2222
--
--# sel = 1 : 20% evm  sel = 2 : 27% evm  sel = 3 : 16% evm
--cckdigfilttype=0
--ofdmdigfilttype=1
--
--# 11a paparams lowband
--pa1lob0=5662
--pa1lob1=64130
--pa1lob2=65156
--# paparams midband
--pa1b0=5724
--pa1b1=64128
--pa1b2=65167
--#paparams high band
--pa1hib0=5675
--pa1hib1=64129
--pa1hib2=65169
--pa1itssit=62
--pa1maxpwr=66
--opo=0
--mcs5gpo=0x22222222
--
--# 11g rssi params
--rssismf2g=0xa
--rssismc2g=0xb
--rssisav2g=0x3
--bxa2g=0
--
--# 11a rssi params
--rssismf5g=0xa
--rssismc5g=0xa
--rssisav5g=0x3
--bxa2g=0
--
--# country code
--ccode=X2
--cctl=0x0
--
--rxpo2g=1
--rxpo5g=0
--rxpo2gchnflg=0x1FFF
--
--boardnum=2048
--macaddr=00:90:4c:c5:34:23
--
--#######
--nocrc=1
--
--#for mfgc
--otpimagesize=182
--
--# sdio extra configs
--hwhdr=0x05ffff031030031003100000
--
--#This generates empty F1, F2 and F3 tuple chains, and may be used if the host SDIO stack does not require the standard tuples.
--RAW1=80 02 fe ff
--
--#This includes the standard FUNCID and FUNCE tuples in the F1, F2, F3 and common CIS.
--#RAW1=80 32 fe 21 02 0c 00 22 2a 01 01 00 00 c5 0 e6 00 00 00 00 00 40 00 00 ff ff 80 00 00 00 00 00 00 00 00 00 00 c8 00 00 00 00 00 00 00 00 00 00 00 00 00 ff 20 04 D0 2 29 43 21 02 0c 00 22 04 00 20 00 5A
--nvramver=4.218.0.0
+ 	ci->c_inf[1].rev = ci->corerev(sdiodev, ci, ci->c_inf[1].id);
+-	regdata = brcmf_sdcard_reg_read(sdiodev,
+-				CORE_SB(ci->c_inf[1].base, sbidhigh), 4);
+-	ci->c_inf[1].id = (regdata & SSB_IDHIGH_CC) >> SSB_IDHIGH_CC_SHIFT;
+ 
+ 	brcmf_dbg(INFO, "ccrev=%d, pmurev=%d, buscore rev/type=%d/0x%x\n",
+ 		  ci->c_inf[0].rev, ci->pmurev,
 -- 
 1.7.5.4
 
