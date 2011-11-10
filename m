@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:58691 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932342Ab1KQRGV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 12:06:21 -0500
-Subject: [PATCH] nl80211: add testmode to the list of supported commands
+Received: from mga02.intel.com ([134.134.136.20]:56565 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756894Ab1KJBdf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 20:33:35 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 17 Nov 2011 19:06:10 +0200
-Message-ID: <20111117170610.21114.57859.stgit@localhost6.localdomain6> (sfid-20111117_180625_317829_8709F7BE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 20/28] iwlwifi: fix unused label in iwl_send_cmd_sync
+Date: Wed,  9 Nov 2011 16:39:23 -0800
+Message-Id: <1320885571-19122-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023418_506160_60C1AB4F)
+In-Reply-To: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-User space might want to test if driver supports testmode. Adding testmode
-to the list of supported commands makes this easier.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I omitted testmode_dump() in purpose. I assume all drivers implementing
-testmode_dump() will also implement testmode_cmd().
+Warning introduced by c847474b7dfdda304d0d8ffcc5a9db546b1cb3e9
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+iwlwifi: check status before send command
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/wireless/nl80211.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 864fcb6..5ab8e97 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -897,6 +897,10 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 		NLA_PUT_U32(msg, i, NL80211_CMD_REGISTER_BEACONS);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 09a31dc..a6d898b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -1075,7 +1075,7 @@ cancel:
+ 		trans_pcie->txq[trans->shrd->cmd_queue].meta[cmd_idx].flags &=
+ 							~CMD_WANT_SKB;
  	}
- 
-+#ifdef CONFIG_NL80211_TESTMODE
-+	CMD(testmode_cmd, TESTMODE);
-+#endif
+-fail:
 +
- #undef CMD
- 
- 	if (dev->ops->connect || dev->ops->auth) {
+ 	if (cmd->reply_page) {
+ 		iwl_free_pages(trans->shrd, cmd->reply_page);
+ 		cmd->reply_page = 0;
+-- 
+1.7.0.4
 
