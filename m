@@ -1,59 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:53984 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756421Ab1KVVGS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 16:06:18 -0500
-Date: Tue, 22 Nov 2011 16:05:11 -0500 (EST)
-Message-Id: <20111122.160511.2302883259439708995.davem@davemloft.net> (sfid-20111122_220636_795512_CB0C27C1)
+Received: from mga02.intel.com ([134.134.136.20]:43792 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932761Ab1KJPtf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 10:49:35 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2011-11-22
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20111122205655.GE8452@tuxdriver.com>
-References: <20111122193505.GC8452@tuxdriver.com>
-	<20111122.151429.253381379981773726.davem@davemloft.net>
-	<20111122205655.GE8452@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 00/27] update for 3.3
+Date: Thu, 10 Nov 2011 06:55:00 -0800
+Message-Id: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_164939_289689_56C5B820)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 22 Nov 2011 15:56:55 -0500
+We move all the mac80211 related functions into single file
+We also fix number of P2P related issues and add P2P NoA probe responses
+We adding more debug hook to improve debugging capabilities
 
-> On Tue, Nov 22, 2011 at 03:14:29PM -0500, David Miller wrote:
->> From: "John W. Linville" <linville@tuxdriver.com>
->> Date: Tue, 22 Nov 2011 14:35:05 -0500
->> 
->> > Here is the latest batch of fixes intended for 3.2.  This includes a
->> > correction for a user-visible error in mac80211's debugfs info, a fix
->> > for a potential memory corrupter in prism54, an endian fix for rt2x00,
->> > an endian fix for mac80211, a fix for a NULL derefernce in cfg80211, a
->> > locking fix and a deadlock fix for p54spi, and a pair of rt2x00 fixes
->> > for handling some spurious interrupts that hardware can generate.
->> > 
->> > Please let me know if there are problems!
->> 
->> The rt2800pci change doesn't look correct.
->> 
->> If the IRQ line is shared with another device, this change will make it
->> never see interrupts.  Once you say "IRQ_HANDLED" the IRQ dispatch
->> stops processing the interrupt handler list.
-> 
-> I thought this at first as well.  But looking at the code in
-> kernel/irq/handle.c doesn't support that conclusion.  In fact, every
-> handler gets invoked no matter what they all return.  All of the irq
-> handler return values are ORed together and passed to note_interrupt.
-> Only if every irq handler returns IRQ_NONE does the code in
-> kernel/irq/spurious.c start getting involved.
-> 
-> Anyway, this seems to be safe even for shared interrupts.  That said,
-> this is a bit ugly.  But it makes a serious difference in performance
-> for those afflicted with this issue.
 
-It just means that we won't notice spurious interrupts if the device
-sharing the line with rt2800pci generates one.
+Don Fry (6):
+  iwlagn: move ucode_write_complete from priv to trans structure
+  iwlagn: remove knowledge of ucode image location from upper layers
+  iwlagn: push knowledge of ucode image lower down
+  iwlagn: move ucode files out of the iwl_priv structure
+  iwlagn: Remove dependence of iwl_priv from eeprom routines.
+  iwlagn: move nvm_device_type from iwl_priv to iwl_trans
 
-This change is wrong.
+Emmanuel Grumbach (3):
+  iwlwifi: fix unused label in iwl_send_cmd_sync
+  iwlwifi: remove the use of the QOS debug flag
+  iwlwifi: add debug information on queue stop / wake
+
+Johannes Berg (6):
+  iwlagn: add P2P NoA to probe responses
+  iwlagn: fix NULL ptr deref when reprogramming sta w/o LQ
+  iwlagn: use per-vif AC parameters
+  iwlagn: explicitly program P2P QoS parameters
+  iwlagn: convert remain-on-channel duration to TU
+  iwlagn: don't always split remain-on-channel
+
+Todd Previte (1):
+  iwlwifi: Suppress noisy syslog messages when RF_KILL switch engaged
+
+Venkataraman, Meenakshi (1):
+  iwlwifi: fix rate-scaling algorithm for BT combo devices
+
+Wey-Yi Guy (10):
+  iwlwifi: two more SKUs for 6x05 series
+  iwlagn: check for SMPS mode
+  iwlwifi: remove un-supported SKUs
+  iwlwifi: move all mac80211 related functions to one place
+  iwlwifi: move more mac80211 callback function
+  iwlwifi: move hw_scan into _mac80211 file
+  iwlwifi: move station functions to mac80211
+  iwlwifi: Move the core suspend function to iwl-agn-lib
+  iwlwifi: set "echo" host command length
+  iwlwifi: check status before send command
+
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+
+
+ drivers/net/wireless/iwlwifi/Makefile             |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-2000.c           |   20 -
+ drivers/net/wireless/iwlwifi/iwl-6000.c           |   10 -
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |  358 +++++
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c         |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c         |   49 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c       |   13 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c        |   78 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |   16 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c      |  154 ++-
+ drivers/net/wireless/iwlwifi/iwl-agn.c            | 1544 +-------------------
+ drivers/net/wireless/iwlwifi/iwl-agn.h            |   31 +-
+ drivers/net/wireless/iwlwifi/iwl-cfg.h            |    6 -
+ drivers/net/wireless/iwlwifi/iwl-core.c           |  307 +----
+ drivers/net/wireless/iwlwifi/iwl-core.h           |   14 -
+ drivers/net/wireless/iwlwifi/iwl-debug.h          |   19 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c        |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |   34 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c         |  142 +-
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c       | 1632 +++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-pci.c            |   20 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c           |   47 +-
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c        |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |   35 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |   52 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |   23 +-
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |   50 +-
+ 28 files changed, 2448 insertions(+), 2233 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-mac80211.c
+
