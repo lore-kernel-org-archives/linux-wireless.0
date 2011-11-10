@@ -1,93 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54422 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753530Ab1KLOFz (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49912 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753591Ab1KJMoK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Nov 2011 09:05:55 -0500
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 1/3] ath9k: Remove enabling btcoex from stomp type change
-Date: Sat, 12 Nov 2011 19:35:46 +0530
-Message-ID: <1321106748-13014-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111112_150606_534901_5905F1D4)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 10 Nov 2011 07:44:10 -0500
+Subject: rewriting powersave
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kalle.valo@iki.fi>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 10 Nov 2011 13:44:05 +0100
+Message-ID: <1320929045.3967.52.camel@jlt3.sipsolutions.net> (sfid-20111110_134417_015524_7F885E2A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes btcoex_enable from stomp type change and let
-it be called from callee functions that makes the code can be
-reusable for MCI changes.
+All,
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/btcoex.c       |    4 ----
- drivers/net/wireless/ath/ath9k/gpio.c         |    2 ++
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |    2 ++
- 3 files changed, 4 insertions(+), 4 deletions(-)
+Let's more seriously think about rewriting powersave. We need to be able
+to handle multi-vif powersave, and nobody even claims to understand the
+current code any more, let alone knows how to fix the bugs in it.
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index 0122639..f525e91 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -269,8 +269,6 @@ static void ar9003_btcoex_bt_stomp(struct ath_hw *ah,
- 				"Invalid Stomptype\n");
- 		break;
- 	}
--
--	ath9k_hw_btcoex_enable(ah);
- }
- 
- /*
-@@ -302,7 +300,5 @@ void ath9k_hw_btcoex_bt_stomp(struct ath_hw *ah,
- 				"Invalid Stomptype\n");
- 		break;
- 	}
--
--	ath9k_hw_btcoex_enable(ah);
- }
- EXPORT_SYMBOL(ath9k_hw_btcoex_bt_stomp);
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 2c279dc..e4ae08e 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -198,6 +198,7 @@ static void ath_btcoex_period_timer(unsigned long data)
- 	ath9k_hw_btcoex_bt_stomp(ah, is_btscan ? ATH_BTCOEX_STOMP_ALL :
- 			      btcoex->bt_stomp_type);
- 
-+	ath9k_hw_btcoex_enable(ah);
- 	spin_unlock_bh(&btcoex->btcoex_lock);
- 
- 	if (btcoex->btcoex_period != btcoex->btcoex_no_stomp) {
-@@ -240,6 +241,7 @@ static void ath_btcoex_no_stomp_timer(void *arg)
- 	 else if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_ALL)
- 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_LOW);
- 
-+	ath9k_hw_btcoex_enable(ah);
- 	spin_unlock_bh(&btcoex->btcoex_lock);
- 	ath9k_ps_restore(sc);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index e3a02eb..ce606b6 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -80,6 +80,7 @@ static void ath_btcoex_period_work(struct work_struct *work)
- 	ath9k_hw_btcoex_bt_stomp(priv->ah, is_btscan ? ATH_BTCOEX_STOMP_ALL :
- 			btcoex->bt_stomp_type);
- 
-+	ath9k_hw_btcoex_enable(priv->ah);
- 	timer_period = is_btscan ? btcoex->btscan_no_stomp :
- 		btcoex->btcoex_no_stomp;
- 	ieee80211_queue_delayed_work(priv->hw, &priv->duty_cycle_work,
-@@ -108,6 +109,7 @@ static void ath_btcoex_duty_cycle_work(struct work_struct *work)
- 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_NONE);
- 	else if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_ALL)
- 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_LOW);
-+	ath9k_hw_btcoex_enable(priv->ah);
- }
- 
- void ath_htc_init_btcoex_work(struct ath9k_htc_priv *priv)
--- 
-1.7.7.3
+We have three flags:
+* IEEE80211_HW_SUPPORTS_PS
+* IEEE80211_HW_PS_NULLFUNC_STACK
+* IEEE80211_HW_SUPPORTS_DYNAMIC_PS
+but obviously not all combinations make sense. The valid combinations
+are:
+
+1) !SUPPORTS_PS (d'oh)
+2) SUPPORTS_PS
+3) SUPPORTS_PS | NULLFUNC_STACK
+4) SUPPORTS_PS | SUPPORTS_DYNAMIC_PS
+
+The drivers seem to use them:
+1) didn't check, probably plenty
+2) wl1251, wl12xx (though the latter is moving to 4) I believe)
+3) ath9k_htc, ath9k, carl9170, p54, rt2x00, rtlwifi
+4) iwlwifi, iwlegacy
+
+So by far the most common are 1 and 3, with 2 being a dying breed and 4
+being obviously trivial.
+
+
+The interesting thing here is that the difference between 2 and 3 is
+relatively small, except for the off-channel case where case 2 is really
+confusing. But wl1251 has hardware scan, so we don't have to worry about
+that all that much. (The auth/assoc work case is curious but I think we
+need to do that differently soon enough anyway)
+
+Since clearly it is possible to implement this in the lower layers, I'm
+thinking we should provide an implementation that the drivers can use to
+implement powersave and be in category 4 from mac80211's POV.
+
+I think the API for case 3 could look something like this:
+
+struct powersave {
+	...
+};
+
+struct powersave_ops {
+	void (*tx_nulldata)(void *ctx, ...);
+	void (*set_radio)(void *ctx, bool on);
+	void (*timeout_radio_off)(void *ctx);
+};
+
+void powersave_init(struct powersave *ps, struct powersave_ops *ops, void *ctx);
+void powersave_deinit(struct powersave *ps);
+
+void powersave_start(struct powersave *ps);
+void powersave_stop(struct powersave *ps);
+bool powersave_tx(struct powersave *ps);
+void powersave_rx(struct powersave *ps);
+void powersave_nulldata_status(struct powersave *ps, bool ack);
+
+/* maybe for wl12xx's BT implementation: */
+void powersave_disable_dynps(struct powersave *ps);
+void powersave_enable_dynps(struct powersave *ps);
+
+
+I think this would be created per (managed) interface by the driver. I
+don't think we need to hide the internals, and that makes it easier to
+just have such a struct in the vif struct.
+
+Additional APIs might be needed for some of the configuration
+parameters, not really sure yet.
+
+The API rules would be that the set_radio() callback is always called
+within a function call, which is why timeout_radio_off() is a separate
+callback (locking would be different).
+
+
+I haven't really full thought this through but it doesn't seem
+impossible to do. Thoughts?
+
+johannes
 
