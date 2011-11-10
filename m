@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33578 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751093Ab1KDTnZ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47392 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754090Ab1KJIow (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 15:43:25 -0400
-Message-ID: <4EB44058.1040705@candelatech.com> (sfid-20111104_204330_099299_796FF05E)
-Date: Fri, 04 Nov 2011 12:43:20 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: crash in wireless-next
-References: <4EB42C0C.40101@candelatech.com>  (sfid-20111104_191656_642276_99C645ED)  <1320435146.3969.125.camel@jlt3.sipsolutions.net>  (sfid-20111104_203233_422852_33ADA66F) <1320435238.3969.126.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1320435238.3969.126.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 10 Nov 2011 03:44:52 -0500
+Subject: [PATCH] nl80211: fix compiler warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20111109215007.GD10712@tuxdriver.com> (sfid-20111109_230016_428309_0817D10D)
+References: <20111109215007.GD10712@tuxdriver.com>
+	 (sfid-20111109_230016_428309_0817D10D)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 10 Nov 2011 09:44:46 +0100
+Message-ID: <1320914686.3967.4.camel@jlt3.sipsolutions.net> (sfid-20111110_094456_632513_1E2E338C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/04/2011 12:33 PM, Johannes Berg wrote:
-> On Fri, 2011-11-04 at 20:32 +0100, Johannes Berg wrote:
->> On Fri, 2011-11-04 at 11:16 -0700, Ben Greear wrote:
->>> Anyone seen a crash like this?  I was restarting my user-space
->>> tools, and had just unloaded the drivers that had,
->>> around 135 virtual stations created.  Just my disable-ht
->>> patch series applied on top of yesterday's wireless-testing.
->>>
->>> I'll dig into it more when I get a chance, but let me know
->>> if someone is already working on this...
->>
->> The only crash in wext I ever saw was recently with compat but I don't
->> think that looked similar.
->
-> I guess you don't have CONFIG_COMPAT, but in that case I think so much
-> gets inlined into wext_handle_ioctl() that I have no idea what could
-> possibly crash. Disassembly of the place that crashed (preferably with
-> -S if you have it) would be useful.
+From: Johannes Berg <johannes.berg@intel.com>
 
-It might have been some issue with just copying over modules.  I installed
-a full kernel and the crash went away..at least for a bit.  System crashed
-while I was driving home, but serial console is at work..so will check it
-later to see if it was the same issue.
+John reported the following warning:
 
-I'll build w/debug and dis-assemble it if the problem persists.
+net/wireless/nl80211.c: In function ‘nl80211_tx_mgmt’:
+net/wireless/nl80211.c:5286:8: warning: ‘hdr’ may be used uninitialized in this function
 
-Thanks,
-Ben
+Evidently, his version of gcc isn't able to see that
+when "msg" is initialized, "hdr" must also be. My
+gcc, 4.6.1, can actually see that and doesn't warn.
+Simply initialize the variable to NULL. That means
+if the compiler was ever right we'll crash though so
+isn't really optimal since it may hide warnings from
+the compiler when somebody modifies this code in the
+future.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Reported-by: John Linville <linville@tuxdriver.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/net/wireless/nl80211.c	2011-11-10 09:36:08.000000000 +0100
++++ b/net/wireless/nl80211.c	2011-11-10 09:42:15.000000000 +0100
+@@ -5283,7 +5283,7 @@ static int nl80211_tx_mgmt(struct sk_buf
+ 	bool channel_type_valid = false;
+ 	u32 freq;
+ 	int err;
+-	void *hdr;
++	void *hdr = NULL;
+ 	u64 cookie;
+ 	struct sk_buff *msg = NULL;
+ 	unsigned int wait = 0;
+
+
