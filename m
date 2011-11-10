@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:36424 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752852Ab1K1MCv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 07:02:51 -0500
-Received: by ghrr1 with SMTP id r1so5098351ghr.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 04:02:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAMqtkVzpmAA0WsaUfGF5gQBHLjEjtU7PX6+TEwOsfAM=j4ok5g@mail.gmail.com>
-References: <CAMqtkVzpmAA0WsaUfGF5gQBHLjEjtU7PX6+TEwOsfAM=j4ok5g@mail.gmail.com>
-From: =?UTF-8?B?0JDQu9C10LrRgdCw0L3QtNGAINCn0LDQv9C60LjQvQ==?=
-	<watashi@reisei.ru>
-Date: Mon, 28 Nov 2011 16:02:30 +0400
-Message-ID: <CAMqtkVzEBcAZ7XeScvLuKqLj1Sv-QQQqyVe5ZjnBtQeK6_SgYQ@mail.gmail.com> (sfid-20111128_130254_350391_15756BC0)
-Subject: Fwd: Compilation error
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:26419 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751028Ab1KJBdf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 20:33:35 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 21/28] iwlagn: convert remain-on-channel duration to TU
+Date: Wed,  9 Nov 2011 16:39:24 -0800
+Message-Id: <1320885571-19122-22-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023400_877467_A55CE5D7)
+In-Reply-To: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello! I have a compilation error while porting
-compat-wireless-3.2-rc1-1 on 2.6.32 linux kernel
+From: Johannes Berg <johannes.berg@intel.com>
 
+The device expects TU but we get ms, so convert.
 
-CC [M]  /home/username/compat-wireless-3.2-rc1-1/net/mac80211/main.o
-In file included from
-/home/username/compat-wireless-3.2-rc1-1/net/mac80211/ieee80211_i.h:30,
-                 from
-/home/username/compat-wireless-3.2-rc1-1/net/mac80211/main.c:27:
-/home/username/compat-wireless-3.2-rc1-1/net/mac80211/key.h:88: error:
-expected specifier-qualifier-list before 'atomic64_t'
-/home/username/compat-wireless-3.2-rc1-1/net/mac80211/key.h:100:
-error: expected specifier-qualifier-list before 'atomic64_t'
-make[3]: *** [/home/username/compat-wireless-3.2-rc1-1/net/mac80211/main.o]
-Ошибка 1
-make[2]: *** [/home/username/compat-wireless-3.2-rc1-1/net/mac80211] Ошибка 2
-make[1]: *** [_module_/home/username/compat-wireless-3.2-rc1-1] Ошибка 2
-make[1]: Выход из каталога `/home/username/core-test-test/core_modified'
-make: *** [modules] Ошибка 2
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Please, help me to correct this.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 073e827..05b1f0d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -957,7 +957,8 @@ static int iwlagn_mac_remain_on_channel(struct ieee80211_hw *hw,
+ 
+ 	priv->hw_roc_channel = channel;
+ 	priv->hw_roc_chantype = channel_type;
+-	priv->hw_roc_duration = duration;
++	/* convert from ms to TU */
++	priv->hw_roc_duration = DIV_ROUND_UP(1000 * duration, 1024);
+ 	priv->hw_roc_start_notified = false;
+ 	cancel_delayed_work(&priv->hw_roc_disable_work);
+ 
+-- 
+1.7.0.4
+
