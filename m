@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:34984 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623Ab1KPOqT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 09:46:19 -0500
-Received: by vcbfk1 with SMTP id fk1so424002vcb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 06:46:19 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1321454572.4502.3.camel@jlt3.sipsolutions.net>
-References: <20111116142854.518391560@sipsolutions.net>
-	<20111116142911.501655161@sipsolutions.net>
-	<CAOZOX0VkGezQcijrEMiQSiuY=yadgSva7w9-SfrvYYW_UG+0LQ@mail.gmail.com>
-	<1321454572.4502.3.camel@jlt3.sipsolutions.net>
-Date: Wed, 16 Nov 2011 15:46:18 +0100
-Message-ID: <CAOZOX0V4jVbVKQ1Qcc+wqi8URgzPSN6xXOSmRt9mHOQv=f75qA@mail.gmail.com> (sfid-20111116_154622_768954_37797A7F)
-Subject: Re: [PATCH 4/4] mac80211: transmit fragment list to drivers
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:46218 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935489Ab1KJPtl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 10:49:41 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 19/27] iwlwifi: check status before send command
+Date: Thu, 10 Nov 2011 06:55:19 -0800
+Message-Id: <1320936927-9078-20-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_165013_948715_BADC75DF)
+In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 16, 2011 at 3:42 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2011-11-16 at 15:40 +0100, Ivo Van Doorn wrote:
->
->> > +static inline void drv_tx_frags(struct ieee80211_local *local,
->> > +                               struct ieee80211_sub_if_data *sdata,
->> > +                               struct sta_info *sta,
->> > +                               struct sk_buff_head *skbs,
->> > +                               void *internal)
->> > +{
->> > +       local->ops->tx_frags(&local->hw,
->> > +                            sdata ? &sdata->vif : NULL,
->> > +                            sta ? &sta->sta : NULL,
->> > +                            skbs, internal);
->> > +}
->>
->> Instead of changing every driver and making .tx_frags callback mandatory,
->> isn't it easier to have a if-else here?
->
-> We certainly can't have the if-else here, if there should be one it
-> should be in __ieee80211_tx().
+Check the status before sending host command, if any of the condition
+match, cancel the host command before queue
 
-Yeah, I was too lazy to search for the call to drv_tx_frags() itself. :)
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   26 +++++++++++----------
+ 1 files changed, 14 insertions(+), 12 deletions(-)
 
->> Then it is much easier for the drivers as you can document that either
->> .tx or .tx_frags is mandatory but never both.
->
-> Maybe that's the better option. Somehow I thought it would be more
-> efficient this way, but I guess it doesn't actually make much of a
-> difference and I can get rid of the void *internal parameter.
->
-> I'll change.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 461e1ae..09a31dc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -1001,6 +1001,20 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	IWL_DEBUG_INFO(trans, "Attempting to send sync command %s\n",
+ 			get_cmd_string(cmd->id));
+ 
++	if (test_bit(STATUS_EXIT_PENDING, &trans->shrd->status))
++		return -EBUSY;
++
++
++	if (test_bit(STATUS_RF_KILL_HW, &trans->shrd->status)) {
++		IWL_ERR(trans, "Command %s aborted: RF KILL Switch\n",
++			       get_cmd_string(cmd->id));
++		return -ECANCELED;
++	}
++	if (test_bit(STATUS_FW_ERROR, &trans->shrd->status)) {
++		IWL_ERR(trans, "Command %s failed: FW Error\n",
++			       get_cmd_string(cmd->id));
++		return -EIO;
++	}
+ 	set_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status);
+ 	IWL_DEBUG_INFO(trans, "Setting HCMD_ACTIVE for command %s\n",
+ 			get_cmd_string(cmd->id));
+@@ -1041,18 +1055,6 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 		}
+ 	}
+ 
+-	if (test_bit(STATUS_RF_KILL_HW, &trans->shrd->status)) {
+-		IWL_ERR(trans, "Command %s aborted: RF KILL Switch\n",
+-			       get_cmd_string(cmd->id));
+-		ret = -ECANCELED;
+-		goto fail;
+-	}
+-	if (test_bit(STATUS_FW_ERROR, &trans->shrd->status)) {
+-		IWL_ERR(trans, "Command %s failed: FW Error\n",
+-			       get_cmd_string(cmd->id));
+-		ret = -EIO;
+-		goto fail;
+-	}
+ 	if ((cmd->flags & CMD_WANT_SKB) && !cmd->reply_page) {
+ 		IWL_ERR(trans, "Error: Response NULL in '%s'\n",
+ 			  get_cmd_string(cmd->id));
+-- 
+1.7.0.4
 
-Thanks,
-
-Ivo
