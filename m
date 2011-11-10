@@ -1,42 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53912 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933194Ab1KHURp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 15:17:45 -0500
-Subject: Re: [PATCH v8 2/2] mac80211:  Support ht-cap over-rides.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1320783128.24797.48.camel@jlt3.sipsolutions.net> (sfid-20111108_211213_875547_E1753A2D)
-References: <1320780995-30483-1-git-send-email-greearb@candelatech.com>
-	 <1320780995-30483-2-git-send-email-greearb@candelatech.com>
-	 (sfid-20111108_203659_989707_E33ECA13)  <1320783128.24797.48.camel@jlt3.sipsolutions.net>
-	 (sfid-20111108_211213_875547_E1753A2D)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Nov 2011 21:17:38 +0100
-Message-ID: <1320783458.24797.49.camel@jlt3.sipsolutions.net> (sfid-20111108_211749_009438_CC61DE09)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:32739 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935479Ab1KJPtl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 10:49:41 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 16/27] iwlwifi: move station functions to mac80211
+Date: Thu, 10 Nov 2011 06:55:16 -0800
+Message-Id: <1320936927-9078-17-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_165008_917184_9AC0BC76)
+In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-11-08 at 21:12 +0100, Johannes Berg wrote:
+The station related mac80211 callback functions should belong to _mac80211
 
-> For example here:
-> 
-> >  		if (!(ap_ht_cap_flags & IEEE80211_HT_CAP_40MHZ_INTOLERANT) &&
-> > +		    !ieee80111_cfg_override_disables_ht40(sdata) &&
-> >  		    (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
-> >  		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
-> >  			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-> 
-> This just adds complexity. If you calculate sdata->used_ht_caps first
-> then you can replace the sband->ht_cap.cap check with an
-> sdata->used_ht_caps.cap check and be done with it, instead of having to
-> check both.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |   68 -------------------------
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |    7 ---
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |   71 +++++++++++++++++++++++++++
+ 3 files changed, 71 insertions(+), 75 deletions(-)
 
-Similarly in ieee80211_add_ht_ie(), you wouldn't have to re-calculate
-the override, etc. I think it would be a lot simpler that way.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index 1b112df..901fd94 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -829,28 +829,6 @@ int iwl_send_lq_cmd(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 	return ret;
+ }
+ 
+-int iwlagn_mac_sta_remove(struct ieee80211_hw *hw,
+-		       struct ieee80211_vif *vif,
+-		       struct ieee80211_sta *sta)
+-{
+-	struct iwl_priv *priv = hw->priv;
+-	struct iwl_station_priv *sta_priv = (void *)sta->drv_priv;
+-	int ret;
+-
+-	IWL_DEBUG_MAC80211(priv, "enter: received request to remove "
+-			   "station %pM\n", sta->addr);
+-	mutex_lock(&priv->shrd->mutex);
+-	IWL_DEBUG_INFO(priv, "proceeding to remove station %pM\n",
+-			sta->addr);
+-	ret = iwl_remove_station(priv, sta_priv->sta_id, sta->addr);
+-	if (ret)
+-		IWL_DEBUG_QUIET_RFKILL(priv, "Error removing station %pM\n",
+-			sta->addr);
+-	mutex_unlock(&priv->shrd->mutex);
+-	IWL_DEBUG_MAC80211(priv, "leave\n");
+-
+-	return ret;
+-}
+ 
+ void iwl_sta_fill_lq(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 		     u8 sta_id, struct iwl_link_quality_cmd *link_cmd)
+@@ -1468,20 +1446,7 @@ int iwl_sta_rx_agg_stop(struct iwl_priv *priv, struct ieee80211_sta *sta,
+ 	return iwl_send_add_sta(priv, &sta_cmd, CMD_SYNC);
+ }
+ 
+-static void iwl_sta_modify_ps_wake(struct iwl_priv *priv, int sta_id)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
+-	priv->stations[sta_id].sta.station_flags &= ~STA_FLG_PWR_SAVE_MSK;
+-	priv->stations[sta_id].sta.station_flags_msk = STA_FLG_PWR_SAVE_MSK;
+-	priv->stations[sta_id].sta.sta.modify_mask = 0;
+-	priv->stations[sta_id].sta.sleep_tx_count = 0;
+-	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+-	iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
+ 
+-}
+ 
+ void iwl_sta_modify_sleep_tx_count(struct iwl_priv *priv, int sta_id, int cnt)
+ {
+@@ -1498,36 +1463,3 @@ void iwl_sta_modify_sleep_tx_count(struct iwl_priv *priv, int sta_id, int cnt)
+ 	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
+ 
+ }
+-
+-void iwlagn_mac_sta_notify(struct ieee80211_hw *hw,
+-			   struct ieee80211_vif *vif,
+-			   enum sta_notify_cmd cmd,
+-			   struct ieee80211_sta *sta)
+-{
+-	struct iwl_priv *priv = hw->priv;
+-	struct iwl_station_priv *sta_priv = (void *)sta->drv_priv;
+-	int sta_id;
+-
+-	IWL_DEBUG_MAC80211(priv, "enter\n");
+-
+-	switch (cmd) {
+-	case STA_NOTIFY_SLEEP:
+-		WARN_ON(!sta_priv->client);
+-		sta_priv->asleep = true;
+-		if (atomic_read(&sta_priv->pending_frames) > 0)
+-			ieee80211_sta_block_awake(hw, sta, true);
+-		break;
+-	case STA_NOTIFY_AWAKE:
+-		WARN_ON(!sta_priv->client);
+-		if (!sta_priv->asleep)
+-			break;
+-		sta_priv->asleep = false;
+-		sta_id = iwl_sta_id(sta);
+-		if (sta_id != IWL_INVALID_STATION)
+-			iwl_sta_modify_ps_wake(priv, sta_id);
+-		break;
+-	default:
+-		break;
+-	}
+-	IWL_DEBUG_MAC80211(priv, "leave\n");
+-}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 72af933..d325132 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -210,9 +210,6 @@ int iwl_add_station_common(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 			   struct ieee80211_sta *sta, u8 *sta_id_r);
+ int iwl_remove_station(struct iwl_priv *priv, const u8 sta_id,
+ 		       const u8 *addr);
+-int iwlagn_mac_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+-		       struct ieee80211_sta *sta);
+-
+ u8 iwl_prep_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 		    const u8 *addr, bool is_ap, struct ieee80211_sta *sta);
+ 
+@@ -330,10 +327,6 @@ void iwl_sta_modify_sleep_tx_count(struct iwl_priv *priv, int sta_id, int cnt);
+ int iwl_update_bcast_station(struct iwl_priv *priv,
+ 			     struct iwl_rxon_context *ctx);
+ int iwl_update_bcast_stations(struct iwl_priv *priv);
+-void iwlagn_mac_sta_notify(struct ieee80211_hw *hw,
+-			   struct ieee80211_vif *vif,
+-			   enum sta_notify_cmd cmd,
+-			   struct ieee80211_sta *sta);
+ 
+ /* rate */
+ static inline u32 iwl_ant_idx_to_flags(u8 ant_idx)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 6df08bb..b46702c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -1847,6 +1847,77 @@ static int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
+ 	return ret;
+ }
+ 
++static int iwlagn_mac_sta_remove(struct ieee80211_hw *hw,
++		       struct ieee80211_vif *vif,
++		       struct ieee80211_sta *sta)
++{
++	struct iwl_priv *priv = hw->priv;
++	struct iwl_station_priv *sta_priv = (void *)sta->drv_priv;
++	int ret;
++
++	IWL_DEBUG_MAC80211(priv, "enter: received request to remove "
++			   "station %pM\n", sta->addr);
++	mutex_lock(&priv->shrd->mutex);
++	IWL_DEBUG_INFO(priv, "proceeding to remove station %pM\n",
++			sta->addr);
++	ret = iwl_remove_station(priv, sta_priv->sta_id, sta->addr);
++	if (ret)
++		IWL_DEBUG_QUIET_RFKILL(priv, "Error removing station %pM\n",
++			sta->addr);
++	mutex_unlock(&priv->shrd->mutex);
++	IWL_DEBUG_MAC80211(priv, "leave\n");
++
++	return ret;
++}
++
++static void iwl_sta_modify_ps_wake(struct iwl_priv *priv, int sta_id)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
++	priv->stations[sta_id].sta.station_flags &= ~STA_FLG_PWR_SAVE_MSK;
++	priv->stations[sta_id].sta.station_flags_msk = STA_FLG_PWR_SAVE_MSK;
++	priv->stations[sta_id].sta.sta.modify_mask = 0;
++	priv->stations[sta_id].sta.sleep_tx_count = 0;
++	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
++	iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
++	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
++
++}
++
++static void iwlagn_mac_sta_notify(struct ieee80211_hw *hw,
++			   struct ieee80211_vif *vif,
++			   enum sta_notify_cmd cmd,
++			   struct ieee80211_sta *sta)
++{
++	struct iwl_priv *priv = hw->priv;
++	struct iwl_station_priv *sta_priv = (void *)sta->drv_priv;
++	int sta_id;
++
++	IWL_DEBUG_MAC80211(priv, "enter\n");
++
++	switch (cmd) {
++	case STA_NOTIFY_SLEEP:
++		WARN_ON(!sta_priv->client);
++		sta_priv->asleep = true;
++		if (atomic_read(&sta_priv->pending_frames) > 0)
++			ieee80211_sta_block_awake(hw, sta, true);
++		break;
++	case STA_NOTIFY_AWAKE:
++		WARN_ON(!sta_priv->client);
++		if (!sta_priv->asleep)
++			break;
++		sta_priv->asleep = false;
++		sta_id = iwl_sta_id(sta);
++		if (sta_id != IWL_INVALID_STATION)
++			iwl_sta_modify_ps_wake(priv, sta_id);
++		break;
++	default:
++		break;
++	}
++	IWL_DEBUG_MAC80211(priv, "leave\n");
++}
++
+ struct ieee80211_ops iwlagn_hw_ops = {
+ 	.tx = iwlagn_mac_tx,
+ 	.start = iwlagn_mac_start,
+-- 
+1.7.0.4
 
