@@ -1,62 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44734 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750907Ab1KHVIh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 16:08:37 -0500
-Subject: Re: [PATCH v8 2/2] mac80211:  Support ht-cap over-rides.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4EB999BE.8050909@candelatech.com>
-References: <1320780995-30483-1-git-send-email-greearb@candelatech.com>
-	 <1320780995-30483-2-git-send-email-greearb@candelatech.com>
-	 (sfid-20111108_203659_989707_E33ECA13) <1320782949.24797.45.camel@jlt3.sipsolutions.net>
-	 <4EB994A1.1020808@candelatech.com>
-	 <1320785889.24797.75.camel@jlt3.sipsolutions.net>
-	 <4EB999BE.8050909@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Nov 2011 22:08:35 +0100
-Message-ID: <1320786515.24797.80.camel@jlt3.sipsolutions.net> (sfid-20111108_220840_328525_F9FDBB68)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:56565 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751028Ab1KJBdb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 20:33:31 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Todd Previte <toddX.a.previte@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 02/28] iwlwifi: Suppress noisy syslog messages when RF_KILL switch engaged
+Date: Wed,  9 Nov 2011 16:39:05 -0800
+Message-Id: <1320885571-19122-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023414_114992_2AFEC837)
+In-Reply-To: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-11-08 at 13:06 -0800, Ben Greear wrote:
+From: Todd Previte <toddX.a.previte@intel.com>
 
-> > About APs: that can't be right, there certainly will be 1x1 APs.
-> 
-> Section 20.1.1 again:
-> 
-> "An HT non-AP STA shall support all equal modulation (EQM) rates for one spatial stream (MCSs 0 through
-> 7) using 20 MHz channel width. An HT AP shall support all EQM rates for one and two spatial streams
-> (MCSs 0 through 15) using 20 MHz channel width."
-> 
-> Again, I think the requirement is lame, and maybe everyone will just ignore it,
-> but it is there...
+When a station is associated with an AP and the RF_KILL switch is engaged,
+numerous error messages were sent to the system log. The error messages
+were the result of the failure(s) of the various submodules to perform
+their tasks after the radios were disabled.
 
-Funny. Yeah I'm pretty sure everybody ignores that. Of course maybe you
-can't get a 1x1 AP certified as an AP, but surely that'll happen with a
-P2P GO all the time.
+To resolve this situation, the messages were modified to use a new macro,
+IWL_DEBUG_QUIET_RFKILL. This macro allows for the RF_KILL error messages
+to be sent to the log provided that IWL_DEBUG is true and IWL_DL_RADIO
+is '1'. For all other cases, the error messages resulting from an RFKILL
+event will not be sent to the system log. Messages logged because of an
+RFKILL will be tagged with the prefix '(RFKILL)' to clarify the cause of
+the error.
 
-> > start = allow_single_stream_mask ? 0 : 1;
-> >
-> > for (i = start; i<  IEEE80211_HT_MCS_MASK_LEN; i++) {
-> > 	u8 val = smask[i]&  scaps[i];
-> > 	val |= ht_cap->mcs.rx_mask[i]&  ~smask[i];
-> > 	ht_cap->mcs.rx_mask[i] val;
-> > }
-> >
-> > or so. right? Much simpler?
-> 
-> Depends on whether we want to honour the AP part of 20.1.1.
-> Since we don't support AP mode anyway right now,
-> I'm fine with your suggestion.  Let me know if you want
-> me to proceed with your suggested changes.
+Signed-off-by: Todd Previte <toddX.a.previte@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c      |    5 +++--
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-debug.h         |   15 +++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   10 ++++++----
+ 4 files changed, 25 insertions(+), 7 deletions(-)
 
-I don't want to honour it. In fact, the more I think about it the less I
-want to honour the 0-7 part here, since that just made the code more
-complex and almost nobody will be using this override anyway.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 58a381c..4c52bee 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -45,7 +45,8 @@ static int iwlagn_disable_bss(struct iwl_priv *priv,
+ 	send->filter_flags = old_filter;
+ 
+ 	if (ret)
+-		IWL_ERR(priv, "Error clearing ASSOC_MSK on BSS (%d)\n", ret);
++		IWL_DEBUG_QUIET_RFKILL(priv,
++			"Error clearing ASSOC_MSK on BSS (%d)\n", ret);
+ 
+ 	return ret;
+ }
+@@ -124,7 +125,7 @@ static void iwlagn_update_qos(struct iwl_priv *priv,
+ 			       sizeof(struct iwl_qosparam_cmd),
+ 			       &ctx->qos_data.def_qos_parm);
+ 	if (ret)
+-		IWL_ERR(priv, "Failed to update QoS\n");
++		IWL_DEBUG_QUIET_RFKILL(priv, "Failed to update QoS\n");
+ }
+ 
+ static int iwlagn_update_beacon(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index ed62836..9306768 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -840,7 +840,7 @@ int iwlagn_mac_sta_remove(struct ieee80211_hw *hw,
+ 			sta->addr);
+ 	ret = iwl_remove_station(priv, sta_priv->sta_id, sta->addr);
+ 	if (ret)
+-		IWL_ERR(priv, "Error removing station %pM\n",
++		IWL_DEBUG_QUIET_RFKILL(priv, "Error removing station %pM\n",
+ 			sta->addr);
+ 	mutex_unlock(&priv->shrd->mutex);
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 69a77e2..1dddf9b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -70,10 +70,25 @@ do {                                            			\
+ 			       DUMP_PREFIX_OFFSET, 16, 1, p, len, 1);	\
+ } while (0)
+ 
++#define IWL_DEBUG_QUIET_RFKILL(p, fmt, args...)			\
++do {									\
++	if (!iwl_is_rfkill(p->shrd))				\
++		dev_printk(KERN_ERR, bus(p)->dev, "%c %s " fmt,	\
++		(in_interrupt() ? 'I' : 'U'), __func__ , ##args);	\
++	else if	(iwl_get_debug_level(p->shrd) & IWL_DL_RADIO)	\
++		dev_printk(KERN_ERR, bus(p)->dev, "(RFKILL) %c %s " fmt, \
++		(in_interrupt() ? 'I' : 'U'), __func__ , ##args);	\
++} while (0)
++
+ #else
+ #define IWL_DEBUG(m, level, fmt, args...)
+ #define IWL_DEBUG_LIMIT(m, level, fmt, args...)
+ #define iwl_print_hex_dump(m, level, p, len)
++#define IWL_DEBUG_QUIET_RFKILL(p, fmt, args...)	\
++do {							\
++	if (!iwl_is_rfkill(p->shrd))			\
++		IWL_ERR(p, fmt, ##args);		\
++} while (0)
+ #endif				/* CONFIG_IWLWIFI_DEBUG */
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 4a0c953..461e1ae 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -982,7 +982,8 @@ static int iwl_send_cmd_async(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 
+ 	ret = iwl_enqueue_hcmd(trans, cmd);
+ 	if (ret < 0) {
+-		IWL_ERR(trans, "Error sending %s: enqueue_hcmd failed: %d\n",
++		IWL_DEBUG_QUIET_RFKILL(trans,
++			"Error sending %s: enqueue_hcmd failed: %d\n",
+ 			  get_cmd_string(cmd->id), ret);
+ 		return ret;
+ 	}
+@@ -1008,7 +1009,8 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	if (cmd_idx < 0) {
+ 		ret = cmd_idx;
+ 		clear_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status);
+-		IWL_ERR(trans, "Error sending %s: enqueue_hcmd failed: %d\n",
++		IWL_DEBUG_QUIET_RFKILL(trans,
++			"Error sending %s: enqueue_hcmd failed: %d\n",
+ 			  get_cmd_string(cmd->id), ret);
+ 		return ret;
+ 	}
+@@ -1022,12 +1024,12 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 				&trans_pcie->txq[trans->shrd->cmd_queue];
+ 			struct iwl_queue *q = &txq->q;
+ 
+-			IWL_ERR(trans,
++			IWL_DEBUG_QUIET_RFKILL(trans,
+ 				"Error sending %s: time out after %dms.\n",
+ 				get_cmd_string(cmd->id),
+ 				jiffies_to_msecs(HOST_COMPLETE_TIMEOUT));
+ 
+-			IWL_ERR(trans,
++			IWL_DEBUG_QUIET_RFKILL(trans,
+ 				"Current CMD queue read_ptr %d write_ptr %d\n",
+ 				q->read_ptr, q->write_ptr);
+ 
+-- 
+1.7.0.4
 
