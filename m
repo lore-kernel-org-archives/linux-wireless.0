@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47075 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752266Ab1KRWp2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 17:45:28 -0500
-Date: Fri, 18 Nov 2011 17:34:46 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
-Subject: Re: [PATCH] compat-wireless: avoid pr_fmt build SPAM
-Message-ID: <20111118223445.GA5642@tuxdriver.com> (sfid-20111118_234531_972115_2C250B8C)
-References: <1321649673-15874-1-git-send-email-linville@tuxdriver.com>
- <1321655181.2367.1.camel@Joe-Laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1321655181.2367.1.camel@Joe-Laptop>
+Received: from mga02.intel.com ([134.134.136.20]:46218 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935339Ab1KJPth (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 10:49:37 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 04/27] iwlagn: check for SMPS mode
+Date: Thu, 10 Nov 2011 06:55:04 -0800
+Message-Id: <1320936927-9078-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_164946_238728_9E8F1DB6)
+In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 18, 2011 at 02:26:21PM -0800, Joe Perches wrote:
-> On Fri, 2011-11-18 at 15:54 -0500, John W. Linville wrote:
-> > The way the compat-* header files are included causes the default
-> > pr_fmt definition from <linux/kernel.h> to be evaluated for every file.
-> > Files that define pr_fmt then generate a lot of build SPAM about
-> > pr_fmt being redefined.
-> > 
-> > Eliminate the build noise by preemptively undefining pr_fmt in those
-> > files that define it.  This is accomplished by adding a patch to the
-> > patches directory.
-> 
-> Why not undef pr_fmt after the compat-* headers?
+Check and report WARN only when its invalid
 
-That caused a build break.  IIRC, not everyone that uses pr_*
-defines pr_fmt.  If pr_fmt is undef'd then they don't compile.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    3 +++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 1a52ed2..6465983 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -827,6 +827,7 @@ static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
+ 	case IEEE80211_SMPS_STATIC:
+ 	case IEEE80211_SMPS_DYNAMIC:
+ 		return IWL_NUM_IDLE_CHAINS_SINGLE;
++	case IEEE80211_SMPS_AUTOMATIC:
+ 	case IEEE80211_SMPS_OFF:
+ 		return active_cnt;
+ 	default:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 4c52bee..8e45fba 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -542,6 +542,9 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	mutex_lock(&priv->shrd->mutex);
+ 
++	if (test_bit(STATUS_EXIT_PENDING, &priv->shrd->status))
++		goto out;
++
+ 	if (unlikely(test_bit(STATUS_SCANNING, &priv->shrd->status))) {
+ 		IWL_DEBUG_MAC80211(priv, "leave - scanning\n");
+ 		goto out;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
