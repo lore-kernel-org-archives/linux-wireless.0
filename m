@@ -1,147 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:33736 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753979Ab1KKLmz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Nov 2011 06:42:55 -0500
+Received: from mms1.broadcom.com ([216.31.210.17]:3755 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751649Ab1KJTau (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 14:30:50 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 09/19] brcm80211: fmac: add resetcore function for
+ bcm4330 chip
+Date: Thu, 10 Nov 2011 20:30:24 +0100
+Message-ID: <1320953434-16859-11-git-send-email-arend@broadcom.com> (sfid-20111110_203108_723235_6476B4F0)
+In-Reply-To: <1320953434-16859-1-git-send-email-arend@broadcom.com>
+References: <1320953434-16859-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1321009374.2548.31.camel@edumazet-laptop>
-References: <1320933501.3967.68.camel@jlt3.sipsolutions.net>
-	<CAGXE3d-_RFgW_zwfX2vTBe1psXmgoBFO5pd5cAgtYo=Jwpddhw@mail.gmail.com>
-	<7be02f26a67fac4c7448a74f1f17aa01@visp.net.lb>
-	<CAA93jw7ECQegWj6rpd48sbmDQUjorCYzXANXJSj0baHtxzC7EA@mail.gmail.com>
-	<1321009374.2548.31.camel@edumazet-laptop>
-Date: Fri, 11 Nov 2011 12:42:54 +0100
-Message-ID: <CAA93jw7n1jYiWrnHOF0Zmzd0cVtadNhPSCpP5YqEdq_Q9opw5A@mail.gmail.com> (sfid-20111111_124305_895090_3FF102E9)
-Subject: Re: creating netdev queues on the fly?
-From: Dave Taht <dave.taht@gmail.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Denys Fedoryshchenko <denys@wbc.net.sa>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Andrew McGregor <andrewmcgr@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 11, 2011 at 12:02 PM, Eric Dumazet <eric.dumazet@gmail.com> wrote:
-> Le jeudi 10 novembre 2011 à 16:25 +0100, Dave Taht a écrit :
->
->
->
->> Two notes:
->>
->> 1) Getting 'time' from the kernel is expensive. And: System time wanders.
->>
->> mac80211 Wifi devices however do export a get_tsf function which could
->> be used as a relative-to-the-queue clock - and we actually don't need
->> accuracy down to the level of get_tsf (25ns)
->>
->
->
-> getting 'time' from kernel is not that expensive, depending on
-> resolution you need. We are not going to use timestamps from devices !
+From: Franky Lin <frankyl@broadcom.com>
 
-Wireless keeps track of time via a TSF function.
+This patch is part of the series of adding new backplane support
 
-http://en.wikipedia.org/wiki/Timing_Synchronization_Function_%28TSF%29
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    5 +-
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   45 ++++++++++++++++++--
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |    4 +-
+ 3 files changed, 45 insertions(+), 9 deletions(-)
 
-TSF wanders forward based on an election process from broadcast beacons,
-the presentation below contains animations and the like that describe
-how it works
-
-http://www.cse.ohio-state.edu/~lai/788-Au05/2-scalibility.ppt
-
-Further it copes with life in terms of TU. One tu is 1024us.
-
-Now, whether any of that is truly relevant to how to do packet
-scheduling well on wireless, is a good question. TU is fairly
-fundamental to the minstrel algorithm. It bothers me to have anything
-resembling a beat frequency.
-
->
-> If ms resolution is enough (say you want to drop packets if they stay
-> more than 100ms in qdisc), jiffies is a single memory read.
-
-The intended properties of the hardware queues are 10 ms VO, 100 ms
-VI, and some_sane_number_relative_to_real_bandwidth for BE and BK.
-
-The software queues should make similar assumptions, although for
-voice traffic, being able to drop and 'pull forward' the next packet
-in a stream should it exceed time in queue would be good, and you
-could go with 30 ms in queue with that level of jitter.
-
->
-> If needing us or ns resolution, psched_get_time() uses ktime_get(), and
-> is used in CBQ, HTB, HFSC, TBF, so if it was expensive we would have big
-> problem right now :)
->
-> 2) You need to get a timestamp on entry to the first queue and check
->> against the allowable latency on exit from the last. So to construct a
->> tc chain you'd want a tfifo (timestamp on entry), fifot (check
->> timestamp against limit on dequeue), and for the simplest of
->> applications : tfifot (timestamp on entry, check on exit)
->
-> That would be not very practical.
->
-> I would see a new Qdisc/Class property, like the rate estimator, that we
-> can attach to any Qdisc/Class with a new tc option.
->
-> Even without any limit enforcing (might be Random Early Detection by the
-> way), it could be used to get a Queue Delay estimation, using EWMA
->
-> avqdelay = avqdelay*(1-W) + qdelay*W;
-> W = 2^(-ewma_log);
->
-> tc [ qdisc | class] add [...] [est 1sec 8sec] [delayest ewma_log ] ..
-
-More elegant to be sure. But for N you kind of need to do ewma between
-aggregated transmission groups.
-
->
-> tc -s -d qdisc ...
-> qdisc htb 1: root refcnt 2 r2q 10 default 1 direct_packets_stat 0 ver 3.17
->  Sent 3596219 bytes 2567 pkt (dropped 238, overlimits 3797 requeues 0)
->  rate 2557Kbit 215pps backlog 0b 0p requeues 0
->  delay 91ms
-
-I still don't 'get' how we can split out a stream based on a
-stationid, toss it in a queue to be further scheduled (my choice would
-be QFQ, btw), and then sanely de-schedule a burst of packets for that
-destination appropriate for that station's aggregation level and
-transmit rate using existing tc methods.
-
-I liked the callback idea discussed earlier for implementing a
-'grouper' of this sort.
-
-That said I'm strongly encouraged by the dialog thus far on this thread.
-
->
->
->
-> tc [ qdisc | class] add [...] [est 1sec 8sec] [delaylimit max ] ..
->
-> tc -s -d qdisc ...
-> qdisc htb 1: root refcnt 2 r2q 10 default 1 direct_packets_stat 0 ver 3.17
->  Sent 3596219 bytes 2567 pkt (dropped 238, overlimits 3797 requeues 0)
->  rate 2557Kbit 215pps backlog 0b 0p requeues 0
->  delay 91ms delaylimit 100ms (dropped 12)
-
-and I assume that you are either making this syntax up or coding
-faster than emailing in some tree somewhere...
-
->
->
->
->
-
-
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 0d0e283..a5d1c35 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3108,8 +3108,7 @@ static int brcmf_sdbrcm_download_state(struct brcmf_bus *bus, bool enter)
+ 
+ 		ci->coredisable(bus->sdiodev, ci, BCMA_CORE_ARM_CM3);
+ 
+-		brcmf_sdio_chip_resetcore(bus->sdiodev, ci,
+-					  BCMA_CORE_INTERNAL_MEM);
++		ci->resetcore(bus->sdiodev, ci, BCMA_CORE_INTERNAL_MEM);
+ 
+ 		/* Clear the top bit of memory */
+ 		if (bus->ramsize) {
+@@ -3133,7 +3132,7 @@ static int brcmf_sdbrcm_download_state(struct brcmf_bus *bus, bool enter)
+ 		w_sdreg32(bus, 0xFFFFFFFF,
+ 			  offsetof(struct sdpcmd_regs, intstatus), &retries);
+ 
+-		brcmf_sdio_chip_resetcore(bus->sdiodev, ci, BCMA_CORE_ARM_CM3);
++		ci->resetcore(bus->sdiodev, ci, BCMA_CORE_ARM_CM3);
+ 
+ 		/* Allow HT Clock now that the ARM is running. */
+ 		bus->alp_only = false;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+index d2cf8c6..cef9abb 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+@@ -278,9 +278,9 @@ brcmf_sdio_ai_coredisable(struct brcmf_sdio_dev *sdiodev,
+ 	udelay(1);
+ }
+ 
+-void
+-brcmf_sdio_chip_resetcore(struct brcmf_sdio_dev *sdiodev,
+-			  struct chip_info *ci, u16 coreid)
++static void
++brcmf_sdio_sb_resetcore(struct brcmf_sdio_dev *sdiodev,
++			struct chip_info *ci, u16 coreid)
+ {
+ 	u32 regdata;
+ 	u8 idx;
+@@ -291,7 +291,7 @@ brcmf_sdio_chip_resetcore(struct brcmf_sdio_dev *sdiodev,
+ 	 * Must do the disable sequence first to work for
+ 	 * arbitrary current core state.
+ 	 */
+-	ci->coredisable(sdiodev, ci, coreid);
++	brcmf_sdio_sb_coredisable(sdiodev, ci, coreid);
+ 
+ 	/*
+ 	 * Now do the initialization sequence.
+@@ -301,8 +301,11 @@ brcmf_sdio_chip_resetcore(struct brcmf_sdio_dev *sdiodev,
+ 	brcmf_sdcard_reg_write(sdiodev,
+ 			CORE_SB(ci->c_inf[idx].base, sbtmstatelow), 4,
+ 			SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK | SSB_TMSLOW_RESET);
++	regdata = brcmf_sdcard_reg_read(sdiodev,
++				CORE_SB(ci->c_inf[idx].base, sbtmstatelow), 4);
+ 	udelay(1);
+ 
++	/* clear any serror */
+ 	regdata = brcmf_sdcard_reg_read(sdiodev,
+ 				CORE_SB(ci->c_inf[idx].base, sbtmstatehigh), 4);
+ 	if (regdata & SSB_TMSHIGH_SERR)
+@@ -320,12 +323,44 @@ brcmf_sdio_chip_resetcore(struct brcmf_sdio_dev *sdiodev,
+ 	brcmf_sdcard_reg_write(sdiodev,
+ 		CORE_SB(ci->c_inf[idx].base, sbtmstatelow), 4,
+ 		SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK);
++	regdata = brcmf_sdcard_reg_read(sdiodev,
++				CORE_SB(ci->c_inf[idx].base, sbtmstatelow), 4);
+ 	udelay(1);
+ 
+ 	/* leave clock enabled */
+ 	brcmf_sdcard_reg_write(sdiodev,
+ 			       CORE_SB(ci->c_inf[idx].base, sbtmstatelow),
+ 			       4, SSB_TMSLOW_CLOCK);
++	regdata = brcmf_sdcard_reg_read(sdiodev,
++				CORE_SB(ci->c_inf[idx].base, sbtmstatelow), 4);
++	udelay(1);
++}
++
++static void
++brcmf_sdio_ai_resetcore(struct brcmf_sdio_dev *sdiodev,
++			struct chip_info *ci, u16 coreid)
++{
++	u8 idx;
++	u32 regdata;
++
++	idx = brcmf_sdio_chip_getinfidx(ci, coreid);
++
++	/* must disable first to work for arbitrary current core state */
++	brcmf_sdio_ai_coredisable(sdiodev, ci, coreid);
++
++	/* now do initialization sequence */
++	brcmf_sdcard_reg_write(sdiodev, ci->c_inf[idx].wrapbase+BCMA_IOCTL,
++			       4, BCMA_IOCTL_FGC | BCMA_IOCTL_CLK);
++	regdata = brcmf_sdcard_reg_read(sdiodev,
++					ci->c_inf[idx].wrapbase+BCMA_IOCTL, 4);
++	brcmf_sdcard_reg_write(sdiodev, ci->c_inf[idx].wrapbase+BCMA_RESET_CTL,
++			       4, 0);
++	udelay(1);
++
++	brcmf_sdcard_reg_write(sdiodev, ci->c_inf[idx].wrapbase+BCMA_IOCTL,
++			       4, BCMA_IOCTL_CLK);
++	regdata = brcmf_sdcard_reg_read(sdiodev,
++					ci->c_inf[idx].wrapbase+BCMA_IOCTL, 4);
+ 	udelay(1);
+ }
+ 
+@@ -371,11 +406,13 @@ static int brcmf_sdio_chip_recognition(struct brcmf_sdio_dev *sdiodev,
+ 		ci->iscoreup = brcmf_sdio_sb_iscoreup;
+ 		ci->corerev = brcmf_sdio_sb_corerev;
+ 		ci->coredisable = brcmf_sdio_sb_coredisable;
++		ci->resetcore = brcmf_sdio_sb_resetcore;
+ 		break;
+ 	case SOCI_AI:
+ 		ci->iscoreup = brcmf_sdio_ai_iscoreup;
+ 		ci->corerev = brcmf_sdio_ai_corerev;
+ 		ci->coredisable = brcmf_sdio_ai_coredisable;
++		ci->resetcore = brcmf_sdio_ai_resetcore;
+ 		break;
+ 	default:
+ 		brcmf_dbg(ERROR, "socitype %u not supported\n", ci->socitype);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
+index 22232a8..ce974d7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
+@@ -80,6 +80,8 @@ struct chip_info {
+ 			 u16 coreid);
+ 	void (*coredisable)(struct brcmf_sdio_dev *sdiodev,
+ 			struct chip_info *ci, u16 coreid);
++	void (*resetcore)(struct brcmf_sdio_dev *sdiodev,
++			struct chip_info *ci, u16 coreid);
+ };
+ 
+ struct sbconfig {
+@@ -122,8 +124,6 @@ struct sbconfig {
+ 	u32 sbidhigh;	/* identification */
+ };
+ 
+-extern void brcmf_sdio_chip_resetcore(struct brcmf_sdio_dev *sdiodev,
+-				      struct chip_info *ci, u16 coreid);
+ extern int brcmf_sdio_chip_attach(struct brcmf_sdio_dev *sdiodev,
+ 				  struct chip_info **ci_ptr, u32 regs);
+ extern void brcmf_sdio_chip_detach(struct chip_info **ci_ptr);
 -- 
-Dave Täht
-SKYPE: davetaht
-US Tel: 1-239-829-5608
-FR Tel: 0638645374
-http://www.bufferbloat.net
+1.7.5.4
+
+
