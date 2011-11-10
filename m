@@ -1,164 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45043 "EHLO mx1.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:26419 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757132Ab1KRIX2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 03:23:28 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Greg Dietsche <Gregory.Dietsche@cuw.edu>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 77/77] iwlegacy: debugfs_ops should depend on CONFIG_IWLEGACY_DEBUGFS
-Date: Fri, 18 Nov 2011 09:22:39 +0100
-Message-Id: <1321604559-10707-77-git-send-email-sgruszka@redhat.com> (sfid-20111118_092342_523132_BC4DB472)
-In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
-References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+	id S1755443Ab1KJBdd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 20:33:33 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 15/28] iwlwifi: move hw_scan into _mac80211 file
+Date: Wed,  9 Nov 2011 16:39:18 -0800
+Message-Id: <1320885571-19122-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023433_397710_FC060DD4)
+In-Reply-To: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+iwlagn_mac_hw_scan should belong to _mac80211 callback.
 
-Only setup structs related to debugfs_ops when CONFIG_IWLEGACY_DEBUGFS is set.
-
-Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlegacy/3945.c   |    2 ++
- drivers/net/wireless/iwlegacy/3945.h   |   21 ---------------------
- drivers/net/wireless/iwlegacy/4965.c   |    2 ++
- drivers/net/wireless/iwlegacy/4965.h   |   21 ---------------------
- drivers/net/wireless/iwlegacy/common.h |    4 ++++
- 5 files changed, 8 insertions(+), 42 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    3 --
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |   46 +++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |   45 --------------------------
+ 3 files changed, 46 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/3945.c b/drivers/net/wireless/iwlegacy/3945.c
-index 7367dbb..863664f 100644
---- a/drivers/net/wireless/iwlegacy/3945.c
-+++ b/drivers/net/wireless/iwlegacy/3945.c
-@@ -2671,11 +2671,13 @@ static struct il_lib_ops il3945_lib = {
- 	.send_tx_power = il3945_send_tx_power,
- 	.is_valid_rtc_data_addr = il3945_hw_valid_rtc_data_addr,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index ee3692a..fa47f75 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -312,9 +312,6 @@ void iwl_init_scan_params(struct iwl_priv *priv);
+ int iwl_scan_cancel(struct iwl_priv *priv);
+ void iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms);
+ void iwl_force_scan_end(struct iwl_priv *priv);
+-int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
+-		    struct ieee80211_vif *vif,
+-		    struct cfg80211_scan_request *req);
+ void iwl_internal_short_hw_scan(struct iwl_priv *priv);
+ int iwl_force_reset(struct iwl_priv *priv, int mode, bool external);
+ u16 iwl_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 1b2dbb0..6df08bb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -1801,6 +1801,52 @@ static int iwlagn_mac_change_interface(struct ieee80211_hw *hw,
+ 	return err;
+ }
  
-+#ifdef CONFIG_IWLEGACY_DEBUGFS
- 	.debugfs_ops = {
- 			.rx_stats_read = il3945_ucode_rx_stats_read,
- 			.tx_stats_read = il3945_ucode_tx_stats_read,
- 			.general_stats_read = il3945_ucode_general_stats_read,
- 			},
-+#endif
- };
++static int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
++		    struct ieee80211_vif *vif,
++		    struct cfg80211_scan_request *req)
++{
++	struct iwl_priv *priv = hw->priv;
++	int ret;
++
++	IWL_DEBUG_MAC80211(priv, "enter\n");
++
++	if (req->n_channels == 0)
++		return -EINVAL;
++
++	mutex_lock(&priv->shrd->mutex);
++
++	/*
++	 * If an internal scan is in progress, just set
++	 * up the scan_request as per above.
++	 */
++	if (priv->scan_type != IWL_SCAN_NORMAL) {
++		IWL_DEBUG_SCAN(priv,
++			       "SCAN request during internal scan - defer\n");
++		priv->scan_request = req;
++		priv->scan_vif = vif;
++		ret = 0;
++	} else {
++		priv->scan_request = req;
++		priv->scan_vif = vif;
++		/*
++		 * mac80211 will only ask for one band at a time
++		 * so using channels[0] here is ok
++		 */
++		ret = iwl_scan_initiate(priv, vif, IWL_SCAN_NORMAL,
++					req->channels[0]->band);
++		if (ret) {
++			priv->scan_request = NULL;
++			priv->scan_vif = NULL;
++		}
++	}
++
++	IWL_DEBUG_MAC80211(priv, "leave\n");
++
++	mutex_unlock(&priv->shrd->mutex);
++
++	return ret;
++}
++
+ struct ieee80211_ops iwlagn_hw_ops = {
+ 	.tx = iwlagn_mac_tx,
+ 	.start = iwlagn_mac_start,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index a26fbd3..625beec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -939,51 +939,6 @@ int __must_check iwl_scan_initiate(struct iwl_priv *priv,
+ 	return 0;
+ }
  
- static const struct il_legacy_ops il3945_legacy_ops = {
-diff --git a/drivers/net/wireless/iwlegacy/3945.h b/drivers/net/wireless/iwlegacy/3945.h
-index 00d3336..2b2895c 100644
---- a/drivers/net/wireless/iwlegacy/3945.h
-+++ b/drivers/net/wireless/iwlegacy/3945.h
-@@ -621,27 +621,6 @@ ssize_t il3945_ucode_tx_stats_read(struct file *file, char __user *user_buf,
- ssize_t il3945_ucode_general_stats_read(struct file *file,
- 					char __user *user_buf, size_t count,
- 					loff_t *ppos);
--#else
--static ssize_t
--il3945_ucode_rx_stats_read(struct file *file, char __user *user_buf,
--			   size_t count, loff_t *ppos)
+-int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
+-		    struct ieee80211_vif *vif,
+-		    struct cfg80211_scan_request *req)
 -{
--	return 0;
--}
+-	struct iwl_priv *priv = hw->priv;
+-	int ret;
 -
--static ssize_t
--il3945_ucode_tx_stats_read(struct file *file, char __user *user_buf,
--			   size_t count, loff_t *ppos)
--{
--	return 0;
--}
+-	IWL_DEBUG_MAC80211(priv, "enter\n");
 -
--static ssize_t
--il3945_ucode_general_stats_read(struct file *file, char __user *user_buf,
--				size_t count, loff_t *ppos)
--{
--	return 0;
--}
- #endif
- 
- #endif
-diff --git a/drivers/net/wireless/iwlegacy/4965.c b/drivers/net/wireless/iwlegacy/4965.c
-index ac80a00..84c54dc 100644
---- a/drivers/net/wireless/iwlegacy/4965.c
-+++ b/drivers/net/wireless/iwlegacy/4965.c
-@@ -2333,11 +2333,13 @@ static struct il_lib_ops il4965_lib = {
- 	.temp_ops = {
- 		     .temperature = il4965_temperature_calib,
- 		     },
-+#ifdef CONFIG_IWLEGACY_DEBUGFS
- 	.debugfs_ops = {
- 			.rx_stats_read = il4965_ucode_rx_stats_read,
- 			.tx_stats_read = il4965_ucode_tx_stats_read,
- 			.general_stats_read = il4965_ucode_general_stats_read,
- 			},
-+#endif
- };
- 
- static const struct il_legacy_ops il4965_legacy_ops = {
-diff --git a/drivers/net/wireless/iwlegacy/4965.h b/drivers/net/wireless/iwlegacy/4965.h
-index ded8b92..7447231 100644
---- a/drivers/net/wireless/iwlegacy/4965.h
-+++ b/drivers/net/wireless/iwlegacy/4965.h
-@@ -956,27 +956,6 @@ ssize_t il4965_ucode_tx_stats_read(struct file *file, char __user *user_buf,
- ssize_t il4965_ucode_general_stats_read(struct file *file,
- 					char __user *user_buf, size_t count,
- 					loff_t *ppos);
--#else
--static ssize_t
--il4965_ucode_rx_stats_read(struct file *file, char __user *user_buf,
--			   size_t count, loff_t *ppos)
--{
--	return 0;
--}
+-	if (req->n_channels == 0)
+-		return -EINVAL;
 -
--static ssize_t
--il4965_ucode_tx_stats_read(struct file *file, char __user *user_buf,
--			   size_t count, loff_t *ppos)
--{
--	return 0;
--}
+-	mutex_lock(&priv->shrd->mutex);
 -
--static ssize_t
--il4965_ucode_general_stats_read(struct file *file, char __user *user_buf,
--				size_t count, loff_t *ppos)
--{
--	return 0;
+-	/*
+-	 * If an internal scan is in progress, just set
+-	 * up the scan_request as per above.
+-	 */
+-	if (priv->scan_type != IWL_SCAN_NORMAL) {
+-		IWL_DEBUG_SCAN(priv,
+-			       "SCAN request during internal scan - defer\n");
+-		priv->scan_request = req;
+-		priv->scan_vif = vif;
+-		ret = 0;
+-	} else {
+-		priv->scan_request = req;
+-		priv->scan_vif = vif;
+-		/*
+-		 * mac80211 will only ask for one band at a time
+-		 * so using channels[0] here is ok
+-		 */
+-		ret = iwl_scan_initiate(priv, vif, IWL_SCAN_NORMAL,
+-					req->channels[0]->band);
+-		if (ret) {
+-			priv->scan_request = NULL;
+-			priv->scan_vif = NULL;
+-		}
+-	}
+-
+-	IWL_DEBUG_MAC80211(priv, "leave\n");
+-
+-	mutex_unlock(&priv->shrd->mutex);
+-
+-	return ret;
 -}
- #endif
  
- /****************************/
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index d0975ab..1bc0b02 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1631,6 +1631,7 @@ struct il_apm_ops {
- 	void (*config) (struct il_priv *il);
- };
- 
-+#ifdef CONFIG_IWLEGACY_DEBUGFS
- struct il_debugfs_ops {
- 	ssize_t(*rx_stats_read) (struct file *file, char __user *user_buf,
- 				 size_t count, loff_t *ppos);
-@@ -1640,6 +1641,7 @@ struct il_debugfs_ops {
- 				      char __user *user_buf, size_t count,
- 				      loff_t *ppos);
- };
-+#endif
- 
- struct il_temp_ops {
- 	void (*temperature) (struct il_priv *il);
-@@ -1683,7 +1685,9 @@ struct il_lib_ops {
- 	/* temperature */
- 	struct il_temp_ops temp_ops;
- 
-+#ifdef CONFIG_IWLEGACY_DEBUGFS
- 	struct il_debugfs_ops debugfs_ops;
-+#endif
- 
- };
- 
+ /*
+  * internal short scan, this function should only been called while associated.
 -- 
-1.7.1
+1.7.0.4
 
