@@ -1,44 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pbsg501.nifty.com ([202.248.238.71]:35973 "EHLO
-	pbsg501.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932834Ab1KPBmz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 20:42:55 -0500
-Received: from [127.0.0.1] (himob2-p64.iem.hi-ho.ne.jp [203.180.25.64]) (authenticated)
-	by pbsg501.nifty.com with ESMTP id pAG1gcbR005629
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 10:42:44 +0900
-Date: Wed, 16 Nov 2011 10:41:36 +0900
-From: Masahiro Inoue <miyabi.-.inoue@nifty.com>
-To: linux-wireless@vger.kernel.org
-Subject: Build Error Report
-Message-Id: <20111116104133.E58B.2E210E2F@nifty.com> (sfid-20111116_024259_178078_3D2C3F99)
+Received: from mms2.broadcom.com ([216.31.210.18]:4624 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751757Ab1KJTau (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 14:30:50 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 00/19] brcm80211: cleanup and preparing for new chip
+Date: Thu, 10 Nov 2011 20:30:14 +0100
+Message-ID: <1320953434-16859-1-git-send-email-arend@broadcom.com> (sfid-20111110_203057_160844_47B818BD)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+This series is more cleanup that is related to comments on the mainline
+patch and preparing for adding a new chip for brcmfmac driver. And lastly
+a patch to avoid sighs from maintainers or any accusations of any advances.
 
-The build error occurs by compat-wireless-2011-11-10.
-My kernel is 2.6.27.
+This patch series should apply on wireless-testing repository. There are
+not other patches this series depends on.
 
-  CC [M]  /home/miyabi/test/compat-wireless/compat-wireless-2011-11-15/drivers/net/wireless/iwlwifi/iwl-agn-calib.o
-/home/miyabi/test/compat-wireless/compat-wireless-2011-11-15/drivers/net/wireless/iwlwifi/iwl-agn-calib.c: In function 'iwlagn_gain_computation':
-/home/miyabi/test/compat-wireless/compat-wireless-2011-11-15/drivers/net/wireless/iwlwifi/iwl-agn-calib.c:891: warning: comparison of distinct pointer types lacks a cast
-  CC [M]  /home/miyabi/test/compat-wireless/compat-wireless-2011-11-15/drivers/net/wireless/iwlwifi/iwl-io.o
-  CC [M]  /home/miyabi/test/compat-wireless/compat-wireless-2011-11-15/drivers/net/wireless/iwlwifi/iwl-agn-tt.o
-  CC [M]  /home/miyabi/test/compat-wireless/compat-wireless-2011-11-15/drivers/net/wireless/iwlwifi/iwl-agn-sta.o
-  CC [M]  /home/miyabi/test/compat-wireless/compat-wireless-2011-11-15/drivers/net/wireless/iwlwifi/iwl-agn-rx.o
-/home/miyabi/test/compat-wireless/compat-wireless-2011-11-15/drivers/net/wireless/iwlwifi/iwl-agn-rx.c: In function 'iwlagn_rx_noa_notification':
-/home/miyabi/test/compat-wireless/compat-wireless-2011-11-15/drivers/net/wireless/iwlwifi/iwl-agn-rx.c:1075: error: implicit declaration of function 'kfree_rcu'
-/home/miyabi/test/compat-wireless/compat-wireless-2011-11-15/drivers/net/wireless/iwlwifi/iwl-agn-rx.c:1075: error: 'rcu_head' undeclared (first use in this function)
-/home/miyabi/test/compat-wireless/compat-wireless-2011-11-15/drivers/net/wireless/iwlwifi/iwl-agn-rx.c:1075: error: (Each undeclared identifier is reported only once
-/home/miyabi/test/compat-wireless/compat-wireless-2011-11-15/drivers/net/wireless/iwlwifi/iwl-agn-rx.c:1075: error: for each function it appears in.)
-make[4]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2011-11-15/drivers/net/wireless/iwlwifi/iwl-agn-rx.o] Error 1
-make[3]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2011-11-15/drivers/net/wireless/iwlwifi] Error 2
-make[2]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2011-11-15/drivers/net/wireless] Error 2
-make[1]: *** [_module_/home/miyabi/test/compat-wireless/compat-wireless-2011-11-15] Error 2
-make[1]: Leaving directory `/usr/src/kernels/2.6.27-74vl5-x86_64'
-make: *** [modules] Error 2
+Alwin Beukers (2):
+  brcm80211: smac: don't modify sta parameters when adding sta
+  brcm80211: smac: combine promiscuous mode functionality
+
+Arend van Spriel (9):
+  brcm80211: smac: fix endianess issue for OTP memory access
+  brcm80211: smac: remove code under unused macro definitions
+  brcm80211: smac: replace own access category definitions with
+    mac80211 enum
+  brcm80211: smac: remove duplicate definition of D11_PHY_HDR_LEN
+  brcm80211: smac: remove usage of brcmu_pkttotlen
+  brcm80211: util: use sk_buff_head in precedence queue functions
+  brcm80211: util: move brcmu_pkttotlen() function to brcmfmac
+  brcm80211: util: remove pointer traversal from brcmu_pkt_buf_free_skb
+  brcm80211: fmac: add function to free the glom skb queue
+
+Franky Lin (8):
+  brcm80211: fmac: add iscoreup function for bcm4330 chip
+  brcm80211: fmac: add corerev function for bcm4330 chip
+  brcm80211: fmac: add coredisable function for bcm4330 chip
+  brcm80211: fmac: add resetcore function for bcm4330 chip
+  brcm80211: fmac: remove id retrieve code
+  brcm80211: fmac: stop using hard coded firmware/nvram name
+  brcm80211: fmac: remove PCMCIA core related code
+  brcm80211: fmac: release bss struct returned from cfg80211_inform_bss
+
+ drivers/net/wireless/brcm80211/Kconfig             |   14 ++
+ drivers/net/wireless/brcm80211/brcmfmac/bcmchip.h  |   25 --
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    2 -
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   96 ++++-----
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |  234 +++++++++++++++----
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |   17 +-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   18 +-
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c    |    6 +-
+ drivers/net/wireless/brcm80211/brcmsmac/channel.c  |  118 ----------
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    7 -
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |   86 ++++----
+ drivers/net/wireless/brcm80211/brcmsmac/main.h     |    8 +-
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |    8 -
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    2 -
+ drivers/net/wireless/brcm80211/brcmsmac/srom.c     |    2 +
+ drivers/net/wireless/brcm80211/brcmutil/utils.c    |  167 ++++-----------
+ .../net/wireless/brcm80211/include/brcmu_utils.h   |   19 +-
+ 17 files changed, 359 insertions(+), 470 deletions(-)
+ delete mode 100644 drivers/net/wireless/brcm80211/brcmfmac/bcmchip.h
+
+-- 
+1.7.5.4
 
 
