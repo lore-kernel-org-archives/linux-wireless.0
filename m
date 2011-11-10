@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms16-1.1blu.de ([89.202.0.34]:59784 "EHLO ms16-1.1blu.de"
+Received: from ackle.nomi.cz ([81.31.33.35]:45422 "EHLO ackle.nomi.cz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753504Ab1KNVUx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 16:20:53 -0500
-Date: Mon, 14 Nov 2011 22:18:47 +0100
-From: Lars Schotte <gusto@guttok.net>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn 3.0.9 aggreggation messages
-Message-ID: <20111114221847.2ca32e6a@hana.gusto> (sfid-20111114_222055_921959_AF01E22A)
-In-Reply-To: <1321303101.1796.8.camel@wwguy-ubuntu>
-References: <20111114131642.31e8ddbd@hana.gusto>
-	<1321283410.13578.33.camel@wwguy-ubuntu>
-	<20111114201947.58d5fdf6@hana.gusto>
-	<1321303101.1796.8.camel@wwguy-ubuntu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S935188Ab1KJQaz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 11:30:55 -0500
+Date: Thu, 10 Nov 2011 17:30:51 +0100
+From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20111110163051.GA24533@nomi.cz> (sfid-20111110_173139_854605_12A925E8)
+References: <20111029171554.GA16596@nomi.cz> <20111031160342.GB2225@redhat.com> <20111109155411.GA1669@nomi.cz> <20111109165158.GA2254@redhat.com> <20111110091816.GA2247@nomi.cz> <20111110114732.GA2217@redhat.com> <20111110125347.GA29415@nomi.cz> <20111110160703.GA2775@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20111110160703.GA2775@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-of course he deactivates the aggregation soon after, because the AP
-sees no reason why there should be one.
+Hello,
 
-triggering the aggreggation is that problem and it exists only since
-3.0.9. 3.0.8 is OK, but 3.1.1 seems to be affected as well. 3.1.0 was
-OK.
-
-so someting broke it recently.
-
-unfortunately i can not remember if 3.2 kernel had that problem, i
-already removed it because it was too unstable for me, so i can not
-test it any more (w/o compiling it again).
-
-On Mon, 14 Nov 2011 12:38:21 -0800
-wwguy <wey-yi.w.guy@intel.com> wrote:
-
-> Hi Schotte,
+On Thu, Nov 10, 2011 at 05:07:04PM +0100, Stanislaw Gruszka wrote:
+> > (We've got a lot of Lenovos here, mostly T520 and T420s, most of them running
+> > Fedora, and nobody has reported memory corruption problems.
 > 
-> looks like driver has problem activate the aggregation, you can see in
-> the log, the aggregation queue being activate then deactivate soon
-> after. that is why you are seeing the messages showing up in dmesg
-> log.
-> 
-> what AP you are using? is similar thing happen if you connect to
-> different AP?
-> 
-> Thanks
-> Wey
+> Are there any others with 6205? If not that would confirm issue is
+> related with that model.
 
+I think all those T520 and T420s models have exactly the same wireless card. I
+don't see why they wouldn't have. :-)
 
+> You may first try some older kernel as Wey suggested, i.e. 2.6.38.
+
+Okay, I'll try that as soon as I get some more free time.
+
+Thanks for the suggestions,
 -- 
-Lars Schotte
-@ Hana (F16)
+Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
