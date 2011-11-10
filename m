@@ -1,54 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40315 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751870Ab1KCIbB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 04:31:01 -0400
-Subject: Re: [wireless-next PATCH 1/5] mac80211: Support forcing station to
- disable 11n.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4EB22EE6.3030100@candelatech.com>
-References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20111028_071135_777672_88A08497) <1319789318.3914.10.camel@jlt3.sipsolutions.net>
-	 <4EAAFAA7.8090403@candelatech.com>
-	 (sfid-20111028_205543_472872_4928ADE0) <1320220415.3950.1.camel@jlt3.sipsolutions.net>
-	 <4EB17103.70506@candelatech.com>
-	 <1320256263.7846.3.camel@jlt3.sipsolutions.net>
-	 <4EB22EE6.3030100@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 Nov 2011 09:30:58 +0100
-Message-ID: <1320309058.3950.7.camel@jlt3.sipsolutions.net> (sfid-20111103_093106_603513_CB9D55F4)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:56484 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752247Ab1KJBdc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 20:33:32 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 06/28] iwlagn: use per-vif AC parameters
+Date: Wed,  9 Nov 2011 16:39:09 -0800
+Message-Id: <1320885571-19122-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023421_218472_F7808A5B)
+In-Reply-To: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-11-02 at 23:04 -0700, Ben Greear wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> I think I made at least most of the other changes you were asking
-> for, but I'm still baffled about what to do about fullmac drivers.
-> 
-> Based on the comment above, if I simply left out the mac80211 stuff
-> then the new values passed in to the associate/connect logic will just
-> be ignored.
-> 
-> So, I suppose the fullmac drivers will just silently ignore the new
-> variables as well.  I looked, but didn't figure out where fullmac
-> connects into the cfg80211 logic.  If I can find it, then I could
-> add explicit checks for the new variables and return failure if
-> they are set..but I'm not sure that is any better than just silently
-> ignoring them anyway.
+Eliad added the ability to configure AC parameters
+per virtual interface; make use of this in iwlwifi
+and set the parameters in the right context. Since
+storage and uploading to the device is already per
+context, this is sufficient.
 
-So I think just ignoring it would be a bad idea, because you have no way
-to know whether or not the values were used afterwards. That might be
-sufficient for you right now, but typically becomes a support problem at
-some point because people try it and can't figure out what part broke.
-That's why I think silently ignoring something like that is not a good
-idea.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   30 ++++++++++++++----------------
+ 1 files changed, 14 insertions(+), 16 deletions(-)
 
-Hence the typical handling of this with a wiphy flag that you set and if
-it's unset but userspace is requesting this you reject the command.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 001fdf1..989f9f3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1125,10 +1125,14 @@ int iwlagn_mac_conf_tx(struct ieee80211_hw *hw,
+ 		    const struct ieee80211_tx_queue_params *params)
+ {
+ 	struct iwl_priv *priv = hw->priv;
+-	struct iwl_rxon_context *ctx;
++	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
++	struct iwl_rxon_context *ctx = vif_priv->ctx;
+ 	unsigned long flags;
+ 	int q;
+ 
++	if (WARN_ON(!ctx))
++		return -EINVAL;
++
+ 	IWL_DEBUG_MAC80211(priv, "enter\n");
+ 
+ 	if (!iwl_is_ready_rf(priv->shrd)) {
+@@ -1145,21 +1149,15 @@ int iwlagn_mac_conf_tx(struct ieee80211_hw *hw,
+ 
+ 	spin_lock_irqsave(&priv->shrd->lock, flags);
+ 
+-	/*
+-	 * MULTI-FIXME
+-	 * This may need to be done per interface in nl80211/cfg80211/mac80211.
+-	 */
+-	for_each_context(priv, ctx) {
+-		ctx->qos_data.def_qos_parm.ac[q].cw_min =
+-			cpu_to_le16(params->cw_min);
+-		ctx->qos_data.def_qos_parm.ac[q].cw_max =
+-			cpu_to_le16(params->cw_max);
+-		ctx->qos_data.def_qos_parm.ac[q].aifsn = params->aifs;
+-		ctx->qos_data.def_qos_parm.ac[q].edca_txop =
+-				cpu_to_le16((params->txop * 32));
+-
+-		ctx->qos_data.def_qos_parm.ac[q].reserved1 = 0;
+-	}
++	ctx->qos_data.def_qos_parm.ac[q].cw_min =
++		cpu_to_le16(params->cw_min);
++	ctx->qos_data.def_qos_parm.ac[q].cw_max =
++		cpu_to_le16(params->cw_max);
++	ctx->qos_data.def_qos_parm.ac[q].aifsn = params->aifs;
++	ctx->qos_data.def_qos_parm.ac[q].edca_txop =
++			cpu_to_le16((params->txop * 32));
++
++	ctx->qos_data.def_qos_parm.ac[q].reserved1 = 0;
+ 
+ 	spin_unlock_irqrestore(&priv->shrd->lock, flags);
+ 
+-- 
+1.7.0.4
 
