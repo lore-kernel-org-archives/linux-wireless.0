@@ -1,36 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:47927 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753149Ab1KDWag convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 18:30:36 -0400
+Received: from mms1.broadcom.com ([216.31.210.17]:3750 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751608Ab1KJTau (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 14:30:50 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 18/19] brcm80211: fmac: remove PCMCIA core related code
+Date: Thu, 10 Nov 2011 20:30:33 +0100
+Message-ID: <1320953434-16859-20-git-send-email-arend@broadcom.com> (sfid-20111110_203134_530616_B438E079)
+In-Reply-To: <1320953434-16859-1-git-send-email-arend@broadcom.com>
+References: <1320953434-16859-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20111104191343.GB13505@tuxdriver.com>
-References: <20111104191343.GB13505@tuxdriver.com>
-Date: Fri, 4 Nov 2011 23:30:34 +0100
-Message-ID: <CACna6ryikPeppgrUvdhCYGjbi7hBOOcaX6YAz6CgFwd6dbsmfA@mail.gmail.com> (sfid-20111104_233057_028826_B40C3440)
-Subject: Re: pull request: wireless 2011-11-04
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/11/4 John W. Linville <linville@tuxdriver.com>:
-> commit 22097fd297c85ec6c2e700d506f231f7cae442e1
->
-> Dave,
->
-> Here is the first batch of wireless fixes intended for 3.2 -- hooray!
+From: Franky Lin <frankyl@broadcom.com>
 
-John, could you take a look at 2 patches?
-[PATCH 3.2 REQ V2] b43: HT-PHY: report signal to mac80211
-[PATCH V2 3.2] b43: fill ctl1 word on all newer PHYs, fix PHY errors
-I don't think there were commited for 3.2 or rejected by you.
+all the devices supported or will be supported by brcmfmac
+do not have a PCMCIA bus core. So remove the corresponding code.
 
-Were there any problems with that 2 patches?
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   15 ---------------
+ 1 files changed, 0 insertions(+), 15 deletions(-)
 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index a7fc542..6a3d484 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -691,14 +691,6 @@ static int brcmf_sdbrcm_htclk(struct brcmf_bus *bus, bool on, bool pendok)
+ 			return -EBADE;
+ 		}
+ 
+-		if (pendok && ((bus->ci->c_inf[1].id == PCMCIA_CORE_ID)
+-			       && (bus->ci->c_inf[1].rev == 9))) {
+-			u32 dummy, retries;
+-			r_sdreg32(bus, &dummy,
+-				  offsetof(struct sdpcmd_regs, clockctlstatus),
+-				  &retries);
+-		}
+-
+ 		/* Check current status */
+ 		clkctl = brcmf_sdcard_cfg_read(bus->sdiodev, SDIO_FUNC_1,
+ 					       SBSDIO_FUNC1_CHIPCLKCSR, &err);
+@@ -915,13 +907,6 @@ static int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
+ 		brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
+ 			SBSDIO_FUNC1_CHIPCLKCSR, 0, NULL);
+ 
+-		/* Force pad isolation off if possible
+-			 (in case power never toggled) */
+-		if ((bus->ci->c_inf[1].id == PCMCIA_CORE_ID)
+-		    && (bus->ci->c_inf[1].rev >= 10))
+-			brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
+-				SBSDIO_DEVICE_CTL, 0, NULL);
+-
+ 		/* Make sure the controller has the bus up */
+ 		brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
+ 
 -- 
-Rafał
+1.7.5.4
+
+
