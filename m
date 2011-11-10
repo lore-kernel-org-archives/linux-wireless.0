@@ -1,236 +1,351 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29204 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753527Ab1K2O6m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 09:58:42 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Russell Hu <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Wilson Tsao <wtsao@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 15/17] ath9k_hw: Add MCI related changes in chip reset
-Date: Tue, 29 Nov 2011 20:25:36 +0530
-Message-ID: <1322578538-18912-16-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111129_155854_944674_47BC1C0F)
-In-Reply-To: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:43792 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935431Ab1KJPtn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 10:49:43 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 24/27] iwlwifi: add debug information on queue stop / wake
+Date: Thu, 10 Nov 2011 06:55:24 -0800
+Message-Id: <1320936927-9078-25-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_164954_566987_92A1D8B6)
+In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-here we check for BT state and if BT calibration has started,
-give 25ms for BT Calibration to finish. we also take care of 2G/5G
-switch and LNA transfer incase WLAN is operating in 5G. in case the BT
-state is awake when we do WLAN calibration re-calibrate and we reset
-the message exchange between WLAN and BT. BT is given preference when
-simultaneous CAL request happens. calibration for WLAN/BT is done
-assuming that the other co-existing module is in awake state, if not
-we continue to do calibration while if the other module's state changes
-we need to do restart the calibration handshake
+Users complain that the traffic gets stalled sometimes. This will
+allow easier debugging.
 
-Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |  132 +++++++++++++++++++++++++++++++++++
- 1 files changed, 132 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c         |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c       |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-debug.h          |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |   35 +++++++++++++++++---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |   14 +++++---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |   23 ++++++++------
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |   15 +++++---
+ 8 files changed, 67 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1d71d1b..e2860d7 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1514,6 +1514,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 		   struct ath9k_hw_cal_data *caldata, bool bChannelChange)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
- 	u32 saveLedState;
- 	struct ath9k_channel *curchan = ah->curchan;
- 	u32 saveDefAntenna;
-@@ -1521,6 +1522,53 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	u64 tsf = 0;
- 	int i, r;
- 	bool allow_fbs = false;
-+	bool mci = !!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
-+	bool save_fullsleep = ah->chip_fullsleep;
-+
-+	if (mci) {
-+
-+		ar9003_mci_2g5g_changed(ah, IS_CHAN_2GHZ(chan));
-+
-+		if (mci_hw->bt_state == MCI_BT_CAL_START) {
-+			u32 payload[4] = {0, 0, 0, 0};
-+
-+			ath_dbg(common, ATH_DBG_MCI, "MCI stop rx for BT CAL");
-+
-+			mci_hw->bt_state = MCI_BT_CAL;
-+
-+			/*
-+			 * MCI FIX: disable mci interrupt here. This is to avoid
-+			 * SW_MSG_DONE or RX_MSG bits to trigger MCI_INT and
-+			 * lead to mci_intr reentry.
-+			 */
-+
-+			ar9003_mci_disable_interrupt(ah);
-+
-+			ath_dbg(common, ATH_DBG_MCI, "send WLAN_CAL_GRANT");
-+			MCI_GPM_SET_CAL_TYPE(payload, MCI_GPM_WLAN_CAL_GRANT);
-+			ar9003_mci_send_message(ah, MCI_GPM, 0, payload,
-+						16, true, false);
-+
-+			ath_dbg(common, ATH_DBG_MCI, "\nMCI BT is calibrating");
-+
-+			/* Wait BT calibration to be completed for 25ms */
-+
-+			if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_DONE,
-+								  0, 25000))
-+				ath_dbg(common, ATH_DBG_MCI,
-+					"MCI got BT_CAL_DONE\n");
-+			else
-+				ath_dbg(common, ATH_DBG_MCI,
-+					"MCI ### BT cal takes to long, force"
-+					"bt_state to be bt_awake\n");
-+			mci_hw->bt_state = MCI_BT_AWAKE;
-+			/* MCI FIX: enable mci interrupt here */
-+			ar9003_mci_enable_interrupt(ah);
-+
-+			return true;
-+		}
-+	}
-+
- 
- 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
- 		return -EIO;
-@@ -1558,12 +1606,29 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 		if (ath9k_hw_channel_change(ah, chan)) {
- 			ath9k_hw_loadnf(ah, ah->curchan);
- 			ath9k_hw_start_nfcal(ah, true);
-+			if (mci && mci_hw->ready)
-+				ar9003_mci_2g5g_switch(ah, true);
-+
- 			if (AR_SREV_9271(ah))
- 				ar9002_hw_load_ani_reg(ah, chan);
- 			return 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+index f0d6d94..fdb4c37 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+@@ -800,7 +800,8 @@ static void iwlagn_pass_packet_to_mac80211(struct iwl_priv *priv,
+ 					       ctx->active.bssid_addr))
+ 				continue;
+ 			ctx->last_tx_rejected = false;
+-			iwl_trans_wake_any_queue(trans(priv), ctx->ctxid);
++			iwl_trans_wake_any_queue(trans(priv), ctx->ctxid,
++				"channel got active");
  		}
  	}
  
-+	if (mci) {
-+		ar9003_mci_disable_interrupt(ah);
-+
-+		if (mci_hw->ready && !save_fullsleep) {
-+			ar9003_mci_mute_bt(ah);
-+			udelay(20);
-+			REG_WRITE(ah, AR_BTCOEX_CTRL, 0);
-+		}
-+
-+		mci_hw->bt_state = MCI_BT_SLEEP;
-+		mci_hw->ready = false;
-+	}
-+
-+
- 	saveDefAntenna = REG_READ(ah, AR_DEF_ANTENNA);
- 	if (saveDefAntenna == 0)
- 		saveDefAntenna = 1;
-@@ -1619,6 +1684,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (r)
- 		return r;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index b73077f..8de97f5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -844,7 +844,8 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
+ 			if (ctx->last_tx_rejected) {
+ 				ctx->last_tx_rejected = false;
+ 				iwl_trans_wake_any_queue(trans(priv),
+-							 ctx->ctxid);
++							 ctx->ctxid,
++							 "Disassoc: flush queue");
+ 			}
+ 			ctx->staging.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
  
-+	if (mci)
-+		ar9003_mci_reset(ah, false, IS_CHAN_2GHZ(chan), save_fullsleep);
-+
- 	/*
- 	 * Some AR91xx SoC devices frequently fail to accept TSF writes
- 	 * right after the chip reset. When that happens, write a new
-@@ -1736,6 +1804,55 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	ath9k_hw_loadnf(ah, chan);
- 	ath9k_hw_start_nfcal(ah, true);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 014b98a..e6a02e0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -813,7 +813,8 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
+ 			    iwl_is_associated_ctx(ctx) && ctx->vif &&
+ 			    ctx->vif->type == NL80211_IFTYPE_STATION) {
+ 				ctx->last_tx_rejected = true;
+-				iwl_trans_stop_queue(trans(priv), txq_id);
++				iwl_trans_stop_queue(trans(priv), txq_id,
++					"Tx on passive channel");
  
-+	if (mci && mci_hw->ready) {
-+
-+		if (IS_CHAN_2GHZ(chan) &&
-+		    (mci_hw->bt_state == MCI_BT_SLEEP)) {
-+
-+			if (ar9003_mci_check_int(ah,
-+			    AR_MCI_INTERRUPT_RX_MSG_REMOTE_RESET) ||
-+			    ar9003_mci_check_int(ah,
-+			    AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE)) {
-+
-+				/*
-+				 * BT is sleeping. Check if BT wakes up during
-+				 * WLAN calibration. If BT wakes up during
-+				 * WLAN calibration, need to go through all
-+				 * message exchanges again and recal.
-+				 */
-+
-+				ath_dbg(common, ATH_DBG_MCI, "MCI BT wakes up"
-+					"during WLAN calibration\n");
-+
-+				REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW,
-+					  AR_MCI_INTERRUPT_RX_MSG_REMOTE_RESET |
-+					  AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE);
-+				ath_dbg(common, ATH_DBG_MCI, "MCI send"
-+					"REMOTE_RESET\n");
-+				ar9003_mci_remote_reset(ah, true);
-+				ar9003_mci_send_sys_waking(ah, true);
-+				udelay(1);
-+				if (IS_CHAN_2GHZ(chan))
-+					ar9003_mci_send_lna_transfer(ah, true);
-+
-+				mci_hw->bt_state = MCI_BT_AWAKE;
-+
-+				ath_dbg(common, ATH_DBG_MCI, "MCI re-cal\n");
-+
-+				if (caldata) {
-+					caldata->done_txiqcal_once = false;
-+					caldata->done_txclcal_once = false;
-+					caldata->rtt_hist.num_readings = 0;
-+				}
-+
-+				if (!ath9k_hw_init_cal(ah, chan))
-+					return -EIO;
-+
-+			}
-+		}
-+		ar9003_mci_enable_interrupt(ah);
-+	}
-+
- 	ENABLE_REGWRITE_BUFFER(ah);
+ 				IWL_DEBUG_TX_REPLY(priv,
+ 					   "TXQ %d status %s (0x%08x) "
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index a11e7aa..40ef97b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -166,7 +166,7 @@ static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
+ #define IWL_DL_11H		(1 << 28)
+ #define IWL_DL_STATS		(1 << 29)
+ #define IWL_DL_TX_REPLY		(1 << 30)
+-#define IWL_DL_UNUSED		(1 << 31)
++#define IWL_DL_TX_QUEUES	(1 << 31)
  
- 	ath9k_hw_restore_chainmask(ah);
-@@ -1778,6 +1895,21 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (ah->btcoex_hw.enabled)
- 		ath9k_hw_btcoex_enable(ah);
+ #define IWL_DEBUG_INFO(p, f, a...)	IWL_DEBUG(p, IWL_DL_INFO, f, ## a)
+ #define IWL_DEBUG_MAC80211(p, f, a...)	IWL_DEBUG(p, IWL_DL_MAC80211, f, ## a)
+@@ -203,7 +203,7 @@ static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
+ #define IWL_DEBUG_TX_REPLY(p, f, a...)	IWL_DEBUG(p, IWL_DL_TX_REPLY, f, ## a)
+ #define IWL_DEBUG_TX_REPLY_LIMIT(p, f, a...) \
+ 		IWL_DEBUG_LIMIT(p, IWL_DL_TX_REPLY, f, ## a)
+-#define IWL_DEBUG_UNUSED(p, f, a...)	IWL_DEBUG(p, IWL_DL_UNUSED, f, ## a)
++#define IWL_DEBUG_TX_QUEUES(p, f, a...)	IWL_DEBUG(p, IWL_DL_TX_QUEUES, f, ## a)
+ #define IWL_DEBUG_RADIO(p, f, a...)	IWL_DEBUG(p, IWL_DL_RADIO, f, ## a)
+ #define IWL_DEBUG_POWER(p, f, a...)	IWL_DEBUG(p, IWL_DL_POWER, f, ## a)
+ #define IWL_DEBUG_11H(p, f, a...)	IWL_DEBUG(p, IWL_DL_11H, f, ## a)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+index 2b6756e..afaaa2a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+@@ -355,7 +355,7 @@ static inline void iwl_set_swq_id(struct iwl_tx_queue *txq, u8 ac, u8 hwq)
+ }
  
-+	if (mci && mci_hw->ready) {
-+		/*
-+		 * check BT state again to make
-+		 * sure it's not changed.
-+		 */
-+
-+		ar9003_mci_sync_bt_state(ah);
-+		ar9003_mci_2g5g_switch(ah, true);
-+
-+		if ((mci_hw->bt_state == MCI_BT_AWAKE) &&
-+				(mci_hw->query_bt == true)) {
-+			mci_hw->need_flush_btinfo = true;
+ static inline void iwl_wake_queue(struct iwl_trans *trans,
+-				  struct iwl_tx_queue *txq)
++				  struct iwl_tx_queue *txq, const char *msg)
+ {
+ 	u8 queue = txq->swq_id;
+ 	u8 ac = queue & 3;
+@@ -363,13 +363,22 @@ static inline void iwl_wake_queue(struct iwl_trans *trans,
+ 	struct iwl_trans_pcie *trans_pcie =
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+-	if (test_and_clear_bit(hwq, trans_pcie->queue_stopped))
+-		if (atomic_dec_return(&trans_pcie->queue_stop_count[ac]) <= 0)
++	if (test_and_clear_bit(hwq, trans_pcie->queue_stopped)) {
++		if (atomic_dec_return(&trans_pcie->queue_stop_count[ac]) <= 0) {
+ 			iwl_wake_sw_queue(priv(trans), ac);
++			IWL_DEBUG_TX_QUEUES(trans, "Wake hwq %d ac %d. %s",
++					    hwq, ac, msg);
++		} else {
++			IWL_DEBUG_TX_QUEUES(trans, "Don't wake hwq %d ac %d"
++					    " stop count %d. %s",
++					    hwq, ac, atomic_read(&trans_pcie->
++					    queue_stop_count[ac]), msg);
 +		}
 +	}
-+
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		ar9003_hw_bb_watchdog_config(ah);
+ }
  
+ static inline void iwl_stop_queue(struct iwl_trans *trans,
+-				  struct iwl_tx_queue *txq)
++				  struct iwl_tx_queue *txq, const char *msg)
+ {
+ 	u8 queue = txq->swq_id;
+ 	u8 ac = queue & 3;
+@@ -377,9 +386,23 @@ static inline void iwl_stop_queue(struct iwl_trans *trans,
+ 	struct iwl_trans_pcie *trans_pcie =
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+-	if (!test_and_set_bit(hwq, trans_pcie->queue_stopped))
+-		if (atomic_inc_return(&trans_pcie->queue_stop_count[ac]) > 0)
++	if (!test_and_set_bit(hwq, trans_pcie->queue_stopped)) {
++		if (atomic_inc_return(&trans_pcie->queue_stop_count[ac]) > 0) {
+ 			iwl_stop_sw_queue(priv(trans), ac);
++			IWL_DEBUG_TX_QUEUES(trans, "Stop hwq %d ac %d"
++					    " stop count %d. %s",
++					    hwq, ac, atomic_read(&trans_pcie->
++					    queue_stop_count[ac]), msg);
++		} else {
++			IWL_DEBUG_TX_QUEUES(trans, "Don't stop hwq %d ac %d"
++					    " stop count %d. %s",
++					    hwq, ac, atomic_read(&trans_pcie->
++					    queue_stop_count[ac]), msg);
++		}
++	} else {
++		IWL_DEBUG_TX_QUEUES(trans, "stop hwq %d, but it is stopped/ %s",
++				    hwq, msg);
++	}
+ }
+ 
+ #ifdef ieee80211_stop_queue
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index a6d898b..6dba151 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -430,7 +430,7 @@ void iwl_trans_tx_queue_set_status(struct iwl_trans *trans,
+ 
+ 	txq->sched_retry = scd_retry;
+ 
+-	IWL_DEBUG_INFO(trans, "%s %s Queue %d on FIFO %d\n",
++	IWL_DEBUG_TX_QUEUES(trans, "%s %s Queue %d on FIFO %d\n",
+ 		       active ? "Activate" : "Deactivate",
+ 		       scd_retry ? "BA" : "AC/CMD", txq_id, tx_fifo_id);
+ }
+@@ -561,12 +561,13 @@ int iwl_trans_pcie_tx_agg_alloc(struct iwl_trans *trans,
+ 
+ 	tid_data = &trans->shrd->tid_data[sta_id][tid];
+ 	if (tid_data->tfds_in_queue == 0) {
+-		IWL_DEBUG_HT(trans, "HW queue is empty\n");
++		IWL_DEBUG_TX_QUEUES(trans, "HW queue is empty\n");
+ 		tid_data->agg.state = IWL_AGG_ON;
+ 		iwl_start_tx_ba_trans_ready(priv(trans), ctx, sta_id, tid);
+ 	} else {
+-		IWL_DEBUG_HT(trans, "HW queue is NOT empty: %d packets in HW"
+-			     "queue\n", tid_data->tfds_in_queue);
++		IWL_DEBUG_TX_QUEUES(trans,
++				    "HW queue is NOT empty: %d packets in HW"
++				    " queue\n", tid_data->tfds_in_queue);
+ 		tid_data->agg.state = IWL_EMPTYING_HW_QUEUE_ADDBA;
+ 	}
+ 	spin_unlock_irqrestore(&trans->shrd->sta_lock, flags);
+@@ -643,14 +644,15 @@ int iwl_trans_pcie_tx_agg_disable(struct iwl_trans *trans,
+ 
+ 	/* The queue is not empty */
+ 	if (write_ptr != read_ptr) {
+-		IWL_DEBUG_HT(trans, "Stopping a non empty AGG HW QUEUE\n");
++		IWL_DEBUG_TX_QUEUES(trans,
++				    "Stopping a non empty AGG HW QUEUE\n");
+ 		trans->shrd->tid_data[sta_id][tid].agg.state =
+ 			IWL_EMPTYING_HW_QUEUE_DELBA;
+ 		spin_unlock_irqrestore(&trans->shrd->sta_lock, flags);
+ 		return 0;
+ 	}
+ 
+-	IWL_DEBUG_HT(trans, "HW queue is empty\n");
++	IWL_DEBUG_TX_QUEUES(trans, "HW queue is empty\n");
+ turn_off:
+ 	trans->shrd->tid_data[sta_id][tid].agg.state = IWL_AGG_OFF;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index da34110..a1a5833 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1231,7 +1231,7 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 			txq->need_update = 1;
+ 			iwl_txq_update_write_ptr(trans, txq);
+ 		} else {
+-			iwl_stop_queue(trans, txq);
++			iwl_stop_queue(trans, txq, "Queue is full");
+ 		}
+ 	}
+ 	return 0;
+@@ -1283,20 +1283,21 @@ static int iwlagn_txq_check_empty(struct iwl_trans *trans,
+ 		/* aggregated HW queue */
+ 		if ((txq_id  == tid_data->agg.txq_id) &&
+ 		    (q->read_ptr == q->write_ptr)) {
+-			IWL_DEBUG_HT(trans,
++			IWL_DEBUG_TX_QUEUES(trans,
+ 				"HW queue empty: continue DELBA flow\n");
+ 			iwl_trans_pcie_txq_agg_disable(trans, txq_id);
+ 			tid_data->agg.state = IWL_AGG_OFF;
+ 			iwl_stop_tx_ba_trans_ready(priv(trans),
+ 						   NUM_IWL_RXON_CTX,
+ 						   sta_id, tid);
+-			iwl_wake_queue(trans, &trans_pcie->txq[txq_id]);
++			iwl_wake_queue(trans, &trans_pcie->txq[txq_id],
++				       "DELBA flow complete");
+ 		}
+ 		break;
+ 	case IWL_EMPTYING_HW_QUEUE_ADDBA:
+ 		/* We are reclaiming the last packet of the queue */
+ 		if (tid_data->tfds_in_queue == 0) {
+-			IWL_DEBUG_HT(trans,
++			IWL_DEBUG_TX_QUEUES(trans,
+ 				"HW queue empty: continue ADDBA flow\n");
+ 			tid_data->agg.state = IWL_AGG_ON;
+ 			iwl_start_tx_ba_trans_ready(priv(trans),
+@@ -1354,7 +1355,7 @@ static void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+ 				ssn , tfd_num, txq_id, txq->swq_id);
+ 		freed = iwl_tx_queue_reclaim(trans, txq_id, tfd_num, skbs);
+ 		if (iwl_queue_space(&txq->q) > txq->q.low_mark && cond)
+-			iwl_wake_queue(trans, txq);
++			iwl_wake_queue(trans, txq, "Packets reclaimed");
+ 	}
+ 
+ 	iwl_free_tfds_in_queue(trans, sta_id, tid, freed);
+@@ -1418,7 +1419,8 @@ static int iwl_trans_pcie_resume(struct iwl_trans *trans)
+ #endif /* CONFIG_PM_SLEEP */
+ 
+ static void iwl_trans_pcie_wake_any_queue(struct iwl_trans *trans,
+-					  enum iwl_rxon_context_id ctx)
++					  enum iwl_rxon_context_id ctx,
++					  const char *msg)
+ {
+ 	u8 ac, txq_id;
+ 	struct iwl_trans_pcie *trans_pcie =
+@@ -1426,11 +1428,11 @@ static void iwl_trans_pcie_wake_any_queue(struct iwl_trans *trans,
+ 
+ 	for (ac = 0; ac < AC_NUM; ac++) {
+ 		txq_id = trans_pcie->ac_to_queue[ctx][ac];
+-		IWL_DEBUG_INFO(trans, "Queue Status: Q[%d] %s\n",
++		IWL_DEBUG_TX_QUEUES(trans, "Queue Status: Q[%d] %s\n",
+ 			ac,
+ 			(atomic_read(&trans_pcie->queue_stop_count[ac]) > 0)
+ 			      ? "stopped" : "awake");
+-		iwl_wake_queue(trans, &trans_pcie->txq[txq_id]);
++		iwl_wake_queue(trans, &trans_pcie->txq[txq_id], msg);
+ 	}
+ }
+ 
+@@ -1453,11 +1455,12 @@ static struct iwl_trans *iwl_trans_pcie_alloc(struct iwl_shared *shrd)
+ 	return iwl_trans;
+ }
+ 
+-static void iwl_trans_pcie_stop_queue(struct iwl_trans *trans, int txq_id)
++static void iwl_trans_pcie_stop_queue(struct iwl_trans *trans, int txq_id,
++				      const char *msg)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+-	iwl_stop_queue(trans, &trans_pcie->txq[txq_id]);
++	iwl_stop_queue(trans, &trans_pcie->txq[txq_id], msg);
+ }
+ 
+ #define IWL_FLUSH_WAIT_MS	2000
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 1ecdd1c..7839362 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -171,7 +171,8 @@ struct iwl_trans_ops {
+ 	void (*tx_start)(struct iwl_trans *trans);
+ 
+ 	void (*wake_any_queue)(struct iwl_trans *trans,
+-			       enum iwl_rxon_context_id ctx);
++			       enum iwl_rxon_context_id ctx,
++			       const char *msg);
+ 
+ 	int (*send_cmd)(struct iwl_trans *trans, struct iwl_host_cmd *cmd);
+ 
+@@ -196,7 +197,7 @@ struct iwl_trans_ops {
+ 
+ 	void (*free)(struct iwl_trans *trans);
+ 
+-	void (*stop_queue)(struct iwl_trans *trans, int q);
++	void (*stop_queue)(struct iwl_trans *trans, int q, const char *msg);
+ 
+ 	int (*dbgfs_register)(struct iwl_trans *trans, struct dentry* dir);
+ 	int (*check_stuck_queue)(struct iwl_trans *trans, int q);
+@@ -277,9 +278,10 @@ static inline void iwl_trans_tx_start(struct iwl_trans *trans)
+ }
+ 
+ static inline void iwl_trans_wake_any_queue(struct iwl_trans *trans,
+-					    enum iwl_rxon_context_id ctx)
++					    enum iwl_rxon_context_id ctx,
++					    const char *msg)
+ {
+-	trans->ops->wake_any_queue(trans, ctx);
++	trans->ops->wake_any_queue(trans, ctx, msg);
+ }
+ 
+ 
+@@ -339,9 +341,10 @@ static inline void iwl_trans_free(struct iwl_trans *trans)
+ 	trans->ops->free(trans);
+ }
+ 
+-static inline void iwl_trans_stop_queue(struct iwl_trans *trans, int q)
++static inline void iwl_trans_stop_queue(struct iwl_trans *trans, int q,
++					const char *msg)
+ {
+-	trans->ops->stop_queue(trans, q);
++	trans->ops->stop_queue(trans, q, msg);
+ }
+ 
+ static inline int iwl_trans_wait_tx_queue_empty(struct iwl_trans *trans)
 -- 
 1.7.0.4
 
