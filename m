@@ -1,155 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43792 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935453Ab1KJPtj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 10:49:39 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 15/27] iwlwifi: move hw_scan into _mac80211 file
-Date: Thu, 10 Nov 2011 06:55:15 -0800
-Message-Id: <1320936927-9078-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_164948_027318_35006BF3)
-In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:65246 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934785Ab1KJOPI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 09:15:08 -0500
+Received: by wyh15 with SMTP id 15so2729239wyh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Nov 2011 06:15:07 -0800 (PST)
+From: Patrick Kelle <patrick.kelle81@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Patrick Kelle <patrick.kelle81@gmail.com>
+Subject: [PATCH] minstrel: Remove unused function parameter in calc_rate_durations()
+Date: Thu, 10 Nov 2011 15:13:11 +0100
+Message-Id: <1320934391-2574-1-git-send-email-patrick.kelle81@gmail.com> (sfid-20111110_151514_464896_F3DABDC2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwlagn_mac_hw_scan should belong to _mac80211 callback.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Patrick Kelle <patrick.kelle81@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.h     |    3 --
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |   46 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-scan.c     |   45 --------------------------
- 3 files changed, 46 insertions(+), 48 deletions(-)
+ net/mac80211/rc80211_minstrel.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index ee3692a..fa47f75 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -312,9 +312,6 @@ void iwl_init_scan_params(struct iwl_priv *priv);
- int iwl_scan_cancel(struct iwl_priv *priv);
- void iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms);
- void iwl_force_scan_end(struct iwl_priv *priv);
--int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
--		    struct ieee80211_vif *vif,
--		    struct cfg80211_scan_request *req);
- void iwl_internal_short_hw_scan(struct iwl_priv *priv);
- int iwl_force_reset(struct iwl_priv *priv, int mode, bool external);
- u16 iwl_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index 1b2dbb0..6df08bb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -1801,6 +1801,52 @@ static int iwlagn_mac_change_interface(struct ieee80211_hw *hw,
- 	return err;
- }
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 8adac67..6fb908c 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -334,8 +334,8 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
  
-+static int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
-+		    struct ieee80211_vif *vif,
-+		    struct cfg80211_scan_request *req)
-+{
-+	struct iwl_priv *priv = hw->priv;
-+	int ret;
-+
-+	IWL_DEBUG_MAC80211(priv, "enter\n");
-+
-+	if (req->n_channels == 0)
-+		return -EINVAL;
-+
-+	mutex_lock(&priv->shrd->mutex);
-+
-+	/*
-+	 * If an internal scan is in progress, just set
-+	 * up the scan_request as per above.
-+	 */
-+	if (priv->scan_type != IWL_SCAN_NORMAL) {
-+		IWL_DEBUG_SCAN(priv,
-+			       "SCAN request during internal scan - defer\n");
-+		priv->scan_request = req;
-+		priv->scan_vif = vif;
-+		ret = 0;
-+	} else {
-+		priv->scan_request = req;
-+		priv->scan_vif = vif;
-+		/*
-+		 * mac80211 will only ask for one band at a time
-+		 * so using channels[0] here is ok
-+		 */
-+		ret = iwl_scan_initiate(priv, vif, IWL_SCAN_NORMAL,
-+					req->channels[0]->band);
-+		if (ret) {
-+			priv->scan_request = NULL;
-+			priv->scan_vif = NULL;
-+		}
-+	}
-+
-+	IWL_DEBUG_MAC80211(priv, "leave\n");
-+
-+	mutex_unlock(&priv->shrd->mutex);
-+
-+	return ret;
-+}
-+
- struct ieee80211_ops iwlagn_hw_ops = {
- 	.tx = iwlagn_mac_tx,
- 	.start = iwlagn_mac_start,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index a26fbd3..625beec 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -939,51 +939,6 @@ int __must_check iwl_scan_initiate(struct iwl_priv *priv,
- 	return 0;
- }
  
--int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
--		    struct ieee80211_vif *vif,
--		    struct cfg80211_scan_request *req)
--{
--	struct iwl_priv *priv = hw->priv;
--	int ret;
--
--	IWL_DEBUG_MAC80211(priv, "enter\n");
--
--	if (req->n_channels == 0)
--		return -EINVAL;
--
--	mutex_lock(&priv->shrd->mutex);
--
--	/*
--	 * If an internal scan is in progress, just set
--	 * up the scan_request as per above.
--	 */
--	if (priv->scan_type != IWL_SCAN_NORMAL) {
--		IWL_DEBUG_SCAN(priv,
--			       "SCAN request during internal scan - defer\n");
--		priv->scan_request = req;
--		priv->scan_vif = vif;
--		ret = 0;
--	} else {
--		priv->scan_request = req;
--		priv->scan_vif = vif;
--		/*
--		 * mac80211 will only ask for one band at a time
--		 * so using channels[0] here is ok
--		 */
--		ret = iwl_scan_initiate(priv, vif, IWL_SCAN_NORMAL,
--					req->channels[0]->band);
--		if (ret) {
--			priv->scan_request = NULL;
--			priv->scan_vif = NULL;
--		}
--	}
--
--	IWL_DEBUG_MAC80211(priv, "leave\n");
--
--	mutex_unlock(&priv->shrd->mutex);
--
--	return ret;
--}
+ static void
+-calc_rate_durations(struct minstrel_sta_info *mi, struct ieee80211_local *local,
+-                    struct minstrel_rate *d, struct ieee80211_rate *rate)
++calc_rate_durations(struct ieee80211_local *local, struct minstrel_rate *d,
++		    struct ieee80211_rate *rate)
+ {
+ 	int erp = !!(rate->flags & IEEE80211_RATE_ERP_G);
  
- /*
-  * internal short scan, this function should only been called while associated.
+@@ -402,8 +402,7 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
+ 
+ 		mr->rix = i;
+ 		mr->bitrate = sband->bitrates[i].bitrate / 5;
+-		calc_rate_durations(mi, local, mr,
+-				&sband->bitrates[i]);
++		calc_rate_durations(local, mr, &sband->bitrates[i]);
+ 
+ 		/* calculate maximum number of retransmissions before
+ 		 * fallback (based on maximum segment size) */
 -- 
-1.7.0.4
+1.7.7.1
 
