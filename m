@@ -1,106 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61703 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757830Ab1KVQYu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 11:24:50 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Wilson Tsao <wtsao@qca.qualcomm.com>
-Subject: [PATCH 12/18] ath9k_hw: MCI related changes in chip management
-Date: Tue, 22 Nov 2011 21:52:39 +0530
-Message-ID: <1321978965-21684-13-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111122_172452_895770_C8E38235)
-In-Reply-To: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:32739 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935504Ab1KJPtn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 10:49:43 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 25/27] iwlwifi: fix rate-scaling algorithm for BT combo devices
+Date: Thu, 10 Nov 2011 06:55:25 -0800
+Message-Id: <1320936927-9078-26-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_164952_346218_8B16B748)
+In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Venkataraman, Meenakshi <meenakshi.venkataraman@intel.com>
 
-send halt BT GPM if the chip is in network sleep and BT state
-is awake
+iwlwifi tries to avoid using antenna B in BT combo devices when BT
+is active. A bug in the rate-scaling algorithm was causing the combo
+device to never attempt MIMO rates. Fix the algorithm to
+opportunistically try MIMO rates when BT traffic is low.
 
-Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c  |   24 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/reg.h |    2 ++
- 2 files changed, 26 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    8 ++------
+ 1 files changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 662ab7e..ba5734a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1933,6 +1933,7 @@ static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
- bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
- 	int status = true, setChip = true;
- 	static const char *modes[] = {
- 		"AWAKE",
-@@ -1950,12 +1951,35 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- 	switch (mode) {
- 	case ATH9K_PM_AWAKE:
- 		status = ath9k_hw_set_power_awake(ah, setChip);
-+
-+		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
-+			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
-+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 66118ce..359c47a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -1458,10 +1458,8 @@ static int rs_move_legacy_other(struct iwl_priv *priv,
  		break;
- 	case ATH9K_PM_FULL_SLEEP:
-+
-+		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI) {
-+			if (ar9003_mci_state(ah, MCI_STATE_ENABLE, NULL) &&
-+				(mci->bt_state != MCI_BT_SLEEP) &&
-+				!mci->halted_bt_gpm) {
-+				ath_dbg(common, ATH_DBG_MCI, "MCI halt BT GPM"
-+						"(full_sleep)");
-+				ar9003_mci_send_coex_halt_bt_gpm(ah,
-+								 true, true);
-+			}
-+
-+			mci->ready = false;
-+			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
-+		}
-+
- 		ath9k_set_power_sleep(ah, setChip);
- 		ah->chip_fullsleep = true;
+ 	case IWL_BT_COEX_TRAFFIC_LOAD_LOW:
+ 		/* avoid antenna B unless MIMO */
+-		valid_tx_ant =
+-			first_antenna(hw_params(priv).valid_tx_ant);
+ 		if (tbl->action == IWL_LEGACY_SWITCH_ANTENNA2)
+-			tbl->action = IWL_LEGACY_SWITCH_ANTENNA1;
++			tbl->action = IWL_LEGACY_SWITCH_SISO;
  		break;
- 	case ATH9K_PM_NETWORK_SLEEP:
-+
-+		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
-+			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
-+
- 		ath9k_set_power_network_sleep(ah, setChip);
+ 	case IWL_BT_COEX_TRAFFIC_LOAD_HIGH:
+ 	case IWL_BT_COEX_TRAFFIC_LOAD_CONTINUOUS:
+@@ -1636,10 +1634,8 @@ static int rs_move_siso_to_other(struct iwl_priv *priv,
  		break;
- 	default:
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index ba3672f..6e2f188 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1279,6 +1279,8 @@ enum {
- #define AR_RTC_INTR_MASK \
- 	((AR_SREV_9100(ah)) ? (AR_RTC_BASE + 0x0058) : 0x7058)
- 
-+#define AR_RTC_KEEP_AWAKE	0x7034
-+
- /* RTC_DERIVED_* - only for AR9100 */
- 
- #define AR_RTC_DERIVED_CLK \
+ 	case IWL_BT_COEX_TRAFFIC_LOAD_LOW:
+ 		/* avoid antenna B unless MIMO */
+-		valid_tx_ant =
+-			first_antenna(hw_params(priv).valid_tx_ant);
+ 		if (tbl->action == IWL_SISO_SWITCH_ANTENNA2)
+-			tbl->action = IWL_SISO_SWITCH_ANTENNA1;
++			tbl->action = IWL_SISO_SWITCH_MIMO2_AB;
+ 		break;
+ 	case IWL_BT_COEX_TRAFFIC_LOAD_HIGH:
+ 	case IWL_BT_COEX_TRAFFIC_LOAD_CONTINUOUS:
 -- 
 1.7.0.4
 
