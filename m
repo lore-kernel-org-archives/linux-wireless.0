@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18843 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751637Ab1KXGIT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 01:08:19 -0500
-Message-ID: <4ECDDF25.6030900@qca.qualcomm.com> (sfid-20111124_070825_447116_D2828054)
-Date: Thu, 24 Nov 2011 11:37:33 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>, Wilson Tsao <wtsao@qca.qualcomm.com>
-Subject: Re: [PATCH 16/18] ath9k: make ath_reset non-static
-References: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com> <1321978965-21684-17-git-send-email-mohammed@qca.qualcomm.com> <4ECD032F.4040009@openwrt.org> <4ECD0ECC.2060101@qca.qualcomm.com> <4ECD1224.3070900@openwrt.org>
-In-Reply-To: <4ECD1224.3070900@openwrt.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:56484 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752019Ab1KJBdf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 20:33:35 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 22/28] iwlagn: don't always split remain-on-channel
+Date: Wed,  9 Nov 2011 16:39:25 -0800
+Message-Id: <1320885571-19122-23-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023342_854724_3FAA44A3)
+In-Reply-To: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 23 November 2011 09:02 PM, Felix Fietkau wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Doing reset from tasklet context created several nasty stability issues
-> that were hard to track down, and the potential gain from doing reset
-> 'immediately' that way is purely theoretical. Resets should be rare in
-> normal operation, as they're also expensive.
-> The main problem when running reset from a tasklet is that there is no
-> way of gracefully shutting down ongoing workqueue activity, so the
-> result of the reset could be that the work items mess up the state right
-> after the reset is done.
+Due to the P2P context always having the associated
+bit set when we got to this code, we were splitting
+up the remain-on-channel durations unconditionally.
+This isn't needed -- if the P2P context is in P2P
+device type mode it doesn't impose restrictions on
+timing to skip it in that case.
 
-thanks, true in this case ath_reset is called from tasklet context. i 
-will send a v2 for using queue_work.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
->
-> - Felix
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 625beec..359d218 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -416,6 +416,8 @@ static u16 iwl_limit_dwell(struct iwl_priv *priv, u16 dwell_time)
+ 
+ 		if (!iwl_is_associated_ctx(ctx))
+ 			continue;
++		if (ctx->staging.dev_type == RXON_DEV_TYPE_P2P)
++			continue;
+ 		value = ctx->beacon_int;
+ 		if (!value)
+ 			value = IWL_PASSIVE_DWELL_BASE;
 -- 
-thanks,
-shafi
+1.7.0.4
+
