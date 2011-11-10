@@ -1,58 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:38615 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756386Ab1KPL5W (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 06:57:22 -0500
-Received: by bkbzu5 with SMTP id zu5so504540bkb.4
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 03:57:20 -0800 (PST)
-Subject: Re: redesigning authentication/association flows
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1321442014.4773.42.camel@jlt3.sipsolutions.net>
-References: <1321442014.4773.42.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 16 Nov 2011 13:57:16 +0200
-Message-ID: <1321444636.2408.112.camel@cumari> (sfid-20111116_125726_221306_BC561B62)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:43792 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935349Ab1KJPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 10:49:38 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 05/27] iwlagn: fix NULL ptr deref when reprogramming sta w/o LQ
+Date: Thu, 10 Nov 2011 06:55:05 -0800
+Message-Id: <1320936927-9078-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_165046_636235_CF03FB4C)
+In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-11-16 at 12:13 +0100, Johannes Berg wrote: 
-> I've been growing unhappy with the way I designed authentication and
-> association in cfg80211 and I'm ready to admit that the way it works now
-> was a design mistake. Just see the tx_sync as an example, and if we
-> explicitly do remain-on-channel for the authentication or association
-> then we'll have to start doing GO NoA sync within r-o-c which will be a
-> nightmare.
+From: Johannes Berg <johannes.berg@intel.com>
 
-[...]
+Reinette reports a crash in iwl_reprogram_ap_sta(). The
+debugging shows:
 
-> Note that this gets rid of the stupid tx_sync, the attempt at doing this
-> off-channel, and we never have to deal with tx_sync in remain-on-channel
-> which would be really really strange.
-> 
-> The only difference really is that today, if auth fails, we can stay
-> connected. HOWEVER, wpa_supplicant isn't actually able to deal with
-> that, gets confused and recovers with clear_state_mismatch().
-> 
-> 
-> I think this will help all drivers, from at76c50x which is broken
-> completely today, wl1251 which has a dummy join, wl12xx which has a work
-> around with remain-on-channel but this doesn't work well with a GO (NoA)
-> and of course iwlwifi (which has tx_sync for this) and iwlegacy which
-> has a bunch of RXON ping-pong things going on.
+  b1 16    mov    $0x16,%cl
+ *f3 a5    rep movsl %ds     <-- trapping instruction:(%rsi),%es:(%rdi)
 
-As discussed on the phone, I think this should be okay with wl12xx.  We
-will have to study it a bit further to be sure, but my first impression
-is that it's should be fine.
+which is a memcpy of 22 (0x16) words (movsl). this points
+to "priv->stations[sta_id].lq" being NULL since that is
+the memcpy() of that size here.
 
-One small correction from my mistake, wl1251 doesn't have a dummy join,
-it's the old wl12xx which did (with older firmwares that didn't support
-roc/croc).  Sorry, I got confused.
+The only way I see for this to happen is if we try to
+do some RXON reprogramming while connecting to an AP,
+after tx_sync() but before full setup, but that seems
+like something that might very well happen.
 
+Fix this by checking if the LQ is present and only then
+reprogramming it.
+
+Reported-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index 9306768..1b112df 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -647,7 +647,7 @@ void iwl_reprogram_ap_sta(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 	int ret;
+ 	struct iwl_addsta_cmd sta_cmd;
+ 	struct iwl_link_quality_cmd lq;
+-	bool active;
++	bool active, have_lq = false;
+ 
+ 	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
+ 	if (!(priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE)) {
+@@ -657,7 +657,10 @@ void iwl_reprogram_ap_sta(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 
+ 	memcpy(&sta_cmd, &priv->stations[sta_id].sta, sizeof(sta_cmd));
+ 	sta_cmd.mode = 0;
+-	memcpy(&lq, priv->stations[sta_id].lq, sizeof(lq));
++	if (priv->stations[sta_id].lq) {
++		memcpy(&lq, priv->stations[sta_id].lq, sizeof(lq));
++		have_lq = true;
++	}
+ 
+ 	active = priv->stations[sta_id].used & IWL_STA_UCODE_ACTIVE;
+ 	priv->stations[sta_id].used &= ~IWL_STA_DRIVER_ACTIVE;
+@@ -679,7 +682,8 @@ void iwl_reprogram_ap_sta(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 	if (ret)
+ 		IWL_ERR(priv, "failed to re-add STA %pM (%d)\n",
+ 			priv->stations[sta_id].sta.sta.addr, ret);
+-	iwl_send_lq_cmd(priv, ctx, &lq, CMD_SYNC, true);
++	if (have_lq)
++		iwl_send_lq_cmd(priv, ctx, &lq, CMD_SYNC, true);
+ }
+ 
+ int iwl_get_free_ucode_key_offset(struct iwl_priv *priv)
 -- 
-Cheers,
-Luca.
+1.7.0.4
 
