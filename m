@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:16767 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939Ab1KFVxM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Nov 2011 16:53:12 -0500
-Date: Sun, 6 Nov 2011 22:58:31 +0100 (CET)
-From: Jesper Juhl <jj@chaosbits.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] net, wireless, mwifiex: Fix mem leak in
- mwifiex_update_curr_bss_params()
-Message-ID: <alpine.LNX.2.00.1111062255310.5763@swampdragon.chaosbits.net> (sfid-20111106_225322_863092_D3E7DB30)
+Received: from cantor2.suse.de ([195.135.220.15]:50139 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933817Ab1KJPSN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 10:18:13 -0500
+Date: Thu, 10 Nov 2011 07:17:46 -0800
+From: Greg KH <gregkh@suse.de>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@kernel.org
+Subject: Re: [PATCH 3.1-stable] staging: brcm80211: fix for rate index in
+ receive status
+Message-ID: <20111110151746.GB29104@suse.de> (sfid-20111110_161836_103778_9C05FAC7)
+References: <1320918514-5916-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1320918514-5916-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If kmemdup() fails we leak the memory allocated to bss_desc.
-This patch fixes the leak.
-I also removed the pointless default assignment of 'NULL' to 'bss_desc' 
-while I was there anyway.
+On Thu, Nov 10, 2011 at 10:48:34AM +0100, Arend van Spriel wrote:
+> This fix resolves an issue on 5GHz as posted on LKML:
+> 
+> BUG: All network processes hang (brcmsmac/wpa_supplicant)
+> ID: <20111018111422.GA1979@schottelius.org>
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
----
- drivers/net/wireless/mwifiex/scan.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+What are these tags for?  I've not seen them in kernel patches before.
 
- note: patch is compile tested only since I don't have the hardware.
+> Cc: stable@kernel.org
 
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index dae8dbb..8a3f959 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1469,7 +1469,7 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv, u8 *bssid,
- 			       s32 rssi, const u8 *ie_buf, size_t ie_len,
- 			       u16 beacon_period, u16 cap_info_bitmap, u8 band)
- {
--	struct mwifiex_bssdescriptor *bss_desc = NULL;
-+	struct mwifiex_bssdescriptor *bss_desc;
- 	int ret;
- 	unsigned long flags;
- 	u8 *beacon_ie;
-@@ -1484,6 +1484,7 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv, u8 *bssid,
- 
- 	beacon_ie = kmemdup(ie_buf, ie_len, GFP_KERNEL);
- 	if (!beacon_ie) {
-+		kfree(bss_desc);
- 		dev_err(priv->adapter->dev, " failed to alloc beacon_ie\n");
- 		return -ENOMEM;
- 	}
--- 
-1.7.7.2
+Wrong address, please use stable@vger.kernel.org now.
 
+> Reported-by: Nico Schottelius <nico-linux-20111017@schottelius.org>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+> Hi Greg,
+> 
+> This change is in the mainline brcmsmac driver, but I do not have a commit
+> message to refer to as we transitioned from staging to mainline in the last
+> merge window. Can you process this patch without that info?
 
--- 
-Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-Plain text mails only, please.
+No, I need the git commit id of the patch that fixed this in Linus's
+tree, if the files are different due to the move, that's fine, but I
+still need this to reference.
 
+greg k-h
