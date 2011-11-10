@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54286 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753405Ab1KUVpg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 16:45:36 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rtlwifi: squash warning in _usb_read_sync
-Date: Mon, 21 Nov 2011 16:37:26 -0500
-Message-Id: <1321911446-11564-1-git-send-email-linville@tuxdriver.com> (sfid-20111121_224542_100940_B1E08D22)
+Received: from ackle.nomi.cz ([81.31.33.35]:58727 "EHLO ackle.nomi.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752944Ab1KJMxv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 07:53:51 -0500
+Date: Thu, 10 Nov 2011 13:53:47 +0100
+From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20111110125347.GA29415@nomi.cz> (sfid-20111110_135409_461893_C800979A)
+References: <20111029171554.GA16596@nomi.cz> <20111031160342.GB2225@redhat.com> <20111109155411.GA1669@nomi.cz> <20111109165158.GA2254@redhat.com> <20111110091816.GA2247@nomi.cz> <20111110114732.GA2217@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20111110114732.GA2217@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/rtlwifi/usb.c: In function ‘_usb_read_sync’:
-drivers/net/wireless/rtlwifi/usb.c:102:6: warning: ‘status’ may be used uninitialized in this function
-drivers/net/wireless/rtlwifi/usb.c:102:6: note: ‘status’ was declared here
+Hello Stanislaw,
 
-My compiler is dumb, but better to eliminate the warning then to have
-anyone waste time evaluating this again...
+On Thu, Nov 10, 2011 at 12:47:33PM +0100, Stanislaw Gruszka wrote:
+> If "dmesg | grep corrupt" will show "Setting corrupt debug order to 1"
+> patches are in use. Anyway I need to test the patches locally, to see
+> if they work as expected, perhaps exception is generated but call-trace
+> is not printed.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/rtlwifi/usb.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+It does say that, yes.
 
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index 79889b8..20f4403 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -107,7 +107,7 @@ static int _usbctrl_vendorreq_sync_read(struct usb_device *udev, u8 request,
- 	pipe = usb_rcvctrlpipe(udev, 0); /* read_in */
- 	reqtype =  REALTEK_USB_VENQT_READ;
- 
--	while (++vendorreq_times <= MAX_USBCTRL_VENDORREQ_TIMES) {
-+	do {
- 		status = usb_control_msg(udev, pipe, request, reqtype, value,
- 					 index, pdata, len, 0); /*max. timeout*/
- 		if (status < 0) {
-@@ -118,7 +118,8 @@ static int _usbctrl_vendorreq_sync_read(struct usb_device *udev, u8 request,
- 		} else {
- 			break;
- 		}
--	}
-+	} while (++vendorreq_times < MAX_USBCTRL_VENDORREQ_TIMES);
-+
- 	if (status < 0 && count++ < 4)
- 		pr_err("reg 0x%x, usbctrl_vendorreq TimeOut! status:0x%x value=0x%x\n",
- 		       value, status, le32_to_cpu(*(u32 *)pdata));
+> Is this happen only with "Intel Corporation Centrino Advanced-N 6205" or
+> with some other adapters?
+
+I don't have any other iwlwifi adapters, so I wouldn't know. The people in
+that Ubuntu bugreport have exactly that card as well, but in another notebook.
+And they claim it works in newer Ubuntu, but I am running latest kernels with
+latest uCode, so I'm out of ideas what else could be wrong.
+
+> > Perhaps it would be cheaper to just get another card in that case.
+> > :-)
+>
+> That will left issue unresolved :-(
+
+Yeah, but considering how few people report this, I'm starting to feel that it
+might in fact be a hardware issue. It is unfortunate that the wifi adapter in
+this Lenovo model isn't placed in that part of the notebook on the back where
+it could be easily replaced. If that was the case, I could easily swap it with
+my colleagues without voiding the warranty.
+
+(We've got a lot of Lenovos here, mostly T520 and T420s, most of them running
+Fedora, and nobody has reported memory corruption problems. Mine is T420.
+Perhaps I should try to connect to this WPA Enterprise using Windows and see
+if anything goes wrong. However, I have no clue as to what shall I do to
+reproduce the issue in Windows.)
+
+Regards,
 -- 
-1.7.4.4
-
+Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
