@@ -1,30 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:53694 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750936Ab1K1VML (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 16:12:11 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 67EBD5402F4
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 16:12:10 -0500 (EST)
-Subject: Compat-wireless release for 2011-11-28 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20111128211210.44E9E40636@repository3.orbit-lab.org> (sfid-20111128_221215_662919_FB33050F)
-Date: Mon, 28 Nov 2011 16:12:10 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mga02.intel.com ([134.134.136.20]:46218 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935317Ab1KJPtk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 10:49:40 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 20/27] iwlwifi: fix unused label in iwl_send_cmd_sync
+Date: Thu, 10 Nov 2011 06:55:20 -0800
+Message-Id: <1320936927-9078-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_165041_956237_AB898514)
+In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://github.com/mcgrof/compat
-   38eb59d..83f194e  linux-3.2.y -> origin/linux-3.2.y
-   47605df..545ece9  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + b35a5f0...b2798e2 akpm-end   -> origin/akpm-end  (forced update)
-   caca6a0..401d006  akpm-start -> origin/akpm-start
- + e7980f7...1d406ff master     -> origin/master  (forced update)
-   caca6a0..401d006  stable     -> origin/stable
- * [new tag]         next-20111128 -> next-20111128
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-compat-wireless code metrics
+Warning introduced by c847474b7dfdda304d0d8ffcc5a9db546b1cb3e9
 
-    818064 - Total upstream lines of code being pulled
+iwlwifi: check status before send command
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 09a31dc..a6d898b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -1075,7 +1075,7 @@ cancel:
+ 		trans_pcie->txq[trans->shrd->cmd_queue].meta[cmd_idx].flags &=
+ 							~CMD_WANT_SKB;
+ 	}
+-fail:
++
+ 	if (cmd->reply_page) {
+ 		iwl_free_pages(trans->shrd, cmd->reply_page);
+ 		cmd->reply_page = 0;
+-- 
+1.7.0.4
+
