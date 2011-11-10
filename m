@@ -1,97 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:48154 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932194Ab1KBT1k (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 15:27:40 -0400
-Received: by vcge1 with SMTP id e1so482274vcg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2011 12:27:39 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v3 4/4] mac80211: Populate QoS header on mesh frames sent to gates.
-Date: Wed,  2 Nov 2011 12:27:27 -0700
-Message-Id: <1320262047-5389-4-git-send-email-thomas@cozybit.com> (sfid-20111102_202757_472181_C91850F8)
-In-Reply-To: <1320262047-5389-1-git-send-email-thomas@cozybit.com>
-References: <1320262047-5389-1-git-send-email-thomas@cozybit.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:3749 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750814Ab1KJTau (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 14:30:50 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Alwin Beukers" <alwin@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 13/19] brcm80211: smac: combine promiscuous mode
+ functionality
+Date: Thu, 10 Nov 2011 20:30:28 +0100
+Message-ID: <1320953434-16859-15-git-send-email-arend@broadcom.com> (sfid-20111110_203054_258119_3B97BBF3)
+In-Reply-To: <1320953434-16859-1-git-send-email-arend@broadcom.com>
+References: <1320953434-16859-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+From: Alwin Beukers <alwin@broadcom.com>
 
-Also set correct skb queue mapping once next hop is known, and set
-txinfo jiffies when forwarding.
+Combined mac configuration for promiscious mode and monitor mode, and
+removed unused monitor mode flag in pub structure.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/mesh_hwmp.c    |    5 ++++-
- net/mac80211/mesh_pathtbl.c |    5 +++++
- net/mac80211/rx.c           |    8 +++++---
- 3 files changed, 14 insertions(+), 4 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   47 +++++++++---------------
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h  |    1 -
+ 2 files changed, 17 insertions(+), 31 deletions(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index b22b223..c4d8efe 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -1028,8 +1028,11 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
- 					PREQ_Q_F_START | PREQ_Q_F_REFRESH);
- 		}
- 		next_hop = rcu_dereference(mpath->next_hop);
--		if (next_hop)
-+		if (next_hop) {
- 			memcpy(hdr->addr1, next_hop->sta.addr, ETH_ALEN);
-+			skb_set_queue_mapping(skb,
-+				ieee80211_select_queue(sdata, skb));
-+		}
- 		else
- 			err = -ENOENT;
- 	} else {
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 332b5ff1..9d2f55f 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -270,6 +270,11 @@ static void prepare_for_gate(struct sk_buff *skb, char *dst_addr,
- 	memcpy(hdr->addr1, next_hop, ETH_ALEN);
- 	rcu_read_unlock();
- 	memcpy(hdr->addr3, dst_addr, ETH_ALEN);
-+
-+	/*  once next hop is set we can set qos header */
-+	skb_set_queue_mapping(skb,
-+			ieee80211_select_queue(gate_mpath->sdata, skb));
-+	ieee80211_set_qos_hdr(gate_mpath->sdata, skb);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 6a679c9..36e3e06 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -3583,42 +3583,30 @@ static void brcms_c_bandinit_ordered(struct brcms_c_info *wlc,
+ 	brcms_c_set_phy_chanspec(wlc, chanspec);
  }
  
- /**
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 45ace14..302c866 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1965,12 +1965,10 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 			memset(info, 0, sizeof(*info));
- 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
- 			info->control.vif = &rx->sdata->vif;
-+			info->control.jiffies = jiffies;
- 			if (is_multicast_ether_addr(fwd_hdr->addr1)) {
- 				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
- 								fwded_mcast);
--				skb_set_queue_mapping(fwd_skb,
--					ieee80211_select_queue(sdata, fwd_skb));
--				ieee80211_set_qos_hdr(sdata, fwd_skb);
- 			} else {
- 				int err;
- 				/*
-@@ -1991,6 +1989,10 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 			}
- 			IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
- 						     fwded_frames);
+-static void brcms_c_mac_bcn_promisc(struct brcms_c_info *wlc)
+-{
+-	if (wlc->bcnmisc_monitor)
+-		brcms_b_mctrl(wlc->hw, MCTL_BCNS_PROMISC, MCTL_BCNS_PROMISC);
+-	else
+-		brcms_b_mctrl(wlc->hw, MCTL_BCNS_PROMISC, 0);
+-}
+-
+-void brcms_c_mac_bcn_promisc_change(struct brcms_c_info *wlc, bool promisc)
+-{
+-	wlc->bcnmisc_monitor = promisc;
+-	brcms_c_mac_bcn_promisc(wlc);
+-}
+-
+-/* set or clear maccontrol bits MCTL_PROMISC and MCTL_KEEPCONTROL */
++/*
++ * Set or clear maccontrol bits MCTL_PROMISC, MCTL_BCNS_PROMISC and
++ * MCTL_KEEPCONTROL
++ */
+ static void brcms_c_mac_promisc(struct brcms_c_info *wlc)
+ {
+ 	u32 promisc_bits = 0;
+ 
+-	/*
+-	 * promiscuous mode just sets MCTL_PROMISC
+-	 * Note: APs get all BSS traffic without the need to set
+-	 * the MCTL_PROMISC bit since all BSS data traffic is
+-	 * directed at the AP
+-	 */
+-	if (wlc->pub->promisc)
+-		promisc_bits |= MCTL_PROMISC;
++	if (wlc->bcnmisc_monitor)
++		promisc_bits |= MCTL_BCNS_PROMISC;
+ 
+-	/* monitor mode needs both MCTL_PROMISC and MCTL_KEEPCONTROL
+-	 * Note: monitor mode also needs MCTL_BCNS_PROMISC, but that is
+-	 * handled in brcms_c_mac_bcn_promisc()
+-	 */
+ 	if (wlc->monitor)
+-		promisc_bits |= MCTL_PROMISC | MCTL_KEEPCONTROL;
++		promisc_bits |=
++			MCTL_PROMISC | MCTL_BCNS_PROMISC | MCTL_KEEPCONTROL;
+ 
+-	brcms_b_mctrl(wlc->hw, MCTL_PROMISC | MCTL_KEEPCONTROL, promisc_bits);
++	brcms_b_mctrl(wlc->hw,
++			MCTL_PROMISC | MCTL_BCNS_PROMISC | MCTL_KEEPCONTROL,
++			promisc_bits);
++}
 +
-+			/* next hop is now known, update the queue mapping */
-+			skb_set_queue_mapping(fwd_skb,
-+				ieee80211_select_queue(sdata, fwd_skb));
- 			ieee80211_add_pending_skb(local, fwd_skb);
- 		}
++void brcms_c_mac_bcn_promisc_change(struct brcms_c_info *wlc, bool promisc)
++{
++	wlc->bcnmisc_monitor = promisc;
++	brcms_c_mac_promisc(wlc);
+ }
+ 
+ /*
+@@ -3650,7 +3638,6 @@ static void brcms_c_ucode_mac_upd(struct brcms_c_info *wlc)
  	}
+ 
+ 	/* update the various promisc bits */
+-	brcms_c_mac_bcn_promisc(wlc);
+ 	brcms_c_mac_promisc(wlc);
+ }
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+index 8f3da0e..21ccf3a 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+@@ -381,7 +381,6 @@ struct brcms_pub {
+ 	uint _nbands;		/* # bands supported */
+ 	uint now;		/* # elapsed seconds */
+ 
+-	bool promisc;		/* promiscuous destination address */
+ 	bool delayed_down;	/* down delayed */
+ 	bool associated;	/* true:part of [I]BSS, false: not */
+ 	/* (union of stas_associated, aps_associated) */
 -- 
 1.7.5.4
+
 
