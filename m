@@ -1,45 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:55569 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753986Ab1KUWSx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 17:18:53 -0500
+Received: from mms1.broadcom.com ([216.31.210.17]:3746 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750923Ab1KJTau (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 14:30:50 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 06/19] brcm80211: fmac: add iscoreup function for
+ bcm4330 chip
+Date: Thu, 10 Nov 2011 20:30:21 +0100
+Message-ID: <1320953434-16859-8-git-send-email-arend@broadcom.com> (sfid-20111110_203055_210559_9A65AF1D)
+In-Reply-To: <1320953434-16859-1-git-send-email-arend@broadcom.com>
+References: <1320953434-16859-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <201111212249.31196.rjw@sisk.pl>
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera> <201111212249.31196.rjw@sisk.pl>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 21 Nov 2011 14:18:29 -0800
-Message-ID: <CA+55aFygSFt+O5KLoiE_0V+o45eKfsoDDV5ML8EF=J0n9z_D-Q@mail.gmail.com> (sfid-20111121_231923_897743_1387AF6C)
-Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
-To: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Andy Lutomirski <luto@amacapital.net>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 21, 2011 at 1:49 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->
-> Subject    : hugetlb oops on 3.1.0-rc8-devel
-> Submitter  : Andy Lutomirski <luto@amacapital.net>
-> Date       : 2011-11-01 22:20
-> Message-ID : CALCETrW1mpVCz2tO5roaz1r6vnno+srHR-dHA6_pkRi2qiCfdw@mail.gmail.com
-> References : http://marc.info/?l=linux-kernel&m=132018604426692&w=2
+From: Franky Lin <frankyl@broadcom.com>
 
-Despite the subject line, that's not an oops, it's a BUG_ON().
+New type of backplane interconnect support is needed
+for bcm4330
 
-And it *should* be fixed by commit ea4039a34c4c ("hugetlb: release
-pages in the error path of hugetlb_cow()") although I don't think Andy
-ever confirmed that (since it was hard to trigger).
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    4 +-
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   50 ++++++++++++++++++--
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |    6 ++-
+ 3 files changed, 51 insertions(+), 9 deletions(-)
 
-                     Linus
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 43b4496..5b81336 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3120,9 +3120,7 @@ static int brcmf_sdbrcm_download_state(struct brcmf_bus *bus, bool enter)
+ 					 (u8 *)&zeros, 4);
+ 		}
+ 	} else {
+-		idx = brcmf_sdio_chip_getinfidx(ci, BCMA_CORE_INTERNAL_MEM);
+-		if (!brcmf_sdio_chip_iscoreup(bus->sdiodev,
+-					      ci->c_inf[idx].base)) {
++		if (!ci->iscoreup(bus->sdiodev, ci, BCMA_CORE_INTERNAL_MEM)) {
+ 			brcmf_dbg(ERROR, "SOCRAM core is down after reset?\n");
+ 			bcmerror = -EBADE;
+ 			goto fail;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+index 99d00dd..263ad0c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+@@ -45,6 +45,10 @@
+ 	((((sbidh) & SSB_IDHIGH_RCHI) >> SSB_IDHIGH_RCHI_SHIFT) | \
+ 	  ((sbidh) & SSB_IDHIGH_RCLO))
+ 
++/* SOC Interconnect types (aka chip types) */
++#define SOCI_SB		0
++#define SOCI_AI		1
++
+ #define SDIOD_DRVSTR_KEY(chip, pmu)     (((chip) << 16) | (pmu))
+ /* SDIO Pad drive strength to select value mappings */
+ struct sdiod_drive_str {
+@@ -106,19 +110,44 @@ brcmf_sdio_chip_corerev(struct brcmf_sdio_dev *sdiodev,
+ 	return SBCOREREV(regdata);
+ }
+ 
+-bool
+-brcmf_sdio_chip_iscoreup(struct brcmf_sdio_dev *sdiodev,
+-			 u32 corebase)
++static bool
++brcmf_sdio_sb_iscoreup(struct brcmf_sdio_dev *sdiodev,
++		       struct chip_info *ci, u16 coreid)
+ {
+ 	u32 regdata;
++	u8 idx;
++
++	idx = brcmf_sdio_chip_getinfidx(ci, coreid);
+ 
+ 	regdata = brcmf_sdcard_reg_read(sdiodev,
+-			CORE_SB(corebase, sbtmstatelow), 4);
++			CORE_SB(ci->c_inf[idx].base, sbtmstatelow), 4);
+ 	regdata &= (SSB_TMSLOW_RESET | SSB_TMSLOW_REJECT |
+ 		    SSB_IMSTATE_REJECT | SSB_TMSLOW_CLOCK);
+ 	return (SSB_TMSLOW_CLOCK == regdata);
+ }
+ 
++static bool
++brcmf_sdio_ai_iscoreup(struct brcmf_sdio_dev *sdiodev,
++		       struct chip_info *ci, u16 coreid)
++{
++	u32 regdata;
++	u8 idx;
++	bool ret;
++
++	idx = brcmf_sdio_chip_getinfidx(ci, coreid);
++
++	regdata = brcmf_sdcard_reg_read(sdiodev,
++					ci->c_inf[idx].wrapbase+BCMA_IOCTL, 4);
++	ret = (regdata & (BCMA_IOCTL_FGC | BCMA_IOCTL_CLK)) == BCMA_IOCTL_CLK;
++
++	regdata = brcmf_sdcard_reg_read(sdiodev,
++					ci->c_inf[idx].wrapbase+BCMA_RESET_CTL,
++					4);
++	ret = ret && ((regdata & BCMA_RESET_CTL_RESET) == 0);
++
++	return ret;
++}
++
+ void
+ brcmf_sdio_chip_coredisable(struct brcmf_sdio_dev *sdiodev, u32 corebase)
+ {
+@@ -258,6 +287,7 @@ static int brcmf_sdio_chip_recognition(struct brcmf_sdio_dev *sdiodev,
+ 			CORE_CC_REG(ci->c_inf[0].base, chipid), 4);
+ 	ci->chip = regdata & CID_ID_MASK;
+ 	ci->chiprev = (regdata & CID_REV_MASK) >> CID_REV_SHIFT;
++	ci->socitype = (regdata & CID_TYPE_MASK) >> CID_TYPE_SHIFT;
+ 
+ 	brcmf_dbg(INFO, "chipid=0x%x chiprev=%d\n", ci->chip, ci->chiprev);
+ 
+@@ -277,6 +307,18 @@ static int brcmf_sdio_chip_recognition(struct brcmf_sdio_dev *sdiodev,
+ 		return -ENODEV;
+ 	}
+ 
++	switch (ci->socitype) {
++	case SOCI_SB:
++		ci->iscoreup = brcmf_sdio_sb_iscoreup;
++		break;
++	case SOCI_AI:
++		ci->iscoreup = brcmf_sdio_ai_iscoreup;
++		break;
++	default:
++		brcmf_dbg(ERROR, "socitype %u not supported\n", ci->socitype);
++		return -ENODEV;
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
+index 0ee37ae..557c80d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
+@@ -65,12 +65,16 @@ struct chip_core_info {
+ struct chip_info {
+ 	u32 chip;
+ 	u32 chiprev;
++	u32 socitype;
+ 	/* core info */
+ 	/* always put chipcommon core at 0, bus core at 1 */
+ 	struct chip_core_info c_inf[BRCMF_MAX_CORENUM];
+ 	u32 pmurev;
+ 	u32 pmucaps;
+ 	u32 ramsize;
++
++	bool (*iscoreup)(struct brcmf_sdio_dev *sdiodev, struct chip_info *ci,
++			 u16 coreid);
+ };
+ 
+ struct sbconfig {
+@@ -115,8 +119,6 @@ struct sbconfig {
+ 
+ extern void brcmf_sdio_chip_resetcore(struct brcmf_sdio_dev *sdiodev,
+ 				      u32 corebase);
+-extern bool brcmf_sdio_chip_iscoreup(struct brcmf_sdio_dev *sdiodev,
+-				     u32 corebase);
+ extern void brcmf_sdio_chip_coredisable(struct brcmf_sdio_dev *sdiodev,
+ 					u32 corebase);
+ extern int brcmf_sdio_chip_attach(struct brcmf_sdio_dev *sdiodev,
+-- 
+1.7.5.4
+
+
