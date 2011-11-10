@@ -1,71 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:33480 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750960Ab1KYSkv (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:39859 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934814Ab1KJOfS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 13:40:51 -0500
-Received: by eaak14 with SMTP id k14so988570eaa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Nov 2011 10:40:50 -0800 (PST)
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	nbd@openwrt.org, jirislaby@gmail.com,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: [PATCH v2 00/12] ath5k: A few updates + cleanups + kerneldoc
-Date: Fri, 25 Nov 2011 20:40:19 +0200
-Message-Id: <1322246431-10825-1-git-send-email-mickflemm@gmail.com> (sfid-20111125_194054_783874_1F236AEE)
+	Thu, 10 Nov 2011 09:35:18 -0500
+Message-ID: <1320935713.2310.9.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC> (sfid-20111110_153533_082549_9B566EB4)
+Subject: Re: creating netdev queues on the fly?
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 10 Nov 2011 15:35:13 +0100
+In-Reply-To: <1320933501.3967.68.camel@jlt3.sipsolutions.net>
+References: <1320933501.3967.68.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series of patches includes some stability fixes related to interrupt
-handling, an updated version of a calibration-related patch I posted some
-time ago but never submited here and a new module parameter to disable
-GPIO based rfkill switch (we had a few bug reports on that recently).
+Le jeudi 10 novembre 2011 à 14:58 +0100, Johannes Berg a écrit :
+> Hi,
+> 
+> I've been thinking about how we manage TX queues in wifi and right now
+> we just split things up by access category for QoS purposes.
+> 
+> However we have the issue that we might be pushing data to stations with
+> completely different speeds. Onn wired, where our outgoing speed is
+> essentially constant and some router/switch has to drop packets for the
+> slow link:
+> 
+> machine A === 1000mbps link ==== [switch] === 1000mbps === machine B
+>                                      |
+>                                      +--- 100mbps link --- machine C
+> 
+> But on wireless we really transmit to slow stations only with a slow
+> speed, so our outgoing speed differs. I think the scenario is quite
+> different, also because the speed can vary obviously.
+> 
+> So to get to my question: What if we could create netdev queues on the
+> fly?
+> 
+> The reason to do that is that we really don't want to reserve some 8000
+> queues just because somebody could possibly try to create 2000
+> connections (2007 is the theoretical max due to protocol restrictions)
+> to the AP interface. We also don't really want to create a netdev for
+> each peer (though you could implement it that way today).
+> 
+> I looked at this and it doesn't seem terrible. Creating & destroying the
+> queues might be tricky though. I think ndo_select_queue might return the
+> queue pointer instead of an index, and then that queue could be used.
+> The normal queues would still be in an array, with maybe a linked list
+> of extra queues that were dynamically created. Obviously the driver
+> would have to be able to manage that.
+> 
+> Ultimately, all the frames will of course end up on the same four
+> hardware queues again. But this would some better management, and piled
+> up traffic to one station that suddenly dies wouldn't impact performance
+> for all others as badly as it does today since we wouldn't let all those
+> frames pile up on the hardware queues, they'd only get there with some
+> mechanism that might take airtime into account.
+> 
+> I think this might also make implementing reservation (tspec) easier.
+> Not sure if anyone wants/needs that though.
+> 
+> 
+> Am I completely crazy?
+> 
 
-It also adds kernel doc on all ath5k_hw_* functions and structs (needs
-some more work but it should be fine, I reviewed the output, spell-ckecked
-it etc) and a few minor fixes and optimizations.
+In term of qdisc management I believe its a bit complex if we start to
+dynamically add netdev queues :)
 
-v2: Adress comments from Adrian, Felix, Jiri and Bob. Thanks a lot for the
-review !
+My first idea would be to extend Qdisc management so that a device can
+callback qdisc when a frame is finaly delivered / consumed / discarded.
 
-Nick Kossifidis (12):
-  ath5k: Switch from read-and-clear to write-to-clear method when
-    handling PISR/SISR registers
-  ath5k: Add TXNOFRM to INT_TX_ALL
-  ath5k: Cleanups v1
-  ath5k: Calibration re-work
-  ath5k: Use usleep_range where possible
-  ath5k: Cleanups v2 + add kerneldoc on all hw functions
-  ath5k: We always do full calibration on AR5210
-  ath5k: Add a module parameter to disable hw rf kill switch
-  ath5k: MRR support and 2GHz radio override belong in ah_capabilities
-  ath5k: ath5k_ani_period_restart only touches struct ath5k_ani_state
-  ath5k: Renumber hw queue ids
-  ath5k: Optimize ath5k_cw_validate
+We currently only have qdisc->enqueue() and qdisc->dequeue(), we could
+add qdisc->deliver_callback(skb)
 
- drivers/net/wireless/ath/ath5k/ahb.c      |    4 +-
- drivers/net/wireless/ath/ath5k/ani.c      |   91 ++--
- drivers/net/wireless/ath/ath5k/ani.h      |   32 +-
- drivers/net/wireless/ath/ath5k/ath5k.h    |  569 +++++++++++++------
- drivers/net/wireless/ath/ath5k/attach.c   |   16 +-
- drivers/net/wireless/ath/ath5k/base.c     |  287 +++++++----
- drivers/net/wireless/ath/ath5k/caps.c     |   27 +-
- drivers/net/wireless/ath/ath5k/desc.c     |  217 ++++++--
- drivers/net/wireless/ath/ath5k/desc.h     |  124 +++--
- drivers/net/wireless/ath/ath5k/dma.c      |  370 ++++++++-----
- drivers/net/wireless/ath/ath5k/gpio.c     |   81 +++-
- drivers/net/wireless/ath/ath5k/initvals.c |   75 ++-
- drivers/net/wireless/ath/ath5k/pci.c      |    2 +-
- drivers/net/wireless/ath/ath5k/pcu.c      |  222 +++++---
- drivers/net/wireless/ath/ath5k/phy.c      |  853 +++++++++++++++++++++++------
- drivers/net/wireless/ath/ath5k/qcu.c      |  143 ++++--
- drivers/net/wireless/ath/ath5k/reg.h      |   27 +-
- drivers/net/wireless/ath/ath5k/reset.c    |  230 ++++++--
- drivers/net/wireless/ath/ath5k/rfbuffer.h |   59 ++-
- drivers/net/wireless/ath/ath5k/rfgain.h   |   22 +-
- 20 files changed, 2465 insertions(+), 986 deletions(-)
+You keep devices as they are, with a netdevqueue per hardware queue.
 
--- 
-1.7.8.rc3
+Then, using a Qdisc like existing ones, but with a limit of
+outstanding(given to device but not yet consumed) packets per class.
+
+external tc classifier would deliver a hash/index depending on remote
+station.
+
+As a bonus you can get all the existing rate estimators / QOS /
+shapers ...
+
+
 
