@@ -1,45 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:26419 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52169 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751028Ab1KJBdf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 20:33:35 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 21/28] iwlagn: convert remain-on-channel duration to TU
-Date: Wed,  9 Nov 2011 16:39:24 -0800
-Message-Id: <1320885571-19122-22-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023400_877467_A55CE5D7)
-In-Reply-To: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1753236Ab1KJLqw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 06:46:52 -0500
+Date: Thu, 10 Nov 2011 12:47:33 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20111110114732.GA2217@redhat.com> (sfid-20111110_124712_990094_05808507)
+References: <20111029171554.GA16596@nomi.cz>
+ <20111031160342.GB2225@redhat.com>
+ <20111109155411.GA1669@nomi.cz>
+ <20111109165158.GA2254@redhat.com>
+ <20111110091816.GA2247@nomi.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20111110091816.GA2247@nomi.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello Tomáš
 
-The device expects TU but we get ms, so convert.
+On Thu, Nov 10, 2011 at 10:18:16AM +0100, Tomáš Janoušek wrote:
+> On Wed, Nov 09, 2011 at 05:51:59PM +0100, Stanislaw Gruszka wrote:
+> > I just discovered that CONFIG_DEBUG_PAGEALLOC does not work as expected.
+> > It leave most of free pages unprotected, hence unintentional write to
+> > them is not discovered. I'm attaching additional patch, which should
+> > make detection actually work.
+> > 
+> > If kernel will does not boot with corrupt_dbg=1, you may try to catch
+> > corruption without that option. Attached patch should make it possible,
+> > however having corrupt_dbg=1 increase probability of the catch.
+> 
+> Okay, I applied this additional patch, and by the increased memory usage (as
+> shown by free) I concluded that it indeed works. However, I was still able to
+> reproduce the issue without a single error being written to dmesg. :-(
+If "dmesg | grep corrupt" will show "Setting corrupt debug order to 1"
+patches are in use. Anyway I need to test the patches locally, to see
+if they work as expected, perhaps exception is generated but call-trace
+is not printed.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Is this happen only with "Intel Corporation Centrino Advanced-N 6205" or
+with some other adapters?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index 073e827..05b1f0d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -957,7 +957,8 @@ static int iwlagn_mac_remain_on_channel(struct ieee80211_hw *hw,
- 
- 	priv->hw_roc_channel = channel;
- 	priv->hw_roc_chantype = channel_type;
--	priv->hw_roc_duration = duration;
-+	/* convert from ms to TU */
-+	priv->hw_roc_duration = DIV_ROUND_UP(1000 * duration, 1024);
- 	priv->hw_roc_start_notified = false;
- 	cancel_delayed_work(&priv->hw_roc_disable_work);
- 
--- 
-1.7.0.4
+> I will try some really old kernels as Wey suggested to see whether it makes
+> any sense to bisect it, but if it does, it might take more time than I can
+> make free.
+Yes, bisection is very time consuming, especially when reproducing
+is not easy.
 
+> Perhaps it would be cheaper to just get another card in that case.
+> :-)
+That will left issue unresolved :-(
+
+Stanislaw
