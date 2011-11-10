@@ -1,124 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:41172 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755822Ab1K2UJf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 15:09:35 -0500
-Date: Tue, 29 Nov 2011 15:08:15 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Borislav Petkov <bp@amd64.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, x86@kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	deepthi@linux.vnet.ibm.com
-Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
-Message-ID: <20111129200815.GA12114@phenom.dumpdata.com> (sfid-20111129_211048_591085_63CAE60F)
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera>
- <201111212249.31196.rjw@sisk.pl>
- <20111122135412.GA29905@phenom.dumpdata.com>
- <20111129180414.GA11459@phenom.dumpdata.com>
- <20111129183428.GE8200@aftab>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111129183428.GE8200@aftab>
+Received: from mga02.intel.com ([134.134.136.20]:46218 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935481Ab1KJPtl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 10:49:41 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 22/27] iwlagn: don't always split remain-on-channel
+Date: Thu, 10 Nov 2011 06:55:22 -0800
+Message-Id: <1320936927-9078-23-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_165006_787619_9FDCDB76)
+In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 29, 2011 at 07:34:28PM +0100, Borislav Petkov wrote:
-> On Tue, Nov 29, 2011 at 01:04:14PM -0500, Konrad Rzeszutek Wilk wrote:
-> > This patch:
-> > 
-> > commit d91ee5863b71e8c90eaf6035bff3078a85e2e7b5
-> > Author: Len Brown <len.brown@intel.com>
-> > Date:   Fri Apr 1 18:28:35 2011 -0400
-> > 
-> >     cpuidle: replace xen access to x86 pm_idle and default_idle
-> > 
-> >     ..scribble on pm_idle and access default_idle,
-> >    have it simply disable_cpuidle() so acpi_idle will not load and
-> >    architecture default HLT will be used.
-> > 
-> > idea was to have one call - disable_cpuidle() which would make
-> > pm_idle not be molested by other code. It disallows cpuidle_idle_call
-> > and acpi_idle_call to not set pm_idle (which is excellent). But the
-> 
-> what is acpi_idle_call, I can't find it anywhere.
+From: Johannes Berg <johannes.berg@intel.com>
 
-You are right. I had "acpi_idle_enter_*" and its friend in mind. Which
-are called from the cpuidle_idle_call.
+Due to the P2P context always having the associated
+bit set when we got to this code, we were splitting
+up the remain-on-channel durations unconditionally.
+This isn't needed -- if the P2P context is in P2P
+device type mode it doesn't impose restrictions on
+timing to skip it in that case.
 
-Let me fix that comment up.
-> 
-> > amd_e400_idle and mwait_idle can still setup pm_idle which we really
-> > do not want.
-> 
-> This is not the case: rather select_idle_routine()/idle_setup() sets
-> pm_idle.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Yes. Let me fix up the comment.
-> 
-> [..]
-> 
-> > +bool set_pm_idle_to_default()
-> > +{
-> > +	if (!pm_idle) {
-> > +		pm_idle = default_idle;
-> > +		return true;
-> > +	}
-> > +	return false;
-> > +}
-> 
-> I don't understand what you're trying to achieve here? Do you want
-> default_idle to be always the pm_idle for xen or what is the deal here?
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 625beec..359d218 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -416,6 +416,8 @@ static u16 iwl_limit_dwell(struct iwl_priv *priv, u16 dwell_time)
+ 
+ 		if (!iwl_is_associated_ctx(ctx))
+ 			continue;
++		if (ctx->staging.dev_type == RXON_DEV_TYPE_P2P)
++			continue;
+ 		value = ctx->beacon_int;
+ 		if (!value)
+ 			value = IWL_PASSIVE_DWELL_BASE;
+-- 
+1.7.0.4
 
-Yes (always want default_idle).
-> 
-> If yes, then simply do:
-> 
-> bool set_pm_idle_to_default(void)	// remember to add "void" for no function args
-> {
-> 	bool ret = !!pm_idle;
-> 
-> 	pm_idle = default_idle;
-
-That would work too.
-> 
-> 	return ret;
-> 
-> }
-> 
-> ...
-> 
-> >  void stop_this_cpu(void *dummy) 
-> >  {
-> >  	local_irq_disable();
-> > diff --git a/arch/x86/xen/setup.c b/arch/x86/xen/setup.c
-> > index 46d6d21..7506181 100644
-> > --- a/arch/x86/xen/setup.c
-> > +++ b/arch/x86/xen/setup.c
-> > @@ -448,6 +448,6 @@ void __init xen_arch_setup(void)
-> >  #endif
-> >  	disable_cpuidle();
-> >  	boot_option_idle_override = IDLE_HALT;
-> > -
-> > +	WARN_ON(!set_pm_idle_to_default());
-> 
-> and then do
-> 
-> 	WARN_ON(set_pm_idle_to_default());
-> 
-> instead of having arbitrary confusing logic. This way you can warn
-> whether something else set pm_idle already. Or?
-
-That would work as well.
