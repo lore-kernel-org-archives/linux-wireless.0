@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55718 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751764Ab1KNOCx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 09:02:53 -0500
-Subject: [PATCH] mac80211: remove crypto special case for auth frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Nov 2011 15:02:44 +0100
-Message-ID: <1321279364.4472.50.camel@jlt3.sipsolutions.net> (sfid-20111114_150256_857143_FE73A2E7)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:46218 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935498Ab1KJPtn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 10:49:43 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 23/27] iwlwifi: remove the use of the QOS debug flag
+Date: Thu, 10 Nov 2011 06:55:23 -0800
+Message-Id: <1320936927-9078-24-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_164950_883232_379B28F9)
+In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-The shared key authentication frame that needs to be
-encrypted (the third one in the shared key handshake)
-is directly encrypted in ieee80211_send_auth and the
-IEEE80211_TX_INTFL_DONT_ENCRYPT is set. All others
-are not encrypted, so the only way to get to this is
-erroneously on no-monitor AP side.
+This bit was used only once. Use IWL_DL_INFO instead.
 
-Remove the special case for authentication frames to
-fix the AP shared key side when operating without
-cooked monitor interfaces -- with cooked monitor the
-IEEE80211_TX_INTFL_DONT_ENCRYPT also gets set, so we
-never get here -- an AP never encrypts auth frames.
-
-Without this patch, an AP operating in WEP mode with
-my no-monitor patches would erroneously encrypt all
-authentication frames, instead of none.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/tx.c |    2 --
- 1 file changed, 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-debug.h    |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
---- a/net/mac80211/tx.c	2011-11-14 11:33:28.000000000 +0100
-+++ b/net/mac80211/tx.c	2011-11-14 14:46:29.000000000 +0100
-@@ -572,8 +572,6 @@ ieee80211_tx_h_select_key(struct ieee802
- 		switch (tx->key->conf.cipher) {
- 		case WLAN_CIPHER_SUITE_WEP40:
- 		case WLAN_CIPHER_SUITE_WEP104:
--			if (ieee80211_is_auth(hdr->frame_control))
--				break;
- 		case WLAN_CIPHER_SUITE_TKIP:
- 			if (!ieee80211_is_data_present(hdr->frame_control))
- 				tx->key = NULL;
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 8e45fba..b73077f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -117,7 +117,7 @@ static void iwlagn_update_qos(struct iwl_priv *priv,
+ 	if (ctx->ht.enabled)
+ 		ctx->qos_data.def_qos_parm.qos_flags |= QOS_PARAM_FLG_TGN_MSK;
+ 
+-	IWL_DEBUG_QOS(priv, "send QoS cmd with Qos active=%d FLAGS=0x%X\n",
++	IWL_DEBUG_INFO(priv, "send QoS cmd with Qos active=%d FLAGS=0x%X\n",
+ 		      ctx->qos_data.qos_active,
+ 		      ctx->qos_data.def_qos_parm.qos_flags);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 1dddf9b..a11e7aa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -166,7 +166,7 @@ static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
+ #define IWL_DL_11H		(1 << 28)
+ #define IWL_DL_STATS		(1 << 29)
+ #define IWL_DL_TX_REPLY		(1 << 30)
+-#define IWL_DL_QOS		(1 << 31)
++#define IWL_DL_UNUSED		(1 << 31)
+ 
+ #define IWL_DEBUG_INFO(p, f, a...)	IWL_DEBUG(p, IWL_DL_INFO, f, ## a)
+ #define IWL_DEBUG_MAC80211(p, f, a...)	IWL_DEBUG(p, IWL_DL_MAC80211, f, ## a)
+@@ -203,7 +203,7 @@ static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
+ #define IWL_DEBUG_TX_REPLY(p, f, a...)	IWL_DEBUG(p, IWL_DL_TX_REPLY, f, ## a)
+ #define IWL_DEBUG_TX_REPLY_LIMIT(p, f, a...) \
+ 		IWL_DEBUG_LIMIT(p, IWL_DL_TX_REPLY, f, ## a)
+-#define IWL_DEBUG_QOS(p, f, a...)	IWL_DEBUG(p, IWL_DL_QOS, f, ## a)
++#define IWL_DEBUG_UNUSED(p, f, a...)	IWL_DEBUG(p, IWL_DL_UNUSED, f, ## a)
+ #define IWL_DEBUG_RADIO(p, f, a...)	IWL_DEBUG(p, IWL_DL_RADIO, f, ## a)
+ #define IWL_DEBUG_POWER(p, f, a...)	IWL_DEBUG(p, IWL_DL_POWER, f, ## a)
+ #define IWL_DEBUG_11H(p, f, a...)	IWL_DEBUG(p, IWL_DL_11H, f, ## a)
+-- 
+1.7.0.4
 
