@@ -1,86 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms16-1.1blu.de ([89.202.0.34]:51125 "EHLO ms16-1.1blu.de"
+Received: from mga02.intel.com ([134.134.136.20]:46218 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756598Ab1KNXR3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 18:17:29 -0500
-Date: Tue, 15 Nov 2011 00:16:21 +0100
-From: Lars Schotte <gusto@guttok.net>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn 3.0.9 aggreggation messages
-Message-ID: <20111115001621.0f89db2f@hana.gusto> (sfid-20111115_001734_974766_9853FD0E)
-In-Reply-To: <1321311573.1796.35.camel@wwguy-ubuntu>
-References: <20111114131642.31e8ddbd@hana.gusto>
-	<1321283410.13578.33.camel@wwguy-ubuntu>
-	<20111114201947.58d5fdf6@hana.gusto>
-	<1321303101.1796.8.camel@wwguy-ubuntu>
-	<20111114221847.2ca32e6a@hana.gusto>
-	<1321305750.1796.11.camel@wwguy-ubuntu>
-	<20111114224718.491c1777@hana.gusto>
-	<1321307098.1796.14.camel@wwguy-ubuntu>
-	<20111114232852.2372a032@hana.gusto>
-	<1321310502.1796.21.camel@wwguy-ubuntu>
-	<20111114235636.24c85fc3@hana.gusto>
-	<1321311573.1796.35.camel@wwguy-ubuntu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S935317Ab1KJPth (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 10:49:37 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 07/27] iwlagn: move ucode_write_complete from priv to trans structure
+Date: Thu, 10 Nov 2011 06:55:07 -0800
+Message-Id: <1320936927-9078-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_164943_600553_499020D8)
+In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-i looked over some changelogs .. from the linux kernel 3.1 branch.
+From: Don Fry <donald.h.fry@intel.com>
 
-i saw that you ve introduced some patches to this, or you at least
-signed them off.
+ucode_write_complete is used for ucode loading.  Move it as part of
+restructuring work out of the priv structure.
 
-the changelog also says that you've changed the logging level for that
-aggregation problem, so even if it would be there, it doesnt pop up on
-kernel 3.1's.
+Signed-off-by: Don Fry <donald.h.fry@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c     |   29 +++++++++++----------
+ drivers/net/wireless/iwlwifi/iwl-dev.h           |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans.h         |    3 ++
+ 4 files changed, 19 insertions(+), 16 deletions(-)
 
-i also did read there that there was like waiting for a real reason to
-move to aggregation. so it was there the whole time, only it did not
-write itself out on the log.
-
-so i am not sure if we were not just hunting ghosts here.
-
-On Mon, 14 Nov 2011 14:59:33 -0800
-wwguy <wey-yi.w.guy@intel.com> wrote:
-
-> ok, thanks
-> 
-> please do let us know if it appear on 3.1.1
-> 
-> at the meantime, we will look into how to backport to 3.0.x
-> 
-> Regards
-> Wey
-> 
-> On Mon, 2011-11-14 at 14:56 -0800, Lars Schotte wrote:
-> > i definitely see it in 3.0.8 and 3.0.9.
-> > 
-> > on the fedora fc16 linux kernel 3.1.1 it did not yet appear, but
-> > that may change.
-> > 
-> > so maybe it would be worth a look if it is not fixed by 3.1.1, or if
-> > something changed. however ... if it is a FIX, it should definitely
-> > be fixed also in 3.0.X branch.
-> > 
-> > so that message still is there on 3.0.9 and 3.0.8, we will see about
-> > the more current ones.
-> > 
-> > On Mon, 14 Nov 2011 14:41:42 -0800
-> > wwguy <wey-yi.w.guy@intel.com> wrote:
-> > 
-> > > so youno longer seeing the issue?
-> > > 
-> > > Wey
-> > 
-> > 
-> > 
-> 
-> 
-
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+index 8ba0dd5..502659a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+@@ -75,48 +75,49 @@ static struct iwl_wimax_coex_event_entry cu_priorities[COEX_NUM_OF_EVENTS] = {
+ /*
+  * ucode
+  */
+-static int iwlagn_load_section(struct iwl_priv *priv, const char *name,
++static int iwlagn_load_section(struct iwl_trans *trans, const char *name,
+ 				struct fw_desc *image, u32 dst_addr)
+ {
++	struct iwl_bus *bus = bus(trans);
+ 	dma_addr_t phy_addr = image->p_addr;
+ 	u32 byte_cnt = image->len;
+ 	int ret;
+ 
+-	priv->ucode_write_complete = 0;
++	trans->ucode_write_complete = 0;
+ 
+-	iwl_write_direct32(bus(priv),
++	iwl_write_direct32(bus,
+ 		FH_TCSR_CHNL_TX_CONFIG_REG(FH_SRVC_CHNL),
+ 		FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_PAUSE);
+ 
+-	iwl_write_direct32(bus(priv),
++	iwl_write_direct32(bus,
+ 		FH_SRVC_CHNL_SRAM_ADDR_REG(FH_SRVC_CHNL), dst_addr);
+ 
+-	iwl_write_direct32(bus(priv),
++	iwl_write_direct32(bus,
+ 		FH_TFDIB_CTRL0_REG(FH_SRVC_CHNL),
+ 		phy_addr & FH_MEM_TFDIB_DRAM_ADDR_LSB_MSK);
+ 
+-	iwl_write_direct32(bus(priv),
++	iwl_write_direct32(bus,
+ 		FH_TFDIB_CTRL1_REG(FH_SRVC_CHNL),
+ 		(iwl_get_dma_hi_addr(phy_addr)
+ 			<< FH_MEM_TFDIB_REG1_ADDR_BITSHIFT) | byte_cnt);
+ 
+-	iwl_write_direct32(bus(priv),
++	iwl_write_direct32(bus,
+ 		FH_TCSR_CHNL_TX_BUF_STS_REG(FH_SRVC_CHNL),
+ 		1 << FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_NUM |
+ 		1 << FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_IDX |
+ 		FH_TCSR_CHNL_TX_BUF_STS_REG_VAL_TFDB_VALID);
+ 
+-	iwl_write_direct32(bus(priv),
++	iwl_write_direct32(bus,
+ 		FH_TCSR_CHNL_TX_CONFIG_REG(FH_SRVC_CHNL),
+ 		FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE	|
+ 		FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_DISABLE	|
+ 		FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_ENDTFD);
+ 
+-	IWL_DEBUG_FW(priv, "%s uCode section being loaded...\n", name);
+-	ret = wait_event_timeout(priv->shrd->wait_command_queue,
+-				 priv->ucode_write_complete, 5 * HZ);
++	IWL_DEBUG_FW(bus, "%s uCode section being loaded...\n", name);
++	ret = wait_event_timeout(trans->shrd->wait_command_queue,
++				 trans->ucode_write_complete, 5 * HZ);
+ 	if (!ret) {
+-		IWL_ERR(priv, "Could not load the %s uCode section\n",
++		IWL_ERR(trans, "Could not load the %s uCode section\n",
+ 			name);
+ 		return -ETIMEDOUT;
+ 	}
+@@ -129,12 +130,12 @@ static int iwlagn_load_given_ucode(struct iwl_priv *priv,
+ {
+ 	int ret = 0;
+ 
+-	ret = iwlagn_load_section(priv, "INST", &image->code,
++	ret = iwlagn_load_section(trans(priv), "INST", &image->code,
+ 				   IWLAGN_RTC_INST_LOWER_BOUND);
+ 	if (ret)
+ 		return ret;
+ 
+-	return iwlagn_load_section(priv, "DATA", &image->data,
++	return iwlagn_load_section(trans(priv), "DATA", &image->data,
+ 				    IWLAGN_RTC_DATA_LOWER_BOUND);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index ef8620b..4279e01 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -920,7 +920,6 @@ struct iwl_priv {
+ 	struct fw_img ucode_wowlan;
+ 
+ 	enum iwlagn_ucode_type ucode_type;
+-	u8 ucode_write_complete;	/* the image write is complete */
+ 	char firmware_name[25];
+ 
+ 	struct iwl_rxon_context contexts[NUM_IWL_RXON_CTX];
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 374c68c..ee126f8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -1108,7 +1108,7 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
+ 		isr_stats->tx++;
+ 		handled |= CSR_INT_BIT_FH_TX;
+ 		/* Wake up uCode load routine, now that load is complete */
+-		priv(trans)->ucode_write_complete = 1;
++		trans->ucode_write_complete = 1;
+ 		wake_up(&trans->shrd->wait_command_queue);
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index c592312..34b817f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -212,12 +212,15 @@ struct iwl_trans_ops {
+  * @ops - pointer to iwl_trans_ops
+  * @shrd - pointer to iwl_shared which holds shared data from the upper layer
+  * @hcmd_lock: protects HCMD
++ * @ucode_write_complete: indicates that the ucode has been copied.
+  */
+ struct iwl_trans {
+ 	const struct iwl_trans_ops *ops;
+ 	struct iwl_shared *shrd;
+ 	spinlock_t hcmd_lock;
+ 
++	u8 ucode_write_complete;	/* the image write is complete */
++
+ 	/* pointer to trans specific struct */
+ 	/*Ensure that this pointer will always be aligned to sizeof pointer */
+ 	char trans_specific[0] __attribute__((__aligned__(sizeof(void *))));
 -- 
-Lars Schotte
-@ Hana (F16)
+1.7.0.4
+
