@@ -1,72 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:56698 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755662Ab1K0Pn6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Nov 2011 10:43:58 -0500
-Received: by wwp14 with SMTP id 14so7257561wwp.1
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2011 07:43:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1322386685.4044.8.camel@jlt3.sipsolutions.net>
-References: <1322378621-14647-1-git-send-email-mar.kolya@gmail.com>
-	<1322378621-14647-2-git-send-email-mar.kolya@gmail.com>
-	<1322386685.4044.8.camel@jlt3.sipsolutions.net>
-Date: Sun, 27 Nov 2011 10:43:57 -0500
-Message-ID: <CALGY4fvbUxPcf=Ay4kW2UoHekPgaieCKye7T=pqo9YKXsNva=w@mail.gmail.com> (sfid-20111127_164404_934565_6AFC2F7C)
-Subject: Re: [PATCH] mac80211: fix race condition caused by late addBA resp
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:43792 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935453Ab1KJPtj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 10:49:39 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 15/27] iwlwifi: move hw_scan into _mac80211 file
+Date: Thu, 10 Nov 2011 06:55:15 -0800
+Message-Id: <1320936927-9078-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_164948_027318_35006BF3)
+In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+iwlagn_mac_hw_scan should belong to _mac80211 callback.
 
->
->
->> +     del_timer_sync(&tid_tx->addba_resp_timer);
->> +
->> +     /*
->> +      * Test that we are not stopping agg session now.
->> +      * Since addba_resp_timer may have just finished we need to
->> +      * check HT_AGG_STATE_STOPPING too.
->> +      */
->> +     if (test_bit(HT_AGG_STATE_WANT_STOP, &tid_tx->state)
->> +         || test_bit(HT_AGG_STATE_STOPPING, &tid_tx->state)) {
->> +#ifdef CONFIG_MAC80211_HT_DEBUG
->> +             printk(KERN_DEBUG "got addBA resp for tid %d but we are not "
->> +                             "(or no longer) expecting expecting it\n",
->> +                     tid);
->> +#endif
->> +             goto out;
->> +     }
->> +
->>       if (mgmt->u.action.u.addba_resp.dialog_token != tid_tx->dialog_token) {
->>  #ifdef CONFIG_MAC80211_HT_DEBUG
->>               printk(KERN_DEBUG "wrong addBA response token, tid %d\n", tid);
->
-> You can't do this -- if this happens and the dialog token is bad the
-> session will linger forever since the timer is now dead.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    3 --
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |   46 +++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |   45 --------------------------
+ 3 files changed, 46 insertions(+), 48 deletions(-)
 
-   I'm not sure I understand what you mean by this and how my patch
-affects dialog_token. I'd appreciate if you could explain this in some
-detail.
-
->
-> Also please move the bool operators to the end of the line rather than
-> the start:
->        if (test_bit(...) ||
->            test_bit(...)) {
->
-> Other than that the patch looks fine.
-
-  I saw you have posted couple of newer versions of this. Shall I
-still make this change and repost?
-
-  Thanks!
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index ee3692a..fa47f75 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -312,9 +312,6 @@ void iwl_init_scan_params(struct iwl_priv *priv);
+ int iwl_scan_cancel(struct iwl_priv *priv);
+ void iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms);
+ void iwl_force_scan_end(struct iwl_priv *priv);
+-int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
+-		    struct ieee80211_vif *vif,
+-		    struct cfg80211_scan_request *req);
+ void iwl_internal_short_hw_scan(struct iwl_priv *priv);
+ int iwl_force_reset(struct iwl_priv *priv, int mode, bool external);
+ u16 iwl_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 1b2dbb0..6df08bb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -1801,6 +1801,52 @@ static int iwlagn_mac_change_interface(struct ieee80211_hw *hw,
+ 	return err;
+ }
+ 
++static int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
++		    struct ieee80211_vif *vif,
++		    struct cfg80211_scan_request *req)
++{
++	struct iwl_priv *priv = hw->priv;
++	int ret;
++
++	IWL_DEBUG_MAC80211(priv, "enter\n");
++
++	if (req->n_channels == 0)
++		return -EINVAL;
++
++	mutex_lock(&priv->shrd->mutex);
++
++	/*
++	 * If an internal scan is in progress, just set
++	 * up the scan_request as per above.
++	 */
++	if (priv->scan_type != IWL_SCAN_NORMAL) {
++		IWL_DEBUG_SCAN(priv,
++			       "SCAN request during internal scan - defer\n");
++		priv->scan_request = req;
++		priv->scan_vif = vif;
++		ret = 0;
++	} else {
++		priv->scan_request = req;
++		priv->scan_vif = vif;
++		/*
++		 * mac80211 will only ask for one band at a time
++		 * so using channels[0] here is ok
++		 */
++		ret = iwl_scan_initiate(priv, vif, IWL_SCAN_NORMAL,
++					req->channels[0]->band);
++		if (ret) {
++			priv->scan_request = NULL;
++			priv->scan_vif = NULL;
++		}
++	}
++
++	IWL_DEBUG_MAC80211(priv, "leave\n");
++
++	mutex_unlock(&priv->shrd->mutex);
++
++	return ret;
++}
++
+ struct ieee80211_ops iwlagn_hw_ops = {
+ 	.tx = iwlagn_mac_tx,
+ 	.start = iwlagn_mac_start,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index a26fbd3..625beec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -939,51 +939,6 @@ int __must_check iwl_scan_initiate(struct iwl_priv *priv,
+ 	return 0;
+ }
+ 
+-int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
+-		    struct ieee80211_vif *vif,
+-		    struct cfg80211_scan_request *req)
+-{
+-	struct iwl_priv *priv = hw->priv;
+-	int ret;
+-
+-	IWL_DEBUG_MAC80211(priv, "enter\n");
+-
+-	if (req->n_channels == 0)
+-		return -EINVAL;
+-
+-	mutex_lock(&priv->shrd->mutex);
+-
+-	/*
+-	 * If an internal scan is in progress, just set
+-	 * up the scan_request as per above.
+-	 */
+-	if (priv->scan_type != IWL_SCAN_NORMAL) {
+-		IWL_DEBUG_SCAN(priv,
+-			       "SCAN request during internal scan - defer\n");
+-		priv->scan_request = req;
+-		priv->scan_vif = vif;
+-		ret = 0;
+-	} else {
+-		priv->scan_request = req;
+-		priv->scan_vif = vif;
+-		/*
+-		 * mac80211 will only ask for one band at a time
+-		 * so using channels[0] here is ok
+-		 */
+-		ret = iwl_scan_initiate(priv, vif, IWL_SCAN_NORMAL,
+-					req->channels[0]->band);
+-		if (ret) {
+-			priv->scan_request = NULL;
+-			priv->scan_vif = NULL;
+-		}
+-	}
+-
+-	IWL_DEBUG_MAC80211(priv, "leave\n");
+-
+-	mutex_unlock(&priv->shrd->mutex);
+-
+-	return ret;
+-}
+ 
+ /*
+  * internal short scan, this function should only been called while associated.
 -- 
-Truthfully yours,
-Martynov Nikolay.
-Email: mar.kolya@gmail.com
+1.7.0.4
+
