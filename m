@@ -1,39 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:51172 "EHLO mail.neratec.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4681 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751321Ab1KDJrZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 05:47:25 -0400
-Message-ID: <4EB3B4AA.5050409@neratec.com> (sfid-20111104_104729_079239_EE8052AB)
-Date: Fri, 04 Nov 2011 10:47:22 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+	id S1756285Ab1KJTa7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 14:30:59 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 15/19] brcm80211: util: remove pointer traversal from
+ brcmu_pkt_buf_free_skb
+Date: Thu, 10 Nov 2011 20:30:30 +0100
+Message-ID: <1320953434-16859-17-git-send-email-arend@broadcom.com> (sfid-20111110_203116_291356_B5D718DC)
+In-Reply-To: <1320953434-16859-1-git-send-email-arend@broadcom.com>
+References: <1320953434-16859-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	rodrigue@qca.qualcomm.com
-Subject: Re: [ath9k-devel] [RFC v2 2/2] ath9k: integrate initial DFS module
-References: <1320328553-28066-1-git-send-email-zefir.kurtisi@neratec.com> <1320328553-28066-3-git-send-email-zefir.kurtisi@neratec.com> <201111031651.46073.chunkeey@googlemail.com> <4EB2CE96.4060702@neratec.com> <20111104030046.25361.qmail@stuge.se>
-In-Reply-To: <20111104030046.25361.qmail@stuge.se>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/04/2011 04:00 AM, Peter Stuge wrote:
-> Zefir Kurtisi wrote:
->> Just clarify whether you do not like the CONFIG_ prefix or the fact
->> that it can't be enabled.
-> 
-> It's IMO always stupid to add dead code. No exceptions for
-> $random_authority_which_has_no_jurisdiction_for_billions_of_users.
-> 
-> 
-> //Peter
+The function brcmu_pkt_buf_free_skb() was following the next pointer
+to free all linked packets. However, it is only called with unlinked
+packets so this can be removed.
 
-Hi Peter,
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmutil/utils.c |   33 +++++++---------------
+ 1 files changed, 11 insertions(+), 22 deletions(-)
 
-ok, got it.
+diff --git a/drivers/net/wireless/brcm80211/brcmutil/utils.c b/drivers/net/wireless/brcm80211/brcmutil/utils.c
+index 3a92f72..b7537f7 100644
+--- a/drivers/net/wireless/brcm80211/brcmutil/utils.c
++++ b/drivers/net/wireless/brcm80211/brcmutil/utils.c
+@@ -41,28 +41,17 @@ EXPORT_SYMBOL(brcmu_pkt_buf_get_skb);
+ /* Free the driver packet. Free the tag if present */
+ void brcmu_pkt_buf_free_skb(struct sk_buff *skb)
+ {
+-	struct sk_buff *nskb;
+-	int nest = 0;
+-
+-	/* perversion: we use skb->next to chain multi-skb packets */
+-	while (skb) {
+-		nskb = skb->next;
+-		skb->next = NULL;
+-
+-		if (skb->destructor)
+-			/* cannot kfree_skb() on hard IRQ (net/core/skbuff.c) if
+-			 * destructor exists
+-			 */
+-			dev_kfree_skb_any(skb);
+-		else
+-			/* can free immediately (even in_irq()) if destructor
+-			 * does not exist
+-			 */
+-			dev_kfree_skb(skb);
+-
+-		nest++;
+-		skb = nskb;
+-	}
++	WARN_ON(skb->next);
++	if (skb->destructor)
++		/* cannot kfree_skb() on hard IRQ (net/core/skbuff.c) if
++		 * destructor exists
++		 */
++		dev_kfree_skb_any(skb);
++	else
++		/* can free immediately (even in_irq()) if destructor
++		 * does not exist
++		 */
++		dev_kfree_skb(skb);
+ }
+ EXPORT_SYMBOL(brcmu_pkt_buf_free_skb);
+ 
+-- 
+1.7.5.4
 
-But I don't call it dead code when its sole purpose is to be tested by developers (i.e. useless for the common user) and can be easily enabled by those. This is only a tiny fraction of the DFS functionality at the lowest layer that need additional support at the upper (mac, hostapd) that is missing so far. Therefore I opted to make it available for devs until all pieces are in (no authority issue, just sanity), but will change it in v3.
 
-
-Thanks for your feedback
-Zefir
