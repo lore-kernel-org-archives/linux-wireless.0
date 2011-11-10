@@ -1,69 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39242 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751252Ab1KNIEY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 03:04:24 -0500
-Subject: Re: off- & multi-channel operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <CAJ-VmokRJ2fGS5Cb-2OY2vV_-cGdNTmEyBn1acndejiyhE8G7g@mail.gmail.com> (sfid-20111112_234709_362354_FD841A43)
-References: <1320844134.3845.61.camel@jlt3.sipsolutions.net>
-	 <CAJ-VmokRJ2fGS5Cb-2OY2vV_-cGdNTmEyBn1acndejiyhE8G7g@mail.gmail.com>
-	 (sfid-20111112_234709_362354_FD841A43)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Nov 2011 08:52:46 +0100
-Message-ID: <1321257166.4472.9.camel@jlt3.sipsolutions.net> (sfid-20111114_090433_858305_75283338)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:26419 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754073Ab1KJBde (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 20:33:34 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 19/28] iwlwifi: check status before send command
+Date: Wed,  9 Nov 2011 16:39:22 -0800
+Message-Id: <1320885571-19122-20-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023416_169208_E3815B7E)
+In-Reply-To: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-11-12 at 14:46 -0800, Adrian Chadd wrote:
-> I'm looking at this in FreeBSD's net80211, primarily to be able to
-> bring sanity to tx/rx aggregation handling so things like active, high
-> throughput traffic doesn't get annoyed when off-channel mode occurs.
-> 
-> So when you decide to start scanning, there may be frames already in
-> the TX queue. If you simply called "start scanning now!", hardware
-> like say ath9k would have to do this (and i haven't looked to see if
-> it does, I bet it does. :-)
-> 
-> * the TX queue would have to be paused in its entirety, so the higher
-> layers both stop sending frames, _and_ any existing call to
-> if_transmit/if_start (and the linux equivalents) have entirely
-> completed;
-> * that doesn't guarantee the hardware-queued TXes have completed, so
-> you either have to wait for those to complete before you start
-> off-channel operation, or ..
-> * .. you tell the driver "i'm about to start scanning, please get ready";
-> * where the driver (eg ath9k) would then stop RX/TX DMA, with frames
-> still in the RX completion queue and TX pending/completion state;
+Check the status before sending host command, if any of the condition
+match, cancel the host command before queue
 
-I have no idea what ath9k does, but we do tell it about start/stop
-scanning and flush queues explicitly (the latter may not be the best
-thing to do with multi-channel)
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   26 +++++++++++----------
+ 1 files changed, 14 insertions(+), 12 deletions(-)
 
-> * .. which have to be handled at some point;
-> * .. since the hardware may hvae multiple TX queues, but you typically
-> use the same for on-channel and off-channel, you have to then handle
-> those frames then, OR set them aside and handle them once you go
-> on-channel again;
-
-I'm thinking that since the hardware has enough queues, you might use a
-set per channel to switch more quickly, but that's up to the driver
-implementation :-)
-
-[snip]
-
-> I do think you need the stack to be able to do the frame buffering;
-> the driver could exert a little more control so it's not forced to
-> simply drop all the frames on the floor, but be given time to complete
-> what it's doing before scanning begins.
-
-Yes, well, the driver can always start & stop queues, and for software
-scan we do already stop queues (not for hardware scan for obvious
-reasons).
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 461e1ae..09a31dc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -1001,6 +1001,20 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	IWL_DEBUG_INFO(trans, "Attempting to send sync command %s\n",
+ 			get_cmd_string(cmd->id));
+ 
++	if (test_bit(STATUS_EXIT_PENDING, &trans->shrd->status))
++		return -EBUSY;
++
++
++	if (test_bit(STATUS_RF_KILL_HW, &trans->shrd->status)) {
++		IWL_ERR(trans, "Command %s aborted: RF KILL Switch\n",
++			       get_cmd_string(cmd->id));
++		return -ECANCELED;
++	}
++	if (test_bit(STATUS_FW_ERROR, &trans->shrd->status)) {
++		IWL_ERR(trans, "Command %s failed: FW Error\n",
++			       get_cmd_string(cmd->id));
++		return -EIO;
++	}
+ 	set_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status);
+ 	IWL_DEBUG_INFO(trans, "Setting HCMD_ACTIVE for command %s\n",
+ 			get_cmd_string(cmd->id));
+@@ -1041,18 +1055,6 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 		}
+ 	}
+ 
+-	if (test_bit(STATUS_RF_KILL_HW, &trans->shrd->status)) {
+-		IWL_ERR(trans, "Command %s aborted: RF KILL Switch\n",
+-			       get_cmd_string(cmd->id));
+-		ret = -ECANCELED;
+-		goto fail;
+-	}
+-	if (test_bit(STATUS_FW_ERROR, &trans->shrd->status)) {
+-		IWL_ERR(trans, "Command %s failed: FW Error\n",
+-			       get_cmd_string(cmd->id));
+-		ret = -EIO;
+-		goto fail;
+-	}
+ 	if ((cmd->flags & CMD_WANT_SKB) && !cmd->reply_page) {
+ 		IWL_ERR(trans, "Error: Response NULL in '%s'\n",
+ 			  get_cmd_string(cmd->id));
+-- 
+1.7.0.4
 
