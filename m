@@ -1,175 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:58523 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753323Ab1KUOlq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 09:41:46 -0500
-Received: by mail-bw0-f46.google.com with SMTP id 11so6626611bke.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 06:41:45 -0800 (PST)
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>,
-	Max Filippov <jcmvbkbc@gmail.com>
-Subject: [RFC v2 3/8] mac80211: tracking mesh peer link-specific power mode
-Date: Mon, 21 Nov 2011 18:40:11 +0400
-Message-Id: <1321886416-12597-4-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154149_972027_446A5478)
-In-Reply-To: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
-References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
+Received: from nbd.name ([46.4.11.11]:55273 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752931Ab1KJKFG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 05:05:06 -0500
+Message-ID: <4EBBA1C4.3070007@openwrt.org> (sfid-20111110_110510_958975_A2EE1731)
+Date: Thu, 10 Nov 2011 11:04:52 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Paul Stewart <pstew@google.com>,
+	Adrian Chadd <adrian.chadd@gmail.com>
+Subject: Re: [PATCH v2 4/4] ath9k_hw: Fix tx power settings for AR9003
+References: <1320918297-1799-1-git-send-email-rmanohar@qca.qualcomm.com>
+In-Reply-To: <1320918297-1799-1-git-send-email-rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-peer_ps_mode field has been added to sta_info structure to represent
-peer's link-specific power mode for our station.
+On 2011-11-10 10:44 AM, Rajkumar Manoharan wrote:
+> Retriving tx power for 2x2 and 3x3 chainmask is not handled
+> properly. While calculating tx power for 2x2, 3 dBm was reduced
+> and for 3x3, 5 dBm was reduced which should be added back when
+> retriving.
+>
+> Cc: Paul Stewart<pstew@google.com>
+> Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+I think the tx power reduction for 2x2/3x3 needs to be revisited. In the 
+discussion that led to Walsh spatial spreading being disabled you 
+mentioned this:
 
-Peer's link-specific power mode is tracked from the Power Management
-field in the Frame Control field and the Mesh Power Save Level field
-in the QoS Control field at the end of a frame exchange sequence.
+> In the FCC rulings, only transmissions that are completely non-coherent, are
+> allowed to waive the array gain contribution to EIRP for multi-transmit configurations.
+> The use of 2-stream with 2 transmit and use of 3-steam with 3 transmit qualifies
+> for this spatial multiplexing MIMO classification as long as the streams are
+> directly mapped to each radio (not Walsh spread prior to splitting to multiple radios)
+So if I understand this issue correctly, Walsh spatial spreading was 
+disabled so that the tx power for 2x2 or 3x3 would not have to be 
+reduced by the array gain contribution - yet we're still doing that.
 
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
-Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
----
- include/linux/ieee80211.h |   11 ++++++++
- net/mac80211/mesh.h       |    2 +
- net/mac80211/rx.c         |   61 +++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/sta_info.h   |    2 +
- 4 files changed, 76 insertions(+), 0 deletions(-)
+When Adrian pointed out that tx power is reduced based on the number of 
+chains, you mentioned this:
+> Those pwrdecrease fields are applicable for AR9280 chips not for AR9003.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 483fa46..44e9c0d 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -546,6 +546,17 @@ static inline int ieee80211_is_qos_nullfunc(__le16 fc)
- 	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_NULLFUNC);
- }
- 
-+/**
-+ * ieee80211s_has_qos_pm - check Power Save Level in QoS control
-+ * @qc - QoS control bytes in little-endian byteorder
-+ */
-+
-+static inline int ieee80211s_has_qos_pm(__le16 qc)
-+{
-+	return (qc & cpu_to_le16(
-+			IEEE80211_QOS_CTL_MESH_PS_LEVEL)) != 0;
-+}
-+
- struct ieee80211s_hdr {
- 	u8 flags;
- 	u8 ttl;
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 8c00e2d..6842453 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -222,6 +222,8 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata);
- void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata);
- void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata);
- void ieee80211_mesh_root_setup(struct ieee80211_if_mesh *ifmsh);
-+void ieee80211s_set_sta_ps_mode(struct sta_info *sta,
-+				enum nl80211_mesh_power_mode mode);
- 
- /* Mesh paths */
- int mesh_nexthop_lookup(struct sk_buff *skb,
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index b867bd5..40ad4ed 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1162,6 +1162,34 @@ int ieee80211_sta_ps_transition(struct ieee80211_sta *sta, bool start)
- }
- EXPORT_SYMBOL(ieee80211_sta_ps_transition);
- 
-+void ieee80211s_set_sta_ps_mode(struct sta_info *sta,
-+				enum nl80211_mesh_power_mode mode)
-+{
-+	if (sta->peer_ps_mode != mode) {
-+		sta->peer_ps_mode = mode;
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		switch (mode) {
-+		case NL80211_MESH_POWER_ACTIVE:
-+			printk(KERN_DEBUG "%s: STA %pM enters active mode\n",
-+				sta->sdata->name, sta->sta.addr);
-+			break;
-+		case NL80211_MESH_POWER_LIGHT_SLEEP:
-+			printk(KERN_DEBUG "%s: STA %pM enters light sleep mode\n",
-+				sta->sdata->name, sta->sta.addr);
-+			break;
-+		case NL80211_MESH_POWER_DEEP_SLEEP:
-+			printk(KERN_DEBUG "%s: STA %pM enters deep sleep mode\n",
-+				sta->sdata->name, sta->sta.addr);
-+			break;
-+		default:
-+			printk(KERN_DEBUG "%s: STA %pM used invalid power save mode\n",
-+				sta->sdata->name, sta->sta.addr);
-+			break;
-+		}
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+	}
-+}
-+
- static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
- {
-@@ -1314,6 +1342,39 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 	}
- 
- 	/*
-+	 * Test mesh power save level subfield of QoS control field (PSL)
-+	 * and Power Managment field of frame control (PW)
-+	 * +----+----+-----------------+
-+	 * | PM | PSL| Mesh Power Mode |
-+	 * +----+----+-----------------+
-+	 * | 0  |Rsrv|    Active       |
-+	 * +----+----+-----------------+
-+	 * | 1  | 0  |    Light        |
-+	 * +----+----+-----------------+
-+	 * | 1  | 1  |    Deep         |
-+	 * +----+----+-----------------+
-+	 */
-+	if (!ieee80211_has_morefrags(hdr->frame_control) &&
-+	    !(status->rx_flags & IEEE80211_RX_DEFERRED_RELEASE) &&
-+	    ieee80211_vif_is_mesh(&rx->sdata->vif) &&
-+	    (ieee80211_is_data(hdr->frame_control) ||
-+	     ieee80211_is_nullfunc(hdr->frame_control))) {
-+		if (ieee80211_has_pm(hdr->frame_control)) {
-+			__le16 *qc = (__le16 *) ieee80211_get_qos_ctl(hdr);
-+			if (ieee80211s_has_qos_pm(*qc)) {
-+				ieee80211s_set_sta_ps_mode(sta,
-+					NL80211_MESH_POWER_DEEP_SLEEP);
-+			} else {
-+				ieee80211s_set_sta_ps_mode(sta,
-+					NL80211_MESH_POWER_LIGHT_SLEEP);
-+			}
-+		} else {
-+			ieee80211s_set_sta_ps_mode(sta,
-+				NL80211_MESH_POWER_ACTIVE);
-+		}
-+	}
-+
-+	/*
- 	 * Drop (qos-)data::nullfunc frames silently, since they
- 	 * are used only to control station power saving mode.
- 	 */
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 8742668..86fe10a 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -251,6 +251,7 @@ struct sta_ampdu_mlme {
-  * @ignore_plink_timer: ignore the peer-link timer (used internally)
-  * @plink_state: peer link state
-  * @local_ps_mode: local link-specific power save mode
-+ * @peer_ps_mode: peer link-specific power save mode
-  * @plink_timeout: timeout of peer link
-  * @plink_timer: peer link watch timer
-  * @plink_timer_was_running: used by suspend/resume to restore timers
-@@ -340,6 +341,7 @@ struct sta_info {
- 	bool plink_timer_was_running;
- 	enum nl80211_plink_state plink_state;
- 	enum nl80211_mesh_power_mode local_ps_mode;
-+	enum nl80211_mesh_power_mode peer_ps_mode;
- 	u32 plink_timeout;
- 	struct timer_list plink_timer;
- #endif
--- 
-1.7.3.4
+According to this patch, this doesn't seem to match what the code does, 
+though I didn't notice it back then.
 
+So before we merge this patch, let's decide whether we actually need 
+this tx power reduction or not.
+
+- Felix
