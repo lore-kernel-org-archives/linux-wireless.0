@@ -1,57 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3446 "EHLO MMS3.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4628 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753832Ab1KUV67 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 16:58:59 -0500
-Message-ID: <4ECAC99B.8090507@broadcom.com> (sfid-20111121_225902_586769_17A8A879)
-Date: Mon, 21 Nov 2011 13:58:51 -0800
-From: "Franky Lin" <frankyl@broadcom.com>
+	id S1756269Ab1KJTaz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 14:30:55 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 19/19] brcm80211: fmac: release bss struct returned from
+ cfg80211_inform_bss
+Date: Thu, 10 Nov 2011 20:30:34 +0100
+Message-ID: <1320953434-16859-21-git-send-email-arend@broadcom.com> (sfid-20111110_203119_789239_AE98CCE1)
+In-Reply-To: <1320953434-16859-1-git-send-email-arend@broadcom.com>
+References: <1320953434-16859-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Thomas_Lang=E5s?= <thomas.langas@fxitech.com>
-cc: "Arend Van Spriel" <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Howard Harte" <hharte@broadcom.com>
-Subject: Re: brcm80211 (with bcm4329-chip)
-References: <CADrAYBnwWEaigcgQYYk6V3VEuEYyrmzJQXegKVk6TgOTPh5N8A@mail.gmail.com>
- <4ECA8908.7070304@broadcom.com> <4ECA98DB.4030608@broadcom.com>
- <CADrAYBk7_fsVJUAYNqEZpdBPKOTGUai_UhPT9LMHaEyY+Zm24w@mail.gmail.com>
- <4ECAAD6C.4080103@broadcom.com>
- <CADrAYBndEsNz5nypirSxQPObpSV5BWARWOQzwmBTmzg+tgUbBA@mail.gmail.com>
- <CADrAYB=wDwrzCFEi4-PFepLiLMbPLAGxoaNGtXBaPZPR1onokA@mail.gmail.com>
-In-Reply-To: <CADrAYB=wDwrzCFEi4-PFepLiLMbPLAGxoaNGtXBaPZPR1onokA@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/21/2011 01:34 PM, Thomas Langås wrote:
-> On Mon, Nov 21, 2011 at 10:13 PM, Thomas Langås
-> <thomas.langas@fxitech.com>  wrote:
->> Hmm, doing that, and loading this as a module instead of compiling it into the
->> kernel seemed to work.
->>
->> Is there a reason for this not working when being compiled into the kernel? Is
->> it possible that I need to change the order of  some of the units
->> being initialized
->> in my machine-description / init?\
+From: Franky Lin <frankyl@broadcom.com>
 
-Usually we compile it as module instead of built-in. But I just tried it 
-with built-in and it can intialize and scan. Some issue did happen 
-during joining  an AP. So I would suggest use module for your 
-development for now.
+Referenced struct returned by cfg80211_inform_bss must be released with
+cfg80211_put_bss to avoid memory leak.
 
->
-> Ok, so I get the device listed as a wlan0-device, and I see the driver
-> being able to communicate
-> with the chip, sort of (it can read registers at least), but then I
-> start seeing errors like this (from
-> the previously attached log):
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   18 +++++++++++++-----
+ 1 files changed, 13 insertions(+), 5 deletions(-)
 
-It's possible that the firmware carshed. Are you using the 
-firmware/nvram from Linux repository? You should use the nvram that fits 
-your platform.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 73be2c8..cc19a73 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -2049,10 +2049,10 @@ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_priv *cfg_priv,
+ 		notify_timestamp, notify_capability, notify_interval, notify_ie,
+ 		notify_ielen, notify_signal, GFP_KERNEL);
+ 
+-	if (!bss) {
+-		WL_ERR("cfg80211_inform_bss_frame error\n");
+-		return -EINVAL;
+-	}
++	if (!bss)
++		return -ENOMEM;
++
++	cfg80211_put_bss(bss);
+ 
+ 	return err;
+ }
+@@ -2096,6 +2096,7 @@ static s32 wl_inform_ibss(struct brcmf_cfg80211_priv *cfg_priv,
+ 	struct ieee80211_channel *notify_channel;
+ 	struct brcmf_bss_info_le *bi = NULL;
+ 	struct ieee80211_supported_band *band;
++	struct cfg80211_bss *bss;
+ 	u8 *buf = NULL;
+ 	s32 err = 0;
+ 	u16 channel;
+@@ -2149,10 +2150,17 @@ static s32 wl_inform_ibss(struct brcmf_cfg80211_priv *cfg_priv,
+ 	WL_CONN("signal: %d\n", notify_signal);
+ 	WL_CONN("notify_timestamp: %#018llx\n", notify_timestamp);
+ 
+-	cfg80211_inform_bss(wiphy, notify_channel, bssid,
++	bss = cfg80211_inform_bss(wiphy, notify_channel, bssid,
+ 		notify_timestamp, notify_capability, notify_interval,
+ 		notify_ie, notify_ielen, notify_signal, GFP_KERNEL);
+ 
++	if (!bss) {
++		err = -ENOMEM;
++		goto CleanUp;
++	}
++
++	cfg80211_put_bss(bss);
++
+ CleanUp:
+ 
+ 	kfree(buf);
+-- 
+1.7.5.4
 
-Franky
 
