@@ -1,59 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:33749 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752961Ab1KSOUd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Nov 2011 09:20:33 -0500
-Received: by iage36 with SMTP id e36so4950702iag.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 06:20:32 -0800 (PST)
+Received: from cantor2.suse.de ([195.135.220.15]:34280 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932429Ab1KJSpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 13:45:52 -0500
+Date: Thu, 10 Nov 2011 10:44:57 -0800
+From: Greg KH <gregkh@suse.de>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH 3.1-stable] staging: brcm80211: fix for rate index in
+ receive status
+Message-ID: <20111110184457.GA8010@suse.de> (sfid-20111110_194610_842826_77F955CC)
+References: <1320918514-5916-1-git-send-email-arend@broadcom.com>
+ <20111110151746.GB29104@suse.de>
+ <4EBC19D6.2070806@broadcom.com>
 MIME-Version: 1.0
-Date: Sat, 19 Nov 2011 22:20:30 +0800
-Message-ID: <CAHW5WCL2V=wh43YYbiMo+rnh=-g4fobKEZHrCLvW03Q73=gzYA@mail.gmail.com> (sfid-20111119_152036_858107_D65FFE9C)
-Subject: Wireless stalled after a few minutes with Linux Kernel 3.1
-From: Haohui Liao <liaohaohui@gmail.com>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4EBC19D6.2070806@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Linux wifi developers,
+On Thu, Nov 10, 2011 at 07:37:10PM +0100, Arend van Spriel wrote:
+> On 11/10/2011 04:17 PM, Greg KH wrote:
+> > On Thu, Nov 10, 2011 at 10:48:34AM +0100, Arend van Spriel wrote:
+> >> This fix resolves an issue on 5GHz as posted on LKML:
+> >>
+> >> BUG: All network processes hang (brcmsmac/wpa_supplicant)
+> >> ID: <20111018111422.GA1979@schottelius.org>
+> > 
+> > What are these tags for?  I've not seen them in kernel patches before.
+> > 
+> 
+> The first line was the email Subject as posted on LKML. The second is
+> the message id.
 
-I am using ArchLinux with Linux kernel 3.0.7.  I find that sometimes
-the wifi connection will suddenly just disconnect itself but it will
-quickly resume.  Some said on the Internet that this is due to
-surrounding interference, is this normal?
+Neither of those are something we normally put in changelog comments,
+right?
 
-When I upgraded to Linux kernel 3.1, I have even worst experience, the
-wifi will stall a few minutes after connection and only killing
-wpa_supplicant and running it all over again will I be able to
-reconnect to the wifi.  The following are my hardware and software
-status:
+> >> Cc: stable@kernel.org
+> > 
+> > Wrong address, please use stable@vger.kernel.org now.
+> > 
+> 
+> Noted.
+> 
+> >> Reported-by: Nico Schottelius <nico-linux-20111017@schottelius.org>
+> >> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> >> ---
+> >> Hi Greg,
+> >>
+> >> This change is in the mainline brcmsmac driver, but I do not have a commit
+> >> message to refer to as we transitioned from staging to mainline in the last
+> >> merge window. Can you process this patch without that info?
+> > 
+> > No, I need the git commit id of the patch that fixed this in Linus's
+> > tree, if the files are different due to the move, that's fine, but I
+> > still need this to reference.
+> > 
+> 
+> Here it is:
+> 
+> commit 5a84d6ad4c9306afb467a600a4c6d7b50da49440
+> Author: Arend van Spriel <arend@broadcom.com>
+> Date:   Tue Aug 23 14:14:00 2011 +0200
+> 
+>     staging: brcm80211: fill in proper rx rate in mac80211 rx status
+> 
+>     The brcmsmac driver supports different rates on 5GHz but this is not
+>     taken into account when providing the rate index in the receive
+>     status information passed to mac80211.
+> 
+>     Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+>     Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>     Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+>     Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>     Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-oftware: Linux-3.1-4 & wpa_supplicant v0.7.3
-Closely related but not the same problem (my system doesn't have have
-the bcma as mentioned in the url):
-https://bbs.archlinux.org/viewtopic.php?pid=1014217
-Observation: No such network stall with linux-3.0.7-1.
+Thanks, that's what I need.  I'll queue this up for the next 3.1 kernel
+after this one gets out later this week.
 
-I didn't encounter core dump problem with kernel 3.1. However, after
-connecting for a few seconds or minutes, the connection with stall and
-I can't assess Internet. I check my dmesg, it gave the following info:
-
-[ 45.966602] wlan0: direct probe to f4:3f:61:06:22:21 (try 1/3)
-[ 45.969213] wlan0: direct probe responded
-[ 45.998789] wlan0: authenticate with f4:3f:61:06:22:21 (try 1)
-[ 46.001234] wlan0: authenticated
-[ 46.001270] wlan0: associate with f4:3f:61:06:22:21 (try 1)
-[ 46.004102] wlan0: RX AssocResp from f4:3f:61:06:22:21 (capab=0x411
-status=0 aid=1)
-[ 46.004107] wlan0: associated
-[ 93.007527] usb 1-1.3: USB disconnect, device number 3
-[ 95.654157] NET: Registered protocol family 10
-[ 106.263062] wlan0: no IPv6 routers present
-
-Does this mean that the IPv6 in kernel 3.1 is affecting the wifi
-connection?  Please advice.
-
-
-Best Regards,
-Liao Haohui
+greg k-h
