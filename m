@@ -1,149 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:35178 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751642Ab1KOGE0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 01:04:26 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-CC: Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [RFC 11/18] ath9k: Add functions to allocate/free buffers for MCI
-Date: Tue, 15 Nov 2011 11:34:18 +0530
-Message-ID: <1321337058-12771-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111115_070429_752164_DA5724F5)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:32739 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932822Ab1KJPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Nov 2011 10:49:38 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 06/27] iwlwifi: remove un-supported SKUs
+Date: Thu, 10 Nov 2011 06:55:06 -0800
+Message-Id: <1320936927-9078-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_165027_182149_426AFA6A)
+In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+BG only SKUs are no longer supported by 2000 and 1x5 series. Remove it
 
-required buffers and dma allocation is done for GPM and SCHED
-messages
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/mci.c   |   78 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/mci.h   |    2 +
- 3 files changed, 81 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-2000.c |   20 --------------------
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   10 ----------
+ drivers/net/wireless/iwlwifi/iwl-cfg.h  |    6 ------
+ drivers/net/wireless/iwlwifi/iwl-pci.c  |   18 ------------------
+ 4 files changed, 0 insertions(+), 54 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 93b45b4..9f28cc4 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -647,6 +647,7 @@ struct ath_softc {
- 	struct delayed_work tx_complete_work;
- 	struct delayed_work hw_pll_work;
- 	struct ath_btcoex btcoex;
-+	struct ath_mci_coex mci_coex;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index 7943197..b319357 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -270,11 +270,6 @@ struct iwl_cfg iwl2000_2bgn_cfg = {
+ 	.ht_params = &iwl2000_ht_params,
+ };
  
- 	struct ath_descdma txsdma;
+-struct iwl_cfg iwl2000_2bg_cfg = {
+-	.name = "2000 Series 2x2 BG",
+-	IWL_DEVICE_2000,
+-};
+-
+ struct iwl_cfg iwl2000_2bgn_d_cfg = {
+ 	.name = "2000D Series 2x2 BGN",
+ 	IWL_DEVICE_2000,
+@@ -304,11 +299,6 @@ struct iwl_cfg iwl2030_2bgn_cfg = {
+ 	.ht_params = &iwl2000_ht_params,
+ };
  
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 0fbb141..5b24676 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -14,6 +14,9 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
+-struct iwl_cfg iwl2030_2bg_cfg = {
+-	.name = "2000 Series 2x2 BG/BT",
+-	IWL_DEVICE_2030,
+-};
+-
+ #define IWL_DEVICE_105						\
+ 	.fw_name_pre = IWL105_FW_PRE,				\
+ 	.ucode_api_max = IWL105_UCODE_API_MAX,			\
+@@ -326,11 +316,6 @@ struct iwl_cfg iwl2030_2bg_cfg = {
+ 	.rx_with_siso_diversity = true,				\
+ 	.iq_invert = true					\
  
-+#include <linux/dma-mapping.h>
-+#include <linux/slab.h>
-+
- #include "ath9k.h"
- #include "mci.h"
+-struct iwl_cfg iwl105_bg_cfg = {
+-	.name = "105 Series 1x1 BG",
+-	IWL_DEVICE_105,
+-};
+-
+ struct iwl_cfg iwl105_bgn_cfg = {
+ 	.name = "105 Series 1x1 BGN",
+ 	IWL_DEVICE_105,
+@@ -361,11 +346,6 @@ struct iwl_cfg iwl105_bgn_d_cfg = {
+ 	.rx_with_siso_diversity = true,				\
+ 	.iq_invert = true					\
  
-@@ -252,3 +255,78 @@ void ath_mci_process_status(struct ath_softc *sc,
- 	if (old_num_mgmt != mci->num_mgmt)
- 		ath_mci_update_scheme(sc);
- }
-+
-+
-+static int ath_mci_buf_alloc(struct ath_softc *sc, struct ath_mci_buf *buf)
-+{
-+	int error = 0;
-+
-+	buf->bf_addr = dma_alloc_coherent(sc->dev, buf->bf_len,
-+					  &buf->bf_paddr, GFP_KERNEL);
-+
-+	if (buf->bf_addr == NULL) {
-+		error = -ENOMEM;
-+		goto fail;
-+	}
-+
-+	return 0;
-+
-+fail:
-+	memset(buf, 0, sizeof(*buf));
-+	return error;
-+}
-+
-+static void ath_mci_buf_free(struct ath_softc *sc, struct ath_mci_buf *buf)
-+{
-+	if (buf->bf_addr) {
-+		dma_free_coherent(sc->dev, buf->bf_len, buf->bf_addr,
-+							buf->bf_paddr);
-+		memset(buf, 0, sizeof(*buf));
-+	}
-+}
-+
-+int ath_mci_setup(struct ath_softc *sc)
-+{
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_mci_coex *mci = &sc->mci_coex;
-+	int error = 0;
-+
-+	mci->sched_buf.bf_len = ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE;
-+
-+	if (ath_mci_buf_alloc(sc, &mci->sched_buf)) {
-+		ath_dbg(common, ATH_DBG_FATAL, "MCI buffer alloc failed\n");
-+		error = -ENOMEM;
-+		goto fail;
-+	}
-+
-+	mci->sched_buf.bf_len = ATH_MCI_SCHED_BUF_SIZE;
-+
-+	memset(mci->sched_buf.bf_addr, MCI_GPM_RSVD_PATTERN,
-+						mci->sched_buf.bf_len);
-+
-+	mci->gpm_buf.bf_len = ATH_MCI_GPM_BUF_SIZE;
-+	mci->gpm_buf.bf_addr = (u8 *)mci->sched_buf.bf_addr +
-+							mci->sched_buf.bf_len;
-+	mci->gpm_buf.bf_paddr = mci->sched_buf.bf_paddr + mci->sched_buf.bf_len;
-+
-+	/* initialize the buffer */
-+	memset(mci->gpm_buf.bf_addr, MCI_GPM_RSVD_PATTERN, mci->gpm_buf.bf_len);
-+
-+	ar9003_mci_setup(sc->sc_ah, mci->gpm_buf.bf_paddr,
-+			 mci->gpm_buf.bf_addr, (mci->gpm_buf.bf_len >> 4),
-+			 mci->sched_buf.bf_paddr);
-+fail:
-+	return error;
-+}
-+
-+void ath_mci_cleanup(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_mci_coex *mci = &sc->mci_coex;
-+
-+	/*
-+	 * both schedule and gpm buffers will be released
-+	 */
-+	ath_mci_buf_free(sc, &mci->sched_buf);
-+	ar9003_mci_cleanup(ah);
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
-index 5df0d60..4eeb0fe 100644
---- a/drivers/net/wireless/ath/ath9k/mci.h
-+++ b/drivers/net/wireless/ath/ath9k/mci.h
-@@ -132,4 +132,6 @@ void ath_mci_process_profile(struct ath_softc *sc,
- 			     struct ath_mci_profile_info *info);
- void ath_mci_process_status(struct ath_softc *sc,
- 			    struct ath_mci_profile_status *status);
-+int ath_mci_setup(struct ath_softc *sc);
-+void ath_mci_cleanup(struct ath_softc *sc);
- #endif
+-struct iwl_cfg iwl135_bg_cfg = {
+-	.name = "135 Series 1x1 BG/BT",
+-	IWL_DEVICE_135,
+-};
+-
+ struct iwl_cfg iwl135_bgn_cfg = {
+ 	.name = "135 Series 1x1 BGN/BT",
+ 	IWL_DEVICE_135,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index c840c78..ee3363f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -439,16 +439,6 @@ struct iwl_cfg iwl6035_2agn_cfg = {
+ 	.ht_params = &iwl6000_ht_params,
+ };
+ 
+-struct iwl_cfg iwl6035_2abg_cfg = {
+-	.name = "6035 Series 2x2 ABG/BT",
+-	IWL_DEVICE_6030,
+-};
+-
+-struct iwl_cfg iwl6035_2bg_cfg = {
+-	.name = "6035 Series 2x2 BG/BT",
+-	IWL_DEVICE_6030,
+-};
+-
+ struct iwl_cfg iwl1030_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 1030 BGN",
+ 	IWL_DEVICE_6030,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-cfg.h b/drivers/net/wireless/iwlwifi/iwl-cfg.h
+index 2a2dc45..e1d7825 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-cfg.h
++++ b/drivers/net/wireless/iwlwifi/iwl-cfg.h
+@@ -101,17 +101,11 @@ extern struct iwl_cfg iwl100_bg_cfg;
+ extern struct iwl_cfg iwl130_bgn_cfg;
+ extern struct iwl_cfg iwl130_bg_cfg;
+ extern struct iwl_cfg iwl2000_2bgn_cfg;
+-extern struct iwl_cfg iwl2000_2bg_cfg;
+ extern struct iwl_cfg iwl2000_2bgn_d_cfg;
+ extern struct iwl_cfg iwl2030_2bgn_cfg;
+-extern struct iwl_cfg iwl2030_2bg_cfg;
+ extern struct iwl_cfg iwl6035_2agn_cfg;
+-extern struct iwl_cfg iwl6035_2abg_cfg;
+-extern struct iwl_cfg iwl6035_2bg_cfg;
+-extern struct iwl_cfg iwl105_bg_cfg;
+ extern struct iwl_cfg iwl105_bgn_cfg;
+ extern struct iwl_cfg iwl105_bgn_d_cfg;
+-extern struct iwl_cfg iwl135_bg_cfg;
+ extern struct iwl_cfg iwl135_bgn_cfg;
+ 
+ #endif /* __iwl_pci_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index 9ecfbd7..86d6a23 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -326,46 +326,28 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+ 	{IWL_PCI_DEVICE(0x0890, 0x4022, iwl2000_2bgn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0891, 0x4222, iwl2000_2bgn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0890, 0x4422, iwl2000_2bgn_cfg)},
+-	{IWL_PCI_DEVICE(0x0890, 0x4026, iwl2000_2bg_cfg)},
+-	{IWL_PCI_DEVICE(0x0891, 0x4226, iwl2000_2bg_cfg)},
+-	{IWL_PCI_DEVICE(0x0890, 0x4426, iwl2000_2bg_cfg)},
+ 	{IWL_PCI_DEVICE(0x0890, 0x4822, iwl2000_2bgn_d_cfg)},
+ 
+ /* 2x30 Series */
+ 	{IWL_PCI_DEVICE(0x0887, 0x4062, iwl2030_2bgn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0888, 0x4262, iwl2030_2bgn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0887, 0x4462, iwl2030_2bgn_cfg)},
+-	{IWL_PCI_DEVICE(0x0887, 0x4066, iwl2030_2bg_cfg)},
+-	{IWL_PCI_DEVICE(0x0888, 0x4266, iwl2030_2bg_cfg)},
+-	{IWL_PCI_DEVICE(0x0887, 0x4466, iwl2030_2bg_cfg)},
+ 
+ /* 6x35 Series */
+ 	{IWL_PCI_DEVICE(0x088E, 0x4060, iwl6035_2agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x088F, 0x4260, iwl6035_2agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x088E, 0x4460, iwl6035_2agn_cfg)},
+-	{IWL_PCI_DEVICE(0x088E, 0x4064, iwl6035_2abg_cfg)},
+-	{IWL_PCI_DEVICE(0x088F, 0x4264, iwl6035_2abg_cfg)},
+-	{IWL_PCI_DEVICE(0x088E, 0x4464, iwl6035_2abg_cfg)},
+-	{IWL_PCI_DEVICE(0x088E, 0x4066, iwl6035_2bg_cfg)},
+-	{IWL_PCI_DEVICE(0x088F, 0x4266, iwl6035_2bg_cfg)},
+-	{IWL_PCI_DEVICE(0x088E, 0x4466, iwl6035_2bg_cfg)},
+ 
+ /* 105 Series */
+ 	{IWL_PCI_DEVICE(0x0894, 0x0022, iwl105_bgn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0895, 0x0222, iwl105_bgn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0894, 0x0422, iwl105_bgn_cfg)},
+-	{IWL_PCI_DEVICE(0x0894, 0x0026, iwl105_bg_cfg)},
+-	{IWL_PCI_DEVICE(0x0895, 0x0226, iwl105_bg_cfg)},
+-	{IWL_PCI_DEVICE(0x0894, 0x0426, iwl105_bg_cfg)},
+ 	{IWL_PCI_DEVICE(0x0894, 0x0822, iwl105_bgn_d_cfg)},
+ 
+ /* 135 Series */
+ 	{IWL_PCI_DEVICE(0x0892, 0x0062, iwl135_bgn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0893, 0x0262, iwl135_bgn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0892, 0x0462, iwl135_bgn_cfg)},
+-	{IWL_PCI_DEVICE(0x0892, 0x0066, iwl135_bg_cfg)},
+-	{IWL_PCI_DEVICE(0x0893, 0x0266, iwl135_bg_cfg)},
+-	{IWL_PCI_DEVICE(0x0892, 0x0466, iwl135_bg_cfg)},
+ 
+ 	{0}
+ };
 -- 
 1.7.0.4
 
