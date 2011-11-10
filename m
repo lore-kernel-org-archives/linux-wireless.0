@@ -1,33 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kwall.cngroup.cz ([194.213.192.9]:13592 "EHLO kwall.cngroup.cz"
+Received: from mga11.intel.com ([192.55.52.93]:49376 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756112Ab1KWPY2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 10:24:28 -0500
-Date: Wed, 23 Nov 2011 16:24:26 +0100
-From: Jan =?UTF-8?B?RHZvxZnDoWs=?= <dvorakj@cngroup.dk>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rtl8192cu not working with Edimax EW-7811Un
-Message-Id: <20111123162426.9a30d25585fa54507c1c864e@cngroup.dk> (sfid-20111123_162432_155694_8FFEE6F8)
-In-Reply-To: <20111123143304.GA13460@redhat.com>
-References: <20111122113427.3d332b00776546d5ebac11de@cngroup.dk>
-	<20111122140139.GA3891@redhat.com>
-	<20111123112301.f5e523ff743f86dae539fdf3@cngroup.dk>
-	<20111123143304.GA13460@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1751132Ab1KJBos (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 20:44:48 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 3.1] iwlwifi: avoid a panic when unloading the module with RF Kill
+Date: Wed,  9 Nov 2011 16:50:50 -0800
+Message-Id: <1320886250-27329-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_024452_527958_834B4659)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 23 Nov 2011 15:33:05 +0100
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> Another kernel to test :-)
-> http://koji.fedoraproject.org/koji/taskinfo?taskID=3534603
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-OK, I have no idea if this is because of the new kernel, but
-client mode works. I can't still use hostapd, however.
+When HW RF kill switch is set to kill the radio, our NIC issues an
+interrupt after we stop the APM module. When we unload the module,
+the driver disables and cleans the interrupts before stopping the
+APM. So we have a real interrupt (inta not zero) pending.
+When this interrupts pops up the tasklet has already been killed
+and we crash.
 
-So, in hope this does not get old too soon, any ideas? :-)
+Here is a logical description of the flow:
 
-Thanks for your help and patience,
-	Jan Dvorak
+disable and clean interrupts
+synchronize interrupts
+kill the tasklet
+
+stop the APM <<== creates an RF kill interrupt
+
+free_irq <<== somehow our ISR is called here and we crash
+
+Here is the panic message:
+
+[  201.313636] BUG: unable to handle kernel paging request at ffff8800911b7150
+[  201.314541] IP: [<ffffffff8106d652>] tasklet_action+0x62/0x130
+[  201.315149] PGD 1c06063 PUD db37f067 PMD db408067 PTE 80000000911b7160
+[  201.316456] Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
+[  201.317324] CPU 1
+[  201.317495] Modules linked in: arc4 iwlwifi(-) mac80211 cfg80211 netconsole configfs binfmt_misc i915 drm_kms_helper drm uvcvideo i2c_algo_bit videodev dell_laptop dcdbas intel_agp dell_wmi intel_ips psmouse intel_gtt v4l2_compat_ioctl32 asix usbnet mii serio_raw video sparse_keymap firewire_ohci sdhci_pci sdhci firewire_core e1000e crc_itu_t [last unloaded: configfs]
+[  201.323839]
+[  201.324015] Pid: 2061, comm: modprobe Not tainted 3.1.0-rc9-wl #4 Dell Inc. Latitude E6410/0667CC
+[  201.324736] RIP: 0010:[<ffffffff8106d652>]  [<ffffffff8106d652>] tasklet_action+0x62/0x130
+[  201.325128] RSP: 0018:ffff88011bc43ea0  EFLAGS: 00010286
+[  201.325338] RAX: ffff88008ae70000 RBX: ffff8800911b7150 RCX: ffff88008ae70028
+[  201.325555] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff88008ae70000
+[  201.325775] RBP: ffff88011bc43ec0 R08: 0000000000000000 R09: 0000000000000000
+[  201.325994] R10: 0000000000000002 R11: 0000000000000001 R12: 0000000000000001
+[  201.326212] R13: 0000000000000006 R14: 0000000000000100 R15: ffff88008e259fd8
+[  201.326431] FS:  00007f4b90ea9700(0000) GS:ffff88011bc40000(0000) knlGS:0000000000000000
+[  201.326657] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[  201.326864] CR2: ffff8800911b7150 CR3: 000000008fd6d000 CR4: 00000000000006e0
+[  201.327083] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  201.327302] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[  201.327521] Process modprobe (pid: 2061, threadinfo ffff88008e258000, task ffff88008ae70000)
+[  201.327747] Stack:
+[  201.330494]  0000000000000046 0000000000000030 0000000000000001 0000000000000006
+[  201.333870]  ffff88011bc43f30 ffffffff8106cd8a ffffffff811e1016 ffff88011bc43f08
+[  201.337186]  0000000100000046 ffff88008e259fd8 0000000a10be2160 0000000000000006
+[  201.340458] Call Trace:
+[  201.342994]  <IRQ>
+[  201.345656]  [<ffffffff8106cd8a>] __do_softirq+0xca/0x250
+[  201.348185]  [<ffffffff811e1016>] ? pde_put+0x76/0x90
+[  201.350730]  [<ffffffff8131aeae>] ? do_raw_spin_unlock+0x5e/0xb0
+[  201.353261]  [<ffffffff811e1016>] ? pde_put+0x76/0x90
+[  201.355776]  [<ffffffff8163ccfc>] call_softirq+0x1c/0x30
+[  201.358287]  [<ffffffff8101531d>] do_softirq+0x9d/0xd0
+[  201.360823]  [<ffffffff8106cb05>] irq_exit+0xd5/0xf0
+[  201.363330]  [<ffffffff8163d5d6>] do_IRQ+0x66/0xe0
+[  201.365819]  [<ffffffff81632673>] common_interrupt+0x73/0x73
+[  201.368257]  <EOI>
+
+Cc: <stable@kernel.org> 3.1+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+this patch will be also available from wireless branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   33 +++++++++++++------------
+ 1 files changed, 17 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index da34110..ce91898 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -990,29 +990,16 @@ static int iwl_trans_tx_stop(struct iwl_trans *trans)
+ 	return 0;
+ }
+ 
+-static void iwl_trans_pcie_disable_sync_irq(struct iwl_trans *trans)
++static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+ {
+ 	unsigned long flags;
+-	struct iwl_trans_pcie *trans_pcie =
+-		IWL_TRANS_GET_PCIE_TRANS(trans);
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
++	/* tell the device to stop sending interrupts */
+ 	spin_lock_irqsave(&trans->shrd->lock, flags);
+ 	iwl_disable_interrupts(trans);
+ 	spin_unlock_irqrestore(&trans->shrd->lock, flags);
+ 
+-	/* wait to make sure we flush pending tasklet*/
+-	synchronize_irq(bus(trans)->irq);
+-	tasklet_kill(&trans_pcie->irq_tasklet);
+-}
+-
+-static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+-{
+-	/* stop and reset the on-board processor */
+-	iwl_write32(bus(trans), CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
+-
+-	/* tell the device to stop sending interrupts */
+-	iwl_trans_pcie_disable_sync_irq(trans);
+-
+ 	/* device going down, Stop using ICT table */
+ 	iwl_disable_ict(trans);
+ 
+@@ -1039,6 +1026,20 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+ 
+ 	/* Stop the device, and put it in low power state */
+ 	iwl_apm_stop(priv(trans));
++
++	/* Upon stop, the APM issues an interrupt if HW RF kill is set.
++	 * Clean again the interrupt here
++	 */
++	spin_lock_irqsave(&trans->shrd->lock, flags);
++	iwl_disable_interrupts(trans);
++	spin_unlock_irqrestore(&trans->shrd->lock, flags);
++
++	/* wait to make sure we flush pending tasklet*/
++	synchronize_irq(bus(trans)->irq);
++	tasklet_kill(&trans_pcie->irq_tasklet);
++
++	/* stop and reset the on-board processor */
++	iwl_write32(bus(trans), CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
+ }
+ 
+ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+-- 
+1.7.0.4
+
