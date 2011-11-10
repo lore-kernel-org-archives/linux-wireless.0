@@ -1,93 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:59965 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755084Ab1KOLZ4 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:57571 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934970Ab1KJOrl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 06:25:56 -0500
-From: Sangwook Lee <sangwook.lee@linaro.org>
-To: linux-kernel@vger.kernel.org, linux-mips@linux-mips.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Cc: ralf@linux-mips.org, juhosg@openwrt.org, rodrigue@qca.qualcomm.com,
-	linville@tuxdriver.com, rmanohar@qca.qualcomm.com,
-	patches@linaro.org, Sangwook Lee <sangwook.lee@linaro.org>
-Subject: [PATCH] ath9k: rename ath9k_platform.h to ath_platform.h
-Date: Tue, 15 Nov 2011 11:23:44 +0000
-Message-Id: <1321356224-5053-1-git-send-email-sangwook.lee@linaro.org> (sfid-20111115_122614_521458_F41B5789)
+	Thu, 10 Nov 2011 09:47:41 -0500
+MIME-Version: 1.0
+In-Reply-To: <1320933501.3967.68.camel@jlt3.sipsolutions.net>
+References: <1320933501.3967.68.camel@jlt3.sipsolutions.net>
+Date: Thu, 10 Nov 2011 15:47:38 +0100
+Message-ID: <CAA93jw6NZc4qP5ArK6tFF1DhP3_Rxsr8VFusU-nSzLHb6tnxjQ@mail.gmail.com> (sfid-20111110_154755_286503_A015FA50)
+Subject: Re: creating netdev queues on the fly?
+From: Dave Taht <dave.taht@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch series proposes to rename ath9k_platform.h to "ath_platform.h
-This header file handles platform data used only for ath9k,
-but it can used by ath6k as well. We can take "wl12xx.h" as
-as a example. Please let us change this file name so that
-other Atheors WLANs use this file for their own platform data
+On Thu, Nov 10, 2011 at 2:58 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Hi,
 
-Signed-off-by: Sangwook Lee <sangwook.lee@linaro.org>
----
- arch/mips/ath79/dev-ar913x-wmac.c                  |    2 +-
- drivers/net/wireless/ath/ath9k/ahb.c               |    2 +-
- drivers/net/wireless/ath/ath9k/init.c              |    2 +-
- drivers/net/wireless/ath/ath9k/pci.c               |    2 +-
- include/linux/{ath9k_platform.h => ath_platform.h} |    0
- 5 files changed, 4 insertions(+), 4 deletions(-)
- rename include/linux/{ath9k_platform.h => ath_platform.h} (100%)
+>
+> Am I completely crazy?
 
-diff --git a/arch/mips/ath79/dev-ar913x-wmac.c b/arch/mips/ath79/dev-ar913x-wmac.c
-index 48f425a..bc8869c 100644
---- a/arch/mips/ath79/dev-ar913x-wmac.c
-+++ b/arch/mips/ath79/dev-ar913x-wmac.c
-@@ -13,7 +13,7 @@
- #include <linux/delay.h>
- #include <linux/irq.h>
- #include <linux/platform_device.h>
--#include <linux/ath9k_platform.h>
-+#include <linux/ath_platform.h>
- 
- #include <asm/mach-ath79/ath79.h>
- #include <asm/mach-ath79/ar71xx_regs.h>
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 85a54cd..d84bee6 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -18,7 +18,7 @@
- 
- #include <linux/nl80211.h>
- #include <linux/platform_device.h>
--#include <linux/ath9k_platform.h>
-+#include <linux/ath_platform.h>
- #include "ath9k.h"
- 
- static const struct platform_device_id ath9k_platform_id_table[] = {
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index af1b325..0c82aea 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -16,7 +16,7 @@
- 
- #include <linux/dma-mapping.h>
- #include <linux/slab.h>
--#include <linux/ath9k_platform.h>
-+#include <linux/ath_platform.h>
- 
- #include "ath9k.h"
- 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index edb0b4b..2f031b8 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -17,7 +17,7 @@
- #include <linux/nl80211.h>
- #include <linux/pci.h>
- #include <linux/pci-aspm.h>
--#include <linux/ath9k_platform.h>
-+#include <linux/ath_platform.h>
- #include "ath9k.h"
- 
- static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
-diff --git a/include/linux/ath9k_platform.h b/include/linux/ath_platform.h
-similarity index 100%
-rename from include/linux/ath9k_platform.h
-rename to include/linux/ath_platform.h
+Somewhat. :)
+
+Much of your thinking aligns with mine, however my goal was to try and
+reduce latencies on wireless-n, where we send variable size truckloads
+of packets to each destination.
+
+Solving that one is hard, and requires two levels of active queue
+management in the packet scheduler layer, and a bit more communication
+up from the driver itself.
+
+We could have a unique 'station identifier' which fits handily into 32
+bits as the max allowed range is 0-2008 and map from MAC to that on tx
+entry. Having that as a flow classifier lets us have per station
+destination queues easily split up via a std tc filter... and then  we
+have the ability, finally, to manage queue depth on a per station
+basis.
+
+So you end up with four queues, each tied to a hardware queue that
+then splits things up on a per station basis, fair queues within the
+queues to each station, and recombines them at the end on a basis
+bursty enough to aggregate as they exit the radio.
+
+I don't mind at all up to 8000 queues, honestly, wasting 99% on mostly
+unused queue structures via pouring megabytes into useless
+bufferbloated FIFO only packet buffers seems an acceptible compromise,
+but I'm easy...
+
+As for managing queue depth on a per station basis, some of what has
+been discussed on "byte queue limits" applies, but given wireless's
+peculiarites, tsf timestamping on entry to the first qdisc, doing fair
+queuing inside the per-sta queue (QFQ?), and checking the timestamp on
+exit from the queue against a sane limit for the queue type would do
+wonders for overall latencies and network responsiveness.
+
+Done right, instead of seeing a single tcp stream capable of inducing
+multi-second latencies for the next stream, latencies would stay flat
+up unto the max aggregation depth of different streams on a given sta,
+subject only the how many other competing stations there are, the net
+effect of packet loss would be vastly lessened, and world peace,
+achieved. I dream of 2ms pings and dns lookups, even gaming, under
+load, on wireless. I do.
+
+First steps are getting a station identifier and some useful
+statistics regarding that stations max (that quantum) packet bundle
+size, and completion rate, mostly from minstrel... on each packet...
+
+a tc classifier that can use it to toss into the tcindex mechanism (if
+that is what is used), another sane classifier for something like QFQ
+per station, and a packet 'grouper' that can output correctly sized
+bursts of packets on a sane basis from the queues in a randomly sane
+order (not round robin per se', to even out the load it has to start
+dequeuing groups)
+
+How to do all that within tc? Well... I like the idea of throwing out
+the 32 bitness of tc's calssifiers (mac hashing and ipv6 hashing is
+not very effective), but I doubt that will fly..
+
+So to fit into the the existing structures the idea of adding the
+concept of a  tc qdisc 'grouper'  along with all the other tc filter
+'splitters' - that could be multiqueue and multiple hardware queue
+aware - seems like an answer.
+
+Another crazy piece of the idea (courtesy nbd - I'd rather go crazy
+adding fields to the skb) is to wedge that id and some minstrel
+statistics and completion rates and the timestamp into each skb's
+mostly unused 48 byte 'reserved for special uses field... which it has
+to do under rcu lock anyway.
+
+I started coding up time based queue limits the other weekend,
+actually... some of this has been discussed on the bloat list.
+
+>
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
 -- 
-1.7.4.1
-
+Dave Täht
+SKYPE: davetaht
+US Tel: 1-239-829-5608
+FR Tel: 0638645374
+http://www.bufferbloat.net
