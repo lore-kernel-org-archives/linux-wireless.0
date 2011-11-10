@@ -1,39 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:49055 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752618Ab1KOGeE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45392 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753170Ab1KJQ0N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 01:34:04 -0500
-Date: Tue, 15 Nov 2011 09:33:09 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] mac80211: use kfree_skb() instead of kfree()
-Message-ID: <20111115063309.GB30827@elgon.mountain> (sfid-20111115_073411_110164_EB28A936)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 10 Nov 2011 11:26:13 -0500
+Subject: Re: creating netdev queues on the fly?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1320935713.2310.9.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC> (sfid-20111110_153533_082549_9B566EB4)
+References: <1320933501.3967.68.camel@jlt3.sipsolutions.net>
+	 <1320935713.2310.9.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+	 (sfid-20111110_153533_082549_9B566EB4)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 10 Nov 2011 17:26:09 +0100
+Message-ID: <1320942369.3967.127.camel@jlt3.sipsolutions.net> (sfid-20111110_172618_355776_DBCFD790)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sk_buff structs should be freed using kfree_skb().
+On Thu, 2011-11-10 at 15:35 +0100, Eric Dumazet wrote:
 
-This was introduced recently in 029458212 "mac80211: Save probe
-response data for bss".
+> > So to get to my question: What if we could create netdev queues on the
+> > fly?
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> In term of qdisc management I believe its a bit complex if we start to
+> dynamically add netdev queues :)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 12a6d4b..b34ca0c 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -474,7 +474,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		RCU_INIT_POINTER(sdata->u.ap.probe_resp, NULL);
- 		synchronize_rcu();
- 		kfree(old_beacon);
--		kfree(old_probe_resp);
-+		kfree_skb(old_probe_resp);
- 
- 		/* down all dependent devices, that is VLANs */
- 		list_for_each_entry_safe(vlan, tmpsdata, &sdata->u.ap.vlans,
+Yeah I was thinking that would be the problematic part.
+
+> My first idea would be to extend Qdisc management so that a device can
+> callback qdisc when a frame is finaly delivered / consumed / discarded.
+> 
+> We currently only have qdisc->enqueue() and qdisc->dequeue(), we could
+> add qdisc->deliver_callback(skb)
+> 
+> You keep devices as they are, with a netdevqueue per hardware queue.
+> 
+> Then, using a Qdisc like existing ones, but with a limit of
+> outstanding(given to device but not yet consumed) packets per class.
+> 
+> external tc classifier would deliver a hash/index depending on remote
+> station.
+
+So basically you'd have a class for each station? Or a class for each
+station/AC? That's a lot of classes rather than queues, are they
+pre-allocated, or does it not matter? Overall that sounds like a good
+approach.
+
+> As a bonus you can get all the existing rate estimators / QOS /
+> shapers ...
+
+Yeah ... I guess I need to start learning tc :)
+
+johannes
+
