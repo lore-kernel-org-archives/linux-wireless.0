@@ -1,110 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56245 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757810Ab1KRPXF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 10:23:05 -0500
-Subject: [PATCH] nl80211: make get_vlan logic more common
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Carpenter <dan.carpenter@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 18 Nov 2011 16:23:01 +0100
-Message-ID: <1321629781.10266.61.camel@jlt3.sipsolutions.net> (sfid-20111118_162309_255144_1F681588)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:56565 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751028Ab1KJBda (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Nov 2011 20:33:30 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 00/28]  update for 3.3
+Date: Wed,  9 Nov 2011 16:39:03 -0800
+Message-Id: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023334_647920_085B25F2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+We move all the mac80211 related functions into single file
+We also fix number of P2P related issues and add P2P NoA probe responses
+We adding more debug hook to improve debugging capabilities
 
-get_vlan() sets the output parameter even if it
-returns an error, which is a bit odd. Instead,
-convert it to use ERR_PTR.
+Don Fry (6):
+  iwlagn: move ucode_write_complete from priv to trans structure
+  iwlagn: remove knowledge of ucode image location from upper layers
+  iwlagn: push knowledge of ucode image lower down
+  iwlagn: move ucode files out of the iwl_priv structure
+  iwlagn: Remove dependence of iwl_priv from eeprom routines.
+  iwlagn: move nvm_device_type from iwl_priv to iwl_trans
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c |   52 ++++++++++++++++++++++++++++---------------------
- 1 file changed, 30 insertions(+), 22 deletions(-)
+Emmanuel Grumbach (4):
+  iwlwifi: fix unused label in iwl_send_cmd_sync
+  iwlwifi: remove the use of the QOS debug flag
+  iwlwifi: add debug information on queue stop / wake
+  iwlwifi: fix an RCU sparse warning
 
---- a/net/wireless/nl80211.c	2011-11-18 15:33:05.000000000 +0100
-+++ b/net/wireless/nl80211.c	2011-11-18 16:18:57.000000000 +0100
-@@ -2480,26 +2480,34 @@ static int nl80211_get_station(struct sk
- /*
-  * Get vlan interface making sure it is running and on the right wiphy.
-  */
--static int get_vlan(struct genl_info *info,
--		    struct cfg80211_registered_device *rdev,
--		    struct net_device **vlan)
-+static struct net_device *get_vlan(struct genl_info *info,
-+				   struct cfg80211_registered_device *rdev)
- {
- 	struct nlattr *vlanattr = info->attrs[NL80211_ATTR_STA_VLAN];
--	*vlan = NULL;
-+	struct net_device *v;
-+	int ret;
- 
--	if (vlanattr) {
--		*vlan = dev_get_by_index(genl_info_net(info),
--					 nla_get_u32(vlanattr));
--		if (!*vlan)
--			return -ENODEV;
--		if (!(*vlan)->ieee80211_ptr)
--			return -EINVAL;
--		if ((*vlan)->ieee80211_ptr->wiphy != &rdev->wiphy)
--			return -EINVAL;
--		if (!netif_running(*vlan))
--			return -ENETDOWN;
-+	if (!vlanattr)
-+		return NULL;
-+
-+	v = dev_get_by_index(genl_info_net(info), nla_get_u32(vlanattr));
-+	if (!v)
-+		return ERR_PTR(-ENODEV);
-+
-+	if (!v->ieee80211_ptr || v->ieee80211_ptr->wiphy != &rdev->wiphy) {
-+		ret = -EINVAL;
-+		goto error;
-+	}
-+
-+	if (!netif_running(v)) {
-+		ret = -ENETDOWN;
-+		goto error;
- 	}
--	return 0;
-+
-+	return v;
-+ error:
-+	dev_put(v);
-+	return ERR_PTR(ret);
- }
- 
- static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
-@@ -2549,9 +2557,9 @@ static int nl80211_set_station(struct sk
- 		params.plink_state =
- 		    nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_STATE]);
- 
--	err = get_vlan(info, rdev, &params.vlan);
--	if (err)
--		goto out;
-+	params.vlan = get_vlan(info, rdev);
-+	if (IS_ERR(params.vlan))
-+		return PTR_ERR(params.vlan);
- 
- 	/* validate settings */
- 	err = 0;
-@@ -2719,9 +2727,9 @@ static int nl80211_new_station(struct sk
- 	      (rdev->wiphy.flags & WIPHY_FLAG_TDLS_EXTERNAL_SETUP)))
- 		return -EINVAL;
- 
--	err = get_vlan(info, rdev, &params.vlan);
--	if (err)
--		goto out;
-+	params.vlan = get_vlan(info, rdev);
-+	if (IS_ERR(params.vlan))
-+		return PTR_ERR(params.vlan);
- 
- 	/* validate settings */
- 	err = 0;
+Johannes Berg (6):
+  iwlagn: add P2P NoA to probe responses
+  iwlagn: fix NULL ptr deref when reprogramming sta w/o LQ
+  iwlagn: use per-vif AC parameters
+  iwlagn: explicitly program P2P QoS parameters
+  iwlagn: convert remain-on-channel duration to TU
+  iwlagn: don't always split remain-on-channel
 
+Todd Previte (1):
+  iwlwifi: Suppress noisy syslog messages when RF_KILL switch engaged
+
+Venkataraman, Meenakshi (1):
+  iwlwifi: fix rate-scaling algorithm for BT combo devices
+
+Wey-Yi Guy (10):
+  iwlwifi: two more SKUs for 6x05 series
+  iwlagn: check for SMPS mode
+  iwlwifi: remove un-supported SKUs
+  iwlwifi: move all mac80211 related functions to one place
+  iwlwifi: move more mac80211 callback function
+  iwlwifi: move hw_scan into _mac80211 file
+  iwlwifi: move station functions to mac80211
+  iwlwifi: Move the core suspend function to iwl-agn-lib
+  iwlwifi: set "echo" host command length
+  iwlwifi: check status before send command
+
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+
+ drivers/net/wireless/iwlwifi/Makefile             |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-2000.c           |   20 -
+ drivers/net/wireless/iwlwifi/iwl-6000.c           |   10 -
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |  358 +++++
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c         |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c         |   49 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c       |   13 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c        |   78 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |   16 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c      |  154 ++-
+ drivers/net/wireless/iwlwifi/iwl-agn.c            | 1544 +-------------------
+ drivers/net/wireless/iwlwifi/iwl-agn.h            |   31 +-
+ drivers/net/wireless/iwlwifi/iwl-cfg.h            |    6 -
+ drivers/net/wireless/iwlwifi/iwl-core.c           |  307 +----
+ drivers/net/wireless/iwlwifi/iwl-core.h           |   14 -
+ drivers/net/wireless/iwlwifi/iwl-debug.h          |   19 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c        |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |   34 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c         |  142 +-
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c       | 1632 +++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-pci.c            |   20 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c           |   47 +-
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c        |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |   35 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |   52 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |   23 +-
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |   50 +-
+ 28 files changed, 2448 insertions(+), 2233 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-mac80211.c
 
