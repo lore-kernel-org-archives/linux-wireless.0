@@ -1,133 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46410 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755504Ab1KWOKN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 09:10:13 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH] mac80211: do not pass AP VLAN vif pointers to drivers
-Date: Wed, 23 Nov 2011 21:09:49 +0700
-Message-Id: <1322057389-22421-1-git-send-email-nbd@openwrt.org> (sfid-20111123_151017_863524_3473A0EA)
+Received: from he.sipsolutions.net ([78.46.109.217]:37444 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745Ab1KKSAz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Nov 2011 13:00:55 -0500
+Subject: Re: off- & multi-channel operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4EBD6152.5040002@candelatech.com>
+References: <1320844134.3845.61.camel@jlt3.sipsolutions.net>
+	 <4EBABCE2.5000007@candelatech.com>
+	 <1320862529.3845.90.camel@jlt3.sipsolutions.net>
+	 <4EBADA61.5060506@candelatech.com>
+	 <1321006412.3977.10.camel@jlt3.sipsolutions.net>
+	 <4EBD6152.5040002@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 11 Nov 2011 19:00:51 +0100
+Message-ID: <1321034451.22919.3.camel@jlt3.sipsolutions.net> (sfid-20111111_190058_485429_5D6D4E45)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes frequent WARN_ONs when using AP VLAN + aggregation, as these vifs
-are virtual and not registered with drivers.
-Use sta_info_get_bss instead of sta_info_get in aggregation callbacks, so
-that these callbacks can find the station entry when called with the AP vif.
+On Fri, 2011-11-11 at 09:54 -0800, Ben Greear wrote:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/agg-rx.c     |    2 +-
- net/mac80211/agg-tx.c     |    4 ++--
- net/mac80211/driver-ops.h |   14 ++++++++++++++
- net/mac80211/sta_info.c   |    4 ----
- 4 files changed, 17 insertions(+), 7 deletions(-)
+> > mac80211 isn't going to be controlling the switching between 1 and 11 at
+> > all though. And there will be drivers like iwlwifi and wl12xx that want
+> > to control the "stay on channel 6" as well.
+> 
+> But at least for ath9k, it certainly *could* do this.  If other NICs
+> cannot handle this for whatever reason, then they can be handled some
+> other way.  It would seem to me that mac80211 is going to have a better
+> picture on what needs doing than the driver (it can see software queues,
+> all network-devices, the upper network stack if needed, etc).
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 476b106..06e92da 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -109,7 +109,7 @@ void ieee80211_stop_rx_ba_session(struct ieee80211_vif *vif, u16 ba_rx_bitmap,
- 	int i;
- 
- 	rcu_read_lock();
--	sta = sta_info_get(sdata, addr);
-+	sta = sta_info_get_bss(sdata, addr);
- 	if (!sta) {
- 		rcu_read_unlock();
- 		return;
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 39d72cc..94154b6 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -527,7 +527,7 @@ void ieee80211_start_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u16 tid)
- 	}
- 
- 	mutex_lock(&local->sta_mtx);
--	sta = sta_info_get(sdata, ra);
-+	sta = sta_info_get_bss(sdata, ra);
- 	if (!sta) {
- 		mutex_unlock(&local->sta_mtx);
- #ifdef CONFIG_MAC80211_HT_DEBUG
-@@ -656,7 +656,7 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid)
- 
- 	mutex_lock(&local->sta_mtx);
- 
--	sta = sta_info_get(sdata, ra);
-+	sta = sta_info_get_bss(sdata, ra);
- 	if (!sta) {
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		printk(KERN_DEBUG "Could not find station: %pM\n", ra);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 49cc5e0..e8960ae 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -10,6 +10,16 @@ static inline void check_sdata_in_driver(struct ieee80211_sub_if_data *sdata)
- 	WARN_ON(!(sdata->flags & IEEE80211_SDATA_IN_DRIVER));
- }
- 
-+static inline struct ieee80211_sub_if_data *
-+get_bss_sdata(struct ieee80211_sub_if_data *sdata)
-+{
-+	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+		sdata = container_of(sdata->bss, struct ieee80211_sub_if_data,
-+				     u.ap);
-+
-+	return sdata;
-+}
-+
- static inline void drv_tx(struct ieee80211_local *local, struct sk_buff *skb)
- {
- 	local->ops->tx(&local->hw, skb);
-@@ -421,6 +431,7 @@ static inline void drv_sta_notify(struct ieee80211_local *local,
- 				  enum sta_notify_cmd cmd,
- 				  struct ieee80211_sta *sta)
- {
-+	sdata = get_bss_sdata(sdata);
- 	check_sdata_in_driver(sdata);
- 
- 	trace_drv_sta_notify(local, sdata, cmd, sta);
-@@ -437,6 +448,7 @@ static inline int drv_sta_add(struct ieee80211_local *local,
- 
- 	might_sleep();
- 
-+	sdata = get_bss_sdata(sdata);
- 	check_sdata_in_driver(sdata);
- 
- 	trace_drv_sta_add(local, sdata, sta);
-@@ -454,6 +466,7 @@ static inline void drv_sta_remove(struct ieee80211_local *local,
- {
- 	might_sleep();
- 
-+	sdata = get_bss_sdata(sdata);
- 	check_sdata_in_driver(sdata);
- 
- 	trace_drv_sta_remove(local, sdata, sta);
-@@ -547,6 +560,7 @@ static inline int drv_ampdu_action(struct ieee80211_local *local,
- 
- 	might_sleep();
- 
-+	sdata = get_bss_sdata(sdata);
- 	check_sdata_in_driver(sdata);
- 
- 	trace_drv_ampdu_action(local, sdata, action, sta, tid, ssn, buf_size);
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 8eaa746..f982352 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -351,10 +351,6 @@ static int sta_info_finish_insert(struct sta_info *sta,
- 
- 	if (!sta->dummy || dummy_reinsert) {
- 		/* notify driver */
--		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--			sdata = container_of(sdata->bss,
--					     struct ieee80211_sub_if_data,
--					     u.ap);
- 		err = drv_sta_add(local, sdata, &sta->sta);
- 		if (err) {
- 			if (!async)
--- 
-1.7.3.2
+It could, but it won't be efficient. mac80211 mostly does everything in
+workqueues, and this is rather timing sensitive so you want to do it
+closer to the hardware, possibly even in the interrupt handler that
+tells you to switch (you could program the timers in the hardware for
+that)
+
+> >> If you expect the driver might have pkts queued for multiple channels,
+> >> and that is why it would be switching, then you could just have a mac80211
+> >> call that says 'stay on this channel (6) until I tell you otherwise'.
+> >> The driver could then stop it's automated switching.  That would seem
+> >> fairly easy to implement.
+> >
+> > Yes, that's what we'll probably need. Actually we already have that in a
+> > way with the remain_on_channel, but it's not used for work/scan/etc.
+> > today, only for p2p.
+> 
+> So, I'm suggesting we put this functionality into the work logic.  It's
+> already doing half-assed on/off channel stuff, as is scan, and it seems
+> as p2p or other off-channel stations needs as well.  Lets put it all in one
+> place, and then optimize it to work well.  We could batch work-items for
+> the same channel together, for instance, and handle the on/off channel
+> switching so that the stations get enough time to do useful work on their
+> channel.
+
+That works mostly, but not for actual operation on multiple channels.
+
+> >> Worst case, you flush all buffers and
+> >> then it should certainly stop switching?  (The hard part would seem to be making the
+> >> driver able to deal with multiple xmit queues and doing automated
+> >> switching in the first place.  It certainly never worked well when
+> >> ath9k tried to do something similar with virtual phys)
+> >
+> > At least for iwlwifi I expect we'd have multiple hardware queues with
+> > the uCode handling the switching.
+> 
+> So if the NIC can do everything, then maybe send work-items to it and let
+> it do the scheduling?  Like:  'spend max of 200ms on this channel and send/rcv as
+> many pkts as possible', or 'scan this channel for 20ms', or 'do-full-hw-scan'.
+> If the NIC wants to hop channels on it's own, the off-channel work items could
+> be considered suggestions and let the NIC schedule how it wants.
+
+That's kinda how it works now, but not all NICs can even handle that.
+Think wl1251 or iwlegacy for example, it'll never support all of these
+features of course but it also doesn't deal well with the channel
+switching work items we have today.
+
+johannes
 
