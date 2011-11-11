@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:45199 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753692Ab1KUWMR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 17:12:17 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:32418 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753517Ab1KKFqi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Nov 2011 00:46:38 -0500
+Date: Fri, 11 Nov 2011 06:47:31 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20111111054731.GA2292@redhat.com> (sfid-20111111_064654_299987_C5007DC1)
+References: <20111029171554.GA16596@nomi.cz>
+ <20111031160342.GB2225@redhat.com>
+ <20111109155411.GA1669@nomi.cz>
+ <20111109165158.GA2254@redhat.com>
+ <20111110091816.GA2247@nomi.cz>
+ <20111110114732.GA2217@redhat.com>
+ <20111110125347.GA29415@nomi.cz>
+ <20111110160703.GA2775@redhat.com>
+ <20111110163051.GA24533@nomi.cz>
 MIME-Version: 1.0
-In-Reply-To: <201111212249.31196.rjw@sisk.pl>
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera> <201111212249.31196.rjw@sisk.pl>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 21 Nov 2011 14:11:54 -0800
-Message-ID: <CA+55aFwAELQieN=qR7Gz_MT5rHPp90H10uTMS+DOJjefk7q3ng@mail.gmail.com> (sfid-20111121_231241_057942_2CD6D34C)
-Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
-To: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Andy Lutomirski <luto@amacapital.net>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20111110163051.GA24533@nomi.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 21, 2011 at 1:49 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->
-> Subject    : [3.1 REGRESSION] Commit 5cec93c216db77c45f7ce970d46283bcb1933884 breaks the Chromium seccomp sandbox
-> Submitter  : Nix <nix@esperi.org.uk>
-> Date       : 2011-11-14 0:40
-> Message-ID : 8762inleno.fsf@spindle.srvr.nix
-> References : http://marc.info/?l=linux-kernel&m=132123396226377&w=2
+On Thu, Nov 10, 2011 at 05:30:51PM +0100, TomÃ¡Å¡ JanouÅ¡ek wrote:
+> I think all those T520 and T420s models have exactly the same wireless card. I
+> don't see why they wouldn't have. :-)
+Well, laptops models have common mainboards, but peripheral components
+might not be identical. Especially wireless card might vary from unit
+to unit. For example:
 
-So this should be fixed by commit 2b666859ec32 ("x86: Default to
-vsyscall=native for now"), since we disabled the vsyscall emulation
-because it broken UML too.
+T520 with iwl6300:
+http://smolt.fedoraproject.org/client/show/pub_0cbc8731-47d3-4ecf-8add-aa832b34edcd
+T520 with iwl1000:
+http://smolt.fedoraproject.org/client/show/pub_02f601d6-7a93-4c0e-bc01-a4a95db36086 
+T520 with iwl6205:
+http://smolt.fedoraproject.org/client/show/pub_0232252f-75a9-4050-a69b-c8e95e00eaf2
 
-Of course, the chromium seccomp thing might re-surface with the
-patches that enable the emulation (with better emulation), which Andy
-is still working on, and that I was planning on merging for 3.3.
-
-Andy, it migth be worth contacting Nix and having him test whether
-your fixed emulation works for chromium too.
-
-                      Linus
+Stanislaw
