@@ -1,113 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:46758 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756751Ab1KOXvl (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:37985 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751668Ab1KKKSl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 18:51:41 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: [PATCH] iw: add support for wmm NoAck per WMM Queue
-Date: Wed, 16 Nov 2011 00:21:16 +0100
-Message-Id: <1321399276-3585-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111116_005145_029548_F6815E80)
-In-Reply-To: <1321399276-3585-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1321399276-3585-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Fri, 11 Nov 2011 05:18:41 -0500
+Subject: [PATCH 09/10] ath6kl: disable HTC for USB devices
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 11 Nov 2011 12:18:37 +0200
+Message-ID: <20111111101837.12075.38773.stgit@localhost6.localdomain6> (sfid-20111111_111844_496709_5ED12434)
+In-Reply-To: <20111111101551.12075.94865.stgit@localhost6.localdomain6>
+References: <20111111101551.12075.94865.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds support for the new NoAck feature in nl80211/mac80211
+As HTC layer doesn't support USB devices return an error if that happens.
+USB support will be added to HTC in the future, this is just a temporary
+solution.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- nl80211.h |    2 ++
- phy.c     |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 53 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath6kl/hif.c |    5 +++++
+ drivers/net/wireless/ath/ath6kl/htc.c |   10 +++++++++-
+ 2 files changed, 14 insertions(+), 1 deletions(-)
 
-diff --git a/nl80211.h b/nl80211.h
-index 8049bf7..3d199c6 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -2065,6 +2065,7 @@ enum nl80211_mesh_setup_params {
-  * @NL80211_TXQ_ATTR_CWMAX: Maximum contention window [a value of the form
-  *	2^n-1 in the range 1..32767]
-  * @NL80211_TXQ_ATTR_AIFS: Arbitration interframe space [0..255]
-+ * @NL80211_TXQ_ATTR_NOACK: NoAck Mode, 0 meaning normal Ack operation
-  * @__NL80211_TXQ_ATTR_AFTER_LAST: Internal
-  * @NL80211_TXQ_ATTR_MAX: Maximum TXQ attribute number
-  */
-@@ -2075,6 +2076,7 @@ enum nl80211_txq_attr {
- 	NL80211_TXQ_ATTR_CWMIN,
- 	NL80211_TXQ_ATTR_CWMAX,
- 	NL80211_TXQ_ATTR_AIFS,
-+	NL80211_TXQ_ATTR_NOACK,
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
+index e57da35..0772ef6 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.c
++++ b/drivers/net/wireless/ath/ath6kl/hif.c
+@@ -689,6 +689,11 @@ int ath6kl_hif_setup(struct ath6kl_device *dev)
+ 	ath6kl_dbg(ATH6KL_DBG_HIF, "hif block size %d mbox addr 0x%x\n",
+ 		   dev->htc_cnxt->block_sz, dev->ar->mbox_info.htc_addr);
  
- 	/* keep last */
- 	__NL80211_TXQ_ATTR_AFTER_LAST,
-diff --git a/phy.c b/phy.c
-index d9090fd..e5f36be 100644
---- a/phy.c
-+++ b/phy.c
-@@ -131,6 +131,57 @@ COMMAND(set, frag, "<fragmentation threshold|off>",
- 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_fragmentation,
- 	"Set fragmentation threshold.");
++	/* usb doesn't support enabling interrupts */
++	/* FIXME: remove check once USB support is implemented */
++	if (dev->ar->hif_type == ATH6KL_HIF_TYPE_USB)
++		return 0;
++
+ 	status = ath6kl_hif_disable_intrs(dev);
  
-+static int handle_wmm_noack(struct nl80211_state *state,
-+				struct nl_cb *cb, struct nl_msg *msg,
-+				int argc, char **argv)
-+{
-+	enum nl80211_txq_q queue;
-+	unsigned int noack;
-+	struct nlattr *txq, *params;
+ fail_setup:
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index f3b63ca..b017022 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -2543,6 +2543,12 @@ int ath6kl_htc_wait_target(struct htc_target *target)
+ 	struct htc_service_connect_resp resp;
+ 	int status;
+ 
++	/* FIXME: remove once USB support is implemented */
++	if (target->dev->ar->hif_type == ATH6KL_HIF_TYPE_USB) {
++		ath6kl_err("HTC doesn't support USB yet. Patience!\n");
++		return -EOPNOTSUPP;
++	}
 +
-+	if (argc != 2)
-+		return 1;
-+
-+	if (strcmp("VO", argv[0]) == 0)
-+		queue = NL80211_TXQ_Q_VO;
-+	else if (strcmp("VI", argv[0]) == 0)
-+		queue = NL80211_TXQ_Q_VI;
-+	else if (strcmp("BE", argv[0]) == 0)
-+		queue = NL80211_TXQ_Q_BE;
-+	else if (strcmp("BK", argv[0]) == 0)
-+		queue = NL80211_TXQ_Q_BK;
-+	else
-+		return 1;
-+
-+	if (strcmp("off", argv[1]) == 0)
-+		noack = 0;
-+	else if (strcmp("on", argv[1]) == 0)
-+		noack = 1;
-+	else
-+		return 1;
-+
-+	txq = nla_nest_start(msg, NL80211_ATTR_WIPHY_TXQ_PARAMS);
-+	if (!txq)
-+		goto nla_put_failure;
-+
-+	params = nla_nest_start(msg, 1);
-+	if (!params)
-+		goto nla_put_failure;
-+
-+	NLA_PUT_U8(msg, NL80211_TXQ_ATTR_QUEUE, queue);
-+	NLA_PUT_U8(msg, NL80211_TXQ_ATTR_NOACK, noack);
-+	nla_nest_end(msg, params);
-+	nla_nest_end(msg, txq);
-+
-+	return 0;
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND(set, wmm_noack, "<VO|VI|BE|BK> <on|off>",
-+	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_wmm_noack,
-+	"Set WMM noack policy");
-+
-+
- static int handle_rts(struct nl80211_state *state,
- 		      struct nl_cb *cb, struct nl_msg *msg,
- 		      int argc, char **argv)
--- 
-1.7.7.2
+ 	/* we should be getting 1 control message that the target is ready */
+ 	packet = htc_wait_for_ctrl_msg(target);
+ 
+@@ -2772,7 +2778,9 @@ void ath6kl_htc_cleanup(struct htc_target *target)
+ {
+ 	struct htc_packet *packet, *tmp_packet;
+ 
+-	ath6kl_hif_cleanup_scatter(target->dev->ar);
++	/* FIXME: remove check once USB support is implemented */
++	if (target->dev->ar->hif_type != ATH6KL_HIF_TYPE_USB)
++		ath6kl_hif_cleanup_scatter(target->dev->ar);
+ 
+ 	list_for_each_entry_safe(packet, tmp_packet,
+ 			&target->free_ctrl_txbuf, list) {
 
