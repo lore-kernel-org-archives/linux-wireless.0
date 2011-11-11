@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:44394 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753256Ab1K1R4Z (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50709 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752484Ab1KKTaL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 12:56:25 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Alexander Simon <an.alexsimon@googlemail.com>,
-	Marek Lindner <lindner_marek@yahoo.de>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCH 1/4] mac80211: fill rate filter for internal scan requests
-Date: Mon, 28 Nov 2011 18:55:13 +0100
-Message-Id: <1322502917-28205-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111128_185634_810824_7B135F2B)
-In-Reply-To: <1322502917-28205-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1322502917-28205-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Fri, 11 Nov 2011 14:30:11 -0500
+Date: Fri, 11 Nov 2011 14:29:09 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: fix warning in ieee80211_probe_client
+Message-ID: <20111111192909.GE2485@tuxdriver.com> (sfid-20111111_203016_334603_48BCDE58)
+References: <1321036348-32272-1-git-send-email-linville@tuxdriver.com>
+ <1321039350.22919.6.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1321039350.22919.6.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rates bitmap for internal scan requests shoud be filled,
-otherwise there will be probe requests with zero rates supported.
+On Fri, Nov 11, 2011 at 08:22:30PM +0100, Johannes Berg wrote:
+> On Fri, 2011-11-11 at 13:32 -0500, John W. Linville wrote:
+> > CC [M]  net/mac80211/cfg.o
+> > net/mac80211/cfg.c: In function ‘ieee80211_probe_client’:
+> > net/mac80211/cfg.c:2567:7: warning: ‘qos’ may be used uninitialized in this function
+> 
+> Hm, you need a better compiler ;-) How about below instead (keeping the
+> subject)? I kinda don't like just initialising the variable "randomly".
+> 
+> johannes
+> 
+> 
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The warning is spurious -- if !sta we always exit without using the
+> unassigned qos variable, and if we do find the sta we assign it.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- net/mac80211/main.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Works for me...
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index dddedfa..3e15f75 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -779,6 +779,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if (!local->int_scan_req)
- 		return -ENOMEM;
- 
-+	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
-+		if (!local->hw.wiphy->bands[band])
-+			continue;
-+		local->int_scan_req->rates[band] = (u32) -1;
-+	}
-+
- 	/* if low-level driver supports AP, we also support VLAN */
- 	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_AP)) {
- 		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
 -- 
-1.7.7.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
