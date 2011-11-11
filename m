@@ -1,85 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4798 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759562Ab1KWBWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 20:22:15 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 00/24] brcm80211: generic cleanup and fullmac bus
- interface refactoring
-Date: Tue, 22 Nov 2011 17:21:35 -0800
-Message-ID: <1322011319-24863-1-git-send-email-frankyl@broadcom.com> (sfid-20111123_022236_484307_0EBE700B)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47767 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752484Ab1KKTAS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Nov 2011 14:00:18 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	libertas-dev@lists.infradead.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] libertas: release bss references and avoid warning from cfg80211_inform_bss
+Date: Fri, 11 Nov 2011 13:53:29 -0500
+Message-Id: <1321037609-1806-1-git-send-email-linville@tuxdriver.com> (sfid-20111111_200022_777645_D35595E5)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch serises contains some clean up patches for both fullmac and
-softmac as well as some fullmac bus interface refactoring patches.
+  CC [M]  drivers/net/wireless/libertas/cfg.o
+drivers/net/wireless/libertas/cfg.c: In function ‘lbs_ret_scan’:
+drivers/net/wireless/libertas/cfg.c:636:24: warning: ignoring return value of ‘cfg80211_inform_bss’, declared with attribute warn_unused_result
+drivers/net/wireless/libertas/cfg.c: In function ‘lbs_join_post’:
+drivers/net/wireless/libertas/cfg.c:1766:21: warning: ignoring return value of ‘cfg80211_inform_bss’, declared with attribute warn_unused_result
 
-In order to add USB bus support to fullmac, current interface between
-common layer and bus layer must be optimized. Interface functions of
-bus layer will be stored in a interface structure along with other
-context variables and registered to common layer during
-initialization. Interface functions of common layer can be called
-directly by bus layer. The pointer of the shared interface
-structure will be saved in the private driver_data pointer of the
-dongle device.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/libertas/cfg.c |   25 +++++++++++++++----------
+ 1 files changed, 15 insertions(+), 10 deletions(-)
 
-Alwin Beukers (2):
-  brcm80211: smac: fix channel frequency
-  brcm80211: smac: added support for mac80211 filter flags
-
-Arend van Spriel (7):
-  brcm80211: fmac: cleanup receive path using proper skb_queue
-    functions
-  brcm80211: smac: remove skb next pointer usage from the driver
-  brcm80211: fmac: separate receiving skb chain from other receive path
-  brcm80211: fmac: remove width parameter from
-    brcmf_sdioh_request_buffer
-  brcm80211: fmac: simplify the brcmf_sdioh_request_buffer() function
-  brcm80211: fmac: remove alignment check from
-    brcmf_sdioh_request_buffer()
-  brcm80211: fmac: rename wait queue name to match using function
-
-Franky Lin (15):
-  brcm80211: fmac: change firmware/nvram name to be more generic
-  brcm80211: fmac: discard packet received when net device not
-    registered
-  brcm80211: fmac: move module init/exit to sdio layer
-  brcm80211: fmac: remove function brcmf_c_init
-  brcm80211: fmac: remove unused parameter of brcmf_sdbrcm_probe
-  brcm80211: fmac: rename structure brcmf_bus to brcmf_sdio
-  brcm80211: fmac: introduce common bus interface struct brcmf_bus
-  brcm80211: fmac: move busstate to struct brcmf_bus
-  brcm80211: fmac: stop using brcmf_pub in brcmf_sdbrcm_bus_watchdog
-  brcm80211: fmac: change function bus_rxctl parameter
-  brcm80211: fmac: change function bus_txctl parameter
-  brcm80211: fmac: change function bus_txdata parameter
-  brcm80211: fmac: change function bus_init parameter
-  brcm80211: fmac: remove function brcmf_bus_get_device
-  brcm80211: fmac: change function bus_stop parameter
-
- drivers/net/wireless/brcm80211/brcmfmac/bcmchip.h  |   25 --
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  148 ++++++++--
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |  207 ++++++-------
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   31 ++-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |   19 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c  |    6 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   15 -
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   85 ++----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  320 +++++++++-----------
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |   30 ++-
- drivers/net/wireless/brcm80211/brcmsmac/dma.c      |   62 ++---
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   38 +--
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |   47 ++--
- drivers/net/wireless/brcm80211/brcmsmac/main.h     |    6 +-
- .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |    2 +-
- 15 files changed, 512 insertions(+), 529 deletions(-)
- delete mode 100644 drivers/net/wireless/brcm80211/brcmfmac/bcmchip.h
-
+diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+index 4fcd653..89f34ad 100644
+--- a/drivers/net/wireless/libertas/cfg.c
++++ b/drivers/net/wireless/libertas/cfg.c
+@@ -485,6 +485,7 @@ static int lbs_cfg_set_channel(struct wiphy *wiphy,
+ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
+ 	struct cmd_header *resp)
+ {
++	struct cfg80211_bss *bss;
+ 	struct cmd_ds_802_11_scan_rsp *scanresp = (void *)resp;
+ 	int bsssize;
+ 	const u8 *pos;
+@@ -632,12 +633,14 @@ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
+ 				     LBS_SCAN_RSSI_TO_MBM(rssi)/100);
+ 
+ 			if (channel &&
+-			    !(channel->flags & IEEE80211_CHAN_DISABLED))
+-				cfg80211_inform_bss(wiphy, channel,
++			    !(channel->flags & IEEE80211_CHAN_DISABLED)) {
++				bss = cfg80211_inform_bss(wiphy, channel,
+ 					bssid, le64_to_cpu(*(__le64 *)tsfdesc),
+ 					capa, intvl, ie, ielen,
+ 					LBS_SCAN_RSSI_TO_MBM(rssi),
+ 					GFP_KERNEL);
++				cfg80211_put_bss(bss);
++			}
+ 		} else
+ 			lbs_deb_scan("scan response: missing BSS channel IE\n");
+ 
+@@ -1720,6 +1723,7 @@ static void lbs_join_post(struct lbs_private *priv,
+ 		   2 + 2 +                      /* atim */
+ 		   2 + 8];                      /* extended rates */
+ 	u8 *fake = fake_ie;
++	struct cfg80211_bss *bss;
+ 
+ 	lbs_deb_enter(LBS_DEB_CFG80211);
+ 
+@@ -1763,14 +1767,15 @@ static void lbs_join_post(struct lbs_private *priv,
+ 	*fake++ = 0x6c;
+ 	lbs_deb_hex(LBS_DEB_CFG80211, "IE", fake_ie, fake - fake_ie);
+ 
+-	cfg80211_inform_bss(priv->wdev->wiphy,
+-			    params->channel,
+-			    bssid,
+-			    0,
+-			    capability,
+-			    params->beacon_interval,
+-			    fake_ie, fake - fake_ie,
+-			    0, GFP_KERNEL);
++	bss = cfg80211_inform_bss(priv->wdev->wiphy,
++				  params->channel,
++				  bssid,
++				  0,
++				  capability,
++				  params->beacon_interval,
++				  fake_ie, fake - fake_ie,
++				  0, GFP_KERNEL);
++	cfg80211_put_bss(bss);
+ 
+ 	memcpy(priv->wdev->ssid, params->ssid, params->ssid_len);
+ 	priv->wdev->ssid_len = params->ssid_len;
 -- 
-1.7.5.4
-
+1.7.4.4
 
