@@ -1,119 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:44263 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932194Ab1KBT1f (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:41802 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751689Ab1KKLyT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 15:27:35 -0400
-Received: by vws1 with SMTP id 1so230966vws.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2011 12:27:34 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v3 1/4] mac80211: Avoid filling up mesh preq queue with redundant requests
-Date: Wed,  2 Nov 2011 12:27:24 -0700
-Message-Id: <1320262047-5389-1-git-send-email-thomas@cozybit.com> (sfid-20111102_202738_787802_050E909A)
+	Fri, 11 Nov 2011 06:54:19 -0500
+Message-ID: <1321012453.2548.37.camel@edumazet-laptop> (sfid-20111111_125431_563183_076EDFC5)
+Subject: Re: creating netdev queues on the fly?
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Dave Taht <dave.taht@gmail.com>
+Cc: Denys Fedoryshchenko <denys@wbc.net.sa>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andrew McGregor <andrewmcgr@gmail.com>
+Date: Fri, 11 Nov 2011 12:54:13 +0100
+In-Reply-To: <CAA93jw7n1jYiWrnHOF0Zmzd0cVtadNhPSCpP5YqEdq_Q9opw5A@mail.gmail.com>
+References: <1320933501.3967.68.camel@jlt3.sipsolutions.net>
+	 <CAGXE3d-_RFgW_zwfX2vTBe1psXmgoBFO5pd5cAgtYo=Jwpddhw@mail.gmail.com>
+	 <7be02f26a67fac4c7448a74f1f17aa01@visp.net.lb>
+	 <CAA93jw7ECQegWj6rpd48sbmDQUjorCYzXANXJSj0baHtxzC7EA@mail.gmail.com>
+	 <1321009374.2548.31.camel@edumazet-laptop>
+	 <CAA93jw7n1jYiWrnHOF0Zmzd0cVtadNhPSCpP5YqEdq_Q9opw5A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+Le vendredi 11 novembre 2011 à 12:42 +0100, Dave Taht a écrit :
 
-Don't accept redundant PREQs for a given destination. This fixes a
-problem under high load:
+> More elegant to be sure. But for N you kind of need to do ewma between
+> aggregated transmission groups.
+> 
 
-kernel: [20386.250913] mesh_queue_preq: 235 callbacks suppressed
-kernel: [20386.253335] Mesh HWMP (mesh0): PREQ node queue full
-kernel: [20386.253352] Mesh HWMP (mesh0): PREQ node queue full
-(...)
+I speak at Class/Qdisc level. If each transmission group has its own
+class [ I believe it should ], it should fit.
 
-The 802.11s protocol has a provision to limit the rate of path requests
-(PREQs) are transmitted (dot11MeshHWMPpreqMinInterval) but there was no
-limit on the rate at which PREQs were being queued up.  There is a valid
-reason for queuing PREQs: this way we can even out PREQ bursts.  But
-queueing multiple PREQs for the same destination is useless.
 
-Reported-by: Pedro Larbig <pedro.larbig@carhs.de>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+> I still don't 'get' how we can split out a stream based on a
+> stationid, toss it in a queue to be further scheduled (my choice would
+> be QFQ, btw), and then sanely de-schedule a burst of packets for that
+> destination appropriate for that station's aggregation level and
+> transmit rate using existing tc methods.
+> 
 
----
-v3:
-	move mpath flag update inside state_lock (Johannes)
+Right now its not possible since we dont have a feedback once a packet
+is dequeued from qdisc. But it should be doable.
 
- net/mac80211/mesh.h      |    3 +++
- net/mac80211/mesh_hwmp.c |   15 +++++++++++++--
- 2 files changed, 16 insertions(+), 2 deletions(-)
+> I liked the callback idea discussed earlier for implementing a
+> 'grouper' of this sort.
+> 
+> That said I'm strongly encouraged by the dialog thus far on this thread.
+> 
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 8c00e2d..b3745e8 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -31,6 +31,8 @@
-  * @MESH_PATH_FIXED: the mesh path has been manually set and should not be
-  * 	modified
-  * @MESH_PATH_RESOLVED: the mesh path can has been resolved
-+ * @MESH_PATH_REQ_QUEUED: there is an unsent path request for this destination
-+ * already queued up, waiting for the discovery process to start.
-  *
-  * MESH_PATH_RESOLVED is used by the mesh path timer to
-  * decide when to stop or cancel the mesh path discovery.
-@@ -41,6 +43,7 @@ enum mesh_path_flags {
- 	MESH_PATH_SN_VALID =	BIT(2),
- 	MESH_PATH_FIXED	=	BIT(3),
- 	MESH_PATH_RESOLVED =	BIT(4),
-+	MESH_PATH_REQ_QUEUED =	BIT(5),
- };
- 
- /**
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 9a1f8bb..b22b223 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -867,9 +867,19 @@ static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
- 		return;
- 	}
- 
-+	spin_lock_bh(&mpath->state_lock);
-+	if (mpath->flags & MESH_PATH_REQ_QUEUED) {
-+		spin_unlock_bh(&mpath->state_lock);
-+		spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
-+		return;
-+	}
-+
- 	memcpy(preq_node->dst, mpath->dst, ETH_ALEN);
- 	preq_node->flags = flags;
- 
-+	mpath->flags |= MESH_PATH_REQ_QUEUED;
-+	spin_unlock_bh(&mpath->state_lock);
-+
- 	list_add_tail(&preq_node->list, &ifmsh->preq_queue.list);
- 	++ifmsh->preq_queue_len;
- 	spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
-@@ -921,6 +931,7 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
- 		goto enddiscovery;
- 
- 	spin_lock_bh(&mpath->state_lock);
-+	mpath->flags &= ~MESH_PATH_REQ_QUEUED;
- 	if (preq_node->flags & PREQ_Q_F_START) {
- 		if (mpath->flags & MESH_PATH_RESOLVING) {
- 			spin_unlock_bh(&mpath->state_lock);
-@@ -1028,8 +1039,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
- 			mesh_queue_preq(mpath, PREQ_Q_F_START);
- 		}
- 
--		if (skb_queue_len(&mpath->frame_queue) >=
--				MESH_FRAME_QUEUE_LEN)
-+		if (skb_queue_len(&mpath->frame_queue) >= MESH_FRAME_QUEUE_LEN)
- 			skb_to_free = skb_dequeue(&mpath->frame_queue);
- 
- 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
-@@ -1061,6 +1071,7 @@ void mesh_path_timer(unsigned long data)
- 	} else if (mpath->discovery_retries < max_preq_retries(sdata)) {
- 		++mpath->discovery_retries;
- 		mpath->discovery_timeout *= 2;
-+		mpath->flags &= ~MESH_PATH_REQ_QUEUED;
- 		spin_unlock_bh(&mpath->state_lock);
- 		mesh_queue_preq(mpath, 0);
- 	} else {
--- 
-1.7.5.4
+...
+
+> and I assume that you are either making this syntax up or coding
+> faster than emailing in some tree somewhere...
+> 
+
+That because I prefer discussing on this before starting coding once
+general idea is accepted.
+
+Note this delay idea is not new, it already was mentioned on netdev some
+months ago.
+
+
 
