@@ -1,92 +1,552 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3800 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753611Ab1KYN0w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 08:26:52 -0500
-Message-ID: <4ECF9789.2090703@broadcom.com> (sfid-20111125_142655_986894_61C0759A)
-Date: Fri, 25 Nov 2011 14:26:33 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:56473 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750971Ab1KKKRi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Nov 2011 05:17:38 -0500
+Subject: [PATCH 01/10] ath6kl: move bmi calls to hif driver
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 11 Nov 2011 12:17:33 +0200
+Message-ID: <20111111101733.12075.14441.stgit@localhost6.localdomain6> (sfid-20111111_111742_111251_4D9FA7CE)
+In-Reply-To: <20111111101551.12075.94865.stgit@localhost6.localdomain6>
+References: <20111111101551.12075.94865.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-To: "Haohui Liao" <liaohaohui@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Wireless stalled after a few minutes with Linux Kernel 3.1
-References: <CAHW5WCL2V=wh43YYbiMo+rnh=-g4fobKEZHrCLvW03Q73=gzYA@mail.gmail.com>
- <4EC7E739.4080404@broadcom.com>
- <CAHW5WCLUefvgvRkgz7Nr+Rwu6_96t7EVVB33U0ED5g9a0cHFXw@mail.gmail.com>
-In-Reply-To: <CAHW5WCLUefvgvRkgz7Nr+Rwu6_96t7EVVB33U0ED5g9a0cHFXw@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/25/2011 02:18 PM, Haohui Liao wrote:
-> Dear Arend van Spriel,
-> 
-> Sorry for my late reply.  I have attached my dmesg outout
-> from Linux 3.0.7 (I am using Arch Linux 64 bit), the lsmod
-> output for Linux 3.0.7, the lsmod output for Linux 3.1-4
-> (the package for Arch Linux.  I believe the `-4' is just
-> minor changes to configuration and compilation.  I have
-> install the `-3' and `-4' and all of the have the stall problem)
-> and the lspci output.
-> 
->> Provide hardware info.
-> 
-> I am not sure if the attached files provide enough hardware
-> information, please advise.
-> 
->> Actually, this trace looks fine. The last message means
->> that no IPv6 capable network equipment has been
->> detected. Did you do unplug a USB device?
-> 
-> Yes, I have unplug the USB thumbdrive.  But I don't think
-> unpluging a USB device.  Let me explain how the stall will
-> happen.
-> 
-> The following is a portion of my wpa_supplicant.conf
-> 
->     ssid="LINUX-LINK"
->     proto=WPA2
->     key_mgmt=WPA-PSK
->     pairwise=TKIP
->     group=TKIP
->     wpa_ptk_rekey=600
-> 
-> I didn't realise that `wpa_ptk_rekey=600' will actually change
-> the wifi key every 10 minutes.  I just copy from the default
-> wpa_supplicant.conf.  Later I read the description and I found
-> that it is for the paranoid user who want really secure
-> connection.  So I remove the wpa_ptk_rekey=600 and the
-> connection will last longer for ath9k.  Sometimes a
-> disconnection happened.  I found from Internet that nearby
-> wifi interference can cause this problem.
-> 
-> This is fine with Linux 3.0.7.   However, during the
-> wpa_ptk_rekey or during interference, the Linux 3.1 will
-> stalled.  The only solution for me is to kill wpa_supplicant
-> and restart it again.  I can always produce this phenomena
-> with Linux 3.1, so I dare not install the Linux 3.1.1 kernel.
-> I heard that Linux 3.2 has some improvements for ath9k
-> but it is not available for ArchLinux yet, so I can't inform you
-> if Linux 3.2 has a similar problem.
-> 
-> I understand that kernel debugging is an extremely
-> difficult task.  Please advise me on what to do to provide
-> useful info to you.
-> 
-> Thanks.
-> 
-> 
-> Best Regards,
-> Liao Haohui
+In preparation for USB support which has it's own method for bmi.
 
-Now I am confused. Looking in the lspci output I see you have an atheros
-card, ie.:
+Based on code by Kevin Fang.
 
-02:00.0 Network controller: Atheros Communications Inc. AR928X Wireless
-Network Adapter (PCI-Express) (rev 01)
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/bmi.c     |  191 ++---------------------------
+ drivers/net/wireless/ath/ath6kl/hif-ops.h |   10 ++
+ drivers/net/wireless/ath/ath6kl/hif.h     |    2 
+ drivers/net/wireless/ath/ath6kl/sdio.c    |  162 +++++++++++++++++++++++++
+ 4 files changed, 190 insertions(+), 175 deletions(-)
 
-So probably you are better off talking to someone at Atheros.
-
-Gr. AvS
+diff --git a/drivers/net/wireless/ath/ath6kl/bmi.c b/drivers/net/wireless/ath/ath6kl/bmi.c
+index a962fe4..12f5b57 100644
+--- a/drivers/net/wireless/ath/ath6kl/bmi.c
++++ b/drivers/net/wireless/ath/ath6kl/bmi.c
+@@ -19,165 +19,6 @@
+ #include "target.h"
+ #include "debug.h"
+ 
+-static int ath6kl_get_bmi_cmd_credits(struct ath6kl *ar)
+-{
+-	u32 addr;
+-	unsigned long timeout;
+-	int ret;
+-
+-	ar->bmi.cmd_credits = 0;
+-
+-	/* Read the counter register to get the command credits */
+-	addr = COUNT_DEC_ADDRESS + (HTC_MAILBOX_NUM_MAX + ENDPOINT1) * 4;
+-
+-	timeout = jiffies + msecs_to_jiffies(BMI_COMMUNICATION_TIMEOUT);
+-	while (time_before(jiffies, timeout) && !ar->bmi.cmd_credits) {
+-
+-		/*
+-		 * Hit the credit counter with a 4-byte access, the first byte
+-		 * read will hit the counter and cause a decrement, while the
+-		 * remaining 3 bytes has no effect. The rationale behind this
+-		 * is to make all HIF accesses 4-byte aligned.
+-		 */
+-		ret = hif_read_write_sync(ar, addr,
+-					 (u8 *)&ar->bmi.cmd_credits, 4,
+-					 HIF_RD_SYNC_BYTE_INC);
+-		if (ret) {
+-			ath6kl_err("Unable to decrement the command credit count register: %d\n",
+-				   ret);
+-			return ret;
+-		}
+-
+-		/* The counter is only 8 bits.
+-		 * Ignore anything in the upper 3 bytes
+-		 */
+-		ar->bmi.cmd_credits &= 0xFF;
+-	}
+-
+-	if (!ar->bmi.cmd_credits) {
+-		ath6kl_err("bmi communication timeout\n");
+-		return -ETIMEDOUT;
+-	}
+-
+-	return 0;
+-}
+-
+-static int ath6kl_bmi_get_rx_lkahd(struct ath6kl *ar)
+-{
+-	unsigned long timeout;
+-	u32 rx_word = 0;
+-	int ret = 0;
+-
+-	timeout = jiffies + msecs_to_jiffies(BMI_COMMUNICATION_TIMEOUT);
+-	while (time_before(jiffies, timeout) && !rx_word) {
+-		ret = hif_read_write_sync(ar, RX_LOOKAHEAD_VALID_ADDRESS,
+-					  (u8 *)&rx_word, sizeof(rx_word),
+-					  HIF_RD_SYNC_BYTE_INC);
+-		if (ret) {
+-			ath6kl_err("unable to read RX_LOOKAHEAD_VALID\n");
+-			return ret;
+-		}
+-
+-		 /* all we really want is one bit */
+-		rx_word &= (1 << ENDPOINT1);
+-	}
+-
+-	if (!rx_word) {
+-		ath6kl_err("bmi_recv_buf FIFO empty\n");
+-		return -EINVAL;
+-	}
+-
+-	return ret;
+-}
+-
+-static int ath6kl_bmi_send_buf(struct ath6kl *ar, u8 *buf, u32 len)
+-{
+-	int ret;
+-	u32 addr;
+-
+-	ret = ath6kl_get_bmi_cmd_credits(ar);
+-	if (ret)
+-		return ret;
+-
+-	addr = ar->mbox_info.htc_addr;
+-
+-	ret = hif_read_write_sync(ar, addr, buf, len,
+-				  HIF_WR_SYNC_BYTE_INC);
+-	if (ret)
+-		ath6kl_err("unable to send the bmi data to the device\n");
+-
+-	return ret;
+-}
+-
+-static int ath6kl_bmi_recv_buf(struct ath6kl *ar, u8 *buf, u32 len)
+-{
+-	int ret;
+-	u32 addr;
+-
+-	/*
+-	 * During normal bootup, small reads may be required.
+-	 * Rather than issue an HIF Read and then wait as the Target
+-	 * adds successive bytes to the FIFO, we wait here until
+-	 * we know that response data is available.
+-	 *
+-	 * This allows us to cleanly timeout on an unexpected
+-	 * Target failure rather than risk problems at the HIF level.
+-	 * In particular, this avoids SDIO timeouts and possibly garbage
+-	 * data on some host controllers.  And on an interconnect
+-	 * such as Compact Flash (as well as some SDIO masters) which
+-	 * does not provide any indication on data timeout, it avoids
+-	 * a potential hang or garbage response.
+-	 *
+-	 * Synchronization is more difficult for reads larger than the
+-	 * size of the MBOX FIFO (128B), because the Target is unable
+-	 * to push the 129th byte of data until AFTER the Host posts an
+-	 * HIF Read and removes some FIFO data.  So for large reads the
+-	 * Host proceeds to post an HIF Read BEFORE all the data is
+-	 * actually available to read.  Fortunately, large BMI reads do
+-	 * not occur in practice -- they're supported for debug/development.
+-	 *
+-	 * So Host/Target BMI synchronization is divided into these cases:
+-	 *  CASE 1: length < 4
+-	 *        Should not happen
+-	 *
+-	 *  CASE 2: 4 <= length <= 128
+-	 *        Wait for first 4 bytes to be in FIFO
+-	 *        If CONSERVATIVE_BMI_READ is enabled, also wait for
+-	 *        a BMI command credit, which indicates that the ENTIRE
+-	 *        response is available in the the FIFO
+-	 *
+-	 *  CASE 3: length > 128
+-	 *        Wait for the first 4 bytes to be in FIFO
+-	 *
+-	 * For most uses, a small timeout should be sufficient and we will
+-	 * usually see a response quickly; but there may be some unusual
+-	 * (debug) cases of BMI_EXECUTE where we want an larger timeout.
+-	 * For now, we use an unbounded busy loop while waiting for
+-	 * BMI_EXECUTE.
+-	 *
+-	 * If BMI_EXECUTE ever needs to support longer-latency execution,
+-	 * especially in production, this code needs to be enhanced to sleep
+-	 * and yield.  Also note that BMI_COMMUNICATION_TIMEOUT is currently
+-	 * a function of Host processor speed.
+-	 */
+-	if (len >= 4) { /* NB: Currently, always true */
+-		ret = ath6kl_bmi_get_rx_lkahd(ar);
+-		if (ret)
+-			return ret;
+-	}
+-
+-	addr = ar->mbox_info.htc_addr;
+-	ret = hif_read_write_sync(ar, addr, buf, len,
+-				  HIF_RD_SYNC_BYTE_INC);
+-	if (ret) {
+-		ath6kl_err("Unable to read the bmi data from the device: %d\n",
+-			   ret);
+-		return ret;
+-	}
+-
+-	return 0;
+-}
+-
+ int ath6kl_bmi_done(struct ath6kl *ar)
+ {
+ 	int ret;
+@@ -190,7 +31,7 @@ int ath6kl_bmi_done(struct ath6kl *ar)
+ 
+ 	ar->bmi.done_sent = true;
+ 
+-	ret = ath6kl_bmi_send_buf(ar, (u8 *)&cid, sizeof(cid));
++	ret = ath6kl_hif_bmi_write(ar, (u8 *)&cid, sizeof(cid));
+ 	if (ret) {
+ 		ath6kl_err("Unable to send bmi done: %d\n", ret);
+ 		return ret;
+@@ -210,13 +51,13 @@ int ath6kl_bmi_get_target_info(struct ath6kl *ar,
+ 		return -EACCES;
+ 	}
+ 
+-	ret = ath6kl_bmi_send_buf(ar, (u8 *)&cid, sizeof(cid));
++	ret = ath6kl_hif_bmi_write(ar, (u8 *)&cid, sizeof(cid));
+ 	if (ret) {
+ 		ath6kl_err("Unable to send get target info: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-	ret = ath6kl_bmi_recv_buf(ar, (u8 *)&targ_info->version,
++	ret = ath6kl_hif_bmi_read(ar, (u8 *)&targ_info->version,
+ 				  sizeof(targ_info->version));
+ 	if (ret) {
+ 		ath6kl_err("Unable to recv target info: %d\n", ret);
+@@ -225,7 +66,7 @@ int ath6kl_bmi_get_target_info(struct ath6kl *ar,
+ 
+ 	if (le32_to_cpu(targ_info->version) == TARGET_VERSION_SENTINAL) {
+ 		/* Determine how many bytes are in the Target's targ_info */
+-		ret = ath6kl_bmi_recv_buf(ar,
++		ret = ath6kl_hif_bmi_read(ar,
+ 				   (u8 *)&targ_info->byte_count,
+ 				   sizeof(targ_info->byte_count));
+ 		if (ret) {
+@@ -244,7 +85,7 @@ int ath6kl_bmi_get_target_info(struct ath6kl *ar,
+ 		}
+ 
+ 		/* Read the remainder of the targ_info */
+-		ret = ath6kl_bmi_recv_buf(ar,
++		ret = ath6kl_hif_bmi_read(ar,
+ 				   ((u8 *)targ_info) +
+ 				   sizeof(targ_info->byte_count),
+ 				   sizeof(*targ_info) -
+@@ -300,13 +141,13 @@ int ath6kl_bmi_read(struct ath6kl *ar, u32 addr, u8 *buf, u32 len)
+ 		memcpy(&(ar->bmi.cmd_buf[offset]), &rx_len, sizeof(rx_len));
+ 		offset += sizeof(len);
+ 
+-		ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++		ret = ath6kl_hif_bmi_write(ar, ar->bmi.cmd_buf, offset);
+ 		if (ret) {
+ 			ath6kl_err("Unable to write to the device: %d\n",
+ 				   ret);
+ 			return ret;
+ 		}
+-		ret = ath6kl_bmi_recv_buf(ar, ar->bmi.cmd_buf, rx_len);
++		ret = ath6kl_hif_bmi_read(ar, ar->bmi.cmd_buf, rx_len);
+ 		if (ret) {
+ 			ath6kl_err("Unable to read from the device: %d\n",
+ 				   ret);
+@@ -371,7 +212,7 @@ int ath6kl_bmi_write(struct ath6kl *ar, u32 addr, u8 *buf, u32 len)
+ 		memcpy(&(ar->bmi.cmd_buf[offset]), src, tx_len);
+ 		offset += tx_len;
+ 
+-		ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++		ret = ath6kl_hif_bmi_write(ar, ar->bmi.cmd_buf, offset);
+ 		if (ret) {
+ 			ath6kl_err("Unable to write to the device: %d\n",
+ 				   ret);
+@@ -413,13 +254,13 @@ int ath6kl_bmi_execute(struct ath6kl *ar, u32 addr, u32 *param)
+ 	memcpy(&(ar->bmi.cmd_buf[offset]), param, sizeof(*param));
+ 	offset += sizeof(*param);
+ 
+-	ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++	ret = ath6kl_hif_bmi_write(ar, ar->bmi.cmd_buf, offset);
+ 	if (ret) {
+ 		ath6kl_err("Unable to write to the device: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-	ret = ath6kl_bmi_recv_buf(ar, ar->bmi.cmd_buf, sizeof(*param));
++	ret = ath6kl_hif_bmi_read(ar, ar->bmi.cmd_buf, sizeof(*param));
+ 	if (ret) {
+ 		ath6kl_err("Unable to read from the device: %d\n", ret);
+ 		return ret;
+@@ -457,7 +298,7 @@ int ath6kl_bmi_set_app_start(struct ath6kl *ar, u32 addr)
+ 	memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
+ 	offset += sizeof(addr);
+ 
+-	ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++	ret = ath6kl_hif_bmi_write(ar, ar->bmi.cmd_buf, offset);
+ 	if (ret) {
+ 		ath6kl_err("Unable to write to the device: %d\n", ret);
+ 		return ret;
+@@ -493,13 +334,13 @@ int ath6kl_bmi_reg_read(struct ath6kl *ar, u32 addr, u32 *param)
+ 	memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
+ 	offset += sizeof(addr);
+ 
+-	ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++	ret = ath6kl_hif_bmi_write(ar, ar->bmi.cmd_buf, offset);
+ 	if (ret) {
+ 		ath6kl_err("Unable to write to the device: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-	ret = ath6kl_bmi_recv_buf(ar, ar->bmi.cmd_buf, sizeof(*param));
++	ret = ath6kl_hif_bmi_read(ar, ar->bmi.cmd_buf, sizeof(*param));
+ 	if (ret) {
+ 		ath6kl_err("Unable to read from the device: %d\n", ret);
+ 		return ret;
+@@ -540,7 +381,7 @@ int ath6kl_bmi_reg_write(struct ath6kl *ar, u32 addr, u32 param)
+ 	memcpy(&(ar->bmi.cmd_buf[offset]), &param, sizeof(param));
+ 	offset += sizeof(param);
+ 
+-	ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++	ret = ath6kl_hif_bmi_write(ar, ar->bmi.cmd_buf, offset);
+ 	if (ret) {
+ 		ath6kl_err("Unable to write to the device: %d\n", ret);
+ 		return ret;
+@@ -587,7 +428,7 @@ int ath6kl_bmi_lz_data(struct ath6kl *ar, u8 *buf, u32 len)
+ 			tx_len);
+ 		offset += tx_len;
+ 
+-		ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++		ret = ath6kl_hif_bmi_write(ar, ar->bmi.cmd_buf, offset);
+ 		if (ret) {
+ 			ath6kl_err("Unable to write to the device: %d\n",
+ 				   ret);
+@@ -629,7 +470,7 @@ int ath6kl_bmi_lz_stream_start(struct ath6kl *ar, u32 addr)
+ 	memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
+ 	offset += sizeof(addr);
+ 
+-	ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++	ret = ath6kl_hif_bmi_write(ar, ar->bmi.cmd_buf, offset);
+ 	if (ret) {
+ 		ath6kl_err("Unable to start LZ stream to the device: %d\n",
+ 			   ret);
+diff --git a/drivers/net/wireless/ath/ath6kl/hif-ops.h b/drivers/net/wireless/ath/ath6kl/hif-ops.h
+index eed2287..0c4c602 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif-ops.h
++++ b/drivers/net/wireless/ath/ath6kl/hif-ops.h
+@@ -91,6 +91,16 @@ static inline int ath6kl_hif_suspend(struct ath6kl *ar,
+ 	return ar->hif_ops->suspend(ar, wow);
+ }
+ 
++static inline int ath6kl_hif_bmi_read(struct ath6kl *ar, u8 *buf, u32 len)
++{
++	return ar->hif_ops->bmi_read(ar, buf, len);
++}
++
++static inline int ath6kl_hif_bmi_write(struct ath6kl *ar, u8 *buf, u32 len)
++{
++	return ar->hif_ops->bmi_write(ar, buf, len);
++}
++
+ static inline int ath6kl_hif_resume(struct ath6kl *ar)
+ {
+ 	ath6kl_dbg(ATH6KL_DBG_HIF, "hif resume\n");
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.h b/drivers/net/wireless/ath/ath6kl/hif.h
+index f2dc3bc..42004e9 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.h
++++ b/drivers/net/wireless/ath/ath6kl/hif.h
+@@ -244,6 +244,8 @@ struct ath6kl_hif_ops {
+ 	void (*cleanup_scatter)(struct ath6kl *ar);
+ 	int (*suspend)(struct ath6kl *ar, struct cfg80211_wowlan *wow);
+ 	int (*resume)(struct ath6kl *ar);
++	int (*bmi_read)(struct ath6kl *ar, u8 *buf, u32 len);
++	int (*bmi_write)(struct ath6kl *ar, u8 *buf, u32 len);
+ 	int (*power_on)(struct ath6kl *ar);
+ 	int (*power_off)(struct ath6kl *ar);
+ 	void (*stop)(struct ath6kl *ar);
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index e69ca5e..2a803b3 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -846,6 +846,166 @@ static int ath6kl_sdio_resume(struct ath6kl *ar)
+ 	return 0;
+ }
+ 
++static int ath6kl_sdio_bmi_credits(struct ath6kl *ar)
++{
++	u32 addr;
++	unsigned long timeout;
++	int ret;
++
++	ar->bmi.cmd_credits = 0;
++
++	/* Read the counter register to get the command credits */
++	addr = COUNT_DEC_ADDRESS + (HTC_MAILBOX_NUM_MAX + ENDPOINT1) * 4;
++
++	timeout = jiffies + msecs_to_jiffies(BMI_COMMUNICATION_TIMEOUT);
++	while (time_before(jiffies, timeout) && !ar->bmi.cmd_credits) {
++
++		/*
++		 * Hit the credit counter with a 4-byte access, the first byte
++		 * read will hit the counter and cause a decrement, while the
++		 * remaining 3 bytes has no effect. The rationale behind this
++		 * is to make all HIF accesses 4-byte aligned.
++		 */
++		ret = ath6kl_sdio_read_write_sync(ar, addr,
++					 (u8 *)&ar->bmi.cmd_credits, 4,
++					 HIF_RD_SYNC_BYTE_INC);
++		if (ret) {
++			ath6kl_err("Unable to decrement the command credit "
++						"count register: %d\n", ret);
++			return ret;
++		}
++
++		/* The counter is only 8 bits.
++		 * Ignore anything in the upper 3 bytes
++		 */
++		ar->bmi.cmd_credits &= 0xFF;
++	}
++
++	if (!ar->bmi.cmd_credits) {
++		ath6kl_err("bmi communication timeout\n");
++		return -ETIMEDOUT;
++	}
++
++	return 0;
++}
++
++static int ath6kl_bmi_get_rx_lkahd(struct ath6kl *ar)
++{
++	unsigned long timeout;
++	u32 rx_word = 0;
++	int ret = 0;
++
++	timeout = jiffies + msecs_to_jiffies(BMI_COMMUNICATION_TIMEOUT);
++	while ((time_before(jiffies, timeout)) && !rx_word) {
++		ret = ath6kl_sdio_read_write_sync(ar,
++					RX_LOOKAHEAD_VALID_ADDRESS,
++					(u8 *)&rx_word, sizeof(rx_word),
++					HIF_RD_SYNC_BYTE_INC);
++		if (ret) {
++			ath6kl_err("unable to read RX_LOOKAHEAD_VALID\n");
++			return ret;
++		}
++
++		 /* all we really want is one bit */
++		rx_word &= (1 << ENDPOINT1);
++	}
++
++	if (!rx_word) {
++		ath6kl_err("bmi_recv_buf FIFO empty\n");
++		return -EINVAL;
++	}
++
++	return ret;
++}
++
++static int ath6kl_sdio_bmi_write(struct ath6kl *ar, u8 *buf, u32 len)
++{
++	int ret;
++	u32 addr;
++
++	ret = ath6kl_sdio_bmi_credits(ar);
++	if (ret)
++		return ret;
++
++	addr = ar->mbox_info.htc_addr;
++
++	ret = ath6kl_sdio_read_write_sync(ar, addr, buf, len,
++					  HIF_WR_SYNC_BYTE_INC);
++	if (ret)
++		ath6kl_err("unable to send the bmi data to the device\n");
++
++	return ret;
++}
++
++static int ath6kl_sdio_bmi_read(struct ath6kl *ar, u8 *buf, u32 len)
++{
++	int ret;
++	u32 addr;
++
++	/*
++	 * During normal bootup, small reads may be required.
++	 * Rather than issue an HIF Read and then wait as the Target
++	 * adds successive bytes to the FIFO, we wait here until
++	 * we know that response data is available.
++	 *
++	 * This allows us to cleanly timeout on an unexpected
++	 * Target failure rather than risk problems at the HIF level.
++	 * In particular, this avoids SDIO timeouts and possibly garbage
++	 * data on some host controllers.  And on an interconnect
++	 * such as Compact Flash (as well as some SDIO masters) which
++	 * does not provide any indication on data timeout, it avoids
++	 * a potential hang or garbage response.
++	 *
++	 * Synchronization is more difficult for reads larger than the
++	 * size of the MBOX FIFO (128B), because the Target is unable
++	 * to push the 129th byte of data until AFTER the Host posts an
++	 * HIF Read and removes some FIFO data.  So for large reads the
++	 * Host proceeds to post an HIF Read BEFORE all the data is
++	 * actually available to read.  Fortunately, large BMI reads do
++	 * not occur in practice -- they're supported for debug/development.
++	 *
++	 * So Host/Target BMI synchronization is divided into these cases:
++	 *  CASE 1: length < 4
++	 *        Should not happen
++	 *
++	 *  CASE 2: 4 <= length <= 128
++	 *        Wait for first 4 bytes to be in FIFO
++	 *        If CONSERVATIVE_BMI_READ is enabled, also wait for
++	 *        a BMI command credit, which indicates that the ENTIRE
++	 *        response is available in the the FIFO
++	 *
++	 *  CASE 3: length > 128
++	 *        Wait for the first 4 bytes to be in FIFO
++	 *
++	 * For most uses, a small timeout should be sufficient and we will
++	 * usually see a response quickly; but there may be some unusual
++	 * (debug) cases of BMI_EXECUTE where we want an larger timeout.
++	 * For now, we use an unbounded busy loop while waiting for
++	 * BMI_EXECUTE.
++	 *
++	 * If BMI_EXECUTE ever needs to support longer-latency execution,
++	 * especially in production, this code needs to be enhanced to sleep
++	 * and yield.  Also note that BMI_COMMUNICATION_TIMEOUT is currently
++	 * a function of Host processor speed.
++	 */
++	if (len >= 4) { /* NB: Currently, always true */
++		ret = ath6kl_bmi_get_rx_lkahd(ar);
++		if (ret)
++			return ret;
++	}
++
++	addr = ar->mbox_info.htc_addr;
++	ret = ath6kl_sdio_read_write_sync(ar, addr, buf, len,
++				  HIF_RD_SYNC_BYTE_INC);
++	if (ret) {
++		ath6kl_err("Unable to read the bmi data from the device: %d\n",
++			   ret);
++		return ret;
++	}
++
++	return 0;
++}
++
+ static void ath6kl_sdio_stop(struct ath6kl *ar)
+ {
+ 	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
+@@ -890,6 +1050,8 @@ static const struct ath6kl_hif_ops ath6kl_sdio_ops = {
+ 	.cleanup_scatter = ath6kl_sdio_cleanup_scatter,
+ 	.suspend = ath6kl_sdio_suspend,
+ 	.resume = ath6kl_sdio_resume,
++	.bmi_read = ath6kl_sdio_bmi_read,
++	.bmi_write = ath6kl_sdio_bmi_write,
+ 	.power_on = ath6kl_sdio_power_on,
+ 	.power_off = ath6kl_sdio_power_off,
+ 	.stop = ath6kl_sdio_stop,
 
