@@ -1,49 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40893 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755393Ab1K2SSc (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:49164 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752775Ab1KKVMJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 13:18:32 -0500
-Message-ID: <4ED521F0.3000606@candelatech.com> (sfid-20111129_191835_469534_6BD4BAA2)
-Date: Tue, 29 Nov 2011 10:18:24 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Moving scan logic into work-queue?
-References: <4ED520DD.8050606@candelatech.com> <1322590531.4110.29.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1322590531.4110.29.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 11 Nov 2011 16:12:09 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id EE41C540243
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Nov 2011 16:34:57 -0500 (EST)
+Subject: Compat-wireless release for 2011-11-11 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111111211207.CE32840633@repository3.orbit-lab.org> (sfid-20111111_221214_140338_10DCB773)
+Date: Fri, 11 Nov 2011 16:12:07 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/29/2011 10:15 AM, Johannes Berg wrote:
-> On Tue, 2011-11-29 at 10:13 -0800, Ben Greear wrote:
->> We've talked before about moving the scan logic into the work-queue.
->
-> I think you mean ieee80211_work, not work-queue.
->
->> Since my previous attempts at optimizing this code for scanning&  off-channel
->> work didn't stick, I thought I might attempt to convert the scan logic
->> to the work-queue, with hopes of then being able to make another attempt
->> at optimizing things for multiple interfaces&  potentially off-channel work
->> items.
->>
->> Before I start though, I'm hoping for some guidance on how you'd
->> want this implemented.  Or, if you think there are other changes
->> that should go in first, I'll wait...
->
-> In any case, yes, please don't work on this now. I need to rework auth&
-> assoc handling completely, and get rid of the work items for that etc.
-> That will probably mean a large rewrite of the work item logic, possibly
-> even removing most of that code.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 54759c8...335981b akpm-end   -> origin/akpm-end  (forced update)
+   19e0baf..5e442a4  akpm-start -> origin/akpm-start
+ + 3a3de05...efd4465 master     -> origin/master  (forced update)
+   19e0baf..5e442a4  stable     -> origin/stable
+ * [new tag]         next-20111111 -> next-20111111
 
-Ok, I'll wait to see how that turns out.
+compat-wireless code metrics
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+    816525 - Total upstream lines of code being pulled
+      2488 - backport code changes
+      2143 - backport code additions
+       345 - backport code deletions
+      8650 - backport from compat module
+     11138 - total backport code
+    1.3641 - % of code consists of backport work
