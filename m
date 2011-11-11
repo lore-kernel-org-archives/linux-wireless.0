@@ -1,35 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:15297 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750775Ab1KNF21 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39216 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757213Ab1KKSpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 00:28:27 -0500
-Date: Mon, 14 Nov 2011 10:57:39 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Kalle Valo <kvalo@adurom.com>
-CC: <j@w1.fi>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wpa_supplicant: Set configured auth_algs
-Message-ID: <20111114052738.GA9563@vasanth-laptop> (sfid-20111114_062831_047018_30BEF476)
-References: <1321023741-32760-1-git-send-email-vthiagar@qca.qualcomm.com>
- <877h35af6x.fsf@purkki.adurom.net>
+	Fri, 11 Nov 2011 13:45:12 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: fix warning in ieee80211_probe_client
+Date: Fri, 11 Nov 2011 13:32:28 -0500
+Message-Id: <1321036348-32272-1-git-send-email-linville@tuxdriver.com> (sfid-20111111_194528_165423_47C2083E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <877h35af6x.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 12, 2011 at 11:00:06AM +0200, Kalle Valo wrote:
-> Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com> writes:
-> 
-> > In Ap mode, Authentication algorithm is reset in
-> > hostapd_config_defaults_bss() and never be set to the configured
-> > one. This would pass the default auth_algs (OPEN|SHARED) to driver
-> > and cause authentication isseues.
-> 
-> Shouldn't you send this to the hostap mailing list?
+  CC [M]  net/mac80211/cfg.o
+net/mac80211/cfg.c: In function ‘ieee80211_probe_client’:
+net/mac80211/cfg.c:2567:7: warning: ‘qos’ may be used uninitialized in this function
 
-Oops, forgot it, as the ath6kl patch has a reference to this patch I added
-linux-wireless list but missed to add the one meant for hostap. Thanks for
-pointing this out.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/cfg.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Vasanth
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c2416fb..1d82d2b 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2564,7 +2564,7 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
+ 	struct sk_buff *skb;
+ 	int size = sizeof(*nullfunc);
+ 	__le16 fc;
+-	bool qos;
++	bool qos = NULL;
+ 	struct ieee80211_tx_info *info;
+ 	struct sta_info *sta;
+ 
+-- 
+1.7.4.4
+
