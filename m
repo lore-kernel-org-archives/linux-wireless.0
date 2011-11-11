@@ -1,48 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ackle.nomi.cz ([81.31.33.35]:58412 "EHLO ackle.nomi.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751299Ab1KUNJU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 08:09:20 -0500
-Date: Mon, 21 Nov 2011 14:09:16 +0100
-From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: iwlagn: memory corruption with WPA enterprise
-Message-ID: <20111121130916.GA11136@nomi.cz> (sfid-20111121_140939_485072_83B5AA9E)
-References: <20111110091816.GA2247@nomi.cz> <20111110114732.GA2217@redhat.com> <20111110125347.GA29415@nomi.cz> <20111110160703.GA2775@redhat.com> <20111110163051.GA24533@nomi.cz> <20111111054731.GA2292@redhat.com> <20111111150105.GA25437@nomi.cz> <20111114140714.GD2513@redhat.com> <20111119181106.GA5515@nomi.cz> <20111121130527.GA4010@redhat.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33029 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751306Ab1KKGNU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Nov 2011 01:13:20 -0500
+Received: by bke11 with SMTP id 11so2975573bke.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Nov 2011 22:13:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20111121130527.GA4010@redhat.com>
+In-Reply-To: <CAG6hwVN9wR9mbRVWUA_Poa8ng+9RzHXj6PDfpLfN0djWeYAs9g@mail.gmail.com>
+References: <CAG6hwVN9wR9mbRVWUA_Poa8ng+9RzHXj6PDfpLfN0djWeYAs9g@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Fri, 11 Nov 2011 08:13:03 +0200
+Message-ID: <CA+XVXffySzSsRTduhX9UAWDv=oDt9eSEQe+Oj5RebQ9JZBAgaA@mail.gmail.com> (sfid-20111111_071324_142235_3BEE5585)
+Subject: Re: regression in "mac80211: support adding IV-room in the skb for
+ CCMP keys"
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Fri, Nov 11, 2011 at 07:01, Thomas Pedersen <thomas@cozybit.com> wrote:
+> Hello,
+>
+> Any kernel debugging tips involving stack corruption? :)
+>
+> When testing a secure mesh topology in qemu using mac80211_hwsim with
+> master-2011-11-09 I get a hard lockup, but no OOPS. gdb was able to
+> show:
+>
 
-On Mon, Nov 21, 2011 at 02:05:28PM +0100, Stanislaw Gruszka wrote:
-> The farther we get the problem is more and more strange.
-> 
-> Device that write to wrong address, would generate:
-> 
-> DMAR:[DMA Write] Request device [00:02.0] fault addr 6df084000
-> DMAR:[fault reason 05] PTE Write access is not set
+Did you try applying this
+http://www.spinics.net/lists/linux-wireless/msg79976.html ?
 
-And that's exactly what happens if I don't disable firewire-ohci, because of
-that stupid Ricoh multifunction blah blah issue.
-
-> But only if
-> 
-> PCI-DMA: Using DMAR IOMMU
-> 
-> was printed in dmesg before. DMAR can be disabled by graphics
-> driver, or maybe by other drivers too. Then above print will
-> be missed in dmesg and protection would not work.
-> 
-> Try "dmesg | grep DMAR" to see if DMA remapping is really is
-> in use. 
-
-Well, this message is not printed, but as I said, loading firewire-ohci
-triggers DMAR faults, so it should be in use anyway.
-
--- 
-Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
+Arik
