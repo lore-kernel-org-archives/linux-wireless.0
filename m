@@ -1,40 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:33516 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756718Ab1KOQoa (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:63547 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753502Ab1KKLDE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 11:44:30 -0500
-Message-ID: <4EC29534.7010502@adurom.com> (sfid-20111115_174454_976800_7DAF4251)
-Date: Tue, 15 Nov 2011 18:37:08 +0200
-From: Kalle Valo <kvalo@adurom.com>
-MIME-Version: 1.0
-To: Sangwook Lee <sangwook.lee@linaro.org>
-CC: linux-kernel@vger.kernel.org, linux-mips@linux-mips.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	ralf@linux-mips.org, juhosg@openwrt.org, rodrigue@qca.qualcomm.com,
-	linville@tuxdriver.com, rmanohar@qca.qualcomm.com,
-	patches@linaro.org
-Subject: Re: [PATCH] ath9k: rename ath9k_platform.h to ath_platform.h
-References: <1321356224-5053-1-git-send-email-sangwook.lee@linaro.org>
-In-Reply-To: <1321356224-5053-1-git-send-email-sangwook.lee@linaro.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 11 Nov 2011 06:03:04 -0500
+Message-ID: <1321009374.2548.31.camel@edumazet-laptop> (sfid-20111111_120314_702313_BBEDD8E7)
+Subject: Re: creating netdev queues on the fly?
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Dave Taht <dave.taht@gmail.com>
+Cc: Denys Fedoryshchenko <denys@wbc.net.sa>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 11 Nov 2011 12:02:54 +0100
+In-Reply-To: <CAA93jw7ECQegWj6rpd48sbmDQUjorCYzXANXJSj0baHtxzC7EA@mail.gmail.com>
+References: <1320933501.3967.68.camel@jlt3.sipsolutions.net>
+	 <CAGXE3d-_RFgW_zwfX2vTBe1psXmgoBFO5pd5cAgtYo=Jwpddhw@mail.gmail.com>
+	 <7be02f26a67fac4c7448a74f1f17aa01@visp.net.lb>
+	 <CAA93jw7ECQegWj6rpd48sbmDQUjorCYzXANXJSj0baHtxzC7EA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sangwook,
+Le jeudi 10 novembre 2011 à 16:25 +0100, Dave Taht a écrit :
 
-On 11/15/2011 01:23 PM, Sangwook Lee wrote:
-> The patch series proposes to rename ath9k_platform.h to "ath_platform.h
-> This header file handles platform data used only for ath9k,
-> but it can used by ath6k as well. We can take "wl12xx.h" as
-> as a example. Please let us change this file name so that
-> other Atheors WLANs use this file for their own platform data
 
-ath9k and ath6kl are very different devices, I'm not sure if sharing a
-platfrom struct between the two is really a good idea. Most likely there
-is very little the two drivers can share. What are your plans here?
 
-I myself was thinking that we would have include/linux/ath6kl.h
-dedicated just for ath6kl. That would makes things simpler.
+> Two notes:
+> 
+> 1) Getting 'time' from the kernel is expensive. And: System time wanders.
+> 
+> mac80211 Wifi devices however do export a get_tsf function which could
+> be used as a relative-to-the-queue clock - and we actually don't need
+> accuracy down to the level of get_tsf (25ns)
+> 
 
-Kalle
+
+getting 'time' from kernel is not that expensive, depending on
+resolution you need. We are not going to use timestamps from devices !
+
+If ms resolution is enough (say you want to drop packets if they stay
+more than 100ms in qdisc), jiffies is a single memory read.
+
+If needing us or ns resolution, psched_get_time() uses ktime_get(), and
+is used in CBQ, HTB, HFSC, TBF, so if it was expensive we would have big
+problem right now :)
+
+2) You need to get a timestamp on entry to the first queue and check
+> against the allowable latency on exit from the last. So to construct a
+> tc chain you'd want a tfifo (timestamp on entry), fifot (check
+> timestamp against limit on dequeue), and for the simplest of
+> applications : tfifot (timestamp on entry, check on exit)
+
+That would be not very practical.
+
+I would see a new Qdisc/Class property, like the rate estimator, that we
+can attach to any Qdisc/Class with a new tc option.
+
+Even without any limit enforcing (might be Random Early Detection by the
+way), it could be used to get a Queue Delay estimation, using EWMA
+
+avqdelay = avqdelay*(1-W) + qdelay*W;
+W = 2^(-ewma_log);
+
+tc [ qdisc | class] add [...] [est 1sec 8sec] [delayest ewma_log ] ..
+
+tc -s -d qdisc ...
+qdisc htb 1: root refcnt 2 r2q 10 default 1 direct_packets_stat 0 ver 3.17
+ Sent 3596219 bytes 2567 pkt (dropped 238, overlimits 3797 requeues 0) 
+ rate 2557Kbit 215pps backlog 0b 0p requeues 0 
+ delay 91ms
+
+
+
+tc [ qdisc | class] add [...] [est 1sec 8sec] [delaylimit max ] ..
+
+tc -s -d qdisc ...
+qdisc htb 1: root refcnt 2 r2q 10 default 1 direct_packets_stat 0 ver 3.17
+ Sent 3596219 bytes 2567 pkt (dropped 238, overlimits 3797 requeues 0) 
+ rate 2557Kbit 215pps backlog 0b 0p requeues 0 
+ delay 91ms delaylimit 100ms (dropped 12)
+
+
+
