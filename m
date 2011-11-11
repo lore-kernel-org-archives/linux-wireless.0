@@ -1,120 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:59189 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752011Ab1KNPSS convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39945 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752288Ab1KKN0n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 10:18:18 -0500
-MIME-Version: 1.0
-In-Reply-To: <1321121444-31528-2-git-send-email-gwingerde@gmail.com>
-References: <1321121444-31528-1-git-send-email-gwingerde@gmail.com>
-	<1321121444-31528-2-git-send-email-gwingerde@gmail.com>
-Date: Mon, 14 Nov 2011 16:18:17 +0100
-Message-ID: <CAOZOX0VFb5AbgrfjiNE-Y=0zZT+eBTzziKF7qrmPW192LOHVzw@mail.gmail.com> (sfid-20111114_161820_480448_61B5F979)
-Subject: Re: [rt2x00-users] [PATCH] rt2x00: Fix sleep-while-atomic bug in
- powersaving code.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: linville@tuxdriver.com, stable@vger.kernel.org,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 11 Nov 2011 08:26:43 -0500
+Subject: Re: off- & multi-channel operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20111111131632.GA2331@redhat.com>
+References: <1320844134.3845.61.camel@jlt3.sipsolutions.net>
+	 <20111111131632.GA2331@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 11 Nov 2011 14:26:33 +0100
+Message-ID: <1321017993.3977.206.camel@jlt3.sipsolutions.net> (sfid-20111111_142646_299566_14E769B8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 12, 2011 at 7:10 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> The generic powersaving code that determines after reception of a frame
-> whether the device should go back to sleep or whether is could stay
-> awake was calling rt2x00lib_config directly from RX tasklet context.
-> On a number of the devices this call can actually sleep, due to having
-> to confirm that the sleeping commands have been executed successfully.
->
-> Fix this by moving the call to rt2x00lib_config to a workqueue call.
->
-> This fixes bug https://bugzilla.redhat.com/show_bug.cgi?id=731672
->
-> Tested-by: Tomas Trnka <tomastrnka@gmx.com>
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> Cc: <stable@vger.kernel.org>
+On Fri, 2011-11-11 at 14:16 +0100, Stanislaw Gruszka wrote:
+> On Wed, Nov 09, 2011 at 02:08:54PM +0100, Johannes Berg wrote:
+> > How do we want to handle these things? I'm sure I want the drivers to
+> > handle multi-channel operation fairly transparently, with multiple
+> > (hardware) queues (in the driver), so mac80211 doesn't have to
+> > start/stop the queues continuously and can just transmit on that
+> > interface, the frame might only go out a bit later.
+> 
+> I do not quite understand how separate tx queues could help here, because
+> we not only have to transmit off-channel but also receive data. For me
+> simple solution would be adding new functions on top of
+> ieee80211_tx_skb, which will just queue skb's if we are not on operating
+> channel at present, and send them lately when we come back.
+> 
+> Or perhaps you are talking about separate tx and rx queues, that could
+> eventually work, but driver still should know how long to stay off-channel
+> to receive all needed frames. 
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Well, so usually you'd schedule NoA, or use null data frames to not
+receive, etc. Using multiple TX queues would help schedule the TX,
+scheduling the RX is a different issue.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
->  drivers/net/wireless/rt2x00/rt2x00dev.c |   22 ++++++++++++++++++++--
->  2 files changed, 21 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index 2ec5c00..99ff12d 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -943,6 +943,7 @@ struct rt2x00_dev {
->         * Powersaving work
->         */
->        struct delayed_work autowakeup_work;
-> +       struct work_struct sleep_work;
->
->        /*
->         * Data queue arrays for RX, TX, Beacon and ATIM.
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index e1fb2a8..edd317f 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -465,6 +465,23 @@ static u8 *rt2x00lib_find_ie(u8 *data, unsigned int len, u8 ie)
->        return NULL;
->  }
->
-> +static void rt2x00lib_sleep(struct work_struct *work)
-> +{
-> +       struct rt2x00_dev *rt2x00dev =
-> +           container_of(work, struct rt2x00_dev, sleep_work);
-> +
-> +       if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
-> +               return;
-> +
-> +       /*
-> +        * Check again is powersaving is enabled, to prevent races from delayed
-> +        * work execution.
-> +        */
-> +       if (!test_bit(CONFIG_POWERSAVING, &rt2x00dev->flags))
-> +               rt2x00lib_config(rt2x00dev, &rt2x00dev->hw->conf,
-> +                                IEEE80211_CONF_CHANGE_PS);
-> +}
-> +
->  static void rt2x00lib_rxdone_check_ps(struct rt2x00_dev *rt2x00dev,
->                                      struct sk_buff *skb,
->                                      struct rxdone_entry_desc *rxdesc)
-> @@ -512,8 +529,7 @@ static void rt2x00lib_rxdone_check_ps(struct rt2x00_dev *rt2x00dev,
->        cam |= (tim_ie->bitmap_ctrl & 0x01);
->
->        if (!cam && !test_bit(CONFIG_POWERSAVING, &rt2x00dev->flags))
-> -               rt2x00lib_config(rt2x00dev, &rt2x00dev->hw->conf,
-> -                                IEEE80211_CONF_CHANGE_PS);
-> +               queue_work(rt2x00dev->workqueue, &rt2x00dev->sleep_work);
->  }
->
->  static int rt2x00lib_rxdone_read_signal(struct rt2x00_dev *rt2x00dev,
-> @@ -1141,6 +1157,7 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
->
->        INIT_WORK(&rt2x00dev->intf_work, rt2x00lib_intf_scheduled);
->        INIT_DELAYED_WORK(&rt2x00dev->autowakeup_work, rt2x00lib_autowakeup);
-> +       INIT_WORK(&rt2x00dev->sleep_work, rt2x00lib_sleep);
->
->        /*
->         * Let the driver probe the device to detect the capabilities.
-> @@ -1197,6 +1214,7 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
->         */
->        cancel_work_sync(&rt2x00dev->intf_work);
->        cancel_delayed_work_sync(&rt2x00dev->autowakeup_work);
-> +       cancel_work_sync(&rt2x00dev->sleep_work);
->        if (rt2x00_is_usb(rt2x00dev)) {
->                del_timer_sync(&rt2x00dev->txstatus_timer);
->                cancel_work_sync(&rt2x00dev->rxdone_work);
-> --
-> 1.7.7
->
->
-> _______________________________________________
-> users mailing list
-> users@rt2x00.serialmonkey.com
-> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
->
+johannes
+
