@@ -1,48 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:63195 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751318Ab1KVRd3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 12:33:29 -0500
-Received: by fagn18 with SMTP id n18so673538fag.19
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2011 09:33:28 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] mac80211: don't indicate probe resp change in IBSS mode
-Date: Tue, 22 Nov 2011 19:33:18 +0200
-Message-Id: <1321983198-20877-1-git-send-email-arik@wizery.com> (sfid-20111122_183332_813781_7AB9FFA0)
+Received: from mx1.redhat.com ([209.132.183.28]:40163 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756960Ab1KKNP2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Nov 2011 08:15:28 -0500
+Date: Fri, 11 Nov 2011 14:16:33 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: off- & multi-channel operation
+Message-ID: <20111111131632.GA2331@redhat.com> (sfid-20111111_141531_900578_9C19DF73)
+References: <1320844134.3845.61.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1320844134.3845.61.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Due the a fall-through in the switch statement, the IBSS mode got a
-report for AP_RPOBE_RESPONSE change on reconfig. Change this to an AP
-only notification.
+On Wed, Nov 09, 2011 at 02:08:54PM +0100, Johannes Berg wrote:
+> How do we want to handle these things? I'm sure I want the drivers to
+> handle multi-channel operation fairly transparently, with multiple
+> (hardware) queues (in the driver), so mac80211 doesn't have to
+> start/stop the queues continuously and can just transmit on that
+> interface, the frame might only go out a bit later.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- net/mac80211/util.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+I do not quite understand how separate tx queues could help here, because
+we not only have to transmit off-channel but also receive data. For me
+simple solution would be adding new functions on top of
+ieee80211_tx_skb, which will just queue skb's if we are not on operating
+channel at present, and send them lately when we come back.
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 3b9b492..2c56920 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1244,8 +1244,11 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 			changed |= BSS_CHANGED_IBSS;
- 			/* fall through */
- 		case NL80211_IFTYPE_AP:
--			changed |= BSS_CHANGED_SSID |
--				   BSS_CHANGED_AP_PROBE_RESP;
-+			changed |= BSS_CHANGED_SSID;
-+
-+			if (sdata->vif.type == NL80211_IFTYPE_AP)
-+				changed |= BSS_CHANGED_AP_PROBE_RESP;
-+
- 			/* fall through */
- 		case NL80211_IFTYPE_MESH_POINT:
- 			changed |= BSS_CHANGED_BEACON |
--- 
-1.7.5.4
+Or perhaps you are talking about separate tx and rx queues, that could
+eventually work, but driver still should know how long to stay off-channel
+to receive all needed frames. 
 
+Stanislaw
