@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:36557 "EHLO mga11.intel.com"
+Received: from ackle.nomi.cz ([81.31.33.35]:54165 "EHLO ackle.nomi.cz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750777Ab1KXOB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 09:01:56 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 24 Nov 2011 16:01:08 +0200
-Subject: RE: [PATCH] mac80211: fix TX warning
-Message-ID: <4825B8A2C4E264489E57869F0DCFB223445BEF16FB@hasmsx502.ger.corp.intel.com> (sfid-20111124_150159_991140_32CF28E6)
-References: <1322142456.5366.18.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1322142456.5366.18.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	id S1752585Ab1KKPBJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Nov 2011 10:01:09 -0500
+Date: Fri, 11 Nov 2011 16:01:05 +0100
+From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20111111150105.GA25437@nomi.cz> (sfid-20111111_160140_734085_F71C48E0)
+References: <20111029171554.GA16596@nomi.cz> <20111031160342.GB2225@redhat.com> <20111109155411.GA1669@nomi.cz> <20111109165158.GA2254@redhat.com> <20111110091816.GA2247@nomi.cz> <20111110114732.GA2217@redhat.com> <20111110125347.GA29415@nomi.cz> <20111110160703.GA2775@redhat.com> <20111110163051.GA24533@nomi.cz> <20111111054731.GA2292@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20111111054731.GA2292@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBGcm9tOiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJnQGludGVsLmNvbT4NCj4gDQo+IEVt
-bWFudWVsIHJlcG9ydGVkIHRoYXQgbXkgcHJldmlvdXMgcGF0Y2hlcyB0byBlbmFibGUNCj4gaGFu
-ZGluZyBhbGwgZnJhZ21lbnRzIHRvIGRyaXZlcnMgYXQgb25jZSB0cmlnZ2VyZWQNCj4gdGhlIHdh
-cm5pbmcgdGhhdCB0aGUgU0tCIHF1ZXVlIHdhc24ndCBlbXB0eS4gVGhpcyBpcw0KPiBoYXBwZW5p
-bmcgd2hlbiB3ZSBhY3R1YWxseSBxdWV1ZSB1cCBzb21lIGZyYW1lcyBhbmQNCj4gZG9uJ3QgaGFu
-ZCB0aGVtIHRvIHRoZSBkcml2ZXIgKHF1ZXVlcyBhcmUgc3RvcHBlZCkuDQo+IA0KPiBUaGUgcmVh
-c29uIGZvciBpdCBpcyB0aGF0IG15IGNvZGUgdGhhdCBzcGxpY2VzIHRoZQ0KPiBmcmFtZShzKSBv
-dmVyIHRvIHRoZSBwZW5kaW5nIHF1ZXVlIGRpZG4ndCByZS1pbml0DQo+IHRoZSBsb2NhbCBxdWV1
-ZSwgc28gc2tiX3F1ZXVlX2VtcHR5KCkgd2FzIGZhbHNlLiBGaXgNCj4gdGhpcyBieSB1c2luZyB0
-aGUgX2luaXQgdmVyc2lvbnMgb2YgdGhlIHNwbGljaW5nLg0KPiANCj4gQWxzbywgY29udmVydCB0
-aGUgd2FybmluZyB0byBXQVJOX09OX09OQ0UuDQo+IA0KPiBSZXBvcnRlZC1ieTogRW1tYW51ZWwg
-R3J1bWJhY2ggPGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTog
-Sm9oYW5uZXMgQmVyZyA8am9oYW5uZXMuYmVyZ0BpbnRlbC5jb20+DQo+IC0tLQ0KDQpTZWVtcyB0
-byBiZSB3b3JraW5nIC0gbmVlZCB0byB0ZXN0IGl0IGEgYml0IG1vcmUgdGhvdWdoIChub3Qgc3Vy
-ZSBpdCB3aWxsIGJlIGJlZm9yZSBuZXh0IHdlZWsgdGhvdWdoKQ0KDQpUaGFua3MgIQ0KLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tCkludGVsIElzcmFlbCAoNzQpIExpbWl0ZWQKClRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0
-YWNobWVudHMgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZvcgp0aGUgc29sZSB1
-c2Ugb2YgdGhlIGludGVuZGVkIHJlY2lwaWVudChzKS4gQW55IHJldmlldyBvciBkaXN0cmlidXRp
-b24KYnkgb3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBhcmUgbm90IHRoZSBp
-bnRlbmRlZApyZWNpcGllbnQsIHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIgYW5kIGRlbGV0ZSBh
-bGwgY29waWVzLgo=
+Hello,
 
+On Fri, Nov 11, 2011 at 06:47:31AM +0100, Stanislaw Gruszka wrote:
+> On Thu, Nov 10, 2011 at 05:30:51PM +0100, Tomáš Janoušek wrote:
+> > I think all those T520 and T420s models have exactly the same wireless card. I
+> > don't see why they wouldn't have. :-)
+>
+> Well, laptops models have common mainboards, but peripheral components
+> might not be identical. Especially wireless card might vary from unit
+> to unit. For example:
+> 
+> T520 with iwl6300:
+> http://smolt.fedoraproject.org/client/show/pub_0cbc8731-47d3-4ecf-8add-aa832b34edcd
+> T520 with iwl1000:
+> http://smolt.fedoraproject.org/client/show/pub_02f601d6-7a93-4c0e-bc01-a4a95db36086 
+> T520 with iwl6205:
+> http://smolt.fedoraproject.org/client/show/pub_0232252f-75a9-4050-a69b-c8e95e00eaf2
+
+These links don't work, but my colleagues indeed do have iwl6205. They are,
+however, running 64-bit kernels, so I tried doing the same and I haven't been
+able to reproduce the issue for the past few hours. So it seems like it
+happens on 32-bit kernels only. This looks like a good workaround (better than
+getting a different wireless card), so I can run 64-bit during working days
+and experiment with 32-bit when I have time to debug this.
+
+Could you please elaborate on that thing with enabling IOMMU? The only thing I
+know about IOMMU is that it is somehow related to VT-d (passing whole PCI
+devices to virtual guests), and that I have to pass intel_iommu=off to kernel
+command line, otherwise the machine doesn't even boot. Is that a problem?
+
+Kind regards,
+-- 
+Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
