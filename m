@@ -1,124 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:37746 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751570Ab1KKKSL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Nov 2011 05:18:11 -0500
-Subject: [PATCH 05/10] ath6kl: firmware boot fixes for ar6004
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 11 Nov 2011 12:18:06 +0200
-Message-ID: <20111111101806.12075.41071.stgit@localhost6.localdomain6> (sfid-20111111_111814_180776_1CAD95C9)
-In-Reply-To: <20111111101551.12075.94865.stgit@localhost6.localdomain6>
-References: <20111111101551.12075.94865.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp3-g21.free.fr ([212.27.42.3]:52539 "EHLO smtp3-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752492Ab1KKWsJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Nov 2011 17:48:09 -0500
+From: Gilles Espinasse <g.esp@free.fr>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Gilles Espinasse <g.esp@free.fr>
+Subject: [PATCH] iw : V2 fix compilation against libnl-3.x
+Date: Sat, 12 Nov 2011 00:04:38 +0100
+Message-Id: <1321052678-23396-1-git-send-email-g.esp@free.fr> (sfid-20111111_234815_290810_DE807291)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These have changed a bit since last time ar6004 code was commited.
+Add configuration to compile against 3.1 and 3.2 without breaking 3.0
+That's a bit of mess with version on .pc file and the part which belong or not to the shared lib name.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+libnl-genl-3.1 is broken and can't be used
+
+Starting from 3.2.0, I could have used libnl-genl-3.0.pc file like in patch V1 and not hardcode adding libnl-genl-3 into LIBS
+I consider this a matter of tast for now, coded like previous versions that can't use that way to code.
+
+Added an echo to display against which libnl version iw is compiled.
+That particulary help me to test with various versions because of the mess on .pc file version as libnl>=3.2.0 has again pc file version with 3.0 number.
+
+Removed the version_check part instead of extending blindly for the new versions.
+That was mostly dead code because prior check on NLLIBNAME not empty already care.
+The only case where that could matter would be using something stupid like
+NLLIBNAME=foo make
+
+Compilation tested to work against
+- libnl-2.0
+- libnl-3.0
+- libnl-3.1
+- libnl-3.2.0
+- libnl-3.2.2
+
+Tested to fail without a libnl .pc file
+
+Signed-off-by: Gilles Espinasse <g.esp@free.fr>
 ---
- drivers/net/wireless/ath/ath6kl/init.c |   34 +++++++++++++++++++++++---------
- 1 files changed, 24 insertions(+), 10 deletions(-)
+ Makefile |   33 +++++++++++++++++++--------------
+ 1 files changed, 19 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index df43fdb..1446d7e 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -821,6 +821,9 @@ static int ath6kl_fetch_fw_api2(struct ath6kl *ar)
- 	case AR6004_REV1_VERSION:
- 		filename = AR6004_REV1_FIRMWARE_2_FILE;
- 		break;
-+	case AR6004_REV2_VERSION:
-+		filename = AR6004_REV2_FIRMWARE_2_FILE;
-+		break;
- 	default:
- 		return -EOPNOTSUPP;
- 	}
-@@ -995,7 +998,11 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
- 	 * writing board data.
- 	 */
- 	if (ar->target_type == TARGET_TYPE_AR6004) {
--		board_address = AR6004_REV1_BOARD_DATA_ADDRESS;
-+		if (ar->version.target_ver == AR6004_REV1_VERSION)
-+			board_address = AR6004_REV1_BOARD_DATA_ADDRESS;
-+		else
-+			board_address = AR6004_REV2_BOARD_DATA_ADDRESS;
+diff --git a/Makefile b/Makefile
+index 8443ee6..c7f6d72 100644
+--- a/Makefile
++++ b/Makefile
+@@ -25,6 +25,8 @@ ALL = iw
+ NL1FOUND := $(shell $(PKG_CONFIG) --atleast-version=1 libnl-1 && echo Y)
+ NL2FOUND := $(shell $(PKG_CONFIG) --atleast-version=2 libnl-2.0 && echo Y)
+ NL3FOUND := $(shell $(PKG_CONFIG) --atleast-version=3 libnl-3.0 && echo Y)
++NL31FOUND := $(shell $(PKG_CONFIG) --exact-version=3.1 libnl-3.1 && echo Y)
++NL3xFOUND := $(shell $(PKG_CONFIG) --atleast-version=3.2 libnl-3.0 && echo Y)
+ 
+ ifeq ($(NL1FOUND),Y)
+ NLLIBNAME = libnl-1
+@@ -42,12 +44,27 @@ LIBS += -lnl-genl
+ NLLIBNAME = libnl-3.0
+ endif
+ 
++# nl-3.1 has a broken libnl-gnl-3.1.pc file
++# as show by pkg-config --debug --libs --cflags --exact-version=3.1 libnl-genl-3.1;echo $?
++ifeq ($(NL31FOUND),Y)
++CFLAGS += -DCONFIG_LIBNL30
++LIBS += -lnl-genl
++NLLIBNAME = libnl-3.1
++endif
 +
- 		ath6kl_bmi_write(ar,
- 				ath6kl_get_hi_item_addr(ar,
- 				HI_ITEM(hi_board_data)),
-@@ -1013,7 +1020,8 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
- 			HI_ITEM(hi_board_ext_data)),
- 			(u8 *) &board_ext_address, 4);
++ifeq ($(NL3xFOUND),Y)
++CFLAGS += -DCONFIG_LIBNL30
++LIBS += -lnl-genl-3
++NLLIBNAME = libnl-3.0
++endif
++
+ ifeq ($(NLLIBNAME),)
+ $(error Cannot find development files for any supported version of libnl)
+ endif
  
--	if (board_ext_address == 0) {
-+	if (ar->target_type == TARGET_TYPE_AR6003 &&
-+	    board_ext_address == 0) {
- 		ath6kl_err("Failed to get board file target address.\n");
- 		return -EINVAL;
- 	}
-@@ -1033,8 +1041,8 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
- 		break;
- 	}
+ LIBS += $(shell $(PKG_CONFIG) --libs $(NLLIBNAME))
+ CFLAGS += $(shell $(PKG_CONFIG) --cflags $(NLLIBNAME))
++NLVERSION :=$(shell $(PKG_CONFIG) --print-provides $(NLLIBNAME))
  
--	if (ar->fw_board_len == (board_data_size +
--				 board_ext_data_size)) {
-+	if (board_ext_address &&
-+	    ar->fw_board_len == (board_data_size + board_ext_data_size)) {
+ ifeq ($(V),1)
+ Q=
+@@ -57,20 +74,8 @@ Q=@
+ NQ=echo
+ endif
  
- 		/* write extended board data */
- 		ath6kl_dbg(ATH6KL_DBG_BOOT,
-@@ -1092,8 +1100,8 @@ static int ath6kl_upload_otp(struct ath6kl *ar)
- 	bool from_hw = false;
- 	int ret;
+-all: version_check $(ALL)
+-
+-version_check:
+-ifeq ($(NL3FOUND),Y)
+-else
+-ifeq ($(NL2FOUND),Y)
+-else
+-ifeq ($(NL1FOUND),Y)
+-else
+-	$(error No libnl found)
+-endif
+-endif
+-endif
+-
++all: $(ALL)
++	@echo "Compilation against $(NLVERSION)"
  
--	if (WARN_ON(ar->fw_otp == NULL))
--		return -ENOENT;
-+	if (ar->fw_otp == NULL)
-+		return 0;
+ VERSION_OBJS := $(filter-out version.o, $(OBJS))
  
- 	address = ar->hw.app_load_addr;
- 
-@@ -1142,7 +1150,7 @@ static int ath6kl_upload_firmware(struct ath6kl *ar)
- 	int ret;
- 
- 	if (WARN_ON(ar->fw == NULL))
--		return -ENOENT;
-+		return 0;
- 
- 	address = ar->hw.app_load_addr;
- 
-@@ -1172,8 +1180,8 @@ static int ath6kl_upload_patch(struct ath6kl *ar)
- 	u32 address, param;
- 	int ret;
- 
--	if (WARN_ON(ar->fw_patch == NULL))
--		return -ENOENT;
-+	if (ar->fw_patch == NULL)
-+		return 0;
- 
- 	address = ar->hw.dataset_patch_addr;
- 
-@@ -1346,10 +1354,16 @@ static int ath6kl_init_hw_params(struct ath6kl *ar)
- 		break;
- 	case AR6004_REV1_VERSION:
- 		ar->hw.dataset_patch_addr = AR6003_REV2_DATASET_PATCH_ADDRESS;
--		ar->hw.app_load_addr = AR6003_REV3_APP_LOAD_ADDRESS;
-+		ar->hw.app_load_addr = 0x1234;
- 		ar->hw.board_ext_data_addr = AR6004_REV1_BOARD_EXT_DATA_ADDRESS;
- 		ar->hw.reserved_ram_size = AR6004_REV1_RAM_RESERVE_SIZE;
- 		break;
-+	case AR6004_REV2_VERSION:
-+		ar->hw.dataset_patch_addr = AR6003_REV2_DATASET_PATCH_ADDRESS;
-+		ar->hw.app_load_addr = 0x1234;
-+		ar->hw.board_ext_data_addr = AR6004_REV1_BOARD_EXT_DATA_ADDRESS;
-+		ar->hw.reserved_ram_size = AR6004_REV2_RAM_RESERVE_SIZE;
-+		break;
- 	default:
- 		ath6kl_err("Unsupported hardware version: 0x%x\n",
- 			   ar->version.target_ver);
+-- 
+1.5.6.5
 
