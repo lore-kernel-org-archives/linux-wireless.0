@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:29390 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753902Ab1KROJh (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:43054 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753248Ab1KKSlk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 09:09:37 -0500
-Date: Fri, 18 Nov 2011 17:09:06 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] ath6kl: use a larger buffer for debug output
-Message-ID: <20111118140906.GA9685@elgon.mountain> (sfid-20111118_150942_354029_4789F63D)
+	Fri, 11 Nov 2011 13:41:40 -0500
+Received: by wwe5 with SMTP id 5so1735004wwe.1
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Nov 2011 10:41:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+XVXffySzSsRTduhX9UAWDv=oDt9eSEQe+Oj5RebQ9JZBAgaA@mail.gmail.com>
+References: <CAG6hwVN9wR9mbRVWUA_Poa8ng+9RzHXj6PDfpLfN0djWeYAs9g@mail.gmail.com>
+ <CA+XVXffySzSsRTduhX9UAWDv=oDt9eSEQe+Oj5RebQ9JZBAgaA@mail.gmail.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Fri, 11 Nov 2011 10:41:19 -0800
+Message-ID: <CAG6hwVOE8+EDWw+3+s=R+9eO7B+Y=9D8nVAE1gAmksu9hhVkHg@mail.gmail.com> (sfid-20111111_194143_561732_79B0352E)
+Subject: Re: regression in "mac80211: support adding IV-room in the skb for
+ CCMP keys"
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function makes the static checkers grumble.  The return value of
-snprintf() is the number of bytes which would have been copied if
-there was enough space.  In theory, a %u can take take 10 digits so
-len could be larger than 16 and it would be a small information
-leak.
+On Thu, Nov 10, 2011 at 10:13 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> On Fri, Nov 11, 2011 at 07:01, Thomas Pedersen <thomas@cozybit.com> wrote:
+>> Hello,
+>>
+>> Any kernel debugging tips involving stack corruption? :)
+>>
+>> When testing a secure mesh topology in qemu using mac80211_hwsim with
+>> master-2011-11-09 I get a hard lockup, but no OOPS. gdb was able to
+>> show:
+>>
+>
+> Did you try applying this
+> http://www.spinics.net/lists/linux-wireless/msg79976.html ?
 
-We may as well make the buffer larger as well since that is very
-easy to do.
+That fixed it, thanks!
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index 9eff0d0..e632008 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -1551,11 +1551,12 @@ static ssize_t ath6kl_listen_int_read(struct file *file,
- 						size_t count, loff_t *ppos)
- {
- 	struct ath6kl *ar = file->private_data;
--	char buf[16];
-+	char buf[32];
- 	int len;
- 
- 	len = snprintf(buf, sizeof(buf), "%u %u\n", ar->listen_intvl_t,
- 					ar->listen_intvl_b);
-+	len = min(sizeof(buf), len);
- 
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
+Thomas
