@@ -1,99 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:58673 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753955Ab1K1XHn (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:54422 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753530Ab1KLOFz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 18:07:43 -0500
-Received: by vbbfc26 with SMTP id fc26so4251822vbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 15:07:42 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	compat@orbit-lab.org, Paul Stewart <pstew@google.com>,
-	Senthilkumar Balasubramanian <senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH v4] cfg80211: Restore orig channel values upon disconnect
-Date: Mon, 28 Nov 2011 18:07:34 -0500
-Message-Id: <1322521654-8745-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111129_000747_221872_C8FEEFF3)
+	Sat, 12 Nov 2011 09:05:55 -0500
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 1/3] ath9k: Remove enabling btcoex from stomp type change
+Date: Sat, 12 Nov 2011 19:35:46 +0530
+Message-ID: <1321106748-13014-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111112_150606_534901_5905F1D4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+This patch removes btcoex_enable from stomp type change and let
+it be called from callee functions that makes the code can be
+reusable for MCI changes.
 
-When we restore regulatory settings the world regulatory domain
-is properly reset on cfg80211 (or user prefered regulatory domain)
-but we were never setting back channel values for drivers that use
-WIPHY_FLAG_CUSTOM_REGULATORY. Set these values up again by using
-the orig_ channel parameters.
-
-This fixes restoring custom regulatory settings upon disconnect
-events.
-
-Cc: compat@orbit-lab.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: Senthilkumar Balasubramanian <senthilb@qca.qualcomm.com>
 Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath9k/btcoex.c       |    4 ----
+ drivers/net/wireless/ath/ath9k/gpio.c         |    2 ++
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |    2 ++
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-Sorry here is my fixed patch which ammend's Rajkumar's original patch,
-I had not commited my changes to his patch.
-
- net/wireless/reg.c |   26 ++++++++++++++++++++++++++
- 1 files changed, 26 insertions(+), 0 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 4fe396a..504d3f1 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1780,6 +1780,26 @@ static void restore_alpha2(char *alpha2, bool reset_user)
- 		REG_DBG_PRINT("Restoring regulatory settings\n");
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index 0122639..f525e91 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -269,8 +269,6 @@ static void ar9003_btcoex_bt_stomp(struct ath_hw *ah,
+ 				"Invalid Stomptype\n");
+ 		break;
+ 	}
+-
+-	ath9k_hw_btcoex_enable(ah);
  }
  
-+static void restore_custom_reg_settings(struct wiphy *wiphy)
-+{
-+	struct ieee80211_supported_band *sband;
-+	enum ieee80211_band band;
-+	struct ieee80211_channel *chan;
-+	int i;
-+
-+	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
-+		sband = wiphy->bands[band];
-+		if (!sband)
-+			continue;
-+		for (i = 0; i < sband->n_channels; i++) {
-+			chan = &sband->channels[i];
-+			chan->flags = chan->orig_flags;
-+			chan->max_antenna_gain = chan->orig_mag;
-+			chan->max_power = chan->orig_mpwr;
-+		}
-+	}
-+}
-+
  /*
-  * Restoring regulatory settings involves ingoring any
-  * possibly stale country IE information and user regulatory
-@@ -1801,6 +1821,7 @@ static void restore_regulatory_settings(bool reset_user)
- 	struct reg_beacon *reg_beacon, *btmp;
- 	struct regulatory_request *reg_request, *tmp;
- 	LIST_HEAD(tmp_reg_req_list);
-+	struct cfg80211_registered_device *rdev;
+@@ -302,7 +300,5 @@ void ath9k_hw_btcoex_bt_stomp(struct ath_hw *ah,
+ 				"Invalid Stomptype\n");
+ 		break;
+ 	}
+-
+-	ath9k_hw_btcoex_enable(ah);
+ }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_bt_stomp);
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 2c279dc..e4ae08e 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -198,6 +198,7 @@ static void ath_btcoex_period_timer(unsigned long data)
+ 	ath9k_hw_btcoex_bt_stomp(ah, is_btscan ? ATH_BTCOEX_STOMP_ALL :
+ 			      btcoex->bt_stomp_type);
  
- 	mutex_lock(&cfg80211_mutex);
- 	mutex_lock(&reg_mutex);
-@@ -1853,6 +1874,11 @@ static void restore_regulatory_settings(bool reset_user)
- 		kfree(last_request);
- 	last_request = &core_request_world;
++	ath9k_hw_btcoex_enable(ah);
+ 	spin_unlock_bh(&btcoex->btcoex_lock);
  
-+	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
-+		if (rdev->wiphy.flags & WIPHY_FLAG_CUSTOM_REGULATORY)
-+			restore_custom_reg_settings(&rdev->wiphy);
-+	}
-+
- 	mutex_unlock(&reg_mutex);
- 	mutex_unlock(&cfg80211_mutex);
+ 	if (btcoex->btcoex_period != btcoex->btcoex_no_stomp) {
+@@ -240,6 +241,7 @@ static void ath_btcoex_no_stomp_timer(void *arg)
+ 	 else if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_ALL)
+ 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_LOW);
  
++	ath9k_hw_btcoex_enable(ah);
+ 	spin_unlock_bh(&btcoex->btcoex_lock);
+ 	ath9k_ps_restore(sc);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index e3a02eb..ce606b6 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -80,6 +80,7 @@ static void ath_btcoex_period_work(struct work_struct *work)
+ 	ath9k_hw_btcoex_bt_stomp(priv->ah, is_btscan ? ATH_BTCOEX_STOMP_ALL :
+ 			btcoex->bt_stomp_type);
+ 
++	ath9k_hw_btcoex_enable(priv->ah);
+ 	timer_period = is_btscan ? btcoex->btscan_no_stomp :
+ 		btcoex->btcoex_no_stomp;
+ 	ieee80211_queue_delayed_work(priv->hw, &priv->duty_cycle_work,
+@@ -108,6 +109,7 @@ static void ath_btcoex_duty_cycle_work(struct work_struct *work)
+ 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_NONE);
+ 	else if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_ALL)
+ 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_LOW);
++	ath9k_hw_btcoex_enable(priv->ah);
+ }
+ 
+ void ath_htc_init_btcoex_work(struct ath9k_htc_priv *priv)
 -- 
-1.7.4.15.g7811d
+1.7.7.3
 
