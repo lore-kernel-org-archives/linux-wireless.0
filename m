@@ -1,56 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46603 "EHLO mx1.redhat.com"
+Received: from purkki.adurom.net ([80.68.90.206]:50073 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756792Ab1KRIWm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 03:22:42 -0500
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAI8MgGA032444
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 03:22:42 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 52/77] iwlegacy: move IL_MASK
-Date: Fri, 18 Nov 2011 09:22:14 +0100
-Message-Id: <1321604559-10707-52-git-send-email-sgruszka@redhat.com> (sfid-20111118_092247_244503_87EC7B1E)
-In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
-References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+	id S1750951Ab1KLJAN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Nov 2011 04:00:13 -0500
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: <j@w1.fi>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wpa_supplicant: Set configured auth_algs
+References: <1321023741-32760-1-git-send-email-vthiagar@qca.qualcomm.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sat, 12 Nov 2011 11:00:06 +0200
+In-Reply-To: <1321023741-32760-1-git-send-email-vthiagar@qca.qualcomm.com> (Vasanthakumar Thiagarajan's message of "Fri\, 11 Nov 2011 20\:32\:21 +0530")
+Message-ID: <877h35af6x.fsf@purkki.adurom.net> (sfid-20111112_100024_534116_340A7DE2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/4965-mac.c    |    2 ++
- drivers/net/wireless/iwlegacy/iwl-helpers.h |    3 ---
- 2 files changed, 2 insertions(+), 3 deletions(-)
+Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com> writes:
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 2bab0fc..dbe5bf2 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -4944,6 +4944,8 @@ static const s8 default_queue_to_tx_fifo[] = {
- 	IL_TX_FIFO_UNUSED,
- };
- 
-+#define IL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
-+
- static int il4965_alive_notify(struct il_priv *il)
- {
- 	u32 a;
-diff --git a/drivers/net/wireless/iwlegacy/iwl-helpers.h b/drivers/net/wireless/iwlegacy/iwl-helpers.h
-index eb5a287..2db83fc 100644
---- a/drivers/net/wireless/iwlegacy/iwl-helpers.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-helpers.h
-@@ -35,9 +35,6 @@
- 
- #include "iwl-io.h"
- 
--#define IL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
--
--
- /**
-  * il_queue_inc_wrap - increment queue idx, wrap back to beginning
-  * @idx -- current idx
+> In Ap mode, Authentication algorithm is reset in
+> hostapd_config_defaults_bss() and never be set to the configured
+> one. This would pass the default auth_algs (OPEN|SHARED) to driver
+> and cause authentication isseues.
+
+Shouldn't you send this to the hostap mailing list?
+
 -- 
-1.7.1
-
+Kalle Valo
