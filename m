@@ -1,108 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:43838 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753797Ab1KWUcl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 15:32:41 -0500
-Received: by mail-iy0-f174.google.com with SMTP id e36so2078525iag.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 12:32:41 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	johannes@sipsolutions.net, linville@tuxdriver.com
-Subject: [PATCH 1/7] {nl,cfg,mac}80211: Allow Setting Multicast Rate in Mesh
-Date: Wed, 23 Nov 2011 12:32:20 -0800
-Message-Id: <1322080347-7644-2-git-send-email-thomas@cozybit.com> (sfid-20111123_213244_933775_635D1B17)
-In-Reply-To: <1322080347-7644-1-git-send-email-thomas@cozybit.com>
-References: <1322080347-7644-1-git-send-email-thomas@cozybit.com>
+Received: from mout7.freenet.de ([195.4.92.97]:42371 "EHLO mout7.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754319Ab1KLRBL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Nov 2011 12:01:11 -0500
+Received: from [195.4.92.142] (helo=mjail2.freenet.de)
+	by mout7.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #5)
+	id 1RPGx2-0002cw-6E
+	for linux-wireless@vger.kernel.org; Sat, 12 Nov 2011 18:01:08 +0100
+Received: from localhost ([::1]:51066 helo=mjail2.freenet.de)
+	by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RPGx2-0007wO-2Q
+	for linux-wireless@vger.kernel.org; Sat, 12 Nov 2011 18:01:08 +0100
+Received: from [195.4.92.23] (port=42738 helo=13.mx.freenet.de)
+	by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RPGuU-00076V-7T
+	for linux-wireless@vger.kernel.org; Sat, 12 Nov 2011 17:58:30 +0100
+Received: from p4fde0d2e.dip0.t-ipconnect.de ([79.222.13.46]:38506 helo=mail.maya.org)
+	by 13.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
+	id 1RPGuT-0006pX-Ub
+	for linux-wireless@vger.kernel.org; Sat, 12 Nov 2011 17:58:30 +0100
+Message-ID: <4EBEA616.2020002@01019freenet.de> (sfid-20111112_180116_700364_0A4CC049)
+Date: Sat, 12 Nov 2011 18:00:06 +0100
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+MIME-Version: 1.0
+To: users@rt2x00.serialmonkey.com
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Try to narrow down the problem with rt2800usb and rt3572 based USB
+ WLAN devices
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Hello,
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- include/net/cfg80211.h |    2 ++
- net/mac80211/cfg.c     |    6 ++++++
- net/mac80211/tx.c      |    1 +
- net/wireless/nl80211.c |    5 +++++
- 4 files changed, 14 insertions(+), 0 deletions(-)
+as I already wrote some time ago, the rt2800usb module doesn't work very
+well with WUSB600Nv2, e.g. (rt3572 chip). If it's on load, you get a lot
+of warnings like these:
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d5e1891..edf1a4b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -802,6 +802,7 @@ struct mesh_config {
-  * @ie_len: length of vendor information elements
-  * @is_authenticated: this mesh requires authentication
-  * @is_secure: this mesh uses security
-+ * @mcast_rate: multicat rate for Mesh Node [6Mbps is the default for 802.11a]
-  *
-  * These parameters are fixed when the mesh is created.
-  */
-@@ -814,6 +815,7 @@ struct mesh_setup {
- 	u8 ie_len;
- 	bool is_authenticated;
- 	bool is_secure;
-+	int mcast_rate[IEEE80211_NUM_BANDS];
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 2577c45..8fa85db 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1185,6 +1185,8 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
- {
- 	u8 *new_ie;
- 	const u8 *old_ie;
-+	struct ieee80211_sub_if_data *sdata = container_of(ifmsh,
-+					struct ieee80211_sub_if_data, u.mesh);
- 
- 	/* allocate information elements */
- 	new_ie = NULL;
-@@ -1211,6 +1213,10 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
- 	if (setup->is_secure)
- 		ifmsh->security |= IEEE80211_MESH_SEC_SECURED;
- 
-+	/* mcast rate setting in Mesh Node */
-+	memcpy(sdata->vif.bss_conf.mcast_rate, setup->mcast_rate,
-+						sizeof(setup->mcast_rate));
-+
- 	return 0;
- }
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 8d31933..6ec3194 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -636,6 +636,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
- 	else
- 		txrc.max_rate_idx = fls(txrc.rate_idx_mask) - 1;
- 	txrc.bss = (tx->sdata->vif.type == NL80211_IFTYPE_AP ||
-+		    tx->sdata->vif.type == NL80211_IFTYPE_MESH_POINT ||
- 		    tx->sdata->vif.type == NL80211_IFTYPE_ADHOC);
- 
- 	/* set up RTS protection if desired */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a1cabde..9b8f9d9 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5648,6 +5648,11 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
- 	setup.mesh_id = nla_data(info->attrs[NL80211_ATTR_MESH_ID]);
- 	setup.mesh_id_len = nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
- 
-+	if (info->attrs[NL80211_ATTR_MCAST_RATE] &&
-+		!nl80211_parse_mcast_rate(rdev, setup.mcast_rate,
-+		nla_get_u32(info->attrs[NL80211_ATTR_MCAST_RATE])))
-+			return -EINVAL;
-+
- 	if (info->attrs[NL80211_ATTR_MESH_SETUP]) {
- 		/* parse additional setup parameters if given */
- 		err = nl80211_parse_mesh_setup(info, &setup);
--- 
-1.7.5.4
 
+kernel: [357109.158376] phy0 ->rt2800usb_txdone_entry_check: Warning -
+Data pending for entry 28 in queue 2
+
+or:
+
+kernel: [357109.158275] phy0 -> rt2800usb_txdone_entry_check: Warning -
+TX status report missed for queue 2 entry 20
+
+The throughput is very very bad (between 3 and 0 Mbits/s - 802.11n).
+
+
+To get some more information about what's happening, I did an USB trace
+and compared it with the rt3572sta driver from ralink.
+
+First the outcome of the trace of the ralink driver (example - netperf
+-t TCP_MAERTS -h server):
+
+Packet- src->dst	Data			URB type	URB ID	
+number
+----------------------------------------------------------------------
+7743	host -> 8.1	Request 24576 (0)	Submit		41c0
+7744	8.1 -> host	21840 bytes		Complete	41c0 (response to 7743)
+
+7745	host -> 8.1	Request 24576 (0)	Submit		b140
+7746	8.1 -> host	21840 bytes		Complete	b140 (response to 7745)
+
+7747	host -> 8.1	Request 24576 (0)	Submit		c5c0
+7748	8.1 -> host	21840 bytes		Complete	c5c0 (response to 7747)
+
+7749	host -> 8.1	Request 24576 (0)	Submit		92c0
+7750	8.1 -> host	21840 bytes		Complete	92c0 (response to 7749)
+
+7751	host -> 8.1	Request 24576 (0)	Submit		a440
+7752	8.1 -> host	6240 bytes		Complete	a440 (response to 7751)
+
+7753	host -> 8.1	Request 24576 (0)	Submit		fe40
+7754	8.1 -> host	21840 bytes		Complete	fe40 (response zu 7753)
+
+
+I could see a completely regular request/response behavior. Requested
+are 24576 bytes, the response almost always is 21840 bytes. Throughput
+is about 10 MBit/s.
+
+
+
+The same trace with rt2800usb confuses me completely:
+
+82998	host -> 8.1	Request 3860 (0)	Submit		2cc0
+...
+83043	8.1 -> host	1560 bytes		Complete	29c0
+
+83044	host -> 8.1	Request 3860 (0)	Submit		2bc0
+83045	host -> 8.1	Request 3860 (0)	Submit		2340
+83046	host -> 8.1	Request 3860 (0)	Submit		25c0
+83047	8.1 -> host	1560 bytes		Complete	2540
+83048	host -> 8.1	Request 3860 (0)	Submit		27c0
+83049	host -> 8.1	Request 3860 (0)	Submit		29c0
+83050	host -> 8.1	Request 3860 (0)	Submit		2540
+....
+83056	8.1 -> host	1560 bytes		Complete	1e40 (response to 83050)
+83057	8.1 -> host	1560 bytes		Complete	c640 (response to 83050)
+83059	8.1 -> host	1560 bytes		Complete	f4c0 (response to 83050)
+83060	8.1 -> host	1560 bytes		Complete	4940 (response to 83050)
+83061	8.1 -> host	1560 bytes		Complete	3240 (response to 83050)
+
+83062	host -> 8.1	Request 3860 (0)	Submit		1e40
+83063	host -> 8.1	Request 3860 (0)	Submit		c640
+83064	host -> 8.1	Request 3860 (0)	Submit		f4c0
+83065	host -> 8.1	Request 3860 (0)	Submit		4940
+83066	host -> 8.1	Request 3860 (0)	Submit		3240
+
+83068	8.1 -> host	1560 bytes		Complete	7440 (response to 83066)
+83070	host -> 8.1	Request 3860 (0)	Submit		7440
+
+83072	8.1 -> host	1560 bytes		Complete	34c0 (response to 83070)
+83073	8.1 -> host	1560 bytes		Complete	0840 (response to 83070)
+
+83074	host -> 8.1	Request 3860 (0)	Submit		34c0
+83075	host -> 8.1	Request 3860 (0)	Submit		0840
+83076	host -> 8.1	Request 3860 (0)	Submit		ddc0
+83077	8.1 -> host	1560 bytes		Complete	c8c0 (response to 83075)
+83078	host -> 8.1	Request 3860 (0)	Submit		c8c0
+83079	host -> 8.1	Request 3860 (0)	Submit		4bc0
+
+83111	8.1 -> host	1560 bytes		Complete	ca40 (response to 83078)
+83112	8.1 -> host	1560 bytes		Complete	c640 (response to 83078)
+83116	host -> 8.1	Request 3860 (0)	Submit		ca40
+83116	host -> 8.1	Request 3860 (0)	Submit		c640
+83122	8.1 -> host	1560 bytes		Complete	c9c0 (response to 83117)
+83123	host -> 8.1	Request 3860 (0)	Submit		c9c0
+83125	8.1 -> host	1560 bytes		Complete	c5c0 (response to 83123)
+
+
+The device gets bombed with tons of small requests (3860 bytes instead
+of 24576) and sometimes, there can be seen an answer (1560 bytes instead
+of 21840). Most of the requests seem not to be answered at all.
+
+
+Another comparison: using the ralink driver, I could count about 2365
+packets / s. With the rt2800usb driver, I could see about 15187 packets / s.
+
+
+
+Could anybody please try to explain this behavior, or even better, fix
+it (it looks really broken to me)?
+
+
+Thank you,
+kind regards,
+Andreas
