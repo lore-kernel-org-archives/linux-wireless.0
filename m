@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4725 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933715Ab1KJIy3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 03:54:29 -0500
-Message-ID: <4EBB912B.6020703@broadcom.com> (sfid-20111110_095432_450602_F90DAE47)
-Date: Thu, 10 Nov 2011 09:54:03 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62853 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752448Ab1KMKaR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Nov 2011 05:30:17 -0500
+Message-ID: <4EBF9C30.60801@qca.qualcomm.com> (sfid-20111113_113022_468394_8F7A2441)
+Date: Sun, 13 Nov 2011 12:30:08 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Hauke Mehrtens" <hauke@hauke-m.de>
-Subject: Re: [PATCH] wireless: cleanup brcm80211 bits in
- drivers/net/wireless/Makefile
-References: <1318515949-9558-1-git-send-email-hauke@hauke-m.de>
- <1320870425-21200-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1320870425-21200-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+To: Raja Mani <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: Fix call trace while starting IBSS mode
+References: <1320838343-5708-1-git-send-email-rmani@qca.qualcomm.com> <4EBF9B9F.2000307@qca.qualcomm.com>
+In-Reply-To: <4EBF9B9F.2000307@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/09/2011 09:27 PM, John W. Linville wrote:
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/net/wireless/Makefile |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
-> 
+On 11/13/2011 12:27 PM, Kalle Valo wrote:
+> On 11/09/2011 01:32 PM, Raja Mani wrote:
+>> When the connect event is received from the target in IBSS mode,
+>> cfg80211_ibss_joined() is called without informing BSS info to
+>> cfg80211 layer which internally hits the below WARN_ON message.
 
-Thanks, John
+[...]
 
-You may add my acknowledgement (leave it up to you ;-) ).
+> Thanks, applied.
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
+Sorry, forgot to mention that I changed the patch title to:
 
-Gr. AvS
+    ath6kl: Fix cfg80211 warning while starting IBSS mode
 
+Kalle
