@@ -1,58 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:50885 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751460Ab1KGI35 convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32837 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751183Ab1KMKak (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 03:29:57 -0500
-Received: by bke11 with SMTP id 11so3380303bke.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Nov 2011 00:29:56 -0800 (PST)
+	Sun, 13 Nov 2011 05:30:40 -0500
+Message-ID: <4EBF9B9F.2000307@qca.qualcomm.com> (sfid-20111113_113043_552951_87B6364B)
+Date: Sun, 13 Nov 2011 12:27:43 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20111104101943.704950080@sipsolutions.net>
-References: <20111104101809.711636760@sipsolutions.net> <20111104101943.704950080@sipsolutions.net>
-From: Arik Nemtsov <anamtsov@gmail.com>
-Date: Mon, 7 Nov 2011 10:29:41 +0200
-Message-ID: <CA+XVXfemN4dZC2GkKqpvGsFxs81dST4Mth0rEDd-MQrXc8rnXw@mail.gmail.com> (sfid-20111107_093001_329284_53B2308E)
-Subject: Re: [PATCH 05/12] nl80211: advertise device AP SME
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Raja Mani <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: Fix call trace while starting IBSS mode
+References: <1320838343-5708-1-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1320838343-5708-1-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 4, 2011 at 12:18, Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Add the ability to advertise that the device
-> contains the AP SME and what features it can
-> support.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-[...]
->
-> +/**
-> + * enum nl80211_ap_sme_features - device-integrated AP features
-> + * @NL80211_AP_SME_WSC: The driver is capable of indicating received probe
-> + *     request frames to userspace via management frame subscription events
-> + *     if the payload includes the WSC IE. The driver is capable of adding
-> + *     the WSC IE as configured from userspace into beacons, probe responses
-> + *     and (re)association reponse frame and allows userspace to update them
-> + *     during the lifetime of the BSS.
-> + */
-> +enum nl80211_ap_sme_features {
-> +       NL80211_AP_SME_WSC      = 1 << 0,
-> +};
+On 11/09/2011 01:32 PM, Raja Mani wrote:
+> When the connect event is received from the target in IBSS mode,
+> cfg80211_ibss_joined() is called without informing BSS info to
+> cfg80211 layer which internally hits the below WARN_ON message.
+> 
+> WARNING: at net/wireless/ibss.c:33 __cfg80211_ibss_joined+0x153/0x180 [cfg80211]()
+> [..]
+> [ 4916.845878] Call Trace:
+> [ 4916.845889]  [<c10427d2>] warn_slowpath_common+0x72/0xa0
+> [ 4916.845905]  [<f8bccc63>] ? __cfg80211_ibss_joined+0x153/0x180 [cfg80211]
+> [ 4916.845918]  [<f8bccc63>] ? __cfg80211_ibss_joined+0x153/0x180 [cfg80211]
+> [ 4916.845923]  [<c1042822>] warn_slowpath_null+0x22/0x30
+> [ 4916.845934]  [<f8bccc63>] __cfg80211_ibss_joined+0x153/0x180 [cfg80211]
+> [ 4916.845941]  [<c1025108>] ? default_spin_lock_flags+0x8/0x10
+> [ 4916.845952]  [<f8bb7fcd>] cfg80211_process_rdev_events+0x19d/0x220 [cfg80211]
+> [ 4916.845962]  [<f8bb669b>] cfg80211_event_work+0x2b/0x50 [cfg80211]
+> [ 4916.845968]  [<c105aae6>] process_one_work+0x116/0x3c0
+> [ 4916.845977]  [<f8bb6670>] ? cfg80211_get_dev_from_info+0x40/0x40 [cfg80211]
+> [ 4916.845982]  [<c105cdf0>] worker_thread+0x140/0x3b0
+> [ 4916.845986]  [<c105ccb0>] ? manage_workers+0x1f0/0x1f0
+> [ 4916.845991]  [<c1060c64>] kthread+0x74/0x80
+> [ 4916.845995]  [<c1060bf0>] ? kthread_worker_fn+0x160/0x160
+> [ 4916.846001]  [<c14e7bbe>] kernel_thread_helper+0x6/0x10
+> [ 4916.846005] ---[ end trace 769254924e409367 ]---
+> 
+> This patch make sures that BSS info is delivered via cfg80211_inform_bss()
+> to cfg80211 in advance before intimating IBSS status to cfg80211.
+> 
+> In addition to this, one debug message is also added to know
+> ad-hoc mode status (creator/joiner).
+> 
+> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 
-Perhaps we should break up this feature into two? With the upcoming
-probe-resp patches a wl12xx card will be able to indicate
-probe-requests with WSC IE up, but won't be able to add a userspace
-provided WSC IE into beacons.
-Also I'm wondering what this is used for. For instance this contains
-no indication about WPS1 and p2p. Pretty sure ath6kl handles these in
-a similar fashion (at least for the put-IE-from-userspace-in-beacon
-part).
+Thanks, applied.
 
-And as a final nit-pick, I think WPS2 is more appropriate, as this is
-also the name of the option in the hostapd code and config file.
-
-Arik
+Kalle
