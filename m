@@ -1,228 +1,266 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35414 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755002Ab1KDKVr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 06:21:47 -0400
-Message-Id: <20111104101945.803176720@sipsolutions.net> (sfid-20111104_112929_465173_CBFB6C6F)
-Date: Fri, 04 Nov 2011 11:18:21 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 12/12] cfg80211/mac80211: allow management TX to not wait
- for ACK
-References: <20111104101809.711636760@sipsolutions.net>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:56506 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751469Ab1KMTGw convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Nov 2011 14:06:52 -0500
+Message-ID: <1321211202.18929.295.camel@deadeye> (sfid-20111113_200656_656625_6A8B7FEC)
+Subject: [PATCH v2] x86: Add amilo-rfkill driver for some Fujitsu-Siemens
+ Amilo laptops
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Matthew Garrett <mjg@redhat.com>
+Cc: platform-driver-x86@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Martin =?UTF-8?Q?Ve=C4=8De=C5=99a?= <ja@marvec.org>,
+	Alejandro Vidal Mata <alex14@gmail.com>,
+	Javier Vidal Mata <javitu@gmail.com>,
+	Tino Schmidt <mailtinoshomepage@gmx.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	631664@bugs.debian.org
+Date: Sun, 13 Nov 2011 19:06:42 +0000
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+An rfkill driver based on the fsaa1655g and fsam7440 drivers for
+Fujitsu-Siemens Amilo A1655 and M7440 models found at:
 
-For probe responses it can be useful to not wait for ACK to
-avoid retransmissions if the station that sent the probe is
-already on the next channel, so allow userspace to request
-not caring about the ACK with a new nl80211 flag.
+http://sourceforge.net/projects/fsaa1655g/
+http://sourceforge.net/projects/fsam7440/
 
-Since mac80211 needs to be updated for the new function
-prototype anyway implement it right away -- it's just a
-few lines of code.
+This adds DMI matching and replaces the procfs files with rfkill
+devices.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 ---
-v2: accidentally sent as v2 instead of v1
-v3: update commit log (Arend) and fix bug (Eliad)
+Changes from v1:
+- Remove module parameter and call to rfkill_init_sw_state()
+- Correct Martin's name in copyright banner
 
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 +-
- include/linux/nl80211.h                    |    7 ++++
- include/net/cfg80211.h                     |    2 -
- net/mac80211/cfg.c                         |   11 +++++--
- net/wireless/core.h                        |    2 -
- net/wireless/mlme.c                        |    5 ++-
- net/wireless/nl80211.c                     |   43 +++++++++++++++++------------
- 7 files changed, 48 insertions(+), 25 deletions(-)
+ drivers/platform/x86/Kconfig        |    7 ++
+ drivers/platform/x86/Makefile       |    1 +
+ drivers/platform/x86/amilo-rfkill.c |  180 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 188 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/platform/x86/amilo-rfkill.c
 
---- a/include/linux/nl80211.h	2011-11-03 14:02:32.000000000 +0100
-+++ b/include/linux/nl80211.h	2011-11-03 14:02:44.000000000 +0100
-@@ -1144,6 +1144,11 @@ enum nl80211_commands {
-  *	with support for the features listed in this attribute, see
-  *	&enum nl80211_ap_sme_features.
-  *
-+ * @NL80211_ATTR_DONT_WAIT_FOR_ACK: Used with %NL80211_CMD_FRAME, this tells
-+ *	the driver to not wait for an acknowledgement. Note that due to this,
-+ *	it will also not give a status callback nor return a cookie. This is
-+ *	mostly useful for probe responses to save airtime.
+diff --git a/drivers/platform/x86/Kconfig b/drivers/platform/x86/Kconfig
+index 7f43cf8..cb2c255 100644
+--- a/drivers/platform/x86/Kconfig
++++ b/drivers/platform/x86/Kconfig
+@@ -143,6 +143,13 @@ config FUJITSU_LAPTOP_DEBUG
+ 
+ 	  If you are not sure, say N here.
+ 
++config AMILO_RFKILL
++	tristate "Fujitsu-Siemens Amilo rfkill support"
++	depends on RFKILL
++	---help---
++	  This is a driver for enabling wifi on some Fujitsu-Siemens Amilo
++	  laptops.
++
+ config TC1100_WMI
+ 	tristate "HP Compaq TC1100 Tablet WMI Extras (EXPERIMENTAL)"
+ 	depends on !X86_64
+diff --git a/drivers/platform/x86/Makefile b/drivers/platform/x86/Makefile
+index 293a320..3acbaad 100644
+--- a/drivers/platform/x86/Makefile
++++ b/drivers/platform/x86/Makefile
+@@ -17,6 +17,7 @@ obj-$(CONFIG_ACER_WMI)		+= acer-wmi.o
+ obj-$(CONFIG_ACERHDF)		+= acerhdf.o
+ obj-$(CONFIG_HP_ACCEL)		+= hp_accel.o
+ obj-$(CONFIG_HP_WMI)		+= hp-wmi.o
++obj-$(CONFIG_AMILO_RFKILL)	+= amilo-rfkill.o
+ obj-$(CONFIG_TC1100_WMI)	+= tc1100-wmi.o
+ obj-$(CONFIG_SONY_LAPTOP)	+= sony-laptop.o
+ obj-$(CONFIG_IDEAPAD_LAPTOP)	+= ideapad-laptop.o
+diff --git a/drivers/platform/x86/amilo-rfkill.c b/drivers/platform/x86/amilo-rfkill.c
+new file mode 100644
+index 0000000..028d3ec
+--- /dev/null
++++ b/drivers/platform/x86/amilo-rfkill.c
+@@ -0,0 +1,180 @@
++/*
++ * Support for rfkill on some Fujitsu-Siemens Amilo laptops.
++ * Copyright 2011 Ben Hutchings.
 + *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1374,6 +1379,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_DEVICE_AP_SME,
- 
-+	NL80211_ATTR_DONT_WAIT_FOR_ACK,
++ * Based in part on the fsam7440 driver, which is:
++ * Copyright 2005 Alejandro Vidal Mata & Javier Vidal Mata.
++ * and on the fsaa1655g driver, which is:
++ * Copyright 2006 Martin Večeřa.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
 +
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
---- a/net/wireless/core.h	2011-11-03 14:02:32.000000000 +0100
-+++ b/net/wireless/core.h	2011-11-03 14:02:44.000000000 +0100
-@@ -378,7 +378,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg8021
- 			  enum nl80211_channel_type channel_type,
- 			  bool channel_type_valid, unsigned int wait,
- 			  const u8 *buf, size_t len, bool no_cck,
--			  u64 *cookie);
-+			  bool dont_wait_for_ack, u64 *cookie);
- 
- /* SME */
- int __cfg80211_connect(struct cfg80211_registered_device *rdev,
---- a/net/wireless/mlme.c	2011-11-03 14:02:28.000000000 +0100
-+++ b/net/wireless/mlme.c	2011-11-03 14:02:44.000000000 +0100
-@@ -904,7 +904,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg8021
- 			  enum nl80211_channel_type channel_type,
- 			  bool channel_type_valid, unsigned int wait,
- 			  const u8 *buf, size_t len, bool no_cck,
--			  u64 *cookie)
-+			  bool dont_wait_for_ack, u64 *cookie)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	const struct ieee80211_mgmt *mgmt;
-@@ -995,7 +995,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg8021
- 	/* Transmit the Action frame as requested by user space */
- 	return rdev->ops->mgmt_tx(&rdev->wiphy, dev, chan, offchan,
- 				  channel_type, channel_type_valid,
--				  wait, buf, len, no_cck, cookie);
-+				  wait, buf, len, no_cck, dont_wait_for_ack,
-+				  cookie);
- }
- 
- bool cfg80211_rx_mgmt(struct net_device *dev, int freq, const u8 *buf,
---- a/net/wireless/nl80211.c	2011-11-03 14:02:32.000000000 +0100
-+++ b/net/wireless/nl80211.c	2011-11-03 14:02:44.000000000 +0100
-@@ -196,6 +196,7 @@ static const struct nla_policy nl80211_p
- 	[NL80211_ATTR_TDLS_OPERATION] = { .type = NLA_U8 },
- 	[NL80211_ATTR_TDLS_SUPPORT] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_TDLS_EXTERNAL_SETUP] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_DONT_WAIT_FOR_ACK] = { .type = NLA_FLAG },
- };
- 
- /* policy for the key attributes */
-@@ -5276,10 +5277,11 @@ static int nl80211_tx_mgmt(struct sk_buf
- 	int err;
- 	void *hdr;
- 	u64 cookie;
--	struct sk_buff *msg;
-+	struct sk_buff *msg = NULL;
- 	unsigned int wait = 0;
--	bool offchan;
--	bool no_cck;
-+	bool offchan, no_cck, dont_wait_for_ack;
++#include <linux/module.h>
++#include <linux/dmi.h>
++#include <linux/io.h>
++#include <linux/moduleparam.h>
++#include <linux/platform_device.h>
++#include <linux/rfkill.h>
 +
-+	dont_wait_for_ack = info->attrs[NL80211_ATTR_DONT_WAIT_FOR_ACK];
- 
- 	if (!info->attrs[NL80211_ATTR_FRAME] ||
- 	    !info->attrs[NL80211_ATTR_WIPHY_FREQ])
-@@ -5323,29 +5325,36 @@ static int nl80211_tx_mgmt(struct sk_buf
- 	if (chan == NULL)
- 		return -EINVAL;
- 
--	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
--	if (!msg)
--		return -ENOMEM;
--
--	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
--			     NL80211_CMD_FRAME);
--
--	if (IS_ERR(hdr)) {
--		err = PTR_ERR(hdr);
--		goto free_msg;
-+	if (!dont_wait_for_ack) {
-+		msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+		if (!msg)
-+			return -ENOMEM;
++/*
++ * These values were obtained from disassembling and debugging the
++ * PM.exe program installed in the Fujitsu-Siemens AMILO A1655G
++ */
++#define A1655_STATE_PORT	0x64
++#define A1655_COMMAND_PORT	0x64
++#define A1655_DATA_PORT		0x60
++#define A1655_WIFI_COMMAND	0xC5
++#define A1655_WIFI_ON		0x25
++#define A1655_WIFI_OFF		0x45
 +
-+		hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
-+				     NL80211_CMD_FRAME);
++static int amilo_a1655_rfkill_set_block(void *data, bool blocked)
++{
++	u8 val;
 +
-+		if (IS_ERR(hdr)) {
-+			err = PTR_ERR(hdr);
-+			goto free_msg;
-+		}
- 	}
++	do
++		val = inb(A1655_STATE_PORT);
++	while ((val & 2) == 2);
++	outb(A1655_WIFI_COMMAND, A1655_COMMAND_PORT);
++	do
++		val = inb(A1655_STATE_PORT);
++	while ((val & 2) == 2);
++	outb(blocked ? A1655_WIFI_OFF : A1655_WIFI_ON, A1655_DATA_PORT);
 +
- 	err = cfg80211_mlme_mgmt_tx(rdev, dev, chan, offchan, channel_type,
- 				    channel_type_valid, wait,
- 				    nla_data(info->attrs[NL80211_ATTR_FRAME]),
- 				    nla_len(info->attrs[NL80211_ATTR_FRAME]),
--				    no_cck, &cookie);
-+				    no_cck, dont_wait_for_ack, &cookie);
- 	if (err)
- 		goto free_msg;
- 
--	NLA_PUT_U64(msg, NL80211_ATTR_COOKIE, cookie);
-+	if (msg) {
-+		NLA_PUT_U64(msg, NL80211_ATTR_COOKIE, cookie);
- 
--	genlmsg_end(msg, hdr);
--	return genlmsg_reply(msg, info);
-+		genlmsg_end(msg, hdr);
-+		return genlmsg_reply(msg, info);
++	return 0;
++}
++
++static const struct rfkill_ops amilo_a1655_rfkill_ops = {
++	.set_block = amilo_a1655_rfkill_set_block
++};
++
++/*
++ * These values were obtained from disassembling the PM.exe program
++ * installed in the Fujitsu-Siemens AMILO M 7440
++ */
++#define M7440_PORT1		0x118f
++#define M7440_PORT2		0x118e
++#define M7440_RADIO_ON1		0x12
++#define M7440_RADIO_ON2		0x80
++#define M7440_RADIO_OFF1	0x10
++#define M7440_RADIO_OFF2	0x00
++
++static int amilo_m7440_rfkill_set_block(void *data, bool blocked)
++{
++	u8 val1 = blocked ? M7440_RADIO_OFF1 : M7440_RADIO_ON1;
++	u8 val2 = blocked ? M7440_RADIO_OFF2 : M7440_RADIO_ON2;
++
++	outb(val1, M7440_PORT1);
++	outb(val2, M7440_PORT2);
++
++	/* Check whether the state has changed correctly */
++	if (inb(M7440_PORT1) != val1 || inb(M7440_PORT2) != val2)
++		return -EIO;
++
++	return 0;
++}
++
++static const struct rfkill_ops amilo_m7440_rfkill_ops = {
++	.set_block = amilo_m7440_rfkill_set_block
++};
++
++static const struct dmi_system_id __devinitdata amilo_rfkill_id_table[] = {
++	{
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "FUJITSU SIEMENS"),
++			DMI_MATCH(DMI_BOARD_NAME, "AMILO A1655"),
++		},
++		.driver_data = (void *)&amilo_a1655_rfkill_ops
++	},
++	{
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "FUJITSU SIEMENS"),
++			DMI_MATCH(DMI_BOARD_NAME, "AMILO M7440"),
++		},
++		.driver_data = (void *)&amilo_m7440_rfkill_ops
++	},
++	{}
++};
++
++static struct platform_device *amilo_rfkill_pdev;
++static struct rfkill *amilo_rfkill_dev;
++
++static int __devinit amilo_rfkill_probe(struct platform_device *device)
++{
++	const struct dmi_system_id *system_id =
++		dmi_first_match(amilo_rfkill_id_table);
++	int rc;
++
++	amilo_rfkill_dev = rfkill_alloc(KBUILD_MODNAME, &device->dev,
++					RFKILL_TYPE_WLAN,
++					system_id->driver_data, NULL);
++	if (!amilo_rfkill_dev)
++		return -ENOMEM;
++
++	rc = rfkill_register(amilo_rfkill_dev);
++	if (rc)
++		goto fail;
++
++	return 0;
++
++fail:
++	rfkill_destroy(amilo_rfkill_dev);
++	return rc;
++}
++
++static int amilo_rfkill_remove(struct platform_device *device)
++{
++	rfkill_unregister(amilo_rfkill_dev);
++	rfkill_destroy(amilo_rfkill_dev);
++	return 0;
++}
++
++static struct platform_driver amilo_rfkill_driver = {
++	.driver = {
++		.name	= KBUILD_MODNAME,
++		.owner	= THIS_MODULE,
++	},
++	.probe	= amilo_rfkill_probe,
++	.remove	= amilo_rfkill_remove,
++};
++
++static int __init amilo_rfkill_init(void)
++{
++	int rc;
++
++	if (dmi_first_match(amilo_rfkill_id_table) == NULL)
++		return -ENODEV;
++
++	rc = platform_driver_register(&amilo_rfkill_driver);
++	if (rc)
++		return rc;
++
++	amilo_rfkill_pdev = platform_device_register_simple(KBUILD_MODNAME, -1,
++							    NULL, 0);
++	if (IS_ERR(amilo_rfkill_pdev)) {
++		rc = PTR_ERR(amilo_rfkill_pdev);
++		goto fail;
 +	}
 +
 +	return 0;
- 
-  nla_put_failure:
- 	err = -ENOBUFS;
---- a/include/net/cfg80211.h	2011-11-03 14:02:32.000000000 +0100
-+++ b/include/net/cfg80211.h	2011-11-03 14:02:44.000000000 +0100
-@@ -1584,7 +1584,7 @@ struct cfg80211_ops {
- 			  enum nl80211_channel_type channel_type,
- 			  bool channel_type_valid, unsigned int wait,
- 			  const u8 *buf, size_t len, bool no_cck,
--			  u64 *cookie);
-+			  bool dont_wait_for_ack, u64 *cookie);
- 	int	(*mgmt_tx_cancel_wait)(struct wiphy *wiphy,
- 				       struct net_device *dev,
- 				       u64 cookie);
---- a/net/mac80211/cfg.c	2011-11-03 14:02:28.000000000 +0100
-+++ b/net/mac80211/cfg.c	2011-11-03 14:02:44.000000000 +0100
-@@ -1936,7 +1936,7 @@ static int ieee80211_mgmt_tx(struct wiph
- 			     enum nl80211_channel_type channel_type,
- 			     bool channel_type_valid, unsigned int wait,
- 			     const u8 *buf, size_t len, bool no_cck,
--			     u64 *cookie)
-+			     bool dont_wait_for_ack, u64 *cookie)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
-@@ -1944,10 +1944,15 @@ static int ieee80211_mgmt_tx(struct wiph
- 	struct sta_info *sta;
- 	struct ieee80211_work *wk;
- 	const struct ieee80211_mgmt *mgmt = (void *)buf;
--	u32 flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
--		    IEEE80211_TX_CTL_REQ_TX_STATUS;
-+	u32 flags;
- 	bool is_offchan = false;
- 
-+	if (dont_wait_for_ack)
-+		flags = IEEE80211_TX_CTL_NO_ACK;
-+	else
-+		flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
-+			IEEE80211_TX_CTL_REQ_TX_STATUS;
 +
- 	/* Check that we are on the requested channel for transmission */
- 	if (chan != local->tmp_channel &&
- 	    chan != local->oper_channel)
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c	2011-11-03 13:48:08.000000000 +0100
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c	2011-11-03 14:02:44.000000000 +0100
-@@ -1732,7 +1732,8 @@ static int ath6kl_mgmt_tx(struct wiphy *
- 			  struct ieee80211_channel *chan, bool offchan,
- 			  enum nl80211_channel_type channel_type,
- 			  bool channel_type_valid, unsigned int wait,
--			  const u8 *buf, size_t len, bool no_cck, u64 *cookie)
-+			  const u8 *buf, size_t len, bool no_cck,
-+			  bool dont_wait_for_ack, u64 *cookie)
- {
- 	struct ath6kl *ar = ath6kl_priv(dev);
- 	u32 id;
++fail:
++	platform_driver_unregister(&amilo_rfkill_driver);
++	return rc;
++}
++
++static void __exit amilo_rfkill_exit(void)
++{
++	platform_device_unregister(amilo_rfkill_pdev);
++	platform_driver_unregister(&amilo_rfkill_driver);
++}
++
++MODULE_AUTHOR("Ben Hutchings <ben@decadent.org.uk>");
++MODULE_LICENSE("GPL");
++MODULE_DEVICE_TABLE(dmi, amilo_rfkill_id_table);
++
++module_init(amilo_rfkill_init);
++module_exit(amilo_rfkill_exit);
+-- 
+1.7.7.2
 
 
