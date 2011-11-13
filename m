@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33032 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750949Ab1KRR2q (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26832 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751754Ab1KMJnj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 12:28:46 -0500
-Subject: Re: [PATCH v9 2/2] mac80211:  Support ht-cap over-rides.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4EC69155.4060306@candelatech.com>
-References: <1321566884-31757-1-git-send-email-greearb@candelatech.com>
-	 <1321566884-31757-2-git-send-email-greearb@candelatech.com>
-	 (sfid-20111117_225512_858995_688665F5) <1321611355.10266.30.camel@jlt3.sipsolutions.net>
-	 <4EC69155.4060306@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 18 Nov 2011 18:28:42 +0100
-Message-ID: <1321637322.10266.70.camel@jlt3.sipsolutions.net> (sfid-20111118_182901_712145_9CF4D730)
-Mime-Version: 1.0
+	Sun, 13 Nov 2011 04:43:39 -0500
+Message-ID: <4EBF913F.9030304@qca.qualcomm.com> (sfid-20111113_104349_273777_9075A659)
+Date: Sun, 13 Nov 2011 11:43:27 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: Fix packet drop when ath6kl_cookie runs out
+References: <1320762685-4665-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1320762685-4665-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-11-18 at 09:09 -0800, Ben Greear wrote:
-> On 11/18/2011 02:15 AM, Johannes Berg wrote:
-> > On Thu, 2011-11-17 at 13:54 -0800, greearb@candelatech.com wrote:
-> >
-> >> -void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
-> >> +bool ieee80111_cfg_override_disables_ht40(struct ieee80211_sub_if_data *sdata)
-> >> +{
-> >> +	const u16 flg = IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-> >> +	if ((sdata->u.mgd.ht_capa_mask.cap_info&  flg)&&
-> >> +	    !(sdata->u.mgd.ht_capa.cap_info&  flg))
-> >> +		return true;
-> >
-> > This looks like it has endian bugs. Note that sband->ht_cap is
-> > ieee80211_sta_ht_cap, whereas sdata->u.mgd.ht_capa[_mask] is
-> > ieee80211_ht_cap -- the latter is in IEEE format (LE) while the former
-> > is in a complete different format that's easier to digest for the
-> > CPU :-)
+On 11/08/2011 04:31 PM, Vasanthakumar Thiagarajan wrote:
+> "ath6kl: Maintain virtual interface in a list" mistakenly stops the
+> netq only when the mode is ibss. This causes packet drops in sta mode
+> when the available cookies (buffer abstraction in ath6kl and also used
+> for tx throttling) runs out for the highest priority traffic. This patch
+> just fixes this regression though the original code may still need fixes
+> which can be addressed in separate patches.
 > 
-> So, the ht-caps & mask data coming from user-space via netlink
-> should be in network-byte order?
+> Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-It is that way right now, and that makes sense.
+Thanks, applied.
 
-> Or do you want me to flip the bytes around when copying
-> it into the u.mgd.ht_cap structs?
+>  	 * The last MAX_HI_COOKIE_NUM "batch" of cookies are reserved for
+> @@ -465,20 +465,18 @@ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
+>  	 */
+>  	if (ar->ac_stream_pri_map[ar->ep2ac_map[endpoint]] <
+>  	    ar->hiac_stream_active_pri &&
+> -	    ar->cookie_count <= MAX_HI_COOKIE_NUM) {
+> +	    ar->cookie_count <= MAX_HI_COOKIE_NUM)
+>  		/*
+>  		 * Give preference to the highest priority stream by
+>  		 * dropping the packets which overflowed.
+>  		 */
+>  		action = HTC_SEND_FULL_DROP;
 
-No. Just use them in little endian ("network byte order" for 802.11)
+In the code before "ath6kl: Maintain virtual interface in a list" this
+test was not run in Ad-Hoc mode, but now it is run. AFAICS it shouldn't
+create any issues, but wanted to point out anyway.
 
-johannes
+Also, as discussed earlier, it's better to have braces when you have a
+comment in a single line if statement. But this is a minor style issue
+and can be fixed later. Any case here are examples what I mean:
 
+if (foo)
+	return 0;
+
+if (bar) {
+	/* this is a comment */
+	return 0;
+}
+
+/* this is a second comment */
+if (foobar)
+	return 0;
+
+Kalle
