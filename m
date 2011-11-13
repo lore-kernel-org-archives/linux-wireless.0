@@ -1,53 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:44591 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752798Ab1KAQFp (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:64538 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751825Ab1KMWcK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Nov 2011 12:05:45 -0400
-Received: by qabj40 with SMTP id j40so5891302qab.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2011 09:05:44 -0700 (PDT)
+	Sun, 13 Nov 2011 17:32:10 -0500
+Received: by mail-bw0-f46.google.com with SMTP id 11so5251631bke.19
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Nov 2011 14:32:09 -0800 (PST)
+Message-ID: <4EC04566.3060304@gmail.com> (sfid-20111113_233216_368658_941654FF)
+Date: Sun, 13 Nov 2011 23:32:06 +0100
+From: Fabio Avanzolini <fabio.avanzolini@gmail.com>
 MIME-Version: 1.0
-Date: Tue, 1 Nov 2011 18:05:44 +0200
-Message-ID: <CAFED-jm6P3Xn-3O6YuEXbtVCf6_JpyH1K18kTJkFybpBbwBnVA@mail.gmail.com> (sfid-20111101_170548_821733_69B9C14A)
-Subject: [PATCH] compat-wireless: add driver-select for mac80211_hwsim
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: hp compaq 6510b
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Hallo,
 
----
- scripts/driver-select |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+i have a notebook HP COMPAQ 6510b and i use Linux mint
 
-diff --git a/scripts/driver-select b/scripts/driver-select
-index 3619541..6f7f103 100755
---- a/scripts/driver-select
-+++ b/scripts/driver-select
-@@ -33,7 +33,7 @@ PURPLE="\033[35m"
- CYAN="\033[36m"
- UNDERLINE="\033[02m"
+-Version-
+Kernel        : Linux 2.6.39-2-486 (i686)
+Compiled        : #1 Tue Jul 5 02:52:23 UTC 2011
+C Library        : Unknown
+Default C Compiler        : GNU C Compiler version 4.6.1 (Debian 4.6.1-4)
+Distribution        : Linux Mint Debian Edition
 
--SUPPORTED_80211_DRIVERS="ath5k ath9k ath9k_htc carl9170 ath6kl b43
-zd1211rw rt2x00 wl1251 wl12xx brcmsmac brcmfmac"
-+SUPPORTED_80211_DRIVERS="ath5k ath9k ath9k_htc carl9170 ath6kl b43
-zd1211rw rt2x00 wl1251 wl12xx brcmsmac brcmfmac mac80211_hwsim"
+i need help for a trouble with wifi i need firmware can you help me please.
 
- # b43 needs some more work for driver-select, the SSB stuff, plus
- # what if you update b44 but not b43? It will bust.
-@@ -424,6 +424,11 @@ case $1 in
-                disable_staging
-                disable_var_01
-                ;;
-+       mac80211_hwsim)
-+               disable_staging
-+               disable_bt_usb_ethernet
-+               select_driver           CONFIG_MAC80211_HWSIM
-+               ;;
- # Ethernet and Bluetooth drivers
-        atl1)
-                enable_only_ethernet
--- 
-1.7.4.1
+than you
+
+Fabio Avanzolini
+
