@@ -1,90 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4.mundo-r.com ([212.51.32.151]:29200 "EHLO
-	smtp4.mundo-r.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753170Ab1KZCco (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:7167 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751788Ab1KMJEz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 21:32:44 -0500
-Message-ID: <4ED04D73.7010703@igalia.com> (sfid-20111126_033300_760119_77F52EE8)
-Date: Sat, 26 Nov 2011 03:22:43 +0100
-From: Carlos Alberto Lopez Perez <clopez@igalia.com>
+	Sun, 13 Nov 2011 04:04:55 -0500
+Message-ID: <4EBF8803.6020906@qca.qualcomm.com> (sfid-20111113_100530_433017_ACE13CDF)
+Date: Sun, 13 Nov 2011 11:04:03 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-CC: Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 3.1+ iwlwifi lockup
-References: <20111031143408.GA17152@redhat.com> <1320179254.31823.130.camel@wwguy-huron>
-In-Reply-To: <1320179254.31823.130.camel@wwguy-huron>
-Content-Type: multipart/signed; micalg=pgp-sha512;
- protocol="application/pgp-signature";
- boundary="------------enig6BA58511676EDF93F870BCDA"
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/3] ath6kl: Add support for WAPI configuration
+References: <1320313179-9259-1-git-send-email-jouni@qca.qualcomm.com>
+In-Reply-To: <1320313179-9259-1-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig6BA58511676EDF93F870BCDA
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On 11/03/2011 11:39 AM, Jouni Malinen wrote:
+> This set of patches extends ath6kl to allow station and AP mode WAPI
+> support to be enabled. Please note that these depend on earlier patches
+> that are not yet in wireless-testing.git:
+> 
+> ieee80211: Define cipher suite selector for WPI-SMS4
+> nl80211: Increase maximum NL80211_ATTR_KEY_SEQ length to 16
+> 
+> In addition, the three patches I sent yesterday for ath6kl should be
+> applied first:
+> 
+> ath6kl: Remove unused WMI crypto defines
+> ath6kl: Fix key configuration to copy at most seq_len from seq
+> ath6kl: Do not hide ath6kl_wmi_addkey_cmd() error values
 
-On 01/11/11 21:27, Guy, Wey-Yi wrote:
-> Any more information to help us understand how to re-produce the issue?=
+Thanks, all three applied.
 
-> without more data, it is really hard to root cause and fix it.
->=20
-> Thanks
-> Wey
-
-
-This bug (or a related one) triggers on my laptop (Dell Latitude E6420)
-since I switched from Kernel 3.0-debian to 3.1-debian (AMD64). I believe
-that the bugs happens after waking up from the suspension-to-RAM.
-
-Since I switched to 3.1 Kernel after waking up from suspension my laptop
-freezes very often and I need to hard reboot it, this is really
-annoying. This wasn't happening with 3.0 Kernel and I believe that
-iwlagn is the cause.
-
-I have an Intel Advanced-N 6205 (rev 34) wireless card.
-
-The other day I was able to get the following kernel errors after waking
-up from suspension with this 3.1 kernel[1]
-
-This 3.1 Kernel is the Debian precompiled one (linux-image-3.1.0-1-amd64)=
-
-
-$ uname -r
-3.1.0-1-amd64
-
-
-[1] Find here the dmesg part that comes after the wakeup from suspension:=
-
-
-http://people.igalia.com/clopez/iwlagn_dmesg_3.1.log.txt
-
-
---------------enig6BA58511676EDF93F870BCDA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iQIcBAEBCgAGBQJO0E1zAAoJEJZQic5rlfiCtUkP/2NFV+JWfaJUEiYK1a2c5XlU
-pkR3gk+LuZLz7ruOe6+wYDtGZ+bKkzbRAPtpr3dTGpkR1XrxGnzrTISux4vF633O
-h4tZZ+uMHyXzdUYuOIpYmwIPsBCnueMK/i2clv+3tA0Ew5MSwrqfVXdRB+eNIQ/K
-+r81WLXO/PXpa4QdqSXQf3wXuESxyUADGusKobFasASOdAkyK1BeDOPcL9c/WqB0
-/1Hi91eFf911j8qvOLqMnrxK/iCkwZLPeO/XR5d4k+q+AGDxB6G3V8LQWgKJ18WW
-smD75wits+V9ekmrq1tdywlTsDGO+kkmL0L4HTg2vlevFJt0Q8hQjp0WrWRgcBK8
-C37GfM2BpAPZH+epO3fqQsTa1JqqQpIG89mbKjU4LRuI6tCtTtHp2AD8Ht7sHgys
-nzFlDLYi9lCA+f8pUaznOf9VeoX+wchlFfXvPkbw1edEto5heMQ1VRzC+Z7Q1ugp
-C95xQ5F7tAyKk+b+9MTO9DEIGPgS43XN3drdIfbqlR4fs/F17e3MWhFUBT8iY706
-LTBJ2H4ndrLZfjuTNvJ3IiYYcFc5eeTjvEs8V6ExTQ1ORDnbOlIIteLYmgBOuh0L
-STwlY+MHcauCCyQFEvH/Za4ZvwIDgMD89FgAQimtc9lpXwhFPNcIlChahnbiHXqH
-nEOAFO6FImB691jK52QQ
-=yj11
------END PGP SIGNATURE-----
-
---------------enig6BA58511676EDF93F870BCDA--
+Kalle
