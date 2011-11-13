@@ -1,126 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:58758 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752159Ab1KSTtZ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8626 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751677Ab1KMJW2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Nov 2011 14:49:25 -0500
-Message-ID: <1321732145.2885.163.camel@deadeye> (sfid-20111119_204932_792234_BD2CF18A)
-Subject: Re: [17/26] b43: refuse to load unsupported firmware
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Greg KH <gregkh@suse.de>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	greg@kroah.com, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	roman-vl@meta.ua,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Date: Sat, 19 Nov 2011 19:49:05 +0000
-In-Reply-To: <20111119190559.GC30197@suse.de>
-References: <20111119000329.419617905@clark.kroah.org>
-	 <1321723330.2885.145.camel@deadeye> <20111119190559.GC30197@suse.de>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-ngTtci1XnwPyCQAxnVG6"
-Mime-Version: 1.0
+	Sun, 13 Nov 2011 04:22:28 -0500
+Message-ID: <4EBF8C47.2080907@qca.qualcomm.com> (sfid-20111113_102237_214064_1EBBCAB3)
+Date: Sun, 13 Nov 2011 11:22:15 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: Fix accessing wrong skb->data in ath6kl_tx_complete()
+References: <1320650417-11954-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1320650417-11954-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 11/07/2011 09:20 AM, Vasanthakumar Thiagarajan wrote:
+> When buffer alignmnet is applied, the data pointer of skb taken from
+> cookie will no longer point to the first byte of the actual data.
+> But the skb->data pointer is used in ath6kl_tx_complete() to get
+> the index of the virtual interface which will not give the correct
+> interface index and sometimes may give the following WARN_ON() message.
+> Use packet->buf instead of skb->data to fix this.
+> 
+> WARNING: at drivers/net/wireless/ath/ath6kl/wmi.c:88 ath6kl_get_vif_by_index+0x5b/0x60 [ath6kl]()
+> Hardware name: 2842K3U
+> Modules linked in: ath6kl mmc_block cfg80211 binfmt_misc ppdev nfs nfsd lockd nfs_acl auth_rpcgss sunrpc exportfs snd_hda_codec_hdmi snd_hda_codec_realtek snd_hda_intel
+> +snd_hda_codec snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm snd_seq_dummy thinkpad_acpi snd_seq_oss snd_seq_midi snd_rawmidi joydev fbcon tileblit font bitblit softcursor
+> +snd_seq_midi_event snd_seq snd_timer snd_seq_device i915 uvcvideo drm_kms_helper drm psmouse serio_raw snd i2c_algo_bit sdhci_pci videodev intel_agp soundcore intel_gtt jmb38x_ms
+> +memstick sdhci snd_page_alloc nvram lp parport agpgart video ahci r8169 mii libahci [last unloaded: ath6kl]
+> Pid: 15482, comm: kworker/u:1 Tainted: G        W   3.1.0-rc10-wl+ #2
+> Call Trace:
+>  [<c0144d72>] warn_slowpath_common+0x72/0xa0
+>  [<fb7c94fb>] ? ath6kl_get_vif_by_index+0x5b/0x60 [ath6kl]
+>  [<fb7c94fb>] ? ath6kl_get_vif_by_index+0x5b/0x60 [ath6kl]
+>  [<c0144dc2>] warn_slowpath_null+0x22/0x30
+>  [<fb7c94fb>] ath6kl_get_vif_by_index+0x5b/0x60 [ath6kl]
+>  [<fb7c7028>] ath6kl_tx_complete+0x128/0x4d0 [ath6kl]
+>  [<c04df920>] ? mmc_request_done+0x80/0x80
+>  [<fb7b9e2e>] htc_tx_complete+0x5e/0x70 [ath6kl]
+>  [<c05e4cf6>] ? _raw_spin_unlock_bh+0x16/0x20
+>  [<fb7ce588>] ? ath6kl_sdio_scatter_req_add+0x48/0x60 [ath6kl]
+>  [<fb7b9f42>] htc_async_tx_scat_complete+0xb2/0x120 [ath6kl]
+>  [<fb7ce9e7>] ath6kl_sdio_scat_rw+0x87/0x370 [ath6kl]
+>  [<c0101e12>] ? __switch_to+0xd2/0x190
+>  [<c01397b5>] ? finish_task_switch+0x45/0xd0
+>  [<c05e272e>] ? __schedule+0x3ae/0x8b0
+>  [<fb7cf00a>] ath6kl_sdio_write_async_work+0x4a/0xf0 [ath6kl]
+>  [<c015d266>] process_one_work+0x116/0x3c0
+>  [<fb7cefc0>] ? ath6kl_sdio_read_write_sync+0xb0/0xb0 [ath6kl]
+>  [<c015f5b0>] worker_thread+0x140/0x3b0
+>  [<c015f470>] ? manage_workers+0x1f0/0x1f0
+>  [<c0163424>] kthread+0x74/0x80
+>  [<c01633b0>] ? kthread_worker_fn+0x160/0x160
+>  [<c05ebdc6>] kernel_thread_helper+0x6/0x10
+> 
+> Reported-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
---=-ngTtci1XnwPyCQAxnVG6
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Thanks, applied.
 
-On Sat, 2011-11-19 at 11:05 -0800, Greg KH wrote:
-> On Sat, Nov 19, 2011 at 05:22:10PM +0000, Ben Hutchings wrote:
-> > On Fri, 2011-11-18 at 16:02 -0800, Greg KH wrote:
-> > > 3.1-stable review patch.  If anyone has any objections, please let me=
- know.
-> > >=20
-> > > ------------------
-> > >=20
-> > > [This patch is supposed to be applied in 3.1 (and maybe older) branch=
-es only.]
-> > >=20
-> > > New kernels support newer firmware that users may try to incorrectly =
-use
-> > > with older kernels. Display error and explain the problem in such a c=
-ase
-> > >=20
-> > > Signed-off-by: Rafa=C3=85=C2=82 Mi=C3=85=C2=82ecki <zajec5@gmail.com>
-> > > Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-> > >=20
-> > > ---
-> > >  drivers/net/wireless/b43/main.c |    7 +++++++
-> > >  1 file changed, 7 insertions(+)
-> > >=20
-> > > --- a/drivers/net/wireless/b43/main.c
-> > > +++ b/drivers/net/wireless/b43/main.c
-> > > @@ -2508,6 +2508,13 @@ static int b43_upload_microcode(struct b
-> > >  		b43_print_fw_helptext(dev->wl, 1);
-> > >  		err =3D -EOPNOTSUPP;
-> > >  		goto error;
-> > > +	} else if (fwrev >=3D 598) {
-> > > +		b43err(dev->wl, "YOUR FIRMWARE IS TOO NEW. Support for "
-> > > +		       "firmware 598 and up requires kernel 3.2 or newer. You "
-> > > +		       "have to install older firmware or upgrade kernel.\n");
-> > > +		b43_print_fw_helptext(dev->wl, 1);
-> > > +		err =3D -EOPNOTSUPP;
-> > > +		goto error;
-> > [...]
-> >=20
-> > Again, I strongly object to this way of handling the incompatibility.
-> > The revision check is fine, but the solution must be to assign a
-> > different filename for the newer revisions.  The changes to 3.0/3.1
-> > should be deferred until this is resolved.
->=20
-> You can object, however the driver author and maintainer wants it done
-> this way for now, so that's a valid solution that I have to accept.  It
-> solves real bugs that people have already hit when running the 3.0 and
-> 3.1 kernels.
-
-The revision check fixes a bug, yes.  What I'm concerned about is the
-cop-out error message: 'We didn't deal with versioning properly, so you
-get to solve the problem.'  It should be possible to reboot between
-multiple installed kernel versions without modifying files.
-
-> Propagating a userspace tool change for those systems
-> would be much harder, if not impossible, don't you think? It would also
-> require a much more intrusive change to the driver infrastructure to
-> handle such a proposed change.
-
-It is the new kernel version and firmware files that should be changed,
-not the old ones.
-
-There is another option which is to use the /lib/firmware/<kernel-ver>
-directories to separate incompatible firmware versions.  That is not
-nearly as good as using a API/ABI number in the filename, but it would
-work and the error message could suggest it.
-
-Ben.
-
---=20
-Ben Hutchings
-The world is coming to an end.	Please log off.
-
---=-ngTtci1XnwPyCQAxnVG6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIVAwUATsgIMee/yOyVhhEJAQp6uA//dQfTB+UIad1X9f5L6revzcYaZQZ+ahrP
-U0XobRanGvioeghnwMcDv8qQUaW6xjGuUmCjpySAjdwsjY00+2KDfAfTy+nMwuHl
-r4KY4KmD6iV77fyPsHDrCzcgCpY32tkVion+DM0JYUHljBxlHUNoTxvgtZqjXgW/
-JOBHojTJTXBtF9Y3ffner91wBgz3CIvdt8KSacxahVrhcDqh3db2c/R2Uupsngpe
-UDZVI4Sqh9pcCO/0fJl+fMO+2BEYxCzPfTQtJ+x4Sp/OaWSWy5sRIDit/kAQcjyf
-4eAb+DQWZGykacPmlUqgiU5ZKRFEZwk+gdydWQmKHkoki7BgiPiuZn3FYMj6H6gM
-Q2M6Ek/Dd0EbhocBRozZM43n89DCVvLH04fxcc8qG/CbSqIJ3DVkW0GspHkrAlCU
-O0dxy4QLEoYYUeFu01j+n8TtuEEgO0mP4Q3MKhTqB32I/hteEpNwi/hsfiijlsYP
-aejCRYnx8304UiSnQKybJvdh21/642kYY3m2/y/6cojQOhVFX8BgAA0F6Zhxj4co
-Z8ZQwE1YLqnMY5XETUFFYYfQy+F1+H56sjpNc8DImUI6RcTdaFI+vFYEzSClEKxv
-egzrHzcyH6uU9c0aTsBPiZvfG8xRL+hgl6js+rZdI0RaXkBhO4Pj9wUnIr21HcBf
-4RoHoYA8pNo=
-=nIhd
------END PGP SIGNATURE-----
-
---=-ngTtci1XnwPyCQAxnVG6--
+Kalle
