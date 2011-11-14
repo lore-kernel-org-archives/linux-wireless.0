@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:38589 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753024Ab1K3KSS (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:63724 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751632Ab1KNPIs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 05:18:18 -0500
-Message-ID: <1322648286.6774.0.camel@phoenix> (sfid-20111130_111823_178117_D7BD6748)
-Subject: [PATCH] NFC: pn533: Staticise pn533_data_exchange()
-From: Axel Lin <axel.lin@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 30 Nov 2011 18:18:06 +0800
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 14 Nov 2011 10:08:48 -0500
+Received: by yenr9 with SMTP id r9so5227564yen.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2011 07:08:47 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4EBEA616.2020002@01019freenet.de>
+References: <4EBEA616.2020002@01019freenet.de>
+Date: Mon, 14 Nov 2011 16:08:47 +0100
+Message-ID: <CAGXE3d8X8N9VVLZCmyyGrwVhD-3BQJKcnY=nWmE+0h68dnWMBg@mail.gmail.com> (sfid-20111114_160851_422242_B096C5AC)
+Subject: Re: Try to narrow down the problem with rt2800usb and rt3572 based
+ USB WLAN devices
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: users@rt2x00.serialmonkey.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is not used outside this driver so no need to make the symbol global.
+On Sat, Nov 12, 2011 at 6:00 PM, Andreas Hartmann
+<andihartmann@01019freenet.de> wrote:
+> Could anybody please try to explain this behavior, or even better, fix
+> it (it looks really broken to me)?
 
-Signed-off-by: Axel Lin <axel.lin@gmail.com>
----
- drivers/nfc/pn533.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+AFAIK it is possible to aggregate  multiple frames into one URB
+for rt2800 USB devices. However, rt2800usb doesn't make use
+of this yet while the legacy driver does. However, I don't think that
+this is the cause for the poor performance you see ...
 
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index bd02384..ea10f54 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -1339,7 +1339,7 @@ error:
- 	return 0;
- }
- 
--int pn533_data_exchange(struct nfc_dev *nfc_dev, u32 target_idx,
-+static int pn533_data_exchange(struct nfc_dev *nfc_dev, u32 target_idx,
- 						struct sk_buff *skb,
- 						data_exchange_cb_t cb,
- 						void *cb_context)
--- 
-1.7.5.4
-
-
-
+Helmut
