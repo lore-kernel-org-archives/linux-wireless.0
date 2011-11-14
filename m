@@ -1,59 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:33934 "HELO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750957Ab1KHFld (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54532 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751123Ab1KNQ5J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 00:41:33 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/7] mwifiex: fix ht_cap_info in ibss beacons
-Date: Mon,  7 Nov 2011 21:41:06 -0800
-Message-Id: <1320730872-25619-2-git-send-email-bzhao@marvell.com> (sfid-20111108_064135_513219_B65E4E79)
-In-Reply-To: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
-References: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
+	Mon, 14 Nov 2011 11:57:09 -0500
+Subject: [PATCH 1/2] compat-wireless: disable SKB TX status stamping in
+ mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 14 Nov 2011 17:14:49 +0100
+Message-ID: <1321287289.10264.16.camel@jlt3.sipsolutions.net> (sfid-20111114_175713_926907_64425DAA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-A local variable is used to calculate ht_cap_info.
-Erroneously ht_cap.cap_info isn't updated in the ibss beacons
-after the calculation. This patch fixes it.
-
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mwifiex/join.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index 62b4c29..062716c 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -922,15 +922,15 @@ mwifiex_cmd_802_11_ad_hoc_start(struct mwifiex_private *priv,
- 				cpu_to_le16(WLAN_EID_HT_CAPABILITY);
- 			ht_cap->header.len =
- 			       cpu_to_le16(sizeof(struct ieee80211_ht_cap));
--			ht_cap_info = le16_to_cpu(ht_cap->ht_cap.cap_info);
- 
--			ht_cap_info |= IEEE80211_HT_CAP_SGI_20;
-+			ht_cap_info = IEEE80211_HT_CAP_SGI_20;
- 			if (adapter->chan_offset) {
- 				ht_cap_info |= IEEE80211_HT_CAP_SGI_40;
- 				ht_cap_info |= IEEE80211_HT_CAP_DSSSCCK40;
- 				ht_cap_info |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
- 				SETHT_MCS32(ht_cap->ht_cap.mcs.rx_mask);
- 			}
-+			ht_cap->ht_cap.cap_info = cpu_to_le16(ht_cap_info);
- 
- 			ht_cap->ht_cap.ampdu_params_info
- 					= IEEE80211_HT_MAX_AMPDU_64K;
--- 
-1.7.0.2
+diff --git a/patches/12-mac80211-disable-tx-status.patch b/patches/12-mac80211-disable-tx-status.patch
+new file mode 100644
+index 0000000..522cb8c
+--- /dev/null
++++ b/patches/12-mac80211-disable-tx-status.patch
+@@ -0,0 +1,24 @@
++We can't possibly backport the wifi TX status since
++skb_shinfo()->tx_flags used to be a union and there
++is no way to make the & work properly in that case.
++So we need to just ifdef this part out.
++
++
++--- a/net/mac80211/tx.c	2011-11-14 16:46:04.000000000 +0100
+++++ b/net/mac80211/tx.c	2011-11-14 17:04:09.000000000 +0100
++@@ -1915,6 +1915,7 @@ netdev_tx_t ieee80211_subif_start_xmit(s
++ 		goto fail;
++ 	}
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,3,0))
++ 	if (unlikely(!multicast && skb->sk &&
++ 		     skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS)) {
++ 		struct sk_buff *orig_skb = skb;
++@@ -1953,6 +1954,7 @@ netdev_tx_t ieee80211_subif_start_xmit(s
++ 			skb = orig_skb;
++ 		}
++ 	}
+++#endif
++ 
++ 	/*
++ 	 * If the skb is shared we need to obtain our own copy.
+
 
