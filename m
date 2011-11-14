@@ -1,36 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58303 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752503Ab1KRBA2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 20:00:28 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 0/5] update for 3.3
-Date: Thu, 17 Nov 2011 16:05:08 -0800
-Message-Id: <1321574713-12076-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111118_020033_230547_436049EC)
+Received: from he.sipsolutions.net ([78.46.109.217]:54747 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754216Ab1KNPh5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Nov 2011 10:37:57 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.77)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1RPybc-0000uq-9I
+	for linux-wireless@vger.kernel.org; Mon, 14 Nov 2011 16:37:56 +0100
+Subject: Re: off- & multi-channel operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1320844134.3845.61.camel@jlt3.sipsolutions.net> (sfid-20111109_140902_212963_943EDBDE)
+References: <1320844134.3845.61.camel@jlt3.sipsolutions.net>
+	 (sfid-20111109_140902_212963_943EDBDE)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 14 Nov 2011 16:37:21 +0100
+Message-ID: <1321285041.10264.14.camel@jlt3.sipsolutions.net> (sfid-20111114_163801_419252_45F674FB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We adding few debug hooks and hope to catch more information when
-encounter problems
+Another thought that crossed my mind is how to handle off-channel TDLS.
+I'm sure it'll become a requirement fairly soon, and I think we'll want
+to design it into the stack.
 
-Emmanuel Grumbach (4):
-  iwlwifi: check the HW when a queue is stuck
-  iwlwifi: improve the prints in the reclaim path
-  iwlwifi: fix endianity issues in debug prints
-  iwlwifi: tid_data is taken twice in iwl_trans_pcie_tx_agg_alloc
+I wish I could gather a few people into a room and sit there for a few
+days brainstorming how it should look like (and how to implement
+backward compatibility!) .... :-)
 
-Wey-Yi Guy (1):
-  iwlwifi: remove redundancy
+Anyway so my thought about off-channel TDLS was -- should we maybe
+assign a channel to each station? Obviously each station associated to
+an AP would have the same channel. That might make channel switching
+(CSA) a little interesting, but hey ...
 
-these patches are also available from wireless-next branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+In our device we'll probably not handle it this way, but it seems like
+the best abstraction?
 
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |    7 +++----
- drivers/net/wireless/iwlwifi/iwl-io.c             |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    5 +++++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |    4 ----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |   12 ++++++++----
- 5 files changed, 17 insertions(+), 13 deletions(-)
+Also I think we should probably have some explicit channel handling. I'm
+not thinking about scanning/off-channel operations but about actual use
+of the channel. There could be some weight requests for the different
+channels depending on airtime needs, but ultimately the driver will
+probably have to make the timing decisions and will communicate that up
+to make negotiation between devices possible for this. NoA might be
+handled in the driver right now, but I think TDLS negotiation for
+channels would not be, and there you need timings...
+
+johannes
+
 
