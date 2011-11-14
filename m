@@ -1,86 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:51995 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755163Ab1KRKFt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 05:05:49 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] ath6kl: Enable multiple vif support
-Date: Fri, 18 Nov 2011 10:05:28 +0530
-Message-ID: <1321590928-11646-3-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111118_110553_729027_58CCE779)
-In-Reply-To: <1321590928-11646-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1321590928-11646-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from ms16-1.1blu.de ([89.202.0.34]:59784 "EHLO ms16-1.1blu.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753504Ab1KNVUx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Nov 2011 16:20:53 -0500
+Date: Mon, 14 Nov 2011 22:18:47 +0100
+From: Lars Schotte <gusto@guttok.net>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlagn 3.0.9 aggreggation messages
+Message-ID: <20111114221847.2ca32e6a@hana.gusto> (sfid-20111114_222055_921959_AF01E22A)
+In-Reply-To: <1321303101.1796.8.camel@wwguy-ubuntu>
+References: <20111114131642.31e8ddbd@hana.gusto>
+	<1321283410.13578.33.camel@wwguy-ubuntu>
+	<20111114201947.58d5fdf6@hana.gusto>
+	<1321303101.1796.8.camel@wwguy-ubuntu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The maximum number of supported virtual interfaces are 3.
+of course he deactivates the aggregation soon after, because the AP
+sees no reason why there should be one.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.h |    2 +-
- drivers/net/wireless/ath/ath6kl/init.c |   18 +++---------------
- 2 files changed, 4 insertions(+), 16 deletions(-)
+triggering the aggreggation is that problem and it exists only since
+3.0.9. 3.0.8 is OK, but 3.1.1 seems to be affected as well. 3.1.0 was
+OK.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index b185564..75b9d0e 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -404,7 +404,7 @@ enum ath6kl_hif_type {
-  * Driver's maximum limit, note that some firmwares support only one vif
-  * and the runtime (current) limit must be checked from ar->vif_max.
-  */
--#define ATH6KL_VIF_MAX	1
-+#define ATH6KL_VIF_MAX	3
- 
- /* vif flags info */
- enum ath6kl_vif_state {
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 48544ed..bf159da 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -414,11 +414,7 @@ static int ath6kl_target_config_wlan_params(struct ath6kl *ar, int idx)
- 			status = -EIO;
- 		}
- 
--	/*
--	 * FIXME: Make sure p2p configurations are not applied to
--	 * non-p2p capable interfaces when multivif support is enabled.
--	 */
--	if (ar->p2p) {
-+	if (ar->p2p && (ar->vif_max == 1 || idx)) {
- 		ret = ath6kl_wmi_info_req_cmd(ar->wmi, idx,
- 					      P2P_FLAG_CAPABILITIES_REQ |
- 					      P2P_FLAG_MACADDR_REQ |
-@@ -431,11 +427,7 @@ static int ath6kl_target_config_wlan_params(struct ath6kl *ar, int idx)
- 		}
- 	}
- 
--	/*
--	 * FIXME: Make sure p2p configurations are not applied to
--	 * non-p2p capable interfaces when multivif support is enabled.
--	 */
--	if (ar->p2p) {
-+	if (ar->p2p && (ar->vif_max == 1 || idx)) {
- 		/* Enable Probe Request reporting for P2P */
- 		ret = ath6kl_wmi_probe_report_req_cmd(ar->wmi, idx, true);
- 		if (ret) {
-@@ -481,11 +473,7 @@ int ath6kl_configure_target(struct ath6kl *ar)
- 		fw_submode |= HI_OPTION_FW_SUBMODE_P2PDEV <<
- 			      (i * HI_OPTION_FW_SUBMODE_BITS);
- 
--	/*
--	 * FIXME: This needs to be removed once the multivif
--	 * support is enabled.
--	 */
--	if (ar->p2p)
-+	if (ar->p2p && ar->vif_max == 1)
- 		fw_submode = HI_OPTION_FW_SUBMODE_P2PDEV;
- 
- 	param = HTC_PROTOCOL_VERSION;
+so someting broke it recently.
+
+unfortunately i can not remember if 3.2 kernel had that problem, i
+already removed it because it was too unstable for me, so i can not
+test it any more (w/o compiling it again).
+
+On Mon, 14 Nov 2011 12:38:21 -0800
+wwguy <wey-yi.w.guy@intel.com> wrote:
+
+> Hi Schotte,
+> 
+> looks like driver has problem activate the aggregation, you can see in
+> the log, the aggregation queue being activate then deactivate soon
+> after. that is why you are seeing the messages showing up in dmesg
+> log.
+> 
+> what AP you are using? is similar thing happen if you connect to
+> different AP?
+> 
+> Thanks
+> Wey
+
+
 -- 
-1.7.0.4
-
+Lars Schotte
+@ Hana (F16)
