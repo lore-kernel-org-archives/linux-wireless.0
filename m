@@ -1,125 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13624 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154Ab1K3FNw (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:46434 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754216Ab1KNOoz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 00:13:52 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Russell Hu <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Wilson Tsao <wtsao@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 14/17] ath9k_hw: Add support for MCI WLAN calibration
-Date: Wed, 30 Nov 2011 10:41:26 +0530
-Message-ID: <1322629889-19961-15-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_061355_964994_6673A7A4)
-In-Reply-To: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
+	Mon, 14 Nov 2011 09:44:55 -0500
+Received: by mail-vx0-f174.google.com with SMTP id gb30so525137vcb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2011 06:44:54 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1321121444-31528-1-git-send-email-gwingerde@gmail.com>
+References: <1321121444-31528-1-git-send-email-gwingerde@gmail.com>
+Date: Mon, 14 Nov 2011 15:44:54 +0100
+Message-ID: <CAOZOX0UUE5J9q7cv8161fi-SMDU+trws3wXeKrhgHVZU1k4LZQ@mail.gmail.com> (sfid-20111114_154458_428280_B60FE2D5)
+Subject: Re: [rt2x00-users] [PATCH] rt2x00: Add USB device ID of Buffalo WLI-UC-GNHP.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Sat, Nov 12, 2011 at 7:10 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> This is reported to be an RT3070 based device.
+>
+> Reported-by: Teika Kazura <teika@lavabit.com>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-WLAN communicates with BT for its calibration by sending WLAN_CAL_REQ,
-waits for BT_CAL_GRANT. This is done with the help of GPM messages.
-also WLAN_CAL_DONE messages is sent once WLAN calibration is done.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   43 +++++++++++++++++++++++++
- 1 files changed, 43 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 12a730d..f7bc05c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -18,6 +18,7 @@
- #include "hw-ops.h"
- #include "ar9003_phy.h"
- #include "ar9003_rtt.h"
-+#include "ar9003_mci.h"
- 
- #define MAX_MEASUREMENT	MAX_IQCAL_MEASUREMENT
- #define MAX_MAG_DELTA	11
-@@ -934,10 +935,12 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_hw_cal_data *caldata = ah->caldata;
-+	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
- 	bool txiqcal_done = false, txclcal_done = false;
- 	bool is_reusable = true, status = true;
- 	bool run_rtt_cal = false, run_agc_cal;
- 	bool rtt = !!(ah->caps.hw_caps & ATH9K_HW_CAP_RTT);
-+	bool mci = !!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
- 	u32 agc_ctrl = 0, agc_supp_cals = AR_PHY_AGC_CONTROL_OFFSET_CAL |
- 					  AR_PHY_AGC_CONTROL_FLTR_CAL   |
- 					  AR_PHY_AGC_CONTROL_PKDET_CAL;
-@@ -1005,6 +1008,31 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	} else if (caldata && !caldata->done_txiqcal_once)
- 		run_agc_cal = true;
- 
-+	if (mci && IS_CHAN_2GHZ(chan) &&
-+	    (mci_hw->bt_state  == MCI_BT_AWAKE) &&
-+	    run_agc_cal &&
-+	    !(mci_hw->config & ATH_MCI_CONFIG_DISABLE_MCI_CAL)) {
-+
-+		u32 pld[4] = {0, 0, 0, 0};
-+
-+		/* send CAL_REQ only when BT is AWAKE. */
-+		ath_dbg(common, ATH_DBG_MCI, "MCI send WLAN_CAL_REQ 0x%x\n",
-+			mci_hw->wlan_cal_seq);
-+		MCI_GPM_SET_CAL_TYPE(pld, MCI_GPM_WLAN_CAL_REQ);
-+		pld[MCI_GPM_WLAN_CAL_W_SEQUENCE] = mci_hw->wlan_cal_seq++;
-+		ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
-+
-+		/* Wait BT_CAL_GRANT for 50ms */
-+		ath_dbg(common, ATH_DBG_MCI, "MCI wait for BT_CAL_GRANT");
-+
-+		if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_GRANT, 0, 50000))
-+			ath_dbg(common, ATH_DBG_MCI, "MCI got BT_CAL_GRANT");
-+		else {
-+			is_reusable = false;
-+			ath_dbg(common, ATH_DBG_MCI, "\nMCI BT is not responding");
-+		}
-+	}
-+
- 	txiqcal_done = ar9003_hw_tx_iq_cal_run(ah);
- 	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
- 	udelay(5);
-@@ -1022,6 +1050,21 @@ skip_tx_iqcal:
- 				       AR_PHY_AGC_CONTROL_CAL,
- 				       0, AH_WAIT_TIMEOUT);
- 	}
-+
-+	if (mci && IS_CHAN_2GHZ(chan) &&
-+	    (mci_hw->bt_state  == MCI_BT_AWAKE)	&&
-+	    run_agc_cal	&&
-+	    !(mci_hw->config & ATH_MCI_CONFIG_DISABLE_MCI_CAL)) {
-+
-+		u32 pld[4] = {0, 0, 0, 0};
-+
-+		ath_dbg(common, ATH_DBG_MCI, "MCI Send WLAN_CAL_DONE 0x%x\n",
-+			mci_hw->wlan_cal_done);
-+		MCI_GPM_SET_CAL_TYPE(pld, MCI_GPM_WLAN_CAL_DONE);
-+		pld[MCI_GPM_WLAN_CAL_W_SEQUENCE] = mci_hw->wlan_cal_done++;
-+		ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
-+	}
-+
- 	if (rtt && !run_rtt_cal) {
- 		agc_ctrl |= agc_supp_cals;
- 		REG_WRITE(ah, AR_PHY_AGC_CONTROL, agc_ctrl);
--- 
-1.7.0.4
-
+> ---
+>  drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index f156579..3778763 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -919,6 +919,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>        { USB_DEVICE(0x050d, 0x935b) },
+>        /* Buffalo */
+>        { USB_DEVICE(0x0411, 0x00e8) },
+> +       { USB_DEVICE(0x0411, 0x0158) },
+>        { USB_DEVICE(0x0411, 0x016f) },
+>        { USB_DEVICE(0x0411, 0x01a2) },
+>        /* Corega */
+> --
+> 1.7.7
+>
+>
+> _______________________________________________
+> users mailing list
+> users@rt2x00.serialmonkey.com
+> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
+>
