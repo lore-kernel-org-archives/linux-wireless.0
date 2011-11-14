@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:43898 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754484Ab1KXPkn (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35703 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752723Ab1KNJI2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 10:40:43 -0500
-Received: by iage36 with SMTP id e36so3140491iag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2011 07:40:42 -0800 (PST)
-Message-ID: <4ECE6570.1030706@lwfinger.net> (sfid-20111124_164047_272970_B3A334F4)
-Date: Thu, 24 Nov 2011 09:40:32 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?SmFuIER2b8WZw6Fr?= <dvorakj@cngroup.dk>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rtl8192cu not working with Edimax EW-7811Un
-References: <20111122113427.3d332b00776546d5ebac11de@cngroup.dk> <20111122140139.GA3891@redhat.com> <20111123112301.f5e523ff743f86dae539fdf3@cngroup.dk> <20111123143304.GA13460@redhat.com> <20111123162426.9a30d25585fa54507c1c864e@cngroup.dk> <4ECD13D0.6010500@lwfinger.net> <20111123155108.GD13460@redhat.com> <20111123175210.fd0ac6b0b66885b3deaecfc0@cngroup.dk> <4ECD3E5E.6010109@lwfinger.net> <20111124140350.06e9644056a9b4993bc093cb@cngroup.dk>
-In-Reply-To: <20111124140350.06e9644056a9b4993bc093cb@cngroup.dk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 14 Nov 2011 04:08:28 -0500
+Subject: Re: [PATCH] iw : V2 fix compilation against libnl-3.x
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gilles Espinasse <g.esp@free.fr>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1321052678-23396-1-git-send-email-g.esp@free.fr>
+References: <1321052678-23396-1-git-send-email-g.esp@free.fr>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 14 Nov 2011 10:08:25 +0100
+Message-ID: <1321261705.4472.38.camel@jlt3.sipsolutions.net> (sfid-20111114_100832_980593_C66B1F4E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/24/2011 07:03 AM, Jan Dvořák wrote:
-> On Wed, 23 Nov 2011 12:41:34 -0600
-> Larry Finger<Larry.Finger@lwfinger.net>  wrote:
->>>>> I can't still use hostapd, however.
->>>> Hmm, I'm not sure if rtl92c works in AP mode, Larry?
->>
->> When I try it, I get rtl8192cu to beacon, and it is possible to authenticate and
->> associate, but the second computer never gets an IP number.
->
-> Even without DHCP, no traffic ever comes through. Plus from here it looks like
-> the client is reconnecting (quickly, let's say once per 5s) to no end.
->
-> So, how do I debug this properly? Can I turn on some kind of verbose mode?
-> Is there a way to sniff the communication (kismet or something)?
+On Sat, 2011-11-12 at 00:04 +0100, Gilles Espinasse wrote:
+> Add configuration to compile against 3.1 and 3.2 without breaking 3.0
+> That's a bit of mess with version on .pc file and the part which belong or not to the shared lib name.
+> 
+> libnl-genl-3.1 is broken and can't be used
+> 
+> Starting from 3.2.0, I could have used libnl-genl-3.0.pc file like in patch V1 and not hardcode adding libnl-genl-3 into LIBS
+> I consider this a matter of tast for now, coded like previous versions that can't use that way to code.
+> 
+> Added an echo to display against which libnl version iw is compiled.
+> That particulary help me to test with various versions because of the mess on .pc file version as libnl>=3.2.0 has again pc file version with 3.0 number.
+> 
+> Removed the version_check part instead of extending blindly for the new versions.
+> That was mostly dead code because prior check on NLLIBNAME not empty already care.
+> The only case where that could matter would be using something stupid like
+> NLLIBNAME=foo make
+> 
+> Compilation tested to work against
+> - libnl-2.0
+> - libnl-3.0
+> - libnl-3.1
+> - libnl-3.2.0
+> - libnl-3.2.2
+> 
+> Tested to fail without a libnl .pc file
 
-You could look at what the device is putting on the air with kismet or 
-wireshark. Another option would be to see the flow through the driver by loading 
-the driver with the debug option. The maximum debug level of 5 is likely too 
-much output, but using 4 should be OK. You need a recent kernel to use this 
-option. I'm not sure if it is in 3.1 or not. Use 'modinfo rtl8192cu' to see the 
-module parameter list.
+Great, thanks!
 
-Larry
+Applied,
+
+> +all: $(ALL)
+> +	@echo "Compilation against $(NLVERSION)"
+
+but I removed the echo here.
+
+johannes
 
