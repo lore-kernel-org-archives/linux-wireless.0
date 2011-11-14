@@ -1,287 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:33018 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752140Ab1KYBPn (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:59674 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753370Ab1KNO2c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 20:15:43 -0500
-Received: by mail-iy0-f174.google.com with SMTP id e36so3749758iag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2011 17:15:43 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
+	Mon, 14 Nov 2011 09:28:32 -0500
+Received: by fagn18 with SMTP id n18so3049954fag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2011 06:28:31 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v2 6/7] mac80211: don't initiate path discovery when forwarding frame with unknown DA
-Date: Thu, 24 Nov 2011 17:15:25 -0800
-Message-Id: <1322183726-12436-7-git-send-email-thomas@cozybit.com> (sfid-20111125_021547_312697_812C5CAB)
-In-Reply-To: <1322183726-12436-1-git-send-email-thomas@cozybit.com>
-References: <1322183726-12436-1-git-send-email-thomas@cozybit.com>
+Cc: linville@tuxdriver.com, nbd@openwrt.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 3/3] mac80211: Get rid of search loop for rate group index
+Date: Mon, 14 Nov 2011 15:28:20 +0100
+Message-Id: <1321280900-24006-3-git-send-email-helmut.schaa@googlemail.com> (sfid-20111114_152835_280978_174F4F69)
+In-Reply-To: <1321280900-24006-2-git-send-email-helmut.schaa@googlemail.com>
+References: <1321280900-24006-1-git-send-email-helmut.schaa@googlemail.com>
+ <1321280900-24006-2-git-send-email-helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We used to initiate a path discovery when receiving a frame for which
-there is no forwarding information. To cut down on PREQ spam, just send
-a (gated) PERR in response.
+Finding the group index for a specific rate is done by looping through
+all groups and returning if the correct one is found. This code is
+called for each tx'ed frame and thus it makes sense to reduce its
+runtime.
 
-Also separate path discovery logic from nexthop querying. This patch
-means we no longer queue frames when forwarding, so kill the PERR TX
-stuff in discard_frame().
+Do this by calculating the group index by this formula based on the SGI
+and HT40 flags as well as the stream number:
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+idx = (HT40 * 2 * MINSTREL_MAX_STREAMS) +
+      (SGI * MINSTREL_MAX_STREAMS) +
+      (streams - 1)
+
+Hence, the groups are ordered by th HT40 flag first, then by the SGI
+flag and afterwards by the number of used streams.
+
+This should reduce the runtime of minstrel_ht_get_group_idx
+considerable.
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- net/mac80211/mesh.h         |    2 +
- net/mac80211/mesh_hwmp.c    |  111 ++++++++++++++++++++++++++-----------------
- net/mac80211/mesh_pathtbl.c |   27 ----------
- net/mac80211/rx.c           |   14 +++--
- net/mac80211/tx.c           |    2 +-
- 5 files changed, 79 insertions(+), 77 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c |   32 ++++++++++++++++----------------
+ 1 files changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 622cc96..bd14bd2 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -233,6 +233,8 @@ void ieee80211_mesh_root_setup(struct ieee80211_if_mesh *ifmsh);
- /* Mesh paths */
- int mesh_nexthop_lookup(struct sk_buff *skb,
- 		struct ieee80211_sub_if_data *sdata);
-+int mesh_nexthop_resolve(struct sk_buff *skb,
-+			 struct ieee80211_sub_if_data *sdata);
- void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata);
- struct mesh_path *mesh_path_lookup(u8 *dst,
- 		struct ieee80211_sub_if_data *sdata);
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index fe93386..73abb75 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -982,72 +982,97 @@ enddiscovery:
- 	kfree(preq_node);
- }
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 3d76fd7..bb228e7 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -36,8 +36,17 @@
+ /* Transmit duration for the raw data part of an average sized packet */
+ #define MCS_DURATION(streams, sgi, bps) MCS_SYMBOL_TIME(sgi, MCS_NSYMS((streams) * (bps)))
  
--/**
-- * mesh_nexthop_lookup - put the appropriate next hop on a mesh frame
-+/* mesh_nexthop_resolve - lookup next hop for given skb and start path
-+ * discovery if no forwarding information is found.
-  *
-  * @skb: 802.11 frame to be sent
-  * @sdata: network subif the frame will be sent through
-  *
-- * Returns: 0 if the next hop was found. Nonzero otherwise. If no next hop is
-- * found, the function will start a path discovery and queue the frame so it is
-- * sent when the path is resolved. This means the caller must not free the skb
-- * in this case.
-+ * Returns: 0 if the next hop was found and -ENOENT if the frame was queued.
-+ * skb is freeed here if no mpath could be allocated.
-  */
--int mesh_nexthop_lookup(struct sk_buff *skb,
--			struct ieee80211_sub_if_data *sdata)
-+int mesh_nexthop_resolve(struct sk_buff *skb,
-+			 struct ieee80211_sub_if_data *sdata)
- {
--	struct sk_buff *skb_to_free = NULL;
--	struct mesh_path *mpath;
--	struct sta_info *next_hop;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct mesh_path *mpath;
-+	struct sk_buff *skb_to_free = NULL;
- 	u8 *target_addr = hdr->addr3;
- 	int err = 0;
- 
- 	rcu_read_lock();
--	mpath = mesh_path_lookup(target_addr, sdata);
-+	err = mesh_nexthop_lookup(skb, sdata);
-+	if (!err)
-+		goto endlookup;
- 
-+	/* no nexthop found, start resolving */
-+	mpath = mesh_path_lookup(target_addr, sdata);
- 	if (!mpath) {
- 		mesh_path_add(target_addr, sdata);
- 		mpath = mesh_path_lookup(target_addr, sdata);
- 		if (!mpath) {
--			sdata->u.mesh.mshstats.dropped_frames_no_route++;
-+			mesh_path_discard_frame(skb, sdata);
- 			err = -ENOSPC;
- 			goto endlookup;
- 		}
- 	}
- 
--	if (mpath->flags & MESH_PATH_ACTIVE) {
--		if (time_after(jiffies,
--			       mpath->exp_time -
--			       msecs_to_jiffies(sdata->u.mesh.mshcfg.path_refresh_time)) &&
--		    !memcmp(sdata->vif.addr, hdr->addr4, ETH_ALEN) &&
--		    !(mpath->flags & MESH_PATH_RESOLVING) &&
--		    !(mpath->flags & MESH_PATH_FIXED)) {
--			mesh_queue_preq(mpath,
--					PREQ_Q_F_START | PREQ_Q_F_REFRESH);
--		}
--		next_hop = rcu_dereference(mpath->next_hop);
--		if (next_hop) {
--			memcpy(hdr->addr1, next_hop->sta.addr, ETH_ALEN);
--			memcpy(hdr->addr2, sdata->vif.addr, ETH_ALEN);
--		} else
--			err = -ENOENT;
--	} else {
--		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--		if (!(mpath->flags & MESH_PATH_RESOLVING)) {
--			/* Start discovery only if it is not running yet */
--			mesh_queue_preq(mpath, PREQ_Q_F_START);
--		}
-+	if (!(mpath->flags & MESH_PATH_RESOLVING))
-+		mesh_queue_preq(mpath, PREQ_Q_F_START);
-+
-+	if (skb_queue_len(&mpath->frame_queue) >= MESH_FRAME_QUEUE_LEN)
-+		skb_to_free = skb_dequeue(&mpath->frame_queue);
-+
-+	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
-+	ieee80211_set_qos_hdr(sdata, skb);
-+	skb_queue_tail(&mpath->frame_queue, skb);
-+	err = -ENOENT;
-+	if (skb_to_free)
-+		mesh_path_discard_frame(skb_to_free, sdata);
-+
-+endlookup:
-+	rcu_read_unlock();
-+	return err;
-+}
-+/**
-+ * mesh_nexthop_lookup - put the appropriate next hop on a mesh frame. Calling
-+ * this function is considered "using" the associated mpath, so preempt a path
-+ * refresh if this mpath expires soon.
-+ *
-+ * @skb: 802.11 frame to be sent
-+ * @sdata: network subif the frame will be sent through
-+ *
-+ * Returns: 0 if the next hop was found. Nonzero otherwise.
++/*
++ * Define group sort order: HT40 -> SGI -> #streams
 + */
-+int mesh_nexthop_lookup(struct sk_buff *skb,
-+			struct ieee80211_sub_if_data *sdata)
-+{
-+	struct mesh_path *mpath;
-+	struct sta_info *next_hop;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	u8 *target_addr = hdr->addr3;
-+	int err = -ENOENT;
- 
--		if (skb_queue_len(&mpath->frame_queue) >= MESH_FRAME_QUEUE_LEN)
--			skb_to_free = skb_dequeue(&mpath->frame_queue);
-+	rcu_read_lock();
-+	mpath = mesh_path_lookup(target_addr, sdata);
++#define GROUP_IDX(_streams, _sgi, _ht40)	\
++	MINSTREL_MAX_STREAMS * 2 * _ht40 +	\
++	MINSTREL_MAX_STREAMS * _sgi +		\
++	_streams - 1
 +
-+	if (!mpath || !(mpath->flags & MESH_PATH_ACTIVE))
-+		goto endlookup;
-+
-+	if (time_after(jiffies,
-+		       mpath->exp_time -
-+		       msecs_to_jiffies(sdata->u.mesh.mshcfg.path_refresh_time)) &&
-+	    !memcmp(sdata->vif.addr, hdr->addr4, ETH_ALEN) &&
-+	    !(mpath->flags & MESH_PATH_RESOLVING) &&
-+	    !(mpath->flags & MESH_PATH_FIXED))
-+		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH);
- 
--		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
--		ieee80211_set_qos_hdr(sdata, skb);
--		skb_queue_tail(&mpath->frame_queue, skb);
--		if (skb_to_free)
--			mesh_path_discard_frame(skb_to_free, sdata);
--		err = -ENOENT;
-+	next_hop = rcu_dereference(mpath->next_hop);
-+	if (next_hop) {
-+		memcpy(hdr->addr1, next_hop->sta.addr, ETH_ALEN);
-+		memcpy(hdr->addr2, sdata->vif.addr, ETH_ALEN);
-+		err = 0;
- 	}
- 
- endlookup:
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 4c50d8a..edf167e 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -973,38 +973,11 @@ int mesh_path_send_to_gates(struct mesh_path *mpath)
-  * @skb: frame to discard
-  * @sdata: network subif the frame was to be sent through
-  *
-- * If the frame was being forwarded from another MP, a PERR frame will be sent
-- * to the precursor.  The precursor's address (i.e. the previous hop) was saved
-- * in addr1 of the frame-to-be-forwarded, and would only be overwritten once
-- * the destination is successfully resolved.
-- *
-  * Locking: the function must me called within a rcu_read_lock region
+ /* MCS rate information for an MCS group */
+-#define MCS_GROUP(_streams, _sgi, _ht40) {				\
++#define MCS_GROUP(_streams, _sgi, _ht40)				\
++	[GROUP_IDX(_streams, _sgi, _ht40)] = {				\
+ 	.streams = _streams,						\
+ 	.flags =							\
+ 		(_sgi ? IEEE80211_TX_RC_SHORT_GI : 0) |			\
+@@ -58,6 +67,9 @@
+  * To enable sufficiently targeted rate sampling, MCS rates are divided into
+  * groups, based on the number of streams and flags (HT40, SGI) that they
+  * use.
++ *
++ * Sortorder has to be fixed for GROUP_IDX macro to be applicable:
++ * HT40 -> SGI -> #streams
   */
- void mesh_path_discard_frame(struct sk_buff *skb,
- 			     struct ieee80211_sub_if_data *sdata)
+ const struct mcs_group minstrel_mcs_groups[] = {
+ 	MCS_GROUP(1, 0, 0),
+@@ -102,21 +114,9 @@ minstrel_ewma(int old, int new, int weight)
+ static int
+ minstrel_ht_get_group_idx(struct ieee80211_tx_rate *rate)
  {
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
--	struct mesh_path *mpath;
--	u32 sn = 0;
--	__le16 reason = cpu_to_le16(WLAN_REASON_MESH_PATH_NOFORWARD);
+-	int streams = (rate->idx / MCS_GROUP_RATES) + 1;
+-	u32 flags = IEEE80211_TX_RC_SHORT_GI | IEEE80211_TX_RC_40_MHZ_WIDTH;
+-	int i;
 -
--	if (memcmp(hdr->addr4, sdata->vif.addr, ETH_ALEN) != 0) {
--		u8 *ra, *da;
+-	for (i = 0; i < ARRAY_SIZE(minstrel_mcs_groups); i++) {
+-		if (minstrel_mcs_groups[i].streams != streams)
+-			continue;
+-		if (minstrel_mcs_groups[i].flags != (rate->flags & flags))
+-			continue;
 -
--		da = hdr->addr3;
--		ra = hdr->addr2;
--		rcu_read_lock();
--		mpath = mesh_path_lookup(da, sdata);
--		if (mpath) {
--			spin_lock_bh(&mpath->state_lock);
--			sn = ++mpath->sn;
--			spin_unlock_bh(&mpath->state_lock);
--		}
--		rcu_read_unlock();
--		mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl, da,
--				   cpu_to_le32(sn), reason, ra, sdata);
+-		return i;
 -	}
 -
- 	kfree_skb(skb);
- 	sdata->u.mesh.mshstats.dropped_frames_no_route++;
+-	WARN_ON(1);
+-	return 0;
++	return GROUP_IDX((rate->idx / MCS_GROUP_RATES) + 1,
++			 !!(rate->flags & IEEE80211_TX_RC_SHORT_GI),
++			 !!(rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH));
  }
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 4e960d7..7733253 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1902,6 +1902,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 	struct ieee80211_local *local = rx->local;
- 	struct ieee80211_sub_if_data *sdata = rx->sdata;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
-+	__le16 reason = cpu_to_le16(WLAN_REASON_MESH_PATH_NOFORWARD);
- 	u16 q;
  
- 	hdr = (struct ieee80211_hdr *) skb->data;
-@@ -1988,13 +1989,14 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 								fwded_mcast);
- 				memcpy(fwd_hdr->addr2, sdata->vif.addr, ETH_ALEN);
- 			} else {
--				int err;
--				err = mesh_nexthop_lookup(fwd_skb, sdata);
--				/* Failed to immediately resolve next hop:
--				 * fwded frame was dropped or will be added
--				 * later to the pending skb queue.  */
--				if (err)
-+				if (mesh_nexthop_lookup(fwd_skb, sdata)) {
-+				/* can't resolve next hop, send a PERR */
-+					mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl,
-+							   fwd_hdr->addr3, 0, reason,
-+							   fwd_hdr->addr2, sdata);
-+					sdata->u.mesh.mshstats.dropped_frames_no_route++;
- 					return RX_DROP_MONITOR;
-+				}
- 
- 				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
- 								fwded_unicast);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 6ec3194..75eadce 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1459,7 +1459,7 @@ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
- 	if (ieee80211_vif_is_mesh(&sdata->vif) &&
- 	    ieee80211_is_data(hdr->frame_control) &&
- 		!is_multicast_ether_addr(hdr->addr1))
--			if (mesh_nexthop_lookup(skb, sdata)) {
-+			if (mesh_nexthop_resolve(skb, sdata)) {
- 				/* skb queued: don't free */
- 				rcu_read_unlock();
- 				return;
+ static inline struct minstrel_rate_stats *
 -- 
-1.7.5.4
+1.7.3.4
 
