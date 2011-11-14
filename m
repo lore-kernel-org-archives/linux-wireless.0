@@ -1,72 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:58626 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750904Ab1KCGpD (ORCPT
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:37065 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753270Ab1KNRaZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 02:45:03 -0400
-Received: by bkat2 with SMTP id t2so1162029bka.22
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2011 23:45:00 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: coelho@ti.com
+	Mon, 14 Nov 2011 12:30:25 -0500
+Subject: [PATCH 01/10] ath6kl: remove hw version related parameter defines
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] wl12xx: use the same SDIO block size for all different chips
-Date: Thu,  3 Nov 2011 08:44:42 +0200
-Message-Id: <1320302683-23403-3-git-send-email-coelho@ti.com> (sfid-20111103_074509_424395_47FF52BB)
-In-Reply-To: <1320302683-23403-1-git-send-email-coelho@ti.com>
-References: <1320302683-23403-1-git-send-email-coelho@ti.com>
+Date: Mon, 14 Nov 2011 19:30:13 +0200
+Message-ID: <20111114173013.29925.97884.stgit@localhost6.localdomain6> (sfid-20111114_183028_890408_93383A69)
+In-Reply-To: <20111114172836.29925.4134.stgit@localhost6.localdomain6>
+References: <20111114172836.29925.4134.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The sdio driver uses a block size of 512 bytes by default.  With our
-card, this doesn't work correctly because it sets the block size FBR
-in the chip too early (ie. before the chip is powered on).  Thus, if
-we don't set it explicitly, block mode remains disabled in the chip.
-If we try to send more data than fits in one block, the sdio driver
-will split it into separate blocks before sending to the chip.  This
-causes problems because the chip is not expecting multiple blocks.
+Having separate defines, in a different file, makes it difficult to read
+the actual values. As we are just setting named fields in a struct
+the defines don't make any sense anymore.
 
-At the moment this is not a problem, because we use chunks of 512
-bytes for firmware upload and the data is always sent in byte mode.
-In the next patch, we will change the chunk size to a bigger value, so
-this patch is a preparation for that.
+There are no functional changes, only moving of constants.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/wl12xx/main.c |   14 ++++++++++----
- 1 files changed, 10 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath6kl/init.c   |   26 +++++++++++++-------------
+ drivers/net/wireless/ath/ath6kl/target.h |   14 --------------
+ 2 files changed, 13 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index bddf289..0532630 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1313,7 +1313,16 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 	/* 0. read chip id from CHIP_ID */
- 	wl->chip.id = wl1271_read32(wl, CHIP_ID_B);
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index e96ce07..3286b1b 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1337,32 +1337,32 @@ static int ath6kl_init_hw_params(struct ath6kl *ar)
+ {
+ 	switch (ar->version.target_ver) {
+ 	case AR6003_REV2_VERSION:
+-		ar->hw.dataset_patch_addr = AR6003_REV2_DATASET_PATCH_ADDRESS;
+-		ar->hw.app_load_addr = AR6003_REV2_APP_LOAD_ADDRESS;
+-		ar->hw.board_ext_data_addr = AR6003_REV2_BOARD_EXT_DATA_ADDRESS;
+-		ar->hw.reserved_ram_size = AR6003_REV2_RAM_RESERVE_SIZE;
++		ar->hw.dataset_patch_addr = 0x57e884;
++		ar->hw.app_load_addr = 0x543180;
++		ar->hw.board_ext_data_addr = 0x57e500;
++		ar->hw.reserved_ram_size = 6912;
  
--	/* 1. check if chip id is valid */
-+	/*
-+	 * For wl127x based devices we could use the default block
-+	 * size (512 bytes), but due to a bug in the sdio driver, we
-+	 * need to set it explicitly after the chip is powered on.  To
-+	 * simplify the code and since the performance impact is
-+	 * negligible, we use the same block size for all different
-+	 * chip types.
-+	 */
-+	if (!wl1271_set_block_size(wl))
-+		wl->quirks |= WL12XX_QUIRK_NO_BLOCKSIZE_ALIGNMENT;
+ 		/* hw2.0 needs override address hardcoded */
+ 		ar->hw.app_start_override_addr = 0x944C00;
  
- 	switch (wl->chip.id) {
- 	case CHIP_ID_1271_PG10:
-@@ -1343,9 +1352,6 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 		ret = wl1271_setup(wl);
- 		if (ret < 0)
- 			goto out;
--
--		if (!wl1271_set_block_size(wl))
--			wl->quirks |= WL12XX_QUIRK_NO_BLOCKSIZE_ALIGNMENT;
  		break;
- 	case CHIP_ID_1283_PG10:
+ 	case AR6003_REV3_VERSION:
+-		ar->hw.dataset_patch_addr = AR6003_REV3_DATASET_PATCH_ADDRESS;
++		ar->hw.dataset_patch_addr = 0x57ff74;
+ 		ar->hw.app_load_addr = 0x1234;
+-		ar->hw.board_ext_data_addr = AR6003_REV3_BOARD_EXT_DATA_ADDRESS;
+-		ar->hw.reserved_ram_size = AR6003_REV3_RAM_RESERVE_SIZE;
++		ar->hw.board_ext_data_addr = 0x542330;
++		ar->hw.reserved_ram_size = 512;
+ 		break;
+ 	case AR6004_REV1_VERSION:
+-		ar->hw.dataset_patch_addr = AR6003_REV2_DATASET_PATCH_ADDRESS;
++		ar->hw.dataset_patch_addr = 0x57e884;
+ 		ar->hw.app_load_addr = 0x1234;
+-		ar->hw.board_ext_data_addr = AR6004_REV1_BOARD_EXT_DATA_ADDRESS;
+-		ar->hw.reserved_ram_size = AR6004_REV1_RAM_RESERVE_SIZE;
++		ar->hw.board_ext_data_addr = 0x437000;
++		ar->hw.reserved_ram_size = 19456;
+ 		break;
+ 	case AR6004_REV2_VERSION:
+-		ar->hw.dataset_patch_addr = AR6003_REV2_DATASET_PATCH_ADDRESS;
++		ar->hw.dataset_patch_addr = 0x57e884;
+ 		ar->hw.app_load_addr = 0x1234;
+-		ar->hw.board_ext_data_addr = AR6004_REV1_BOARD_EXT_DATA_ADDRESS;
+-		ar->hw.reserved_ram_size = AR6004_REV2_RAM_RESERVE_SIZE;
++		ar->hw.board_ext_data_addr = 0x437000;
++		ar->hw.reserved_ram_size = 11264;
+ 		break;
  	default:
--- 
-1.7.4.1
+ 		ath6kl_err("Unsupported hardware version: 0x%x\n",
+diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
+index 35478d4..ece0f13 100644
+--- a/drivers/net/wireless/ath/ath6kl/target.h
++++ b/drivers/net/wireless/ath/ath6kl/target.h
+@@ -334,22 +334,8 @@ struct host_interest {
+ 	(((target_type) == TARGET_TYPE_AR6003) ? AR6003_VTOP(vaddr) : \
+ 	(((target_type) == TARGET_TYPE_AR6004) ? AR6004_VTOP(vaddr) : 0))
+ 
+-#define AR6003_REV2_APP_LOAD_ADDRESS            0x543180
+-#define AR6003_REV2_BOARD_EXT_DATA_ADDRESS      0x57E500
+-#define AR6003_REV2_DATASET_PATCH_ADDRESS       0x57e884
+-#define AR6003_REV2_RAM_RESERVE_SIZE            6912
+-
+-#define AR6003_REV3_APP_LOAD_ADDRESS            0x545000
+-#define AR6003_REV3_BOARD_EXT_DATA_ADDRESS      0x542330
+-#define AR6003_REV3_DATASET_PATCH_ADDRESS       0x57FF74
+-#define AR6003_REV3_RAM_RESERVE_SIZE            512
+-
+ #define AR6004_REV1_BOARD_DATA_ADDRESS          0x433900
+-#define AR6004_REV1_BOARD_EXT_DATA_ADDRESS      0x437000
+-#define AR6004_REV1_RAM_RESERVE_SIZE            19456
+-
+ #define AR6004_REV2_BOARD_DATA_ADDRESS          0x43d400
+-#define AR6004_REV2_RAM_RESERVE_SIZE            11264
+ 
+ #define ATH6KL_FWLOG_PAYLOAD_SIZE		1500
+ 
 
