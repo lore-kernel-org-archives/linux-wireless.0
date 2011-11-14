@@ -1,83 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56565 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752019Ab1KJBdc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 20:33:32 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 05/28] iwlagn: fix NULL ptr deref when reprogramming sta w/o LQ
-Date: Wed,  9 Nov 2011 16:39:08 -0800
-Message-Id: <1320885571-19122-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023411_453462_508E4340)
-In-Reply-To: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:33714 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753324Ab1KNVMQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Nov 2011 16:12:16 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id E291E54009C
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2011 16:35:50 -0500 (EST)
+Subject: Compat-wireless release for 2011-11-14 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111114211214.E3FA940633@repository3.orbit-lab.org> (sfid-20111114_221220_040482_257820A9)
+Date: Mon, 14 Nov 2011 16:12:14 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+>From git://github.com/mcgrof/compat-wireless
+ * [new branch]      linux-3.2.y -> origin/linux-3.2.y
+   6dec5d8..4ab9b62  master     -> origin/master
+>From git://github.com/mcgrof/compat-wireless
+ * [new tag]         compat-wireless-2011-11-08 -> compat-wireless-2011-11-08
+>From git://github.com/mcgrof/compat
+ * [new branch]      linux-3.2.y -> origin/linux-3.2.y
+   fd3c355..1beb89b  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 335981b...e45f8b4 akpm-end   -> origin/akpm-end  (forced update)
+   5e442a4..52e4c2a  akpm-start -> origin/akpm-start
+ + efd4465...a51a24e master     -> origin/master  (forced update)
+   5e442a4..52e4c2a  stable     -> origin/stable
+ * [new tag]         next-20111114 -> next-20111114
 
-Reinette reports a crash in iwl_reprogram_ap_sta(). The
-debugging shows:
+compat-wireless code metrics
 
-  b1 16    mov    $0x16,%cl
- *f3 a5    rep movsl %ds     <-- trapping instruction:(%rsi),%es:(%rdi)
-
-which is a memcpy of 22 (0x16) words (movsl). this points
-to "priv->stations[sta_id].lq" being NULL since that is
-the memcpy() of that size here.
-
-The only way I see for this to happen is if we try to
-do some RXON reprogramming while connecting to an AP,
-after tx_sync() but before full setup, but that seems
-like something that might very well happen.
-
-Fix this by checking if the LQ is present and only then
-reprogramming it.
-
-Reported-by: Reinette Chatre <reinette.chatre@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-index 9306768..1b112df 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-@@ -647,7 +647,7 @@ void iwl_reprogram_ap_sta(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	int ret;
- 	struct iwl_addsta_cmd sta_cmd;
- 	struct iwl_link_quality_cmd lq;
--	bool active;
-+	bool active, have_lq = false;
- 
- 	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
- 	if (!(priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE)) {
-@@ -657,7 +657,10 @@ void iwl_reprogram_ap_sta(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 
- 	memcpy(&sta_cmd, &priv->stations[sta_id].sta, sizeof(sta_cmd));
- 	sta_cmd.mode = 0;
--	memcpy(&lq, priv->stations[sta_id].lq, sizeof(lq));
-+	if (priv->stations[sta_id].lq) {
-+		memcpy(&lq, priv->stations[sta_id].lq, sizeof(lq));
-+		have_lq = true;
-+	}
- 
- 	active = priv->stations[sta_id].used & IWL_STA_UCODE_ACTIVE;
- 	priv->stations[sta_id].used &= ~IWL_STA_DRIVER_ACTIVE;
-@@ -679,7 +682,8 @@ void iwl_reprogram_ap_sta(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	if (ret)
- 		IWL_ERR(priv, "failed to re-add STA %pM (%d)\n",
- 			priv->stations[sta_id].sta.sta.addr, ret);
--	iwl_send_lq_cmd(priv, ctx, &lq, CMD_SYNC, true);
-+	if (have_lq)
-+		iwl_send_lq_cmd(priv, ctx, &lq, CMD_SYNC, true);
- }
- 
- int iwl_get_free_ucode_key_offset(struct iwl_priv *priv)
--- 
-1.7.0.4
-
+    816892 - Total upstream lines of code being pulled
+      2492 - backport code changes
+      2146 - backport code additions
+       346 - backport code deletions
+      8671 - backport from compat module
+     11163 - total backport code
+    1.3665 - % of code consists of backport work
