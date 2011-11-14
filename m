@@ -1,62 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4297 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750835Ab1K3FM4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 00:12:56 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Russell Hu <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Wilson Tsao <wtsao@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 08/17] ath9k_hw: check for asynchronous MCI interrupt pending
-Date: Wed, 30 Nov 2011 10:41:20 +0530
-Message-ID: <1322629889-19961-9-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_061259_209220_E5511A82)
-In-Reply-To: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
+Received: from nbd.name ([46.4.11.11]:42303 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754700Ab1KNOkx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Nov 2011 09:40:53 -0500
+Message-ID: <4EC12871.2070402@openwrt.org> (sfid-20111114_154101_861508_DEE31355)
+Date: Mon, 14 Nov 2011 15:40:49 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 3/3] mac80211: Get rid of search loop for rate group index
+References: <1321280900-24006-1-git-send-email-helmut.schaa@googlemail.com> <1321280900-24006-2-git-send-email-helmut.schaa@googlemail.com> <1321280900-24006-3-git-send-email-helmut.schaa@googlemail.com>
+In-Reply-To: <1321280900-24006-3-git-send-email-helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-
-MCI interrupt is an asynchronous one, so take care of it by having a
-check in ath9k_hw_intrpend, which actually decides whether the interrupt
-is really for the driver from ath_isr
-
-Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/mac.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 9d69320..0e4fbb3 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -760,7 +760,10 @@ bool ath9k_hw_intrpend(struct ath_hw *ah)
- 		return true;
- 
- 	host_isr = REG_READ(ah, AR_INTR_ASYNC_CAUSE);
--	if ((host_isr & AR_INTR_MAC_IRQ) && (host_isr != AR_INTR_SPURIOUS))
-+
-+	if (((host_isr & AR_INTR_MAC_IRQ) ||
-+	     (host_isr & AR_INTR_ASYNC_MASK_MCI)) &&
-+	    (host_isr != AR_INTR_SPURIOUS))
- 		return true;
- 
- 	host_isr = REG_READ(ah, AR_INTR_SYNC_CAUSE);
--- 
-1.7.0.4
-
+On 2011-11-14 3:28 PM, Helmut Schaa wrote:
+> Finding the group index for a specific rate is done by looping through
+> all groups and returning if the correct one is found. This code is
+> called for each tx'ed frame and thus it makes sense to reduce its
+> runtime.
+>
+> Do this by calculating the group index by this formula based on the SGI
+> and HT40 flags as well as the stream number:
+>
+> idx = (HT40 * 2 * MINSTREL_MAX_STREAMS) +
+>        (SGI * MINSTREL_MAX_STREAMS) +
+>        (streams - 1)
+>
+> Hence, the groups are ordered by th HT40 flag first, then by the SGI
+> flag and afterwards by the number of used streams.
+>
+> This should reduce the runtime of minstrel_ht_get_group_idx
+> considerable.
+>
+> Signed-off-by: Helmut Schaa<helmut.schaa@googlemail.com>
+For the whole series:
+Acked-by: Felix Fietkau <nbd@openwrt.org>
