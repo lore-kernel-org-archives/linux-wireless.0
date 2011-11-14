@@ -1,59 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23696 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755118Ab1KGQBB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 11:01:01 -0500
-Date: Mon, 7 Nov 2011 17:00:58 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Lukasz Jagiello <jagiello.lukasz@gmail.com>
-Subject: Re: [PATCH v2] mac80211: disassociate when direct probe timed out
-Message-ID: <20111107160058.GC5990@redhat.com> (sfid-20111107_170106_066324_E032C39F)
-References: <20111107142620.GA5852@redhat.com>
- <20111107152859.GA5990@redhat.com>
- <20111107153410.GB5990@redhat.com>
- <1320680552.3993.46.camel@jlt3.sipsolutions.net>
- <1320680602.3993.47.camel@jlt3.sipsolutions.net>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:49741 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750784Ab1KNKmq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Nov 2011 05:42:46 -0500
+Received: by bke11 with SMTP id 11so5757526bke.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2011 02:42:45 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1320680602.3993.47.camel@jlt3.sipsolutions.net>
+From: =?ISO-8859-1?Q?Andr=E9s_Garc=EDa_Saavedra?=
+	<andres.garcia.saavedra@gmail.com>
+Date: Mon, 14 Nov 2011 11:42:24 +0100
+Message-ID: <CADxqDgFoO63RG67McnxUJSmxZ9ZPPnE7obKkn+MZAsoJ4UMQtg@mail.gmail.com> (sfid-20111114_114250_597140_DB6484C5)
+Subject: force AR5212 to sleep
+To: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 07, 2011 at 04:43:22PM +0100, Johannes Berg wrote:
-> On Mon, 2011-11-07 at 16:42 +0100, Johannes Berg wrote:
-> > On Mon, 2011-11-07 at 16:34 +0100, Stanislaw Gruszka wrote:
-> > 
-> > > +++ b/net/mac80211/mlme.c
-> > > @@ -2379,8 +2379,14 @@ ieee80211_probe_auth_done(struct ieee80211_work *wk,
-> > >  			  struct sk_buff *skb)
-> > >  {
-> > >  	struct ieee80211_local *local = wk->sdata->local;
-> > > +	struct ieee80211_if_managed *ifmgd = &wk->sdata->u.mgd;
-> > >  
-> > >  	if (!skb) {
-> > > +		mutex_lock(&ifmgd->mtx);
-> > > +		if (ifmgd->associated)
-> > > +			ieee80211_set_disassoc(wk->sdata, true, false);
-> > > +		mutex_unlock(&ifmgd->mtx);
-> > > +
-> > >  		cfg80211_send_auth_timeout(wk->sdata->dev, wk->filter_ta);
-> > >  		goto destroy;
-> > >  	}
-> > 
-> > This doesn't seem right -- we can authenticate with a new AP while
-> > connected to an old one, but if the connection to the new one fails why
-> > should we tear down the connection to the *old* one?
-> 
-> Also, we should never be able to get into a situation where the new AP
-> is the same as the old AP as cfg80211 won't let you authenticate with a
-> BSS that you're connected to (I believe).
+Hi all,
 
-Oh, I see. So this problem happens with roaming, and we are doing something
-wrong with channels switching. Johannes, do you have idea how to
-possibly fix that? Here is full dmesg from Lukasz with warnings:
-http://bugzilla.redhat.com/attachment.cgi?id=523540
+I am testing some custom algorithms for powersaving using
+mac80211/ath5k. I am using  Dlink DWL-AG660 PCMCIA cards for my
+experiments. For these algorithms I am notifying sleep/awake events
+from mac80211 down to the driver whenever I want to. For the case of
+ath5k I followed that code madwifi was using to force the chipset to
+sleep (full sleep mode), find the piece of code below:
 
-Stanislaw 
+The problem is, the card (and the laptop) totally freezes whenever
+this is done. According to
+http://madwifi-project.org/wiki/Compatibility/D-Link this card uses a
+AR5212, and madwifi driver does use this piece of code to force the
+chip to sleep (in that case when resetting or stopping an interface).
+
+Undoubtedly, I am missing something I should take care of. I'd
+appreciate any "clue" you could give me.
+
+
+/**** CODE *****/
+
+    struct ath5k_softc *sc = hw->priv;
+    struct ath5k_hw *ah = sc->ah;
+    unsigned int i;
+    u32 staid, data;
+
+    staid = ath5k_hw_reg_read(ah, AR5K_STA_ID1);
+
+    ath5k_hw_reg_write(ah, AR5K_SLEEP_CTL_SLE_ALLOW, AR5K_SLEEP_CTL);
+
+    staid |= AR5K_STA_ID1_PWR_SV;
+
+    ath5k_hw_reg_write(ah, staid, AR5K_STA_ID1);
+
+/**** CODE *****/
+
+
+Thanks in advance,
+Andrés
