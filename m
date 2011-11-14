@@ -1,148 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:36147 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753459Ab1KEMZr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Nov 2011 08:25:47 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [RFC] iw: Support ht-capability overrides mask.
-Date: Sat,  5 Nov 2011 05:25:42 -0700
-Message-Id: <1320495942-8993-1-git-send-email-greearb@candelatech.com> (sfid-20111105_132623_134674_D27C3AC8)
+Received: from purkki.adurom.net ([80.68.90.206]:58019 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751693Ab1KNFnZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Nov 2011 00:43:25 -0500
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rewriting powersave
+References: <1320929045.3967.52.camel@jlt3.sipsolutions.net>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Mon, 14 Nov 2011 07:43:23 +0200
+In-Reply-To: <1320929045.3967.52.camel@jlt3.sipsolutions.net> (Johannes Berg's message of "Thu\, 10 Nov 2011 13\:44\:05 +0100")
+Message-ID: <8739dr9s3o.fsf@purkki.adurom.net> (sfid-20111114_064328_504819_32048CA2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi Johannes,
 
-Let user know which capabilities are supported.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 b55b282... aeec06f... M	info.c
-:100644 100644 8049bf7... e732da8... M	nl80211.h
- info.c    |   28 ++++++++++++++++++++++++++++
- nl80211.h |   54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 82 insertions(+), 0 deletions(-)
+> Since clearly it is possible to implement this in the lower layers, I'm
+> thinking we should provide an implementation that the drivers can use to
+> implement powersave and be in category 4 from mac80211's POV.
 
-diff --git a/info.c b/info.c
-index b55b282..aeec06f 100644
---- a/info.c
-+++ b/info.c
-@@ -400,6 +400,34 @@ broken_combination:
- 	if (tb_msg[NL80211_ATTR_SUPPORT_AP_UAPSD])
- 		printf("\tDevice supports AP-side u-APSD.\n");
- 
-+	if (tb_msg[NL80211_ATTR_HT_CAPABILITY_MASK]) {
-+		struct ieee80211_ht_cap *cm;
-+		printf("\tHT Capabilities over-rides:\n");
-+		if (nla_len(tb_msg[NL80211_ATTR_HT_CAPABILITY_MASK]) >=
-+		    sizeof(*cm)) {
-+			cm = nla_data(tb_msg[NL80211_ATTR_HT_CAPABILITY_MASK]);
-+			printf("\t\t* MCS: %02hx %02hx %02hx %02hx %02hx %02hx"
-+			       " %02hx %02hx %02hx %02hx\n",
-+			       cm->mcs.rx_mask[0], cm->mcs.rx_mask[1],
-+			       cm->mcs.rx_mask[2], cm->mcs.rx_mask[3],
-+			       cm->mcs.rx_mask[4], cm->mcs.rx_mask[5],
-+			       cm->mcs.rx_mask[6], cm->mcs.rx_mask[7],
-+			       cm->mcs.rx_mask[8], cm->mcs.rx_mask[9]);
-+			printf("\t\t* MAX-AMSDU:     %s\n"
-+			       "\t\t* AMPDU-Factor:  %s\n"
-+			       "\t\t* AMPDU-Density: %s\n",
-+			       cm->cap_info & IEEE80211_HT_CAP_MAX_AMSDU ? "Yes" : "No",
-+			       cm->ampdu_params_info & IEEE80211_HT_AMPDU_PARM_FACTOR ? "Yes" : "No",
-+			       cm->ampdu_params_info & IEEE80211_HT_AMPDU_PARM_DENSITY ? "Yes" : "No");
-+		} else {
-+			printf("\tERROR:  capabilities mask is too short, expected: %d"
-+			       ", received: %d\n",
-+			       sizeof(*cm), nla_len(tb_msg[NL80211_ATTR_HT_CAPABILITY_MASK]));
-+		}
-+	} else {
-+		printf("\tHT Capabilities over-rides are NOT supported\n");
-+	}
-+
- 	return NL_SKIP;
- }
- 
-diff --git a/nl80211.h b/nl80211.h
-index 8049bf7..e732da8 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -1109,6 +1109,12 @@ enum nl80211_commands {
-  *	%NL80211_CMD_TDLS_MGMT. Otherwise %NL80211_CMD_TDLS_OPER should be
-  *	used for asking the driver to perform a TDLS operation.
-  *
-+ * @NL80211_ATTR_DISABLE_HT:  Force HT capable interfaces to disable
-+ *      this feature.
-+ * @NL80211_ATTR_DISABLE_HT40:  Disable HT-40 even if AP and hardware
-+ *      support it.
-+ * @NL80211_ATTR_HT_CAPABILITY_MASK: Specify which bits of the HT_CAPs
-+ *      to pay attention to.
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1337,6 +1343,10 @@ enum nl80211_attrs {
- 	NL80211_ATTR_TDLS_SUPPORT,
- 	NL80211_ATTR_TDLS_EXTERNAL_SETUP,
- 
-+	NL80211_ATTR_DISABLE_HT,
-+	NL80211_ATTR_DISABLE_HT40,
-+	NL80211_ATTR_HT_CAPABILITY_MASK,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -1421,6 +1431,50 @@ enum nl80211_iftype {
- 	NL80211_IFTYPE_MAX = NUM_NL80211_IFTYPES - 1
- };
- 
-+/* 802.11n HT capability AMPDU settings (for ampdu_params_info) */
-+#define IEEE80211_HT_AMPDU_PARM_FACTOR          0x03
-+#define IEEE80211_HT_AMPDU_PARM_DENSITY         0x1C
-+
-+#define IEEE80211_HT_CAP_MAX_AMSDU              0x0800
-+
-+#define IEEE80211_HT_MCS_MASK_LEN               10
-+
-+/**
-+ * struct ieee80211_mcs_info - MCS information
-+ * @rx_mask: RX mask
-+ * @rx_highest: highest supported RX rate. If set represents
-+ *      the highest supported RX data rate in units of 1 Mbps.
-+ *      If this field is 0 this value should not be used to
-+ *      consider the highest RX data rate supported.
-+ * @tx_params: TX parameters
-+ */
-+struct ieee80211_mcs_info {
-+	__u8 rx_mask[IEEE80211_HT_MCS_MASK_LEN];
-+	__u16 rx_highest;
-+	__u8 tx_params;
-+	__u8 reserved[3];
-+} __attribute__ ((packed));
-+
-+
-+/**
-+ * struct ieee80211_ht_cap - HT capabilities
-+ *
-+ * This structure is the "HT capabilities element" as
-+ * described in 802.11n D5.0 7.3.2.57
-+ */
-+struct ieee80211_ht_cap {
-+	__u16 cap_info;
-+	__u8 ampdu_params_info;
-+
-+	/* 16 bytes MCS information */
-+	struct ieee80211_mcs_info mcs;
-+
-+	__u16 extended_ht_cap_info;
-+	__u32 tx_BF_cap_info;
-+	__u8 antenna_selection_info;
-+} __attribute__ ((packed));
-+
-+
- /**
-  * enum nl80211_sta_flags - station flags
-  *
+I think this is the way to go, even I was skeptic when you first
+mentioned about. We really need to make mac80211 powersave
+implementation more simple and this is a clean way to do it. And I
+would assume that all new (sane) hardware designs belong to category 4
+so this would only affect existing drivers.
+
 -- 
-1.7.3.4
-
+Kalle Valo
