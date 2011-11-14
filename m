@@ -1,150 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56565 "EHLO mga02.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:50059 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751028Ab1KJBdb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 20:33:31 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Todd Previte <toddX.a.previte@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 02/28] iwlwifi: Suppress noisy syslog messages when RF_KILL switch engaged
-Date: Wed,  9 Nov 2011 16:39:05 -0800
-Message-Id: <1320885571-19122-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023414_114992_2AFEC837)
-In-Reply-To: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1756607Ab1KNXXX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Nov 2011 18:23:23 -0500
+Subject: Re: iwlagn 3.0.9 aggreggation messages
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Lars Schotte <gusto@guttok.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20111115001621.0f89db2f@hana.gusto>
+References: <20111114131642.31e8ddbd@hana.gusto>
+	 <1321283410.13578.33.camel@wwguy-ubuntu>
+	 <20111114201947.58d5fdf6@hana.gusto>	<1321303101.1796.8.camel@wwguy-ubuntu>
+	 <20111114221847.2ca32e6a@hana.gusto>
+	 <1321305750.1796.11.camel@wwguy-ubuntu>
+	 <20111114224718.491c1777@hana.gusto>
+	 <1321307098.1796.14.camel@wwguy-ubuntu>
+	 <20111114232852.2372a032@hana.gusto>
+	 <1321310502.1796.21.camel@wwguy-ubuntu>
+	 <20111114235636.24c85fc3@hana.gusto>
+	 <1321311573.1796.35.camel@wwguy-ubuntu>
+	 <20111115001621.0f89db2f@hana.gusto>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 14 Nov 2011 15:17:08 -0800
+Message-ID: <1321312628.1796.37.camel@wwguy-ubuntu> (sfid-20111115_002335_934014_F45A174D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Todd Previte <toddX.a.previte@intel.com>
+On Mon, 2011-11-14 at 15:16 -0800, Lars Schotte wrote:
+> i looked over some changelogs .. from the linux kernel 3.1 branch.
+> 
+> i saw that you ve introduced some patches to this, or you at least
+> signed them off.
+> 
+> the changelog also says that you've changed the logging level for that
+> aggregation problem, so even if it would be there, it doesnt pop up on
+> kernel 3.1's.
+> 
+> i also did read there that there was like waiting for a real reason to
+> move to aggregation. so it was there the whole time, only it did not
+> write itself out on the log.
+> 
+> so i am not sure if we were not just hunting ghosts here.
+> 
+you are correct, I do have patch to modify the log level and make sur
+ewe are not generate the un-necessary messages in the log and cause
+confusion. But I don't think it is related to what the behavior you are
+seeing (at least I hope not); but I will double check. 
 
-When a station is associated with an AP and the RF_KILL switch is engaged,
-numerous error messages were sent to the system log. The error messages
-were the result of the failure(s) of the various submodules to perform
-their tasks after the radios were disabled.
+Thanks
+Wey
 
-To resolve this situation, the messages were modified to use a new macro,
-IWL_DEBUG_QUIET_RFKILL. This macro allows for the RF_KILL error messages
-to be sent to the log provided that IWL_DEBUG is true and IWL_DL_RADIO
-is '1'. For all other cases, the error messages resulting from an RFKILL
-event will not be sent to the system log. Messages logged because of an
-RFKILL will be tagged with the prefix '(RFKILL)' to clarify the cause of
-the error.
+> On Mon, 14 Nov 2011 14:59:33 -0800
+> wwguy <wey-yi.w.guy@intel.com> wrote:
+> 
+> > ok, thanks
+> > 
+> > please do let us know if it appear on 3.1.1
+> > 
+> > at the meantime, we will look into how to backport to 3.0.x
+> > 
+> > Regards
+> > Wey
+> > 
+> > On Mon, 2011-11-14 at 14:56 -0800, Lars Schotte wrote:
+> > > i definitely see it in 3.0.8 and 3.0.9.
+> > > 
+> > > on the fedora fc16 linux kernel 3.1.1 it did not yet appear, but
+> > > that may change.
+> > > 
+> > > so maybe it would be worth a look if it is not fixed by 3.1.1, or if
+> > > something changed. however ... if it is a FIX, it should definitely
+> > > be fixed also in 3.0.X branch.
+> > > 
+> > > so that message still is there on 3.0.9 and 3.0.8, we will see about
+> > > the more current ones.
+> > > 
+> > > On Mon, 14 Nov 2011 14:41:42 -0800
+> > > wwguy <wey-yi.w.guy@intel.com> wrote:
+> > > 
+> > > > so youno longer seeing the issue?
+> > > > 
+> > > > Wey
+> > > 
+> > > 
+> > > 
+> > 
+> > 
+> 
+> 
+> 
 
-Signed-off-by: Todd Previte <toddX.a.previte@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c      |    5 +++--
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debug.h         |   15 +++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   10 ++++++----
- 4 files changed, 25 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 58a381c..4c52bee 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -45,7 +45,8 @@ static int iwlagn_disable_bss(struct iwl_priv *priv,
- 	send->filter_flags = old_filter;
- 
- 	if (ret)
--		IWL_ERR(priv, "Error clearing ASSOC_MSK on BSS (%d)\n", ret);
-+		IWL_DEBUG_QUIET_RFKILL(priv,
-+			"Error clearing ASSOC_MSK on BSS (%d)\n", ret);
- 
- 	return ret;
- }
-@@ -124,7 +125,7 @@ static void iwlagn_update_qos(struct iwl_priv *priv,
- 			       sizeof(struct iwl_qosparam_cmd),
- 			       &ctx->qos_data.def_qos_parm);
- 	if (ret)
--		IWL_ERR(priv, "Failed to update QoS\n");
-+		IWL_DEBUG_QUIET_RFKILL(priv, "Failed to update QoS\n");
- }
- 
- static int iwlagn_update_beacon(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-index ed62836..9306768 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-@@ -840,7 +840,7 @@ int iwlagn_mac_sta_remove(struct ieee80211_hw *hw,
- 			sta->addr);
- 	ret = iwl_remove_station(priv, sta_priv->sta_id, sta->addr);
- 	if (ret)
--		IWL_ERR(priv, "Error removing station %pM\n",
-+		IWL_DEBUG_QUIET_RFKILL(priv, "Error removing station %pM\n",
- 			sta->addr);
- 	mutex_unlock(&priv->shrd->mutex);
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index 69a77e2..1dddf9b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -70,10 +70,25 @@ do {                                            			\
- 			       DUMP_PREFIX_OFFSET, 16, 1, p, len, 1);	\
- } while (0)
- 
-+#define IWL_DEBUG_QUIET_RFKILL(p, fmt, args...)			\
-+do {									\
-+	if (!iwl_is_rfkill(p->shrd))				\
-+		dev_printk(KERN_ERR, bus(p)->dev, "%c %s " fmt,	\
-+		(in_interrupt() ? 'I' : 'U'), __func__ , ##args);	\
-+	else if	(iwl_get_debug_level(p->shrd) & IWL_DL_RADIO)	\
-+		dev_printk(KERN_ERR, bus(p)->dev, "(RFKILL) %c %s " fmt, \
-+		(in_interrupt() ? 'I' : 'U'), __func__ , ##args);	\
-+} while (0)
-+
- #else
- #define IWL_DEBUG(m, level, fmt, args...)
- #define IWL_DEBUG_LIMIT(m, level, fmt, args...)
- #define iwl_print_hex_dump(m, level, p, len)
-+#define IWL_DEBUG_QUIET_RFKILL(p, fmt, args...)	\
-+do {							\
-+	if (!iwl_is_rfkill(p->shrd))			\
-+		IWL_ERR(p, fmt, ##args);		\
-+} while (0)
- #endif				/* CONFIG_IWLWIFI_DEBUG */
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-index 4a0c953..461e1ae 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-@@ -982,7 +982,8 @@ static int iwl_send_cmd_async(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 
- 	ret = iwl_enqueue_hcmd(trans, cmd);
- 	if (ret < 0) {
--		IWL_ERR(trans, "Error sending %s: enqueue_hcmd failed: %d\n",
-+		IWL_DEBUG_QUIET_RFKILL(trans,
-+			"Error sending %s: enqueue_hcmd failed: %d\n",
- 			  get_cmd_string(cmd->id), ret);
- 		return ret;
- 	}
-@@ -1008,7 +1009,8 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	if (cmd_idx < 0) {
- 		ret = cmd_idx;
- 		clear_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status);
--		IWL_ERR(trans, "Error sending %s: enqueue_hcmd failed: %d\n",
-+		IWL_DEBUG_QUIET_RFKILL(trans,
-+			"Error sending %s: enqueue_hcmd failed: %d\n",
- 			  get_cmd_string(cmd->id), ret);
- 		return ret;
- 	}
-@@ -1022,12 +1024,12 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 				&trans_pcie->txq[trans->shrd->cmd_queue];
- 			struct iwl_queue *q = &txq->q;
- 
--			IWL_ERR(trans,
-+			IWL_DEBUG_QUIET_RFKILL(trans,
- 				"Error sending %s: time out after %dms.\n",
- 				get_cmd_string(cmd->id),
- 				jiffies_to_msecs(HOST_COMPLETE_TIMEOUT));
- 
--			IWL_ERR(trans,
-+			IWL_DEBUG_QUIET_RFKILL(trans,
- 				"Current CMD queue read_ptr %d write_ptr %d\n",
- 				q->read_ptr, q->write_ptr);
- 
--- 
-1.7.0.4
 
