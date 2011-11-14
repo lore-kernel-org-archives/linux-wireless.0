@@ -1,47 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50989 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751672Ab1K2IYr (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:61155 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751775Ab1KNWkN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 03:24:47 -0500
-Subject: Re: [PATCH] mac80211: reset addba retries after timeout
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1322533625-24641-1-git-send-email-mar.kolya@gmail.com> (sfid-20111129_032719_396777_36A0D329)
-References: <1322533625-24641-1-git-send-email-mar.kolya@gmail.com>
-	 (sfid-20111129_032719_396777_36A0D329)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 29 Nov 2011 09:24:44 +0100
-Message-ID: <1322555084.4110.2.camel@jlt3.sipsolutions.net> (sfid-20111129_092450_842509_D9C85365)
-Mime-Version: 1.0
+	Mon, 14 Nov 2011 17:40:13 -0500
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 14 Nov 2011 14:39:51 -0800
+Message-ID: <CAB=NE6UB6TySinKTjPused7RLAUrd13BKWhD2PNzHE+fhUgQiw@mail.gmail.com> (sfid-20111114_234037_900396_75ED588E)
+Subject: [ANN] compat-wireless stable updates: 3.2-rc1, 3.1.1, 3.0.9
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-11-28 at 21:27 -0500, Nikolay Martynov wrote:
-> Currently code allows three (HT_AGG_MAX_RETRIES) unanswered addba
-> requests. When this limit is reached aggregation is turned off for
-> given TID permanently. This doesn't seem right: three requests is
-> not that much, some 'blackout' can happen, but effect of it affects
-> whole connection indefinitely.
->   This patch adds a period of time (1 minute) after which counter of
-> sent addba requests is reset so addba requests can be sent again.
->   The traffic impact should be negligible, but connection will be more
-> stable.
+I went back to my beehive and got busy updating the stable snapshots
+of compat-wireless [0] with a slew of new stable kernel updates. One
+for 3.2-rc1 [1], another for 3.1.1 [2] and then one for 3.0.9 [3].
+These are now based on the shiny new linux-stable.git [4] tree now
+maintained by Greg. Please report any issues observed. Thanks to all
+the contributors to these releases, particularly Hauke Mehrtens, I'm
+mainly just a patch monkey now.
 
-Conceptually, this seems OK to me, although on broken APs it might mean
-connection stalls every minute, not sure how desirable that is?
+[0] http://wireless.kernel.org/en/users/Download/stable
+[1] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/compat-wireless-3.2-rc1-1.tar.bz2
+[2] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.1/compat-wireless-3.1.1-1.tar.bz2
+[3] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.0/compat-wireless-3.0.9-1.tar.bz2
+[4] git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 
-> -	/* we have tried too many times, receiver does not want A-MPDU */
->  	if (sta->ampdu_mlme.addba_req_num[tid] > HT_AGG_MAX_RETRIES) {
-> -		ret = -EBUSY;
-> -		goto err_unlock_sta;
-> +		unsigned int timestamp = jiffies_to_msecs(jiffies);
-> +		if (timestamp - sta->ampdu_mlme.last_addba_req_time[tid] >
-> +		    HT_AGG_RETRIES_PERIOD) {
-
-this logic is confusing -- why ms? jiffies should be absolutely OK for
-minute-long timeouts.
-
-johannes
-
+  Luis
