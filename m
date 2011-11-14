@@ -1,26 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22158 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754769Ab1KPIhY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 03:37:24 -0500
-Message-ID: <4EC3763D.6090706@qca.qualcomm.com> (sfid-20111116_093727_570145_0FB0739A)
-Date: Wed, 16 Nov 2011 10:37:17 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/10] ath6kl: configurable board address and multivif
-References: <20111114172836.29925.4134.stgit@localhost6.localdomain6>
-In-Reply-To: <20111114172836.29925.4134.stgit@localhost6.localdomain6>
+Received: from perches-mx.perches.com ([206.117.179.246]:41733 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751071Ab1KNBKb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Nov 2011 20:10:31 -0500
+Message-ID: <1321233030.15834.12.camel@Joe-Laptop> (sfid-20111114_021049_838189_50E17482)
+Subject: Re: [PATCH] brcmsmac: Use current logging styles
+From: Joe Perches <joe@perches.com>
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Date: Sun, 13 Nov 2011 17:10:30 -0800
+In-Reply-To: <20111113170825.6633b17e@nehalam.linuxnetplumber.net>
+References: <1321213264.15834.4.camel@Joe-Laptop>
+	 <20111113170825.6633b17e@nehalam.linuxnetplumber.net>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/14/2011 07:29 PM, Kalle Valo wrote:
-> Read board address and max number of vif interfaces from firmware.
-> Also some cleanup in init.c.
+On Sun, 2011-11-13 at 17:08 -0800, Stephen Hemminger wrote:
+> On Sun, 13 Nov 2011 11:41:04 -0800
+> Joe Perches <joe@perches.com> wrote:
+> 
+> > Add and use pr_fmt and pr_<level>
+> > Remove useless double parentheses from macros.
+> > Remove function names from format strings, add to pr_debug use.
+> > Coalesce formats.
+> > Remove uncompileable undeclared variable in a DMA_NONE use.
+> 
+> If you are going to change it why not got all the way to netdev_XXX and dev_XXX macros
+> instead.
 
-All 10 applied.
+No dev always available, simpler change,
+mirrors the changes in brcmfmac.
 
-Kalle
