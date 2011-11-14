@@ -1,257 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43672 "EHLO mx1.redhat.com"
+Received: from ms16-1.1blu.de ([89.202.0.34]:51125 "EHLO ms16-1.1blu.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756524Ab1KPMUa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 07:20:30 -0500
-Date: Wed, 16 Nov 2011 13:22:06 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Greg Dietsche <gregory.dietsche@cuw.edu>,
-	linux-wireless@vger.kernel.org
-Subject: pull request: iwlegacy 2011-11-16
-Message-ID: <20111116122205.GA4409@redhat.com> (sfid-20111116_132034_573139_86CDF44E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1756598Ab1KNXR3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Nov 2011 18:17:29 -0500
+Date: Tue, 15 Nov 2011 00:16:21 +0100
+From: Lars Schotte <gusto@guttok.net>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlagn 3.0.9 aggreggation messages
+Message-ID: <20111115001621.0f89db2f@hana.gusto> (sfid-20111115_001734_974766_9853FD0E)
+In-Reply-To: <1321311573.1796.35.camel@wwguy-ubuntu>
+References: <20111114131642.31e8ddbd@hana.gusto>
+	<1321283410.13578.33.camel@wwguy-ubuntu>
+	<20111114201947.58d5fdf6@hana.gusto>
+	<1321303101.1796.8.camel@wwguy-ubuntu>
+	<20111114221847.2ca32e6a@hana.gusto>
+	<1321305750.1796.11.camel@wwguy-ubuntu>
+	<20111114224718.491c1777@hana.gusto>
+	<1321307098.1796.14.camel@wwguy-ubuntu>
+	<20111114232852.2372a032@hana.gusto>
+	<1321310502.1796.21.camel@wwguy-ubuntu>
+	<20111114235636.24c85fc3@hana.gusto>
+	<1321311573.1796.35.camel@wwguy-ubuntu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+i looked over some changelogs .. from the linux kernel 3.1 branch.
 
-Please pull iwlegacy cleanup changes done by Greg and me, intended
-for 3.3. These request include huge patches with file renaming and
-automatic code processing done by sed and indent. Driver is still
-quite messy and need more cleanup, but these massive changes bring
-driver close to the state that we could name it maintainable.
+i saw that you ve introduced some patches to this, or you at least
+signed them off.
 
-Hopefully with having clean, maintainable code I will be able to fix
-some nasty not easy reproducible bugs, we still have in the iwlegacy
-driver.
+the changelog also says that you've changed the logging level for that
+aggregation problem, so even if it would be there, it doesnt pop up on
+kernel 3.1's.
 
-Thanks
-Stanislaw
+i also did read there that there was like waiting for a real reason to
+move to aggregation. so it was there the whole time, only it did not
+write itself out on the log.
 
-The following changes since commit b4487c2d0edaf1332d7a9f11b5661044955ef5e2:
+so i am not sure if we were not just hunting ghosts here.
 
-  mac80211: fix warning in ieee80211_probe_client (2011-11-11 14:29:35 -0500)
+On Mon, 14 Nov 2011 14:59:33 -0800
+wwguy <wey-yi.w.guy@intel.com> wrote:
 
-are available in the git repository at:
-  git://github.com/sgruszka/iwlegacy.git for-linville
+> ok, thanks
+> 
+> please do let us know if it appear on 3.1.1
+> 
+> at the meantime, we will look into how to backport to 3.0.x
+> 
+> Regards
+> Wey
+> 
+> On Mon, 2011-11-14 at 14:56 -0800, Lars Schotte wrote:
+> > i definitely see it in 3.0.8 and 3.0.9.
+> > 
+> > on the fedora fc16 linux kernel 3.1.1 it did not yet appear, but
+> > that may change.
+> > 
+> > so maybe it would be worth a look if it is not fixed by 3.1.1, or if
+> > something changed. however ... if it is a FIX, it should definitely
+> > be fixed also in 3.0.X branch.
+> > 
+> > so that message still is there on 3.0.9 and 3.0.8, we will see about
+> > the more current ones.
+> > 
+> > On Mon, 14 Nov 2011 14:41:42 -0800
+> > wwguy <wey-yi.w.guy@intel.com> wrote:
+> > 
+> > > so youno longer seeing the issue?
+> > > 
+> > > Wey
+> > 
+> > 
+> > 
+> 
+> 
 
-Greg Dietsche (9):
-      iwlegacy: change IL_WARN to D_HT in il4965_tx_agg_start
-      iwlegacy: change IL_ERR to D_HT in iwl4965_rs_tl_turn_on_agg_for_tid
-      iwlegacy: 4965: remove vif null check in request_scan
-      iwlegacy: 4965-rs: remove null check on sta in il4965_rs_tx_status
-      iwlegacy: 4965-rs: remove unnecessary null check for sta and lq_sta
-      iwlegacy: 4965-rs: il4965_rs_alloc_sta: remove lq_sta local var
-      iwlegacy: 4965-rs: don't return rate from il4965_rs_update_rate_tbl
-      iwlegacy: 4965-rs: cleanup il4965_rs_sta_dbgfs_rate_scale_data_read
-      iwlegacy: debugfs_ops should depend on CONFIG_IWLEGACY_DEBUGFS
 
-Stanislaw Gruszka (68):
-      iwlegacy: remove tracing
-      iwlegacy: rename iwl to il
-      iwlegacy: rename priv to il
-      iwlegacy: rename iwlegacy to il
-      iwlegacy: remove DEBUG_IO
-      iwlegacy: remove DEBUG_LIMIT
-      iwlegacy: rename IL_DEBUG_ to D_
-      iwlegacy: remove il argument from IWL_ERR/INFO/WARN/CRIT
-      iwlegacy: remove IL_CRIT
-      iwlegacy: rename il_{read,write}32 to _il_{rd,wr}
-      iwlegacy: mark poll bit as unlocked function
-      iwlegacy: mark il_{grab,release}_nic_access as unlocked
-      iwlegacy: remove _il_{read,write}_direct32
-      iwlegacy: rename i/o direct methods
-      iwlegacy: rename il_{read,write}_prph
-      iwlegacy: remove not needed parentheses
-      iwlegacy: rename remaining IWLs to ILs
-      iwlegacy: s/iwl_rx_packet/iwl_rx_pkt/
-      iwlegacy: partial rxon context cleanup
-      iwlegacy: s/il_rx_mem_buffer/il_rx_buf/
-      iwlegacy: s/statistics/stats/
-      iwlegacy: s/window/win/
-      iwlegacy: s/IL_RATE/RATE/
-      iwlegacy: s/INDEX/IDX/
-      iwlegacy: s/index/idx/
-      iwlegacy: s/TABLE/TBL/
-      iwlegacy: remove for_each_context
-      iwlegacy: rename base 4965 and 3945 file names
-      iwlegacy: merge iwl-4965-led.c into 4965.c
-      iwlegacy: merge iwl-3945-led.c into 3945.c
-      iwlegacy: merge iwl-4965-eeprom.c into 4965.c
-      iwlegacy: merge iwl-4965-ucode.c into 4965.c
-      iwlegacy: merge iwl-4965-sta.c into 4965-mac.c
-      iwlegacy: merge iwl-4965-{tx,rx}.c into 4965-mac.c
-      iwlegacy: merge iwl-4965-lib.c into 4965-mac.c
-      iwlegacy: rename iwl-4965-{rs,calib,debugfs}.c to 4965-{rs,calib,debug}.c
-      iwlegacy: rename iwl-3945-{rs,debugfs}.c to 3945-{rs,debug}.c
-      iwlegacy: add accidentally removed comments
-      iwlegacy: move iwl-4965-{,hw,debugfs,calib}.h to 4965.h
-      iwlegacy: move iwl-3945-{,hw,fh,debugfs}.h to 3945.h
-      iwlegacy: s/STATUS_/S_/
-      iwlegacy: s/STATISTICS/STATS/
-      iwlegacy: rename REPLY_ to N_ or C_
-      iwlegacy: s/rx_handler/handler/
-      iwlegacy: s/rx_reply/hdl/
-      iwlegacy: rename other handlers
-      iwlegacy: rename iwl-core.c to common.c
-      iwlegacy: merge common .c files
-      iwlegacy: rename module name
-      iwlegacy: rename iwl-commands.h to commands.h
-      iwlegacy: remove il_ieee80211_get_hw_conf
-      iwlegacy: move IL_MASK
-      iwlegacy: rename iwl-csr.h to csr.h
-      iwlegacy: rename iwl-core.h to common.h
-      iwlegacy: merge common header files
-      iwlegacy: remove iwl-helpers.h
-      iwlegacy: merge iwl-legacy-rs.h into common.h
-      iwlegacy: merge iwl-power.h into common.h
-      iwlegacy: merge iwl-{eeprom,led}.h into common.h
-      iwlegacy: rename iwl-prph.h to prph.h
-      iwlegacy: use FH39_ prefix in 3945 code
-      iwlegacy: use FH49_ prefix in 4965 code
-      iwlegacy: merge iwl-fh.h into 4965.h
-      iwlegacy: rename iwl-debug.c to debug.c
-      iwlegacy: merge iwl-debug.h into common.h
-      iwlegacy: indentions and whitespaces
-      iwlegacy: checkpatch.pl fixes
-      iwlegacy: remove unused IL_AC_UNSET define
 
- drivers/net/wireless/Makefile                      |    2 +-
- drivers/net/wireless/iwlegacy/3945-debug.c         |  505 ++
- drivers/net/wireless/iwlegacy/3945-mac.c           | 3977 ++++++++++++
- drivers/net/wireless/iwlegacy/3945-rs.c            |  995 +++
- drivers/net/wireless/iwlegacy/3945.c               | 2751 ++++++++
- drivers/net/wireless/iwlegacy/3945.h               |  626 ++
- .../iwlegacy/{iwl-4965-calib.c => 4965-calib.c}    |  613 +-
- drivers/net/wireless/iwlegacy/4965-debug.c         |  746 +++
- drivers/net/wireless/iwlegacy/4965-mac.c           | 6536 ++++++++++++++++++++
- drivers/net/wireless/iwlegacy/4965-rs.c            | 2860 +++++++++
- drivers/net/wireless/iwlegacy/4965.c               | 2421 ++++++++
- drivers/net/wireless/iwlegacy/4965.h               | 1309 ++++
- drivers/net/wireless/iwlegacy/Kconfig              |   43 +-
- drivers/net/wireless/iwlegacy/Makefile             |   24 +-
- .../iwlegacy/{iwl-commands.h => commands.h}        | 1134 ++--
- drivers/net/wireless/iwlegacy/common.c             | 5707 +++++++++++++++++
- drivers/net/wireless/iwlegacy/common.h             | 3424 ++++++++++
- drivers/net/wireless/iwlegacy/{iwl-csr.h => csr.h} |   93 +-
- drivers/net/wireless/iwlegacy/debug.c              | 1410 +++++
- drivers/net/wireless/iwlegacy/iwl-3945-debugfs.c   |  523 --
- drivers/net/wireless/iwlegacy/iwl-3945-debugfs.h   |   60 -
- drivers/net/wireless/iwlegacy/iwl-3945-fh.h        |  187 -
- drivers/net/wireless/iwlegacy/iwl-3945-hw.h        |  291 -
- drivers/net/wireless/iwlegacy/iwl-3945-led.c       |   63 -
- drivers/net/wireless/iwlegacy/iwl-3945-led.h       |   32 -
- drivers/net/wireless/iwlegacy/iwl-3945-rs.c        |  996 ---
- drivers/net/wireless/iwlegacy/iwl-3945.c           | 2741 --------
- drivers/net/wireless/iwlegacy/iwl-3945.h           |  308 -
- drivers/net/wireless/iwlegacy/iwl-4965-calib.h     |   75 -
- drivers/net/wireless/iwlegacy/iwl-4965-debugfs.c   |  774 ---
- drivers/net/wireless/iwlegacy/iwl-4965-debugfs.h   |   59 -
- drivers/net/wireless/iwlegacy/iwl-4965-eeprom.c    |  154 -
- drivers/net/wireless/iwlegacy/iwl-4965-hw.h        |  811 ---
- drivers/net/wireless/iwlegacy/iwl-4965-led.c       |   73 -
- drivers/net/wireless/iwlegacy/iwl-4965-led.h       |   33 -
- drivers/net/wireless/iwlegacy/iwl-4965-lib.c       | 1194 ----
- drivers/net/wireless/iwlegacy/iwl-4965-rs.c        | 2871 ---------
- drivers/net/wireless/iwlegacy/iwl-4965-rx.c        |  215 -
- drivers/net/wireless/iwlegacy/iwl-4965-sta.c       |  721 ---
- drivers/net/wireless/iwlegacy/iwl-4965-tx.c        | 1378 -----
- drivers/net/wireless/iwlegacy/iwl-4965-ucode.c     |  166 -
- drivers/net/wireless/iwlegacy/iwl-4965.c           | 2183 -------
- drivers/net/wireless/iwlegacy/iwl-4965.h           |  282 -
- drivers/net/wireless/iwlegacy/iwl-core.c           | 2661 --------
- drivers/net/wireless/iwlegacy/iwl-core.h           |  636 --
- drivers/net/wireless/iwlegacy/iwl-debug.h          |  198 -
- drivers/net/wireless/iwlegacy/iwl-debugfs.c        | 1313 ----
- drivers/net/wireless/iwlegacy/iwl-dev.h            | 1364 ----
- drivers/net/wireless/iwlegacy/iwl-devtrace.c       |   42 -
- drivers/net/wireless/iwlegacy/iwl-devtrace.h       |  210 -
- drivers/net/wireless/iwlegacy/iwl-eeprom.c         |  553 --
- drivers/net/wireless/iwlegacy/iwl-eeprom.h         |  344 -
- drivers/net/wireless/iwlegacy/iwl-fh.h             |  513 --
- drivers/net/wireless/iwlegacy/iwl-hcmd.c           |  271 -
- drivers/net/wireless/iwlegacy/iwl-helpers.h        |  196 -
- drivers/net/wireless/iwlegacy/iwl-io.h             |  545 --
- drivers/net/wireless/iwlegacy/iwl-led.c            |  205 -
- drivers/net/wireless/iwlegacy/iwl-led.h            |   56 -
- drivers/net/wireless/iwlegacy/iwl-legacy-rs.h      |  456 --
- drivers/net/wireless/iwlegacy/iwl-power.c          |  165 -
- drivers/net/wireless/iwlegacy/iwl-power.h          |   55 -
- drivers/net/wireless/iwlegacy/iwl-rx.c             |  281 -
- drivers/net/wireless/iwlegacy/iwl-scan.c           |  549 --
- drivers/net/wireless/iwlegacy/iwl-spectrum.h       |    4 +-
- drivers/net/wireless/iwlegacy/iwl-sta.c            |  540 +-
- drivers/net/wireless/iwlegacy/iwl-sta.h            |  148 -
- drivers/net/wireless/iwlegacy/iwl-tx.c             |  658 --
- drivers/net/wireless/iwlegacy/iwl3945-base.c       | 4016 ------------
- drivers/net/wireless/iwlegacy/iwl4965-base.c       | 3281 ----------
- .../net/wireless/iwlegacy/{iwl-prph.h => prph.h}   |  133 +-
- 70 files changed, 34525 insertions(+), 36234 deletions(-)
- create mode 100644 drivers/net/wireless/iwlegacy/3945-debug.c
- create mode 100644 drivers/net/wireless/iwlegacy/3945-mac.c
- create mode 100644 drivers/net/wireless/iwlegacy/3945-rs.c
- create mode 100644 drivers/net/wireless/iwlegacy/3945.c
- create mode 100644 drivers/net/wireless/iwlegacy/3945.h
- rename drivers/net/wireless/iwlegacy/{iwl-4965-calib.c => 4965-calib.c} (55%)
- create mode 100644 drivers/net/wireless/iwlegacy/4965-debug.c
- create mode 100644 drivers/net/wireless/iwlegacy/4965-mac.c
- create mode 100644 drivers/net/wireless/iwlegacy/4965-rs.c
- create mode 100644 drivers/net/wireless/iwlegacy/4965.c
- create mode 100644 drivers/net/wireless/iwlegacy/4965.h
- rename drivers/net/wireless/iwlegacy/{iwl-commands.h => commands.h} (79%)
- create mode 100644 drivers/net/wireless/iwlegacy/common.c
- create mode 100644 drivers/net/wireless/iwlegacy/common.h
- rename drivers/net/wireless/iwlegacy/{iwl-csr.h => csr.h} (84%)
- create mode 100644 drivers/net/wireless/iwlegacy/debug.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-3945-debugfs.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-3945-debugfs.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-3945-fh.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-3945-hw.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-3945-led.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-3945-led.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-3945-rs.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-3945.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-3945.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965-calib.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965-debugfs.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965-debugfs.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965-eeprom.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965-hw.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965-led.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965-led.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965-lib.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965-rs.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965-rx.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965-sta.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965-tx.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965-ucode.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-core.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-core.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-debug.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-debugfs.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-dev.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-devtrace.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-devtrace.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-eeprom.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-eeprom.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-fh.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-hcmd.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-helpers.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-io.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-led.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-led.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-legacy-rs.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-power.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-power.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-rx.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-scan.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-sta.h
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl-tx.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl3945-base.c
- delete mode 100644 drivers/net/wireless/iwlegacy/iwl4965-base.c
- rename drivers/net/wireless/iwlegacy/{iwl-prph.h => prph.h} (83%)
-
+-- 
+Lars Schotte
+@ Hana (F16)
