@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:24314 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751281Ab1KMKtl (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:61861 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753370Ab1KNO2a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Nov 2011 05:49:41 -0500
-Message-ID: <4EBFA0B3.7060509@qca.qualcomm.com> (sfid-20111113_114944_884262_A3851434)
-Date: Sun, 13 Nov 2011 12:49:23 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Arik Nemtsov <arik@wizery.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>
-Subject: Re: [PATCH] ath6kl: indicate probe-resp offload support
-References: <1320772448-20467-1-git-send-email-arik@wizery.com>
-In-Reply-To: <1320772448-20467-1-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Mon, 14 Nov 2011 09:28:30 -0500
+Received: by mail-bw0-f46.google.com with SMTP id 11so5946855bke.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2011 06:28:30 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, nbd@openwrt.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 2/3] mac80211: Check rate->idx before rate->count
+Date: Mon, 14 Nov 2011 15:28:19 +0100
+Message-Id: <1321280900-24006-2-git-send-email-helmut.schaa@googlemail.com> (sfid-20111114_152834_717024_FE170711)
+In-Reply-To: <1321280900-24006-1-git-send-email-helmut.schaa@googlemail.com>
+References: <1321280900-24006-1-git-send-email-helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/08/2011 07:14 PM, Arik Nemtsov wrote:
-> The ath6kl responds to probe-requests in HW while operating as an AP. It
-> supports offloading exclusions to support the WPS, WPS2, P2P and
-> 802.11u protocols.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
-> I haven't added validation in hostap that check for these flags before
-> sending down the probe-resp IEs. This is still useful for tools such as
-> iw, that can print out device characteristics.
+The drivers are not required to fill in rate->count if rate->idx is set
+to -1. Hence, we should first check rate->idx before accessing
+rate->count.
 
-Thanks, I'll apply this once I merge latest wireless-next to
-ath6kl-next. I just can't do it right now.
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ net/mac80211/rc80211_minstrel_ht.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-> I'm not sure 802.11u is actually supported, just seemed so from the
-> hostap code sending down the IEs.
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 63f1821..3d76fd7 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -300,10 +300,10 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ static bool
+ minstrel_ht_txstat_valid(struct ieee80211_tx_rate *rate)
+ {
+-	if (!rate->count)
++	if (rate->idx < 0)
+ 		return false;
+ 
+-	if (rate->idx < 0)
++	if (!rate->count)
+ 		return false;
+ 
+ 	return !!(rate->flags & IEEE80211_TX_RC_MCS);
+-- 
+1.7.3.4
 
-Jouni, can you comment on this one?
-
-Kalle
