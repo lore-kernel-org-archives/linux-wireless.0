@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:39853 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751156Ab1KRT7e (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:45046 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753749Ab1KNRbT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 14:59:34 -0500
-Received: by fagn18 with SMTP id n18so4730719fag.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 11:59:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1321645446-22527-3-git-send-email-hauke@hauke-m.de>
-References: <1321645446-22527-1-git-send-email-hauke@hauke-m.de> <1321645446-22527-3-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Fri, 18 Nov 2011 11:59:12 -0800
-Message-ID: <CAB=NE6Va3Hj++skXUVzvXWCRAoDuqs7rj3i+Ype6918CLyf8sQ@mail.gmail.com> (sfid-20111118_205937_154462_404E622F)
-Subject: Re: [PATCH 3/3] compat-wireless: fetch crc8.c and cordic.c from kernel
-To: Hauke Mehrtens <hauke@hauke-m.de>
+	Mon, 14 Nov 2011 12:31:19 -0500
+Subject: [PATCH 07/10] ath6kl: add ar6004 firmwares to sdio module
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Date: Mon, 14 Nov 2011 19:31:15 +0200
+Message-ID: <20111114173115.29925.67131.stgit@localhost6.localdomain6> (sfid-20111114_183126_430415_968E8551)
+In-Reply-To: <20111114172836.29925.4134.stgit@localhost6.localdomain6>
+References: <20111114172836.29925.4134.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 18, 2011 at 11:44 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> crc8.c and cordic.c are not provided by compat any more, now the
-> generation script will fetch them from the kernel image.
-> They are used in the build process only when there is not version of
-> this library already in the kernel.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+When adding ar6004 SDIO support I forgot to add corresponding
+MODULE_FIRMWARE() definitions to sdio.c.
 
-This has the benefit of allowing us to pull the code but that also
-means less code dumped into compat. As I see it I want it to be the
-other way around, more stuff moved to compat.git given that this means
-others can make more use of a general compatibility framework. If
-compat-wireless itself becomes more of a compat-kernel, which I'm
-happy to do but I think we'd need more subsystem developers willing to
-do this, then I see the benefit of sucking in the code but for now I
-see more gains the other way around. But perhaps there are some
-benefits I may be missing?
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/sdio.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 1dab96a..c2010bf 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -1339,3 +1339,9 @@ MODULE_FIRMWARE(AR6003_HW_2_1_1_FIRMWARE_FILE);
+ MODULE_FIRMWARE(AR6003_HW_2_1_1_PATCH_FILE);
+ MODULE_FIRMWARE(AR6003_HW_2_1_1_BOARD_DATA_FILE);
+ MODULE_FIRMWARE(AR6003_HW_2_1_1_DEFAULT_BOARD_DATA_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_0_FIRMWARE_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_0_BOARD_DATA_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_0_DEFAULT_BOARD_DATA_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_1_FIRMWARE_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_1_BOARD_DATA_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_1_DEFAULT_BOARD_DATA_FILE);
+
