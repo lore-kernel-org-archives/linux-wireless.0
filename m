@@ -1,61 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33616 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751888Ab1KXSdU (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:51191 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753660Ab1KNRan (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 13:33:20 -0500
-Subject: Re: [RFC v2 0/8] mesh power saving implementation: indication
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>
-In-Reply-To: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154127_723214_750C1617)
-References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
-	 (sfid-20111121_154127_723214_750C1617)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Nov 2011 19:33:17 +0100
-Message-ID: <1322159597.5366.37.camel@jlt3.sipsolutions.net> (sfid-20111124_193323_982603_0123F3D8)
-Mime-Version: 1.0
+	Mon, 14 Nov 2011 12:30:43 -0500
+Subject: [PATCH 03/10] ath6kl: add board address to struct ath6kl_hw
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 14 Nov 2011 19:30:39 +0200
+Message-ID: <20111114173039.29925.47227.stgit@localhost6.localdomain6> (sfid-20111114_183045_437793_AC8C7520)
+In-Reply-To: <20111114172836.29925.4134.stgit@localhost6.localdomain6>
+References: <20111114172836.29925.4134.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-11-21 at 18:40 +0400, Ivan Bezyazychnyy wrote:
+This is to make it configurable by firmware IEs. Also determine if we need
+to write or read the board address to the chip by checking if board address
+is set or not.
 
-> Based on the latest IEEE 802.11s standard the power saving mechanism
-> can be divided into the following implementation phases:
-> * indication of mesh STAs' power modes in frames;
-> * a buffering and identification sending frames in mesh STA;
-> * Mesh Awake Window implementation;
-> * Peer service periods.
-> 
-> This patchset implements the phase of indication of mesh STAs'
-> power modes in frames. There are two types of mesh power modes:
-> * peer power mode: a mesh STA indicates its mesh power mode for each
-> mesh peering and obtains the mesh power modes of its peer mesh STAs;
-> * non-peer power mode: mesh station also indicates mesh power mode for
-> non-peer mesh stations. It determines when non-peer mesh STAs may send
-> Probe Request and Mesh Peering Open Request frames to the mesh STA.
-> 
-> Peer power mode should be indicated with Power Management field in the Frame
-> Control field and the Mesh Power Save Level field in all transmitted
-> individually addressed Mesh Data or QoS Null frames on this link.
-> 
-> Non-peer power mode should be indicated with the Power Management
-> field in the Frame Control field and the Mesh Power Save Level field
-> in the Mesh Capability field in Beacon and Probe Response frames. A
-> mesh STA shall also indicate its non-peer mesh power mode with the
-> Power Management field in the Frame Control field and the Mesh Power
-> Save Level field in the QoS Control field in group addressed Mesh Data
-> frames.
-> 
-> We would appreciate comments and advice.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/core.h   |    1 +
+ drivers/net/wireless/ath/ath6kl/init.c   |   10 ++++------
+ drivers/net/wireless/ath/ath6kl/target.h |    3 ---
+ 3 files changed, 5 insertions(+), 9 deletions(-)
 
-I just did a cursory review -- I only looked at code style and general
-issues.
-
-I expect that Thomas/Javier will review this from a functionality POV, I
-have no idea if these per-station things etc. even make sense.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index f5a8334..83167be 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -548,6 +548,7 @@ struct ath6kl {
+ 		u32 app_start_override_addr;
+ 		u32 board_ext_data_addr;
+ 		u32 reserved_ram_size;
++		u32 board_addr;
+ 	} hw;
+ 
+ 	u16 conf_flags;
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 77444d1..bed468d 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -57,6 +57,7 @@ static const struct ath6kl_hw hw_list[] = {
+ 		.app_load_addr			= 0x1234,
+ 		.board_ext_data_addr		= 0x437000,
+ 		.reserved_ram_size		= 19456,
++		.board_addr			= 0x433900,
+ 	},
+ 	{
+ 		.id				= AR6004_REV2_VERSION,
+@@ -64,6 +65,7 @@ static const struct ath6kl_hw hw_list[] = {
+ 		.app_load_addr			= 0x1234,
+ 		.board_ext_data_addr		= 0x437000,
+ 		.reserved_ram_size		= 11264,
++		.board_addr			= 0x43d400,
+ 	},
+ };
+ 
+@@ -1031,12 +1033,8 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
+ 	 * For AR6004, host determine Target RAM address for
+ 	 * writing board data.
+ 	 */
+-	if (ar->target_type == TARGET_TYPE_AR6004) {
+-		if (ar->version.target_ver == AR6004_REV1_VERSION)
+-			board_address = AR6004_REV1_BOARD_DATA_ADDRESS;
+-		else
+-			board_address = AR6004_REV2_BOARD_DATA_ADDRESS;
+-
++	if (ar->hw.board_addr != 0) {
++		board_address = ar->hw.board_addr;
+ 		ath6kl_bmi_write(ar,
+ 				ath6kl_get_hi_item_addr(ar,
+ 				HI_ITEM(hi_board_data)),
+diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
+index ece0f13..108a723 100644
+--- a/drivers/net/wireless/ath/ath6kl/target.h
++++ b/drivers/net/wireless/ath/ath6kl/target.h
+@@ -334,9 +334,6 @@ struct host_interest {
+ 	(((target_type) == TARGET_TYPE_AR6003) ? AR6003_VTOP(vaddr) : \
+ 	(((target_type) == TARGET_TYPE_AR6004) ? AR6004_VTOP(vaddr) : 0))
+ 
+-#define AR6004_REV1_BOARD_DATA_ADDRESS          0x433900
+-#define AR6004_REV2_BOARD_DATA_ADDRESS          0x43d400
+-
+ #define ATH6KL_FWLOG_PAYLOAD_SIZE		1500
+ 
+ struct ath6kl_dbglog_buf {
 
