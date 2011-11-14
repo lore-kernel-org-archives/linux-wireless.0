@@ -1,44 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:52362 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751595Ab1KVSLq (ORCPT
+Received: from mail-dy0-f46.google.com ([209.85.220.46]:40788 "EHLO
+	mail-dy0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751719Ab1KNVWR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 13:11:46 -0500
-Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id pAMIBjNH024404
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2011 10:11:45 -0800
-Message-ID: <4ECBE5E1.3000209@candelatech.com> (sfid-20111122_191149_242124_20DA201C)
-Date: Tue, 22 Nov 2011 10:11:45 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 14 Nov 2011 16:22:17 -0500
+Received: by dyi18 with SMTP id 18so246410dyi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2011 13:22:16 -0800 (PST)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Compile failure related to iwlegacy
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1321302275.10264.20.camel@jlt3.sipsolutions.net>
+References: <1318925897.3958.11.camel@jlt3.sipsolutions.net>
+ <4EC16797.40208@hauke-m.de> <1321302275.10264.20.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 14 Nov 2011 13:21:55 -0800
+Message-ID: <CAB=NE6WEXwrj2JqupCG=_DVA9Jxd4iAz_igPLQxVoWZgeiYvug@mail.gmail.com> (sfid-20111114_222221_230952_01A3FD4B)
+Subject: Re: compat-wireless: backporting kfree_rcu()?
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I just pulled wireless-testing and tried building:
-
-   BUILD   arch/x86/boot/bzImage
-Setup is 14908 bytes (padded to 15360 bytes).
-System is 3555 kB
-CRC 36c2015b
-Kernel: arch/x86/boot/bzImage is ready  (#28)
-   MODPOST 2828 modules
-ERROR: "il_dbgfs_unregister" [drivers/net/wireless/iwlegacy/iwl4965.ko] undefined!
-ERROR: "il_dbgfs_register" [drivers/net/wireless/iwlegacy/iwl4965.ko] undefined!
-ERROR: "il_dbgfs_unregister" [drivers/net/wireless/iwlegacy/iwl3945.ko] undefined!
-ERROR: "il_dbgfs_register" [drivers/net/wireless/iwlegacy/iwl3945.ko] undefined!
-WARNING: modpost: Found 7 section mismatch(es).
-To see full details build your kernel with:
-'make CONFIG_DEBUG_SECTION_MISMATCH=y'
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+T24gTW9uLCBOb3YgMTQsIDIwMTEgYXQgMTI6MjQgUE0sIEpvaGFubmVzIEJlcmcKPGpvaGFubmVz
+QHNpcHNvbHV0aW9ucy5uZXQ+IHdyb3RlOgo+IEhpLAo+Cj4+ID4gI2RlZmluZSBrZnJlZV9yY3Uo
+ZGF0YSwgcmN1aGVhZCkgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBkbyB7IMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgXAo+PiA+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHZvaWQgX19rZnJl
+ZV9yY3VfZm4oc3RydWN0IHJjdV9oZWFkICpyY3VfaGVhZCkgwqBcCj4+ID4gwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgeyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBcCj4+ID4gwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgdm9pZCAqX19fcHRyOyDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBcCj4+ID4gwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgX19fcHRyID0gY29udGFpbmVyX29mKHJjdV9oZWFkLCB0eXBlb2Yo
+KihkYXRhKSksIHJjdWhlYWQpO1wKPj4gPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCBrZnJlZShfX19wdHIpOyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoFwKPj4gPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB9IMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIFwKPj4gPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBjYWxsX3JjdSgmKGRh
+dGEpLT5yY3VoZWFkLCBfX2tmcmVlX3JjdV9mbik7IMKgIMKgIMKgIMKgIMKgIMKgIFwKPj4gPiDC
+oCDCoCDCoCDCoCB9IHdoaWxlICgwKQo+PiA+Cj4+ID4KPj4gPiBUaGlzIHdvcmtzLCB0aGFua3Mg
+dG8gZ2NjIHN1cHBvcnRpbmcgbmVzdGVkIGZ1bmN0aW9ucywgYnV0IGhhcyBvbmUgbWFqb3IKPj4g
+PiBpc3N1ZTogYW55IG1vZHVsZSB1c2luZyBjYWxsX3JjdSgpIG11c3QgaGF2ZSBhbiByY3VfYmFy
+cmllcigpIGluIGl0cwo+PiA+IG1vZHVsZV9leGl0KCkgYmVjYXVzZSBfX2tmcmVlX3JjdV9mbigp
+IG1pZ2h0IGJlIGNhbGxlZCBhZnRlciB0aGUgbW9kdWxlCj4+ID4gaXMgdW5sb2FkZWQuIEZvciBr
+ZnJlZV9yY3UoKSB0aGlzIGlzbid0IG5lZWRlZCBzaW5jZSB0aGUgZnVuY3Rpb24gY2FsbGVkCj4+
+ID4gbGl2ZXMgaW4gdGhlIGJhc2Uga2VybmVsLgo+Pgo+PiBUaGlzIGxvb2tzIG5pY2UgdG8gbWUu
+Cj4KPiA6LSkKPgo+PiA+IEkgcGxheWVkIGFyb3VuZCB3aXRoIGluamVjdGluZyBhIGNhbGwgdG8g
+cmN1X2JhcnJpZXIoKSBpbnRvIG1vZHVsZSBleGl0Cj4+ID4gYnkgbW9kaWZ5aW5nIG1vZHVsZV9l
+eGl0KCkgYnV0IEkgY291bGRuJ3QgbWFrZSB0aGUgQ1BQIGRvIHRoYXQuIEFueW9uZQo+PiA+IGVs
+c2UgaGF2ZSBhbnkgaWRlYXM/Cj4+Cj4+IEkgcGxheWVkIGFyb3VuZCB3aXRoIG1vZHVsZV9leGl0
+IGFuZCBtb2RpZmllZCB0aGUgZGVmaW5lIGludG8gdGhlCj4+IGZvbGxvd2luZy4gTm93IHJjdV9i
+YXJyaWVyKCkgZ2V0cyBjYWxsZWQgb24gZXZlcnkgbW9kdWxlX2V4aXQuIEFzCj4+IG1vZHVsZXMg
+YXJlIG5vdCB1bmxvYWRlZCBzbyBvZnRlbiBpdCBzaG91bGQgbm90IGh1cmQgdGhhdCB0aGlzIGlz
+IGFsc28KPj4gZG9uZSB3aGVuIHVubG9hZGluZyBhIG1vZHVsZSBub3QgdXNpbmcga2ZyZWVfcmN1
+KCkuCj4KPiBPay4KPgo+PiAjdW5kZWYgbW9kdWxlX2V4aXQKPj4gI2RlZmluZSBtb2R1bGVfZXhp
+dChleGl0Zm4pIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIFwKPj4gwqAgwqAgwqAgdm9pZCBfX2V4aXQgX19leGl0X3JjdV9iYXJyaWVyKHZvaWQpIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgXAo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCB7IMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIFwKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgZXhpdGZuKCk7
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIFwKPj4gwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcmN1X2JhcnJpZXIoKTsgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBcCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIH0gwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgXAo+PiDCoCDCoCDCoCBzdGF0aWMgaW5saW5lIGV4aXRjYWxsX3QgX19leGl0dGVzdCh2
+b2lkKSDCoCDCoCDCoCDCoCDCoCDCoCDCoCBcCj4+IMKgIMKgIMKgIHsgcmV0dXJuIGV4aXRmbjsg
+fSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oFwKPj4gwqAgwqAgwqAgdm9pZCBjbGVhbnVwX21vZHVsZSh2b2lkKSBfX2F0dHJpYnV0ZV9fKChh
+bGlhcygiX19leGl0X3JjdV9iYXJyaWVyIikpKTsKPgo+PiBKb2hhbm5lcyBhcmUgeW91IGZpbmUg
+d2l0aCB0aGlzPwo+Cj4gRnJhbmtseSwgSSBkb24ndCB0aGluayBJIHJlYWxseSB1bmRlcnN0YW5k
+IGl0LCBidXQgaWYgaXQgd29ya3MsIHdoeSBub3Q/Cj4gSSBndWVzcyBJIGNvdWxkIHN0aWNrIGEg
+cHJpbnRrIGludG8gdGhhdCBmdW5jdGlvbiB0aGVyZSB0byB2ZXJpZnkgaXQgOy0pCgpDYW4ndCBz
+YXkgSSBnZXQgdGhpcyBlaXRoZXIsIGJ1dCBpZiBpdCB3b3JrIGFuZCBpZiBkb2N1bWVudGVkIHJl
+YWxseQp3ZWxsIEknZCBnbGFkbHkgc3VjayBpdCBpbi4KCiAgTHVpcwo=
