@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:37828 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751732Ab1KXQuY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 11:50:24 -0500
-Received: by ggnr5 with SMTP id r5so2731928ggn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2011 08:50:23 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1322153083.5366.26.camel@jlt3.sipsolutions.net>
-References: <1322062858-15276-1-git-send-email-mcgrof@qca.qualcomm.com>
- <1322062858-15276-3-git-send-email-mcgrof@qca.qualcomm.com> <1322153083.5366.26.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 24 Nov 2011 11:50:02 -0500
-Message-ID: <CAB=NE6VoPFkTs1xugqCO20bj2j5zbAGWbUeTT5PX4JDOAtXtbA@mail.gmail.com> (sfid-20111124_175027_232023_BCACB9AA)
-Subject: Re: [RFC 2/5] cfg80211: add support to immediately apply reg settings
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:22837 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751654Ab1KNWnW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Nov 2011 17:43:22 -0500
+Message-ID: <1321310590.16847.3.camel@dcbw.foobar.com> (sfid-20111114_234337_599577_C67428CD)
+Subject: Re: [PATCH] Net, libertas: Resolve memory leak in
+ if_spi_host_to_card()
+From: Dan Williams <dcbw@redhat.com>
+To: Jesper Juhl <jj@chaosbits.net>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	Colin McCabe <colin@cozybit.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 14 Nov 2011 16:43:10 -0600
+In-Reply-To: <alpine.LNX.2.00.1111132211580.3368@swampdragon.chaosbits.net>
+References: <alpine.LNX.2.00.1111132211580.3368@swampdragon.chaosbits.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 24, 2011 at 11:44 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2011-11-23 at 10:40 -0500, Luis R. Rodriguez wrote:
->> It is useful to apply reguatory settings immediately. We already
->> handle applying regulatory hints immediatey for most hints but
->> for user hints and country IE hints we want to kick hardware
->> immediately to make these changes take effect. This adds supports
->> to let us kick hardware to make the changes take effect as soon
->> as possible.
->
-> Can't say I like this -- wouldn't we rather call the regulatory update
-> callback or so?
+On Sun, 2011-11-13 at 22:14 +0100, Jesper Juhl wrote:
+> If we hit the default case in the switch in if_spi_host_to_card() we'll leak
+> the memory we allocated for 'packet'. This patch resolves the leak by freeing
+> the allocated memory in that case.
+> 
+> Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 
-I'm not a fan either, at first I considered doing that on the
-reg_notifier() but then that also means every driver must implement a
-reg_notifier() callback, or a new reg_apply() callback. If we do it
-within cfg80211 it means all drivers get this for free and that was
-the tradeoff I wanted to review through these RFCs. Unfortunately
-setting the tx power was the only thing I saw cfg80211 could do right
-now.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-I'm still "meh" about this too.
+> ---
+>  drivers/net/wireless/libertas/if_spi.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+>  Compile tested only due to lack of hardware.
+> 
+> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+> index 11b69b3..728baa4 100644
+> --- a/drivers/net/wireless/libertas/if_spi.c
+> +++ b/drivers/net/wireless/libertas/if_spi.c
+> @@ -995,6 +995,7 @@ static int if_spi_host_to_card(struct lbs_private *priv,
+>  		spin_unlock_irqrestore(&card->buffer_lock, flags);
+>  		break;
+>  	default:
+> +		kfree(packet);
+>  		netdev_err(priv->dev, "can't transfer buffer of type %d\n",
+>  			   type);
+>  		err = -EINVAL;
+> -- 
+> 1.7.7.3
+> 
+> 
 
-  Luis
+
