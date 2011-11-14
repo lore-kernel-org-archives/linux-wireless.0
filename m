@@ -1,137 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2336 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751994Ab1KQWcB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 17:32:01 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: dwmw2@infradead.org
-cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: [PATCH 3/3] linux-firmware: remove nvram file for bcm4329
- development board
-Date: Thu, 17 Nov 2011 14:31:41 -0800
-Message-ID: <1321569101-19568-4-git-send-email-frankyl@broadcom.com> (sfid-20111117_233223_729306_64BD2002)
-In-Reply-To: <1321569101-19568-1-git-send-email-frankyl@broadcom.com>
-References: <1321569101-19568-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-dy0-f46.google.com ([209.85.220.46]:58345 "EHLO
+	mail-dy0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754694Ab1KNUjr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Nov 2011 15:39:47 -0500
+Received: by dyi18 with SMTP id 18so242777dyi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2011 12:39:45 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1321287289.10264.16.camel@jlt3.sipsolutions.net>
+References: <1321287289.10264.16.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 14 Nov 2011 12:39:24 -0800
+Message-ID: <CAB=NE6X0MsJN5WmaGxg_2Xp+TNKayJ9bQvQu5--heF5RP44JrQ@mail.gmail.com> (sfid-20111114_213950_279055_DE732878)
+Subject: Re: [PATCH 1/2] compat-wireless: disable SKB TX status stamping in mac80211
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The nvram file contains configuration info for firmware which varies
-with different hardware designs. The version currently in the
-repository is for a Broadcom-internal development board that is not
-available on the market. This file is not applicable for any exsisting
-end-user product. Users should use the nvram file that was
-shipped with their device to avoid unexpected or incorrect behavior.
-Remove the file from repository to avoid confusion.
+On Mon, Nov 14, 2011 at 8:14 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- brcm/bcm4329-fullmac-4.txt |   94 --------------------------------------------
- 1 files changed, 0 insertions(+), 94 deletions(-)
- delete mode 100644 brcm/bcm4329-fullmac-4.txt
+Applied and pushed, thanks!
 
-diff --git a/brcm/bcm4329-fullmac-4.txt b/brcm/bcm4329-fullmac-4.txt
-deleted file mode 100644
-index f757f55..0000000
---- a/brcm/bcm4329-fullmac-4.txt
-+++ /dev/null
-@@ -1,94 +0,0 @@
--# bcm94329sdagb board
--# $Copyright (C) 2008 Broadcom Corporation$
--# $id$
--
--sromrev=3
--vendid=0x14e4
--devid=0x432e
--# board type
--boardtype=0x4ff
--
--# board revision 1.1
--boardrev=0x19
--
--# boardflags
--boardflags=0x1200
--
--####### IMP ########
--# Specify the xtalfreq if it is otherthan 38.4MHz
--xtalfreq=38400
--
--aa2g=1
--aa5g=1
--
--ag0=255
--
--# 11g paparams
--pa0b0=6003,6003,5112
--pa0b1=64086,64086,64229
--pa0b2=65195,65195,65081
--pa0itssit=62
--pa0maxpwr=66
--opo=0
--mcs2gpo0=0x2222
--mcs2gpo1=0x2222
--
--# sel = 1 : 20% evm  sel = 2 : 27% evm  sel = 3 : 16% evm
--cckdigfilttype=0
--ofdmdigfilttype=1
--
--# 11a paparams lowband
--pa1lob0=5662
--pa1lob1=64130
--pa1lob2=65156
--# paparams midband
--pa1b0=5724
--pa1b1=64128
--pa1b2=65167
--#paparams high band
--pa1hib0=5675
--pa1hib1=64129
--pa1hib2=65169
--pa1itssit=62
--pa1maxpwr=66
--opo=0
--mcs5gpo=0x22222222
--
--# 11g rssi params
--rssismf2g=0xa
--rssismc2g=0xb
--rssisav2g=0x3
--bxa2g=0
--
--# 11a rssi params
--rssismf5g=0xa
--rssismc5g=0xa
--rssisav5g=0x3
--bxa2g=0
--
--# country code
--ccode=X2
--cctl=0x0
--
--rxpo2g=1
--rxpo5g=0
--rxpo2gchnflg=0x1FFF
--
--boardnum=2048
--macaddr=00:90:4c:c5:34:23
--
--#######
--nocrc=1
--
--#for mfgc
--otpimagesize=182
--
--# sdio extra configs
--hwhdr=0x05ffff031030031003100000
--
--#This generates empty F1, F2 and F3 tuple chains, and may be used if the host SDIO stack does not require the standard tuples.
--RAW1=80 02 fe ff
--
--#This includes the standard FUNCID and FUNCE tuples in the F1, F2, F3 and common CIS.
--#RAW1=80 32 fe 21 02 0c 00 22 2a 01 01 00 00 c5 0 e6 00 00 00 00 00 40 00 00 ff ff 80 00 00 00 00 00 00 00 00 00 00 c8 00 00 00 00 00 00 00 00 00 00 00 00 00 ff 20 04 D0 2 29 43 21 02 0c 00 22 04 00 20 00 5A
--nvramver=4.218.0.0
--- 
-1.7.5.4
-
-
+ Luis
