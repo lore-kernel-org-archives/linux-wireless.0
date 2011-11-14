@@ -1,230 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:42374 "HELO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754659Ab1KQElK (ORCPT
+Received: from mailgw02.dd24.net ([193.46.215.43]:39029 "EHLO
+	mailgw02.dd24.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751051Ab1KNAMA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 23:41:10 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Tristan Xu <xurf@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: add support for Marvell sd8797 device
-Date: Wed, 16 Nov 2011 20:40:35 -0800
-Message-Id: <1321504835-11172-1-git-send-email-bzhao@marvell.com> (sfid-20111117_054128_433758_D75C6670)
+	Sun, 13 Nov 2011 19:12:00 -0500
+Subject: Re: iwl4965: "MAC is in deep sleep!" freezes
+From: Christoph Anton Mitterer <calestyo@scientia.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Jonathan Nieder <jrnieder@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Dietsche <Gregory.Dietsche@cuw.edu>,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <20110908084913.GB2195@redhat.com>
+References: <bbdbd01d4965ae789384bc1f9d0a2426@imap.dd24.net>
+	 <20110902233806.GA22157@elie> <20110905091918.GC2221@redhat.com>
+	 <265f56a4dc9f5d3edeca3d101e445353@imap.dd24.net>
+	 <20110908084913.GB2195@redhat.com>
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-HBLg9lit2NnK8ge86ZhI"
+Date: Mon, 14 Nov 2011 01:02:32 +0100
+Message-ID: <1321228952.3362.15.camel@fermat.scientia.net> (sfid-20111114_011245_631725_13BFB9E1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch supports Marvell chipset 88W8797 (Avastar) with
-SDIO interface.
 
-The corresponding firmware image file is located at:
-"mrvl/sd8797_uapsta.bin"
+--=-HBLg9lit2NnK8ge86ZhI
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Tristan Xu <xurf@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Frank Huang <frankh@marvell.com>
----
- drivers/net/wireless/mwifiex/Kconfig       |    4 +-
- drivers/net/wireless/mwifiex/cfp.c         |   38 +++++++++++++++++++---------
- drivers/net/wireless/mwifiex/fw.h          |    1 +
- drivers/net/wireless/mwifiex/main.h        |    3 +-
- drivers/net/wireless/mwifiex/sdio.c        |   17 +++++++++++-
- drivers/net/wireless/mwifiex/sdio.h        |    1 +
- drivers/net/wireless/mwifiex/sta_cmdresp.c |    2 +-
- drivers/net/wireless/mwifiex/sta_ioctl.c   |    4 +-
- 8 files changed, 50 insertions(+), 20 deletions(-)
+Hi.
 
-diff --git a/drivers/net/wireless/mwifiex/Kconfig b/drivers/net/wireless/mwifiex/Kconfig
-index 8f2797a..2a078ce 100644
---- a/drivers/net/wireless/mwifiex/Kconfig
-+++ b/drivers/net/wireless/mwifiex/Kconfig
-@@ -10,12 +10,12 @@ config MWIFIEX
- 	  mwifiex.
- 
- config MWIFIEX_SDIO
--	tristate "Marvell WiFi-Ex Driver for SD8787"
-+	tristate "Marvell WiFi-Ex Driver for SD8787/SD8797"
- 	depends on MWIFIEX && MMC
- 	select FW_LOADER
- 	---help---
- 	  This adds support for wireless adapters based on Marvell
--	  8787 chipset with SDIO interface.
-+	  8787/8797 chipsets with SDIO interface.
- 
- 	  If you choose to build it as a module, it will be called
- 	  mwifiex_sdio.
-diff --git a/drivers/net/wireless/mwifiex/cfp.c b/drivers/net/wireless/mwifiex/cfp.c
-index f2e6de0..1782a77 100644
---- a/drivers/net/wireless/mwifiex/cfp.c
-+++ b/drivers/net/wireless/mwifiex/cfp.c
-@@ -75,18 +75,32 @@ static u8 supported_rates_n[N_SUPPORTED_RATES] = { 0x02, 0x04, 0 };
-  * This function maps an index in supported rates table into
-  * the corresponding data rate.
-  */
--u32 mwifiex_index_to_data_rate(u8 index, u8 ht_info)
-+u32 mwifiex_index_to_data_rate(struct mwifiex_private *priv, u8 index,
-+							u8 ht_info)
- {
--	u16 mcs_rate[4][8] = {
--		{0x1b, 0x36, 0x51, 0x6c, 0xa2, 0xd8, 0xf3, 0x10e}
--	,			/* LG 40M */
--	{0x1e, 0x3c, 0x5a, 0x78, 0xb4, 0xf0, 0x10e, 0x12c}
--	,			/* SG 40M */
--	{0x0d, 0x1a, 0x27, 0x34, 0x4e, 0x68, 0x75, 0x82}
--	,			/* LG 20M */
--	{0x0e, 0x1c, 0x2b, 0x39, 0x56, 0x73, 0x82, 0x90}
--	};			/* SG 20M */
--
-+	/*
-+	 * For every mcs_rate line, the first 8 bytes are for stream 1x1,
-+	 * and all 16 bytes are for stream 2x2.
-+	 */
-+	u16  mcs_rate[4][16] = {
-+		/* LGI 40M */
-+		{ 0x1b, 0x36, 0x51, 0x6c, 0xa2, 0xd8, 0xf3, 0x10e,
-+		  0x36, 0x6c, 0xa2, 0xd8, 0x144, 0x1b0, 0x1e6, 0x21c },
-+
-+		/* SGI 40M */
-+		{ 0x1e, 0x3c, 0x5a, 0x78, 0xb4, 0xf0, 0x10e, 0x12c,
-+		  0x3c, 0x78, 0xb4, 0xf0, 0x168, 0x1e0, 0x21c, 0x258 },
-+
-+		/* LGI 20M */
-+		{ 0x0d, 0x1a, 0x27, 0x34, 0x4e, 0x68, 0x75, 0x82,
-+		  0x1a, 0x34, 0x4e, 0x68, 0x9c, 0xd0, 0xea, 0x104 },
-+
-+		/* SGI 20M */
-+		{ 0x0e, 0x1c, 0x2b, 0x39, 0x56, 0x73, 0x82, 0x90,
-+		  0x1c, 0x39, 0x56, 0x73, 0xad, 0xe7, 0x104, 0x120 }
-+	};
-+	u32 mcs_num_supp =
-+		(priv->adapter->hw_dev_mcs_support == HT_STREAM_2X2) ? 16 : 8;
- 	u32 rate;
- 
- 	if (ht_info & BIT(0)) {
-@@ -95,7 +109,7 @@ u32 mwifiex_index_to_data_rate(u8 index, u8 ht_info)
- 				rate = 0x0D;	/* MCS 32 SGI rate */
- 			else
- 				rate = 0x0C;	/* MCS 32 LGI rate */
--		} else if (index < 8) {
-+		} else if (index < mcs_num_supp) {
- 			if (ht_info & BIT(1)) {
- 				if (ht_info & BIT(2))
- 					/* SGI, 40M */
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 35cb29c..62b8639 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -165,6 +165,7 @@ enum MWIFIEX_802_11_WEP_STATUS {
- 
- #define GET_RXMCSSUPP(DevMCSSupported) (DevMCSSupported & 0x0f)
- #define SETHT_MCS32(x) (x[4] |= 1)
-+#define HT_STREAM_2X2	0x22
- 
- #define SET_SECONDARYCHAN(RadioType, SECCHAN) (RadioType |= (SECCHAN << 4))
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 30f138b..3861a61 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -775,7 +775,8 @@ struct mwifiex_chan_freq_power *
- struct mwifiex_chan_freq_power *mwifiex_get_cfp_by_band_and_freq_from_cfg80211(
- 						struct mwifiex_private *priv,
- 						u8 band, u32 freq);
--u32 mwifiex_index_to_data_rate(u8 index, u8 ht_info);
-+u32 mwifiex_index_to_data_rate(struct mwifiex_private *priv, u8 index,
-+							u8 ht_info);
- u32 mwifiex_find_freq_from_band_chan(u8, u8);
- int mwifiex_cmd_append_vsie_tlv(struct mwifiex_private *priv, u16 vsie_mask,
- 				u8 **buffer);
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index ffaf3f3..702452b 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -256,10 +256,13 @@ static int mwifiex_sdio_resume(struct device *dev)
- 
- /* Device ID for SD8787 */
- #define SDIO_DEVICE_ID_MARVELL_8787   (0x9119)
-+/* Device ID for SD8797 */
-+#define SDIO_DEVICE_ID_MARVELL_8797   (0x9129)
- 
- /* WLAN IDs */
- static const struct sdio_device_id mwifiex_ids[] = {
- 	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8787)},
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8797)},
- 	{},
- };
- 
-@@ -1573,7 +1576,16 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- 	sdio_set_drvdata(func, card);
- 
- 	adapter->dev = &func->dev;
--	strcpy(adapter->fw_name, SD8787_DEFAULT_FW_NAME);
-+
-+	switch (func->device) {
-+	case SDIO_DEVICE_ID_MARVELL_8797:
-+		strcpy(adapter->fw_name, SD8797_DEFAULT_FW_NAME);
-+		break;
-+	case SDIO_DEVICE_ID_MARVELL_8787:
-+	default:
-+		strcpy(adapter->fw_name, SD8787_DEFAULT_FW_NAME);
-+		break;
-+	}
- 
- 	return 0;
- 
-@@ -1774,4 +1786,5 @@ MODULE_AUTHOR("Marvell International Ltd.");
- MODULE_DESCRIPTION("Marvell WiFi-Ex SDIO Driver version " SDIO_VERSION);
- MODULE_VERSION(SDIO_VERSION);
- MODULE_LICENSE("GPL v2");
--MODULE_FIRMWARE("mrvl/sd8787_uapsta.bin");
-+MODULE_FIRMWARE(SD8787_DEFAULT_FW_NAME);
-+MODULE_FIRMWARE(SD8797_DEFAULT_FW_NAME);
-diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-index 3f71180..a3fb322 100644
---- a/drivers/net/wireless/mwifiex/sdio.h
-+++ b/drivers/net/wireless/mwifiex/sdio.h
-@@ -29,6 +29,7 @@
- #include "main.h"
- 
- #define SD8787_DEFAULT_FW_NAME "mrvl/sd8787_uapsta.bin"
-+#define SD8797_DEFAULT_FW_NAME "mrvl/sd8797_uapsta.bin"
- 
- #define BLOCK_MODE	1
- #define BYTE_MODE	0
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 7a16b0c..e812db8 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -508,7 +508,7 @@ static int mwifiex_ret_802_11_tx_rate_query(struct mwifiex_private *priv,
- 	priv->tx_htinfo = resp->params.tx_rate.ht_info;
- 	if (!priv->is_data_rate_auto)
- 		priv->data_rate =
--			mwifiex_index_to_data_rate(priv->tx_rate,
-+			mwifiex_index_to_data_rate(priv, priv->tx_rate,
- 						   priv->tx_htinfo);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index ea4a29b..4b6f553 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -832,8 +832,8 @@ int mwifiex_drv_get_data_rate(struct mwifiex_private *priv,
- 
- 	if (!ret) {
- 		if (rate->is_rate_auto)
--			rate->rate = mwifiex_index_to_data_rate(priv->tx_rate,
--							priv->tx_htinfo);
-+			rate->rate = mwifiex_index_to_data_rate(priv,
-+					priv->tx_rate, priv->tx_htinfo);
- 		else
- 			rate->rate = priv->data_rate;
- 	} else {
--- 
-1.7.0.2
+Sorry for completely forgetting about this... (for so long)
+
+I've tried your patch now against 3.1, and it seems to not help.
+
+Not sure whether trying with 2.6.38 helps.
+It "stopped" working within the very same kernel.
+
+The old mainboard got broken and was replaced by a new one (of the same
+type),... but perhaps the wifi controller is of a new revision or so?!
+
+
+Cheers,
+Chris.
+
+
+On Thu, 2011-09-08 at 10:49 +0200, Stanislaw Gruszka wrote:
+> On Mon, Sep 05, 2011 at 09:42:01AM +0000, Christoph Anton Mitterer wrote:
+> > On Mon, 5 Sep 2011 11:19:18 +0200, Stanislaw Gruszka <sgruszka@redhat.c=
+om>
+> > wrote:
+> > > this look like firmware hang. This happen just after module load, tha=
+t's
+> > > good news, because it allow to log relative small amount debug messag=
+es
+> > > to see what possibly driver do wrong to crash firmware.
+> > Note, that the effects of - usually but not always - frozen system whil=
+e
+> > the errors are printed (sometimes keyboard input seems still be possibl=
+e
+> > during that) ... happen over and over again... say about every  10 minu=
+tes
+> > or so.
+> > Not just the first time the modules is loaded.
+> > Is the firmware loaded over and over again?
+> I think is not, but even if is, kernel should not crash. Can you grab
+> crash logs using photo camera, serial cable or netconsole, to allow to=
+=20
+> see where exactly crash happen and fix it.
+>=20
+> > > Please configure syslog to log kernel debug messages.
+> > Will mail it later.
+>=20
+> Firmware hang seems to happen when REPLY_LEDS_CMD command is send.
+> No idea if attached patch could help or not, but is worth to try it.
+> It prevent to send LED command asynchronously, when possibly some
+> other commands are pending in firmware.
+>=20
+> If it does not help, please provide the same way captured debug
+> messages from 2.6.38 kernel, where drivers works. I'll compare
+> it with broken driver logs to figure out what broken driver
+> do differently.
+>=20
+> Thanks
+> Stanislaw
+
+
+--=-HBLg9lit2NnK8ge86ZhI
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIITMjCCBggw
+ggPwoAMCAQICAQEwDQYJKoZIhvcNAQEEBQAweTEQMA4GA1UEChMHUm9vdCBDQTEeMBwGA1UECxMV
+aHR0cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5
+MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcwHhcNMDUxMDE0MDczNjU1WhcNMzMw
+MzI4MDczNjU1WjBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwGA1UECxMVaHR0cDovL3d3dy5D
+QWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290MIICIjANBgkqhkiG9w0BAQEF
+AAOCAg8AMIICCgKCAgEAq0k1EUh80iZ+U5TPQ6ndKNdCKovzh3gZWHwPntqJfeH763KQDXShlmSr
+n6AkmXPa4lV2xxd79QSsRrjDvn9kjRBsJPNhnMDykPpR5vVpAWPDD1biSkLP4kSMJSioxXkJfUa5
+ivPp8zQpCEXkHJ/LlAQcgagUs5hlxEPsToKNCdG9qluNktDs3pDFfwrC4+vmMVpedD6XM1nowwM9
+YDO/99FvR8TN7mKDUm4uCJqk2RUYkaaFkkewrkjrbbch7IUaaHI1q//wEF3A9JSnatU7kn5MkAV+
+k8Esi6SOYnQVcW4LcQPqrxU4mtTSBXJvjPkr61pyJfk5RuNyGz4Ew2QnIhAqik9YpwOtvrQuE+1d
+qkjX1X3UKntc+kYEUOTMDkJbjO3b8s/8lpPg2xE2VGI0OI8MYJs7l1Y4rfPSW4ugW+pOlrh819Wg
+hnBA05Ept6I8rfWMu88akorkNHvA2Gxf6QrCw6cgmlrfLF1SXLpH1ZvvJChwOCAv1X8pwLJBA2iS
+zOCczJdLRe86EAqrcDqYlXCtNbHqhSukHIAhMamuYHqAJkgAuAHAk2NVIpE8Vuev2zol848xVOom
+i4FZ+aHRUxHFe50D9nQR4G2xLD8shpGZcZqmd4s0YNEUtCysna+MENOfxGr4bxP8c1n3ZkJ0Horj
++NzSb5icy0eYlUAF++kCAwEAAaOBvzCBvDAPBgNVHRMBAf8EBTADAQH/MF0GCCsGAQUFBwEBBFEw
+TzAjBggrBgEFBQcwAYYXaHR0cDovL29jc3AuQ0FjZXJ0Lm9yZy8wKAYIKwYBBQUHMAKGHGh0dHA6
+Ly93d3cuQ0FjZXJ0Lm9yZy9jYS5jcnQwSgYDVR0gBEMwQTA/BggrBgEEAYGQSjAzMDEGCCsGAQUF
+BwIBFiVodHRwOi8vd3d3LkNBY2VydC5vcmcvaW5kZXgucGhwP2lkPTEwMA0GCSqGSIb3DQEBBAUA
+A4ICAQB/CIih2hpQSdqJ+6EIcvOK9x7EOrR5WyAwsUXewl3TZWnxwl1UVDyFX7l7QpHCmf0bUZur
+RqWhEFOebYisc24sM6bw9J7gdcE+iEWp4WZD/lZa0XpBePdA2ko68QtbpbsWBubC55O5hU2XT7Ee
+OEOA75sNjO+4p2AAh1d9HkQcyyPvmzyZna+1KRxFeRaWTSdt8Rxsw8JVZLO8FOLzpB8eMvwnFQXP
+3S6uPoJhe/AhEBj2ROpTOfnc0Jog4Ma74LtaT8SZyAe9tb2i2y5iDUI0Qbz/i4r1USKqiDAA4rDU
+vL5lutUDV3mb6NzITfhQ7ZGlUiiirPs2WD7plCuRUIcb1l7WjMz3DxAMUk7QFmHl5QpsvxfHckZX
+nJj1bGBjem9euU4vyLm5u2qFvJgN7fk+l4Q0lK4Ar6Hl55JuTr3z4tkUi1zS6wFsoBelLRDrnHpK
+vb3uzv3tIkCrcDiI9QqHasKrBWDJSAXaU8HeRHdqs/M8PO2AvKY4SikkX/5ZO5slelZjAGS5XaRi
+fVc2T62D7x+SU6COd1fd5WERPSMAkEw8+qNgkwSjrzX2DmqPT0pgp4UFbEahj/THduOhWVf3cbLE
+bhRcbW1BZt8bk7HUAMPuy888PSGAqV9jZfzd4F+k9CvwhXFB1Gcl+xqxl67WmYITQdJupRuZJ4Dn
+C6moADCCBo8wggR3oAMCAQICAwCyHTANBgkqhkiG9w0BAQUFADBUMRQwEgYDVQQKEwtDQWNlcnQg
+SW5jLjEeMBwGA1UECxMVaHR0cDovL3d3dy5DQWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xh
+c3MgMyBSb290MB4XDTEwMDgwMTIxMjc0M1oXDTEyMDczMTIxMjc0M1owggEdMSEwHwYDVQQDExhD
+aHJpc3RvcGggQW50b24gTWl0dGVyZXIxJDAiBgkqhkiG9w0BCQEWFWNhbGVzdHlvQHNjaWVudGlh
+Lm5ldDExMC8GCSqGSIb3DQEJARYibWFpbEBjaHJpc3RvcGguYW50b24ubWl0dGVyZXIubmFtZTEv
+MC0GCSqGSIb3DQEJARYgY2hyaXN0b3BoLmFudG9uLm1pdHRlcmVyQGNlcm4uY2gxPjA8BgkqhkiG
+9w0BCQEWL2NocmlzdG9waC5hbnRvbi5taXR0ZXJlckBwaHlzaWsudW5pLW11ZW5jaGVuLmRlMS4w
+LAYJKoZIhvcNAQkBFh9jaHJpc3RvcGguYW50b24ubWl0dGVyZXJAbG11LmRlMIIBIjANBgkqhkiG
+9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuwNa6CEzsTRd3bRYXPNn2KYKhFZbyPPk1CjuFfy+1PAfKBiG
+JmhhHGkmwCdnOd5aVnGzwIPfTv/+Rw3Cuw2zJ4YmJmX3uNDz/l2M6h5MO7Bawv7CjdR+ljGaIBYi
+gMuNaBawmoo60shkvOwf8df/Ou5KTxX7uL/hNOb1Q2/3yJWBBMPCbKD0nTvVH34nE1lfZxvKk/Mu
+dT7jc/WZ3kJshsO7y0WS/DEDvqPiQI5zfCx/qslMYCSCwcqZ4/NHwEXX4zgt9tfPj34iBNLEod7H
+zdNhCfdqn1j/FTsRI12M2OXEYhYgBoRNRYshPV10ePbV9+GPzvWlJm7Hn07fxVi4ZQIDAQABo4IB
+nTCCAZkwDAYDVR0TAQH/BAIwADBWBglghkgBhvhCAQ0ESRZHVG8gZ2V0IHlvdXIgb3duIGNlcnRp
+ZmljYXRlIGZvciBGUkVFIGhlYWQgb3ZlciB0byBodHRwOi8vd3d3LkNBY2VydC5vcmcwQAYDVR0l
+BDkwNwYIKwYBBQUHAwQGCCsGAQUFBwMCBgorBgEEAYI3CgMEBgorBgEEAYI3CgMDBglghkgBhvhC
+BAEwMgYIKwYBBQUHAQEEJjAkMCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5jYWNlcnQub3JnMIG6
+BgNVHREEgbIwga+BFWNhbGVzdHlvQHNjaWVudGlhLm5ldIEibWFpbEBjaHJpc3RvcGguYW50b24u
+bWl0dGVyZXIubmFtZYEgY2hyaXN0b3BoLmFudG9uLm1pdHRlcmVyQGNlcm4uY2iBL2NocmlzdG9w
+aC5hbnRvbi5taXR0ZXJlckBwaHlzaWsudW5pLW11ZW5jaGVuLmRlgR9jaHJpc3RvcGguYW50b24u
+bWl0dGVyZXJAbG11LmRlMA0GCSqGSIb3DQEBBQUAA4ICAQAQFRkG3/PZgFdEFzeQyB2Gy8aXvyfS
+XpoF14+eAplacl6HXG874gfBw0VlTMkG7ynK3sh2cOEz20BMbly/MGT9tMpo246EhINlIwpfnqlS
+GZ+AVXrmztX25Eler+fO2wOVEeCn+HV09wb95VJtdzeAVaWpON5cEjGm9TLpMfR3RDDDkkcKI1uB
+kAcwVugRHmAXgx+2Mi6bDrG1q3TXA8JCdo+8ojdboSEpJvPXhXeKcN9N9ajLqcv/J0jp5s1jZCRn
+oX8OGIu9KWYmD7w2dHaYDmi/JHAa1ddd38BjULi1azqAVr32f1UWzU12JucqGHvlsZvkr479f/jV
+4G8ID7zz/KG0Qb1op7gOZnj56/ek2jHyFBlYnAsnqM2imqSkNZsOAhxLPsYvqE3APCTcFMSilCCD
+66K8OLrzpAj6fzcY9UJ9pkRZBP+nkOTN9avqZivxwKR8Zvl4XG9NJEdftSDTjFaVeYjn8hiDW0c9
+uqVlayI35d2L0jC6h/npeihVWSOBiqFd5sPepTrqe7AvPrpYR12QrbkYeqARcqYnLe3jKuyWyqhQ
+EQty00Zb0n3d7ezZ15ECXBOQHhvlDkbT6UeGX3Xa9kvNYWIb62S1nZ4oicU94NPxwMYtttaOTjzY
+3hb5/aS+TWT+xkTFSFmd2perZmiiyByCKC5bcp6cOPWgvzCCBo8wggR3oAMCAQICAwCyHTANBgkq
+hkiG9w0BAQUFADBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwGA1UECxMVaHR0cDovL3d3dy5D
+QWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290MB4XDTEwMDgwMTIxMjc0M1oX
+DTEyMDczMTIxMjc0M1owggEdMSEwHwYDVQQDExhDaHJpc3RvcGggQW50b24gTWl0dGVyZXIxJDAi
+BgkqhkiG9w0BCQEWFWNhbGVzdHlvQHNjaWVudGlhLm5ldDExMC8GCSqGSIb3DQEJARYibWFpbEBj
+aHJpc3RvcGguYW50b24ubWl0dGVyZXIubmFtZTEvMC0GCSqGSIb3DQEJARYgY2hyaXN0b3BoLmFu
+dG9uLm1pdHRlcmVyQGNlcm4uY2gxPjA8BgkqhkiG9w0BCQEWL2NocmlzdG9waC5hbnRvbi5taXR0
+ZXJlckBwaHlzaWsudW5pLW11ZW5jaGVuLmRlMS4wLAYJKoZIhvcNAQkBFh9jaHJpc3RvcGguYW50
+b24ubWl0dGVyZXJAbG11LmRlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuwNa6CEz
+sTRd3bRYXPNn2KYKhFZbyPPk1CjuFfy+1PAfKBiGJmhhHGkmwCdnOd5aVnGzwIPfTv/+Rw3Cuw2z
+J4YmJmX3uNDz/l2M6h5MO7Bawv7CjdR+ljGaIBYigMuNaBawmoo60shkvOwf8df/Ou5KTxX7uL/h
+NOb1Q2/3yJWBBMPCbKD0nTvVH34nE1lfZxvKk/MudT7jc/WZ3kJshsO7y0WS/DEDvqPiQI5zfCx/
+qslMYCSCwcqZ4/NHwEXX4zgt9tfPj34iBNLEod7HzdNhCfdqn1j/FTsRI12M2OXEYhYgBoRNRYsh
+PV10ePbV9+GPzvWlJm7Hn07fxVi4ZQIDAQABo4IBnTCCAZkwDAYDVR0TAQH/BAIwADBWBglghkgB
+hvhCAQ0ESRZHVG8gZ2V0IHlvdXIgb3duIGNlcnRpZmljYXRlIGZvciBGUkVFIGhlYWQgb3ZlciB0
+byBodHRwOi8vd3d3LkNBY2VydC5vcmcwQAYDVR0lBDkwNwYIKwYBBQUHAwQGCCsGAQUFBwMCBgor
+BgEEAYI3CgMEBgorBgEEAYI3CgMDBglghkgBhvhCBAEwMgYIKwYBBQUHAQEEJjAkMCIGCCsGAQUF
+BzABhhZodHRwOi8vb2NzcC5jYWNlcnQub3JnMIG6BgNVHREEgbIwga+BFWNhbGVzdHlvQHNjaWVu
+dGlhLm5ldIEibWFpbEBjaHJpc3RvcGguYW50b24ubWl0dGVyZXIubmFtZYEgY2hyaXN0b3BoLmFu
+dG9uLm1pdHRlcmVyQGNlcm4uY2iBL2NocmlzdG9waC5hbnRvbi5taXR0ZXJlckBwaHlzaWsudW5p
+LW11ZW5jaGVuLmRlgR9jaHJpc3RvcGguYW50b24ubWl0dGVyZXJAbG11LmRlMA0GCSqGSIb3DQEB
+BQUAA4ICAQAQFRkG3/PZgFdEFzeQyB2Gy8aXvyfSXpoF14+eAplacl6HXG874gfBw0VlTMkG7ynK
+3sh2cOEz20BMbly/MGT9tMpo246EhINlIwpfnqlSGZ+AVXrmztX25Eler+fO2wOVEeCn+HV09wb9
+5VJtdzeAVaWpON5cEjGm9TLpMfR3RDDDkkcKI1uBkAcwVugRHmAXgx+2Mi6bDrG1q3TXA8JCdo+8
+ojdboSEpJvPXhXeKcN9N9ajLqcv/J0jp5s1jZCRnoX8OGIu9KWYmD7w2dHaYDmi/JHAa1ddd38Bj
+ULi1azqAVr32f1UWzU12JucqGHvlsZvkr479f/jV4G8ID7zz/KG0Qb1op7gOZnj56/ek2jHyFBlY
+nAsnqM2imqSkNZsOAhxLPsYvqE3APCTcFMSilCCD66K8OLrzpAj6fzcY9UJ9pkRZBP+nkOTN9avq
+ZivxwKR8Zvl4XG9NJEdftSDTjFaVeYjn8hiDW0c9uqVlayI35d2L0jC6h/npeihVWSOBiqFd5sPe
+pTrqe7AvPrpYR12QrbkYeqARcqYnLe3jKuyWyqhQEQty00Zb0n3d7ezZ15ECXBOQHhvlDkbT6UeG
+X3Xa9kvNYWIb62S1nZ4oicU94NPxwMYtttaOTjzY3hb5/aS+TWT+xkTFSFmd2perZmiiyByCKC5b
+cp6cOPWgvzGCAr0wggK5AgEBMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0
+dHA6Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAIDALIdMAkG
+BSsOAwIaBQCgggE3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTEx
+MTExNDAwMDIzMFowIwYJKoZIhvcNAQkEMRYEFKjimJOFkMqY1RBP6iVKfFaiT5zZMGoGCSsGAQQB
+gjcQBDFdMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6Ly93d3cuQ0Fj
+ZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAIDALIdMGwGCyqGSIb3DQEJEAIL
+MV2gWzBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwGA1UECxMVaHR0cDovL3d3dy5DQWNlcnQu
+b3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290AgMAsh0wDQYJKoZIhvcNAQEBBQAEggEA
+BEA9iRzkCLMgKpNN5ivY4ishwTIC8lEAOUvdsVPL+bEC+y6rj0N+4Oqr9fflNiLsimVVQUSRygkm
+wdYid1WU6/Ewxx/7rLRlZu6BlQ+ynYE9CvEdfjrhl7rBBu8riJHvNBx185yJnmCgTOSvldA/XHdr
+jLhh+FCyiIEoGcWYdX20wj/1TLzsxyM4YrDEnn7Xc5q8cfF5VqMElISv/SlaQRXgXs2YScmHK7LW
+r1hBUh5mCSqgtaemeYVLST3xbkWQJnrwpIPA7o0lbalOWTdJnxcmFSa2ytaCqV6ZkatAqLky0e4Q
+RM3FFYPe4wSq4AgVh0n7K1pMzIHHNVnXhXsffQAAAAAAAA==
+
+
+--=-HBLg9lit2NnK8ge86ZhI--
 
