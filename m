@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51579 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750748Ab1KCIIG (ORCPT
+Received: from mail-dy0-f46.google.com ([209.85.220.46]:47868 "EHLO
+	mail-dy0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757274Ab1KOT3T convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 04:08:06 -0400
-Subject: Re: mac80211: UAPSD - EOSP bit seems to be not set when send qos
- null frame
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAFED-j=sP7PSD8yv1U4RA9-NGnjJ9CE5C6qWOQxZ=rzGMdt+2w@mail.gmail.com> (sfid-20111103_090606_495560_51D06706)
-References: <CAFED-jkVtVFBJfDc-18a+RogAFoTVudS9_POjZHFZ=AtBu1p0g@mail.gmail.com>
-	 <1320306440.3950.0.camel@jlt3.sipsolutions.net>
-	 <CAFED-j=sP7PSD8yv1U4RA9-NGnjJ9CE5C6qWOQxZ=rzGMdt+2w@mail.gmail.com>
-	 (sfid-20111103_090606_495560_51D06706)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 Nov 2011 09:08:03 +0100
-Message-ID: <1320307683.3950.2.camel@jlt3.sipsolutions.net> (sfid-20111103_090811_283339_BC65CFF7)
-Mime-Version: 1.0
+	Tue, 15 Nov 2011 14:29:19 -0500
+Received: by dyi18 with SMTP id 18so309608dyi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Nov 2011 11:29:18 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1321384334.3975.2.camel@jlt3.sipsolutions.net>
+References: <1321371888-26897-1-git-send-email-patrick.kelle81@gmail.com>
+	<CAA93jw7nWHnCnT48RJ00+Zxq9CFuCzhkeh=+7h+DqvYH2T7W1Q@mail.gmail.com>
+	<1321384334.3975.2.camel@jlt3.sipsolutions.net>
+Date: Tue, 15 Nov 2011 20:29:17 +0100
+Message-ID: <CAA93jw56rVGCJfx+7niRJ0whUk3c1H8o228dkOTcoi5agXZF_A@mail.gmail.com> (sfid-20111115_202923_513080_3FAEA9B1)
+Subject: Re: [PATCH] minstrel_ht: Remove unused function parameters
+From: Dave Taht <dave.taht@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Patrick Kelle <patrick.kelle81@gmail.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	nbd@openwrt.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-11-03 at 09:05 +0100, Janusz Dziedzic wrote:
-> 2011/11/3 Johannes Berg <johannes@sipsolutions.net>:
-> > On Thu, 2011-11-03 at 08:36 +0100, Janusz Dziedzic wrote:
-> >> Hello,
-> >>
-> >> I have a question connected with UAPSD implementation.
-> >> Seems, mac80211 always clear EOSP bit in ieee80211_set_qos_hdr() fuction.
-> >> Is that a problem in mac80211 or this should be handled in different place/way?
-> >
-> > It should be set:
-> >
-> >        if (qos) {
-> >                nullfunc->qos_ctrl = cpu_to_le16(tid);
-> >
-> >                if (reason == IEEE80211_FRAME_RELEASE_UAPSD)
-> >                        nullfunc->qos_ctrl |=
-> >                                cpu_to_le16(IEEE80211_QOS_CTL_EOSP);
-> >        }
-> >
-> 
-> Yes, I see this is set correctly before we call ieee80211_set_qos_hdr().
-> Next ieee80211_set_qos_hdr() fuction seems not care about EOSP bit and
-> we have this bit cleared before ieee80211_tx() call.
+On Tue, Nov 15, 2011 at 8:12 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2011-11-15 at 20:10 +0100, Dave Taht wrote:
+>> It was kind of my hope that one day minstrel would export a useful API
+>> and statistics to other subsystems - like sysfs, tc or the upper parts of the
+>> network stack, and snmp.
+>
+> I think that doesn't make a lot of sense -- it should be done at a more
+> abstract level.
 
-Oh, WTH. Somebody had posted a patch that fixed that, I thought that
-went in but in my testing this didn't show up since my device always
-sets/clears it according to what I told it.
+what was the intent of parameter being removed in this patch series,
+originally, then?
 
-johannes
+> johannes
+>
+>
 
+
+
+-- 
+Dave Täht
+SKYPE: davetaht
+US Tel: 1-239-829-5608
+FR Tel: 0638645374
+http://www.bufferbloat.net
