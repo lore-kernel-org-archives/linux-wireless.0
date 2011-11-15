@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1027 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756313Ab1KWPsj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 10:48:39 -0500
-Date: Wed, 23 Nov 2011 16:51:09 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jan =?utf-8?B?RHZvxZnDoWs=?= <dvorakj@cngroup.dk>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rtl8192cu not working with Edimax EW-7811Un
-Message-ID: <20111123155108.GD13460@redhat.com> (sfid-20111123_164842_374579_2B052E51)
-References: <20111122113427.3d332b00776546d5ebac11de@cngroup.dk>
- <20111122140139.GA3891@redhat.com>
- <20111123112301.f5e523ff743f86dae539fdf3@cngroup.dk>
- <20111123143304.GA13460@redhat.com>
- <20111123162426.9a30d25585fa54507c1c864e@cngroup.dk>
- <4ECD13D0.6010500@lwfinger.net>
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:33516 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756718Ab1KOQoa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Nov 2011 11:44:30 -0500
+Message-ID: <4EC29534.7010502@adurom.com> (sfid-20111115_174454_976800_7DAF4251)
+Date: Tue, 15 Nov 2011 18:37:08 +0200
+From: Kalle Valo <kvalo@adurom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4ECD13D0.6010500@lwfinger.net>
+To: Sangwook Lee <sangwook.lee@linaro.org>
+CC: linux-kernel@vger.kernel.org, linux-mips@linux-mips.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	ralf@linux-mips.org, juhosg@openwrt.org, rodrigue@qca.qualcomm.com,
+	linville@tuxdriver.com, rmanohar@qca.qualcomm.com,
+	patches@linaro.org
+Subject: Re: [PATCH] ath9k: rename ath9k_platform.h to ath_platform.h
+References: <1321356224-5053-1-git-send-email-sangwook.lee@linaro.org>
+In-Reply-To: <1321356224-5053-1-git-send-email-sangwook.lee@linaro.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 23, 2011 at 09:40:00AM -0600, Larry Finger wrote:
-> On 11/23/2011 09:24 AM, Jan Dvořák wrote:
-> >>http://koji.fedoraproject.org/koji/taskinfo?taskID=3534603
-> >
-> >OK, I have no idea if this is because of the new kernel, but
-> >client mode works.
-Could you confirm that on previous kernel client mode does not
-work, and work with that new kernel?  
+Hi Sangwook,
 
-> I can't still use hostapd, however.
-Hmm, I'm not sure if rtl92c works in AP mode, Larry?
+On 11/15/2011 01:23 PM, Sangwook Lee wrote:
+> The patch series proposes to rename ath9k_platform.h to "ath_platform.h
+> This header file handles platform data used only for ath9k,
+> but it can used by ath6k as well. We can take "wl12xx.h" as
+> as a example. Please let us change this file name so that
+> other Atheors WLANs use this file for their own platform data
 
-> >So, in hope this does not get old too soon, any ideas? :-)
-Eeee..., I do not understed this question.
+ath9k and ath6kl are very different devices, I'm not sure if sharing a
+platfrom struct between the two is really a good idea. Most likely there
+is very little the two drivers can share. What are your plans here?
 
-> What patches did you put in that koji kernel?
+I myself was thinking that we would have include/linux/ath6kl.h
+dedicated just for ath6kl. That would makes things simpler.
 
-Full revert of:
-
-commit b23b025fe246f3acc2988eb6d400df34c27cb8ae
-Author: Ben Greear <greearb@candelatech.com>
-Date:   Fri Feb 4 11:54:17 2011 -0800
-
-    mac80211: Optimize scans on current operating channel.
-
-> I know that the initial driver had a problem connecting to
-> 802.11n-only channels, but this was fixed in wireless-testing some
-> time ago. Is this the patch?
-No.
-
-Thanks
-Stanislaw
+Kalle
