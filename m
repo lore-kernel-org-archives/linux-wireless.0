@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:33352 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751457Ab1KIQFl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 11:05:41 -0500
-Subject: Re: iwlagn: memory corruption with WPA enterprise
-From: wwguy <wey-yi.w.guy@intel.com>
-To: =?UTF-8?Q?Tom=C3=A1=C5=A1_Janou=C5=A1ek?= <tomi@nomi.cz>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20111109155411.GA1669@nomi.cz>
-References: <20111029171554.GA16596@nomi.cz>
-	 <20111031160342.GB2225@redhat.com>  <20111109155411.GA1669@nomi.cz>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 09 Nov 2011 07:59:31 -0800
-Message-ID: <1320854371.13578.26.camel@wwguy-ubuntu> (sfid-20111109_170557_687312_E61D508C)
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:51628 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752349Ab1KOGFt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Nov 2011 01:05:49 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+CC: Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC 16/18] ath9k: make ath_reset non-static
+Date: Tue, 15 Nov 2011 11:35:40 +0530
+Message-ID: <1321337140-12953-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111115_070558_191002_844E359C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-11-09 at 07:54 -0800, Tomáš Janoušek wrote:
-> Hello Stanislaw,
-> 
-> On Mon, Oct 31, 2011 at 05:03:43PM +0100, Stanislaw Gruszka wrote:
-> > You may try debugging patches I posted a while ago:
-> > http://marc.info/?l=linux-mm&m=131914560820378&w=2
-> > http://marc.info/?l=linux-mm&m=131914560820293&w=2
-> > http://marc.info/?l=linux-mm&m=131914560820317&w=2
-> > 
-> > With a bit of luck, kernel should panic and dump call-trace when
-> > bad code start to write at memory addresses where is not suppose
-> > to.
-> 
-> Thanks for your suggestions. I did as you told me, applied those 3 patches on
-> top of 3.1 + net-next (the one from 29 Oct 2011), enabled all those things in
-> config and passed corrupt_dbg=1 on cmdline, but the problem happens without
-> anything being written to dmesg.
-> 
-> Am I just lacking a bit of luck, or could it mean something (like that the
-> error is in hardware, the microcode, or something like that)?
-> 
-I am not sure it is uCode related, is there any chance you can bisect
-the problem?
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-we have a major code re-structure around .38/.39 time and not sure it
-cause some un-expected problem. 
+to be used by MCI specific changes
 
-at the meantime, we will following your instruction and see if we can
-re-produce the problem you are seeing
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
+ drivers/net/wireless/ath/ath9k/main.c  |    2 +-
+ 2 files changed, 2 insertions(+), 1 deletions(-)
 
-Thanks
-Wey
-
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 9f28cc4..c04ff7d 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -424,6 +424,7 @@ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status);
+ 
+ #define ATH_PAPRD_TIMEOUT	100 /* msecs */
+ 
++int ath_reset(struct ath_softc *sc, bool retry_tx);
+ void ath_reset_work(struct work_struct *work);
+ void ath_hw_check(struct work_struct *work);
+ void ath_hw_pll_work(struct work_struct *work);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 90d35f2..c9578ab 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -959,7 +959,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	ath9k_ps_restore(sc);
+ }
+ 
+-static int ath_reset(struct ath_softc *sc, bool retry_tx)
++int ath_reset(struct ath_softc *sc, bool retry_tx)
+ {
+ 	int r;
+ 
+-- 
+1.7.0.4
 
