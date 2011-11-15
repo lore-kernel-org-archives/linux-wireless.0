@@ -1,76 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:34123 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932832Ab1KJRAU (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24366 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751736Ab1KOGFW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 12:00:20 -0500
-Message-ID: <1320944415.10042.26.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC> (sfid-20111110_180027_677301_11CA0FA6)
-Subject: Re: creating netdev queues on the fly?
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 10 Nov 2011 18:00:15 +0100
-In-Reply-To: <1320942369.3967.127.camel@jlt3.sipsolutions.net>
-References: <1320933501.3967.68.camel@jlt3.sipsolutions.net>
-	 <1320935713.2310.9.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
-	 (sfid-20111110_153533_082549_9B566EB4) <1320942369.3967.127.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 15 Nov 2011 01:05:22 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+CC: Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC 14/18] ath9k_hw: Add support for MCI WLAN calibration
+Date: Tue, 15 Nov 2011 11:35:13 +0530
+Message-ID: <1321337113-12880-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111115_070551_988389_AB255402)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le jeudi 10 novembre 2011 à 17:26 +0100, Johannes Berg a écrit :
-> On Thu, 2011-11-10 at 15:35 +0100, Eric Dumazet wrote:
-> 
-> > > So to get to my question: What if we could create netdev queues on the
-> > > fly?
-> 
-> > In term of qdisc management I believe its a bit complex if we start to
-> > dynamically add netdev queues :)
-> 
-> Yeah I was thinking that would be the problematic part.
-> 
-> > My first idea would be to extend Qdisc management so that a device can
-> > callback qdisc when a frame is finaly delivered / consumed / discarded.
-> > 
-> > We currently only have qdisc->enqueue() and qdisc->dequeue(), we could
-> > add qdisc->deliver_callback(skb)
-> > 
-> > You keep devices as they are, with a netdevqueue per hardware queue.
-> > 
-> > Then, using a Qdisc like existing ones, but with a limit of
-> > outstanding(given to device but not yet consumed) packets per class.
-> > 
-> > external tc classifier would deliver a hash/index depending on remote
-> > station.
-> 
-> So basically you'd have a class for each station? Or a class for each
-> station/AC? That's a lot of classes rather than queues, are they
-> pre-allocated, or does it not matter? Overall that sounds like a good
-> approach.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-They could be statically allocated in a stochastic fashion (Sorry, SFQ
-is one of my favorite qdisc, very light in memory/cpu and yet powerful)
+WLAN communicates with BT for its calibration by sending WLAN_CAL_REQ,
+waits for BT_CAL_GRANT. This is done with the help of GPM messages.
+also WLAN_CAL_DONE messages is sent once WLAN calibration is done.
 
-net/sched/sch_sfq.c
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |   43 +++++++++++++++++++++++++
+ 1 files changed, 43 insertions(+), 0 deletions(-)
 
-Of course, HFSC / DRR are considered more flexible, but eat _much_ more
-memory.
-
-http://people.netfilter.org/kaber/shaping
-
-You declare a hash divisor of 1024 to map one station to one class
-(Might have hash collision of course...)
-
-Each active slot contains a local queue to one remote station.
-Each queue can be pfifo or whatever smart qdisc (sfq, or a more flexible
-qdisc)
-
-Then you use a filter to select the appropriate class :
-
-tc filter add dev ${dev} protocol all pref 1 parent $handle handle 1 \
-	flow hash keys remote_station divisor 1024
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 12a730d..f7bc05c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -18,6 +18,7 @@
+ #include "hw-ops.h"
+ #include "ar9003_phy.h"
+ #include "ar9003_rtt.h"
++#include "ar9003_mci.h"
+ 
+ #define MAX_MEASUREMENT	MAX_IQCAL_MEASUREMENT
+ #define MAX_MAG_DELTA	11
+@@ -934,10 +935,12 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_hw_cal_data *caldata = ah->caldata;
++	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
+ 	bool txiqcal_done = false, txclcal_done = false;
+ 	bool is_reusable = true, status = true;
+ 	bool run_rtt_cal = false, run_agc_cal;
+ 	bool rtt = !!(ah->caps.hw_caps & ATH9K_HW_CAP_RTT);
++	bool mci = !!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
+ 	u32 agc_ctrl = 0, agc_supp_cals = AR_PHY_AGC_CONTROL_OFFSET_CAL |
+ 					  AR_PHY_AGC_CONTROL_FLTR_CAL   |
+ 					  AR_PHY_AGC_CONTROL_PKDET_CAL;
+@@ -1005,6 +1008,31 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 	} else if (caldata && !caldata->done_txiqcal_once)
+ 		run_agc_cal = true;
+ 
++	if (mci && IS_CHAN_2GHZ(chan) &&
++	    (mci_hw->bt_state  == MCI_BT_AWAKE) &&
++	    run_agc_cal &&
++	    !(mci_hw->config & ATH_MCI_CONFIG_DISABLE_MCI_CAL)) {
++
++		u32 pld[4] = {0, 0, 0, 0};
++
++		/* send CAL_REQ only when BT is AWAKE. */
++		ath_dbg(common, ATH_DBG_MCI, "MCI send WLAN_CAL_REQ 0x%x\n",
++			mci_hw->wlan_cal_seq);
++		MCI_GPM_SET_CAL_TYPE(pld, MCI_GPM_WLAN_CAL_REQ);
++		pld[MCI_GPM_WLAN_CAL_W_SEQUENCE] = mci_hw->wlan_cal_seq++;
++		ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
++
++		/* Wait BT_CAL_GRANT for 50ms */
++		ath_dbg(common, ATH_DBG_MCI, "MCI wait for BT_CAL_GRANT");
++
++		if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_GRANT, 0, 50000))
++			ath_dbg(common, ATH_DBG_MCI, "MCI got BT_CAL_GRANT");
++		else {
++			is_reusable = false;
++			ath_dbg(common, ATH_DBG_MCI, "\nMCI BT is not responding");
++		}
++	}
++
+ 	txiqcal_done = ar9003_hw_tx_iq_cal_run(ah);
+ 	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
+ 	udelay(5);
+@@ -1022,6 +1050,21 @@ skip_tx_iqcal:
+ 				       AR_PHY_AGC_CONTROL_CAL,
+ 				       0, AH_WAIT_TIMEOUT);
+ 	}
++
++	if (mci && IS_CHAN_2GHZ(chan) &&
++	    (mci_hw->bt_state  == MCI_BT_AWAKE)	&&
++	    run_agc_cal	&&
++	    !(mci_hw->config & ATH_MCI_CONFIG_DISABLE_MCI_CAL)) {
++
++		u32 pld[4] = {0, 0, 0, 0};
++
++		ath_dbg(common, ATH_DBG_MCI, "MCI Send WLAN_CAL_DONE 0x%x\n",
++			mci_hw->wlan_cal_done);
++		MCI_GPM_SET_CAL_TYPE(pld, MCI_GPM_WLAN_CAL_DONE);
++		pld[MCI_GPM_WLAN_CAL_W_SEQUENCE] = mci_hw->wlan_cal_done++;
++		ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
++	}
++
+ 	if (rtt && !run_rtt_cal) {
+ 		agc_ctrl |= agc_supp_cals;
+ 		REG_WRITE(ah, AR_PHY_AGC_CONTROL, agc_ctrl);
+-- 
+1.7.0.4
 
