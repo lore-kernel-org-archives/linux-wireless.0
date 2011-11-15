@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14460 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756675Ab1KRIWg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 03:22:36 -0500
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAI8Mank015853
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 03:22:36 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 49/77] iwlegacy: rename module name
-Date: Fri, 18 Nov 2011 09:22:11 +0100
-Message-Id: <1321604559-10707-49-git-send-email-sgruszka@redhat.com> (sfid-20111118_092242_427759_DCFFDD07)
-In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
-References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+Received: from acsinet15.oracle.com ([141.146.126.227]:49055 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752618Ab1KOGeE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Nov 2011 01:34:04 -0500
+Date: Tue, 15 Nov 2011 09:33:09 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] mac80211: use kfree_skb() instead of kfree()
+Message-ID: <20111115063309.GB30827@elgon.mountain> (sfid-20111115_073411_110164_EB28A936)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/Makefile |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+sk_buff structs should be freed using kfree_skb().
 
-diff --git a/drivers/net/wireless/iwlegacy/Makefile b/drivers/net/wireless/iwlegacy/Makefile
-index 413213b..7421841 100644
---- a/drivers/net/wireless/iwlegacy/Makefile
-+++ b/drivers/net/wireless/iwlegacy/Makefile
-@@ -1,8 +1,8 @@
--obj-$(CONFIG_IWLEGACY)	+= iwl-legacy.o
--iwl-legacy-objs 		:= common.o
--iwl-legacy-$(CONFIG_IWLEGACY_DEBUGFS) += iwl-debugfs.o
-+obj-$(CONFIG_IWLEGACY)	+= iwlegacy.o
-+iwlegacy-objs 		:= common.o
-+iwlegacy-$(CONFIG_IWLEGACY_DEBUGFS) += iwl-debugfs.o
- 
--iwl-legacy-objs += $(iwl-legacy-m)
-+iwlegacy-objs += $(iwlegacy-m)
- 
- # 4965
- obj-$(CONFIG_IWL4965)	+= iwl4965.o
--- 
-1.7.1
+This was introduced recently in 029458212 "mac80211: Save probe
+response data for bss".
 
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 12a6d4b..b34ca0c 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -474,7 +474,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		RCU_INIT_POINTER(sdata->u.ap.probe_resp, NULL);
+ 		synchronize_rcu();
+ 		kfree(old_beacon);
+-		kfree(old_probe_resp);
++		kfree_skb(old_probe_resp);
+ 
+ 		/* down all dependent devices, that is VLANs */
+ 		list_for_each_entry_safe(vlan, tmpsdata, &sdata->u.ap.vlans,
