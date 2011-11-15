@@ -1,71 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:51794 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755961Ab1K3I52 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 03:57:28 -0500
-Subject: Re: [PATCH v1 0/3] support for antenna configuration profiles
-From: Johannes Berg <johannes.berg@intel.com>
-To: Daniel Golle <dgolle@allnet.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <4ED4C789.8060701@allnet.de> (sfid-20111129_125258_741403_289EEE8F)
-References: <20111128161225.GA25430@localhost>
-	 (sfid-20111128_171757_078893_7ACF616B) <1322499145.4060.8.camel@jlt3.sipsolutions.net>
-	 <4ED4C789.8060701@allnet.de> (sfid-20111129_125258_741403_289EEE8F)
-Date: Wed, 30 Nov 2011 09:57:02 +0100
-Message-ID: <1322643422.3982.1.camel@jlt3.sipsolutions.net> (sfid-20111130_095731_493880_69F42569)
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:53201 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751993Ab1KOGGp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Nov 2011 01:06:45 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+CC: Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC 15/18] ath9k_hw: Add MCI related changes in chip reset
+Date: Tue, 15 Nov 2011 11:35:27 +0530
+Message-ID: <1321337127-12917-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111115_070650_284859_1BC7646F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDExLTExLTI5IGF0IDEyOjUyICswMTAwLCBEYW5pZWwgR29sbGUgd3JvdGU6Cgo+
-IE15IGlkZWEgaXMgdG8gaGF2ZSBhIGdlbmVyaWMgQVBJIGFsbG93aW5nIHRoZSB1c2VyIHRvIHNl
-bGVjdCBjb25maWd1cmF0aW9uCj4gcHJvZmlsZXMgZm9yIGV4dGVybmFsIExOQS9taXhlcnMgZm91
-bmQgaW4gb3V0ZG9vciBoaWdoLXBvd2VyIGFwcGxpYW5jZXMuCj4gSSBhbHNvIGZpcnN0IHRob3Vn
-aHQgb2YganVzdCB1c2luZyB0aGUgZXhpc3RpbmcgYW50ZW5uYSBzZWxlY3Rpb24gQVBJIGZvciB0
-aGF0LAo+IGJ1dCB0aGVyZSBhcmUgZ29vZCByZWFzb25zIGFnYWluc3QgdGhhdDoKPiAqIEFudGVu
-bmEgY29udHJvbCBBUEkgYXNzdW1lcyB0aGF0IHRoZSBhbGxvd2VkIHZhbHVlcyBmb3IgdHhfYW50
-IGFuZCByeF9hbnQgYXJlCj4gaW5kZXBlbmRlbnQgb2YgZWFjaCBvdGhlci4gSW4gaGlnaC1wb3dl
-ciBhcHBsaWNhdGlvbnMsIHRoaXMgaXMgbm90IHRoZSBjYXNlCj4gKGkuZS4geW91J2xsIHByb2Jh
-Ymx5IGV2ZW4gZGFtYWdlIHRoZSBSWC1wYXJ0IG9mIHlvdXIgaGFyZHdhcmUgd2hlbiBzZWxlY3Rp
-bmcKPiB0aGUgc2FtZSBwYXRoIGZvciBSWCBhbmQgVFgpLiBUaGVyZWZvcmUgc2ltcGxlIGJpdG1h
-c2tzIHN1Y2ggYXMKPiBhdmFpbGFibGVfYW50ZW5uYXNfcngvdHggd29uJ3QgZG8gdGhlIGpvYi4K
-PiAqIEJvdGgsIGV4dGVybmFsIG1peGVyIGFuZCBhbnRlbm5hIGNvbnRyb2wgbWF5IGJlIHVzZWQg
-dG9nZXRoZXIgaW4gTWlNbwo+IGFwcGxpY2F0aW9ucywgZS5nLiB5b3UgbWF5IGhhdmUgYW50ZW5u
-YXMgMCwxIHdoaWNoIGFyZSBjb250cm9sbGVkIGJ5IHRoZSB1c3VhbAo+IGFudGVubmEgc2VsZWN0
-aW9uIEFQSSBhbmQgYWRkaXRpb25hbGx5IHlvdSBnb3QgYW4gZXh0ZXJuYWwgTE5BL21peGVyIHdo
-aWNoCj4gYWxsb3dzIHlvdSB0byBzZWxlY3QgZWl0aGVyIHRoZSBidWlsdC1pbiBhbnRlbm5hLXBh
-aXIgb3IgYW4gZXh0ZXJuYWxseSBjb25uZWN0ZWQKPiBvbmUuCj4gSW4gbXkgZXhhbXBsZSwgaXQg
-bG9va3MgbGlrZSB0aGlzCj4gCj4gKy0tLS0tLS0tLSsgICAgICAgKy0tLS0tLS0rCj4gfCAgICAg
-ICAgIC0tLVRYYS0tLSAgICAgICB8Cj4gfCBXaUZpICAgIC0tLVJYYTEtLSAgZXh0LiB8Cj4gfCBD
-aGlwICAgIC0tLVJYYTItLSAgTE5BICB8Cj4gfChBUjkyODUpIC4uLi4uLi4uLiBtaXhlciB8Cj4g
-Ky0tLS0tLS0tLSsgICAgICAgKy0tLS0tLS0rCj4gCj4gWW91IG1heSBzdGlsbCB3YW50IHRvIHVz
-ZSBhbnRlbm5hIHNlbGVjdGlvbiBBUEkgdG8gc2VsZWN0ZWQgZWl0aGVyIFJYLXBhdGggMCBvcgo+
-IDEgb3IgYm90aCBvZiB0aGUgQVI5Mjg1LCBhZGRpdGlvbmFsbHkgeW91IHdhbnQgdG8gc2VsZWN0
-IGEgcHJvZmlsZSBmb3IgdGhlCj4gZXh0ZXJuYWwgTE5BL21peGVyLgo+IAo+ICogQXMgQWRyaWFu
-IHBvaW50ZWQgb3V0IGFuZCBJIGFncmVlIHdpdGgsIGl0J3MgbmljZSB0byBnaXZlIHRoZSB1c2Vy
-IHNvbWUKPiBpbmZvcm1hdGlvbiBhYm91dCB0aGUgYXZhaWxhYmxlIGNvbmZpZ3VyYXRpb24gcHJv
-ZmlsZXMsIGkuZS4gaGF2ZSB1c2VyLXBhcnNhYmxlCj4gbmFtZXMgYW5kIGRlc2NyaXB0aW9ucyBv
-ZiB0aGUgZGlmZmVyZW50IGNvbmZpZ3VyYXRpb24gcHJvZmlsZXMgKGUuZy4KPiAiYnVpbHQtaW4i
-LyJleHRlcm5hbCIsICJob3Jpem9udGFsIi8idmVydGljYWwiLCAuLi4pIGZvciB0aGUgZGV2aWNl
-Lgo+IAo+IE15IGN1cnJlbnQgc29sdXRpb24gaG93IHRoaW5ncyBhcmUgZG9uZSBpbiBhdGg5ayBp
-cyBzcGVjaWZpYyBmb3IgdGhlIEFSOTI4NSwgYnV0Cj4gb25jZSB0aGVyZSBpcyBhIGdlbmVyaWMg
-aW5mcmFzdHJ1Y3R1cmUgZm9yIHRoaXMgaW4gbWFjODAyMTEsIGl0IGNhbiBiZSB1c2VkIGZvcgo+
-IGRpZmZlcmVudCBzb2x1dGlvbnMsIGUuZy4gYXRoNWstZGV2aWNlcyB3aXRoIGEgc2ltaWxhciBz
-ZXR1cCB3aGljaCBjb250cm9sIHRoZQo+IGV4dC5MTkEvbWl4ZXIgdXNpbmcgc29tZSBHUElPIFBJ
-TnMuCj4gSW4gZnV0dXJlIHdlIG1heSBhbHNvIHNlZSBkZXZpY2VzIHdpdGggc2V2ZXJhbCBkaXJl
-Y3Rpb25hbCBNaU1vIGJlYW1zIGFuZCB3ZQo+IHdhbnQgdG8gc2VsZWN0IHdoaWNoIG9uZShzKSB0
-byB1c2UuCj4gCj4gSSBob3BlIHRoaW5ncyBhcmUgbW9yZSBjbGVhciBub3cuCgpOb3QgbXVjaCB0
-byBiZSBob25lc3QsIEkgaGF2ZSBubyBpZGVhIGhvdyB0aGlzIHdvcmtzLiA6LSkKCkZvciBleGFt
-cGxlLCB0aGlzIHNlZW1zIGxpa2UgaGFyZHdhcmUgbW9kcywgc28gaG93IGRvZXMgdGhlIGRyaXZl
-ciBrbm93CndoYXQgdGhlIHByb2ZpbGVzIGFyZT8KCmpvaGFubmVzCgotLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLQpJbnRlbCBHbWJICkRvcm5hY2hlciBTdHJhc3NlIDEKODU2MjIgRmVsZGtp
-cmNoZW4vTXVlbmNoZW4sIERldXRzY2hsYW5kIApTaXR6IGRlciBHZXNlbGxzY2hhZnQ6IEZlbGRr
-aXJjaGVuIGJlaSBNdWVuY2hlbgpHZXNjaGFlZnRzZnVlaHJlcjogRG91Z2xhcyBMdXNrLCBQZXRl
-ciBHbGVpc3NuZXIsIEhhbm5lcyBTY2h3YWRlcmVyClJlZ2lzdGVyZ2VyaWNodDogTXVlbmNoZW4g
-SFJCIDQ3NDU2IApVc3QuLUlkTnIuL1ZBVCBSZWdpc3RyYXRpb24gTm8uOiBERTEyOTM4NTg5NQpD
-aXRpYmFuayBGcmFua2Z1cnQgYS5NLiAoQkxaIDUwMiAxMDkgMDApIDYwMDExOTA1Mgo=
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+
+here we check for BT state and if BT calibration has started,
+give 25ms for BT Calibration to finish. we also take care of 2G/5G
+switch and LNA transfer incase WLAN is operating in 5G. in case the BT
+state is awake when we do WLAN calibration re-calibrate and we reset
+the message exchange between WLAN and BT. BT is given preference when
+simultaneous CAL request happens. calibration for WLAN/BT is done
+assuming that the other co-existing module is in awake state, if not
+we continue to do calibration while if the other module's state changes
+we need to do restart the calibration handshake
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |  132 +++++++++++++++++++++++++++++++++++
+ 1 files changed, 132 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 1d71d1b..e2860d7 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1514,6 +1514,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		   struct ath9k_hw_cal_data *caldata, bool bChannelChange)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
+ 	u32 saveLedState;
+ 	struct ath9k_channel *curchan = ah->curchan;
+ 	u32 saveDefAntenna;
+@@ -1521,6 +1522,53 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	u64 tsf = 0;
+ 	int i, r;
+ 	bool allow_fbs = false;
++	bool mci = !!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
++	bool save_fullsleep = ah->chip_fullsleep;
++
++	if (mci) {
++
++		ar9003_mci_2g5g_changed(ah, IS_CHAN_2GHZ(chan));
++
++		if (mci_hw->bt_state == MCI_BT_CAL_START) {
++			u32 payload[4] = {0, 0, 0, 0};
++
++			ath_dbg(common, ATH_DBG_MCI, "MCI stop rx for BT CAL");
++
++			mci_hw->bt_state = MCI_BT_CAL;
++
++			/*
++			 * MCI FIX: disable mci interrupt here. This is to avoid
++			 * SW_MSG_DONE or RX_MSG bits to trigger MCI_INT and
++			 * lead to mci_intr reentry.
++			 */
++
++			ar9003_mci_disable_interrupt(ah);
++
++			ath_dbg(common, ATH_DBG_MCI, "send WLAN_CAL_GRANT");
++			MCI_GPM_SET_CAL_TYPE(payload, MCI_GPM_WLAN_CAL_GRANT);
++			ar9003_mci_send_message(ah, MCI_GPM, 0, payload,
++						16, true, false);
++
++			ath_dbg(common, ATH_DBG_MCI, "\nMCI BT is calibrating");
++
++			/* Wait BT calibration to be completed for 25ms */
++
++			if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_DONE,
++								  0, 25000))
++				ath_dbg(common, ATH_DBG_MCI,
++					"MCI got BT_CAL_DONE\n");
++			else
++				ath_dbg(common, ATH_DBG_MCI,
++					"MCI ### BT cal takes to long, force"
++					"bt_state to be bt_awake\n");
++			mci_hw->bt_state = MCI_BT_AWAKE;
++			/* MCI FIX: enable mci interrupt here */
++			ar9003_mci_enable_interrupt(ah);
++
++			return true;
++		}
++	}
++
+ 
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
+ 		return -EIO;
+@@ -1558,12 +1606,29 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		if (ath9k_hw_channel_change(ah, chan)) {
+ 			ath9k_hw_loadnf(ah, ah->curchan);
+ 			ath9k_hw_start_nfcal(ah, true);
++			if (mci && mci_hw->ready)
++				ar9003_mci_2g5g_switch(ah, true);
++
+ 			if (AR_SREV_9271(ah))
+ 				ar9002_hw_load_ani_reg(ah, chan);
+ 			return 0;
+ 		}
+ 	}
+ 
++	if (mci) {
++		ar9003_mci_disable_interrupt(ah);
++
++		if (mci_hw->ready && !save_fullsleep) {
++			ar9003_mci_mute_bt(ah);
++			udelay(20);
++			REG_WRITE(ah, AR_BTCOEX_CTRL, 0);
++		}
++
++		mci_hw->bt_state = MCI_BT_SLEEP;
++		mci_hw->ready = false;
++	}
++
++
+ 	saveDefAntenna = REG_READ(ah, AR_DEF_ANTENNA);
+ 	if (saveDefAntenna == 0)
+ 		saveDefAntenna = 1;
+@@ -1619,6 +1684,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (r)
+ 		return r;
+ 
++	if (mci)
++		ar9003_mci_reset(ah, false, IS_CHAN_2GHZ(chan), save_fullsleep);
++
+ 	/*
+ 	 * Some AR91xx SoC devices frequently fail to accept TSF writes
+ 	 * right after the chip reset. When that happens, write a new
+@@ -1736,6 +1804,55 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	ath9k_hw_loadnf(ah, chan);
+ 	ath9k_hw_start_nfcal(ah, true);
+ 
++	if (mci && mci_hw->ready) {
++
++		if (IS_CHAN_2GHZ(chan) &&
++		    (mci_hw->bt_state == MCI_BT_SLEEP)) {
++
++			if (ar9003_mci_check_int(ah,
++			    AR_MCI_INTERRUPT_RX_MSG_REMOTE_RESET) ||
++			    ar9003_mci_check_int(ah,
++			    AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE)) {
++
++				/*
++				 * BT is sleeping. Check if BT wakes up during
++				 * WLAN calibration. If BT wakes up during
++				 * WLAN calibration, need to go through all
++				 * message exchanges again and recal.
++				 */
++
++				ath_dbg(common, ATH_DBG_MCI, "MCI BT wakes up"
++					"during WLAN calibration\n");
++
++				REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW,
++					  AR_MCI_INTERRUPT_RX_MSG_REMOTE_RESET |
++					  AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE);
++				ath_dbg(common, ATH_DBG_MCI, "MCI send"
++					"REMOTE_RESET\n");
++				ar9003_mci_remote_reset(ah, true);
++				ar9003_mci_send_sys_waking(ah, true);
++				udelay(1);
++				if (IS_CHAN_2GHZ(chan))
++					ar9003_mci_send_lna_transfer(ah, true);
++
++				mci_hw->bt_state = MCI_BT_AWAKE;
++
++				ath_dbg(common, ATH_DBG_MCI, "MCI re-cal\n");
++
++				if (caldata) {
++					caldata->done_txiqcal_once = false;
++					caldata->done_txclcal_once = false;
++					caldata->rtt_hist.num_readings = 0;
++				}
++
++				if (!ath9k_hw_init_cal(ah, chan))
++					return -EIO;
++
++			}
++		}
++		ar9003_mci_enable_interrupt(ah);
++	}
++
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 
+ 	ath9k_hw_restore_chainmask(ah);
+@@ -1778,6 +1895,21 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (ah->btcoex_hw.enabled)
+ 		ath9k_hw_btcoex_enable(ah);
+ 
++	if (mci && mci_hw->ready) {
++		/*
++		 * check BT state again to make
++		 * sure it's not changed.
++		 */
++
++		ar9003_mci_sync_bt_state(ah);
++		ar9003_mci_2g5g_switch(ah, true);
++
++		if ((mci_hw->bt_state == MCI_BT_AWAKE) &&
++				(mci_hw->query_bt == true)) {
++			mci_hw->need_flush_btinfo = true;
++		}
++	}
++
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		ar9003_hw_bb_watchdog_config(ah);
+ 
+-- 
+1.7.0.4
 
