@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34511 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:60195 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933479Ab1KJJc5 (ORCPT
+	with ESMTP id S1751620Ab1KOTMS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 04:32:57 -0500
-Subject: Re: [PATCH v3] mac80211/cfg80211: report monitor channel in
- wireless extensions
+	Tue, 15 Nov 2011 14:12:18 -0500
+Subject: Re: [PATCH] minstrel_ht: Remove unused function parameters
 From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <CA+XFjirhwYeU2fJJ7ua6XxGyG+oKBK9xhxnjOKZqV8-rN9u6nQ@mail.gmail.com> (sfid-20111110_102934_143930_76429D40)
-References: <1320778327.24797.36.camel@jlt3.sipsolutions.net>
-	 <1320778887.24797.38.camel@jlt3.sipsolutions.net>
-	 <1320831021.3845.14.camel@jlt3.sipsolutions.net>
-	 <CA+XFjirhwYeU2fJJ7ua6XxGyG+oKBK9xhxnjOKZqV8-rN9u6nQ@mail.gmail.com>
-	 (sfid-20111110_102934_143930_76429D40)
+To: Dave Taht <dave.taht@gmail.com>
+Cc: Patrick Kelle <patrick.kelle81@gmail.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	nbd@openwrt.org
+In-Reply-To: <CAA93jw7nWHnCnT48RJ00+Zxq9CFuCzhkeh=+7h+DqvYH2T7W1Q@mail.gmail.com> (sfid-20111115_201048_258376_C707079A)
+References: <1321371888-26897-1-git-send-email-patrick.kelle81@gmail.com>
+	 <CAA93jw7nWHnCnT48RJ00+Zxq9CFuCzhkeh=+7h+DqvYH2T7W1Q@mail.gmail.com>
+	 (sfid-20111115_201048_258376_C707079A)
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 10 Nov 2011 10:32:51 +0100
-Message-ID: <1320917571.3967.17.camel@jlt3.sipsolutions.net> (sfid-20111110_103303_161039_EA0657D2)
+Date: Tue, 15 Nov 2011 20:12:14 +0100
+Message-ID: <1321384334.3975.2.camel@jlt3.sipsolutions.net> (sfid-20111115_201221_806756_97543DE9)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-11-10 at 10:28 +0100, Gábor Stefanik wrote:
+On Tue, 2011-11-15 at 20:10 +0100, Dave Taht wrote:
+> It was kind of my hope that one day minstrel would export a useful API
+> and statistics to other subsystems - like sysfs, tc or the upper parts of the
+> network stack, and snmp.
 
-> > @@ -1342,6 +1342,9 @@ struct cfg80211_gtk_rekey_data {
-> >  *     doesn't verify much. Note, however, that the passed netdev may be
-> >  *     %NULL as well if the user requested changing the channel for the
-> >  *     device itself, or for a monitor interface.
-> > + * @get_channel: Get the current operating channel, should return %NULL if
-> > + *     there's no single defined operating channel if for example the
-> > + *     device implements channel hopping for multi-channel virtual interfaces.
-> 
-> Why not return the the channel the radio is tuned to at the moment of
-> the request in that case?
-
-Mostly, you won't even know. In many cases the device will switch
-internally. And even if you could know, since it's switching many times
-per second it'll be completely useless.
-
-Frankly, I think this whole thing is completely useless. IMNSHO aircrack
-or whatever tool uses this is brain-dead since radiotap reports the
-correct frequency for each frame *anyway*.
+I think that doesn't make a lot of sense -- it should be done at a more
+abstract level.
 
 johannes
 
