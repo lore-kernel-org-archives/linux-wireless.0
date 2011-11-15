@@ -1,74 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:40434 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754654Ab1KUUhQ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48663 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751701Ab1KOGEj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 15:37:16 -0500
-Date: Mon, 21 Nov 2011 21:37:13 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@adurom.com>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [PATCHv3 3/3] mac80211: Add NoAck per tid Support
-Message-ID: <20111121203713.GB13116@pandem0nium> (sfid-20111121_213721_187619_B27EBA8D)
-References: <1321614110-32392-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1321614110-32392-4-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1321614744.10266.37.camel@jlt3.sipsolutions.net>
- <20111118123054.GA32175@pandem0nium>
- <87mxbpie8o.fsf@purkki.adurom.net>
- <1321896393.3999.53.camel@jlt3.sipsolutions.net>
+	Tue, 15 Nov 2011 01:04:39 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+CC: Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC 12/18] ath9k_hw: MCI related changes in chip management
+Date: Tue, 15 Nov 2011 11:34:31 +0530
+Message-ID: <1321337071-12807-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111115_070442_928102_CA71BDD2)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="xXmbgvnjoT4axfJE"
-In-Reply-To: <1321896393.3999.53.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
---xXmbgvnjoT4axfJE
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+send halt BT GPM if the chip is in network sleep and BT state
+is awake
 
-On Mon, Nov 21, 2011 at 06:26:33PM +0100, Johannes Berg wrote:
-> On Mon, 2011-11-21 at 19:20 +0200, Kalle Valo wrote:
-> > Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de> writes:
-> >=20
-> > >> Isn't this missing an update to ieee80211_duration() now?
-> > >
-> > > Yep, I silently dropped that modification - I rather don't mess with =
-stuff I
-> > > don't completly understand. Keeping the duration too long shouldn't h=
-urt
-> > > (only performance), having it too short will have much worse effects =
-=2E..
-> >=20
-> > Still a comment in the function about this issue would be nice. Just to
-> > make sure that it's not forgotten.
->=20
-> I think it should be added back -- it doesn't seem that hard? Just check
-> if (qos_data && no-ack)? It's on my list but I haven't gotten around ...
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  |   24 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/reg.h |    2 ++
+ 2 files changed, 26 insertions(+), 0 deletions(-)
 
-Very well, I've sent another patch in reply to the PATCHv4 set - please have
-a look at this one.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 662ab7e..ba5734a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1933,6 +1933,7 @@ static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
+ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 	int status = true, setChip = true;
+ 	static const char *modes[] = {
+ 		"AWAKE",
+@@ -1950,12 +1951,35 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
+ 	switch (mode) {
+ 	case ATH9K_PM_AWAKE:
+ 		status = ath9k_hw_set_power_awake(ah, setChip);
++
++		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
++			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
++
+ 		break;
+ 	case ATH9K_PM_FULL_SLEEP:
++
++		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI) {
++			if (ar9003_mci_state(ah, MCI_STATE_ENABLE, NULL) &&
++				(mci->bt_state != MCI_BT_SLEEP) &&
++				!mci->halted_bt_gpm) {
++				ath_dbg(common, ATH_DBG_MCI, "MCI halt BT GPM"
++						"(full_sleep)");
++				ar9003_mci_send_coex_halt_bt_gpm(ah,
++								 true, true);
++			}
++
++			mci->ready = false;
++			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
++		}
++
+ 		ath9k_set_power_sleep(ah, setChip);
+ 		ah->chip_fullsleep = true;
+ 		break;
+ 	case ATH9K_PM_NETWORK_SLEEP:
++
++		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
++			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
++
+ 		ath9k_set_power_network_sleep(ah, setChip);
+ 		break;
+ 	default:
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index ba3672f..6e2f188 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1279,6 +1279,8 @@ enum {
+ #define AR_RTC_INTR_MASK \
+ 	((AR_SREV_9100(ah)) ? (AR_RTC_BASE + 0x0058) : 0x7058)
+ 
++#define AR_RTC_KEEP_AWAKE	0x7034
++
+ /* RTC_DERIVED_* - only for AR9100 */
+ 
+ #define AR_RTC_DERIVED_CLK \
+-- 
+1.7.0.4
 
-Thanks
-        Simon
-
---xXmbgvnjoT4axfJE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk7KtnkACgkQrzg/fFk7axYuagCgqikaXO3KJ7SfliNSZdnaK7Xk
-UJgAn1aDNG/+OqD8ndxt3DdfexDjKcgm
-=dV/C
------END PGP SIGNATURE-----
-
---xXmbgvnjoT4axfJE--
