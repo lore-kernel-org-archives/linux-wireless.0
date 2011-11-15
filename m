@@ -1,55 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35828 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751122Ab1KHPco (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:46758 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756751Ab1KOXvl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 10:32:44 -0500
-Subject: Re: [PATCH v3 2/3] nl80211: Pass probe response data to drivers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1320762928-6782-2-git-send-email-arik@wizery.com> (sfid-20111108_153608_442677_579C7A50)
-References: <1320762928-6782-1-git-send-email-arik@wizery.com>
-	 <1320762928-6782-2-git-send-email-arik@wizery.com>
-	 (sfid-20111108_153608_442677_579C7A50)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Nov 2011 16:32:40 +0100
-Message-ID: <1320766360.24797.5.camel@jlt3.sipsolutions.net> (sfid-20111108_163247_180589_F48760F8)
-Mime-Version: 1.0
+	Tue, 15 Nov 2011 18:51:41 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCH] iw: add support for wmm NoAck per WMM Queue
+Date: Wed, 16 Nov 2011 00:21:16 +0100
+Message-Id: <1321399276-3585-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111116_005145_029548_F6815E80)
+In-Reply-To: <1321399276-3585-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1321399276-3585-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-11-08 at 16:35 +0200, Arik Nemtsov wrote:
-> Pass probe-response data from usermode via beacon parameters.
-> 
-> Signed-off-by: Guy Eilam <guy@wizery.com>
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
-> v1->3:
-> Set the probe response data as part of the addset_beacon function, instead
-> of set_bss. This makes more sense since the probe response is always
-> updated with the beacon.
-> 
-> include/linux/nl80211.h |    4 ++++
->  include/net/cfg80211.h  |    4 ++++
->  net/wireless/nl80211.c  |    9 +++++++++
->  3 files changed, 17 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-> index e74afc4..3fa03b3 100644
-> --- a/include/linux/nl80211.h
-> +++ b/include/linux/nl80211.h
-> @@ -1114,6 +1114,8 @@ enum nl80211_commands {
->   *	In addition this attribute holds a bitmap of the supported protocols
->   *	for offloading using &enum nl80211_probe_resp_offload_support_attr.
->   *
-> + * @NL80211_ATTR_PROBE_RESP: Probe Response template data
-> + *
+This adds support for the new NoAck feature in nl80211/mac80211
 
-That should say what kind of data is expected -- I think a full frame in
-this case? Should it really be a full frame though? Maybe ath6kl
-requires something else and we can make this somehow compatible with
-both?
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ nl80211.h |    2 ++
+ phy.c     |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 53 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/nl80211.h b/nl80211.h
+index 8049bf7..3d199c6 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -2065,6 +2065,7 @@ enum nl80211_mesh_setup_params {
+  * @NL80211_TXQ_ATTR_CWMAX: Maximum contention window [a value of the form
+  *	2^n-1 in the range 1..32767]
+  * @NL80211_TXQ_ATTR_AIFS: Arbitration interframe space [0..255]
++ * @NL80211_TXQ_ATTR_NOACK: NoAck Mode, 0 meaning normal Ack operation
+  * @__NL80211_TXQ_ATTR_AFTER_LAST: Internal
+  * @NL80211_TXQ_ATTR_MAX: Maximum TXQ attribute number
+  */
+@@ -2075,6 +2076,7 @@ enum nl80211_txq_attr {
+ 	NL80211_TXQ_ATTR_CWMIN,
+ 	NL80211_TXQ_ATTR_CWMAX,
+ 	NL80211_TXQ_ATTR_AIFS,
++	NL80211_TXQ_ATTR_NOACK,
+ 
+ 	/* keep last */
+ 	__NL80211_TXQ_ATTR_AFTER_LAST,
+diff --git a/phy.c b/phy.c
+index d9090fd..e5f36be 100644
+--- a/phy.c
++++ b/phy.c
+@@ -131,6 +131,57 @@ COMMAND(set, frag, "<fragmentation threshold|off>",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_fragmentation,
+ 	"Set fragmentation threshold.");
+ 
++static int handle_wmm_noack(struct nl80211_state *state,
++				struct nl_cb *cb, struct nl_msg *msg,
++				int argc, char **argv)
++{
++	enum nl80211_txq_q queue;
++	unsigned int noack;
++	struct nlattr *txq, *params;
++
++	if (argc != 2)
++		return 1;
++
++	if (strcmp("VO", argv[0]) == 0)
++		queue = NL80211_TXQ_Q_VO;
++	else if (strcmp("VI", argv[0]) == 0)
++		queue = NL80211_TXQ_Q_VI;
++	else if (strcmp("BE", argv[0]) == 0)
++		queue = NL80211_TXQ_Q_BE;
++	else if (strcmp("BK", argv[0]) == 0)
++		queue = NL80211_TXQ_Q_BK;
++	else
++		return 1;
++
++	if (strcmp("off", argv[1]) == 0)
++		noack = 0;
++	else if (strcmp("on", argv[1]) == 0)
++		noack = 1;
++	else
++		return 1;
++
++	txq = nla_nest_start(msg, NL80211_ATTR_WIPHY_TXQ_PARAMS);
++	if (!txq)
++		goto nla_put_failure;
++
++	params = nla_nest_start(msg, 1);
++	if (!params)
++		goto nla_put_failure;
++
++	NLA_PUT_U8(msg, NL80211_TXQ_ATTR_QUEUE, queue);
++	NLA_PUT_U8(msg, NL80211_TXQ_ATTR_NOACK, noack);
++	nla_nest_end(msg, params);
++	nla_nest_end(msg, txq);
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, wmm_noack, "<VO|VI|BE|BK> <on|off>",
++	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_wmm_noack,
++	"Set WMM noack policy");
++
++
+ static int handle_rts(struct nl80211_state *state,
+ 		      struct nl_cb *cb, struct nl_msg *msg,
+ 		      int argc, char **argv)
+-- 
+1.7.7.2
 
