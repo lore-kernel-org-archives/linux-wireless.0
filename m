@@ -1,100 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:43109 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751585Ab1KAHXv (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48663 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751701Ab1KOGEo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Nov 2011 03:23:51 -0400
-Received: by wwi36 with SMTP id 36so2663232wwi.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2011 00:23:50 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/2] wl12xx: set scan probe requests rate according to the no_cck flag
-Date: Tue,  1 Nov 2011 09:23:51 +0200
-Message-Id: <1320132232-12283-1-git-send-email-eliad@wizery.com> (sfid-20111101_082355_851210_1A5BEBF5)
+	Tue, 15 Nov 2011 01:04:44 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+CC: Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC 09/18] ath9k_hw: check for MCI interrupt in get_isr
+Date: Tue, 15 Nov 2011 11:33:50 +0530
+Message-ID: <1321337030-12699-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111115_070448_005332_A8712732)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Guy Eilam <guy@wizery.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Set the TX rate of probe requests during scanning according to the
-no_cck flag in the scan request struct.
+check for the condition of MCI interrupt being triggered and
+appropriately obtain the values of MCI_INTERRUPT_RX_MSG_RAW and
+MCI_INTERRUPT_RAW
 
-Signed-off-by: Guy Eilam <guy@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
-v2: consider bitrate_mask
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |   36 +++++++++++++++++++++++++-
+ 1 files changed, 34 insertions(+), 2 deletions(-)
 
- drivers/net/wireless/wl12xx/conf.h |    4 ++++
- drivers/net/wireless/wl12xx/scan.c |   19 +++++++++++++++----
- 2 files changed, 19 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index 04bb8fb..1bcfb01 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -440,6 +440,10 @@ struct conf_rx_settings {
- 	CONF_HW_BIT_RATE_36MBPS | CONF_HW_BIT_RATE_48MBPS |      \
- 	CONF_HW_BIT_RATE_54MBPS)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index ccde784..95587e3 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -175,15 +175,47 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 	u32 isr = 0;
+ 	u32 mask2 = 0;
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+-	u32 sync_cause = 0;
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
++	u32 sync_cause = 0, async_cause;
  
-+#define CONF_TX_CCK_RATES  (CONF_HW_BIT_RATE_1MBPS |		\
-+	CONF_HW_BIT_RATE_2MBPS | CONF_HW_BIT_RATE_5_5MBPS |	\
-+	CONF_HW_BIT_RATE_11MBPS)
+-	if (REG_READ(ah, AR_INTR_ASYNC_CAUSE) & AR_INTR_MAC_IRQ) {
++	async_cause = REG_READ(ah, AR_INTR_ASYNC_CAUSE);
 +
- #define CONF_TX_OFDM_RATES (CONF_HW_BIT_RATE_6MBPS |             \
- 	CONF_HW_BIT_RATE_12MBPS | CONF_HW_BIT_RATE_24MBPS |      \
- 	CONF_HW_BIT_RATE_36MBPS | CONF_HW_BIT_RATE_48MBPS |      \
-diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
-index fb2c431..de82ccf 100644
---- a/drivers/net/wireless/wl12xx/scan.c
-+++ b/drivers/net/wireless/wl12xx/scan.c
-@@ -203,7 +203,6 @@ static int wl1271_scan_send(struct wl1271 *wl, struct ieee80211_vif *vif,
++	if (async_cause & (AR_INTR_MAC_IRQ | AR_INTR_ASYNC_MASK_MCI)) {
+ 		if ((REG_READ(ah, AR_RTC_STATUS) & AR_RTC_STATUS_M)
+ 				== AR_RTC_STATUS_ON)
+ 			isr = REG_READ(ah, AR_ISR);
+ 	}
  
- 	cmd->params.tx_rate = cpu_to_le32(basic_rate);
- 	cmd->params.n_probe_reqs = wl->conf.scan.num_probe_reqs;
--	cmd->params.tx_rate = cpu_to_le32(basic_rate);
- 	cmd->params.tid_trigger = 0;
- 	cmd->params.scan_tag = WL1271_SCAN_DEFAULT_TAG;
- 
-@@ -255,7 +254,7 @@ void wl1271_scan_stm(struct wl1271 *wl, struct ieee80211_vif *vif)
- 	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
- 	int ret = 0;
- 	enum ieee80211_band band;
--	u32 rate;
-+	u32 rate, mask;
- 
- 	switch (wl->scan.state) {
- 	case WL1271_SCAN_STATE_IDLE:
-@@ -263,7 +262,13 @@ void wl1271_scan_stm(struct wl1271 *wl, struct ieee80211_vif *vif)
- 
- 	case WL1271_SCAN_STATE_2GHZ_ACTIVE:
- 		band = IEEE80211_BAND_2GHZ;
--		rate = wl1271_tx_min_rate_get(wl, wlvif->bitrate_masks[band]);
-+		mask = wlvif->bitrate_masks[band];
-+		if (wl->scan.req->no_cck) {
-+			mask &= ~CONF_TX_CCK_RATES;
-+			if (!mask)
-+				mask = CONF_TX_RATE_MASK_BASIC_P2P;
++	if (async_cause & AR_INTR_ASYNC_MASK_MCI) {
++		u32 raw_intr, rx_msg_intr;
++
++		rx_msg_intr = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_RAW);
++		raw_intr = REG_READ(ah, AR_MCI_INTERRUPT_RAW);
++
++		if ((raw_intr == 0xdeadbeef) || (rx_msg_intr == 0xdeadbeef))
++			ath_dbg(common, ATH_DBG_MCI,
++				"MCI gets 0xdeadbeef during MCI int processing"
++				"new raw_intr=0x%08x, new rx_msg_raw=0x%08x, "
++				"raw_intr=0x%08x, rx_msg_raw=0x%08x\n",
++				raw_intr, rx_msg_intr, mci->raw_intr,
++				mci->rx_msg_intr);
++		else {
++			mci->rx_msg_intr |= rx_msg_intr;
++			mci->raw_intr |= raw_intr;
++			*masked |= ATH9K_INT_MCI;
++
++			if (rx_msg_intr & AR_MCI_INTERRUPT_RX_MSG_CONT_INFO)
++				mci->cont_status =
++					REG_READ(ah, AR_MCI_CONT_STATUS);
++
++			REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW, rx_msg_intr);
++			REG_WRITE(ah, AR_MCI_INTERRUPT_RAW, raw_intr);
++			ath_dbg(common, ATH_DBG_MCI, "AR_INTR_SYNC_MCI\n");
++
 +		}
-+		rate = wl1271_tx_min_rate_get(wl, mask);
- 		ret = wl1271_scan_send(wl, vif, band, false, rate);
- 		if (ret == WL1271_NOTHING_TO_SCAN) {
- 			wl->scan.state = WL1271_SCAN_STATE_2GHZ_PASSIVE;
-@@ -274,7 +279,13 @@ void wl1271_scan_stm(struct wl1271 *wl, struct ieee80211_vif *vif)
++	}
++
+ 	sync_cause = REG_READ(ah, AR_INTR_SYNC_CAUSE) & AR_INTR_SYNC_DEFAULT;
  
- 	case WL1271_SCAN_STATE_2GHZ_PASSIVE:
- 		band = IEEE80211_BAND_2GHZ;
--		rate = wl1271_tx_min_rate_get(wl, wlvif->bitrate_masks[band]);
-+		mask = wlvif->bitrate_masks[band];
-+		if (wl->scan.req->no_cck) {
-+			mask &= ~CONF_TX_CCK_RATES;
-+			if (!mask)
-+				mask = CONF_TX_RATE_MASK_BASIC_P2P;
-+		}
-+		rate = wl1271_tx_min_rate_get(wl, mask);
- 		ret = wl1271_scan_send(wl, vif, band, true, rate);
- 		if (ret == WL1271_NOTHING_TO_SCAN) {
- 			if (wl->enable_11a)
+ 	*masked = 0;
 -- 
-1.7.6.401.g6a319
+1.7.0.4
 
