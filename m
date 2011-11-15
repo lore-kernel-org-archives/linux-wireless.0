@@ -1,68 +1,249 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:33962 "HELO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751601Ab1KHFoq (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:48027 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754288Ab1KOIqw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 00:44:46 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 6/7] mwifiex: remove unnecessary free_priv handler
-Date: Mon,  7 Nov 2011 21:41:11 -0800
-Message-Id: <1320730872-25619-7-git-send-email-bzhao@marvell.com> (sfid-20111108_064449_480252_261F7018)
-In-Reply-To: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
-References: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
+	Tue, 15 Nov 2011 03:46:52 -0500
+Received: by wyh15 with SMTP id 15so6769702wyh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Nov 2011 00:46:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAApCBGzySbfcmGD7duY1SGAMK9f-NDHYX-DLtZ+Q1P066QdESQ@mail.gmail.com>
+References: <CAApCBGyo=+L_pY=xLeBnwPbY+Q-cNpRPw85SvCDKLfqu=vJ2+w@mail.gmail.com>
+	<CAApCBGzE3G-uReWtJ+BjyQoJOKjJDA8=N0cd6X+9aY-tROf-KA@mail.gmail.com>
+	<CAApCBGzySbfcmGD7duY1SGAMK9f-NDHYX-DLtZ+Q1P066QdESQ@mail.gmail.com>
+Date: Tue, 15 Nov 2011 10:46:50 +0200
+Message-ID: <CAApCBGwRx1JF4uq5DByO2Pk-7zdoe5y=2x+ZjKX+Cf2Ji_NisQ@mail.gmail.com> (sfid-20111115_094707_348943_852CE656)
+Subject: Re: ar9390 Support for master mode?
+From: wireless newbie <wnewbie72@gmail.com>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Extending timeout to ten times longer didn't help. Anyone with
+knowledge of internals of ar9390? Is that register correct?
 
-Cfg80211 stack allocates private area for driver use in
-struct cfg80211_bss. It will be freed by stack in bss_release().
-Driver don't need to worry about it.
 
-In mwifiex driver, we use the private area just to store band
-information(u8). We don't allocate memory explicitly and store
-it's pointer in bss->priv. Hence we don't have any cleanup work
-to do in free_priv handler. Currently we try to free the allocated
-private area in free_priv handler which is not correct.
-
-This patch removes unnecessary free_priv handler.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/scan.c |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 8a3f959..c650e60 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1535,11 +1535,6 @@ done:
- 	return 0;
- }
- 
--static void mwifiex_free_bss_priv(struct cfg80211_bss *bss)
--{
--	kfree(bss->priv);
--}
--
- /*
-  * This function handles the command response of scan.
-  *
-@@ -1765,7 +1760,6 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 					      cap_info_bitmap, beacon_period,
- 					      ie_buf, ie_len, rssi, GFP_KERNEL);
- 				*(u8 *)bss->priv = band;
--				bss->free_priv = mwifiex_free_bss_priv;
- 
- 				if (priv->media_connected && !memcmp(bssid,
- 					priv->curr_bss_params.bss_descriptor
--- 
-1.7.0.2
-
+2011/11/15 wireless newbie <wnewbie72@gmail.com>:
+> I tried (almost) bleeding edge compat wireless drivers (dated
+> 1.11.2011) but the same problem persists. It turns out that the
+> problem is in AGC calibration in function ar9003_hw_init_cal. It times
+> out. This is what ath9k_hw_wait prints to log:
+>
+> ath: timeout (100000 us) on reg 0xa2c4: 0x00158dd9 & 0x00000001 != 0x00000000
+>
+> Is there anyone who has so much knowledge that he/she could verify if
+> those values make sense with this chip (ar9390)? I would like to rule
+> out the possibility that the driver is polling a bit in a wrong
+> register. Or could it be that the timeout value needs to be extended?
+>
+> Thanks.
+>
+> 2011/11/14 wireless newbie <wnewbie72@gmail.com>:
+>> Ok, this doesn't seem to interest anyone in the wireless list.
+>> Hopefully someone cares to respond from the ath9k list..
+>>
+>> I experience this problem with station mode too. I get
+>>
+>> ath: Unable to reset hardware; reset status -5 (freq 2412 MHz)
+>> Could not set interface wlan0 flags: Input/output error
+>> Could not set interface 'wlan0' UP
+>>
+>> when starting wpa_supplicant. Could it be that ar9390 isn't really
+>> supported by ath9k driver? I have quite recent compat wireless drivers
+>> in use:
+>>
+>> Compat-wireless backport release: compat-wireless-v3.1-rc8-1
+>> Backport based on linux-2.6-allstable.git v3.1-rc8
+>>
+>> Has anyone managed to use ar9390 in linux?
+>>
+>>
+>>
+>> ---------- Forwarded message ----------
+>> From: wireless newbie <wnewbie72@gmail.com>
+>> Date: 2011/11/11
+>> Subject: ar9390 Support for master mode?
+>> To: linux-wireless@vger.kernel.org
+>>
+>>
+>> Hi all,
+>>
+>> Has any one used ar9390 based devices as an AP? I'm trying, but all
+>> fails when I load hostapd:
+>>
+>> ath9k 0000:01:00.0: mon.wlan0: Features changed: 0x00004800 -> 0x00004000
+>> ath: Unable to reset hardware; reset status -5 (freq 2412 MHz)
+>> Could not set interface mon.wlan0 flags: Input/output error
+>> nl80211: Failed to set interface wlan0 into AP mode
+>> nl80211 driver initialization failed.
+>> ELOOP: remaining socket: sock=8 eloop_data=0x10219770
+>> user_data=0x10219d18 handler=0x1002b8c0
+>> ELOOP: remaining socket: sock=10 eloop_data=0x1021c0b8 user_data=(nil)
+>> handler=0x100353e0
+>>
+>> With iw, it seems that AP is part of the capabilities:
+>>
+>> iw phy phy0 info
+>>
+>> Wiphy phy0
+>>        Band 1:
+>>                Capabilities: 0x11ef
+>>                        RX LDPC
+>>                        HT20/HT40
+>>                        SM Power Save disabled
+>>                        RX HT20 SGI
+>>                        RX HT40 SGI
+>>                        TX STBC
+>>                        RX STBC 1-stream
+>>                        Max AMSDU length: 3839 bytes
+>>                        DSSS/CCK HT40
+>>                Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+>>                Minimum RX AMPDU time spacing: 8 usec (0x06)
+>>                HT TX/RX MCS rate indexes supported: 0-23
+>>                Frequencies:
+>>                        * 2412 MHz [1] (17.0 dBm)
+>>                        * 2417 MHz [2] (17.0 dBm)
+>>                        * 2422 MHz [3] (17.0 dBm)
+>>                        * 2427 MHz [4] (17.0 dBm)
+>>                        * 2432 MHz [5] (17.0 dBm)
+>>                        * 2437 MHz [6] (17.0 dBm)
+>>                        * 2442 MHz [7] (17.0 dBm)
+>>                        * 2447 MHz [8] (17.0 dBm)
+>>                        * 2452 MHz [9] (17.0 dBm)
+>>                        * 2457 MHz [10] (17.0 dBm)
+>>                        * 2462 MHz [11] (17.0 dBm)
+>>                        * 2467 MHz [12] (disabled)
+>>                        * 2472 MHz [13] (disabled)
+>>                        * 2484 MHz [14] (disabled)
+>>                Bitrates (non-HT):
+>>                        * 1.0 Mbps
+>>                        * 2.0 Mbps (short preamble supported)
+>>                        * 5.5 Mbps (short preamble supported)
+>>                        * 11.0 Mbps (short preamble supported)
+>>                        * 6.0 Mbps
+>>                        * 9.0 Mbps
+>>                        * 12.0 Mbps
+>>                        * 18.0 Mbps
+>>                        * 24.0 Mbps
+>>                        * 36.0 Mbps
+>>                        * 48.0 Mbps
+>>                        * 54.0 Mbps
+>>        Band 2:
+>>                Capabilities: 0x11ef
+>>                        RX LDPC
+>>                        HT20/HT40
+>>                        SM Power Save disabled
+>>                        RX HT20 SGI
+>>                        RX HT40 SGI
+>>                        TX STBC
+>>                        RX STBC 1-stream
+>>                        Max AMSDU length: 3839 bytes
+>>                        DSSS/CCK HT40
+>>                Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+>>                Minimum RX AMPDU time spacing: 8 usec (0x06)
+>>                HT TX/RX MCS rate indexes supported: 0-23
+>>                Frequencies:
+>>                        * 5180 MHz [36] (18.0 dBm) (passive scanning, no IBSS)
+>>                        * 5200 MHz [40] (18.0 dBm) (passive scanning, no IBSS)
+>>                        * 5220 MHz [44] (18.0 dBm) (passive scanning, no IBSS)
+>>                        * 5240 MHz [48] (18.0 dBm) (passive scanning, no IBSS)
+>>                        * 5260 MHz [52] (disabled)
+>>                        * 5280 MHz [56] (disabled)
+>>                        * 5300 MHz [60] (disabled)
+>>                        * 5320 MHz [64] (disabled)
+>>                        * 5500 MHz [100] (disabled)
+>>                        * 5520 MHz [104] (disabled)
+>>                        * 5540 MHz [108] (disabled)
+>>                        * 5560 MHz [112] (disabled)
+>>                        * 5580 MHz [116] (disabled)
+>>                        * 5600 MHz [120] (disabled)
+>>                        * 5620 MHz [124] (disabled)
+>>                        * 5640 MHz [128] (disabled)
+>>                        * 5660 MHz [132] (disabled)
+>>                        * 5680 MHz [136] (disabled)
+>>                        * 5700 MHz [140] (disabled)
+>>                        * 5745 MHz [149] (18.0 dBm) (passive scanning, no IBSS)
+>>                        * 5765 MHz [153] (18.0 dBm) (passive scanning, no IBSS)
+>>                        * 5785 MHz [157] (18.0 dBm) (passive scanning, no IBSS)
+>>                        * 5805 MHz [161] (18.0 dBm) (passive scanning, no IBSS)
+>>                        * 5825 MHz [165] (18.0 dBm) (passive scanning, no IBSS)
+>>                Bitrates (non-HT):
+>>                        * 6.0 Mbps
+>>                        * 9.0 Mbps
+>>                        * 12.0 Mbps
+>>                        * 18.0 Mbps
+>>                        * 24.0 Mbps
+>>                        * 36.0 Mbps
+>>                        * 48.0 Mbps
+>>                        * 54.0 Mbps
+>>        max # scan SSIDs: 4
+>>        max scan IEs length: 2257 bytes
+>>        Coverage class: 0 (up to 0m)
+>>        Available Antennas: TX 0 RX 0
+>>        Supported interface modes:
+>>                 * IBSS
+>>                 * managed
+>>                 * AP
+>>                 * AP/VLAN
+>>                 * WDS
+>>                 * monitor
+>>                 * mesh point
+>>                 * P2P-client
+>>                 * P2P-GO
+>>        Supported commands:
+>>                 * new_interface
+>>                 * set_interface
+>>                 * new_key
+>>                 * new_beacon
+>>                 * new_station
+>>                 * new_mpath
+>>                 * set_mesh_params
+>>                 * set_bss
+>>                 * authenticate
+>>                 * associate
+>>                 * deauthenticate
+>>                 * disassociate
+>>                 * join_ibss
+>>                 * join_mesh
+>>                 * remain_on_channel
+>>                 * set_tx_bitrate_mask
+>>                 * action
+>>                 * frame_wait_cancel
+>>                 * set_wiphy_netns
+>>                 * set_channel
+>>                 * set_wds_peer
+>>                 * connect
+>>                 * disconnect
+>>        Supported TX frame types:
+>>                 * IBSS: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050
+>> 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+>>                 * managed: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050
+>> 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+>>                 * AP: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050
+>> 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+>>                 * AP/VLAN: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050
+>> 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+>>                 * mesh point: 0x0000 0x0010 0x0020 0x0030 0x0040
+>> 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0
+>> 0x00f0
+>>                 * P2P-client: 0x0000 0x0010 0x0020 0x0030 0x0040
+>> 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0
+>> 0x00f0
+>>                 * P2P-GO: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050
+>> 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+>>        Supported RX frame types:
+>>                 * IBSS: 0x00d0
+>>                 * managed: 0x0040 0x00d0
+>>                 * AP: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
+>>                 * AP/VLAN: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
+>>                 * mesh point: 0x00b0 0x00c0 0x00d0
+>>                 * P2P-client: 0x0040 0x00d0
+>>                 * P2P-GO: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
+>>
+>> Has anyone experienced something like this? Can this be related to my
+>> hostapd config, or is this driver issue?
+>>
+>> br, Sami
+>>
+>
