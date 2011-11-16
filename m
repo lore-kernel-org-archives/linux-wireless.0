@@ -1,68 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:52469 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755821Ab1KRNVS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 08:21:18 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: [PATCHv4 2/2] iw: add support for NoAck per tid
-Date: Fri, 18 Nov 2011 14:20:46 +0100
-Message-Id: <1321622446-2477-6-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111118_142129_702986_EA4B86E2)
-In-Reply-To: <1321622446-2477-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1321622446-2477-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from mail.neratec.ch ([80.75.119.105]:59002 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932068Ab1KPKJw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Nov 2011 05:09:52 -0500
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linville@tuxdriver.com
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	rodrigue@qca.qualcomm.com, shafi.wireless@gmail.com,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [PATCH] ath9k: trivial: reorder rx_tasklet processing
+Date: Wed, 16 Nov 2011 11:09:44 +0100
+Message-Id: <1321438184-8439-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20111116_110956_861875_B77788A6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds support for the new NoAck feature in nl80211/mac80211
+DFS events are reported as PHY errors and need to be processed
+with a correct timestamp set before ath9k_skb_preprocess() is
+called and the frame is possibly dropped.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+This patch puts the rxs->mactime calculation before the skb
+is preprocessed to prepare for DFS event reporting.
+
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 ---
- interface.c |   27 +++++++++++++++++++++++++++
- 1 files changed, 27 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/interface.c b/interface.c
-index 3a345ba..274103e 100644
---- a/interface.c
-+++ b/interface.c
-@@ -386,6 +386,33 @@ COMMAND(set, 4addr, "<on|off>",
- 	NL80211_CMD_SET_INTERFACE, 0, CIB_NETDEV, handle_interface_4addr,
- 	"Set interface 4addr (WDS) mode.");
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 67b862c..4c8e296 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1838,11 +1838,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		if (sc->sc_flags & SC_OP_RXFLUSH)
+ 			goto requeue_drop_frag;
  
-+static int handle_interface_noack_map(struct nl80211_state *state,
-+				      struct nl_cb *cb,
-+				      struct nl_msg *msg,
-+				      int argc, char **argv)
-+{
-+	uint16_t noack_map;
-+	char *end;
+-		retval = ath9k_rx_skb_preprocess(common, hw, hdr, &rs,
+-						 rxs, &decrypt_error);
+-		if (retval)
+-			goto requeue_drop_frag;
+-
+ 		rxs->mactime = (tsf & ~0xffffffffULL) | rs.rs_tstamp;
+ 		if (rs.rs_tstamp > tsf_lower &&
+ 		    unlikely(rs.rs_tstamp - tsf_lower > 0x10000000))
+@@ -1852,6 +1847,11 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		    unlikely(tsf_lower - rs.rs_tstamp > 0x10000000))
+ 			rxs->mactime += 0x100000000ULL;
+ 
++		retval = ath9k_rx_skb_preprocess(common, hw, hdr, &rs,
++						 rxs, &decrypt_error);
++		if (retval)
++			goto requeue_drop_frag;
 +
-+	if (argc != 1)
-+		return 1;
-+
-+	noack_map = strtoul(argv[0], &end, 16);
-+	if (*end)
-+		return 1;
-+
-+	NLA_PUT_U16(msg, NL80211_ATTR_NOACK_MAP, noack_map);
-+
-+	return 0;
-+ nla_put_failure:
-+	return -ENOBUFS;
-+
-+}
-+COMMAND(set, noack_map, "<map>",
-+	NL80211_CMD_SET_NOACK_MAP, 0, CIB_NETDEV, handle_interface_noack_map,
-+	"Set the NoAck map for the TIDs. (0x0009 = BE, 0x0006 = BK, 0x0030 = VI, 0x00C0 = VO)");
-+
-+
- static int handle_interface_wds_peer(struct nl80211_state *state,
- 				     struct nl_cb *cb,
- 				     struct nl_msg *msg,
+ 		/* Ensure we always have an skb to requeue once we are done
+ 		 * processing the current buffer's skb */
+ 		requeue_skb = ath_rxbuf_alloc(common, common->rx_bufsize, GFP_ATOMIC);
 -- 
-1.7.7.3
+1.7.4.1
 
