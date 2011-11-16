@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:56920 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753591Ab1KZVy5 convert rfc822-to-8bit (ORCPT
+Received: from nbd.name ([46.4.11.11]:40226 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751213Ab1KPSQ5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Nov 2011 16:54:57 -0500
-MIME-Version: 1.0
-In-Reply-To: <201111262232.46195.rjw@sisk.pl>
-References: <CA+55aFyNUC+k1gp3MQkxQzernEzRZwYOH4EBnOq=6UiaJ2oh4A@mail.gmail.com>
-	<201111250203.29786.rjw@sisk.pl>
-	<201111262232.46195.rjw@sisk.pl>
-Date: Sun, 27 Nov 2011 05:54:56 +0800
-Message-ID: <CAJ-VmonZYrEJS7UkqdSTnMQ5waDjPgSpVDPqiHz2=Uksso5tHw@mail.gmail.com> (sfid-20111126_225521_709221_FC30135E)
-Subject: Re: [Regression, 3.2-rc1] ath9k broken on AR928X (was: Re: Linux
- 3.2-rc3 - just in time for Thanksgiving)
-From: Adrian Chadd <adrian@freebsd.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 16 Nov 2011 13:16:57 -0500
+References: <1321445323-71774-1-git-send-email-nbd@openwrt.org> <1321445323-71774-2-git-send-email-nbd@openwrt.org> <CAB=NE6XOz9p=GwQWZ3TibMMan70QO7dXgVRP4PLuV6p=P1-RXA@mail.gmail.com>
+In-Reply-To: <CAB=NE6XOz9p=GwQWZ3TibMMan70QO7dXgVRP4PLuV6p=P1-RXA@mail.gmail.com>
+Mime-Version: 1.0 (iPhone Mail 8H7)
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <A6331C99-8D86-4CD6-88F2-123B38F31B26@nbd.name> (sfid-20111116_191700_064846_A1510CD2)
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>
+From: Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH 2/4] ath9k: rework power state handling
+Date: Wed, 16 Nov 2011 19:16:58 +0100
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 November 2011 05:32, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> Tomorrow I'll try to identify the offending commits.
->
-> Well, it took more time than I had hoped. :-(
->
-> Bisection turns up:
->
-> commit 2577c6e8f2320f1d2f09be122efef5b9118efee4
-> Author: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-> Date:   Tue Sep 13 22:38:18 2011 +0530
->
->    ath9k_hw: Add support for AR946/8x chipsets.
->
->    This patch adds support for AR946/8x chipets.
+On 16.11.2011, at 18:42, "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com> wrote:
 
-Oh god. That's going to be fun to figure out :)
+> On Wed, Nov 16, 2011 at 4:08 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> Turning off the radio when mac80211 tells the driver that it's idle is not
+>> a good idea, as idle interfaces might still occasionally scan or send packets.
+>> The only time the radio can be safely turned off is when drv_stop has been
+>> called. In the mean time, use sc->ps_idle only to indicate network sleep vs
+>> full sleep.
+>> Move the LED GPIO changes out of the PCI suspend/resume path, the start/stop
+>> functions already take care of that.
+>> 
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> 
+> This set of patches are going to need some good amount of testing for
+> power impact. The benefits and gains need to be considered. I'll yield
+> to Senthil and Paul for final approval on this.
+One of the gains is that this series fixes some "PCI error" crashes on OpenWrt during hostapd restarts.
 
-> which I think is wrong for at lest two reasons.  Not that I understand
-> what it actually does to the driver, but first, it does much more than the
-> changelog says and, second, it is practically impossible to revert
-> because of the number of commits on top depending on it.  Quite frankly,
-> it is about to make it to my list of examples of how things should _not_ be
-> done in the kernel.
->
-> The commit immediately preceding it doesn't show any symptoms of failure, so
-> I'm quite convinced this one really introduced the problem for me.
->
-> The chip in the affected box is (according to "lspci -v"):
-
-Can you please find out what the actual PCI device id is? That way I
-can help you (hopefully) isolate which bits of that change would cause
-your regression.
-
-That commit almost exclusively touches the AR93xx chipset support, so
-I can't (easily) see how this would break support for the AR928x NICs.
-
-Adrian
+- Felix
