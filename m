@@ -1,43 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:57589 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756600Ab1KVOqh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 09:46:37 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH] ath9k_hw: cosmetic change in calibration debug log
-Date: Tue, 22 Nov 2011 20:15:56 +0530
-Message-ID: <1321973156-17427-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111122_154646_105703_680C3817)
+Received: from mx1.redhat.com ([209.132.183.28]:24082 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756039Ab1KPLPb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Nov 2011 06:15:31 -0500
+Date: Wed, 16 Nov 2011 12:17:02 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Amir Hedayaty <hedayaty@gmail.com>
+Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
+Message-ID: <20111116111702.GB2191@redhat.com> (sfid-20111116_121534_998928_8B758EC5)
+References: <20111116100915.GA2191@redhat.com>
+ <CAOZOX0WDQQeg4o5J9iQ_TpQgyYpTk5D3B4rpdTVR_4nGFVQ0wg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAOZOX0WDQQeg4o5J9iQ_TpQgyYpTk5D3B4rpdTVR_4nGFVQ0wg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Wed, Nov 16, 2011 at 11:14:41AM +0100, Ivo Van Doorn wrote:
+> > I changed rt2800pci only because get bug report for that device, not
+> > sure if similar changes are not needed for other rt2x00 PCI devices.
+> 
+> The ticket mentiones that the end-result is a slow connection,
+> this is also a bug in older chipsets. So could you prepare a patch
+> for the other drivers as well?
+Yes, sure. Do you have handy links to bug reports that I could
+reference in the changelog?
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 12a730d..e5407df 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -824,7 +824,7 @@ static void ar9003_hw_tx_iq_cal_post_proc(struct ath_hw *ah, bool is_reusable)
- 						chan_info_tab[i] + offset);
- 
- 				ath_dbg(common, ATH_DBG_CALIBRATE,
--					"IQ RES[%d]=0x%x"
-+					"IQ_RES[%d]=0x%x "
- 					"IQ_RES[%d]=0x%x\n",
- 					idx, iq_res[idx], idx + 1,
- 					iq_res[idx + 1]);
--- 
-1.7.0.4
-
+Stanislaw
