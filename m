@@ -1,57 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ackle.nomi.cz ([81.31.33.35]:58727 "EHLO ackle.nomi.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752944Ab1KJMxv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 07:53:51 -0500
-Date: Thu, 10 Nov 2011 13:53:47 +0100
-From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: iwlagn: memory corruption with WPA enterprise
-Message-ID: <20111110125347.GA29415@nomi.cz> (sfid-20111110_135409_461893_C800979A)
-References: <20111029171554.GA16596@nomi.cz> <20111031160342.GB2225@redhat.com> <20111109155411.GA1669@nomi.cz> <20111109165158.GA2254@redhat.com> <20111110091816.GA2247@nomi.cz> <20111110114732.GA2217@redhat.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:38362 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751674Ab1KPXiO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Nov 2011 18:38:14 -0500
+Received: by ggnb2 with SMTP id b2so335924ggn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 15:38:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20111110114732.GA2217@redhat.com>
+In-Reply-To: <1321479498.4502.27.camel@jlt3.sipsolutions.net>
+References: <CAMG6FYg38voWUWtKJ-4dRnv+MS=JqXL+q6A+Pc=mbsbDpMOusQ@mail.gmail.com>
+	<1321479498.4502.27.camel@jlt3.sipsolutions.net>
+Date: Thu, 17 Nov 2011 00:38:12 +0100
+Message-ID: <CAMG6FYjwVHbdEr0eJPV6wcp9ZFO2m2HKcWUdBeP3GC0Z6_G+jA@mail.gmail.com> (sfid-20111117_003818_062207_0E04F37D)
+Subject: Re: [RFC] cfg80211: more correct support of multi-essid bss-es
+From: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Stanislaw,
+On Wed, Nov 16, 2011 at 10:38 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2011-11-16 at 15:00 +0100, Dmitry Tarnyagin wrote:
 
-On Thu, Nov 10, 2011 at 12:47:33PM +0100, Stanislaw Gruszka wrote:
-> If "dmesg | grep corrupt" will show "Setting corrupt debug order to 1"
-> patches are in use. Anyway I need to test the patches locally, to see
-> if they work as expected, perhaps exception is generated but call-trace
-> is not printed.
-
-It does say that, yes.
-
-> Is this happen only with "Intel Corporation Centrino Advanced-N 6205" or
-> with some other adapters?
-
-I don't have any other iwlwifi adapters, so I wouldn't know. The people in
-that Ubuntu bugreport have exactly that card as well, but in another notebook.
-And they claim it works in newer Ubuntu, but I am running latest kernels with
-latest uCode, so I'm out of ideas what else could be wrong.
-
-> > Perhaps it would be cheaper to just get another card in that case.
-> > :-)
+>> The patch implements linked list of aliases for bss (alias is a bss
+>> with the same key information but with different ESSID).
 >
-> That will left issue unresolved :-(
+> I think you mean here not "different SSID", but "possibly hidden SSID"?
+> Otherwise the code doesn't make much sense -- if the SSID is really
+> incompatible it doesn't seem to get stuffed into the same node?
+>
+I'm trying to address 3 different but similar scenarios:
+1. Hidden AP, has different SSID in beacons (empty) and probe responses (real);
+2. Changing of SSID of an existing AP (in some moment 2 aliases with
+different SSID in both beacon and probe resp exist in the bss list);
+3. (hypothetical) real multi-ssid AP with permanent set of 2 or more
+different ies sets.
 
-Yeah, but considering how few people report this, I'm starting to feel that it
-might in fact be a hardware issue. It is unfortunate that the wifi adapter in
-this Lenovo model isn't placed in that part of the notebook on the back where
-it could be easily replaced. If that was the case, I could easily swap it with
-my colleagues without voiding the warranty.
+> (rfc patch only but just FYI something caused line-wrapping here)
+>
+Thanks, I will find and shoot it.
 
-(We've got a lot of Lenovos here, mostly T520 and T420s, most of them running
-Fedora, and nobody has reported memory corruption problems. Mine is T420.
-Perhaps I should try to connect to this WPA Enterprise using Windows and see
-if anything goes wrong. However, I have no clue as to what shall I do to
-reproduce the issue in Windows.)
 
-Regards,
--- 
-Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
+> can we call it "ssid", not "essid" please? :)
+Ok :)
+
+> Hm the fact that sometimes list_aliases is the anchor and sometimes not
+> is a bit confusing, but I think I understand it.
+>
+> Wasn't there a case where an existing BSS entry is replaced by a new
+> one?
+>
+I think I need to add more comment in the logic :)
+Idea is to fill beacon ies of incoming unknown probe responses with
+existing, but possibly incorrect information from aliases and replace
+it when and if the real beacon comes.
+Then, addressing the first scenario:
+1a. There is a beacon bss entry in the list and a probe response is coming
+Probe resp is filled with beacon ies and contains complete set of IEs.
+Existing beacon bss entry is not updating to keep consistence of rb
+tree.
+1b. There is a probe response bss entry in the list and a beacon is coming
+The beacon updates the probe response with its ies.
+
+Second:
+2a. There is an existing entry in the list with a whole set of ies and
+a new beacon comes
+The beacon starts a new bss entry. The old one is getting expired soon.
+2b. Same, but a new probe response comes
+It starts a new bss entry with inconsistent set of ies. After
+reception of an updated beacon the inconsistence is getting fixed. The
+old entry is getting expired soon.
+
+Third:
+Similar to second, but old entry does not expire.
+
+Something like that :)
