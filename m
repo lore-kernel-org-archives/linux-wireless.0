@@ -1,179 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:34207 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752449Ab1KBSTm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 14:19:42 -0400
-Received: by qyk2 with SMTP id 2so38074qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2011 11:19:42 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 2 Nov 2011 19:19:41 +0100
-Message-ID: <CAMG6FYiV8F=MFBeUQCGSj__h=REVLMvTZCvLEvDPT7GP2KWsWw@mail.gmail.com> (sfid-20111102_191945_962100_47EF911D)
-Subject: [PATCH] cfg80211: merge in beacon ies of hidden bss.
-From: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+Received: from nbd.name ([46.4.11.11]:44530 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756422Ab1KPMIy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Nov 2011 07:08:54 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 1/4] ath9k: always issue a full hw reset after waking up from full-sleep mode
+Date: Wed, 16 Nov 2011 13:08:40 +0100
+Message-Id: <1321445323-71774-1-git-send-email-nbd@openwrt.org> (sfid-20111116_130858_956594_9ABD2E0E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The problem with PSM when a hidden SSID was used was originally
-reported by Juuso Oikarinen.
+After waking up from full sleep, registers are accessible, but rx/tx
+typically fails. A fast channel change will not recover from this, so
+ensure that a full-sleep -> wake transition is always followed by a full
+reset.
 
- - When generally scanning, the AP is getting a bss entry with
-   a zero SSID.
- - When associationg, a probe-req is sent to the AP with the SSID,
-   and as a result a probe-responseis received with the hidden
-   SSID in place. As a consequence, a second bss entry is created
-   for the AP, now with the real SSID.
- - After association, mac80211 executes ieee80211_recalc_ps(),
-   but does not switch to powersave becuse the beacon-ies are missing.
+The reason why this hasn't created any serious problems yet is that it's
+hidden by the (wrong) behavior of enabling/disabling the radio when the
+wiphy idle state changes.
 
-As result, the STA does not ever enter PSM.
-
-The patch merges in beacon ies of hidden bss from beacon to the probe
-response, creating a consistant set of ies in place.
-
-Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- net/wireless/scan.c |   97 +++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 files changed, 94 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |   12 ++++++++++--
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index dd0d4c5..237e9ed 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -325,8 +325,8 @@ static bool is_mesh(struct cfg80211_bss *a,
- 	    sizeof(struct ieee80211_meshconf_ie) - 2) == 0;
- }
-
--static int cmp_bss(struct cfg80211_bss *a,
--		   struct cfg80211_bss *b)
-+static int cmp_bss_core(struct cfg80211_bss *a,
-+			struct cfg80211_bss *b)
- {
- 	int r;
-
-@@ -348,7 +348,15 @@ static int cmp_bss(struct cfg80211_bss *a,
- 			       b->len_information_elements);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index e43c41c..734e854 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -118,7 +118,7 @@ void ath9k_ps_restore(struct ath_softc *sc)
+ 	if (--sc->ps_usecount != 0)
+ 		goto unlock;
+ 
+-	if (sc->ps_idle)
++	if (sc->ps_idle && (sc->ps_flags & PS_WAIT_FOR_TX_ACK))
+ 		mode = ATH9K_PM_FULL_SLEEP;
+ 	else if (sc->ps_enabled &&
+ 		 !(sc->ps_flags & (PS_WAIT_FOR_BEACON |
+@@ -332,7 +332,8 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
+ 		hchan = ah->curchan;
  	}
-
--	r = memcmp(a->bssid, b->bssid, ETH_ALEN);
-+	return memcmp(a->bssid, b->bssid, ETH_ALEN);
-+}
+ 
+-	if (fastcc && !ath9k_hw_check_alive(ah))
++	if (fastcc && (ah->chip_fullsleep ||
++	    !ath9k_hw_check_alive(ah)))
+ 		fastcc = false;
+ 
+ 	if (!ath_prepare_reset(sc, retry_tx, flush))
+@@ -1176,6 +1177,13 @@ static void ath9k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		}
+ 	}
+ 
++	/*
++	 * Cannot tx while the hardware is in full sleep, it first needs a full
++	 * chip reset to recover from that
++	 */
++	if (unlikely(sc->sc_ah->power_mode == ATH9K_PM_FULL_SLEEP))
++		goto exit;
 +
-+static int cmp_bss(struct cfg80211_bss *a,
-+		   struct cfg80211_bss *b)
-+{
-+	int r;
-+
-+	r = cmp_bss_core(a, b);
- 	if (r)
- 		return r;
-
-@@ -359,6 +367,38 @@ static int cmp_bss(struct cfg80211_bss *a,
- 		       b->len_information_elements);
- }
-
-+static int cmp_hidden_bss(struct cfg80211_bss *a,
-+		   struct cfg80211_bss *b)
-+{
-+	const u8 *ie1;
-+	const u8 *ie2;
-+	size_t ielen;
-+	int i;
-+	int r;
-+
-+	r = cmp_bss_core(a, b);
-+	if (r)
-+		return r;
-+
-+	ie1 = cfg80211_find_ie(WLAN_EID_SSID,
-+			a->information_elements,
-+			a->len_information_elements);
-+	ie2 = cfg80211_find_ie(WLAN_EID_SSID,
-+			b->information_elements,
-+			b->len_information_elements);
-+	if (!ie1 && !ie2)
-+		return 0;
-+	if (!ie1 || !ie2)
-+		return -1;
-+
-+	ielen = min(ie1[1], ie2[1]);
-+	for (i = 0; i < ielen; ++i)
-+		if (ie2[i + 2])
-+			return -1;
-+
-+	return ie2[1] - ie1[1];
-+}
-+
- struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
- 				      struct ieee80211_channel *channel,
- 				      const u8 *bssid,
-@@ -475,6 +515,50 @@ rb_find_bss(struct cfg80211_registered_device *dev,
- }
-
- static struct cfg80211_internal_bss *
-+rb_find_hidden_bss(struct cfg80211_registered_device *dev,
-+	    struct cfg80211_internal_bss *res)
-+{
-+	struct rb_node *n = dev->bss_tree.rb_node;
-+	struct cfg80211_internal_bss *bss;
-+	int r;
-+
-+	while (n) {
-+		bss = rb_entry(n, struct cfg80211_internal_bss, rbn);
-+		r = cmp_hidden_bss(&res->pub, &bss->pub);
-+
-+		if (r == 0)
-+			return bss;
-+		else if (r < 0)
-+			n = n->rb_left;
-+		else
-+			n = n->rb_right;
-+	}
-+
-+	return NULL;
-+}
-+
-+static int
-+merge_hidden_ies(struct cfg80211_internal_bss *res,
-+		 struct cfg80211_internal_bss *hidden)
-+{
-+	if (unlikely(res->pub.beacon_ies))
-+		return -EALREADY;
-+	if (WARN_ON(!hidden->pub.beacon_ies))
-+		return -EINVAL;
-+
-+	res->pub.beacon_ies = kmalloc(hidden->pub.len_beacon_ies, GFP_ATOMIC);
-+	if (unlikely(!res->pub.beacon_ies))
-+		return -ENOMEM;
-+
-+	res->beacon_ies_allocated = true;
-+	res->pub.len_beacon_ies = hidden->pub.len_beacon_ies;
-+	memcpy(res->pub.beacon_ies, hidden->pub.beacon_ies,
-+			res->pub.len_beacon_ies);
-+
-+	return 0;
-+}
-+
-+static struct cfg80211_internal_bss *
- cfg80211_bss_update(struct cfg80211_registered_device *dev,
- 		    struct cfg80211_internal_bss *res)
- {
-@@ -494,6 +578,13 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
- 	spin_lock_bh(&dev->bss_lock);
-
- 	found = rb_find_bss(dev, res);
-+	if (!found) {
-+		struct cfg80211_internal_bss *hidden;
-+
-+		hidden = rb_find_hidden_bss(dev, res);
-+		if (hidden)
-+			merge_hidden_ies(res, hidden);
-+	}
-
- 	if (found) {
- 		found->pub.beacon_interval = res->pub.beacon_interval;
+ 	if (unlikely(sc->sc_ah->power_mode != ATH9K_PM_AWAKE)) {
+ 		/*
+ 		 * We are using PS-Poll and mac80211 can request TX while in
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 55d077e..363bf33 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1955,7 +1955,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 		skb_pull(skb, padsize);
+ 	}
+ 
+-	if (sc->ps_flags & PS_WAIT_FOR_TX_ACK) {
++	if ((sc->ps_flags & PS_WAIT_FOR_TX_ACK) && !txq->axq_depth) {
+ 		sc->ps_flags &= ~PS_WAIT_FOR_TX_ACK;
+ 		ath_dbg(common, ATH_DBG_PS,
+ 			"Going back to sleep after having received TX status (0x%lx)\n",
 -- 
-With best regards,
-Dmitry Tarnyagin
+1.7.3.2
+
