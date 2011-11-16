@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:52220 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754045Ab1KYQS7 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42533 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751986Ab1KPOm5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 11:18:59 -0500
-Received: by vcbfk14 with SMTP id fk14so2177392vcb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Nov 2011 08:18:59 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87bos0hejm.fsf@purkki.adurom.net>
-References: <CAJZjf_xDm_RaFqxF-r+MAPyh_HcCb+yV4dNrfhr+LH0-z2zk8g@mail.gmail.com>
- <CAJZjf_yEBb3BEf+-Fei78xBmJT1Y_Jr5fPUJNKwi6kvuVg24KA@mail.gmail.com> <87bos0hejm.fsf@purkki.adurom.net>
-From: Pedro Francisco <pedrogfrancisco@gmail.com>
-Date: Fri, 25 Nov 2011 16:18:38 +0000
-Message-ID: <CAJZjf_xpHgForL+2JjerEvx2McYMpT4xw08HMaz8dB33c3tQeA@mail.gmail.com> (sfid-20111125_171904_202601_AC99038C)
-Subject: Re: iwl3945 firmware errors: tentative debugging
-To: Kalle Valo <kvalo@adurom.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 16 Nov 2011 09:42:57 -0500
+Subject: Re: [PATCH 4/4] mac80211: transmit fragment list to drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <CAOZOX0VkGezQcijrEMiQSiuY=yadgSva7w9-SfrvYYW_UG+0LQ@mail.gmail.com> (sfid-20111116_154033_317943_1E753583)
+References: <20111116142854.518391560@sipsolutions.net>
+	 <20111116142911.501655161@sipsolutions.net>
+	 <CAOZOX0VkGezQcijrEMiQSiuY=yadgSva7w9-SfrvYYW_UG+0LQ@mail.gmail.com>
+	 (sfid-20111116_154033_317943_1E753583)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 16 Nov 2011 15:42:52 +0100
+Message-ID: <1321454572.4502.3.camel@jlt3.sipsolutions.net> (sfid-20111116_154300_391376_C734BF90)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Trusting firmware logs, it uses both active and passive scans.
+On Wed, 2011-11-16 at 15:40 +0100, Ivo Van Doorn wrote:
 
-As to why, I don't know, though I suppose it'd make sense to let the
-wireless card handle scanning unless some condition arised which led
-NM to think it would have to roam soon.
+> > +static inline void drv_tx_frags(struct ieee80211_local *local,
+> > +                               struct ieee80211_sub_if_data *sdata,
+> > +                               struct sta_info *sta,
+> > +                               struct sk_buff_head *skbs,
+> > +                               void *internal)
+> > +{
+> > +       local->ops->tx_frags(&local->hw,
+> > +                            sdata ? &sdata->vif : NULL,
+> > +                            sta ? &sta->sta : NULL,
+> > +                            skbs, internal);
+> > +}
+> 
+> Instead of changing every driver and making .tx_frags callback mandatory,
+> isn't it easier to have a if-else here?
 
-On Fri, Nov 25, 2011 at 7:00 AM, Kalle Valo <kvalo@adurom.com> wrote:
-> Pedro Francisco <pedrogfrancisco@gmail.com> writes:
->
->>
->> I was able to trigger the firmware error by doing "iw dev wlan0 scan
->> passive". By comparison, "iw dev wlan0 scan" does NOT trigger the
->> firmware error.
->
-> So NM uses passive scan? Now I'm curious, why is that?
->
+We certainly can't have the if-else here, if there should be one it
+should be in __ieee80211_tx().
+
+> Then it is much easier for the drivers as you can document that either
+> .tx or .tx_frags is mandatory but never both.
+
+Maybe that's the better option. Somehow I thought it would be more
+efficient this way, but I guess it doesn't actually make much of a
+difference and I can get rid of the void *internal parameter.
+
+I'll change.
+
+johannes
+
