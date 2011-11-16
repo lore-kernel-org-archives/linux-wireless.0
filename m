@@ -1,77 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61697 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752314Ab1KWIBf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 03:01:35 -0500
-Date: Wed, 23 Nov 2011 09:03:54 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: David Miller <davem@davemloft.net>
-Cc: Larry.Finger@lwfinger.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>, hedayaty@gmail.com
-Subject: Re: pull request: wireless 2011-11-22
-Message-ID: <20111123080353.GA3752@redhat.com> (sfid-20111123_090204_971651_9DF7663A)
-References: <20111122.160511.2302883259439708995.davem@davemloft.net>
- <20111122.161322.454163033398038634.davem@davemloft.net>
- <4ECC1479.8090209@lwfinger.net>
- <20111122.164057.1411098663938026383.davem@davemloft.net>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:34984 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623Ab1KPOqT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Nov 2011 09:46:19 -0500
+Received: by vcbfk1 with SMTP id fk1so424002vcb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 06:46:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111122.164057.1411098663938026383.davem@davemloft.net>
+In-Reply-To: <1321454572.4502.3.camel@jlt3.sipsolutions.net>
+References: <20111116142854.518391560@sipsolutions.net>
+	<20111116142911.501655161@sipsolutions.net>
+	<CAOZOX0VkGezQcijrEMiQSiuY=yadgSva7w9-SfrvYYW_UG+0LQ@mail.gmail.com>
+	<1321454572.4502.3.camel@jlt3.sipsolutions.net>
+Date: Wed, 16 Nov 2011 15:46:18 +0100
+Message-ID: <CAOZOX0V4jVbVKQ1Qcc+wqi8URgzPSN6xXOSmRt9mHOQv=f75qA@mail.gmail.com> (sfid-20111116_154622_768954_37797A7F)
+Subject: Re: [PATCH 4/4] mac80211: transmit fragment list to drivers
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 22, 2011 at 04:40:57PM -0500, David Miller wrote:
-> >>> It just means that we won't notice spurious interrupts if the device
-> >>> sharing the line with rt2800pci generates one.
-> >>>
-> >>> This change is wrong.
+On Wed, Nov 16, 2011 at 3:42 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2011-11-16 at 15:40 +0100, Ivo Van Doorn wrote:
+>
+>> > +static inline void drv_tx_frags(struct ieee80211_local *local,
+>> > +                               struct ieee80211_sub_if_data *sdata,
+>> > +                               struct sta_info *sta,
+>> > +                               struct sk_buff_head *skbs,
+>> > +                               void *internal)
+>> > +{
+>> > +       local->ops->tx_frags(&local->hw,
+>> > +                            sdata ? &sdata->vif : NULL,
+>> > +                            sta ? &sta->sta : NULL,
+>> > +                            skbs, internal);
+>> > +}
+>>
+>> Instead of changing every driver and making .tx_frags callback mandatory,
+>> isn't it easier to have a if-else here?
+>
+> We certainly can't have the if-else here, if there should be one it
+> should be in __ieee80211_tx().
 
-Ehh, I had a feeling that I was doing something wrong ... 
+Yeah, I was too lazy to search for the call to drv_tx_frags() itself. :)
 
-> >> BTW, look at it this way, if what you say is true John then what's the
-> >> point
-> >> in returning any specific value at all?
-> >>
-> >> Everyone can just return IRQ_HANDLED and everything would just work.
-> >>
-> >> But you know that's not the case, and that it's important that this
-> >> value
-> >> is returned accurately.
-> > 
-> > I was trying to find the thread that reported the improvement in
-> > performance with this change, but failed. Is it possible that their
-> > change just papered over an interrupt storm from some other device
-> > that shared that interrupt?
-> 
-> It doesn't fix a performance problem, it fixes a problem wherein the
-> IRQ line is disabled by the generic IRQ code because all handlers
-> return IRQ_NONE.
+>> Then it is much easier for the drivers as you can document that either
+>> .tx or .tx_frags is mandatory but never both.
+>
+> Maybe that's the better option. Somehow I thought it would be more
+> efficient this way, but I guess it doesn't actually make much of a
+> difference and I can get rid of the void *internal parameter.
+>
+> I'll change.
 
-According to Amir, who reports this problem patch fix the performance
-(https://bugzilla.redhat.com/show_bug.cgi?id=658451),
-from very bad to expected on wifi link. It can be explained, if we
-disable interrupt line, driver still operate, but read TX/RX statuses
-from hardware when internal driver watchdog timeout. Hence we operate,
-but very slow. If we prevent to disable interrupt by IRQ controller
-driver, device operate normally.
+Thanks,
 
-The main problem here, that we have hardware (or firmware) that
-generate interrupt with empty interrupt status register, so we can
-not detect if interrupt is really generated by Ralink device.
-
-Perhaps exist good fix for that problem, i.e. we can write to some
-register to stop hardware generating spurious interrupts, or exist
-other way than reading status register to find out if Ralink device
-generated interrupt. But that require detailed hardware knowledge,
-and I'm not sure if we ever can get such informations. Also this 
-could be a hardware bug, device just generate spurious interrupts
-and we can not do anything about it. I looked at driver from Ralink
-site, and it do exactly that, it return IRQ_HANDLED if status register
-is empty.
-
-Ok, I'm thinking about other fix now ...
-
-Stanislaw
+Ivo
