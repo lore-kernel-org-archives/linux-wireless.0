@@ -1,85 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:44056 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751288Ab1K1HUN (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51403 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757903Ab1KPO3u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 02:20:13 -0500
-Subject: Re: [PATCH 10/11] wireless: Remove redundant spi driver bus
- initialization
-From: Luciano Coelho <coelho@ti.com>
-To: Lars-Peter Clausen <lars@metafoo.de>
-Cc: linux-kernel@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1322148561-25138-10-git-send-email-lars@metafoo.de>
-References: <1322148561-25138-1-git-send-email-lars@metafoo.de>
-	 <1322148561-25138-10-git-send-email-lars@metafoo.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 28 Nov 2011 09:20:07 +0200
-Message-ID: <1322464807.6502.11.camel@cumari> (sfid-20111128_082017_214059_F822582D)
+	Wed, 16 Nov 2011 09:29:50 -0500
+Message-Id: <20111116142911.206008880@sipsolutions.net> (sfid-20111116_152956_343742_BB1A3EFD)
+Date: Wed, 16 Nov 2011 15:28:57 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] mac80211: make TX LED handling independent of
+ fragmentation
+References: <20111116142854.518391560@sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-11-24 at 16:29 +0100, Lars-Peter Clausen wrote: 
-> In ancient times it was necessary to manually initialize the bus field of an
-> spi_driver to spi_bus_type. These days this is done in spi_driver_register(),
-> so we can drop the manual assignment.
-> 
-> The patch was generated using the following coccinelle semantic patch:
-> // <smpl>
-> @@
-> identifier _driver;
-> @@
-> struct spi_driver _driver = {
-> 	.driver = {
-> -		.bus = &spi_bus_type,
-> 	},
-> };
-> // </smpl>
-> 
-> Signed-off-by: Lars-Peter Clausen <lars@metafoo.de>
-> Cc: Dan Williams <dcbw@redhat.com>
-> Cc: "John W. Linville" <linville@tuxdriver.com>
-> Cc: Christian Lamparter <chunkeey@googlemail.com>
-> Cc: Luciano Coelho <coelho@ti.com>
-> Cc: libertas-dev@lists.infradead.org
-> Cc: linux-wireless@vger.kernel.org
-> ---
+From: Johannes Berg <johannes.berg@intel.com>
 
-[...]
+This just prepares for passing the entire fragment
+list to the driver. No significant changes, but the
+TX throughput is calculated slightly differently
+now and we blink only once for each MSDU.
 
-> diff --git a/drivers/net/wireless/wl1251/spi.c b/drivers/net/wireless/wl1251/spi.c
-> index eaa5f95..6248c35 100644
-> --- a/drivers/net/wireless/wl1251/spi.c
-> +++ b/drivers/net/wireless/wl1251/spi.c
-> @@ -319,7 +319,6 @@ static int __devexit wl1251_spi_remove(struct spi_device *spi)
->  static struct spi_driver wl1251_spi_driver = {
->  	.driver = {
->  		.name		= DRIVER_NAME,
-> -		.bus		= &spi_bus_type,
->  		.owner		= THIS_MODULE,
->  	},
->  
-> diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
-> index 0f97186..12421a6 100644
-> --- a/drivers/net/wireless/wl12xx/spi.c
-> +++ b/drivers/net/wireless/wl12xx/spi.c
-> @@ -462,7 +462,6 @@ static int __devexit wl1271_remove(struct spi_device *spi)
->  static struct spi_driver wl1271_spi_driver = {
->  	.driver = {
->  		.name		= "wl1271_spi",
-> -		.bus		= &spi_bus_type,
->  		.owner		= THIS_MODULE,
->  	},
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c |   28 ++++++++++++++++------------
+ 1 file changed, 16 insertions(+), 12 deletions(-)
 
-For the wl12xx and wl1251 parts:
+--- a/net/mac80211/tx.c	2011-11-16 15:16:45.000000000 +0100
++++ b/net/mac80211/tx.c	2011-11-16 15:17:19.000000000 +0100
+@@ -1207,18 +1207,23 @@ ieee80211_tx_prepare(struct ieee80211_su
+  * Returns false if the frame couldn't be transmitted but was queued instead.
+  */
+ static bool __ieee80211_tx(struct ieee80211_local *local,
+-			   struct sk_buff_head *skbs,
++			   struct sk_buff_head *skbs, int led_len,
+ 			   struct sta_info *sta, bool txpending)
+ {
+ 	struct sk_buff *skb, *tmp;
+ 	struct ieee80211_tx_info *info;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	unsigned long flags;
+-	int len;
++	__le16 fc;
++
++	if (WARN_ON(skb_queue_empty(skbs)))
++		return true;
++
++	skb = skb_peek(skbs);
++	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
+ 
+ 	skb_queue_walk_safe(skbs, skb, tmp) {
+ 		int q = skb_get_queue_mapping(skb);
+-		__le16 fc;
+ 
+ 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+ 		if (local->queue_stop_reasons[q] ||
+@@ -1241,8 +1246,6 @@ static bool __ieee80211_tx(struct ieee80
+ 
+ 		info = IEEE80211_SKB_CB(skb);
+ 
+-		len = skb->len;
+-
+ 		sdata = vif_to_sdata(info->control.vif);
+ 
+ 		switch (sdata->vif.type) {
+@@ -1263,15 +1266,13 @@ static bool __ieee80211_tx(struct ieee80
+ 		else
+ 			info->control.sta = NULL;
+ 
+-		fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
+-
+ 		__skb_unlink(skb, skbs);
+ 		drv_tx(local, skb);
+-
+-		ieee80211_tpt_led_trig_tx(local, fc, len);
+-		ieee80211_led_tx(local, 1);
+ 	}
+ 
++	ieee80211_tpt_led_trig_tx(local, fc, led_len);
++	ieee80211_led_tx(local, 1);
++
+ 	WARN_ON(!skb_queue_empty(skbs));
+ 
+ 	return true;
+@@ -1341,6 +1342,7 @@ static bool ieee80211_tx(struct ieee8021
+ 	ieee80211_tx_result res_prepare;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	bool result = true;
++	int led_len;
+ 
+ 	if (unlikely(skb->len < 10)) {
+ 		dev_kfree_skb(skb);
+@@ -1350,6 +1352,7 @@ static bool ieee80211_tx(struct ieee8021
+ 	rcu_read_lock();
+ 
+ 	/* initialises tx */
++	led_len = skb->len;
+ 	res_prepare = ieee80211_tx_prepare(sdata, &tx, skb);
+ 
+ 	if (unlikely(res_prepare == TX_DROP)) {
+@@ -1363,7 +1366,8 @@ static bool ieee80211_tx(struct ieee8021
+ 	info->band = tx.channel->band;
+ 
+ 	if (!invoke_tx_handlers(&tx))
+-		result = __ieee80211_tx(local, &tx.skbs, tx.sta, txpending);
++		result = __ieee80211_tx(local, &tx.skbs, led_len,
++					tx.sta, txpending);
+  out:
+ 	rcu_read_unlock();
+ 	return result;
+@@ -2119,7 +2123,7 @@ static bool ieee80211_tx_pending_skb(str
+ 		hdr = (struct ieee80211_hdr *)skb->data;
+ 		sta = sta_info_get(sdata, hdr->addr1);
+ 
+-		result = __ieee80211_tx(local, &skbs, sta, true);
++		result = __ieee80211_tx(local, &skbs, skb->len, sta, true);
+ 	}
+ 
+ 	return result;
 
-Acked-by: Luciano Coelho <coelho@ti.com>
-
-
--- 
-Cheers,
-Luca.
 
