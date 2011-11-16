@@ -1,68 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:53608 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752969Ab1KBMKu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 08:10:50 -0400
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Cc: rodrigue@qca.qualcomm.com, nbd@openwrt.org, linville@tuxdriver.com,
-	Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Subject: [PATCH] ath9k: preserve DFS flags in calcrxfilter
-Date: Wed,  2 Nov 2011 13:10:03 +0100
-Message-Id: <1320235803-12190-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20111102_131054_050715_ED335C6C)
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:54613 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755569Ab1KPLB7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Nov 2011 06:01:59 -0500
+Received: by ywt32 with SMTP id 32so4617002ywt.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 03:01:59 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAOZOX0Wa4gquXeMrh_1U2kJvJQttQDQ9pWNVT5jjoHOxZxL4jg@mail.gmail.com>
+References: <20111116100915.GA2191@redhat.com>
+	<CAGXE3d8oPL9POJEZdb4urFVQXjPY2W8HYePLc2F804=W7nCfSw@mail.gmail.com>
+	<CAOZOX0Wa4gquXeMrh_1U2kJvJQttQDQ9pWNVT5jjoHOxZxL4jg@mail.gmail.com>
+Date: Wed, 16 Nov 2011 12:01:59 +0100
+Message-ID: <CAGXE3d-O7vn+cZJ-Z-jYwt_oyiRTA01uz+70j7cy9xCkWAi1Gw@mail.gmail.com> (sfid-20111116_120203_062168_13F3EA53)
+Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Amir Hedayaty <hedayaty@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RX filter flags previously set for DFS radar detection were not
-preserved after "ath9k: disable unnecessary PHY error reporting".
+On Wed, Nov 16, 2011 at 11:52 AM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
+> On Wed, Nov 16, 2011 at 11:46 AM, Helmut Schaa
+> <helmut.schaa@googlemail.com> wrote:
+>> On Wed, Nov 16, 2011 at 11:09 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>>> +       /*
+>>> +        * Some devices can generate interrupts with empty CSR register, we
+>>> +        * "handle" such irq's to prevent interrupt controller treat them as
+>>> +        * spurious interrupts and disable irq line.
+>>> +        */
+>>>        if (!reg)
+>>> -               return IRQ_NONE;
+>>> +               return IRQ_HANDLED;
+>>
+>> What if this interrupt belongs to a different device on a shared interrupt line?
+>> In case reg is zero we can't be sure our device generated this interrupt, right?
+>
+> In the bugzilla report  Stanislaw indicated that even when rt2800pci
+> indicates IRQ_HANDLED,
+> all other drivers on the same interruptline will still get the interrupt event.
 
-This patch ensures that the flags required for DFS support are
-kept set.
+Ah, ok. Should be fine with me then ...
 
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |   12 ++++++++----
- 1 files changed, 8 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 592ae5b..02c8dc3 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -417,6 +417,7 @@ void ath_rx_cleanup(struct ath_softc *sc)
-  * Calculate the receive filter according to the
-  * operating mode and state:
-  *
-+ * o preserve DFS (phyerror, phyradar)
-  * o always accept unicast, broadcast, and multicast traffic
-  * o maintain current state of phy error reception (the hal
-  *   may enable phy error frames for noise immunity work)
-@@ -434,10 +435,15 @@ void ath_rx_cleanup(struct ath_softc *sc)
- 
- u32 ath_calcrxfilter(struct ath_softc *sc)
- {
-+	const u32 rx_filter_preserve =
-+		(ATH9K_RX_FILTER_PHYERR | ATH9K_RX_FILTER_PHYRADAR);
-+	const u32 rx_filter_accept =
-+		(ATH9K_RX_FILTER_UCAST | ATH9K_RX_FILTER_BCAST
-+				| ATH9K_RX_FILTER_MCAST);
- 	u32 rfilt;
- 
--	rfilt = ATH9K_RX_FILTER_UCAST | ATH9K_RX_FILTER_BCAST
--		| ATH9K_RX_FILTER_MCAST;
-+	rfilt = (ath9k_hw_getrxfilter(sc->sc_ah) & rx_filter_preserve);
-+	rfilt |= rx_filter_accept;
- 
- 	if (sc->rx.rxfilter & FIF_PROBE_REQ)
- 		rfilt |= ATH9K_RX_FILTER_PROBEREQ;
-@@ -475,8 +481,6 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	}
- 
- 	return rfilt;
--
--#undef RX_FILTER_PRESERVE
- }
- 
- int ath_startrecv(struct ath_softc *sc)
--- 
-1.7.4.1
-
+Thanks.
