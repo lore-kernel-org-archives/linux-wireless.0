@@ -1,46 +1,309 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:54461 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752014Ab1K2FWP convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 00:22:15 -0500
-Received: by lahl5 with SMTP id l5so802532lah.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 21:22:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4ED3FA65.7010104@aol.com>
-References: <4ED3A6E8.4050000@aol.com>
-	<CACna6ryNkHeVXWXxFfod1-KQs8HQVv7wF-xpY5MA-Qs6fCypCg@mail.gmail.com>
-	<CACna6rzRJgfddE4jPivxBJCCZEyKSHsdRX7cE15rRxk2nhiRkA@mail.gmail.com>
-	<4ED3B33E.8020309@lwfinger.net>
-	<4ED3FA65.7010104@aol.com>
-Date: Tue, 29 Nov 2011 06:22:14 +0100
-Message-ID: <CACna6rw1gEjd_hcX=5hLHt0YwUqDaVBs7_MO50GLKeok57YtVw@mail.gmail.com> (sfid-20111129_062219_730320_290EE037)
-Subject: Re: Trouble with Macbook Pro 8,2 (broadcom 4331) and latest b43
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: AndrewL733 <AndrewL733@aol.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:44531 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756497Ab1KPMIz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Nov 2011 07:08:55 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 2/4] ath9k: rework power state handling
+Date: Wed, 16 Nov 2011 13:08:41 +0100
+Message-Id: <1321445323-71774-2-git-send-email-nbd@openwrt.org> (sfid-20111116_130904_778915_18CFAE83)
+In-Reply-To: <1321445323-71774-1-git-send-email-nbd@openwrt.org>
+References: <1321445323-71774-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/11/28 AndrewL733 <AndrewL733@aol.com>:
-> Hi,
->
-> Thanks for the suggestions.  Nothing solving the problem so far.
->
-> I meant
-> find /lib/modules -name "b43.ko"
->
->
-> What is the point of looking for b43.ko?  It exists for my running kernel.
+Turning off the radio when mac80211 tells the driver that it's idle is not
+a good idea, as idle interfaces might still occasionally scan or send packets.
+The only time the radio can be safely turned off is when drv_stop has been
+called. In the mean time, use sc->ps_idle only to indicate network sleep vs
+full sleep.
+Move the LED GPIO changes out of the PCI suspend/resume path, the start/stop
+functions already take care of that.
 
-I believe b43.ko from compat-wireless should be put in some specific
-subdirectory, probably "extra". AFAIR it's
-/lib/modules/SOMEKERNEL/extra/...
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/main.c |  156 ++++++++++-----------------------
+ drivers/net/wireless/ath/ath9k/pci.c  |   19 +----
+ 2 files changed, 47 insertions(+), 128 deletions(-)
 
-If you can see only default b43.ko, it means compat-wireless didn't
-install successfully.
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 734e854..81e1368 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -883,82 +883,6 @@ chip_reset:
+ #undef SCHED_INTR
+ }
+ 
+-static void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+-{
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ieee80211_channel *channel = hw->conf.channel;
+-	int r;
+-
+-	ath9k_ps_wakeup(sc);
+-	spin_lock_bh(&sc->sc_pcu_lock);
+-	atomic_set(&ah->intr_ref_cnt, -1);
+-
+-	ath9k_hw_configpcipowersave(ah, false);
+-
+-	if (!ah->curchan)
+-		ah->curchan = ath9k_cmn_get_curchannel(sc->hw, ah);
+-
+-	r = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
+-	if (r) {
+-		ath_err(common,
+-			"Unable to reset channel (%u MHz), reset status %d\n",
+-			channel->center_freq, r);
+-	}
+-
+-	ath_complete_reset(sc, true);
+-
+-	/* Enable LED */
+-	ath9k_hw_cfg_output(ah, ah->led_pin,
+-			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+-	ath9k_hw_set_gpio(ah, ah->led_pin, 0);
+-
+-	spin_unlock_bh(&sc->sc_pcu_lock);
+-
+-	ath9k_ps_restore(sc);
+-}
+-
+-void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+-{
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ieee80211_channel *channel = hw->conf.channel;
+-	int r;
+-
+-	ath9k_ps_wakeup(sc);
+-
+-	ath_cancel_work(sc);
+-
+-	spin_lock_bh(&sc->sc_pcu_lock);
+-
+-	/*
+-	 * Keep the LED on when the radio is disabled
+-	 * during idle unassociated state.
+-	 */
+-	if (!sc->ps_idle) {
+-		ath9k_hw_set_gpio(ah, ah->led_pin, 1);
+-		ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
+-	}
+-
+-	ath_prepare_reset(sc, false, true);
+-
+-	if (!ah->curchan)
+-		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
+-
+-	r = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
+-	if (r) {
+-		ath_err(ath9k_hw_common(sc->sc_ah),
+-			"Unable to reset channel (%u MHz), reset status %d\n",
+-			channel->center_freq, r);
+-	}
+-
+-	ath9k_hw_phy_disable(ah);
+-
+-	ath9k_hw_configpcipowersave(ah, true);
+-
+-	spin_unlock_bh(&sc->sc_pcu_lock);
+-	ath9k_ps_restore(sc);
+-}
+-
+ static int ath_reset(struct ath_softc *sc, bool retry_tx)
+ {
+ 	int r;
+@@ -1094,6 +1018,9 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	 * and then setup of the interrupt mask.
+ 	 */
+ 	spin_lock_bh(&sc->sc_pcu_lock);
++
++	atomic_set(&ah->intr_ref_cnt, -1);
++
+ 	r = ath9k_hw_reset(ah, init_channel, ah->caldata, false);
+ 	if (r) {
+ 		ath_err(common,
+@@ -1132,6 +1059,18 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 		goto mutex_unlock;
+ 	}
+ 
++	if (ah->led_pin >= 0) {
++		ath9k_hw_cfg_output(ah, ah->led_pin,
++				    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
++		ath9k_hw_set_gpio(ah, ah->led_pin, 0);
++	}
++
++	/*
++	 * Reset key cache to sane defaults (all entries cleared) instead of
++	 * semi-random values after suspend/resume.
++	 */
++	ath9k_cmn_init_crypto(sc->sc_ah);
++
+ 	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	if ((ah->btcoex_hw.scheme != ATH_BTCOEX_CFG_NONE) &&
+@@ -1230,6 +1169,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	bool prev_idle;
+ 
+ 	mutex_lock(&sc->mutex);
+ 
+@@ -1260,35 +1200,45 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	 * before setting the invalid flag. */
+ 	ath9k_hw_disable_interrupts(ah);
+ 
+-	if (!(sc->sc_flags & SC_OP_INVALID)) {
+-		ath_drain_all_txq(sc, false);
+-		ath_stoprecv(sc);
+-		ath9k_hw_phy_disable(ah);
+-	} else
+-		sc->rx.rxlink = NULL;
++	spin_unlock_bh(&sc->sc_pcu_lock);
++
++	/* we can now sync irq and kill any running tasklets, since we already
++	 * disabled interrupts and not holding a spin lock */
++	synchronize_irq(sc->irq);
++	tasklet_kill(&sc->intr_tq);
++	tasklet_kill(&sc->bcon_tasklet);
++
++	prev_idle = sc->ps_idle;
++	sc->ps_idle = true;
++
++	spin_lock_bh(&sc->sc_pcu_lock);
++
++	if (ah->led_pin >= 0) {
++		ath9k_hw_set_gpio(ah, ah->led_pin, 1);
++		ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
++	}
++
++	ath_prepare_reset(sc, false, true);
+ 
+ 	if (sc->rx.frag) {
+ 		dev_kfree_skb_any(sc->rx.frag);
+ 		sc->rx.frag = NULL;
+ 	}
+ 
+-	/* disable HAL and put h/w to sleep */
+-	ath9k_hw_disable(ah);
++	if (!ah->curchan)
++		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
+ 
+-	spin_unlock_bh(&sc->sc_pcu_lock);
++	ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
++	ath9k_hw_phy_disable(ah);
+ 
+-	/* we can now sync irq and kill any running tasklets, since we already
+-	 * disabled interrupts and not holding a spin lock */
+-	synchronize_irq(sc->irq);
+-	tasklet_kill(&sc->intr_tq);
+-	tasklet_kill(&sc->bcon_tasklet);
++	ath9k_hw_configpcipowersave(ah, true);
+ 
+-	ath9k_ps_restore(sc);
++	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+-	sc->ps_idle = true;
+-	ath_radio_disable(sc, hw);
++	ath9k_ps_restore(sc);
+ 
+ 	sc->sc_flags |= SC_OP_INVALID;
++	sc->ps_idle = prev_idle;
+ 
+ 	mutex_unlock(&sc->mutex);
+ 
+@@ -1628,8 +1578,8 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_conf *conf = &hw->conf;
+-	bool disable_radio = false;
+ 
++	ath9k_ps_wakeup(sc);
+ 	mutex_lock(&sc->mutex);
+ 
+ 	/*
+@@ -1638,16 +1588,8 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	 * of the changes. Likewise we must only disable the radio towards
+ 	 * the end.
+ 	 */
+-	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
++	if (changed & IEEE80211_CONF_CHANGE_IDLE)
+ 		sc->ps_idle = !!(conf->flags & IEEE80211_CONF_IDLE);
+-		if (!sc->ps_idle) {
+-			ath_radio_enable(sc, hw);
+-			ath_dbg(common, ATH_DBG_CONFIG,
+-				"not-idle: enabling radio\n");
+-		} else {
+-			disable_radio = true;
+-		}
+-	}
+ 
+ 	/*
+ 	 * We just prepare to enable PS. We have to wait until our AP has
+@@ -1753,18 +1695,12 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 		ath_dbg(common, ATH_DBG_CONFIG,
+ 			"Set power: %d\n", conf->power_level);
+ 		sc->config.txpowlimit = 2 * conf->power_level;
+-		ath9k_ps_wakeup(sc);
+ 		ath9k_cmn_update_txpow(ah, sc->curtxpow,
+ 				       sc->config.txpowlimit, &sc->curtxpow);
+-		ath9k_ps_restore(sc);
+-	}
+-
+-	if (disable_radio) {
+-		ath_dbg(common, ATH_DBG_CONFIG, "idle: disabling radio\n");
+-		ath_radio_disable(sc, hw);
+ 	}
+ 
+ 	mutex_unlock(&sc->mutex);
++	ath9k_ps_restore(sc);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 2dcdf63..f42ab6c 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -307,12 +307,11 @@ static int ath_pci_suspend(struct device *device)
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct ath_softc *sc = hw->priv;
+ 
+-	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
+-
+ 	/* The device has to be moved to FULLSLEEP forcibly.
+ 	 * Otherwise the chip never moved to full sleep,
+ 	 * when no interface is up.
+ 	 */
++	ath9k_hw_disable(sc->sc_ah);
+ 	ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_FULL_SLEEP);
+ 
+ 	return 0;
+@@ -334,22 +333,6 @@ static int ath_pci_resume(struct device *device)
+ 	if ((val & 0x0000ff00) != 0)
+ 		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
+ 
+-	ath9k_ps_wakeup(sc);
+-	/* Enable LED */
+-	ath9k_hw_cfg_output(sc->sc_ah, sc->sc_ah->led_pin,
+-			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+-	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 0);
+-
+-	  /*
+-	   * Reset key cache to sane defaults (all entries cleared) instead of
+-	   * semi-random values after suspend/resume.
+-	   */
+-	ath9k_cmn_init_crypto(sc->sc_ah);
+-	ath9k_ps_restore(sc);
+-
+-	sc->ps_idle = true;
+-	ath_radio_disable(sc, hw);
+-
+ 	return 0;
+ }
+ 
 -- 
-Rafał
+1.7.3.2
+
