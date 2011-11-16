@@ -1,62 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:5393 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755688Ab1KWDwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 22:52:08 -0500
-Subject: Re: 3.1+ iwlwifi lockup
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Dave Jones <davej@redhat.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20111123033446.GB9703@redhat.com>
-References: <20111031143408.GA17152@redhat.com>
-	 <1321992902.8072.7.camel@wwguy-ubuntu> <20111123024545.GA9703@redhat.com>
-	 <1322015380.11647.82.camel@wwguy-huron>  <20111123033446.GB9703@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 22 Nov 2011 18:56:05 -0800
-Message-ID: <1322016965.11647.95.camel@wwguy-huron> (sfid-20111123_045236_867828_598B29DE)
-Mime-Version: 1.0
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:43051 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755394Ab1KPKv1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Nov 2011 05:51:27 -0500
+Date: Wed, 16 Nov 2011 11:51:20 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: Re: [PATCH] mac80211: Add NoAck per WMM Queue Support
+Message-ID: <20111116105120.GA6139@pandem0nium> (sfid-20111116_115131_539496_1D301BE8)
+References: <1321399276-3585-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1321429935.4773.10.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="G4iJoqBmSsgzjUCe"
+In-Reply-To: <1321429935.4773.10.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-11-22 at 19:34 -0800, Dave Jones wrote:
-> On Tue, Nov 22, 2011 at 06:29:40PM -0800, Guy, Wey-Yi wrote:
->  
->  > On Tue, 2011-11-22 at 18:45 -0800, Dave Jones wrote:
->  > > On Tue, Nov 22, 2011 at 12:15:02PM -0800, wwguy wrote:
->  > >  > Hi Dave,
->  > >  > 
->  > >  > Sorry for taking so long.
->  > >  > it is a bogus command from the firmware which driver try to process it
->  > >  > and cause problem. I am not sure how it happen. But could you please try
->  > >  > the patch I attach here.
->  > >  > 
->  > >  > For now I am just ignore the command, but not sure it is good enough,
->  > >  > might has to reload the firmware, but not sure.
->  > > 
->  > > With Linus' current tree and this patch, I got a panic pretty quickly,
->  > > but with a different trace.
->  > > 
->  > Are you seeing the problem without this patch? I guess the patch I done
->  > here is not the right thing to do and I try to address the problem too
->  > aggressively
-> 
-> I've been running Linus' current tree for the whole time and haven't seen
-> any iwlwifi traces since my initial report on the 11th.
-> 
-> I can't reproduce the bug, even by doing the same operation
-> (an scp of a dozen photographs).
-> 
-> It seems to happen almost at random, as if it's somehow timing related.
-> I'm running the patched kernel again now, and it's been fine for the last hour.
-> 
-Agree, that is why I could not re-produce here after many try. Could you
-share your configuration, such as band/channel, 32/64 bit system, 20/40
-MHz, traffic type, open/security, power management, ..., 
 
-Thanks
-Wey
-> 
+--G4iJoqBmSsgzjUCe
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+Hi Johannes,
 
+thanks for the review!
+
+On Wed, Nov 16, 2011 at 08:52:15AM +0100, Johannes Berg wrote:
+> On Wed, 2011-11-16 at 00:21 +0100, Simon Wunderlich wrote:
+> > This patch adds support for NoAck per WMM Queue. The Unicast QoS
+> > Header is adapted accordingly for each outgoing frame.
+> > The support is turned on and off through nl80211 by extending
+> > the WMM TX Queue Parameters, but can be triggered separately.
+>=20
+> Can you explain what for? :-)
+
+We want to set NoAck for special traffic classes like video or voice where
+"old" packets are not useful, but keep it for background and best effort tr=
+affic.
+This can be applied on devices supporting both traffic classes (e.g.=20
+laptops, smartphones with VoIP software) as well as for backhaul links.
+
+Something similar has been done previously on madwifi, what we used:
+
+http://madwifi-project.org/wiki/UserDocs/UsersGuide#noackpolicy-WMMNoAckPol=
+icyBitValue
+
+>=20
+> I'm not sure this API is really the best way to handle it either, like I
+> just said it might be nicer per connection or so to get reset properly.
+>=20
+
+I'm not sure what you mean by "per connection" - do you mean per AP/Sta
+connection? We need definitely need it per queue as explained above.
+
+> > I have tested this feature on ath9k as well as ath5k devices. There is
+> > an iw patch as well to make use of this feature.
+>=20
+> Since you're adding 'real API' (unlike the debugfs file which you should
+> probably remove now!) you also should think about drivers like mwifiex
+> that don't support this and don't use mac80211.
+
+mwifiex neither supports set_txq_params nor the new function, nl80211 should
+just return "-EOPNOTSUPP". A short grep revealed that no driver in wireless=
+-testing
+implements set_txq_params so far, so at least for the drivers within the ke=
+rnel
+this should be safe. I forgot to explicitly check for rdev->ops->set_txq_no=
+ack
+and will add this check in v2 ...
+
+I will also remove the debugfs entry.
+
+>=20
+> Also, given real API, this impacts the duration calculation etc.
+
+I'm no expert in duration calculation, but will give it a try.
+
+best regards,
+	Simon
+
+>=20
+> johannes
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+
+--G4iJoqBmSsgzjUCe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk7DlagACgkQrzg/fFk7axblsACgqXYyUdvYrV8Akd6Lp/MEHsIb
+HuMAn1y3KPhSg0A5ndTTzht5aMM+VQ56
+=DiAL
+-----END PGP SIGNATURE-----
+
+--G4iJoqBmSsgzjUCe--
