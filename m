@@ -1,87 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57946 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756792Ab1KRIWl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 03:22:41 -0500
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAI8Mfa9022797
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 03:22:41 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 51/77] iwlegacy: remove il_ieee80211_get_hw_conf
-Date: Fri, 18 Nov 2011 09:22:13 +0100
-Message-Id: <1321604559-10707-51-git-send-email-sgruszka@redhat.com> (sfid-20111118_092246_629019_F9141FFE)
-In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
-References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:53002 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755880Ab1KPKwY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Nov 2011 05:52:24 -0500
+Received: by vcbfk1 with SMTP id fk1so192858vcb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 02:52:23 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAGXE3d8oPL9POJEZdb4urFVQXjPY2W8HYePLc2F804=W7nCfSw@mail.gmail.com>
+References: <20111116100915.GA2191@redhat.com>
+	<CAGXE3d8oPL9POJEZdb4urFVQXjPY2W8HYePLc2F804=W7nCfSw@mail.gmail.com>
+Date: Wed, 16 Nov 2011 11:52:23 +0100
+Message-ID: <CAOZOX0Wa4gquXeMrh_1U2kJvJQttQDQ9pWNVT5jjoHOxZxL4jg@mail.gmail.com> (sfid-20111116_115226_930104_E69EE378)
+Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Amir Hedayaty <hedayaty@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/3945-mac.c    |    2 +-
- drivers/net/wireless/iwlegacy/4965.c        |    2 +-
- drivers/net/wireless/iwlegacy/common.c      |    2 +-
- drivers/net/wireless/iwlegacy/iwl-helpers.h |    6 ------
- 4 files changed, 3 insertions(+), 9 deletions(-)
+On Wed, Nov 16, 2011 at 11:46 AM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> On Wed, Nov 16, 2011 at 11:09 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>> +       /*
+>> +        * Some devices can generate interrupts with empty CSR register, we
+>> +        * "handle" such irq's to prevent interrupt controller treat them as
+>> +        * spurious interrupts and disable irq line.
+>> +        */
+>>        if (!reg)
+>> -               return IRQ_NONE;
+>> +               return IRQ_HANDLED;
+>
+> What if this interrupt belongs to a different device on a shared interrupt line?
+> In case reg is zero we can't be sure our device generated this interrupt, right?
 
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index ae60410..cd7ae58 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -2759,7 +2759,7 @@ void il3945_post_associate(struct il_priv *il)
- 
- 	il_scan_cancel_timeout(il, 200);
- 
--	conf = il_ieee80211_get_hw_conf(il->hw);
-+	conf = &il->hw->conf;
- 
- 	ctx->staging.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
- 	il3945_commit_rxon(il, ctx);
-diff --git a/drivers/net/wireless/iwlegacy/4965.c b/drivers/net/wireless/iwlegacy/4965.c
-index ed2c617..6833a3c 100644
---- a/drivers/net/wireless/iwlegacy/4965.c
-+++ b/drivers/net/wireless/iwlegacy/4965.c
-@@ -2184,7 +2184,7 @@ static void il4965_post_associate(struct il_priv *il)
- 
- 	il_scan_cancel_timeout(il, 200);
- 
--	conf = il_ieee80211_get_hw_conf(il->hw);
-+	conf = &il->hw->conf;
- 
- 	ctx->staging.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
- 	il_commit_rxon(il, ctx);
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index 7062574..bbf674d 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -3514,7 +3514,7 @@ il_send_rxon_timing(struct il_priv *il, struct il_rxon_context *ctx)
- 	u16 beacon_int;
- 	struct ieee80211_vif *vif = ctx->vif;
- 
--	conf = il_ieee80211_get_hw_conf(il->hw);
-+	conf = &il->hw->conf;
- 
- 	lockdep_assert_held(&il->mutex);
- 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-helpers.h b/drivers/net/wireless/iwlegacy/iwl-helpers.h
-index 0e64003..eb5a287 100644
---- a/drivers/net/wireless/iwlegacy/iwl-helpers.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-helpers.h
-@@ -38,12 +38,6 @@
- #define IL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
- 
- 
--static inline struct ieee80211_conf *il_ieee80211_get_hw_conf(
--	struct ieee80211_hw *hw)
--{
--	return &hw->conf;
--}
--
- /**
-  * il_queue_inc_wrap - increment queue idx, wrap back to beginning
-  * @idx -- current idx
--- 
-1.7.1
+In the bugzilla report  Stanislaw indicated that even when rt2800pci
+indicates IRQ_HANDLED,
+all other drivers on the same interruptline will still get the interrupt event.
 
+Ivo
