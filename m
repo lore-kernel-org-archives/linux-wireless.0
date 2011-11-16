@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms16-1.1blu.de ([89.202.0.34]:59608 "EHLO ms16-1.1blu.de"
+Received: from nbd.name ([46.4.11.11]:44529 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754128Ab1KNNPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 08:15:11 -0500
-Received: from [79.254.124.83] (helo=hana.gusto)
-	by ms16-1.1blu.de with esmtpsa (TLS-1.0:DHE_RSA_AES_128_CBC_SHA1:16)
-	(Exim 4.69)
-	(envelope-from <gusto@guttok.net>)
-	id 1RPvTy-0003cC-Po
-	for linux-wireless@vger.kernel.org; Mon, 14 Nov 2011 13:17:51 +0100
-Date: Mon, 14 Nov 2011 13:16:42 +0100
-From: Lars Schotte <gusto@guttok.net>
+	id S1756388Ab1KPMIy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Nov 2011 07:08:54 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Subject: iwlagn 3.0.9 aggreggation messages
-Message-ID: <20111114131642.31e8ddbd@hana.gusto> (sfid-20111114_141517_380956_B0D5A07E)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 4/4] ath9k: cancel all workqueue activity when going idle
+Date: Wed, 16 Nov 2011 13:08:43 +0100
+Message-Id: <1321445323-71774-4-git-send-email-nbd@openwrt.org> (sfid-20111116_130858_381407_FE63DD2C)
+In-Reply-To: <1321445323-71774-3-git-send-email-nbd@openwrt.org>
+References: <1321445323-71774-1-git-send-email-nbd@openwrt.org>
+ <1321445323-71774-2-git-send-email-nbd@openwrt.org>
+ <1321445323-71774-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-i get always such aggreggation messages every 35 seconds since the
-update from 3.0.8 to 3.0.9, so something is wrong there.
-
-[  238.280312] iwlagn 0000:02:00.0: Aggregation not enabled for tid 0
-because load = 0 [  335.575672] iwlagn 0000:02:00.0:
-iwlagn_tx_agg_start on ra = 20:4e:7f:5b:2d:f5 tid = 0 [  400.605027]
-iwlagn 0000:02:00.0: iwlagn_tx_agg_start on ra = 20:4e:7f:5b:2d:f5 tid
-= 0 [  532.418136] iwlagn 0000:02:00.0: iwlagn_tx_agg_start on ra =
-20:4e:7f:5b:2d:f5 tid = 0 [  590.173035] iwlagn 0000:02:00.0:
-iwlagn_tx_agg_start on ra = 20:4e:7f:5b:2d:f5 tid = 0 [  616.193084]
-iwlagn 0000:02:00.0: iwlagn_tx_agg_start on ra = 20:4e:7f:5b:2d:f5 tid
-= 0 [  934.882300] iwlagn 0000:02:00.0: iwlagn_tx_agg_start on ra =
-20:4e:7f:5b:2d:f5 tid = 0 [  983.877888] iwlagn 0000:02:00.0:
-iwlagn_tx_agg_start on ra = 20:4e:7f:5b:2d:f5 tid = 0 [ 1048.354089]
-iwlagn 0000:02:00.0: iwlagn_tx_agg_start on ra = 20:4e:7f:5b:2d:f5 tid
-= 0 [ 1137.254697] iwlagn 0000:02:00.0: iwlagn_tx_agg_start on ra =
-20:4e:7f:5b:2d:f5 tid = 0 [ 1173.956035] iwlagn 0000:02:00.0:
-iwlagn_tx_agg_start on ra = 20:4e:7f:5b:2d:f5 tid = 0
-
-then there are no iwlagn drivers in 3.2 any more, but iwlwifi, what's
-the difference between these two drivers?
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a7f7926..edee011 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1588,8 +1588,11 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	 * of the changes. Likewise we must only disable the radio towards
+ 	 * the end.
+ 	 */
+-	if (changed & IEEE80211_CONF_CHANGE_IDLE)
++	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
+ 		sc->ps_idle = !!(conf->flags & IEEE80211_CONF_IDLE);
++		if (sc->ps_idle)
++			ath_cancel_work(sc);
++	}
+ 
+ 	/*
+ 	 * We just prepare to enable PS. We have to wait until our AP has
 -- 
-Lars Schotte
-@ Hana (F16)
+1.7.3.2
+
