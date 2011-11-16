@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34322 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751994Ab1KQWWQ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25348 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751515Ab1KPIyl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 17:22:16 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2 2/4] compat-wireless: remove leading whitespace from CONFIG_COMPAT_FIRMWARE_CLASS
-Date: Thu, 17 Nov 2011 17:21:09 -0500
-Message-Id: <1321568471-23068-2-git-send-email-linville@tuxdriver.com> (sfid-20111117_232241_514414_2887F417)
-In-Reply-To: <1321568471-23068-1-git-send-email-linville@tuxdriver.com>
-References: <1321568471-23068-1-git-send-email-linville@tuxdriver.com>
+	Wed, 16 Nov 2011 03:54:41 -0500
+Message-ID: <4EC379CD.9050105@qca.qualcomm.com> (sfid-20111116_095445_019646_ADA741DA)
+Date: Wed, 16 Nov 2011 10:52:29 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: Fix AP mode operation after interface down/up
+References: <1321429894-10845-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1321429894-10845-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CONFIG_COMPAT_FIRMWARE_CLASS is being checked in compat-2.6.33.h, so it
-needs to show-up in compat_autoconf.h.  Remove the leading whitespace,
-so that gen-compat-autoconf.sh will treat it accordingly.
+On 11/16/2011 09:51 AM, Vasanthakumar Thiagarajan wrote:
+> When operating AP interface is brough down the mode is reset to
+> STA. This STA will be reconfigured into AP mode when the interface
+> is brought up again. This sequence will be successful only when
+> change_virtual_intf() returns with no error, but there is a
+> check in this callback which does the type change only when
+> that interface is active. This callback does nothing more
+> than saving the new interface type to vif and wdev, so the
+> sanity check for interface state and wmi state is not necessary.
+> This makes the AP interface functional again after interface down/up.
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- config.mk |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+Thanks, applied.
 
-diff --git a/config.mk b/config.mk
-index 1bb2799..7116206 100644
---- a/config.mk
-+++ b/config.mk
-@@ -114,9 +114,13 @@ else
- endif
- endif #CONFIG_COMPAT_KERNEL_2_6_27
- 
-+#
-+# CONFIG_COMPAT_FIRMWARE_CLASS definition has no leading whitespace,
-+# because it gets passed-on through compat_autoconf.h.
-+#
- ifdef CONFIG_COMPAT_KERNEL_2_6_33
- ifdef CONFIG_FW_LOADER
-- CONFIG_COMPAT_FIRMWARE_CLASS=m
-+CONFIG_COMPAT_FIRMWARE_CLASS=m
- endif #CONFIG_FW_LOADER
- endif #CONFIG_COMPAT_KERNEL_2_6_33
- 
--- 
-1.7.4.4
-
+Kalle
