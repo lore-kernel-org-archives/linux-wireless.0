@@ -1,184 +1,235 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f53.google.com ([209.85.216.53]:47669 "EHLO
-	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751494Ab1K1VbS (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52397 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752432Ab1KPPC7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 16:31:18 -0500
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	stable@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 1/2] cfg80211: fix race on init and driver registration
-Date: Mon, 28 Nov 2011 16:31:09 -0500
-Message-Id: <1322515870-3392-2-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111128_223124_411022_25D25E83)
-In-Reply-To: <1322515870-3392-1-git-send-email-mcgrof@qca.qualcomm.com>
-References: <1322515870-3392-1-git-send-email-mcgrof@qca.qualcomm.com>
+	Wed, 16 Nov 2011 10:02:59 -0500
+Subject: [PATCH v2 4/4] mac80211: transmit fragment list to drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo Van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <20111116142911.501655161@sipsolutions.net> (sfid-20111116_152957_439907_F94BE74E)
+References: <20111116142854.518391560@sipsolutions.net>
+	 <20111116142911.501655161@sipsolutions.net>
+	 (sfid-20111116_152957_439907_F94BE74E)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 16 Nov 2011 16:02:47 +0100
+Message-ID: <1321455767.4502.9.camel@jlt3.sipsolutions.net> (sfid-20111116_160302_082735_F67A8496)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a theoretical race that if hit will trigger
-a crash. The race is between when we issue the first
-regulatory hint, regulatory_hint_core(), gets processed
-by the workqueue and between when the first device
-gets registered to the wireless core. This is not easy
-to reproduce but it was easy to do so through the
-regulatory simulator I have been working on. This
-is a port of the fix I implemented there [1].
+From: Johannes Berg <johannes.berg@intel.com>
 
-[1] https://github.com/mcgrof/regsim/commit/a246ccf81f059cb662eee288aa13100f631e4cc8
+Drivers can usually handle fragmented packets
+much easier when they get the entire list of
+fragments at once. The only thing they need to
+do is keep enough space on the queues for up
+to ten fragments of a single MSDU.
 
-Cc: stable@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+This allows them to implement this with a new
+operation tx_frags.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/reg.c |   47 +++++++++++++++++++++++++++++++----------------
- 1 files changed, 31 insertions(+), 16 deletions(-)
+v2: don't modify all drivers, thanks Ivo.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 76b35df..09b753b 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -57,8 +57,17 @@
- #define REG_DBG_PRINT(args...)
- #endif
+ include/net/mac80211.h    |   22 ++++++++--
+ net/mac80211/driver-ops.h |    8 +++
+ net/mac80211/main.c       |    2 
+ net/mac80211/tx.c         |   94 +++++++++++++++++++++++++++++-----------------
+ 4 files changed, 86 insertions(+), 40 deletions(-)
+
+--- a/include/net/mac80211.h	2011-11-16 15:43:47.000000000 +0100
++++ b/include/net/mac80211.h	2011-11-16 15:54:26.000000000 +0100
+@@ -1760,11 +1760,21 @@ enum ieee80211_frame_release_type {
+  *	skb contains the buffer starting from the IEEE 802.11 header.
+  *	The low-level driver should send the frame out based on
+  *	configuration in the TX control data. This handler should,
+- *	preferably, never fail and stop queues appropriately, more
+- *	importantly, however, it must never fail for A-MPDU-queues.
+- *	This function should return NETDEV_TX_OK except in very
+- *	limited cases.
+- *	Must be implemented and atomic.
++ *	preferably, never fail and stop queues appropriately.
++ *	This must be implemented if @tx_frags is not.
++ *	Must be atomic.
++ *
++ * @tx_frags: Called to transmit multiple fragments of a single MSDU.
++ *	This handler must consume all fragments, sending out some of
++ *	them only is useless and it can't ask for some of them to be
++ *	queued again. If the frame is not fragmented the queue has a
++ *	single SKB only. To avoid issues with the networking stack
++ *	when TX status is reported the frames should be removed from
++ *	the skb queue.
++ *	If this is used, the tx_info @vif and @sta pointers will be
++ *	invalid -- you must not use them in that case.
++ *	This must be implemented if @tx isn't.
++ *	Must be atomic.
+  *
+  * @start: Called before the first netdevice attached to the hardware
+  *	is enabled. This should turn on the hardware and must turn on
+@@ -2101,6 +2111,8 @@ enum ieee80211_frame_release_type {
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
++	void (*tx_frags)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			 struct ieee80211_sta *sta, struct sk_buff_head *skbs);
+ 	int (*start)(struct ieee80211_hw *hw);
+ 	void (*stop)(struct ieee80211_hw *hw);
+ #ifdef CONFIG_PM
+--- a/net/mac80211/driver-ops.h	2011-11-16 15:43:47.000000000 +0100
++++ b/net/mac80211/driver-ops.h	2011-11-16 15:49:51.000000000 +0100
+@@ -15,6 +15,14 @@ static inline void drv_tx(struct ieee802
+ 	local->ops->tx(&local->hw, skb);
+ }
  
-+static struct regulatory_request core_request_world = {
-+	.initiator = NL80211_REGDOM_SET_BY_CORE,
-+	.alpha2[0] = '0',
-+	.alpha2[1] = '0',
-+	.intersect = false,
-+	.processed = true,
-+	.country_ie_env = ENVIRON_ANY,
-+};
++static inline void drv_tx_frags(struct ieee80211_local *local,
++				struct ieee80211_vif *vif,
++				struct ieee80211_sta *sta,
++				struct sk_buff_head *skbs)
++{
++	local->ops->tx_frags(&local->hw, vif, sta, skbs);
++}
 +
- /* Receipt of information from last regulatory request */
--static struct regulatory_request *last_request;
-+static struct regulatory_request *last_request = &core_request_world;
- 
- /* To trigger userspace events */
- static struct platform_device *reg_pdev;
-@@ -150,7 +159,7 @@ static char user_alpha2[2];
- module_param(ieee80211_regdom, charp, 0444);
- MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
- 
--static void reset_regdomains(void)
-+static void reset_regdomains(bool full_reset)
+ static inline int drv_start(struct ieee80211_local *local)
  {
- 	/* avoid freeing static information or freeing something twice */
- 	if (cfg80211_regdomain == cfg80211_world_regdom)
-@@ -165,6 +174,13 @@ static void reset_regdomains(void)
+ 	int ret;
+--- a/net/mac80211/tx.c	2011-11-16 15:43:47.000000000 +0100
++++ b/net/mac80211/tx.c	2011-11-16 15:50:35.000000000 +0100
+@@ -1203,24 +1203,15 @@ ieee80211_tx_prepare(struct ieee80211_su
+ 	return TX_CONTINUE;
+ }
  
- 	cfg80211_world_regdom = &world_regdom;
- 	cfg80211_regdomain = NULL;
+-/*
+- * Returns false if the frame couldn't be transmitted but was queued instead.
+- */
+-static bool __ieee80211_tx(struct ieee80211_local *local,
+-			   struct sk_buff_head *skbs, int led_len,
+-			   struct sta_info *sta, bool txpending)
++static bool ieee80211_tx_frags(struct ieee80211_local *local,
++			       struct ieee80211_vif *vif,
++			       struct ieee80211_sta *sta,
++			       struct sk_buff_head *skbs,
++			       bool txpending)
+ {
+ 	struct sk_buff *skb, *tmp;
+ 	struct ieee80211_tx_info *info;
+-	struct ieee80211_sub_if_data *sdata;
+ 	unsigned long flags;
+-	__le16 fc;
+-
+-	if (WARN_ON(skb_queue_empty(skbs)))
+-		return true;
+-
+-	skb = skb_peek(skbs);
+-	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
+ 
+ 	skb_queue_walk_safe(skbs, skb, tmp) {
+ 		int q = skb_get_queue_mapping(skb);
+@@ -1245,37 +1236,72 @@ static bool __ieee80211_tx(struct ieee80
+ 		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 
+ 		info = IEEE80211_SKB_CB(skb);
++		info->control.vif = vif;
++		info->control.sta = sta;
+ 
+-		sdata = vif_to_sdata(info->control.vif);
++		__skb_unlink(skb, skbs);
++		drv_tx(local, skb);
++	}
+ 
+-		switch (sdata->vif.type) {
+-		case NL80211_IFTYPE_MONITOR:
+-			info->control.vif = NULL;
+-			break;
+-		case NL80211_IFTYPE_AP_VLAN:
+-			info->control.vif = &container_of(sdata->bss,
+-				struct ieee80211_sub_if_data, u.ap)->vif;
+-			break;
+-		default:
+-			/* keep */
+-			break;
+-		}
++	return true;
++}
+ 
+-		if (sta && sta->uploaded)
+-			info->control.sta = &sta->sta;
+-		else
+-			info->control.sta = NULL;
++/*
++ * Returns false if the frame couldn't be transmitted but was queued instead.
++ */
++static bool __ieee80211_tx(struct ieee80211_local *local,
++			   struct sk_buff_head *skbs, int led_len,
++			   struct sta_info *sta, bool txpending)
++{
++	struct ieee80211_tx_info *info;
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_vif *vif;
++	struct ieee80211_sta *pubsta;
++	struct sk_buff *skb;
++	bool result = true;
++	__le16 fc;
+ 
+-		__skb_unlink(skb, skbs);
+-		drv_tx(local, skb);
++	if (WARN_ON(skb_queue_empty(skbs)))
++		return true;
 +
-+	if (!full_reset)
-+		return;
++	skb = skb_peek(skbs);
++	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
++	info = IEEE80211_SKB_CB(skb);
++	sdata = vif_to_sdata(info->control.vif);
++	if (sta && !sta->uploaded)
++		sta = NULL;
 +
-+	if (last_request != &core_request_world)
-+		kfree(last_request);
-+	last_request = &core_request_world;
++	if (sta)
++		pubsta = &sta->sta;
++	else
++		pubsta = NULL;
++
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_MONITOR:
++		sdata = NULL;
++		vif = NULL;
++		break;
++	case NL80211_IFTYPE_AP_VLAN:
++		sdata = container_of(sdata->bss,
++				     struct ieee80211_sub_if_data, u.ap);
++		/* fall through */
++	default:
++		vif = &sdata->vif;
++		break;
+ 	}
+ 
++	if (local->ops->tx_frags)
++		drv_tx_frags(local, vif, pubsta, skbs);
++	else
++		result = ieee80211_tx_frags(local, vif, pubsta, skbs,
++					    txpending);
++
+ 	ieee80211_tpt_led_trig_tx(local, fc, led_len);
+ 	ieee80211_led_tx(local, 1);
+ 
+ 	WARN_ON(!skb_queue_empty(skbs));
+ 
+-	return true;
++	return result;
  }
  
  /*
-@@ -175,7 +191,7 @@ static void update_world_regdomain(const struct ieee80211_regdomain *rd)
- {
- 	BUG_ON(!last_request);
+--- a/net/mac80211/main.c	2011-11-15 14:02:07.000000000 +0100
++++ b/net/mac80211/main.c	2011-11-16 15:48:09.000000000 +0100
+@@ -609,7 +609,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(
  
--	reset_regdomains();
-+	reset_regdomains(false);
+ 	local->hw.priv = (char *)local + ALIGN(sizeof(*local), NETDEV_ALIGN);
  
- 	cfg80211_world_regdom = rd;
- 	cfg80211_regdomain = rd;
-@@ -1409,7 +1425,8 @@ static int __regulatory_hint(struct wiphy *wiphy,
- 	}
- 
- new_request:
--	kfree(last_request);
-+	if (last_request != &core_request_world)
-+		kfree(last_request);
- 
- 	last_request = pending_request;
- 	last_request->intersect = intersect;
-@@ -1579,9 +1596,6 @@ static int regulatory_hint_core(const char *alpha2)
- {
- 	struct regulatory_request *request;
- 
--	kfree(last_request);
--	last_request = NULL;
--
- 	request = kzalloc(sizeof(struct regulatory_request),
- 			  GFP_KERNEL);
- 	if (!request)
-@@ -1779,7 +1793,7 @@ static void restore_regulatory_settings(bool reset_user)
- 	mutex_lock(&cfg80211_mutex);
- 	mutex_lock(&reg_mutex);
- 
--	reset_regdomains();
-+	reset_regdomains(true);
- 	restore_alpha2(alpha2, reset_user);
- 
- 	/*
-@@ -1823,6 +1837,10 @@ static void restore_regulatory_settings(bool reset_user)
- 	/* First restore to the basic regulatory settings */
- 	cfg80211_regdomain = cfg80211_world_regdom;
- 
-+	if (last_request != &core_request_world)
-+		kfree(last_request);
-+	last_request = &core_request_world;
-+
- 	mutex_unlock(&reg_mutex);
- 	mutex_unlock(&cfg80211_mutex);
- 
-@@ -2085,7 +2103,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 		int r;
- 
- 		if (last_request->initiator != NL80211_REGDOM_SET_BY_DRIVER) {
--			reset_regdomains();
-+			reset_regdomains(false);
- 			cfg80211_regdomain = rd;
- 			return 0;
- 		}
-@@ -2106,7 +2124,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 		if (r)
- 			return r;
- 
--		reset_regdomains();
-+		reset_regdomains(false);
- 		cfg80211_regdomain = rd;
- 		return 0;
- 	}
-@@ -2131,7 +2149,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 
- 		rd = NULL;
- 
--		reset_regdomains();
-+		reset_regdomains(false);
- 		cfg80211_regdomain = intersected_rd;
- 
- 		return 0;
-@@ -2151,7 +2169,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 	kfree(rd);
- 	rd = NULL;
- 
--	reset_regdomains();
-+	reset_regdomains(false);
- 	cfg80211_regdomain = intersected_rd;
- 
- 	return 0;
-@@ -2304,11 +2322,8 @@ void /* __init_or_exit */ regulatory_exit(void)
- 	mutex_lock(&cfg80211_mutex);
- 	mutex_lock(&reg_mutex);
- 
--	reset_regdomains();
--
--	kfree(last_request);
-+	reset_regdomains(true);
- 
--	last_request = NULL;
- 	dev_set_uevent_suppress(&reg_pdev->dev, true);
- 
- 	platform_device_unregister(reg_pdev);
--- 
-1.7.4.15.g7811d
+-	BUG_ON(!ops->tx);
++	BUG_ON(!ops->tx && !ops->tx_frags);
+ 	BUG_ON(!ops->start);
+ 	BUG_ON(!ops->stop);
+ 	BUG_ON(!ops->config);
+
 
