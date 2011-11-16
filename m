@@ -1,37 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:8502 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879Ab1KAF35 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52839 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754627Ab1KPHvL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Nov 2011 01:29:57 -0400
-Date: Tue, 1 Nov 2011 10:59:33 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V2 00/31] ath6kl Add multiple vif support
-Message-ID: <20111101052932.GA7966@vasanth-laptop> (sfid-20111101_063008_317915_11D34D1D)
-References: <1319551466-29070-1-git-send-email-vthiagar@qca.qualcomm.com> <4EA7B536.70107@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4EA7B536.70107@qca.qualcomm.com>
+	Wed, 16 Nov 2011 02:51:11 -0500
+Subject: Re: [PATCH] compat-wireless: add iwlwifi RCU compat
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1318925272.3958.5.camel@jlt3.sipsolutions.net> (sfid-20111018_100806_415009_C55DA618)
+References: <1318925272.3958.5.camel@jlt3.sipsolutions.net>
+	 (sfid-20111018_100806_415009_C55DA618)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 16 Nov 2011 08:51:08 +0100
+Message-ID: <1321429868.4773.6.camel@jlt3.sipsolutions.net> (sfid-20111116_085115_766845_F180BE5F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 26, 2011 at 10:22:30AM +0300, Kalle Valo wrote:
-> On 10/25/2011 05:03 PM, Vasanthakumar Thiagarajan wrote:
-> > This patch set adds basic infrastructure for multiple
-> > virtual interface. As configuring the firmware with more than one
-> > vif causes random target assert, the number of supported vifs is
-> > restricted to 1 for now. I would like to thank Vivek Natarajan
-> > (nataraja@qca.qualcomm.com) for his inital work in this area and
-> > Arthi Thiruvengadam (athiruve@qca.qualcomm.com) for finding some
-> > critical bugs.
+On Tue, 2011-10-18 at 10:07 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> I saw the lockdep warning below after I loaded the module and connected
-> to an AP. But the driver still functioned normally.
+> We need to patch the new kfree_rcu() reference in
+> iwlwifi out and add rcu_barrier() to make it safe.
 
-Sorry, i did not test with lockdep warning enabled, i'll look into
-this. Thanks!
+Ping. Need to apply this now, see
+http://mid.gmane.org/20111116104133.E58B.2E210E2F@nifty.com
 
-Vasanth
+johannes
+
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> Obviously the patch needing this isn't upstream yet, but I wanted to
+> give you this patch for when it comes upstream. If you prefer we hold
+> the compat patch and send it together with the kernel patch let me know
+> we can try to do that.
+> 
+> diff --git a/patches/41-no-kfree-rcu.patch b/patches/41-no-kfree-rcu.patch
+> index c18b50d..37c5c1b 100644
+> --- a/patches/41-no-kfree-rcu.patch
+> +++ b/patches/41-no-kfree-rcu.patch
+> @@ -81,3 +81,42 @@
+>   
+>   static int ieee80211_compatible_rates(const u8 *supp_rates, int supp_rates_len,
+>   				      struct ieee80211_supported_band *sband,
+> +--- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c	2011-10-17 18:29:19.000000000 +0200
+> ++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c	2011-10-18 10:00:27.000000000 +0200
+> +@@ -1032,6 +1032,14 @@ static int iwlagn_rx_reply_rx(struct iwl
+> + 	return 0;
+> + }
+> + 
+> ++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,40))
+> ++static void kfree_noa_data(struct rcu_head *head)
+> ++{
+> ++	void *data = container_of(head, struct iwl_wipan_noa_data, rcu_head);
+> ++	kfree(data);
+> ++}
+> ++#endif
+> ++
+> + static int iwlagn_rx_noa_notification(struct iwl_priv *priv,
+> + 				      struct iwl_rx_mem_buffer *rxb,
+> + 				      struct iwl_device_cmd *cmd)
+> +@@ -1071,7 +1079,11 @@ static int iwlagn_rx_noa_notification(st
+> + 	rcu_assign_pointer(priv->noa_data, new_data);
+> + 
+> + 	if (old_data)
+> ++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,40))
+> ++		call_rcu(&old_data->rcu_head, kfree_noa_data);
+> ++#else
+> + 		kfree_rcu(old_data, rcu_head);
+> ++#endif
+> + 
+> + 	return 0;
+> + }
+> +--- a/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-10-17 18:29:19.000000000 +0200
+> ++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-10-18 10:00:44.000000000 +0200
+> +@@ -3460,6 +3460,7 @@ static void __exit iwl_exit(void)
+> + {
+> + 	iwl_pci_unregister_driver();
+> + 	iwlagn_rate_control_unregister();
+> ++	rcu_barrier();
+> + }
+> + 
+> + module_exit(iwl_exit);
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 
