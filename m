@@ -1,66 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15480 "EHLO mx1.redhat.com"
+Received: from nbd.name ([46.4.11.11]:52544 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756675Ab1KRIWO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 03:22:14 -0500
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAI8MERf022728
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 03:22:14 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+	id S1752653Ab1KPMfE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Nov 2011 07:35:04 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 38/77] iwlegacy: add accidentally removed comments
-Date: Fri, 18 Nov 2011 09:22:00 +0100
-Message-Id: <1321604559-10707-38-git-send-email-sgruszka@redhat.com> (sfid-20111118_092229_876963_5E74AA59)
-In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
-References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH v2] mac80211: call ieee80211_recalc_idle() after sending packets
+Date: Wed, 16 Nov 2011 13:34:55 +0100
+Message-Id: <1321446895-72287-1-git-send-email-nbd@openwrt.org> (sfid-20111116_133507_455908_F140308C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/4965-mac.c |   27 +++++++++++++++++++++++++++
- 1 files changed, 27 insertions(+), 0 deletions(-)
+Some drivers (e.g. ath9k) assume that it's safe to go into low-power mode
+immediately after the idle state changes. To support that, mac80211 even
+calls drv_flush() before that happens.
+In some instances, mac80211 sent a packet right after recalculating the
+idle state, this patch fixes that.
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index d817d8d..a8a6461 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -1411,6 +1411,33 @@ void il4965_reply_stats(struct il_priv *il,
- 	il4965_rx_stats(il, rxb);
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/mlme.c       |   15 +++++++++------
+ net/mac80211/offchannel.c |    4 ++--
+ 2 files changed, 11 insertions(+), 8 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index f9ec15b..9d1fb85 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1359,9 +1359,6 @@ static void __ieee80211_connection_loss(struct ieee80211_sub_if_data *sdata)
+ 	ieee80211_set_disassoc(sdata, true, true);
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+-	mutex_lock(&local->mtx);
+-	ieee80211_recalc_idle(local);
+-	mutex_unlock(&local->mtx);
+ 	/*
+ 	 * must be outside lock due to cfg80211,
+ 	 * but that's not a problem.
+@@ -1370,6 +1367,10 @@ static void __ieee80211_connection_loss(struct ieee80211_sub_if_data *sdata)
+ 				       IEEE80211_STYPE_DEAUTH,
+ 				       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
+ 				       NULL, true);
++
++	mutex_lock(&local->mtx);
++	ieee80211_recalc_idle(local);
++	mutex_unlock(&local->mtx);
  }
  
+ void ieee80211_beacon_connection_loss_work(struct work_struct *work)
+@@ -2136,9 +2137,6 @@ static void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ieee80211_set_disassoc(sdata, true, true);
+ 	mutex_unlock(&ifmgd->mtx);
+-	mutex_lock(&local->mtx);
+-	ieee80211_recalc_idle(local);
+-	mutex_unlock(&local->mtx);
+ 	/*
+ 	 * must be outside lock due to cfg80211,
+ 	 * but that's not a problem.
+@@ -2146,6 +2144,11 @@ static void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_send_deauth_disassoc(sdata, bssid,
+ 			IEEE80211_STYPE_DEAUTH, reason,
+ 			NULL, true);
 +
-+/*
-+ * mac80211 queues, ACs, hardware queues, FIFOs.
-+ *
-+ * Cf. http://wireless.kernel.org/en/developers/Documentation/mac80211/queues
-+ *
-+ * Mac80211 uses the following numbers, which we get as from it
-+ * by way of skb_get_queue_mapping(skb):
-+ *
-+ *     VO      0
-+ *     VI      1
-+ *     BE      2
-+ *     BK      3
-+ *
-+ *
-+ * Regular (not A-MPDU) frames are put into hardware queues corresponding
-+ * to the FIFOs, see comments in iwl-prph.h. Aggregated frames get their
-+ * own queue per aggregation session (RA/TID combination), such queues are
-+ * set up to map into FIFOs too, for which we need an AC->FIFO mapping. In
-+ * order to map frames to the right queue, we also need an AC->hw queue
-+ * mapping. This is implemented here.
-+ *
-+ * Due to the way hw queues are set up (by the hw specific modules like
-+ * iwl-4965.c), the AC->hw queue mapping is the identity
-+ * mapping.
-+ */
++	mutex_lock(&local->mtx);
++	ieee80211_recalc_idle(local);
++	mutex_unlock(&local->mtx);
 +
- static const u8 tid_to_ac[] = {
- 	IEEE80211_AC_BE,
- 	IEEE80211_AC_BK,
+ 	mutex_lock(&ifmgd->mtx);
+ }
+ 
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 3d41441..ebd8ccc 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -212,8 +212,6 @@ static void ieee80211_hw_roc_start(struct work_struct *work)
+ 		return;
+ 	}
+ 
+-	ieee80211_recalc_idle(local);
+-
+ 	if (local->hw_roc_skb) {
+ 		sdata = IEEE80211_DEV_TO_SUB_IF(local->hw_roc_dev);
+ 		ieee80211_tx_skb(sdata, local->hw_roc_skb);
+@@ -227,6 +225,8 @@ static void ieee80211_hw_roc_start(struct work_struct *work)
+ 					  GFP_KERNEL);
+ 	}
+ 
++	ieee80211_recalc_idle(local);
++
+ 	mutex_unlock(&local->mtx);
+ }
+ 
 -- 
-1.7.1
+1.7.3.2
 
