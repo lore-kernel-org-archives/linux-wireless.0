@@ -1,79 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:20749 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:57639 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751718Ab1K3FPp (ORCPT
+	with ESMTP id S1754798Ab1KPIpK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 00:15:45 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Russell Hu <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Wilson Tsao <wtsao@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 07/17] ath9k_hw: take care of enabling MCI interrupts
-Date: Wed, 30 Nov 2011 10:41:19 +0530
-Message-ID: <1322629889-19961-8-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_061548_783768_45E59849)
-In-Reply-To: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
+	Wed, 16 Nov 2011 03:45:10 -0500
+Message-ID: <4EC37784.3020006@qca.qualcomm.com> (sfid-20111116_094514_516302_2A061D48)
+Date: Wed, 16 Nov 2011 10:42:44 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Raja Mani <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: Clear WPS ctrl flag if zero length IE is received
+ from CFG
+References: <1321346696-6127-1-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1321346696-6127-1-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 11/15/2011 10:44 AM, Raja Mani wrote:
+> Connect control flag CONNECT_WPS_FLAG has to be cleared
+> by default even if the driver receives zero length IE
+> from CFG.
+> 
+> Otherwise this flag would be always set after WPS exchange
+> which would lead wpa_supplicant to fail to connect with
+> the received WPS credentials. This issue is observed only
+> in OPEN security.
 
-enable MCI interrupt when ath9k_hw_enable_interrupts is called,
-like during the completion of chip_reset before which the interrupts
-are disabled
+Thanks, applied. But I did a s/CFG/cfg80211/ in the commit log.
 
-Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/mac.c |   12 ++++++++----
- 1 files changed, 8 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index ecdb6fd..9d69320 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -798,6 +798,7 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 sync_default = AR_INTR_SYNC_DEFAULT;
-+	u32 async_mask;
- 
- 	if (!(ah->imask & ATH9K_INT_GLOBAL))
- 		return;
-@@ -812,13 +813,16 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
- 	if (AR_SREV_9340(ah))
- 		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
- 
-+	async_mask = AR_INTR_MAC_IRQ;
-+
-+	if (ah->imask & ATH9K_INT_MCI)
-+		async_mask |= AR_INTR_ASYNC_MASK_MCI;
-+
- 	ath_dbg(common, ATH_DBG_INTERRUPT, "enable IER\n");
- 	REG_WRITE(ah, AR_IER, AR_IER_ENABLE);
- 	if (!AR_SREV_9100(ah)) {
--		REG_WRITE(ah, AR_INTR_ASYNC_ENABLE,
--			  AR_INTR_MAC_IRQ);
--		REG_WRITE(ah, AR_INTR_ASYNC_MASK, AR_INTR_MAC_IRQ);
--
-+		REG_WRITE(ah, AR_INTR_ASYNC_ENABLE, async_mask);
-+		REG_WRITE(ah, AR_INTR_ASYNC_MASK, async_mask);
- 
- 		REG_WRITE(ah, AR_INTR_SYNC_ENABLE, sync_default);
- 		REG_WRITE(ah, AR_INTR_SYNC_MASK, sync_default);
--- 
-1.7.0.4
-
+Kalle
