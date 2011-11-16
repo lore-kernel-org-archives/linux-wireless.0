@@ -1,404 +1,427 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:46717 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754666Ab1KRTo1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 14:44:27 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat: remove crc8 and cordic lib
-Date: Fri, 18 Nov 2011 20:44:17 +0100
-Message-Id: <1321645457-26438-1-git-send-email-hauke@hauke-m.de> (sfid-20111118_204429_790017_2104DD6D)
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:49989 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757830Ab1KPOAh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Nov 2011 09:00:37 -0500
+Received: by yenq3 with SMTP id q3so1979367yen.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 06:00:36 -0800 (PST)
+MIME-Version: 1.0
+Date: Wed, 16 Nov 2011 15:00:36 +0100
+Message-ID: <CAMG6FYg38voWUWtKJ-4dRnv+MS=JqXL+q6A+Pc=mbsbDpMOusQ@mail.gmail.com> (sfid-20111116_150041_059201_735F0AD7)
+Subject: [RFC] cfg80211: more correct support of multi-essid bss-es
+From: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These two libs are now fetched by compat-wireless directly form the kernel.
+More correct implementation of the same idea as in the
+"cfg80211: merge in beacon ies of hidden bss" commit.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+The patch implements linked list of aliases for bss (alias is a bss
+with the same key information but with different ESSID).
+Ie update rules when new beacon/proberesp is coming:
+ - Beacon updates target bss and aliases with empty beacon ies list.
+ - Probe response ies updates only target bss structure.
+ - Beacon ies of incoming probe response are filled with
+   beacon ies taken from an alias.
+
+Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
 ---
- compat/Makefile        |    3 -
- compat/cordic.c        |  101 ------------------------------------------------
- compat/crc8.c          |   86 ----------------------------------------
- include/linux/cordic.h |   48 -----------------------
- include/linux/crc8.h   |  101 ------------------------------------------------
- 5 files changed, 0 insertions(+), 339 deletions(-)
- delete mode 100644 compat/cordic.c
- delete mode 100644 compat/crc8.c
- delete mode 100644 include/linux/cordic.h
- delete mode 100644 include/linux/crc8.h
+ net/wireless/core.h |    1 +
+ net/wireless/scan.c |  287 ++++++++++++++++++++++----------------------------
+ 2 files changed, 127 insertions(+), 161 deletions(-)
 
-diff --git a/compat/Makefile b/compat/Makefile
-index fc43ba1..31985f7 100644
---- a/compat/Makefile
-+++ b/compat/Makefile
-@@ -34,7 +34,4 @@ compat-$(CONFIG_COMPAT_KERNEL_2_6_39) += \
- 	compat-2.6.39.o \
- 	kstrtox.o
- compat-$(CONFIG_COMPAT_KERNEL_3_0) += compat-3.0.o
--compat-$(CONFIG_COMPAT_KERNEL_3_1) += \
--	cordic.o \
--	crc8.o
- 
-diff --git a/compat/cordic.c b/compat/cordic.c
-deleted file mode 100644
-index aa27a88..0000000
---- a/compat/cordic.c
-+++ /dev/null
-@@ -1,101 +0,0 @@
--/*
-- * Copyright (c) 2011 Broadcom Corporation
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--#include <linux/module.h>
--#include <linux/cordic.h>
--
--#define CORDIC_ANGLE_GEN	39797
--#define CORDIC_PRECISION_SHIFT	16
--#define	CORDIC_NUM_ITER		(CORDIC_PRECISION_SHIFT + 2)
--
--#define	FIXED(X)	((s32)((X) << CORDIC_PRECISION_SHIFT))
--#define	FLOAT(X)	(((X) >= 0) \
--		? ((((X) >> (CORDIC_PRECISION_SHIFT - 1)) + 1) >> 1) \
--		: -((((-(X)) >> (CORDIC_PRECISION_SHIFT - 1)) + 1) >> 1))
--
--static const s32 arctan_table[] = {
--	2949120,
--	1740967,
--	919879,
--	466945,
--	234379,
--	117304,
--	58666,
--	29335,
--	14668,
--	7334,
--	3667,
--	1833,
--	917,
--	458,
--	229,
--	115,
--	57,
--	29
--};
--
--/*
-- * cordic_calc_iq() - calculates the i/q coordinate for given angle
-- *
-- * theta: angle in degrees for which i/q coordinate is to be calculated
-- * coord: function output parameter holding the i/q coordinate
-- */
--struct cordic_iq cordic_calc_iq(s32 theta)
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 1c7d4df..9a08dcb 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -128,6 +128,7 @@ static inline void assert_cfg80211_lock(void)
+
+ struct cfg80211_internal_bss {
+ 	struct list_head list;
++	struct list_head list_aliases;
+ 	struct rb_node rbn;
+ 	unsigned long ts;
+ 	struct kref ref;
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 31119e3..bca8602 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -191,6 +191,8 @@ static void __cfg80211_unlink_bss(struct
+cfg80211_registered_device *dev,
+ 				  struct cfg80211_internal_bss *bss)
+ {
+ 	list_del_init(&bss->list);
++	if (!list_empty(&bss->list_aliases))
++		list_del_init(&bss->list_aliases);
+ 	rb_erase(&bss->rbn, &dev->bss_tree);
+ 	kref_put(&bss->ref, bss_release);
+ }
+@@ -355,8 +357,8 @@ static bool is_mesh(struct cfg80211_bss *a,
+ 	    sizeof(struct ieee80211_meshconf_ie) - 2) == 0;
+ }
+
+-static int cmp_bss_core(struct cfg80211_bss *a,
+-			struct cfg80211_bss *b)
++static int cmp_bss_noessid(struct cfg80211_bss *a,
++			   struct cfg80211_bss *b)
+ {
+ 	int r;
+
+@@ -386,7 +388,7 @@ static int cmp_bss(struct cfg80211_bss *a,
+ {
+ 	int r;
+
+-	r = cmp_bss_core(a, b);
++	r = cmp_bss_noessid(a, b);
+ 	if (r)
+ 		return r;
+
+@@ -397,52 +399,6 @@ static int cmp_bss(struct cfg80211_bss *a,
+ 		       b->len_information_elements);
+ }
+
+-static int cmp_hidden_bss(struct cfg80211_bss *a,
+-		   struct cfg80211_bss *b)
 -{
--	struct cordic_iq coord;
--	s32 angle, valtmp;
--	unsigned iter;
--	int signx = 1;
--	int signtheta;
+-	const u8 *ie1;
+-	const u8 *ie2;
+-	int i;
+-	int r;
 -
--	coord.i = CORDIC_ANGLE_GEN;
--	coord.q = 0;
--	angle = 0;
+-	r = cmp_bss_core(a, b);
+-	if (r)
+-		return r;
 -
--	theta = FIXED(theta);
--	signtheta = (theta < 0) ? -1 : 1;
--	theta = ((theta + FIXED(180) * signtheta) % FIXED(360)) -
--		FIXED(180) * signtheta;
+-	ie1 = cfg80211_find_ie(WLAN_EID_SSID,
+-			a->information_elements,
+-			a->len_information_elements);
+-	ie2 = cfg80211_find_ie(WLAN_EID_SSID,
+-			b->information_elements,
+-			b->len_information_elements);
 -
--	if (FLOAT(theta) > 90) {
--		theta -= FIXED(180);
--		signx = -1;
--	} else if (FLOAT(theta) < -90) {
--		theta += FIXED(180);
--		signx = -1;
--	}
+-	/* Key comparator must use same algorithm in any rb-tree
+-	 * search function (order is important), otherwise ordering
+-	 * of items in the tree is broken and search gives incorrect
+-	 * results. This code uses same order as cmp_ies() does. */
 -
--	for (iter = 0; iter < CORDIC_NUM_ITER; iter++) {
--		if (theta > angle) {
--			valtmp = coord.i - (coord.q >> iter);
--			coord.q += (coord.i >> iter);
--			angle += arctan_table[iter];
--		} else {
--			valtmp = coord.i + (coord.q >> iter);
--			coord.q -= (coord.i >> iter);
--			angle -= arctan_table[iter];
+-	/* sort missing IE before (left of) present IE */
+-	if (!ie1)
+-		return -1;
+-	if (!ie2)
+-		return 1;
+-
+-	/* zero-size SSID is used as an indication of the hidden bss */
+-	if (!ie2[1])
+-		return 0;
+-
+-	/* sort by length first, then by contents */
+-	if (ie1[1] != ie2[1])
+-		return ie2[1] - ie1[1];
+-
+-	/* zeroed SSID ie is another indication of a hidden bss */
+-	for (i = 0; i < ie2[1]; i++)
+-		if (ie2[i + 2])
+-			return -1;
+-
+-	return 0;
+-}
+-
+ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
+ 				      struct ieee80211_channel *channel,
+ 				      const u8 *bssid,
+@@ -559,7 +515,7 @@ rb_find_bss(struct cfg80211_registered_device *dev,
+ }
+
+ static struct cfg80211_internal_bss *
+-rb_find_hidden_bss(struct cfg80211_registered_device *dev,
++rb_find_bss_alias(struct cfg80211_registered_device *dev,
+ 	    struct cfg80211_internal_bss *res)
+ {
+ 	struct rb_node *n = dev->bss_tree.rb_node;
+@@ -568,7 +524,7 @@ rb_find_hidden_bss(struct cfg80211_registered_device *dev,
+
+ 	while (n) {
+ 		bss = rb_entry(n, struct cfg80211_internal_bss, rbn);
+-		r = cmp_hidden_bss(&res->pub, &bss->pub);
++		r = cmp_bss_noessid(&res->pub, &bss->pub);
+
+ 		if (r == 0)
+ 			return bss;
+@@ -582,29 +538,120 @@ rb_find_hidden_bss(struct
+cfg80211_registered_device *dev,
+ }
+
+ static void
+-copy_hidden_ies(struct cfg80211_internal_bss *res,
+-		 struct cfg80211_internal_bss *hidden)
++cfg80211_bss_update_bss(struct cfg80211_registered_device *dev,
++			 struct cfg80211_internal_bss *prev,
++			 struct cfg80211_internal_bss *res,
++			 int force)
+ {
+-	if (unlikely(res->pub.beacon_ies))
+-		return;
+-	if (WARN_ON(!hidden->pub.beacon_ies))
+-		return;
++	prev->pub.beacon_interval = res->pub.beacon_interval;
++	prev->pub.tsf = res->pub.tsf;
++	prev->pub.signal = res->pub.signal;
++	prev->pub.capability = res->pub.capability;
++	prev->ts = res->ts;
++
++	/* Update IEs */
++	if (res->pub.proberesp_ies && (force || !prev->pub.proberesp_ies)) {
++		size_t used = dev->wiphy.bss_priv_size + sizeof(*res);
++		size_t ielen = res->pub.len_proberesp_ies;
++
++		if (prev->pub.proberesp_ies &&
++		    !prev->proberesp_ies_allocated &&
++		    ksize(prev) >= used + ielen) {
++			memcpy(prev->pub.proberesp_ies,
++			       res->pub.proberesp_ies, ielen);
++			prev->pub.len_proberesp_ies = ielen;
++		} else {
++			u8 *ies = prev->pub.proberesp_ies;
++
++			if (prev->proberesp_ies_allocated)
++				ies = krealloc(ies, ielen, GFP_ATOMIC);
++			else
++				ies = kmalloc(ielen, GFP_ATOMIC);
++
++			if (ies) {
++				memcpy(ies, res->pub.proberesp_ies,
++				       ielen);
++				prev->proberesp_ies_allocated = true;
++				prev->pub.proberesp_ies = ies;
++				prev->pub.len_proberesp_ies = ielen;
++			}
++		}
+
+-	res->pub.beacon_ies = kmalloc(hidden->pub.len_beacon_ies, GFP_ATOMIC);
+-	if (unlikely(!res->pub.beacon_ies))
+-		return;
++		/* Override possible earlier Beacon frame IEs */
++		prev->pub.information_elements =
++			prev->pub.proberesp_ies;
++		prev->pub.len_information_elements =
++			prev->pub.len_proberesp_ies;
++	}
++	if (res->pub.beacon_ies && (force || !prev->pub.beacon_ies)) {
++		size_t used = dev->wiphy.bss_priv_size + sizeof(*res);
++		size_t ielen = res->pub.len_beacon_ies;
++		bool information_elements_is_beacon_ies =
++			(prev->pub.information_elements ==
++			 prev->pub.beacon_ies);
++
++		if (prev->pub.beacon_ies &&
++		    !prev->beacon_ies_allocated &&
++		    ksize(prev) >= used + ielen) {
++			memcpy(prev->pub.beacon_ies,
++			       res->pub.beacon_ies, ielen);
++			prev->pub.len_beacon_ies = ielen;
++		} else {
++			u8 *ies = prev->pub.beacon_ies;
++
++			if (prev->beacon_ies_allocated)
++				ies = krealloc(ies, ielen, GFP_ATOMIC);
++			else
++				ies = kmalloc(ielen, GFP_ATOMIC);
++
++			if (ies) {
++				memcpy(ies, res->pub.beacon_ies,
++				       ielen);
++				prev->beacon_ies_allocated = true;
++				prev->pub.beacon_ies = ies;
++				prev->pub.len_beacon_ies = ielen;
++			}
++		}
++
++		/* Override IEs if they were from a beacon before */
++		if (information_elements_is_beacon_ies) {
++			prev->pub.information_elements =
++				prev->pub.beacon_ies;
++			prev->pub.len_information_elements =
++				prev->pub.len_beacon_ies;
++		}
++	}
++}
+
+-	res->beacon_ies_allocated = true;
+-	res->pub.len_beacon_ies = hidden->pub.len_beacon_ies;
+-	memcpy(res->pub.beacon_ies, hidden->pub.beacon_ies,
+-			res->pub.len_beacon_ies);
++static void
++cfg80211_bss_update_list(struct cfg80211_registered_device *dev,
++			 struct cfg80211_internal_bss *prev,
++			 struct cfg80211_internal_bss *res,
++			 int force)
++{
++	struct cfg80211_internal_bss *bss;
++
++	cfg80211_bss_update_bss(dev, prev, res, force);
++	list_for_each_entry(bss, &prev->list_aliases, list_aliases)
++		cfg80211_bss_update_bss(dev, bss, res, force);
++}
++
++static void
++cfg80211_bss_insert(struct cfg80211_registered_device *dev,
++		    struct cfg80211_internal_bss *alias,
++		    struct cfg80211_internal_bss *res)
++{
++	list_add_tail(&res->list, &dev->bss_list);
++	if (alias)
++		list_add_tail(&alias->list_aliases, &res->list_aliases);
++	rb_insert_bss(dev, res);
+ }
+
+ static struct cfg80211_internal_bss *
+ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+ 		    struct cfg80211_internal_bss *res)
+ {
+-	struct cfg80211_internal_bss *found = NULL;
++	struct cfg80211_internal_bss *found = NULL, *alias;
+
+ 	/*
+ 	 * The reference to "res" is donated to this function.
+@@ -622,105 +669,21 @@ cfg80211_bss_update(struct
+cfg80211_registered_device *dev,
+ 	found = rb_find_bss(dev, res);
+
+ 	if (found) {
+-		found->pub.beacon_interval = res->pub.beacon_interval;
+-		found->pub.tsf = res->pub.tsf;
+-		found->pub.signal = res->pub.signal;
+-		found->pub.capability = res->pub.capability;
+-		found->ts = res->ts;
+-
+-		/* Update IEs */
+-		if (res->pub.proberesp_ies) {
+-			size_t used = dev->wiphy.bss_priv_size + sizeof(*res);
+-			size_t ielen = res->pub.len_proberesp_ies;
+-
+-			if (found->pub.proberesp_ies &&
+-			    !found->proberesp_ies_allocated &&
+-			    ksize(found) >= used + ielen) {
+-				memcpy(found->pub.proberesp_ies,
+-				       res->pub.proberesp_ies, ielen);
+-				found->pub.len_proberesp_ies = ielen;
+-			} else {
+-				u8 *ies = found->pub.proberesp_ies;
+-
+-				if (found->proberesp_ies_allocated)
+-					ies = krealloc(ies, ielen, GFP_ATOMIC);
+-				else
+-					ies = kmalloc(ielen, GFP_ATOMIC);
+-
+-				if (ies) {
+-					memcpy(ies, res->pub.proberesp_ies,
+-					       ielen);
+-					found->proberesp_ies_allocated = true;
+-					found->pub.proberesp_ies = ies;
+-					found->pub.len_proberesp_ies = ielen;
+-				}
+-			}
+-
+-			/* Override possible earlier Beacon frame IEs */
+-			found->pub.information_elements =
+-				found->pub.proberesp_ies;
+-			found->pub.len_information_elements =
+-				found->pub.len_proberesp_ies;
 -		}
--		coord.i = valtmp;
--	}
+-		if (res->pub.beacon_ies) {
+-			size_t used = dev->wiphy.bss_priv_size + sizeof(*res);
+-			size_t ielen = res->pub.len_beacon_ies;
+-			bool information_elements_is_beacon_ies =
+-				(found->pub.information_elements ==
+-				 found->pub.beacon_ies);
 -
--	coord.i *= signx;
--	coord.q *= signx;
--	return coord;
--}
--EXPORT_SYMBOL(cordic_calc_iq);
+-			if (found->pub.beacon_ies &&
+-			    !found->beacon_ies_allocated &&
+-			    ksize(found) >= used + ielen) {
+-				memcpy(found->pub.beacon_ies,
+-				       res->pub.beacon_ies, ielen);
+-				found->pub.len_beacon_ies = ielen;
+-			} else {
+-				u8 *ies = found->pub.beacon_ies;
 -
--MODULE_DESCRIPTION("Cordic functions");
--MODULE_AUTHOR("Broadcom Corporation");
--MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/compat/crc8.c b/compat/crc8.c
-deleted file mode 100644
-index 87b59ca..0000000
---- a/compat/crc8.c
-+++ /dev/null
-@@ -1,86 +0,0 @@
--/*
-- * Copyright (c) 2011 Broadcom Corporation
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
+-				if (found->beacon_ies_allocated)
+-					ies = krealloc(ies, ielen, GFP_ATOMIC);
+-				else
+-					ies = kmalloc(ielen, GFP_ATOMIC);
 -
--#define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
+-				if (ies) {
+-					memcpy(ies, res->pub.beacon_ies,
+-					       ielen);
+-					found->beacon_ies_allocated = true;
+-					found->pub.beacon_ies = ies;
+-					found->pub.len_beacon_ies = ielen;
+-				}
+-			}
 -
--#include <linux/module.h>
--#include <linux/crc8.h>
--#include <linux/printk.h>
+-			/* Override IEs if they were from a beacon before */
+-			if (information_elements_is_beacon_ies) {
+-				found->pub.information_elements =
+-					found->pub.beacon_ies;
+-				found->pub.len_information_elements =
+-					found->pub.len_beacon_ies;
+-			}
+-		}
 -
--/*
-- * crc8_populate_msb - fill crc table for given polynomial in reverse bit order.
-- *
-- * table:	table to be filled.
-- * polynomial:	polynomial for which table is to be filled.
-- */
--void crc8_populate_msb(u8 table[CRC8_TABLE_SIZE], u8 polynomial)
--{
--	int i, j;
--	const u8 msbit = 0x80;
--	u8 t = msbit;
++		if (res->pub.beacon_ies)
++			cfg80211_bss_update_list(dev, found, res, 1);
++		else
++			cfg80211_bss_update_bss(dev, found, res, 1);
+ 		kref_put(&res->ref, bss_release);
+ 	} else {
+-		struct cfg80211_internal_bss *hidden;
 -
--	table[0] = 0;
+-		/* First check if the beacon is a probe response from
+-		 * a hidden bss. If so, copy beacon ies (with nullified
+-		 * ssid) into the probe response bss entry (with real ssid).
+-		 * It is required basically for PSM implementation
+-		 * (probe responses do not contain tim ie) */
 -
--	for (i = 1; i < CRC8_TABLE_SIZE; i *= 2) {
--		t = (t << 1) ^ (t & msbit ? polynomial : 0);
--		for (j = 0; j < i; j++)
--			table[i+j] = table[j] ^ t;
--	}
--}
--EXPORT_SYMBOL(crc8_populate_msb);
+-		/* TODO: The code is not trying to update existing probe
+-		 * response bss entries when beacon ies are
+-		 * getting changed. */
+-		hidden = rb_find_hidden_bss(dev, res);
+-		if (hidden)
+-			copy_hidden_ies(res, hidden);
 -
--/*
-- * crc8_populate_lsb - fill crc table for given polynomial in regular bit order.
-- *
-- * table:	table to be filled.
-- * polynomial:	polynomial for which table is to be filled.
-- */
--void crc8_populate_lsb(u8 table[CRC8_TABLE_SIZE], u8 polynomial)
--{
--	int i, j;
--	u8 t = 1;
--
--	table[0] = 0;
--
--	for (i = (CRC8_TABLE_SIZE >> 1); i; i >>= 1) {
--		t = (t >> 1) ^ (t & 1 ? polynomial : 0);
--		for (j = 0; j < CRC8_TABLE_SIZE; j += 2*i)
--			table[i+j] = table[j] ^ t;
--	}
--}
--EXPORT_SYMBOL(crc8_populate_lsb);
--
--/*
-- * crc8 - calculate a crc8 over the given input data.
-- *
-- * table: crc table used for calculation.
-- * pdata: pointer to data buffer.
-- * nbytes: number of bytes in data buffer.
-- * crc:	previous returned crc8 value.
-- */
--u8 crc8(const u8 table[CRC8_TABLE_SIZE], u8 *pdata, size_t nbytes, u8 crc)
--{
--	/* loop over the buffer data */
--	while (nbytes-- > 0)
--		crc = table[(crc ^ *pdata++) & 0xff];
--
--	return crc;
--}
--EXPORT_SYMBOL(crc8);
--
--MODULE_DESCRIPTION("CRC8 (by Williams, Ross N.) function");
--MODULE_AUTHOR("Broadcom Corporation");
--MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/include/linux/cordic.h b/include/linux/cordic.h
-deleted file mode 100644
-index f932093..0000000
---- a/include/linux/cordic.h
-+++ /dev/null
-@@ -1,48 +0,0 @@
--/*
-- * Copyright (c) 2011 Broadcom Corporation
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--#ifndef __CORDIC_H_
--#define __CORDIC_H_
--
--#include <linux/types.h>
--
--/**
-- * struct cordic_iq - i/q coordinate.
-- *
-- * @i: real part of coordinate (in phase).
-- * @q: imaginary part of coordinate (quadrature).
-- */
--struct cordic_iq {
--	s32 i;
--	s32 q;
--};
--
--/**
-- * cordic_calc_iq() - calculates the i/q coordinate for given angle.
-- *
-- * @theta: angle in degrees for which i/q coordinate is to be calculated.
-- * @coord: function output parameter holding the i/q coordinate.
-- *
-- * The function calculates the i/q coordinate for a given angle using
-- * cordic algorithm. The coordinate consists of a real (i) and an
-- * imaginary (q) part. The real part is essentially the cosine of the
-- * angle and the imaginary part is the sine of the angle. The returned
-- * values are scaled by 2^16 for precision. The range for theta is
-- * for -180 degrees to +180 degrees. Passed values outside this range are
-- * converted before doing the actual calculation.
-- */
--struct cordic_iq cordic_calc_iq(s32 theta);
--
--#endif /* __CORDIC_H_ */
-diff --git a/include/linux/crc8.h b/include/linux/crc8.h
-deleted file mode 100644
-index 13c8dab..0000000
---- a/include/linux/crc8.h
-+++ /dev/null
-@@ -1,101 +0,0 @@
--/*
-- * Copyright (c) 2011 Broadcom Corporation
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--#ifndef __CRC8_H_
--#define __CRC8_H_
--
--#include <linux/types.h>
--
--/* see usage of this value in crc8() description */
--#define CRC8_INIT_VALUE		0xFF
--
--/*
-- * Return value of crc8() indicating valid message+crc. This is true
-- * if a CRC is inverted before transmission. The CRC computed over the
-- * whole received bitstream is _table[x], where x is the bit pattern
-- * of the modification (almost always 0xff).
-- */
--#define CRC8_GOOD_VALUE(_table)	(_table[0xFF])
--
--/* required table size for crc8 algorithm */
--#define CRC8_TABLE_SIZE			256
--
--/* helper macro assuring right table size is used */
--#define DECLARE_CRC8_TABLE(_table) \
--	static u8 _table[CRC8_TABLE_SIZE]
--
--/**
-- * crc8_populate_lsb - fill crc table for given polynomial in regular bit order.
-- *
-- * @table:	table to be filled.
-- * @polynomial:	polynomial for which table is to be filled.
-- *
-- * This function fills the provided table according the polynomial provided for
-- * regular bit order (lsb first). Polynomials in CRC algorithms are typically
-- * represented as shown below.
-- *
-- *	poly = x^8 + x^7 + x^6 + x^4 + x^2 + 1
-- *
-- * For lsb first direction x^7 maps to the lsb. So the polynomial is as below.
-- *
-- * - lsb first: poly = 10101011(1) = 0xAB
-- */
--void crc8_populate_lsb(u8 table[CRC8_TABLE_SIZE], u8 polynomial);
--
--/**
-- * crc8_populate_msb - fill crc table for given polynomial in reverse bit order.
-- *
-- * @table:	table to be filled.
-- * @polynomial:	polynomial for which table is to be filled.
-- *
-- * This function fills the provided table according the polynomial provided for
-- * reverse bit order (msb first). Polynomials in CRC algorithms are typically
-- * represented as shown below.
-- *
-- *	poly = x^8 + x^7 + x^6 + x^4 + x^2 + 1
-- *
-- * For msb first direction x^7 maps to the msb. So the polynomial is as below.
-- *
-- * - msb first: poly = (1)11010101 = 0xD5
-- */
--void crc8_populate_msb(u8 table[CRC8_TABLE_SIZE], u8 polynomial);
--
--/**
-- * crc8() - calculate a crc8 over the given input data.
-- *
-- * @table:	crc table used for calculation.
-- * @pdata:	pointer to data buffer.
-- * @nbytes:	number of bytes in data buffer.
-- * @crc:	previous returned crc8 value.
-- *
-- * The CRC8 is calculated using the polynomial given in crc8_populate_msb()
-- * or crc8_populate_lsb().
-- *
-- * The caller provides the initial value (either %CRC8_INIT_VALUE
-- * or the previous returned value) to allow for processing of
-- * discontiguous blocks of data.  When generating the CRC the
-- * caller is responsible for complementing the final return value
-- * and inserting it into the byte stream.  When validating a byte
-- * stream (including CRC8), a final return value of %CRC8_GOOD_VALUE
-- * indicates the byte stream data can be considered valid.
-- *
-- * Reference:
-- * "A Painless Guide to CRC Error Detection Algorithms", ver 3, Aug 1993
-- * Williams, Ross N., ross<at>ross.net
-- * (see URL http://www.ross.net/crc/download/crc_v3.txt).
-- */
--u8 crc8(const u8 table[CRC8_TABLE_SIZE], u8 *pdata, size_t nbytes, u8 crc);
--
--#endif /* __CRC8_H_ */
--- 
-1.7.4.1
++		alias = rb_find_bss_alias(dev, res);
++		if (alias) {
++			if (res->pub.beacon_ies)
++				cfg80211_bss_update_list(dev, alias, res, 0);
++			else
++				cfg80211_bss_update_bss(dev, res, alias, 0);
++		}
+ 		/* this "consumes" the reference */
+-		list_add_tail(&res->list, &dev->bss_list);
+-		rb_insert_bss(dev, res);
++		cfg80211_bss_insert(dev, alias, res);
+ 		found = res;
+ 	}
 
+@@ -761,6 +724,7 @@ cfg80211_inform_bss(struct wiphy *wiphy,
+ 	res->pub.tsf = timestamp;
+ 	res->pub.beacon_interval = beacon_interval;
+ 	res->pub.capability = capability;
++	INIT_LIST_HEAD(&res->list_aliases);
+ 	/*
+ 	 * Since we do not know here whether the IEs are from a Beacon or Probe
+ 	 * Response frame, we need to pick one of the options and only use it
+@@ -828,6 +792,7 @@ cfg80211_inform_bss_frame(struct wiphy *wiphy,
+ 	res->pub.tsf = le64_to_cpu(mgmt->u.probe_resp.timestamp);
+ 	res->pub.beacon_interval = le16_to_cpu(mgmt->u.probe_resp.beacon_int);
+ 	res->pub.capability = le16_to_cpu(mgmt->u.probe_resp.capab_info);
++	INIT_LIST_HEAD(&res->list_aliases);
+ 	/*
+ 	 * The initial buffer for the IEs is allocated with the BSS entry and
+ 	 * is located after the private area.
+-- 
+
+With best regards,
+Dmitry Tarnyagin
