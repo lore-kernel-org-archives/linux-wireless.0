@@ -1,94 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:35582 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398Ab1KQSPQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46875 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755394Ab1KPK5w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 13:15:16 -0500
-Received: by ggnb2 with SMTP id b2so1421463ggn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2011 10:15:16 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: George <george0505@realtek.com>, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 1/4] rtlwifi: rtl8192cu: Allow retries for USB I/O
-Date: Thu, 17 Nov 2011 12:14:42 -0600
-Message-Id: <1321553685-31154-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20111117_191523_061051_3D6AA7DC)
-In-Reply-To: <1321553685-31154-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1321553685-31154-1-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 16 Nov 2011 05:57:52 -0500
+Subject: Re: [PATCH] mac80211: Add NoAck per WMM Queue Support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+In-Reply-To: <20111116105120.GA6139@pandem0nium>
+References: <1321399276-3585-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1321429935.4773.10.camel@jlt3.sipsolutions.net>
+	 <20111116105120.GA6139@pandem0nium>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 16 Nov 2011 11:57:47 +0100
+Message-ID: <1321441067.4773.26.camel@jlt3.sipsolutions.net> (sfid-20111116_115755_479186_0EF5AA89)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: George <george0505@realtek.com>
+Hi,
 
-The USB driver does not retry reads - allow 10 tries.
+> > Can you explain what for? :-)
+> 
+> We want to set NoAck for special traffic classes like video or voice where
+> "old" packets are not useful, but keep it for background and best effort traffic.
+> This can be applied on devices supporting both traffic classes (e.g. 
+> laptops, smartphones with VoIP software) as well as for backhaul links.
 
-Signed-off-by: George <george0505@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h |    2 +-
- drivers/net/wireless/rtlwifi/usb.c                |   18 +++++++++++++++---
- 2 files changed, 16 insertions(+), 4 deletions(-)
+Ok.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h
-index 3d5823c..fcc4032 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h
-@@ -32,7 +32,7 @@
- 
- #define FW_8192C_SIZE				0x3000
- #define FW_8192C_START_ADDRESS			0x1000
--#define FW_8192C_END_ADDRESS			0x3FFF
-+#define FW_8192C_END_ADDRESS			0x1FFF
- #define FW_8192C_PAGE_SIZE			4096
- #define FW_8192C_POLLING_DELAY			5
- #define FW_8192C_POLLING_TIMEOUT_COUNT		100
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index 54cb8a6..add29e9 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -34,6 +34,7 @@
- #include "usb.h"
- #include "base.h"
- #include "ps.h"
-+#include "rtl8192c/fw_common.h"
- 
- #define	REALTEK_USB_VENQT_READ			0xC0
- #define	REALTEK_USB_VENQT_WRITE			0x40
-@@ -41,6 +42,7 @@
- #define	REALTEK_USB_VENQT_CMD_IDX		0x00
- 
- #define REALTEK_USB_VENQT_MAX_BUF_SIZE		254
-+#define MAX_USBCTRL_VENDORREQ_TIMES		10
- 
- static void usbctrl_async_callback(struct urb *urb)
- {
-@@ -100,13 +102,23 @@ static int _usbctrl_vendorreq_sync_read(struct usb_device *udev, u8 request,
- 	unsigned int pipe;
- 	int status;
- 	u8 reqtype;
-+	int vendorreq_times = 0;
- 
- 	pipe = usb_rcvctrlpipe(udev, 0); /* read_in */
- 	reqtype =  REALTEK_USB_VENQT_READ;
- 
--	status = usb_control_msg(udev, pipe, request, reqtype, value, index,
--				 pdata, len, 0); /* max. timeout */
--
-+	while (++vendorreq_times <= MAX_USBCTRL_VENDORREQ_TIMES) {
-+		status = usb_control_msg(udev, pipe, request, reqtype, value,
-+					 index, pdata, len, 0); /*max. timeout*/
-+		if (status < 0) {
-+			/* firmware download is checksumed, don't retry */
-+			if ((value >= FW_8192C_START_ADDRESS &&
-+			    value <= FW_8192C_END_ADDRESS))
-+				break;
-+		} else {
-+			break;
-+		}
-+	}
- 	if (status < 0)
- 		pr_err("reg 0x%x, usbctrl_vendorreq TimeOut! status:0x%x value=0x%x\n",
- 		       value, status, *(u32 *)pdata);
--- 
-1.7.7
+> > I'm not sure this API is really the best way to handle it either, like I
+> > just said it might be nicer per connection or so to get reset properly.
+> > 
+> 
+> I'm not sure what you mean by "per connection" - do you mean per AP/Sta
+> connection? We need definitely need it per queue as explained above.
+
+No, I mean ... it could be a parameter to connect() or associate(),
+which would get a bitmap of ACs to use no-ack policy for, instead of an
+explicit new configuration.
+
+> > > I have tested this feature on ath9k as well as ath5k devices. There is
+> > > an iw patch as well to make use of this feature.
+> > 
+> > Since you're adding 'real API' (unlike the debugfs file which you should
+> > probably remove now!) you also should think about drivers like mwifiex
+> > that don't support this and don't use mac80211.
+> 
+> mwifiex neither supports set_txq_params nor the new function, nl80211 should
+> just return "-EOPNOTSUPP". A short grep revealed that no driver in wireless-testing
+> implements set_txq_params so far, so at least for the drivers within the kernel
+> this should be safe. I forgot to explicitly check for rdev->ops->set_txq_noack
+> and will add this check in v2 ...
+
+Good point -- but if you'd change to make it a parameter for connect and
+associate (I think that is better since it will clean up by itself
+properly when disconnecting) then you would need some flag indicating
+that the driver/device supports this (with mac80211 obviously always
+supporting it).
+
+johannes
+
 
