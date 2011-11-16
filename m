@@ -1,71 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19446 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754321Ab1KCJlt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 05:41:49 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 3/3] mac80211: simplify ieee80211_work_work
-Date: Thu,  3 Nov 2011 10:40:47 +0100
-Message-Id: <1320313247-23167-3-git-send-email-sgruszka@redhat.com> (sfid-20111103_104151_581363_B64FDF07)
-In-Reply-To: <1320313247-23167-1-git-send-email-sgruszka@redhat.com>
-References: <1320313247-23167-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:52750 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383Ab1KPSXr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Nov 2011 13:23:47 -0500
+Received: by fagn18 with SMTP id n18so1852930fag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 10:23:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <A6331C99-8D86-4CD6-88F2-123B38F31B26@nbd.name>
+References: <1321445323-71774-1-git-send-email-nbd@openwrt.org>
+ <1321445323-71774-2-git-send-email-nbd@openwrt.org> <CAB=NE6XOz9p=GwQWZ3TibMMan70QO7dXgVRP4PLuV6p=P1-RXA@mail.gmail.com>
+ <A6331C99-8D86-4CD6-88F2-123B38F31B26@nbd.name>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Wed, 16 Nov 2011 10:23:25 -0800
+Message-ID: <CAB=NE6WLQUqbWoVGC4WgGVFTUJC1i8_um4=sBU-V+NpfW57YHg@mail.gmail.com> (sfid-20111116_192350_989995_DD32BFD3)
+Subject: Re: [PATCH 2/4] ath9k: rework power state handling
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since local->tmp_channel is always NULL in one branch, some code paths
-will newer be taken in that branch, so remove them.
+On Wed, Nov 16, 2011 at 10:16 AM, Felix Fietkau <nbd@nbd.name> wrote:
+> On 16.11.2011, at 18:42, "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com> wrote:
+>
+>> On Wed, Nov 16, 2011 at 4:08 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>> Turning off the radio when mac80211 tells the driver that it's idle is not
+>>> a good idea, as idle interfaces might still occasionally scan or send packets.
+>>> The only time the radio can be safely turned off is when drv_stop has been
+>>> called. In the mean time, use sc->ps_idle only to indicate network sleep vs
+>>> full sleep.
+>>> Move the LED GPIO changes out of the PCI suspend/resume path, the start/stop
+>>> functions already take care of that.
+>>>
+>>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>>
+>> This set of patches are going to need some good amount of testing for
+>> power impact. The benefits and gains need to be considered. I'll yield
+>> to Senthil and Paul for final approval on this.
+>
+> One of the gains is that this series fixes some "PCI error" crashes
+> on OpenWrt during hostapd restarts.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/mac80211/work.c |   17 +++--------------
- 1 files changed, 3 insertions(+), 14 deletions(-)
+Thanks for the clarification, I was expecting this to be the case, the
+point I am trying to make though is that this "fix" itself may
+introduce a regression for non-AP devices, specifically in terms of
+power consumption and I'd like the stakeholders who do care about that
+to review these changes carefully as well. The difficulty will be to
+find a reasonable middle ground.
 
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 6c53b6d..788b96e 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -969,10 +969,9 @@ static void ieee80211_work_work(struct work_struct *work)
- 		}
- 
- 		if (!started && !local->tmp_channel) {
--			bool on_oper_chan;
--			bool tmp_chan_changed = false;
--			bool on_oper_chan2;
-+			bool on_oper_chan, on_oper_chan2;
- 			enum nl80211_channel_type wk_ct;
-+
- 			on_oper_chan = ieee80211_cfg_on_oper_channel(local);
- 
- 			/* Work with existing channel type if possible. */
-@@ -981,11 +980,6 @@ static void ieee80211_work_work(struct work_struct *work)
- 				wk_ct = ieee80211_calc_ct(wk->chan_type,
- 						local->hw.conf.channel_type);
- 
--			if (local->tmp_channel)
--				if ((local->tmp_channel != wk->chan) ||
--				    (local->tmp_channel_type != wk_ct))
--					tmp_chan_changed = true;
--
- 			local->tmp_channel = wk->chan;
- 			local->tmp_channel_type = wk_ct;
- 			/*
-@@ -1008,12 +1002,7 @@ static void ieee80211_work_work(struct work_struct *work)
- 								    true,
- 								    false);
- 				}
--			} else if (tmp_chan_changed)
--				/* Still off-channel, but on some other
--				 * channel, so update hardware.
--				 * PS should already be off-channel.
--				 */
--				ieee80211_hw_config(local, 0);
-+			}
- 
- 			started = true;
- 			wk->timeout = jiffies;
--- 
-1.7.1
-
+  Luis
