@@ -1,40 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:52797 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754049Ab1KNTub (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:38615 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756386Ab1KPL5W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 14:50:31 -0500
-Date: Mon, 14 Nov 2011 14:49:25 -0500 (EST)
-Message-Id: <20111114.144925.1878369827907627467.davem@davemloft.net> (sfid-20111114_205051_303118_7277A138)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2011-11-14
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20111114193253.GA2499@tuxdriver.com>
-References: <20111114193253.GA2499@tuxdriver.com>
+	Wed, 16 Nov 2011 06:57:22 -0500
+Received: by bkbzu5 with SMTP id zu5so504540bkb.4
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 03:57:20 -0800 (PST)
+Subject: Re: redesigning authentication/association flows
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <1321442014.4773.42.camel@jlt3.sipsolutions.net>
+References: <1321442014.4773.42.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 16 Nov 2011 13:57:16 +0200
+Message-ID: <1321444636.2408.112.camel@cumari> (sfid-20111116_125726_221306_BC561B62)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 14 Nov 2011 14:32:54 -0500
+On Wed, 2011-11-16 at 12:13 +0100, Johannes Berg wrote: 
+> I've been growing unhappy with the way I designed authentication and
+> association in cfg80211 and I'm ready to admit that the way it works now
+> was a design mistake. Just see the tx_sync as an example, and if we
+> explicitly do remain-on-channel for the authentication or association
+> then we'll have to start doing GO NoA sync within r-o-c which will be a
+> nightmare.
 
-> Here is another batch of fixes intended for 3.2.  This includes an
-> mwifiex fix to enable association with "hidden" APs, a fix for avoiding
-> an unhandled RF kill interrupt when unloading iwlwifi, a NULL pointer
-> fix in the mac80211 radiotap code, a fix for ieee80211_build_probe_req
-> to pass-up a proper return code when ieee80211_probereq_get fails, a
-> race fix for mac80211 to avoid a WARNING in ieee80211_can_queue_work, a
-> NULL pointer fix in the cfg80211 regulatory code, and a fix for an
-> unaligned memory access in the libertas driver.
- ...
-> The following changes since commit 1e49570171117e547e6324c58371db4a0dc2f1db:
-> 
->   net: Fix references to deleted NET_ETHERNET Kconfig setting. (2011-11-09 19:26:53 -0500)
-> 
-> are available in the git repository at:
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
+[...]
 
-Pulled, thanks John!
+> Note that this gets rid of the stupid tx_sync, the attempt at doing this
+> off-channel, and we never have to deal with tx_sync in remain-on-channel
+> which would be really really strange.
+> 
+> The only difference really is that today, if auth fails, we can stay
+> connected. HOWEVER, wpa_supplicant isn't actually able to deal with
+> that, gets confused and recovers with clear_state_mismatch().
+> 
+> 
+> I think this will help all drivers, from at76c50x which is broken
+> completely today, wl1251 which has a dummy join, wl12xx which has a work
+> around with remain-on-channel but this doesn't work well with a GO (NoA)
+> and of course iwlwifi (which has tx_sync for this) and iwlegacy which
+> has a bunch of RXON ping-pong things going on.
+
+As discussed on the phone, I think this should be okay with wl12xx.  We
+will have to study it a bit further to be sure, but my first impression
+is that it's should be fine.
+
+One small correction from my mistake, wl1251 doesn't have a dummy join,
+it's the old wl12xx which did (with older firmwares that didn't support
+roc/croc).  Sorry, I got confused.
+
+-- 
+Cheers,
+Luca.
+
