@@ -1,46 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:54063 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755491Ab1KON7n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 08:59:43 -0500
-Date: Tue, 15 Nov 2011 14:59:38 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: =?utf-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org,
-	'LKML' <linux-kernel@vger.kernel.org>
-Subject: Re: =?utf-8?B?562U5aSNOiDnrZTlpI06IOetlA==?= =?utf-8?B?5aSNOg==?=
- 3.1-rc6+ rtl8192se issue
-Message-ID: <20111115135938.GD3292@x1.osrc.amd.com> (sfid-20111115_150000_878190_64AE361B)
-References: <791179BCE62F4954AB936E6CAC9CA977@realsil.com.cn>
- <4E7AAB8B.40900@lwfinger.net>
- <20110922075115.GA17640@liondog.tnic>
- <6452E68488784D0EA32E4BDF1B941EFB@realsil.com.cn>
- <20110923103339.GA26078@gere.osrc.amd.com>
- <4E7CB504.4060904@lwfinger.net>
- <20110928131823.GA2693@gere.osrc.amd.com>
- <4E83D092.7010405@lwfinger.net>
- <20111005151533.GA18592@gere.osrc.amd.com>
- <4E8D1465.207@lwfinger.net>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:44430 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755394Ab1KPKOm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Nov 2011 05:14:42 -0500
+Received: by vcbfk1 with SMTP id fk1so164932vcb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 02:14:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4E8D1465.207@lwfinger.net>
+In-Reply-To: <20111116100915.GA2191@redhat.com>
+References: <20111116100915.GA2191@redhat.com>
+Date: Wed, 16 Nov 2011 11:14:41 +0100
+Message-ID: <CAOZOX0WDQQeg4o5J9iQ_TpQgyYpTk5D3B4rpdTVR_4nGFVQ0wg@mail.gmail.com> (sfid-20111116_111446_135101_EEED2BB7)
+Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Amir Hedayaty <hedayaty@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 05, 2011 at 09:37:25PM -0500, Larry Finger wrote:
-> I have been going though the differences between the 06/20/2011 and
-> 08/16/2011 drivers and making those changes to the kernel drivers.
-> Could you please apply the 5 attached patches to the
-> wireless-testing tree and see if your sluggishness is fixed?
+Hi,
 
-Just to document it here:
+On Wed, Nov 16, 2011 at 11:09 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> Some devices may generate spurious interrupts, we have to handle them
+> otherwise interrupt line will be disabled with below message and driver
+> will not work:
+>
+> [ 2052.114334] irq 17: nobody cared (try booting with the "irqpoll" option)
+> [ 2052.114339] Pid: 0, comm: swapper Tainted: P           2.6.35.6-48.fc14.x86_64 #1
+> [ 2052.114341] Call Trace:
+> [ 2052.114342]  <IRQ>  [<ffffffff810a6e2b>] __report_bad_irq.clone.1+0x3d/0x8b
+> [ 2052.114349]  [<ffffffff810a6f93>] note_interrupt+0x11a/0x17f
+> [ 2052.114352]  [<ffffffff810a7a73>] handle_fasteoi_irq+0xa8/0xce
+> [ 2052.114355]  [<ffffffff8100c2ea>] handle_irq+0x88/0x90
+> [ 2052.114357]  [<ffffffff8146f034>] do_IRQ+0x5c/0xb4
+> [ 2052.114360]  [<ffffffff81469593>] ret_from_intr+0x0/0x11
+> [ 2052.114361]  <EOI>  [<ffffffff8102b7f9>] ? native_safe_halt+0xb/0xd
+> [ 2052.114366]  [<ffffffff81010f03>] ? need_resched+0x23/0x2d
+> [ 2052.114367]  [<ffffffff8101102a>] default_idle+0x34/0x4f
+> [ 2052.114370]  [<ffffffff81008325>] cpu_idle+0xaa/0xcc
+> [ 2052.114373]  [<ffffffff81461f2a>] start_secondary+0x24d/0x28e
+> [ 2052.114374] handlers:
+> [ 2052.114375] [<ffffffff81332944>] (usb_hcd_irq+0x0/0x7c)
+> [ 2052.114378] [<ffffffffa00697da>] (rt2800pci_interrupt+0x0/0x18d [rt2800pci])
+> [ 2052.114384] Disabling IRQ #17
+>
+> Resolve:
+> https://bugzilla.redhat.com/show_bug.cgi?id=658451
+>
+> Reported-and-tested-by: Amir Hedayaty <hedayaty@gmail.com>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-3.1 still has the problem, if you have something ready ported to 3.1
-from the Realsil driver version, let me know and I'll give it a run.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Thanks.
+> ---
+> I changed rt2800pci only because get bug report for that device, not
+> sure if similar changes are not needed for other rt2x00 PCI devices.
 
--- 
-Regards/Gruss,
-   Boris
+The ticket mentiones that the end-result is a slow connection,
+this is also a bug in older chipsets. So could you prepare a patch
+for the other drivers as well?
+
+>  drivers/net/wireless/rt2x00/rt2800pci.c |    7 ++++++-
+>  1 files changed, 6 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+> index da48c8a..4dc2d0f 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -880,8 +880,13 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
+>        rt2x00pci_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
+>        rt2x00pci_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
+>
+> +       /*
+> +        * Some devices can generate interrupts with empty CSR register, we
+> +        * "handle" such irq's to prevent interrupt controller treat them as
+> +        * spurious interrupts and disable irq line.
+> +        */
+>        if (!reg)
+> -               return IRQ_NONE;
+> +               return IRQ_HANDLED;
+>
+>        if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+>                return IRQ_HANDLED;
+> --
+> 1.7.1
+>
+>
