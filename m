@@ -1,58 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54756 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755817Ab1KGSQe (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:60267 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752848Ab1KPSkI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 13:16:34 -0500
-Date: Mon, 7 Nov 2011 13:11:35 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: init rate-control for TDLS sta when supp-rates
- are known
-Message-ID: <20111107181135.GD2798@tuxdriver.com> (sfid-20111107_191638_165011_C7839BB6)
-References: <1319636866-12171-1-git-send-email-arik@wizery.com>
- <20111027142248.GA3972@jm.kir.nu>
+	Wed, 16 Nov 2011 13:40:08 -0500
+Received: by yenq3 with SMTP id q3so1751yen.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 10:40:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111027142248.GA3972@jm.kir.nu>
+In-Reply-To: <CAB=NE6WLQUqbWoVGC4WgGVFTUJC1i8_um4=sBU-V+NpfW57YHg@mail.gmail.com>
+References: <1321445323-71774-1-git-send-email-nbd@openwrt.org>
+	<1321445323-71774-2-git-send-email-nbd@openwrt.org>
+	<CAB=NE6XOz9p=GwQWZ3TibMMan70QO7dXgVRP4PLuV6p=P1-RXA@mail.gmail.com>
+	<A6331C99-8D86-4CD6-88F2-123B38F31B26@nbd.name>
+	<CAB=NE6WLQUqbWoVGC4WgGVFTUJC1i8_um4=sBU-V+NpfW57YHg@mail.gmail.com>
+Date: Wed, 16 Nov 2011 10:40:07 -0800
+Message-ID: <CAMcMvsjsCzDH6hpS6Bon-5Zrad5eNf41Zq0ei_iw+MFK41rF=w@mail.gmail.com> (sfid-20111116_194012_785911_D4B63DFD)
+Subject: Re: [PATCH 2/4] ath9k: rework power state handling
+From: Paul Stewart <pstew@google.com>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: Felix Fietkau <nbd@nbd.name>, Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 27, 2011 at 05:22:48PM +0300, Jouni Malinen wrote:
-> On Wed, Oct 26, 2011 at 03:47:46PM +0200, Arik Nemtsov wrote:
-> > Initialize rate control algorithms only when supported rates are known
-> > for a TDLS peer sta. Direct Tx between peers is not allowed before the
-> > link is enabled. In turn, this only occurs after a change_station()
-> > call that sets supported rates.
-> 
-> Thanks - this seems to fix the issues I saw previously. I tested ath9k
-> with this instead of my earlier patch and was able to run successfully
-> through my TDLS test scripts against another implementation.
+In fact, could this be made contingent on whether there's an AP-mode
+interface, since the problem you're encountering seems to only be in
+AP mode?  What troubles me, Felix, is your statement that " this
+series fixes some "PCI error" crashes".  Does this mean that you
+haven't root-caused the problem, and that this may only partially mask
+it?
 
-I merged this patch from Jouni:
+--
+Paul
 
-	commit e3a4cc2f073739c9c9c2e97efc774703061f034a
-	Author: Jouni Malinen <j@w1.fi>
-	Date:   Sun Oct 23 22:36:04 2011 +0300
-
-	    mac80211: Fix TDLS support validation in add_station handler
-    
-	    We need to verify whether the command is successful before allocating
-	    the station entry to avoid extra processing. This also fixes a memory
-	    leak on the error path.
-    
-	    Signed-off-by: Jouni Malinen <j@w1.fi>
-	    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-I'm not sure what to do with this patch now.  I think I will just drop
-it, and you can send me a new patch that applies on top of Jouni's
-(perhaps even reverting it) as appropriate?
-
-Thanks,
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+On Wed, Nov 16, 2011 at 10:23 AM, Luis R. Rodriguez
+<mcgrof@qca.qualcomm.com> wrote:
+> On Wed, Nov 16, 2011 at 10:16 AM, Felix Fietkau <nbd@nbd.name> wrote:
+>> On 16.11.2011, at 18:42, "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com> wrote:
+>>
+>>> On Wed, Nov 16, 2011 at 4:08 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>>> Turning off the radio when mac80211 tells the driver that it's idle is not
+>>>> a good idea, as idle interfaces might still occasionally scan or send packets.
+>>>> The only time the radio can be safely turned off is when drv_stop has been
+>>>> called. In the mean time, use sc->ps_idle only to indicate network sleep vs
+>>>> full sleep.
+>>>> Move the LED GPIO changes out of the PCI suspend/resume path, the start/stop
+>>>> functions already take care of that.
+>>>>
+>>>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>>>
+>>> This set of patches are going to need some good amount of testing for
+>>> power impact. The benefits and gains need to be considered. I'll yield
+>>> to Senthil and Paul for final approval on this.
+>>
+>> One of the gains is that this series fixes some "PCI error" crashes
+>> on OpenWrt during hostapd restarts.
+>
+> Thanks for the clarification, I was expecting this to be the case, the
+> point I am trying to make though is that this "fix" itself may
+> introduce a regression for non-AP devices, specifically in terms of
+> power consumption and I'd like the stakeholders who do care about that
+> to review these changes carefully as well. The difficulty will be to
+> find a reasonable middle ground.
+>
+>  Luis
+>
