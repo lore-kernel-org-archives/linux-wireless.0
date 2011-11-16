@@ -1,107 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:64182 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751918Ab1K3FQR (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33627 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755998Ab1KPLNi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 00:16:17 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Russell Hu <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Wilson Tsao <wtsao@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 12/17] ath9k_hw: MCI related changes in chip management
-Date: Wed, 30 Nov 2011 10:41:24 +0530
-Message-ID: <1322629889-19961-13-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_061621_809338_07BFB9A7)
-In-Reply-To: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 16 Nov 2011 06:13:38 -0500
+Subject: redesigning authentication/association flows
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 16 Nov 2011 12:13:34 +0100
+Message-ID: <1321442014.4773.42.camel@jlt3.sipsolutions.net> (sfid-20111116_121342_134417_A84714C4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Hi,
 
-send halt BT GPM if the chip is in network sleep and BT state
-is awake
+I've been growing unhappy with the way I designed authentication and
+association in cfg80211 and I'm ready to admit that the way it works now
+was a design mistake. Just see the tx_sync as an example, and if we
+explicitly do remain-on-channel for the authentication or association
+then we'll have to start doing GO NoA sync within r-o-c which will be a
+nightmare.
 
-Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c  |   24 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/reg.h |    2 ++
- 2 files changed, 26 insertions(+), 0 deletions(-)
+So I think we should just revisit all this. Here's what I currently
+think I will do:
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 662ab7e..ba5734a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1933,6 +1933,7 @@ static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
- bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
- 	int status = true, setChip = true;
- 	static const char *modes[] = {
- 		"AWAKE",
-@@ -1950,12 +1951,35 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- 	switch (mode) {
- 	case ATH9K_PM_AWAKE:
- 		status = ath9k_hw_set_power_awake(ah, setChip);
-+
-+		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
-+			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
-+
- 		break;
- 	case ATH9K_PM_FULL_SLEEP:
-+
-+		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI) {
-+			if (ar9003_mci_state(ah, MCI_STATE_ENABLE, NULL) &&
-+				(mci->bt_state != MCI_BT_SLEEP) &&
-+				!mci->halted_bt_gpm) {
-+				ath_dbg(common, ATH_DBG_MCI, "MCI halt BT GPM"
-+						"(full_sleep)");
-+				ar9003_mci_send_coex_halt_bt_gpm(ah,
-+								 true, true);
-+			}
-+
-+			mci->ready = false;
-+			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
-+		}
-+
- 		ath9k_set_power_sleep(ah, setChip);
- 		ah->chip_fullsleep = true;
- 		break;
- 	case ATH9K_PM_NETWORK_SLEEP:
-+
-+		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
-+			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
-+
- 		ath9k_set_power_network_sleep(ah, setChip);
- 		break;
- 	default:
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index ba3672f..6e2f188 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1279,6 +1279,8 @@ enum {
- #define AR_RTC_INTR_MASK \
- 	((AR_SREV_9100(ah)) ? (AR_RTC_BASE + 0x0058) : 0x7058)
- 
-+#define AR_RTC_KEEP_AWAKE	0x7034
-+
- /* RTC_DERIVED_* - only for AR9100 */
- 
- #define AR_RTC_DERIVED_CLK \
--- 
-1.7.0.4
+== cfg80211
+ - get rid of the entire auth_bss/auth_try_bss, etc. Allow
+   authentication and association at any time (even association without
+   authentication, AP will reject anyway)
+ - keep track only of current_bss with authenticated/associated flag to
+   list it in scan results
+ - entirely handle local state change for authentication in cfg80211
+   since drivers can no longer expect auth/assoc sequencing
+
+(note that in current code all of this only impacts mac80211 since no
+other driver supports authenticate/associate commands)
+
+== mac80211
+When asked to auth/assoc change sequence to do:
+ - if associated to BSSID != new BSSID:
+   - send null data PM=1 to AP (?)
+ - if authenticated/associated to BSSID != new BSSID:
+   - bss_info_changed: zero bssid, not associated, zero aid etc
+   - remove AP station entry
+ - if not already configured as such:
+   - clear IDLE for interface
+   - set channel (in the future: for interface)
+   - bss_info_changed: set correct bssid, not associated, ...
+   - add AP station entry (even to driver, not dummy as today)
+ - send frame
+ - check response, if failure clear configuration
+
+
+Note that this gets rid of the stupid tx_sync, the attempt at doing this
+off-channel, and we never have to deal with tx_sync in remain-on-channel
+which would be really really strange.
+
+The only difference really is that today, if auth fails, we can stay
+connected. HOWEVER, wpa_supplicant isn't actually able to deal with
+that, gets confused and recovers with clear_state_mismatch().
+
+
+I think this will help all drivers, from at76c50x which is broken
+completely today, wl1251 which has a dummy join, wl12xx which has a work
+around with remain-on-channel but this doesn't work well with a GO (NoA)
+and of course iwlwifi (which has tx_sync for this) and iwlegacy which
+has a bunch of RXON ping-pong things going on.
+
+I don't think ath5k, ath9k and most other drivers will really be
+impacted, the ones I'm not sure about are Ralink and Realtek drivers.
+
+Anyone have major issues with this?
+
+johannes
 
