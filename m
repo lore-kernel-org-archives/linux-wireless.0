@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:49258 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755184Ab1KRTc1 convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40497 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752118Ab1KQTam (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 14:32:27 -0500
-Received: by yenq3 with SMTP id q3so2843753yen.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 11:32:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4EC6B10A.5020907@hauke-m.de>
-References: <1321490374-24529-1-git-send-email-linville@tuxdriver.com> <4EC6B10A.5020907@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
-Date: Fri, 18 Nov 2011 11:32:05 -0800
-Message-ID: <CAB=NE6X69-2QyxJjUx6_O9JrfWTBf=WzVO-vgdykPeMg34Egig@mail.gmail.com> (sfid-20111118_203230_014696_8004FAA9)
-Subject: Re: [PATCH 1/2] compat: avoid warning in compat_system_workqueue_create
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Thu, 17 Nov 2011 14:30:42 -0500
+Date: Thu, 17 Nov 2011 14:03:08 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Greg Dietsche <gregory.dietsche@cuw.edu>,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: pull request: iwlegacy 2011-11-16
+Message-ID: <20111117190307.GE32622@tuxdriver.com> (sfid-20111117_203045_703607_6644D70B)
+References: <20111116122205.GA4409@redhat.com>
+ <87y5vf8ak3.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87y5vf8ak3.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 18, 2011 at 11:24 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> On 11/17/2011 01:39 AM, John W. Linville wrote:
->> The check in the WARN_ON is inverted.
->>
-> Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
->> Signed-off-by: John W. Linville <linville@tuxdriver.com>
->> ---
->>  compat/compat-2.6.36.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/compat/compat-2.6.36.c b/compat/compat-2.6.36.c
->> index aab25df..fe24da8 100644
->> --- a/compat/compat-2.6.36.c
->> +++ b/compat/compat-2.6.36.c
->> @@ -99,7 +99,7 @@ EXPORT_SYMBOL_GPL(system_nrt_wq);
->>  void compat_system_workqueue_create()
->>  {
->>       system_nrt_wq = create_singlethread_workqueue("events_nrt");
->> -     WARN_ON(system_nrt_wq);
->> +     WARN_ON(!system_nrt_wq);
->>  }
->>
->>  void compat_system_workqueue_destroy()
->
-> That was my fault, please apply this patch.
+On Thu, Nov 17, 2011 at 09:36:44AM +0200, Kalle Valo wrote:
+> Hi Stanislaw,
+> 
+> Stanislaw Gruszka <sgruszka@redhat.com> writes:
+> 
+> > Please pull iwlegacy cleanup changes done by Greg and me, intended
+> > for 3.3. These request include huge patches with file renaming and
+> > automatic code processing done by sed and indent. Driver is still
+> > quite messy and need more cleanup, but these massive changes bring
+> > driver close to the state that we could name it maintainable.
+> >
+> > Hopefully with having clean, maintainable code I will be able to fix
+> > some nasty not easy reproducible bugs, we still have in the iwlegacy
+> > driver.
+> 
+> I haven't seen these patches on linux-wireless mailing list at all.
+> Isn't it recommended that all wireless patches are sent to
+> linux-wireless for public review?
 
-Odd, I thought I had applied this already, sorry for the delay,
-applied and pushed, I also applied this patch on the linux-3.2.y
-branch, I'll make another stable release based on 3.2 for this as
-otherwise people will get these warnings for their backports.
+Yes, it is.  Please make sure to send these patches to the list for
+review by the group.
 
-  Luis
+Thanks,
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
