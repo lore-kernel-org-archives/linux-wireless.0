@@ -1,372 +1,299 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51719 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751778Ab1KGXPC (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45958 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932320Ab1KQQCe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 18:15:02 -0500
-From: greearb@candelatech.com
+	Thu, 17 Nov 2011 11:02:34 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v6 2/2] mac80211:  Support ht-cap over-rides.
-Date: Mon,  7 Nov 2011 15:14:36 -0800
-Message-Id: <1320707676-17255-2-git-send-email-greearb@candelatech.com> (sfid-20111108_001506_530478_55E2C13F)
-In-Reply-To: <1320707676-17255-1-git-send-email-greearb@candelatech.com>
-References: <1320707676-17255-1-git-send-email-greearb@candelatech.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] compat: support RHEL6 as a build target
+Date: Thu, 17 Nov 2011 10:42:39 -0500
+Message-Id: <1321544559-2305-1-git-send-email-linville@tuxdriver.com> (sfid-20111117_170238_673290_BD7BAA92)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+This patch enables compatibility with RHEL6 as a build target, mostly
+with simple tricks similar to what was added for compatibility with
+Debian Squeeze.
 
-This implements ht-cap over-rides for mac80211 drivers.
-HT may be disabled, making an /a/b/g/n station act like an
-a/b/g station.  HT40 may be disabled forcing the station to
-be HT20 even if the AP and local hardware support HT40.
+A handful of new CONFIG_* requirements were added, to provide for build
+flexibility required to support RHEL6:
 
-MAX-AMSDU may be disabled.
-AMPDU-Density may be increased.
-AMPDU-Factor may be decreased.
+	CONFIG_COMPAT_KFIFO
+	CONFIG_COMPAT_FIRMWARE_DATA_RW_NEEDS_FILP
 
-This has been successfully tested with ath9k using patched
-wpa_supplicant and iw.
+Also, CONFIG_COMPAT_FIRMWARE_CLASS is now checked in a header file and
+so the build configuration must change to update compat_autoconf.h
+appropriately
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
-:100644 100644 48363c3... 25ea406... M	include/linux/ieee80211.h
-:100644 100644 a9ded52... 7f4389e... M	net/mac80211/cfg.c
-:100644 100644 f80a35c... 47b89bb... M	net/mac80211/ht.c
-:100644 100644 ea10a51... 6afa409... M	net/mac80211/ieee80211_i.h
-:100644 100644 d4ee6d2... 7be5ad8... M	net/mac80211/main.c
-:100644 100644 57fb58f... 7c71db0... M	net/mac80211/mlme.c
-:100644 100644 6c53b6d... 3f318df... M	net/mac80211/work.c
- include/linux/ieee80211.h  |    6 +++
- net/mac80211/cfg.c         |    2 +-
- net/mac80211/ht.c          |   90 +++++++++++++++++++++++++++++++++++++++++++-
- net/mac80211/ieee80211_i.h |   10 ++++-
- net/mac80211/main.c        |   14 +++++++
- net/mac80211/mlme.c        |   12 +++++-
- net/mac80211/work.c        |   35 ++++++++++++-----
- 7 files changed, 154 insertions(+), 15 deletions(-)
+ compat/Makefile                |    6 +++---
+ compat/compat-2.6.35.c         |    4 ++--
+ compat/compat-2.6.37.c         |    4 ++--
+ compat/compat_firmware_class.c |   12 ++++++++++++
+ include/linux/compat-2.6.33.h  |    9 +++++++++
+ include/linux/compat-2.6.34.h  |   19 +++++++++++++++++++
+ include/linux/compat-2.6.35.h  |    3 +++
+ include/linux/compat-2.6.36.h  |    3 +++
+ include/linux/compat-2.6.37.h  |    6 ++++++
+ 9 files changed, 59 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 48363c3..25ea406 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -906,6 +906,12 @@ struct ieee80211_mcs_info {
- #define IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT	2
- #define		IEEE80211_HT_MCS_TX_MAX_STREAMS	4
- #define IEEE80211_HT_MCS_TX_UNEQUAL_MODULATION	0x10
-+/*
-+ * Stations supporting 802.11n are required to support
-+ * at least the first 8 MCS rates.  See section 7.3.2.56.4
-+ * and 20.1.1 of the 802.11n spec.
-+ */
-+#define IEEE80211_HT_MCS_REQ_RATES_STA		8
+diff --git a/compat/Makefile b/compat/Makefile
+index 2fb1893..fc43ba1 100644
+--- a/compat/Makefile
++++ b/compat/Makefile
+@@ -24,9 +24,9 @@ compat-$(CONFIG_COMPAT_KERNEL_2_6_29) += compat-2.6.29.o
+ compat-$(CONFIG_COMPAT_KERNEL_2_6_32) += compat-2.6.32.o
+ compat-$(CONFIG_COMPAT_KERNEL_2_6_33) += compat-2.6.33.o
+ compat-$(CONFIG_COMPAT_KERNEL_2_6_35) += compat-2.6.35.o
+-compat-$(CONFIG_COMPAT_KERNEL_2_6_36) += \
+-	compat-2.6.36.o \
+-	kfifo.o
++compat-$(CONFIG_COMPAT_KERNEL_2_6_36) += compat-2.6.36.o
++
++compat-$(CONFIG_COMPAT_KFIFO) += kfifo.o
  
- /*
-  * 802.11n D5.0 20.3.5 / 20.6 says:
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a9ded52..7f4389e 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -778,7 +778,7 @@ static void sta_apply_parameters(struct ieee80211_local *local,
- 	}
- 
- 	if (params->ht_capa)
--		ieee80211_ht_cap_ie_to_sta_ht_cap(sband,
-+		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
- 						  params->ht_capa,
- 						  &sta->sta.ht_cap);
- 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index f80a35c..47b89bb 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -18,7 +18,89 @@
- #include "ieee80211_i.h"
- #include "rate.h"
- 
--void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
-+bool ieee80111_cfg_override_disables_ht40(struct ieee80211_sub_if_data *sdata)
-+{
-+	if ((sdata->u.mgd.ht_capa_mask.cap_info &
-+	     IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
-+	    !(sdata->u.mgd.ht_capa.cap_info &
-+	      IEEE80211_HT_CAP_SUP_WIDTH_20_40))
-+		return true;
-+	return false;
-+}
-+
-+void __check_htcap_disable(struct ieee80211_sub_if_data *sdata,
-+			   struct ieee80211_sta_ht_cap *ht_cap,
-+			   u16 flag)
-+{
-+	if (sdata->u.mgd.ht_capa_mask.cap_info & flag) {
-+		if (!(sdata->u.mgd.ht_capa.cap_info & flag))
-+			ht_cap->cap &= ~flag;
-+	}
-+}
-+
-+void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
-+				     struct ieee80211_sta_ht_cap *ht_cap,
-+				     int min_rates)
-+{
-+	u8 *scaps = (u8 *)(&sdata->u.mgd.ht_capa.mcs.rx_mask);
-+	u8 *smask = (u8 *)(&sdata->u.mgd.ht_capa_mask.mcs.rx_mask);
-+	int i;
-+
-+	/* NOTE:  If you add more over-rides here, update register_hw
-+	 * ht_capa_mod_msk logic in main.c as well.
-+	 */
-+
-+	/* check for HT over-rides, MCS rates first. */
-+	for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++) {
-+		int q;
-+		for (q = 0; q < 8; q++) {
-+			/*
-+			 * We always need to advert at least MCS0-7, to
-+			 * be a compliant HT station, for instance
-+			 */
-+			if (((i * 8 + q) >= min_rates) &&
-+			    (smask[i] & (1<<q))) {
-+				if (!(scaps[i] & (1<<q))) {
-+					/*
-+					 * Can only disable rates, not force
-+					 * new ones
-+					 */
-+					ht_cap->mcs.rx_mask[i] &= ~(1<<q);
-+				}
-+			}
-+		}
-+	}
-+
-+	/* Force removal of HT-40 capabilities? */
-+	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_SUP_WIDTH_20_40);
-+	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_SGI_40);
-+
-+	/* Allow user to disable the max-AMSDU bit. */
-+	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_MAX_AMSDU);
-+
-+	/* Allow user to decrease AMPDU factor */
-+	if (sdata->u.mgd.ht_capa_mask.ampdu_params_info &
-+	    IEEE80211_HT_AMPDU_PARM_FACTOR) {
-+		u16 n = sdata->u.mgd.ht_capa.ampdu_params_info
-+			& IEEE80211_HT_AMPDU_PARM_FACTOR;
-+		if (n < ht_cap->ampdu_factor)
-+			ht_cap->ampdu_factor = n;
-+	}
-+
-+	/* Allow the user to increase AMPDU density. */
-+	if (sdata->u.mgd.ht_capa_mask.ampdu_params_info &
-+	    IEEE80211_HT_AMPDU_PARM_DENSITY) {
-+		u16 n = (sdata->u.mgd.ht_capa.ampdu_params_info &
-+			 IEEE80211_HT_AMPDU_PARM_DENSITY)
-+			>> IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT;
-+		if (n > ht_cap->ampdu_density)
-+			ht_cap->ampdu_density = n;
-+	}
-+}
-+
-+
-+void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
-+				       struct ieee80211_supported_band *sband,
- 				       struct ieee80211_ht_cap *ht_cap_ie,
- 				       struct ieee80211_sta_ht_cap *ht_cap)
+ compat-$(CONFIG_COMPAT_KERNEL_2_6_37) += compat-2.6.37.o
+ compat-$(CONFIG_COMPAT_KERNEL_2_6_38) += compat-2.6.38.o
+diff --git a/compat/compat-2.6.35.c b/compat/compat-2.6.35.c
+index 44a15d6..7a31a54 100644
+--- a/compat/compat-2.6.35.c
++++ b/compat/compat-2.6.35.c
+@@ -18,7 +18,7 @@
+  * hex_to_bin() converts one hex digit to its actual value or -1 in case of bad
+  * input.
+  */
+-int hex_to_bin(char ch)
++int compat_hex_to_bin(char ch)
  {
-@@ -102,6 +184,12 @@ void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
- 	/* handle MCS rate 32 too */
- 	if (sband->ht_cap.mcs.rx_mask[32/8] & ht_cap_ie->mcs.rx_mask[32/8] & 1)
- 		ht_cap->mcs.rx_mask[32/8] |= 1;
-+
-+	/*
-+	 * If user has specified capability over-rides, take care
-+	 * of that here.
-+	 */
-+	ieee80211_apply_htcap_overrides(sdata, ht_cap, 0);
+ 	if ((ch >= '0') && (ch <= '9'))
+ 		return ch - '0';
+@@ -27,7 +27,7 @@ int hex_to_bin(char ch)
+ 		return ch - 'a' + 10;
+ 	return -1;
+ }
+-EXPORT_SYMBOL(hex_to_bin);
++EXPORT_SYMBOL(compat_hex_to_bin);
+ 
+ /**
+  * noop_llseek - No Operation Performed llseek implementation
+diff --git a/compat/compat-2.6.37.c b/compat/compat-2.6.37.c
+index 257880e..d7259bb 100644
+--- a/compat/compat-2.6.37.c
++++ b/compat/compat-2.6.37.c
+@@ -345,7 +345,7 @@ EXPORT_SYMBOL(compat_led_classdev_unregister);
+  *	For tight control over page level allocator and protection flags
+  *	use __vmalloc() instead.
+  */
+-void *vzalloc(unsigned long size)
++void *compat_vzalloc(unsigned long size)
+ {
+ 	void *buf;
+ 	buf = vmalloc(size);
+@@ -353,6 +353,6 @@ void *vzalloc(unsigned long size)
+ 		memset(buf, 0, size);
+ 	return buf;
+ }
+-EXPORT_SYMBOL(vzalloc);
++EXPORT_SYMBOL(compat_vzalloc);
+ 
+ #endif
+diff --git a/compat/compat_firmware_class.c b/compat/compat_firmware_class.c
+index 79cd543..4eb5ba7 100644
+--- a/compat/compat_firmware_class.c
++++ b/compat/compat_firmware_class.c
+@@ -314,9 +314,15 @@ static ssize_t firmware_loading_store(struct device *dev,
+ 
+ static DEVICE_ATTR(loading, 0644, firmware_loading_show, firmware_loading_store);
+ 
++#if defined(CONFIG_COMPAT_FIRMWARE_DATA_RW_NEEDS_FILP)
++static ssize_t firmware_data_read(struct file *filp, struct kobject *kobj,
++				  struct bin_attribute *bin_attr,
++				  char *buffer, loff_t offset, size_t count)
++#else
+ static ssize_t firmware_data_read(struct kobject *kobj,
+ 				  struct bin_attribute *bin_attr,
+ 				  char *buffer, loff_t offset, size_t count)
++#endif
+ {
+ 	struct device *dev = to_dev(kobj);
+ 	struct firmware_priv *fw_priv = to_firmware_priv(dev);
+@@ -407,9 +413,15 @@ static int fw_realloc_buffer(struct firmware_priv *fw_priv, int min_size)
+  *	Data written to the 'data' attribute will be later handed to
+  *	the driver as a firmware image.
+  **/
++#if defined(CONFIG_COMPAT_FIRMWARE_DATA_RW_NEEDS_FILP)
++static ssize_t firmware_data_write(struct file *filp, struct kobject *kobj,
++				   struct bin_attribute *bin_attr,
++				   char *buffer, loff_t offset, size_t count)
++#else
+ static ssize_t firmware_data_write(struct kobject *kobj,
+ 				   struct bin_attribute *bin_attr,
+ 				   char *buffer, loff_t offset, size_t count)
++#endif
+ {
+ 	struct device *dev = to_dev(kobj);
+ 	struct firmware_priv *fw_priv = to_firmware_priv(dev);
+diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
+index 539b469..c900a6f 100644
+--- a/include/linux/compat-2.6.33.h
++++ b/include/linux/compat-2.6.33.h
+@@ -13,10 +13,13 @@
+ #include <pcmcia/ds.h>
+ #endif
+ #include <linux/firmware.h>
++#include <linux/input.h>
+ 
++#if defined(CONFIG_COMPAT_FIRMWARE_CLASS)
+ #define release_firmware compat_release_firmware
+ #define request_firmware compat_request_firmware
+ #define request_firmware_nowait compat_request_firmware_nowait
++#endif
+ 
+ #if defined(CONFIG_FW_LOADER) || defined(CONFIG_FW_LOADER_MODULE)
+ int compat_request_firmware(const struct firmware **fw, const char *name,
+@@ -47,7 +50,10 @@ static inline void compat_release_firmware(const struct firmware *fw)
+ }
+ #endif
+ 
++/* mask KEY_RFKILL as RHEL6 backports this */
++#if !defined(KEY_RFKILL)
+ #define KEY_RFKILL		247	/* Key that controls all radios */
++#endif
+ 
+ #define IFF_DONT_BRIDGE 0x800		/* disallow bridging this ether dev */
+ /* source: include/linux/if.h */
+@@ -129,6 +135,9 @@ static inline int pci_pcie_cap(struct pci_dev *dev)
+ 	return pci_find_capability(dev, PCI_CAP_ID_EXP);
  }
  
- void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta, bool tx)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ea10a51..6afa409 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -443,6 +443,9 @@ struct ieee80211_if_managed {
- 	 */
- 	int rssi_min_thold, rssi_max_thold;
- 	int last_ave_beacon_signal;
-+	struct ieee80211_ht_cap ht_capa; /* configured ht-cap over-rides */
-+	struct ieee80211_ht_cap ht_capa_mask; /* Valid parts of ht_capa */
++/* mask pci_is_pcie as RHEL6 backports this */
++#define pci_is_pcie(a) compat_pci_is_pcie(a)
 +
- };
+ /**
+  * pci_is_pcie - check if the PCI device is PCI Express capable
+  * @dev: PCI device
+diff --git a/include/linux/compat-2.6.34.h b/include/linux/compat-2.6.34.h
+index 562ccf7..a9c9dd1 100644
+--- a/include/linux/compat-2.6.34.h
++++ b/include/linux/compat-2.6.34.h
+@@ -46,6 +46,9 @@
+ #define netdev_info(dev, format, args...)			\
+ 	netdev_printk(KERN_INFO, dev, format, ##args)
  
- struct ieee80211_if_ibss {
-@@ -1179,7 +1182,12 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 				       struct net_device *dev);
- 
- /* HT */
--void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
-+bool ieee80111_cfg_override_disables_ht40(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
-+				     struct ieee80211_sta_ht_cap *ht_cap,
-+				     int min_rates);
-+void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
-+				       struct ieee80211_supported_band *sband,
- 				       struct ieee80211_ht_cap *ht_cap_ie,
- 				       struct ieee80211_sta_ht_cap *ht_cap);
- void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index d4ee6d2..7be5ad8 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -560,6 +560,19 @@ ieee80211_default_mgmt_stypes[NUM_NL80211_IFTYPES] = {
- 	},
- };
- 
-+static const struct ieee80211_ht_cap mac80211_ht_capa_mod_mask = {
-+	.ampdu_params_info = IEEE80211_HT_AMPDU_PARM_FACTOR |
-+			     IEEE80211_HT_AMPDU_PARM_DENSITY,
++/* mask netdev_dbg as RHEL6 backports this */
++#if !defined(netdev_dbg)
 +
-+	.cap_info = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
-+		    IEEE80211_HT_CAP_MAX_AMSDU |
-+		    IEEE80211_HT_CAP_SGI_40,
-+	.mcs = {
-+		.rx_mask = { 0xff, 0xff, 0xff, 0xff, 0xff,
-+			     0xff, 0xff, 0xff, 0xff, 0xff, },
-+	},
-+};
+ #if defined(DEBUG)
+ #define netdev_dbg(__dev, format, args...)			\
+ 	netdev_printk(KERN_DEBUG, __dev, format, ##args)
+@@ -64,6 +67,11 @@ do {								\
+ })
+ #endif
+ 
++#endif
 +
- struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 					const struct ieee80211_ops *ops)
- {
-@@ -628,6 +641,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 	local->user_power_level = -1;
- 	local->uapsd_queues = IEEE80211_DEFAULT_UAPSD_QUEUES;
- 	local->uapsd_max_sp_len = IEEE80211_DEFAULT_MAX_SP_LEN;
-+	wiphy->ht_capa_mod_mask = &mac80211_ht_capa_mod_mask;
- 
- 	INIT_LIST_HEAD(&local->interfaces);
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 57fb58f..7c71db0 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -207,6 +207,7 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 		channel_type = NL80211_CHAN_HT20;
- 
- 		if (!(ap_ht_cap_flags & IEEE80211_HT_CAP_40MHZ_INTOLERANT) &&
-+		    !ieee80111_cfg_override_disables_ht40(sdata) &&
- 		    (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
- 		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
- 			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-@@ -1584,7 +1585,7 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 		sdata->flags &= ~IEEE80211_SDATA_OPERATING_GMODE;
- 
- 	if (elems.ht_cap_elem && !(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
--		ieee80211_ht_cap_ie_to_sta_ht_cap(sband,
-+		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
- 				elems.ht_cap_elem, &sta->sta.ht_cap);
- 
- 	ap_ht_cap_flags = sta->sta.ht_cap.cap;
-@@ -1953,7 +1954,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 
- 		sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
- 
--		ieee80211_ht_cap_ie_to_sta_ht_cap(sband,
-+		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
- 				elems.ht_cap_elem, &sta->sta.ht_cap);
- 
- 		ap_ht_cap_flags = sta->sta.ht_cap.cap;
-@@ -2611,6 +2612,13 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 			ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
- 
- 
-+	if (req->flags & ASSOC_REQ_DISABLE_HT)
-+		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
++/* mask netdev_vdbg as RHEL6 backports this */
++#if !defined(netdev_dbg)
 +
-+	memcpy(&ifmgd->ht_capa, &req->ht_capa, sizeof(ifmgd->ht_capa));
-+	memcpy(&ifmgd->ht_capa_mask, &req->ht_capa_mask,
-+	       sizeof(ifmgd->ht_capa_mask));
+ #if defined(VERBOSE_DEBUG)
+ #define netdev_vdbg	netdev_dbg
+ #else
+@@ -76,6 +84,8 @@ do {								\
+ })
+ #endif
+ 
++#endif
 +
- 	if (req->ie && req->ie_len) {
- 		memcpy(wk->ie, req->ie, req->ie_len);
- 		wk->ie_len = req->ie_len;
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 6c53b6d..3f318df 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -94,7 +94,8 @@ static int ieee80211_compatible_rates(const u8 *supp_rates, int supp_rates_len,
+ /*
+  * netdev_WARN() acts like dev_printk(), but with the key difference
+  * of using a WARN/WARN_ON to get the message out, including the
+@@ -107,6 +117,9 @@ do {					  			\
+ #define netif_info(priv, type, dev, fmt, args...)		\
+ 	netif_printk(priv, type, KERN_INFO, (dev), fmt, ##args)
  
- /* frame sending functions */
- 
--static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
-+static void ieee80211_add_ht_ie(struct ieee80211_sub_if_data *sdata,
-+				struct sk_buff *skb, const u8 *ht_info_ie,
- 				struct ieee80211_supported_band *sband,
- 				struct ieee80211_channel *channel,
- 				enum ieee80211_smps_mode smps)
-@@ -102,11 +103,11 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
- 	struct ieee80211_ht_info *ht_info;
- 	u8 *pos;
- 	u32 flags = channel->flags;
--	u16 cap = sband->ht_cap.cap;
-+	u16 cap;
- 	__le16 tmp;
-+	struct ieee80211_sta_ht_cap ht_cap;
- 
--	if (!sband->ht_cap.ht_supported)
--		return;
-+	BUILD_BUG_ON(sizeof(ht_cap) != sizeof(sband->ht_cap));
- 
- 	if (!ht_info_ie)
- 		return;
-@@ -114,6 +115,20 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
- 	if (ht_info_ie[1] < sizeof(struct ieee80211_ht_info))
- 		return;
- 
-+	memcpy(&ht_cap, &sband->ht_cap, sizeof(ht_cap));
-+	/*
-+	 * This is for an association attempt, and stations must
-+	 * support at least the first 8 MCS rates.  See section 20.1.1
-+	 * of the 802.11n spec for details.
-+	 */
-+	ieee80211_apply_htcap_overrides(sdata, &ht_cap,
-+					IEEE80211_HT_MCS_REQ_RATES_STA);
++/* mask netif_dbg as RHEL6 backports this */
++#if !defined(netif_dbg)
 +
-+	cap = ht_cap.cap;
+ #if defined(DEBUG)
+ #define netif_dbg(priv, type, dev, format, args...)		\
+ 	netif_printk(priv, type, KERN_DEBUG, dev, format, ##args)
+@@ -127,6 +140,11 @@ do {								\
+ })
+ #endif
+ 
++#endif
 +
-+	if (!ht_cap.ht_supported)
-+		return;
++/* mask netif_vdbg as RHEL6 backports this */
++#if !defined(netif_vdbg)
 +
- 	ht_info = (struct ieee80211_ht_info *)(ht_info_ie + 2);
+ #if defined(VERBOSE_DEBUG)
+ #define netif_vdbg	netdev_dbg
+ #else
+@@ -137,6 +155,7 @@ do {								\
+ 	0;							\
+ })
+ #endif
++#endif
+ /* source: include/linux/netdevice.h */
  
- 	/* determine capability flags */
-@@ -166,13 +181,13 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
- 	pos += sizeof(u16);
  
- 	/* AMPDU parameters */
--	*pos++ = sband->ht_cap.ampdu_factor |
--		 (sband->ht_cap.ampdu_density <<
--			IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
-+	*pos++ = ht_cap.ampdu_factor |
-+		 (ht_cap.ampdu_density <<
-+		  IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
+diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
+index 857a521..5e43002 100644
+--- a/include/linux/compat-2.6.35.h
++++ b/include/linux/compat-2.6.35.h
+@@ -26,6 +26,9 @@ static inline wait_queue_head_t *sk_sleep(struct sock *sk)
  
- 	/* MCS set */
--	memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
--	pos += sizeof(sband->ht_cap.mcs);
-+	memcpy(pos, &ht_cap.mcs, sizeof(ht_cap.mcs));
-+	pos += sizeof(ht_cap.mcs);
+ #define sdio_writeb_readb(func, write_byte, addr, err_ret) sdio_readb(func, addr, err_ret)
  
- 	/* extended capabilities */
- 	pos += sizeof(__le16);
-@@ -356,7 +371,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
++/* mask hex_to_bin as RHEL6 backports this */
++#define hex_to_bin(a) compat_hex_to_bin(a)
++
+ int hex_to_bin(char ch);
  
- 	if (wk->assoc.use_11n && wk->assoc.wmm_used &&
- 	    local->hw.queues >= 4)
--		ieee80211_add_ht_ie(skb, wk->assoc.ht_information_ie,
-+		ieee80211_add_ht_ie(sdata, skb, wk->assoc.ht_information_ie,
- 				    sband, wk->chan, wk->assoc.smps);
+ extern loff_t noop_llseek(struct file *file, loff_t offset, int origin);
+diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+index 29ade27..b5d9975 100644
+--- a/include/linux/compat-2.6.36.h
++++ b/include/linux/compat-2.6.36.h
+@@ -14,6 +14,9 @@
+ #define kparam_block_sysfs_write(a)
+ #define kparam_unblock_sysfs_write(a)
  
- 	/* if present, add any custom non-vendor IEs that go after HT */
++/* mask va_format as RHEL6 backports this */
++#define va_format compat_va_format
++
+ struct va_format {
+ 	const char *fmt;
+ 	va_list *va;
+diff --git a/include/linux/compat-2.6.37.h b/include/linux/compat-2.6.37.h
+index d375746..c19e781 100644
+--- a/include/linux/compat-2.6.37.h
++++ b/include/linux/compat-2.6.37.h
+@@ -12,6 +12,9 @@
+ 
+ extern struct kobj_ns_type_operations net_ns_type_operations;
+ 
++/* mask skb_checksum_none_assert as RHEL6 backports this */
++#define skb_checksum_none_assert(a) compat_skb_checksum_none_assert(a)
++
+ /**
+  * skb_checksum_none_assert - make sure skb ip_summed is CHECKSUM_NONE
+  * @skb: skb to check
+@@ -110,6 +113,9 @@ extern void compat_led_brightness_set(struct led_classdev *led_cdev,
+ 
+ #define netdev_refcnt_read(a) atomic_read(&a->refcnt)
+ 
++/* mask vzalloc as RHEL6 backports this */
++#define vzalloc(a) compat_vzalloc(a)
++
+ extern void *vzalloc(unsigned long size);
+ 
+ #define rtnl_dereference(p)                                     \
 -- 
-1.7.3.4
+1.7.4.4
 
