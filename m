@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:49685 "EHLO
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:52713 "EHLO
 	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751334Ab1KGVYt (ORCPT
+	with ESMTP id S1757522Ab1KQOsG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 16:24:49 -0500
-Received: by wwi36 with SMTP id 36so7342083wwi.1
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Nov 2011 13:24:48 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2] mac80211: init rate-control for TDLS sta when supp-rates are known
-Date: Mon,  7 Nov 2011 23:24:39 +0200
-Message-Id: <1320701079-5584-1-git-send-email-arik@wizery.com> (sfid-20111107_222452_883011_42F65E9D)
+	Thu, 17 Nov 2011 09:48:06 -0500
+MIME-Version: 1.0
+In-Reply-To: <1321481775-10853-1-git-send-email-gwingerde@gmail.com>
+References: <1321481775-10853-1-git-send-email-gwingerde@gmail.com>
+Date: Thu, 17 Nov 2011 15:48:03 +0100
+Message-ID: <CAOZOX0WWRgYW44vVcHHW1F=h1mhJ55qHMuUcOAJemqKQRhVfdA@mail.gmail.com> (sfid-20111117_154810_096811_3534CE7F)
+Subject: Re: [PATCH] rt2x00: Fix efuse EEPROM reading on PPC32.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.org>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialize rate control algorithms only when supported rates are known
-for a TDLS peer sta. Direct Tx between peers is not allowed before the
-link is enabled. In turn, this only occurs after a change_station()
-call that sets supported rates.
+On Wed, Nov 16, 2011 at 11:16 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> Fix __le32 to __le16 conversion of the first word of an 8-word block
+> of EEPROM read via the efuse method.
+>
+> Reported-and-tested-by: Ingvar Hagelund <ingvar@redpill-linpro.com>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> CC: <stable@vger.kernel.org>
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
-v1->2: rebase on top of wireless-testing
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-net/mac80211/cfg.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a9ded52..8f774cb 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -847,7 +847,12 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 	sta_apply_parameters(local, sta, params);
- 
--	rate_control_rate_init(sta);
-+	/*
-+	 * for TDLS, rate control should be initialized only when supported
-+	 * rates are known.
-+	 */
-+	if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER))
-+		rate_control_rate_init(sta);
- 
- 	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
- 		sdata->vif.type == NL80211_IFTYPE_AP;
-@@ -931,6 +936,9 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 
- 	sta_apply_parameters(local, sta, params);
- 
-+	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) && params->supported_rates)
-+		rate_control_rate_init(sta);
-+
- 	rcu_read_unlock();
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
--- 
-1.7.5.4
-
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 3f183a1..1ba079d 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -3771,7 +3771,7 @@ static void rt2800_efuse_read(struct rt2x00_dev *rt2x00dev, unsigned int i)
+>        /* Apparently the data is read from end to start */
+>        rt2800_register_read_lock(rt2x00dev, EFUSE_DATA3, &reg);
+>        /* The returned value is in CPU order, but eeprom is le */
+> -       rt2x00dev->eeprom[i] = cpu_to_le32(reg);
+> +       *(u32 *)&rt2x00dev->eeprom[i] = cpu_to_le32(reg);
+>        rt2800_register_read_lock(rt2x00dev, EFUSE_DATA2, &reg);
+>        *(u32 *)&rt2x00dev->eeprom[i + 2] = cpu_to_le32(reg);
+>        rt2800_register_read_lock(rt2x00dev, EFUSE_DATA1, &reg);
+> --
+> 1.7.7
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
