@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58711 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932117Ab1KJIF3 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34320 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751675Ab1KQWWP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 03:05:29 -0500
-Subject: Re: [PATCH 01/28] iwlagn: add P2P NoA to probe responses
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1320885571-19122-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023338_740420_996794F6)
-References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1320885571-19122-2-git-send-email-wey-yi.w.guy@intel.com>
-	 (sfid-20111110_023338_740420_996794F6)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 10 Nov 2011 09:05:22 +0100
-Message-ID: <1320912322.3967.1.camel@jlt3.sipsolutions.net> (sfid-20111110_090533_001607_1DE0F2A8)
-Mime-Version: 1.0
+	Thu, 17 Nov 2011 17:22:15 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2 3/4] compat: check CONFIG_COMPAT_FIRMWARE_CLASS in compat-2.6.33.h
+Date: Thu, 17 Nov 2011 17:20:41 -0500
+Message-Id: <1321568442-22758-3-git-send-email-linville@tuxdriver.com> (sfid-20111117_232220_343834_20C286F0)
+In-Reply-To: <1321568442-22758-1-git-send-email-linville@tuxdriver.com>
+References: <1321568442-22758-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-11-09 at 16:39 -0800, Wey-Yi Guy wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Whether to use NoA or not is entire controlled
-> by the uCode right now, and it also adds the
-> attribute to beacons. We do need to add it to
-> probe responses in the driver though.
-> 
-> Keep track of the NoA notification from the
-> uCode and add the data to probe responses when
-> such are transmitted. Use RCU to manage the
-> lifetime.
+If a pre-2.6.33 kernel has backported suitable firmware loader
+functionality, then it doesn't need the compat_firmware_class.  In that
+case, compat-2.6.33 should not redefine the *_firmware function names.
 
-Patch 25 should have been merged into this one :)
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ include/linux/compat-2.6.33.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
+index 539b469..e9e888a 100644
+--- a/include/linux/compat-2.6.33.h
++++ b/include/linux/compat-2.6.33.h
+@@ -14,9 +14,11 @@
+ #endif
+ #include <linux/firmware.h>
+ 
++#if defined(CONFIG_COMPAT_FIRMWARE_CLASS)
+ #define release_firmware compat_release_firmware
+ #define request_firmware compat_request_firmware
+ #define request_firmware_nowait compat_request_firmware_nowait
++#endif
+ 
+ #if defined(CONFIG_FW_LOADER) || defined(CONFIG_FW_LOADER_MODULE)
+ int compat_request_firmware(const struct firmware **fw, const char *name,
+-- 
+1.7.4.4
 
