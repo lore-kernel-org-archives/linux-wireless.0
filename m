@@ -1,99 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:42032 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754276Ab1KYMLY convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41276 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754532Ab1KQRZG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 07:11:24 -0500
-MIME-Version: 1.0
-In-Reply-To: <20111123041728.GA11864@redhat.com>
-References: <20111031143408.GA17152@redhat.com>
-	<1321992902.8072.7.camel@wwguy-ubuntu>
-	<20111123024545.GA9703@redhat.com>
-	<1322015380.11647.82.camel@wwguy-huron>
-	<20111123033446.GB9703@redhat.com>
-	<1322016965.11647.95.camel@wwguy-huron>
-	<20111123041728.GA11864@redhat.com>
-Date: Fri, 25 Nov 2011 14:11:22 +0200
-Message-ID: <CANUX_P3bFpKyePkgYwQUO0Y3XN=B+7YHSsD81Vt=LwK6ZbrD6g@mail.gmail.com> (sfid-20111125_131142_853383_9FE6A5E2)
-Subject: Re: 3.1+ iwlwifi lockup
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Dave Jones <davej@redhat.com>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 17 Nov 2011 12:25:06 -0500
+Subject: Re: [PATCH v8 2/2] mac80211:  Support ht-cap over-rides.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4EC542C4.1040402@candelatech.com>
+References: <1320780995-30483-1-git-send-email-greearb@candelatech.com>
+	 <1320780995-30483-2-git-send-email-greearb@candelatech.com>
+	 (sfid-20111108_203659_989707_E33ECA13) <1320783128.24797.48.camel@jlt3.sipsolutions.net>
+	 <4EB99812.3000507@candelatech.com>
+	 <1320786130.24797.78.camel@jlt3.sipsolutions.net>
+	 <4EBC2516.4080807@candelatech.com>
+	 <1321529293.3997.28.camel@jlt3.sipsolutions.net>
+	 <4EC542C4.1040402@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 17 Nov 2011 18:25:03 +0100
+Message-ID: <1321550703.3997.45.camel@jlt3.sipsolutions.net> (sfid-20111117_182516_858639_0ACB6131)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+On Thu, 2011-11-17 at 09:22 -0800, Ben Greear wrote:
 
-I looked again at your stack strace, we need more debug. Please enable
-Rx debug flag: 0x1000000.
+> > We can't, but can't we like assign sdata->ht_caps = sband->ht_caps? Or
+> > maybe even calculate restricted HT caps for both 2.4 and 5 GHz?
+> > Basically what I was thinking is this:
+> 
+> > struct sub_if_data {
+> > 	...
+> > 	struct ieee80211_sta_ht_cap ht_cap[num_bands];
+> > 	...
+> > };
+> 
+> So we'd have to copy this data from sbands[] upon creation
+> of the interface to make sure it is always initialized?
+> This would allow us to easily support the overrides for
+> non-station interfaces, so I do like that benefit.
+> 
+> Can the sbands[] data ever change for any reason once
+> an interface is created?  If not, then probably this is
+> doable.  If it can change, then we are screwed.
 
-What is happening here is that the HW (the Flow Handler for instance),
-is closing an empty RB (Receive Buffer). The beginning of the buffer
-is 0x00005555 which is the maker of "End of Buffer" of the Flow
-Handler. The marker helps the driver to understand that there is no
-more useful data in the buffer.
-So basically what we are seeing here is that the FH is sending an
-empty buffer. Which is not nice.
-This can very well be a bug in the read / write pointers in the Rx
-flow, or something in that region.
+I don't think it can change but it's not const (I think?) so drivers
+might do stupid things -- but that would be buggy anyway.
 
-On Wed, Nov 23, 2011 at 06:17, Dave Jones <davej@redhat.com> wrote:
-> On Tue, Nov 22, 2011 at 06:56:05PM -0800, Guy, Wey-Yi wrote:
->  > Agree, that is why I could not re-produce here after many try. Could you
->  > share your configuration, such as
->
->  > band/channel
->
-> Channel:1
-> Frequency:2.412 GHz (Channel 1)
->
->  > 32/64 bit system
->
-> 64bit. It's a Dell Adamo laptop.
->
->  > 20/40 MHz
->
-> not sure how to find out what you're looking for.
->
->  > traffic type
->
-> last triggered it with just ssh.
->
->  > open/security
->
-> IE: IEEE 802.11i/WPA2 Version 1
->    Group Cipher : CCMP
->    Pairwise Ciphers (1) : CCMP
->    Authentication Suites (1) : PSK
->
->  > power management
->
-> nothing special. everything is default.
->
-> all messages related to iwlwifi in dmesg are below..
->
->        Dave
->
-> [   24.423300] Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
-> [   24.425560] Copyright(c) 2003-2011 Intel Corporation
-> [   24.428667] iwlwifi 0000:04:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> [   24.437959] iwlwifi 0000:04:00.0: setting latency timer to 64
-> [   24.438108] iwlwifi 0000:04:00.0: pci_resource_len = 0x00002000
-> [   24.444058] iwlwifi 0000:04:00.0: pci_resource_base = ffffc90011574000
-> [   24.445823] iwlwifi 0000:04:00.0: HW Revision ID = 0x0
-> [   24.447695] iwlwifi 0000:04:00.0: irq 46 for MSI/MSI-X
-> [   24.447896] iwlwifi 0000:04:00.0: Detected Intel(R) Ultimate N WiFi Link 5300 AGN, REV=0x24
-> [   24.453070] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
-> [   24.486217] iwlwifi 0000:04:00.0: device EEPROM VER=0x120, CALIB=0x4
-> [   24.489176] iwlwifi 0000:04:00.0: Device SKU: 0Xf0
-> [   24.490778] iwlwifi 0000:04:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
-> [   24.520548] iwlwifi 0000:04:00.0: loaded firmware version 8.83.5.1 build 33692
-> [   39.229498] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
-> [   39.240818] iwlwifi 0000:04:00.0: Radio type=0x0-0x2-0x0
-> [   39.607327] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
-> [   39.613424] iwlwifi 0000:04:00.0: Radio type=0x0-0x2-0x0
-> [  210.248807] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra = b8:c7:5d:0c:39:87 tid = 6
+> It seems you are basically wanting to copy the sband[] data
+> local to each interface (sdata), and then we would remove sband from most
+> (or all?) of the method calls that deal with sband->ht_caps?
+
+I guess. Though we still need the band to know which one to use (I'm
+reluctant to say we just need one due to channel switching etc.)
+
+> Looks like quite a bit of code churn, and probably requiring at least two
+> patches:
+>   * Get rid of sband usage by copying the sband data into sdata
+>   * Add the over-ride logic
+
+Yeah. It might be *too much* churn, but that's what I was thinking. If
+you think it's likely too much churn let's go with what you have now,
+there are only a few minor things about it I don't like much.
+
+johannes
+
