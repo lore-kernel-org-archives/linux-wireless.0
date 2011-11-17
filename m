@@ -1,30 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:42451 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752267Ab1KZEbT (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34322 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751994Ab1KQWWQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 23:31:19 -0500
-Received: by bke11 with SMTP id 11so5204713bke.19
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Nov 2011 20:31:18 -0800 (PST)
-MIME-Version: 1.0
-Date: Fri, 25 Nov 2011 20:31:18 -0800
-Message-ID: <CA++WF2O0WjyqU0HEGR1XE9xDFzR+sxRboVWexRCMPi8okOVkkA@mail.gmail.com> (sfid-20111126_053129_849976_6A005698)
-Subject: Converting ipw2x00 driver to mac80211 framework
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 17 Nov 2011 17:22:16 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2 2/4] compat-wireless: remove leading whitespace from CONFIG_COMPAT_FIRMWARE_CLASS
+Date: Thu, 17 Nov 2011 17:21:09 -0500
+Message-Id: <1321568471-23068-2-git-send-email-linville@tuxdriver.com> (sfid-20111117_232241_514414_2887F417)
+In-Reply-To: <1321568471-23068-1-git-send-email-linville@tuxdriver.com>
+References: <1321568471-23068-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+CONFIG_COMPAT_FIRMWARE_CLASS is being checked in compat-2.6.33.h, so it
+needs to show-up in compat_autoconf.h.  Remove the leading whitespace,
+so that gen-compat-autoconf.sh will treat it accordingly.
 
-What do you think is the best way of converting the ipw2x00 driver to
-the mac80211 framework?
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ config.mk |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-Is it a good idea to start with the following: split ipw2100.c and
-ipw2200.c to the smaller files where each will contain some subset of
-functionality (removing code duplication along the way) like in
-iwmc3200wifi driver?
+diff --git a/config.mk b/config.mk
+index 1bb2799..7116206 100644
+--- a/config.mk
++++ b/config.mk
+@@ -114,9 +114,13 @@ else
+ endif
+ endif #CONFIG_COMPAT_KERNEL_2_6_27
+ 
++#
++# CONFIG_COMPAT_FIRMWARE_CLASS definition has no leading whitespace,
++# because it gets passed-on through compat_autoconf.h.
++#
+ ifdef CONFIG_COMPAT_KERNEL_2_6_33
+ ifdef CONFIG_FW_LOADER
+- CONFIG_COMPAT_FIRMWARE_CLASS=m
++CONFIG_COMPAT_FIRMWARE_CLASS=m
+ endif #CONFIG_FW_LOADER
+ endif #CONFIG_COMPAT_KERNEL_2_6_33
+ 
+-- 
+1.7.4.4
 
-Stanislav
