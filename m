@@ -1,172 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:26419 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754626Ab1KJBdd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 20:33:33 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 10/28] iwlagn: push knowledge of ucode image lower down
-Date: Wed,  9 Nov 2011 16:39:13 -0800
-Message-Id: <1320885571-19122-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023345_075456_24F1FC33)
-In-Reply-To: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail.candelatech.com ([208.74.158.172]:42723 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752194Ab1KQRti (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Nov 2011 12:49:38 -0500
+Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id pAHHncxm013676
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2011 09:49:38 -0800
+Message-ID: <4EC54932.4090007@candelatech.com> (sfid-20111117_184942_279324_ABBF5D35)
+Date: Thu, 17 Nov 2011 09:49:38 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [wireless-next PATCH 5/5] wifi-debugfs: Fix AMSDU rate printout.
+References: <1319778680-11405-1-git-send-email-greearb@candelatech.com> <1319778680-11405-5-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1319778680-11405-5-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Don Fry <donald.h.fry@intel.com>
+On 10/27/2011 10:11 PM, greearb@candelatech.com wrote:
+> From: Ben Greear<greearb@candelatech.com>
+>
+> It was flipped.  See section 7.3.2.56 of the 802.11n
+> spec for details.
 
-Move the knowledge of the ucode image to lower level routines.  Also do
-not pass the iwl_priv structure lower than it needs to be.
+This patch is stand-alone, even though it was originally
+part of a series I posted.  Do I need to re-post as 1/1
+(it's not yet in wireless-testing tree).
 
-Signed-off-by: Don Fry <donald.h.fry@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |   51 +++++++++++++++-----------
- 1 files changed, 30 insertions(+), 21 deletions(-)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-index 1ad4af4..9144ef5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-@@ -142,9 +142,16 @@ static inline struct fw_img *iwl_get_ucode_image(struct iwl_priv *priv,
- }
- 
- static int iwlagn_load_given_ucode(struct iwl_priv *priv,
--				   struct fw_img *image)
-+				   enum iwlagn_ucode_type ucode_type)
- {
- 	int ret = 0;
-+	struct fw_img *image = iwl_get_ucode_image(priv, ucode_type);
-+
-+
-+	if (!image) {
-+		IWL_ERR(priv, "Invalid ucode requested (%d)\n", ucode_type);
-+		return -EINVAL;
-+	}
- 
- 	ret = iwlagn_load_section(trans(priv), "INST", &image->code,
- 				   IWLAGN_RTC_INST_LOWER_BOUND);
-@@ -435,7 +442,7 @@ static int iwlagn_alive_notify(struct iwl_priv *priv)
-  *   using sample data 100 bytes apart.  If these sample points are good,
-  *   it's a pretty good bet that everything between them is good, too.
-  */
--static int iwl_verify_inst_sparse(struct iwl_priv *priv,
-+static int iwl_verify_inst_sparse(struct iwl_bus *bus,
- 				      struct fw_desc *fw_desc)
- {
- 	__le32 *image = (__le32 *)fw_desc->v_addr;
-@@ -443,15 +450,15 @@ static int iwl_verify_inst_sparse(struct iwl_priv *priv,
- 	u32 val;
- 	u32 i;
- 
--	IWL_DEBUG_FW(priv, "ucode inst image size is %u\n", len);
-+	IWL_DEBUG_FW(bus, "ucode inst image size is %u\n", len);
- 
- 	for (i = 0; i < len; i += 100, image += 100/sizeof(u32)) {
- 		/* read data comes through single port, auto-incr addr */
- 		/* NOTE: Use the debugless read so we don't flood kernel log
- 		 * if IWL_DL_IO is set */
--		iwl_write_direct32(bus(priv), HBUS_TARG_MEM_RADDR,
-+		iwl_write_direct32(bus, HBUS_TARG_MEM_RADDR,
- 			i + IWLAGN_RTC_INST_LOWER_BOUND);
--		val = iwl_read32(bus(priv), HBUS_TARG_MEM_RDAT);
-+		val = iwl_read32(bus, HBUS_TARG_MEM_RDAT);
- 		if (val != le32_to_cpu(*image))
- 			return -EIO;
- 	}
-@@ -459,7 +466,7 @@ static int iwl_verify_inst_sparse(struct iwl_priv *priv,
- 	return 0;
- }
- 
--static void iwl_print_mismatch_inst(struct iwl_priv *priv,
-+static void iwl_print_mismatch_inst(struct iwl_bus *bus,
- 				    struct fw_desc *fw_desc)
- {
- 	__le32 *image = (__le32 *)fw_desc->v_addr;
-@@ -468,18 +475,18 @@ static void iwl_print_mismatch_inst(struct iwl_priv *priv,
- 	u32 offs;
- 	int errors = 0;
- 
--	IWL_DEBUG_FW(priv, "ucode inst image size is %u\n", len);
-+	IWL_DEBUG_FW(bus, "ucode inst image size is %u\n", len);
- 
--	iwl_write_direct32(bus(priv), HBUS_TARG_MEM_RADDR,
-+	iwl_write_direct32(bus, HBUS_TARG_MEM_RADDR,
- 			   IWLAGN_RTC_INST_LOWER_BOUND);
- 
- 	for (offs = 0;
- 	     offs < len && errors < 20;
- 	     offs += sizeof(u32), image++) {
- 		/* read data comes through single port, auto-incr addr */
--		val = iwl_read32(bus(priv), HBUS_TARG_MEM_RDAT);
-+		val = iwl_read32(bus, HBUS_TARG_MEM_RDAT);
- 		if (val != le32_to_cpu(*image)) {
--			IWL_ERR(priv, "uCode INST section at "
-+			IWL_ERR(bus, "uCode INST section at "
- 				"offset 0x%x, is 0x%x, s/b 0x%x\n",
- 				offs, val, le32_to_cpu(*image));
- 			errors++;
-@@ -491,16 +498,24 @@ static void iwl_print_mismatch_inst(struct iwl_priv *priv,
-  * iwl_verify_ucode - determine which instruction image is in SRAM,
-  *    and verify its contents
-  */
--static int iwl_verify_ucode(struct iwl_priv *priv, struct fw_img *img)
-+static int iwl_verify_ucode(struct iwl_priv *priv,
-+			    enum iwlagn_ucode_type ucode_type)
- {
--	if (!iwl_verify_inst_sparse(priv, &img->code)) {
-+	struct fw_img *img = iwl_get_ucode_image(priv, ucode_type);
-+
-+	if (!img) {
-+		IWL_ERR(priv, "Invalid ucode requested (%d)\n", ucode_type);
-+		return -EINVAL;
-+	}
-+
-+	if (!iwl_verify_inst_sparse(bus(priv), &img->code)) {
- 		IWL_DEBUG_FW(priv, "uCode is good in inst SRAM\n");
- 		return 0;
- 	}
- 
- 	IWL_ERR(priv, "UCODE IMAGE IN INSTRUCTION SRAM NOT VALID!!\n");
- 
--	iwl_print_mismatch_inst(priv, &img->code);
-+	iwl_print_mismatch_inst(bus(priv), &img->code);
- 	return -EIO;
- }
- 
-@@ -542,12 +557,6 @@ int iwlagn_load_ucode_wait_alive(struct iwl_priv *priv,
- 	struct iwlagn_alive_data alive_data;
- 	int ret;
- 	enum iwlagn_ucode_type old_type;
--	struct fw_img *image = iwl_get_ucode_image(priv, ucode_type);
--
--	if (!image) {
--		IWL_ERR(priv, "Invalid ucode requested (%d)\n", ucode_type);
--		return -EINVAL;
--	}
- 
- 	ret = iwl_trans_start_device(trans(priv));
- 	if (ret)
-@@ -559,7 +568,7 @@ int iwlagn_load_ucode_wait_alive(struct iwl_priv *priv,
- 	old_type = priv->ucode_type;
- 	priv->ucode_type = ucode_type;
- 
--	ret = iwlagn_load_given_ucode(priv, image);
-+	ret = iwlagn_load_given_ucode(priv, ucode_type);
- 	if (ret) {
- 		priv->ucode_type = old_type;
- 		iwlagn_remove_notification(priv, &alive_wait);
-@@ -590,7 +599,7 @@ int iwlagn_load_ucode_wait_alive(struct iwl_priv *priv,
- 	 * skip it for WoWLAN.
- 	 */
- 	if (ucode_type != IWL_UCODE_WOWLAN) {
--		ret = iwl_verify_ucode(priv, image);
-+		ret = iwl_verify_ucode(priv, ucode_type);
- 		if (ret) {
- 			priv->ucode_type = old_type;
- 			return ret;
+>
+> Signed-off-by: Ben Greear<greearb@candelatech.com>
+> ---
+> :100644 100644 1ceec86... 4310431... M	net/mac80211/debugfs_sta.c
+>   net/mac80211/debugfs_sta.c |    4 ++--
+>   1 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+> index 1ceec86..4310431 100644
+> --- a/net/mac80211/debugfs_sta.c
+> +++ b/net/mac80211/debugfs_sta.c
+> @@ -274,9 +274,9 @@ static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
+>
+>   		PRINT_HT_CAP((htc->cap&  BIT(10)), "HT Delayed Block Ack");
+>
+> -		PRINT_HT_CAP((htc->cap&  BIT(11)), "Max AMSDU length: "
+> -			     "3839 bytes");
+>   		PRINT_HT_CAP(!(htc->cap&  BIT(11)), "Max AMSDU length: "
+> +			     "3839 bytes");
+> +		PRINT_HT_CAP((htc->cap&  BIT(11)), "Max AMSDU length: "
+>   			     "7935 bytes");
+>
+>   		/*
+
+
 -- 
-1.7.0.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
