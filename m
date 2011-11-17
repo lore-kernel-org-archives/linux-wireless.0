@@ -1,44 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59993 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753637Ab1KXTP1 (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:38702 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757483Ab1KQOq2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 14:15:27 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211:  Make __check_htcap_disable static.
-Date: Thu, 24 Nov 2011 11:15:21 -0800
-Message-Id: <1322162121-21639-1-git-send-email-greearb@candelatech.com> (sfid-20111124_201530_181000_FC0E37F1)
+	Thu, 17 Nov 2011 09:46:28 -0500
+MIME-Version: 1.0
+In-Reply-To: <1321481775-10853-1-git-send-email-gwingerde@gmail.com>
+References: <1321481775-10853-1-git-send-email-gwingerde@gmail.com>
+Date: Thu, 17 Nov 2011 15:46:28 +0100
+Message-ID: <CAGXE3d80tV9X9xuRvwg_KC6GksBU4DcLp5FeWRUNaTCDH2YHPg@mail.gmail.com> (sfid-20111117_154632_703275_C7E904AD)
+Subject: Re: [PATCH] rt2x00: Fix efuse EEPROM reading on PPC32.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.org>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Wed, Nov 16, 2011 at 11:16 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> Fix __le32 to __le16 conversion of the first word of an 8-word block
+> of EEPROM read via the efuse method.
+>
+> Reported-and-tested-by: Ingvar Hagelund <ingvar@redpill-linpro.com>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> CC: <stable@vger.kernel.org>
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
+Nice catch!
 
-:100644 100644 810cfbe... d3eafae... M	net/mac80211/ht.c
- net/mac80211/ht.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index 810cfbe..d3eafae 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -28,9 +28,9 @@ bool ieee80111_cfg_override_disables_ht40(struct ieee80211_sub_if_data *sdata)
- 	return false;
- }
- 
--void __check_htcap_disable(struct ieee80211_sub_if_data *sdata,
--			   struct ieee80211_sta_ht_cap *ht_cap,
--			   u16 flag)
-+static void __check_htcap_disable(struct ieee80211_sub_if_data *sdata,
-+				  struct ieee80211_sta_ht_cap *ht_cap,
-+				  u16 flag)
- {
- 	__le16 le_flag = cpu_to_le16(flag);
- 	if (sdata->u.mgd.ht_capa_mask.cap_info & le_flag) {
--- 
-1.7.3.4
-
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
