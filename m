@@ -1,34 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:58019 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751693Ab1KNFnZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 00:43:25 -0500
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rewriting powersave
-References: <1320929045.3967.52.camel@jlt3.sipsolutions.net>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Mon, 14 Nov 2011 07:43:23 +0200
-In-Reply-To: <1320929045.3967.52.camel@jlt3.sipsolutions.net> (Johannes Berg's message of "Thu\, 10 Nov 2011 13\:44\:05 +0100")
-Message-ID: <8739dr9s3o.fsf@purkki.adurom.net> (sfid-20111114_064328_504819_32048CA2)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:43972 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752576Ab1KQXFP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Nov 2011 18:05:15 -0500
+Message-ID: <4EC59321.5000806@hauke-m.de> (sfid-20111118_000519_624624_FD18189A)
+Date: Fri, 18 Nov 2011 00:05:05 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: mcgrof@gmail.com, mcgrof@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/3] compat: backport kfree_rcu()
+References: <1321564991-7249-1-git-send-email-hauke@hauke-m.de>	 <1321564991-7249-2-git-send-email-hauke@hauke-m.de> <1321568836.3997.53.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1321568836.3997.53.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On 11/17/2011 11:27 PM, Johannes Berg wrote:
+> On Thu, 2011-11-17 at 22:23 +0100, Hauke Mehrtens wrote:
+> 
+>> +#undef module_exit
+>> +#define module_exit(exitfn)						\
+> 
+>> +	static inline exitcall_t __exittest(void)			\
+>> +	{ return exitfn; }						\
+> 
+> This is not necessary since the exitfn() below will already create a
+> compile error if you try module_exit(no_such_function).
+This check is not needed, I will remove it. We get the code from the
+kernel and it should compile. Most of the tests this function does are
+also done by our real function.
+> 
+>> +	void __exit __exit_compat(void)					\
+>> +	{								\
+> 
+> Shouldn't that be static?
+Yes it also works when it is static I changed that.
+> 
+> johannes
+> 
+> 
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Hauke
 
-> Since clearly it is possible to implement this in the lower layers, I'm
-> thinking we should provide an implementation that the drivers can use to
-> implement powersave and be in category 4 from mac80211's POV.
-
-I think this is the way to go, even I was skeptic when you first
-mentioned about. We really need to make mac80211 powersave
-implementation more simple and this is a clean way to do it. And I
-would assume that all new (sane) hardware designs belong to category 4
-so this would only affect existing drivers.
-
--- 
-Kalle Valo
