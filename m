@@ -1,44 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sdinet.de ([78.47.32.153]:38386 "EHLO mail.sdinet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753962Ab1KPXf0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 18:35:26 -0500
-Date: Thu, 17 Nov 2011 00:27:39 +0100 (CET)
-From: Sven-Haegar Koch <haegar@sdinet.de>
-To: =?ISO-8859-2?Q?Jaros=B3aw_Tabor?= <jarek@srv.pl>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn for 2.6.32
-In-Reply-To: <1321474189.7964.11528.camel@tower.local>
-Message-ID: <alpine.DEB.2.02.1111170025200.2195@aurora> (sfid-20111117_003529_367884_22848452)
-References: <1321474189.7964.11528.camel@tower.local>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-1077197493-1321486064=:2195"
+Received: from he.sipsolutions.net ([78.46.109.217]:43881 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756744Ab1KQR3i (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Nov 2011 12:29:38 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.77)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1RR5mL-0002Ri-Jr
+	for linux-wireless@vger.kernel.org; Thu, 17 Nov 2011 18:29:37 +0100
+Subject: [RFC] mac80211: handle SMPS action frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 17 Nov 2011 18:29:37 +0100
+Message-ID: <1321550977.3997.46.camel@jlt3.sipsolutions.net> (sfid-20111117_182942_096605_C9901248)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+From: Johannes Berg <johannes.berg@intel.com>
 
---8323328-1077197493-1321486064=:2195
-Content-Type: TEXT/PLAIN; charset=ISO-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+When a peer changes SMPS state we should update
+rate control so it doesn't have to detect it by
+itself. It can't detect "dynamic" mode anyway
+since that just requires rts-cts handshaking.
 
-On Wed, 16 Nov 2011, Jaros=B3aw Tabor wrote:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h |    5 +++-
+ net/mac80211/rx.c      |   53 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 57 insertions(+), 1 deletion(-)
 
-> =09I'd like to build iwlagn for kernel 2.6.32. The driver from 2.6.32 is
-> buggy - it often stucks with 802.11n. Driver from 2.6.39 works fine.
-> =09How to do it ?
+--- a/include/net/mac80211.h	2011-11-17 18:18:18.000000000 +0100
++++ b/include/net/mac80211.h	2011-11-17 18:18:31.000000000 +0100
+@@ -3502,9 +3502,12 @@ void ieee80211_send_bar(struct ieee80211
+  *
+  * @IEEE80211_RC_HT_CHANGED: The HT parameters of the operating channel have
+  *	changed, rate control algorithm can update its internal state if needed.
++ * @IEEE80211_RC_SMPS_CHANGED: The SMPS state of the station changed, the rate
++ *	control algorithm needs to adjust accordingly.
+  */
+ enum rate_control_changed {
+-	IEEE80211_RC_HT_CHANGED = BIT(0)
++	IEEE80211_RC_HT_CHANGED		= BIT(0),
++	IEEE80211_RC_SMPS_CHANGED	= BIT(1),
+ };
+ 
+ /**
+--- a/net/mac80211/rx.c	2011-11-17 18:17:29.000000000 +0100
++++ b/net/mac80211/rx.c	2011-11-17 18:18:31.000000000 +0100
+@@ -28,6 +28,7 @@
+ #include "wpa.h"
+ #include "tkip.h"
+ #include "wme.h"
++#include "rate.h"
+ 
+ /*
+  * monitor mode reception
+@@ -2246,6 +2247,58 @@ ieee80211_rx_h_action(struct ieee80211_r
+ 		return RX_DROP_UNUSABLE;
+ 
+ 	switch (mgmt->u.action.category) {
++	case WLAN_CATEGORY_HT:
++		if (sdata->vif.type != NL80211_IFTYPE_STATION &&
++		    sdata->vif.type != NL80211_IFTYPE_MESH_POINT &&
++		    sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
++		    sdata->vif.type != NL80211_IFTYPE_AP)
++			break;
++
++		/* verify action & smps_control are present */
++		if (len < IEEE80211_MIN_ACTION_SIZE + 2)
++			goto invalid;
++
++		switch (mgmt->u.action.u.ht_smps.action) {
++		case WLAN_HT_ACTION_SMPS: {
++			struct ieee80211_supported_band *sband;
++			u8 smps;
++
++			/* convert to HT capability */
++			switch (mgmt->u.action.u.ht_smps.smps_control) {
++			case WLAN_HT_SMPS_CONTROL_DISABLED:
++				smps = WLAN_HT_CAP_SM_PS_DISABLED;
++				break;
++			case WLAN_HT_SMPS_CONTROL_STATIC:
++				smps = WLAN_HT_CAP_SM_PS_STATIC;
++				break;
++			case WLAN_HT_SMPS_CONTROL_DYNAMIC:
++				smps = WLAN_HT_CAP_SM_PS_DYNAMIC;
++				break;
++			default:
++				goto invalid;
++			}
++			smps <<= IEEE80211_HT_CAP_SM_PS_SHIFT;
++
++			/* if no change do nothing */
++			if ((rx->sta->sta.ht_cap.cap &
++					IEEE80211_HT_CAP_SM_PS) == smps)
++				goto handled;
++
++			rx->sta->sta.ht_cap.cap &= ~IEEE80211_HT_CAP_SM_PS;
++			rx->sta->sta.ht_cap.cap |= smps;
++
++			sband = rx->local->hw.wiphy->bands[status->band];
++
++			rate_control_rate_update(local, sband, rx->sta,
++						 IEEE80211_RC_SMPS_CHANGED,
++						 local->_oper_channel_type);
++			goto handled;
++		}
++		default:
++			goto invalid;
++		}
++
++		break;
+ 	case WLAN_CATEGORY_BACK:
+ 		if (sdata->vif.type != NL80211_IFTYPE_STATION &&
+ 		    sdata->vif.type != NL80211_IFTYPE_MESH_POINT &&
 
-Look for compat-wireless.
 
-http://linuxwireless.org/en/users/Download#Download_latest_Linux_wireless_d=
-rivers
-
-
-c'ya
-sven-haegar
-
---=20
-Three may keep a secret, if two of them are dead.
-- Ben F.
---8323328-1077197493-1321486064=:2195--
