@@ -1,32 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39817 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752973Ab1K2Iv6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 03:51:58 -0500
-Subject: Re: [PATCH v3] iw: Support ht-capability overrides mask.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1322505622-13446-1-git-send-email-greearb@candelatech.com> (sfid-20111128_194043_702798_6A11361F)
-References: <1322505622-13446-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20111128_194043_702798_6A11361F)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 29 Nov 2011 09:51:54 +0100
-Message-ID: <1322556714.4110.13.camel@jlt3.sipsolutions.net> (sfid-20111129_095201_431742_2E67C91C)
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:3627 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751322Ab1KQWbv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Nov 2011 17:31:51 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: dwmw2@infradead.org
+cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: [PATCH 0/3] linux-firmware: new firmware for brcmfmac and nvram
+ removal
+Date: Thu, 17 Nov 2011 14:31:38 -0800
+Message-ID: <1321569101-19568-1-git-send-email-frankyl@broadcom.com> (sfid-20111117_233154_459786_40512EB4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-11-28 at 10:40 -0800, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> Let user know which capabilities are supported.
+This patch series adds new firmware for bcm4329 and bcm4330 and removes
+the nvram file from the repository as it is not useful for Linux users
+and only used for internal development.
 
-I applied this with a bunch of modifications, but I think you should
-follow up and make it more complete. You're covering exactly and only
-the case that you're working on right now, I don't think that's good
-practice.
+Franky Lin (3):
+  linux-firmware: add new bcm4329 firmware for brcmfmac
+  linux-firmware: add bcm4330 firmware for brcmfmac
+  linux-firmware: remove nvram file for bcm4329 development board
 
-johannes
+ brcm/bcm4329-fullmac-4.txt |   94 --------------------------------------------
+ brcm/brcmfmac4329.bin      |  Bin 0 -> 253748 bytes
+ brcm/brcmfmac4330.bin      |  Bin 0 -> 222126 bytes
+ 3 files changed, 0 insertions(+), 94 deletions(-)
+ delete mode 100644 brcm/bcm4329-fullmac-4.txt
+ create mode 100755 brcm/brcmfmac4329.bin
+ create mode 100755 brcm/brcmfmac4330.bin
+
+-- 
+1.7.5.4
+
 
