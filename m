@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:31094 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756387Ab1KREJa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 23:09:30 -0500
-Subject: Re: [PATCH] iwl-debug: Shrink object by using dev_err and
- deduplicating formats
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Joe Perches <joe@perches.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <1321580775.22117.8.camel@Joe-Laptop>
-References: <1321580775.22117.8.camel@Joe-Laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 17 Nov 2011 19:14:16 -0800
-Message-ID: <1321586056.11647.10.camel@wwguy-huron> (sfid-20111118_050956_954971_40051BC9)
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33512 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754146Ab1KQSPo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Nov 2011 13:15:44 -0500
+Date: Thu, 17 Nov 2011 13:03:39 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [wireless-next PATCH 5/5] wifi-debugfs: Fix AMSDU rate printout.
+Message-ID: <20111117180339.GC32622@tuxdriver.com> (sfid-20111117_191547_626087_2C6F427B)
+References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
+ <1319778680-11405-5-git-send-email-greearb@candelatech.com>
+ <4EC54932.4090007@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4EC54932.4090007@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-11-17 at 17:46 -0800, Joe Perches wrote:
-> Using dev_err instead of dev_printk(KERN_ERR uses fewer
-> arguments and is a bit smaller.
+On Thu, Nov 17, 2011 at 09:49:38AM -0800, Ben Greear wrote:
+> On 10/27/2011 10:11 PM, greearb@candelatech.com wrote:
+> >From: Ben Greear<greearb@candelatech.com>
+> >
+> >It was flipped.  See section 7.3.2.56 of the 802.11n
+> >spec for details.
 > 
-> Deduplicating formats used by IWL_DEBUG_QUIET_RFKILL also
-> makes the object a bit smaller.
->  
-> Neatened the macros, used ##__VA_ARGS__.
+> This patch is stand-alone, even though it was originally
+> part of a series I posted.  Do I need to re-post as 1/1
+> (it's not yet in wireless-testing tree).
 > 
-> $ size drivers/net/wireless/iwlwifi/built-in.o*
->    text	   data	    bss	    dec	    hex	filename
->  462652	   8646	  92576	 563874	  89aa2	drivers/net/wireless/iwlwifi/built-in.o.new
->  467557	   8646	  92592	 568795	  8addb	drivers/net/wireless/iwlwifi/built-in.o.old
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
-> \
+> Thanks,
+> Ben
 
-very interesting. Thanks
+Sorry, I dropped the entire series.  Please repost this one
+individually.
 
-Wey
+Thanks,
 
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
