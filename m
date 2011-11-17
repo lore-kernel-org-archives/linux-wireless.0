@@ -1,103 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39594 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751888Ab1KXS0J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 13:26:09 -0500
-Subject: Re: [RFC v2 3/8] mac80211: tracking mesh peer link-specific power
- mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Mike Krinkin <krinkin.m.u@gmail.com>,
-	Max Filippov <jcmvbkbc@gmail.com>
-In-Reply-To: <1321886416-12597-4-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154149_972027_446A5478)
-References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
-	 <1321886416-12597-4-git-send-email-ivan.bezyazychnyy@gmail.com>
-	 (sfid-20111121_154149_972027_446A5478)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Nov 2011 19:26:06 +0100
-Message-ID: <1322159166.5366.32.camel@jlt3.sipsolutions.net> (sfid-20111124_192613_864664_70C64A72)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:43999 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754016Ab1KQXGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Nov 2011 18:06:04 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v2 2/3] compat: backport kfree_rcu()
+Date: Fri, 18 Nov 2011 00:05:45 +0100
+Message-Id: <1321571145-23893-1-git-send-email-hauke@hauke-m.de> (sfid-20111118_000609_089612_9D20A0A5)
+In-Reply-To: <1321564991-7249-2-git-send-email-hauke@hauke-m.de>
+References: <1321564991-7249-2-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-11-21 at 18:40 +0400, Ivan Bezyazychnyy wrote:
-> peer_ps_mode field has been added to sta_info structure to represent
-> peer's link-specific power mode for our station.
-> 
-> Peer's link-specific power mode is tracked from the Power Management
-> field in the Frame Control field and the Mesh Power Save Level field
-> in the QoS Control field at the end of a frame exchange sequence.
-> 
-> Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-> Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
-> Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
-> ---
->  include/linux/ieee80211.h |   11 ++++++++
->  net/mac80211/mesh.h       |    2 +
->  net/mac80211/rx.c         |   61 +++++++++++++++++++++++++++++++++++++++++++++
->  net/mac80211/sta_info.h   |    2 +
->  4 files changed, 76 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-> index 483fa46..44e9c0d 100644
-> --- a/include/linux/ieee80211.h
-> +++ b/include/linux/ieee80211.h
-> @@ -546,6 +546,17 @@ static inline int ieee80211_is_qos_nullfunc(__le16 fc)
->  	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_NULLFUNC);
->  }
->  
-> +/**
-> + * ieee80211s_has_qos_pm - check Power Save Level in QoS control
-> + * @qc - QoS control bytes in little-endian byteorder
-> + */
-> +
-> +static inline int ieee80211s_has_qos_pm(__le16 qc)
+This adds a nested function everywhere kfree_rcu() was called. This
+function frees the memory and is given as a function to call_rcu().
+The kfree_rcu define was made by Johannes Berg.
+The rcu callback could happen every time also after the module was
+unloaded and this will cause problems.
+A rcu_barrier() was added into every module_exit so that this will not
+be called after the module was unloaded.
 
-bool
+The define overwriting module_exit is based on the original module_exit
+which looks like this:
+/* This is only required if you want to be unloadable. */
+/#define module_exit(exitfn)                                    \
+        static inline exitcall_t __exittest(void)               \
+        { return exitfn; }                                      \
+        void cleanup_module(void) __attribute__((alias(#exitfn)));
 
-> +{
-> +	return (qc & cpu_to_le16(
-> +			IEEE80211_QOS_CTL_MESH_PS_LEVEL)) != 0;
-> +}
+We replaced the call to the actual function exitfn() with a call to our
+function which calls the original exitfn() and then rcu_barrier()
 
-and with bool there's no need for the != 0 part.
+As a module will not be unloaded that ofter it should not have a big
+performance impact when rcu_barrier() is called on every module exit,
+also when no kfree_rcu() backport is used in that module.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+CC: Johannes Berg <johannes@sipsolutions.net>
+---
+v2: remove compile check for exitfn
+    make function static
+
+ include/linux/compat-3.0.h |   46 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 46 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/compat-3.0.h b/include/linux/compat-3.0.h
+index 8c8720e..22ab539 100644
+--- a/include/linux/compat-3.0.h
++++ b/include/linux/compat-3.0.h
+@@ -5,6 +5,8 @@
  
-> +void ieee80211s_set_sta_ps_mode(struct sta_info *sta,
-> +				enum nl80211_mesh_power_mode mode)
-
-static?
-
->  static ieee80211_rx_result debug_noinline
->  ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
->  {
-> @@ -1314,6 +1342,39 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
->  	}
->  
->  	/*
-> +	 * Test mesh power save level subfield of QoS control field (PSL)
-> +	 * and Power Managment field of frame control (PW)
-> +	 * +----+----+-----------------+
-> +	 * | PM | PSL| Mesh Power Mode |
-> +	 * +----+----+-----------------+
-> +	 * | 0  |Rsrv|    Active       |
-> +	 * +----+----+-----------------+
-> +	 * | 1  | 0  |    Light        |
-> +	 * +----+----+-----------------+
-> +	 * | 1  | 1  |    Deep         |
-> +	 * +----+----+-----------------+
-> +	 */
-> +	if (!ieee80211_has_morefrags(hdr->frame_control) &&
-> +	    !(status->rx_flags & IEEE80211_RX_DEFERRED_RELEASE) &&
-> +	    ieee80211_vif_is_mesh(&rx->sdata->vif) &&
-> +	    (ieee80211_is_data(hdr->frame_control) ||
-> +	     ieee80211_is_nullfunc(hdr->frame_control))) {
-> +		if (ieee80211_has_pm(hdr->frame_control)) {
-> +			__le16 *qc = (__le16 *) ieee80211_get_qos_ctl(hdr);
-> +			if (ieee80211s_has_qos_pm(*qc)) {
-
-I don't think you guaranteed that it even has a QoS header.
-
-johannes
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0))
+ 
++#include <linux/rcupdate.h>
++
+ /*
+  * since commit 1c5cae815d19ffe02bdfda1260949ef2b1806171
+  * "net: call dev_alloc_name from register_netdevice" dev_alloc_name is
+@@ -79,6 +81,50 @@ static inline int __must_check kstrtos32_from_user(const char __user *s, size_t
+ 	return kstrtoint_from_user(s, count, base, res);
+ }
+ 
++/* 
++ * This adds a nested function everywhere kfree_rcu() was called. This
++ * function frees the memory and is given as a function to call_rcu().
++ * The rcu callback could happen every time also after the module was
++ *  unloaded and this will cause problems.
++ */
++#define kfree_rcu(data, rcuhead)		do {			\
++		void __kfree_rcu_fn(struct rcu_head *rcu_head)		\
++		{							\
++			void *___ptr;					\
++			___ptr = container_of(rcu_head, typeof(*(data)), rcuhead);\
++			kfree(___ptr);					\
++		}							\
++		call_rcu(&(data)->rcuhead, __kfree_rcu_fn);		\
++	} while (0)
++
++#ifdef MODULE
++
++/*
++ * The define overwriting module_exit is based on the original module_exit
++ * which looks like this:
++ * #define module_exit(exitfn)                                    \
++ *         static inline exitcall_t __exittest(void)               \
++ *         { return exitfn; }                                      \
++ *         void cleanup_module(void) __attribute__((alias(#exitfn)));
++ *
++ * We replaced the call to the actual function exitfn() with a call to our
++ * function which calls the original exitfn() and then rcu_barrier()
++ *
++ * As a module will not be unloaded that ofter it should not have a big
++ * performance impact when rcu_barrier() is called on every module exit,
++ * also when no kfree_rcu() backport is used in that module.
++ */
++#undef module_exit
++#define module_exit(exitfn)						\
++	static void __exit __exit_compat(void)				\
++	{								\
++		exitfn();						\
++		rcu_barrier();						\
++	}								\
++	void cleanup_module(void) __attribute__((alias("__exit_compat")));
++
++#endif
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)) */
+ 
+ #endif /* LINUX_3_0_COMPAT_H */
+-- 
+1.7.4.1
 
