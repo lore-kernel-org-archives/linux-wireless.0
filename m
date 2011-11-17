@@ -1,78 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39530 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750875Ab1KILLE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 06:11:04 -0500
-Subject: Re: v3.1 - WARNING: at net/mac80211/util.c:540
- ieee80211_can_queue_work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Meyer <thomas@m3y3r.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1320436165.29441.28.camel@localhost.localdomain>
-References: <1320431074.29441.25.camel@localhost.localdomain>
-	 <1320434727.3969.124.camel@jlt3.sipsolutions.net>
-	 <1320436165.29441.28.camel@localhost.localdomain>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 09 Nov 2011 12:10:59 +0100
-Message-ID: <1320837059.3845.35.camel@jlt3.sipsolutions.net> (sfid-20111109_121108_801987_FFA0BE17)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:43431 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751960Ab1KQVXg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Nov 2011 16:23:36 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 2/3] compat: backport kfree_rcu()
+Date: Thu, 17 Nov 2011 22:23:10 +0100
+Message-Id: <1321564991-7249-2-git-send-email-hauke@hauke-m.de> (sfid-20111117_222342_483194_BC3755AF)
+In-Reply-To: <1321564991-7249-1-git-send-email-hauke@hauke-m.de>
+References: <1321564991-7249-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-11-04 at 20:49 +0100, Thomas Meyer wrote:
-> Am Freitag, den 04.11.2011, 20:25 +0100 schrieb Johannes Berg:
-> > A little more ... anything really ... would be helpful.
-> > 
-> 
-> First time that I ever saw this WARNING. happened after 9 days uptime,
-> while suspending the machine to ram.
+This adds a nested function everywhere kfree_rcu() was called. This
+function frees the memory and is given as a function to call_rcu().
+The kfree_rcu define was mad by Johannes Berg.
+The rcu callback could happen every time also after the module was
+unloaded and this will cause problems.
+A rcu_barrier() was added into every module_exit so that this will not
+be called after the module was unloaded.
 
-I don't suppose you can reproduce, can you? :-)
+The define overwriting module_exit is based on the original module_exit
+which looks like this:
+/* This is only required if you want to be unloadable. */
+/#define module_exit(exitfn)                                    \
+        static inline exitcall_t __exittest(void)               \
+        { return exitfn; }                                      \
+        void cleanup_module(void) __attribute__((alias(#exitfn)));
 
-> > > [281558.898592] Pid: 0, comm: swapper Tainted: G        W   3.1.0 #3
-> > > [281558.898595] Call Trace:
-> > > [281558.898597]  <IRQ>  [<ffffffff8103024a>] warn_slowpath_common+0x7a/0xb0
-> > > [281558.898610]  [<ffffffff8105731d>] ? clockevents_program_event+0x5d/0xa0
-> > > [281558.898614]  [<ffffffff81030321>] warn_slowpath_fmt+0x41/0x50
-> > > [281558.898619]  [<ffffffff81058259>] ? tick_program_event+0x19/0x20
-> > > [281558.898624]  [<ffffffff8104d46e>] ? hrtimer_interrupt+0xfe/0x1f0
-> > > [281558.898633]  [<ffffffffa017fe45>] ieee80211_can_queue_work+0x35/0x40 [mac80211]
-> > > [281558.898642]  [<ffffffffa017ff9b>] ieee80211_queue_work+0x1b/0x40 [mac80211]
-> > > [281558.898651]  [<ffffffffa016bfdf>] ieee80211_sta_timer+0x2f/0x40 [mac80211]
-> > > [281558.898657]  [<ffffffff8103bb8f>] run_timer_softirq+0xef/0x210
-> > > [281558.898666]  [<ffffffffa016bfb0>] ? ieee80211_sta_bcn_mon_timer+0x40/0x40 [mac80211]
+We replaced the call to the actual function exitfn() with a call to our
+function which calls the original exitfn() and then rcu_barrier()
 
-Interestingly, sta_bcn_mon_timer was there -- but I don't see how *that*
-caused it. I do, however, see how conn_mon_timer could cause it:
+As a module will not be unloaded that ofter it should not have a big
+performance impact when rcu_barrier() is called on every module exit,
+also when no kfree_rcu() backport is used in that module.
 
-conn_mon_timer fired and queued monitor_work
-you suspended, invoking sta_quiesce, which *first* disables the timer
-and *then* cancels monitor_work synchronously -- that will run
-monitor_work and re-enable the timer ...
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+CC: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/linux/compat-3.0.h |   48 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 48 insertions(+), 0 deletions(-)
 
-Mostly theoretical, if you can reproduce it (which I very much doubt)
-you could try the patch below.
-
-johannes
-
---- wireless-testing.orig/net/mac80211/mlme.c	2011-11-09 12:05:44.000000000 +0100
-+++ wireless-testing/net/mac80211/mlme.c	2011-11-09 12:07:11.000000000 +0100
-@@ -2288,6 +2288,7 @@ void ieee80211_sta_quiesce(struct ieee80
+diff --git a/include/linux/compat-3.0.h b/include/linux/compat-3.0.h
+index 8c8720e..56639fd 100644
+--- a/include/linux/compat-3.0.h
++++ b/include/linux/compat-3.0.h
+@@ -5,6 +5,8 @@
  
- 	cancel_work_sync(&ifmgd->request_smps_work);
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0))
  
-+	cancel_work_sync(&ifmgd->monitor_work);
- 	cancel_work_sync(&ifmgd->beacon_connection_loss_work);
- 	if (del_timer_sync(&ifmgd->timer))
- 		set_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running);
-@@ -2296,7 +2297,6 @@ void ieee80211_sta_quiesce(struct ieee80
- 	if (del_timer_sync(&ifmgd->chswitch_timer))
- 		set_bit(TMR_RUNNING_CHANSW, &ifmgd->timers_running);
++#include <linux/rcupdate.h>
++
+ /*
+  * since commit 1c5cae815d19ffe02bdfda1260949ef2b1806171
+  * "net: call dev_alloc_name from register_netdevice" dev_alloc_name is
+@@ -79,6 +81,52 @@ static inline int __must_check kstrtos32_from_user(const char __user *s, size_t
+ 	return kstrtoint_from_user(s, count, base, res);
+ }
  
--	cancel_work_sync(&ifmgd->monitor_work);
- 	/* these will just be re-established on connection */
- 	del_timer_sync(&ifmgd->conn_mon_timer);
- 	del_timer_sync(&ifmgd->bcn_mon_timer);
-
++/* 
++ * This adds a nested function everywhere kfree_rcu() was called. This
++ * function frees the memory and is given as a function to call_rcu().
++ * The rcu callback could happen every time also after the module was
++ *  unloaded and this will cause problems.
++ */
++#define kfree_rcu(data, rcuhead)		do {			\
++		void __kfree_rcu_fn(struct rcu_head *rcu_head)		\
++		{							\
++			void *___ptr;					\
++			___ptr = container_of(rcu_head, typeof(*(data)), rcuhead);\
++			kfree(___ptr);					\
++		}							\
++		call_rcu(&(data)->rcuhead, __kfree_rcu_fn);		\
++	} while (0)
++
++#ifdef MODULE
++
++/*
++ * The define overwriting module_exit is based on the original module_exit
++ * which looks like this:
++ * #define module_exit(exitfn)                                    \
++ *         static inline exitcall_t __exittest(void)               \
++ *         { return exitfn; }                                      \
++ *         void cleanup_module(void) __attribute__((alias(#exitfn)));
++ *
++ * We replaced the call to the actual function exitfn() with a call to our
++ * function which calls the original exitfn() and then rcu_barrier()
++ *
++ * As a module will not be unloaded that ofter it should not have a big
++ * performance impact when rcu_barrier() is called on every module exit,
++ * also when no kfree_rcu() backport is used in that module.
++ */
++#undef module_exit
++#define module_exit(exitfn)						\
++	static inline exitcall_t __exittest(void)			\
++	{ return exitfn; }						\
++	void __exit __exit_compat(void)					\
++	{								\
++		exitfn();						\
++		rcu_barrier();						\
++	}								\
++	void cleanup_module(void) __attribute__((alias("__exit_compat")));
++
++#endif
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)) */
+ 
+ #endif /* LINUX_3_0_COMPAT_H */
+-- 
+1.7.4.1
 
