@@ -1,54 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22472 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753942Ab1KAMN3 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34318 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751345Ab1KQWWP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Nov 2011 08:13:29 -0400
-Message-ID: <4EAFE222.6050504@qca.qualcomm.com> (sfid-20111101_131332_138171_51A36A40)
-Date: Tue, 1 Nov 2011 14:12:18 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: Fix lockdep warning
-References: <1320145730-3007-1-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1320145730-3007-1-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Thu, 17 Nov 2011 17:22:15 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2 1/4] compat-wireless: add CONFIG_COMPAT_KFIFO setting to config.mk
+Date: Thu, 17 Nov 2011 17:21:08 -0500
+Message-Id: <1321568471-23068-1-git-send-email-linville@tuxdriver.com> (sfid-20111117_232237_855715_DCE6E1A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/01/2011 01:08 PM, Vasanthakumar Thiagarajan wrote:
-> The following is the lockdep warning which detects possible
-> deadlock condition with the way ar->lock and ar->list_lock
-> are being used.
-> 
->   (&(&ar->lock)->rlock){+.-...}, at: [<ffffffffa0492d13>] ath6kl_indicate_tx_activity+0x83/0x110 [ath6kl]
->  but this lock took another, SOFTIRQ-unsafe lock in the past:
->   (&(&ar->list_lock)->rlock){+.+...}
-> 
->  and interrupts could create inverse lock ordering between them.
-> 
->  other info that might help us debug this:
->   Possible interrupt unsafe locking scenario:
-> 
->         CPU0                    CPU1
->         ----                    ----
->    lock(&(&ar->list_lock)->rlock);
->                                 local_irq_disable();
->                                 lock(&(&ar->lock)->rlock);
->                                 lock(&(&ar->list_lock)->rlock);
->    <Interrupt>
->      lock(&(&ar->lock)->rlock);
-> 
->   *** DEADLOCK ***
-> 
-> softirqs have to be disabled when acquiring ar->list_lock to avoid
-> the above deadlock condition. When the above warning printed the
-> interface is still up and running without issue.
-> 
-> Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ config.mk |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-Thanks, applied.
+diff --git a/config.mk b/config.mk
+index a71de4e..1bb2799 100644
+--- a/config.mk
++++ b/config.mk
+@@ -120,6 +120,10 @@ ifdef CONFIG_FW_LOADER
+ endif #CONFIG_FW_LOADER
+ endif #CONFIG_COMPAT_KERNEL_2_6_33
+ 
++ifdef CONFIG_COMPAT_KERNEL_2_6_36
++ CONFIG_COMPAT_KFIFO=y
++endif #CONFIG_COMPAT_KERNEL_2_6_36
++
+ # Wireless subsystem stuff
+ CONFIG_MAC80211=m
+ 
+-- 
+1.7.4.4
 
-Kalle
