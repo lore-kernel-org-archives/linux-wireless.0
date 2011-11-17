@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6246 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757121Ab1KRIXY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 03:23:24 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Greg Dietsche <Gregory.Dietsche@cuw.edu>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 74/77] iwlegacy: 4965-rs: il4965_rs_alloc_sta: remove lq_sta local var
-Date: Fri, 18 Nov 2011 09:22:36 +0100
-Message-Id: <1321604559-10707-74-git-send-email-sgruszka@redhat.com> (sfid-20111118_092340_809334_D7641F0F)
-In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
-References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:37324 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398Ab1KQSPH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Nov 2011 13:15:07 -0500
+Received: by ywt32 with SMTP id 32so1410397ywt.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2011 10:15:05 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 0/4] Miscellaneous patches for rtlwifi and rtl8192cu
+Date: Thu, 17 Nov 2011 12:14:41 -0600
+Message-Id: <1321553685-31154-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20111117_191517_708081_5FBB24F2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+These patches include the following:
 
-remove the lq_sta local variable and return the
-result directly in il4965_rs_alloc_sta
+1. Addition of USB retries for rtl8192cu.
+2. Change USB firmware upload to device to use block writes, not one dword at a time.
+3. Fix usage of rtl8192cu on big-endian platforms.
+4. Simplify interrupt routine for PCI devices.
 
-Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/iwlegacy/4965-rs.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-rs.c b/drivers/net/wireless/iwlegacy/4965-rs.c
-index 2ec808e..5200637 100644
---- a/drivers/net/wireless/iwlegacy/4965-rs.c
-+++ b/drivers/net/wireless/iwlegacy/4965-rs.c
-@@ -2295,7 +2295,6 @@ il4965_rs_get_rate(void *il_r, struct ieee80211_sta *sta, void *il_sta,
- static void *
- il4965_rs_alloc_sta(void *il_rate, struct ieee80211_sta *sta, gfp_t gfp)
- {
--	struct il_lq_sta *lq_sta;
- 	struct il_station_priv *sta_priv =
- 	    (struct il_station_priv *)sta->drv_priv;
- 	struct il_priv *il;
-@@ -2303,9 +2302,7 @@ il4965_rs_alloc_sta(void *il_rate, struct ieee80211_sta *sta, gfp_t gfp)
- 	il = (struct il_priv *)il_rate;
- 	D_RATE("create station rate scale win\n");
- 
--	lq_sta = &sta_priv->lq_sta;
--
--	return lq_sta;
-+	return &sta_priv->lq_sta;
- }
- 
- /*
+John,
+
+All of these are 3.3 material.
+
+Thanks, Larry
+--- 
+
+George (1):
+  rtlwifi: rtl8192cu: Allow retries for USB I/O
+
+Larry Finger (3):
+  rtlwifi: rtl8192cu: Change firmware upload to use block writes
+  rtlwifi: rtl8192cu: Fix endianian issues
+  rtlwifi: Remove redundant code from PCI interrupt
+
+ drivers/net/wireless/rtlwifi/base.c               |    6 +-
+ drivers/net/wireless/rtlwifi/base.h               |    2 +-
+ drivers/net/wireless/rtlwifi/pci.c                |    3 -
+ drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c |   60 ++++++++++++++++----
+ drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h |   23 ++++----
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c       |    9 ++--
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.c      |    1 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c      |    2 +-
+ drivers/net/wireless/rtlwifi/usb.c                |   56 ++++++++++++++++---
+ drivers/net/wireless/rtlwifi/wifi.h               |    7 ++-
+ 10 files changed, 123 insertions(+), 46 deletions(-)
+
 -- 
-1.7.1
+1.7.7
 
