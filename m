@@ -1,81 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40595 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42715 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753009Ab1KRTaa (ORCPT
+	with ESMTP id S1754687Ab1KQAp2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 14:30:30 -0500
-Date: Fri, 18 Nov 2011 14:22:18 -0500
+	Wed, 16 Nov 2011 19:45:28 -0500
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Nico -telmich- Schottelius <nico-linux-20111118@schottelius.org>,
-	LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <m@bues.ch>
-Subject: Re: b43: BCM 4331: MacBook 8,1: No connection after suspend
-Message-ID: <20111118192217.GA2663@tuxdriver.com> (sfid-20111118_203054_536522_9576D734)
-References: <20111118173242.GA2101@schottelius.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111118173242.GA2101@schottelius.org>
+To: linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/2] compat: avoid warning in compat_system_workqueue_create
+Date: Wed, 16 Nov 2011 19:39:33 -0500
+Message-Id: <1321490374-24529-1-git-send-email-linville@tuxdriver.com> (sfid-20111117_014556_510646_1E85477F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend has nothing to do with b43, and b43 has it's own
-mailing list, b43-dev@lists.infradead.org.  Even if it didn't,
-linux-wireless@vger.kernel.org would be a more appropriate list than
-this one.
+The check in the WARN_ON is inverted.
 
-John
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ compat/compat-2.6.36.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-On Fri, Nov 18, 2011 at 06:32:42PM +0100, Nico -telmich- Schottelius wrote:
-> Hello,
-> 
-> new notebook, new problems (*):
-> 
-> Running 3.2.0-rc1 on the MacBook Pro 8,1 with the BCM4331
-> (14e4:4331) the WLAN indeed works:
-> 
-> [   86.231702] b43-phy0: Broadcom 4331 WLAN found (core revision 29)
-> [   86.269190] ieee80211 phy0: Selected rate control algorithm
-> 'minstrel_ht'
-> [   86.270486] Broadcom 43xx driver loaded [ Features: PMNLS ]
-> [   87.677265] b43-phy0: Loading firmware version 666.2 (2011-02-23
-> 01:15:07)
-> 
-> But: After a suspend it seems not to receive any packets anymore:
-> 
-> [ 2334.494845] wlan0: authenticate with 64:87:d7:37:89:89 (try 1)
-> [ 2334.694035] wlan0: authenticate with 64:87:d7:37:89:89 (try 2)
-> [ 2334.893909] wlan0: authenticate with 64:87:d7:37:89:89 (try 3)
-> [ 2335.093824] wlan0: authentication with 64:87:d7:37:89:89 timed out
-> 
-> wpa_supplicant thus retries to connect to the network again and again
-> without success.
-> 
-> This is reproducable on the MBP 8,1 and is *NOT* fixed if I unload
-> b43 and modprobe it again. It is also "not fixed" when doing
-> multiple suspends/resumes.
-> 
-> Any pointers to this?
-> 
-> Cheers,
-> 
-> Nico
-> 
-> 
-> (*) feels like in good old times...
-> 
-> -- 
-> PGP key: 7ED9 F7D3 6B10 81D7 0EC5  5C09 D7DC C8E4 3187 7DF0
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-
+diff --git a/compat/compat-2.6.36.c b/compat/compat-2.6.36.c
+index aab25df..fe24da8 100644
+--- a/compat/compat-2.6.36.c
++++ b/compat/compat-2.6.36.c
+@@ -99,7 +99,7 @@ EXPORT_SYMBOL_GPL(system_nrt_wq);
+ void compat_system_workqueue_create()
+ {
+ 	system_nrt_wq = create_singlethread_workqueue("events_nrt");
+-	WARN_ON(system_nrt_wq);
++	WARN_ON(!system_nrt_wq);
+ }
+ 
+ void compat_system_workqueue_destroy()
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.4
+
