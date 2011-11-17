@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:34716 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932541Ab1KHOgU (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59987 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752144Ab1KQVtq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 09:36:20 -0500
-Received: by eye27 with SMTP id 27so396199eye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 06:36:19 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v3 2/2] wl12xx: indicate probe-resp offloading support
-Date: Tue,  8 Nov 2011 16:36:10 +0200
-Message-Id: <1320762970-6860-2-git-send-email-arik@wizery.com> (sfid-20111108_153623_767561_E5C14A33)
-In-Reply-To: <1320762970-6860-1-git-send-email-arik@wizery.com>
-References: <1320762970-6860-1-git-send-email-arik@wizery.com>
+	Thu, 17 Nov 2011 16:49:46 -0500
+Subject: Re: [PATCH] wifi-debugfs: Fix AMSDU rate printout.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1321566487-31705-1-git-send-email-greearb@candelatech.com> (sfid-20111117_224815_705423_97548BC6)
+References: <1321566487-31705-1-git-send-email-greearb@candelatech.com>
+	 (sfid-20111117_224815_705423_97548BC6)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 17 Nov 2011 22:49:45 +0100
+Message-ID: <1321566585.3997.49.camel@jlt3.sipsolutions.net> (sfid-20111117_224949_505570_23427FE3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wl12xx driver supports probe-response offloading, and the  WPS, WPS2
-and P2P special cases as well.
+On Thu, 2011-11-17 at 13:48 -0800, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> It was flipped.  See section 7.3.2.56 of the 802.11n
+> spec for details.
 
-Signed-off-by: Guy Eilam <guy@wizery.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 3750a6e..6c5f40b 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -5017,6 +5017,12 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
- 
- 	wl->hw->wiphy->reg_notifier = wl1271_reg_notify;
- 
-+	wl->hw->wiphy->flags |= WIPHY_FLAG_SUPPORT_PROBE_RESP_OFFLOAD;
-+	wl->hw->wiphy->probe_resp_offload =
-+		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS |
-+		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2 |
-+		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P;
-+
- 	SET_IEEE80211_DEV(wl->hw, wl->dev);
- 
- 	wl->hw->sta_data_size = sizeof(struct wl1271_station);
--- 
-1.7.5.4
+but the subject should be "mac80211: fix AMSDU rate output in debugfs"
+or so, maybe John can fix it up.
+
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+> :100644 100644 c5f3417... 3110cbd... M	net/mac80211/debugfs_sta.c
+>  net/mac80211/debugfs_sta.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+> index c5f3417..3110cbd 100644
+> --- a/net/mac80211/debugfs_sta.c
+> +++ b/net/mac80211/debugfs_sta.c
+> @@ -274,9 +274,9 @@ static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
+>  
+>  		PRINT_HT_CAP((htc->cap & BIT(10)), "HT Delayed Block Ack");
+>  
+> -		PRINT_HT_CAP((htc->cap & BIT(11)), "Max AMSDU length: "
+> -			     "3839 bytes");
+>  		PRINT_HT_CAP(!(htc->cap & BIT(11)), "Max AMSDU length: "
+> +			     "3839 bytes");
+> +		PRINT_HT_CAP((htc->cap & BIT(11)), "Max AMSDU length: "
+>  			     "7935 bytes");
+>  
+>  		/*
+
 
