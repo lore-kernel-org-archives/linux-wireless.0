@@ -1,59 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:48973 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756079Ab1KWWst convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 17:48:49 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Amitkumar Karwar <akarwar@marvell.com>
-Date: Wed, 23 Nov 2011 14:48:45 -0800
-Subject: RE: [RFC 5/5] mwifiex: fix usage of set tx power
-Message-ID: <477F20668A386D41ADCC57781B1F70430818351F4B@SC-VEXCH1.marvell.com> (sfid-20111123_234852_601664_AC7F8AFC)
-References: <1322064521-16540-1-git-send-email-mcgrof@qca.qualcomm.com>
-In-Reply-To: <1322064521-16540-1-git-send-email-mcgrof@qca.qualcomm.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:46987 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932186Ab1KQPXe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Nov 2011 10:23:34 -0500
+Subject: [PATCH] mac80211: remove unused ASSOC_AP flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 17 Nov 2011 16:23:29 +0100
+Message-ID: <1321543409.3997.42.camel@jlt3.sipsolutions.net> (sfid-20111117_162337_552950_BB1CBC85)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Subject: [RFC 5/5] mwifiex: fix usage of set tx power
-> 
-> mBm is passed but dBm was assumed...
-> 
-> Cc: Bing Zhao <bzhao@marvell.com>
-> Cc: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+WLAN_STA_ASSOC_AP indicates that the station entry
+is for an AP we're associated to but isn't used so
+remove it.
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/debugfs_sta.c |    4 ++--
+ net/mac80211/mlme.c        |    1 -
+ net/mac80211/sta_info.h    |    2 --
+ 3 files changed, 2 insertions(+), 5 deletions(-)
 
-Thanks,
-Bing
+--- a/net/mac80211/mlme.c	2011-11-14 16:46:03.000000000 +0100
++++ b/net/mac80211/mlme.c	2011-11-17 14:46:01.000000000 +0100
+@@ -1575,7 +1575,6 @@ static bool ieee80211_assoc_success(stru
+ 
+ 	set_sta_flag(sta, WLAN_STA_AUTH);
+ 	set_sta_flag(sta, WLAN_STA_ASSOC);
+-	set_sta_flag(sta, WLAN_STA_ASSOC_AP);
+ 	if (!(ifmgd->flags & IEEE80211_STA_CONTROL_PORT))
+ 		set_sta_flag(sta, WLAN_STA_AUTHORIZED);
+ 
+--- a/net/mac80211/sta_info.h	2011-11-10 09:27:32.000000000 +0100
++++ b/net/mac80211/sta_info.h	2011-11-17 14:46:04.000000000 +0100
+@@ -30,7 +30,6 @@
+  *	when virtual port control is not in use.
+  * @WLAN_STA_SHORT_PREAMBLE: Station is capable of receiving short-preamble
+  *	frames.
+- * @WLAN_STA_ASSOC_AP: We're associated to that station, it is an AP.
+  * @WLAN_STA_WME: Station is a QoS-STA.
+  * @WLAN_STA_WDS: Station is one of our WDS peers.
+  * @WLAN_STA_CLEAR_PS_FILT: Clear PS filter in hardware (using the
+@@ -60,7 +59,6 @@ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_PS_STA,
+ 	WLAN_STA_AUTHORIZED,
+ 	WLAN_STA_SHORT_PREAMBLE,
+-	WLAN_STA_ASSOC_AP,
+ 	WLAN_STA_WME,
+ 	WLAN_STA_WDS,
+ 	WLAN_STA_CLEAR_PS_FILT,
+--- a/net/mac80211/debugfs_sta.c	2011-11-08 18:04:34.000000000 +0100
++++ b/net/mac80211/debugfs_sta.c	2011-11-17 14:46:20.000000000 +0100
+@@ -63,10 +63,10 @@ static ssize_t sta_flags_read(struct fil
+ 	test_sta_flag(sta, WLAN_STA_##flg) ? #flg "\n" : ""
+ 
+ 	int res = scnprintf(buf, sizeof(buf),
+-			    "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
++			    "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+ 			    TEST(AUTH), TEST(ASSOC), TEST(PS_STA),
+ 			    TEST(PS_DRIVER), TEST(AUTHORIZED),
+-			    TEST(SHORT_PREAMBLE), TEST(ASSOC_AP),
++			    TEST(SHORT_PREAMBLE),
+ 			    TEST(WME), TEST(WDS), TEST(CLEAR_PS_FILT),
+ 			    TEST(MFP), TEST(BLOCK_BA), TEST(PSPOLL),
+ 			    TEST(UAPSD), TEST(SP), TEST(TDLS_PEER),
 
-> ---
->  drivers/net/wireless/mwifiex/cfg80211.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-> index e9ab9a3..0db97cc 100644
-> --- a/drivers/net/wireless/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/mwifiex/cfg80211.c
-> @@ -120,10 +120,11 @@ mwifiex_cfg80211_del_key(struct wiphy *wiphy, struct net_device *netdev,
->  static int
->  mwifiex_cfg80211_set_tx_power(struct wiphy *wiphy,
->  			      enum nl80211_tx_power_setting type,
-> -			      int dbm)
-> +			      int mbm)
->  {
->  	struct mwifiex_private *priv = mwifiex_cfg80211_get_priv(wiphy);
->  	struct mwifiex_power_cfg power_cfg;
-> +	int dbm = MBM_TO_DBM(mbm);
-> 
->  	if (type == NL80211_TX_POWER_FIXED) {
->  		power_cfg.is_power_auto = 0;
-> --
-> 1.7.4.15.g7811d
 
