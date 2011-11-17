@@ -1,79 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60851 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752620Ab1KKKNi (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:35582 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398Ab1KQSPQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Nov 2011 05:13:38 -0500
-Subject: Re: off- & multi-channel operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4EBADA61.5060506@candelatech.com>
-References: <1320844134.3845.61.camel@jlt3.sipsolutions.net>
-	 <4EBABCE2.5000007@candelatech.com>
-	 <1320862529.3845.90.camel@jlt3.sipsolutions.net>
-	 <4EBADA61.5060506@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 11 Nov 2011 11:13:32 +0100
-Message-ID: <1321006412.3977.10.camel@jlt3.sipsolutions.net> (sfid-20111111_111342_314201_03372762)
-Mime-Version: 1.0
+	Thu, 17 Nov 2011 13:15:16 -0500
+Received: by ggnb2 with SMTP id b2so1421463ggn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2011 10:15:16 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: George <george0505@realtek.com>, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 1/4] rtlwifi: rtl8192cu: Allow retries for USB I/O
+Date: Thu, 17 Nov 2011 12:14:42 -0600
+Message-Id: <1321553685-31154-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20111117_191523_061051_3D6AA7DC)
+In-Reply-To: <1321553685-31154-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1321553685-31154-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-11-09 at 11:54 -0800, Ben Greear wrote:
+From: George <george0505@realtek.com>
 
-> > However, it's not really going to work well for multi-channel capable
-> > drivers: say the driver is continually switching between channels 1 and
-> > 11 for multi-channel operation, but now you want to do a p2p listen
-> > phase on channel 6. That needs to interact with the driver since it has
-> > to stop switching, and it'd be much easier to have the driver manage
-> > that interaction.
-> 
-> If mac80211 is controlling the channel switching with off-channel work
-> items, can't it just keep the nic on channel 6 doing the p2p listen
-> for the proper amount of time?  Why does the driver have to make
-> the decision?
+The USB driver does not retry reads - allow 10 tries.
 
-mac80211 isn't going to be controlling the switching between 1 and 11 at
-all though. And there will be drivers like iwlwifi and wl12xx that want
-to control the "stay on channel 6" as well.
+Signed-off-by: George <george0505@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h |    2 +-
+ drivers/net/wireless/rtlwifi/usb.c                |   18 +++++++++++++++---
+ 2 files changed, 16 insertions(+), 4 deletions(-)
 
-> If you expect the driver might have pkts queued for multiple channels,
-> and that is why it would be switching, then you could just have a mac80211
-> call that says 'stay on this channel (6) until I tell you otherwise'.
-> The driver could then stop it's automated switching.  That would seem
-> fairly easy to implement.
-
-Yes, that's what we'll probably need. Actually we already have that in a
-way with the remain_on_channel, but it's not used for work/scan/etc.
-today, only for p2p.
-
-> Worst case, you flush all buffers and
-> then it should certainly stop switching?  (The hard part would seem to be making the
-> driver able to deal with multiple xmit queues and doing automated
-> switching in the first place.  It certainly never worked well when
-> ath9k tried to do something similar with virtual phys)
-
-At least for iwlwifi I expect we'd have multiple hardware queues with
-the uCode handling the switching.
-
-> > Thing is that this doesn't really work too well even today with a lot of
-> > devices we support, e.g. iwlwifi or even iwlegacy isn't really built to
-> > do this. You're mostly looking at it from an ath9k perspective I suppose
-> > where all of this is really quite simple :-)
-> 
-> If you can put the scan state machine into the work logic,
-> the work logic will get much better testing, and hopefully
-> that will simplify the on-off channel logic (just having no
-> scan_channel to worry about would simplify on/off channel
-> logic that I wrote (and which was just removed).
-> 
-> The only driver I have any idea about is ath9k:  What does iw* do
-> that makes this difficult?
-
-Uh, that would be a really really long explanation so I think for now
-you'll just have to take my word for it. It's just the way the firmware
-is designed.
-
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h
+index 3d5823c..fcc4032 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h
+@@ -32,7 +32,7 @@
+ 
+ #define FW_8192C_SIZE				0x3000
+ #define FW_8192C_START_ADDRESS			0x1000
+-#define FW_8192C_END_ADDRESS			0x3FFF
++#define FW_8192C_END_ADDRESS			0x1FFF
+ #define FW_8192C_PAGE_SIZE			4096
+ #define FW_8192C_POLLING_DELAY			5
+ #define FW_8192C_POLLING_TIMEOUT_COUNT		100
+diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+index 54cb8a6..add29e9 100644
+--- a/drivers/net/wireless/rtlwifi/usb.c
++++ b/drivers/net/wireless/rtlwifi/usb.c
+@@ -34,6 +34,7 @@
+ #include "usb.h"
+ #include "base.h"
+ #include "ps.h"
++#include "rtl8192c/fw_common.h"
+ 
+ #define	REALTEK_USB_VENQT_READ			0xC0
+ #define	REALTEK_USB_VENQT_WRITE			0x40
+@@ -41,6 +42,7 @@
+ #define	REALTEK_USB_VENQT_CMD_IDX		0x00
+ 
+ #define REALTEK_USB_VENQT_MAX_BUF_SIZE		254
++#define MAX_USBCTRL_VENDORREQ_TIMES		10
+ 
+ static void usbctrl_async_callback(struct urb *urb)
+ {
+@@ -100,13 +102,23 @@ static int _usbctrl_vendorreq_sync_read(struct usb_device *udev, u8 request,
+ 	unsigned int pipe;
+ 	int status;
+ 	u8 reqtype;
++	int vendorreq_times = 0;
+ 
+ 	pipe = usb_rcvctrlpipe(udev, 0); /* read_in */
+ 	reqtype =  REALTEK_USB_VENQT_READ;
+ 
+-	status = usb_control_msg(udev, pipe, request, reqtype, value, index,
+-				 pdata, len, 0); /* max. timeout */
+-
++	while (++vendorreq_times <= MAX_USBCTRL_VENDORREQ_TIMES) {
++		status = usb_control_msg(udev, pipe, request, reqtype, value,
++					 index, pdata, len, 0); /*max. timeout*/
++		if (status < 0) {
++			/* firmware download is checksumed, don't retry */
++			if ((value >= FW_8192C_START_ADDRESS &&
++			    value <= FW_8192C_END_ADDRESS))
++				break;
++		} else {
++			break;
++		}
++	}
+ 	if (status < 0)
+ 		pr_err("reg 0x%x, usbctrl_vendorreq TimeOut! status:0x%x value=0x%x\n",
+ 		       value, status, *(u32 *)pdata);
+-- 
+1.7.7
 
