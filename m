@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:57146 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750748Ab1KWQIq (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50855 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322Ab1KQW1S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 11:08:46 -0500
-Received: by vcbfk14 with SMTP id fk14so475925vcb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 08:08:45 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [RFC 5/5] mwifiex: fix usage of set tx power
-Date: Wed, 23 Nov 2011 11:08:41 -0500
-Message-Id: <1322064521-16540-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111123_170849_539007_E0DD4638)
+	Thu, 17 Nov 2011 17:27:18 -0500
+Subject: Re: [PATCH 2/3] compat: backport kfree_rcu()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: mcgrof@gmail.com, mcgrof@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1321564991-7249-2-git-send-email-hauke@hauke-m.de>
+References: <1321564991-7249-1-git-send-email-hauke@hauke-m.de>
+	 <1321564991-7249-2-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 17 Nov 2011 23:27:16 +0100
+Message-ID: <1321568836.3997.53.camel@jlt3.sipsolutions.net> (sfid-20111117_232721_760191_EA202A7D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mBm is passed but dBm was assumed...
+On Thu, 2011-11-17 at 22:23 +0100, Hauke Mehrtens wrote:
 
-Cc: Bing Zhao <bzhao@marvell.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+> +#undef module_exit
+> +#define module_exit(exitfn)						\
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index e9ab9a3..0db97cc 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -120,10 +120,11 @@ mwifiex_cfg80211_del_key(struct wiphy *wiphy, struct net_device *netdev,
- static int
- mwifiex_cfg80211_set_tx_power(struct wiphy *wiphy,
- 			      enum nl80211_tx_power_setting type,
--			      int dbm)
-+			      int mbm)
- {
- 	struct mwifiex_private *priv = mwifiex_cfg80211_get_priv(wiphy);
- 	struct mwifiex_power_cfg power_cfg;
-+	int dbm = MBM_TO_DBM(mbm);
- 
- 	if (type == NL80211_TX_POWER_FIXED) {
- 		power_cfg.is_power_auto = 0;
--- 
-1.7.4.15.g7811d
+> +	static inline exitcall_t __exittest(void)			\
+> +	{ return exitfn; }						\
+
+This is not necessary since the exitfn() below will already create a
+compile error if you try module_exit(no_such_function).
+
+> +	void __exit __exit_compat(void)					\
+> +	{								\
+
+Shouldn't that be static?
+
+johannes
+
 
