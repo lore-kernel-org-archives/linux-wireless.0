@@ -1,81 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45415 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750907Ab1KHVCM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 16:02:12 -0500
-Subject: Re: [PATCH v8 2/2] mac80211:  Support ht-cap over-rides.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4EB99812.3000507@candelatech.com>
-References: <1320780995-30483-1-git-send-email-greearb@candelatech.com>
-	 <1320780995-30483-2-git-send-email-greearb@candelatech.com>
-	 (sfid-20111108_203659_989707_E33ECA13) <1320783128.24797.48.camel@jlt3.sipsolutions.net>
-	 <4EB99812.3000507@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Nov 2011 22:02:10 +0100
-Message-ID: <1320786130.24797.78.camel@jlt3.sipsolutions.net> (sfid-20111108_220215_674252_F8310E1B)
-Mime-Version: 1.0
+Received: from nm2.bullet.mail.in.yahoo.com ([121.101.151.224]:35203 "HELO
+	nm2.bullet.mail.in.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753980Ab1KQPbX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Nov 2011 10:31:23 -0500
+Message-ID: <1321543880.78636.YahooMailNeo@web137415.mail.in.yahoo.com> (sfid-20111117_163126_369915_C1052864)
+Date: Thu, 17 Nov 2011 21:01:20 +0530 (IST)
+From: prakhar vig <aquarian_133@yahoo.co.in>
+Reply-To: prakhar vig <aquarian_133@yahoo.co.in>
+Subject: mac80211 Queries
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-11-08 at 12:58 -0800, Ben Greear wrote:
-
-> >> +bool ieee80111_cfg_override_disables_ht40(struct ieee80211_sub_if_data *sdata)
-> >> +{
-> >> +	if ((sdata->u.mgd.ht_capa_mask.cap_info&
-> >> +	     IEEE80211_HT_CAP_SUP_WIDTH_20_40)&&
-> >> +	    !(sdata->u.mgd.ht_capa.cap_info&
-> >> +	      IEEE80211_HT_CAP_SUP_WIDTH_20_40))
-> >> +		return true;
-> >> +	return false;
-> >
-> > Would it really go above 80 cols if you didn't line-wrap it? Maybe
-> > remove the extra sets of parentheses? And even if it goes to a little
-> > bit above 80 it's still be more readable without the wrapping ...
-> 
-> It is more readable w/out the wrapping, but hard to know when
-> patches get rejected about that or not, so I tried to keep
-> checkpatch happy.  If you'll take slightly longer lines I'll
-> happily un-wrap it.
-
-Please. I'd rather go over a bit than read the above :-)
-
-> > One thing I don't quite understand: Why don't you calculate the HT caps
-> > to use upon assoc request, and then store *those* instead, then you
-> > wouldn't have to check the overrides every time.
-> 
-> Adding more state just gives more places to mess up that
-> state or forget to update it somehow.  Think of the channel
-> pointers in the scan & work code :)
-> Not to mention the extra bloat in RAM.
-> Since this is not hot-path code, I think having less state
-> is well worth the effort.
-
-You don't have more state though, you actually should end up with less
-since you can throw away the configured ht_caps & ht_mask? And you
-really just shift the access from sband->... to calculated_... stuff.
-
-
-> > For example here:
-> >
-> >>   		if (!(ap_ht_cap_flags&  IEEE80211_HT_CAP_40MHZ_INTOLERANT)&&
-> >> +		    !ieee80111_cfg_override_disables_ht40(sdata)&&
-> >>   		(sband->ht_cap.cap&  IEEE80211_HT_CAP_SUP_WIDTH_20_40)&&
-> >>   		(hti->ht_param&  IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
-> >>   			switch(hti->ht_param&  IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-> >
-> > This just adds complexity. If you calculate sdata->used_ht_caps first
-> > then you can replace the sband->ht_cap.cap check with an
-> > sdata->used_ht_caps.cap check and be done with it, instead of having to
-> > check both.
-> 
-> I think that's a bad idea, but will change it if you insist.
-
-I really think that'd be much nicer. As it is now we have to add all
-these checks everywhere, if we just calculate it once and then change
-places to use it we just have to remember to use the right thing.
-
-johannes
-
+Hi All,
+ 
+I am new to mac80211, I have few queries regarding the architecture.
+Would be highly thnkful if someone can clarify my understanding:
+ 
+1. As per my understanding, all IEs creation for Satellite will be done at WPA Supplicant irrespective of management frame or Action Frame and passed to mac80211 using nl80211 driver and cfg80211, where Management Frame will be created and passed to driver.
+ 
+2. Scanning for satellite will be initiated by Supplicant.
+ 
+Regards,
+Prakhar
