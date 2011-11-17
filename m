@@ -1,1427 +1,271 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from os.inf.tu-dresden.de ([141.76.48.99]:50756 "EHLO
-	os.inf.tu-dresden.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752508Ab1KUVYA (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:35582 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753273Ab1KQSPU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 16:24:00 -0500
-Date: Mon, 21 Nov 2011 22:23:35 +0100
-From: Udo Steinberg <udo@hypervisor.org>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: Linux Network Mailing List <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Firmware errors and warnings with Centrino Advanced-N 6205
-Message-ID: <20111121222335.19493eed@x220> (sfid-20111121_222409_320262_D087C2DA)
-In-Reply-To: <1321903999.2258.8.camel@wwguy-ubuntu>
-References: <20111120210012.405bd632@x220>
-	<1321889065.2258.5.camel@wwguy-ubuntu>
-	<20111121194824.12f4c276@x220>
-	<1321903999.2258.8.camel@wwguy-ubuntu>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/01CLjD2cX4y1v.Q6tQW68M6"; protocol="application/pgp-signature"
+	Thu, 17 Nov 2011 13:15:20 -0500
+Received: by mail-gx0-f174.google.com with SMTP id b2so1421463ggn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2011 10:15:19 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] rtlwifi: rtl8192cu: Fix endianian issues
+Date: Thu, 17 Nov 2011 12:14:44 -0600
+Message-Id: <1321553685-31154-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20111117_191526_268652_2DFA1637)
+In-Reply-To: <1321553685-31154-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1321553685-31154-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/01CLjD2cX4y1v.Q6tQW68M6
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Driver rtlwifi fails on a big-endian host.
 
-On Mon, 21 Nov 2011 11:33:19 -0800 wwguy (W) wrote:
+These changes have been tested on a Mac PowerBook G4, which has
+a PPC processor.
 
-W> Looks like the firmware not like the rate was used with the antenna
-W> choice.
-W>=20
-W> Could you please load the iwlagn module with debug flag =3D 0x1000
-W>=20
-W> $ sudo modprobe iwlagn debug=3D0x1000
-W>=20
-W> and let me know what you have
-W>=20
-W> btw, what kernel version you are using?
+Although this patch touches some of the code that will affect endian
+issues on PCI hardware through drivers rtl8192ce, rtl8192se, and
+rtl8192de, these have not been tested due to lack of suitable hardware.
 
-Hi Wey,
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/base.c               |    6 ++--
+ drivers/net/wireless/rtlwifi/base.h               |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c |   28 ++++++++++++---------
+ drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h |   20 +++++++-------
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c       |    9 +++---
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c      |    2 +-
+ drivers/net/wireless/rtlwifi/usb.c                |   12 +++++---
+ 7 files changed, 43 insertions(+), 36 deletions(-)
 
-I'm using Linux kernel 3.1.0. I got the following output with debug=3D0x100=
-0.
+diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
+index 3bb64e6..b78b3f1 100644
+--- a/drivers/net/wireless/rtlwifi/base.c
++++ b/drivers/net/wireless/rtlwifi/base.c
+@@ -345,9 +345,9 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
+ 	if (is_valid_ether_addr(rtlefuse->dev_addr)) {
+ 		SET_IEEE80211_PERM_ADDR(hw, rtlefuse->dev_addr);
+ 	} else {
+-		u8 rtlmac[] = { 0x00, 0xe0, 0x4c, 0x81, 0x92, 0x00 };
+-		get_random_bytes((rtlmac + (ETH_ALEN - 1)), 1);
+-		SET_IEEE80211_PERM_ADDR(hw, rtlmac);
++		u8 rtlmac1[] = { 0x00, 0xe0, 0x4c, 0x81, 0x92, 0x00 };
++		get_random_bytes((rtlmac1 + (ETH_ALEN - 1)), 1);
++		SET_IEEE80211_PERM_ADDR(hw, rtlmac1);
+ 	}
+ 
+ }
+diff --git a/drivers/net/wireless/rtlwifi/base.h b/drivers/net/wireless/rtlwifi/base.h
+index b6eb85e..a7595e2 100644
+--- a/drivers/net/wireless/rtlwifi/base.h
++++ b/drivers/net/wireless/rtlwifi/base.h
+@@ -76,7 +76,7 @@ enum ap_peer {
+ 	SET_BITS_TO_LE_2BYTE(_hdr, 8, 1, _val)
+ 
+ #define SET_80211_PS_POLL_AID(_hdr, _val)		\
+-	(*(u16 *)((u8 *)(_hdr) + 2) = le16_to_cpu(_val))
++	(*(u16 *)((u8 *)(_hdr) + 2) = _val)
+ #define SET_80211_PS_POLL_BSSID(_hdr, _val)		\
+ 	memcpy(((u8 *)(_hdr)) + 4, (u8 *)(_val), ETH_ALEN)
+ #define SET_80211_PS_POLL_TA(_hdr, _val)		\
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+index e20bf31..fa393df 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+@@ -109,6 +109,7 @@ static void _rtl92c_fw_block_write(struct ieee80211_hw *hw,
+ 	u8 *bufferPtr = (u8 *) buffer;
+ 	u32 *pu4BytePtr = (u32 *) buffer;
+ 	u32 i, offset, blockCount, remainSize;
++	u32 data;
+ 
+ 	if (rtlpriv->io.writeN_sync) {
+ 		rtl_block_fw_writeN(hw, buffer, size);
+@@ -116,20 +117,22 @@ static void _rtl92c_fw_block_write(struct ieee80211_hw *hw,
+ 	}
+ 	blockCount = size / blockSize;
+ 	remainSize = size % blockSize;
++	if (remainSize) {
++		/* the last word is < 4 bytes - pad it with zeros */
++		for (i = 0; i < 4 - remainSize; i++)
++			*(bufferPtr + size + i) = 0;
++		blockCount++;
++	}
+ 
+ 	for (i = 0; i < blockCount; i++) {
+ 		offset = i * blockSize;
++		/* for big-endian platforms, the firmware data need to be byte
++		 * swapped as it was read as a byte string and will be written
++		 * as 32-bit dwords and byte swapped when written
++		 */
++		data = le32_to_cpu(*(__le32 *)(pu4BytePtr + i));
+ 		rtl_write_dword(rtlpriv, (FW_8192C_START_ADDRESS + offset),
+-				*(pu4BytePtr + i));
+-	}
+-
+-	if (remainSize) {
+-		offset = blockCount * blockSize;
+-		bufferPtr += offset;
+-		for (i = 0; i < remainSize; i++) {
+-			rtl_write_byte(rtlpriv, (FW_8192C_START_ADDRESS +
+-						 offset + i), *(bufferPtr + i));
+-		}
++				data);
+ 	}
+ }
+ 
+@@ -270,8 +273,9 @@ int rtl92c_download_fw(struct ieee80211_hw *hw)
+ 	if (IS_FW_HEADER_EXIST(pfwheader)) {
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
+ 			 ("Firmware Version(%d), Signature(%#x),Size(%d)\n",
+-			  pfwheader->version, pfwheader->signature,
+-			  (uint)sizeof(struct rtl92c_firmware_header)));
++			 le16_to_cpu(pfwheader->version),
++			 le16_to_cpu(pfwheader->signature),
++			 (uint)sizeof(struct rtl92c_firmware_header)));
+ 
+ 		pfwdata = pfwdata + sizeof(struct rtl92c_firmware_header);
+ 		fwsize = fwsize - sizeof(struct rtl92c_firmware_header);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h
+index c55c054..cec5a3a 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h
+@@ -38,26 +38,26 @@
+ #define FW_8192C_POLLING_TIMEOUT_COUNT		100
+ 
+ #define IS_FW_HEADER_EXIST(_pfwhdr)	\
+-	((_pfwhdr->signature&0xFFF0) == 0x92C0 ||\
+-	(_pfwhdr->signature&0xFFF0) == 0x88C0)
++	((le16_to_cpu(_pfwhdr->signature)&0xFFF0) == 0x92C0 ||\
++	(le16_to_cpu(_pfwhdr->signature)&0xFFF0) == 0x88C0)
+ 
+ struct rtl92c_firmware_header {
+-	u16 signature;
++	__le16 signature;
+ 	u8 category;
+ 	u8 function;
+-	u16 version;
++	__le16 version;
+ 	u8 subversion;
+ 	u8 rsvd1;
+ 	u8 month;
+ 	u8 date;
+ 	u8 hour;
+ 	u8 minute;
+-	u16 ramcodeSize;
+-	u16 rsvd2;
+-	u32 svnindex;
+-	u32 rsvd3;
+-	u32 rsvd4;
+-	u32 rsvd5;
++	__le16 ramcodeSize;
++	__le16 rsvd2;
++	__le32 svnindex;
++	__le32 rsvd3;
++	__le32 rsvd4;
++	__le32 rsvd5;
+ };
+ 
+ enum rtl8192c_h2c_cmd {
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+index 814c05d..4ed973a 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -498,7 +498,7 @@ static void _rtl92cu_read_adapter_info(struct ieee80211_hw *hw)
+ 	}
+ 	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_LOUD, ("MAP\n"),
+ 		      hwinfo, HWSET_MAX_SIZE);
+-	eeprom_id = *((u16 *)&hwinfo[0]);
++	eeprom_id = le16_to_cpu(*((__le16 *)&hwinfo[0]));
+ 	if (eeprom_id != RTL8190_EEPROM_ID) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 ("EEPROM ID(%#x) is invalid!!\n", eeprom_id));
+@@ -516,13 +516,14 @@ static void _rtl92cu_read_adapter_info(struct ieee80211_hw *hw)
+ 	pr_info("MAC address: %pM\n", rtlefuse->dev_addr);
+ 	_rtl92cu_read_txpower_info_from_hwpg(hw,
+ 					   rtlefuse->autoload_failflag, hwinfo);
+-	rtlefuse->eeprom_vid = *(u16 *)&hwinfo[EEPROM_VID];
+-	rtlefuse->eeprom_did = *(u16 *)&hwinfo[EEPROM_DID];
++	rtlefuse->eeprom_vid = le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_VID]);
++	rtlefuse->eeprom_did = le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_DID]);
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+ 		 (" VID = 0x%02x PID = 0x%02x\n",
+ 		 rtlefuse->eeprom_vid, rtlefuse->eeprom_did));
+ 	rtlefuse->eeprom_channelplan = *(u8 *)&hwinfo[EEPROM_CHANNELPLAN];
+-	rtlefuse->eeprom_version = *(u16 *)&hwinfo[EEPROM_VERSION];
++	rtlefuse->eeprom_version =
++			 le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_VERSION]);
+ 	rtlefuse->txpwr_fromeprom = true;
+ 	rtlefuse->eeprom_oemid = *(u8 *)&hwinfo[EEPROM_CUSTOMER_ID];
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+index f875fed..f27092c 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+@@ -489,7 +489,7 @@ static void _rtl_tx_desc_checksum(u8 *txdesc)
+ 	SET_TX_DESC_TX_DESC_CHECKSUM(txdesc, 0);
+ 	for (index = 0; index < 16; index++)
+ 		checksum = checksum ^ (*(ptr + index));
+-	SET_TX_DESC_TX_DESC_CHECKSUM(txdesc, checksum);
++	SET_TX_DESC_TX_DESC_CHECKSUM(txdesc, cpu_to_le16(checksum));
+ }
+ 
+ void rtl92cu_tx_fill_desc(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+index 34ea59b..ad109ad 100644
+--- a/drivers/net/wireless/rtlwifi/usb.c
++++ b/drivers/net/wireless/rtlwifi/usb.c
+@@ -83,6 +83,7 @@ static int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
+ 	dr->wValue = cpu_to_le16(value);
+ 	dr->wIndex = cpu_to_le16(index);
+ 	dr->wLength = cpu_to_le16(len);
++	/* data are already in little-endian order */
+ 	memcpy(buf, pdata, len);
+ 	usb_fill_control_urb(urb, udev, pipe,
+ 			     (unsigned char *)dr, buf, len,
+@@ -102,6 +103,7 @@ static int _usbctrl_vendorreq_sync_read(struct usb_device *udev, u8 request,
+ 	int status;
+ 	u8 reqtype;
+ 	int vendorreq_times = 0;
++	static int count;
+ 
+ 	pipe = usb_rcvctrlpipe(udev, 0); /* read_in */
+ 	reqtype =  REALTEK_USB_VENQT_READ;
+@@ -118,9 +120,9 @@ static int _usbctrl_vendorreq_sync_read(struct usb_device *udev, u8 request,
+ 			break;
+ 		}
+ 	}
+-	if (status < 0)
++	if (status < 0 && count++ < 4)
+ 		pr_err("reg 0x%x, usbctrl_vendorreq TimeOut! status:0x%x value=0x%x\n",
+-		       value, status, *(u32 *)pdata);
++		       value, status, le32_to_cpu(*(u32 *)pdata));
+ 	return status;
+ }
+ 
+@@ -140,7 +142,7 @@ static u32 _usb_read_sync(struct usb_device *udev, u32 addr, u16 len)
+ 
+ 	wvalue = (u16)addr;
+ 	_usbctrl_vendorreq_sync_read(udev, request, wvalue, index, data, len);
+-	ret = *data;
++	ret = le32_to_cpu(*data);
+ 	kfree(data);
+ 	return ret;
+ }
+@@ -172,12 +174,12 @@ static void _usb_write_async(struct usb_device *udev, u32 addr, u32 val,
+ 	u8 request;
+ 	u16 wvalue;
+ 	u16 index;
+-	u32 data;
++	__le32 data;
+ 
+ 	request = REALTEK_USB_VENQT_CMD_REQ;
+ 	index = REALTEK_USB_VENQT_CMD_IDX; /* n/a */
+ 	wvalue = (u16)(addr&0x0000ffff);
+-	data = val;
++	data = cpu_to_le32(val);
+ 	_usbctrl_vendorreq_async_write(udev, request, wvalue, index, &data,
+ 				       len);
+ }
+-- 
+1.7.7
 
-Cheers,
-
-	- Udo
-
-Nov 21 22:12:02 x220 kernel: Intel(R) Wireless WiFi Link AGN driver for Lin=
-ux, in-tree:d
-Nov 21 22:12:02 x220 kernel: Copyright(c) 2003-2011 Intel Corporation
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (leve=
-l, low) -> IRQ 17
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: setting latency timer to =
-64
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: pci_resource_len =3D 0x00=
-002000
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: pci_resource_base =3D fff=
-fc900041a0000
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: HW Revision ID =3D 0x34
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: irq 49 for MSI/MSI-X
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: Detected Intel(R) Centrin=
-o(R) Advanced-N 6205 AGN, REV=3D0xB0
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: L1 Disabled; Enabling L0S
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: device EEPROM VER=3D0x715=
-, CALIB=3D0x6
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: Device SKU: 0X1f0
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: Valid Tx ant: 0X3, Valid =
-Rx ant: 0X3
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2406 active=3D2 idle=3D1
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: Tunable channels: 13 802.=
-11bg, 24 802.11a channels
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: loaded firmware version 1=
-7.168.5.3 build 42301
-Nov 21 22:12:02 x220 kernel: Registered led device: phy1-led
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: Selected rate control algorith=
-m 'iwl-agn-rs'
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwl_prep_station Add STA to =
-driver ID 15: ff:ff:ff:ff:ff:ff
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwl_prep_station Add STA to =
-driver ID 14: ff:ff:ff:ff:ff:ff
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: L1 Disabled; Enabling L0S
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: Radio type=3D0x1-0x2-0x0
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: L1 Disabled; Enabling L0S
-Nov 21 22:12:02 x220 kernel: iwlagn 0000:03:00.0: Radio type=3D0x1-0x2-0x0
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2406 active=3D2 idle=3D1
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2406 active=3D2 idle=3D1
-Nov 21 22:12:02 x220 last message repeated 2 times
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2406 active=3D2 idle=3D1
-Nov 21 22:12:02 x220 last message repeated 5 times
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:12:02 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2406 active=3D2 idle=3D1
-Nov 21 22:12:06 x220 last message repeated 11 times
-Nov 21 22:12:06 x220 kernel: wlan0: authenticate with 00:24:fe:41:8d:0e (tr=
-y 1)
-Nov 21 22:12:06 x220 kernel: wlan0: authenticated
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2406 active=3D2 idle=3D1
-Nov 21 22:12:06 x220 last message repeated 5 times
-Nov 21 22:12:06 x220 kernel: wlan0: associate with 00:24:fe:41:8d:0e (try 1)
-Nov 21 22:12:06 x220 kernel: wlan0: RX ReassocResp from 00:24:fe:41:8d:0e (=
-capab=3D0x431 status=3D0 aid=3D1)
-Nov 21 22:12:06 x220 kernel: wlan0: associated
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_prep_station Add STA to =
-driver ID 0: 00:24:fe:41:8d:0e
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_set_ht_add_station spati=
-al multiplexing power save mode: disabled
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 0 addr 00:24:fe:41:8d:0e to uCode
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2406 active=3D2 idle=3D1
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x6806 active=3D2 idle=3D2
-Nov 21 22:12:06 x220 last message repeated 2 times
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x6806 active=3D2 idle=3D2
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x6806 active=3D2 idle=3D2
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta 00:24:fe:41:8d:0e
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 0 addr 00:24:fe:41:8d:0e to uCode
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008025 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta 00:24:fe:41:8d:0e
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 0 addr 00:24:fe:41:8d:0e to uCode
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_send_rxon_timing beacon =
-interval 100 beacon timer 102016 beacon tim 0
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_send_remove_station REPL=
-Y_REMOVE_STA PASSED
-Nov 21 22:12:06 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:12:07 x220 last message repeated 2 times
-Nov 21 22:12:08 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:12:08 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:12:33 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:12:38 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:12:38 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:12:38 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:12:38 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:12:38 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:12:44 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:12:44 x220 kernel: iwlagn 0000:03:00.0: Tx aggregation enabled on=
- ra =3D 00:24:fe:41:8d:0e tid =3D 0
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:23 x220 last message repeated 2 times
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:23 x220 last message repeated 2 times
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: Microcode SW error detect=
-ed.  Restarting 0x2000000.
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: Loaded firmware version: =
-17.168.5.3 build 42301
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: Start IWL Error Log Dump:
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: Status: 0x000412E4, count=
-: 6
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x00002078 | ADVANCED_SYS=
-ASSERT         =20
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x00009514 | uPc
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x00009496 | branchlink1
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x00009496 | branchlink2
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x0000D1F2 | interruptlin=
-k1
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | interruptlin=
-k2
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x00008035 | data1
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x0000C90F | data2
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x000005A7 | line
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x4E404AC5 | beacon time
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x812C753B | tsf low
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | tsf hi
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | time gp1
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x085F4F65 | time gp2
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | time gp3
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x000111A8 | uCode version
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x000000B0 | hw version
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x00480303 | board version
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: 0x093D004E | hcmd
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: CSR values:
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: (2nd byte of CSR_INT_COAL=
-ESCING is CSR_INT_PERIODIC_REG)
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:        CSR_HW_IF_CONFIG_R=
-EG: 0X00480303
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:          CSR_INT_COALESCI=
-NG: 0X0000ff40
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:                     CSR_I=
-NT: 0X00000000
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:                CSR_INT_MA=
-SK: 0X00000000
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:           CSR_FH_INT_STAT=
-US: 0X00000000
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:                 CSR_GPIO_=
-IN: 0X00000030
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:                   CSR_RES=
-ET: 0X00000000
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:                CSR_GP_CNT=
-RL: 0X080403c5
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:                  CSR_HW_R=
-EV: 0X000000b0
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:              CSR_EEPROM_R=
-EG: 0X37d60ffd
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:               CSR_EEPROM_=
-GP: 0X90000001
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:              CSR_OTP_GP_R=
-EG: 0X00030001
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:                 CSR_GIO_R=
-EG: 0X00080044
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:            CSR_GP_UCODE_R=
-EG: 0X00008520
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:           CSR_GP_DRIVER_R=
-EG: 0X00000000
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:           CSR_UCODE_DRV_G=
-P1: 0X00000000
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:           CSR_UCODE_DRV_G=
-P2: 0X00000000
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:                 CSR_LED_R=
-EG: 0X00000058
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:        CSR_DRAM_INT_TBL_R=
-EG: 0X88211eee
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:        CSR_GIO_CHICKEN_BI=
-TS: 0X27800200
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:             CSR_ANA_PLL_C=
-FG: 0X00000000
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:           CSR_HW_REV_WA_R=
-EG: 0X0001001a
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:        CSR_DBG_HPET_MEM_R=
-EG: 0Xffff0010
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: FH register values:
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:         FH_RSCSR_CHNL0_ST=
-TS_WPTR_REG: 0X212d1300
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:        FH_RSCSR_CHNL0_RBD=
-CB_BASE_REG: 0X0213af40
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:                  FH_RSCSR=
-_CHNL0_WPTR: 0X000000c8
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:         FH_MEM_RCSR_CHNL0=
-_CONFIG_REG: 0X80819104
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:          FH_MEM_RSSR_SHAR=
-ED_CTRL_REG: 0X000000fc
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:            FH_MEM_RSSR_RX=
-_STATUS_REG: 0X07030000
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_=
-ERR_IRQ2DRV: 0X00000000
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:                FH_TSSR_TX=
-_STATUS_REG: 0X07ff0001
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0:                 FH_TSSR_T=
-X_ERROR_REG: 0X00000000
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: Start IWL Event Log Dump:=
- display last 20 entries
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140460940:0x000=
-00020:0208
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140460959:0x000=
-00000:0302
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140460993:0x000=
-00001:0203
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140460998:0x0ab=
-7001c:0206
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140460999:0x000=
-00040:0204
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140461002:0x2a1=
-0fb5e:0222
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140461002:0xc01=
-00084:0223
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140461005:0x000=
-00040:0219
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140461006:0x010=
-00110:0211
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140461010:0x000=
-00000:0212
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140461049:0x000=
-00000:0215
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140461051:0x000=
-00008:0220
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140461069:0x000=
-00000:0302
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140461100:0x000=
-000d4:0303
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140461104:0x000=
-01fb8:0217
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140461104:0x0ab=
-7001c:0217
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140461723:0x000=
-000fa:0106
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140461725:0x000=
-00000:0301
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140463965:0x093=
-d004e:0401
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0140463975:0x000=
-00000:0125
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: Hardware restart was requested
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_prep_station Add STA to =
-driver ID 15: ff:ff:ff:ff:ff:ff
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_prep_station Add STA to =
-driver ID 14: ff:ff:ff:ff:ff:ff
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: L1 Disabled; Enabling L0S
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: Radio type=3D0x1-0x2-0x0
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_send_rxon_timing beacon =
-interval 200 beacon timer 204416 beacon tim 0
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:23 x220 last message repeated 2 times
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_prep_station Add STA to =
-driver ID 0: 00:24:fe:41:8d:0e
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_set_ht_add_station spati=
-al multiplexing power save mode: disabled
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 0 addr 00:24:fe:41:8d:0e to uCode
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:23 x220 last message repeated 2 times
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8015 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8015 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta 00:24:fe:41:8d:0e
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 0 addr 00:24:fe:41:8d:0e to uCode
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta 00:24:fe:41:8d:0e
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 0 addr 00:24:fe:41:8d:0e to uCode
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_send_rxon_timing beacon =
-interval 100 beacon timer 102016 beacon tim 0
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_send_remove_station REPL=
-Y_REMOVE_STA PASSED
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: Stopping AGG while state =
-not ON or starting
-Nov 21 22:14:23 x220 kernel: iwlagn 0000:03:00.0: queue number out of range=
-: 0, must be 10 to 19
-Nov 21 22:14:23 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:14:23 x220 last message repeated 3 times
-Nov 21 22:14:24 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:24 x220 last message repeated 2 times
-Nov 21 22:14:24 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:14:24 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:24 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:14:24 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:24 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:14:24 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:24 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:14:24 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:24 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:14:24 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:24 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:14:24 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:14:25 x220 last message repeated 2 times
-Nov 21 22:14:40 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:14:40 x220 kernel: iwlagn 0000:03:00.0: Tx aggregation enabled on=
- ra =3D 00:24:fe:41:8d:0e tid =3D 0
-Nov 21 22:15:05 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:16:32 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:32 x220 last message repeated 2 times
-Nov 21 22:16:32 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:16:32 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:32 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:16:32 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:32 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:16:32 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:32 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:16:32 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:32 x220 last message repeated 2 times
-Nov 21 22:16:32 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:16:32 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:32 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:16:32 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: Microcode SW error detect=
-ed.  Restarting 0x2000000.
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: Loaded firmware version: =
-17.168.5.3 build 42301
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: Start IWL Error Log Dump:
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: Status: 0x000412E4, count=
-: 6
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x00002078 | ADVANCED_SYS=
-ASSERT         =20
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x00009514 | uPc
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x00009496 | branchlink1
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x00009496 | branchlink2
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x0000D1F2 | interruptlin=
-k1
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | interruptlin=
-k2
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x00008035 | data1
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x0000E90D | data2
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x000005A7 | line
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x3BC143DF | beacon time
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x88E40C21 | tsf low
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | tsf hi
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | time gp1
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x07B77463 | time gp2
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | time gp3
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x000111A8 | uCode version
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x000000B0 | hw version
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x00480303 | board version
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: 0x091D004E | hcmd
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: CSR values:
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: (2nd byte of CSR_INT_COAL=
-ESCING is CSR_INT_PERIODIC_REG)
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:        CSR_HW_IF_CONFIG_R=
-EG: 0X00480303
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:          CSR_INT_COALESCI=
-NG: 0X0000ff40
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:                     CSR_I=
-NT: 0X00000000
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:                CSR_INT_MA=
-SK: 0X00000000
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:           CSR_FH_INT_STAT=
-US: 0X00000000
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:                 CSR_GPIO_=
-IN: 0X00000030
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:                   CSR_RES=
-ET: 0X00000000
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:                CSR_GP_CNT=
-RL: 0X080403c5
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:                  CSR_HW_R=
-EV: 0X000000b0
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:              CSR_EEPROM_R=
-EG: 0X37d60ffd
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:               CSR_EEPROM_=
-GP: 0X90000001
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:              CSR_OTP_GP_R=
-EG: 0X00030001
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:                 CSR_GIO_R=
-EG: 0X00080044
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:            CSR_GP_UCODE_R=
-EG: 0X00007b58
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:           CSR_GP_DRIVER_R=
-EG: 0X00000000
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:           CSR_UCODE_DRV_G=
-P1: 0X00000000
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:           CSR_UCODE_DRV_G=
-P2: 0X00000000
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:                 CSR_LED_R=
-EG: 0X00000078
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:        CSR_DRAM_INT_TBL_R=
-EG: 0X88211eee
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:        CSR_GIO_CHICKEN_BI=
-TS: 0X27800200
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:             CSR_ANA_PLL_C=
-FG: 0X00000000
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:           CSR_HW_REV_WA_R=
-EG: 0X0001001a
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:        CSR_DBG_HPET_MEM_R=
-EG: 0Xffff0000
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: FH register values:
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:         FH_RSCSR_CHNL0_ST=
-TS_WPTR_REG: 0X212d1300
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:        FH_RSCSR_CHNL0_RBD=
-CB_BASE_REG: 0X0213af40
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:                  FH_RSCSR=
-_CHNL0_WPTR: 0X00000078
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:         FH_MEM_RCSR_CHNL0=
-_CONFIG_REG: 0X80819104
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:          FH_MEM_RSSR_SHAR=
-ED_CTRL_REG: 0X000000fc
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:            FH_MEM_RSSR_RX=
-_STATUS_REG: 0X07030000
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_=
-ERR_IRQ2DRV: 0X00000000
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:                FH_TSSR_TX=
-_STATUS_REG: 0X07ff0001
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0:                 FH_TSSR_T=
-X_ERROR_REG: 0X00000000
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: Start IWL Event Log Dump:=
- display last 20 entries
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129462778:0x000=
-00008:0220
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129462963:0x000=
-000fa:0106
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129462964:0x000=
-00000:0302
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463112:0x000=
-000d4:0322
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463141:0x005=
-a7a5f:0310
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463204:0x0a6=
-e001c:0206
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463205:0x000=
-00001:0204
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463209:0x000=
-00001:0214
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463209:0x010=
-01110:0205
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463233:0x000=
-00020:0208
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463252:0x000=
-00000:0302
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463286:0x000=
-00001:0203
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463291:0x0a6=
-e001c:0206
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463292:0x000=
-00040:0204
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463295:0x010=
-00110:0211
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463299:0x000=
-00000:0212
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463344:0x000=
-00000:0215
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463347:0x000=
-00008:0220
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463387:0x091=
-d004e:0401
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0129463397:0x000=
-00000:0125
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: Hardware restart was requested
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_prep_station Add STA to =
-driver ID 15: ff:ff:ff:ff:ff:ff
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_prep_station Add STA to =
-driver ID 14: ff:ff:ff:ff:ff:ff
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: L1 Disabled; Enabling L0S
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: Radio type=3D0x1-0x2-0x0
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_send_rxon_timing beacon =
-interval 200 beacon timer 204416 beacon tim 0
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:33 x220 last message repeated 2 times
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_prep_station Add STA to =
-driver ID 0: 00:24:fe:41:8d:0e
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_set_ht_add_station spati=
-al multiplexing power save mode: disabled
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 0 addr 00:24:fe:41:8d:0e to uCode
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:33 x220 last message repeated 2 times
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8015 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8015 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta 00:24:fe:41:8d:0e
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 0 addr 00:24:fe:41:8d:0e to uCode
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta 00:24:fe:41:8d:0e
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 0 addr 00:24:fe:41:8d:0e to uCode
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_send_rxon_timing beacon =
-interval 100 beacon timer 102016 beacon tim 0
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_send_remove_station REPL=
-Y_REMOVE_STA PASSED
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: Stopping AGG while state =
-not ON or starting
-Nov 21 22:16:33 x220 kernel: iwlagn 0000:03:00.0: queue number out of range=
-: 0, must be 10 to 19
-Nov 21 22:16:33 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:16:33 x220 last message repeated 4 times
-Nov 21 22:16:34 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:34 x220 last message repeated 2 times
-Nov 21 22:16:34 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:16:34 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:34 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:16:34 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:34 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:16:34 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:34 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:16:34 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:34 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:16:34 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:34 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:16:34 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:16:34 x220 last message repeated 2 times
-Nov 21 22:16:52 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:16:52 x220 kernel: iwlagn 0000:03:00.0: Tx aggregation enabled on=
- ra =3D 00:24:fe:41:8d:0e tid =3D 0
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:41 x220 last message repeated 2 times
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:41 x220 last message repeated 2 times
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: Microcode SW error detect=
-ed.  Restarting 0x2000000.
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: Loaded firmware version: =
-17.168.5.3 build 42301
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: Start IWL Error Log Dump:
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: Status: 0x000412E4, count=
-: 6
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x00002078 | ADVANCED_SYS=
-ASSERT         =20
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x00009514 | uPc
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x00009496 | branchlink1
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x00009496 | branchlink2
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x0000D1F2 | interruptlin=
-k1
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | interruptlin=
-k2
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x00008035 | data1
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x0000C90F | data2
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x000005A7 | line
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x3980974C | beacon time
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x908DA8B4 | tsf low
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | tsf hi
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | time gp1
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x07A97A19 | time gp2
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | time gp3
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x000111A8 | uCode version
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x000000B0 | hw version
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x00480303 | board version
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: 0x09DA004E | hcmd
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: CSR values:
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: (2nd byte of CSR_INT_COAL=
-ESCING is CSR_INT_PERIODIC_REG)
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:        CSR_HW_IF_CONFIG_R=
-EG: 0X00480303
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:          CSR_INT_COALESCI=
-NG: 0X0000ff40
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:                     CSR_I=
-NT: 0X00000000
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:                CSR_INT_MA=
-SK: 0X00000000
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:           CSR_FH_INT_STAT=
-US: 0X00000000
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:                 CSR_GPIO_=
-IN: 0X00000030
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:                   CSR_RES=
-ET: 0X00000000
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:                CSR_GP_CNT=
-RL: 0X080403c5
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:                  CSR_HW_R=
-EV: 0X000000b0
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:              CSR_EEPROM_R=
-EG: 0X37d60ffd
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:               CSR_EEPROM_=
-GP: 0X90000001
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:              CSR_OTP_GP_R=
-EG: 0X00030001
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:                 CSR_GIO_R=
-EG: 0X00080044
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:            CSR_GP_UCODE_R=
-EG: 0X0000760f
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:           CSR_GP_DRIVER_R=
-EG: 0X00000000
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:           CSR_UCODE_DRV_G=
-P1: 0X00000000
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:           CSR_UCODE_DRV_G=
-P2: 0X00000000
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:                 CSR_LED_R=
-EG: 0X00000078
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:        CSR_DRAM_INT_TBL_R=
-EG: 0X88211eee
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:        CSR_GIO_CHICKEN_BI=
-TS: 0X27800200
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:             CSR_ANA_PLL_C=
-FG: 0X00000000
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:           CSR_HW_REV_WA_R=
-EG: 0X0001001a
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:        CSR_DBG_HPET_MEM_R=
-EG: 0Xffff0000
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: FH register values:
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:         FH_RSCSR_CHNL0_ST=
-TS_WPTR_REG: 0X212d1300
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:        FH_RSCSR_CHNL0_RBD=
-CB_BASE_REG: 0X0213af40
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:                  FH_RSCSR=
-_CHNL0_WPTR: 0X000000a8
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:         FH_MEM_RCSR_CHNL0=
-_CONFIG_REG: 0X80819104
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:          FH_MEM_RSSR_SHAR=
-ED_CTRL_REG: 0X000000fc
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:            FH_MEM_RSSR_RX=
-_STATUS_REG: 0X07030000
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_=
-ERR_IRQ2DRV: 0X00000000
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:                FH_TSSR_TX=
-_STATUS_REG: 0X07ff0001
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0:                 FH_TSSR_T=
-X_ERROR_REG: 0X00000000
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: Start IWL Event Log Dump:=
- display last 20 entries
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546673:0x000=
-00001:0203
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546678:0x0ad=
-5001c:0206
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546678:0x000=
-00040:0204
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546681:0x2a1=
-0fb5e:0222
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546682:0xc01=
-00084:0223
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546685:0x000=
-00040:0219
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546685:0x010=
-00110:0211
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546689:0x000=
-00000:0212
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546728:0x000=
-00000:0215
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546731:0x000=
-00008:0220
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546748:0x000=
-00000:0302
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546779:0x000=
-000d4:0303
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546783:0x000=
-01dd6:0217
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546784:0x0ad=
-5001c:0217
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546920:0x000=
-000fa:0106
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128546922:0x000=
-00000:0302
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128547069:0x000=
-000d4:0322
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128547099:0x005=
-a7a5f:0310
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128547345:0x09d=
-a004e:0401
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0128547355:0x000=
-00000:0125
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: Hardware restart was requested
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_prep_station Add STA to =
-driver ID 15: ff:ff:ff:ff:ff:ff
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_prep_station Add STA to =
-driver ID 14: ff:ff:ff:ff:ff:ff
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: L1 Disabled; Enabling L0S
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: Radio type=3D0x1-0x2-0x0
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_send_rxon_timing beacon =
-interval 200 beacon timer 204416 beacon tim 0
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:41 x220 last message repeated 2 times
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_prep_station Add STA to =
-driver ID 0: 00:24:fe:41:8d:0e
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_set_ht_add_station spati=
-al multiplexing power save mode: disabled
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 0 addr 00:24:fe:41:8d:0e to uCode
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:41 x220 last message repeated 2 times
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8015 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8015 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta 00:24:fe:41:8d:0e
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 0 addr 00:24:fe:41:8d:0e to uCode
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta 00:24:fe:41:8d:0e
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 0 addr 00:24:fe:41:8d:0e to uCode
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_send_rxon_timing beacon =
-interval 100 beacon timer 102016 beacon tim 0
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_send_remove_station REPL=
-Y_REMOVE_STA PASSED
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: Stopping AGG while state =
-not ON or starting
-Nov 21 22:18:41 x220 kernel: iwlagn 0000:03:00.0: queue number out of range=
-: 0, must be 10 to 19
-Nov 21 22:18:41 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:18:41 x220 last message repeated 4 times
-Nov 21 22:18:43 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:43 x220 last message repeated 2 times
-Nov 21 22:18:43 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:18:43 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:43 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:43 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:43 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:18:43 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:43 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:18:43 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:43 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:18:43 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:43 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:18:43 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:56 x220 last message repeated 5 times
-Nov 21 22:18:56 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:56 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:56 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:18:56 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:56 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:56 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:56 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:56 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:56 x220 last message repeated 2 times
-Nov 21 22:18:56 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:56 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:56 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:56 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:57 x220 last message repeated 3 times
-Nov 21 22:18:57 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:18:57 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:57 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:18:57 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:57 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:18:57 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:57 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:18:57 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:57 x220 last message repeated 2 times
-Nov 21 22:18:57 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:18:57 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:57 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:18:57 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:18:58 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:18:58 x220 kernel: iwlagn 0000:03:00.0: Tx aggregation enabled on=
- ra =3D 00:24:fe:41:8d:0e tid =3D 0
-Nov 21 22:19:11 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:11 x220 last message repeated 2 times
-Nov 21 22:19:11 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:19:11 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:11 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:19:11 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:11 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:19:11 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:11 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:19:11 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:11 x220 last message repeated 2 times
-Nov 21 22:19:11 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:19:11 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:11 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:19:11 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: Microcode SW error detect=
-ed.  Restarting 0x2000000.
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: Loaded firmware version: =
-17.168.5.3 build 42301
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: Start IWL Error Log Dump:
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: Status: 0x000412E4, count=
-: 6
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x00002078 | ADVANCED_SYS=
-ASSERT         =20
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x00009514 | uPc
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x00009496 | branchlink1
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x00009496 | branchlink2
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x0000D1F2 | interruptlin=
-k1
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | interruptlin=
-k2
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x00008035 | data1
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x0000C90E | data2
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x000005A7 | line
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x49811381 | beacon time
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x925BAC7F | tsf low
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | tsf hi
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | time gp1
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x01CDE1AE | time gp2
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x00000000 | time gp3
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x000111A8 | uCode version
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x000000B0 | hw version
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x00480303 | board version
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: 0x09D0004E | hcmd
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: CSR values:
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: (2nd byte of CSR_INT_COAL=
-ESCING is CSR_INT_PERIODIC_REG)
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:        CSR_HW_IF_CONFIG_R=
-EG: 0X00480303
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:          CSR_INT_COALESCI=
-NG: 0X0000ff40
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:                     CSR_I=
-NT: 0X00000000
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:                CSR_INT_MA=
-SK: 0X00000000
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:           CSR_FH_INT_STAT=
-US: 0X00000000
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:                 CSR_GPIO_=
-IN: 0X00000030
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:                   CSR_RES=
-ET: 0X00000000
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:                CSR_GP_CNT=
-RL: 0X080403c5
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:                  CSR_HW_R=
-EV: 0X000000b0
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:              CSR_EEPROM_R=
-EG: 0X37d60ffd
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:               CSR_EEPROM_=
-GP: 0X90000001
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:              CSR_OTP_GP_R=
-EG: 0X00030001
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:                 CSR_GIO_R=
-EG: 0X00080044
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:            CSR_GP_UCODE_R=
-EG: 0X00001e9f
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:           CSR_GP_DRIVER_R=
-EG: 0X00000000
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:           CSR_UCODE_DRV_G=
-P1: 0X00000000
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:           CSR_UCODE_DRV_G=
-P2: 0X00000000
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:                 CSR_LED_R=
-EG: 0X00000078
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:        CSR_DRAM_INT_TBL_R=
-EG: 0X88211eee
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:        CSR_GIO_CHICKEN_BI=
-TS: 0X27800200
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:             CSR_ANA_PLL_C=
-FG: 0X00000000
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:           CSR_HW_REV_WA_R=
-EG: 0X0001001a
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:        CSR_DBG_HPET_MEM_R=
-EG: 0Xffff0000
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: FH register values:
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:         FH_RSCSR_CHNL0_ST=
-TS_WPTR_REG: 0X212d1300
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:        FH_RSCSR_CHNL0_RBD=
-CB_BASE_REG: 0X0213af40
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:                  FH_RSCSR=
-_CHNL0_WPTR: 0X000000f0
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:         FH_MEM_RCSR_CHNL0=
-_CONFIG_REG: 0X80819104
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:          FH_MEM_RSSR_SHAR=
-ED_CTRL_REG: 0X000000fc
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:            FH_MEM_RSSR_RX=
-_STATUS_REG: 0X07030000
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_=
-ERR_IRQ2DRV: 0X00000000
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:                FH_TSSR_TX=
-_STATUS_REG: 0X07ff0001
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0:                 FH_TSSR_T=
-X_ERROR_REG: 0X00000000
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: Start IWL Event Log Dump:=
- display last 20 entries
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030267653:0x000=
-00040:0204
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030267656:0x010=
-00110:0211
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030267660:0x000=
-00000:0212
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030267703:0x000=
-00000:0215
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030267706:0x000=
-00008:0220
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030267723:0x000=
-00000:0302
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030267754:0x000=
-000d4:0303
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030267758:0x000=
-01c06:0217
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030267759:0x0a0=
-5001c:0217
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030268632:0x000=
-000fa:0106
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030268633:0x000=
-00000:0302
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030268664:0x000=
-000b4:0303
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030268839:0x000=
-000fa:0106
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030268840:0x000=
-00000:0302
-Nov 21 22:19:11 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030268871:0x000=
-000b4:0303
-Nov 21 22:19:12 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030269495:0x000=
-000fa:0106
-Nov 21 22:19:12 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030269497:0x000=
-00000:0302
-Nov 21 22:19:12 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030269528:0x000=
-000b4:0303
-Nov 21 22:19:12 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030269862:0x09d=
-0004e:0401
-Nov 21 22:19:12 x220 kernel: iwlagn 0000:03:00.0: EVT_LOGT:0030269872:0x000=
-00000:0125
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: Hardware restart was requested
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_prep_station Add STA to =
-driver ID 15: ff:ff:ff:ff:ff:ff
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_prep_station Add STA to =
-driver ID 14: ff:ff:ff:ff:ff:ff
-Nov 21 22:19:12 x220 kernel: iwlagn 0000:03:00.0: L1 Disabled; Enabling L0S
-Nov 21 22:19:12 x220 kernel: iwlagn 0000:03:00.0: Radio type=3D0x1-0x2-0x0
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_send_rxon_timing beacon =
-interval 200 beacon timer 204416 beacon tim 0
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:12 x220 last message repeated 2 times
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_prep_station Add STA to =
-driver ID 0: 00:24:fe:41:8d:0e
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_set_ht_add_station spati=
-al multiplexing power save mode: disabled
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 0 addr 00:24:fe:41:8d:0e to uCode
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:12 x220 last message repeated 2 times
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8015 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8015 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta 00:24:fe:41:8d:0e
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 0 addr 00:24:fe:41:8d:0e to uCode
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x8035 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng all known stations ... start.
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta 00:24:fe:41:8d:0e
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_restore_stations Restori=
-ng sta ff:ff:ff:ff:ff:ff
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 0 addr 00:24:fe:41:8d:0e to uCode
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate Added=
- STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_send_rxon_timing beacon =
-interval 100 beacon timer 102016 beacon tim 0
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_send_remove_station REPL=
-Y_REMOVE_STA PASSED
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:19:12 x220 kernel: iwlagn 0000:03:00.0: Stopping AGG while state =
-not ON or starting
-Nov 21 22:19:12 x220 kernel: iwlagn 0000:03:00.0: queue number out of range=
-: 0, must be 10 to 19
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:19:12 x220 last message repeated 3 times
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:12 x220 last message repeated 2 times
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x5 operation mode :0x0 extension channel offset 0x0
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4008035 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U _iwl_set_rxon_ht rxon flags =
-0x4000005 operation mode :0x0 extension channel offset 0x1
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-Nov 21 22:19:12 x220 kernel: ieee80211 phy1: U iwl_sta_ucode_activate STA i=
-d 0 addr 00:24:fe:41:8d:0e already present in uCode (according to driver)
-Nov 21 22:19:13 x220 kernel: ieee80211 phy1: U iwlagn_set_rxon_chain rx_cha=
-in=3D0x2806 active=3D2 idle=3D2
-
---Sig_/01CLjD2cX4y1v.Q6tQW68M6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk7KwVgACgkQnhRzXSM7nSnNNwCfYty1yQQnWJ0LzQC7RUOeIQp/
-/GYAnRyz4KJJRXHiE3xcmT+L/Y5WkIRY
-=3qw5
------END PGP SIGNATURE-----
-
---Sig_/01CLjD2cX4y1v.Q6tQW68M6--
