@@ -1,27 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s37.blu0.hotmail.com ([65.55.111.112]:18221 "EHLO
-	blu0-omc2-s37.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751720Ab1KRA53 (ORCPT
+Received: from mail-dy0-f46.google.com ([209.85.220.46]:62949 "EHLO
+	mail-dy0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755984Ab1KRUCN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 19:57:29 -0500
-Message-ID: <BLU0-SMTP421BF8706B6D24975A58ED5C40@phx.gbl> (sfid-20111118_015736_542166_78CA0448)
-From: Bruce Race <barace48@hotmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="US-ASCII"; format=flowed; delsp=yes
-MIME-Version: 1.0 (Apple Message framework v936)
-Subject: dell d505 wifi driver install ubuntu 11.10
-Date: Thu, 17 Nov 2011 19:51:15 -0500
+	Fri, 18 Nov 2011 15:02:13 -0500
+Received: by dyi18 with SMTP id 18so272835dyi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 12:02:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1321645446-22527-2-git-send-email-hauke@hauke-m.de>
+References: <1321645446-22527-1-git-send-email-hauke@hauke-m.de> <1321645446-22527-2-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 18 Nov 2011 12:01:50 -0800
+Message-ID: <CAB=NE6Vezb619RGWf1vj4Xx=B_pJy_6=5m6xO-GooMPKPQYqhg@mail.gmail.com> (sfid-20111118_210227_085305_BB41A6D6)
+Subject: Re: [PATCH 2/3] compat-wireless: escape &
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am a novice ubuntu user. I am trying to use ubuntu to build a high  
-school science lab from free dell d505 notebooks the gov't gave to the  
-school. We are having issues with getting the intel pro/wireless to  
-work. We have found the drivers but lack the knowledge to install  
-them. Specifically the commands to use in the terminal window.
+On Fri, Nov 18, 2011 at 11:44 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> & needs to be escaped.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Can you provide assistance?
+applied and pushed, thanks!
 
-Thank you kindly,
 
-Doc Race
+  Luis
