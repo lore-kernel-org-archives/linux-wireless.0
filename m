@@ -1,18 +1,18 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60509 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:62837 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755413Ab1KRIVW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 03:21:22 -0500
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAI8LMjW026083
+	id S1756682Ab1KRIWV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 03:22:21 -0500
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAI8MKLe032385
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 03:21:22 -0500
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 03:22:20 -0500
 From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: linux-wireless@vger.kernel.org
 Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 16/77] iwlegacy: remove not needed parentheses
-Date: Fri, 18 Nov 2011 09:21:38 +0100
-Message-Id: <1321604559-10707-16-git-send-email-sgruszka@redhat.com> (sfid-20111118_092130_662465_730137D2)
+Subject: [PATCH 41/77] iwlegacy: s/STATUS_/S_/
+Date: Fri, 18 Nov 2011 09:22:03 +0100
+Message-Id: <1321604559-10707-41-git-send-email-sgruszka@redhat.com> (sfid-20111118_092229_270127_C8D2B452)
 In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
 References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -20,1100 +20,1463 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/iwlegacy/iwl-3945-hw.h    |    4 +-
- drivers/net/wireless/iwlegacy/iwl-3945-rs.c    |   40 ++++----
- drivers/net/wireless/iwlegacy/iwl-3945.c       |   25 +++---
- drivers/net/wireless/iwlegacy/iwl-4965-calib.c |   27 +++---
- drivers/net/wireless/iwlegacy/iwl-4965-hw.h    |    8 +-
- drivers/net/wireless/iwlegacy/iwl-4965-lib.c   |    6 +-
- drivers/net/wireless/iwlegacy/iwl-4965-rs.c    |  125 +++++++++++-------------
- drivers/net/wireless/iwlegacy/iwl-4965-tx.c    |   19 ++--
- drivers/net/wireless/iwlegacy/iwl-4965.c       |   44 ++++----
- drivers/net/wireless/iwlegacy/iwl-4965.h       |    4 +-
- drivers/net/wireless/iwlegacy/iwl-core.c       |   18 ++--
- drivers/net/wireless/iwlegacy/iwl-io.h         |    2 +-
- drivers/net/wireless/iwlegacy/iwl-legacy-rs.h  |    2 +-
- drivers/net/wireless/iwlegacy/iwl-scan.c       |    2 +-
- drivers/net/wireless/iwlegacy/iwl-sta.c        |    2 +-
- drivers/net/wireless/iwlegacy/iwl-tx.c         |    2 +-
- drivers/net/wireless/iwlegacy/iwl3945-base.c   |   20 ++--
- 17 files changed, 168 insertions(+), 182 deletions(-)
+ drivers/net/wireless/iwlegacy/3945-mac.c    |   98 ++++++++++----------
+ drivers/net/wireless/iwlegacy/3945.c        |   10 +-
+ drivers/net/wireless/iwlegacy/4965-mac.c    |  134 +++++++++++++-------------
+ drivers/net/wireless/iwlegacy/4965.c        |   18 ++--
+ drivers/net/wireless/iwlegacy/iwl-core.c    |   40 ++++----
+ drivers/net/wireless/iwlegacy/iwl-core.h    |   50 +++++-----
+ drivers/net/wireless/iwlegacy/iwl-debugfs.c |   66 +++++++-------
+ drivers/net/wireless/iwlegacy/iwl-hcmd.c    |   14 ++--
+ drivers/net/wireless/iwlegacy/iwl-helpers.h |    4 +-
+ drivers/net/wireless/iwlegacy/iwl-led.c     |    2 +-
+ drivers/net/wireless/iwlegacy/iwl-power.c   |    6 +-
+ drivers/net/wireless/iwlegacy/iwl-rx.c      |    2 +-
+ drivers/net/wireless/iwlegacy/iwl-scan.c    |   42 ++++----
+ drivers/net/wireless/iwlegacy/iwl-tx.c      |    4 +-
+ 14 files changed, 245 insertions(+), 245 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-3945-hw.h b/drivers/net/wireless/iwlegacy/iwl-3945-hw.h
-index ad05093..67650ff 100644
---- a/drivers/net/wireless/iwlegacy/iwl-3945-hw.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-3945-hw.h
-@@ -264,8 +264,8 @@ struct il3945_eeprom {
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index 17edbdf..f69211e 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -827,17 +827,17 @@ static void il3945_rx_card_state_notif(struct il_priv *il,
+ 		    CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED);
  
- static inline int il3945_hw_valid_rtc_data_addr(u32 addr)
- {
--	return (addr >= IWL39_RTC_DATA_LOWER_BOUND) &&
--	       (addr < IWL39_RTC_DATA_UPPER_BOUND);
-+	return (addr >= IWL39_RTC_DATA_LOWER_BOUND &&
-+		addr < IWL39_RTC_DATA_UPPER_BOUND);
- }
- 
- /* Base physical address of il3945_shared is provided to FH_TSSR_CBB_BASE
-diff --git a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-index d05da7a..afa6be8 100644
---- a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-@@ -104,7 +104,7 @@ static u8 il3945_get_rate_index_by_rssi(s32 rssi, enum ieee80211_band band)
- 	u32 table_size = 0;
- 	struct il3945_tpt_entry *tpt_table = NULL;
- 
--	if ((rssi < IL_MIN_RSSI_VAL) || (rssi > IL_MAX_RSSI_VAL))
-+	if (rssi < IL_MIN_RSSI_VAL || rssi > IL_MAX_RSSI_VAL)
- 		rssi = IL_MIN_RSSI_VAL;
- 
- 	switch (band) {
-@@ -123,7 +123,7 @@ static u8 il3945_get_rate_index_by_rssi(s32 rssi, enum ieee80211_band band)
- 		break;
- 	}
- 
--	while ((index < table_size) && (rssi < tpt_table[index].min_rssi))
-+	while (index < table_size && rssi < tpt_table[index].min_rssi)
- 		index++;
- 
- 	index = min(index, (table_size - 1));
-@@ -315,8 +315,8 @@ static void il3945_collect_tx_data(struct il3945_rs_sta *rs_sta,
- 	fail_count = window->counter - window->success_counter;
- 
- 	/* Calculate average throughput, if we have enough history. */
--	if ((fail_count >= IL_RATE_MIN_FAILURE_TH) ||
--	    (window->success_counter >= IL_RATE_MIN_SUCCESS_TH))
-+	if (fail_count >= IL_RATE_MIN_FAILURE_TH ||
-+	    window->success_counter >= IL_RATE_MIN_SUCCESS_TH)
- 		window->average_tpt = ((window->success_ratio *
- 				rs_sta->expected_tpt[index] + 64) / 128);
+ 	if (flags & HW_CARD_DISABLED)
+-		set_bit(STATUS_RF_KILL_HW, &il->status);
++		set_bit(S_RF_KILL_HW, &il->status);
  	else
-@@ -461,7 +461,7 @@ static void il3945_rs_tx_status(void *il_rate, struct ieee80211_supported_band *
- 		retries = IL_RATE_RETRY_TH;
+-		clear_bit(STATUS_RF_KILL_HW, &il->status);
++		clear_bit(S_RF_KILL_HW, &il->status);
  
- 	first_index = sband->bitrates[info->status.rates[0].idx].hw_value;
--	if ((first_index < 0) || (first_index >= IL_RATE_COUNT_3945)) {
-+	if (first_index < 0 || first_index >= IL_RATE_COUNT_3945) {
- 		D_RATE("leave: Rate out of bounds: %d\n", first_index);
- 		return;
- 	}
-@@ -663,9 +663,9 @@ static void il3945_rs_get_rate(void *il_r, struct ieee80211_sta *sta,
  
- 	/* get user max rate if set */
- 	max_rate_idx = txrc->max_rate_idx;
--	if ((sband->band == IEEE80211_BAND_5GHZ) && (max_rate_idx != -1))
-+	if (sband->band == IEEE80211_BAND_5GHZ && max_rate_idx != -1)
- 		max_rate_idx += IL_FIRST_OFDM_RATE;
--	if ((max_rate_idx < 0) || (max_rate_idx >= IL_RATE_COUNT))
-+	if (max_rate_idx < 0 || max_rate_idx >= IL_RATE_COUNT)
- 		max_rate_idx = -1;
+ 	il_scan_cancel(il);
  
- 	index = min(rs_sta->last_txrate_idx & 0xffff, IL_RATE_COUNT_3945 - 1);
-@@ -686,7 +686,7 @@ static void il3945_rs_get_rate(void *il_r, struct ieee80211_sta *sta,
- 	}
+-	if ((test_bit(STATUS_RF_KILL_HW, &status) !=
+-	     test_bit(STATUS_RF_KILL_HW, &il->status)))
++	if ((test_bit(S_RF_KILL_HW, &status) !=
++	     test_bit(S_RF_KILL_HW, &il->status)))
+ 		wiphy_rfkill_set_hw_state(il->hw->wiphy,
+-				test_bit(STATUS_RF_KILL_HW, &il->status));
++				test_bit(S_RF_KILL_HW, &il->status));
+ 	else
+ 		wake_up(&il->wait_command_queue);
+ }
+@@ -1537,7 +1537,7 @@ static void il3945_irq_tasklet(struct il_priv *il)
  
- 	/* force user max rate if set by user */
--	if ((max_rate_idx != -1) && (max_rate_idx < index)) {
-+	if (max_rate_idx != -1 && max_rate_idx < index) {
- 		if (rate_mask & (1 << max_rate_idx))
- 			index = max_rate_idx;
- 	}
-@@ -695,8 +695,8 @@ static void il3945_rs_get_rate(void *il_r, struct ieee80211_sta *sta,
+ 	/* Re-enable all interrupts */
+ 	/* only Re-enable if disabled by irq */
+-	if (test_bit(STATUS_INT_ENABLED, &il->status))
++	if (test_bit(S_INT_ENABLED, &il->status))
+ 		il_enable_interrupts(il);
  
- 	fail_count = window->counter - window->success_counter;
+ #ifdef CONFIG_IWLEGACY_DEBUG
+@@ -2213,7 +2213,7 @@ static void il3945_alive_start(struct il_priv *il)
+ 	D_INFO("RFKILL status: 0x%x\n", rfkill);
  
--	if (((fail_count < IL_RATE_MIN_FAILURE_TH) &&
--	     (window->success_counter < IL_RATE_MIN_SUCCESS_TH))) {
-+	if (fail_count < IL_RATE_MIN_FAILURE_TH &&
-+	    window->success_counter < IL_RATE_MIN_SUCCESS_TH) {
- 		spin_unlock_irqrestore(&rs_sta->lock, flags);
+ 	if (rfkill & 0x1) {
+-		clear_bit(STATUS_RF_KILL_HW, &il->status);
++		clear_bit(S_RF_KILL_HW, &il->status);
+ 		/* if RFKILL is not on, then wait for thermal
+ 		 * sensor in adapter to kick in */
+ 		while (il3945_hw_get_temperature(il) == 0) {
+@@ -2225,10 +2225,10 @@ static void il3945_alive_start(struct il_priv *il)
+ 			D_INFO("Thermal calibration took %dus\n",
+ 				       thermal_spin * 10);
+ 	} else
+-		set_bit(STATUS_RF_KILL_HW, &il->status);
++		set_bit(S_RF_KILL_HW, &il->status);
  
- 		D_RATE("Invalid average_tpt on rate %d: "
-@@ -721,7 +721,7 @@ static void il3945_rs_get_rate(void *il_r, struct ieee80211_sta *sta,
- 	high = (high_low >> 8) & 0xff;
+ 	/* After the ALIVE response, we can send commands to 3945 uCode */
+-	set_bit(STATUS_ALIVE, &il->status);
++	set_bit(S_ALIVE, &il->status);
  
- 	/* If user set max rate, dont allow higher than user constrain */
--	if ((max_rate_idx != -1) && (max_rate_idx < high))
-+	if (max_rate_idx != -1 && max_rate_idx < high)
- 		high = IL_RATE_INVALID;
+ 	/* Enable watchdog to monitor the driver tx queues */
+ 	il_setup_watchdog(il);
+@@ -2256,7 +2256,7 @@ static void il3945_alive_start(struct il_priv *il)
+ 	/* Configure Bluetooth device coexistence support */
+ 	il_send_bt_config(il);
  
- 	/* Collect Measured throughputs of adjacent rates */
-@@ -736,13 +736,13 @@ static void il3945_rs_get_rate(void *il_r, struct ieee80211_sta *sta,
- 	scale_action = 0;
+-	set_bit(STATUS_READY, &il->status);
++	set_bit(S_READY, &il->status);
  
- 	/* Low success ratio , need to drop the rate */
--	if ((window->success_ratio < IL_RATE_DECREASE_TH) || !current_tpt) {
-+	if (window->success_ratio < IL_RATE_DECREASE_TH || !current_tpt) {
- 		D_RATE("decrease rate because of low success_ratio\n");
- 		scale_action = -1;
- 	/* No throughput measured yet for adjacent rates,
- 	 * try increase */
--	} else if ((low_tpt == IL_INVALID_VALUE) &&
--		   (high_tpt == IL_INVALID_VALUE)) {
-+	} else if (low_tpt == IL_INVALID_VALUE &&
-+		   high_tpt == IL_INVALID_VALUE) {
+ 	/* Configure the adapter for unassociated operation */
+ 	il3945_commit_rxon(il, ctx);
+@@ -2283,9 +2283,9 @@ static void __il3945_down(struct il_priv *il)
  
- 		if (high != IL_RATE_INVALID && window->success_ratio >= IL_RATE_INCREASE_TH)
- 			scale_action = 1;
-@@ -752,9 +752,9 @@ static void il3945_rs_get_rate(void *il_r, struct ieee80211_sta *sta,
- 	/* Both adjacent throughputs are measured, but neither one has
- 	 * better throughput; we're using the best rate, don't change
- 	 * it! */
--	} else if ((low_tpt != IL_INVALID_VALUE) &&
--		 (high_tpt != IL_INVALID_VALUE) &&
--		 (low_tpt < current_tpt) && (high_tpt < current_tpt)) {
-+	} else if (low_tpt != IL_INVALID_VALUE &&
-+		 high_tpt != IL_INVALID_VALUE &&
-+		 low_tpt < current_tpt && high_tpt < current_tpt) {
+ 	il_scan_cancel_timeout(il, 200);
  
- 		D_RATE("No action -- low [%d] & high [%d] < "
- 			       "current_tpt [%d]\n",
-@@ -790,9 +790,9 @@ static void il3945_rs_get_rate(void *il_r, struct ieee80211_sta *sta,
+-	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &il->status);
++	exit_pending = test_and_set_bit(S_EXIT_PENDING, &il->status);
  
- 	/* Sanity check; asked for decrease, but success rate or throughput
- 	 * has been good at old rate.  Don't change it. */
--	if ((scale_action == -1) && (low != IL_RATE_INVALID) &&
--		    ((window->success_ratio > IL_RATE_HIGH_TH) ||
--		     (current_tpt > (100 * rs_sta->expected_tpt[low]))))
-+	if (scale_action == -1 && low != IL_RATE_INVALID &&
-+	    (window->success_ratio > IL_RATE_HIGH_TH ||
-+	     current_tpt > 100 * rs_sta->expected_tpt[low]))
- 		scale_action = 0;
+-	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
++	/* Stop TX queues watchdog. We need to have S_EXIT_PENDING bit set
+ 	 * to prevent rearm timer */
+ 	del_timer_sync(&il->watchdog);
  
- 	switch (scale_action) {
-diff --git a/drivers/net/wireless/iwlegacy/iwl-3945.c b/drivers/net/wireless/iwlegacy/iwl-3945.c
-index cdea5b0..fb69b74 100644
---- a/drivers/net/wireless/iwlegacy/iwl-3945.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-3945.c
-@@ -173,7 +173,7 @@ void il3945_disable_events(struct il_priv *il)
- 	disable_ptr = il_read_targ_mem(il, base + (4 * sizeof(u32)));
- 	array_size = il_read_targ_mem(il, base + (5 * sizeof(u32)));
+@@ -2300,7 +2300,7 @@ static void __il3945_down(struct il_priv *il)
+ 	/* Wipe out the EXIT_PENDING status bit if we are not actually
+ 	 * exiting the module */
+ 	if (!exit_pending)
+-		clear_bit(STATUS_EXIT_PENDING, &il->status);
++		clear_bit(S_EXIT_PENDING, &il->status);
  
--	if (IL_EVT_DISABLE && (array_size == IL_EVT_DISABLE_SIZE)) {
-+	if (IL_EVT_DISABLE && array_size == IL_EVT_DISABLE_SIZE) {
- 		D_INFO("Disabling selected uCode log events at 0x%x\n",
- 			       disable_ptr);
- 		for (i = 0; i < IL_EVT_DISABLE_SIZE; i++)
-@@ -293,9 +293,8 @@ static void il3945_tx_queue_reclaim(struct il_priv *il,
- 		il->cfg->ops->lib->txq_free_tfd(il, txq);
+ 	/* stop and reset the on-board processor */
+ 	_il_wr(il, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
+@@ -2317,25 +2317,25 @@ static void __il3945_down(struct il_priv *il)
+ 	/* If we have not previously called il3945_init() then
+ 	 * clear all bits but the RF Kill bits and return */
+ 	if (!il_is_init(il)) {
+-		il->status = test_bit(STATUS_RF_KILL_HW, &il->status) <<
+-					STATUS_RF_KILL_HW |
+-			       test_bit(STATUS_GEO_CONFIGURED, &il->status) <<
+-					STATUS_GEO_CONFIGURED |
+-				test_bit(STATUS_EXIT_PENDING, &il->status) <<
+-					STATUS_EXIT_PENDING;
++		il->status = test_bit(S_RF_KILL_HW, &il->status) <<
++					S_RF_KILL_HW |
++			       test_bit(S_GEO_CONFIGURED, &il->status) <<
++					S_GEO_CONFIGURED |
++				test_bit(S_EXIT_PENDING, &il->status) <<
++					S_EXIT_PENDING;
+ 		goto exit;
  	}
  
--	if (il_queue_space(q) > q->low_mark && (txq_id >= 0) &&
--			(txq_id != IWL39_CMD_QUEUE_NUM) &&
--			il->mac80211_registered)
-+	if (il_queue_space(q) > q->low_mark && txq_id >= 0 &&
-+	    txq_id != IWL39_CMD_QUEUE_NUM && il->mac80211_registered)
- 		il_wake_queue(il, txq);
+ 	/* ...otherwise clear out all the status bits but the RF Kill
+ 	 * bit and continue taking the NIC down. */
+-	il->status &= test_bit(STATUS_RF_KILL_HW, &il->status) <<
+-				STATUS_RF_KILL_HW |
+-			test_bit(STATUS_GEO_CONFIGURED, &il->status) <<
+-				STATUS_GEO_CONFIGURED |
+-			test_bit(STATUS_FW_ERROR, &il->status) <<
+-				STATUS_FW_ERROR |
+-			test_bit(STATUS_EXIT_PENDING, &il->status) <<
+-				STATUS_EXIT_PENDING;
++	il->status &= test_bit(S_RF_KILL_HW, &il->status) <<
++				S_RF_KILL_HW |
++			test_bit(S_GEO_CONFIGURED, &il->status) <<
++				S_GEO_CONFIGURED |
++			test_bit(S_FW_ERROR, &il->status) <<
++				S_FW_ERROR |
++			test_bit(S_EXIT_PENDING, &il->status) <<
++				S_EXIT_PENDING;
+ 
+ 	il3945_hw_txq_ctx_stop(il);
+ 	il3945_hw_rxq_stop(il);
+@@ -2400,7 +2400,7 @@ static int __il3945_up(struct il_priv *il)
+ 	if (rc)
+ 		return rc;
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status)) {
++	if (test_bit(S_EXIT_PENDING, &il->status)) {
+ 		IL_WARN("Exit pending; will not bring the NIC up\n");
+ 		return -EIO;
+ 	}
+@@ -2413,9 +2413,9 @@ static int __il3945_up(struct il_priv *il)
+ 	/* If platform's RF_KILL switch is NOT set to KILL */
+ 	if (_il_rd(il, CSR_GP_CNTRL) &
+ 				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
+-		clear_bit(STATUS_RF_KILL_HW, &il->status);
++		clear_bit(S_RF_KILL_HW, &il->status);
+ 	else {
+-		set_bit(STATUS_RF_KILL_HW, &il->status);
++		set_bit(S_RF_KILL_HW, &il->status);
+ 		IL_WARN("Radio disabled by HW RF Kill switch\n");
+ 		return -ENODEV;
+ 	}
+@@ -2448,7 +2448,7 @@ static int __il3945_up(struct il_priv *il)
+ 	       il->ucode_data.len);
+ 
+ 	/* We return success when we resume from suspend and rf_kill is on. */
+-	if (test_bit(STATUS_RF_KILL_HW, &il->status))
++	if (test_bit(S_RF_KILL_HW, &il->status))
+ 		return 0;
+ 
+ 	for (i = 0; i < MAX_HW_RESTARTS; i++) {
+@@ -2472,9 +2472,9 @@ static int __il3945_up(struct il_priv *il)
+ 		return 0;
+ 	}
+ 
+-	set_bit(STATUS_EXIT_PENDING, &il->status);
++	set_bit(S_EXIT_PENDING, &il->status);
+ 	__il3945_down(il);
+-	clear_bit(STATUS_EXIT_PENDING, &il->status);
++	clear_bit(S_EXIT_PENDING, &il->status);
+ 
+ 	/* tried to restart and config the device for as long as our
+ 	 * patience could withstand */
+@@ -2495,7 +2495,7 @@ static void il3945_bg_init_alive_start(struct work_struct *data)
+ 	    container_of(data, struct il_priv, init_alive_start.work);
+ 
+ 	mutex_lock(&il->mutex);
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		goto out;
+ 
+ 	il3945_init_alive_start(il);
+@@ -2509,7 +2509,7 @@ static void il3945_bg_alive_start(struct work_struct *data)
+ 	    container_of(data, struct il_priv, alive_start.work);
+ 
+ 	mutex_lock(&il->mutex);
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		goto out;
+ 
+ 	il3945_alive_start(il);
+@@ -2527,15 +2527,15 @@ static void il3945_rfkill_poll(struct work_struct *data)
+ {
+ 	struct il_priv *il =
+ 	    container_of(data, struct il_priv, _3945.rfkill_poll.work);
+-	bool old_rfkill = test_bit(STATUS_RF_KILL_HW, &il->status);
++	bool old_rfkill = test_bit(S_RF_KILL_HW, &il->status);
+ 	bool new_rfkill = !(_il_rd(il, CSR_GP_CNTRL)
+ 			& CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
+ 
+ 	if (new_rfkill != old_rfkill) {
+ 		if (new_rfkill)
+-			set_bit(STATUS_RF_KILL_HW, &il->status);
++			set_bit(S_RF_KILL_HW, &il->status);
+ 		else
+-			clear_bit(STATUS_RF_KILL_HW, &il->status);
++			clear_bit(S_RF_KILL_HW, &il->status);
+ 
+ 		wiphy_rfkill_set_hw_state(il->hw->wiphy, new_rfkill);
+ 
+@@ -2682,10 +2682,10 @@ int il3945_request_scan(struct il_priv *il, struct ieee80211_vif *vif)
+ 	cmd.data = scan;
+ 	scan->len = cpu_to_le16(cmd.len);
+ 
+-	set_bit(STATUS_SCAN_HW, &il->status);
++	set_bit(S_SCAN_HW, &il->status);
+ 	ret = il_send_cmd_sync(il, &cmd);
+ 	if (ret)
+-		clear_bit(STATUS_SCAN_HW, &il->status);
++		clear_bit(S_SCAN_HW, &il->status);
+ 	return ret;
  }
  
-@@ -316,7 +315,7 @@ static void il3945_rx_reply_tx(struct il_priv *il,
- 	int rate_idx;
- 	int fail;
+@@ -2705,10 +2705,10 @@ static void il3945_bg_restart(struct work_struct *data)
+ {
+ 	struct il_priv *il = container_of(data, struct il_priv, restart);
  
--	if ((index >= txq->q.n_bd) || (il_queue_used(&txq->q, index) == 0)) {
-+	if (index >= txq->q.n_bd || il_queue_used(&txq->q, index) == 0) {
- 		IL_ERR("Read index for DMA queue txq_id (%d) index %d "
- 			  "is out of range [0-%d] %d %d\n", txq_id,
- 			  index, txq->q.n_bd, txq->q.write_ptr,
-@@ -544,8 +543,8 @@ static void il3945_rx_reply_rx(struct il_priv *il,
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
  		return;
- 	}
  
--	if (!(rx_end->status & RX_RES_STATUS_NO_CRC32_ERROR)
--	    || !(rx_end->status & RX_RES_STATUS_NO_RXE_OVERFLOW)) {
-+	if (!(rx_end->status & RX_RES_STATUS_NO_CRC32_ERROR) ||
-+	    !(rx_end->status & RX_RES_STATUS_NO_RXE_OVERFLOW)) {
- 		D_RX("Bad CRC or FIFO: 0x%08X.\n", rx_end->status);
+-	if (test_and_clear_bit(STATUS_FW_ERROR, &il->status)) {
++	if (test_and_clear_bit(S_FW_ERROR, &il->status)) {
+ 		mutex_lock(&il->mutex);
+ 		il->ctx.vif = NULL;
+ 		il->is_open = 0;
+@@ -2719,7 +2719,7 @@ static void il3945_bg_restart(struct work_struct *data)
+ 		il3945_down(il);
+ 
+ 		mutex_lock(&il->mutex);
+-		if (test_bit(STATUS_EXIT_PENDING, &il->status)) {
++		if (test_bit(S_EXIT_PENDING, &il->status)) {
+ 			mutex_unlock(&il->mutex);
+ 			return;
+ 		}
+@@ -2735,7 +2735,7 @@ static void il3945_bg_rx_replenish(struct work_struct *data)
+ 	    container_of(data, struct il_priv, rx_replenish);
+ 
+ 	mutex_lock(&il->mutex);
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		goto out;
+ 
+ 	il3945_rx_replenish(il);
+@@ -2755,7 +2755,7 @@ void il3945_post_associate(struct il_priv *il)
+ 	D_ASSOC("Associated as %d to: %pM\n",
+ 			ctx->vif->bss_conf.aid, ctx->active.bssid_addr);
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
  		return;
+ 
+ 	il_scan_cancel_timeout(il, 200);
+@@ -2847,10 +2847,10 @@ static int il3945_mac_start(struct ieee80211_hw *hw)
+ 	/* Wait for START_ALIVE from ucode. Otherwise callbacks from
+ 	 * mac80211 will not be run successfully. */
+ 	ret = wait_event_timeout(il->wait_command_queue,
+-			test_bit(STATUS_READY, &il->status),
++			test_bit(S_READY, &il->status),
+ 			UCODE_READY_TIMEOUT);
+ 	if (!ret) {
+-		if (!test_bit(STATUS_READY, &il->status)) {
++		if (!test_bit(S_READY, &il->status)) {
+ 			IL_ERR(
+ 				"Wait for START_ALIVE timeout after %dms.\n",
+ 				jiffies_to_msecs(UCODE_READY_TIMEOUT));
+@@ -2918,7 +2918,7 @@ void il3945_config_ap(struct il_priv *il)
+ 	struct ieee80211_vif *vif = ctx->vif;
+ 	int rc = 0;
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		return;
+ 
+ 	/* The following should be done only at AP bring up */
+@@ -3870,7 +3870,7 @@ static void __devexit il3945_pci_remove(struct pci_dev *pdev)
+ 
+ 	il_dbgfs_unregister(il);
+ 
+-	set_bit(STATUS_EXIT_PENDING, &il->status);
++	set_bit(S_EXIT_PENDING, &il->status);
+ 
+ 	il_leds_exit(il);
+ 
+diff --git a/drivers/net/wireless/iwlegacy/3945.c b/drivers/net/wireless/iwlegacy/3945.c
+index 17615c3..8ebd576 100644
+--- a/drivers/net/wireless/iwlegacy/3945.c
++++ b/drivers/net/wireless/iwlegacy/3945.c
+@@ -1008,7 +1008,7 @@ int il3945_hw_nic_init(struct il_priv *il)
+ 	if (rc)
+ 		return rc;
+ 
+-	set_bit(STATUS_INIT, &il->status);
++	set_bit(S_INIT, &il->status);
+ 
+ 	return 0;
+ }
+@@ -1394,7 +1394,7 @@ static int il3945_send_tx_power(struct il_priv *il)
+ 	};
+ 	u16 chan;
+ 
+-	if (WARN_ONCE(test_bit(STATUS_SCAN_HW, &il->status),
++	if (WARN_ONCE(test_bit(S_SCAN_HW, &il->status),
+ 		      "TX Power requested while scanning!\n"))
+ 		return -EAGAIN;
+ 
+@@ -1571,7 +1571,7 @@ static int il3945_hw_reg_comp_txpower_temp(struct il_priv *il)
+ 	int temperature = il->temperature;
+ 
+ 	if (il->disable_tx_power_cal ||
+-	    test_bit(STATUS_SCANNING, &il->status)) {
++	    test_bit(S_SCANNING, &il->status)) {
+ 		/* do not perform tx power calibration */
+ 		return 0;
  	}
-@@ -599,7 +598,7 @@ int il3945_hw_txq_attach_buf_to_tfd(struct il_priv *il,
+@@ -1726,7 +1726,7 @@ int il3945_commit_rxon(struct il_priv *il, struct il_rxon_context *ctx)
+ 	int rc = 0;
+ 	bool new_assoc = !!(staging_rxon->filter_flags & RXON_FILTER_ASSOC_MSK);
  
- 	count = TFD_CTL_COUNT_GET(le32_to_cpu(tfd->control_flags));
- 
--	if ((count >= NUM_TFD_CHUNKS) || (count < 0)) {
-+	if (count >= NUM_TFD_CHUNKS || count < 0) {
- 		IL_ERR("Error can not send more than %d chunks\n",
- 			  NUM_TFD_CHUNKS);
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
  		return -EINVAL;
-@@ -1053,7 +1052,7 @@ static int il3945_hw_reg_adjust_power_by_temp(int new_reading, int old_reading)
-  */
- static inline int il3945_hw_reg_temp_out_of_range(int temperature)
- {
--	return ((temperature < -260) || (temperature > 25)) ? 1 : 0;
-+	return (temperature < -260 || temperature > 25) ? 1 : 0;
- }
  
- int il3945_hw_get_temperature(struct il_priv *il)
-@@ -1666,10 +1665,10 @@ static int il3945_send_rxon_assoc(struct il_priv *il,
- 	const struct il_rxon_cmd *rxon1 = &ctx->staging;
- 	const struct il_rxon_cmd *rxon2 = &ctx->active;
+ 	if (!il_is_alive(il))
+@@ -1885,7 +1885,7 @@ static void il3945_bg_reg_txpower_periodic(struct work_struct *work)
+ 	struct il_priv *il = container_of(work, struct il_priv,
+ 					     _3945.thermal_periodic.work);
  
--	if ((rxon1->flags == rxon2->flags) &&
--	    (rxon1->filter_flags == rxon2->filter_flags) &&
--	    (rxon1->cck_basic_rates == rxon2->cck_basic_rates) &&
--	    (rxon1->ofdm_basic_rates == rxon2->ofdm_basic_rates)) {
-+	if (rxon1->flags == rxon2->flags &&
-+	    rxon1->filter_flags == rxon2->filter_flags &&
-+	    rxon1->cck_basic_rates == rxon2->cck_basic_rates &&
-+	    rxon1->ofdm_basic_rates == rxon2->ofdm_basic_rates) {
- 		D_INFO("Using current RXON_ASSOC.  Not resending.\n");
- 		return 0;
- 	}
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-calib.c b/drivers/net/wireless/iwlegacy/iwl-4965-calib.c
-index 7f85834..c055a15 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-calib.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-calib.c
-@@ -198,8 +198,8 @@ static int il4965_sens_energy_cck(struct il_priv *il,
- 			data->num_in_cck_no_fa);
- 
- 	/* If we got too many false alarms this time, reduce sensitivity */
--	if ((false_alarms > max_false_alarms) &&
--		(data->auto_corr_cck > AUTO_CORR_MAX_TH_CCK)) {
-+	if (false_alarms > max_false_alarms &&
-+	    data->auto_corr_cck > AUTO_CORR_MAX_TH_CCK) {
- 		D_CALIB("norm FA %u > max FA %u\n",
- 		     false_alarms, max_false_alarms);
- 		D_CALIB("... reducing sensitivity\n");
-@@ -230,9 +230,9 @@ static int il4965_sens_energy_cck(struct il_priv *il,
- 		 *      from a previous beacon with too many, or healthy # FAs
- 		 * OR 2) We've seen a lot of beacons (100) with too few
- 		 *       false alarms */
--		if ((data->nrg_prev_state != IL_FA_TOO_MANY) &&
--			((data->nrg_auto_corr_silence_diff > NRG_DIFF) ||
--			(data->num_in_cck_no_fa > MAX_NUMBER_CCK_NO_FA))) {
-+		if (data->nrg_prev_state != IL_FA_TOO_MANY &&
-+		    (data->nrg_auto_corr_silence_diff > NRG_DIFF ||
-+		     data->num_in_cck_no_fa > MAX_NUMBER_CCK_NO_FA)) {
- 
- 			D_CALIB("... increasing sensitivity\n");
- 			/* Increase nrg value to increase sensitivity */
-@@ -289,9 +289,9 @@ static int il4965_sens_energy_cck(struct il_priv *il,
- 		val = data->auto_corr_cck_mrc + AUTO_CORR_STEP_CCK;
- 		data->auto_corr_cck_mrc =
- 			min((u32)ranges->auto_corr_max_cck_mrc, val);
--	} else if ((false_alarms < min_false_alarms) &&
--	   ((data->nrg_auto_corr_silence_diff > NRG_DIFF) ||
--	   (data->num_in_cck_no_fa > MAX_NUMBER_CCK_NO_FA))) {
-+	} else if (false_alarms < min_false_alarms &&
-+		   (data->nrg_auto_corr_silence_diff > NRG_DIFF ||
-+		    data->num_in_cck_no_fa > MAX_NUMBER_CCK_NO_FA)) {
- 
- 		/* Decrease auto_corr values to increase sensitivity */
- 		val = data->auto_corr_cck - AUTO_CORR_STEP_CCK;
-@@ -747,9 +747,8 @@ static void il4965_gain_computation(struct il_priv *il,
- 	for (i = default_chain; i < NUM_RX_CHAINS; i++) {
- 		s32 delta_g = 0;
- 
--		if (!(data->disconn_array[i]) &&
--		    (data->delta_gain_code[i] ==
--			     CHAIN_NOISE_DELTA_GAIN_INIT_VAL)) {
-+		if (!data->disconn_array[i] &&
-+		    data->delta_gain_code[i] == CHAIN_NOISE_DELTA_GAIN_INIT_VAL) {
- 			delta_g = average_noise[i] - min_average_noise;
- 			data->delta_gain_code[i] = (u8)((delta_g * 10) / 15);
- 			data->delta_gain_code[i] =
-@@ -860,7 +859,7 @@ void il4965_chain_noise_calibration(struct il_priv *il, void *stat_resp)
- 
- 	/* Make sure we accumulate data for just the associated channel
- 	 *   (even if scanning). */
--	if ((rxon_chnum != stat_chnum) || (rxon_band24 != stat_band24)) {
-+	if (rxon_chnum != stat_chnum || rxon_band24 != stat_band24) {
- 		D_CALIB("Stats not from chan=%d, band24=%d\n",
- 				rxon_chnum, rxon_band24);
- 		spin_unlock_irqrestore(&il->lock, flags);
-@@ -920,8 +919,8 @@ void il4965_chain_noise_calibration(struct il_priv *il, void *stat_resp)
- 			   il->cfg->base_params->chain_noise_num_beacons;
- 
- 	for (i = 0; i < NUM_RX_CHAINS; i++) {
--		if (!(data->disconn_array[i]) &&
--		   (average_noise[i] <= min_average_noise)) {
-+		if (!data->disconn_array[i] &&
-+		    average_noise[i] <= min_average_noise) {
- 			/* This means that chain i is active and has
- 			 * lower noise values so far: */
- 			min_average_noise = average_noise[i];
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-hw.h b/drivers/net/wireless/iwlegacy/iwl-4965-hw.h
-index b6b7fe2..b21c004 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-hw.h
-@@ -102,8 +102,8 @@
- 
- static inline int il4965_hw_valid_rtc_data_addr(u32 addr)
- {
--	return (addr >= IWL49_RTC_DATA_LOWER_BOUND) &&
--	       (addr < IWL49_RTC_DATA_UPPER_BOUND);
-+	return (addr >= IWL49_RTC_DATA_LOWER_BOUND &&
-+		addr < IWL49_RTC_DATA_UPPER_BOUND);
- }
- 
- /********************* START TEMPERATURE *************************************/
-@@ -147,8 +147,8 @@ static inline int il4965_hw_valid_rtc_data_addr(u32 addr)
- #define IL_TX_POWER_TEMPERATURE_MAX  (410)
- 
- #define IL_TX_POWER_TEMPERATURE_OUT_OF_RANGE(t) \
--	(((t) < IL_TX_POWER_TEMPERATURE_MIN) || \
--	 ((t) > IL_TX_POWER_TEMPERATURE_MAX))
-+	((t) < IL_TX_POWER_TEMPERATURE_MIN || \
-+	 (t) > IL_TX_POWER_TEMPERATURE_MAX)
- 
- /********************* END TEMPERATURE ***************************************/
- 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-lib.c b/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
-index 8fafd20..8bb2b62 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
-@@ -234,7 +234,7 @@ void il4965_rx_queue_restock(struct il_priv *il)
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&rxq->lock, flags);
--	while ((il_rx_queue_space(rxq) > 0) && (rxq->free_count)) {
-+	while (il_rx_queue_space(rxq) > 0 && rxq->free_count) {
- 		/* The overwritten rxb must be a used one */
- 		rxb = rxq->queue[rxq->write];
- 		BUG_ON(rxb && rxb->page);
-@@ -307,7 +307,7 @@ static void il4965_rx_allocate(struct il_priv *il, gfp_t priority)
- 					       "order: %d\n",
- 					       il->hw_params.rx_page_order);
- 
--			if ((rxq->free_count <= RX_LOW_WATERMARK) &&
-+			if (rxq->free_count <= RX_LOW_WATERMARK &&
- 			    net_ratelimit())
- 				IL_ERR(
- 					"Failed to alloc_pages with %s. "
-@@ -1106,7 +1106,7 @@ void il4965_set_rxon_chain(struct il_priv *il, struct il_rxon_context *ctx)
- 
- 	ctx->staging.rx_chain = cpu_to_le16(rx_chain);
- 
--	if (!is_single && (active_rx_cnt >= IL_NUM_RX_CHAINS_SINGLE) && is_cam)
-+	if (!is_single && active_rx_cnt >= IL_NUM_RX_CHAINS_SINGLE && is_cam)
- 		ctx->staging.rx_chain |= RXON_RX_CHAIN_MIMO_FORCE_MSK;
- 	else
- 		ctx->staging.rx_chain &= ~RXON_RX_CHAIN_MIMO_FORCE_MSK;
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-index 93bb31d..c2f4230 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-@@ -127,7 +127,7 @@ static int il4965_hwrate_to_plcp_idx(u32 rate_n_flags)
- 		/* skip 9M not supported in ht*/
- 		if (idx >= IL_RATE_9M_INDEX)
- 			idx += 1;
--		if ((idx >= IL_FIRST_OFDM_RATE) && (idx <= IL_LAST_OFDM_RATE))
-+		if (idx >= IL_FIRST_OFDM_RATE && idx <= IL_LAST_OFDM_RATE)
- 			return idx;
- 
- 	/* legacy rate format, search for match in table */
-@@ -251,8 +251,7 @@ il4965_rs_tl_rm_old_stats(struct il_traffic_load *tl, u32 curr_time)
- 	/* The oldest age we want to keep */
- 	u32 oldest_time = curr_time - TID_MAX_TIME_DIFF;
- 
--	while (tl->queue_count &&
--	       (tl->time_stamp < oldest_time)) {
-+	while (tl->queue_count && tl->time_stamp < oldest_time) {
- 		tl->total -= tl->packet_count[tl->head];
- 		tl->packet_count[tl->head] = 0;
- 		tl->time_stamp += TID_QUEUE_CELL_SPACING;
-@@ -477,8 +476,8 @@ static int il4965_rs_collect_tx_data(struct il_scale_tbl_info *tbl,
- 	fail_count = window->counter - window->success_counter;
- 
- 	/* Calculate average throughput, if we have enough history. */
--	if ((fail_count >= IL_RATE_MIN_FAILURE_TH) ||
--	    (window->success_counter >= IL_RATE_MIN_SUCCESS_TH))
-+	if (fail_count >= IL_RATE_MIN_FAILURE_TH ||
-+	    window->success_counter >= IL_RATE_MIN_SUCCESS_TH)
- 		window->average_tpt = (window->success_ratio * tpt + 64) / 128;
- 	else
- 		window->average_tpt = IL_INVALID_VALUE;
-@@ -619,7 +618,7 @@ static int il4965_rs_toggle_antenna(u32 valid_ant, u32 *rate_n_flags,
- 
- 	new_ant_type = ant_toggle_lookup[tbl->ant_type];
- 
--	while ((new_ant_type != tbl->ant_type) &&
-+	while (new_ant_type != tbl->ant_type &&
- 	       !il4965_rs_is_valid_ant(valid_ant, new_ant_type))
- 		new_ant_type = ant_toggle_lookup[new_ant_type];
- 
-@@ -790,8 +789,8 @@ out:
- static bool il4965_table_type_matches(struct il_scale_tbl_info *a,
- 			       struct il_scale_tbl_info *b)
- {
--	return (a->lq_type == b->lq_type) && (a->ant_type == b->ant_type) &&
--		(a->is_SGI == b->is_SGI);
-+	return (a->lq_type == b->lq_type && a->ant_type == b->ant_type &&
-+		a->is_SGI == b->is_SGI);
- }
- 
- /*
-@@ -830,7 +829,7 @@ il4965_rs_tx_status(void *il_r, struct ieee80211_supported_band *sband,
- 	}
- 
- 	if (!ieee80211_is_data(hdr->frame_control) ||
--	    info->flags & IEEE80211_TX_CTL_NO_ACK)
-+	    (info->flags & IEEE80211_TX_CTL_NO_ACK))
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
  		return;
  
- 	/* This packet was aggregated but doesn't carry status info */
-@@ -867,19 +866,14 @@ il4965_rs_tx_status(void *il_r, struct ieee80211_supported_band *sband,
- 			mac_index += IL_FIRST_OFDM_RATE;
+ 	mutex_lock(&il->mutex);
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index ee084a8..c4198bd 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -90,7 +90,7 @@ void il4965_check_abort_status(struct il_priv *il,
+ {
+ 	if (frame_count == 1 && status == TX_STATUS_FAIL_RFKILL_FLUSH) {
+ 		IL_ERR("Tx flush command to flush out all frames\n");
+-		if (!test_bit(STATUS_EXIT_PENDING, &il->status))
++		if (!test_bit(S_EXIT_PENDING, &il->status))
+ 			queue_work(il->workqueue, &il->tx_flush);
  	}
- 	/* Here we actually compare this rate to the latest LQ command */
--	if ((mac_index < 0) ||
--	    (tbl_type.is_SGI !=
--			!!(mac_flags & IEEE80211_TX_RC_SHORT_GI)) ||
--	    (tbl_type.is_ht40 !=
--			!!(mac_flags & IEEE80211_TX_RC_40_MHZ_WIDTH)) ||
--	    (tbl_type.is_dup !=
--			!!(mac_flags & IEEE80211_TX_RC_DUP_DATA)) ||
--	    (tbl_type.ant_type != info->antenna_sel_tx) ||
--	    (!!(tx_rate & RATE_MCS_HT_MSK) !=
--			!!(mac_flags & IEEE80211_TX_RC_MCS)) ||
--	    (!!(tx_rate & RATE_MCS_GF_MSK) !=
--			!!(mac_flags & IEEE80211_TX_RC_GREEN_FIELD)) ||
--	    (rs_index != mac_index)) {
-+	if (mac_index < 0 ||
-+	    tbl_type.is_SGI != !!(mac_flags & IEEE80211_TX_RC_SHORT_GI) ||
-+	    tbl_type.is_ht40 != !!(mac_flags & IEEE80211_TX_RC_40_MHZ_WIDTH) ||
-+	    tbl_type.is_dup != !!(mac_flags & IEEE80211_TX_RC_DUP_DATA) ||
-+	    tbl_type.ant_type != info->antenna_sel_tx ||
-+	    !!(tx_rate & RATE_MCS_HT_MSK) != !!(mac_flags & IEEE80211_TX_RC_MCS) ||
-+	    !!(tx_rate & RATE_MCS_GF_MSK) != !!(mac_flags & IEEE80211_TX_RC_GREEN_FIELD) ||
-+	    rs_index != mac_index) {
- 		D_RATE(
- 		"initial rate %d does not match %d (0x%x)\n",
- 			 mac_index, rs_index, tx_rate);
-@@ -1119,12 +1113,12 @@ static s32 il4965_rs_get_best_rate(struct il_priv *il,
- 		 *    conditions) at candidate rate is above expected
- 		 *    "active" throughput (under perfect conditions).
- 		 */
--		if ((((100 * tpt_tbl[rate]) > lq_sta->last_tpt) &&
--		     ((active_sr > IL_RATE_DECREASE_TH) &&
--		      (active_sr <= IL_RATE_HIGH_TH) &&
--		      (tpt_tbl[rate] <= active_tpt))) ||
--		    ((active_sr >= IL_RATE_SCALE_SWITCH) &&
--		     (tpt_tbl[rate] > active_tpt))) {
-+		if ((100 * tpt_tbl[rate] > lq_sta->last_tpt &&
-+		     (active_sr > IL_RATE_DECREASE_TH &&
-+		      active_sr <= IL_RATE_HIGH_TH &&
-+		      tpt_tbl[rate] <= active_tpt)) ||
-+		    (active_sr >= IL_RATE_SCALE_SWITCH &&
-+		     tpt_tbl[rate] > active_tpt)) {
+ }
+@@ -246,7 +246,7 @@ int il4965_hw_nic_init(struct il_priv *il)
+ 	} else
+ 		il4965_txq_ctx_reset(il);
  
- 			/* (2nd or later pass)
- 			 * If we've already tried to raise the rate, and are
-@@ -1213,7 +1207,7 @@ static int il4965_rs_switch_to_mimo2(struct il_priv *il,
+-	set_bit(STATUS_INIT, &il->status);
++	set_bit(S_INIT, &il->status);
  
- 	D_RATE("LQ: MIMO2 best rate %d mask %X\n",
- 				rate, rate_mask);
--	if ((rate == IL_RATE_INVALID) || !((1 << rate) & rate_mask)) {
-+	if (rate == IL_RATE_INVALID || !((1 << rate) & rate_mask)) {
- 		D_RATE(
- 				"Can't switch with index %d rate mask %x\n",
- 						rate, rate_mask);
-@@ -1265,7 +1259,7 @@ static int il4965_rs_switch_to_siso(struct il_priv *il,
- 	rate = il4965_rs_get_best_rate(il, lq_sta, tbl, rate_mask, index);
+ 	return 0;
+ }
+@@ -966,7 +966,7 @@ int il4965_request_scan(struct il_priv *il, struct ieee80211_vif *vif)
+ 	scan->tx_cmd.rate_n_flags = il4965_hw_set_rate_n_flags(rate, rate_flags);
  
- 	D_RATE("LQ: get best rate %d mask %X\n", rate, rate_mask);
--	if ((rate == IL_RATE_INVALID) || !((1 << rate) & rate_mask)) {
-+	if (rate == IL_RATE_INVALID || !((1 << rate) & rate_mask)) {
- 		D_RATE(
- 			"can not switch with index %d rate mask %x\n",
- 			     rate, rate_mask);
-@@ -1680,10 +1674,10 @@ il4965_rs_stay_in_table(struct il_lq_sta *lq_sta, bool force_search)
- 		 * stats in active history.
- 		 */
- 		if (force_search ||
--		    (lq_sta->total_failed > lq_sta->max_failure_limit) ||
--		    (lq_sta->total_success > lq_sta->max_success_limit) ||
--		    ((!lq_sta->search_better_tbl) && (lq_sta->flush_timer)
--		     && (flush_interval_passed))) {
-+		    lq_sta->total_failed > lq_sta->max_failure_limit ||
-+		    lq_sta->total_success > lq_sta->max_success_limit ||
-+		    (!lq_sta->search_better_tbl && lq_sta->flush_timer &&
-+		     flush_interval_passed)) {
- 			D_RATE("LQ: stay is expired %d %d %d\n:",
- 				     lq_sta->total_failed,
- 				     lq_sta->total_success,
-@@ -1788,7 +1782,7 @@ static void il4965_rs_rate_scale_perform(struct il_priv *il,
- 	/* Send management frames and NO_ACK data using lowest rate. */
- 	/* TODO: this could probably be improved.. */
- 	if (!ieee80211_is_data(hdr->frame_control) ||
--	    info->flags & IEEE80211_TX_CTL_NO_ACK)
-+	    (info->flags & IEEE80211_TX_CTL_NO_ACK))
+ 	/* In power save mode use one chain, otherwise use all chains */
+-	if (test_bit(STATUS_POWER_PMI, &il->status)) {
++	if (test_bit(S_POWER_PMI, &il->status)) {
+ 		/* rx_ant has been set to all valid chains previously */
+ 		active_chains = rx_ant &
+ 				((u8)(il->chain_noise_data.active_chains));
+@@ -1010,11 +1010,11 @@ int il4965_request_scan(struct il_priv *il, struct ieee80211_vif *vif)
+ 	cmd.data = scan;
+ 	scan->len = cpu_to_le16(cmd.len);
+ 
+-	set_bit(STATUS_SCAN_HW, &il->status);
++	set_bit(S_SCAN_HW, &il->status);
+ 
+ 	ret = il_send_cmd_sync(il, &cmd);
+ 	if (ret)
+-		clear_bit(STATUS_SCAN_HW, &il->status);
++		clear_bit(S_SCAN_HW, &il->status);
+ 
+ 	return ret;
+ }
+@@ -1120,7 +1120,7 @@ static u8 il4965_count_chain_bitmap(u32 chain_bitmap)
+ void il4965_set_rxon_chain(struct il_priv *il, struct il_rxon_context *ctx)
+ {
+ 	bool is_single = il4965_is_single_rx_stream(il);
+-	bool is_cam = !test_bit(STATUS_POWER_PMI, &il->status);
++	bool is_cam = !test_bit(S_POWER_PMI, &il->status);
+ 	u8 idle_rx_cnt, active_rx_cnt, valid_rx_cnt;
+ 	u32 active_chains;
+ 	u16 rx_chain;
+@@ -1258,7 +1258,7 @@ void il4965_rx_missed_beacon_notif(struct il_priv *il,
+ 		    le32_to_cpu(missed_beacon->total_missed_becons),
+ 		    le32_to_cpu(missed_beacon->num_recvd_beacons),
+ 		    le32_to_cpu(missed_beacon->num_expected_beacons));
+-		if (!test_bit(STATUS_SCANNING, &il->status))
++		if (!test_bit(S_SCANNING, &il->status))
+ 			il4965_init_sensitivity(il);
+ 	}
+ }
+@@ -1378,7 +1378,7 @@ void il4965_rx_stats(struct il_priv *il,
+ 	memcpy(&il->_4965.stats, &pkt->u.stats,
+ 		sizeof(il->_4965.stats));
+ 
+-	set_bit(STATUS_STATISTICS, &il->status);
++	set_bit(S_STATISTICS, &il->status);
+ 
+ 	/* Reschedule the stats timer to occur in
+ 	 * REG_RECALIB_PERIOD seconds to ensure we get a
+@@ -1387,7 +1387,7 @@ void il4965_rx_stats(struct il_priv *il,
+ 	mod_timer(&il->stats_periodic, jiffies +
+ 		  msecs_to_jiffies(REG_RECALIB_PERIOD * 1000));
+ 
+-	if (unlikely(!test_bit(STATUS_SCANNING, &il->status)) &&
++	if (unlikely(!test_bit(S_SCANNING, &il->status)) &&
+ 	    (pkt->hdr.cmd == STATISTICS_NOTIFICATION)) {
+ 		il4965_rx_calc_noise(il);
+ 		queue_work(il->workqueue, &il->run_time_calib_work);
+@@ -3809,7 +3809,7 @@ static void il4965_bg_stats_periodic(unsigned long data)
+ {
+ 	struct il_priv *il = (struct il_priv *)data;
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
  		return;
  
- 	if (!sta || !lq_sta)
-@@ -1797,7 +1791,7 @@ static void il4965_rs_rate_scale_perform(struct il_priv *il,
- 	lq_sta->supp_rates = sta->supp_rates[lq_sta->band];
+ 	/* dont send host command if rf-kill is on */
+@@ -3895,17 +3895,17 @@ static void il4965_rx_card_state_notif(struct il_priv *il,
+ 		il4965_perform_ct_kill_task(il);
  
- 	tid = il4965_rs_tl_add_packet(lq_sta, hdr);
--	if ((tid != MAX_TID_COUNT) && (lq_sta->tx_agg_tid_en & (1 << tid))) {
-+	if (tid != MAX_TID_COUNT && (lq_sta->tx_agg_tid_en & (1 << tid))) {
- 		tid_data = &il->stations[lq_sta->lq.sta_id].tid[tid];
- 		if (tid_data->agg.state == IL_AGG_OFF)
- 			lq_sta->is_agg = 0;
-@@ -1872,8 +1866,8 @@ static void il4965_rs_rate_scale_perform(struct il_priv *il,
- 	}
+ 	if (flags & HW_CARD_DISABLED)
+-		set_bit(STATUS_RF_KILL_HW, &il->status);
++		set_bit(S_RF_KILL_HW, &il->status);
+ 	else
+-		clear_bit(STATUS_RF_KILL_HW, &il->status);
++		clear_bit(S_RF_KILL_HW, &il->status);
  
- 	/* force user max rate if set by user */
--	if ((lq_sta->max_rate_idx != -1) &&
--	    (lq_sta->max_rate_idx < index)) {
-+	if (lq_sta->max_rate_idx != -1 &&
-+	    lq_sta->max_rate_idx < index) {
- 		index = lq_sta->max_rate_idx;
- 		update_lq = 1;
- 		window = &(tbl->win[index]);
-@@ -1890,8 +1884,8 @@ static void il4965_rs_rate_scale_perform(struct il_priv *il,
- 	 * in current association (use new rate found above).
- 	 */
- 	fail_count = window->counter - window->success_counter;
--	if ((fail_count < IL_RATE_MIN_FAILURE_TH) &&
--			(window->success_counter < IL_RATE_MIN_SUCCESS_TH)) {
-+	if (fail_count < IL_RATE_MIN_FAILURE_TH &&
-+	    window->success_counter < IL_RATE_MIN_SUCCESS_TH) {
- 		D_RATE("LQ: still below TH. succ=%d total=%d "
- 			       "for index %d\n",
- 			       window->success_counter, window->counter, index);
-@@ -1975,8 +1969,8 @@ static void il4965_rs_rate_scale_perform(struct il_priv *il,
- 	high = (high_low >> 8) & 0xff;
+ 	if (!(flags & RXON_CARD_DISABLED))
+ 		il_scan_cancel(il);
  
- 	/* If user set max rate, dont allow higher than user constrain */
--	if ((lq_sta->max_rate_idx != -1) &&
--	    (lq_sta->max_rate_idx < high))
-+	if (lq_sta->max_rate_idx != -1 &&
-+	    lq_sta->max_rate_idx < high)
- 		high = IL_RATE_INVALID;
- 
- 	sr = window->success_ratio;
-@@ -1991,14 +1985,14 @@ static void il4965_rs_rate_scale_perform(struct il_priv *il,
- 	scale_action = 0;
- 
- 	/* Too many failures, decrease rate */
--	if ((sr <= IL_RATE_DECREASE_TH) || (current_tpt == 0)) {
-+	if (sr <= IL_RATE_DECREASE_TH || current_tpt == 0) {
- 		D_RATE(
- 			"decrease rate because of low success_ratio\n");
- 		scale_action = -1;
- 
- 	/* No throughput measured yet for adjacent rates; try increase. */
--	} else if ((low_tpt == IL_INVALID_VALUE) &&
--		   (high_tpt == IL_INVALID_VALUE)) {
-+	} else if (low_tpt == IL_INVALID_VALUE &&
-+		   high_tpt == IL_INVALID_VALUE) {
- 
- 		if (high != IL_RATE_INVALID && sr >= IL_RATE_INCREASE_TH)
- 			scale_action = 1;
-@@ -2008,10 +2002,8 @@ static void il4965_rs_rate_scale_perform(struct il_priv *il,
- 
- 	/* Both adjacent throughputs are measured, but neither one has better
- 	 * throughput; we're using the best rate, don't change it! */
--	else if ((low_tpt != IL_INVALID_VALUE) &&
--		 (high_tpt != IL_INVALID_VALUE) &&
--		 (low_tpt < current_tpt) &&
--		 (high_tpt < current_tpt))
-+	else if (low_tpt != IL_INVALID_VALUE && high_tpt != IL_INVALID_VALUE &&
-+		 low_tpt < current_tpt && high_tpt < current_tpt)
- 		scale_action = 0;
- 
- 	/* At least one adjacent rate's throughput is measured,
-@@ -2021,7 +2013,7 @@ static void il4965_rs_rate_scale_perform(struct il_priv *il,
- 		if (high_tpt != IL_INVALID_VALUE) {
- 			/* Higher rate has better throughput */
- 			if (high_tpt > current_tpt &&
--					sr >= IL_RATE_INCREASE_TH) {
-+			    sr >= IL_RATE_INCREASE_TH) {
- 				scale_action = 1;
- 			} else {
- 				scale_action = 0;
-@@ -2042,9 +2034,8 @@ static void il4965_rs_rate_scale_perform(struct il_priv *il,
- 
- 	/* Sanity check; asked for decrease, but success rate or throughput
- 	 * has been good at old rate.  Don't change it. */
--	if ((scale_action == -1) && (low != IL_RATE_INVALID) &&
--		    ((sr > IL_RATE_HIGH_TH) ||
--		     (current_tpt > (100 * tbl->expected_tpt[low]))))
-+	if (scale_action == -1 && low != IL_RATE_INVALID &&
-+	    (sr > IL_RATE_HIGH_TH || current_tpt > 100 * tbl->expected_tpt[low]))
- 		scale_action = 0;
- 
- 	switch (scale_action) {
-@@ -2090,8 +2081,8 @@ lq_update:
- 	 * 2)  Not just finishing up a search
- 	 * 3)  Allowing a new search
- 	 */
--	if (!update_lq && !done_search &&
--		!lq_sta->stay_in_tbl && window->counter) {
-+	if (!update_lq && !done_search && !lq_sta->stay_in_tbl &&
-+	    window->counter) {
- 		/* Save current throughput to compare with "search" throughput*/
- 		lq_sta->last_tpt = current_tpt;
- 
-@@ -2146,10 +2137,10 @@ lq_update:
- 		 * have been tried and compared, stay in this best modulation
- 		 * mode for a while before next round of mode comparisons. */
- 		if (lq_sta->enable_counter &&
--		    (lq_sta->action_counter >= tbl1->max_search)) {
--			if ((lq_sta->last_tpt > IL_AGG_TPT_THREHOLD) &&
-+		    lq_sta->action_counter >= tbl1->max_search) {
-+			if (lq_sta->last_tpt > IL_AGG_TPT_THREHOLD &&
- 			    (lq_sta->tx_agg_tid_en & (1 << tid)) &&
--			    (tid != MAX_TID_COUNT)) {
-+			    tid != MAX_TID_COUNT) {
- 				tid_data =
- 				   &il->stations[lq_sta->lq.sta_id].tid[tid];
- 				if (tid_data->agg.state == IL_AGG_OFF) {
-@@ -2217,7 +2208,7 @@ static void il4965_rs_initialize_lq(struct il_priv *il,
- 
- 	tbl = &(lq_sta->lq_info[active_tbl]);
- 
--	if ((i < 0) || (i >= IL_RATE_COUNT))
-+	if (i < 0 || i >= IL_RATE_COUNT)
- 		i = 0;
- 
- 	rate = il_rates[i].plcp;
-@@ -2256,11 +2247,11 @@ il4965_rs_get_rate(void *il_r, struct ieee80211_sta *sta, void *il_sta,
- 	/* Get max rate if user set max rate */
- 	if (lq_sta) {
- 		lq_sta->max_rate_idx = txrc->max_rate_idx;
--		if ((sband->band == IEEE80211_BAND_5GHZ) &&
--		    (lq_sta->max_rate_idx != -1))
-+		if (sband->band == IEEE80211_BAND_5GHZ &&
-+		    lq_sta->max_rate_idx != -1)
- 			lq_sta->max_rate_idx += IL_FIRST_OFDM_RATE;
--		if ((lq_sta->max_rate_idx < 0) ||
--		    (lq_sta->max_rate_idx >= IL_RATE_COUNT))
-+		if (lq_sta->max_rate_idx < 0 ||
-+		    lq_sta->max_rate_idx >= IL_RATE_COUNT)
- 			lq_sta->max_rate_idx = -1;
- 	}
- 
-@@ -2301,9 +2292,9 @@ il4965_rs_get_rate(void *il_r, struct ieee80211_sta *sta, void *il_sta,
- 					IEEE80211_TX_RC_GREEN_FIELD;
- 	} else {
- 		/* Check for invalid rates */
--		if ((rate_idx < 0) || (rate_idx >= IL_RATE_COUNT_LEGACY) ||
--				((sband->band == IEEE80211_BAND_5GHZ) &&
--				 (rate_idx < IL_FIRST_OFDM_RATE)))
-+		if (rate_idx < 0 || rate_idx >= IL_RATE_COUNT_LEGACY ||
-+		    (sband->band == IEEE80211_BAND_5GHZ &&
-+		     rate_idx < IL_FIRST_OFDM_RATE))
- 			rate_idx = rate_lowest_index(sband, sta);
- 		/* On valid 5 GHz rate, adjust index */
- 		else if (sband->band == IEEE80211_BAND_5GHZ)
-@@ -2475,7 +2466,7 @@ static void il4965_rs_fill_link_cmd(struct il_priv *il,
- 		/* Repeat initial/next rate.
- 		 * For legacy IL_NUMBER_TRY == 1, this loop will not execute.
- 		 * For HT IL_HT_NUMBER_TRY == 3, this executes twice. */
--		while (repeat_rate > 0 && (index < LINK_QUAL_MAX_RETRY_NUM)) {
-+		while (repeat_rate > 0 && index < LINK_QUAL_MAX_RETRY_NUM) {
- 			if (is_legacy(tbl_type.lq_type)) {
- 				if (ant_toggle_cnt < NUM_TRY_BEFORE_ANT_TOGGLE)
- 					ant_toggle_cnt++;
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
-index f86a3b9..a32a4f3 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
-@@ -195,8 +195,8 @@ static void il4965_tx_cmd_build_rate(struct il_priv *il,
- 	 * index is invalid.
- 	 */
- 	rate_idx = info->control.rates[0].idx;
--	if (info->control.rates[0].flags & IEEE80211_TX_RC_MCS ||
--			(rate_idx < 0) || (rate_idx > IL_RATE_COUNT_LEGACY))
-+	if ((info->control.rates[0].flags & IEEE80211_TX_RC_MCS) ||
-+	    rate_idx < 0 || rate_idx > IL_RATE_COUNT_LEGACY)
- 		rate_idx = rate_lowest_index(&il->bands[info->band],
- 				info->control.sta);
- 	/* For 5 GHZ band, remap mac80211 rate indices into driver indices */
-@@ -208,7 +208,7 @@ static void il4965_tx_cmd_build_rate(struct il_priv *il,
- 	rate_flags = 0;
- 
- 	/* Set CCK flag as needed */
--	if ((rate_idx >= IL_FIRST_CCK_RATE) && (rate_idx <= IL_LAST_CCK_RATE))
-+	if (rate_idx >= IL_FIRST_CCK_RATE && rate_idx <= IL_LAST_CCK_RATE)
- 		rate_flags |= RATE_MCS_CCK_MSK;
- 
- 	/* Set up antennas */
-@@ -535,8 +535,7 @@ int il4965_tx_skb(struct il_priv *il, struct sk_buff *skb)
- 	if (sta_priv && sta_priv->client && !is_agg)
- 		atomic_inc(&sta_priv->pending_frames);
- 
--	if ((il_queue_space(q) < q->high_mark) &&
--			il->mac80211_registered) {
-+	if (il_queue_space(q) < q->high_mark && il->mac80211_registered) {
- 		if (wait_write_ptr) {
- 			spin_lock_irqsave(&il->lock, flags);
- 			txq->need_update = 1;
-@@ -1050,8 +1049,8 @@ int il4965_txq_check_empty(struct il_priv *il,
- 	case IL_EMPTYING_HW_QUEUE_DELBA:
- 		/* We are reclaiming the last packet of the */
- 		/* aggregated HW queue */
--		if ((txq_id  == tid_data->agg.txq_id) &&
--		    (q->read_ptr == q->write_ptr)) {
-+		if (txq_id  == tid_data->agg.txq_id &&
-+		    q->read_ptr == q->write_ptr) {
- 			u16 ssn = SEQ_TO_SN(tid_data->seq_number);
- 			int tx_fifo = il4965_get_fifo_from_tid(ctx, tid);
- 			D_HT(
-@@ -1114,7 +1113,7 @@ int il4965_tx_queue_reclaim(struct il_priv *il, int txq_id, int index)
- 	int nfreed = 0;
- 	struct ieee80211_hdr *hdr;
- 
--	if ((index >= q->n_bd) || (il_queue_used(q, index) == 0)) {
-+	if (index >= q->n_bd || il_queue_used(q, index) == 0) {
- 		IL_ERR("Read index for DMA queue txq id (%d), index %d, "
- 			  "is out of range [0-%d] %d %d.\n", txq_id,
- 			  index, q->n_bd, q->write_ptr, q->read_ptr);
-@@ -1321,9 +1320,9 @@ void il4965_rx_reply_compressed_ba(struct il_priv *il,
- 		int freed = il4965_tx_queue_reclaim(il, scd_flow, index);
- 		il4965_free_tfds_in_queue(il, sta_id, tid, freed);
- 
--		if ((il_queue_space(&txq->q) > txq->q.low_mark) &&
-+		if (il_queue_space(&txq->q) > txq->q.low_mark &&
- 		    il->mac80211_registered &&
--		    (agg->state != IL_EMPTYING_HW_QUEUE_DELBA))
-+		    agg->state != IL_EMPTYING_HW_QUEUE_DELBA)
- 			il_wake_queue(il, txq);
- 
- 		il4965_txq_check_empty(il, sta_id, tid, scd_flow);
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965.c b/drivers/net/wireless/iwlegacy/iwl-4965.c
-index a745032..3706e47 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965.c
-@@ -284,8 +284,8 @@ static bool iw4965_is_ht40_channel(__le32 rxon_flags)
- {
- 	int chan_mod = le32_to_cpu(rxon_flags & RXON_FLG_CHANNEL_MODE_MSK)
- 				    >> RXON_FLG_CHANNEL_MODE_POS;
--	return ((chan_mod == CHANNEL_MODE_PURE_40) ||
--		  (chan_mod == CHANNEL_MODE_MIXED));
-+	return (chan_mod == CHANNEL_MODE_PURE_40 ||
-+		chan_mod == CHANNEL_MODE_MIXED);
+-	if ((test_bit(STATUS_RF_KILL_HW, &status) !=
+-	     test_bit(STATUS_RF_KILL_HW, &il->status)))
++	if ((test_bit(S_RF_KILL_HW, &status) !=
++	     test_bit(S_RF_KILL_HW, &il->status)))
+ 		wiphy_rfkill_set_hw_state(il->hw->wiphy,
+-			test_bit(STATUS_RF_KILL_HW, &il->status));
++			test_bit(S_RF_KILL_HW, &il->status));
+ 	else
+ 		wake_up(&il->wait_command_queue);
  }
+@@ -4199,11 +4199,11 @@ static void il4965_irq_tasklet(struct il_priv *il)
+ 		 * is killed. Hence update the killswitch state here. The
+ 		 * rfkill handler will care about restarting if needed.
+ 		 */
+-		if (!test_bit(STATUS_ALIVE, &il->status)) {
++		if (!test_bit(S_ALIVE, &il->status)) {
+ 			if (hw_rf_kill)
+-				set_bit(STATUS_RF_KILL_HW, &il->status);
++				set_bit(S_RF_KILL_HW, &il->status);
+ 			else
+-				clear_bit(STATUS_RF_KILL_HW, &il->status);
++				clear_bit(S_RF_KILL_HW, &il->status);
+ 			wiphy_rfkill_set_hw_state(il->hw->wiphy, hw_rf_kill);
+ 		}
  
- static void il4965_nic_config(struct il_priv *il)
-@@ -323,7 +323,7 @@ static void il4965_chain_noise_reset(struct il_priv *il)
- {
- 	struct il_chain_noise_data *data = &(il->chain_noise_data);
+@@ -4272,7 +4272,7 @@ static void il4965_irq_tasklet(struct il_priv *il)
  
--	if ((data->state == IL_CHAIN_NOISE_ALIVE) &&
-+	if (data->state == IL_CHAIN_NOISE_ALIVE &&
- 	    il_is_any_associated(il)) {
- 		struct il_calib_diff_gain_cmd cmd;
+ 	/* Re-enable all interrupts */
+ 	/* only Re-enable if disabled by irq */
+-	if (test_bit(STATUS_INT_ENABLED, &il->status))
++	if (test_bit(S_INT_ENABLED, &il->status))
+ 		il_enable_interrupts(il);
+ 	/* Re-enable RF_KILL if it occurred */
+ 	else if (handled & CSR_INT_BIT_RF_KILL)
+@@ -5079,7 +5079,7 @@ static void il4965_alive_start(struct il_priv *il)
  
-@@ -458,8 +458,8 @@ static s32 il4965_get_voltage_compensation(s32 eeprom_voltage,
- {
- 	s32 comp = 0;
  
--	if ((TX_POWER_IL_ILLEGAL_VOLTAGE == eeprom_voltage) ||
--	    (TX_POWER_IL_ILLEGAL_VOLTAGE == current_voltage))
-+	if (TX_POWER_IL_ILLEGAL_VOLTAGE == eeprom_voltage ||
-+	    TX_POWER_IL_ILLEGAL_VOLTAGE == current_voltage)
- 		return 0;
+ 	/* After the ALIVE response, we can send host commands to the uCode */
+-	set_bit(STATUS_ALIVE, &il->status);
++	set_bit(S_ALIVE, &il->status);
  
- 	il4965_math_div_round(current_voltage - eeprom_voltage,
-@@ -506,8 +506,8 @@ static u32 il4965_get_sub_band(const struct il_priv *il, u32 channel)
- 		if (il->calib_info->band_info[b].ch_from == 0)
- 			continue;
+ 	/* Enable watchdog to monitor the driver tx queues */
+ 	il_setup_watchdog(il);
+@@ -5110,7 +5110,7 @@ static void il4965_alive_start(struct il_priv *il)
  
--		if ((channel >= il->calib_info->band_info[b].ch_from)
--		    && (channel <= il->calib_info->band_info[b].ch_to))
-+		if (channel >= il->calib_info->band_info[b].ch_from &&
-+		    channel <= il->calib_info->band_info[b].ch_to)
- 			break;
+ 	il4965_reset_run_time_calib(il);
+ 
+-	set_bit(STATUS_READY, &il->status);
++	set_bit(S_READY, &il->status);
+ 
+ 	/* Configure the adapter for unassociated operation */
+ 	il_commit_rxon(il, ctx);
+@@ -5141,9 +5141,9 @@ static void __il4965_down(struct il_priv *il)
+ 
+ 	il_scan_cancel_timeout(il, 200);
+ 
+-	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &il->status);
++	exit_pending = test_and_set_bit(S_EXIT_PENDING, &il->status);
+ 
+-	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
++	/* Stop TX queues watchdog. We need to have S_EXIT_PENDING bit set
+ 	 * to prevent rearm timer */
+ 	del_timer_sync(&il->watchdog);
+ 
+@@ -5157,7 +5157,7 @@ static void __il4965_down(struct il_priv *il)
+ 	/* Wipe out the EXIT_PENDING status bit if we are not actually
+ 	 * exiting the module */
+ 	if (!exit_pending)
+-		clear_bit(STATUS_EXIT_PENDING, &il->status);
++		clear_bit(S_EXIT_PENDING, &il->status);
+ 
+ 	/* stop and reset the on-board processor */
+ 	_il_wr(il, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
+@@ -5174,25 +5174,25 @@ static void __il4965_down(struct il_priv *il)
+ 	/* If we have not previously called il_init() then
+ 	 * clear all bits but the RF Kill bit and return */
+ 	if (!il_is_init(il)) {
+-		il->status = test_bit(STATUS_RF_KILL_HW, &il->status) <<
+-					STATUS_RF_KILL_HW |
+-			       test_bit(STATUS_GEO_CONFIGURED, &il->status) <<
+-					STATUS_GEO_CONFIGURED |
+-			       test_bit(STATUS_EXIT_PENDING, &il->status) <<
+-					STATUS_EXIT_PENDING;
++		il->status = test_bit(S_RF_KILL_HW, &il->status) <<
++					S_RF_KILL_HW |
++			       test_bit(S_GEO_CONFIGURED, &il->status) <<
++					S_GEO_CONFIGURED |
++			       test_bit(S_EXIT_PENDING, &il->status) <<
++					S_EXIT_PENDING;
+ 		goto exit;
  	}
  
-@@ -1158,15 +1158,15 @@ static int il4965_send_rxon_assoc(struct il_priv *il,
- 	const struct il_rxon_cmd *rxon1 = &ctx->staging;
- 	const struct il_rxon_cmd *rxon2 = &ctx->active;
+ 	/* ...otherwise clear out all the status bits but the RF Kill
+ 	 * bit and continue taking the NIC down. */
+-	il->status &= test_bit(STATUS_RF_KILL_HW, &il->status) <<
+-				STATUS_RF_KILL_HW |
+-			test_bit(STATUS_GEO_CONFIGURED, &il->status) <<
+-				STATUS_GEO_CONFIGURED |
+-			test_bit(STATUS_FW_ERROR, &il->status) <<
+-				STATUS_FW_ERROR |
+-		       test_bit(STATUS_EXIT_PENDING, &il->status) <<
+-				STATUS_EXIT_PENDING;
++	il->status &= test_bit(S_RF_KILL_HW, &il->status) <<
++				S_RF_KILL_HW |
++			test_bit(S_GEO_CONFIGURED, &il->status) <<
++				S_GEO_CONFIGURED |
++			test_bit(S_FW_ERROR, &il->status) <<
++				S_FW_ERROR |
++		       test_bit(S_EXIT_PENDING, &il->status) <<
++				S_EXIT_PENDING;
  
--	if ((rxon1->flags == rxon2->flags) &&
--	    (rxon1->filter_flags == rxon2->filter_flags) &&
--	    (rxon1->cck_basic_rates == rxon2->cck_basic_rates) &&
--	    (rxon1->ofdm_ht_single_stream_basic_rates ==
--	     rxon2->ofdm_ht_single_stream_basic_rates) &&
--	    (rxon1->ofdm_ht_dual_stream_basic_rates ==
--	     rxon2->ofdm_ht_dual_stream_basic_rates) &&
--	    (rxon1->rx_chain == rxon2->rx_chain) &&
--	    (rxon1->ofdm_basic_rates == rxon2->ofdm_basic_rates)) {
-+	if (rxon1->flags == rxon2->flags &&
-+	    rxon1->filter_flags == rxon2->filter_flags &&
-+	    rxon1->cck_basic_rates == rxon2->cck_basic_rates &&
-+	    rxon1->ofdm_ht_single_stream_basic_rates ==
-+		rxon2->ofdm_ht_single_stream_basic_rates &&
-+	    rxon1->ofdm_ht_dual_stream_basic_rates ==
-+		rxon2->ofdm_ht_dual_stream_basic_rates &&
-+	    rxon1->rx_chain == rxon2->rx_chain &&
-+	    rxon1->ofdm_basic_rates == rxon2->ofdm_basic_rates) {
- 		D_INFO("Using current RXON_ASSOC.  Not resending.\n");
+ 	il4965_txq_ctx_stop(il);
+ 	il4965_rxq_stop(il);
+@@ -5283,7 +5283,7 @@ static int __il4965_up(struct il_priv *il)
+ 	int i;
+ 	int ret;
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status)) {
++	if (test_bit(S_EXIT_PENDING, &il->status)) {
+ 		IL_WARN("Exit pending; will not bring the NIC up\n");
+ 		return -EIO;
+ 	}
+@@ -5309,9 +5309,9 @@ static int __il4965_up(struct il_priv *il)
+ 	/* If platform's RF_KILL switch is NOT set to KILL */
+ 	if (_il_rd(il,
+ 		CSR_GP_CNTRL) & CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
+-		clear_bit(STATUS_RF_KILL_HW, &il->status);
++		clear_bit(S_RF_KILL_HW, &il->status);
+ 	else
+-		set_bit(STATUS_RF_KILL_HW, &il->status);
++		set_bit(S_RF_KILL_HW, &il->status);
+ 
+ 	if (il_is_rfkill(il)) {
+ 		wiphy_rfkill_set_hw_state(il->hw->wiphy, true);
+@@ -5372,9 +5372,9 @@ static int __il4965_up(struct il_priv *il)
  		return 0;
  	}
-@@ -1216,7 +1216,7 @@ static int il4965_commit_rxon(struct il_priv *il, struct il_rxon_context *ctx)
+ 
+-	set_bit(STATUS_EXIT_PENDING, &il->status);
++	set_bit(S_EXIT_PENDING, &il->status);
+ 	__il4965_down(il);
+-	clear_bit(STATUS_EXIT_PENDING, &il->status);
++	clear_bit(S_EXIT_PENDING, &il->status);
+ 
+ 	/* tried to restart and config the device for as long as our
+ 	 * patience could withstand */
+@@ -5395,7 +5395,7 @@ static void il4965_bg_init_alive_start(struct work_struct *data)
+ 	    container_of(data, struct il_priv, init_alive_start.work);
+ 
+ 	mutex_lock(&il->mutex);
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		goto out;
+ 
+ 	il->cfg->ops->lib->init_alive_start(il);
+@@ -5409,7 +5409,7 @@ static void il4965_bg_alive_start(struct work_struct *data)
+ 	    container_of(data, struct il_priv, alive_start.work);
+ 
+ 	mutex_lock(&il->mutex);
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		goto out;
+ 
+ 	il4965_alive_start(il);
+@@ -5424,8 +5424,8 @@ static void il4965_bg_run_time_calib_work(struct work_struct *work)
+ 
+ 	mutex_lock(&il->mutex);
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status) ||
+-	    test_bit(STATUS_SCANNING, &il->status)) {
++	if (test_bit(S_EXIT_PENDING, &il->status) ||
++	    test_bit(S_SCANNING, &il->status)) {
+ 		mutex_unlock(&il->mutex);
+ 		return;
+ 	}
+@@ -5444,10 +5444,10 @@ static void il4965_bg_restart(struct work_struct *data)
+ {
+ 	struct il_priv *il = container_of(data, struct il_priv, restart);
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		return;
+ 
+-	if (test_and_clear_bit(STATUS_FW_ERROR, &il->status)) {
++	if (test_and_clear_bit(S_FW_ERROR, &il->status)) {
+ 		mutex_lock(&il->mutex);
+ 		il->ctx.vif = NULL;
+ 		il->is_open = 0;
+@@ -5461,7 +5461,7 @@ static void il4965_bg_restart(struct work_struct *data)
+ 		il4965_down(il);
+ 
+ 		mutex_lock(&il->mutex);
+-		if (test_bit(STATUS_EXIT_PENDING, &il->status)) {
++		if (test_bit(S_EXIT_PENDING, &il->status)) {
+ 			mutex_unlock(&il->mutex);
+ 			return;
+ 		}
+@@ -5476,7 +5476,7 @@ static void il4965_bg_rx_replenish(struct work_struct *data)
+ 	struct il_priv *il =
+ 	    container_of(data, struct il_priv, rx_replenish);
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		return;
+ 
+ 	mutex_lock(&il->mutex);
+@@ -5582,10 +5582,10 @@ int il4965_mac_start(struct ieee80211_hw *hw)
+ 	/* Wait for START_ALIVE from Run Time ucode. Otherwise callbacks from
+ 	 * mac80211 will not be run successfully. */
+ 	ret = wait_event_timeout(il->wait_command_queue,
+-			test_bit(STATUS_READY, &il->status),
++			test_bit(S_READY, &il->status),
+ 			UCODE_READY_TIMEOUT);
+ 	if (!ret) {
+-		if (!test_bit(STATUS_READY, &il->status)) {
++		if (!test_bit(S_READY, &il->status)) {
+ 			IL_ERR("START_ALIVE timeout after %dms.\n",
+ 				jiffies_to_msecs(UCODE_READY_TIMEOUT));
+ 			return -ETIMEDOUT;
+@@ -5751,7 +5751,7 @@ int il4965_mac_ampdu_action(struct ieee80211_hw *hw,
+ 	case IEEE80211_AMPDU_RX_STOP:
+ 		D_HT("stop Rx\n");
+ 		ret = il4965_sta_rx_agg_stop(il, sta, tid);
+-		if (test_bit(STATUS_EXIT_PENDING, &il->status))
++		if (test_bit(S_EXIT_PENDING, &il->status))
+ 			ret = 0;
+ 		break;
+ 	case IEEE80211_AMPDU_TX_START:
+@@ -5761,7 +5761,7 @@ int il4965_mac_ampdu_action(struct ieee80211_hw *hw,
+ 	case IEEE80211_AMPDU_TX_STOP:
+ 		D_HT("stop Tx\n");
+ 		ret = il4965_tx_agg_stop(il, vif, sta, tid);
+-		if (test_bit(STATUS_EXIT_PENDING, &il->status))
++		if (test_bit(S_EXIT_PENDING, &il->status))
+ 			ret = 0;
+ 		break;
+ 	case IEEE80211_AMPDU_TX_OPERATIONAL:
+@@ -5833,9 +5833,9 @@ void il4965_mac_channel_switch(struct ieee80211_hw *hw,
+ 	if (il_is_rfkill(il))
+ 		goto out;
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status) ||
+-	    test_bit(STATUS_SCANNING, &il->status) ||
+-	    test_bit(STATUS_CHANNEL_SWITCH_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status) ||
++	    test_bit(S_SCANNING, &il->status) ||
++	    test_bit(S_CHANNEL_SWITCH_PENDING, &il->status))
+ 		goto out;
+ 
+ 	if (!il_is_associated_ctx(ctx))
+@@ -5891,10 +5891,10 @@ void il4965_mac_channel_switch(struct ieee80211_hw *hw,
+ 	 * at this point, staging_rxon has the
+ 	 * configuration for channel switch
+ 	 */
+-	set_bit(STATUS_CHANNEL_SWITCH_PENDING, &il->status);
++	set_bit(S_CHANNEL_SWITCH_PENDING, &il->status);
+ 	il->switch_channel = cpu_to_le16(ch);
+ 	if (il->cfg->ops->lib->set_channel_switch(il, ch_switch)) {
+-		clear_bit(STATUS_CHANNEL_SWITCH_PENDING, &il->status);
++		clear_bit(S_CHANNEL_SWITCH_PENDING, &il->status);
+ 		il->switch_channel = 0;
+ 		ieee80211_chswitch_done(ctx->vif, false);
+ 	}
+@@ -5968,8 +5968,8 @@ static void il4965_bg_txpower_work(struct work_struct *work)
+ 	 * then just return; the stats notification will
+ 	 * kick off another scheduled work to compensate for
+ 	 * any temperature delta we missed here. */
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status) ||
+-	    test_bit(STATUS_SCANNING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status) ||
++	    test_bit(S_SCANNING, &il->status))
+ 		goto out;
+ 
+ 	/* Regardless of if we are associated, we must reconfigure the
+@@ -6376,12 +6376,12 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/* If platform's RF_KILL switch is NOT set to KILL */
+ 	if (_il_rd(il, CSR_GP_CNTRL) &
+ 		CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
+-		clear_bit(STATUS_RF_KILL_HW, &il->status);
++		clear_bit(S_RF_KILL_HW, &il->status);
+ 	else
+-		set_bit(STATUS_RF_KILL_HW, &il->status);
++		set_bit(S_RF_KILL_HW, &il->status);
+ 
+ 	wiphy_rfkill_set_hw_state(il->hw->wiphy,
+-		test_bit(STATUS_RF_KILL_HW, &il->status));
++		test_bit(S_RF_KILL_HW, &il->status));
+ 
+ 	il_power_initialize(il);
+ 
+@@ -6433,9 +6433,9 @@ static void __devexit il4965_pci_remove(struct pci_dev *pdev)
+ 
+ 	/* ieee80211_unregister_hw call wil cause il_mac_stop to
+ 	 * to be called and il4965_down since we are removing the device
+-	 * we need to set STATUS_EXIT_PENDING bit.
++	 * we need to set S_EXIT_PENDING bit.
+ 	 */
+-	set_bit(STATUS_EXIT_PENDING, &il->status);
++	set_bit(S_EXIT_PENDING, &il->status);
+ 
+ 	il_leds_exit(il);
+ 
+diff --git a/drivers/net/wireless/iwlegacy/4965.c b/drivers/net/wireless/iwlegacy/4965.c
+index 8199e63..1efe824 100644
+--- a/drivers/net/wireless/iwlegacy/4965.c
++++ b/drivers/net/wireless/iwlegacy/4965.c
+@@ -1349,7 +1349,7 @@ static int il4965_send_tx_power(struct il_priv *il)
+ 	u8 ctrl_chan_high = 0;
+ 	struct il_rxon_context *ctx = &il->ctx;
+ 
+-	if (WARN_ONCE(test_bit(STATUS_SCAN_HW, &il->status),
++	if (WARN_ONCE(test_bit(S_SCAN_HW, &il->status),
+ 		      "TX Power requested while scanning!\n"))
+ 		return -EAGAIN;
+ 
+@@ -1441,7 +1441,7 @@ static int il4965_commit_rxon(struct il_priv *il, struct il_rxon_context *ctx)
+ 	 * receive commit_rxon request
  	 * abort any previous channel switch if still in process
  	 */
- 	if (test_bit(STATUS_CHANNEL_SWITCH_PENDING, &il->status) &&
--	    (il->switch_channel != ctx->staging.channel)) {
-+	    il->switch_channel != ctx->staging.channel) {
+-	if (test_bit(STATUS_CHANNEL_SWITCH_PENDING, &il->status) &&
++	if (test_bit(S_CHANNEL_SWITCH_PENDING, &il->status) &&
+ 	    il->switch_channel != ctx->staging.channel) {
  		D_11H("abort channel switch on %d\n",
  		      le16_to_cpu(il->switch_channel));
- 		il_chswitch_done(il, false);
-@@ -1366,7 +1366,7 @@ static int il4965_hw_channel_switch(struct il_priv *il,
- 	 * calculate the ucode channel switch time
- 	 * adding TSF as one of the factor for when to switch
+@@ -1673,7 +1673,7 @@ static int il4965_hw_get_temperature(struct il_priv *il)
+ 	s32 R1, R2, R3;
+ 	u32 R4;
+ 
+-	if (test_bit(STATUS_TEMPERATURE, &il->status) &&
++	if (test_bit(S_TEMPERATURE, &il->status) &&
+ 	    (il->_4965.stats.flag &
+ 			STATISTICS_REPLY_FLG_HT40_MODE_MSK)) {
+ 		D_TEMP("Running HT40 temperature calibration\n");
+@@ -1696,7 +1696,7 @@ static int il4965_hw_get_temperature(struct il_priv *il)
+ 	 * with an updated temperature, use R4 provided to us in the
+ 	 * "initialize" ALIVE response.
  	 */
--	if ((il->ucode_beacon_time > tsf_low) && beacon_interval) {
-+	if (il->ucode_beacon_time > tsf_low && beacon_interval) {
- 		if (switch_count > ((il->ucode_beacon_time - tsf_low) /
- 		    beacon_interval)) {
- 			switch_count -= (il->ucode_beacon_time -
-@@ -1789,7 +1789,7 @@ static void il4965_rx_reply_tx(struct il_priv *il,
- 	u8 *qc = NULL;
- 	unsigned long flags;
- 
--	if ((index >= txq->q.n_bd) || (il_queue_used(&txq->q, index) == 0)) {
-+	if (index >= txq->q.n_bd || il_queue_used(&txq->q, index) == 0) {
- 		IL_ERR("Read index for DMA queue txq_id (%d) index %d "
- 			  "is out of range [0-%d] %d %d\n", txq_id,
- 			  index, txq->q.n_bd, txq->q.write_ptr,
-@@ -1838,8 +1838,8 @@ static void il4965_rx_reply_tx(struct il_priv *il,
- 						       tid, freed);
- 
- 			if (il->mac80211_registered &&
--			    (il_queue_space(&txq->q) > txq->q.low_mark)
--				 && (agg->state != IL_EMPTYING_HW_QUEUE_DELBA))
-+			    il_queue_space(&txq->q) > txq->q.low_mark &&
-+			    agg->state != IL_EMPTYING_HW_QUEUE_DELBA)
- 				il_wake_queue(il, txq);
- 		}
- 	} else {
-@@ -1863,7 +1863,7 @@ static void il4965_rx_reply_tx(struct il_priv *il,
- 			D_TX_REPLY("Station not known\n");
- 
- 		if (il->mac80211_registered &&
--		    (il_queue_space(&txq->q) > txq->q.low_mark))
-+		    il_queue_space(&txq->q) > txq->q.low_mark)
- 			il_wake_queue(il, txq);
- 	}
- 	if (qc && likely(sta_id != IL_INVALID_STATION))
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965.h b/drivers/net/wireless/iwlegacy/iwl-4965.h
-index ea2a98e..56bfdb0 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965.h
-@@ -163,8 +163,8 @@ static inline u32 il4965_tx_status_to_mac80211(u32 status)
- static inline bool il4965_is_tx_success(u32 status)
+-	if (!test_bit(STATUS_TEMPERATURE, &il->status))
++	if (!test_bit(S_TEMPERATURE, &il->status))
+ 		vt = sign_extend32(R4, 23);
+ 	else
+ 		vt = sign_extend32(le32_to_cpu(il->_4965.stats.
+@@ -1737,7 +1737,7 @@ static int il4965_is_temp_calib_needed(struct il_priv *il)
  {
- 	status &= TX_STATUS_MSK;
--	return (status == TX_STATUS_SUCCESS) ||
--	       (status == TX_STATUS_DIRECT_DONE);
-+	return (status == TX_STATUS_SUCCESS ||
-+		status == TX_STATUS_DIRECT_DONE);
- }
+ 	int temp_diff;
  
- u8 il4965_toggle_tx_ant(struct il_priv *il, u8 ant_idx, u8 valid);
+-	if (!test_bit(STATUS_STATISTICS, &il->status)) {
++	if (!test_bit(S_STATISTICS, &il->status)) {
+ 		D_TEMP("Temperature not updated -- no stats.\n");
+ 		return 0;
+ 	}
+@@ -1784,10 +1784,10 @@ static void il4965_temperature_calib(struct il_priv *il)
+ 	}
+ 
+ 	il->temperature = temp;
+-	set_bit(STATUS_TEMPERATURE, &il->status);
++	set_bit(S_TEMPERATURE, &il->status);
+ 
+ 	if (!il->disable_tx_power_cal &&
+-	     unlikely(!test_bit(STATUS_SCANNING, &il->status)) &&
++	     unlikely(!test_bit(S_SCANNING, &il->status)) &&
+ 	     il4965_is_temp_calib_needed(il))
+ 		queue_work(il->workqueue, &il->txpower_work);
+ }
+@@ -2179,7 +2179,7 @@ static void il4965_post_associate(struct il_priv *il)
+ 	if (!vif || !il->is_open)
+ 		return;
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		return;
+ 
+ 	il_scan_cancel_timeout(il, 200);
+@@ -2254,7 +2254,7 @@ static void il4965_config_ap(struct il_priv *il)
+ 
+ 	lockdep_assert_held(&il->mutex);
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		return;
+ 
+ 	/* The following should be done only at AP bring up */
 diff --git a/drivers/net/wireless/iwlegacy/iwl-core.c b/drivers/net/wireless/iwlegacy/iwl-core.c
-index ed44159..acbd5a8 100644
+index bd222f5..ba7ee4b 100644
 --- a/drivers/net/wireless/iwlegacy/iwl-core.c
 +++ b/drivers/net/wireless/iwlegacy/iwl-core.c
-@@ -251,8 +251,8 @@ int il_init_geos(struct il_priv *il)
- 	il->tx_power_user_lmt = max_tx_power;
- 	il->tx_power_next = max_tx_power;
- 
--	if ((il->bands[IEEE80211_BAND_5GHZ].n_channels == 0) &&
--	     il->cfg->sku & IL_SKU_A) {
-+	if (il->bands[IEEE80211_BAND_5GHZ].n_channels == 0 &&
-+	    (il->cfg->sku & IL_SKU_A)) {
- 		IL_INFO("Incorrectly detected BG card as ABG. "
- 			"Please send your PCI ID 0x%04X:0x%04X to maintainer.\n",
- 			   il->pci_dev->device,
-@@ -708,8 +708,7 @@ il_set_rxon_channel(struct il_priv *il, struct ieee80211_channel *ch,
- 	enum ieee80211_band band = ch->band;
- 	u16 channel = ch->hw_value;
- 
--	if ((le16_to_cpu(ctx->staging.channel) == channel) &&
--	    (il->band == band))
-+	if (le16_to_cpu(ctx->staging.channel) == channel && il->band == band)
+@@ -165,7 +165,7 @@ int il_init_geos(struct il_priv *il)
+ 	if (il->bands[IEEE80211_BAND_2GHZ].n_bitrates ||
+ 	    il->bands[IEEE80211_BAND_5GHZ].n_bitrates) {
+ 		D_INFO("Geography modes already initialized.\n");
+-		set_bit(STATUS_GEO_CONFIGURED, &il->status);
++		set_bit(S_GEO_CONFIGURED, &il->status);
  		return 0;
- 
- 	ctx->staging.channel = cpu_to_le16(channel);
-@@ -2306,8 +2305,8 @@ static void il_ht_conf(struct il_priv *il,
- 				>> IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT;
- 			maxstreams += 1;
- 
--			if ((ht_cap->mcs.rx_mask[1] == 0) &&
--			    (ht_cap->mcs.rx_mask[2] == 0))
-+			if (ht_cap->mcs.rx_mask[1] == 0 &&
-+			    ht_cap->mcs.rx_mask[2] == 0)
- 				ht_conf->single_chain_sufficient = true;
- 			if (maxstreams <= 1)
- 				ht_conf->single_chain_sufficient = true;
-@@ -2467,7 +2466,7 @@ void il_mac_bss_info_changed(struct ieee80211_hw *hw,
- 	 * mac80211 decides to do both changes at once because
- 	 * it will invoke post_associate.
- 	 */
--	if (vif->type == NL80211_IFTYPE_ADHOC && changes & BSS_CHANGED_BEACON)
-+	if (vif->type == NL80211_IFTYPE_ADHOC && (changes & BSS_CHANGED_BEACON))
- 		il_beacon_update(hw, vif);
- 
- 	if (changes & BSS_CHANGED_ERP_PREAMBLE) {
-@@ -2482,8 +2481,7 @@ void il_mac_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changes & BSS_CHANGED_ERP_CTS_PROT) {
- 		D_MAC80211(
- 			"ERP_CTS %d\n", bss_conf->use_cts_prot);
--		if (bss_conf->use_cts_prot &&
--			(il->band != IEEE80211_BAND_5GHZ))
-+		if (bss_conf->use_cts_prot && il->band != IEEE80211_BAND_5GHZ)
- 			ctx->staging.flags |= RXON_FLG_TGG_PROTECT_MSK;
- 		else
- 			ctx->staging.flags &= ~RXON_FLG_TGG_PROTECT_MSK;
-@@ -2596,7 +2594,7 @@ irqreturn_t il_isr(int irq, void *data)
- 		goto none;
  	}
  
--	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
-+	if (inta == 0xFFFFFFFF || (inta & 0xFFFFFFF0) == 0xa5a5a5a0) {
- 		/* Hardware disappeared. It might have already raised
- 		 * an interrupt */
- 		IL_WARN("HARDWARE GONE?? INTA == 0x%08x\n", inta);
-diff --git a/drivers/net/wireless/iwlegacy/iwl-io.h b/drivers/net/wireless/iwlegacy/iwl-io.h
-index 8cb924d..9d33da8 100644
---- a/drivers/net/wireless/iwlegacy/iwl-io.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-io.h
-@@ -176,7 +176,7 @@ static inline void il_write_reg_buf(struct il_priv *il,
+@@ -264,7 +264,7 @@ int il_init_geos(struct il_priv *il)
+ 		   il->bands[IEEE80211_BAND_2GHZ].n_channels,
+ 		   il->bands[IEEE80211_BAND_5GHZ].n_channels);
+ 
+-	set_bit(STATUS_GEO_CONFIGURED, &il->status);
++	set_bit(S_GEO_CONFIGURED, &il->status);
+ 
+ 	return 0;
+ }
+@@ -277,7 +277,7 @@ void il_free_geos(struct il_priv *il)
  {
- 	u32 count = sizeof(u32);
+ 	kfree(il->ieee_channels);
+ 	kfree(il->ieee_rates);
+-	clear_bit(STATUS_GEO_CONFIGURED, &il->status);
++	clear_bit(S_GEO_CONFIGURED, &il->status);
+ }
+ EXPORT_SYMBOL(il_free_geos);
  
--	if ((il != NULL) && (values != NULL)) {
-+	if (il != NULL && values != NULL) {
- 		for (; 0 < len; len -= count, reg += count, values++)
- 			il_wr(il, reg, *values);
+@@ -839,10 +839,10 @@ void il_chswitch_done(struct il_priv *il, bool is_success)
+ {
+ 	struct il_rxon_context *ctx = &il->ctx;
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		return;
+ 
+-	if (test_and_clear_bit(STATUS_CHANNEL_SWITCH_PENDING, &il->status))
++	if (test_and_clear_bit(S_CHANNEL_SWITCH_PENDING, &il->status))
+ 		ieee80211_chswitch_done(ctx->vif, is_success);
+ }
+ EXPORT_SYMBOL(il_chswitch_done);
+@@ -855,7 +855,7 @@ void il_rx_csa(struct il_priv *il, struct il_rx_buf *rxb)
+ 	struct il_rxon_context *ctx = &il->ctx;
+ 	struct il_rxon_cmd *rxon = (void *)&ctx->active;
+ 
+-	if (!test_bit(STATUS_CHANNEL_SWITCH_PENDING, &il->status))
++	if (!test_bit(S_CHANNEL_SWITCH_PENDING, &il->status))
+ 		return;
+ 
+ 	if (!le32_to_cpu(csa->status) && csa->channel == il->switch_channel) {
+@@ -903,10 +903,10 @@ EXPORT_SYMBOL(il_print_rx_config_cmd);
+ void il_irq_handle_error(struct il_priv *il)
+ {
+ 	/* Set the FW error flag -- cleared on il_down */
+-	set_bit(STATUS_FW_ERROR, &il->status);
++	set_bit(S_FW_ERROR, &il->status);
+ 
+ 	/* Cancel currently queued command. */
+-	clear_bit(STATUS_HCMD_ACTIVE, &il->status);
++	clear_bit(S_HCMD_ACTIVE, &il->status);
+ 
+ 	IL_ERR("Loaded firmware version: %s\n",
+ 		il->hw->wiphy->fw_version);
+@@ -924,9 +924,9 @@ void il_irq_handle_error(struct il_priv *il)
+ 
+ 	/* Keep the restart process from trying to send host
+ 	 * commands by clearing the INIT status bit */
+-	clear_bit(STATUS_READY, &il->status);
++	clear_bit(S_READY, &il->status);
+ 
+-	if (!test_bit(STATUS_EXIT_PENDING, &il->status)) {
++	if (!test_bit(S_EXIT_PENDING, &il->status)) {
+ 		IL_DBG(IL_DL_FW_ERRORS,
+ 			  "Restarting adapter due to uCode error.\n");
+ 
+@@ -1127,7 +1127,7 @@ int il_set_tx_power(struct il_priv *il, s8 tx_power, bool force)
+ 	il->tx_power_next = tx_power;
+ 
+ 	/* do not set tx power when scanning or channel changing */
+-	defer = test_bit(STATUS_SCANNING, &il->status) ||
++	defer = test_bit(S_SCANNING, &il->status) ||
+ 		memcmp(&ctx->active, &ctx->staging, sizeof(ctx->staging));
+ 	if (defer && !force) {
+ 		D_INFO("Deferring tx power set\n");
+@@ -1678,7 +1678,7 @@ int il_force_reset(struct il_priv *il, bool external)
+ {
+ 	struct il_force_reset *force_reset;
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		return -EINVAL;
+ 
+ 	force_reset = &il->force_reset;
+@@ -1713,13 +1713,13 @@ int il_force_reset(struct il_priv *il, bool external)
+ 	IL_ERR("On demand firmware reload\n");
+ 
+ 	/* Set the FW error flag -- cleared on il_down */
+-	set_bit(STATUS_FW_ERROR, &il->status);
++	set_bit(S_FW_ERROR, &il->status);
+ 	wake_up(&il->wait_command_queue);
+ 	/*
+ 	 * Keep the restart process from trying to send host
+ 	 * commands by clearing the INIT status bit
+ 	 */
+-	clear_bit(STATUS_READY, &il->status);
++	clear_bit(S_READY, &il->status);
+ 	queue_work(il->workqueue, &il->restart);
+ 
+ 	return 0;
+@@ -1826,7 +1826,7 @@ void il_bg_watchdog(unsigned long data)
+ 	int cnt;
+ 	unsigned long timeout;
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		return;
+ 
+ 	timeout = il->cfg->base_params->wd_timeout;
+@@ -1960,9 +1960,9 @@ int il_pci_resume(struct device *device)
+ 		hw_rfkill = true;
+ 
+ 	if (hw_rfkill)
+-		set_bit(STATUS_RF_KILL_HW, &il->status);
++		set_bit(S_RF_KILL_HW, &il->status);
+ 	else
+-		clear_bit(STATUS_RF_KILL_HW, &il->status);
++		clear_bit(S_RF_KILL_HW, &il->status);
+ 
+ 	wiphy_rfkill_set_hw_state(il->hw->wiphy, hw_rfkill);
+ 
+@@ -1985,7 +1985,7 @@ EXPORT_SYMBOL(il_pm_ops);
+ static void
+ il_update_qos(struct il_priv *il, struct il_rxon_context *ctx)
+ {
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		return;
+ 
+ 	if (!ctx->is_active)
+@@ -2034,7 +2034,7 @@ int il_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 	D_MAC80211("enter to channel %d changed 0x%X\n",
+ 					channel->hw_value, changed);
+ 
+-	if (unlikely(test_bit(STATUS_SCANNING, &il->status))) {
++	if (unlikely(test_bit(S_SCANNING, &il->status))) {
+ 		scan_active = 1;
+ 		D_MAC80211("scan active\n");
  	}
-diff --git a/drivers/net/wireless/iwlegacy/iwl-legacy-rs.h b/drivers/net/wireless/iwlegacy/iwl-legacy-rs.h
-index 744829a..5da7d41 100644
---- a/drivers/net/wireless/iwlegacy/iwl-legacy-rs.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-legacy-rs.h
-@@ -279,7 +279,7 @@ enum il_table_type {
- 	LQ_MAX,
- };
+@@ -2566,7 +2566,7 @@ unplugged:
+ none:
+ 	/* re-enable interrupts here since we don't have anything to service. */
+ 	/* only Re-enable if disabled by irq */
+-	if (test_bit(STATUS_INT_ENABLED, &il->status))
++	if (test_bit(S_INT_ENABLED, &il->status))
+ 		il_enable_interrupts(il);
+ 	spin_unlock_irqrestore(&il->lock, flags);
+ 	return IRQ_NONE;
+diff --git a/drivers/net/wireless/iwlegacy/iwl-core.h b/drivers/net/wireless/iwlegacy/iwl-core.h
+index 8333761..5b2883f 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-core.h
++++ b/drivers/net/wireless/iwlegacy/iwl-core.h
+@@ -533,47 +533,47 @@ void il_free_geos(struct il_priv *il);
  
--#define is_legacy(tbl) (((tbl) == LQ_G) || ((tbl) == LQ_A))
-+#define is_legacy(tbl) ((tbl) == LQ_G || (tbl) == LQ_A)
- #define is_siso(tbl) ((tbl) == LQ_SISO)
- #define is_mimo2(tbl) ((tbl) == LQ_MIMO2)
- #define is_mimo(tbl) (is_mimo2(tbl))
+ /*************** DRIVER STATUS FUNCTIONS   *****/
+ 
+-#define STATUS_HCMD_ACTIVE	0	/* host command in progress */
+-/* 1 is unused (used to be STATUS_HCMD_SYNC_ACTIVE) */
+-#define STATUS_INT_ENABLED	2
+-#define STATUS_RF_KILL_HW	3
+-#define STATUS_CT_KILL		4
+-#define STATUS_INIT		5
+-#define STATUS_ALIVE		6
+-#define STATUS_READY		7
+-#define STATUS_TEMPERATURE	8
+-#define STATUS_GEO_CONFIGURED	9
+-#define STATUS_EXIT_PENDING	10
+-#define STATUS_STATISTICS	12
+-#define STATUS_SCANNING		13
+-#define STATUS_SCAN_ABORTING	14
+-#define STATUS_SCAN_HW		15
+-#define STATUS_POWER_PMI	16
+-#define STATUS_FW_ERROR		17
+-#define STATUS_CHANNEL_SWITCH_PENDING 18
++#define S_HCMD_ACTIVE	0	/* host command in progress */
++/* 1 is unused (used to be S_HCMD_SYNC_ACTIVE) */
++#define S_INT_ENABLED	2
++#define S_RF_KILL_HW	3
++#define S_CT_KILL		4
++#define S_INIT		5
++#define S_ALIVE		6
++#define S_READY		7
++#define S_TEMPERATURE	8
++#define S_GEO_CONFIGURED	9
++#define S_EXIT_PENDING	10
++#define S_STATISTICS	12
++#define S_SCANNING		13
++#define S_SCAN_ABORTING	14
++#define S_SCAN_HW		15
++#define S_POWER_PMI	16
++#define S_FW_ERROR		17
++#define S_CHANNEL_SWITCH_PENDING 18
+ 
+ static inline int il_is_ready(struct il_priv *il)
+ {
+ 	/* The adapter is 'ready' if READY and GEO_CONFIGURED bits are
+ 	 * set but EXIT_PENDING is not */
+-	return test_bit(STATUS_READY, &il->status) &&
+-	       test_bit(STATUS_GEO_CONFIGURED, &il->status) &&
+-	       !test_bit(STATUS_EXIT_PENDING, &il->status);
++	return test_bit(S_READY, &il->status) &&
++	       test_bit(S_GEO_CONFIGURED, &il->status) &&
++	       !test_bit(S_EXIT_PENDING, &il->status);
+ }
+ 
+ static inline int il_is_alive(struct il_priv *il)
+ {
+-	return test_bit(STATUS_ALIVE, &il->status);
++	return test_bit(S_ALIVE, &il->status);
+ }
+ 
+ static inline int il_is_init(struct il_priv *il)
+ {
+-	return test_bit(STATUS_INIT, &il->status);
++	return test_bit(S_INIT, &il->status);
+ }
+ 
+ static inline int il_is_rfkill_hw(struct il_priv *il)
+ {
+-	return test_bit(STATUS_RF_KILL_HW, &il->status);
++	return test_bit(S_RF_KILL_HW, &il->status);
+ }
+ 
+ static inline int il_is_rfkill(struct il_priv *il)
+@@ -583,7 +583,7 @@ static inline int il_is_rfkill(struct il_priv *il)
+ 
+ static inline int il_is_ctkill(struct il_priv *il)
+ {
+-	return test_bit(STATUS_CT_KILL, &il->status);
++	return test_bit(S_CT_KILL, &il->status);
+ }
+ 
+ static inline int il_is_ready_rf(struct il_priv *il)
+diff --git a/drivers/net/wireless/iwlegacy/iwl-debugfs.c b/drivers/net/wireless/iwlegacy/iwl-debugfs.c
+index 8448db7..114922b 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlegacy/iwl-debugfs.c
+@@ -402,7 +402,7 @@ il_dbgfs_channels_read(struct file *file, char __user *user_buf,
+ 	char *buf;
+ 	ssize_t ret;
+ 
+-	if (!test_bit(STATUS_GEO_CONFIGURED, &il->status))
++	if (!test_bit(S_GEO_CONFIGURED, &il->status))
+ 		return -EAGAIN;
+ 
+ 	buf = kzalloc(bufsz, GFP_KERNEL);
+@@ -471,38 +471,38 @@ static ssize_t il_dbgfs_status_read(struct file *file,
+ 	int pos = 0;
+ 	const size_t bufsz = sizeof(buf);
+ 
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_HCMD_ACTIVE:\t %d\n",
+-		test_bit(STATUS_HCMD_ACTIVE, &il->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_INT_ENABLED:\t %d\n",
+-		test_bit(STATUS_INT_ENABLED, &il->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_RF_KILL_HW:\t %d\n",
+-		test_bit(STATUS_RF_KILL_HW, &il->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_CT_KILL:\t\t %d\n",
+-		test_bit(STATUS_CT_KILL, &il->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_INIT:\t\t %d\n",
+-		test_bit(STATUS_INIT, &il->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_ALIVE:\t\t %d\n",
+-		test_bit(STATUS_ALIVE, &il->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_READY:\t\t %d\n",
+-		test_bit(STATUS_READY, &il->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_TEMPERATURE:\t %d\n",
+-		test_bit(STATUS_TEMPERATURE, &il->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_GEO_CONFIGURED:\t %d\n",
+-		test_bit(STATUS_GEO_CONFIGURED, &il->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_EXIT_PENDING:\t %d\n",
+-		test_bit(STATUS_EXIT_PENDING, &il->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_STATISTICS:\t %d\n",
+-		test_bit(STATUS_STATISTICS, &il->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_SCANNING:\t %d\n",
+-		test_bit(STATUS_SCANNING, &il->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_SCAN_ABORTING:\t %d\n",
+-		test_bit(STATUS_SCAN_ABORTING, &il->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_SCAN_HW:\t\t %d\n",
+-		test_bit(STATUS_SCAN_HW, &il->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_POWER_PMI:\t %d\n",
+-		test_bit(STATUS_POWER_PMI, &il->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_FW_ERROR:\t %d\n",
+-		test_bit(STATUS_FW_ERROR, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_HCMD_ACTIVE:\t %d\n",
++		test_bit(S_HCMD_ACTIVE, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_INT_ENABLED:\t %d\n",
++		test_bit(S_INT_ENABLED, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_RF_KILL_HW:\t %d\n",
++		test_bit(S_RF_KILL_HW, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_CT_KILL:\t\t %d\n",
++		test_bit(S_CT_KILL, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_INIT:\t\t %d\n",
++		test_bit(S_INIT, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_ALIVE:\t\t %d\n",
++		test_bit(S_ALIVE, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_READY:\t\t %d\n",
++		test_bit(S_READY, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_TEMPERATURE:\t %d\n",
++		test_bit(S_TEMPERATURE, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_GEO_CONFIGURED:\t %d\n",
++		test_bit(S_GEO_CONFIGURED, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_EXIT_PENDING:\t %d\n",
++		test_bit(S_EXIT_PENDING, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_STATISTICS:\t %d\n",
++		test_bit(S_STATISTICS, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_SCANNING:\t %d\n",
++		test_bit(S_SCANNING, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_SCAN_ABORTING:\t %d\n",
++		test_bit(S_SCAN_ABORTING, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_SCAN_HW:\t\t %d\n",
++		test_bit(S_SCAN_HW, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_POWER_PMI:\t %d\n",
++		test_bit(S_POWER_PMI, &il->status));
++	pos += scnprintf(buf + pos, bufsz - pos, "S_FW_ERROR:\t %d\n",
++		test_bit(S_FW_ERROR, &il->status));
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlegacy/iwl-hcmd.c b/drivers/net/wireless/iwlegacy/iwl-hcmd.c
+index 0b11f2f..4762a0e 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-hcmd.c
++++ b/drivers/net/wireless/iwlegacy/iwl-hcmd.c
+@@ -128,7 +128,7 @@ il_send_cmd_async(struct il_priv *il, struct il_host_cmd *cmd)
+ 	if (!cmd->callback)
+ 		cmd->callback = il_generic_cmd_callback;
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		return -EBUSY;
+ 
+ 	ret = il_enqueue_hcmd(il, cmd);
+@@ -155,7 +155,7 @@ int il_send_cmd_sync(struct il_priv *il, struct il_host_cmd *cmd)
+ 	D_INFO("Attempting to send sync command %s\n",
+ 			il_get_cmd_string(cmd->id));
+ 
+-	set_bit(STATUS_HCMD_ACTIVE, &il->status);
++	set_bit(S_HCMD_ACTIVE, &il->status);
+ 	D_INFO("Setting HCMD_ACTIVE for command %s\n",
+ 			il_get_cmd_string(cmd->id));
+ 
+@@ -168,16 +168,16 @@ int il_send_cmd_sync(struct il_priv *il, struct il_host_cmd *cmd)
+ 	}
+ 
+ 	ret = wait_event_timeout(il->wait_command_queue,
+-			!test_bit(STATUS_HCMD_ACTIVE, &il->status),
++			!test_bit(S_HCMD_ACTIVE, &il->status),
+ 			HOST_COMPLETE_TIMEOUT);
+ 	if (!ret) {
+-		if (test_bit(STATUS_HCMD_ACTIVE, &il->status)) {
++		if (test_bit(S_HCMD_ACTIVE, &il->status)) {
+ 			IL_ERR(
+ 				"Error sending %s: time out after %dms.\n",
+ 				il_get_cmd_string(cmd->id),
+ 				jiffies_to_msecs(HOST_COMPLETE_TIMEOUT));
+ 
+-			clear_bit(STATUS_HCMD_ACTIVE, &il->status);
++			clear_bit(S_HCMD_ACTIVE, &il->status);
+ 			D_INFO(
+ 				"Clearing HCMD_ACTIVE for command %s\n",
+ 				       il_get_cmd_string(cmd->id));
+@@ -186,13 +186,13 @@ int il_send_cmd_sync(struct il_priv *il, struct il_host_cmd *cmd)
+ 		}
+ 	}
+ 
+-	if (test_bit(STATUS_RF_KILL_HW, &il->status)) {
++	if (test_bit(S_RF_KILL_HW, &il->status)) {
+ 		IL_ERR("Command %s aborted: RF KILL Switch\n",
+ 			       il_get_cmd_string(cmd->id));
+ 		ret = -ECANCELED;
+ 		goto fail;
+ 	}
+-	if (test_bit(STATUS_FW_ERROR, &il->status)) {
++	if (test_bit(S_FW_ERROR, &il->status)) {
+ 		IL_ERR("Command %s failed: FW Error\n",
+ 			       il_get_cmd_string(cmd->id));
+ 		ret = -EIO;
+diff --git a/drivers/net/wireless/iwlegacy/iwl-helpers.h b/drivers/net/wireless/iwlegacy/iwl-helpers.h
+index 5fcb23e..0e64003 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-helpers.h
++++ b/drivers/net/wireless/iwlegacy/iwl-helpers.h
+@@ -146,7 +146,7 @@ static inline void il_stop_queue(struct il_priv *il,
+ 
+ static inline void il_disable_interrupts(struct il_priv *il)
+ {
+-	clear_bit(STATUS_INT_ENABLED, &il->status);
++	clear_bit(S_INT_ENABLED, &il->status);
+ 
+ 	/* disable interrupts from uCode/NIC to host */
+ 	_il_wr(il, CSR_INT_MASK, 0x00000000);
+@@ -167,7 +167,7 @@ static inline void il_enable_rfkill_int(struct il_priv *il)
+ static inline void il_enable_interrupts(struct il_priv *il)
+ {
+ 	D_ISR("Enabling interrupts\n");
+-	set_bit(STATUS_INT_ENABLED, &il->status);
++	set_bit(S_INT_ENABLED, &il->status);
+ 	_il_wr(il, CSR_INT_MASK, il->inta_mask);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlegacy/iwl-led.c b/drivers/net/wireless/iwlegacy/iwl-led.c
+index 3652cdc..a840c2e 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-led.c
++++ b/drivers/net/wireless/iwlegacy/iwl-led.c
+@@ -107,7 +107,7 @@ static int il_led_cmd(struct il_priv *il,
+ 	};
+ 	int ret;
+ 
+-	if (!test_bit(STATUS_READY, &il->status))
++	if (!test_bit(S_READY, &il->status))
+ 		return -EBUSY;
+ 
+ 	if (il->blink_on == on && il->blink_off == off)
+diff --git a/drivers/net/wireless/iwlegacy/iwl-power.c b/drivers/net/wireless/iwlegacy/iwl-power.c
+index 051623a..c66a0f7 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-power.c
++++ b/drivers/net/wireless/iwlegacy/iwl-power.c
+@@ -113,18 +113,18 @@ il_power_set_mode(struct il_priv *il, struct il_powertable_cmd *cmd,
+ 
+ 	/* scan complete use sleep_power_next, need to be updated */
+ 	memcpy(&il->power_data.sleep_cmd_next, cmd, sizeof(*cmd));
+-	if (test_bit(STATUS_SCANNING, &il->status) && !force) {
++	if (test_bit(S_SCANNING, &il->status) && !force) {
+ 		D_INFO("Defer power set mode while scanning\n");
+ 		return 0;
+ 	}
+ 
+ 	if (cmd->flags & IL_POWER_DRIVER_ALLOW_SLEEP_MSK)
+-		set_bit(STATUS_POWER_PMI, &il->status);
++		set_bit(S_POWER_PMI, &il->status);
+ 
+ 	ret = il_set_power(il, cmd);
+ 	if (!ret) {
+ 		if (!(cmd->flags & IL_POWER_DRIVER_ALLOW_SLEEP_MSK))
+-			clear_bit(STATUS_POWER_PMI, &il->status);
++			clear_bit(S_POWER_PMI, &il->status);
+ 
+ 		if (il->cfg->ops->lib->update_chain_flags && update_chains)
+ 			il->cfg->ops->lib->update_chain_flags(il);
+diff --git a/drivers/net/wireless/iwlegacy/iwl-rx.c b/drivers/net/wireless/iwlegacy/iwl-rx.c
+index 58d19c1..76f2361 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-rx.c
++++ b/drivers/net/wireless/iwlegacy/iwl-rx.c
+@@ -137,7 +137,7 @@ il_rx_queue_update_write_ptr(struct il_priv *il,
+ 		goto exit_unlock;
+ 
+ 	/* If power-saving is in use, make sure device is awake */
+-	if (test_bit(STATUS_POWER_PMI, &il->status)) {
++	if (test_bit(S_POWER_PMI, &il->status)) {
+ 		reg = _il_rd(il, CSR_UCODE_DRV_GP1);
+ 
+ 		if (reg & CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP) {
 diff --git a/drivers/net/wireless/iwlegacy/iwl-scan.c b/drivers/net/wireless/iwlegacy/iwl-scan.c
-index 3687104..e352a18 100644
+index 18226d1..6d20f2b 100644
 --- a/drivers/net/wireless/iwlegacy/iwl-scan.c
 +++ b/drivers/net/wireless/iwlegacy/iwl-scan.c
-@@ -307,7 +307,7 @@ u16 il_get_passive_dwell_time(struct il_priv *il,
- 			if (!il_is_associated_ctx(ctx))
- 				continue;
- 			value = ctx->vif ? ctx->vif->bss_conf.beacon_int : 0;
--			if ((value > IL_PASSIVE_DWELL_BASE) || !value)
-+			if (value > IL_PASSIVE_DWELL_BASE || !value)
- 				value = IL_PASSIVE_DWELL_BASE;
- 			value = (value * 98) / 100 - IL_CHANNEL_TUNE_TIME * 2;
- 			passive = min(value, passive);
-diff --git a/drivers/net/wireless/iwlegacy/iwl-sta.c b/drivers/net/wireless/iwlegacy/iwl-sta.c
-index 42033d2..cca467c 100644
---- a/drivers/net/wireless/iwlegacy/iwl-sta.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-sta.c
-@@ -595,7 +595,7 @@ il_restore_stations(struct il_priv *il, struct il_rxon_context *ctx)
- 		if (ctx->ctxid != il->stations[i].ctxid)
- 			continue;
- 		if ((il->stations[i].used & IL_STA_DRIVER_ACTIVE) &&
--			    !(il->stations[i].used & IL_STA_UCODE_ACTIVE)) {
-+		    !(il->stations[i].used & IL_STA_UCODE_ACTIVE)) {
- 			D_ASSOC("Restoring sta %pM\n",
- 					il->stations[i].sta.sta.addr);
- 			il->stations[i].sta.mode = 0;
-diff --git a/drivers/net/wireless/iwlegacy/iwl-tx.c b/drivers/net/wireless/iwlegacy/iwl-tx.c
-index fa23c98..0d3515d 100644
---- a/drivers/net/wireless/iwlegacy/iwl-tx.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-tx.c
-@@ -565,7 +565,7 @@ static void il_hcmd_queue_reclaim(struct il_priv *il, int txq_id,
- 	struct il_queue *q = &txq->q;
- 	int nfreed = 0;
+@@ -66,11 +66,11 @@ static int il_send_scan_abort(struct il_priv *il)
+ 	/* Exit instantly with error when device is not ready
+ 	 * to receive scan abort command or it does not perform
+ 	 * hardware scan currently */
+-	if (!test_bit(STATUS_READY, &il->status) ||
+-	    !test_bit(STATUS_GEO_CONFIGURED, &il->status) ||
+-	    !test_bit(STATUS_SCAN_HW, &il->status) ||
+-	    test_bit(STATUS_FW_ERROR, &il->status) ||
+-	    test_bit(STATUS_EXIT_PENDING, &il->status))
++	if (!test_bit(S_READY, &il->status) ||
++	    !test_bit(S_GEO_CONFIGURED, &il->status) ||
++	    !test_bit(S_SCAN_HW, &il->status) ||
++	    test_bit(S_FW_ERROR, &il->status) ||
++	    test_bit(S_EXIT_PENDING, &il->status))
+ 		return -EIO;
  
--	if ((idx >= q->n_bd) || (il_queue_used(q, idx) == 0)) {
-+	if (idx >= q->n_bd || il_queue_used(q, idx) == 0) {
- 		IL_ERR("Read index for DMA queue txq id (%d), index %d, "
- 			  "is out of range [0-%d] %d %d.\n", txq_id,
- 			  idx, q->n_bd, q->write_ptr, q->read_ptr);
-diff --git a/drivers/net/wireless/iwlegacy/iwl3945-base.c b/drivers/net/wireless/iwlegacy/iwl3945-base.c
-index 5037216..ec9a93c 100644
---- a/drivers/net/wireless/iwlegacy/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl3945-base.c
-@@ -646,7 +646,7 @@ static int il3945_tx_skb(struct il_priv *il, struct sk_buff *skb)
- 	il_txq_update_write_ptr(il, txq);
- 	spin_unlock_irqrestore(&il->lock, flags);
+ 	ret = il_send_cmd_sync(il, &cmd);
+@@ -109,15 +109,15 @@ void il_force_scan_end(struct il_priv *il)
+ {
+ 	lockdep_assert_held(&il->mutex);
  
--	if ((il_queue_space(q) < q->high_mark)
-+	if (il_queue_space(q) < q->high_mark
- 	    && il->mac80211_registered) {
- 		if (wait_write_ptr) {
- 			spin_lock_irqsave(&il->lock, flags);
-@@ -974,7 +974,7 @@ static void il3945_rx_queue_restock(struct il_priv *il)
- 
- 	spin_lock_irqsave(&rxq->lock, flags);
- 	write = rxq->write & ~0x7;
--	while ((il_rx_queue_space(rxq) > 0) && (rxq->free_count)) {
-+	while (il_rx_queue_space(rxq) > 0 && rxq->free_count) {
- 		/* Get next free Rx buffer, remove from free list */
- 		element = rxq->rx_free.next;
- 		rxb = list_entry(element, struct il_rx_mem_buffer, list);
-@@ -995,8 +995,8 @@ static void il3945_rx_queue_restock(struct il_priv *il)
- 
- 	/* If we've added more space for the firmware to place data, tell it.
- 	 * Increment device's write pointer in multiples of 8. */
--	if ((rxq->write_actual != (rxq->write & ~0x7))
--	    || (abs(rxq->write - rxq->read) > 7)) {
-+	if (rxq->write_actual != (rxq->write & ~0x7) ||
-+	    abs(rxq->write - rxq->read) > 7) {
- 		spin_lock_irqsave(&rxq->lock, flags);
- 		rxq->need_update = 1;
- 		spin_unlock_irqrestore(&rxq->lock, flags);
-@@ -1041,7 +1041,7 @@ static void il3945_rx_allocate(struct il_priv *il, gfp_t priority)
- 		if (!page) {
- 			if (net_ratelimit())
- 				D_INFO("Failed to allocate SKB buffer.\n");
--			if ((rxq->free_count <= RX_LOW_WATERMARK) &&
-+			if (rxq->free_count <= RX_LOW_WATERMARK &&
- 			    net_ratelimit())
- 				IL_ERR("Failed to allocate SKB buffer with %s. Only %u free buffers remaining.\n",
- 					 priority == GFP_ATOMIC ?  "GFP_ATOMIC" : "GFP_KERNEL",
-@@ -1254,8 +1254,8 @@ static void il3945_rx_handle(struct il_priv *il)
- 		 * Ucode should set SEQ_RX_FRAME bit if ucode-originated,
- 		 *   but apparently a few don't get set; catch them here. */
- 		reclaim = !(pkt->hdr.sequence & SEQ_RX_FRAME) &&
--			(pkt->hdr.cmd != STATISTICS_NOTIFICATION) &&
--			(pkt->hdr.cmd != REPLY_TX);
-+			pkt->hdr.cmd != STATISTICS_NOTIFICATION &&
-+			pkt->hdr.cmd != REPLY_TX;
- 
- 		/* Based on type of command response or notification,
- 		 *   handle those that need handling via function in
-@@ -1659,7 +1659,7 @@ static void il3945_init_hw_rates(struct il_priv *il,
- 		rates[i].hw_value = i; /* Rate scaling will work on indexes */
- 		rates[i].hw_value_short = i;
- 		rates[i].flags = 0;
--		if ((i > IWL39_LAST_OFDM_RATE) || (i < IL_FIRST_OFDM_RATE)) {
-+		if (i > IWL39_LAST_OFDM_RATE || i < IL_FIRST_OFDM_RATE) {
- 			/*
- 			 * If CCK != 1M then set short preamble rate flag.
- 			 */
-@@ -3294,7 +3294,7 @@ static ssize_t il3945_show_measurement(struct device *d,
- 	il->measurement_status = 0;
- 	spin_unlock_irqrestore(&il->lock, flags);
- 
--	while (size && (PAGE_SIZE - len)) {
-+	while (size && PAGE_SIZE - len) {
- 		hex_dump_to_buffer(data + ofs, size, 16, 1, buf + len,
- 				   PAGE_SIZE - len, 1);
- 		len = strlen(buf);
-@@ -3406,7 +3406,7 @@ static ssize_t il3945_store_antenna(struct device *d,
- 		return count;
+-	if (!test_bit(STATUS_SCANNING, &il->status)) {
++	if (!test_bit(S_SCANNING, &il->status)) {
+ 		D_SCAN("Forcing scan end while not scanning\n");
+ 		return;
  	}
  
--	if ((ant >= 0) && (ant <= 2)) {
-+	if (ant >= 0 && ant <= 2) {
- 		D_INFO("Setting antenna select to %d.\n", ant);
- 		il3945_mod_params.antenna = (enum il3945_antenna)ant;
- 	} else
+ 	D_SCAN("Forcing scan end\n");
+-	clear_bit(STATUS_SCANNING, &il->status);
+-	clear_bit(STATUS_SCAN_HW, &il->status);
+-	clear_bit(STATUS_SCAN_ABORTING, &il->status);
++	clear_bit(S_SCANNING, &il->status);
++	clear_bit(S_SCAN_HW, &il->status);
++	clear_bit(S_SCAN_ABORTING, &il->status);
+ 	il_complete_scan(il, true);
+ }
+ 
+@@ -127,12 +127,12 @@ static void il_do_scan_abort(struct il_priv *il)
+ 
+ 	lockdep_assert_held(&il->mutex);
+ 
+-	if (!test_bit(STATUS_SCANNING, &il->status)) {
++	if (!test_bit(S_SCANNING, &il->status)) {
+ 		D_SCAN("Not performing scan to abort\n");
+ 		return;
+ 	}
+ 
+-	if (test_and_set_bit(STATUS_SCAN_ABORTING, &il->status)) {
++	if (test_and_set_bit(S_SCAN_ABORTING, &il->status)) {
+ 		D_SCAN("Scan abort in progress\n");
+ 		return;
+ 	}
+@@ -172,12 +172,12 @@ int il_scan_cancel_timeout(struct il_priv *il, unsigned long ms)
+ 	il_do_scan_abort(il);
+ 
+ 	while (time_before_eq(jiffies, timeout)) {
+-		if (!test_bit(STATUS_SCAN_HW, &il->status))
++		if (!test_bit(S_SCAN_HW, &il->status))
+ 			break;
+ 		msleep(20);
+ 	}
+ 
+-	return test_bit(STATUS_SCAN_HW, &il->status);
++	return test_bit(S_SCAN_HW, &il->status);
+ }
+ EXPORT_SYMBOL(il_scan_cancel_timeout);
+ 
+@@ -251,7 +251,7 @@ static void il_rx_scan_complete_notif(struct il_priv *il,
+ 		       scan_notif->tsf_high, scan_notif->status);
+ 
+ 	/* The HW is no longer scanning */
+-	clear_bit(STATUS_SCAN_HW, &il->status);
++	clear_bit(S_SCAN_HW, &il->status);
+ 
+ 	D_SCAN("Scan on %sGHz took %dms\n",
+ 		       (il->scan_band == IEEE80211_BAND_2GHZ) ? "2.4" : "5.2",
+@@ -341,25 +341,25 @@ static int il_scan_initiate(struct il_priv *il,
+ 		return -EIO;
+ 	}
+ 
+-	if (test_bit(STATUS_SCAN_HW, &il->status)) {
++	if (test_bit(S_SCAN_HW, &il->status)) {
+ 		D_SCAN(
+ 			"Multiple concurrent scan requests in parallel.\n");
+ 		return -EBUSY;
+ 	}
+ 
+-	if (test_bit(STATUS_SCAN_ABORTING, &il->status)) {
++	if (test_bit(S_SCAN_ABORTING, &il->status)) {
+ 		D_SCAN("Scan request while abort pending.\n");
+ 		return -EBUSY;
+ 	}
+ 
+ 	D_SCAN("Starting scan...\n");
+ 
+-	set_bit(STATUS_SCANNING, &il->status);
++	set_bit(S_SCANNING, &il->status);
+ 	il->scan_start = jiffies;
+ 
+ 	ret = il->cfg->ops->utils->request_scan(il, vif);
+ 	if (ret) {
+-		clear_bit(STATUS_SCANNING, &il->status);
++		clear_bit(S_SCANNING, &il->status);
+ 		return ret;
+ 	}
+ 
+@@ -383,7 +383,7 @@ int il_mac_hw_scan(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&il->mutex);
+ 
+-	if (test_bit(STATUS_SCANNING, &il->status)) {
++	if (test_bit(S_SCANNING, &il->status)) {
+ 		D_SCAN("Scan already in progress.\n");
+ 		ret = -EAGAIN;
+ 		goto out_unlock;
+@@ -494,11 +494,11 @@ static void il_bg_scan_completed(struct work_struct *work)
+ 
+ 	mutex_lock(&il->mutex);
+ 
+-	aborted = test_and_clear_bit(STATUS_SCAN_ABORTING, &il->status);
++	aborted = test_and_clear_bit(S_SCAN_ABORTING, &il->status);
+ 	if (aborted)
+ 		D_SCAN("Aborted scan completed.\n");
+ 
+-	if (!test_and_clear_bit(STATUS_SCANNING, &il->status)) {
++	if (!test_and_clear_bit(S_SCANNING, &il->status)) {
+ 		D_SCAN("Scan already completed.\n");
+ 		goto out_settings;
+ 	}
+diff --git a/drivers/net/wireless/iwlegacy/iwl-tx.c b/drivers/net/wireless/iwlegacy/iwl-tx.c
+index e46e588..3f97d09 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-tx.c
++++ b/drivers/net/wireless/iwlegacy/iwl-tx.c
+@@ -51,7 +51,7 @@ il_txq_update_write_ptr(struct il_priv *il, struct il_tx_queue *txq)
+ 		return;
+ 
+ 	/* if we're trying to save power */
+-	if (test_bit(STATUS_POWER_PMI, &il->status)) {
++	if (test_bit(S_POWER_PMI, &il->status)) {
+ 		/* wake up nic if it's powered down ...
+ 		 * uCode will wake up, and interrupt us again, so next
+ 		 * time we'll skip this part. */
+@@ -641,7 +641,7 @@ il_tx_cmd_complete(struct il_priv *il, struct il_rx_buf *rxb)
+ 	il_hcmd_queue_reclaim(il, txq_id, idx, cmd_idx);
+ 
+ 	if (!(meta->flags & CMD_ASYNC)) {
+-		clear_bit(STATUS_HCMD_ACTIVE, &il->status);
++		clear_bit(S_HCMD_ACTIVE, &il->status);
+ 		D_INFO("Clearing HCMD_ACTIVE for command %s\n",
+ 			       il_get_cmd_string(cmd->hdr.cmd));
+ 		wake_up(&il->wait_command_queue);
 -- 
 1.7.1
 
