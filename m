@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55090 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47075 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755327Ab1KRTAq (ORCPT
+	with ESMTP id S1752266Ab1KRWp2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 14:00:46 -0500
+	Fri, 18 Nov 2011 17:45:28 -0500
+Date: Fri, 18 Nov 2011 17:34:46 -0500
 From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] compat-wireless: change CONFIG_IWLAGN -> CONFIG_IWLWIFI
-Date: Fri, 18 Nov 2011 13:46:18 -0500
-Message-Id: <1321641978-2787-1-git-send-email-linville@tuxdriver.com> (sfid-20111118_200055_853449_7FAC7950)
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+Subject: Re: [PATCH] compat-wireless: avoid pr_fmt build SPAM
+Message-ID: <20111118223445.GA5642@tuxdriver.com> (sfid-20111118_234531_972115_2C250B8C)
+References: <1321649673-15874-1-git-send-email-linville@tuxdriver.com>
+ <1321655181.2367.1.camel@Joe-Laptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1321655181.2367.1.camel@Joe-Laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This Kconfig option changed in the 2.6.32 timeframe.
+On Fri, Nov 18, 2011 at 02:26:21PM -0800, Joe Perches wrote:
+> On Fri, 2011-11-18 at 15:54 -0500, John W. Linville wrote:
+> > The way the compat-* header files are included causes the default
+> > pr_fmt definition from <linux/kernel.h> to be evaluated for every file.
+> > Files that define pr_fmt then generate a lot of build SPAM about
+> > pr_fmt being redefined.
+> > 
+> > Eliminate the build noise by preemptively undefining pr_fmt in those
+> > files that define it.  This is accomplished by adding a patch to the
+> > patches directory.
+> 
+> Why not undef pr_fmt after the compat-* headers?
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- config.mk |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+That caused a build break.  IIRC, not everyone that uses pr_*
+defines pr_fmt.  If pr_fmt is undef'd then they don't compile.
 
-diff --git a/config.mk b/config.mk
-index a71de4e..87bd16a 100644
---- a/config.mk
-+++ b/config.mk
-@@ -246,7 +246,7 @@ ifdef CONFIG_PCI
- CONFIG_ATH5K_PCI=y
- CONFIG_ATH9K_PCI=y
- 
--CONFIG_IWLAGN=m
-+CONFIG_IWLWIFI=m
- # CONFIG_IWLWIFI_DEBUG=y
- # CONFIG_IWLWIFI_DEBUGFS=y
- # CONFIG_IWLWIFI_DEVICE_TRACING=y
+John
 -- 
-1.7.4.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
