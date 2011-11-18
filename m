@@ -1,148 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52798 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755412Ab1KQTpa (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:51538 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751478Ab1KRLCF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 14:45:30 -0500
-Date: Thu, 17 Nov 2011 14:36:31 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless 2011-11-17
-Message-ID: <20111117193631.GF32622@tuxdriver.com> (sfid-20111117_204552_122603_8C29FCC7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 18 Nov 2011 06:02:05 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCHv3 2/3] wireless: Add NoAck per tid Support
+Date: Fri, 18 Nov 2011 12:01:47 +0100
+Message-Id: <1321614110-32392-3-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111118_120217_968887_FE99736B)
+In-Reply-To: <1321614110-32392-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1321614110-32392-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+This patch contains the configuration changes in nl80211/cfg80211.
 
-Here is a little batch of fixes intended for 3.2.  This includes a new
-USB ID for rt2x00, a fix for a sleep-while-atomic bug in rt2x00, and a
-fix for a potential memory leak in libertas.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
+ include/linux/nl80211.h |   10 ++++++++++
+ include/net/cfg80211.h  |    6 ++++++
+ net/wireless/nl80211.c  |   28 ++++++++++++++++++++++++++++
+ 3 files changed, 44 insertions(+), 0 deletions(-)
 
-The following changes since commit 102463b18d922dd55c29fbfa222e0355ecf3e42f:
-
-  stmmac: fix pm functions avoiding sleep on spinlock (2011-11-17 03:13:42 -0500)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
-
-Gertjan van Wingerde (2):
-      rt2x00: Add USB device ID of Buffalo WLI-UC-GNHP.
-      rt2x00: Fix sleep-while-atomic bug in powersaving code.
-
-Jesper Juhl (1):
-      Net, libertas: Resolve memory leak in if_spi_host_to_card()
-
-John W. Linville (1):
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless into for-davem
-
- drivers/net/wireless/libertas/if_spi.c  |    1 +
- drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
- drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
- drivers/net/wireless/rt2x00/rt2x00dev.c |   22 ++++++++++++++++++++--
- 4 files changed, 23 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-index 11b69b3..728baa4 100644
---- a/drivers/net/wireless/libertas/if_spi.c
-+++ b/drivers/net/wireless/libertas/if_spi.c
-@@ -995,6 +995,7 @@ static int if_spi_host_to_card(struct lbs_private *priv,
- 		spin_unlock_irqrestore(&card->buffer_lock, flags);
- 		break;
- 	default:
-+		kfree(packet);
- 		netdev_err(priv->dev, "can't transfer buffer of type %d\n",
- 			   type);
- 		err = -EINVAL;
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index f156579..3778763 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -919,6 +919,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x050d, 0x935b) },
- 	/* Buffalo */
- 	{ USB_DEVICE(0x0411, 0x00e8) },
-+	{ USB_DEVICE(0x0411, 0x0158) },
- 	{ USB_DEVICE(0x0411, 0x016f) },
- 	{ USB_DEVICE(0x0411, 0x01a2) },
- 	/* Corega */
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 2ec5c00..99ff12d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -943,6 +943,7 @@ struct rt2x00_dev {
- 	 * Powersaving work
- 	 */
- 	struct delayed_work autowakeup_work;
-+	struct work_struct sleep_work;
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index f9261c2..b99e50d 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -538,6 +538,9 @@
+  *	OLBC handling in hostapd. Beacons are reported in %NL80211_CMD_FRAME
+  *	messages. Note that per PHY only one application may register.
+  *
++ * @NL80211_CMD_SET_NOACK_MAP: sets a bitmap for the individual TIDs whether
++ *      No Acknowledgement Policy should be applied.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -675,6 +678,8 @@ enum nl80211_commands {
  
- 	/*
- 	 * Data queue arrays for RX, TX, Beacon and ATIM.
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index e1fb2a8..edd317f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -465,6 +465,23 @@ static u8 *rt2x00lib_find_ie(u8 *data, unsigned int len, u8 ie)
- 	return NULL;
+ 	NL80211_CMD_UNEXPECTED_4ADDR_FRAME,
+ 
++	NL80211_CMD_SET_NOACK_MAP,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -1170,6 +1175,9 @@ enum nl80211_commands {
+  *	probe-response frame. The DA field in the 802.11 header is zero-ed out,
+  *	to be filled by the FW.
+  *
++ * @NL80211_ATTR_NOACK_MAP: This u16 bitmap contains the No Ack Policy of
++ *      up to 16 TIDs.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1408,6 +1416,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_PROBE_RESP,
+ 
++	NL80211_ATTR_NOACK_MAP,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 8d7ba09..2720f2e 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1442,6 +1442,8 @@ struct cfg80211_gtk_rekey_data {
+  *
+  * @probe_client: probe an associated client, must return a cookie that it
+  *	later passes to cfg80211_probe_status().
++ *
++ * @set_noack_map: Set the NoAck Map for the TIDs.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -1635,6 +1637,10 @@ struct cfg80211_ops {
+ 	int	(*probe_client)(struct wiphy *wiphy, struct net_device *dev,
+ 				const u8 *peer, u64 *cookie);
+ 
++	int	(*set_noack_map)(struct wiphy *wiphy,
++				  struct net_device *dev,
++				  u16 noack_map);
++
+ 	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy);
+ };
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 6bc7c4b..a0c2c13 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -199,6 +199,8 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_DONT_WAIT_FOR_ACK] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_PROBE_RESP] = { .type = NLA_BINARY,
+ 				      .len = IEEE80211_MAX_DATA_LEN },
++	[NL80211_ATTR_NOACK_MAP] = { .type = NLA_U16 },
++
+ };
+ 
+ /* policy for the key attributes */
+@@ -1743,6 +1745,23 @@ static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
+ 	return rdev->ops->del_virtual_intf(&rdev->wiphy, dev);
  }
  
-+static void rt2x00lib_sleep(struct work_struct *work)
++static int nl80211_set_noack_map(struct sk_buff *skb, struct genl_info *info)
 +{
-+	struct rt2x00_dev *rt2x00dev =
-+	    container_of(work, struct rt2x00_dev, sleep_work);
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	u16 noack_map;
 +
-+	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
-+		return;
++	if (!info->attrs[NL80211_ATTR_NOACK_MAP])
++		return -EINVAL;
 +
-+	/*
-+	 * Check again is powersaving is enabled, to prevent races from delayed
-+	 * work execution.
-+	 */
-+	if (!test_bit(CONFIG_POWERSAVING, &rt2x00dev->flags))
-+		rt2x00lib_config(rt2x00dev, &rt2x00dev->hw->conf,
-+				 IEEE80211_CONF_CHANGE_PS);
++	if (!rdev->ops->set_noack_map)
++		return -EOPNOTSUPP;
++
++	noack_map = nla_get_u16(info->attrs[NL80211_ATTR_NOACK_MAP]);
++
++	return rdev->ops->set_noack_map(&rdev->wiphy, dev, noack_map);
 +}
 +
- static void rt2x00lib_rxdone_check_ps(struct rt2x00_dev *rt2x00dev,
- 				      struct sk_buff *skb,
- 				      struct rxdone_entry_desc *rxdesc)
-@@ -512,8 +529,7 @@ static void rt2x00lib_rxdone_check_ps(struct rt2x00_dev *rt2x00dev,
- 	cam |= (tim_ie->bitmap_ctrl & 0x01);
+ struct get_key_cookie {
+ 	struct sk_buff *msg;
+ 	int error;
+@@ -6529,6 +6548,15 @@ static struct genl_ops nl80211_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_WIPHY |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_SET_NOACK_MAP,
++		.doit = nl80211_set_noack_map,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++
+ };
  
- 	if (!cam && !test_bit(CONFIG_POWERSAVING, &rt2x00dev->flags))
--		rt2x00lib_config(rt2x00dev, &rt2x00dev->hw->conf,
--				 IEEE80211_CONF_CHANGE_PS);
-+		queue_work(rt2x00dev->workqueue, &rt2x00dev->sleep_work);
- }
- 
- static int rt2x00lib_rxdone_read_signal(struct rt2x00_dev *rt2x00dev,
-@@ -1141,6 +1157,7 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 
- 	INIT_WORK(&rt2x00dev->intf_work, rt2x00lib_intf_scheduled);
- 	INIT_DELAYED_WORK(&rt2x00dev->autowakeup_work, rt2x00lib_autowakeup);
-+	INIT_WORK(&rt2x00dev->sleep_work, rt2x00lib_sleep);
- 
- 	/*
- 	 * Let the driver probe the device to detect the capabilities.
-@@ -1197,6 +1214,7 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
- 	 */
- 	cancel_work_sync(&rt2x00dev->intf_work);
- 	cancel_delayed_work_sync(&rt2x00dev->autowakeup_work);
-+	cancel_work_sync(&rt2x00dev->sleep_work);
- 	if (rt2x00_is_usb(rt2x00dev)) {
- 		del_timer_sync(&rt2x00dev->txstatus_timer);
- 		cancel_work_sync(&rt2x00dev->rxdone_work);
+ static struct genl_multicast_group nl80211_mlme_mcgrp = {
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.7.3
+
