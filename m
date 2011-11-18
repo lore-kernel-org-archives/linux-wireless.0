@@ -1,59 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48983 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750863Ab1KHIxc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55090 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755327Ab1KRTAq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 03:53:32 -0500
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Paul Stewart <pstew@google.com>
-Subject: [PATCH 4/4] ath9k_hw: Fix tx power settings for AR9003
-Date: Tue, 8 Nov 2011 14:22:48 +0530
-Message-ID: <1320742368-11343-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111108_095336_293994_554995FA)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 18 Nov 2011 14:00:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] compat-wireless: change CONFIG_IWLAGN -> CONFIG_IWLWIFI
+Date: Fri, 18 Nov 2011 13:46:18 -0500
+Message-Id: <1321641978-2787-1-git-send-email-linville@tuxdriver.com> (sfid-20111118_200055_853449_7FAC7950)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Retriving tx power for 2x2 and 3x3 chainmask is not handled
-properly. While calculating tx power for 2x2, 3 dBm was reduced
-and for 3x3, 5 dBm was reduced which should be added back when
-retriving.
+This Kconfig option changed in the 2.6.32 timeframe.
 
-Cc: Paul Stewart <pstew@google.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
+ config.mk |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index ee9c09b..d2e4f28 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -5059,6 +5059,21 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
- 			regulatory->max_power_level = targetPowerValT2[i];
- 	}
+diff --git a/config.mk b/config.mk
+index a71de4e..87bd16a 100644
+--- a/config.mk
++++ b/config.mk
+@@ -246,7 +246,7 @@ ifdef CONFIG_PCI
+ CONFIG_ATH5K_PCI=y
+ CONFIG_ATH9K_PCI=y
  
-+	switch (ar5416_get_ntxchains(ah->txchainmask)) {
-+	case 1:
-+		break;
-+	case 2:
-+		regulatory->max_power_level += INCREASE_MAXPOW_BY_TWO_CHAIN;
-+		break;
-+	case 3:
-+		regulatory->max_power_level += INCREASE_MAXPOW_BY_THREE_CHAIN;
-+		break;
-+	default:
-+		ath_dbg(ath9k_hw_common(ah), ATH_DBG_EEPROM,
-+			"Invalid chainmask configuration\n");
-+		break;
-+	}
-+
- 	if (test)
- 		return;
- 
+-CONFIG_IWLAGN=m
++CONFIG_IWLWIFI=m
+ # CONFIG_IWLWIFI_DEBUG=y
+ # CONFIG_IWLWIFI_DEBUGFS=y
+ # CONFIG_IWLWIFI_DEVICE_TRACING=y
 -- 
-1.7.7.2
+1.7.4.4
 
