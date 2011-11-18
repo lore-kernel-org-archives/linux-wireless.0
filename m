@@ -1,789 +1,385 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32739 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935319Ab1KJPtl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 10:49:41 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 17/27] iwlwifi: Move the core suspend function to iwl-agn-lib
-Date: Thu, 10 Nov 2011 06:55:17 -0800
-Message-Id: <1320936927-9078-18-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_165017_513396_E66473DD)
-In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail.candelatech.com ([208.74.158.172]:48827 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751469Ab1KRTcG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 14:32:06 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v10 1/2] wireless:  Support ht-capabilities over-rides.
+Date: Fri, 18 Nov 2011 11:31:59 -0800
+Message-Id: <1321644720-8245-1-git-send-email-greearb@candelatech.com> (sfid-20111118_203211_189016_91A83B22)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The core suspend function is part of agn, iwl_mac80211 should only
-handle mac80211 I/F operations.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+This allows users to disable features such as HT, HT40,
+and to modify the MCS, AMPDU, and AMSDU settings for
+drivers that support it.
+
+The MCS, AMPDU, and AMSDU features that may be disabled are
+are reported in the phy-info netlink message as a mask.
+
+Attemping to disable features that are not supported will
+take no affect, but will not return errors.  This is to aid
+backwards compatibility in user-space apps that may not be
+clever enough to deal with parsing the the capabilities mask.
+
+This patch only enables the infrastructure.  An additional
+patch will enable the feature in mac80211.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |  357 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    6 +
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |  347 +--------------------------
- 3 files changed, 365 insertions(+), 345 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 6465983..0bc9622 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -984,3 +984,360 @@ void iwlagn_remove_notification(struct iwl_priv *priv,
- 	list_del(&wait_entry->list);
- 	spin_unlock_bh(&priv->notif_wait_lock);
- }
+v10:  No changes since v9
+
+:100644 100644 f9261c2... 0df2062... M	include/linux/nl80211.h
+:100644 100644 8d7ba09... 4f6d131... M	include/net/cfg80211.h
+:100644 100644 1c7d4df... fb08c28... M	net/wireless/core.h
+:100644 100644 6c1bafd... 438dfc1... M	net/wireless/mlme.c
+:100644 100644 6bc7c4b... aa98ec2... M	net/wireless/nl80211.c
+:100644 100644 0acfdc9... f0c900c... M	net/wireless/sme.c
+ include/linux/nl80211.h |   14 ++++++++++++++
+ include/net/cfg80211.h  |   27 +++++++++++++++++++++++++++
+ net/wireless/core.h     |   10 ++++++++--
+ net/wireless/mlme.c     |   37 ++++++++++++++++++++++++++++++++++---
+ net/wireless/nl80211.c  |   44 +++++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/sme.c      |    7 ++++++-
+ 6 files changed, 132 insertions(+), 7 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index f9261c2..0df2062 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1169,6 +1169,17 @@ enum nl80211_commands {
+  * @NL80211_ATTR_PROBE_RESP: Probe Response template data. Contains the entire
+  *	probe-response frame. The DA field in the 802.11 header is zero-ed out,
+  *	to be filled by the FW.
++ * @NL80211_ATTR_DISABLE_HT:  Force HT capable interfaces to disable
++ *      this feature.  Currently, only supported in mac80211 drivers.
++ * @NL80211_ATTR_HT_CAPABILITY_MASK: Specify which bits of the
++ *      ATTR_HT_CAPABILITY to which attention should be paid.
++ *      Currently, only mac80211 NICs support this feature.
++ *      The values that may be configured are:
++ *       MCS rates, MAX-AMSDU, HT-20-40 and HT_CAP_SGI_40
++ *       AMPDU density and AMPDU factor.
++ *      All values are treated as suggestions and may be ignored
++ *      by the driver as required.  The actual values may be seen in
++ *      the station debugfs ht_caps file.
+  *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -1408,6 +1419,9 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_PROBE_RESP,
+ 
++	NL80211_ATTR_DISABLE_HT,
++	NL80211_ATTR_HT_CAPABILITY_MASK,
 +
-+#ifdef CONFIG_PM_SLEEP
-+static void iwlagn_convert_p1k(u16 *p1k, __le16 *out)
-+{
-+	int i;
-+
-+	for (i = 0; i < IWLAGN_P1K_SIZE; i++)
-+		out[i] = cpu_to_le16(p1k[i]);
-+}
-+
-+struct wowlan_key_data {
-+	struct iwl_rxon_context *ctx;
-+	struct iwlagn_wowlan_rsc_tsc_params_cmd *rsc_tsc;
-+	struct iwlagn_wowlan_tkip_params_cmd *tkip;
-+	const u8 *bssid;
-+	bool error, use_rsc_tsc, use_tkip;
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 8d7ba09..4f6d131 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1044,6 +1044,15 @@ struct cfg80211_auth_request {
+ };
+ 
+ /**
++ * enum cfg80211_assoc_req_flags - Over-ride default behaviour in association.
++ *
++ * @ASSOC_REQ_DISABLE_HT:  Disable HT (802.11n)
++ */
++enum cfg80211_assoc_req_flags {
++	ASSOC_REQ_DISABLE_HT		= BIT(0),
 +};
 +
-+
-+static void iwlagn_wowlan_program_keys(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif,
-+			       struct ieee80211_sta *sta,
-+			       struct ieee80211_key_conf *key,
-+			       void *_data)
-+{
-+	struct iwl_priv *priv = hw->priv;
-+	struct wowlan_key_data *data = _data;
-+	struct iwl_rxon_context *ctx = data->ctx;
-+	struct aes_sc *aes_sc, *aes_tx_sc = NULL;
-+	struct tkip_sc *tkip_sc, *tkip_tx_sc = NULL;
-+	struct iwlagn_p1k_cache *rx_p1ks;
-+	u8 *rx_mic_key;
-+	struct ieee80211_key_seq seq;
-+	u32 cur_rx_iv32 = 0;
-+	u16 p1k[IWLAGN_P1K_SIZE];
-+	int ret, i;
-+
-+	mutex_lock(&priv->shrd->mutex);
-+
-+	if ((key->cipher == WLAN_CIPHER_SUITE_WEP40 ||
-+	     key->cipher == WLAN_CIPHER_SUITE_WEP104) &&
-+	     !sta && !ctx->key_mapping_keys)
-+		ret = iwl_set_default_wep_key(priv, ctx, key);
-+	else
-+		ret = iwl_set_dynamic_key(priv, ctx, key, sta);
-+
-+	if (ret) {
-+		IWL_ERR(priv, "Error setting key during suspend!\n");
-+		data->error = true;
-+	}
-+
-+	switch (key->cipher) {
-+	case WLAN_CIPHER_SUITE_TKIP:
-+		if (sta) {
-+			tkip_sc = data->rsc_tsc->all_tsc_rsc.tkip.unicast_rsc;
-+			tkip_tx_sc = &data->rsc_tsc->all_tsc_rsc.tkip.tsc;
-+
-+			rx_p1ks = data->tkip->rx_uni;
-+
-+			ieee80211_get_key_tx_seq(key, &seq);
-+			tkip_tx_sc->iv16 = cpu_to_le16(seq.tkip.iv16);
-+			tkip_tx_sc->iv32 = cpu_to_le32(seq.tkip.iv32);
-+
-+			ieee80211_get_tkip_p1k_iv(key, seq.tkip.iv32, p1k);
-+			iwlagn_convert_p1k(p1k, data->tkip->tx.p1k);
-+
-+			memcpy(data->tkip->mic_keys.tx,
-+			       &key->key[NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY],
-+			       IWLAGN_MIC_KEY_SIZE);
-+
-+			rx_mic_key = data->tkip->mic_keys.rx_unicast;
-+		} else {
-+			tkip_sc =
-+				data->rsc_tsc->all_tsc_rsc.tkip.multicast_rsc;
-+			rx_p1ks = data->tkip->rx_multi;
-+			rx_mic_key = data->tkip->mic_keys.rx_mcast;
-+		}
-+
-+		/*
-+		 * For non-QoS this relies on the fact that both the uCode and
-+		 * mac80211 use TID 0 (as they need to to avoid replay attacks)
-+		 * for checking the IV in the frames.
-+		 */
-+		for (i = 0; i < IWLAGN_NUM_RSC; i++) {
-+			ieee80211_get_key_rx_seq(key, i, &seq);
-+			tkip_sc[i].iv16 = cpu_to_le16(seq.tkip.iv16);
-+			tkip_sc[i].iv32 = cpu_to_le32(seq.tkip.iv32);
-+			/* wrapping isn't allowed, AP must rekey */
-+			if (seq.tkip.iv32 > cur_rx_iv32)
-+				cur_rx_iv32 = seq.tkip.iv32;
-+		}
-+
-+		ieee80211_get_tkip_rx_p1k(key, data->bssid, cur_rx_iv32, p1k);
-+		iwlagn_convert_p1k(p1k, rx_p1ks[0].p1k);
-+		ieee80211_get_tkip_rx_p1k(key, data->bssid,
-+					  cur_rx_iv32 + 1, p1k);
-+		iwlagn_convert_p1k(p1k, rx_p1ks[1].p1k);
-+
-+		memcpy(rx_mic_key,
-+		       &key->key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY],
-+		       IWLAGN_MIC_KEY_SIZE);
-+
-+		data->use_tkip = true;
-+		data->use_rsc_tsc = true;
-+		break;
-+	case WLAN_CIPHER_SUITE_CCMP:
-+		if (sta) {
-+			u8 *pn = seq.ccmp.pn;
-+
-+			aes_sc = data->rsc_tsc->all_tsc_rsc.aes.unicast_rsc;
-+			aes_tx_sc = &data->rsc_tsc->all_tsc_rsc.aes.tsc;
-+
-+			ieee80211_get_key_tx_seq(key, &seq);
-+			aes_tx_sc->pn = cpu_to_le64(
-+					(u64)pn[5] |
-+					((u64)pn[4] << 8) |
-+					((u64)pn[3] << 16) |
-+					((u64)pn[2] << 24) |
-+					((u64)pn[1] << 32) |
-+					((u64)pn[0] << 40));
-+		} else
-+			aes_sc = data->rsc_tsc->all_tsc_rsc.aes.multicast_rsc;
-+
-+		/*
-+		 * For non-QoS this relies on the fact that both the uCode and
-+		 * mac80211 use TID 0 for checking the IV in the frames.
-+		 */
-+		for (i = 0; i < IWLAGN_NUM_RSC; i++) {
-+			u8 *pn = seq.ccmp.pn;
-+
-+			ieee80211_get_key_rx_seq(key, i, &seq);
-+			aes_sc->pn = cpu_to_le64(
-+					(u64)pn[5] |
-+					((u64)pn[4] << 8) |
-+					((u64)pn[3] << 16) |
-+					((u64)pn[2] << 24) |
-+					((u64)pn[1] << 32) |
-+					((u64)pn[0] << 40));
-+		}
-+		data->use_rsc_tsc = true;
-+		break;
-+	}
-+
-+	mutex_unlock(&priv->shrd->mutex);
-+}
-+
-+int iwlagn_send_patterns(struct iwl_priv *priv,
-+			struct cfg80211_wowlan *wowlan)
-+{
-+	struct iwlagn_wowlan_patterns_cmd *pattern_cmd;
-+	struct iwl_host_cmd cmd = {
-+		.id = REPLY_WOWLAN_PATTERNS,
-+		.dataflags[0] = IWL_HCMD_DFL_NOCOPY,
-+		.flags = CMD_SYNC,
-+	};
-+	int i, err;
-+
-+	if (!wowlan->n_patterns)
-+		return 0;
-+
-+	cmd.len[0] = sizeof(*pattern_cmd) +
-+		wowlan->n_patterns * sizeof(struct iwlagn_wowlan_pattern);
-+
-+	pattern_cmd = kmalloc(cmd.len[0], GFP_KERNEL);
-+	if (!pattern_cmd)
-+		return -ENOMEM;
-+
-+	pattern_cmd->n_patterns = cpu_to_le32(wowlan->n_patterns);
-+
-+	for (i = 0; i < wowlan->n_patterns; i++) {
-+		int mask_len = DIV_ROUND_UP(wowlan->patterns[i].pattern_len, 8);
-+
-+		memcpy(&pattern_cmd->patterns[i].mask,
-+			wowlan->patterns[i].mask, mask_len);
-+		memcpy(&pattern_cmd->patterns[i].pattern,
-+			wowlan->patterns[i].pattern,
-+			wowlan->patterns[i].pattern_len);
-+		pattern_cmd->patterns[i].mask_size = mask_len;
-+		pattern_cmd->patterns[i].pattern_size =
-+			wowlan->patterns[i].pattern_len;
-+	}
-+
-+	cmd.data[0] = pattern_cmd;
-+	err = iwl_trans_send_cmd(trans(priv), &cmd);
-+	kfree(pattern_cmd);
-+	return err;
-+}
-+
-+int iwlagn_suspend(struct iwl_priv *priv,
-+		struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
-+{
-+	struct iwlagn_wowlan_wakeup_filter_cmd wakeup_filter_cmd;
-+	struct iwl_rxon_cmd rxon;
-+	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
-+	struct iwlagn_wowlan_kek_kck_material_cmd kek_kck_cmd;
-+	struct iwlagn_wowlan_tkip_params_cmd tkip_cmd = {};
-+	struct iwlagn_d3_config_cmd d3_cfg_cmd = {};
-+	struct wowlan_key_data key_data = {
-+		.ctx = ctx,
-+		.bssid = ctx->active.bssid_addr,
-+		.use_rsc_tsc = false,
-+		.tkip = &tkip_cmd,
-+		.use_tkip = false,
-+	};
-+	int ret, i;
-+	u16 seq;
-+
-+	key_data.rsc_tsc = kzalloc(sizeof(*key_data.rsc_tsc), GFP_KERNEL);
-+	if (!key_data.rsc_tsc)
-+		return -ENOMEM;
-+
-+	memset(&wakeup_filter_cmd, 0, sizeof(wakeup_filter_cmd));
-+
-+	/*
-+	 * We know the last used seqno, and the uCode expects to know that
-+	 * one, it will increment before TX.
-+	 */
-+	seq = le16_to_cpu(priv->last_seq_ctl) & IEEE80211_SCTL_SEQ;
-+	wakeup_filter_cmd.non_qos_seq = cpu_to_le16(seq);
-+
-+	/*
-+	 * For QoS counters, we store the one to use next, so subtract 0x10
-+	 * since the uCode will add 0x10 before using the value.
-+	 */
-+	for (i = 0; i < 8; i++) {
-+		seq = priv->shrd->tid_data[IWL_AP_ID][i].seq_number;
-+		seq -= 0x10;
-+		wakeup_filter_cmd.qos_seq[i] = cpu_to_le16(seq);
-+	}
-+
-+	if (wowlan->disconnect)
-+		wakeup_filter_cmd.enabled |=
-+			cpu_to_le32(IWLAGN_WOWLAN_WAKEUP_BEACON_MISS |
-+				    IWLAGN_WOWLAN_WAKEUP_LINK_CHANGE);
-+	if (wowlan->magic_pkt)
-+		wakeup_filter_cmd.enabled |=
-+			cpu_to_le32(IWLAGN_WOWLAN_WAKEUP_MAGIC_PACKET);
-+	if (wowlan->gtk_rekey_failure)
-+		wakeup_filter_cmd.enabled |=
-+			cpu_to_le32(IWLAGN_WOWLAN_WAKEUP_GTK_REKEY_FAIL);
-+	if (wowlan->eap_identity_req)
-+		wakeup_filter_cmd.enabled |=
-+			cpu_to_le32(IWLAGN_WOWLAN_WAKEUP_EAP_IDENT_REQ);
-+	if (wowlan->four_way_handshake)
-+		wakeup_filter_cmd.enabled |=
-+			cpu_to_le32(IWLAGN_WOWLAN_WAKEUP_4WAY_HANDSHAKE);
-+	if (wowlan->n_patterns)
-+		wakeup_filter_cmd.enabled |=
-+			cpu_to_le32(IWLAGN_WOWLAN_WAKEUP_PATTERN_MATCH);
-+
-+	if (wowlan->rfkill_release)
-+		d3_cfg_cmd.wakeup_flags |=
-+			cpu_to_le32(IWLAGN_D3_WAKEUP_RFKILL);
-+
-+	iwl_scan_cancel_timeout(priv, 200);
-+
-+	memcpy(&rxon, &ctx->active, sizeof(rxon));
-+
-+	iwl_trans_stop_device(trans(priv));
-+
-+	priv->shrd->wowlan = true;
-+
-+	ret = iwlagn_load_ucode_wait_alive(priv, IWL_UCODE_WOWLAN);
-+	if (ret)
-+		goto out;
-+
-+	/* now configure WoWLAN ucode */
-+	ret = iwl_alive_start(priv);
-+	if (ret)
-+		goto out;
-+
-+	memcpy(&ctx->staging, &rxon, sizeof(rxon));
-+	ret = iwlagn_commit_rxon(priv, ctx);
-+	if (ret)
-+		goto out;
-+
-+	ret = iwl_power_update_mode(priv, true);
-+	if (ret)
-+		goto out;
-+
-+	if (!iwlagn_mod_params.sw_crypto) {
-+		/* mark all keys clear */
-+		priv->ucode_key_table = 0;
-+		ctx->key_mapping_keys = 0;
-+
-+		/*
-+		 * This needs to be unlocked due to lock ordering
-+		 * constraints. Since we're in the suspend path
-+		 * that isn't really a problem though.
-+		 */
-+		mutex_unlock(&priv->shrd->mutex);
-+		ieee80211_iter_keys(priv->hw, ctx->vif,
-+				    iwlagn_wowlan_program_keys,
-+				    &key_data);
-+		mutex_lock(&priv->shrd->mutex);
-+		if (key_data.error) {
-+			ret = -EIO;
-+			goto out;
-+		}
-+
-+		if (key_data.use_rsc_tsc) {
-+			struct iwl_host_cmd rsc_tsc_cmd = {
-+				.id = REPLY_WOWLAN_TSC_RSC_PARAMS,
-+				.flags = CMD_SYNC,
-+				.data[0] = key_data.rsc_tsc,
-+				.dataflags[0] = IWL_HCMD_DFL_NOCOPY,
-+				.len[0] = sizeof(key_data.rsc_tsc),
-+			};
-+
-+			ret = iwl_trans_send_cmd(trans(priv), &rsc_tsc_cmd);
-+			if (ret)
-+				goto out;
-+		}
-+
-+		if (key_data.use_tkip) {
-+			ret = iwl_trans_send_cmd_pdu(trans(priv),
-+						 REPLY_WOWLAN_TKIP_PARAMS,
-+						 CMD_SYNC, sizeof(tkip_cmd),
-+						 &tkip_cmd);
-+			if (ret)
-+				goto out;
-+		}
-+
-+		if (priv->have_rekey_data) {
-+			memset(&kek_kck_cmd, 0, sizeof(kek_kck_cmd));
-+			memcpy(kek_kck_cmd.kck, priv->kck, NL80211_KCK_LEN);
-+			kek_kck_cmd.kck_len = cpu_to_le16(NL80211_KCK_LEN);
-+			memcpy(kek_kck_cmd.kek, priv->kek, NL80211_KEK_LEN);
-+			kek_kck_cmd.kek_len = cpu_to_le16(NL80211_KEK_LEN);
-+			kek_kck_cmd.replay_ctr = priv->replay_ctr;
-+
-+			ret = iwl_trans_send_cmd_pdu(trans(priv),
-+						 REPLY_WOWLAN_KEK_KCK_MATERIAL,
-+						 CMD_SYNC, sizeof(kek_kck_cmd),
-+						 &kek_kck_cmd);
-+			if (ret)
-+				goto out;
-+		}
-+	}
-+
-+	ret = iwl_trans_send_cmd_pdu(trans(priv), REPLY_D3_CONFIG, CMD_SYNC,
-+				     sizeof(d3_cfg_cmd), &d3_cfg_cmd);
-+	if (ret)
-+		goto out;
-+
-+	ret = iwl_trans_send_cmd_pdu(trans(priv), REPLY_WOWLAN_WAKEUP_FILTER,
-+				 CMD_SYNC, sizeof(wakeup_filter_cmd),
-+				 &wakeup_filter_cmd);
-+	if (ret)
-+		goto out;
-+
-+	ret = iwlagn_send_patterns(priv, wowlan);
-+ out:
-+	kfree(key_data.rsc_tsc);
-+	return ret;
-+}
-+#endif
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index d325132..5d8d2f4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -119,6 +119,12 @@ u16 iwlagn_eeprom_calib_version(struct iwl_priv *priv);
- int iwlagn_txfifo_flush(struct iwl_priv *priv, u16 flush_control);
- void iwlagn_dev_txfifo_flush(struct iwl_priv *priv, u16 flush_control);
- int iwlagn_send_beacon_cmd(struct iwl_priv *priv);
-+#ifdef CONFIG_PM_SLEEP
-+int iwlagn_send_patterns(struct iwl_priv *priv,
-+			 struct cfg80211_wowlan *wowlan);
-+int iwlagn_suspend(struct iwl_priv *priv,
-+		   struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan);
-+#endif
++/**
+  * struct cfg80211_assoc_request - (Re)Association request data
+  *
+  * This structure provides information needed to complete IEEE 802.11
+@@ -1054,6 +1063,10 @@ struct cfg80211_auth_request {
+  * @use_mfp: Use management frame protection (IEEE 802.11w) in this association
+  * @crypto: crypto settings
+  * @prev_bssid: previous BSSID, if not %NULL use reassociate frame
++ * @flags:  See &enum cfg80211_assoc_req_flags
++ * @ht_capa:  HT Capabilities over-rides.  Values set in ht_capa_mask
++ *   will be used in ht_capa.  Un-supported values will be ignored.
++ * @ht_capa_mask:  The bits of ht_capa which are to be used.
+  */
+ struct cfg80211_assoc_request {
+ 	struct cfg80211_bss *bss;
+@@ -1061,6 +1074,9 @@ struct cfg80211_assoc_request {
+ 	size_t ie_len;
+ 	struct cfg80211_crypto_settings crypto;
+ 	bool use_mfp;
++	u32 flags;
++	struct ieee80211_ht_cap ht_capa;
++	struct ieee80211_ht_cap ht_capa_mask;
+ };
  
- /* rx */
- int iwlagn_hwrate_to_mac80211_idx(u32 rate_n_flags, enum ieee80211_band band);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index b46702c..073e827 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -368,209 +368,13 @@ static void iwlagn_mac_set_rekey_data(struct ieee80211_hw *hw,
+ /**
+@@ -1159,6 +1175,10 @@ struct cfg80211_ibss_params {
+  * @key_len: length of WEP key for shared key authentication
+  * @key_idx: index of WEP key for shared key authentication
+  * @key: WEP key for shared key authentication
++ * @flags:  See &enum cfg80211_assoc_req_flags
++ * @ht_capa:  HT Capabilities over-rides.  Values set in ht_capa_mask
++ *   will be used in ht_capa.  Un-supported values will be ignored.
++ * @ht_capa_mask:  The bits of ht_capa which are to be used.
+  */
+ struct cfg80211_connect_params {
+ 	struct ieee80211_channel *channel;
+@@ -1172,6 +1192,9 @@ struct cfg80211_connect_params {
+ 	struct cfg80211_crypto_settings crypto;
+ 	const u8 *key;
+ 	u8 key_len, key_idx;
++	u32 flags;
++	struct ieee80211_ht_cap ht_capa;
++	struct ieee80211_ht_cap ht_capa_mask;
+ };
+ 
+ /**
+@@ -1934,6 +1957,8 @@ struct wiphy_wowlan_support {
+  * @wowlan: WoWLAN support information
+  *
+  * @ap_sme_capa: AP SME capabilities, flags from &enum nl80211_ap_sme_features.
++ * @ht_capa_mod_mask:  Specify what ht_cap values can be over-ridden.
++ *	If null, then none can be over-ridden.
+  */
+ struct wiphy {
+ 	/* assign these fields before you register the wiphy */
+@@ -2023,6 +2048,8 @@ struct wiphy {
+ 	/* dir in debugfs: ieee80211/<wiphyname> */
+ 	struct dentry *debugfsdir;
+ 
++	const struct ieee80211_ht_cap *ht_capa_mod_mask;
++
+ #ifdef CONFIG_NET_NS
+ 	/* the network namespace this phy lives in currently */
+ 	struct net *_net;
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 1c7d4df..fb08c28 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -341,13 +341,17 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			  const u8 *bssid, const u8 *prev_bssid,
+ 			  const u8 *ssid, int ssid_len,
+ 			  const u8 *ie, int ie_len, bool use_mfp,
+-			  struct cfg80211_crypto_settings *crypt);
++			  struct cfg80211_crypto_settings *crypt,
++			  u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
++			  struct ieee80211_ht_cap *ht_capa_mask);
+ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			struct net_device *dev, struct ieee80211_channel *chan,
+ 			const u8 *bssid, const u8 *prev_bssid,
+ 			const u8 *ssid, int ssid_len,
+ 			const u8 *ie, int ie_len, bool use_mfp,
+-			struct cfg80211_crypto_settings *crypt);
++			struct cfg80211_crypto_settings *crypt,
++			u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
++			struct ieee80211_ht_cap *ht_capa_mask);
+ int __cfg80211_mlme_deauth(struct cfg80211_registered_device *rdev,
+ 			   struct net_device *dev, const u8 *bssid,
+ 			   const u8 *ie, int ie_len, u16 reason,
+@@ -379,6 +383,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 			  bool channel_type_valid, unsigned int wait,
+ 			  const u8 *buf, size_t len, bool no_cck,
+ 			  bool dont_wait_for_ack, u64 *cookie);
++void cfg80211_oper_and_ht_capa(struct ieee80211_ht_cap *ht_capa,
++			       const struct ieee80211_ht_cap *ht_capa_mask);
+ 
+ /* SME */
+ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 6c1bafd..438dfc1 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -501,13 +501,32 @@ int cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+ 	return err;
  }
  
- #ifdef CONFIG_PM_SLEEP
--struct wowlan_key_data {
--	struct iwl_rxon_context *ctx;
--	struct iwlagn_wowlan_rsc_tsc_params_cmd *rsc_tsc;
--	struct iwlagn_wowlan_tkip_params_cmd *tkip;
--	const u8 *bssid;
--	bool error, use_rsc_tsc, use_tkip;
--};
--
--static void iwlagn_convert_p1k(u16 *p1k, __le16 *out)
--{
--	int i;
--
--	for (i = 0; i < IWLAGN_P1K_SIZE; i++)
--		out[i] = cpu_to_le16(p1k[i]);
--}
--
--static void iwlagn_wowlan_program_keys(struct ieee80211_hw *hw,
--				       struct ieee80211_vif *vif,
--				       struct ieee80211_sta *sta,
--				       struct ieee80211_key_conf *key,
--				       void *_data)
--{
--	struct iwl_priv *priv = hw->priv;
--	struct wowlan_key_data *data = _data;
--	struct iwl_rxon_context *ctx = data->ctx;
--	struct aes_sc *aes_sc, *aes_tx_sc = NULL;
--	struct tkip_sc *tkip_sc, *tkip_tx_sc = NULL;
--	struct iwlagn_p1k_cache *rx_p1ks;
--	u8 *rx_mic_key;
--	struct ieee80211_key_seq seq;
--	u32 cur_rx_iv32 = 0;
--	u16 p1k[IWLAGN_P1K_SIZE];
--	int ret, i;
--
--	mutex_lock(&priv->shrd->mutex);
--
--	if ((key->cipher == WLAN_CIPHER_SUITE_WEP40 ||
--	     key->cipher == WLAN_CIPHER_SUITE_WEP104) &&
--	     !sta && !ctx->key_mapping_keys)
--		ret = iwl_set_default_wep_key(priv, ctx, key);
--	else
--		ret = iwl_set_dynamic_key(priv, ctx, key, sta);
--
--	if (ret) {
--		IWL_ERR(priv, "Error setting key during suspend!\n");
--		data->error = true;
--	}
--
--	switch (key->cipher) {
--	case WLAN_CIPHER_SUITE_TKIP:
--		if (sta) {
--			tkip_sc = data->rsc_tsc->all_tsc_rsc.tkip.unicast_rsc;
--			tkip_tx_sc = &data->rsc_tsc->all_tsc_rsc.tkip.tsc;
--
--			rx_p1ks = data->tkip->rx_uni;
--
--			ieee80211_get_key_tx_seq(key, &seq);
--			tkip_tx_sc->iv16 = cpu_to_le16(seq.tkip.iv16);
--			tkip_tx_sc->iv32 = cpu_to_le32(seq.tkip.iv32);
--
--			ieee80211_get_tkip_p1k_iv(key, seq.tkip.iv32, p1k);
--			iwlagn_convert_p1k(p1k, data->tkip->tx.p1k);
--
--			memcpy(data->tkip->mic_keys.tx,
--			       &key->key[NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY],
--			       IWLAGN_MIC_KEY_SIZE);
--
--			rx_mic_key = data->tkip->mic_keys.rx_unicast;
--		} else {
--			tkip_sc = data->rsc_tsc->all_tsc_rsc.tkip.multicast_rsc;
--			rx_p1ks = data->tkip->rx_multi;
--			rx_mic_key = data->tkip->mic_keys.rx_mcast;
--		}
--
--		/*
--		 * For non-QoS this relies on the fact that both the uCode and
--		 * mac80211 use TID 0 (as they need to to avoid replay attacks)
--		 * for checking the IV in the frames.
--		 */
--		for (i = 0; i < IWLAGN_NUM_RSC; i++) {
--			ieee80211_get_key_rx_seq(key, i, &seq);
--			tkip_sc[i].iv16 = cpu_to_le16(seq.tkip.iv16);
--			tkip_sc[i].iv32 = cpu_to_le32(seq.tkip.iv32);
--			/* wrapping isn't allowed, AP must rekey */
--			if (seq.tkip.iv32 > cur_rx_iv32)
--				cur_rx_iv32 = seq.tkip.iv32;
--		}
--
--		ieee80211_get_tkip_rx_p1k(key, data->bssid, cur_rx_iv32, p1k);
--		iwlagn_convert_p1k(p1k, rx_p1ks[0].p1k);
--		ieee80211_get_tkip_rx_p1k(key, data->bssid,
--					  cur_rx_iv32 + 1, p1k);
--		iwlagn_convert_p1k(p1k, rx_p1ks[1].p1k);
--
--		memcpy(rx_mic_key,
--		       &key->key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY],
--		       IWLAGN_MIC_KEY_SIZE);
--
--		data->use_tkip = true;
--		data->use_rsc_tsc = true;
--		break;
--	case WLAN_CIPHER_SUITE_CCMP:
--		if (sta) {
--			u8 *pn = seq.ccmp.pn;
--
--			aes_sc = data->rsc_tsc->all_tsc_rsc.aes.unicast_rsc;
--			aes_tx_sc = &data->rsc_tsc->all_tsc_rsc.aes.tsc;
--
--			ieee80211_get_key_tx_seq(key, &seq);
--			aes_tx_sc->pn = cpu_to_le64(
--					(u64)pn[5] |
--					((u64)pn[4] << 8) |
--					((u64)pn[3] << 16) |
--					((u64)pn[2] << 24) |
--					((u64)pn[1] << 32) |
--					((u64)pn[0] << 40));
--		} else
--			aes_sc = data->rsc_tsc->all_tsc_rsc.aes.multicast_rsc;
--
--		/*
--		 * For non-QoS this relies on the fact that both the uCode and
--		 * mac80211 use TID 0 for checking the IV in the frames.
--		 */
--		for (i = 0; i < IWLAGN_NUM_RSC; i++) {
--			u8 *pn = seq.ccmp.pn;
--
--			ieee80211_get_key_rx_seq(key, i, &seq);
--			aes_sc->pn = cpu_to_le64(
--					(u64)pn[5] |
--					((u64)pn[4] << 8) |
--					((u64)pn[3] << 16) |
--					((u64)pn[2] << 24) |
--					((u64)pn[1] << 32) |
--					((u64)pn[0] << 40));
--		}
--		data->use_rsc_tsc = true;
--		break;
--	}
--
--	mutex_unlock(&priv->shrd->mutex);
--}
--
--static int iwlagn_send_patterns(struct iwl_priv *priv,
--				struct cfg80211_wowlan *wowlan)
--{
--	struct iwlagn_wowlan_patterns_cmd *pattern_cmd;
--	struct iwl_host_cmd cmd = {
--		.id = REPLY_WOWLAN_PATTERNS,
--		.dataflags[0] = IWL_HCMD_DFL_NOCOPY,
--		.flags = CMD_SYNC,
--	};
--	int i, err;
--
--	if (!wowlan->n_patterns)
--		return 0;
--
--	cmd.len[0] = sizeof(*pattern_cmd) +
--		wowlan->n_patterns * sizeof(struct iwlagn_wowlan_pattern);
--
--	pattern_cmd = kmalloc(cmd.len[0], GFP_KERNEL);
--	if (!pattern_cmd)
--		return -ENOMEM;
--
--	pattern_cmd->n_patterns = cpu_to_le32(wowlan->n_patterns);
--
--	for (i = 0; i < wowlan->n_patterns; i++) {
--		int mask_len = DIV_ROUND_UP(wowlan->patterns[i].pattern_len, 8);
--
--		memcpy(&pattern_cmd->patterns[i].mask,
--			wowlan->patterns[i].mask, mask_len);
--		memcpy(&pattern_cmd->patterns[i].pattern,
--			wowlan->patterns[i].pattern,
--			wowlan->patterns[i].pattern_len);
--		pattern_cmd->patterns[i].mask_size = mask_len;
--		pattern_cmd->patterns[i].pattern_size =
--			wowlan->patterns[i].pattern_len;
--	}
--
--	cmd.data[0] = pattern_cmd;
--	err = iwl_trans_send_cmd(trans(priv), &cmd);
--	kfree(pattern_cmd);
--	return err;
--}
- 
- static int iwlagn_mac_suspend(struct ieee80211_hw *hw,
- 			      struct cfg80211_wowlan *wowlan)
++/*  Do a logical ht_capa &= ht_capa_mask.  */
++void cfg80211_oper_and_ht_capa(struct ieee80211_ht_cap *ht_capa,
++			       const struct ieee80211_ht_cap *ht_capa_mask)
++{
++	int i;
++	u8 *p1, *p2;
++	if (!ht_capa_mask) {
++		memset(ht_capa, 0, sizeof(*ht_capa));
++		return;
++	}
++
++	p1 = (u8*)(ht_capa);
++	p2 = (u8*)(ht_capa_mask);
++	for (i = 0; i<sizeof(*ht_capa); i++)
++		p1[i] &= p2[i];
++}
++
+ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			  struct net_device *dev,
+ 			  struct ieee80211_channel *chan,
+ 			  const u8 *bssid, const u8 *prev_bssid,
+ 			  const u8 *ssid, int ssid_len,
+ 			  const u8 *ie, int ie_len, bool use_mfp,
+-			  struct cfg80211_crypto_settings *crypt)
++			  struct cfg80211_crypto_settings *crypt,
++			  u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
++			  struct ieee80211_ht_cap *ht_capa_mask)
  {
- 	struct iwl_priv *priv = hw->priv;
--	struct iwlagn_wowlan_wakeup_filter_cmd wakeup_filter_cmd;
--	struct iwl_rxon_cmd rxon;
- 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
--	struct iwlagn_wowlan_kek_kck_material_cmd kek_kck_cmd;
--	struct iwlagn_wowlan_tkip_params_cmd tkip_cmd = {};
--	struct wowlan_key_data key_data = {
--		.ctx = ctx,
--		.bssid = ctx->active.bssid_addr,
--		.use_rsc_tsc = false,
--		.tkip = &tkip_cmd,
--		.use_tkip = false,
--	};
--	struct iwlagn_d3_config_cmd d3_cfg_cmd = {};
--	int ret, i;
--	u16 seq;
-+	int ret;
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_assoc_request req;
+@@ -537,6 +556,15 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 	memcpy(&req.crypto, crypt, sizeof(req.crypto));
+ 	req.use_mfp = use_mfp;
+ 	req.prev_bssid = prev_bssid;
++	req.flags = assoc_flags;
++	if (ht_capa)
++		memcpy(&req.ht_capa, ht_capa, sizeof(req.ht_capa));
++	if (ht_capa_mask)
++		memcpy(&req.ht_capa_mask, ht_capa_mask,
++		       sizeof(req.ht_capa_mask));
++	cfg80211_oper_and_ht_capa(&req.ht_capa_mask,
++				  rdev->wiphy.ht_capa_mod_mask);
++
+ 	req.bss = cfg80211_get_bss(&rdev->wiphy, chan, bssid, ssid, ssid_len,
+ 				   WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
+ 	if (!req.bss) {
+@@ -574,14 +602,17 @@ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			const u8 *bssid, const u8 *prev_bssid,
+ 			const u8 *ssid, int ssid_len,
+ 			const u8 *ie, int ie_len, bool use_mfp,
+-			struct cfg80211_crypto_settings *crypt)
++			struct cfg80211_crypto_settings *crypt,
++			u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
++			struct ieee80211_ht_cap *ht_capa_mask)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	int err;
  
- 	if (WARN_ON(!wowlan))
+ 	wdev_lock(wdev);
+ 	err = __cfg80211_mlme_assoc(rdev, dev, chan, bssid, prev_bssid,
+-				    ssid, ssid_len, ie, ie_len, use_mfp, crypt);
++				    ssid, ssid_len, ie, ie_len, use_mfp, crypt,
++				    assoc_flags, ht_capa, ht_capa_mask);
+ 	wdev_unlock(wdev);
+ 
+ 	return err;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 6bc7c4b..aa98ec2 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -199,6 +199,10 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_DONT_WAIT_FOR_ACK] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_PROBE_RESP] = { .type = NLA_BINARY,
+ 				      .len = IEEE80211_MAX_DATA_LEN },
++	[NL80211_ATTR_DISABLE_HT] = { .type = NLA_FLAG },
++	[NL80211_ATTR_HT_CAPABILITY_MASK] = {
++		.len = NL80211_HT_CAPABILITY_LEN
++	},
+ };
+ 
+ /* policy for the key attributes */
+@@ -1025,6 +1029,11 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 
+ 	NLA_PUT_U32(msg, NL80211_ATTR_FEATURE_FLAGS, dev->wiphy.features);
+ 
++	if (dev->wiphy.ht_capa_mod_mask)
++		NLA_PUT(msg, NL80211_ATTR_HT_CAPABILITY_MASK,
++			sizeof(*dev->wiphy.ht_capa_mod_mask),
++			dev->wiphy.ht_capa_mod_mask);
++
+ 	return genlmsg_end(msg, hdr);
+ 
+  nla_put_failure:
+@@ -4384,6 +4393,9 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
+ 	const u8 *bssid, *ssid, *ie = NULL, *prev_bssid = NULL;
+ 	int err, ssid_len, ie_len = 0;
+ 	bool use_mfp = false;
++	u32 flags = 0;
++	struct ieee80211_ht_cap *ht_capa = NULL;
++	struct ieee80211_ht_cap *ht_capa_mask = NULL;
+ 
+ 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
  		return -EINVAL;
-@@ -585,153 +389,7 @@ static int iwlagn_mac_suspend(struct ieee80211_hw *hw,
- 		goto out;
+@@ -4427,11 +4439,25 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
+ 	if (info->attrs[NL80211_ATTR_PREV_BSSID])
+ 		prev_bssid = nla_data(info->attrs[NL80211_ATTR_PREV_BSSID]);
+ 
++	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_HT]))
++		flags |= ASSOC_REQ_DISABLE_HT;
++
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
++		ht_capa_mask =
++			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]);
++
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY]) {
++		if (!ht_capa_mask)
++			return -EINVAL;
++		ht_capa = nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
++	}
++
+ 	err = nl80211_crypto_settings(rdev, info, &crypto, 1);
+ 	if (!err)
+ 		err = cfg80211_mlme_assoc(rdev, dev, chan, bssid, prev_bssid,
+ 					  ssid, ssid_len, ie, ie_len, use_mfp,
+-					  &crypto);
++					  &crypto, flags, ht_capa,
++					  ht_capa_mask);
+ 
+ 	return err;
+ }
+@@ -4921,6 +4947,22 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 			return PTR_ERR(connkeys);
  	}
  
--	key_data.rsc_tsc = kzalloc(sizeof(*key_data.rsc_tsc), GFP_KERNEL);
--	if (!key_data.rsc_tsc) {
--		ret = -ENOMEM;
--		goto out;
--	}
--
--	memset(&wakeup_filter_cmd, 0, sizeof(wakeup_filter_cmd));
--
--	/*
--	 * We know the last used seqno, and the uCode expects to know that
--	 * one, it will increment before TX.
--	 */
--	seq = le16_to_cpu(priv->last_seq_ctl) & IEEE80211_SCTL_SEQ;
--	wakeup_filter_cmd.non_qos_seq = cpu_to_le16(seq);
--
--	/*
--	 * For QoS counters, we store the one to use next, so subtract 0x10
--	 * since the uCode will add 0x10 before using the value.
--	 */
--	for (i = 0; i < 8; i++) {
--		seq = priv->shrd->tid_data[IWL_AP_ID][i].seq_number;
--		seq -= 0x10;
--		wakeup_filter_cmd.qos_seq[i] = cpu_to_le16(seq);
--	}
--
--	if (wowlan->disconnect)
--		wakeup_filter_cmd.enabled |=
--			cpu_to_le32(IWLAGN_WOWLAN_WAKEUP_BEACON_MISS |
--				    IWLAGN_WOWLAN_WAKEUP_LINK_CHANGE);
--	if (wowlan->magic_pkt)
--		wakeup_filter_cmd.enabled |=
--			cpu_to_le32(IWLAGN_WOWLAN_WAKEUP_MAGIC_PACKET);
--	if (wowlan->gtk_rekey_failure)
--		wakeup_filter_cmd.enabled |=
--			cpu_to_le32(IWLAGN_WOWLAN_WAKEUP_GTK_REKEY_FAIL);
--	if (wowlan->eap_identity_req)
--		wakeup_filter_cmd.enabled |=
--			cpu_to_le32(IWLAGN_WOWLAN_WAKEUP_EAP_IDENT_REQ);
--	if (wowlan->four_way_handshake)
--		wakeup_filter_cmd.enabled |=
--			cpu_to_le32(IWLAGN_WOWLAN_WAKEUP_4WAY_HANDSHAKE);
--	if (wowlan->n_patterns)
--		wakeup_filter_cmd.enabled |=
--			cpu_to_le32(IWLAGN_WOWLAN_WAKEUP_PATTERN_MATCH);
--
--	if (wowlan->rfkill_release)
--		d3_cfg_cmd.wakeup_flags |=
--			cpu_to_le32(IWLAGN_D3_WAKEUP_RFKILL);
--
--	iwl_scan_cancel_timeout(priv, 200);
--
--	memcpy(&rxon, &ctx->active, sizeof(rxon));
--
--	iwl_trans_stop_device(trans(priv));
--
--	priv->shrd->wowlan = true;
--
--	ret = iwlagn_load_ucode_wait_alive(priv, IWL_UCODE_WOWLAN);
--	if (ret)
--		goto error;
--
--	/* now configure WoWLAN ucode */
--	ret = iwl_alive_start(priv);
--	if (ret)
--		goto error;
--
--	memcpy(&ctx->staging, &rxon, sizeof(rxon));
--	ret = iwlagn_commit_rxon(priv, ctx);
--	if (ret)
--		goto error;
--
--	ret = iwl_power_update_mode(priv, true);
--	if (ret)
--		goto error;
--
--	if (!iwlagn_mod_params.sw_crypto) {
--		/* mark all keys clear */
--		priv->ucode_key_table = 0;
--		ctx->key_mapping_keys = 0;
--
--		/*
--		 * This needs to be unlocked due to lock ordering
--		 * constraints. Since we're in the suspend path
--		 * that isn't really a problem though.
--		 */
--		mutex_unlock(&priv->shrd->mutex);
--		ieee80211_iter_keys(priv->hw, ctx->vif,
--				    iwlagn_wowlan_program_keys,
--				    &key_data);
--		mutex_lock(&priv->shrd->mutex);
--		if (key_data.error) {
--			ret = -EIO;
--			goto error;
--		}
--
--		if (key_data.use_rsc_tsc) {
--			struct iwl_host_cmd rsc_tsc_cmd = {
--				.id = REPLY_WOWLAN_TSC_RSC_PARAMS,
--				.flags = CMD_SYNC,
--				.data[0] = key_data.rsc_tsc,
--				.dataflags[0] = IWL_HCMD_DFL_NOCOPY,
--				.len[0] = sizeof(*key_data.rsc_tsc),
--			};
--
--			ret = iwl_trans_send_cmd(trans(priv), &rsc_tsc_cmd);
--			if (ret)
--				goto error;
--		}
--
--		if (key_data.use_tkip) {
--			ret = iwl_trans_send_cmd_pdu(trans(priv),
--						 REPLY_WOWLAN_TKIP_PARAMS,
--						 CMD_SYNC, sizeof(tkip_cmd),
--						 &tkip_cmd);
--			if (ret)
--				goto error;
--		}
--
--		if (priv->have_rekey_data) {
--			memset(&kek_kck_cmd, 0, sizeof(kek_kck_cmd));
--			memcpy(kek_kck_cmd.kck, priv->kck, NL80211_KCK_LEN);
--			kek_kck_cmd.kck_len = cpu_to_le16(NL80211_KCK_LEN);
--			memcpy(kek_kck_cmd.kek, priv->kek, NL80211_KEK_LEN);
--			kek_kck_cmd.kek_len = cpu_to_le16(NL80211_KEK_LEN);
--			kek_kck_cmd.replay_ctr = priv->replay_ctr;
--
--			ret = iwl_trans_send_cmd_pdu(trans(priv),
--						 REPLY_WOWLAN_KEK_KCK_MATERIAL,
--						 CMD_SYNC, sizeof(kek_kck_cmd),
--						 &kek_kck_cmd);
--			if (ret)
--				goto error;
--		}
--	}
--
--	ret = iwl_trans_send_cmd_pdu(trans(priv), REPLY_D3_CONFIG, CMD_SYNC,
--				     sizeof(d3_cfg_cmd), &d3_cfg_cmd);
--	if (ret)
--		goto error;
--
--	ret = iwl_trans_send_cmd_pdu(trans(priv), REPLY_WOWLAN_WAKEUP_FILTER,
--				 CMD_SYNC, sizeof(wakeup_filter_cmd),
--				 &wakeup_filter_cmd);
--	if (ret)
--		goto error;
--
--	ret = iwlagn_send_patterns(priv, wowlan);
-+	ret = iwlagn_suspend(priv, hw, wowlan);
- 	if (ret)
- 		goto error;
++	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_HT]))
++		connect.flags |= ASSOC_REQ_DISABLE_HT;
++
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
++		memcpy(&connect.ht_capa_mask,
++		       nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]),
++		       sizeof(connect.ht_capa_mask));
++
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY]) {
++		if (!info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
++			return -EINVAL;
++		memcpy(&connect.ht_capa,
++		       nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]),
++		       sizeof(connect.ht_capa));
++	}
++
+ 	err = cfg80211_connect(rdev, dev, &connect, connkeys);
+ 	if (err)
+ 		kfree(connkeys);
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 0acfdc9..f0c900c 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -190,7 +190,9 @@ static int cfg80211_conn_do_work(struct wireless_dev *wdev)
+ 					    prev_bssid,
+ 					    params->ssid, params->ssid_len,
+ 					    params->ie, params->ie_len,
+-					    false, &params->crypto);
++					    false, &params->crypto,
++					    params->flags, &params->ht_capa,
++					    &params->ht_capa_mask);
+ 		if (err)
+ 			__cfg80211_mlme_deauth(rdev, wdev->netdev, params->bssid,
+ 					       NULL, 0,
+@@ -774,6 +776,9 @@ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+ 		wdev->connect_keys = NULL;
+ 	}
  
-@@ -749,7 +407,6 @@ static int iwlagn_mac_suspend(struct ieee80211_hw *hw,
- 	ieee80211_restart_hw(priv->hw);
-  out:
- 	mutex_unlock(&priv->shrd->mutex);
--	kfree(key_data.rsc_tsc);
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- 
- 	return ret;
++	cfg80211_oper_and_ht_capa(&connect->ht_capa_mask,
++				  rdev->wiphy.ht_capa_mod_mask);
++
+ 	if (connkeys && connkeys->def >= 0) {
+ 		int idx;
+ 		u32 cipher;
 -- 
-1.7.0.4
+1.7.3.4
 
