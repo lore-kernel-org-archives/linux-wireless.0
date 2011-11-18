@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:46687 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751469Ab1KRToP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 14:44:15 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/3] compat-wireless: escape &
-Date: Fri, 18 Nov 2011 20:44:05 +0100
-Message-Id: <1321645446-22527-2-git-send-email-hauke@hauke-m.de> (sfid-20111118_204418_878734_83893579)
-In-Reply-To: <1321645446-22527-1-git-send-email-hauke@hauke-m.de>
-References: <1321645446-22527-1-git-send-email-hauke@hauke-m.de>
+Received: from mga09.intel.com ([134.134.136.24]:21444 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757273Ab1KRPQ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 10:16:57 -0500
+Subject: Re: [PATCH 28/77] iwlegacy: rename base 4965 and 3945 file names
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1321604559-10707-28-git-send-email-sgruszka@redhat.com>
+References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+	 <1321604559-10707-28-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 18 Nov 2011 06:21:38 -0800
+Message-ID: <1321626098.11647.13.camel@wwguy-huron> (sfid-20111118_161700_821697_76286088)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-& needs to be escaped.
+On Fri, 2011-11-18 at 00:21 -0800, Stanislaw Gruszka wrote:
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/iwlegacy/3945-mac.c     | 4007 ++++++++++++++++++++++++++
+>  drivers/net/wireless/iwlegacy/3945.c         | 2740 ++++++++++++++++++
+>  drivers/net/wireless/iwlegacy/4965-mac.c     | 3245 +++++++++++++++++++++
+>  drivers/net/wireless/iwlegacy/4965.c         | 2183 ++++++++++++++
+>  drivers/net/wireless/iwlegacy/Makefile       |    4 +-
+>  drivers/net/wireless/iwlegacy/iwl-3945.c     | 2740 ------------------
+>  drivers/net/wireless/iwlegacy/iwl-4965.c     | 2183 --------------
+>  drivers/net/wireless/iwlegacy/iwl3945-base.c | 4007 --------------------------
+>  drivers/net/wireless/iwlegacy/iwl4965-base.c | 3245 ---------------------
+>  9 files changed, 12177 insertions(+), 12177 deletions(-)
+>  create mode 100644 drivers/net/wireless/iwlegacy/3945-mac.c
+>  create mode 100644 drivers/net/wireless/iwlegacy/3945.c
+>  create mode 100644 drivers/net/wireless/iwlegacy/4965-mac.c
+>  create mode 100644 drivers/net/wireless/iwlegacy/4965.c
+>  delete mode 100644 drivers/net/wireless/iwlegacy/iwl-3945.c
+>  delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965.c
+>  delete mode 100644 drivers/net/wireless/iwlegacy/iwl3945-base.c
+>  delete mode 100644 drivers/net/wireless/iwlegacy/iwl4965-base.c
+> 
+> 683K patch can be downloaded from:
+> http://people.redhat.com/sgruszka/iwlegacy-2011-11-16/0028-iwlegacy-rename-base-4965-and-3945-file-names.patch
+> --
+myabe also rename other modules which has "iwl" prefix to "il"? such as
+iwl-led.c, iwl-eeprom.c, ...
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- scripts/gen-compat-autoconf.sh |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
-index 0063478..28ed25a 100755
---- a/scripts/gen-compat-autoconf.sh
-+++ b/scripts/gen-compat-autoconf.sh
-@@ -152,7 +152,7 @@ for i in $(egrep '^CONFIG_|^ifdef CONFIG_|^ifndef CONFIG_|^endif #CONFIG_|^else
- 		continue
- 		;;
- 	'ifndef+CONFIG_'* )
--		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_3_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,\2,0))/' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_2_6_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,\2))/' -e 's/\(ifndef CONFIG_COMPAT_RHEL_\)\([0-9]*\)_\([0-9]*\)/if (!defined(RHEL_MAJOR) || RHEL_MAJOR != \2 || RHEL_MINOR < \3)/' -e 's/\(#ifndef \)\(CONFIG_[^:space:]*\)/#if !defined(\2) && !defined(\2_MODULE)/'
-+		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_3_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,\2,0))/' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_2_6_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,\2))/' -e 's/\(ifndef CONFIG_COMPAT_RHEL_\)\([0-9]*\)_\([0-9]*\)/if (!defined(RHEL_MAJOR) || RHEL_MAJOR != \2 || RHEL_MINOR < \3)/' -e 's/\(#ifndef \)\(CONFIG_[^:space:]*\)/#if !defined(\2) \&\& !defined(\2_MODULE)/'
- 		continue
- 		;;
- 	'else+#CONFIG_'* | 'endif+#CONFIG_'* )
--- 
-1.7.4.1
+Thanks
+Wey
 
