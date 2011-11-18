@@ -1,525 +1,453 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43792 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:11157 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935431Ab1KJPtj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 10:49:39 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 10/27] iwlagn: move ucode files out of the iwl_priv structure
-Date: Thu, 10 Nov 2011 06:55:10 -0800
-Message-Id: <1320936927-9078-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_164957_425041_25CB2662)
-In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1755265Ab1KRIVS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 03:21:18 -0500
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAI8LItb022568
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 03:21:18 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 14/77] iwlegacy: rename i/o direct methods
+Date: Fri, 18 Nov 2011 09:21:36 +0100
+Message-Id: <1321604559-10707-14-git-send-email-sgruszka@redhat.com> (sfid-20111118_092145_305295_F5430865)
+In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Don Fry <donald.h.fry@intel.com>
-
-Relocate the ucode files and update relevant code.
-More code refactoring.
-
-Signed-off-by: Don Fry <donald.h.fry@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |   96 +++++++++++++++++++-------
- drivers/net/wireless/iwlwifi/iwl-agn.c       |   73 ++++----------------
- drivers/net/wireless/iwlwifi/iwl-agn.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c   |    6 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h       |   24 +------
- drivers/net/wireless/iwlwifi/iwl-trans.h     |   29 ++++++++
- 6 files changed, 121 insertions(+), 109 deletions(-)
+ drivers/net/wireless/iwlegacy/iwl-3945.c       |   30 ++++++++++++------------
+ drivers/net/wireless/iwlegacy/iwl-4965-lib.c   |   18 +++++++-------
+ drivers/net/wireless/iwlegacy/iwl-4965-tx.c    |   10 ++++----
+ drivers/net/wireless/iwlegacy/iwl-4965-ucode.c |    4 +-
+ drivers/net/wireless/iwlegacy/iwl-csr.h        |    4 +-
+ drivers/net/wireless/iwlegacy/iwl-io.h         |   11 ++++----
+ drivers/net/wireless/iwlegacy/iwl-rx.c         |    4 +-
+ drivers/net/wireless/iwlegacy/iwl-tx.c         |    2 +-
+ drivers/net/wireless/iwlegacy/iwl3945-base.c   |    6 ++--
+ drivers/net/wireless/iwlegacy/iwl4965-base.c   |   16 ++++++------
+ 10 files changed, 52 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-index 9144ef5..9ec315b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-@@ -31,6 +31,7 @@
- #include <linux/module.h>
- #include <linux/init.h>
- #include <linux/sched.h>
-+#include <linux/dma-mapping.h>
+diff --git a/drivers/net/wireless/iwlegacy/iwl-3945.c b/drivers/net/wireless/iwlegacy/iwl-3945.c
+index 8c3ae39..fc8ddb6 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-3945.c
++++ b/drivers/net/wireless/iwlegacy/iwl-3945.c
+@@ -773,11 +773,11 @@ static void il3945_set_pwr_vmain(struct il_priv *il)
  
- #include "iwl-dev.h"
- #include "iwl-core.h"
-@@ -72,6 +73,52 @@ static struct iwl_wimax_coex_event_entry cu_priorities[COEX_NUM_OF_EVENTS] = {
- 	{COEX_CU_RSRVD2_RP, COEX_CU_RSRVD2_WP, 0, COEX_RSRVD2_FLAGS}
- };
+ static int il3945_rx_init(struct il_priv *il, struct il_rx_queue *rxq)
+ {
+-	il_write_direct32(il, FH39_RCSR_RBD_BASE(0), rxq->bd_dma);
+-	il_write_direct32(il, FH39_RCSR_RPTR_ADDR(0),
++	il_wr(il, FH39_RCSR_RBD_BASE(0), rxq->bd_dma);
++	il_wr(il, FH39_RCSR_RPTR_ADDR(0),
+ 					rxq->rb_stts_dma);
+-	il_write_direct32(il, FH39_RCSR_WPTR(0), 0);
+-	il_write_direct32(il, FH39_RCSR_CONFIG(0),
++	il_wr(il, FH39_RCSR_WPTR(0), 0);
++	il_wr(il, FH39_RCSR_CONFIG(0),
+ 		FH39_RCSR_RX_CONFIG_REG_VAL_DMA_CHNL_EN_ENABLE |
+ 		FH39_RCSR_RX_CONFIG_REG_VAL_RDRBD_EN_ENABLE |
+ 		FH39_RCSR_RX_CONFIG_REG_BIT_WR_STTS_EN |
+@@ -788,7 +788,7 @@ static int il3945_rx_init(struct il_priv *il, struct il_rx_queue *rxq)
+ 		FH39_RCSR_RX_CONFIG_REG_VAL_MSG_MODE_FH);
  
-+/******************************************************************************
-+ *
-+ * uCode download functions
-+ *
-+ ******************************************************************************/
-+
-+static void iwl_free_fw_desc(struct iwl_bus *bus, struct fw_desc *desc)
-+{
-+	if (desc->v_addr)
-+		dma_free_coherent(bus->dev, desc->len,
-+				  desc->v_addr, desc->p_addr);
-+	desc->v_addr = NULL;
-+	desc->len = 0;
-+}
-+
-+static void iwl_free_fw_img(struct iwl_bus *bus, struct fw_img *img)
-+{
-+	iwl_free_fw_desc(bus, &img->code);
-+	iwl_free_fw_desc(bus, &img->data);
-+}
-+
-+void iwl_dealloc_ucode(struct iwl_trans *trans)
-+{
-+	iwl_free_fw_img(bus(trans), &trans->ucode_rt);
-+	iwl_free_fw_img(bus(trans), &trans->ucode_init);
-+	iwl_free_fw_img(bus(trans), &trans->ucode_wowlan);
-+}
-+
-+int iwl_alloc_fw_desc(struct iwl_bus *bus, struct fw_desc *desc,
-+		      const void *data, size_t len)
-+{
-+	if (!len) {
-+		desc->v_addr = NULL;
-+		return -EINVAL;
-+	}
-+
-+	desc->v_addr = dma_alloc_coherent(bus->dev, len,
-+					  &desc->p_addr, GFP_KERNEL);
-+	if (!desc->v_addr)
-+		return -ENOMEM;
-+
-+	desc->len = len;
-+	memcpy(desc->v_addr, data, len);
-+	return 0;
-+}
-+
- /*
-  * ucode
-  */
-@@ -125,40 +172,41 @@ static int iwlagn_load_section(struct iwl_trans *trans, const char *name,
+ 	/* fake read to flush all prev I/O */
+-	il_read_direct32(il, FH39_RSSR_CTRL);
++	il_rd(il, FH39_RSSR_CTRL);
+ 
  	return 0;
  }
+@@ -810,10 +810,10 @@ static int il3945_tx_reset(struct il_priv *il)
+ 	il_write_prph(il, ALM_SCD_TXF4MF_REG, 0x000004);
+ 	il_write_prph(il, ALM_SCD_TXF5MF_REG, 0x000005);
  
--static inline struct fw_img *iwl_get_ucode_image(struct iwl_priv *priv,
--					enum iwlagn_ucode_type ucode_type)
-+static inline struct fw_img *iwl_get_ucode_image(struct iwl_trans *trans,
-+					enum iwl_ucode_type ucode_type)
- {
- 	switch (ucode_type) {
- 	case IWL_UCODE_INIT:
--		return &priv->ucode_init;
-+		return &trans->ucode_init;
- 	case IWL_UCODE_WOWLAN:
--		return &priv->ucode_wowlan;
-+		return &trans->ucode_wowlan;
- 	case IWL_UCODE_REGULAR:
--		return &priv->ucode_rt;
-+		return &trans->ucode_rt;
- 	case IWL_UCODE_NONE:
- 		break;
+-	il_write_direct32(il, FH39_TSSR_CBB_BASE,
++	il_wr(il, FH39_TSSR_CBB_BASE,
+ 			     il->_3945.shared_phys);
+ 
+-	il_write_direct32(il, FH39_TSSR_MSG_CONFIG,
++	il_wr(il, FH39_TSSR_MSG_CONFIG,
+ 		FH39_TSSR_TX_MSG_CONFIG_REG_VAL_SNOOP_RD_TXPD_ON |
+ 		FH39_TSSR_TX_MSG_CONFIG_REG_VAL_ORDER_RD_TXPD_ON |
+ 		FH39_TSSR_TX_MSG_CONFIG_REG_VAL_MAX_FRAG_SIZE_128B |
+@@ -987,7 +987,7 @@ int il3945_hw_nic_init(struct il_priv *il)
+ 	il_rx_queue_update_write_ptr(il, rxq);
+ 	*/
+ 
+-	il_write_direct32(il, FH39_RCSR_WPTR(0), rxq->write & ~7);
++	il_wr(il, FH39_RCSR_WPTR(0), rxq->write & ~7);
+ 
+ 	rc = il3945_txq_ctx_reset(il);
+ 	if (rc)
+@@ -1030,8 +1030,8 @@ void il3945_hw_txq_ctx_stop(struct il_priv *il)
+ 
+ 	/* reset TFD queues */
+ 	for (txq_id = 0; txq_id < il->hw_params.max_txq_num; txq_id++) {
+-		il_write_direct32(il, FH39_TCSR_CONFIG(txq_id), 0x0);
+-		il_poll_direct_bit(il, FH39_TSSR_TX_STATUS,
++		il_wr(il, FH39_TCSR_CONFIG(txq_id), 0x0);
++		il_poll_bit(il, FH39_TSSR_TX_STATUS,
+ 				FH39_TSSR_TX_STATUS_REG_MSK_CHNL_IDLE(txq_id),
+ 				1000);
  	}
- 	return NULL;
- }
- 
--static int iwlagn_load_given_ucode(struct iwl_priv *priv,
--				   enum iwlagn_ucode_type ucode_type)
-+static int iwlagn_load_given_ucode(struct iwl_trans *trans,
-+				   enum iwl_ucode_type ucode_type)
+@@ -2183,8 +2183,8 @@ int il3945_hw_rxq_stop(struct il_priv *il)
  {
- 	int ret = 0;
--	struct fw_img *image = iwl_get_ucode_image(priv, ucode_type);
-+	struct fw_img *image = iwl_get_ucode_image(trans, ucode_type);
+ 	int rc;
  
+-	il_write_direct32(il, FH39_RCSR_CONFIG(0), 0);
+-	rc = il_poll_direct_bit(il, FH39_RSSR_STATUS,
++	il_wr(il, FH39_RCSR_CONFIG(0), 0);
++	rc = il_poll_bit(il, FH39_RSSR_STATUS,
+ 			FH39_RSSR_CHNL0_RX_STATUS_CHNL_IDLE, 1000);
+ 	if (rc < 0)
+ 		IL_ERR("Can't stop Rx DMA.\n");
+@@ -2200,10 +2200,10 @@ int il3945_hw_tx_queue_init(struct il_priv *il, struct il_tx_queue *txq)
  
- 	if (!image) {
--		IWL_ERR(priv, "Invalid ucode requested (%d)\n", ucode_type);
-+		IWL_ERR(trans, "Invalid ucode requested (%d)\n",
-+			ucode_type);
- 		return -EINVAL;
- 	}
+ 	shared_data->tx_base_ptr[txq_id] = cpu_to_le32((u32)txq->q.dma_addr);
  
--	ret = iwlagn_load_section(trans(priv), "INST", &image->code,
-+	ret = iwlagn_load_section(trans, "INST", &image->code,
- 				   IWLAGN_RTC_INST_LOWER_BOUND);
- 	if (ret)
- 		return ret;
+-	il_write_direct32(il, FH39_CBCC_CTRL(txq_id), 0);
+-	il_write_direct32(il, FH39_CBCC_BASE(txq_id), 0);
++	il_wr(il, FH39_CBCC_CTRL(txq_id), 0);
++	il_wr(il, FH39_CBCC_BASE(txq_id), 0);
  
--	return iwlagn_load_section(trans(priv), "DATA", &image->data,
-+	return iwlagn_load_section(trans, "DATA", &image->data,
- 				    IWLAGN_RTC_DATA_LOWER_BOUND);
- }
+-	il_write_direct32(il, FH39_TCSR_CONFIG(txq_id),
++	il_wr(il, FH39_TCSR_CONFIG(txq_id),
+ 		FH39_TCSR_TX_CONFIG_REG_VAL_CIRQ_RTC_NOINT |
+ 		FH39_TCSR_TX_CONFIG_REG_VAL_MSG_MODE_TXF |
+ 		FH39_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_IFTFD |
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-lib.c b/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
+index 6503b8f..8fafd20 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
++++ b/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
+@@ -103,17 +103,17 @@ int il4965_rx_init(struct il_priv *il, struct il_rx_queue *rxq)
+ 		rb_size = FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_4K;
  
-@@ -498,24 +546,24 @@ static void iwl_print_mismatch_inst(struct iwl_bus *bus,
-  * iwl_verify_ucode - determine which instruction image is in SRAM,
-  *    and verify its contents
-  */
--static int iwl_verify_ucode(struct iwl_priv *priv,
--			    enum iwlagn_ucode_type ucode_type)
-+static int iwl_verify_ucode(struct iwl_trans *trans,
-+			    enum iwl_ucode_type ucode_type)
- {
--	struct fw_img *img = iwl_get_ucode_image(priv, ucode_type);
-+	struct fw_img *img = iwl_get_ucode_image(trans, ucode_type);
+ 	/* Stop Rx DMA */
+-	il_write_direct32(il, FH_MEM_RCSR_CHNL0_CONFIG_REG, 0);
++	il_wr(il, FH_MEM_RCSR_CHNL0_CONFIG_REG, 0);
  
- 	if (!img) {
--		IWL_ERR(priv, "Invalid ucode requested (%d)\n", ucode_type);
-+		IWL_ERR(trans, "Invalid ucode requested (%d)\n", ucode_type);
- 		return -EINVAL;
- 	}
+ 	/* Reset driver's Rx queue write index */
+-	il_write_direct32(il, FH_RSCSR_CHNL0_RBDCB_WPTR_REG, 0);
++	il_wr(il, FH_RSCSR_CHNL0_RBDCB_WPTR_REG, 0);
  
--	if (!iwl_verify_inst_sparse(bus(priv), &img->code)) {
--		IWL_DEBUG_FW(priv, "uCode is good in inst SRAM\n");
-+	if (!iwl_verify_inst_sparse(bus(trans), &img->code)) {
-+		IWL_DEBUG_FW(trans, "uCode is good in inst SRAM\n");
- 		return 0;
- 	}
+ 	/* Tell device where to find RBD circular buffer in DRAM */
+-	il_write_direct32(il, FH_RSCSR_CHNL0_RBDCB_BASE_REG,
++	il_wr(il, FH_RSCSR_CHNL0_RBDCB_BASE_REG,
+ 			   (u32)(rxq->bd_dma >> 8));
  
--	IWL_ERR(priv, "UCODE IMAGE IN INSTRUCTION SRAM NOT VALID!!\n");
-+	IWL_ERR(trans, "UCODE IMAGE IN INSTRUCTION SRAM NOT VALID!!\n");
+ 	/* Tell device where in DRAM to update its Rx status */
+-	il_write_direct32(il, FH_RSCSR_CHNL0_STTS_WPTR_REG,
++	il_wr(il, FH_RSCSR_CHNL0_STTS_WPTR_REG,
+ 			   rxq->rb_stts_dma >> 4);
  
--	iwl_print_mismatch_inst(bus(priv), &img->code);
-+	iwl_print_mismatch_inst(bus(trans), &img->code);
- 	return -EIO;
- }
- 
-@@ -551,12 +599,12 @@ static void iwlagn_alive_fn(struct iwl_priv *priv,
- #define UCODE_CALIB_TIMEOUT	(2*HZ)
- 
- int iwlagn_load_ucode_wait_alive(struct iwl_priv *priv,
--				 enum iwlagn_ucode_type ucode_type)
-+				 enum iwl_ucode_type ucode_type)
- {
- 	struct iwl_notification_wait alive_wait;
- 	struct iwlagn_alive_data alive_data;
- 	int ret;
--	enum iwlagn_ucode_type old_type;
-+	enum iwl_ucode_type old_type;
- 
- 	ret = iwl_trans_start_device(trans(priv));
- 	if (ret)
-@@ -568,7 +616,7 @@ int iwlagn_load_ucode_wait_alive(struct iwl_priv *priv,
- 	old_type = priv->ucode_type;
- 	priv->ucode_type = ucode_type;
- 
--	ret = iwlagn_load_given_ucode(priv, ucode_type);
-+	ret = iwlagn_load_given_ucode(trans(priv), ucode_type);
- 	if (ret) {
- 		priv->ucode_type = old_type;
- 		iwlagn_remove_notification(priv, &alive_wait);
-@@ -599,7 +647,7 @@ int iwlagn_load_ucode_wait_alive(struct iwl_priv *priv,
- 	 * skip it for WoWLAN.
+ 	/* Enable Rx DMA
+@@ -122,7 +122,7 @@ int il4965_rx_init(struct il_priv *il, struct il_rx_queue *rxq)
+ 	 * RB timeout 0x10
+ 	 * 256 RBDs
  	 */
- 	if (ucode_type != IWL_UCODE_WOWLAN) {
--		ret = iwl_verify_ucode(priv, ucode_type);
-+		ret = iwl_verify_ucode(trans(priv), ucode_type);
- 		if (ret) {
- 			priv->ucode_type = old_type;
- 			return ret;
-@@ -628,7 +676,7 @@ int iwlagn_run_init_ucode(struct iwl_priv *priv)
- 	lockdep_assert_held(&priv->shrd->mutex);
- 
- 	/* No init ucode required? Curious, but maybe ok */
--	if (!priv->ucode_init.code.len)
-+	if (!trans(priv)->ucode_init.code.len)
- 		return 0;
- 
- 	if (priv->ucode_type != IWL_UCODE_NONE)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index b6fa361..7514b17 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -30,7 +30,6 @@
- #include <linux/module.h>
- #include <linux/init.h>
- #include <linux/slab.h>
--#include <linux/dma-mapping.h>
- #include <linux/delay.h>
- #include <linux/sched.h>
- #include <linux/skbuff.h>
-@@ -452,52 +451,6 @@ static void iwl_bg_tx_flush(struct work_struct *work)
- 	iwlagn_dev_txfifo_flush(priv, IWL_DROP_ALL);
- }
- 
--/******************************************************************************
-- *
-- * uCode download functions
-- *
-- ******************************************************************************/
--
--static void iwl_free_fw_desc(struct iwl_priv *priv, struct fw_desc *desc)
--{
--	if (desc->v_addr)
--		dma_free_coherent(bus(priv)->dev, desc->len,
--				  desc->v_addr, desc->p_addr);
--	desc->v_addr = NULL;
--	desc->len = 0;
--}
--
--static void iwl_free_fw_img(struct iwl_priv *priv, struct fw_img *img)
--{
--	iwl_free_fw_desc(priv, &img->code);
--	iwl_free_fw_desc(priv, &img->data);
--}
--
--static void iwl_dealloc_ucode(struct iwl_priv *priv)
--{
--	iwl_free_fw_img(priv, &priv->ucode_rt);
--	iwl_free_fw_img(priv, &priv->ucode_init);
--	iwl_free_fw_img(priv, &priv->ucode_wowlan);
--}
--
--static int iwl_alloc_fw_desc(struct iwl_priv *priv, struct fw_desc *desc,
--			     const void *data, size_t len)
--{
--	if (!len) {
--		desc->v_addr = NULL;
--		return -EINVAL;
--	}
--
--	desc->v_addr = dma_alloc_coherent(bus(priv)->dev, len,
--					  &desc->p_addr, GFP_KERNEL);
--	if (!desc->v_addr)
--		return -ENOMEM;
--
--	desc->len = len;
--	memcpy(desc->v_addr, data, len);
--	return 0;
--}
--
- static void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags)
+-	il_write_direct32(il, FH_MEM_RCSR_CHNL0_CONFIG_REG,
++	il_wr(il, FH_MEM_RCSR_CHNL0_CONFIG_REG,
+ 			   FH_RCSR_RX_CONFIG_CHNL_EN_ENABLE_VAL |
+ 			   FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_INT_HOST_VAL |
+ 			   FH_RCSR_CHNL0_RX_CONFIG_SINGLE_FRAME_MSK |
+@@ -403,8 +403,8 @@ int il4965_rxq_stop(struct il_priv *il)
  {
- 	int i;
-@@ -1040,30 +993,32 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 	/* Runtime instructions and 2 copies of data:
- 	 * 1) unmodified from disk
- 	 * 2) backup cache for save/restore during power-downs */
--	if (iwl_alloc_fw_desc(priv, &priv->ucode_rt.code,
-+	if (iwl_alloc_fw_desc(bus(priv), &trans(priv)->ucode_rt.code,
- 			      pieces.inst, pieces.inst_size))
- 		goto err_pci_alloc;
--	if (iwl_alloc_fw_desc(priv, &priv->ucode_rt.data,
-+	if (iwl_alloc_fw_desc(bus(priv), &trans(priv)->ucode_rt.data,
- 			      pieces.data, pieces.data_size))
- 		goto err_pci_alloc;
  
- 	/* Initialization instructions and data */
- 	if (pieces.init_size && pieces.init_data_size) {
--		if (iwl_alloc_fw_desc(priv, &priv->ucode_init.code,
-+		if (iwl_alloc_fw_desc(bus(priv), &trans(priv)->ucode_init.code,
- 				      pieces.init, pieces.init_size))
- 			goto err_pci_alloc;
--		if (iwl_alloc_fw_desc(priv, &priv->ucode_init.data,
-+		if (iwl_alloc_fw_desc(bus(priv), &trans(priv)->ucode_init.data,
- 				      pieces.init_data, pieces.init_data_size))
- 			goto err_pci_alloc;
- 	}
+ 	/* stop Rx DMA */
+-	il_write_direct32(il, FH_MEM_RCSR_CHNL0_CONFIG_REG, 0);
+-	il_poll_direct_bit(il, FH_MEM_RSSR_RX_STATUS_REG,
++	il_wr(il, FH_MEM_RCSR_CHNL0_CONFIG_REG, 0);
++	il_poll_bit(il, FH_MEM_RSSR_RX_STATUS_REG,
+ 			    FH_RSSR_CHNL0_RX_STATUS_CHNL_IDLE, 1000);
  
- 	/* WoWLAN instructions and data */
- 	if (pieces.wowlan_inst_size && pieces.wowlan_data_size) {
--		if (iwl_alloc_fw_desc(priv, &priv->ucode_wowlan.code,
-+		if (iwl_alloc_fw_desc(bus(priv),
-+				      &trans(priv)->ucode_wowlan.code,
- 				      pieces.wowlan_inst,
- 				      pieces.wowlan_inst_size))
- 			goto err_pci_alloc;
--		if (iwl_alloc_fw_desc(priv, &priv->ucode_wowlan.data,
-+		if (iwl_alloc_fw_desc(bus(priv),
-+				      &trans(priv)->ucode_wowlan.data,
- 				      pieces.wowlan_data,
- 				      pieces.wowlan_data_size))
- 			goto err_pci_alloc;
-@@ -1156,7 +1111,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 
-  err_pci_alloc:
- 	IWL_ERR(priv, "failed to allocate pci memory\n");
--	iwl_dealloc_ucode(priv);
-+	iwl_dealloc_ucode(trans(priv));
-  out_unbind:
- 	complete(&priv->firmware_loading_complete);
- 	device_release_driver(bus(priv)->dev);
-@@ -1697,7 +1652,8 @@ static int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 			    WIPHY_FLAG_DISABLE_BEACON_HINTS |
- 			    WIPHY_FLAG_IBSS_RSN;
- 
--	if (priv->ucode_wowlan.code.len && device_can_wakeup(bus(priv)->dev)) {
-+	if (trans(priv)->ucode_wowlan.code.len &&
-+	    device_can_wakeup(bus(priv)->dev)) {
- 		hw->wiphy->wowlan.flags = WIPHY_WOWLAN_MAGIC_PKT |
- 					  WIPHY_WOWLAN_DISCONNECT |
- 					  WIPHY_WOWLAN_EAP_IDENTITY_REQ |
-@@ -2241,15 +2197,16 @@ static int iwlagn_mac_resume(struct ieee80211_hw *hw)
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 		if (ret == 0) {
-+			struct iwl_trans *trans = trans(priv);
- 			if (!priv->wowlan_sram)
- 				priv->wowlan_sram =
--					kzalloc(priv->ucode_wowlan.data.len,
-+					kzalloc(trans->ucode_wowlan.data.len,
- 						GFP_KERNEL);
- 
- 			if (priv->wowlan_sram)
- 				_iwl_read_targ_mem_words(
- 					bus(priv), 0x800000, priv->wowlan_sram,
--					priv->ucode_wowlan.data.len / 4);
-+					trans->ucode_wowlan.data.len / 4);
+ 	return 0;
+@@ -1179,7 +1179,7 @@ int il4965_dump_fh(struct il_priv *il, char **buf, bool display)
+ 			pos += scnprintf(*buf + pos, bufsz - pos,
+ 				"  %34s: 0X%08x\n",
+ 				il4965_get_fh_string(fh_tbl[i]),
+-				il_read_direct32(il, fh_tbl[i]));
++				il_rd(il, fh_tbl[i]));
  		}
- #endif
+ 		return pos;
  	}
-@@ -3400,7 +3357,7 @@ void __devexit iwl_remove(struct iwl_priv * priv)
- 	/*This will stop the queues, move the device to low power state */
- 	iwl_trans_stop_device(trans(priv));
- 
--	iwl_dealloc_ucode(priv);
-+	iwl_dealloc_ucode(trans(priv));
- 
- 	iwl_eeprom_free(priv);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index adefab5..7cc5cd8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -95,7 +95,7 @@ int iwlagn_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
- void iwlagn_send_prio_tbl(struct iwl_priv *priv);
- int iwlagn_run_init_ucode(struct iwl_priv *priv);
- int iwlagn_load_ucode_wait_alive(struct iwl_priv *priv,
--				 enum iwlagn_ucode_type ucode_type);
-+				 enum iwl_ucode_type ucode_type);
- 
- /* lib */
- int iwlagn_send_tx_power(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index a1670e3..42871ba 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -236,9 +236,9 @@ static ssize_t iwl_dbgfs_sram_read(struct file *file,
- 	if (!priv->dbgfs_sram_offset && !priv->dbgfs_sram_len) {
- 		priv->dbgfs_sram_offset = 0x800000;
- 		if (priv->ucode_type == IWL_UCODE_INIT)
--			priv->dbgfs_sram_len = priv->ucode_init.data.len;
-+			priv->dbgfs_sram_len = trans(priv)->ucode_init.data.len;
- 		else
--			priv->dbgfs_sram_len = priv->ucode_rt.data.len;
-+			priv->dbgfs_sram_len = trans(priv)->ucode_rt.data.len;
+@@ -1188,7 +1188,7 @@ int il4965_dump_fh(struct il_priv *il, char **buf, bool display)
+ 	for (i = 0; i <  ARRAY_SIZE(fh_tbl); i++) {
+ 		IL_ERR("  %34s: 0X%08x\n",
+ 			il4965_get_fh_string(fh_tbl[i]),
+-			il_read_direct32(il, fh_tbl[i]));
++			il_rd(il, fh_tbl[i]));
  	}
- 	len = priv->dbgfs_sram_len;
- 
-@@ -341,7 +341,7 @@ static ssize_t iwl_dbgfs_wowlan_sram_read(struct file *file,
- 
- 	return simple_read_from_buffer(user_buf, count, ppos,
- 				       priv->wowlan_sram,
--				       priv->ucode_wowlan.data.len);
-+				       trans(priv)->ucode_wowlan.data.len);
+ 	return 0;
  }
- static ssize_t iwl_dbgfs_stations_read(struct file *file, char __user *user_buf,
- 					size_t count, loff_t *ppos)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 4279e01..2c68b9b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -230,17 +230,6 @@ struct iwl_vif_priv {
- 	u8 ibss_bssid_sta_id;
- };
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
+index 66dd172..25c9b71 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
++++ b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
+@@ -640,7 +640,7 @@ int il4965_txq_ctx_alloc(struct il_priv *il)
+ 	il4965_txq_set_sched(il, 0);
  
--/* one for each uCode image (inst/data, boot/init/runtime) */
--struct fw_desc {
--	void *v_addr;		/* access by driver */
--	dma_addr_t p_addr;	/* access by card's busmaster DMA */
--	u32 len;		/* bytes */
--};
--
--struct fw_img {
--	struct fw_desc code, data;
--};
--
- /* v1/v2 uCode file layout */
- struct iwl_ucode_header {
- 	__le32 ver;	/* major/minor/API/serial */
-@@ -805,13 +794,6 @@ enum iwl_scan_type {
- 	IWL_SCAN_ROC,
- };
+ 	/* Tell NIC where to find the "keep warm" buffer */
+-	il_write_direct32(il, FH_KW_MEM_ADDR_REG, il->kw.dma >> 4);
++	il_wr(il, FH_KW_MEM_ADDR_REG, il->kw.dma >> 4);
  
--enum iwlagn_ucode_type {
--	IWL_UCODE_NONE,
--	IWL_UCODE_REGULAR,
--	IWL_UCODE_INIT,
--	IWL_UCODE_WOWLAN,
--};
--
- #ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
- struct iwl_testmode_trace {
- 	u32 buff_size;
-@@ -915,11 +897,7 @@ struct iwl_priv {
- 	u32 ucode_ver;			/* version of ucode, copy of
- 					   iwl_ucode.ver */
+ 	spin_unlock_irqrestore(&il->lock, flags);
  
--	struct fw_img ucode_rt;
--	struct fw_img ucode_init;
--	struct fw_img ucode_wowlan;
--
--	enum iwlagn_ucode_type ucode_type;
-+	enum iwl_ucode_type ucode_type;
- 	char firmware_name[25];
+@@ -679,7 +679,7 @@ void il4965_txq_ctx_reset(struct il_priv *il)
+ 	il4965_txq_set_sched(il, 0);
  
- 	struct iwl_rxon_context contexts[NUM_IWL_RXON_CTX];
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 34b817f..1ecdd1c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -207,12 +207,34 @@ struct iwl_trans_ops {
- #endif
- };
+ 	/* Tell NIC where to find the "keep warm" buffer */
+-	il_write_direct32(il, FH_KW_MEM_ADDR_REG, il->kw.dma >> 4);
++	il_wr(il, FH_KW_MEM_ADDR_REG, il->kw.dma >> 4);
  
-+/* one for each uCode image (inst/data, boot/init/runtime) */
-+struct fw_desc {
-+	dma_addr_t p_addr;	/* hardware address */
-+	void *v_addr;		/* software address */
-+	u32 len;		/* size in bytes */
-+};
-+
-+struct fw_img {
-+	struct fw_desc code;	/* firmware code image */
-+	struct fw_desc data;	/* firmware data image */
-+};
-+
-+enum iwl_ucode_type {
-+	IWL_UCODE_NONE,
-+	IWL_UCODE_REGULAR,
-+	IWL_UCODE_INIT,
-+	IWL_UCODE_WOWLAN,
-+};
-+
- /**
-  * struct iwl_trans - transport common data
-  * @ops - pointer to iwl_trans_ops
-  * @shrd - pointer to iwl_shared which holds shared data from the upper layer
-  * @hcmd_lock: protects HCMD
-  * @ucode_write_complete: indicates that the ucode has been copied.
-+ * @ucode_rt: run time ucode image
-+ * @ucode_init: init ucode image
-+ * @ucode_wowlan: wake on wireless ucode image (optional)
+ 	spin_unlock_irqrestore(&il->lock, flags);
+ 
+@@ -707,14 +707,14 @@ void il4965_txq_ctx_stop(struct il_priv *il)
+ 
+ 	/* Stop each Tx DMA channel, and wait for it to be idle */
+ 	for (ch = 0; ch < il->hw_params.dma_chnl_num; ch++) {
+-		il_write_direct32(il,
++		il_wr(il,
+ 				FH_TCSR_CHNL_TX_CONFIG_REG(ch), 0x0);
+-		if (il_poll_direct_bit(il, FH_TSSR_TX_STATUS_REG,
++		if (il_poll_bit(il, FH_TSSR_TX_STATUS_REG,
+ 				    FH_TSSR_TX_STATUS_REG_MSK_CHNL_IDLE(ch),
+ 				    1000))
+ 			IL_ERR("Failing on timeout while stopping"
+ 			    " DMA channel %d [0x%08x]", ch,
+-			    il_read_direct32(il,
++			    il_rd(il,
+ 					FH_TSSR_TX_STATUS_REG));
+ 	}
+ 	spin_unlock_irqrestore(&il->lock, flags);
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-ucode.c b/drivers/net/wireless/iwlegacy/iwl-4965-ucode.c
+index 4f0e6fe..bb0b7f5 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-4965-ucode.c
++++ b/drivers/net/wireless/iwlegacy/iwl-4965-ucode.c
+@@ -61,7 +61,7 @@ il4965_verify_inst_sparse(struct il_priv *il, __le32 *image, u32 len)
+ 		/* read data comes through single port, auto-incr addr */
+ 		/* NOTE: Use the debugless read so we don't flood kernel log
+ 		 * if IL_DL_IO is set */
+-		il_write_direct32(il, HBUS_TARG_MEM_RADDR,
++		il_wr(il, HBUS_TARG_MEM_RADDR,
+ 			i + IWL4965_RTC_INST_LOWER_BOUND);
+ 		val = _il_rd(il, HBUS_TARG_MEM_RDAT);
+ 		if (val != le32_to_cpu(*image)) {
+@@ -89,7 +89,7 @@ static int il4965_verify_inst_full(struct il_priv *il, __le32 *image,
+ 
+ 	D_INFO("ucode inst image size is %u\n", len);
+ 
+-	il_write_direct32(il, HBUS_TARG_MEM_RADDR,
++	il_wr(il, HBUS_TARG_MEM_RADDR,
+ 			   IWL4965_RTC_INST_LOWER_BOUND);
+ 
+ 	errcnt = 0;
+diff --git a/drivers/net/wireless/iwlegacy/iwl-csr.h b/drivers/net/wireless/iwlegacy/iwl-csr.h
+index faffb8e..c00ec35 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-csr.h
++++ b/drivers/net/wireless/iwlegacy/iwl-csr.h
+@@ -72,7 +72,7 @@
+  *
+  * Use _il_wr() and _il_rd() family to access these registers;
+  * these provide simple PCI bus access, without waking up the MAC.
+- * Do not use il_write_direct32() family for these registers;
++ * Do not use il_wr() family for these registers;
+  * no need to "grab nic access" via CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ.
+  * The MAC (uCode processor, etc.) does not need to be powered up for accessing
+  * the CSR registers.
+@@ -368,7 +368,7 @@
+  * to indirectly access device's internal memory or registers that
+  * may be powered-down.
+  *
+- * Use il_write_direct32()/il_read_direct32() family
++ * Use il_wr()/il_rd() family
+  * for these registers;
+  * host must "grab nic access" via CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ
+  * to make sure the MAC (uCode processor, etc.) is powered up for accessing
+diff --git a/drivers/net/wireless/iwlegacy/iwl-io.h b/drivers/net/wireless/iwlegacy/iwl-io.h
+index ecf799d..f435942 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-io.h
++++ b/drivers/net/wireless/iwlegacy/iwl-io.h
+@@ -144,7 +144,7 @@ static inline void _il_release_nic_access(struct il_priv *il)
+ 			CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+ }
+ 
+-static inline u32 il_read_direct32(struct il_priv *il, u32 reg)
++static inline u32 il_rd(struct il_priv *il, u32 reg)
+ {
+ 	u32 value;
+ 	unsigned long reg_flags;
+@@ -159,7 +159,7 @@ static inline u32 il_read_direct32(struct il_priv *il, u32 reg)
+ }
+ 
+ static inline void
+-il_write_direct32(struct il_priv *il, u32 reg, u32 value)
++il_wr(struct il_priv *il, u32 reg, u32 value)
+ {
+ 	unsigned long reg_flags;
+ 
+@@ -178,17 +178,17 @@ static inline void il_write_reg_buf(struct il_priv *il,
+ 
+ 	if ((il != NULL) && (values != NULL)) {
+ 		for (; 0 < len; len -= count, reg += count, values++)
+-			il_write_direct32(il, reg, *values);
++			il_wr(il, reg, *values);
+ 	}
+ }
+ 
+-static inline int _il_poll_direct_bit(struct il_priv *il, u32 addr,
++static inline int il_poll_bit(struct il_priv *il, u32 addr,
+ 				       u32 mask, int timeout)
+ {
+ 	int t = 0;
+ 
+ 	do {
+-		if ((il_read_direct32(il, addr) & mask) == mask)
++		if ((il_rd(il, addr) & mask) == mask)
+ 			return t;
+ 		udelay(IL_POLL_INTERVAL);
+ 		t += IL_POLL_INTERVAL;
+@@ -196,7 +196,6 @@ static inline int _il_poll_direct_bit(struct il_priv *il, u32 addr,
+ 
+ 	return -ETIMEDOUT;
+ }
+-#define il_poll_direct_bit _il_poll_direct_bit
+ 
+ static inline u32 _il_read_prph(struct il_priv *il, u32 reg)
+ {
+diff --git a/drivers/net/wireless/iwlegacy/iwl-rx.c b/drivers/net/wireless/iwlegacy/iwl-rx.c
+index e481ca8..b2ec2a2 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-rx.c
++++ b/drivers/net/wireless/iwlegacy/iwl-rx.c
+@@ -150,14 +150,14 @@ il_rx_queue_update_write_ptr(struct il_priv *il,
+ 		}
+ 
+ 		q->write_actual = (q->write & ~0x7);
+-		il_write_direct32(il, rx_wrt_ptr_reg,
++		il_wr(il, rx_wrt_ptr_reg,
+ 				q->write_actual);
+ 
+ 	/* Else device is assumed to be awake */
+ 	} else {
+ 		/* Device expects a multiple of 8 */
+ 		q->write_actual = (q->write & ~0x7);
+-		il_write_direct32(il, rx_wrt_ptr_reg,
++		il_wr(il, rx_wrt_ptr_reg,
+ 			q->write_actual);
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlegacy/iwl-tx.c b/drivers/net/wireless/iwlegacy/iwl-tx.c
+index 6b5e652..fa23c98 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-tx.c
++++ b/drivers/net/wireless/iwlegacy/iwl-tx.c
+@@ -66,7 +66,7 @@ il_txq_update_write_ptr(struct il_priv *il, struct il_tx_queue *txq)
+ 			return;
+ 		}
+ 
+-		il_write_direct32(il, HBUS_TARG_WRPTR,
++		il_wr(il, HBUS_TARG_WRPTR,
+ 				txq->q.write_ptr | (txq_id << 8));
+ 
+ 		/*
+diff --git a/drivers/net/wireless/iwlegacy/iwl3945-base.c b/drivers/net/wireless/iwlegacy/iwl3945-base.c
+index d45e9f5..a0b5a74 100644
+--- a/drivers/net/wireless/iwlegacy/iwl3945-base.c
++++ b/drivers/net/wireless/iwlegacy/iwl3945-base.c
+@@ -1520,7 +1520,7 @@ static void il3945_irq_tasklet(struct il_priv *il)
+ 		il->isr_stats.tx++;
+ 
+ 		_il_wr(il, CSR_FH_INT_STATUS, (1 << 6));
+-		il_write_direct32(il, FH39_TCSR_CREDIT
++		il_wr(il, FH39_TCSR_CREDIT
+ 					(FH39_SRVC_CHNL), 0x0);
+ 		handled |= CSR_INT_BIT_FH_TX;
+ 	}
+@@ -1698,7 +1698,7 @@ static int il3945_verify_inst_full(struct il_priv *il, __le32 *image, u32 len)
+ 
+ 	D_INFO("ucode inst image size is %u\n", len);
+ 
+-	il_write_direct32(il, HBUS_TARG_MEM_RADDR,
++	il_wr(il, HBUS_TARG_MEM_RADDR,
+ 			       IWL39_RTC_INST_LOWER_BOUND);
+ 
+ 	errcnt = 0;
+@@ -1745,7 +1745,7 @@ static int il3945_verify_inst_sparse(struct il_priv *il, __le32 *image, u32 len)
+ 		/* read data comes through single port, auto-incr addr */
+ 		/* NOTE: Use the debugless read so we don't flood kernel log
+ 		 * if IL_DL_IO is set */
+-		il_write_direct32(il, HBUS_TARG_MEM_RADDR,
++		il_wr(il, HBUS_TARG_MEM_RADDR,
+ 			i + IWL39_RTC_INST_LOWER_BOUND);
+ 		val = _il_rd(il, HBUS_TARG_MEM_RDAT);
+ 		if (val != le32_to_cpu(*image)) {
+diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
+index f4eb037..b0668ea 100644
+--- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
++++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
+@@ -416,7 +416,7 @@ int il4965_hw_tx_queue_init(struct il_priv *il,
+ 	int txq_id = txq->q.id;
+ 
+ 	/* Circular buffer (TFD queue in DRAM) physical base address */
+-	il_write_direct32(il, FH_MEM_CBBC_QUEUE(txq_id),
++	il_wr(il, FH_MEM_CBBC_QUEUE(txq_id),
+ 			     txq->q.dma_addr >> 8);
+ 
+ 	return 0;
+@@ -548,13 +548,13 @@ static void il4965_rx_card_state_notif(struct il_priv *il,
+ 		_il_wr(il, CSR_UCODE_DRV_GP1_SET,
+ 			    CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED);
+ 
+-		il_write_direct32(il, HBUS_TARG_MBX_C,
++		il_wr(il, HBUS_TARG_MBX_C,
+ 					HBUS_TARG_MBX_C_REG_BIT_CMD_BLOCKED);
+ 
+ 		if (!(flags & RXON_CARD_DISABLED)) {
+ 			_il_wr(il, CSR_UCODE_DRV_GP1_CLR,
+ 				    CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED);
+-			il_write_direct32(il, HBUS_TARG_MBX_C,
++			il_wr(il, HBUS_TARG_MBX_C,
+ 					HBUS_TARG_MBX_C_REG_BIT_CMD_BLOCKED);
+ 		}
+ 	}
+@@ -1639,14 +1639,14 @@ static int il4965_alive_notify(struct il_priv *il)
+ 
+ 	/* Enable DMA channel */
+ 	for (chan = 0; chan < FH49_TCSR_CHNL_NUM ; chan++)
+-		il_write_direct32(il,
++		il_wr(il,
+ 				FH_TCSR_CHNL_TX_CONFIG_REG(chan),
+ 				FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE |
+ 				FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE);
+ 
+ 	/* Update FH chicken bits */
+-	reg_val = il_read_direct32(il, FH_TX_CHICKEN_BITS_REG);
+-	il_write_direct32(il, FH_TX_CHICKEN_BITS_REG,
++	reg_val = il_rd(il, FH_TX_CHICKEN_BITS_REG);
++	il_wr(il, FH_TX_CHICKEN_BITS_REG,
+ 			   reg_val | FH_TX_CHICKEN_BITS_SCD_AUTO_RETRY_EN);
+ 
+ 	/* Disable chain mode for all queues */
+@@ -1657,7 +1657,7 @@ static int il4965_alive_notify(struct il_priv *il)
+ 
+ 		/* TFD circular buffer read/write indexes */
+ 		il_write_prph(il, IWL49_SCD_QUEUE_RDPTR(i), 0);
+-		il_write_direct32(il, HBUS_TARG_WRPTR, 0 | (i << 8));
++		il_wr(il, HBUS_TARG_WRPTR, 0 | (i << 8));
+ 
+ 		/* Max Tx Window size for Scheduler-ACK mode */
+ 		il_write_targ_mem(il, il->scd_base_addr +
+@@ -2731,7 +2731,7 @@ static void il4965_init_hw_rates(struct il_priv *il,
   */
- struct iwl_trans {
- 	const struct iwl_trans_ops *ops;
-@@ -220,6 +242,9 @@ struct iwl_trans {
- 	spinlock_t hcmd_lock;
- 
- 	u8 ucode_write_complete;	/* the image write is complete */
-+	struct fw_img ucode_rt;
-+	struct fw_img ucode_init;
-+	struct fw_img ucode_wowlan;
- 
- 	/* pointer to trans specific struct */
- 	/*Ensure that this pointer will always be aligned to sizeof pointer */
-@@ -351,4 +376,8 @@ static inline int iwl_trans_resume(struct iwl_trans *trans)
- ******************************************************/
- extern const struct iwl_trans_ops trans_ops_pcie;
- 
-+int iwl_alloc_fw_desc(struct iwl_bus *bus, struct fw_desc *desc,
-+		      const void *data, size_t len);
-+void iwl_dealloc_ucode(struct iwl_trans *trans);
-+
- #endif /* __iwl_trans_h__ */
+ void il4965_set_wr_ptrs(struct il_priv *il, int txq_id, u32 index)
+ {
+-	il_write_direct32(il, HBUS_TARG_WRPTR,
++	il_wr(il, HBUS_TARG_WRPTR,
+ 			     (index & 0xff) | (txq_id << 8));
+ 	il_write_prph(il, IWL49_SCD_QUEUE_RDPTR(txq_id), index);
+ }
 -- 
-1.7.0.4
+1.7.1
 
