@@ -1,36 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:37788 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751512Ab1KPI11 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 03:27:27 -0500
-Received: by yenq3 with SMTP id q3so1653633yen.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 00:27:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAA93jw56rVGCJfx+7niRJ0whUk3c1H8o228dkOTcoi5agXZF_A@mail.gmail.com>
-References: <1321371888-26897-1-git-send-email-patrick.kelle81@gmail.com>
-	<CAA93jw7nWHnCnT48RJ00+Zxq9CFuCzhkeh=+7h+DqvYH2T7W1Q@mail.gmail.com>
-	<1321384334.3975.2.camel@jlt3.sipsolutions.net>
-	<CAA93jw56rVGCJfx+7niRJ0whUk3c1H8o228dkOTcoi5agXZF_A@mail.gmail.com>
-Date: Wed, 16 Nov 2011 09:27:26 +0100
-Message-ID: <CAGXE3d8orQLS4prLhV9rhANZszry0-FAOPHygukZ2mdBa3Tn0g@mail.gmail.com> (sfid-20111116_092730_752772_C85805CB)
-Subject: Re: [PATCH] minstrel_ht: Remove unused function parameters
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Dave Taht <dave.taht@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Patrick Kelle <patrick.kelle81@gmail.com>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:14460 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756675Ab1KRIWg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 03:22:36 -0500
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAI8Mank015853
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 03:22:36 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 49/77] iwlegacy: rename module name
+Date: Fri, 18 Nov 2011 09:22:11 +0100
+Message-Id: <1321604559-10707-49-git-send-email-sgruszka@redhat.com> (sfid-20111118_092242_427759_DCFFDD07)
+In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 15, 2011 at 8:29 PM, Dave Taht <dave.taht@gmail.com> wrote:
-> what was the intent of parameter being removed in this patch series,
-> originally, then?
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/Makefile |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-Removing _unused_ function parameters from internal minstrel_ht functions
-looks like a useful cleanup to me :) and might even help the compiler to
-generate better code ...
+diff --git a/drivers/net/wireless/iwlegacy/Makefile b/drivers/net/wireless/iwlegacy/Makefile
+index 413213b..7421841 100644
+--- a/drivers/net/wireless/iwlegacy/Makefile
++++ b/drivers/net/wireless/iwlegacy/Makefile
+@@ -1,8 +1,8 @@
+-obj-$(CONFIG_IWLEGACY)	+= iwl-legacy.o
+-iwl-legacy-objs 		:= common.o
+-iwl-legacy-$(CONFIG_IWLEGACY_DEBUGFS) += iwl-debugfs.o
++obj-$(CONFIG_IWLEGACY)	+= iwlegacy.o
++iwlegacy-objs 		:= common.o
++iwlegacy-$(CONFIG_IWLEGACY_DEBUGFS) += iwl-debugfs.o
+ 
+-iwl-legacy-objs += $(iwl-legacy-m)
++iwlegacy-objs += $(iwlegacy-m)
+ 
+ # 4965
+ obj-$(CONFIG_IWL4965)	+= iwl4965.o
+-- 
+1.7.1
 
-Helmut
