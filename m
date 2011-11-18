@@ -1,90 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:37648 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752569Ab1KZIhh (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:39853 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751156Ab1KRT7e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Nov 2011 03:37:37 -0500
-Received: by vbbfc26 with SMTP id fc26so2672045vbb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Nov 2011 00:37:36 -0800 (PST)
+	Fri, 18 Nov 2011 14:59:34 -0500
+Received: by fagn18 with SMTP id n18so4730719fag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 11:59:33 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1322246431-10825-2-git-send-email-mickflemm@gmail.com>
-References: <1322246431-10825-1-git-send-email-mickflemm@gmail.com>
-	<1322246431-10825-2-git-send-email-mickflemm@gmail.com>
-Date: Sat, 26 Nov 2011 16:37:36 +0800
-Message-ID: <CAJ-Vmom6LyS173ZgH_6kODx5pmG0k_8CCgBKmCPFd_8=vwiJPw@mail.gmail.com> (sfid-20111126_093740_327904_CE004E93)
-Subject: Re: [PATCH v2 01/12] ath5k: Switch from read-and-clear to
- write-to-clear method when handling PISR/SISR registers
-From: Adrian Chadd <adrian@freebsd.org>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	nbd@openwrt.org, jirislaby@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1321645446-22527-3-git-send-email-hauke@hauke-m.de>
+References: <1321645446-22527-1-git-send-email-hauke@hauke-m.de> <1321645446-22527-3-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Fri, 18 Nov 2011 11:59:12 -0800
+Message-ID: <CAB=NE6Va3Hj++skXUVzvXWCRAoDuqs7rj3i+Ype6918CLyf8sQ@mail.gmail.com> (sfid-20111118_205937_154462_404E622F)
+Subject: Re: [PATCH 3/3] compat-wireless: fetch crc8.c and cordic.c from kernel
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, Nov 18, 2011 at 11:44 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> crc8.c and cordic.c are not provided by compat any more, now the
+> generation script will fetch them from the kernel image.
+> They are used in the build process only when there is not version of
+> this library already in the kernel.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Review #2:
+This has the benefit of allowing us to pull the code but that also
+means less code dumped into compat. As I see it I want it to be the
+other way around, more stuff moved to compat.git given that this means
+others can make more use of a general compatibility framework. If
+compat-wireless itself becomes more of a compat-kernel, which I'm
+happy to do but I think we'd need more subsystem developers willing to
+do this, then I see the benefit of sucking in the code but for now I
+see more gains the other way around. But perhaps there are some
+benefits I may be missing?
 
-One thing that I discovered whilst debugging some silly races in
-FreeBSD was that the update of the txq active mask wasn't done
-atomically.
-
-Ie, when you check this:
-
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1689,7 +1689,7 @@ ath5k_tasklet_tx(unsigned long data)
-       struct ath5k_hw *ah = (void *)data;
-
-       for (i = 0; i < AR5K_NUM_TX_QUEUES; i++)
--               if (ah->txqs[i].setup && (ah->ah_txq_isr & BIT(i)))
-+               if (ah->txqs[i].setup && (ah->ah_txq_isr_txok_all & BIT(i)))
-                       ath5k_tx_processq(ah, &ah->txqs[i]);
-
-The way that the original code did it was:
-
-* update the HAL TX mask bits inside the HAL getisr routine, so it
-would just update the HAL idea of txqactive;
-* Then, ath_hal_gettxintrtxqs() would pass back to the driver the set
-of txq bits currently active, and reset those that are active (with a
-mask, so you can read only a few)
-* the ath_intr() routine would simply schedule a tasklet call when a
-TX interrupt came in;
-* .. and then the TX completion tasklet would call
-ath_hal_gettxintrtxqs() for each task bit to see if it needed
-servicing.
-
-Now, in previous generations of hardware/kernel, this may not have
-raced - ath_intr() may have been a "fast" interrupt handler and thus
-would occur atomically on a single CPU - so you don't have any races.
-But these days, ath_intr() is just a software interrupt and can occur
-in parallel with another CPU executing the completion handler.
-
-So since there was no locking around the TXQ bit updates and clear, it
-was very possible that a very busy TX device would "miss" TX queue
-notifications, as the CPU running the TX completion would
-read-and-clear the TXQ active bits in the HAL, whilst another CPU was
-running ath_intr() which was trying to do a read/modify/write of those
-same bits.
-
-I _think_ felix fixed this in ath9k by hiding this stuff behind the
-PCU lock. I've also fixed it in FreeBSD. I think it's worth
-re-evaluating what is going on in ath5k and maybe add some similar
-locking.
-
-Oh wait. Where are you clearing these bits? It doesn't look like
-you're even clearing the ah_txq_isr bits in the most recent ath5k tree
-I have here. This means you're likely not missing events; but you're
-likely always scanning those queues. Making this code a bit pointless.
-:)
-
-Anyway, I'd tidy this all up in a subsequent patchset. Get the
-interrupt changes in, then figure out how to properly lock the
-interrupt TXQ bit set path (the isr) and the clear path (once you've
-tested whether the TXQ needed servicing and then cleared the bit.)
-
-HTH,
-
-
-adrian
+  Luis
