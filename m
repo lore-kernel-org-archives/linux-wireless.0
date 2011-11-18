@@ -1,382 +1,914 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35147 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751561Ab1KQVyu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 16:54:50 -0500
-From: greearb@candelatech.com
+Received: from mx1.redhat.com ([209.132.183.28]:27588 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756792Ab1KRIWo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 03:22:44 -0500
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAI8Mim0015876
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 03:22:44 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v9 1/2] wireless:  Support ht-capabilities over-rides.
-Date: Thu, 17 Nov 2011 13:54:43 -0800
-Message-Id: <1321566884-31757-1-git-send-email-greearb@candelatech.com> (sfid-20111117_225454_269234_8D9DA167)
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 53/77] iwlegacy: rename iwl-csr.h to csr.h
+Date: Fri, 18 Nov 2011 09:22:15 +0100
+Message-Id: <1321604559-10707-53-git-send-email-sgruszka@redhat.com> (sfid-20111118_092250_733314_A9D73BB5)
+In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
-
-This allows users to disable features such as HT, HT40,
-and to modify the MCS, AMPDU, and AMSDU settings for
-drivers that support it.
-
-The MCS, AMPDU, and AMSDU features that may be disabled are
-are reported in the phy-info netlink message as a mask.
-
-Attemping to disable features that are not supported will
-take no affect, but will not return errors.  This is to aid
-backwards compatibility in user-space apps that may not be
-clever enough to deal with parsing the the capabilities mask.
-
-This patch only enables the infrastructure.  An additional
-patch will enable the feature in mac80211.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
-:100644 100644 f9261c2... 0df2062... M	include/linux/nl80211.h
-:100644 100644 8d7ba09... 4f6d131... M	include/net/cfg80211.h
-:100644 100644 1c7d4df... fb08c28... M	net/wireless/core.h
-:100644 100644 6c1bafd... 438dfc1... M	net/wireless/mlme.c
-:100644 100644 6bc7c4b... aa98ec2... M	net/wireless/nl80211.c
-:100644 100644 0acfdc9... f0c900c... M	net/wireless/sme.c
- include/linux/nl80211.h |   14 ++++++++++++++
- include/net/cfg80211.h  |   27 +++++++++++++++++++++++++++
- net/wireless/core.h     |   10 ++++++++--
- net/wireless/mlme.c     |   37 ++++++++++++++++++++++++++++++++++---
- net/wireless/nl80211.c  |   44 +++++++++++++++++++++++++++++++++++++++++++-
- net/wireless/sme.c      |    7 ++++++-
- 6 files changed, 132 insertions(+), 7 deletions(-)
+ drivers/net/wireless/iwlegacy/3945.h    |    1 -
+ drivers/net/wireless/iwlegacy/csr.h     |  422 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlegacy/iwl-csr.h |  422 -------------------------------
+ drivers/net/wireless/iwlegacy/iwl-dev.h |    2 +-
+ 4 files changed, 423 insertions(+), 424 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlegacy/csr.h
+ delete mode 100644 drivers/net/wireless/iwlegacy/iwl-csr.h
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index f9261c2..0df2062 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1169,6 +1169,17 @@ enum nl80211_commands {
-  * @NL80211_ATTR_PROBE_RESP: Probe Response template data. Contains the entire
-  *	probe-response frame. The DA field in the 802.11 header is zero-ed out,
-  *	to be filled by the FW.
-+ * @NL80211_ATTR_DISABLE_HT:  Force HT capable interfaces to disable
-+ *      this feature.  Currently, only supported in mac80211 drivers.
-+ * @NL80211_ATTR_HT_CAPABILITY_MASK: Specify which bits of the
-+ *      ATTR_HT_CAPABILITY to which attention should be paid.
-+ *      Currently, only mac80211 NICs support this feature.
-+ *      The values that may be configured are:
-+ *       MCS rates, MAX-AMSDU, HT-20-40 and HT_CAP_SGI_40
-+ *       AMPDU density and AMPDU factor.
-+ *      All values are treated as suggestions and may be ignored
-+ *      by the driver as required.  The actual values may be seen in
-+ *      the station debugfs ht_caps file.
-  *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -1408,6 +1419,9 @@ enum nl80211_attrs {
+diff --git a/drivers/net/wireless/iwlegacy/3945.h b/drivers/net/wireless/iwlegacy/3945.h
+index 7559a5e..e89ca5d 100644
+--- a/drivers/net/wireless/iwlegacy/3945.h
++++ b/drivers/net/wireless/iwlegacy/3945.h
+@@ -34,7 +34,6 @@
+ /* Hardware specific file defines the PCI IDs table for that hardware module */
+ extern const struct pci_device_id il3945_hw_card_ids[];
  
- 	NL80211_ATTR_PROBE_RESP,
- 
-+	NL80211_ATTR_DISABLE_HT,
-+	NL80211_ATTR_HT_CAPABILITY_MASK,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8d7ba09..4f6d131 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1044,6 +1044,15 @@ struct cfg80211_auth_request {
- };
- 
- /**
-+ * enum cfg80211_assoc_req_flags - Over-ride default behaviour in association.
+-#include "iwl-csr.h"
+ #include "iwl-prph.h"
+ #include "iwl-debug.h"
+ #include "iwl-power.h"
+diff --git a/drivers/net/wireless/iwlegacy/csr.h b/drivers/net/wireless/iwlegacy/csr.h
+new file mode 100644
+index 0000000..4db0429
+--- /dev/null
++++ b/drivers/net/wireless/iwlegacy/csr.h
+@@ -0,0 +1,422 @@
++/******************************************************************************
 + *
-+ * @ASSOC_REQ_DISABLE_HT:  Disable HT (802.11n)
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2005 - 2011 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
++ * USA
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <ilw@linux.intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2005 - 2011 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *****************************************************************************/
++#ifndef __il_csr_h__
++#define __il_csr_h__
++/*
++ * CSR (control and status registers)
++ *
++ * CSR registers are mapped directly into PCI bus space, and are accessible
++ * whenever platform supplies power to device, even when device is in
++ * low power states due to driver-invoked device resets
++ * (e.g. CSR_RESET_REG_FLAG_SW_RESET) or uCode-driven power-saving modes.
++ *
++ * Use _il_wr() and _il_rd() family to access these registers;
++ * these provide simple PCI bus access, without waking up the MAC.
++ * Do not use il_wr() family for these registers;
++ * no need to "grab nic access" via CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ.
++ * The MAC (uCode processor, etc.) does not need to be powered up for accessing
++ * the CSR registers.
++ *
++ * NOTE:  Device does need to be awake in order to read this memory
++ *        via CSR_EEPROM register
 + */
-+enum cfg80211_assoc_req_flags {
-+	ASSOC_REQ_DISABLE_HT		= BIT(0),
-+};
++#define CSR_BASE    (0x000)
 +
-+/**
-  * struct cfg80211_assoc_request - (Re)Association request data
-  *
-  * This structure provides information needed to complete IEEE 802.11
-@@ -1054,6 +1063,10 @@ struct cfg80211_auth_request {
-  * @use_mfp: Use management frame protection (IEEE 802.11w) in this association
-  * @crypto: crypto settings
-  * @prev_bssid: previous BSSID, if not %NULL use reassociate frame
-+ * @flags:  See &enum cfg80211_assoc_req_flags
-+ * @ht_capa:  HT Capabilities over-rides.  Values set in ht_capa_mask
-+ *   will be used in ht_capa.  Un-supported values will be ignored.
-+ * @ht_capa_mask:  The bits of ht_capa which are to be used.
-  */
- struct cfg80211_assoc_request {
- 	struct cfg80211_bss *bss;
-@@ -1061,6 +1074,9 @@ struct cfg80211_assoc_request {
- 	size_t ie_len;
- 	struct cfg80211_crypto_settings crypto;
- 	bool use_mfp;
-+	u32 flags;
-+	struct ieee80211_ht_cap ht_capa;
-+	struct ieee80211_ht_cap ht_capa_mask;
- };
- 
- /**
-@@ -1159,6 +1175,10 @@ struct cfg80211_ibss_params {
-  * @key_len: length of WEP key for shared key authentication
-  * @key_idx: index of WEP key for shared key authentication
-  * @key: WEP key for shared key authentication
-+ * @flags:  See &enum cfg80211_assoc_req_flags
-+ * @ht_capa:  HT Capabilities over-rides.  Values set in ht_capa_mask
-+ *   will be used in ht_capa.  Un-supported values will be ignored.
-+ * @ht_capa_mask:  The bits of ht_capa which are to be used.
-  */
- struct cfg80211_connect_params {
- 	struct ieee80211_channel *channel;
-@@ -1172,6 +1192,9 @@ struct cfg80211_connect_params {
- 	struct cfg80211_crypto_settings crypto;
- 	const u8 *key;
- 	u8 key_len, key_idx;
-+	u32 flags;
-+	struct ieee80211_ht_cap ht_capa;
-+	struct ieee80211_ht_cap ht_capa_mask;
- };
- 
- /**
-@@ -1934,6 +1957,8 @@ struct wiphy_wowlan_support {
-  * @wowlan: WoWLAN support information
-  *
-  * @ap_sme_capa: AP SME capabilities, flags from &enum nl80211_ap_sme_features.
-+ * @ht_capa_mod_mask:  Specify what ht_cap values can be over-ridden.
-+ *	If null, then none can be over-ridden.
-  */
- struct wiphy {
- 	/* assign these fields before you register the wiphy */
-@@ -2023,6 +2048,8 @@ struct wiphy {
- 	/* dir in debugfs: ieee80211/<wiphyname> */
- 	struct dentry *debugfsdir;
- 
-+	const struct ieee80211_ht_cap *ht_capa_mod_mask;
++#define CSR_HW_IF_CONFIG_REG    (CSR_BASE+0x000) /* hardware interface config */
++#define CSR_INT_COALESCING      (CSR_BASE+0x004) /* accum ints, 32-usec units */
++#define CSR_INT                 (CSR_BASE+0x008) /* host interrupt status/ack */
++#define CSR_INT_MASK            (CSR_BASE+0x00c) /* host interrupt enable */
++#define CSR_FH_INT_STATUS       (CSR_BASE+0x010) /* busmaster int status/ack*/
++#define CSR_GPIO_IN             (CSR_BASE+0x018) /* read external chip pins */
++#define CSR_RESET               (CSR_BASE+0x020) /* busmaster enable, NMI, etc*/
++#define CSR_GP_CNTRL            (CSR_BASE+0x024)
 +
- #ifdef CONFIG_NET_NS
- 	/* the network namespace this phy lives in currently */
- 	struct net *_net;
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 1c7d4df..fb08c28 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -341,13 +341,17 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
- 			  const u8 *bssid, const u8 *prev_bssid,
- 			  const u8 *ssid, int ssid_len,
- 			  const u8 *ie, int ie_len, bool use_mfp,
--			  struct cfg80211_crypto_settings *crypt);
-+			  struct cfg80211_crypto_settings *crypt,
-+			  u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
-+			  struct ieee80211_ht_cap *ht_capa_mask);
- int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
- 			struct net_device *dev, struct ieee80211_channel *chan,
- 			const u8 *bssid, const u8 *prev_bssid,
- 			const u8 *ssid, int ssid_len,
- 			const u8 *ie, int ie_len, bool use_mfp,
--			struct cfg80211_crypto_settings *crypt);
-+			struct cfg80211_crypto_settings *crypt,
-+			u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
-+			struct ieee80211_ht_cap *ht_capa_mask);
- int __cfg80211_mlme_deauth(struct cfg80211_registered_device *rdev,
- 			   struct net_device *dev, const u8 *bssid,
- 			   const u8 *ie, int ie_len, u16 reason,
-@@ -379,6 +383,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 			  bool channel_type_valid, unsigned int wait,
- 			  const u8 *buf, size_t len, bool no_cck,
- 			  bool dont_wait_for_ack, u64 *cookie);
-+void cfg80211_oper_and_ht_capa(struct ieee80211_ht_cap *ht_capa,
-+			       const struct ieee80211_ht_cap *ht_capa_mask);
- 
- /* SME */
- int __cfg80211_connect(struct cfg80211_registered_device *rdev,
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 6c1bafd..438dfc1 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -501,13 +501,32 @@ int cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
- 	return err;
- }
- 
-+/*  Do a logical ht_capa &= ht_capa_mask.  */
-+void cfg80211_oper_and_ht_capa(struct ieee80211_ht_cap *ht_capa,
-+			       const struct ieee80211_ht_cap *ht_capa_mask)
-+{
-+	int i;
-+	u8 *p1, *p2;
-+	if (!ht_capa_mask) {
-+		memset(ht_capa, 0, sizeof(*ht_capa));
-+		return;
-+	}
++/* 2nd byte of CSR_INT_COALESCING, not accessible via _il_wr()! */
++#define CSR_INT_PERIODIC_REG	(CSR_BASE+0x005)
 +
-+	p1 = (u8*)(ht_capa);
-+	p2 = (u8*)(ht_capa_mask);
-+	for (i = 0; i<sizeof(*ht_capa); i++)
-+		p1[i] &= p2[i];
-+}
++/*
++ * Hardware revision info
++ * Bit fields:
++ * 31-8:  Reserved
++ *  7-4:  Type of device:  see CSR_HW_REV_TYPE_xxx definitions
++ *  3-2:  Revision step:  0 = A, 1 = B, 2 = C, 3 = D
++ *  1-0:  "Dash" (-) value, as in A-1, etc.
++ *
++ * NOTE:  Revision step affects calculation of CCK txpower for 4965.
++ * NOTE:  See also CSR_HW_REV_WA_REG (work-around for bug in 4965).
++ */
++#define CSR_HW_REV              (CSR_BASE+0x028)
 +
- int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
- 			  struct net_device *dev,
- 			  struct ieee80211_channel *chan,
- 			  const u8 *bssid, const u8 *prev_bssid,
- 			  const u8 *ssid, int ssid_len,
- 			  const u8 *ie, int ie_len, bool use_mfp,
--			  struct cfg80211_crypto_settings *crypt)
-+			  struct cfg80211_crypto_settings *crypt,
-+			  u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
-+			  struct ieee80211_ht_cap *ht_capa_mask)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_assoc_request req;
-@@ -537,6 +556,15 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
- 	memcpy(&req.crypto, crypt, sizeof(req.crypto));
- 	req.use_mfp = use_mfp;
- 	req.prev_bssid = prev_bssid;
-+	req.flags = assoc_flags;
-+	if (ht_capa)
-+		memcpy(&req.ht_capa, ht_capa, sizeof(req.ht_capa));
-+	if (ht_capa_mask)
-+		memcpy(&req.ht_capa_mask, ht_capa_mask,
-+		       sizeof(req.ht_capa_mask));
-+	cfg80211_oper_and_ht_capa(&req.ht_capa_mask,
-+				  rdev->wiphy.ht_capa_mod_mask);
++/*
++ * EEPROM memory reads
++ *
++ * NOTE:  Device must be awake, initialized via apm_ops.init(),
++ *        in order to read.
++ */
++#define CSR_EEPROM_REG          (CSR_BASE+0x02c)
++#define CSR_EEPROM_GP           (CSR_BASE+0x030)
 +
- 	req.bss = cfg80211_get_bss(&rdev->wiphy, chan, bssid, ssid, ssid_len,
- 				   WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
- 	if (!req.bss) {
-@@ -574,14 +602,17 @@ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
- 			const u8 *bssid, const u8 *prev_bssid,
- 			const u8 *ssid, int ssid_len,
- 			const u8 *ie, int ie_len, bool use_mfp,
--			struct cfg80211_crypto_settings *crypt)
-+			struct cfg80211_crypto_settings *crypt,
-+			u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
-+			struct ieee80211_ht_cap *ht_capa_mask)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	int err;
- 
- 	wdev_lock(wdev);
- 	err = __cfg80211_mlme_assoc(rdev, dev, chan, bssid, prev_bssid,
--				    ssid, ssid_len, ie, ie_len, use_mfp, crypt);
-+				    ssid, ssid_len, ie, ie_len, use_mfp, crypt,
-+				    assoc_flags, ht_capa, ht_capa_mask);
- 	wdev_unlock(wdev);
- 
- 	return err;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 6bc7c4b..aa98ec2 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -199,6 +199,10 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_DONT_WAIT_FOR_ACK] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_PROBE_RESP] = { .type = NLA_BINARY,
- 				      .len = IEEE80211_MAX_DATA_LEN },
-+	[NL80211_ATTR_DISABLE_HT] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_HT_CAPABILITY_MASK] = {
-+		.len = NL80211_HT_CAPABILITY_LEN
-+	},
- };
- 
- /* policy for the key attributes */
-@@ -1025,6 +1029,11 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 
- 	NLA_PUT_U32(msg, NL80211_ATTR_FEATURE_FLAGS, dev->wiphy.features);
- 
-+	if (dev->wiphy.ht_capa_mod_mask)
-+		NLA_PUT(msg, NL80211_ATTR_HT_CAPABILITY_MASK,
-+			sizeof(*dev->wiphy.ht_capa_mod_mask),
-+			dev->wiphy.ht_capa_mod_mask);
++#define CSR_GIO_REG		(CSR_BASE+0x03C)
++#define CSR_GP_UCODE_REG	(CSR_BASE+0x048)
++#define CSR_GP_DRIVER_REG	(CSR_BASE+0x050)
 +
- 	return genlmsg_end(msg, hdr);
++/*
++ * UCODE-DRIVER GP (general purpose) mailbox registers.
++ * SET/CLR registers set/clear bit(s) if "1" is written.
++ */
++#define CSR_UCODE_DRV_GP1       (CSR_BASE+0x054)
++#define CSR_UCODE_DRV_GP1_SET   (CSR_BASE+0x058)
++#define CSR_UCODE_DRV_GP1_CLR   (CSR_BASE+0x05c)
++#define CSR_UCODE_DRV_GP2       (CSR_BASE+0x060)
++
++#define CSR_LED_REG             (CSR_BASE+0x094)
++#define CSR_DRAM_INT_TBL_REG	(CSR_BASE+0x0A0)
++
++/* GIO Chicken Bits (PCI Express bus link power management) */
++#define CSR_GIO_CHICKEN_BITS    (CSR_BASE+0x100)
++
++/* Analog phase-lock-loop configuration  */
++#define CSR_ANA_PLL_CFG         (CSR_BASE+0x20c)
++
++/*
++ * CSR Hardware Revision Workaround Register.  Indicates hardware rev;
++ * "step" determines CCK backoff for txpower calculation.  Used for 4965 only.
++ * See also CSR_HW_REV register.
++ * Bit fields:
++ *  3-2:  0 = A, 1 = B, 2 = C, 3 = D step
++ *  1-0:  "Dash" (-) value, as in C-1, etc.
++ */
++#define CSR_HW_REV_WA_REG		(CSR_BASE+0x22C)
++
++#define CSR_DBG_HPET_MEM_REG		(CSR_BASE+0x240)
++#define CSR_DBG_LINK_PWR_MGMT_REG	(CSR_BASE+0x250)
++
++/* Bits for CSR_HW_IF_CONFIG_REG */
++#define CSR49_HW_IF_CONFIG_REG_BIT_4965_R	(0x00000010)
++#define CSR_HW_IF_CONFIG_REG_MSK_BOARD_VER	(0x00000C00)
++#define CSR_HW_IF_CONFIG_REG_BIT_MAC_SI 	(0x00000100)
++#define CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI	(0x00000200)
++
++#define CSR39_HW_IF_CONFIG_REG_BIT_3945_MB         (0x00000100)
++#define CSR39_HW_IF_CONFIG_REG_BIT_3945_MM         (0x00000200)
++#define CSR39_HW_IF_CONFIG_REG_BIT_SKU_MRC            (0x00000400)
++#define CSR39_HW_IF_CONFIG_REG_BIT_BOARD_TYPE         (0x00000800)
++#define CSR39_HW_IF_CONFIG_REG_BITS_SILICON_TYPE_A    (0x00000000)
++#define CSR39_HW_IF_CONFIG_REG_BITS_SILICON_TYPE_B    (0x00001000)
++
++#define CSR_HW_IF_CONFIG_REG_BIT_HAP_WAKE_L1A	(0x00080000)
++#define CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM	(0x00200000)
++#define CSR_HW_IF_CONFIG_REG_BIT_NIC_READY	(0x00400000) /* PCI_OWN_SEM */
++#define CSR_HW_IF_CONFIG_REG_BIT_NIC_PREPARE_DONE (0x02000000) /* ME_OWN */
++#define CSR_HW_IF_CONFIG_REG_PREPARE		  (0x08000000) /* WAKE_ME */
++
++#define CSR_INT_PERIODIC_DIS			(0x00) /* disable periodic int*/
++#define CSR_INT_PERIODIC_ENA			(0xFF) /* 255*32 usec ~ 8 msec*/
++
++/* interrupt flags in INTA, set by uCode or hardware (e.g. dma),
++ * acknowledged (reset) by host writing "1" to flagged bits. */
++#define CSR_INT_BIT_FH_RX        (1 << 31) /* Rx DMA, cmd responses, FH_INT[17:16] */
++#define CSR_INT_BIT_HW_ERR       (1 << 29) /* DMA hardware error FH_INT[31] */
++#define CSR_INT_BIT_RX_PERIODIC	 (1 << 28) /* Rx periodic */
++#define CSR_INT_BIT_FH_TX        (1 << 27) /* Tx DMA FH_INT[1:0] */
++#define CSR_INT_BIT_SCD          (1 << 26) /* TXQ pointer advanced */
++#define CSR_INT_BIT_SW_ERR       (1 << 25) /* uCode error */
++#define CSR_INT_BIT_RF_KILL      (1 << 7)  /* HW RFKILL switch GP_CNTRL[27] toggled */
++#define CSR_INT_BIT_CT_KILL      (1 << 6)  /* Critical temp (chip too hot) rfkill */
++#define CSR_INT_BIT_SW_RX        (1 << 3)  /* Rx, command responses, 3945 */
++#define CSR_INT_BIT_WAKEUP       (1 << 1)  /* NIC controller waking up (pwr mgmt) */
++#define CSR_INT_BIT_ALIVE        (1 << 0)  /* uCode interrupts once it initializes */
++
++#define CSR_INI_SET_MASK	(CSR_INT_BIT_FH_RX   | \
++				 CSR_INT_BIT_HW_ERR  | \
++				 CSR_INT_BIT_FH_TX   | \
++				 CSR_INT_BIT_SW_ERR  | \
++				 CSR_INT_BIT_RF_KILL | \
++				 CSR_INT_BIT_SW_RX   | \
++				 CSR_INT_BIT_WAKEUP  | \
++				 CSR_INT_BIT_ALIVE)
++
++/* interrupt flags in FH (flow handler) (PCI busmaster DMA) */
++#define CSR_FH_INT_BIT_ERR       (1 << 31) /* Error */
++#define CSR_FH_INT_BIT_HI_PRIOR  (1 << 30) /* High priority Rx, bypass coalescing */
++#define CSR39_FH_INT_BIT_RX_CHNL2  (1 << 18) /* Rx channel 2 (3945 only) */
++#define CSR_FH_INT_BIT_RX_CHNL1  (1 << 17) /* Rx channel 1 */
++#define CSR_FH_INT_BIT_RX_CHNL0  (1 << 16) /* Rx channel 0 */
++#define CSR39_FH_INT_BIT_TX_CHNL6  (1 << 6)  /* Tx channel 6 (3945 only) */
++#define CSR_FH_INT_BIT_TX_CHNL1  (1 << 1)  /* Tx channel 1 */
++#define CSR_FH_INT_BIT_TX_CHNL0  (1 << 0)  /* Tx channel 0 */
++
++#define CSR39_FH_INT_RX_MASK	(CSR_FH_INT_BIT_HI_PRIOR | \
++				 CSR39_FH_INT_BIT_RX_CHNL2 | \
++				 CSR_FH_INT_BIT_RX_CHNL1 | \
++				 CSR_FH_INT_BIT_RX_CHNL0)
++
++
++#define CSR39_FH_INT_TX_MASK	(CSR39_FH_INT_BIT_TX_CHNL6 | \
++				 CSR_FH_INT_BIT_TX_CHNL1 | \
++				 CSR_FH_INT_BIT_TX_CHNL0)
++
++#define CSR49_FH_INT_RX_MASK	(CSR_FH_INT_BIT_HI_PRIOR | \
++				 CSR_FH_INT_BIT_RX_CHNL1 | \
++				 CSR_FH_INT_BIT_RX_CHNL0)
++
++#define CSR49_FH_INT_TX_MASK	(CSR_FH_INT_BIT_TX_CHNL1 | \
++				 CSR_FH_INT_BIT_TX_CHNL0)
++
++/* GPIO */
++#define CSR_GPIO_IN_BIT_AUX_POWER                   (0x00000200)
++#define CSR_GPIO_IN_VAL_VAUX_PWR_SRC                (0x00000000)
++#define CSR_GPIO_IN_VAL_VMAIN_PWR_SRC               (0x00000200)
++
++/* RESET */
++#define CSR_RESET_REG_FLAG_NEVO_RESET                (0x00000001)
++#define CSR_RESET_REG_FLAG_FORCE_NMI                 (0x00000002)
++#define CSR_RESET_REG_FLAG_SW_RESET                  (0x00000080)
++#define CSR_RESET_REG_FLAG_MASTER_DISABLED           (0x00000100)
++#define CSR_RESET_REG_FLAG_STOP_MASTER               (0x00000200)
++#define CSR_RESET_LINK_PWR_MGMT_DISABLED             (0x80000000)
++
++/*
++ * GP (general purpose) CONTROL REGISTER
++ * Bit fields:
++ *    27:  HW_RF_KILL_SW
++ *         Indicates state of (platform's) hardware RF-Kill switch
++ * 26-24:  POWER_SAVE_TYPE
++ *         Indicates current power-saving mode:
++ *         000 -- No power saving
++ *         001 -- MAC power-down
++ *         010 -- PHY (radio) power-down
++ *         011 -- Error
++ *   9-6:  SYS_CONFIG
++ *         Indicates current system configuration, reflecting pins on chip
++ *         as forced high/low by device circuit board.
++ *     4:  GOING_TO_SLEEP
++ *         Indicates MAC is entering a power-saving sleep power-down.
++ *         Not a good time to access device-internal resources.
++ *     3:  MAC_ACCESS_REQ
++ *         Host sets this to request and maintain MAC wakeup, to allow host
++ *         access to device-internal resources.  Host must wait for
++ *         MAC_CLOCK_READY (and !GOING_TO_SLEEP) before accessing non-CSR
++ *         device registers.
++ *     2:  INIT_DONE
++ *         Host sets this to put device into fully operational D0 power mode.
++ *         Host resets this after SW_RESET to put device into low power mode.
++ *     0:  MAC_CLOCK_READY
++ *         Indicates MAC (ucode processor, etc.) is powered up and can run.
++ *         Internal resources are accessible.
++ *         NOTE:  This does not indicate that the processor is actually running.
++ *         NOTE:  This does not indicate that 4965 or 3945 has completed
++ *                init or post-power-down restore of internal SRAM memory.
++ *                Use CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP as indication that
++ *                SRAM is restored and uCode is in normal operation mode.
++ *                Later devices (5xxx/6xxx/1xxx) use non-volatile SRAM, and
++ *                do not need to save/restore it.
++ *         NOTE:  After device reset, this bit remains "0" until host sets
++ *                INIT_DONE
++ */
++#define CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY        (0x00000001)
++#define CSR_GP_CNTRL_REG_FLAG_INIT_DONE              (0x00000004)
++#define CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ         (0x00000008)
++#define CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP         (0x00000010)
++
++#define CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN           (0x00000001)
++
++#define CSR_GP_CNTRL_REG_MSK_POWER_SAVE_TYPE         (0x07000000)
++#define CSR_GP_CNTRL_REG_FLAG_MAC_POWER_SAVE         (0x04000000)
++#define CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW          (0x08000000)
++
++
++/* EEPROM REG */
++#define CSR_EEPROM_REG_READ_VALID_MSK	(0x00000001)
++#define CSR_EEPROM_REG_BIT_CMD		(0x00000002)
++#define CSR_EEPROM_REG_MSK_ADDR		(0x0000FFFC)
++#define CSR_EEPROM_REG_MSK_DATA		(0xFFFF0000)
++
++/* EEPROM GP */
++#define CSR_EEPROM_GP_VALID_MSK		(0x00000007) /* signature */
++#define CSR_EEPROM_GP_IF_OWNER_MSK	(0x00000180)
++#define CSR_EEPROM_GP_GOOD_SIG_EEP_LESS_THAN_4K		(0x00000002)
++#define CSR_EEPROM_GP_GOOD_SIG_EEP_MORE_THAN_4K		(0x00000004)
++
++/* GP REG */
++#define CSR_GP_REG_POWER_SAVE_STATUS_MSK            (0x03000000) /* bit 24/25 */
++#define CSR_GP_REG_NO_POWER_SAVE            (0x00000000)
++#define CSR_GP_REG_MAC_POWER_SAVE           (0x01000000)
++#define CSR_GP_REG_PHY_POWER_SAVE           (0x02000000)
++#define CSR_GP_REG_POWER_SAVE_ERROR         (0x03000000)
++
++
++/* CSR GIO */
++#define CSR_GIO_REG_VAL_L0S_ENABLED	(0x00000002)
++
++/*
++ * UCODE-DRIVER GP (general purpose) mailbox register 1
++ * Host driver and uCode write and/or read this register to communicate with
++ * each other.
++ * Bit fields:
++ *     4:  UCODE_DISABLE
++ *         Host sets this to request permanent halt of uCode, same as
++ *         sending CARD_STATE command with "halt" bit set.
++ *     3:  CT_KILL_EXIT
++ *         Host sets this to request exit from CT_KILL state, i.e. host thinks
++ *         device temperature is low enough to continue normal operation.
++ *     2:  CMD_BLOCKED
++ *         Host sets this during RF KILL power-down sequence (HW, SW, CT KILL)
++ *         to release uCode to clear all Tx and command queues, enter
++ *         unassociated mode, and power down.
++ *         NOTE:  Some devices also use HBUS_TARG_MBX_C register for this bit.
++ *     1:  SW_BIT_RFKILL
++ *         Host sets this when issuing CARD_STATE command to request
++ *         device sleep.
++ *     0:  MAC_SLEEP
++ *         uCode sets this when preparing a power-saving power-down.
++ *         uCode resets this when power-up is complete and SRAM is sane.
++ *         NOTE:  3945/4965 saves internal SRAM data to host when powering down,
++ *                and must restore this data after powering back up.
++ *                MAC_SLEEP is the best indication that restore is complete.
++ *                Later devices (5xxx/6xxx/1xxx) use non-volatile SRAM, and
++ *                do not need to save/restore it.
++ */
++#define CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP             (0x00000001)
++#define CSR_UCODE_SW_BIT_RFKILL                     (0x00000002)
++#define CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED           (0x00000004)
++#define CSR_UCODE_DRV_GP1_REG_BIT_CT_KILL_EXIT      (0x00000008)
++
++/* GIO Chicken Bits (PCI Express bus link power management) */
++#define CSR_GIO_CHICKEN_BITS_REG_BIT_L1A_NO_L0S_RX  (0x00800000)
++#define CSR_GIO_CHICKEN_BITS_REG_BIT_DIS_L0S_EXIT_TIMER  (0x20000000)
++
++/* LED */
++#define CSR_LED_BSM_CTRL_MSK (0xFFFFFFDF)
++#define CSR_LED_REG_TRUN_ON (0x78)
++#define CSR_LED_REG_TRUN_OFF (0x38)
++
++/* ANA_PLL */
++#define CSR39_ANA_PLL_CFG_VAL        (0x01000000)
++
++/* HPET MEM debug */
++#define CSR_DBG_HPET_MEM_REG_VAL	(0xFFFF0000)
++
++/* DRAM INT TBL */
++#define CSR_DRAM_INT_TBL_ENABLE		(1 << 31)
++#define CSR_DRAM_INIT_TBL_WRAP_CHECK	(1 << 27)
++
++/*
++ * HBUS (Host-side Bus)
++ *
++ * HBUS registers are mapped directly into PCI bus space, but are used
++ * to indirectly access device's internal memory or registers that
++ * may be powered-down.
++ *
++ * Use il_wr()/il_rd() family
++ * for these registers;
++ * host must "grab nic access" via CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ
++ * to make sure the MAC (uCode processor, etc.) is powered up for accessing
++ * internal resources.
++ *
++ * Do not use _il_wr()/_il_rd() family to access these registers;
++ * these provide only simple PCI bus access, without waking up the MAC.
++ */
++#define HBUS_BASE	(0x400)
++
++/*
++ * Registers for accessing device's internal SRAM memory (e.g. SCD SRAM
++ * structures, error log, event log, verifying uCode load).
++ * First write to address register, then read from or write to data register
++ * to complete the job.  Once the address register is set up, accesses to
++ * data registers auto-increment the address by one dword.
++ * Bit usage for address registers (read or write):
++ *  0-31:  memory address within device
++ */
++#define HBUS_TARG_MEM_RADDR     (HBUS_BASE+0x00c)
++#define HBUS_TARG_MEM_WADDR     (HBUS_BASE+0x010)
++#define HBUS_TARG_MEM_WDAT      (HBUS_BASE+0x018)
++#define HBUS_TARG_MEM_RDAT      (HBUS_BASE+0x01c)
++
++/* Mailbox C, used as workaround alternative to CSR_UCODE_DRV_GP1 mailbox */
++#define HBUS_TARG_MBX_C         (HBUS_BASE+0x030)
++#define HBUS_TARG_MBX_C_REG_BIT_CMD_BLOCKED         (0x00000004)
++
++/*
++ * Registers for accessing device's internal peripheral registers
++ * (e.g. SCD, BSM, etc.).  First write to address register,
++ * then read from or write to data register to complete the job.
++ * Bit usage for address registers (read or write):
++ *  0-15:  register address (offset) within device
++ * 24-25:  (# bytes - 1) to read or write (e.g. 3 for dword)
++ */
++#define HBUS_TARG_PRPH_WADDR    (HBUS_BASE+0x044)
++#define HBUS_TARG_PRPH_RADDR    (HBUS_BASE+0x048)
++#define HBUS_TARG_PRPH_WDAT     (HBUS_BASE+0x04c)
++#define HBUS_TARG_PRPH_RDAT     (HBUS_BASE+0x050)
++
++/*
++ * Per-Tx-queue write pointer (idx, really!)
++ * Indicates idx to next TFD that driver will fill (1 past latest filled).
++ * Bit usage:
++ *  0-7:  queue write idx
++ * 11-8:  queue selector
++ */
++#define HBUS_TARG_WRPTR         (HBUS_BASE+0x060)
++
++#endif /* !__il_csr_h__ */
+diff --git a/drivers/net/wireless/iwlegacy/iwl-csr.h b/drivers/net/wireless/iwlegacy/iwl-csr.h
+deleted file mode 100644
+index 4db0429..0000000
+--- a/drivers/net/wireless/iwlegacy/iwl-csr.h
++++ /dev/null
+@@ -1,422 +0,0 @@
+-/******************************************************************************
+- *
+- * This file is provided under a dual BSD/GPLv2 license.  When using or
+- * redistributing this file, you may do so under either license.
+- *
+- * GPL LICENSE SUMMARY
+- *
+- * Copyright(c) 2005 - 2011 Intel Corporation. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
+- * USA
+- *
+- * The full GNU General Public License is included in this distribution
+- * in the file called LICENSE.GPL.
+- *
+- * Contact Information:
+- *  Intel Linux Wireless <ilw@linux.intel.com>
+- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
+- *
+- * BSD LICENSE
+- *
+- * Copyright(c) 2005 - 2011 Intel Corporation. All rights reserved.
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- *
+- *  * Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- *  * Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in
+- *    the documentation and/or other materials provided with the
+- *    distribution.
+- *  * Neither the name Intel Corporation nor the names of its
+- *    contributors may be used to endorse or promote products derived
+- *    from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- *
+- *****************************************************************************/
+-#ifndef __il_csr_h__
+-#define __il_csr_h__
+-/*
+- * CSR (control and status registers)
+- *
+- * CSR registers are mapped directly into PCI bus space, and are accessible
+- * whenever platform supplies power to device, even when device is in
+- * low power states due to driver-invoked device resets
+- * (e.g. CSR_RESET_REG_FLAG_SW_RESET) or uCode-driven power-saving modes.
+- *
+- * Use _il_wr() and _il_rd() family to access these registers;
+- * these provide simple PCI bus access, without waking up the MAC.
+- * Do not use il_wr() family for these registers;
+- * no need to "grab nic access" via CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ.
+- * The MAC (uCode processor, etc.) does not need to be powered up for accessing
+- * the CSR registers.
+- *
+- * NOTE:  Device does need to be awake in order to read this memory
+- *        via CSR_EEPROM register
+- */
+-#define CSR_BASE    (0x000)
+-
+-#define CSR_HW_IF_CONFIG_REG    (CSR_BASE+0x000) /* hardware interface config */
+-#define CSR_INT_COALESCING      (CSR_BASE+0x004) /* accum ints, 32-usec units */
+-#define CSR_INT                 (CSR_BASE+0x008) /* host interrupt status/ack */
+-#define CSR_INT_MASK            (CSR_BASE+0x00c) /* host interrupt enable */
+-#define CSR_FH_INT_STATUS       (CSR_BASE+0x010) /* busmaster int status/ack*/
+-#define CSR_GPIO_IN             (CSR_BASE+0x018) /* read external chip pins */
+-#define CSR_RESET               (CSR_BASE+0x020) /* busmaster enable, NMI, etc*/
+-#define CSR_GP_CNTRL            (CSR_BASE+0x024)
+-
+-/* 2nd byte of CSR_INT_COALESCING, not accessible via _il_wr()! */
+-#define CSR_INT_PERIODIC_REG	(CSR_BASE+0x005)
+-
+-/*
+- * Hardware revision info
+- * Bit fields:
+- * 31-8:  Reserved
+- *  7-4:  Type of device:  see CSR_HW_REV_TYPE_xxx definitions
+- *  3-2:  Revision step:  0 = A, 1 = B, 2 = C, 3 = D
+- *  1-0:  "Dash" (-) value, as in A-1, etc.
+- *
+- * NOTE:  Revision step affects calculation of CCK txpower for 4965.
+- * NOTE:  See also CSR_HW_REV_WA_REG (work-around for bug in 4965).
+- */
+-#define CSR_HW_REV              (CSR_BASE+0x028)
+-
+-/*
+- * EEPROM memory reads
+- *
+- * NOTE:  Device must be awake, initialized via apm_ops.init(),
+- *        in order to read.
+- */
+-#define CSR_EEPROM_REG          (CSR_BASE+0x02c)
+-#define CSR_EEPROM_GP           (CSR_BASE+0x030)
+-
+-#define CSR_GIO_REG		(CSR_BASE+0x03C)
+-#define CSR_GP_UCODE_REG	(CSR_BASE+0x048)
+-#define CSR_GP_DRIVER_REG	(CSR_BASE+0x050)
+-
+-/*
+- * UCODE-DRIVER GP (general purpose) mailbox registers.
+- * SET/CLR registers set/clear bit(s) if "1" is written.
+- */
+-#define CSR_UCODE_DRV_GP1       (CSR_BASE+0x054)
+-#define CSR_UCODE_DRV_GP1_SET   (CSR_BASE+0x058)
+-#define CSR_UCODE_DRV_GP1_CLR   (CSR_BASE+0x05c)
+-#define CSR_UCODE_DRV_GP2       (CSR_BASE+0x060)
+-
+-#define CSR_LED_REG             (CSR_BASE+0x094)
+-#define CSR_DRAM_INT_TBL_REG	(CSR_BASE+0x0A0)
+-
+-/* GIO Chicken Bits (PCI Express bus link power management) */
+-#define CSR_GIO_CHICKEN_BITS    (CSR_BASE+0x100)
+-
+-/* Analog phase-lock-loop configuration  */
+-#define CSR_ANA_PLL_CFG         (CSR_BASE+0x20c)
+-
+-/*
+- * CSR Hardware Revision Workaround Register.  Indicates hardware rev;
+- * "step" determines CCK backoff for txpower calculation.  Used for 4965 only.
+- * See also CSR_HW_REV register.
+- * Bit fields:
+- *  3-2:  0 = A, 1 = B, 2 = C, 3 = D step
+- *  1-0:  "Dash" (-) value, as in C-1, etc.
+- */
+-#define CSR_HW_REV_WA_REG		(CSR_BASE+0x22C)
+-
+-#define CSR_DBG_HPET_MEM_REG		(CSR_BASE+0x240)
+-#define CSR_DBG_LINK_PWR_MGMT_REG	(CSR_BASE+0x250)
+-
+-/* Bits for CSR_HW_IF_CONFIG_REG */
+-#define CSR49_HW_IF_CONFIG_REG_BIT_4965_R	(0x00000010)
+-#define CSR_HW_IF_CONFIG_REG_MSK_BOARD_VER	(0x00000C00)
+-#define CSR_HW_IF_CONFIG_REG_BIT_MAC_SI 	(0x00000100)
+-#define CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI	(0x00000200)
+-
+-#define CSR39_HW_IF_CONFIG_REG_BIT_3945_MB         (0x00000100)
+-#define CSR39_HW_IF_CONFIG_REG_BIT_3945_MM         (0x00000200)
+-#define CSR39_HW_IF_CONFIG_REG_BIT_SKU_MRC            (0x00000400)
+-#define CSR39_HW_IF_CONFIG_REG_BIT_BOARD_TYPE         (0x00000800)
+-#define CSR39_HW_IF_CONFIG_REG_BITS_SILICON_TYPE_A    (0x00000000)
+-#define CSR39_HW_IF_CONFIG_REG_BITS_SILICON_TYPE_B    (0x00001000)
+-
+-#define CSR_HW_IF_CONFIG_REG_BIT_HAP_WAKE_L1A	(0x00080000)
+-#define CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM	(0x00200000)
+-#define CSR_HW_IF_CONFIG_REG_BIT_NIC_READY	(0x00400000) /* PCI_OWN_SEM */
+-#define CSR_HW_IF_CONFIG_REG_BIT_NIC_PREPARE_DONE (0x02000000) /* ME_OWN */
+-#define CSR_HW_IF_CONFIG_REG_PREPARE		  (0x08000000) /* WAKE_ME */
+-
+-#define CSR_INT_PERIODIC_DIS			(0x00) /* disable periodic int*/
+-#define CSR_INT_PERIODIC_ENA			(0xFF) /* 255*32 usec ~ 8 msec*/
+-
+-/* interrupt flags in INTA, set by uCode or hardware (e.g. dma),
+- * acknowledged (reset) by host writing "1" to flagged bits. */
+-#define CSR_INT_BIT_FH_RX        (1 << 31) /* Rx DMA, cmd responses, FH_INT[17:16] */
+-#define CSR_INT_BIT_HW_ERR       (1 << 29) /* DMA hardware error FH_INT[31] */
+-#define CSR_INT_BIT_RX_PERIODIC	 (1 << 28) /* Rx periodic */
+-#define CSR_INT_BIT_FH_TX        (1 << 27) /* Tx DMA FH_INT[1:0] */
+-#define CSR_INT_BIT_SCD          (1 << 26) /* TXQ pointer advanced */
+-#define CSR_INT_BIT_SW_ERR       (1 << 25) /* uCode error */
+-#define CSR_INT_BIT_RF_KILL      (1 << 7)  /* HW RFKILL switch GP_CNTRL[27] toggled */
+-#define CSR_INT_BIT_CT_KILL      (1 << 6)  /* Critical temp (chip too hot) rfkill */
+-#define CSR_INT_BIT_SW_RX        (1 << 3)  /* Rx, command responses, 3945 */
+-#define CSR_INT_BIT_WAKEUP       (1 << 1)  /* NIC controller waking up (pwr mgmt) */
+-#define CSR_INT_BIT_ALIVE        (1 << 0)  /* uCode interrupts once it initializes */
+-
+-#define CSR_INI_SET_MASK	(CSR_INT_BIT_FH_RX   | \
+-				 CSR_INT_BIT_HW_ERR  | \
+-				 CSR_INT_BIT_FH_TX   | \
+-				 CSR_INT_BIT_SW_ERR  | \
+-				 CSR_INT_BIT_RF_KILL | \
+-				 CSR_INT_BIT_SW_RX   | \
+-				 CSR_INT_BIT_WAKEUP  | \
+-				 CSR_INT_BIT_ALIVE)
+-
+-/* interrupt flags in FH (flow handler) (PCI busmaster DMA) */
+-#define CSR_FH_INT_BIT_ERR       (1 << 31) /* Error */
+-#define CSR_FH_INT_BIT_HI_PRIOR  (1 << 30) /* High priority Rx, bypass coalescing */
+-#define CSR39_FH_INT_BIT_RX_CHNL2  (1 << 18) /* Rx channel 2 (3945 only) */
+-#define CSR_FH_INT_BIT_RX_CHNL1  (1 << 17) /* Rx channel 1 */
+-#define CSR_FH_INT_BIT_RX_CHNL0  (1 << 16) /* Rx channel 0 */
+-#define CSR39_FH_INT_BIT_TX_CHNL6  (1 << 6)  /* Tx channel 6 (3945 only) */
+-#define CSR_FH_INT_BIT_TX_CHNL1  (1 << 1)  /* Tx channel 1 */
+-#define CSR_FH_INT_BIT_TX_CHNL0  (1 << 0)  /* Tx channel 0 */
+-
+-#define CSR39_FH_INT_RX_MASK	(CSR_FH_INT_BIT_HI_PRIOR | \
+-				 CSR39_FH_INT_BIT_RX_CHNL2 | \
+-				 CSR_FH_INT_BIT_RX_CHNL1 | \
+-				 CSR_FH_INT_BIT_RX_CHNL0)
+-
+-
+-#define CSR39_FH_INT_TX_MASK	(CSR39_FH_INT_BIT_TX_CHNL6 | \
+-				 CSR_FH_INT_BIT_TX_CHNL1 | \
+-				 CSR_FH_INT_BIT_TX_CHNL0)
+-
+-#define CSR49_FH_INT_RX_MASK	(CSR_FH_INT_BIT_HI_PRIOR | \
+-				 CSR_FH_INT_BIT_RX_CHNL1 | \
+-				 CSR_FH_INT_BIT_RX_CHNL0)
+-
+-#define CSR49_FH_INT_TX_MASK	(CSR_FH_INT_BIT_TX_CHNL1 | \
+-				 CSR_FH_INT_BIT_TX_CHNL0)
+-
+-/* GPIO */
+-#define CSR_GPIO_IN_BIT_AUX_POWER                   (0x00000200)
+-#define CSR_GPIO_IN_VAL_VAUX_PWR_SRC                (0x00000000)
+-#define CSR_GPIO_IN_VAL_VMAIN_PWR_SRC               (0x00000200)
+-
+-/* RESET */
+-#define CSR_RESET_REG_FLAG_NEVO_RESET                (0x00000001)
+-#define CSR_RESET_REG_FLAG_FORCE_NMI                 (0x00000002)
+-#define CSR_RESET_REG_FLAG_SW_RESET                  (0x00000080)
+-#define CSR_RESET_REG_FLAG_MASTER_DISABLED           (0x00000100)
+-#define CSR_RESET_REG_FLAG_STOP_MASTER               (0x00000200)
+-#define CSR_RESET_LINK_PWR_MGMT_DISABLED             (0x80000000)
+-
+-/*
+- * GP (general purpose) CONTROL REGISTER
+- * Bit fields:
+- *    27:  HW_RF_KILL_SW
+- *         Indicates state of (platform's) hardware RF-Kill switch
+- * 26-24:  POWER_SAVE_TYPE
+- *         Indicates current power-saving mode:
+- *         000 -- No power saving
+- *         001 -- MAC power-down
+- *         010 -- PHY (radio) power-down
+- *         011 -- Error
+- *   9-6:  SYS_CONFIG
+- *         Indicates current system configuration, reflecting pins on chip
+- *         as forced high/low by device circuit board.
+- *     4:  GOING_TO_SLEEP
+- *         Indicates MAC is entering a power-saving sleep power-down.
+- *         Not a good time to access device-internal resources.
+- *     3:  MAC_ACCESS_REQ
+- *         Host sets this to request and maintain MAC wakeup, to allow host
+- *         access to device-internal resources.  Host must wait for
+- *         MAC_CLOCK_READY (and !GOING_TO_SLEEP) before accessing non-CSR
+- *         device registers.
+- *     2:  INIT_DONE
+- *         Host sets this to put device into fully operational D0 power mode.
+- *         Host resets this after SW_RESET to put device into low power mode.
+- *     0:  MAC_CLOCK_READY
+- *         Indicates MAC (ucode processor, etc.) is powered up and can run.
+- *         Internal resources are accessible.
+- *         NOTE:  This does not indicate that the processor is actually running.
+- *         NOTE:  This does not indicate that 4965 or 3945 has completed
+- *                init or post-power-down restore of internal SRAM memory.
+- *                Use CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP as indication that
+- *                SRAM is restored and uCode is in normal operation mode.
+- *                Later devices (5xxx/6xxx/1xxx) use non-volatile SRAM, and
+- *                do not need to save/restore it.
+- *         NOTE:  After device reset, this bit remains "0" until host sets
+- *                INIT_DONE
+- */
+-#define CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY        (0x00000001)
+-#define CSR_GP_CNTRL_REG_FLAG_INIT_DONE              (0x00000004)
+-#define CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ         (0x00000008)
+-#define CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP         (0x00000010)
+-
+-#define CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN           (0x00000001)
+-
+-#define CSR_GP_CNTRL_REG_MSK_POWER_SAVE_TYPE         (0x07000000)
+-#define CSR_GP_CNTRL_REG_FLAG_MAC_POWER_SAVE         (0x04000000)
+-#define CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW          (0x08000000)
+-
+-
+-/* EEPROM REG */
+-#define CSR_EEPROM_REG_READ_VALID_MSK	(0x00000001)
+-#define CSR_EEPROM_REG_BIT_CMD		(0x00000002)
+-#define CSR_EEPROM_REG_MSK_ADDR		(0x0000FFFC)
+-#define CSR_EEPROM_REG_MSK_DATA		(0xFFFF0000)
+-
+-/* EEPROM GP */
+-#define CSR_EEPROM_GP_VALID_MSK		(0x00000007) /* signature */
+-#define CSR_EEPROM_GP_IF_OWNER_MSK	(0x00000180)
+-#define CSR_EEPROM_GP_GOOD_SIG_EEP_LESS_THAN_4K		(0x00000002)
+-#define CSR_EEPROM_GP_GOOD_SIG_EEP_MORE_THAN_4K		(0x00000004)
+-
+-/* GP REG */
+-#define CSR_GP_REG_POWER_SAVE_STATUS_MSK            (0x03000000) /* bit 24/25 */
+-#define CSR_GP_REG_NO_POWER_SAVE            (0x00000000)
+-#define CSR_GP_REG_MAC_POWER_SAVE           (0x01000000)
+-#define CSR_GP_REG_PHY_POWER_SAVE           (0x02000000)
+-#define CSR_GP_REG_POWER_SAVE_ERROR         (0x03000000)
+-
+-
+-/* CSR GIO */
+-#define CSR_GIO_REG_VAL_L0S_ENABLED	(0x00000002)
+-
+-/*
+- * UCODE-DRIVER GP (general purpose) mailbox register 1
+- * Host driver and uCode write and/or read this register to communicate with
+- * each other.
+- * Bit fields:
+- *     4:  UCODE_DISABLE
+- *         Host sets this to request permanent halt of uCode, same as
+- *         sending CARD_STATE command with "halt" bit set.
+- *     3:  CT_KILL_EXIT
+- *         Host sets this to request exit from CT_KILL state, i.e. host thinks
+- *         device temperature is low enough to continue normal operation.
+- *     2:  CMD_BLOCKED
+- *         Host sets this during RF KILL power-down sequence (HW, SW, CT KILL)
+- *         to release uCode to clear all Tx and command queues, enter
+- *         unassociated mode, and power down.
+- *         NOTE:  Some devices also use HBUS_TARG_MBX_C register for this bit.
+- *     1:  SW_BIT_RFKILL
+- *         Host sets this when issuing CARD_STATE command to request
+- *         device sleep.
+- *     0:  MAC_SLEEP
+- *         uCode sets this when preparing a power-saving power-down.
+- *         uCode resets this when power-up is complete and SRAM is sane.
+- *         NOTE:  3945/4965 saves internal SRAM data to host when powering down,
+- *                and must restore this data after powering back up.
+- *                MAC_SLEEP is the best indication that restore is complete.
+- *                Later devices (5xxx/6xxx/1xxx) use non-volatile SRAM, and
+- *                do not need to save/restore it.
+- */
+-#define CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP             (0x00000001)
+-#define CSR_UCODE_SW_BIT_RFKILL                     (0x00000002)
+-#define CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED           (0x00000004)
+-#define CSR_UCODE_DRV_GP1_REG_BIT_CT_KILL_EXIT      (0x00000008)
+-
+-/* GIO Chicken Bits (PCI Express bus link power management) */
+-#define CSR_GIO_CHICKEN_BITS_REG_BIT_L1A_NO_L0S_RX  (0x00800000)
+-#define CSR_GIO_CHICKEN_BITS_REG_BIT_DIS_L0S_EXIT_TIMER  (0x20000000)
+-
+-/* LED */
+-#define CSR_LED_BSM_CTRL_MSK (0xFFFFFFDF)
+-#define CSR_LED_REG_TRUN_ON (0x78)
+-#define CSR_LED_REG_TRUN_OFF (0x38)
+-
+-/* ANA_PLL */
+-#define CSR39_ANA_PLL_CFG_VAL        (0x01000000)
+-
+-/* HPET MEM debug */
+-#define CSR_DBG_HPET_MEM_REG_VAL	(0xFFFF0000)
+-
+-/* DRAM INT TBL */
+-#define CSR_DRAM_INT_TBL_ENABLE		(1 << 31)
+-#define CSR_DRAM_INIT_TBL_WRAP_CHECK	(1 << 27)
+-
+-/*
+- * HBUS (Host-side Bus)
+- *
+- * HBUS registers are mapped directly into PCI bus space, but are used
+- * to indirectly access device's internal memory or registers that
+- * may be powered-down.
+- *
+- * Use il_wr()/il_rd() family
+- * for these registers;
+- * host must "grab nic access" via CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ
+- * to make sure the MAC (uCode processor, etc.) is powered up for accessing
+- * internal resources.
+- *
+- * Do not use _il_wr()/_il_rd() family to access these registers;
+- * these provide only simple PCI bus access, without waking up the MAC.
+- */
+-#define HBUS_BASE	(0x400)
+-
+-/*
+- * Registers for accessing device's internal SRAM memory (e.g. SCD SRAM
+- * structures, error log, event log, verifying uCode load).
+- * First write to address register, then read from or write to data register
+- * to complete the job.  Once the address register is set up, accesses to
+- * data registers auto-increment the address by one dword.
+- * Bit usage for address registers (read or write):
+- *  0-31:  memory address within device
+- */
+-#define HBUS_TARG_MEM_RADDR     (HBUS_BASE+0x00c)
+-#define HBUS_TARG_MEM_WADDR     (HBUS_BASE+0x010)
+-#define HBUS_TARG_MEM_WDAT      (HBUS_BASE+0x018)
+-#define HBUS_TARG_MEM_RDAT      (HBUS_BASE+0x01c)
+-
+-/* Mailbox C, used as workaround alternative to CSR_UCODE_DRV_GP1 mailbox */
+-#define HBUS_TARG_MBX_C         (HBUS_BASE+0x030)
+-#define HBUS_TARG_MBX_C_REG_BIT_CMD_BLOCKED         (0x00000004)
+-
+-/*
+- * Registers for accessing device's internal peripheral registers
+- * (e.g. SCD, BSM, etc.).  First write to address register,
+- * then read from or write to data register to complete the job.
+- * Bit usage for address registers (read or write):
+- *  0-15:  register address (offset) within device
+- * 24-25:  (# bytes - 1) to read or write (e.g. 3 for dword)
+- */
+-#define HBUS_TARG_PRPH_WADDR    (HBUS_BASE+0x044)
+-#define HBUS_TARG_PRPH_RADDR    (HBUS_BASE+0x048)
+-#define HBUS_TARG_PRPH_WDAT     (HBUS_BASE+0x04c)
+-#define HBUS_TARG_PRPH_RDAT     (HBUS_BASE+0x050)
+-
+-/*
+- * Per-Tx-queue write pointer (idx, really!)
+- * Indicates idx to next TFD that driver will fill (1 past latest filled).
+- * Bit usage:
+- *  0-7:  queue write idx
+- * 11-8:  queue selector
+- */
+-#define HBUS_TARG_WRPTR         (HBUS_BASE+0x060)
+-
+-#endif /* !__il_csr_h__ */
+diff --git a/drivers/net/wireless/iwlegacy/iwl-dev.h b/drivers/net/wireless/iwlegacy/iwl-dev.h
+index 991b455..ce5bc53 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-dev.h
++++ b/drivers/net/wireless/iwlegacy/iwl-dev.h
+@@ -40,7 +40,7 @@
+ #include <net/ieee80211_radiotap.h>
  
-  nla_put_failure:
-@@ -4384,6 +4393,9 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 	const u8 *bssid, *ssid, *ie = NULL, *prev_bssid = NULL;
- 	int err, ssid_len, ie_len = 0;
- 	bool use_mfp = false;
-+	u32 flags = 0;
-+	struct ieee80211_ht_cap *ht_capa = NULL;
-+	struct ieee80211_ht_cap *ht_capa_mask = NULL;
- 
- 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
- 		return -EINVAL;
-@@ -4427,11 +4439,25 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 	if (info->attrs[NL80211_ATTR_PREV_BSSID])
- 		prev_bssid = nla_data(info->attrs[NL80211_ATTR_PREV_BSSID]);
- 
-+	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_HT]))
-+		flags |= ASSOC_REQ_DISABLE_HT;
-+
-+	if (info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
-+		ht_capa_mask =
-+			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]);
-+
-+	if (info->attrs[NL80211_ATTR_HT_CAPABILITY]) {
-+		if (!ht_capa_mask)
-+			return -EINVAL;
-+		ht_capa = nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
-+	}
-+
- 	err = nl80211_crypto_settings(rdev, info, &crypto, 1);
- 	if (!err)
- 		err = cfg80211_mlme_assoc(rdev, dev, chan, bssid, prev_bssid,
- 					  ssid, ssid_len, ie, ie_len, use_mfp,
--					  &crypto);
-+					  &crypto, flags, ht_capa,
-+					  ht_capa_mask);
- 
- 	return err;
- }
-@@ -4921,6 +4947,22 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 			return PTR_ERR(connkeys);
- 	}
- 
-+	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_HT]))
-+		connect.flags |= ASSOC_REQ_DISABLE_HT;
-+
-+	if (info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
-+		memcpy(&connect.ht_capa_mask,
-+		       nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]),
-+		       sizeof(connect.ht_capa_mask));
-+
-+	if (info->attrs[NL80211_ATTR_HT_CAPABILITY]) {
-+		if (!info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
-+			return -EINVAL;
-+		memcpy(&connect.ht_capa,
-+		       nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]),
-+		       sizeof(connect.ht_capa));
-+	}
-+
- 	err = cfg80211_connect(rdev, dev, &connect, connkeys);
- 	if (err)
- 		kfree(connkeys);
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 0acfdc9..f0c900c 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -190,7 +190,9 @@ static int cfg80211_conn_do_work(struct wireless_dev *wdev)
- 					    prev_bssid,
- 					    params->ssid, params->ssid_len,
- 					    params->ie, params->ie_len,
--					    false, &params->crypto);
-+					    false, &params->crypto,
-+					    params->flags, &params->ht_capa,
-+					    &params->ht_capa_mask);
- 		if (err)
- 			__cfg80211_mlme_deauth(rdev, wdev->netdev, params->bssid,
- 					       NULL, 0,
-@@ -774,6 +776,9 @@ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
- 		wdev->connect_keys = NULL;
- 	}
- 
-+	cfg80211_oper_and_ht_capa(&connect->ht_capa_mask,
-+				  rdev->wiphy.ht_capa_mod_mask);
-+
- 	if (connkeys && connkeys->def >= 0) {
- 		int idx;
- 		u32 cipher;
+ #include "iwl-eeprom.h"
+-#include "iwl-csr.h"
++#include "csr.h"
+ #include "iwl-prph.h"
+ #include "iwl-debug.h"
+ #include "4965.h"
 -- 
-1.7.3.4
+1.7.1
 
