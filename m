@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:63733 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016Ab1KDFVp (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40587 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754718Ab1KRRJt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 01:21:45 -0400
-Received: by ywf7 with SMTP id 7so2127713ywf.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2011 22:21:44 -0700 (PDT)
+	Fri, 18 Nov 2011 12:09:49 -0500
+Message-ID: <4EC69155.4060306@candelatech.com> (sfid-20111118_180953_087266_93FE2633)
+Date: Fri, 18 Nov 2011 09:09:41 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <CABDyM6TFm3HPTiJybCkg4fUetKaF2P+qM8DUnHJ5Y+yJAG2i4g@mail.gmail.com>
-References: <CABDyM6TFm3HPTiJybCkg4fUetKaF2P+qM8DUnHJ5Y+yJAG2i4g@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 4 Nov 2011 16:21:22 +1100
-Message-ID: <CAGRGNgXNbdBcKhn-FJEoWVMAcEvi5CLKKhM+B0wzX0=1L8CYow@mail.gmail.com> (sfid-20111104_062156_496598_A188673D)
-Subject: Re: iwlagn master mode
-To: Richard Yao <ryao@cs.stonybrook.edu>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v9 2/2] mac80211:  Support ht-cap over-rides.
+References: <1321566884-31757-1-git-send-email-greearb@candelatech.com>  <1321566884-31757-2-git-send-email-greearb@candelatech.com>  (sfid-20111117_225512_858995_688665F5) <1321611355.10266.30.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1321611355.10266.30.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Richard,
-
-On Fri, Nov 4, 2011 at 12:14, Richard Yao <ryao@cs.stonybrook.edu> wrote:
-> Someone I know had to boot into his Mac Book Air's recovery mode and
-> he needed a wireless connection. Since the university's wireless
-> network was inaccessible to both of us, I tried setting up an access
-> point via my laptop so he could connect to the internet through my
-> computer's wired ethernet connection. I quickly learned that master
-> mode wasn't supported, which made this impossible.
+On 11/18/2011 02:15 AM, Johannes Berg wrote:
+> On Thu, 2011-11-17 at 13:54 -0800, greearb@candelatech.com wrote:
 >
-> Is it possible to get master mode support in the iwlagn driver?
+>> -void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
+>> +bool ieee80111_cfg_override_disables_ht40(struct ieee80211_sub_if_data *sdata)
+>> +{
+>> +	const u16 flg = IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+>> +	if ((sdata->u.mgd.ht_capa_mask.cap_info&  flg)&&
+>> +	    !(sdata->u.mgd.ht_capa.cap_info&  flg))
+>> +		return true;
+>
+> This looks like it has endian bugs. Note that sband->ht_cap is
+> ieee80211_sta_ht_cap, whereas sdata->u.mgd.ht_capa[_mask] is
+> ieee80211_ht_cap -- the latter is in IEEE format (LE) while the former
+> is in a complete different format that's easier to digest for the
+> CPU :-)
 
-As far as I know, it is supported.
+So, the ht-caps & mask data coming from user-space via netlink
+should be in network-byte order?
 
-In the case you describe, you have a two options:
-1. Use Network Manager or equivalent to set up an "AdHoc" network
-("Create New Wireless Network")
-2. Use hostapd to set up the access point. See here:
-http://wireless.kernel.org/en/users/Documentation/hostapd
-
-You cannot set master mode without using hostapd.
+Or do you want me to flip the bytes around when copying
+it into the u.mgd.ht_cap structs?
 
 Thanks,
+Ben
 
 -- 
-Julian Calaby
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
