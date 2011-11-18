@@ -1,46 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:52268 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751265Ab1K0GHd (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:35288 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756567Ab1KRTd1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Nov 2011 01:07:33 -0500
-Received: by vcbfk14 with SMTP id fk14so2904795vcb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Nov 2011 22:07:33 -0800 (PST)
+	Fri, 18 Nov 2011 14:33:27 -0500
+Received: by fagn18 with SMTP id n18so4704358fag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 11:33:25 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1321285041.10264.14.camel@jlt3.sipsolutions.net>
-References: <1320844134.3845.61.camel@jlt3.sipsolutions.net>
-	<1321285041.10264.14.camel@jlt3.sipsolutions.net>
-Date: Sun, 27 Nov 2011 14:07:32 +0800
-Message-ID: <CAJ-VmokTTXYEMp9=XJN=N_0ubH96NWRbGCFjfnnXp4q1s2iVUw@mail.gmail.com> (sfid-20111127_070737_505043_75C802D2)
-Subject: Re: off- & multi-channel operation
-From: Adrian Chadd <adrian@freebsd.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1321641978-2787-1-git-send-email-linville@tuxdriver.com>
+References: <1321641978-2787-1-git-send-email-linville@tuxdriver.com>
+From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+Date: Fri, 18 Nov 2011 11:33:04 -0800
+Message-ID: <CAB=NE6UkPz5H3i3Q2NWp-SM3Nsw_ad7R=yOcUomNomEOY5w+bQ@mail.gmail.com> (sfid-20111118_203334_818897_E1C11AAD)
+Subject: Re: [PATCH] compat-wireless: change CONFIG_IWLAGN -> CONFIG_IWLWIFI
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm sorry I haven't responded to this. I'm busy moving country :-)
+On Fri, Nov 18, 2011 at 10:46 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> This Kconfig option changed in the 2.6.32 timeframe.
+>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Let's talk about this in a couple weeks. I know that FreeBSD's
-net80211 code allows drivers to only override what methods they
-require net80211 to provide. So drivers can do their own MLME, for
-example, but still throw some control frame handling at
-net80211/hostapd. Or use the net80211 rate control API whilst doing
-mostly everything else in firmware (eg if_iwn.)
+Applied and pushed! Thanks!
 
-I'm also looking at how to handle off-channel operation when doing
-active 802.11n (and not, but software aggregation does tickle things)
-traffic. Flushing the actively queued traffic whilst doing off-channel
-work is likely sub-optimal. I have no idea if that's what mac80211
-does.
-
-Anyway, I'll be back doing active hacking on this stuff in two or
-three weeks. I bet we could save time by solving the same problem
-together rather than solving it individually and differently.
-
-(At that stage I may pick your brain about how P2P is supposed to
-integrate correctly with off-channel operation..)
-
-
-Adrian
+ Luis
