@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37858 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751509Ab1KHMEq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 07:04:46 -0500
-Subject: [PATCH] mac80211: fix bug in ieee80211_build_probe_req
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Nov 2011 13:04:41 +0100
-Message-ID: <1320753881.4304.28.camel@jlt3.sipsolutions.net> (sfid-20111108_130449_320433_34C6C605)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:46687 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751469Ab1KRToP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 14:44:15 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/3] compat-wireless: escape &
+Date: Fri, 18 Nov 2011 20:44:05 +0100
+Message-Id: <1321645446-22527-2-git-send-email-hauke@hauke-m.de> (sfid-20111118_204418_878734_83893579)
+In-Reply-To: <1321645446-22527-1-git-send-email-hauke@hauke-m.de>
+References: <1321645446-22527-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+& needs to be escaped.
 
-ieee80211_probereq_get() can return NULL in
-which case we should clean up & return NULL
-in ieee80211_build_probe_req() as well.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- net/mac80211/util.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ scripts/gen-compat-autoconf.sh |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
---- a/net/mac80211/util.c	2011-11-08 09:24:02.000000000 +0100
-+++ b/net/mac80211/util.c	2011-11-08 12:50:12.000000000 +0100
-@@ -880,6 +880,8 @@ struct sk_buff *ieee80211_build_probe_re
- 	skb = ieee80211_probereq_get(&local->hw, &sdata->vif,
- 				     ssid, ssid_len,
- 				     buf, buf_len);
-+	if (!skb)
-+		goto out;
- 
- 	if (dst) {
- 		mgmt = (struct ieee80211_mgmt *) skb->data;
-@@ -888,6 +890,8 @@ struct sk_buff *ieee80211_build_probe_re
- 	}
- 
- 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+
-+ out:
- 	kfree(buf);
- 
- 	return skb;
-
+diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
+index 0063478..28ed25a 100755
+--- a/scripts/gen-compat-autoconf.sh
++++ b/scripts/gen-compat-autoconf.sh
+@@ -152,7 +152,7 @@ for i in $(egrep '^CONFIG_|^ifdef CONFIG_|^ifndef CONFIG_|^endif #CONFIG_|^else
+ 		continue
+ 		;;
+ 	'ifndef+CONFIG_'* )
+-		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_3_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,\2,0))/' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_2_6_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,\2))/' -e 's/\(ifndef CONFIG_COMPAT_RHEL_\)\([0-9]*\)_\([0-9]*\)/if (!defined(RHEL_MAJOR) || RHEL_MAJOR != \2 || RHEL_MINOR < \3)/' -e 's/\(#ifndef \)\(CONFIG_[^:space:]*\)/#if !defined(\2) && !defined(\2_MODULE)/'
++		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_3_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,\2,0))/' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_2_6_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,\2))/' -e 's/\(ifndef CONFIG_COMPAT_RHEL_\)\([0-9]*\)_\([0-9]*\)/if (!defined(RHEL_MAJOR) || RHEL_MAJOR != \2 || RHEL_MINOR < \3)/' -e 's/\(#ifndef \)\(CONFIG_[^:space:]*\)/#if !defined(\2) \&\& !defined(\2_MODULE)/'
+ 		continue
+ 		;;
+ 	'else+#CONFIG_'* | 'endif+#CONFIG_'* )
+-- 
+1.7.4.1
 
