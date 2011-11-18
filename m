@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:12702 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757466Ab1KRKHf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 05:07:35 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/3] ath6kl: Remove modparam multi_norm_if_support
-Date: Fri, 18 Nov 2011 10:05:26 +0530
-Message-ID: <1321590928-11646-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111118_110756_899853_83D7E6C0)
+Received: from mx1.redhat.com ([209.132.183.28]:10932 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752181Ab1KRPj3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 10:39:29 -0500
+Date: Fri, 18 Nov 2011 16:41:33 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 28/77] iwlegacy: rename base 4965 and 3945 file names
+Message-ID: <20111118154133.GD2203@redhat.com> (sfid-20111118_163933_224009_56935F87)
+References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+ <1321604559-10707-28-git-send-email-sgruszka@redhat.com>
+ <1321626098.11647.13.camel@wwguy-huron>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1321626098.11647.13.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This modparam was introduced to enable non-p2p mode operation
-on two virtual interfaces. It does not seem to be necessary to
-have a separate module parameter to do that. Instead, this option
-can be enabled when any one of the interfaces is not going to be
-used for p2p (ath6kl_p2p).
+On Fri, Nov 18, 2011 at 06:21:38AM -0800, Guy, Wey-Yi wrote:
+> On Fri, 2011-11-18 at 00:21 -0800, Stanislaw Gruszka wrote:
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> > ---
+> >  drivers/net/wireless/iwlegacy/3945-mac.c     | 4007 ++++++++++++++++++++++++++
+> >  drivers/net/wireless/iwlegacy/3945.c         | 2740 ++++++++++++++++++
+> >  drivers/net/wireless/iwlegacy/4965-mac.c     | 3245 +++++++++++++++++++++
+> >  drivers/net/wireless/iwlegacy/4965.c         | 2183 ++++++++++++++
+> >  drivers/net/wireless/iwlegacy/Makefile       |    4 +-
+> >  drivers/net/wireless/iwlegacy/iwl-3945.c     | 2740 ------------------
+> >  drivers/net/wireless/iwlegacy/iwl-4965.c     | 2183 --------------
+> >  drivers/net/wireless/iwlegacy/iwl3945-base.c | 4007 --------------------------
+> >  drivers/net/wireless/iwlegacy/iwl4965-base.c | 3245 ---------------------
+> >  9 files changed, 12177 insertions(+), 12177 deletions(-)
+> >  create mode 100644 drivers/net/wireless/iwlegacy/3945-mac.c
+> >  create mode 100644 drivers/net/wireless/iwlegacy/3945.c
+> >  create mode 100644 drivers/net/wireless/iwlegacy/4965-mac.c
+> >  create mode 100644 drivers/net/wireless/iwlegacy/4965.c
+> >  delete mode 100644 drivers/net/wireless/iwlegacy/iwl-3945.c
+> >  delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965.c
+> >  delete mode 100644 drivers/net/wireless/iwlegacy/iwl3945-base.c
+> >  delete mode 100644 drivers/net/wireless/iwlegacy/iwl4965-base.c
+> > 
+> > 683K patch can be downloaded from:
+> > http://people.redhat.com/sgruszka/iwlegacy-2011-11-16/0028-iwlegacy-rename-base-4965-and-3945-file-names.patch
+> > --
+> myabe also rename other modules which has "iwl" prefix to "il"? such as
+> iwl-led.c, iwl-eeprom.c, ...
+Other patched do that.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index ed3fbbe..afa7279 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -23,10 +23,8 @@
- #include "testmode.h"
- 
- static unsigned int ath6kl_p2p;
--static unsigned int multi_norm_if_support;
- 
- module_param(ath6kl_p2p, uint, 0644);
--module_param(multi_norm_if_support, uint, 0644);
- 
- #define RATETAB_ENT(_rate, _rateid, _flags) {   \
- 	.bitrate    = (_rate),                  \
-@@ -2454,14 +2452,13 @@ struct ath6kl *ath6kl_core_alloc(struct device *dev)
- 	}
- 
- 	ar = wiphy_priv(wiphy);
--	if (!multi_norm_if_support)
--		ar->p2p = !!ath6kl_p2p;
-+	ar->p2p = !!ath6kl_p2p;
- 	ar->wiphy = wiphy;
- 	ar->dev = dev;
- 
- 	ar->vif_max = 1;
- 
--	if (multi_norm_if_support)
-+	if (!ar->p2p)
- 		ar->max_norm_iface = 2;
- 	else
- 		ar->max_norm_iface = 1;
--- 
-1.7.0.4
-
+Stanislaw
