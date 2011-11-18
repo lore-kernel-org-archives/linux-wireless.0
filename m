@@ -1,544 +1,827 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15823 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751607Ab1KRIU5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 03:20:57 -0500
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAI8KvQF032158
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 03:20:57 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 04/77] iwlegacy: rename iwlegacy to il
-Date: Fri, 18 Nov 2011 09:21:26 +0100
-Message-Id: <1321604559-10707-4-git-send-email-sgruszka@redhat.com> (sfid-20111118_092103_011210_7A206251)
-In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
-References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:36080 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755754Ab1KRWy3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 17:54:29 -0500
+Date: Fri, 18 Nov 2011 16:54:22 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: linux-wireless@vger.kernel.org
+Subject: Problems associating with RTL8188CE
+Message-ID: <20111118225422.GD19138@thinkpad-t410> (sfid-20111118_235433_382686_E158A9FD)
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="6sX45UoQRIJXqkqR"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-More renaming to make code shorter.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/iwl-4965-lib.c  |    2 +-
- drivers/net/wireless/iwlegacy/iwl-4965-rs.c   |   20 +++++-----
- drivers/net/wireless/iwlegacy/iwl-4965-sta.c  |    4 +-
- drivers/net/wireless/iwlegacy/iwl-4965-tx.c   |    2 +-
- drivers/net/wireless/iwlegacy/iwl-core.c      |   18 ++++----
- drivers/net/wireless/iwlegacy/iwl-debug.h     |    2 +-
- drivers/net/wireless/iwlegacy/iwl-debugfs.c   |    4 +-
- drivers/net/wireless/iwlegacy/iwl-dev.h       |    8 ++--
- drivers/net/wireless/iwlegacy/iwl-eeprom.c    |   54 ++++++++++++------------
- drivers/net/wireless/iwlegacy/iwl-eeprom.h    |    2 +-
- drivers/net/wireless/iwlegacy/iwl-legacy-rs.h |    4 +-
- drivers/net/wireless/iwlegacy/iwl-scan.c      |    4 +-
- drivers/net/wireless/iwlegacy/iwl3945-base.c  |    4 +-
- drivers/net/wireless/iwlegacy/iwl4965-base.c  |    6 +-
- 14 files changed, 67 insertions(+), 67 deletions(-)
+--6sX45UoQRIJXqkqR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-lib.c b/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
-index 4d25590..647399e 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
-@@ -424,7 +424,7 @@ int il4965_hwrate_to_mac80211_idx(u32 rate_n_flags, enum ieee80211_band band)
- 		if (band == IEEE80211_BAND_5GHZ)
- 			band_offset = IL_FIRST_OFDM_RATE;
- 		for (idx = band_offset; idx < IL_RATE_COUNT_LEGACY; idx++)
--			if (iwlegacy_rates[idx].plcp == (rate_n_flags & 0xFF))
-+			if (il_rates[idx].plcp == (rate_n_flags & 0xFF))
- 				return idx - band_offset;
- 	}
- 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-index e53ed1a..60ff0cd 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-@@ -96,7 +96,7 @@ static const u8 ant_toggle_lookup[] = {
-  * maps to IL_RATE_INVALID
-  *
-  */
--const struct il_rate_info iwlegacy_rates[IL_RATE_COUNT] = {
-+const struct il_rate_info il_rates[IL_RATE_COUNT] = {
- 	IL_DECLARE_RATE_INFO(1, INV, INV, 2, INV, 2, INV, 2),    /*  1mbps */
- 	IL_DECLARE_RATE_INFO(2, INV, 1, 5, 1, 5, 1, 5),          /*  2mbps */
- 	IL_DECLARE_RATE_INFO(5, INV, 2, 6, 2, 11, 2, 11),        /*5.5mbps */
-@@ -132,8 +132,8 @@ static int il4965_hwrate_to_plcp_idx(u32 rate_n_flags)
- 
- 	/* legacy rate format, search for match in table */
- 	} else {
--		for (idx = 0; idx < ARRAY_SIZE(iwlegacy_rates); idx++)
--			if (iwlegacy_rates[idx].plcp == (rate_n_flags & 0xFF))
-+		for (idx = 0; idx < ARRAY_SIZE(il_rates); idx++)
-+			if (il_rates[idx].plcp == (rate_n_flags & 0xFF))
- 				return idx;
- 	}
- 
-@@ -499,7 +499,7 @@ static u32 il4965_rate_n_flags_from_tbl(struct il_priv *il,
- 	u32 rate_n_flags = 0;
- 
- 	if (is_legacy(tbl->lq_type)) {
--		rate_n_flags = iwlegacy_rates[index].plcp;
-+		rate_n_flags = il_rates[index].plcp;
- 		if (index >= IL_FIRST_CCK_RATE && index <= IL_LAST_CCK_RATE)
- 			rate_n_flags |= RATE_MCS_CCK_MSK;
- 
-@@ -511,9 +511,9 @@ static u32 il4965_rate_n_flags_from_tbl(struct il_priv *il,
- 		rate_n_flags = RATE_MCS_HT_MSK;
- 
- 		if (is_siso(tbl->lq_type))
--			rate_n_flags |=	iwlegacy_rates[index].plcp_siso;
-+			rate_n_flags |=	il_rates[index].plcp_siso;
- 		else
--			rate_n_flags |=	iwlegacy_rates[index].plcp_mimo2;
-+			rate_n_flags |=	il_rates[index].plcp_mimo2;
- 	} else {
- 		IL_ERR(il, "Invalid tbl->lq_type %d\n", tbl->lq_type);
- 	}
-@@ -702,7 +702,7 @@ il4965_rs_get_adjacent_rate(struct il_priv *il, u8 index, u16 rate_mask,
- 
- 	low = index;
- 	while (low != IL_RATE_INVALID) {
--		low = iwlegacy_rates[low].prev_rs;
-+		low = il_rates[low].prev_rs;
- 		if (low == IL_RATE_INVALID)
- 			break;
- 		if (rate_mask & (1 << low))
-@@ -712,7 +712,7 @@ il4965_rs_get_adjacent_rate(struct il_priv *il, u8 index, u16 rate_mask,
- 
- 	high = index;
- 	while (high != IL_RATE_INVALID) {
--		high = iwlegacy_rates[high].next_rs;
-+		high = il_rates[high].next_rs;
- 		if (high == IL_RATE_INVALID)
- 			break;
- 		if (rate_mask & (1 << high))
-@@ -2220,7 +2220,7 @@ static void il4965_rs_initialize_lq(struct il_priv *il,
- 	if ((i < 0) || (i >= IL_RATE_COUNT))
- 		i = 0;
- 
--	rate = iwlegacy_rates[i].plcp;
-+	rate = il_rates[i].plcp;
- 	tbl->ant_type = il4965_first_antenna(valid_tx_ant);
- 	rate |= tbl->ant_type << RATE_MCS_ANT_POS;
- 
-@@ -2793,7 +2793,7 @@ static ssize_t il4965_rs_sta_dbgfs_rate_scale_data_read(struct file *file,
- 	else
- 		desc += sprintf(buff+desc,
- 				"Bit Rate= %d Mb/s\n",
--				iwlegacy_rates[lq_sta->last_txrate_idx].ieee >> 1);
-+				il_rates[lq_sta->last_txrate_idx].ieee >> 1);
- 
- 	ret = simple_read_from_buffer(user_buf, count, ppos, buff, desc);
- 	return ret;
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-sta.c b/drivers/net/wireless/iwlegacy/iwl-4965-sta.c
-index 20290d2..0fbc991 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-sta.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-sta.c
-@@ -59,7 +59,7 @@ il4965_sta_alloc_lq(struct il_priv *il, u8 sta_id)
- 
- 	rate_flags |= il4965_first_antenna(il->hw_params.valid_tx_ant) <<
- 				RATE_MCS_ANT_POS;
--	rate_n_flags = il4965_hw_set_rate_n_flags(iwlegacy_rates[r].plcp,
-+	rate_n_flags = il4965_hw_set_rate_n_flags(il_rates[r].plcp,
- 						   rate_flags);
- 	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++)
- 		link_cmd->rs_table[i].rate_n_flags = rate_n_flags;
-@@ -554,7 +554,7 @@ int il4965_alloc_bcast_station(struct il_priv *il,
- 	u8 sta_id;
- 
- 	spin_lock_irqsave(&il->sta_lock, flags);
--	sta_id = il_prep_station(il, ctx, iwlegacy_bcast_addr,
-+	sta_id = il_prep_station(il, ctx, il_bcast_addr,
- 								false, NULL);
- 	if (sta_id == IL_INVALID_STATION) {
- 		IL_ERR(il, "Unable to prepare broadcast station\n");
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
-index 59d7374..fcc938e 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
-@@ -203,7 +203,7 @@ static void il4965_tx_cmd_build_rate(struct il_priv *il,
- 	if (info->band == IEEE80211_BAND_5GHZ)
- 		rate_idx += IL_FIRST_OFDM_RATE;
- 	/* Get PLCP rate for tx_cmd->rate_n_flags */
--	rate_plcp = iwlegacy_rates[rate_idx].plcp;
-+	rate_plcp = il_rates[rate_idx].plcp;
- 	/* Zero out flags for this packet */
- 	rate_flags = 0;
- 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-core.c b/drivers/net/wireless/iwlegacy/iwl-core.c
-index 80ec543..a768e78 100644
---- a/drivers/net/wireless/iwlegacy/iwl-core.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-core.c
-@@ -68,11 +68,11 @@ static bool bt_coex_active = true;
- module_param(bt_coex_active, bool, S_IRUGO);
- MODULE_PARM_DESC(bt_coex_active, "enable wifi/bluetooth co-exist");
- 
--u32 iwlegacy_debug_level;
--EXPORT_SYMBOL(iwlegacy_debug_level);
-+u32 il_debug_level;
-+EXPORT_SYMBOL(il_debug_level);
- 
--const u8 iwlegacy_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
--EXPORT_SYMBOL(iwlegacy_bcast_addr);
-+const u8 il_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-+EXPORT_SYMBOL(il_bcast_addr);
- 
- 
- /* This function both allocates and initializes hw and il. */
-@@ -183,7 +183,7 @@ int il_init_geos(struct il_priv *il)
- 
- 	/* 5.2GHz channels start after the 2.4GHz channels */
- 	sband = &il->bands[IEEE80211_BAND_5GHZ];
--	sband->channels = &channels[ARRAY_SIZE(iwlegacy_eeprom_band_1)];
-+	sband->channels = &channels[ARRAY_SIZE(il_eeprom_band_1)];
- 	/* just OFDM */
- 	sband->bitrates = &rates[IL_FIRST_OFDM_RATE];
- 	sband->n_bitrates = IL_RATE_COUNT_LEGACY - IL_FIRST_OFDM_RATE;
-@@ -1486,7 +1486,7 @@ int il_alloc_traffic_mem(struct il_priv *il)
- {
- 	u32 traffic_size = IL_TRAFFIC_DUMP_SIZE;
- 
--	if (iwlegacy_debug_level & IL_DL_TX) {
-+	if (il_debug_level & IL_DL_TX) {
- 		if (!il->tx_traffic) {
- 			il->tx_traffic =
- 				kzalloc(traffic_size, GFP_KERNEL);
-@@ -1494,7 +1494,7 @@ int il_alloc_traffic_mem(struct il_priv *il)
- 				return -ENOMEM;
- 		}
- 	}
--	if (iwlegacy_debug_level & IL_DL_RX) {
-+	if (il_debug_level & IL_DL_RX) {
- 		if (!il->rx_traffic) {
- 			il->rx_traffic =
- 				kzalloc(traffic_size, GFP_KERNEL);
-@@ -1523,7 +1523,7 @@ void il_dbg_log_tx_data_frame(struct il_priv *il,
- 	__le16 fc;
- 	u16 len;
- 
--	if (likely(!(iwlegacy_debug_level & IL_DL_TX)))
-+	if (likely(!(il_debug_level & IL_DL_TX)))
- 		return;
- 
- 	if (!il->tx_traffic)
-@@ -1548,7 +1548,7 @@ void il_dbg_log_rx_data_frame(struct il_priv *il,
- 	__le16 fc;
- 	u16 len;
- 
--	if (likely(!(iwlegacy_debug_level & IL_DL_RX)))
-+	if (likely(!(il_debug_level & IL_DL_RX)))
- 		return;
- 
- 	if (!il->rx_traffic)
-diff --git a/drivers/net/wireless/iwlegacy/iwl-debug.h b/drivers/net/wireless/iwlegacy/iwl-debug.h
-index 657da25..05a7933 100644
---- a/drivers/net/wireless/iwlegacy/iwl-debug.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-debug.h
-@@ -30,7 +30,7 @@
- #define __il_debug_h__
- 
- struct il_priv;
--extern u32 iwlegacy_debug_level;
-+extern u32 il_debug_level;
- 
- #define IL_ERR(p, f, a...) dev_err(&((p)->pci_dev->dev), f, ## a)
- #define IL_WARN(p, f, a...) dev_warn(&((p)->pci_dev->dev), f, ## a)
-diff --git a/drivers/net/wireless/iwlegacy/iwl-debugfs.c b/drivers/net/wireless/iwlegacy/iwl-debugfs.c
-index f2f2eba..a811c17 100644
---- a/drivers/net/wireless/iwlegacy/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-debugfs.c
-@@ -705,7 +705,7 @@ static ssize_t il_dbgfs_traffic_log_read(struct file *file,
- 				"q[%d]: read_ptr: %u, write_ptr: %u\n",
- 				cnt, q->read_ptr, q->write_ptr);
- 	}
--	if (il->tx_traffic && (iwlegacy_debug_level & IL_DL_TX)) {
-+	if (il->tx_traffic && (il_debug_level & IL_DL_TX)) {
- 		ptr = il->tx_traffic;
- 		pos += scnprintf(buf + pos, bufsz - pos,
- 				"Tx Traffic idx: %u\n",	il->tx_traffic_idx);
-@@ -728,7 +728,7 @@ static ssize_t il_dbgfs_traffic_log_read(struct file *file,
- 			"read: %u, write: %u\n",
- 			 rxq->read, rxq->write);
- 
--	if (il->rx_traffic && (iwlegacy_debug_level & IL_DL_RX)) {
-+	if (il->rx_traffic && (il_debug_level & IL_DL_RX)) {
- 		ptr = il->rx_traffic;
- 		pos += scnprintf(buf + pos, bufsz - pos,
- 				"Rx Traffic idx: %u\n",	il->rx_traffic_idx);
-diff --git a/drivers/net/wireless/iwlegacy/iwl-dev.h b/drivers/net/wireless/iwlegacy/iwl-dev.h
-index 824d193..2e2e3f3 100644
---- a/drivers/net/wireless/iwlegacy/iwl-dev.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-dev.h
-@@ -626,7 +626,7 @@ struct il_hw_params {
-  *
-  ****************************************************************************/
- extern void il4965_update_chain_flags(struct il_priv *il);
--extern const u8 iwlegacy_bcast_addr[ETH_ALEN];
-+extern const u8 il_bcast_addr[ETH_ALEN];
- extern int il_queue_space(const struct il_queue *q);
- static inline int il_queue_used(const struct il_queue *q, int i)
- {
-@@ -1220,7 +1220,7 @@ struct il_priv {
- #ifdef CONFIG_IWLWIFI_LEGACY_DEBUG
- 	/* debugging info */
- 	u32 debug_level; /* per device debugging will override global
--			    iwlegacy_debug_level if set */
-+			    il_debug_level if set */
- #endif /* CONFIG_IWLWIFI_LEGACY_DEBUG */
- #ifdef CONFIG_IWLWIFI_LEGACY_DEBUGFS
- 	/* debugfs */
-@@ -1270,12 +1270,12 @@ static inline u32 il_get_debug_level(struct il_priv *il)
- 	if (il->debug_level)
- 		return il->debug_level;
- 	else
--		return iwlegacy_debug_level;
-+		return il_debug_level;
- }
- #else
- static inline u32 il_get_debug_level(struct il_priv *il)
- {
--	return iwlegacy_debug_level;
-+	return il_debug_level;
- }
- #endif
- 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-eeprom.c b/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-index 5edec73..f6b9d6d 100644
---- a/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-@@ -77,7 +77,7 @@
- 
- /************************** EEPROM BANDS ****************************
-  *
-- * The iwlegacy_eeprom_band definitions below provide the mapping from the
-+ * The il_eeprom_band definitions below provide the mapping from the
-  * EEPROM contents to the specific channel number supported for each
-  * band.
-  *
-@@ -107,32 +107,32 @@
-  *********************************************************************/
- 
- /* 2.4 GHz */
--const u8 iwlegacy_eeprom_band_1[14] = {
-+const u8 il_eeprom_band_1[14] = {
- 	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
- };
- 
- /* 5.2 GHz bands */
--static const u8 iwlegacy_eeprom_band_2[] = {	/* 4915-5080MHz */
-+static const u8 il_eeprom_band_2[] = {	/* 4915-5080MHz */
- 	183, 184, 185, 187, 188, 189, 192, 196, 7, 8, 11, 12, 16
- };
- 
--static const u8 iwlegacy_eeprom_band_3[] = {	/* 5170-5320MHz */
-+static const u8 il_eeprom_band_3[] = {	/* 5170-5320MHz */
- 	34, 36, 38, 40, 42, 44, 46, 48, 52, 56, 60, 64
- };
- 
--static const u8 iwlegacy_eeprom_band_4[] = {	/* 5500-5700MHz */
-+static const u8 il_eeprom_band_4[] = {	/* 5500-5700MHz */
- 	100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140
- };
- 
--static const u8 iwlegacy_eeprom_band_5[] = {	/* 5725-5825MHz */
-+static const u8 il_eeprom_band_5[] = {	/* 5725-5825MHz */
- 	145, 149, 153, 157, 161, 165
- };
- 
--static const u8 iwlegacy_eeprom_band_6[] = {       /* 2.4 ht40 channel */
-+static const u8 il_eeprom_band_6[] = {       /* 2.4 ht40 channel */
- 	1, 2, 3, 4, 5, 6, 7
- };
- 
--static const u8 iwlegacy_eeprom_band_7[] = {       /* 5.2 ht40 channel */
-+static const u8 il_eeprom_band_7[] = {       /* 5.2 ht40 channel */
- 	36, 44, 52, 60, 100, 108, 116, 124, 132, 149, 157
- };
- 
-@@ -273,46 +273,46 @@ static void il_init_band_reference(const struct il_priv *il,
- 			eeprom_ops.regulatory_bands[eep_band - 1];
- 	switch (eep_band) {
- 	case 1:		/* 2.4GHz band */
--		*eeprom_ch_count = ARRAY_SIZE(iwlegacy_eeprom_band_1);
-+		*eeprom_ch_count = ARRAY_SIZE(il_eeprom_band_1);
- 		*eeprom_ch_info = (struct il_eeprom_channel *)
- 				il_eeprom_query_addr(il, offset);
--		*eeprom_ch_index = iwlegacy_eeprom_band_1;
-+		*eeprom_ch_index = il_eeprom_band_1;
- 		break;
- 	case 2:		/* 4.9GHz band */
--		*eeprom_ch_count = ARRAY_SIZE(iwlegacy_eeprom_band_2);
-+		*eeprom_ch_count = ARRAY_SIZE(il_eeprom_band_2);
- 		*eeprom_ch_info = (struct il_eeprom_channel *)
- 				il_eeprom_query_addr(il, offset);
--		*eeprom_ch_index = iwlegacy_eeprom_band_2;
-+		*eeprom_ch_index = il_eeprom_band_2;
- 		break;
- 	case 3:		/* 5.2GHz band */
--		*eeprom_ch_count = ARRAY_SIZE(iwlegacy_eeprom_band_3);
-+		*eeprom_ch_count = ARRAY_SIZE(il_eeprom_band_3);
- 		*eeprom_ch_info = (struct il_eeprom_channel *)
- 				il_eeprom_query_addr(il, offset);
--		*eeprom_ch_index = iwlegacy_eeprom_band_3;
-+		*eeprom_ch_index = il_eeprom_band_3;
- 		break;
- 	case 4:		/* 5.5GHz band */
--		*eeprom_ch_count = ARRAY_SIZE(iwlegacy_eeprom_band_4);
-+		*eeprom_ch_count = ARRAY_SIZE(il_eeprom_band_4);
- 		*eeprom_ch_info = (struct il_eeprom_channel *)
- 				il_eeprom_query_addr(il, offset);
--		*eeprom_ch_index = iwlegacy_eeprom_band_4;
-+		*eeprom_ch_index = il_eeprom_band_4;
- 		break;
- 	case 5:		/* 5.7GHz band */
--		*eeprom_ch_count = ARRAY_SIZE(iwlegacy_eeprom_band_5);
-+		*eeprom_ch_count = ARRAY_SIZE(il_eeprom_band_5);
- 		*eeprom_ch_info = (struct il_eeprom_channel *)
- 				il_eeprom_query_addr(il, offset);
--		*eeprom_ch_index = iwlegacy_eeprom_band_5;
-+		*eeprom_ch_index = il_eeprom_band_5;
- 		break;
- 	case 6:		/* 2.4GHz ht40 channels */
--		*eeprom_ch_count = ARRAY_SIZE(iwlegacy_eeprom_band_6);
-+		*eeprom_ch_count = ARRAY_SIZE(il_eeprom_band_6);
- 		*eeprom_ch_info = (struct il_eeprom_channel *)
- 				il_eeprom_query_addr(il, offset);
--		*eeprom_ch_index = iwlegacy_eeprom_band_6;
-+		*eeprom_ch_index = il_eeprom_band_6;
- 		break;
- 	case 7:		/* 5 GHz ht40 channels */
--		*eeprom_ch_count = ARRAY_SIZE(iwlegacy_eeprom_band_7);
-+		*eeprom_ch_count = ARRAY_SIZE(il_eeprom_band_7);
- 		*eeprom_ch_info = (struct il_eeprom_channel *)
- 				il_eeprom_query_addr(il, offset);
--		*eeprom_ch_index = iwlegacy_eeprom_band_7;
-+		*eeprom_ch_index = il_eeprom_band_7;
- 		break;
- 	default:
- 		BUG();
-@@ -387,11 +387,11 @@ int il_init_channel_map(struct il_priv *il)
- 	IL_DEBUG_EEPROM(il, "Initializing regulatory info from EEPROM\n");
- 
- 	il->channel_count =
--	    ARRAY_SIZE(iwlegacy_eeprom_band_1) +
--	    ARRAY_SIZE(iwlegacy_eeprom_band_2) +
--	    ARRAY_SIZE(iwlegacy_eeprom_band_3) +
--	    ARRAY_SIZE(iwlegacy_eeprom_band_4) +
--	    ARRAY_SIZE(iwlegacy_eeprom_band_5);
-+	    ARRAY_SIZE(il_eeprom_band_1) +
-+	    ARRAY_SIZE(il_eeprom_band_2) +
-+	    ARRAY_SIZE(il_eeprom_band_3) +
-+	    ARRAY_SIZE(il_eeprom_band_4) +
-+	    ARRAY_SIZE(il_eeprom_band_5);
- 
- 	IL_DEBUG_EEPROM(il, "Parsing data for %d channels.\n",
- 			il->channel_count);
-diff --git a/drivers/net/wireless/iwlegacy/iwl-eeprom.h b/drivers/net/wireless/iwlegacy/iwl-eeprom.h
-index acb5ec1..b97c837 100644
---- a/drivers/net/wireless/iwlegacy/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-eeprom.h
-@@ -144,7 +144,7 @@ struct il_eeprom_channel {
- #define EEPROM_4965_BOARD_PBA                  (2*0x56+1) /* 9 bytes */
- 
- /* 2.4 GHz */
--extern const u8 iwlegacy_eeprom_band_1[14];
-+extern const u8 il_eeprom_band_1[14];
- 
- /*
-  * factory calibration data for one txpower level, on one channel,
-diff --git a/drivers/net/wireless/iwlegacy/iwl-legacy-rs.h b/drivers/net/wireless/iwlegacy/iwl-legacy-rs.h
-index 4282ed5..744829a 100644
---- a/drivers/net/wireless/iwlegacy/iwl-legacy-rs.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-legacy-rs.h
-@@ -56,7 +56,7 @@ struct il3945_rate_info {
- 
- /*
-  * These serve as indexes into
-- * struct il_rate_info iwlegacy_rates[IL_RATE_COUNT];
-+ * struct il_rate_info il_rates[IL_RATE_COUNT];
-  */
- enum {
- 	IL_RATE_1M_INDEX = 0,
-@@ -268,7 +268,7 @@ enum {
- #define TID_MAX_TIME_DIFF ((TID_QUEUE_MAX_SIZE - 1) * TID_QUEUE_CELL_SPACING)
- #define TIME_WRAP_AROUND(x, y) (((y) > (x)) ? (y) - (x) : (0-(x)) + (y))
- 
--extern const struct il_rate_info iwlegacy_rates[IL_RATE_COUNT];
-+extern const struct il_rate_info il_rates[IL_RATE_COUNT];
- 
- enum il_table_type {
- 	LQ_NONE,
-diff --git a/drivers/net/wireless/iwlegacy/iwl-scan.c b/drivers/net/wireless/iwlegacy/iwl-scan.c
-index 0184d5b..5a967d2 100644
---- a/drivers/net/wireless/iwlegacy/iwl-scan.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-scan.c
-@@ -442,9 +442,9 @@ il_fill_probe_req(struct il_priv *il, struct ieee80211_mgmt *frame,
- 		return 0;
- 
- 	frame->frame_control = cpu_to_le16(IEEE80211_STYPE_PROBE_REQ);
--	memcpy(frame->da, iwlegacy_bcast_addr, ETH_ALEN);
-+	memcpy(frame->da, il_bcast_addr, ETH_ALEN);
- 	memcpy(frame->sa, ta, ETH_ALEN);
--	memcpy(frame->bssid, iwlegacy_bcast_addr, ETH_ALEN);
-+	memcpy(frame->bssid, il_bcast_addr, ETH_ALEN);
- 	frame->seq_ctrl = 0;
- 
- 	len += 24;
-diff --git a/drivers/net/wireless/iwlegacy/iwl3945-base.c b/drivers/net/wireless/iwlegacy/iwl3945-base.c
-index 2c336a7..af3f194 100644
---- a/drivers/net/wireless/iwlegacy/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl3945-base.c
-@@ -2378,7 +2378,7 @@ static int il3945_alloc_bcast_station(struct il_priv *il)
- 
- 	spin_lock_irqsave(&il->sta_lock, flags);
- 	sta_id = il_prep_station(il, ctx,
--					iwlegacy_bcast_addr, false, NULL);
-+					il_bcast_addr, false, NULL);
- 	if (sta_id == IL_INVALID_STATION) {
- 		IL_ERR(il, "Unable to prepare broadcast station\n");
- 		spin_unlock_irqrestore(&il->sta_lock, flags);
-@@ -4003,7 +4003,7 @@ module_param_named(disable_hw_scan, il3945_mod_params.disable_hw_scan,
- 		int, S_IRUGO);
- MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 1)");
- #ifdef CONFIG_IWLWIFI_LEGACY_DEBUG
--module_param_named(debug, iwlegacy_debug_level, uint, S_IRUGO | S_IWUSR);
-+module_param_named(debug, il_debug_level, uint, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(debug, "debug output mask");
- #endif
- module_param_named(fw_restart, il3945_mod_params.restart_fw, int, S_IRUGO);
-diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-index ae8a937..d4eacc3 100644
---- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-@@ -2712,7 +2712,7 @@ static void il4965_init_hw_rates(struct il_priv *il,
- 	int i;
- 
- 	for (i = 0; i < IL_RATE_COUNT_LEGACY; i++) {
--		rates[i].bitrate = iwlegacy_rates[i].ieee * 5;
-+		rates[i].bitrate = il_rates[i].ieee * 5;
- 		rates[i].hw_value = i; /* Rate scaling will work on indexes */
- 		rates[i].hw_value_short = i;
- 		rates[i].flags = 0;
-@@ -2721,7 +2721,7 @@ static void il4965_init_hw_rates(struct il_priv *il,
- 			 * If CCK != 1M then set short preamble rate flag.
- 			 */
- 			rates[i].flags |=
--				(iwlegacy_rates[i].plcp == IL_RATE_1M_PLCP) ?
-+				(il_rates[i].plcp == IL_RATE_1M_PLCP) ?
- 					0 : IEEE80211_RATE_SHORT_PREAMBLE;
- 		}
- 	}
-@@ -3259,7 +3259,7 @@ module_exit(il4965_exit);
- module_init(il4965_init);
- 
- #ifdef CONFIG_IWLWIFI_LEGACY_DEBUG
--module_param_named(debug, iwlegacy_debug_level, uint, S_IRUGO | S_IWUSR);
-+module_param_named(debug, il_debug_level, uint, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(debug, "debug output mask");
- #endif
- 
--- 
-1.7.1
+I'm seeing a lot of problems associating with APs when using a Toshiba
+NB505 with RTL8188CE wireless. The situation seems to have improved
+quite a bit when I moved from 3.0 to 3.2-rc2, but I still see a good
+number of failed associations. This card doesn't seem to like my Linksys
+E2000 router in particular; I rarely see a successful association with
+this router.
 
+I'm attaching logs from the kernel and wpa_supplicant from some failed
+associations with the E2000 along with the wpa_supplicant configuration
+I used. I loaded rtl8192ce with debug=3, but if more verbosity or any
+other information is needed, please let me know.
+
+Thanks,
+Seth
+
+--6sX45UoQRIJXqkqR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="wpa-supplicant.log"
+
+Initializing interface 'wlan0' conf 'wpa_supplicant.conf' driver 'default' ctrl_interface 'N/A' bridge 'N/A'
+Configuration file 'wpa_supplicant.conf' -> '/home/sforshee/wpa_supplicant.conf'
+Reading configuration file '/home/sforshee/wpa_supplicant.conf'
+Line: 1 - start of a new network block
+ssid - hexdump_ascii(len=6):
+     4b 61 69 6c 69 61                                 Kailia          
+scan_ssid=1 (0x1)
+key_mgmt: 0x2
+PSK (ASCII passphrase) - hexdump_ascii(len=22): [REMOVED]
+PSK (from passphrase) - hexdump(len=32): [REMOVED]
+Priority group 0
+   id=0 ssid='Kailia'
+WEXT: cfg80211-based driver detected
+SIOCGIWRANGE: WE(compiled)=22 WE(source)=21 enc_capa=0xf
+  capabilities: key_mgmt 0xf enc 0xf flags 0x0
+netlink: Operstate: linkmode=1, operstate=5
+Own MAC address: 7c:4f:b5:c7:a5:53
+wpa_driver_wext_set_key: alg=0 key_idx=0 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=1 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=2 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=3 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=4 set_tx=0 seq_len=0 key_len=0
+Driver did not support SIOCSIWENCODEEXT
+wpa_driver_wext_set_key: alg=0 key_idx=5 set_tx=0 seq_len=0 key_len=0
+Driver did not support SIOCSIWENCODEEXT
+wpa_driver_wext_set_countermeasures
+RSN: flushing PMKID list in the driver
+Setting scan request: 0 sec 100000 usec
+WPS: UUID based on MAC address - hexdump(len=16): bb 15 a1 23 32 80 50 ef 91 fb cc 63 e2 40 66 22
+EAPOL: SUPP_PAE entering state DISCONNECTED
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: KEY_RX entering state NO_KEY_RECEIVE
+EAPOL: SUPP_BE entering state INITIALIZE
+EAP: EAP entering state DISABLED
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: Supplicant port status: Unauthorized
+Added interface wlan0
+RTM_NEWLINK: operstate=0 ifi_flags=0x1043 ([UP][RUNNING])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b06 len=12
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b1a len=16
+State: DISCONNECTED -> SCANNING
+Scan SSID - hexdump_ascii(len=6):
+     4b 61 69 6c 69 61                                 Kailia          
+Starting AP scan for specific SSID(s)
+Scan requested (ret=0) - scan timeout 5 seconds
+EAPOL: disable timer tick
+EAPOL: Supplicant port status: Unauthorized
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b19 len=16
+Received 3662 bytes of scan results (8 BSSes)
+BSS: Start scan result update 1
+BSS: Add new id 0 BSSID c0:c1:c0:01:e8:1c SSID 'Kailia'
+BSS: Add new id 1 BSSID 00:25:3c:2d:1b:09 SSID '2WIRE639'
+BSS: Add new id 2 BSSID 02:24:8c:65:b8:09 SSID 'Piria'
+BSS: Add new id 3 BSSID 00:24:56:a0:d1:e9 SSID '2WIRE576'
+BSS: Add new id 4 BSSID 00:24:8c:65:b8:08 SSID 'Nisyros'
+BSS: Add new id 5 BSSID 00:1d:5a:7c:63:51 SSID '2WIRE788'
+BSS: Add new id 6 BSSID 90:84:0d:de:96:01 SSID 'R-network'
+BSS: Add new id 7 BSSID 00:14:d1:ca:8e:58 SSID ''
+New scan results available
+WPS: attr type=0x104a len=1
+WPS: attr type=0x1044 len=1
+WPS: attr type=0x104a len=1
+WPS: attr type=0x1044 len=1
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: c0:c1:c0:01:e8:1c ssid='Kailia' wpa_ie_len=0 rsn_ie_len=20 caps=0x11
+   selected based on RSN IE
+   selected WPA AP c0:c1:c0:01:e8:1c ssid='Kailia'
+Trying to associate with c0:c1:c0:01:e8:1c (SSID='Kailia' freq=2412 MHz)
+FT: Stored MDIE and FTIE from (Re)Association Response - hexdump(len=0):
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+RSN: using IEEE 802.11i/D9.0
+WPA: Selected cipher suites: group 16 pairwise 16 key_mgmt 2 proto 2
+WPA: clearing AP WPA IE
+WPA: set AP RSN IE - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 0c 00
+WPA: using GTK CCMP
+WPA: using PTK CCMP
+WPA: using KEY_MGMT WPA-PSK
+WPA: not using MGMT group cipher
+WPA: Set own WPA IE default - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
+No keys have been configured - skip key clearing
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_psk
+Setting authentication timeout: 10 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP fail=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portControl=Auto
+EAPOL: Supplicant port status: Unauthorized
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b1a len=16
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b06 len=12
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b04 len=16
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b1a len=22
+Authentication with c0:c1:c0:01:e8:1c timed out.
+Added BSSID c0:c1:c0:01:e8:1c into blacklist
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portValid=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Starting AP scan for wildcard SSID
+Scan requested (ret=0) - scan timeout 30 seconds
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b19 len=16
+Scan results did not fit - trying larger buffer (8192 bytes)
+Received 6429 bytes of scan results (14 BSSes)
+BSS: Start scan result update 2
+BSS: Add new id 8 BSSID 98:fc:11:74:62:f2 SSID 'CSJHC'
+BSS: Add new id 9 BSSID 00:1f:33:df:ce:2a SSID 'BandP'
+BSS: Add new id 10 BSSID 00:02:6f:6b:ce:e6 SSID '09b239332'
+BSS: Add new id 11 BSSID 00:1d:5a:70:8d:59 SSID '2WIRE868'
+BSS: Add new id 12 BSSID 98:2c:be:20:f1:89 SSID '2WIRE065'
+BSS: Add new id 13 BSSID 96:84:0d:de:96:01 SSID 'R-guest'
+New scan results available
+WPS: attr type=0x104a len=1
+WPS: attr type=0x1044 len=1
+WPS: attr type=0x104a len=1
+WPS: attr type=0x1044 len=1
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 00:25:3c:2d:1b:09 ssid='2WIRE639' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+1: 00:24:8c:65:b8:08 ssid='Nisyros' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+2: 02:24:8c:65:b8:09 ssid='Piria' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+3: 00:24:56:a0:d1:e9 ssid='2WIRE576' wpa_ie_len=26 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+4: 98:fc:11:74:62:f2 ssid='CSJHC' wpa_ie_len=28 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+5: 90:84:0d:de:96:01 ssid='R-network' wpa_ie_len=0 rsn_ie_len=20 caps=0x11
+   skip - SSID mismatch
+6: 00:1f:33:df:ce:2a ssid='BandP' wpa_ie_len=24 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+7: 00:02:6f:6b:ce:e6 ssid='09b239332' wpa_ie_len=26 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+8: c0:c1:c0:01:e8:1c ssid='Kailia' wpa_ie_len=0 rsn_ie_len=20 caps=0x11
+   selected based on RSN IE
+   selected WPA AP c0:c1:c0:01:e8:1c ssid='Kailia'
+Trying to associate with c0:c1:c0:01:e8:1c (SSID='Kailia' freq=2412 MHz)
+FT: Stored MDIE and FTIE from (Re)Association Response - hexdump(len=0):
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+RSN: using IEEE 802.11i/D9.0
+WPA: Selected cipher suites: group 16 pairwise 16 key_mgmt 2 proto 2
+WPA: clearing AP WPA IE
+WPA: set AP RSN IE - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 0c 00
+WPA: using GTK CCMP
+WPA: using PTK CCMP
+WPA: using KEY_MGMT WPA-PSK
+WPA: not using MGMT group cipher
+WPA: Set own WPA IE default - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
+No keys have been configured - skip key clearing
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_psk
+Setting authentication timeout: 10 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP fail=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portControl=Auto
+EAPOL: Supplicant port status: Unauthorized
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b1a len=16
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b06 len=12
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b04 len=16
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b1a len=22
+Authentication with c0:c1:c0:01:e8:1c timed out.
+BSSID c0:c1:c0:01:e8:1c blacklist count incremented to 2
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portValid=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Scan SSID - hexdump_ascii(len=6):
+     4b 61 69 6c 69 61                                 Kailia          
+Starting AP scan for specific SSID(s)
+Scan requested (ret=0) - scan timeout 30 seconds
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b19 len=16
+Scan results did not fit - trying larger buffer (8192 bytes)
+Received 5757 bytes of scan results (13 BSSes)
+BSS: Start scan result update 3
+BSS: Add new id 14 BSSID 00:1d:5a:e2:55:d9 SSID '2WIRE172'
+BSS: Add new id 15 BSSID 00:21:7c:7a:27:91 SSID '2WIRE933'
+New scan results available
+WPS: attr type=0x104a len=1
+WPS: attr type=0x1044 len=1
+WPS: attr type=0x1041 len=1
+WPS: attr type=0x103b len=1
+WPS: attr type=0x1047 len=16
+WPS: attr type=0x1021 len=12
+WPS: attr type=0x1023 len=13
+WPS: attr type=0x1024 len=7
+WPS: attr type=0x1042 len=2
+WPS: attr type=0x1054 len=8
+WPS: attr type=0x1011 len=13
+WPS: attr type=0x1008 len=2
+WPS: attr type=0x104a len=1
+WPS: attr type=0x1044 len=1
+WPS: attr type=0x1041 len=1
+WPS: attr type=0x103b len=1
+WPS: attr type=0x1047 len=16
+WPS: attr type=0x1021 len=12
+WPS: attr type=0x1023 len=13
+WPS: attr type=0x1024 len=7
+WPS: attr type=0x1042 len=2
+WPS: attr type=0x1054 len=8
+WPS: attr type=0x1011 len=13
+WPS: attr type=0x1008 len=2
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 98:fc:11:74:62:f2 ssid='CSJHC' wpa_ie_len=28 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+1: 00:1f:33:df:ce:2a ssid='BandP' wpa_ie_len=24 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+2: 00:02:6f:6b:ce:e6 ssid='09b239332' wpa_ie_len=26 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+3: 02:24:8c:65:b8:09 ssid='Piria' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+4: 00:24:56:a0:d1:e9 ssid='2WIRE576' wpa_ie_len=26 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+5: 00:24:8c:65:b8:08 ssid='Nisyros' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+6: 00:1d:5a:70:8d:59 ssid='2WIRE868' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+7: 00:1d:5a:e2:55:d9 ssid='2WIRE172' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+8: 00:21:7c:7a:27:91 ssid='2WIRE933' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+9: 90:84:0d:de:96:01 ssid='R-network' wpa_ie_len=0 rsn_ie_len=20 caps=0x11
+   skip - SSID mismatch
+10: 98:2c:be:20:f1:89 ssid='2WIRE065' wpa_ie_len=0 rsn_ie_len=0 caps=0x11
+   skip - no WPA/RSN IE
+11: 96:84:0d:de:96:01 ssid='R-guest' wpa_ie_len=0 rsn_ie_len=0 caps=0x1
+   skip - no WPA/RSN IE
+12: 00:14:d1:ca:8e:58 ssid='' wpa_ie_len=0 rsn_ie_len=0 caps=0x1
+   skip - SSID not known
+Try to find non-WPA AP
+0: 98:fc:11:74:62:f2 ssid='CSJHC' wpa_ie_len=28 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+1: 00:1f:33:df:ce:2a ssid='BandP' wpa_ie_len=24 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+2: 00:02:6f:6b:ce:e6 ssid='09b239332' wpa_ie_len=26 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+3: 02:24:8c:65:b8:09 ssid='Piria' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+4: 00:24:56:a0:d1:e9 ssid='2WIRE576' wpa_ie_len=26 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+5: 00:24:8c:65:b8:08 ssid='Nisyros' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+6: 00:1d:5a:70:8d:59 ssid='2WIRE868' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+7: 00:1d:5a:e2:55:d9 ssid='2WIRE172' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+8: 00:21:7c:7a:27:91 ssid='2WIRE933' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+9: 90:84:0d:de:96:01 ssid='R-network' wpa_ie_len=0 rsn_ie_len=20 caps=0x11
+   skip - SSID mismatch
+10: 98:2c:be:20:f1:89 ssid='2WIRE065' wpa_ie_len=0 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+11: 96:84:0d:de:96:01 ssid='R-guest' wpa_ie_len=0 rsn_ie_len=0 caps=0x1
+   skip - SSID mismatch
+12: 00:14:d1:ca:8e:58 ssid='' wpa_ie_len=0 rsn_ie_len=0 caps=0x1
+   skip - SSID not known
+No APs found - clear blacklist and try again
+Removed BSSID c0:c1:c0:01:e8:1c from blacklist (clear)
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 98:fc:11:74:62:f2 ssid='CSJHC' wpa_ie_len=28 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+1: 00:1f:33:df:ce:2a ssid='BandP' wpa_ie_len=24 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+2: 00:02:6f:6b:ce:e6 ssid='09b239332' wpa_ie_len=26 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+3: 02:24:8c:65:b8:09 ssid='Piria' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+4: 00:24:56:a0:d1:e9 ssid='2WIRE576' wpa_ie_len=26 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+5: 00:24:8c:65:b8:08 ssid='Nisyros' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+6: 00:1d:5a:70:8d:59 ssid='2WIRE868' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+7: 00:1d:5a:e2:55:d9 ssid='2WIRE172' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+8: 00:21:7c:7a:27:91 ssid='2WIRE933' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+9: 90:84:0d:de:96:01 ssid='R-network' wpa_ie_len=0 rsn_ie_len=20 caps=0x11
+   skip - SSID mismatch
+10: 98:2c:be:20:f1:89 ssid='2WIRE065' wpa_ie_len=0 rsn_ie_len=0 caps=0x11
+   skip - no WPA/RSN IE
+11: 96:84:0d:de:96:01 ssid='R-guest' wpa_ie_len=0 rsn_ie_len=0 caps=0x1
+   skip - no WPA/RSN IE
+12: 00:14:d1:ca:8e:58 ssid='' wpa_ie_len=0 rsn_ie_len=0 caps=0x1
+   skip - SSID not known
+Try to find non-WPA AP
+0: 98:fc:11:74:62:f2 ssid='CSJHC' wpa_ie_len=28 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+1: 00:1f:33:df:ce:2a ssid='BandP' wpa_ie_len=24 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+2: 00:02:6f:6b:ce:e6 ssid='09b239332' wpa_ie_len=26 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+3: 02:24:8c:65:b8:09 ssid='Piria' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+4: 00:24:56:a0:d1:e9 ssid='2WIRE576' wpa_ie_len=26 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+5: 00:24:8c:65:b8:08 ssid='Nisyros' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+6: 00:1d:5a:70:8d:59 ssid='2WIRE868' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+7: 00:1d:5a:e2:55:d9 ssid='2WIRE172' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+8: 00:21:7c:7a:27:91 ssid='2WIRE933' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+9: 90:84:0d:de:96:01 ssid='R-network' wpa_ie_len=0 rsn_ie_len=20 caps=0x11
+   skip - SSID mismatch
+10: 98:2c:be:20:f1:89 ssid='2WIRE065' wpa_ie_len=0 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+11: 96:84:0d:de:96:01 ssid='R-guest' wpa_ie_len=0 rsn_ie_len=0 caps=0x1
+   skip - SSID mismatch
+12: 00:14:d1:ca:8e:58 ssid='' wpa_ie_len=0 rsn_ie_len=0 caps=0x1
+   skip - SSID not known
+No suitable network found
+Setting scan request: 5 sec 0 usec
+Starting AP scan for wildcard SSID
+Scan requested (ret=0) - scan timeout 30 seconds
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b19 len=16
+Scan results did not fit - trying larger buffer (8192 bytes)
+Received 5323 bytes of scan results (12 BSSes)
+BSS: Start scan result update 4
+BSS: Expire BSS 1 due to no match in scan
+BSS: Remove id 1 BSSID 00:25:3c:2d:1b:09 SSID '2WIRE639'
+BSS: Expire BSS 5 due to no match in scan
+BSS: Remove id 5 BSSID 00:1d:5a:7c:63:51 SSID '2WIRE788'
+New scan results available
+WPS: attr type=0x104a len=1
+WPS: attr type=0x1044 len=1
+WPS: attr type=0x104a len=1
+WPS: attr type=0x1044 len=1
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 02:24:8c:65:b8:09 ssid='Piria' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+1: 00:24:8c:65:b8:08 ssid='Nisyros' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+2: 00:1d:5a:e2:55:d9 ssid='2WIRE172' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+3: 00:24:56:a0:d1:e9 ssid='2WIRE576' wpa_ie_len=26 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+4: 90:84:0d:de:96:01 ssid='R-network' wpa_ie_len=0 rsn_ie_len=20 caps=0x11
+   skip - SSID mismatch
+5: 00:1d:5a:70:8d:59 ssid='2WIRE868' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+6: 00:02:6f:6b:ce:e6 ssid='09b239332' wpa_ie_len=26 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+7: 00:21:7c:7a:27:91 ssid='2WIRE933' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+8: c0:c1:c0:01:e8:1c ssid='Kailia' wpa_ie_len=0 rsn_ie_len=20 caps=0x11
+   selected based on RSN IE
+   selected WPA AP c0:c1:c0:01:e8:1c ssid='Kailia'
+Trying to associate with c0:c1:c0:01:e8:1c (SSID='Kailia' freq=2412 MHz)
+FT: Stored MDIE and FTIE from (Re)Association Response - hexdump(len=0):
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+RSN: using IEEE 802.11i/D9.0
+WPA: Selected cipher suites: group 16 pairwise 16 key_mgmt 2 proto 2
+WPA: clearing AP WPA IE
+WPA: set AP RSN IE - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 0c 00
+WPA: using GTK CCMP
+WPA: using PTK CCMP
+WPA: using KEY_MGMT WPA-PSK
+WPA: not using MGMT group cipher
+WPA: Set own WPA IE default - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
+No keys have been configured - skip key clearing
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_psk
+Setting authentication timeout: 10 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP fail=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portControl=Auto
+EAPOL: Supplicant port status: Unauthorized
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b1a len=16
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b06 len=12
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b04 len=16
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b1a len=22
+Authentication with c0:c1:c0:01:e8:1c timed out.
+Added BSSID c0:c1:c0:01:e8:1c into blacklist
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portValid=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Scan SSID - hexdump_ascii(len=6):
+     4b 61 69 6c 69 61                                 Kailia          
+Starting AP scan for specific SSID(s)
+Scan requested (ret=0) - scan timeout 30 seconds
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b19 len=16
+Scan results did not fit - trying larger buffer (8192 bytes)
+Received 5185 bytes of scan results (12 BSSes)
+BSS: Start scan result update 5
+BSS: Add new id 16 BSSID 00:25:3c:2d:1b:09 SSID '2WIRE639'
+BSS: Expire BSS 8 due to no match in scan
+BSS: Remove id 8 BSSID 98:fc:11:74:62:f2 SSID 'CSJHC'
+BSS: Expire BSS 9 due to no match in scan
+BSS: Remove id 9 BSSID 00:1f:33:df:ce:2a SSID 'BandP'
+New scan results available
+WPS: attr type=0x104a len=1
+WPS: attr type=0x1044 len=1
+WPS: attr type=0x104a len=1
+WPS: attr type=0x1044 len=1
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 02:24:8c:65:b8:09 ssid='Piria' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+1: 00:24:8c:65:b8:08 ssid='Nisyros' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+2: 90:84:0d:de:96:01 ssid='R-network' wpa_ie_len=0 rsn_ie_len=20 caps=0x11
+   skip - SSID mismatch
+3: 00:1d:5a:70:8d:59 ssid='2WIRE868' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+4: 00:02:6f:6b:ce:e6 ssid='09b239332' wpa_ie_len=26 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+5: 00:1d:5a:e2:55:d9 ssid='2WIRE172' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+6: 00:21:7c:7a:27:91 ssid='2WIRE933' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+7: c0:c1:c0:01:e8:1c ssid='Kailia' wpa_ie_len=0 rsn_ie_len=20 caps=0x11
+   selected based on RSN IE
+   selected WPA AP c0:c1:c0:01:e8:1c ssid='Kailia'
+Trying to associate with c0:c1:c0:01:e8:1c (SSID='Kailia' freq=2412 MHz)
+FT: Stored MDIE and FTIE from (Re)Association Response - hexdump(len=0):
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+RSN: using IEEE 802.11i/D9.0
+WPA: Selected cipher suites: group 16 pairwise 16 key_mgmt 2 proto 2
+WPA: clearing AP WPA IE
+WPA: set AP RSN IE - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 0c 00
+WPA: using GTK CCMP
+WPA: using PTK CCMP
+WPA: using KEY_MGMT WPA-PSK
+WPA: not using MGMT group cipher
+WPA: Set own WPA IE default - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
+No keys have been configured - skip key clearing
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_psk
+Setting authentication timeout: 10 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP fail=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portControl=Auto
+EAPOL: Supplicant port status: Unauthorized
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b1a len=16
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b06 len=12
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b04 len=16
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b1a len=22
+Authentication with c0:c1:c0:01:e8:1c timed out.
+BSSID c0:c1:c0:01:e8:1c blacklist count incremented to 2
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portValid=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Starting AP scan for wildcard SSID
+Scan requested (ret=0) - scan timeout 30 seconds
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Wireless event: cmd=0x8b19 len=16
+Scan results did not fit - trying larger buffer (8192 bytes)
+Received 6028 bytes of scan results (14 BSSes)
+BSS: Start scan result update 6
+BSS: Add new id 17 BSSID 00:1d:5a:7c:63:51 SSID '2WIRE788'
+New scan results available
+WPS: attr type=0x104a len=1
+WPS: attr type=0x1044 len=1
+WPS: attr type=0x104a len=1
+WPS: attr type=0x1044 len=1
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 02:24:8c:65:b8:09 ssid='Piria' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+1: 00:24:8c:65:b8:08 ssid='Nisyros' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+2: 90:84:0d:de:96:01 ssid='R-network' wpa_ie_len=0 rsn_ie_len=20 caps=0x11
+   skip - SSID mismatch
+3: 00:1d:5a:70:8d:59 ssid='2WIRE868' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+4: 00:02:6f:6b:ce:e6 ssid='09b239332' wpa_ie_len=26 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+5: 00:1d:5a:e2:55:d9 ssid='2WIRE172' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+6: 00:21:7c:7a:27:91 ssid='2WIRE933' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+7: 00:25:3c:2d:1b:09 ssid='2WIRE639' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+8: c0:c1:c0:01:e8:1c ssid='Kailia' wpa_ie_len=0 rsn_ie_len=20 caps=0x11
+   skip - blacklisted
+9: 00:24:56:a0:d1:e9 ssid='2WIRE576' wpa_ie_len=26 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+10: 00:1d:5a:7c:63:51 ssid='2WIRE788' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+11: 98:2c:be:20:f1:89 ssid='2WIRE065' wpa_ie_len=0 rsn_ie_len=0 caps=0x11
+   skip - no WPA/RSN IE
+12: 00:14:d1:ca:8e:58 ssid='' wpa_ie_len=0 rsn_ie_len=0 caps=0x1
+   skip - SSID not known
+13: 96:84:0d:de:96:01 ssid='R-guest' wpa_ie_len=0 rsn_ie_len=0 caps=0x1
+   skip - no WPA/RSN IE
+Try to find non-WPA AP
+0: 02:24:8c:65:b8:09 ssid='Piria' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+1: 00:24:8c:65:b8:08 ssid='Nisyros' wpa_ie_len=0 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+2: 90:84:0d:de:96:01 ssid='R-network' wpa_ie_len=0 rsn_ie_len=20 caps=0x11
+   skip - SSID mismatch
+3: 00:1d:5a:70:8d:59 ssid='2WIRE868' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+4: 00:02:6f:6b:ce:e6 ssid='09b239332' wpa_ie_len=26 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+5: 00:1d:5a:e2:55:d9 ssid='2WIRE172' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+6: 00:21:7c:7a:27:91 ssid='2WIRE933' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+7: 00:25:3c:2d:1b:09 ssid='2WIRE639' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+8: c0:c1:c0:01:e8:1c ssid='Kailia' wpa_ie_len=0 rsn_ie_len=20 caps=0x11
+   skip - blacklisted
+9: 00:24:56:a0:d1:e9 ssid='2WIRE576' wpa_ie_len=26 rsn_ie_len=24 caps=0x11
+   skip - SSID mismatch
+10: 00:1d:5a:7c:63:51 ssid='2WIRE788' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+11: 98:2c:be:20:f1:89 ssid='2WIRE065' wpa_ie_len=0 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+12: 00:14:d1:ca:8e:58 ssid='' wpa_ie_len=0 rsn_ie_len=0 caps=0x1
+   skip - SSID not known
+13: 96:84:0d:de:96:01 ssid='R-guest' wpa_ie_len=0 rsn_ie_len=0 caps=0x1
+   skip - SSID mismatch
+No APs found - clear blacklist and try again
+Removed BSSID c0:c1:c0:01:e8:1c from blacklist (clear)
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+
+--6sX45UoQRIJXqkqR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="dmesg.log"
+
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5360.904322] cfg80211: Calling CRDA to update world regulatory domain
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5360.932587] cfg80211: World regulatory domain updated:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5360.936510] cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5360.940574] cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5360.944608] cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5360.948602] cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5360.952533] cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5360.956189] cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5360.969504] rtl8192ce 0000:07:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5360.972820] rtl8192ce 0000:07:00.0: setting latency timer to 64
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5360.989838] rtlwifi:_rtl_init_hw_ht_capab():<0-0> 1T1R
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5360.993372] cfg80211: Updating information on frequency 2412 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5360.996464] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.000213] cfg80211: Updating information on frequency 2417 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.003857] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.007517] cfg80211: Updating information on frequency 2422 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.011409] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.016258] cfg80211: Updating information on frequency 2427 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.021505] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.026713] cfg80211: Updating information on frequency 2432 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.032082] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.037470] cfg80211: Updating information on frequency 2437 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.042979] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.048530] cfg80211: Updating information on frequency 2442 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.054266] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.059972] cfg80211: Updating information on frequency 2447 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.065798] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.071714] cfg80211: Updating information on frequency 2452 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.077903] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.084091] cfg80211: Updating information on frequency 2457 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.091445] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.098092] cfg80211: Updating information on frequency 2462 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.104631] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.111276] cfg80211: Updating information on frequency 2467 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.118075] cfg80211: 2457000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.124764] cfg80211: Updating information on frequency 2472 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.131602] cfg80211: 2457000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.138441] cfg80211: Disabling freq 2484 MHz as custom regd has no rule that fits a 20 MHz wide channel
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.145891] cfg80211: Ignoring regulatory request Set by core since the driver uses its own custom regulatory domain
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.150945] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.157645] rtlwifi: wireless switch is on
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.165004] cfg80211: Calling CRDA for country: EC
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.194684] cfg80211: Updating information on frequency 2412 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.199637] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204386] cfg80211: Updating information on frequency 2417 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204398] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204406] cfg80211: Updating information on frequency 2422 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204415] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204422] cfg80211: Updating information on frequency 2427 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204430] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204437] cfg80211: Updating information on frequency 2432 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204445] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204452] cfg80211: Updating information on frequency 2437 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204460] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204467] cfg80211: Updating information on frequency 2442 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204475] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204482] cfg80211: Updating information on frequency 2447 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204491] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204497] cfg80211: Updating information on frequency 2452 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204506] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204512] cfg80211: Updating information on frequency 2457 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204521] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204528] cfg80211: Updating information on frequency 2462 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204536] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204543] cfg80211: Updating information on frequency 2467 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204551] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204558] cfg80211: Updating information on frequency 2472 MHz for a 20 MHz width channel with regulatory rule:
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204566] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204572] cfg80211: Disabling freq 2484 MHz
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204583] cfg80211: Regulatory domain changed to country: EC
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204588] cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204596] cfg80211:     (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204603] cfg80211:     (5170000 KHz - 5250000 KHz @ 20000 KHz), (300 mBi, 1700 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204611] cfg80211:     (5250000 KHz - 5330000 KHz @ 20000 KHz), (300 mBi, 2300 mBm)
+Nov 18 16:23:38 ubuntu-NB505 kernel: [ 5361.204619] cfg80211:     (5735000 KHz - 5835000 KHz @ 20000 KHz), (300 mBi, 3000 mBm)
+Nov 18 16:23:43 ubuntu-NB505 kernel: [ 5365.985224] rtl8192c_common: Loading firmware file rtlwifi/rtl8192cfw.bin
+Nov 18 16:23:43 ubuntu-NB505 kernel: [ 5365.989357] rtl8192c_common:rtl92c_download_fw():<0-0> Firmware Version(49), Signature(0x88c1),Size(32)
+Nov 18 16:23:43 ubuntu-NB505 kernel: [ 5366.320052] rtlwifi:rtl_pci_start():<0-0> OK
+Nov 18 16:23:43 ubuntu-NB505 kernel: [ 5366.335029] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+Nov 18 16:23:43 ubuntu-NB505 kernel: [ 5366.424070] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-0> IPS Set eRf nic disable
+Nov 18 16:23:43 ubuntu-NB505 kernel: [ 5366.481833] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-0> IPS Set eRf nic enable
+Nov 18 16:23:43 ubuntu-NB505 kernel: [ 5366.490556] rtl8192c_common: Loading firmware file rtlwifi/rtl8192cfw.bin
+Nov 18 16:23:43 ubuntu-NB505 kernel: [ 5366.496684] rtl8192c_common:rtl92c_download_fw():<0-0> Firmware Version(49), Signature(0x88c1),Size(32)
+Nov 18 16:23:45 ubuntu-NB505 kernel: [ 5367.690674] wlan0: direct probe to c0:c1:c0:01:e8:1c (try 1/3)
+Nov 18 16:23:45 ubuntu-NB505 kernel: [ 5367.706420] wlan0: direct probe responded
+Nov 18 16:23:45 ubuntu-NB505 kernel: [ 5367.724064] wlan0: authenticate with c0:c1:c0:01:e8:1c (try 1)
+Nov 18 16:23:45 ubuntu-NB505 kernel: [ 5367.724093] rtlwifi:rtl_pci_tx():<200-1> MAC80211_LINKING
+Nov 18 16:23:45 ubuntu-NB505 kernel: [ 5367.788092] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-0> IPS Set eRf nic disable
+Nov 18 16:23:45 ubuntu-NB505 kernel: [ 5367.924090] wlan0: authenticate with c0:c1:c0:01:e8:1c (try 2)
+Nov 18 16:23:45 ubuntu-NB505 kernel: [ 5368.124091] wlan0: authenticate with c0:c1:c0:01:e8:1c (try 3)
+Nov 18 16:23:45 ubuntu-NB505 kernel: [ 5368.324086] wlan0: authentication with c0:c1:c0:01:e8:1c timed out
+Nov 18 16:23:55 ubuntu-NB505 kernel: [ 5377.692058] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-0> IPS Set eRf nic enable
+Nov 18 16:23:55 ubuntu-NB505 kernel: [ 5377.698428] rtl8192c_common: Loading firmware file rtlwifi/rtl8192cfw.bin
+Nov 18 16:23:55 ubuntu-NB505 kernel: [ 5377.702379] rtl8192c_common:rtl92c_download_fw():<0-0> Firmware Version(49), Signature(0x88c1),Size(32)
+Nov 18 16:23:56 ubuntu-NB505 kernel: [ 5378.894976] wlan0: authenticate with c0:c1:c0:01:e8:1c (try 1)
+Nov 18 16:23:56 ubuntu-NB505 kernel: [ 5378.895011] rtlwifi:rtl_pci_tx():<200-1> MAC80211_LINKING
+Nov 18 16:23:56 ubuntu-NB505 kernel: [ 5378.992092] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-0> IPS Set eRf nic disable
+Nov 18 16:23:56 ubuntu-NB505 kernel: [ 5379.092069] wlan0: authenticate with c0:c1:c0:01:e8:1c (try 2)
+Nov 18 16:23:56 ubuntu-NB505 kernel: [ 5379.292089] wlan0: authenticate with c0:c1:c0:01:e8:1c (try 3)
+Nov 18 16:23:56 ubuntu-NB505 kernel: [ 5379.496078] wlan0: authentication with c0:c1:c0:01:e8:1c timed out
+Nov 18 16:24:06 ubuntu-NB505 kernel: [ 5388.897510] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-0> IPS Set eRf nic enable
+Nov 18 16:24:06 ubuntu-NB505 kernel: [ 5388.905087] rtl8192c_common: Loading firmware file rtlwifi/rtl8192cfw.bin
+Nov 18 16:24:06 ubuntu-NB505 kernel: [ 5388.910213] rtl8192c_common:rtl92c_download_fw():<0-0> Firmware Version(49), Signature(0x88c1),Size(32)
+Nov 18 16:24:07 ubuntu-NB505 kernel: [ 5390.200085] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-0> IPS Set eRf nic disable
+Nov 18 16:24:12 ubuntu-NB505 kernel: [ 5395.108685] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-0> IPS Set eRf nic enable
+Nov 18 16:24:12 ubuntu-NB505 kernel: [ 5395.117237] rtl8192c_common: Loading firmware file rtlwifi/rtl8192cfw.bin
+Nov 18 16:24:12 ubuntu-NB505 kernel: [ 5395.124784] rtl8192c_common:rtl92c_download_fw():<0-0> Firmware Version(49), Signature(0x88c1),Size(32)
+Nov 18 16:24:13 ubuntu-NB505 kernel: [ 5396.318437] wlan0: authenticate with c0:c1:c0:01:e8:1c (try 1)
+Nov 18 16:24:13 ubuntu-NB505 kernel: [ 5396.322251] rtlwifi:rtl_pci_tx():<200-1> MAC80211_LINKING
+Nov 18 16:24:13 ubuntu-NB505 kernel: [ 5396.416083] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-0> IPS Set eRf nic disable
+Nov 18 16:24:14 ubuntu-NB505 kernel: [ 5396.524076] wlan0: authenticate with c0:c1:c0:01:e8:1c (try 2)
+Nov 18 16:24:14 ubuntu-NB505 kernel: [ 5396.724078] wlan0: authenticate with c0:c1:c0:01:e8:1c (try 3)
+Nov 18 16:24:14 ubuntu-NB505 kernel: [ 5396.928077] wlan0: authentication with c0:c1:c0:01:e8:1c timed out
+Nov 18 16:24:23 ubuntu-NB505 kernel: [ 5406.328680] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-0> IPS Set eRf nic enable
+Nov 18 16:24:23 ubuntu-NB505 kernel: [ 5406.331206] rtl8192c_common: Loading firmware file rtlwifi/rtl8192cfw.bin
+Nov 18 16:24:23 ubuntu-NB505 kernel: [ 5406.331219] rtl8192c_common:rtl92c_download_fw():<0-0> Firmware Version(49), Signature(0x88c1),Size(32)
+Nov 18 16:24:25 ubuntu-NB505 kernel: [ 5407.519229] wlan0: direct probe to c0:c1:c0:01:e8:1c (try 1/3)
+Nov 18 16:24:25 ubuntu-NB505 kernel: [ 5407.616070] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-0> IPS Set eRf nic disable
+Nov 18 16:24:25 ubuntu-NB505 kernel: [ 5407.720073] wlan0: direct probe to c0:c1:c0:01:e8:1c (try 2/3)
+Nov 18 16:24:25 ubuntu-NB505 kernel: [ 5407.924075] wlan0: direct probe to c0:c1:c0:01:e8:1c (try 3/3)
+Nov 18 16:24:25 ubuntu-NB505 kernel: [ 5408.124099] wlan0: direct probe to c0:c1:c0:01:e8:1c timed out
+Nov 18 16:24:35 ubuntu-NB505 kernel: [ 5417.520334] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-0> IPS Set eRf nic enable
+Nov 18 16:24:35 ubuntu-NB505 kernel: [ 5417.522861] rtl8192c_common: Loading firmware file rtlwifi/rtl8192cfw.bin
+Nov 18 16:24:35 ubuntu-NB505 kernel: [ 5417.522875] rtl8192c_common:rtl92c_download_fw():<0-0> Firmware Version(49), Signature(0x88c1),Size(32)
+Nov 18 16:24:36 ubuntu-NB505 kernel: [ 5418.710601] wlan0: direct probe to c0:c1:c0:01:e8:1c (try 1/3)
+Nov 18 16:24:36 ubuntu-NB505 kernel: [ 5418.808042] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-0> IPS Set eRf nic disable
+Nov 18 16:24:36 ubuntu-NB505 kernel: [ 5418.908061] wlan0: direct probe to c0:c1:c0:01:e8:1c (try 2/3)
+Nov 18 16:24:36 ubuntu-NB505 kernel: [ 5419.108090] wlan0: direct probe to c0:c1:c0:01:e8:1c (try 3/3)
+Nov 18 16:24:36 ubuntu-NB505 kernel: [ 5419.312085] wlan0: direct probe to c0:c1:c0:01:e8:1c timed out
+
+--6sX45UoQRIJXqkqR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="wpa_supplicant.conf"
+
+network={
+	ssid="Kailia"
+	scan_ssid=1
+	key_mgmt=WPA-PSK
+	psk=[omitted]
+}
+
+--6sX45UoQRIJXqkqR--
