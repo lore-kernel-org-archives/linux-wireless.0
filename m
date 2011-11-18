@@ -1,36 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:56153 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754913Ab1KHONP (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:49668 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751280Ab1KRUna (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 09:13:15 -0500
-Received: by mail-bw0-f41.google.com with SMTP id s6so594754bka.14
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 06:13:14 -0800 (PST)
-Subject: Re: [PATCH] wl12xx: reconfigure rate policies on set_bitrate_mask
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1318327059-14158-1-git-send-email-eliad@wizery.com>
-References: <1318327059-14158-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Nov 2011 16:13:10 +0200
-Message-ID: <1320761590.19479.12.camel@cumari> (sfid-20111108_151319_072266_36A56B92)
-Mime-Version: 1.0
+	Fri, 18 Nov 2011 15:43:30 -0500
+Message-ID: <4EC6C36D.4070900@candelatech.com> (sfid-20111118_214333_674730_65FE944A)
+Date: Fri, 18 Nov 2011 12:43:25 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v10 2/2] mac80211:  Support ht-cap over-rides.
+References: <1321644720-8245-1-git-send-email-greearb@candelatech.com>  <1321644720-8245-2-git-send-email-greearb@candelatech.com>  (sfid-20111118_203218_329178_9FB3658A) <1321648257.10266.77.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1321648257.10266.77.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-10-11 at 11:57 +0200, Eliad Peller wrote: 
-> The rate policies are configured only after association,
-> resulting in auth req being sent in wrong rates.
-> 
-> Reconfigure rate policies on bitrate mask change.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+On 11/18/2011 12:30 PM, Johannes Berg wrote:
+> On Fri, 2011-11-18 at 11:32 -0800, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> This implements ht-cap over-rides for mac80211 drivers.
+>> HT may be disabled, making an /a/b/g/n station act like an
+>> a/b/g station.  HT40 may be disabled forcing the station to
+>> be HT20 even if the AP and local hardware support HT40.
+>>
+>> MAX-AMSDU may be disabled.
+>> AMPDU-Density may be increased.
+>> AMPDU-Factor may be decreased.
+>>
+>> This has been successfully tested with ath9k using patched
+>> wpa_supplicant and iw.
+>>
+>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+>> ---
+>>
+>> v10:
+>>   *  Add check in ieee80211_apply_htcap_overrides to make
+>>      sure we are type NL80211_IFTYPE_STATION.
+>>
+>>   *  Memset u.mgd.ht_capa and ht_capa_mask to 0 in
+>>      ieee80211_set_disassoc to make sure we do not try to
+>>      use stale data.
+>>
+>>   *  Add cpu_to_le16 when dealing with u.mgd.ht_capa*
+>>      Appears to make no change on x86, but should help
+>>      with certain other platforms.
+>>
+>>   *  Addressed other issues brought up in review of v9.
+>
+> Thanks. I haven't tested it, but see no obvious bugs. :-)
 
-Applied!
+Well, feels like progress!
+
+If you actually want to enable/view the new features, you'll want
+to patch hostap and iw.  You could use my trees if you want, though
+they have some extra stuff and the ht-caps logic needs the cpu_to_le16
+changes and probably a bit of other cleanup at the moment.
+
+https://github.com/greearb/hostap-ct
+https://github.com/greearb/iw-ct
+
+I'll post some clean iw and hostap patches later today if all goes well.
+
+Thanks,
+Ben
 
 -- 
-Cheers,
-Luca.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
