@@ -1,236 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:15108 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751614Ab1K3FO0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 00:14:26 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Russell Hu <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Wilson Tsao <wtsao@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 15/17] ath9k_hw: Add MCI related changes in chip reset
-Date: Wed, 30 Nov 2011 10:41:27 +0530
-Message-ID: <1322629889-19961-16-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_061431_331211_0ADAB7A6)
-In-Reply-To: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:58470 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754857Ab1KRIVP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 03:21:15 -0500
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAI8LEvi026051
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 03:21:15 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 12/77] iwlegacy: mark il_{grab,release}_nic_access as unlocked
+Date: Fri, 18 Nov 2011 09:21:34 +0100
+Message-Id: <1321604559-10707-12-git-send-email-sgruszka@redhat.com> (sfid-20111118_092121_486942_908EA938)
+In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-
-here we check for BT state and if BT calibration has started,
-give 25ms for BT Calibration to finish. we also take care of 2G/5G
-switch and LNA transfer incase WLAN is operating in 5G. in case the BT
-state is awake when we do WLAN calibration re-calibrate and we reset
-the message exchange between WLAN and BT. BT is given preference when
-simultaneous CAL request happens. calibration for WLAN/BT is done
-assuming that the other co-existing module is in awake state, if not
-we continue to do calibration while if the other module's state changes
-we need to do restart the calibration handshake
-
-Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |  132 +++++++++++++++++++++++++++++++++++
- 1 files changed, 132 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlegacy/iwl-io.h       |   42 ++++++++++++-------------
+ drivers/net/wireless/iwlegacy/iwl4965-base.c |    4 +-
+ 2 files changed, 22 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1d71d1b..e2860d7 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1514,6 +1514,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 		   struct ath9k_hw_cal_data *caldata, bool bChannelChange)
+diff --git a/drivers/net/wireless/iwlegacy/iwl-io.h b/drivers/net/wireless/iwlegacy/iwl-io.h
+index 7ad262e..c2e32ed 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-io.h
++++ b/drivers/net/wireless/iwlegacy/iwl-io.h
+@@ -137,14 +137,12 @@ static inline int _il_grab_nic_access(struct il_priv *il)
+ 
+ 	return 0;
+ }
+-#define il_grab_nic_access(il) _il_grab_nic_access(il)
+ 
+ static inline void _il_release_nic_access(struct il_priv *il)
  {
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
- 	u32 saveLedState;
- 	struct ath9k_channel *curchan = ah->curchan;
- 	u32 saveDefAntenna;
-@@ -1521,6 +1522,53 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	u64 tsf = 0;
- 	int i, r;
- 	bool allow_fbs = false;
-+	bool mci = !!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
-+	bool save_fullsleep = ah->chip_fullsleep;
-+
-+	if (mci) {
-+
-+		ar9003_mci_2g5g_changed(ah, IS_CHAN_2GHZ(chan));
-+
-+		if (mci_hw->bt_state == MCI_BT_CAL_START) {
-+			u32 payload[4] = {0, 0, 0, 0};
-+
-+			ath_dbg(common, ATH_DBG_MCI, "MCI stop rx for BT CAL");
-+
-+			mci_hw->bt_state = MCI_BT_CAL;
-+
-+			/*
-+			 * MCI FIX: disable mci interrupt here. This is to avoid
-+			 * SW_MSG_DONE or RX_MSG bits to trigger MCI_INT and
-+			 * lead to mci_intr reentry.
-+			 */
-+
-+			ar9003_mci_disable_interrupt(ah);
-+
-+			ath_dbg(common, ATH_DBG_MCI, "send WLAN_CAL_GRANT");
-+			MCI_GPM_SET_CAL_TYPE(payload, MCI_GPM_WLAN_CAL_GRANT);
-+			ar9003_mci_send_message(ah, MCI_GPM, 0, payload,
-+						16, true, false);
-+
-+			ath_dbg(common, ATH_DBG_MCI, "\nMCI BT is calibrating");
-+
-+			/* Wait BT calibration to be completed for 25ms */
-+
-+			if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_DONE,
-+								  0, 25000))
-+				ath_dbg(common, ATH_DBG_MCI,
-+					"MCI got BT_CAL_DONE\n");
-+			else
-+				ath_dbg(common, ATH_DBG_MCI,
-+					"MCI ### BT cal takes to long, force"
-+					"bt_state to be bt_awake\n");
-+			mci_hw->bt_state = MCI_BT_AWAKE;
-+			/* MCI FIX: enable mci interrupt here */
-+			ar9003_mci_enable_interrupt(ah);
-+
-+			return true;
-+		}
-+	}
-+
+ 	_il_clear_bit(il, CSR_GP_CNTRL,
+ 			CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+ }
+-#define il_release_nic_access(il) _il_release_nic_access(il)
  
- 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
- 		return -EIO;
-@@ -1558,12 +1606,29 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 		if (ath9k_hw_channel_change(ah, chan)) {
- 			ath9k_hw_loadnf(ah, ah->curchan);
- 			ath9k_hw_start_nfcal(ah, true);
-+			if (mci && mci_hw->ready)
-+				ar9003_mci_2g5g_switch(ah, true);
-+
- 			if (AR_SREV_9271(ah))
- 				ar9002_hw_load_ani_reg(ah, chan);
- 			return 0;
- 		}
+ static inline u32 _il_read_direct32(struct il_priv *il, u32 reg)
+ {
+@@ -157,9 +155,9 @@ static inline u32 il_read_direct32(struct il_priv *il, u32 reg)
+ 	unsigned long reg_flags;
+ 
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	il_grab_nic_access(il);
++	_il_grab_nic_access(il);
+ 	value = _il_read_direct32(il, reg);
+-	il_release_nic_access(il);
++	_il_release_nic_access(il);
+ 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
+ 	return value;
+ 
+@@ -176,9 +174,9 @@ il_write_direct32(struct il_priv *il, u32 reg, u32 value)
+ 	unsigned long reg_flags;
+ 
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	if (!il_grab_nic_access(il)) {
++	if (!_il_grab_nic_access(il)) {
+ 		_il_write_direct32(il, reg, value);
+-		il_release_nic_access(il);
++		_il_release_nic_access(il);
  	}
+ 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
+ }
+@@ -222,9 +220,9 @@ static inline u32 il_read_prph(struct il_priv *il, u32 reg)
+ 	u32 val;
  
-+	if (mci) {
-+		ar9003_mci_disable_interrupt(ah);
-+
-+		if (mci_hw->ready && !save_fullsleep) {
-+			ar9003_mci_mute_bt(ah);
-+			udelay(20);
-+			REG_WRITE(ah, AR_BTCOEX_CTRL, 0);
-+		}
-+
-+		mci_hw->bt_state = MCI_BT_SLEEP;
-+		mci_hw->ready = false;
-+	}
-+
-+
- 	saveDefAntenna = REG_READ(ah, AR_DEF_ANTENNA);
- 	if (saveDefAntenna == 0)
- 		saveDefAntenna = 1;
-@@ -1619,6 +1684,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (r)
- 		return r;
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	il_grab_nic_access(il);
++	_il_grab_nic_access(il);
+ 	val = _il_read_prph(il, reg);
+-	il_release_nic_access(il);
++	_il_release_nic_access(il);
+ 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
+ 	return val;
+ }
+@@ -244,9 +242,9 @@ il_write_prph(struct il_priv *il, u32 addr, u32 val)
+ 	unsigned long reg_flags;
  
-+	if (mci)
-+		ar9003_mci_reset(ah, false, IS_CHAN_2GHZ(chan), save_fullsleep);
-+
- 	/*
- 	 * Some AR91xx SoC devices frequently fail to accept TSF writes
- 	 * right after the chip reset. When that happens, write a new
-@@ -1736,6 +1804,55 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	ath9k_hw_loadnf(ah, chan);
- 	ath9k_hw_start_nfcal(ah, true);
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	if (!il_grab_nic_access(il)) {
++	if (!_il_grab_nic_access(il)) {
+ 		_il_write_prph(il, addr, val);
+-		il_release_nic_access(il);
++		_il_release_nic_access(il);
+ 	}
+ 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
+ }
+@@ -260,9 +258,9 @@ il_set_bits_prph(struct il_priv *il, u32 reg, u32 mask)
+ 	unsigned long reg_flags;
  
-+	if (mci && mci_hw->ready) {
-+
-+		if (IS_CHAN_2GHZ(chan) &&
-+		    (mci_hw->bt_state == MCI_BT_SLEEP)) {
-+
-+			if (ar9003_mci_check_int(ah,
-+			    AR_MCI_INTERRUPT_RX_MSG_REMOTE_RESET) ||
-+			    ar9003_mci_check_int(ah,
-+			    AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE)) {
-+
-+				/*
-+				 * BT is sleeping. Check if BT wakes up during
-+				 * WLAN calibration. If BT wakes up during
-+				 * WLAN calibration, need to go through all
-+				 * message exchanges again and recal.
-+				 */
-+
-+				ath_dbg(common, ATH_DBG_MCI, "MCI BT wakes up"
-+					"during WLAN calibration\n");
-+
-+				REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW,
-+					  AR_MCI_INTERRUPT_RX_MSG_REMOTE_RESET |
-+					  AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE);
-+				ath_dbg(common, ATH_DBG_MCI, "MCI send"
-+					"REMOTE_RESET\n");
-+				ar9003_mci_remote_reset(ah, true);
-+				ar9003_mci_send_sys_waking(ah, true);
-+				udelay(1);
-+				if (IS_CHAN_2GHZ(chan))
-+					ar9003_mci_send_lna_transfer(ah, true);
-+
-+				mci_hw->bt_state = MCI_BT_AWAKE;
-+
-+				ath_dbg(common, ATH_DBG_MCI, "MCI re-cal\n");
-+
-+				if (caldata) {
-+					caldata->done_txiqcal_once = false;
-+					caldata->done_txclcal_once = false;
-+					caldata->rtt_hist.num_readings = 0;
-+				}
-+
-+				if (!ath9k_hw_init_cal(ah, chan))
-+					return -EIO;
-+
-+			}
-+		}
-+		ar9003_mci_enable_interrupt(ah);
-+	}
-+
- 	ENABLE_REGWRITE_BUFFER(ah);
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	il_grab_nic_access(il);
++	_il_grab_nic_access(il);
+ 	_il_set_bits_prph(il, reg, mask);
+-	il_release_nic_access(il);
++	_il_release_nic_access(il);
+ 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
+ }
  
- 	ath9k_hw_restore_chainmask(ah);
-@@ -1778,6 +1895,21 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (ah->btcoex_hw.enabled)
- 		ath9k_hw_btcoex_enable(ah);
+@@ -276,9 +274,9 @@ static inline void il_set_bits_mask_prph(struct il_priv *il, u32 reg,
+ 	unsigned long reg_flags;
  
-+	if (mci && mci_hw->ready) {
-+		/*
-+		 * check BT state again to make
-+		 * sure it's not changed.
-+		 */
-+
-+		ar9003_mci_sync_bt_state(ah);
-+		ar9003_mci_2g5g_switch(ah, true);
-+
-+		if ((mci_hw->bt_state == MCI_BT_AWAKE) &&
-+				(mci_hw->query_bt == true)) {
-+			mci_hw->need_flush_btinfo = true;
-+		}
-+	}
-+
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		ar9003_hw_bb_watchdog_config(ah);
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	il_grab_nic_access(il);
++	_il_grab_nic_access(il);
+ 	_il_set_bits_mask_prph(il, reg, bits, mask);
+-	il_release_nic_access(il);
++	_il_release_nic_access(il);
+ 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
+ }
+ 
+@@ -289,10 +287,10 @@ static inline void il_clear_bits_prph(struct il_priv
+ 	u32 val;
+ 
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	il_grab_nic_access(il);
++	_il_grab_nic_access(il);
+ 	val = _il_read_prph(il, reg);
+ 	_il_write_prph(il, reg, (val & ~mask));
+-	il_release_nic_access(il);
++	_il_release_nic_access(il);
+ 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
+ }
+ 
+@@ -302,13 +300,13 @@ static inline u32 il_read_targ_mem(struct il_priv *il, u32 addr)
+ 	u32 value;
+ 
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	il_grab_nic_access(il);
++	_il_grab_nic_access(il);
+ 
+ 	_il_write_direct32(il, HBUS_TARG_MEM_RADDR, addr);
+ 	rmb();
+ 	value = _il_read_direct32(il, HBUS_TARG_MEM_RDAT);
+ 
+-	il_release_nic_access(il);
++	_il_release_nic_access(il);
+ 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
+ 	return value;
+ }
+@@ -319,11 +317,11 @@ il_write_targ_mem(struct il_priv *il, u32 addr, u32 val)
+ 	unsigned long reg_flags;
+ 
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	if (!il_grab_nic_access(il)) {
++	if (!_il_grab_nic_access(il)) {
+ 		_il_write_direct32(il, HBUS_TARG_MEM_WADDR, addr);
+ 		wmb();
+ 		_il_write_direct32(il, HBUS_TARG_MEM_WDAT, val);
+-		il_release_nic_access(il);
++		_il_release_nic_access(il);
+ 	}
+ 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
+ }
+@@ -335,14 +333,14 @@ il_write_targ_mem_buf(struct il_priv *il, u32 addr,
+ 	unsigned long reg_flags;
+ 
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	if (!il_grab_nic_access(il)) {
++	if (!_il_grab_nic_access(il)) {
+ 		_il_write_direct32(il, HBUS_TARG_MEM_WADDR, addr);
+ 		wmb();
+ 		for (; 0 < len; len -= sizeof(u32), values++)
+ 			_il_write_direct32(il,
+ 					HBUS_TARG_MEM_WDAT, *values);
+ 
+-		il_release_nic_access(il);
++		_il_release_nic_access(il);
+ 	}
+ 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
+ }
+diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
+index f3ec8bb..f4eb037 100644
+--- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
++++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
+@@ -522,8 +522,8 @@ static void il4965_perform_ct_kill_task(struct il_priv *il)
+ 	_il_rd(il, CSR_UCODE_DRV_GP1);
+ 
+ 	spin_lock_irqsave(&il->reg_lock, flags);
+-	if (!il_grab_nic_access(il))
+-		il_release_nic_access(il);
++	if (!_il_grab_nic_access(il))
++		_il_release_nic_access(il);
+ 	spin_unlock_irqrestore(&il->reg_lock, flags);
+ }
  
 -- 
-1.7.0.4
+1.7.1
 
