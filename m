@@ -1,78 +1,352 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34897 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751944Ab1KGJNa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 04:13:30 -0500
-Subject: Re: [PATCH v4 2/2] mac80211:  Support ht-cap over-rides.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1320437440-6463-2-git-send-email-greearb@candelatech.com> (sfid-20111104_211114_679516_4CC16ABF)
-References: <1320437440-6463-1-git-send-email-greearb@candelatech.com>
-	 <1320437440-6463-2-git-send-email-greearb@candelatech.com>
-	 (sfid-20111104_211114_679516_4CC16ABF)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 07 Nov 2011 10:13:28 +0100
-Message-ID: <1320657208.3993.29.camel@jlt3.sipsolutions.net> (sfid-20111107_101334_899358_B98A39DE)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:16211 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756571Ab1KRIWB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 03:22:01 -0500
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAI8M1sn022674
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 03:22:01 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 32/77] iwlegacy: merge iwl-4965-ucode.c into 4965.c
+Date: Fri, 18 Nov 2011 09:21:54 +0100
+Message-Id: <1321604559-10707-32-git-send-email-sgruszka@redhat.com> (sfid-20111118_092207_099945_0701D288)
+In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-11-04 at 13:10 -0700, greearb@candelatech.com wrote:
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/4965.c           |  125 ++++++++++++++++++
+ drivers/net/wireless/iwlegacy/Makefile         |    2 +-
+ drivers/net/wireless/iwlegacy/iwl-4965-ucode.c |  166 ------------------------
+ 3 files changed, 126 insertions(+), 167 deletions(-)
+ delete mode 100644 drivers/net/wireless/iwlegacy/iwl-4965-ucode.c
 
-> +/*
-> + * Stations supporting 802.11n are required to support
-> + * at least the first 8 MCS rates.  See section 7.3.2.56.4
-> + * and 20.1.1 of the 802.11n spec.
-> + */
-> +#define IEEE80211_HT_MCS_REQ_RATES_STA		8
-
-I'd prefer if this was a validation on the input from userspace directly
-in cfg80211, that way other drivers that want to implement this don't
-have to bother.
-
-That probably goes well with the validation of the supported mask that I
-asked for.
-
-> +	/* mac80211 allows over-riding some of the ht-capabilities */
-> +	local->hw.wiphy->ht_capa_mod_mask =
-> +		kzalloc(sizeof(*local->hw.wiphy->ht_capa_mod_mask),
-> +			GFP_KERNEL);
-> +	if (local->hw.wiphy->ht_capa_mod_mask) {
-> +		struct ieee80211_ht_cap *cm = local->hw.wiphy->ht_capa_mod_mask;
-> +		u8 *r = (u8 *)(&cm->mcs.rx_mask);
-> +		memset(r, 0xff, IEEE80211_HT_MCS_MASK_LEN);
-> +		cm->cap_info |= IEEE80211_HT_CAP_MAX_AMSDU;
-> +		cm->ampdu_params_info |= IEEE80211_HT_AMPDU_PARM_FACTOR;
-> +		cm->ampdu_params_info |= IEEE80211_HT_AMPDU_PARM_DENSITY;
-> +	}
-
-Why is this not just a static const that you fill manually? There's
-nothing that's not constant here. So e.g.
-
-static const struct ieee80211_ht_cap mac80211_ht_capa_mod_mask = {
-	.ampdu_params_info = IEEE80211_HT_AMPDU_PARM_FACTOR |
-			     IEEE80211_HT_AMPDU_PARM_DENSITY,
-	.mcs = {
-		.rx_mask = { 0xff, 0xff, 0xff, 0xff, 0xff,
-			     0xff, 0xff, 0xff, 0xff, 0xff, },
-	},
-	/* etc */
-};
-
-> @@ -988,6 +1001,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->   fail_wiphy_register:
->  	if (local->wiphy_ciphers_allocated)
->  		kfree(local->hw.wiphy->cipher_suites);
-> +	kfree(local->hw.wiphy->ht_capa_mod_mask);
-> +	local->hw.wiphy->ht_capa_mod_mask = NULL;
-
-No need for this then obviously.
-
-
-Looks pretty good overall. This is _much_ more readable than the
-previous series. :-)
-
-johannes
+diff --git a/drivers/net/wireless/iwlegacy/4965.c b/drivers/net/wireless/iwlegacy/4965.c
+index a4b42cc..752564d 100644
+--- a/drivers/net/wireless/iwlegacy/4965.c
++++ b/drivers/net/wireless/iwlegacy/4965.c
+@@ -47,6 +47,131 @@
+ #include "iwl-4965.h"
+ #include "iwl-4965-debugfs.h"
+ 
++#define IL_AC_UNSET -1
++
++/**
++ * il_verify_inst_sparse - verify runtime uCode image in card vs. host,
++ *   using sample data 100 bytes apart.  If these sample points are good,
++ *   it's a pretty good bet that everything between them is good, too.
++ */
++static int
++il4965_verify_inst_sparse(struct il_priv *il, __le32 *image, u32 len)
++{
++	u32 val;
++	int ret = 0;
++	u32 errcnt = 0;
++	u32 i;
++
++	D_INFO("ucode inst image size is %u\n", len);
++
++	for (i = 0; i < len; i += 100, image += 100/sizeof(u32)) {
++		/* read data comes through single port, auto-incr addr */
++		/* NOTE: Use the debugless read so we don't flood kernel log
++		 * if IL_DL_IO is set */
++		il_wr(il, HBUS_TARG_MEM_RADDR,
++			i + IL4965_RTC_INST_LOWER_BOUND);
++		val = _il_rd(il, HBUS_TARG_MEM_RDAT);
++		if (val != le32_to_cpu(*image)) {
++			ret = -EIO;
++			errcnt++;
++			if (errcnt >= 3)
++				break;
++		}
++	}
++
++	return ret;
++}
++
++/**
++ * il4965_verify_inst_full - verify runtime uCode image in card vs. host,
++ *     looking at all data.
++ */
++static int il4965_verify_inst_full(struct il_priv *il, __le32 *image,
++				 u32 len)
++{
++	u32 val;
++	u32 save_len = len;
++	int ret = 0;
++	u32 errcnt;
++
++	D_INFO("ucode inst image size is %u\n", len);
++
++	il_wr(il, HBUS_TARG_MEM_RADDR,
++			   IL4965_RTC_INST_LOWER_BOUND);
++
++	errcnt = 0;
++	for (; len > 0; len -= sizeof(u32), image++) {
++		/* read data comes through single port, auto-incr addr */
++		/* NOTE: Use the debugless read so we don't flood kernel log
++		 * if IL_DL_IO is set */
++		val = _il_rd(il, HBUS_TARG_MEM_RDAT);
++		if (val != le32_to_cpu(*image)) {
++			IL_ERR("uCode INST section is invalid at "
++				  "offset 0x%x, is 0x%x, s/b 0x%x\n",
++				  save_len - len, val, le32_to_cpu(*image));
++			ret = -EIO;
++			errcnt++;
++			if (errcnt >= 20)
++				break;
++		}
++	}
++
++	if (!errcnt)
++		D_INFO(
++		    "ucode image in INSTRUCTION memory is good\n");
++
++	return ret;
++}
++
++/**
++ * il4965_verify_ucode - determine which instruction image is in SRAM,
++ *    and verify its contents
++ */
++int il4965_verify_ucode(struct il_priv *il)
++{
++	__le32 *image;
++	u32 len;
++	int ret;
++
++	/* Try bootstrap */
++	image = (__le32 *)il->ucode_boot.v_addr;
++	len = il->ucode_boot.len;
++	ret = il4965_verify_inst_sparse(il, image, len);
++	if (!ret) {
++		D_INFO("Bootstrap uCode is good in inst SRAM\n");
++		return 0;
++	}
++
++	/* Try initialize */
++	image = (__le32 *)il->ucode_init.v_addr;
++	len = il->ucode_init.len;
++	ret = il4965_verify_inst_sparse(il, image, len);
++	if (!ret) {
++		D_INFO("Initialize uCode is good in inst SRAM\n");
++		return 0;
++	}
++
++	/* Try runtime/protocol */
++	image = (__le32 *)il->ucode_code.v_addr;
++	len = il->ucode_code.len;
++	ret = il4965_verify_inst_sparse(il, image, len);
++	if (!ret) {
++		D_INFO("Runtime uCode is good in inst SRAM\n");
++		return 0;
++	}
++
++	IL_ERR("NO VALID UCODE IMAGE IN INSTRUCTION SRAM!!\n");
++
++	/* Since nothing seems to match, show first several data entries in
++	 * instruction SRAM, so maybe visual inspection will give a clue.
++	 * Selection of bootstrap image (vs. other images) is arbitrary. */
++	image = (__le32 *)il->ucode_boot.v_addr;
++	len = il->ucode_boot.len;
++	ret = il4965_verify_inst_full(il, image, len);
++
++	return ret;
++}
++
+ /******************************************************************************
+  *
+  * EEPROM related functions
+diff --git a/drivers/net/wireless/iwlegacy/Makefile b/drivers/net/wireless/iwlegacy/Makefile
+index 2776845..43daa07 100644
+--- a/drivers/net/wireless/iwlegacy/Makefile
++++ b/drivers/net/wireless/iwlegacy/Makefile
+@@ -9,7 +9,7 @@ iwl-legacy-objs += $(iwl-legacy-m)
+ # 4965
+ obj-$(CONFIG_IWL4965)	+= iwl4965.o
+ iwl4965-objs		:= 4965.o 4965-mac.o iwl-4965-rs.o
+-iwl4965-objs		+= iwl-4965-ucode.o iwl-4965-tx.o
++iwl4965-objs		+= iwl-4965-tx.o
+ iwl4965-objs		+= iwl-4965-lib.o iwl-4965-rx.o iwl-4965-calib.o
+ iwl4965-objs		+= iwl-4965-sta.o
+ iwl4965-$(CONFIG_IWLEGACY_DEBUGFS) += iwl-4965-debugfs.o
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-ucode.c b/drivers/net/wireless/iwlegacy/iwl-4965-ucode.c
+deleted file mode 100644
+index 633caf5..0000000
+--- a/drivers/net/wireless/iwlegacy/iwl-4965-ucode.c
++++ /dev/null
+@@ -1,166 +0,0 @@
+-/******************************************************************************
+- *
+- * GPL LICENSE SUMMARY
+- *
+- * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
+- * USA
+- *
+- * The full GNU General Public License is included in this distribution
+- * in the file called LICENSE.GPL.
+- *
+- * Contact Information:
+- *  Intel Linux Wireless <ilw@linux.intel.com>
+- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
+- *
+- *****************************************************************************/
+-
+-#include <linux/kernel.h>
+-#include <linux/module.h>
+-#include <linux/init.h>
+-#include <linux/sched.h>
+-
+-#include "iwl-dev.h"
+-#include "iwl-core.h"
+-#include "iwl-io.h"
+-#include "iwl-helpers.h"
+-#include "iwl-4965-hw.h"
+-#include "iwl-4965.h"
+-#include "iwl-4965-calib.h"
+-
+-#define IL_AC_UNSET -1
+-
+-/**
+- * il_verify_inst_sparse - verify runtime uCode image in card vs. host,
+- *   using sample data 100 bytes apart.  If these sample points are good,
+- *   it's a pretty good bet that everything between them is good, too.
+- */
+-static int
+-il4965_verify_inst_sparse(struct il_priv *il, __le32 *image, u32 len)
+-{
+-	u32 val;
+-	int ret = 0;
+-	u32 errcnt = 0;
+-	u32 i;
+-
+-	D_INFO("ucode inst image size is %u\n", len);
+-
+-	for (i = 0; i < len; i += 100, image += 100/sizeof(u32)) {
+-		/* read data comes through single port, auto-incr addr */
+-		/* NOTE: Use the debugless read so we don't flood kernel log
+-		 * if IL_DL_IO is set */
+-		il_wr(il, HBUS_TARG_MEM_RADDR,
+-			i + IL4965_RTC_INST_LOWER_BOUND);
+-		val = _il_rd(il, HBUS_TARG_MEM_RDAT);
+-		if (val != le32_to_cpu(*image)) {
+-			ret = -EIO;
+-			errcnt++;
+-			if (errcnt >= 3)
+-				break;
+-		}
+-	}
+-
+-	return ret;
+-}
+-
+-/**
+- * il4965_verify_inst_full - verify runtime uCode image in card vs. host,
+- *     looking at all data.
+- */
+-static int il4965_verify_inst_full(struct il_priv *il, __le32 *image,
+-				 u32 len)
+-{
+-	u32 val;
+-	u32 save_len = len;
+-	int ret = 0;
+-	u32 errcnt;
+-
+-	D_INFO("ucode inst image size is %u\n", len);
+-
+-	il_wr(il, HBUS_TARG_MEM_RADDR,
+-			   IL4965_RTC_INST_LOWER_BOUND);
+-
+-	errcnt = 0;
+-	for (; len > 0; len -= sizeof(u32), image++) {
+-		/* read data comes through single port, auto-incr addr */
+-		/* NOTE: Use the debugless read so we don't flood kernel log
+-		 * if IL_DL_IO is set */
+-		val = _il_rd(il, HBUS_TARG_MEM_RDAT);
+-		if (val != le32_to_cpu(*image)) {
+-			IL_ERR("uCode INST section is invalid at "
+-				  "offset 0x%x, is 0x%x, s/b 0x%x\n",
+-				  save_len - len, val, le32_to_cpu(*image));
+-			ret = -EIO;
+-			errcnt++;
+-			if (errcnt >= 20)
+-				break;
+-		}
+-	}
+-
+-	if (!errcnt)
+-		D_INFO(
+-		    "ucode image in INSTRUCTION memory is good\n");
+-
+-	return ret;
+-}
+-
+-/**
+- * il4965_verify_ucode - determine which instruction image is in SRAM,
+- *    and verify its contents
+- */
+-int il4965_verify_ucode(struct il_priv *il)
+-{
+-	__le32 *image;
+-	u32 len;
+-	int ret;
+-
+-	/* Try bootstrap */
+-	image = (__le32 *)il->ucode_boot.v_addr;
+-	len = il->ucode_boot.len;
+-	ret = il4965_verify_inst_sparse(il, image, len);
+-	if (!ret) {
+-		D_INFO("Bootstrap uCode is good in inst SRAM\n");
+-		return 0;
+-	}
+-
+-	/* Try initialize */
+-	image = (__le32 *)il->ucode_init.v_addr;
+-	len = il->ucode_init.len;
+-	ret = il4965_verify_inst_sparse(il, image, len);
+-	if (!ret) {
+-		D_INFO("Initialize uCode is good in inst SRAM\n");
+-		return 0;
+-	}
+-
+-	/* Try runtime/protocol */
+-	image = (__le32 *)il->ucode_code.v_addr;
+-	len = il->ucode_code.len;
+-	ret = il4965_verify_inst_sparse(il, image, len);
+-	if (!ret) {
+-		D_INFO("Runtime uCode is good in inst SRAM\n");
+-		return 0;
+-	}
+-
+-	IL_ERR("NO VALID UCODE IMAGE IN INSTRUCTION SRAM!!\n");
+-
+-	/* Since nothing seems to match, show first several data entries in
+-	 * instruction SRAM, so maybe visual inspection will give a clue.
+-	 * Selection of bootstrap image (vs. other images) is arbitrary. */
+-	image = (__le32 *)il->ucode_boot.v_addr;
+-	len = il->ucode_boot.len;
+-	ret = il4965_verify_inst_full(il, image, len);
+-
+-	return ret;
+-}
+-- 
+1.7.1
 
