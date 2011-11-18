@@ -1,53 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:55099 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741Ab1KGVW2 convert rfc822-to-8bit (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:29728 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757926Ab1KROKO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 16:22:28 -0500
-Received: by bke11 with SMTP id 11so4024925bke.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Nov 2011 13:22:27 -0800 (PST)
+	Fri, 18 Nov 2011 09:10:14 -0500
+Date: Fri, 18 Nov 2011 17:09:54 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: jouni@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: ath6kl: Allow CCKM AKM and KRK to be configured
+Message-ID: <20111118140954.GC9685@elgon.mountain> (sfid-20111118_151018_195739_3C2FC9EE)
 MIME-Version: 1.0
-In-Reply-To: <20111107181135.GD2798@tuxdriver.com>
-References: <1319636866-12171-1-git-send-email-arik@wizery.com>
- <20111027142248.GA3972@jm.kir.nu> <20111107181135.GD2798@tuxdriver.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 7 Nov 2011 23:22:11 +0200
-Message-ID: <CA+XVXffLpuw-3R3xtcbbJNDgv9LBLO=C4_FKZ2+6beCUJ0D91g@mail.gmail.com> (sfid-20111107_222232_428322_2A534263)
-Subject: Re: [PATCH] mac80211: init rate-control for TDLS sta when supp-rates
- are known
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 7, 2011 at 20:11, John W. Linville <linville@tuxdriver.com> wrote:
-> I merged this patch from Jouni:
->
->        commit e3a4cc2f073739c9c9c2e97efc774703061f034a
->        Author: Jouni Malinen <j@w1.fi>
->        Date:   Sun Oct 23 22:36:04 2011 +0300
->
->            mac80211: Fix TDLS support validation in add_station handler
->
->            We need to verify whether the command is successful before allocating
->            the station entry to avoid extra processing. This also fixes a memory
->            leak on the error path.
->
->            Signed-off-by: Jouni Malinen <j@w1.fi>
->            Signed-off-by: John W. Linville <linville@tuxdriver.com>
->
-> I'm not sure what to do with this patch now.  I think I will just drop
-> it, and you can send me a new patch that applies on top of Jouni's
-> (perhaps even reverting it) as appropriate?
+Hello Jouni Malinen,
 
-Actually the merged patch from Jouni is unrelated to this fix (and
-should have been merged). There's a different patch from Jouni that
-should not be applied - "mac80211: Fix STA supported rate
-configuration with dummy entry".
+This is a semi-automatic email about new static checker warnings.
 
-I'll resend this one after rebasing to the latest wireless-testing
-(there was a conflict).
+The patch 837cb97e5b72: "ath6kl: Allow CCKM AKM and KRK to be 
+configured" from Oct 11, 2011, leads to the following Smatch 
+complaint:
 
-Arik
+drivers/net/wireless/ath/ath6kl/cfg80211.c +939 ath6kl_cfg80211_add_key()
+	 warn: variable dereferenced before check 'params' (see line 917)
+
+drivers/net/wireless/ath/ath6kl/cfg80211.c
+   916	
+   917		if (params->cipher == CCKM_KRK_CIPHER_SUITE) {
+                    ^^^^^^^^
+new dereference.
+
+   918			if (params->key_len != WMI_KRK_LEN)
+   919				return -EINVAL;
+   920			return ath6kl_wmi_add_krk_cmd(ar->wmi, vif->fw_vif_idx,
+   921						      params->key);
+   922		}
+   923	
+   924		if (key_index < WMI_MIN_KEY_INDEX || key_index > WMI_MAX_KEY_INDEX) {
+   925			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+   926				   "%s: key index %d out of bounds\n", __func__,
+   927				   key_index);
+   928			return -ENOENT;
+   929		}
+   930	
+   931		key = &vif->keys[key_index];
+   932		memset(key, 0, sizeof(struct ath6kl_key));
+   933	
+   934		if (pairwise)
+   935			key_usage = PAIRWISE_USAGE;
+   936		else
+   937			key_usage = GROUP_USAGE;
+   938	
+   939		if (params) {
+                    ^^^^^^
+check.
+
+   940			if (params->key_len > WLAN_MAX_KEY_LEN ||
+   941			    params->seq_len > sizeof(key->seq))
+
+regards,
+dan carpenter
+
