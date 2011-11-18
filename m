@@ -1,58 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:34606 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752385Ab1KWHht convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:52113 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751300Ab1KRUal (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 02:37:49 -0500
+	Fri, 18 Nov 2011 15:30:41 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+CC: Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 18 Nov 2011 12:25:12 -0800
+Subject: RE: [PATCH v2] cfg80211/mac80211: Revert "move information element
+ parsing logic to cfg80211"
+Message-ID: <477F20668A386D41ADCC57781B1F7043081835170D@SC-VEXCH1.marvell.com> (sfid-20111118_213044_800761_1F3F0DB8)
+References: <1321631520.10266.62.camel@jlt3.sipsolutions.net>
+	 (sfid-20111118_165216_664504_042C8D9F)
+ <1321631690.10266.63.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1321631690.10266.63.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFyy19VYSdZW0+jNxAb8ix0xpX2j9YFw9oQi3jm3+mDEvw@mail.gmail.com>
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera>
-	<201111212249.31196.rjw@sisk.pl>
-	<CA+55aFyy19VYSdZW0+jNxAb8ix0xpX2j9YFw9oQi3jm3+mDEvw@mail.gmail.com>
-Date: Wed, 23 Nov 2011 08:37:45 +0100
-Message-ID: <CACna6rzQhp4DXonK_Mr+Od9yMQJtr24Z5TE27VxhcMrcY4u+EA@mail.gmail.com> (sfid-20111123_083811_573632_A10CA0D4)
-Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	stephen hemminger <shemminger@vyatta.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 21 listopada 2011 23:22 użytkownik Linus Torvalds
-<torvalds@linux-foundation.org> napisał:
-> On Mon, Nov 21, 2011 at 1:49 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->>
->> Subject    : [3.1-rc8 REGRESSION] sky2 hangs machine on turning off or suspending
->> Submitter  : Rafał Miłecki <zajec5@gmail.com>
->> Date       : 2011-11-09 11:46
->> Message-ID : CACna6ryTdLcWVYgHu=_mRFga1sFivpE_DyZOY-HMmKggkWAJAw@mail.gmail.com
->> References : http://marc.info/?l=linux-netdev&m=132083922228088&w=4
->
-> This should be fixed by commit 1401a8008a09 ("sky2: fix hang on
-> shutdown (and other irq issues)") in current -git.
-
-This patch doesn't fix my hang.
-
-However git contains also:
-sky2: fix hang in napi_disable
-This is the one fixing my case.
-
-So the bug is resolved, however I'm a little disappointed noone
-ping-ed me about that patches. I've spent some time on bisecting this
-issue, expected to get some response :/
-
--- 
-Rafał
+SGkgSm9oYW5uZXMsDQoNCj4gU3ViamVjdDogW1BBVENIIHYyXSBjZmc4MDIxMS9tYWM4MDIxMTog
+UmV2ZXJ0ICJtb3ZlIGluZm9ybWF0aW9uIGVsZW1lbnQgcGFyc2luZyBsb2dpYyB0byBjZmc4MDIx
+MSINCj4gDQo+IEZyb206IEpvaGFubmVzIEJlcmcgPGpvaGFubmVzLmJlcmdAaW50ZWwuY29tPg0K
+PiANCj4gTm8gb3RoZXIgZHJpdmVyIGV2ZXIgZW5kZWQgdXAgdXNpbmcgdGhpcywgYW5kDQo+IHRo
+ZSBjb21taXQgZm9yZ290IHRvIG1vdmUgdGhlIHByb3RvdHlwZSBzbyBubw0KPiBkcml2ZXIgY291
+bGQgaGF2ZSB1c2VkIGl0LiBSZXZlcnQgaXQsIGlmIGFueQ0KPiBkcml2ZXIgc2hvd3MgdXAgYW5k
+IG5lZWRzIGl0IGl0IGNhbiBiZSBtb3ZlZA0KPiBhZ2FpbiwgYnV0IHVudGlsIHRoZW4gaXQncyBt
+b3JlIGVmZmljaWVudCB0bw0KPiBoYXZlIGl0IGluIG1hYzgwMjExIHdoZXJlIHRoZSBvbmx5IHVz
+ZXIgaXMuDQoNCkl0J3MgT0sgdG8gcmV2ZXJ0IGl0IGZvciBub3cuDQoNCldlIGFyZSBzdGlsbCB3
+b3JraW5nIG9uIGEgY2xlYW51cCBwYXRjaCBpbiBtd2lmaWV4IGRyaXZlciB0aGF0IHdpbGwgbWFr
+ZSB1c2Ugb2YgaWVlZTgwMl8xMV9wYXJzZV9lbGVtc19jcmMoKSBmdW5jdGlvbiBhbmQgcmVtb3Zl
+IG91ciBvd24gSUUgcGFyc2luZyBsb2dpYy4gV2UgY2FuIG1vdmUgdGhlIGZ1bmN0aW9uIGFnYWlu
+IGxhdGVyIHdoZW4gb3VyIHBhdGNoIGlzIHJlYWR5Lg0KDQpUaGFua3MsDQpCaW5nDQoNCg==
