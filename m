@@ -1,54 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49617 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751715Ab1KGPn2 (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:47199 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751267Ab1KRLCF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 10:43:28 -0500
-Subject: Re: [PATCH v2] mac80211: disassociate when direct probe timed out
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Lukasz Jagiello <jagiello.lukasz@gmail.com>
-In-Reply-To: <1320680552.3993.46.camel@jlt3.sipsolutions.net> (sfid-20111107_164241_816840_392AC13F)
-References: <20111107142620.GA5852@redhat.com>
-	 <20111107152859.GA5990@redhat.com>  <20111107153410.GB5990@redhat.com>
-	 <1320680552.3993.46.camel@jlt3.sipsolutions.net>
-	 (sfid-20111107_164241_816840_392AC13F)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 07 Nov 2011 16:43:22 +0100
-Message-ID: <1320680602.3993.47.camel@jlt3.sipsolutions.net> (sfid-20111107_164332_126559_2F44D08E)
-Mime-Version: 1.0
+	Fri, 18 Nov 2011 06:02:05 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCHv3 1/3] mac80211: remove debugfs noack test
+Date: Fri, 18 Nov 2011 12:01:46 +0100
+Message-Id: <1321614110-32392-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111118_120216_746418_D18986F4)
+In-Reply-To: <1321614110-32392-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1321614110-32392-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-11-07 at 16:42 +0100, Johannes Berg wrote:
-> On Mon, 2011-11-07 at 16:34 +0100, Stanislaw Gruszka wrote:
-> 
-> > +++ b/net/mac80211/mlme.c
-> > @@ -2379,8 +2379,14 @@ ieee80211_probe_auth_done(struct ieee80211_work *wk,
-> >  			  struct sk_buff *skb)
-> >  {
-> >  	struct ieee80211_local *local = wk->sdata->local;
-> > +	struct ieee80211_if_managed *ifmgd = &wk->sdata->u.mgd;
-> >  
-> >  	if (!skb) {
-> > +		mutex_lock(&ifmgd->mtx);
-> > +		if (ifmgd->associated)
-> > +			ieee80211_set_disassoc(wk->sdata, true, false);
-> > +		mutex_unlock(&ifmgd->mtx);
-> > +
-> >  		cfg80211_send_auth_timeout(wk->sdata->dev, wk->filter_ta);
-> >  		goto destroy;
-> >  	}
-> 
-> This doesn't seem right -- we can authenticate with a new AP while
-> connected to an old one, but if the connection to the new one fails why
-> should we tear down the connection to the *old* one?
+This feature has been superseded by the NoAck per Queue feature.
 
-Also, we should never be able to get into a situation where the new AP
-is the same as the old AP as cfg80211 won't let you authenticate with a
-BSS that you're connected to (I believe).
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ net/mac80211/debugfs.c     |   35 -----------------------------------
+ net/mac80211/ieee80211_i.h |    1 -
+ net/mac80211/tx.c          |   10 +---------
+ net/mac80211/wme.c         |    3 +--
+ 4 files changed, 2 insertions(+), 47 deletions(-)
 
-johannes
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 00cefcb..90baea5 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -97,40 +97,6 @@ static const struct file_operations reset_ops = {
+ 	.llseek = noop_llseek,
+ };
+ 
+-static ssize_t noack_read(struct file *file, char __user *user_buf,
+-			  size_t count, loff_t *ppos)
+-{
+-	struct ieee80211_local *local = file->private_data;
+-
+-	return mac80211_format_buffer(user_buf, count, ppos, "%d\n",
+-				      local->wifi_wme_noack_test);
+-}
+-
+-static ssize_t noack_write(struct file *file,
+-			   const char __user *user_buf,
+-			   size_t count, loff_t *ppos)
+-{
+-	struct ieee80211_local *local = file->private_data;
+-	char buf[10];
+-	size_t len;
+-
+-	len = min(count, sizeof(buf) - 1);
+-	if (copy_from_user(buf, user_buf, len))
+-		return -EFAULT;
+-	buf[len] = '\0';
+-
+-	local->wifi_wme_noack_test = !!simple_strtoul(buf, NULL, 0);
+-
+-	return count;
+-}
+-
+-static const struct file_operations noack_ops = {
+-	.read = noack_read,
+-	.write = noack_write,
+-	.open = mac80211_open_file_generic,
+-	.llseek = default_llseek,
+-};
+-
+ static ssize_t uapsd_queues_read(struct file *file, char __user *user_buf,
+ 				 size_t count, loff_t *ppos)
+ {
+@@ -398,7 +364,6 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 	DEBUGFS_ADD(wep_iv);
+ 	DEBUGFS_ADD(queues);
+ 	DEBUGFS_ADD_MODE(reset, 0200);
+-	DEBUGFS_ADD(noack);
+ 	DEBUGFS_ADD(uapsd_queues);
+ 	DEBUGFS_ADD(uapsd_max_sp_len);
+ 	DEBUGFS_ADD(channel_type);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 068cc92..5c62579 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -957,7 +957,6 @@ struct ieee80211_local {
+ 	int total_ps_buffered; /* total number of all buffered unicast and
+ 				* multicast packets for power saving stations
+ 				*/
+-	int wifi_wme_noack_test;
+ 	unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
+ 
+ 	/*
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 30d212a..f632690 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1150,16 +1150,8 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 	if (is_multicast_ether_addr(hdr->addr1)) {
+ 		tx->flags &= ~IEEE80211_TX_UNICAST;
+ 		info->flags |= IEEE80211_TX_CTL_NO_ACK;
+-	} else {
++	} else
+ 		tx->flags |= IEEE80211_TX_UNICAST;
+-		if (unlikely(local->wifi_wme_noack_test))
+-			info->flags |= IEEE80211_TX_CTL_NO_ACK;
+-		/*
+-		 * Flags are initialized to 0. Hence, no need to
+-		 * explicitly unset IEEE80211_TX_CTL_NO_ACK since
+-		 * it might already be set for injected frames.
+-		 */
+-	}
+ 
+ 	if (!(info->flags & IEEE80211_TX_CTL_DONTFRAG)) {
+ 		if (!(tx->flags & IEEE80211_TX_UNICAST) ||
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 4332711..74b3d10 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -150,8 +150,7 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
+ 		/* preserve EOSP bit */
+ 		ack_policy = *p & IEEE80211_QOS_CTL_EOSP;
+ 
+-		if (unlikely(sdata->local->wifi_wme_noack_test) ||
+-		    is_multicast_ether_addr(hdr->addr1))
++		if (is_multicast_ether_addr(hdr->addr1))
+ 			ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
+ 		/* qos header is 2 bytes */
+ 		*p++ = ack_policy | tid;
+-- 
+1.7.7.3
 
