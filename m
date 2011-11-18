@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:18354 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753404Ab1KUOrm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 09:47:42 -0500
-Date: Mon, 21 Nov 2011 17:47:13 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] prism54: potential memory corruption in prism54_get_essid()
-Message-ID: <20111121144713.GA19092@elgon.mountain> (sfid-20111121_154746_551249_AB0F8FB7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:58303 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755510Ab1KRBAa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Nov 2011 20:00:30 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 5/5] iwlwifi: remove redundancy
+Date: Thu, 17 Nov 2011 16:05:13 -0800
+Message-Id: <1321574713-12076-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111118_020038_799820_754C22B0)
+In-Reply-To: <1321574713-12076-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1321574713-12076-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"dwrq->length" is the capped version of "essid->length".
+just use iwl_bus, remove the redundancy
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-io.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-index d97a2ca..bc2ba80 100644
---- a/drivers/net/wireless/prism54/isl_ioctl.c
-+++ b/drivers/net/wireless/prism54/isl_ioctl.c
-@@ -778,7 +778,7 @@ prism54_get_essid(struct net_device *ndev, struct iw_request_info *info,
- 		dwrq->flags = 0;
- 		dwrq->length = 0;
- 	}
--	essid->octets[essid->length] = '\0';
-+	essid->octets[dwrq->length] = '\0';
- 	memcpy(extra, essid->octets, dwrq->length);
- 	kfree(essid);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
+index 3ffa8e6..3464cad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.c
++++ b/drivers/net/wireless/iwlwifi/iwl-io.c
+@@ -143,7 +143,7 @@ u32 iwl_read_direct32(struct iwl_bus *bus, u32 reg)
  
+ 	spin_lock_irqsave(&bus->reg_lock, flags);
+ 	iwl_grab_nic_access(bus);
+-	value = iwl_read32(bus(bus), reg);
++	value = iwl_read32(bus, reg);
+ 	iwl_release_nic_access(bus);
+ 	spin_unlock_irqrestore(&bus->reg_lock, flags);
+ 
+-- 
+1.7.0.4
+
