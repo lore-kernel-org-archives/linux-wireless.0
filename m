@@ -1,68 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:33287 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753938Ab1KUXkg (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:52456 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752182Ab1KRNVS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 18:40:36 -0500
-Received: by vcbfk1 with SMTP id fk1so6238943vcb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 15:40:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4ECAD52A.6050509@broadcom.com>
-References: <CADrAYBnwWEaigcgQYYk6V3VEuEYyrmzJQXegKVk6TgOTPh5N8A@mail.gmail.com>
-	<4ECA8908.7070304@broadcom.com>
-	<4ECA98DB.4030608@broadcom.com>
-	<CADrAYBk7_fsVJUAYNqEZpdBPKOTGUai_UhPT9LMHaEyY+Zm24w@mail.gmail.com>
-	<4ECAAD6C.4080103@broadcom.com>
-	<CADrAYBndEsNz5nypirSxQPObpSV5BWARWOQzwmBTmzg+tgUbBA@mail.gmail.com>
-	<CADrAYB=wDwrzCFEi4-PFepLiLMbPLAGxoaNGtXBaPZPR1onokA@mail.gmail.com>
-	<4ECAC99B.8090507@broadcom.com>
-	<CADrAYBmhBWVDC=K+F-NU6WkUv-M=WddWvU1pe9AXABEinUBGvQ@mail.gmail.com>
-	<4ECAD52A.6050509@broadcom.com>
-Date: Tue, 22 Nov 2011 00:40:34 +0100
-Message-ID: <CADrAYBntm4GuhcZaErKimv4Z4Nt+Z6=67qdwi7eomZpTOoQsnQ@mail.gmail.com> (sfid-20111122_004039_336953_41C713A4)
-Subject: Re: brcm80211 (with bcm4329-chip)
-From: =?ISO-8859-1?Q?Thomas_Lang=E5s?= <thomas.langas@fxitech.com>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: Arend Van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Howard Harte <hharte@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 18 Nov 2011 08:21:18 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCHv4 3/3] mac80211: Add NoAck per tid support
+Date: Fri, 18 Nov 2011 14:20:44 +0100
+Message-Id: <1321622446-2477-4-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111118_142122_393233_CEDBDD38)
+In-Reply-To: <1321622446-2477-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1321622446-2477-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 21, 2011 at 11:48 PM, Franky Lin <frankyl@broadcom.com> wrote:
-> I think both firmware is fine. I was referring to the
-> brcm/bcm4329-fullmac-4.txt It's a nvram file contains critical information
-> used by firmware. And it's hardware dependent. We have submitted a patch to
-> remove the one in Linux firmware repository to avoid confusion as it's for a
-> Broadcom internal development board. It may not work with your set up. I
-> think there should be a similar file comes with the proprietary driver
-> package if you are using a module instead of a 4329 chip. Please use that
-> one.
+This patch contains the processing changes in mac80211.
 
-I did two tests one with only changing the nvram-file, and one with
-changing both
-the firmware and the nvram-file (this is the latest logfile you got).  Both had
-the same result.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ net/mac80211/cfg.c         |   11 +++++++++++
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/iface.c       |    2 ++
+ net/mac80211/wme.c         |    7 ++++++-
+ 4 files changed, 22 insertions(+), 1 deletions(-)
 
-> I don't have Exynos 4210 spec. But I guess for a such new chip the SDIO host
-> should be able to run the bus at 50MHz. You could try to hack the MMC/SDIO
-> host driver and reduce the max frequency to 25MHz or even further to 12MHz
-> to see if any improvement.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 1063a7e..e1a8d89 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -102,6 +102,16 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
++static int ieee80211_set_noack_map(struct wiphy *wiphy,
++				  struct net_device *dev,
++				  u16 noack_map)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	sdata->noack_map = noack_map;
++	return 0;
++}
++
+ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+ 			     u8 key_idx, bool pairwise, const u8 *mac_addr,
+ 			     struct key_params *params)
+@@ -2698,4 +2708,5 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.tdls_mgmt = ieee80211_tdls_mgmt,
+ 	.probe_client = ieee80211_probe_client,
+ 	.get_channel = ieee80211_wiphy_get_channel,
++	.set_noack_map = ieee80211_set_noack_map,
+ };
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 5c62579..e93c496 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -607,6 +607,9 @@ struct ieee80211_sub_if_data {
+ 	struct ieee80211_fragment_entry	fragments[IEEE80211_FRAGMENT_MAX];
+ 	unsigned int fragment_next;
+ 
++	/* TID bitmap for NoAck policy */
++	u16 noack_map;
++
+ 	struct ieee80211_key __rcu *keys[NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS];
+ 	struct ieee80211_key __rcu *default_unicast_key;
+ 	struct ieee80211_key __rcu *default_multicast_key;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index b34ca0c..be1d61e 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -866,6 +866,8 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 	sdata->control_port_protocol = cpu_to_be16(ETH_P_PAE);
+ 	sdata->control_port_no_encrypt = false;
+ 
++	sdata->noack_map = 0;
++
+ 	/* only monitor differs */
+ 	sdata->dev->type = ARPHRD_ETHER;
+ 
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 74b3d10..a98f24a 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -139,6 +139,7 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
+ 			   struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 
+ 	/* Fill in the QoS header if there is one. */
+ 	if (ieee80211_is_data_qos(hdr->frame_control)) {
+@@ -150,8 +151,12 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
+ 		/* preserve EOSP bit */
+ 		ack_policy = *p & IEEE80211_QOS_CTL_EOSP;
+ 
+-		if (is_multicast_ether_addr(hdr->addr1))
++		if (is_multicast_ether_addr(hdr->addr1) ||
++		    sdata->noack_map & BIT(tid)) {
+ 			ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
++			info->flags |= IEEE80211_TX_CTL_NO_ACK;
++		}
++
+ 		/* qos header is 2 bytes */
+ 		*p++ = ack_policy | tid;
+ 		*p = ieee80211_vif_is_mesh(&sdata->vif) ?
+-- 
+1.7.7.3
 
-Max clock is 63MHz, and the setting we have now works with 2.6.36 and the
-proprietary driver (bcm4329).
-
-Looking at the platform-code we have for 2.6.x, I see that we set
-.cd_type                = S3C_SDHCI_CD_GPIO,
-Instead of
-.cd_type                = S3C_SDHCI_CD_INTERNAL,
-
-I don't know if this matters (looking at the schematics, the clk-pin is the same
-for mmc2 as it is for the gpio).  Is this something related to the old
-proprietary
-driver?
-
-
-Regards,
-Thomas
