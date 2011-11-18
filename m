@@ -1,54 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32091 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752377Ab1K3Pbl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 10:31:41 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:40862 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751188Ab1KRH3D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 02:29:03 -0500
+Date: Fri, 18 Nov 2011 08:30:42 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2] ath9k_hw: Fix TX IQ calibration for AR9003
-Date: Wed, 30 Nov 2011 21:01:31 +0530
-Message-ID: <1322667091-1123-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_163144_568897_0DB2C0DF)
+Cc: Kalle Valo <kvalo@adurom.com>,
+	Greg Dietsche <gregory.dietsche@cuw.edu>,
+	linux-wireless@vger.kernel.org
+Subject: Re: pull request: iwlegacy 2011-11-16
+Message-ID: <20111118073041.GA2203@redhat.com> (sfid-20111118_082906_898160_765D0389)
+References: <20111116122205.GA4409@redhat.com>
+ <87y5vf8ak3.fsf@purkki.adurom.net>
+ <20111117190307.GE32622@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111117190307.GE32622@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Thu, Nov 17, 2011 at 02:03:08PM -0500, John W. Linville wrote:
+> On Thu, Nov 17, 2011 at 09:36:44AM +0200, Kalle Valo wrote:
+> > Stanislaw Gruszka <sgruszka@redhat.com> writes:
+> > 
+> > > Please pull iwlegacy cleanup changes done by Greg and me, intended
+> > > for 3.3. These request include huge patches with file renaming and
+> > > automatic code processing done by sed and indent. Driver is still
+> > > quite messy and need more cleanup, but these massive changes bring
+> > > driver close to the state that we could name it maintainable.
+> > >
+> > > Hopefully with having clean, maintainable code I will be able to fix
+> > > some nasty not easy reproducible bugs, we still have in the iwlegacy
+> > > driver.
+> > 
+> > I haven't seen these patches on linux-wireless mailing list at all.
 
-only for AR9485 (or) later chipsets TxIQ calibration
-runs as part of AGC calibration. without this patch
-TX IQ cal completion i.e. ar9003_hw_tx_iq_cal_run won't be executed
-for AR9003
+I did not post them because most of them are big patches done by sed or
+"git mv", nothing that would benefit from review.
 
-Reviewed-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> > Isn't it recommended that all wireless patches are sent to
+> > linux-wireless for public review?
+>
+> Yes, it is.  Please make sure to send these patches to the list for
+> review by the group.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8876134..2de52d2 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2332,7 +2332,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		ah->enabled_cals |= TX_IQ_CAL;
--		if (!AR_SREV_9330(ah))
-+		if (AR_SREV_9485_OR_LATER(ah))
- 			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
- 	}
- 	if (AR_SREV_9462(ah))
--- 
-1.7.0.4
+I'm going to post, but first I'll need to separate big patches and make
+them available for download instead of posting mega bytes in email.
 
+Anyway, if someone like to look at the patches, its better to just pull
+github tree, or even clone it. It used with --reference option clone
+will be fast, i.e:
+
+git clone --reference linux-2.6  git://github.com/sgruszka/iwlegacy.git
+
+Stanislaw
