@@ -1,68 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3675 "EHLO mms1.broadcom.com"
+Received: from c60.cesmail.net ([216.154.195.49]:7269 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753733Ab1KDVYC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 17:24:02 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 01/16] brcm80211: fmac: remove unnecessary 4329 chip
- specific code
-Date: Fri, 4 Nov 2011 22:23:27 +0100
-Message-ID: <1320441822-4615-2-git-send-email-arend@broadcom.com> (sfid-20111104_222438_163169_AB41575B)
-In-Reply-To: <1320441822-4615-1-git-send-email-arend@broadcom.com>
-References: <1320441822-4615-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1756392Ab1KRW6b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 17:58:31 -0500
+Date: Fri, 18 Nov 2011 17:58:28 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 41/77] iwlegacy: s/STATUS_/S_/
+Message-ID: <20111118175828.6e94d02e@mj> (sfid-20111118_235834_275260_3B940CA1)
+In-Reply-To: <1321604559-10707-41-git-send-email-sgruszka@redhat.com>
+References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+	<1321604559-10707-41-git-send-email-sgruszka@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On Fri, 18 Nov 2011 09:22:03 +0100
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
 
-4329 with chiprev 0 can not be found on any product. The code can
-be removed.
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   12 +++---------
- 1 files changed, 3 insertions(+), 9 deletions(-)
+I think this particular change would make the code less readable.  It's
+one thing to replace TABLE with TBL, but S_ can be anything - signed,
+special, settable, stable...
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 6de489b..2c409ca 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -812,10 +812,6 @@ static int brcmf_sdbrcm_htclk(struct brcmf_bus *bus, bool on, bool pendok)
- 		clkreq =
- 		    bus->alp_only ? SBSDIO_ALP_AVAIL_REQ : SBSDIO_HT_AVAIL_REQ;
- 
--		if ((bus->ci->chip == BCM4329_CHIP_ID)
--		    && (bus->ci->chiprev == 0))
--			clkreq |= SBSDIO_FORCE_ALP;
--
- 		brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
- 				       SBSDIO_FUNC1_CHIPCLKCSR, clkreq, &err);
- 		if (err) {
-@@ -1034,11 +1030,9 @@ static int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
- 			SBSDIO_FORCE_HW_CLKREQ_OFF, NULL);
- 
- 		/* Isolate the bus */
--		if (bus->ci->chip != BCM4329_CHIP_ID) {
--			brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
--				SBSDIO_DEVICE_CTL,
--				SBSDIO_DEVCTL_PADS_ISO, NULL);
--		}
-+		brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
-+			SBSDIO_DEVICE_CTL,
-+			SBSDIO_DEVCTL_PADS_ISO, NULL);
- 
- 		/* Change state */
- 		bus->sleeping = true;
+> -		set_bit(STATUS_RF_KILL_HW, &il->status);
+> +		set_bit(S_RF_KILL_HW, &il->status);
+
+You may want to replace RF_KILL with RFKILL if you are desperate to
+shorten variable names.
+
 -- 
-1.7.4.1
-
-
+Regards,
+Pavel Roskin
