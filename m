@@ -1,151 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:53977 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753099Ab1KUNS2 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40595 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753009Ab1KRTaa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 08:18:28 -0500
-Received: by iage36 with SMTP id e36so7262106iag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 05:18:28 -0800 (PST)
+	Fri, 18 Nov 2011 14:30:30 -0500
+Date: Fri, 18 Nov 2011 14:22:18 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Nico -telmich- Schottelius <nico-linux-20111118@schottelius.org>,
+	LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>
+Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Buesch <m@bues.ch>
+Subject: Re: b43: BCM 4331: MacBook 8,1: No connection after suspend
+Message-ID: <20111118192217.GA2663@tuxdriver.com> (sfid-20111118_203054_536522_9576D734)
+References: <20111118173242.GA2101@schottelius.org>
 MIME-Version: 1.0
-Date: Mon, 21 Nov 2011 17:18:27 +0400
-Message-ID: <CAG5dHkRQX47x4L4ztS5R+oRG2V5edMa4C9mPYHnQFQBi0ZXtiw@mail.gmail.com> (sfid-20111121_141831_926545_82487872)
-Subject: [RFC v2 5/8] mac80211: setting link-specific mesh power modes when
- plink opens
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111118173242.GA2101@schottelius.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When plink is opened peer link-specific power mode is set up equal to
-peer non-peer power mode value.
+Arend has nothing to do with b43, and b43 has it's own
+mailing list, b43-dev@lists.infradead.org.  Even if it didn't,
+linux-wireless@vger.kernel.org would be a more appropriate list than
+this one.
 
-When plink is opened local link-specific power mode is set up equal
-to local non-peer value.
+John
 
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
-Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
----
- net/mac80211/mesh.c       |   33 +++++++++++++++++++++++++++++++++
- net/mac80211/mesh.h       |    6 ++++++
- net/mac80211/mesh_plink.c |   22 +++++++++++++++++++++-
- 3 files changed, 60 insertions(+), 1 deletions(-)
+On Fri, Nov 18, 2011 at 06:32:42PM +0100, Nico -telmich- Schottelius wrote:
+> Hello,
+> 
+> new notebook, new problems (*):
+> 
+> Running 3.2.0-rc1 on the MacBook Pro 8,1 with the BCM4331
+> (14e4:4331) the WLAN indeed works:
+> 
+> [   86.231702] b43-phy0: Broadcom 4331 WLAN found (core revision 29)
+> [   86.269190] ieee80211 phy0: Selected rate control algorithm
+> 'minstrel_ht'
+> [   86.270486] Broadcom 43xx driver loaded [ Features: PMNLS ]
+> [   87.677265] b43-phy0: Loading firmware version 666.2 (2011-02-23
+> 01:15:07)
+> 
+> But: After a suspend it seems not to receive any packets anymore:
+> 
+> [ 2334.494845] wlan0: authenticate with 64:87:d7:37:89:89 (try 1)
+> [ 2334.694035] wlan0: authenticate with 64:87:d7:37:89:89 (try 2)
+> [ 2334.893909] wlan0: authenticate with 64:87:d7:37:89:89 (try 3)
+> [ 2335.093824] wlan0: authentication with 64:87:d7:37:89:89 timed out
+> 
+> wpa_supplicant thus retries to connect to the network again and again
+> without success.
+> 
+> This is reproducable on the MBP 8,1 and is *NOT* fixed if I unload
+> b43 and modprobe it again. It is also "not fixed" when doing
+> multiple suspends/resumes.
+> 
+> Any pointers to this?
+> 
+> Cheers,
+> 
+> Nico
+> 
+> 
+> (*) feels like in good old times...
+> 
+> -- 
+> PGP key: 7ED9 F7D3 6B10 81D7 0EC5  5C09 D7DC C8E4 3187 7DF0
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 5b8c5d3..5963164 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -386,6 +386,39 @@ void ieee80211_mesh_root_setup(struct
-ieee80211_if_mesh *ifmsh)
- 	}
- }
-
-+void ieee80211s_set_local_ps_mode(struct sta_info *sta, u8 pm)
-+{
-+	switch (pm) {
-+	case NL80211_MESH_POWER_ACTIVE:
-+		sta->local_ps_mode = NL80211_MESH_POWER_ACTIVE;
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		printk(KERN_DEBUG "%s: local STA operates in active mode with STA %pM\n",
-+			sta->sdata->name, sta->sta.addr);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+		break;
-+	case NL80211_MESH_POWER_LIGHT_SLEEP:
-+		sta->local_ps_mode = NL80211_MESH_POWER_LIGHT_SLEEP;
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		printk(KERN_DEBUG "%s: local STA operates in light sleep mode with
-STA %pM\n",
-+				sta->sdata->name, sta->sta.addr);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+		break;
-+	case NL80211_MESH_POWER_DEEP_SLEEP:
-+		sta->local_ps_mode = NL80211_MESH_POWER_DEEP_SLEEP;
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		printk(KERN_DEBUG "%s: local STA operates in deep sleep mode with STA %pM\n",
-+				sta->sdata->name, sta->sta.addr);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+		break;
-+	default:
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		printk(KERN_DEBUG "%s: local STA used invalid power mode to operate
-with STA %pM\n",
-+				sta->sdata->name, sta->sta.addr);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+		break;
-+	}
-+}
-+
- /**
-  * ieee80211_fill_mesh_addresses - fill addresses of a locally
-originated mesh frame
-  * @hdr:    	802.11 frame header
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index e62c53b..1b2c58d 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -227,6 +227,7 @@ void ieee80211_stop_mesh(struct
-ieee80211_sub_if_data *sdata);
- void ieee80211_mesh_root_setup(struct ieee80211_if_mesh *ifmsh);
- void ieee80211s_set_sta_ps_mode(struct sta_info *sta,
- 				enum nl80211_mesh_power_mode mode);
-+void ieee80211s_set_local_ps_mode(struct sta_info *sta, u8 pm);
-
- /* Mesh paths */
- int mesh_nexthop_lookup(struct sk_buff *skb,
-@@ -312,6 +313,11 @@ static inline bool mesh_path_sel_is_hwmp(struct
-ieee80211_sub_if_data *sdata)
- 	return sdata->u.mesh.mesh_pp_id == IEEE80211_PATH_PROTOCOL_HWMP;
- }
-
-+static inline bool ieee80211s_has_capab_pm(__le16 capab_info)
-+{
-+	return (capab_info & MESHCONF_CAPAB_POWER_SAVE_LEVEL) != 0;
-+}
-+
- void ieee80211_mesh_notify_scan_completed(struct ieee80211_local *local);
-
- void ieee80211_mesh_quiesce(struct ieee80211_sub_if_data *sdata);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 7e57f5d..a8f92f3 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -248,6 +248,8 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
-+	struct ieee80211_mgmt *mgmt = container_of(hw_addr,
-+					struct ieee80211_mgmt, sa[0]);
-
- 	rcu_read_lock();
-
-@@ -275,8 +277,26 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
- 	if (mesh_peer_accepts_plinks(elems) &&
- 			sta->plink_state == NL80211_PLINK_LISTEN &&
- 			sdata->u.mesh.accepting_plinks &&
--			sdata->u.mesh.mshcfg.auto_open_plinks)
-+			sdata->u.mesh.mshcfg.auto_open_plinks) {
-+		if (ieee80211_has_pm(mgmt->frame_control)) {
-+			__le16 capab_info = mgmt->u.probe_resp.capab_info;
-+			if (ieee80211s_has_capab_pm(capab_info)) {
-+				ieee80211s_set_sta_ps_mode(sta,
-+					NL80211_MESH_POWER_DEEP_SLEEP);
-+			} else {
-+				ieee80211s_set_sta_ps_mode(sta,
-+					NL80211_MESH_POWER_LIGHT_SLEEP);
-+			}
-+		} else {
-+			ieee80211s_set_sta_ps_mode(sta,
-+				NL80211_MESH_POWER_ACTIVE);
-+		}
-+
-+		ieee80211s_set_local_ps_mode(sta,
-+			sdata->u.mesh.mshcfg.power_mode);
-+
- 		mesh_plink_open(sta);
-+	}
-
- 	rcu_read_unlock();
- }
 -- 
-1.7.3.4
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
