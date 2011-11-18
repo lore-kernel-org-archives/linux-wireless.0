@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2170 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753758Ab1KOIpQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 03:45:16 -0500
-From: Raja Mani <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: Clear WPS ctrl flag if zero length IE is received from CFG
-Date: Tue, 15 Nov 2011 14:14:56 +0530
-Message-ID: <1321346696-6127-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20111115_094521_102480_788DCB6B)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:58303 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752730Ab1KRBA3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Nov 2011 20:00:29 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/5] iwlwifi: check the HW when a queue is stuck
+Date: Thu, 17 Nov 2011 16:05:09 -0800
+Message-Id: <1321574713-12076-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111118_020036_412648_4FFFBA5C)
+In-Reply-To: <1321574713-12076-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1321574713-12076-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Connect control flag CONNECT_WPS_FLAG has to be cleared
-by default even if the driver receives zero length IE
-from CFG.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Otherwise this flag would be always set after WPS exchange
-which would lead wpa_supplicant to fail to connect with
-the received WPS credentials. This issue is observed only
-in OPEN security.
+Add more information when a queue is stuck and actually get
+information from the scheduler instead of looking at internal
+variables.
 
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 6da5c9e..b99cdc9 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -427,7 +427,8 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 		status = ath6kl_set_assoc_req_ies(vif, sme->ie, sme->ie_len);
- 		if (status)
- 			return status;
--	}
-+	} else
-+		ar->connect_ctrl_flags &= ~CONNECT_WPS_FLAG;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index a1a5833..3f2ceb2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1515,8 +1515,12 @@ static int iwl_trans_pcie_check_stuck_queue(struct iwl_trans *trans, int cnt)
+ 	if (time_after(jiffies, timeout)) {
+ 		IWL_ERR(trans, "Queue %d stuck for %u ms.\n", q->id,
+ 			hw_params(trans).wd_timeout);
+-		IWL_ERR(trans, "Current read_ptr %d write_ptr %d\n",
++		IWL_ERR(trans, "Current SW read_ptr %d write_ptr %d\n",
+ 			q->read_ptr, q->write_ptr);
++		IWL_ERR(trans, "Current HW read_ptr %d write_ptr %d\n",
++			iwl_read_prph(bus(trans), SCD_QUEUE_RDPTR(cnt))
++				& (TFD_QUEUE_SIZE_MAX - 1),
++			iwl_read_prph(bus(trans), SCD_QUEUE_WRPTR(cnt)));
+ 		return 1;
+ 	}
  
- 	if (test_bit(CONNECTED, &vif->flags) &&
- 	    vif->ssid_len == sme->ssid_len &&
 -- 
 1.7.0.4
 
