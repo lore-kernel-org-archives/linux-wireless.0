@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:45721 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752605Ab1K2TRV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36823 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517Ab1KRLM3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 14:17:21 -0500
-Received: by ywa9 with SMTP id 9so4438834ywa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2011 11:17:20 -0800 (PST)
-Message-ID: <4ED52FBD.5030302@lwfinger.net> (sfid-20111129_201724_467372_AD65801D)
-Date: Tue, 29 Nov 2011 13:17:17 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: AndrewL733 <AndrewL733@aol.com>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Trouble with Macbook Pro 8,2 (broadcom 4331) and latest b43
-References: <4ED3A6E8.4050000@aol.com> <CACna6ryNkHeVXWXxFfod1-KQs8HQVv7wF-xpY5MA-Qs6fCypCg@mail.gmail.com> <CACna6rzRJgfddE4jPivxBJCCZEyKSHsdRX7cE15rRxk2nhiRkA@mail.gmail.com> <4ED3B33E.8020309@lwfinger.net> <4ED3FA65.7010104@aol.com> <CACna6rw1gEjd_hcX=5hLHt0YwUqDaVBs7_MO50GLKeok57YtVw@mail.gmail.com> <4ED51DB5.5090202@aol.com>
-In-Reply-To: <4ED51DB5.5090202@aol.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 18 Nov 2011 06:12:29 -0500
+Subject: Re: [PATCHv3 3/3] mac80211: Add NoAck per tid Support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+In-Reply-To: <1321614110-32392-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1321614110-32392-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1321614110-32392-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 18 Nov 2011 12:12:24 +0100
+Message-ID: <1321614744.10266.37.camel@jlt3.sipsolutions.net> (sfid-20111118_121232_476384_F328D587)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/29/2011 12:00 PM, AndrewL733 wrote:
-> Thanks for your reply.
->
-> You are absolutely right. My Mandriva kernel's name is 3.1.2-1.1-desktop but the
-> compat-wireless "make install" is installing everything in the directory
-> /lib/modules/3.1.2-1-desktop/updates. The path is missing the ".1" before the
-> "-desktop".
->
-> I'm not sure why this is happening. I am running a Mandriva kernel from "Cooker"
-> (running Mandriva 2011, which comes with 2.6.38.x, but the Macbook Pro 8,2 DVD
-> isn't recognized until the 3.1 kernel. I also compiled my own 3.2-rc3 kernel but
-> then I can't get fglrx to work properly.
->
-> The joys of Macs and Linux..
->
-> But getting back to b43. How can I instruct "make install" to put the drivers in
-> the correct path? I'm going to try to just copy everything to the correct place
-> and run depmod and see what happens. Maybe that'll work??
+On Fri, 2011-11-18 at 12:01 +0100, Simon Wunderlich wrote:
 
-That path is derived from the current kernel version. It should get it right.
+> -		if (is_multicast_ether_addr(hdr->addr1))
+> +		if (is_multicast_ether_addr(hdr->addr1) ||
+> +			(sdata->noack_map & 1 << tid)) {
 
-You should already have the directory /lib/modules/3.1.2-1.1-desktop. The 
-command 'mv /lib/modules/3.1.2-1-desktop/updates to 
-/lib/modules/3.1.2-1.1-desktop/.' followed by 'depmod -a' should be OK.
+I'd prefer this:
 
-Larry
+		if (is_multicast_ether_addr(...) ||
+		    sdata->noack_map & BIT(tid))
+
+(Note indentation & use of BIT())
+
+Isn't this missing an update to ieee80211_duration() now?
+
+johannes
 
