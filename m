@@ -1,45 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:43069 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755208Ab1K0BQd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Nov 2011 20:16:33 -0500
-MIME-Version: 1.0
-In-Reply-To: <201111262337.43771.rjw@sisk.pl>
-References: <CA+55aFyNUC+k1gp3MQkxQzernEzRZwYOH4EBnOq=6UiaJ2oh4A@mail.gmail.com>
-	<201111250203.29786.rjw@sisk.pl>
-	<201111262232.46195.rjw@sisk.pl>
-	<201111262337.43771.rjw@sisk.pl>
-Date: Sun, 27 Nov 2011 09:16:32 +0800
-Message-ID: <CAJ-Vmo=yh_maZtccaBkqZwip-ubjR4U471ALPwYwTurMaQrZ9Q@mail.gmail.com> (sfid-20111127_021648_798130_42A2BCA7)
-Subject: Re: [PATCH] ath9k: Revert change that broke AR928X on Acer Ferrari One
-From: Adrian Chadd <adrian@freebsd.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:57946 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756792Ab1KRIWl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 03:22:41 -0500
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAI8Mfa9022797
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 03:22:41 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 51/77] iwlegacy: remove il_ieee80211_get_hw_conf
+Date: Fri, 18 Nov 2011 09:22:13 +0100
+Message-Id: <1321604559-10707-51-git-send-email-sgruszka@redhat.com> (sfid-20111118_092246_629019_F9141FFE)
+In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hm, considering the origina patch did this:
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/3945-mac.c    |    2 +-
+ drivers/net/wireless/iwlegacy/4965.c        |    2 +-
+ drivers/net/wireless/iwlegacy/common.c      |    2 +-
+ drivers/net/wireless/iwlegacy/iwl-helpers.h |    6 ------
+ 4 files changed, 3 insertions(+), 9 deletions(-)
 
-        /* Clear Bit 14 of AR_WA after putting chip into Full Sleep mode. */
--       if (AR_SREV_9300_20_OR_LATER(ah))
--               REG_WRITE(ah, AR_WA,
--                         ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
-+       if (!AR_SREV_9480(ah))
-+               REG_WRITE(ah, AR_WA, ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index ae60410..cd7ae58 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -2759,7 +2759,7 @@ void il3945_post_associate(struct il_priv *il)
+ 
+ 	il_scan_cancel_timeout(il, 200);
+ 
+-	conf = il_ieee80211_get_hw_conf(il->hw);
++	conf = &il->hw->conf;
+ 
+ 	ctx->staging.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
+ 	il3945_commit_rxon(il, ctx);
+diff --git a/drivers/net/wireless/iwlegacy/4965.c b/drivers/net/wireless/iwlegacy/4965.c
+index ed2c617..6833a3c 100644
+--- a/drivers/net/wireless/iwlegacy/4965.c
++++ b/drivers/net/wireless/iwlegacy/4965.c
+@@ -2184,7 +2184,7 @@ static void il4965_post_associate(struct il_priv *il)
+ 
+ 	il_scan_cancel_timeout(il, 200);
+ 
+-	conf = il_ieee80211_get_hw_conf(il->hw);
++	conf = &il->hw->conf;
+ 
+ 	ctx->staging.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
+ 	il_commit_rxon(il, ctx);
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 7062574..bbf674d 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -3514,7 +3514,7 @@ il_send_rxon_timing(struct il_priv *il, struct il_rxon_context *ctx)
+ 	u16 beacon_int;
+ 	struct ieee80211_vif *vif = ctx->vif;
+ 
+-	conf = il_ieee80211_get_hw_conf(il->hw);
++	conf = &il->hw->conf;
+ 
+ 	lockdep_assert_held(&il->mutex);
+ 
+diff --git a/drivers/net/wireless/iwlegacy/iwl-helpers.h b/drivers/net/wireless/iwlegacy/iwl-helpers.h
+index 0e64003..eb5a287 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-helpers.h
++++ b/drivers/net/wireless/iwlegacy/iwl-helpers.h
+@@ -38,12 +38,6 @@
+ #define IL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
+ 
+ 
+-static inline struct ieee80211_conf *il_ieee80211_get_hw_conf(
+-	struct ieee80211_hw *hw)
+-{
+-	return &hw->conf;
+-}
+-
+ /**
+  * il_queue_inc_wrap - increment queue idx, wrap back to beginning
+  * @idx -- current idx
+-- 
+1.7.1
 
-.. something tells me that perhaps the correct statement is:
-
-if (AR_SREV_9300_20_OR_LATER(ah) && !AR_SREV_9480(ah))
-    REG_WRITE() ...
-
-?
-
-
-Adrian
