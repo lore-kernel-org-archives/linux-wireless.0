@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:51318 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753076Ab1KDOtg (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:29390 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753902Ab1KROJh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 10:49:36 -0400
-Received: by qabj40 with SMTP id j40so2139371qab.19
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Nov 2011 07:49:35 -0700 (PDT)
+	Fri, 18 Nov 2011 09:09:37 -0500
+Date: Fri, 18 Nov 2011 17:09:06 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] ath6kl: use a larger buffer for debug output
+Message-ID: <20111118140906.GA9685@elgon.mountain> (sfid-20111118_150942_354029_4789F63D)
 MIME-Version: 1.0
-Date: Fri, 4 Nov 2011 15:49:35 +0100
-Message-ID: <CAFED-jmnK5qKG6pMUHC__8CnoJwaBoihV_U5p-JoyAH6VW1rNw@mail.gmail.com> (sfid-20111104_154939_531853_91626D41)
-Subject: mac80211: UAPSD - seems MORE_DATA bit is not set in all cases
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+This function makes the static checkers grumble.  The return value of
+snprintf() is the number of bytes which would have been copied if
+there was enough space.  In theory, a %u can take take 10 digits so
+len could be larger than 16 and it would be a small information
+leak.
 
-Seems we don't set MORE_DATA bit correctly in
-ieee80211_sta_ps_deliver_response() fuction.
-In case we have more than one frame in struct sk_buff_head frames we
-don't set MORE_DATA bit.
+We may as well make the buffer larger as well since that is very
+easy to do.
 
-Proposed fix:
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index ce962d2..8eaa746 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1354,12 +1354,12 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
-                         * Use MoreData flag to indicate whether there are
-                         * more buffered frames for this STA
-                         */
--                       if (!more_data)
--                               hdr->frame_control &=
--                                       cpu_to_le16(~IEEE80211_FCTL_MOREDATA);
--                       else
-+                       if (more_data || !skb_queue_empty(&frames))
-                                hdr->frame_control |=
-                                        cpu_to_le16(IEEE80211_FCTL_MOREDATA);
-+                       else
-+                               hdr->frame_control &=
-+                                       cpu_to_le16(~IEEE80211_FCTL_MOREDATA);
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-                        if (ieee80211_is_data_qos(hdr->frame_control) ||
-                            ieee80211_is_qos_nullfunc(hdr->frame_control))
-
-
-BR
-Janusz
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 9eff0d0..e632008 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -1551,11 +1551,12 @@ static ssize_t ath6kl_listen_int_read(struct file *file,
+ 						size_t count, loff_t *ppos)
+ {
+ 	struct ath6kl *ar = file->private_data;
+-	char buf[16];
++	char buf[32];
+ 	int len;
+ 
+ 	len = snprintf(buf, sizeof(buf), "%u %u\n", ar->listen_intvl_t,
+ 					ar->listen_intvl_b);
++	len = min(sizeof(buf), len);
+ 
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
