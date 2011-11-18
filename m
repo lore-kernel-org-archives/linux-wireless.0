@@ -1,27 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:55490 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752447Ab1KCHgF (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60243 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753564Ab1KRO1i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 03:36:05 -0400
-Received: by qabj40 with SMTP id j40so798744qab.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2011 00:36:04 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 3 Nov 2011 08:36:04 +0100
-Message-ID: <CAFED-jkVtVFBJfDc-18a+RogAFoTVudS9_POjZHFZ=AtBu1p0g@mail.gmail.com> (sfid-20111103_083611_029427_18E6D826)
-Subject: mac80211: UAPSD - EOSP bit seems to be not set when send qos null frame
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 18 Nov 2011 09:27:38 -0500
+Subject: [PATCH] mac80211: minor cleanup to mesh state locking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 18 Nov 2011 15:27:31 +0100
+Message-ID: <1321626451.10266.58.camel@jlt3.sipsolutions.net> (sfid-20111118_152741_812110_D4B35F82)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Johannes Berg <johannes.berg@intel.com>
 
-I have a question connected with UAPSD implementation.
-Seems, mac80211 always clear EOSP bit in ieee80211_set_qos_hdr() fuction.
-Is that a problem in mac80211 or this should be handled in different place/way?
+First time I tried smatch, and it says:
+mesh_hwmp.c +870 mesh_queue_preq(21) error: double lock 'bottom_half:'
+mesh_hwmp.c +873 mesh_queue_preq(24) error: double unlock 'bottom_half:'
+mesh_hwmp.c +886 mesh_queue_preq(37) error: double unlock 'bottom_half:'
 
-BR
-Janusz
+Which is indeed true -- there's no point in disabling BHs
+again if we just did that a few lines earlier, so remove.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mesh_hwmp.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+--- a/net/mac80211/mesh_hwmp.c	2011-11-18 09:46:26.000000000 +0100
++++ b/net/mac80211/mesh_hwmp.c	2011-11-18 15:25:36.000000000 +0100
+@@ -867,9 +867,9 @@ static void mesh_queue_preq(struct mesh_
+ 		return;
+ 	}
+ 
+-	spin_lock_bh(&mpath->state_lock);
++	spin_lock(&mpath->state_lock);
+ 	if (mpath->flags & MESH_PATH_REQ_QUEUED) {
+-		spin_unlock_bh(&mpath->state_lock);
++		spin_unlock(&mpath->state_lock);
+ 		spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
+ 		kfree(preq_node);
+ 		return;
+@@ -879,7 +879,7 @@ static void mesh_queue_preq(struct mesh_
+ 	preq_node->flags = flags;
+ 
+ 	mpath->flags |= MESH_PATH_REQ_QUEUED;
+-	spin_unlock_bh(&mpath->state_lock);
++	spin_unlock(&mpath->state_lock);
+ 
+ 	list_add_tail(&preq_node->list, &ifmsh->preq_queue.list);
+ 	++ifmsh->preq_queue_len;
+
+
