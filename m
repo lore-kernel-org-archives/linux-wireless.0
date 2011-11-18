@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:48041 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:58303 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752017Ab1KZDgk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 22:36:40 -0500
-Subject: Re: [PATCH 4/7] iwlagn: allow up to uCode API 6 for 6000 devices
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-In-Reply-To: <CA+XFjip+ePyqkFw6sJYLrL+ODGBQcuhmntZ62npzB-HrLqPjnw@mail.gmail.com>
-References: <1322248308-5113-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1322248308-5113-5-git-send-email-wey-yi.w.guy@intel.com>
-	 <CA+XFjip+ePyqkFw6sJYLrL+ODGBQcuhmntZ62npzB-HrLqPjnw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 25 Nov 2011 18:40:09 -0800
-Message-ID: <1322275209.11647.145.camel@wwguy-huron> (sfid-20111126_043704_815707_66D64F10)
-Mime-Version: 1.0
+	id S1752503Ab1KRBA2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Nov 2011 20:00:28 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/5] update for 3.3
+Date: Thu, 17 Nov 2011 16:05:08 -0800
+Message-Id: <1321574713-12076-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111118_020033_230547_436049EC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-11-25 at 16:06 -0800, Gábor Stefanik wrote:
-> On Fri, Nov 25, 2011 at 8:11 PM, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> >
-> > Since the uCode hasn't been released (yet?),
-> 
-> Isn't the 6x00 ucode available on intellinuxwireless.org? I certainly
-> can see it there.
-> 
-the current release iwlwifi/downloads/iwlwifi-6000-ucode-9.221.4.1.tgz
-which is version 4. version 6 is under test and will be ready for
-release very soon.
+We adding few debug hooks and hope to catch more information when
+encounter problems
 
-Thanks
-Wey
-> >
+Emmanuel Grumbach (4):
+  iwlwifi: check the HW when a queue is stuck
+  iwlwifi: improve the prints in the reclaim path
+  iwlwifi: fix endianity issues in debug prints
+  iwlwifi: tid_data is taken twice in iwl_trans_pcie_tx_agg_alloc
+
+Wey-Yi Guy (1):
+  iwlwifi: remove redundancy
+
+these patches are also available from wireless-next branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |    7 +++----
+ drivers/net/wireless/iwlwifi/iwl-io.c             |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    5 +++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |    4 ----
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |   12 ++++++++----
+ 5 files changed, 17 insertions(+), 13 deletions(-)
 
