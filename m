@@ -1,44 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59299 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751219Ab1KDQaY (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:51544 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751549Ab1KRLCF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 12:30:24 -0400
-Subject: Re: [PATCH v3 3/3] mac80211: Allow overriding some HT information.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4EB4126E.1020802@candelatech.com>
-References: <1320299722-30113-1-git-send-email-greearb@candelatech.com>
-	 <1320299722-30113-3-git-send-email-greearb@candelatech.com>
-	 (sfid-20111103_065549_863747_7FFD5818) <1320310045.3950.23.camel@jlt3.sipsolutions.net>
-	 <4EB2CBCC.6080709@candelatech.com>
-	 <1320417690.3969.88.camel@jlt3.sipsolutions.net>
-	 <4EB41014.6000002@candelatech.com>
-	 <1320423893.3969.104.camel@jlt3.sipsolutions.net>
-	 <4EB4126E.1020802@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 04 Nov 2011 17:30:20 +0100
-Message-ID: <1320424220.3969.105.camel@jlt3.sipsolutions.net> (sfid-20111104_173027_301239_E258DE67)
-Mime-Version: 1.0
+	Fri, 18 Nov 2011 06:02:05 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCHv3 0/3] add NoAck per tid support
+Date: Fri, 18 Nov 2011 12:01:45 +0100
+Message-Id: <1321614110-32392-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111118_120223_064930_58AD43F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-11-04 at 09:27 -0700, Ben Greear wrote:
+This patch adds support for NoAck per WMM Queue. The Unicast QoS
+Header is adapted accordingly for each outgoing frame.
+The NoAck policy for the individual queues is turned and off through
+a tid bitmap with nl80211 commands.
 
-> > So I still stand by what I said earlier -- you should not allow
-> > advertising a smaller value than the hardware wanted to use initially.
-> > If the AP doesn't use that smaller value, all is well, but if it
-> > actually uses a smaller value then the hardware might fall over.
-> 
-> Ok, I'll add that restriction.  When this all settles, maybe I
-> can get some info from the ath9k folks about what their hardware
-> can actually support.
+I have tested this feature on ath9k as well as ath5k devices. There is
+an iw patch as well to make use of this feature.
 
-There's little point in advertising something bigger than the HW
-supports, so I'd say that's the smallest :-)
-(ok, so this might be for hw crypto, etc., but ath9k could advertise a
-smaller value when hw crypto is disabled for example)
+It should apply well on the latest wireless-testing kernel.
 
-johannes
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+
+---
+Changes to PATCH:
+
+consider NO_ACK flag when calculating duration
+check if set_txq_noack op is implemented before calling it
+
+Changes to PATCHv2:
+
+change from TXQ_PARAM enhancement to separate command. This should be
+more clean and enables more configuration options.
+
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+
+Simon Wunderlich (3):
+  mac80211: remove debugfs noack test
+  wireless: Add NoAck per tid Support
+  mac80211: Add NoAck per tid Support
+
+ include/linux/nl80211.h    |   10 ++++++++++
+ include/net/cfg80211.h     |    6 ++++++
+ net/mac80211/cfg.c         |   11 +++++++++++
+ net/mac80211/debugfs.c     |   35 -----------------------------------
+ net/mac80211/ieee80211_i.h |    4 +++-
+ net/mac80211/iface.c       |    2 ++
+ net/mac80211/tx.c          |   10 +---------
+ net/mac80211/wme.c         |    8 ++++++--
+ net/wireless/nl80211.c     |   28 ++++++++++++++++++++++++++++
+ 9 files changed, 67 insertions(+), 47 deletions(-)
+
+-- 
+1.7.7.3
 
