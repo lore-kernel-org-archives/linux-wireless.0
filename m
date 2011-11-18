@@ -1,56 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:21885 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755572Ab1K2R4V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 12:56:21 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-CC: Nikolay Martynov <mar.kolya@gmail.com>
-Date: Tue, 29 Nov 2011 19:54:40 +0200
-Subject: RE: [RFC] mac80211: fix another race in aggregation start
-Message-ID: <4825B8A2C4E264489E57869F0DCFB223445BFAC6CA@hasmsx502.ger.corp.intel.com> (sfid-20111129_185626_514850_916B04A9)
-References: <1322585453.4110.24.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1322585453.4110.24.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from external1.orbit-lab.org ([128.6.192.131]:41709 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753152Ab1KRVM3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 16:12:29 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 218385401EF
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 16:36:59 -0500 (EST)
+Subject: Compat-wireless release for 2011-11-18 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111118211227.5D67040633@repository3.orbit-lab.org> (sfid-20111118_221240_671350_D09B946C)
+Date: Fri, 18 Nov 2011 16:12:27 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gRnJvbTogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXMuYmVyZ0BpbnRlbC5jb20+DQo+IA0K
-PiBOb3RpY2VkIGJ5IGxvb2tpbmcgYXQgdGhlIGNvZGU6IGlmIHBhY2tldHMgYXJlDQo+IGJlaW5n
-IHByb2Nlc3NlZCB3aGlsZSB3ZSBjbGVhciB0aGUgV0FOVF9TVEFSVA0KPiBiaXQsIHRoZXkgbWln
-aHQgc2VlIGl0IGNsZWFyIGFuZCBxdWV1ZSB1cCBvbg0KPiB0aWRfdHgtPnBlbmRpbmcuIElmIHRo
-ZSBkcml2ZXIgcmVqZWN0cyB0aGUgbmV3DQo+IGFnZ3JlZ2F0aW9uIHNlc3Npb24gdGhlbiwgd2Ug
-bGVhayB0aGUgcGFja2V0Lg0KPiANCj4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcNCj4gU2ln
-bmVkLW9mZi1ieTogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXMuYmVyZ0BpbnRlbC5jb20+DQo+IC0t
-LQ0KPiAgbmV0L21hYzgwMjExL2FnZy10eC5jIHwgICAxMyArKysrKysrKystLS0tDQo+ICAxIGZp
-bGUgY2hhbmdlZCwgOSBpbnNlcnRpb25zKCspLCA0IGRlbGV0aW9ucygtKQ0KPiANCj4gLS0tIGEv
-bmV0L21hYzgwMjExL2FnZy10eC5jCTIwMTEtMTEtMjkgMTc6MjM6NDAuMDAwMDAwMDAwICswMTAw
-DQo+ICsrKyBiL25ldC9tYWM4MDIxMS9hZ2ctdHguYwkyMDExLTExLTI5IDE3OjQ4OjE2LjAwMDAw
-MDAwMCArMDEwMA0KPiBAQCAtMzI0LDE0ICszMjQsMTkgQEAgdm9pZCBpZWVlODAyMTFfdHhfYmFf
-c2Vzc2lvbl9oYW5kbGVfc3Rhcg0KPiAgCSAqLw0KPiAgCWllZWU4MDIxMV9zdG9wX3F1ZXVlX2Fn
-Zyhsb2NhbCwgdGlkKTsNCj4gDQo+IC0JY2xlYXJfYml0KEhUX0FHR19TVEFURV9XQU5UX1NUQVJU
-LCAmdGlkX3R4LT5zdGF0ZSk7DQo+IC0NCj4gIAkvKg0KPiAtCSAqIG1ha2Ugc3VyZSBubyBwYWNr
-ZXRzIGFyZSBiZWluZyBwcm9jZXNzZWQgdG8gZ2V0DQo+IC0JICogdmFsaWQgc3RhcnRpbmcgc2Vx
-dWVuY2UgbnVtYmVyDQo+ICsJICogTWFrZSBzdXJlIG5vIHBhY2tldHMgYXJlIGJlaW5nIHByb2Nl
-c3NlZC4gVGhpcyBlbnN1cmVzIHRoYXQNCj4gKwkgKiAgYSkgd2UgaGF2ZSBhIHZhbGlkIHN0YXJ0
-aW5nIHNlcXVlbmNlIG51bWJlciBhbmQgaXQncyByZWFsbHkNCj4gKwkgKiAgICAgdGhlIG5leHQg
-ZnJhbWUgYW5kIHRoYXQNCj4gKwkgKiAgYikgdGhlcmUncyBubyBwYWNrZXQgdGhhdCBzZWVzIFdB
-TlRfU1RBUlQgY2xlYXJlZCBhbmQgcXVldWVzDQo+ICsJICogICAgIHVwIG9uIHRpZF90eC0+cGVu
-ZGluZyB3aGljaCB3b3VsZCBjYXVzZSB1cyB0byBsb3NlIGl0IGlmDQo+ICsJICogICAgIHRoZSBk
-cml2ZXIgcmVqZWN0cyB0aGUgc2Vzc2lvbiBhbmQgcHJvYmFibHkgY29uZnVzZSB0aGUNCj4gKwkg
-KiAgICAgZHJpdmVyIG90aGVyd2lzZS4NCj4gIAkgKi8NCj4gIAlzeW5jaHJvbml6ZV9uZXQoKTsN
-Cj4gDQo+ICsJY2xlYXJfYml0KEhUX0FHR19TVEFURV9XQU5UX1NUQVJULCAmdGlkX3R4LT5zdGF0
-ZSk7DQo+ICsNCj4gIAlzdGFydF9zZXFfbnVtID0gc3RhLT50aWRfc2VxW3RpZF0gPj4gNDsNCj4g
-DQo+ICAJcmV0ID0gZHJ2X2FtcGR1X2FjdGlvbihsb2NhbCwgc2RhdGEsIElFRUU4MDIxMV9BTVBE
-VV9UWF9TVEFSVCwNCj4gDQoNClllYWgsIHRoYXQgc291bmRzIHJlYXNvbmFibGUgdG8gbWUuIEFs
-dGhvdWdoIEkgd291bGQgYmUgZ2xhZCB0byB0ZXN0IGl0IDotKQ0KDQotLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KSW50
-ZWwgSXNyYWVsICg3NCkgTGltaXRlZAoKVGhpcyBlLW1haWwgYW5kIGFueSBhdHRhY2htZW50cyBt
-YXkgY29udGFpbiBjb25maWRlbnRpYWwgbWF0ZXJpYWwgZm9yCnRoZSBzb2xlIHVzZSBvZiB0aGUg
-aW50ZW5kZWQgcmVjaXBpZW50KHMpLiBBbnkgcmV2aWV3IG9yIGRpc3RyaWJ1dGlvbgpieSBvdGhl
-cnMgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkCnJl
-Y2lwaWVudCwgcGxlYXNlIGNvbnRhY3QgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3BpZXMu
-Cg==
+>From git://github.com/mcgrof/compat-wireless
+   4ab9b62..d32558f  master     -> origin/master
+>From git://github.com/mcgrof/compat
+   1beb89b..38eb59d  linux-3.2.y -> origin/linux-3.2.y
+   1beb89b..47605df  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 34de998...04be1f1 akpm-end   -> origin/akpm-end  (forced update)
+   6aaf05f..a9098b3  akpm-start -> origin/akpm-start
+ + 518b3de...fdf6edf master     -> origin/master  (forced update)
+   6aaf05f..a9098b3  stable     -> origin/stable
+ * [new tag]         next-20111118 -> next-20111118
 
+compat-wireless code metrics
+
+    819371 - Total upstream lines of code being pulled
+      2455 - backport code changes
+      2110 - backport code additions
+       345 - backport code deletions
+      8770 - backport from compat module
+     11225 - total backport code
+    1.3700 - % of code consists of backport work
