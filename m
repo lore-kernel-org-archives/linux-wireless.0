@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:42075 "HELO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751298Ab1KHDce (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:61867 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753266Ab1KRAcI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 22:32:34 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH RESEND 4/4] mwifiex: prevent corruption instead of just warning
-Date: Mon,  7 Nov 2011 19:31:47 -0800
-Message-Id: <1320723107-24202-5-git-send-email-bzhao@marvell.com> (sfid-20111108_043236_458230_1F489011)
-In-Reply-To: <1320723107-24202-1-git-send-email-bzhao@marvell.com>
-References: <1320723107-24202-1-git-send-email-bzhao@marvell.com>
+	Thu, 17 Nov 2011 19:32:08 -0500
+Received: by fagn18 with SMTP id n18so3728272fag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2011 16:32:06 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1321571145-23893-1-git-send-email-hauke@hauke-m.de>
+References: <1321564991-7249-2-git-send-email-hauke@hauke-m.de> <1321571145-23893-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 17 Nov 2011 16:31:46 -0800
+Message-ID: <CAB=NE6V-e3+3wY+gCTtWBwzzotbEaG=N2dBASASX1qX0VGwAKg@mail.gmail.com> (sfid-20111118_013212_243639_F0A88329)
+Subject: Re: [PATCH v2 2/3] compat: backport kfree_rcu()
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+On Thu, Nov 17, 2011 at 3:05 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> This adds a nested function everywhere kfree_rcu() was called. This
+> function frees the memory and is given as a function to call_rcu().
+> The kfree_rcu define was made by Johannes Berg.
+> The rcu callback could happen every time also after the module was
+> unloaded and this will cause problems.
+> A rcu_barrier() was added into every module_exit so that this will not
+> be called after the module was unloaded.
+>
+> The define overwriting module_exit is based on the original module_exit
+> which looks like this:
+> /* This is only required if you want to be unloadable. */
+> /#define module_exit(exitfn)                                    \
+>        static inline exitcall_t __exittest(void)               \
+>        { return exitfn; }                                      \
+>        void cleanup_module(void) __attribute__((alias(#exitfn)));
+>
+> We replaced the call to the actual function exitfn() with a call to our
+> function which calls the original exitfn() and then rcu_barrier()
+>
+> As a module will not be unloaded that ofter it should not have a big
+> performance impact when rcu_barrier() is called on every module exit,
+> also when no kfree_rcu() backport is used in that module.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> CC: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> v2: remove compile check for exitfn
+>    make function static
 
-Probably we never hit this condition, but in case we do, we may as
-well put a return here instead of just printing a warning message and
-then corrupting memory.  The caller doesn't check the return code.
+Wow, that's pretty fucking hairy, good stuff though, thanks! Applied and pushed!
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Acked-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/pcie.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index d12d440..a2f3200 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -1228,9 +1228,12 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
- 	if (!skb)
- 		return 0;
- 
--	if (rdptr >= MWIFIEX_MAX_EVT_BD)
-+	if (rdptr >= MWIFIEX_MAX_EVT_BD) {
- 		dev_err(adapter->dev, "event_complete: Invalid rdptr 0x%x\n",
- 					rdptr);
-+		ret = -EINVAL;
-+		goto done;
-+	}
- 
- 	/* Read the event ring write pointer set by firmware */
- 	if (mwifiex_read_reg(adapter, REG_EVTBD_WRPTR, &wrptr)) {
--- 
-1.7.0.2
-
+  Luis
