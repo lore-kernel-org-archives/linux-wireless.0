@@ -1,116 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:57571 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934970Ab1KJOrl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 09:47:41 -0500
+Received: from server19320154104.serverpool.info ([193.201.54.104]:46619 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751300Ab1KRThg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Nov 2011 14:37:36 -0500
+Message-ID: <4EC6B3FA.90502@hauke-m.de> (sfid-20111118_203739_629502_7D4CA1B1)
+Date: Fri, 18 Nov 2011 20:37:30 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <1320933501.3967.68.camel@jlt3.sipsolutions.net>
-References: <1320933501.3967.68.camel@jlt3.sipsolutions.net>
-Date: Thu, 10 Nov 2011 15:47:38 +0100
-Message-ID: <CAA93jw6NZc4qP5ArK6tFF1DhP3_Rxsr8VFusU-nSzLHb6tnxjQ@mail.gmail.com> (sfid-20111110_154755_286503_A015FA50)
-Subject: Re: creating netdev queues on the fly?
-From: Dave Taht <dave.taht@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+Subject: Re: [PATCH 2/2] compat: implement dummy security_sk_clone
+References: <1321490374-24529-1-git-send-email-linville@tuxdriver.com> <1321490374-24529-2-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1321490374-24529-2-git-send-email-linville@tuxdriver.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 10, 2011 at 2:58 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Hi,
+On 11/17/2011 01:39 AM, John W. Linville wrote:
+> This has been defined in include/linux/security.h for some time, but was
+> only given an EXPORT_SYMBOL for 3.2.  Add a compat_* definition to avoid
+> breaking the module load with an undefined symbol.
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  include/linux/compat-3.2.h |   11 +++++++++++
+>  1 files changed, 11 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/linux/compat-3.2.h b/include/linux/compat-3.2.h
+> index ceaaecc..08f102f 100644
+> --- a/include/linux/compat-3.2.h
+> +++ b/include/linux/compat-3.2.h
+> @@ -72,6 +72,17 @@ static inline char *hex_byte_pack(char *buf, u8 byte)
+>  	return buf;
+>  }
+>  
+> +/*
+> + * This has been defined in include/linux/security.h for some time, but was
+> + * only given an EXPORT_SYMBOL for 3.2.  Add a compat_* definition to avoid
+> + * breaking the compile.
+> + */
+> +#define security_sk_clone(a, b) compat_security_sk_clone(a, b)
+> +
+> +static inline void security_sk_clone(const struct sock *sk, struct sock *newsk)
+> +{
+> +}
+> +
+>  #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,2,0)) */
+>  
+>  #endif /* LINUX_3_2_COMPAT_H */
 
->
-> Am I completely crazy?
+Hi,
 
-Somewhat. :)
+security_sk_clone gets also exported in Linux-3.1 so this should move to
+include/linux/compat-3.1.h. 3.1-rcX did not contain this fix, but I hope
+nobody is using this any more.
 
-Much of your thinking aligns with mine, however my goal was to try and
-reduce latencies on wireless-n, where we send variable size truckloads
-of packets to each destination.
+Hauke
 
-Solving that one is hard, and requires two levels of active queue
-management in the packet scheduler layer, and a bit more communication
-up from the driver itself.
-
-We could have a unique 'station identifier' which fits handily into 32
-bits as the max allowed range is 0-2008 and map from MAC to that on tx
-entry. Having that as a flow classifier lets us have per station
-destination queues easily split up via a std tc filter... and then  we
-have the ability, finally, to manage queue depth on a per station
-basis.
-
-So you end up with four queues, each tied to a hardware queue that
-then splits things up on a per station basis, fair queues within the
-queues to each station, and recombines them at the end on a basis
-bursty enough to aggregate as they exit the radio.
-
-I don't mind at all up to 8000 queues, honestly, wasting 99% on mostly
-unused queue structures via pouring megabytes into useless
-bufferbloated FIFO only packet buffers seems an acceptible compromise,
-but I'm easy...
-
-As for managing queue depth on a per station basis, some of what has
-been discussed on "byte queue limits" applies, but given wireless's
-peculiarites, tsf timestamping on entry to the first qdisc, doing fair
-queuing inside the per-sta queue (QFQ?), and checking the timestamp on
-exit from the queue against a sane limit for the queue type would do
-wonders for overall latencies and network responsiveness.
-
-Done right, instead of seeing a single tcp stream capable of inducing
-multi-second latencies for the next stream, latencies would stay flat
-up unto the max aggregation depth of different streams on a given sta,
-subject only the how many other competing stations there are, the net
-effect of packet loss would be vastly lessened, and world peace,
-achieved. I dream of 2ms pings and dns lookups, even gaming, under
-load, on wireless. I do.
-
-First steps are getting a station identifier and some useful
-statistics regarding that stations max (that quantum) packet bundle
-size, and completion rate, mostly from minstrel... on each packet...
-
-a tc classifier that can use it to toss into the tcindex mechanism (if
-that is what is used), another sane classifier for something like QFQ
-per station, and a packet 'grouper' that can output correctly sized
-bursts of packets on a sane basis from the queues in a randomly sane
-order (not round robin per se', to even out the load it has to start
-dequeuing groups)
-
-How to do all that within tc? Well... I like the idea of throwing out
-the 32 bitness of tc's calssifiers (mac hashing and ipv6 hashing is
-not very effective), but I doubt that will fly..
-
-So to fit into the the existing structures the idea of adding the
-concept of a  tc qdisc 'grouper'  along with all the other tc filter
-'splitters' - that could be multiqueue and multiple hardware queue
-aware - seems like an answer.
-
-Another crazy piece of the idea (courtesy nbd - I'd rather go crazy
-adding fields to the skb) is to wedge that id and some minstrel
-statistics and completion rates and the timestamp into each skb's
-mostly unused 48 byte 'reserved for special uses field... which it has
-to do under rcu lock anyway.
-
-I started coding up time based queue limits the other weekend,
-actually... some of this has been discussed on the bloat list.
-
->
->
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
--- 
-Dave Täht
-SKYPE: davetaht
-US Tel: 1-239-829-5608
-FR Tel: 0638645374
-http://www.bufferbloat.net
+$ git tag --contains 6230c9b4f8957c8938ee4cf2d03166d3c2dc89de
+v3.1
+v3.1.1
+v3.2-rc1
+v3.2-rc2
