@@ -1,46 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43184 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755795Ab1KBRvl (ORCPT
+Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:41449 "EHLO
+	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753418Ab1KSLEJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 13:51:41 -0400
-Subject: Re: [wireless-next PATCH v2 1/4] mac80211: Support forcing station
- to disable 11n.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
+	Sat, 19 Nov 2011 06:04:09 -0500
+Subject: [PATCH 1/5] rndis_wlan: split getting current channel to separate
+ function
+To: "John W. Linville" <linville@tuxdriver.com>
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4EB1726E.5010503@candelatech.com>
-References: <1319840474-2618-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20111029_002128_214854_3ACBE979) <1320220666.3950.6.camel@jlt3.sipsolutions.net>
-	 <4EB1726E.5010503@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 02 Nov 2011 18:51:36 +0100
-Message-ID: <1320256296.7846.4.camel@jlt3.sipsolutions.net> (sfid-20111102_185146_016732_CC131C9F)
-Mime-Version: 1.0
+Date: Sat, 19 Nov 2011 13:04:05 +0200
+Message-ID: <20111119110405.11950.91713.stgit@localhost6.localdomain6> (sfid-20111119_120431_201573_26BF6997)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-11-02 at 09:40 -0700, Ben Greear wrote:
-> On 11/02/2011 12:57 AM, Johannes Berg wrote:
-> > On Fri, 2011-10-28 at 15:21 -0700, greearb@candelatech.com wrote:
-> >> From: Ben Greear<greearb@candelatech.com>
-> >>
-> >> This allows a user to configure a wifi station interface
-> >> to disable 802.11n, even if the AP and NIC supports it.
-> >
-> > You really should've waited for the review on v1 to finish -- this v2 is
-> > worthless. That makes John think that you addressed all review feedback,
-> > when really we didn't even finish discussing some points; eventually
-> > that'll just force me to have my own tree so John isn't confused all the
-> > time.
-> 
-> I explicitly noted in the comments for several of the patches
-> that I did not address all of your comments.  I re-posted because
-> I thought I could at least fix some of your concerns and hopefully
-> get the patches closer to right and make further reviews easier.
+Split getting current channel channel from hardware to separate function
+as this function will be needed later in patch 'pass channel info to
+cfg80211_roamed()'.
 
-Ok, fair enough. I just saw them as extra mail and basically didn't even
-read them, maybe I should have.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/rndis_wlan.c |   49 +++++++++++++++++++++++--------------
+ 1 files changed, 31 insertions(+), 18 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 620e3c0..37c4c40 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -1347,6 +1347,32 @@ static int set_channel(struct usbnet *usbdev, int channel)
+ 	return ret;
+ }
+ 
++static struct ieee80211_channel *get_current_channel(struct usbnet *usbdev,
++						     u16 *beacon_interval)
++{
++	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
++	struct ieee80211_channel *channel;
++	struct ndis_80211_conf config;
++	int len, ret;
++
++	/* Get channel and beacon interval */
++	len = sizeof(config);
++	ret = rndis_query_oid(usbdev, OID_802_11_CONFIGURATION, &config, &len);
++	netdev_dbg(usbdev->net, "%s(): OID_802_11_CONFIGURATION -> %d\n",
++				__func__, ret);
++	if (ret < 0)
++		return NULL;
++
++	channel = ieee80211_get_channel(priv->wdev.wiphy,
++				KHZ_TO_MHZ(le32_to_cpu(config.ds_config)));
++	if (!channel)
++		return NULL;
++
++	if (beacon_interval)
++		*beacon_interval = le16_to_cpu(config.beacon_period);
++	return channel;
++}
++
+ /* index must be 0 - N, as per NDIS  */
+ static int add_wep_key(struct usbnet *usbdev, const u8 *key, int key_len,
+ 								int index)
+@@ -2650,13 +2676,12 @@ static void rndis_wlan_craft_connected_bss(struct usbnet *usbdev, u8 *bssid,
+ {
+ 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
+ 	struct ieee80211_channel *channel;
+-	struct ndis_80211_conf config;
+ 	struct ndis_80211_ssid ssid;
+ 	struct cfg80211_bss *bss;
+ 	s32 signal;
+ 	u64 timestamp;
+ 	u16 capability;
+-	u16 beacon_interval;
++	u16 beacon_interval = 0;
+ 	__le32 rssi;
+ 	u8 ie_buf[34];
+ 	int len, ret, ie_len;
+@@ -2681,22 +2706,10 @@ static void rndis_wlan_craft_connected_bss(struct usbnet *usbdev, u8 *bssid,
+ 	}
+ 
+ 	/* Get channel and beacon interval */
+-	len = sizeof(config);
+-	ret = rndis_query_oid(usbdev, OID_802_11_CONFIGURATION, &config, &len);
+-	netdev_dbg(usbdev->net, "%s(): OID_802_11_CONFIGURATION -> %d\n",
+-				__func__, ret);
+-	if (ret >= 0) {
+-		beacon_interval = le16_to_cpu(config.beacon_period);
+-		channel = ieee80211_get_channel(priv->wdev.wiphy,
+-				KHZ_TO_MHZ(le32_to_cpu(config.ds_config)));
+-		if (!channel) {
+-			netdev_warn(usbdev->net, "%s(): could not get channel."
+-						 "\n", __func__);
+-			return;
+-		}
+-	} else {
+-		netdev_warn(usbdev->net, "%s(): could not get configuration.\n",
+-					 __func__);
++	channel = get_current_channel(usbdev, &beacon_interval);
++	if (!channel) {
++		netdev_warn(usbdev->net, "%s(): could not get channel.\n",
++					__func__);
+ 		return;
+ 	}
+ 
 
