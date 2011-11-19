@@ -1,169 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34875 "EHLO mx1.redhat.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1924 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751285Ab1KIQvT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 11:51:19 -0500
-Date: Wed, 9 Nov 2011 17:51:59 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
-Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: iwlagn: memory corruption with WPA enterprise
-Message-ID: <20111109165158.GA2254@redhat.com> (sfid-20111109_175142_306399_47B44228)
-References: <20111029171554.GA16596@nomi.cz>
- <20111031160342.GB2225@redhat.com>
- <20111109155411.GA1669@nomi.cz>
+	id S1752676Ab1KSR2j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Nov 2011 12:28:39 -0500
+Message-ID: <4EC7E739.4080404@broadcom.com> (sfid-20111119_182843_574953_93B0A514)
+Date: Sat, 19 Nov 2011 18:28:25 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="ReaqsoxgOBHFXBhH"
-In-Reply-To: <20111109155411.GA1669@nomi.cz>
+To: "Haohui Liao" <liaohaohui@gmail.com>
+cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Wireless stalled after a few minutes with Linux Kernel 3.1
+References: <CAHW5WCL2V=wh43YYbiMo+rnh=-g4fobKEZHrCLvW03Q73=gzYA@mail.gmail.com>
+In-Reply-To: <CAHW5WCL2V=wh43YYbiMo+rnh=-g4fobKEZHrCLvW03Q73=gzYA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---ReaqsoxgOBHFXBhH
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-
-Hi
-
-On Wed, Nov 09, 2011 at 04:54:11PM +0100, Tomáš Janoušek wrote:
-> On Mon, Oct 31, 2011 at 05:03:43PM +0100, Stanislaw Gruszka wrote:
-> > You may try debugging patches I posted a while ago:
-> > http://marc.info/?l=linux-mm&m=131914560820378&w=2
-> > http://marc.info/?l=linux-mm&m=131914560820293&w=2
-> > http://marc.info/?l=linux-mm&m=131914560820317&w=2
-> > 
-> > With a bit of luck, kernel should panic and dump call-trace when
-> > bad code start to write at memory addresses where is not suppose
-> > to.
+On 11/19/2011 03:20 PM, Haohui Liao wrote:
+> Dear Linux wifi developers,
 > 
-> Thanks for your suggestions. I did as you told me, applied those 3 patches on
-> top of 3.1 + net-next (the one from 29 Oct 2011), enabled all those things in
-> config and passed corrupt_dbg=1 on cmdline, but the problem happens without
-> anything being written to dmesg.
+> I didn't encounter core dump problem with kernel 3.1. However, after
+> connecting for a few seconds or minutes, the connection with stall and
+> I can't assess Internet. I check my dmesg, it gave the following info:
+> 
+> [ 45.966602] wlan0: direct probe to f4:3f:61:06:22:21 (try 1/3)
+> [ 45.969213] wlan0: direct probe responded
+> [ 45.998789] wlan0: authenticate with f4:3f:61:06:22:21 (try 1)
+> [ 46.001234] wlan0: authenticated
+> [ 46.001270] wlan0: associate with f4:3f:61:06:22:21 (try 1)
+> [ 46.004102] wlan0: RX AssocResp from f4:3f:61:06:22:21 (capab=0x411
+> status=0 aid=1)
+> [ 46.004107] wlan0: associated
+> [ 93.007527] usb 1-1.3: USB disconnect, device number 3
+> [ 95.654157] NET: Registered protocol family 10
+> [ 106.263062] wlan0: no IPv6 routers present
 
-I just discovered that CONFIG_DEBUG_PAGEALLOC does not work as expected.
-It leave most of free pages unprotected, hence unintentional write to
-them is not discovered. I'm attaching additional patch, which should
-make detection actually work.
+Actually, this trace looks fine. The last message means that no IPv6
+capable network equipment has been detected. Did you do unplug a USB device?
 
-If kernel will does not boot with corrupt_dbg=1, you may try to catch
-corruption without that option. Attached patch should make it possible,
-however having corrupt_dbg=1 increase probability of the catch.
+> Does this mean that the IPv6 in kernel 3.1 is affecting the wifi
+> connection?  Please advice.
 
-Thanks
-Stanislaw
+Provide hardware info.
 
+Gr. AvS
 
---ReaqsoxgOBHFXBhH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="0001-mm-remove-debug_pagealloc_enabled.patch"
-
->From 744ddd37f7d61c46e755a7304d791ba0542428a0 Mon Sep 17 00:00:00 2001
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Wed, 9 Nov 2011 14:21:58 +0100
-Subject: [PATCH 1/4] mm: remove debug_pagealloc_enabled
-
-After we finish (no)bootmem, pages are passed to buddy allocator. Since
-debug_pagealloc_enabled is not set, we do not protect pages, what is
-not what we want with CONFIG_DEBUG_PAGEALLOC=y. That could be fixed by
-calling enable_debug_pagealloc() before free_all_bootmem(), but actually
-I do not see any reason why we need that global variable. Hence patch
-remove it.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- arch/x86/mm/pageattr.c |    6 ------
- include/linux/mm.h     |   10 ----------
- init/main.c            |    5 -----
- mm/debug-pagealloc.c   |    3 ---
- 4 files changed, 0 insertions(+), 24 deletions(-)
-
-diff --git a/arch/x86/mm/pageattr.c b/arch/x86/mm/pageattr.c
-index f9e5267..5031eef 100644
---- a/arch/x86/mm/pageattr.c
-+++ b/arch/x86/mm/pageattr.c
-@@ -1334,12 +1334,6 @@ void kernel_map_pages(struct page *page, int numpages, int enable)
- 	}
- 
- 	/*
--	 * If page allocator is not up yet then do not call c_p_a():
--	 */
--	if (!debug_pagealloc_enabled)
--		return;
--
--	/*
- 	 * The return value is ignored as the calls cannot fail.
- 	 * Large pages for identity mappings are not used at boot time
- 	 * and hence no memory allocations during large page split.
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 3dc3a8c..0a22db1 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1537,23 +1537,13 @@ static inline void vm_stat_account(struct mm_struct *mm,
- #endif /* CONFIG_PROC_FS */
- 
- #ifdef CONFIG_DEBUG_PAGEALLOC
--extern int debug_pagealloc_enabled;
--
- extern void kernel_map_pages(struct page *page, int numpages, int enable);
--
--static inline void enable_debug_pagealloc(void)
--{
--	debug_pagealloc_enabled = 1;
--}
- #ifdef CONFIG_HIBERNATION
- extern bool kernel_page_present(struct page *page);
- #endif /* CONFIG_HIBERNATION */
- #else
- static inline void
- kernel_map_pages(struct page *page, int numpages, int enable) {}
--static inline void enable_debug_pagealloc(void)
--{
--}
- #ifdef CONFIG_HIBERNATION
- static inline bool kernel_page_present(struct page *page) { return true; }
- #endif /* CONFIG_HIBERNATION */
-diff --git a/init/main.c b/init/main.c
-index 217ed23..99c4ba3 100644
---- a/init/main.c
-+++ b/init/main.c
-@@ -282,10 +282,6 @@ static int __init unknown_bootoption(char *param, char *val)
- 	return 0;
- }
- 
--#ifdef CONFIG_DEBUG_PAGEALLOC
--int __read_mostly debug_pagealloc_enabled = 0;
--#endif
--
- static int __init init_setup(char *str)
- {
- 	unsigned int i;
-@@ -597,7 +593,6 @@ asmlinkage void __init start_kernel(void)
- 	}
- #endif
- 	page_cgroup_init();
--	enable_debug_pagealloc();
- 	debug_objects_mem_init();
- 	kmemleak_init();
- 	setup_per_cpu_pageset();
-diff --git a/mm/debug-pagealloc.c b/mm/debug-pagealloc.c
-index 7cea557..789ff70 100644
---- a/mm/debug-pagealloc.c
-+++ b/mm/debug-pagealloc.c
-@@ -95,9 +95,6 @@ static void unpoison_pages(struct page *page, int n)
- 
- void kernel_map_pages(struct page *page, int numpages, int enable)
- {
--	if (!debug_pagealloc_enabled)
--		return;
--
- 	if (enable)
- 		unpoison_pages(page, numpages);
- 	else
--- 
-1.7.1
-
-
---ReaqsoxgOBHFXBhH--
