@@ -1,57 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60406 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755433Ab1KHP5L (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:42716 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751885Ab1KSTKm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 10:57:11 -0500
-Subject: Re: [PATCH] mac80211: set carrier_on for ibss vifs only while
- joined
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAB3XZEcGPTzvnTg7DtG8q0E3pGT8KH+tozaO4ZtMGHyQNks_8A@mail.gmail.com> (sfid-20111108_164248_475276_2CC7F1B7)
-References: <1320759419-20743-1-git-send-email-eliad@wizery.com>
-	 <1320766054.24797.2.camel@jlt3.sipsolutions.net>
-	 <CAB3XZEcGPTzvnTg7DtG8q0E3pGT8KH+tozaO4ZtMGHyQNks_8A@mail.gmail.com>
-	 (sfid-20111108_164248_475276_2CC7F1B7)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Nov 2011 16:57:07 +0100
-Message-ID: <1320767827.24797.12.camel@jlt3.sipsolutions.net> (sfid-20111108_165714_875227_2A5B5A59)
-Mime-Version: 1.0
+	Sat, 19 Nov 2011 14:10:42 -0500
+Received: by bke11 with SMTP id 11so4790759bke.19
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 11:10:40 -0800 (PST)
+Message-Id: <6fa261d3570aa403491add7399e1b8b8c4fac143.1321729714.git.chunkeey@googlemail.com> (sfid-20111119_201044_400626_8A346CCE)
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 19 Nov 2011 19:25:02 +0100
+Subject: [PATCH 1/2] p54: use ieee80211_free_txskb
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-11-08 at 17:42 +0200, Eliad Peller wrote:
-> On Tue, Nov 8, 2011 at 5:27 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Tue, 2011-11-08 at 15:36 +0200, Eliad Peller wrote:
-> >> mac80211 should set carrier_on for ibss vifs
-> >> only while they are joined (similar to sta vifs)
-> >
-> >> --- a/net/mac80211/ibss.c
-> >> +++ b/net/mac80211/ibss.c
-> >> @@ -97,6 +97,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
-> >>       /* if merging, indicate to driver that we leave the old IBSS */
-> >>       if (sdata->vif.bss_conf.ibss_joined) {
-> >>               sdata->vif.bss_conf.ibss_joined = false;
-> >> +             netif_carrier_off(sdata->dev);
-> >>               ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IBSS);
-> >>       }
-> >>
-> >> @@ -207,6 +208,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
-> >>       bss = cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
-> >>                                       mgmt, skb->len, 0, GFP_KERNEL);
-> >>       cfg80211_put_bss(bss);
-> >> +     netif_carrier_on(sdata->dev);
-> >>       cfg80211_ibss_joined(sdata->dev, ifibss->bssid, GFP_KERNEL);
-> >
-> > Do we really need to toggle the carrier here? While we merge, shouldn't
-> > we just keep it up, just maybe stop the queues?
-> >
-> technically, we leave the ibss and then rejoin (unlike roaming). so i
-> guess setting the carrier on/off makes sense as well.
-> do you prefer stopping the queues instead?
+In the past, it was fine to simply call
+dev_kfree_skb when it was impossible to
+transmit a skb. However, with the new
+tx status API:
+"mac80211: implement wifi TX status"
+Every loose skb needs to be handed back
+to mac80211.
 
-No, I don't really know :)
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ drivers/net/wireless/p54/txrx.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
+index 6ed9c32..42b97bc 100644
+--- a/drivers/net/wireless/p54/txrx.c
++++ b/drivers/net/wireless/p54/txrx.c
+@@ -242,7 +242,7 @@ void p54_free_skb(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 
+ 	skb_unlink(skb, &priv->tx_queue);
+ 	p54_tx_qos_accounting_free(priv, skb);
+-	dev_kfree_skb_any(skb);
++	ieee80211_free_txskb(dev, skb);
+ }
+ EXPORT_SYMBOL_GPL(p54_free_skb);
+ 
+@@ -788,7 +788,7 @@ void p54_tx_80211(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 			    &hdr_flags, &aid, &burst_allowed);
+ 
+ 	if (p54_tx_qos_accounting_alloc(priv, skb, queue)) {
+-		dev_kfree_skb_any(skb);
++		ieee80211_free_txskb(dev, skb);
+ 		return;
+ 	}
+ 
+-- 
+1.7.7.3
 
