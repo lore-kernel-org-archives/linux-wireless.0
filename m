@@ -1,58 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:52937 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750916Ab1KDBKC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 21:10:02 -0400
-Received: by ggnb2 with SMTP id b2so1933370ggn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2011 18:10:02 -0700 (PDT)
-Message-ID: <4EB33B67.6080806@lwfinger.net> (sfid-20111104_021013_807068_A5373433)
-Date: Thu, 03 Nov 2011 20:09:59 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from cantor2.suse.de ([195.135.220.15]:32785 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754071Ab1KSTGl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Nov 2011 14:06:41 -0500
+Date: Sat, 19 Nov 2011 11:05:59 -0800
+From: Greg KH <gregkh@suse.de>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	greg@kroah.com, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	roman-vl@meta.ua,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: [17/26] b43: refuse to load unsupported firmware
+Message-ID: <20111119190559.GC30197@suse.de> (sfid-20111119_200715_291811_A97DED20)
+References: <20111119000329.419617905@clark.kroah.org>
+ <1321723330.2885.145.camel@deadeye>
 MIME-Version: 1.0
-To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: A new driver is going to be released
-References: <CAMG6FYiNW-1ijghpgQ6R_9HujVEp8d53DQ-vjfJrw_hZamM8Jw@mail.gmail.com>
-In-Reply-To: <CAMG6FYiNW-1ijghpgQ6R_9HujVEp8d53DQ-vjfJrw_hZamM8Jw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1321723330.2885.145.camel@deadeye>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/03/2011 05:40 PM, Dmitry Tarnyagin wrote:
-> Hi,
->
-> I'm about to release cw1200 driver to the community (more or less
-> latest code is available here:
-> http://www.igloocommunity.org/gitweb/?p=kernel/igloo-kernel.git;a=shortlog;h=refs/heads/linux-3.0-ux500
-> as well).
->
-> Technical question: how is it usually done in terms of commit history?
-> Should I preserve the history and release all the changes in the
-> driver separately or should I squash everything to a single commit
-> or...?
+On Sat, Nov 19, 2011 at 05:22:10PM +0000, Ben Hutchings wrote:
+> On Fri, 2011-11-18 at 16:02 -0800, Greg KH wrote:
+> > 3.1-stable review patch.  If anyone has any objections, please let me know.
+> > 
+> > ------------------
+> > 
+> > [This patch is supposed to be applied in 3.1 (and maybe older) branches only.]
+> > 
+> > New kernels support newer firmware that users may try to incorrectly use
+> > with older kernels. Display error and explain the problem in such a case
+> > 
+> > Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> > Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+> > 
+> > ---
+> >  drivers/net/wireless/b43/main.c |    7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > --- a/drivers/net/wireless/b43/main.c
+> > +++ b/drivers/net/wireless/b43/main.c
+> > @@ -2508,6 +2508,13 @@ static int b43_upload_microcode(struct b
+> >  		b43_print_fw_helptext(dev->wl, 1);
+> >  		err = -EOPNOTSUPP;
+> >  		goto error;
+> > +	} else if (fwrev >= 598) {
+> > +		b43err(dev->wl, "YOUR FIRMWARE IS TOO NEW. Support for "
+> > +		       "firmware 598 and up requires kernel 3.2 or newer. You "
+> > +		       "have to install older firmware or upgrade kernel.\n");
+> > +		b43_print_fw_helptext(dev->wl, 1);
+> > +		err = -EOPNOTSUPP;
+> > +		goto error;
+> [...]
+> 
+> Again, I strongly object to this way of handling the incompatibility.
+> The revision check is fine, but the solution must be to assign a
+> different filename for the newer revisions.  The changes to 3.0/3.1
+> should be deferred until this is resolved.
 
-The details of what it took to get your driver to this point are not going to be 
-of much interest in the future. The "official" history starts with acceptance 
-into the kernel. Two things to keep in mind: (1) the kernel source must compile 
-at each step of the way to allow for bisection, thus any changes to Kconfig and 
-Makefile must be in the last patch, and (2) each commit should be small enough 
-that it is relatively easy to review.
+You can object, however the driver author and maintainer wants it done
+this way for now, so that's a valid solution that I have to accept.  It
+solves real bugs that people have already hit when running the 3.0 and
+3.1 kernels.  Propagating a userspace tool change for those systems
+would be much harder, if not impossible, don't you think?  It would also
+require a much more intrusive change to the driver infrastructure to
+handle such a proposed change.
 
-As I do not know the complexity of the driver, it is a little difficult to make 
-suggestions; however, one way to accomplish the above is to add each source file 
-in a separate patch. The maintainer may submit the final version as a single 
-commit, but that is their choice.
+thanks,
 
-Your sending this mail to the wireless ML indicates that you plan to submit the 
-driver to the drivers/net/wireless/ part of the source tree. As long as the 
-driver employs mac80211, that is appropriate. The other option is 
-drivers/staging/. Drivers for that section of the source tree usually are not 
-held to standards as high as the wireless section.
-
-Please be certain that all code submitted passes all tests cleanly including 
-checkpatch, sparse including endianess, and smatch.
-
-Good luck,
-
-Larry
+greg k-h
