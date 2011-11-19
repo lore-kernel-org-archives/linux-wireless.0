@@ -1,80 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11941 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754321Ab1KCJlQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 05:41:16 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:64806 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751541Ab1KSIwf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Nov 2011 03:52:35 -0500
+Received: by bke11 with SMTP id 11so4361670bke.19
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 00:52:34 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1321632729.10266.68.camel@jlt3.sipsolutions.net>
+References: <1320917337-30561-1-git-send-email-arik@wizery.com>
+ <1320917337-30561-3-git-send-email-arik@wizery.com> <1321632729.10266.68.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sat, 19 Nov 2011 10:52:18 +0200
+Message-ID: <CA+XVXfe-NgwN3XuQoJ-BNHmKSdFaoDqQpr0NyrJF4rL0e5vhpQ@mail.gmail.com> (sfid-20111119_095241_786692_95FB05FD)
+Subject: Re: [PATCH v5 3/3] mac80211: Save probe response data for bss
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 1/3] mac80211: remove uneeded scan_chan variable
-Date: Thu,  3 Nov 2011 10:40:45 +0100
-Message-Id: <1320313247-23167-1-git-send-email-sgruszka@redhat.com> (sfid-20111103_104119_145580_085ED27A)
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/mac80211/main.c |   14 ++++++--------
- 1 files changed, 6 insertions(+), 8 deletions(-)
+On Fri, Nov 18, 2011 at 18:12, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2011-11-10 at 11:28 +0200, Arik Nemtsov wrote:
+>> Allow setting a probe response template for an interface operating in
+>> AP mode. Low level drivers are notified about changes in the probe
+>> response template and are able to retrieve a copy of the current probe
+>> response. This data can, for example, be uploaded to hardware as a
+>> template.
+>
+>> +static int ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
+>> +                                 u8 *resp, size_t resp_len)
+>> +{
+>> +     struct sk_buff *new, *old;
+>> +
+>> +     if (!resp || !resp_len)
+>> +             return -EINVAL;
+>> +
+>> +     old = sdata->u.ap.probe_resp;
+>
+> sparse warns here with RCU checking enabled in the kernel:
+>
+> cfg.c:502:13: warning: incorrect type in assignment (different address spaces)
+> cfg.c:502:13:    expected struct sk_buff *old
+> cfg.c:502:13:    got struct sk_buff [noderef] <asn:4>*probe_resp
+>
+>
+> Please take a look, ieee80211_set_beacon() uses rtnl_dereference() to
+> avoid the sparse warning and annotate that the RTNL is used to protect
+> the pointer.
+>
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index d4ee6d2..7710b10 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -100,7 +100,7 @@ static void ieee80211_reconfig_filter(struct work_struct *work)
-  */
- bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local)
- {
--	struct ieee80211_channel *chan, *scan_chan;
-+	struct ieee80211_channel *chan;
- 	enum nl80211_channel_type channel_type;
- 
- 	/* This logic needs to match logic in ieee80211_hw_config */
-@@ -114,7 +114,7 @@ bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local)
- 		else
- 			channel_type = NL80211_CHAN_NO_HT;
- 	} else if (local->tmp_channel) {
--		chan = scan_chan = local->tmp_channel;
-+		chan = local->tmp_channel;
- 		channel_type = local->tmp_channel_type;
- 	} else {
- 		chan = local->oper_channel;
-@@ -135,7 +135,7 @@ bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local)
- 
- int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
- {
--	struct ieee80211_channel *chan, *scan_chan;
-+	struct ieee80211_channel *chan;
- 	int ret = 0;
- 	int power;
- 	enum nl80211_channel_type channel_type;
-@@ -143,14 +143,12 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
- 
- 	might_sleep();
- 
--	scan_chan = local->scan_channel;
--
- 	/* If this off-channel logic ever changes,  ieee80211_on_oper_channel
- 	 * may need to change as well.
- 	 */
- 	offchannel_flag = local->hw.conf.flags & IEEE80211_CONF_OFFCHANNEL;
--	if (scan_chan) {
--		chan = scan_chan;
-+	if (local->scan_channel) {
-+		chan = local->scan_channel;
- 		/* If scanning on oper channel, use whatever channel-type
- 		 * is currently in use.
- 		 */
-@@ -159,7 +157,7 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
- 		else
- 			channel_type = NL80211_CHAN_NO_HT;
- 	} else if (local->tmp_channel) {
--		chan = scan_chan = local->tmp_channel;
-+		chan = local->tmp_channel;
- 		channel_type = local->tmp_channel_type;
- 	} else {
- 		chan = local->oper_channel;
--- 
-1.7.1
+Thanks. That's indeed a handy .config option.
 
+Arik
