@@ -1,83 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4628 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756269Ab1KJTaz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 14:30:55 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 19/19] brcm80211: fmac: release bss struct returned from
- cfg80211_inform_bss
-Date: Thu, 10 Nov 2011 20:30:34 +0100
-Message-ID: <1320953434-16859-21-git-send-email-arend@broadcom.com> (sfid-20111110_203119_789239_AE98CCE1)
-In-Reply-To: <1320953434-16859-1-git-send-email-arend@broadcom.com>
-References: <1320953434-16859-1-git-send-email-arend@broadcom.com>
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:58071 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751799Ab1KSQPm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Nov 2011 11:15:42 -0500
+Received: by wwe3 with SMTP id 3so2867235wwe.1
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 08:15:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1321684883-6870-1-git-send-email-mar.kolya@gmail.com>
+References: <1321684883-6870-1-git-send-email-mar.kolya@gmail.com>
+Date: Sat, 19 Nov 2011 21:45:41 +0530
+Message-ID: <CAD2nsn37SxnbwponwWPGMgxfcY3sEZjUFXkNBonobGZ=3Dr38Q@mail.gmail.com> (sfid-20111119_171550_442187_1E71D159)
+Subject: Re: [PATCH] ath9k: Improve ath_tx_aggr_stop to avoid TID stuck in
+ cleanup state.
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Nikolay Martynov <mar.kolya@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+Hi Nikolay,
 
-Referenced struct returned by cfg80211_inform_bss must be released with
-cfg80211_put_bss to avoid memory leak.
+On Sat, Nov 19, 2011 at 12:11 PM, Nikolay Martynov <mar.kolya@gmail.com> wrote:
+> From: kolya <mar.kolya@gmail.com>
+>
+>  When tx agg is being stopped TID is flushed using ath_tx_flush_tid. It is possible that ath_tx_flush_tid completelly flushes TID (if all packets in this TID have already been retried). If this happened ath_tx_aggr_stop would leave TID in cleanup state permanently. Fix this by making ath_tx_flush_tid remove AGGR_ADDBA_COMPLETE and AGGR_CLEANUP flags from TID status if TID is empty.
+> ---
+>  drivers/net/wireless/ath/ath9k/xmit.c |   13 ++++++-------
+>  1 files changed, 6 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+> index 55d077e..3574b0f 100644
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -180,6 +180,11 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+>        }
+>
+>        spin_unlock_bh(&txq->axq_lock);
+> +
+> +       if (tid->baw_head == tid->baw_tail) {
+> +               tid->state &= ~AGGR_ADDBA_COMPLETE;
+> +               tid->state &= ~AGGR_CLEANUP;
+> +       }
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   18 +++++++++++++-----
- 1 files changed, 13 insertions(+), 5 deletions(-)
+should this in be protected by axq_lock ?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 73be2c8..cc19a73 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -2049,10 +2049,10 @@ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_priv *cfg_priv,
- 		notify_timestamp, notify_capability, notify_interval, notify_ie,
- 		notify_ielen, notify_signal, GFP_KERNEL);
- 
--	if (!bss) {
--		WL_ERR("cfg80211_inform_bss_frame error\n");
--		return -EINVAL;
--	}
-+	if (!bss)
-+		return -ENOMEM;
-+
-+	cfg80211_put_bss(bss);
- 
- 	return err;
- }
-@@ -2096,6 +2096,7 @@ static s32 wl_inform_ibss(struct brcmf_cfg80211_priv *cfg_priv,
- 	struct ieee80211_channel *notify_channel;
- 	struct brcmf_bss_info_le *bi = NULL;
- 	struct ieee80211_supported_band *band;
-+	struct cfg80211_bss *bss;
- 	u8 *buf = NULL;
- 	s32 err = 0;
- 	u16 channel;
-@@ -2149,10 +2150,17 @@ static s32 wl_inform_ibss(struct brcmf_cfg80211_priv *cfg_priv,
- 	WL_CONN("signal: %d\n", notify_signal);
- 	WL_CONN("notify_timestamp: %#018llx\n", notify_timestamp);
- 
--	cfg80211_inform_bss(wiphy, notify_channel, bssid,
-+	bss = cfg80211_inform_bss(wiphy, notify_channel, bssid,
- 		notify_timestamp, notify_capability, notify_interval,
- 		notify_ie, notify_ielen, notify_signal, GFP_KERNEL);
- 
-+	if (!bss) {
-+		err = -ENOMEM;
-+		goto CleanUp;
-+	}
-+
-+	cfg80211_put_bss(bss);
-+
- CleanUp:
- 
- 	kfree(buf);
+>  }
+>
+>  static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
+> @@ -556,15 +561,9 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+>                spin_unlock_bh(&txq->axq_lock);
+>        }
+>
+> -       if (tid->state & AGGR_CLEANUP) {
+> +       if (tid->state & AGGR_CLEANUP)
+>                ath_tx_flush_tid(sc, tid);
+>
+> -               if (tid->baw_head == tid->baw_tail) {
+> -                       tid->state &= ~AGGR_ADDBA_COMPLETE;
+> -                       tid->state &= ~AGGR_CLEANUP;
+> -               }
+> -       }
+> -
+>        rcu_read_unlock();
+>
+>        if (needreset) {
+
+based on my understanding if we don't clear this flag, i assume we
+might have problem in ath_tx_aggr_start?
+but should not this be properly cleared ath_txcomplete_aggr via tasklet path?
+please let me know if i had  missed somthing?
+
+> --
+> 1.7.4.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
 -- 
-1.7.5.4
-
-
+shafi
