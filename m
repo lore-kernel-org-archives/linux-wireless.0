@@ -1,58 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1979 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752330Ab1KUSbR convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:41018 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750798Ab1KTFa7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 13:31:17 -0500
-Message-ID: <4ECA98DB.4030608@broadcom.com> (sfid-20111121_193120_588528_DC0F8F97)
-Date: Mon, 21 Nov 2011 10:30:51 -0800
-From: "Franky Lin" <frankyl@broadcom.com>
-MIME-Version: 1.0
-To: "Arend van Spriel" <arend@broadcom.com>
-cc: =?ISO-8859-1?Q?Thomas_Lang=E5s?= <thomas.langas@fxitech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: brcm80211 (with bcm4329-chip)
-References: <CADrAYBnwWEaigcgQYYk6V3VEuEYyrmzJQXegKVk6TgOTPh5N8A@mail.gmail.com>
- <4ECA8908.7070304@broadcom.com>
-In-Reply-To: <4ECA8908.7070304@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	Sun, 20 Nov 2011 00:30:59 -0500
+Received: by ghbz2 with SMTP id z2so1829969ghb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 21:30:59 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, kolya <mar.kolya@gmail.com>
+Subject: [PATCH v2] ath9k: Improve ath_tx_aggr_stop to avoid TID stuck in cleanup state.
+Date: Sun, 20 Nov 2011 00:30:35 -0500
+Message-Id: <1321767035-3263-1-git-send-email-mar.kolya@gmail.com> (sfid-20111120_063106_844821_374E87EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/21/2011 09:23 AM, Arend van Spriel wrote:
-> On 11/21/2011 02:56 PM, Thomas Langås wrote:
->> Hi!
->>
->> I'm trying to make our board use this driver instead of an old,
->> proprietary bcm4329-driver, but I can't seem
->> to find much detail on how to tell the driver where my chip is located
->> (on what SDIO-bus).  I suppose there
->> is some specifics I need to include in my machine-file?  Or is
->> everything magic?  Because, currently
->> the platform crashes when enabling the driver. I suspect that this is
->> because we boot from an uSD-card,
->> and that the brcm80211 tries to access the same port for connecting to the chip.
->>
->
-> The MMC core should be able to come up with the correct device. It
-> sounds strange that the driver would be activated for an SD card.
->
-> Could you provide some information on the board you are using. Type of
-> processor, kernel version, and anything else you can/want to share. In
-> /sys/bus/sdio/devices/ you may find the location of the bcm4329.
+From: kolya <mar.kolya@gmail.com>
 
-Current MMC stack in Linux would not confuse a MMC/SD card and a SDIO 
-device. Basically the intialization and command sets they used are 
-different.
+  When tx agg is being stopped TID is flushed using ath_tx_flush_tid. It is possible that ath_tx_flush_tid completelly flushes TID (if all packets in this TID have already been retried). If this happened ath_tx_aggr_stop would leave TID in cleanup state permanently. Fix this by making ath_tx_flush_tid remove AGGR_ADDBA_COMPLETE and AGGR_CLEANUP flags from TID status if TID is empty.
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |   13 ++++++-------
+ 1 files changed, 6 insertions(+), 7 deletions(-)
 
-Just for curiosity, do you know the version of your proprietary driver? 
-You should be able to find it in epivers.h.
-
-A crash log would be helpful to locate the issue.
-
-Regards,
-Franky
-
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 55d077e..80639e3 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -179,6 +179,11 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 		spin_lock_bh(&txq->axq_lock);
+ 	}
+ 
++	if (tid->baw_head == tid->baw_tail) {
++		tid->state &= ~AGGR_ADDBA_COMPLETE;
++		tid->state &= ~AGGR_CLEANUP;
++	}
++
+ 	spin_unlock_bh(&txq->axq_lock);
+ }
+ 
+@@ -556,15 +561,9 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		spin_unlock_bh(&txq->axq_lock);
+ 	}
+ 
+-	if (tid->state & AGGR_CLEANUP) {
++	if (tid->state & AGGR_CLEANUP)
+ 		ath_tx_flush_tid(sc, tid);
+ 
+-		if (tid->baw_head == tid->baw_tail) {
+-			tid->state &= ~AGGR_ADDBA_COMPLETE;
+-			tid->state &= ~AGGR_CLEANUP;
+-		}
+-	}
+-
+ 	rcu_read_unlock();
+ 
+ 	if (needreset) {
+-- 
+1.7.4.1
 
