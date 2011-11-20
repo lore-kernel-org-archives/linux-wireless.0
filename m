@@ -1,284 +1,390 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37854 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754098Ab1K2JUG (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33727 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211Ab1KTH53 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 04:20:06 -0500
-Subject: [PATCH] mac80211: revert on-channel work optimisations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 29 Nov 2011 10:20:02 +0100
-Message-ID: <1322558402.4110.14.camel@jlt3.sipsolutions.net> (sfid-20111129_102016_494453_2C942FA6)
-Mime-Version: 1.0
+	Sun, 20 Nov 2011 02:57:29 -0500
+Received: by mail-bw0-f46.google.com with SMTP id 11so5187685bke.19
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 23:57:28 -0800 (PST)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	nbd@openwrt.org, jirislaby@gmail.com,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH 01/13] ath5k: Switch from read-and-clear to write-to-clear method when handling PISR/SISR registers
+Date: Sun, 20 Nov 2011 09:56:16 +0200
+Message-Id: <1321775788-12520-2-git-send-email-mickflemm@gmail.com> (sfid-20111120_085733_821629_F10FE5DE)
+In-Reply-To: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
+References: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Since card has 12 tx queues and we want to keep track of the interrupts
+per queue we can't fit all these interrupt bits on a single register.
+So we have 5 registers, the primary interrupt status register (PISR) and
+the 4 secondary interupt status registers (SISRs).
 
-The on-channel work optimisations have caused a
-number of issues, and the code is unfortunately
-very complex and almost impossible to follow.
-Instead of attempting to put in more workarounds
-let's just remove those optimisations, we can
-work on them again later, after we change the
-whole auth/assoc design.
+In order to be able to read them all at once (atomic operation) Atheros
+introduced the Read-And-Clear registers to make things easier. So when
+reading RAC_PISR register, hw does a read on PISR and all SISRs, returns
+the value of PISR, copies all SISR values to their shadow copies (RAC_SISRx)
+and clears PISR and SISRs. This saves us from reading PISR/SISRs in a sequence.
 
-This should fix rate_control_send_low() warnings,
-see RH bug 731365.
+So far we 've used this approach and MadWiFi/Windows driver etc also used it
+for years.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+It turns out this operation is not atomic after all (at least not on all cards)
+That means it's possible to loose some interrupts because they came after the
+copy step and hw cleared them on the clean step !
+
+That's probably the reason we got missed beacons, got stuck queues etc and
+couldn't figure out what was going on.
+
+With this patch we switch from RaC operation to an alternative method (that
+makes more sense IMHO anyway, I just chose to be on the safe side so far).
+Instead of reading RAC registers, we read the normal PISR/SISR registers and
+clear any bits we got by writing them back on the register. This will clear only
+the bits we got on our read step and leave any new bits unaffected (at least
+that's what docs say). So if any new interrupts come up we won't miss it.
+
+I've tested this with an AR5213 and an AR2425 and it seems O.K.
+
+Many thanks to Adrian Chadd for debuging this !
+
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 ---
- net/mac80211/ieee80211_i.h |    2 
- net/mac80211/main.c        |   41 ------------------
- net/mac80211/offchannel.c  |    9 +---
- net/mac80211/scan.c        |    4 -
- net/mac80211/work.c        |   99 +++------------------------------------------
- 5 files changed, 13 insertions(+), 142 deletions(-)
+ drivers/net/wireless/ath/ath5k/ath5k.h |    8 +-
+ drivers/net/wireless/ath/ath5k/base.c  |    2 +-
+ drivers/net/wireless/ath/ath5k/dma.c   |  206 +++++++++++++++++++-------------
+ drivers/net/wireless/ath/ath5k/reg.h   |    9 +-
+ 4 files changed, 134 insertions(+), 91 deletions(-)
 
---- a/net/mac80211/work.c	2011-11-29 10:01:09.000000000 +0100
-+++ b/net/mac80211/work.c	2011-11-29 10:02:59.000000000 +0100
-@@ -862,44 +862,6 @@ static void ieee80211_work_rx_queued_mgm
- 	kfree_skb(skb);
- }
- 
--static bool ieee80211_work_ct_coexists(enum nl80211_channel_type wk_ct,
--				       enum nl80211_channel_type oper_ct)
--{
--	switch (wk_ct) {
--	case NL80211_CHAN_NO_HT:
--		return true;
--	case NL80211_CHAN_HT20:
--		if (oper_ct != NL80211_CHAN_NO_HT)
--			return true;
--		return false;
--	case NL80211_CHAN_HT40MINUS:
--	case NL80211_CHAN_HT40PLUS:
--		return (wk_ct == oper_ct);
--	}
--	WARN_ON(1); /* shouldn't get here */
--	return false;
--}
--
--static enum nl80211_channel_type
--ieee80211_calc_ct(enum nl80211_channel_type wk_ct,
--		  enum nl80211_channel_type oper_ct)
--{
--	switch (wk_ct) {
--	case NL80211_CHAN_NO_HT:
--		return oper_ct;
--	case NL80211_CHAN_HT20:
--		if (oper_ct != NL80211_CHAN_NO_HT)
--			return oper_ct;
--		return wk_ct;
--	case NL80211_CHAN_HT40MINUS:
--	case NL80211_CHAN_HT40PLUS:
--		return wk_ct;
--	}
--	WARN_ON(1); /* shouldn't get here */
--	return wk_ct;
--}
--
--
- static void ieee80211_work_timer(unsigned long data)
- {
- 	struct ieee80211_local *local = (void *) data;
-@@ -950,40 +912,12 @@ static void ieee80211_work_work(struct w
- 		}
- 
- 		if (!started && !local->tmp_channel) {
--			bool on_oper_chan, on_oper_chan2;
--			enum nl80211_channel_type wk_ct;
--
--			on_oper_chan = ieee80211_cfg_on_oper_channel(local);
--
--			/* Work with existing channel type if possible. */
--			wk_ct = wk->chan_type;
--			if (wk->chan == local->hw.conf.channel)
--				wk_ct = ieee80211_calc_ct(wk->chan_type,
--						local->hw.conf.channel_type);
-+			ieee80211_offchannel_stop_vifs(local, true);
- 
- 			local->tmp_channel = wk->chan;
--			local->tmp_channel_type = wk_ct;
--			/*
--			 * Leave the station vifs in awake mode if they
--			 * happen to be on the same channel as
--			 * the requested channel.
--			 */
--			on_oper_chan2 = ieee80211_cfg_on_oper_channel(local);
--			if (on_oper_chan != on_oper_chan2) {
--				if (on_oper_chan2) {
--					/* going off oper channel, PS too */
--					ieee80211_offchannel_stop_vifs(local,
--								       true);
--					ieee80211_hw_config(local, 0);
--				} else {
--					/* going on channel, but leave PS
--					 * off-channel. */
--					ieee80211_hw_config(local, 0);
--					ieee80211_offchannel_return(local,
--								    true,
--								    false);
--				}
--			}
-+			local->tmp_channel_type = wk->chan_type;
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index fecbcd9..0f42a57 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1187,7 +1187,13 @@ struct ath5k_hw {
+ 	u32			ah_txq_imr_cbrurn;
+ 	u32			ah_txq_imr_qtrig;
+ 	u32			ah_txq_imr_nofrm;
+-	u32			ah_txq_isr;
 +
-+			ieee80211_hw_config(local, 0);
++	u32			ah_txq_isr_txok_all;
++	u32			ah_txq_isr_txurn;
++	u32			ah_txq_isr_qcborn;
++	u32			ah_txq_isr_qcburn;
++	u32			ah_txq_isr_qtrig;
++
+ 	u32			*ah_rf_banks;
+ 	size_t			ah_rf_banks_size;
+ 	size_t			ah_rf_regs_count;
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index b346d04..c18d310 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1689,7 +1689,7 @@ ath5k_tasklet_tx(unsigned long data)
+ 	struct ath5k_hw *ah = (void *)data;
  
- 			started = true;
- 			wk->timeout = jiffies;
-@@ -1052,34 +986,17 @@ static void ieee80211_work_work(struct w
- 	list_for_each_entry(wk, &local->work_list, list) {
- 		if (!wk->started)
- 			continue;
--		if (wk->chan != local->tmp_channel)
--			continue;
--		if (!ieee80211_work_ct_coexists(wk->chan_type,
--						local->tmp_channel_type))
-+		if (wk->chan != local->tmp_channel ||
-+		    wk->chan_type != local->tmp_channel_type)
- 			continue;
- 		remain_off_channel = true;
- 	}
+ 	for (i = 0; i < AR5K_NUM_TX_QUEUES; i++)
+-		if (ah->txqs[i].setup && (ah->ah_txq_isr & BIT(i)))
++		if (ah->txqs[i].setup && (ah->ah_txq_isr_txok_all & BIT(i)))
+ 			ath5k_tx_processq(ah, &ah->txqs[i]);
  
- 	if (!remain_off_channel && local->tmp_channel) {
- 		local->tmp_channel = NULL;
--		/* If tmp_channel wasn't operating channel, then
--		 * we need to go back on-channel.
--		 * NOTE:  If we can ever be here while scannning,
--		 * or if the hw_config() channel config logic changes,
--		 * then we may need to do a more thorough check to see if
--		 * we still need to do a hardware config.  Currently,
--		 * we cannot be here while scanning, however.
--		 */
--		if (!ieee80211_cfg_on_oper_channel(local))
--			ieee80211_hw_config(local, 0);
-+		ieee80211_hw_config(local, 0);
- 
--		/* At the least, we need to disable offchannel_ps,
--		 * so just go ahead and run the entire offchannel
--		 * return logic here.  We *could* skip enabling
--		 * beaconing if we were already on-oper-channel
--		 * as a future optimization.
--		 */
--		ieee80211_offchannel_return(local, true, true);
-+		ieee80211_offchannel_return(local, true);
- 
- 		/* give connection some time to breathe */
- 		run_again(local, jiffies + HZ/2);
---- a/net/mac80211/ieee80211_i.h	2011-11-29 10:01:39.000000000 +0100
-+++ b/net/mac80211/ieee80211_i.h	2011-11-29 10:02:59.000000000 +0100
-@@ -1220,13 +1220,11 @@ int ieee80211_request_sched_scan_stop(st
- void ieee80211_sched_scan_stopped_work(struct work_struct *work);
- 
- /* off-channel helpers */
--bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local);
- void ieee80211_offchannel_enable_all_ps(struct ieee80211_local *local,
- 					bool tell_ap);
- void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
- 				    bool offchannel_ps_enable);
- void ieee80211_offchannel_return(struct ieee80211_local *local,
--				 bool enable_beaconing,
- 				 bool offchannel_ps_disable);
- void ieee80211_hw_roc_setup(struct ieee80211_local *local);
- 
---- a/net/mac80211/offchannel.c	2011-11-29 10:01:09.000000000 +0100
-+++ b/net/mac80211/offchannel.c	2011-11-29 10:02:59.000000000 +0100
-@@ -156,7 +156,6 @@ void ieee80211_offchannel_enable_all_ps(
- }
- 
- void ieee80211_offchannel_return(struct ieee80211_local *local,
--				 bool enable_beaconing,
- 				 bool offchannel_ps_disable)
+ 	ah->tx_pending = false;
+diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
+index 2481f9c..3a14475 100644
+--- a/drivers/net/wireless/ath/ath5k/dma.c
++++ b/drivers/net/wireless/ath/ath5k/dma.c
+@@ -450,7 +450,6 @@ int ath5k_hw_set_txdp(struct ath5k_hw *ah, unsigned int queue, u32 phys_addr)
+  *
+  * XXX: Link this with tx DMA size ?
+  * XXX: Use it to save interrupts ?
+- * TODO: Needs testing, i think it's related to bmiss...
+  */
+ int ath5k_hw_update_tx_triglevel(struct ath5k_hw *ah, bool increase)
  {
- 	struct ieee80211_sub_if_data *sdata;
-@@ -188,11 +187,9 @@ void ieee80211_offchannel_return(struct
- 			netif_tx_wake_all_queues(sdata->dev);
+@@ -523,62 +522,122 @@ bool ath5k_hw_is_intr_pending(struct ath5k_hw *ah)
+  * being mapped on some standard non hw-specific positions
+  * (check out &ath5k_int).
+  *
+- * NOTE: We use read-and-clear register, so after this function is called ISR
+- * is zeroed.
++ * NOTE: We do write-to-clear, so the active PISR/SISR bits at the time this
++ * function gets called are cleared on return.
+  */
+ int ath5k_hw_get_isr(struct ath5k_hw *ah, enum ath5k_int *interrupt_mask)
+ {
+-	u32 data;
++	u32 data = 0;
+ 
+ 	/*
+-	 * Read interrupt status from the Interrupt Status register
+-	 * on 5210
++	 * Read interrupt status from Primary Interrupt
++	 * Register.
++	 *
++	 * Note: PISR/SISR Not available on 5210
+ 	 */
+ 	if (ah->ah_version == AR5K_AR5210) {
+-		data = ath5k_hw_reg_read(ah, AR5K_ISR);
+-		if (unlikely(data == AR5K_INT_NOCARD)) {
+-			*interrupt_mask = data;
++		u32 isr = 0;
++		isr = ath5k_hw_reg_read(ah, AR5K_ISR);
++		if (unlikely(isr == AR5K_INT_NOCARD)) {
++			*interrupt_mask = isr;
+ 			return -ENODEV;
+ 		}
+-	} else {
++
++		/*
++		 * Filter out the non-common bits from the interrupt
++		 * status.
++		 */
++		*interrupt_mask = (isr & AR5K_INT_COMMON) & ah->ah_imr;
++
++		/* Hanlde INT_FATAL */
++		if (unlikely(isr & (AR5K_ISR_SSERR | AR5K_ISR_MCABT
++						| AR5K_ISR_DPERR)))
++			*interrupt_mask |= AR5K_INT_FATAL;
++
+ 		/*
+-		 * Read interrupt status from Interrupt
+-		 * Status Register shadow copy (Read And Clear)
+-		 *
+-		 * Note: PISR/SISR Not available on 5210
++		 * XXX: BMISS interrupts may occur after association.
++		 * I found this on 5210 code but it needs testing. If this is
++		 * true we should disable them before assoc and re-enable them
++		 * after a successful assoc + some jiffies.
++			interrupt_mask &= ~AR5K_INT_BMISS;
+ 		 */
+-		data = ath5k_hw_reg_read(ah, AR5K_RAC_PISR);
+-		if (unlikely(data == AR5K_INT_NOCARD)) {
+-			*interrupt_mask = data;
++
++		data = isr;
++	} else {
++		u32 pisr = 0;
++		u32 sisr0 = 0;
++		u32 sisr1 = 0;
++		u32 sisr2 = 0;
++		u32 sisr3 = 0;
++		u32 sisr4 = 0;
++
++		/* Read PISR and SISRs... */
++		pisr = ath5k_hw_reg_read(ah, AR5K_PISR);
++		if (unlikely(pisr == AR5K_INT_NOCARD)) {
++			*interrupt_mask = pisr;
+ 			return -ENODEV;
+ 		}
+-	}
+ 
+-	/*
+-	 * Get abstract interrupt mask (driver-compatible)
+-	 */
+-	*interrupt_mask = (data & AR5K_INT_COMMON) & ah->ah_imr;
++		sisr0 = ath5k_hw_reg_read(ah, AR5K_SISR0);
++		sisr1 = ath5k_hw_reg_read(ah, AR5K_SISR1);
++		sisr2 = ath5k_hw_reg_read(ah, AR5K_SISR2);
++		sisr3 = ath5k_hw_reg_read(ah, AR5K_SISR3);
++		sisr4 = ath5k_hw_reg_read(ah, AR5K_SISR4);
+ 
+-	if (ah->ah_version != AR5K_AR5210) {
+-		u32 sisr2 = ath5k_hw_reg_read(ah, AR5K_RAC_SISR2);
+ 
+-		/*HIU = Host Interface Unit (PCI etc)*/
+-		if (unlikely(data & (AR5K_ISR_HIUERR)))
+-			*interrupt_mask |= AR5K_INT_FATAL;
++		/*
++		 * Write to clear them...
++		 * Note: This means that each bit we write back
++		 * to the registers will get cleared, leaving the
++		 * rest unaffected. So this won't affect new interrupts
++		 * we didn't catch while reading/processing, we 'll get
++		 * them next time get_isr gets called.
++		 */
++		ath5k_hw_reg_write(ah, sisr0, AR5K_SISR0);
++		ath5k_hw_reg_write(ah, sisr1, AR5K_SISR1);
++		ath5k_hw_reg_write(ah, sisr2, AR5K_SISR2);
++		ath5k_hw_reg_write(ah, sisr3, AR5K_SISR3);
++		ath5k_hw_reg_write(ah, sisr4, AR5K_SISR4);
++		ath5k_hw_reg_write(ah, pisr, AR5K_PISR);
+ 
+-		/*Beacon Not Ready*/
+-		if (unlikely(data & (AR5K_ISR_BNR)))
+-			*interrupt_mask |= AR5K_INT_BNR;
++		/*
++		 * Filter out the non-common bits from the interrupt
++		 * status.
++		 */
++		*interrupt_mask = (pisr & AR5K_INT_COMMON) & ah->ah_imr;
+ 
+-		if (unlikely(sisr2 & (AR5K_SISR2_SSERR |
+-					AR5K_SISR2_DPERR |
+-					AR5K_SISR2_MCABT)))
+-			*interrupt_mask |= AR5K_INT_FATAL;
+ 
+-		if (data & AR5K_ISR_TIM)
++		/* We treat TXOK,TXDESC, TXERR and TXEOL
++		 * the same way (schedule the tx tasklet)
++		 * so we track them all together per queue */
++		if (pisr & AR5K_ISR_TXOK)
++			ah->ah_txq_isr_txok_all |= AR5K_REG_MS(sisr0,
++						AR5K_SISR0_QCU_TXOK);
++
++		if (pisr & AR5K_ISR_TXDESC)
++			ah->ah_txq_isr_txok_all |= AR5K_REG_MS(sisr0,
++						AR5K_SISR0_QCU_TXDESC);
++
++		if (pisr & AR5K_ISR_TXERR)
++			ah->ah_txq_isr_txok_all |= AR5K_REG_MS(sisr1,
++						AR5K_SISR1_QCU_TXERR);
++
++		if (pisr & AR5K_ISR_TXEOL)
++			ah->ah_txq_isr_txok_all |= AR5K_REG_MS(sisr1,
++						AR5K_SISR1_QCU_TXEOL);
++
++		/* Currently this is not much usefull since we treat
++		 * all queues the same way if we get a TXURN (update
++		 * tx trigger level) but we might need it later on*/
++		if (pisr & AR5K_ISR_TXURN)
++			ah->ah_txq_isr_txurn |= AR5K_REG_MS(sisr2,
++						AR5K_SISR2_QCU_TXURN);
++
++		/* Misc Beacon related interrupts */
++		if (pisr & AR5K_ISR_TIM)
+ 			*interrupt_mask |= AR5K_INT_TIM;
+ 
+-		if (data & AR5K_ISR_BCNMISC) {
++		if (pisr & AR5K_ISR_BCNMISC) {
+ 			if (sisr2 & AR5K_SISR2_TIM)
+ 				*interrupt_mask |= AR5K_INT_TIM;
+ 			if (sisr2 & AR5K_SISR2_DTIM)
+@@ -591,63 +650,40 @@ int ath5k_hw_get_isr(struct ath5k_hw *ah, enum ath5k_int *interrupt_mask)
+ 				*interrupt_mask |= AR5K_INT_CAB_TIMEOUT;
  		}
  
--		/* Check to see if we should re-enable beaconing */
--		if (enable_beaconing &&
--		    (sdata->vif.type == NL80211_IFTYPE_AP ||
--		     sdata->vif.type == NL80211_IFTYPE_ADHOC ||
--		     sdata->vif.type == NL80211_IFTYPE_MESH_POINT))
-+		if (sdata->vif.type == NL80211_IFTYPE_AP ||
-+		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
-+		    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
- 			ieee80211_bss_info_change_notify(
- 				sdata, BSS_CHANGED_BEACON_ENABLED);
- 	}
---- a/net/mac80211/main.c	2011-11-29 10:01:09.000000000 +0100
-+++ b/net/mac80211/main.c	2011-11-29 10:02:59.000000000 +0100
-@@ -92,47 +92,6 @@ static void ieee80211_reconfig_filter(st
- 	ieee80211_configure_filter(local);
- }
+-		if (data & AR5K_ISR_RXDOPPLER)
++		/* Below interrupts are unlikely to happen */
++
++		/* HIU = Host Interface Unit (PCI etc)
++		 * Can be one of MCABT, SSERR, DPERR from SISR2 */
++		if (unlikely(pisr & (AR5K_ISR_HIUERR)))
++			*interrupt_mask |= AR5K_INT_FATAL;
++
++
++		/*Beacon Not Ready*/
++		if (unlikely(pisr & (AR5K_ISR_BNR)))
++			*interrupt_mask |= AR5K_INT_BNR;
++
++		if (unlikely(pisr & (AR5K_ISR_RXDOPPLER)))
+ 			*interrupt_mask |= AR5K_INT_RX_DOPPLER;
+-		if (data & AR5K_ISR_QCBRORN) {
++
++		if (unlikely(pisr & (AR5K_ISR_QCBRORN))) {
+ 			*interrupt_mask |= AR5K_INT_QCBRORN;
+-			ah->ah_txq_isr |= AR5K_REG_MS(
+-					ath5k_hw_reg_read(ah, AR5K_RAC_SISR3),
+-					AR5K_SISR3_QCBRORN);
++			ah->ah_txq_isr_qcborn |= AR5K_REG_MS(sisr3,
++						AR5K_SISR3_QCBRORN);
+ 		}
+-		if (data & AR5K_ISR_QCBRURN) {
++
++		if (unlikely(pisr & (AR5K_ISR_QCBRURN))) {
+ 			*interrupt_mask |= AR5K_INT_QCBRURN;
+-			ah->ah_txq_isr |= AR5K_REG_MS(
+-					ath5k_hw_reg_read(ah, AR5K_RAC_SISR3),
+-					AR5K_SISR3_QCBRURN);
++			ah->ah_txq_isr_qcburn |= AR5K_REG_MS(sisr3,
++						AR5K_SISR3_QCBRURN);
+ 		}
+-		if (data & AR5K_ISR_QTRIG) {
++
++		if (unlikely(pisr & (AR5K_ISR_QTRIG))) {
+ 			*interrupt_mask |= AR5K_INT_QTRIG;
+-			ah->ah_txq_isr |= AR5K_REG_MS(
+-					ath5k_hw_reg_read(ah, AR5K_RAC_SISR4),
+-					AR5K_SISR4_QTRIG);
++			ah->ah_txq_isr_qtrig |= AR5K_REG_MS(sisr4,
++						AR5K_SISR4_QTRIG);
+ 		}
  
--/*
-- * Returns true if we are logically configured to be on
-- * the operating channel AND the hardware-conf is currently
-- * configured on the operating channel.  Compares channel-type
-- * as well.
-- */
--bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local)
--{
--	struct ieee80211_channel *chan;
--	enum nl80211_channel_type channel_type;
+-		if (data & AR5K_ISR_TXOK)
+-			ah->ah_txq_isr |= AR5K_REG_MS(
+-					ath5k_hw_reg_read(ah, AR5K_RAC_SISR0),
+-					AR5K_SISR0_QCU_TXOK);
 -
--	/* This logic needs to match logic in ieee80211_hw_config */
--	if (local->scan_channel) {
--		chan = local->scan_channel;
--		/* If scanning on oper channel, use whatever channel-type
--		 * is currently in use.
--		 */
--		if (chan == local->oper_channel)
--			channel_type = local->_oper_channel_type;
--		else
--			channel_type = NL80211_CHAN_NO_HT;
--	} else if (local->tmp_channel) {
--		chan = local->tmp_channel;
--		channel_type = local->tmp_channel_type;
+-		if (data & AR5K_ISR_TXDESC)
+-			ah->ah_txq_isr |= AR5K_REG_MS(
+-					ath5k_hw_reg_read(ah, AR5K_RAC_SISR0),
+-					AR5K_SISR0_QCU_TXDESC);
+-
+-		if (data & AR5K_ISR_TXERR)
+-			ah->ah_txq_isr |= AR5K_REG_MS(
+-					ath5k_hw_reg_read(ah, AR5K_RAC_SISR1),
+-					AR5K_SISR1_QCU_TXERR);
+-
+-		if (data & AR5K_ISR_TXEOL)
+-			ah->ah_txq_isr |= AR5K_REG_MS(
+-					ath5k_hw_reg_read(ah, AR5K_RAC_SISR1),
+-					AR5K_SISR1_QCU_TXEOL);
+-
+-		if (data & AR5K_ISR_TXURN)
+-			ah->ah_txq_isr |= AR5K_REG_MS(
+-					ath5k_hw_reg_read(ah, AR5K_RAC_SISR2),
+-					AR5K_SISR2_QCU_TXURN);
 -	} else {
--		chan = local->oper_channel;
--		channel_type = local->_oper_channel_type;
--	}
+-		if (unlikely(data & (AR5K_ISR_SSERR | AR5K_ISR_MCABT
+-				| AR5K_ISR_HIUERR | AR5K_ISR_DPERR)))
+-			*interrupt_mask |= AR5K_INT_FATAL;
 -
--	if (chan != local->oper_channel ||
--	    channel_type != local->_oper_channel_type)
--		return false;
--
--	/* Check current hardware-config against oper_channel. */
--	if (local->oper_channel != local->hw.conf.channel ||
--	    local->_oper_channel_type != local->hw.conf.channel_type)
--		return false;
--
--	return true;
--}
--
- int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
- {
- 	struct ieee80211_channel *chan;
---- a/net/mac80211/scan.c	2011-11-29 10:01:09.000000000 +0100
-+++ b/net/mac80211/scan.c	2011-11-29 10:02:59.000000000 +0100
-@@ -297,7 +297,7 @@ static void __ieee80211_scan_completed(s
- 	if (!was_hw_scan) {
- 		ieee80211_configure_filter(local);
- 		drv_sw_scan_complete(local);
--		ieee80211_offchannel_return(local, true, true);
-+		ieee80211_offchannel_return(local, true);
+-		/*
+-		 * XXX: BMISS interrupts may occur after association.
+-		 * I found this on 5210 code but it needs testing. If this is
+-		 * true we should disable them before assoc and re-enable them
+-		 * after a successful assoc + some jiffies.
+-			interrupt_mask &= ~AR5K_INT_BMISS;
+-		 */
++		data = pisr;
  	}
  
- 	ieee80211_recalc_idle(local);
-@@ -602,7 +602,7 @@ static void ieee80211_scan_state_suspend
- 	 * in off-channel state..will put that back
- 	 * on-channel at the end of scanning.
- 	 */
--	ieee80211_offchannel_return(local, true, false);
-+	ieee80211_offchannel_return(local, false);
+ 	/*
+diff --git a/drivers/net/wireless/ath/ath5k/reg.h b/drivers/net/wireless/ath/ath5k/reg.h
+index f5c1000..688d509 100644
+--- a/drivers/net/wireless/ath/ath5k/reg.h
++++ b/drivers/net/wireless/ath/ath5k/reg.h
+@@ -302,16 +302,17 @@
+ #define AR5K_ISR_SWBA		0x00010000	/* Software beacon alert */
+ #define AR5K_ISR_BRSSI		0x00020000	/* Beacon rssi below threshold (?) */
+ #define AR5K_ISR_BMISS		0x00040000	/* Beacon missed */
+-#define AR5K_ISR_HIUERR		0x00080000	/* Host Interface Unit error [5211+] */
++#define AR5K_ISR_HIUERR		0x00080000	/* Host Interface Unit error [5211+]
++						 * 'or' of MCABT, SSERR, DPERR from SISR2 */
+ #define AR5K_ISR_BNR		0x00100000	/* Beacon not ready [5211+] */
+ #define AR5K_ISR_MCABT		0x00100000	/* Master Cycle Abort [5210] */
+ #define AR5K_ISR_RXCHIRP	0x00200000	/* CHIRP Received [5212+] */
+ #define AR5K_ISR_SSERR		0x00200000	/* Signaled System Error [5210] */
+-#define AR5K_ISR_DPERR		0x00400000	/* Det par Error (?) [5210] */
++#define AR5K_ISR_DPERR		0x00400000	/* Bus parity error [5210] */
+ #define AR5K_ISR_RXDOPPLER	0x00400000	/* Doppler chirp received [5212+] */
+ #define AR5K_ISR_TIM		0x00800000	/* [5211+] */
+ #define AR5K_ISR_BCNMISC	0x00800000	/* 'or' of TIM, CAB_END, DTIM_SYNC, BCN_TIMEOUT,
+-						CAB_TIMEOUT and DTIM bits from SISR2 [5212+] */
++						 * CAB_TIMEOUT and DTIM bits from SISR2 [5212+] */
+ #define AR5K_ISR_GPIO		0x01000000	/* GPIO (rf kill) */
+ #define AR5K_ISR_QCBRORN	0x02000000	/* QCU CBR overrun [5211+] */
+ #define AR5K_ISR_QCBRURN	0x04000000	/* QCU CBR underrun [5211+] */
+@@ -347,7 +348,7 @@
+ #define	AR5K_SISR2_BCN_TIMEOUT	0x08000000	/* Beacon Timeout [5212+] */
+ #define	AR5K_SISR2_CAB_TIMEOUT	0x10000000	/* CAB Timeout [5212+] */
+ #define	AR5K_SISR2_DTIM		0x20000000	/* [5212+] */
+-#define	AR5K_SISR2_TSFOOR	0x80000000	/* TSF OOR (?) */
++#define	AR5K_SISR2_TSFOOR	0x80000000	/* TSF Out of range */
  
- 	*next_delay = HZ / 5;
- 	/* afterwards, resume scan & go to next channel */
-
+ #define AR5K_SISR3		0x0090			/* Register Address [5211+] */
+ #define AR5K_SISR3_QCBRORN	0x000003ff	/* Mask for QCBRORN */
+-- 
+1.7.8.rc1
 
