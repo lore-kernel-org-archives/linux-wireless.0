@@ -1,101 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2038 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753043Ab1KDVX7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 17:23:59 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 10/16] brcm80211: fmac: abstract chip iscoreup function
-Date: Fri, 4 Nov 2011 22:23:36 +0100
-Message-ID: <1320441822-4615-11-git-send-email-arend@broadcom.com> (sfid-20111104_222403_281393_FED981FE)
-In-Reply-To: <1320441822-4615-1-git-send-email-arend@broadcom.com>
-References: <1320441822-4615-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33727 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211Ab1KTH5b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Nov 2011 02:57:31 -0500
+Received: by mail-bw0-f46.google.com with SMTP id 11so5187685bke.19
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 23:57:30 -0800 (PST)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	nbd@openwrt.org, jirislaby@gmail.com,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH 02/13] ath5k: Maintain PISR snapshot
+Date: Sun, 20 Nov 2011 09:56:17 +0200
+Message-Id: <1321775788-12520-3-git-send-email-mickflemm@gmail.com> (sfid-20111120_085734_814369_5F4A3CD2)
+In-Reply-To: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
+References: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+Since we dont read a snapshot of the interrupt
+registers it might be possible to get a new interrupt
+while reading them. In this case we should make sure
+that we clear all SISR bits we get from PISR.
 
-Prepare for adding backplane interconnect type support
+Tested on an AR2425
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    8 ++------
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   13 +++++++++++++
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |    3 ++-
- 3 files changed, 17 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath5k/dma.c |   49 ++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath5k/reg.h |   12 +++++++-
+ 2 files changed, 57 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 868cb9d..30802a0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3138,7 +3138,6 @@ brcmf_sdbrcm_chip_resetcore(struct brcmf_sdio_dev *sdiodev, u32 corebase)
- static int brcmf_sdbrcm_download_state(struct brcmf_bus *bus, bool enter)
- {
- 	uint retries;
--	u32 regdata;
- 	int bcmerror = 0;
- 
- 	/* To enter download state, disable ARM and reset SOCRAM.
-@@ -3159,11 +3158,8 @@ static int brcmf_sdbrcm_download_state(struct brcmf_bus *bus, bool enter)
- 					 (u8 *)&zeros, 4);
+diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
+index 3a14475..6a7b907 100644
+--- a/drivers/net/wireless/ath/ath5k/dma.c
++++ b/drivers/net/wireless/ath/ath5k/dma.c
+@@ -578,16 +578,59 @@ int ath5k_hw_get_isr(struct ath5k_hw *ah, enum ath5k_int *interrupt_mask)
+ 			return -ENODEV;
  		}
- 	} else {
--		regdata = brcmf_sdcard_reg_read(bus->sdiodev,
--			CORE_SB(bus->ci->ramcorebase, sbtmstatelow), 4);
--		regdata &= (SBTML_RESET | SBTML_REJ_MASK |
--			(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
--		if ((SICF_CLOCK_EN << SBTML_SICF_SHIFT) != regdata) {
-+		if (!brcmf_sdio_chip_iscoreup(bus->sdiodev,
-+					      bus->ci->ramcorebase)) {
- 			brcmf_dbg(ERROR, "SOCRAM core is down after reset?\n");
- 			bcmerror = -EBADE;
- 			goto fail;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-index 10befbf..e0c22c4 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-@@ -52,6 +52,19 @@
- #define	SBIDH_VC_MASK		0xffff0000	/* vendor code */
- #define	SBIDH_VC_SHIFT		16
  
-+bool
-+brcmf_sdio_chip_iscoreup(struct brcmf_sdio_dev *sdiodev,
-+			 u32 corebase)
-+{
-+	u32 regdata;
++		/* Sanity checks:
++		 * Since we read these registers sequentialy
++		 * we might get a new interrupt while reading
++		 * e.g. SISR0 that we didn't catch when reading
++		 * PISR. So since we are going to handle it on
++		 * this run of get_isr, we need to clear it
++		 * from PISR also (PISR contains the logical OR of
++		 * various interrupt bits from SISRs -see reg.h).
++		 *
++		 * NOTE: We could check if PISR is inconsistent
++		 * with SISRs but it 'll take more time for no
++		 * reason. If e.g. a TXOK bit is set on SISR0
++		 * it 'll also get set on PISR by hw anyway. */
 +
-+	regdata = brcmf_sdcard_reg_read(sdiodev,
-+			CORE_SB(corebase, sbtmstatelow), 4);
-+	regdata &= (SBTML_RESET | SBTML_REJ_MASK |
-+			(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
-+	return ((SICF_CLOCK_EN << SBTML_SICF_SHIFT) == regdata);
-+}
+ 		sisr0 = ath5k_hw_reg_read(ah, AR5K_SISR0);
++		if (sisr0 & AR5K_SISR0_QCU_TXOK)
++			pisr |= AR5K_ISR_TXOK;
++		if (sisr0 & AR5K_SISR0_QCU_TXDESC)
++			pisr |= AR5K_ISR_TXDESC;
 +
- void
- brcmf_sdio_chip_coredisable(struct brcmf_sdio_dev *sdiodev, u32 corebase)
- {
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-index 25ac385..9c43e1d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-@@ -133,7 +133,8 @@ struct sbconfig {
- 	u32 sbidhigh;	/* identification */
- };
+ 		sisr1 = ath5k_hw_reg_read(ah, AR5K_SISR1);
++		if (sisr1 & AR5K_SISR1_QCU_TXERR)
++			pisr |= AR5K_ISR_TXERR;
++		if (sisr1 & AR5K_SISR1_QCU_TXEOL)
++			pisr |= AR5K_ISR_TXEOL;
++
+ 		sisr2 = ath5k_hw_reg_read(ah, AR5K_SISR2);
++		if (sisr2 & AR5K_SISR2_QCU_TXURN)
++			pisr |= AR5K_ISR_TXURN;
++		if (sisr2 & (AR5K_SISR2_MCABT | AR5K_SISR2_SSERR
++		| AR5K_SISR2_DPERR))
++			pisr |= AR5K_ISR_HIUERR;
++		if (sisr2 & (AR5K_SISR2_TIM | AR5K_SISR2_CAB_END
++		| AR5K_SISR2_DTIM_SYNC | AR5K_SISR2_BCN_TIMEOUT
++		| AR5K_SISR2_CAB_TIMEOUT | AR5K_SISR2_DTIM))
++			pisr |= AR5K_ISR_BCNMISC;
++		/* XXX: How about TSFOOR ? Docs say nothing about
++		 * it being bart of BCNMISC, it doesn't make sense ! */
++
+ 		sisr3 = ath5k_hw_reg_read(ah, AR5K_SISR3);
+-		sisr4 = ath5k_hw_reg_read(ah, AR5K_SISR4);
++		if (sisr3 & AR5K_SISR3_QCBRORN)
++			pisr |= AR5K_ISR_QCBRORN;
++		if (sisr3 & AR5K_SISR3_QCBRURN)
++			pisr |= AR5K_ISR_QCBRURN;
  
--
-+extern bool brcmf_sdio_chip_iscoreup(struct brcmf_sdio_dev *sdiodev,
-+				     u32 corebase);
- extern void brcmf_sdio_chip_coredisable(struct brcmf_sdio_dev *sdiodev,
- 					u32 corebase);
- extern int brcmf_sdio_chip_attach(struct brcmf_sdio_dev *sdiodev,
++		sisr4 = ath5k_hw_reg_read(ah, AR5K_SISR4);
++		if (sisr4 & AR5K_SISR4_QTRIG)
++			pisr |= AR5K_ISR_QTRIG;
+ 
+ 		/*
+ 		 * Write to clear them...
+-		 * Note: This means that each bit we write back
++		 *
++		 * NOTE: This means that each bit we write back
+ 		 * to the registers will get cleared, leaving the
+ 		 * rest unaffected. So this won't affect new interrupts
+ 		 * we didn't catch while reading/processing, we 'll get
+@@ -634,9 +677,11 @@ int ath5k_hw_get_isr(struct ath5k_hw *ah, enum ath5k_int *interrupt_mask)
+ 						AR5K_SISR2_QCU_TXURN);
+ 
+ 		/* Misc Beacon related interrupts */
++		/* This one is for 5211 */
+ 		if (pisr & AR5K_ISR_TIM)
+ 			*interrupt_mask |= AR5K_INT_TIM;
+ 
++		/* For 5212+ */
+ 		if (pisr & AR5K_ISR_BCNMISC) {
+ 			if (sisr2 & AR5K_SISR2_TIM)
+ 				*interrupt_mask |= AR5K_INT_TIM;
+diff --git a/drivers/net/wireless/ath/ath5k/reg.h b/drivers/net/wireless/ath/ath5k/reg.h
+index 688d509..99bbfb4 100644
+--- a/drivers/net/wireless/ath/ath5k/reg.h
++++ b/drivers/net/wireless/ath/ath5k/reg.h
+@@ -280,6 +280,10 @@
+  * 5211/5212 we have one primary and 4 secondary registers.
+  * So we have AR5K_ISR for 5210 and AR5K_PISR /SISRx for 5211/5212.
+  * Most of these bits are common for all chipsets.
++ *
++ * NOTE: On 5211+ TXOK, TXDESC, TXERR, TXEOL and TXURN contain
++ * the logical OR from per-queue interrupt bits found on SISR registers
++ * (see below).
+  */
+ #define AR5K_ISR		0x001c			/* Register Address [5210] */
+ #define AR5K_PISR		0x0080			/* Register Address [5211+] */
+@@ -292,7 +296,10 @@
+ #define AR5K_ISR_TXOK		0x00000040	/* Frame successfully transmitted */
+ #define AR5K_ISR_TXDESC		0x00000080	/* TX descriptor request */
+ #define AR5K_ISR_TXERR		0x00000100	/* Transmit error */
+-#define AR5K_ISR_TXNOFRM	0x00000200	/* No frame transmitted (transmit timeout) */
++#define AR5K_ISR_TXNOFRM	0x00000200	/* No frame transmitted (transmit timeout)
++						 * NOTE: We don't have per-queue info for this
++						 * one, but we can enable it per-queue through
++						 * TXNOFRM_QCU field on TXNOFRM register */
+ #define AR5K_ISR_TXEOL		0x00000400	/* Empty TX descriptor */
+ #define AR5K_ISR_TXURN		0x00000800	/* Transmit FIFO underrun */
+ #define AR5K_ISR_MIB		0x00001000	/* Update MIB counters */
+@@ -311,7 +318,8 @@
+ #define AR5K_ISR_DPERR		0x00400000	/* Bus parity error [5210] */
+ #define AR5K_ISR_RXDOPPLER	0x00400000	/* Doppler chirp received [5212+] */
+ #define AR5K_ISR_TIM		0x00800000	/* [5211+] */
+-#define AR5K_ISR_BCNMISC	0x00800000	/* 'or' of TIM, CAB_END, DTIM_SYNC, BCN_TIMEOUT,
++#define AR5K_ISR_BCNMISC	0x00800000	/* Misc beacon related interrupt
++						 * 'or' of TIM, CAB_END, DTIM_SYNC, BCN_TIMEOUT,
+ 						 * CAB_TIMEOUT and DTIM bits from SISR2 [5212+] */
+ #define AR5K_ISR_GPIO		0x01000000	/* GPIO (rf kill) */
+ #define AR5K_ISR_QCBRORN	0x02000000	/* QCU CBR overrun [5211+] */
 -- 
-1.7.4.1
-
+1.7.8.rc1
 
