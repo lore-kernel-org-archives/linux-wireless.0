@@ -1,48 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44360 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752447Ab1KWOpa (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:33072 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753532Ab1KTVKv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 09:45:30 -0500
-Date: Wed, 23 Nov 2011 09:42:59 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: Timo Lindhorst <tlnd@online.de>, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cfg80211: Fix changing regulatory from userspace
-Message-ID: <20111123144258.GC2502@tuxdriver.com> (sfid-20111123_154534_625248_F382A2EA)
-References: <201111230330.11103.tlnd@online.de>
- <CAB=NE6U6ru-xns8M+YUccqxw0FwE-sWtZnFkPUud3jHdAcDxsw@mail.gmail.com>
- <20111123143456.GB2502@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111123143456.GB2502@tuxdriver.com>
+	Sun, 20 Nov 2011 16:10:51 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 103CB54019B
+	for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 16:35:49 -0500 (EST)
+Subject: Compat-wireless release for 2011-11-20 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111120211049.9CEB340633@repository3.orbit-lab.org> (sfid-20111120_221055_214089_D0AD8C78)
+Date: Sun, 20 Nov 2011 16:10:49 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 23, 2011 at 09:34:56AM -0500, John W. Linville wrote:
-> On Wed, Nov 23, 2011 at 06:28:57AM -0800, Luis R. Rodriguez wrote:
-> > On Tue, Nov 22, 2011 at 6:30 PM, Timo Lindhorst <tlnd@online.de> wrote:
-> > > The commit de3584bd62d87b4c250129fbc46ca52c80330add -
-> > > "cfg80211: fix regulatory NULL dereference" prevents the regulatory
-> > > domain from being changed by user space. A wiphy is only present
-> > > if the request comes from driver or is set by country IE, thus
-> > > check only those cases.
-> > >
-> > > Signed-off-by: Timo Lindhorst <tlnd@online.de>
-> > 
-> > Yup but at this point I'd prefer we revert the original patch instead
-> > given that the patch also had some other short comings. John is it too
-> > late?
-> 
-> No, it isn't too late to revert it.  But can we have a new fix soon?
 
-Hmmm...actually, the original patch was sent in the batch yesterday.
-And it was Cc: stable.  It would be a lot less confusing to merge a
-correct fix on top (and Cc: stable on that too).  What is wrong with
-this one?
+compat-wireless code metrics
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+    819371 - Total upstream lines of code being pulled
+      2455 - backport code changes
+      2110 - backport code additions
+       345 - backport code deletions
+      8770 - backport from compat module
+     11225 - total backport code
+    1.3700 - % of code consists of backport work
