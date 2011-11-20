@@ -1,86 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56484 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752247Ab1KJBdc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 20:33:32 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 06/28] iwlagn: use per-vif AC parameters
-Date: Wed,  9 Nov 2011 16:39:09 -0800
-Message-Id: <1320885571-19122-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023421_218472_F7808A5B)
-In-Reply-To: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail.deathmatch.net ([72.66.92.28]:2971 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752241Ab1KTQOm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Nov 2011 11:14:42 -0500
+Date: Sun, 20 Nov 2011 10:44:00 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, nbd@openwrt.org,
+	jirislaby@gmail.com
+Subject: Re: [PATCH 13/13] ath5k: Optimize ath5k_cw_validate
+Message-ID: <20111120154359.GA4069@hash.lan> (sfid-20111120_171446_205493_41251B6E)
+References: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
+ <1321775788-12520-14-git-send-email-mickflemm@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1321775788-12520-14-git-send-email-mickflemm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, Nov 20, 2011 at 09:56:28AM +0200, Nick Kossifidis wrote:
+> +	/* Check if cw_req + 1 a power of 2 */
+> +	if (!((cw_req + 1) & cw_req))
+> +		return cw_req;
+> +
+> +	/* Check if cw_req is a power of 2 */
+> +	if (!(cw_req & (cw_req - 1)))
+> +		return cw_req - 1;
 
-Eliad added the ability to configure AC parameters
-per virtual interface; make use of this in iwlwifi
-and set the parameters in the right context. Since
-storage and uploading to the device is already per
-context, this is sufficient.
+There's is_power_of_two() in log2.h .. but this whole thing could also
+be something like roundup_pow_of_two(cw) maybe?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   30 ++++++++++++++----------------
- 1 files changed, 14 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 001fdf1..989f9f3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1125,10 +1125,14 @@ int iwlagn_mac_conf_tx(struct ieee80211_hw *hw,
- 		    const struct ieee80211_tx_queue_params *params)
- {
- 	struct iwl_priv *priv = hw->priv;
--	struct iwl_rxon_context *ctx;
-+	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
-+	struct iwl_rxon_context *ctx = vif_priv->ctx;
- 	unsigned long flags;
- 	int q;
- 
-+	if (WARN_ON(!ctx))
-+		return -EINVAL;
-+
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
- 
- 	if (!iwl_is_ready_rf(priv->shrd)) {
-@@ -1145,21 +1149,15 @@ int iwlagn_mac_conf_tx(struct ieee80211_hw *hw,
- 
- 	spin_lock_irqsave(&priv->shrd->lock, flags);
- 
--	/*
--	 * MULTI-FIXME
--	 * This may need to be done per interface in nl80211/cfg80211/mac80211.
--	 */
--	for_each_context(priv, ctx) {
--		ctx->qos_data.def_qos_parm.ac[q].cw_min =
--			cpu_to_le16(params->cw_min);
--		ctx->qos_data.def_qos_parm.ac[q].cw_max =
--			cpu_to_le16(params->cw_max);
--		ctx->qos_data.def_qos_parm.ac[q].aifsn = params->aifs;
--		ctx->qos_data.def_qos_parm.ac[q].edca_txop =
--				cpu_to_le16((params->txop * 32));
--
--		ctx->qos_data.def_qos_parm.ac[q].reserved1 = 0;
--	}
-+	ctx->qos_data.def_qos_parm.ac[q].cw_min =
-+		cpu_to_le16(params->cw_min);
-+	ctx->qos_data.def_qos_parm.ac[q].cw_max =
-+		cpu_to_le16(params->cw_max);
-+	ctx->qos_data.def_qos_parm.ac[q].aifsn = params->aifs;
-+	ctx->qos_data.def_qos_parm.ac[q].edca_txop =
-+			cpu_to_le16((params->txop * 32));
-+
-+	ctx->qos_data.def_qos_parm.ac[q].reserved1 = 0;
- 
- 	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 
 -- 
-1.7.0.4
+Bob Copeland %% www.bobcopeland.com
 
