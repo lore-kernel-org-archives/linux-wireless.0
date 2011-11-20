@@ -1,43 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:54032 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751494Ab1K1Viy (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:47531 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751313Ab1KTH6B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 16:38:54 -0500
-Received: by qadc14 with SMTP id c14so1617565qad.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 13:38:54 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH 0/5] wireless: fix set tx power
-Date: Mon, 28 Nov 2011 16:38:45 -0500
-Message-Id: <1322516330-4007-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111128_223857_672819_A93DC0F8)
+	Sun, 20 Nov 2011 02:58:01 -0500
+Received: by mail-bw0-f46.google.com with SMTP id 11so5187743bke.19
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 23:58:00 -0800 (PST)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	nbd@openwrt.org, jirislaby@gmail.com,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH 12/13] ath5k: Renumber hw queue ids
+Date: Sun, 20 Nov 2011 09:56:27 +0200
+Message-Id: <1321775788-12520-13-git-send-email-mickflemm@gmail.com> (sfid-20111120_085806_147612_5A66FA56)
+In-Reply-To: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
+References: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver maintainers have approved of these now except for brcm80211.
-I should note that Kalle indicated he was going to queue up the ath6kl
-patch though so not sure if you want to wait for his patch or just suck
-mine in. I think it makes sense to roll these in together as a series,
-the rebase that Kalle would do shouldn't be impacted by this I think.
+According to documentation higher DCUs have higher priority and should
+be used for beacons and CAB traffic. More specifically DCU 9 should be
+used for beacons and DCU 8 for CAB traffic, I assumed DCU 7 should be
+OK for UAPSD traffic.
 
-What we can do later is just add a data structure as suggested by hpa
-to avoid these sort of issues.
+Note that DCU 8 and 9 are special because they can only be mapped to a single
+QCU each but since we use a 1:1 mapping between QCUs and DCUs anyway we don't
+have to change much.
 
-Luis R. Rodriguez (5):
-  cfg80211: clarify set tx power mBm documentation
-  ath6kl: fix ath6kl's set tx power
-  brcm80211: fix usage of set tx power
-  brcm80211: avoid code duplication on set tx power
-  mwifiex: fix usage of set tx power
+P.S. I also did a few related cleanups on qcu.c and ath5k.h
 
- drivers/net/wireless/ath/ath6kl/cfg80211.c         |    3 ++-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    9 ++-------
- drivers/net/wireless/mwifiex/cfg80211.c            |    3 ++-
- include/net/cfg80211.h                             |    3 ++-
- 4 files changed, 8 insertions(+), 10 deletions(-)
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h |   10 ++++------
+ drivers/net/wireless/ath/ath5k/qcu.c   |   14 +++++++-------
+ 2 files changed, 11 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 304cc92..892aaa1 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -571,20 +571,18 @@ enum ath5k_tx_queue_subtype {
+  * @AR5K_TX_QUEUE_ID_CAB: Content after beacon queue
+  * @AR5K_TX_QUEUE_ID_BEACON: Beacon queue
+  * @AR5K_TX_QUEUE_ID_UAPSD: Urgent Automatic Power Save Delivery,
+- * @AR5K_TX_QUEUE_ID_XR_DATA: XR Data queue
+  *
+  * Each number represents a hw queue. If hw does not support hw queues
+- * (eg 5210) all data goes in one queue. These match
+- * mac80211 definitions.
++ * (eg 5210) all data goes in one queue.
+  */
+ enum ath5k_tx_queue_id {
+ 	AR5K_TX_QUEUE_ID_NOQCU_DATA	= 0,
+ 	AR5K_TX_QUEUE_ID_NOQCU_BEACON	= 1,
+ 	AR5K_TX_QUEUE_ID_DATA_MIN	= 0,
+ 	AR5K_TX_QUEUE_ID_DATA_MAX	= 3,
+-	AR5K_TX_QUEUE_ID_CAB		= 6,
+-	AR5K_TX_QUEUE_ID_BEACON		= 7,
+-	AR5K_TX_QUEUE_ID_UAPSD		= 8,
++	AR5K_TX_QUEUE_ID_UAPSD		= 7,
++	AR5K_TX_QUEUE_ID_CAB		= 8,
++	AR5K_TX_QUEUE_ID_BEACON		= 9,
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
+index 31924c3..e50e64d 100644
+--- a/drivers/net/wireless/ath/ath5k/qcu.c
++++ b/drivers/net/wireless/ath/ath5k/qcu.c
+@@ -54,7 +54,7 @@ Queue Control Unit, DCF Control Unit Functions
+ /**
+  * ath5k_hw_num_tx_pending() - Get number of pending frames for a  given queue
+  * @ah: The &struct ath5k_hw
+- * @queue: The hw queue number
++ * @queue: One of enum ath5k_tx_queue_id
+  */
+ u32
+ ath5k_hw_num_tx_pending(struct ath5k_hw *ah, unsigned int queue)
+@@ -85,7 +85,7 @@ ath5k_hw_num_tx_pending(struct ath5k_hw *ah, unsigned int queue)
+ /**
+  * ath5k_hw_release_tx_queue() - Set a transmit queue inactive
+  * @ah: The &struct ath5k_hw
+- * @queue: The hw queue number
++ * @queue: One of enum ath5k_tx_queue_id
+  */
+ void
+ ath5k_hw_release_tx_queue(struct ath5k_hw *ah, unsigned int queue)
+@@ -120,7 +120,7 @@ ath5k_cw_validate(u16 cw_req)
+ /**
+  * ath5k_hw_get_tx_queueprops() - Get properties for a transmit queue
+  * @ah: The &struct ath5k_hw
+- * @queue: The hw queue number
++ * @queue: One of enum ath5k_tx_queue_id
+  * @queue_info: The &struct ath5k_txq_info to fill
+  */
+ int
+@@ -134,7 +134,7 @@ ath5k_hw_get_tx_queueprops(struct ath5k_hw *ah, int queue,
+ /**
+  * ath5k_hw_set_tx_queueprops() - Set properties for a transmit queue
+  * @ah: The &struct ath5k_hw
+- * @queue: The hw queue number
++ * @queue: One of enum ath5k_tx_queue_id
+  * @qinfo: The &struct ath5k_txq_info to use
+  *
+  * Returns 0 on success or -EIO if queue is inactive
+@@ -267,7 +267,7 @@ ath5k_hw_setup_tx_queue(struct ath5k_hw *ah, enum ath5k_tx_queue queue_type,
+ /**
+  * ath5k_hw_set_tx_retry_limits() - Set tx retry limits on DCU
+  * @ah: The &struct ath5k_hw
+- * @queue: The hw queue number
++ * @queue: One of enum ath5k_tx_queue_id
+  *
+  * This function is used when initializing a queue, to set
+  * retry limits based on ah->ah_retry_* and the chipset used.
+@@ -310,9 +310,9 @@ ath5k_hw_set_tx_retry_limits(struct ath5k_hw *ah,
+ /**
+  * ath5k_hw_reset_tx_queue() - Initialize a single hw queue
+  * @ah: The &struct ath5k_hw
+- * @queue: The hw queue number
++ * @queue: One of enum ath5k_tx_queue_id
+  *
+- * Set DFS properties for the given transmit queue on DCU
++ * Set DCF properties for the given transmit queue on DCU
+  * and configures all queue-specific parameters.
+  */
+ int
 -- 
-1.7.4.15.g7811d
+1.7.8.rc1
 
