@@ -1,67 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:40878 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750898Ab1KUFwV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 00:52:21 -0500
-Received: by wwe5 with SMTP id 5so9850224wwe.1
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 21:52:20 -0800 (PST)
+Received: from ackle.nomi.cz ([81.31.33.35]:33689 "EHLO ackle.nomi.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754979Ab1KTDUU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Nov 2011 22:20:20 -0500
+Date: Sun, 20 Nov 2011 04:20:16 +0100
+From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20111120032016.GA14520@nomi.cz> (sfid-20111120_042041_631054_A2FA1349)
+References: <20111110091816.GA2247@nomi.cz> <20111110114732.GA2217@redhat.com> <20111110125347.GA29415@nomi.cz> <20111110160703.GA2775@redhat.com> <20111110163051.GA24533@nomi.cz> <20111111054731.GA2292@redhat.com> <20111111150105.GA25437@nomi.cz> <20111114140714.GD2513@redhat.com> <20111119181106.GA5515@nomi.cz> <1321755233.22510.1.camel@wwguy-ubuntu>
 MIME-Version: 1.0
-In-Reply-To: <CAD2nsn2AWuTOJyufUFP+iS5PobMubjqQ-q52mvYfENr1WriJSg@mail.gmail.com>
-References: <1321836540-5325-1-git-send-email-mar.kolya@gmail.com>
-	<CAD2nsn2AWuTOJyufUFP+iS5PobMubjqQ-q52mvYfENr1WriJSg@mail.gmail.com>
-Date: Mon, 21 Nov 2011 00:52:20 -0500
-Message-ID: <CALGY4fsaHGp3cZxTGPpxyjnjD4QorFgsNmUfAFN=Pfi1tQtamA@mail.gmail.com> (sfid-20111121_065224_674296_DDE0CD0A)
-Subject: Re: [PATCH 0/4] Fix the way ANI is being disabled for ar9100 and ar9340
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linville@tuxdriver.com, rodrigue@qca.qualcomm.com
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1321755233.22510.1.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi,
 
-2011/11/21 Mohammed Shafi <shafi.wireless@gmail.com>:
+On Sat, Nov 19, 2011 at 06:13:53PM -0800, wwguy wrote:
+> hmm, I don't have any IOMMU supported system, I guess it is the time to
+> get one :-)
 
->>  Question: there are common.disable_ani (and corresponding debugfs file) and config.enable_ani in ath9k code. config.enable_ani sets if ANI is supported and common.disable_ani is meant to disable calibration. This is confusing on a sense that disable_ani completely disables all calibration code including short/long calibration and ANI, not ANI alone. Would it make sense to rename disable_ani to disable_calib and enable_ani to ani_supported?
->
-> I understand short and long calibration of ANI, not the complete calibration :)
-> disable_ani is to stop/start ANI anytime via ath9k debugfs entry.
-> please let me know if you have further queries
+Well, the bug manifests itself regardless of whether IOMMU is used or not...
 
-  I'm new to this code so I hope you'll forgive me if my question
-sounds stupidly.
-  There is 'ath_ani_calibrate' which basically does three things
-(apart from timer management boilerplate):
-   -- calls ath9k_hw_calibrate to perform 'long calibration'
-   -- calls ath9k_hw_calibrate to perform 'short calibration'
-   -- calls ath9k_hw_ani_monitor to get ANI statistics (?)
-  So there seem to be three major parts of ANI: long calibration,
-short calibration, and third thing which I find hard to name correctly
-so I'll refer to it as 'ANI-ANI'.
+Anyway, did you have time to try to reproduce it with the .config I sent?
+(It may take hours, sometimes. :-/)
 
-  From your response I understand that 'short calibration' and 'long
-calibration' generally considered to be part of think called ANI.
-Considering this name 'disable_ani' in a sense that it disables
-'ath_ani_calibrate' as a whole looks ok.
-  But config.enable_ani is used to control if 'ANI-ANI' gets executed
-(and this was somewhat true before my patch).
-  So, having two variables which 'negated' names is confusing by
-itself, i.e. enable_ani vs disable_ani. But more confusing is the fact
-that they actually control different things and have different
-meaning, so disable_ani != (!enable_ani).
-
-  I do understand that my 'ANI-ANI' probably has proper name and I
-think that 'enable_ani' should probably be renamed using this proper
-name.
-
-  I'd really appreciate if you could let me know where my
-understanding is incorrect.
-  Thanks!
-
+Regards,
 -- 
-Truthfully yours,
-Martynov Nikolay.
-Email: mar.kolya@gmail.com
+Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
