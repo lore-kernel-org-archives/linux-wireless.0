@@ -1,56 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60739 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752807Ab1K3MQU (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:23901 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753333Ab1KTVEb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 07:16:20 -0500
-Subject: Re: [PATCH 4/4] mac80211: handle protection mode, RIFS and ADDBA
- for HT IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Alexander Simon <an.alexsimon@googlemail.com>,
-	Marek Lindner <lindner_marek@yahoo.de>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-In-Reply-To: <1322502917-28205-5-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1322502917-28205-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1322502917-28205-5-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 30 Nov 2011 13:16:15 +0100
-Message-ID: <1322655375.3982.11.camel@jlt3.sipsolutions.net> (sfid-20111130_131623_679357_57CD5A9E)
-Mime-Version: 1.0
+	Sun, 20 Nov 2011 16:04:31 -0500
+Date: Mon, 21 Nov 2011 00:04:00 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] iwlegacy: off by one in iwl3945_hw_build_tx_cmd_rate()
+Message-ID: <20111120210400.GB7354@elgon.mountain> (sfid-20111120_220436_339076_B3BDAD7E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-11-28 at 18:55 +0100, Simon Wunderlich wrote:
+We use "rate_index" like this:
+	rate = iwl3945_rates[rate_index].plcp;
+The iwl3945_rates[] array has IWL_RATE_COUNT_3945 elements so the
+limit here is off by one.
 
-> +	/*
-> +	 * 11.5.1.1: If the initiating STA is an HT STA, is a member of an
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-802.11-2012 will renumber clauses, please add new references as
-"802.11-2007 11.5.1.1"
-
-Other than that I have a feeling this patch should come before patch 3?
-
-> +++ b/net/mac80211/ibss.c
-> @@ -954,6 +954,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
->  			struct cfg80211_ibss_params *params)
->  {
->  	struct sk_buff *skb;
-> +	u32 changed = 0;
->  
->  	skb = dev_alloc_skb(sdata->local->hw.extra_tx_headroom +
->  			    sizeof(struct ieee80211_hdr_3addr) +
-> @@ -1016,6 +1017,23 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
->  	ieee80211_recalc_idle(sdata->local);
->  	mutex_unlock(&sdata->local->mtx);
->  
-> +	/*
-> +	 * 9.13.3.1: In an IBSS, the HT Protection field is reserved, but
-
-Same reference thing here.
-
-johannes
-
+diff --git a/drivers/net/wireless/iwlegacy/iwl-3945.c b/drivers/net/wireless/iwlegacy/iwl-3945.c
+index f7c0a74..1627048 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-3945.c
++++ b/drivers/net/wireless/iwlegacy/iwl-3945.c
+@@ -676,7 +676,7 @@ void iwl3945_hw_build_tx_cmd_rate(struct iwl_priv *priv,
+ 				  int sta_id, int tx_id)
+ {
+ 	u16 hw_value = ieee80211_get_tx_rate(priv->hw, info)->hw_value;
+-	u16 rate_index = min(hw_value & 0xffff, IWL_RATE_COUNT_3945);
++	u16 rate_index = min(hw_value & 0xffff, IWL_RATE_COUNT_3945 - 1);
+ 	u16 rate_mask;
+ 	int rate;
+ 	u8 rts_retry_limit;
