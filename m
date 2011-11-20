@@ -1,74 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.unitix.de ([176.9.2.175]:40616 "EHLO mail2.unitix.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757167Ab1KRWrT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 17:47:19 -0500
-Received: from [0.0.0.0] (august.arndnet.de [62.75.245.222])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail2.unitix.de (Postfix) with ESMTPSA id CBE4E3E19
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2011 23:38:35 +0100 (CET)
-Message-ID: <4EC6DE6B.3080603@arndnet.de> (sfid-20111118_234723_826039_8BE33D54)
-Date: Fri, 18 Nov 2011 23:38:35 +0100
-From: Arnd Hannemann <arnd@arndnet.de>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: 3.2.0-rc2: WARNING: at iwlwifi/wl-trans-pcie.c:1105
-Content-Type: text/plain; charset=ISO-8859-15
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:47531 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751629Ab1KTH54 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Nov 2011 02:57:56 -0500
+Received: by mail-bw0-f46.google.com with SMTP id 11so5187743bke.19
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 23:57:55 -0800 (PST)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	nbd@openwrt.org, jirislaby@gmail.com,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH 10/13] ath5k: MRR support and 2GHz radio override belong in ah_capabilities
+Date: Sun, 20 Nov 2011 09:56:25 +0200
+Message-Id: <1321775788-12520-11-git-send-email-mickflemm@gmail.com> (sfid-20111120_085801_517558_F518D31C)
+In-Reply-To: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
+References: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+MRR support and 2GHz radio override belong in ah_capabilities and we
+should use them (e.g. so far  we used to set mrr descriptor without
+checking if MRR support is enabled + we checked for MRR support 2
+times, one by trying to set up an MRR descriptor and another one based
+on MAC version).
 
-I just got the following WARNING on a 3.2.0-rc2 kernel:
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/ahb.c    |    4 ++-
+ drivers/net/wireless/ath/ath5k/ath5k.h  |   12 ++++----
+ drivers/net/wireless/ath/ath5k/attach.c |    5 ---
+ drivers/net/wireless/ath/ath5k/base.c   |   47 ++++++++++++-------------------
+ drivers/net/wireless/ath/ath5k/caps.c   |   27 +++++++++++++----
+ 5 files changed, 47 insertions(+), 48 deletions(-)
 
-[  191.516877] iwlwifi 0000:03:00.0: Tx aggregation enabled on ra = 30:46:9a:XX:XX:XX tid = 0
-[  191.516890] ------------[ cut here ]------------
-[  191.516920] WARNING: at /home/arnd/Projekte/kernel/linux-2.6/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c:1105 iwl_trans_pcie_tx+0x835/0x890 [iwlwifi]()
-[  191.516925] Hardware name: 4384GEG
-[  191.516927] Modules linked in: ip6table_filter ip6_tables ipt_MASQUERADE iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack ipt_REJECT xt_CHECKSUM iptable_mangle xt_tcpudp iptable_filter ip_tables x_tables bnep rfcomm bridge stp llc kvm_intel kvm binfmt_misc joydev dm_crypt snd_hda_codec_hdmi snd_hda_codec_conexant arc4 snd_hda_intel snd_hda_codec snd_hwdep snd_pcm thinkpad_acpi snd_seq_midi snd_rawmidi snd_seq_midi_event qcserial usb_wwan usbserial snd_seq btusb bluetooth snd_timer snd_seq_device iwlwifi psmouse mac80211 intel_ips serio_raw snd cfg80211 snd_page_alloc mei(C) soundcore nvram tpm_tis btrfs zlib_deflate libcrc32c mxm_wmi firewire_ohci ahci firewire_core libahci wmi e1000e sdhci_pci crc_itu_t i915 drm_kms_helper drm sdhci i2c_algo_bit video
-[  191.517007] Pid: 2401, comm: kworker/u:17 Tainted: G        WC   3.2.0-rc2aha #3
-[  191.517010] Call Trace:
-[  191.517013]  <IRQ>  [<ffffffff81062b9f>] warn_slowpath_common+0x7f/0xc0
-[  191.517027]  [<ffffffff81062bfa>] warn_slowpath_null+0x1a/0x20
-[  191.517042]  [<ffffffffa031ce25>] iwl_trans_pcie_tx+0x835/0x890 [iwlwifi]
-[  191.517059]  [<ffffffffa02810b8>] ? ccmp_encrypt_skb.isra.4+0x108/0x230 [mac80211]
-[  191.517067]  [<ffffffff8105a500>] ? try_to_wake_up+0x220/0x2a0
-[  191.517073]  [<ffffffff810861e6>] ? autoremove_wake_function+0x16/0x40
-[  191.517085]  [<ffffffffa03078d7>] ? iwlagn_tx_skb+0xc7/0x7d0 [iwlwifi]
-[  191.517096]  [<ffffffffa0307c60>] iwlagn_tx_skb+0x450/0x7d0 [iwlwifi]
-[  191.517110]  [<ffffffffa0323a87>] ? iwl_tx_cmd_complete+0x1e7/0x350 [iwlwifi]
-[  191.517120]  [<ffffffffa02fe65a>] iwlagn_mac_tx+0x1a/0x30 [iwlwifi]
-[  191.517137]  [<ffffffffa0299436>] __ieee80211_tx+0x76/0x230 [mac80211]
-[  191.517152]  [<ffffffffa0320e96>] ? iwl_irq_tasklet+0x846/0xe10 [iwlwifi]
-[  191.517170]  [<ffffffffa029b44c>] ieee80211_tx+0x8c/0xc0 [mac80211]
-[  191.517187]  [<ffffffffa029c32d>] ieee80211_tx_pending+0x7d/0x220 [mac80211]
-[  191.517193]  [<ffffffff8106a20d>] ? __do_softirq+0xfd/0x210
-[  191.517199]  [<ffffffff81069b78>] tasklet_action+0x78/0x140
-[  191.517204]  [<ffffffff8106a1b8>] __do_softirq+0xa8/0x210
-[  191.517210]  [<ffffffff8160f2ac>] call_softirq+0x1c/0x30
-[  191.517212]  <EOI>  [<ffffffff81015195>] do_softirq+0x65/0xa0
-[  191.517222]  [<ffffffff8106a104>] local_bh_enable_ip+0x94/0xa0
-[  191.517227]  [<ffffffff81605109>] _raw_spin_unlock_bh+0x19/0x20
-[  191.517241]  [<ffffffffa0284899>] ieee80211_agg_tx_operational+0xb9/0xd0 [mac80211]
-[  191.517257]  [<ffffffffa028d9c8>] ? ieee80211_iface_work+0xd8/0x350 [mac80211]
-[  191.517273]  [<ffffffffa02850ee>] ieee80211_process_addba_resp+0x11e/0x120 [mac80211]
-[  191.517289]  [<ffffffffa028dbef>] ieee80211_iface_work+0x2ff/0x350 [mac80211]
-[  191.517305]  [<ffffffffa028d8f0>] ? ieee80211_teardown_sdata+0xe0/0xe0 [mac80211]
-[  191.517312]  [<ffffffff8108023a>] process_one_work+0x11a/0x480
-[  191.517317]  [<ffffffff81080fc4>] worker_thread+0x164/0x370
-[  191.517322]  [<ffffffff81080e60>] ? manage_workers.isra.30+0x230/0x230
-[  191.517327]  [<ffffffff8108573c>] kthread+0x8c/0xa0
-[  191.517332]  [<ffffffff8160f1b4>] kernel_thread_helper+0x4/0x10
-[  191.517338]  [<ffffffff810856b0>] ? flush_kthread_worker+0xa0/0xa0
-[  191.517343]  [<ffffffff8160f1b0>] ? gs_change+0x13/0x13
-[  191.517346] ---[ end trace f5849db7402e7e61 ]---
-[  193.817069] iwlwifi 0000:03:00.0: Queue 11 stuck for 2000 ms.
-[  193.817075] iwlwifi 0000:03:00.0: Current read_ptr 166 write_ptr 172
-[  193.817078] iwlwifi 0000:03:00.0: On demand firmware reload
-[  193.817420] ieee80211 phy0: Hardware restart was requested
-[  193.817470] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
-[  193.817596] iwlwifi 0000:03:00.0: Radio type=0x0-0x3-0x1
+diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
+index e5be7e70..ee7ea57 100644
+--- a/drivers/net/wireless/ath/ath5k/ahb.c
++++ b/drivers/net/wireless/ath/ath5k/ahb.c
+@@ -166,7 +166,9 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 		if (to_platform_device(ah->dev)->id == 0 &&
+ 		    (bcfg->config->flags & (BD_WLAN0 | BD_WLAN1)) ==
+ 		     (BD_WLAN1 | BD_WLAN0))
+-			__set_bit(ATH_STAT_2G_DISABLED, ah->status);
++			ah->ah_capabilities.cap_needs_2GHz_ovr = true;
++		else
++			ah->ah_capabilities.cap_needs_2GHz_ovr = false;
+ 	}
+ 
+ 	ret = ath5k_init_ah(ah, &ath_ahb_bus_ops);
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 743938c..304cc92 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1159,6 +1159,8 @@ struct ath5k_capabilities {
+ 	} cap_queues;
+ 
+ 	bool cap_has_phyerr_counters;
++	bool cap_has_mrr_support;
++	bool cap_needs_2GHz_ovr;
+ };
+ 
+ /* size of noise floor history (keep it a power of two) */
+@@ -1274,13 +1276,11 @@ struct ath5k_hw {
+ 	dma_addr_t		desc_daddr;	/* DMA (physical) address */
+ 	size_t			desc_len;	/* size of TX/RX descriptors */
+ 
+-	DECLARE_BITMAP(status, 6);
++	DECLARE_BITMAP(status, 4);
+ #define ATH_STAT_INVALID	0		/* disable hardware accesses */
+-#define ATH_STAT_MRRETRY	1		/* multi-rate retry support */
+-#define ATH_STAT_PROMISC	2
+-#define ATH_STAT_LEDSOFT	3		/* enable LED gpio status */
+-#define ATH_STAT_STARTED	4		/* opened & irqs enabled */
+-#define ATH_STAT_2G_DISABLED	5		/* multiband radio without 2G */
++#define ATH_STAT_PROMISC	1
++#define ATH_STAT_LEDSOFT	2		/* enable LED gpio status */
++#define ATH_STAT_STARTED	3		/* opened & irqs enabled */
+ 
+ 	unsigned int		filter_flags;	/* HW flags, AR5K_RX_FILTER_* */
+ 	struct ieee80211_channel *curchan;	/* current h/w channel */
+diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+index b69e057..d7114c7 100644
+--- a/drivers/net/wireless/ath/ath5k/attach.c
++++ b/drivers/net/wireless/ath/ath5k/attach.c
+@@ -306,11 +306,6 @@ int ath5k_hw_init(struct ath5k_hw *ah)
+ 		goto err;
+ 	}
+ 
+-	if (test_bit(ATH_STAT_2G_DISABLED, ah->status)) {
+-		__clear_bit(AR5K_MODE_11B, ah->ah_capabilities.cap_mode);
+-		__clear_bit(AR5K_MODE_11G, ah->ah_capabilities.cap_mode);
+-	}
+-
+ 	/* Crypto settings */
+ 	common->keymax = (ah->ah_version == AR5K_AR5210 ?
+ 			  AR5K_KEYTABLE_SIZE_5210 : AR5K_KEYTABLE_SIZE_5211);
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index b901721..ef0ffcd 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -725,21 +725,24 @@ ath5k_txbuf_setup(struct ath5k_hw *ah, struct ath5k_buf *bf,
+ 	if (ret)
+ 		goto err_unmap;
+ 
+-	memset(mrr_rate, 0, sizeof(mrr_rate));
+-	memset(mrr_tries, 0, sizeof(mrr_tries));
+-	for (i = 0; i < 3; i++) {
+-		rate = ieee80211_get_alt_retry_rate(ah->hw, info, i);
+-		if (!rate)
+-			break;
++	/* Set up MRR descriptor */
++	if (ah->ah_capabilities.cap_has_mrr_support) {
++		memset(mrr_rate, 0, sizeof(mrr_rate));
++		memset(mrr_tries, 0, sizeof(mrr_tries));
++		for (i = 0; i < 3; i++) {
++			rate = ieee80211_get_alt_retry_rate(ah->hw, info, i);
++			if (!rate)
++				break;
+ 
+-		mrr_rate[i] = rate->hw_value;
+-		mrr_tries[i] = info->control.rates[i + 1].count;
+-	}
++			mrr_rate[i] = rate->hw_value;
++			mrr_tries[i] = info->control.rates[i + 1].count;
++		}
+ 
+-	ath5k_hw_setup_mrr_tx_desc(ah, ds,
+-		mrr_rate[0], mrr_tries[0],
+-		mrr_rate[1], mrr_tries[1],
+-		mrr_rate[2], mrr_tries[2]);
++		ath5k_hw_setup_mrr_tx_desc(ah, ds,
++			mrr_rate[0], mrr_tries[0],
++			mrr_rate[1], mrr_tries[1],
++			mrr_rate[2], mrr_tries[2]);
++	}
+ 
+ 	ds->ds_link = 0;
+ 	ds->ds_data = bf->skbaddr;
+@@ -2488,8 +2491,8 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
+ 	if (ret)
+ 		goto err_irq;
+ 
+-	/* set up multi-rate retry capabilities */
+-	if (ah->ah_version == AR5K_AR5212) {
++	/* Set up multi-rate retry capabilities */
++	if (ah->ah_capabilities.cap_has_mrr_support) {
+ 		hw->max_rates = 4;
+ 		hw->max_rate_tries = max(AR5K_INIT_RETRY_SHORT,
+ 					 AR5K_INIT_RETRY_LONG);
+@@ -2849,20 +2852,6 @@ ath5k_init(struct ieee80211_hw *hw)
+ 
+ 
+ 	/*
+-	 * Check if the MAC has multi-rate retry support.
+-	 * We do this by trying to setup a fake extended
+-	 * descriptor.  MACs that don't have support will
+-	 * return false w/o doing anything.  MACs that do
+-	 * support it will return true w/o doing anything.
+-	 */
+-	ret = ath5k_hw_setup_mrr_tx_desc(ah, NULL, 0, 0, 0, 0, 0, 0);
+-
+-	if (ret < 0)
+-		goto err;
+-	if (ret > 0)
+-		__set_bit(ATH_STAT_MRRETRY, ah->status);
+-
+-	/*
+ 	 * Collect the channel list.  The 802.11 layer
+ 	 * is responsible for filtering this list based
+ 	 * on settings like the phy mode and regulatory
+diff --git a/drivers/net/wireless/ath/ath5k/caps.c b/drivers/net/wireless/ath/ath5k/caps.c
+index 810fba9..994169a 100644
+--- a/drivers/net/wireless/ath/ath5k/caps.c
++++ b/drivers/net/wireless/ath/ath5k/caps.c
+@@ -85,12 +85,19 @@ int ath5k_hw_set_capabilities(struct ath5k_hw *ah)
+ 			caps->cap_range.range_2ghz_min = 2412;
+ 			caps->cap_range.range_2ghz_max = 2732;
+ 
+-			if (AR5K_EEPROM_HDR_11B(ee_header))
+-				__set_bit(AR5K_MODE_11B, caps->cap_mode);
+-
+-			if (AR5K_EEPROM_HDR_11G(ee_header) &&
+-			    ah->ah_version != AR5K_AR5211)
+-				__set_bit(AR5K_MODE_11G, caps->cap_mode);
++			/* Override 2GHz modes on SoCs that need it
++			 * NOTE: cap_needs_2GHz_ovr gets set from
++			 * ath_ahb_probe */
++			if (!caps->cap_needs_2GHz_ovr) {
++				if (AR5K_EEPROM_HDR_11B(ee_header))
++					__set_bit(AR5K_MODE_11B,
++							caps->cap_mode);
++
++				if (AR5K_EEPROM_HDR_11G(ee_header) &&
++				ah->ah_version != AR5K_AR5211)
++					__set_bit(AR5K_MODE_11G,
++							caps->cap_mode);
++			}
+ 		}
+ 	}
+ 
+@@ -103,12 +110,18 @@ int ath5k_hw_set_capabilities(struct ath5k_hw *ah)
+ 	else
+ 		caps->cap_queues.q_tx_num = AR5K_NUM_TX_QUEUES;
+ 
+-	/* newer hardware has PHY error counters */
++	/* Newer hardware has PHY error counters */
+ 	if (ah->ah_mac_srev >= AR5K_SREV_AR5213A)
+ 		caps->cap_has_phyerr_counters = true;
+ 	else
+ 		caps->cap_has_phyerr_counters = false;
+ 
++	/* MACs since AR5212 have MRR support */
++	if (ah->ah_version == AR5K_AR5212)
++		caps->cap_has_mrr_support = true;
++	else
++		caps->cap_has_mrr_support = false;
++
+ 	return 0;
+ }
+ 
+-- 
+1.7.8.rc1
 
-Best regards,
-Arnd
