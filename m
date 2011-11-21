@@ -1,73 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:32785 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754071Ab1KSTGl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Nov 2011 14:06:41 -0500
-Date: Sat, 19 Nov 2011 11:05:59 -0800
-From: Greg KH <gregkh@suse.de>
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	greg@kroah.com, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	roman-vl@meta.ua,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: Re: [17/26] b43: refuse to load unsupported firmware
-Message-ID: <20111119190559.GC30197@suse.de> (sfid-20111119_200715_291811_A97DED20)
-References: <20111119000329.419617905@clark.kroah.org>
- <1321723330.2885.145.camel@deadeye>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:40737 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751332Ab1KUW3T convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 17:29:19 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1321723330.2885.145.camel@deadeye>
+In-Reply-To: <201111212249.31196.rjw@sisk.pl>
+References: <lx6sezwGldO.A.IhF.UBpWOB@chimera>
+	<201111212249.31196.rjw@sisk.pl>
+Date: Mon, 21 Nov 2011 17:29:17 -0500
+Message-ID: <CADnq5_PJ5rAvmjwSfh23A7QsUZEvGQHKYOE8CVtCYqeLM2T7-Q@mail.gmail.com> (sfid-20111121_233010_262282_63ADBD31)
+Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
+From: Alex Deucher <alexdeucher@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 19, 2011 at 05:22:10PM +0000, Ben Hutchings wrote:
-> On Fri, 2011-11-18 at 16:02 -0800, Greg KH wrote:
-> > 3.1-stable review patch.  If anyone has any objections, please let me know.
-> > 
-> > ------------------
-> > 
-> > [This patch is supposed to be applied in 3.1 (and maybe older) branches only.]
-> > 
-> > New kernels support newer firmware that users may try to incorrectly use
-> > with older kernels. Display error and explain the problem in such a case
-> > 
-> > Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
-> > Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-> > 
-> > ---
-> >  drivers/net/wireless/b43/main.c |    7 +++++++
-> >  1 file changed, 7 insertions(+)
-> > 
-> > --- a/drivers/net/wireless/b43/main.c
-> > +++ b/drivers/net/wireless/b43/main.c
-> > @@ -2508,6 +2508,13 @@ static int b43_upload_microcode(struct b
-> >  		b43_print_fw_helptext(dev->wl, 1);
-> >  		err = -EOPNOTSUPP;
-> >  		goto error;
-> > +	} else if (fwrev >= 598) {
-> > +		b43err(dev->wl, "YOUR FIRMWARE IS TOO NEW. Support for "
-> > +		       "firmware 598 and up requires kernel 3.2 or newer. You "
-> > +		       "have to install older firmware or upgrade kernel.\n");
-> > +		b43_print_fw_helptext(dev->wl, 1);
-> > +		err = -EOPNOTSUPP;
-> > +		goto error;
-> [...]
-> 
-> Again, I strongly object to this way of handling the incompatibility.
-> The revision check is fine, but the solution must be to assign a
-> different filename for the newer revisions.  The changes to 3.0/3.1
-> should be deferred until this is resolved.
+On Mon, Nov 21, 2011 at 4:49 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> This message contains a list of some regressions from 3.0 and 3.1
+> for which there are no fixes in the mainline known to the tracking team.
+> If any of them have been fixed already, please let us know.
+>
+> If you know of any other unresolved regressions from 3.0 and 3.1, please let us
+> know either and we'll add them to the list. †Also, please let us know if any of
+> the entries below are invalid.
+>
+> The entries below are simplified and the statistics are not present due to the
+> continuing Bugzilla outage.
+>
+> Subject † †: iwlagn is getting very shaky
+> Submitter †: Norbert Preining <preining@logic.at>
+> Date † † † : 2011-10-19 6:01
+> Message-ID : 20111019060108.GA11588@gamma.logic.tuwien.ac.at
+> References : http://marc.info/?l=linux-kernel&m=131914553920614&w=2
+>
+> Subject † †: Regression: "irqpoll" hasn't been working for me since March 16 IRQ
+> Submitter †: Edward Donovan <edward.donovan@numble.net>
+> Date † † † : 2011-10-19 22:09
+> Message-ID : CADdbW+HXdCPfJu2RTF6zz+ujCmiu_dmZwL2iScuF53p=AaZ1Uw@mail.gmail.com
+> References : http://marc.info/?l=linux-kernel&m=131914554220679&w=2
+>
+> Subject † †: Regression in 3.1 causes Xen to use wrong idle routine
+> Submitter †: Stefan Bader <stefan.bader@canonical.com>
+> Date † † † : 2011-10-26 10:24
+> Message-ID : 4EA7DFD1.9060608@canonical.com
+> References : http://marc.info/?l=linux-acpi&m=131962467924564&w=2
+>
+> Subject † †: 3.1+ iwlwifi lockup
+> Submitter †: Dave Jones <davej@redhat.com>
+> Date † † † : 2011-10-31 14:34
+> Message-ID : 20111031143408.GA17152@redhat.com
+> References : http://marc.info/?l=linux-kernel&m=132007169420160&w=2
+>
+> Subject † †: hugetlb oops on 3.1.0-rc8-devel
+> Submitter †: Andy Lutomirski <luto@amacapital.net>
+> Date † † † : 2011-11-01 22:20
+> Message-ID : CALCETrW1mpVCz2tO5roaz1r6vnno+srHR-dHA6_pkRi2qiCfdw@mail.gmail.com
+> References : http://marc.info/?l=linux-kernel&m=132018604426692&w=2
+>
+> Subject † †: Simultaneous cat and external keyboard input causing kernel panic
+> Submitter †: Timo Jyrinki <timo.jyrinki@gmail.com>
+> Date † † † : 2011-11-03 12:14
+> Message-ID : CAJtFfxmovJHspHHKbvBVc4pw+u5mjGmUejCXEzdV+GqE=jVSOQ@mail.gmail.com
+> References : http://marc.info/?l=linux-kernel&m=132032253903074&w=2
+>
+> Subject † †: Linus GIT - INFO: possible circular locking dependency detected
+> Submitter †: Miles Lane <miles.lane@gmail.com>
+> Date † † † : 2011-11-03 15:57
+> Message-ID : CAHFgRy8S0xLfhZxTUOEH5A0PL_Fb79-0-gmbQ=9h2D-xMqt1hA@mail.gmail.com
+> References : http://marc.info/?l=linux-kernel&m=132033587908426&w=2
+>
+> Subject † †: lockdep warning after aa6afca5bcab: "proc: fix races against execve() of /proc/PID/fd**"
+> Submitter †: Ari Savolainen <ari.m.savolainen@gmail.com>
+> Date † † † : 2011-11-08 3:47
+> Message-ID : CAEbykaXYZEFhTgWMm2AfaWQ2SaXYuO_ypTnw+6AVWScOYSCuuw@mail.gmail.com
+> References : http://marc.info/?l=linux-kernel&m=132072413125099&w=2
+>
+> Subject † †: DMA-API check_sync errors with 3.2
+> Submitter †: Josh Boyer <jwboyer@redhat.com>
+> Date † † † : 2011-11-08 17:31
+> Message-ID : 20111108173153.GE14216@zod.bos.redhat.com
+> References : http://marc.info/?l=linux-kernel&m=132077357608797&w=2
+>
+> Subject † †: [3.1-rc8 REGRESSION] sky2 hangs machine on turning off or suspending
+> Submitter †: Rafa≥ Mi≥ecki <zajec5@gmail.com>
+> Date † † † : 2011-11-09 11:46
+> Message-ID : CACna6ryTdLcWVYgHu=_mRFga1sFivpE_DyZOY-HMmKggkWAJAw@mail.gmail.com
+> References : http://marc.info/?l=linux-netdev&m=132083922228088&w=4
+>
+> Subject † †: 3.2-rc1 doesn't boot on dual socket opteron without swap
+> Submitter †: Niklas Schnelle <niklas@komani.de>
+> Date † † † : 2011-11-10 20:09
+> Message-ID : 1320955769.1718.8.camel@jupiter
+> References : http://marc.info/?l=linux-kernel&m=132095583501767&w=2
+>
+> Subject † †: Sparc-32 doesn't work in 3.1.
+> Submitter †: Rob Landley <rob@landley.net>
+> Date † † † : 2011-11-12 11:22
+> Message-ID : 4EBEAB5A.5020809@landley.net
+> References : http://www.spinics.net/lists/kernel/msg1260383.html
+>
+> Subject † †: khugepaged blocks suspend2ram (3.2.0-rc1-00252-g8f042aa)
+> Submitter †: Sergei Trofimovich <slyich@gmail.com>
+> Date † † † : 2011-11-12 10:48
+> Message-ID : 20111112104859.7744b282@sf.home
+> References : https://lkml.org/lkml/2011/11/12/11
+>
+> Subject † †: WARNING: at fs/sysfs/sysfs.h:195 (during boot)
+> Submitter †: Markus Trippelsdorf <markus@trippelsdorf.de>
+> Date † † † : 2011-11-13 19:24
+> Message-ID : 20111113192417.GA1659@x4.trippels.de
+> References : http://marc.info/?l=linux-kernel&m=132121231921932&w=2
+>
+> Subject † †: PROBLEM: Radeon display connector : No monitor connected or invalid EDID
+> Submitter †: Treeve Jelbert <treeve@scarlet.be>
+> Date † † † : 2011-11-13 17:27
+> Message-ID : 2407026.akcTO2Ggic@gemini-64
+> References : http://marc.info/?l=linux-kernel&m=132120530920139&w=2
 
-You can object, however the driver author and maintainer wants it done
-this way for now, so that's a valid solution that I have to accept.  It
-solves real bugs that people have already hit when running the 3.0 and
-3.1 kernels.  Propagating a userspace tool change for those systems
-would be much harder, if not impossible, don't you think?  It would also
-require a much more intrusive change to the driver infrastructure to
-handle such a proposed change.
+Treeve replied to me directly saying the it was a problem with his
+config file and everything is working fine now.
 
-thanks,
+Alex
 
-greg k-h
+>
+> Subject † †: [3.1 REGRESSION] Commit 5cec93c216db77c45f7ce970d46283bcb1933884 breaks the Chromium seccomp sandbox
+> Submitter †: Nix <nix@esperi.org.uk>
+> Date † † † : 2011-11-14 0:40
+> Message-ID : 8762inleno.fsf@spindle.srvr.nix
+> References : http://marc.info/?l=linux-kernel&m=132123396226377&w=2
+>
+> Subject † †: max PWM is zero
+> Submitter †: Marcos Paulo de Souza <marcos.mage@gmail.com>
+> Date † † † : 2011-11-15 15:14
+> Message-ID : alpine.LNX.2.00.1111151301410.2693@darkstar.example.net
+> References : http://marc.info/?l=linux-kernel&m=132137019330548&w=2
+>
+> Subject † †: Oops on suspend with libertas SDIO (Linux 3.2-rc2)
+> Submitter †: Sven Neumann <s.neumann@raumfeld.com>
+> Date † † † : 2011-11-17 15:36
+> Message-ID : 1321544210.31090.6.camel@sven
+> References : http://marc.info/?l=linux-kernel&m=132154527715807&w=2
+>
+> Subject † †: Impossible high cpu-time values for migration threads
+> Submitter †: Markus Trippelsdorf <markus@trippelsdorf.de>
+> Date † † † : 2011-11-17 22:17
+> Message-ID : 20111117221731.GA9229@x4.trippels.de
+> References : http://marc.info/?l=linux-kernel&m=132156832124314&w=2
+>
+> Subject † †: WARNING: at mm/slub.c:3357, kernel BUG at mm/slub.c:3413
+> Submitter †: Markus Trippelsdorf <markus@trippelsdorf.de>
+> Date † † † : 2011-11-18 7:25
+> Message-ID : 20111118072519.GA1615@x4.trippels.de
+> References : http://marc.info/?l=linux-kernel&m=132160119031794&w=2
+>
+> Subject † †: [REGRESSION] resume takes 10s longer due to e1b6eb3 (Bluetooth: Increase HCI reset timeout ...)
+> Submitter †: Tom·π Janouπek <tomi@nomi.cz>
+> Date † † † : 2011-11-18 18:40
+> Message-ID : 20111118184017.GA5052@nomi.cz
+> References : http://marc.info/?l=linux-kernel&m=132164169511416&w=2
+>
+> Subject † †: [REGRESSION] sudden cpu hogging in kernel 3.2 rc-series
+> Submitter †: "Nicolas Kalkhof" <nkalkhof@web.de>
+> Date † † † : 2011-11-18 20:33
+> Message-ID : 506786689.810044.1321648395265.JavaMail.fmail@mwmweb010
+> References : http://marc.info/?l=linux-kernel&m=132164909313594&w=2
+>
+> Thanks!
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> http://lists.freedesktop.org/mailman/listinfo/dri-devel
+>
