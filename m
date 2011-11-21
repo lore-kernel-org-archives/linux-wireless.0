@@ -1,68 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3702 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754044Ab1KDVYC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 17:24:02 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:59610 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754576Ab1KUAtZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Nov 2011 19:49:25 -0500
+Received: by mail-gx0-f174.google.com with SMTP id r5so1781850ggn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 16:49:25 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
 To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 08/16] brcm80211: fmac: remove duplicate regiter set in
- chip attach path
-Date: Fri, 4 Nov 2011 22:23:34 +0100
-Message-ID: <1320441822-4615-9-git-send-email-arend@broadcom.com> (sfid-20111104_222417_716154_79D17E88)
-In-Reply-To: <1320441822-4615-1-git-send-email-arend@broadcom.com>
-References: <1320441822-4615-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, Nikolay Martynov <mar.kolya@gmail.com>
+Subject: [PATCH 2/4] ath9k: change calibration debug to log all calibration types
+Date: Sun, 20 Nov 2011 19:48:58 -0500
+Message-Id: <1321836540-5325-3-git-send-email-mar.kolya@gmail.com> (sfid-20111121_014928_180779_2FA6DF4C)
+In-Reply-To: <1321836540-5325-1-git-send-email-mar.kolya@gmail.com>
+References: <1321836540-5325-1-git-send-email-mar.kolya@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
-
-Same register writes have been done in brcmf_sdbrcm_probe_init
-which is earlier in the same code path.
-
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   13 -------------
- 1 files changed, 0 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 30187c1..5e7b70e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3872,7 +3872,6 @@ brcmf_sdbrcm_chip_attach(struct brcmf_bus *bus, u32 regs)
- {
- 	struct chip_info *ci;
- 	int err;
--	u8 clkval;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index e43c41c..9ce3dff 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -561,7 +561,6 @@ void ath_ani_calibrate(unsigned long data)
+ 	/* Long calibration runs independently of short calibration. */
+ 	if ((timestamp - common->ani.longcal_timer) >= long_cal_interval) {
+ 		longcal = true;
+-		ath_dbg(common, ATH_DBG_ANI, "longcal @%lu\n", jiffies);
+ 		common->ani.longcal_timer = timestamp;
+ 	}
  
- 	brcmf_dbg(TRACE, "Enter\n");
+@@ -569,8 +568,6 @@ void ath_ani_calibrate(unsigned long data)
+ 	if (!common->ani.caldone) {
+ 		if ((timestamp - common->ani.shortcal_timer) >= short_cal_interval) {
+ 			shortcal = true;
+-			ath_dbg(common, ATH_DBG_ANI,
+-				"shortcal @%lu\n", jiffies);
+ 			common->ani.shortcal_timer = timestamp;
+ 			common->ani.resetcal_timer = timestamp;
+ 		}
+@@ -605,6 +602,11 @@ void ath_ani_calibrate(unsigned long data)
+ 						ah->rxchainmask, longcal);
+ 	}
  
-@@ -3885,18 +3884,6 @@ brcmf_sdbrcm_chip_attach(struct brcmf_bus *bus, u32 regs)
- 	if (err)
- 		goto fail;
++        ath_dbg(common, ATH_DBG_ANI,
++                "Calibration @%lu finished: %s %s %s, caldone: %s\n", jiffies,
++                longcal ? "long" : "", shortcal ? "short" : "",
++                aniflag ? "ani" : "", common->ani.caldone ? "true" : "false");
++
+ 	ath9k_ps_restore(sc);
  
--	/* Disable F2 to clear any intermediate frame state on the dongle */
--	brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_0, SDIO_CCCR_IOEx,
--		SDIO_FUNC_ENABLE_1, NULL);
--
--	/* WAR: cmd52 backplane read so core HW will drop ALPReq */
--	clkval = brcmf_sdcard_cfg_read(bus->sdiodev, SDIO_FUNC_1,
--			0, NULL);
--
--	/* Done with backplane-dependent accesses, can drop clock... */
--	brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
--			       SBSDIO_FUNC1_CHIPCLKCSR, 0, NULL);
--
- 	bus->ci = ci;
- 	return 0;
- fail:
+ set_timer:
 -- 
 1.7.4.1
-
 
