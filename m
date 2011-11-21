@@ -1,194 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61112 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751883Ab1KYRfA (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:58523 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753954Ab1KUOl5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 12:35:00 -0500
-Message-ID: <4ECFD1BF.4070503@lwfinger.net> (sfid-20111125_183505_854456_A9F51AEE)
-Date: Fri, 25 Nov 2011 11:34:55 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: fix lps_lock deadlock
-References: <1322219327-23148-1-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1322219327-23148-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 21 Nov 2011 09:41:57 -0500
+Received: by mail-bw0-f46.google.com with SMTP id 11so6626611bke.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 06:41:56 -0800 (PST)
+From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
+	Mike Krinkin <krinkin.m.u@gmail.com>
+Subject: [RFC v2 7/8] cfg80211 and nl80211: getting local and peer mesh power modes
+Date: Mon, 21 Nov 2011 18:40:15 +0400
+Message-Id: <1321886416-12597-8-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154200_869030_6C31831B)
+In-Reply-To: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
+References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/25/2011 05:08 AM, Stanislaw Gruszka wrote:
-> rtl_lps_leave can be called from interrupt context, so we have to
-> disable interrups when taking lps_lock.
->
-> Below is full lockdep info about deadlock:
->
-> [   93.815269] =================================
-> [   93.815390] [ INFO: inconsistent lock state ]
-> [   93.815472] 2.6.41.1-3.offch.fc15.x86_64.debug #1
-> [   93.815556] ---------------------------------
-> [   93.815635] inconsistent {SOFTIRQ-ON-W} ->  {IN-SOFTIRQ-W} usage.
-> [   93.815743] swapper/0 [HC0[0]:SC1[1]:HE1:SE0] takes:
-> [   93.815832]  (&(&rtlpriv->locks.lps_lock)->rlock){+.?...}, at: [<ffffffffa025dad6>] rtl_lps_leave+0x26/0x103 [rtlwifi]
-> [   93.815947] {SOFTIRQ-ON-W} state was registered at:
-> [   93.815947]   [<ffffffff8108e10d>] __lock_acquire+0x369/0xd0c
-> [   93.815947]   [<ffffffff8108efb3>] lock_acquire+0xf3/0x13e
-> [   93.815947]   [<ffffffff814e981d>] _raw_spin_lock+0x45/0x79
-> [   93.815947]   [<ffffffffa025de34>] rtl_swlps_rf_awake+0x5a/0x76 [rtlwifi]
-> [   93.815947]   [<ffffffffa025aec0>] rtl_op_config+0x12a/0x32a [rtlwifi]
-> [   93.815947]   [<ffffffffa01d614b>] ieee80211_hw_config+0x124/0x129 [mac80211]
-> [   93.815947]   [<ffffffffa01e0af3>] ieee80211_dynamic_ps_disable_work+0x32/0x47 [mac80211]
-> [   93.815947]   [<ffffffff81075aa5>] process_one_work+0x205/0x3e7
-> [   93.815947]   [<ffffffff81076753>] worker_thread+0xda/0x15d
-> [   93.815947]   [<ffffffff8107a119>] kthread+0xa8/0xb0
-> [   93.815947]   [<ffffffff814f3184>] kernel_thread_helper+0x4/0x10
-> [   93.815947] irq event stamp: 547822
-> [   93.815947] hardirqs last  enabled at (547822): [<ffffffff814ea1a7>] _raw_spin_unlock_irqrestore+0x45/0x61
-> [   93.815947] hardirqs last disabled at (547821): [<ffffffff814e9987>] _raw_spin_lock_irqsave+0x22/0x8e
-> [   93.815947] softirqs last  enabled at (547790): [<ffffffff810623ed>] _local_bh_enable+0x13/0x15
-> [   93.815947] softirqs last disabled at (547791): [<ffffffff814f327c>] call_softirq+0x1c/0x30
-> [   93.815947]
-> [   93.815947] other info that might help us debug this:
-> [   93.815947]  Possible unsafe locking scenario:
-> [   93.815947]
-> [   93.815947]        CPU0
-> [   93.815947]        ----
-> [   93.815947]   lock(&(&rtlpriv->locks.lps_lock)->rlock);
-> [   93.815947]<Interrupt>
-> [   93.815947]     lock(&(&rtlpriv->locks.lps_lock)->rlock);
-> [   93.815947]
-> [   93.815947]  *** DEADLOCK ***
-> [   93.815947]
-> [   93.815947] no locks held by swapper/0.
-> [   93.815947]
-> [   93.815947] stack backtrace:
-> [   93.815947] Pid: 0, comm: swapper Not tainted 2.6.41.1-3.offch.fc15.x86_64.debug #1
-> [   93.815947] Call Trace:
-> [   93.815947]<IRQ>   [<ffffffff814dfd00>] print_usage_bug+0x1e7/0x1f8
-> [   93.815947]  [<ffffffff8101a849>] ? save_stack_trace+0x2c/0x49
-> [   93.815947]  [<ffffffff8108d55c>] ? print_irq_inversion_bug.part.18+0x1a0/0x1a0
-> [   93.815947]  [<ffffffff8108dc8a>] mark_lock+0x106/0x220
-> [   93.815947]  [<ffffffff8108e099>] __lock_acquire+0x2f5/0xd0c
-> [   93.815947]  [<ffffffff810152af>] ? native_sched_clock+0x34/0x36
-> [   93.830125]  [<ffffffff810152ba>] ? sched_clock+0x9/0xd
-> [   93.830125]  [<ffffffff81080181>] ? sched_clock_local+0x12/0x75
-> [   93.830125]  [<ffffffffa025dad6>] ? rtl_lps_leave+0x26/0x103 [rtlwifi]
-> [   93.830125]  [<ffffffff8108efb3>] lock_acquire+0xf3/0x13e
-> [   93.830125]  [<ffffffffa025dad6>] ? rtl_lps_leave+0x26/0x103 [rtlwifi]
-> [   93.830125]  [<ffffffff814e981d>] _raw_spin_lock+0x45/0x79
-> [   93.830125]  [<ffffffffa025dad6>] ? rtl_lps_leave+0x26/0x103 [rtlwifi]
-> [   93.830125]  [<ffffffff81422467>] ? skb_dequeue+0x62/0x6d
-> [   93.830125]  [<ffffffffa025dad6>] rtl_lps_leave+0x26/0x103 [rtlwifi]
-> [   93.830125]  [<ffffffffa025f677>] _rtl_pci_ips_leave_tasklet+0xe/0x10 [rtlwifi]
-> [   93.830125]  [<ffffffff8106281f>] tasklet_action+0x8d/0xee
-> [   93.830125]  [<ffffffff810629ce>] __do_softirq+0x112/0x25a
-> [   93.830125]  [<ffffffff814f327c>] call_softirq+0x1c/0x30
-> [   93.830125]  [<ffffffff81010bf6>] do_softirq+0x4b/0xa1
-> [   93.830125]  [<ffffffff81062d7d>] irq_exit+0x5d/0xcf
-> [   93.830125]  [<ffffffff814f3b7e>] do_IRQ+0x8e/0xa5
-> [   93.830125]  [<ffffffff814ea533>] common_interrupt+0x73/0x73
-> [   93.830125]<EOI>   [<ffffffff8108b825>] ? trace_hardirqs_off+0xd/0xf
-> [   93.830125]  [<ffffffff812bb6d5>] ? intel_idle+0xe5/0x10c
-> [   93.830125]  [<ffffffff812bb6d1>] ? intel_idle+0xe1/0x10c
-> [   93.830125]  [<ffffffff813f8d5e>] cpuidle_idle_call+0x11c/0x1fe
-> [   93.830125]  [<ffffffff8100e2ef>] cpu_idle+0xab/0x101
-> [   93.830125]  [<ffffffff814c6373>] rest_init+0xd7/0xde
-> [   93.830125]  [<ffffffff814c629c>] ? csum_partial_copy_generic+0x16c/0x16c
-> [   93.830125]  [<ffffffff81d4bbb0>] start_kernel+0x3dd/0x3ea
-> [   93.830125]  [<ffffffff81d4b2c4>] x86_64_start_reservations+0xaf/0xb3
-> [   93.830125]  [<ffffffff81d4b140>] ? early_idt_handlers+0x140/0x140
-> [   93.830125]  [<ffffffff81d4b3ca>] x86_64_start_kernel+0x102/0x111
->
-> Reported-and-tested-by: Oliver Paukstadt<pstadt@sourcentral.org>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanislaw Gruszka<sgruszka@redhat.com>
+Link-specific power mode defines a mesh power mode in which it
+operates for the mesh peering with the station. Possibility of getting
+local link-specific power mode and peer link-specific power mode is
+added.
 
-Thanks for fixing this problem. The patch also fixes the lockdep warning I was 
-getting, but my knowledge of locking was not good enough to get the solution.
+Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
+---
+ include/linux/nl80211.h |    6 ++++++
+ include/net/cfg80211.h  |   10 +++++++++-
+ net/mac80211/cfg.c      |    6 +++++-
+ net/wireless/nl80211.c  |    6 ++++++
+ 4 files changed, 26 insertions(+), 2 deletions(-)
 
-Is this problem related to https://bugzilla.redhat.com/show_bug.cgi?id=755154 
-and/or https://bugzilla.redhat.com/show_bug.cgi?id=754075? If so, perhaps they 
-should be mentioned in the commit message.
-
-Is there a bug report by Oliver Paukstadt? I could not find one with Google.
-
-Patch ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-Larry
-
-
-
-> ---
->   drivers/net/wireless/rtlwifi/ps.c |   17 +++++++++--------
->   1 files changed, 9 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
-> index db52628..55c8e50 100644
-> --- a/drivers/net/wireless/rtlwifi/ps.c
-> +++ b/drivers/net/wireless/rtlwifi/ps.c
-> @@ -395,7 +395,7 @@ void rtl_lps_enter(struct ieee80211_hw *hw)
->   	if (mac->link_state != MAC80211_LINKED)
->   		return;
->
-> -	spin_lock(&rtlpriv->locks.lps_lock);
-> +	spin_lock_irq(&rtlpriv->locks.lps_lock);
->
->   	/* Idle for a while if we connect to AP a while ago. */
->   	if (mac->cnt_after_linked>= 2) {
-> @@ -407,7 +407,7 @@ void rtl_lps_enter(struct ieee80211_hw *hw)
->   		}
->   	}
->
-> -	spin_unlock(&rtlpriv->locks.lps_lock);
-> +	spin_unlock_irq(&rtlpriv->locks.lps_lock);
->   }
->
->   /*Leave the leisure power save mode.*/
-> @@ -416,8 +416,9 @@ void rtl_lps_leave(struct ieee80211_hw *hw)
->   	struct rtl_priv *rtlpriv = rtl_priv(hw);
->   	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
->   	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-> +	unsigned long flags;
->
-> -	spin_lock(&rtlpriv->locks.lps_lock);
-> +	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flags);
->
->   	if (ppsc->fwctrl_lps) {
->   		if (ppsc->dot11_psmode != EACTIVE) {
-> @@ -438,7 +439,7 @@ void rtl_lps_leave(struct ieee80211_hw *hw)
->   			rtl_lps_set_psmode(hw, EACTIVE);
->   		}
->   	}
-> -	spin_unlock(&rtlpriv->locks.lps_lock);
-> +	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flags);
->   }
->
->   /* For sw LPS*/
-> @@ -539,9 +540,9 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw)
->   		RT_CLEAR_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM);
->   	}
->
-> -	spin_lock(&rtlpriv->locks.lps_lock);
-> +	spin_lock_irq(&rtlpriv->locks.lps_lock);
->   	rtl_ps_set_rf_state(hw, ERFON, RF_CHANGE_BY_PS);
-> -	spin_unlock(&rtlpriv->locks.lps_lock);
-> +	spin_unlock_irq(&rtlpriv->locks.lps_lock);
->   }
->
->   void rtl_swlps_rfon_wq_callback(void *data)
-> @@ -574,9 +575,9 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
->   	if (rtlpriv->link_info.busytraffic)
->   		return;
->
-> -	spin_lock(&rtlpriv->locks.lps_lock);
-> +	spin_lock_irq(&rtlpriv->locks.lps_lock);
->   	rtl_ps_set_rf_state(hw, ERFSLEEP, RF_CHANGE_BY_PS);
-> -	spin_unlock(&rtlpriv->locks.lps_lock);
-> +	spin_unlock_irq(&rtlpriv->locks.lps_lock);
->
->   	if (ppsc->reg_rfps_level&  RT_RF_OFF_LEVL_ASPM&&
->   		!RT_IN_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM)) {
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index ce789ce..4f4bfb8 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1552,6 +1552,10 @@ enum nl80211_sta_bss_param {
+  *     containing info as possible, see &enum nl80211_sta_bss_param
+  * @NL80211_STA_INFO_CONNECTED_TIME: time since the station is last connected
+  * @NL80211_STA_INFO_STA_FLAGS: Contains a struct nl80211_sta_flag_update.
++ * @NL80211_STA_INFO_LOCAL_MESH_PS_MODE: local mesh STA link-specific power
++ * 	save mode
++ * @NL80211_STA_INFO_PEER_MESH_PS_MODE: peer mesh STA link-specific power
++ * 	save mode
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -1574,6 +1578,8 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_BSS_PARAM,
+ 	NL80211_STA_INFO_CONNECTED_TIME,
+ 	NL80211_STA_INFO_STA_FLAGS,
++	NL80211_STA_INFO_LOCAL_MESH_PS_MODE,
++	NL80211_STA_INFO_PEER_MESH_PS_MODE,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2204222..845937c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -500,6 +500,8 @@ struct station_parameters {
+  * @STATION_INFO_CONNECTED_TIME: @connected_time filled
+  * @STATION_INFO_ASSOC_REQ_IES: @assoc_req_ies filled
+  * @STATION_INFO_STA_FLAGS: @sta_flags filled
++ * @STATION_INFO_LOCAL_MESH_PS_MODE: @local_ps_mode filled
++ * @STATION_INFO_PEER_MESH_PS_MODE: @peer_ps_mode filled
+  */
+ enum station_info_flags {
+ 	STATION_INFO_INACTIVE_TIME	= 1<<0,
+@@ -520,7 +522,9 @@ enum station_info_flags {
+ 	STATION_INFO_BSS_PARAM          = 1<<15,
+ 	STATION_INFO_CONNECTED_TIME	= 1<<16,
+ 	STATION_INFO_ASSOC_REQ_IES	= 1<<17,
+-	STATION_INFO_STA_FLAGS		= 1<<18
++	STATION_INFO_STA_FLAGS		= 1<<18,
++	STATION_INFO_LOCAL_MESH_PS_MODE = 1<<17,
++	STATION_INFO_PEER_MESH_PS_MODE  = 1<<18
+ };
+ 
+ /**
+@@ -608,6 +612,8 @@ struct sta_bss_parameters {
+  * @tx_failed: number of failed transmissions (retries exceeded, no ACK)
+  * @rx_dropped_misc:  Dropped for un-specified reason.
+  * @bss_param: current BSS parameters
++ * @local_ps_mode: local mesh STA power save mode
++ * @peer_ps_mode: peer mesh STA power save mode
+  * @generation: generation number for nl80211 dumps.
+  *	This number should increase every time the list of stations
+  *	changes, i.e. when a station is added or removed, so that
+@@ -638,6 +644,8 @@ struct station_info {
+ 	u32 rx_dropped_misc;
+ 	struct sta_bss_parameters bss_param;
+ 	struct nl80211_sta_flag_update sta_flags;
++	u8 local_ps_mode;
++	u8 peer_ps_mode;
+ 
+ 	int generation;
+ 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 78c61ee..2b0cc2c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -388,11 +388,15 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ #ifdef CONFIG_MAC80211_MESH
+ 		sinfo->filled |= STATION_INFO_LLID |
+ 				 STATION_INFO_PLID |
+-				 STATION_INFO_PLINK_STATE;
++				 STATION_INFO_PLINK_STATE |
++				 STATION_INFO_LOCAL_MESH_PS_MODE |
++				 STATION_INFO_PEER_MESH_PS_MODE;
+ 
+ 		sinfo->llid = le16_to_cpu(sta->llid);
+ 		sinfo->plid = le16_to_cpu(sta->plid);
+ 		sinfo->plink_state = sta->plink_state;
++		sinfo->local_ps_mode = sta->local_ps_mode;
++		sinfo->peer_ps_mode = sta->peer_ps_mode;
+ #endif
+ 	}
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 80bc2a7..c53c8bb 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2325,6 +2325,12 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 	if (sinfo->filled & STATION_INFO_TX_FAILED)
+ 		NLA_PUT_U32(msg, NL80211_STA_INFO_TX_FAILED,
+ 			    sinfo->tx_failed);
++	if (sinfo->filled & STATION_INFO_LOCAL_MESH_PS_MODE)
++		NLA_PUT_U8(msg, NL80211_STA_INFO_LOCAL_MESH_PS_MODE,
++			sinfo->local_ps_mode);
++	if (sinfo->filled & STATION_INFO_PEER_MESH_PS_MODE)
++		NLA_PUT_U8(msg, NL80211_STA_INFO_PEER_MESH_PS_MODE,
++			sinfo->peer_ps_mode);
+ 	if (sinfo->filled & STATION_INFO_BSS_PARAM) {
+ 		bss_param = nla_nest_start(msg, NL80211_STA_INFO_BSS_PARAM);
+ 		if (!bss_param)
+-- 
+1.7.3.4
 
