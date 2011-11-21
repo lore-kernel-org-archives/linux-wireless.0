@@ -1,72 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47986 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932296Ab1KDTZ3 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:61420 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753172Ab1KUNUR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 15:25:29 -0400
-Subject: Re: v3.1 - WARNING: at net/mac80211/util.c:540
- ieee80211_can_queue_work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Meyer <thomas@m3y3r.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1320431074.29441.25.camel@localhost.localdomain>
-References: <1320431074.29441.25.camel@localhost.localdomain>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 04 Nov 2011 20:25:27 +0100
-Message-ID: <1320434727.3969.124.camel@jlt3.sipsolutions.net> (sfid-20111104_202533_593942_C845ABB3)
-Mime-Version: 1.0
+	Mon, 21 Nov 2011 08:20:17 -0500
+Received: by iage36 with SMTP id e36so7263920iag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 05:20:16 -0800 (PST)
+MIME-Version: 1.0
+Date: Mon, 21 Nov 2011 17:20:16 +0400
+Message-ID: <CAG5dHkS2GVJsAs3wCYbwcA6ZmQZj+VY5u6WfVOy44SCA4A1Q3w@mail.gmail.com> (sfid-20111121_142020_657232_216E810F)
+Subject: [RFC v2 7/8] cfg80211 and nl80211: getting local and peer mesh power modes
+From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A little more ... anything really ... would be helpful.
+Link-specific power mode defines a mesh power mode in which it
+operates for the mesh peering with the station. Possibility of getting
+local link-specific power mode and peer link-specific power mode is
+added.
 
-johannes
+Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
+---
+ include/linux/nl80211.h |    6 ++++++
+ include/net/cfg80211.h  |   10 +++++++++-
+ net/mac80211/cfg.c      |    6 +++++-
+ net/wireless/nl80211.c  |    6 ++++++
+ 4 files changed, 26 insertions(+), 2 deletions(-)
 
-[full quote for wireless list]
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index ce789ce..4f4bfb8 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1552,6 +1552,10 @@ enum nl80211_sta_bss_param {
+  *     containing info as possible, see &enum nl80211_sta_bss_param
+  * @NL80211_STA_INFO_CONNECTED_TIME: time since the station is last connected
+  * @NL80211_STA_INFO_STA_FLAGS: Contains a struct nl80211_sta_flag_update.
++ * @NL80211_STA_INFO_LOCAL_MESH_PS_MODE: local mesh STA link-specific power
++ * 	save mode
++ * @NL80211_STA_INFO_PEER_MESH_PS_MODE: peer mesh STA link-specific power
++ * 	save mode
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -1574,6 +1578,8 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_BSS_PARAM,
+ 	NL80211_STA_INFO_CONNECTED_TIME,
+ 	NL80211_STA_INFO_STA_FLAGS,
++	NL80211_STA_INFO_LOCAL_MESH_PS_MODE,
++	NL80211_STA_INFO_PEER_MESH_PS_MODE,
 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2204222..845937c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -500,6 +500,8 @@ struct station_parameters {
+  * @STATION_INFO_CONNECTED_TIME: @connected_time filled
+  * @STATION_INFO_ASSOC_REQ_IES: @assoc_req_ies filled
+  * @STATION_INFO_STA_FLAGS: @sta_flags filled
++ * @STATION_INFO_LOCAL_MESH_PS_MODE: @local_ps_mode filled
++ * @STATION_INFO_PEER_MESH_PS_MODE: @peer_ps_mode filled
+  */
+ enum station_info_flags {
+ 	STATION_INFO_INACTIVE_TIME	= 1<<0,
+@@ -520,7 +522,9 @@ enum station_info_flags {
+ 	STATION_INFO_BSS_PARAM          = 1<<15,
+ 	STATION_INFO_CONNECTED_TIME	= 1<<16,
+ 	STATION_INFO_ASSOC_REQ_IES	= 1<<17,
+-	STATION_INFO_STA_FLAGS		= 1<<18
++	STATION_INFO_STA_FLAGS		= 1<<18,
++	STATION_INFO_LOCAL_MESH_PS_MODE = 1<<17,
++	STATION_INFO_PEER_MESH_PS_MODE  = 1<<18
+ };
 
-On Fri, 2011-11-04 at 19:24 +0100, Thomas Meyer wrote:
-> [281558.898551] WARNING: at net/mac80211/util.c:540 ieee80211_can_queue_work+0x35/0x40 [mac80211]()
-> [281558.898554] Hardware name: Aspire 1810T
-> [281558.898556] queueing ieee80211 work while going to suspend
-> [281558.898558] Modules linked in: ipt_MASQUERADE iptable_nat nf_nat
-> vfat fat fuse bluetooth nf_conntrack_ipv6 nf_defrag_ipv6 ip6t_REJECT
-> ip6table_filter ip6_tables sha256_generic aes_x86_64 aes_generic
-> snd_hda_codec_hdmi snd_hda_codec_realtek snd_hda_intel snd_hda_codec
-> snd_hwdep snd_seq snd_seq_device arc4 snd_pcm snd_timer iwlagn
-> virtio_net virtio virtio_ring uvcvideo mac80211 videodev usb_storage
-> v4l2_compat_ioctl32 snd kvm_intel cfg80211 soundcore acer_wmi kvm
-> snd_page_alloc sparse_keymap wmi acerhdf rfkill pcspkr joydev uinput
-> ipv6
-> [281558.898592] Pid: 0, comm: swapper Tainted: G        W   3.1.0 #3
-> [281558.898595] Call Trace:
-> [281558.898597]  <IRQ>  [<ffffffff8103024a>] warn_slowpath_common+0x7a/0xb0
-> [281558.898610]  [<ffffffff8105731d>] ? clockevents_program_event+0x5d/0xa0
-> [281558.898614]  [<ffffffff81030321>] warn_slowpath_fmt+0x41/0x50
-> [281558.898619]  [<ffffffff81058259>] ? tick_program_event+0x19/0x20
-> [281558.898624]  [<ffffffff8104d46e>] ? hrtimer_interrupt+0xfe/0x1f0
-> [281558.898633]  [<ffffffffa017fe45>] ieee80211_can_queue_work+0x35/0x40 [mac80211]
-> [281558.898642]  [<ffffffffa017ff9b>] ieee80211_queue_work+0x1b/0x40 [mac80211]
-> [281558.898651]  [<ffffffffa016bfdf>] ieee80211_sta_timer+0x2f/0x40 [mac80211]
-> [281558.898657]  [<ffffffff8103bb8f>] run_timer_softirq+0xef/0x210
-> [281558.898666]  [<ffffffffa016bfb0>] ? ieee80211_sta_bcn_mon_timer+0x40/0x40 [mac80211]
-> [281558.898671]  [<ffffffff81035787>] __do_softirq+0x87/0x110
-> [281558.898677]  [<ffffffff81485c3a>] call_softirq+0x1a/0x30
-> [281558.898682]  [<ffffffff810038dd>] do_softirq+0x4d/0x80
-> [281558.898685]  [<ffffffff810359ee>] irq_exit+0x7e/0xa0
-> [281558.898689]  [<ffffffff8100377b>] do_IRQ+0x5b/0xd0
-> [281558.898693]  [<ffffffff8147f569>] common_interrupt+0x69/0x69
-> [281558.898695]  <EOI>  [<ffffffff8123d352>] ? acpi_idle_enter_c1+0x2d/0x98
-> [281558.898704]  [<ffffffff8123d352>] ? acpi_idle_enter_c1+0x2d/0x98
-> [281558.898708]  [<ffffffff8123d5db>] acpi_idle_enter_simple+0x31/0xe8
-> [281558.898714]  [<ffffffff81395149>] cpuidle_idle_call+0x99/0xf0
-> [281558.898717]  [<ffffffff810011e8>] cpu_idle+0x98/0xe0
-> [281558.898722]  [<ffffffff8146e45e>] rest_init+0x62/0x64
-> [281558.898726]  [<ffffffff81690b5b>] start_kernel+0x34e/0x359
-> [281558.898730]  [<ffffffff81690322>] x86_64_start_reservations+0x132/0x136
-> [281558.898734]  [<ffffffff81690416>] x86_64_start_kernel+0xf0/0xf7
-> [281558.898739]  [<ffffffff81017370>] ? acpi_suspend_lowlevel+0x1b0/0x1b0
-> [281558.898742] ---[ end trace 4dca017856e3a2e9 ]---
-> 
+ /**
+@@ -608,6 +612,8 @@ struct sta_bss_parameters {
+  * @tx_failed: number of failed transmissions (retries exceeded, no ACK)
+  * @rx_dropped_misc:  Dropped for un-specified reason.
+  * @bss_param: current BSS parameters
++ * @local_ps_mode: local mesh STA power save mode
++ * @peer_ps_mode: peer mesh STA power save mode
+  * @generation: generation number for nl80211 dumps.
+  *	This number should increase every time the list of stations
+  *	changes, i.e. when a station is added or removed, so that
+@@ -638,6 +644,8 @@ struct station_info {
+ 	u32 rx_dropped_misc;
+ 	struct sta_bss_parameters bss_param;
+ 	struct nl80211_sta_flag_update sta_flags;
++	u8 local_ps_mode;
++	u8 peer_ps_mode;
 
+ 	int generation;
 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 78c61ee..2b0cc2c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -388,11 +388,15 @@ static void sta_set_sinfo(struct sta_info *sta,
+struct station_info *sinfo)
+ #ifdef CONFIG_MAC80211_MESH
+ 		sinfo->filled |= STATION_INFO_LLID |
+ 				 STATION_INFO_PLID |
+-				 STATION_INFO_PLINK_STATE;
++				 STATION_INFO_PLINK_STATE |
++				 STATION_INFO_LOCAL_MESH_PS_MODE |
++				 STATION_INFO_PEER_MESH_PS_MODE;
+
+ 		sinfo->llid = le16_to_cpu(sta->llid);
+ 		sinfo->plid = le16_to_cpu(sta->plid);
+ 		sinfo->plink_state = sta->plink_state;
++		sinfo->local_ps_mode = sta->local_ps_mode;
++		sinfo->peer_ps_mode = sta->peer_ps_mode;
+ #endif
+ 	}
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 80bc2a7..c53c8bb 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2325,6 +2325,12 @@ static int nl80211_send_station(struct sk_buff
+*msg, u32 pid, u32 seq,
+ 	if (sinfo->filled & STATION_INFO_TX_FAILED)
+ 		NLA_PUT_U32(msg, NL80211_STA_INFO_TX_FAILED,
+ 			    sinfo->tx_failed);
++	if (sinfo->filled & STATION_INFO_LOCAL_MESH_PS_MODE)
++		NLA_PUT_U8(msg, NL80211_STA_INFO_LOCAL_MESH_PS_MODE,
++			sinfo->local_ps_mode);
++	if (sinfo->filled & STATION_INFO_PEER_MESH_PS_MODE)
++		NLA_PUT_U8(msg, NL80211_STA_INFO_PEER_MESH_PS_MODE,
++			sinfo->peer_ps_mode);
+ 	if (sinfo->filled & STATION_INFO_BSS_PARAM) {
+ 		bss_param = nla_nest_start(msg, NL80211_STA_INFO_BSS_PARAM);
+ 		if (!bss_param)
+-- 
+1.7.3.4
