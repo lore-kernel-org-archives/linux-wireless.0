@@ -1,58 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54721 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756898Ab1K2WgC (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:51147 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751481Ab1KUDoI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 17:36:02 -0500
-Subject: Re: [PATCH] mac80211: reset addba retries after timeout
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <CALGY4ftCLvwUuRZbH30PyUxAd6U7-p9hGwu8SjzLmqV4=XryZg@mail.gmail.com> (sfid-20111129_232917_739824_BB56AB1A)
-References: <1322533625-24641-1-git-send-email-mar.kolya@gmail.com>
-	 <1322555084.4110.2.camel@jlt3.sipsolutions.net>
-	 <CALGY4fvLSKBY93M9Bhb-F8Sm=Uw5nU+OvTtAmk_BXQX8WX6V8A@mail.gmail.com>
-	 <1322579973.4110.22.camel@jlt3.sipsolutions.net>
-	 <CALGY4fvSOdKtZbPSdvYkY3XXaGXNo-Ft8ir4LikmnTLqSkVCGA@mail.gmail.com>
-	 <1322604877.11282.1.camel@jlt3.sipsolutions.net>
-	 <CALGY4ftCLvwUuRZbH30PyUxAd6U7-p9hGwu8SjzLmqV4=XryZg@mail.gmail.com>
-	 (sfid-20111129_232917_739824_BB56AB1A)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 29 Nov 2011 23:35:59 +0100
-Message-ID: <1322606159.11282.2.camel@jlt3.sipsolutions.net> (sfid-20111129_233607_526916_75337404)
-Mime-Version: 1.0
+	Sun, 20 Nov 2011 22:44:08 -0500
+Received: by ywt32 with SMTP id 32so4243932ywt.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 19:44:07 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAJ-VmokN00pC40cAhpPYLzkBOpHsRwVC-LZX6=zPTBgaXhc3aw@mail.gmail.com>
+References: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
+	<1321775788-12520-3-git-send-email-mickflemm@gmail.com>
+	<CAJ-VmokN00pC40cAhpPYLzkBOpHsRwVC-LZX6=zPTBgaXhc3aw@mail.gmail.com>
+Date: Mon, 21 Nov 2011 05:44:07 +0200
+Message-ID: <CAFtRNNwk-kk++s3xfZD+vv+k+0F24VWR8HJLLPu1DOP7FD4Otg@mail.gmail.com> (sfid-20111121_044432_452400_55B46DF4)
+Subject: Re: [PATCH 02/13] ath5k: Maintain PISR snapshot
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	nbd@openwrt.org, jirislaby@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-11-29 at 17:28 -0500, Nikolay Martynov wrote:
-> Hi.
-> 
-> 2011/11/29 Johannes Berg <johannes@sipsolutions.net>:
-> > On Tue, 2011-11-29 at 17:01 -0500, Nikolay Martynov wrote:
-> >
-> >> >>   Do APs broken is such way exist? I.e. APs which declare aggregation
-> >> >> support but do not respond to addba.
-> >> >
-> >> > I seem to remember something ... not really sure.
-> >>
-> >>   If such APs exist I think it might be possible to extend my patch to
-> >> do something like the following. For the first time make 10 attempts
-> >> to establish addba. If this fails - make no more attempts for the
-> >> duration of the connection. If this succeeds - use logic I've added in
-> >> the patch. This should handle broken APs and won't allow agg to be
-> >> disable because of some random blackout.
-> >
-> > Wouldn't that be equivalent to just bumping the number of tries?
-> 
->   Well, sort of if you are willing to bump it to 10-15, I guess it
-> would be kind of same thing.
->   I've seen couple of times when 3 wasn't enough and agg got disabled,
-> but 10-15 seems reasonably large to give up completely.
+2011/11/21 Adrian Chadd <adrian@freebsd.org>:
+> .. replying to this after having not slept for > 24 hours, thanks to
+> being in transit between the US and Western Australia..
 
-Maybe the better approach would be to bump it up, but also only allow an
-attempt once every say 15 seconds or so? It seems kinda useless to try 3
-(or 10/15) times in quick succession and then give up, vs. just trying
-more spaced out?
+Ouch ! I've done that a lot lately, without traveling :P
 
-johannes
+> On 20 November 2011 15:56, Nick Kossifidis <mickflemm@gmail.com> wrote:
+>> Since we dont read a snapshot of the interrupt
+>> registers it might be possible to get a new interrupt
+>> while reading them. In this case we should make sure
+>> that we clear all SISR bits we get from PISR.
+>
+> Just to be clear, you _shouldn't_ clear the secondary status mask bit
+> in the primary status register when you write back 1's to the primary
+> ISR.
+> Clear the bits that you read in the secondary status registers. If you
+> clear the relevant bit in the primary status register then you may
+> also skip perfectly valid interrupts.
+>
+> You don't need to check the secondary registers and the primary ISR
+> bits for consistency. Just read what I did in freebsd-head :
+> src/sys/dev/ath/ath_hal/ar5416/ar5416_interrupts.c . it works fine.
+>
+>
+> Adrian
+>
 
+ACK, thanks for the update ! It's just that docs say nothing about
+when and how PISR gets updated so i tried to manually update it.
+
+-- 
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
