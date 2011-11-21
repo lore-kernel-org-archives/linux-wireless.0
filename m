@@ -1,89 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:56446 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750810Ab1KWIvj (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:58523 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753323Ab1KUOlq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 03:51:39 -0500
-Received: by ghrr1 with SMTP id r1so1127094ghr.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 00:51:39 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20111123080506.GB9833@redhat.com>
-References: <20111116100915.GA2191@redhat.com>
-	<20111122214940.GH8452@tuxdriver.com>
-	<20111123080506.GB9833@redhat.com>
-Date: Wed, 23 Nov 2011 09:51:38 +0100
-Message-ID: <CAGXE3d-HE8MWV5Xv9e407iDn83UFvjua52mYGEJuJnQuQvnyog@mail.gmail.com> (sfid-20111123_095142_678314_388B76EF)
-Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Amir Hedayaty <hedayaty@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 21 Nov 2011 09:41:46 -0500
+Received: by mail-bw0-f46.google.com with SMTP id 11so6626611bke.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 06:41:45 -0800 (PST)
+From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
+	Mike Krinkin <krinkin.m.u@gmail.com>,
+	Max Filippov <jcmvbkbc@gmail.com>
+Subject: [RFC v2 3/8] mac80211: tracking mesh peer link-specific power mode
+Date: Mon, 21 Nov 2011 18:40:11 +0400
+Message-Id: <1321886416-12597-4-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154149_972027_446A5478)
+In-Reply-To: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
+References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 23, 2011 at 9:05 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Tue, Nov 22, 2011 at 04:49:40PM -0500, John W. Linville wrote:
->> On Wed, Nov 16, 2011 at 11:09:17AM +0100, Stanislaw Gruszka wrote:
->> Perhaps there is some way to convince the hardware not to generate
->> spurious interrupts?
->
-> Ivo, Gertjan, Helmut, is there a possibility that I can get hardware
-> documentation or any other support from Ralink, that could help to
-> solve this (and possible other issues)?
+peer_ps_mode field has been added to sta_info structure to represent
+peer's link-specific power mode for our station.
 
-There is sort of documentation for this hardware but not freely available :(
+Peer's link-specific power mode is tracked from the Power Management
+field in the Frame Control field and the Mesh Power Save Level field
+in the QoS Control field at the end of a frame exchange sequence.
 
-Are we 100% sure that the rt2800pci device is generating the interrupts?
-
-Just a shot in the dark but instead of masking out interrupts we don't handle
-just enable all device interrupts. Mind to try the below patch?
-
-Helmut
-
+Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
+Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
 ---
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c
-b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 4dc2d0f..c0badec 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -437,24 +437,24 @@ static void rt2800pci_toggle_irq(struct
-rt2x00_dev *rt2x00dev,
+ include/linux/ieee80211.h |   11 ++++++++
+ net/mac80211/mesh.h       |    2 +
+ net/mac80211/rx.c         |   61 +++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/sta_info.h   |    2 +
+ 4 files changed, 76 insertions(+), 0 deletions(-)
 
- 	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
- 	rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
--	rt2x00_set_field32(&reg, INT_MASK_CSR_RXDELAYINT, 0);
--	rt2x00_set_field32(&reg, INT_MASK_CSR_TXDELAYINT, 0);
-+	rt2x00_set_field32(&reg, INT_MASK_CSR_RXDELAYINT, mask);
-+	rt2x00_set_field32(&reg, INT_MASK_CSR_TXDELAYINT, mask);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_DONE, mask);
--	rt2x00_set_field32(&reg, INT_MASK_CSR_AC0_DMA_DONE, 0);
--	rt2x00_set_field32(&reg, INT_MASK_CSR_AC1_DMA_DONE, 0);
--	rt2x00_set_field32(&reg, INT_MASK_CSR_AC2_DMA_DONE, 0);
--	rt2x00_set_field32(&reg, INT_MASK_CSR_AC3_DMA_DONE, 0);
--	rt2x00_set_field32(&reg, INT_MASK_CSR_HCCA_DMA_DONE, 0);
--	rt2x00_set_field32(&reg, INT_MASK_CSR_MGMT_DMA_DONE, 0);
--	rt2x00_set_field32(&reg, INT_MASK_CSR_MCU_COMMAND, 0);
--	rt2x00_set_field32(&reg, INT_MASK_CSR_RXTX_COHERENT, 0);
-+	rt2x00_set_field32(&reg, INT_MASK_CSR_AC0_DMA_DONE, mask);
-+	rt2x00_set_field32(&reg, INT_MASK_CSR_AC1_DMA_DONE, mask);
-+	rt2x00_set_field32(&reg, INT_MASK_CSR_AC2_DMA_DONE, mask);
-+	rt2x00_set_field32(&reg, INT_MASK_CSR_AC3_DMA_DONE, mask);
-+	rt2x00_set_field32(&reg, INT_MASK_CSR_HCCA_DMA_DONE, mask);
-+	rt2x00_set_field32(&reg, INT_MASK_CSR_MGMT_DMA_DONE, mask);
-+	rt2x00_set_field32(&reg, INT_MASK_CSR_MCU_COMMAND, mask);
-+	rt2x00_set_field32(&reg, INT_MASK_CSR_RXTX_COHERENT, mask);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_TBTT, mask);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_PRE_TBTT, mask);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_TX_FIFO_STATUS, mask);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_AUTO_WAKEUP, mask);
--	rt2x00_set_field32(&reg, INT_MASK_CSR_GPTIMER, 0);
--	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_COHERENT, 0);
--	rt2x00_set_field32(&reg, INT_MASK_CSR_TX_COHERENT, 0);
-+	rt2x00_set_field32(&reg, INT_MASK_CSR_GPTIMER, mask);
-+	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_COHERENT, mask);
-+	rt2x00_set_field32(&reg, INT_MASK_CSR_TX_COHERENT, mask);
- 	rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
- 	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 483fa46..44e9c0d 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -546,6 +546,17 @@ static inline int ieee80211_is_qos_nullfunc(__le16 fc)
+ 	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_NULLFUNC);
+ }
+ 
++/**
++ * ieee80211s_has_qos_pm - check Power Save Level in QoS control
++ * @qc - QoS control bytes in little-endian byteorder
++ */
++
++static inline int ieee80211s_has_qos_pm(__le16 qc)
++{
++	return (qc & cpu_to_le16(
++			IEEE80211_QOS_CTL_MESH_PS_LEVEL)) != 0;
++}
++
+ struct ieee80211s_hdr {
+ 	u8 flags;
+ 	u8 ttl;
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 8c00e2d..6842453 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -222,6 +222,8 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_mesh_root_setup(struct ieee80211_if_mesh *ifmsh);
++void ieee80211s_set_sta_ps_mode(struct sta_info *sta,
++				enum nl80211_mesh_power_mode mode);
+ 
+ /* Mesh paths */
+ int mesh_nexthop_lookup(struct sk_buff *skb,
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b867bd5..40ad4ed 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1162,6 +1162,34 @@ int ieee80211_sta_ps_transition(struct ieee80211_sta *sta, bool start)
+ }
+ EXPORT_SYMBOL(ieee80211_sta_ps_transition);
+ 
++void ieee80211s_set_sta_ps_mode(struct sta_info *sta,
++				enum nl80211_mesh_power_mode mode)
++{
++	if (sta->peer_ps_mode != mode) {
++		sta->peer_ps_mode = mode;
++#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
++		switch (mode) {
++		case NL80211_MESH_POWER_ACTIVE:
++			printk(KERN_DEBUG "%s: STA %pM enters active mode\n",
++				sta->sdata->name, sta->sta.addr);
++			break;
++		case NL80211_MESH_POWER_LIGHT_SLEEP:
++			printk(KERN_DEBUG "%s: STA %pM enters light sleep mode\n",
++				sta->sdata->name, sta->sta.addr);
++			break;
++		case NL80211_MESH_POWER_DEEP_SLEEP:
++			printk(KERN_DEBUG "%s: STA %pM enters deep sleep mode\n",
++				sta->sdata->name, sta->sta.addr);
++			break;
++		default:
++			printk(KERN_DEBUG "%s: STA %pM used invalid power save mode\n",
++				sta->sdata->name, sta->sta.addr);
++			break;
++		}
++#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
++	}
++}
++
+ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
+ {
+@@ -1314,6 +1342,39 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 	}
+ 
+ 	/*
++	 * Test mesh power save level subfield of QoS control field (PSL)
++	 * and Power Managment field of frame control (PW)
++	 * +----+----+-----------------+
++	 * | PM | PSL| Mesh Power Mode |
++	 * +----+----+-----------------+
++	 * | 0  |Rsrv|    Active       |
++	 * +----+----+-----------------+
++	 * | 1  | 0  |    Light        |
++	 * +----+----+-----------------+
++	 * | 1  | 1  |    Deep         |
++	 * +----+----+-----------------+
++	 */
++	if (!ieee80211_has_morefrags(hdr->frame_control) &&
++	    !(status->rx_flags & IEEE80211_RX_DEFERRED_RELEASE) &&
++	    ieee80211_vif_is_mesh(&rx->sdata->vif) &&
++	    (ieee80211_is_data(hdr->frame_control) ||
++	     ieee80211_is_nullfunc(hdr->frame_control))) {
++		if (ieee80211_has_pm(hdr->frame_control)) {
++			__le16 *qc = (__le16 *) ieee80211_get_qos_ctl(hdr);
++			if (ieee80211s_has_qos_pm(*qc)) {
++				ieee80211s_set_sta_ps_mode(sta,
++					NL80211_MESH_POWER_DEEP_SLEEP);
++			} else {
++				ieee80211s_set_sta_ps_mode(sta,
++					NL80211_MESH_POWER_LIGHT_SLEEP);
++			}
++		} else {
++			ieee80211s_set_sta_ps_mode(sta,
++				NL80211_MESH_POWER_ACTIVE);
++		}
++	}
++
++	/*
+ 	 * Drop (qos-)data::nullfunc frames silently, since they
+ 	 * are used only to control station power saving mode.
+ 	 */
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 8742668..86fe10a 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -251,6 +251,7 @@ struct sta_ampdu_mlme {
+  * @ignore_plink_timer: ignore the peer-link timer (used internally)
+  * @plink_state: peer link state
+  * @local_ps_mode: local link-specific power save mode
++ * @peer_ps_mode: peer link-specific power save mode
+  * @plink_timeout: timeout of peer link
+  * @plink_timer: peer link watch timer
+  * @plink_timer_was_running: used by suspend/resume to restore timers
+@@ -340,6 +341,7 @@ struct sta_info {
+ 	bool plink_timer_was_running;
+ 	enum nl80211_plink_state plink_state;
+ 	enum nl80211_mesh_power_mode local_ps_mode;
++	enum nl80211_mesh_power_mode peer_ps_mode;
+ 	u32 plink_timeout;
+ 	struct timer_list plink_timer;
+ #endif
+-- 
+1.7.3.4
+
