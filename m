@@ -1,35 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:33086 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752417Ab1KGDa3 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56508 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754026Ab1KUNQB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Nov 2011 22:30:29 -0500
-Received: by vcbf1 with SMTP id f1so1773180vcb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Nov 2011 19:30:29 -0800 (PST)
+	Mon, 21 Nov 2011 08:16:01 -0500
+Received: by iage36 with SMTP id e36so7259714iag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 05:16:00 -0800 (PST)
 MIME-Version: 1.0
-Date: Sun, 6 Nov 2011 21:30:29 -0600
-Message-ID: <CAJsNL7n+tZ2RrH9Tb_ccwUCPNq+7pVHp_-mGV_dT1JxAhQrJ1Q@mail.gmail.com> (sfid-20111107_043032_990476_E07D1A7A)
-Subject: Random disconnect after association is complete
-From: alfred steele <alfred.jaquez@gmail.com>
-To: hostap@lists.shmoo.com
-Cc: linux-wireless@vger.kernel.org
+Date: Mon, 21 Nov 2011 17:16:00 +0400
+Message-ID: <CAG5dHkQ6p-Cr=HNAnSzL0gkWpXVSwrwm4F3k-2D+NzBsg4vgsw@mail.gmail.com> (sfid-20111121_141621_485201_CE1A33FE)
+Subject: [RFC v2 2/8] mac80211: mesh power mode indication in QoS frames
+From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
-
-wpa_supplicant v 0.6.8: There is a suddent disconnect apperaing in the
-control event interface immediately after association and then the
-Disconnet-remove keys" goes on for about one minute before stopping.
-After association, there are  a number of "Key negotiation completed"
-events pop up in  around 20 seconds followed by
-"CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys" and this
-pattern repeats itslef
-
-Is this about some specific configuration in wpa supplicant, may be
-related to ap_scan=2, i see a bunch of braodcast probe requests from
-the chip when this happens.
-
-Thanks in Advance!
-Alfred
+According to IEEE80211s standard a mesh peering is always
+associatedwith two mesh STAs. Both mesh STAs have their own mesh power
+mode forthe mesh peering. This power mode is called as link-specific
+powermode.
+local_ps_mode field has been added to sta_info structure to
+representlink-specific power mode at this station for station
+represented bythis structure.
+According to this standard mesh STA shall indicate its non-peer
+meshpower mode with the Power Management field in the Frame Control
+fieldand the Mesh Power Save Level field in the QoS Control field in
+groupaddressed Mesh Data frames.
+And mesh STA shall indicate link-specific power mode with the
+PowerManagement field in the Frame Control field and the Mesh Power
+SaveLevel field in the QoS Control field in all transmitted
+individuallyaddressed Mesh Data frames and QoS Null frames.
+The Power Management field set to 1 and the Mesh Power Save
+Levelsubfield set to 0 indicate that the mesh STA is operating in
+lightmode. The Power Management field set to 0 and the mesh Power
+SaveLevel subfield set to 1 indicate that the mesh STA is operating
+indeep sleep mode. The Mesh Power Save Level subfield is reserved,
+ifthe Power Management subfield is set to 0.
+Signed-off-by: Ivan Bezyazychnyy
+<ivan.bezyazychnyy@gmail.com>Signed-off-by: Mike Krinkin
+<krinkin.m.u@gmail.com>Signed-off-by: Max Filippov
+<jcmvbkbc@gmail.com>Signed-off-by: Marco Porsch
+<marco.porsch@etit.tu-chemnitz.de>--- include/linux/ieee80211.h |    3
++++ net/mac80211/sta_info.h   |    2 ++ net/mac80211/tx.c         |
+43 +++++++++++++++++++++++++++++++++++++++++++ 3 files changed, 48
+insertions(+), 0 deletions(-)
+diff --git a/include/linux/ieee80211.h
+b/include/linux/ieee80211.hindex 48363c3..483fa46 100644---
+a/include/linux/ieee80211.h+++ b/include/linux/ieee80211.h@@ -133,6
++133,9 @@ /* Mesh Control 802.11s */ #define
+IEEE80211_QOS_CTL_MESH_CONTROL_PRESENT  0x0100 +/* mesh power save
+level subfield mask */+#define IEEE80211_QOS_CTL_MESH_PS_LEVEL
+	0x0200+ /* U-APSD queue for WMM IEs sent by AP */ #define
+IEEE80211_WMM_IE_AP_QOSINFO_UAPSD	(1<<7) #define
+IEEE80211_WMM_IE_AP_QOSINFO_PARAM_SET_CNT_MASK	0x0fdiff --git
+a/net/mac80211/sta_info.h b/net/mac80211/sta_info.hindex
+8c8ce05..8742668 100644--- a/net/mac80211/sta_info.h+++
+b/net/mac80211/sta_info.h@@ -250,6 +250,7 @@ struct sta_ampdu_mlme {
+* @plink_retries: Retries in establishment  * @ignore_plink_timer:
+ignore the peer-link timer (used internally)  * @plink_state: peer
+link state+ * @local_ps_mode: local link-specific power save mode  *
+@plink_timeout: timeout of peer link  * @plink_timer: peer link watch
+timer  * @plink_timer_was_running: used by suspend/resume to restore
+timers@@ -338,6 +339,7 @@ struct sta_info { 	bool ignore_plink_timer;
+	bool plink_timer_was_running; 	enum nl80211_plink_state
+plink_state;+	enum nl80211_mesh_power_mode local_ps_mode; 	u32
+plink_timeout; 	struct timer_list plink_timer; #endifdiff --git
+a/net/mac80211/tx.c b/net/mac80211/tx.cindex 48bbb96..500c3ce
+100644--- a/net/mac80211/tx.c+++ b/net/mac80211/tx.c@@ -1033,6
++1033,47 @@ ieee80211_tx_h_calculate_duration(struct ieee80211_tx_data
+*tx) 	return TX_CONTINUE; } +static enum
+nl80211_mesh_power_mode+ieee80211s_get_ps_mode(struct
+ieee80211_sub_if_data *sdata,+			struct ieee80211_hdr *hdr)+{+	enum
+nl80211_mesh_power_mode pm = NL80211_MESH_POWER_ACTIVE;+	struct
+mesh_path *mpath;++	if (is_multicast_ether_addr(hdr->addr1)) {+		pm =
+(enum nl80211_mesh_power_mode)+				sdata->u.mesh.mshcfg.power_mode;+	}
+else {+		rcu_read_lock();+		mpath = mesh_path_lookup(hdr->addr3,
+sdata);+		if (mpath) {+			pm =
+mpath->next_hop->local_ps_mode;+		}+		rcu_read_unlock();+	}++	return
+pm;+}++static void ieee80211_set_mesh_ps_fields(struct
+ieee80211_sub_if_data *sdata,+					struct ieee80211_hdr *hdr)+{+	if
+(ieee80211_vif_is_mesh(&sdata->vif) &&+	
+(ieee80211_is_data_qos(hdr->frame_control)+	     ||
+ieee80211_is_qos_nullfunc(hdr->frame_control))) {+		enum
+nl80211_mesh_power_mode+				pm = ieee80211s_get_ps_mode(sdata,
+hdr);+		if (pm != NL80211_MESH_POWER_ACTIVE) {+			__le16 *qc = (__le16
+*) ieee80211_get_qos_ctl(hdr);+			hdr->frame_control |=
+cpu_to_le16(IEEE80211_FCTL_PM);+			if (pm ==
+NL80211_MESH_POWER_DEEP_SLEEP) {+				*qc |=
+cpu_to_le16(+					IEEE80211_QOS_CTL_MESH_PS_LEVEL);+			}+		}+	}+}+ /*
+actual transmit path */  static bool ieee80211_tx_prep_agg(struct
+ieee80211_tx_data *tx,@@ -1437,6 +1478,8 @@ void ieee80211_xmit(struct
+ieee80211_sub_if_data *sdata, struct sk_buff *skb) 			}
+	ieee80211_set_qos_hdr(sdata, skb);+	if
+(ieee80211_vif_is_mesh(&sdata->vif))+		ieee80211_set_mesh_ps_fields(sdata,
+hdr); 	ieee80211_tx(sdata, skb, false); 	rcu_read_unlock(); }--
+1.7.3.4
