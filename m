@@ -1,144 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45212 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932240Ab1KBQ7r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 12:59:47 -0400
-Message-ID: <4EB176F9.7090304@candelatech.com> (sfid-20111102_175951_173721_A67318F0)
-Date: Wed, 02 Nov 2011 09:59:37 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:36665 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754259Ab1KUNig (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 08:38:36 -0500
+Date: Mon, 21 Nov 2011 14:40:57 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20111121134056.GB4010@redhat.com> (sfid-20111121_143852_000199_DAB42085)
+References: <20111110114732.GA2217@redhat.com>
+ <20111110125347.GA29415@nomi.cz>
+ <20111110160703.GA2775@redhat.com>
+ <20111110163051.GA24533@nomi.cz>
+ <20111111054731.GA2292@redhat.com>
+ <20111111150105.GA25437@nomi.cz>
+ <20111114140714.GD2513@redhat.com>
+ <20111119181106.GA5515@nomi.cz>
+ <20111121130527.GA4010@redhat.com>
+ <20111121130916.GA11136@nomi.cz>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [wireless-next PATCH 3/5] wifi: Allow overriding some HT information.
-References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>  <1319778680-11405-3-git-send-email-greearb@candelatech.com>  (sfid-20111028_071147_787476_DBCC8CCF) <1319789573.3914.15.camel@jlt3.sipsolutions.net>  <4EAAD95E.1030001@candelatech.com> (sfid-20111028_183341_942256_664FE0B1) <1320221630.3950.22.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1320221630.3950.22.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: multipart/mixed; boundary="0F1p//8PRICkK4MW"
+In-Reply-To: <20111121130916.GA11136@nomi.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/02/2011 01:13 AM, Johannes Berg wrote:
-> On Fri, 2011-10-28 at 09:33 -0700, Ben Greear wrote:
->
->>>> * Allow configuring the mcs (/n) rates available.
->>>> * Allow configuration of MAX-A-MSDU
->>>> * Allow configuration of A-MPDU factor&   density.
->>>>
->>>> Users can only remove existing rates.  The MSDU and MPDU
->>>> values can be set to any value allowed by the 802.11n
->>>> specification.
->>>
->>> That can't work -- the device might not support it.
->>
->> The device would always support removing rates, right?
->
-> No. As I pointed out in another email, you need to think beyond
-> mac80211.
->
->> As for the MSDU and MPDU stuff, I would need to add capabilities
->> flags and then enable each driver as they are tested?
->
-> No. Neither of these can ever be increased so it's not that simple. And
-> making it smaller is always possible since it's just advertising.
-> Presumably you do understand the reasons for this advertising/these
-> restrictions?
 
-It seems that a driver might default to a mid-range value for the MPDU values
-because it is somehow 'better' for whatever reason, and yet it might still
-support larger values if the user desires, perhaps because in specific
-scenarios larger values are better.  Ath9k does set to the max value,
-so if we do a per-driver capabilities flag as I did in v2 then we
-are safe.
+--0F1p//8PRICkK4MW
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+
+On Mon, Nov 21, 2011 at 02:09:16PM +0100, Tomáš Janoušek wrote:
+> On Mon, Nov 21, 2011 at 02:05:28PM +0100, Stanislaw Gruszka wrote:
+> > The farther we get the problem is more and more strange.
+> > 
+> > Device that write to wrong address, would generate:
+> > 
+> > DMAR:[DMA Write] Request device [00:02.0] fault addr 6df084000
+> > DMAR:[fault reason 05] PTE Write access is not set
+> 
+> And that's exactly what happens if I don't disable firewire-ohci, because of
+> that stupid Ricoh multifunction blah blah issue.
+
+So maybe problem is caused by Ricoh, not by iwlagn. But if so 
+why blacklisting iwlagn help? Wired. Did you disable firewire in
+BIOS, or just blacklist module?
+
+> > Try "dmesg | grep DMAR" to see if DMA remapping is really is
+> > in use. 
+> 
+> Well, this message is not printed, but as I said, loading firewire-ohci
+> triggers DMAR faults, so it should be in use anyway.
+
+So IOMMU is in use and it does not prevent corruption, crap.
+
+Ok maybe let's try to find some better reproducer first.
+I wrote simple program that fill memory with some pattern, and
+then check every one second if pattern is still there.
+It can be used like:
+./checkmem 100M 30M
+where first argument is size of memory it will alloc and check,
+second specify number of internal loops to make cpu busy (bigger
+value will cause more cpu power consumption). Many instances of
+the program can be running at once.
+
+Tomáš, please try to reproduce with that program, I'm attaching
+it. When corruption will be detected, checkmem will print invalid
+values, maybe would be possible to find out what contents is
+written to memory.
+
+Stanislaw
+
+--0F1p//8PRICkK4MW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="checkmem.c"
+
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <sys/time.h>
+
+unsigned int pattern;
+unsigned int *ptr;
+int finish = 0;
+long size = 1 * 1024 * 1024;
+long loops = 10 * 1024 * 1024;
+
+void initArgs(int argc, char *argv[])
+{
+	int rc, i;
+	char suf;
+	long arg;
+
+	if (argc > 3)
+		goto exit;
+
+	for (i = 1; i < argc; i++) {
+		rc = sscanf(argv[i], "%ld%c", &arg, &suf);
+		if (rc == 2) {
+			switch (suf) {
+			case 'M':
+			case 'm':
+				arg *= 1024 * 1024;
+				break;
+			case 'K':
+			case 'k':
+				arg *= 1024;
+				break;
+			default:
+				goto exit;
+			}
+		} else if (rc != 1)
+			goto exit;
+
+		if (i == 1)
+			size = arg;
+		else if (i == 2)
+			loops = arg;
+	}
+
+	printf("size %ld loops %ld\n", size, loops);
+	return;
+
+exit:		
+	fprintf(stderr, "usage: %s size loops\n", argv[0]);
+	exit(1);
+}
+
+void initPattern()
+{ 
+	struct timeval tv = { 0xdeadbeaf, 0 };
+	
+	gettimeofday(&tv, NULL);
+	srand(tv.tv_sec ^ tv.tv_usec);
+	pattern = rand();
+	printf("pattern %08x\n", pattern);
+}
+
+void initChunk()
+{
+	int i;
+	
+	ptr = malloc(size);
+	if (ptr == NULL) {
+		fprintf(stderr, "fail to allocate mem\n");
+		fflush(stderr);
+		exit(1);
+	}
+
+	for (i = 0; i < size/4; i++)
+		ptr[i] = pattern;
+	
+	printf("initialized %d MB\n", size/(1024*1024));
+	fflush(stdout);
+}
 
 
->>> I also don't really like the way you pass in some binary "mask" when
->>> it's not really a binary masking operation.
->>
->> I found the mask to work very well.  It's easy enough to
->> deal with in user-space, and easily allows us to add override features
->> (the additional bits to support the MPDU stuff once the
->> HT rates logic was in is a very small bit of code).
->>
->> Otherwise, I'll need to add new netlink commands for each new
->> feature.  That is going to bloat hostapd as well as the
->> kernel.
->
-> I'm not sure it'll bloat it, but I can live with the binary struct. It
-> seems a bit ugly to me but I think it's acceptable. However, you should
-> document more clearly what struct it is and how it is defined to work.
-> You're also relying on userspace to not do stupid things (otherwise your
-> code reads memory out of bounds), this would help:
->
->>          /* add attributes here, update the policy in nl80211.c */
+void sig_handler()
+{
+	finish = 1;
+}
 
-I copied some of that code from nl80211_set_station, which appears to
-also forget to check the length for the NL80211_ATTR_HT_CAPABILITY
-object.  Is there some reason why it doesn't need to check, or does
-that code need fixing as well?
+void checkChunks()
+{
+	int i;
+	int ok = 1;
+	int printed = 0;
 
-> Anyway, I'm out of breath. I think this is simply bad implementation&
-> execution of your ideas. These are somewhat interesting features and I'm
-> willing to accommodate even some of the more esoteric features that most
-> people will never use, but I'm quite annoyed by how much of your patches
-> I end up doing myself through review.
->
-> Please focus more on the quality of your patches in "details" like
-> security, API issues, non-mac80211 drivers and even simply logic like
-> the A-MSDU thing I just pointed out. I'm spending a disproportionate
-> amount of time reviewing your patches over and over again with every
-> patchset and am no longer willing to do that.
+	for (i = 0; i < size/4; i++) {
+		if (ptr[i] != pattern) {
+			if (!printed) {
+				fprintf(stderr, "memory corruption!\n");
+				fflush(stderr);
+				printed = 1;
+			}
+			fprintf(stderr, "%p: 0x%08x\n", &ptr[i], ptr[i]);
+			fflush(stderr);
+			ok = 0;
+		}
+	}
 
-I listed several thinks that could be changed in the patch description,
-and your comment was:
+	if (ok) {
+		printf("check ok\n");
+		fflush(stdout);
+	} else {
+		/* In case of memory corruption sleep forever */
+		while (1)
+			sleep(1);
+	}
+}
 
-That can't work -- the device might not support it.
+void alarm_handler()
+{
+	checkChunks();
+	alarm(1);
+}
 
-Now, how am I supposed to know what you are talking about?
+#define barrier() __asm__ __volatile__("": : :"memory")
 
-> Obviously we'll still have to discuss things like whether it should be a
-> connection or interface parameter -- but I shouldn't have to point out
-> trivial security issues -- you should be focusing more on these things
-> while writing the code, not after the fact where it's much harder. E.g.
-> never ever use nla_data() without validating nla_len() in some way, it
-> seems to me that should be completely obvious.
+void use_cpu()
+{
+	long i;
+	static long a = 0;
 
-Well, it's more obvious now.  Do you also need to check the length when
-doing code like this code from nl80211_set_station:
+	for (i = 0; i < loops; i++) {
+		a++;
+		barrier();
+		a += 3;
+		barrier();
+		a += 10;
+		barrier();
+	}
+}
 
-	if (info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL])
-		params.listen_interval =
-		    nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
+int main(int argc, char *argv[])
+{
+	initArgs(argc, argv);
+	initPattern();	
+	initChunk();
 
-In other words, is it safe to assume you have 16 bits, or could a broken
-user-space pass in a single byte and screw this up?
+	signal(SIGUSR1, sig_handler);
+	signal(SIGINT, sig_handler);
+	signal(SIGTERM, sig_handler);
 
->>>> +	memcpy(&ht_cap,&sband->ht_cap, sizeof(ht_cap));
->>>> +	/*
->>>> +	 * This is for an association attempt, and we must
->>>> +	 * advert at least the first 8 rates, even if we
->>>> +	 * will later force the rate control to a lower rate.
->>>> +	 */
->>>> +	ieee80211_apply_htcap_overrides(sdata,&ht_cap, 8);
->>>
->>> Yuck, why, why hard-code 8, etc.
->>
->> I can make a define that involves MCS7.
->
-> I don't think I understand then why MCSs 0-7 must be supported?
+	signal(SIGALRM, alarm_handler);
+	alarm(1);
 
- From 20.1.1 of the 802.11n spec:
+	while (finish == 0) {
+		use_cpu();
+		sleep(1);
+	}
 
-"An HT non-AP STA shall support all equal modulation (EQM) rates for one spatial stream (MCSs 0 through
-7) using 20 MHz channel width. An HT AP shall support all EQM rates for one and two spatial streams
-(MCSs 0 through 15) using 20 MHz channel width."
+	checkChunks();
 
-That is why I wrote that code as I did, but perhaps I misunderstand that section of
-the docs.
+	return 0;
+}
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+--0F1p//8PRICkK4MW--
