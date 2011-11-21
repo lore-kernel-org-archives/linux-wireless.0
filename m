@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35255 "EHLO mx1.redhat.com"
+Received: from c60.cesmail.net ([216.154.195.49]:22420 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756975Ab1KRIXM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 03:23:12 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Greg Dietsche <Gregory.Dietsche@cuw.edu>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 68/77] iwlegacy: change IL_WARN to D_HT in il4965_tx_agg_start
-Date: Fri, 18 Nov 2011 09:22:30 +0100
-Message-Id: <1321604559-10707-68-git-send-email-sgruszka@redhat.com> (sfid-20111118_092319_559275_DA269481)
-In-Reply-To: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+	id S1752791Ab1KURBs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 12:01:48 -0500
+Date: Mon, 21 Nov 2011 12:01:45 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 45/77] iwlegacy: s/rx_reply/hdl/
+Message-ID: <20111121120145.7820e4b2@mj> (sfid-20111121_180152_395772_2E04679E)
+In-Reply-To: <20111121074432.GA2787@redhat.com>
 References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+	<1321604559-10707-45-git-send-email-sgruszka@redhat.com>
+	<20111118180208.6a16e68c@mj>
+	<20111121074432.GA2787@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+On Mon, 21 Nov 2011 08:44:56 +0100
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
 
-This message should be a debug message and not a warning.
+> On Fri, Nov 18, 2011 at 06:02:08PM -0500, Pavel Roskin wrote:
+> > Why do you want it?  
+> For the same reason as in other patches - for make code shorter. 
+> 
+> >I understand rx_reply, 
+> Actually rx_reply is confusing name for interrupt handler.
+> 
+> > but I don't understand
+> > "hdl".  Is it Hairy Definition Language? :)
+> :-) it's shortcut from "handler", but you known it, don't you ?
 
-Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/4965-mac.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Actually, I had that idea after a while, but first I thought about
+something specific to Intel hardware.  I was also thinking of SDL and 
+MDL even though I knew both were irrelevant.
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 21a1381..8d2f616 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -2252,7 +2252,7 @@ il4965_tx_agg_start(struct il_priv *il, struct ieee80211_vif *vif,
- 	if (unlikely(tx_fifo < 0))
- 		return tx_fifo;
- 
--	IL_WARN("%s on ra = %pM tid = %d\n", __func__, sta->addr, tid);
-+	D_HT("%s on ra = %pM tid = %d\n", __func__, sta->addr, tid);
- 
- 	sta_id = il_sta_id(sta);
- 	if (sta_id == IL_INVALID_STATION) {
 -- 
-1.7.1
-
+Regards,
+Pavel Roskin
