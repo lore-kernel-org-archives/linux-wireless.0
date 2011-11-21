@@ -1,51 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms16-1.1blu.de ([89.202.0.34]:51655 "EHLO ms16-1.1blu.de"
+Received: from mms2.broadcom.com ([216.31.210.18]:4977 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751089Ab1KNW5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 17:57:44 -0500
-Date: Mon, 14 Nov 2011 23:56:36 +0100
-From: Lars Schotte <gusto@guttok.net>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn 3.0.9 aggreggation messages
-Message-ID: <20111114235636.24c85fc3@hana.gusto> (sfid-20111114_235747_668777_FEBC1D94)
-In-Reply-To: <1321310502.1796.21.camel@wwguy-ubuntu>
-References: <20111114131642.31e8ddbd@hana.gusto>
-	<1321283410.13578.33.camel@wwguy-ubuntu>
-	<20111114201947.58d5fdf6@hana.gusto>
-	<1321303101.1796.8.camel@wwguy-ubuntu>
-	<20111114221847.2ca32e6a@hana.gusto>
-	<1321305750.1796.11.camel@wwguy-ubuntu>
-	<20111114224718.491c1777@hana.gusto>
-	<1321307098.1796.14.camel@wwguy-ubuntu>
-	<20111114232852.2372a032@hana.gusto>
-	<1321310502.1796.21.camel@wwguy-ubuntu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1754070Ab1KUWsT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 17:48:19 -0500
+Message-ID: <4ECAD52A.6050509@broadcom.com> (sfid-20111121_234827_434750_A5053489)
+Date: Mon, 21 Nov 2011 14:48:10 -0800
+From: "Franky Lin" <frankyl@broadcom.com>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?Thomas_Lang=E5s?= <thomas.langas@fxitech.com>
+cc: "Arend Van Spriel" <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Howard Harte" <hharte@broadcom.com>
+Subject: Re: brcm80211 (with bcm4329-chip)
+References: <CADrAYBnwWEaigcgQYYk6V3VEuEYyrmzJQXegKVk6TgOTPh5N8A@mail.gmail.com>
+ <4ECA8908.7070304@broadcom.com> <4ECA98DB.4030608@broadcom.com>
+ <CADrAYBk7_fsVJUAYNqEZpdBPKOTGUai_UhPT9LMHaEyY+Zm24w@mail.gmail.com>
+ <4ECAAD6C.4080103@broadcom.com>
+ <CADrAYBndEsNz5nypirSxQPObpSV5BWARWOQzwmBTmzg+tgUbBA@mail.gmail.com>
+ <CADrAYB=wDwrzCFEi4-PFepLiLMbPLAGxoaNGtXBaPZPR1onokA@mail.gmail.com>
+ <4ECAC99B.8090507@broadcom.com>
+ <CADrAYBmhBWVDC=K+F-NU6WkUv-M=WddWvU1pe9AXABEinUBGvQ@mail.gmail.com>
+In-Reply-To: <CADrAYBmhBWVDC=K+F-NU6WkUv-M=WddWvU1pe9AXABEinUBGvQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-i definitely see it in 3.0.8 and 3.0.9.
+On 11/21/2011 02:26 PM, Thomas Langås wrote:
+> On Mon, Nov 21, 2011 at 10:58 PM, Franky Lin<frankyl@broadcom.com>  wrote:
+>> It's possible that the firmware carshed. Are you using the firmware/nvram
+>> from Linux repository? You should use the nvram that fits your platform.
+>
+> I'm using the one from repository now, yes.
+>
+> Using the firmware I had from before, the only difference I see is the
+> time of when
+> the IRQ handler is called, but that is probably just randomness, I guess?
 
-on the fedora fc16 linux kernel 3.1.1 it did not yet appear, but that
-may change.
+I think both firmware is fine. I was referring to the 
+brcm/bcm4329-fullmac-4.txt It's a nvram file contains critical 
+information used by firmware. And it's hardware dependent. We have 
+submitted a patch to remove the one in Linux firmware repository to 
+avoid confusion as it's for a Broadcom internal development board. It 
+may not work with your set up. I think there should be a similar file 
+comes with the proprietary driver package if you are using a module 
+instead of a 4329 chip. Please use that one.
 
-so maybe it would be worth a look if it is not fixed by 3.1.1, or if
-something changed. however ... if it is a FIX, it should definitely be
-fixed also in 3.0.X branch.
+>
+> Attached is the log when modprobing with old firmware.
+>
 
-so that message still is there on 3.0.9 and 3.0.8, we will see about
-the more current ones.
+The issue you facing is more likely SDIO bus connection issue.
+brcmf_sdioh_request_word: Failed to write word, Err: 0xffffffac
+mmc1: Got data interrupt 0x00200000 even though no data operation was in 
+progress.
+These may be both caused by data CRC error/time out.
+I don't have Exynos 4210 spec. But I guess for a such new chip the SDIO 
+host should be able to run the bus at 50MHz. You could try to hack the 
+MMC/SDIO host driver and reduce the max frequency to 25MHz or even 
+further to 12MHz to see if any improvement.
 
-On Mon, 14 Nov 2011 14:41:42 -0800
-wwguy <wey-yi.w.guy@intel.com> wrote:
+Regards,
+Franky
 
-> so youno longer seeing the issue?
-> 
-> Wey
-
-
-
--- 
-Lars Schotte
-@ Hana (F16)
