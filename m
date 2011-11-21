@@ -1,42 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:53173 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752645Ab1KUWW4 convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:29457 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753408Ab1KUG5r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 17:22:56 -0500
+	Mon, 21 Nov 2011 01:57:47 -0500
+From: Raja Mani <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: Use mutex to protect dma buffer in sync read write
+Date: Mon, 21 Nov 2011 12:26:51 +0530
+Message-ID: <1321858611-2729-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20111121_075751_014174_D6962ADD)
 MIME-Version: 1.0
-In-Reply-To: <201111212249.31196.rjw@sisk.pl>
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera> <201111212249.31196.rjw@sisk.pl>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 21 Nov 2011 14:22:33 -0800
-Message-ID: <CA+55aFyy19VYSdZW0+jNxAb8ix0xpX2j9YFw9oQi3jm3+mDEvw@mail.gmail.com> (sfid-20111121_232321_736988_02A981FF)
-Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
-To: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 21, 2011 at 1:49 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->
-> Subject    : [3.1-rc8 REGRESSION] sky2 hangs machine on turning off or suspending
-> Submitter  : Rafa³ Mi³ecki <zajec5@gmail.com>
-> Date       : 2011-11-09 11:46
-> Message-ID : CACna6ryTdLcWVYgHu=_mRFga1sFivpE_DyZOY-HMmKggkWAJAw@mail.gmail.com
-> References : http://marc.info/?l=linux-netdev&m=132083922228088&w=4
+Firmware crashes while starting Soft AP in 32 bit x86 platform.
+The reason is that the single dma buffer (ar_sdio->dma_buffer)
+is used in ath6kl_sdio_read_write_sync() for unaligned buffer
+handling and this function is called in the multiple context
+at the same time. So, finally hits dma buffer corruption and
+firmware crash.
 
-This should be fixed by commit 1401a8008a09 ("sky2: fix hang on
-shutdown (and other irq issues)") in current -git.
+Mutex is used to protect dma buffer to avoid data corruption.
+Spin lock can not used to fix this issue since mmc stack
+read/write calls may for sleep.
 
-                   Linus
+Observed this issue with recently commited patch
+"ath6kl: Claim sdio function only at appropriate places"
+861dd058f495973c7ad2a44b8f68f3cc05733eab
+
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/sdio.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index c2010bf..36cdb18 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -54,6 +54,7 @@ struct ath6kl_sdio {
+ 	struct work_struct wr_async_work;
+ 	struct list_head wr_asyncq;
+ 	spinlock_t wr_async_lock;
++	struct mutex rd_wr_sync_mlock;
+ };
+ 
+ #define CMD53_ARG_READ          0
+@@ -396,6 +397,7 @@ static int ath6kl_sdio_read_write_sync(struct ath6kl *ar, u32 addr, u8 *buf,
+ 	if (buf_needs_bounce(buf)) {
+ 		if (!ar_sdio->dma_buffer)
+ 			return -ENOMEM;
++		mutex_lock(&ar_sdio->rd_wr_sync_mlock);
+ 		tbuf = ar_sdio->dma_buffer;
+ 		memcpy(tbuf, buf, len);
+ 		bounced = true;
+@@ -406,6 +408,9 @@ static int ath6kl_sdio_read_write_sync(struct ath6kl *ar, u32 addr, u8 *buf,
+ 	if ((request & HIF_READ) && bounced)
+ 		memcpy(buf, tbuf, len);
+ 
++	if (bounced)
++		mutex_unlock(&ar_sdio->rd_wr_sync_mlock);
++
+ 	return ret;
+ }
+ 
+@@ -1220,6 +1225,7 @@ static int ath6kl_sdio_probe(struct sdio_func *func,
+ 	spin_lock_init(&ar_sdio->lock);
+ 	spin_lock_init(&ar_sdio->scat_lock);
+ 	spin_lock_init(&ar_sdio->wr_async_lock);
++	mutex_init(&ar_sdio->rd_wr_sync_mlock);
+ 
+ 	INIT_LIST_HEAD(&ar_sdio->scat_req);
+ 	INIT_LIST_HEAD(&ar_sdio->bus_req_freeq);
+-- 
+1.7.0.4
+
