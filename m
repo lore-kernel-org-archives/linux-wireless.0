@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44786 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751230Ab1KDNEX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 09:04:23 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath6kl: Fix error in writing create_qos debugfs
-Date: Fri, 4 Nov 2011 18:34:55 +0530
-Message-ID: <1320411895-4828-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111104_140426_670234_CF49C4D8)
+Received: from purkki.adurom.net ([80.68.90.206]:39550 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752483Ab1KUPdF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 10:33:05 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Greg Dietsche <gregory.dietsche@cuw.edu>,
+	linux-wireless@vger.kernel.org
+Subject: Re: pull request: iwlegacy 2011-11-16
+References: <20111116122205.GA4409@redhat.com>
+	<87y5vf8ak3.fsf@purkki.adurom.net>
+	<20111117190307.GE32622@tuxdriver.com>
+	<20111118073041.GA2203@redhat.com>
+Date: Mon, 21 Nov 2011 17:32:59 +0200
+In-Reply-To: <20111118073041.GA2203@redhat.com> (Stanislaw Gruszka's message
+	of "Fri, 18 Nov 2011 08:30:42 +0100")
+Message-ID: <87vcqdij84.fsf@purkki.adurom.net> (sfid-20111121_163317_680131_556947BF)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-100 bytes are allocated to store the parameters which are needed
-to create a priority stream. These 100 bytes are not sufficiant and
-throws error when running the following command.
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-echo "6 2 3 1 1 9999999 9999999 9999999 7777777 0 6 45000 200 56789000
- 56789000 5678900 0 0 9999999 20000 0" > create_qos
+> On Thu, Nov 17, 2011 at 02:03:08PM -0500, John W. Linville wrote:
+>> On Thu, Nov 17, 2011 at 09:36:44AM +0200, Kalle Valo wrote:
+>> > Stanislaw Gruszka <sgruszka@redhat.com> writes:
+>>
+>> > I haven't seen these patches on linux-wireless mailing list at all.
+>
+> I did not post them because most of them are big patches done by sed or
+> "git mv", nothing that would benefit from review.
 
-179 bytes are needed when the following vlaues are given so that
-a maximum possible value in that data type can be given in decimal.
+If you use git's rename detection patches moving files shouldn't be
+large. And besides, if you are doing so big changes that patches are too
+big for the mailing list I think you are doing something wrong.
 
-echo "255 255 255 255 255 4294967295 4294967295 4294967295 4294967295
- 4294967295 255 65535 65535 4294967295 4294967295 4294967295 4294967295
- 4294967295 4294967295 4294967295 4294967295" > create_qos
+> Anyway, if someone like to look at the patches, its better to just pull
+> github tree, or even clone it. It used with --reference option clone
+> will be fast, i.e:
+>
+> git clone --reference linux-2.6  git://github.com/sgruszka/iwlegacy.git
 
-Following takes 187 bytes when given in hex
+Nobody is going to do review from a git tree unless forced. That's why
+we review via email.
 
-echo "0xff 0xff 0xff 0xff 0xff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff
- 0xff 0xffff 0xffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff
- 0xffffffff 0xffffffff" > create_qos
-
-Increase the size to 200 bytes so that it can hold upto the maximum
-value possible for that data type.
-
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/debug.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index 70ea137..370664a 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -1252,7 +1252,7 @@ static ssize_t ath6kl_create_qos_write(struct file *file,
- 
- 	struct ath6kl *ar = file->private_data;
- 	struct ath6kl_vif *vif;
--	char buf[100];
-+	char buf[200];
- 	ssize_t len;
- 	char *sptr, *token;
- 	struct wmi_create_pstream_cmd pstream;
 -- 
-1.7.0.4
-
+Kalle Valo
