@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52169 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753236Ab1KJLqw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 06:46:52 -0500
-Date: Thu, 10 Nov 2011 12:47:33 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
-Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: iwlagn: memory corruption with WPA enterprise
-Message-ID: <20111110114732.GA2217@redhat.com> (sfid-20111110_124712_990094_05808507)
-References: <20111029171554.GA16596@nomi.cz>
- <20111031160342.GB2225@redhat.com>
- <20111109155411.GA1669@nomi.cz>
- <20111109165158.GA2254@redhat.com>
- <20111110091816.GA2247@nomi.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20111110091816.GA2247@nomi.cz>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:52228 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754913Ab1KUCXG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Nov 2011 21:23:06 -0500
+Received: by ghbz2 with SMTP id z2so2300796ghb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 18:23:05 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Nikolay Martynov <mar.kolya@gmail.com>
+Subject: [PATCH 0/3] Add session timeout support for tx aggregation
+Date: Sun, 20 Nov 2011 21:22:49 -0500
+Message-Id: <1321842172-6732-1-git-send-email-mar.kolya@gmail.com> (sfid-20111121_032311_122233_16C6FEEF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Tomáš
+  Currently tx aggregation is not being timed out even if timeout is specified when aggregation is opened. Tx tid stays active until delba arrives from recipient (i.e. recipient times out tid when it is inactive). The problem with this approach is that delba can get lost in the air and tx tid will stay perpetually opened on the originator while closed on recipient thus all data sent via this tid will be lost.
+  The problem manifests itself with connection becoming slow/unusable with ping times jumping to 4s. At such time opened tx tid can be seen on one side of the connection without corresponding rx tid one the other side. This seems to be happening quite often soon after connection on ar9102 I have.
+  This patch implements tx tid timeouting in way very similar to rx tid timeouting.
 
-On Thu, Nov 10, 2011 at 10:18:16AM +0100, Tomáš Janoušek wrote:
-> On Wed, Nov 09, 2011 at 05:51:59PM +0100, Stanislaw Gruszka wrote:
-> > I just discovered that CONFIG_DEBUG_PAGEALLOC does not work as expected.
-> > It leave most of free pages unprotected, hence unintentional write to
-> > them is not discovered. I'm attaching additional patch, which should
-> > make detection actually work.
-> > 
-> > If kernel will does not boot with corrupt_dbg=1, you may try to catch
-> > corruption without that option. Attached patch should make it possible,
-> > however having corrupt_dbg=1 increase probability of the catch.
-> 
-> Okay, I applied this additional patch, and by the increased memory usage (as
-> shown by free) I concluded that it indeed works. However, I was still able to
-> reproduce the issue without a single error being written to dmesg. :-(
-If "dmesg | grep corrupt" will show "Setting corrupt debug order to 1"
-patches are in use. Anyway I need to test the patches locally, to see
-if they work as expected, perhaps exception is generated but call-trace
-is not printed.
+  All comments and suggestions are appreciated.
+  Thanks.
 
-Is this happen only with "Intel Corporation Centrino Advanced-N 6205" or
-with some other adapters?
+kolya (3):
+  mac80211: add tx agg session timer to timeout inactive tids in way
+    similar to rx agg sessions are being timed out
+  mac80211: use WLAN_BACK_RECIPIENT instead of hardcoded 0
+  mac80211: format debugfs agg_status output
 
-> I will try some really old kernels as Wey suggested to see whether it makes
-> any sense to bisect it, but if it does, it might take more time than I can
-> make free.
-Yes, bisection is very time consuming, especially when reproducing
-is not easy.
+ net/mac80211/agg-rx.c      |    7 ++++---
+ net/mac80211/agg-tx.c      |   35 ++++++++++++++++++++++++++++++++++-
+ net/mac80211/debugfs_sta.c |    8 +++++---
+ net/mac80211/sta_info.h    |    2 ++
+ net/mac80211/tx.c          |    9 +++++++++
+ 5 files changed, 54 insertions(+), 7 deletions(-)
 
-> Perhaps it would be cheaper to just get another card in that case.
-> :-)
-That will left issue unresolved :-(
+-- 
+1.7.4.1
 
-Stanislaw
