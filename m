@@ -1,43 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40226 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751213Ab1KPSQ5 convert rfc822-to-8bit (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:55407 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752432Ab1KUT5p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 13:16:57 -0500
-References: <1321445323-71774-1-git-send-email-nbd@openwrt.org> <1321445323-71774-2-git-send-email-nbd@openwrt.org> <CAB=NE6XOz9p=GwQWZ3TibMMan70QO7dXgVRP4PLuV6p=P1-RXA@mail.gmail.com>
-In-Reply-To: <CAB=NE6XOz9p=GwQWZ3TibMMan70QO7dXgVRP4PLuV6p=P1-RXA@mail.gmail.com>
-Mime-Version: 1.0 (iPhone Mail 8H7)
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <A6331C99-8D86-4CD6-88F2-123B38F31B26@nbd.name> (sfid-20111116_191700_064846_A1510CD2)
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Paul Stewart <pstew@google.com>
-From: Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH 2/4] ath9k: rework power state handling
-Date: Wed, 16 Nov 2011 19:16:58 +0100
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+	Mon, 21 Nov 2011 14:57:45 -0500
+Date: Mon, 21 Nov 2011 22:58:23 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] ath6kl: use a larger buffer for debug output
+Message-ID: <20111121195823.GN29436@mwanda> (sfid-20111121_205750_399413_2F3D2438)
+References: <20111118140906.GA9685@elgon.mountain>
+ <1321625461.10266.57.camel@jlt3.sipsolutions.net>
+ <4ECA826F.8010605@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="iwjEIfU64POCkTAH"
+In-Reply-To: <4ECA826F.8010605@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16.11.2011, at 18:42, "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com> wrote:
 
-> On Wed, Nov 16, 2011 at 4:08 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->> Turning off the radio when mac80211 tells the driver that it's idle is not
->> a good idea, as idle interfaces might still occasionally scan or send packets.
->> The only time the radio can be safely turned off is when drv_stop has been
->> called. In the mean time, use sc->ps_idle only to indicate network sleep vs
->> full sleep.
->> Move the LED GPIO changes out of the PCI suspend/resume path, the start/stop
->> functions already take care of that.
->> 
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> 
-> This set of patches are going to need some good amount of testing for
-> power impact. The benefits and gains need to be considered. I'll yield
-> to Senthil and Paul for final approval on this.
-One of the gains is that this series fixes some "PCI error" crashes on OpenWrt during hostapd restarts.
+--iwjEIfU64POCkTAH
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-- Felix
+On Mon, Nov 21, 2011 at 06:55:11PM +0200, Kalle Valo wrote:
+> >>  	len =3D snprintf(buf, sizeof(buf), "%u %u\n", ar->listen_intvl_t,
+> >>  					ar->listen_intvl_b);
+> >> +	len =3D min(sizeof(buf), len);
+> >=20
+> > Maybe that should be scnprintf instead then?
+>=20
+> Yeah, I agree. And most likely debug.c has even more cases where
+> scnprintf() is needed.
+>=20
+
+Yes yes.  Obviously.  I sent the patch at 5 pm on Friday and lost
+track of it for a bit.  I'll send a fixed version tomorrow morning.
+
+regards,
+dan carpenter
+
+
+--iwjEIfU64POCkTAH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJOyq1eAAoJEOnZkXI/YHqRWr4QAILJWyuKGnhNL7DilqvGYNHS
+r+hDsdrNdQ/q+4Ln2/rFaH58ebWLHMExFglRj4to374Ok6TdndYOS4EUcbobuzZw
+LaCxzbl58aPX66Po1fvCQizxOKsNC5t70eiFCPzJS15U1iTirHOq5X0NagRvgSqo
+EjUpo/QeGYIavGAH2Ej2TuCJA7p959lrbQ5g8PpO8dpsB0nayNJNhQ8fTWBnlDvE
+eushXUtXc/4Woq28whbb0hKk/r5tWrwxV4E4860xmT79YTNdAwKnJi3vqCqvnJBi
+BdoYneWMczmtgIMZygYdonHkp/364LxyMBj4lanvadBlfU3UoHccLwZsYEvQ1vmK
+dnEvbZ1X+zuKLJNZJE2ojRY/RV/PoJusXAxQucZCk81+xKFUiTIGnVDiQ/DtCpoL
+vN0b04lh0UHAWyadAOcSzaonJnZ4ZZHzAqcSuAvnHXI5BIrxc3xGqINYPRzGqYLv
+4NbQ7BiwXP3a+it4LWVCHkeQYFlNXZ77XBCtGd6QUJxB1weXYEsF/wMOVHjHOi2t
+iHUWaPTdngmJmhGtCJhjCUqPkRxB7rzPl8cdS2xgcG1OqbQHUv7PfwSjvQnzPcMe
+e4PqQCxE9ROC113h0isQuH5cSBau3hfrmzwPhIqlcLEjVI1Ivv++KJEXB/ysP/3E
+JJXQeAQdgrdCtBI8G9Hx
+=gUDp
+-----END PGP SIGNATURE-----
+
+--iwjEIfU64POCkTAH--
