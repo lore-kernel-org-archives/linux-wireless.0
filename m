@@ -1,84 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:38319 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751704Ab1KLVKN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Nov 2011 16:10:13 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1RPKq1-0000N3-QV
-	for linux-wireless@vger.kernel.org; Sat, 12 Nov 2011 22:10:09 +0100
-Received: from 5ED0428A.cm-7-1b.dynamic.ziggo.nl ([94.208.66.138])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Nov 2011 22:10:09 +0100
-Received: from jfcmdejongh by 5ED0428A.cm-7-1b.dynamic.ziggo.nl with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Nov 2011 22:10:09 +0100
-To: linux-wireless@vger.kernel.org
-From: Jan de Jongh <jfcmdejongh@gmail.com>
-Subject: Re: 802.11p implementation...
-Date: Sat, 12 Nov 2011 21:01:06 +0000 (UTC)
-Message-ID: <loom.20111112T202645-807@post.gmane.org> (sfid-20111112_221024_420473_825EFCFA)
-References: <CAFtRNNwXdeBfa-mFNyAVALgTxM-wrUthgMLS18VokqOSSiWPqg@mail.gmail.com> <1320585006.11133.2.camel@jlt3.sipsolutions.net> <CAFtRNNxGd7NSmjNhZboW5VOZ++j=D1E_G6E6RqXLA3Ssuu4XfQ@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:49984 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755063Ab1KUKXz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 05:23:55 -0500
+Subject: [PATCH v2] mac80211: fix RCU warnings in mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1321870713.3999.33.camel@jlt3.sipsolutions.net> (sfid-20111121_111841_644776_00D2FB95)
+References: <1321870713.3999.33.camel@jlt3.sipsolutions.net>
+	 (sfid-20111121_111841_644776_00D2FB95)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 21 Nov 2011 11:23:50 +0100
+Message-ID: <1321871030.3999.35.camel@jlt3.sipsolutions.net> (sfid-20111121_112358_050750_E462FB90)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nick Kossifidis <mickflemm@...> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> 
-> 2011/11/6 Johannes Berg <johannes@...>:
-> > On Sun, 2011-11-06 at 02:53 +0200, Nick Kossifidis wrote:
-> >> It seems a group of people have released an 802.11p implementation on
-> >> top of 2.6.31.
-> >>
-> >> http://www.gcdc.net/mainmenu/Home/downloads/Technology
-...
-> > johannes
-> >
-> 
-...
+Sparse RCU checking reports two warnings in the mesh
+path table code. These are due to questionable uses of
+rcu_dereference.
 
-Hi Nick, Johannes,
+To fix the first one, get rid of mesh_gate_add() and
+just make mesh_path_add_gate() do the correct deref.
 
-First, please note that I haven't checked on recent ath5k support for 802.11p.
-If such support it already present, this mail is quite obsolete :-)...
+To fix the second one, simply remove rcu_dereference()
+in mesh_gate_del() -- it already gets a proper pointer
+as indicated by the prototype (no __rcu annotation)
+and confirmed by the code.
 
-The Grand Cooperative Driving Challenge succesfully used 802.11p in
-vehicle-to-vehicle communications and vehicle-to-infrastructure communications,
-using a modified ath5k driver (which you found on the gcdc.net site).
-Apart from GCDC, there are many research and commercial projects/products
-(SPITS/FREILOT/...) using patched ath5k drivers for half-clock-rate operation,
-ocb, and access to the 5.9-6.0 GHz frequencies.
-And there are many more to come,.
-Simply because Atheros-based cards are among the few
-(if not the only ones)
-that support 802.11p/5.9GHz operation.
-For GCDC, the patches had their origins in the CVIS project,
-and in work by Eric Koenders of Peek Traffic.
+Cc: Javier Cardona <javier@cozybit.com>
+Cc: Thomas Pedersen <thomas@cozybit.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+v2: oops. fix prototypes
 
-However, the current situation is far from ideal...
-By now, the 11p amendment has been ratified,
-but maintaining 802.11p support for contemparory kernel/compat-wireless combos
-is near to impossible without structural support from ath/ath5k developers.
-The result of this effort, in short, would mean 802.11p operation
-through module parameter and crda/regdb settings only,
-and without the need to (re)compile kernels and/or kernel modules.
-11p Operation would simply imply some configuration efforts
-on well-known distributions (modules,conf, regdb/crda, iw, and stuff like that)
-out-of-the-box...
-I understand that there are regulatory issues
-(crda, do we want anyone to operate on the ITS frequencies???) involved,
-but we would be very interested in
-structural 11p support in the ath5k driver (and, perhaps ath9k).
-"We" referring to a substantial part of the ITS community.
-If you can arrange substantial commitment to 11p support in ath5k,
-I can mobilize people and funding for
-development/testing/deployment/discussion/feedback.
+ net/mac80211/mesh_pathtbl.c |   27 +++++----------------------
+ 1 file changed, 5 insertions(+), 22 deletions(-)
 
-Let me know what you think of this, best wishes,
+--- a/net/mac80211/mesh_pathtbl.c	2011-11-21 11:19:44.000000000 +0100
++++ b/net/mac80211/mesh_pathtbl.c	2011-11-21 11:23:19.000000000 +0100
+@@ -69,8 +69,6 @@ static inline struct mesh_table *resize_
+ 		lockdep_is_held(&pathtbl_resize_lock));
+ }
+ 
+-static int mesh_gate_add(struct mesh_table *tbl, struct mesh_path *mpath);
+-
+ /*
+  * CAREFUL -- "tbl" must not be an expression,
+  * in particular not an rcu_dereference(), since
+@@ -420,21 +418,18 @@ static void mesh_gate_node_reclaim(struc
+ }
+ 
+ /**
+- * mesh_gate_add - mark mpath as path to a mesh gate and add to known_gates
+- * @mesh_tbl: table which contains known_gates list
+- * @mpath: mpath to known mesh gate
+- *
+- * Returns: 0 on success
+- *
++ * mesh_path_add_gate - add the given mpath to a mesh gate to our path table
++ * @mpath: gate path to add to table
+  */
+-static int mesh_gate_add(struct mesh_table *tbl, struct mesh_path *mpath)
++int mesh_path_add_gate(struct mesh_path *mpath)
+ {
++	struct mesh_table *tbl;
+ 	struct mpath_node *gate, *new_gate;
+ 	struct hlist_node *n;
+ 	int err;
+ 
+ 	rcu_read_lock();
+-	tbl = rcu_dereference(tbl);
++	tbl = rcu_dereference(mesh_paths);
+ 
+ 	hlist_for_each_entry_rcu(gate, n, tbl->known_gates, list)
+ 		if (gate->mpath == mpath) {
+@@ -478,8 +473,6 @@ static int mesh_gate_del(struct mesh_tab
+ 	struct mpath_node *gate;
+ 	struct hlist_node *p, *q;
+ 
+-	tbl = rcu_dereference(tbl);
+-
+ 	hlist_for_each_entry_safe(gate, p, q, tbl->known_gates, list)
+ 		if (gate->mpath == mpath) {
+ 			spin_lock_bh(&tbl->gates_lock);
+@@ -498,16 +491,6 @@ static int mesh_gate_del(struct mesh_tab
+ }
+ 
+ /**
+- *
+- * mesh_path_add_gate - add the given mpath to a mesh gate to our path table
+- * @mpath: gate path to add to table
+- */
+-int mesh_path_add_gate(struct mesh_path *mpath)
+-{
+-	return mesh_gate_add(mesh_paths, mpath);
+-}
+-
+-/**
+  * mesh_gate_num - number of gates known to this interface
+  * @sdata: subif data
+  */
 
-Jan de Jongh
-GCDC - Technology Leader
 
