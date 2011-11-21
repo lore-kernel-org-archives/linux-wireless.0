@@ -1,38 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3627 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751322Ab1KQWbv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 17:31:51 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: dwmw2@infradead.org
-cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: [PATCH 0/3] linux-firmware: new firmware for brcmfmac and nvram
- removal
-Date: Thu, 17 Nov 2011 14:31:38 -0800
-Message-ID: <1321569101-19568-1-git-send-email-frankyl@broadcom.com> (sfid-20111117_233154_459786_40512EB4)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:58523 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753954Ab1KUOmA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 09:42:00 -0500
+Received: by mail-bw0-f46.google.com with SMTP id 11so6626611bke.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 06:41:59 -0800 (PST)
+From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
+	Mike Krinkin <krinkin.m.u@gmail.com>
+Subject: [RFC v2 8/8] cfg80211 and nl80211: setting and getting mesh non-peer power mode
+Date: Mon, 21 Nov 2011 18:40:16 +0400
+Message-Id: <1321886416-12597-9-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154203_638278_18E997E9)
+In-Reply-To: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
+References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series adds new firmware for bcm4329 and bcm4330 and removes
-the nvram file from the repository as it is not useful for Linux users
-and only used for internal development.
+The non-peer mesh power mode determines when non-peer mesh STAs may
+send Probe Request and Mesh Peering Open Request frames to the mesh STA.
+Possibilities of setting and getting mesh non-peer power mode are
+added.
 
-Franky Lin (3):
-  linux-firmware: add new bcm4329 firmware for brcmfmac
-  linux-firmware: add bcm4330 firmware for brcmfmac
-  linux-firmware: remove nvram file for bcm4329 development board
+Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
+---
+ include/linux/nl80211.h |    3 +++
+ net/mac80211/cfg.c      |    5 +++++
+ net/wireless/nl80211.c  |    8 ++++++++
+ 3 files changed, 16 insertions(+), 0 deletions(-)
 
- brcm/bcm4329-fullmac-4.txt |   94 --------------------------------------------
- brcm/brcmfmac4329.bin      |  Bin 0 -> 253748 bytes
- brcm/brcmfmac4330.bin      |  Bin 0 -> 222126 bytes
- 3 files changed, 0 insertions(+), 94 deletions(-)
- delete mode 100644 brcm/bcm4329-fullmac-4.txt
- create mode 100755 brcm/brcmfmac4329.bin
- create mode 100755 brcm/brcmfmac4330.bin
-
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 4f4bfb8..78807f4 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -2015,6 +2015,8 @@ enum nl80211_mesh_power_mode {
+  * access to a broader network beyond the MBSS.  This is done via Root
+  * Announcement frames.
+  *
++ * @NL80211_MESHCONF_POWER_MODE: mesh non-peer power mode
++ *
+  * @NL80211_MESHCONF_ATTR_MAX: highest possible mesh configuration attribute
+  *
+  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
+@@ -2038,6 +2040,7 @@ enum nl80211_meshconf_params {
+ 	NL80211_MESHCONF_ELEMENT_TTL,
+ 	NL80211_MESHCONF_HWMP_RANN_INTERVAL,
+ 	NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
++	NL80211_MESHCONF_POWER_MODE,
+ 
+ 	/* keep last */
+ 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 2b0cc2c..e841740 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1227,6 +1227,11 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
+ 		conf->dot11MeshHWMPRannInterval =
+ 			nconf->dot11MeshHWMPRannInterval;
+ 	}
++	if (_chg_mesh_attr(NL80211_MESHCONF_POWER_MODE, mask)) {
++		conf->power_mode = nconf->power_mode;
++		ieee80211_bss_info_change_notify(sdata,
++						BSS_CHANGED_BEACON);
++	}
+ 	return 0;
+ }
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c53c8bb..cfa8b0e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3144,6 +3144,8 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
+ 			cur_params.dot11MeshHWMPRannInterval);
+ 	NLA_PUT_U8(msg, NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
+ 			cur_params.dot11MeshGateAnnouncementProtocol);
++	NLA_PUT_U8(msg, NL80211_MESHCONF_POWER_MODE,
++			cur_params.power_mode);
+ 	nla_nest_end(msg, pinfoattr);
+ 	genlmsg_end(msg, hdr);
+ 	return genlmsg_reply(msg, info);
+@@ -3174,6 +3176,8 @@ static const struct nla_policy nl80211_meshconf_params_policy[NL80211_MESHCONF_A
+ 	[NL80211_MESHCONF_HWMP_ROOTMODE] = { .type = NLA_U8 },
+ 	[NL80211_MESHCONF_HWMP_RANN_INTERVAL] = { .type = NLA_U16 },
+ 	[NL80211_MESHCONF_GATE_ANNOUNCEMENTS] = { .type = NLA_U8 },
++
++	[NL80211_MESHCONF_POWER_MODE] = { .type = NLA_U8 },
+ };
+ 
+ static const struct nla_policy
+@@ -3260,6 +3264,10 @@ do {\
+ 			dot11MeshGateAnnouncementProtocol, mask,
+ 			NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
+ 			nla_get_u8);
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg,
++			power_mode, mask,
++			NL80211_MESHCONF_POWER_MODE,
++			nla_get_u8);
+ 	if (mask_out)
+ 		*mask_out = mask;
+ 
 -- 
-1.7.5.4
-
+1.7.3.4
 
