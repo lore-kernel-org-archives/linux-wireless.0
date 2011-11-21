@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60520 "EHLO mx1.redhat.com"
+Received: from purkki.adurom.net ([80.68.90.206]:41117 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754321Ab1KCJl0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 05:41:26 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 2/3] mac80211: remove useless brackets in ieee80211_cfg_on_oper_channel
-Date: Thu,  3 Nov 2011 10:40:46 +0100
-Message-Id: <1320313247-23167-2-git-send-email-sgruszka@redhat.com> (sfid-20111103_104128_854523_1EEFF4DC)
-In-Reply-To: <1320313247-23167-1-git-send-email-sgruszka@redhat.com>
-References: <1320313247-23167-1-git-send-email-sgruszka@redhat.com>
+	id S1752388Ab1KURUr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 12:20:47 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: Re: [PATCHv3 3/3] mac80211: Add NoAck per tid Support
+References: <1321614110-32392-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	<1321614110-32392-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+	<1321614744.10266.37.camel@jlt3.sipsolutions.net>
+	<20111118123054.GA32175@pandem0nium>
+Date: Mon, 21 Nov 2011 19:20:39 +0200
+In-Reply-To: <20111118123054.GA32175@pandem0nium> (Simon Wunderlich's message
+	of "Fri, 18 Nov 2011 13:30:54 +0100")
+Message-ID: <87mxbpie8o.fsf@purkki.adurom.net> (sfid-20111121_182050_513052_26500E73)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/mac80211/main.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de> writes:
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 7710b10..cd87fd9 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -126,8 +126,8 @@ bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local)
- 		return false;
- 
- 	/* Check current hardware-config against oper_channel. */
--	if ((local->oper_channel != local->hw.conf.channel) ||
--	    (local->_oper_channel_type != local->hw.conf.channel_type))
-+	if (local->oper_channel != local->hw.conf.channel ||
-+	    local->_oper_channel_type != local->hw.conf.channel_type)
- 		return false;
- 
- 	return true;
+>> Isn't this missing an update to ieee80211_duration() now?
+>
+> Yep, I silently dropped that modification - I rather don't mess with stuff I
+> don't completly understand. Keeping the duration too long shouldn't hurt
+> (only performance), having it too short will have much worse effects ...
+
+Still a comment in the function about this issue would be nice. Just to
+make sure that it's not forgotten.
+
 -- 
-1.7.1
-
+Kalle Valo
