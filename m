@@ -1,71 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28461 "EHLO mx1.redhat.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:4623 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752433Ab1K3PjD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 10:39:03 -0500
-Date: Wed, 30 Nov 2011 16:39:30 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Michal Hocko <mhocko@suse.cz>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
- iwl3945_rs_free_sta
-Message-ID: <20111130153929.GA2144@redhat.com> (sfid-20111130_163908_559584_15FF5EBC)
-References: <20111129100727.GD2675@tiehlicka.suse.cz>
- <20111129113906.GA7299@redhat.com>
- <20111130101028.GA2906@tiehlicka.suse.cz>
- <20111130142316.GA2466@redhat.com>
- <20111130140316.GA4153@tiehlicka.suse.cz>
+	id S1755452Ab1KURXb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 12:23:31 -0500
+Message-ID: <4ECA8908.7070304@broadcom.com> (sfid-20111121_182341_140044_BF76D357)
+Date: Mon, 21 Nov 2011 18:23:20 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="OgqxwSJOaUobr8KG"
-In-Reply-To: <20111130140316.GA4153@tiehlicka.suse.cz>
+To: =?ISO-8859-1?Q?Thomas_Lang=E5s?= <thomas.langas@fxitech.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Subject: Re: brcm80211 (with bcm4329-chip)
+References: <CADrAYBnwWEaigcgQYYk6V3VEuEYyrmzJQXegKVk6TgOTPh5N8A@mail.gmail.com>
+In-Reply-To: <CADrAYBnwWEaigcgQYYk6V3VEuEYyrmzJQXegKVk6TgOTPh5N8A@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 11/21/2011 02:56 PM, Thomas Langås wrote:
+> Hi!
+> 
+> I'm trying to make our board use this driver instead of an old,
+> proprietary bcm4329-driver, but I can't seem
+> to find much detail on how to tell the driver where my chip is located
+> (on what SDIO-bus).  I suppose there
+> is some specifics I need to include in my machine-file?  Or is
+> everything magic?  Because, currently
+> the platform crashes when enabling the driver. I suspect that this is
+> because we boot from an uSD-card,
+> and that the brcm80211 tries to access the same port for connecting to the chip.
+> 
 
---OgqxwSJOaUobr8KG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+The MMC core should be able to come up with the correct device. It
+sounds strange that the driver would be activated for an SD card.
 
-On Wed, Nov 30, 2011 at 03:03:16PM +0100, Michal Hocko wrote:
-> No, didn't help unfortunately...
+Could you provide some information on the board you are using. Type of
+processor, kernel version, and anything else you can/want to share. In
+/sys/bus/sdio/devices/ you may find the location of the bcm4329.
 
-Lets gather some more messages. Please apply attached simple patch,
-recompile with:
-CONFIG_MAC80211_DEBUG_MENU=y
-CONFIG_MAC80211_VERBOSE_DEBUG=y
-and provide dmesg.
+Gr. AvS
 
-Thanks
-Stanislaw
-
---OgqxwSJOaUobr8KG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="mac80211_debug.patch"
-
-diff --git a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-index 8faeaf2..c728f94 100644
---- a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-@@ -413,6 +413,7 @@ static void *iwl3945_rs_alloc_sta(void *iwl_priv, struct ieee80211_sta *sta, gfp
- 	IWL_DEBUG_RATE(priv, "enter\n");
- 
- 	rs_sta = &psta->rs_sta;
-+	printk("%s rs_sta %p\n", __func__, rs_sta);
- 
- 	spin_lock_init(&rs_sta->lock);
- 	init_timer(&rs_sta->rate_scale_flush);
-@@ -432,6 +433,10 @@ static void iwl3945_rs_free_sta(void *iwl_priv, struct ieee80211_sta *sta,
- 	 * to use iwl_priv to print out debugging) since it may not be fully
- 	 * initialized at this point.
- 	 */
-+
-+	printk("%s rs_sta %p\n", __func__, rs_sta);
-+	if (WARN_ON(rs_sta->rate_scale_flush.base == NULL))
-+		return;
- 	del_timer_sync(&rs_sta->rate_scale_flush);
- }
- 
-
---OgqxwSJOaUobr8KG--
