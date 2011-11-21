@@ -1,28 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:55261 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752151Ab1KYVMB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 16:12:01 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 89D76540575
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Nov 2011 16:12:00 -0500 (EST)
-Subject: Compat-wireless release for 2011-11-25 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20111125211200.67D1B4062B@repository3.orbit-lab.org> (sfid-20111125_221206_279660_4A233825)
-Date: Fri, 25 Nov 2011 16:12:00 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from cantor2.suse.de ([195.135.220.15]:56464 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752330Ab1KUSaw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 13:30:52 -0500
+Date: Mon, 21 Nov 2011 10:26:34 -0800
+From: Greg KH <gregkh@suse.de>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, mjg@redhat.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: pci: Rework ASPM disable code patch
+Message-ID: <20111121182634.GA7037@suse.de> (sfid-20111121_193055_507580_B4C2450D)
+References: <1321896029.11647.50.camel@wwguy-huron>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1321896029.11647.50.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 2d84e58...b35a5f0 akpm-end   -> origin/akpm-end  (forced update)
-   0952157..caca6a0  akpm-start -> origin/akpm-start
- + e0715c95...e7980f7 master     -> origin/master  (forced update)
-   0952157..caca6a0  stable     -> origin/stable
- * [new tag]         next-20111125 -> next-20111125
- * [new tag]         v3.2-rc3   -> v3.2-rc3
+On Mon, Nov 21, 2011 at 09:20:29AM -0800, Guy, Wey-Yi wrote:
+> Hi John/Garrett/Greg,
+> 
+> We test the ASPM patch with the Intel WiFi devices on number of
+> platforms and the improvement is huge.
 
-compat-wireless code metrics
+What "ASPM patch"?
 
-    817967 - Total upstream lines of code being pulled
+> In the "idle associated" mode, the power consumption number for our new
+> devices down to ~40mW range from over 120mW.
+> 
+> We will do more testing but I will suggest to apply this patch to the
+> stable release.
+
+What is the git commit id of this patch?  Have you read
+Documentation/stable_kernel_rules.txt for how to properly submit a patch
+to the stable kernel trees?
+
+thanks,
+
+greg k-h
