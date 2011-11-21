@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58106 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753246Ab1KUN7q (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:60237 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132Ab1KUUfB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 08:59:46 -0500
-MIME-Version: 1.0
-In-Reply-To: <20111121030640.GI32505@gamma.logic.tuwien.ac.at>
-References: <20111102031345.GA10851@gamma.logic.tuwien.ac.at>
-	<1320204101.31823.140.camel@wwguy-huron>
-	<20111104045817.GA25778@gamma.logic.tuwien.ac.at>
-	<20111107123812.GB23508@gamma.logic.tuwien.ac.at>
-	<1320709047.31823.188.camel@wwguy-huron>
-	<20111108043233.GA21171@gamma.logic.tuwien.ac.at>
-	<CANUX_P0Q0wve4D6fZPsMv2Zw=02gb9u+3C2cjRv7UAmWqXnjzw@mail.gmail.com>
-	<CANUX_P06ww42p6N1k_P-Y1KMKOd1QgR_DxVWe19qtsEX2rfWpw@mail.gmail.com>
-	<20111109051152.GA16006@gamma.logic.tuwien.ac.at>
-	<CANUX_P2Yz9bWP_EmU1Acs7Mu2w78CXxO-njhiMt97b0TJHFYiQ@mail.gmail.com>
-	<20111121030640.GI32505@gamma.logic.tuwien.ac.at>
-Date: Mon, 21 Nov 2011 15:59:44 +0200
-Message-ID: <CANUX_P2AA5stHwjegKdFhFGg7jxwdVU2Xr8OUtXUdEOKz_6E5A@mail.gmail.com> (sfid-20111121_145950_080471_C7CD48ED)
-Subject: Re: iwlagn is getting very shaky
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Norbert Preining <preining@logic.at>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 21 Nov 2011 15:35:01 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCH] mac80211: fix duration calculation for QoS NOACK frames
+Date: Mon, 21 Nov 2011 21:34:30 +0100
+Message-Id: <1321907670-22247-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111121_213506_322618_BB4BEAB5)
+In-Reply-To: <1321622446-2477-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1321622446-2477-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> And what I stil see is that the tx-queue gets stuck and does not
-> recover without rmmod iwlwif.
->
-> hwq 11: read=0 write=0 stop=1 swq_id=0x2e (ac 2/hwq 11)
->
-> But I still am using the patch that you sent to disable power save,
-> so it is not only this one.
->
-> If you think I shouuld turn on power debug again and see hope that
-> it happens again, let me know.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ net/mac80211/tx.c |   14 +++++++++-----
+ 1 files changed, 9 insertions(+), 5 deletions(-)
 
-No, I don't think it is needed. Thanks.
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index f632690..8b8952a 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -150,11 +150,15 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx, int group_addr,
+ 		rate = mrate;
+ 	}
+ 
+-	/* Time needed to transmit ACK
+-	 * (10 bytes + 4-byte FCS = 112 bits) plus SIFS; rounded up
+-	 * to closest integer */
+-
+-	dur = ieee80211_frame_duration(local, 10, rate, erp,
++	/* Don't calculate ACKs for QoS Frames with NoAck Policy set */
++	if (ieee80211_is_data_qos(hdr->frame_control) &&
++	    *(ieee80211_get_qos_ctl(hdr)) | IEEE80211_QOS_CTL_ACK_POLICY_NOACK)
++		dur = 0;
++	else
++		/* Time needed to transmit ACK
++		 * (10 bytes + 4-byte FCS = 112 bits) plus SIFS; rounded up
++		 * to closest integer */
++		dur = ieee80211_frame_duration(local, 10, rate, erp,
+ 				tx->sdata->vif.bss_conf.use_short_preamble);
+ 
+ 	if (next_frag_len) {
+-- 
+1.7.7.3
 
-I do would like you to check that you have my patch:
-
-iwlwifi: add debug information on queue stop / wake
-
-and run with debug flags 0x80000000 (bit 31)
-This will print a message each time a queue is stopped / started.
-
-Thanks for your patience !
