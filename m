@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61443 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750771Ab1KGF1a (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:53173 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645Ab1KUWW4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 00:27:30 -0500
-From: Raja Mani <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH v2 06/11] ath6kl: Move ath6kl_cfg80211_stop() call specific to deep sleep and cut pwr
-Date: Mon, 7 Nov 2011 10:55:42 +0530
-Message-ID: <1320643547-3578-7-git-send-email-rmani@qca.qualcomm.com> (sfid-20111107_062733_158373_FDDD9263)
-In-Reply-To: <1320643547-3578-1-git-send-email-rmani@qca.qualcomm.com>
-References: <1320643547-3578-1-git-send-email-rmani@qca.qualcomm.com>
+	Mon, 21 Nov 2011 17:22:56 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <201111212249.31196.rjw@sisk.pl>
+References: <lx6sezwGldO.A.IhF.UBpWOB@chimera> <201111212249.31196.rjw@sisk.pl>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 21 Nov 2011 14:22:33 -0800
+Message-ID: <CA+55aFyy19VYSdZW0+jNxAb8ix0xpX2j9YFw9oQi3jm3+mDEvw@mail.gmail.com> (sfid-20111121_232321_736988_02A981FF)
+Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
+To: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath6kl_cfg80211_stop() call is not applicable for WOW mode. Hence moving
-this call to deep sleep and cut pwr specific cases.
+On Mon, Nov 21, 2011 at 1:49 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>
+> Subject    : [3.1-rc8 REGRESSION] sky2 hangs machine on turning off or suspending
+> Submitter  : Rafa³ Mi³ecki <zajec5@gmail.com>
+> Date       : 2011-11-09 11:46
+> Message-ID : CACna6ryTdLcWVYgHu=_mRFga1sFivpE_DyZOY-HMmKggkWAJAw@mail.gmail.com
+> References : http://marc.info/?l=linux-netdev&m=132083922228088&w=4
 
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+This should be fixed by commit 1401a8008a09 ("sky2: fix hang on
+shutdown (and other irq issues)") in current -git.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 1dc7374..2cd43c8 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1759,10 +1759,11 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
- {
- 	int ret;
- 
--	ath6kl_cfg80211_stop(ar);
--
- 	switch (mode) {
- 	case ATH6KL_CFG_SUSPEND_DEEPSLEEP:
-+
-+		ath6kl_cfg80211_stop(ar);
-+
- 		/* save the current power mode before enabling power save */
- 		ar->wmi->saved_pwr_mode = ar->wmi->pwr_mode;
- 
-@@ -1777,6 +1778,9 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
- 		break;
- 
- 	case ATH6KL_CFG_SUSPEND_CUTPOWER:
-+
-+		ath6kl_cfg80211_stop(ar);
-+
- 		if (ar->state == ATH6KL_STATE_OFF) {
- 			ath6kl_dbg(ATH6KL_DBG_SUSPEND,
- 				   "suspend hw off, no action for cutpower\n");
--- 
-1.7.1
-
+                   Linus
