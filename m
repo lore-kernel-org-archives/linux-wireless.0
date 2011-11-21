@@ -1,47 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34320 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751675Ab1KQWWP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 17:22:15 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2 3/4] compat: check CONFIG_COMPAT_FIRMWARE_CLASS in compat-2.6.33.h
-Date: Thu, 17 Nov 2011 17:20:41 -0500
-Message-Id: <1321568442-22758-3-git-send-email-linville@tuxdriver.com> (sfid-20111117_232220_343834_20C286F0)
-In-Reply-To: <1321568442-22758-1-git-send-email-linville@tuxdriver.com>
-References: <1321568442-22758-1-git-send-email-linville@tuxdriver.com>
+Received: from mga03.intel.com ([143.182.124.21]:50824 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753535Ab1KUSQT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 13:16:19 -0500
+Subject: pci: Rework ASPM disable code patch
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com, mjg@redhat.com, gregkh@suse.de
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 21 Nov 2011 09:20:29 -0800
+Message-ID: <1321896029.11647.50.camel@wwguy-huron> (sfid-20111121_191622_484312_29A2F2D8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If a pre-2.6.33 kernel has backported suitable firmware loader
-functionality, then it doesn't need the compat_firmware_class.  In that
-case, compat-2.6.33 should not redefine the *_firmware function names.
+Hi John/Garrett/Greg,
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- include/linux/compat-2.6.33.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+We test the ASPM patch with the Intel WiFi devices on number of
+platforms and the improvement is huge.
 
-diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
-index 539b469..e9e888a 100644
---- a/include/linux/compat-2.6.33.h
-+++ b/include/linux/compat-2.6.33.h
-@@ -14,9 +14,11 @@
- #endif
- #include <linux/firmware.h>
- 
-+#if defined(CONFIG_COMPAT_FIRMWARE_CLASS)
- #define release_firmware compat_release_firmware
- #define request_firmware compat_request_firmware
- #define request_firmware_nowait compat_request_firmware_nowait
-+#endif
- 
- #if defined(CONFIG_FW_LOADER) || defined(CONFIG_FW_LOADER_MODULE)
- int compat_request_firmware(const struct firmware **fw, const char *name,
--- 
-1.7.4.4
+In the "idle associated" mode, the power consumption number for our new
+devices down to ~40mW range from over 120mW.
+
+We will do more testing but I will suggest to apply this patch to the
+stable release.
+
+Thanks
+Wey
 
