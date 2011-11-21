@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54678 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754416Ab1KKTYo (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2015 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753281Ab1KURMb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Nov 2011 14:24:44 -0500
-Date: Fri, 11 Nov 2011 14:16:43 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: fix warning in ieee80211_probe_client
-Message-ID: <20111111191643.GD2485@tuxdriver.com> (sfid-20111111_202447_644874_0101EEB1)
-References: <1321036348-32272-1-git-send-email-linville@tuxdriver.com>
- <4EBD7183.3080008@lwfinger.net>
+	Mon, 21 Nov 2011 12:12:31 -0500
+Message-ID: <4ECA861A.4040906@qca.qualcomm.com> (sfid-20111121_181234_890884_949F9007)
+Date: Mon, 21 Nov 2011 19:10:50 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4EBD7183.3080008@lwfinger.net>
+To: Raja Mani <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: Use mutex to protect dma buffer in sync read
+ write
+References: <1321858611-2729-1-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1321858611-2729-1-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 11, 2011 at 01:03:31PM -0600, Larry Finger wrote:
-> On 11/11/2011 12:32 PM, John W. Linville wrote:
-> >   CC [M]  net/mac80211/cfg.o
-> >net/mac80211/cfg.c: In function ‘ieee80211_probe_client’:
-> >net/mac80211/cfg.c:2567:7: warning: ‘qos’ may be used uninitialized in this function
-> >
-> >Signed-off-by: John W. Linville<linville@tuxdriver.com>
-> >---
-> >  net/mac80211/cfg.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> >
-> >diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> >index c2416fb..1d82d2b 100644
-> >--- a/net/mac80211/cfg.c
-> >+++ b/net/mac80211/cfg.c
-> >@@ -2564,7 +2564,7 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
-> >  	struct sk_buff *skb;
-> >  	int size = sizeof(*nullfunc);
-> >  	__le16 fc;
-> >-	bool qos;
-> >+	bool qos = NULL;
-> >  	struct ieee80211_tx_info *info;
-> >  	struct sta_info *sta;
+On 11/21/2011 08:56 AM, Raja Mani wrote:
+> Firmware crashes while starting Soft AP in 32 bit x86 platform.
+> The reason is that the single dma buffer (ar_sdio->dma_buffer)
+> is used in ath6kl_sdio_read_write_sync() for unaligned buffer
+> handling and this function is called in the multiple context
+> at the same time. So, finally hits dma buffer corruption and
+> firmware crash.
 > 
-> Shouldn't the initialization for a bool be "false"? Doesn't
-> checkpatch.pl complain about that? I know it does if you try to
-> initialize a pointer to 0 rather than NULL.
+> Mutex is used to protect dma buffer to avoid data corruption.
+> Spin lock can not used to fix this issue since mmc stack
+> read/write calls may for sleep.
+> 
+> Observed this issue with recently commited patch
+> "ath6kl: Claim sdio function only at appropriate places"
+> 861dd058f495973c7ad2a44b8f68f3cc05733eab
+> 
+> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 
-That's why we post patches to the list. :-)
+I really would not like to add yet another lock (or mutex) to ath6kl,
+but I don't see any other quick fix for this. So I have applied this for
+now, but I hope that in the future we get to remove the ugly bounce
+buffer altogether.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+But I did minor changes in the patch: I added a comment to the mutex
+(which I now require for all new locks), renamed the lock to something
+easier and moved it after the buffer.
+
+Kalle
