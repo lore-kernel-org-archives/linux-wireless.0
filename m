@@ -1,115 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40836 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751850Ab1KFNPO (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:55691 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752511Ab1KUVeZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Nov 2011 08:15:14 -0500
-Message-Id: <20111106131424.932238639@sipsolutions.net> (sfid-20111106_142607_361678_CA917B5C)
-Date: Sun, 06 Nov 2011 14:13:33 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] nl80211: advertise socket TX status capability
-References: <20111106131332.746774119@sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 21 Nov 2011 16:34:25 -0500
+Received: by vbbfc21 with SMTP id fc21so3040191vbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 13:34:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CADrAYBndEsNz5nypirSxQPObpSV5BWARWOQzwmBTmzg+tgUbBA@mail.gmail.com>
+References: <CADrAYBnwWEaigcgQYYk6V3VEuEYyrmzJQXegKVk6TgOTPh5N8A@mail.gmail.com>
+	<4ECA8908.7070304@broadcom.com>
+	<4ECA98DB.4030608@broadcom.com>
+	<CADrAYBk7_fsVJUAYNqEZpdBPKOTGUai_UhPT9LMHaEyY+Zm24w@mail.gmail.com>
+	<4ECAAD6C.4080103@broadcom.com>
+	<CADrAYBndEsNz5nypirSxQPObpSV5BWARWOQzwmBTmzg+tgUbBA@mail.gmail.com>
+Date: Mon, 21 Nov 2011 22:34:25 +0100
+Message-ID: <CADrAYB=wDwrzCFEi4-PFepLiLMbPLAGxoaNGtXBaPZPR1onokA@mail.gmail.com> (sfid-20111121_223428_196597_C5B976FA)
+Subject: Re: brcm80211 (with bcm4329-chip)
+From: =?ISO-8859-1?Q?Thomas_Lang=E5s?= <thomas.langas@fxitech.com>
+To: Franky Lin <frankyl@broadcom.com>
+Cc: Arend Van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Howard Harte <hharte@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Nov 21, 2011 at 10:13 PM, Thomas Langås
+<thomas.langas@fxitech.com> wrote:
+> Hmm, doing that, and loading this as a module instead of compiling it into the
+> kernel seemed to work.
+>
+> Is there a reason for this not working when being compiled into the kernel? Is
+> it possible that I need to change the order of  some of the units
+> being initialized
+> in my machine-description / init?
 
-The new wifi socket TX capability should be
-supported by wifi drivers, let them advertise
-whether they do or not.
+Ok, so I get the device listed as a wlan0-device, and I see the driver
+being able to communicate
+with the chip, sort of (it can read registers at least), but then I
+start seeing errors like this (from
+the previously attached log):
+[  463.030000] brcmf_sdioh_request_word: Failed to write word, Err: 0xffffffac
+[  463.030000] brcmf_sdcard_reg_write: error writing 0x00000000 to
+addr 0x8058 size 4
+[  463.030000] brcmf_sdcard_reg_write: fun = 1, addr = 0x1800005c,
+uint32data = 0x0
+[  463.030000] brcmf_sdioh_request_word: rw=1, func=1, addr=0x0805c, nbytes=4
+[  463.030000] brcmf_sdioh_request_word: Failed to write word, Err: 0xffffffac
+[  463.030000] brcmf_sdcard_reg_write: error writing 0x00000000 to
+addr 0x805c size 4
+[  463.030000] brcmf_sdioh_request_byte: rw=1, func=0, addr=0x00002
+[  463.040000] brcmf_sdcard_cfg_write: fun = 0, addr = 0x2, u8data = 0x2
+[  463.040000] brcmf_sdioh_request_byte: rw=0, func=1, addr=0x00000
+[  463.040000] brcmf_sdcard_cfg_read: fun = 1, addr = 0x0, u8data = 0x29
+[  463.040000] brcmf_sdioh_request_byte: rw=1, func=1, addr=0x1000e
+[  463.040000] brcmf_sdcard_cfg_write: fun = 1, addr = 0x1000e, u8data = 0x0
+[  463.040000] brcmf_sdbrcm_sdiod_drive_strength_init: No SDIO Drive
+strength init done for chip 4329 rev 3 pmurev 6
+...
+[  463.040000] brcmf_sdcard_reg_write: fun = 1, addr = 0x18011000,
+uint32data = 0x2
+[  463.040000] brcmf_sdioh_request_word: rw=1, func=1, addr=0x09000, nbytes=4
+[  463.040000] brcmf_sdioh_request_word: Failed to write word, Err: 0xffffffac
+[  463.040000] brcmf_sdcard_reg_write: error writing 0x00000002 to
+addr 0x9000 size 4
+[  463.040000] brcmf_attach: Enter
+...
+[  463.050000] brcmf_sdbrcm_probe: completed!!
+...
+[  463.055000] brcmf_sdbrcm_isr: Enter
+[  463.055000] brcmf_sdbrcm_isr: bus is down. we have nothing to do
+...
+(and the list goes on)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/nl80211.h |   18 ++++++++++++++++++
- include/net/cfg80211.h  |    3 ++-
- net/wireless/nl80211.c  |    2 ++
- 3 files changed, 22 insertions(+), 1 deletion(-)
-
---- a/include/linux/nl80211.h	2011-11-04 11:22:29.000000000 +0100
-+++ b/include/linux/nl80211.h	2011-11-04 11:43:48.000000000 +0100
-@@ -695,6 +695,8 @@ enum nl80211_commands {
- #define NL80211_CMD_DISASSOCIATE NL80211_CMD_DISASSOCIATE
- #define NL80211_CMD_REG_BEACON_HINT NL80211_CMD_REG_BEACON_HINT
- 
-+#define NL80211_ATTR_FEATURE_FLAGS NL80211_ATTR_FEATURE_FLAGS
-+
- /* source-level API compatibility */
- #define NL80211_CMD_GET_MESH_PARAMS NL80211_CMD_GET_MESH_CONFIG
- #define NL80211_CMD_SET_MESH_PARAMS NL80211_CMD_SET_MESH_CONFIG
-@@ -1156,6 +1158,9 @@ enum nl80211_commands {
-  *	it will also not give a status callback nor return a cookie. This is
-  *	mostly useful for probe responses to save airtime.
-  *
-+ * @NL80211_ATTR_FEATURE_FLAGS: This u32 attribute contains flags from
-+ *	&enum nl80211_feature_flags and is advertised in wiphy information.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1388,6 +1393,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_DONT_WAIT_FOR_ACK,
- 
-+	NL80211_ATTR_FEATURE_FLAGS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -1422,6 +1429,7 @@ enum nl80211_attrs {
- #define NL80211_ATTR_AKM_SUITES NL80211_ATTR_AKM_SUITES
- #define NL80211_ATTR_KEY NL80211_ATTR_KEY
- #define NL80211_ATTR_KEYS NL80211_ATTR_KEYS
-+#define NL80211_ATTR_FEATURE_FLAGS NL80211_ATTR_FEATURE_FLAGS
- 
- #define NL80211_MAX_SUPP_RATES			32
- #define NL80211_MAX_SUPP_REG_RULES		32
-@@ -2714,4 +2722,14 @@ enum nl80211_ap_sme_features {
- 	NL80211_AP_SME_WSC	= 1 << 0,
- };
- 
-+/**
-+ * enum nl80211_feature_flags - device/driver features
-+ * @NL80211_FEATURE_SK_TX_STATUS: This driver supports reflecting back
-+ *	TX status to the socket error queue when requested with the
-+ *	socket option.
-+ */
-+enum nl80211_feature_flags {
-+	NL80211_FEATURE_SK_TX_STATUS	= 1 << 0,
-+};
-+
- #endif /* __LINUX_NL80211_H */
---- a/include/net/cfg80211.h	2011-11-04 11:22:29.000000000 +0100
-+++ b/include/net/cfg80211.h	2011-11-04 11:43:05.000000000 +0100
-@@ -1877,6 +1877,7 @@ struct wiphy_wowlan_support {
-  * @software_iftypes: bitmask of software interface types, these are not
-  *	subject to any restrictions since they are purely managed in SW.
-  * @flags: wiphy flags, see &enum wiphy_flags
-+ * @features: features advertised to nl80211, see &enum nl80211_feature_flags.
-  * @bss_priv_size: each BSS struct has private data allocated with it,
-  *	this variable determines its size
-  * @max_scan_ssids: maximum number of SSIDs the device can scan for in
-@@ -1938,7 +1939,7 @@ struct wiphy {
- 	/* Supported interface modes, OR together BIT(NL80211_IFTYPE_...) */
- 	u16 interface_modes;
- 
--	u32 flags;
-+	u32 flags, features;
- 
- 	u32 ap_sme_capa;
- 
---- a/net/wireless/nl80211.c	2011-11-04 11:22:29.000000000 +0100
-+++ b/net/wireless/nl80211.c	2011-11-04 11:43:05.000000000 +0100
-@@ -1017,6 +1017,8 @@ static int nl80211_send_wiphy(struct sk_
- 		NLA_PUT_U32(msg, NL80211_ATTR_DEVICE_AP_SME,
- 			    dev->wiphy.ap_sme_capa);
- 
-+	NLA_PUT_U32(msg, NL80211_ATTR_FEATURE_FLAGS, dev->wiphy.features);
-+
- 	return genlmsg_end(msg, hdr);
- 
-  nla_put_failure:
+Any pointers on what I should start looking for?  :)
 
 
+Regards,
+Thomas
