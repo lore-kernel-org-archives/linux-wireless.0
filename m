@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57233 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756062Ab1K3IcX (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52340 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752718Ab1KUNNY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 03:32:23 -0500
-Subject: Re: [PATCH] mac80211: reset addba retries after timeout
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <CALGY4fu7DExMn6BCrwTMCEav1VEe81NAvJapiLXoi_DSf50ctg@mail.gmail.com> (sfid-20111129_234719_623158_EFE47BCC)
-References: <1322533625-24641-1-git-send-email-mar.kolya@gmail.com>
-	 <1322555084.4110.2.camel@jlt3.sipsolutions.net>
-	 <CALGY4fvLSKBY93M9Bhb-F8Sm=Uw5nU+OvTtAmk_BXQX8WX6V8A@mail.gmail.com>
-	 <1322579973.4110.22.camel@jlt3.sipsolutions.net>
-	 <CALGY4fvSOdKtZbPSdvYkY3XXaGXNo-Ft8ir4LikmnTLqSkVCGA@mail.gmail.com>
-	 <1322604877.11282.1.camel@jlt3.sipsolutions.net>
-	 <CALGY4ftCLvwUuRZbH30PyUxAd6U7-p9hGwu8SjzLmqV4=XryZg@mail.gmail.com>
-	 <1322606159.11282.2.camel@jlt3.sipsolutions.net>
-	 <CALGY4fu7DExMn6BCrwTMCEav1VEe81NAvJapiLXoi_DSf50ctg@mail.gmail.com>
-	 (sfid-20111129_234719_623158_EFE47BCC)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 30 Nov 2011 09:32:18 +0100
-Message-ID: <1322641938.3982.0.camel@jlt3.sipsolutions.net> (sfid-20111130_093226_883039_FCB736D2)
-Mime-Version: 1.0
+	Mon, 21 Nov 2011 08:13:24 -0500
+Received: by iage36 with SMTP id e36so7257162iag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 05:13:24 -0800 (PST)
+MIME-Version: 1.0
+Date: Mon, 21 Nov 2011 17:13:24 +0400
+Message-ID: <CAG5dHkSLvG2mbsxGAzQ9SwFrFNwEhiCxTLjn9RvpRQwwsny5+g@mail.gmail.com> (sfid-20111121_141328_183782_F6BD333D)
+Subject: [RFC v2 0/8] mesh power saving implementation: indication
+From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-11-29 at 17:46 -0500, Nikolay Martynov wrote:
+Hi!
 
-> > Maybe the better approach would be to bump it up, but also only allow an
-> > attempt once every say 15 seconds or so? It seems kinda useless to try 3
-> > (or 10/15) times in quick succession and then give up, vs. just trying
-> > more spaced out?
-> 
->   Makes sense to me. Although I would left first 2-3 go quickly in
-> case first was lost due to random glitch there is no reason to wait 15
-> seconds. But if first 2-3 fail - it make sense split next apart, I
-> think.
+We have updated our patches and also we would like to add some words
+what our work is about.
 
-Seems ok to me, want to implement it? :)
+Based on the latest IEEE 802.11s standard the power saving mechanism
+can be divided into the following implementation phases:
+* indication of mesh STAs' power modes in frames;
+* a buffering and identification sending frames in mesh STA;
+* Mesh Awake Window implementation;
+* Peer service periods.
 
-johannes
+This patchset implements the phase of indication of mesh STAs'
+power modes in frames. There are two types of mesh power modes:
+* peer power mode: a mesh STA indicates its mesh power mode for each
+mesh peering and obtains the mesh power modes of its peer mesh STAs;
+* non-peer power mode: mesh station also indicates mesh power mode for
+non-peer mesh stations. It determines when non-peer mesh STAs may send
+Probe Request and Mesh Peering Open Request frames to the mesh STA.
 
+Peer power mode should be indicated with Power Management field in the Frame
+Control field and the Mesh Power Save Level field in all transmitted
+individually addressed Mesh Data or QoS Null frames on this link.
+
+Non-peer power mode should be indicated with the Power Management
+field in the Frame Control field and the Mesh Power Save Level field
+in the Mesh Capability field in Beacon and Probe Response frames. A
+mesh STA shall also indicate its non-peer mesh power mode with the
+Power Management field in the Frame Control field and the Mesh Power
+Save Level field in the QoS Control field in group addressed Mesh Data
+frames.
+
+We would appreciate comments and advice.
+
+Thanks,
+Ivan
