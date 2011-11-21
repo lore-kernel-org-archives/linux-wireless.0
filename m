@@ -1,59 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:59592 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752849Ab1KYUIU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 15:08:20 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 7/7] iwlwifi: help to debug AGG SM inconsistencies
-Date: Fri, 25 Nov 2011 11:11:48 -0800
-Message-Id: <1322248308-5113-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111125_210828_035269_B92C66FF)
-In-Reply-To: <1322248308-5113-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1322248308-5113-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:40878 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750898Ab1KUFwV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 00:52:21 -0500
+Received: by wwe5 with SMTP id 5so9850224wwe.1
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 21:52:20 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAD2nsn2AWuTOJyufUFP+iS5PobMubjqQ-q52mvYfENr1WriJSg@mail.gmail.com>
+References: <1321836540-5325-1-git-send-email-mar.kolya@gmail.com>
+	<CAD2nsn2AWuTOJyufUFP+iS5PobMubjqQ-q52mvYfENr1WriJSg@mail.gmail.com>
+Date: Mon, 21 Nov 2011 00:52:20 -0500
+Message-ID: <CALGY4fsaHGp3cZxTGPpxyjnjD4QorFgsNmUfAFN=Pfi1tQtamA@mail.gmail.com> (sfid-20111121_065224_674296_DDE0CD0A)
+Subject: Re: [PATCH 0/4] Fix the way ANI is being disabled for ar9100 and ar9340
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linville@tuxdriver.com, rodrigue@qca.qualcomm.com
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Hi,
 
-Add more data when inconsistencies occur in the AGG state machine.
+2011/11/21 Mohammed Shafi <shafi.wireless@gmail.com>:
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   12 ++++++++++--
- 1 files changed, 10 insertions(+), 2 deletions(-)
+>>  Question: there are common.disable_ani (and corresponding debugfs file) and config.enable_ani in ath9k code. config.enable_ani sets if ANI is supported and common.disable_ani is meant to disable calibration. This is confusing on a sense that disable_ani completely disables all calibration code including short/long calibration and ANI, not ANI alone. Would it make sense to rename disable_ani to disable_calib and enable_ani to ani_supported?
+>
+> I understand short and long calibration of ANI, not the complete calibration :)
+> disable_ani is to stop/start ANI anytime via ath9k debugfs entry.
+> please let me know if you have further queries
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 527e795..2ac7542 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1099,13 +1099,21 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 		hdr->seq_ctrl = hdr->seq_ctrl &
- 				cpu_to_le16(IEEE80211_SCTL_FRAG);
- 		hdr->seq_ctrl |= cpu_to_le16(seq_number);
--		seq_number += 0x10;
- 		/* aggregation is on for this <sta,tid> */
- 		if (info->flags & IEEE80211_TX_CTL_AMPDU) {
--			WARN_ON_ONCE(tid_data->agg.state != IWL_AGG_ON);
-+			if (WARN_ON_ONCE(tid_data->agg.state != IWL_AGG_ON)) {
-+				IWL_ERR(trans, "TX_CTL_AMPDU while not in AGG:"
-+					" Tx flags = 0x%08x, agg.state = %d",
-+					info->flags, tid_data->agg.state);
-+				IWL_ERR(trans, "sta_id = %d, tid = %d "
-+					"txq_id = %d, seq_num = %d", sta_id,
-+					tid, tid_data->agg.txq_id,
-+					seq_number >> 4);
-+			}
- 			txq_id = tid_data->agg.txq_id;
- 			is_agg = true;
- 		}
-+		seq_number += 0x10;
- 	}
- 
- 	/* Copy MAC header from skb into command buffer */
+  I'm new to this code so I hope you'll forgive me if my question
+sounds stupidly.
+  There is 'ath_ani_calibrate' which basically does three things
+(apart from timer management boilerplate):
+   -- calls ath9k_hw_calibrate to perform 'long calibration'
+   -- calls ath9k_hw_calibrate to perform 'short calibration'
+   -- calls ath9k_hw_ani_monitor to get ANI statistics (?)
+  So there seem to be three major parts of ANI: long calibration,
+short calibration, and third thing which I find hard to name correctly
+so I'll refer to it as 'ANI-ANI'.
+
+  From your response I understand that 'short calibration' and 'long
+calibration' generally considered to be part of think called ANI.
+Considering this name 'disable_ani' in a sense that it disables
+'ath_ani_calibrate' as a whole looks ok.
+  But config.enable_ani is used to control if 'ANI-ANI' gets executed
+(and this was somewhat true before my patch).
+  So, having two variables which 'negated' names is confusing by
+itself, i.e. enable_ani vs disable_ani. But more confusing is the fact
+that they actually control different things and have different
+meaning, so disable_ani != (!enable_ani).
+
+  I do understand that my 'ANI-ANI' probably has proper name and I
+think that 'enable_ani' should probably be renamed using this proper
+name.
+
+  I'd really appreciate if you could let me know where my
+understanding is incorrect.
+  Thanks!
+
 -- 
-1.7.0.4
-
+Truthfully yours,
+Martynov Nikolay.
+Email: mar.kolya@gmail.com
