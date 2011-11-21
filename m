@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4819 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759554Ab1KWBWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 20:22:15 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 11/24] brcm80211: fmac: discard packet received when net
- device not registered
-Date: Tue, 22 Nov 2011 17:21:46 -0800
-Message-ID: <1322011319-24863-12-git-send-email-frankyl@broadcom.com> (sfid-20111123_022238_274366_F87DE755)
-In-Reply-To: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
-References: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:35031 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752591Ab1KUJpI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 04:45:08 -0500
+Subject: Re: [PATCH] cfg80211: fix regulatory NULL dereference
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1321868640.3999.17.camel@jlt3.sipsolutions.net> (sfid-20111121_104413_868989_62927AFC)
+References: <1321868640.3999.17.camel@jlt3.sipsolutions.net>
+	 (sfid-20111121_104413_868989_62927AFC)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 21 Nov 2011 10:45:00 +0100
+Message-ID: <1321868700.3999.18.camel@jlt3.sipsolutions.net> (sfid-20111121_104511_474797_BC88F2F9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new feature in the dongle firmware requires a handshake during
-firmware intialization. The request is sent in event packets which the
-host driver is not able to handle before any net device registered.
-Discard those packets as the context for handling it is missing.
-The initialization handler will be added as part of feature support
-code in the future.
+On Mon, 2011-11-21 at 10:44 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> By the time userspace returns with a response to
+> the regulatory domain request, the wiphy causing
+> the request might have gone away. If this is so,
+> reject the update but mark the request as having
+> been processed anyway.
+> 
+> Cc: Luis R. Rodriguez <lrodriguez@qca.qualcomm.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Oops, Cc: stable@vger.kernel.org
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 7af1413..62413e8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -431,6 +431,12 @@ void brcmf_rx_frame(struct brcmf_pub *drvr, int ifidx,
- 		if (ifp == NULL)
- 			ifp = drvr_priv->iflist[0];
- 
-+		if (!ifp || !ifp->ndev ||
-+		    ifp->ndev->reg_state != NETREG_REGISTERED) {
-+			brcmu_pkt_buf_free_skb(skb);
-+			continue;
-+		}
-+
- 		skb->dev = ifp->ndev;
- 		skb->protocol = eth_type_trans(skb, skb->dev);
- 
--- 
-1.7.5.4
-
+johannes
 
