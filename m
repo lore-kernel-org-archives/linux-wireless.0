@@ -1,33 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:38702 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757483Ab1KQOq2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60691 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752671Ab1KUQDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 09:46:28 -0500
-MIME-Version: 1.0
-In-Reply-To: <1321481775-10853-1-git-send-email-gwingerde@gmail.com>
-References: <1321481775-10853-1-git-send-email-gwingerde@gmail.com>
-Date: Thu, 17 Nov 2011 15:46:28 +0100
-Message-ID: <CAGXE3d80tV9X9xuRvwg_KC6GksBU4DcLp5FeWRUNaTCDH2YHPg@mail.gmail.com> (sfid-20111117_154632_703275_C7E904AD)
-Subject: Re: [PATCH] rt2x00: Fix efuse EEPROM reading on PPC32.
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.org>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	stable@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 21 Nov 2011 11:03:32 -0500
+Subject: Re: [PATCH 1/3] mac80211: add tx agg session timer to timeout
+ inactive tids in way similar to rx agg sessions are being timed out
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nikolay Martynov <mar.kolya@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <CALGY4ftYb=QS+-3B4kPEJpYf+pdhwrWu5pj+yg-ceO4PU-PwmA@mail.gmail.com> (sfid-20111121_165816_850771_E5B84BD4)
+References: <1321842172-6732-1-git-send-email-mar.kolya@gmail.com>
+	 <1321842172-6732-2-git-send-email-mar.kolya@gmail.com>
+	 <1321868083.3999.15.camel@jlt3.sipsolutions.net>
+	 <CALGY4ftYb=QS+-3B4kPEJpYf+pdhwrWu5pj+yg-ceO4PU-PwmA@mail.gmail.com>
+	 (sfid-20111121_165816_850771_E5B84BD4)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 21 Nov 2011 17:03:29 +0100
+Message-ID: <1321891409.3999.52.camel@jlt3.sipsolutions.net> (sfid-20111121_170335_238212_717D7727)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 16, 2011 at 11:16 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> Fix __le32 to __le16 conversion of the first word of an 8-word block
-> of EEPROM read via the efuse method.
->
-> Reported-and-tested-by: Ingvar Hagelund <ingvar@redpill-linpro.com>
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> CC: <stable@vger.kernel.org>
+On Mon, 2011-11-21 at 10:57 -0500, Nikolay Martynov wrote:
 
-Nice catch!
+> >> @@ -689,6 +716,8 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid)
+> >>        * more.
+> >>        */
+> >>
+> >> +     del_timer_sync(&tid_tx->session_timer);
+> >> +
+> >>       ieee80211_agg_splice_packets(local, tid_tx, tid);
+> >
+> > This is a deadlock waiting to happen.
 
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+>   I'd really appreciate if you could be a bit more specific on why
+> this could lead to deadlock. Thanks!
+
+It's within the spinlock, and you take the spinlock in the timer. So
+this can happen:
+
+cpu 1				cpu 2
+stop_tx_ba_cb
+  spin_lock_bh(&sta->lock);
+				start your timer function
+  del_timer_sync
+    wait for timer to finish
+				spin_lock_bh(&sta->lock);
+
+johannes
+
