@@ -1,55 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:37521 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751241Ab1K0Kog (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Nov 2011 05:44:36 -0500
-MIME-Version: 1.0
-In-Reply-To: <1322387175.4044.16.camel@jlt3.sipsolutions.net>
-References: <20111122072730.GA32225@gamma.logic.tuwien.ac.at>
-	<CANUX_P15En9bHVx4bhq6=XKPZnC2u+QyVJ+jnm4ns=39DrOBtg@mail.gmail.com>
-	<2D0C7905-AEB2-4DE4-89B1-945D89F2B5D6@logic.at>
-	<CANUX_P21PDdyo4u-x_1A0Lcqf-33yHgzUxddAoc3juGRNnrcDg@mail.gmail.com>
-	<20111122124357.GA32440@gamma.logic.tuwien.ac.at>
-	<CANUX_P0uyyuK4netV6srYCh9FsC4cpGzxobHE3T38n5RvvA0RQ@mail.gmail.com>
-	<20111123015503.GC23203@gamma.logic.tuwien.ac.at>
-	<CANUX_P1zDDzMy5yrFXSZAkMQ-87uu-fE1e-2sCEgHJi4dh5eiw@mail.gmail.com>
-	<20111125122143.GA30404@gamma.logic.tuwien.ac.at>
-	<CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com>
-	<20111125123720.GA31564@gamma.logic.tuwien.ac.at>
-	<CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com>
-	<CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com>
-	<1322387175.4044.16.camel@jlt3.sipsolutions.net>
-Date: Sun, 27 Nov 2011 12:44:35 +0200
-Message-ID: <CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com> (sfid-20111127_114454_906159_61E86EE4)
-Subject: Re: iwlagn is getting very shaky
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Norbert Preining <preining@logic.at>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	Dave Jones <davej@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga14.intel.com ([143.182.124.37]:40254 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752653Ab1KUWLT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 17:11:19 -0500
+Subject: Re: pci: Rework ASPM disable code patch
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Greg KH <gregkh@suse.de>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"mjg@redhat.com" <mjg@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20111121205139.GA11055@suse.de>
+References: <1321896029.11647.50.camel@wwguy-huron>
+	 <20111121182634.GA7037@suse.de> <1321897113.11647.52.camel@wwguy-huron>
+	 <20111121205139.GA11055@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 21 Nov 2011 13:15:28 -0800
+Message-ID: <1321910128.11647.56.camel@wwguy-huron> (sfid-20111121_231123_297155_8E89906C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 27, 2011 at 11:46, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Sun, 2011-11-27 at 11:43 +0200, Emmanuel Grumbach wrote:
->> Hi again
->>
->> Can you please try the attached patch ?
->> I would like to know if it helps.
->
-> As in the patch that Nikolay sent to the list earlier today, this should
-> also check STOPPING since WANT_STOP may get cleared as soon as it is
-> processed.
->
+On Mon, 2011-11-21 at 12:51 -0800, Greg KH wrote:
+> On Mon, Nov 21, 2011 at 09:38:33AM -0800, Guy, Wey-Yi wrote:
+> > On Mon, 2011-11-21 at 10:26 -0800, Greg KH wrote:
+> > > On Mon, Nov 21, 2011 at 09:20:29AM -0800, Guy, Wey-Yi wrote:
+> > > > Hi John/Garrett/Greg,
+> > > > 
+> > > > We test the ASPM patch with the Intel WiFi devices on number of
+> > > > platforms and the improvement is huge.
+> > > 
+> > > What "ASPM patch"?
+> > 
+> > https://lkml.org/lkml/2011/11/11/212
+> 
+> Ok, yet you feel that my statement there is not sufficient right now?
 
-Thanks.
-Norbert, could you please test Nikolay's patch instead of mine ?
+oh, I am just want to let you know we test this patch and the result is
+very good, it make huge improvement with our devices.
+
+> 
+> > > > In the "idle associated" mode, the power consumption number for our new
+> > > > devices down to ~40mW range from over 120mW.
+> > > > 
+> > > > We will do more testing but I will suggest to apply this patch to the
+> > > > stable release.
+> > > 
+> > > What is the git commit id of this patch?  Have you read
+> > > Documentation/stable_kernel_rules.txt for how to properly submit a patch
+> > > to the stable kernel trees?
+> 
+> You failed to answer this :(
+
+oh here is the patch already in linux-next tree
+
+commit 7f92c4f7d92a7558ed7eb29fa59e1c98402dc3c2
+Author: Matthew Garrett <mjg@redhat.com>
+Date:   Thu Nov 10 16:38:33 2011 -0500
+
+    PCI: Rework ASPM disable code
+    
+    Right now we forcibly clear ASPM state on all devices if the BIOS
+indicates
+    that the feature isn't supported. Based on the Microsoft
+presentation
+    "PCI Express In Depth for Windows Vista and Beyond", I'm starting to
+think
+    that this may be an error. The implication is that unless the
+platform
+    grants full control via _OSC, Windows will not touch any PCIe
+features -
+    including ASPM. In that case clearing ASPM state would be an error
+unless
+    the platform has granted us that control.
+    
+    This patch reworks the ASPM disabling code such that the actual
+clearing
+    of state is triggered by a successful handoff of PCIe control to the
+OS.
+    The general ASPM code undergoes some changes in order to ensure that
+the
+    ability to clear the bits isn't overridden by ASPM having already
+been
+    disabled. Further, this theoretically now allows for situations
+where
+    only a subset of PCIe roots hand over control, leaving the others in
+the
+    BIOS state.
+    
+    It's difficult to know for sure that this is the right thing to do -
+    there's zero public documentation on the interaction between all of
+these
+    components. But enough vendors enable ASPM on platforms and then set
+this
+    bit that it seems likely that they're expecting the OS to leave them
+alone.
+    
+    Measured to save around 5W on an idle Thinkpad X220.
+    
+    Signed-off-by: Matthew Garrett <mjg@redhat.com>
+    Signed-off-by: Jesse Barnes <jbarnes@virtuousgeek.org>
+
+
+Thanks
+Wey
+
+
