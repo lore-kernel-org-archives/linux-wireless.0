@@ -1,29 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:37792 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750876Ab1KHK7p (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:55569 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753986Ab1KUWSx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 05:59:45 -0500
-Received: by ywf7 with SMTP id 7so400721ywf.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 02:59:44 -0800 (PST)
+	Mon, 21 Nov 2011 17:18:53 -0500
 MIME-Version: 1.0
-In-Reply-To: <1320740407.4304.6.camel@jlt3.sipsolutions.net>
-References: <1320740407.4304.6.camel@jlt3.sipsolutions.net>
-Date: Tue, 8 Nov 2011 11:59:44 +0100
-Message-ID: <CAGXE3d_7W5xbGJAEH1tB1jVZHPehnYVu-cnQXjMRATJHxuD4ow@mail.gmail.com> (sfid-20111108_115950_687411_F35640B6)
-Subject: Re: [PATCH] cfg80211: fix missing kernel-doc
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <201111212249.31196.rjw@sisk.pl>
+References: <lx6sezwGldO.A.IhF.UBpWOB@chimera> <201111212249.31196.rjw@sisk.pl>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 21 Nov 2011 14:18:29 -0800
+Message-ID: <CA+55aFygSFt+O5KLoiE_0V+o45eKfsoDDV5ML8EF=J0n9z_D-Q@mail.gmail.com> (sfid-20111121_231923_897743_1387AF6C)
+Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
+To: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Andy Lutomirski <luto@amacapital.net>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 8, 2011 at 9:20 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Nov 21, 2011 at 1:49 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
 >
-> Two new struct members were not documented, fix that.
+> Subject    : hugetlb oops on 3.1.0-rc8-devel
+> Submitter  : Andy Lutomirski <luto@amacapital.net>
+> Date       : 2011-11-01 22:20
+> Message-ID : CALCETrW1mpVCz2tO5roaz1r6vnno+srHR-dHA6_pkRi2qiCfdw@mail.gmail.com
+> References : http://marc.info/?l=linux-kernel&m=132018604426692&w=2
 
-Thanks for fixing this up!
-Helmut
+Despite the subject line, that's not an oops, it's a BUG_ON().
+
+And it *should* be fixed by commit ea4039a34c4c ("hugetlb: release
+pages in the error path of hugetlb_cow()") although I don't think Andy
+ever confirmed that (since it was hard to trigger).
+
+                     Linus
