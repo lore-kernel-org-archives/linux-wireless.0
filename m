@@ -1,72 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36079 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753042Ab1K3KKc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 05:10:32 -0500
-Date: Wed, 30 Nov 2011 11:10:28 +0100
-From: Michal Hocko <mhocko@suse.cz>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
- iwl3945_rs_free_sta
-Message-ID: <20111130101028.GA2906@tiehlicka.suse.cz> (sfid-20111130_111053_261824_4B367AD2)
-References: <20111129100727.GD2675@tiehlicka.suse.cz>
- <20111129113906.GA7299@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111129113906.GA7299@redhat.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:50482 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754921Ab1KUCXN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Nov 2011 21:23:13 -0500
+Received: by yenq3 with SMTP id q3so4209472yen.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 18:23:12 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, kolya <mar.kolya@gmail.com>
+Subject: [PATCH 2/3] mac80211: use WLAN_BACK_RECIPIENT instead of hardcoded 0
+Date: Sun, 20 Nov 2011 21:22:51 -0500
+Message-Id: <1321842172-6732-3-git-send-email-mar.kolya@gmail.com> (sfid-20111121_032317_379708_83A50D25)
+In-Reply-To: <1321842172-6732-1-git-send-email-mar.kolya@gmail.com>
+References: <1321842172-6732-1-git-send-email-mar.kolya@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue 29-11-11 12:39:07, Stanislaw Gruszka wrote:
-> Hi Michal
-> 
-> On Tue, Nov 29, 2011 at 11:07:27AM +0100, Michal Hocko wrote:
-> > [I am not sure whether this is ieee80211 or iwl3945 issue so put both
-> > maintainers into loop]
-> The only changed we had in iwlegacy between 3.1 and 3.2-rc, was only 
-> adjustment to mac80211 changes. However I think this is iwlegacy issue,
-> just for some reason bug did not trigger before.
+From: kolya <mar.kolya@gmail.com>
 
-I have double checked 3.1 and cannot reproduce it.
-Anyway, I have put:
+---
+ net/mac80211/agg-rx.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-index 8faeaf2..9221ed4 100644
---- a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-@@ -432,6 +432,7 @@ static void iwl3945_rs_free_sta(void *iwl_priv, struct ieee80211_sta *sta,
- 	 * to use iwl_priv to print out debugging) since it may not be fully
- 	 * initialized at this point.
- 	 */
-+	printk("XXX: deleting time: %x\n", rs_sta->rate_scale_flush.base);
- 	del_timer_sync(&rs_sta->rate_scale_flush);
- }
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 476b106..449d77b 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -73,8 +73,9 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ 	RCU_INIT_POINTER(sta->ampdu_mlme.tid_rx[tid], NULL);
  
-And the timer base is really NULL when the issue happens. So, somebody
-probably removed the timer already?
-
-> Is this problem 100% reproducible for you ? 
-
-Yes, it seems to be sufficient to suspend to RAM while associated and
-turn off the AP before waking up the machine.
-I wasn't able to reproduce just by turning of the AP while associated
-without suspend.
-
-> If so I'll try to reproduce it locally, otherwise I'll review related
-> code to find reason of that problem.
-> 
-> Thanks
-> Stanislaw 
-
-Thanks
-
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+-	printk(KERN_DEBUG "Rx BA session stop requested for %pM tid %u\n",
+-	       sta->sta.addr, tid);
++	printk(KERN_DEBUG "Rx BA session stop requested for %pM tid %u %s reason: %d\n",
++	       sta->sta.addr, tid, initiator == WLAN_BACK_RECIPIENT ? "recipient" : "inititator",
++               (int)reason);
+ #endif /* CONFIG_MAC80211_HT_DEBUG */
+ 
+ 	if (drv_ampdu_action(local, sta->sdata, IEEE80211_AMPDU_RX_STOP,
+@@ -85,7 +86,7 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ 	/* check if this is a self generated aggregation halt */
+ 	if (initiator == WLAN_BACK_RECIPIENT && tx)
+ 		ieee80211_send_delba(sta->sdata, sta->sta.addr,
+-				     tid, 0, reason);
++				     tid, WLAN_BACK_RECIPIENT, reason);
+ 
+ 	del_timer_sync(&tid_rx->session_timer);
+ 	del_timer_sync(&tid_rx->reorder_timer);
 -- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+1.7.4.1
+
