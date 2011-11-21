@@ -1,124 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51403 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757903Ab1KPO3u (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:45199 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753692Ab1KUWMR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 09:29:50 -0500
-Message-Id: <20111116142911.206008880@sipsolutions.net> (sfid-20111116_152956_343742_BB1A3EFD)
-Date: Wed, 16 Nov 2011 15:28:57 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] mac80211: make TX LED handling independent of
- fragmentation
-References: <20111116142854.518391560@sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 21 Nov 2011 17:12:17 -0500
+MIME-Version: 1.0
+In-Reply-To: <201111212249.31196.rjw@sisk.pl>
+References: <lx6sezwGldO.A.IhF.UBpWOB@chimera> <201111212249.31196.rjw@sisk.pl>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 21 Nov 2011 14:11:54 -0800
+Message-ID: <CA+55aFwAELQieN=qR7Gz_MT5rHPp90H10uTMS+DOJjefk7q3ng@mail.gmail.com> (sfid-20111121_231241_057942_2CD6D34C)
+Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
+To: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Andy Lutomirski <luto@amacapital.net>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Nov 21, 2011 at 1:49 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>
+> Subject    : [3.1 REGRESSION] Commit 5cec93c216db77c45f7ce970d46283bcb1933884 breaks the Chromium seccomp sandbox
+> Submitter  : Nix <nix@esperi.org.uk>
+> Date       : 2011-11-14 0:40
+> Message-ID : 8762inleno.fsf@spindle.srvr.nix
+> References : http://marc.info/?l=linux-kernel&m=132123396226377&w=2
 
-This just prepares for passing the entire fragment
-list to the driver. No significant changes, but the
-TX throughput is calculated slightly differently
-now and we blink only once for each MSDU.
+So this should be fixed by commit 2b666859ec32 ("x86: Default to
+vsyscall=native for now"), since we disabled the vsyscall emulation
+because it broken UML too.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c |   28 ++++++++++++++++------------
- 1 file changed, 16 insertions(+), 12 deletions(-)
+Of course, the chromium seccomp thing might re-surface with the
+patches that enable the emulation (with better emulation), which Andy
+is still working on, and that I was planning on merging for 3.3.
 
---- a/net/mac80211/tx.c	2011-11-16 15:16:45.000000000 +0100
-+++ b/net/mac80211/tx.c	2011-11-16 15:17:19.000000000 +0100
-@@ -1207,18 +1207,23 @@ ieee80211_tx_prepare(struct ieee80211_su
-  * Returns false if the frame couldn't be transmitted but was queued instead.
-  */
- static bool __ieee80211_tx(struct ieee80211_local *local,
--			   struct sk_buff_head *skbs,
-+			   struct sk_buff_head *skbs, int led_len,
- 			   struct sta_info *sta, bool txpending)
- {
- 	struct sk_buff *skb, *tmp;
- 	struct ieee80211_tx_info *info;
- 	struct ieee80211_sub_if_data *sdata;
- 	unsigned long flags;
--	int len;
-+	__le16 fc;
-+
-+	if (WARN_ON(skb_queue_empty(skbs)))
-+		return true;
-+
-+	skb = skb_peek(skbs);
-+	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
- 
- 	skb_queue_walk_safe(skbs, skb, tmp) {
- 		int q = skb_get_queue_mapping(skb);
--		__le16 fc;
- 
- 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
- 		if (local->queue_stop_reasons[q] ||
-@@ -1241,8 +1246,6 @@ static bool __ieee80211_tx(struct ieee80
- 
- 		info = IEEE80211_SKB_CB(skb);
- 
--		len = skb->len;
--
- 		sdata = vif_to_sdata(info->control.vif);
- 
- 		switch (sdata->vif.type) {
-@@ -1263,15 +1266,13 @@ static bool __ieee80211_tx(struct ieee80
- 		else
- 			info->control.sta = NULL;
- 
--		fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
--
- 		__skb_unlink(skb, skbs);
- 		drv_tx(local, skb);
--
--		ieee80211_tpt_led_trig_tx(local, fc, len);
--		ieee80211_led_tx(local, 1);
- 	}
- 
-+	ieee80211_tpt_led_trig_tx(local, fc, led_len);
-+	ieee80211_led_tx(local, 1);
-+
- 	WARN_ON(!skb_queue_empty(skbs));
- 
- 	return true;
-@@ -1341,6 +1342,7 @@ static bool ieee80211_tx(struct ieee8021
- 	ieee80211_tx_result res_prepare;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	bool result = true;
-+	int led_len;
- 
- 	if (unlikely(skb->len < 10)) {
- 		dev_kfree_skb(skb);
-@@ -1350,6 +1352,7 @@ static bool ieee80211_tx(struct ieee8021
- 	rcu_read_lock();
- 
- 	/* initialises tx */
-+	led_len = skb->len;
- 	res_prepare = ieee80211_tx_prepare(sdata, &tx, skb);
- 
- 	if (unlikely(res_prepare == TX_DROP)) {
-@@ -1363,7 +1366,8 @@ static bool ieee80211_tx(struct ieee8021
- 	info->band = tx.channel->band;
- 
- 	if (!invoke_tx_handlers(&tx))
--		result = __ieee80211_tx(local, &tx.skbs, tx.sta, txpending);
-+		result = __ieee80211_tx(local, &tx.skbs, led_len,
-+					tx.sta, txpending);
-  out:
- 	rcu_read_unlock();
- 	return result;
-@@ -2119,7 +2123,7 @@ static bool ieee80211_tx_pending_skb(str
- 		hdr = (struct ieee80211_hdr *)skb->data;
- 		sta = sta_info_get(sdata, hdr->addr1);
- 
--		result = __ieee80211_tx(local, &skbs, sta, true);
-+		result = __ieee80211_tx(local, &skbs, skb->len, sta, true);
- 	}
- 
- 	return result;
+Andy, it migth be worth contacting Nix and having him test whether
+your fixed emulation works for chromium too.
 
-
+                      Linus
