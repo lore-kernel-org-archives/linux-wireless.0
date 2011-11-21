@@ -1,47 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:51676 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751815Ab1KWCcE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 21:32:04 -0500
-Subject: [PATCH] cfg80211: Fix changing regulatory from userspace
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-Cc: mcgrof@qca.qualcomm.com, linux-wireless@vger.kernel.org
-From: Timo Lindhorst <tlnd@online.de>
-Date: Wed, 23 Nov 2011 03:30:10 +0100
+Received: from mx1.redhat.com ([209.132.183.28]:61971 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753973Ab1KUHmo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 02:42:44 -0500
+Date: Mon, 21 Nov 2011 08:44:56 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 45/77] iwlegacy: s/rx_reply/hdl/
+Message-ID: <20111121074432.GA2787@redhat.com> (sfid-20111121_084251_206117_EEF71360)
+References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
+ <1321604559-10707-45-git-send-email-sgruszka@redhat.com>
+ <20111118180208.6a16e68c@mj>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201111230330.11103.tlnd@online.de> (sfid-20111123_033208_463849_FB5198A5)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111118180208.6a16e68c@mj>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit de3584bd62d87b4c250129fbc46ca52c80330add -
-"cfg80211: fix regulatory NULL dereference" prevents the regulatory
-domain from being changed by user space. A wiphy is only present
-if the request comes from driver or is set by country IE, thus
-check only those cases.
+On Fri, Nov 18, 2011 at 06:02:08PM -0500, Pavel Roskin wrote:
+> Why do you want it?  
+For the same reason as in other patches - for make code shorter. 
 
-Signed-off-by: Timo Lindhorst <tlnd@online.de>
----
- net/wireless/reg.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+>I understand rx_reply, 
+Actually rx_reply is confusing name for interrupt handler.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 76b35df..c9588ae 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2076,7 +2076,9 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 	}
- 
- 	request_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
--	if (!request_wiphy) {
-+	if (((last_request->initiator == NL80211_REGDOM_SET_BY_DRIVER) ||
-+	     (last_request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE)) &&
-+	    !request_wiphy) {
- 		reg_set_request_processed();
- 		return -ENODEV;
- 	}
--- 
-1.7.7.3
+> but I don't understand
+> "hdl".  Is it Hairy Definition Language? :)
+:-) it's shortcut from "handler", but you known it, don't you ?
 
+Stanislaw
