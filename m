@@ -1,235 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54437 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753676Ab1KLOGC (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:58250 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750803Ab1KUFP6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Nov 2011 09:06:02 -0500
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 2/3] ath9k_hw: Cleanup btcoex wlan weights
-Date: Sat, 12 Nov 2011 19:35:47 +0530
-Message-ID: <1321106748-13014-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111112_150607_396305_25DEEAA4)
-In-Reply-To: <1321106748-13014-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1321106748-13014-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Mon, 21 Nov 2011 00:15:58 -0500
+Received: by wwe5 with SMTP id 5so9799169wwe.1
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 21:15:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1321836540-5325-4-git-send-email-mar.kolya@gmail.com>
+References: <1321836540-5325-1-git-send-email-mar.kolya@gmail.com>
+	<1321836540-5325-4-git-send-email-mar.kolya@gmail.com>
+Date: Mon, 21 Nov 2011 10:45:55 +0530
+Message-ID: <CAD2nsn0K6ALfXercrdtZ5LePPAoGR70kd+h4RxQqbRYr95wkmQ@mail.gmail.com> (sfid-20111121_061602_525018_A194CEAC)
+Subject: Re: [PATCH 3/4] ath9k: use config.enable_ani to check if ani should
+ be performed
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Nikolay Martynov <mar.kolya@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove all wlan weight macros and group it together for better
-understanding & readability. It makes the code reusable for
-AR9462 wlan weights.
+On Mon, Nov 21, 2011 at 6:18 AM, Nikolay Martynov <mar.kolya@gmail.com> wrote:
+> ---
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 ++-
+>  drivers/net/wireless/ath/ath9k/hw.c           |   12 ++++++++----
+>  drivers/net/wireless/ath/ath9k/main.c         |    4 ++--
+>  3 files changed, 12 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> index 0b9a0e8..f8983fd 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> @@ -808,7 +808,8 @@ void ath9k_htc_ani_work(struct work_struct *work)
+>        }
+>
+>        /* Verify whether we must check ANI */
+> -       if ((timestamp - common->ani.checkani_timer) >= ATH_ANI_POLLINTERVAL) {
+> +       if (sc->sc_ah->config.enable_ani
+> +            && (timestamp - common->ani.checkani_timer) >= ATH_ANI_POLLINTERVAL) {
+>                aniflag = true;
+>                common->ani.checkani_timer = timestamp;
+>        }
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> index 662ab7e..d6a2568 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> @@ -504,10 +504,10 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
+>                return ecode;
+>        }
+>
+> -       if (!AR_SREV_9100(ah) && !AR_SREV_9340(ah)) {
+> -               ath9k_hw_ani_setup(ah);
+> -               ath9k_hw_ani_init(ah);
+> -       }
+> +        if (ah->config.enable_ani) {
+> +                ath9k_hw_ani_setup(ah);
+> +                ath9k_hw_ani_init(ah);
+> +        }
+>
+>        return 0;
+>  }
+> @@ -610,6 +610,10 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+>        if (!AR_SREV_9300_20_OR_LATER(ah))
+>                ah->ani_function &= ~ATH9K_ANI_MRC_CCK;
+>
+> +        //disable ANI for 9100 and 9340
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/btcoex.c |   64 ++++++++++++-------------------
- drivers/net/wireless/ath/ath9k/btcoex.h |    8 +++-
- drivers/net/wireless/ath/ath9k/hw.h     |    5 --
- drivers/net/wireless/ath/ath9k/reg.h    |   15 +------
- 4 files changed, 34 insertions(+), 58 deletions(-)
+please change the comment style to
+/*
+*disable ANI for AR9100 and AR9340
+*/
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index f525e91..0ba39ea 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -36,6 +36,12 @@ struct ath_btcoex_config {
- 	bool bt_hold_rx_clear;
- };
- 
-+static const u32 ar9003_wlan_weights[ATH_BTCOEX_STOMP_MAX]
-+				    [AR9300_NUM_WLAN_WEIGHTS] = {
-+	{ 0xfffffff0, 0xfffffff0, 0xfffffff0, 0xfffffff0 }, /* STOMP_ALL */
-+	{ 0x88888880, 0x88888880, 0x88888880, 0x88888880 }, /* STOMP_LOW */
-+	{ 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, /* STOMP_NONE */
-+};
- 
- void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
+> +        if (AR_SREV_9100(ah) || AR_SREV_9340(ah))
+> +                ah->config.enable_ani = false;
+> +
+>        ath9k_hw_init_mode_regs(ah);
+>
+>        if (!ah->is_pciexpress)
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 9ce3dff..4653538 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -581,8 +581,8 @@ void ath_ani_calibrate(unsigned long data)
+>        }
+>
+>        /* Verify whether we must check ANI */
+> -       if ((timestamp - common->ani.checkani_timer) >=
+> -            ah->config.ani_poll_interval) {
+> +       if (sc->sc_ah->config.enable_ani
+> +            && (timestamp - common->ani.checkani_timer) >= ah->config.ani_poll_interval) {
+>                aniflag = true;
+>                common->ani.checkani_timer = timestamp;
+>        }
+
+instead of doing checks like the above , can we just prevent
+ath_ani_calibrate being not executed at all by doing something like
+this, please verify if i had missed something
+
+diff --git a/drivers/net/wireless/ath/ath9k/init.c
+b/drivers/net/wireless/ath/ath9k/init.c
+index e046de9..e0ebccd 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -500,7 +500,9 @@ static void ath9k_init_misc(struct ath_softc *sc)
  {
-@@ -152,27 +158,26 @@ EXPORT_SYMBOL(ath9k_hw_btcoex_set_weight);
- 
- static void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
- {
--	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
-+	struct ath_btcoex_hw *btcoex = &ah->btcoex_hw;
- 	u32  val;
-+	int i;
- 
- 	/*
- 	 * Program coex mode and weight registers to
- 	 * enable coex 3-wire
- 	 */
--	REG_WRITE(ah, AR_BT_COEX_MODE, btcoex_hw->bt_coex_mode);
--	REG_WRITE(ah, AR_BT_COEX_MODE2, btcoex_hw->bt_coex_mode2);
-+	REG_WRITE(ah, AR_BT_COEX_MODE, btcoex->bt_coex_mode);
-+	REG_WRITE(ah, AR_BT_COEX_MODE2, btcoex->bt_coex_mode2);
- 
- 
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
--		REG_WRITE(ah, AR_BT_COEX_WL_WEIGHTS0, ah->bt_coex_wlan_weight[0]);
--		REG_WRITE(ah, AR_BT_COEX_WL_WEIGHTS1, ah->bt_coex_wlan_weight[1]);
--		REG_WRITE(ah, AR_BT_COEX_BT_WEIGHTS0, ah->bt_coex_bt_weight[0]);
--		REG_WRITE(ah, AR_BT_COEX_BT_WEIGHTS1, ah->bt_coex_bt_weight[1]);
--		REG_WRITE(ah, AR_BT_COEX_BT_WEIGHTS2, ah->bt_coex_bt_weight[2]);
--		REG_WRITE(ah, AR_BT_COEX_BT_WEIGHTS3, ah->bt_coex_bt_weight[3]);
--
-+		REG_WRITE(ah, AR_BT_COEX_WL_WEIGHTS0, btcoex->wlan_weight[0]);
-+		REG_WRITE(ah, AR_BT_COEX_WL_WEIGHTS1, btcoex->wlan_weight[1]);
-+		for (i = 0; i < AR9300_NUM_BT_WEIGHTS; i++)
-+			REG_WRITE(ah, AR_BT_COEX_BT_WEIGHTS(i),
-+				  btcoex->bt_weight[i]);
- 	} else
--		REG_WRITE(ah, AR_BT_COEX_WEIGHT, btcoex_hw->bt_coex_weights);
-+		REG_WRITE(ah, AR_BT_COEX_WEIGHT, btcoex->bt_coex_weights);
- 
- 
- 
-@@ -185,7 +190,7 @@ static void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
- 	REG_RMW_FIELD(ah, AR_QUIET1, AR_QUIET1_QUIET_ACK_CTS_ENABLE, 1);
- 	REG_RMW_FIELD(ah, AR_PCU_MISC, AR_PCU_BT_ANT_PREVENT_RX, 0);
- 
--	ath9k_hw_cfg_output(ah, btcoex_hw->wlanactive_gpio,
-+	ath9k_hw_cfg_output(ah, btcoex->wlanactive_gpio,
- 			    AR_GPIO_OUTPUT_MUX_AS_RX_CLEAR_EXTERNAL);
- }
- 
-@@ -215,6 +220,7 @@ EXPORT_SYMBOL(ath9k_hw_btcoex_enable);
- void ath9k_hw_btcoex_disable(struct ath_hw *ah)
- {
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
-+	int i;
- 
- 	ath9k_hw_set_gpio(ah, btcoex_hw->wlanactive_gpio, 0);
- 
-@@ -228,10 +234,8 @@ void ath9k_hw_btcoex_disable(struct ath_hw *ah)
- 		if (AR_SREV_9300_20_OR_LATER(ah)) {
- 			REG_WRITE(ah, AR_BT_COEX_WL_WEIGHTS0, 0);
- 			REG_WRITE(ah, AR_BT_COEX_WL_WEIGHTS1, 0);
--			REG_WRITE(ah, AR_BT_COEX_BT_WEIGHTS0, 0);
--			REG_WRITE(ah, AR_BT_COEX_BT_WEIGHTS1, 0);
--			REG_WRITE(ah, AR_BT_COEX_BT_WEIGHTS2, 0);
--			REG_WRITE(ah, AR_BT_COEX_BT_WEIGHTS3, 0);
-+			for (i = 0; i < AR9300_NUM_BT_WEIGHTS; i++)
-+				REG_WRITE(ah, AR_BT_COEX_BT_WEIGHTS(i), 0);
- 		} else
- 			REG_WRITE(ah, AR_BT_COEX_WEIGHT, 0);
- 
-@@ -244,30 +248,12 @@ EXPORT_SYMBOL(ath9k_hw_btcoex_disable);
- static void ar9003_btcoex_bt_stomp(struct ath_hw *ah,
- 			 enum ath_stomp_type stomp_type)
- {
--	ah->bt_coex_bt_weight[0] = AR9300_BT_WGHT;
--	ah->bt_coex_bt_weight[1] = AR9300_BT_WGHT;
--	ah->bt_coex_bt_weight[2] = AR9300_BT_WGHT;
--	ah->bt_coex_bt_weight[3] = AR9300_BT_WGHT;
--
-+	struct ath_btcoex_hw *btcoex = &ah->btcoex_hw;
-+	int i;
- 
--	switch (stomp_type) {
--	case ATH_BTCOEX_STOMP_ALL:
--		ah->bt_coex_wlan_weight[0] = AR9300_STOMP_ALL_WLAN_WGHT0;
--		ah->bt_coex_wlan_weight[1] = AR9300_STOMP_ALL_WLAN_WGHT1;
--		break;
--	case ATH_BTCOEX_STOMP_LOW:
--		ah->bt_coex_wlan_weight[0] = AR9300_STOMP_LOW_WLAN_WGHT0;
--		ah->bt_coex_wlan_weight[1] = AR9300_STOMP_LOW_WLAN_WGHT1;
--		break;
--	case ATH_BTCOEX_STOMP_NONE:
--		ah->bt_coex_wlan_weight[0] = AR9300_STOMP_NONE_WLAN_WGHT0;
--		ah->bt_coex_wlan_weight[1] = AR9300_STOMP_NONE_WLAN_WGHT1;
--		break;
--
--	default:
--		ath_dbg(ath9k_hw_common(ah), ATH_DBG_BTCOEX,
--				"Invalid Stomptype\n");
--		break;
-+	for (i = 0; i < AR9300_NUM_WLAN_WEIGHTS; i++) {
-+		btcoex->bt_weight[i] = AR9300_BT_WGHT;
-+		btcoex->wlan_weight[i] = ar9003_wlan_weights[stomp_type][i];
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index 234f776..34acb51 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -36,12 +36,14 @@
- #define ATH_BT_CNT_THRESHOLD	       3
- #define ATH_BT_CNT_SCAN_THRESHOLD      15
- 
-+#define AR9300_NUM_BT_WEIGHTS   4
-+#define AR9300_NUM_WLAN_WEIGHTS 4
- /* Defines the BT AR_BT_COEX_WGHT used */
- enum ath_stomp_type {
--	ATH_BTCOEX_NO_STOMP,
- 	ATH_BTCOEX_STOMP_ALL,
- 	ATH_BTCOEX_STOMP_LOW,
--	ATH_BTCOEX_STOMP_NONE
-+	ATH_BTCOEX_STOMP_NONE,
-+	ATH_BTCOEX_STOMP_MAX
- };
- 
- enum ath_btcoex_scheme {
-@@ -59,6 +61,8 @@ struct ath_btcoex_hw {
- 	u32 bt_coex_mode; 	/* Register setting for AR_BT_COEX_MODE */
- 	u32 bt_coex_weights; 	/* Register setting for AR_BT_COEX_WEIGHT */
- 	u32 bt_coex_mode2; 	/* Register setting for AR_BT_COEX_MODE2 */
-+	u32 bt_weight[AR9300_NUM_BT_WEIGHTS];
-+	u32 wlan_weight[AR9300_NUM_WLAN_WEIGHTS];
- };
- 
- void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 33e8f2f..3cb878c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -59,9 +59,6 @@
- #define AT9285_COEX3WIRE_SA_SUBSYSID	0x30aa
- #define AT9285_COEX3WIRE_DA_SUBSYSID	0x30ab
- 
--#define AR9300_NUM_BT_WEIGHTS   4
--#define AR9300_NUM_WLAN_WEIGHTS 4
--
- #define ATH_AMPDU_LIMIT_MAX        (64 * 1024 - 1)
- 
- #define	ATH_DEFAULT_NOISE_FLOOR -95
-@@ -802,8 +799,6 @@ struct ath_hw {
- 
- 	/* Bluetooth coexistance */
- 	struct ath_btcoex_hw btcoex_hw;
--	u32 bt_coex_bt_weight[AR9300_NUM_BT_WEIGHTS];
--	u32 bt_coex_wlan_weight[AR9300_NUM_WLAN_WEIGHTS];
- 
- 	u32 intr_txqs;
- 	u8 txchainmask;
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 8fcb7e9..e17236d 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1753,18 +1753,9 @@ enum {
- #define AR_BT_COEX_WL_WEIGHTS0     0x8174
- #define AR_BT_COEX_WL_WEIGHTS1     0x81c4
- 
--#define AR_BT_COEX_BT_WEIGHTS0     0x83ac
--#define AR_BT_COEX_BT_WEIGHTS1     0x83b0
--#define AR_BT_COEX_BT_WEIGHTS2     0x83b4
--#define AR_BT_COEX_BT_WEIGHTS3     0x83b8
--
--#define AR9300_BT_WGHT                     0xcccc4444
--#define AR9300_STOMP_ALL_WLAN_WGHT0        0xfffffff0
--#define AR9300_STOMP_ALL_WLAN_WGHT1        0xfffffff0
--#define AR9300_STOMP_LOW_WLAN_WGHT0        0x88888880
--#define AR9300_STOMP_LOW_WLAN_WGHT1        0x88888880
--#define AR9300_STOMP_NONE_WLAN_WGHT0       0x00000000
--#define AR9300_STOMP_NONE_WLAN_WGHT1       0x00000000
-+#define AR_BT_COEX_BT_WEIGHTS(_i)  (0x83ac + (_i << 2))
+        struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+        int i = 0;
+-       setup_timer(&common->ani.timer, ath_ani_calibrate, (unsigned long)sc);
 +
-+#define AR9300_BT_WGHT             0xcccc4444
- 
- #define AR_BT_COEX_MODE2           0x817c
- #define AR_BT_BCN_MISS_THRESH      0x000000ff
--- 
-1.7.7.3
++       if (sc->sc_ah->config.enable_ani)
++               setup_timer(&common->ani.timer, ath_ani_calibrate,
+(unsigned long)sc);
 
+        sc->config.txpowlimit = ATH_TXPOWER_MAX;
+
+
+
+> --
+> 1.7.4.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+-- 
+shafi
