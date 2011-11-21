@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4520 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750809Ab1K3HOX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 02:14:23 -0500
-Message-ID: <4ED5D723.2060106@qca.qualcomm.com> (sfid-20111130_081427_038323_C3222C40)
-Date: Wed, 30 Nov 2011 12:41:31 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Received: from ackle.nomi.cz ([81.31.33.35]:35927 "EHLO ackle.nomi.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753323Ab1KUOca (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 09:32:30 -0500
+Date: Mon, 21 Nov 2011 15:32:26 +0100
+From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20111121143226.GA16969@nomi.cz> (sfid-20111121_153246_532963_59ABF52C)
+References: <20111110125347.GA29415@nomi.cz> <20111110160703.GA2775@redhat.com> <20111110163051.GA24533@nomi.cz> <20111111054731.GA2292@redhat.com> <20111111150105.GA25437@nomi.cz> <20111114140714.GD2513@redhat.com> <20111119181106.GA5515@nomi.cz> <20111121130527.GA4010@redhat.com> <20111121130916.GA11136@nomi.cz> <20111121134056.GB4010@redhat.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@adurom.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: Re: [ath9k-devel] [RFC] ath9k: validate for non-zero BSSID
-References: <1322576540-13751-1-git-send-email-mohammed@qca.qualcomm.com>	<20111130023650.19520.qmail@stuge.se>	<4ED5BD76.7020204@qca.qualcomm.com> <8739d6gl7s.fsf@purkki.adurom.net>
-In-Reply-To: <8739d6gl7s.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20111121134056.GB4010@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 30 November 2011 12:17 PM, Kalle Valo wrote:
-> Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>  writes:
->
->> unassociated state for station.
->>
->> but I observed this when i tested ad-hoc mode. I just started an
->> ad-hoc mode creator and left it for some time with no one joining. i
->> observed there are few frames in rx_tasklet of ath9k driver which seem
->> to be beacons and their BSSID is '0', as our curbssid is also '0' they
->> seem to be wrongly identified as 'my_beacons'.
->
-> This is a perfect addition to the commit log. Remember that the commit
-> log should especially answer the question "why?".
->
-Kalle, thanks. I will properly test this in STA and IBSS mode, and add 
-this commit log.
+Hello,
 
+On Mon, Nov 21, 2011 at 02:40:57PM +0100, Stanislaw Gruszka wrote:
+> On Mon, Nov 21, 2011 at 02:09:16PM +0100, Tomáš Janoušek wrote:
+> > And that's exactly what happens if I don't disable firewire-ohci, because of
+> > that stupid Ricoh multifunction blah blah issue.
+> 
+> So maybe problem is caused by Ricoh, not by iwlagn. But if so 
+> why blacklisting iwlagn help? Wired. Did you disable firewire in
+> BIOS, or just blacklist module?
+
+I don't think so. The problem with Ricoh is that it has two PCI devices:
+0d:00.0 and 0d:00.3, but both use 0d:00.0 in DMA requests, which triggers DMAR
+faults.  Of course, I can try disabling that in BIOS, but I doubt it will
+change anything.
+
+> Ok maybe let's try to find some better reproducer first.
+> I wrote simple program that fill memory with some pattern, and
+> then check every one second if pattern is still there.
+> It can be used like:
+> ./checkmem 100M 30M
+> where first argument is size of memory it will alloc and check,
+> second specify number of internal loops to make cpu busy (bigger
+> value will cause more cpu power consumption). Many instances of
+> the program can be running at once.
+> 
+> Tomáš, please try to reproduce with that program, I'm attaching
+> it. When corruption will be detected, checkmem will print invalid
+> values, maybe would be possible to find out what contents is
+> written to memory.
+
+Okay, I'll try that later. Yesterday I tried to use memtester [1] to catch the
+problem, but it never occured in it. Kernel compilation was segfaulting and
+that tool was running alongside being all happy. But maybe it has different
+memory usage pattern or something. Anyway, I'll try your program and if it
+doesn't work, I'll make it so. :-)
+
+[1] http://pyropus.ca/software/memtester/
+
+Regards,
 -- 
-thanks,
-shafi
+Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
