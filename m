@@ -1,34 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:50482 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753496Ab1KPVMN (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:40434 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754654Ab1KUUhQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 16:12:13 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 955425401EF
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 16:36:15 -0500 (EST)
-Subject: Compat-wireless release for 2011-11-16 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20111116211211.809014062D@repository3.orbit-lab.org> (sfid-20111116_221217_245771_57AC96F6)
-Date: Wed, 16 Nov 2011 16:12:11 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 21 Nov 2011 15:37:16 -0500
+Date: Mon, 21 Nov 2011 21:37:13 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@adurom.com>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: Re: [PATCHv3 3/3] mac80211: Add NoAck per tid Support
+Message-ID: <20111121203713.GB13116@pandem0nium> (sfid-20111121_213721_187619_B27EBA8D)
+References: <1321614110-32392-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1321614110-32392-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1321614744.10266.37.camel@jlt3.sipsolutions.net>
+ <20111118123054.GA32175@pandem0nium>
+ <87mxbpie8o.fsf@purkki.adurom.net>
+ <1321896393.3999.53.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="xXmbgvnjoT4axfJE"
+In-Reply-To: <1321896393.3999.53.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 6cf8074...0cd945a akpm-end   -> origin/akpm-end  (forced update)
-   7f80850..cfcfc9e  akpm-start -> origin/akpm-start
- + 5be1fb2...5d13673 master     -> origin/master  (forced update)
-   7f80850..cfcfc9e  stable     -> origin/stable
- * [new tag]         next-20111116 -> next-20111116
- * [new tag]         v3.2-rc2   -> v3.2-rc2
 
-compat-wireless code metrics
+--xXmbgvnjoT4axfJE
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-    816915 - Total upstream lines of code being pulled
-      2492 - backport code changes
-      2146 - backport code additions
-       346 - backport code deletions
-      8671 - backport from compat module
-     11163 - total backport code
-    1.3665 - % of code consists of backport work
+On Mon, Nov 21, 2011 at 06:26:33PM +0100, Johannes Berg wrote:
+> On Mon, 2011-11-21 at 19:20 +0200, Kalle Valo wrote:
+> > Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de> writes:
+> >=20
+> > >> Isn't this missing an update to ieee80211_duration() now?
+> > >
+> > > Yep, I silently dropped that modification - I rather don't mess with =
+stuff I
+> > > don't completly understand. Keeping the duration too long shouldn't h=
+urt
+> > > (only performance), having it too short will have much worse effects =
+=2E..
+> >=20
+> > Still a comment in the function about this issue would be nice. Just to
+> > make sure that it's not forgotten.
+>=20
+> I think it should be added back -- it doesn't seem that hard? Just check
+> if (qos_data && no-ack)? It's on my list but I haven't gotten around ...
+
+Very well, I've sent another patch in reply to the PATCHv4 set - please have
+a look at this one.
+
+Thanks
+        Simon
+
+--xXmbgvnjoT4axfJE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk7KtnkACgkQrzg/fFk7axYuagCgqikaXO3KJ7SfliNSZdnaK7Xk
+UJgAn1aDNG/+OqD8ndxt3DdfexDjKcgm
+=dV/C
+-----END PGP SIGNATURE-----
+
+--xXmbgvnjoT4axfJE--
