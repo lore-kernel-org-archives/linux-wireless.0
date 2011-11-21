@@ -1,150 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42170 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753764Ab1KLOIf (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:50482 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755048Ab1KUCXQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Nov 2011 09:08:35 -0500
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 3/3] ath9k_hw: set btcoex weights for AR9462
-Date: Sat, 12 Nov 2011 19:35:48 +0530
-Message-ID: <1321106748-13014-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111112_150840_009727_20C556CF)
-In-Reply-To: <1321106748-13014-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1321106748-13014-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 20 Nov 2011 21:23:16 -0500
+Received: by mail-yx0-f174.google.com with SMTP id q3so4209472yen.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 18:23:16 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, kolya <mar.kolya@gmail.com>
+Subject: [PATCH 3/3] mac80211: format debugfs agg_status output
+Date: Sun, 20 Nov 2011 21:22:52 -0500
+Message-Id: <1321842172-6732-4-git-send-email-mar.kolya@gmail.com> (sfid-20111121_032319_806351_85B2CE38)
+In-Reply-To: <1321842172-6732-1-git-send-email-mar.kolya@gmail.com>
+References: <1321842172-6732-1-git-send-email-mar.kolya@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/btcoex.c |   37 ++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/btcoex.h |    2 +
- drivers/net/wireless/ath/ath9k/reg.h    |    2 +-
- 3 files changed, 37 insertions(+), 4 deletions(-)
+From: kolya <mar.kolya@gmail.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index 0ba39ea..9ac28d9 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -43,6 +43,14 @@ static const u32 ar9003_wlan_weights[ATH_BTCOEX_STOMP_MAX]
- 	{ 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, /* STOMP_NONE */
- };
+---
+ net/mac80211/debugfs_sta.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index c5f3417..e010419 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -154,7 +154,7 @@ static ssize_t sta_agg_status_read(struct file *file, char __user *userbuf,
+ 	p += scnprintf(p, sizeof(buf) + buf - p, "next dialog_token: %#02x\n",
+ 			sta->ampdu_mlme.dialog_token_allocator + 1);
+ 	p += scnprintf(p, sizeof(buf) + buf - p,
+-		       "TID\t\tRX active\tDTKN\tSSN\t\tTX\tDTKN\tpending\n");
++		       "TID\t\tRX active\tDTKN\tSSN\t\tTX active\tDTKN\ttimeout\tpending\n");
  
-+static const u32 ar9462_wlan_weights[ATH_BTCOEX_STOMP_MAX]
-+				    [AR9300_NUM_WLAN_WEIGHTS] = {
-+	{ 0x01017d01, 0x41414101, 0x41414101, 0x41414141 }, /* STOMP_ALL */
-+	{ 0x01017d01, 0x3b3b3b01, 0x3b3b3b01, 0x3b3b3b3b }, /* STOMP_LOW */
-+	{ 0x01017d01, 0x01010101, 0x01010101, 0x01010101 }, /* STOMP_NONE */
-+	{ 0x01017d01, 0x013b0101, 0x3b3b0101, 0x3b3b013b }, /* STOMP_LOW_FTP */
-+};
-+
- void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
- {
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
-@@ -194,6 +202,19 @@ static void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
- 			    AR_GPIO_OUTPUT_MUX_AS_RX_CLEAR_EXTERNAL);
- }
+ 	for (i = 0; i < STA_TID_NUM; i++) {
+ 		tid_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[i]);
+@@ -162,14 +162,16 @@ static ssize_t sta_agg_status_read(struct file *file, char __user *userbuf,
  
-+static void ath9k_hw_btcoex_enable_mci(struct ath_hw *ah)
-+{
-+	struct ath_btcoex_hw *btcoex = &ah->btcoex_hw;
-+	int i;
-+
-+	for (i = 0; i < AR9300_NUM_BT_WEIGHTS; i++)
-+		REG_WRITE(ah, AR_MCI_COEX_WL_WEIGHTS(i),
-+			  btcoex->wlan_weight[i]);
-+
-+	REG_RMW_FIELD(ah, AR_QUIET1, AR_QUIET1_QUIET_ACK_CTS_ENABLE, 1);
-+	btcoex->enabled = true;
-+}
-+
- void ath9k_hw_btcoex_enable(struct ath_hw *ah)
- {
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
-@@ -207,6 +228,9 @@ void ath9k_hw_btcoex_enable(struct ath_hw *ah)
- 	case ATH_BTCOEX_CFG_3WIRE:
- 		ath9k_hw_btcoex_enable_3wire(ah);
- 		break;
-+	case ATH_BTCOEX_CFG_MCI:
-+		ath9k_hw_btcoex_enable_mci(ah);
-+		return;
- 	}
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "%02d", i);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x", !!tid_rx);
+-		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.2x",
++		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%#.2x",
+ 				tid_rx ? tid_rx->dialog_token : 0);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.3x",
+ 				tid_rx ? tid_rx->ssn : 0);
  
- 	REG_RMW(ah, AR_GPIO_PDPU,
-@@ -222,6 +246,13 @@ void ath9k_hw_btcoex_disable(struct ath_hw *ah)
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
- 	int i;
- 
-+	btcoex_hw->enabled = false;
-+	if (btcoex_hw->scheme == ATH_BTCOEX_CFG_MCI) {
-+		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_NONE);
-+		for (i = 0; i < AR9300_NUM_BT_WEIGHTS; i++)
-+			REG_WRITE(ah, AR_MCI_COEX_WL_WEIGHTS(i),
-+				  btcoex_hw->wlan_weight[i]);
-+	}
- 	ath9k_hw_set_gpio(ah, btcoex_hw->wlanactive_gpio, 0);
- 
- 	ath9k_hw_cfg_output(ah, btcoex_hw->wlanactive_gpio,
-@@ -240,8 +271,6 @@ void ath9k_hw_btcoex_disable(struct ath_hw *ah)
- 			REG_WRITE(ah, AR_BT_COEX_WEIGHT, 0);
- 
- 	}
--
--	ah->btcoex_hw.enabled = false;
- }
- EXPORT_SYMBOL(ath9k_hw_btcoex_disable);
- 
-@@ -249,11 +278,13 @@ static void ar9003_btcoex_bt_stomp(struct ath_hw *ah,
- 			 enum ath_stomp_type stomp_type)
- {
- 	struct ath_btcoex_hw *btcoex = &ah->btcoex_hw;
-+	const u32 *weight = AR_SREV_9462(ah) ? ar9003_wlan_weights[stomp_type] :
-+					       ar9462_wlan_weights[stomp_type];
- 	int i;
- 
- 	for (i = 0; i < AR9300_NUM_WLAN_WEIGHTS; i++) {
- 		btcoex->bt_weight[i] = AR9300_BT_WGHT;
--		btcoex->wlan_weight[i] = ar9003_wlan_weights[stomp_type][i];
-+		btcoex->wlan_weight[i] = weight[i];
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index 34acb51..d5e5db1 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -43,6 +43,7 @@ enum ath_stomp_type {
- 	ATH_BTCOEX_STOMP_ALL,
- 	ATH_BTCOEX_STOMP_LOW,
- 	ATH_BTCOEX_STOMP_NONE,
-+	ATH_BTCOEX_STOMP_LOW_FTP,
- 	ATH_BTCOEX_STOMP_MAX
- };
- 
-@@ -50,6 +51,7 @@ enum ath_btcoex_scheme {
- 	ATH_BTCOEX_CFG_NONE,
- 	ATH_BTCOEX_CFG_2WIRE,
- 	ATH_BTCOEX_CFG_3WIRE,
-+	ATH_BTCOEX_CFG_MCI,
- };
- 
- struct ath_btcoex_hw {
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index e17236d..4591097 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1752,7 +1752,7 @@ enum {
- 
- #define AR_BT_COEX_WL_WEIGHTS0     0x8174
- #define AR_BT_COEX_WL_WEIGHTS1     0x81c4
--
-+#define AR_MCI_COEX_WL_WEIGHTS(_i) (0x18b0 + (_i << 2))
- #define AR_BT_COEX_BT_WEIGHTS(_i)  (0x83ac + (_i << 2))
- 
- #define AR9300_BT_WGHT             0xcccc4444
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x", !!tid_tx);
+-		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.2x",
++		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%#.2x",
+ 				tid_tx ? tid_tx->dialog_token : 0);
++		p += scnprintf(p, sizeof(buf) + buf - p, "\t%d",
++                               tid_tx ? (int)tid_tx->timeout : 0);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%03d",
+ 				tid_tx ? skb_queue_len(&tid_tx->pending) : 0);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\n");
 -- 
-1.7.7.3
+1.7.4.1
 
