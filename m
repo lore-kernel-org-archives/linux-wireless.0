@@ -1,55 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:64806 "EHLO
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:58523 "EHLO
 	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751541Ab1KSIwf convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1752387Ab1KUOlX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Nov 2011 03:52:35 -0500
-Received: by bke11 with SMTP id 11so4361670bke.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 00:52:34 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1321632729.10266.68.camel@jlt3.sipsolutions.net>
-References: <1320917337-30561-1-git-send-email-arik@wizery.com>
- <1320917337-30561-3-git-send-email-arik@wizery.com> <1321632729.10266.68.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Sat, 19 Nov 2011 10:52:18 +0200
-Message-ID: <CA+XVXfe-NgwN3XuQoJ-BNHmKSdFaoDqQpr0NyrJF4rL0e5vhpQ@mail.gmail.com> (sfid-20111119_095241_786692_95FB05FD)
-Subject: Re: [PATCH v5 3/3] mac80211: Save probe response data for bss
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 21 Nov 2011 09:41:23 -0500
+Received: by bke11 with SMTP id 11so6626611bke.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 06:41:22 -0800 (PST)
+From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Subject: [RFC v2 0/8] mesh power saving implementation: indication
+Date: Mon, 21 Nov 2011 18:40:08 +0400
+Message-Id: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154127_723214_750C1617)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 18, 2011 at 18:12, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2011-11-10 at 11:28 +0200, Arik Nemtsov wrote:
->> Allow setting a probe response template for an interface operating in
->> AP mode. Low level drivers are notified about changes in the probe
->> response template and are able to retrieve a copy of the current probe
->> response. This data can, for example, be uploaded to hardware as a
->> template.
->
->> +static int ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
->> +                                 u8 *resp, size_t resp_len)
->> +{
->> +     struct sk_buff *new, *old;
->> +
->> +     if (!resp || !resp_len)
->> +             return -EINVAL;
->> +
->> +     old = sdata->u.ap.probe_resp;
->
-> sparse warns here with RCU checking enabled in the kernel:
->
-> cfg.c:502:13: warning: incorrect type in assignment (different address spaces)
-> cfg.c:502:13:    expected struct sk_buff *old
-> cfg.c:502:13:    got struct sk_buff [noderef] <asn:4>*probe_resp
->
->
-> Please take a look, ieee80211_set_beacon() uses rtnl_dereference() to
-> avoid the sparse warning and annotate that the RTNL is used to protect
-> the pointer.
->
+Hi!
 
-Thanks. That's indeed a handy .config option.
+We have updated our patches and also we would like to add some words
+what our work is about.
 
-Arik
+Based on the latest IEEE 802.11s standard the power saving mechanism
+can be divided into the following implementation phases:
+* indication of mesh STAs' power modes in frames;
+* a buffering and identification sending frames in mesh STA;
+* Mesh Awake Window implementation;
+* Peer service periods.
+
+This patchset implements the phase of indication of mesh STAs'
+power modes in frames. There are two types of mesh power modes:
+* peer power mode: a mesh STA indicates its mesh power mode for each
+mesh peering and obtains the mesh power modes of its peer mesh STAs;
+* non-peer power mode: mesh station also indicates mesh power mode for
+non-peer mesh stations. It determines when non-peer mesh STAs may send
+Probe Request and Mesh Peering Open Request frames to the mesh STA.
+
+Peer power mode should be indicated with Power Management field in the Frame
+Control field and the Mesh Power Save Level field in all transmitted
+individually addressed Mesh Data or QoS Null frames on this link.
+
+Non-peer power mode should be indicated with the Power Management
+field in the Frame Control field and the Mesh Power Save Level field
+in the Mesh Capability field in Beacon and Probe Response frames. A
+mesh STA shall also indicate its non-peer mesh power mode with the
+Power Management field in the Frame Control field and the Mesh Power
+Save Level field in the QoS Control field in group addressed Mesh Data
+frames.
+
+We would appreciate comments and advice.
+
+Thanks,
+Ivan
+
+Ivan Bezyazychnyy (8):
+  cfg80211 and nl80211: mesh power mode config parameter
+  mac80211: mesh power mode indication in QoS frames
+  mac80211: tracking mesh peer link-specific power mode
+  mac80211: mesh non-peer power mode indication in beacons
+  mac80211: setting link-specific mesh power modes when plink opens
+  cfg80211 and nl80211: Setting local link-specific power mode
+  cfg80211 and nl80211: getting local and peer mesh power modes
+  cfg80211 and nl80211: setting and getting mesh non-peer power mode
+
+ include/linux/ieee80211.h |   14 ++++++++++
+ include/linux/nl80211.h   |   41 ++++++++++++++++++++++++++++++
+ include/net/cfg80211.h    |   14 +++++++++-
+ net/mac80211/cfg.c        |   16 +++++++++++-
+ net/mac80211/mesh.c       |   35 +++++++++++++++++++++++++
+ net/mac80211/mesh.h       |   11 ++++++++
+ net/mac80211/mesh_plink.c |   22 +++++++++++++++-
+ net/mac80211/rx.c         |   61 +++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/sta_info.h   |    4 +++
+ net/mac80211/tx.c         |   46 ++++++++++++++++++++++++++++++++++
+ net/wireless/mesh.c       |    1 +
+ net/wireless/nl80211.c    |   22 ++++++++++++++++
+ 12 files changed, 284 insertions(+), 3 deletions(-)
+
+-- 
+1.7.3.4
+
