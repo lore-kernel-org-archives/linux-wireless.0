@@ -1,59 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44393 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751703Ab1KBKSD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 06:18:03 -0400
-Subject: Re: [PATCH 2/4] mac80211: QoS multicast frames have No Ack policy
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	linville@tuxdriver.com
-In-Reply-To: <1319864732-11286-2-git-send-email-thomas@cozybit.com> (sfid-20111029_070612_354228_603C12F5)
-References: <1319864732-11286-1-git-send-email-thomas@cozybit.com>
-	 <1319864732-11286-2-git-send-email-thomas@cozybit.com>
-	 (sfid-20111029_070612_354228_603C12F5)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 02 Nov 2011 11:17:57 +0100
-Message-ID: <1320229077.3950.40.camel@jlt3.sipsolutions.net> (sfid-20111102_111808_986548_5F8B8E76)
-Mime-Version: 1.0
+Received: from ackle.nomi.cz ([81.31.33.35]:58412 "EHLO ackle.nomi.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751299Ab1KUNJU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 08:09:20 -0500
+Date: Mon, 21 Nov 2011 14:09:16 +0100
+From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20111121130916.GA11136@nomi.cz> (sfid-20111121_140939_485072_83B5AA9E)
+References: <20111110091816.GA2247@nomi.cz> <20111110114732.GA2217@redhat.com> <20111110125347.GA29415@nomi.cz> <20111110160703.GA2775@redhat.com> <20111110163051.GA24533@nomi.cz> <20111111054731.GA2292@redhat.com> <20111111150105.GA25437@nomi.cz> <20111114140714.GD2513@redhat.com> <20111119181106.GA5515@nomi.cz> <20111121130527.GA4010@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20111121130527.GA4010@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-10-28 at 22:05 -0700, Thomas Pedersen wrote:
-> Previously QoS multicast frames had the Normal Acknowledgment QoS
-> control bits set. This would cause broadcast frames to be discarded by
-> peers with which we have a BA session, since their sequence number would
-> fall outside the allowed range. Set No Ack QoS control bits on multicast
-> QoS frames and filter these in de-aggregation code.
+Hello,
 
-I'm not sure why you would attempt to deaggregate broadcast frames but I
-guess mesh is a bit special.
+On Mon, Nov 21, 2011 at 02:05:28PM +0100, Stanislaw Gruszka wrote:
+> The farther we get the problem is more and more strange.
+> 
+> Device that write to wrong address, would generate:
+> 
+> DMAR:[DMA Write] Request device [00:02.0] fault addr 6df084000
+> DMAR:[fault reason 05] PTE Write access is not set
 
-> @@ -770,6 +771,11 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
->  	if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
->  		goto dont_reorder;
->  
-> +	/* not part of a BA session */
-> +	if (!((ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK) ||
-> +	      (ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_NORMAL)))
-> +		goto dont_reorder;
+And that's exactly what happens if I don't disable firewire-ohci, because of
+that stupid Ricoh multifunction blah blah issue.
 
-Maybe ack_policy != BA && ack_policy != NORMAl would be easier to read?
+> But only if
+> 
+> PCI-DMA: Using DMAR IOMMU
+> 
+> was printed in dmesg before. DMAR can be disabled by graphics
+> driver, or maybe by other drivers too. Then above print will
+> be missed in dmesg and protection would not work.
+> 
+> Try "dmesg | grep DMAR" to see if DMA remapping is really is
+> in use. 
 
-> --- a/net/mac80211/wme.c
-> +++ b/net/mac80211/wme.c
-> @@ -147,7 +147,8 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
->  
->  		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
->  
-> -		if (unlikely(sdata->local->wifi_wme_noack_test))
-> +		if (unlikely(sdata->local->wifi_wme_noack_test) ||
-> +		    is_multicast_ether_addr(hdr->addr1))
->  			ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
+Well, this message is not printed, but as I said, loading firewire-ohci
+triggers DMAR faults, so it should be in use anyway.
 
-Interestingly, this seems to have been a bug for a long time --
-7.1.3.5.3 indicates this is supposed to be done.
-
-johannes
-
+-- 
+Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
