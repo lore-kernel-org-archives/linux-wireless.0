@@ -1,238 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4808 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759552Ab1KWBWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 20:22:15 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:52228 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754913Ab1KUCXK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Nov 2011 21:23:10 -0500
+Received: by mail-gy0-f174.google.com with SMTP id z2so2300796ghb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 18:23:09 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
 To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 01/24] brcm80211: fmac: cleanup receive path using
- proper skb_queue functions
-Date: Tue, 22 Nov 2011 17:21:36 -0800
-Message-ID: <1322011319-24863-2-git-send-email-frankyl@broadcom.com> (sfid-20111123_022222_588210_B9A46802)
-In-Reply-To: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
-References: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: linux-wireless@vger.kernel.org, kolya <mar.kolya@gmail.com>
+Subject: [PATCH 1/3] mac80211: add tx agg session timer to timeout inactive tids in way similar to rx agg sessions are being timed out
+Date: Sun, 20 Nov 2011 21:22:50 -0500
+Message-Id: <1321842172-6732-2-git-send-email-mar.kolya@gmail.com> (sfid-20111121_032314_633142_7ED628C5)
+In-Reply-To: <1321842172-6732-1-git-send-email-mar.kolya@gmail.com>
+References: <1321842172-6732-1-git-send-email-mar.kolya@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+From: kolya <mar.kolya@gmail.com>
 
-In the receive path there was still code using the next pointer to
-access all packets in skb_queue. This patch fixes that.
-
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   11 ++++-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   15 ++----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   52 ++++++++------------
- 3 files changed, 36 insertions(+), 42 deletions(-)
+ net/mac80211/agg-tx.c   |   35 ++++++++++++++++++++++++++++++++++-
+ net/mac80211/sta_info.h |    2 ++
+ net/mac80211/tx.c       |    9 +++++++++
+ 3 files changed, 45 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index 6da519e..7962f64 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -699,7 +699,16 @@ extern bool brcmf_c_prec_enq(struct brcmf_pub *drvr, struct pktq *q,
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 39d72cc..915f3ff 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -349,6 +349,28 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ 				     tid_tx->timeout);
+ }
  
- /* Receive frame for delivery to OS.  Callee disposes of rxp. */
- extern void brcmf_rx_frame(struct brcmf_pub *drvr, int ifidx,
--			 struct sk_buff *rxp, int numpkt);
-+			   struct sk_buff_head *rxlist);
-+static inline void brcmf_rx_packet(struct brcmf_pub *drvr, int ifidx,
-+				   struct sk_buff *pkt)
++/*
++ * After accepting the AddBA Response we activated a timer,
++ * resetting it after each frame that we send.
++ */
++static void sta_tx_agg_session_timer_expired(unsigned long data)
 +{
-+	struct sk_buff_head q;
++	/* not an elegant detour, but there is no choice as the timer passes
++	 * only one argument, and various sta_info are needed here, so init
++	 * flow in sta_info_create gives the TID as data, while the timer_to_id
++	 * array gives the sta through container_of */
++	u8 *ptid = (u8 *)data;
++	u8 *timer_to_id = ptid - *ptid;
++	struct sta_info *sta = container_of(timer_to_id, struct sta_info,
++					 timer_to_tid[0]);
 +
-+	skb_queue_head_init(&q);
-+	skb_queue_tail(&q, pkt);
-+	brcmf_rx_frame(drvr, ifidx, &q);
++#ifdef CONFIG_MAC80211_HT_DEBUG
++	printk(KERN_DEBUG "tx session timer expired on tid %d\n", (u16)*ptid);
++#endif
++
++        ieee80211_stop_tx_ba_session(&sta->sta, *ptid);
 +}
- 
- /* Return pointer to interface name */
- extern char *brcmf_ifname(struct brcmf_pub *drvr, int idx);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 719fd93..9721174 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -397,26 +397,21 @@ static int brcmf_host_event(struct brcmf_info *drvr_priv, int *ifidx,
- 	return bcmerror;
- }
- 
--void brcmf_rx_frame(struct brcmf_pub *drvr, int ifidx, struct sk_buff *skb,
--		  int numpkt)
-+void brcmf_rx_frame(struct brcmf_pub *drvr, int ifidx,
-+		    struct sk_buff_head *skb_list)
++
+ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 				  u16 timeout)
  {
- 	struct brcmf_info *drvr_priv = drvr->info;
- 	unsigned char *eth;
- 	uint len;
- 	void *data;
--	struct sk_buff *pnext, *save_pktbuf;
--	int i;
-+	struct sk_buff *skb, *pnext;
- 	struct brcmf_if *ifp;
- 	struct brcmf_event_msg event;
+@@ -418,11 +440,16 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
  
- 	brcmf_dbg(TRACE, "Enter\n");
+ 	tid_tx->timeout = timeout;
  
--	save_pktbuf = skb;
--
--	for (i = 0; skb && i < numpkt; i++, skb = pnext) {
--
--		pnext = skb->next;
--		skb->next = NULL;
-+	skb_queue_walk_safe(skb_list, skb, pnext) {
-+		skb_unlink(skb, skb_list);
+-	/* Tx timer */
++	/* response timer */
+ 	tid_tx->addba_resp_timer.function = sta_addba_resp_timer_expired;
+ 	tid_tx->addba_resp_timer.data = (unsigned long)&sta->timer_to_tid[tid];
+ 	init_timer(&tid_tx->addba_resp_timer);
  
- 		/* Get the protocol, maintain skb around eth_type_trans()
- 		 * The main reason for this hack is for the limitation of
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 22913af..10b9247 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -1120,7 +1120,7 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
- 	u8 *dptr, num = 0;
- 
- 	u16 sublen, check;
--	struct sk_buff *pfirst, *plast, *pnext, *save_pfirst;
-+	struct sk_buff *pfirst, *pnext;
- 
- 	int errcode;
- 	u8 chan, seq, doff, sfdoff;
-@@ -1137,7 +1137,7 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
- 
- 	/* If there's a descriptor, generate the packet chain */
- 	if (bus->glomd) {
--		pfirst = plast = pnext = NULL;
-+		pfirst = pnext = NULL;
- 		dlen = (u16) (bus->glomd->len);
- 		dptr = bus->glomd->data;
- 		if (!dlen || (dlen & 1)) {
-@@ -1338,10 +1338,14 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
- 		/* Remove superframe header, remember offset */
- 		skb_pull(pfirst, doff);
- 		sfdoff = doff;
-+		num = 0;
- 
- 		/* Validate all the subframe headers */
--		for (num = 0, pnext = pfirst; pnext && !errcode;
--		     num++, pnext = pnext->next) {
-+		skb_queue_walk(&bus->glom, pnext) {
-+			/* leave when invalid subframe is found */
-+			if (errcode)
-+				break;
++	/* tx timer */
++	tid_tx->session_timer.function = sta_tx_agg_session_timer_expired;
++	tid_tx->session_timer.data = (unsigned long)&sta->timer_to_tid[tid];
++	init_timer(&tid_tx->session_timer);
 +
- 			dptr = (u8 *) (pnext->data);
- 			dlen = (u16) (pnext->len);
- 			sublen = get_unaligned_le16(dptr);
-@@ -1374,6 +1378,8 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
- 					  num, doff, sublen, SDPCM_HDRLEN);
- 				errcode = -1;
- 			}
-+			/* increase the subframe count */
-+			num++;
- 		}
+ 	/* assign a dialog token */
+ 	sta->ampdu_mlme.dialog_token_allocator++;
+ 	tid_tx->dialog_token = sta->ampdu_mlme.dialog_token_allocator;
+@@ -689,6 +716,8 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid)
+ 	 * more.
+ 	 */
  
- 		if (errcode) {
-@@ -1394,13 +1400,8 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
- 		}
- 
- 		/* Basic SD framing looks ok - process each packet (header) */
--		save_pfirst = pfirst;
--		plast = NULL;
--
--		for (num = 0; pfirst; rxseq++, pfirst = pnext) {
--			pnext = pfirst->next;
--			pfirst->next = NULL;
- 
-+		skb_queue_walk_safe(&bus->glom, pfirst, pnext) {
- 			dptr = (u8 *) (pfirst->data);
- 			sublen = get_unaligned_le16(dptr);
- 			chan = SDPCM_PACKET_CHANNEL(&dptr[SDPCM_FRAMETAG_LEN]);
-@@ -1420,6 +1421,8 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
- 				bus->rx_badseq++;
- 				rxseq = seq;
- 			}
-+			rxseq++;
++	del_timer_sync(&tid_tx->session_timer);
 +
- #ifdef BCMDBG
- 			if (BRCMF_BYTES_ON() && BRCMF_DATA_ON()) {
- 				printk(KERN_DEBUG "Rx Subframe Data:\n");
-@@ -1432,36 +1435,22 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
- 			skb_pull(pfirst, doff);
+ 	ieee80211_agg_splice_packets(local, tid_tx, tid);
  
- 			if (pfirst->len == 0) {
-+				skb_unlink(pfirst, &bus->glom);
- 				brcmu_pkt_buf_free_skb(pfirst);
--				if (plast)
--					plast->next = pnext;
--				else
--					save_pfirst = pnext;
--
- 				continue;
- 			} else if (brcmf_proto_hdrpull(bus->drvr, &ifidx,
- 						       pfirst) != 0) {
- 				brcmf_dbg(ERROR, "rx protocol error\n");
- 				bus->drvr->rx_errors++;
-+				skb_unlink(pfirst, &bus->glom);
- 				brcmu_pkt_buf_free_skb(pfirst);
--				if (plast)
--					plast->next = pnext;
--				else
--					save_pfirst = pnext;
--
- 				continue;
- 			}
+ 	/* future packets must not find the tid_tx struct any more */
+@@ -778,6 +807,10 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ 			ieee80211_agg_tx_operational(local, sta, tid);
  
--			/* this packet will go up, link back into
--				 chain and count it */
--			pfirst->next = pnext;
--			plast = pfirst;
--			num++;
--
- #ifdef BCMDBG
- 			if (BRCMF_GLOM_ON()) {
- 				brcmf_dbg(GLOM, "subframe %d to stack, %p (%p/%d) nxt/lnk %p/%p\n",
--					  num, pfirst, pfirst->data,
-+					  bus->glom.qlen, pfirst, pfirst->data,
- 					  pfirst->len, pfirst->next,
- 					  pfirst->prev);
- 				print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
-@@ -1470,14 +1459,15 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
- 			}
- #endif				/* BCMDBG */
- 		}
--		if (num) {
-+		/* sent any remaining packets up */
-+		if (bus->glom.qlen) {
- 			up(&bus->sdsem);
--			brcmf_rx_frame(bus->drvr, ifidx, save_pfirst, num);
-+			brcmf_rx_frame(bus->drvr, ifidx, &bus->glom);
- 			down(&bus->sdsem);
- 		}
+ 		sta->ampdu_mlme.addba_req_num[tid] = 0;
++
++                if (tid_tx->timeout)
++                        mod_timer(&tid_tx->session_timer, TU_TO_EXP_TIME(tid_tx->timeout));
++
+ 	} else {
+ 		___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR,
+ 						true);
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index c5923ab..6027a53 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -90,6 +90,7 @@ enum ieee80211_sta_info_flags {
+  * struct tid_ampdu_tx - TID aggregation information (Tx).
+  *
+  * @rcu_head: rcu head for freeing structure
++ * @session_timer: check if we keep Tx-ing on the TID (by timeout value)
+  * @addba_resp_timer: timer for peer's response to addba request
+  * @pending: pending frames queue -- use sta's spinlock to protect
+  * @dialog_token: dialog token for aggregation session
+@@ -112,6 +113,7 @@ enum ieee80211_sta_info_flags {
+  */
+ struct tid_ampdu_tx {
+ 	struct rcu_head rcu_head;
++	struct timer_list session_timer;
+ 	struct timer_list addba_resp_timer;
+ 	struct sk_buff_head pending;
+ 	unsigned long state;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 30d212a..a6d46ca 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1044,6 +1044,10 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
  
- 		bus->rxglomframes++;
--		bus->rxglompkts += num;
-+		bus->rxglompkts += bus->glom.qlen;
- 	}
- 	return num;
- }
-@@ -2075,7 +2065,7 @@ deliver:
- 
- 		/* Unlock during rx call */
- 		up(&bus->sdsem);
--		brcmf_rx_frame(bus->drvr, ifidx, pkt, 1);
-+		brcmf_rx_packet(bus->drvr, ifidx, pkt);
- 		down(&bus->sdsem);
- 	}
- 	rxcount = maxframes - rxleft;
+ 	if (test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
+ 		info->flags |= IEEE80211_TX_CTL_AMPDU;
++                /* reset session timer */
++                if (tid_tx->timeout)
++                        mod_timer(&tid_tx->session_timer,
++                                  TU_TO_EXP_TIME(tid_tx->timeout));
+ 	} else if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state)) {
+ 		/*
+ 		 * nothing -- this aggregation session is being started
+@@ -1075,6 +1079,11 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
+ 			/* do nothing, let packet pass through */
+ 		} else if (test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
+ 			info->flags |= IEEE80211_TX_CTL_AMPDU;
++
++                        /* reset session timer */
++                        if (tid_tx->timeout)
++                                mod_timer(&tid_tx->session_timer,
++                                          TU_TO_EXP_TIME(tid_tx->timeout));
+ 		} else {
+ 			queued = true;
+ 			info->control.vif = &tx->sdata->vif;
 -- 
-1.7.5.4
-
+1.7.4.1
 
