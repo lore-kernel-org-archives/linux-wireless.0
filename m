@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kwall.cngroup.cz ([194.213.192.9]:25021 "EHLO kwall.cngroup.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755687Ab1KXND5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 08:03:57 -0500
-Date: Thu, 24 Nov 2011 14:03:50 +0100
-From: Jan =?UTF-8?B?RHZvxZnDoWs=?= <dvorakj@cngroup.dk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rtl8192cu not working with Edimax EW-7811Un
-Message-Id: <20111124140350.06e9644056a9b4993bc093cb@cngroup.dk> (sfid-20111124_140400_335815_79C471E1)
-In-Reply-To: <4ECD3E5E.6010109@lwfinger.net>
-References: <20111122113427.3d332b00776546d5ebac11de@cngroup.dk>
-	<20111122140139.GA3891@redhat.com>
-	<20111123112301.f5e523ff743f86dae539fdf3@cngroup.dk>
-	<20111123143304.GA13460@redhat.com>
-	<20111123162426.9a30d25585fa54507c1c864e@cngroup.dk>
-	<4ECD13D0.6010500@lwfinger.net>
-	<20111123155108.GD13460@redhat.com>
-	<20111123175210.fd0ac6b0b66885b3deaecfc0@cngroup.dk>
-	<4ECD3E5E.6010109@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from external1.orbit-lab.org ([128.6.192.131]:43149 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751103Ab1KUVMj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 16:12:39 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id BDA9454044A
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 16:37:50 -0500 (EST)
+Subject: Compat-wireless release for 2011-11-21 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111121211237.794164062E@repository3.orbit-lab.org> (sfid-20111121_221242_666977_B4CB2237)
+Date: Mon, 21 Nov 2011 16:12:37 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 23 Nov 2011 12:41:34 -0600
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> >>> I can't still use hostapd, however.
-> >> Hmm, I'm not sure if rtl92c works in AP mode, Larry?
-> 
-> When I try it, I get rtl8192cu to beacon, and it is possible to authenticate and 
-> associate, but the second computer never gets an IP number.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 04be1f1...80d9ddd akpm-end   -> origin/akpm-end  (forced update)
+   a9098b3..a767835  akpm-start -> origin/akpm-start
+ + fdf6edf...bd87c6c master     -> origin/master  (forced update)
+   a9098b3..a767835  stable     -> origin/stable
+ * [new tag]         next-20111121 -> next-20111121
 
-Even without DHCP, no traffic ever comes through. Plus from here it looks like
-the client is reconnecting (quickly, let's say once per 5s) to no end.
+compat-wireless code metrics
 
-So, how do I debug this properly? Can I turn on some kind of verbose mode?
-Is there a way to sniff the communication (kismet or something)?
-
-Best regards,
-	Jan Dvorak
+    819372 - Total upstream lines of code being pulled
+      2455 - backport code changes
+      2110 - backport code additions
+       345 - backport code deletions
+      8770 - backport from compat module
+     11225 - total backport code
+    1.3700 - % of code consists of backport work
