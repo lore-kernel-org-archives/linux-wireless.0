@@ -1,77 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4838 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759567Ab1KWBWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 20:22:15 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 14/24] brcm80211: fmac: remove unused parameter of
- brcmf_sdbrcm_probe
-Date: Tue, 22 Nov 2011 17:21:49 -0800
-Message-ID: <1322011319-24863-15-git-send-email-frankyl@broadcom.com> (sfid-20111123_022220_739377_4DE94B9E)
-In-Reply-To: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
-References: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:49678 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755349Ab1KUW3Z convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Nov 2011 17:29:25 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CA+55aFygSFt+O5KLoiE_0V+o45eKfsoDDV5ML8EF=J0n9z_D-Q@mail.gmail.com>
+References: <lx6sezwGldO.A.IhF.UBpWOB@chimera> <201111212249.31196.rjw@sisk.pl>
+ <CA+55aFygSFt+O5KLoiE_0V+o45eKfsoDDV5ML8EF=J0n9z_D-Q@mail.gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Mon, 21 Nov 2011 14:29:02 -0800
+Message-ID: <CALCETrX-GS+R3jZXURSk0=8rvNK_X2XzkMF+age+TbPmwENt-w@mail.gmail.com> (sfid-20111121_232953_246574_E8A52006)
+Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bus_no, slot, func and bustype are no longer needed by brcmf_sdbrcm_probe.
-This patch removes them.
+On Mon, Nov 21, 2011 at 2:18 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Mon, Nov 21, 2011 at 1:49 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>>
+>> Subject    : hugetlb oops on 3.1.0-rc8-devel
+>> Submitter  : Andy Lutomirski <luto@amacapital.net>
+>> Date       : 2011-11-01 22:20
+>> Message-ID : CALCETrW1mpVCz2tO5roaz1r6vnno+srHR-dHA6_pkRi2qiCfdw@mail.gmail.com
+>> References : http://marc.info/?l=linux-kernel&m=132018604426692&w=2
+>
+> Despite the subject line, that's not an oops, it's a BUG_ON().
+>
+> And it *should* be fixed by commit ea4039a34c4c ("hugetlb: release
+> pages in the error path of hugetlb_cow()") although I don't think Andy
+> ever confirmed that (since it was hard to trigger).
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    3 +--
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    3 +--
- 3 files changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 668eb36..6c85d66 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -432,7 +432,7 @@ int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- 	sdiodev->sbwad = SI_ENUM_BASE;
- 
- 	/* try to attach to the target device */
--	sdiodev->bus = brcmf_sdbrcm_probe(0, 0, 0, 0, regs, sdiodev);
-+	sdiodev->bus = brcmf_sdbrcm_probe(regs, sdiodev);
- 	if (!sdiodev->bus) {
- 		brcmf_dbg(ERROR, "device attach failed\n");
- 		ret = -ENODEV;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 8acd1bb..f01da6a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3861,8 +3861,7 @@ static void brcmf_sdbrcm_release(struct brcmf_bus *bus)
- 	brcmf_dbg(TRACE, "Disconnected\n");
- }
- 
--void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
--			 u32 regsva, struct brcmf_sdio_dev *sdiodev)
-+void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
- {
- 	int ret;
- 	struct brcmf_bus *bus;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-index 4e501f8..0618f5e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-@@ -258,8 +258,7 @@ brcmf_sdioh_request_chain(struct brcmf_sdio_dev *sdiodev, uint fix_inc,
- extern void brcmf_sdio_wdtmr_enable(struct brcmf_sdio_dev *sdiodev,
- 				    bool enable);
- 
--extern void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
--				u32 regsva, struct brcmf_sdio_dev *sdiodev);
-+extern void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev);
- extern void brcmf_sdbrcm_disconnect(void *ptr);
- extern void brcmf_sdbrcm_isr(void *arg);
- #endif				/* _BRCM_SDH_H_ */
--- 
-1.7.5.4
-
-
+I haven't seen it again, but that probably doesn't mean anything.
+I've also fixed a bug in some userspace software I was running, and
+that fix means I'm probably not stressing that part of the kernel
+anymore.  (Even without the fix, it took two weeks to hit this.)
