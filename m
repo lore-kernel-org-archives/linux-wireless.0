@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34726 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753365Ab1KDJUS (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:60302 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750811Ab1KUDDZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 05:20:18 -0400
-Subject: Re: A new driver is going to be released
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <CAMG6FYjGDhts2K3gYSeh0HACkFgSxxXZYdRCHrYp=2W3LceoyQ@mail.gmail.com> (sfid-20111104_101035_860741_ABCAE9E8)
-References: <CAMG6FYiNW-1ijghpgQ6R_9HujVEp8d53DQ-vjfJrw_hZamM8Jw@mail.gmail.com>
-	 <4EB33B67.6080806@lwfinger.net> <1320372088.29008.0.camel@dcbw.foobar.com>
-	 <CAMG6FYgD9DDa+eJgALi3LLF1yQO3ujaxAskpEf1kvcJ19rYwxA@mail.gmail.com>
-	 <1320394336.3969.0.camel@jlt3.sipsolutions.net>
-	 <CAMG6FYjGDhts2K3gYSeh0HACkFgSxxXZYdRCHrYp=2W3LceoyQ@mail.gmail.com>
-	 (sfid-20111104_101035_860741_ABCAE9E8)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 04 Nov 2011 10:20:12 +0100
-Message-ID: <1320398412.3969.18.camel@jlt3.sipsolutions.net> (sfid-20111104_102022_348671_FA1B571C)
-Mime-Version: 1.0
+	Sun, 20 Nov 2011 22:03:25 -0500
+Date: Mon, 21 Nov 2011 12:03:12 +0900
+From: Norbert Preining <preining@logic.at>
+To: Richard Yao <ryao@cs.stonybrook.edu>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+Subject: Re: iwlagn is getting very shaky
+Message-ID: <20111121030312.GH32505@gamma.logic.tuwien.ac.at> (sfid-20111121_040331_745335_F8DE278C)
+References: <20111102031345.GA10851@gamma.logic.tuwien.ac.at> <1320204101.31823.140.camel@wwguy-huron> <20111104045817.GA25778@gamma.logic.tuwien.ac.at> <20111107123812.GB23508@gamma.logic.tuwien.ac.at> <1320709047.31823.188.camel@wwguy-huron> <20111108043233.GA21171@gamma.logic.tuwien.ac.at> <CANUX_P0Q0wve4D6fZPsMv2Zw=02gb9u+3C2cjRv7UAmWqXnjzw@mail.gmail.com> <CANUX_P06ww42p6N1k_P-Y1KMKOd1QgR_DxVWe19qtsEX2rfWpw@mail.gmail.com> <20111109051152.GA16006@gamma.logic.tuwien.ac.at> <CABDyM6SGveC+65WRKDBEgTDLo8EzSb8RBUBHynssSW5-fWB0bA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CABDyM6SGveC+65WRKDBEgTDLo8EzSb8RBUBHynssSW5-fWB0bA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-11-04 at 10:10 +0100, Dmitry Tarnyagin wrote:
-> Hi Johannes,
-> 
-> >> Correct. But I would move it to drivers/net/wireless during submission.
-> >
-> > A word of caution: don't attempt that in its current state.
-> >
-> Thank you for caution. CONFIG_CW1200_USE_STE_EXTENSIONS,
-> CONFIG_WAKELOCK and HAS_PUT_TASK_STRUCT will be removed
-> of course, API will be aligned with 3.1. But I'm a bit curious what else could
-> prevent from submission to drivers/net/wireless? I do not see obvious problems
-> with code. Could you please give a short advise what should be fixed then if you
-> see problems?
+On Mi, 16 Nov 2011, Richard Yao wrote:
+> Would your university by any chance be using wireless network hardware
+> from Aruba Networks?
 
-Well there is a ton of stuff like compat code too. Also, for example the
-worker thread is pretty strange -- kthread_create() is essentially
-deprecated, and having a thread to handle interrupts is weird to start
-with.
+No, I its Cisco.
 
-johannes
+Best wishes
 
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+BOTLEY
+The prominent stain on a man's trouser crotch seen on his return from
+the lavatory. A botley proper is caused by an accident with the push
+taps, and should not be confused with any stain caused by insufficient
+waggling of the willy.
+			--- Douglas Adams, The Meaning of Liff
