@@ -1,86 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:55404 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752241Ab1KTQKB convert rfc822-to-8bit (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:2251 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753373Ab1KUXmR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Nov 2011 11:10:01 -0500
-Received: by ggnr5 with SMTP id r5so1555561ggn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 08:10:00 -0800 (PST)
+	Mon, 21 Nov 2011 18:42:17 -0500
+From: "Howard Harte" <hharte@broadcom.com>
+To: =?iso-8859-1?Q?Thomas_Lang=E5s?= <thomas.langas@fxitech.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+cc: "Arend Van Spriel" <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 21 Nov 2011 15:42:08 -0800
+Subject: RE: brcm80211 (with bcm4329-chip)
+Message-ID: <4F34EB345A846E42B8D432EA578382CC154E402FB4@SJEXCHCCR01.corp.ad.broadcom.com> (sfid-20111122_004220_783985_17D0CB65)
+References: <CADrAYBnwWEaigcgQYYk6V3VEuEYyrmzJQXegKVk6TgOTPh5N8A@mail.gmail.com>
+ <4ECA8908.7070304@broadcom.com> <4ECA98DB.4030608@broadcom.com>
+ <CADrAYBk7_fsVJUAYNqEZpdBPKOTGUai_UhPT9LMHaEyY+Zm24w@mail.gmail.com>
+ <4ECAAD6C.4080103@broadcom.com>
+ <CADrAYBndEsNz5nypirSxQPObpSV5BWARWOQzwmBTmzg+tgUbBA@mail.gmail.com>
+ <CADrAYB=wDwrzCFEi4-PFepLiLMbPLAGxoaNGtXBaPZPR1onokA@mail.gmail.com>
+ <4ECAC99B.8090507@broadcom.com>
+ <CADrAYBmhBWVDC=K+F-NU6WkUv-M=WddWvU1pe9AXABEinUBGvQ@mail.gmail.com>
+ <4ECAD52A.6050509@broadcom.com>
+ <CADrAYBntm4GuhcZaErKimv4Z4Nt+Z6=67qdwi7eomZpTOoQsnQ@mail.gmail.com>
+In-Reply-To: <CADrAYBntm4GuhcZaErKimv4Z4Nt+Z6=67qdwi7eomZpTOoQsnQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4EC92474.5020908@gmail.com>
-References: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
-	<1321775788-12520-7-git-send-email-mickflemm@gmail.com>
-	<4EC8C6FD.1030103@openwrt.org>
-	<CAFtRNNxbEnbS27Hd=ZKN2nMfOABEZ-nEBygLZr5FSaoXvtvBhA@mail.gmail.com>
-	<4EC92474.5020908@gmail.com>
-Date: Sun, 20 Nov 2011 18:10:00 +0200
-Message-ID: <CAFtRNNwjiUz3nDb2BFuBtsYz1-yvUqQfAgvMDSf1REA4x=Zz9g@mail.gmail.com> (sfid-20111120_171012_905293_6AF19BA4)
-Subject: Re: [PATCH 06/13] ath5k: Use usleep_range where possible
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	me@bobcopeland.com, mcgrof@gmail.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/11/20 Jiri Slaby <jirislaby@gmail.com>:
-> On 11/20/2011 04:43 PM, Nick Kossifidis wrote:
->> 2011/11/20 Felix Fietkau <nbd@openwrt.org>:
->>> On 2011-11-20 8:56 AM, Nick Kossifidis wrote:
->>>> Use usleep_range where possible to reduce busy waits
->>>>
->>>> Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
->>>> ---
->>>>  drivers/net/wireless/ath/ath5k/attach.c |    2 +-
->>>>  drivers/net/wireless/ath/ath5k/pci.c    |    2 +-
->>>>  drivers/net/wireless/ath/ath5k/phy.c    |   22 +++++++++++-----------
->>>>  drivers/net/wireless/ath/ath5k/reset.c  |   14 +++++++-------
->>>>  4 files changed, 20 insertions(+), 20 deletions(-)
->>>>
->>>> @@ -1454,7 +1454,7 @@ static int ath5k_hw_rf5110_calibrate(struct ath5k_hw *ah,
->>>>       beacon = ath5k_hw_reg_read(ah, AR5K_BEACON_5210);
->>>>       ath5k_hw_reg_write(ah, beacon & ~AR5K_BEACON_ENABLE, AR5K_BEACON_5210);
->>>>
->>>> -     mdelay(2);
->>>> +     usleep_range(2000, 2500);
->>>>
->>>>       /*
->>>>        * Set the channel (with AGC turned off)
->>>> @@ -1467,7 +1467,7 @@ static int ath5k_hw_rf5110_calibrate(struct ath5k_hw *ah,
->>>>        * Activate PHY and wait
->>>>        */
->>>>       ath5k_hw_reg_write(ah, AR5K_PHY_ACT_ENABLE, AR5K_PHY_ACT);
->>>> -     mdelay(1);
->>>> +     usleep_range(1000, 1500);
->>>>
->>>>       AR5K_REG_DISABLE_BITS(ah, AR5K_PHY_AGC, AR5K_PHY_AGC_DISABLE);
->>>>
->>> Are you sure this is safe? This looks like it's being called from
->>> tasklet context, and I think usleep_range is not allowed there.
->>>
->>> - Felix
->>>
->>
->> Reset runs in process context. Calls to reset are done directly from
->> non-interrupt context (e.g. during init) or through a work queue, not
->> a tasklet. They are also locked using a mutex lock, not a spinlock so
->> we should be fine.
->
-> But those two are not reset, but calibrate. And calibration is performed
-> in a tasklet.
->
-> thanks,
-> --
-> js
->
+Hello Thomas,
 
-Just noticed I missed that part on 05, there is no need to run
-calibration through a tasklet, will post an update on 05...
+The max clock speed supported by 4329 is 50MHz.
+
+-Howard
 
 
--- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+-----Original Message-----
+From: Thomas Lang�s [mailto:thomas.langas@fxitech.com] 
+Sent: Monday, November 21, 2011 3:41 PM
+To: Franky (Zhenhui) Lin
+Cc: Arend Van Spriel; linux-wireless@vger.kernel.org; Howard Harte
+Subject: Re: brcm80211 (with bcm4329-chip)
+
+On Mon, Nov 21, 2011 at 11:48 PM, Franky Lin <frankyl@broadcom.com> wrote:
+> I think both firmware is fine. I was referring to the
+> brcm/bcm4329-fullmac-4.txt It's a nvram file contains critical information
+> used by firmware. And it's hardware dependent. We have submitted a patch to
+> remove the one in Linux firmware repository to avoid confusion as it's for a
+> Broadcom internal development board. It may not work with your set up. I
+> think there should be a similar file comes with the proprietary driver
+> package if you are using a module instead of a 4329 chip. Please use that
+> one.
+
+I did two tests one with only changing the nvram-file, and one with
+changing both
+the firmware and the nvram-file (this is the latest logfile you got).  Both had
+the same result.
+
+> I don't have Exynos 4210 spec. But I guess for a such new chip the SDIO host
+> should be able to run the bus at 50MHz. You could try to hack the MMC/SDIO
+> host driver and reduce the max frequency to 25MHz or even further to 12MHz
+> to see if any improvement.
+
+Max clock is 63MHz, and the setting we have now works with 2.6.36 and the
+proprietary driver (bcm4329).
+
+Looking at the platform-code we have for 2.6.x, I see that we set
+.cd_type                = S3C_SDHCI_CD_GPIO,
+Instead of
+.cd_type                = S3C_SDHCI_CD_INTERNAL,
+
+I don't know if this matters (looking at the schematics, the clk-pin is the same
+for mmc2 as it is for the gpio).  Is this something related to the old
+proprietary
+driver?
+
+
+Regards,
+Thomas
+
+
