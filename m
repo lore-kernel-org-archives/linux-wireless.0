@@ -1,91 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:39859 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934814Ab1KJOfS (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:65393 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753130Ab1KVAWx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 09:35:18 -0500
-Message-ID: <1320935713.2310.9.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC> (sfid-20111110_153533_082549_9B566EB4)
-Subject: Re: creating netdev queues on the fly?
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 10 Nov 2011 15:35:13 +0100
-In-Reply-To: <1320933501.3967.68.camel@jlt3.sipsolutions.net>
-References: <1320933501.3967.68.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 21 Nov 2011 19:22:53 -0500
+Received: by vbbfc21 with SMTP id fc21so3161763vbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 16:22:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4ECAE912.8020603@broadcom.com>
+References: <CADrAYBnwWEaigcgQYYk6V3VEuEYyrmzJQXegKVk6TgOTPh5N8A@mail.gmail.com>
+	<4ECA8908.7070304@broadcom.com>
+	<4ECA98DB.4030608@broadcom.com>
+	<CADrAYBk7_fsVJUAYNqEZpdBPKOTGUai_UhPT9LMHaEyY+Zm24w@mail.gmail.com>
+	<4ECAAD6C.4080103@broadcom.com>
+	<CADrAYBndEsNz5nypirSxQPObpSV5BWARWOQzwmBTmzg+tgUbBA@mail.gmail.com>
+	<CADrAYB=wDwrzCFEi4-PFepLiLMbPLAGxoaNGtXBaPZPR1onokA@mail.gmail.com>
+	<4ECAC99B.8090507@broadcom.com>
+	<CADrAYBmhBWVDC=K+F-NU6WkUv-M=WddWvU1pe9AXABEinUBGvQ@mail.gmail.com>
+	<4ECAD52A.6050509@broadcom.com>
+	<CADrAYBntm4GuhcZaErKimv4Z4Nt+Z6=67qdwi7eomZpTOoQsnQ@mail.gmail.com>
+	<4F34EB345A846E42B8D432EA578382CC154E402FB4@SJEXCHCCR01.corp.ad.broadcom.com>
+	<CADrAYBmD+OzXOLyunz6guyYzwn-mXuHtEaX-7cAVy7QmWp603A@mail.gmail.com>
+	<4ECAE525.6030206@broadcom.com>
+	<CADrAYBkL_Am57Vmo=mbJpGGZy81Tt6VoBfWt0_pb3F7wnL5Drg@mail.gmail.com>
+	<4ECAE912.8020603@broadcom.com>
+Date: Tue, 22 Nov 2011 01:22:52 +0100
+Message-ID: <CADrAYB=TS3HmBO_mHqP+RAskTX0NnsKJdmF3hEU3LejE_fuaAQ@mail.gmail.com> (sfid-20111122_012257_400292_0C97F9C0)
+Subject: Re: brcm80211 (with bcm4329-chip)
+From: =?ISO-8859-1?Q?Thomas_Lang=E5s?= <thomas.langas@fxitech.com>
+To: Franky Lin <frankyl@broadcom.com>
+Cc: Howard Harte <hharte@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le jeudi 10 novembre 2011 Ã  14:58 +0100, Johannes Berg a Ã©crit :
-> Hi,
-> 
-> I've been thinking about how we manage TX queues in wifi and right now
-> we just split things up by access category for QoS purposes.
-> 
-> However we have the issue that we might be pushing data to stations with
-> completely different speeds. Onn wired, where our outgoing speed is
-> essentially constant and some router/switch has to drop packets for the
-> slow link:
-> 
-> machine A === 1000mbps link ==== [switch] === 1000mbps === machine B
->                                      |
->                                      +--- 100mbps link --- machine C
-> 
-> But on wireless we really transmit to slow stations only with a slow
-> speed, so our outgoing speed differs. I think the scenario is quite
-> different, also because the speed can vary obviously.
-> 
-> So to get to my question: What if we could create netdev queues on the
-> fly?
-> 
-> The reason to do that is that we really don't want to reserve some 8000
-> queues just because somebody could possibly try to create 2000
-> connections (2007 is the theoretical max due to protocol restrictions)
-> to the AP interface. We also don't really want to create a netdev for
-> each peer (though you could implement it that way today).
-> 
-> I looked at this and it doesn't seem terrible. Creating & destroying the
-> queues might be tricky though. I think ndo_select_queue might return the
-> queue pointer instead of an index, and then that queue could be used.
-> The normal queues would still be in an array, with maybe a linked list
-> of extra queues that were dynamically created. Obviously the driver
-> would have to be able to manage that.
-> 
-> Ultimately, all the frames will of course end up on the same four
-> hardware queues again. But this would some better management, and piled
-> up traffic to one station that suddenly dies wouldn't impact performance
-> for all others as badly as it does today since we wouldn't let all those
-> frames pile up on the hardware queues, they'd only get there with some
-> mechanism that might take airtime into account.
-> 
-> I think this might also make implementing reservation (tspec) easier.
-> Not sure if anyone wants/needs that though.
-> 
-> 
-> Am I completely crazy?
-> 
+On Tue, Nov 22, 2011 at 1:13 AM, Franky Lin <frankyl@broadcom.com> wrote:
+> On 11/21/2011 04:00 PM, Thomas Langås wrote:
+>>
+>> On Tue, Nov 22, 2011 at 12:56 AM, Franky Lin<frankyl@broadcom.com>  wrote:
+>> Set it to 25MHz, still same problem.
+> I see. How about revert the change for enabling the debug message and give
+> it a go. Can the driver function normally? (load, scan, join AP and ping).
 
-In term of qdisc management I believe its a bit complex if we start to
-dynamically add netdev queues :)
+It loads, but that's about it, it reports that the network is down.
 
-My first idea would be to extend Qdisc management so that a device can
-callback qdisc when a frame is finaly delivered / consumed / discarded.
+>>> About the functional combination of .36 kernel + proprietary driver, is
+>>> it a
+>>> mainline kernel or an Android one?
+>> Android, yes.
+> You said the current kernel is from Samsung's tree, is it an Android one as
+> well?
 
-We currently only have qdisc->enqueue() and qdisc->dequeue(), we could
-add qdisc->deliver_callback(skb)
-
-You keep devices as they are, with a netdevqueue per hardware queue.
-
-Then, using a Qdisc like existing ones, but with a limit of
-outstanding(given to device but not yet consumed) packets per class.
-
-external tc classifier would deliver a hash/index depending on remote
-station.
-
-As a bonus you can get all the existing rate estimators / QOS /
-shapers ...
+No, not Android but this one:
+https://github.com/kgene/linux-samsung
 
 
-
+Regards,
+Thomas
