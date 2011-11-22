@@ -1,90 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:56349 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751698Ab1K1JPQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 04:15:16 -0500
-Message-ID: <1322471704.2730.1.camel@phoenix> (sfid-20111128_101536_581303_4710BA6F)
-Subject: [PATCH] net: rfkill: convert net/rfkill/* to use
- module_platform_driver()
-From: Axel Lin <axel.lin@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Antonio Ospite <ospite@studenti.unina.it>,
-	Rhyland Klein <rklein@nvidia.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Mon, 28 Nov 2011 17:15:04 +0800
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:5241 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754526Ab1KVMWR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 07:22:17 -0500
+Date: Tue, 22 Nov 2011 13:22:06 +0100
+From: Andrea Arcangeli <aarcange@redhat.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
+Message-ID: <20111122122206.GD8397@redhat.com> (sfid-20111122_132242_967458_770E8391)
+References: <lx6sezwGldO.A.IhF.UBpWOB@chimera>
+ <201111212249.31196.rjw@sisk.pl>
+ <4ECB37E4.6020204@linux.vnet.ibm.com>
+ <20111121215918.febd9fd4.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111121215918.febd9fd4.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch converts the drivers in net/rfkill/* to use the
-module_platform_driver() macro which makes the code smaller and a bit
-simpler.
+On Mon, Nov 21, 2011 at 09:59:18PM -0800, Andrew Morton wrote:
+> grr, nothing in that patch's changelog indicates that it fixed a
+> regression nor that it fixed an infinite blockage of suspend.
 
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Antonio Ospite <ospite@studenti.unina.it>
-Cc: Rhyland Klein <rklein@nvidia.com>
-Signed-off-by: Axel Lin <axel.lin@gmail.com>
----
- net/rfkill/rfkill-gpio.c      |   13 +------------
- net/rfkill/rfkill-regulator.c |   12 +-----------
- 2 files changed, 2 insertions(+), 23 deletions(-)
+Well it's not a recent thing so I didn't flag it as a regression. It
+doesn't infinite block it, suspend works fine almost all the time (or
+it would have been noticed before), and if you've bad luck and it
+doesn't suspend the first time around like someone experienced, if you
+try again a bit later it'll work.
 
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index 128677d..ca355e7 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -220,18 +220,7 @@ static struct platform_driver rfkill_gpio_driver = {
- 	},
- };
- 
--static int __init rfkill_gpio_init(void)
--{
--	return platform_driver_register(&rfkill_gpio_driver);
--}
--
--static void __exit rfkill_gpio_exit(void)
--{
--	platform_driver_unregister(&rfkill_gpio_driver);
--}
--
--module_init(rfkill_gpio_init);
--module_exit(rfkill_gpio_exit);
-+module_platform_driver(rfkill_gpio_driver);
- 
- MODULE_DESCRIPTION("gpio rfkill");
- MODULE_AUTHOR("NVIDIA");
-diff --git a/net/rfkill/rfkill-regulator.c b/net/rfkill/rfkill-regulator.c
-index 3ca7277..2ebfe8d 100644
---- a/net/rfkill/rfkill-regulator.c
-+++ b/net/rfkill/rfkill-regulator.c
-@@ -144,17 +144,7 @@ static struct platform_driver rfkill_regulator_driver = {
- 	},
- };
- 
--static int __init rfkill_regulator_init(void)
--{
--	return platform_driver_register(&rfkill_regulator_driver);
--}
--module_init(rfkill_regulator_init);
--
--static void __exit rfkill_regulator_exit(void)
--{
--	platform_driver_unregister(&rfkill_regulator_driver);
--}
--module_exit(rfkill_regulator_exit);
-+module_platform_driver(rfkill_regulator_driver);
- 
- MODULE_AUTHOR("Guiming Zhuo <gmzhuo@gmail.com>");
- MODULE_AUTHOR("Antonio Ospite <ospite@studenti.unina.it>");
--- 
-1.7.5.4
+> I moved it to my 3.2 queue, thanks.
 
-
-
+Thanks!
