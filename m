@@ -1,82 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1-relais-roc.national.inria.fr ([192.134.164.82]:37774 "EHLO
-	mail1-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753200Ab1KGMKy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 07:10:54 -0500
-Date: Mon, 7 Nov 2011 12:58:35 +0100 (CET)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Eliad Peller <eliad@wizery.com>
-cc: Julia Lawall <julia@diku.dk>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	kernel-janitors@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+Received: from mx1.redhat.com ([209.132.183.28]:10852 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755894Ab1KVOLm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 09:11:42 -0500
+Date: Tue, 22 Nov 2011 15:14:13 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Arnd Hannemann <arnd@arndnet.de>, linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/5] net/mac80211/debugfs.c: use kstrtoul, etc
-In-Reply-To: <CAB3XZEfHV+sO=+vJdZUQVqXFtHvZyhJQ1Cm8LJ8Puyz9eqq9Kg@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1111071258160.2527@hadrien> (sfid-20111107_131059_584868_75A6A162)
-References: <1320586010-21931-1-git-send-email-julia@diku.dk> <1320586010-21931-4-git-send-email-julia@diku.dk> <CAB3XZEfHV+sO=+vJdZUQVqXFtHvZyhJQ1Cm8LJ8Puyz9eqq9Kg@mail.gmail.com>
+Subject: Re: 3.2.0-rc2: WARNING: at iwlwifi/wl-trans-pcie.c:1105
+Message-ID: <20111122141412.GB3891@redhat.com> (sfid-20111122_151220_976651_1363744B)
+References: <4EC6DE6B.3080603@arndnet.de>
+ <4ECB65A5.3010009@arndnet.de>
+ <CANUX_P1RXxRuybzj0gavVOkN-a3H_qRO45S1nc3oPq1aZe5V3g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323329-1619784325-1320667116=:2527"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANUX_P1RXxRuybzj0gavVOkN-a3H_qRO45S1nc3oPq1aZe5V3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Tue, Nov 22, 2011 at 01:47:53PM +0200, Emmanuel Grumbach wrote:
+> > additional to the WARNING wireless with iwlwifi seems to be very flaky on 3.2.0-rc2.
+> Yeah I know about that one. I haven't found the time to look at it yet.
+> I do have a patch that can help to debug. This patch will be sent
+> through the regular channel.
+> I am considering to remove the warning though
 
---8323329-1619784325-1320667116=:2527
-Content-Type: TEXT/PLAIN; charset=iso-8859-1; format=flowed
-Content-Transfer-Encoding: 8BIT
+Just after the warning there is "Queue stuck" message, without warning
+there will be no hint what is causing firmware hung.
 
-
-
-On Mon, 7 Nov 2011, Eliad Peller wrote:
-
-> On Sun, Nov 6, 2011 at 3:26 PM, Julia Lawall <julia@diku.dk> wrote:
->> From: Julia Lawall <julia@diku.dk>
->>
->> Use kstrtoul, etc instead of the now deprecated strict_strtoul, etc.
->>
->> A semantic patch rule for the kstrtoul case is as follows:
->> (http://coccinelle.lip6.fr/)
->>
->> // <smpl>
->> @@
->> expression a,b;
->> {int,long} *c;
->> @@
->>
->> -strict_strtoul
->> +kstrtoul
->>  (a,b,c)
->> // </smpl>
->>
->> Signed-off-by: Julia Lawall <julia@diku.dk>
->>
->> ---
->>  net/mac80211/debugfs.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff -u -p a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
->> --- a/net/mac80211/debugfs.c
->> +++ b/net/mac80211/debugfs.c
->> @@ -190,7 +190,7 @@ static ssize_t uapsd_max_sp_len_write(st
->>                return -EFAULT;
->>        buf[len] = '\0';
->>
->> -       ret = strict_strtoul(buf, 0, &val);
->> +       ret = kstrtoul(buf, 0, &val);
->>
->>        if (ret)
->>                return -EINVAL;
->>
->
-> maybe while cleaning it up change copy_from_user +
-> strict_stroul/kstroul -> kstroul_from_user?
-
-Thanks for the suggestion.  I will look into it.
-
-julia
---8323329-1619784325-1320667116=:2527--
+Stanislaw
