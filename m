@@ -1,29 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:55529 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755208Ab1KNQBf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 11:01:35 -0500
-Received: by vws1 with SMTP id 1so5171955vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2011 08:01:34 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CADxqDgFoO63RG67McnxUJSmxZ9ZPPnE7obKkn+MZAsoJ4UMQtg@mail.gmail.com>
-References: <CADxqDgFoO63RG67McnxUJSmxZ9ZPPnE7obKkn+MZAsoJ4UMQtg@mail.gmail.com>
-Date: Mon, 14 Nov 2011 08:01:34 -0800
-Message-ID: <CAJ-Vmon3T-boUkWywfj9oQJYg2fF=rGOLyWXanniEGexV9QPJQ@mail.gmail.com> (sfid-20111114_170139_269443_1BCC854A)
-Subject: Re: force AR5212 to sleep
-From: Adrian Chadd <adrian@freebsd.org>
-To: =?ISO-8859-1?Q?Andr=E9s_Garc=EDa_Saavedra?=
-	<andres.garcia.saavedra@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:22930 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757009Ab1KVUyf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 15:54:35 -0500
+Subject: Re: 3.1+ iwlwifi lockup
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Dave Jones <davej@redhat.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20111122204741.GA3764@redhat.com>
+References: <20111031143408.GA17152@redhat.com>
+	 <1321992902.8072.7.camel@wwguy-ubuntu>  <20111122204741.GA3764@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 22 Nov 2011 11:58:36 -0800
+Message-ID: <1321991916.11647.77.camel@wwguy-huron> (sfid-20111122_215453_007364_443D20C7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hm, have you looked to see whether you're then touching any of the
-registers you shouldn't touch?
-Ie, some parts of the chip are now asleep, so you may not be able to
-do things like calibration whilst it's asleep.
+Hi Dave,
+
+Not sure what happens, feel like memory corruption but not sure. the
+contain of the command is totally bogus.
+
+Could you please test and send update, it is part of "3.2+rc2+
+Regressions from 3.0 and 3.1" reports
+
+Thanks
+Wey
+
+On Tue, 2011-11-22 at 12:47 -0800, Dave Jones wrote:
+> On Tue, Nov 22, 2011 at 12:15:02PM -0800, wwguy wrote:
+>  > Hi Dave,
+>  > 
+>  > Sorry for taking so long.
+>  > it is a bogus command from the firmware which driver try to process it
+>  > and cause problem. I am not sure how it happen. But could you please try
+>  > the patch I attach here.
+>  > 
+>  > For now I am just ignore the command, but not sure it is good enough,
+>  > might has to reload the firmware, but not sure.
+> 
+> I can try the patch. Though FYI, I've not seen this bug again since I reported it.
+> 
+>  > Do you have a bugzilla# I can reference to?
+> 
+> no.
+> 
+> 	Dave
 
 
-Adrian
