@@ -1,133 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:56618 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752433Ab1KVFtt (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:52927 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751328Ab1KVHqA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 00:49:49 -0500
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <srivatsa.bhat@linux.vnet.ibm.com>;
-	Tue, 22 Nov 2011 11:19:45 +0530
-Message-ID: <4ECB37E4.6020204@linux.vnet.ibm.com> (sfid-20111122_065019_562869_0B640FFB)
-Date: Tue, 22 Nov 2011 11:19:24 +0530
-From: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+	Tue, 22 Nov 2011 02:46:00 -0500
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera> <201111212249.31196.rjw@sisk.pl>
-In-Reply-To: <201111212249.31196.rjw@sisk.pl>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20111122072730.GA32225@gamma.logic.tuwien.ac.at>
+References: <1320709047.31823.188.camel@wwguy-huron>
+	<20111108043233.GA21171@gamma.logic.tuwien.ac.at>
+	<CANUX_P0Q0wve4D6fZPsMv2Zw=02gb9u+3C2cjRv7UAmWqXnjzw@mail.gmail.com>
+	<CANUX_P06ww42p6N1k_P-Y1KMKOd1QgR_DxVWe19qtsEX2rfWpw@mail.gmail.com>
+	<20111109051152.GA16006@gamma.logic.tuwien.ac.at>
+	<CANUX_P2Yz9bWP_EmU1Acs7Mu2w78CXxO-njhiMt97b0TJHFYiQ@mail.gmail.com>
+	<20111121030640.GI32505@gamma.logic.tuwien.ac.at>
+	<CANUX_P2AA5stHwjegKdFhFGg7jxwdVU2Xr8OUtXUdEOKz_6E5A@mail.gmail.com>
+	<20111122051310.GA23705@gamma.logic.tuwien.ac.at>
+	<CANUX_P1RjcRD2tW1A6YYSEV9+aUZyTEro7tZXJWRoxk6gx-2jA@mail.gmail.com>
+	<CANUX_P2aFn84uSqgZA2gTBN7E4+0jGmJQTkx4eug4Ls0hK0==Q@mail.gmail.com>
+	<20111122072730.GA32225@gamma.logic.tuwien.ac.at>
+Date: Tue, 22 Nov 2011 09:45:58 +0200
+Message-ID: <CANUX_P15En9bHVx4bhq6=XKPZnC2u+QyVJ+jnm4ns=39DrOBtg@mail.gmail.com> (sfid-20111122_084619_790903_11D50DD5)
+Subject: Re: iwlagn is getting very shaky
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Norbert Preining <preining@logic.at>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/22/2011 03:19 AM, Rafael J. Wysocki wrote:
-> This message contains a list of some regressions from 3.0 and 3.1
-> for which there are no fixes in the mainline known to the tracking team.
-> If any of them have been fixed already, please let us know.
-> 
-> If you know of any other unresolved regressions from 3.0 and 3.1, please let us
-> know either and we'll add them to the list.  Also, please let us know if any of
-> the entries below are invalid.
-> 
-> The entries below are simplified and the statistics are not present due to the
-> continuing Bugzilla outage.
-> 
-> Subject    : iwlagn is getting very shaky
-> Submitter  : Norbert Preining <preining@logic.at>
-> Date       : 2011-10-19 6:01
-> Message-ID : 20111019060108.GA11588@gamma.logic.tuwien.ac.at
-> References : http://marc.info/?l=linux-kernel&m=131914553920614&w=2
-> 
-> Subject    : Regression: "irqpoll" hasn't been working for me since March 16 IRQ
-> Submitter  : Edward Donovan <edward.donovan@numble.net>
-> Date       : 2011-10-19 22:09
-> Message-ID : CADdbW+HXdCPfJu2RTF6zz+ujCmiu_dmZwL2iScuF53p=AaZ1Uw@mail.gmail.com
-> References : http://marc.info/?l=linux-kernel&m=131914554220679&w=2
-> 
-> Subject    : Regression in 3.1 causes Xen to use wrong idle routine
-> Submitter  : Stefan Bader <stefan.bader@canonical.com>
-> Date       : 2011-10-26 10:24
-> Message-ID : 4EA7DFD1.9060608@canonical.com
-> References : http://marc.info/?l=linux-acpi&m=131962467924564&w=2
-> 
-> Subject    : 3.1+ iwlwifi lockup
-> Submitter  : Dave Jones <davej@redhat.com>
-> Date       : 2011-10-31 14:34
-> Message-ID : 20111031143408.GA17152@redhat.com
-> References : http://marc.info/?l=linux-kernel&m=132007169420160&w=2
-> 
-> Subject    : hugetlb oops on 3.1.0-rc8-devel
-> Submitter  : Andy Lutomirski <luto@amacapital.net>
-> Date       : 2011-11-01 22:20
-> Message-ID : CALCETrW1mpVCz2tO5roaz1r6vnno+srHR-dHA6_pkRi2qiCfdw@mail.gmail.com
-> References : http://marc.info/?l=linux-kernel&m=132018604426692&w=2
-> 
-> Subject    : Simultaneous cat and external keyboard input causing kernel panic
-> Submitter  : Timo Jyrinki <timo.jyrinki@gmail.com>
-> Date       : 2011-11-03 12:14
-> Message-ID : CAJtFfxmovJHspHHKbvBVc4pw+u5mjGmUejCXEzdV+GqE=jVSOQ@mail.gmail.com
-> References : http://marc.info/?l=linux-kernel&m=132032253903074&w=2
-> 
-> Subject    : Linus GIT - INFO: possible circular locking dependency detected
-> Submitter  : Miles Lane <miles.lane@gmail.com>
-> Date       : 2011-11-03 15:57
-> Message-ID : CAHFgRy8S0xLfhZxTUOEH5A0PL_Fb79-0-gmbQ=9h2D-xMqt1hA@mail.gmail.com
-> References : http://marc.info/?l=linux-kernel&m=132033587908426&w=2
-> 
-> Subject    : lockdep warning after aa6afca5bcab: "proc: fix races against execve() of /proc/PID/fd**"
-> Submitter  : Ari Savolainen <ari.m.savolainen@gmail.com>
-> Date       : 2011-11-08 3:47
-> Message-ID : CAEbykaXYZEFhTgWMm2AfaWQ2SaXYuO_ypTnw+6AVWScOYSCuuw@mail.gmail.com
-> References : http://marc.info/?l=linux-kernel&m=132072413125099&w=2
-> 
-> Subject    : DMA-API check_sync errors with 3.2
-> Submitter  : Josh Boyer <jwboyer@redhat.com>
-> Date       : 2011-11-08 17:31
-> Message-ID : 20111108173153.GE14216@zod.bos.redhat.com
-> References : http://marc.info/?l=linux-kernel&m=132077357608797&w=2
-> 
-> Subject    : [3.1-rc8 REGRESSION] sky2 hangs machine on turning off or suspending
-> Submitter  : Rafał Miłecki <zajec5@gmail.com>
-> Date       : 2011-11-09 11:46
-> Message-ID : CACna6ryTdLcWVYgHu=_mRFga1sFivpE_DyZOY-HMmKggkWAJAw@mail.gmail.com
-> References : http://marc.info/?l=linux-netdev&m=132083922228088&w=4
-> 
-> Subject    : 3.2-rc1 doesn't boot on dual socket opteron without swap
-> Submitter  : Niklas Schnelle <niklas@komani.de>
-> Date       : 2011-11-10 20:09
-> Message-ID : 1320955769.1718.8.camel@jupiter
-> References : http://marc.info/?l=linux-kernel&m=132095583501767&w=2
-> 
-> Subject    : Sparc-32 doesn't work in 3.1.
-> Submitter  : Rob Landley <rob@landley.net>
-> Date       : 2011-11-12 11:22
-> Message-ID : 4EBEAB5A.5020809@landley.net
-> References : http://www.spinics.net/lists/kernel/msg1260383.html
-> 
-> Subject    : khugepaged blocks suspend2ram (3.2.0-rc1-00252-g8f042aa)
-> Submitter  : Sergei Trofimovich <slyich@gmail.com>
-> Date       : 2011-11-12 10:48
-> Message-ID : 20111112104859.7744b282@sf.home
-> References : https://lkml.org/lkml/2011/11/12/11
-> 
+On Tue, Nov 22, 2011 at 09:27, Norbert Preining <preining@logic.at> wrote:
+> HI Emmanuel,
+>
+> On Di, 22 Nov 2011, Emmanuel Grumbach wrote:
+>> Please apply the patch attached. It has been submitted upstream but
+>> hasn't been merged in the tree you use apparently.
+>
+> Does not apply against current git, as there is no iwl-mac80211.c:
+> [/usr/src/git-kernel/linux.git] patch -p1 --dry-run < ~/QUEUE_DEBUG.patch
+> patching file drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+> patching file drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+> Hunk #1 succeeded at 116 (offset -1 lines).
+> Hunk #2 succeeded at 840 (offset -4 lines).
+> patching file drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+> Hunk #1 succeeded at 800 (offset -13 lines).
+> patching file drivers/net/wireless/iwlwifi/iwl-debug.h
+> Hunk #1 succeeded at 151 (offset -15 lines).
+> Hunk #2 succeeded at 188 (offset -15 lines).
+> can't find file to patch at input line 78
+> Perhaps you used the wrong -p or --strip option?
+> The text leading up to this was:
+> --------------------------
+> |diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+> |index 073e827..05b1f0d 100644
+> |--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+> |+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+> --------------------------
+> File to patch:
+>
 
-Andrea's patch already fixes this issue, which was reported first by
-Jiri Slaby. https://lkml.org/lkml/2011/11/11/93
-I remember Andrew Morton taking this patch in his -mm tree. But it is
-not in mainline yet. So can we consider this closed or not?
+Glad it applied
+>
+>> Then please run with set the TXQUEUES debug flag: 0x8000000.
+>
+> Is this a load options to iwlwifi module (debug=0x..... at module load time?)
+> or has to be set in /sys/kernel/debug/ieee80211/phy?/iwlwifi/debug/*
+> somewhere?
+>
 
-Thanks,
-Srivatsa S. Bhat
+yes it is a module parameter: modprobe iwlwifi debug=0x80000000
 
+>
+>> Do you use any SoftAP / P2P feature ? HW queues can be stalled
+>
+> No. Fixed AP with fixed IP and no special adaptions.
+>
+
+Ok thanks
