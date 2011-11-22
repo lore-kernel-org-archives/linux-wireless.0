@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.multi.fi ([85.134.37.151]:33703 "EHLO smtp.multi.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754142Ab1KATD2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Nov 2011 15:03:28 -0400
-Message-ID: <4EB03E22.2090304@mageia.org> (sfid-20111101_200335_523736_9EC9EC6B)
-Date: Tue, 01 Nov 2011 20:44:50 +0200
-From: Thomas Backlund <tmb@mageia.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:62833 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757898Ab1KVQ00 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 11:26:26 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>
+Subject: [PATCH 08/18] ath9k_hw: check for asynchronous MCI interrupt pending
+Date: Tue, 22 Nov 2011 21:52:35 +0530
+Message-ID: <1321978965-21684-9-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111122_172632_451887_400AC6E9)
+In-Reply-To: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-CC: linux-kernel@vger.kernel.org, netdev@kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: spamm of cfg80211: Calling CRDA to update world regulatory domain
-References: <4EB00DD3.7090701@gmail.com>
-In-Reply-To: <4EB00DD3.7090701@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Justin P. Mattock skrev 1.11.2011 17:18:
-> is there a way to get rid of this annoying spamming of the regulatory?
->
->
-> [ 338.519037] cfg80211: Calling CRDA to update world regulatory domain
-> [ 338.523266] cfg80211: World regulatory domain updated:
-> [ 338.523269] cfg80211: (start_freq - end_freq @ bandwidth),
-> (max_antenna_gain, max_eirp)
-> [ 338.523272] cfg80211: (2402000 KHz - 2472000 KHz @ 40000 KHz), (300
-> mBi, 2000 mBm)
-> [ 338.523276] cfg80211: (2457000 KHz - 2482000 KHz @ 20000 KHz), (300
-> mBi, 2000 mBm)
-> [ 338.523279] cfg80211: (2474000 KHz - 2494000 KHz @ 20000 KHz), (300
-> mBi, 2000 mBm)
-> [ 338.523281] cfg80211: (5170000 KHz - 5250000 KHz @ 40000 KHz), (300
-> mBi, 2000 mBm)
-> [ 338.523284] cfg80211: (5735000 KHz - 5835000 KHz @ 40000 KHz), (300
-> mBi, 2000 mBm)
-> [ 340.948738] wlan1: authenticate with 00:1d:a2:d8:7e:70 (try 1)
-> [ 340.950479] wlan1: authenticated
-> [ 340.950707] wlan1: associate with 00:1d:a2:d8:7e:70 (try 1)
-> [ 340.953611] wlan1: RX ReassocResp from 00:1d:a2:d8:7e:70 (capab=0x401
-> status=0 aid=79)
-> [ 340.953614] wlan1: associated
-> [ 458.646604] wlan1: deauthenticated from 00:1d:a2:d8:7e:70 (Reason: 2)
->
->
-> my entire syslog is filled with the above.
->
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
+MCI interrupt is an asynchronous one, so take care of it by having a
+check in ath9k_hw_intrpend, which actually decides whether the interrupt
+is really for the driver from ath_isr
 
-Are you using networkmanager or systemd or even both ?
-Atleast at some point networkmanager have had problems when trying to
-activate wireless faster than the hw like, so you get into
-auth/deauth loop, and for every time interface restart gets detected,
-setting crda gets triggered.
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/mac.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-For me systemd also has had the same problems for me from time to time,
-and the only way to get wireless up then is to disable it for a
-~5+ seconds with the hw killswitch, and when I re-enable it, network 
-comes up as intended.
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 9d69320..0e4fbb3 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -760,7 +760,10 @@ bool ath9k_hw_intrpend(struct ath_hw *ah)
+ 		return true;
+ 
+ 	host_isr = REG_READ(ah, AR_INTR_ASYNC_CAUSE);
+-	if ((host_isr & AR_INTR_MAC_IRQ) && (host_isr != AR_INTR_SPURIOUS))
++
++	if (((host_isr & AR_INTR_MAC_IRQ) ||
++	     (host_isr & AR_INTR_ASYNC_MASK_MCI)) &&
++	    (host_isr != AR_INTR_SPURIOUS))
+ 		return true;
+ 
+ 	host_isr = REG_READ(ah, AR_INTR_SYNC_CAUSE);
+-- 
+1.7.0.4
 
-This happends for me with atleast 3.0 and 3.1 kernels and Intel 4965AGN 
-wireless connecting to a 11N 5GHz AP.
-
---
-Thomas
