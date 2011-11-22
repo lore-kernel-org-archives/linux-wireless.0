@@ -1,64 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:18413 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755372Ab1KUXfx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 18:35:53 -0500
-Subject: Re: Firmware errors and warnings with Centrino Advanced-N 6205
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Udo Steinberg <udo@hypervisor.org>
-Cc: Linux Network Mailing List <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20111122002838.392f7622@x220>
-References: <20111120210012.405bd632@x220>
-	 <1321889065.2258.5.camel@wwguy-ubuntu>	<20111121194824.12f4c276@x220>
-	 <1321903999.2258.8.camel@wwguy-ubuntu>	<20111121222335.19493eed@x220>
-	 <1321915724.1834.2.camel@wwguy-ubuntu>  <20111122002838.392f7622@x220>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 21 Nov 2011 15:29:31 -0800
-Message-ID: <1321918171.1834.7.camel@wwguy-ubuntu> (sfid-20111122_003558_429499_D6137429)
+Received: from shards.monkeyblade.net ([198.137.202.13]:54416 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752786Ab1KVVmE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 16:42:04 -0500
+Date: Tue, 22 Nov 2011 16:40:57 -0500 (EST)
+Message-Id: <20111122.164057.1411098663938026383.davem@davemloft.net> (sfid-20111122_224232_041651_2DA7D95E)
+To: Larry.Finger@lwfinger.net
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2011-11-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <4ECC1479.8090209@lwfinger.net>
+References: <20111122.160511.2302883259439708995.davem@davemloft.net>
+	<20111122.161322.454163033398038634.davem@davemloft.net>
+	<4ECC1479.8090209@lwfinger.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Base on the information you provide, I am prettyr sure you are using
-pure-40MHz. 
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Tue, 22 Nov 2011 15:30:33 -0600
 
-Is there any chance you have the access to the AP and check on it
-configuration? is it "pure-40MHz above", could you either change it to
-"20/40 MHz mixed mode", or change it to "pure-40MHz below" and see if
-the problem is exist?
+> On 11/22/2011 03:13 PM, David Miller wrote:
+>> From: David Miller<davem@davemloft.net>
+>> Date: Tue, 22 Nov 2011 16:05:11 -0500 (EST)
+>>
+>>> From: "John W. Linville"<linville@tuxdriver.com>
+>>> Date: Tue, 22 Nov 2011 15:56:55 -0500
+>>>
+>>>> On Tue, Nov 22, 2011 at 03:14:29PM -0500, David Miller wrote:
+>>>>> From: "John W. Linville"<linville@tuxdriver.com>
+>>>>> Date: Tue, 22 Nov 2011 14:35:05 -0500
+>>>>>
+>>>>>> Here is the latest batch of fixes intended for 3.2.  This includes a
+>>>>>> correction for a user-visible error in mac80211's debugfs info, a fix
+>>>>>> for a potential memory corrupter in prism54, an endian fix for rt2x00,
+>>>>>> an endian fix for mac80211, a fix for a NULL derefernce in cfg80211, a
+>>>>>> locking fix and a deadlock fix for p54spi, and a pair of rt2x00 fixes
+>>>>>> for handling some spurious interrupts that hardware can generate.
+>>>>>>
+>>>>>> Please let me know if there are problems!
+>>>>>
+>>>>> The rt2800pci change doesn't look correct.
+>>>>>
+>>>>> If the IRQ line is shared with another device, this change will make
+>>>>> it
+>>>>> never see interrupts.  Once you say "IRQ_HANDLED" the IRQ dispatch
+>>>>> stops processing the interrupt handler list.
+>>>>
+>>>> I thought this at first as well.  But looking at the code in
+>>>> kernel/irq/handle.c doesn't support that conclusion.  In fact, every
+>>>> handler gets invoked no matter what they all return.  All of the irq
+>>>> handler return values are ORed together and passed to note_interrupt.
+>>>> Only if every irq handler returns IRQ_NONE does the code in
+>>>> kernel/irq/spurious.c start getting involved.
+>>>>
+>>>> Anyway, this seems to be safe even for shared interrupts.  That said,
+>>>> this is a bit ugly.  But it makes a serious difference in performance
+>>>> for those afflicted with this issue.
+>>>
+>>> It just means that we won't notice spurious interrupts if the device
+>>> sharing the line with rt2800pci generates one.
+>>>
+>>> This change is wrong.
+>>
+>> BTW, look at it this way, if what you say is true John then what's the
+>> point
+>> in returning any specific value at all?
+>>
+>> Everyone can just return IRQ_HANDLED and everything would just work.
+>>
+>> But you know that's not the case, and that it's important that this
+>> value
+>> is returned accurately.
+> 
+> I was trying to find the thread that reported the improvement in
+> performance with this change, but failed. Is it possible that their
+> change just papered over an interrupt storm from some other device
+> that shared that interrupt?
 
-Thanks
-Wey
-
-
-On Mon, 2011-11-21 at 15:28 -0800, Udo Steinberg wrote:
-> On Mon, 21 Nov 2011 14:48:44 -0800 wwguy (W) wrote:
-> 
-> W> btw, are you using pure 40MHz mode on your AP?
-> 
-> Hi Wey,
-> 
-> I am not sure, but I believe it's running some mix of 802.11 b/g/n.
-> 
-> The Linux that runs on the Fritz!Box says:
-> 
-> ath0      IEEE 802.11ng  ESSID:"XXX"  Nickname:""
->           Mode:Master  Frequency:2.412 GHz  Access Point: 00:24:FE:41:8D:0E   
->           Bit Rate:0 kb/s   Tx-Power:19 dBm   Sensitivity=0/3  
->           Retry:off   RTS thr:off   Fragment thr:off
->           Encryption key:XXXX-XXXX-XXXX-XXXX-XXXX-XXX-XXXX-EBCB [2]   Security mode:open
->           Power Management:off
->           Link Quality=49/94  Signal level=-60 dBm  Noise level=-109 dBm
->           Rx invalid nwid:3  Rx invalid crypt:0  Rx invalid frag:0
->           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-> 
-> The web interface shows that the AP uses channels 1-7 and sends on channel 1.
-> I've attached a screenshot. Yellow bars indicate other WLANs and grey bars
-> are other interference.
-> 
-> Cheers,
-> 
-> 	- Udo
-
-
+It doesn't fix a performance problem, it fixes a problem wherein the
+IRQ line is disabled by the generic IRQ code because all handlers
+return IRQ_NONE.
