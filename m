@@ -1,62 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46534 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750960Ab1KYSkV convert rfc822-to-8bit (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:51132 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752718Ab1KVH1i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 13:40:21 -0500
-Received: by iage36 with SMTP id e36so4896257iag.19
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Nov 2011 10:40:20 -0800 (PST)
+	Tue, 22 Nov 2011 02:27:38 -0500
+Date: Tue, 22 Nov 2011 16:27:30 +0900
+From: Norbert Preining <preining@logic.at>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+Subject: Re: iwlagn is getting very shaky
+Message-ID: <20111122072730.GA32225@gamma.logic.tuwien.ac.at> (sfid-20111122_082756_858392_E770405A)
+References: <1320709047.31823.188.camel@wwguy-huron> <20111108043233.GA21171@gamma.logic.tuwien.ac.at> <CANUX_P0Q0wve4D6fZPsMv2Zw=02gb9u+3C2cjRv7UAmWqXnjzw@mail.gmail.com> <CANUX_P06ww42p6N1k_P-Y1KMKOd1QgR_DxVWe19qtsEX2rfWpw@mail.gmail.com> <20111109051152.GA16006@gamma.logic.tuwien.ac.at> <CANUX_P2Yz9bWP_EmU1Acs7Mu2w78CXxO-njhiMt97b0TJHFYiQ@mail.gmail.com> <20111121030640.GI32505@gamma.logic.tuwien.ac.at> <CANUX_P2AA5stHwjegKdFhFGg7jxwdVU2Xr8OUtXUdEOKz_6E5A@mail.gmail.com> <20111122051310.GA23705@gamma.logic.tuwien.ac.at> <CANUX_P2aFn84uSqgZA2gTBN7E4+0jGmJQTkx4eug4Ls0hK0==Q@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPjQAd8GU8F2EV1zjZP5NG_QvfYaLr7wPz3OE49mX+-Mrx15XA@mail.gmail.com>
-References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
-	<CAPjQAd8GU8F2EV1zjZP5NG_QvfYaLr7wPz3OE49mX+-Mrx15XA@mail.gmail.com>
-Date: Fri, 25 Nov 2011 22:40:20 +0400
-Message-ID: <CAG5dHkRaRe4HZmK401DSqD5hqpZ9yrKfUs-gOjPypSNzFn7khQ@mail.gmail.com> (sfid-20111125_194025_241521_A8AB149D)
-Subject: Re: [RFC v2 0/8] mesh power saving implementation: indication
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-To: Javier Cardona <javier@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANUX_P1RjcRD2tW1A6YYSEV9+aUZyTEro7tZXJWRoxk6gx-2jA@mail.gmail.com> <CANUX_P2aFn84uSqgZA2gTBN7E4+0jGmJQTkx4eug4Ls0hK0==Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 November 2011 05:40, Javier Cardona <javier@cozybit.com> wrote:
-> Hi Ivan,
->
-> Good work!  Comments inline.
->
-> On Mon, Nov 21, 2011 at 6:40 AM, Ivan Bezyazychnyy
-> <ivan.bezyazychnyy@gmail.com> wrote:
->> We have updated our patches and also we would like to add some words
->> what our work is about.
->>
->> Based on the latest IEEE 802.11s standard the power saving mechanism
->> can be divided into the following implementation phases:
->> * indication of mesh STAs' power modes in frames;
->> * a buffering and identification sending frames in mesh STA;
->> * Mesh Awake Window implementation;
->> * Peer service periods.
->
-> My recommendation would be to implement this bottom up.  That is,
-> start by implementing the Extensible synchronization framework
-> (Section 13.12.2, 802.11mb D10.0), as power save will not work without
-> syncronization.  After that, continue as...
->
-> 13.13.8.4 Operation in light sleep mode for a mesh peering
-> 13.13.4 TIM transmissions in an MBSS (and buffering)
-> 13.13.6 Mesh awake window
-> 13.13.9 Mesh peer service periods
->
-> Only after this is implemented I would advertise this capability in
-> beacons and make it configurable via userspace (i.e. what you've done
-> in this patchset).  That approach would also make it easier to test;
-> only after you get the TSF right you should attempt to implement the
-> awake windows and so on.
->
-> Does that make sense to you?
->
-Thanks. Definitely that makes sense, but we have to better understand
-the first part about synchronization. We will study it.
+HI Emmanuel,
 
-Best regards,
-Ivan
+On Di, 22 Nov 2011, Emmanuel Grumbach wrote:
+> Please apply the patch attached. It has been submitted upstream but
+> hasn't been merged in the tree you use apparently.
+
+Does not apply against current git, as there is no iwl-mac80211.c:
+[/usr/src/git-kernel/linux.git] patch -p1 --dry-run < ~/QUEUE_DEBUG.patch 
+patching file drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+patching file drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+Hunk #1 succeeded at 116 (offset -1 lines).
+Hunk #2 succeeded at 840 (offset -4 lines).
+patching file drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+Hunk #1 succeeded at 800 (offset -13 lines).
+patching file drivers/net/wireless/iwlwifi/iwl-debug.h
+Hunk #1 succeeded at 151 (offset -15 lines).
+Hunk #2 succeeded at 188 (offset -15 lines).
+can't find file to patch at input line 78
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+|index 073e827..05b1f0d 100644
+|--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+|+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+--------------------------
+File to patch: 
+
+
+> Then please run with set the TXQUEUES debug flag: 0x8000000.
+
+Is this a load options to iwlwifi module (debug=0x..... at module load time?)
+or has to be set in /sys/kernel/debug/ieee80211/phy?/iwlwifi/debug/*
+somewhere?
+
+> This will give us a better understanding regarding what happens with
+> the queues and how they are mapped.
+
+You have seen my remark on RX packages and RX bytes?
+
+> Do you use any SoftAP / P2P feature ? HW queues can be stalled
+
+No. Fixed AP with fixed IP and no special adaptions.
+
+> sometimes when using such configuration. Can it also be that the AP
+> that we can't work with has any kind of power save feature (I know
+> that this one is hard to answer though :-)) ?
+
+There is AFAIR something that is set after 3hours or so ... not of
+importance, but I will check the settings. But then, it was always
+working before ;-)
+
+> Forgot to reply on the WARN_ON you saw. Yes I know about it. We seem
+
+Ok, fine. Thus I can forget about it. THanks.
+
+Best wishes
+
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+HARPENDEN (n.)
+The coda to a phone conversion, consisting of about eight exchanges,
+by which people try gracefully to get off the line.
+			--- Douglas Adams, The Meaning of Liff
