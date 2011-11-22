@@ -1,60 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3469 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754347Ab1KKTt0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Nov 2011 14:49:26 -0500
-Message-ID: <4EBD7C3E.9030205@broadcom.com> (sfid-20111111_204948_341305_34265454)
-Date: Fri, 11 Nov 2011 11:49:18 -0800
-From: "Franky Lin" <frankyl@broadcom.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Arend Van Spriel" <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 17/19] brcm80211: fmac: stop using hard coded
- firmware/nvram name
-References: <1320953434-16859-1-git-send-email-arend@broadcom.com>
- <1320953434-16859-19-git-send-email-arend@broadcom.com>
- <20111111173548.GC2485@tuxdriver.com>
-In-Reply-To: <20111111173548.GC2485@tuxdriver.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:59305 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755378Ab1KVSKN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 13:10:13 -0500
+Received: by ywt32 with SMTP id 32so450943ywt.19
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2011 10:10:13 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH 0/3] cfg80211: few regulatory fixes
+Date: Tue, 22 Nov 2011 10:09:59 -0800
+Message-Id: <1321985402-14257-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111122_191026_563815_2BD51C19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/11/2011 09:35 AM, John W. Linville wrote:
-> On Thu, Nov 10, 2011 at 08:30:32PM +0100, Arend van Spriel wrote:
->> From: Franky Lin<frankyl@broadcom.com>
->>
->> The nvram file contains info for firmware which varies with different
->> hardware designs. Current nvram file in Linux firmware repository is
->> for a internal development board. It is not applicable for any exsisting
->> end-user product. Every device with a fullmac support wifi dongle
->> should have its own nvram file in the system. Similar rule can be applied
->> to the dongle firmware. This patch remove the hard coded firmware/nvram
->> name in the driver. The paths of firmware and nvram file must be
->> passed to the driver through module parameter during or configured
->> in kernel option.
->>
->> Reviewed-by: Pieter-Paul Giesberts<pieterpg@broadcom.com>
->> Reviewed-by: Arend van Spriel<arend@broadcom.com
->> Signed-off-by: Franky Lin<frankyl@broadcom.com>
->> Signed-off-by: Arend van Spriel<arend@broadcom.com>
->
-> I can't say that I'm too fond of this one.  Why do you need to be
-> able to change the name of the file?  Other drivers seem to handle
-> this without having to set the filename at Kconfig time?
->
-> John
+Here's my queue of fixes for cfg80211 regulatory. One is a performance
+fix so whether or not it goes, I'll leave it to you guys. I document it
+very well though. The others are fixes that should go to stable. One of them
+is based on an issue I found through the shiny new regulatory simulator, but
+also helps address the issue Johannes has found. The last patch amends
+Johannes' proposed fix by using the new fix I found through the regulatory
+simulator.
 
-That is indeed an approach that would make the code cleaner. Anyway the 
-user need to figure out where the firmware/nvram are in the system and 
-provide the path to driver in the approach this patch provide. So just 
-one more step to create a soft link point to them with the name could be 
-recognised by the driver. Could you please drop this patch? I just 
-checked the rest of the train can be applied without any problem. I will 
-modify and resubmit it in the next train.
+Unfortunately I haven't had time to test these myself.. so just spitting
+them all out for review.
 
-Thanks,
-Franky
+Luis R. Rodriguez (3):
+  cfg80211: allow following country IE power for custom regdom cards
+  cfg80211: fix race on init and driver registration
+  cfg80211: amend regulatory NULL dereference fix
+
+ include/net/cfg80211.h |    4 ++-
+ net/wireless/reg.c     |   50 +++++++++++++++++++++++++++++++++++------------
+ 2 files changed, 40 insertions(+), 14 deletions(-)
+
+-- 
+1.7.4.15.g7811d
 
