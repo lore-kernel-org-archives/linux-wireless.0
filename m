@@ -1,65 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36108 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753503Ab1KIWAL (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61703 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757836Ab1KVQYu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 17:00:11 -0500
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1ROGBm-0007rk-BB
-	for linux-wireless@vger.kernel.org; Wed, 09 Nov 2011 17:00:10 -0500
-Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id pA9Lo8SZ014402
-	for <linux-wireless@vger.kernel.org>; Wed, 9 Nov 2011 16:50:08 -0500
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id pA9Lo8w7014381
-	for linux-wireless@vger.kernel.org; Wed, 9 Nov 2011 16:50:08 -0500
-Date: Wed, 9 Nov 2011 16:50:08 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: New wireless-testing has grown some warnings -- please fix ASAP!
-Message-ID: <20111109215007.GD10712@tuxdriver.com> (sfid-20111109_230016_428309_0817D10D)
+	Tue, 22 Nov 2011 11:24:50 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>
+Subject: [PATCH 03/18] ath9k_hw: Add MCI h/w specific structure
+Date: Tue, 22 Nov 2011 21:52:30 +0530
+Message-ID: <1321978965-21684-4-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111122_172455_206325_B2214331)
+In-Reply-To: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit befdbc51cc69c01cd412ad2429960b9c3042f97c is the current
-wireless-testing head.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-This iteration of wireless-testing seems to have grown some
-warnings.  Some of them come from a new __must_check annotation of
-cfg80211_inform_bss, while others are simply unused or uninitialized
-variables.  In any case, I would prefer not to see them.
-
-Please check the wireless-testing build and attempt to squash any
-warnings that can be reasonably squashed.  Those who do not do so
-will be subject to irritated sighs over IRC, drunken emails about
-my new DVD rental service, and accusations of making unwanted sexual
-advances toward me.  You've been warned.
-
-John
-
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath9k/btcoex.h |   31 +++++++++++++++++++++++++++++++
+ 1 files changed, 31 insertions(+), 0 deletions(-)
 
-  CC [M]  net/wireless/nl80211.o
-net/wireless/nl80211.c: In function ‘nl80211_tx_mgmt’:
-net/wireless/nl80211.c:5286:8: warning: ‘hdr’ may be used uninitialized in this function
-
-  CC [M]  drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.o
-drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c: In function ‘wl_inform_ibss’:
-drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c:2152:21: warning: ignoring return value of ‘cfg80211_inform_bss’, declared with attribute warn_unused_result
-
-  CC [M]  drivers/net/wireless/libertas/cfg.o
-drivers/net/wireless/libertas/cfg.c: In function ‘lbs_ret_scan’:
-drivers/net/wireless/libertas/cfg.c:636:24: warning: ignoring return value of ‘cfg80211_inform_bss’, declared with attribute warn_unused_result
-drivers/net/wireless/libertas/cfg.c: In function ‘lbs_join_post’:
-drivers/net/wireless/libertas/cfg.c:1766:21: warning: ignoring return value of ‘cfg80211_inform_bss’, declared with attribute warn_unused_result
-
-  CC [M]  drivers/net/wireless/mwifiex/cfg80211.o
-drivers/net/wireless/mwifiex/cfg80211.c: In function ‘mwifiex_cfg80211_inform_ibss_bss’:
-drivers/net/wireless/mwifiex/cfg80211.c:803:21: warning: ignoring return value of ‘cfg80211_inform_bss’, declared with attribute warn_unused_result
-
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index d5e5db1..278361c 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -54,8 +54,39 @@ enum ath_btcoex_scheme {
+ 	ATH_BTCOEX_CFG_MCI,
+ };
+ 
++struct ath9k_hw_mci {
++	u32 raw_intr;
++	u32 rx_msg_intr;
++	u32 cont_status;
++	u32 gpm_addr;
++	u32 gpm_len;
++	u32 gpm_idx;
++	u32 sched_addr;
++	u32 wlan_channels[4];
++	u32 wlan_cal_seq;
++	u32 wlan_cal_done;
++	u32 config;
++	u8 *gpm_buf;
++	u8 *sched_buf;
++	bool ready;
++	bool update_2g5g;
++	bool is_2g;
++	bool query_bt;
++	bool unhalt_bt_gpm; /* need send UNHALT */
++	bool halted_bt_gpm; /* HALT sent */
++	bool need_flush_btinfo;
++	bool bt_version_known;
++	bool wlan_channels_update;
++	u8 wlan_ver_major;
++	u8 wlan_ver_minor;
++	u8 bt_ver_major;
++	u8 bt_ver_minor;
++	u8 bt_state;
++};
++
+ struct ath_btcoex_hw {
+ 	enum ath_btcoex_scheme scheme;
++	struct ath9k_hw_mci mci;
+ 	bool enabled;
+ 	u8 wlanactive_gpio;
+ 	u8 btactive_gpio;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
