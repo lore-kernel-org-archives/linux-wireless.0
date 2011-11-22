@@ -1,92 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out5.smtp.messagingengine.com ([66.111.4.29]:39270 "EHLO
-	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751349Ab1KDUcs (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:49185 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755320Ab1KVCIv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 16:32:48 -0400
-Date: Fri, 4 Nov 2011 13:32:39 -0700
-From: Greg KH <greg@kroah.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, roman-vl@meta.ua,
-	linux-wireless@vger.kernel.org
-Subject: Re: b43 scans wifi networks with old firmware only.
-Message-ID: <20111104203239.GB6833@kroah.com> (sfid-20111104_213251_843301_4D127347)
-References: <48883.148.106.128.38.1320319313.metamail@webmail.meta.ua>
- <4EB2AF44.7090102@lwfinger.net>
- <CACna6rx5eZ+JsS+X=FyPFo9J1+=tkzsujHMHCPFPY=+O_yxS1Q@mail.gmail.com>
- <4EB333E1.6000508@lwfinger.net>
- <CACna6ryKdReeSAP6W=PYBT3LnFBe-iL3daKFFxzK56TFNUW+Qw@mail.gmail.com>
+	Mon, 21 Nov 2011 21:08:51 -0500
+Received: by ghrr1 with SMTP id r1so422323ghr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 18:08:51 -0800 (PST)
+Message-ID: <4ECB028E.3030809@lwfinger.net> (sfid-20111122_030856_067620_FA9F09B3)
+Date: Mon, 21 Nov 2011 20:01:50 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6ryKdReeSAP6W=PYBT3LnFBe-iL3daKFFxzK56TFNUW+Qw@mail.gmail.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Problems associating with RTL8188CE
+References: <20111118225422.GD19138@thinkpad-t410> <4EC88F58.1080203@lwfinger.net> <20111121181350.GC6736@thinkpad-t410> <4ECA99CC.7020008@lwfinger.net> <20111121185610.GD6736@thinkpad-t410>
+In-Reply-To: <20111121185610.GD6736@thinkpad-t410>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 04, 2011 at 11:27:06AM +0100, Rafał Miłecki wrote:
-> W dniu 4 listopada 2011 01:37 użytkownik Larry Finger
-> <Larry.Finger@lwfinger.net> napisał:
-> > On 11/03/2011 05:37 PM, Rafał Miłecki wrote:
-> >>
-> >> 2011/11/3 Larry Finger<Larry.Finger@lwfinger.net>:
-> >>>
-> >>> On 11/03/2011 06:21 AM, Roman V.Leon. wrote:
-> >>>>
-> >>>> Hello Gents.
-> >>>> I have problem with b43 driver 5.100.138, it's not scanning networks for
-> >>>> unknown reason. I have broadcom wifi card PCIID is 14e4:4315, linux kern
-> >>>> ver. is 3.0. When i'm trying to launch iwlist scan, i'm getting "no scan
-> >>>> results".
-> >>>>
-> >>>> for example:
-> >>>> sudo ifconfig wlan0 up
-> >>>> sudo iwlist wlan0 scan
-> >>>>     No scan results.
-> >>>>
-> >>>> With the older driver 5.10.56.2808, i see normal scan results. If you
-> >>>> need
-> >>>> any more information, i will send.
-> >>>
-> >>> The condition you report is known. Broadcom changed the TX/RX header
-> >>> structure with firmware versions greater than 600, as shown by a 'dmesg |
-> >>> grep firmware'. Those changes are not implemented in b43 until kernel
-> >>> 3.2.
-> >>>
-> >>> These numbers are not b43 driver numbers, nor are they firmware numbers
-> >>> reported by b43. They are the versions of Broadcom drivers.
-> >>>
-> >>> If you look at
-> >>> http://wireless.kernel.org/en/users/Drivers/b43#firmwareinstallation, you
-> >>> will see that firmware should be extracted from Broadcom driver 5.100.138
-> >>> "if you are using kernel 3.2 or newer". For older kernels you should
-> >>> extract
-> >>> firmware from the 5.10.56.27.3 of the Broadcom proprietary driver. Of
-> >>> course, 5.10.56.2808 will also work.
-> >>>
-> >>>  You could also get those changes by employing a bleeding-edge version of
-> >>> compat-wireless. In that case, firmware from 5.100.138 would work.
-> >>
-> >> Should we/can we send patch for at least 3.0.x and 3.1.x kernels
-> >> adding error on loading too new firmware?
-> >
-> > I think adding an error would have been appropriate. We certainly cannot
-> > prevent versionitis; however, getting a patch into those kernels that is not
-> > in mainline might be a problem.
-> 
-> Greg: the problem with b43 happens when kernels 3.1- users install
-> firmware supported by kernels 3.2+.
+On 11/21/2011 12:56 PM, Seth Forshee wrote:
+> On Mon, Nov 21, 2011 at 12:34:52PM -0600, Larry Finger wrote:
+>> On 11/21/2011 12:13 PM, Seth Forshee wrote:
+>>>
+>>> I've uploaded the capture along with the logs to
+>>> http://people.canonical.com/~sforshee/rtl8188ce/.
+>>
+>> Unfortunately, I do not have permission to access the pcap file. The
+>> other two are OK, but not the one of interest.
+>
+> Sorry about that, didn't notice the lack of permissions. Fixed now.
 
-Ick, that sucks.
+I got it now. I would like one other piece of information - what is the MAC 
+address of your RTL8188CE device? It is not found in any of the dmesg logs that 
+I have.
 
-> Is this possible to grab some separated patch for that older kernels?
-> The ideal way to do this was:
-> 1) Commit error enabling patch with Cc: stable
-> 2) Add support for new firmwares
-> 3) Drop error
-> Unfortunately I didn't think about that, now it's too late.
+Larry
 
-Sure, just let me know what patch you want added to the 3.1-stable tree
-and I'll add it.
-
-thanks,
-
-greg k-h
