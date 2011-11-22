@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:59359 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755343Ab1K2OxO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 09:53:14 -0500
-Date: Tue, 29 Nov 2011 17:52:47 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: arend@broadcom.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: brcm80211: fmac: remove alignment check from
- brcmf_sdioh_request_buffer()
-Message-ID: <20111129145247.GA7152@elgon.mountain> (sfid-20111129_155318_906621_EEDE610D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga02.intel.com ([134.134.136.20]:1170 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752802Ab1KVWzo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 17:55:44 -0500
+Subject: Re: 3.1+ iwlwifi lockup
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Dave Jones <davej@redhat.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20111122225409.GA23889@redhat.com>
+References: <20111031143408.GA17152@redhat.com>
+	 <1321992902.8072.7.camel@wwguy-ubuntu> <20111122204741.GA3764@redhat.com>
+	 <1321991916.11647.77.camel@wwguy-huron> <20111122225409.GA23889@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 22 Nov 2011 14:49:20 -0800
+Message-ID: <1322002160.8072.9.camel@wwguy-ubuntu> (sfid-20111122_235559_646736_5E6A88C0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2011-11-22 at 14:54 -0800, Dave Jones wrote:
+> On Tue, Nov 22, 2011 at 11:58:36AM -0800, Guy, Wey-Yi wrote:
+>  > Hi Dave,
+>  > 
+>  > Not sure what happens, feel like memory corruption but not sure. the
+>  > contain of the command is totally bogus.
+>  > 
+>  > Could you please test and send update, it is part of "3.2+rc2+
+>  > Regressions from 3.0 and 3.1" reports
+>  
+> Will do.
+> 
+> Not sure if it's a helpful data point, but the access point is
+> an apple airport (in case that's sending something strange that
+> confused the firmware).
 
-Hello Arend van Spriel,
+not sure, but something to keep in-mind for sure.
 
-This is a semi-automatic email about new static checker warnings.
+Thanks for the help.
 
-The patch 8054321b7cb8: "brcm80211: fmac: remove alignment check from 
-brcmf_sdioh_request_buffer()" from Nov 22, 2011, leads to the 
-following Smatch complaint:
+Wey
 
-drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c +298 brcmf_sdioh_request_buffer()
-	 warn: variable dereferenced before check 'pkt' (see line 293)
+>  
 
-drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-   292		int status;
-   293		uint pkt_len = pkt->len;
-                               ^^^^^^^^
-New dereference.
-
-   294		bool fifo = (fix_inc == SDIOH_DATA_FIX);
-   295	
-   296		brcmf_dbg(TRACE, "Enter\n");
-   297	
-   298		if (pkt == NULL)
-                    ^^^^^^^^^^^
-Old check.  Probably the check can be removed.  It from a quick glance
-that this function is called from three places and pkt is always a valid
-pointer.
-
-   299			return -EINVAL;
-   300	
-
-regards,
-dan carpenter
 
