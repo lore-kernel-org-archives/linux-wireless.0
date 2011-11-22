@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36371 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752807Ab1K3MQt (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:52362 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751595Ab1KVSLq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 07:16:49 -0500
-Subject: Re: [PATCH 2/4] nl80211: Parse channel type attribute in an ibss
- join request
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Alexander Simon <an.alexsimon@googlemail.com>,
-	Marek Lindner <lindner_marek@yahoo.de>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-In-Reply-To: <1322502917-28205-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1322502917-28205-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1322502917-28205-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 30 Nov 2011 13:16:46 +0100
-Message-ID: <1322655406.3982.12.camel@jlt3.sipsolutions.net> (sfid-20111130_131652_560433_D64C26E0)
-Mime-Version: 1.0
+	Tue, 22 Nov 2011 13:11:46 -0500
+Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id pAMIBjNH024404
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2011 10:11:45 -0800
+Message-ID: <4ECBE5E1.3000209@candelatech.com> (sfid-20111122_191149_242124_20DA201C)
+Date: Tue, 22 Nov 2011 10:11:45 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Compile failure related to iwlegacy
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-11-28 at 18:55 +0100, Simon Wunderlich wrote:
-> Prepare cfg80211 for IBSS HT:
->  * extend cfg80211 ibss struct with channel_type
->  * Check if extension channel can be used
->  * Export can_beacon_sec_chan for use in mac80211 (will be called
->    from ibss.c later).
+I just pulled wireless-testing and tried building:
 
-I'm thinking there should be a "driver supports HT IBSS" flag, and we
-reject the config otherwise?
+   BUILD   arch/x86/boot/bzImage
+Setup is 14908 bytes (padded to 15360 bytes).
+System is 3555 kB
+CRC 36c2015b
+Kernel: arch/x86/boot/bzImage is ready  (#28)
+   MODPOST 2828 modules
+ERROR: "il_dbgfs_unregister" [drivers/net/wireless/iwlegacy/iwl4965.ko] undefined!
+ERROR: "il_dbgfs_register" [drivers/net/wireless/iwlegacy/iwl4965.ko] undefined!
+ERROR: "il_dbgfs_unregister" [drivers/net/wireless/iwlegacy/iwl3945.ko] undefined!
+ERROR: "il_dbgfs_register" [drivers/net/wireless/iwlegacy/iwl3945.ko] undefined!
+WARNING: modpost: Found 7 section mismatch(es).
+To see full details build your kernel with:
+'make CONFIG_DEBUG_SECTION_MISMATCH=y'
 
-johannes
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
