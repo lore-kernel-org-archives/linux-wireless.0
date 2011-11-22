@@ -1,121 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s15228384.onlinehome-server.info ([87.106.30.177]:53081 "EHLO
-	mail.x86-64.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756086Ab1K2Sei (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:55965 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765Ab1KVFfC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 13:34:38 -0500
-Date: Tue, 29 Nov 2011 19:34:28 +0100
-From: Borislav Petkov <bp@amd64.org>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, x86@kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	deepthi@linux.vnet.ibm.com
-Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
-Message-ID: <20111129183428.GE8200@aftab> (sfid-20111129_193502_015244_2CD1EC57)
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera>
- <201111212249.31196.rjw@sisk.pl>
- <20111122135412.GA29905@phenom.dumpdata.com>
- <20111129180414.GA11459@phenom.dumpdata.com>
+	Tue, 22 Nov 2011 00:35:02 -0500
+Received: by wwe5 with SMTP id 5so11826276wwe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 21:35:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111129180414.GA11459@phenom.dumpdata.com>
+In-Reply-To: <20111121213322.GA2209@slate>
+References: <20111121213322.GA2209@slate>
+Date: Tue, 22 Nov 2011 11:05:00 +0530
+Message-ID: <CAD2nsn1pLNvHi20nnm_SFVpHLgKymxPh93V20qjQ2y1t3=K2Xw@mail.gmail.com> (sfid-20111122_063507_519352_1C3AB946)
+Subject: Re: Panic/likely regression ath9k, frequent
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Cedric Sodhi <manday@gmx.net>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 29, 2011 at 01:04:14PM -0500, Konrad Rzeszutek Wilk wrote:
-> This patch:
-> 
-> commit d91ee5863b71e8c90eaf6035bff3078a85e2e7b5
-> Author: Len Brown <len.brown@intel.com>
-> Date:   Fri Apr 1 18:28:35 2011 -0400
-> 
->     cpuidle: replace xen access to x86 pm_idle and default_idle
-> 
->     ..scribble on pm_idle and access default_idle,
->    have it simply disable_cpuidle() so acpi_idle will not load and
->    architecture default HLT will be used.
-> 
-> idea was to have one call - disable_cpuidle() which would make
-> pm_idle not be molested by other code. It disallows cpuidle_idle_call
-> and acpi_idle_call to not set pm_idle (which is excellent). But the
+On Tue, Nov 22, 2011 at 3:03 AM, Cedric Sodhi <manday@gmx.net> wrote:
+> 03:00.0 0280: 168c:002b (rev 01)
+>
+> AR9285
+>
+> 3.2.something from a not-network-related repo. Everything network
+> related should be equivalent to mainline.
+>
+> So far I could not obtain any details, because I've no idea how to make
+> ramoops succeed requesting memory and unfortunally my last attempt at
+> using vmcore failed because somehow I lost dbg symbols. The backtrace
+> that I get from the vmcore looks little promising though, even without
+> symbols:
+>
+> (gdb) bt
+> #0  0xffffffff8119ff42 in ?? ()
+> #1  0x0000000000000000 in ?? ()
+>
+> Even less promising looks the size of the vmcore, which I assume to be
+> the size of the actual RAM in use at the point of the panic:
+>
+> -r--------  1 root   root   4014652552 Nov 21 20:19 vmcore
+>
+> Compared to the output in normal operation, which is when the panics
+> occur. At the asbolute most, 2 Gigabytes including caches.
+>
+> I'm afraid, that if my interpretion of the size of vmcore is correct,
+> ath eats up all RAM and thereby cause the panic, milliseconds before the
+> crash.
+>
+> Why I think it's ath9k? This panic occurs, though not clearly
+> reproducibly, with moderate load on the wifi, that is listening to
+> online radio. And a few times I could witness a panic log on the console
+> (mostly everything freezes right in X) and ath was clearly involved.
 
-what is acpi_idle_call, I can't find it anywhere.
+i am going to try this in my wireless-testing tree/ latest compat
+wireless. please let me know if i had to do something specific(running
+traffic in noisy environment, put the device in monitor mode) to
+trigger the panic. any info to recreate will be helpful. i will also
+try that online radio(i am not aware if it). i will be trying it in my
+x86 platform.
 
-> amd_e400_idle and mwait_idle can still setup pm_idle which we really
-> do not want.
+>
+> As I said, I'm trying to obtain anything more definite, but it could be
+> hard, unless I get ramoops to work, which currently refuses to accept
+> any memory address to write the dump to.
+>
+> Of course, I readily provide any info I can from the vmcore and will try
+> to get a bt with proper symbols asap.
+>
+> Until then, this appears to be a regression somewhere since 3.1.1 (or
+> possibly 3.1.0). It's hard to tell though, since it's not readily
+> reproducible but I have never had the panic in neither of those
+> versions.
+>
+> Cedric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-This is not the case: rather select_idle_routine()/idle_setup() sets
-pm_idle.
 
-[..]
-
-> +bool set_pm_idle_to_default()
-> +{
-> +	if (!pm_idle) {
-> +		pm_idle = default_idle;
-> +		return true;
-> +	}
-> +	return false;
-> +}
-
-I don't understand what you're trying to achieve here? Do you want
-default_idle to be always the pm_idle for xen or what is the deal here?
-
-If yes, then simply do:
-
-bool set_pm_idle_to_default(void)	// remember to add "void" for no function args
-{
-	bool ret = !!pm_idle;
-
-	pm_idle = default_idle;
-
-	return ret;
-
-}
-
-...
-
->  void stop_this_cpu(void *dummy)
->  {
->  	local_irq_disable();
-> diff --git a/arch/x86/xen/setup.c b/arch/x86/xen/setup.c
-> index 46d6d21..7506181 100644
-> --- a/arch/x86/xen/setup.c
-> +++ b/arch/x86/xen/setup.c
-> @@ -448,6 +448,6 @@ void __init xen_arch_setup(void)
->  #endif
->  	disable_cpuidle();
->  	boot_option_idle_override = IDLE_HALT;
-> -
-> +	WARN_ON(!set_pm_idle_to_default());
-
-and then do
-
-	WARN_ON(set_pm_idle_to_default());
-
-instead of having arbitrary confusing logic. This way you can warn
-whether something else set pm_idle already. Or?
-
-Thanks.
 
 -- 
-Regards/Gruss,
-Boris.
-
-Advanced Micro Devices GmbH
-Einsteinring 24, 85609 Dornach
-GM: Alberto Bozzo
-Reg: Dornach, Landkreis Muenchen
-HRB Nr. 43632 WEEE Registernr: 129 19551
+shafi
