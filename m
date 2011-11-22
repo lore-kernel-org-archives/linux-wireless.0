@@ -1,71 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qmta12.westchester.pa.mail.comcast.net ([76.96.59.227]:53985
-	"EHLO qmta12.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753479Ab1K2M7u (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:36197 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755932Ab1KVVbA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 07:59:50 -0500
-Received: from www.jots.org (unknown [192.168.22.1])
-	by elanor.jots.org (Postfix) with ESMTP id 98B644000A
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2011 07:53:32 -0500 (EST)
-To: <linux-wireless@vger.kernel.org>
-From: "Ken D'Ambrosio" <ken@jots.org>
-Subject: Bug report: can't maintain WiFi connectivity in recent kernels.
-Date: Tue, 29 Nov 2011 07:53:32 -0500
-Content-Type: text/plain; charset=UTF-8; format=fixed
+	Tue, 22 Nov 2011 16:31:00 -0500
+Message-ID: <4ECC1479.8090209@lwfinger.net> (sfid-20111122_223122_826426_AF422D11)
+Date: Tue, 22 Nov 2011 15:30:33 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Message-id: <cccaa07e4d4d42fa6f0f88758ca0c46a@www.jots.org> (sfid-20111129_135954_181403_8B093451)
+To: David Miller <davem@davemloft.net>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2011-11-22
+References: <20111122.151429.253381379981773726.davem@davemloft.net> <20111122205655.GE8452@tuxdriver.com> <20111122.160511.2302883259439708995.davem@davemloft.net> <20111122.161322.454163033398038634.davem@davemloft.net>
+In-Reply-To: <20111122.161322.454163033398038634.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.  For reasons pertaining to btrfs, I'm running 3.1+  kernels, and the wifi
-on my system now flakes out sporadically, but reliably.  It can sometimes run
-for a couple days, but other days (like, say, yesterday) it'll fail upwards of
-30 times. Simply attempting to re-acquire a connection via Network Manager
-fails 100%.  I need to rmmod and modprobe the iwlwifi module, and then am able
-to immediately connect, 100% of the time -- albeit, briefly.  Rebooting under
-these circumstances seems to have as much affect as reloading the module.  (I
-wonder if there's something that changes on the WAP side that triggers this? 
-That would explain the occasional doses of extended uptime, followed by days of
-misery, regardless of reboots and module playing.)
+On 11/22/2011 03:13 PM, David Miller wrote:
+> From: David Miller<davem@davemloft.net>
+> Date: Tue, 22 Nov 2011 16:05:11 -0500 (EST)
+>
+>> From: "John W. Linville"<linville@tuxdriver.com>
+>> Date: Tue, 22 Nov 2011 15:56:55 -0500
+>>
+>>> On Tue, Nov 22, 2011 at 03:14:29PM -0500, David Miller wrote:
+>>>> From: "John W. Linville"<linville@tuxdriver.com>
+>>>> Date: Tue, 22 Nov 2011 14:35:05 -0500
+>>>>
+>>>>> Here is the latest batch of fixes intended for 3.2.  This includes a
+>>>>> correction for a user-visible error in mac80211's debugfs info, a fix
+>>>>> for a potential memory corrupter in prism54, an endian fix for rt2x00,
+>>>>> an endian fix for mac80211, a fix for a NULL derefernce in cfg80211, a
+>>>>> locking fix and a deadlock fix for p54spi, and a pair of rt2x00 fixes
+>>>>> for handling some spurious interrupts that hardware can generate.
+>>>>>
+>>>>> Please let me know if there are problems!
+>>>>
+>>>> The rt2800pci change doesn't look correct.
+>>>>
+>>>> If the IRQ line is shared with another device, this change will make it
+>>>> never see interrupts.  Once you say "IRQ_HANDLED" the IRQ dispatch
+>>>> stops processing the interrupt handler list.
+>>>
+>>> I thought this at first as well.  But looking at the code in
+>>> kernel/irq/handle.c doesn't support that conclusion.  In fact, every
+>>> handler gets invoked no matter what they all return.  All of the irq
+>>> handler return values are ORed together and passed to note_interrupt.
+>>> Only if every irq handler returns IRQ_NONE does the code in
+>>> kernel/irq/spurious.c start getting involved.
+>>>
+>>> Anyway, this seems to be safe even for shared interrupts.  That said,
+>>> this is a bit ugly.  But it makes a serious difference in performance
+>>> for those afflicted with this issue.
+>>
+>> It just means that we won't notice spurious interrupts if the device
+>> sharing the line with rt2800pci generates one.
+>>
+>> This change is wrong.
+>
+> BTW, look at it this way, if what you say is true John then what's the point
+> in returning any specific value at all?
+>
+> Everyone can just return IRQ_HANDLED and everything would just work.
+>
+> But you know that's not the case, and that it's important that this value
+> is returned accurately.
 
-While the behavior, sadly, *is* sporadic, when
+I was trying to find the thread that reported the improvement in performance 
+with this change, but failed. Is it possible that their change just papered over 
+an interrupt storm from some other device that shared that interrupt?
 
-- it's not a problem on older (distribution-supplied) kernels, and
-- reloading -- and only reloading -- the module fixes it, however briefly,
+I'm following this because the rtlwifi-family of drivers already did what was 
+suggested here. If this is wrong, then so is it.
 
-it seems to me it's probably a problem with the module.
-
-
-Here's some additional information:
-
-* Happens on multiple WAPs (home, hotel, work, etc.)
-
-* 02:00.0 Network controller: Intel Corporation WiFi Link 1000 Series
-
-* The system *thinks* everything is fine -- NetworkManager happily shows all
-the WAPs, etc. -- but I'm unable to re-acquire them until I reload the module.
-
-* kernel 3.1.0+, untainted  (Chris Mason's btrfs git pull from three weeks ago;
-also experienced with slightly older, post 3.x kernels)
-
-* Seems to fail most quickly under load (e.g., streaming); can push an hour if
-doing relatively little
-
-* I'm unsure which kernel rev. was the tipping point, but Ubuntu 10.04
-generally "just worked," and is what I'm booted to now off of USB -- 2.6.32.
-
-I'd give you dmesg messages, but I'm -- catch-22 -- Ubuntu 10.04 won't mount my
-btrfs partition, but runs WiFi flawlessly.  If you need those messages, just
-let me know, and I'll pull them off.
-
-If there's anything else I can help out with, please don't hesitate to let me
-know.
-
-Thanks!
-
--Ken
-
-
-
-
+Larry
 
