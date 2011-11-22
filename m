@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38280 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756023Ab1KDRHr (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:35147 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751936Ab1KVF6z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 13:07:47 -0400
-Subject: [PATCH 3.2] mac80211: warn only once about not finding a rate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 04 Nov 2011 18:07:43 +0100
-Message-ID: <1320426463.3969.123.camel@jlt3.sipsolutions.net> (sfid-20111104_180754_421600_83966AA5)
+	Tue, 22 Nov 2011 00:58:55 -0500
+Date: Mon, 21 Nov 2011 21:59:18 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Andrea Arcangeli <aarcange@redhat.com>
+Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
+Message-Id: <20111121215918.febd9fd4.akpm@linux-foundation.org> (sfid-20111122_065924_627845_C70E7C63)
+In-Reply-To: <4ECB37E4.6020204@linux.vnet.ibm.com>
+References: <lx6sezwGldO.A.IhF.UBpWOB@chimera>
+	<201111212249.31196.rjw@sisk.pl>
+	<4ECB37E4.6020204@linux.vnet.ibm.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 22 Nov 2011 11:19:24 +0530 "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com> wrote:
 
-The warning really shouldn't happen, but until we
-find the reason why it does don't spew it all the
-time, just once is enough to know we've hit it.
+> > Subject    : khugepaged blocks suspend2ram (3.2.0-rc1-00252-g8f042aa)
+> > Submitter  : Sergei Trofimovich <slyich@gmail.com>
+> > Date       : 2011-11-12 10:48
+> > Message-ID : 20111112104859.7744b282@sf.home
+> > References : https://lkml.org/lkml/2011/11/12/11
+> > 
+> 
+> Andrea's patch already fixes this issue, which was reported first by
+> Jiri Slaby. https://lkml.org/lkml/2011/11/11/93
+> I remember Andrew Morton taking this patch in his -mm tree. But it is
+> not in mainline yet. So can we consider this closed or not?
 
-Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+grr, nothing in that patch's changelog indicates that it fixed a
+regression nor that it fixed an infinite blockage of suspend.
 
---- a/include/net/mac80211.h	2011-11-04 15:10:56.000000000 +0100
-+++ b/include/net/mac80211.h	2011-11-04 18:04:48.000000000 +0100
-@@ -3576,8 +3576,9 @@ rate_lowest_index(struct ieee80211_suppo
- 			return i;
- 
- 	/* warn when we cannot find a rate. */
--	WARN_ON(1);
-+	WARN_ON_ONCE(1);
- 
-+	/* and return 0 (the lowest index) */
- 	return 0;
- }
- 
-
-
+I moved it to my 3.2 queue, thanks.
