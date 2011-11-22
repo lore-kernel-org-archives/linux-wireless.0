@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:62913 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752930Ab1KPXHJ convert rfc822-to-8bit (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:53984 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756421Ab1KVVGS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 18:07:09 -0500
-Received: by bke11 with SMTP id 11so1222273bke.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 15:07:08 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Michael =?iso-8859-1?q?B=FCsch?= <m@bues.ch>
-Subject: Re: [PATCH] p54spi: Add missing spin_lock_init
-Date: Thu, 17 Nov 2011 00:07:02 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <20111116234831.08f1f703@milhouse>
-In-Reply-To: <20111116234831.08f1f703@milhouse>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201111170007.02388.chunkeey@googlemail.com> (sfid-20111117_000713_971248_290E3F11)
+	Tue, 22 Nov 2011 16:06:18 -0500
+Date: Tue, 22 Nov 2011 16:05:11 -0500 (EST)
+Message-Id: <20111122.160511.2302883259439708995.davem@davemloft.net> (sfid-20111122_220636_795512_CB0C27C1)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2011-11-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20111122205655.GE8452@tuxdriver.com>
+References: <20111122193505.GC8452@tuxdriver.com>
+	<20111122.151429.253381379981773726.davem@davemloft.net>
+	<20111122205655.GE8452@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, November 16, 2011 11:48:31 PM Michael Büsch wrote:
-> The tx_lock is not initialized properly. Add spin_lock_init().
-> 
-> Signed-off-by: Michael Buesch <m@bues.ch>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 22 Nov 2011 15:56:55 -0500
 
-Cc: <stable@kernel.org>
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+> On Tue, Nov 22, 2011 at 03:14:29PM -0500, David Miller wrote:
+>> From: "John W. Linville" <linville@tuxdriver.com>
+>> Date: Tue, 22 Nov 2011 14:35:05 -0500
+>> 
+>> > Here is the latest batch of fixes intended for 3.2.  This includes a
+>> > correction for a user-visible error in mac80211's debugfs info, a fix
+>> > for a potential memory corrupter in prism54, an endian fix for rt2x00,
+>> > an endian fix for mac80211, a fix for a NULL derefernce in cfg80211, a
+>> > locking fix and a deadlock fix for p54spi, and a pair of rt2x00 fixes
+>> > for handling some spurious interrupts that hardware can generate.
+>> > 
+>> > Please let me know if there are problems!
+>> 
+>> The rt2800pci change doesn't look correct.
+>> 
+>> If the IRQ line is shared with another device, this change will make it
+>> never see interrupts.  Once you say "IRQ_HANDLED" the IRQ dispatch
+>> stops processing the interrupt handler list.
+> 
+> I thought this at first as well.  But looking at the code in
+> kernel/irq/handle.c doesn't support that conclusion.  In fact, every
+> handler gets invoked no matter what they all return.  All of the irq
+> handler return values are ORed together and passed to note_interrupt.
+> Only if every irq handler returns IRQ_NONE does the code in
+> kernel/irq/spurious.c start getting involved.
+> 
+> Anyway, this seems to be safe even for shared interrupts.  That said,
+> this is a bit ugly.  But it makes a serious difference in performance
+> for those afflicted with this issue.
 
-> ---
-> 
-> 
-> Index: compat-wireless-2011-11-04/drivers/net/wireless/p54/p54spi.c
-> ===================================================================
-> --- compat-wireless-2011-11-04.orig/drivers/net/wireless/p54/p54spi.c	2011-11-05 20:30:04.000000000 +0100
-> +++ compat-wireless-2011-11-04/drivers/net/wireless/p54/p54spi.c	2011-11-16 22:12:03.648829886 +0100
-> @@ -656,6 +656,7 @@ static int __devinit p54spi_probe(struct
->  	init_completion(&priv->fw_comp);
->  	INIT_LIST_HEAD(&priv->tx_pending);
->  	mutex_init(&priv->mutex);
-> +	spin_lock_init(&priv->tx_lock);
->  	SET_IEEE80211_DEV(hw, &spi->dev);
->  	priv->common.open = p54spi_op_start;
->  	priv->common.stop = p54spi_op_stop;
+It just means that we won't notice spurious interrupts if the device
+sharing the line with rt2800pci generates one.
+
+This change is wrong.
