@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42723 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752194Ab1KQRti (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:52144 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755968Ab1KVAAk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 12:49:38 -0500
-Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id pAHHncxm013676
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2011 09:49:38 -0800
-Message-ID: <4EC54932.4090007@candelatech.com> (sfid-20111117_184942_279324_ABBF5D35)
-Date: Thu, 17 Nov 2011 09:49:38 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 21 Nov 2011 19:00:40 -0500
+Received: by vcbfk1 with SMTP id fk1so6249028vcb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 16:00:39 -0800 (PST)
 MIME-Version: 1.0
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [wireless-next PATCH 5/5] wifi-debugfs: Fix AMSDU rate printout.
-References: <1319778680-11405-1-git-send-email-greearb@candelatech.com> <1319778680-11405-5-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1319778680-11405-5-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-To: unlisted-recipients:; (no To-header on input)
+In-Reply-To: <4ECAE525.6030206@broadcom.com>
+References: <CADrAYBnwWEaigcgQYYk6V3VEuEYyrmzJQXegKVk6TgOTPh5N8A@mail.gmail.com>
+	<4ECA8908.7070304@broadcom.com>
+	<4ECA98DB.4030608@broadcom.com>
+	<CADrAYBk7_fsVJUAYNqEZpdBPKOTGUai_UhPT9LMHaEyY+Zm24w@mail.gmail.com>
+	<4ECAAD6C.4080103@broadcom.com>
+	<CADrAYBndEsNz5nypirSxQPObpSV5BWARWOQzwmBTmzg+tgUbBA@mail.gmail.com>
+	<CADrAYB=wDwrzCFEi4-PFepLiLMbPLAGxoaNGtXBaPZPR1onokA@mail.gmail.com>
+	<4ECAC99B.8090507@broadcom.com>
+	<CADrAYBmhBWVDC=K+F-NU6WkUv-M=WddWvU1pe9AXABEinUBGvQ@mail.gmail.com>
+	<4ECAD52A.6050509@broadcom.com>
+	<CADrAYBntm4GuhcZaErKimv4Z4Nt+Z6=67qdwi7eomZpTOoQsnQ@mail.gmail.com>
+	<4F34EB345A846E42B8D432EA578382CC154E402FB4@SJEXCHCCR01.corp.ad.broadcom.com>
+	<CADrAYBmD+OzXOLyunz6guyYzwn-mXuHtEaX-7cAVy7QmWp603A@mail.gmail.com>
+	<4ECAE525.6030206@broadcom.com>
+Date: Tue, 22 Nov 2011 01:00:39 +0100
+Message-ID: <CADrAYBkL_Am57Vmo=mbJpGGZy81Tt6VoBfWt0_pb3F7wnL5Drg@mail.gmail.com> (sfid-20111122_010050_288722_781E76AA)
+Subject: Re: brcm80211 (with bcm4329-chip)
+From: =?ISO-8859-1?Q?Thomas_Lang=E5s?= <thomas.langas@fxitech.com>
+To: Franky Lin <frankyl@broadcom.com>
+Cc: Howard Harte <hharte@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/27/2011 10:11 PM, greearb@candelatech.com wrote:
-> From: Ben Greear<greearb@candelatech.com>
->
-> It was flipped.  See section 7.3.2.56 of the 802.11n
-> spec for details.
+On Tue, Nov 22, 2011 at 12:56 AM, Franky Lin <frankyl@broadcom.com> wrote:
+> Yes please give it a try.
 
-This patch is stand-alone, even though it was originally
-part of a series I posted.  Do I need to re-post as 1/1
-(it's not yet in wireless-testing tree).
+Set it to 25MHz, still same problem.
 
-Thanks,
-Ben
+> About the functional combination of .36 kernel + proprietary driver, is it a
+> mainline kernel or an Android one?
 
->
-> Signed-off-by: Ben Greear<greearb@candelatech.com>
-> ---
-> :100644 100644 1ceec86... 4310431... M	net/mac80211/debugfs_sta.c
->   net/mac80211/debugfs_sta.c |    4 ++--
->   1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-> index 1ceec86..4310431 100644
-> --- a/net/mac80211/debugfs_sta.c
-> +++ b/net/mac80211/debugfs_sta.c
-> @@ -274,9 +274,9 @@ static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
->
->   		PRINT_HT_CAP((htc->cap&  BIT(10)), "HT Delayed Block Ack");
->
-> -		PRINT_HT_CAP((htc->cap&  BIT(11)), "Max AMSDU length: "
-> -			     "3839 bytes");
->   		PRINT_HT_CAP(!(htc->cap&  BIT(11)), "Max AMSDU length: "
-> +			     "3839 bytes");
-> +		PRINT_HT_CAP((htc->cap&  BIT(11)), "Max AMSDU length: "
->   			     "7935 bytes");
->
->   		/*
+Android, yes.
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Regards,
+Thomas
