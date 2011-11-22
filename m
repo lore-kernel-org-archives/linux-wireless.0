@@ -1,64 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49489 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754719Ab1KCRah (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 13:30:37 -0400
-Message-ID: <4EB2CFB3.2060802@openwrt.org> (sfid-20111103_183045_992727_CB439558)
-Date: Thu, 03 Nov 2011 18:30:27 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50763 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757881Ab1KVVA2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 16:00:28 -0500
+Date: Tue, 22 Nov 2011 15:56:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2011-11-22
+Message-ID: <20111122205655.GE8452@tuxdriver.com> (sfid-20111122_220058_698148_7BA78BC4)
+References: <20111122193505.GC8452@tuxdriver.com>
+ <20111122.151429.253381379981773726.davem@davemloft.net>
 MIME-Version: 1.0
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	rodrigue@qca.qualcomm.com
-Subject: Re: [RFC v2 2/2] ath9k: integrate initial DFS module
-References: <1320328553-28066-1-git-send-email-zefir.kurtisi@neratec.com> <1320328553-28066-3-git-send-email-zefir.kurtisi@neratec.com> <201111031651.46073.chunkeey@googlemail.com> <4EB2CE96.4060702@neratec.com>
-In-Reply-To: <4EB2CE96.4060702@neratec.com>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111122.151429.253381379981773726.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-11-03 6:25 PM, Zefir Kurtisi wrote:
-> On 11/03/2011 04:51 PM, Christian Lamparter wrote:
->>  On Thursday, November 03, 2011 02:55:53 PM Zefir Kurtisi wrote:
->>>  This patch integrates the DFS module into ath9k, including
->>>   * building the module into ath9k_hw
->>>   * setting up DFS debugfs
->>>   * defining HW capability flag for DFS support
->>>   * setting this flag by DFS supporting devices
->>>     (so far: AR_SREV_9280_20_OR_LATER, TBC)
->>>   * setting PHYRADAR rx filter flag to enable radar
->>>     pulse reporting
->>>   * forward radar PHY errors to dfs module
->>>
->>>  This is WIP and at its current stage is limited to test ath9k
->>>  pulse detection capabilities. The DFS pattern matching is
->>>  TBD in the higher layers and is not part of this patch.
->>>
->>>  CONFIG_ATH9K_DFS must be set to enable pulse detection.
->>  where? There's no kconfig option, yet it has the CONFIG_ perifx.
->>  So people will be looking for it.
->>
->>  This is exactly why I made such a big fuss about CONFIG_XYZ issue last time.
->>  <http://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg06825.html>
->>  Just drop the ifdef.
->>
->>
-> Hi Christian,
->
-> I just followed Luis' request to follow the regulatory statement and
-> make non regulatory certified code unusable by the 'common user'.
->
-> Therefore, not (yet) selectable as a kconfig option, but for devs and
-> testers to be easily enabled.
->
-> At this stage, removing the ifdef would not harm, because all the
-> code does is counting events. But for the long run I understand it is
-> a sensitive topic and requires to be disabled (at least as default
-> setting).
-I don't think it's a sensitive topic at all. Just leave out all the 
-ifdef stuff. In the long run when we actually get to the part where we 
-can test a full DFS implementation, the only thing that needs to be left 
-out for normal users is the flag announcing support for it.
+On Tue, Nov 22, 2011 at 03:14:29PM -0500, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Tue, 22 Nov 2011 14:35:05 -0500
+> 
+> > Here is the latest batch of fixes intended for 3.2.  This includes a
+> > correction for a user-visible error in mac80211's debugfs info, a fix
+> > for a potential memory corrupter in prism54, an endian fix for rt2x00,
+> > an endian fix for mac80211, a fix for a NULL derefernce in cfg80211, a
+> > locking fix and a deadlock fix for p54spi, and a pair of rt2x00 fixes
+> > for handling some spurious interrupts that hardware can generate.
+> > 
+> > Please let me know if there are problems!
+> 
+> The rt2800pci change doesn't look correct.
+> 
+> If the IRQ line is shared with another device, this change will make it
+> never see interrupts.  Once you say "IRQ_HANDLED" the IRQ dispatch
+> stops processing the interrupt handler list.
 
-- Felix
+I thought this at first as well.  But looking at the code in
+kernel/irq/handle.c doesn't support that conclusion.  In fact, every
+handler gets invoked no matter what they all return.  All of the irq
+handler return values are ORed together and passed to note_interrupt.
+Only if every irq handler returns IRQ_NONE does the code in
+kernel/irq/spurious.c start getting involved.
+
+Anyway, this seems to be safe even for shared interrupts.  That said,
+this is a bit ugly.  But it makes a serious difference in performance
+for those afflicted with this issue.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
