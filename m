@@ -1,63 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59117 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753513Ab1KUV4v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 16:56:51 -0500
-Message-ID: <4ECAC919.4080408@hauke-m.de> (sfid-20111121_225654_336347_4F674807)
-Date: Mon, 21 Nov 2011 22:56:41 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61703 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757836Ab1KVQYx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 11:24:53 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>
+Subject: [PATCH 13/18] ath9k_hw: MCI related changes in set_reset_reg
+Date: Tue, 22 Nov 2011 21:52:40 +0530
+Message-ID: <1321978965-21684-14-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111122_172456_737730_5C335E0B)
+In-Reply-To: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-To: linux-usb@vger.kernel.org,
-	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: bcma USB Host driver
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-I am thinking on how to implement the usb host driver for the bcma bus
-correctly. bcma is the driver for Broadcom's AMBA implementation (see
-drivers/bcma/ ) and on SoCs it also provides a core with an USB Host
-controller. This USB host controller has an OHCI and an EHCI interface
-on different addresses, but it is on core on this bus, just with two
-address spaces [0]. For the software developers point of view it is
-pretty similar to Braodcoms SSB bus, for which I have the same problem.
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   14 +++++++++++---
+ 1 files changed, 11 insertions(+), 3 deletions(-)
 
-The bcma bus driver exposes one device for this core which is
-responsibility for EHCI and OHCI at the same time. Now I implemented a
-driver for ehci and one for ohci but just one gets registered, because
-only one is able to claim this device. I based my work on how it is done
-for the ssb bus, which is similar to the bcma bus implementation and
-there is already a ohci driver for ssb in the kernel (see
-drivers/usb/host/ohci-ssb.c ), but no ehci driver (I want to add that
-also, for now we only have some hacky think in OpenWrt).
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index ba5734a..1d71d1b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1350,6 +1350,7 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
+ 
+ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
+ {
++	bool ret = false;
+ 
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		REG_WRITE(ah, AR_WA, ah->WARegVal);
+@@ -1361,13 +1362,20 @@ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
+ 
+ 	switch (type) {
+ 	case ATH9K_RESET_POWER_ON:
+-		return ath9k_hw_set_reset_power_on(ah);
++		ret = ath9k_hw_set_reset_power_on(ah);
++		break;
+ 	case ATH9K_RESET_WARM:
+ 	case ATH9K_RESET_COLD:
+-		return ath9k_hw_set_reset(ah, type);
++		ret = ath9k_hw_set_reset(ah, type);
++		break;
+ 	default:
+-		return false;
++		break;
+ 	}
++
++	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
++		REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
++
++	return ret;
+ }
+ 
+ static bool ath9k_hw_chip_reset(struct ath_hw *ah,
+-- 
+1.7.0.4
 
-The Broadcom hardware uses a standard ehci and ohci interface, there are
-just some register reads and writes needed at startup to work around
-some hardware bugs. In the Braodcom SDK they are registering the USB
-core as two PCI device and are using the normal pci drivers.
-
-To provide ehci and ohci at the same time I came up with some solutions:
-
-1. The OHCI driver also initializes the EHCI driver, when it gets load
-and is an USB 2.0 device. This is how it is done in OpenWrt and I do not
-like it [1].
-2. bcma provides two devices with different identification and there are
-two independ drivers working with it.
-3. bcma handles the usb registration directly and all code goes to
-drivers/bcma/
-4. Is there some way like a platform device with a memory address which
-I could register and which is then handled by the usb system?
-
-Are there any better approaches on how to do this? I do not think I am
-the first person with such a problem.
-
-Hauke
-
-[0]:
-https://github.com/hauke/openwrt/commit/43e4344b7b8b4d7fb5a6220066effde30cb00501#diff-4
-[1]:
-https://dev.openwrt.org/browser/trunk/target/linux/brcm47xx/patches-3.0/023-usb_ehci_ohci.patch
