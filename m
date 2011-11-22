@@ -1,52 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41878 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754586Ab1KRU63 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 15:58:29 -0500
-Date: Fri, 18 Nov 2011 15:53:28 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
-Subject: Re: [PATCH 2/2] compat: implement dummy security_sk_clone
-Message-ID: <20111118205327.GB2663@tuxdriver.com> (sfid-20111118_215832_700977_D26D4DFC)
-References: <1321490374-24529-1-git-send-email-linville@tuxdriver.com>
- <1321490374-24529-2-git-send-email-linville@tuxdriver.com>
- <4EC6B3FA.90502@hauke-m.de>
+Received: from smtp203.alice.it ([82.57.200.99]:48404 "EHLO smtp203.alice.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752917Ab1KVPGV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 10:06:21 -0500
+Received: from trisquel.localnet (80.116.67.249) by smtp203.alice.it (8.6.023.02) (authenticated as editempo@alice.it)
+        id 4ECA5E23000B7E12 for linux-wireless@vger.kernel.org; Tue, 22 Nov 2011 16:00:32 +0100
+From: "Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: brcmfmac + compat wireless + 2.6.35
+Date: Tue, 22 Nov 2011 16:00:31 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4EC6B3FA.90502@hauke-m.de>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201111221600.31514.GNUtoo@no-log.org> (sfid-20111122_160624_974680_4E3979BB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 18, 2011 at 08:37:30PM +0100, Hauke Mehrtens wrote:
-> On 11/17/2011 01:39 AM, John W. Linville wrote:
-> > This has been defined in include/linux/security.h for some time, but was
-> > only given an EXPORT_SYMBOL for 3.2.  Add a compat_* definition to avoid
-> > breaking the module load with an undefined symbol.
-> > 
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+hi,
+With compat wireless on 2.6.35 running on nexus S(also known as crespo or 
+herring) I've the dmesg full of
+[  109.999238] mmc2:0001:2: pending IRQ with no handler
 
-<snip>
+to make it find the card I've done the a wireless activator that can be found 
+here:
 
-> Hi,
-> 
-> security_sk_clone gets also exported in Linux-3.1 so this should move to
-> include/linux/compat-3.1.h. 3.1-rcX did not contain this fix, but I hope
-> nobody is using this any more.
-> 
-> Hauke
-> 
-> $ git tag --contains 6230c9b4f8957c8938ee4cf2d03166d3c2dc89de
-> v3.1
-> v3.1.1
-> v3.2-rc1
-> v3.2-rc2
+http://git.freesmartphone.org/?p=linux-2.6.git;a=commit;h=50ad0092e17490671d44884052545f43c4261234
 
-My bad -- must have misread it!  Sending a new one now...
+Is the activator wrong? (there is no runtime PM in 2.6.35 as far as I know).
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Denis.
