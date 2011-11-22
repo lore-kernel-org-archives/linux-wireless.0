@@ -1,34 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:63724 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751632Ab1KNPIs (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:54098 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751892Ab1KVVOi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 10:08:48 -0500
-Received: by yenr9 with SMTP id r9so5227564yen.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2011 07:08:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4EBEA616.2020002@01019freenet.de>
-References: <4EBEA616.2020002@01019freenet.de>
-Date: Mon, 14 Nov 2011 16:08:47 +0100
-Message-ID: <CAGXE3d8X8N9VVLZCmyyGrwVhD-3BQJKcnY=nWmE+0h68dnWMBg@mail.gmail.com> (sfid-20111114_160851_422242_B096C5AC)
-Subject: Re: Try to narrow down the problem with rt2800usb and rt3572 based
- USB WLAN devices
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: users@rt2x00.serialmonkey.com,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 22 Nov 2011 16:14:38 -0500
+Date: Tue, 22 Nov 2011 16:13:22 -0500 (EST)
+Message-Id: <20111122.161322.454163033398038634.davem@davemloft.net> (sfid-20111122_221454_910897_C5CF059B)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2011-11-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20111122.160511.2302883259439708995.davem@davemloft.net>
+References: <20111122.151429.253381379981773726.davem@davemloft.net>
+	<20111122205655.GE8452@tuxdriver.com>
+	<20111122.160511.2302883259439708995.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 12, 2011 at 6:00 PM, Andreas Hartmann
-<andihartmann@01019freenet.de> wrote:
-> Could anybody please try to explain this behavior, or even better, fix
-> it (it looks really broken to me)?
+From: David Miller <davem@davemloft.net>
+Date: Tue, 22 Nov 2011 16:05:11 -0500 (EST)
 
-AFAIK it is possible to aggregate  multiple frames into one URB
-for rt2800 USB devices. However, rt2800usb doesn't make use
-of this yet while the legacy driver does. However, I don't think that
-this is the cause for the poor performance you see ...
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Tue, 22 Nov 2011 15:56:55 -0500
+> 
+>> On Tue, Nov 22, 2011 at 03:14:29PM -0500, David Miller wrote:
+>>> From: "John W. Linville" <linville@tuxdriver.com>
+>>> Date: Tue, 22 Nov 2011 14:35:05 -0500
+>>> 
+>>> > Here is the latest batch of fixes intended for 3.2.  This includes a
+>>> > correction for a user-visible error in mac80211's debugfs info, a fix
+>>> > for a potential memory corrupter in prism54, an endian fix for rt2x00,
+>>> > an endian fix for mac80211, a fix for a NULL derefernce in cfg80211, a
+>>> > locking fix and a deadlock fix for p54spi, and a pair of rt2x00 fixes
+>>> > for handling some spurious interrupts that hardware can generate.
+>>> > 
+>>> > Please let me know if there are problems!
+>>> 
+>>> The rt2800pci change doesn't look correct.
+>>> 
+>>> If the IRQ line is shared with another device, this change will make it
+>>> never see interrupts.  Once you say "IRQ_HANDLED" the IRQ dispatch
+>>> stops processing the interrupt handler list.
+>> 
+>> I thought this at first as well.  But looking at the code in
+>> kernel/irq/handle.c doesn't support that conclusion.  In fact, every
+>> handler gets invoked no matter what they all return.  All of the irq
+>> handler return values are ORed together and passed to note_interrupt.
+>> Only if every irq handler returns IRQ_NONE does the code in
+>> kernel/irq/spurious.c start getting involved.
+>> 
+>> Anyway, this seems to be safe even for shared interrupts.  That said,
+>> this is a bit ugly.  But it makes a serious difference in performance
+>> for those afflicted with this issue.
+> 
+> It just means that we won't notice spurious interrupts if the device
+> sharing the line with rt2800pci generates one.
+> 
+> This change is wrong.
 
-Helmut
+BTW, look at it this way, if what you say is true John then what's the point
+in returning any specific value at all?
+
+Everyone can just return IRQ_HANDLED and everything would just work.
+
+But you know that's not the case, and that it's important that this value
+is returned accurately.
