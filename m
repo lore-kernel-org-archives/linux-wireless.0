@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:32904 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752891Ab1K2A4Y (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25206 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757898Ab1KVQ0T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 19:56:24 -0500
-Date: Mon, 28 Nov 2011 19:55:16 -0500 (EST)
-Message-Id: <20111128.195516.37800643865997337.davem@davemloft.net> (sfid-20111129_015634_625463_FD3D332C)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2011-11-28
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20111128200221.GD2681@tuxdriver.com>
-References: <20111128200221.GD2681@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 22 Nov 2011 11:26:19 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>
+Subject: [PATCH 18/18] ath9k: fix a typo
+Date: Tue, 22 Nov 2011 21:52:45 +0530
+Message-ID: <1321978965-21684-19-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111122_172626_848705_AAF7D2F2)
+In-Reply-To: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 28 Nov 2011 15:02:22 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-> Another big pull request -- my apologies!  I have a couple of
-> sub-maintainers that had let their patch queues back-up a bit too
-> long...
-> 
-> This pull request contains a lot of refactoring in the iwlegacy and
-> ath6kl drivers.  mac80211 and rndis_wlan get some love as well.  Beyond
-> that, there is a handful of small updates and minor fixes to some
-> drivers and around the wireless stack.
-> 
-> Let me know if there are problems!
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/btcoex.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Pulled, but please push back on the ath6kl guys, they seem to have this
-disease where they add tons of debugfs files for controlling things like
-QoS from userspace instead of creating and using generic configuration
-machanisms via netlink or similar that any other driver could support too.
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index 9ac28d9..bbb2081 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -21,7 +21,7 @@ enum ath_bt_mode {
+ 	ATH_BT_COEX_MODE_LEGACY,        /* legacy rx_clear mode */
+ 	ATH_BT_COEX_MODE_UNSLOTTED,     /* untimed/unslotted mode */
+ 	ATH_BT_COEX_MODE_SLOTTED,       /* slotted mode */
+-	ATH_BT_COEX_MODE_DISALBED,      /* coexistence disabled */
++	ATH_BT_COEX_MODE_DISABLED,      /* coexistence disabled */
+ };
+ 
+ struct ath_btcoex_config {
+-- 
+1.7.0.4
 
-Thanks.
