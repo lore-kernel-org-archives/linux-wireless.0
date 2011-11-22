@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:62862 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755735Ab1KBRfU convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4199 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752451Ab1KVQYf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 13:35:20 -0400
-Received: by wyh15 with SMTP id 15so386845wyh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2011 10:35:18 -0700 (PDT)
+	Tue, 22 Nov 2011 11:24:35 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>
+Subject: [PATCH 02/18] ath9k_hw: add GPIO output MUX related macros
+Date: Tue, 22 Nov 2011 21:52:29 +0530
+Message-ID: <1321978965-21684-3-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111122_172437_225246_2C170E0F)
+In-Reply-To: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1320229077.3950.40.camel@jlt3.sipsolutions.net>
-References: <1319864732-11286-1-git-send-email-thomas@cozybit.com>
-	<1319864732-11286-2-git-send-email-thomas@cozybit.com>
-	<1320229077.3950.40.camel@jlt3.sipsolutions.net>
-Date: Wed, 2 Nov 2011 10:35:18 -0700
-Message-ID: <CAG6hwVOqyb6Oi63vjD0j6KLAc70cpiWsb9MOR2mZjqPqnVNAcQ@mail.gmail.com> (sfid-20111102_183524_064249_CE28CF8E)
-Subject: Re: [PATCH 2/4] mac80211: QoS multicast frames have No Ack policy
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 2, 2011 at 3:17 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2011-10-28 at 22:05 -0700, Thomas Pedersen wrote:
->> Previously QoS multicast frames had the Normal Acknowledgment QoS
->> control bits set. This would cause broadcast frames to be discarded by
->> peers with which we have a BA session, since their sequence number would
->> fall outside the allowed range. Set No Ack QoS control bits on multicast
->> QoS frames and filter these in de-aggregation code.
->
-> I'm not sure why you would attempt to deaggregate broadcast frames but I
-> guess mesh is a bit special.
->
->> @@ -770,6 +771,11 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
->>       if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
->>               goto dont_reorder;
->>
->> +     /* not part of a BA session */
->> +     if (!((ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK) ||
->> +           (ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_NORMAL)))
->> +             goto dont_reorder;
->
-> Maybe ack_policy != BA && ack_policy != NORMAl would be easier to read?
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-OK.
->
->> --- a/net/mac80211/wme.c
->> +++ b/net/mac80211/wme.c
->> @@ -147,7 +147,8 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
->>
->>               tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
->>
->> -             if (unlikely(sdata->local->wifi_wme_noack_test))
->> +             if (unlikely(sdata->local->wifi_wme_noack_test) ||
->> +                 is_multicast_ether_addr(hdr->addr1))
->>                       ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
->
-> Interestingly, this seems to have been a bug for a long time --
-> 7.1.3.5.3 indicates this is supposed to be done.
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.h |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-I'll fix up the other patches as well and resubmit.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 4f786cb..cd43d59 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -126,6 +126,16 @@
+ #define AR_GPIO_OUTPUT_MUX_AS_RX_CLEAR_EXTERNAL  4
+ #define AR_GPIO_OUTPUT_MUX_AS_MAC_NETWORK_LED    5
+ #define AR_GPIO_OUTPUT_MUX_AS_MAC_POWER_LED      6
++#define AR_GPIO_OUTPUT_MUX_AS_MCI_WLAN_DATA      0x16
++#define AR_GPIO_OUTPUT_MUX_AS_MCI_WLAN_CLK       0x17
++#define AR_GPIO_OUTPUT_MUX_AS_MCI_BT_DATA        0x18
++#define AR_GPIO_OUTPUT_MUX_AS_MCI_BT_CLK         0x19
++#define AR_GPIO_OUTPUT_MUX_AS_WL_IN_TX           0x14
++#define AR_GPIO_OUTPUT_MUX_AS_WL_IN_RX           0x13
++#define AR_GPIO_OUTPUT_MUX_AS_BT_IN_TX           9
++#define AR_GPIO_OUTPUT_MUX_AS_BT_IN_RX           8
++#define AR_GPIO_OUTPUT_MUX_AS_RUCKUS_STROBE      0x1d
++#define AR_GPIO_OUTPUT_MUX_AS_RUCKUS_DATA        0x1e
+ 
+ #define AR_GPIOD_MASK               0x00001FFF
+ #define AR_GPIO_BIT(_gpio)          (1 << (_gpio))
+-- 
+1.7.0.4
 
-Thanks!
-Thomas
