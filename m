@@ -1,66 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41351 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751342Ab1KILOU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 06:14:20 -0500
-Subject: [PATCH] mac80211: fix race between connection monitor & suspend
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Thomas Meyer <thomas@m3y3r.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 09 Nov 2011 12:14:16 +0100
-Message-ID: <1320837256.3845.36.camel@jlt3.sipsolutions.net> (sfid-20111109_121424_402576_5F422D3A)
-Mime-Version: 1.0
+Received: from smtp204.alice.it ([82.57.200.100]:43627 "EHLO smtp204.alice.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757074Ab1KVTq5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 14:46:57 -0500
+Received: from trisquel.localnet (80.116.67.249) by smtp204.alice.it (8.6.023.02) (authenticated as editempo@alice.it)
+        id 4ECA5ECD000EC17A for linux-wireless@vger.kernel.org; Tue, 22 Nov 2011 20:46:55 +0100
+From: "Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: brcmfmac + compat wireless + 2.6.35
+Date: Tue, 22 Nov 2011 20:46:54 +0100
+References: <201111221600.31514.GNUtoo@no-log.org>
+In-Reply-To: <201111221600.31514.GNUtoo@no-log.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201111222046.54310.GNUtoo@no-log.org> (sfid-20111122_204702_708336_02F47192)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Some more infos:
 
-When the connection monitor timer fires right before
-suspend, the following will happen:
- timer fires -> monitor_work gets queued
- suspend calls ieee80211_sta_quiesce
- ieee80211_sta_quiesce:
-  - deletes timer
-  - cancels monitor_work synchronously, running it
-  [note wrong order of these steps]
- monitor_work runs, re-arming the timer
- later, timer fires while system should be quiesced
+ * The version of compat wireless used is the following: 
+compat-wireless-2011-11-21
 
-This causes a warning:
+ * adding an if 0 in brcmf_sdcard_intr_reg removes the problematic dmesg 
+message:
+int brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev)
+{
+        brcmf_dbg(TRACE, "Entering\n");
+#if 0
+        sdio_claim_host(sdiodev->func[1]);
+        sdio_claim_irq(sdiodev->func[1], brcmf_sdioh_irqhandler);
+        sdio_release_host(sdiodev->func[1]);
+#endif
+        return 0;
+}
+but then:
+# ifconfig wlan0 up
+ifconfig: SIOCSIFFLAGS: Operation not permitted
+(with rfkill state ok (soft = 0, hard = 0, state = 1) and beeing root.
 
-WARNING: at net/mac80211/util.c:540 ieee80211_can_queue_work+0x35/0x40 [mac80211]()
-
-but is otherwise harmless. I'm not completely sure
-this is the scenario Thomas stumbled across, but it
-is the only way I can right now see the warning in
-a scenario like the one he reported.
-
-Reported-by: Thomas Meyer <thomas@m3y3r.de>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- a/net/mac80211/mlme.c	2011-11-09 12:05:44.000000000 +0100
-+++ b/net/mac80211/mlme.c	2011-11-09 12:07:11.000000000 +0100
-@@ -2288,6 +2288,7 @@ void ieee80211_sta_quiesce(struct ieee80
- 
- 	cancel_work_sync(&ifmgd->request_smps_work);
- 
-+	cancel_work_sync(&ifmgd->monitor_work);
- 	cancel_work_sync(&ifmgd->beacon_connection_loss_work);
- 	if (del_timer_sync(&ifmgd->timer))
- 		set_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running);
-@@ -2296,7 +2297,6 @@ void ieee80211_sta_quiesce(struct ieee80
- 	if (del_timer_sync(&ifmgd->chswitch_timer))
- 		set_bit(TMR_RUNNING_CHANSW, &ifmgd->timers_running);
- 
--	cancel_work_sync(&ifmgd->monitor_work);
- 	/* these will just be re-established on connection */
- 	del_timer_sync(&ifmgd->conn_mon_timer);
- 	del_timer_sync(&ifmgd->bcn_mon_timer);
-
-
+Denis.
