@@ -1,265 +1,296 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:60479 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754606Ab1KOJ5Z convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:51951 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754090Ab1KVIL2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 04:57:25 -0500
-Received: by wwe5 with SMTP id 5so5804480wwe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Nov 2011 01:57:23 -0800 (PST)
+	Tue, 22 Nov 2011 03:11:28 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAD2nsn0_=APp8uMN0ptW-a96DsHRLqTjdx45fKuEoR4yEwAP1g@mail.gmail.com>
-References: <CAApCBGyo=+L_pY=xLeBnwPbY+Q-cNpRPw85SvCDKLfqu=vJ2+w@mail.gmail.com>
-	<CAApCBGzE3G-uReWtJ+BjyQoJOKjJDA8=N0cd6X+9aY-tROf-KA@mail.gmail.com>
-	<CAApCBGzySbfcmGD7duY1SGAMK9f-NDHYX-DLtZ+Q1P066QdESQ@mail.gmail.com>
-	<CAD2nsn0_=APp8uMN0ptW-a96DsHRLqTjdx45fKuEoR4yEwAP1g@mail.gmail.com>
-Date: Tue, 15 Nov 2011 11:57:23 +0200
-Message-ID: <CAApCBGxDTUF1Y7A5RjncbB18RLTh6P898b-+B9iPMx94F+6iUg@mail.gmail.com> (sfid-20111115_105730_820458_8121069C)
-Subject: Re: ar9390 Support for master mode?
-From: wireless newbie <wnewbie72@gmail.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <2D0C7905-AEB2-4DE4-89B1-945D89F2B5D6@logic.at>
+References: <1320709047.31823.188.camel@wwguy-huron>
+	<20111108043233.GA21171@gamma.logic.tuwien.ac.at>
+	<CANUX_P0Q0wve4D6fZPsMv2Zw=02gb9u+3C2cjRv7UAmWqXnjzw@mail.gmail.com>
+	<CANUX_P06ww42p6N1k_P-Y1KMKOd1QgR_DxVWe19qtsEX2rfWpw@mail.gmail.com>
+	<20111109051152.GA16006@gamma.logic.tuwien.ac.at>
+	<CANUX_P2Yz9bWP_EmU1Acs7Mu2w78CXxO-njhiMt97b0TJHFYiQ@mail.gmail.com>
+	<20111121030640.GI32505@gamma.logic.tuwien.ac.at>
+	<CANUX_P2AA5stHwjegKdFhFGg7jxwdVU2Xr8OUtXUdEOKz_6E5A@mail.gmail.com>
+	<20111122051310.GA23705@gamma.logic.tuwien.ac.at>
+	<CANUX_P1RjcRD2tW1A6YYSEV9+aUZyTEro7tZXJWRoxk6gx-2jA@mail.gmail.com>
+	<CANUX_P2aFn84uSqgZA2gTBN7E4+0jGmJQTkx4eug4Ls0hK0==Q@mail.gmail.com>
+	<20111122072730.GA32225@gamma.logic.tuwien.ac.at>
+	<CANUX_P15En9bHVx4bhq6=XKPZnC2u+QyVJ+jnm4ns=39DrOBtg@mail.gmail.com>
+	<2D0C7905-AEB2-4DE4-89B1-945D89F2B5D6@logic.at>
+Date: Tue, 22 Nov 2011 10:11:25 +0200
+Message-ID: <CANUX_P21PDdyo4u-x_1A0Lcqf-33yHgzUxddAoc3juGRNnrcDg@mail.gmail.com> (sfid-20111122_091152_985107_E5F4CE8C)
+Subject: Re: iwlagn is getting very shaky
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Norbert Preining <preining@logic.at>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+Content-Type: multipart/mixed; boundary=f46d043c7ccc8a0b6c04b24e5923
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-That fix is already in place but it didn't help.
+--f46d043c7ccc8a0b6c04b24e5923
+Content-Type: text/plain; charset=ISO-8859-1
 
-2011/11/15 Mohammed Shafi <shafi.wireless@gmail.com>:
-> On Tue, Nov 15, 2011 at 1:45 PM, wireless newbie <wnewbie72@gmail.com> wrote:
->> I tried (almost) bleeding edge compat wireless drivers (dated
->> 1.11.2011) but the same problem persists. It turns out that the
->> problem is in AGC calibration in function ar9003_hw_init_cal. It times
->> out. This is what ath9k_hw_wait prints to log:
->>
->> ath: timeout (100000 us) on reg 0xa2c4: 0x00158dd9 & 0x00000001 != 0x00000000
->
-> a similar problem addressed by
-> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/78758
-> and this fix is there in bleeding edge compat(today). did it help?
->
->>
->> Is there anyone who has so much knowledge that he/she could verify if
->> those values make sense with this chip (ar9390)? I would like to rule
->> out the possibility that the driver is polling a bit in a wrong
->> register. Or could it be that the timeout value needs to be extended?
->>
->> Thanks.
->>
->> 2011/11/14 wireless newbie <wnewbie72@gmail.com>:
->>> Ok, this doesn't seem to interest anyone in the wireless list.
->>> Hopefully someone cares to respond from the ath9k list..
->>>
->>> I experience this problem with station mode too. I get
->>>
->>> ath: Unable to reset hardware; reset status -5 (freq 2412 MHz)
->>> Could not set interface wlan0 flags: Input/output error
->>> Could not set interface 'wlan0' UP
->>>
->>> when starting wpa_supplicant. Could it be that ar9390 isn't really
->>> supported by ath9k driver? I have quite recent compat wireless drivers
->>> in use:
->>>
->>> Compat-wireless backport release: compat-wireless-v3.1-rc8-1
->>> Backport based on linux-2.6-allstable.git v3.1-rc8
->>>
->>> Has anyone managed to use ar9390 in linux?
->>>
->>>
->>>
->>> ---------- Forwarded message ----------
->>> From: wireless newbie <wnewbie72@gmail.com>
->>> Date: 2011/11/11
->>> Subject: ar9390 Support for master mode?
->>> To: linux-wireless@vger.kernel.org
->>>
->>>
->>> Hi all,
->>>
->>> Has any one used ar9390 based devices as an AP? I'm trying, but all
->>> fails when I load hostapd:
->>>
->>> ath9k 0000:01:00.0: mon.wlan0: Features changed: 0x00004800 -> 0x00004000
->>> ath: Unable to reset hardware; reset status -5 (freq 2412 MHz)
->>> Could not set interface mon.wlan0 flags: Input/output error
->>> nl80211: Failed to set interface wlan0 into AP mode
->>> nl80211 driver initialization failed.
->>> ELOOP: remaining socket: sock=8 eloop_data=0x10219770
->>> user_data=0x10219d18 handler=0x1002b8c0
->>> ELOOP: remaining socket: sock=10 eloop_data=0x1021c0b8 user_data=(nil)
->>> handler=0x100353e0
->>>
->>> With iw, it seems that AP is part of the capabilities:
->>>
->>> iw phy phy0 info
->>>
->>> Wiphy phy0
->>>        Band 1:
->>>                Capabilities: 0x11ef
->>>                        RX LDPC
->>>                        HT20/HT40
->>>                        SM Power Save disabled
->>>                        RX HT20 SGI
->>>                        RX HT40 SGI
->>>                        TX STBC
->>>                        RX STBC 1-stream
->>>                        Max AMSDU length: 3839 bytes
->>>                        DSSS/CCK HT40
->>>                Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
->>>                Minimum RX AMPDU time spacing: 8 usec (0x06)
->>>                HT TX/RX MCS rate indexes supported: 0-23
->>>                Frequencies:
->>>                        * 2412 MHz [1] (17.0 dBm)
->>>                        * 2417 MHz [2] (17.0 dBm)
->>>                        * 2422 MHz [3] (17.0 dBm)
->>>                        * 2427 MHz [4] (17.0 dBm)
->>>                        * 2432 MHz [5] (17.0 dBm)
->>>                        * 2437 MHz [6] (17.0 dBm)
->>>                        * 2442 MHz [7] (17.0 dBm)
->>>                        * 2447 MHz [8] (17.0 dBm)
->>>                        * 2452 MHz [9] (17.0 dBm)
->>>                        * 2457 MHz [10] (17.0 dBm)
->>>                        * 2462 MHz [11] (17.0 dBm)
->>>                        * 2467 MHz [12] (disabled)
->>>                        * 2472 MHz [13] (disabled)
->>>                        * 2484 MHz [14] (disabled)
->>>                Bitrates (non-HT):
->>>                        * 1.0 Mbps
->>>                        * 2.0 Mbps (short preamble supported)
->>>                        * 5.5 Mbps (short preamble supported)
->>>                        * 11.0 Mbps (short preamble supported)
->>>                        * 6.0 Mbps
->>>                        * 9.0 Mbps
->>>                        * 12.0 Mbps
->>>                        * 18.0 Mbps
->>>                        * 24.0 Mbps
->>>                        * 36.0 Mbps
->>>                        * 48.0 Mbps
->>>                        * 54.0 Mbps
->>>        Band 2:
->>>                Capabilities: 0x11ef
->>>                        RX LDPC
->>>                        HT20/HT40
->>>                        SM Power Save disabled
->>>                        RX HT20 SGI
->>>                        RX HT40 SGI
->>>                        TX STBC
->>>                        RX STBC 1-stream
->>>                        Max AMSDU length: 3839 bytes
->>>                        DSSS/CCK HT40
->>>                Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
->>>                Minimum RX AMPDU time spacing: 8 usec (0x06)
->>>                HT TX/RX MCS rate indexes supported: 0-23
->>>                Frequencies:
->>>                        * 5180 MHz [36] (18.0 dBm) (passive scanning, no IBSS)
->>>                        * 5200 MHz [40] (18.0 dBm) (passive scanning, no IBSS)
->>>                        * 5220 MHz [44] (18.0 dBm) (passive scanning, no IBSS)
->>>                        * 5240 MHz [48] (18.0 dBm) (passive scanning, no IBSS)
->>>                        * 5260 MHz [52] (disabled)
->>>                        * 5280 MHz [56] (disabled)
->>>                        * 5300 MHz [60] (disabled)
->>>                        * 5320 MHz [64] (disabled)
->>>                        * 5500 MHz [100] (disabled)
->>>                        * 5520 MHz [104] (disabled)
->>>                        * 5540 MHz [108] (disabled)
->>>                        * 5560 MHz [112] (disabled)
->>>                        * 5580 MHz [116] (disabled)
->>>                        * 5600 MHz [120] (disabled)
->>>                        * 5620 MHz [124] (disabled)
->>>                        * 5640 MHz [128] (disabled)
->>>                        * 5660 MHz [132] (disabled)
->>>                        * 5680 MHz [136] (disabled)
->>>                        * 5700 MHz [140] (disabled)
->>>                        * 5745 MHz [149] (18.0 dBm) (passive scanning, no IBSS)
->>>                        * 5765 MHz [153] (18.0 dBm) (passive scanning, no IBSS)
->>>                        * 5785 MHz [157] (18.0 dBm) (passive scanning, no IBSS)
->>>                        * 5805 MHz [161] (18.0 dBm) (passive scanning, no IBSS)
->>>                        * 5825 MHz [165] (18.0 dBm) (passive scanning, no IBSS)
->>>                Bitrates (non-HT):
->>>                        * 6.0 Mbps
->>>                        * 9.0 Mbps
->>>                        * 12.0 Mbps
->>>                        * 18.0 Mbps
->>>                        * 24.0 Mbps
->>>                        * 36.0 Mbps
->>>                        * 48.0 Mbps
->>>                        * 54.0 Mbps
->>>        max # scan SSIDs: 4
->>>        max scan IEs length: 2257 bytes
->>>        Coverage class: 0 (up to 0m)
->>>        Available Antennas: TX 0 RX 0
->>>        Supported interface modes:
->>>                 * IBSS
->>>                 * managed
->>>                 * AP
->>>                 * AP/VLAN
->>>                 * WDS
->>>                 * monitor
->>>                 * mesh point
->>>                 * P2P-client
->>>                 * P2P-GO
->>>        Supported commands:
->>>                 * new_interface
->>>                 * set_interface
->>>                 * new_key
->>>                 * new_beacon
->>>                 * new_station
->>>                 * new_mpath
->>>                 * set_mesh_params
->>>                 * set_bss
->>>                 * authenticate
->>>                 * associate
->>>                 * deauthenticate
->>>                 * disassociate
->>>                 * join_ibss
->>>                 * join_mesh
->>>                 * remain_on_channel
->>>                 * set_tx_bitrate_mask
->>>                 * action
->>>                 * frame_wait_cancel
->>>                 * set_wiphy_netns
->>>                 * set_channel
->>>                 * set_wds_peer
->>>                 * connect
->>>                 * disconnect
->>>        Supported TX frame types:
->>>                 * IBSS: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050
->>> 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
->>>                 * managed: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050
->>> 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
->>>                 * AP: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050
->>> 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
->>>                 * AP/VLAN: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050
->>> 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
->>>                 * mesh point: 0x0000 0x0010 0x0020 0x0030 0x0040
->>> 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0
->>> 0x00f0
->>>                 * P2P-client: 0x0000 0x0010 0x0020 0x0030 0x0040
->>> 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0
->>> 0x00f0
->>>                 * P2P-GO: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050
->>> 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
->>>        Supported RX frame types:
->>>                 * IBSS: 0x00d0
->>>                 * managed: 0x0040 0x00d0
->>>                 * AP: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
->>>                 * AP/VLAN: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
->>>                 * mesh point: 0x00b0 0x00c0 0x00d0
->>>                 * P2P-client: 0x0040 0x00d0
->>>                 * P2P-GO: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
->>>
->>> Has anyone experienced something like this? Can this be related to my
->>> hostapd config, or is this driver issue?
->>>
->>> br, Sami
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+On Tue, Nov 22, 2011 at 09:54, Norbert Preining <preining@logic.at> wrote:
+> Hi
 >
 >
+> I wrote ...
 >
-> --
-> shafi
+>>> Does not apply against current git,
 >
+> ...
+>
+>>> can't find file to patch at input line 78
+>>> Perhaps you used the wrong -p or --strip option?
+>>> The text leading up to this was:
+>>> --------------------------
+>>> |diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+>
+> You answered ...
+>
+>> Glad it applied
+>
+> Me scratching my head!?
+
+Sorry, please try again with that one.
+
+--f46d043c7ccc8a0b6c04b24e5923
+Content-Type: application/octet-stream; name="QUEUE_DEBUG.patch"
+Content-Disposition: attachment; filename="QUEUE_DEBUG.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gvamkura0
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFnbi1yeC5jIGIv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWduLXJ4LmMKaW5kZXggZjBkNmQ5NC4u
+ZmRiNGMzNyAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWdu
+LXJ4LmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWduLXJ4LmMKQEAg
+LTgwMCw3ICs4MDAsOCBAQCBzdGF0aWMgdm9pZCBpd2xhZ25fcGFzc19wYWNrZXRfdG9fbWFjODAy
+MTEoc3RydWN0IGl3bF9wcml2ICpwcml2LAogCQkJCQkgICAgICAgY3R4LT5hY3RpdmUuYnNzaWRf
+YWRkcikpCiAJCQkJY29udGludWU7CiAJCQljdHgtPmxhc3RfdHhfcmVqZWN0ZWQgPSBmYWxzZTsK
+LQkJCWl3bF90cmFuc193YWtlX2FueV9xdWV1ZSh0cmFucyhwcml2KSwgY3R4LT5jdHhpZCk7CisJ
+CQlpd2xfdHJhbnNfd2FrZV9hbnlfcXVldWUodHJhbnMocHJpdiksIGN0eC0+Y3R4aWQsCisJCQkJ
+ImNoYW5uZWwgZ290IGFjdGl2ZSIpOwogCQl9CiAJfQogCmRpZmYgLS1naXQgYS9kcml2ZXJzL25l
+dC93aXJlbGVzcy9pd2x3aWZpL2l3bC1hZ24tcnhvbi5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+aXdsd2lmaS9pd2wtYWduLXJ4b24uYwppbmRleCA4ZTQ1ZmJhLi44ZGU5N2Y1IDEwMDY0NAotLS0g
+YS9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1hZ24tcnhvbi5jCisrKyBiL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFnbi1yeG9uLmMKQEAgLTExNyw3ICsxMTcsNyBA
+QCBzdGF0aWMgdm9pZCBpd2xhZ25fdXBkYXRlX3FvcyhzdHJ1Y3QgaXdsX3ByaXYgKnByaXYsCiAJ
+aWYgKGN0eC0+aHQuZW5hYmxlZCkKIAkJY3R4LT5xb3NfZGF0YS5kZWZfcW9zX3Bhcm0ucW9zX2Zs
+YWdzIHw9IFFPU19QQVJBTV9GTEdfVEdOX01TSzsKIAotCUlXTF9ERUJVR19RT1MocHJpdiwgInNl
+bmQgUW9TIGNtZCB3aXRoIFFvcyBhY3RpdmU9JWQgRkxBR1M9MHglWFxuIiwKKwlJV0xfREVCVUdf
+SU5GTyhwcml2LCAic2VuZCBRb1MgY21kIHdpdGggUW9zIGFjdGl2ZT0lZCBGTEFHUz0weCVYXG4i
+LAogCQkgICAgICBjdHgtPnFvc19kYXRhLnFvc19hY3RpdmUsCiAJCSAgICAgIGN0eC0+cW9zX2Rh
+dGEuZGVmX3Fvc19wYXJtLnFvc19mbGFncyk7CiAKQEAgLTg0NCw3ICs4NDQsOCBAQCB2b2lkIGl3
+bGFnbl9ic3NfaW5mb19jaGFuZ2VkKHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3LAogCQkJaWYgKGN0
+eC0+bGFzdF90eF9yZWplY3RlZCkgewogCQkJCWN0eC0+bGFzdF90eF9yZWplY3RlZCA9IGZhbHNl
+OwogCQkJCWl3bF90cmFuc193YWtlX2FueV9xdWV1ZSh0cmFucyhwcml2KSwKLQkJCQkJCQkgY3R4
+LT5jdHhpZCk7CisJCQkJCQkJIGN0eC0+Y3R4aWQsCisJCQkJCQkJICJEaXNhc3NvYzogZmx1c2gg
+cXVldWUiKTsKIAkJCX0KIAkJCWN0eC0+c3RhZ2luZy5maWx0ZXJfZmxhZ3MgJj0gflJYT05fRklM
+VEVSX0FTU09DX01TSzsKIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lm
+aS9pd2wtYWduLXR4LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1hZ24tdHgu
+YwppbmRleCAwMTRiOThhLi5lNmEwMmUwIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVz
+cy9pd2x3aWZpL2l3bC1hZ24tdHguYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZp
+L2l3bC1hZ24tdHguYwpAQCAtODEzLDcgKzgxMyw4IEBAIGludCBpd2xhZ25fcnhfcmVwbHlfdHgo
+c3RydWN0IGl3bF9wcml2ICpwcml2LCBzdHJ1Y3QgaXdsX3J4X21lbV9idWZmZXIgKnJ4YiwKIAkJ
+CSAgICBpd2xfaXNfYXNzb2NpYXRlZF9jdHgoY3R4KSAmJiBjdHgtPnZpZiAmJgogCQkJICAgIGN0
+eC0+dmlmLT50eXBlID09IE5MODAyMTFfSUZUWVBFX1NUQVRJT04pIHsKIAkJCQljdHgtPmxhc3Rf
+dHhfcmVqZWN0ZWQgPSB0cnVlOwotCQkJCWl3bF90cmFuc19zdG9wX3F1ZXVlKHRyYW5zKHByaXYp
+LCB0eHFfaWQpOworCQkJCWl3bF90cmFuc19zdG9wX3F1ZXVlKHRyYW5zKHByaXYpLCB0eHFfaWQs
+CisJCQkJCSJUeCBvbiBwYXNzaXZlIGNoYW5uZWwiKTsKIAogCQkJCUlXTF9ERUJVR19UWF9SRVBM
+WShwcml2LAogCQkJCQkgICAiVFhRICVkIHN0YXR1cyAlcyAoMHglMDh4KSAiCmRpZmYgLS1naXQg
+YS9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1kZWJ1Zy5oIGIvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvaXdsd2lmaS9pd2wtZGVidWcuaAppbmRleCAxZGRkZjliLi40MGVmOTdiIDEwMDY0
+NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1kZWJ1Zy5oCisrKyBiL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWRlYnVnLmgKQEAgLTE2Niw3ICsxNjYsNyBA
+QCBzdGF0aWMgaW5saW5lIHZvaWQgaXdsX2RiZ2ZzX3VucmVnaXN0ZXIoc3RydWN0IGl3bF9wcml2
+ICpwcml2KQogI2RlZmluZSBJV0xfRExfMTFICQkoMSA8PCAyOCkKICNkZWZpbmUgSVdMX0RMX1NU
+QVRTCQkoMSA8PCAyOSkKICNkZWZpbmUgSVdMX0RMX1RYX1JFUExZCQkoMSA8PCAzMCkKLSNkZWZp
+bmUgSVdMX0RMX1FPUwkJKDEgPDwgMzEpCisjZGVmaW5lIElXTF9ETF9UWF9RVUVVRVMJKDEgPDwg
+MzEpCiAKICNkZWZpbmUgSVdMX0RFQlVHX0lORk8ocCwgZiwgYS4uLikJSVdMX0RFQlVHKHAsIElX
+TF9ETF9JTkZPLCBmLCAjIyBhKQogI2RlZmluZSBJV0xfREVCVUdfTUFDODAyMTEocCwgZiwgYS4u
+LikJSVdMX0RFQlVHKHAsIElXTF9ETF9NQUM4MDIxMSwgZiwgIyMgYSkKQEAgLTIwMyw3ICsyMDMs
+NyBAQCBzdGF0aWMgaW5saW5lIHZvaWQgaXdsX2RiZ2ZzX3VucmVnaXN0ZXIoc3RydWN0IGl3bF9w
+cml2ICpwcml2KQogI2RlZmluZSBJV0xfREVCVUdfVFhfUkVQTFkocCwgZiwgYS4uLikJSVdMX0RF
+QlVHKHAsIElXTF9ETF9UWF9SRVBMWSwgZiwgIyMgYSkKICNkZWZpbmUgSVdMX0RFQlVHX1RYX1JF
+UExZX0xJTUlUKHAsIGYsIGEuLi4pIFwKIAkJSVdMX0RFQlVHX0xJTUlUKHAsIElXTF9ETF9UWF9S
+RVBMWSwgZiwgIyMgYSkKLSNkZWZpbmUgSVdMX0RFQlVHX1FPUyhwLCBmLCBhLi4uKQlJV0xfREVC
+VUcocCwgSVdMX0RMX1FPUywgZiwgIyMgYSkKKyNkZWZpbmUgSVdMX0RFQlVHX1RYX1FVRVVFUyhw
+LCBmLCBhLi4uKQlJV0xfREVCVUcocCwgSVdMX0RMX1RYX1FVRVVFUywgZiwgIyMgYSkKICNkZWZp
+bmUgSVdMX0RFQlVHX1JBRElPKHAsIGYsIGEuLi4pCUlXTF9ERUJVRyhwLCBJV0xfRExfUkFESU8s
+IGYsICMjIGEpCiAjZGVmaW5lIElXTF9ERUJVR19QT1dFUihwLCBmLCBhLi4uKQlJV0xfREVCVUco
+cCwgSVdMX0RMX1BPV0VSLCBmLCAjIyBhKQogI2RlZmluZSBJV0xfREVCVUdfMTFIKHAsIGYsIGEu
+Li4pCUlXTF9ERUJVRyhwLCBJV0xfRExfMTFILCBmLCAjIyBhKQpkaWZmIC0tZ2l0IGEvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMtcGNpZS1pbnQuaCBiL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXRyYW5zLXBjaWUtaW50LmgKaW5kZXggMmI2NzU2ZS4uYWZh
+YWEyYSAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMt
+cGNpZS1pbnQuaAorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC10cmFucy1w
+Y2llLWludC5oCkBAIC0zNTUsNyArMzU1LDcgQEAgc3RhdGljIGlubGluZSB2b2lkIGl3bF9zZXRf
+c3dxX2lkKHN0cnVjdCBpd2xfdHhfcXVldWUgKnR4cSwgdTggYWMsIHU4IGh3cSkKIH0KIAogc3Rh
+dGljIGlubGluZSB2b2lkIGl3bF93YWtlX3F1ZXVlKHN0cnVjdCBpd2xfdHJhbnMgKnRyYW5zLAot
+CQkJCSAgc3RydWN0IGl3bF90eF9xdWV1ZSAqdHhxKQorCQkJCSAgc3RydWN0IGl3bF90eF9xdWV1
+ZSAqdHhxLCBjb25zdCBjaGFyICptc2cpCiB7CiAJdTggcXVldWUgPSB0eHEtPnN3cV9pZDsKIAl1
+OCBhYyA9IHF1ZXVlICYgMzsKQEAgLTM2MywxMyArMzYzLDIyIEBAIHN0YXRpYyBpbmxpbmUgdm9p
+ZCBpd2xfd2FrZV9xdWV1ZShzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywKIAlzdHJ1Y3QgaXdsX3Ry
+YW5zX3BjaWUgKnRyYW5zX3BjaWUgPQogCQlJV0xfVFJBTlNfR0VUX1BDSUVfVFJBTlModHJhbnMp
+OwogCi0JaWYgKHRlc3RfYW5kX2NsZWFyX2JpdChod3EsIHRyYW5zX3BjaWUtPnF1ZXVlX3N0b3Bw
+ZWQpKQotCQlpZiAoYXRvbWljX2RlY19yZXR1cm4oJnRyYW5zX3BjaWUtPnF1ZXVlX3N0b3BfY291
+bnRbYWNdKSA8PSAwKQorCWlmICh0ZXN0X2FuZF9jbGVhcl9iaXQoaHdxLCB0cmFuc19wY2llLT5x
+dWV1ZV9zdG9wcGVkKSkgeworCQlpZiAoYXRvbWljX2RlY19yZXR1cm4oJnRyYW5zX3BjaWUtPnF1
+ZXVlX3N0b3BfY291bnRbYWNdKSA8PSAwKSB7CiAJCQlpd2xfd2FrZV9zd19xdWV1ZShwcml2KHRy
+YW5zKSwgYWMpOworCQkJSVdMX0RFQlVHX1RYX1FVRVVFUyh0cmFucywgIldha2UgaHdxICVkIGFj
+ICVkLiAlcyIsCisJCQkJCSAgICBod3EsIGFjLCBtc2cpOworCQl9IGVsc2UgeworCQkJSVdMX0RF
+QlVHX1RYX1FVRVVFUyh0cmFucywgIkRvbid0IHdha2UgaHdxICVkIGFjICVkIgorCQkJCQkgICAg
+IiBzdG9wIGNvdW50ICVkLiAlcyIsCisJCQkJCSAgICBod3EsIGFjLCBhdG9taWNfcmVhZCgmdHJh
+bnNfcGNpZS0+CisJCQkJCSAgICBxdWV1ZV9zdG9wX2NvdW50W2FjXSksIG1zZyk7CisJCX0KKwl9
+CiB9CiAKIHN0YXRpYyBpbmxpbmUgdm9pZCBpd2xfc3RvcF9xdWV1ZShzdHJ1Y3QgaXdsX3RyYW5z
+ICp0cmFucywKLQkJCQkgIHN0cnVjdCBpd2xfdHhfcXVldWUgKnR4cSkKKwkJCQkgIHN0cnVjdCBp
+d2xfdHhfcXVldWUgKnR4cSwgY29uc3QgY2hhciAqbXNnKQogewogCXU4IHF1ZXVlID0gdHhxLT5z
+d3FfaWQ7CiAJdTggYWMgPSBxdWV1ZSAmIDM7CkBAIC0zNzcsOSArMzg2LDIzIEBAIHN0YXRpYyBp
+bmxpbmUgdm9pZCBpd2xfc3RvcF9xdWV1ZShzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywKIAlzdHJ1
+Y3QgaXdsX3RyYW5zX3BjaWUgKnRyYW5zX3BjaWUgPQogCQlJV0xfVFJBTlNfR0VUX1BDSUVfVFJB
+TlModHJhbnMpOwogCi0JaWYgKCF0ZXN0X2FuZF9zZXRfYml0KGh3cSwgdHJhbnNfcGNpZS0+cXVl
+dWVfc3RvcHBlZCkpCi0JCWlmIChhdG9taWNfaW5jX3JldHVybigmdHJhbnNfcGNpZS0+cXVldWVf
+c3RvcF9jb3VudFthY10pID4gMCkKKwlpZiAoIXRlc3RfYW5kX3NldF9iaXQoaHdxLCB0cmFuc19w
+Y2llLT5xdWV1ZV9zdG9wcGVkKSkgeworCQlpZiAoYXRvbWljX2luY19yZXR1cm4oJnRyYW5zX3Bj
+aWUtPnF1ZXVlX3N0b3BfY291bnRbYWNdKSA+IDApIHsKIAkJCWl3bF9zdG9wX3N3X3F1ZXVlKHBy
+aXYodHJhbnMpLCBhYyk7CisJCQlJV0xfREVCVUdfVFhfUVVFVUVTKHRyYW5zLCAiU3RvcCBod3Eg
+JWQgYWMgJWQiCisJCQkJCSAgICAiIHN0b3AgY291bnQgJWQuICVzIiwKKwkJCQkJICAgIGh3cSwg
+YWMsIGF0b21pY19yZWFkKCZ0cmFuc19wY2llLT4KKwkJCQkJICAgIHF1ZXVlX3N0b3BfY291bnRb
+YWNdKSwgbXNnKTsKKwkJfSBlbHNlIHsKKwkJCUlXTF9ERUJVR19UWF9RVUVVRVModHJhbnMsICJE
+b24ndCBzdG9wIGh3cSAlZCBhYyAlZCIKKwkJCQkJICAgICIgc3RvcCBjb3VudCAlZC4gJXMiLAor
+CQkJCQkgICAgaHdxLCBhYywgYXRvbWljX3JlYWQoJnRyYW5zX3BjaWUtPgorCQkJCQkgICAgcXVl
+dWVfc3RvcF9jb3VudFthY10pLCBtc2cpOworCQl9CisJfSBlbHNlIHsKKwkJSVdMX0RFQlVHX1RY
+X1FVRVVFUyh0cmFucywgInN0b3AgaHdxICVkLCBidXQgaXQgaXMgc3RvcHBlZC8gJXMiLAorCQkJ
+CSAgICBod3EsIG1zZyk7CisJfQogfQogCiAjaWZkZWYgaWVlZTgwMjExX3N0b3BfcXVldWUKZGlm
+ZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXRyYW5zLXBjaWUtdHgu
+YyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXRyYW5zLXBjaWUtdHguYwppbmRl
+eCBhNmQ4OThiLi42ZGJhMTUxIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3
+aWZpL2l3bC10cmFucy1wY2llLXR4LmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lm
+aS9pd2wtdHJhbnMtcGNpZS10eC5jCkBAIC00MzAsNyArNDMwLDcgQEAgdm9pZCBpd2xfdHJhbnNf
+dHhfcXVldWVfc2V0X3N0YXR1cyhzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywKIAogCXR4cS0+c2No
+ZWRfcmV0cnkgPSBzY2RfcmV0cnk7CiAKLQlJV0xfREVCVUdfSU5GTyh0cmFucywgIiVzICVzIFF1
+ZXVlICVkIG9uIEZJRk8gJWRcbiIsCisJSVdMX0RFQlVHX1RYX1FVRVVFUyh0cmFucywgIiVzICVz
+IFF1ZXVlICVkIG9uIEZJRk8gJWRcbiIsCiAJCSAgICAgICBhY3RpdmUgPyAiQWN0aXZhdGUiIDog
+IkRlYWN0aXZhdGUiLAogCQkgICAgICAgc2NkX3JldHJ5ID8gIkJBIiA6ICJBQy9DTUQiLCB0eHFf
+aWQsIHR4X2ZpZm9faWQpOwogfQpAQCAtNTYxLDEyICs1NjEsMTMgQEAgaW50IGl3bF90cmFuc19w
+Y2llX3R4X2FnZ19hbGxvYyhzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywKIAogCXRpZF9kYXRhID0g
+JnRyYW5zLT5zaHJkLT50aWRfZGF0YVtzdGFfaWRdW3RpZF07CiAJaWYgKHRpZF9kYXRhLT50ZmRz
+X2luX3F1ZXVlID09IDApIHsKLQkJSVdMX0RFQlVHX0hUKHRyYW5zLCAiSFcgcXVldWUgaXMgZW1w
+dHlcbiIpOworCQlJV0xfREVCVUdfVFhfUVVFVUVTKHRyYW5zLCAiSFcgcXVldWUgaXMgZW1wdHlc
+biIpOwogCQl0aWRfZGF0YS0+YWdnLnN0YXRlID0gSVdMX0FHR19PTjsKIAkJaXdsX3N0YXJ0X3R4
+X2JhX3RyYW5zX3JlYWR5KHByaXYodHJhbnMpLCBjdHgsIHN0YV9pZCwgdGlkKTsKIAl9IGVsc2Ug
+ewotCQlJV0xfREVCVUdfSFQodHJhbnMsICJIVyBxdWV1ZSBpcyBOT1QgZW1wdHk6ICVkIHBhY2tl
+dHMgaW4gSFciCi0JCQkgICAgICJxdWV1ZVxuIiwgdGlkX2RhdGEtPnRmZHNfaW5fcXVldWUpOwor
+CQlJV0xfREVCVUdfVFhfUVVFVUVTKHRyYW5zLAorCQkJCSAgICAiSFcgcXVldWUgaXMgTk9UIGVt
+cHR5OiAlZCBwYWNrZXRzIGluIEhXIgorCQkJCSAgICAiIHF1ZXVlXG4iLCB0aWRfZGF0YS0+dGZk
+c19pbl9xdWV1ZSk7CiAJCXRpZF9kYXRhLT5hZ2cuc3RhdGUgPSBJV0xfRU1QVFlJTkdfSFdfUVVF
+VUVfQUREQkE7CiAJfQogCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJnRyYW5zLT5zaHJkLT5zdGFf
+bG9jaywgZmxhZ3MpOwpAQCAtNjQzLDE0ICs2NDQsMTUgQEAgaW50IGl3bF90cmFuc19wY2llX3R4
+X2FnZ19kaXNhYmxlKHN0cnVjdCBpd2xfdHJhbnMgKnRyYW5zLAogCiAJLyogVGhlIHF1ZXVlIGlz
+IG5vdCBlbXB0eSAqLwogCWlmICh3cml0ZV9wdHIgIT0gcmVhZF9wdHIpIHsKLQkJSVdMX0RFQlVH
+X0hUKHRyYW5zLCAiU3RvcHBpbmcgYSBub24gZW1wdHkgQUdHIEhXIFFVRVVFXG4iKTsKKwkJSVdM
+X0RFQlVHX1RYX1FVRVVFUyh0cmFucywKKwkJCQkgICAgIlN0b3BwaW5nIGEgbm9uIGVtcHR5IEFH
+RyBIVyBRVUVVRVxuIik7CiAJCXRyYW5zLT5zaHJkLT50aWRfZGF0YVtzdGFfaWRdW3RpZF0uYWdn
+LnN0YXRlID0KIAkJCUlXTF9FTVBUWUlOR19IV19RVUVVRV9ERUxCQTsKIAkJc3Bpbl91bmxvY2tf
+aXJxcmVzdG9yZSgmdHJhbnMtPnNocmQtPnN0YV9sb2NrLCBmbGFncyk7CiAJCXJldHVybiAwOwog
+CX0KIAotCUlXTF9ERUJVR19IVCh0cmFucywgIkhXIHF1ZXVlIGlzIGVtcHR5XG4iKTsKKwlJV0xf
+REVCVUdfVFhfUVVFVUVTKHRyYW5zLCAiSFcgcXVldWUgaXMgZW1wdHlcbiIpOwogdHVybl9vZmY6
+CiAJdHJhbnMtPnNocmQtPnRpZF9kYXRhW3N0YV9pZF1bdGlkXS5hZ2cuc3RhdGUgPSBJV0xfQUdH
+X09GRjsKIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJh
+bnMtcGNpZS5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMtcGNpZS5j
+CmluZGV4IGRhMzQxMTAuLmExYTU4MzMgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L2l3bHdpZmkvaXdsLXRyYW5zLXBjaWUuYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3
+aWZpL2l3bC10cmFucy1wY2llLmMKQEAgLTEyMzEsNyArMTIzMSw3IEBAIHN0YXRpYyBpbnQgaXds
+X3RyYW5zX3BjaWVfdHgoc3RydWN0IGl3bF90cmFucyAqdHJhbnMsIHN0cnVjdCBza19idWZmICpz
+a2IsCiAJCQl0eHEtPm5lZWRfdXBkYXRlID0gMTsKIAkJCWl3bF90eHFfdXBkYXRlX3dyaXRlX3B0
+cih0cmFucywgdHhxKTsKIAkJfSBlbHNlIHsKLQkJCWl3bF9zdG9wX3F1ZXVlKHRyYW5zLCB0eHEp
+OworCQkJaXdsX3N0b3BfcXVldWUodHJhbnMsIHR4cSwgIlF1ZXVlIGlzIGZ1bGwiKTsKIAkJfQog
+CX0KIAlyZXR1cm4gMDsKQEAgLTEyODMsMjAgKzEyODMsMjEgQEAgc3RhdGljIGludCBpd2xhZ25f
+dHhxX2NoZWNrX2VtcHR5KHN0cnVjdCBpd2xfdHJhbnMgKnRyYW5zLAogCQkvKiBhZ2dyZWdhdGVk
+IEhXIHF1ZXVlICovCiAJCWlmICgodHhxX2lkICA9PSB0aWRfZGF0YS0+YWdnLnR4cV9pZCkgJiYK
+IAkJICAgIChxLT5yZWFkX3B0ciA9PSBxLT53cml0ZV9wdHIpKSB7Ci0JCQlJV0xfREVCVUdfSFQo
+dHJhbnMsCisJCQlJV0xfREVCVUdfVFhfUVVFVUVTKHRyYW5zLAogCQkJCSJIVyBxdWV1ZSBlbXB0
+eTogY29udGludWUgREVMQkEgZmxvd1xuIik7CiAJCQlpd2xfdHJhbnNfcGNpZV90eHFfYWdnX2Rp
+c2FibGUodHJhbnMsIHR4cV9pZCk7CiAJCQl0aWRfZGF0YS0+YWdnLnN0YXRlID0gSVdMX0FHR19P
+RkY7CiAJCQlpd2xfc3RvcF90eF9iYV90cmFuc19yZWFkeShwcml2KHRyYW5zKSwKIAkJCQkJCSAg
+IE5VTV9JV0xfUlhPTl9DVFgsCiAJCQkJCQkgICBzdGFfaWQsIHRpZCk7Ci0JCQlpd2xfd2FrZV9x
+dWV1ZSh0cmFucywgJnRyYW5zX3BjaWUtPnR4cVt0eHFfaWRdKTsKKwkJCWl3bF93YWtlX3F1ZXVl
+KHRyYW5zLCAmdHJhbnNfcGNpZS0+dHhxW3R4cV9pZF0sCisJCQkJICAgICAgICJERUxCQSBmbG93
+IGNvbXBsZXRlIik7CiAJCX0KIAkJYnJlYWs7CiAJY2FzZSBJV0xfRU1QVFlJTkdfSFdfUVVFVUVf
+QUREQkE6CiAJCS8qIFdlIGFyZSByZWNsYWltaW5nIHRoZSBsYXN0IHBhY2tldCBvZiB0aGUgcXVl
+dWUgKi8KIAkJaWYgKHRpZF9kYXRhLT50ZmRzX2luX3F1ZXVlID09IDApIHsKLQkJCUlXTF9ERUJV
+R19IVCh0cmFucywKKwkJCUlXTF9ERUJVR19UWF9RVUVVRVModHJhbnMsCiAJCQkJIkhXIHF1ZXVl
+IGVtcHR5OiBjb250aW51ZSBBRERCQSBmbG93XG4iKTsKIAkJCXRpZF9kYXRhLT5hZ2cuc3RhdGUg
+PSBJV0xfQUdHX09OOwogCQkJaXdsX3N0YXJ0X3R4X2JhX3RyYW5zX3JlYWR5KHByaXYodHJhbnMp
+LApAQCAtMTM1NCw3ICsxMzU1LDcgQEAgc3RhdGljIHZvaWQgaXdsX3RyYW5zX3BjaWVfcmVjbGFp
+bShzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywgaW50IHN0YV9pZCwgaW50IHRpZCwKIAkJCQlzc24g
+LCB0ZmRfbnVtLCB0eHFfaWQsIHR4cS0+c3dxX2lkKTsKIAkJZnJlZWQgPSBpd2xfdHhfcXVldWVf
+cmVjbGFpbSh0cmFucywgdHhxX2lkLCB0ZmRfbnVtLCBza2JzKTsKIAkJaWYgKGl3bF9xdWV1ZV9z
+cGFjZSgmdHhxLT5xKSA+IHR4cS0+cS5sb3dfbWFyayAmJiBjb25kKQotCQkJaXdsX3dha2VfcXVl
+dWUodHJhbnMsIHR4cSk7CisJCQlpd2xfd2FrZV9xdWV1ZSh0cmFucywgdHhxLCAiUGFja2V0cyBy
+ZWNsYWltZWQiKTsKIAl9CiAKIAlpd2xfZnJlZV90ZmRzX2luX3F1ZXVlKHRyYW5zLCBzdGFfaWQs
+IHRpZCwgZnJlZWQpOwpAQCAtMTQxOCw3ICsxNDE5LDggQEAgc3RhdGljIGludCBpd2xfdHJhbnNf
+cGNpZV9yZXN1bWUoc3RydWN0IGl3bF90cmFucyAqdHJhbnMpCiAjZW5kaWYgLyogQ09ORklHX1BN
+X1NMRUVQICovCiAKIHN0YXRpYyB2b2lkIGl3bF90cmFuc19wY2llX3dha2VfYW55X3F1ZXVlKHN0
+cnVjdCBpd2xfdHJhbnMgKnRyYW5zLAotCQkJCQkgIGVudW0gaXdsX3J4b25fY29udGV4dF9pZCBj
+dHgpCisJCQkJCSAgZW51bSBpd2xfcnhvbl9jb250ZXh0X2lkIGN0eCwKKwkJCQkJICBjb25zdCBj
+aGFyICptc2cpCiB7CiAJdTggYWMsIHR4cV9pZDsKIAlzdHJ1Y3QgaXdsX3RyYW5zX3BjaWUgKnRy
+YW5zX3BjaWUgPQpAQCAtMTQyNiwxMSArMTQyOCwxMSBAQCBzdGF0aWMgdm9pZCBpd2xfdHJhbnNf
+cGNpZV93YWtlX2FueV9xdWV1ZShzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywKIAogCWZvciAoYWMg
+PSAwOyBhYyA8IEFDX05VTTsgYWMrKykgewogCQl0eHFfaWQgPSB0cmFuc19wY2llLT5hY190b19x
+dWV1ZVtjdHhdW2FjXTsKLQkJSVdMX0RFQlVHX0lORk8odHJhbnMsICJRdWV1ZSBTdGF0dXM6IFFb
+JWRdICVzXG4iLAorCQlJV0xfREVCVUdfVFhfUVVFVUVTKHRyYW5zLCAiUXVldWUgU3RhdHVzOiBR
+WyVkXSAlc1xuIiwKIAkJCWFjLAogCQkJKGF0b21pY19yZWFkKCZ0cmFuc19wY2llLT5xdWV1ZV9z
+dG9wX2NvdW50W2FjXSkgPiAwKQogCQkJICAgICAgPyAic3RvcHBlZCIgOiAiYXdha2UiKTsKLQkJ
+aXdsX3dha2VfcXVldWUodHJhbnMsICZ0cmFuc19wY2llLT50eHFbdHhxX2lkXSk7CisJCWl3bF93
+YWtlX3F1ZXVlKHRyYW5zLCAmdHJhbnNfcGNpZS0+dHhxW3R4cV9pZF0sIG1zZyk7CiAJfQogfQog
+CkBAIC0xNDUzLDExICsxNDU1LDEyIEBAIHN0YXRpYyBzdHJ1Y3QgaXdsX3RyYW5zICppd2xfdHJh
+bnNfcGNpZV9hbGxvYyhzdHJ1Y3QgaXdsX3NoYXJlZCAqc2hyZCkKIAlyZXR1cm4gaXdsX3RyYW5z
+OwogfQogCi1zdGF0aWMgdm9pZCBpd2xfdHJhbnNfcGNpZV9zdG9wX3F1ZXVlKHN0cnVjdCBpd2xf
+dHJhbnMgKnRyYW5zLCBpbnQgdHhxX2lkKQorc3RhdGljIHZvaWQgaXdsX3RyYW5zX3BjaWVfc3Rv
+cF9xdWV1ZShzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywgaW50IHR4cV9pZCwKKwkJCQkgICAgICBj
+b25zdCBjaGFyICptc2cpCiB7CiAJc3RydWN0IGl3bF90cmFuc19wY2llICp0cmFuc19wY2llID0g
+SVdMX1RSQU5TX0dFVF9QQ0lFX1RSQU5TKHRyYW5zKTsKIAotCWl3bF9zdG9wX3F1ZXVlKHRyYW5z
+LCAmdHJhbnNfcGNpZS0+dHhxW3R4cV9pZF0pOworCWl3bF9zdG9wX3F1ZXVlKHRyYW5zLCAmdHJh
+bnNfcGNpZS0+dHhxW3R4cV9pZF0sIG1zZyk7CiB9CiAKICNkZWZpbmUgSVdMX0ZMVVNIX1dBSVRf
+TVMJMjAwMApkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJh
+bnMuaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXRyYW5zLmgKaW5kZXggMWVj
+ZGQxYy4uNzgzOTM2MiAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9p
+d2wtdHJhbnMuaAorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC10cmFucy5o
+CkBAIC0xNzEsNyArMTcxLDggQEAgc3RydWN0IGl3bF90cmFuc19vcHMgewogCXZvaWQgKCp0eF9z
+dGFydCkoc3RydWN0IGl3bF90cmFucyAqdHJhbnMpOwogCiAJdm9pZCAoKndha2VfYW55X3F1ZXVl
+KShzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywKLQkJCSAgICAgICBlbnVtIGl3bF9yeG9uX2NvbnRl
+eHRfaWQgY3R4KTsKKwkJCSAgICAgICBlbnVtIGl3bF9yeG9uX2NvbnRleHRfaWQgY3R4LAorCQkJ
+ICAgICAgIGNvbnN0IGNoYXIgKm1zZyk7CiAKIAlpbnQgKCpzZW5kX2NtZCkoc3RydWN0IGl3bF90
+cmFucyAqdHJhbnMsIHN0cnVjdCBpd2xfaG9zdF9jbWQgKmNtZCk7CiAKQEAgLTE5Niw3ICsxOTcs
+NyBAQCBzdHJ1Y3QgaXdsX3RyYW5zX29wcyB7CiAKIAl2b2lkICgqZnJlZSkoc3RydWN0IGl3bF90
+cmFucyAqdHJhbnMpOwogCi0Jdm9pZCAoKnN0b3BfcXVldWUpKHN0cnVjdCBpd2xfdHJhbnMgKnRy
+YW5zLCBpbnQgcSk7CisJdm9pZCAoKnN0b3BfcXVldWUpKHN0cnVjdCBpd2xfdHJhbnMgKnRyYW5z
+LCBpbnQgcSwgY29uc3QgY2hhciAqbXNnKTsKIAogCWludCAoKmRiZ2ZzX3JlZ2lzdGVyKShzdHJ1
+Y3QgaXdsX3RyYW5zICp0cmFucywgc3RydWN0IGRlbnRyeSogZGlyKTsKIAlpbnQgKCpjaGVja19z
+dHVja19xdWV1ZSkoc3RydWN0IGl3bF90cmFucyAqdHJhbnMsIGludCBxKTsKQEAgLTI3Nyw5ICsy
+NzgsMTAgQEAgc3RhdGljIGlubGluZSB2b2lkIGl3bF90cmFuc190eF9zdGFydChzdHJ1Y3QgaXds
+X3RyYW5zICp0cmFucykKIH0KIAogc3RhdGljIGlubGluZSB2b2lkIGl3bF90cmFuc193YWtlX2Fu
+eV9xdWV1ZShzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywKLQkJCQkJICAgIGVudW0gaXdsX3J4b25f
+Y29udGV4dF9pZCBjdHgpCisJCQkJCSAgICBlbnVtIGl3bF9yeG9uX2NvbnRleHRfaWQgY3R4LAor
+CQkJCQkgICAgY29uc3QgY2hhciAqbXNnKQogewotCXRyYW5zLT5vcHMtPndha2VfYW55X3F1ZXVl
+KHRyYW5zLCBjdHgpOworCXRyYW5zLT5vcHMtPndha2VfYW55X3F1ZXVlKHRyYW5zLCBjdHgsIG1z
+Zyk7CiB9CiAKIApAQCAtMzM5LDkgKzM0MSwxMCBAQCBzdGF0aWMgaW5saW5lIHZvaWQgaXdsX3Ry
+YW5zX2ZyZWUoc3RydWN0IGl3bF90cmFucyAqdHJhbnMpCiAJdHJhbnMtPm9wcy0+ZnJlZSh0cmFu
+cyk7CiB9CiAKLXN0YXRpYyBpbmxpbmUgdm9pZCBpd2xfdHJhbnNfc3RvcF9xdWV1ZShzdHJ1Y3Qg
+aXdsX3RyYW5zICp0cmFucywgaW50IHEpCitzdGF0aWMgaW5saW5lIHZvaWQgaXdsX3RyYW5zX3N0
+b3BfcXVldWUoc3RydWN0IGl3bF90cmFucyAqdHJhbnMsIGludCBxLAorCQkJCQljb25zdCBjaGFy
+ICptc2cpCiB7Ci0JdHJhbnMtPm9wcy0+c3RvcF9xdWV1ZSh0cmFucywgcSk7CisJdHJhbnMtPm9w
+cy0+c3RvcF9xdWV1ZSh0cmFucywgcSwgbXNnKTsKIH0KIAogc3RhdGljIGlubGluZSBpbnQgaXds
+X3RyYW5zX3dhaXRfdHhfcXVldWVfZW1wdHkoc3RydWN0IGl3bF90cmFucyAqdHJhbnMpCg==
+--f46d043c7ccc8a0b6c04b24e5923--
