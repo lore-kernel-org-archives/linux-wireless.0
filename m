@@ -1,71 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:48486 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751871Ab1KOGCZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 01:02:25 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-CC: Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [RFC 04/18] ath9k_hw: initialize MCI parameters
-Date: Tue, 15 Nov 2011 11:32:13 +0530
-Message-ID: <1321336933-12518-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111115_070227_862782_80CABA51)
+Received: from mx1.redhat.com ([209.132.183.28]:61697 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752314Ab1KWIBf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Nov 2011 03:01:35 -0500
+Date: Wed, 23 Nov 2011 09:03:54 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: David Miller <davem@davemloft.net>
+Cc: Larry.Finger@lwfinger.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>, hedayaty@gmail.com
+Subject: Re: pull request: wireless 2011-11-22
+Message-ID: <20111123080353.GA3752@redhat.com> (sfid-20111123_090204_971651_9DF7663A)
+References: <20111122.160511.2302883259439708995.davem@davemloft.net>
+ <20111122.161322.454163033398038634.davem@davemloft.net>
+ <4ECC1479.8090209@lwfinger.net>
+ <20111122.164057.1411098663938026383.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111122.164057.1411098663938026383.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Tue, Nov 22, 2011 at 04:40:57PM -0500, David Miller wrote:
+> >>> It just means that we won't notice spurious interrupts if the device
+> >>> sharing the line with rt2800pci generates one.
+> >>>
+> >>> This change is wrong.
 
-these parameter will be utilized and modified in the MCI hardware codes
-state machine
+Ehh, I had a feeling that I was doing something wrong ... 
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/init.c |   22 ++++++++++++++++++++++
- 1 files changed, 22 insertions(+), 0 deletions(-)
+> >> BTW, look at it this way, if what you say is true John then what's the
+> >> point
+> >> in returning any specific value at all?
+> >>
+> >> Everyone can just return IRQ_HANDLED and everything would just work.
+> >>
+> >> But you know that's not the case, and that it's important that this
+> >> value
+> >> is returned accurately.
+> > 
+> > I was trying to find the thread that reported the improvement in
+> > performance with this change, but failed. Is it possible that their
+> > change just papered over an interrupt storm from some other device
+> > that shared that interrupt?
+> 
+> It doesn't fix a performance problem, it fixes a problem wherein the
+> IRQ line is disabled by the generic IRQ code because all handlers
+> return IRQ_NONE.
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index e046de9..34b922b 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -408,6 +408,7 @@ fail:
- static int ath9k_init_btcoex(struct ath_softc *sc)
- {
- 	struct ath_txq *txq;
-+	struct ath_hw *ah = sc->sc_ah;
- 	int r;
- 
- 	switch (sc->sc_ah->btcoex_hw.scheme) {
-@@ -426,6 +427,27 @@ static int ath9k_init_btcoex(struct ath_softc *sc)
- 		sc->btcoex.bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
- 		sc->btcoex.duty_cycle = ATH_BTCOEX_DEF_DUTY_CYCLE;
- 		INIT_LIST_HEAD(&sc->btcoex.mci.info);
-+		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI) {
-+			ah->btcoex_hw.mci.ready = false;
-+			ah->btcoex_hw.mci.bt_state = 0;
-+			ah->btcoex_hw.mci.bt_ver_major = 3;
-+			ah->btcoex_hw.mci.bt_ver_minor = 0;
-+			ah->btcoex_hw.mci.bt_version_known = false;
-+			ah->btcoex_hw.mci.update_2g5g = true;
-+			ah->btcoex_hw.mci.is_2g = true;
-+			ah->btcoex_hw.mci.wlan_channels_update = false;
-+			ah->btcoex_hw.mci.wlan_channels[0] = 0x00000000;
-+			ah->btcoex_hw.mci.wlan_channels[1] = 0xffffffff;
-+			ah->btcoex_hw.mci.wlan_channels[2] = 0xffffffff;
-+			ah->btcoex_hw.mci.wlan_channels[3] = 0x7fffffff;
-+			ah->btcoex_hw.mci.query_bt = true;
-+			ah->btcoex_hw.mci.unhalt_bt_gpm = true;
-+			ah->btcoex_hw.mci.halted_bt_gpm = false;
-+			ah->btcoex_hw.mci.need_flush_btinfo = false;
-+			ah->btcoex_hw.mci.wlan_cal_seq = 0;
-+			ah->btcoex_hw.mci.wlan_cal_done = 0;
-+			ah->btcoex_hw.mci.config = 0x2201;
-+		}
- 		break;
- 	default:
- 		WARN_ON(1);
--- 
-1.7.0.4
+According to Amir, who reports this problem patch fix the performance
+(https://bugzilla.redhat.com/show_bug.cgi?id=658451),
+from very bad to expected on wifi link. It can be explained, if we
+disable interrupt line, driver still operate, but read TX/RX statuses
+from hardware when internal driver watchdog timeout. Hence we operate,
+but very slow. If we prevent to disable interrupt by IRQ controller
+driver, device operate normally.
 
+The main problem here, that we have hardware (or firmware) that
+generate interrupt with empty interrupt status register, so we can
+not detect if interrupt is really generated by Ralink device.
+
+Perhaps exist good fix for that problem, i.e. we can write to some
+register to stop hardware generating spurious interrupts, or exist
+other way than reading status register to find out if Ralink device
+generated interrupt. But that require detailed hardware knowledge,
+and I'm not sure if we ever can get such informations. Also this 
+could be a hardware bug, device just generate spurious interrupts
+and we can not do anything about it. I looked at driver from Ralink
+site, and it do exactly that, it return IRQ_HANDLED if status register
+is empty.
+
+Ok, I'm thinking about other fix now ...
+
+Stanislaw
