@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:59712 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753644Ab1KKTDf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Nov 2011 14:03:35 -0500
-Received: by gyc15 with SMTP id 15so3197538gyc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Nov 2011 11:03:34 -0800 (PST)
-Message-ID: <4EBD7183.3080008@lwfinger.net> (sfid-20111111_200339_375598_86D6474A)
-Date: Fri, 11 Nov 2011 13:03:31 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:4819 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759554Ab1KWBWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 20:22:15 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 11/24] brcm80211: fmac: discard packet received when net
+ device not registered
+Date: Tue, 22 Nov 2011 17:21:46 -0800
+Message-ID: <1322011319-24863-12-git-send-email-frankyl@broadcom.com> (sfid-20111123_022238_274366_F87DE755)
+In-Reply-To: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
+References: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: fix warning in ieee80211_probe_client
-References: <1321036348-32272-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1321036348-32272-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/11/2011 12:32 PM, John W. Linville wrote:
->    CC [M]  net/mac80211/cfg.o
-> net/mac80211/cfg.c: In function ‘ieee80211_probe_client’:
-> net/mac80211/cfg.c:2567:7: warning: ‘qos’ may be used uninitialized in this function
->
-> Signed-off-by: John W. Linville<linville@tuxdriver.com>
-> ---
->   net/mac80211/cfg.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index c2416fb..1d82d2b 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -2564,7 +2564,7 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
->   	struct sk_buff *skb;
->   	int size = sizeof(*nullfunc);
->   	__le16 fc;
-> -	bool qos;
-> +	bool qos = NULL;
->   	struct ieee80211_tx_info *info;
->   	struct sta_info *sta;
+A new feature in the dongle firmware requires a handshake during
+firmware intialization. The request is sent in event packets which the
+host driver is not able to handle before any net device registered.
+Discard those packets as the context for handling it is missing.
+The initialization handler will be added as part of feature support
+code in the future.
 
-Shouldn't the initialization for a bool be "false"? Doesn't checkpatch.pl 
-complain about that? I know it does if you try to initialize a pointer to 0 
-rather than NULL.
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 7af1413..62413e8 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -431,6 +431,12 @@ void brcmf_rx_frame(struct brcmf_pub *drvr, int ifidx,
+ 		if (ifp == NULL)
+ 			ifp = drvr_priv->iflist[0];
+ 
++		if (!ifp || !ifp->ndev ||
++		    ifp->ndev->reg_state != NETREG_REGISTERED) {
++			brcmu_pkt_buf_free_skb(skb);
++			continue;
++		}
++
+ 		skb->dev = ifp->ndev;
+ 		skb->protocol = eth_type_trans(skb, skb->dev);
+ 
+-- 
+1.7.5.4
+
 
