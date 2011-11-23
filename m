@@ -1,43 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:50738 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754629Ab1KUAtO (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:39174 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756112Ab1KWPEz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Nov 2011 19:49:14 -0500
-Received: by ghbz2 with SMTP id z2so2246231ghb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 16:49:13 -0800 (PST)
-From: Nikolay Martynov <mar.kolya@gmail.com>
+	Wed, 23 Nov 2011 10:04:55 -0500
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	rodrigue@qca.qualcomm.com, Nikolay Martynov <mar.kolya@gmail.com>
-Subject: [PATCH 0/4] Fix the way ANI is being disabled for ar9100 and ar9340
-Date: Sun, 20 Nov 2011 19:48:56 -0500
-Message-Id: <1321836540-5325-1-git-send-email-mar.kolya@gmail.com> (sfid-20111121_014918_079008_F9DFCCB1)
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	stable@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 1/2] cfg80211: fix race on init and driver registration
+Date: Wed, 23 Nov 2011 10:04:46 -0500
+Message-Id: <1322060687-6512-2-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111123_160458_865343_B56E9050)
+In-Reply-To: <1322060687-6512-1-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1322060687-6512-1-git-send-email-mcgrof@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  Currently in ath9k code there is an attempt which is meant to disable ANI for ar9100 and ar9340. But it doesn't really achieve this. All it does is disable ANI init and setup (i.e. calls to ath9k_hw_ani_setup and ath9k_hw_ani_init). Since ath9k_hw_ani_setup is not called ah->config.ani_poll_interval is never initialized (i.e. it is always zero) and ath_ani_calibrate always executes ANI procedures (over uninitialized ANI parameters).
-  Moreover, ath_ani_calibrate is being called each 1ms because common->ani.timer is set to zero interval because ah->config.ani_poll_interval==0 (and thus smallest value of all intervals). Normally it should not be called this often.
-  This patchset makes use of config.enable_ani to check if ANI should be performed. It sets config.enable_ani to false for appropriate platforms.
-  Also last patch in this set enables ANI for ar9100 - it seems to be working fine there (tested on ar9102).
+There is a theoretical race that if hit will trigger
+a crash. The race is between when we issue the first
+regulatory hint, regulatory_hint_core(), gets processed
+by the workqueue and between when the first device
+gets registered to the wireless core. This is not easy
+to reproduce but it was easy to do so through the
+regulatory simulator I have been working on. This
+is a port of the fix I implemented there [1].
 
-  Question: there are common.disable_ani (and corresponding debugfs file) and config.enable_ani in ath9k code. config.enable_ani sets if ANI is supported and common.disable_ani is meant to disable calibration. This is confusing on a sense that disable_ani completely disables all calibration code including short/long calibration and ANI, not ANI alone. Would it make sense to rename disable_ani to disable_calib and enable_ani to ani_supported?
+[1] https://github.com/mcgrof/regsim/commit/a246ccf81f059cb662eee288aa13100f631e4cc8
 
-  All comments and suggestions are appreciated.
-  Thanks.
+Cc: stable@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ net/wireless/reg.c |   28 ++++++++++++++++++++--------
+ 1 files changed, 20 insertions(+), 8 deletions(-)
 
-Nikolay Martynov (4):
-  ath9k: cosmetic fix in calibration debug log
-  ath9k: change calibration debug to log all calibration types
-  ath9k: use config.enable_ani to check if ani should be performed
-  ath9k: enable ani for 9100
-
- drivers/net/wireless/ath/ath9k/ar9002_calib.c |    2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 ++-
- drivers/net/wireless/ath/ath9k/hw.c           |   12 ++++++++----
- drivers/net/wireless/ath/ath9k/main.c         |   12 +++++++-----
- 4 files changed, 18 insertions(+), 11 deletions(-)
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 76b35df..df73b96 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -57,8 +57,17 @@
+ #define REG_DBG_PRINT(args...)
+ #endif
+ 
++static struct regulatory_request core_request_world = {
++	.initiator = NL80211_REGDOM_SET_BY_CORE,
++	.alpha2[0] = '0',
++	.alpha2[1] = '0',
++	.intersect = false,
++	.processed = true,
++	.country_ie_env = ENVIRON_ANY,
++};
++
+ /* Receipt of information from last regulatory request */
+-static struct regulatory_request *last_request;
++static struct regulatory_request *last_request = &core_request_world;
+ 
+ /* To trigger userspace events */
+ static struct platform_device *reg_pdev;
+@@ -165,6 +174,10 @@ static void reset_regdomains(void)
+ 
+ 	cfg80211_world_regdom = &world_regdom;
+ 	cfg80211_regdomain = NULL;
++
++	if (last_request != &core_request_world)
++		kfree(last_request);
++	last_request = &core_request_world;
+ }
+ 
+ /*
+@@ -1409,7 +1422,8 @@ static int __regulatory_hint(struct wiphy *wiphy,
+ 	}
+ 
+ new_request:
+-	kfree(last_request);
++	if (last_request != &core_request_world)
++		kfree(last_request);
+ 
+ 	last_request = pending_request;
+ 	last_request->intersect = intersect;
+@@ -1579,9 +1593,6 @@ static int regulatory_hint_core(const char *alpha2)
+ {
+ 	struct regulatory_request *request;
+ 
+-	kfree(last_request);
+-	last_request = NULL;
+-
+ 	request = kzalloc(sizeof(struct regulatory_request),
+ 			  GFP_KERNEL);
+ 	if (!request)
+@@ -1823,6 +1834,10 @@ static void restore_regulatory_settings(bool reset_user)
+ 	/* First restore to the basic regulatory settings */
+ 	cfg80211_regdomain = cfg80211_world_regdom;
+ 
++	if (last_request != &core_request_world)
++		kfree(last_request);
++	last_request = &core_request_world;
++
+ 	mutex_unlock(&reg_mutex);
+ 	mutex_unlock(&cfg80211_mutex);
+ 
+@@ -2306,9 +2321,6 @@ void /* __init_or_exit */ regulatory_exit(void)
+ 
+ 	reset_regdomains();
+ 
+-	kfree(last_request);
+-
+-	last_request = NULL;
+ 	dev_set_uevent_suppress(&reg_pdev->dev, true);
+ 
+ 	platform_device_unregister(reg_pdev);
 -- 
-1.7.4.1
+1.7.4.15.g7811d
 
