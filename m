@@ -1,38 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:46218 "EHLO mga02.intel.com"
+Received: from plane.gmane.org ([80.91.229.3]:60314 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935471Ab1KJPtk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 10:49:40 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 18/27] iwlwifi: set "echo" host command length
-Date: Thu, 10 Nov 2011 06:55:18 -0800
-Message-Id: <1320936927-9078-19-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_165038_839442_0E44D104)
-In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1755521Ab1KWPv3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Nov 2011 10:51:29 -0500
+Received: from public by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <public@plane.gmane.org>)
+	id 1RTF6c-00044Z-9a
+	for linux-wireless@vger.kernel.org; Wed, 23 Nov 2011 16:51:26 +0100
+Message-ID: <4ECD1661.2010709@alpha-unix.de> (sfid-20111123_165132_717174_A742C0BA)
+Date: Wed, 23 Nov 2011 16:50:57 +0100
+From: Michael Basse <michael@alpha-unix.de>
+MIME-Version: 1.0
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Stanislaw Gruszka
+	<public-sgruszka-H+wXaHxf7aLQT0dZR+AlfA@plane.gmane.org>,
+	"John W. Linville"
+	<public-linville-2XuSBdqkA4R54TAoqtyWWQ@plane.gmane.org>,
+	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@plane.gmane.org,
+	Ivo van Doorn
+	<public-IvDoorn-Re5JQEeQqe8AvxtiuMwx3w@plane.gmane.org>,
+	Gertjan van Wingerde
+	<public-gwingerde-Re5JQEeQqe8AvxtiuMwx3w@plane.gmane.org>,
+	Helmut Schaa
+	<public-helmut.schaa-gM/Ye1E23mwN+BqQ9rBEUg@plane.gmane.org>,
+	Amir Hedayaty
+	<public-hedayaty-Re5JQEeQqe8AvxtiuMwx3w@plane.gmane.org>
+Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
+References: <20111116100915.GA2191@redhat.com> <4ECC071E.5050403@alpha-unix.de> <20111123073500.GA9833@redhat.com>
+In-Reply-To: <20111123073500.GA9833@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"echo" host command has no data, set the length to 0
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index f7b0048..f9e9170 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1434,6 +1434,7 @@ int iwl_cmd_echo_test(struct iwl_priv *priv)
- 	int ret;
- 	struct iwl_host_cmd cmd = {
- 		.id = REPLY_ECHO,
-+		.len = { 0 },
- 		.flags = CMD_SYNC,
- 	};
- 
--- 
-1.7.0.4
+Hi
+
+Am 23.11.2011 08:35, schrieb Stanislaw Gruszka:
+> Hi
+> 
+> I do not think my patch fix this problem, but perhaps Gertjan's
+> patch do this:
+> 
+> http://marc.info/?l=linux-wireless&m=132112188308082&w=2
+> 
+> Note, if you are hitting the same issue, what is fixed by this patch,
+> it's enough to do "iwconfig wlan0 power off" to workaround the problem.
+> So you can avoid applying the patch, and just use above command and
+> check if issue is still reproducible.
+> 
+> Stanislaw
+
+Thank you very much for that feedback. I have posted that informations
+on the ubuntu-bugtracker. I will do some testing with that workaround
+and hopefully it is fixing the issue.
+
+Greetings
+
+Michael
 
