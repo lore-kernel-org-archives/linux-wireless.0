@@ -1,74 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:39243 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754671Ab1K2RIQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 12:08:16 -0500
-Received: by vbbfc26 with SMTP id fc26so4946896vbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2011 09:08:16 -0800 (PST)
+Received: from mms2.broadcom.com ([216.31.210.18]:4834 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759566Ab1KWBWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 20:22:15 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 12/24] brcm80211: fmac: move module init/exit to sdio
+ layer
+Date: Tue, 22 Nov 2011 17:21:47 -0800
+Message-ID: <1322011319-24863-13-git-send-email-frankyl@broadcom.com> (sfid-20111123_022228_155681_DA6B1088)
+In-Reply-To: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
+References: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20111124125414.GA8077@redhat.com>
-References: <CAJZjf_xDm_RaFqxF-r+MAPyh_HcCb+yV4dNrfhr+LH0-z2zk8g@mail.gmail.com>
- <CAJZjf_yEBb3BEf+-Fei78xBmJT1Y_Jr5fPUJNKwi6kvuVg24KA@mail.gmail.com> <20111124125414.GA8077@redhat.com>
-From: Pedro Francisco <pedrogfrancisco@gmail.com>
-Date: Tue, 29 Nov 2011 17:07:55 +0000
-Message-ID: <CAJZjf_zM2zBsoh66KcRwgi-jS7DF-qH5-sKrUoCB=hFTPES7LA@mail.gmail.com> (sfid-20111129_180820_603219_3B1238B4)
-Subject: Re: iwl3945 firmware errors: tentative debugging
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My country has the following regulatory.bin lines:
+This patch is part of the fullmac bus interface refactoring series.
+It moves the module init/exit code to bus layer.
 
-country PT:	(2402.000 - 2482.000 @ 40.000), (N/A, 20.00)	(5170.000 -
-5250.000 @ 40.000), (N/A, 20.00)	(5250.000 - 5330.000 @ 40.000), (N/A,
-20.00), DFS <------ removed whole line	(5490.000 - 5710.000 @ 40.000),
-(N/A, 27.00), DFS <------ removed whole line
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   19 ++++++++++---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    4 ---
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   28 --------------------
+ 3 files changed, 14 insertions(+), 37 deletions(-)
 
-If I remove the last two lines, everything works as expected, i.e., NO
-"Microsode SW error". If I include any of the last two, the Microcode
-will issue an error.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index adee305..7a2325b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -577,17 +577,26 @@ static struct sdio_driver brcmf_sdmmc_driver = {
+ #endif	/* CONFIG_PM_SLEEP */
+ };
+ 
+-/* bus register interface */
+-int brcmf_bus_register(void)
++static void __exit brcmf_sdio_exit(void)
+ {
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	return sdio_register_driver(&brcmf_sdmmc_driver);
++	sdio_unregister_driver(&brcmf_sdmmc_driver);
+ }
+ 
+-void brcmf_bus_unregister(void)
++static int __init brcmf_sdio_init(void)
+ {
++	int ret;
++
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	sdio_unregister_driver(&brcmf_sdmmc_driver);
++	ret = sdio_register_driver(&brcmf_sdmmc_driver);
++
++	if (ret)
++		brcmf_dbg(ERROR, "sdio_register_driver failed: %d\n", ret);
++
++	return ret;
+ }
++
++module_init(brcmf_sdio_init);
++module_exit(brcmf_sdio_exit);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+index a249407..118216b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+@@ -27,10 +27,6 @@
+  * Exported from brcmf bus module (brcmf_usb, brcmf_sdio)
+  */
+ 
+-/* Indicate (dis)interest in finding dongles. */
+-extern int brcmf_bus_register(void);
+-extern void brcmf_bus_unregister(void);
+-
+ /* obtain linux device object providing bus function */
+ extern struct device *brcmf_bus_get_device(struct brcmf_bus *bus);
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 62413e8..73d32802 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -1147,34 +1147,6 @@ void brcmf_detach(struct brcmf_pub *drvr)
+ 	}
+ }
+ 
+-static void __exit brcmf_module_cleanup(void)
+-{
+-	brcmf_dbg(TRACE, "Enter\n");
+-
+-	brcmf_bus_unregister();
+-}
+-
+-static int __init brcmf_module_init(void)
+-{
+-	int error;
+-
+-	brcmf_dbg(TRACE, "Enter\n");
+-
+-	error = brcmf_bus_register();
+-
+-	if (error) {
+-		brcmf_dbg(ERROR, "brcmf_bus_register failed\n");
+-		goto failed;
+-	}
+-	return 0;
+-
+-failed:
+-	return -EINVAL;
+-}
+-
+-module_init(brcmf_module_init);
+-module_exit(brcmf_module_cleanup);
+-
+ int brcmf_os_proto_block(struct brcmf_pub *drvr)
+ {
+ 	struct brcmf_info *drvr_priv = drvr->info;
+-- 
+1.7.5.4
 
-I've tried every combination of those lines except just one of
-"(5250.000 - 5330.000 @ 40.000), (N/A, 20.00), DFS" OR "(5490.000 -
-5710.000 @ 40.000), (N/A, 27.00), DFS".
 
-Next week I'll look at the source code.
-On Thu, Nov 24, 2011 at 12:54 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> Hi Pedro
->
-> On Thu, Nov 24, 2011 at 11:49:30AM +0000, Pedro Francisco wrote:
->> iwl3945 has had firmware errors triggered 'by' NM after started using
->> nl80211 instead of wext. Since Intel has stopped supporting iwl3945,
->> no firmware fix has been possible. It has been workarounded by
->> disable_hw_scan=1 as default, with the penalty of network performance
->> being lower and frequent 'hangs' on the connection.
-> Eh, we changed to software scan by default for workaround various
-> problems. Unfortunately that is causing other problems for other
-> users. For now, do not exist best default disable_hw_scan= value, that
-> would pleased everyone :-(
->
->> I was able to trigger the firmware error by doing "iw dev wlan0 scan
->> passive". By comparison, "iw dev wlan0 scan" does NOT trigger the
->> firmware error.
->
->> Having activated firmware debugging, it would seem a firmware error
->> occurs when a full passive scan is done. If all channels 1-140 are
->> scanned passively, a firmware error occurs. If at least one of those
->> channels is actively scanned, no error occurs.
->>
->> Where should I look next?
-> Good finding, I'm able to reproduce that firmware error too. Perhaps
-> you could install older kernel ie. 2.6.32 or even 2.6.24 and see if you
-> can recreate problem there (but I'm not sure if on older kernel
-> "iw dev wlan0 scan passive" command will work). If you will find kernel
-> version, where issue is not present, you might figure out what is
-> different regarding setting up SCAN command, or let me know so I
-> will look at that :-) If that is broken also on old kernels, we
-> perhaps could modify code that will disallow to do all passive
-> channels scan.
->
-> Thanks
-> Stanislaw
