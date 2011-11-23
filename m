@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:56142 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932731Ab1KBQhs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 12:37:48 -0400
-Message-ID: <4EB171D8.4080506@candelatech.com> (sfid-20111102_173751_364286_3F0FEF85)
-Date: Wed, 02 Nov 2011 09:37:44 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:48468 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752625Ab1KWDev (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 22:34:51 -0500
+Date: Tue, 22 Nov 2011 22:34:46 -0500
+From: Dave Jones <davej@redhat.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: 3.1+ iwlwifi lockup
+Message-ID: <20111123033446.GB9703@redhat.com> (sfid-20111123_043513_166373_D2FFD3D7)
+References: <20111031143408.GA17152@redhat.com>
+ <1321992902.8072.7.camel@wwguy-ubuntu>
+ <20111123024545.GA9703@redhat.com>
+ <1322015380.11647.82.camel@wwguy-huron>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [wireless-next PATCH 1/5] mac80211: Support forcing station to
- disable 11n.
-References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>  (sfid-20111028_071135_777672_88A08497) <1319789318.3914.10.camel@jlt3.sipsolutions.net>  <4EAAD734.10501@candelatech.com> (sfid-20111028_182428_876939_0D798225) <1320220577.3950.4.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1320220577.3950.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1322015380.11647.82.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/02/2011 12:56 AM, Johannes Berg wrote:
-> On Fri, 2011-10-28 at 09:24 -0700, Ben Greear wrote:
->
->>>> +++ b/net/mac80211/cfg.c
->>>> @@ -57,6 +57,9 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
->>>>    	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->>>>    	int ret;
->>>>
->>>> +	if (params->disable_11n != -1)
->>>> +		sdata->cfg_disable_11n = params->disable_11n;
->>>
->>> This doesn't seem right -- why change the iface for it? It's a per
->>> connection parameter.
->>
->> I wanted it to be an interface parameter, or at least I think
->> that is what I want.
->
-> Why? I'm thinking that it's better as a connection parameter as then
-> it's more temporal. I know we have interface parameters like RTS/CTS
-> settings etc, but I like connection parameters better as they go away
-> with each new connection, so the behaviour is less surprising to most
-> users. Imagine your wpa_supplicant crashes, and then the user who was
-> restricting it to no-HT starts the regular wpa_supplicant; now his
-> interface will be in no-HT until he reboots or figures out the right
-> magic to change it. I think that kind of situation is undesirable.
+On Tue, Nov 22, 2011 at 06:29:40PM -0800, Guy, Wey-Yi wrote:
+ 
+ > On Tue, 2011-11-22 at 18:45 -0800, Dave Jones wrote:
+ > > On Tue, Nov 22, 2011 at 12:15:02PM -0800, wwguy wrote:
+ > >  > Hi Dave,
+ > >  > 
+ > >  > Sorry for taking so long.
+ > >  > it is a bogus command from the firmware which driver try to process it
+ > >  > and cause problem. I am not sure how it happen. But could you please try
+ > >  > the patch I attach here.
+ > >  > 
+ > >  > For now I am just ignore the command, but not sure it is good enough,
+ > >  > might has to reload the firmware, but not sure.
+ > > 
+ > > With Linus' current tree and this patch, I got a panic pretty quickly,
+ > > but with a different trace.
+ > > 
+ > Are you seeing the problem without this patch? I guess the patch I done
+ > here is not the right thing to do and I try to address the problem too
+ > aggressively
 
-Ok, I will try to figure out how to do this as part of connection.
+I've been running Linus' current tree for the whole time and haven't seen
+any iwlwifi traces since my initial report on the 11th.
 
-Thanks,
-Ben
+I can't reproduce the bug, even by doing the same operation
+(an scp of a dozen photographs).
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+It seems to happen almost at random, as if it's somehow timing related.
+I'm running the patched kernel again now, and it's been fine for the last hour.
+
+	Dave
 
