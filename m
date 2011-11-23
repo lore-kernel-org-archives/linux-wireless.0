@@ -1,54 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:40073 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753580Ab1K2RkP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 12:40:15 -0500
-Received: by vcbfk14 with SMTP id fk14so4869869vcb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2011 09:40:14 -0800 (PST)
+Received: from mms2.broadcom.com ([216.31.210.18]:4846 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759581Ab1KWBWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 20:22:15 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 20/24] brcm80211: fmac: change function bus_txctl
+ parameter
+Date: Tue, 22 Nov 2011 17:21:55 -0800
+Message-ID: <1322011319-24863-21-git-send-email-frankyl@broadcom.com> (sfid-20111123_022242_017294_D06F9453)
+In-Reply-To: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
+References: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20111126.152955.1479814929356999712.davem@davemloft.net>
-References: <20111126.152955.1479814929356999712.davem@davemloft.net>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 29 Nov 2011 12:39:53 -0500
-Message-ID: <CAB=NE6U411A0w-VUYum7U_0r4CPc1Vaxv2jNEGdpbTv1EHFbZg@mail.gmail.com> (sfid-20111129_184029_476054_4B8EDCEA)
-Subject: Re: prism54 bug...
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/11/26 David Miller <davem@davemloft.net>:
->
-> Someone please look into this.
->
-> In prism2_ioctl_scan_req() gcc generates a warning:
->
-> drivers/net/wireless/prism54/isl_ioctl.c: In function ‘prism2_ioctl_scan_req’:
-> drivers/net/wireless/prism54/isl_ioctl.c:2733:14: warning: array subscript is above array bounds [-Warray-bounds]
->
-> it's a pretty serious issue, it's about the call to:
->
->                current_ev = prism54_translate_bss(ndev, &info, current_ev,
->                                                   extra + IW_SCAN_MAX_DATA,
->                                                   &(bsslist->bsslist[i]),
->                                                   noise);
->
-> it's not the bsslist->bsslist[i] thing, that's fine.
->
-> It's "extra + IW_SCAN_MAX_DATA".
->
->        char *extra = "";
->        char *current_ev = "foo";
->
-> and IW_SCAN_MAX_DATA is 4096.  Effectively these calls crap IW entries
-> into random pieces of memory as far as I can tell.
->
-> We either need to figure out where this ioctl interface expects the
-> response to go, or remove the ioctl and this code entirely since it's
-> obviously not being used.
+Change paramter to device pointer for bus layer interface function
+brcmf_sdbrcm_bus_txctl. This is part of the fullmac bus interface
+refactoring.
 
-I'm going to kill all this shit. Thanks for the report.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c  |    2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    5 ++++-
+ 3 files changed, 6 insertions(+), 3 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+index 44f46d1..be20e7d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+@@ -43,7 +43,7 @@ extern int brcmf_sdbrcm_bus_txdata(struct brcmf_sdio *bus, struct sk_buff *txp);
+  * Expects caller to enforce a single outstanding transaction.
+  */
+ extern int
+-brcmf_sdbrcm_bus_txctl(struct brcmf_sdio *bus, unsigned char *msg, uint msglen);
++brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen);
+ 
+ extern int
+ brcmf_sdbrcm_bus_rxctl(struct device *dev, unsigned char *msg, uint msglen);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+index 5ab8671..a527d5d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+@@ -116,7 +116,7 @@ static int brcmf_proto_cdc_msg(struct brcmf_pub *drvr)
+ 		len = CDC_MAX_MSG_SIZE;
+ 
+ 	/* Send request */
+-	return brcmf_sdbrcm_bus_txctl(drvr->bus, (unsigned char *)&prot->msg,
++	return brcmf_sdbrcm_bus_txctl(drvr->dev, (unsigned char *)&prot->msg,
+ 				      len);
+ }
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index e13c9e9..b62dc98 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -2797,7 +2797,7 @@ static int brcmf_tx_frame(struct brcmf_sdio *bus, u8 *frame, u16 len)
+ }
+ 
+ int
+-brcmf_sdbrcm_bus_txctl(struct brcmf_sdio *bus, unsigned char *msg, uint msglen)
++brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
+ {
+ 	u8 *frame;
+ 	u16 len;
+@@ -2805,6 +2805,9 @@ brcmf_sdbrcm_bus_txctl(struct brcmf_sdio *bus, unsigned char *msg, uint msglen)
+ 	uint retries = 0;
+ 	u8 doff = 0;
+ 	int ret = -1;
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv;
++	struct brcmf_sdio *bus = sdiodev->bus;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-- 
+1.7.5.4
+
+
