@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40292 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751870Ab1KCI1K (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 04:27:10 -0400
-Subject: [PATCH] nl80211: fix HT capability attribute validation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:48038 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755260Ab1KWDZn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 22:25:43 -0500
+Subject: Re: 3.1+ iwlwifi lockup
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Dave Jones <davej@redhat.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20111123024545.GA9703@redhat.com>
+References: <20111031143408.GA17152@redhat.com>
+	 <1321992902.8072.7.camel@wwguy-ubuntu>  <20111123024545.GA9703@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 Nov 2011 09:27:01 +0100
-Message-ID: <1320308821.3950.4.camel@jlt3.sipsolutions.net> (sfid-20111103_092716_362338_3AF0AF8B)
+Date: Tue, 22 Nov 2011 18:29:40 -0800
+Message-ID: <1322015380.11647.82.camel@wwguy-huron> (sfid-20111123_042630_497651_4B3B5506)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Dave,
 
-Since the NL80211_ATTR_HT_CAPABILITY attribute is
-used as a struct, it needs a minimum, not maximum
-length. Enforce that properly. Not doing so could
-potentially lead to reading after the buffer.
+On Tue, 2011-11-22 at 18:45 -0800, Dave Jones wrote:
+> On Tue, Nov 22, 2011 at 12:15:02PM -0800, wwguy wrote:
+>  > Hi Dave,
+>  > 
+>  > Sorry for taking so long.
+>  > it is a bogus command from the firmware which driver try to process it
+>  > and cause problem. I am not sure how it happen. But could you please try
+>  > the patch I attach here.
+>  > 
+>  > For now I am just ignore the command, but not sure it is good enough,
+>  > might has to reload the firmware, but not sure.
+> 
+> With Linus' current tree and this patch, I got a panic pretty quickly,
+> but with a different trace.
+> 
+Are you seeing the problem without this patch? I guess the patch I done
+here is not the right thing to do and I try to address the problem too
+aggressively
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Thanks
+Wey.
 
---- a/net/wireless/nl80211.c	2011-11-03 09:00:25.000000000 +0100
-+++ b/net/wireless/nl80211.c	2011-11-03 09:16:21.000000000 +0100
-@@ -132,8 +132,7 @@ static const struct nla_policy nl80211_p
- 	[NL80211_ATTR_MESH_CONFIG] = { .type = NLA_NESTED },
- 	[NL80211_ATTR_SUPPORT_MESH_AUTH] = { .type = NLA_FLAG },
- 
--	[NL80211_ATTR_HT_CAPABILITY] = { .type = NLA_BINARY,
--					 .len = NL80211_HT_CAPABILITY_LEN },
-+	[NL80211_ATTR_HT_CAPABILITY] = { .len = NL80211_HT_CAPABILITY_LEN },
- 
- 	[NL80211_ATTR_MGMT_SUBTYPE] = { .type = NLA_U8 },
- 	[NL80211_ATTR_IE] = { .type = NLA_BINARY,
+
 
 
