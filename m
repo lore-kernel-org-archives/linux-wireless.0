@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:53002 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755880Ab1KPKwY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 05:52:24 -0500
-Received: by vcbfk1 with SMTP id fk1so192858vcb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 02:52:23 -0800 (PST)
+Received: from mail.neratec.ch ([80.75.119.105]:34615 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750748Ab1KWQLt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Nov 2011 11:11:49 -0500
+Message-ID: <4ECD1B40.1050203@neratec.com> (sfid-20111123_171152_576866_36BE854D)
+Date: Wed, 23 Nov 2011 17:11:44 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-In-Reply-To: <CAGXE3d8oPL9POJEZdb4urFVQXjPY2W8HYePLc2F804=W7nCfSw@mail.gmail.com>
-References: <20111116100915.GA2191@redhat.com>
-	<CAGXE3d8oPL9POJEZdb4urFVQXjPY2W8HYePLc2F804=W7nCfSw@mail.gmail.com>
-Date: Wed, 16 Nov 2011 11:52:23 +0100
-Message-ID: <CAOZOX0Wa4gquXeMrh_1U2kJvJQttQDQ9pWNVT5jjoHOxZxL4jg@mail.gmail.com> (sfid-20111116_115226_930104_E69EE378)
-Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Amir Hedayaty <hedayaty@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	shafi.wireless@gmail.com, nbd@openwrt.org
+Subject: Re: [PATCH 0/2] ath9k: DFS radar detection
+References: <1320770044-12271-1-git-send-email-zefir.kurtisi@neratec.com> <20111115143755.GB2483@tuxdriver.com> <CAB=NE6WLvLc2UpuQ2RYagN2OhwvEZZuYTUY+Ak+wFmBPH9EfUQ@mail.gmail.com>
+In-Reply-To: <CAB=NE6WLvLc2UpuQ2RYagN2OhwvEZZuYTUY+Ak+wFmBPH9EfUQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 16, 2011 at 11:46 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> On Wed, Nov 16, 2011 at 11:09 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> +       /*
->> +        * Some devices can generate interrupts with empty CSR register, we
->> +        * "handle" such irq's to prevent interrupt controller treat them as
->> +        * spurious interrupts and disable irq line.
->> +        */
->>        if (!reg)
->> -               return IRQ_NONE;
->> +               return IRQ_HANDLED;
->
-> What if this interrupt belongs to a different device on a shared interrupt line?
-> In case reg is zero we can't be sure our device generated this interrupt, right?
+Luis,
 
-In the bugzilla report  Stanislaw indicated that even when rt2800pci
-indicates IRQ_HANDLED,
-all other drivers on the same interruptline will still get the interrupt event.
+any pending concerns or feedback before I start working on v2?
 
-Ivo
+
+Zefir
+
+On 11/15/2011 05:46 PM, Luis R. Rodriguez wrote:
+> On Tue, Nov 15, 2011 at 6:37 AM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+>> On Tue, Nov 08, 2011 at 05:34:02PM +0100, Zefir Kurtisi wrote:
+>>> This patch series proposes DFS radar pulse detection for ath9k.
+>>>
+>>> The first patch adds a new DFS module, the second turns those
+>>> knobs to enable the HW to detect radar pulses and forward them
+>>> to the new module.
+>>>
+>>> Here, sanity and plausibility checks that are HW dependent are
+>>> performed and resulting radar events are passed to higher level
+>>> generic pattern detectors for further processing (spectrum
+>>> management, etc.).
+>>>
+>>> DFS support is limited to newer chip-sets (for now 9280 and later).
+>>>
+>>> So far, AP operation on DFS channels is not supported by
+>>> mac80211/hostapd. Testing the proposed pulse detection is done in
+>>> monitor mode.
+>>>
+>>> Zefir Kurtisi (2):
+>>>   ath9k: add DFS radar pulse processing
+>>>   ath9k: integrate initial DFS module
+>>
+>> Any comments from the ath9k guys on this?
+> 
+> Just sent my initial set of comments.
+> 
+>   Luis
+
