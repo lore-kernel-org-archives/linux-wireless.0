@@ -1,39 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:32863 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752930Ab1KPXMR convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:43838 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754463Ab1KWUcp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 18:12:17 -0500
-Received: by bke11 with SMTP id 11so1227179bke.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 15:12:16 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Michael =?iso-8859-1?q?B=FCsch?= <m@bues.ch>
-Subject: Re: [PATCH] p54spi: Remove FIXME in op_stop
-Date: Thu, 17 Nov 2011 00:12:03 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <20111116235120.4c60c066@milhouse>
-In-Reply-To: <20111116235120.4c60c066@milhouse>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201111170012.03948.chunkeey@googlemail.com> (sfid-20111117_001229_462284_0E70053F)
+	Wed, 23 Nov 2011 15:32:45 -0500
+Received: by mail-iy0-f174.google.com with SMTP id e36so2078525iag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 12:32:45 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH 3/7] mac80211: fix switched HWMP frame addresses
+Date: Wed, 23 Nov 2011 12:32:22 -0800
+Message-Id: <1322080347-7644-4-git-send-email-thomas@cozybit.com> (sfid-20111123_213247_777267_014CA7DE)
+In-Reply-To: <1322080347-7644-1-git-send-email-thomas@cozybit.com>
+References: <1322080347-7644-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, November 16, 2011 11:51:20 PM Michael Büsch wrote:
-> Don't use the interruptible variant of mutex_lock(). It doesn't really
-> need to be interruptible. This avoids nasty error handling.
-> 
-> Signed-off-by: Michael Buesch <m@bues.ch>
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+HWMP originator and target addresses were switched on the air but also
+on reception, which is why path selection still worked.
 
-BTW: I always wondered if it would make sense to have a
-cached rx skb ready in p54spi_rx(). This way we don't
-have to do DMA onto the stack [which is really ugly and
-possibly illegal] and might even get a better rx
-performance. I could write the code but as you know I don't
-have the hardware to test it.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh_hwmp.c |   30 +++++++++++-------------------
+ 1 files changed, 11 insertions(+), 19 deletions(-)
 
-Regards,
-	Christian
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 1b13135..208ba35 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -393,15 +393,13 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
+ 		orig_metric = PREQ_IE_METRIC(hwmp_ie);
+ 		break;
+ 	case MPATH_PREP:
+-		/* Originator here refers to the MP that was the destination in
+-		 * the Path Request. The draft refers to that MP as the
+-		 * destination address, even though usually it is the origin of
+-		 * the PREP frame. We divert from the nomenclature in the draft
++		/* Originator here refers to the MP that was the target in the
++		 * Path Request. We divert from the nomenclature in the draft
+ 		 * so that we can easily use a single function to gather path
+ 		 * information from both PREQ and PREP frames.
+ 		 */
+-		orig_addr = PREP_IE_ORIG_ADDR(hwmp_ie);
+-		orig_sn = PREP_IE_ORIG_SN(hwmp_ie);
++		orig_addr = PREP_IE_TARGET_ADDR(hwmp_ie);
++		orig_sn = PREP_IE_TARGET_SN(hwmp_ie);
+ 		orig_lifetime = PREP_IE_LIFETIME(hwmp_ie);
+ 		orig_metric = PREP_IE_METRIC(hwmp_ie);
+ 		break;
+@@ -562,9 +560,9 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		ttl = ifmsh->mshcfg.element_ttl;
+ 		if (ttl != 0) {
+ 			mhwmp_dbg("replying to the PREQ");
+-			mesh_path_sel_frame_tx(MPATH_PREP, 0, target_addr,
+-				cpu_to_le32(target_sn), 0, orig_addr,
+-				cpu_to_le32(orig_sn), mgmt->sa, 0, ttl,
++			mesh_path_sel_frame_tx(MPATH_PREP, 0, orig_addr,
++				cpu_to_le32(orig_sn), 0, target_addr,
++				cpu_to_le32(target_sn), mgmt->sa, 0, ttl,
+ 				cpu_to_le32(lifetime), cpu_to_le32(metric),
+ 				0, sdata);
+ 		} else
+@@ -618,14 +616,8 @@ static void hwmp_prep_frame_process(struct ieee80211_sub_if_data *sdata,
+ 
+ 	mhwmp_dbg("received PREP from %pM", PREP_IE_ORIG_ADDR(prep_elem));
+ 
+-	/* Note that we divert from the draft nomenclature and denominate
+-	 * destination to what the draft refers to as origininator. So in this
+-	 * function destnation refers to the final destination of the PREP,
+-	 * which corresponds with the originator of the PREQ which this PREP
+-	 * replies
+-	 */
+-	target_addr = PREP_IE_TARGET_ADDR(prep_elem);
+-	if (memcmp(target_addr, sdata->vif.addr, ETH_ALEN) == 0)
++	orig_addr = PREP_IE_ORIG_ADDR(prep_elem);
++	if (memcmp(orig_addr, sdata->vif.addr, ETH_ALEN) == 0)
+ 		/* destination, no forwarding required */
+ 		return;
+ 
+@@ -636,7 +628,7 @@ static void hwmp_prep_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	rcu_read_lock();
+-	mpath = mesh_path_lookup(target_addr, sdata);
++	mpath = mesh_path_lookup(orig_addr, sdata);
+ 	if (mpath)
+ 		spin_lock_bh(&mpath->state_lock);
+ 	else
+@@ -651,7 +643,7 @@ static void hwmp_prep_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	flags = PREP_IE_FLAGS(prep_elem);
+ 	lifetime = PREP_IE_LIFETIME(prep_elem);
+ 	hopcount = PREP_IE_HOPCOUNT(prep_elem) + 1;
+-	orig_addr = PREP_IE_ORIG_ADDR(prep_elem);
++	target_addr = PREP_IE_TARGET_ADDR(prep_elem);
+ 	target_sn = PREP_IE_TARGET_SN(prep_elem);
+ 	orig_sn = PREP_IE_ORIG_SN(prep_elem);
+ 
+-- 
+1.7.5.4
+
