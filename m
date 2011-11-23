@@ -1,31 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:42045 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750835Ab1KIVje (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:53741 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751059Ab1KWSgl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 16:39:34 -0500
-Received: by gyc15 with SMTP id 15so2191332gyc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Nov 2011 13:39:34 -0800 (PST)
+	Wed, 23 Nov 2011 13:36:41 -0500
+Received: by qyd20 with SMTP id 20so663640qyd.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 10:36:40 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1320833356-19132-4-git-send-email-ilane@ti.com>
-References: <1320833356-19132-1-git-send-email-ilane@ti.com>
-	<1320833356-19132-4-git-send-email-ilane@ti.com>
-Date: Wed, 9 Nov 2011 18:39:33 -0300
-Message-ID: <CAK3JMAb-uFh5BN7ntHwhzyW=zLS93KXu7DUCf_u=nF_1ixekhw@mail.gmail.com> (sfid-20111109_223937_261860_2867CE97)
-Subject: Re: [PATCH v4 3/3] NFC: Check if NCI data flow control is used
-From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-To: ilanelias78@gmail.com
-Cc: aloisio.almeida@openbossa.org, samuel@sortiz.org,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ilan Elias <ilane@ti.com>
-Content-Type: text/plain; charset=UTF-8
+Date: Wed, 23 Nov 2011 19:36:40 +0100
+Message-ID: <CAFED-j=5-s7V9HZvYJDJ14KbVm+ioa=KnoBh1fj2ueT05QusTQ@mail.gmail.com> (sfid-20111123_193645_014727_7152EFD5)
+Subject: mac80211: AP mode - question about Tx buffered unicast frames drop timeout
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/11/9  <ilanelias78@gmail.com>:
-> From: Ilan Elias <ilane@ti.com>
->
-> Check if NCI data flow control is used in nci_tx_work.
->
-> Signed-off-by: Ilan Elias <ilane@ti.com>
-Acked-by: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Hello,
+
+in sta_info.c I see function we call to remove expired unicast buffered frames.
+
+sta_info_buffer_expired()
+{
+...
+	timeout = (sta->listen_interval *
+		   sta->sdata->vif.bss_conf.beacon_int *
+		   32 / 15625) * HZ;
+	if (timeout < STA_TX_BUFFER_EXPIRE)
+		timeout = STA_TX_BUFFER_EXPIRE;
+...
+}
+
+STA_TX_BUFFER_EXPIRE is define as 10 seconds.
+Do you remember why we set this as 10 seconds in case we calculate lower value?
+This "listen_interval" calculation seems to be correct.
+I found this during UAPSD debuging in AP mode.
+
+BR
+Janusz
