@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:49824 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756087Ab1KPLpH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 06:45:07 -0500
-Received: by vwl15 with SMTP id 15so533021vwl.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2011 03:45:06 -0800 (PST)
+Received: from mms2.broadcom.com ([216.31.210.18]:4814 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759487Ab1KWBWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 20:22:15 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 07/24] brcm80211: smac: fix channel frequency
+Date: Tue, 22 Nov 2011 17:21:42 -0800
+Message-ID: <1322011319-24863-8-git-send-email-frankyl@broadcom.com> (sfid-20111123_022226_120361_E3F2EC49)
+In-Reply-To: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
+References: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20111116111702.GB2191@redhat.com>
-References: <20111116100915.GA2191@redhat.com>
-	<CAOZOX0WDQQeg4o5J9iQ_TpQgyYpTk5D3B4rpdTVR_4nGFVQ0wg@mail.gmail.com>
-	<20111116111702.GB2191@redhat.com>
-Date: Wed, 16 Nov 2011 12:45:06 +0100
-Message-ID: <CAOZOX0XR8f9aoSHeFw95TPuUAe42-0mKwzkv_8aM6qtnP53pJA@mail.gmail.com> (sfid-20111116_124512_302027_205DFA3C)
-Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Amir Hedayaty <hedayaty@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 16, 2011 at 12:17 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Wed, Nov 16, 2011 at 11:14:41AM +0100, Ivo Van Doorn wrote:
->> > I changed rt2800pci only because get bug report for that device, not
->> > sure if similar changes are not needed for other rt2x00 PCI devices.
->>
->> The ticket mentiones that the end-result is a slow connection,
->> this is also a bug in older chipsets. So could you prepare a patch
->> for the other drivers as well?
-> Yes, sure. Do you have handy links to bug reports that I could
-> reference in the changelog?
+From: Alwin Beukers <alwin@broadcom.com>
 
-Not really, I think most complains were on the mailinglist. There
-are probably some bugreports, but I am not sure if that was the kernel
-bugzilla, or on one of the distributions bugzilla's.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Ivo
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+index e17edf7..008aab9 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -109,7 +109,7 @@ static const struct chan_info_basic chan_info_all[] = {
+ 	{204, 5020},
+ 	{208, 5040},
+ 	{212, 5060},
+-	{216, 50800}
++	{216, 5080}
+ };
+ 
+ static const u8 ofdm_rate_lookup[] = {
+-- 
+1.7.5.4
+
+
