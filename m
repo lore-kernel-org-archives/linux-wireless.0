@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50709 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752484Ab1KKTaL (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:63166 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755071Ab1KWCuw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Nov 2011 14:30:11 -0500
-Date: Fri, 11 Nov 2011 14:29:09 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: fix warning in ieee80211_probe_client
-Message-ID: <20111111192909.GE2485@tuxdriver.com> (sfid-20111111_203016_334603_48BCDE58)
-References: <1321036348-32272-1-git-send-email-linville@tuxdriver.com>
- <1321039350.22919.6.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1321039350.22919.6.camel@jlt3.sipsolutions.net>
+	Tue, 22 Nov 2011 21:50:52 -0500
+Received: by vcbfk1 with SMTP id fk1so940785vcb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2011 18:50:51 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Nikolay Martynov <mar.kolya@gmail.com>
+Subject: [PATCH v2 2/3] mac80211: trivial: use WLAN_BACK_RECIPIENT instead of hardcoded 0
+Date: Tue, 22 Nov 2011 21:50:29 -0500
+Message-Id: <1322016630-27332-3-git-send-email-mar.kolya@gmail.com> (sfid-20111123_035055_346683_791FA30C)
+In-Reply-To: <1322016630-27332-1-git-send-email-mar.kolya@gmail.com>
+References: <1322016630-27332-1-git-send-email-mar.kolya@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 11, 2011 at 08:22:30PM +0100, Johannes Berg wrote:
-> On Fri, 2011-11-11 at 13:32 -0500, John W. Linville wrote:
-> > CC [M]  net/mac80211/cfg.o
-> > net/mac80211/cfg.c: In function ‘ieee80211_probe_client’:
-> > net/mac80211/cfg.c:2567:7: warning: ‘qos’ may be used uninitialized in this function
-> 
-> Hm, you need a better compiler ;-) How about below instead (keeping the
-> subject)? I kinda don't like just initialising the variable "randomly".
-> 
-> johannes
-> 
-> 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> The warning is spurious -- if !sta we always exit without using the
-> unassigned qos variable, and if we do find the sta we assign it.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  Use WLAN_BACK_RECIPIENT instead of hardcoded 0 for clarity
 
-Works for me...
+Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+---
+ net/mac80211/agg-rx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 476b106..d4f23d4 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -85,7 +85,7 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ 	/* check if this is a self generated aggregation halt */
+ 	if (initiator == WLAN_BACK_RECIPIENT && tx)
+ 		ieee80211_send_delba(sta->sdata, sta->sta.addr,
+-				     tid, 0, reason);
++				     tid, WLAN_BACK_RECIPIENT, reason);
+ 
+ 	del_timer_sync(&tid_rx->session_timer);
+ 	del_timer_sync(&tid_rx->reorder_timer);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.1
+
