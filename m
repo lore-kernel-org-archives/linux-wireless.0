@@ -1,83 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59597 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751486Ab1KXSpq (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:35276 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751415Ab1KWBzN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 13:45:46 -0500
-Subject: Re: [PATCH v2 0/3] mac80211: timeout tx agg sessions in way
- similar to rx agg sessions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1322159944.5366.42.camel@jlt3.sipsolutions.net> (sfid-20111124_193911_596534_7ABB278D)
-References: <1322016630-27332-1-git-send-email-mar.kolya@gmail.com>
-	 <1322158678.5366.27.camel@jlt3.sipsolutions.net>
-	 <CALGY4fv6NTRDPUEa-7h+DqaHZwdKnNG4fEmzyHrYZukz3B1gqA@mail.gmail.com>
-	 (sfid-20111124_193358_972023_10DAB172)  <1322159944.5366.42.camel@jlt3.sipsolutions.net>
-	 (sfid-20111124_193911_596534_7ABB278D)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Nov 2011 19:45:43 +0100
-Message-ID: <1322160343.5366.47.camel@jlt3.sipsolutions.net> (sfid-20111124_194549_911049_F52AA0D4)
-Mime-Version: 1.0
+	Tue, 22 Nov 2011 20:55:13 -0500
+Date: Wed, 23 Nov 2011 10:55:03 +0900
+From: Norbert Preining <preining@logic.at>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>
+Subject: Re: iwlagn is getting very shaky
+Message-ID: <20111123015503.GC23203@gamma.logic.tuwien.ac.at> (sfid-20111123_025535_715849_11AC9F3E)
+References: <CANUX_P2AA5stHwjegKdFhFGg7jxwdVU2Xr8OUtXUdEOKz_6E5A@mail.gmail.com> <20111122051310.GA23705@gamma.logic.tuwien.ac.at> <CANUX_P1RjcRD2tW1A6YYSEV9+aUZyTEro7tZXJWRoxk6gx-2jA@mail.gmail.com> <CANUX_P2aFn84uSqgZA2gTBN7E4+0jGmJQTkx4eug4Ls0hK0==Q@mail.gmail.com> <20111122072730.GA32225@gamma.logic.tuwien.ac.at> <CANUX_P15En9bHVx4bhq6=XKPZnC2u+QyVJ+jnm4ns=39DrOBtg@mail.gmail.com> <2D0C7905-AEB2-4DE4-89B1-945D89F2B5D6@logic.at> <CANUX_P21PDdyo4u-x_1A0Lcqf-33yHgzUxddAoc3juGRNnrcDg@mail.gmail.com> <20111122124357.GA32440@gamma.logic.tuwien.ac.at> <CANUX_P0uyyuK4netV6srYCh9FsC4cpGzxobHE3T38n5RvvA0RQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANUX_P0uyyuK4netV6srYCh9FsC4cpGzxobHE3T38n5RvvA0RQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-11-24 at 19:39 +0100, Johannes Berg wrote:
+On Di, 22 Nov 2011, Emmanuel Grumbach wrote:
+> This is completely broken. This log looks really bad. AGG are enabled
+> and disabled right away, messing the queues completely.
 
-> >   And one more thing, if you do not mind.
-> > 'ieee80211_stop_tx_ba_session' tests tx_tid->state for
-> > HT_AGG_STATE_STOPPING holding only spinlock on sta->lock.
-> > '___ieee80211_stop_tx_ba_session' sets this bit when spin lock on
-> > sta->lock is not being held. It seems to be that this could lead to
-> > problems if these two functions get called at about same time (which
-> > could easily happen when this patch is applied). Although actual
-> > window when lock is not help is really small. But I think the way it
-> > is currently done could still lead to problems. I think
-> > 'set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);' should be moved up
-> > to be covered by spin lock. I can include this as a part of next
-> > version of my patch. I'd really appreciate your thoughts about this.
-> 
-> Yeah that does indeed seem like an issue
+I can easily reproduce that here, today after reboot I saw something more:
+[   82.894328] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Deactivate 
+AC/CMD Queue 11 on FIFO 0
+[   83.072243] iwlwifi 0000:06:00.0: U iwl_trans_pcie_tx_agg_alloc HW queue is NOT empty: 85 packets in HW queue
+[  288.039768] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Deactivate AC/CMD Queue 11 on FIFO 0
+[  288.039884] wlan0: deauthenticating from 00:0a:79:eb:56:10 by local choice (reason=3)
+[  288.040218] iwlwifi 0000:06:00.0: I iwl_stop_queue Stop hwq 2 ac 2 stop count 1. Queue is full
+[  288.052312] iwlwifi 0000:06:00.0: I iwl_wake_queue Wake hwq 2 ac 2. Packets reclaimed
+[  288.052542] iwlwifi 0000:06:00.0: I iwl_stop_queue Stop hwq 2 ac 2 stop count 1. Queue is full
+[  288.064074] iwlwifi 0000:06:00.0: I iwl_wake_queue Wake hwq 2 ac 2. Packets reclaimed
+[  288.064301] iwlwifi 0000:06:00.0: I iwl_stop_queue Stop hwq 2 ac 2 stop count 1. Queue is full
+[  288.074618] iwlwifi 0000:06:00.0: I iwl_wake_queue Wake hwq 2 ac 2. Packets reclaimed
 
-Actually I think the right way to fix it would be the change below, do
-you agree? I think just moving the set_bit doesn't help because other
-code might call right into ___ieee80211_stop_tx_ba_session (or with just
-two underscores on front)
+> Will send another patch later.
 
-johannes
+Thanks.
 
---- wireless-testing.orig/net/mac80211/agg-tx.c	2011-11-09 10:07:34.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-tx.c	2011-11-24 19:44:51.000000000 +0100
-@@ -162,6 +162,12 @@ int ___ieee80211_stop_tx_ba_session(stru
- 		return -ENOENT;
- 	}
- 
-+	/* if we're already stopping ignore any new requests to stop */
-+	if (test_bit(HT_AGG_STATE_STOPPING, &tid_tx->state)) {
-+		spin_unlock_bh(&sta->lock);
-+		return -EALREADY;
-+	}
-+
- 	if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state)) {
- 		/* not even started yet! */
- 		ieee80211_assign_tid_tx(sta, tid, NULL);
-@@ -170,6 +176,8 @@ int ___ieee80211_stop_tx_ba_session(stru
- 		return 0;
- 	}
- 
-+	set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);
-+
- 	spin_unlock_bh(&sta->lock);
- 
- #ifdef CONFIG_MAC80211_HT_DEBUG
-@@ -177,8 +185,6 @@ int ___ieee80211_stop_tx_ba_session(stru
- 	       sta->sta.addr, tid);
- #endif /* CONFIG_MAC80211_HT_DEBUG */
- 
--	set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);
--
- 	del_timer_sync(&tid_tx->addba_resp_timer);
- 
- 	/*
-
-
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+FORSINAIN (n. archaic)
+The right of the lord of the manor to molest dwarves on their
+birthdays.
+			--- Douglas Adams, The Meaning of Liff
