@@ -1,91 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:58143 "EHLO lo.gmane.org"
+Received: from nbd.name ([46.4.11.11]:47604 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755854Ab1KVUfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 15:35:06 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1RSx3Y-0000Fz-Gs
-	for linux-wireless@vger.kernel.org; Tue, 22 Nov 2011 21:35:04 +0100
-Received: from p5791742e.dip0.t-ipconnect.de ([87.145.116.46])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2011 21:35:04 +0100
-Received: from michael by p5791742e.dip0.t-ipconnect.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2011 21:35:04 +0100
-To: linux-wireless@vger.kernel.org
-From: Michael Basse <michael@alpha-unix.de>
-Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
-Date: Tue, 22 Nov 2011 21:33:34 +0100
-Message-ID: <4ECC071E.5050403@alpha-unix.de> (sfid-20111122_213516_384831_A026761E)
-References: <20111116100915.GA2191@redhat.com>
-Mime-Version: 1.0
+	id S1756249Ab1KWPdM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Nov 2011 10:33:12 -0500
+Message-ID: <4ECD1224.3070900@openwrt.org> (sfid-20111123_163316_097227_806927B9)
+Date: Wed, 23 Nov 2011 22:32:52 +0700
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, Wilson Tsao <wtsao@qca.qualcomm.com>
+Subject: Re: [PATCH 16/18] ath9k: make ath_reset non-static
+References: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com> <1321978965-21684-17-git-send-email-mohammed@qca.qualcomm.com> <4ECD032F.4040009@openwrt.org> <4ECD0ECC.2060101@qca.qualcomm.com>
+In-Reply-To: <4ECD0ECC.2060101@qca.qualcomm.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Cc: "John W. Linville"
-	<public-linville-2XuSBdqkA4R54TAoqtyWWQ@lo.gmane.org>,
-	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@lo.gmane.org,
-	Ivo van Doorn
-	<public-IvDoorn-Re5JQEeQqe8AvxtiuMwx3w@lo.gmane.org>,
-	Gertjan van Wingerde
-	<public-gwingerde-Re5JQEeQqe8AvxtiuMwx3w@lo.gmane.org>,
-	Helmut Schaa
-	<public-helmut.schaa-gM/Ye1E23mwN+BqQ9rBEUg@lo.gmane.org>,
-	Amir Hedayaty
-	<public-hedayaty-Re5JQEeQqe8AvxtiuMwx3w@lo.gmane.org>
-In-Reply-To: <20111116100915.GA2191@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On 2011-11-23 10:18 PM, Mohammed Shafi Shajakhan wrote:
+> Hi Felix,
+> 
+> thanks for your review.
+> On Wednesday 23 November 2011 07:59 PM, Felix Fietkau wrote:
+>> On 2011-11-22 11:22 PM, Mohammed Shafi Shajakhan wrote:
+>>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>>
+>>> to be used by MCI specific changes
+>>>
+>>> Cc: Wilson Tsao<wtsao@qca.qualcomm.com>
+>>> Cc: Senthil Balasubramanian<senthilb@qca.qualcomm.com>
+>>> Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+>>> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>> NACK. ath_reset can no longer be called in tasklet context (which you
+>> seem to be doing in the next patch).
+>> Replace your ath_reset() call with:
+>>    ieee80211_queue_work(sc->hw,&sc->hw_reset_work);
+>>
+>> - Felix
+> 
+> just like in ath9k_flush, i like to have the chip reset immediately 
+> rather than queuing at as a work.
+> in chip reset we have:
+> *we have BT calibration
+> *sync up with BT state
+> *2g_5g change
+> *LNA transfer
+> and few other things
+> 
+> when BT asks for calibration i understand we have to immediately give 
+> preference to it.
+> please let me know if i had missed something and also if queuing 
+> ath_reset actually helps us in some way.
+> i will revert this back once i test queue_work does no harm.
+Doing reset from tasklet context created several nasty stability issues
+that were hard to track down, and the potential gain from doing reset
+'immediately' that way is purely theoretical. Resets should be rare in
+normal operation, as they're also expensive.
+The main problem when running reset from a tasklet is that there is no
+way of gracefully shutting down ongoing workqueue activity, so the
+result of the reset could be that the work items mess up the state right
+after the reset is done.
 
-Hi Stanislaw,
-first of all thank you for your patch.
-
-> I changed rt2800pci only because get bug report for that device,
-> not sure if similar changes are not needed for other rt2x00 PCI
-> devices
-
-Me (and many other) ubuntu-users are facing issues with different
-Version of Kernel 3.x. As it seems all users are using "rt2800pci" for
-there wifi.
-
-Model: "RaLink RT2860"
-Vendor: pci 0x1814 "RaLink"
-Device: pci 0x0781 "RT2860"
-SubVendor: pci 0x1814 "RaLink"
-SubDevice: pci 0x2790
-Driver: "rt2800pci"
-Driver Modules: "rt2800pci"
-
-See also
-
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/869502
-http://thread.gmane.org/gmane.linux.kernel/1211290
-http://rt2x00.serialmonkey.com/phpBB/viewtopic.php?f=5&t=6192
-
-I have build the newest ubuntu-kernel with your patch
-
-http://alpha-unix.de/~iceroot/ubuntu/
-
-Hopefully your patch is fixing the issues we are facing.
-Just wanted to say thank you to your work and i will give you feedback
-about your patch.
-
-Greetings from germany
-
-Michael Basse
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iQEcBAEBAgAGBQJOzAcdAAoJEMIajL8dFT4GAXwIAJJJoUghmTUbw/354z09CDuB
-eCpIaJw0is+zyp3RLssUJmmabyFtLkC0nFJ4iAGJfL/ozf7ISjtk1nLlQFbt6/iy
-knV1uSGv6o9UuFCzJZ7boJ9cdNq35pAVul86PFqQ+fgDQYdlqfdLyNc71JRazvIE
-b01jUudgjZDe09rKmrxiBvcr7FVKPhsSvrH5t6mSYpHJufDDm+TmQk+TJBT+KS8/
-aDMPKXlCaAXNlXlm8tgLds8Flx5nnxGvvSXA1DDw37Z7kHOWKLOeHz8ILuctneVz
-e8Fp5kgl02VVUVFK/K6+M4EbF/jmTo7FIW5Nlv60H9qsfx+peTkhKqx8o48FGAQ=
-=D2BU
------END PGP SIGNATURE-----
-
+- Felix
