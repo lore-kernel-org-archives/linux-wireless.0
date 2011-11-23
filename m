@@ -1,61 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51051 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755083Ab1KCIhs (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:43838 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754436Ab1KWUcx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 04:37:48 -0400
-Subject: Re: [PATCH v3 1/3] mac80211: Support forcing station to disable HT
- (802.11n).
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1320299722-30113-1-git-send-email-greearb@candelatech.com> (sfid-20111103_065534_192366_EF6ABFB6)
-References: <1320299722-30113-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20111103_065534_192366_EF6ABFB6)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 Nov 2011 09:37:45 +0100
-Message-ID: <1320309465.3950.14.camel@jlt3.sipsolutions.net> (sfid-20111103_093753_210769_DC31D0B7)
-Mime-Version: 1.0
+	Wed, 23 Nov 2011 15:32:53 -0500
+Received: by mail-iy0-f174.google.com with SMTP id e36so2078525iag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 12:32:53 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH 7/7] mac80211: clean up rx_h_mesh_fwding
+Date: Wed, 23 Nov 2011 12:32:26 -0800
+Message-Id: <1322080347-7644-8-git-send-email-thomas@cozybit.com> (sfid-20111123_213256_873601_E54172A4)
+In-Reply-To: <1322080347-7644-1-git-send-email-thomas@cozybit.com>
+References: <1322080347-7644-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-11-02 at 22:55 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> This allows a user to configure a wifi station interface
-> to disable the HT features, even if the AP and NIC supports it.
+Lose about two levels of unnecessary indentation.
 
-I like this version much better. Some nitpicks:
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/rx.c |   88 +++++++++++++++++++++++-----------------------------
+ 1 files changed, 39 insertions(+), 49 deletions(-)
 
-
-> +#define ASSOC_REQ_DISABLE_HT	(1<<0) /* Disable HT (802.11n) */
-
-You could use an enum to use kernel-doc notation here.
-
-> @@ -1046,6 +1048,7 @@ struct cfg80211_auth_request {
->   * @use_mfp: Use management frame protection (IEEE 802.11w) in this association
->   * @crypto: crypto settings
->   * @prev_bssid: previous BSSID, if not %NULL use reassociate frame
-> + * @flags:  See ASSOC_REQ_* flags above.
-
-and then say "See &enum cfg80211_assoc_req_flags" or so should even
-create the correct link in kernel-doc output.
-
-> @@ -1053,6 +1056,7 @@ struct cfg80211_assoc_request {
->  	size_t ie_len;
->  	struct cfg80211_crypto_settings crypto;
->  	bool use_mfp;
-> +	u32 flags;
-
-Seems like it might be good for use_mfp to become a flag? Anyway,
-internal APIs are easy to change.
-
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-
-I'd rather split this up into cfg80211/mac80211. In fact, maybe
-splitting it into one cfg80211 and one mac80211 patch, instead of three
-different patches that span both might be worthwhile?
-
-johannes
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index ac09f55..a166c3c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1895,15 +1895,16 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
+ static ieee80211_rx_result
+ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ {
+-	struct ieee80211_hdr *hdr;
++	struct ieee80211_hdr *fwd_hdr, *hdr;
++	struct ieee80211_tx_info *info;
+ 	struct ieee80211s_hdr *mesh_hdr;
+-	unsigned int hdrlen;
+ 	struct sk_buff *skb = rx->skb, *fwd_skb;
+ 	struct ieee80211_local *local = rx->local;
+ 	struct ieee80211_sub_if_data *sdata = rx->sdata;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	__le16 reason = cpu_to_le16(WLAN_REASON_MESH_PATH_NOFORWARD);
+-	u16 q;
++	u16 q, hdrlen;
+ 
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+@@ -1919,7 +1920,6 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 		return RX_CONTINUE;
+ 
+ 	if (!mesh_hdr->ttl)
+-		/* illegal frame */
+ 		return RX_DROP_MONITOR;
+ 
+ 	if (mesh_hdr->flags & MESH_FLAGS_AE) {
+@@ -1955,58 +1955,48 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 
+ 	q = ieee80211_select_queue_cooked(local, skb, hdr);
+ 	if (ieee80211_queue_stopped(&local->hw, q)) {
+-		IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
+-					     dropped_frames_congestion);
++		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, dropped_frames_congestion);
+ 		return RX_DROP_MONITOR;
+ 	}
+ 	skb_set_queue_mapping(skb, q);
+-	mesh_hdr->ttl--;
+ 
+-	if (status->rx_flags & IEEE80211_RX_RA_MATCH) {
+-		if (!mesh_hdr->ttl)
+-			IEEE80211_IFSTA_MESH_CTR_INC(&rx->sdata->u.mesh,
+-						     dropped_frames_ttl);
+-		else {
+-			struct ieee80211_hdr *fwd_hdr;
+-			struct ieee80211_tx_info *info;
+-
+-			fwd_skb = skb_copy(skb, GFP_ATOMIC);
+-
+-			if (!fwd_skb && net_ratelimit())
+-				printk(KERN_DEBUG "%s: failed to clone mesh frame\n",
+-						   sdata->name);
+-			if (!fwd_skb)
+-				goto out;
+-
+-			fwd_hdr =  (struct ieee80211_hdr *) fwd_skb->data;
+-			info = IEEE80211_SKB_CB(fwd_skb);
+-			memset(info, 0, sizeof(*info));
+-			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+-			info->control.vif = &rx->sdata->vif;
+-			info->control.jiffies = jiffies;
+-			if (is_multicast_ether_addr(fwd_hdr->addr1)) {
+-				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
+-								fwded_mcast);
+-				memcpy(fwd_hdr->addr2, sdata->vif.addr, ETH_ALEN);
+-			} else {
+-				if (mesh_nexthop_lookup(fwd_skb, sdata)) {
+-				/* can't resolve next hop, send a PERR */
+-					mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl,
+-							   fwd_hdr->addr3, 0, reason,
+-							   fwd_hdr->addr2, sdata);
+-					sdata->u.mesh.mshstats.dropped_frames_no_route++;
+-					return RX_DROP_MONITOR;
+-				}
++	if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
++		goto out;
+ 
+-				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
+-								fwded_unicast);
+-			}
+-			IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
+-						     fwded_frames);
+-			ieee80211_add_pending_skb(local, fwd_skb);
+-		}
++	if (!--mesh_hdr->ttl) {
++		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, dropped_frames_ttl);
++		return RX_DROP_MONITOR;
++	}
++
++	fwd_skb = skb_copy(skb, GFP_ATOMIC);
++	if (!fwd_skb) {
++		if (net_ratelimit())
++			printk(KERN_DEBUG "%s: failed to clone mesh frame\n",
++					sdata->name);
++		goto out;
++	}
++
++	fwd_hdr =  (struct ieee80211_hdr *) fwd_skb->data;
++	info = IEEE80211_SKB_CB(fwd_skb);
++	memset(info, 0, sizeof(*info));
++	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++	info->control.vif = &rx->sdata->vif;
++	info->control.jiffies = jiffies;
++	if (is_multicast_ether_addr(fwd_hdr->addr1)) {
++		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, fwded_mcast);
++		memcpy(fwd_hdr->addr2, sdata->vif.addr, ETH_ALEN);
++	} else if (!mesh_nexthop_lookup(fwd_skb, sdata)) {
++		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, fwded_unicast);
++	} else {
++		/* unable to resolve next hop */
++		mesh_path_error_tx(ifmsh->mshcfg.element_ttl, fwd_hdr->addr3,
++				    0, reason, fwd_hdr->addr2, sdata);
++		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, dropped_frames_no_route);
++		return RX_DROP_MONITOR;
+ 	}
+ 
++	IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, fwded_frames);
++	ieee80211_add_pending_skb(local, fwd_skb);
+  out:
+ 	if (is_multicast_ether_addr(hdr->addr1) ||
+ 	    sdata->dev->flags & IFF_PROMISC)
+-- 
+1.7.5.4
 
