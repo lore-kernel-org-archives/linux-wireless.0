@@ -1,53 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:36100 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752241Ab1KTQPW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Nov 2011 11:15:22 -0500
-Received: by ghbz2 with SMTP id z2so2021908ghb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 08:15:22 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:57808 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755733Ab1KWO3Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Nov 2011 09:29:25 -0500
+Message-ID: <4ECD032F.4040009@openwrt.org> (sfid-20111123_152928_229593_0AF777A1)
+Date: Wed, 23 Nov 2011 21:29:03 +0700
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <20111120154359.GA4069@hash.lan>
-References: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
-	<1321775788-12520-14-git-send-email-mickflemm@gmail.com>
-	<20111120154359.GA4069@hash.lan>
-Date: Sun, 20 Nov 2011 18:15:21 +0200
-Message-ID: <CAFtRNNw738sve7mrA2+O7rrg0Pf6=E4zaFcgWgQLyf9q2pt8MA@mail.gmail.com> (sfid-20111120_171525_484309_E9FBA8BC)
-Subject: Re: [PATCH 13/13] ath5k: Optimize ath5k_cw_validate
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, mcgrof@gmail.com, nbd@openwrt.org,
-	jirislaby@gmail.com
-Content-Type: text/plain; charset=UTF-8
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, Wilson Tsao <wtsao@qca.qualcomm.com>
+Subject: Re: [PATCH 16/18] ath9k: make ath_reset non-static
+References: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com> <1321978965-21684-17-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1321978965-21684-17-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/11/20 Bob Copeland <me@bobcopeland.com>:
-> On Sun, Nov 20, 2011 at 09:56:28AM +0200, Nick Kossifidis wrote:
->> +     /* Check if cw_req + 1 a power of 2 */
->> +     if (!((cw_req + 1) & cw_req))
->> +             return cw_req;
->> +
->> +     /* Check if cw_req is a power of 2 */
->> +     if (!(cw_req & (cw_req - 1)))
->> +             return cw_req - 1;
->
-> There's is_power_of_two() in log2.h .. but this whole thing could also
-> be something like roundup_pow_of_two(cw) maybe?
->
+On 2011-11-22 11:22 PM, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> 
+> to be used by MCI specific changes
+> 
+> Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+> Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+NACK. ath_reset can no longer be called in tasklet context (which you
+seem to be doing in the next patch).
+Replace your ath_reset() call with:
+  ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
 
-Nice catch ! I didn't knew about log2.h, seems interesting :-)
-
-roundup_pow_of_two(n) - 1 should take away that while loop but in most
-cases we 'll get a correct cw value so is_power_of_two(cw_req + 1)
-would take care of that faster.
-
-I'll post an update
-
-
-
--- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+- Felix
