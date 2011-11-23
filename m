@@ -1,53 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39282 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751788Ab1KTJXZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Nov 2011 04:23:25 -0500
-Message-ID: <4EC8C6FD.1030103@openwrt.org> (sfid-20111120_102329_978217_DB9EFF53)
-Date: Sun, 20 Nov 2011 10:23:09 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	jirislaby@gmail.com
-Subject: Re: [PATCH 06/13] ath5k: Use usleep_range where possible
-References: <1321775788-12520-1-git-send-email-mickflemm@gmail.com> <1321775788-12520-7-git-send-email-mickflemm@gmail.com>
-In-Reply-To: <1321775788-12520-7-git-send-email-mickflemm@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:55947 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756646Ab1KWPlT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Nov 2011 10:41:19 -0500
+Received: by mail-vw0-f46.google.com with SMTP id fc26so572756vbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 07:41:19 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [RFC 5/5] wireless: annotate drivers that do not support NL80211_TX_POWER_REG
+Date: Wed, 23 Nov 2011 10:40:58 -0500
+Message-Id: <1322062858-15276-6-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111123_164122_733147_1F64C5F5)
+In-Reply-To: <1322062858-15276-1-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1322062858-15276-1-git-send-email-mcgrof@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-11-20 8:56 AM, Nick Kossifidis wrote:
-> Use usleep_range where possible to reduce busy waits
-> 
-> Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath5k/attach.c |    2 +-
->  drivers/net/wireless/ath/ath5k/pci.c    |    2 +-
->  drivers/net/wireless/ath/ath5k/phy.c    |   22 +++++++++++-----------
->  drivers/net/wireless/ath/ath5k/reset.c  |   14 +++++++-------
->  4 files changed, 20 insertions(+), 20 deletions(-)
-> 
-> @@ -1454,7 +1454,7 @@ static int ath5k_hw_rf5110_calibrate(struct ath5k_hw *ah,
->  	beacon = ath5k_hw_reg_read(ah, AR5K_BEACON_5210);
->  	ath5k_hw_reg_write(ah, beacon & ~AR5K_BEACON_ENABLE, AR5K_BEACON_5210);
->  
-> -	mdelay(2);
-> +	usleep_range(2000, 2500);
->  
->  	/*
->  	 * Set the channel (with AGC turned off)
-> @@ -1467,7 +1467,7 @@ static int ath5k_hw_rf5110_calibrate(struct ath5k_hw *ah,
->  	 * Activate PHY and wait
->  	 */
->  	ath5k_hw_reg_write(ah, AR5K_PHY_ACT_ENABLE, AR5K_PHY_ACT);
-> -	mdelay(1);
-> +	usleep_range(1000, 1500);
->  
->  	AR5K_REG_DISABLE_BITS(ah, AR5K_PHY_AGC, AR5K_PHY_AGC_DISABLE);
->  
-Are you sure this is safe? This looks like it's being called from
-tasklet context, and I think usleep_range is not allowed there.
+brcm80211, iwmc3200wifi and mwifiex lack support for
+NL80211_TX_POWER_REG.
 
-- Felix
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    2 ++
+ drivers/net/wireless/iwmc3200wifi/cfg80211.c       |    2 ++
+ drivers/net/wireless/mwifiex/cfg80211.c            |    3 +++
+ 3 files changed, 7 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index f23b0c3..678849e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -1454,6 +1454,8 @@ brcmf_cfg80211_set_tx_power(struct wiphy *wiphy,
+ 			goto done;
+ 		}
+ 		break;
++	case NL80211_TX_POWER_REG:
++		return -EOPNOTSUPP;
+ 	}
+ 	/* Make sure radio is off or on as far as software is concerned */
+ 	disable = WL_RADIO_SW_DISABLE << 16;
+diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+index 48e8218..d84390f 100644
+--- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
++++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+@@ -710,6 +710,8 @@ static int iwm_cfg80211_set_txpower(struct wiphy *wiphy,
+ 			return ret;
+ 
+ 		return iwm_tx_power_trigger(iwm);
++	case NL80211_TX_REG:
++		return -EOPNOTSUPP;
+ 	default:
+ 		IWM_ERR(iwm, "Unsupported power type: %d\n", type);
+ 		return -EOPNOTSUPP;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 0db97cc..136841b 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -126,6 +126,9 @@ mwifiex_cfg80211_set_tx_power(struct wiphy *wiphy,
+ 	struct mwifiex_power_cfg power_cfg;
+ 	int dbm = MBM_TO_DBM(mbm);
+ 
++	if (type == NL80211_TX_POWER_REG)
++		return -EOPNOTSUPP;
++
+ 	if (type == NL80211_TX_POWER_FIXED) {
+ 		power_cfg.is_power_auto = 0;
+ 		power_cfg.power_level = dbm;
+-- 
+1.7.4.15.g7811d
+
