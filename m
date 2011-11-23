@@ -1,46 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:59039 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753107Ab1K2JBw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 04:01:52 -0500
-Received: by eaak14 with SMTP id k14so2776022eaa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2011 01:01:51 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:30191 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750919Ab1KWKsz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Nov 2011 05:48:55 -0500
+Date: Wed, 23 Nov 2011 11:51:07 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Amir Hedayaty <hedayaty@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
+Message-ID: <20111123105106.GA7943@redhat.com> (sfid-20111123_114859_348653_0186BBFE)
+References: <20111116100915.GA2191@redhat.com>
+ <20111122214940.GH8452@tuxdriver.com>
+ <20111123080506.GB9833@redhat.com>
+ <CAGXE3d-HE8MWV5Xv9e407iDn83UFvjua52mYGEJuJnQuQvnyog@mail.gmail.com>
 MIME-Version: 1.0
-Date: Tue, 29 Nov 2011 11:01:50 +0200
-Message-ID: <CAApCBGx28SbbmNpynCpKW9CyAsV5+c_fZ=1k9QAsKnXf4nDQEw@mail.gmail.com> (sfid-20111129_100155_369051_F43FA1C4)
-Subject: ar9390 failing AGC calibration on powerpc platform
-From: wireless newbie <wnewbie72@gmail.com>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Cc: Felix Fietkau <nbd@openwrt.org>, openwrt-devel@lists.openwrt.org,
-	Mohammed Shafi <shafi.wireless@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGXE3d-HE8MWV5Xv9e407iDn83UFvjua52mYGEJuJnQuQvnyog@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Nov 23, 2011 at 09:51:38AM +0100, Helmut Schaa wrote:
+> Are we 100% sure that the rt2800pci device is generating the interrupts?
+No, good point. There is also usb_hcd_irq() registered on that line.
 
-I have been trying to get my ar9390 based wlan module to work as an AP
-on my powerpc target. There seems to be some issues with AGC
-calibration though. As soon as I start hostapd, I get the following:
+I wonder if there is method to control irq routing. I don't know 
+about any that could allow to control assignment of individual irq's.
+There are nomsi, acpi=noirq and noacpi kernel parameters which influence
+irq routing, so perhaps with a bit of luck they could cause exclusively
+Ralink device will be assigned to irq line>
 
-ath9k 0000:01:00.0: mon.wlan0: Features changed: 0x00004800 -> 0x00004000
-ath: Unable to reset hardware; reset status -5 (freq 2412 MHz)
-Could not set interface mon.wlan0 flags: Input/output error
-nl80211: Failed to set interface wlan0 into AP mode
-nl80211 driver initialization failed.
-ELOOP: remaining socket: sock=8 eloop_data=0x10219770
-user_data=0x10219d18 handler=0x1002b8c0
-ELOOP: remaining socket: sock=10 eloop_data=0x1021c0b8 user_data=(nil)
-handler=0x100353e0
+Amir, could you configure system to assure Ralink device have
+assigned exclusive (non shared) irq line. Interrupts assignment
+can be seen in /proc/interrupts. If above kernel parameters do not
+achieve that, you can try disabling USB in BIOS and (if possible)
+changing pci slot of Ralink device.
+ 
+> Just a shot in the dark but instead of masking out interrupts we don't handle
+> just enable all device interrupts. Mind to try the below patch?
+Amir, the best way is to test it on top of compat wireless, if you will
+be unable to do this, I'll prepare fedora koji build with patch.
 
-Further debugging revealed that the problem was AGC calibration that
-didn't finish and that can be seen from the logs too:
+Thanks
+Stanislaw 
 
-ath: timeout (100000 us) on reg 0xa2c4: 0x00158dd9 & 0x00000001 != 0x00000000
-
-I moved that module to x86 ubuntu 11.10 pc to see if it works there.
-For my surprise it worked just fine. So it seems that there is
-something related to powerpc platform. I'm using kernel 2.6.39 and
-compat wireless drivers from november. Would it be possible that there
-is some endianess stuff somewhere that isn't handled properly?
+> ---
+> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c
+> b/drivers/net/wireless/rt2x00/rt2800pci.c
+> index 4dc2d0f..c0badec 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -437,24 +437,24 @@ static void rt2800pci_toggle_irq(struct
+> rt2x00_dev *rt2x00dev,
+> 
+>  	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
+>  	rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
+> -	rt2x00_set_field32(&reg, INT_MASK_CSR_RXDELAYINT, 0);
+> -	rt2x00_set_field32(&reg, INT_MASK_CSR_TXDELAYINT, 0);
+> +	rt2x00_set_field32(&reg, INT_MASK_CSR_RXDELAYINT, mask);
+> +	rt2x00_set_field32(&reg, INT_MASK_CSR_TXDELAYINT, mask);
+>  	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_DONE, mask);
+> -	rt2x00_set_field32(&reg, INT_MASK_CSR_AC0_DMA_DONE, 0);
+> -	rt2x00_set_field32(&reg, INT_MASK_CSR_AC1_DMA_DONE, 0);
+> -	rt2x00_set_field32(&reg, INT_MASK_CSR_AC2_DMA_DONE, 0);
+> -	rt2x00_set_field32(&reg, INT_MASK_CSR_AC3_DMA_DONE, 0);
+> -	rt2x00_set_field32(&reg, INT_MASK_CSR_HCCA_DMA_DONE, 0);
+> -	rt2x00_set_field32(&reg, INT_MASK_CSR_MGMT_DMA_DONE, 0);
+> -	rt2x00_set_field32(&reg, INT_MASK_CSR_MCU_COMMAND, 0);
+> -	rt2x00_set_field32(&reg, INT_MASK_CSR_RXTX_COHERENT, 0);
+> +	rt2x00_set_field32(&reg, INT_MASK_CSR_AC0_DMA_DONE, mask);
+> +	rt2x00_set_field32(&reg, INT_MASK_CSR_AC1_DMA_DONE, mask);
+> +	rt2x00_set_field32(&reg, INT_MASK_CSR_AC2_DMA_DONE, mask);
+> +	rt2x00_set_field32(&reg, INT_MASK_CSR_AC3_DMA_DONE, mask);
+> +	rt2x00_set_field32(&reg, INT_MASK_CSR_HCCA_DMA_DONE, mask);
+> +	rt2x00_set_field32(&reg, INT_MASK_CSR_MGMT_DMA_DONE, mask);
+> +	rt2x00_set_field32(&reg, INT_MASK_CSR_MCU_COMMAND, mask);
+> +	rt2x00_set_field32(&reg, INT_MASK_CSR_RXTX_COHERENT, mask);
+>  	rt2x00_set_field32(&reg, INT_MASK_CSR_TBTT, mask);
+>  	rt2x00_set_field32(&reg, INT_MASK_CSR_PRE_TBTT, mask);
+>  	rt2x00_set_field32(&reg, INT_MASK_CSR_TX_FIFO_STATUS, mask);
+>  	rt2x00_set_field32(&reg, INT_MASK_CSR_AUTO_WAKEUP, mask);
+> -	rt2x00_set_field32(&reg, INT_MASK_CSR_GPTIMER, 0);
+> -	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_COHERENT, 0);
+> -	rt2x00_set_field32(&reg, INT_MASK_CSR_TX_COHERENT, 0);
+> +	rt2x00_set_field32(&reg, INT_MASK_CSR_GPTIMER, mask);
+> +	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_COHERENT, mask);
+> +	rt2x00_set_field32(&reg, INT_MASK_CSR_TX_COHERENT, mask);
+>  	rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
+>  	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
