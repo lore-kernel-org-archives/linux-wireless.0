@@ -1,118 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:40694 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751904Ab1K1R4Y (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:55947 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756646Ab1KWPlK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 12:56:24 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+	Wed, 23 Nov 2011 10:41:10 -0500
+Received: by mail-vw0-f46.google.com with SMTP id fc26so572756vbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 07:41:09 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Alexander Simon <an.alexsimon@googlemail.com>,
-	Marek Lindner <lindner_marek@yahoo.de>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCH 4/4] mac80211: handle protection mode, RIFS and ADDBA for HT IBSS
-Date: Mon, 28 Nov 2011 18:55:16 +0100
-Message-Id: <1322502917-28205-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111128_185629_108712_6AF49AA5)
-In-Reply-To: <1322502917-28205-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1322502917-28205-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [RFC 2/5] cfg80211: add support to immediately apply reg settings
+Date: Wed, 23 Nov 2011 10:40:55 -0500
+Message-Id: <1322062858-15276-3-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111123_164114_908482_5AFBED2B)
+In-Reply-To: <1322062858-15276-1-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1322062858-15276-1-git-send-email-mcgrof@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Follow 802.11n-2009 9.13.3.1 for protection mode and ADDBA
-* Send ADDBA only to HT STAs - implement 11.5.1.1 partially
+It is useful to apply reguatory settings immediately. We already
+handle applying regulatory hints immediatey for most hints but
+for user hints and country IE hints we want to kick hardware
+immediately to make these changes take effect. This adds supports
+to let us kick hardware to make the changes take effect as soon
+as possible.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 ---
- net/mac80211/agg-tx.c |   21 +++++++++++++++++++++
- net/mac80211/ibss.c   |   18 ++++++++++++++++++
- net/mac80211/util.c   |    3 +++
- 3 files changed, 42 insertions(+), 0 deletions(-)
+ include/linux/nl80211.h |    4 ++++
+ net/wireless/core.c     |   23 +++++++++++++++++++++++
+ net/wireless/core.h     |    2 ++
+ net/wireless/nl80211.c  |    5 +++++
+ net/wireless/reg.c      |    8 ++++++++
+ 5 files changed, 42 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 41b9bfd..c85c369 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -390,6 +390,27 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
- 		return -EINVAL;
- 	}
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 97bfebf..5f68f60 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -2452,11 +2452,15 @@ enum nl80211_cqm_rssi_threshold_event {
+  * @NL80211_TX_POWER_AUTOMATIC: automatically determine transmit power
+  * @NL80211_TX_POWER_LIMITED: limit TX power by the mBm parameter
+  * @NL80211_TX_POWER_FIXED: fix TX power to the mBm parameter
++ * @NL80211_TX_POWER_REG: adjust tx power based on the latest
++ *	regulatory update. The driver must inspect the chan->max_power,
++ *	the mBm power passed will always be 0 and can be ignored.
+  */
+ enum nl80211_tx_power_setting {
+ 	NL80211_TX_POWER_AUTOMATIC,
+ 	NL80211_TX_POWER_LIMITED,
+ 	NL80211_TX_POWER_FIXED,
++	NL80211_TX_POWER_REG,
+ };
  
-+	/*
-+	 * 11.5.1.1: If the initiating STA is an HT STA, is a member of an
-+	 * IBSS, and has no other existing Block Ack agreement with the
-+	 * recipient STA, then the initiating STA shall transmit a Probe
-+	 * Request frame to the recipient STA and shall not transmit an
-+	 * ADDBA Request frame unless it receives a Probe Response frame
-+	 * from the recipient within dot11ADDBAFailureTimeout.
-+	 *
-+	 * The probe request mechanism for ADDBA is currently not implemented,
-+	 * but we only build up Block Ack session with HT STAs. This information
-+	 * is set when we receive a bss info from a probe response or a beacon.
-+	 */
-+	if (sta->sdata->vif.type == NL80211_IFTYPE_ADHOC &&
-+	    !sta->sta.ht_cap.ht_supported) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		printk(KERN_DEBUG "BA request denied - IBSS STA %pM"
-+		       "does not advertise HT support\n", pubsta->addr);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+		return -EINVAL;
-+	}
-+
- 	spin_lock_bh(&sta->lock);
- 
- 	/* we have tried too many times, receiver does not want A-MPDU */
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 1e4fd0f..ea424de 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -954,6 +954,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
- 			struct cfg80211_ibss_params *params)
- {
- 	struct sk_buff *skb;
-+	u32 changed = 0;
- 
- 	skb = dev_alloc_skb(sdata->local->hw.extra_tx_headroom +
- 			    sizeof(struct ieee80211_hdr_3addr) +
-@@ -1016,6 +1017,23 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_recalc_idle(sdata->local);
- 	mutex_unlock(&sdata->local->mtx);
- 
-+	/*
-+	 * 9.13.3.1: In an IBSS, the HT Protection field is reserved, but
-+	 * an HT STA shall protect HT transmissions as though the HT
-+	 * Protection field were set to non-HT mixed mode.
-+	 *
-+	 * In an IBSS, the RIFS Mode field of the HT Operation element is
-+	 * also reserved, but an HT STA shall operate as though this field
-+	 * were set to 1.
-+	 */
-+
-+	sdata->vif.bss_conf.ht_operation_mode |=
-+		  IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED
-+		| IEEE80211_HT_PARAM_RIFS_MODE;
-+
-+	changed |= BSS_CHANGED_HT;
-+	ieee80211_bss_info_change_notify(sdata, changed);
-+
- 	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
- 
+ /**
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index ccdfed8..9cac8c3 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -478,6 +478,29 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
  	return 0;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 3b9b492..c26e968 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1585,6 +1585,9 @@ u8 *ieee80211_ie_build_ht_info(u8 *pos,
- 	}
- 	if (ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
- 		ht_info->ht_param |= IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
-+
-+	/* Note: According to 9.13.3.1, HT Protection field and RIFS Mode
-+	 * are reserved in IBSS mode, therefore keep them at 0 */
- 	ht_info->operation_mode = 0x0000;
- 	ht_info->stbc_param = 0x0000;
+ }
  
++/*
++ * Kicks the hardware to apply immediately any needed regulatory
++ * changes. This is an optimization to ensure values are propagated
++ * to hardware right away. Most regulatory hints are applied immediately
++ * but for country IE hints and user hints this will ensure we apply the
++ * changes immediately.
++ */
++int wiphy_reg_config_update(struct wiphy *wiphy)
++{
++	int r;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++
++	if (!rdev || !rdev->ops->set_tx_power)
++		return -EINVAL;
++	r = rdev->ops->set_tx_power(wiphy, NL80211_TX_POWER_REG, 0);
++	/*
++	 * XXX: trigger disconnect if operating channel / channel type
++	 * is not allowed due to a new regulatory update. What do we
++	 * want to do here?
++	 */
++	return r;
++}
++
+ int wiphy_register(struct wiphy *wiphy)
+ {
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index fb08c28..6c852d3 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -462,6 +462,8 @@ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
+ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 				 u32 beacon_int);
+ 
++int wiphy_reg_config_update(struct wiphy *wiphy);
++
+ #ifdef CONFIG_CFG80211_DEVELOPER_WARNINGS
+ #define CFG80211_DEV_WARN_ON(cond)	WARN_ON(cond)
+ #else
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a1cabde..3dd2e91 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1329,6 +1329,11 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 		idx = NL80211_ATTR_WIPHY_TX_POWER_SETTING;
+ 		type = nla_get_u32(info->attrs[idx]);
+ 
++		if (type == NL80211_TX_POWER_REG) {
++			result = -EOPNOTSUPP;
++			goto bad_res;
++		}
++
+ 		if (!info->attrs[NL80211_ATTR_WIPHY_TX_POWER_LEVEL] &&
+ 		    (type != NL80211_TX_POWER_AUTOMATIC)) {
+ 			result = -EINVAL;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 3f9f318..38b1214 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1142,6 +1142,7 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
+ 				    enum nl80211_reg_initiator initiator)
+ {
+ 	enum ieee80211_band band;
++	int r;
+ 
+ 	assert_reg_lock();
+ 
+@@ -1159,6 +1160,13 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
+ 	reg_process_ht_flags(wiphy);
+ 	if (wiphy->reg_notifier)
+ 		wiphy->reg_notifier(wiphy, last_request);
++
++	r = wiphy_reg_config_update(wiphy);
++	if (!r) {
++		REG_DBG_PRINT("Unable to immediately apply "
++			      "regulatory updates on %s\n",
++			      wiphy_name(wiphy));
++	}
+ }
+ 
+ void regulatory_update(struct wiphy *wiphy,
 -- 
-1.7.7.3
+1.7.4.15.g7811d
 
