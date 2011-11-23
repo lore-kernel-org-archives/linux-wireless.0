@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51215 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753040Ab1KRRfZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 12:35:25 -0500
-Subject: Re: [PATCH v9 2/2] mac80211:  Support ht-cap over-rides.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4EC69658.8000309@candelatech.com>
-References: <1321566884-31757-1-git-send-email-greearb@candelatech.com>
-	 <1321566884-31757-2-git-send-email-greearb@candelatech.com>
-	 (sfid-20111117_225512_858995_688665F5) <1321611355.10266.30.camel@jlt3.sipsolutions.net>
-	 <4EC69155.4060306@candelatech.com>
-	 <1321637322.10266.70.camel@jlt3.sipsolutions.net>
-	 <4EC69658.8000309@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 18 Nov 2011 18:35:21 +0100
-Message-ID: <1321637721.10266.72.camel@jlt3.sipsolutions.net> (sfid-20111118_183528_928231_E3E070D5)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:14855 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753645Ab1KWQ6F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Nov 2011 11:58:05 -0500
+Date: Wed, 23 Nov 2011 18:00:38 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Amir Hedayaty <hedayaty@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
+Message-ID: <20111123170037.GE13460@redhat.com> (sfid-20111123_175811_102144_80E168B0)
+References: <20111116100915.GA2191@redhat.com>
+ <20111122214940.GH8452@tuxdriver.com>
+ <20111123080506.GB9833@redhat.com>
+ <CAGXE3d-HE8MWV5Xv9e407iDn83UFvjua52mYGEJuJnQuQvnyog@mail.gmail.com>
+ <20111123105106.GA7943@redhat.com>
+ <CAN6fvj2=EhimZUy-DKtpzAKq1mpvBt03KtX9vCi0dBTCXWVsRg@mail.gmail.com>
+ <20111123151414.GC7943@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111123151414.GC7943@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-11-18 at 09:31 -0800, Ben Greear wrote:
+On Wed, Nov 23, 2011 at 04:14:14PM +0100, Stanislaw Gruszka wrote:
+> I'll do koji kernel build with the patch, that would be easiest, I'll
+> provide link shortly.
 
-> >>> This looks like it has endian bugs. Note that sband->ht_cap is
-> >>> ieee80211_sta_ht_cap, whereas sdata->u.mgd.ht_capa[_mask] is
-> >>> ieee80211_ht_cap -- the latter is in IEEE format (LE) while the former
-> >>> is in a complete different format that's easier to digest for the
-> >>> CPU :-)
-> >>
-> >> So, the ht-caps&  mask data coming from user-space via netlink
-> >> should be in network-byte order?
-> >
-> > It is that way right now, and that makes sense.
-> 
-> Ok, I think I am using host-byte-order currently in my iw
-> and hostap patches, which is why everything works for me.
-> 
-> But, I'll flip that all around....
+Is here:
+http://koji.fedoraproject.org/koji/taskinfo?taskID=3535123
+it still compile, so I hope there will be no errors during
+compilation.
 
-You're using x86 so 802.11 byte order == CPU byte order...
-
-Be careful: "network byte order" usually means big endian...
-
-johannes
-
+Stanislaw
