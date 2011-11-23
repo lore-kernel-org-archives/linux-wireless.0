@@ -1,53 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:44803 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754879Ab1K3OQo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 09:16:44 -0500
-Received: by eaak14 with SMTP id k14so721707eaa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2011 06:16:43 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:18017 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756001Ab1KWERd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 23:17:33 -0500
+Date: Tue, 22 Nov 2011 23:17:28 -0500
+From: Dave Jones <davej@redhat.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: 3.1+ iwlwifi lockup
+Message-ID: <20111123041728.GA11864@redhat.com> (sfid-20111123_051753_717485_3C3B59E5)
+References: <20111031143408.GA17152@redhat.com>
+ <1321992902.8072.7.camel@wwguy-ubuntu>
+ <20111123024545.GA9703@redhat.com>
+ <1322015380.11647.82.camel@wwguy-huron>
+ <20111123033446.GB9703@redhat.com>
+ <1322016965.11647.95.camel@wwguy-huron>
 MIME-Version: 1.0
-In-Reply-To: <1322641938.3982.0.camel@jlt3.sipsolutions.net>
-References: <1322533625-24641-1-git-send-email-mar.kolya@gmail.com>
-	<1322555084.4110.2.camel@jlt3.sipsolutions.net>
-	<CALGY4fvLSKBY93M9Bhb-F8Sm=Uw5nU+OvTtAmk_BXQX8WX6V8A@mail.gmail.com>
-	<1322579973.4110.22.camel@jlt3.sipsolutions.net>
-	<CALGY4fvSOdKtZbPSdvYkY3XXaGXNo-Ft8ir4LikmnTLqSkVCGA@mail.gmail.com>
-	<1322604877.11282.1.camel@jlt3.sipsolutions.net>
-	<CALGY4ftCLvwUuRZbH30PyUxAd6U7-p9hGwu8SjzLmqV4=XryZg@mail.gmail.com>
-	<1322606159.11282.2.camel@jlt3.sipsolutions.net>
-	<CALGY4fu7DExMn6BCrwTMCEav1VEe81NAvJapiLXoi_DSf50ctg@mail.gmail.com>
-	<1322641938.3982.0.camel@jlt3.sipsolutions.net>
-Date: Wed, 30 Nov 2011 09:16:43 -0500
-Message-ID: <CALGY4fup7F-581LYfcSZYGvMOqzrNxiNedVbQOOb_VjVwzrokQ@mail.gmail.com> (sfid-20111130_151648_248497_7AF42156)
-Subject: Re: [PATCH] mac80211: reset addba retries after timeout
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1322016965.11647.95.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/11/30 Johannes Berg <johannes@sipsolutions.net>:
-> On Tue, 2011-11-29 at 17:46 -0500, Nikolay Martynov wrote:
->
->> > Maybe the better approach would be to bump it up, but also only allow an
->> > attempt once every say 15 seconds or so? It seems kinda useless to try 3
->> > (or 10/15) times in quick succession and then give up, vs. just trying
->> > more spaced out?
->>
->>   Makes sense to me. Although I would left first 2-3 go quickly in
->> case first was lost due to random glitch there is no reason to wait 15
->> seconds. But if first 2-3 fail - it make sense split next apart, I
->> think.
->
-> Seems ok to me, want to implement it? :)
+On Tue, Nov 22, 2011 at 06:56:05PM -0800, Guy, Wey-Yi wrote:
+ > Agree, that is why I could not re-produce here after many try. Could you
+ > share your configuration, such as 
 
-  Sure, I'll send patch for this.
+ > band/channel
 
+Channel:1
+Frequency:2.412 GHz (Channel 1)
 
+ > 32/64 bit system
 
--- 
-Truthfully yours,
-Martynov Nikolay.
-Email: mar.kolya@gmail.com
+64bit. It's a Dell Adamo laptop.
+
+ > 20/40 MHz
+
+not sure how to find out what you're looking for.
+
+ > traffic type
+
+last triggered it with just ssh.
+
+ > open/security
+
+IE: IEEE 802.11i/WPA2 Version 1
+    Group Cipher : CCMP
+    Pairwise Ciphers (1) : CCMP
+    Authentication Suites (1) : PSK
+
+ > power management
+
+nothing special. everything is default.
+
+all messages related to iwlwifi in dmesg are below..
+
+	Dave
+
+[   24.423300] Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
+[   24.425560] Copyright(c) 2003-2011 Intel Corporation
+[   24.428667] iwlwifi 0000:04:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[   24.437959] iwlwifi 0000:04:00.0: setting latency timer to 64
+[   24.438108] iwlwifi 0000:04:00.0: pci_resource_len = 0x00002000
+[   24.444058] iwlwifi 0000:04:00.0: pci_resource_base = ffffc90011574000
+[   24.445823] iwlwifi 0000:04:00.0: HW Revision ID = 0x0
+[   24.447695] iwlwifi 0000:04:00.0: irq 46 for MSI/MSI-X
+[   24.447896] iwlwifi 0000:04:00.0: Detected Intel(R) Ultimate N WiFi Link 5300 AGN, REV=0x24
+[   24.453070] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
+[   24.486217] iwlwifi 0000:04:00.0: device EEPROM VER=0x120, CALIB=0x4
+[   24.489176] iwlwifi 0000:04:00.0: Device SKU: 0Xf0
+[   24.490778] iwlwifi 0000:04:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
+[   24.520548] iwlwifi 0000:04:00.0: loaded firmware version 8.83.5.1 build 33692
+[   39.229498] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
+[   39.240818] iwlwifi 0000:04:00.0: Radio type=0x0-0x2-0x0
+[   39.607327] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
+[   39.613424] iwlwifi 0000:04:00.0: Radio type=0x0-0x2-0x0
+[  210.248807] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra = b8:c7:5d:0c:39:87 tid = 6
+
