@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40426 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751322Ab1KQWeZ (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:43838 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753797Ab1KWUcj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 17:34:25 -0500
-Subject: Re: [PATCH 0/3] linux-firmware: new firmware for brcmfmac and
- nvram removal
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: dwmw2@infradead.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <1321569101-19568-1-git-send-email-frankyl@broadcom.com> (sfid-20111117_233154_459786_40512EB4)
-References: <1321569101-19568-1-git-send-email-frankyl@broadcom.com>
-	 (sfid-20111117_233154_459786_40512EB4)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 17 Nov 2011 23:34:22 +0100
-Message-ID: <1321569262.3997.54.camel@jlt3.sipsolutions.net> (sfid-20111117_233428_662677_374FDE78)
-Mime-Version: 1.0
+	Wed, 23 Nov 2011 15:32:39 -0500
+Received: by iage36 with SMTP id e36so2078525iag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 12:32:38 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH 0/7] mesh fixes and improvements
+Date: Wed, 23 Nov 2011 12:32:19 -0800
+Message-Id: <1322080347-7644-1-git-send-email-thomas@cozybit.com> (sfid-20111123_213242_738083_F4238B77)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-11-17 at 14:31 -0800, Franky Lin wrote:
-> This patch series adds new firmware for bcm4329 and bcm4330 and removes
-> the nvram file from the repository as it is not useful for Linux users
-> and only used for internal development.
-> 
-> Franky Lin (3):
->   linux-firmware: add new bcm4329 firmware for brcmfmac
->   linux-firmware: add bcm4330 firmware for brcmfmac
->   linux-firmware: remove nvram file for bcm4329 development board
-> 
->  brcm/bcm4329-fullmac-4.txt |   94 --------------------------------------------
->  brcm/brcmfmac4329.bin      |  Bin 0 -> 253748 bytes
->  brcm/brcmfmac4330.bin      |  Bin 0 -> 222126 bytes
+This series contains several (relatively minor) fixes and improvements for the
+mesh stack. Chun-Yeow has also submitted a patch which adds the capability of
+specifying a legacy rate for multicast frames in mesh, similar to what is
+currently possible in IBSS. A follow-up patch for iw will be submitted
+separately.
 
-Don't you need to update WHENCE for new files?
+A couple of these will fail checpatch due to overstepping the 80 column limit,
+but this is fixed in the final patch.
 
-johannes
+Thanks,
+Thomas
+
+Chun-Yeow Yeoh (1):
+  {nl,cfg,mac}80211: Allow Setting Multicast Rate in Mesh
+
+Thomas Pedersen (6):
+  mac80211: failed forwarded mesh frame addressing
+  mac80211: fix switched HWMP frame addresses
+  mac80211: fix forwarded mesh frame queue mapping
+  {nl,cfg,mac}80211: implement dot11MeshHWMPperrMinInterval
+  mac80211: don't initiate path discovery when forwarding frame with
+    unknown DA
+  mac80211: clean up rx_h_mesh_fwding
+
+ include/linux/nl80211.h       |    5 ++
+ include/net/cfg80211.h        |    3 +
+ net/mac80211/cfg.c            |    9 +++
+ net/mac80211/debugfs_netdev.c |    3 +
+ net/mac80211/ieee80211_i.h    |    4 +-
+ net/mac80211/iface.c          |   15 +----
+ net/mac80211/mesh.c           |    1 +
+ net/mac80211/mesh.h           |    2 +
+ net/mac80211/mesh_hwmp.c      |  146 ++++++++++++++++++++++++-----------------
+ net/mac80211/mesh_pathtbl.c   |   29 +--------
+ net/mac80211/rx.c             |  105 +++++++++++++-----------------
+ net/mac80211/tx.c             |    3 +-
+ net/mac80211/wme.c            |   23 +++++++
+ net/mac80211/wme.h            |    3 +
+ net/wireless/mesh.c           |    2 +
+ net/wireless/nl80211.c        |   11 +++
+ 16 files changed, 201 insertions(+), 163 deletions(-)
+
+-- 
+1.7.5.4
 
