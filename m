@@ -1,150 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43792 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932761Ab1KJPtg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 10:49:36 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Todd Previte <toddX.a.previte@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 02/27] iwlwifi: Suppress noisy syslog messages when RF_KILL switch engaged
-Date: Thu, 10 Nov 2011 06:55:02 -0800
-Message-Id: <1320936927-9078-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_165024_230195_0A57F076)
-In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:46298 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752060Ab1KWSli (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Nov 2011 13:41:38 -0500
+Received: by iage36 with SMTP id e36so1963844iag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 10:41:37 -0800 (PST)
+Message-ID: <4ECD3E5E.6010109@lwfinger.net> (sfid-20111123_194141_873486_C57EBEB5)
+Date: Wed, 23 Nov 2011 12:41:34 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?SmFuIER2b8WZw6Fr?= <dvorakj@cngroup.dk>
+CC: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rtl8192cu not working with Edimax EW-7811Un
+References: <20111122113427.3d332b00776546d5ebac11de@cngroup.dk> <20111122140139.GA3891@redhat.com> <20111123112301.f5e523ff743f86dae539fdf3@cngroup.dk> <20111123143304.GA13460@redhat.com> <20111123162426.9a30d25585fa54507c1c864e@cngroup.dk> <4ECD13D0.6010500@lwfinger.net> <20111123155108.GD13460@redhat.com> <20111123175210.fd0ac6b0b66885b3deaecfc0@cngroup.dk>
+In-Reply-To: <20111123175210.fd0ac6b0b66885b3deaecfc0@cngroup.dk>
+Content-Type: multipart/mixed;
+ boundary="------------020201080605050708030400"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Todd Previte <toddX.a.previte@intel.com>
+This is a multi-part message in MIME format.
+--------------020201080605050708030400
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-When a station is associated with an AP and the RF_KILL switch is engaged,
-numerous error messages were sent to the system log. The error messages
-were the result of the failure(s) of the various submodules to perform
-their tasks after the radios were disabled.
+On 11/23/2011 10:52 AM, Jan Dvořák wrote:
+> On Wed, 23 Nov 2011 16:51:09 +0100
+> Stanislaw Gruszka<sgruszka@redhat.com>  wrote:
+>> Could you confirm that on previous kernel client mode does not
+>> work, and work with that new kernel?
+>
+> I'll try it when I get home or first thing yesterday.
+>
+>>> I can't still use hostapd, however.
+>> Hmm, I'm not sure if rtl92c works in AP mode, Larry?
 
-To resolve this situation, the messages were modified to use a new macro,
-IWL_DEBUG_QUIET_RFKILL. This macro allows for the RF_KILL error messages
-to be sent to the log provided that IWL_DEBUG is true and IWL_DL_RADIO
-is '1'. For all other cases, the error messages resulting from an RFKILL
-event will not be sent to the system log. Messages logged because of an
-RFKILL will be tagged with the prefix '(RFKILL)' to clarify the cause of
-the error.
+When I try it, I get rtl8192cu to beacon, and it is possible to authenticate and 
+associate, but the second computer never gets an IP number. I think my script to 
+set up dhcpd is faulty, but I cannot find the problem. I attached it - perhaps 
+one of you can find what I'm doing wrong. BTW, the script also fails when I try 
+to use b43 as an AP, and I know it works.
 
-Signed-off-by: Todd Previte <toddX.a.previte@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c      |    5 +++--
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debug.h         |   15 +++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   10 ++++++----
- 4 files changed, 25 insertions(+), 7 deletions(-)
+Larry
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 58a381c..4c52bee 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -45,7 +45,8 @@ static int iwlagn_disable_bss(struct iwl_priv *priv,
- 	send->filter_flags = old_filter;
- 
- 	if (ret)
--		IWL_ERR(priv, "Error clearing ASSOC_MSK on BSS (%d)\n", ret);
-+		IWL_DEBUG_QUIET_RFKILL(priv,
-+			"Error clearing ASSOC_MSK on BSS (%d)\n", ret);
- 
- 	return ret;
- }
-@@ -124,7 +125,7 @@ static void iwlagn_update_qos(struct iwl_priv *priv,
- 			       sizeof(struct iwl_qosparam_cmd),
- 			       &ctx->qos_data.def_qos_parm);
- 	if (ret)
--		IWL_ERR(priv, "Failed to update QoS\n");
-+		IWL_DEBUG_QUIET_RFKILL(priv, "Failed to update QoS\n");
- }
- 
- static int iwlagn_update_beacon(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-index ed62836..9306768 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-@@ -840,7 +840,7 @@ int iwlagn_mac_sta_remove(struct ieee80211_hw *hw,
- 			sta->addr);
- 	ret = iwl_remove_station(priv, sta_priv->sta_id, sta->addr);
- 	if (ret)
--		IWL_ERR(priv, "Error removing station %pM\n",
-+		IWL_DEBUG_QUIET_RFKILL(priv, "Error removing station %pM\n",
- 			sta->addr);
- 	mutex_unlock(&priv->shrd->mutex);
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index 69a77e2..1dddf9b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -70,10 +70,25 @@ do {                                            			\
- 			       DUMP_PREFIX_OFFSET, 16, 1, p, len, 1);	\
- } while (0)
- 
-+#define IWL_DEBUG_QUIET_RFKILL(p, fmt, args...)			\
-+do {									\
-+	if (!iwl_is_rfkill(p->shrd))				\
-+		dev_printk(KERN_ERR, bus(p)->dev, "%c %s " fmt,	\
-+		(in_interrupt() ? 'I' : 'U'), __func__ , ##args);	\
-+	else if	(iwl_get_debug_level(p->shrd) & IWL_DL_RADIO)	\
-+		dev_printk(KERN_ERR, bus(p)->dev, "(RFKILL) %c %s " fmt, \
-+		(in_interrupt() ? 'I' : 'U'), __func__ , ##args);	\
-+} while (0)
-+
- #else
- #define IWL_DEBUG(m, level, fmt, args...)
- #define IWL_DEBUG_LIMIT(m, level, fmt, args...)
- #define iwl_print_hex_dump(m, level, p, len)
-+#define IWL_DEBUG_QUIET_RFKILL(p, fmt, args...)	\
-+do {							\
-+	if (!iwl_is_rfkill(p->shrd))			\
-+		IWL_ERR(p, fmt, ##args);		\
-+} while (0)
- #endif				/* CONFIG_IWLWIFI_DEBUG */
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-index 4a0c953..461e1ae 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-@@ -982,7 +982,8 @@ static int iwl_send_cmd_async(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 
- 	ret = iwl_enqueue_hcmd(trans, cmd);
- 	if (ret < 0) {
--		IWL_ERR(trans, "Error sending %s: enqueue_hcmd failed: %d\n",
-+		IWL_DEBUG_QUIET_RFKILL(trans,
-+			"Error sending %s: enqueue_hcmd failed: %d\n",
- 			  get_cmd_string(cmd->id), ret);
- 		return ret;
- 	}
-@@ -1008,7 +1009,8 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	if (cmd_idx < 0) {
- 		ret = cmd_idx;
- 		clear_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status);
--		IWL_ERR(trans, "Error sending %s: enqueue_hcmd failed: %d\n",
-+		IWL_DEBUG_QUIET_RFKILL(trans,
-+			"Error sending %s: enqueue_hcmd failed: %d\n",
- 			  get_cmd_string(cmd->id), ret);
- 		return ret;
- 	}
-@@ -1022,12 +1024,12 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 				&trans_pcie->txq[trans->shrd->cmd_queue];
- 			struct iwl_queue *q = &txq->q;
- 
--			IWL_ERR(trans,
-+			IWL_DEBUG_QUIET_RFKILL(trans,
- 				"Error sending %s: time out after %dms.\n",
- 				get_cmd_string(cmd->id),
- 				jiffies_to_msecs(HOST_COMPLETE_TIMEOUT));
- 
--			IWL_ERR(trans,
-+			IWL_DEBUG_QUIET_RFKILL(trans,
- 				"Current CMD queue read_ptr %d write_ptr %d\n",
- 				q->read_ptr, q->write_ptr);
- 
--- 
-1.7.0.4
 
+
+
+
+--------------020201080605050708030400
+Content-Type: text/plain;
+ name="control_ap"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="control_ap"
+
+IyEvYmluL3NoCiMgU2NyaXB0IHRvIHN0YXJ0L3N0b3AgYSBob3N0YXBkLWJhc2VkIGFjY2Vz
+cyBwb2ludAojCiMgU2FtcGxlIHN0YXJ0IGNhbGwgImNvbnRyb2xfYXAgc3RhcnQgd2xhbjAg
+ZXRoMCIKIyBTdG9wIHdpdGggImNvbnRyb2xfYXAgc3RvcCIKIwoKY2FzZSAiJDEiIGluCnN0
+YXJ0KQoJaWYgWyAkIyAtbmUgMyBdCgl0aGVuCgkgIGVjaG8gIlVzYWdlOiAkMCBzdGFydCBB
+UF9pZmFjZSBORVRfaWZhY2UiCgkgIGV4aXQgMQoJZmkKOzsKc3RvcCkKCWlmIFsgJCMgLW5l
+IDEgXQoJdGhlbgoJICBlY2hvICJVc2FnZTogJDAgc3RvcCIKCSAgZXhpdCAxCglmaQo7Owoq
+KQogICAgICAgIGVjaG8gIlVzYWdlOiIKCWVjaG8gIiQwIHN0YXJ0IEFQLWlmYWNlIG5ldF9p
+ZmFjZSIKCWVjaG8gIm9yIgoJZWNobyAiJDAgc3RvcCIKICAgICAgICBleGl0IDEKICAgICAg
+ICA7Owplc2FjCgojIFN5bWJvbHMgZm9yIG5lZWRlZCBwcm9ncmFtcwoKSVBUQUJMRVM9L3Vz
+ci9zYmluL2lwdGFibGVzCklGQ09ORklHPS9zYmluL2lmY29uZmlnCkRIQ1BEPS91c3Ivc2Jp
+bi9kaGNwZApIT1NUQVBEPS91c3Ivc2Jpbi9ob3N0YXBkCgojIFN5bWJvbHMgZm9yIEFQIGFu
+ZCBleHRlcm5hbCBpbnRlcmZhY2VzCgpORVRfQVA9JDIKTkVUX0VYVD0kMwoKIyBGaXJzdCAz
+IG9jdGV0cyBvZiBJUCBhZGRyZXNzIGZvciB0aGUgQVAKCkFQX0FERFI9MTkyLjE2OC4wCgoj
+IElQIGFkZHJlc3MgZm9yIG5hbWVzZXJ2ZXIKCk5BTUVfU0VSVkVSPTguOC44LjgKCiMgQVAg
+Q2hhbm5lbCwgU1NJRCwgRW5jcnlwdGlvbiBtZXRob2QsICBhbmQgRW5jcnlwdGlvbiBzZWNy
+ZXQKCkFQX0NIQU5ORUw9MQpBUF9TU0lEPXRlc3QKV1BBX1NFQ1JFVD0iXCIxMjM0NTY3ODlc
+IiIKRU5DUllQVF9NT0RFPTIKCmNhc2UgIiQxIiBpbgpzdGFydCkKICAgICAgICBlY2hvICJT
+dGFydGluZyBBUCBtb2RlIGZvciAkTkVUX0FQIGF0IGFkZHJlc3MgJEFQX0FERFIiCiAgICAg
+ICAgIyBEaXNhYmxlIHBhY2tldCBmb3J3YXJkaW5nCiAgICAgICAgZWNobyAwID4gL3Byb2Mv
+c3lzL25ldC9pcHY0L2lwX2ZvcndhcmQKICAgICAgICAjIFN0b3AgYW55IGV4aXN0aW5nIGhv
+c3RhcGQgYW5kIGRoY3BkIGRhZW1vbnMKICAgICAgICBraWxscHJvYyBob3N0YXBkCiAgICAg
+ICAga2lsbHByb2MgZGhjcGQKICAgICAgICAjU2V0IHVwIGZvcndhcmRpbmcKICAgICAgICAk
+SVBUQUJMRVMgLXQgbmF0IC1BIFBPU1RST1VUSU5HIC1vICRORVRfRVhUIC1qIE1BU1FVRVJB
+REUKICAgICAgICAkSVBUQUJMRVMgLUEgRk9SV0FSRCAtaSAkTkVUX0VYVCAtbyAkTkVUX0FQ
+IC1tIHN0YXRlIFwKCQktLXN0YXRlIFJFTEFURUQsRVNUQUJMSVNIRUQgLWogQUNDRVBUCiAg
+ICAgICAgJElQVEFCTEVTIC1BIEZPUldBUkQgLWkgJE5FVF9BUCAtbyAkTkVUX0VYVCAtaiBB
+Q0NFUFQKICAgICAgICAjIEVuYWJsZSBwYWNrZXQgZm9yd2FyZGluZwogICAgICAgIGVjaG8g
+MSA+IC9wcm9jL3N5cy9uZXQvaXB2NC9pcF9mb3J3YXJkCiAgICAgICAgIyBHZXQgdGhlIEFQ
+IGludGVyZmFjZSBpbiB0aGUgcmlnaHQgc3RhdGUKICAgICAgICAkSUZDT05GSUcgJE5FVF9B
+UCBkb3duCiAgICAgICAgJElGQ09ORklHICRORVRfQVAgdXAKICAgICAgICAkSUZDT05GSUcg
+JE5FVF9BUCAkQVBfQUREUi4xCiAgICAgICAgIyBkaGNwZCBuZWVkcyB0byBoYXZlIGEgbGVh
+c2VzIGZpbGUgYXZhaWxhYmxlIC0gY3JlYXRlIGl0IGlmIG5lZWRlZAogICAgICAgIGlmIFsg
+ISAtZiAvdmFyL2xpYi9kaGNwL2RiL2RoY3BkLmxlYXNlcyBdOyB0aGVuCiAgICAgICAgICAg
+ICAgICB0b3VjaCAvdmFyL2xpYi9kaGNwL2RiL2RoY3BkLmxlYXNlcwogICAgICAgIGZpCgkj
+IFdyaXRlIHRoZSBESENQIHNlcnZlciBjb25maWd1cmF0aW9uIGZpbGUKCWVjaG8gIm9wdGlv
+biBkb21haW4tbmFtZS1zZXJ2ZXJzICROQU1FX1NFUlZFUjsiID4gfi9kaGNwZC5jb25mCgll
+Y2hvICJkZWZhdWx0LWxlYXNlLXRpbWUgNjAwOyIgPj4gfi9kaGNwZC5jb25mCgllY2hvICJt
+YXgtbGVhc2UtdGltZSA3MjAwOyIgPj4gfi9kaGNwZC5jb25mCgllY2hvICJkZG5zLXVwZGF0
+ZS1zdHlsZSBub25lOyBkZG5zLXVwZGF0ZXMgb2ZmOyIgPj4gfi9kaGNwZC5jb25mCgllY2hv
+ICJzdWJuZXQgJEFQX0FERFIuMCBuZXRtYXNrIDI1NS4yNTUuMjU1LjAgeyIgPj4gfi9kaGNw
+ZC5jb25mCgllY2hvICIgICAgICAgIHJhbmdlICRBUF9BRERSLjIwMCAkQVBfQUREUi4yMjk7
+IiA+PiB+L2RoY3BkLmNvbmYKIwllY2hvICIgICAgICAgIG9wdGlvbiBzdWJuZXQtbWFzayAy
+NTUuMjU1LjI1NS4wOyIgPj4gfi9kaGNwZC5jb25mCgllY2hvICIgICAgICAgIG9wdGlvbiBi
+cm9hZGNhc3QtYWRkcmVzcyAkQVBfQUREUi4yNTU7IiA+PiB+L2RoY3BkLmNvbmYKCWVjaG8g
+IiAgICAgICAgb3B0aW9uIHJvdXRlcnMgJEFQX0FERFIuMTsiID4+IH4vZGhjcGQuY29uZgoJ
+ZWNobyAifSIgPj4gfi9kaGNwZC5jb25mCgkjIFdyaXRlIHRoZSBob3N0YXBkIGNvbmZpZ3Vy
+YXRpb24gZmlsZQoJZWNobyAiaW50ZXJmYWNlPSRORVRfQVAiID4gfi9ob3N0YXBkLmNvbmYK
+CWVjaG8gImRyaXZlcj1ubDgwMjExIiA+PiB+L2hvc3RhcGQuY29uZiAKCWVjaG8gImh3X21v
+ZGU9ZyIgPj4gfi9ob3N0YXBkLmNvbmYgCgllY2hvICJjaGFubmVsPSRBUF9DSEFOTkVMIiA+
+PiB+L2hvc3RhcGQuY29uZiAKCWVjaG8gInNzaWQ9JEFQX1NTSUQiID4+IH4vaG9zdGFwZC5j
+b25mIAoJZWNobyAid3BhPUVOQ1JZUFRfTU9ERSIgPj4gfi9ob3N0YXBkLmNvbmYgCgllY2hv
+ICJ3cGFfa2V5X21nbXQ9V1BBLVBTSyIgPj4gfi9ob3N0YXBkLmNvbmYgCgllY2hvICJ3cGFf
+cGFpcndpc2U9Q0NNUCIgPj4gfi9ob3N0YXBkLmNvbmYgCgllY2hvICJ3cGFfcGFzc3BocmFz
+ZT0kV1BBX1NFQ1JFVCIgPj4gfi9ob3N0YXBkLmNvbmYgCiAgICAgICAgIyBCcmluZyB1cCBo
+b3N0YXBkCiAgICAgICAgJEhPU1RBUEQgLUIgfi9ob3N0YXBkLmNvbmYKICAgICAgICAjIEJy
+aW5nIHVwIHRoZSBESENQIHNlcnZlcgogICAgICAgICRESENQRCAtY2Ygfi9kaGNwZC5jb25m
+ICRORVRfQVAKICAgICAgICA7OwpzdG9wKQogICAgICAgIGVjaG8gIlN0b3BwaW5nIEFQIG1v
+ZGUiCiAgICAgICAgIyBTdG9wIGhvc3RhcGQgYW5kIGRoY3BkIGRhZW1vbnMKICAgICAgICBr
+aWxscHJvYyBob3N0YXBkCiAgICAgICAga2lsbHByb2MgZGhjcGQKCXJtIC1mIH4vaG9zdGFw
+ZC5jb25mCglybSAtZiB+L2RoY3BkLmNvbmYKICAgICAgICA7Owplc2FjCgo=
+--------------020201080605050708030400--
