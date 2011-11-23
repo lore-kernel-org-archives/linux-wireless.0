@@ -1,68 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60410 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755158Ab1KHP6y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 10:58:54 -0500
-Subject: Re: [PATCH v3 1/3] nl80211: Add probe response offload attribute
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <CA+XVXfcrbfVvs+PQCjyrW_QZSKZiAzKUvrqbjqJr47dU73=n2A@mail.gmail.com> (sfid-20111108_165440_062522_2707F77D)
-References: <1320762928-6782-1-git-send-email-arik@wizery.com>
-	 <1320766291.24797.4.camel@jlt3.sipsolutions.net>
-	 <CA+XVXfcrbfVvs+PQCjyrW_QZSKZiAzKUvrqbjqJr47dU73=n2A@mail.gmail.com>
-	 (sfid-20111108_165440_062522_2707F77D)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Nov 2011 16:58:48 +0100
-Message-ID: <1320767928.24797.14.camel@jlt3.sipsolutions.net> (sfid-20111108_165857_732994_E8049B8D)
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:1650 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759501Ab1KWBWL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Nov 2011 20:22:11 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 10/24] brcm80211: fmac: rename wait queue name to match
+ using function
+Date: Tue, 22 Nov 2011 17:21:45 -0800
+Message-ID: <1322011319-24863-11-git-send-email-frankyl@broadcom.com> (sfid-20111123_022259_855887_888C29C6)
+In-Reply-To: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
+References: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-11-08 at 17:53 +0200, Arik Nemtsov wrote:
-> On Tue, Nov 8, 2011 at 17:31, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Tue, 2011-11-08 at 16:35 +0200, Arik Nemtsov wrote:
-> >> Notify user-space about probe-response offloading support in the driver.
-> >>
-> >> A wiphy flag is used to indicate support and a bitmap of protocols
-> >> determines which protocols are supported.
-> >
-> >> + * @NL80211_ATTR_PROBE_RESP_OFFLOAD_SUPPORT: Indicates support for probe
-> >> + *   response offloading by the driver/firmware.
-> >> + *   In addition this attribute holds a bitmap of the supported protocols
-> >> + *   for offloading using &enum nl80211_probe_resp_offload_support_attr.
-> >
-> > I wonder if this should make it more clear that probe requests will be
-> > replied to, and this is not optional?
-> 
-> Actually wl12xx "supports" the legacy way as well. We can operate
-> without wpa_s explicitly setting the probe-resp (even though we just
-> piece it together in other ways).
-> In this sense, it's not a mandatory feature. If wpa_s fails to
-> generate it for some reason, we don't want it to fail the AP load. The
-> AP will operate just fine.
+From: Arend van Spriel <arend@broadcom.com>
 
-It'll operate, not sure about "just fine" :-) The way I see it that's
-mostly a backward compatibility feature, no?
+The wait queue request_packet_wait was used in request_chain function
+and for sake of consistency it has been renamed to request_chain_wait.
 
-> >> +++ b/include/net/cfg80211.h
-> >> @@ -1693,6 +1693,7 @@ enum wiphy_flags {
-> >>       WIPHY_FLAG_AP_UAPSD                     = BIT(14),
-> >>       WIPHY_FLAG_SUPPORTS_TDLS                = BIT(15),
-> >>       WIPHY_FLAG_TDLS_EXTERNAL_SETUP          = BIT(16),
-> >> +     WIPHY_FLAG_SUPPORT_PROBE_RESP_OFFLOAD   = BIT(17),
-> >
-> > Ditto here, maybe WIPHY_FLAG_HAS_PROBE_RESP_OFFLOAD?
-> >
-> > As we discussed, ath6kl & similar full-mac drivers with AP SME in the
-> > device should set this to advertise the probe protocol feature set they
-> > support (by passing up), and even for wl12xx it's not optional.
-> 
-> All this has to do with user-space semantics. Currently hostap always
-> sets the probe-resp IEs, without checking offloading support.
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    8 ++++++--
+ .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    2 +-
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-Which is fine too, but I think ath6kl should set this value right?
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index ccb32c0..adee305 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -229,6 +229,10 @@ brcmf_sdioh_request_data(struct brcmf_sdio_dev *sdiodev, uint write, bool fifo,
+ 	return err_ret;
+ }
+ 
++/*
++ * This function takes a queue of packets. The packets on the queue
++ * are assumed to be properly aligned by the caller.
++ */
+ int
+ brcmf_sdioh_request_chain(struct brcmf_sdio_dev *sdiodev, uint fix_inc,
+ 			  uint write, uint func, uint addr,
+@@ -242,7 +246,7 @@ brcmf_sdioh_request_chain(struct brcmf_sdio_dev *sdiodev, uint fix_inc,
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	brcmf_pm_resume_wait(sdiodev, &sdiodev->request_packet_wait);
++	brcmf_pm_resume_wait(sdiodev, &sdiodev->request_chain_wait);
+ 	if (brcmf_pm_resume_error(sdiodev))
+ 		return -EIO;
+ 
+@@ -478,7 +482,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 		atomic_set(&sdiodev->suspend, false);
+ 		init_waitqueue_head(&sdiodev->request_byte_wait);
+ 		init_waitqueue_head(&sdiodev->request_word_wait);
+-		init_waitqueue_head(&sdiodev->request_packet_wait);
++		init_waitqueue_head(&sdiodev->request_chain_wait);
+ 		init_waitqueue_head(&sdiodev->request_buffer_wait);
+ 	}
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+index 1e4a0bb..4e501f8 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+@@ -132,7 +132,7 @@ struct brcmf_sdio_dev {
+ 	atomic_t suspend;		/* suspend flag */
+ 	wait_queue_head_t request_byte_wait;
+ 	wait_queue_head_t request_word_wait;
+-	wait_queue_head_t request_packet_wait;
++	wait_queue_head_t request_chain_wait;
+ 	wait_queue_head_t request_buffer_wait;
+ 
+ };
+-- 
+1.7.5.4
 
-johannes
 
