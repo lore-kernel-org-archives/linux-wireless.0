@@ -1,57 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38460 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754940Ab1K3Maj (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:52863 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753346Ab1KWSWA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 07:30:39 -0500
-Subject: Re: [PATCH 2/4] nl80211: Parse channel type attribute in an ibss
- join request
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Alexander Simon <an.alexsimon@googlemail.com>,
-	Marek Lindner <lindner_marek@yahoo.de>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-In-Reply-To: <20111130122731.GA14283@pandem0nium>
-References: <1322502917-28205-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1322502917-28205-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1322655406.3982.12.camel@jlt3.sipsolutions.net>
-	 <20111130122731.GA14283@pandem0nium>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 30 Nov 2011 13:30:35 +0100
-Message-ID: <1322656235.3982.14.camel@jlt3.sipsolutions.net> (sfid-20111130_133041_141011_903430EF)
-Mime-Version: 1.0
+	Wed, 23 Nov 2011 13:22:00 -0500
+Subject: [PATCH] ath6kl: remove unused sc_params from struct ath6kl
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 23 Nov 2011 20:21:54 +0200
+Message-ID: <20111123182154.25200.78078.stgit@localhost6.localdomain6> (sfid-20111123_192204_405929_0B6DE36B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-11-30 at 13:27 +0100, Simon Wunderlich wrote:
-> Hey Johannes,
-> 
-> On Wed, Nov 30, 2011 at 01:16:46PM +0100, Johannes Berg wrote:
-> > On Mon, 2011-11-28 at 18:55 +0100, Simon Wunderlich wrote:
-> > > Prepare cfg80211 for IBSS HT:
-> > >  * extend cfg80211 ibss struct with channel_type
-> > >  * Check if extension channel can be used
-> > >  * Export can_beacon_sec_chan for use in mac80211 (will be called
-> > >    from ibss.c later).
-> > 
-> > I'm thinking there should be a "driver supports HT IBSS" flag, and we
-> > reject the config otherwise?
-> 
-> There is already an implicit check for this - rdev_freq_to_chan() checks
-> if the channel_type is supported, and -EINVAL otherwise. So if I call 
-> ibss_join with HT20 or HT40 on ath5k, it gets rejected already.
+It was only initialised but not used anywhere. Also remove two defines
+which ended up unused after this change.
 
-Right, but this just checks if HT is supported, not if HT-IBSS is
-supported. I can see some cfg80211 drivers implementing HT and IBSS, but
-not HT-IBSS, just like mac80211 before these patches.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 ---
+ drivers/net/wireless/ath/ath6kl/core.h     |    1 -
+ drivers/net/wireless/ath/ath6kl/wmi.h      |   10 ----------
+ 3 files changed, 0 insertions(+), 14 deletions(-)
 
-> If this is not enough and we need a further flag, could you please give
-> me a hint how/where to implement it?
-
-I'd add it to enum nl80211_feature_flags.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 08708bd..ae336ea 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2488,9 +2488,6 @@ struct ath6kl *ath6kl_core_alloc(struct device *dev)
+ 	ar->tx_pwr = 0;
+ 
+ 	ar->intra_bss = 1;
+-	memset(&ar->sc_params, 0, sizeof(ar->sc_params));
+-	ar->sc_params.short_scan_ratio = WMI_SHORTSCANRATIO_DEFAULT;
+-	ar->sc_params.scan_ctrl_flags = DEFAULT_SCAN_CTRL_FLAGS;
+ 	ar->lrssi_roam_threshold = DEF_LRSSI_ROAM_THRESHOLD;
+ 
+ 	ar->state = ATH6KL_STATE_OFF;
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 03e378d..7709d95 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -533,7 +533,6 @@ struct ath6kl {
+ 	struct list_head amsdu_rx_buffer_queue;
+ 	u8 rx_meta_ver;
+ 	enum wlan_low_pwr_state wlan_pwr_state;
+-	struct wmi_scan_params_cmd sc_params;
+ 	u8 mac_addr[ETH_ALEN];
+ #define AR_MCAST_FILTER_MAC_ADDR_SIZE  4
+ 	struct {
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 76342d5..69db947 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -748,9 +748,6 @@ struct wmi_start_scan_cmd {
+ 	__le16 ch_list[1];
+ } __packed;
+ 
+-/* WMI_SET_SCAN_PARAMS_CMDID */
+-#define WMI_SHORTSCANRATIO_DEFAULT      3
+-
+ /*
+  *  Warning: scan control flag value of 0xFF is used to disable
+  *  all flags in WMI_SCAN_PARAMS_CMD. Do not add any more
+@@ -783,13 +780,6 @@ enum wmi_scan_ctrl_flags_bits {
+ 	ENABLE_SCAN_ABORT_EVENT = 0x40
+ };
+ 
+-#define DEFAULT_SCAN_CTRL_FLAGS			\
+-	(CONNECT_SCAN_CTRL_FLAGS |		\
+-	 SCAN_CONNECTED_CTRL_FLAGS |		\
+-	 ACTIVE_SCAN_CTRL_FLAGS |		\
+-	 ROAM_SCAN_CTRL_FLAGS |			\
+-	 ENABLE_AUTO_CTRL_FLAGS)
+-
+ struct wmi_scan_params_cmd {
+ 	  /* sec */
+ 	__le16 fg_start_period;
 
