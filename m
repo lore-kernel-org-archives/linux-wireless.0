@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42940 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754671Ab1K2Qr0 (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.186]:51676 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751815Ab1KWCcE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 11:47:26 -0500
-Subject: Re: Converting ipw2x00 driver to mac80211 framework
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CA++WF2Op0dScq=coD=qkjqE-Q3ncOVjWVfFsF6sWUi0M5To=7g@mail.gmail.com> (sfid-20111129_173345_176491_131376D3)
-References: <CA++WF2O0WjyqU0HEGR1XE9xDFzR+sxRboVWexRCMPi8okOVkkA@mail.gmail.com>
-	 <1322338254.4283.2.camel@jlt3.sipsolutions.net>
-	 <1322338337.4283.3.camel@jlt3.sipsolutions.net>
-	 <CA++WF2Op0dScq=coD=qkjqE-Q3ncOVjWVfFsF6sWUi0M5To=7g@mail.gmail.com>
-	 (sfid-20111129_173345_176491_131376D3)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 29 Nov 2011 17:47:22 +0100
-Message-ID: <1322585242.4110.23.camel@jlt3.sipsolutions.net> (sfid-20111129_174729_260744_55F54B20)
-Mime-Version: 1.0
+	Tue, 22 Nov 2011 21:32:04 -0500
+Subject: [PATCH] cfg80211: Fix changing regulatory from userspace
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: mcgrof@qca.qualcomm.com, linux-wireless@vger.kernel.org
+From: Timo Lindhorst <tlnd@online.de>
+Date: Wed, 23 Nov 2011 03:30:10 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <201111230330.11103.tlnd@online.de> (sfid-20111123_033208_463849_FB5198A5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-11-29 at 08:33 -0800, Stanislav Yakovlev wrote:
-> >> It would be much less risky to convert the entire thing to cfg80211, I
-> >> think, basically just replacing the configuration layer in libipw_wx.c
-> >> with a cfg80211 based one.
-> >
-> > It might also be a good idea to do some cleanups first -- e.g. I notice,
-> > just in a random look at the code, that reset_port isn't used anywhere
-> > so all code related to that can be removed...
-> 
-> Do I understand correctly that you suggest remove reset_port from
-> libipw_device struct
-> and remove all code like this:
-> 
-> -          if (ieee->reset_on_keychange &&
-> -              ieee->iw_mode != IW_MODE_INFRA &&
-> -              ieee->reset_port && ieee->reset_port(dev)) {
-> -                 LIBIPW_DEBUG_WX("%s: reset_port failed\n", dev->name);
-> -                 return -EINVAL;
-> -         }
-> 
-> from libipw_wx.c ?
+The commit de3584bd62d87b4c250129fbc46ca52c80330add -
+"cfg80211: fix regulatory NULL dereference" prevents the regulatory
+domain from being changed by user space. A wiphy is only present
+if the request comes from driver or is set by country IE, thus
+check only those cases.
 
-Right. There might be more of this too. That'd just help with converting
-since you wouldn't have to think about converting this at all.
+Signed-off-by: Timo Lindhorst <tlnd@online.de>
+---
+ net/wireless/reg.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-johannes
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 76b35df..c9588ae 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2076,7 +2076,9 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 	}
+ 
+ 	request_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
+-	if (!request_wiphy) {
++	if (((last_request->initiator == NL80211_REGDOM_SET_BY_DRIVER) ||
++	     (last_request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE)) &&
++	    !request_wiphy) {
+ 		reg_set_request_processed();
+ 		return -ENODEV;
+ 	}
+-- 
+1.7.7.3
 
