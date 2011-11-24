@@ -1,105 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f53.google.com ([209.85.216.53]:49718 "EHLO
-	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751291Ab1K2C1Q (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:62701 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752883Ab1KXQZg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 21:27:16 -0500
-Received: by qao25 with SMTP id 25so4176qao.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 18:27:15 -0800 (PST)
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Nikolay Martynov <mar.kolya@gmail.com>
-Subject: [PATCH] mac80211: reset addba retries after timeout
-Date: Mon, 28 Nov 2011 21:27:05 -0500
-Message-Id: <1322533625-24641-1-git-send-email-mar.kolya@gmail.com> (sfid-20111129_032719_396777_36A0D329)
+	Thu, 24 Nov 2011 11:25:36 -0500
+MIME-Version: 1.0
+In-Reply-To: <1322148142.5366.25.camel@jlt3.sipsolutions.net>
+References: <1322060687-6512-1-git-send-email-mcgrof@qca.qualcomm.com>
+ <1322060687-6512-3-git-send-email-mcgrof@qca.qualcomm.com> <1322148142.5366.25.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Thu, 24 Nov 2011 11:25:15 -0500
+Message-ID: <CAB=NE6WHYrsFHQ+_X7ANAOk6ydBcDK1rSnMVa8Tb-eDqyhP9gg@mail.gmail.com> (sfid-20111124_172540_589542_90F3DBF8)
+Subject: Re: [RFC 2/2] cfg80211: amend regulatory NULL dereference fix
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	stable@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  Currently code allows three (HT_AGG_MAX_RETRIES) unanswered addba
-requests. When this limit is reached aggregation is turned off for
-given TID permanently. This doesn't seem right: three requests is
-not that much, some 'blackout' can happen, but effect of it affects
-whole connection indefinitely.
-  This patch adds a period of time (1 minute) after which counter of
-sent addba requests is reset so addba requests can be sent again.
-  The traffic impact should be negligible, but connection will be more
-stable.
+On Thu, Nov 24, 2011 at 10:22 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2011-11-23 at 10:04 -0500, Luis R. Rodriguez wrote:
+>> Johannes' patch for "cfg80211: fix regulatory NULL dereference"
+>> broke user regulaotry hints and it did not address the fact that
+>> last_request was left populated even if the previous regulatory
+>> hint was stale due to the wiphy disappearing.
+>>
+>> Fix user reguluatory hints by only bailing out if for those
+>> regulatory hints where a request_wiphy is expected. The stale last_request
+>> considerations are addressed through the previous fixes on last_request
+>> where we reset the last_request to a static world regdom request upon
+>> reset_regdomains(). In this case though we further enhance the effect
+>> by simply restoring reguluatory settings completely.
+>>
+>> Cc: stable@vger.kernel.org
+>> Cc: Johannes Berg <johannes.berg@intel.com>
+>> Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+>> ---
+>>  net/wireless/reg.c |    6 ++++--
+>>  1 files changed, 4 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+>> index df73b96..6049050 100644
+>> --- a/net/wireless/reg.c
+>> +++ b/net/wireless/reg.c
+>> @@ -2091,8 +2091,10 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+>>       }
+>>
+>>       request_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
+>> -     if (!request_wiphy) {
+>> -             reg_set_request_processed();
+>> +     if (!request_wiphy &&
+>> +         (last_request->initiator == NL80211_REGDOM_SET_BY_DRIVER ||
+>> +          last_request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE)) {
+>> +             schedule_delayed_work(&reg_timeout, 0);
+>>               return -ENODEV;
+>
+> This seems OK to me, but the function is really hard to follow -- maybe
+> (later) we should take some code duplication and make it easier to read
+> by switching on the type of hint first?
 
-Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
----
- net/mac80211/agg-tx.c   |   21 ++++++++++++++++++---
- net/mac80211/sta_info.h |    3 +++
- 2 files changed, 21 insertions(+), 3 deletions(-)
+Agreed and good idea. I'll do this on the regsim.git for the rewrite.
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 39d72cc..521638c 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -339,6 +339,7 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
- #endif
- 
- 	spin_lock_bh(&sta->lock);
-+	sta->ampdu_mlme.last_addba_req_time[tid] = jiffies_to_msecs(jiffies);
- 	sta->ampdu_mlme.addba_req_num[tid]++;
- 	spin_unlock_bh(&sta->lock);
- 
-@@ -389,10 +390,24 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
- 
- 	spin_lock_bh(&sta->lock);
- 
--	/* we have tried too many times, receiver does not want A-MPDU */
- 	if (sta->ampdu_mlme.addba_req_num[tid] > HT_AGG_MAX_RETRIES) {
--		ret = -EBUSY;
--		goto err_unlock_sta;
-+		unsigned int timestamp = jiffies_to_msecs(jiffies);
-+		if (timestamp - sta->ampdu_mlme.last_addba_req_time[tid] >
-+		    HT_AGG_RETRIES_PERIOD) {
-+			/*
-+			 * last addba attempt was more then
-+			 * HT_AGG_RETRIES_PERIOD time ago,
-+			 * we can start trying again now
-+			 */
-+			sta->ampdu_mlme.addba_req_num[tid] = 0;
-+		} else {
-+			/*
-+			 * we have tried too many times,
-+			 * receiver does not want A-MPDU (yet)
-+			 */
-+			ret = -EBUSY;
-+			goto err_unlock_sta;
-+		}
- 	}
- 
- 	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 6280e8b..a16d60a 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -76,6 +76,7 @@ enum ieee80211_sta_info_flags {
- #define STA_TID_NUM 16
- #define ADDBA_RESP_INTERVAL HZ
- #define HT_AGG_MAX_RETRIES		0x3
-+#define HT_AGG_RETRIES_PERIOD		(60*1000)
- 
- #define HT_AGG_STATE_DRV_READY		0
- #define HT_AGG_STATE_RESPONSE_RECEIVED	1
-@@ -169,6 +170,7 @@ struct tid_ampdu_rx {
-  * @tid_tx: aggregation info for Tx per TID
-  * @tid_start_tx: sessions where start was requested
-  * @addba_req_num: number of times addBA request has been sent.
-+ * @last_addba_req_time: timestamp of the last addBA request.
-  * @dialog_token_allocator: dialog token enumerator for each new session;
-  * @work: work struct for starting/stopping aggregation
-  * @tid_rx_timer_expired: bitmap indicating on which TIDs the
-@@ -188,6 +190,7 @@ struct sta_ampdu_mlme {
- 	struct work_struct work;
- 	struct tid_ampdu_tx __rcu *tid_tx[STA_TID_NUM];
- 	struct tid_ampdu_tx *tid_start_tx[STA_TID_NUM];
-+	unsigned int last_addba_req_time[STA_TID_NUM];
- 	u8 addba_req_num[STA_TID_NUM];
- 	u8 dialog_token_allocator;
- };
--- 
-1.7.4.1
-
+  Luis
