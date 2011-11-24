@@ -1,97 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51102 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750771Ab1KGF2H (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:46334 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752781Ab1KXSeb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 00:28:07 -0500
-From: Raja Mani <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH v2 11/11] ath6kl: Remove few unused WMI stuff
-Date: Mon, 7 Nov 2011 10:55:47 +0530
-Message-ID: <1320643547-3578-12-git-send-email-rmani@qca.qualcomm.com> (sfid-20111107_062810_058936_379CD2A4)
-In-Reply-To: <1320643547-3578-1-git-send-email-rmani@qca.qualcomm.com>
-References: <1320643547-3578-1-git-send-email-rmani@qca.qualcomm.com>
+	Thu, 24 Nov 2011 13:34:31 -0500
+Received: by wwp14 with SMTP id 14so2181429wwp.1
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2011 10:34:30 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1322158678.5366.27.camel@jlt3.sipsolutions.net>
+References: <1322016630-27332-1-git-send-email-mar.kolya@gmail.com>
+	<1322158678.5366.27.camel@jlt3.sipsolutions.net>
+Date: Thu, 24 Nov 2011 13:34:30 -0500
+Message-ID: <CALGY4fuFWf3Q2LvUgUXjnqGhWGtYYQni6pRqSnEFGop5JHmmFg@mail.gmail.com> (sfid-20111124_193434_496685_4D44D089)
+Subject: Re: [PATCH v2 0/3] mac80211: timeout tx agg sessions in way similar
+ to rx agg sessions
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Removed unused WOW_MAX_FILTER_LISTS macro.
+Hi,
 
-* Removed empty ath6kl_wmi_get_wow_list_event_rx() function.
-  List of configured WOW patterns are maintained in CFG layer
-  itself. No need to have this function in ath6kl to get
-  configured WOW pattern list. It can added later if we need
-  it for debugging.
+ Thanks for spending your time looking at my patch and providing feedback!
 
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/wmi.c |   10 ----------
- drivers/net/wireless/ath/ath6kl/wmi.h |   14 --------------
- 2 files changed, 0 insertions(+), 24 deletions(-)
+2011/11/24 Johannes Berg <johannes@sipsolutions.net>:
+> On Tue, 2011-11-22 at 21:50 -0500, Nikolay Martynov wrote:
+>> Currently tx aggregation is not being timed out even if timeout is
+>> specified when aggregation is opened. Tx tid stays active until delba
+>> arrives from recipient (i.e. recipient times out tid when it is
+>> inactive).
+>>   The problem with this approach is that delba can get lost in the air
+>> and tx tid will stay perpetually opened on the originator while closed
+>> on recipient thus all data sent via this tid will be lost.
+>>  The problem manifests itself with connection becoming slow/unusable
+>> with ping times jumping to 4s. At such time opened tx tid can be seen
+>> on one side of the connection without corresponding rx tid one the
+>> other side. This seems to be happening quite often soon after
+>> connection on ar9102 I have.
+>>   This patch implements tx tid timeouting in way very similar to rx tid
+>> timeouting.
+>>
+>>   All comments and suggestions are appreciated.
+>
+> Looks OK to me. Did you run it through sparse too? :-)
+>
+> johannes
+>
+>
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 3da1fb5..922344d 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -2576,15 +2576,6 @@ int ath6kl_wmi_del_wow_pattern_cmd(struct wmi *wmi, u8 if_idx,
- 	return ret;
- }
- 
--static int ath6kl_wmi_get_wow_list_event_rx(struct wmi *wmi, u8 * datap,
--					    int len)
--{
--	if (len < sizeof(struct wmi_get_wow_list_reply))
--		return -EINVAL;
--
--	return 0;
--}
--
- static int ath6kl_wmi_cmd_send_xtnd(struct wmi *wmi, struct sk_buff *skb,
- 				    enum wmix_command_id cmd_id,
- 				    enum wmi_sync_flag sync_flag)
-@@ -3295,7 +3286,6 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
- 		break;
- 	case WMI_GET_WOW_LIST_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_GET_WOW_LIST_EVENTID\n");
--		ret = ath6kl_wmi_get_wow_list_event_rx(wmi, datap, len);
- 		break;
- 	case WMI_GET_PMKID_LIST_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_GET_PMKID_LIST_EVENTID\n");
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index a65eee2..76342d5 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -1795,7 +1795,6 @@ struct wmi_set_appie_cmd {
- #define WSC_REG_ACTIVE     1
- #define WSC_REG_INACTIVE   0
- 
--#define WOW_MAX_FILTER_LISTS	 1
- #define WOW_MAX_FILTERS_PER_LIST 4
- #define WOW_PATTERN_SIZE	 64
- #define WOW_MASK_SIZE		 64
-@@ -1866,19 +1865,6 @@ struct wmi_del_wow_pattern_cmd {
- 	__le16 filter_id;
- } __packed;
- 
--/* WMI_GET_WOW_LIST_CMD reply  */
--struct wmi_get_wow_list_reply {
--	/* number of patterns in reply */
--	u8 num_filters;
--
--	/* this is filter # x of total num_filters */
--	u8 this_filter_num;
--
--	u8 wow_mode;
--	u8 host_mode;
--	struct wow_filter wow_filters[1];
--} __packed;
--
- /* WMI_SET_AKMP_PARAMS_CMD */
- 
- struct wmi_pmkid {
+ Please forgive my lack of experience, but could you please point me
+to some docs where I can read about sparse and how to use it? I'd
+really appreciate this.
+
+ Also, I one more thing I forgot to mention in original cover letter.
+Some time before this patch I've posted patch for ath9k: "[PATCH v3]
+ath9k: improve ath_tx_aggr_stop to avoid TID stuck in cleanup state".
+I've noticed that bug fixed in ath9k patch is triggered much more
+often when this patch to mac80211 applied. Probably because of some
+timing issues when TID is being closed from both ends at about same
+time.
+ What I mean to say is that this patch to mac80211 should probably be
+applied after that patch to ath9k to avoid making ath9k less stable.
+
+ And one more thing, if you do not mind.
+'ieee80211_stop_tx_ba_session' tests tx_tid->state for
+HT_AGG_STATE_STOPPING holding only spinlock on sta->lock.
+'___ieee80211_stop_tx_ba_session' sets this bit when spin lock on
+sta->lock is not being held. It seems to be that this could lead to
+problems if these two functions get called at about same time (which
+could easily happen when this patch is applied). Although actual
+window when lock is not help is really small. But I think the way it
+is currently done could still lead to problems. I think
+'set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);' should be moved up
+to be covered by spin lock. I can include this as a part of next
+version of my patch. I'd really appreciate your thoughts about this.
+
+Thanks!
+
 -- 
-1.7.1
-
+Truthfully yours,
+Martynov Nikolay.
+Email: mar.kolya@gmail.com
