@@ -1,85 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:52927 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328Ab1KVHqA (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37908 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755356Ab1KXNrm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 02:46:00 -0500
-MIME-Version: 1.0
-In-Reply-To: <20111122072730.GA32225@gamma.logic.tuwien.ac.at>
-References: <1320709047.31823.188.camel@wwguy-huron>
-	<20111108043233.GA21171@gamma.logic.tuwien.ac.at>
-	<CANUX_P0Q0wve4D6fZPsMv2Zw=02gb9u+3C2cjRv7UAmWqXnjzw@mail.gmail.com>
-	<CANUX_P06ww42p6N1k_P-Y1KMKOd1QgR_DxVWe19qtsEX2rfWpw@mail.gmail.com>
-	<20111109051152.GA16006@gamma.logic.tuwien.ac.at>
-	<CANUX_P2Yz9bWP_EmU1Acs7Mu2w78CXxO-njhiMt97b0TJHFYiQ@mail.gmail.com>
-	<20111121030640.GI32505@gamma.logic.tuwien.ac.at>
-	<CANUX_P2AA5stHwjegKdFhFGg7jxwdVU2Xr8OUtXUdEOKz_6E5A@mail.gmail.com>
-	<20111122051310.GA23705@gamma.logic.tuwien.ac.at>
-	<CANUX_P1RjcRD2tW1A6YYSEV9+aUZyTEro7tZXJWRoxk6gx-2jA@mail.gmail.com>
-	<CANUX_P2aFn84uSqgZA2gTBN7E4+0jGmJQTkx4eug4Ls0hK0==Q@mail.gmail.com>
-	<20111122072730.GA32225@gamma.logic.tuwien.ac.at>
-Date: Tue, 22 Nov 2011 09:45:58 +0200
-Message-ID: <CANUX_P15En9bHVx4bhq6=XKPZnC2u+QyVJ+jnm4ns=39DrOBtg@mail.gmail.com> (sfid-20111122_084619_790903_11D50DD5)
-Subject: Re: iwlagn is getting very shaky
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Norbert Preining <preining@logic.at>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 24 Nov 2011 08:47:42 -0500
+Subject: [PATCH] mac80211: fix TX warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Nov 2011 14:47:36 +0100
+Message-ID: <1322142456.5366.18.camel@jlt3.sipsolutions.net> (sfid-20111124_144750_774844_9A02DEA3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 22, 2011 at 09:27, Norbert Preining <preining@logic.at> wrote:
-> HI Emmanuel,
->
-> On Di, 22 Nov 2011, Emmanuel Grumbach wrote:
->> Please apply the patch attached. It has been submitted upstream but
->> hasn't been merged in the tree you use apparently.
->
-> Does not apply against current git, as there is no iwl-mac80211.c:
-> [/usr/src/git-kernel/linux.git] patch -p1 --dry-run < ~/QUEUE_DEBUG.patch
-> patching file drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-> patching file drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-> Hunk #1 succeeded at 116 (offset -1 lines).
-> Hunk #2 succeeded at 840 (offset -4 lines).
-> patching file drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-> Hunk #1 succeeded at 800 (offset -13 lines).
-> patching file drivers/net/wireless/iwlwifi/iwl-debug.h
-> Hunk #1 succeeded at 151 (offset -15 lines).
-> Hunk #2 succeeded at 188 (offset -15 lines).
-> can't find file to patch at input line 78
-> Perhaps you used the wrong -p or --strip option?
-> The text leading up to this was:
-> --------------------------
-> |diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-> |index 073e827..05b1f0d 100644
-> |--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-> |+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-> --------------------------
-> File to patch:
->
+From: Johannes Berg <johannes.berg@intel.com>
 
-Glad it applied
->
->> Then please run with set the TXQUEUES debug flag: 0x8000000.
->
-> Is this a load options to iwlwifi module (debug=0x..... at module load time?)
-> or has to be set in /sys/kernel/debug/ieee80211/phy?/iwlwifi/debug/*
-> somewhere?
->
+Emmanuel reported that my previous patches to enable
+handing all fragments to drivers at once triggered
+the warning that the SKB queue wasn't empty. This is
+happening when we actually queue up some frames and
+don't hand them to the driver (queues are stopped).
 
-yes it is a module parameter: modprobe iwlwifi debug=0x80000000
+The reason for it is that my code that splices the
+frame(s) over to the pending queue didn't re-init
+the local queue, so skb_queue_empty() was false. Fix
+this by using the _init versions of the splicing.
 
->
->> Do you use any SoftAP / P2P feature ? HW queues can be stalled
->
-> No. Fixed AP with fixed IP and no special adaptions.
->
+Also, convert the warning to WARN_ON_ONCE.
 
-Ok thanks
+Reported-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+--- a/net/mac80211/tx.c	2011-11-24 09:42:07.000000000 +0100
++++ b/net/mac80211/tx.c	2011-11-24 14:43:09.000000000 +0100
+@@ -1223,9 +1223,10 @@ static bool ieee80211_tx_frags(struct ie
+ 			 * queue is woken again.
+ 			 */
+ 			if (txpending)
+-				skb_queue_splice(skbs, &local->pending[q]);
++				skb_queue_splice_init(skbs, &local->pending[q]);
+ 			else
+-				skb_queue_splice_tail(skbs, &local->pending[q]);
++				skb_queue_splice_tail_init(skbs,
++							   &local->pending[q]);
+ 
+ 			spin_unlock_irqrestore(&local->queue_stop_reason_lock,
+ 					       flags);
+@@ -1297,7 +1298,7 @@ static bool __ieee80211_tx(struct ieee80
+ 	ieee80211_tpt_led_trig_tx(local, fc, led_len);
+ 	ieee80211_led_tx(local, 1);
+ 
+-	WARN_ON(!skb_queue_empty(skbs));
++	WARN_ON_ONCE(!skb_queue_empty(skbs));
+ 
+ 	return result;
+ }
+
+
