@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39812 "EHLO mx2.suse.de"
+Received: from kwall.cngroup.cz ([194.213.192.9]:25021 "EHLO kwall.cngroup.cz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753509Ab1KUUy4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 15:54:56 -0500
-Date: Mon, 21 Nov 2011 12:51:39 -0800
-From: Greg KH <gregkh@suse.de>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"mjg@redhat.com" <mjg@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pci: Rework ASPM disable code patch
-Message-ID: <20111121205139.GA11055@suse.de> (sfid-20111121_215510_157127_49189A73)
-References: <1321896029.11647.50.camel@wwguy-huron>
- <20111121182634.GA7037@suse.de>
- <1321897113.11647.52.camel@wwguy-huron>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1321897113.11647.52.camel@wwguy-huron>
+	id S1755687Ab1KXND5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Nov 2011 08:03:57 -0500
+Date: Thu, 24 Nov 2011 14:03:50 +0100
+From: Jan =?UTF-8?B?RHZvxZnDoWs=?= <dvorakj@cngroup.dk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rtl8192cu not working with Edimax EW-7811Un
+Message-Id: <20111124140350.06e9644056a9b4993bc093cb@cngroup.dk> (sfid-20111124_140400_335815_79C471E1)
+In-Reply-To: <4ECD3E5E.6010109@lwfinger.net>
+References: <20111122113427.3d332b00776546d5ebac11de@cngroup.dk>
+	<20111122140139.GA3891@redhat.com>
+	<20111123112301.f5e523ff743f86dae539fdf3@cngroup.dk>
+	<20111123143304.GA13460@redhat.com>
+	<20111123162426.9a30d25585fa54507c1c864e@cngroup.dk>
+	<4ECD13D0.6010500@lwfinger.net>
+	<20111123155108.GD13460@redhat.com>
+	<20111123175210.fd0ac6b0b66885b3deaecfc0@cngroup.dk>
+	<4ECD3E5E.6010109@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 21, 2011 at 09:38:33AM -0800, Guy, Wey-Yi wrote:
-> On Mon, 2011-11-21 at 10:26 -0800, Greg KH wrote:
-> > On Mon, Nov 21, 2011 at 09:20:29AM -0800, Guy, Wey-Yi wrote:
-> > > Hi John/Garrett/Greg,
-> > > 
-> > > We test the ASPM patch with the Intel WiFi devices on number of
-> > > platforms and the improvement is huge.
-> > 
-> > What "ASPM patch"?
+On Wed, 23 Nov 2011 12:41:34 -0600
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> >>> I can't still use hostapd, however.
+> >> Hmm, I'm not sure if rtl92c works in AP mode, Larry?
 > 
-> https://lkml.org/lkml/2011/11/11/212
+> When I try it, I get rtl8192cu to beacon, and it is possible to authenticate and 
+> associate, but the second computer never gets an IP number.
 
-Ok, yet you feel that my statement there is not sufficient right now?
+Even without DHCP, no traffic ever comes through. Plus from here it looks like
+the client is reconnecting (quickly, let's say once per 5s) to no end.
 
-> > > In the "idle associated" mode, the power consumption number for our new
-> > > devices down to ~40mW range from over 120mW.
-> > > 
-> > > We will do more testing but I will suggest to apply this patch to the
-> > > stable release.
-> > 
-> > What is the git commit id of this patch?  Have you read
-> > Documentation/stable_kernel_rules.txt for how to properly submit a patch
-> > to the stable kernel trees?
+So, how do I debug this properly? Can I turn on some kind of verbose mode?
+Is there a way to sniff the communication (kismet or something)?
 
-You failed to answer this :(
-
-{sigh}
-
-greg k-h
+Best regards,
+	Jan Dvorak
