@@ -1,65 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:44621 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752232Ab1K3Uqm (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:45294 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754020Ab1KXVNF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 15:46:42 -0500
-Received: by mail-lpp01m010-f46.google.com with SMTP id w12so290792lag.19
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2011 12:46:42 -0800 (PST)
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Nikolay Martynov <mar.kolya@gmail.com>
-Subject: [PATCH v3 2/4] ath9k: change calibration debug log to output all calibration types
-Date: Wed, 30 Nov 2011 15:46:18 -0500
-Message-Id: <1322685980-8757-3-git-send-email-mar.kolya@gmail.com> (sfid-20111130_214646_187222_2700C4E0)
-In-Reply-To: <1322685980-8757-1-git-send-email-mar.kolya@gmail.com>
-References: <20111130201051.GC2477@tuxdriver.com>
- <1322685980-8757-1-git-send-email-mar.kolya@gmail.com>
+	Thu, 24 Nov 2011 16:13:05 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 8BA3554038F
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2011 16:13:03 -0500 (EST)
+Subject: Compat-wireless release for 2011-11-24 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111124211303.6466A40638@repository3.orbit-lab.org> (sfid-20111124_221309_924155_E2F35F3A)
+Date: Thu, 24 Nov 2011 16:13:03 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  To help debugging write a log entry when long calibration, short
-calibration or ANI is performed.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 0982886...2d84e58 akpm-end   -> origin/akpm-end  (forced update)
+   866d43c..0952157  akpm-start -> origin/akpm-start
+ + 2a8bdff...e0715c95 master     -> origin/master  (forced update)
+   866d43c..0952157  stable     -> origin/stable
+ * [new tag]         next-20111124 -> next-20111124
 
-Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index e43c41c..937fcfa 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -561,7 +561,6 @@ void ath_ani_calibrate(unsigned long data)
- 	/* Long calibration runs independently of short calibration. */
- 	if ((timestamp - common->ani.longcal_timer) >= long_cal_interval) {
- 		longcal = true;
--		ath_dbg(common, ATH_DBG_ANI, "longcal @%lu\n", jiffies);
- 		common->ani.longcal_timer = timestamp;
- 	}
- 
-@@ -569,8 +568,6 @@ void ath_ani_calibrate(unsigned long data)
- 	if (!common->ani.caldone) {
- 		if ((timestamp - common->ani.shortcal_timer) >= short_cal_interval) {
- 			shortcal = true;
--			ath_dbg(common, ATH_DBG_ANI,
--				"shortcal @%lu\n", jiffies);
- 			common->ani.shortcal_timer = timestamp;
- 			common->ani.resetcal_timer = timestamp;
- 		}
-@@ -605,6 +602,11 @@ void ath_ani_calibrate(unsigned long data)
- 						ah->rxchainmask, longcal);
- 	}
- 
-+	ath_dbg(common, ATH_DBG_ANI,
-+		"Calibration @%lu finished: %s %s %s, caldone: %s\n", jiffies,
-+		longcal ? "long" : "", shortcal ? "short" : "",
-+		aniflag ? "ani" : "", common->ani.caldone ? "true" : "false");
-+
- 	ath9k_ps_restore(sc);
- 
- set_timer:
--- 
-1.7.4.1
-
+    817967 - Total upstream lines of code being pulled
