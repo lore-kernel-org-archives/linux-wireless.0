@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:51220 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755813Ab1K0Qtd (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57734 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355Ab1KXS3H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Nov 2011 11:49:33 -0500
-Received: by iage36 with SMTP id e36so7575126iag.19
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2011 08:49:33 -0800 (PST)
-Message-ID: <4ED26A18.7090906@lwfinger.net> (sfid-20111127_174936_785652_C8A9A48F)
-Date: Sun, 27 Nov 2011 10:49:28 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: Looking for BCM43228
-References: <CACna6rwU4RuYuiAFjXFDH-c+EFsKtKFmB1Sh8kXdb9EoUt4abg@mail.gmail.com> <CACna6rzkSgbf8sV2S1mg2OhxKstXeiqnmNmYFSMuAc563acBpg@mail.gmail.com> <CACna6ryTA+nbz9cJtFEWypb1atY2s+eKseANM-u=-EjW6FWE7Q@mail.gmail.com> <CACna6rzJzzhdBig48TGV=cfBYuvmjxowSw2Ai_GA-W0n_Y3Qkw@mail.gmail.com> <CACna6rzVQ6LZ7p9yLUxkN+_P7UE9TZoQ1Y-rRTNoT=yMF5G+5g@mail.gmail.com>
-In-Reply-To: <CACna6rzVQ6LZ7p9yLUxkN+_P7UE9TZoQ1Y-rRTNoT=yMF5G+5g@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 24 Nov 2011 13:29:07 -0500
+Subject: Re: [RFC v2 5/8] mac80211: setting link-specific mesh power modes
+ when plink opens
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Mike Krinkin <krinkin.m.u@gmail.com>,
+	Max Filippov <jcmvbkbc@gmail.com>
+In-Reply-To: <1321886416-12597-6-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154155_732897_648C5C05)
+References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
+	 <1321886416-12597-6-git-send-email-ivan.bezyazychnyy@gmail.com>
+	 (sfid-20111121_154155_732897_648C5C05)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Nov 2011 19:29:04 +0100
+Message-ID: <1322159344.5366.34.camel@jlt3.sipsolutions.net> (sfid-20111124_192911_934984_B5C6EE54)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/27/2011 09:57 AM, Rafał Miłecki wrote:
-> W dniu 29 sierpnia 2011 23:27 użytkownik Rafał Miłecki
-> <zajec5@gmail.com>  napisał:
->> W dniu 29 sierpnia 2011 21:02 użytkownik Rafał Miłecki
->> <zajec5@gmail.com>  napisał:
->>> I'll mail Marc, Ubuntu's launchpad reported to ask if he still has
->>> access to this notebook.
->>
->> I've just received photo of the card (inside notebook) from Marc. It's
->> labeled as DW1530, bingo! :)
->>
->> I'll ask Dell about prices. Larry: I'm also waiting for you getting
->> response, maybe your prices will be lower?
->
-> You can buy one if you want :)
-> http://www.ebay.com/itm//180755618575
+On Mon, 2011-11-21 at 18:40 +0400, Ivan Bezyazychnyy wrote:
 
-Thanks for the link. I have one coming.
+> +static inline bool ieee80211s_has_capab_pm(__le16 capab_info)
+> +{
+> +	return (capab_info & MESHCONF_CAPAB_POWER_SAVE_LEVEL) != 0;
+> +}
 
-Larry
+To me it look like sparse will warn here.
+
+> --- a/net/mac80211/mesh_plink.c
+> +++ b/net/mac80211/mesh_plink.c
+> @@ -248,6 +248,8 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
+>  {
+>  	struct ieee80211_local *local = sdata->local;
+>  	struct sta_info *sta;
+> +	struct ieee80211_mgmt *mgmt = container_of(hw_addr,
+> +					struct ieee80211_mgmt, sa[0]);
+
+You've got to be kidding! Change the prototypes accordingly if you need
+more stuff.
+ 
+johannes
 
