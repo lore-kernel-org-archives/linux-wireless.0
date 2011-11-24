@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57319 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754811Ab1KBKNn (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:38121 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752907Ab1KXINe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 06:13:43 -0400
-Subject: Re: [PATCH v2 1/3] nl80211: Add probe response offload attribute
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <coelho@ti.com>
-Cc: Guy Eilam <guy@wizery.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1320055498.2672.10.camel@cumari>
-References: <1319313081-28722-1-git-send-email-guy@wizery.com>
-	 <1320055498.2672.10.camel@cumari>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 02 Nov 2011 11:13:37 +0100
-Message-ID: <1320228817.3950.38.camel@jlt3.sipsolutions.net> (sfid-20111102_111347_098197_AD456333)
-Mime-Version: 1.0
+	Thu, 24 Nov 2011 03:13:34 -0500
+Received: by bke11 with SMTP id 11so2634032bke.19
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2011 00:13:33 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, ivdoorn@gmail.com, gwingerde@gmail.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH] rt2x00: Pass BlockAck and BlackAckReq frames to mac80211 in monitor mode
+Date: Thu, 24 Nov 2011 09:13:26 +0100
+Message-Id: <1322122406-10242-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111124_091338_089995_CD0CE78D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-10-31 at 12:04 +0200, Luciano Coelho wrote:
+Previously BlockAcks were always dropped by the rt2800 hardware while
+BlockAckReqs were always accepted. However, both are only useful on
+monitor interfaces at the moment and both are control frames. So
+pass them up when mac80211 sets FIF_CONTROL.
 
-> > + * @NL80211_ATTR_PROBE_RESP_OFFLOAD_SUPPORT: Indicates the support
-> > + *	of probe response offloading by the driver/firmware.
-> > + *	In addition this attribute holds a bitmap of the supported protocols
-> > + *	for offloading using &enum nl80211_probe_resp_offload_support_attr.
-> > + *
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-> I'm not sure I understand why we need this.  Why aren't the flags
-> themselves enough?
-
-Not sure I understand the question?
-
-> Johannes wrote, on a separate thread:
-> > Oh, and probably a regular WIPHY flag that indicates whether the
-> > attribute should be added at all so that it can also be 0 but present
-> > (presence with 0 value indicates something other than not present).
-> 
-> What would be the meaning when the WIPHY flag is set but the attributes
-> are all 0? Wouldn't it mean that we don't support probe_resp offload at
-> all? Or would it mean that we support probe_resp offloading in normal
-> cases (ie. not WCS nor P2P)? If the latter is the case, why not add a
-> bit in the attributes to indicate that "normal" probe_resp offloading is
-> supported? I think this would be cleaner because there wouldn't be any
-> implicit semantics.
-
-It would mean we don't support probe response offload at all, and as a
-consequence would be more or less equivalent to having 0xfffffff as the
-flags mask (everything is "supported").
-
-Adding a flag for "normal" doesn't make sense: you can only ever reply
-to "normal" probe requests, you need to send any "special" ones up to
-the host. So each bit in this bitfield essentially says "I support this
-by passing it to the host" -- a bit for "normal" doesn't make sense in
-that context.
-
-johannes
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 1ba079d..e5df380 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1203,8 +1203,10 @@ void rt2800_config_filter(struct rt2x00_dev *rt2x00dev,
+ 			   !(filter_flags & FIF_CONTROL));
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_PSPOLL,
+ 			   !(filter_flags & FIF_PSPOLL));
+-	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BA, 1);
+-	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BAR, 0);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BA,
++			   !(filter_flags & FIF_CONTROL));
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BAR,
++			   !(filter_flags & FIF_CONTROL));
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CNTL,
+ 			   !(filter_flags & FIF_CONTROL));
+ 	rt2800_register_write(rt2x00dev, RX_FILTER_CFG, reg);
+-- 
+1.7.3.4
 
