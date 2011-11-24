@@ -1,96 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:41400 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751670Ab1KXS6A convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 13:58:00 -0500
-Received: by wwo28 with SMTP id 28so1108382wwo.1
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2011 10:57:59 -0800 (PST)
+Received: from mga11.intel.com ([192.55.52.93]:36557 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750777Ab1KXOB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Nov 2011 09:01:56 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 24 Nov 2011 16:01:08 +0200
+Subject: RE: [PATCH] mac80211: fix TX warning
+Message-ID: <4825B8A2C4E264489E57869F0DCFB223445BEF16FB@hasmsx502.ger.corp.intel.com> (sfid-20111124_150159_991140_32CF28E6)
+References: <1322142456.5366.18.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1322142456.5366.18.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1322160343.5366.47.camel@jlt3.sipsolutions.net>
-References: <1322016630-27332-1-git-send-email-mar.kolya@gmail.com>
-	<1322158678.5366.27.camel@jlt3.sipsolutions.net>
-	<CALGY4fv6NTRDPUEa-7h+DqaHZwdKnNG4fEmzyHrYZukz3B1gqA@mail.gmail.com>
-	<1322159944.5366.42.camel@jlt3.sipsolutions.net>
-	<1322160343.5366.47.camel@jlt3.sipsolutions.net>
-Date: Thu, 24 Nov 2011 13:57:59 -0500
-Message-ID: <CALGY4fsfmKhns0+AB69ZmKE33-k95V0su3wex-kJ888cUB4Gcg@mail.gmail.com> (sfid-20111124_195805_356357_5E52F8CD)
-Subject: Re: [PATCH v2 0/3] mac80211: timeout tx agg sessions in way similar
- to rx agg sessions
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+PiBGcm9tOiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJnQGludGVsLmNvbT4NCj4gDQo+IEVt
+bWFudWVsIHJlcG9ydGVkIHRoYXQgbXkgcHJldmlvdXMgcGF0Y2hlcyB0byBlbmFibGUNCj4gaGFu
+ZGluZyBhbGwgZnJhZ21lbnRzIHRvIGRyaXZlcnMgYXQgb25jZSB0cmlnZ2VyZWQNCj4gdGhlIHdh
+cm5pbmcgdGhhdCB0aGUgU0tCIHF1ZXVlIHdhc24ndCBlbXB0eS4gVGhpcyBpcw0KPiBoYXBwZW5p
+bmcgd2hlbiB3ZSBhY3R1YWxseSBxdWV1ZSB1cCBzb21lIGZyYW1lcyBhbmQNCj4gZG9uJ3QgaGFu
+ZCB0aGVtIHRvIHRoZSBkcml2ZXIgKHF1ZXVlcyBhcmUgc3RvcHBlZCkuDQo+IA0KPiBUaGUgcmVh
+c29uIGZvciBpdCBpcyB0aGF0IG15IGNvZGUgdGhhdCBzcGxpY2VzIHRoZQ0KPiBmcmFtZShzKSBv
+dmVyIHRvIHRoZSBwZW5kaW5nIHF1ZXVlIGRpZG4ndCByZS1pbml0DQo+IHRoZSBsb2NhbCBxdWV1
+ZSwgc28gc2tiX3F1ZXVlX2VtcHR5KCkgd2FzIGZhbHNlLiBGaXgNCj4gdGhpcyBieSB1c2luZyB0
+aGUgX2luaXQgdmVyc2lvbnMgb2YgdGhlIHNwbGljaW5nLg0KPiANCj4gQWxzbywgY29udmVydCB0
+aGUgd2FybmluZyB0byBXQVJOX09OX09OQ0UuDQo+IA0KPiBSZXBvcnRlZC1ieTogRW1tYW51ZWwg
+R3J1bWJhY2ggPGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTog
+Sm9oYW5uZXMgQmVyZyA8am9oYW5uZXMuYmVyZ0BpbnRlbC5jb20+DQo+IC0tLQ0KDQpTZWVtcyB0
+byBiZSB3b3JraW5nIC0gbmVlZCB0byB0ZXN0IGl0IGEgYml0IG1vcmUgdGhvdWdoIChub3Qgc3Vy
+ZSBpdCB3aWxsIGJlIGJlZm9yZSBuZXh0IHdlZWsgdGhvdWdoKQ0KDQpUaGFua3MgIQ0KLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tCkludGVsIElzcmFlbCAoNzQpIExpbWl0ZWQKClRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0
+YWNobWVudHMgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZvcgp0aGUgc29sZSB1
+c2Ugb2YgdGhlIGludGVuZGVkIHJlY2lwaWVudChzKS4gQW55IHJldmlldyBvciBkaXN0cmlidXRp
+b24KYnkgb3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBhcmUgbm90IHRoZSBp
+bnRlbmRlZApyZWNpcGllbnQsIHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIgYW5kIGRlbGV0ZSBh
+bGwgY29waWVzLgo=
 
-2011/11/24 Johannes Berg <johannes@sipsolutions.net>:
-> On Thu, 2011-11-24 at 19:39 +0100, Johannes Berg wrote:
->
->> >   And one more thing, if you do not mind.
->> > 'ieee80211_stop_tx_ba_session' tests tx_tid->state for
->> > HT_AGG_STATE_STOPPING holding only spinlock on sta->lock.
->> > '___ieee80211_stop_tx_ba_session' sets this bit when spin lock on
->> > sta->lock is not being held. It seems to be that this could lead to
->> > problems if these two functions get called at about same time (which
->> > could easily happen when this patch is applied). Although actual
->> > window when lock is not help is really small. But I think the way it
->> > is currently done could still lead to problems. I think
->> > 'set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);' should be moved up
->> > to be covered by spin lock. I can include this as a part of next
->> > version of my patch. I'd really appreciate your thoughts about this.
->>
->> Yeah that does indeed seem like an issue
->
-> Actually I think the right way to fix it would be the change below, do
-> you agree? I think just moving the set_bit doesn't help because other
-> code might call right into ___ieee80211_stop_tx_ba_session (or with just
-> two underscores on front)
->
-> johannes
->
-> --- wireless-testing.orig/net/mac80211/agg-tx.c 2011-11-09 10:07:34.000000000 +0100
-> +++ wireless-testing/net/mac80211/agg-tx.c      2011-11-24 19:44:51.000000000 +0100
-> @@ -162,6 +162,12 @@ int ___ieee80211_stop_tx_ba_session(stru
->                return -ENOENT;
->        }
->
-> +       /* if we're already stopping ignore any new requests to stop */
-> +       if (test_bit(HT_AGG_STATE_STOPPING, &tid_tx->state)) {
-> +               spin_unlock_bh(&sta->lock);
-> +               return -EALREADY;
-> +       }
-> +
->        if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state)) {
->                /* not even started yet! */
->                ieee80211_assign_tid_tx(sta, tid, NULL);
-> @@ -170,6 +176,8 @@ int ___ieee80211_stop_tx_ba_session(stru
->                return 0;
->        }
->
-> +       set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);
-> +
->        spin_unlock_bh(&sta->lock);
->
->  #ifdef CONFIG_MAC80211_HT_DEBUG
-> @@ -177,8 +185,6 @@ int ___ieee80211_stop_tx_ba_session(stru
->               sta->sta.addr, tid);
->  #endif /* CONFIG_MAC80211_HT_DEBUG */
->
-> -       set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);
-> -
->        del_timer_sync(&tid_tx->addba_resp_timer);
->
->        /*
->
->
->
-
-Yes, this patch does make sense to me.
-
--- 
-Truthfully yours,
-Martynov Nikolay.
-Email: mar.kolya@gmail.com
