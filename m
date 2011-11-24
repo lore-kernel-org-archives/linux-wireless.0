@@ -1,115 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:39174 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756112Ab1KWPEz (ORCPT
+Received: from w1.fi ([128.177.27.249]:52499 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751936Ab1KXV2N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 10:04:55 -0500
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	stable@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 1/2] cfg80211: fix race on init and driver registration
-Date: Wed, 23 Nov 2011 10:04:46 -0500
-Message-Id: <1322060687-6512-2-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111123_160458_865343_B56E9050)
-In-Reply-To: <1322060687-6512-1-git-send-email-mcgrof@qca.qualcomm.com>
-References: <1322060687-6512-1-git-send-email-mcgrof@qca.qualcomm.com>
+	Thu, 24 Nov 2011 16:28:13 -0500
+Date: Thu, 24 Nov 2011 23:28:05 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211: AP mode - question about Tx buffered unicast frames
+ drop timeout
+Message-ID: <20111124212805.GA10164@jm.kir.nu> (sfid-20111124_222816_973406_6D9355AC)
+References: <CAFED-j=5-s7V9HZvYJDJ14KbVm+ioa=KnoBh1fj2ueT05QusTQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFED-j=5-s7V9HZvYJDJ14KbVm+ioa=KnoBh1fj2ueT05QusTQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a theoretical race that if hit will trigger
-a crash. The race is between when we issue the first
-regulatory hint, regulatory_hint_core(), gets processed
-by the workqueue and between when the first device
-gets registered to the wireless core. This is not easy
-to reproduce but it was easy to do so through the
-regulatory simulator I have been working on. This
-is a port of the fix I implemented there [1].
+On Wed, Nov 23, 2011 at 07:36:40PM +0100, Janusz Dziedzic wrote:
+> in sta_info.c I see function we call to remove expired unicast buffered frames.
+> 
+> sta_info_buffer_expired()
+> {
+> ...
+> 	timeout = (sta->listen_interval *
+> 		   sta->sdata->vif.bss_conf.beacon_int *
+> 		   32 / 15625) * HZ;
+> 	if (timeout < STA_TX_BUFFER_EXPIRE)
+> 		timeout = STA_TX_BUFFER_EXPIRE;
+> ...
+> }
+> 
+> STA_TX_BUFFER_EXPIRE is define as 10 seconds.
+> Do you remember why we set this as 10 seconds in case we calculate lower value?
 
-[1] https://github.com/mcgrof/regsim/commit/a246ccf81f059cb662eee288aa13100f631e4cc8
+Too old code to remember.. That's from almost 10 years ago, I think.
 
-Cc: stable@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- net/wireless/reg.c |   28 ++++++++++++++++++++--------
- 1 files changed, 20 insertions(+), 8 deletions(-)
+> This "listen_interval" calculation seems to be correct.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 76b35df..df73b96 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -57,8 +57,17 @@
- #define REG_DBG_PRINT(args...)
- #endif
- 
-+static struct regulatory_request core_request_world = {
-+	.initiator = NL80211_REGDOM_SET_BY_CORE,
-+	.alpha2[0] = '0',
-+	.alpha2[1] = '0',
-+	.intersect = false,
-+	.processed = true,
-+	.country_ie_env = ENVIRON_ANY,
-+};
-+
- /* Receipt of information from last regulatory request */
--static struct regulatory_request *last_request;
-+static struct regulatory_request *last_request = &core_request_world;
- 
- /* To trigger userspace events */
- static struct platform_device *reg_pdev;
-@@ -165,6 +174,10 @@ static void reset_regdomains(void)
- 
- 	cfg80211_world_regdom = &world_regdom;
- 	cfg80211_regdomain = NULL;
-+
-+	if (last_request != &core_request_world)
-+		kfree(last_request);
-+	last_request = &core_request_world;
- }
- 
- /*
-@@ -1409,7 +1422,8 @@ static int __regulatory_hint(struct wiphy *wiphy,
- 	}
- 
- new_request:
--	kfree(last_request);
-+	if (last_request != &core_request_world)
-+		kfree(last_request);
- 
- 	last_request = pending_request;
- 	last_request->intersect = intersect;
-@@ -1579,9 +1593,6 @@ static int regulatory_hint_core(const char *alpha2)
- {
- 	struct regulatory_request *request;
- 
--	kfree(last_request);
--	last_request = NULL;
--
- 	request = kzalloc(sizeof(struct regulatory_request),
- 			  GFP_KERNEL);
- 	if (!request)
-@@ -1823,6 +1834,10 @@ static void restore_regulatory_settings(bool reset_user)
- 	/* First restore to the basic regulatory settings */
- 	cfg80211_regdomain = cfg80211_world_regdom;
- 
-+	if (last_request != &core_request_world)
-+		kfree(last_request);
-+	last_request = &core_request_world;
-+
- 	mutex_unlock(&reg_mutex);
- 	mutex_unlock(&cfg80211_mutex);
- 
-@@ -2306,9 +2321,6 @@ void /* __init_or_exit */ regulatory_exit(void)
- 
- 	reset_regdomains();
- 
--	kfree(last_request);
--
--	last_request = NULL;
- 	dev_set_uevent_suppress(&reg_pdev->dev, true);
- 
- 	platform_device_unregister(reg_pdev);
+I would not agree with that. It seems to result in timeout being 0 in
+most cases. (unsigned int) sta->listen_interval *
+sta->sdata->vif.bss_conf.beacon_int * 32 / 125 * HZ / 125 could be a
+more useful order for the calculation. Or maybe use something like
+min(sta->listen_interval *
+sta->sdata->vif.bss_conf.beacon_int, 100000) to avoid integer overflow
+in more or less theoretical cases without having to split the operation
+that much..
+
+Anyway, yes, it should be fine to make STA_TX_BUFFER_EXPIRE smaller.
+
 -- 
-1.7.4.15.g7811d
-
+Jouni Malinen                                            PGP id EFC895FA
