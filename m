@@ -1,39 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58303 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755510Ab1KRBAa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 20:00:30 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 5/5] iwlwifi: remove redundancy
-Date: Thu, 17 Nov 2011 16:05:13 -0800
-Message-Id: <1321574713-12076-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111118_020038_799820_754C22B0)
-In-Reply-To: <1321574713-12076-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1321574713-12076-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:29507 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754706Ab1KXMcW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Nov 2011 07:32:22 -0500
+Message-ID: <4ECE394D.4000603@qca.qualcomm.com> (sfid-20111124_133225_817435_FCD3A82A)
+Date: Thu, 24 Nov 2011 14:32:13 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: remove unused sc_params from struct ath6kl
+References: <20111123182154.25200.78078.stgit@localhost6.localdomain6>
+In-Reply-To: <20111123182154.25200.78078.stgit@localhost6.localdomain6>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-just use iwl_bus, remove the redundancy
+On 11/23/2011 08:21 PM, Kalle Valo wrote:
+> It was only initialised but not used anywhere. Also remove two defines
+> which ended up unused after this change.
+> 
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-io.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Applied.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
-index 3ffa8e6..3464cad 100644
---- a/drivers/net/wireless/iwlwifi/iwl-io.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-io.c
-@@ -143,7 +143,7 @@ u32 iwl_read_direct32(struct iwl_bus *bus, u32 reg)
- 
- 	spin_lock_irqsave(&bus->reg_lock, flags);
- 	iwl_grab_nic_access(bus);
--	value = iwl_read32(bus(bus), reg);
-+	value = iwl_read32(bus, reg);
- 	iwl_release_nic_access(bus);
- 	spin_unlock_irqrestore(&bus->reg_lock, flags);
- 
--- 
-1.7.0.4
-
+Kalle
