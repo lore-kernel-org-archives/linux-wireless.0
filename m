@@ -1,33 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:43149 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751103Ab1KUVMj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 16:12:39 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id BDA9454044A
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 16:37:50 -0500 (EST)
-Subject: Compat-wireless release for 2011-11-21 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20111121211237.794164062E@repository3.orbit-lab.org> (sfid-20111121_221242_666977_B4CB2237)
-Date: Mon, 21 Nov 2011 16:12:37 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mga09.intel.com ([134.134.136.24]:41441 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756116Ab1KXOQx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Nov 2011 09:16:53 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 24 Nov 2011 16:16:06 +0200
+Subject: RE: [PATCH] mac80211: fix TX warning
+Message-ID: <4825B8A2C4E264489E57869F0DCFB223445BEF173F@hasmsx502.ger.corp.intel.com> (sfid-20111124_151656_811380_4A534986)
+References: <1322142456.5366.18.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1322142456.5366.18.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 04be1f1...80d9ddd akpm-end   -> origin/akpm-end  (forced update)
-   a9098b3..a767835  akpm-start -> origin/akpm-start
- + fdf6edf...bd87c6c master     -> origin/master  (forced update)
-   a9098b3..a767835  stable     -> origin/stable
- * [new tag]         next-20111121 -> next-20111121
+PiBGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0N
+Cj4gU2VudDogVGh1cnNkYXksIE5vdmVtYmVyIDI0LCAyMDExIDM6NDggUE0NCj4gVG86IEpvaG4g
+TGludmlsbGUNCj4gQ2M6IEdydW1iYWNoLCBFbW1hbnVlbDsgbGludXgtd2lyZWxlc3MNCj4gU3Vi
+amVjdDogW1BBVENIXSBtYWM4MDIxMTogZml4IFRYIHdhcm5pbmcNCj4gDQo+IEZyb206IEpvaGFu
+bmVzIEJlcmcgPGpvaGFubmVzLmJlcmdAaW50ZWwuY29tPg0KPiANCj4gRW1tYW51ZWwgcmVwb3J0
+ZWQgdGhhdCBteSBwcmV2aW91cyBwYXRjaGVzIHRvIGVuYWJsZQ0KPiBoYW5kaW5nIGFsbCBmcmFn
+bWVudHMgdG8gZHJpdmVycyBhdCBvbmNlIHRyaWdnZXJlZA0KPiB0aGUgd2FybmluZyB0aGF0IHRo
+ZSBTS0IgcXVldWUgd2Fzbid0IGVtcHR5LiBUaGlzIGlzDQo+IGhhcHBlbmluZyB3aGVuIHdlIGFj
+dHVhbGx5IHF1ZXVlIHVwIHNvbWUgZnJhbWVzIGFuZA0KPiBkb24ndCBoYW5kIHRoZW0gdG8gdGhl
+IGRyaXZlciAocXVldWVzIGFyZSBzdG9wcGVkKS4NCj4gDQo+IFRoZSByZWFzb24gZm9yIGl0IGlz
+IHRoYXQgbXkgY29kZSB0aGF0IHNwbGljZXMgdGhlDQo+IGZyYW1lKHMpIG92ZXIgdG8gdGhlIHBl
+bmRpbmcgcXVldWUgZGlkbid0IHJlLWluaXQNCj4gdGhlIGxvY2FsIHF1ZXVlLCBzbyBza2JfcXVl
+dWVfZW1wdHkoKSB3YXMgZmFsc2UuIEZpeA0KPiB0aGlzIGJ5IHVzaW5nIHRoZSBfaW5pdCB2ZXJz
+aW9ucyBvZiB0aGUgc3BsaWNpbmcuDQo+IA0KPiBBbHNvLCBjb252ZXJ0IHRoZSB3YXJuaW5nIHRv
+IFdBUk5fT05fT05DRS4NCj4gDQo+IFJlcG9ydGVkLWJ5OiBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1t
+YW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBKb2hhbm5lcyBCZXJn
+IDxqb2hhbm5lcy5iZXJnQGludGVsLmNvbT4NCg0KVGVzdGVkLWJ5OiBFbW1hbnVlbCBHcnVtYmFj
+aCA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkludGVsIElzcmFl
+bCAoNzQpIExpbWl0ZWQKClRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0YWNobWVudHMgbWF5IGNvbnRh
+aW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZvcgp0aGUgc29sZSB1c2Ugb2YgdGhlIGludGVuZGVk
+IHJlY2lwaWVudChzKS4gQW55IHJldmlldyBvciBkaXN0cmlidXRpb24KYnkgb3RoZXJzIGlzIHN0
+cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZApyZWNpcGllbnQs
+IHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIgYW5kIGRlbGV0ZSBhbGwgY29waWVzLgo=
 
-compat-wireless code metrics
-
-    819372 - Total upstream lines of code being pulled
-      2455 - backport code changes
-      2110 - backport code additions
-       345 - backport code deletions
-      8770 - backport from compat module
-     11225 - total backport code
-    1.3700 - % of code consists of backport work
