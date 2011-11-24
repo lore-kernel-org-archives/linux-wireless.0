@@ -1,68 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41276 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754532Ab1KQRZG (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:41400 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751670Ab1KXS6A convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 12:25:06 -0500
-Subject: Re: [PATCH v8 2/2] mac80211:  Support ht-cap over-rides.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4EC542C4.1040402@candelatech.com>
-References: <1320780995-30483-1-git-send-email-greearb@candelatech.com>
-	 <1320780995-30483-2-git-send-email-greearb@candelatech.com>
-	 (sfid-20111108_203659_989707_E33ECA13) <1320783128.24797.48.camel@jlt3.sipsolutions.net>
-	 <4EB99812.3000507@candelatech.com>
-	 <1320786130.24797.78.camel@jlt3.sipsolutions.net>
-	 <4EBC2516.4080807@candelatech.com>
-	 <1321529293.3997.28.camel@jlt3.sipsolutions.net>
-	 <4EC542C4.1040402@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 17 Nov 2011 18:25:03 +0100
-Message-ID: <1321550703.3997.45.camel@jlt3.sipsolutions.net> (sfid-20111117_182516_858639_0ACB6131)
-Mime-Version: 1.0
+	Thu, 24 Nov 2011 13:58:00 -0500
+Received: by wwo28 with SMTP id 28so1108382wwo.1
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2011 10:57:59 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1322160343.5366.47.camel@jlt3.sipsolutions.net>
+References: <1322016630-27332-1-git-send-email-mar.kolya@gmail.com>
+	<1322158678.5366.27.camel@jlt3.sipsolutions.net>
+	<CALGY4fv6NTRDPUEa-7h+DqaHZwdKnNG4fEmzyHrYZukz3B1gqA@mail.gmail.com>
+	<1322159944.5366.42.camel@jlt3.sipsolutions.net>
+	<1322160343.5366.47.camel@jlt3.sipsolutions.net>
+Date: Thu, 24 Nov 2011 13:57:59 -0500
+Message-ID: <CALGY4fsfmKhns0+AB69ZmKE33-k95V0su3wex-kJ888cUB4Gcg@mail.gmail.com> (sfid-20111124_195805_356357_5E52F8CD)
+Subject: Re: [PATCH v2 0/3] mac80211: timeout tx agg sessions in way similar
+ to rx agg sessions
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-11-17 at 09:22 -0800, Ben Greear wrote:
+Hi
 
-> > We can't, but can't we like assign sdata->ht_caps = sband->ht_caps? Or
-> > maybe even calculate restricted HT caps for both 2.4 and 5 GHz?
-> > Basically what I was thinking is this:
-> 
-> > struct sub_if_data {
-> > 	...
-> > 	struct ieee80211_sta_ht_cap ht_cap[num_bands];
-> > 	...
-> > };
-> 
-> So we'd have to copy this data from sbands[] upon creation
-> of the interface to make sure it is always initialized?
-> This would allow us to easily support the overrides for
-> non-station interfaces, so I do like that benefit.
-> 
-> Can the sbands[] data ever change for any reason once
-> an interface is created?  If not, then probably this is
-> doable.  If it can change, then we are screwed.
+2011/11/24 Johannes Berg <johannes@sipsolutions.net>:
+> On Thu, 2011-11-24 at 19:39 +0100, Johannes Berg wrote:
+>
+>> >   And one more thing, if you do not mind.
+>> > 'ieee80211_stop_tx_ba_session' tests tx_tid->state for
+>> > HT_AGG_STATE_STOPPING holding only spinlock on sta->lock.
+>> > '___ieee80211_stop_tx_ba_session' sets this bit when spin lock on
+>> > sta->lock is not being held. It seems to be that this could lead to
+>> > problems if these two functions get called at about same time (which
+>> > could easily happen when this patch is applied). Although actual
+>> > window when lock is not help is really small. But I think the way it
+>> > is currently done could still lead to problems. I think
+>> > 'set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);' should be moved up
+>> > to be covered by spin lock. I can include this as a part of next
+>> > version of my patch. I'd really appreciate your thoughts about this.
+>>
+>> Yeah that does indeed seem like an issue
+>
+> Actually I think the right way to fix it would be the change below, do
+> you agree? I think just moving the set_bit doesn't help because other
+> code might call right into ___ieee80211_stop_tx_ba_session (or with just
+> two underscores on front)
+>
+> johannes
+>
+> --- wireless-testing.orig/net/mac80211/agg-tx.c 2011-11-09 10:07:34.000000000 +0100
+> +++ wireless-testing/net/mac80211/agg-tx.c      2011-11-24 19:44:51.000000000 +0100
+> @@ -162,6 +162,12 @@ int ___ieee80211_stop_tx_ba_session(stru
+>                return -ENOENT;
+>        }
+>
+> +       /* if we're already stopping ignore any new requests to stop */
+> +       if (test_bit(HT_AGG_STATE_STOPPING, &tid_tx->state)) {
+> +               spin_unlock_bh(&sta->lock);
+> +               return -EALREADY;
+> +       }
+> +
+>        if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state)) {
+>                /* not even started yet! */
+>                ieee80211_assign_tid_tx(sta, tid, NULL);
+> @@ -170,6 +176,8 @@ int ___ieee80211_stop_tx_ba_session(stru
+>                return 0;
+>        }
+>
+> +       set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);
+> +
+>        spin_unlock_bh(&sta->lock);
+>
+>  #ifdef CONFIG_MAC80211_HT_DEBUG
+> @@ -177,8 +185,6 @@ int ___ieee80211_stop_tx_ba_session(stru
+>               sta->sta.addr, tid);
+>  #endif /* CONFIG_MAC80211_HT_DEBUG */
+>
+> -       set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);
+> -
+>        del_timer_sync(&tid_tx->addba_resp_timer);
+>
+>        /*
+>
+>
+>
 
-I don't think it can change but it's not const (I think?) so drivers
-might do stupid things -- but that would be buggy anyway.
+Yes, this patch does make sense to me.
 
-> It seems you are basically wanting to copy the sband[] data
-> local to each interface (sdata), and then we would remove sband from most
-> (or all?) of the method calls that deal with sband->ht_caps?
-
-I guess. Though we still need the band to know which one to use (I'm
-reluctant to say we just need one due to channel switching etc.)
-
-> Looks like quite a bit of code churn, and probably requiring at least two
-> patches:
->   * Get rid of sband usage by copying the sband data into sdata
->   * Add the over-ride logic
-
-Yeah. It might be *too much* churn, but that's what I was thinking. If
-you think it's likely too much churn let's go with what you have now,
-there are only a few minor things about it I don't like much.
-
-johannes
-
+-- 
+Truthfully yours,
+Martynov Nikolay.
+Email: mar.kolya@gmail.com
