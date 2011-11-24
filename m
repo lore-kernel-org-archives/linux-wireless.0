@@ -1,121 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qmta14.westchester.pa.mail.comcast.net ([76.96.59.212]:55450
-	"EHLO qmta14.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754760Ab1K2OTO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39594 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751888Ab1KXS0J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 09:19:14 -0500
-Received: from www.jots.org (unknown [192.168.22.1])
-	by elanor.jots.org (Postfix) with ESMTP id 248754000A
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2011 09:18:40 -0500 (EST)
-To: <linux-wireless@vger.kernel.org>
-From: "Ken D'Ambrosio" <ken@jots.org>
-Subject: Followup with dmesg WARNING (was Bug report: can't maintain WiFi connectivity
-        in recent kernels.)
-Date: Tue, 29 Nov 2011 09:18:40 -0500
-Content-Type: text/plain; charset=UTF-8; format=fixed
-MIME-Version: 1.0
-Message-id: <a562bb7bd5c895756114c38e0de891de@www.jots.org> (sfid-20111129_151918_364652_33E29E3A)
+	Thu, 24 Nov 2011 13:26:09 -0500
+Subject: Re: [RFC v2 3/8] mac80211: tracking mesh peer link-specific power
+ mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Mike Krinkin <krinkin.m.u@gmail.com>,
+	Max Filippov <jcmvbkbc@gmail.com>
+In-Reply-To: <1321886416-12597-4-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154149_972027_446A5478)
+References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
+	 <1321886416-12597-4-git-send-email-ivan.bezyazychnyy@gmail.com>
+	 (sfid-20111121_154149_972027_446A5478)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Nov 2011 19:26:06 +0100
+Message-ID: <1322159166.5366.32.camel@jlt3.sipsolutions.net> (sfid-20111124_192613_864664_70C64A72)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I hadn't sent this, because I'd thought I was only getting WARNINGs on my
-Virtualbox-tainted kernel, but this happened untainted, so here you go.  Hope
-it helps!
+On Mon, 2011-11-21 at 18:40 +0400, Ivan Bezyazychnyy wrote:
+> peer_ps_mode field has been added to sta_info structure to represent
+> peer's link-specific power mode for our station.
+> 
+> Peer's link-specific power mode is tracked from the Power Management
+> field in the Frame Control field and the Mesh Power Save Level field
+> in the QoS Control field at the end of a frame exchange sequence.
+> 
+> Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+> Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
+> Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
+> ---
+>  include/linux/ieee80211.h |   11 ++++++++
+>  net/mac80211/mesh.h       |    2 +
+>  net/mac80211/rx.c         |   61 +++++++++++++++++++++++++++++++++++++++++++++
+>  net/mac80211/sta_info.h   |    2 +
+>  4 files changed, 76 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+> index 483fa46..44e9c0d 100644
+> --- a/include/linux/ieee80211.h
+> +++ b/include/linux/ieee80211.h
+> @@ -546,6 +546,17 @@ static inline int ieee80211_is_qos_nullfunc(__le16 fc)
+>  	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_NULLFUNC);
+>  }
+>  
+> +/**
+> + * ieee80211s_has_qos_pm - check Power Save Level in QoS control
+> + * @qc - QoS control bytes in little-endian byteorder
+> + */
+> +
+> +static inline int ieee80211s_has_qos_pm(__le16 qc)
 
--Ken
+bool
 
+> +{
+> +	return (qc & cpu_to_le16(
+> +			IEEE80211_QOS_CTL_MESH_PS_LEVEL)) != 0;
+> +}
 
-[  198.113130] wlan0: deauthenticating from 00:27:0d:98:d1:f1 by local choice
-(reason=3)
-[  198.113277] ------------[ cut here ]------------
-[  198.113313] WARNING: at net/wireless/mlme.c:309
-__cfg80211_auth_remove+0x56/0xa0 [cfg80211]()
-[  198.113317] Hardware name: EC14 Series
-[  198.113320] Modules linked in: nls_iso8859_1 nls_cp437 vfat fat binfmt_misc
-ppdev snd_hda_codec_hdmi snd_hda_codec_realtek joydev snd_hda_intel
-snd_hda_codec arc4 snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm usb_storage
-snd_seq_dummy uvcvideo videodev snd_seq_oss fbcon tileblit snd_seq_midi i915
-snd_rawmidi iwlwifi font bitblit snd_seq_midi_event softcursor snd_seq psmouse
-snd_timer snd_seq_device serio_raw mac80211 drm_kms_helper acer_wmi drm
-sparse_keymap atl1c i2c_algo_bit cfg80211 intel_agp snd intel_gtt agpgart
-soundcore video snd_page_alloc lp parport
-[  198.113397] Pid: 44, comm: kworker/u:3 Not tainted 3.1.0+ #1
-[  198.113401] Call Trace:
-[  198.113412]  [<c068e057>] ? printk+0x1d/0x1f
-[  198.113423]  [<c01562b2>] warn_slowpath_common+0x72/0xa0
-[  198.113439]  [<f8cbc1e6>] ? __cfg80211_auth_remove+0x56/0xa0 [cfg80211]
-[  198.113454]  [<f8cbc1e6>] ? __cfg80211_auth_remove+0x56/0xa0 [cfg80211]
-[  198.113461]  [<c0156302>] warn_slowpath_null+0x22/0x30
-[  198.113480]  [<f8cbc1e6>] __cfg80211_auth_remove+0x56/0xa0 [cfg80211]
-[  198.113496]  [<f8cbc2ae>] cfg80211_send_auth_timeout+0x5e/0xc0 [cfg80211]
-[  198.113518]  [<f868f796>] ieee80211_probe_auth_done+0xe6/0xf0 [mac80211]
-[  198.113525]  [<c014f614>] ? wake_up_process+0x14/0x20
-[  198.113532]  [<c06976ec>] ? __mutex_unlock_slowpath+0x3c/0x50
-[  198.113552]  [<f86929bb>] ieee80211_work_work+0x47b/0x12d0 [mac80211]
-[  198.113559]  [<c0134c58>] ? default_spin_lock_flags+0x8/0x10
-[  198.113566]  [<c0698701>] ? _raw_spin_trylock_bh+0x1/0x30
-[  198.113575]  [<c017043e>] process_one_work+0xfe/0x3a0
-[  198.113580]  [<c014f614>] ? wake_up_process+0x14/0x20
-[  198.113586]  [<c016dfe5>] ? start_worker+0x25/0x30
-[  198.113605]  [<f8692540>] ? free_work+0x20/0x20 [mac80211]
-[  198.113612]  [<c0170f74>] worker_thread+0x124/0x2d0
-[  198.113618]  [<c0170e50>] ? manage_workers.isra.28+0x1e0/0x1e0
-[  198.113624]  [<c0174ced>] kthread+0x6d/0x80
-[  198.113630]  [<c0174c80>] ? flush_kthread_worker+0x80/0x80
-[  198.113637]  [<c069fb06>] kernel_thread_helper+0x6/0x10
-[  198.113642] ---[ end trace 04bdbdc199f6d75f ]---
+and with bool there's no need for the != 0 part.
+ 
+> +void ieee80211s_set_sta_ps_mode(struct sta_info *sta,
+> +				enum nl80211_mesh_power_mode mode)
 
+static?
 
+>  static ieee80211_rx_result debug_noinline
+>  ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
+>  {
+> @@ -1314,6 +1342,39 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+>  	}
+>  
+>  	/*
+> +	 * Test mesh power save level subfield of QoS control field (PSL)
+> +	 * and Power Managment field of frame control (PW)
+> +	 * +----+----+-----------------+
+> +	 * | PM | PSL| Mesh Power Mode |
+> +	 * +----+----+-----------------+
+> +	 * | 0  |Rsrv|    Active       |
+> +	 * +----+----+-----------------+
+> +	 * | 1  | 0  |    Light        |
+> +	 * +----+----+-----------------+
+> +	 * | 1  | 1  |    Deep         |
+> +	 * +----+----+-----------------+
+> +	 */
+> +	if (!ieee80211_has_morefrags(hdr->frame_control) &&
+> +	    !(status->rx_flags & IEEE80211_RX_DEFERRED_RELEASE) &&
+> +	    ieee80211_vif_is_mesh(&rx->sdata->vif) &&
+> +	    (ieee80211_is_data(hdr->frame_control) ||
+> +	     ieee80211_is_nullfunc(hdr->frame_control))) {
+> +		if (ieee80211_has_pm(hdr->frame_control)) {
+> +			__le16 *qc = (__le16 *) ieee80211_get_qos_ctl(hdr);
+> +			if (ieee80211s_has_qos_pm(*qc)) {
 
-Hi.  For reasons pertaining to btrfs, I'm running 3.1+  kernels, and the wifi
-on my system now flakes out sporadically, but reliably.  It can sometimes run
-for a couple days, but other days (like, say, yesterday) it'll fail upwards of
-30 times. Simply attempting to re-acquire a connection via Network Manager
-fails 100%.  I need to rmmod and modprobe the iwlwifi module, and then am able
-to immediately connect, 100% of the time -- albeit, briefly.  Rebooting under
-these circumstances seems to have as much affect as reloading the module.  (I
-wonder if there's something that changes on the WAP side that triggers this? 
-That would explain the occasional doses of extended uptime, followed by days of
-misery, regardless of reboots and module playing.)
+I don't think you guaranteed that it even has a QoS header.
 
-While the behavior, sadly, *is* sporadic, when
-
-- it's not a problem on older (distribution-supplied) kernels, and
-- reloading -- and only reloading -- the module fixes it, however briefly,
-
-it seems to me it's probably a problem with the module.
-
-
-Here's some additional information:
-
-* Happens on multiple WAPs (home, hotel, work, etc.)
-
-* 02:00.0 Network controller: Intel Corporation WiFi Link 1000 Series
-
-* The system *thinks* everything is fine -- NetworkManager happily shows all
-the WAPs, etc. -- but I'm unable to re-acquire them until I reload the module.
-
-* kernel 3.1.0+, untainted  (Chris Mason's btrfs git pull from three weeks ago;
-also experienced with slightly older, post 3.x kernels)
-
-* Seems to fail most quickly under load (e.g., streaming); can push an hour if
-doing relatively little
-
-* I'm unsure which kernel rev. was the tipping point, but Ubuntu 10.04
-generally "just worked," and is what I'm booted to now off of USB -- 2.6.32.
-
-I'd give you dmesg messages, but I'm -- catch-22 -- Ubuntu 10.04 won't mount my
-btrfs partition, but runs WiFi flawlessly.  If you need those messages, just
-let me know, and I'll pull them off.
-
-If there's anything else I can help out with, please don't hesitate to let me
-know.
-
-Thanks!
-
--Ken
-
-
-
-
+johannes
 
