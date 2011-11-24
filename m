@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6584 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752688Ab1KWPmH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 10:42:07 -0500
-Date: Wed, 23 Nov 2011 16:44:38 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Amir Hedayaty <hedayaty@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
-Message-ID: <20111123154437.GC13460@redhat.com> (sfid-20111123_164211_664857_C622168D)
-References: <20111116100915.GA2191@redhat.com>
- <20111122214940.GH8452@tuxdriver.com>
- <20111123080506.GB9833@redhat.com>
- <CAGXE3d-HE8MWV5Xv9e407iDn83UFvjua52mYGEJuJnQuQvnyog@mail.gmail.com>
- <20111123105106.GA7943@redhat.com>
- <CAN6fvj2=EhimZUy-DKtpzAKq1mpvBt03KtX9vCi0dBTCXWVsRg@mail.gmail.com>
- <20111123151414.GC7943@redhat.com>
+Received: from acsinet15.oracle.com ([141.146.126.227]:24297 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753181Ab1KXHXf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Nov 2011 02:23:35 -0500
+Date: Thu, 24 Nov 2011 10:22:48 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jiri Pirko <jpirko@redhat.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	linux-usb@vger.kernel.org, orinoco-devel@lists.sourceforge.net,
+	kernel-janitors@vger.kernel.org
+Subject: [patch] orinoco: remove an unused variable
+Message-ID: <20111124072247.GE14122@elgon.mountain> (sfid-20111124_082346_876774_BA8B2593)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111123151414.GC7943@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 23, 2011 at 04:14:14PM +0100, Stanislaw Gruszka wrote:
-> > ohci_hcd:usb3, ohci_hcd:usb4, snd_hda_intel
-> >  17:   22153190     140306   13063918   91518105   IO-APIC-fasteoi
-> > ehci_hcd:usb1, 0000:02:00.0
-[snip]
-> I'm seeing rt2800pci anywhere, is module loaded?
-It must be 0000:02:00.0 entry, lscpi can be used to confirm that.
-  
-Stanislaw
+The "version" isn't used anymore now that this is a module_usb_driver().
+
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+I wrote this patch against linux-next.
+
+This is a fallout from d632eb1bf22 "USB: convert drivers/net/* to use
+module_usb_driver()" so I'm not sure if this patch should go through
+the USB tree or the wireless tree.
+
+diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
+index ae8ce56..f634d45 100644
+--- a/drivers/net/wireless/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/orinoco/orinoco_usb.c
+@@ -1754,11 +1754,6 @@ static struct usb_driver orinoco_driver = {
+ 	.id_table = ezusb_table,
+ };
+ 
+-/* Can't be declared "const" or the whole __initdata section will
+- * become const */
+-static char version[] __initdata = DRIVER_NAME " " DRIVER_VERSION
+-	" (Manuel Estrada Sainz)";
+-
+ module_usb_driver(orinoco_driver);
+ 
+ MODULE_AUTHOR("Manuel Estrada Sainz");
