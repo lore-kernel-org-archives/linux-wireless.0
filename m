@@ -1,51 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44404 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752772Ab1KBKTu (ORCPT
+Received: from va3ehsobe003.messaging.microsoft.com ([216.32.180.13]:28703
+	"EHLO VA3EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753985Ab1KXP2u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 06:19:50 -0400
-Subject: Re: [PATCH 3/4] mac80211: check if frame is really part of this BA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	linville@tuxdriver.com
-In-Reply-To: <1319864732-11286-3-git-send-email-thomas@cozybit.com> (sfid-20111029_070615_135144_45E428A3)
-References: <1319864732-11286-1-git-send-email-thomas@cozybit.com>
-	 <1319864732-11286-3-git-send-email-thomas@cozybit.com>
-	 (sfid-20111029_070615_135144_45E428A3)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 02 Nov 2011 11:19:46 +0100
-Message-ID: <1320229186.3950.42.camel@jlt3.sipsolutions.net> (sfid-20111102_111953_435070_02F8ED4E)
-Mime-Version: 1.0
+	Thu, 24 Nov 2011 10:28:50 -0500
+From: Lars-Peter Clausen <lars@metafoo.de>
+To: <linux-kernel@vger.kernel.org>
+CC: Lars-Peter Clausen <lars@metafoo.de>,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Luciano Coelho <coelho@ti.com>,
+	<libertas-dev@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 10/11] wireless: Remove redundant spi driver bus initialization
+Date: Thu, 24 Nov 2011 16:29:20 +0100
+Message-ID: <1322148561-25138-10-git-send-email-lars@metafoo.de> (sfid-20111124_162913_755882_F7B25A40)
+In-Reply-To: <1322148561-25138-1-git-send-email-lars@metafoo.de>
+References: <1322148561-25138-1-git-send-email-lars@metafoo.de>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-10-28 at 22:05 -0700, Thomas Pedersen wrote:
-> There was an an implicit assumption that any QoS data frame received
-> from a STA/TID with an active BA session was sent to this vif as part of
-> a BA.  This is not true if IFF_PROMISC is enabled and the frame was
-> destined for a different peer, for example. Don't treat these frames as
-> part of a BA from the sending STA.
-> 
-> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-> ---
->  net/mac80211/rx.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index ee9e71b..ad39216 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -776,6 +776,10 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
->  	      (ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_NORMAL)))
->  		goto dont_reorder;
->  
-> +	/* not actually part of this BA session */
-> +	if (compare_ether_addr(hdr->addr1, rx->sdata->vif.addr) != 0)
-> +		goto dont_reorder;
+In ancient times it was necessary to manually initialize the bus field of an
+spi_driver to spi_bus_type. These days this is done in spi_driver_register(),
+so we can drop the manual assignment.
 
-Huh that seems strange. Shouldn't that rather check
-IEEE80211_RX_RA_MATCH?
+The patch was generated using the following coccinelle semantic patch:
+// <smpl>
+@@
+identifier _driver;
+@@
+struct spi_driver _driver = {
+	.driver = {
+-		.bus = &spi_bus_type,
+	},
+};
+// </smpl>
 
-johannes
+Signed-off-by: Lars-Peter Clausen <lars@metafoo.de>
+Cc: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Luciano Coelho <coelho@ti.com>
+Cc: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+---
+ drivers/net/wireless/libertas/if_spi.c |    1 -
+ drivers/net/wireless/p54/p54spi.c      |    1 -
+ drivers/net/wireless/wl1251/spi.c      |    1 -
+ drivers/net/wireless/wl12xx/spi.c      |    1 -
+ 4 files changed, 0 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index 728baa4..50b1ee7 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -1291,7 +1291,6 @@ static struct spi_driver libertas_spi_driver = {
+ 	.remove = __devexit_p(libertas_spi_remove),
+ 	.driver = {
+ 		.name	= "libertas_spi",
+-		.bus	= &spi_bus_type,
+ 		.owner	= THIS_MODULE,
+ 		.pm	= &if_spi_pm_ops,
+ 	},
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+index 2d5cf5b..7faed62 100644
+--- a/drivers/net/wireless/p54/p54spi.c
++++ b/drivers/net/wireless/p54/p54spi.c
+@@ -700,7 +700,6 @@ static int __devexit p54spi_remove(struct spi_device *spi)
+ static struct spi_driver p54spi_driver = {
+ 	.driver = {
+ 		.name		= "p54spi",
+-		.bus		= &spi_bus_type,
+ 		.owner		= THIS_MODULE,
+ 	},
+ 
+diff --git a/drivers/net/wireless/wl1251/spi.c b/drivers/net/wireless/wl1251/spi.c
+index eaa5f95..6248c35 100644
+--- a/drivers/net/wireless/wl1251/spi.c
++++ b/drivers/net/wireless/wl1251/spi.c
+@@ -319,7 +319,6 @@ static int __devexit wl1251_spi_remove(struct spi_device *spi)
+ static struct spi_driver wl1251_spi_driver = {
+ 	.driver = {
+ 		.name		= DRIVER_NAME,
+-		.bus		= &spi_bus_type,
+ 		.owner		= THIS_MODULE,
+ 	},
+ 
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index 0f97186..12421a6 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -462,7 +462,6 @@ static int __devexit wl1271_remove(struct spi_device *spi)
+ static struct spi_driver wl1271_spi_driver = {
+ 	.driver = {
+ 		.name		= "wl1271_spi",
+-		.bus		= &spi_bus_type,
+ 		.owner		= THIS_MODULE,
+ 	},
+ 
+-- 
+1.7.7.1
+
 
