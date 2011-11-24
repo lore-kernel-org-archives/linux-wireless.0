@@ -1,66 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7362 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755718Ab1K2O45 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41753 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751888Ab1KXSjH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 09:56:57 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Russell Hu <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Wilson Tsao <wtsao@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 06/17] ath9k: Add MCI interrupt to interrupt mask
-Date: Tue, 29 Nov 2011 20:25:27 +0530
-Message-ID: <1322578538-18912-7-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111129_155700_270878_CD415751)
-In-Reply-To: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 24 Nov 2011 13:39:07 -0500
+Subject: Re: [PATCH v2 0/3] mac80211: timeout tx agg sessions in way
+ similar to rx agg sessions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nikolay Martynov <mar.kolya@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <CALGY4fv6NTRDPUEa-7h+DqaHZwdKnNG4fEmzyHrYZukz3B1gqA@mail.gmail.com> (sfid-20111124_193358_972023_10DAB172)
+References: <1322016630-27332-1-git-send-email-mar.kolya@gmail.com>
+	 <1322158678.5366.27.camel@jlt3.sipsolutions.net>
+	 <CALGY4fv6NTRDPUEa-7h+DqaHZwdKnNG4fEmzyHrYZukz3B1gqA@mail.gmail.com>
+	 (sfid-20111124_193358_972023_10DAB172)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Nov 2011 19:39:04 +0100
+Message-ID: <1322159944.5366.42.camel@jlt3.sipsolutions.net> (sfid-20111124_193911_596534_7ABB278D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Thu, 2011-11-24 at 13:33 -0500, Nikolay Martynov wrote:
 
-Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+> > Looks OK to me. Did you run it through sparse too? :-)
+> >
+>   Please forgive my lack of experience, but could you please point me
+> to some docs where I can read about sparse and how to use it? I'd
+> really appreciate this.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index e43c41c..90d35f2 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -764,7 +764,8 @@ irqreturn_t ath_isr(int irq, void *dev)
- 		ATH9K_INT_BMISS |		\
- 		ATH9K_INT_CST |			\
- 		ATH9K_INT_TSFOOR |		\
--		ATH9K_INT_GENTIMER)
-+		ATH9K_INT_GENTIMER |		\
-+		ATH9K_INT_MCI)
- 
- 	struct ath_softc *sc = dev;
- 	struct ath_hw *ah = sc->sc_ah;
-@@ -1119,6 +1120,9 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_HT)
- 		ah->imask |= ATH9K_INT_CST;
- 
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
-+		ah->imask |= ATH9K_INT_MCI;
-+
- 	sc->sc_flags &= ~SC_OP_INVALID;
- 	sc->sc_ah->is_monitoring = false;
- 
--- 
-1.7.0.4
+Sure, FWIW, I'm just asking because I received lots of patches recently
+that later got sparse warnings. I guess you normally run something like
+
+make M=net/mac80211
+
+To run sparse, you add C=1 (just run sparse if cc runs) or C=2 (run
+sparse on all files). Obviously you need to install sparse first, your
+distribution probably has packages.
+
+>   Also, I one more thing I forgot to mention in original cover letter.
+> Some time before this patch I've posted patch for ath9k: "[PATCH v3]
+> ath9k: improve ath_tx_aggr_stop to avoid TID stuck in cleanup state".
+> I've noticed that bug fixed in ath9k patch is triggered much more
+> often when this patch to mac80211 applied. Probably because of some
+> timing issues when TID is being closed from both ends at about same
+> time.
+>   What I mean to say is that this patch to mac80211 should probably be
+> applied after that patch to ath9k to avoid making ath9k less stable.
+
+You should send that info to the list not just me, I've added the list
+back.
+
+>   And one more thing, if you do not mind.
+> 'ieee80211_stop_tx_ba_session' tests tx_tid->state for
+> HT_AGG_STATE_STOPPING holding only spinlock on sta->lock.
+> '___ieee80211_stop_tx_ba_session' sets this bit when spin lock on
+> sta->lock is not being held. It seems to be that this could lead to
+> problems if these two functions get called at about same time (which
+> could easily happen when this patch is applied). Although actual
+> window when lock is not help is really small. But I think the way it
+> is currently done could still lead to problems. I think
+> 'set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);' should be moved up
+> to be covered by spin lock. I can include this as a part of next
+> version of my patch. I'd really appreciate your thoughts about this.
+
+Yeah that does indeed seem like an issue -- please send a separate patch
+outside of this series and add Cc: stable@vger.kernel.org (to the patch
+description not to the actual email, if you're not familiar with the
+stable submission rules please check for those)
+
+johannes
 
