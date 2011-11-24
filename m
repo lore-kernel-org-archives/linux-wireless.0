@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kwall.cngroup.cz ([194.213.192.9]:23307 "EHLO kwall.cngroup.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754106Ab1KWQwR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 11:52:17 -0500
-Date: Wed, 23 Nov 2011 17:52:10 +0100
-From: Jan =?UTF-8?B?RHZvxZnDoWs=?= <dvorakj@cngroup.dk>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rtl8192cu not working with Edimax EW-7811Un
-Message-Id: <20111123175210.fd0ac6b0b66885b3deaecfc0@cngroup.dk> (sfid-20111123_175221_063804_A009BCDE)
-In-Reply-To: <20111123155108.GD13460@redhat.com>
-References: <20111122113427.3d332b00776546d5ebac11de@cngroup.dk>
-	<20111122140139.GA3891@redhat.com>
-	<20111123112301.f5e523ff743f86dae539fdf3@cngroup.dk>
-	<20111123143304.GA13460@redhat.com>
-	<20111123162426.9a30d25585fa54507c1c864e@cngroup.dk>
-	<4ECD13D0.6010500@lwfinger.net>
-	<20111123155108.GD13460@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:33616 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751888Ab1KXSdU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Nov 2011 13:33:20 -0500
+Subject: Re: [RFC v2 0/8] mesh power saving implementation: indication
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Javier Cardona <javier@cozybit.com>,
+	Thomas Pedersen <thomas@cozybit.com>
+In-Reply-To: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154127_723214_750C1617)
+References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
+	 (sfid-20111121_154127_723214_750C1617)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Nov 2011 19:33:17 +0100
+Message-ID: <1322159597.5366.37.camel@jlt3.sipsolutions.net> (sfid-20111124_193323_982603_0123F3D8)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 23 Nov 2011 16:51:09 +0100
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> Could you confirm that on previous kernel client mode does not
-> work, and work with that new kernel?  
+On Mon, 2011-11-21 at 18:40 +0400, Ivan Bezyazychnyy wrote:
 
-I'll try it when I get home or first thing yesterday.
+> Based on the latest IEEE 802.11s standard the power saving mechanism
+> can be divided into the following implementation phases:
+> * indication of mesh STAs' power modes in frames;
+> * a buffering and identification sending frames in mesh STA;
+> * Mesh Awake Window implementation;
+> * Peer service periods.
+> 
+> This patchset implements the phase of indication of mesh STAs'
+> power modes in frames. There are two types of mesh power modes:
+> * peer power mode: a mesh STA indicates its mesh power mode for each
+> mesh peering and obtains the mesh power modes of its peer mesh STAs;
+> * non-peer power mode: mesh station also indicates mesh power mode for
+> non-peer mesh stations. It determines when non-peer mesh STAs may send
+> Probe Request and Mesh Peering Open Request frames to the mesh STA.
+> 
+> Peer power mode should be indicated with Power Management field in the Frame
+> Control field and the Mesh Power Save Level field in all transmitted
+> individually addressed Mesh Data or QoS Null frames on this link.
+> 
+> Non-peer power mode should be indicated with the Power Management
+> field in the Frame Control field and the Mesh Power Save Level field
+> in the Mesh Capability field in Beacon and Probe Response frames. A
+> mesh STA shall also indicate its non-peer mesh power mode with the
+> Power Management field in the Frame Control field and the Mesh Power
+> Save Level field in the QoS Control field in group addressed Mesh Data
+> frames.
+> 
+> We would appreciate comments and advice.
 
-> > I can't still use hostapd, however.
-> Hmm, I'm not sure if rtl92c works in AP mode, Larry?
+I just did a cursory review -- I only looked at code style and general
+issues.
 
-The iw says it should.
+I expect that Thomas/Javier will review this from a functionality POV, I
+have no idea if these per-station things etc. even make sense.
 
-> > >So, in hope this does not get old too soon, any ideas? :-)
-> Eeee..., I do not understed this question.
+johannes
 
-Never mind.
-
-Best regards,
-	Jan Dvorak
