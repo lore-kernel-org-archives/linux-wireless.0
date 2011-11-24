@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bluegiga.fi ([194.100.31.45]:30843 "EHLO darkblue.bluegiga.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751889Ab1KXTrT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 14:47:19 -0500
-From: Veli-Pekka Peltola <veli-pekka.peltola@bluegiga.com>
-To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi, Veli-Pekka Peltola <veli-pekka.peltola@bluegiga.com>
-Subject: [PATCH] hostap_cs: add ID for Canon K30225
-Date: Thu, 24 Nov 2011 21:35:28 +0200
-Message-Id: <1322163328-5791-1-git-send-email-veli-pekka.peltola@bluegiga.com> (sfid-20111124_204722_492418_516D2643)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:42623 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751808Ab1KXTsi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Nov 2011 14:48:38 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat: add config var for CORDIC and CRC8
+Date: Thu, 24 Nov 2011 20:48:33 +0100
+Message-Id: <1322164113-22180-1-git-send-email-hauke@hauke-m.de> (sfid-20111124_204841_368304_5651759B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Veli-Pekka Peltola <veli-pekka.peltola@bluegiga.com>
----
- drivers/net/wireless/hostap/hostap_cs.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Sometimes the kernel version compat-wireless is build against has
+support for cordic and crc8 in its source, but these modules where not
+build when the kernel was build, because no one selected them. They are
+needed for the bcmsmac driver and they should be build every time when
+there is not an kernel module already.
 
-diff --git a/drivers/net/wireless/hostap/hostap_cs.c b/drivers/net/wireless/hostap/hostap_cs.c
-index 5441ad1..89e9d3a 100644
---- a/drivers/net/wireless/hostap/hostap_cs.c
-+++ b/drivers/net/wireless/hostap/hostap_cs.c
-@@ -656,6 +656,9 @@ static const struct pcmcia_device_id hostap_cs_ids[] = {
- 		"Addtron", "AWP-100 Wireless PCMCIA", "Version 01.02",
- 		0xe6ec52ce, 0x08649af2, 0x4b74baa0),
- 	PCMCIA_DEVICE_PROD_ID123(
-+		"Canon", "Wireless LAN CF Card K30225", "Version 01.00",
-+		0x96ef6fe2, 0x263fcbab, 0xa57adb8c),
-+	PCMCIA_DEVICE_PROD_ID123(
- 		"D", "Link DWL-650 11Mbps WLAN Card", "Version 01.02",
- 		0x71b18589, 0xb6f1b0ab, 0x4b74baa0),
- 	PCMCIA_DEVICE_PROD_ID123(
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ compat/Makefile |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/compat/Makefile b/compat/Makefile
+index fc43ba1..1a3c977 100644
+--- a/compat/Makefile
++++ b/compat/Makefile
+@@ -34,7 +34,7 @@ compat-$(CONFIG_COMPAT_KERNEL_2_6_39) += \
+ 	compat-2.6.39.o \
+ 	kstrtox.o
+ compat-$(CONFIG_COMPAT_KERNEL_3_0) += compat-3.0.o
+-compat-$(CONFIG_COMPAT_KERNEL_3_1) += \
+-	cordic.o \
+-	crc8.o
++
++compat-$(CONFIG_COMPAT_CORDIC) += cordic.o
++compat-$(CONFIG_COMPAT_CRC8) += crc8.o
+ 
 -- 
 1.7.5.4
 
