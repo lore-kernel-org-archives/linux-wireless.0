@@ -1,70 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:52818 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756430Ab1KOPwg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 10:52:36 -0500
-Message-ID: <4EC28ABC.70307@neratec.com> (sfid-20111115_165240_672662_E55D6E13)
-Date: Tue, 15 Nov 2011 16:52:28 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com,
-	nbd@openwrt.org
-Subject: Re: [PATCH 2/2] ath9k: integrate initial DFS module
-References: <1320770044-12271-1-git-send-email-zefir.kurtisi@neratec.com>	<1320770044-12271-3-git-send-email-zefir.kurtisi@neratec.com> <CAD2nsn1a7rgvGGNYGjVsCdfGXVVzOYK-dM6ojV1+P5dsL6yYvA@mail.gmail.com>
-In-Reply-To: <CAD2nsn1a7rgvGGNYGjVsCdfGXVVzOYK-dM6ojV1+P5dsL6yYvA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:44579 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751016Ab1KXPPX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Nov 2011 10:15:23 -0500
+Subject: Re: [PATCH 1/7] {nl,cfg,mac}80211: Allow Setting Multicast Rate in
+ Mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>, linville@tuxdriver.com
+In-Reply-To: <1322080347-7644-2-git-send-email-thomas@cozybit.com> (sfid-20111123_213313_268163_2293C7FE)
+References: <1322080347-7644-1-git-send-email-thomas@cozybit.com>
+	 <1322080347-7644-2-git-send-email-thomas@cozybit.com>
+	 (sfid-20111123_213313_268163_2293C7FE)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Nov 2011 16:15:16 +0100
+Message-ID: <1322147716.5366.22.camel@jlt3.sipsolutions.net> (sfid-20111124_161528_611097_5CD6D131)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/15/2011 04:24 PM, Mohammed Shafi wrote:
-> Hi Zefir,
-> 
-> just few doubt, sorry for the late reply
-> 
-> On Tue, Nov 8, 2011 at 10:04 PM, Zefir Kurtisi
-> <zefir.kurtisi@neratec.com> wrote:
->> This patch integrates the DFS module into ath9k, including
->>  * build the module into ath9k_hw
->>  * set up DFS debugfs
->> @@ -1855,11 +1858,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
->>                if (sc->sc_flags & SC_OP_RXFLUSH)
->>                        goto requeue_drop_frag;
->>
->> -               retval = ath9k_rx_skb_preprocess(common, hw, hdr, &rs,
->> -                                                rxs, &decrypt_error);
->> -               if (retval)
->> -                       goto requeue_drop_frag;
->> -
->>                rxs->mactime = (tsf & ~0xffffffffULL) | rs.rs_tstamp;
->>                if (rs.rs_tstamp > tsf_lower &&
->>                    unlikely(rs.rs_tstamp - tsf_lower > 0x10000000))
->> @@ -1869,6 +1867,17 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
->>                    unlikely(tsf_lower - rs.rs_tstamp > 0x10000000))
->>                        rxs->mactime += 0x100000000ULL;
->>
->> +               if ((rs.rs_status & ATH9K_RXERR_PHY) &&
->> +                   (rs.rs_phyerr == ATH9K_PHYERR_RADAR)) {
->> +                       /* DFS: check for radar pulse */
->> +                       ath9k_dfs_process_phyerr(sc, hdr, &rs, rxs->mactime);
->> +               }
->> +
->> +               retval = ath9k_rx_skb_preprocess(common, hw, hdr, &rs,
->> +                                                rxs, &decrypt_error);
->> +               if (retval)
->> +                       goto requeue_drop_frag;
-> 
-> does the above fixes any bug related to mactime displayed in sniffer
-> 
-> 
+On Wed, 2011-11-23 at 12:32 -0800, Thomas Pedersen wrote:
 
-Hi Mohammed,
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -5648,6 +5648,11 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
+>  	setup.mesh_id = nla_data(info->attrs[NL80211_ATTR_MESH_ID]);
+>  	setup.mesh_id_len = nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
+>  
+> +	if (info->attrs[NL80211_ATTR_MCAST_RATE] &&
+> +		!nl80211_parse_mcast_rate(rdev, setup.mcast_rate,
+> +		nla_get_u32(info->attrs[NL80211_ATTR_MCAST_RATE])))
+> +			return -EINVAL;
 
-no, like all other modifications within this patch the above does not fix anything (at least not intentionally) ;)
+That could use some better indentation ...
 
-What it does is moving the calculation of rxs->mactime before ath9k_rx_skb_preprocess(), since the mactime is needed to stamp the radar event. So, the five lines marked as removals are actually moved further down which shouldn't have any side effects. 
+johannes
 
-
-Thanks
-Zefir
