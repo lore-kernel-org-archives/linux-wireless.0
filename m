@@ -1,138 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4628 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751891Ab1KJTau (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 14:30:50 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 07/19] brcm80211: fmac: add corerev function for bcm4330
- chip
-Date: Thu, 10 Nov 2011 20:30:22 +0100
-Message-ID: <1320953434-16859-9-git-send-email-arend@broadcom.com> (sfid-20111110_203059_778082_9E28860E)
-In-Reply-To: <1320953434-16859-1-git-send-email-arend@broadcom.com>
-References: <1320953434-16859-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:33480 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752840Ab1KYSlQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Nov 2011 13:41:16 -0500
+Received: by mail-ey0-f174.google.com with SMTP id k14so988570eaa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Nov 2011 10:41:16 -0800 (PST)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	nbd@openwrt.org, jirislaby@gmail.com,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH v2 11/12] ath5k: Renumber hw queue ids
+Date: Fri, 25 Nov 2011 20:40:30 +0200
+Message-Id: <1322246431-10825-12-git-send-email-mickflemm@gmail.com> (sfid-20111125_194124_424634_6BEF2DDA)
+In-Reply-To: <1322246431-10825-1-git-send-email-mickflemm@gmail.com>
+References: <1322246431-10825-1-git-send-email-mickflemm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+According to documentation higher DCUs have higher priority and should
+be used for beacons and CAB traffic. More specifically DCU 9 should be
+used for beacons and DCU 8 for CAB traffic, I assumed DCU 7 should be
+OK for UAPSD traffic.
 
-This patch is part of the series adding new backplane support
+Note that DCU 8 and 9 are special because they can only be mapped to a single
+QCU each but since we use a 1:1 mapping between QCUs and DCUs anyway we don't
+have to change much.
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+P.S. I also did a few related cleanups on qcu.c and ath5k.h
+
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   31 ++++++++++++++++----
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |    3 ++
- 2 files changed, 28 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath5k/ath5k.h |   10 ++++------
+ drivers/net/wireless/ath/ath5k/qcu.c   |   14 +++++++-------
+ 2 files changed, 11 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-index 263ad0c..85b665e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-@@ -49,6 +49,10 @@
- #define SOCI_SB		0
- #define SOCI_AI		1
- 
-+/* EROM CompIdentB */
-+#define CIB_REV_MASK		0xff000000
-+#define CIB_REV_SHIFT		24
-+
- #define SDIOD_DRVSTR_KEY(chip, pmu)     (((chip) << 16) | (pmu))
- /* SDIO Pad drive strength to select value mappings */
- struct sdiod_drive_str {
-@@ -100,16 +104,30 @@ brcmf_sdio_chip_getinfidx(struct chip_info *ci, u16 coreid)
- }
- 
- static u32
--brcmf_sdio_chip_corerev(struct brcmf_sdio_dev *sdiodev,
--			u32 corebase)
-+brcmf_sdio_sb_corerev(struct brcmf_sdio_dev *sdiodev,
-+		      struct chip_info *ci, u16 coreid)
- {
- 	u32 regdata;
-+	u8 idx;
-+
-+	idx = brcmf_sdio_chip_getinfidx(ci, coreid);
- 
- 	regdata = brcmf_sdcard_reg_read(sdiodev,
--			CORE_SB(corebase, sbidhigh), 4);
-+			CORE_SB(ci->c_inf[idx].base, sbidhigh), 4);
- 	return SBCOREREV(regdata);
- }
- 
-+static u32
-+brcmf_sdio_ai_corerev(struct brcmf_sdio_dev *sdiodev,
-+		      struct chip_info *ci, u16 coreid)
-+{
-+	u8 idx;
-+
-+	idx = brcmf_sdio_chip_getinfidx(ci, coreid);
-+
-+	return (ci->c_inf[idx].cib & CIB_REV_MASK) >> CIB_REV_SHIFT;
-+}
-+
- static bool
- brcmf_sdio_sb_iscoreup(struct brcmf_sdio_dev *sdiodev,
- 		       struct chip_info *ci, u16 coreid)
-@@ -310,9 +328,11 @@ static int brcmf_sdio_chip_recognition(struct brcmf_sdio_dev *sdiodev,
- 	switch (ci->socitype) {
- 	case SOCI_SB:
- 		ci->iscoreup = brcmf_sdio_sb_iscoreup;
-+		ci->corerev = brcmf_sdio_sb_corerev;
- 		break;
- 	case SOCI_AI:
- 		ci->iscoreup = brcmf_sdio_ai_iscoreup;
-+		ci->corerev = brcmf_sdio_ai_corerev;
- 		break;
- 	default:
- 		brcmf_dbg(ERROR, "socitype %u not supported\n", ci->socitype);
-@@ -378,8 +398,7 @@ brcmf_sdio_chip_buscoresetup(struct brcmf_sdio_dev *sdiodev,
- 	u8 idx;
- 
- 	/* get chipcommon rev */
--	ci->c_inf[0].rev =
--		brcmf_sdio_chip_corerev(sdiodev, ci->c_inf[0].base);
-+	ci->c_inf[0].rev = ci->corerev(sdiodev, ci, ci->c_inf[0].id);
- 
- 	/* get chipcommon capabilites */
- 	ci->c_inf[0].caps =
-@@ -393,7 +412,7 @@ brcmf_sdio_chip_buscoresetup(struct brcmf_sdio_dev *sdiodev,
- 		ci->pmurev = ci->pmucaps & PCAP_REV_MASK;
- 	}
- 
--	ci->c_inf[1].rev = brcmf_sdio_chip_corerev(sdiodev, ci->c_inf[1].base);
-+	ci->c_inf[1].rev = ci->corerev(sdiodev, ci, ci->c_inf[1].id);
- 	regdata = brcmf_sdcard_reg_read(sdiodev,
- 				CORE_SB(ci->c_inf[1].base, sbidhigh), 4);
- 	ci->c_inf[1].id = (regdata & SSB_IDHIGH_CC) >> SSB_IDHIGH_CC_SHIFT;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-index 557c80d..ea91e60 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-@@ -60,6 +60,7 @@ struct chip_core_info {
- 	u32 base;
- 	u32 wrapbase;
- 	u32 caps;
-+	u32 cib;
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index c3815f7..e564e58 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -571,20 +571,18 @@ enum ath5k_tx_queue_subtype {
+  * @AR5K_TX_QUEUE_ID_CAB: Content after beacon queue
+  * @AR5K_TX_QUEUE_ID_BEACON: Beacon queue
+  * @AR5K_TX_QUEUE_ID_UAPSD: Urgent Automatic Power Save Delivery,
+- * @AR5K_TX_QUEUE_ID_XR_DATA: XR Data queue
+  *
+  * Each number represents a hw queue. If hw does not support hw queues
+- * (eg 5210) all data goes in one queue. These match
+- * mac80211 definitions.
++ * (eg 5210) all data goes in one queue.
+  */
+ enum ath5k_tx_queue_id {
+ 	AR5K_TX_QUEUE_ID_NOQCU_DATA	= 0,
+ 	AR5K_TX_QUEUE_ID_NOQCU_BEACON	= 1,
+ 	AR5K_TX_QUEUE_ID_DATA_MIN	= 0,
+ 	AR5K_TX_QUEUE_ID_DATA_MAX	= 3,
+-	AR5K_TX_QUEUE_ID_CAB		= 6,
+-	AR5K_TX_QUEUE_ID_BEACON		= 7,
+-	AR5K_TX_QUEUE_ID_UAPSD		= 8,
++	AR5K_TX_QUEUE_ID_UAPSD		= 7,
++	AR5K_TX_QUEUE_ID_CAB		= 8,
++	AR5K_TX_QUEUE_ID_BEACON		= 9,
  };
  
- struct chip_info {
-@@ -75,6 +76,8 @@ struct chip_info {
- 
- 	bool (*iscoreup)(struct brcmf_sdio_dev *sdiodev, struct chip_info *ci,
- 			 u16 coreid);
-+	u32 (*corerev)(struct brcmf_sdio_dev *sdiodev, struct chip_info *ci,
-+			 u16 coreid);
- };
- 
- struct sbconfig {
+ /*
+diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
+index 31924c3..e50e64d 100644
+--- a/drivers/net/wireless/ath/ath5k/qcu.c
++++ b/drivers/net/wireless/ath/ath5k/qcu.c
+@@ -54,7 +54,7 @@ Queue Control Unit, DCF Control Unit Functions
+ /**
+  * ath5k_hw_num_tx_pending() - Get number of pending frames for a  given queue
+  * @ah: The &struct ath5k_hw
+- * @queue: The hw queue number
++ * @queue: One of enum ath5k_tx_queue_id
+  */
+ u32
+ ath5k_hw_num_tx_pending(struct ath5k_hw *ah, unsigned int queue)
+@@ -85,7 +85,7 @@ ath5k_hw_num_tx_pending(struct ath5k_hw *ah, unsigned int queue)
+ /**
+  * ath5k_hw_release_tx_queue() - Set a transmit queue inactive
+  * @ah: The &struct ath5k_hw
+- * @queue: The hw queue number
++ * @queue: One of enum ath5k_tx_queue_id
+  */
+ void
+ ath5k_hw_release_tx_queue(struct ath5k_hw *ah, unsigned int queue)
+@@ -120,7 +120,7 @@ ath5k_cw_validate(u16 cw_req)
+ /**
+  * ath5k_hw_get_tx_queueprops() - Get properties for a transmit queue
+  * @ah: The &struct ath5k_hw
+- * @queue: The hw queue number
++ * @queue: One of enum ath5k_tx_queue_id
+  * @queue_info: The &struct ath5k_txq_info to fill
+  */
+ int
+@@ -134,7 +134,7 @@ ath5k_hw_get_tx_queueprops(struct ath5k_hw *ah, int queue,
+ /**
+  * ath5k_hw_set_tx_queueprops() - Set properties for a transmit queue
+  * @ah: The &struct ath5k_hw
+- * @queue: The hw queue number
++ * @queue: One of enum ath5k_tx_queue_id
+  * @qinfo: The &struct ath5k_txq_info to use
+  *
+  * Returns 0 on success or -EIO if queue is inactive
+@@ -267,7 +267,7 @@ ath5k_hw_setup_tx_queue(struct ath5k_hw *ah, enum ath5k_tx_queue queue_type,
+ /**
+  * ath5k_hw_set_tx_retry_limits() - Set tx retry limits on DCU
+  * @ah: The &struct ath5k_hw
+- * @queue: The hw queue number
++ * @queue: One of enum ath5k_tx_queue_id
+  *
+  * This function is used when initializing a queue, to set
+  * retry limits based on ah->ah_retry_* and the chipset used.
+@@ -310,9 +310,9 @@ ath5k_hw_set_tx_retry_limits(struct ath5k_hw *ah,
+ /**
+  * ath5k_hw_reset_tx_queue() - Initialize a single hw queue
+  * @ah: The &struct ath5k_hw
+- * @queue: The hw queue number
++ * @queue: One of enum ath5k_tx_queue_id
+  *
+- * Set DFS properties for the given transmit queue on DCU
++ * Set DCF properties for the given transmit queue on DCU
+  * and configures all queue-specific parameters.
+  */
+ int
 -- 
-1.7.5.4
-
+1.7.8.rc3
 
