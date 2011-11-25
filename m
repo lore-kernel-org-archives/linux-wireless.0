@@ -1,134 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:51689 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752182Ab1KRNVU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 08:21:20 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: [PATCHv4 1/3] mac80211: remove debugfs noack test
-Date: Fri, 18 Nov 2011 14:20:42 +0100
-Message-Id: <1321622446-2477-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111118_142130_282161_6B55EF41)
-In-Reply-To: <1321622446-2477-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1321622446-2477-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from mga01.intel.com ([192.55.52.88]:19787 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752064Ab1KYUIS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Nov 2011 15:08:18 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, "Hsu, Kenny" <kenny.hsu@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/7] iwlwifi: add tm commands for indirect register access
+Date: Fri, 25 Nov 2011 11:11:42 -0800
+Message-Id: <1322248308-5113-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111125_210827_399561_1782243E)
+In-Reply-To: <1322248308-5113-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1322248308-5113-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This feature has been superseded by the NoAck per Queue feature.
+From: Hsu, Kenny <kenny.hsu@intel.com>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Create new testmode commands to suppot indirect access
+of peripheral register.
+- IWL_TM_CMD_APP2DEV_INDIRECT_REG_READ32
+- IWL_TM_CMD_APP2DEV_INDIRECT_REG_WRITE32
+
+Meanwhile, add affix "DIRECT" into original register access
+commands for better discrimination with new commands.
+- IWL_TM_CMD_APP2DEV_DIRECT_REG_READ32
+- IWL_TM_CMD_APP2DEV_DIRECT_REG_WRITE32
+- IWL_TM_CMD_APP2DEV_DIRECT_REG_WRITE8
+
+Signed-off-by: Kenny Hsu <kenny.hsu@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/debugfs.c     |   35 -----------------------------------
- net/mac80211/ieee80211_i.h |    1 -
- net/mac80211/tx.c          |   10 +---------
- net/mac80211/wme.c         |    3 +--
- 4 files changed, 2 insertions(+), 47 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c  |   40 +++++++++++++++++++++++----
+ drivers/net/wireless/iwlwifi/iwl-testmode.h |   20 +++++++++-----
+ 2 files changed, 47 insertions(+), 13 deletions(-)
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 00cefcb..90baea5 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -97,40 +97,6 @@ static const struct file_operations reset_ops = {
- 	.llseek = noop_llseek,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sv-open.c b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+index e3882d0..be16caf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sv-open.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+@@ -276,7 +276,7 @@ static int iwl_testmode_reg(struct ieee80211_hw *hw, struct nlattr **tb)
+ 	IWL_INFO(priv, "testmode register access command offset 0x%x\n", ofs);
+ 
+ 	switch (nla_get_u32(tb[IWL_TM_ATTR_COMMAND])) {
+-	case IWL_TM_CMD_APP2DEV_REG_READ32:
++	case IWL_TM_CMD_APP2DEV_DIRECT_REG_READ32:
+ 		val32 = iwl_read32(bus(priv), ofs);
+ 		IWL_INFO(priv, "32bit value to read 0x%x\n", val32);
+ 
+@@ -291,7 +291,7 @@ static int iwl_testmode_reg(struct ieee80211_hw *hw, struct nlattr **tb)
+ 			IWL_DEBUG_INFO(priv,
+ 				       "Error sending msg : %d\n", status);
+ 		break;
+-	case IWL_TM_CMD_APP2DEV_REG_WRITE32:
++	case IWL_TM_CMD_APP2DEV_DIRECT_REG_WRITE32:
+ 		if (!tb[IWL_TM_ATTR_REG_VALUE32]) {
+ 			IWL_DEBUG_INFO(priv,
+ 				       "Error finding value to write\n");
+@@ -302,7 +302,7 @@ static int iwl_testmode_reg(struct ieee80211_hw *hw, struct nlattr **tb)
+ 			iwl_write32(bus(priv), ofs, val32);
+ 		}
+ 		break;
+-	case IWL_TM_CMD_APP2DEV_REG_WRITE8:
++	case IWL_TM_CMD_APP2DEV_DIRECT_REG_WRITE8:
+ 		if (!tb[IWL_TM_ATTR_REG_VALUE8]) {
+ 			IWL_DEBUG_INFO(priv, "Error finding value to write\n");
+ 			return -ENOMSG;
+@@ -312,6 +312,32 @@ static int iwl_testmode_reg(struct ieee80211_hw *hw, struct nlattr **tb)
+ 			iwl_write8(bus(priv), ofs, val8);
+ 		}
+ 		break;
++	case IWL_TM_CMD_APP2DEV_INDIRECT_REG_READ32:
++		val32 = iwl_read_prph(bus(priv), ofs);
++		IWL_INFO(priv, "32bit value to read 0x%x\n", val32);
++
++		skb = cfg80211_testmode_alloc_reply_skb(hw->wiphy, 20);
++		if (!skb) {
++			IWL_DEBUG_INFO(priv, "Error allocating memory\n");
++			return -ENOMEM;
++		}
++		NLA_PUT_U32(skb, IWL_TM_ATTR_REG_VALUE32, val32);
++		status = cfg80211_testmode_reply(skb);
++		if (status < 0)
++			IWL_DEBUG_INFO(priv,
++					"Error sending msg : %d\n", status);
++		break;
++	case IWL_TM_CMD_APP2DEV_INDIRECT_REG_WRITE32:
++		if (!tb[IWL_TM_ATTR_REG_VALUE32]) {
++			IWL_DEBUG_INFO(priv,
++					"Error finding value to write\n");
++			return -ENOMSG;
++		} else {
++			val32 = nla_get_u32(tb[IWL_TM_ATTR_REG_VALUE32]);
++			IWL_INFO(priv, "32bit value to write 0x%x\n", val32);
++			iwl_write_prph(bus(priv), ofs, val32);
++		}
++		break;
+ 	default:
+ 		IWL_DEBUG_INFO(priv, "Unknown testmode register command ID\n");
+ 		return -ENOSYS;
+@@ -665,9 +691,11 @@ int iwlagn_mac_testmode_cmd(struct ieee80211_hw *hw, void *data, int len)
+ 		IWL_DEBUG_INFO(priv, "testmode cmd to uCode\n");
+ 		result = iwl_testmode_ucode(hw, tb);
+ 		break;
+-	case IWL_TM_CMD_APP2DEV_REG_READ32:
+-	case IWL_TM_CMD_APP2DEV_REG_WRITE32:
+-	case IWL_TM_CMD_APP2DEV_REG_WRITE8:
++	case IWL_TM_CMD_APP2DEV_DIRECT_REG_READ32:
++	case IWL_TM_CMD_APP2DEV_DIRECT_REG_WRITE32:
++	case IWL_TM_CMD_APP2DEV_DIRECT_REG_WRITE8:
++	case IWL_TM_CMD_APP2DEV_INDIRECT_REG_READ32:
++	case IWL_TM_CMD_APP2DEV_INDIRECT_REG_WRITE32:
+ 		IWL_DEBUG_INFO(priv, "testmode cmd to register\n");
+ 		result = iwl_testmode_reg(hw, tb);
+ 		break;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.h b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+index b980bda..1779648 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+@@ -76,9 +76,9 @@
+  *	the actual uCode host command ID is carried with
+  *	IWL_TM_ATTR_UCODE_CMD_ID
+  *
+- * @IWL_TM_CMD_APP2DEV_REG_READ32:
+- * @IWL_TM_CMD_APP2DEV_REG_WRITE32:
+- * @IWL_TM_CMD_APP2DEV_REG_WRITE8:
++ * @IWL_TM_CMD_APP2DEV_DIRECT_REG_READ32:
++ * @IWL_TM_CMD_APP2DEV_DIRECT_REG_WRITE32:
++ * @IWL_TM_CMD_APP2DEV_DIRECT_REG_WRITE8:
+  *	commands from user applicaiton to access register
+  *
+  * @IWL_TM_CMD_APP2DEV_GET_DEVICENAME: retrieve device name
+@@ -107,12 +107,16 @@
+  *	commands from user application to own change the ownership of the uCode
+  *	if application has the ownership, the only host command from
+  *	testmode will deliver to uCode. Default owner is driver
++ * @IWL_TM_CMD_APP2DEV_INDIRECT_REG_READ32:
++ * @IWL_TM_CMD_APP2DEV_INDIRECT_REG_WRITE32:
++ *	commands from user applicaiton to indirectly access peripheral register
++ *
+  */
+ enum iwl_tm_cmd_t {
+ 	IWL_TM_CMD_APP2DEV_UCODE		= 1,
+-	IWL_TM_CMD_APP2DEV_REG_READ32		= 2,
+-	IWL_TM_CMD_APP2DEV_REG_WRITE32		= 3,
+-	IWL_TM_CMD_APP2DEV_REG_WRITE8		= 4,
++	IWL_TM_CMD_APP2DEV_DIRECT_REG_READ32	= 2,
++	IWL_TM_CMD_APP2DEV_DIRECT_REG_WRITE32	= 3,
++	IWL_TM_CMD_APP2DEV_DIRECT_REG_WRITE8	= 4,
+ 	IWL_TM_CMD_APP2DEV_GET_DEVICENAME	= 5,
+ 	IWL_TM_CMD_APP2DEV_LOAD_INIT_FW		= 6,
+ 	IWL_TM_CMD_APP2DEV_CFG_INIT_CALIB	= 7,
+@@ -126,7 +130,9 @@ enum iwl_tm_cmd_t {
+ 	IWL_TM_CMD_DEV2APP_UCODE_RX_PKT		= 15,
+ 	IWL_TM_CMD_DEV2APP_EEPROM_RSP		= 16,
+ 	IWL_TM_CMD_APP2DEV_OWNERSHIP		= 17,
+-	IWL_TM_CMD_MAX				= 18,
++	IWL_TM_CMD_APP2DEV_INDIRECT_REG_READ32	= 18,
++	IWL_TM_CMD_APP2DEV_INDIRECT_REG_WRITE32	= 19,
++	IWL_TM_CMD_MAX				= 20,
  };
  
--static ssize_t noack_read(struct file *file, char __user *user_buf,
--			  size_t count, loff_t *ppos)
--{
--	struct ieee80211_local *local = file->private_data;
--
--	return mac80211_format_buffer(user_buf, count, ppos, "%d\n",
--				      local->wifi_wme_noack_test);
--}
--
--static ssize_t noack_write(struct file *file,
--			   const char __user *user_buf,
--			   size_t count, loff_t *ppos)
--{
--	struct ieee80211_local *local = file->private_data;
--	char buf[10];
--	size_t len;
--
--	len = min(count, sizeof(buf) - 1);
--	if (copy_from_user(buf, user_buf, len))
--		return -EFAULT;
--	buf[len] = '\0';
--
--	local->wifi_wme_noack_test = !!simple_strtoul(buf, NULL, 0);
--
--	return count;
--}
--
--static const struct file_operations noack_ops = {
--	.read = noack_read,
--	.write = noack_write,
--	.open = mac80211_open_file_generic,
--	.llseek = default_llseek,
--};
--
- static ssize_t uapsd_queues_read(struct file *file, char __user *user_buf,
- 				 size_t count, loff_t *ppos)
- {
-@@ -398,7 +364,6 @@ void debugfs_hw_add(struct ieee80211_local *local)
- 	DEBUGFS_ADD(wep_iv);
- 	DEBUGFS_ADD(queues);
- 	DEBUGFS_ADD_MODE(reset, 0200);
--	DEBUGFS_ADD(noack);
- 	DEBUGFS_ADD(uapsd_queues);
- 	DEBUGFS_ADD(uapsd_max_sp_len);
- 	DEBUGFS_ADD(channel_type);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 068cc92..5c62579 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -957,7 +957,6 @@ struct ieee80211_local {
- 	int total_ps_buffered; /* total number of all buffered unicast and
- 				* multicast packets for power saving stations
- 				*/
--	int wifi_wme_noack_test;
- 	unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
- 
- 	/*
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 30d212a..f632690 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1150,16 +1150,8 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
- 	if (is_multicast_ether_addr(hdr->addr1)) {
- 		tx->flags &= ~IEEE80211_TX_UNICAST;
- 		info->flags |= IEEE80211_TX_CTL_NO_ACK;
--	} else {
-+	} else
- 		tx->flags |= IEEE80211_TX_UNICAST;
--		if (unlikely(local->wifi_wme_noack_test))
--			info->flags |= IEEE80211_TX_CTL_NO_ACK;
--		/*
--		 * Flags are initialized to 0. Hence, no need to
--		 * explicitly unset IEEE80211_TX_CTL_NO_ACK since
--		 * it might already be set for injected frames.
--		 */
--	}
- 
- 	if (!(info->flags & IEEE80211_TX_CTL_DONTFRAG)) {
- 		if (!(tx->flags & IEEE80211_TX_UNICAST) ||
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 4332711..74b3d10 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -150,8 +150,7 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
- 		/* preserve EOSP bit */
- 		ack_policy = *p & IEEE80211_QOS_CTL_EOSP;
- 
--		if (unlikely(sdata->local->wifi_wme_noack_test) ||
--		    is_multicast_ether_addr(hdr->addr1))
-+		if (is_multicast_ether_addr(hdr->addr1))
- 			ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
- 		/* qos header is 2 bytes */
- 		*p++ = ack_policy | tid;
+ /*
 -- 
-1.7.7.3
+1.7.0.4
 
