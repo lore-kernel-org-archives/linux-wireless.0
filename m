@@ -1,68 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:47204 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751952Ab1KRLCF (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:33018 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752140Ab1KYBPd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 06:02:05 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+	Thu, 24 Nov 2011 20:15:33 -0500
+Received: by iage36 with SMTP id e36so3749758iag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2011 17:15:32 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: [PATCHv3 2/2] iw: add support for NoAck per tid
-Date: Fri, 18 Nov 2011 12:01:50 +0100
-Message-Id: <1321614110-32392-6-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111118_120220_739723_87985BC5)
-In-Reply-To: <1321614110-32392-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1321614110-32392-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH v2 0/7] mesh fixes and improvements
+Date: Thu, 24 Nov 2011 17:15:19 -0800
+Message-Id: <1322183726-12436-1-git-send-email-thomas@cozybit.com> (sfid-20111125_021536_389466_D7239EE6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds support for the new NoAck feature in nl80211/mac80211
+This series contains several (relatively minor) fixes and improvements for the
+mesh stack. Chun-Yeow has also submitted a patch which adds the capability of
+specifying a legacy rate for multicast frames in mesh, similar to what is
+currently possible in IBSS. A follow-up patch for iw will be submitted
+separately.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- interface.c |   27 +++++++++++++++++++++++++++
- 1 files changed, 27 insertions(+), 0 deletions(-)
+A couple of these will fail checpatch due to overstepping the 80 column limit,
+but this is fixed in the final patch.
 
-diff --git a/interface.c b/interface.c
-index 3a345ba..db38b6a 100644
---- a/interface.c
-+++ b/interface.c
-@@ -386,6 +386,33 @@ COMMAND(set, 4addr, "<on|off>",
- 	NL80211_CMD_SET_INTERFACE, 0, CIB_NETDEV, handle_interface_4addr,
- 	"Set interface 4addr (WDS) mode.");
- 
-+static int handle_interface_noack_map(struct nl80211_state *state,
-+				      struct nl_cb *cb,
-+				      struct nl_msg *msg,
-+				      int argc, char **argv)
-+{
-+	uint16_t noack_map;
-+	char *end;
-+
-+	if (argc != 1)
-+		return 1;
-+
-+	noack_map = strtoul(argv[0], &end, 16);
-+	if (end != (argv[0] + strlen(argv[0])))
-+		return 1;
-+
-+	NLA_PUT_U16(msg, NL80211_ATTR_NOACK_MAP, noack_map);
-+
-+	return 0;
-+ nla_put_failure:
-+	return -ENOBUFS;
-+
-+}
-+COMMAND(set, noack_map, "<map>",
-+	NL80211_CMD_SET_NOACK_MAP, 0, CIB_NETDEV, handle_interface_noack_map,
-+	"Set the NoAck map for the TIDs. (0x0001 = BE, 0x000e = BK, 0x0030 = VI, 0x00C0 = VO)");
-+
-+
- static int handle_interface_wds_peer(struct nl80211_state *state,
- 				     struct nl_cb *cb,
- 				     struct nl_msg *msg,
+v2: mostly just style issues.
+
+Chun-Yeow Yeoh (1):
+  {nl,cfg,mac}80211: Allow Setting Multicast Rate in Mesh
+
+Thomas Pedersen (6):
+  mac80211: failed forwarded mesh frame addressing
+  mac80211: fix switched HWMP frame addresses
+  mac80211: fix forwarded mesh frame queue mapping
+  {nl,cfg,mac}80211: implement dot11MeshHWMPperrMinInterval
+  mac80211: don't initiate path discovery when forwarding frame with
+    unknown DA
+  mac80211: clean up rx_h_mesh_fwding
+
+ include/linux/nl80211.h       |    5 ++
+ include/net/cfg80211.h        |    3 +
+ net/mac80211/cfg.c            |    9 +++
+ net/mac80211/debugfs_netdev.c |    3 +
+ net/mac80211/ieee80211_i.h    |    4 +-
+ net/mac80211/iface.c          |   15 +----
+ net/mac80211/mesh.c           |    1 +
+ net/mac80211/mesh.h           |    2 +
+ net/mac80211/mesh_hwmp.c      |  146 ++++++++++++++++++++++++-----------------
+ net/mac80211/mesh_pathtbl.c   |   29 +--------
+ net/mac80211/rx.c             |  105 +++++++++++++-----------------
+ net/mac80211/tx.c             |    3 +-
+ net/mac80211/wme.c            |   23 +++++++
+ net/mac80211/wme.h            |    3 +
+ net/wireless/mesh.c           |    2 +
+ net/wireless/nl80211.c        |   11 +++
+ 16 files changed, 201 insertions(+), 163 deletions(-)
+
 -- 
-1.7.7.3
+1.7.5.4
 
