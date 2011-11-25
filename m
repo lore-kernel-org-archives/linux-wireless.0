@@ -1,70 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:62214 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755126Ab1KUEIj (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:47800 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752950Ab1KYSlS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Nov 2011 23:08:39 -0500
-Received: by ywt32 with SMTP id 32so4256764ywt.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 20:08:38 -0800 (PST)
-MIME-Version: 1.0
-Date: Mon, 21 Nov 2011 06:08:38 +0200
-Message-ID: <CAFtRNNz6YEVp2efHqnh0aQ8DEdWm9-ztp8vRTmdorUjf8tJs5w@mail.gmail.com> (sfid-20111121_050842_816863_86D63DCE)
-Subject: A weird hw crypto bug...
+	Fri, 25 Nov 2011 13:41:18 -0500
+Received: by mail-ey0-f174.google.com with SMTP id k14so988641eaa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Nov 2011 10:41:18 -0800 (PST)
 From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	nbd@openwrt.org, jirislaby@gmail.com,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH v2 12/12] ath5k: Optimize ath5k_cw_validate
+Date: Fri, 25 Nov 2011 20:40:31 +0200
+Message-Id: <1322246431-10825-13-git-send-email-mickflemm@gmail.com> (sfid-20111125_194129_123811_8C552148)
+In-Reply-To: <1322246431-10825-1-git-send-email-mickflemm@gmail.com>
+References: <1322246431-10825-1-git-send-email-mickflemm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some time ago we had a few reports of AR2413 cards being unable to
-encrypt packets of specific lengths.
+Optimize ath5k_cw_validate by using the classic (X & (X - 1)) == 0
+check to see if a number is power of 2.
 
->From https://bugs.launchpad.net/ubuntu/+source/linux/+bug/568090, user
-Musaraigne did some further investigation/debuging on this:
+v2: Use functions from log2.h instead
 
-"The cause of the high and unpredictable latencies is that packets are
-dropped depending on their size. According to my tests, packet sizes
-of the form
-  size = 128*k + 81 + m
-or
-  size = 128*k + 105 + m
-for any k>=2 and 0<=m<=7
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/qcu.c |   17 +++++++++++++----
+ 1 files changed, 13 insertions(+), 4 deletions(-)
 
-are dropped randomly in 90-95% of the cases. Conversely, all other
-packet sizes work fine.
-
-You can see for yourself if this is true on your system:
-  ping -M do -s 596 www.google.com
-should result in 90% packet loss (because 624 = 128*4 + 105 + 7; the
-28 byte difference comes from network headers added by ping)
-while
-  ping -M do -s 597 www.google.com
-should result in negligible packet loss."
-
-So far I couldn't reproduce this bug with my AR2413 and now after e
-few user reports I'm almost sure that it's only present on cards
-created by Askey. I verified it again recently based on a bug report
-from an OpenSUSE user here...
-
-https://bugzilla.novell.com/show_bug.cgi?id=731576
-
-What seems weird is that some users reported that MadWiFi worked fine
-on these cards (I have no idea what happens on their windows driver,
-maybe they disable hw crypto) ! Since for hw crypto we use code from
-the common ath module (and I think this is the same with HAL) I don't
-see how that can happen.
-
-Anyway my question is how to handle this:
-
-a) Just disable hw crypto for all AR2413 cards made by Askey
-b) If we handle such card do some padding based on Musaraigne's findings
-
-I'd like to go with b but I don't know how to do it correctly without
-corrupting anything. Any ideas ?
-
-
+diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
+index e50e64d..30b50f9 100644
+--- a/drivers/net/wireless/ath/ath5k/qcu.c
++++ b/drivers/net/wireless/ath/ath5k/qcu.c
+@@ -23,6 +23,7 @@ Queue Control Unit, DCF Control Unit Functions
+ #include "ath5k.h"
+ #include "reg.h"
+ #include "debug.h"
++#include <linux/log2.h>
+ 
+ /**
+  * DOC: Queue Control Unit (QCU)/DCF Control Unit (DCU) functions
+@@ -108,13 +109,21 @@ ath5k_hw_release_tx_queue(struct ath5k_hw *ah, unsigned int queue)
+ static u16
+ ath5k_cw_validate(u16 cw_req)
+ {
+-	u32 cw = 1;
+ 	cw_req = min(cw_req, (u16)1023);
+ 
+-	while (cw < cw_req)
+-		cw = (cw << 1) | 1;
++	/* Check if cw_req + 1 a power of 2 */
++	if (is_power_of_2(cw_req + 1))
++		return cw_req;
+ 
+-	return cw;
++	/* Check if cw_req is a power of 2 */
++	if (is_power_of_2(cw_req))
++		return cw_req - 1;
++
++	/* If none of the above is correct
++	 * find the closest power of 2 */
++	cw_req = (u16) roundup_pow_of_two(cw_req) - 1;
++
++	return cw_req;
+ }
+ 
+ /**
 -- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.7.8.rc3
+
