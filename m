@@ -1,30 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:29076 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751554Ab1KRXCL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 18:02:11 -0500
-Date: Fri, 18 Nov 2011 18:02:08 -0500
-From: Pavel Roskin <proski@gnu.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 45/77] iwlegacy: s/rx_reply/hdl/
-Message-ID: <20111118180208.6a16e68c@mj> (sfid-20111119_000214_477046_4BBAD9E2)
-In-Reply-To: <1321604559-10707-45-git-send-email-sgruszka@redhat.com>
-References: <1321604559-10707-1-git-send-email-sgruszka@redhat.com>
-	<1321604559-10707-45-git-send-email-sgruszka@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:42229 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750960Ab1KYSk4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Nov 2011 13:40:56 -0500
+Received: by bke11 with SMTP id 11so4712560bke.19
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Nov 2011 10:40:55 -0800 (PST)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	nbd@openwrt.org, jirislaby@gmail.com,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH v2 02/12] ath5k: Add TXNOFRM to INT_TX_ALL
+Date: Fri, 25 Nov 2011 20:40:21 +0200
+Message-Id: <1322246431-10825-3-git-send-email-mickflemm@gmail.com> (sfid-20111125_194059_861003_536C4D46)
+In-Reply-To: <1322246431-10825-1-git-send-email-mickflemm@gmail.com>
+References: <1322246431-10825-1-git-send-email-mickflemm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 18 Nov 2011 09:22:07 +0100
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+Add TXNOFRM to INT_TX_ALL since it's a TX interrupt too.
 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Why do you want it?  I understand rx_reply, but I don't understand
-"hdl".  Is it Hairy Definition Language? :)
-
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 0f42a57..b8abdbc 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -856,6 +856,7 @@ enum ath5k_int {
+ 	AR5K_INT_TX_ALL = AR5K_INT_TXOK
+ 		| AR5K_INT_TXDESC
+ 		| AR5K_INT_TXERR
++		| AR5K_INT_TXNOFRM
+ 		| AR5K_INT_TXEOL
+ 		| AR5K_INT_TXURN,
+ 
 -- 
-Regards,
-Pavel Roskin
+1.7.8.rc3
+
