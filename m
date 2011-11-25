@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49898 "EHLO mx1.redhat.com"
+Received: from purkki.adurom.net ([80.68.90.206]:46323 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751402Ab1K1JVK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 04:21:10 -0500
-Date: Mon, 28 Nov 2011 10:23:09 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: fix lps_lock deadlock
-Message-ID: <20111128092308.GB2372@redhat.com> (sfid-20111128_102115_126780_2A5F5524)
-References: <1322219327-23148-1-git-send-email-sgruszka@redhat.com>
- <4ECFD1BF.4070503@lwfinger.net>
+	id S1750840Ab1KYHAx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Nov 2011 02:00:53 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Pedro Francisco <pedrogfrancisco@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 firmware errors: tentative debugging
+References: <CAJZjf_xDm_RaFqxF-r+MAPyh_HcCb+yV4dNrfhr+LH0-z2zk8g@mail.gmail.com>
+	<CAJZjf_yEBb3BEf+-Fei78xBmJT1Y_Jr5fPUJNKwi6kvuVg24KA@mail.gmail.com>
+Date: Fri, 25 Nov 2011 09:00:45 +0200
+In-Reply-To: <CAJZjf_yEBb3BEf+-Fei78xBmJT1Y_Jr5fPUJNKwi6kvuVg24KA@mail.gmail.com>
+	(Pedro Francisco's message of "Thu, 24 Nov 2011 11:49:30 +0000")
+Message-ID: <87bos0hejm.fsf@purkki.adurom.net> (sfid-20111125_080057_181858_B803C4C1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4ECFD1BF.4070503@lwfinger.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 25, 2011 at 11:34:55AM -0600, Larry Finger wrote:
-> Thanks for fixing this problem. The patch also fixes the lockdep
-> warning I was getting, but my knowledge of locking was not good
-> enough to get the solution.
-> 
-> Is this problem related to
-> https://bugzilla.redhat.com/show_bug.cgi?id=755154 and/or
-> https://bugzilla.redhat.com/show_bug.cgi?id=754075? If so, perhaps
-> they should be mentioned in the commit message.
+Pedro Francisco <pedrogfrancisco@gmail.com> writes:
 
-I'll post v2 shortly with that information included.
+> iwl3945 has had firmware errors triggered 'by' NM after started using
+> nl80211 instead of wext. Since Intel has stopped supporting iwl3945,
+> no firmware fix has been possible. It has been workarounded by
+> disable_hw_scan=1 as default, with the penalty of network performance
+> being lower and frequent 'hangs' on the connection.
+>
+> I was able to trigger the firmware error by doing "iw dev wlan0 scan
+> passive". By comparison, "iw dev wlan0 scan" does NOT trigger the
+> firmware error.
 
-> Is there a bug report by Oliver Paukstadt? I could not find one with Google.
-It's here: 
-https://bugzilla.redhat.com/show_bug.cgi?id=731365#c67
-I did not reference that, becuse it's part of different bug report.
- 
-> Patch ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+So NM uses passive scan? Now I'm curious, why is that?
 
-Thanks
-Stanislaw
+-- 
+Kalle Valo
