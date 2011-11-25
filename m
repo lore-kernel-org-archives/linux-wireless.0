@@ -1,165 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:33018 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752140Ab1KYBPk (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:52114 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751177Ab1KYEuE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 20:15:40 -0500
-Received: by mail-iy0-f174.google.com with SMTP id e36so3749758iag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2011 17:15:39 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v2 4/7] mac80211: fix forwarded mesh frame queue mapping
-Date: Thu, 24 Nov 2011 17:15:23 -0800
-Message-Id: <1322183726-12436-5-git-send-email-thomas@cozybit.com> (sfid-20111125_021544_011649_07FB499C)
-In-Reply-To: <1322183726-12436-1-git-send-email-thomas@cozybit.com>
-References: <1322183726-12436-1-git-send-email-thomas@cozybit.com>
+	Thu, 24 Nov 2011 23:50:04 -0500
+MIME-Version: 1.0
+In-Reply-To: <20111124230254.GA2100@gamma.logic.tuwien.ac.at>
+References: <CANUX_P1RjcRD2tW1A6YYSEV9+aUZyTEro7tZXJWRoxk6gx-2jA@mail.gmail.com>
+	<CANUX_P2aFn84uSqgZA2gTBN7E4+0jGmJQTkx4eug4Ls0hK0==Q@mail.gmail.com>
+	<20111122072730.GA32225@gamma.logic.tuwien.ac.at>
+	<CANUX_P15En9bHVx4bhq6=XKPZnC2u+QyVJ+jnm4ns=39DrOBtg@mail.gmail.com>
+	<2D0C7905-AEB2-4DE4-89B1-945D89F2B5D6@logic.at>
+	<CANUX_P21PDdyo4u-x_1A0Lcqf-33yHgzUxddAoc3juGRNnrcDg@mail.gmail.com>
+	<20111122124357.GA32440@gamma.logic.tuwien.ac.at>
+	<CANUX_P0uyyuK4netV6srYCh9FsC4cpGzxobHE3T38n5RvvA0RQ@mail.gmail.com>
+	<20111123015503.GC23203@gamma.logic.tuwien.ac.at>
+	<CANUX_P1zDDzMy5yrFXSZAkMQ-87uu-fE1e-2sCEgHJi4dh5eiw@mail.gmail.com>
+	<20111124230254.GA2100@gamma.logic.tuwien.ac.at>
+Date: Fri, 25 Nov 2011 06:50:03 +0200
+Message-ID: <CANUX_P0EMQra_JS5xb5dfjDUO+QwhmJ9LPANfX+89hApXU4hvw@mail.gmail.com> (sfid-20111125_055028_487479_7F3F3C78)
+Subject: Re: iwlagn is getting very shaky
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Norbert Preining <preining@logic.at>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	Dave Jones <davej@redhat.com>
+Content-Type: multipart/mixed; boundary=f46d04428fe8dd567f04b287e2fe
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can't rely on ieee80211_select_queue() to do its job at this point
-since the skb->protocol is not yet known. Instead, factor out and reuse
-the queue mapping logic for injected frames.
+--f46d04428fe8dd567f04b287e2fe
+Content-Type: text/plain; charset=ISO-8859-1
 
-Also, to mitigate congestion, forwarded frames should be dropped if the
-outgoing queue was stopped.  This was not correctly implemented as we
-were not checking the right queue.  Furthermore, we were dropping frames
-that had arrived to their destination if that queue was stopped.
+On Fri, Nov 25, 2011 at 01:02, Norbert Preining <preining@logic.at> wrote:
+> On Do, 24 Nov 2011, Emmanuel Grumbach wrote:
+>> Please apply the patch attached on top of the one I previously sent.
+>> Let me know I you have trouble with patch.
+>
+> Which patch? Nothing attached, I also checked in the mail archives
+> in case I had again problems with attached patches. Nothing.
+> Please resend.
+>
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
-v2: Style & naming (Johannes)
+Oh well... Sorry again....
 
- net/mac80211/iface.c |   15 +--------------
- net/mac80211/rx.c    |   15 ++++++++-------
- net/mac80211/wme.c   |   24 ++++++++++++++++++++++++
- net/mac80211/wme.h   |    3 +++
- 4 files changed, 36 insertions(+), 21 deletions(-)
+--f46d04428fe8dd567f04b287e2fe
+Content-Type: text/x-patch; charset=US-ASCII; name="DEBUG_QUEUE2.patch"
+Content-Disposition: attachment; filename="DEBUG_QUEUE2.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gvepnfhv0
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index b34ca0c..ee90f07 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -672,7 +672,6 @@ static u16 ieee80211_monitor_select_queue(struct net_device *dev,
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_radiotap_header *rtap = (void *)skb->data;
--	u8 *p;
- 
- 	if (local->hw.queues < 4)
- 		return 0;
-@@ -683,19 +682,7 @@ static u16 ieee80211_monitor_select_queue(struct net_device *dev,
- 
- 	hdr = (void *)((u8 *)skb->data + le16_to_cpu(rtap->it_len));
- 
--	if (!ieee80211_is_data(hdr->frame_control)) {
--		skb->priority = 7;
--		return ieee802_1d_to_ac[skb->priority];
--	}
--	if (!ieee80211_is_data_qos(hdr->frame_control)) {
--		skb->priority = 0;
--		return ieee802_1d_to_ac[skb->priority];
--	}
--
--	p = ieee80211_get_qos_ctl(hdr);
--	skb->priority = *p & IEEE80211_QOS_CTL_TAG1D_MASK;
--
--	return ieee80211_downgrade_queue(local, skb);
-+	return ieee80211_select_queue_80211(local, skb, hdr);
- }
- 
- static const struct net_device_ops ieee80211_monitorif_ops = {
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index eef5302..4e960d7 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1902,6 +1902,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 	struct ieee80211_local *local = rx->local;
- 	struct ieee80211_sub_if_data *sdata = rx->sdata;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
-+	u16 q;
- 
- 	hdr = (struct ieee80211_hdr *) skb->data;
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-@@ -1920,12 +1921,6 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 		/* illegal frame */
- 		return RX_DROP_MONITOR;
- 
--	if (ieee80211_queue_stopped(&local->hw, skb_get_queue_mapping(skb))) {
--		IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
--						dropped_frames_congestion);
--		return RX_DROP_MONITOR;
--	}
--
- 	if (mesh_hdr->flags & MESH_FLAGS_AE) {
- 		struct mesh_path *mppath;
- 		char *proxied_addr;
-@@ -1957,7 +1952,13 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 	    compare_ether_addr(sdata->vif.addr, hdr->addr3) == 0)
- 		return RX_CONTINUE;
- 
--	skb_set_queue_mapping(skb, ieee80211_select_queue(sdata, skb));
-+	q = ieee80211_select_queue_80211(local, skb, hdr);
-+	if (ieee80211_queue_stopped(&local->hw, q)) {
-+		IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
-+					     dropped_frames_congestion);
-+		return RX_DROP_MONITOR;
-+	}
-+	skb_set_queue_mapping(skb, q);
- 	mesh_hdr->ttl--;
- 
- 	if (status->rx_flags & IEEE80211_RX_RA_MATCH) {
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 4332711..2feb749 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -52,6 +52,30 @@ static int wme_downgrade_ac(struct sk_buff *skb)
- 	}
- }
- 
-+/* Indicate which queue to use for this fully formed 802.11 frame */
-+u16 ieee80211_select_queue_80211(struct ieee80211_local *local,
-+				 struct sk_buff *skb,
-+				 struct ieee80211_hdr *hdr)
-+{
-+	u8 *p;
-+
-+	if (local->hw.queues < 4)
-+		return 0;
-+
-+	if (!ieee80211_is_data(hdr->frame_control)) {
-+		skb->priority = 7;
-+		return ieee802_1d_to_ac[skb->priority];
-+	}
-+	if (!ieee80211_is_data_qos(hdr->frame_control)) {
-+		skb->priority = 0;
-+		return ieee802_1d_to_ac[skb->priority];
-+	}
-+
-+	p = ieee80211_get_qos_ctl(hdr);
-+	skb->priority = *p & IEEE80211_QOS_CTL_TAG1D_MASK;
-+
-+	return ieee80211_downgrade_queue(local, skb);
-+}
- 
- /* Indicate which queue to use. */
- u16 ieee80211_select_queue(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/wme.h b/net/mac80211/wme.h
-index 34e166f..94edceb 100644
---- a/net/mac80211/wme.h
-+++ b/net/mac80211/wme.h
-@@ -15,6 +15,9 @@
- 
- extern const int ieee802_1d_to_ac[8];
- 
-+u16 ieee80211_select_queue_80211(struct ieee80211_local *local,
-+				 struct sk_buff *skb,
-+				 struct ieee80211_hdr *hdr);
- u16 ieee80211_select_queue(struct ieee80211_sub_if_data *sdata,
- 			   struct sk_buff *skb);
- void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
--- 
-1.7.5.4
-
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWNvcmUuYyBiL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWNvcmUuYwppbmRleCA4ZWZhMTBmLi40Zjdj
+NzU4IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1jb3JlLmMK
+KysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtY29yZS5jCkBAIC0xNTk2LDYg
+KzE1OTYsNyBAQCB2b2lkIGl3bF9zdGFydF90eF9iYV90cmFuc19yZWFkeShzdHJ1Y3QgaXdsX3By
+aXYgKnByaXYsCiAJCWN0eCA9IHByaXYtPnN0YXRpb25zW3N0YV9pZF0uY3R4aWQ7CiAJdmlmID0g
+cHJpdi0+Y29udGV4dHNbY3R4XS52aWY7CiAKKwlJV0xfREVCVUdfVFhfUVVFVUVTKHByaXYsICJU
+ZWxsaW5nIG1hYyBzdGFydCBCQSByZWFkeSB0aWQ6ICVkIiwgdGlkKTsKIAlpZWVlODAyMTFfc3Rh
+cnRfdHhfYmFfY2JfaXJxc2FmZSh2aWYsIGFkZHIsIHRpZCk7CiB9CiAKQEAgLTE2MTAsNiArMTYx
+MSw3IEBAIHZvaWQgaXdsX3N0b3BfdHhfYmFfdHJhbnNfcmVhZHkoc3RydWN0IGl3bF9wcml2ICpw
+cml2LAogCQljdHggPSBwcml2LT5zdGF0aW9uc1tzdGFfaWRdLmN0eGlkOwogCXZpZiA9IHByaXYt
+PmNvbnRleHRzW2N0eF0udmlmOwogCisJSVdMX0RFQlVHX1RYX1FVRVVFUyhwcml2LCAiVGVsbGlu
+ZyBtYWMgc3RvcCBCQSByZWFkeSB0aWQ6ICVkIiwgdGlkKTsKIAlpZWVlODAyMTFfc3RvcF90eF9i
+YV9jYl9pcnFzYWZlKHZpZiwgYWRkciwgdGlkKTsKIH0KIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtbWFjODAyMTEuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L2l3bHdpZmkvaXdsLW1hYzgwMjExLmMKaW5kZXggZWMzMTQ4Mi4uMTRmODllZSAxMDA2NDQKLS0t
+IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtbWFjODAyMTEuYworKysgYi9kcml2
+ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1tYWM4MDIxMS5jCkBAIC02MzIsNiArNjMyLDcg
+QEAgc3RhdGljIGludCBpd2xhZ25fbWFjX2FtcGR1X2FjdGlvbihzdHJ1Y3QgaWVlZTgwMjExX2h3
+ICpodywKIAkJYnJlYWs7CiAJY2FzZSBJRUVFODAyMTFfQU1QRFVfVFhfU1RPUDoKIAkJSVdMX0RF
+QlVHX0hUKHByaXYsICJzdG9wIFR4XG4iKTsKKwkJSVdMX0RFQlVHX1RYX1FVRVVFUyhwcml2LCAi
+U3RvcCBUeCBhZ2cgZm9yIHRpZCAlZCIsIHRpZCk7CiAJCXJldCA9IGl3bGFnbl90eF9hZ2dfc3Rv
+cChwcml2LCB2aWYsIHN0YSwgdGlkKTsKIAkJaWYgKChyZXQgPT0gMCkgJiYgKHByaXYtPmFnZ190
+aWRzX2NvdW50ID4gMCkpIHsKIAkJCXByaXYtPmFnZ190aWRzX2NvdW50LS07CmRpZmYgLS1naXQg
+YS9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC10cmFucy1wY2llLWludC5oIGIvZHJp
+dmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMtcGNpZS1pbnQuaAppbmRleCA4NGNm
+NjQxLi4xN2U3OTNmIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3
+bC10cmFucy1wY2llLWludC5oCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXds
+LXRyYW5zLXBjaWUtaW50LmgKQEAgLTQyNCwxMiArNDI0LDE0IEBAIHN0YXRpYyBpbmxpbmUgdm9p
+ZCBpd2xfc3RvcF9xdWV1ZShzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywKIHN0YXRpYyBpbmxpbmUg
+dm9pZCBpd2xfdHhxX2N0eF9hY3RpdmF0ZShzdHJ1Y3QgaXdsX3RyYW5zX3BjaWUgKnRyYW5zX3Bj
+aWUsCiAJCQkJCWludCB0eHFfaWQpCiB7CisJSVdMX0RFQlVHX1RYX1FVRVVFUyh0cmFuc19wY2ll
+LT50cmFucywgIkFjdGl2YXRlIHR4cSAlZCIsIHR4cV9pZCk7CiAJc2V0X2JpdCh0eHFfaWQsICZ0
+cmFuc19wY2llLT50eHFfY3R4X2FjdGl2ZV9tc2spOwogfQogCiBzdGF0aWMgaW5saW5lIHZvaWQg
+aXdsX3R4cV9jdHhfZGVhY3RpdmF0ZShzdHJ1Y3QgaXdsX3RyYW5zX3BjaWUgKnRyYW5zX3BjaWUs
+CiAJCQkJCSAgaW50IHR4cV9pZCkKIHsKKwlJV0xfREVCVUdfVFhfUVVFVUVTKHRyYW5zX3BjaWUt
+PnRyYW5zLCAiRGVhY3RpdmF0ZSB0eHEgJWQiLCB0eHFfaWQpOwogCWNsZWFyX2JpdCh0eHFfaWQs
+ICZ0cmFuc19wY2llLT50eHFfY3R4X2FjdGl2ZV9tc2spOwogfQogCmRpZmYgLS1naXQgYS9kcml2
+ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC10cmFucy1wY2llLXR4LmMgYi9kcml2ZXJzL25l
+dC93aXJlbGVzcy9pd2x3aWZpL2l3bC10cmFucy1wY2llLXR4LmMKaW5kZXggMDQ5ZTNiNi4uMTFl
+MGI1NiAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMt
+cGNpZS10eC5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXRyYW5zLXBj
+aWUtdHguYwpAQCAtNDcyLDYgKzQ3Miw4IEBAIHZvaWQgaXdsX3RyYW5zX3BjaWVfdHhfYWdnX3Nl
+dHVwKHN0cnVjdCBpd2xfdHJhbnMgKnRyYW5zLAogCQlyZXR1cm47CiAJfQogCisJSVdMX0RFQlVH
+X1RYX1FVRVVFUyh0cmFucywgIlNldHVwIEFHRyBmb3IgdGlkICVkIiwgdGlkKTsKKwogCXNwaW5f
+bG9ja19pcnFzYXZlKCZ0cmFucy0+c2hyZC0+c3RhX2xvY2ssIGZsYWdzKTsKIAl0aWRfZGF0YSA9
+ICZ0cmFucy0+c2hyZC0+dGlkX2RhdGFbc3RhX2lkXVt0aWRdOwogCXNzbl9pZHggPSBTRVFfVE9f
+U04odGlkX2RhdGEtPnNlcV9udW1iZXIpOwpAQCAtNTM2LDggKzUzOCwxMCBAQCBzdGF0aWMgaW50
+IGl3bGFnbl90eHFfY3R4X2FjdGl2YXRlX2ZyZWUoc3RydWN0IGl3bF90cmFucyAqdHJhbnMpCiAK
+IAlmb3IgKHR4cV9pZCA9IDA7IHR4cV9pZCA8IGh3X3BhcmFtcyh0cmFucykubWF4X3R4cV9udW07
+IHR4cV9pZCsrKQogCQlpZiAoIXRlc3RfYW5kX3NldF9iaXQodHhxX2lkLAotCQkJCQkmdHJhbnNf
+cGNpZS0+dHhxX2N0eF9hY3RpdmVfbXNrKSkKKwkJCQkJJnRyYW5zX3BjaWUtPnR4cV9jdHhfYWN0
+aXZlX21zaykpIHsKKwkJCUlXTF9ERUJVR19UWF9RVUVVRVModHJhbnMsICJBY3RpdmF0ZSB0eHEg
+JWQiLCB0eHFfaWQpOwogCQkJcmV0dXJuIHR4cV9pZDsKKwkJfQogCXJldHVybiAtMTsKIH0KIApA
+QCAtNTgyLDYgKzU4Niw4IEBAIHZvaWQgaXdsX3RyYW5zX3BjaWVfdHhxX2FnZ19kaXNhYmxlKHN0
+cnVjdCBpd2xfdHJhbnMgKnRyYW5zLCBpbnQgdHhxX2lkKQogCXN0cnVjdCBpd2xfdHJhbnNfcGNp
+ZSAqdHJhbnNfcGNpZSA9IElXTF9UUkFOU19HRVRfUENJRV9UUkFOUyh0cmFucyk7CiAJaXdsYWdu
+X3R4X3F1ZXVlX3N0b3Bfc2NoZWR1bGVyKHRyYW5zLCB0eHFfaWQpOwogCisJSVdMX0RFQlVHX1RY
+X1FVRVVFUyh0cmFucywgIkRpc2FibGUgQUdHIHR4cV9pZCAlZCIsIHR4cV9pZCk7CisKIAlpd2xf
+Y2xlYXJfYml0c19wcnBoKGJ1cyh0cmFucyksIFNDRF9BR0dSX1NFTCwgKDEgPDwgdHhxX2lkKSk7
+CiAKIAl0cmFuc19wY2llLT50eHFbdHhxX2lkXS5xLnJlYWRfcHRyID0gMDsK
+--f46d04428fe8dd567f04b287e2fe--
