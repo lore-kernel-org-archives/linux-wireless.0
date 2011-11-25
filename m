@@ -1,69 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:42560 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750771Ab1KGF1x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 00:27:53 -0500
-From: Raja Mani <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH v2 00/11] ath6kl: Add WOW support
-Date: Mon, 7 Nov 2011 10:55:36 +0530
-Message-ID: <1320643547-3578-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20111107_062755_996209_7D0BD282)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:48127 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752626Ab1KYX4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Nov 2011 18:56:20 -0500
+Message-ID: <4ED02B1D.7030409@hauke-m.de> (sfid-20111126_005638_031072_33008E8E)
+Date: Sat, 26 Nov 2011 00:56:13 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Arend van Spriel <arend@broadcom.com>
+CC: "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJl?= =?UTF-8?B?Y2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: bcma USB Host driver
+References: <4ECAC919.4080408@hauke-m.de> <4ECB8C82.5040003@broadcom.com>
+In-Reply-To: <4ECB8C82.5040003@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Version 2 patch set is tested on Qualcomm MSM board and 
-takes care most of the review comments given by Kalle.
+Hi Arend,
 
-V2 changes:
- * WOW mode selection logic is moved to HIF layer, earlier it was implemented in CFG i/f layer.
- * Individual parameters are used in the functions instead of struct as a parameter.
- * Unused one extra byte is removed in struct wmi_add_wow_pattern_cmd.
- * Used ar->state for WOW state handling and separate WOW state handling is removed. 
- * host sdio irq wake up capability is checked before entering into WOW suspend mode. 
- * Empty commit logs are avoided.  :-)
- * No error is reported from Sparse.
- * Rebased to multi vif implementation.
+On 11/22/2011 12:50 PM, Arend van Spriel wrote:
+> On 11/21/2011 10:56 PM, Hauke Mehrtens wrote:
+>> Hi,
+>>
+>> To provide ehci and ohci at the same time I came up with some solutions:
+>>
+>> 1. The OHCI driver also initializes the EHCI driver, when it gets load
+>> and is an USB 2.0 device. This is how it is done in OpenWrt and I do not
+>> like it [1].
+>> 2. bcma provides two devices with different identification and there are
+>> two independ drivers working with it.
+> 
+> When doing this the wrapper access (bcma_aread/awrite) will have effect
+> on both not-so-independent drivers.
+Yes that will be a workaround for this problem and will probably cause
+problems when some other new features are added as we have an additional
+corner case to handle.
 
- and other minor corrections.
+>> 3. bcma handles the usb registration directly and all code goes to
+>> drivers/bcma/
+> 
+> Sound like mixing device driver functionality in a bus driver. It does
+> not feel right to me, but bcma is already handling chipcommon, and
+> pci(e) cores.
+> 
+> Main question would be whether a linux device driver can provide
+> multiple system functions. I tend to say it can. So I would suggest to
+> have a single device driver providing OHCI and EHCI functionality.
 
-Using these patch set, WOW patterns can be controlled and configured via iw command. 
-Please refer iw help menu for more details.
+@USB guys, how do I design a driver for a linux device providing ohci
+and ehci functionality at the same time. The device has two address
+spaces one for ehci and one for ohci functions.
+I thought about registering one controller (ehci or ohci) with
+usb_create_shared_hcd(). The code then will be in an own module and not
+in echi_hcd.ko and ochi_hcd.ko like for pci, I hope this works.
+Is there a better solution to do this, is there an other driver with the
+same problem already solved?
 
-Limitations:
-   * Optional bytes can't be specified while configuring WOW patterns from iw command.
-     This is due to the limitation in the firmware.
-
-   * Pattern byte matching will always happen from the first byte of received packet. 
-     This is the limitation in the recent "iw" command (It doesn't take the pattern 
-     offset where to start pattern matching in the received packets as of now).
-
-Raja Mani (11):
-  ath6kl: Add wmi functions to add/delete WOW patterns
-  ath6kl: Add wmi functions to configure WOW mode and host sleep mode
-  ath6kl: Add WOW suspend/resume implementation
-  ath6kl: Include new parameter in suspend path for wowlan
-  ath6kl: Add new state for WOW mode
-  ath6kl: Move ath6kl_cfg80211_stop() call specific to deep sleep and
-    cut pwr
-  ath6kl: Invoke WOW suspend/resume calls during PM operation
-  ath6kl: Perform WOW resume in RX path in case of SDIO IRQ wake up
-  ath6kl: Expose ath6kl's WOW capabilities to CFG layer
-  ath6kl: Remove WARN_ON msg in Suspend path
-  ath6kl: Remove few unused WMI stuff
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c |  188 +++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath6kl/cfg80211.h |    5 +-
- drivers/net/wireless/ath/ath6kl/core.h     |    5 +
- drivers/net/wireless/ath/ath6kl/hif-ops.h  |    5 +-
- drivers/net/wireless/ath/ath6kl/hif.h      |    2 +-
- drivers/net/wireless/ath/ath6kl/sdio.c     |   29 ++++-
- drivers/net/wireless/ath/ath6kl/txrx.c     |    2 +
- drivers/net/wireless/ath/ath6kl/wmi.c      |  164 +++++++++++++++++++++++-
- drivers/net/wireless/ath/ath6kl/wmi.h      |   64 ++++++++--
- 9 files changed, 436 insertions(+), 28 deletions(-)
-
+>> 4. Is there some way like a platform device with a memory address which
+>> I could register and which is then handled by the usb system?
+>>
+>> Are there any better approaches on how to do this? I do not think I am
+>> the first person with such a problem.
+>>
+>> Hauke
+>>
+> 
+> Gr. AvS
+> 
+> ps.: I polled again internally about et driver support. Keep you posted.
+> 
