@@ -1,52 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:37504 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751494Ab1K1VjA (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50063 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752208Ab1KYHe7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 16:39:00 -0500
-Received: by vbbfc26 with SMTP id fc26so4193335vbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 13:38:59 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH 2/5] ath6kl: fix set tx power
-Date: Mon, 28 Nov 2011 16:38:47 -0500
-Message-Id: <1322516330-4007-3-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111128_223903_551982_7C9001A2)
-In-Reply-To: <1322516330-4007-1-git-send-email-mcgrof@qca.qualcomm.com>
-References: <1322516330-4007-1-git-send-email-mcgrof@qca.qualcomm.com>
+	Fri, 25 Nov 2011 02:34:59 -0500
+Subject: Re: [PATCH v2 0/3] mac80211: timeout tx agg sessions in way
+ similar to rx agg sessions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nikolay Martynov <mar.kolya@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <CALGY4ftKV_u0avbXytHOxRWWiDiDBGhAKTCE+_QqJnebt8Rj=Q@mail.gmail.com> (sfid-20111125_054407_814873_ADCC84EF)
+References: <1322016630-27332-1-git-send-email-mar.kolya@gmail.com>
+	 <1322158678.5366.27.camel@jlt3.sipsolutions.net>
+	 <CALGY4fv6NTRDPUEa-7h+DqaHZwdKnNG4fEmzyHrYZukz3B1gqA@mail.gmail.com>
+	 <1322159944.5366.42.camel@jlt3.sipsolutions.net>
+	 <CALGY4ftKV_u0avbXytHOxRWWiDiDBGhAKTCE+_QqJnebt8Rj=Q@mail.gmail.com>
+	 (sfid-20111125_054407_814873_ADCC84EF)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 25 Nov 2011 08:34:56 +0100
+Message-ID: <1322206496.4123.0.camel@jlt3.sipsolutions.net> (sfid-20111125_083502_571337_D27FCC48)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath6kl assumed cfg80211 passed to us power in dBm but it is in mBm.
+On Thu, 2011-11-24 at 23:43 -0500, Nikolay Martynov wrote:
 
-Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
+> >> > Looks OK to me. Did you run it through sparse too? :-)
 
-Kalle queued this up already.
+>   I wasn't able to find any sparse warnings introduced by my changes,
+> everything looks fine.
 
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Great, thanks for checking.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 0252604..9f3d3f0 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1181,11 +1181,12 @@ static int ath6kl_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
- */
- static int ath6kl_cfg80211_set_txpower(struct wiphy *wiphy,
- 				       enum nl80211_tx_power_setting type,
--				       int dbm)
-+				       int mbm)
- {
- 	struct ath6kl *ar = (struct ath6kl *)wiphy_priv(wiphy);
- 	struct ath6kl_vif *vif;
- 	u8 ath6kl_dbm;
-+	int dbm = MBM_TO_DBM(mbm);
- 
- 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: type 0x%x, dbm %d\n", __func__,
- 		   type, dbm);
--- 
-1.7.4.15.g7811d
+johannes
 
