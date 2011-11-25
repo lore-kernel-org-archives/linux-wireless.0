@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47392 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754090Ab1KJIow (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 03:44:52 -0500
-Subject: [PATCH] nl80211: fix compiler warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20111109215007.GD10712@tuxdriver.com> (sfid-20111109_230016_428309_0817D10D)
-References: <20111109215007.GD10712@tuxdriver.com>
-	 (sfid-20111109_230016_428309_0817D10D)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 10 Nov 2011 09:44:46 +0100
-Message-ID: <1320914686.3967.4.camel@jlt3.sipsolutions.net> (sfid-20111110_094456_632513_1E2E338C)
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:59592 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752849Ab1KYUIU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Nov 2011 15:08:20 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 7/7] iwlwifi: help to debug AGG SM inconsistencies
+Date: Fri, 25 Nov 2011 11:11:48 -0800
+Message-Id: <1322248308-5113-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111125_210828_035269_B92C66FF)
+In-Reply-To: <1322248308-5113-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1322248308-5113-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-John reported the following warning:
+Add more data when inconsistencies occur in the AGG state machine.
 
-net/wireless/nl80211.c: In function ‘nl80211_tx_mgmt’:
-net/wireless/nl80211.c:5286:8: warning: ‘hdr’ may be used uninitialized in this function
-
-Evidently, his version of gcc isn't able to see that
-when "msg" is initialized, "hdr" must also be. My
-gcc, 4.6.1, can actually see that and doesn't warn.
-Simply initialize the variable to NULL. That means
-if the compiler was ever right we'll crash though so
-isn't really optimal since it may hide warnings from
-the compiler when somebody modifies this code in the
-future.
-
-Reported-by: John Linville <linville@tuxdriver.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/wireless/nl80211.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
 
---- a/net/wireless/nl80211.c	2011-11-10 09:36:08.000000000 +0100
-+++ b/net/wireless/nl80211.c	2011-11-10 09:42:15.000000000 +0100
-@@ -5283,7 +5283,7 @@ static int nl80211_tx_mgmt(struct sk_buf
- 	bool channel_type_valid = false;
- 	u32 freq;
- 	int err;
--	void *hdr;
-+	void *hdr = NULL;
- 	u64 cookie;
- 	struct sk_buff *msg = NULL;
- 	unsigned int wait = 0;
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 527e795..2ac7542 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1099,13 +1099,21 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 		hdr->seq_ctrl = hdr->seq_ctrl &
+ 				cpu_to_le16(IEEE80211_SCTL_FRAG);
+ 		hdr->seq_ctrl |= cpu_to_le16(seq_number);
+-		seq_number += 0x10;
+ 		/* aggregation is on for this <sta,tid> */
+ 		if (info->flags & IEEE80211_TX_CTL_AMPDU) {
+-			WARN_ON_ONCE(tid_data->agg.state != IWL_AGG_ON);
++			if (WARN_ON_ONCE(tid_data->agg.state != IWL_AGG_ON)) {
++				IWL_ERR(trans, "TX_CTL_AMPDU while not in AGG:"
++					" Tx flags = 0x%08x, agg.state = %d",
++					info->flags, tid_data->agg.state);
++				IWL_ERR(trans, "sta_id = %d, tid = %d "
++					"txq_id = %d, seq_num = %d", sta_id,
++					tid, tid_data->agg.txq_id,
++					seq_number >> 4);
++			}
+ 			txq_id = tid_data->agg.txq_id;
+ 			is_agg = true;
+ 		}
++		seq_number += 0x10;
+ 	}
+ 
+ 	/* Copy MAC header from skb into command buffer */
+-- 
+1.7.0.4
 
