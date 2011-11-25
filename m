@@ -1,286 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:33727 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751211Ab1KTH5g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Nov 2011 02:57:36 -0500
-Received: by mail-bw0-f46.google.com with SMTP id 11so5187685bke.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 23:57:35 -0800 (PST)
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	nbd@openwrt.org, jirislaby@gmail.com,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: [PATCH 04/13] ath5k: Cleanups v1
-Date: Sun, 20 Nov 2011 09:56:19 +0200
-Message-Id: <1321775788-12520-5-git-send-email-mickflemm@gmail.com> (sfid-20111120_085739_428467_2FBA1379)
-In-Reply-To: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
-References: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
+Received: from mout7.freenet.de ([195.4.92.97]:41036 "EHLO mout7.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755468Ab1KYOsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Nov 2011 09:48:54 -0500
+Received: from [195.4.92.140] (helo=mjail0.freenet.de)
+	by mout7.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #5)
+	id 1RTx59-0002PS-C3
+	for linux-wireless@vger.kernel.org; Fri, 25 Nov 2011 15:48:51 +0100
+Received: from localhost ([::1]:43833 helo=mjail0.freenet.de)
+	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RTx59-0001vO-9D
+	for linux-wireless@vger.kernel.org; Fri, 25 Nov 2011 15:48:51 +0100
+Received: from [195.4.92.22] (port=38559 helo=12.mx.freenet.de)
+	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RTx3A-0006Gp-No
+	for linux-wireless@vger.kernel.org; Fri, 25 Nov 2011 15:46:48 +0100
+Received: from p4fde0b80.dip0.t-ipconnect.de ([79.222.11.128]:56156 helo=mail.maya.org)
+	by 12.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
+	id 1RTx3A-0000Rh-8Y
+	for linux-wireless@vger.kernel.org; Fri, 25 Nov 2011 15:46:48 +0100
+Message-ID: <4ECFAAC2.9070005@01019freenet.de> (sfid-20111125_154857_494194_C471FAB9)
+Date: Fri, 25 Nov 2011 15:48:34 +0100
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+MIME-Version: 1.0
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: spamm of cfg80211: Calling CRDA to update world regulatory domain
+References: <4EB00DD3.7090701@gmail.com>
+In-Reply-To: <4EB00DD3.7090701@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No functional changes, just a few comments/documentation/cleanup
+Hi,
 
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
----
- drivers/net/wireless/ath/ath5k/base.c |  112 ++++++++++++++++++++++++---------
- drivers/net/wireless/ath/ath5k/dma.c  |   17 ++++-
- 2 files changed, 96 insertions(+), 33 deletions(-)
+Justin P. Mattock schrieb:
+> is there a way to get rid of this annoying spamming of the regulatory?
+> 
+> 
+> [  338.519037] cfg80211: Calling CRDA to update world regulatory domain
+> [  338.523266] cfg80211: World regulatory domain updated:
+> [  338.523269] cfg80211:     (start_freq - end_freq @ bandwidth),
+> (max_antenna_gain, max_eirp)
+> [  338.523272] cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz),
+> (300 mBi, 2000 mBm)
+> [  338.523276] cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz),
+> (300 mBi, 2000 mBm)
+> [  338.523279] cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz),
+> (300 mBi, 2000 mBm)
+> [  338.523281] cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz),
+> (300 mBi, 2000 mBm)
+> [  338.523284] cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz),
+> (300 mBi, 2000 mBm)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index c18d310..47194a4 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2149,69 +2149,110 @@ ath5k_intr(int irq, void *dev_id)
- 	enum ath5k_int status;
- 	unsigned int counter = 1000;
- 
-+
-+	/*
-+	 * If hw is not ready (or detached) and we get an
-+	 * interrupt, or if we have no interrupts pending
-+	 * (that means it's not for us) skip it.
-+	 *
-+	 * NOTE: Group 0/1 PCI interface registers are not
-+	 * supported on WiSOCs, so we can't check for pending
-+	 * interrupts (ISR belongs to another register group
-+	 * so we are ok).
-+	 */
- 	if (unlikely(test_bit(ATH_STAT_INVALID, ah->status) ||
--		((ath5k_get_bus_type(ah) != ATH_AHB) &&
--				!ath5k_hw_is_intr_pending(ah))))
-+			((ath5k_get_bus_type(ah) != ATH_AHB) &&
-+			!ath5k_hw_is_intr_pending(ah))))
- 		return IRQ_NONE;
- 
-+	/** Main loop **/
- 	do {
--		ath5k_hw_get_isr(ah, &status);		/* NB: clears IRQ too */
-+		ath5k_hw_get_isr(ah, &status);	/* NB: clears IRQ too */
-+
- 		ATH5K_DBG(ah, ATH5K_DEBUG_INTR, "status 0x%x/0x%x\n",
- 				status, ah->imask);
-+
-+		/*
-+		 * Fatal hw error -> Log and reset
-+		 *
-+		 * Fatal errors are unrecoverable so we have to
-+		 * reset the card. These errors include bus and
-+		 * dma errors.
-+		 */
- 		if (unlikely(status & AR5K_INT_FATAL)) {
--			/*
--			 * Fatal errors are unrecoverable.
--			 * Typically these are caused by DMA errors.
--			 */
-+
- 			ATH5K_DBG(ah, ATH5K_DEBUG_RESET,
- 				  "fatal int, resetting\n");
- 			ieee80211_queue_work(ah->hw, &ah->reset_work);
-+
-+		/*
-+		 * RX Overrun -> Count and reset if needed
-+		 *
-+		 * Receive buffers are full. Either the bus is busy or
-+		 * the CPU is not fast enough to process all received
-+		 * frames.
-+		 */
- 		} else if (unlikely(status & AR5K_INT_RXORN)) {
-+
- 			/*
--			 * Receive buffers are full. Either the bus is busy or
--			 * the CPU is not fast enough to process all received
--			 * frames.
- 			 * Older chipsets need a reset to come out of this
- 			 * condition, but we treat it as RX for newer chips.
--			 * We don't know exactly which versions need a reset -
-+			 * We don't know exactly which versions need a reset
- 			 * this guess is copied from the HAL.
- 			 */
- 			ah->stats.rxorn_intr++;
-+
- 			if (ah->ah_mac_srev < AR5K_SREV_AR5212) {
- 				ATH5K_DBG(ah, ATH5K_DEBUG_RESET,
- 					  "rx overrun, resetting\n");
- 				ieee80211_queue_work(ah->hw, &ah->reset_work);
- 			} else
- 				ath5k_schedule_rx(ah);
-+
- 		} else {
-+
-+			/* Software Beacon Alert -> Schedule beacon tasklet */
- 			if (status & AR5K_INT_SWBA)
- 				tasklet_hi_schedule(&ah->beacontq);
- 
--			if (status & AR5K_INT_RXEOL) {
--				/*
--				* NB: the hardware should re-read the link when
--				*     RXE bit is written, but it doesn't work at
--				*     least on older hardware revs.
--				*/
-+			/*
-+			 * No more RX descriptors -> Just count
-+			 *
-+			 * NB: the hardware should re-read the link when
-+			 *     RXE bit is written, but it doesn't work at
-+			 *     least on older hardware revs.
-+			 */
-+			if (status & AR5K_INT_RXEOL)
- 				ah->stats.rxeol_intr++;
--			}
--			if (status & AR5K_INT_TXURN) {
--				/* bump tx trigger level */
-+
-+
-+			/* TX Underrun -> Bump tx trigger level */
-+			if (status & AR5K_INT_TXURN)
- 				ath5k_hw_update_tx_triglevel(ah, true);
--			}
-+
-+			/* RX -> Schedule rx tasklet */
- 			if (status & (AR5K_INT_RXOK | AR5K_INT_RXERR))
- 				ath5k_schedule_rx(ah);
--			if (status & (AR5K_INT_TXOK | AR5K_INT_TXDESC
--					| AR5K_INT_TXERR | AR5K_INT_TXEOL))
-+
-+			/* TX -> Schedule tx tasklet */
-+			if (status & (AR5K_INT_TXOK
-+					| AR5K_INT_TXDESC
-+					| AR5K_INT_TXERR
-+					| AR5K_INT_TXEOL))
- 				ath5k_schedule_tx(ah);
--			if (status & AR5K_INT_BMISS) {
--				/* TODO */
--			}
-+
-+			/* Missed beacon -> TODO
-+			if (status & AR5K_INT_BMISS)
-+			*/
-+
-+			/* MIB event -> Update counters and notify ANI */
- 			if (status & AR5K_INT_MIB) {
- 				ah->stats.mib_intr++;
- 				ath5k_hw_update_mib_counters(ah);
- 				ath5k_ani_mib_intr(ah);
- 			}
-+
-+			/* GPIO -> Notify RFKill layer */
- 			if (status & AR5K_INT_GPIO)
- 				tasklet_schedule(&ah->rf_kill.toggleq);
- 
-@@ -2222,12 +2263,19 @@ ath5k_intr(int irq, void *dev_id)
- 
- 	} while (ath5k_hw_is_intr_pending(ah) && --counter > 0);
- 
-+	/*
-+	 * Until we handle rx/tx interrupts mask them on IMR
-+	 *
-+	 * NOTE: ah->(rx/tx)_pending are set when scheduling the tasklets
-+	 * and unset after we 've handled the interrupts.
-+	 */
- 	if (ah->rx_pending || ah->tx_pending)
- 		ath5k_set_current_imask(ah);
- 
- 	if (unlikely(!counter))
- 		ATH5K_WARN(ah, "too many interrupts, giving up for now\n");
- 
-+	/* Fire up calibration poll */
- 	ath5k_intr_calibration_poll(ah);
- 
- 	return IRQ_HANDLED;
-@@ -2544,9 +2592,15 @@ int ath5k_start(struct ieee80211_hw *hw)
- 	 * and then setup of the interrupt mask.
- 	 */
- 	ah->curchan = ah->hw->conf.channel;
--	ah->imask = AR5K_INT_RXOK | AR5K_INT_RXERR | AR5K_INT_RXEOL |
--		AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
--		AR5K_INT_FATAL | AR5K_INT_GLOBAL | AR5K_INT_MIB;
-+	ah->imask = AR5K_INT_RXOK
-+		| AR5K_INT_RXERR
-+		| AR5K_INT_RXEOL
-+		| AR5K_INT_RXORN
-+		| AR5K_INT_TXDESC
-+		| AR5K_INT_TXEOL
-+		| AR5K_INT_FATAL
-+		| AR5K_INT_GLOBAL
-+		| AR5K_INT_MIB;
- 
- 	ret = ath5k_reset(ah, NULL, false);
- 	if (ret)
-diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
-index 6a7b907..9840a3f 100644
---- a/drivers/net/wireless/ath/ath5k/dma.c
-+++ b/drivers/net/wireless/ath/ath5k/dma.c
-@@ -707,21 +707,25 @@ int ath5k_hw_get_isr(struct ath5k_hw *ah, enum ath5k_int *interrupt_mask)
- 		if (unlikely(pisr & (AR5K_ISR_BNR)))
- 			*interrupt_mask |= AR5K_INT_BNR;
- 
-+		/* Doppler chirp received */
- 		if (unlikely(pisr & (AR5K_ISR_RXDOPPLER)))
- 			*interrupt_mask |= AR5K_INT_RX_DOPPLER;
- 
-+		/* A queue got CBR overrun */
- 		if (unlikely(pisr & (AR5K_ISR_QCBRORN))) {
- 			*interrupt_mask |= AR5K_INT_QCBRORN;
- 			ah->ah_txq_isr_qcborn |= AR5K_REG_MS(sisr3,
- 						AR5K_SISR3_QCBRORN);
- 		}
- 
-+		/* A queue got CBR underrun */
- 		if (unlikely(pisr & (AR5K_ISR_QCBRURN))) {
- 			*interrupt_mask |= AR5K_INT_QCBRURN;
- 			ah->ah_txq_isr_qcburn |= AR5K_REG_MS(sisr3,
- 						AR5K_SISR3_QCBRURN);
- 		}
- 
-+		/* A queue got triggered */
- 		if (unlikely(pisr & (AR5K_ISR_QTRIG))) {
- 			*interrupt_mask |= AR5K_INT_QTRIG;
- 			ah->ah_txq_isr_qtrig |= AR5K_REG_MS(sisr4,
-@@ -778,16 +782,14 @@ enum ath5k_int ath5k_hw_set_imr(struct ath5k_hw *ah, enum ath5k_int new_mask)
- 		u32 simr2 = ath5k_hw_reg_read(ah, AR5K_SIMR2)
- 				& AR5K_SIMR2_QCU_TXURN;
- 
-+		/* Fatal interrupt abstraction for 5211+ */
- 		if (new_mask & AR5K_INT_FATAL) {
- 			int_mask |= AR5K_IMR_HIUERR;
- 			simr2 |= (AR5K_SIMR2_MCABT | AR5K_SIMR2_SSERR
- 				| AR5K_SIMR2_DPERR);
- 		}
- 
--		/*Beacon Not Ready*/
--		if (new_mask & AR5K_INT_BNR)
--			int_mask |= AR5K_INT_BNR;
--
-+		/* Misc beacon related interrupts */
- 		if (new_mask & AR5K_INT_TIM)
- 			int_mask |= AR5K_IMR_TIM;
- 
-@@ -802,6 +804,11 @@ enum ath5k_int ath5k_hw_set_imr(struct ath5k_hw *ah, enum ath5k_int new_mask)
- 		if (new_mask & AR5K_INT_CAB_TIMEOUT)
- 			simr2 |= AR5K_SISR2_CAB_TIMEOUT;
- 
-+		/*Beacon Not Ready*/
-+		if (new_mask & AR5K_INT_BNR)
-+			int_mask |= AR5K_INT_BNR;
-+
-+		/* RX doppler chirp */
- 		if (new_mask & AR5K_INT_RX_DOPPLER)
- 			int_mask |= AR5K_IMR_RXDOPPLER;
- 
-@@ -811,10 +818,12 @@ enum ath5k_int ath5k_hw_set_imr(struct ath5k_hw *ah, enum ath5k_int new_mask)
- 		ath5k_hw_reg_write(ah, simr2, AR5K_SIMR2);
- 
- 	} else {
-+		/* Fatal interrupt abstraction for 5210 */
- 		if (new_mask & AR5K_INT_FATAL)
- 			int_mask |= (AR5K_IMR_SSERR | AR5K_IMR_MCABT
- 				| AR5K_IMR_HIUERR | AR5K_IMR_DPERR);
- 
-+		/* Only common interrupts left for 5210 (no SIMRs) */
- 		ath5k_hw_reg_write(ah, int_mask, AR5K_IMR);
- 	}
- 
--- 
-1.7.8.rc1
+I can see these messages with compat-wireless-2011-11-22, two. They are
+sent out every 3 or 4 seconds. compat-wireless-2011-10-31 doesn't show
+the problem.
 
+
+Andreas
