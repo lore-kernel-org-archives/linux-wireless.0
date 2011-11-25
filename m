@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:18275 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755370Ab1KNV26 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 16:28:58 -0500
-Subject: Re: iwlagn 3.0.9 aggreggation messages
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Lars Schotte <gusto@guttok.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20111114221847.2ca32e6a@hana.gusto>
-References: <20111114131642.31e8ddbd@hana.gusto>
-	 <1321283410.13578.33.camel@wwguy-ubuntu>
-	 <20111114201947.58d5fdf6@hana.gusto>	<1321303101.1796.8.camel@wwguy-ubuntu>
-	 <20111114221847.2ca32e6a@hana.gusto>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Nov 2011 13:22:30 -0800
-Message-ID: <1321305750.1796.11.camel@wwguy-ubuntu> (sfid-20111114_222902_749732_79F50E3C)
-Mime-Version: 1.0
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:33480 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751548Ab1KYSlH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Nov 2011 13:41:07 -0500
+Received: by mail-ey0-f174.google.com with SMTP id k14so988570eaa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Nov 2011 10:41:07 -0800 (PST)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	nbd@openwrt.org, jirislaby@gmail.com,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH v2 07/12] ath5k: We always do full calibration on AR5210
+Date: Fri, 25 Nov 2011 20:40:26 +0200
+Message-Id: <1322246431-10825-8-git-send-email-mickflemm@gmail.com> (sfid-20111125_194117_645068_4AC876B3)
+In-Reply-To: <1322246431-10825-1-git-send-email-mickflemm@gmail.com>
+References: <1322246431-10825-1-git-send-email-mickflemm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ok, there were changes in this area to trigger faster in order to
-address some performance issue. 
+There is no short calibration on AR5210, make sure we treat it always
+as full calibration.
 
-so I believe more logic need to go in and delay the trigger in some
-cases.
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/phy.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-Would you be able to test for me if I have a patch for testing?
-
-Thanks
-Wey
-
-On Mon, 2011-11-14 at 13:18 -0800, Lars Schotte wrote:
-> of course he deactivates the aggregation soon after, because the AP
-> sees no reason why there should be one.
-> 
-> triggering the aggreggation is that problem and it exists only since
-> 3.0.9. 3.0.8 is OK, but 3.1.1 seems to be affected as well. 3.1.0 was
-> OK.
-> 
-> so someting broke it recently.
-> 
-> unfortunately i can not remember if 3.2 kernel had that problem, i
-> already removed it because it was too unstable for me, so i can not
-> test it any more (w/o compiling it again).
-> 
-> On Mon, 14 Nov 2011 12:38:21 -0800
-> wwguy <wey-yi.w.guy@intel.com> wrote:
-> 
-> > Hi Schotte,
-> > 
-> > looks like driver has problem activate the aggregation, you can see in
-> > the log, the aggregation queue being activate then deactivate soon
-> > after. that is why you are seeing the messages showing up in dmesg
-> > log.
-> > 
-> > what AP you are using? is similar thing happen if you connect to
-> > different AP?
-> > 
-> > Thanks
-> > Wey
-> 
-> 
-
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index a635441..e1f8613 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1674,6 +1674,9 @@ ath5k_hw_rf5110_calibrate(struct ath5k_hw *ah,
+ 	u32 phy_sig, phy_agc, phy_sat, beacon;
+ 	int ret;
+ 
++	if (!(ah->ah_cal_mask & AR5K_CALIBRATION_FULL))
++		return 0;
++
+ 	/*
+ 	 * Disable beacons and RX/TX queues, wait
+ 	 */
+-- 
+1.7.8.rc3
 
