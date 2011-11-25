@@ -1,40 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www17.your-server.de ([213.133.104.17]:33241 "EHLO
-	www17.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753720Ab1KTTJy (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:42032 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754276Ab1KYMLY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Nov 2011 14:09:54 -0500
-Subject: [PATCH] brcm80211: smac: Use kmemdup rather than duplicating its
- implementation
-From: Thomas Meyer <thomas@m3y3r.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Date: Thu, 17 Nov 2011 23:43:40 +0100
-Message-ID: <1321569820.1624.289.camel@localhost.localdomain> (sfid-20111120_201022_690680_9B7F3D49)
+	Fri, 25 Nov 2011 07:11:24 -0500
+MIME-Version: 1.0
+In-Reply-To: <20111123041728.GA11864@redhat.com>
+References: <20111031143408.GA17152@redhat.com>
+	<1321992902.8072.7.camel@wwguy-ubuntu>
+	<20111123024545.GA9703@redhat.com>
+	<1322015380.11647.82.camel@wwguy-huron>
+	<20111123033446.GB9703@redhat.com>
+	<1322016965.11647.95.camel@wwguy-huron>
+	<20111123041728.GA11864@redhat.com>
+Date: Fri, 25 Nov 2011 14:11:22 +0200
+Message-ID: <CANUX_P3bFpKyePkgYwQUO0Y3XN=B+7YHSsD81Vt=LwK6ZbrD6g@mail.gmail.com> (sfid-20111125_131142_853383_9FE6A5E2)
+Subject: Re: 3.1+ iwlwifi lockup
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Dave Jones <davej@redhat.com>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The semantic patch that makes this change is available
-in scripts/coccinelle/api/memdup.cocci.
+Hi
 
-Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
----
+I looked again at your stack strace, we need more debug. Please enable
+Rx debug flag: 0x1000000.
 
-diff -u -p a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c 2011-11-07 19:39:05.641131954 +0100
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c 2011-11-08 10:44:56.761349456 +0100
-@@ -1561,11 +1561,10 @@ int brcms_ucode_init_buf(struct brcms_in
- 			if (le32_to_cpu(hdr->idx) == idx) {
- 				pdata = wl->fw.fw_bin[i]->data +
- 					le32_to_cpu(hdr->offset);
--				*pbuf = kmalloc(len, GFP_ATOMIC);
-+				*pbuf = kmemdup(pdata, len, GFP_ATOMIC);
- 				if (*pbuf == NULL)
- 					goto fail;
- 
--				memcpy(*pbuf, pdata, len);
- 				return 0;
- 			}
- 		}
+What is happening here is that the HW (the Flow Handler for instance),
+is closing an empty RB (Receive Buffer). The beginning of the buffer
+is 0x00005555 which is the maker of "End of Buffer" of the Flow
+Handler. The marker helps the driver to understand that there is no
+more useful data in the buffer.
+So basically what we are seeing here is that the FH is sending an
+empty buffer. Which is not nice.
+This can very well be a bug in the read / write pointers in the Rx
+flow, or something in that region.
+
+On Wed, Nov 23, 2011 at 06:17, Dave Jones <davej@redhat.com> wrote:
+> On Tue, Nov 22, 2011 at 06:56:05PM -0800, Guy, Wey-Yi wrote:
+>  > Agree, that is why I could not re-produce here after many try. Could you
+>  > share your configuration, such as
+>
+>  > band/channel
+>
+> Channel:1
+> Frequency:2.412 GHz (Channel 1)
+>
+>  > 32/64 bit system
+>
+> 64bit. It's a Dell Adamo laptop.
+>
+>  > 20/40 MHz
+>
+> not sure how to find out what you're looking for.
+>
+>  > traffic type
+>
+> last triggered it with just ssh.
+>
+>  > open/security
+>
+> IE: IEEE 802.11i/WPA2 Version 1
+>    Group Cipher : CCMP
+>    Pairwise Ciphers (1) : CCMP
+>    Authentication Suites (1) : PSK
+>
+>  > power management
+>
+> nothing special. everything is default.
+>
+> all messages related to iwlwifi in dmesg are below..
+>
+>        Dave
+>
+> [   24.423300] Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
+> [   24.425560] Copyright(c) 2003-2011 Intel Corporation
+> [   24.428667] iwlwifi 0000:04:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> [   24.437959] iwlwifi 0000:04:00.0: setting latency timer to 64
+> [   24.438108] iwlwifi 0000:04:00.0: pci_resource_len = 0x00002000
+> [   24.444058] iwlwifi 0000:04:00.0: pci_resource_base = ffffc90011574000
+> [   24.445823] iwlwifi 0000:04:00.0: HW Revision ID = 0x0
+> [   24.447695] iwlwifi 0000:04:00.0: irq 46 for MSI/MSI-X
+> [   24.447896] iwlwifi 0000:04:00.0: Detected Intel(R) Ultimate N WiFi Link 5300 AGN, REV=0x24
+> [   24.453070] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
+> [   24.486217] iwlwifi 0000:04:00.0: device EEPROM VER=0x120, CALIB=0x4
+> [   24.489176] iwlwifi 0000:04:00.0: Device SKU: 0Xf0
+> [   24.490778] iwlwifi 0000:04:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
+> [   24.520548] iwlwifi 0000:04:00.0: loaded firmware version 8.83.5.1 build 33692
+> [   39.229498] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
+> [   39.240818] iwlwifi 0000:04:00.0: Radio type=0x0-0x2-0x0
+> [   39.607327] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
+> [   39.613424] iwlwifi 0000:04:00.0: Radio type=0x0-0x2-0x0
+> [  210.248807] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra = b8:c7:5d:0c:39:87 tid = 6
