@@ -1,82 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44530 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756422Ab1KPMIy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 07:08:54 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 1/4] ath9k: always issue a full hw reset after waking up from full-sleep mode
-Date: Wed, 16 Nov 2011 13:08:40 +0100
-Message-Id: <1321445323-71774-1-git-send-email-nbd@openwrt.org> (sfid-20111116_130858_956594_9ABD2E0E)
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:56920 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753591Ab1KZVy5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Nov 2011 16:54:57 -0500
+MIME-Version: 1.0
+In-Reply-To: <201111262232.46195.rjw@sisk.pl>
+References: <CA+55aFyNUC+k1gp3MQkxQzernEzRZwYOH4EBnOq=6UiaJ2oh4A@mail.gmail.com>
+	<201111250203.29786.rjw@sisk.pl>
+	<201111262232.46195.rjw@sisk.pl>
+Date: Sun, 27 Nov 2011 05:54:56 +0800
+Message-ID: <CAJ-VmonZYrEJS7UkqdSTnMQ5waDjPgSpVDPqiHz2=Uksso5tHw@mail.gmail.com> (sfid-20111126_225521_709221_FC30135E)
+Subject: Re: [Regression, 3.2-rc1] ath9k broken on AR928X (was: Re: Linux
+ 3.2-rc3 - just in time for Thanksgiving)
+From: Adrian Chadd <adrian@freebsd.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After waking up from full sleep, registers are accessible, but rx/tx
-typically fails. A fast channel change will not recover from this, so
-ensure that a full-sleep -> wake transition is always followed by a full
-reset.
+On 27 November 2011 05:32, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> Tomorrow I'll try to identify the offending commits.
+>
+> Well, it took more time than I had hoped. :-(
+>
+> Bisection turns up:
+>
+> commit 2577c6e8f2320f1d2f09be122efef5b9118efee4
+> Author: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+> Date:   Tue Sep 13 22:38:18 2011 +0530
+>
+>    ath9k_hw: Add support for AR946/8x chipsets.
+>
+>    This patch adds support for AR946/8x chipets.
 
-The reason why this hasn't created any serious problems yet is that it's
-hidden by the (wrong) behavior of enabling/disabling the radio when the
-wiphy idle state changes.
+Oh god. That's going to be fun to figure out :)
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/main.c |   12 ++++++++++--
- drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
- 2 files changed, 11 insertions(+), 3 deletions(-)
+> which I think is wrong for at lest two reasons.  Not that I understand
+> what it actually does to the driver, but first, it does much more than the
+> changelog says and, second, it is practically impossible to revert
+> because of the number of commits on top depending on it.  Quite frankly,
+> it is about to make it to my list of examples of how things should _not_ be
+> done in the kernel.
+>
+> The commit immediately preceding it doesn't show any symptoms of failure, so
+> I'm quite convinced this one really introduced the problem for me.
+>
+> The chip in the affected box is (according to "lspci -v"):
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index e43c41c..734e854 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -118,7 +118,7 @@ void ath9k_ps_restore(struct ath_softc *sc)
- 	if (--sc->ps_usecount != 0)
- 		goto unlock;
- 
--	if (sc->ps_idle)
-+	if (sc->ps_idle && (sc->ps_flags & PS_WAIT_FOR_TX_ACK))
- 		mode = ATH9K_PM_FULL_SLEEP;
- 	else if (sc->ps_enabled &&
- 		 !(sc->ps_flags & (PS_WAIT_FOR_BEACON |
-@@ -332,7 +332,8 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
- 		hchan = ah->curchan;
- 	}
- 
--	if (fastcc && !ath9k_hw_check_alive(ah))
-+	if (fastcc && (ah->chip_fullsleep ||
-+	    !ath9k_hw_check_alive(ah)))
- 		fastcc = false;
- 
- 	if (!ath_prepare_reset(sc, retry_tx, flush))
-@@ -1176,6 +1177,13 @@ static void ath9k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		}
- 	}
- 
-+	/*
-+	 * Cannot tx while the hardware is in full sleep, it first needs a full
-+	 * chip reset to recover from that
-+	 */
-+	if (unlikely(sc->sc_ah->power_mode == ATH9K_PM_FULL_SLEEP))
-+		goto exit;
-+
- 	if (unlikely(sc->sc_ah->power_mode != ATH9K_PM_AWAKE)) {
- 		/*
- 		 * We are using PS-Poll and mac80211 can request TX while in
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 55d077e..363bf33 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1955,7 +1955,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 		skb_pull(skb, padsize);
- 	}
- 
--	if (sc->ps_flags & PS_WAIT_FOR_TX_ACK) {
-+	if ((sc->ps_flags & PS_WAIT_FOR_TX_ACK) && !txq->axq_depth) {
- 		sc->ps_flags &= ~PS_WAIT_FOR_TX_ACK;
- 		ath_dbg(common, ATH_DBG_PS,
- 			"Going back to sleep after having received TX status (0x%lx)\n",
--- 
-1.7.3.2
+Can you please find out what the actual PCI device id is? That way I
+can help you (hopefully) isolate which bits of that change would cause
+your regression.
 
+That commit almost exclusively touches the AR93xx chipset support, so
+I can't (easily) see how this would break support for the AR928x NICs.
+
+Adrian
