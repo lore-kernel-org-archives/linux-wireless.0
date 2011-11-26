@@ -1,101 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:44263 "EHLO
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:37648 "EHLO
 	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932194Ab1KBT1g (ORCPT
+	with ESMTP id S1752569Ab1KZIhh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 15:27:36 -0400
-Received: by mail-vw0-f46.google.com with SMTP id 1so230966vws.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2011 12:27:36 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v3 2/4] mac80211: QoS multicast frames have No Ack policy
-Date: Wed,  2 Nov 2011 12:27:25 -0700
-Message-Id: <1320262047-5389-2-git-send-email-thomas@cozybit.com> (sfid-20111102_202740_985007_CD26F46D)
-In-Reply-To: <1320262047-5389-1-git-send-email-thomas@cozybit.com>
-References: <1320262047-5389-1-git-send-email-thomas@cozybit.com>
+	Sat, 26 Nov 2011 03:37:37 -0500
+Received: by vbbfc26 with SMTP id fc26so2672045vbb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Nov 2011 00:37:36 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1322246431-10825-2-git-send-email-mickflemm@gmail.com>
+References: <1322246431-10825-1-git-send-email-mickflemm@gmail.com>
+	<1322246431-10825-2-git-send-email-mickflemm@gmail.com>
+Date: Sat, 26 Nov 2011 16:37:36 +0800
+Message-ID: <CAJ-Vmom6LyS173ZgH_6kODx5pmG0k_8CCgBKmCPFd_8=vwiJPw@mail.gmail.com> (sfid-20111126_093740_327904_CE004E93)
+Subject: Re: [PATCH v2 01/12] ath5k: Switch from read-and-clear to
+ write-to-clear method when handling PISR/SISR registers
+From: Adrian Chadd <adrian@freebsd.org>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	nbd@openwrt.org, jirislaby@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously QoS multicast frames had the Normal Acknowledgment QoS
-control bits set. This would cause broadcast frames to be discarded by
-peers with which we have a BA session, since their sequence number would
-fall outside the allowed range. Set No Ack QoS control bits on multicast
-QoS frames and filter these in de-aggregation code.
+Hi,
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
+Review #2:
 
-v2: Use proper QoS Ack Policy ctl field mask (Christian)
+One thing that I discovered whilst debugging some silly races in
+FreeBSD was that the update of the txq active mask wasn't done
+atomically.
 
-v3: Clean up conditional (Johannes)
+Ie, when you check this:
 
- include/linux/ieee80211.h |    1 +
- net/mac80211/rx.c         |    9 ++++++++-
- net/mac80211/wme.c        |    3 ++-
- 3 files changed, 11 insertions(+), 2 deletions(-)
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1689,7 +1689,7 @@ ath5k_tasklet_tx(unsigned long data)
+       struct ath5k_hw *ah = (void *)data;
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 48363c3..bc61e69 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -128,6 +128,7 @@
- #define IEEE80211_QOS_CTL_ACK_POLICY_NOACK	0x0020
- #define IEEE80211_QOS_CTL_ACK_POLICY_NO_EXPL	0x0040
- #define IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK	0x0060
-+#define IEEE80211_QOS_CTL_ACK_POLICY_MASK	0x0060
- /* A-MSDU 802.11n */
- #define IEEE80211_QOS_CTL_A_MSDU_PRESENT	0x0080
- /* Mesh Control 802.11s */
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index b867bd5..bbe7b50 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -747,7 +747,7 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
- 	struct sta_info *sta = rx->sta;
- 	struct tid_ampdu_rx *tid_agg_rx;
- 	u16 sc;
--	int tid;
-+	u8 tid, ack_policy;
- 
- 	if (!ieee80211_is_data_qos(hdr->frame_control))
- 		goto dont_reorder;
-@@ -760,6 +760,8 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
- 	if (!sta)
- 		goto dont_reorder;
- 
-+	ack_policy = *ieee80211_get_qos_ctl(hdr) &
-+		     IEEE80211_QOS_CTL_ACK_POLICY_MASK;
- 	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
- 
- 	tid_agg_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[tid]);
-@@ -770,6 +772,11 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
- 	if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
- 		goto dont_reorder;
- 
-+	/* not part of a BA session */
-+	if (ack_policy != IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK &&
-+	    ack_policy != IEEE80211_QOS_CTL_ACK_POLICY_NORMAL)
-+		goto dont_reorder;
-+
- 	/* new, potentially un-ordered, ampdu frame - process it */
- 
- 	/* reset session timer */
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index fd52e69..a440a4a 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -147,7 +147,8 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
- 
- 		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
- 
--		if (unlikely(sdata->local->wifi_wme_noack_test))
-+		if (unlikely(sdata->local->wifi_wme_noack_test) ||
-+		    is_multicast_ether_addr(hdr->addr1))
- 			ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
- 		/* qos header is 2 bytes */
- 		*p++ = ack_policy | tid;
--- 
-1.7.5.4
+       for (i = 0; i < AR5K_NUM_TX_QUEUES; i++)
+-               if (ah->txqs[i].setup && (ah->ah_txq_isr & BIT(i)))
++               if (ah->txqs[i].setup && (ah->ah_txq_isr_txok_all & BIT(i)))
+                       ath5k_tx_processq(ah, &ah->txqs[i]);
 
+The way that the original code did it was:
+
+* update the HAL TX mask bits inside the HAL getisr routine, so it
+would just update the HAL idea of txqactive;
+* Then, ath_hal_gettxintrtxqs() would pass back to the driver the set
+of txq bits currently active, and reset those that are active (with a
+mask, so you can read only a few)
+* the ath_intr() routine would simply schedule a tasklet call when a
+TX interrupt came in;
+* .. and then the TX completion tasklet would call
+ath_hal_gettxintrtxqs() for each task bit to see if it needed
+servicing.
+
+Now, in previous generations of hardware/kernel, this may not have
+raced - ath_intr() may have been a "fast" interrupt handler and thus
+would occur atomically on a single CPU - so you don't have any races.
+But these days, ath_intr() is just a software interrupt and can occur
+in parallel with another CPU executing the completion handler.
+
+So since there was no locking around the TXQ bit updates and clear, it
+was very possible that a very busy TX device would "miss" TX queue
+notifications, as the CPU running the TX completion would
+read-and-clear the TXQ active bits in the HAL, whilst another CPU was
+running ath_intr() which was trying to do a read/modify/write of those
+same bits.
+
+I _think_ felix fixed this in ath9k by hiding this stuff behind the
+PCU lock. I've also fixed it in FreeBSD. I think it's worth
+re-evaluating what is going on in ath5k and maybe add some similar
+locking.
+
+Oh wait. Where are you clearing these bits? It doesn't look like
+you're even clearing the ah_txq_isr bits in the most recent ath5k tree
+I have here. This means you're likely not missing events; but you're
+likely always scanning those queues. Making this code a bit pointless.
+:)
+
+Anyway, I'd tidy this all up in a subsequent patchset. Get the
+interrupt changes in, then figure out how to properly lock the
+interrupt TXQ bit set path (the isr) and the clear path (once you've
+tested whether the TXQ needed servicing and then cleared the bit.)
+
+HTH,
+
+
+adrian
