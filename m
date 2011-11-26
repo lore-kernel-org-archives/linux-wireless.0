@@ -1,77 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:55008 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758925Ab1KVWij (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 17:38:39 -0500
-Date: Tue, 22 Nov 2011 17:37:29 -0500 (EST)
-Message-Id: <20111122.173729.1155753802137219940.davem@davemloft.net> (sfid-20111122_233858_983450_F501631B)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2011-11-22 #2
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20111122215611.GI8452@tuxdriver.com>
-References: <20111122193505.GC8452@tuxdriver.com>
-	<20111122215611.GI8452@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from ogre.sisk.pl ([217.79.144.158]:57897 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753591Ab1KZV3y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Nov 2011 16:29:54 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [Regression, 3.2-rc1] ath9k broken on AR928X (was: Re: Linux 3.2-rc3 - just in time for Thanksgiving)
+Date: Sat, 26 Nov 2011 22:32:46 +0100
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+References: <CA+55aFyNUC+k1gp3MQkxQzernEzRZwYOH4EBnOq=6UiaJ2oh4A@mail.gmail.com> <201111250203.29786.rjw@sisk.pl>
+In-Reply-To: <201111250203.29786.rjw@sisk.pl>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201111262232.46195.rjw@sisk.pl> (sfid-20111126_223025_924103_6AAAE0E2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 22 Nov 2011 16:56:12 -0500
-
-> Here is the latest batch of fixes intended for 3.2.  This includes a
-> correction for a user-visible error in mac80211's debugfs info, a fix
-> for a potential memory corrupter in prism54, an endian fix for rt2x00,
-> an endian fix for mac80211, a fix for a NULL derefernce in cfg80211, a
-> locking fix for p54spi and a deadlock fix also for p54spi.
+On Friday, November 25, 2011, Rafael J. Wysocki wrote:
+> On Thursday, November 24, 2011, Linus Torvalds wrote:
+> > Hey, since most of the US will be in a food-induced coma tomorrow, I
+> > just *know* that doing a new release candidate is a good idea.
+> > 
+> > One quarter arch updates, two quarters drivers, and one quarter random
+> > changes. Shake vigorously and serve cold..
+> > 
+> > And maybe the rest of the world can try to make up for the lack of any
+> > expected US participation? Hmm?
 > 
-> This reverts the problematic rt2x00 patches from the earlier pull
-> request.
+> Well, unfortunately, this kernel is unusable on my Acer Ferrari One.
 > 
-> Please let me know if there are problems!
+> First off, it hangs solid every time several seconds or at last a few
+> minutes after boot.  I haven't been able to collect any debug data from
+> it yet, but one of the symptoms is black screen with (unmovable) mouse
+> cursor (this only happens when X has been started, but the box hangs without
+> X too).
+> 
+> Second, the wireless is apparently unable to associate with the AP
+> (that 3.1-rc10 works with correctly on the same box).
+> 
+> Tomorrow I'll try to identify the offending commits.
 
-I'm still seeing the problematic rt2x00 changes when I pull:
+Well, it took more time than I had hoped. :-(
 
-[davem@boricha net]$ git pull git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
-remote: Counting objects: 112, done.        
-remote: Compressing objects: 100% (82/82), done.        
-remote: Total 82 (delta 71), reused 0 (delta 0)        
-Unpacking objects: 100% (82/82), done.
->From git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless
- * branch            for-davem  -> FETCH_HEAD
-Updating 5eccdf5..02f1ce3
-Fast-forward
- drivers/net/wireless/p54/p54spi.c        |    5 +++--
- drivers/net/wireless/prism54/isl_ioctl.c |    2 +-
- drivers/net/wireless/rt2x00/rt2800lib.c  |    2 +-
- net/mac80211/debugfs_sta.c               |    4 ++--
- net/mac80211/status.c                    |    8 ++++----
- net/wireless/reg.c                       |    4 ++++
- 6 files changed, 15 insertions(+), 10 deletions(-)
-[davem@boricha net]$ git format-patch ORIG_HEAD
-0001-rt2800pci-handle-spurious-interrupts.patch
-0002-rt2x00-handle-spurious-pci-interrupts.patch
-0003-rt2x00-Fix-efuse-EEPROM-reading-on-PPC32.patch
-0004-p54spi-Add-missing-spin_lock_init.patch
-0005-p54spi-Fix-workqueue-deadlock.patch
-0006-mac80211-Fix-AMSDU-rate-printout-in-debugfs.patch
-0007-mac80211-Fix-endian-bug-in-radiotap-header-generatio.patch
-0008-cfg80211-fix-regulatory-NULL-dereference.patch
-0009-prism54-potential-memory-corruption-in-prism54_get_e.patch
-0010-Revert-rt2x00-handle-spurious-pci-interrupts.patch
-0011-Revert-rt2800pci-handle-spurious-interrupts.patch
-[davem@boricha net]$ head 0001-rt2800pci-handle-spurious-interrupts.patch 
->From 4ba7d9997869d25bd223dea7536fc1ce9fab3b3b Mon Sep 17 00:00:00 2001
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Wed, 16 Nov 2011 11:09:17 +0100
-Subject: [PATCH 01/11] rt2800pci: handle spurious interrupts
+Bisection turns up:
 
-Some devices may generate spurious interrupts, we have to handle them
-otherwise interrupt line will be disabled with below message and driver
-will not work:
+commit 2577c6e8f2320f1d2f09be122efef5b9118efee4
+Author: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Date:   Tue Sep 13 22:38:18 2011 +0530
 
-[ 2052.114334] irq 17: nobody cared (try booting with the "irqpoll" option)
-[davem@boricha net]$ 
+    ath9k_hw: Add support for AR946/8x chipsets.
+    
+    This patch adds support for AR946/8x chipets.
+    
+    Signed-off-by: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+which I think is wrong for at lest two reasons.  Not that I understand
+what it actually does to the driver, but first, it does much more than the
+changelog says and, second, it is practically impossible to revert
+because of the number of commits on top depending on it.  Quite frankly,
+it is about to make it to my list of examples of how things should _not_ be
+done in the kernel.
+
+The commit immediately preceding it doesn't show any symptoms of failure, so
+I'm quite convinced this one really introduced the problem for me.
+
+The chip in the affected box is (according to "lspci -v"):
+
+09:00.0 Network controller: Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
+        Subsystem: Foxconn International, Inc. Device e01f
+        Flags: bus master, fast devsel, latency 0, IRQ 19
+        Memory at f0000000 (64-bit, non-prefetchable) [size=64K]
+        Capabilities: [40] Power Management version 2
+        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
+        Capabilities: [60] Express Legacy Endpoint, MSI 00
+        Capabilities: [90] MSI-X: Enable- Count=1 Masked-
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [140] Virtual Channel
+        Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
+        Kernel driver in use: ath9k
+
+Thanks,
+Rafael
