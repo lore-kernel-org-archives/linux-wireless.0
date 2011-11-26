@@ -1,95 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms16-1.1blu.de ([89.202.0.34]:57794 "EHLO ms16-1.1blu.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755129Ab1KNVv6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 16:51:58 -0500
-Date: Mon, 14 Nov 2011 22:50:49 +0100
-From: Lars Schotte <gusto@guttok.net>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn 3.0.9 aggreggation messages
-Message-ID: <20111114225049.18a44ed3@hana.gusto> (sfid-20111114_225201_383472_BD57C866)
-In-Reply-To: <1321306060.1796.13.camel@wwguy-ubuntu>
-References: <20111114131642.31e8ddbd@hana.gusto>
-	<1321283410.13578.33.camel@wwguy-ubuntu>
-	<20111114201947.58d5fdf6@hana.gusto>
-	<1321303101.1796.8.camel@wwguy-ubuntu>
-	<20111114221847.2ca32e6a@hana.gusto>
-	<1321306060.1796.13.camel@wwguy-ubuntu>
+Received: from he.sipsolutions.net ([78.46.109.217]:34755 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753773Ab1KZUMU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Nov 2011 15:12:20 -0500
+Subject: Re: Converting ipw2x00 driver to mac80211 framework
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1322338254.4283.2.camel@jlt3.sipsolutions.net> (sfid-20111126_211101_524928_E79A99E1)
+References: <CA++WF2O0WjyqU0HEGR1XE9xDFzR+sxRboVWexRCMPi8okOVkkA@mail.gmail.com>
+	 (sfid-20111126_053149_447307_E1B14D26)  <1322338254.4283.2.camel@jlt3.sipsolutions.net>
+	 (sfid-20111126_211101_524928_E79A99E1)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 26 Nov 2011 21:12:17 +0100
+Message-ID: <1322338337.4283.3.camel@jlt3.sipsolutions.net> (sfid-20111126_211223_748846_D0487EC3)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-you mean iwlagn option :-)
+On Sat, 2011-11-26 at 21:10 +0100, Johannes Berg wrote:
 
-ok, i ll try it and i leave the debug option on as well.
+> It would be much less risky to convert the entire thing to cfg80211, I
+> think, basically just replacing the configuration layer in libipw_wx.c
+> with a cfg80211 based one.
 
-now testing first with the 3.0.8 kernel so that we see if the problem
-was always there.
+It might also be a good idea to do some cleanups first -- e.g. I notice,
+just in a random look at the code, that reset_port isn't used anywhere
+so all code related to that can be removed...
 
-additionaly the AP configuration is of interest here, because i think
-there could be something that is misleading the intel wifi driver here:
+johannes
 
-config wifi-device  radio1
-        option type     mac80211
-        option channel  36
-        option macaddr  20:4e:7f:5b:2d:f5
-        option hwmode   11na
-        option htmode   HT20
-        list ht_capab   SHORT-GI-40
-        list ht_capab   TX-STBC
-        list ht_capab   RX-STBC1
-        list ht_capab   DSSS_CCK-40
-        option country  DE
-
-
-On Mon, 14 Nov 2011 13:27:40 -0800
-wwguy <wey-yi.w.guy@intel.com> wrote:
-
-> Could you try with the following module parameter and see if it help?
-> 
-> $modprobe iwlwifi auto_agg=0
-> 
-> Thanks
-> Wey
-> 
-> On Mon, 2011-11-14 at 13:18 -0800, Lars Schotte wrote:
-> > of course he deactivates the aggregation soon after, because the AP
-> > sees no reason why there should be one.
-> > 
-> > triggering the aggreggation is that problem and it exists only since
-> > 3.0.9. 3.0.8 is OK, but 3.1.1 seems to be affected as well. 3.1.0
-> > was OK.
-> > 
-> > so someting broke it recently.
-> > 
-> > unfortunately i can not remember if 3.2 kernel had that problem, i
-> > already removed it because it was too unstable for me, so i can not
-> > test it any more (w/o compiling it again).
-> > 
-> > On Mon, 14 Nov 2011 12:38:21 -0800
-> > wwguy <wey-yi.w.guy@intel.com> wrote:
-> > 
-> > > Hi Schotte,
-> > > 
-> > > looks like driver has problem activate the aggregation, you can
-> > > see in the log, the aggregation queue being activate then
-> > > deactivate soon after. that is why you are seeing the messages
-> > > showing up in dmesg log.
-> > > 
-> > > what AP you are using? is similar thing happen if you connect to
-> > > different AP?
-> > > 
-> > > Thanks
-> > > Wey
-> > 
-> > 
-> 
-> 
-
-
-
--- 
-Lars Schotte
-@ Hana (F16)
