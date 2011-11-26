@@ -1,59 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36872 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267Ab1KRLP0 (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:39606 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754253Ab1KZUgO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 06:15:26 -0500
-Subject: Re: [PATCHv3 2/2] iw: add support for NoAck per tid
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-In-Reply-To: <1321614110-32392-6-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1321614110-32392-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1321614110-32392-6-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 18 Nov 2011 12:15:23 +0100
-Message-ID: <1321614923.10266.44.camel@jlt3.sipsolutions.net> (sfid-20111118_121529_921108_BCAEFE1F)
+	Sat, 26 Nov 2011 15:36:14 -0500
+Date: Sat, 26 Nov 2011 15:36:12 -0500 (EST)
+Message-Id: <20111126.153612.261362172680649109.davem@davemloft.net> (sfid-20111126_213648_005568_92F34095)
+To: linux-wireless@vger.kernel.org
+CC: netdev@vger.kernel.org
+Subject: [PATCH] airo: Fix array bounds warning when moving packet payload.
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=iso-8859-7
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-11-18 at 12:01 +0100, Simon Wunderlich wrote:
-
-> +static int handle_interface_noack_map(struct nl80211_state *state,
-> +				      struct nl_cb *cb,
-> +				      struct nl_msg *msg,
-> +				      int argc, char **argv)
-> +{
-> +	uint16_t noack_map;
-> +	char *end;
-> +
-> +	if (argc != 1)
-> +		return 1;
-> +
-> +	noack_map = strtoul(argv[0], &end, 16);
-> +	if (end != (argv[0] + strlen(argv[0])))
-> +		return 1;
-
-if (*end)
-	return 1;
-
-:-)
-
-> +	NLA_PUT_U16(msg, NL80211_ATTR_NOACK_MAP, noack_map);
-> +
-> +	return 0;
-> + nla_put_failure:
-> +	return -ENOBUFS;
-> +
-> +}
-> +COMMAND(set, noack_map, "<map>",
-> +	NL80211_CMD_SET_NOACK_MAP, 0, CIB_NETDEV, handle_interface_noack_map,
-> +	"Set the NoAck map for the TIDs. (0x0001 = BE, 0x000e = BK, 0x0030 = VI, 0x00C0 = VO)");
-
-That doesn't seem right -- BE should be 0x9, BK should be 0x6, no?
-
-johannes
-
+DQpkcml2ZXJzL25ldC93aXJlbGVzcy9haXJvLmM6IEluIGZ1bmN0aW9uIKFlbmNhcHN1bGF0ZaI6
+DQpkcml2ZXJzL25ldC93aXJlbGVzcy9haXJvLmM6MTQyMToxNTogd2FybmluZzogYXJyYXkgc3Vi
+c2NyaXB0IGlzIGFib3ZlIGFycmF5IGJvdW5kcyBbLVdhcnJheS1ib3VuZHNdDQpkcml2ZXJzL25l
+dC93aXJlbGVzcy9haXJvLmM6IEluIGZ1bmN0aW9uIKFkZWNhcHN1bGF0ZaI6DQpkcml2ZXJzL25l
+dC93aXJlbGVzcy9haXJvLmM6MTUwOToxNjogd2FybmluZzogYXJyYXkgc3Vic2NyaXB0IGlzIGFi
+b3ZlIGFycmF5IGJvdW5kcyBbLVdhcnJheS1ib3VuZHNdDQoNClNpZ25lZC1vZmYtYnk6IERhdmlk
+IFMuIE1pbGxlciA8ZGF2ZW1AZGF2ZW1sb2Z0Lm5ldD4NCi0tLQ0KDQpJIHdhcyBzaW1wbHkgdGly
+ZWQgb2Ygc2VlaW5nIHRoZXNlIHdhcm5pbmdzIGFsbCB0aGUgdGltZSwgY29tbWl0dGVkIHRvIG5l
+dC1uZXh0Lg0KDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvYWlyby5jIHwgICAgNCArKy0tDQogMSBm
+aWxlcyBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1n
+aXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9haXJvLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9h
+aXJvLmMNCmluZGV4IGFjMTE3NmEuLjFjMDA4YzYgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93
+aXJlbGVzcy9haXJvLmMNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2Fpcm8uYw0KQEAgLTE0
+MTgsNyArMTQxOCw3IEBAIHN0YXRpYyBpbnQgZW5jYXBzdWxhdGUoc3RydWN0IGFpcm9faW5mbyAq
+YWkgLGV0aGVySGVhZCAqZnJhbWUsIE1JQ0J1ZmZlciAqbWljLCBpDQogCWVtbWgzMl91cGRhdGUo
+JmNvbnRleHQtPnNlZWQsZnJhbWUtPmRhLEVUSF9BTEVOICogMik7IC8vIERBLFNBDQogCWVtbWgz
+Ml91cGRhdGUoJmNvbnRleHQtPnNlZWQsKHU4KikmbWljLT50eXBlbGVuLDEwKTsgLy8gVHlwZS9M
+ZW5ndGggYW5kIFNuYXANCiAJZW1taDMyX3VwZGF0ZSgmY29udGV4dC0+c2VlZCwodTgqKSZtaWMt
+PnNlcSxzaXplb2YobWljLT5zZXEpKTsgLy9TRVENCi0JZW1taDMyX3VwZGF0ZSgmY29udGV4dC0+
+c2VlZCxmcmFtZS0+ZGEgKyBFVEhfQUxFTiAqIDIscGF5TGVuKTsgLy9wYXlsb2FkDQorCWVtbWgz
+Ml91cGRhdGUoJmNvbnRleHQtPnNlZWQsKHU4KikoZnJhbWUgKyAxKSxwYXlMZW4pOyAvL3BheWxv
+YWQNCiAJZW1taDMyX2ZpbmFsKCZjb250ZXh0LT5zZWVkLCAodTgqKSZtaWMtPm1pYyk7DQogDQog
+CS8qICAgIE5ldyBUeXBlL2xlbmd0aCA/Pz8/Pz8/Pz8/ICovDQpAQCAtMTUwNiw3ICsxNTA2LDcg
+QEAgc3RhdGljIGludCBkZWNhcHN1bGF0ZShzdHJ1Y3QgYWlyb19pbmZvICphaSwgTUlDQnVmZmVy
+ICptaWMsIGV0aGVySGVhZCAqZXRoLCB1MTYNCiAJCWVtbWgzMl91cGRhdGUoJmNvbnRleHQtPnNl
+ZWQsIGV0aC0+ZGEsIEVUSF9BTEVOKjIpOyANCiAJCWVtbWgzMl91cGRhdGUoJmNvbnRleHQtPnNl
+ZWQsICh1OCAqKSZtaWMtPnR5cGVsZW4sIHNpemVvZihtaWMtPnR5cGVsZW4pK3NpemVvZihtaWMt
+PnUuc25hcCkpOyANCiAJCWVtbWgzMl91cGRhdGUoJmNvbnRleHQtPnNlZWQsICh1OCAqKSZtaWMt
+PnNlcSxzaXplb2YobWljLT5zZXEpKTsJDQotCQllbW1oMzJfdXBkYXRlKCZjb250ZXh0LT5zZWVk
+LCBldGgtPmRhICsgRVRIX0FMRU4qMixwYXlMZW4pOwkNCisJCWVtbWgzMl91cGRhdGUoJmNvbnRl
+eHQtPnNlZWQsICh1OCAqKShldGggKyAxKSxwYXlMZW4pOwkNCiAJCS8vQ2FsY3VsYXRlIE1JQw0K
+IAkJZW1taDMyX2ZpbmFsKCZjb250ZXh0LT5zZWVkLCBkaWdlc3QpOw0KIAkNCi0tIA0KMS43LjYu
+NA0KDQo=
