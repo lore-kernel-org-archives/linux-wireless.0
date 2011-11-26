@@ -1,148 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:58523 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753954Ab1KUOlw (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:39631 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754561Ab1KZUm0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 09:41:52 -0500
-Received: by mail-bw0-f46.google.com with SMTP id 11so6626611bke.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 06:41:51 -0800 (PST)
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+	Sat, 26 Nov 2011 15:42:26 -0500
+Date: Sat, 26 Nov 2011 15:42:24 -0500 (EST)
+Message-Id: <20111126.154224.363743641955094391.davem@davemloft.net> (sfid-20111126_214425_626288_6452E487)
 To: linux-wireless@vger.kernel.org
-Cc: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>,
-	Max Filippov <jcmvbkbc@gmail.com>
-Subject: [RFC v2 5/8] mac80211: setting link-specific mesh power modes when plink opens
-Date: Mon, 21 Nov 2011 18:40:13 +0400
-Message-Id: <1321886416-12597-6-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154155_732897_648C5C05)
-In-Reply-To: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
-References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
+CC: netdev@vger.kernel.org
+Subject: [PATCH] ray_cs: Fix array bounds warnings.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=iso-8859-7
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When plink is opened peer link-specific power mode is set up equal to
-peer non-peer power mode value.
-
-When plink is opened local link-specific power mode is set up equal
-to local non-peer value.
-
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
-Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
----
- net/mac80211/mesh.c       |   33 +++++++++++++++++++++++++++++++++
- net/mac80211/mesh.h       |    6 ++++++
- net/mac80211/mesh_plink.c |   22 +++++++++++++++++++++-
- 3 files changed, 60 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 5b8c5d3..5963164 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -386,6 +386,39 @@ void ieee80211_mesh_root_setup(struct ieee80211_if_mesh *ifmsh)
- 	}
- }
- 
-+void ieee80211s_set_local_ps_mode(struct sta_info *sta, u8 pm)
-+{
-+	switch (pm) {
-+	case NL80211_MESH_POWER_ACTIVE:
-+		sta->local_ps_mode = NL80211_MESH_POWER_ACTIVE;
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		printk(KERN_DEBUG "%s: local STA operates in active mode with STA %pM\n",
-+			sta->sdata->name, sta->sta.addr);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+		break;
-+	case NL80211_MESH_POWER_LIGHT_SLEEP:
-+		sta->local_ps_mode = NL80211_MESH_POWER_LIGHT_SLEEP;
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		printk(KERN_DEBUG "%s: local STA operates in light sleep mode with STA %pM\n",
-+				sta->sdata->name, sta->sta.addr);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+		break;
-+	case NL80211_MESH_POWER_DEEP_SLEEP:
-+		sta->local_ps_mode = NL80211_MESH_POWER_DEEP_SLEEP;
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		printk(KERN_DEBUG "%s: local STA operates in deep sleep mode with STA %pM\n",
-+				sta->sdata->name, sta->sta.addr);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+		break;
-+	default:
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+		printk(KERN_DEBUG "%s: local STA used invalid power mode to operate with STA %pM\n",
-+				sta->sdata->name, sta->sta.addr);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+		break;
-+	}
-+}
-+
- /**
-  * ieee80211_fill_mesh_addresses - fill addresses of a locally originated mesh frame
-  * @hdr:    	802.11 frame header
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index e62c53b..1b2c58d 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -227,6 +227,7 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata);
- void ieee80211_mesh_root_setup(struct ieee80211_if_mesh *ifmsh);
- void ieee80211s_set_sta_ps_mode(struct sta_info *sta,
- 				enum nl80211_mesh_power_mode mode);
-+void ieee80211s_set_local_ps_mode(struct sta_info *sta, u8 pm);
- 
- /* Mesh paths */
- int mesh_nexthop_lookup(struct sk_buff *skb,
-@@ -312,6 +313,11 @@ static inline bool mesh_path_sel_is_hwmp(struct ieee80211_sub_if_data *sdata)
- 	return sdata->u.mesh.mesh_pp_id == IEEE80211_PATH_PROTOCOL_HWMP;
- }
- 
-+static inline bool ieee80211s_has_capab_pm(__le16 capab_info)
-+{
-+	return (capab_info & MESHCONF_CAPAB_POWER_SAVE_LEVEL) != 0;
-+}
-+
- void ieee80211_mesh_notify_scan_completed(struct ieee80211_local *local);
- 
- void ieee80211_mesh_quiesce(struct ieee80211_sub_if_data *sdata);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 7e57f5d..a8f92f3 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -248,6 +248,8 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
-+	struct ieee80211_mgmt *mgmt = container_of(hw_addr,
-+					struct ieee80211_mgmt, sa[0]);
- 
- 	rcu_read_lock();
- 
-@@ -275,8 +277,26 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
- 	if (mesh_peer_accepts_plinks(elems) &&
- 			sta->plink_state == NL80211_PLINK_LISTEN &&
- 			sdata->u.mesh.accepting_plinks &&
--			sdata->u.mesh.mshcfg.auto_open_plinks)
-+			sdata->u.mesh.mshcfg.auto_open_plinks) {
-+		if (ieee80211_has_pm(mgmt->frame_control)) {
-+			__le16 capab_info = mgmt->u.probe_resp.capab_info;
-+			if (ieee80211s_has_capab_pm(capab_info)) {
-+				ieee80211s_set_sta_ps_mode(sta,
-+					NL80211_MESH_POWER_DEEP_SLEEP);
-+			} else {
-+				ieee80211s_set_sta_ps_mode(sta,
-+					NL80211_MESH_POWER_LIGHT_SLEEP);
-+			}
-+		} else {
-+			ieee80211s_set_sta_ps_mode(sta,
-+				NL80211_MESH_POWER_ACTIVE);
-+		}
-+
-+		ieee80211s_set_local_ps_mode(sta,
-+			sdata->u.mesh.mshcfg.power_mode);
-+
- 		mesh_plink_open(sta);
-+	}
- 
- 	rcu_read_unlock();
- }
--- 
-1.7.3.4
-
+DQpyeF9tc2cgaXMgZGVmaW5lZCB0byBoYXZlIGEgMSBlbnRyeSBhcnJheSBhdCB0aGUgZW5kLCBz
+byBnY2Mgd2FybnM6DQoNCmRyaXZlcnMvbmV0L3dpcmVsZXNzL3JheV9jcy5jOiBJbiBmdW5jdGlv
+biChcnhfYXV0aGVudGljYXRlojoNCmRyaXZlcnMvbmV0L3dpcmVsZXNzL3JheV9jcy5jOjI0MzY6
+Mzogd2FybmluZzogYXJyYXkgc3Vic2NyaXB0IGlzIGFib3ZlIGFycmF5IGJvdW5kcyBbLVdhcnJh
+eS1ib3VuZHNdDQpkcml2ZXJzL25ldC93aXJlbGVzcy9yYXlfY3MuYzoyNDM2OjM6IHdhcm5pbmc6
+IGFycmF5IHN1YnNjcmlwdCBpcyBhYm92ZSBhcnJheSBib3VuZHMgWy1XYXJyYXktYm91bmRzXQ0K
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvcmF5X2NzLmM6MjQzNjozOiB3YXJuaW5nOiBhcnJheSBzdWJz
+Y3JpcHQgaXMgYWJvdmUgYXJyYXkgYm91bmRzIFstV2FycmF5LWJvdW5kc10NCmRyaXZlcnMvbmV0
+L3dpcmVsZXNzL3JheV9jcy5jOjI0MzY6Mzogd2FybmluZzogYXJyYXkgc3Vic2NyaXB0IGlzIGFi
+b3ZlIGFycmF5IGJvdW5kcyBbLVdhcnJheS1ib3VuZHNdDQpkcml2ZXJzL25ldC93aXJlbGVzcy9y
+YXlfY3MuYzoyNDM2OjM6IHdhcm5pbmc6IGFycmF5IHN1YnNjcmlwdCBpcyBhYm92ZSBhcnJheSBi
+b3VuZHMgWy1XYXJyYXktYm91bmRzXQ0KZHJpdmVycy9uZXQvd2lyZWxlc3MvcmF5X2NzLmM6MjQz
+OToxNTogd2FybmluZzogYXJyYXkgc3Vic2NyaXB0IGlzIGFib3ZlIGFycmF5IGJvdW5kcyBbLVdh
+cnJheS1ib3VuZHNdDQpkcml2ZXJzL25ldC93aXJlbGVzcy9yYXlfY3MuYzoyNDUyOjE2OiB3YXJu
+aW5nOiBhcnJheSBzdWJzY3JpcHQgaXMgYWJvdmUgYXJyYXkgYm91bmRzIFstV2FycmF5LWJvdW5k
+c10NCmRyaXZlcnMvbmV0L3dpcmVsZXNzL3JheV9jcy5jOjI0NTM6MTg6IHdhcm5pbmc6IGFycmF5
+IHN1YnNjcmlwdCBpcyBhYm92ZSBhcnJheSBib3VuZHMgWy1XYXJyYXktYm91bmRzXQ0KZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvcmF5X2NzLmM6MjQ1MzozMjogd2FybmluZzogYXJyYXkgc3Vic2NyaXB0
+IGlzIGFib3ZlIGFycmF5IGJvdW5kcyBbLVdhcnJheS1ib3VuZHNdDQoNClVzZSBhIHplcm8gbGVu
+Z3RoIGFycmF5IGFuZCByZW5hbWUgdG8gInJheV9yeF9tc2ciIHRvIG1ha2Ugc3VyZSB3ZSBoaXQg
+YWxsDQpvZiB0aGUgbmVjZXNzYXJ5IGNhc2VzLg0KDQpTaWduZWQtb2ZmLWJ5OiBEYXZpZCBTLiBN
+aWxsZXIgPGRhdmVtQGRhdmVtbG9mdC5uZXQ+DQotLS0NCg0KQW5vdGhlciB3YXJuaW5nIHNwZXcg
+dGhhdCdzIGJlZW4gZHJpdmluZyBtZSBiYW5hbmFzIGZvciBhIHdoaWxlLCBjb21taXR0ZWQNCnRv
+IG5ldC1uZXh0Lg0KDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvcmF5X2NzLmMgfCAgICA0ICsrLS0N
+CiBkcml2ZXJzL25ldC93aXJlbGVzcy9yYXljdGwuaCB8ICAgIDQgKystLQ0KIDIgZmlsZXMgY2hh
+bmdlZCwgNCBpbnNlcnRpb25zKCspLCA0IGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJp
+dmVycy9uZXQvd2lyZWxlc3MvcmF5X2NzLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yYXlfY3Mu
+Yw0KaW5kZXggMDAyMWU0OS4uMDRmZWMxZiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL3JheV9jcy5jDQorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yYXlfY3MuYw0KQEAgLTI0
+MjYsNyArMjQyNiw3IEBAIHN0YXRpYyB2b2lkIHJ4X2F1dGhlbnRpY2F0ZShyYXlfZGV2X3QgKmxv
+Y2FsLCBzdHJ1Y3QgcmNzIF9faW9tZW0gKnByY3MsDQogCQkJICAgIHVuc2lnbmVkIGludCBwa3Rf
+YWRkciwgaW50IHJ4X2xlbikNCiB7DQogCVVDSEFSIGJ1ZmZbMjU2XTsNCi0Jc3RydWN0IHJ4X21z
+ZyAqbXNnID0gKHN0cnVjdCByeF9tc2cgKilidWZmOw0KKwlzdHJ1Y3QgcmF5X3J4X21zZyAqbXNn
+ID0gKHN0cnVjdCByYXlfcnhfbXNnICopIGJ1ZmY7DQogDQogCWRlbF90aW1lcigmbG9jYWwtPnRp
+bWVyKTsNCiANCkBAIC0yNTEzLDcgKzI1MTMsNyBAQCBzdGF0aWMgdm9pZCByeF9kZWF1dGhlbnRp
+Y2F0ZShyYXlfZGV2X3QgKmxvY2FsLCBzdHJ1Y3QgcmNzIF9faW9tZW0gKnByY3MsDQogCQkJICAg
+ICAgdW5zaWduZWQgaW50IHBrdF9hZGRyLCBpbnQgcnhfbGVuKQ0KIHsNCiAvKiAgVUNIQVIgYnVm
+ZlsyNTZdOw0KLSAgICBzdHJ1Y3QgcnhfbXNnICptc2cgPSAoc3RydWN0IHJ4X21zZyAqKWJ1ZmY7
+DQorICAgIHN0cnVjdCByYXlfcnhfbXNnICptc2cgPSAoc3RydWN0IHJheV9yeF9tc2cgKikgYnVm
+ZjsNCiAqLw0KIAlwcl9kZWJ1ZygiRGVhdXRoZW50aWNhdGlvbiBmcmFtZSByZWNlaXZlZFxuIik7
+DQogCWxvY2FsLT5hdXRoZW50aWNhdGlvbl9zdGF0ZSA9IFVOQVVUSEVOVElDQVRFRDsNCmRpZmYg
+LS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yYXljdGwuaCBiL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL3JheWN0bC5oDQppbmRleCBkNzY0NmYyLi4zYzNiOThiIDEwMDY0NA0KLS0tIGEvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvcmF5Y3RsLmgNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JheWN0
+bC5oDQpAQCAtNTY2LDkgKzU2Niw5IEBAIHN0cnVjdCBwaHlfaGVhZGVyIHsNCiAgICAgVUNIQVIg
+aGRyXzM7DQogICAgIFVDSEFSIGhkcl80Ow0KIH07DQotc3RydWN0IHJ4X21zZyB7DQorc3RydWN0
+IHJheV9yeF9tc2cgew0KICAgICBzdHJ1Y3QgbWFjX2hlYWRlciBtYWM7DQotICAgIFVDSEFSICB2
+YXJbMV07DQorICAgIFVDSEFSICB2YXJbMF07DQogfTsNCiANCiBzdHJ1Y3QgdHhfbXNnIHsNCi0t
+IA0KMS43LjYuNA0KDQo=
