@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3687 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754011Ab1KDVYC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 17:24:02 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 00/16] brcm80211: fmac: refactoring for coming new chip
- support
-Date: Fri, 4 Nov 2011 22:23:26 +0100
-Message-ID: <1320441822-4615-1-git-send-email-arend@broadcom.com> (sfid-20111104_222420_270984_6494E4D8)
+Received: from netrider.rowland.org ([192.131.102.5]:42511 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753140Ab1KZB17 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Nov 2011 20:27:59 -0500
+Date: Fri, 25 Nov 2011 20:27:58 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+cc: Arend van Spriel <arend@broadcom.com>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJl?= =?UTF-8?B?Y2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: bcma USB Host driver
+In-Reply-To: <4ED02B1D.7030409@hauke-m.de>
+Message-ID: <Pine.LNX.4.44L0.1111252022490.14777-100000@netrider.rowland.org> (sfid-20111126_022807_118681_909B9AA7)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Working on adding support for bcm4330 in brcmfmac. This series is paving the
-way for that.
+On Sat, 26 Nov 2011, Hauke Mehrtens wrote:
 
-This series applies to master branch in wireless-testing and depends on
-patch sent on Oct 29, 2011 with following ID:
+> > Main question would be whether a linux device driver can provide
+> > multiple system functions. I tend to say it can. So I would suggest to
+> > have a single device driver providing OHCI and EHCI functionality.
+> 
+> @USB guys, how do I design a driver for a linux device providing ohci
+> and ehci functionality at the same time. The device has two address
+> spaces one for ehci and one for ohci functions.
 
-Message-ID: <1319880615-3000-1-git-send-email-arend@broadcom.com>
+How many IRQ lines?
 
-Franky Lin (16):
-  brcm80211: fmac: remove unnecessary 4329 chip specific code
-  brcm80211: fmac: move chip recognition function to sdio_chip.c
-  brcm80211: fmac: move bus core prep code to sdio_chip.c
-  brcm80211: fmac: abstract chip buscore setup function
-  brcm80211: fmac: move core disable function to sdio_chip.c
-  brcm80211: fmac: disable dongle arm core in bus core setup function
-  brcm80211: fmac: move dongle gpio reset code to chip attach function
-  brcm80211: fmac: remove duplicate regiter set in chip attach path
-  brcm80211: fmac: chip attach code flow clean up
-  brcm80211: fmac: abstract chip iscoreup function
-  brcm80211: fmac: abstract chip core revision function
-  brcm80211: fmac: move chip reset core function to sdio_chip.c
-  brcm80211: fmac: move chip detach function to sdio_chip.c
-  brcm80211: fmac: move chip drive strength related code to sdio_chip.c
-  brcm80211: fmac: replace private SB macros with ssb_regs version
-  brcm80211: fmac: optimize chip core info management
+And incidentally, in what sense is this _one_ device?  Are you sure 
+it's not _two_ devices in one package?
 
- drivers/net/wireless/brcm80211/brcmfmac/Makefile   |    3 +-
- drivers/net/wireless/brcm80211/brcmfmac/bcmchip.h  |    7 -
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  602 ++------------------
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |  488 ++++++++++++++++
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |  131 +++++
- 5 files changed, 656 insertions(+), 575 deletions(-)
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
+> I thought about registering one controller (ehci or ohci) with
+> usb_create_shared_hcd(). The code then will be in an own module and not
+> in echi_hcd.ko and ochi_hcd.ko like for pci, I hope this works.
+> Is there a better solution to do this, is there an other driver with the
+> same problem already solved?
 
--- 
-1.7.4.1
+I don't know of any other driver that does this.  Your best solution is 
+probably write a driver that registers two child platform devices, and 
+write two corresponding platform drivers, one for the EHCI part and one 
+for the OHCI part.
 
+Alan Stern
 
