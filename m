@@ -1,44 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36451 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752607Ab1K2IdD (ORCPT
+Received: from smtp4.mundo-r.com ([212.51.32.151]:29200 "EHLO
+	smtp4.mundo-r.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753170Ab1KZCco (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 03:33:03 -0500
-Subject: Re: [PATCH] cfg80211: Fix changing regulatory from userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Timo Lindhorst <tlnd@online.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <CAB=NE6Xrm3dGTLLrpeKdODKJN3X-fiss6BEeyYAyn2E5TQuJ6g@mail.gmail.com> (sfid-20111128_201500_595293_EAA27F85)
-References: <201111230330.11103.tlnd@online.de>
-	 <CAB=NE6U6ru-xns8M+YUccqxw0FwE-sWtZnFkPUud3jHdAcDxsw@mail.gmail.com>
-	 <20111123143456.GB2502@tuxdriver.com> <20111123144258.GC2502@tuxdriver.com>
-	 <CAB=NE6WtBH+jpi3AVAdn2ZTZFPYMx6y73bneTEquZaGbuUJizQ@mail.gmail.com>
-	 <20111128184506.GC2681@tuxdriver.com>
-	 <CAB=NE6Xrm3dGTLLrpeKdODKJN3X-fiss6BEeyYAyn2E5TQuJ6g@mail.gmail.com>
-	 (sfid-20111128_201500_595293_EAA27F85)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 29 Nov 2011 09:32:56 +0100
-Message-ID: <1322555576.4110.10.camel@jlt3.sipsolutions.net> (sfid-20111129_093308_092190_EA7AA3E4)
-Mime-Version: 1.0
+	Fri, 25 Nov 2011 21:32:44 -0500
+Message-ID: <4ED04D73.7010703@igalia.com> (sfid-20111126_033300_760119_77F52EE8)
+Date: Sat, 26 Nov 2011 03:22:43 +0100
+From: Carlos Alberto Lopez Perez <clopez@igalia.com>
+MIME-Version: 1.0
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+CC: Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: 3.1+ iwlwifi lockup
+References: <20111031143408.GA17152@redhat.com> <1320179254.31823.130.camel@wwguy-huron>
+In-Reply-To: <1320179254.31823.130.camel@wwguy-huron>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ protocol="application/pgp-signature";
+ boundary="------------enig6BA58511676EDF93F870BCDA"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-11-28 at 14:14 -0500, Luis R. Rodriguez wrote:
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig6BA58511676EDF93F870BCDA
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> John, I'll will send a respin after I dissect what Tomas mentioned. I
-> have one other patch added to my series also that Rajkumar Manoharan
-> <rmanohar@qca.qualcomm.com> sent to me that I will be rolling into my
-> series. If we are pressed my recommendation is to revert Johannes'
-> patch for now, but if you do, please let me know so I can amend my
-> patches to address that bit.
+On 01/11/11 21:27, Guy, Wey-Yi wrote:
+> Any more information to help us understand how to re-produce the issue?=
 
-I really don't want to revert that since it fixes a NULL pointer
-dereference that you can probably trigger fairly easily from userspace
-with not much more than well-timed unplug and lots of disk activity.
+> without more data, it is really hard to root cause and fix it.
+>=20
+> Thanks
+> Wey
 
-Why can't you just work on the fix first and then do all those
-improvement patches?
 
-johannes
+This bug (or a related one) triggers on my laptop (Dell Latitude E6420)
+since I switched from Kernel 3.0-debian to 3.1-debian (AMD64). I believe
+that the bugs happens after waking up from the suspension-to-RAM.
 
+Since I switched to 3.1 Kernel after waking up from suspension my laptop
+freezes very often and I need to hard reboot it, this is really
+annoying. This wasn't happening with 3.0 Kernel and I believe that
+iwlagn is the cause.
+
+I have an Intel Advanced-N 6205 (rev 34) wireless card.
+
+The other day I was able to get the following kernel errors after waking
+up from suspension with this 3.1 kernel[1]
+
+This 3.1 Kernel is the Debian precompiled one (linux-image-3.1.0-1-amd64)=
+
+
+$ uname -r
+3.1.0-1-amd64
+
+
+[1] Find here the dmesg part that comes after the wakeup from suspension:=
+
+
+http://people.igalia.com/clopez/iwlagn_dmesg_3.1.log.txt
+
+
+--------------enig6BA58511676EDF93F870BCDA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQIcBAEBCgAGBQJO0E1zAAoJEJZQic5rlfiCtUkP/2NFV+JWfaJUEiYK1a2c5XlU
+pkR3gk+LuZLz7ruOe6+wYDtGZ+bKkzbRAPtpr3dTGpkR1XrxGnzrTISux4vF633O
+h4tZZ+uMHyXzdUYuOIpYmwIPsBCnueMK/i2clv+3tA0Ew5MSwrqfVXdRB+eNIQ/K
++r81WLXO/PXpa4QdqSXQf3wXuESxyUADGusKobFasASOdAkyK1BeDOPcL9c/WqB0
+/1Hi91eFf911j8qvOLqMnrxK/iCkwZLPeO/XR5d4k+q+AGDxB6G3V8LQWgKJ18WW
+smD75wits+V9ekmrq1tdywlTsDGO+kkmL0L4HTg2vlevFJt0Q8hQjp0WrWRgcBK8
+C37GfM2BpAPZH+epO3fqQsTa1JqqQpIG89mbKjU4LRuI6tCtTtHp2AD8Ht7sHgys
+nzFlDLYi9lCA+f8pUaznOf9VeoX+wchlFfXvPkbw1edEto5heMQ1VRzC+Z7Q1ugp
+C95xQ5F7tAyKk+b+9MTO9DEIGPgS43XN3drdIfbqlR4fs/F17e3MWhFUBT8iY706
+LTBJ2H4ndrLZfjuTNvJ3IiYYcFc5eeTjvEs8V6ExTQ1ORDnbOlIIteLYmgBOuh0L
+STwlY+MHcauCCyQFEvH/Za4ZvwIDgMD89FgAQimtc9lpXwhFPNcIlChahnbiHXqH
+nEOAFO6FImB691jK52QQ
+=yj11
+-----END PGP SIGNATURE-----
+
+--------------enig6BA58511676EDF93F870BCDA--
