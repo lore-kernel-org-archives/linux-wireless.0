@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:45689 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752301Ab1KIKx6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 05:53:58 -0500
-Subject: re: iwlagn: use 6 Mbps rate for no-CCK scans
-From: Johannes Berg <johannes.berg@intel.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20111109104926.GA19993@elgon.mountain> (sfid-20111109_114956_885304_81137F1F)
-References: <20111109104926.GA19993@elgon.mountain>
-	 (sfid-20111109_114956_885304_81137F1F)
-Date: Wed, 09 Nov 2011 11:53:55 +0100
-Message-ID: <1320836035.3845.29.camel@jlt3.sipsolutions.net> (sfid-20111109_115401_964586_1E8FA9EF)
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:48916 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750917Ab1K0Gj7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Nov 2011 01:39:59 -0500
+MIME-Version: 1.0
+In-Reply-To: <4ED1D7BE.7040401@openwrt.org>
+References: <CA+55aFyNUC+k1gp3MQkxQzernEzRZwYOH4EBnOq=6UiaJ2oh4A@mail.gmail.com>
+	<201111250203.29786.rjw@sisk.pl>
+	<201111262232.46195.rjw@sisk.pl>
+	<201111262337.43771.rjw@sisk.pl>
+	<CAJ-Vmo=yh_maZtccaBkqZwip-ubjR4U471ALPwYwTurMaQrZ9Q@mail.gmail.com>
+	<4ED1D7BE.7040401@openwrt.org>
+Date: Sun, 27 Nov 2011 14:39:58 +0800
+Message-ID: <CAJ-VmokUf_U5e2fFt4eNOSRZ_AAXH_OC8obBJr3zDB7KmXC-tA@mail.gmail.com> (sfid-20111127_074004_725172_06B4A138)
+Subject: Re: [PATCH] ath9k: Revert change that broke AR928X on Acer Ferrari One
+From: Adrian Chadd <adrian@freebsd.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgRGFuLAoKPiBUaGlzIGlzIGEgc2VtaS1hdXRvbWF0aWMgZW1haWwgYWJvdXQgbmV3IHN0YXRp
-YyBjaGVja2VyIHdhcm5pbmdzLgoKOi0pCgo+IFRoZSBwYXRjaCAzYThhZWEwOThjOGU6ICJpd2xh
-Z246IHVzZSA2IE1icHMgcmF0ZSBmb3Igbm8tQ0NLIHNjYW5zIiAKPiBmcm9tIE9jdCAxNCwgMjAx
-MSwgbGVhZHMgdG8gdGhlIGZvbGxvd2luZyBTbWF0Y2ggY29tcGxhaW50Ogo+IAo+IGRyaXZlcnMv
-bmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXNjYW4uYyArNzgyIGl3bGFnbl9yZXF1ZXN0X3NjYW4o
-KQo+IAkgZXJyb3I6IHdlIHByZXZpb3VzbHkgYXNzdW1lZCAncHJpdi0+c2Nhbl9yZXF1ZXN0JyBj
-b3VsZCBiZSBudWxsIChzZWUgbGluZSA2ODEpCj4gCj4gZHJpdmVycy9uZXQvd2lyZWxlc3MvaXds
-d2lmaS9pd2wtc2Nhbi5jCj4gICAgNjgwCQkJCQkgICAgICAgPj4gUlhPTl9GTEdfQ0hBTk5FTF9N
-T0RFX1BPUzsKPiAgICA2ODEJCQlpZiAoKHByaXYtPnNjYW5fcmVxdWVzdCAmJiBwcml2LT5zY2Fu
-X3JlcXVlc3QtPm5vX2NjaykgfHwKPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIF5eXl5e
-Xl5eXl5eXl5eXl5eXgo+IG5ld2x5IGludHJvZHVjZWQgY2hlY2suICAoUHJvYmFibHkgbm90IG5l
-ZWRlZC4gIE5vdGhpbmcgZWxzZSBpbiB0aGlzCj4gZnVuY3Rpb24gY2hlY2tzIHRoaXMpLgoKLi4u
-Cgo+ICAgIDc3NwkJc3dpdGNoIChwcml2LT5zY2FuX3R5cGUpIHsKPiAgICA3NzgJCWNhc2UgSVdM
-X1NDQU5fTk9STUFMOgo+ICAgIDc3OQkJCWNtZF9sZW4gPSBpd2xfZmlsbF9wcm9iZV9yZXEocHJp
-diwKPiAgICA3ODAJCQkJCQkoc3RydWN0IGllZWU4MDIxMV9tZ210ICopc2Nhbi0+ZGF0YSwKPiAg
-ICA3ODEJCQkJCQl2aWYtPmFkZHIsCj4gICAgNzgyCQkJCQkJcHJpdi0+c2Nhbl9yZXF1ZXN0LT5p
-ZSwKPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBeXl5e
-Xl5eXl5eXl5eXl5eXl5eXgo+IHVuY2hlY2tlZCBkZXJlZmVyZW5jZS4KClJpZ2h0LCB3ZWxsIC4u
-LiBpZiBzY2FuX3R5cGUgPT0gSVdMX1NDQU5fTk9STUFMLCBwcml2LT5zY2FuX3JlcXVlc3QgbXVz
-dApleGlzdCwgYnV0IGlmIGl0J3MgYW5vdGhlciBzY2FuIHR5cGUsIHByaXYtPnNjYW5fcmVxdWVz
-dCB3aWxsIG5vdCBleGlzdCwKYW5kIHRoZSBuZXdseSBpbnRyb2R1Y2VkIGNoZWNrIGlzIGV4ZWN1
-dGVkIGluIGFsbCBjYXNlcy4KCmpvaGFubmVzCgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LQpJbnRlbCBHbWJICkRvcm5hY2hlciBTdHJhc3NlIDEKODU2MjIgRmVsZGtpcmNoZW4vTXVlbmNo
-ZW4sIERldXRzY2hsYW5kIApTaXR6IGRlciBHZXNlbGxzY2hhZnQ6IEZlbGRraXJjaGVuIGJlaSBN
-dWVuY2hlbgpHZXNjaGFlZnRzZnVlaHJlcjogRG91Z2xhcyBMdXNrLCBQZXRlciBHbGVpc3NuZXIs
-IEhhbm5lcyBTY2h3YWRlcmVyClJlZ2lzdGVyZ2VyaWNodDogTXVlbmNoZW4gSFJCIDQ3NDU2IApV
-c3QuLUlkTnIuL1ZBVCBSZWdpc3RyYXRpb24gTm8uOiBERTEyOTM4NTg5NQpDaXRpYmFuayBGcmFu
-a2Z1cnQgYS5NLiAoQkxaIDUwMiAxMDkgMDApIDYwMDExOTA1Mgo=
+On 27 November 2011 14:25, Felix Fietkau <nbd@openwrt.org> wrote:
+>>
+>> if (AR_SREV_9300_20_OR_LATER(ah) && !AR_SREV_9480(ah))
+>>     REG_WRITE() ...
+>>
+> I checked again, the !AR_SREV_9480(ah) was intentionally removed in a
+> later change, so using AR_SREV_9300_20_OR_LATER(ah) is correct.
 
+Cool. I'm glad we got to the bottom of this one.
+
+
+Adrian
