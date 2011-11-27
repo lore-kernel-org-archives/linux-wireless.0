@@ -1,91 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.allnet.de ([212.18.29.59]:25565 "EHLO mail.allnet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754691Ab1K2Lwp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 06:52:45 -0500
-Message-ID: <4ED4C789.8060701@allnet.de> (sfid-20111129_125258_741403_289EEE8F)
-Date: Tue, 29 Nov 2011 12:52:41 +0100
-From: Daniel Golle <dgolle@allnet.de>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:39563 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752167Ab1K0T7U convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Nov 2011 14:59:20 -0500
+Received: by ywa9 with SMTP id 9so2307091ywa.19
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2011 11:59:19 -0800 (PST)
 MIME-Version: 1.0
-To: Johannes Berg <johannes.berg@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH v1 0/3] support for antenna configuration profiles
-References: <20111128161225.GA25430@localhost>	 (sfid-20111128_171757_078893_7ACF616B) <1322499145.4060.8.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1322499145.4060.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAJ-Vmom6LyS173ZgH_6kODx5pmG0k_8CCgBKmCPFd_8=vwiJPw@mail.gmail.com>
+References: <1322246431-10825-1-git-send-email-mickflemm@gmail.com>
+	<1322246431-10825-2-git-send-email-mickflemm@gmail.com>
+	<CAJ-Vmom6LyS173ZgH_6kODx5pmG0k_8CCgBKmCPFd_8=vwiJPw@mail.gmail.com>
+Date: Sun, 27 Nov 2011 21:59:18 +0200
+Message-ID: <CAFtRNNwqhUXQqxnNKq_Cm7dC_mkw_RSa8DUMXh9y=YYk_yDb2g@mail.gmail.com> (sfid-20111127_205930_511299_CD370874)
+Subject: Re: [PATCH v2 01/12] ath5k: Switch from read-and-clear to
+ write-to-clear method when handling PISR/SISR registers
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	nbd@openwrt.org, jirislaby@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+2011/11/26 Adrian Chadd <adrian@freebsd.org>:
+> Hi,
+>
+> Review #2:
+>
+> One thing that I discovered whilst debugging some silly races in
+> FreeBSD was that the update of the txq active mask wasn't done
+> atomically.
+>
+> Ie, when you check this:
+>
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -1689,7 +1689,7 @@ ath5k_tasklet_tx(unsigned long data)
+>       struct ath5k_hw *ah = (void *)data;
+>
+>       for (i = 0; i < AR5K_NUM_TX_QUEUES; i++)
+> -               if (ah->txqs[i].setup && (ah->ah_txq_isr & BIT(i)))
+> +               if (ah->txqs[i].setup && (ah->ah_txq_isr_txok_all & BIT(i)))
+>                       ath5k_tx_processq(ah, &ah->txqs[i]);
+>
+> The way that the original code did it was:
+>
+> * update the HAL TX mask bits inside the HAL getisr routine, so it
+> would just update the HAL idea of txqactive;
+> * Then, ath_hal_gettxintrtxqs() would pass back to the driver the set
+> of txq bits currently active, and reset those that are active (with a
+> mask, so you can read only a few)
+> * the ath_intr() routine would simply schedule a tasklet call when a
+> TX interrupt came in;
+> * .. and then the TX completion tasklet would call
+> ath_hal_gettxintrtxqs() for each task bit to see if it needed
+> servicing.
 
-Hi Johannes,
+I'm not aware of ath_hal_gettxintrqs etc, this was the patch I wrote on this...
 
-On 11/28/2011 05:52 PM, Johannes Berg wrote:
-> Can you remind us what it is you're trying to achieve? And why it can't
-> be done with the antenna selection API today?
-My idea is to have a generic API allowing the user to select configuration
-profiles for external LNA/mixers found in outdoor high-power appliances.
-I also first thought of just using the existing antenna selection API for that,
-but there are good reasons against that:
-* Antenna control API assumes that the allowed values for tx_ant and rx_ant are
-independent of each other. In high-power applications, this is not the case
-(i.e. you'll probably even damage the RX-part of your hardware when selecting
-the same path for RX and TX). Therefore simple bitmasks such as
-available_antennas_rx/tx won't do the job.
-* Both, external mixer and antenna control may be used together in MiMo
-applications, e.g. you may have antennas 0,1 which are controlled by the usual
-antenna selection API and additionally you got an external LNA/mixer which
-allows you to select either the built-in antenna-pair or an externally connected
-one.
-In my example, it looks like this
+http://www.mail-archive.com/ath5k-devel@lists.ath5k.org/msg01312.html
 
-+---------+       +-------+
-|         ---TXa---       |
-| WiFi    ---RXa1--  ext. |
-| Chip    ---RXa2--  LNA  |
-|(AR9285) ......... mixer |
-+---------+       +-------+
+> Now, in previous generations of hardware/kernel, this may not have
+> raced - ath_intr() may have been a "fast" interrupt handler and thus
+> would occur atomically on a single CPU - so you don't have any races.
+> But these days, ath_intr() is just a software interrupt and can occur
+> in parallel with another CPU executing the completion handler.
+>
+> So since there was no locking around the TXQ bit updates and clear, it
+> was very possible that a very busy TX device would "miss" TX queue
+> notifications, as the CPU running the TX completion would
+> read-and-clear the TXQ active bits in the HAL, whilst another CPU was
+> running ath_intr() which was trying to do a read/modify/write of those
+> same bits.
+>
+> I _think_ felix fixed this in ath9k by hiding this stuff behind the
+> PCU lock. I've also fixed it in FreeBSD. I think it's worth
+> re-evaluating what is going on in ath5k and maybe add some similar
+> locking.
+>
+> Oh wait. Where are you clearing these bits? It doesn't look like
+> you're even clearing the ah_txq_isr bits in the most recent ath5k tree
+> I have here. This means you're likely not missing events; but you're
+> likely always scanning those queues. Making this code a bit pointless.
+> :)
 
-You may still want to use antenna selection API to selected either RX-path 0 or
-1 or both of the AR9285, additionally you want to select a profile for the
-external LNA/mixer.
+Yup we don't clean them but that's not a bug, we still only check
+active queues that produced interrupts, not everything. Anyway we have
+txq->lock already so it's not a big deal to implement this I'll post a
+patch on top of this patchset.
 
-* As Adrian pointed out and I agree with, it's nice to give the user some
-information about the available configuration profiles, i.e. have user-parsable
-names and descriptions of the different configuration profiles (e.g.
-"built-in"/"external", "horizontal"/"vertical", ...) for the device.
+> Anyway, I'd tidy this all up in a subsequent patchset. Get the
+> interrupt changes in, then figure out how to properly lock the
+> interrupt TXQ bit set path (the isr) and the clear path (once you've
+> tested whether the TXQ needed servicing and then cleared the bit.)
+>
+> HTH,
+>
+>
+> adrian
+>
 
-My current solution how things are done in ath9k is specific for the AR9285, but
-once there is a generic infrastructure for this in mac80211, it can be used for
-different solutions, e.g. ath5k-devices with a similar setup which control the
-ext.LNA/mixer using some GPIO PINs.
-In future we may also see devices with several directional MiMo beams and we
-want to select which one(s) to use.
-
-I hope things are more clear now.
-
-
-Cheers
+Thanks again for your comments ;-)
 
 
-Daniel
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJO1MeFAAoJEDy9cKN/1Et0R14P/0boU8k9U1CHDJAQzLswT6aF
-ts9gE0DLvC10qSu15sdRWH516T9K3sFeq2LlSYx4ljV6G3Y1lECzlJjuhFk15ZW+
-5Q0dlofmEhmO3shdvODgrKcqIdmvDkxHRqlCXtYuEPsDKi3QWVEqj8nji588nORt
-wCDGxdNEl8HJYmKi8R+OsAZcypCylV5HFo/J+Xt9pgQmP6gtqGkF3s+KwiPLDFo8
-BnusiD2aQOgqbSs/63t+yaapGLi2ATwFjgKOE/5DywyKUHPGT6e/SouGnWHVuEfA
-+Kq33fUm5C93VK9aBVg+hawj6LGB9DAizGlDaEUib4TVt6R23N5HaeOp4uI+T41K
-pjz3jQD6CsTM8Ypo3UvsRI+SWvacNPcmRqJMplOL7sc9pkNx1UatP/wE2/pRPfki
-X1t9Lw8cb6FIeRZAe+ftiDZN5TEvqOTXBMAYe4tsPMr/GZ/g5eubdZDiHVe0gkQ2
-oIWFq8vnTX8UUP8jz0h4xkENsPoMHi6YwEFULIqdPfwEFqBXsxOCFPednZ5BU6ww
-KO9CQpMWqDhDtGsp5jsaC5s1K2Mo7w2hmfwMZjxy+wudftL7oe25niqlJZsTBKa9
-j72u+XwqXkf4wmsbbaPmDOI93mqBcgSPOUtaEz3RRZbi4EFFQUZA1+bX0SMdUHxD
-8oTrNnbFvv7ow1T2oQfy
-=I+el
------END PGP SIGNATURE-----
+-- 
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
