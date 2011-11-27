@@ -1,55 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:30841 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754775Ab1KGVDQ (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:61090 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750917Ab1K0GiW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 16:03:16 -0500
-Message-ID: <4EB84748.7090302@qca.qualcomm.com> (sfid-20111107_220322_383972_5EADA23A)
-Date: Mon, 7 Nov 2011 23:02:00 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Sun, 27 Nov 2011 01:38:22 -0500
 MIME-Version: 1.0
-To: Raja Mani <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 00/11] ath6kl: Add WOW support
-References: <1320643547-3578-1-git-send-email-rmani@qca.qualcomm.com>
-In-Reply-To: <1320643547-3578-1-git-send-email-rmani@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <20111125123720.GA31564@gamma.logic.tuwien.ac.at>
+References: <20111122072730.GA32225@gamma.logic.tuwien.ac.at>
+	<CANUX_P15En9bHVx4bhq6=XKPZnC2u+QyVJ+jnm4ns=39DrOBtg@mail.gmail.com>
+	<2D0C7905-AEB2-4DE4-89B1-945D89F2B5D6@logic.at>
+	<CANUX_P21PDdyo4u-x_1A0Lcqf-33yHgzUxddAoc3juGRNnrcDg@mail.gmail.com>
+	<20111122124357.GA32440@gamma.logic.tuwien.ac.at>
+	<CANUX_P0uyyuK4netV6srYCh9FsC4cpGzxobHE3T38n5RvvA0RQ@mail.gmail.com>
+	<20111123015503.GC23203@gamma.logic.tuwien.ac.at>
+	<CANUX_P1zDDzMy5yrFXSZAkMQ-87uu-fE1e-2sCEgHJi4dh5eiw@mail.gmail.com>
+	<20111125122143.GA30404@gamma.logic.tuwien.ac.at>
+	<CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com>
+	<20111125123720.GA31564@gamma.logic.tuwien.ac.at>
+Date: Sun, 27 Nov 2011 08:38:21 +0200
+Message-ID: <CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com> (sfid-20111127_073841_232686_69847366)
+Subject: Re: iwlagn is getting very shaky
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Norbert Preining <preining@logic.at>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	Dave Jones <davej@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/07/2011 07:25 AM, Raja Mani wrote:
-> Version 2 patch set is tested on Qualcomm MSM board and 
-> takes care most of the review comments given by Kalle.
-> 
-> V2 changes:
->  * WOW mode selection logic is moved to HIF layer, earlier it was implemented in CFG i/f layer.
->  * Individual parameters are used in the functions instead of struct as a parameter.
->  * Unused one extra byte is removed in struct wmi_add_wow_pattern_cmd.
->  * Used ar->state for WOW state handling and separate WOW state handling is removed. 
->  * host sdio irq wake up capability is checked before entering into WOW suspend mode. 
->  * Empty commit logs are avoided.  :-)
->  * No error is reported from Sparse.
->  * Rebased to multi vif implementation.
-> 
->  and other minor corrections.
-> 
-> Using these patch set, WOW patterns can be controlled and configured via iw command. 
-> Please refer iw help menu for more details.
-> 
-> Limitations:
->    * Optional bytes can't be specified while configuring WOW patterns from iw command.
->      This is due to the limitation in the firmware.
-> 
->    * Pattern byte matching will always happen from the first byte of received packet. 
->      This is the limitation in the recent "iw" command (It doesn't take the pattern 
->      offset where to start pattern matching in the received packets as of now).
+> Yeah, that was my impression too, but still, I wanted to mention it.
+>
+>> I am already on week-end here and will look at it more carefully
+>> later. First impression is that things are messy here. I guess we are
+>> getting in a bad failure path that wasn't checked...
+>
+> No problem, I can cope with it.
+>
 
-Thanks, patchset looks really good now. There were two things I didn't
-like, the check_wow() call in RX path and locking for
-ath6kl_wmi_relinquish_implicit_pstream_credits(). But we can fix those
-later.
+you can always disable 11n: modprobe 11n_disable=1.
 
-All 11 patches applied. I did a couple of minor changes, I'll send a
-separate email describing those.
+Well... Something is really weird here:
+mac80211 requests from us to:
+* start agg
+* stop agg
+* agg operational
 
-Kalle
+this is not a legal sequence
+
+BTW - I am under this impression that mac80211 hasn't been compiled
+with HT debug flag. Can you please set this compilation flag ?
+
+I also would like you to add this line in iwlagn_mac_ampdu_action:
+
+
+static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
+				   struct ieee80211_vif *vif,
+				   enum ieee80211_ampdu_mlme_action action,
+				   struct ieee80211_sta *sta, u16 tid, u16 *ssn,
+				   u8 buf_size)
+{
+	struct iwl_priv *priv = hw->priv;
+	int ret = -EINVAL;
+	struct iwl_station_priv *sta_priv = (void *) sta->drv_priv;
+
+	IWL_DEBUG_HT(priv, "A-MPDU action on addr %pM tid %d\n",
+		     sta->addr, tid);
+
+dump_stack();   <<<<========================================= new line
+
+	if (!(priv->cfg->sku & EEPROM_SKU_CAP_11N_ENABLE))
+		return -EACCES;
+
+
+
+This will give an insight at why is mac80211 calling the driver and
+better point me to the bug.
+
+
+Thanks !
