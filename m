@@ -1,74 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:64765 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751766Ab1KVRxH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 12:53:07 -0500
-Received: by fagn18 with SMTP id n18so694450fag.19
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2011 09:53:06 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] wl12xx: avoid bail out when probe-resp is not set by mac80211
-Date: Tue, 22 Nov 2011 19:52:59 +0200
-Message-Id: <1321984379-1565-1-git-send-email-arik@wizery.com> (sfid-20111122_185311_477216_CC9418CB)
+Received: from nbd.name ([46.4.11.11]:57195 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751635Ab1K0GU5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Nov 2011 01:20:57 -0500
+Message-ID: <4ED1D6AE.9070100@openwrt.org> (sfid-20111127_072123_176671_C9CCAECB)
+Date: Sun, 27 Nov 2011 13:20:30 +0700
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: Re: [Regression, 3.2-rc1] ath9k broken on AR928X
+References: <CA+55aFyNUC+k1gp3MQkxQzernEzRZwYOH4EBnOq=6UiaJ2oh4A@mail.gmail.com> <201111250203.29786.rjw@sisk.pl> <201111262232.46195.rjw@sisk.pl>
+In-Reply-To: <201111262232.46195.rjw@sisk.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During reconfig we can get the BSS_CHANGED_AP_PROBE_RESP indication
-even if a probe-resp has not been set in the first place. Therefore
-ignore the error when not getting a probe-resp from mac80211. Resort to
-the legacy probe-resp in this case.
+On 2011-11-27 4:32 AM, Rafael J. Wysocki wrote:
+> On Friday, November 25, 2011, Rafael J. Wysocki wrote:
+>> On Thursday, November 24, 2011, Linus Torvalds wrote:
+>> > Hey, since most of the US will be in a food-induced coma tomorrow, I
+>> > just *know* that doing a new release candidate is a good idea.
+>> > 
+>> > One quarter arch updates, two quarters drivers, and one quarter random
+>> > changes. Shake vigorously and serve cold..
+>> > 
+>> > And maybe the rest of the world can try to make up for the lack of any
+>> > expected US participation? Hmm?
+>> 
+>> Well, unfortunately, this kernel is unusable on my Acer Ferrari One.
+>> 
+>> First off, it hangs solid every time several seconds or at last a few
+>> minutes after boot.  I haven't been able to collect any debug data from
+>> it yet, but one of the symptoms is black screen with (unmovable) mouse
+>> cursor (this only happens when X has been started, but the box hangs without
+>> X too).
+>> 
+>> Second, the wireless is apparently unable to associate with the AP
+>> (that 3.1-rc10 works with correctly on the same box).
+>> 
+>> Tomorrow I'll try to identify the offending commits.
+> 
+> Well, it took more time than I had hoped. :-(
+> 
+> Bisection turns up:
+> 
+> commit 2577c6e8f2320f1d2f09be122efef5b9118efee4
+> Author: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+> Date:   Tue Sep 13 22:38:18 2011 +0530
+> 
+>     ath9k_hw: Add support for AR946/8x chipsets.
+>     
+>     This patch adds support for AR946/8x chipets.
+>     
+>     Signed-off-by: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
+> which I think is wrong for at lest two reasons.  Not that I understand
+> what it actually does to the driver, but first, it does much more than the
+> changelog says and, second, it is practically impossible to revert
+> because of the number of commits on top depending on it.  Quite frankly,
+> it is about to make it to my list of examples of how things should _not_ be
+> done in the kernel.
+> 
+> The commit immediately preceding it doesn't show any symptoms of failure, so
+> I'm quite convinced this one really introduced the problem for me.
+> 
+> The chip in the affected box is (according to "lspci -v"):
+> 
+> 09:00.0 Network controller: Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
+>         Subsystem: Foxconn International, Inc. Device e01f
+>         Flags: bus master, fast devsel, latency 0, IRQ 19
+>         Memory at f0000000 (64-bit, non-prefetchable) [size=64K]
+>         Capabilities: [40] Power Management version 2
+>         Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
+>         Capabilities: [60] Express Legacy Endpoint, MSI 00
+>         Capabilities: [90] MSI-X: Enable- Count=1 Masked-
+>         Capabilities: [100] Advanced Error Reporting
+>         Capabilities: [140] Virtual Channel
+>         Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
+>         Kernel driver in use: ath9k
+> 
+> Thanks,
+> Rafael
 
-Also take this opportunity to add a vif argument to the set_probe_resp
-function.
+Looking at the diff, the only thing I can find that would break AR928x
+is this (in the function ath9k_set_power_sleep in hw.c):
 
-Reported-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   17 ++++++++---------
- 1 files changed, 8 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 08b06ee..8c58001 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3299,14 +3299,15 @@ static void wl12xx_remove_vendor_ie(struct sk_buff *skb,
- 	skb_trim(skb, skb->len - len);
+        /* Clear Bit 14 of AR_WA after putting chip into Full Sleep mode. */
+-       if (AR_SREV_9300_20_OR_LATER(ah))
+-               REG_WRITE(ah, AR_WA,
+-                         ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
++       if (!AR_SREV_9480(ah))
++               REG_WRITE(ah, AR_WA, ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
  }
- 
--static int wl1271_ap_set_probe_resp_tmpl(struct wl1271 *wl, u32 rates)
-+static int wl1271_ap_set_probe_resp_tmpl(struct wl1271 *wl, u32 rates,
-+					 struct ieee80211_vif *vif)
- {
- 	struct sk_buff *skb;
- 	int ret;
- 
--	skb = ieee80211_proberesp_get(wl->hw, wl->vif);
-+	skb = ieee80211_proberesp_get(wl->hw, vif);
- 	if (!skb)
--		return -EINVAL;
-+		return -EOPNOTSUPP;
- 
- 	ret = wl1271_cmd_template_set(wl,
- 				      CMD_TEMPL_AP_PROBE_RESPONSE,
-@@ -3437,12 +3438,10 @@ static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
- 
- 	if ((changed & BSS_CHANGED_AP_PROBE_RESP) && is_ap) {
- 		u32 rate = wl1271_tx_min_rate_get(wl, wlvif->basic_rate_set);
--		ret = wl1271_ap_set_probe_resp_tmpl(wl, rate);
--		if (ret < 0)
--			goto out;
--
--		wl1271_debug(DEBUG_AP, "probe response updated");
--		set_bit(WLVIF_FLAG_AP_PROBE_RESP_SET, &wlvif->flags);
-+		if (!wl1271_ap_set_probe_resp_tmpl(wl, rate, vif)) {
-+			wl1271_debug(DEBUG_AP, "probe response updated");
-+			set_bit(WLVIF_FLAG_AP_PROBE_RESP_SET, &wlvif->flags);
-+		}
- 	}
- 
- 	if ((changed & BSS_CHANGED_BEACON)) {
--- 
-1.7.5.4
 
+
+Please try changing the if line to:
+if (AR_SREV_9300_20_OR_LATER(ah) && !AR_SREV_9480(ah))
+
+Apparently later changes even removed this check. I'll take a look at the
+history to figure out what's going on, this could probably explain other
+regressions on pre-AR9380 chips as well.
+
+- Felix
