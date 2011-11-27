@@ -1,40 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44579 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016Ab1KXPPX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 10:15:23 -0500
-Subject: Re: [PATCH 1/7] {nl,cfg,mac}80211: Allow Setting Multicast Rate in
- Mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>, linville@tuxdriver.com
-In-Reply-To: <1322080347-7644-2-git-send-email-thomas@cozybit.com> (sfid-20111123_213313_268163_2293C7FE)
-References: <1322080347-7644-1-git-send-email-thomas@cozybit.com>
-	 <1322080347-7644-2-git-send-email-thomas@cozybit.com>
-	 (sfid-20111123_213313_268163_2293C7FE)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Nov 2011 16:15:16 +0100
-Message-ID: <1322147716.5366.22.camel@jlt3.sipsolutions.net> (sfid-20111124_161528_611097_5CD6D131)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:38431 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754904Ab1K0IUD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Nov 2011 03:20:03 -0500
+From: emmanuel.grumbach@intel.com
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	stable@vger.kernel.org
+Subject: [PATCH 1/1] mac80211: fix race between the AGG SM and the Tx data path
+Date: Sun, 27 Nov 2011 10:19:59 +0200
+Message-Id: <1322381999-27872-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20111127_092013_663934_B2C02739)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-11-23 at 12:32 -0800, Thomas Pedersen wrote:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -5648,6 +5648,11 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
->  	setup.mesh_id = nla_data(info->attrs[NL80211_ATTR_MESH_ID]);
->  	setup.mesh_id_len = nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
->  
-> +	if (info->attrs[NL80211_ATTR_MCAST_RATE] &&
-> +		!nl80211_parse_mcast_rate(rdev, setup.mcast_rate,
-> +		nla_get_u32(info->attrs[NL80211_ATTR_MCAST_RATE])))
-> +			return -EINVAL;
+When a packet is supposed to sent be as an a-MPDU, mac80211 sets
+IEEE80211_TX_CTL_AMPDU to let the driver know. On the other
+hand, mac80211 configures the driver for aggregration with the
+ampdu_action callback.
+There is race between these two mechanisms since the following
+scenario can occur when the BA agreement is torn down:
 
-That could use some better indentation ...
+Tx softIRQ	 			drv configuration
+==========				=================
 
-johannes
+check OPERATIONAL bit
+Set the TX_CTL_AMPDU bit in the packet
+
+					clear OPERATIONAL bit
+					stop Tx AGG
+Pass Tx packet to the driver.
+
+In that case the driver would get a packet with TX_CTL_AMPDU set
+although it has already been notified that the BA session has been
+torn down.
+
+To fix this, we need to synchronize all the Qdisc activity after we
+cleared the OPERATIONAL bit. After that step, all the following
+packets will be buffered until the driver reports it is ready to get
+new packets for this RA / TID. This buffering allows not to run into
+another race that would send packets with TX_CTL_AMPDU unset while
+the driver hasn't been requested to tear down the BA session yet.
+
+This race occurs in practice and iwlwifi complains with a WARN_ON
+when it happens.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/agg-tx.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 39d72cc..d9b5340 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -188,6 +188,18 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 	 */
+ 	clear_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state);
+ 
++	/*
++	 * There might be a few packets that have been scheduled
++	 * before the HT_AGG_STATE_OPERATIONAL has been cleared
++	 * and that may get to the driver only after the following
++	 * drv_ampdu_action gets called. In that case, the driver
++	 * would get a packet with the IEEE80211_TX_CTL_AMPDU flag
++	 * set while it has been already notified that the BA session
++	 * has been torn down. Sync the Qdisc to make sure this does
++	 * not happen.
++	 */
++	synchronize_net();
++
+ 	tid_tx->stop_initiator = initiator;
+ 	tid_tx->tx_stop = tx;
+ 
+-- 
+1.7.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
