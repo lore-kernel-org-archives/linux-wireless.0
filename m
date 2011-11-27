@@ -1,85 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4115 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151Ab1K3FMS (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:37521 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751241Ab1K0Kog (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 00:12:18 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Russell Hu <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 00/17] Add support for MCI BT coex
-Date: Wed, 30 Nov 2011 10:41:12 +0530
-Message-ID: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_061224_368122_B90E9548)
+	Sun, 27 Nov 2011 05:44:36 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1322387175.4044.16.camel@jlt3.sipsolutions.net>
+References: <20111122072730.GA32225@gamma.logic.tuwien.ac.at>
+	<CANUX_P15En9bHVx4bhq6=XKPZnC2u+QyVJ+jnm4ns=39DrOBtg@mail.gmail.com>
+	<2D0C7905-AEB2-4DE4-89B1-945D89F2B5D6@logic.at>
+	<CANUX_P21PDdyo4u-x_1A0Lcqf-33yHgzUxddAoc3juGRNnrcDg@mail.gmail.com>
+	<20111122124357.GA32440@gamma.logic.tuwien.ac.at>
+	<CANUX_P0uyyuK4netV6srYCh9FsC4cpGzxobHE3T38n5RvvA0RQ@mail.gmail.com>
+	<20111123015503.GC23203@gamma.logic.tuwien.ac.at>
+	<CANUX_P1zDDzMy5yrFXSZAkMQ-87uu-fE1e-2sCEgHJi4dh5eiw@mail.gmail.com>
+	<20111125122143.GA30404@gamma.logic.tuwien.ac.at>
+	<CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com>
+	<20111125123720.GA31564@gamma.logic.tuwien.ac.at>
+	<CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com>
+	<CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com>
+	<1322387175.4044.16.camel@jlt3.sipsolutions.net>
+Date: Sun, 27 Nov 2011 12:44:35 +0200
+Message-ID: <CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com> (sfid-20111127_114454_906159_61E86EE4)
+Subject: Re: iwlagn is getting very shaky
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Norbert Preining <preining@logic.at>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	Dave Jones <davej@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Sun, Nov 27, 2011 at 11:46, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Sun, 2011-11-27 at 11:43 +0200, Emmanuel Grumbach wrote:
+>> Hi again
+>>
+>> Can you please try the attached patch ?
+>> I would like to know if it helps.
+>
+> As in the patch that Nikolay sent to the list earlier today, this should
+> also check STOPPING since WANT_STOP may get cleared as soon as it is
+> processed.
+>
 
-Add support for MCI BT-Coex for AR9462. with AR9462 we have
-WLAN and BT coexists via MCI protocol(Message Coexistence Interface)
-WLAN and BT exchanges GPM, SCHED messages and few other messages
-for coexistence.
-
-*thanks to Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-for his technical support
-
-*thanks to Wilson Tsao <wtsao@qca.qualcomm.com> who being the core
-author of MCI, for his valuable help and documents
-
-*thanks a lot to Rajkumar Manoharan <rmanohar@qca.qualcomm.com> for
-his suggestions, review comments, code cleanups, and modifications
-in design.
-
-bug fixes and few miscellaneous cleanups will be added then and there
-
-Mohammed Shafi Shajakhan (17):
-  ath9k_hw: add definitions to support MCI h/w code
-  ath9k_hw: add GPIO output MUX related macros
-  ath9k_hw: Add MCI h/w specific structure
-  ath9k_hw: initialize MCI parameters
-  ath9k_hw: Add MCI h/w code and state machine
-  ath9k: Add MCI interrupt to interrupt mask
-  ath9k_hw: take care of enabling MCI interrupts
-  ath9k_hw: check for asynchronous MCI interrupt pending
-  ath9k_hw: check for MCI interrupt in get_isr
-  ath9k: add MCI specific definitions and structures
-  ath9k: Add functions to allocate/free buffers for MCI
-  ath9k_hw: MCI related changes in chip management
-  ath9k_hw: MCI related changes in set_reset_reg
-  ath9k_hw: Add support for MCI WLAN calibration
-  ath9k_hw: Add MCI related changes in chip reset
-  ath9k: MCI state machine based on MCI interrupt
-  ath9k: fix a typo
-
- drivers/net/wireless/ath/ath9k/Makefile       |    3 +-
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   43 +
- drivers/net/wireless/ath/ath9k/ar9003_mac.c   |   36 +-
- drivers/net/wireless/ath/ath9k/ar9003_mci.c   | 1464 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_mci.h   |  102 ++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h   |    3 +
- drivers/net/wireless/ath/ath9k/ath9k.h        |    1 +
- drivers/net/wireless/ath/ath9k/btcoex.c       |    2 +-
- drivers/net/wireless/ath/ath9k/btcoex.h       |   31 +
- drivers/net/wireless/ath/ath9k/hw.c           |  174 +++-
- drivers/net/wireless/ath/ath9k/hw.h           |  182 +++
- drivers/net/wireless/ath/ath9k/init.c         |   33 +
- drivers/net/wireless/ath/ath9k/mac.c          |   17 +-
- drivers/net/wireless/ath/ath9k/main.c         |    9 +-
- drivers/net/wireless/ath/ath9k/mci.c          |  419 +++++++
- drivers/net/wireless/ath/ath9k/mci.h          |   20 +
- drivers/net/wireless/ath/ath9k/reg.h          |  306 +++++-
- 17 files changed, 2805 insertions(+), 40 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_mci.c
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_mci.h
-
+Thanks.
+Norbert, could you please test Nikolay's patch instead of mine ?
