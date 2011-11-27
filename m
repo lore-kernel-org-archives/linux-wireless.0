@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:40311 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753655Ab1KILS2 (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:43069 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755208Ab1K0BQd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 06:18:28 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 15so1479663wyh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Nov 2011 03:18:27 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] wl12xx: flush packets before stopping dev role
-Date: Wed,  9 Nov 2011 13:18:24 +0200
-Message-Id: <1320837504-12026-2-git-send-email-eliad@wizery.com> (sfid-20111109_121831_242905_3FA820D0)
-In-Reply-To: <1320837504-12026-1-git-send-email-eliad@wizery.com>
-References: <1320837504-12026-1-git-send-email-eliad@wizery.com>
+	Sat, 26 Nov 2011 20:16:33 -0500
+MIME-Version: 1.0
+In-Reply-To: <201111262337.43771.rjw@sisk.pl>
+References: <CA+55aFyNUC+k1gp3MQkxQzernEzRZwYOH4EBnOq=6UiaJ2oh4A@mail.gmail.com>
+	<201111250203.29786.rjw@sisk.pl>
+	<201111262232.46195.rjw@sisk.pl>
+	<201111262337.43771.rjw@sisk.pl>
+Date: Sun, 27 Nov 2011 09:16:32 +0800
+Message-ID: <CAJ-Vmo=yh_maZtccaBkqZwip-ubjR4U471ALPwYwTurMaQrZ9Q@mail.gmail.com> (sfid-20111127_021648_798130_42A2BCA7)
+Subject: Re: [PATCH] ath9k: Revert change that broke AR928X on Acer Ferrari One
+From: Adrian Chadd <adrian@freebsd.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During sta disconnection, a deauth packet is being queued to
-the dev role queue. However, the dev role is being stopped
-before the packet was sent.
+Hm, considering the origina patch did this:
 
-Flush the tx queue before stopping the dev role.
+        /* Clear Bit 14 of AR_WA after putting chip into Full Sleep mode. */
+-       if (AR_SREV_9300_20_OR_LATER(ah))
+-               REG_WRITE(ah, AR_WA,
+-                         ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
++       if (!AR_SREV_9480(ah))
++               REG_WRITE(ah, AR_WA, ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/cmd.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+.. something tells me that perhaps the correct statement is:
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 23c50ed..cb4a4e9 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -1826,6 +1826,9 @@ int wl12xx_stop_dev(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 		      wlvif->bss_type == BSS_TYPE_IBSS)))
- 		return -EINVAL;
- 
-+	/* flush all pending packets */
-+	wl1271_tx_work_locked(wl);
-+
- 	if (test_bit(wlvif->dev_role_id, wl->roc_map)) {
- 		ret = wl12xx_croc(wl, wlvif->dev_role_id);
- 		if (ret < 0)
--- 
-1.7.6.401.g6a319
+if (AR_SREV_9300_20_OR_LATER(ah) && !AR_SREV_9480(ah))
+    REG_WRITE() ...
 
+?
+
+
+Adrian
