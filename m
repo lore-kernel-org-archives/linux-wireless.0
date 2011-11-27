@@ -1,66 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36854 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757300Ab1KWICq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 03:02:46 -0500
-Date: Wed, 23 Nov 2011 09:05:07 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Amir Hedayaty <hedayaty@gmail.com>
-Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
-Message-ID: <20111123080506.GB9833@redhat.com> (sfid-20111123_090249_697345_7A12649F)
-References: <20111116100915.GA2191@redhat.com>
- <20111122214940.GH8452@tuxdriver.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:55579 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754859Ab1K0OH4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Nov 2011 09:07:56 -0500
+Received: by qadc14 with SMTP id c14so794087qad.19
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2011 06:07:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111122214940.GH8452@tuxdriver.com>
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1322246431-10825-1-git-send-email-mickflemm@gmail.com>
+References: <1322246431-10825-1-git-send-email-mickflemm@gmail.com>
+Date: Sun, 27 Nov 2011 15:07:55 +0100
+Message-ID: <CA+icZUUwLuGa87-B1F7Vd=oEM6KLYAd1GnKig84GTfKQx+iU5Q@mail.gmail.com> (sfid-20111127_150801_516652_B2122F33)
+Subject: Re: [PATCH v2 00/12] ath5k: A few updates + cleanups + kerneldoc
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	nbd@openwrt.org, jirislaby@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 22, 2011 at 04:49:40PM -0500, John W. Linville wrote:
-> On Wed, Nov 16, 2011 at 11:09:17AM +0100, Stanislaw Gruszka wrote:
-> > Some devices may generate spurious interrupts, we have to handle them
-> > otherwise interrupt line will be disabled with below message and driver
-> > will not work:
-> > 
-> > [ 2052.114334] irq 17: nobody cared (try booting with the "irqpoll" option)
-> > [ 2052.114339] Pid: 0, comm: swapper Tainted: P           2.6.35.6-48.fc14.x86_64 #1
-> > [ 2052.114341] Call Trace:
-> > [ 2052.114342]  <IRQ>  [<ffffffff810a6e2b>] __report_bad_irq.clone.1+0x3d/0x8b
-> > [ 2052.114349]  [<ffffffff810a6f93>] note_interrupt+0x11a/0x17f
-> > [ 2052.114352]  [<ffffffff810a7a73>] handle_fasteoi_irq+0xa8/0xce
-> > [ 2052.114355]  [<ffffffff8100c2ea>] handle_irq+0x88/0x90
-> > [ 2052.114357]  [<ffffffff8146f034>] do_IRQ+0x5c/0xb4
-> > [ 2052.114360]  [<ffffffff81469593>] ret_from_intr+0x0/0x11
-> > [ 2052.114361]  <EOI>  [<ffffffff8102b7f9>] ? native_safe_halt+0xb/0xd
-> > [ 2052.114366]  [<ffffffff81010f03>] ? need_resched+0x23/0x2d
-> > [ 2052.114367]  [<ffffffff8101102a>] default_idle+0x34/0x4f
-> > [ 2052.114370]  [<ffffffff81008325>] cpu_idle+0xaa/0xcc
-> > [ 2052.114373]  [<ffffffff81461f2a>] start_secondary+0x24d/0x28e
-> > [ 2052.114374] handlers:
-> > [ 2052.114375] [<ffffffff81332944>] (usb_hcd_irq+0x0/0x7c)
-> > [ 2052.114378] [<ffffffffa00697da>] (rt2800pci_interrupt+0x0/0x18d [rt2800pci])
-> > [ 2052.114384] Disabling IRQ #17
-> > 
-> > Resolve:
-> > https://bugzilla.redhat.com/show_bug.cgi?id=658451
-> > 
-> > Reported-and-tested-by: Amir Hedayaty <hedayaty@gmail.com>
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> 
-> I trust that you saw the comments in the other thread.  I have reverted
-> this patch and the related rt2x00 one.
-I responded there.
+On Fri, Nov 25, 2011 at 7:40 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> This series of patches includes some stability fixes related to interrupt
+> handling, an updated version of a calibration-related patch I posted some
+> time ago but never submited here and a new module parameter to disable
+> GPIO based rfkill switch (we had a few bug reports on that recently).
+>
+> It also adds kernel doc on all ath5k_hw_* functions and structs (needs
+> some more work but it should be fine, I reviewed the output, spell-ckecked
+> it etc) and a few minor fixes and optimizations.
+>
+> v2: Adress comments from Adrian, Felix, Jiri and Bob. Thanks a lot for the
+> review !
+>
+> Nick Kossifidis (12):
+>  ath5k: Switch from read-and-clear to write-to-clear method when
+>    handling PISR/SISR registers
+>  ath5k: Add TXNOFRM to INT_TX_ALL
+>  ath5k: Cleanups v1
+>  ath5k: Calibration re-work
+>  ath5k: Use usleep_range where possible
+>  ath5k: Cleanups v2 + add kerneldoc on all hw functions
+>  ath5k: We always do full calibration on AR5210
+>  ath5k: Add a module parameter to disable hw rf kill switch
+>  ath5k: MRR support and 2GHz radio override belong in ah_capabilities
+>  ath5k: ath5k_ani_period_restart only touches struct ath5k_ani_state
+>  ath5k: Renumber hw queue ids
+>  ath5k: Optimize ath5k_cw_validate
+>
+>  drivers/net/wireless/ath/ath5k/ahb.c      |    4 +-
+>  drivers/net/wireless/ath/ath5k/ani.c      |   91 ++--
+>  drivers/net/wireless/ath/ath5k/ani.h      |   32 +-
+>  drivers/net/wireless/ath/ath5k/ath5k.h    |  569 +++++++++++++------
+>  drivers/net/wireless/ath/ath5k/attach.c   |   16 +-
+>  drivers/net/wireless/ath/ath5k/base.c     |  287 +++++++----
+>  drivers/net/wireless/ath/ath5k/caps.c     |   27 +-
+>  drivers/net/wireless/ath/ath5k/desc.c     |  217 ++++++--
+>  drivers/net/wireless/ath/ath5k/desc.h     |  124 +++--
+>  drivers/net/wireless/ath/ath5k/dma.c      |  370 ++++++++-----
+>  drivers/net/wireless/ath/ath5k/gpio.c     |   81 +++-
+>  drivers/net/wireless/ath/ath5k/initvals.c |   75 ++-
+>  drivers/net/wireless/ath/ath5k/pci.c      |    2 +-
+>  drivers/net/wireless/ath/ath5k/pcu.c      |  222 +++++---
+>  drivers/net/wireless/ath/ath5k/phy.c      |  853 +++++++++++++++++++++++------
+>  drivers/net/wireless/ath/ath5k/qcu.c      |  143 ++++--
+>  drivers/net/wireless/ath/ath5k/reg.h      |   27 +-
+>  drivers/net/wireless/ath/ath5k/reset.c    |  230 ++++++--
+>  drivers/net/wireless/ath/ath5k/rfbuffer.h |   59 ++-
+>  drivers/net/wireless/ath/ath5k/rfgain.h   |   22 +-
+>  20 files changed, 2465 insertions(+), 986 deletions(-)
+>
+> --
+> 1.7.8.rc3
+>
+Unfortunately, <patchwork.kernel.org> is still down, thus I have
+extracted your patchset from your emails.
+I have git-am-ed them in my local linux-next (next-20111125) GIT.
+( Patchset attached ).
 
-> Perhaps there is some way to convince the hardware not to generate
-> spurious interrupts?
+I have only seen this little typo by having a quick view on the single patch:
 
-Ivo, Gertjan, Helmut, is there a possibility that I can get hardware
-documentation or any other support from Ralink, that could help to
-solve this (and possible other issues)?
+[ drivers/net/wireless/ath/ath5k/pcu.c ]
 
-Stanislaw
++ * -Different operating modes: AP, STA, IBSS <--- Space before "Different"
+
+Any special thing you want to be tested?
+
+How can I easily generate the (kernel) docs for ath5k (I mean I don't
+want to generate a complete kernel-doc)?
+
+- Sedat -
+
+[1] https://patchwork.kernel.org/project/linux-wireless/list/
