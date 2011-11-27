@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59612 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753122Ab1K1SKs (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:53861 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810Ab1K0WQF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 13:10:48 -0500
-Subject: Re: [PATCH 1/4] mac80211: fill rate filter for internal scan
- requests
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Alexander Simon <an.alexsimon@googlemail.com>,
-	Marek Lindner <lindner_marek@yahoo.de>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-In-Reply-To: <1322502917-28205-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111128_185634_810824_7B135F2B)
-References: <1322502917-28205-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1322502917-28205-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 (sfid-20111128_185634_810824_7B135F2B)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 28 Nov 2011 19:10:43 +0100
-Message-ID: <1322503843.4060.9.camel@jlt3.sipsolutions.net> (sfid-20111128_191051_151411_48AC876F)
-Mime-Version: 1.0
+	Sun, 27 Nov 2011 17:16:05 -0500
+Received: by vcbfk14 with SMTP id fk14so3181487vcb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2011 14:16:03 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Nikolay Martynov <mar.kolya@gmail.com>
+Subject: [PATCH 0/2] mac80211: use timeout from addba resp
+Date: Sun, 27 Nov 2011 17:15:51 -0500
+Message-Id: <1322432153-17425-1-git-send-email-mar.kolya@gmail.com> (sfid-20111127_231609_949056_E5E23CE4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-11-28 at 18:55 +0100, Simon Wunderlich wrote:
-> The rates bitmap for internal scan requests shoud be filled,
-> otherwise there will be probe requests with zero rates supported.
+  If other side sent us non zero timeout in addba response use it as a
+timeout for TX session. Before this patch initiator and recipient
+could have different timeouts if recipient decides to change timeout
+offered by initiator.
+  This patchset also adds timeout information into agg_status sysfs file.
+  This should be applied after patches for "timeout tx agg sessions in
+way similar to rx agg sessions".
 
-You should probably send this as a separate bugfix, and maybe even Cc
-stable.
+  All comments and suggestions are appreciated.
+  Thanks.
 
-johannes
+Nikolay Martynov (2):
+  mac80211: Use timeout from addba resp
+  mac80211: add session timeout to agg_status debugfs file
 
+ net/mac80211/agg-tx.c      |   10 +++++++++-
+ net/mac80211/debugfs_sta.c |    9 +++++++--
+ 2 files changed, 16 insertions(+), 3 deletions(-)
+
+-- 
+1.7.4.1
 
