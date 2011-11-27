@@ -1,85 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61703 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757836Ab1KVQYu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 11:24:50 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Wilson Tsao <wtsao@qca.qualcomm.com>
-Subject: [PATCH 03/18] ath9k_hw: Add MCI h/w specific structure
-Date: Tue, 22 Nov 2011 21:52:30 +0530
-Message-ID: <1321978965-21684-4-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111122_172455_206325_B2214331)
-In-Reply-To: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55308 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755152Ab1K0ATF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Nov 2011 19:19:05 -0500
+Message-ID: <4ED181F1.40009@hauke-m.de> (sfid-20111127_012031_724178_06522C4E)
+Date: Sun, 27 Nov 2011 01:18:57 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Alan Stern <stern@rowland.harvard.edu>
+CC: Arend van Spriel <arend@broadcom.com>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJl?= =?UTF-8?B?Y2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: bcma USB Host driver
+References: <Pine.LNX.4.44L0.1111252022490.14777-100000@netrider.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1111252022490.14777-100000@netrider.rowland.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Hi Alan,
 
-Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/btcoex.h |   31 +++++++++++++++++++++++++++++++
- 1 files changed, 31 insertions(+), 0 deletions(-)
+On 11/26/2011 02:27 AM, Alan Stern wrote:
+> On Sat, 26 Nov 2011, Hauke Mehrtens wrote:
+> 
+>>> Main question would be whether a linux device driver can provide
+>>> multiple system functions. I tend to say it can. So I would suggest to
+>>> have a single device driver providing OHCI and EHCI functionality.
+>>
+>> @USB guys, how do I design a driver for a linux device providing ohci
+>> and ehci functionality at the same time. The device has two address
+>> spaces one for ehci and one for ohci functions.
+> 
+> How many IRQ lines?
+The ehci and ohci controller are sharing one IRQ line.
+> 
+> And incidentally, in what sense is this _one_ device?  Are you sure 
+> it's not _two_ devices in one package?
+This is an SoC, so in hardware it is a chip with many functionality. On
+the internal bus it is connected as one device, which offers two address
+spaces. I do not have access to the detailed hardware specs just some
+other driver source code.
+> 
+>> I thought about registering one controller (ehci or ohci) with
+>> usb_create_shared_hcd(). The code then will be in an own module and not
+>> in echi_hcd.ko and ochi_hcd.ko like for pci, I hope this works.
+>> Is there a better solution to do this, is there an other driver with the
+>> same problem already solved?
+> 
+> I don't know of any other driver that does this.  Your best solution is 
+> probably write a driver that registers two child platform devices, and 
+> write two corresponding platform drivers, one for the EHCI part and one 
+> for the OHCI part.
+Thanks for this tip. I did this and it is working nicely. It has an
+other advantage, for the ssb bus I was able to use the same platform
+drivers as used for the bcma bus.
+> 
+> Alan Stern
+> 
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index d5e5db1..278361c 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -54,8 +54,39 @@ enum ath_btcoex_scheme {
- 	ATH_BTCOEX_CFG_MCI,
- };
- 
-+struct ath9k_hw_mci {
-+	u32 raw_intr;
-+	u32 rx_msg_intr;
-+	u32 cont_status;
-+	u32 gpm_addr;
-+	u32 gpm_len;
-+	u32 gpm_idx;
-+	u32 sched_addr;
-+	u32 wlan_channels[4];
-+	u32 wlan_cal_seq;
-+	u32 wlan_cal_done;
-+	u32 config;
-+	u8 *gpm_buf;
-+	u8 *sched_buf;
-+	bool ready;
-+	bool update_2g5g;
-+	bool is_2g;
-+	bool query_bt;
-+	bool unhalt_bt_gpm; /* need send UNHALT */
-+	bool halted_bt_gpm; /* HALT sent */
-+	bool need_flush_btinfo;
-+	bool bt_version_known;
-+	bool wlan_channels_update;
-+	u8 wlan_ver_major;
-+	u8 wlan_ver_minor;
-+	u8 bt_ver_major;
-+	u8 bt_ver_minor;
-+	u8 bt_state;
-+};
-+
- struct ath_btcoex_hw {
- 	enum ath_btcoex_scheme scheme;
-+	struct ath9k_hw_mci mci;
- 	bool enabled;
- 	u8 wlanactive_gpio;
- 	u8 btactive_gpio;
--- 
-1.7.0.4
+Hauke
 
