@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:42536 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751814Ab1K2Hua (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53442 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751241Ab1K0JqY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 02:50:30 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAAJw_ZvyWoprc8yCwET_2O67gpnQy=5imAQG=PVWT8OhB_7rXA@mail.gmail.com>
-References: <20111125122143.GA30404@gamma.logic.tuwien.ac.at>
-	<CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com>
-	<20111125123720.GA31564@gamma.logic.tuwien.ac.at>
-	<CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com>
-	<CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com>
-	<1322387175.4044.16.camel@jlt3.sipsolutions.net>
-	<CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com>
-	<20111128035627.GH1422@gamma.logic.tuwien.ac.at>
-	<CANUX_P2kYiFCP8uAhLZC_kVEjoyxabRBx3Pn+ndtFus=6hJN7Q@mail.gmail.com>
-	<20111128042343.GA4619@gamma.logic.tuwien.ac.at>
-	<20111128232525.GA12719@gamma.logic.tuwien.ac.at>
-	<CANUX_P2b_ZYr4hHigA+tGa9uakcq3hQXnOiP5isQtfcYxCaxcw@mail.gmail.com>
-	<CAAJw_ZvyWoprc8yCwET_2O67gpnQy=5imAQG=PVWT8OhB_7rXA@mail.gmail.com>
-Date: Tue, 29 Nov 2011 09:50:29 +0200
-Message-ID: <CANUX_P23E33VsBSyFY46T13AW9HYEO_jJAwO85Es1voP3xA1FQ@mail.gmail.com> (sfid-20111129_085046_337578_6D5D59DD)
+	Sun, 27 Nov 2011 04:46:24 -0500
 Subject: Re: iwlagn is getting very shaky
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Jeff Chua <jeff.chua.linux@gmail.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
 Cc: Norbert Preining <preining@logic.at>,
 	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	David Rientjes <rientjes@google.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Dave Jones <davej@redhat.com>,
-	David Rientjes <rientjes@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	Dave Jones <davej@redhat.com>
+In-Reply-To: <CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com> (sfid-20111127_104334_556605_64D24A69)
+References: <20111122072730.GA32225@gamma.logic.tuwien.ac.at>
+	 <CANUX_P15En9bHVx4bhq6=XKPZnC2u+QyVJ+jnm4ns=39DrOBtg@mail.gmail.com>
+	 <2D0C7905-AEB2-4DE4-89B1-945D89F2B5D6@logic.at>
+	 <CANUX_P21PDdyo4u-x_1A0Lcqf-33yHgzUxddAoc3juGRNnrcDg@mail.gmail.com>
+	 <20111122124357.GA32440@gamma.logic.tuwien.ac.at>
+	 <CANUX_P0uyyuK4netV6srYCh9FsC4cpGzxobHE3T38n5RvvA0RQ@mail.gmail.com>
+	 <20111123015503.GC23203@gamma.logic.tuwien.ac.at>
+	 <CANUX_P1zDDzMy5yrFXSZAkMQ-87uu-fE1e-2sCEgHJi4dh5eiw@mail.gmail.com>
+	 <20111125122143.GA30404@gamma.logic.tuwien.ac.at>
+	 <CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com>
+	 <20111125123720.GA31564@gamma.logic.tuwien.ac.at>
+	 <CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com>
+	 <CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com>
+	 (sfid-20111127_104334_556605_64D24A69)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 27 Nov 2011 10:46:15 +0100
+Message-ID: <1322387175.4044.16.camel@jlt3.sipsolutions.net> (sfid-20111127_104640_947748_A035555C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>>
->>> Ok, here we go. First of all, it seems that the problem is solved
->>> inthe sense that the connection stays alive all the time and does not
->>> disappear. OTOH, I now get quite a lot of messages, that might point
->>> either to a broken AP here, or something else:
->>> =============================
->>> Anyway, the connection might stumble now and then a bit, but it does
->>> not break down, so I don't complain ;-)
->>>
->>> BIG THANKS to everyone!!!
->>>
->>
->> Thanks for you testing and patience.
->
-> Does this have anything to do with another subject "MAC is in deep
-> sleep!" ... Not trying to interrupt the discussion here, but my iwlagn
-> is unstable at 3.2.0-rc3. I'm seeing a lot of "MAC is in deep sleep!"
->
+On Sun, 2011-11-27 at 11:43 +0200, Emmanuel Grumbach wrote:
+> Hi again
+> 
+> Can you please try the attached patch ?
+> I would like to know if it helps.
 
-Probably not.
+As in the patch that Nikolay sent to the list earlier today, this should
+also check STOPPING since WANT_STOP may get cleared as soon as it is
+processed.
+
+johannes
+
