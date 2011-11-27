@@ -1,76 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48090 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755028Ab1KHL2k (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:55175 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751241Ab1K0KmS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 06:28:40 -0500
-Subject: [PATCH] mac80211: fix NULL dereference in radiotap code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Xiaokang Qin <xiaokang.qin@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Nov 2011 12:28:33 +0100
-Message-ID: <1320751713.4304.27.camel@jlt3.sipsolutions.net> (sfid-20111108_122843_934932_B023EB15)
-Mime-Version: 1.0
+	Sun, 27 Nov 2011 05:42:18 -0500
+Received: by wwo28 with SMTP id 28so5461805wwo.1
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2011 02:42:17 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1322386685.4044.8.camel@jlt3.sipsolutions.net>
+References: <1322378621-14647-1-git-send-email-mar.kolya@gmail.com>
+	<1322378621-14647-2-git-send-email-mar.kolya@gmail.com>
+	<1322386685.4044.8.camel@jlt3.sipsolutions.net>
+Date: Sun, 27 Nov 2011 12:42:17 +0200
+Message-ID: <CANUX_P0UEnZLiDfk-aSnd3e_=v_gsZYV9BCtgdcPODLTaYkV8w@mail.gmail.com> (sfid-20111127_114222_396323_FFD8C360)
+Subject: Re: [PATCH] mac80211: fix race condition caused by late addBA resp
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Nikolay Martynov <mar.kolya@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, Nov 27, 2011 at 11:38, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Sun, 2011-11-27 at 02:23 -0500, Nikolay Martynov wrote:
+>> Currently if addBA respones comes in just after addba_resp_timer has
+>> expired we still accept addBA response and (try to) open agg
+>> session. This patch fixes this race condition and makes sure that if
+>> addba_resp_timer has expired addBA response is not longer accepted and
+>> we do not try to open half-closed session.
+>
 
-When receiving failed PLCP frames is enabled, there
-won't be a rate pointer when we add the radiotap
-header and thus the kernel will crash. Fix this by
-not assuming the rate pointer is always valid. It's
-still always valid for frames that have good PLCP
-though, and that is checked & enforced.
-
-This was broken by my
-commit fc88518916793af8ad6a02e05ff254d95c36d875
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Fri Jul 30 13:23:12 2010 +0200
-
-    mac80211: don't check rates on PLCP error frames
-
-where I removed the check in this case but didn't
-take into account that the rate info would be used.
-
-Reported-by: Xiaokang Qin <xiaokang.qin@intel.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
---- a/net/mac80211/rx.c	2011-11-08 09:24:58.000000000 +0100
-+++ b/net/mac80211/rx.c	2011-11-08 12:19:55.000000000 +0100
-@@ -140,8 +140,9 @@ ieee80211_add_rx_radiotap_header(struct
- 	pos++;
- 
- 	/* IEEE80211_RADIOTAP_RATE */
--	if (status->flag & RX_FLAG_HT) {
-+	if (!rate || status->flag & RX_FLAG_HT) {
- 		/*
-+		 * Without rate information don't add it. If we have,
- 		 * MCS information is a separate field in radiotap,
- 		 * added below. The byte here is needed as padding
- 		 * for the channel though, so initialise it to 0.
-@@ -162,12 +163,14 @@ ieee80211_add_rx_radiotap_header(struct
- 	else if (status->flag & RX_FLAG_HT)
- 		put_unaligned_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ,
- 				   pos);
--	else if (rate->flags & IEEE80211_RATE_ERP_G)
-+	else if (rate && rate->flags & IEEE80211_RATE_ERP_G)
- 		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ,
- 				   pos);
--	else
-+	else if (rate)
- 		put_unaligned_le16(IEEE80211_CHAN_CCK | IEEE80211_CHAN_2GHZ,
- 				   pos);
-+	else
-+		put_unaligned_le16(IEEE80211_CHAN_2GHZ, pos);
- 	pos += 2;
- 
- 	/* IEEE80211_RADIOTAP_DBM_ANTSIGNAL */
-
-
+I just sent a patch to Norbert that looks a bit the same.
+I prefer yours though, as Johannes said in the other thread, it checks
+the stop condition better.
+I also saw a few other holes in the state machine. Basically we don't
+clear flags: i.e. I didn't see where we clear the driver ready flag.
+This is the kind of things that can lead to weird stuff.
