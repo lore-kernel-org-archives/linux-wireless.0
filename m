@@ -1,80 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59924 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932097Ab1KBRuE (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:51220 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755813Ab1K0Qtd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 13:50:04 -0400
-Subject: Re: [wireless-next PATCH 3/5] wifi: Allow overriding some HT
- information.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4EB176F9.7090304@candelatech.com>
-References: <1319778680-11405-1-git-send-email-greearb@candelatech.com>
-	 <1319778680-11405-3-git-send-email-greearb@candelatech.com>
-	 (sfid-20111028_071147_787476_DBCC8CCF) <1319789573.3914.15.camel@jlt3.sipsolutions.net>
-	 <4EAAD95E.1030001@candelatech.com>
-	 (sfid-20111028_183341_942256_664FE0B1) <1320221630.3950.22.camel@jlt3.sipsolutions.net>
-	 <4EB176F9.7090304@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 02 Nov 2011 18:49:58 +0100
-Message-ID: <1320256198.7846.2.camel@jlt3.sipsolutions.net> (sfid-20111102_185008_683088_929A95E1)
-Mime-Version: 1.0
+	Sun, 27 Nov 2011 11:49:33 -0500
+Received: by iage36 with SMTP id e36so7575126iag.19
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2011 08:49:33 -0800 (PST)
+Message-ID: <4ED26A18.7090906@lwfinger.net> (sfid-20111127_174936_785652_C8A9A48F)
+Date: Sun, 27 Nov 2011 10:49:28 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: Looking for BCM43228
+References: <CACna6rwU4RuYuiAFjXFDH-c+EFsKtKFmB1Sh8kXdb9EoUt4abg@mail.gmail.com> <CACna6rzkSgbf8sV2S1mg2OhxKstXeiqnmNmYFSMuAc563acBpg@mail.gmail.com> <CACna6ryTA+nbz9cJtFEWypb1atY2s+eKseANM-u=-EjW6FWE7Q@mail.gmail.com> <CACna6rzJzzhdBig48TGV=cfBYuvmjxowSw2Ai_GA-W0n_Y3Qkw@mail.gmail.com> <CACna6rzVQ6LZ7p9yLUxkN+_P7UE9TZoQ1Y-rRTNoT=yMF5G+5g@mail.gmail.com>
+In-Reply-To: <CACna6rzVQ6LZ7p9yLUxkN+_P7UE9TZoQ1Y-rRTNoT=yMF5G+5g@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-11-02 at 09:59 -0700, Ben Greear wrote:
+On 11/27/2011 09:57 AM, Rafał Miłecki wrote:
+> W dniu 29 sierpnia 2011 23:27 użytkownik Rafał Miłecki
+> <zajec5@gmail.com>  napisał:
+>> W dniu 29 sierpnia 2011 21:02 użytkownik Rafał Miłecki
+>> <zajec5@gmail.com>  napisał:
+>>> I'll mail Marc, Ubuntu's launchpad reported to ask if he still has
+>>> access to this notebook.
+>>
+>> I've just received photo of the card (inside notebook) from Marc. It's
+>> labeled as DW1530, bingo! :)
+>>
+>> I'll ask Dell about prices. Larry: I'm also waiting for you getting
+>> response, maybe your prices will be lower?
+>
+> You can buy one if you want :)
+> http://www.ebay.com/itm//180755618575
 
-> > No. Neither of these can ever be increased so it's not that simple. And
-> > making it smaller is always possible since it's just advertising.
-> > Presumably you do understand the reasons for this advertising/these
-> > restrictions?
-> 
-> It seems that a driver might default to a mid-range value for the MPDU values
-> because it is somehow 'better' for whatever reason, and yet it might still
-> support larger values if the user desires, perhaps because in specific
-> scenarios larger values are better.  Ath9k does set to the max value,
-> so if we do a per-driver capabilities flag as I did in v2 then we
-> are safe.
+Thanks for the link. I have one coming.
 
-Then the proper way to do that would be to not have a flag, but a max it
-can be set to. However, I see no reason it should default to a mid-range
-value?! iwlwifi for example needs to allocate enough space but ... I
-don't get it. What's wrong with simply not allowing to increase, only
-decrease?
-
-> >>          /* add attributes here, update the policy in nl80211.c */
-> 
-> I copied some of that code from nl80211_set_station, which appears to
-> also forget to check the length for the NL80211_ATTR_HT_CAPABILITY
-> object.  Is there some reason why it doesn't need to check, or does
-> that code need fixing as well?
-
-NL80211_ATTR_HT_CAPABILITY in particular *has* a policy entry.
-
-> Well, it's more obvious now.  Do you also need to check the length when
-> doing code like this code from nl80211_set_station:
-> 
-> 	if (info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL])
-> 		params.listen_interval =
-> 		    nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
-> 
-> In other words, is it safe to assume you have 16 bits, or could a broken
-> user-space pass in a single byte and screw this up?
-
-There's the policy that validates it.
-
-
->  From 20.1.1 of the 802.11n spec:
-> 
-> "An HT non-AP STA shall support all equal modulation (EQM) rates for one spatial stream (MCSs 0 through
-> 7) using 20 MHz channel width. An HT AP shall support all EQM rates for one and two spatial streams
-> (MCSs 0 through 15) using 20 MHz channel width."
-> 
-> That is why I wrote that code as I did, but perhaps I misunderstand that section of
-> the docs.
-
-No, that makes some sense, I wasn't aware of that restriction.
-
-johannes
+Larry
 
