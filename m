@@ -1,55 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:42716 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751885Ab1KSTKm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Nov 2011 14:10:42 -0500
-Received: by bke11 with SMTP id 11so4790759bke.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2011 11:10:40 -0800 (PST)
-Message-Id: <6fa261d3570aa403491add7399e1b8b8c4fac143.1321729714.git.chunkeey@googlemail.com> (sfid-20111119_201044_400626_8A346CCE)
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sat, 19 Nov 2011 19:25:02 +0100
-Subject: [PATCH 1/2] p54: use ieee80211_free_txskb
+Received: from mga14.intel.com ([143.182.124.37]:6095 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752536Ab1K0N3s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Nov 2011 08:29:48 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+Cc: stable@kernel.org, Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH v2] mac80211: fix race between the AGG SM and the Tx data path
+Date: Sun, 27 Nov 2011 15:29:44 +0200
+Message-Id: <1322400584-10964-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20111127_142959_845534_A4ABDBBA)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the past, it was fine to simply call
-dev_kfree_skb when it was impossible to
-transmit a skb. However, with the new
-tx status API:
-"mac80211: implement wifi TX status"
-Every loose skb needs to be handed back
-to mac80211.
+When a packet is supposed to sent be as an a-MPDU, mac80211 sets
+IEEE80211_TX_CTL_AMPDU to let the driver know. On the other
+hand, mac80211 configures the driver for aggregration with the
+ampdu_action callback.
+There is race between these two mechanisms since the following
+scenario can occur when the BA agreement is torn down:
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Tx softIRQ	 			drv configuration
+==========				=================
+
+check OPERATIONAL bit
+Set the TX_CTL_AMPDU bit in the packet
+
+					clear OPERATIONAL bit
+					stop Tx AGG
+Pass Tx packet to the driver.
+
+In that case the driver would get a packet with TX_CTL_AMPDU set
+although it has already been notified that the BA session has been
+torn down.
+
+To fix this, we need to synchronize all the Qdisc activity after we
+cleared the OPERATIONAL bit. After that step, all the following
+packets will be buffered until the driver reports it is ready to get
+new packets for this RA / TID. This buffering allows not to run into
+another race that would send packets with TX_CTL_AMPDU unset while
+the driver hasn't been requested to tear down the BA session yet.
+
+This race occurs in practice and iwlwifi complains with a WARN_ON
+when it happens.
+
+Cc: stable@kernel.org
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/p54/txrx.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+v2: Update the comment in the code - Thanks Johannes
+---
+ net/mac80211/agg-tx.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
-index 6ed9c32..42b97bc 100644
---- a/drivers/net/wireless/p54/txrx.c
-+++ b/drivers/net/wireless/p54/txrx.c
-@@ -242,7 +242,7 @@ void p54_free_skb(struct ieee80211_hw *dev, struct sk_buff *skb)
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 39d72cc..e8813bd 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -188,6 +188,20 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 	 */
+ 	clear_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state);
  
- 	skb_unlink(skb, &priv->tx_queue);
- 	p54_tx_qos_accounting_free(priv, skb);
--	dev_kfree_skb_any(skb);
-+	ieee80211_free_txskb(dev, skb);
- }
- EXPORT_SYMBOL_GPL(p54_free_skb);
- 
-@@ -788,7 +788,7 @@ void p54_tx_80211(struct ieee80211_hw *dev, struct sk_buff *skb)
- 			    &hdr_flags, &aid, &burst_allowed);
- 
- 	if (p54_tx_qos_accounting_alloc(priv, skb, queue)) {
--		dev_kfree_skb_any(skb);
-+		ieee80211_free_txskb(dev, skb);
- 		return;
- 	}
++	/*
++	 * There might be a few packets being processed right now (on
++	 * another CPU) that have already gotten past the aggregation
++	 * check when it was still OPERATIONAL and consequently have
++	 * IEEE80211_TX_CTL_AMPDU set. In that case, this code might
++	 * call into the driver at the same time or even before the
++	 * TX paths calls into it, which could confuse the driver.
++	 *
++	 * Wait for all currently running TX paths to finish before
++	 * telling the driver. New packets will not go through since
++	 * the aggregation session is no longer OPERATIONAL.
++	 */
++	synchronize_net();
++
+ 	tid_tx->stop_initiator = initiator;
+ 	tid_tx->tx_stop = tx;
  
 -- 
-1.7.7.3
+1.7.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
