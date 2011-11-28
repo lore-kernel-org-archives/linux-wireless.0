@@ -1,46 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37092 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753151Ab1KCJlM (ORCPT
+Received: from hqemgate03.nvidia.com ([216.228.121.140]:15625 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752056Ab1K1TKT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 05:41:12 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH 0/3] ath6kl: Add support for WAPI configuration
-Date: Thu, 3 Nov 2011 11:39:36 +0200
-Message-ID: <1320313179-9259-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20111103_104115_233942_E6519601)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 28 Nov 2011 14:10:19 -0500
+Subject: Re: [PATCH] net: rfkill: convert net/rfkill/* to use
+ module_platform_driver()
+From: Rhyland Klein <rklein@nvidia.com>
+To: Axel Lin <axel.lin@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Antonio Ospite <ospite@studenti.unina.it>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+In-Reply-To: <1322471704.2730.1.camel@phoenix>
+References: <1322471704.2730.1.camel@phoenix>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 28 Nov 2011 11:09:47 -0800
+Message-ID: <1322507387.3888.1.camel@rklein-linux2> (sfid-20111128_201035_747945_55711858)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of patches extends ath6kl to allow station and AP mode WAPI
-support to be enabled. Please note that these depend on earlier patches
-that are not yet in wireless-testing.git:
+On Mon, 2011-11-28 at 01:15 -0800, Axel Lin wrote:
+> This patch converts the drivers in net/rfkill/* to use the
+> module_platform_driver() macro which makes the code smaller and a bit
+> simpler.
+> 
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: "John W. Linville" <linville@tuxdriver.com>
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> Cc: Antonio Ospite <ospite@studenti.unina.it>
+> Cc: Rhyland Klein <rklein@nvidia.com>
+> Signed-off-by: Axel Lin <axel.lin@gmail.com>
+> ---
+>  net/rfkill/rfkill-gpio.c      |   13 +------------
+>  net/rfkill/rfkill-regulator.c |   12 +-----------
+>  2 files changed, 2 insertions(+), 23 deletions(-)
+> 
+> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+> index 128677d..ca355e7 100644
+> --- a/net/rfkill/rfkill-gpio.c
+> +++ b/net/rfkill/rfkill-gpio.c
+> @@ -220,18 +220,7 @@ static struct platform_driver rfkill_gpio_driver = {
+>  	},
+>  };
+>  
+> -static int __init rfkill_gpio_init(void)
+> -{
+> -	return platform_driver_register(&rfkill_gpio_driver);
+> -}
+> -
+> -static void __exit rfkill_gpio_exit(void)
+> -{
+> -	platform_driver_unregister(&rfkill_gpio_driver);
+> -}
+> -
+> -module_init(rfkill_gpio_init);
+> -module_exit(rfkill_gpio_exit);
+> +module_platform_driver(rfkill_gpio_driver);
+>  
+>  MODULE_DESCRIPTION("gpio rfkill");
+>  MODULE_AUTHOR("NVIDIA");
 
-ieee80211: Define cipher suite selector for WPI-SMS4
-nl80211: Increase maximum NL80211_ATTR_KEY_SEQ length to 16
+Gpio part looks good to me.
 
-In addition, the three patches I sent yesterday for ath6kl should be
-applied first:
-
-ath6kl: Remove unused WMI crypto defines
-ath6kl: Fix key configuration to copy at most seq_len from seq
-ath6kl: Do not hide ath6kl_wmi_addkey_cmd() error values
-
-
-Dai Shuibing (3):
-  ath6kl: Add support for configuring SMS4 keys
-  ath6kl: Allow SMS4 to be configured in AP mode
-  ath6kl: Indicate WAPI IE from (Re)Association Request frame
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   24 ++++++++++++++++++++++--
- drivers/net/wireless/ath/ath6kl/common.h   |    1 +
- drivers/net/wireless/ath/ath6kl/main.c     |   12 ++++++++++++
- 3 files changed, 35 insertions(+), 2 deletions(-)
-
--- 
-1.7.4.1
+Acked-by: Rhyland Klein <rklein@nvidia.com>
 
