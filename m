@@ -1,97 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:64590 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750810Ab1KWIus convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:38429 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753211Ab1K1TO5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 03:50:48 -0500
-Received: by vcbfk14 with SMTP id fk14so38719vcb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 00:50:47 -0800 (PST)
+	Mon, 28 Nov 2011 14:14:57 -0500
+Received: by qadc14 with SMTP id c14so1505517qad.19
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 11:14:56 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20111123080506.GB9833@redhat.com>
-References: <20111116100915.GA2191@redhat.com>
-	<20111122214940.GH8452@tuxdriver.com>
-	<20111123080506.GB9833@redhat.com>
-Date: Wed, 23 Nov 2011 09:50:47 +0100
-Message-ID: <CAOZOX0VMHfkWWxHEez4zRyLX9-JaJ=Fuf-ftNOPoug61RisgwQ@mail.gmail.com> (sfid-20111123_095051_917251_377FE581)
-Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	RA-Eddy Tsai <Eddy_Tsai@ralinktech.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Amir Hedayaty <hedayaty@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20111128184506.GC2681@tuxdriver.com>
+References: <201111230330.11103.tlnd@online.de> <CAB=NE6U6ru-xns8M+YUccqxw0FwE-sWtZnFkPUud3jHdAcDxsw@mail.gmail.com>
+ <20111123143456.GB2502@tuxdriver.com> <20111123144258.GC2502@tuxdriver.com>
+ <CAB=NE6WtBH+jpi3AVAdn2ZTZFPYMx6y73bneTEquZaGbuUJizQ@mail.gmail.com> <20111128184506.GC2681@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Mon, 28 Nov 2011 14:14:35 -0500
+Message-ID: <CAB=NE6Xrm3dGTLLrpeKdODKJN3X-fiss6BEeyYAyn2E5TQuJ6g@mail.gmail.com> (sfid-20111128_201500_595293_EAA27F85)
+Subject: Re: [PATCH] cfg80211: Fix changing regulatory from userspace
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Timo Lindhorst <tlnd@online.de>, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Wed, Nov 23, 2011 at 9:05 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Tue, Nov 22, 2011 at 04:49:40PM -0500, John W. Linville wrote:
->> On Wed, Nov 16, 2011 at 11:09:17AM +0100, Stanislaw Gruszka wrote:
->> > Some devices may generate spurious interrupts, we have to handle them
->> > otherwise interrupt line will be disabled with below message and driver
->> > will not work:
+On Mon, Nov 28, 2011 at 1:45 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Wed, Nov 23, 2011 at 06:58:00AM -0800, Luis R. Rodriguez wrote:
+>> On Wed, Nov 23, 2011 at 6:42 AM, John W. Linville
+>> <linville@tuxdriver.com> wrote:
+>> > On Wed, Nov 23, 2011 at 09:34:56AM -0500, John W. Linville wrote:
+>> >> On Wed, Nov 23, 2011 at 06:28:57AM -0800, Luis R. Rodriguez wrote:
+>> >> > On Tue, Nov 22, 2011 at 6:30 PM, Timo Lindhorst <tlnd@online.de> wrote:
+>> >> > > The commit de3584bd62d87b4c250129fbc46ca52c80330add -
+>> >> > > "cfg80211: fix regulatory NULL dereference" prevents the regulatory
+>> >> > > domain from being changed by user space. A wiphy is only present
+>> >> > > if the request comes from driver or is set by country IE, thus
+>> >> > > check only those cases.
+>> >> > >
+>> >> > > Signed-off-by: Timo Lindhorst <tlnd@online.de>
+>> >> >
+>> >> > Yup but at this point I'd prefer we revert the original patch instead
+>> >> > given that the patch also had some other short comings. John is it too
+>> >> > late?
+>> >>
+>> >> No, it isn't too late to revert it. Â But can we have a new fix soon?
 >> >
->> > [ 2052.114334] irq 17: nobody cared (try booting with the "irqpoll" option)
->> > [ 2052.114339] Pid: 0, comm: swapper Tainted: P           2.6.35.6-48.fc14.x86_64 #1
->> > [ 2052.114341] Call Trace:
->> > [ 2052.114342]  <IRQ>  [<ffffffff810a6e2b>] __report_bad_irq.clone.1+0x3d/0x8b
->> > [ 2052.114349]  [<ffffffff810a6f93>] note_interrupt+0x11a/0x17f
->> > [ 2052.114352]  [<ffffffff810a7a73>] handle_fasteoi_irq+0xa8/0xce
->> > [ 2052.114355]  [<ffffffff8100c2ea>] handle_irq+0x88/0x90
->> > [ 2052.114357]  [<ffffffff8146f034>] do_IRQ+0x5c/0xb4
->> > [ 2052.114360]  [<ffffffff81469593>] ret_from_intr+0x0/0x11
->> > [ 2052.114361]  <EOI>  [<ffffffff8102b7f9>] ? native_safe_halt+0xb/0xd
->> > [ 2052.114366]  [<ffffffff81010f03>] ? need_resched+0x23/0x2d
->> > [ 2052.114367]  [<ffffffff8101102a>] default_idle+0x34/0x4f
->> > [ 2052.114370]  [<ffffffff81008325>] cpu_idle+0xaa/0xcc
->> > [ 2052.114373]  [<ffffffff81461f2a>] start_secondary+0x24d/0x28e
->> > [ 2052.114374] handlers:
->> > [ 2052.114375] [<ffffffff81332944>] (usb_hcd_irq+0x0/0x7c)
->> > [ 2052.114378] [<ffffffffa00697da>] (rt2800pci_interrupt+0x0/0x18d [rt2800pci])
->> > [ 2052.114384] Disabling IRQ #17
->> >
->> > Resolve:
->> > https://bugzilla.redhat.com/show_bug.cgi?id=658451
->> >
->> > Reported-and-tested-by: Amir Hedayaty <hedayaty@gmail.com>
->> > Cc: stable@vger.kernel.org
->> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+>> > Hmmm...actually, the original patch was sent in the batch yesterday.
+>> > And it was Cc: stable. Â It would be a lot less confusing to merge a
+>> > correct fix on top (and Cc: stable on that too). Â What is wrong with
+>> > this one?
 >>
->> I trust that you saw the comments in the other thread.  I have reverted
->> this patch and the related rt2x00 one.
-> I responded there.
+>> This one is a correct fix to one of the issues present in the original
+>> patch, the other issue is the original patch overlooks the fact that
+>> last_request would be left with stale data. Let me post my fixes as
+>> RFCs on top of Johannes's original patch to clarify. Unfortunately
+>> this doesn't have much testing but I'll post for review at least.
 >
->> Perhaps there is some way to convince the hardware not to generate
->> spurious interrupts?
->
-> Ivo, Gertjan, Helmut, is there a possibility that I can get hardware
-> documentation or any other support from Ralink, that could help to
-> solve this (and possible other issues)?
+> Looks like the RFCs got some comments. Â Will there be a respin
+> of those? Â Or should I just apply this one for now?
 
-In the rt2x00 project we do have the early draft of the Specsheet for
-the first 2800pci devices. However this falls in the category of specsheets
-which is not yet publically published by Ralink, and hence we can't
-distribute it further.
+John, I'll will send a respin after I dissect what Tomas mentioned. I
+have one other patch added to my series also that Rajkumar Manoharan
+<rmanohar@qca.qualcomm.com> sent to me that I will be rolling into my
+series. If we are pressed my recommendation is to revert Johannes'
+patch for now, but if you do, please let me know so I can amend my
+patches to address that bit.
 
-I've added Eddy Tsai to the recipientlist for this mail, he is the Ralink
-developer, and he might have a better idea on this issue.
+I'm working on this right now.
 
-Eddy, we have an issue with rt2860 devices which are generating
-spurious interrupts,
-however how can we determine in our IRQ handler if the rt2860 generated the
-interrupt and not another device on the same IRQ line?
-In the driver released by Ralink the CSR is checked to see if any interrupt bit
-is set, and if nothing is set IRQ_HANDLED is returned. However this means
-we can return IRQ_HANDLED when the interrupt was triggered by another device
-as well.
-Is there a way to prevent rt2860 from firing spurious interrupts, or
-is there a better
-way to detect if rt2860 fired the interrupt?
-
-Thanks,
-
-Ivo
+  Luis
