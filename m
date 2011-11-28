@@ -1,98 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li235-22.members.linode.com ([173.255.225.22]:49191 "EHLO
-	erley.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752009Ab1KSD21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 22:28:27 -0500
-Message-ID: <4EC72081.5020605@erley.org> (sfid-20111119_042830_531229_550C61BE)
-Date: Fri, 18 Nov 2011 22:20:33 -0500
-From: Pat Erley <pat-lkml@erley.org>
-MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: Jan de Jongh <jfcmdejongh@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: 802.11p implementation...
-References: <CAFtRNNwXdeBfa-mFNyAVALgTxM-wrUthgMLS18VokqOSSiWPqg@mail.gmail.com> <1320585006.11133.2.camel@jlt3.sipsolutions.net> <CAFtRNNxGd7NSmjNhZboW5VOZ++j=D1E_G6E6RqXLA3Ssuu4XfQ@mail.gmail.com> <loom.20111112T202645-807@post.gmane.org> <CAFtRNNxJjiCtPAyM=KwD+rpXkZXCUgpuSw2BHpaxb6frxBWumA@mail.gmail.com>
-In-Reply-To: <CAFtRNNxJjiCtPAyM=KwD+rpXkZXCUgpuSw2BHpaxb6frxBWumA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:38986 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752598Ab1K1VrX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Nov 2011 16:47:23 -0500
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	stable@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v3 1/2] cfg80211: fix race on init and driver registration
+Date: Mon, 28 Nov 2011 16:47:15 -0500
+Message-Id: <1322516836-5474-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111128_224726_522632_B6FCF8A7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/17/2011 03:59 PM, Nick Kossifidis wrote:
-> 2011/11/12 Jan de Jongh<jfcmdejongh@gmail.com>:
->> Nick Kossifidis<mickflemm@...>  writes:
->>
->>>
->>> 2011/11/6 Johannes Berg<johannes@...>:
->>>> On Sun, 2011-11-06 at 02:53 +0200, Nick Kossifidis wrote:
->>>>> It seems a group of people have released an 802.11p implementation on
->>>>> top of 2.6.31.
->>>>>
->>>>> http://www.gcdc.net/mainmenu/Home/downloads/Technology
->> ...
->>>> johannes
->>>>
->>>
->> ...
->>
->> Hi Nick, Johannes,
->>
->> First, please note that I haven't checked on recent ath5k support for 802.11p.
->> If such support it already present, this mail is quite obsolete :-)...
->>
->> The Grand Cooperative Driving Challenge succesfully used 802.11p in
->> vehicle-to-vehicle communications and vehicle-to-infrastructure communications,
->> using a modified ath5k driver (which you found on the gcdc.net site).
->> Apart from GCDC, there are many research and commercial projects/products
->> (SPITS/FREILOT/...) using patched ath5k drivers for half-clock-rate operation,
->> ocb, and access to the 5.9-6.0 GHz frequencies.
->> And there are many more to come,.
->> Simply because Atheros-based cards are among the few
->> (if not the only ones)
->> that support 802.11p/5.9GHz operation.
->> For GCDC, the patches had their origins in the CVIS project,
->> and in work by Eric Koenders of Peek Traffic.
->>
->> However, the current situation is far from ideal...
->> By now, the 11p amendment has been ratified,
->> but maintaining 802.11p support for contemparory kernel/compat-wireless combos
->> is near to impossible without structural support from ath/ath5k developers.
->> The result of this effort, in short, would mean 802.11p operation
->> through module parameter and crda/regdb settings only,
->> and without the need to (re)compile kernels and/or kernel modules.
->> 11p Operation would simply imply some configuration efforts
->> on well-known distributions (modules,conf, regdb/crda, iw, and stuff like that)
->> out-of-the-box...
->> I understand that there are regulatory issues
->> (crda, do we want anyone to operate on the ITS frequencies???) involved,
->> but we would be very interested in
->> structural 11p support in the ath5k driver (and, perhaps ath9k).
->> "We" referring to a substantial part of the ITS community.
->> If you can arrange substantial commitment to 11p support in ath5k,
->> I can mobilize people and funding for
->> development/testing/deployment/discussion/feedback.
->>
->> Let me know what you think of this, best wishes,
->>
->> Jan de Jongh
->> GCDC - Technology Leader
->>
->
-> ath5k already has half/quarter width channel support, we just don't
-> have an interface for it yet (we 'll add one through debugfs soon).
-> What else do you need from the driver and the protocol stack ? From a
-> quick look at the patches you use, you only want half width channel
-> support and to disable beacons by setting beacon interval to 0. Is
-> that all ?
->
-> Also your patches on ath5k are missing some parts, I suggest you
-> update your code or re-base your changes on top of a newer kernel
-> version to get proper half width support for more cards and more.
->
-> Finally if you want to work with upstream developers I suggest you
-> send your code and comments to linux-wireless instead.
->
->
-I have a working patch I'm using (and an openwrt implementation patch).  I'll
-resubmit them to the ath5k-devel ML monday.  It works quite well.
+There is a theoretical race that if hit will trigger
+a crash. The race is between when we issue the first
+regulatory hint, regulatory_hint_core(), gets processed
+by the workqueue and between when the first device
+gets registered to the wireless core. This is not easy
+to reproduce but it was easy to do so through the
+regulatory simulator I have been working on. This
+is a port of the fix I implemented there [1].
 
-Pat Erley
+[1] https://github.com/mcgrof/regsim/commit/a246ccf81f059cb662eee288aa13100f631e4cc8
+
+Cc: stable@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ net/wireless/reg.c |   43 +++++++++++++++++++++++++++----------------
+ 1 files changed, 27 insertions(+), 16 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 76b35df..a5f0ac7 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -57,8 +57,17 @@
+ #define REG_DBG_PRINT(args...)
+ #endif
+ 
++static struct regulatory_request core_request_world = {
++	.initiator = NL80211_REGDOM_SET_BY_CORE,
++	.alpha2[0] = '0',
++	.alpha2[1] = '0',
++	.intersect = false,
++	.processed = true,
++	.country_ie_env = ENVIRON_ANY,
++};
++
+ /* Receipt of information from last regulatory request */
+-static struct regulatory_request *last_request;
++static struct regulatory_request *last_request = &core_request_world;
+ 
+ /* To trigger userspace events */
+ static struct platform_device *reg_pdev;
+@@ -150,7 +159,7 @@ static char user_alpha2[2];
+ module_param(ieee80211_regdom, charp, 0444);
+ MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
+ 
+-static void reset_regdomains(void)
++static void reset_regdomains(bool full_reset)
+ {
+ 	/* avoid freeing static information or freeing something twice */
+ 	if (cfg80211_regdomain == cfg80211_world_regdom)
+@@ -165,6 +174,13 @@ static void reset_regdomains(void)
+ 
+ 	cfg80211_world_regdom = &world_regdom;
+ 	cfg80211_regdomain = NULL;
++
++	if (!full_reset)
++		return;
++
++	if (last_request != &core_request_world)
++		kfree(last_request);
++	last_request = &core_request_world;
+ }
+ 
+ /*
+@@ -175,7 +191,7 @@ static void update_world_regdomain(const struct ieee80211_regdomain *rd)
+ {
+ 	BUG_ON(!last_request);
+ 
+-	reset_regdomains();
++	reset_regdomains(false);
+ 
+ 	cfg80211_world_regdom = rd;
+ 	cfg80211_regdomain = rd;
+@@ -1409,7 +1425,8 @@ static int __regulatory_hint(struct wiphy *wiphy,
+ 	}
+ 
+ new_request:
+-	kfree(last_request);
++	if (last_request != &core_request_world)
++		kfree(last_request);
+ 
+ 	last_request = pending_request;
+ 	last_request->intersect = intersect;
+@@ -1579,9 +1596,6 @@ static int regulatory_hint_core(const char *alpha2)
+ {
+ 	struct regulatory_request *request;
+ 
+-	kfree(last_request);
+-	last_request = NULL;
+-
+ 	request = kzalloc(sizeof(struct regulatory_request),
+ 			  GFP_KERNEL);
+ 	if (!request)
+@@ -1779,7 +1793,7 @@ static void restore_regulatory_settings(bool reset_user)
+ 	mutex_lock(&cfg80211_mutex);
+ 	mutex_lock(&reg_mutex);
+ 
+-	reset_regdomains();
++	reset_regdomains(true);
+ 	restore_alpha2(alpha2, reset_user);
+ 
+ 	/*
+@@ -2085,7 +2099,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 		int r;
+ 
+ 		if (last_request->initiator != NL80211_REGDOM_SET_BY_DRIVER) {
+-			reset_regdomains();
++			reset_regdomains(false);
+ 			cfg80211_regdomain = rd;
+ 			return 0;
+ 		}
+@@ -2106,7 +2120,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 		if (r)
+ 			return r;
+ 
+-		reset_regdomains();
++		reset_regdomains(false);
+ 		cfg80211_regdomain = rd;
+ 		return 0;
+ 	}
+@@ -2131,7 +2145,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 
+ 		rd = NULL;
+ 
+-		reset_regdomains();
++		reset_regdomains(false);
+ 		cfg80211_regdomain = intersected_rd;
+ 
+ 		return 0;
+@@ -2151,7 +2165,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 	kfree(rd);
+ 	rd = NULL;
+ 
+-	reset_regdomains();
++	reset_regdomains(false);
+ 	cfg80211_regdomain = intersected_rd;
+ 
+ 	return 0;
+@@ -2304,11 +2318,8 @@ void /* __init_or_exit */ regulatory_exit(void)
+ 	mutex_lock(&cfg80211_mutex);
+ 	mutex_lock(&reg_mutex);
+ 
+-	reset_regdomains();
+-
+-	kfree(last_request);
++	reset_regdomains(true);
+ 
+-	last_request = NULL;
+ 	dev_set_uevent_suppress(&reg_pdev->dev, true);
+ 
+ 	platform_device_unregister(reg_pdev);
+-- 
+1.7.4.15.g7811d
+
