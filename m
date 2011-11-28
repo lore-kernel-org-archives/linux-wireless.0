@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:34471 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753568Ab1K1Pok (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:51117 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751495Ab1K1AW2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 10:44:40 -0500
-Received: by eaak14 with SMTP id k14so1920856eaa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 07:44:39 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1322469030.4060.4.camel@jlt3.sipsolutions.net>
-References: <1322432153-17425-1-git-send-email-mar.kolya@gmail.com>
-	<1322469030.4060.4.camel@jlt3.sipsolutions.net>
-Date: Mon, 28 Nov 2011 10:44:38 -0500
-Message-ID: <CALGY4ftDBArahTTQAoy07Q+qjR2UtXJ7KETPk-rR33u+f0Radw@mail.gmail.com> (sfid-20111128_164854_725341_05337D82)
-Subject: Re: [PATCH 0/2] mac80211: use timeout from addba resp
+	Sun, 27 Nov 2011 19:22:28 -0500
+Received: by vbbfc26 with SMTP id fc26so3356107vbb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2011 16:22:28 -0800 (PST)
 From: Nikolay Martynov <mar.kolya@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, Nikolay Martynov <mar.kolya@gmail.com>
+Subject: [PATCH v2 0/4] Fix the way ANI is being handled for ar9100 and ar9340
+Date: Sun, 27 Nov 2011 19:22:10 -0500
+Message-Id: <1322439734-14520-1-git-send-email-mar.kolya@gmail.com> (sfid-20111128_012232_213059_56DA7509)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+  Currently in ath9k code there is an attempt which is meant to
+disable ANI for ar9100 and ar9340. But it doesn't really achieve
+this. All it does is disable ANI init and setup (i.e. calls to
+ath9k_hw_ani_setup and ath9k_hw_ani_init). Since ath9k_hw_ani_setup is
+not called ah->config.ani_poll_interval is never initialized (i.e. it
+is always zero) and ath_ani_calibrate always executes ANI procedures
+(over uninitialized ANI parameters).
+  Moreover, ath_ani_calibrate is being called each 1ms because
+common->ani.timer is set to zero interval because
+ah->config.ani_poll_interval==0 (and thus smallest value of all
+intervals). Normally it should not be called this often.
+  This patch changes the code so config.enable_ani is used to check if
+ANI should be performed.
+  Also, this pacthset enables ANI for ar9100 - ANI was always performed
+for this chip, but this patch fixes the fact that it was performed
+over uninitialized data.
 
-2011/11/28 Johannes Berg <johannes@sipsolutions.net>:
-> On Sun, 2011-11-27 at 17:15 -0500, Nikolay Martynov wrote:
->> If other side sent us non zero timeout in addba response use it as a
->> timeout for TX session. Before this patch initiator and recipient
->> could have different timeouts if recipient decides to change timeout
->> offered by initiator.
->
-> I'm not convinced this is correct, can you say where the standard says
-> that we should take the recipient's timeout? The way I read it, the
-> originator informs the recipient of its timeout, not the other way
-> around, and we implement that in agg-rx.
+  All comments and suggestions are appreciated.
+  Thanks.
 
- Sorry, about this. I just though that if addba resp contains timeout
-then there should be some use of it. If this goes against standard
-just disregard this patch.
- BTW, is it possible to download a copy of the standard or is it
-something I need to pay for/subscribe to?
- Thanks!
+Nikolay Martynov (4):
+  ath9k: trivial: cosmetic fix in calibration debug log
+  ath9k: change calibration debug log to output all calibration types
+  ath9k: use config.enable_ani to check if ani should be performed
+  ath9k: enable ANI for ar9100 chips
 
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |    2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 ++-
+ drivers/net/wireless/ath/ath9k/hw.c           |   12 ++++++++----
+ drivers/net/wireless/ath/ath9k/main.c         |   12 +++++++-----
+ 5 files changed, 19 insertions(+), 12 deletions(-)
 
 -- 
-Truthfully yours,
-Martynov Nikolay.
-Email: mar.kolya@gmail.com
+1.7.4.1
+
