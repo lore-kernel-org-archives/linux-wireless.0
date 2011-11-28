@@ -1,53 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:48499 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751105Ab1KHPNk convert rfc822-to-8bit (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:53694 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750936Ab1K1VML (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 10:13:40 -0500
-Received: by iage36 with SMTP id e36so621573iag.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 07:13:39 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1320762970-6860-1-git-send-email-arik@wizery.com>
-References: <1320762970-6860-1-git-send-email-arik@wizery.com>
-Date: Tue, 8 Nov 2011 17:13:39 +0200
-Message-ID: <CAB3XZEcm_4kppAkQbp+HrBAgPSY5W1jiJ5qst2V5E+4x5TMHoA@mail.gmail.com> (sfid-20111108_161343_243531_8926765C)
-Subject: Re: [PATCH v3 1/2] wl12xx: configure probe-resp template according to notification
-From: Eliad Peller <eliad@wizery.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 28 Nov 2011 16:12:11 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 67EBD5402F4
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 16:12:10 -0500 (EST)
+Subject: Compat-wireless release for 2011-11-28 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111128211210.44E9E40636@repository3.orbit-lab.org> (sfid-20111128_221215_662919_FB33050F)
+Date: Mon, 28 Nov 2011 16:12:10 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 8, 2011 at 4:36 PM, Arik Nemtsov <arik@wizery.com> wrote:
-> When operating in AP-mode, replace our probe-response template when a
-> notification is recieved from mac80211. We preserve the "legacy" way of
-> configuring a probe-response according to beacon for IBSS mode and for
-> versions of hostapd that do not support this feature.
->
-> Signed-off-by: Guy Eilam <guy@wizery.com>
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
-[...]
-> +static int wl1271_ap_set_probe_resp_tmpl(struct wl1271 *wl, u32 rates)
-> +{
-> +       struct sk_buff *skb;
-> +       int ret;
-> +
-> +       skb = ieee80211_proberesp_get(wl->hw, wl->vif);
-> +       if (!skb)
-> +               return -EINVAL;
-> +
-> +       ret = wl1271_cmd_template_set(wl,
-> +                                     CMD_TEMPL_AP_PROBE_RESPONSE,
-> +                                     skb->data,
-> +                                     skb->len, 0,
-> +                                     rates);
-> +
-> +       dev_kfree_skb(skb);
-> +       return ret;
-> +}
+>From git://github.com/mcgrof/compat
+   38eb59d..83f194e  linux-3.2.y -> origin/linux-3.2.y
+   47605df..545ece9  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + b35a5f0...b2798e2 akpm-end   -> origin/akpm-end  (forced update)
+   caca6a0..401d006  akpm-start -> origin/akpm-start
+ + e7980f7...1d406ff master     -> origin/master  (forced update)
+   caca6a0..401d006  stable     -> origin/stable
+ * [new tag]         next-20111128 -> next-20111128
 
-add a check for max template size?
+compat-wireless code metrics
 
-Eliad.
+    818064 - Total upstream lines of code being pulled
