@@ -1,77 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:35635 "EHLO
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:56052 "EHLO
 	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932097Ab1KBRyy convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1754222Ab1K1Dtj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 13:54:54 -0400
-Received: by wwi36 with SMTP id 36so606125wwi.1
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2011 10:54:53 -0700 (PDT)
+	Sun, 27 Nov 2011 22:49:39 -0500
+Received: by wwp14 with SMTP id 14so8154156wwp.1
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2011 19:49:37 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAG6hwVOqyb6Oi63vjD0j6KLAc70cpiWsb9MOR2mZjqPqnVNAcQ@mail.gmail.com>
-References: <1319864732-11286-1-git-send-email-thomas@cozybit.com>
-	<1319864732-11286-2-git-send-email-thomas@cozybit.com>
-	<1320229077.3950.40.camel@jlt3.sipsolutions.net>
-	<CAG6hwVOqyb6Oi63vjD0j6KLAc70cpiWsb9MOR2mZjqPqnVNAcQ@mail.gmail.com>
-Date: Wed, 2 Nov 2011 10:54:53 -0700
-Message-ID: <CAG6hwVNsjnk2r6d2bW1WHzT3CJhkscGvCX5b3XBHn3EMEO-D5Q@mail.gmail.com> (sfid-20111102_185459_070065_C388403A)
-Subject: Re: [PATCH 2/4] mac80211: QoS multicast frames have No Ack policy
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	linville@tuxdriver.com
+In-Reply-To: <CAGRGNgVouJ_XneiR0nXe04Tc6bxPpgvT7sdCXaxg1eUhX5y+tg@mail.gmail.com>
+References: <1322439734-14520-1-git-send-email-mar.kolya@gmail.com>
+	<1322439734-14520-2-git-send-email-mar.kolya@gmail.com>
+	<CAGRGNgVouJ_XneiR0nXe04Tc6bxPpgvT7sdCXaxg1eUhX5y+tg@mail.gmail.com>
+Date: Sun, 27 Nov 2011 22:49:37 -0500
+Message-ID: <CALGY4fsyJeia_LWYFV7wtW98nj0_BArVLwDddQHD+JZu=WwbJA@mail.gmail.com> (sfid-20111128_044942_866246_BF082C88)
+Subject: Re: [PATCH v2 1/4] ath9k: trivial: cosmetic fix in calibration debug log
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 2, 2011 at 10:35 AM, Thomas Pedersen <thomas@cozybit.com> wrote:
-> On Wed, Nov 2, 2011 at 3:17 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> On Fri, 2011-10-28 at 22:05 -0700, Thomas Pedersen wrote:
->>> Previously QoS multicast frames had the Normal Acknowledgment QoS
->>> control bits set. This would cause broadcast frames to be discarded by
->>> peers with which we have a BA session, since their sequence number would
->>> fall outside the allowed range. Set No Ack QoS control bits on multicast
->>> QoS frames and filter these in de-aggregation code.
->>
->> I'm not sure why you would attempt to deaggregate broadcast frames but I
->> guess mesh is a bit special.
->>
+Oh, sorry, shame on me... I'll resend this one. Other patches in this
+set should not depend on this.
 
-I don't think it's a mesh specific thing, broadcast frames are just
-not being sent out as QoS data in the infrastructure case and
-therefore not caught by the de-aggregation code. According to 7.2.2,
-broadcast and multicast data frames should go out as QoS if all STAs
-in the BSS are QoS STAs. I don't know if this really matters in
-practice though.
+2011/11/27 Julian Calaby <julian.calaby@gmail.com>:
+> Nikolay,
+>
+> Minor nit:
+>
+> On Mon, Nov 28, 2011 at 11:22, Nikolay Martynov <mar.kolya@gmail.com> wrote:
+>>  Add missed space and change typo in calibration debugging log.
+>>
+>> Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/ar9002_calib.c |    2 +-
+>>  drivers/net/wireless/ath/ath9k/ar9003_calib.c |    2 +-
+>>  2 files changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+>> index 12a730d..4b3c70a 100644
+>> --- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+>> +++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+>> @@ -225,7 +225,7 @@ static void ar9003_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
+>>                        i);
+>>
+>>                ath_dbg(common, ATH_DBG_CALIBRATE,
+>> -                       "Orignal: Chn %diq_corr_meas = 0x%08x\n",
+>> +                       "Original: Chn %diq_corr_meas = 0x%08x\n",
+>
+> You haven't put a space after the %d like you did in the other file.
+>
+> Thanks,
+>
+> --
+> Julian Calaby
+>
+> Email: julian.calaby@gmail.com
+> Profile: http://www.google.com/profiles/julian.calaby/
+> .Plan: http://sites.google.com/site/juliancalaby/
+>
 
->>> @@ -770,6 +771,11 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
->>>       if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
->>>               goto dont_reorder;
->>>
->>> +     /* not part of a BA session */
->>> +     if (!((ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK) ||
->>> +           (ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_NORMAL)))
->>> +             goto dont_reorder;
->>
->> Maybe ack_policy != BA && ack_policy != NORMAl would be easier to read?
->
-> OK.
->>
->>> --- a/net/mac80211/wme.c
->>> +++ b/net/mac80211/wme.c
->>> @@ -147,7 +147,8 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
->>>
->>>               tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
->>>
->>> -             if (unlikely(sdata->local->wifi_wme_noack_test))
->>> +             if (unlikely(sdata->local->wifi_wme_noack_test) ||
->>> +                 is_multicast_ether_addr(hdr->addr1))
->>>                       ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
->>
->> Interestingly, this seems to have been a bug for a long time --
->> 7.1.3.5.3 indicates this is supposed to be done.
->
-> I'll fix up the other patches as well and resubmit.
->
-> Thanks!
-> Thomas
->
+
+
+-- 
+Truthfully yours,
+Martynov Nikolay.
+Email: mar.kolya@gmail.com
