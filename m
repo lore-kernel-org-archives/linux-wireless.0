@@ -1,63 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55969 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758573Ab1KVWAa (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:40694 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751904Ab1K1R4Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 17:00:30 -0500
-Date: Tue, 22 Nov 2011 16:49:40 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Amir Hedayaty <hedayaty@gmail.com>
-Subject: Re: [PATCH] rt2800pci: handle spurious interrupts
-Message-ID: <20111122214940.GH8452@tuxdriver.com> (sfid-20111122_230046_442208_11A45C54)
-References: <20111116100915.GA2191@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111116100915.GA2191@redhat.com>
+	Mon, 28 Nov 2011 12:56:24 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Alexander Simon <an.alexsimon@googlemail.com>,
+	Marek Lindner <lindner_marek@yahoo.de>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCH 4/4] mac80211: handle protection mode, RIFS and ADDBA for HT IBSS
+Date: Mon, 28 Nov 2011 18:55:16 +0100
+Message-Id: <1322502917-28205-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111128_185629_108712_6AF49AA5)
+In-Reply-To: <1322502917-28205-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1322502917-28205-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 16, 2011 at 11:09:17AM +0100, Stanislaw Gruszka wrote:
-> Some devices may generate spurious interrupts, we have to handle them
-> otherwise interrupt line will be disabled with below message and driver
-> will not work:
-> 
-> [ 2052.114334] irq 17: nobody cared (try booting with the "irqpoll" option)
-> [ 2052.114339] Pid: 0, comm: swapper Tainted: P           2.6.35.6-48.fc14.x86_64 #1
-> [ 2052.114341] Call Trace:
-> [ 2052.114342]  <IRQ>  [<ffffffff810a6e2b>] __report_bad_irq.clone.1+0x3d/0x8b
-> [ 2052.114349]  [<ffffffff810a6f93>] note_interrupt+0x11a/0x17f
-> [ 2052.114352]  [<ffffffff810a7a73>] handle_fasteoi_irq+0xa8/0xce
-> [ 2052.114355]  [<ffffffff8100c2ea>] handle_irq+0x88/0x90
-> [ 2052.114357]  [<ffffffff8146f034>] do_IRQ+0x5c/0xb4
-> [ 2052.114360]  [<ffffffff81469593>] ret_from_intr+0x0/0x11
-> [ 2052.114361]  <EOI>  [<ffffffff8102b7f9>] ? native_safe_halt+0xb/0xd
-> [ 2052.114366]  [<ffffffff81010f03>] ? need_resched+0x23/0x2d
-> [ 2052.114367]  [<ffffffff8101102a>] default_idle+0x34/0x4f
-> [ 2052.114370]  [<ffffffff81008325>] cpu_idle+0xaa/0xcc
-> [ 2052.114373]  [<ffffffff81461f2a>] start_secondary+0x24d/0x28e
-> [ 2052.114374] handlers:
-> [ 2052.114375] [<ffffffff81332944>] (usb_hcd_irq+0x0/0x7c)
-> [ 2052.114378] [<ffffffffa00697da>] (rt2800pci_interrupt+0x0/0x18d [rt2800pci])
-> [ 2052.114384] Disabling IRQ #17
-> 
-> Resolve:
-> https://bugzilla.redhat.com/show_bug.cgi?id=658451
-> 
-> Reported-and-tested-by: Amir Hedayaty <hedayaty@gmail.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+* Follow 802.11n-2009 9.13.3.1 for protection mode and ADDBA
+* Send ADDBA only to HT STAs - implement 11.5.1.1 partially
 
-I trust that you saw the comments in the other thread.  I have reverted
-this patch and the related rt2x00 one.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ net/mac80211/agg-tx.c |   21 +++++++++++++++++++++
+ net/mac80211/ibss.c   |   18 ++++++++++++++++++
+ net/mac80211/util.c   |    3 +++
+ 3 files changed, 42 insertions(+), 0 deletions(-)
 
-Perhaps there is some way to convince the hardware not to generate
-spurious interrupts?
-
-John
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 41b9bfd..c85c369 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -390,6 +390,27 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 		return -EINVAL;
+ 	}
+ 
++	/*
++	 * 11.5.1.1: If the initiating STA is an HT STA, is a member of an
++	 * IBSS, and has no other existing Block Ack agreement with the
++	 * recipient STA, then the initiating STA shall transmit a Probe
++	 * Request frame to the recipient STA and shall not transmit an
++	 * ADDBA Request frame unless it receives a Probe Response frame
++	 * from the recipient within dot11ADDBAFailureTimeout.
++	 *
++	 * The probe request mechanism for ADDBA is currently not implemented,
++	 * but we only build up Block Ack session with HT STAs. This information
++	 * is set when we receive a bss info from a probe response or a beacon.
++	 */
++	if (sta->sdata->vif.type == NL80211_IFTYPE_ADHOC &&
++	    !sta->sta.ht_cap.ht_supported) {
++#ifdef CONFIG_MAC80211_HT_DEBUG
++		printk(KERN_DEBUG "BA request denied - IBSS STA %pM"
++		       "does not advertise HT support\n", pubsta->addr);
++#endif /* CONFIG_MAC80211_HT_DEBUG */
++		return -EINVAL;
++	}
++
+ 	spin_lock_bh(&sta->lock);
+ 
+ 	/* we have tried too many times, receiver does not want A-MPDU */
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 1e4fd0f..ea424de 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -954,6 +954,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+ 			struct cfg80211_ibss_params *params)
+ {
+ 	struct sk_buff *skb;
++	u32 changed = 0;
+ 
+ 	skb = dev_alloc_skb(sdata->local->hw.extra_tx_headroom +
+ 			    sizeof(struct ieee80211_hdr_3addr) +
+@@ -1016,6 +1017,23 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_recalc_idle(sdata->local);
+ 	mutex_unlock(&sdata->local->mtx);
+ 
++	/*
++	 * 9.13.3.1: In an IBSS, the HT Protection field is reserved, but
++	 * an HT STA shall protect HT transmissions as though the HT
++	 * Protection field were set to non-HT mixed mode.
++	 *
++	 * In an IBSS, the RIFS Mode field of the HT Operation element is
++	 * also reserved, but an HT STA shall operate as though this field
++	 * were set to 1.
++	 */
++
++	sdata->vif.bss_conf.ht_operation_mode |=
++		  IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED
++		| IEEE80211_HT_PARAM_RIFS_MODE;
++
++	changed |= BSS_CHANGED_HT;
++	ieee80211_bss_info_change_notify(sdata, changed);
++
+ 	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+ 
+ 	return 0;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 3b9b492..c26e968 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1585,6 +1585,9 @@ u8 *ieee80211_ie_build_ht_info(u8 *pos,
+ 	}
+ 	if (ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
+ 		ht_info->ht_param |= IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
++
++	/* Note: According to 9.13.3.1, HT Protection field and RIFS Mode
++	 * are reserved in IBSS mode, therefore keep them at 0 */
+ 	ht_info->operation_mode = 0x0000;
+ 	ht_info->stbc_param = 0x0000;
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.7.3
+
