@@ -1,31 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:64000 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755541Ab1KUQGK (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:36424 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752852Ab1K1MCv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 11:06:10 -0500
-Message-ID: <4ECA76EC.4000004@qca.qualcomm.com> (sfid-20111121_170616_786327_8459A56E)
-Date: Mon, 21 Nov 2011 18:06:04 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 28 Nov 2011 07:02:51 -0500
+Received: by ghrr1 with SMTP id r1so5098351ghr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 04:02:50 -0800 (PST)
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/3] ath6kl: Remove modparam multi_norm_if_support
-References: <1321590928-11646-1-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1321590928-11646-1-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <CAMqtkVzpmAA0WsaUfGF5gQBHLjEjtU7PX6+TEwOsfAM=j4ok5g@mail.gmail.com>
+References: <CAMqtkVzpmAA0WsaUfGF5gQBHLjEjtU7PX6+TEwOsfAM=j4ok5g@mail.gmail.com>
+From: =?UTF-8?B?0JDQu9C10LrRgdCw0L3QtNGAINCn0LDQv9C60LjQvQ==?=
+	<watashi@reisei.ru>
+Date: Mon, 28 Nov 2011 16:02:30 +0400
+Message-ID: <CAMqtkVzEBcAZ7XeScvLuKqLj1Sv-QQQqyVe5ZjnBtQeK6_SgYQ@mail.gmail.com> (sfid-20111128_130254_350391_15756BC0)
+Subject: Fwd: Compilation error
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/18/2011 06:35 AM, Vasanthakumar Thiagarajan wrote:
-> This modparam was introduced to enable non-p2p mode operation
-> on two virtual interfaces. It does not seem to be necessary to
-> have a separate module parameter to do that. Instead, this option
-> can be enabled when any one of the interfaces is not going to be
-> used for p2p (ath6kl_p2p).
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Hello! I have a compilation error while porting
+compat-wireless-3.2-rc1-1 on 2.6.32 linux kernel
 
-Thanks, all three patches applied.
 
-Kalle
+CC [M]  /home/username/compat-wireless-3.2-rc1-1/net/mac80211/main.o
+In file included from
+/home/username/compat-wireless-3.2-rc1-1/net/mac80211/ieee80211_i.h:30,
+                 from
+/home/username/compat-wireless-3.2-rc1-1/net/mac80211/main.c:27:
+/home/username/compat-wireless-3.2-rc1-1/net/mac80211/key.h:88: error:
+expected specifier-qualifier-list before 'atomic64_t'
+/home/username/compat-wireless-3.2-rc1-1/net/mac80211/key.h:100:
+error: expected specifier-qualifier-list before 'atomic64_t'
+make[3]: *** [/home/username/compat-wireless-3.2-rc1-1/net/mac80211/main.o]
+Ошибка 1
+make[2]: *** [/home/username/compat-wireless-3.2-rc1-1/net/mac80211] Ошибка 2
+make[1]: *** [_module_/home/username/compat-wireless-3.2-rc1-1] Ошибка 2
+make[1]: Выход из каталога `/home/username/core-test-test/core_modified'
+make: *** [modules] Ошибка 2
+
+Please, help me to correct this.
