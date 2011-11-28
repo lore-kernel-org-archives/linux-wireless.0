@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:57120 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753928Ab1KQPGb convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:37535 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754222Ab1K1Dv0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 10:06:31 -0500
-Received: by bke11 with SMTP id 11so2100770bke.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2011 07:06:29 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [PATCH] p54spi: Fix workqueue deadlock
-Date: Thu, 17 Nov 2011 16:06:14 +0100
-Cc: Michael =?iso-8859-1?q?B=FCsch?= <m@bues.ch>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <20111116235546.096975f6@milhouse> <201111170007.58457.chunkeey@googlemail.com> <CAGRGNgVOmK+O7hifSuaKAL4vJCN1fkCZwZun4kchDpdLSLPZ7Q@mail.gmail.com>
-In-Reply-To: <CAGRGNgVOmK+O7hifSuaKAL4vJCN1fkCZwZun4kchDpdLSLPZ7Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201111171606.15132.chunkeey@googlemail.com> (sfid-20111117_160634_278783_99DC696D)
+	Sun, 27 Nov 2011 22:51:26 -0500
+Received: by vbbfc26 with SMTP id fc26so3440509vbb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2011 19:51:25 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, Nikolay Martynov <mar.kolya@gmail.com>
+Subject: [PATCH v3] ath9k: trivial: cosmetic fix in calibration debug log
+Date: Sun, 27 Nov 2011 22:51:18 -0500
+Message-Id: <1322452278-15276-1-git-send-email-mar.kolya@gmail.com> (sfid-20111128_045128_248089_1B7DA7C3)
+In-Reply-To: <CAGRGNgVouJ_XneiR0nXe04Tc6bxPpgvT7sdCXaxg1eUhX5y+tg@mail.gmail.com>
+References: <CAGRGNgVouJ_XneiR0nXe04Tc6bxPpgvT7sdCXaxg1eUhX5y+tg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, November 17, 2011 01:04:49 AM Julian Calaby wrote:
-> Christian, Michael,
-> 
-> I'm not sure these patches made it to the list.
-> 
-> Thanks,
+  Add missed space and change typo in calibration debugging log.
 
-You are right, but I don't know why? Michael can you please
-resend the patch?
+Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Regards,
-	Chr
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+index 88279e3..157337f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+@@ -203,7 +203,7 @@ static void ar9002_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
+ 			i);
+ 
+ 		ath_dbg(common, ATH_DBG_CALIBRATE,
+-			"Orignal: Chn %diq_corr_meas = 0x%08x\n",
++			"Original: Chn %d iq_corr_meas = 0x%08x\n",
+ 			i, ah->totalIqCorrMeas[i]);
+ 
+ 		iqCorrNeg = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 12a730d..755c98e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -225,7 +225,7 @@ static void ar9003_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
+ 			i);
+ 
+ 		ath_dbg(common, ATH_DBG_CALIBRATE,
+-			"Orignal: Chn %diq_corr_meas = 0x%08x\n",
++			"Original: Chn %d iq_corr_meas = 0x%08x\n",
+ 			i, ah->totalIqCorrMeas[i]);
+ 
+ 		iqCorrNeg = 0;
+-- 
+1.7.4.1
 
-> On Thu, Nov 17, 2011 at 10:07, Christian Lamparter
-> <chunkeey@googlemail.com> wrote:
-> > On Wednesday, November 16, 2011 11:55:46 PM Michael Büsch wrote:
-> >> priv->work must not be synced while priv->mutex is locked, because
-> >> the mutex is taken in the work handler.
-> >> Move cancel_work_sync down to after the device shutdown code.
-> >> This is safe, because the work handler checks fw_state and bails out
-> >> early in case of a race.
-> >>
-> >> Signed-off-by: Michael Buesch <m@bues.ch>
-> > Cc: <stable@kernel.org>
-> > Acked-by: Christian Lamparter <chunkeey@googlemail.com>
