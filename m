@@ -1,81 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:36165 "EHLO
-	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752186Ab1KGT1h convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 14:27:37 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Jesper Juhl <jj@chaosbits.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 7 Nov 2011 11:27:25 -0800
-Subject: RE: [PATCH] net, wireless, mwifiex: Fix mem leak in
- mwifiex_update_curr_bss_params()
-Message-ID: <477F20668A386D41ADCC57781B1F7043081814452B@SC-VEXCH1.marvell.com> (sfid-20111107_202757_618073_97C6FAA9)
-References: <alpine.LNX.2.00.1111062255310.5763@swampdragon.chaosbits.net>
- <4EB70920.80905@linux.vnet.ibm.com>
-In-Reply-To: <4EB70920.80905@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:34957 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754471Ab1K1XIr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Nov 2011 18:08:47 -0500
+Received: by ghrr1 with SMTP id r1so5751628ghr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 15:08:47 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1322521654-8745-1-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1322521654-8745-1-git-send-email-mcgrof@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Mon, 28 Nov 2011 18:08:26 -0500
+Message-ID: <CAB=NE6V7viVAsZwZmR9afyXWy=hLeG=7FOBeFW+d2UUO3FA+qQ@mail.gmail.com> (sfid-20111129_000850_805061_15E4B3D0)
+Subject: Re: [PATCH v4] cfg80211: Restore orig channel values upon disconnect
+To: linux-wireless@vger.kernel.org
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	compat@orbit-lab.org, Paul Stewart <pstew@google.com>,
+	Senthilkumar Balasubramanian <senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 11/07/2011 03:28 AM, Jesper Juhl wrote:
-> > If kmemdup() fails we leak the memory allocated to bss_desc.
-> > This patch fixes the leak.
-> > I also removed the pointless default assignment of 'NULL' to 'bss_desc'
-> > while I was there anyway.
-> >
-> > Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+And this is also RFC.. not [PATCH] yet.
 
-Hi Jesper,
+ Luis
 
-Thanks for the patch.
-
-> 
-> Looks good to me.
-> Reviewed-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
-
-Hi Srivatsa,
-
-Thanks for your review.
-
-Acked-by: Bing Zhao <bzhao@marvell.com>
-
-Thanks,
-Bing
-
-> 
-> Thanks,
-> Srivatsa S. Bhat
-> 
-> > ---
-> >  drivers/net/wireless/mwifiex/scan.c |    3 ++-
-> >  1 files changed, 2 insertions(+), 1 deletions(-)
-> >
-> >  note: patch is compile tested only since I don't have the hardware.
-> >
-> > diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-> > index dae8dbb..8a3f959 100644
-> > --- a/drivers/net/wireless/mwifiex/scan.c
-> > +++ b/drivers/net/wireless/mwifiex/scan.c
-> > @@ -1469,7 +1469,7 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv, u8 *bssid,
-> >  			       s32 rssi, const u8 *ie_buf, size_t ie_len,
-> >  			       u16 beacon_period, u16 cap_info_bitmap, u8 band)
-> >  {
-> > -	struct mwifiex_bssdescriptor *bss_desc = NULL;
-> > +	struct mwifiex_bssdescriptor *bss_desc;
-> >  	int ret;
-> >  	unsigned long flags;
-> >  	u8 *beacon_ie;
-> > @@ -1484,6 +1484,7 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv, u8 *bssid,
-> >
-> >  	beacon_ie = kmemdup(ie_buf, ie_len, GFP_KERNEL);
-> >  	if (!beacon_ie) {
-> > +		kfree(bss_desc);
-> >  		dev_err(priv->adapter->dev, " failed to alloc beacon_ie\n");
-> >  		return -ENOMEM;
-> >  	}
+On Mon, Nov 28, 2011 at 6:07 PM, Luis R. Rodriguez
+<mcgrof@qca.qualcomm.com> wrote:
+> From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+>
+> When we restore regulatory settings the world regulatory domain
+> is properly reset on cfg80211 (or user prefered regulatory domain)
+> but we were never setting back channel values for drivers that use
+> WIPHY_FLAG_CUSTOM_REGULATORY. Set these values up again by using
+> the orig_ channel parameters.
+>
+> This fixes restoring custom regulatory settings upon disconnect
+> events.
+>
+> Cc: compat@orbit-lab.org
+> Cc: Paul Stewart <pstew@google.com>
+> Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> Cc: Senthilkumar Balasubramanian <senthilb@qca.qualcomm.com>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+> ---
+>
+> Sorry here is my fixed patch which ammend's Rajkumar's original patch,
+> I had not commited my changes to his patch.
+>
+>  net/wireless/reg.c |   26 ++++++++++++++++++++++++++
+>  1 files changed, 26 insertions(+), 0 deletions(-)
+>
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 4fe396a..504d3f1 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -1780,6 +1780,26 @@ static void restore_alpha2(char *alpha2, bool reset_user)
+>                REG_DBG_PRINT("Restoring regulatory settings\n");
+>  }
+>
+> +static void restore_custom_reg_settings(struct wiphy *wiphy)
+> +{
+> +       struct ieee80211_supported_band *sband;
+> +       enum ieee80211_band band;
+> +       struct ieee80211_channel *chan;
+> +       int i;
+> +
+> +       for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+> +               sband = wiphy->bands[band];
+> +               if (!sband)
+> +                       continue;
+> +               for (i = 0; i < sband->n_channels; i++) {
+> +                       chan = &sband->channels[i];
+> +                       chan->flags = chan->orig_flags;
+> +                       chan->max_antenna_gain = chan->orig_mag;
+> +                       chan->max_power = chan->orig_mpwr;
+> +               }
+> +       }
+> +}
+> +
+>  /*
+>  * Restoring regulatory settings involves ingoring any
+>  * possibly stale country IE information and user regulatory
+> @@ -1801,6 +1821,7 @@ static void restore_regulatory_settings(bool reset_user)
+>        struct reg_beacon *reg_beacon, *btmp;
+>        struct regulatory_request *reg_request, *tmp;
+>        LIST_HEAD(tmp_reg_req_list);
+> +       struct cfg80211_registered_device *rdev;
+>
+>        mutex_lock(&cfg80211_mutex);
+>        mutex_lock(&reg_mutex);
+> @@ -1853,6 +1874,11 @@ static void restore_regulatory_settings(bool reset_user)
+>                kfree(last_request);
+>        last_request = &core_request_world;
+>
+> +       list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
+> +               if (rdev->wiphy.flags & WIPHY_FLAG_CUSTOM_REGULATORY)
+> +                       restore_custom_reg_settings(&rdev->wiphy);
+> +       }
+> +
+>        mutex_unlock(&reg_mutex);
+>        mutex_unlock(&cfg80211_mutex);
+>
+> --
+> 1.7.4.15.g7811d
+>
+>
