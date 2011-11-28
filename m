@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57808 "EHLO nbd.name"
+Received: from mx1.redhat.com ([209.132.183.28]:49898 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755733Ab1KWO3Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 09:29:25 -0500
-Message-ID: <4ECD032F.4040009@openwrt.org> (sfid-20111123_152928_229593_0AF777A1)
-Date: Wed, 23 Nov 2011 21:29:03 +0700
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
+	id S1751402Ab1K1JVK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Nov 2011 04:21:10 -0500
+Date: Mon, 28 Nov 2011 10:23:09 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org, Wilson Tsao <wtsao@qca.qualcomm.com>
-Subject: Re: [PATCH 16/18] ath9k: make ath_reset non-static
-References: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com> <1321978965-21684-17-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1321978965-21684-17-git-send-email-mohammed@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: fix lps_lock deadlock
+Message-ID: <20111128092308.GB2372@redhat.com> (sfid-20111128_102115_126780_2A5F5524)
+References: <1322219327-23148-1-git-send-email-sgruszka@redhat.com>
+ <4ECFD1BF.4070503@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4ECFD1BF.4070503@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-11-22 11:22 PM, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Fri, Nov 25, 2011 at 11:34:55AM -0600, Larry Finger wrote:
+> Thanks for fixing this problem. The patch also fixes the lockdep
+> warning I was getting, but my knowledge of locking was not good
+> enough to get the solution.
 > 
-> to be used by MCI specific changes
-> 
-> Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-> Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-NACK. ath_reset can no longer be called in tasklet context (which you
-seem to be doing in the next patch).
-Replace your ath_reset() call with:
-  ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
+> Is this problem related to
+> https://bugzilla.redhat.com/show_bug.cgi?id=755154 and/or
+> https://bugzilla.redhat.com/show_bug.cgi?id=754075? If so, perhaps
+> they should be mentioned in the commit message.
 
-- Felix
+I'll post v2 shortly with that information included.
+
+> Is there a bug report by Oliver Paukstadt? I could not find one with Google.
+It's here: 
+https://bugzilla.redhat.com/show_bug.cgi?id=731365#c67
+I did not reference that, becuse it's part of different bug report.
+ 
+> Patch ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Thanks
+Stanislaw
