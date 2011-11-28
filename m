@@ -1,79 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33627 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755998Ab1KPLNi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 06:13:38 -0500
-Subject: redesigning authentication/association flows
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 16 Nov 2011 12:13:34 +0100
-Message-ID: <1321442014.4773.42.camel@jlt3.sipsolutions.net> (sfid-20111116_121342_134417_A84714C4)
+Received: from mga03.intel.com ([143.182.124.21]:27991 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751533Ab1K1Qw3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Nov 2011 11:52:29 -0500
+Subject: Re: [PATCH v1 0/3] support for antenna configuration profiles
+From: Johannes Berg <johannes.berg@intel.com>
+To: Daniel Golle <dgolle@allnet.de>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <20111128161225.GA25430@localhost> (sfid-20111128_171757_078893_7ACF616B)
+References: <20111128161225.GA25430@localhost>
+	 (sfid-20111128_171757_078893_7ACF616B)
+Date: Mon, 28 Nov 2011 17:52:25 +0100
+Message-ID: <1322499145.4060.8.camel@jlt3.sipsolutions.net> (sfid-20111128_175232_405663_FF62BDC0)
 Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-I've been growing unhappy with the way I designed authentication and
-association in cfg80211 and I'm ready to admit that the way it works now
-was a design mistake. Just see the tx_sync as an example, and if we
-explicitly do remain-on-channel for the authentication or association
-then we'll have to start doing GO NoA sync within r-o-c which will be a
-nightmare.
-
-So I think we should just revisit all this. Here's what I currently
-think I will do:
-
-== cfg80211
- - get rid of the entire auth_bss/auth_try_bss, etc. Allow
-   authentication and association at any time (even association without
-   authentication, AP will reject anyway)
- - keep track only of current_bss with authenticated/associated flag to
-   list it in scan results
- - entirely handle local state change for authentication in cfg80211
-   since drivers can no longer expect auth/assoc sequencing
-
-(note that in current code all of this only impacts mac80211 since no
-other driver supports authenticate/associate commands)
-
-== mac80211
-When asked to auth/assoc change sequence to do:
- - if associated to BSSID != new BSSID:
-   - send null data PM=1 to AP (?)
- - if authenticated/associated to BSSID != new BSSID:
-   - bss_info_changed: zero bssid, not associated, zero aid etc
-   - remove AP station entry
- - if not already configured as such:
-   - clear IDLE for interface
-   - set channel (in the future: for interface)
-   - bss_info_changed: set correct bssid, not associated, ...
-   - add AP station entry (even to driver, not dummy as today)
- - send frame
- - check response, if failure clear configuration
-
-
-Note that this gets rid of the stupid tx_sync, the attempt at doing this
-off-channel, and we never have to deal with tx_sync in remain-on-channel
-which would be really really strange.
-
-The only difference really is that today, if auth fails, we can stay
-connected. HOWEVER, wpa_supplicant isn't actually able to deal with
-that, gets confused and recovers with clear_state_mismatch().
-
-
-I think this will help all drivers, from at76c50x which is broken
-completely today, wl1251 which has a dummy join, wl12xx which has a work
-around with remain-on-channel but this doesn't work well with a GO (NoA)
-and of course iwlwifi (which has tx_sync for this) and iwlegacy which
-has a bunch of RXON ping-pong things going on.
-
-I don't think ath5k, ath9k and most other drivers will really be
-impacted, the ones I'm not sure about are Ralink and Realtek drivers.
-
-Anyone have major issues with this?
-
-johannes
+T24gTW9uLCAyMDExLTExLTI4IGF0IDE3OjEyICswMTAwLCBEYW5pZWwgR29sbGUgd3JvdGU6Cgo+
+IEl0IHRvb2sgbWUgYSB3aGlsZSB0byBnZXQgdGhpcyBpbnRvIGEgbmljZSBzaGFwZSBhbmQgbWFr
+ZSB0aGUgY29kZSBsZXNzIGhhY2tpc2guCj4gVGhhbmsgeW91IGZvciBhbGwgdGhlIGhlbHBmdWwg
+ZmVlZGJhY2sgb24gUEFUQ0ggdjAgYW5kIHRoZSBSRkMhCj4gSSdtIGxvb2tpbmcgZm9yd2FyZCB0
+byB5b3VyIGNvbW1lbnRzIGFuZCBoaWdobHkgYXBwcmVjaWF0ZSBhbnkgZnVydGhlciBhZHZpc2Uu
+CgoKPiBXaXBoeSBwaHkwCj4gICAgICAgICBCYW5kIDE6Cj4gICAgICAgICAuLi4KPiAgICAgICAg
+IERldmljZSBzdXBwb3J0cyBhbnRlbm5hIGNvbmZpZ3VyYXRpb24gcHJvZmlsZXMuCj4gICAgICAg
+ICAgICAgICAgICAoICkgMCAgaG9yaXogICAoaG9yaXpvbnRhbCBUWCwgdmVydGljYWwgUlgpCj4g
+ICAgICAgICAgICAgICAgICAoKikgMSAgdmVydCAgICAodmVydGljYWwgVFgsIGhvcml6b250YWwg
+UlgpCj4gICAgICAgICAuLi4KCkNhbiB5b3UgcmVtaW5kIHVzIHdoYXQgaXQgaXMgeW91J3JlIHRy
+eWluZyB0byBhY2hpZXZlPyBBbmQgd2h5IGl0IGNhbid0CmJlIGRvbmUgd2l0aCB0aGUgYW50ZW5u
+YSBzZWxlY3Rpb24gQVBJIHRvZGF5PwoKam9oYW5uZXMKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tCkludGVsIEdtYkgKRG9ybmFjaGVyIFN0cmFzc2UgMQo4NTYyMiBGZWxka2lyY2hlbi9N
+dWVuY2hlbiwgRGV1dHNjaGxhbmQgClNpdHogZGVyIEdlc2VsbHNjaGFmdDogRmVsZGtpcmNoZW4g
+YmVpIE11ZW5jaGVuCkdlc2NoYWVmdHNmdWVocmVyOiBEb3VnbGFzIEx1c2ssIFBldGVyIEdsZWlz
+c25lciwgSGFubmVzIFNjaHdhZGVyZXIKUmVnaXN0ZXJnZXJpY2h0OiBNdWVuY2hlbiBIUkIgNDc0
+NTYgClVzdC4tSWROci4vVkFUIFJlZ2lzdHJhdGlvbiBOby46IERFMTI5Mzg1ODk1CkNpdGliYW5r
+IEZyYW5rZnVydCBhLk0uIChCTFogNTAyIDEwOSAwMCkgNjAwMTE5MDUyCg==
 
