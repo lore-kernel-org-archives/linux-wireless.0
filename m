@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:36670 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750884Ab1KVTaq (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44301 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751012Ab1K1IQS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 14:30:46 -0500
-Date: Tue, 22 Nov 2011 19:30:44 +0000
-From: Matthew Garrett <mjg@redhat.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: platform-driver-x86@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Martin =?utf-8?B?VmXEjWXFmWE=?= <ja@marvec.org>,
-	Alejandro Vidal Mata <alex14@gmail.com>,
-	Javier Vidal Mata <javitu@gmail.com>,
-	Tino Schmidt <mailtinoshomepage@gmx.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	631664@bugs.debian.org
-Subject: Re: [PATCH v2] x86: Add amilo-rfkill driver for some
- Fujitsu-Siemens Amilo laptops
-Message-ID: <20111122193044.GE5163@srcf.ucam.org> (sfid-20111122_203050_718514_CA1EAEF7)
-References: <1321211202.18929.295.camel@deadeye>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1321211202.18929.295.camel@deadeye>
+	Mon, 28 Nov 2011 03:16:18 -0500
+Subject: Re: [PATCH v3] mac80211: fix race condition caused by late addBA
+ response
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Nikolay Martynov <mar.kolya@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	Norbert Preining <preining@logic.at>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+In-Reply-To: <CANUX_P0E=bhBrGnYOJ7yt8mOgixNNPP5UKC_Cv5jL9uNiNFH9A@mail.gmail.com> (sfid-20111128_073546_924422_9644D86E)
+References: <1322378621-14647-1-git-send-email-mar.kolya@gmail.com>
+	 <1322378621-14647-2-git-send-email-mar.kolya@gmail.com>
+	 <1322394638.4044.32.camel@jlt3.sipsolutions.net>
+	 <1322394800.4044.33.camel@jlt3.sipsolutions.net>
+	 <CALGY4fufCM2SvYLFaab1TzSr36b55bguFoZRtYZhLuXGMZLG1w@mail.gmail.com>
+	 <1322412918.4044.37.camel@jlt3.sipsolutions.net>
+	 <CANUX_P0E=bhBrGnYOJ7yt8mOgixNNPP5UKC_Cv5jL9uNiNFH9A@mail.gmail.com>
+	 (sfid-20111128_073546_924422_9644D86E)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 28 Nov 2011 09:16:13 +0100
+Message-ID: <1322468173.4060.0.camel@jlt3.sipsolutions.net> (sfid-20111128_091623_591142_3E78F7EF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 13, 2011 at 07:06:42PM +0000, Ben Hutchings wrote:
+On Mon, 2011-11-28 at 08:35 +0200, Emmanuel Grumbach wrote:
 
-> +#define A1655_STATE_PORT	0x64
-> +#define A1655_COMMAND_PORT	0x64
-> +#define A1655_DATA_PORT		0x60
+> > /*
+> >  * addba_resp_timer may have fired before we got here, and
+> >  * caused WANT_STOP to be set. If the stop then was already
+> >  * processed further, STOPPING might be set.
+> >  */
+> >
+> >
+> > Did you notice that I moved this code to after the dialog token check?
+> >
+> 
+> Don't you think we should also send a delBA ? The AP thinks we will Tx
+> in Agg and basically we are now out of sync.
 
-You'll need to synchronise with the i8042 driver here, otherwise things 
-could go horribly wrong.
+We do, during the timer stop path, afaict.
 
-> +#define M7440_PORT1		0x118f
-> +#define M7440_PORT2		0x118e
+johannes
 
-These ports are defined in the DSDT for one of these systems, but not 
-referenced. I think a hardware-banging driver like this is probably the 
-only interface.
-
-Should be fine as long as you make sure you're not racing with the 
-keyboard controller.
-
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
