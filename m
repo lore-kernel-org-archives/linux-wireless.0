@@ -1,63 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:53135 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750754Ab1KIFMC (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:61184 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751048Ab1K1VbP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 00:12:02 -0500
-Date: Wed, 9 Nov 2011 14:11:52 +0900
-From: Norbert Preining <preining@logic.at>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-Subject: Re: iwlagn is getting very shaky
-Message-ID: <20111109051152.GA16006@gamma.logic.tuwien.ac.at> (sfid-20111109_061213_706536_DC96ACC7)
-References: <20111026025014.GB24956@gamma.logic.tuwien.ac.at> <1319601333.14693.19.camel@wwguy-ubuntu> <20111026040332.GF24956@gamma.logic.tuwien.ac.at> <20111102031345.GA10851@gamma.logic.tuwien.ac.at> <1320204101.31823.140.camel@wwguy-huron> <20111104045817.GA25778@gamma.logic.tuwien.ac.at> <20111107123812.GB23508@gamma.logic.tuwien.ac.at> <1320709047.31823.188.camel@wwguy-huron> <20111108043233.GA21171@gamma.logic.tuwien.ac.at> <CANUX_P06ww42p6N1k_P-Y1KMKOd1QgR_DxVWe19qtsEX2rfWpw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANUX_P0Q0wve4D6fZPsMv2Zw=02gb9u+3C2cjRv7UAmWqXnjzw@mail.gmail.com> <CANUX_P06ww42p6N1k_P-Y1KMKOd1QgR_DxVWe19qtsEX2rfWpw@mail.gmail.com>
+	Mon, 28 Nov 2011 16:31:15 -0500
+Received: by vbbfc26 with SMTP id fc26so4187503vbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 13:31:14 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH v2 0/2] cfg80211: reg fixes
+Date: Mon, 28 Nov 2011 16:31:08 -0500
+Message-Id: <1322515870-3392-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111128_223123_127288_41EF7D3F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Emmanuel,
+Here are a series of reg fixes, I'm sending these separate from the
+other patches given that we need these fixes merged soon. I'm sending
+this on top of what I see right now on wireless-testing which is
+that Johannes' patch is not yet reverted so ammending his fix.
 
-On Di, 08 Nov 2011, Emmanuel Grumbach wrote:
-> I would like to see what happens in terms or power.
-> Please set the power debug flag: modprobe iwlwifi debug=0x100
+I address the issue pointed out by Timo by passing a parameter
+for reset_regdomains() and only do a full reset on
+restore_regulatory_settings() and on __exit().
 
-> It may be worth to disable Link Power save too. I would be glad if you
-> could try this patch (attached and inlined), with the power debug flag
-> set.
+Luis R. Rodriguez (2):
+  cfg80211: fix race on init and driver registration
+  cfg80211: amend regulatory NULL dereference fix
 
-With both done, I see things like that:
-[  690.597221] iwlwifi 0000:06:00.0: L1 Enabled; Disabling L0S
-[  690.601979] iwlwifi 0000:06:00.0: Radio type=0x1-0x2-0x0
-[  690.644716] iwlwifi 0000:06:00.0: U iwl_power_sleep_cam_cmd Sleep command for CAM
-[  690.644721] iwlwifi 0000:06:00.0: U iwl_set_power Sending power/sleep command
-[  690.644724] iwlwifi 0000:06:00.0: U iwl_set_power Flags value = 0x00000000
-[  690.644726] iwlwifi 0000:06:00.0: U iwl_set_power Tx timeout = 0
-[  690.644728] iwlwifi 0000:06:00.0: U iwl_set_power Rx timeout = 0
-[  690.644731] iwlwifi 0000:06:00.0: U iwl_set_power Sleep interval vector = { 0 , 0 , 0 , 0 , 0 }
-[  690.645649] iwlwifi 0000:06:00.0: U iwl_power_sleep_cam_cmd Sleep command for CAM
+ net/wireless/reg.c |   53 ++++++++++++++++++++++++++++++++++-----------------
+ 1 files changed, 35 insertions(+), 18 deletions(-)
 
-Does this help you, or do you need more?
+-- 
+1.7.4.15.g7811d
 
-Best wishes
-
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-SNITTER (n.)
-One of the rather unfunny newspaper clippings pinned to an office
-wall, the humour of which is supposed to derive from the fact that the
-headline contains a name similar to that of one of the occupants to
-the office.
-			--- Douglas Adams, The Meaning of Liff
