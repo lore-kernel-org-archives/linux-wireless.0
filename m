@@ -1,90 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45066 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755285Ab1KDOlj (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:50933 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751111Ab1K1GfR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 10:41:39 -0400
-Subject: Re: [PATCH v3 3/3] mac80211: Allow overriding some HT information.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4EB2CBCC.6080709@candelatech.com>
-References: <1320299722-30113-1-git-send-email-greearb@candelatech.com>
-	 <1320299722-30113-3-git-send-email-greearb@candelatech.com>
-	 (sfid-20111103_065549_863747_7FFD5818) <1320310045.3950.23.camel@jlt3.sipsolutions.net>
-	 <4EB2CBCC.6080709@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 04 Nov 2011 15:41:30 +0100
-Message-ID: <1320417690.3969.88.camel@jlt3.sipsolutions.net> (sfid-20111104_154143_120566_BA915DB9)
-Mime-Version: 1.0
+	Mon, 28 Nov 2011 01:35:17 -0500
+Received: by wwp14 with SMTP id 14so8422654wwp.1
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2011 22:35:16 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1322412918.4044.37.camel@jlt3.sipsolutions.net>
+References: <1322378621-14647-1-git-send-email-mar.kolya@gmail.com>
+	<1322378621-14647-2-git-send-email-mar.kolya@gmail.com>
+	<1322394638.4044.32.camel@jlt3.sipsolutions.net>
+	<1322394800.4044.33.camel@jlt3.sipsolutions.net>
+	<CALGY4fufCM2SvYLFaab1TzSr36b55bguFoZRtYZhLuXGMZLG1w@mail.gmail.com>
+	<1322412918.4044.37.camel@jlt3.sipsolutions.net>
+Date: Mon, 28 Nov 2011 08:35:16 +0200
+Message-ID: <CANUX_P0E=bhBrGnYOJ7yt8mOgixNNPP5UKC_Cv5jL9uNiNFH9A@mail.gmail.com> (sfid-20111128_073521_846900_1754CDD8)
+Subject: Re: [PATCH v3] mac80211: fix race condition caused by late addBA response
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Nikolay Martynov <mar.kolya@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	Norbert Preining <preining@logic.at>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-11-03 at 10:13 -0700, Ben Greear wrote:
+On Sun, Nov 27, 2011 at 18:55, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Sun, 2011-11-27 at 11:12 -0500, Nikolay Martynov wrote:
+>
+>> > -       del_timer(&tid_tx->addba_resp_timer);
+>> > +       del_timer_sync(&tid_tx->addba_resp_timer);
+>> >
+>> >  #ifdef CONFIG_MAC80211_HT_DEBUG
+>> >        printk(KERN_DEBUG "switched off addBA timer for tid %d\n", tid);
+>> >  #endif
+>> > +
+>> > +       /*
+>> > +        * addba_resp_timer may have fired before we got here, and
+>> > +        * caused WANT_STOP to be set. STOPPING should not be set
+>> > +        * as we're under the mutex, but check it anyway.
+>> > +        */
+>> > +       if (test_bit(HT_AGG_STATE_WANT_STOP, &tid_tx->state) ||
+>> > +           test_bit(HT_AGG_STATE_STOPPING, &tid_tx->state)) {
+>>
+>>   Just a small comment about comment :).
+>>   If I understand correctly process of stopping tx agg looks as following:
+>>   1) Call to ___ieee80211_stop_tx_ba_session. This removes
+>> HT_AGG_STATE_WANT_STOP (in ht.c) and adds HT_AGG_STATE_STOPPING. It
+>> holds mutex during duration of the call.
+>>   2) Call to ieee80211_stop_tx_ba_cb. This destroys the actual tx_tid.
+>> It holds mutex during duration of the call.
+>
+>>   But between these two calls we have HT_AGG_STATE_STOPPING and no
+>> mutex. I think at this time we can receive addBA resp and that's why I
+>> was checking for HT_AGG_STATE_STOPPING in my original patch.
+>
+> Indeed, I missed that. It's due to the driver callback again.
+>
+> How about this?
+>
+> /*
+>  * addba_resp_timer may have fired before we got here, and
+>  * caused WANT_STOP to be set. If the stop then was already
+>  * processed further, STOPPING might be set.
+>  */
+>
+>
+> Did you notice that I moved this code to after the dialog token check?
+>
 
-> > Here's another argument for splitting the patches differently -- this
-> > ought to be part of the disable HT40 patch.
-> 
-> One thing I could do is move patch 3 to be the first patch.  That gives this method
-> reason to exist, but I can leave out the disable-HT40 parts and (re)add that in
-> the disable-ht40 patch.
-
-I think the whole thing could just be one cfg80211 and one mac80211
-patch, wouldn't that make it simpler?
-
-
-> >> +	/* Set the AMPDU density. */
-> >> +	if (sdata->u.mgd.ht_capa_mask.ampdu_params_info&
-> >> +	    IEEE80211_HT_AMPDU_PARM_DENSITY)
-> >> +		ht_cap->ampdu_density =
-> >> +			(sdata->u.mgd.ht_capa.ampdu_params_info&
-> >> +			 IEEE80211_HT_AMPDU_PARM_DENSITY)
-> >> +			>>  IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT;
-> >> +}
-> >
-> > The AMPDU density should only allow increasing.
-> >
-> > I think a lot of this validation should live in cfg80211 so if another
-> > driver wants to implement it, this kind of thing is already covered.
-> 
-> The ath9k driver supports 0, and then every value that corresponds to 1us or higher.
-> If you set it to 1/2us, for instance, it just quietly rounds up to 1us.  It defaults
-> to 8, so it appears valid to decrease or increase this value.
-
-What quietly rounds up?
-
-If it defaults to 8 then I'm sure there's a reason for it, such as the
-crypto engine not being fast enough and needing 8us buffer between
-frames. As such, I really don't think decreasing it is valid.
-
-> > I think there's a lot of data in the ht_cap struct that you don't use,
-> > is that right? If so you should reject it being configured. I'm also not
-> > quite sure why you support both disable-HT40, and then this setting here
-> > that has SUP_WIDTH_20_40 too.
-> 
-> If I add rejection like this, it will make writing backwards compat user
-> space very difficult.  It would be similar to rejecting unknown netlink
-> attributes, for instance.
-
-Good point.
-
-> I was thinking that if ht-40 is disabled, then I should clear both the
-> IEEE80211_HT_CAP_SUP_WIDTH_20_40 and the IEEE80211_HT_CAP_SGI_40 from
-> the capabilities.  Perhaps there are other flags I should clear as well?
-
-I don't know?
-
-> > I'm more and more coming to the conclusion that it would be clearer to
-> > make separate configuration items for the various things. Most
-> > capabilities you could only disable (greenfield, ...) except for maybe
-> > 40mhz-intol, so maybe that would be easier as a separate u16 attribute
-> > "disable these HT capabilities"?
-> 
-> It seemed like more work for not much gain to me, but I don't mind splitting
-> it out into separate netlink configurables if you want.
-
-It just seems to me it would clarify the semantics. Not really sure I
-care all that much though.
-
-johannes
-
+Don't you think we should also send a delBA ? The AP thinks we will Tx
+in Agg and basically we are now out of sync.
