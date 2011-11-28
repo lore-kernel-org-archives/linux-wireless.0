@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3877 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752135Ab1KYIrI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 03:47:08 -0500
-Message-ID: <4ECF55FE.8080905@broadcom.com> (sfid-20111125_094729_221224_BAC7AA34)
-Date: Fri, 25 Nov 2011 09:46:54 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-qw0-f53.google.com ([209.85.216.53]:45794 "EHLO
+	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754412Ab1K1Vo5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Nov 2011 16:44:57 -0500
 MIME-Version: 1.0
-To: "Ben Greear" <greearb@candelatech.com>
-cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v10 2/2] mac80211:  Support ht-cap over-rides.
-References: <1321644720-8245-1-git-send-email-greearb@candelatech.com>
- <1321644720-8245-2-git-send-email-greearb@candelatech.com> (
- sfid-20111118_203218_329178_9FB3658A)
- <1321648257.10266.77.camel@jlt3.sipsolutions.net>
- <4EC6C36D.4070900@candelatech.com>
- <1322142597.5366.19.camel@jlt3.sipsolutions.net>
- <4ECE9825.8070208@candelatech.com>
-In-Reply-To: <4ECE9825.8070208@candelatech.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+In-Reply-To: <1322515870-3392-2-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1322515870-3392-1-git-send-email-mcgrof@qca.qualcomm.com> <1322515870-3392-2-git-send-email-mcgrof@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Mon, 28 Nov 2011 16:44:35 -0500
+Message-ID: <CAB=NE6Wr0uNkyyZTxM_sOLn=Bqj_As=Hv+yPNqggTwU6hg1HYQ@mail.gmail.com> (sfid-20111128_224519_429258_1FFCD2C8)
+Subject: Re: [PATCH v2 1/2] cfg80211: fix race on init and driver registration
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	stable@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/24/2011 08:16 PM, Ben Greear wrote:
-> On 11/24/2011 05:49 AM, Johannes Berg wrote:
->> Please fix:
->>
->> net/mac80211/ht.c:31:6: warning: symbol '__check_htcap_disable' was not
->> declared. Should it be static?
-> 
-> I sent a patch to make this static, but I do not see the warning.  Are you
-> running something other than a standard 'make bzImage modules' to
-> see this warning?
-> 
-> Thanks,
-> Ben
-> 
+On Mon, Nov 28, 2011 at 4:31 PM, Luis R. Rodriguez
+<mcgrof@qca.qualcomm.com> wrote:
 
-This is probably a sparse warning so you need to add C=2 on the command
-line.
+> @@ -1823,6 +1837,10 @@ static void restore_regulatory_settings(bool reset_user)
+>        /* First restore to the basic regulatory settings */
+>        cfg80211_regdomain = cfg80211_world_regdom;
+>
+> +       if (last_request != &core_request_world)
+> +               kfree(last_request);
+> +       last_request = &core_request_world;
+> +
+>        mutex_unlock(&reg_mutex);
+>        mutex_unlock(&cfg80211_mutex);
+>
 
-Gr. AvS
+This hunk is redundant given that we call reset_regdomains() above,
+will send a v3..
 
+  Luis
