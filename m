@@ -1,81 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4844 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759580Ab1KWBWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 20:22:15 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:37504 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751494Ab1K1VjA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Nov 2011 16:39:00 -0500
+Received: by vbbfc26 with SMTP id fc26so4193335vbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 13:38:59 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
 To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 21/24] brcm80211: fmac: change function bus_txdata
- parameter
-Date: Tue, 22 Nov 2011 17:21:56 -0800
-Message-ID: <1322011319-24863-22-git-send-email-frankyl@broadcom.com> (sfid-20111123_022234_766976_40444657)
-In-Reply-To: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
-References: <1322011319-24863-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH 2/5] ath6kl: fix set tx power
+Date: Mon, 28 Nov 2011 16:38:47 -0500
+Message-Id: <1322516330-4007-3-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111128_223903_551982_7C9001A2)
+In-Reply-To: <1322516330-4007-1-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1322516330-4007-1-git-send-email-mcgrof@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change parameter to device pointer for bus layer interface function
-brcmf_sdbrcm_bus_txdata. This is part of the fullmac bus interface
-refactoring.
+ath6kl assumed cfg80211 passed to us power in dBm but it is in mBm.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    2 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    5 ++++-
- 3 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-index be20e7d..c73679e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-@@ -37,7 +37,7 @@ extern void brcmf_sdbrcm_bus_stop(struct brcmf_sdio *bus);
- extern int brcmf_sdbrcm_bus_init(struct brcmf_pub *drvr);
- 
- /* Send a data frame to the dongle.  Callee disposes of txp. */
--extern int brcmf_sdbrcm_bus_txdata(struct brcmf_sdio *bus, struct sk_buff *txp);
-+extern int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *txp);
- 
- /* Send/receive a control message to/from the dongle.
-  * Expects caller to enforce a single outstanding transaction.
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index c20c72d..1cfe9f3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -310,7 +310,7 @@ int brcmf_sendpkt(struct brcmf_pub *drvr, int ifidx, struct sk_buff *pktbuf)
- 	brcmf_proto_hdrpush(drvr, ifidx, pktbuf);
- 
- 	/* Use bus module to send data frame */
--	return brcmf_sdbrcm_bus_txdata(drvr->bus, pktbuf);
-+	return brcmf_sdbrcm_bus_txdata(drvr->dev, pktbuf);
- }
- 
- static int brcmf_netdev_start_xmit(struct sk_buff *skb, struct net_device *ndev)
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index b62dc98..f80151b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2565,10 +2565,13 @@ static int brcmf_sdbrcm_dpc_thread(void *data)
- 	return 0;
- }
- 
--int brcmf_sdbrcm_bus_txdata(struct brcmf_sdio *bus, struct sk_buff *pkt)
-+int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *pkt)
+Kalle queued this up already.
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 0252604..9f3d3f0 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1181,11 +1181,12 @@ static int ath6kl_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ */
+ static int ath6kl_cfg80211_set_txpower(struct wiphy *wiphy,
+ 				       enum nl80211_tx_power_setting type,
+-				       int dbm)
++				       int mbm)
  {
- 	int ret = -EBADE;
- 	uint datalen, prec;
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv;
-+	struct brcmf_sdio *bus = sdiodev->bus;
+ 	struct ath6kl *ar = (struct ath6kl *)wiphy_priv(wiphy);
+ 	struct ath6kl_vif *vif;
+ 	u8 ath6kl_dbm;
++	int dbm = MBM_TO_DBM(mbm);
  
- 	brcmf_dbg(TRACE, "Enter\n");
- 
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: type 0x%x, dbm %d\n", __func__,
+ 		   type, dbm);
 -- 
-1.7.5.4
-
+1.7.4.15.g7811d
 
