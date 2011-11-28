@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44361 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753168Ab1KWOpa (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:40816 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754208Ab1K1AWv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 09:45:30 -0500
-Date: Wed, 23 Nov 2011 09:34:57 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: Timo Lindhorst <tlnd@online.de>, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cfg80211: Fix changing regulatory from userspace
-Message-ID: <20111123143456.GB2502@tuxdriver.com> (sfid-20111123_154535_224466_A776240F)
-References: <201111230330.11103.tlnd@online.de>
- <CAB=NE6U6ru-xns8M+YUccqxw0FwE-sWtZnFkPUud3jHdAcDxsw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6U6ru-xns8M+YUccqxw0FwE-sWtZnFkPUud3jHdAcDxsw@mail.gmail.com>
+	Sun, 27 Nov 2011 19:22:51 -0500
+Received: by mail-vx0-f174.google.com with SMTP id fk14so3226995vcb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2011 16:22:51 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, Nikolay Martynov <mar.kolya@gmail.com>
+Subject: [PATCH v2 4/4] ath9k: enable ANI for ar9100 chips
+Date: Sun, 27 Nov 2011 19:22:14 -0500
+Message-Id: <1322439734-14520-5-git-send-email-mar.kolya@gmail.com> (sfid-20111128_012253_763844_9119A677)
+In-Reply-To: <1322439734-14520-1-git-send-email-mar.kolya@gmail.com>
+References: <1322439734-14520-1-git-send-email-mar.kolya@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 23, 2011 at 06:28:57AM -0800, Luis R. Rodriguez wrote:
-> On Tue, Nov 22, 2011 at 6:30 PM, Timo Lindhorst <tlnd@online.de> wrote:
-> > The commit de3584bd62d87b4c250129fbc46ca52c80330add -
-> > "cfg80211: fix regulatory NULL dereference" prevents the regulatory
-> > domain from being changed by user space. A wiphy is only present
-> > if the request comes from driver or is set by country IE, thus
-> > check only those cases.
-> >
-> > Signed-off-by: Timo Lindhorst <tlnd@online.de>
-> 
-> Yup but at this point I'd prefer we revert the original patch instead
-> given that the patch also had some other short comings. John is it too
-> late?
+  Enable ANI for ar9100 since it seems to be working fine (and as a matter of fact ANI was always performed for ar9100 since code which was supposed to disable it didn't achieve this goal).
+  This patch sets config.enable_ani to default (true) value for ar9100.
 
-No, it isn't too late to revert it.  But can we have a new fix soon?
+Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index e890104..32f946d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -610,8 +610,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	if (!AR_SREV_9300_20_OR_LATER(ah))
+ 		ah->ani_function &= ~ATH9K_ANI_MRC_CCK;
+ 
+-        /* disable ANI for 9100 and 9340 */
+-        if (AR_SREV_9100(ah) || AR_SREV_9340(ah))
++	/* disable ANI for 9340 */
++        if (AR_SREV_9340(ah))
+                 ah->config.enable_ani = false;
+ 
+ 	ath9k_hw_init_mode_regs(ah);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.1
+
