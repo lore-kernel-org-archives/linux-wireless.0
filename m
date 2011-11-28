@@ -1,33 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60195 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751620Ab1KOTMS (ORCPT
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:44056 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751288Ab1K1HUN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 14:12:18 -0500
-Subject: Re: [PATCH] minstrel_ht: Remove unused function parameters
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dave Taht <dave.taht@gmail.com>
-Cc: Patrick Kelle <patrick.kelle81@gmail.com>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	nbd@openwrt.org
-In-Reply-To: <CAA93jw7nWHnCnT48RJ00+Zxq9CFuCzhkeh=+7h+DqvYH2T7W1Q@mail.gmail.com> (sfid-20111115_201048_258376_C707079A)
-References: <1321371888-26897-1-git-send-email-patrick.kelle81@gmail.com>
-	 <CAA93jw7nWHnCnT48RJ00+Zxq9CFuCzhkeh=+7h+DqvYH2T7W1Q@mail.gmail.com>
-	 (sfid-20111115_201048_258376_C707079A)
+	Mon, 28 Nov 2011 02:20:13 -0500
+Subject: Re: [PATCH 10/11] wireless: Remove redundant spi driver bus
+ initialization
+From: Luciano Coelho <coelho@ti.com>
+To: Lars-Peter Clausen <lars@metafoo.de>
+Cc: linux-kernel@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1322148561-25138-10-git-send-email-lars@metafoo.de>
+References: <1322148561-25138-1-git-send-email-lars@metafoo.de>
+	 <1322148561-25138-10-git-send-email-lars@metafoo.de>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 15 Nov 2011 20:12:14 +0100
-Message-ID: <1321384334.3975.2.camel@jlt3.sipsolutions.net> (sfid-20111115_201221_806756_97543DE9)
+Date: Mon, 28 Nov 2011 09:20:07 +0200
+Message-ID: <1322464807.6502.11.camel@cumari> (sfid-20111128_082017_214059_F822582D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-11-15 at 20:10 +0100, Dave Taht wrote:
-> It was kind of my hope that one day minstrel would export a useful API
-> and statistics to other subsystems - like sysfs, tc or the upper parts of the
-> network stack, and snmp.
+On Thu, 2011-11-24 at 16:29 +0100, Lars-Peter Clausen wrote: 
+> In ancient times it was necessary to manually initialize the bus field of an
+> spi_driver to spi_bus_type. These days this is done in spi_driver_register(),
+> so we can drop the manual assignment.
+> 
+> The patch was generated using the following coccinelle semantic patch:
+> // <smpl>
+> @@
+> identifier _driver;
+> @@
+> struct spi_driver _driver = {
+> 	.driver = {
+> -		.bus = &spi_bus_type,
+> 	},
+> };
+> // </smpl>
+> 
+> Signed-off-by: Lars-Peter Clausen <lars@metafoo.de>
+> Cc: Dan Williams <dcbw@redhat.com>
+> Cc: "John W. Linville" <linville@tuxdriver.com>
+> Cc: Christian Lamparter <chunkeey@googlemail.com>
+> Cc: Luciano Coelho <coelho@ti.com>
+> Cc: libertas-dev@lists.infradead.org
+> Cc: linux-wireless@vger.kernel.org
+> ---
 
-I think that doesn't make a lot of sense -- it should be done at a more
-abstract level.
+[...]
 
-johannes
+> diff --git a/drivers/net/wireless/wl1251/spi.c b/drivers/net/wireless/wl1251/spi.c
+> index eaa5f95..6248c35 100644
+> --- a/drivers/net/wireless/wl1251/spi.c
+> +++ b/drivers/net/wireless/wl1251/spi.c
+> @@ -319,7 +319,6 @@ static int __devexit wl1251_spi_remove(struct spi_device *spi)
+>  static struct spi_driver wl1251_spi_driver = {
+>  	.driver = {
+>  		.name		= DRIVER_NAME,
+> -		.bus		= &spi_bus_type,
+>  		.owner		= THIS_MODULE,
+>  	},
+>  
+> diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+> index 0f97186..12421a6 100644
+> --- a/drivers/net/wireless/wl12xx/spi.c
+> +++ b/drivers/net/wireless/wl12xx/spi.c
+> @@ -462,7 +462,6 @@ static int __devexit wl1271_remove(struct spi_device *spi)
+>  static struct spi_driver wl1271_spi_driver = {
+>  	.driver = {
+>  		.name		= "wl1271_spi",
+> -		.bus		= &spi_bus_type,
+>  		.owner		= THIS_MODULE,
+>  	},
+
+For the wl12xx and wl1251 parts:
+
+Acked-by: Luciano Coelho <coelho@ti.com>
+
+
+-- 
+Cheers,
+Luca.
 
