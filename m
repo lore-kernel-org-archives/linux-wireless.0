@@ -1,54 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:36821 "HELO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752174Ab1KHDcG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35125 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751013Ab1K1NSO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 22:32:06 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH RESEND 2/4] mwifiex: remove an unneeded NULL check
-Date: Mon,  7 Nov 2011 19:31:45 -0800
-Message-Id: <1320723107-24202-3-git-send-email-bzhao@marvell.com> (sfid-20111108_043209_038874_B5BC7A45)
-In-Reply-To: <1320723107-24202-1-git-send-email-bzhao@marvell.com>
-References: <1320723107-24202-1-git-send-email-bzhao@marvell.com>
+	Mon, 28 Nov 2011 08:18:14 -0500
+Subject: Re: [PATCH v3] mac80211: fix race condition caused by late addBA
+ response
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Nikolay Martynov <mar.kolya@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	Norbert Preining <preining@logic.at>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+In-Reply-To: <CANUX_P1c_-JcinU5iWiS5tZo-vvE+RECzW6P13S+JOfFAyH4Ag@mail.gmail.com> (sfid-20111128_133506_902028_2F8CE6CE)
+References: <1322378621-14647-1-git-send-email-mar.kolya@gmail.com>
+	 <1322378621-14647-2-git-send-email-mar.kolya@gmail.com>
+	 <1322394638.4044.32.camel@jlt3.sipsolutions.net>
+	 <1322394800.4044.33.camel@jlt3.sipsolutions.net>
+	 <CALGY4fufCM2SvYLFaab1TzSr36b55bguFoZRtYZhLuXGMZLG1w@mail.gmail.com>
+	 <1322412918.4044.37.camel@jlt3.sipsolutions.net>
+	 <CANUX_P0E=bhBrGnYOJ7yt8mOgixNNPP5UKC_Cv5jL9uNiNFH9A@mail.gmail.com>
+	 <1322468173.4060.0.camel@jlt3.sipsolutions.net>
+	 <CANUX_P1c_-JcinU5iWiS5tZo-vvE+RECzW6P13S+JOfFAyH4Ag@mail.gmail.com>
+	 (sfid-20111128_133506_902028_2F8CE6CE)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 28 Nov 2011 14:18:05 +0100
+Message-ID: <1322486285.4060.5.camel@jlt3.sipsolutions.net> (sfid-20111128_141817_248867_A970EFE3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+On Mon, 2011-11-28 at 14:34 +0200, Emmanuel Grumbach wrote:
+> On Mon, Nov 28, 2011 at 10:16, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Mon, 2011-11-28 at 08:35 +0200, Emmanuel Grumbach wrote:
+> >
+> >> > /*
+> >> >  * addba_resp_timer may have fired before we got here, and
+> >> >  * caused WANT_STOP to be set. If the stop then was already
+> >> >  * processed further, STOPPING might be set.
+> >> >  */
+> >> >
+> >> >
+> >> > Did you notice that I moved this code to after the dialog token check?
+> >> >
+> >>
+> >> Don't you think we should also send a delBA ? The AP thinks we will Tx
+> >> in Agg and basically we are now out of sync.
+> >
+> > We do, during the timer stop path, afaict.
+> >
+> 
+> Yes, but obviously the AP didn't hear it since it sent the addBA resp.
+> IMHO, we should send it again.
 
-We dereference adapter in the error handling code so this needed to
-be fixed.  This function is always called like:
-	adapter->if_ops.host_to_card(adapter, ...);
-so adapter can never be NULL and I've removed the NULL check.
+I don't think so? This is addressing a race between the timer &
+receiving the frame, so typically the delBA would not have gone out yet.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Acked-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/pcie.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 4466976..d12d440 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -1671,9 +1671,8 @@ static int mwifiex_pcie_host_to_card(struct mwifiex_adapter *adapter, u8 type,
- 				     struct sk_buff *skb,
- 				     struct mwifiex_tx_param *tx_param)
- {
--	if (!adapter || !skb) {
--		dev_err(adapter->dev, "Invalid parameter in %s <%p, %p>\n",
--				__func__, adapter, skb);
-+	if (!skb) {
-+		dev_err(adapter->dev, "Passed NULL skb to %s\n", __func__);
- 		return -1;
- 	}
- 
--- 
-1.7.0.2
+johannes
 
