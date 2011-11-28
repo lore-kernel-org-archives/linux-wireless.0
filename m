@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:49246 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045Ab1KHPyK convert rfc822-to-8bit (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:45203 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751265Ab1K1D4u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 10:54:10 -0500
-Received: by bke11 with SMTP id 11so521897bke.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 07:54:09 -0800 (PST)
+	Sun, 27 Nov 2011 22:56:50 -0500
+Date: Mon, 28 Nov 2011 12:56:27 +0900
+From: Norbert Preining <preining@logic.at>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	David Rientjes <rientjes@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	Dave Jones <davej@redhat.com>
+Subject: Re: iwlagn is getting very shaky
+Message-ID: <20111128035627.GH1422@gamma.logic.tuwien.ac.at> (sfid-20111128_045707_597762_387F1C48)
+References: <CANUX_P0uyyuK4netV6srYCh9FsC4cpGzxobHE3T38n5RvvA0RQ@mail.gmail.com> <20111123015503.GC23203@gamma.logic.tuwien.ac.at> <CANUX_P1zDDzMy5yrFXSZAkMQ-87uu-fE1e-2sCEgHJi4dh5eiw@mail.gmail.com> <20111125122143.GA30404@gamma.logic.tuwien.ac.at> <CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com> <20111125123720.GA31564@gamma.logic.tuwien.ac.at> <CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com> <CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com> <1322387175.4044.16.camel@jlt3.sipsolutions.net> <CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1320766291.24797.4.camel@jlt3.sipsolutions.net>
-References: <1320762928-6782-1-git-send-email-arik@wizery.com> <1320766291.24797.4.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 8 Nov 2011 17:53:53 +0200
-Message-ID: <CA+XVXfcrbfVvs+PQCjyrW_QZSKZiAzKUvrqbjqJr47dU73=n2A@mail.gmail.com> (sfid-20111108_165419_736575_B41BB3E6)
-Subject: Re: [PATCH v3 1/3] nl80211: Add probe response offload attribute
-To: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 8, 2011 at 17:31, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2011-11-08 at 16:35 +0200, Arik Nemtsov wrote:
->> Notify user-space about probe-response offloading support in the driver.
->>
->> A wiphy flag is used to indicate support and a bitmap of protocols
->> determines which protocols are supported.
->
->> + * @NL80211_ATTR_PROBE_RESP_OFFLOAD_SUPPORT: Indicates support for probe
->> + *   response offloading by the driver/firmware.
->> + *   In addition this attribute holds a bitmap of the supported protocols
->> + *   for offloading using &enum nl80211_probe_resp_offload_support_attr.
->
-> I wonder if this should make it more clear that probe requests will be
-> replied to, and this is not optional?
+On So, 27 Nov 2011, Emmanuel Grumbach wrote:
+> Norbert, could you please test Nikolay's patch instead of mine ?
 
-Actually wl12xx "supports" the legacy way as well. We can operate
-without wpa_s explicitly setting the probe-resp (even though we just
-piece it together in other ways).
-In this sense, it's not a mandatory feature. If wpa_s fails to
-generate it for some reason, we don't want it to fail the AP load. The
-AP will operate just fine.
+Looks promising, I will do more testing on the way.
 
->
->> +++ b/include/net/cfg80211.h
->> @@ -1693,6 +1693,7 @@ enum wiphy_flags {
->>       WIPHY_FLAG_AP_UAPSD                     = BIT(14),
->>       WIPHY_FLAG_SUPPORTS_TDLS                = BIT(15),
->>       WIPHY_FLAG_TDLS_EXTERNAL_SETUP          = BIT(16),
->> +     WIPHY_FLAG_SUPPORT_PROBE_RESP_OFFLOAD   = BIT(17),
->
-> Ditto here, maybe WIPHY_FLAG_HAS_PROBE_RESP_OFFLOAD?
->
-> As we discussed, ath6kl & similar full-mac drivers with AP SME in the
-> device should set this to advertise the probe protocol feature set they
-> support (by passing up), and even for wl12xx it's not optional.
+Are you still interested in the output from a kernel wiht all the
+patches (the dump_stack() etc etc)? There are actually quite a lot
+of stacks dumped now into my dmesg/syslog ;-)
 
-All this has to do with user-space semantics. Currently hostap always
-sets the probe-resp IEs, without checking offloading support.
+Best wishes
 
-Jouni/ath6kl people - are you ok with adding some checks before
-sending the extra IEs to kernel, as ath6kl is using them?
-
-Arik
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+VIRGINSTOW (n.)
+A Durex machine which doesn't have the phrase 'So was the Titanic'
+scrawled on it. The word has now fallen into disuse.
+			--- Douglas Adams, The Meaning of Liff
