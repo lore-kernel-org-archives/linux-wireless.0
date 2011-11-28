@@ -1,81 +1,273 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:36691 "HELO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751678Ab1KHFmE (ORCPT
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:41758 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753623Ab1K1TqK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 00:42:04 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 7/7] mwifiex: release bss structure returned by cfg80211_inform_bss()
-Date: Mon,  7 Nov 2011 21:41:12 -0800
-Message-Id: <1320730872-25619-8-git-send-email-bzhao@marvell.com> (sfid-20111108_064208_104975_7AA313A1)
-In-Reply-To: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
-References: <1320730872-25619-1-git-send-email-bzhao@marvell.com>
+	Mon, 28 Nov 2011 14:46:10 -0500
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-wireless@vger.kernel.org> from <srivatsa.bhat@linux.vnet.ibm.com>;
+	Tue, 29 Nov 2011 01:16:07 +0530
+Message-ID: <4ED3E4F7.3010507@linux.vnet.ibm.com> (sfid-20111128_204635_322723_051DA233)
+Date: Tue, 29 Nov 2011 01:15:59 +0530
+From: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+MIME-Version: 1.0
+To: Udo Steinberg <udo@hypervisor.org>
+CC: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Network Mailing List <netdev@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	Linux PM mailing list <linux-pm@vger.kernel.org>
+Subject: Re: iwlagn failed resume from S3
+References: <20111128151406.51282c25@x220.fritz.box>
+In-Reply-To: <20111128151406.51282c25@x220.fritz.box>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
 
-Following compilation warning is fixed by releasing referenced BSS
-structure returned by cfg80211_inform_bss().
+Adding linux-pm mailing list to CC.
 
-"warning: ignoring return value of cfg80211_inform_bss,
-declared with attribute warn_unused_result"
+Thanks,
+Srivatsa S. Bhat
 
-Cc: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
-This patch fixes the bug mentioned by Johannes Berg:
-See "[PATCH] cfg80211: annotate cfg80211_inform_bss"
+On 11/28/2011 07:44 PM, Udo Steinberg wrote:
 
- drivers/net/wireless/mwifiex/cfg80211.c |    4 +++-
- drivers/net/wireless/mwifiex/scan.c     |    1 +
- 2 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 462c710..e9ab9a3 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -780,6 +780,7 @@ static int mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
- {
- 	struct ieee80211_channel *chan;
- 	struct mwifiex_bss_info bss_info;
-+	struct cfg80211_bss *bss;
- 	int ie_len;
- 	u8 ie_buf[IEEE80211_MAX_SSID_LEN + sizeof(struct ieee_types_header)];
- 	enum ieee80211_band band;
-@@ -800,9 +801,10 @@ static int mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
- 			ieee80211_channel_to_frequency(bss_info.bss_chan,
- 						       band));
- 
--	cfg80211_inform_bss(priv->wdev->wiphy, chan,
-+	bss = cfg80211_inform_bss(priv->wdev->wiphy, chan,
- 		bss_info.bssid, 0, WLAN_CAPABILITY_IBSS,
- 		0, ie_buf, ie_len, 0, GFP_KERNEL);
-+	cfg80211_put_bss(bss);
- 	memcpy(priv->cfg_bssid, bss_info.bssid, ETH_ALEN);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index c650e60..8a18bcc 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1760,6 +1760,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 					      cap_info_bitmap, beacon_period,
- 					      ie_buf, ie_len, rssi, GFP_KERNEL);
- 				*(u8 *)bss->priv = band;
-+				cfg80211_put_bss(bss);
- 
- 				if (priv->media_connected && !memcmp(bssid,
- 					priv->curr_bss_params.bss_descriptor
--- 
-1.7.0.2
+> Hi,
+> 
+> After coming out of Suspend-to-RAM with Linux-3.1.0, the Centrino Advanced-N
+> 6205 WiFi failed to resume with the following warnings in dmesg. So far this
+> has happened just once and it's not easily reproducible.
+> 
+> Cheers,
+> 
+> 	- Udo
+> 
+> iwlagn 0000:03:00.0: restoring config space at offset 0xf (was 0x100, writing 0x1ff)
+> iwlagn 0000:03:00.0: restoring config space at offset 0x4 (was 0x4, writing 0xf2500004)
+> iwlagn 0000:03:00.0: restoring config space at offset 0x3 (was 0x0, writing 0x10)
+> iwlagn 0000:03:00.0: L1 Disabled; Enabling L0S
+> iwlagn 0000:03:00.0: Radio type=0x1-0x2-0x0
+> ------------[ cut here ]------------
+> WARNING: at drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c:765 iwl_tx_cmd_complete+0xa4/0x335 [iwlagn]()
+> Hardware name: 4290W4H
+> wrong command queue 2 (should be 9), sequence 0x2FA readp=0 writep=0
+> Modules linked in: iwlagn
+> Pid: 0, comm: swapper Not tainted 3.1.0 #1
+> Call Trace:
+>  <IRQ>  [<ffffffff81036e2d>] ? warn_slowpath_common+0x78/0x8c
+>  [<ffffffff81036ee2>] ? warn_slowpath_fmt+0x45/0x4a
+>  [<ffffffffa0027199>] ? iwl_tx_cmd_complete+0xa4/0x335 [iwlagn]
+>  [<ffffffffa001c15c>] ? iwl_rx_dispatch+0x147/0x20f [iwlagn]
+>  [<ffffffffa00251d0>] ? iwl_irq_tasklet+0x7c9/0xb52 [iwlagn]
+>  [<ffffffffa0025fc3>] ? iwl_isr_ict+0x563/0x628 [iwlagn]
+>  [<ffffffff8103b439>] ? tasklet_action+0x67/0xa7
+>  [<ffffffff8103b95b>] ? __do_softirq+0x7f/0x106
+>  [<ffffffff813c10ec>] ? call_softirq+0x1c/0x26
+>  [<ffffffff8100351e>] ? do_softirq+0x31/0x67
+>  [<ffffffff8103bc0f>] ? irq_exit+0x44/0xb0
+>  [<ffffffff8100325f>] ? do_IRQ+0x94/0xad
+>  [<ffffffff813bf62b>] ? common_interrupt+0x6b/0x6b
+>  <EOI>  [<ffffffff8104fe71>] ? __hrtimer_start_range_ns+0x2c6/0x2d9
+>  [<ffffffff81190656>] ? intel_idle+0xcd/0xe9
+>  [<ffffffff81190632>] ? intel_idle+0xa9/0xe9
+>  [<ffffffff812cb231>] ? cpuidle_idle_call+0xa0/0xdb
+>  [<ffffffff810007b9>] ? cpu_idle+0x53/0x7c
+>  [<ffffffff816869fa>] ? start_kernel+0x2be/0x2c9
+> ---[ end trace 0107c607401edcc1 ]---
+> iwl data: 00000000: 00 00 35 02 00 00 fa 02 00 00 34 02 00 00 fa 02  ..5.......4.....
+> iwl data: 00000010: 00 00 35 02 00 00 34 02 00 00 35 02 00 00 f7 02  ..5...4...5.....
+> iwlagn 0000:03:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 209 is out of range [0-256] 0 0.
+> iwlagn 0000:03:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 215 is out of range [0-256] 0 0.
+> iwlagn 0000:03:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 221 is out of range [0-256] 0 0.
+> iwlagn 0000:03:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 214 is out of range [0-256] 0 0.
+> ------------[ cut here ]------------
+> WARNING: at drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c:765 iwl_tx_cmd_complete+0xa4/0x335 [iwlagn]()
+> Hardware name: 4290W4H
+> wrong command queue 20 (should be 9), sequence 0x1447 readp=0 writep=0
+> Modules linked in: iwlagn
+> Pid: 0, comm: swapper Tainted: G        W   3.1.0 #1
+> Call Trace:
+>  <IRQ>  [<ffffffff81036e2d>] ? warn_slowpath_common+0x78/0x8c
+>  [<ffffffff81036ee2>] ? warn_slowpath_fmt+0x45/0x4a
+>  [<ffffffffa0027199>] ? iwl_tx_cmd_complete+0xa4/0x335 [iwlagn]
+>  [<ffffffffa001c15c>] ? iwl_rx_dispatch+0x147/0x20f [iwlagn]
+>  [<ffffffffa00251d0>] ? iwl_irq_tasklet+0x7c9/0xb52 [iwlagn]
+>  [<ffffffffa0025fc3>] ? iwl_isr_ict+0x563/0x628 [iwlagn]
+>  [<ffffffff8103b439>] ? tasklet_action+0x67/0xa7
+>  [<ffffffff8103b95b>] ? __do_softirq+0x7f/0x106
+>  [<ffffffff813c10ec>] ? call_softirq+0x1c/0x26
+>  [<ffffffff8100351e>] ? do_softirq+0x31/0x67
+>  [<ffffffff8103bc0f>] ? irq_exit+0x44/0xb0
+>  [<ffffffff8100325f>] ? do_IRQ+0x94/0xad
+>  [<ffffffff813bf62b>] ? common_interrupt+0x6b/0x6b
+>  <EOI>  [<ffffffff8104fe71>] ? __hrtimer_start_range_ns+0x2c6/0x2d9
+>  [<ffffffff81190656>] ? intel_idle+0xcd/0xe9
+>  [<ffffffff81190632>] ? intel_idle+0xa9/0xe9
+>  [<ffffffff812cb231>] ? cpuidle_idle_call+0xa0/0xdb
+>  [<ffffffff810007b9>] ? cpu_idle+0x53/0x7c
+>  [<ffffffff816869fa>] ? start_kernel+0x2be/0x2c9
+> ---[ end trace 0107c607401edcc2 ]---
+> iwl data: 00000000: cc 0e ba 13 e6 5d 47 14 14 13 7c 6c 42 dc f5 1a  .....]G...|lB...
+> iwl data: 00000010: 5a f8 f3 ba 2f b8 6d 20 10 0e 10 b2 c0 38 e7 0b  Z.../.m .....8..
+> ------------[ cut here ]------------
+> WARNING: at drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c:765 iwl_tx_cmd_complete+0xa4/0x335 [iwlagn]()
+> Hardware name: 4290W4H
+> wrong command queue 0 (should be 9), sequence 0xE1 readp=0 writep=0
+> Modules linked in: iwlagn
+> Pid: 0, comm: swapper Tainted: G        W   3.1.0 #1
+> Call Trace:
+>  <IRQ>  [<ffffffff81036e2d>] ? warn_slowpath_common+0x78/0x8c
+>  [<ffffffff81036ee2>] ? warn_slowpath_fmt+0x45/0x4a
+>  [<ffffffffa0027199>] ? iwl_tx_cmd_complete+0xa4/0x335 [iwlagn]
+>  [<ffffffffa001e577>] ? iwl_rx_scan_complete_notif+0x163/0x1d3 [iwlagn]
+>  [<ffffffffa00251d0>] ? iwl_irq_tasklet+0x7c9/0xb52 [iwlagn]
+>  [<ffffffffa0025fc3>] ? iwl_isr_ict+0x563/0x628 [iwlagn]
+>  [<ffffffff8103b439>] ? tasklet_action+0x67/0xa7
+>  [<ffffffff8103b95b>] ? __do_softirq+0x7f/0x106
+>  [<ffffffff813c10ec>] ? call_softirq+0x1c/0x26
+>  [<ffffffff8100351e>] ? do_softirq+0x31/0x67
+>  [<ffffffff8103bc0f>] ? irq_exit+0x44/0xb0
+>  [<ffffffff8100325f>] ? do_IRQ+0x94/0xad
+>  [<ffffffff813bf62b>] ? common_interrupt+0x6b/0x6b
+>  <EOI>  [<ffffffff8104fe71>] ? __hrtimer_start_range_ns+0x2c6/0x2d9
+>  [<ffffffff81190656>] ? intel_idle+0xcd/0xe9
+>  [<ffffffff81190632>] ? intel_idle+0xa9/0xe9
+>  [<ffffffff812cb231>] ? cpuidle_idle_call+0xa0/0xdb
+>  [<ffffffff810007b9>] ? cpu_idle+0x53/0x7c
+>  [<ffffffff816869fa>] ? start_kernel+0x2be/0x2c9
+> ---[ end trace 0107c607401edcc3 ]---
+> iwl data: 00000000: 35 18 04 00 84 c5 e1 00 f1 00 e0 00 58 00 4e 00  5...........X.N.
+> iwl data: 00000010: 35 08 04 00 85 c5 e1 00 2a b0 e1 00 15 00 13 00  5.......*.......
+> iwlagn 0000:03:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 208 is out of range [0-256] 0 0.
+> iwlagn 0000:03:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 232 is out of range [0-256] 0 0.
+> iwlagn 0000:03:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 213 is out of range [0-256] 0 0.
+> iwlagn 0000:03:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 210 is out of range [0-256] 0 0.
+> ------------[ cut here ]------------
+> WARNING: at drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c:765 iwl_tx_cmd_complete+0xa4/0x335 [iwlagn]()
+> Hardware name: 4290W4H
+> wrong command queue 0 (should be 9), sequence 0x61 readp=0 writep=0
+> Modules linked in: iwlagn
+> Pid: 0, comm: swapper Tainted: G        W   3.1.0 #1
+> Call Trace:
+>  <IRQ>  [<ffffffff81036e2d>] ? warn_slowpath_common+0x78/0x8c
+>  [<ffffffff81036ee2>] ? warn_slowpath_fmt+0x45/0x4a
+>  [<ffffffffa0027199>] ? iwl_tx_cmd_complete+0xa4/0x335 [iwlagn]
+>  [<ffffffffa001c15c>] ? iwl_rx_dispatch+0x147/0x20f [iwlagn]
+>  [<ffffffffa00251d0>] ? iwl_irq_tasklet+0x7c9/0xb52 [iwlagn]
+>  [<ffffffffa0025fc3>] ? iwl_isr_ict+0x563/0x628 [iwlagn]
+>  [<ffffffff8103b439>] ? tasklet_action+0x67/0xa7
+>  [<ffffffff8103b95b>] ? __do_softirq+0x7f/0x106
+>  [<ffffffff813c10ec>] ? call_softirq+0x1c/0x26
+>  [<ffffffff8100351e>] ? do_softirq+0x31/0x67
+>  [<ffffffff8103bc0f>] ? irq_exit+0x44/0xb0
+>  [<ffffffff8100325f>] ? do_IRQ+0x94/0xad
+>  [<ffffffff813bf62b>] ? common_interrupt+0x6b/0x6b
+>  <EOI>  [<ffffffff8104fe71>] ? __hrtimer_start_range_ns+0x2c6/0x2d9
+>  [<ffffffff81190656>] ? intel_idle+0xcd/0xe9
+>  [<ffffffff81190632>] ? intel_idle+0xa9/0xe9
+>  [<ffffffff812cb231>] ? cpuidle_idle_call+0xa0/0xdb
+>  [<ffffffff810007b9>] ? cpu_idle+0x53/0x7c
+>  [<ffffffff816869fa>] ? start_kernel+0x2be/0x2c9
+> ---[ end trace 0107c607401edcc4 ]---
+> iwl data: 00000000: 35 18 04 00 47 10 61 00 45 10 61 00 0c 00 0c 00  5...G.a.E.a.....
+> iwl data: 00000010: 37 00 04 00 48 10 61 00 45 10 61 00 00 00 00 00  7...H.a.E.a.....
+> iwlagn 0000:03:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 219 is out of range [0-256] 0 0.
+> iwlagn 0000:03:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 220 is out of range [0-256] 0 0.
+> iwlagn 0000:03:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 212 is out of range [0-256] 0 0.
+> iwlagn 0000:03:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 230 is out of range [0-256] 0 0.
+> ------------[ cut here ]------------
+> WARNING: at drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c:765 iwl_tx_cmd_complete+0xa4/0x335 [iwlagn]()
+> Hardware name: 4290W4H
+> wrong command queue 0 (should be 9), sequence 0x0 readp=0 writep=0
+> Modules linked in: iwlagn
+> Pid: 0, comm: swapper Tainted: G        W   3.1.0 #1
+> Call Trace:
+>  <IRQ>  [<ffffffff81036e2d>] ? warn_slowpath_common+0x78/0x8c
+>  [<ffffffff81036ee2>] ? warn_slowpath_fmt+0x45/0x4a
+>  [<ffffffffa0027199>] ? iwl_tx_cmd_complete+0xa4/0x335 [iwlagn]
+>  [<ffffffffa001c15c>] ? iwl_rx_dispatch+0x147/0x20f [iwlagn]
+>  [<ffffffffa00251d0>] ? iwl_irq_tasklet+0x7c9/0xb52 [iwlagn]
+>  [<ffffffffa0025fc3>] ? iwl_isr_ict+0x563/0x628 [iwlagn]
+>  [<ffffffff8103b439>] ? tasklet_action+0x67/0xa7
+>  [<ffffffff8103b95b>] ? __do_softirq+0x7f/0x106
+>  [<ffffffff813c10ec>] ? call_softirq+0x1c/0x26
+>  [<ffffffff8100351e>] ? do_softirq+0x31/0x67
+>  [<ffffffff8103bc0f>] ? irq_exit+0x44/0xb0
+>  [<ffffffff8100325f>] ? do_IRQ+0x94/0xad
+>  [<ffffffff813bf62b>] ? common_interrupt+0x6b/0x6b
+>  <EOI>  [<ffffffff8104fe71>] ? __hrtimer_start_range_ns+0x2c6/0x2d9
+>  [<ffffffff81190656>] ? intel_idle+0xcd/0xe9
+>  [<ffffffff81190632>] ? intel_idle+0xa9/0xe9
+>  [<ffffffff812cb231>] ? cpuidle_idle_call+0xa0/0xdb
+>  [<ffffffff810007b9>] ? cpu_idle+0x53/0x7c
+>  [<ffffffff816869fa>] ? start_kernel+0x2be/0x2c9
+> ---[ end trace 0107c607401edcc5 ]---
+> iwl data: 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 fe 01 00 00  ................
+> iwl data: 00000010: b8 c0 0c 04 00 ea ff ff c8 d7 09 07 00 ea ff ff  ................
+> iwlagn 0000:03:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 216 is out of range [0-256] 0 0.
+> iwlagn 0000:03:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 224 is out of range [0-256] 0 0.
+> iwlagn 0000:03:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 223 is out of range [0-256] 0 0.
+> ------------[ cut here ]------------
+> WARNING: at drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c:765 iwl_tx_cmd_complete+0xa4/0x335 [iwlagn]()
+> Hardware name: 4290W4H
+> wrong command queue 18 (should be 9), sequence 0x5259 readp=0 writep=0
+> Modules linked in: iwlagn
+> Pid: 0, comm: swapper Tainted: G        W   3.1.0 #1
+> Call Trace:
+>  <IRQ>  [<ffffffff81036e2d>] ? warn_slowpath_common+0x78/0x8c
+>  [<ffffffff81036ee2>] ? warn_slowpath_fmt+0x45/0x4a
+>  [<ffffffffa0027199>] ? iwl_tx_cmd_complete+0xa4/0x335 [iwlagn]
+>  [<ffffffffa001c15c>] ? iwl_rx_dispatch+0x147/0x20f [iwlagn]
+>  [<ffffffffa00251d0>] ? iwl_irq_tasklet+0x7c9/0xb52 [iwlagn]
+>  [<ffffffffa0025fc3>] ? iwl_isr_ict+0x563/0x628 [iwlagn]
+>  [<ffffffff8103b439>] ? tasklet_action+0x67/0xa7
+>  [<ffffffff8103b95b>] ? __do_softirq+0x7f/0x106
+>  [<ffffffff813c10ec>] ? call_softirq+0x1c/0x26
+>  [<ffffffff8100351e>] ? do_softirq+0x31/0x67
+>  [<ffffffff8103bc0f>] ? irq_exit+0x44/0xb0
+>  [<ffffffff8100325f>] ? do_IRQ+0x94/0xad
+>  [<ffffffff813bf62b>] ? common_interrupt+0x6b/0x6b
+>  <EOI>  [<ffffffff8104fe71>] ? __hrtimer_start_range_ns+0x2c6/0x2d9
+>  [<ffffffff81190656>] ? intel_idle+0xcd/0xe9
+>  [<ffffffff81190632>] ? intel_idle+0xa9/0xe9
+>  [<ffffffff812cb231>] ? cpuidle_idle_call+0xa0/0xdb
+>  [<ffffffff810007b9>] ? cpu_idle+0x53/0x7c
+>  [<ffffffff816869fa>] ? start_kernel+0x2be/0x2c9
+> ---[ end trace 0107c607401edcc6 ]---
+> iwl data: 00000000: d0 26 c9 95 25 33 59 52 20 38 a2 2c 91 27 48 90  .&..%3YR 8.,.'H.
+> iwl data: 00000010: fb 08 36 49 c5 1a a6 ee 13 48 03 62 44 30 77 60  ..6I.....H.bD0w`
+> iwlagn 0000:03:00.0: Failed to start RT ucode: -110
+> iwlagn 0000:03:00.0: Unable to initialize device.
+> ------------[ cut here ]------------
+> WARNING: at net/mac80211/util.c:1182 ieee80211_reconfig+0x110/0x407()
+> Hardware name: 4290W4H
+> Hardware became unavailable upon resume. This could be a software issue prior to suspend or a hardware issue.
+> Modules linked in: iwlagn
+> Pid: 4801, comm: acpi_handler.sh Tainted: G        W   3.1.0 #1
+> Call Trace:
+>  [<ffffffff81036e2d>] ? warn_slowpath_common+0x78/0x8c
+>  [<ffffffff81379cbf>] ? wiphy_suspend+0x5f/0x5f
+>  [<ffffffff81036ee2>] ? warn_slowpath_fmt+0x45/0x4a
+>  [<ffffffff813a7c7e>] ? ieee80211_reconfig+0x110/0x407
+>  [<ffffffff81379cbf>] ? wiphy_suspend+0x5f/0x5f
+>  [<ffffffff81379d2b>] ? wiphy_resume+0x6c/0x7c
+>  [<ffffffff8123d6ed>] ? legacy_resume+0x1e/0x4e
+>  [<ffffffff8123db3a>] ? device_resume+0xb7/0x100
+>  [<ffffffff8123e16f>] ? dpm_resume+0xd7/0x182
+>  [<ffffffff8123e36c>] ? dpm_resume_end+0x8/0x10
+>  [<ffffffff81062179>] ? suspend_devices_and_enter+0x1b3/0x1ec
+>  [<ffffffff8106228a>] ? enter_state+0xd8/0x12b
+>  [<ffffffff810619aa>] ? state_store+0xaa/0xca
+>  [<ffffffff810f08e1>] ? sysfs_write_file+0xd3/0x10f
+>  [<ffffffff810ac20b>] ? vfs_write+0xaf/0x129
+>  [<ffffffff810ac45e>] ? sys_write+0x45/0x6e
+>  [<ffffffff813bfc7b>] ? system_call_fastpath+0x16/0x1b
+> ---[ end trace 0107c607401edcc7 ]---
+> legacy_resume(): wiphy_resume+0x0/0x7c returns -110
+> PM: Device phy0 failed to resume: error -110
+> PM: resume of devices complete after 2777.958 msecs
+> PM: Finishing wakeup.
+> Restarting tasks ... done.
+> video LNXVIDEO:00: Restoring backlight state
 
