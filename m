@@ -1,58 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54279 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753151Ab1KCJkc (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:56841 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752856Ab1K1QCD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 05:40:32 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Dai Shuibing <shuibing@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH 3/3] ath6kl: Indicate WAPI IE from (Re)Association Request frame
-Date: Thu, 3 Nov 2011 11:39:39 +0200
-Message-ID: <1320313179-9259-4-git-send-email-jouni@qca.qualcomm.com> (sfid-20111103_104035_489361_6442C0AD)
-In-Reply-To: <1320313179-9259-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1320313179-9259-1-git-send-email-jouni@qca.qualcomm.com>
+	Mon, 28 Nov 2011 11:02:03 -0500
+Received: by eaak14 with SMTP id k14so1940124eaa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 08:02:02 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACna6ryNkHeVXWXxFfod1-KQs8HQVv7wF-xpY5MA-Qs6fCypCg@mail.gmail.com>
+References: <4ED3A6E8.4050000@aol.com>
+	<CACna6ryNkHeVXWXxFfod1-KQs8HQVv7wF-xpY5MA-Qs6fCypCg@mail.gmail.com>
+Date: Mon, 28 Nov 2011 17:02:02 +0100
+Message-ID: <CACna6rzRJgfddE4jPivxBJCCZEyKSHsdRX7cE15rRxk2nhiRkA@mail.gmail.com> (sfid-20111128_170208_008373_B5FCEE5C)
+Subject: Re: Trouble with Macbook Pro 8,2 (broadcom 4331) and latest b43
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: AndrewL733 <AndrewL733@aol.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dai Shuibing <shuibing@qca.qualcomm.com>
+W dniu 28 listopada 2011 16:59 użytkownik Rafał Miłecki
+<zajec5@gmail.com> napisał:
+> I can give you some hints:
+> 1) find -name "b43.ko" /lib/modules
 
-This is needed to know whether the STA requests WAPI to be used and if
-so, with what AKM and cipher.
+I meant
+find /lib/modules -name "b43.ko"
 
-Signed-off-by: Dai Shuibing <shuibing@qca.qualcomm.com>
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/main.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+Anyway, the problem lies in compat-wireless installation. I don't
+understand the following part:
+make[1]: *** [_emodinst_post] Error 1
+ make[1]: Leaving directory `/usr/src/devel/3.1.2-1.1-desktop'
+ make: *** [install-modules] Error 2
+(don't know where it comes from)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index a800837..559539b 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -534,6 +534,18 @@ void ath6kl_connect_ap_mode_sta(struct ath6kl_vif *vif, u16 aid, u8 *mac_addr,
- 				wpa_ie = pos; /* WPS IE */
- 				break; /* overrides WPA/RSN IE */
- 			}
-+		} else if (pos[0] == 0x44 && wpa_ie == NULL) {
-+			/*
-+			 * Note: WAPI Parameter Set IE re-uses Element ID that
-+			 * was officially allocated for BSS AC Access Delay. As
-+			 * such, we need to be a bit more careful on when
-+			 * parsing the frame. However, BSS AC Access Delay
-+			 * element is not supposed to be included in
-+			 * (Re)Association Request frames, so this should not
-+			 * cause problems.
-+			 */
-+			wpa_ie = pos; /* WAPI IE */
-+			break;
- 		}
- 		pos += 2 + pos[1];
- 	}
 -- 
-1.7.4.1
-
+Rafał
