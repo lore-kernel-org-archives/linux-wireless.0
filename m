@@ -1,144 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:55991 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756643Ab1KIKtm (ORCPT
+Received: from mail-qw0-f53.google.com ([209.85.216.53]:38733 "EHLO
+	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753960Ab1K1UHx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 05:49:42 -0500
-Date: Wed, 9 Nov 2011 13:49:26 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: johannes.berg@intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: iwlagn: use 6 Mbps rate for no-CCK scans
-Message-ID: <20111109104926.GA19993@elgon.mountain> (sfid-20111109_114956_885304_81137F1F)
+	Mon, 28 Nov 2011 15:07:53 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201111252059.44293.tlnd@online.de>
+References: <1322060687-6512-1-git-send-email-mcgrof@qca.qualcomm.com>
+ <1322060687-6512-2-git-send-email-mcgrof@qca.qualcomm.com> <201111252059.44293.tlnd@online.de>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Mon, 28 Nov 2011 15:07:31 -0500
+Message-ID: <CAB=NE6VFaiVS-iugG+vA6KKF6hPOAybJFdxV=L+b6Yt-9WcR2g@mail.gmail.com> (sfid-20111128_210757_173380_FB1151EB)
+Subject: Re: [RFC 1/2] cfg80211: fix race on init and driver registration
+To: Timo Lindhorst <tlnd@online.de>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, stable@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes Berg,
+On Fri, Nov 25, 2011 at 2:59 PM, Timo Lindhorst <tlnd@online.de> wrote:
+> Am Mittwoch, 23. November 2011, 16:04:46 schrieb Luis R. Rodriguez:
+>> There is a theoretical race that if hit will trigger
+>> a crash. The race is between when we issue the first
+>> regulatory hint, regulatory_hint_core(), gets processed
+>> by the workqueue and between when the first device
+>> gets registered to the wireless core. This is not easy
+>> to reproduce but it was easy to do so through the
+>> regulatory simulator I have been working on. This
+>> is a port of the fix I implemented there [1].
+>>
+>> [1]
+>> https://github.com/mcgrof/regsim/commit/a246ccf81f059cb662eee288aa13100f63
+>> 1e4cc8
+>>
+>> Cc: stable@vger.kernel.org
+>> Cc: Johannes Berg <johannes.berg@intel.com>
+>> Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+>> ---
+>>  net/wireless/reg.c |   28 ++++++++++++++++++++--------
+>>  1 files changed, 20 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+>> index 76b35df..df73b96 100644
+>> --- a/net/wireless/reg.c
+>> +++ b/net/wireless/reg.c
+>> @@ -57,8 +57,17 @@
+>>  #define REG_DBG_PRINT(args...)
+>>  #endif
+>>
+>> +static struct regulatory_request core_request_world = {
+>> +     .initiator = NL80211_REGDOM_SET_BY_CORE,
+>> +     .alpha2[0] = '0',
+>> +     .alpha2[1] = '0',
+>> +     .intersect = false,
+>> +     .processed = true,
+>> +     .country_ie_env = ENVIRON_ANY,
+>> +};
+>> +
+>>  /* Receipt of information from last regulatory request */
+>> -static struct regulatory_request *last_request;
+>> +static struct regulatory_request *last_request = &core_request_world;
+>>
+>>  /* To trigger userspace events */
+>>  static struct platform_device *reg_pdev;
+>> @@ -165,6 +174,10 @@ static void reset_regdomains(void)
+>>
+>>       cfg80211_world_regdom = &world_regdom;
+>>       cfg80211_regdomain = NULL;
+>> +
+>> +     if (last_request != &core_request_world)
+>> +             kfree(last_request);
+>> +     last_request = &core_request_world;
+>>  }
+> This breaks setting the regdom correctly! reset_regdomains() is called from
+> within set_regdom() (i.e. via __set_regdom()), however, the subsequent
+> functions called within set_regdom() expect last_request to still hold the
+> currently processed request:
+>
+>        update_all_wiphy_regulatory(last_request->initiator);
+>        print_regdomain(cfg80211_regdomain);
+>        nl80211_send_reg_change_event(last_request);
+>        reg_set_request_processed();
+>
+> This, for instance, prevents to set the regdom from userspace -- or precisely:
+> the regdom is set, but the reg_timeout worker restores the settings after the
+> timeout, which is not canceled as intended within reg_set_request_processed(),
+> since last_request->initiator is not NL80211_REGDOM_SET_BY_USER anymore as
+> last_request was reset to &core_request_world.
 
-This is a semi-automatic email about new static checker warnings.
+Thanks for testing, I really didn't have time. So I'll fix this by
+passing a flag to reset_regdomains()s. I see the issue you pointed
+out. I'll test this time before sending my new series.
 
-The patch 3a8aea098c8e: "iwlagn: use 6 Mbps rate for no-CCK scans" 
-from Oct 14, 2011, leads to the following Smatch complaint:
-
-drivers/net/wireless/iwlwifi/iwl-scan.c +782 iwlagn_request_scan()
-	 error: we previously assumed 'priv->scan_request' could be null (see line 681)
-
-drivers/net/wireless/iwlwifi/iwl-scan.c
-   680					       >> RXON_FLG_CHANNEL_MODE_POS;
-   681			if ((priv->scan_request && priv->scan_request->no_cck) ||
-                             ^^^^^^^^^^^^^^^^^^
-newly introduced check.  (Probably not needed.  Nothing else in this
-function checks this).
-
-   682			    chan_mod == CHANNEL_MODE_PURE_40) {
-   683				rate = IWL_RATE_6M_PLCP;
-   684			} else {
-   685				rate = IWL_RATE_1M_PLCP;
-   686				rate_flags = RATE_MCS_CCK_MSK;
-   687			}
-   688			/*
-   689			 * Internal scans are passive, so we can indiscriminately set
-   690			 * the BT ignore flag on 2.4 GHz since it applies to TX only.
-   691			 */
-   692			if (priv->cfg->bt_params &&
-   693			    priv->cfg->bt_params->advanced_bt_coexist)
-   694				scan->tx_cmd.tx_flags |= TX_CMD_FLG_IGNORE_BT;
-   695			break;
-   696		case IEEE80211_BAND_5GHZ:
-   697			rate = IWL_RATE_6M_PLCP;
-   698			break;
-   699		default:
-   700			IWL_WARN(priv, "Invalid scan band\n");
-   701			return -EIO;
-   702		}
-   703	
-   704		/*
-   705		 * If active scanning is requested but a certain channel is
-   706		 * marked passive, we can do active scanning if we detect
-   707		 * transmissions.
-   708		 *
-   709		 * There is an issue with some firmware versions that triggers
-   710		 * a sysassert on a "good CRC threshold" of zero (== disabled),
-   711		 * on a radar channel even though this means that we should NOT
-   712		 * send probes.
-   713		 *
-   714		 * The "good CRC threshold" is the number of frames that we
-   715		 * need to receive during our dwell time on a channel before
-   716		 * sending out probes -- setting this to a huge value will
-   717		 * mean we never reach it, but at the same time work around
-   718		 * the aforementioned issue. Thus use IWL_GOOD_CRC_TH_NEVER
-   719		 * here instead of IWL_GOOD_CRC_TH_DISABLED.
-   720		 *
-   721		 * This was fixed in later versions along with some other
-   722		 * scan changes, and the threshold behaves as a flag in those
-   723		 * versions.
-   724		 */
-   725		if (priv->new_scan_threshold_behaviour)
-   726			scan->good_CRC_th = is_active ? IWL_GOOD_CRC_TH_DEFAULT :
-   727							IWL_GOOD_CRC_TH_DISABLED;
-   728		else
-   729			scan->good_CRC_th = is_active ? IWL_GOOD_CRC_TH_DEFAULT :
-   730							IWL_GOOD_CRC_TH_NEVER;
-   731	
-   732		band = priv->scan_band;
-   733	
-   734		if (priv->cfg->scan_rx_antennas[band])
-   735			rx_ant = priv->cfg->scan_rx_antennas[band];
-   736	
-   737		if (band == IEEE80211_BAND_2GHZ &&
-   738		    priv->cfg->bt_params &&
-   739		    priv->cfg->bt_params->advanced_bt_coexist) {
-   740			/* transmit 2.4 GHz probes only on first antenna */
-   741			scan_tx_antennas = first_antenna(scan_tx_antennas);
-   742		}
-   743	
-   744		priv->scan_tx_ant[band] = iwl_toggle_tx_ant(priv,
-   745							    priv->scan_tx_ant[band],
-   746							    scan_tx_antennas);
-   747		rate_flags |= iwl_ant_idx_to_flags(priv->scan_tx_ant[band]);
-   748		scan->tx_cmd.rate_n_flags = iwl_hw_set_rate_n_flags(rate, rate_flags);
-   749	
-   750		/* In power save mode use one chain, otherwise use all chains */
-   751		if (test_bit(STATUS_POWER_PMI, &priv->shrd->status)) {
-   752			/* rx_ant has been set to all valid chains previously */
-   753			active_chains = rx_ant &
-   754					((u8)(priv->chain_noise_data.active_chains));
-   755			if (!active_chains)
-   756				active_chains = rx_ant;
-   757	
-   758			IWL_DEBUG_SCAN(priv, "chain_noise_data.active_chains: %u\n",
-   759					priv->chain_noise_data.active_chains);
-   760	
-   761			rx_ant = first_antenna(active_chains);
-   762		}
-   763		if (priv->cfg->bt_params &&
-   764		    priv->cfg->bt_params->advanced_bt_coexist &&
-   765		    priv->bt_full_concurrent) {
-   766			/* operated as 1x1 in full concurrency mode */
-   767			rx_ant = first_antenna(rx_ant);
-   768		}
-   769	
-   770		/* MIMO is not used here, but value is required */
-   771		rx_chain |=
-   772			hw_params(priv).valid_rx_ant << RXON_RX_CHAIN_VALID_POS;
-   773		rx_chain |= rx_ant << RXON_RX_CHAIN_FORCE_MIMO_SEL_POS;
-   774		rx_chain |= rx_ant << RXON_RX_CHAIN_FORCE_SEL_POS;
-   775		rx_chain |= 0x1 << RXON_RX_CHAIN_DRIVER_FORCE_POS;
-   776		scan->rx_chain = cpu_to_le16(rx_chain);
-   777		switch (priv->scan_type) {
-   778		case IWL_SCAN_NORMAL:
-   779			cmd_len = iwl_fill_probe_req(priv,
-   780						(struct ieee80211_mgmt *)scan->data,
-   781						vif->addr,
-   782						priv->scan_request->ie,
-                                                ^^^^^^^^^^^^^^^^^^^^
-unchecked dereference.
-
-   783						priv->scan_request->ie_len,
-   784						IWL_MAX_SCAN_SIZE - sizeof(*scan));
-
-regards,
-dan carpenter
-
+  Luis
