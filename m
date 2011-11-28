@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3830 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752432Ab1KUT6r convert rfc822-to-8bit (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:33475 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753247Ab1K1T7r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 14:58:47 -0500
-Message-ID: <4ECAAD6C.4080103@broadcom.com> (sfid-20111121_205850_650447_D7D3E852)
-Date: Mon, 21 Nov 2011 11:58:36 -0800
-From: "Franky Lin" <frankyl@broadcom.com>
+	Mon, 28 Nov 2011 14:59:47 -0500
+Date: Mon, 28 Nov 2011 20:59:39 +0100
+From: Johan Hovold <jhovold@gmail.com>
+To: Greg KH <greg@kroah.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: stable-3.1: iwlwifi broken with nomsi
+Message-ID: <20111128195939.GA15362@localhost> (sfid-20111128_205951_715394_34409FD5)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Thomas_Lang=E5s?= <thomas.langas@fxitech.com>
-cc: "Arend Van Spriel" <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Howard Harte" <hharte@broadcom.com>
-Subject: Re: brcm80211 (with bcm4329-chip)
-References: <CADrAYBnwWEaigcgQYYk6V3VEuEYyrmzJQXegKVk6TgOTPh5N8A@mail.gmail.com>
- <4ECA8908.7070304@broadcom.com> <4ECA98DB.4030608@broadcom.com>
- <CADrAYBk7_fsVJUAYNqEZpdBPKOTGUai_UhPT9LMHaEyY+Zm24w@mail.gmail.com>
-In-Reply-To: <CADrAYBk7_fsVJUAYNqEZpdBPKOTGUai_UhPT9LMHaEyY+Zm24w@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/21/2011 10:45 AM, Thomas Langås wrote:
-> On Mon, Nov 21, 2011 at 7:30 PM, Franky Lin<frankyl@broadcom.com>  wrote:
->> Current MMC stack in Linux would not confuse a MMC/SD card and a SDIO
->> device. Basically the intialization and command sets they used are
->> different.
->
-> So the crash is unrelated, is what you're saying?   I've attached the
-> log if that'll
-> give you some more clues.
+Hi Greg, 
 
-Yes, it should have nothing to do with the crash.
+I believe commit 63665158282dd3b5d70 (iwlwifi: allow pci_enable_msi fail)
+needs to be added to the 3.1 stable tree as the driver fails to probe
+with MSI disabled since commit 084dd79172cb3 (iwlagn: move PCI related
+operations from probe and remove to PCI layer) without it:
 
-> Attached is a crash.log-file from the serial console.
->
+[    2.564901] iwlagn 0000:0e:00.0: PCI INT A -> GSI 18 (level, low) ->
+IRQ 18
+[    2.564962] iwlagn 0000:0e:00.0: setting latency timer to 64
+[    2.564977] iwlagn 0000:0e:00.0: pci_resource_len = 0x00002000
+[    2.567136] iwlagn 0000:0e:00.0: pci_resource_base = f8038000
+[    2.569274] iwlagn 0000:0e:00.0: HW Revision ID = 0x0
+[    2.571375] iwlagn 0000:0e:00.0: pci_enable_msi failed
+[    2.571431] iwlagn 0000:0e:00.0: PCI INT A disabled
+[    2.575598] iwlagn: probe of 0000:0e:00.0 failed with error -1
 
- > [    5.390000] mmc1: Got data interrupt 0x00200000 even though no 
-data operation was in progress.
+The problem was initially reported here:
 
-This is weird.
-#define  SDHCI_INT_ADMA_ERROR   0x02000000
-Could you check why the the SDIO host controller is generating this kind 
-of interrupt?
+	https://lkml.org/lkml/2011/10/26/314
 
-Also, comment out the line "brcmf_msg_level = BRCMF_ERROR_VAL;" in 
-brcmf_c_init of dhd_common.c. Then insert fullmac module by
-insmod brcmfmac.ko brcmf_msg_level=0x7. This will give you a more detail 
-log of brcmfmac. But I am suspecting even the first SDIO read command 
-failed.
+but the fix was never marked for stable.
 
-Franky
-
+Thanks,
+Johan
