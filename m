@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:41346 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754150Ab1KTWn5 (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:44394 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753256Ab1K1R4Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Nov 2011 17:43:57 -0500
-Received: by vcbfk1 with SMTP id fk1so5005523vcb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Nov 2011 14:43:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1321775788-12520-3-git-send-email-mickflemm@gmail.com>
-References: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
-	<1321775788-12520-3-git-send-email-mickflemm@gmail.com>
-Date: Mon, 21 Nov 2011 06:43:57 +0800
-Message-ID: <CAJ-VmokN00pC40cAhpPYLzkBOpHsRwVC-LZX6=zPTBgaXhc3aw@mail.gmail.com> (sfid-20111120_234406_290699_4687ECC3)
-Subject: Re: [PATCH 02/13] ath5k: Maintain PISR snapshot
-From: Adrian Chadd <adrian@freebsd.org>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	nbd@openwrt.org, jirislaby@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 28 Nov 2011 12:56:25 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Alexander Simon <an.alexsimon@googlemail.com>,
+	Marek Lindner <lindner_marek@yahoo.de>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCH 1/4] mac80211: fill rate filter for internal scan requests
+Date: Mon, 28 Nov 2011 18:55:13 +0100
+Message-Id: <1322502917-28205-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111128_185634_810824_7B135F2B)
+In-Reply-To: <1322502917-28205-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1322502917-28205-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-.. replying to this after having not slept for > 24 hours, thanks to
-being in transit between the US and Western Australia..
+The rates bitmap for internal scan requests shoud be filled,
+otherwise there will be probe requests with zero rates supported.
 
-On 20 November 2011 15:56, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> Since we dont read a snapshot of the interrupt
-> registers it might be possible to get a new interrupt
-> while reading them. In this case we should make sure
-> that we clear all SISR bits we get from PISR.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ net/mac80211/main.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-Just to be clear, you _shouldn't_ clear the secondary status mask bit
-in the primary status register when you write back 1's to the primary
-ISR.
-Clear the bits that you read in the secondary status registers. If you
-clear the relevant bit in the primary status register then you may
-also skip perfectly valid interrupts.
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index dddedfa..3e15f75 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -779,6 +779,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (!local->int_scan_req)
+ 		return -ENOMEM;
+ 
++	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
++		if (!local->hw.wiphy->bands[band])
++			continue;
++		local->int_scan_req->rates[band] = (u32) -1;
++	}
++
+ 	/* if low-level driver supports AP, we also support VLAN */
+ 	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_AP)) {
+ 		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
+-- 
+1.7.7.3
 
-You don't need to check the secondary registers and the primary ISR
-bits for consistency. Just read what I did in freebsd-head :
-src/sys/dev/ath/ath_hal/ar5416/ar5416_interrupts.c . it works fine.
-
-
-Adrian
