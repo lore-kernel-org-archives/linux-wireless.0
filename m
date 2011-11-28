@@ -1,100 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:40086 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750924Ab1KDEL3 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51442 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753247Ab1K1TAk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 00:11:29 -0400
-Received: by mail-yw0-f46.google.com with SMTP id 7so2077492ywf.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2011 21:11:29 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v4 2/4] mac80211: QoS multicast frames have No Ack policy
-Date: Thu,  3 Nov 2011 21:11:11 -0700
-Message-Id: <1320379873-30884-2-git-send-email-thomas@cozybit.com> (sfid-20111104_051133_273884_5B3DD45C)
-In-Reply-To: <1320379873-30884-1-git-send-email-thomas@cozybit.com>
-References: <1320379873-30884-1-git-send-email-thomas@cozybit.com>
+	Mon, 28 Nov 2011 14:00:40 -0500
+Date: Mon, 28 Nov 2011 13:45:06 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: Timo Lindhorst <tlnd@online.de>, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] cfg80211: Fix changing regulatory from userspace
+Message-ID: <20111128184506.GC2681@tuxdriver.com> (sfid-20111128_200049_326006_208F3B8B)
+References: <201111230330.11103.tlnd@online.de>
+ <CAB=NE6U6ru-xns8M+YUccqxw0FwE-sWtZnFkPUud3jHdAcDxsw@mail.gmail.com>
+ <20111123143456.GB2502@tuxdriver.com>
+ <20111123144258.GC2502@tuxdriver.com>
+ <CAB=NE6WtBH+jpi3AVAdn2ZTZFPYMx6y73bneTEquZaGbuUJizQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAB=NE6WtBH+jpi3AVAdn2ZTZFPYMx6y73bneTEquZaGbuUJizQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously QoS multicast frames had the Normal Acknowledgment QoS
-control bits set. This would cause broadcast frames to be discarded by
-peers with which we have a BA session, since their sequence number would
-fall outside the allowed range. Set No Ack QoS control bits on multicast
-QoS frames and filter these in de-aggregation code.
+On Wed, Nov 23, 2011 at 06:58:00AM -0800, Luis R. Rodriguez wrote:
+> On Wed, Nov 23, 2011 at 6:42 AM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > On Wed, Nov 23, 2011 at 09:34:56AM -0500, John W. Linville wrote:
+> >> On Wed, Nov 23, 2011 at 06:28:57AM -0800, Luis R. Rodriguez wrote:
+> >> > On Tue, Nov 22, 2011 at 6:30 PM, Timo Lindhorst <tlnd@online.de> wrote:
+> >> > > The commit de3584bd62d87b4c250129fbc46ca52c80330add -
+> >> > > "cfg80211: fix regulatory NULL dereference" prevents the regulatory
+> >> > > domain from being changed by user space. A wiphy is only present
+> >> > > if the request comes from driver or is set by country IE, thus
+> >> > > check only those cases.
+> >> > >
+> >> > > Signed-off-by: Timo Lindhorst <tlnd@online.de>
+> >> >
+> >> > Yup but at this point I'd prefer we revert the original patch instead
+> >> > given that the patch also had some other short comings. John is it too
+> >> > late?
+> >>
+> >> No, it isn't too late to revert it.  But can we have a new fix soon?
+> >
+> > Hmmm...actually, the original patch was sent in the batch yesterday.
+> > And it was Cc: stable.  It would be a lot less confusing to merge a
+> > correct fix on top (and Cc: stable on that too).  What is wrong with
+> > this one?
+> 
+> This one is a correct fix to one of the issues present in the original
+> patch, the other issue is the original patch overlooks the fact that
+> last_request would be left with stale data. Let me post my fixes as
+> RFCs on top of Johannes's original patch to clarify. Unfortunately
+> this doesn't have much testing but I'll post for review at least.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Looks like the RFCs got some comments.  Will there be a respin
+of those?  Or should I just apply this one for now?
 
-v2: Use proper QoS Ack Policy ctl field mask (Christian)
-
-v3: Clean up conditional (Johannes)
----
- include/linux/ieee80211.h |    1 +
- net/mac80211/rx.c         |    9 ++++++++-
- net/mac80211/wme.c        |    3 ++-
- 3 files changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 48363c3..bc61e69 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -128,6 +128,7 @@
- #define IEEE80211_QOS_CTL_ACK_POLICY_NOACK	0x0020
- #define IEEE80211_QOS_CTL_ACK_POLICY_NO_EXPL	0x0040
- #define IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK	0x0060
-+#define IEEE80211_QOS_CTL_ACK_POLICY_MASK	0x0060
- /* A-MSDU 802.11n */
- #define IEEE80211_QOS_CTL_A_MSDU_PRESENT	0x0080
- /* Mesh Control 802.11s */
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index b867bd5..bbe7b50 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -747,7 +747,7 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
- 	struct sta_info *sta = rx->sta;
- 	struct tid_ampdu_rx *tid_agg_rx;
- 	u16 sc;
--	int tid;
-+	u8 tid, ack_policy;
- 
- 	if (!ieee80211_is_data_qos(hdr->frame_control))
- 		goto dont_reorder;
-@@ -760,6 +760,8 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
- 	if (!sta)
- 		goto dont_reorder;
- 
-+	ack_policy = *ieee80211_get_qos_ctl(hdr) &
-+		     IEEE80211_QOS_CTL_ACK_POLICY_MASK;
- 	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
- 
- 	tid_agg_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[tid]);
-@@ -770,6 +772,11 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
- 	if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
- 		goto dont_reorder;
- 
-+	/* not part of a BA session */
-+	if (ack_policy != IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK &&
-+	    ack_policy != IEEE80211_QOS_CTL_ACK_POLICY_NORMAL)
-+		goto dont_reorder;
-+
- 	/* new, potentially un-ordered, ampdu frame - process it */
- 
- 	/* reset session timer */
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index fd52e69..a440a4a 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -147,7 +147,8 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
- 
- 		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
- 
--		if (unlikely(sdata->local->wifi_wme_noack_test))
-+		if (unlikely(sdata->local->wifi_wme_noack_test) ||
-+		    is_multicast_ether_addr(hdr->addr1))
- 			ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
- 		/* qos header is 2 bytes */
- 		*p++ = ack_policy | tid;
+John
 -- 
-1.7.5.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
