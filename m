@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:41892 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751477Ab1KOGDo (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:53828 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753195Ab1K2PPC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 01:03:44 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-CC: Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [RFC 08/18] ath9k_hw: check for asynchronous MCI interrupt pending
-Date: Tue, 15 Nov 2011 11:33:36 +0530
-Message-ID: <1321337016-12663-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111115_070347_538020_D855EB28)
+	Tue, 29 Nov 2011 10:15:02 -0500
+Received: by vcbfk14 with SMTP id fk14so4694773vcb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2011 07:15:02 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <877h2jh1ux.fsf@purkki.adurom.net>
+References: <1322516330-4007-1-git-send-email-mcgrof@qca.qualcomm.com> <877h2jh1ux.fsf@purkki.adurom.net>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Tue, 29 Nov 2011 10:14:38 -0500
+Message-ID: <CAB=NE6VxhGoczNxocUpvPdLYpcP7ionisQytW61O-e7pMjp7vw@mail.gmail.com> (sfid-20111129_161509_561172_84CB6618)
+Subject: Re: [PATCH 0/5] wireless: fix set tx power
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Tue, Nov 29, 2011 at 1:36 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com> writes:
+>
+>> The driver maintainers have approved of these now except for brcm80211.
+>> I should note that Kalle indicated he was going to queue up the ath6kl
+>> patch though so not sure if you want to wait for his patch or just suck
+>> mine in.
+>
+> John, please don't take the ath6kl patch as it's already in ath6kl.git:
+>
+> https://github.com/kvalo/ath6kl/commit/b992a28557afdcabcee7d8af88471dddfe791c11
+>
+>> I think it makes sense to roll these in together as a series,
+>
+> I don't see any benefit from this.
+>
+>> the rebase that Kalle would do shouldn't be impacted by this I think.
+>
+> I don't rebase ath6kl.git unless absolutely necessary. And I prefer that
+> ath6kl patches would go through ath6kl.git, I get less conflicts that
+> way.
 
-MCI interrupt is an asynchronous one, so take care of it by having a
-check in ath9k_hw_intrpend, which actually decides whether the interrupt
-is really for the driver from ath_isr
+Alrighty, then the others can be sucked in.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/mac.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 9d69320..0e4fbb3 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -760,7 +760,10 @@ bool ath9k_hw_intrpend(struct ath_hw *ah)
- 		return true;
- 
- 	host_isr = REG_READ(ah, AR_INTR_ASYNC_CAUSE);
--	if ((host_isr & AR_INTR_MAC_IRQ) && (host_isr != AR_INTR_SPURIOUS))
-+
-+	if (((host_isr & AR_INTR_MAC_IRQ) ||
-+	     (host_isr & AR_INTR_ASYNC_MASK_MCI)) &&
-+	    (host_isr != AR_INTR_SPURIOUS))
- 		return true;
- 
- 	host_isr = REG_READ(ah, AR_INTR_SYNC_CAUSE);
--- 
-1.7.0.4
-
+  Luis
