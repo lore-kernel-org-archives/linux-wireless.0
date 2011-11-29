@@ -1,23 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:33525 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755488Ab1K2VKc (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:7362 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755865Ab1K2O45 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 16:10:32 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 100EB54022C
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2011 16:10:31 -0500 (EST)
-Subject: Compat-wireless release for 2011-11-29 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20111129211030.E4CD84062C@repository3.orbit-lab.org> (sfid-20111129_221036_112304_38916781)
-Date: Tue, 29 Nov 2011 16:10:30 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 29 Nov 2011 09:56:57 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	Russell Hu <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 07/17] ath9k_hw: take care of enabling MCI interrupts
+Date: Tue, 29 Nov 2011 20:25:28 +0530
+Message-ID: <1322578538-18912-8-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111129_155702_527436_B5FD49E3)
+In-Reply-To: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://github.com/mcgrof/compat-wireless
-   d32558f..8cd266f  master     -> origin/master
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-compat-wireless code metrics
+enable MCI interrupt when ath9k_hw_enable_interrupts is called,
+like during the completion of chip_reset before which the interrupts
+are disabled
 
-    819671 - Total upstream lines of code being pulled
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/mac.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index ecdb6fd..9d69320 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -798,6 +798,7 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	u32 sync_default = AR_INTR_SYNC_DEFAULT;
++	u32 async_mask;
+ 
+ 	if (!(ah->imask & ATH9K_INT_GLOBAL))
+ 		return;
+@@ -812,13 +813,16 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
+ 	if (AR_SREV_9340(ah))
+ 		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
+ 
++	async_mask = AR_INTR_MAC_IRQ;
++
++	if (ah->imask & ATH9K_INT_MCI)
++		async_mask |= AR_INTR_ASYNC_MASK_MCI;
++
+ 	ath_dbg(common, ATH_DBG_INTERRUPT, "enable IER\n");
+ 	REG_WRITE(ah, AR_IER, AR_IER_ENABLE);
+ 	if (!AR_SREV_9100(ah)) {
+-		REG_WRITE(ah, AR_INTR_ASYNC_ENABLE,
+-			  AR_INTR_MAC_IRQ);
+-		REG_WRITE(ah, AR_INTR_ASYNC_MASK, AR_INTR_MAC_IRQ);
+-
++		REG_WRITE(ah, AR_INTR_ASYNC_ENABLE, async_mask);
++		REG_WRITE(ah, AR_INTR_ASYNC_MASK, async_mask);
+ 
+ 		REG_WRITE(ah, AR_INTR_SYNC_ENABLE, sync_default);
+ 		REG_WRITE(ah, AR_INTR_SYNC_MASK, sync_default);
+-- 
+1.7.0.4
+
