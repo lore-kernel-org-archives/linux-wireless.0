@@ -1,140 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61420 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753172Ab1KUNUR (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:7576 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754487Ab1K2O5u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 08:20:17 -0500
-Received: by iage36 with SMTP id e36so7263920iag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 05:20:16 -0800 (PST)
+	Tue, 29 Nov 2011 09:57:50 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	Russell Hu <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 13/17] ath9k_hw: MCI related changes in set_reset_reg
+Date: Tue, 29 Nov 2011 20:25:34 +0530
+Message-ID: <1322578538-18912-14-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111129_155754_261667_4F767EFA)
+In-Reply-To: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Date: Mon, 21 Nov 2011 17:20:16 +0400
-Message-ID: <CAG5dHkS2GVJsAs3wCYbwcA6ZmQZj+VY5u6WfVOy44SCA4A1Q3w@mail.gmail.com> (sfid-20111121_142020_657232_216E810F)
-Subject: [RFC v2 7/8] cfg80211 and nl80211: getting local and peer mesh power modes
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Link-specific power mode defines a mesh power mode in which it
-operates for the mesh peering with the station. Possibility of getting
-local link-specific power mode and peer link-specific power mode is
-added.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- include/linux/nl80211.h |    6 ++++++
- include/net/cfg80211.h  |   10 +++++++++-
- net/mac80211/cfg.c      |    6 +++++-
- net/wireless/nl80211.c  |    6 ++++++
- 4 files changed, 26 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |   14 +++++++++++---
+ 1 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index ce789ce..4f4bfb8 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1552,6 +1552,10 @@ enum nl80211_sta_bss_param {
-  *     containing info as possible, see &enum nl80211_sta_bss_param
-  * @NL80211_STA_INFO_CONNECTED_TIME: time since the station is last connected
-  * @NL80211_STA_INFO_STA_FLAGS: Contains a struct nl80211_sta_flag_update.
-+ * @NL80211_STA_INFO_LOCAL_MESH_PS_MODE: local mesh STA link-specific power
-+ * 	save mode
-+ * @NL80211_STA_INFO_PEER_MESH_PS_MODE: peer mesh STA link-specific power
-+ * 	save mode
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -1574,6 +1578,8 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_BSS_PARAM,
- 	NL80211_STA_INFO_CONNECTED_TIME,
- 	NL80211_STA_INFO_STA_FLAGS,
-+	NL80211_STA_INFO_LOCAL_MESH_PS_MODE,
-+	NL80211_STA_INFO_PEER_MESH_PS_MODE,
-
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2204222..845937c 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -500,6 +500,8 @@ struct station_parameters {
-  * @STATION_INFO_CONNECTED_TIME: @connected_time filled
-  * @STATION_INFO_ASSOC_REQ_IES: @assoc_req_ies filled
-  * @STATION_INFO_STA_FLAGS: @sta_flags filled
-+ * @STATION_INFO_LOCAL_MESH_PS_MODE: @local_ps_mode filled
-+ * @STATION_INFO_PEER_MESH_PS_MODE: @peer_ps_mode filled
-  */
- enum station_info_flags {
- 	STATION_INFO_INACTIVE_TIME	= 1<<0,
-@@ -520,7 +522,9 @@ enum station_info_flags {
- 	STATION_INFO_BSS_PARAM          = 1<<15,
- 	STATION_INFO_CONNECTED_TIME	= 1<<16,
- 	STATION_INFO_ASSOC_REQ_IES	= 1<<17,
--	STATION_INFO_STA_FLAGS		= 1<<18
-+	STATION_INFO_STA_FLAGS		= 1<<18,
-+	STATION_INFO_LOCAL_MESH_PS_MODE = 1<<17,
-+	STATION_INFO_PEER_MESH_PS_MODE  = 1<<18
- };
-
- /**
-@@ -608,6 +612,8 @@ struct sta_bss_parameters {
-  * @tx_failed: number of failed transmissions (retries exceeded, no ACK)
-  * @rx_dropped_misc:  Dropped for un-specified reason.
-  * @bss_param: current BSS parameters
-+ * @local_ps_mode: local mesh STA power save mode
-+ * @peer_ps_mode: peer mesh STA power save mode
-  * @generation: generation number for nl80211 dumps.
-  *	This number should increase every time the list of stations
-  *	changes, i.e. when a station is added or removed, so that
-@@ -638,6 +644,8 @@ struct station_info {
- 	u32 rx_dropped_misc;
- 	struct sta_bss_parameters bss_param;
- 	struct nl80211_sta_flag_update sta_flags;
-+	u8 local_ps_mode;
-+	u8 peer_ps_mode;
-
- 	int generation;
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 78c61ee..2b0cc2c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -388,11 +388,15 @@ static void sta_set_sinfo(struct sta_info *sta,
-struct station_info *sinfo)
- #ifdef CONFIG_MAC80211_MESH
- 		sinfo->filled |= STATION_INFO_LLID |
- 				 STATION_INFO_PLID |
--				 STATION_INFO_PLINK_STATE;
-+				 STATION_INFO_PLINK_STATE |
-+				 STATION_INFO_LOCAL_MESH_PS_MODE |
-+				 STATION_INFO_PEER_MESH_PS_MODE;
-
- 		sinfo->llid = le16_to_cpu(sta->llid);
- 		sinfo->plid = le16_to_cpu(sta->plid);
- 		sinfo->plink_state = sta->plink_state;
-+		sinfo->local_ps_mode = sta->local_ps_mode;
-+		sinfo->peer_ps_mode = sta->peer_ps_mode;
- #endif
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index ba5734a..1d71d1b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1350,6 +1350,7 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
+ 
+ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
+ {
++	bool ret = false;
+ 
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		REG_WRITE(ah, AR_WA, ah->WARegVal);
+@@ -1361,13 +1362,20 @@ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
+ 
+ 	switch (type) {
+ 	case ATH9K_RESET_POWER_ON:
+-		return ath9k_hw_set_reset_power_on(ah);
++		ret = ath9k_hw_set_reset_power_on(ah);
++		break;
+ 	case ATH9K_RESET_WARM:
+ 	case ATH9K_RESET_COLD:
+-		return ath9k_hw_set_reset(ah, type);
++		ret = ath9k_hw_set_reset(ah, type);
++		break;
+ 	default:
+-		return false;
++		break;
  	}
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 80bc2a7..c53c8bb 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2325,6 +2325,12 @@ static int nl80211_send_station(struct sk_buff
-*msg, u32 pid, u32 seq,
- 	if (sinfo->filled & STATION_INFO_TX_FAILED)
- 		NLA_PUT_U32(msg, NL80211_STA_INFO_TX_FAILED,
- 			    sinfo->tx_failed);
-+	if (sinfo->filled & STATION_INFO_LOCAL_MESH_PS_MODE)
-+		NLA_PUT_U8(msg, NL80211_STA_INFO_LOCAL_MESH_PS_MODE,
-+			sinfo->local_ps_mode);
-+	if (sinfo->filled & STATION_INFO_PEER_MESH_PS_MODE)
-+		NLA_PUT_U8(msg, NL80211_STA_INFO_PEER_MESH_PS_MODE,
-+			sinfo->peer_ps_mode);
- 	if (sinfo->filled & STATION_INFO_BSS_PARAM) {
- 		bss_param = nla_nest_start(msg, NL80211_STA_INFO_BSS_PARAM);
- 		if (!bss_param)
++
++	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
++		REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
++
++	return ret;
+ }
+ 
+ static bool ath9k_hw_chip_reset(struct ath_hw *ah,
 -- 
-1.7.3.4
+1.7.0.4
+
