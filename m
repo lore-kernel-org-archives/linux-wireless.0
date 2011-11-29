@@ -1,98 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:57788 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751743Ab1KSRWc (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:41172 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755822Ab1K2UJf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Nov 2011 12:22:32 -0500
-Message-ID: <1321723330.2885.145.camel@deadeye> (sfid-20111119_182246_575852_74CA740B)
-Subject: Re: [17/26] b43: refuse to load unsupported firmware
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Greg KH <gregkh@suse.de>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	greg@kroah.com, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	roman-vl@meta.ua,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Date: Sat, 19 Nov 2011 17:22:10 +0000
-In-Reply-To: <20111119000329.419617905@clark.kroah.org>
-References: <20111119000329.419617905@clark.kroah.org>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-7pTkfw2jr7NOBXYU6h1w"
-Mime-Version: 1.0
+	Tue, 29 Nov 2011 15:09:35 -0500
+Date: Tue, 29 Nov 2011 15:08:15 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Borislav Petkov <bp@amd64.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, x86@kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	deepthi@linux.vnet.ibm.com
+Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
+Message-ID: <20111129200815.GA12114@phenom.dumpdata.com> (sfid-20111129_211048_591085_63CAE60F)
+References: <lx6sezwGldO.A.IhF.UBpWOB@chimera>
+ <201111212249.31196.rjw@sisk.pl>
+ <20111122135412.GA29905@phenom.dumpdata.com>
+ <20111129180414.GA11459@phenom.dumpdata.com>
+ <20111129183428.GE8200@aftab>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111129183428.GE8200@aftab>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Nov 29, 2011 at 07:34:28PM +0100, Borislav Petkov wrote:
+> On Tue, Nov 29, 2011 at 01:04:14PM -0500, Konrad Rzeszutek Wilk wrote:
+> > This patch:
+> > 
+> > commit d91ee5863b71e8c90eaf6035bff3078a85e2e7b5
+> > Author: Len Brown <len.brown@intel.com>
+> > Date:   Fri Apr 1 18:28:35 2011 -0400
+> > 
+> >     cpuidle: replace xen access to x86 pm_idle and default_idle
+> > 
+> >     ..scribble on pm_idle and access default_idle,
+> >    have it simply disable_cpuidle() so acpi_idle will not load and
+> >    architecture default HLT will be used.
+> > 
+> > idea was to have one call - disable_cpuidle() which would make
+> > pm_idle not be molested by other code. It disallows cpuidle_idle_call
+> > and acpi_idle_call to not set pm_idle (which is excellent). But the
+> 
+> what is acpi_idle_call, I can't find it anywhere.
 
---=-7pTkfw2jr7NOBXYU6h1w
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+You are right. I had "acpi_idle_enter_*" and its friend in mind. Which
+are called from the cpuidle_idle_call.
 
-On Fri, 2011-11-18 at 16:02 -0800, Greg KH wrote:
-> 3.1-stable review patch.  If anyone has any objections, please let me kno=
-w.
->=20
-> ------------------
->=20
-> [This patch is supposed to be applied in 3.1 (and maybe older) branches o=
-nly.]
->=20
-> New kernels support newer firmware that users may try to incorrectly use
-> with older kernels. Display error and explain the problem in such a case
->=20
-> Signed-off-by: Rafa=C3=85=C2=82 Mi=C3=85=C2=82ecki <zajec5@gmail.com>
-> Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
->=20
-> ---
->  drivers/net/wireless/b43/main.c |    7 +++++++
->  1 file changed, 7 insertions(+)
->=20
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -2508,6 +2508,13 @@ static int b43_upload_microcode(struct b
->  		b43_print_fw_helptext(dev->wl, 1);
->  		err =3D -EOPNOTSUPP;
->  		goto error;
-> +	} else if (fwrev >=3D 598) {
-> +		b43err(dev->wl, "YOUR FIRMWARE IS TOO NEW. Support for "
-> +		       "firmware 598 and up requires kernel 3.2 or newer. You "
-> +		       "have to install older firmware or upgrade kernel.\n");
-> +		b43_print_fw_helptext(dev->wl, 1);
-> +		err =3D -EOPNOTSUPP;
-> +		goto error;
-[...]
+Let me fix that comment up.
+> 
+> > amd_e400_idle and mwait_idle can still setup pm_idle which we really
+> > do not want.
+> 
+> This is not the case: rather select_idle_routine()/idle_setup() sets
+> pm_idle.
 
-Again, I strongly object to this way of handling the incompatibility.
-The revision check is fine, but the solution must be to assign a
-different filename for the newer revisions.  The changes to 3.0/3.1
-should be deferred until this is resolved.
+Yes. Let me fix up the comment.
+> 
+> [..]
+> 
+> > +bool set_pm_idle_to_default()
+> > +{
+> > +	if (!pm_idle) {
+> > +		pm_idle = default_idle;
+> > +		return true;
+> > +	}
+> > +	return false;
+> > +}
+> 
+> I don't understand what you're trying to achieve here? Do you want
+> default_idle to be always the pm_idle for xen or what is the deal here?
 
-Ben.
+Yes (always want default_idle).
+> 
+> If yes, then simply do:
+> 
+> bool set_pm_idle_to_default(void)	// remember to add "void" for no function args
+> {
+> 	bool ret = !!pm_idle;
+> 
+> 	pm_idle = default_idle;
 
---=20
-Ben Hutchings
-The world is coming to an end.	Please log off.
+That would work too.
+> 
+> 	return ret;
+> 
+> }
+> 
+> ...
+> 
+> >  void stop_this_cpu(void *dummy) 
+> >  {
+> >  	local_irq_disable();
+> > diff --git a/arch/x86/xen/setup.c b/arch/x86/xen/setup.c
+> > index 46d6d21..7506181 100644
+> > --- a/arch/x86/xen/setup.c
+> > +++ b/arch/x86/xen/setup.c
+> > @@ -448,6 +448,6 @@ void __init xen_arch_setup(void)
+> >  #endif
+> >  	disable_cpuidle();
+> >  	boot_option_idle_override = IDLE_HALT;
+> > -
+> > +	WARN_ON(!set_pm_idle_to_default());
+> 
+> and then do
+> 
+> 	WARN_ON(set_pm_idle_to_default());
+> 
+> instead of having arbitrary confusing logic. This way you can warn
+> whether something else set pm_idle already. Or?
 
---=-7pTkfw2jr7NOBXYU6h1w
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIVAwUATsflwue/yOyVhhEJAQoCxQ/+LyPm8CYGaZS2PqwImKx0IVIi8yo8FHr+
-Ylsf6YqJKwA80dsXqdXS/DHVEzhIuaO1KZl9eJdxoQSN1fSfLzEdPuA+8fIquqVd
-Ms3AviWpwkXzRX2tkrVcjKoaVlrfkAczkubmto3O3Xj7rRtCfayJhXuI6zuhWHVw
-7TlDOX8CFTKYMglYyIZgFG+w89HF7eXKmm8pPhE+G80aULbfe/GpD9adjw7/n2Jn
-17LcuslbaP6OSwx0CvgIfE5elXtlblcsiYzRktiQZaZKL0vWptfHNxGExfjpHl3O
-K0HXBakNvuFsMaxmNsrdpMz9GK3iTzfOdjW2x9ZAJXLAnZiszoI4ALPqdHgnEJrY
-qTFJjH4Y7tQ+DB8t+dqWT3bDiJTz2exHN4blGc1z+YowJ5uuw54iM5SgpYREn8fc
-Bc/nZrDoSOUYHzqq0htcxtYeQm8GxjzS+a/qFZnP5bm8CW56fDDEFvJdH04todR6
-oYSskXZHSTQbUvzmi1EtsWukVBC8YBltBBE3J6VNlhHBraFx1qXomUz1IMwjqM4c
-CmuZpWDJfawskOGPqsYy5qOrNFaEZsRt37htB33hEvHZzuast5Ig2GyrhYG5+yH6
-sVbfpNYMhIxT63Wel3oCFqwbWGe0QJhMx7WWbgl/4OBlrWXn1RdD1mFq0tvGRWXP
-J3D0IcIKKe4=
-=pv0H
------END PGP SIGNATURE-----
-
---=-7pTkfw2jr7NOBXYU6h1w--
+That would work as well.
