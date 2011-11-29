@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:54528 "EHLO
-	smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751060Ab1KGPPa convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32146 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754760Ab1K2NwC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 10:15:30 -0500
-Received: from smtp04.msg.oleane.net (smtp04.mail.priv [172.17.20.113])
-	by smtp-out06.msg.oleane.net with ESMTP id pA7FFSOw026154
-	for <linux-wireless@vger.kernel.org>; Mon, 7 Nov 2011 16:15:28 +0100
-Received: from acksys.fr ([195.6.104.67]) (authenticated)
-	by smtp04.msg.oleane.net (MTA) with ESMTP id pA7EswhS014759
-	for <linux-wireless@vger.kernel.org>; Mon, 7 Nov 2011 15:54:59 +0100
-Subject: ifconfig down and mac80211 issue
-From: voncken <cedric.voncken@acksys.fr>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 07 Nov 2011 15:54:58 +0100
-Message-ID: <1320677698.1687.13.camel@voncken-desktop> (sfid-20111107_161533_878983_7E7F3261)
-Mime-Version: 1.0
+	Tue, 29 Nov 2011 08:52:02 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 1/1] mac80211: remove unused function declaration
+Date: Tue, 29 Nov 2011 19:21:53 +0530
+Message-ID: <1322574713-12993-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111129_145212_819401_D62F15FC)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-    I am currently trying to use rstp protocol (using rstpd ) over
-wireless interfaces (ath9k) and I've noticed some strange hostapd
-behaviour.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ net/mac80211/sta_info.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-    Everything seems to work great with wired Ethernet devices.
-
-    this is what I do : 
-	- I have configured an AP (with hostapd), and it works perfectly
-(beacons were sent)
-    	- ifconfig wlanx down
-	- ifconfig wlanx up
-
-    after the ifconfig up, the wlanx does not send any beacons although
-clients are perfectly able to associate with (WPA-SUPPLICANT does an
-active scan).
-
-    Have you ever encounter such issue ?
-
-    Thanks in advance,
-
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 6280e8b..a83e514 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -497,7 +497,6 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+  */
+ int sta_info_insert(struct sta_info *sta);
+ int sta_info_insert_rcu(struct sta_info *sta) __acquires(RCU);
+-int sta_info_insert_atomic(struct sta_info *sta);
+ int sta_info_reinsert(struct sta_info *sta);
+ 
+ int sta_info_destroy_addr(struct ieee80211_sub_if_data *sdata,
 -- 
-VONCKEN Cédric
-ACKSYS R&D dept
-
-
+1.7.0.4
 
