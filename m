@@ -1,55 +1,284 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:59546 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753707Ab1KDI7R convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37854 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754098Ab1K2JUG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 04:59:17 -0400
-Received: by qyk27 with SMTP id 27so570463qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Nov 2011 01:59:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1320395185.3969.4.camel@jlt3.sipsolutions.net>
-References: <CAMG6FYg__nsSLa93AmzcMgckg8HG3FjD3LxpyDfA77WTsVm0oA@mail.gmail.com>
-	<1320395185.3969.4.camel@jlt3.sipsolutions.net>
-Date: Fri, 4 Nov 2011 09:59:16 +0100
-Message-ID: <CAMG6FYgvkjYENbE9ud16HthVF4aeSDqM5McnKDr77XxOD542eA@mail.gmail.com> (sfid-20111104_095921_426197_B12C6C47)
-Subject: Re: [PATCH v2] cfg80211: merge in beacon ies of hidden bss.
-From: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 29 Nov 2011 04:20:06 -0500
+Subject: [PATCH] mac80211: revert on-channel work optimisations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 29 Nov 2011 10:20:02 +0100
+Message-ID: <1322558402.4110.14.camel@jlt3.sipsolutions.net> (sfid-20111129_102016_494453_2C942FA6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: Johannes Berg <johannes.berg@intel.com>
 
->> +     /* Absence of SSID or zero-sized SSID is used as
->> +      * an indication of the hidden bss. */
->> +     if (!ie2 || !ie2[1])
->> +             return 0;
->
-> I don't think that's right -- I never saw anything w/o an SSID IE except
-> for mesh networks I think. Also this has different semantics from the
-> regular rb-tree search which will return -1 if not present (which is
-> actually a bug).
-Ok, agree.
+The on-channel work optimisations have caused a
+number of issues, and the code is unfortunately
+very complex and almost impossible to follow.
+Instead of attempting to put in more workarounds
+let's just remove those optimisations, we can
+work on them again later, after we change the
+whole auth/assoc design.
 
-> Since we need to fix cmp_ie() anyway, how about we change it there as
-> well. I'm going to post a patch.
->
-I assume there is some (unclear for me) idea behind the order of operation
-in the cmp_ie comparator. Natural order of scan output?
+This should fix rate_control_send_low() warnings,
+see RH bug 731365.
 
->> +             /* TODO: The code is not trying to update existing probe
->> +              * response bss entries when beacon ies are
->> +              * getting changed. */
->
-> This is nicer, though I'd prefer the TODO was addressed as well since
-> now we'll forever show stale data, this seems a bit bad.
->
-We'll discuss it and maybe will redesign bss cache a bit, but not in a scope
-of this patch. I do not like stale data in IEs as well - from end-user
-prospective
-WPS likely will not work.
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |    2 
+ net/mac80211/main.c        |   41 ------------------
+ net/mac80211/offchannel.c  |    9 +---
+ net/mac80211/scan.c        |    4 -
+ net/mac80211/work.c        |   99 +++------------------------------------------
+ 5 files changed, 13 insertions(+), 142 deletions(-)
 
-With best regards,
-Dmitry
+--- a/net/mac80211/work.c	2011-11-29 10:01:09.000000000 +0100
++++ b/net/mac80211/work.c	2011-11-29 10:02:59.000000000 +0100
+@@ -862,44 +862,6 @@ static void ieee80211_work_rx_queued_mgm
+ 	kfree_skb(skb);
+ }
+ 
+-static bool ieee80211_work_ct_coexists(enum nl80211_channel_type wk_ct,
+-				       enum nl80211_channel_type oper_ct)
+-{
+-	switch (wk_ct) {
+-	case NL80211_CHAN_NO_HT:
+-		return true;
+-	case NL80211_CHAN_HT20:
+-		if (oper_ct != NL80211_CHAN_NO_HT)
+-			return true;
+-		return false;
+-	case NL80211_CHAN_HT40MINUS:
+-	case NL80211_CHAN_HT40PLUS:
+-		return (wk_ct == oper_ct);
+-	}
+-	WARN_ON(1); /* shouldn't get here */
+-	return false;
+-}
+-
+-static enum nl80211_channel_type
+-ieee80211_calc_ct(enum nl80211_channel_type wk_ct,
+-		  enum nl80211_channel_type oper_ct)
+-{
+-	switch (wk_ct) {
+-	case NL80211_CHAN_NO_HT:
+-		return oper_ct;
+-	case NL80211_CHAN_HT20:
+-		if (oper_ct != NL80211_CHAN_NO_HT)
+-			return oper_ct;
+-		return wk_ct;
+-	case NL80211_CHAN_HT40MINUS:
+-	case NL80211_CHAN_HT40PLUS:
+-		return wk_ct;
+-	}
+-	WARN_ON(1); /* shouldn't get here */
+-	return wk_ct;
+-}
+-
+-
+ static void ieee80211_work_timer(unsigned long data)
+ {
+ 	struct ieee80211_local *local = (void *) data;
+@@ -950,40 +912,12 @@ static void ieee80211_work_work(struct w
+ 		}
+ 
+ 		if (!started && !local->tmp_channel) {
+-			bool on_oper_chan, on_oper_chan2;
+-			enum nl80211_channel_type wk_ct;
+-
+-			on_oper_chan = ieee80211_cfg_on_oper_channel(local);
+-
+-			/* Work with existing channel type if possible. */
+-			wk_ct = wk->chan_type;
+-			if (wk->chan == local->hw.conf.channel)
+-				wk_ct = ieee80211_calc_ct(wk->chan_type,
+-						local->hw.conf.channel_type);
++			ieee80211_offchannel_stop_vifs(local, true);
+ 
+ 			local->tmp_channel = wk->chan;
+-			local->tmp_channel_type = wk_ct;
+-			/*
+-			 * Leave the station vifs in awake mode if they
+-			 * happen to be on the same channel as
+-			 * the requested channel.
+-			 */
+-			on_oper_chan2 = ieee80211_cfg_on_oper_channel(local);
+-			if (on_oper_chan != on_oper_chan2) {
+-				if (on_oper_chan2) {
+-					/* going off oper channel, PS too */
+-					ieee80211_offchannel_stop_vifs(local,
+-								       true);
+-					ieee80211_hw_config(local, 0);
+-				} else {
+-					/* going on channel, but leave PS
+-					 * off-channel. */
+-					ieee80211_hw_config(local, 0);
+-					ieee80211_offchannel_return(local,
+-								    true,
+-								    false);
+-				}
+-			}
++			local->tmp_channel_type = wk->chan_type;
++
++			ieee80211_hw_config(local, 0);
+ 
+ 			started = true;
+ 			wk->timeout = jiffies;
+@@ -1052,34 +986,17 @@ static void ieee80211_work_work(struct w
+ 	list_for_each_entry(wk, &local->work_list, list) {
+ 		if (!wk->started)
+ 			continue;
+-		if (wk->chan != local->tmp_channel)
+-			continue;
+-		if (!ieee80211_work_ct_coexists(wk->chan_type,
+-						local->tmp_channel_type))
++		if (wk->chan != local->tmp_channel ||
++		    wk->chan_type != local->tmp_channel_type)
+ 			continue;
+ 		remain_off_channel = true;
+ 	}
+ 
+ 	if (!remain_off_channel && local->tmp_channel) {
+ 		local->tmp_channel = NULL;
+-		/* If tmp_channel wasn't operating channel, then
+-		 * we need to go back on-channel.
+-		 * NOTE:  If we can ever be here while scannning,
+-		 * or if the hw_config() channel config logic changes,
+-		 * then we may need to do a more thorough check to see if
+-		 * we still need to do a hardware config.  Currently,
+-		 * we cannot be here while scanning, however.
+-		 */
+-		if (!ieee80211_cfg_on_oper_channel(local))
+-			ieee80211_hw_config(local, 0);
++		ieee80211_hw_config(local, 0);
+ 
+-		/* At the least, we need to disable offchannel_ps,
+-		 * so just go ahead and run the entire offchannel
+-		 * return logic here.  We *could* skip enabling
+-		 * beaconing if we were already on-oper-channel
+-		 * as a future optimization.
+-		 */
+-		ieee80211_offchannel_return(local, true, true);
++		ieee80211_offchannel_return(local, true);
+ 
+ 		/* give connection some time to breathe */
+ 		run_again(local, jiffies + HZ/2);
+--- a/net/mac80211/ieee80211_i.h	2011-11-29 10:01:39.000000000 +0100
++++ b/net/mac80211/ieee80211_i.h	2011-11-29 10:02:59.000000000 +0100
+@@ -1220,13 +1220,11 @@ int ieee80211_request_sched_scan_stop(st
+ void ieee80211_sched_scan_stopped_work(struct work_struct *work);
+ 
+ /* off-channel helpers */
+-bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local);
+ void ieee80211_offchannel_enable_all_ps(struct ieee80211_local *local,
+ 					bool tell_ap);
+ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
+ 				    bool offchannel_ps_enable);
+ void ieee80211_offchannel_return(struct ieee80211_local *local,
+-				 bool enable_beaconing,
+ 				 bool offchannel_ps_disable);
+ void ieee80211_hw_roc_setup(struct ieee80211_local *local);
+ 
+--- a/net/mac80211/offchannel.c	2011-11-29 10:01:09.000000000 +0100
++++ b/net/mac80211/offchannel.c	2011-11-29 10:02:59.000000000 +0100
+@@ -156,7 +156,6 @@ void ieee80211_offchannel_enable_all_ps(
+ }
+ 
+ void ieee80211_offchannel_return(struct ieee80211_local *local,
+-				 bool enable_beaconing,
+ 				 bool offchannel_ps_disable)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -188,11 +187,9 @@ void ieee80211_offchannel_return(struct
+ 			netif_tx_wake_all_queues(sdata->dev);
+ 		}
+ 
+-		/* Check to see if we should re-enable beaconing */
+-		if (enable_beaconing &&
+-		    (sdata->vif.type == NL80211_IFTYPE_AP ||
+-		     sdata->vif.type == NL80211_IFTYPE_ADHOC ||
+-		     sdata->vif.type == NL80211_IFTYPE_MESH_POINT))
++		if (sdata->vif.type == NL80211_IFTYPE_AP ||
++		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
++		    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
+ 			ieee80211_bss_info_change_notify(
+ 				sdata, BSS_CHANGED_BEACON_ENABLED);
+ 	}
+--- a/net/mac80211/main.c	2011-11-29 10:01:09.000000000 +0100
++++ b/net/mac80211/main.c	2011-11-29 10:02:59.000000000 +0100
+@@ -92,47 +92,6 @@ static void ieee80211_reconfig_filter(st
+ 	ieee80211_configure_filter(local);
+ }
+ 
+-/*
+- * Returns true if we are logically configured to be on
+- * the operating channel AND the hardware-conf is currently
+- * configured on the operating channel.  Compares channel-type
+- * as well.
+- */
+-bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local)
+-{
+-	struct ieee80211_channel *chan;
+-	enum nl80211_channel_type channel_type;
+-
+-	/* This logic needs to match logic in ieee80211_hw_config */
+-	if (local->scan_channel) {
+-		chan = local->scan_channel;
+-		/* If scanning on oper channel, use whatever channel-type
+-		 * is currently in use.
+-		 */
+-		if (chan == local->oper_channel)
+-			channel_type = local->_oper_channel_type;
+-		else
+-			channel_type = NL80211_CHAN_NO_HT;
+-	} else if (local->tmp_channel) {
+-		chan = local->tmp_channel;
+-		channel_type = local->tmp_channel_type;
+-	} else {
+-		chan = local->oper_channel;
+-		channel_type = local->_oper_channel_type;
+-	}
+-
+-	if (chan != local->oper_channel ||
+-	    channel_type != local->_oper_channel_type)
+-		return false;
+-
+-	/* Check current hardware-config against oper_channel. */
+-	if (local->oper_channel != local->hw.conf.channel ||
+-	    local->_oper_channel_type != local->hw.conf.channel_type)
+-		return false;
+-
+-	return true;
+-}
+-
+ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
+ {
+ 	struct ieee80211_channel *chan;
+--- a/net/mac80211/scan.c	2011-11-29 10:01:09.000000000 +0100
++++ b/net/mac80211/scan.c	2011-11-29 10:02:59.000000000 +0100
+@@ -297,7 +297,7 @@ static void __ieee80211_scan_completed(s
+ 	if (!was_hw_scan) {
+ 		ieee80211_configure_filter(local);
+ 		drv_sw_scan_complete(local);
+-		ieee80211_offchannel_return(local, true, true);
++		ieee80211_offchannel_return(local, true);
+ 	}
+ 
+ 	ieee80211_recalc_idle(local);
+@@ -602,7 +602,7 @@ static void ieee80211_scan_state_suspend
+ 	 * in off-channel state..will put that back
+ 	 * on-channel at the end of scanning.
+ 	 */
+-	ieee80211_offchannel_return(local, true, false);
++	ieee80211_offchannel_return(local, false);
+ 
+ 	*next_delay = HZ / 5;
+ 	/* afterwards, resume scan & go to next channel */
+
+
