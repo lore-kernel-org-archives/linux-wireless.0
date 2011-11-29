@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49593 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751509Ab1KGPmi (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:54531 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751427Ab1K2RMr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Nov 2011 10:42:38 -0500
-Subject: Re: [PATCH v2] mac80211: disassociate when direct probe timed out
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Lukasz Jagiello <jagiello.lukasz@gmail.com>
-In-Reply-To: <20111107153410.GB5990@redhat.com>
-References: <20111107142620.GA5852@redhat.com>
-	 <20111107152859.GA5990@redhat.com>  <20111107153410.GB5990@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 07 Nov 2011 16:42:32 +0100
-Message-ID: <1320680552.3993.46.camel@jlt3.sipsolutions.net> (sfid-20111107_164241_816840_392AC13F)
-Mime-Version: 1.0
+	Tue, 29 Nov 2011 12:12:47 -0500
+Message-ID: <4ED51289.6020008@candelatech.com> (sfid-20111129_181250_378942_14F703D3)
+Date: Tue, 29 Nov 2011 09:12:41 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3] iw: Support ht-capability overrides mask.
+References: <1322505622-13446-1-git-send-email-greearb@candelatech.com>  (sfid-20111128_194043_702798_6A11361F) <1322556714.4110.13.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1322556714.4110.13.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-11-07 at 16:34 +0100, Stanislaw Gruszka wrote:
+On 11/29/2011 12:51 AM, Johannes Berg wrote:
+> On Mon, 2011-11-28 at 10:40 -0800, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> Let user know which capabilities are supported.
+>
+> I applied this with a bunch of modifications, but I think you should
+> follow up and make it more complete. You're covering exactly and only
+> the case that you're working on right now, I don't think that's good
+> practice.
 
-> +++ b/net/mac80211/mlme.c
-> @@ -2379,8 +2379,14 @@ ieee80211_probe_auth_done(struct ieee80211_work *wk,
->  			  struct sk_buff *skb)
->  {
->  	struct ieee80211_local *local = wk->sdata->local;
-> +	struct ieee80211_if_managed *ifmgd = &wk->sdata->u.mgd;
->  
->  	if (!skb) {
-> +		mutex_lock(&ifmgd->mtx);
-> +		if (ifmgd->associated)
-> +			ieee80211_set_disassoc(wk->sdata, true, false);
-> +		mutex_unlock(&ifmgd->mtx);
-> +
->  		cfg80211_send_auth_timeout(wk->sdata->dev, wk->filter_ta);
->  		goto destroy;
->  	}
+It would just be adding dead code until I get more kernel changes in?
 
-This doesn't seem right -- we can authenticate with a new AP while
-connected to an old one, but if the connection to the new one fails why
-should we tear down the connection to the *old* one?
+But, if you can think of any other over-rides you'd like to
+see supported, I can attempt to cook up some kernel patches
+as well.
 
-johannes
+Thanks,
+Ben
+
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
