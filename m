@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:39606 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754253Ab1KZUgO (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:45721 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752605Ab1K2TRV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Nov 2011 15:36:14 -0500
-Date: Sat, 26 Nov 2011 15:36:12 -0500 (EST)
-Message-Id: <20111126.153612.261362172680649109.davem@davemloft.net> (sfid-20111126_213648_005568_92F34095)
-To: linux-wireless@vger.kernel.org
-CC: netdev@vger.kernel.org
-Subject: [PATCH] airo: Fix array bounds warning when moving packet payload.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-7
+	Tue, 29 Nov 2011 14:17:21 -0500
+Received: by ywa9 with SMTP id 9so4438834ywa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2011 11:17:20 -0800 (PST)
+Message-ID: <4ED52FBD.5030302@lwfinger.net> (sfid-20111129_201724_467372_AD65801D)
+Date: Tue, 29 Nov 2011 13:17:17 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: AndrewL733 <AndrewL733@aol.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Trouble with Macbook Pro 8,2 (broadcom 4331) and latest b43
+References: <4ED3A6E8.4050000@aol.com> <CACna6ryNkHeVXWXxFfod1-KQs8HQVv7wF-xpY5MA-Qs6fCypCg@mail.gmail.com> <CACna6rzRJgfddE4jPivxBJCCZEyKSHsdRX7cE15rRxk2nhiRkA@mail.gmail.com> <4ED3B33E.8020309@lwfinger.net> <4ED3FA65.7010104@aol.com> <CACna6rw1gEjd_hcX=5hLHt0YwUqDaVBs7_MO50GLKeok57YtVw@mail.gmail.com> <4ED51DB5.5090202@aol.com>
+In-Reply-To: <4ED51DB5.5090202@aol.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQpkcml2ZXJzL25ldC93aXJlbGVzcy9haXJvLmM6IEluIGZ1bmN0aW9uIKFlbmNhcHN1bGF0ZaI6
-DQpkcml2ZXJzL25ldC93aXJlbGVzcy9haXJvLmM6MTQyMToxNTogd2FybmluZzogYXJyYXkgc3Vi
-c2NyaXB0IGlzIGFib3ZlIGFycmF5IGJvdW5kcyBbLVdhcnJheS1ib3VuZHNdDQpkcml2ZXJzL25l
-dC93aXJlbGVzcy9haXJvLmM6IEluIGZ1bmN0aW9uIKFkZWNhcHN1bGF0ZaI6DQpkcml2ZXJzL25l
-dC93aXJlbGVzcy9haXJvLmM6MTUwOToxNjogd2FybmluZzogYXJyYXkgc3Vic2NyaXB0IGlzIGFi
-b3ZlIGFycmF5IGJvdW5kcyBbLVdhcnJheS1ib3VuZHNdDQoNClNpZ25lZC1vZmYtYnk6IERhdmlk
-IFMuIE1pbGxlciA8ZGF2ZW1AZGF2ZW1sb2Z0Lm5ldD4NCi0tLQ0KDQpJIHdhcyBzaW1wbHkgdGly
-ZWQgb2Ygc2VlaW5nIHRoZXNlIHdhcm5pbmdzIGFsbCB0aGUgdGltZSwgY29tbWl0dGVkIHRvIG5l
-dC1uZXh0Lg0KDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvYWlyby5jIHwgICAgNCArKy0tDQogMSBm
-aWxlcyBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1n
-aXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9haXJvLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9h
-aXJvLmMNCmluZGV4IGFjMTE3NmEuLjFjMDA4YzYgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93
-aXJlbGVzcy9haXJvLmMNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2Fpcm8uYw0KQEAgLTE0
-MTgsNyArMTQxOCw3IEBAIHN0YXRpYyBpbnQgZW5jYXBzdWxhdGUoc3RydWN0IGFpcm9faW5mbyAq
-YWkgLGV0aGVySGVhZCAqZnJhbWUsIE1JQ0J1ZmZlciAqbWljLCBpDQogCWVtbWgzMl91cGRhdGUo
-JmNvbnRleHQtPnNlZWQsZnJhbWUtPmRhLEVUSF9BTEVOICogMik7IC8vIERBLFNBDQogCWVtbWgz
-Ml91cGRhdGUoJmNvbnRleHQtPnNlZWQsKHU4KikmbWljLT50eXBlbGVuLDEwKTsgLy8gVHlwZS9M
-ZW5ndGggYW5kIFNuYXANCiAJZW1taDMyX3VwZGF0ZSgmY29udGV4dC0+c2VlZCwodTgqKSZtaWMt
-PnNlcSxzaXplb2YobWljLT5zZXEpKTsgLy9TRVENCi0JZW1taDMyX3VwZGF0ZSgmY29udGV4dC0+
-c2VlZCxmcmFtZS0+ZGEgKyBFVEhfQUxFTiAqIDIscGF5TGVuKTsgLy9wYXlsb2FkDQorCWVtbWgz
-Ml91cGRhdGUoJmNvbnRleHQtPnNlZWQsKHU4KikoZnJhbWUgKyAxKSxwYXlMZW4pOyAvL3BheWxv
-YWQNCiAJZW1taDMyX2ZpbmFsKCZjb250ZXh0LT5zZWVkLCAodTgqKSZtaWMtPm1pYyk7DQogDQog
-CS8qICAgIE5ldyBUeXBlL2xlbmd0aCA/Pz8/Pz8/Pz8/ICovDQpAQCAtMTUwNiw3ICsxNTA2LDcg
-QEAgc3RhdGljIGludCBkZWNhcHN1bGF0ZShzdHJ1Y3QgYWlyb19pbmZvICphaSwgTUlDQnVmZmVy
-ICptaWMsIGV0aGVySGVhZCAqZXRoLCB1MTYNCiAJCWVtbWgzMl91cGRhdGUoJmNvbnRleHQtPnNl
-ZWQsIGV0aC0+ZGEsIEVUSF9BTEVOKjIpOyANCiAJCWVtbWgzMl91cGRhdGUoJmNvbnRleHQtPnNl
-ZWQsICh1OCAqKSZtaWMtPnR5cGVsZW4sIHNpemVvZihtaWMtPnR5cGVsZW4pK3NpemVvZihtaWMt
-PnUuc25hcCkpOyANCiAJCWVtbWgzMl91cGRhdGUoJmNvbnRleHQtPnNlZWQsICh1OCAqKSZtaWMt
-PnNlcSxzaXplb2YobWljLT5zZXEpKTsJDQotCQllbW1oMzJfdXBkYXRlKCZjb250ZXh0LT5zZWVk
-LCBldGgtPmRhICsgRVRIX0FMRU4qMixwYXlMZW4pOwkNCisJCWVtbWgzMl91cGRhdGUoJmNvbnRl
-eHQtPnNlZWQsICh1OCAqKShldGggKyAxKSxwYXlMZW4pOwkNCiAJCS8vQ2FsY3VsYXRlIE1JQw0K
-IAkJZW1taDMyX2ZpbmFsKCZjb250ZXh0LT5zZWVkLCBkaWdlc3QpOw0KIAkNCi0tIA0KMS43LjYu
-NA0KDQo=
+On 11/29/2011 12:00 PM, AndrewL733 wrote:
+> Thanks for your reply.
+>
+> You are absolutely right. My Mandriva kernel's name is 3.1.2-1.1-desktop but the
+> compat-wireless "make install" is installing everything in the directory
+> /lib/modules/3.1.2-1-desktop/updates. The path is missing the ".1" before the
+> "-desktop".
+>
+> I'm not sure why this is happening. I am running a Mandriva kernel from "Cooker"
+> (running Mandriva 2011, which comes with 2.6.38.x, but the Macbook Pro 8,2 DVD
+> isn't recognized until the 3.1 kernel. I also compiled my own 3.2-rc3 kernel but
+> then I can't get fglrx to work properly.
+>
+> The joys of Macs and Linux..
+>
+> But getting back to b43. How can I instruct "make install" to put the drivers in
+> the correct path? I'm going to try to just copy everything to the correct place
+> and run depmod and see what happens. Maybe that'll work??
+
+That path is derived from the current kernel version. It should get it right.
+
+You should already have the directory /lib/modules/3.1.2-1.1-desktop. The 
+command 'mv /lib/modules/3.1.2-1-desktop/updates to 
+/lib/modules/3.1.2-1.1-desktop/.' followed by 'depmod -a' should be OK.
+
+Larry
+
