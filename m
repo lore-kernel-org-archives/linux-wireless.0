@@ -1,36 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:43412 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932377Ab1KHONY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 09:13:24 -0500
-Received: by mail-bw0-f49.google.com with SMTP id t2so544496bka.8
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 06:13:23 -0800 (PST)
-Subject: Re: [PATCH] wl12xx: keep beacon-filtering enabled during STA
- operation
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1319469920-5173-1-git-send-email-arik@wizery.com>
-References: <1319469920-5173-1-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Nov 2011 16:13:20 +0200
-Message-ID: <1320761600.19479.13.camel@cumari> (sfid-20111108_151329_680590_C78BC61D)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:56339 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752000Ab1K2Lhr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Nov 2011 06:37:47 -0500
+Date: Tue, 29 Nov 2011 12:39:07 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
+ iwl3945_rs_free_sta
+Message-ID: <20111129113906.GA7299@redhat.com> (sfid-20111129_123806_337643_AB3B2FDB)
+References: <20111129100727.GD2675@tiehlicka.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111129100727.GD2675@tiehlicka.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-10-24 at 17:25 +0200, Arik Nemtsov wrote: 
-> Enable beacon filtering on STA init, and don't disable it when entering
-> active mode. Otherwise dynamic-PS supports means we receive beacons from
-> the current AP during any Tx/Rx performed by the driver.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+Hi Michal
 
-Applied, thank you!
+On Tue, Nov 29, 2011 at 11:07:27AM +0100, Michal Hocko wrote:
+> [I am not sure whether this is ieee80211 or iwl3945 issue so put both
+> maintainers into loop]
+The only changed we had in iwlegacy between 3.1 and 3.2-rc, was only 
+adjustment to mac80211 changes. However I think this is iwlegacy issue,
+just for some reason bug did not trigger before.
 
--- 
-Cheers,
-Luca.
+Is this problem 100% reproducible for you ? If so I'll try to reproduce
+it locally, otherwise I'll review related code to find reason of that
+problem.
 
+Thanks
+Stanislaw 
