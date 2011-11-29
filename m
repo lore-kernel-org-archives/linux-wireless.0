@@ -1,39 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57739 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751808Ab1KXSb1 (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:59579 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752901Ab1K2POu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 13:31:27 -0500
-Subject: Re: [RFC v2 7/8] cfg80211 and nl80211: getting local and peer mesh
- power modes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Mike Krinkin <krinkin.m.u@gmail.com>
-In-Reply-To: <1321886416-12597-8-git-send-email-ivan.bezyazychnyy@gmail.com> (sfid-20111121_154200_869030_6C31831B)
-References: <1321886416-12597-1-git-send-email-ivan.bezyazychnyy@gmail.com>
-	 <1321886416-12597-8-git-send-email-ivan.bezyazychnyy@gmail.com>
-	 (sfid-20111121_154200_869030_6C31831B)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Nov 2011 19:31:24 +0100
-Message-ID: <1322159484.5366.35.camel@jlt3.sipsolutions.net> (sfid-20111124_193130_543400_37336803)
-Mime-Version: 1.0
+	Tue, 29 Nov 2011 10:14:50 -0500
+Received: by eeuu47 with SMTP id u47so1121915eeu.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2011 07:14:49 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1322555084.4110.2.camel@jlt3.sipsolutions.net>
+References: <1322533625-24641-1-git-send-email-mar.kolya@gmail.com>
+	<1322555084.4110.2.camel@jlt3.sipsolutions.net>
+Date: Tue, 29 Nov 2011 10:14:48 -0500
+Message-ID: <CALGY4fvLSKBY93M9Bhb-F8Sm=Uw5nU+OvTtAmk_BXQX8WX6V8A@mail.gmail.com> (sfid-20111129_161501_542780_FD605266)
+Subject: Re: [PATCH] mac80211: reset addba retries after timeout
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-11-21 at 18:40 +0400, Ivan Bezyazychnyy wrote:
+Hi.
 
-> @@ -520,7 +522,9 @@ enum station_info_flags {
->  	STATION_INFO_BSS_PARAM          = 1<<15,
->  	STATION_INFO_CONNECTED_TIME	= 1<<16,
->  	STATION_INFO_ASSOC_REQ_IES	= 1<<17,
-> -	STATION_INFO_STA_FLAGS		= 1<<18
-> +	STATION_INFO_STA_FLAGS		= 1<<18,
-> +	STATION_INFO_LOCAL_MESH_PS_MODE = 1<<17,
-> +	STATION_INFO_PEER_MESH_PS_MODE  = 1<<18
->  };
+  Thanks for your comments!
 
-Did you ever even test this?
+2011/11/29 Johannes Berg <johannes@sipsolutions.net>:
+> On Mon, 2011-11-28 at 21:27 -0500, Nikolay Martynov wrote:
+>> Currently code allows three (HT_AGG_MAX_RETRIES) unanswered addba
+>> requests. When this limit is reached aggregation is turned off for
+>> given TID permanently. This doesn't seem right: three requests is
+>> not that much, some 'blackout' can happen, but effect of it affects
+>> whole connection indefinitely.
+>>   This patch adds a period of time (1 minute) after which counter of
+>> sent addba requests is reset so addba requests can be sent again.
+>>   The traffic impact should be negligible, but connection will be more
+>> stable.
+>
+> Conceptually, this seems OK to me, although on broken APs it might mean
+> connection stalls every minute, not sure how desirable that is?
 
-johannes
+  Do APs broken is such way exist? I.e. APs which declare aggregation
+support but do not respond to addba.
+  On the other hand looking at the code I've got an impression that
+connection doesn't stall while waiting for addba resp, i.e. packets
+still go though non-agg path. Did I miss something in this regards?
 
+>
+>> -     /* we have tried too many times, receiver does not want A-MPDU */
+>>       if (sta->ampdu_mlme.addba_req_num[tid] > HT_AGG_MAX_RETRIES) {
+>> -             ret = -EBUSY;
+>> -             goto err_unlock_sta;
+>> +             unsigned int timestamp = jiffies_to_msecs(jiffies);
+>> +             if (timestamp - sta->ampdu_mlme.last_addba_req_time[tid] >
+>> +                 HT_AGG_RETRIES_PERIOD) {
+>
+> this logic is confusing -- why ms? jiffies should be absolutely OK for
+> minute-long timeouts.
+
+  Sure, I'll change this to use jiffies.
+  Thanks.
+
+-- 
+Truthfully yours,
+Martynov Nikolay.
+Email: mar.kolya@gmail.com
