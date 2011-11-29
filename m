@@ -1,39 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50508 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753108Ab1KXUhf (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:59359 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755343Ab1K2OxO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 15:37:35 -0500
-Subject: Re: [PATCH v10 2/2] mac80211:  Support ht-cap over-rides.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
+	Tue, 29 Nov 2011 09:53:14 -0500
+Date: Tue, 29 Nov 2011 17:52:47 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: arend@broadcom.com
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4ECE9825.8070208@candelatech.com>
-References: <1321644720-8245-1-git-send-email-greearb@candelatech.com>
-	 <1321644720-8245-2-git-send-email-greearb@candelatech.com>
-	 (sfid-20111118_203218_329178_9FB3658A) <1321648257.10266.77.camel@jlt3.sipsolutions.net>
-	 <4EC6C36D.4070900@candelatech.com>
-	 <1322142597.5366.19.camel@jlt3.sipsolutions.net>
-	 <4ECE9825.8070208@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Nov 2011 21:37:32 +0100
-Message-ID: <1322167052.5366.56.camel@jlt3.sipsolutions.net> (sfid-20111124_213740_423470_6EE6AA27)
-Mime-Version: 1.0
+Subject: re: brcm80211: fmac: remove alignment check from
+ brcmf_sdioh_request_buffer()
+Message-ID: <20111129145247.GA7152@elgon.mountain> (sfid-20111129_155318_906621_EEDE610D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-11-24 at 11:16 -0800, Ben Greear wrote:
-> On 11/24/2011 05:49 AM, Johannes Berg wrote:
-> > Please fix:
-> >
-> > net/mac80211/ht.c:31:6: warning: symbol '__check_htcap_disable' was not
-> > declared. Should it be static?
-> 
-> I sent a patch to make this static, but I do not see the warning.  Are you
-> running something other than a standard 'make bzImage modules' to
-> see this warning?
 
-Yes, this is a sparse warning, make C=1 or C=2
+Hello Arend van Spriel,
 
-johannes
+This is a semi-automatic email about new static checker warnings.
+
+The patch 8054321b7cb8: "brcm80211: fmac: remove alignment check from 
+brcmf_sdioh_request_buffer()" from Nov 22, 2011, leads to the 
+following Smatch complaint:
+
+drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c +298 brcmf_sdioh_request_buffer()
+	 warn: variable dereferenced before check 'pkt' (see line 293)
+
+drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+   292		int status;
+   293		uint pkt_len = pkt->len;
+                               ^^^^^^^^
+New dereference.
+
+   294		bool fifo = (fix_inc == SDIOH_DATA_FIX);
+   295	
+   296		brcmf_dbg(TRACE, "Enter\n");
+   297	
+   298		if (pkt == NULL)
+                    ^^^^^^^^^^^
+Old check.  Probably the check can be removed.  It from a quick glance
+that this function is called from three places and pkt is always a valid
+pointer.
+
+   299			return -EINVAL;
+   300	
+
+regards,
+dan carpenter
 
