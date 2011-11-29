@@ -1,16 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:38063 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:7520 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118Ab1KOGAy (ORCPT
+	with ESMTP id S1755911Ab1K2O5U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 01:00:54 -0500
+	Tue, 29 Nov 2011 09:57:20 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	Russell Hu <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>
 From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-CC: Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [RFC 00/18] ath9k: Add support for MCI BT coex 
-Date: Tue, 15 Nov 2011 11:30:40 +0530
-Message-ID: <1321336840-12366-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111115_070059_223283_68ABF238)
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 09/17] ath9k_hw: check for MCI interrupt in get_isr
+Date: Tue, 29 Nov 2011 20:25:30 +0530
+Message-ID: <1322578538-18912-10-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111129_155724_259635_7D3D51B8)
+In-Reply-To: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -18,56 +29,72 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Add support for MCI BT-Coex for AR9462. with AR9462 we have
-WLAN and BT coexists via MCI protocol(Message Coexistence Interface)
-WLAN and BT exchanges GPM, SCHED messages and few other messages
-for coexistence.
+check for the condition of MCI interrupt being triggered and
+appropriately obtain the values of MCI_INTERRUPT_RX_MSG_RAW and
+MCI_INTERRUPT_RAW
 
-this is not yet tested and need some more review, few misc cleanups. 
-please add your review comments. 
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |   36 +++++++++++++++++++++++++-
+ 1 files changed, 34 insertions(+), 2 deletions(-)
 
-thanks a lot to Rajkumar Manoharan <rmanohar@qca.qualcomm.com> for
-his suggestions, review comments, code cleanups, and modifications 
-in design. 
-
-Mohammed Shafi Shajakhan (18):
-  ath9k_hw: add definitions to support MCI h/w code
-  ath9k_hw: add GPIO output MUX related macros
-  ath9k_hw: Add MCI h/w specific structure
-  ath9k_hw: initialize MCI parameters
-  ath9k_hw: Add MCI h/w code and state machine
-  ath9k: Add MCI interrupt to interrupt mask
-  ath9k_hw: take care of enabling MCI interrupts
-  ath9k_hw: check for asynchronous MCI interrupt pending
-  ath9k_hw: check for MCI interrupt in get_isr
-  ath9k: add MCI specific definitions and structures
-  ath9k: Add functions to allocate/free buffers for MCI
-  ath9k_hw: MCI related changes in chip management
-  ath9k_hw: MCI related changes in set_reset_reg
-  ath9k_hw: Add support for MCI WLAN calibration
-  ath9k_hw: Add MCI related changes in chip reset
-  ath9k: make ath_reset non-static
-  ath9k: MCI state machine based on MCI interrupt
-  ath9k: fix a typo
-
- drivers/net/wireless/ath/ath9k/Makefile       |    3 +-
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   43 +
- drivers/net/wireless/ath/ath9k/ar9003_mac.c   |   36 +-
- drivers/net/wireless/ath/ath9k/ar9003_mci.c   | 1464 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_mci.h   |  102 ++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h   |    3 +
- drivers/net/wireless/ath/ath9k/ath9k.h        |    2 +
- drivers/net/wireless/ath/ath9k/btcoex.c       |    2 +-
- drivers/net/wireless/ath/ath9k/btcoex.h       |   31 +
- drivers/net/wireless/ath/ath9k/hw.c           |  174 +++-
- drivers/net/wireless/ath/ath9k/hw.h           |  182 +++
- drivers/net/wireless/ath/ath9k/init.c         |   33 +
- drivers/net/wireless/ath/ath9k/mac.c          |   17 +-
- drivers/net/wireless/ath/ath9k/main.c         |   11 +-
- drivers/net/wireless/ath/ath9k/mci.c          |  419 +++++++
- drivers/net/wireless/ath/ath9k/mci.h          |   20 +
- drivers/net/wireless/ath/ath9k/reg.h          |  306 +++++-
- 17 files changed, 2807 insertions(+), 41 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_mci.c
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_mci.h
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index ccde784..95587e3 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -175,15 +175,47 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 	u32 isr = 0;
+ 	u32 mask2 = 0;
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+-	u32 sync_cause = 0;
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
++	u32 sync_cause = 0, async_cause;
+ 
+-	if (REG_READ(ah, AR_INTR_ASYNC_CAUSE) & AR_INTR_MAC_IRQ) {
++	async_cause = REG_READ(ah, AR_INTR_ASYNC_CAUSE);
++
++	if (async_cause & (AR_INTR_MAC_IRQ | AR_INTR_ASYNC_MASK_MCI)) {
+ 		if ((REG_READ(ah, AR_RTC_STATUS) & AR_RTC_STATUS_M)
+ 				== AR_RTC_STATUS_ON)
+ 			isr = REG_READ(ah, AR_ISR);
+ 	}
+ 
++	if (async_cause & AR_INTR_ASYNC_MASK_MCI) {
++		u32 raw_intr, rx_msg_intr;
++
++		rx_msg_intr = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_RAW);
++		raw_intr = REG_READ(ah, AR_MCI_INTERRUPT_RAW);
++
++		if ((raw_intr == 0xdeadbeef) || (rx_msg_intr == 0xdeadbeef))
++			ath_dbg(common, ATH_DBG_MCI,
++				"MCI gets 0xdeadbeef during MCI int processing"
++				"new raw_intr=0x%08x, new rx_msg_raw=0x%08x, "
++				"raw_intr=0x%08x, rx_msg_raw=0x%08x\n",
++				raw_intr, rx_msg_intr, mci->raw_intr,
++				mci->rx_msg_intr);
++		else {
++			mci->rx_msg_intr |= rx_msg_intr;
++			mci->raw_intr |= raw_intr;
++			*masked |= ATH9K_INT_MCI;
++
++			if (rx_msg_intr & AR_MCI_INTERRUPT_RX_MSG_CONT_INFO)
++				mci->cont_status =
++					REG_READ(ah, AR_MCI_CONT_STATUS);
++
++			REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW, rx_msg_intr);
++			REG_WRITE(ah, AR_MCI_INTERRUPT_RAW, raw_intr);
++			ath_dbg(common, ATH_DBG_MCI, "AR_INTR_SYNC_MCI\n");
++
++		}
++	}
++
+ 	sync_cause = REG_READ(ah, AR_INTR_SYNC_CAUSE) & AR_INTR_SYNC_DEFAULT;
+ 
+ 	*masked = 0;
+-- 
+1.7.0.4
 
