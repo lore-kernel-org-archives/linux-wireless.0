@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42715 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754687Ab1KQAp2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33464 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755058Ab1K2Nym (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 19:45:28 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/2] compat: avoid warning in compat_system_workqueue_create
-Date: Wed, 16 Nov 2011 19:39:33 -0500
-Message-Id: <1321490374-24529-1-git-send-email-linville@tuxdriver.com> (sfid-20111117_014556_510646_1E85477F)
+	Tue, 29 Nov 2011 08:54:42 -0500
+Subject: Re: pull request: wireless-next 2011-11-28
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <20111129134243.GB2705@tuxdriver.com>
+References: <20111128200221.GD2681@tuxdriver.com>
+	 <1322554972.4110.0.camel@jlt3.sipsolutions.net>
+	 <20111129134243.GB2705@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 29 Nov 2011 14:54:33 +0100
+Message-ID: <1322574873.4110.15.camel@jlt3.sipsolutions.net> (sfid-20111129_145451_079435_C92A902F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The check in the WARN_ON is inverted.
+On Tue, 2011-11-29 at 08:42 -0500, John W. Linville wrote:
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- compat/compat-2.6.36.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> > > Johannes Berg (12):
+> > 
+> > >       mac80211: use skb list for fragments
+> > >       mac80211: move fragment flag adjustment
+> > >       mac80211: make TX LED handling independent of fragmentation
+> > >       mac80211: transmit fragment list to drivers
+> > 
+> > Since you included these patches, can you please pick up "mac80211: fix
+> > TX warning" relatively quickly? It fixes a harmless but possibly
+> > recurring WARN_ON in this code.
+> 
+> It's already in wireless-next. :-)
 
-diff --git a/compat/compat-2.6.36.c b/compat/compat-2.6.36.c
-index aab25df..fe24da8 100644
---- a/compat/compat-2.6.36.c
-+++ b/compat/compat-2.6.36.c
-@@ -99,7 +99,7 @@ EXPORT_SYMBOL_GPL(system_nrt_wq);
- void compat_system_workqueue_create()
- {
- 	system_nrt_wq = create_singlethread_workqueue("events_nrt");
--	WARN_ON(system_nrt_wq);
-+	WARN_ON(!system_nrt_wq);
- }
- 
- void compat_system_workqueue_destroy()
--- 
-1.7.4.4
+Yeah, sorry, I noticed an hour later or so that I'd been checking the
+wrong tree (without updating first)
+
+johannes
 
