@@ -1,58 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:48956 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754497Ab1KHROQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36455 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752607Ab1K2Ie1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 12:14:16 -0500
-Received: by eye27 with SMTP id 27so573929eye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 09:14:15 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] ath6kl: indicate probe-resp offload support
-Date: Tue,  8 Nov 2011 19:14:08 +0200
-Message-Id: <1320772448-20467-1-git-send-email-arik@wizery.com> (sfid-20111108_181419_877458_6C620174)
+	Tue, 29 Nov 2011 03:34:27 -0500
+Subject: Re: iwlagn is getting very shaky
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Norbert Preining <preining@logic.at>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Dave Jones <davej@redhat.com>,
+	David Rientjes <rientjes@google.com>
+In-Reply-To: <CANUX_P2b_ZYr4hHigA+tGa9uakcq3hQXnOiP5isQtfcYxCaxcw@mail.gmail.com> (sfid-20111129_075940_672404_AD87EAAF)
+References: <20111125122143.GA30404@gamma.logic.tuwien.ac.at>
+	 <CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com>
+	 <20111125123720.GA31564@gamma.logic.tuwien.ac.at>
+	 <CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com>
+	 <CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com>
+	 <1322387175.4044.16.camel@jlt3.sipsolutions.net>
+	 <CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com>
+	 <20111128035627.GH1422@gamma.logic.tuwien.ac.at>
+	 <CANUX_P2kYiFCP8uAhLZC_kVEjoyxabRBx3Pn+ndtFus=6hJN7Q@mail.gmail.com>
+	 <20111128042343.GA4619@gamma.logic.tuwien.ac.at>
+	 <20111128232525.GA12719@gamma.logic.tuwien.ac.at>
+	 <CANUX_P2b_ZYr4hHigA+tGa9uakcq3hQXnOiP5isQtfcYxCaxcw@mail.gmail.com>
+	 (sfid-20111129_075940_672404_AD87EAAF)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 29 Nov 2011 09:31:12 +0100
+Message-ID: <1322555472.4110.8.camel@jlt3.sipsolutions.net> (sfid-20111129_093443_181189_32FE6B42)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ath6kl responds to probe-requests in HW while operating as an AP. It
-supports offloading exclusions to support the WPS, WPS2, P2P and
-802.11u protocols.
+I noticed that the logs are a bit odd wrt. timing.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
-I haven't added validation in hostap that check for these flags before
-sending down the probe-resp IEs. This is still useful for tools such as
-iw, that can print out device characteristics.
+> > Intersperesed I see some other messages that are new to me:
+> > [ 4019.443129] Open BA session requested for 00:0a:79:eb:56:10 tid 0
+> > [ 4019.500149] activated addBA response timer on tid 0
+> > [ 4020.500033] addBA response timer expired on tid 0
 
-I'm not sure 802.11u is actually supported, just seemed so from the
-hostap code sending down the IEs.
+I guess the delay here is due to the synchronize_net()? That can take a
+while, 57ms seems a lot but I suppose it's possible.
 
-The patch of course depends on
-"nl80211: Add probe response offload attribute"
+> > [ 4020.501626] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
+> > [ 4023.740570] switched off addBA timer for tid 0
+> > [ 4023.740578] got addBA resp for tid 0 but we already gave up
+> 
+> Here is the AP is finally replying
 
-drivers/net/wireless/ath/ath6kl/init.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+It's kinda hard to believe that the AP took 4 seconds (!) to reply to
+the frame. Where could the frame get stuck? I don't see any other work
+processing happening etc. either. It's also curious that in those 3
+seconds between these messages, we didn't actually get around to
+stopping the session, that only happens just after:
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index b277111..075d904 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1549,7 +1549,13 @@ static int ath6kl_init(struct net_device *dev)
- 	ar->conf_flags = ATH6KL_CONF_IGNORE_ERP_BARKER |
- 			 ATH6KL_CONF_ENABLE_11N | ATH6KL_CONF_ENABLE_TX_BURST;
- 
--	ar->wdev->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
-+	ar->wdev->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM |
-+				  WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
-+	ar->wdev->wiphy->probe_resp_offload =
-+		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS |
-+		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2 |
-+		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P |
-+		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_80211U;
- 
- 	status = ath6kl_target_config_wlan_params(ar);
- 	if (!status)
--- 
-1.7.5.4
+> > [ 4023.740619] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 0
+
+(here)
+
+> > [ 4023.768544] Open BA session requested for 00:0a:79:eb:56:10 tid 0
+> 
+> Here we are trying again
+> 
+> > [ 4023.784292] activated addBA response timer on tid 0
+> > [ 4023.786294] switched off addBA timer for tid 0
+
+20ms response time here, that's much more reasonable.
+
+
+Could something be hogging the workqueues?
+
+johannes
 
