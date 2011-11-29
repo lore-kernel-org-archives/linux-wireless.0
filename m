@@ -1,155 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:26419 "EHLO mga02.intel.com"
+Received: from mail.allnet.de ([212.18.29.59]:25565 "EHLO mail.allnet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755443Ab1KJBdd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 20:33:33 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 15/28] iwlwifi: move hw_scan into _mac80211 file
-Date: Wed,  9 Nov 2011 16:39:18 -0800
-Message-Id: <1320885571-19122-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_023433_397710_FC060DD4)
-In-Reply-To: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320885571-19122-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1754691Ab1K2Lwp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Nov 2011 06:52:45 -0500
+Message-ID: <4ED4C789.8060701@allnet.de> (sfid-20111129_125258_741403_289EEE8F)
+Date: Tue, 29 Nov 2011 12:52:41 +0100
+From: Daniel Golle <dgolle@allnet.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes.berg@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH v1 0/3] support for antenna configuration profiles
+References: <20111128161225.GA25430@localhost>	 (sfid-20111128_171757_078893_7ACF616B) <1322499145.4060.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1322499145.4060.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwlagn_mac_hw_scan should belong to _mac80211 callback.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.h     |    3 --
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |   46 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-scan.c     |   45 --------------------------
- 3 files changed, 46 insertions(+), 48 deletions(-)
+Hi Johannes,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index ee3692a..fa47f75 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -312,9 +312,6 @@ void iwl_init_scan_params(struct iwl_priv *priv);
- int iwl_scan_cancel(struct iwl_priv *priv);
- void iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms);
- void iwl_force_scan_end(struct iwl_priv *priv);
--int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
--		    struct ieee80211_vif *vif,
--		    struct cfg80211_scan_request *req);
- void iwl_internal_short_hw_scan(struct iwl_priv *priv);
- int iwl_force_reset(struct iwl_priv *priv, int mode, bool external);
- u16 iwl_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index 1b2dbb0..6df08bb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -1801,6 +1801,52 @@ static int iwlagn_mac_change_interface(struct ieee80211_hw *hw,
- 	return err;
- }
- 
-+static int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
-+		    struct ieee80211_vif *vif,
-+		    struct cfg80211_scan_request *req)
-+{
-+	struct iwl_priv *priv = hw->priv;
-+	int ret;
-+
-+	IWL_DEBUG_MAC80211(priv, "enter\n");
-+
-+	if (req->n_channels == 0)
-+		return -EINVAL;
-+
-+	mutex_lock(&priv->shrd->mutex);
-+
-+	/*
-+	 * If an internal scan is in progress, just set
-+	 * up the scan_request as per above.
-+	 */
-+	if (priv->scan_type != IWL_SCAN_NORMAL) {
-+		IWL_DEBUG_SCAN(priv,
-+			       "SCAN request during internal scan - defer\n");
-+		priv->scan_request = req;
-+		priv->scan_vif = vif;
-+		ret = 0;
-+	} else {
-+		priv->scan_request = req;
-+		priv->scan_vif = vif;
-+		/*
-+		 * mac80211 will only ask for one band at a time
-+		 * so using channels[0] here is ok
-+		 */
-+		ret = iwl_scan_initiate(priv, vif, IWL_SCAN_NORMAL,
-+					req->channels[0]->band);
-+		if (ret) {
-+			priv->scan_request = NULL;
-+			priv->scan_vif = NULL;
-+		}
-+	}
-+
-+	IWL_DEBUG_MAC80211(priv, "leave\n");
-+
-+	mutex_unlock(&priv->shrd->mutex);
-+
-+	return ret;
-+}
-+
- struct ieee80211_ops iwlagn_hw_ops = {
- 	.tx = iwlagn_mac_tx,
- 	.start = iwlagn_mac_start,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index a26fbd3..625beec 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -939,51 +939,6 @@ int __must_check iwl_scan_initiate(struct iwl_priv *priv,
- 	return 0;
- }
- 
--int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
--		    struct ieee80211_vif *vif,
--		    struct cfg80211_scan_request *req)
--{
--	struct iwl_priv *priv = hw->priv;
--	int ret;
--
--	IWL_DEBUG_MAC80211(priv, "enter\n");
--
--	if (req->n_channels == 0)
--		return -EINVAL;
--
--	mutex_lock(&priv->shrd->mutex);
--
--	/*
--	 * If an internal scan is in progress, just set
--	 * up the scan_request as per above.
--	 */
--	if (priv->scan_type != IWL_SCAN_NORMAL) {
--		IWL_DEBUG_SCAN(priv,
--			       "SCAN request during internal scan - defer\n");
--		priv->scan_request = req;
--		priv->scan_vif = vif;
--		ret = 0;
--	} else {
--		priv->scan_request = req;
--		priv->scan_vif = vif;
--		/*
--		 * mac80211 will only ask for one band at a time
--		 * so using channels[0] here is ok
--		 */
--		ret = iwl_scan_initiate(priv, vif, IWL_SCAN_NORMAL,
--					req->channels[0]->band);
--		if (ret) {
--			priv->scan_request = NULL;
--			priv->scan_vif = NULL;
--		}
--	}
--
--	IWL_DEBUG_MAC80211(priv, "leave\n");
--
--	mutex_unlock(&priv->shrd->mutex);
--
--	return ret;
--}
- 
- /*
-  * internal short scan, this function should only been called while associated.
--- 
-1.7.0.4
+On 11/28/2011 05:52 PM, Johannes Berg wrote:
+> Can you remind us what it is you're trying to achieve? And why it can't
+> be done with the antenna selection API today?
+My idea is to have a generic API allowing the user to select configuration
+profiles for external LNA/mixers found in outdoor high-power appliances.
+I also first thought of just using the existing antenna selection API for that,
+but there are good reasons against that:
+* Antenna control API assumes that the allowed values for tx_ant and rx_ant are
+independent of each other. In high-power applications, this is not the case
+(i.e. you'll probably even damage the RX-part of your hardware when selecting
+the same path for RX and TX). Therefore simple bitmasks such as
+available_antennas_rx/tx won't do the job.
+* Both, external mixer and antenna control may be used together in MiMo
+applications, e.g. you may have antennas 0,1 which are controlled by the usual
+antenna selection API and additionally you got an external LNA/mixer which
+allows you to select either the built-in antenna-pair or an externally connected
+one.
+In my example, it looks like this
 
++---------+       +-------+
+|         ---TXa---       |
+| WiFi    ---RXa1--  ext. |
+| Chip    ---RXa2--  LNA  |
+|(AR9285) ......... mixer |
++---------+       +-------+
+
+You may still want to use antenna selection API to selected either RX-path 0 or
+1 or both of the AR9285, additionally you want to select a profile for the
+external LNA/mixer.
+
+* As Adrian pointed out and I agree with, it's nice to give the user some
+information about the available configuration profiles, i.e. have user-parsable
+names and descriptions of the different configuration profiles (e.g.
+"built-in"/"external", "horizontal"/"vertical", ...) for the device.
+
+My current solution how things are done in ath9k is specific for the AR9285, but
+once there is a generic infrastructure for this in mac80211, it can be used for
+different solutions, e.g. ath5k-devices with a similar setup which control the
+ext.LNA/mixer using some GPIO PINs.
+In future we may also see devices with several directional MiMo beams and we
+want to select which one(s) to use.
+
+I hope things are more clear now.
+
+
+Cheers
+
+
+Daniel
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJO1MeFAAoJEDy9cKN/1Et0R14P/0boU8k9U1CHDJAQzLswT6aF
+ts9gE0DLvC10qSu15sdRWH516T9K3sFeq2LlSYx4ljV6G3Y1lECzlJjuhFk15ZW+
+5Q0dlofmEhmO3shdvODgrKcqIdmvDkxHRqlCXtYuEPsDKi3QWVEqj8nji588nORt
+wCDGxdNEl8HJYmKi8R+OsAZcypCylV5HFo/J+Xt9pgQmP6gtqGkF3s+KwiPLDFo8
+BnusiD2aQOgqbSs/63t+yaapGLi2ATwFjgKOE/5DywyKUHPGT6e/SouGnWHVuEfA
++Kq33fUm5C93VK9aBVg+hawj6LGB9DAizGlDaEUib4TVt6R23N5HaeOp4uI+T41K
+pjz3jQD6CsTM8Ypo3UvsRI+SWvacNPcmRqJMplOL7sc9pkNx1UatP/wE2/pRPfki
+X1t9Lw8cb6FIeRZAe+ftiDZN5TEvqOTXBMAYe4tsPMr/GZ/g5eubdZDiHVe0gkQ2
+oIWFq8vnTX8UUP8jz0h4xkENsPoMHi6YwEFULIqdPfwEFqBXsxOCFPednZ5BU6ww
+KO9CQpMWqDhDtGsp5jsaC5s1K2Mo7w2hmfwMZjxy+wudftL7oe25niqlJZsTBKa9
+j72u+XwqXkf4wmsbbaPmDOI93mqBcgSPOUtaEz3RRZbi4EFFQUZA1+bX0SMdUHxD
+8oTrNnbFvv7ow1T2oQfy
+=I+el
+-----END PGP SIGNATURE-----
