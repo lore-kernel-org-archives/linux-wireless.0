@@ -1,126 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60778 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932546Ab1LERaM (ORCPT
+Received: from www17.your-server.de ([213.133.104.17]:53243 "EHLO
+	www17.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752525Ab1LCI2d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Dec 2011 12:30:12 -0500
-Date: Mon, 5 Dec 2011 12:19:39 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2011-12-05
-Message-ID: <20111205171938.GD2531@tuxdriver.com> (sfid-20111205_183043_218048_03A42082)
-References: <20111205163032.GC2531@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="1yeeQ81UyVL57Vl7"
-In-Reply-To: <20111205163032.GC2531@tuxdriver.com>
+	Sat, 3 Dec 2011 03:28:33 -0500
+Subject: [PATCH] iwlegacy: Use kcalloc instead of kzalloc to allocate array
+From: Thomas Meyer <thomas@m3y3r.de>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Date: Tue, 29 Nov 2011 22:08:00 +0100
+Message-ID: <1322600880.1534.324.camel@localhost.localdomain> (sfid-20111203_092859_836734_59E00D6F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The advantage of kcalloc is, that will prevent integer overflows which could
+result from the multiplication of number of elements and size and it is also
+a bit nicer to read.
 
---1yeeQ81UyVL57Vl7
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The semantic patch that makes this change is available
+in https://lkml.org/lkml/2011/11/25/107
 
-Forgot the signature...I'll sign this one, just in case! :-)
+Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
+---
 
-John
-
-On Mon, Dec 05, 2011 at 11:30:32AM -0500, John W. Linville wrote:
-> commit cbec0627ef1adf7afa448e8bbae3146ce910212a
->=20
-> Dave,
->=20
-> This batch of fixes is intended for 3.2.
->=20
-> Included is an iwlwifi fix to correctly set some flags related to packet
-> encryption, a couple of cfg80211 regulatory fixes (including one that
-> patches a hole created by the earlier "cfg80211: fix regulatory NULL
-> dereference"), a mac80211 fix to avoid sending probe requests with no
-> supported rates included, an iwlwifi fix to prevent reconfiguring HT40
-> after an association (prevents an assert in the firmware), and another
-> iwlwifi fix that customizes the watchdog timer enablement based on the
-> device type.
->=20
-> Also included is a reversion of a patch that was causing the iwlegacy
-> driver to throw WARNINGs.
->=20
-> Please let me know if there are problems!
->=20
-> John
->=20
-> ---
->=20
-> The following changes since commit f61759e6b831a55b89e584b198c3da325e2bc3=
-79:
->=20
->   ipv4: make sure RTO_ONLINK is saved in routing cache (2011-12-03 01:32:=
-23 -0500)
->=20
-> are available in the git repository at:
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for=
--davem
->=20
-> Johannes Berg (1):
->       iwlagn: fix HW crypto for TX-only keys
->=20
-> John W. Linville (2):
->       Revert "mac80211: clear sta.drv_priv on reconfiguration"
->       Merge branch 'master' of git://git.kernel.org/.../linville/wireless=
- into for-davem
->=20
-> Luis R. Rodriguez (2):
->       cfg80211: fix race on init and driver registration
->       cfg80211: amend regulatory NULL dereference fix
->=20
-> Simon Wunderlich (1):
->       mac80211: fill rate filter for internal scan requests
->=20
-> Wey-Yi Guy (2):
->       iwlwifi: do not re-configure HT40 after associated
->       iwlwifi: change the default behavior of watchdog timer
->=20
->  drivers/net/wireless/iwlwifi/iwl-1000.c     |    1 +
->  drivers/net/wireless/iwlwifi/iwl-5000.c     |    1 +
->  drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   36 ++++++++++++-------
->  drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |    5 ---
->  drivers/net/wireless/iwlwifi/iwl-agn.c      |   34 +++++++++---------
->  drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 +
->  drivers/net/wireless/iwlwifi/iwl-core.c     |   22 +++++++++---
->  drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +
->  drivers/net/wireless/iwlwifi/iwl-shared.h   |    4 +-
->  net/mac80211/main.c                         |    6 +++
->  net/mac80211/util.c                         |    1 -
->  net/wireless/reg.c                          |   49 +++++++++++++++++----=
-------
->  12 files changed, 102 insertions(+), 61 deletions(-)
-
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-
---1yeeQ81UyVL57Vl7
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJO3P0qAAoJEJctW/TcYTgGv1EP/2OP9nSnOM6jBvI4Fn20LhEu
-i+JiUintd1GjaKTxLUw7DFqopk5l6JsSZnATiKwv9+3dy/wyb6aJ5re0lwVidRX/
-jPbkwxZJBh/uAjkkOPDSzD150KO4CwerrPm5BqW3pXzI4mGd6kg2exaOtfwWVC9s
-A/kf9QiyTWm6c3sFnocsItkUUDIlraA3c8n5pRH7nLGB95fmA1bMVHimRRWa/qrj
-JBmjq0B5sSnMJzjbjA7Pyfo8tj5vPFBoXNKLjG+iX5O/Hz5j9XmSyYhZGYEtQhWs
-CceLEFaCXzYT8JbVaDtLdSKGgm+JbDSH/6pe67q7Kp/mnbh3fmjcqsn0tOmpZ4qG
-Q34aUMkb+beKlJTELstYSidBXkJSJRht7vb9A9wG+v0//giD5uAClJS64ZFZLrcZ
-eDbrxQ8RkcBQdaDX/myW+R0ZVnDdc5vcdl9+mwILW1fguJsD+6obNNqKu/PXldXg
-z/YaTaZQfXNDTsRR2C6qdExUcBIAwS35baV8WT/GRsgtwO+qiCjjLNURhvN5K4TM
-/qNbf+od8O0Lm2V56QvQmQbZsToSIYHli8lTFz0yiHEcoy77+MTfWkc2Rk0ivLWR
-lb2gg0brlu5b1cMe8tG8C1y9z5dyEKI5MVZGspKIkjEIQl0lxgBA4CFu5wceGmdu
-RpuCqydwFHgXbtGukOAq
-=DPJD
------END PGP SIGNATURE-----
-
---1yeeQ81UyVL57Vl7--
+diff -u -p a/drivers/net/wireless/iwlegacy/iwl-tx.c b/drivers/net/wireless/iwlegacy/iwl-tx.c
+--- a/drivers/net/wireless/iwlegacy/iwl-tx.c 2011-11-13 11:07:38.540345582 +0100
++++ b/drivers/net/wireless/iwlegacy/iwl-tx.c 2011-11-28 19:55:42.036442592 +0100
+@@ -297,8 +297,8 @@ static int iwl_legacy_tx_queue_alloc(str
+ 	/* Driver private data, only for Tx (not command) queues,
+ 	 * not shared with device. */
+ 	if (id != priv->cmd_queue) {
+-		txq->txb = kzalloc(sizeof(txq->txb[0]) *
+-				   TFD_QUEUE_SIZE_MAX, GFP_KERNEL);
++		txq->txb = kcalloc(TFD_QUEUE_SIZE_MAX, sizeof(txq->txb[0]),
++				   GFP_KERNEL);
+ 		if (!txq->txb) {
+ 			IWL_ERR(priv, "kmalloc for auxiliary BD "
+ 				  "structures failed\n");
