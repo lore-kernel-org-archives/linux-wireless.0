@@ -1,76 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53899 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754420Ab1KHNOX (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:48495 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753107Ab1K2JTC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 08:14:23 -0500
-Subject: Re: [PATCH 3/3] mac80211: simplify ieee80211_work_work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1320313247-23167-3-git-send-email-sgruszka@redhat.com>
-References: <1320313247-23167-1-git-send-email-sgruszka@redhat.com>
-	 <1320313247-23167-3-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Nov 2011 14:14:19 +0100
-Message-ID: <1320758059.4304.32.camel@jlt3.sipsolutions.net> (sfid-20111108_141425_637505_EA429BED)
-Mime-Version: 1.0
+	Tue, 29 Nov 2011 04:19:02 -0500
+MIME-Version: 1.0
+In-Reply-To: <1322555472.4110.8.camel@jlt3.sipsolutions.net>
+References: <20111125122143.GA30404@gamma.logic.tuwien.ac.at>
+	<CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com>
+	<20111125123720.GA31564@gamma.logic.tuwien.ac.at>
+	<CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com>
+	<CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com>
+	<1322387175.4044.16.camel@jlt3.sipsolutions.net>
+	<CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com>
+	<20111128035627.GH1422@gamma.logic.tuwien.ac.at>
+	<CANUX_P2kYiFCP8uAhLZC_kVEjoyxabRBx3Pn+ndtFus=6hJN7Q@mail.gmail.com>
+	<20111128042343.GA4619@gamma.logic.tuwien.ac.at>
+	<20111128232525.GA12719@gamma.logic.tuwien.ac.at>
+	<CANUX_P2b_ZYr4hHigA+tGa9uakcq3hQXnOiP5isQtfcYxCaxcw@mail.gmail.com>
+	<1322555472.4110.8.camel@jlt3.sipsolutions.net>
+Date: Tue, 29 Nov 2011 11:19:00 +0200
+Message-ID: <CANUX_P0z9HmZSj_13Fv0LHUgy2UDXWMaj8L2Tgqz2jQC2mbpZw@mail.gmail.com> (sfid-20111129_101909_006178_4A904534)
+Subject: Re: iwlagn is getting very shaky
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Norbert Preining <preining@logic.at>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Dave Jones <davej@redhat.com>,
+	David Rientjes <rientjes@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-11-03 at 10:40 +0100, Stanislaw Gruszka wrote:
-> Since local->tmp_channel is always NULL in one branch, some code paths
-> will newer be taken in that branch, so remove them.
+On Tue, Nov 29, 2011 at 10:31, Johannes Berg <johannes@sipsolutions.net> wrote:
+> I noticed that the logs are a bit odd wrt. timing.
+>
+>> > Intersperesed I see some other messages that are new to me:
+>> > [ 4019.443129] Open BA session requested for 00:0a:79:eb:56:10 tid 0
+>> > [ 4019.500149] activated addBA response timer on tid 0
+>> > [ 4020.500033] addBA response timer expired on tid 0
+>
+> I guess the delay here is due to the synchronize_net()? That can take a
+> while, 57ms seems a lot but I suppose it's possible.
+>
+>> > [ 4020.501626] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
+>> > [ 4023.740570] switched off addBA timer for tid 0
+>> > [ 4023.740578] got addBA resp for tid 0 but we already gave up
+>>
+>> Here is the AP is finally replying
+>
+> It's kinda hard to believe that the AP took 4 seconds (!) to reply to
+> the frame. Where could the frame get stuck? I don't see any other work
+> processing happening etc. either. It's also curious that in those 3
+> seconds between these messages, we didn't actually get around to
+> stopping the session, that only happens just after:
 
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+Yeah you are right, didn't look at the timestamps. Not sure you would
+see work being processed though.
 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  net/mac80211/work.c |   17 +++--------------
->  1 files changed, 3 insertions(+), 14 deletions(-)
-> 
-> diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-> index 6c53b6d..788b96e 100644
-> --- a/net/mac80211/work.c
-> +++ b/net/mac80211/work.c
-> @@ -969,10 +969,9 @@ static void ieee80211_work_work(struct work_struct *work)
->  		}
->  
->  		if (!started && !local->tmp_channel) {
-> -			bool on_oper_chan;
-> -			bool tmp_chan_changed = false;
-> -			bool on_oper_chan2;
-> +			bool on_oper_chan, on_oper_chan2;
->  			enum nl80211_channel_type wk_ct;
-> +
->  			on_oper_chan = ieee80211_cfg_on_oper_channel(local);
->  
->  			/* Work with existing channel type if possible. */
-> @@ -981,11 +980,6 @@ static void ieee80211_work_work(struct work_struct *work)
->  				wk_ct = ieee80211_calc_ct(wk->chan_type,
->  						local->hw.conf.channel_type);
->  
-> -			if (local->tmp_channel)
-> -				if ((local->tmp_channel != wk->chan) ||
-> -				    (local->tmp_channel_type != wk_ct))
-> -					tmp_chan_changed = true;
-> -
->  			local->tmp_channel = wk->chan;
->  			local->tmp_channel_type = wk_ct;
->  			/*
-> @@ -1008,12 +1002,7 @@ static void ieee80211_work_work(struct work_struct *work)
->  								    true,
->  								    false);
->  				}
-> -			} else if (tmp_chan_changed)
-> -				/* Still off-channel, but on some other
-> -				 * channel, so update hardware.
-> -				 * PS should already be off-channel.
-> -				 */
-> -				ieee80211_hw_config(local, 0);
-> +			}
->  
->  			started = true;
->  			wk->timeout = jiffies;
+>
+>> > [ 4023.740619] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 0
+>
+> (here)
+>
+>> > [ 4023.768544] Open BA session requested for 00:0a:79:eb:56:10 tid 0
+>>
+>> Here we are trying again
+>>
+>> > [ 4023.784292] activated addBA response timer on tid 0
+>> > [ 4023.786294] switched off addBA timer for tid 0
+>
+> 20ms response time here, that's much more reasonable.
+>
+>
+> Could something be hogging the workqueues?
+>
 
+Frankly, I am seeing issues that seem to point to workqueues too.
+Sometimes mac80211 seems just not responsive.
+Sometimes I come back to mac80211 for the AGG callback (start or
+stop), and it takes ages (5 seconds !) until it actually move to
+operationnal / stopped state.
 
+It might that we are holding the mac80211 workqueue in the driver too...
+I guess we could try to enable MAC80211 debug flag with timestamps to check.
+
+> johannes
+>
+>
