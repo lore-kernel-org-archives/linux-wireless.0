@@ -1,299 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45958 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932320Ab1KQQCe (ORCPT
+Received: from imr-mb01.mx.aol.com ([64.12.207.164]:36942 "EHLO
+	imr-mb01.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755377Ab1K2SAm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 11:02:34 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] compat: support RHEL6 as a build target
-Date: Thu, 17 Nov 2011 10:42:39 -0500
-Message-Id: <1321544559-2305-1-git-send-email-linville@tuxdriver.com> (sfid-20111117_170238_673290_BD7BAA92)
+	Tue, 29 Nov 2011 13:00:42 -0500
+Message-ID: <4ED51DB5.5090202@aol.com> (sfid-20111129_190046_087395_4EF34FD9)
+Date: Tue, 29 Nov 2011 13:00:21 -0500
+From: AndrewL733 <AndrewL733@aol.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Trouble with Macbook Pro 8,2 (broadcom 4331) and latest b43
+References: <4ED3A6E8.4050000@aol.com> <CACna6ryNkHeVXWXxFfod1-KQs8HQVv7wF-xpY5MA-Qs6fCypCg@mail.gmail.com> <CACna6rzRJgfddE4jPivxBJCCZEyKSHsdRX7cE15rRxk2nhiRkA@mail.gmail.com> <4ED3B33E.8020309@lwfinger.net> <4ED3FA65.7010104@aol.com> <CACna6rw1gEjd_hcX=5hLHt0YwUqDaVBs7_MO50GLKeok57YtVw@mail.gmail.com>
+In-Reply-To: <CACna6rw1gEjd_hcX=5hLHt0YwUqDaVBs7_MO50GLKeok57YtVw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables compatibility with RHEL6 as a build target, mostly
-with simple tricks similar to what was added for compatibility with
-Debian Squeeze.
+On 11/29/2011 12:22 AM, Rafał Miłecki wrote:
+> 2011/11/28 AndrewL733<AndrewL733@aol.com>:
+>> Hi,
+>>
+>> Thanks for the suggestions.  Nothing solving the problem so far.
+>>
+>> I meant
+>> find /lib/modules -name "b43.ko"
+>>
+>>
+>> What is the point of looking for b43.ko?  It exists for my running kernel.
+> I believe b43.ko from compat-wireless should be put in some specific
+> subdirectory, probably "extra". AFAIR it's
+> /lib/modules/SOMEKERNEL/extra/...
+>
+> If you can see only default b43.ko, it means compat-wireless didn't
+> install successfully.
+>
+Thanks for your reply.
 
-A handful of new CONFIG_* requirements were added, to provide for build
-flexibility required to support RHEL6:
+You are absolutely right.  My Mandriva kernel's name is 
+3.1.2-1.1-desktop but the compat-wireless "make install" is installing 
+everything in the directory /lib/modules/3.1.2-1-desktop/updates.  The 
+path is missing the ".1" before the "-desktop".
 
-	CONFIG_COMPAT_KFIFO
-	CONFIG_COMPAT_FIRMWARE_DATA_RW_NEEDS_FILP
+I'm not sure why this is happening.  I am running a Mandriva kernel from 
+"Cooker" (running Mandriva 2011, which comes with 2.6.38.x, but the 
+Macbook Pro 8,2 DVD isn't recognized until the 3.1 kernel.  I also 
+compiled my own 3.2-rc3 kernel but then I can't get fglrx to work properly.
 
-Also, CONFIG_COMPAT_FIRMWARE_CLASS is now checked in a header file and
-so the build configuration must change to update compat_autoconf.h
-appropriately
+The joys of Macs and Linux..
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- compat/Makefile                |    6 +++---
- compat/compat-2.6.35.c         |    4 ++--
- compat/compat-2.6.37.c         |    4 ++--
- compat/compat_firmware_class.c |   12 ++++++++++++
- include/linux/compat-2.6.33.h  |    9 +++++++++
- include/linux/compat-2.6.34.h  |   19 +++++++++++++++++++
- include/linux/compat-2.6.35.h  |    3 +++
- include/linux/compat-2.6.36.h  |    3 +++
- include/linux/compat-2.6.37.h  |    6 ++++++
- 9 files changed, 59 insertions(+), 7 deletions(-)
+But getting back to b43.  How can I instruct "make install" to put the 
+drivers in the correct path?  I'm going to try to just copy everything 
+to the correct place and run depmod  and see what happens.  Maybe 
+that'll work??
 
-diff --git a/compat/Makefile b/compat/Makefile
-index 2fb1893..fc43ba1 100644
---- a/compat/Makefile
-+++ b/compat/Makefile
-@@ -24,9 +24,9 @@ compat-$(CONFIG_COMPAT_KERNEL_2_6_29) += compat-2.6.29.o
- compat-$(CONFIG_COMPAT_KERNEL_2_6_32) += compat-2.6.32.o
- compat-$(CONFIG_COMPAT_KERNEL_2_6_33) += compat-2.6.33.o
- compat-$(CONFIG_COMPAT_KERNEL_2_6_35) += compat-2.6.35.o
--compat-$(CONFIG_COMPAT_KERNEL_2_6_36) += \
--	compat-2.6.36.o \
--	kfifo.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_36) += compat-2.6.36.o
-+
-+compat-$(CONFIG_COMPAT_KFIFO) += kfifo.o
- 
- compat-$(CONFIG_COMPAT_KERNEL_2_6_37) += compat-2.6.37.o
- compat-$(CONFIG_COMPAT_KERNEL_2_6_38) += compat-2.6.38.o
-diff --git a/compat/compat-2.6.35.c b/compat/compat-2.6.35.c
-index 44a15d6..7a31a54 100644
---- a/compat/compat-2.6.35.c
-+++ b/compat/compat-2.6.35.c
-@@ -18,7 +18,7 @@
-  * hex_to_bin() converts one hex digit to its actual value or -1 in case of bad
-  * input.
-  */
--int hex_to_bin(char ch)
-+int compat_hex_to_bin(char ch)
- {
- 	if ((ch >= '0') && (ch <= '9'))
- 		return ch - '0';
-@@ -27,7 +27,7 @@ int hex_to_bin(char ch)
- 		return ch - 'a' + 10;
- 	return -1;
- }
--EXPORT_SYMBOL(hex_to_bin);
-+EXPORT_SYMBOL(compat_hex_to_bin);
- 
- /**
-  * noop_llseek - No Operation Performed llseek implementation
-diff --git a/compat/compat-2.6.37.c b/compat/compat-2.6.37.c
-index 257880e..d7259bb 100644
---- a/compat/compat-2.6.37.c
-+++ b/compat/compat-2.6.37.c
-@@ -345,7 +345,7 @@ EXPORT_SYMBOL(compat_led_classdev_unregister);
-  *	For tight control over page level allocator and protection flags
-  *	use __vmalloc() instead.
-  */
--void *vzalloc(unsigned long size)
-+void *compat_vzalloc(unsigned long size)
- {
- 	void *buf;
- 	buf = vmalloc(size);
-@@ -353,6 +353,6 @@ void *vzalloc(unsigned long size)
- 		memset(buf, 0, size);
- 	return buf;
- }
--EXPORT_SYMBOL(vzalloc);
-+EXPORT_SYMBOL(compat_vzalloc);
- 
- #endif
-diff --git a/compat/compat_firmware_class.c b/compat/compat_firmware_class.c
-index 79cd543..4eb5ba7 100644
---- a/compat/compat_firmware_class.c
-+++ b/compat/compat_firmware_class.c
-@@ -314,9 +314,15 @@ static ssize_t firmware_loading_store(struct device *dev,
- 
- static DEVICE_ATTR(loading, 0644, firmware_loading_show, firmware_loading_store);
- 
-+#if defined(CONFIG_COMPAT_FIRMWARE_DATA_RW_NEEDS_FILP)
-+static ssize_t firmware_data_read(struct file *filp, struct kobject *kobj,
-+				  struct bin_attribute *bin_attr,
-+				  char *buffer, loff_t offset, size_t count)
-+#else
- static ssize_t firmware_data_read(struct kobject *kobj,
- 				  struct bin_attribute *bin_attr,
- 				  char *buffer, loff_t offset, size_t count)
-+#endif
- {
- 	struct device *dev = to_dev(kobj);
- 	struct firmware_priv *fw_priv = to_firmware_priv(dev);
-@@ -407,9 +413,15 @@ static int fw_realloc_buffer(struct firmware_priv *fw_priv, int min_size)
-  *	Data written to the 'data' attribute will be later handed to
-  *	the driver as a firmware image.
-  **/
-+#if defined(CONFIG_COMPAT_FIRMWARE_DATA_RW_NEEDS_FILP)
-+static ssize_t firmware_data_write(struct file *filp, struct kobject *kobj,
-+				   struct bin_attribute *bin_attr,
-+				   char *buffer, loff_t offset, size_t count)
-+#else
- static ssize_t firmware_data_write(struct kobject *kobj,
- 				   struct bin_attribute *bin_attr,
- 				   char *buffer, loff_t offset, size_t count)
-+#endif
- {
- 	struct device *dev = to_dev(kobj);
- 	struct firmware_priv *fw_priv = to_firmware_priv(dev);
-diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
-index 539b469..c900a6f 100644
---- a/include/linux/compat-2.6.33.h
-+++ b/include/linux/compat-2.6.33.h
-@@ -13,10 +13,13 @@
- #include <pcmcia/ds.h>
- #endif
- #include <linux/firmware.h>
-+#include <linux/input.h>
- 
-+#if defined(CONFIG_COMPAT_FIRMWARE_CLASS)
- #define release_firmware compat_release_firmware
- #define request_firmware compat_request_firmware
- #define request_firmware_nowait compat_request_firmware_nowait
-+#endif
- 
- #if defined(CONFIG_FW_LOADER) || defined(CONFIG_FW_LOADER_MODULE)
- int compat_request_firmware(const struct firmware **fw, const char *name,
-@@ -47,7 +50,10 @@ static inline void compat_release_firmware(const struct firmware *fw)
- }
- #endif
- 
-+/* mask KEY_RFKILL as RHEL6 backports this */
-+#if !defined(KEY_RFKILL)
- #define KEY_RFKILL		247	/* Key that controls all radios */
-+#endif
- 
- #define IFF_DONT_BRIDGE 0x800		/* disallow bridging this ether dev */
- /* source: include/linux/if.h */
-@@ -129,6 +135,9 @@ static inline int pci_pcie_cap(struct pci_dev *dev)
- 	return pci_find_capability(dev, PCI_CAP_ID_EXP);
- }
- 
-+/* mask pci_is_pcie as RHEL6 backports this */
-+#define pci_is_pcie(a) compat_pci_is_pcie(a)
-+
- /**
-  * pci_is_pcie - check if the PCI device is PCI Express capable
-  * @dev: PCI device
-diff --git a/include/linux/compat-2.6.34.h b/include/linux/compat-2.6.34.h
-index 562ccf7..a9c9dd1 100644
---- a/include/linux/compat-2.6.34.h
-+++ b/include/linux/compat-2.6.34.h
-@@ -46,6 +46,9 @@
- #define netdev_info(dev, format, args...)			\
- 	netdev_printk(KERN_INFO, dev, format, ##args)
- 
-+/* mask netdev_dbg as RHEL6 backports this */
-+#if !defined(netdev_dbg)
-+
- #if defined(DEBUG)
- #define netdev_dbg(__dev, format, args...)			\
- 	netdev_printk(KERN_DEBUG, __dev, format, ##args)
-@@ -64,6 +67,11 @@ do {								\
- })
- #endif
- 
-+#endif
-+
-+/* mask netdev_vdbg as RHEL6 backports this */
-+#if !defined(netdev_dbg)
-+
- #if defined(VERBOSE_DEBUG)
- #define netdev_vdbg	netdev_dbg
- #else
-@@ -76,6 +84,8 @@ do {								\
- })
- #endif
- 
-+#endif
-+
- /*
-  * netdev_WARN() acts like dev_printk(), but with the key difference
-  * of using a WARN/WARN_ON to get the message out, including the
-@@ -107,6 +117,9 @@ do {					  			\
- #define netif_info(priv, type, dev, fmt, args...)		\
- 	netif_printk(priv, type, KERN_INFO, (dev), fmt, ##args)
- 
-+/* mask netif_dbg as RHEL6 backports this */
-+#if !defined(netif_dbg)
-+
- #if defined(DEBUG)
- #define netif_dbg(priv, type, dev, format, args...)		\
- 	netif_printk(priv, type, KERN_DEBUG, dev, format, ##args)
-@@ -127,6 +140,11 @@ do {								\
- })
- #endif
- 
-+#endif
-+
-+/* mask netif_vdbg as RHEL6 backports this */
-+#if !defined(netif_vdbg)
-+
- #if defined(VERBOSE_DEBUG)
- #define netif_vdbg	netdev_dbg
- #else
-@@ -137,6 +155,7 @@ do {								\
- 	0;							\
- })
- #endif
-+#endif
- /* source: include/linux/netdevice.h */
- 
- 
-diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
-index 857a521..5e43002 100644
---- a/include/linux/compat-2.6.35.h
-+++ b/include/linux/compat-2.6.35.h
-@@ -26,6 +26,9 @@ static inline wait_queue_head_t *sk_sleep(struct sock *sk)
- 
- #define sdio_writeb_readb(func, write_byte, addr, err_ret) sdio_readb(func, addr, err_ret)
- 
-+/* mask hex_to_bin as RHEL6 backports this */
-+#define hex_to_bin(a) compat_hex_to_bin(a)
-+
- int hex_to_bin(char ch);
- 
- extern loff_t noop_llseek(struct file *file, loff_t offset, int origin);
-diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
-index 29ade27..b5d9975 100644
---- a/include/linux/compat-2.6.36.h
-+++ b/include/linux/compat-2.6.36.h
-@@ -14,6 +14,9 @@
- #define kparam_block_sysfs_write(a)
- #define kparam_unblock_sysfs_write(a)
- 
-+/* mask va_format as RHEL6 backports this */
-+#define va_format compat_va_format
-+
- struct va_format {
- 	const char *fmt;
- 	va_list *va;
-diff --git a/include/linux/compat-2.6.37.h b/include/linux/compat-2.6.37.h
-index d375746..c19e781 100644
---- a/include/linux/compat-2.6.37.h
-+++ b/include/linux/compat-2.6.37.h
-@@ -12,6 +12,9 @@
- 
- extern struct kobj_ns_type_operations net_ns_type_operations;
- 
-+/* mask skb_checksum_none_assert as RHEL6 backports this */
-+#define skb_checksum_none_assert(a) compat_skb_checksum_none_assert(a)
-+
- /**
-  * skb_checksum_none_assert - make sure skb ip_summed is CHECKSUM_NONE
-  * @skb: skb to check
-@@ -110,6 +113,9 @@ extern void compat_led_brightness_set(struct led_classdev *led_cdev,
- 
- #define netdev_refcnt_read(a) atomic_read(&a->refcnt)
- 
-+/* mask vzalloc as RHEL6 backports this */
-+#define vzalloc(a) compat_vzalloc(a)
-+
- extern void *vzalloc(unsigned long size);
- 
- #define rtnl_dereference(p)                                     \
--- 
-1.7.4.4
-
+Andy
