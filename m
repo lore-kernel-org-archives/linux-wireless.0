@@ -1,32 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:57637 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752930Ab1KPXPs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 18:15:48 -0500
-Date: Thu, 17 Nov 2011 00:15:42 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] p54spi: Remove FIXME in op_stop
-Message-ID: <20111117001542.68459372@milhouse> (sfid-20111117_001551_782034_34E3BDA3)
-In-Reply-To: <201111170012.03948.chunkeey@googlemail.com>
-References: <20111116235120.4c60c066@milhouse>
-	<201111170012.03948.chunkeey@googlemail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.candelatech.com ([208.74.158.172]:56965 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756031Ab1K2SN6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Nov 2011 13:13:58 -0500
+Message-ID: <4ED520DD.8050606@candelatech.com> (sfid-20111129_191402_107257_C04D73D0)
+Date: Tue, 29 Nov 2011 10:13:49 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Moving scan logic into work-queue?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 17 Nov 2011 00:12:03 +0100
-Christian Lamparter <chunkeey@googlemail.com> wrote:
-> BTW: I always wondered if it would make sense to have a
-> cached rx skb ready in p54spi_rx(). This way we don't
-> have to do DMA onto the stack [which is really ugly and
-> possibly illegal] and might even get a better rx
-> performance. I could write the code but as you know I don't
-> have the hardware to test it.
 
-I'll test it, if you can come up with a patch.
+We've talked before about moving the scan logic into the work-queue.
+
+Since my previous attempts at optimizing this code for scanning & off-channel
+work didn't stick, I thought I might attempt to convert the scan logic
+to the work-queue, with hopes of then being able to make another attempt
+at optimizing things for multiple interfaces & potentially off-channel work
+items.
+
+Before I start though, I'm hoping for some guidance on how you'd
+want this implemented.  Or, if you think there are other changes
+that should go in first, I'll wait...
+
+Thanks,
+Ben
 
 -- 
-Greetings, Michael.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
