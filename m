@@ -1,46 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50139 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933817Ab1KJPSN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 10:18:13 -0500
-Date: Thu, 10 Nov 2011 07:17:46 -0800
-From: Greg KH <gregkh@suse.de>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@kernel.org
-Subject: Re: [PATCH 3.1-stable] staging: brcm80211: fix for rate index in
- receive status
-Message-ID: <20111110151746.GB29104@suse.de> (sfid-20111110_161836_103778_9C05FAC7)
-References: <1320918514-5916-1-git-send-email-arend@broadcom.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:64995 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752809Ab1K2Wqu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Nov 2011 17:46:50 -0500
+Received: by faaq16 with SMTP id q16so196938faa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2011 14:46:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1320918514-5916-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1322606159.11282.2.camel@jlt3.sipsolutions.net>
+References: <1322533625-24641-1-git-send-email-mar.kolya@gmail.com>
+	<1322555084.4110.2.camel@jlt3.sipsolutions.net>
+	<CALGY4fvLSKBY93M9Bhb-F8Sm=Uw5nU+OvTtAmk_BXQX8WX6V8A@mail.gmail.com>
+	<1322579973.4110.22.camel@jlt3.sipsolutions.net>
+	<CALGY4fvSOdKtZbPSdvYkY3XXaGXNo-Ft8ir4LikmnTLqSkVCGA@mail.gmail.com>
+	<1322604877.11282.1.camel@jlt3.sipsolutions.net>
+	<CALGY4ftCLvwUuRZbH30PyUxAd6U7-p9hGwu8SjzLmqV4=XryZg@mail.gmail.com>
+	<1322606159.11282.2.camel@jlt3.sipsolutions.net>
+Date: Tue, 29 Nov 2011 17:46:48 -0500
+Message-ID: <CALGY4fu7DExMn6BCrwTMCEav1VEe81NAvJapiLXoi_DSf50ctg@mail.gmail.com> (sfid-20111129_234654_147714_26544437)
+Subject: Re: [PATCH] mac80211: reset addba retries after timeout
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 10, 2011 at 10:48:34AM +0100, Arend van Spriel wrote:
-> This fix resolves an issue on 5GHz as posted on LKML:
-> 
-> BUG: All network processes hang (brcmsmac/wpa_supplicant)
-> ID: <20111018111422.GA1979@schottelius.org>
+2011/11/29 Johannes Berg <johannes@sipsolutions.net>:
+> On Tue, 2011-11-29 at 17:28 -0500, Nikolay Martynov wrote:
+>> Hi.
+>>
+>> 2011/11/29 Johannes Berg <johannes@sipsolutions.net>:
+>> > On Tue, 2011-11-29 at 17:01 -0500, Nikolay Martynov wrote:
+>> >
+>> >> >>   Do APs broken is such way exist? I.e. APs which declare aggregation
+>> >> >> support but do not respond to addba.
+>> >> >
+>> >> > I seem to remember something ... not really sure.
+>> >>
+>> >>   If such APs exist I think it might be possible to extend my patch to
+>> >> do something like the following. For the first time make 10 attempts
+>> >> to establish addba. If this fails - make no more attempts for the
+>> >> duration of the connection. If this succeeds - use logic I've added in
+>> >> the patch. This should handle broken APs and won't allow agg to be
+>> >> disable because of some random blackout.
+>> >
+>> > Wouldn't that be equivalent to just bumping the number of tries?
+>>
+>>   Well, sort of if you are willing to bump it to 10-15, I guess it
+>> would be kind of same thing.
+>>   I've seen couple of times when 3 wasn't enough and agg got disabled,
+>> but 10-15 seems reasonably large to give up completely.
+>
+> Maybe the better approach would be to bump it up, but also only allow an
+> attempt once every say 15 seconds or so? It seems kinda useless to try 3
+> (or 10/15) times in quick succession and then give up, vs. just trying
+> more spaced out?
 
-What are these tags for?  I've not seen them in kernel patches before.
+  Makes sense to me. Although I would left first 2-3 go quickly in
+case first was lost due to random glitch there is no reason to wait 15
+seconds. But if first 2-3 fail - it make sense split next apart, I
+think.
 
-> Cc: stable@kernel.org
-
-Wrong address, please use stable@vger.kernel.org now.
-
-> Reported-by: Nico Schottelius <nico-linux-20111017@schottelius.org>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
-> Hi Greg,
-> 
-> This change is in the mainline brcmsmac driver, but I do not have a commit
-> message to refer to as we transitioned from staging to mainline in the last
-> merge window. Can you process this patch without that info?
-
-No, I need the git commit id of the patch that fixed this in Linus's
-tree, if the files are different due to the move, that's fine, but I
-still need this to reference.
-
-greg k-h
+-- 
+Truthfully yours,
+Martynov Nikolay.
+Email: mar.kolya@gmail.com
