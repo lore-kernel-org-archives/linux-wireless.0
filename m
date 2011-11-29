@@ -1,34 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:61155 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751775Ab1KNWkN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Nov 2011 17:40:13 -0500
+Received: from mail.allnet.de ([212.18.29.59]:50195 "EHLO mail.allnet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754760Ab1K2NwM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Nov 2011 08:52:12 -0500
+Message-ID: <4ED4E388.5060301@allnet.de> (sfid-20111129_145217_546472_984CD20D)
+Date: Tue, 29 Nov 2011 14:52:08 +0100
+From: Daniel Golle <dgolle@allnet.de>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 14 Nov 2011 14:39:51 -0800
-Message-ID: <CAB=NE6UB6TySinKTjPused7RLAUrd13BKWhD2PNzHE+fhUgQiw@mail.gmail.com> (sfid-20111114_234037_900396_75ED588E)
-Subject: [ANN] compat-wireless stable updates: 3.2-rc1, 3.1.1, 3.0.9
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes.berg@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: Re: [PATCH v1 0/3] support for antenna configuration profiles
+References: <20111128161225.GA25430@localhost>	 (sfid-20111128_171757_078893_7ACF616B) <1322499145.4060.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1322499145.4060.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I went back to my beehive and got busy updating the stable snapshots
-of compat-wireless [0] with a slew of new stable kernel updates. One
-for 3.2-rc1 [1], another for 3.1.1 [2] and then one for 3.0.9 [3].
-These are now based on the shiny new linux-stable.git [4] tree now
-maintained by Greg. Please report any issues observed. Thanks to all
-the contributors to these releases, particularly Hauke Mehrtens, I'm
-mainly just a patch monkey now.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-[0] http://wireless.kernel.org/en/users/Download/stable
-[1] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/compat-wireless-3.2-rc1-1.tar.bz2
-[2] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.1/compat-wireless-3.1.1-1.tar.bz2
-[3] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.0/compat-wireless-3.0.9-1.tar.bz2
-[4] git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+On 11/28/2011 05:52 PM, Johannes Berg wrote:
+> Can you remind us what it is you're trying to achieve? And why it can't
+> be done with the antenna selection API today?
 
-  Luis
+I can implement antenna configuration profiles in hwsim or try to get an
+ALL0258N hardware sample for someone, given there is a need for that.
+
+Cheers
+
+Daniel
+
+- -- 
+ALLNET GmbH ; Maistr. 2 ; D-82110 Germering ; Germany
+Tel. +49-89-89422222 - Fax +49-89-89422233
+http://www.allnet.de
+email: Daniel Golle <dgolle@allnet.de>
+Schulungs-/Veranstaltungsprogramm: http://www.802lab.de<http://www.802lab.de/>
+Geschäftsführer: Wolfgang Marcus Bauer
+Handelsregister München B 95922 ; UST-ID-Nr. DE 128214294 ;
+St.-Nr.117/115/00164
+WEEE-Reg.-NR. DE 13101093
+Bankverbindung:
+Sparkasse Fürstenfeldbruck KTO: 2774594 ; BLZ: 70053070
+Swift-Code: BYLADEM1FFB ; IBAN: DE61700530700002774594
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJO1OOCAAoJEDy9cKN/1Et0bn4QAKjBz7EDTkXnrf9VGA25ClMT
+92zTmqJA5WDd75YZGw106o9JxjVWMJ4asK0L2+sLKEUlqJnFu/FpQt1bov8zmxT1
+cyEbKRwAetSsaDcgH/v27orhdTusdN1ZhZR/Wv+Gpi+wTsfXfIuDJR8OcJvjPvl8
+Bpl5eIWXVs0eMRzdCVmmZksgW7yClZnt/Y4cuda6nNuh/8H5D8XYtR/7i6lQIjGg
+vJzfBgsYSya1AhF2yF1LBi7/getp+CK9Meo6qHRa8/CtVLIzOfLxaQ8ObZh7WVfT
+PO6Nrw5kL8HkVmwve0W2I4ieNQJJVANe2N5CWpf5Lk4vEjSf38/r+7EXXOtu0bdd
+LhyKKQzAhFzp0hEmIgcClSud9n6hbmBOWdkLXeUIbXShm5vddEmXs3Rqzv4UorSQ
+4teU7xE4buNOnA+yzE3BUHkdRiVZK3k+iXmnU1sXVMx2ovMAVHa3TKr5yTfdz/sc
+ByXC3m1TL/EiY5jzmAbhMfmhKiO/mQcRsBBdHqDFVBMNUkkPO7nFeV3Q3kxhOAOi
+qZY09LBoqSd/sITy9BHa4zgLun4dj68F5//cTdOG8KnoOItV9btkoe55e2CvPHmf
+6gC6XnNwojsUOc/FlneK9VHWmRs7/kWKJAed9UgPR0IXCy6q7yieCBKJfXx1ku9i
+RCzIbTm7jb0YysL+X5Ml
+=YIlR
+-----END PGP SIGNATURE-----
