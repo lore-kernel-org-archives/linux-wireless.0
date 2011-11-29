@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:52889 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751494Ab1K1VjC (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60348 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755736Ab1K2R7q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 16:39:02 -0500
-Received: by mail-vx0-f174.google.com with SMTP id fk14so4064537vcb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 13:39:02 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH 3/5] brcm80211: fix usage of set tx power
-Date: Mon, 28 Nov 2011 16:38:48 -0500
-Message-Id: <1322516330-4007-4-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111128_223906_096708_FAFEA168)
-In-Reply-To: <1322516330-4007-1-git-send-email-mcgrof@qca.qualcomm.com>
-References: <1322516330-4007-1-git-send-email-mcgrof@qca.qualcomm.com>
+	Tue, 29 Nov 2011 12:59:46 -0500
+Subject: Re: [RFC] prism54: fix compilation warning on wrqu.data.pointer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1322588518-15623-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111129_184235_135720_7307E3A5)
+References: <1322588518-15623-1-git-send-email-mcgrof@qca.qualcomm.com>
+	 (sfid-20111129_184235_135720_7307E3A5)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 29 Nov 2011 18:59:33 +0100
+Message-ID: <1322589573.4110.28.camel@jlt3.sipsolutions.net> (sfid-20111129_185949_450620_5E7A34A5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mBm is passed but dBm was assumed...
+On Tue, 2011-11-29 at 12:41 -0500, Luis R. Rodriguez wrote:
+> This fixes this compilation warning:
+> 
+>   CHECK   drivers/net/wireless/prism54/isl_ioctl.c
+> drivers/net/wireless/prism54/isl_ioctl.c:2052:27: warning: incorrect type in assignment (different address spaces)
+> drivers/net/wireless/prism54/isl_ioctl.c:2052:27:    expected void [noderef] <asn:1>*pointer
+> drivers/net/wireless/prism54/isl_ioctl.c:2052:27:    got char *[assigned] memptr
+> drivers/net/wireless/prism54/isl_ioctl.c:2071:27: warning: incorrect type in assignment (different address spaces)
+> drivers/net/wireless/prism54/isl_ioctl.c:2071:27:    expected void [noderef] <asn:1>*pointer
+> drivers/net/wireless/prism54/isl_ioctl.c:2071:27:    got char *[assigned] memptr
+> 
+> The wrqu.data.pointer shouldn't be assigned by the driver, addiotionally
+> custom wext driver events would simply be dropped anyway.
+> 
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+> ---
+> 
+> Johannes, it was unclear to me whether or not wireless_send_event()
+> no longer supports custom driver events if so then not only was this
+> bogus but also all the private driver event crap could likely be
+> removed from prism54 as well.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Looking at cfg80211_michael_mic_failure() in net/wireless/mlme.c, this
+should work.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index cc19a73..fc98981 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -1429,7 +1429,7 @@ brcmf_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *ndev,
- 
- static s32
- brcmf_cfg80211_set_tx_power(struct wiphy *wiphy,
--			 enum nl80211_tx_power_setting type, s32 dbm)
-+			    enum nl80211_tx_power_setting type, s32 mbm)
- {
- 
- 	struct brcmf_cfg80211_priv *cfg_priv = wiphy_to_cfg(wiphy);
-@@ -1437,6 +1437,7 @@ brcmf_cfg80211_set_tx_power(struct wiphy *wiphy,
- 	u16 txpwrmw;
- 	s32 err = 0;
- 	s32 disable = 0;
-+	s32 dbm = MBM_TO_DBM(mbm);
- 
- 	WL_TRACE("Enter\n");
- 	if (!check_sys_up(wiphy))
--- 
-1.7.4.15.g7811d
+johannes
 
