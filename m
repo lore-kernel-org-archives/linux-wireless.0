@@ -1,244 +1,479 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:42512 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755998Ab1KDRTp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Nov 2011 13:19:45 -0400
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Cc: rodrigue@qca.qualcomm.com, nbd@openwrt.org,
-	shafi.wireless@gmail.com, chunkeey@googlemail.com, peter@stuge.se,
-	Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Subject: [RFC v3 2/2] ath9k: integrate initial DFS module
-Date: Fri,  4 Nov 2011 18:19:19 +0100
-Message-Id: <1320427159-18509-3-git-send-email-zefir.kurtisi@neratec.com> (sfid-20111104_181951_829890_A70355BE)
-In-Reply-To: <1320427159-18509-1-git-send-email-zefir.kurtisi@neratec.com>
-References: <1320427159-18509-1-git-send-email-zefir.kurtisi@neratec.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:29204 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753737Ab1K2O6n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Nov 2011 09:58:43 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	Russell Hu <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 16/17] ath9k: MCI state machine based on MCI interrupt
+Date: Tue, 29 Nov 2011 20:25:37 +0530
+Message-ID: <1322578538-18912-17-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111129_155854_365337_C87A67FA)
+In-Reply-To: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch integrates the DFS module into ath9k, including
- * build the module into ath9k_hw
- * set up DFS debugfs
- * define HW capability flag for DFS support
-   * set by DFS supporting devices
-     (so far: AR_SREV_9280_20_OR_LATER, TBC)
- * define and set DFS opmode flag when on DFS channel
-   * configure rader params after reset
-   * provide rader RX filter flag in ath_calcrxfilter()
- * forward radar PHY errors to dfs module
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-This is WIP and at its current stage is limited to test ath9k
-pulse detection capabilities. The DFS pattern matching is
-TBD in the higher layers and is not part of this patch.
-
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/Makefile |    2 ++
- drivers/net/wireless/ath/ath9k/ath9k.h  |    1 +
- drivers/net/wireless/ath/ath9k/debug.c  |    3 +++
- drivers/net/wireless/ath/ath9k/debug.h  |    2 ++
- drivers/net/wireless/ath/ath9k/hw-ops.h |    9 +++++++++
- drivers/net/wireless/ath/ath9k/hw.c     |    7 +++++++
- drivers/net/wireless/ath/ath9k/hw.h     |    1 +
- drivers/net/wireless/ath/ath9k/main.c   |   16 ++++++++++++++++
- drivers/net/wireless/ath/ath9k/recv.c   |   19 ++++++++++++++-----
- 9 files changed, 55 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c   |    4 +-
+ drivers/net/wireless/ath/ath9k/init.c |   11 +
+ drivers/net/wireless/ath/ath9k/main.c |    3 +
+ drivers/net/wireless/ath/ath9k/mci.c  |  341 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/mci.h  |    1 +
+ 5 files changed, 359 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index 36ed3c4..1f260a5 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -29,6 +29,8 @@ ath9k_hw-y:=	\
- 		eeprom_9287.o \
- 		ani.o \
- 		btcoex.o \
-+		dfs.o \
-+		dfs_debug.o \
- 		mac.o \
- 		ar9002_mac.o \
- 		ar9003_mac.o \
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 7ab7a1e..de0309e 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -563,6 +563,7 @@ struct ath_ant_comb {
- #define SC_OP_BT_SCAN		     BIT(13)
- #define SC_OP_ANI_RUN		     BIT(14)
- #define SC_OP_PRIM_STA_VIF	     BIT(15)
-+#define SC_OP_DFS		     BIT(16)
- 
- /* Powersave flags */
- #define PS_WAIT_FOR_BEACON        BIT(0)
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 138ae09..6642108 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1633,6 +1633,9 @@ int ath9k_init_debug(struct ath_hw *ah)
- 	debugfs_create_file("debug", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
- 			    sc, &fops_debug);
- #endif
-+
-+	ath9k_dfs_init_debug(sc);
-+
- 	debugfs_create_file("dma", S_IRUSR, sc->debug.debugfs_phy, sc,
- 			    &fops_dma);
- 	debugfs_create_file("interrupt", S_IRUSR, sc->debug.debugfs_phy, sc,
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index 4f6c939..f70735a 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -19,6 +19,7 @@
- 
- #include "hw.h"
- #include "rc.h"
-+#include "dfs_debug.h"
- 
- struct ath_txq;
- struct ath_buf;
-@@ -180,6 +181,7 @@ struct ath_stats {
- 	struct ath_interrupt_stats istats;
- 	struct ath_tx_stats txstats[ATH9K_NUM_TX_QUEUES];
- 	struct ath_rx_stats rxstats;
-+	struct ath_dfs_stats dfs_stats;
- 	u32 reset[__RESET_TYPE_MAX];
- };
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index e74c233..c4ad0b0 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -212,4 +212,13 @@ static inline int ath9k_hw_fast_chan_change(struct ath_hw *ah,
- 	return ath9k_hw_private_ops(ah)->fast_chan_change(ah, chan,
- 							  ini_reloaded);
- }
-+
-+static inline void ath9k_hw_set_radar_params(struct ath_hw *ah)
-+{
-+	if (!ath9k_hw_private_ops(ah)->set_radar_params)
-+		return;
-+
-+	ath9k_hw_private_ops(ah)->set_radar_params(ah, &ah->radar_conf);
-+}
-+
- #endif /* ATH9K_HW_OPS_H */
 diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 76dbc85..c9ba80d 100644
+index e2860d7..5abe682 100644
 --- a/drivers/net/wireless/ath/ath9k/hw.c
 +++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2333,6 +2333,13 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 		pCap->pcie_lcr_offset = 0x80;
- 	}
+@@ -2397,7 +2397,9 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		pCap->hw_caps |= ATH9K_HW_CAP_4KB_SPLITTRANS;
  
-+	if (AR_SREV_9280_20_OR_LATER(ah)) {
-+		/*
-+		 * TODO: check for which chip-sets we want to support DFS
-+		 */
-+		pCap->hw_caps |= ATH9K_HW_CAP_DFS;
-+	}
+ 	if (common->btcoex_enabled) {
+-		if (AR_SREV_9300_20_OR_LATER(ah)) {
++		if (AR_SREV_9462(ah))
++			btcoex_hw->scheme = ATH_BTCOEX_CFG_MCI;
++		else if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 			btcoex_hw->scheme = ATH_BTCOEX_CFG_3WIRE;
+ 			btcoex_hw->btactive_gpio = ATH_BTACTIVE_GPIO_9300;
+ 			btcoex_hw->wlanactive_gpio = ATH_WLANACTIVE_GPIO_9300;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 34b922b..e9711e2 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -425,8 +425,16 @@ static int ath9k_init_btcoex(struct ath_softc *sc)
+ 		txq = sc->tx.txq_map[WME_AC_BE];
+ 		ath9k_hw_init_btcoex_hw(sc->sc_ah, txq->axq_qnum);
+ 		sc->btcoex.bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
++		break;
++	case ATH_BTCOEX_CFG_MCI:
++		sc->btcoex.bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
+ 		sc->btcoex.duty_cycle = ATH_BTCOEX_DEF_DUTY_CYCLE;
+ 		INIT_LIST_HEAD(&sc->btcoex.mci.info);
 +
- 	tx_chainmask = pCap->tx_chainmask;
- 	rx_chainmask = pCap->rx_chainmask;
- 	while (tx_chainmask || rx_chainmask) {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 9dbc3cd..4f02f83 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -204,6 +204,7 @@ enum ath9k_hw_caps {
- 	ATH9K_HW_CAP_5GHZ			= BIT(14),
- 	ATH9K_HW_CAP_APM			= BIT(15),
- 	ATH9K_HW_CAP_RTT			= BIT(16),
-+	ATH9K_HW_CAP_DFS			= BIT(17),
- };
++		r = ath_mci_setup(sc);
++		if (r)
++			return r;
++
+ 		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI) {
+ 			ah->btcoex_hw.mci.ready = false;
+ 			ah->btcoex_hw.mci.bt_state = 0;
+@@ -861,6 +869,9 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
+ 	    sc->sc_ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_3WIRE)
+ 		ath_gen_timer_free(sc->sc_ah, sc->btcoex.no_stomp_timer);
  
- struct ath9k_hw_capabilities {
++	if (sc->sc_ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_MCI)
++		ath_mci_cleanup(sc);
++
+ 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++)
+ 		if (ATH_TXQ_SETUP(sc, i))
+ 			ath_tx_cleanupq(sc, &sc->tx.txq[i]);
 diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index d3b92ce..e86d820 100644
+index 90d35f2..fd59c1f 100644
 --- a/drivers/net/wireless/ath/ath9k/main.c
 +++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -305,6 +305,10 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 		ath9k_hw_antdiv_comb_conf_set(ah, &div_ant_conf);
- 	}
+@@ -742,6 +742,9 @@ void ath9k_tasklet(unsigned long data)
+ 		if (status & ATH9K_INT_GENTIMER)
+ 			ath_gen_timer_isr(sc->sc_ah);
  
-+	/* set radar parameters if in DFS mode */
-+	if (sc->sc_flags & SC_OP_DFS)
-+		ath9k_hw_set_radar_params(ah);
++	if (status & ATH9K_INT_MCI)
++		ath_mci_intr(sc);
 +
- 	ieee80211_wake_queues(sc->hw);
+ out:
+ 	/* re-enable hardware interrupt */
+ 	ath9k_hw_enable_interrupts(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 5b24676..d678040 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -184,6 +184,56 @@ static void ath_mci_update_scheme(struct ath_softc *sc)
+ 	ath9k_btcoex_timer_resume(sc);
+ }
  
- 	return true;
-@@ -1722,9 +1726,21 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 			memset(&sc->survey[pos], 0, sizeof(struct survey_info));
- 		}
- 
-+		if (curchan->flags & IEEE80211_CHAN_RADAR) {
-+			if (!(ah->caps.hw_caps & ATH9K_HW_CAP_DFS)) {
-+				ath_err(common, "HW does not support DFS\n");
-+				mutex_unlock(&sc->mutex);
-+				return -EINVAL;
-+			}
-+			sc->sc_flags |= SC_OP_DFS;
++
++static void ath_mci_cal_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	u32 payload[4] = {0, 0, 0, 0};
++
++	switch (opcode) {
++	case MCI_GPM_BT_CAL_REQ:
++
++		ath_dbg(common, ATH_DBG_MCI, "MCI received BT_CAL_REQ\n");
++
++		if (ar9003_mci_state(ah, MCI_STATE_BT, NULL) == MCI_BT_AWAKE) {
++			ar9003_mci_state(ah, MCI_STATE_SET_BT_CAL_START, NULL);
++			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
 +		} else
-+			sc->sc_flags &= ~SC_OP_DFS;
++			ath_dbg(common, ATH_DBG_MCI,
++				"MCI State mismatches: %d\n",
++				ar9003_mci_state(ah, MCI_STATE_BT, NULL));
 +
- 		if (ath_set_channel(sc, hw, &sc->sc_ah->channels[pos]) < 0) {
- 			ath_err(common, "Unable to set channel\n");
- 			mutex_unlock(&sc->mutex);
-+			/* clear DFS operation flag on failure */
-+			sc->sc_flags &= ~SC_OP_DFS;
- 			return -EINVAL;
- 		}
++		break;
++
++	case MCI_GPM_BT_CAL_DONE:
++
++		ath_dbg(common, ATH_DBG_MCI, "MCI received BT_CAL_DONE\n");
++
++		if (ar9003_mci_state(ah, MCI_STATE_BT, NULL) == MCI_BT_CAL)
++			ath_dbg(common, ATH_DBG_MCI, "MCI error illegal!\n");
++		else
++			ath_dbg(common, ATH_DBG_MCI, "MCI BT not in CAL state\n");
++
++		break;
++
++	case MCI_GPM_BT_CAL_GRANT:
++
++		ath_dbg(common, ATH_DBG_MCI, "MCI received BT_CAL_GRANT\n");
++
++		/* Send WLAN_CAL_DONE for now */
++		ath_dbg(common, ATH_DBG_MCI, "MCI send WLAN_CAL_DONE\n");
++		MCI_GPM_SET_CAL_TYPE(payload, MCI_GPM_WLAN_CAL_DONE);
++		ar9003_mci_send_message(sc->sc_ah, MCI_GPM, 0, payload,
++					16, false, true);
++		break;
++
++	default:
++		ath_dbg(common, ATH_DBG_MCI, "MCI Unknown GPM CAL message\n");
++		break;
++	}
++}
++
+ void ath_mci_process_profile(struct ath_softc *sc,
+ 			     struct ath_mci_profile_info *info)
+ {
+@@ -256,6 +306,90 @@ void ath_mci_process_status(struct ath_softc *sc,
+ 		ath_mci_update_scheme(sc);
+ }
  
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 0d5f275..76d804c 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -17,6 +17,7 @@
- #include <linux/dma-mapping.h>
- #include "ath9k.h"
- #include "ar9003_mac.h"
-+#include "dfs.h"
- 
- #define SKB_CB_ATHBUF(__skb)	(*((struct ath_buf **)__skb->cb))
- 
-@@ -473,6 +474,8 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
- 	}
- 
-+	if (sc->sc_flags & SC_OP_DFS)
-+		rfilt |= ATH9K_RX_FILTER_PHYRADAR;
- 	return rfilt;
- 
- #undef RX_FILTER_PRESERVE
-@@ -1855,11 +1858,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		if (sc->sc_flags & SC_OP_RXFLUSH)
- 			goto requeue_drop_frag;
- 
--		retval = ath9k_rx_skb_preprocess(common, hw, hdr, &rs,
--						 rxs, &decrypt_error);
--		if (retval)
--			goto requeue_drop_frag;
--
- 		rxs->mactime = (tsf & ~0xffffffffULL) | rs.rs_tstamp;
- 		if (rs.rs_tstamp > tsf_lower &&
- 		    unlikely(rs.rs_tstamp - tsf_lower > 0x10000000))
-@@ -1869,6 +1867,17 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		    unlikely(tsf_lower - rs.rs_tstamp > 0x10000000))
- 			rxs->mactime += 0x100000000ULL;
- 
-+		if ((rs.rs_status & ATH9K_RXERR_PHY) &&
-+		    (rs.rs_phyerr == ATH9K_PHYERR_RADAR)) {
-+			/* DFS: check for radar pulse */
-+			ath9k_dfs_process_phyerr(sc, hdr, &rs, rxs->mactime);
++static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_mci_profile_info profile_info;
++	struct ath_mci_profile_status profile_status;
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	u32 version;
++	u8 major;
++	u8 minor;
++	u32 seq_num;
++
++	switch (opcode) {
++
++	case MCI_GPM_COEX_VERSION_QUERY:
++		ath_dbg(common, ATH_DBG_MCI,
++			"MCI Recv GPM COEX Version Query.\n");
++		version = ar9003_mci_state(ah,
++				MCI_STATE_SEND_WLAN_COEX_VERSION, NULL);
++		break;
++
++	case MCI_GPM_COEX_VERSION_RESPONSE:
++		ath_dbg(common, ATH_DBG_MCI,
++			"MCI Recv GPM COEX Version Response.\n");
++		major = *(rx_payload + MCI_GPM_COEX_B_MAJOR_VERSION);
++		minor = *(rx_payload + MCI_GPM_COEX_B_MINOR_VERSION);
++		ath_dbg(common, ATH_DBG_MCI,
++			"MCI BT Coex version: %d.%d\n", major, minor);
++		version = (major << 8) + minor;
++		version = ar9003_mci_state(ah,
++			  MCI_STATE_SET_BT_COEX_VERSION, &version);
++		break;
++
++	case MCI_GPM_COEX_STATUS_QUERY:
++		ath_dbg(common, ATH_DBG_MCI,
++			"MCI Recv GPM COEX Status Query = 0x%02x.\n",
++			*(rx_payload + MCI_GPM_COEX_B_WLAN_BITMAP));
++		ar9003_mci_state(ah,
++		MCI_STATE_SEND_WLAN_CHANNELS, NULL);
++		break;
++
++	case MCI_GPM_COEX_BT_PROFILE_INFO:
++		ath_dbg(common, ATH_DBG_MCI,
++			"MCI Recv GPM Coex BT profile info\n");
++		memcpy(&profile_info,
++		       (rx_payload + MCI_GPM_COEX_B_PROFILE_TYPE), 10);
++
++		if ((profile_info.type == MCI_GPM_COEX_PROFILE_UNKNOWN)
++		    || (profile_info.type >=
++					    MCI_GPM_COEX_PROFILE_MAX)) {
++
++			ath_dbg(common, ATH_DBG_MCI,
++				"illegal profile type = %d,"
++				"state = %d\n", profile_info.type,
++				profile_info.start);
++			break;
 +		}
 +
-+		retval = ath9k_rx_skb_preprocess(common, hw, hdr, &rs,
-+						 rxs, &decrypt_error);
-+		if (retval)
-+			goto requeue_drop_frag;
++		ath_mci_process_profile(sc, &profile_info);
++		break;
 +
- 		/* Ensure we always have an skb to requeue once we are done
- 		 * processing the current buffer's skb */
- 		requeue_skb = ath_rxbuf_alloc(common, common->rx_bufsize, GFP_ATOMIC);
++	case MCI_GPM_COEX_BT_STATUS_UPDATE:
++		profile_status.is_link = *(rx_payload +
++					   MCI_GPM_COEX_B_STATUS_TYPE);
++		profile_status.conn_handle = *(rx_payload +
++					       MCI_GPM_COEX_B_STATUS_LINKID);
++		profile_status.is_critical = *(rx_payload +
++					       MCI_GPM_COEX_B_STATUS_STATE);
++
++		seq_num = *((u32 *)(rx_payload + 12));
++		ath_dbg(common, ATH_DBG_MCI,
++			"MCI Recv GPM COEX BT_Status_Update: "
++			"is_link=%d, linkId=%d, state=%d, SEQ=%d\n",
++			profile_status.is_link, profile_status.conn_handle,
++			profile_status.is_critical, seq_num);
++
++		ath_mci_process_status(sc, &profile_status);
++		break;
++
++	default:
++		ath_dbg(common, ATH_DBG_MCI,
++		"MCI Unknown GPM COEX message = 0x%02x\n", opcode);
++		break;
++	}
++}
+ 
+ static int ath_mci_buf_alloc(struct ath_softc *sc, struct ath_mci_buf *buf)
+ {
+@@ -330,3 +464,210 @@ void ath_mci_cleanup(struct ath_softc *sc)
+ 	ath_mci_buf_free(sc, &mci->sched_buf);
+ 	ar9003_mci_cleanup(ah);
+ }
++
++void ath_mci_intr(struct ath_softc *sc)
++{
++	struct ath_mci_coex *mci = &sc->mci_coex;
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	u32 mci_int, mci_int_rxmsg;
++	u32 offset, subtype, opcode;
++	u32 *pgpm;
++	u32 more_data = MCI_GPM_MORE;
++	bool skip_gpm = false;
++
++	ar9003_mci_get_interrupt(sc->sc_ah, &mci_int, &mci_int_rxmsg);
++
++	if (ar9003_mci_state(ah, MCI_STATE_ENABLE, NULL) == 0) {
++
++		ar9003_mci_state(sc->sc_ah, MCI_STATE_INIT_GPM_OFFSET, NULL);
++		ath_dbg(common, ATH_DBG_MCI,
++			"MCI interrupt but MCI disabled\n");
++
++		ath_dbg(common, ATH_DBG_MCI,
++			"MCI interrupt: intr = 0x%x, intr_rxmsg = 0x%x\n",
++			mci_int, mci_int_rxmsg);
++		return;
++	}
++
++	if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE) {
++		u32 payload[4] = { 0xffffffff, 0xffffffff,
++				   0xffffffff, 0xffffff00};
++
++		/*
++		 * The following REMOTE_RESET and SYS_WAKING used to sent
++		 * only when BT wake up. Now they are always sent, as a
++		 * recovery method to reset BT MCI's RX alignment.
++		 */
++		ath_dbg(common, ATH_DBG_MCI, "MCI interrupt send REMOTE_RESET\n");
++
++		ar9003_mci_send_message(ah, MCI_REMOTE_RESET, 0,
++					payload, 16, true, false);
++		ath_dbg(common, ATH_DBG_MCI, "MCI interrupt send SYS_WAKING\n");
++		ar9003_mci_send_message(ah, MCI_SYS_WAKING, 0,
++					NULL, 0, true, false);
++
++		mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE;
++		ar9003_mci_state(ah, MCI_STATE_RESET_REQ_WAKE, NULL);
++
++		/*
++		 * always do this for recovery and 2G/5G toggling and LNA_TRANS
++		 */
++		ath_dbg(common, ATH_DBG_MCI, "MCI Set BT state to AWAKE.\n");
++		ar9003_mci_state(ah, MCI_STATE_SET_BT_AWAKE, NULL);
++	}
++
++	/* Processing SYS_WAKING/SYS_SLEEPING */
++	if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_SYS_WAKING) {
++		mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_SYS_WAKING;
++
++		if (ar9003_mci_state(ah, MCI_STATE_BT, NULL) == MCI_BT_SLEEP) {
++
++			if (ar9003_mci_state(ah, MCI_STATE_REMOTE_SLEEP, NULL)
++					== MCI_BT_SLEEP)
++				ath_dbg(common, ATH_DBG_MCI,
++					"MCI BT stays in sleep mode\n");
++			else {
++				ath_dbg(common, ATH_DBG_MCI,
++					"MCI Set BT state to AWAKE.\n");
++				ar9003_mci_state(ah,
++						 MCI_STATE_SET_BT_AWAKE, NULL);
++			}
++		} else
++			ath_dbg(common, ATH_DBG_MCI,
++				"MCI BT stays in AWAKE mode.\n");
++	}
++
++	if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_SYS_SLEEPING) {
++
++		mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_SYS_SLEEPING;
++
++		if (ar9003_mci_state(ah, MCI_STATE_BT, NULL) == MCI_BT_AWAKE) {
++
++			if (ar9003_mci_state(ah, MCI_STATE_REMOTE_SLEEP, NULL)
++					== MCI_BT_AWAKE)
++				ath_dbg(common, ATH_DBG_MCI,
++					"MCI BT stays in AWAKE mode.\n");
++			else {
++				ath_dbg(common, ATH_DBG_MCI,
++					"MCI SetBT state to SLEEP\n");
++				ar9003_mci_state(ah, MCI_STATE_SET_BT_SLEEP,
++						 NULL);
++			}
++		} else
++			ath_dbg(common, ATH_DBG_MCI,
++				"MCI BT stays in SLEEP mode\n");
++	}
++
++	if ((mci_int & AR_MCI_INTERRUPT_RX_INVALID_HDR) ||
++	    (mci_int & AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT)) {
++
++		ath_dbg(common, ATH_DBG_MCI, "MCI RX broken, skip GPM msgs\n");
++		ar9003_mci_state(ah, MCI_STATE_RECOVER_RX, NULL);
++		skip_gpm = true;
++	}
++
++	if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_SCHD_INFO) {
++
++		mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_SCHD_INFO;
++		offset = ar9003_mci_state(ah, MCI_STATE_LAST_SCHD_MSG_OFFSET,
++					  NULL);
++	}
++
++	if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_GPM) {
++
++		mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_GPM;
++
++		while (more_data == MCI_GPM_MORE) {
++
++			pgpm = mci->gpm_buf.bf_addr;
++			offset = ar9003_mci_state(ah,
++					MCI_STATE_NEXT_GPM_OFFSET, &more_data);
++
++			if (offset == MCI_GPM_INVALID)
++				break;
++
++			pgpm += (offset >> 2);
++
++			/*
++			 * The first dword is timer.
++			 * The real data starts from 2nd dword.
++			 */
++
++			subtype = MCI_GPM_TYPE(pgpm);
++			opcode = MCI_GPM_OPCODE(pgpm);
++
++			if (!skip_gpm) {
++
++				if (MCI_GPM_IS_CAL_TYPE(subtype))
++					ath_mci_cal_msg(sc, subtype,
++							(u8 *) pgpm);
++				else {
++					switch (subtype) {
++					case MCI_GPM_COEX_AGENT:
++						ath_mci_msg(sc, opcode,
++							    (u8 *) pgpm);
++						break;
++					default:
++						break;
++					}
++				}
++			}
++			MCI_GPM_RECYCLE(pgpm);
++		}
++	}
++
++	if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_HW_MSG_MASK) {
++
++		if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_LNA_CONTROL)
++			mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_LNA_CONTROL;
++
++		if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_LNA_INFO) {
++			mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_LNA_INFO;
++			ath_dbg(common, ATH_DBG_MCI, "MCI LNA_INFO\n");
++		}
++
++		if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_CONT_INFO) {
++
++			int value_dbm = ar9003_mci_state(ah,
++					MCI_STATE_CONT_RSSI_POWER, NULL);
++
++			mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_CONT_INFO;
++
++			if (ar9003_mci_state(ah, MCI_STATE_CONT_TXRX, NULL))
++				ath_dbg(common, ATH_DBG_MCI,
++					"MCI CONT_INFO: "
++					"(tx) pri = %d, pwr = %d dBm\n",
++					ar9003_mci_state(ah,
++						MCI_STATE_CONT_PRIORITY, NULL),
++					value_dbm);
++			else
++				ath_dbg(common, ATH_DBG_MCI,
++					"MCI CONT_INFO:"
++					"(rx) pri = %d,pwr = %d dBm\n",
++					ar9003_mci_state(ah,
++						MCI_STATE_CONT_PRIORITY, NULL),
++					value_dbm);
++		}
++
++		if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_CONT_NACK) {
++			mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_CONT_NACK;
++			ath_dbg(common, ATH_DBG_MCI, "MCI CONT_NACK\n");
++		}
++
++		if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_CONT_RST) {
++			mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_CONT_RST;
++			ath_dbg(common, ATH_DBG_MCI, "MCI CONT_RST\n");
++		}
++	}
++
++	if ((mci_int & AR_MCI_INTERRUPT_RX_INVALID_HDR) ||
++	    (mci_int & AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT))
++		mci_int &= ~(AR_MCI_INTERRUPT_RX_INVALID_HDR |
++			     AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT);
++
++	if (mci_int_rxmsg & 0xfffffffe)
++		ath_dbg(common, ATH_DBG_MCI,
++			"MCI not processed mci_int_rxmsg = 0x%x\n",
++			mci_int_rxmsg);
++}
+diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
+index 4eeb0fe..b71bded 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.h
++++ b/drivers/net/wireless/ath/ath9k/mci.h
+@@ -134,4 +134,5 @@ void ath_mci_process_status(struct ath_softc *sc,
+ 			    struct ath_mci_profile_status *status);
+ int ath_mci_setup(struct ath_softc *sc);
+ void ath_mci_cleanup(struct ath_softc *sc);
++void ath_mci_intr(struct ath_softc *sc);
+ #endif
 -- 
-1.7.4.1
+1.7.0.4
 
