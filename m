@@ -1,34 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [205.233.59.134] ([205.233.59.134]:56997 "EHLO
-	merlin.infradead.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1750748Ab1LLKyo (ORCPT
+Received: from www17.your-server.de ([213.133.104.17]:60526 "EHLO
+	www17.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752840Ab1LCIU7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 05:54:44 -0500
-Subject: Re: [RFC] NFC: Add num of targets to TARGETS_FOUND event
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: "Elias, Ilan" <ilane@ti.com>
-Cc: "lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
-	"aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <B30D1FD582D6484ABF57420512E5803504FD0316@DNCE03.ent.ti.com>
-References: <B30D1FD582D6484ABF57420512E5803504FD0316@DNCE03.ent.ti.com>
+	Sat, 3 Dec 2011 03:20:59 -0500
+Subject: [PATCH] rt2x00: Use kcalloc instead of kzalloc to allocate array
+From: Thomas Meyer <thomas@m3y3r.de>
+To: IvDoorn@gmail.com, gwingerde@gmail.com,
+	helmut.schaa@googlemail.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 12 Dec 2011 11:59:44 +0100
-Message-ID: <1323687584.13722.4.camel@sortiz-mobl> (sfid-20111212_115447_381842_8ED2A61A)
 Mime-Version: 1.0
+Date: Tue, 29 Nov 2011 22:08:00 +0100
+Message-ID: <1322600880.1534.325.camel@localhost.localdomain> (sfid-20111203_092231_359476_776B830D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ilan,
+The advantage of kcalloc is, that will prevent integer overflows which could
+result from the multiplication of number of elements and size and it is also
+a bit nicer to read.
 
-On Thu, 2011-12-08 at 17:13 +0000, Elias, Ilan wrote:
-> I suggest we add a new attribute NFC_ATTR_NUM_TARGETS_FOUND to the event NFC_EVENT_TARGETS_FOUND.
-> Otherwise, the user would have to wait until a timeut expires in order to decide that no more targets will arrive.
-You mean a timeout from NFC_CMD_GET_TARGET ? You could guess the number
-of targets from the dumped message size, couldn't you ?
+The semantic patch that makes this change is available
+in https://lkml.org/lkml/2011/11/25/107
 
-Cheers,
-Samuel.
+Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
+---
 
-
+diff -u -p a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c 2011-11-28 19:36:47.770108588 +0100
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c 2011-11-28 19:54:53.495525543 +0100
+@@ -831,11 +831,11 @@ static int rt2x00lib_probe_hw_modes(stru
+ 	if (spec->supported_rates & SUPPORT_RATE_OFDM)
+ 		num_rates += 8;
+ 
+-	channels = kzalloc(sizeof(*channels) * spec->num_channels, GFP_KERNEL);
++	channels = kcalloc(spec->num_channels, sizeof(*channels), GFP_KERNEL);
+ 	if (!channels)
+ 		return -ENOMEM;
+ 
+-	rates = kzalloc(sizeof(*rates) * num_rates, GFP_KERNEL);
++	rates = kcalloc(num_rates, sizeof(*rates), GFP_KERNEL);
+ 	if (!rates)
+ 		goto exit_free_channels;
+ 
