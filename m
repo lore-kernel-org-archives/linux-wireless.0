@@ -1,33 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:55674 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751493Ab1K3VXE (ORCPT
+Received: from s15228384.onlinehome-server.info ([87.106.30.177]:53081 "EHLO
+	mail.x86-64.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756086Ab1K2Sei (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 16:23:04 -0500
-Date: Wed, 30 Nov 2011 16:21:57 -0500 (EST)
-Message-Id: <20111130.162157.1166144157202128144.davem@davemloft.net> (sfid-20111130_222328_986629_CB6B6951)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2011-11-30
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20111130193907.GB2477@tuxdriver.com>
-References: <20111130193907.GB2477@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 29 Nov 2011 13:34:38 -0500
+Date: Tue, 29 Nov 2011 19:34:28 +0100
+From: Borislav Petkov <bp@amd64.org>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, x86@kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	deepthi@linux.vnet.ibm.com
+Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
+Message-ID: <20111129183428.GE8200@aftab> (sfid-20111129_193502_015244_2CD1EC57)
+References: <lx6sezwGldO.A.IhF.UBpWOB@chimera>
+ <201111212249.31196.rjw@sisk.pl>
+ <20111122135412.GA29905@phenom.dumpdata.com>
+ <20111129180414.GA11459@phenom.dumpdata.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111129180414.GA11459@phenom.dumpdata.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 30 Nov 2011 14:39:07 -0500
-
-> There is an nl80211 fix for validating user input to prevent a buffer
-> underrun, a mac80211 race fix to prevent a WARN_ON, a mac80211 fix to
-> avoid trying to stop a single aggregation session twice, a mac80211 fix
-> for a race condition that could cause a crash when an addBA response
-> came late, the partial reversion of an ath9k change that broke wireless
-> on Ferrari One laptops, and a fix for an rtlwifi deadlock.
+On Tue, Nov 29, 2011 at 01:04:14PM -0500, Konrad Rzeszutek Wilk wrote:
+> This patch:
 > 
-> Please let me know if there are problems!
+> commit d91ee5863b71e8c90eaf6035bff3078a85e2e7b5
+> Author: Len Brown <len.brown@intel.com>
+> Date:   Fri Apr 1 18:28:35 2011 -0400
+> 
+>     cpuidle: replace xen access to x86 pm_idle and default_idle
+> 
+>     ..scribble on pm_idle and access default_idle,
+>    have it simply disable_cpuidle() so acpi_idle will not load and
+>    architecture default HLT will be used.
+> 
+> idea was to have one call - disable_cpuidle() which would make
+> pm_idle not be molested by other code. It disallows cpuidle_idle_call
+> and acpi_idle_call to not set pm_idle (which is excellent). But the
 
-Applied, thanks.
+what is acpi_idle_call, I can't find it anywhere.
+
+> amd_e400_idle and mwait_idle can still setup pm_idle which we really
+> do not want.
+
+This is not the case: rather select_idle_routine()/idle_setup() sets
+pm_idle.
+
+[..]
+
+> +bool set_pm_idle_to_default()
+> +{
+> +	if (!pm_idle) {
+> +		pm_idle = default_idle;
+> +		return true;
+> +	}
+> +	return false;
+> +}
+
+I don't understand what you're trying to achieve here? Do you want
+default_idle to be always the pm_idle for xen or what is the deal here?
+
+If yes, then simply do:
+
+bool set_pm_idle_to_default(void)	// remember to add "void" for no function args
+{
+	bool ret = !!pm_idle;
+
+	pm_idle = default_idle;
+
+	return ret;
+
+}
+
+...
+
+>  void stop_this_cpu(void *dummy)
+>  {
+>  	local_irq_disable();
+> diff --git a/arch/x86/xen/setup.c b/arch/x86/xen/setup.c
+> index 46d6d21..7506181 100644
+> --- a/arch/x86/xen/setup.c
+> +++ b/arch/x86/xen/setup.c
+> @@ -448,6 +448,6 @@ void __init xen_arch_setup(void)
+>  #endif
+>  	disable_cpuidle();
+>  	boot_option_idle_override = IDLE_HALT;
+> -
+> +	WARN_ON(!set_pm_idle_to_default());
+
+and then do
+
+	WARN_ON(set_pm_idle_to_default());
+
+instead of having arbitrary confusing logic. This way you can warn
+whether something else set pm_idle already. Or?
+
+Thanks.
+
+-- 
+Regards/Gruss,
+Boris.
+
+Advanced Micro Devices GmbH
+Einsteinring 24, 85609 Dornach
+GM: Alberto Bozzo
+Reg: Dornach, Landkreis Muenchen
+HRB Nr. 43632 WEEE Registernr: 129 19551
