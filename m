@@ -1,111 +1,308 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:24366 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736Ab1KOGFW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 01:05:22 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-CC: Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [RFC 14/18] ath9k_hw: Add support for MCI WLAN calibration
-Date: Tue, 15 Nov 2011 11:35:13 +0530
-Message-ID: <1321337113-12880-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111115_070551_988389_AB255402)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from perches-mx.perches.com ([206.117.179.246]:59130 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756354Ab1K2Th4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Nov 2011 14:37:56 -0500
+From: Joe Perches <joe@perches.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/4] nfc: Use standard logging styles
+Date: Tue, 29 Nov 2011 11:37:32 -0800
+Message-Id: <6c89a76ddb76926febe36fe5be514cb186e39a76.1322595343.git.joe@perches.com> (sfid-20111129_204240_768937_A8078852)
+In-Reply-To: <cover.1322595343.git.joe@perches.com>
+References: <cover.1322595343.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Using the normal logging styles is preferred over
+subsystem specific styles when the subsystem does
+not take a specific struct.
 
-WLAN communicates with BT for its calibration by sending WLAN_CAL_REQ,
-waits for BT_CAL_GRANT. This is done with the help of GPM messages.
-also WLAN_CAL_DONE messages is sent once WLAN calibration is done.
+Convert nfc_<level> specific messages to pr_<level>
+Add newlines to uses.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   43 +++++++++++++++++++++++++
- 1 files changed, 43 insertions(+), 0 deletions(-)
+ net/nfc/core.c     |    4 +++-
+ net/nfc/nci/core.c |   28 +++++++++++++++-------------
+ net/nfc/nci/data.c |    8 +++++---
+ net/nfc/nci/ntf.c  |   16 +++++++++-------
+ net/nfc/nci/rsp.c  |    4 +++-
+ net/nfc/rawsock.c  |    4 +++-
+ 6 files changed, 38 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 12a730d..f7bc05c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -18,6 +18,7 @@
- #include "hw-ops.h"
- #include "ar9003_phy.h"
- #include "ar9003_rtt.h"
-+#include "ar9003_mci.h"
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index 47e02c1..03e4571 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -21,6 +21,8 @@
+  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
  
- #define MAX_MEASUREMENT	MAX_IQCAL_MEASUREMENT
- #define MAX_MAG_DELTA	11
-@@ -934,10 +935,12 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+@@ -500,7 +502,7 @@ static int __init nfc_init(void)
  {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_hw_cal_data *caldata = ah->caldata;
-+	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
- 	bool txiqcal_done = false, txclcal_done = false;
- 	bool is_reusable = true, status = true;
- 	bool run_rtt_cal = false, run_agc_cal;
- 	bool rtt = !!(ah->caps.hw_caps & ATH9K_HW_CAP_RTT);
-+	bool mci = !!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
- 	u32 agc_ctrl = 0, agc_supp_cals = AR_PHY_AGC_CONTROL_OFFSET_CAL |
- 					  AR_PHY_AGC_CONTROL_FLTR_CAL   |
- 					  AR_PHY_AGC_CONTROL_PKDET_CAL;
-@@ -1005,6 +1008,31 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	} else if (caldata && !caldata->done_txiqcal_once)
- 		run_agc_cal = true;
+ 	int rc;
  
-+	if (mci && IS_CHAN_2GHZ(chan) &&
-+	    (mci_hw->bt_state  == MCI_BT_AWAKE) &&
-+	    run_agc_cal &&
-+	    !(mci_hw->config & ATH_MCI_CONFIG_DISABLE_MCI_CAL)) {
+-	nfc_info("NFC Core ver %s", VERSION);
++	pr_info("NFC Core ver %s\n", VERSION);
+ 
+ 	rc = class_register(&nfc_class);
+ 	if (rc)
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index fe5ca89..30032b2 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -25,6 +25,8 @@
+  *
+  */
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 +
-+		u32 pld[4] = {0, 0, 0, 0};
-+
-+		/* send CAL_REQ only when BT is AWAKE. */
-+		ath_dbg(common, ATH_DBG_MCI, "MCI send WLAN_CAL_REQ 0x%x\n",
-+			mci_hw->wlan_cal_seq);
-+		MCI_GPM_SET_CAL_TYPE(pld, MCI_GPM_WLAN_CAL_REQ);
-+		pld[MCI_GPM_WLAN_CAL_W_SEQUENCE] = mci_hw->wlan_cal_seq++;
-+		ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
-+
-+		/* Wait BT_CAL_GRANT for 50ms */
-+		ath_dbg(common, ATH_DBG_MCI, "MCI wait for BT_CAL_GRANT");
-+
-+		if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_GRANT, 0, 50000))
-+			ath_dbg(common, ATH_DBG_MCI, "MCI got BT_CAL_GRANT");
-+		else {
-+			is_reusable = false;
-+			ath_dbg(common, ATH_DBG_MCI, "\nMCI BT is not responding");
-+		}
-+	}
-+
- 	txiqcal_done = ar9003_hw_tx_iq_cal_run(ah);
- 	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
- 	udelay(5);
-@@ -1022,6 +1050,21 @@ skip_tx_iqcal:
- 				       AR_PHY_AGC_CONTROL_CAL,
- 				       0, AH_WAIT_TIMEOUT);
+ #include <linux/types.h>
+ #include <linux/workqueue.h>
+ #include <linux/completion.h>
+@@ -96,8 +98,8 @@ static int __nci_request(struct nci_dev *ndev,
+ 			break;
+ 		}
+ 	} else {
+-		nfc_err("wait_for_completion_interruptible_timeout failed %ld",
+-			completion_rc);
++		pr_err("wait_for_completion_interruptible_timeout failed %ld\n",
++		       completion_rc);
+ 
+ 		rc = ((completion_rc == 0) ? (-ETIMEDOUT) : (completion_rc));
  	}
+@@ -355,12 +357,12 @@ static int nci_start_poll(struct nfc_dev *nfc_dev, __u32 protocols)
+ 	nfc_dbg("entry");
+ 
+ 	if (test_bit(NCI_DISCOVERY, &ndev->flags)) {
+-		nfc_err("unable to start poll, since poll is already active");
++		pr_err("unable to start poll, since poll is already active\n");
+ 		return -EBUSY;
+ 	}
+ 
+ 	if (ndev->target_active_prot) {
+-		nfc_err("there is an active target");
++		pr_err("there is an active target\n");
+ 		return -EBUSY;
+ 	}
+ 
+@@ -389,7 +391,7 @@ static void nci_stop_poll(struct nfc_dev *nfc_dev)
+ 	nfc_dbg("entry");
+ 
+ 	if (!test_bit(NCI_DISCOVERY, &ndev->flags)) {
+-		nfc_err("unable to stop poll, since poll is not active");
++		pr_err("unable to stop poll, since poll is not active\n");
+ 		return;
+ 	}
+ 
+@@ -405,18 +407,18 @@ static int nci_activate_target(struct nfc_dev *nfc_dev, __u32 target_idx,
+ 	nfc_dbg("entry, target_idx %d, protocol 0x%x", target_idx, protocol);
+ 
+ 	if (!test_bit(NCI_POLL_ACTIVE, &ndev->flags)) {
+-		nfc_err("there is no available target to activate");
++		pr_err("there is no available target to activate\n");
+ 		return -EINVAL;
+ 	}
+ 
+ 	if (ndev->target_active_prot) {
+-		nfc_err("there is already an active target");
++		pr_err("there is already an active target\n");
+ 		return -EBUSY;
+ 	}
+ 
+ 	if (!(ndev->target_available_prots & (1 << protocol))) {
+-		nfc_err("target does not support the requested protocol 0x%x",
+-			protocol);
++		pr_err("target does not support the requested protocol 0x%x\n",
++		       protocol);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -433,7 +435,7 @@ static void nci_deactivate_target(struct nfc_dev *nfc_dev, __u32 target_idx)
+ 	nfc_dbg("entry, target_idx %d", target_idx);
+ 
+ 	if (!ndev->target_active_prot) {
+-		nfc_err("unable to deactivate target, no active target");
++		pr_err("unable to deactivate target, no active target\n");
+ 		return;
+ 	}
+ 
+@@ -456,7 +458,7 @@ static int nci_data_exchange(struct nfc_dev *nfc_dev, __u32 target_idx,
+ 	nfc_dbg("entry, target_idx %d, len %d", target_idx, skb->len);
+ 
+ 	if (!ndev->target_active_prot) {
+-		nfc_err("unable to exchange data, no active target");
++		pr_err("unable to exchange data, no active target\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -685,7 +687,7 @@ int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, void *payload)
+ 
+ 	skb = nci_skb_alloc(ndev, (NCI_CTRL_HDR_SIZE + plen), GFP_KERNEL);
+ 	if (!skb) {
+-		nfc_err("no memory for command");
++		pr_err("no memory for command\n");
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -760,7 +762,7 @@ static void nci_rx_work(struct work_struct *work)
+ 			break;
+ 
+ 		default:
+-			nfc_err("unknown MT 0x%x", nci_mt(skb->data));
++			pr_err("unknown MT 0x%x\n", nci_mt(skb->data));
+ 			kfree_skb(skb);
+ 			break;
+ 		}
+diff --git a/net/nfc/nci/data.c b/net/nfc/nci/data.c
+index 511fb96..7d8a125 100644
+--- a/net/nfc/nci/data.c
++++ b/net/nfc/nci/data.c
+@@ -21,6 +21,8 @@
+  *
+  */
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 +
-+	if (mci && IS_CHAN_2GHZ(chan) &&
-+	    (mci_hw->bt_state  == MCI_BT_AWAKE)	&&
-+	    run_agc_cal	&&
-+	    !(mci_hw->config & ATH_MCI_CONFIG_DISABLE_MCI_CAL)) {
+ #include <linux/types.h>
+ #include <linux/interrupt.h>
+ #include <linux/wait.h>
+@@ -49,7 +51,7 @@ void nci_data_exchange_complete(struct nci_dev *ndev,
+ 		/* forward skb to nfc core */
+ 		cb(cb_context, skb, err);
+ 	} else if (skb) {
+-		nfc_err("no rx callback, dropping rx data...");
++		pr_err("no rx callback, dropping rx data...\n");
+ 
+ 		/* no waiting callback, free skb */
+ 		kfree_skb(skb);
+@@ -161,7 +163,7 @@ int nci_send_data(struct nci_dev *ndev, __u8 conn_id, struct sk_buff *skb)
+ 		/* fragment packet and queue the fragments */
+ 		rc = nci_queue_tx_data_frags(ndev, conn_id, skb);
+ 		if (rc) {
+-			nfc_err("failed to fragment tx data packet");
++			pr_err("failed to fragment tx data packet\n");
+ 			goto free_exit;
+ 		}
+ 	}
+@@ -191,7 +193,7 @@ static void nci_add_rx_data_frag(struct nci_dev *ndev,
+ 
+ 		/* first, make enough room for the already accumulated data */
+ 		if (skb_cow_head(skb, reassembly_len)) {
+-			nfc_err("error adding room for accumulated rx data");
++			pr_err("error adding room for accumulated rx data\n");
+ 
+ 			kfree_skb(skb);
+ 			skb = 0;
+diff --git a/net/nfc/nci/ntf.c b/net/nfc/nci/ntf.c
+index c1bf541..c704350 100644
+--- a/net/nfc/nci/ntf.c
++++ b/net/nfc/nci/ntf.c
+@@ -25,6 +25,8 @@
+  *
+  */
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 +
-+		u32 pld[4] = {0, 0, 0, 0};
+ #include <linux/types.h>
+ #include <linux/interrupt.h>
+ #include <linux/bitops.h>
+@@ -114,8 +116,8 @@ static int nci_extract_activation_params_iso_dep(struct nci_dev *ndev,
+ 		break;
+ 
+ 	default:
+-		nfc_err("unsupported activation_rf_tech_and_mode 0x%x",
+-			ntf->activation_rf_tech_and_mode);
++		pr_err("unsupported activation_rf_tech_and_mode 0x%x\n",
++		       ntf->activation_rf_tech_and_mode);
+ 		return -EPROTO;
+ 	}
+ 
+@@ -182,8 +184,8 @@ static void nci_rf_intf_activated_ntf_packet(struct nci_dev *ndev,
+ 			break;
+ 
+ 		default:
+-			nfc_err("unsupported activation_rf_tech_and_mode 0x%x",
+-				ntf.activation_rf_tech_and_mode);
++			pr_err("unsupported activation_rf_tech_and_mode 0x%x\n",
++			       ntf.activation_rf_tech_and_mode);
+ 			return;
+ 		}
+ 	}
+@@ -214,8 +216,8 @@ static void nci_rf_intf_activated_ntf_packet(struct nci_dev *ndev,
+ 			break;
+ 
+ 		default:
+-			nfc_err("unsupported rf_interface_type 0x%x",
+-				ntf.rf_interface_type);
++			pr_err("unsupported rf_interface_type 0x%x\n",
++			       ntf.rf_interface_type);
+ 			return;
+ 		}
+ 	}
+@@ -278,7 +280,7 @@ void nci_ntf_packet(struct nci_dev *ndev, struct sk_buff *skb)
+ 		break;
+ 
+ 	default:
+-		nfc_err("unknown ntf opcode 0x%x", ntf_opcode);
++		pr_err("unknown ntf opcode 0x%x\n", ntf_opcode);
+ 		break;
+ 	}
+ 
+diff --git a/net/nfc/nci/rsp.c b/net/nfc/nci/rsp.c
+index 0591f5a..6f51a28 100644
+--- a/net/nfc/nci/rsp.c
++++ b/net/nfc/nci/rsp.c
+@@ -25,6 +25,8 @@
+  *
+  */
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 +
-+		ath_dbg(common, ATH_DBG_MCI, "MCI Send WLAN_CAL_DONE 0x%x\n",
-+			mci_hw->wlan_cal_done);
-+		MCI_GPM_SET_CAL_TYPE(pld, MCI_GPM_WLAN_CAL_DONE);
-+		pld[MCI_GPM_WLAN_CAL_W_SEQUENCE] = mci_hw->wlan_cal_done++;
-+		ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
-+	}
+ #include <linux/types.h>
+ #include <linux/interrupt.h>
+ #include <linux/bitops.h>
+@@ -200,7 +202,7 @@ void nci_rsp_packet(struct nci_dev *ndev, struct sk_buff *skb)
+ 		break;
+ 
+ 	default:
+-		nfc_err("unknown rsp opcode 0x%x", rsp_opcode);
++		pr_err("unknown rsp opcode 0x%x\n", rsp_opcode);
+ 		break;
+ 	}
+ 
+diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
+index ee7b2b3..feb235b 100644
+--- a/net/nfc/rawsock.c
++++ b/net/nfc/rawsock.c
+@@ -21,6 +21,8 @@
+  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 +
- 	if (rtt && !run_rtt_cal) {
- 		agc_ctrl |= agc_supp_cals;
- 		REG_WRITE(ah, AR_PHY_AGC_CONTROL, agc_ctrl);
+ #include <net/tcp_states.h>
+ #include <linux/nfc.h>
+ #include <linux/export.h>
+@@ -294,7 +296,7 @@ static void rawsock_destruct(struct sock *sk)
+ 	skb_queue_purge(&sk->sk_receive_queue);
+ 
+ 	if (!sock_flag(sk, SOCK_DEAD)) {
+-		nfc_err("Freeing alive NFC raw socket %p", sk);
++		pr_err("Freeing alive NFC raw socket %p\n", sk);
+ 		return;
+ 	}
+ }
 -- 
-1.7.0.4
+1.7.6.405.gc1be0
 
