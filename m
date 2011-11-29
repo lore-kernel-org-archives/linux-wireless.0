@@ -1,72 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:50114 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752726Ab1KWWm5 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53475 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751706Ab1K2WOj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 17:42:57 -0500
-Received: by qyd20 with SMTP id 20so855234qyd.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 14:42:57 -0800 (PST)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1318515394-9284-1-git-send-email-hauke@hauke-m.de>
-References: <1318515394-9284-1-git-send-email-hauke@hauke-m.de>
-Date: Wed, 23 Nov 2011 23:42:56 +0100
-Message-ID: <CA+icZUV_0nBu5o2xFSeDS-3T0O7AqbwqK1+iFq7DAD4T9HEjZA@mail.gmail.com> (sfid-20111123_234315_136441_9E5BA279)
-Subject: Re: [PATCH] compat-wireless: adapt moving brcm80211 to main area
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: mcgrof@gmail.com, mcgrof@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 29 Nov 2011 17:14:39 -0500
+Subject: Re: [PATCH] mac80211: reset addba retries after timeout
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nikolay Martynov <mar.kolya@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <CALGY4fvSOdKtZbPSdvYkY3XXaGXNo-Ft8ir4LikmnTLqSkVCGA@mail.gmail.com> (sfid-20111129_230154_722045_7B8D85F9)
+References: <1322533625-24641-1-git-send-email-mar.kolya@gmail.com>
+	 <1322555084.4110.2.camel@jlt3.sipsolutions.net>
+	 <CALGY4fvLSKBY93M9Bhb-F8Sm=Uw5nU+OvTtAmk_BXQX8WX6V8A@mail.gmail.com>
+	 <1322579973.4110.22.camel@jlt3.sipsolutions.net>
+	 <CALGY4fvSOdKtZbPSdvYkY3XXaGXNo-Ft8ir4LikmnTLqSkVCGA@mail.gmail.com>
+	 (sfid-20111129_230154_722045_7B8D85F9)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 29 Nov 2011 23:14:37 +0100
+Message-ID: <1322604877.11282.1.camel@jlt3.sipsolutions.net> (sfid-20111129_231443_228434_A71EA7A0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 13, 2011 at 4:16 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> brcm80211 is no staging driver any more and can be found in the main
-> area where all the other wireless drivers are now. There where some
-> changes needed for the move.
-> And BRCMFMAC does not depend on WEXT any more so remove that from
-> config.
-> BRCMFMAC does not build with kernel < 2.6.29, because
-> ndev->netdev_ops = NULL and ndev->netdev_ops == &brcmf_netdev_ops_pri
-> are not supported by the backport code for netdev_ops.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
-[...]
-> --- a/scripts/driver-select
-> +++ b/scripts/driver-select
-[...]
-> -       brcm80211)
-> +       brcmsmac)
-> +               disable_staging
-> +               disable_bt_usb_ethernet_var
-> +               select_drivers          CONFIG_BRCMUTIL CONFIG_BRCMFMAC
-> +               select_brcm80211_driver CONFIG_BRCMSMAC
-> +               ;;
+On Tue, 2011-11-29 at 17:01 -0500, Nikolay Martynov wrote:
 
-On IRC someone reported problems building brcmsmac.ko, while trying to
-help I fell over this:
-Shouldn't that be CONFIG_BRCM*S*MAC in select_drivers line?
-( Just FYI: The guy tried building linux-2.6.39 with
-compat-wireless-3.2-rc1-1.tar.bz2 )
+> >>   Do APs broken is such way exist? I.e. APs which declare aggregation
+> >> support but do not respond to addba.
+> >
+> > I seem to remember something ... not really sure.
+> 
+>   If such APs exist I think it might be possible to extend my patch to
+> do something like the following. For the first time make 10 attempts
+> to establish addba. If this fails - make no more attempts for the
+> duration of the connection. If this succeeds - use logic I've added in
+> the patch. This should handle broken APs and won't allow agg to be
+> disable because of some random blackout.
 
-- Sedat -
+Wouldn't that be equivalent to just bumping the number of tries?
 
-> +       brcmfmac)
-> +               disable_staging
->                disable_bt_usb_ethernet_var
-> -               select_driver           CONFIG_NOTHING
-> +               select_drivers          CONFIG_BRCMUTIL CONFIG_BRCMFMAC
-> +               select_brcm80211_driver CONFIG_BRCMFMAC
->                ;;
->        zd1211rw)
->                select_driver           CONFIG_COMPAT_ZD1211RW
-> --
-> 1.7.4.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> >>   On the other hand looking at the code I've got an impression that
+> >> connection doesn't stall while waiting for addba resp, i.e. packets
+> >> still go though non-agg path. Did I miss something in this regards?
+> >
+> > We queue up packets in ieee80211_tx_prep_agg() when
+> > HT_AGG_STATE_WANT_START is clear but HT_AGG_STATE_OPERATIONAL is not
+> > set, this is the case after we send the addBA request frame and before
+> > we get a response. So since the timeout is 1 second, the connection can
+> > stall for quite a while.
+> 
+>   Is the any particular reason why packets are not being sent via
+> non-agg path while agg path is being established? I'm not suggesting
+> that it is wrong, I'm just curious. The delay in data transmission
+> you've mentioned in regards to my patch is probably applicable here
+> too, so won't it make sense to ignore agg until it is fully set up?
+
+It's required because you tell the peer what the first aggregated
+packet's sequence number is going to be.
+
+johannes
+
