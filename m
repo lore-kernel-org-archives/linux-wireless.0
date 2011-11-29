@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:57000 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752118Ab1KQTav convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:52718 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755383Ab1K2Rw6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 14:30:51 -0500
-Received: by fagn18 with SMTP id n18so3378443fag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2011 11:30:50 -0800 (PST)
+	Tue, 29 Nov 2011 12:52:58 -0500
+Message-ID: <4ED51BF5.9010508@candelatech.com> (sfid-20111129_185304_555451_9908AFF9)
+Date: Tue, 29 Nov 2011 09:52:53 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1321544559-2305-1-git-send-email-linville@tuxdriver.com>
-References: <1321544559-2305-1-git-send-email-linville@tuxdriver.com>
-From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
-Date: Thu, 17 Nov 2011 11:30:29 -0800
-Message-ID: <CAB=NE6X4+YHpDWtvo1bgqG25da4TrvS9EbUWVP5XnUSGn0Gq-w@mail.gmail.com> (sfid-20111117_203100_389373_294F387F)
-Subject: Re: [PATCH] compat: support RHEL6 as a build target
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3] iw: Support ht-capability overrides mask.
+References: <1322505622-13446-1-git-send-email-greearb@candelatech.com>  (sfid-20111128_194043_702798_6A11361F) <1322556714.4110.13.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1322556714.4110.13.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 17, 2011 at 7:42 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> This patch enables compatibility with RHEL6 as a build target, mostly
-> with simple tricks similar to what was added for compatibility with
-> Debian Squeeze.
+On 11/29/2011 12:51 AM, Johannes Berg wrote:
+> On Mon, 2011-11-28 at 10:40 -0800, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> Let user know which capabilities are supported.
 >
-> A handful of new CONFIG_* requirements were added, to provide for build
-> flexibility required to support RHEL6:
->
->        CONFIG_COMPAT_KFIFO
->        CONFIG_COMPAT_FIRMWARE_DATA_RW_NEEDS_FILP
->
-> Also, CONFIG_COMPAT_FIRMWARE_CLASS is now checked in a header file and
-> so the build configuration must change to update compat_autoconf.h
-> appropriately
->
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> I applied this with a bunch of modifications, but I think you should
+> follow up and make it more complete. You're covering exactly and only
+> the case that you're working on right now, I don't think that's good
+> practice.
 
-Same for this guy.
+It looks to me like your change isn't going to compile on older
+systems (Fedora Core 8, for instance), because htole16 isn't
+defined there (no endian.h file).
 
-  Luis
+That is why I hand-coded an equivalent method...
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
