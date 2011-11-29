@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ackle.nomi.cz ([81.31.33.35]:50037 "EHLO ackle.nomi.cz"
+Received: from purkki.adurom.net ([80.68.90.206]:41971 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751406Ab1KSSLI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Nov 2011 13:11:08 -0500
-Date: Sat, 19 Nov 2011 19:11:06 +0100
-From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: iwlagn: memory corruption with WPA enterprise
-Message-ID: <20111119181106.GA5515@nomi.cz> (sfid-20111119_191116_730685_0AAFD68E)
-References: <20111109155411.GA1669@nomi.cz> <20111109165158.GA2254@redhat.com> <20111110091816.GA2247@nomi.cz> <20111110114732.GA2217@redhat.com> <20111110125347.GA29415@nomi.cz> <20111110160703.GA2775@redhat.com> <20111110163051.GA24533@nomi.cz> <20111111054731.GA2292@redhat.com> <20111111150105.GA25437@nomi.cz> <20111114140714.GD2513@redhat.com>
+	id S1751023Ab1K2GgJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Nov 2011 01:36:09 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/5] wireless: fix set tx power
+References: <1322516330-4007-1-git-send-email-mcgrof@qca.qualcomm.com>
+Date: Tue, 29 Nov 2011 08:36:06 +0200
+In-Reply-To: <1322516330-4007-1-git-send-email-mcgrof@qca.qualcomm.com> (Luis
+	R. Rodriguez's message of "Mon, 28 Nov 2011 16:38:45 -0500")
+Message-ID: <877h2jh1ux.fsf@purkki.adurom.net> (sfid-20111129_073613_961718_A1308DD6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20111114140714.GD2513@redhat.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com> writes:
 
-On Mon, Nov 14, 2011 at 03:07:15PM +0100, Stanislaw Gruszka wrote:
-> On Fri, Nov 11, 2011 at 04:01:05PM +0100, Tomáš Janoušek wrote:
-> > Could you please elaborate on that thing with enabling IOMMU? The only thing I
-> > know about IOMMU is that it is somehow related to VT-d (passing whole PCI
-> > devices to virtual guests), and that I have to pass intel_iommu=off to kernel
-> > command line, otherwise the machine doesn't even boot. Is that a problem?
-> Yes. That mean iommu software or hardware is broken on your system.
->
-> I have no other ideas how to track this down. I think now, this is
-> a firwmare issue. BTW, you suspected that from very beginning :-)
-> This could be also a driver issue, but AFAICT programing DMA do not
-> differ on 6205 from other devices, so bug in firmware is much more
-> probable reason of corruption.
+> The driver maintainers have approved of these now except for brcm80211.
+> I should note that Kalle indicated he was going to queue up the ath6kl
+> patch though so not sure if you want to wait for his patch or just suck
+> mine in.
 
-I have some news. I got IOMMU to work, because I identified the problem [1]
-and disabled firewire-ohci for the time being completely, but I'm not sure
-what do I need to do to make it catch the problem. I assumed that all I need
-is to intel_iommu=on and then all devices do DMA stuff in isolation, but I can
-still reproduce the issue without the smallest hint of an error in dmesg. Does
-it tell us anything, or shall I enable some more debugging stuff?
+John, please don't take the ath6kl patch as it's already in ath6kl.git:
 
-[1] http://thread.gmane.org/gmane.linux.kernel.pci/8765/focus=1217800
+https://github.com/kvalo/ath6kl/commit/b992a28557afdcabcee7d8af88471dddfe791c11
 
-Anyway, I didn't get to trying 2.6.38/39 yet, but I will do that soon. It is
-also safe to say now that x86_64 is completely unaffected, as I was running
-various 64bit kernels the whole week without a single failure.
+> I think it makes sense to roll these in together as a series,
 
-Regards,
+I don't see any benefit from this.
+
+> the rebase that Kalle would do shouldn't be impacted by this I think.
+
+I don't rebase ath6kl.git unless absolutely necessary. And I prefer that
+ath6kl patches would go through ath6kl.git, I get less conflicts that
+way.
+
 -- 
-Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
+Kalle Valo
