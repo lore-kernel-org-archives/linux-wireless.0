@@ -1,57 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:35276 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751415Ab1KWBzN (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40893 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755393Ab1K2SSc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 20:55:13 -0500
-Date: Wed, 23 Nov 2011 10:55:03 +0900
-From: Norbert Preining <preining@logic.at>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>
-Subject: Re: iwlagn is getting very shaky
-Message-ID: <20111123015503.GC23203@gamma.logic.tuwien.ac.at> (sfid-20111123_025535_715849_11AC9F3E)
-References: <CANUX_P2AA5stHwjegKdFhFGg7jxwdVU2Xr8OUtXUdEOKz_6E5A@mail.gmail.com> <20111122051310.GA23705@gamma.logic.tuwien.ac.at> <CANUX_P1RjcRD2tW1A6YYSEV9+aUZyTEro7tZXJWRoxk6gx-2jA@mail.gmail.com> <CANUX_P2aFn84uSqgZA2gTBN7E4+0jGmJQTkx4eug4Ls0hK0==Q@mail.gmail.com> <20111122072730.GA32225@gamma.logic.tuwien.ac.at> <CANUX_P15En9bHVx4bhq6=XKPZnC2u+QyVJ+jnm4ns=39DrOBtg@mail.gmail.com> <2D0C7905-AEB2-4DE4-89B1-945D89F2B5D6@logic.at> <CANUX_P21PDdyo4u-x_1A0Lcqf-33yHgzUxddAoc3juGRNnrcDg@mail.gmail.com> <20111122124357.GA32440@gamma.logic.tuwien.ac.at> <CANUX_P0uyyuK4netV6srYCh9FsC4cpGzxobHE3T38n5RvvA0RQ@mail.gmail.com>
+	Tue, 29 Nov 2011 13:18:32 -0500
+Message-ID: <4ED521F0.3000606@candelatech.com> (sfid-20111129_191835_469534_6BD4BAA2)
+Date: Tue, 29 Nov 2011 10:18:24 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANUX_P0uyyuK4netV6srYCh9FsC4cpGzxobHE3T38n5RvvA0RQ@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Moving scan logic into work-queue?
+References: <4ED520DD.8050606@candelatech.com> <1322590531.4110.29.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1322590531.4110.29.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Di, 22 Nov 2011, Emmanuel Grumbach wrote:
-> This is completely broken. This log looks really bad. AGG are enabled
-> and disabled right away, messing the queues completely.
+On 11/29/2011 10:15 AM, Johannes Berg wrote:
+> On Tue, 2011-11-29 at 10:13 -0800, Ben Greear wrote:
+>> We've talked before about moving the scan logic into the work-queue.
+>
+> I think you mean ieee80211_work, not work-queue.
+>
+>> Since my previous attempts at optimizing this code for scanning&  off-channel
+>> work didn't stick, I thought I might attempt to convert the scan logic
+>> to the work-queue, with hopes of then being able to make another attempt
+>> at optimizing things for multiple interfaces&  potentially off-channel work
+>> items.
+>>
+>> Before I start though, I'm hoping for some guidance on how you'd
+>> want this implemented.  Or, if you think there are other changes
+>> that should go in first, I'll wait...
+>
+> In any case, yes, please don't work on this now. I need to rework auth&
+> assoc handling completely, and get rid of the work items for that etc.
+> That will probably mean a large rewrite of the work item logic, possibly
+> even removing most of that code.
 
-I can easily reproduce that here, today after reboot I saw something more:
-[   82.894328] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Deactivate 
-AC/CMD Queue 11 on FIFO 0
-[   83.072243] iwlwifi 0000:06:00.0: U iwl_trans_pcie_tx_agg_alloc HW queue is NOT empty: 85 packets in HW queue
-[  288.039768] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Deactivate AC/CMD Queue 11 on FIFO 0
-[  288.039884] wlan0: deauthenticating from 00:0a:79:eb:56:10 by local choice (reason=3)
-[  288.040218] iwlwifi 0000:06:00.0: I iwl_stop_queue Stop hwq 2 ac 2 stop count 1. Queue is full
-[  288.052312] iwlwifi 0000:06:00.0: I iwl_wake_queue Wake hwq 2 ac 2. Packets reclaimed
-[  288.052542] iwlwifi 0000:06:00.0: I iwl_stop_queue Stop hwq 2 ac 2 stop count 1. Queue is full
-[  288.064074] iwlwifi 0000:06:00.0: I iwl_wake_queue Wake hwq 2 ac 2. Packets reclaimed
-[  288.064301] iwlwifi 0000:06:00.0: I iwl_stop_queue Stop hwq 2 ac 2 stop count 1. Queue is full
-[  288.074618] iwlwifi 0000:06:00.0: I iwl_wake_queue Wake hwq 2 ac 2. Packets reclaimed
+Ok, I'll wait to see how that turns out.
 
-> Will send another patch later.
+Thanks,
+Ben
 
-Thanks.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-FORSINAIN (n. archaic)
-The right of the lord of the manor to molest dwarves on their
-birthdays.
-			--- Douglas Adams, The Meaning of Liff
