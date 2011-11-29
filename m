@@ -1,90 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35100 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751365Ab1KQLV6 (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:49680 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752866Ab1K2Jce convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 06:21:58 -0500
-Subject: Re: [PATCHv2 1/2] mac80211: Add NoAck per WMM Queue Support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-In-Reply-To: <1321446667-8348-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1321446667-8348-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 17 Nov 2011 12:21:54 +0100
-Message-ID: <1321528914.3997.22.camel@jlt3.sipsolutions.net> (sfid-20111117_122201_589249_69319F00)
-Mime-Version: 1.0
+	Tue, 29 Nov 2011 04:32:34 -0500
+References: <20111125122143.GA30404@gamma.logic.tuwien.ac.at> <CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com> <20111125123720.GA31564@gamma.logic.tuwien.ac.at> <CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com> <CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com> <1322387175.4044.16.camel@jlt3.sipsolutions.net> <CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com> <20111128035627.GH1422@gamma.logic.tuwien.ac.at> <CANUX_P2kYiFCP8uAhLZC_kVEjoyxabRBx3Pn+ndtFus=6hJN7Q@mail.gmail.com> <20111128042343.GA4619@gamma.logic.tuwien.ac.at> <20111128232525.GA12719@gamma.logic.tuwien.ac.at> <CANUX_P2b_ZYr4hHigA+tGa9uakcq3hQXnOiP5isQtfcYxCaxcw@mail.gmail.com> <1322555472.4110.8.camel@jlt3.sipsolutions.net> <CANUX_P0z9HmZSj_13Fv0LHUgy2UDXWMaj8L2Tgqz2jQC2mbpZw@mail.gmail.com>
+In-Reply-To: <CANUX_P0z9HmZSj_13Fv0LHUgy2UDXWMaj8L2Tgqz2jQC2mbpZw@mail.gmail.com>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <F72258A2-71A1-4F82-B5ED-31FD2E837F3A@logic.at> (sfid-20111129_103240_239989_F1E20DEF)
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Dave Jones <davej@redhat.com>,
+	David Rientjes <rientjes@google.com>
+From: Norbert Preining <preining@logic.at>
+Subject: Re: iwlagn is getting very shaky
+Date: Tue, 29 Nov 2011 18:32:13 +0900
+To: Emmanuel Grumbach <egrumbach@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-11-16 at 13:31 +0100, Simon Wunderlich wrote:
-> This patch adds support for NoAck per WMM Queue. The Unicast QoS
-> Header is adapted accordingly for each outgoing frame.
-> The support is turned on and off through nl80211 by extending
-> the WMM TX Queue Parameters, but can be triggered separately.
-> 
-> I have tested this feature on ath9k as well as ath5k devices. There is
-> an iw patch as well to make use of this feature.
+Hi all,
 
-I think we should split this up to cfg80211/mac80211 changes.
+> It might that we are holding the mac80211 workqueue in the driver too...
+> I guess we could try to enable MAC80211 debug flag with timestamps to check.
 
-> +	int	(*set_txq_noack)(struct wiphy *wiphy, struct net_device *dev,
-> +				  struct ieee80211_txq_params *params);
+Actually I got some strange behaviour today at work, but that might be a university temporary problem.
 
-I don't understand why you pass the whole txq params when in reality
-this one will only ever change the noack bit, and the normal txq params
-changes will never include it properly? Seems that it should be split up
-completely?
+Let me know what I can send you?
+I am currently using stock git plus that one patch.
 
-> @@ -1161,6 +1164,11 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
->  		 * explicitly unset IEEE80211_TX_CTL_NO_ACK since
->  		 * it might already be set for injected frames.
->  		 */
-> +
-> +		qc = ieee80211_get_qos_ctl(hdr);
-> +		if (*qc & IEEE80211_QOS_CTL_ACK_POLICY_NOACK)
-> +			info->flags |= IEEE80211_TX_CTL_NO_ACK;
+If you want more patches send me them, and which module parameters.
 
-Err, how do you know the frame is a QoS frame to start with?
+All the best
 
-> @@ -1279,17 +1294,26 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
->  		nla_for_each_nested(nl_txq_params,
->  				    info->attrs[NL80211_ATTR_WIPHY_TXQ_PARAMS],
->  				    rem_txq_params) {
-> +			int result_noack, result_param;
->  			nla_parse(tb, NL80211_TXQ_ATTR_MAX,
->  				  nla_data(nl_txq_params),
->  				  nla_len(nl_txq_params),
->  				  txq_params_policy);
-
-a blank line after variables is good form :)
-
-> -			result = parse_txq_params(tb, &txq_params);
-> -			if (result)
-> +
-> +			result_param = parse_txq_params(tb, &txq_params);
-> +			result_noack = parse_txq_params_noack(tb, &txq_params);
-> +
-> +			if (!result_param)
-> +				result = rdev->ops->set_txq_params(&rdev->wiphy,
-> +							   netdev,
-> +							   &txq_params);
-> +			else if (!result_noack && rdev->ops->set_txq_noack)
-> +				result = rdev->ops->set_txq_noack(&rdev->wiphy,
-> +							   netdev,
-> +							   &txq_params);
-> +			else
->  				goto bad_res;
->  
-> -			result = rdev->ops->set_txq_params(&rdev->wiphy,
-> -							   netdev,
-> -							   &txq_params);
-
-I really don't like this. Why not just add an explicit operation here,
-per netdev etc.? I recently made this code only be allowed for AP
-interfaces too which is probably not what you want either.
-
-johannes
+Norbert
 
