@@ -1,112 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:43051 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755394Ab1KPKv1 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:7384 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755908Ab1K2O5E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Nov 2011 05:51:27 -0500
-Date: Wed, 16 Nov 2011 11:51:20 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [PATCH] mac80211: Add NoAck per WMM Queue Support
-Message-ID: <20111116105120.GA6139@pandem0nium> (sfid-20111116_115131_539496_1D301BE8)
-References: <1321399276-3585-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1321429935.4773.10.camel@jlt3.sipsolutions.net>
+	Tue, 29 Nov 2011 09:57:04 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	Russell Hu <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 08/17] ath9k_hw: check for asynchronous MCI interrupt pending
+Date: Tue, 29 Nov 2011 20:25:29 +0530
+Message-ID: <1322578538-18912-9-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111129_155709_677727_176B0613)
+In-Reply-To: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1322578538-18912-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="G4iJoqBmSsgzjUCe"
-In-Reply-To: <1321429935.4773.10.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
---G4iJoqBmSsgzjUCe
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+MCI interrupt is an asynchronous one, so take care of it by having a
+check in ath9k_hw_intrpend, which actually decides whether the interrupt
+is really for the driver from ath_isr
 
-Hi Johannes,
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/mac.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-thanks for the review!
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 9d69320..0e4fbb3 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -760,7 +760,10 @@ bool ath9k_hw_intrpend(struct ath_hw *ah)
+ 		return true;
+ 
+ 	host_isr = REG_READ(ah, AR_INTR_ASYNC_CAUSE);
+-	if ((host_isr & AR_INTR_MAC_IRQ) && (host_isr != AR_INTR_SPURIOUS))
++
++	if (((host_isr & AR_INTR_MAC_IRQ) ||
++	     (host_isr & AR_INTR_ASYNC_MASK_MCI)) &&
++	    (host_isr != AR_INTR_SPURIOUS))
+ 		return true;
+ 
+ 	host_isr = REG_READ(ah, AR_INTR_SYNC_CAUSE);
+-- 
+1.7.0.4
 
-On Wed, Nov 16, 2011 at 08:52:15AM +0100, Johannes Berg wrote:
-> On Wed, 2011-11-16 at 00:21 +0100, Simon Wunderlich wrote:
-> > This patch adds support for NoAck per WMM Queue. The Unicast QoS
-> > Header is adapted accordingly for each outgoing frame.
-> > The support is turned on and off through nl80211 by extending
-> > the WMM TX Queue Parameters, but can be triggered separately.
->=20
-> Can you explain what for? :-)
-
-We want to set NoAck for special traffic classes like video or voice where
-"old" packets are not useful, but keep it for background and best effort tr=
-affic.
-This can be applied on devices supporting both traffic classes (e.g.=20
-laptops, smartphones with VoIP software) as well as for backhaul links.
-
-Something similar has been done previously on madwifi, what we used:
-
-http://madwifi-project.org/wiki/UserDocs/UsersGuide#noackpolicy-WMMNoAckPol=
-icyBitValue
-
->=20
-> I'm not sure this API is really the best way to handle it either, like I
-> just said it might be nicer per connection or so to get reset properly.
->=20
-
-I'm not sure what you mean by "per connection" - do you mean per AP/Sta
-connection? We need definitely need it per queue as explained above.
-
-> > I have tested this feature on ath9k as well as ath5k devices. There is
-> > an iw patch as well to make use of this feature.
->=20
-> Since you're adding 'real API' (unlike the debugfs file which you should
-> probably remove now!) you also should think about drivers like mwifiex
-> that don't support this and don't use mac80211.
-
-mwifiex neither supports set_txq_params nor the new function, nl80211 should
-just return "-EOPNOTSUPP". A short grep revealed that no driver in wireless=
--testing
-implements set_txq_params so far, so at least for the drivers within the ke=
-rnel
-this should be safe. I forgot to explicitly check for rdev->ops->set_txq_no=
-ack
-and will add this check in v2 ...
-
-I will also remove the debugfs entry.
-
->=20
-> Also, given real API, this impacts the duration calculation etc.
-
-I'm no expert in duration calculation, but will give it a try.
-
-best regards,
-	Simon
-
->=20
-> johannes
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-
---G4iJoqBmSsgzjUCe
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk7DlagACgkQrzg/fFk7axblsACgqXYyUdvYrV8Akd6Lp/MEHsIb
-HuMAn1y3KPhSg0A5ndTTzht5aMM+VQ56
-=DiAL
------END PGP SIGNATURE-----
-
---G4iJoqBmSsgzjUCe--
