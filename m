@@ -1,54 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:52340 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752718Ab1KUNNY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 08:13:24 -0500
-Received: by iage36 with SMTP id e36so7257162iag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2011 05:13:24 -0800 (PST)
-MIME-Version: 1.0
-Date: Mon, 21 Nov 2011 17:13:24 +0400
-Message-ID: <CAG5dHkSLvG2mbsxGAzQ9SwFrFNwEhiCxTLjn9RvpRQwwsny5+g@mail.gmail.com> (sfid-20111121_141328_183782_F6BD333D)
-Subject: [RFC v2 0/8] mesh power saving implementation: indication
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from perches-mx.perches.com ([206.117.179.246]:38003 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756306Ab1K2TiV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Nov 2011 14:38:21 -0500
+From: Joe Perches <joe@perches.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 3/4] nfc: Remove unused nfc_printk and nfc_<level> macros
+Date: Tue, 29 Nov 2011 11:37:34 -0800
+Message-Id: <759af9f0fd066ef1dcf7ad928940f68883d2ff13.1322595343.git.joe@perches.com> (sfid-20111129_203901_959194_DB6A55A7)
+In-Reply-To: <cover.1322595343.git.joe@perches.com>
+References: <cover.1322595343.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+All uses have been removed, so killing what's not necessary.
 
-We have updated our patches and also we would like to add some words
-what our work is about.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ net/nfc/core.c |   19 -------------------
+ net/nfc/nfc.h  |    7 -------
+ 2 files changed, 0 insertions(+), 26 deletions(-)
 
-Based on the latest IEEE 802.11s standard the power saving mechanism
-can be divided into the following implementation phases:
-* indication of mesh STAs' power modes in frames;
-* a buffering and identification sending frames in mesh STA;
-* Mesh Awake Window implementation;
-* Peer service periods.
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index c922adb..3ebc6b3aa 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -35,25 +35,6 @@
+ int nfc_devlist_generation;
+ DEFINE_MUTEX(nfc_devlist_mutex);
+ 
+-int nfc_printk(const char *level, const char *format, ...)
+-{
+-	struct va_format vaf;
+-	va_list args;
+-	int r;
+-
+-	va_start(args, format);
+-
+-	vaf.fmt = format;
+-	vaf.va = &args;
+-
+-	r = printk("%sNFC: %pV\n", level, &vaf);
+-
+-	va_end(args);
+-
+-	return r;
+-}
+-EXPORT_SYMBOL(nfc_printk);
+-
+ /**
+  * nfc_dev_up - turn on the NFC device
+  *
+diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
+index d86583f..67d6050 100644
+--- a/net/nfc/nfc.h
++++ b/net/nfc/nfc.h
+@@ -27,13 +27,6 @@
+ #include <net/nfc/nfc.h>
+ #include <net/sock.h>
+ 
+-__printf(2, 3)
+-int nfc_printk(const char *level, const char *fmt, ...);
+-
+-#define nfc_info(fmt, arg...) nfc_printk(KERN_INFO, fmt, ##arg)
+-#define nfc_err(fmt, arg...) nfc_printk(KERN_ERR, fmt, ##arg)
+-#define nfc_dbg(fmt, arg...) pr_debug(fmt "\n", ##arg)
+-
+ struct nfc_protocol {
+ 	int id;
+ 	struct proto *proto;
+-- 
+1.7.6.405.gc1be0
 
-This patchset implements the phase of indication of mesh STAs'
-power modes in frames. There are two types of mesh power modes:
-* peer power mode: a mesh STA indicates its mesh power mode for each
-mesh peering and obtains the mesh power modes of its peer mesh STAs;
-* non-peer power mode: mesh station also indicates mesh power mode for
-non-peer mesh stations. It determines when non-peer mesh STAs may send
-Probe Request and Mesh Peering Open Request frames to the mesh STA.
-
-Peer power mode should be indicated with Power Management field in the Frame
-Control field and the Mesh Power Save Level field in all transmitted
-individually addressed Mesh Data or QoS Null frames on this link.
-
-Non-peer power mode should be indicated with the Power Management
-field in the Frame Control field and the Mesh Power Save Level field
-in the Mesh Capability field in Beacon and Probe Response frames. A
-mesh STA shall also indicate its non-peer mesh power mode with the
-Power Management field in the Frame Control field and the Mesh Power
-Save Level field in the QoS Control field in group addressed Mesh Data
-frames.
-
-We would appreciate comments and advice.
-
-Thanks,
-Ivan
