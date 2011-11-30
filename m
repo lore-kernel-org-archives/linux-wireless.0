@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51251 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753085Ab1KCBPk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Nov 2011 21:15:40 -0400
-Subject: Re: [PATCH] ieee80211: Define cipher suite selector for WPI-SMS4
-From: Dan Williams <dcbw@redhat.com>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 02 Nov 2011 20:15:52 -0500
-In-Reply-To: <20111102213456.GA21460@jouni.qca.qualcomm.com>
-References: <20111102213456.GA21460@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1320282954.20617.1.camel@dcbw.foobar.com> (sfid-20111103_021545_085394_28C95151)
-Mime-Version: 1.0
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:44621 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752232Ab1K3Uqm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Nov 2011 15:46:42 -0500
+Received: by mail-lpp01m010-f46.google.com with SMTP id w12so290792lag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2011 12:46:42 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Nikolay Martynov <mar.kolya@gmail.com>
+Subject: [PATCH v3 2/4] ath9k: change calibration debug log to output all calibration types
+Date: Wed, 30 Nov 2011 15:46:18 -0500
+Message-Id: <1322685980-8757-3-git-send-email-mar.kolya@gmail.com> (sfid-20111130_214646_187222_2700C4E0)
+In-Reply-To: <1322685980-8757-1-git-send-email-mar.kolya@gmail.com>
+References: <20111130201051.GC2477@tuxdriver.com>
+ <1322685980-8757-1-git-send-email-mar.kolya@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-11-02 at 23:34 +0200, Jouni Malinen wrote:
-> This value is used for WPI-SMS4 in ISO/IEC JTC 1 N 9880.
+  To help debugging write a log entry when long calibration, short
+calibration or ANI is performed.
 
-Does that mean WAPI at some point? :)
+Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
-> ---
->  include/linux/ieee80211.h |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-> index 48363c3..80cba03 100644
-> --- a/include/linux/ieee80211.h
-> +++ b/include/linux/ieee80211.h
-> @@ -1552,6 +1552,8 @@ enum ieee80211_sa_query_action {
->  #define WLAN_CIPHER_SUITE_WEP104	0x000FAC05
->  #define WLAN_CIPHER_SUITE_AES_CMAC	0x000FAC06
->  
-> +#define WLAN_CIPHER_SUITE_SMS4		0x00147201
-> +
->  /* AKM suite selectors */
->  #define WLAN_AKM_SUITE_8021X		0x000FAC01
->  #define WLAN_AKM_SUITE_PSK		0x000FAC02
-> -- 
-> 1.7.4.1
-> 
-> 
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index e43c41c..937fcfa 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -561,7 +561,6 @@ void ath_ani_calibrate(unsigned long data)
+ 	/* Long calibration runs independently of short calibration. */
+ 	if ((timestamp - common->ani.longcal_timer) >= long_cal_interval) {
+ 		longcal = true;
+-		ath_dbg(common, ATH_DBG_ANI, "longcal @%lu\n", jiffies);
+ 		common->ani.longcal_timer = timestamp;
+ 	}
+ 
+@@ -569,8 +568,6 @@ void ath_ani_calibrate(unsigned long data)
+ 	if (!common->ani.caldone) {
+ 		if ((timestamp - common->ani.shortcal_timer) >= short_cal_interval) {
+ 			shortcal = true;
+-			ath_dbg(common, ATH_DBG_ANI,
+-				"shortcal @%lu\n", jiffies);
+ 			common->ani.shortcal_timer = timestamp;
+ 			common->ani.resetcal_timer = timestamp;
+ 		}
+@@ -605,6 +602,11 @@ void ath_ani_calibrate(unsigned long data)
+ 						ah->rxchainmask, longcal);
+ 	}
+ 
++	ath_dbg(common, ATH_DBG_ANI,
++		"Calibration @%lu finished: %s %s %s, caldone: %s\n", jiffies,
++		longcal ? "long" : "", shortcal ? "short" : "",
++		aniflag ? "ani" : "", common->ani.caldone ? "true" : "false");
++
+ 	ath9k_ps_restore(sc);
+ 
+ set_timer:
+-- 
+1.7.4.1
 
