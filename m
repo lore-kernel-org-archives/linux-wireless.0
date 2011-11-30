@@ -1,32 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:39558 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755137Ab1KUPhj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Nov 2011 10:37:39 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com
-Subject: Re: [PATCH] ath9k: Improve ath_tx_aggr_stop to avoid TID stuck in cleanup state.
-References: <1321684883-6870-1-git-send-email-mar.kolya@gmail.com>
-Date: Mon, 21 Nov 2011 17:37:34 +0200
-In-Reply-To: <1321684883-6870-1-git-send-email-mar.kolya@gmail.com> (Nikolay
-	Martynov's message of "Sat, 19 Nov 2011 01:41:23 -0500")
-Message-ID: <87r511ij0h.fsf@purkki.adurom.net> (sfid-20111121_163747_117547_3D45946B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:60200 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753500Ab1K3Ofq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Nov 2011 09:35:46 -0500
+Received: by lagw12 with SMTP id w12so122016lag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2011 06:35:44 -0800 (PST)
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] wl12xx: Print nvs/fw file name if loading fails.
+Date: Wed, 30 Nov 2011 15:35:09 +0100
+Message-Id: <1322663709-28128-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20111130_153549_624240_4ECA2812)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nikolay Martynov <mar.kolya@gmail.com> writes:
+Print the name of nvs/fw if request_firmware fails. This will make
+troubleshooting a bit easier.
 
-> From: kolya <mar.kolya@gmail.com>
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Please use your full name here.
-
->   When tx agg is being stopped TID is flushed using ath_tx_flush_tid. It is possible that ath_tx_flush_tid completelly flushes TID (if all packets in this TID have already been retried). If this happened ath_tx_aggr_stop would leave TID in cleanup state permanently. Fix this by making ath_tx_flush_tid remove AGGR_ADDBA_COMPLETE and AGGR_CLEANUP flags from TID status if TID is empty.
-
-And word wrap your commits to 72 chars or so.
-
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index dbb088e..392dba4 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1055,7 +1055,7 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
+ 	ret = request_firmware(&fw, fw_name, wl->dev);
+ 
+ 	if (ret < 0) {
+-		wl1271_error("could not get firmware: %d", ret);
++		wl1271_error("could not get firmware %s: %d", fw_name, ret);
+ 		return ret;
+ 	}
+ 
+@@ -1093,7 +1093,8 @@ static int wl1271_fetch_nvs(struct wl1271 *wl)
+ 	ret = request_firmware(&fw, WL12XX_NVS_NAME, wl->dev);
+ 
+ 	if (ret < 0) {
+-		wl1271_error("could not get nvs file: %d", ret);
++		wl1271_error("could not get nvs file %s: %d", WL12XX_NVS_NAME,
++			     ret);
+ 		return ret;
+ 	}
+ 
 -- 
-Kalle Valo
+1.7.5.4
+
