@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from csmtp2.one.com ([91.198.169.22]:21986 "EHLO csmtp2.one.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756392Ab1KIW57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Nov 2011 17:57:59 -0500
-Date: Wed, 9 Nov 2011 23:57:57 +0100
-From: Daniel Kuehn <daniel@kuehn.se>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH] Seeing as alot of ath9k devices is PCI/PCIe or their mini
- equivalent it makes sense to set ATH9K_PCI to y by default
-Message-ID: <20111109235757.79821a20@Artemis> (sfid-20111109_235802_568736_0DCE88C7)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:43836 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751569Ab1K3WWH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Nov 2011 17:22:07 -0500
+Received: from compute6.internal (compute6.nyi.mail.srv.osa [10.202.2.46])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 0709921C5D
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2011 17:22:07 -0500 (EST)
+Date: Wed, 30 Nov 2011 14:20:01 -0800
+From: Greg KH <greg@kroah.com>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] mac80211: fill rate filter for internal scan requests
+Message-ID: <20111130222001.GD29052@kroah.com> (sfid-20111130_232211_935965_D811ECED)
+References: <1322668590-18801-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1322668590-18801-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-from: Daniel Kuehn <daniel@kuehn.se>
+On Wed, Nov 30, 2011 at 04:56:30PM +0100, Simon Wunderlich wrote:
+> The rates bitmap for internal scan requests shoud be filled,
+> otherwise there will be probe requests with zero rates supported.
+> 
+> Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+> Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 
-Most ath9k devices are PCI/PCIe based, therefor making PCI/PCIe support
-default y helps those porting a config from 2.6 kernel series
-from getting "non-functional" wireless drivers with 3.x kernel series.
+<formletter>
 
-Signed-off-by: Daniel Kuehn <daniel@kuehn.se>
----
- drivers/net/wireless/ath/ath9k/Kconfig |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+This is not the correct way to submit patches for inclusion in the
+stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
+for how to do this properly.
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig
-b/drivers/net/wireless/ath/ath9k/Kconfig index d9c08c6..7b4c074 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -25,6 +25,7 @@ config ATH9K
- 
- config ATH9K_PCI
- 	bool "Atheros ath9k PCI/PCIe bus support"
-+	default y
- 	depends on ATH9K && PCI
- 	---help---
- 	  This option enables the PCI bus support in ath9k.
--- 
-1.7.7.2
+</formletter>
