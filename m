@@ -1,58 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57263 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501Ab1KHSVS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 13:21:18 -0500
-Subject: Re: [PATCH v6 1/2] wireless:  Support ht-capabilities over-rides.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4EB9720B.8080704@candelatech.com>
-References: <1320707676-17255-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20111108_001449_233997_95FF19FA) <1320740099.4304.5.camel@jlt3.sipsolutions.net>
-	 <4EB96A5C.8040606@candelatech.com>
-	 <1320775251.24797.31.camel@jlt3.sipsolutions.net>
-	 <4EB9720B.8080704@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Nov 2011 19:21:14 +0100
-Message-ID: <1320776474.24797.32.camel@jlt3.sipsolutions.net> (sfid-20111108_192121_613081_4DA2F8D5)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:47429 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752709Ab1K3NWj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Nov 2011 08:22:39 -0500
+Date: Wed, 30 Nov 2011 15:23:16 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
+ iwl3945_rs_free_sta
+Message-ID: <20111130142316.GA2466@redhat.com> (sfid-20111130_142243_863912_80B3CC03)
+References: <20111129100727.GD2675@tiehlicka.suse.cz>
+ <20111129113906.GA7299@redhat.com>
+ <20111130101028.GA2906@tiehlicka.suse.cz>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="OgqxwSJOaUobr8KG"
+In-Reply-To: <20111130101028.GA2906@tiehlicka.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-11-08 at 10:16 -0800, Ben Greear wrote:
 
-> > Fair enough. I think what I'm really after is having a way to know wtf
-> > we're using when you requested something. That would probably be more
-> > useful overall.
+--OgqxwSJOaUobr8KG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-ok.
-
-> The current ht_cap settings for each station are in debugfs, so hopefully it
-> would not be that difficult to add it to a netlink response.  Perhaps
-> it's already there..I haven't looked yet.
+On Wed, Nov 30, 2011 at 11:10:28AM +0100, Michal Hocko wrote:
+> On Tue 29-11-11 12:39:07, Stanislaw Gruszka wrote:
+> > On Tue, Nov 29, 2011 at 11:07:27AM +0100, Michal Hocko wrote:
+> > > [I am not sure whether this is ieee80211 or iwl3945 issue so put both
+> > > maintainers into loop]
+> > The only changed we had in iwlegacy between 3.1 and 3.2-rc, was only 
+> > adjustment to mac80211 changes. However I think this is iwlegacy issue,
+> > just for some reason bug did not trigger before.
 > 
-> > FWIW, I did talk to some people at the kernel summit about the -EINVAL
-> > thing and maybe there's an idea to send back the invalid attribute at
-> > least, but doesn't really matter here. I'm OK with just allowing it all
-> > since it's not going to be used a lot anyway.
+> I have double checked 3.1 and cannot reproduce it.
+> Anyway, I have put:
 > 
-> Ok, I'll add some printks.
+> diff --git a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
+> index 8faeaf2..9221ed4 100644
+> --- a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
+> +++ b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
+> @@ -432,6 +432,7 @@ static void iwl3945_rs_free_sta(void *iwl_priv, struct ieee80211_sta *sta,
+>  	 * to use iwl_priv to print out debugging) since it may not be fully
+>  	 * initialized at this point.
+>  	 */
+> +	printk("XXX: deleting time: %x\n", rs_sta->rate_scale_flush.base);
+>  	del_timer_sync(&rs_sta->rate_scale_flush);
+>  }
+>  
+> And the timer base is really NULL when the issue happens. So, somebody
+> probably removed the timer already?
 
-I really don't think you should add printks here for this.
+I think we call rs_ops->free_sta without rs_ops->alloc_sta, otherwise
+I don't know how it could be NULL in iwl3945_rs_free_sta (excluding memory
+corruption or bug in timer internals).
 
-> > OTOH, if you request a connect(), you don't even know the band and
-> > technically a driver could have different capabilities on different
-> > bands.
+I suspect this could be a regression introduced by commit:
+
+commit 07ba55d7f1d0da174c9bc545c713b44cee760197
+Author: Arik Nemtsov <arik@wizery.com>
+Date:   Wed Sep 28 14:12:53 2011 +0300
+
+    nl80211/mac80211: allow adding TDLS peers as stations
+
+I'm attaching patch with revert of relevant hunk, because full revert
+would be hard currently. Does it workaround problem for you?
+
+> > Is this problem 100% reproducible for you ? 
 > 
-> Lets see if any other drivers try to support these features.  Anyone
-> doing that work will likely see some ways to make use of common code
-> and things can be shuffled then.  As written, the patches are not overly
-> invasive, so I think we can move stuff around later without too much
-> trouble.
+> Yes, it seems to be sufficient to suspend to RAM while associated and
+> turn off the AP before waking up the machine.
+> I wasn't able to reproduce just by turning of the AP while associated
+> without suspend.
 
-Ok, fair enough.
+I'm not able to recreate, but I'm not using your config as my system
+user-space has problem to startup with it :-(
 
-johannes
+Stanislaw
 
+--OgqxwSJOaUobr8KG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="mac80211_use_sta_info_destroy_addr.patch"
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index b1b1bb3..f773dbb 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1144,9 +1144,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	changed |= BSS_CHANGED_BSSID | BSS_CHANGED_HT;
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ 
+-	/* remove AP and TDLS peers */
+ 	if (remove_sta)
+-		sta_info_flush(local, sdata);
++		sta_info_destroy_addr(sdata, bssid);
+ 
+ 	del_timer_sync(&sdata->u.mgd.conn_mon_timer);
+ 	del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
+
+--OgqxwSJOaUobr8KG--
