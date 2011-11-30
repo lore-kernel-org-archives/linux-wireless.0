@@ -1,111 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57195 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751635Ab1K0GU5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Nov 2011 01:20:57 -0500
-Message-ID: <4ED1D6AE.9070100@openwrt.org> (sfid-20111127_072123_176671_C9CCAECB)
-Date: Sun, 27 Nov 2011 13:20:30 +0700
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15108 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751614Ab1K3FO0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Nov 2011 00:14:26 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	Russell Hu <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 15/17] ath9k_hw: Add MCI related changes in chip reset
+Date: Wed, 30 Nov 2011 10:41:27 +0530
+Message-ID: <1322629889-19961-16-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_061431_331211_0ADAB7A6)
+In-Reply-To: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: Re: [Regression, 3.2-rc1] ath9k broken on AR928X
-References: <CA+55aFyNUC+k1gp3MQkxQzernEzRZwYOH4EBnOq=6UiaJ2oh4A@mail.gmail.com> <201111250203.29786.rjw@sisk.pl> <201111262232.46195.rjw@sisk.pl>
-In-Reply-To: <201111262232.46195.rjw@sisk.pl>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-11-27 4:32 AM, Rafael J. Wysocki wrote:
-> On Friday, November 25, 2011, Rafael J. Wysocki wrote:
->> On Thursday, November 24, 2011, Linus Torvalds wrote:
->> > Hey, since most of the US will be in a food-induced coma tomorrow, I
->> > just *know* that doing a new release candidate is a good idea.
->> > 
->> > One quarter arch updates, two quarters drivers, and one quarter random
->> > changes. Shake vigorously and serve cold..
->> > 
->> > And maybe the rest of the world can try to make up for the lack of any
->> > expected US participation? Hmm?
->> 
->> Well, unfortunately, this kernel is unusable on my Acer Ferrari One.
->> 
->> First off, it hangs solid every time several seconds or at last a few
->> minutes after boot.  I haven't been able to collect any debug data from
->> it yet, but one of the symptoms is black screen with (unmovable) mouse
->> cursor (this only happens when X has been started, but the box hangs without
->> X too).
->> 
->> Second, the wireless is apparently unable to associate with the AP
->> (that 3.1-rc10 works with correctly on the same box).
->> 
->> Tomorrow I'll try to identify the offending commits.
-> 
-> Well, it took more time than I had hoped. :-(
-> 
-> Bisection turns up:
-> 
-> commit 2577c6e8f2320f1d2f09be122efef5b9118efee4
-> Author: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-> Date:   Tue Sep 13 22:38:18 2011 +0530
-> 
->     ath9k_hw: Add support for AR946/8x chipsets.
->     
->     This patch adds support for AR946/8x chipets.
->     
->     Signed-off-by: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> which I think is wrong for at lest two reasons.  Not that I understand
-> what it actually does to the driver, but first, it does much more than the
-> changelog says and, second, it is practically impossible to revert
-> because of the number of commits on top depending on it.  Quite frankly,
-> it is about to make it to my list of examples of how things should _not_ be
-> done in the kernel.
-> 
-> The commit immediately preceding it doesn't show any symptoms of failure, so
-> I'm quite convinced this one really introduced the problem for me.
-> 
-> The chip in the affected box is (according to "lspci -v"):
-> 
-> 09:00.0 Network controller: Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
->         Subsystem: Foxconn International, Inc. Device e01f
->         Flags: bus master, fast devsel, latency 0, IRQ 19
->         Memory at f0000000 (64-bit, non-prefetchable) [size=64K]
->         Capabilities: [40] Power Management version 2
->         Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
->         Capabilities: [60] Express Legacy Endpoint, MSI 00
->         Capabilities: [90] MSI-X: Enable- Count=1 Masked-
->         Capabilities: [100] Advanced Error Reporting
->         Capabilities: [140] Virtual Channel
->         Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
->         Kernel driver in use: ath9k
-> 
-> Thanks,
-> Rafael
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Looking at the diff, the only thing I can find that would break AR928x
-is this (in the function ath9k_set_power_sleep in hw.c):
+here we check for BT state and if BT calibration has started,
+give 25ms for BT Calibration to finish. we also take care of 2G/5G
+switch and LNA transfer incase WLAN is operating in 5G. in case the BT
+state is awake when we do WLAN calibration re-calibrate and we reset
+the message exchange between WLAN and BT. BT is given preference when
+simultaneous CAL request happens. calibration for WLAN/BT is done
+assuming that the other co-existing module is in awake state, if not
+we continue to do calibration while if the other module's state changes
+we need to do restart the calibration handshake
 
-        /* Clear Bit 14 of AR_WA after putting chip into Full Sleep mode. */
--       if (AR_SREV_9300_20_OR_LATER(ah))
--               REG_WRITE(ah, AR_WA,
--                         ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
-+       if (!AR_SREV_9480(ah))
-+               REG_WRITE(ah, AR_WA, ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
- }
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |  132 +++++++++++++++++++++++++++++++++++
+ 1 files changed, 132 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 1d71d1b..e2860d7 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1514,6 +1514,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		   struct ath9k_hw_cal_data *caldata, bool bChannelChange)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
+ 	u32 saveLedState;
+ 	struct ath9k_channel *curchan = ah->curchan;
+ 	u32 saveDefAntenna;
+@@ -1521,6 +1522,53 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	u64 tsf = 0;
+ 	int i, r;
+ 	bool allow_fbs = false;
++	bool mci = !!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
++	bool save_fullsleep = ah->chip_fullsleep;
++
++	if (mci) {
++
++		ar9003_mci_2g5g_changed(ah, IS_CHAN_2GHZ(chan));
++
++		if (mci_hw->bt_state == MCI_BT_CAL_START) {
++			u32 payload[4] = {0, 0, 0, 0};
++
++			ath_dbg(common, ATH_DBG_MCI, "MCI stop rx for BT CAL");
++
++			mci_hw->bt_state = MCI_BT_CAL;
++
++			/*
++			 * MCI FIX: disable mci interrupt here. This is to avoid
++			 * SW_MSG_DONE or RX_MSG bits to trigger MCI_INT and
++			 * lead to mci_intr reentry.
++			 */
++
++			ar9003_mci_disable_interrupt(ah);
++
++			ath_dbg(common, ATH_DBG_MCI, "send WLAN_CAL_GRANT");
++			MCI_GPM_SET_CAL_TYPE(payload, MCI_GPM_WLAN_CAL_GRANT);
++			ar9003_mci_send_message(ah, MCI_GPM, 0, payload,
++						16, true, false);
++
++			ath_dbg(common, ATH_DBG_MCI, "\nMCI BT is calibrating");
++
++			/* Wait BT calibration to be completed for 25ms */
++
++			if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_DONE,
++								  0, 25000))
++				ath_dbg(common, ATH_DBG_MCI,
++					"MCI got BT_CAL_DONE\n");
++			else
++				ath_dbg(common, ATH_DBG_MCI,
++					"MCI ### BT cal takes to long, force"
++					"bt_state to be bt_awake\n");
++			mci_hw->bt_state = MCI_BT_AWAKE;
++			/* MCI FIX: enable mci interrupt here */
++			ar9003_mci_enable_interrupt(ah);
++
++			return true;
++		}
++	}
++
+ 
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
+ 		return -EIO;
+@@ -1558,12 +1606,29 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		if (ath9k_hw_channel_change(ah, chan)) {
+ 			ath9k_hw_loadnf(ah, ah->curchan);
+ 			ath9k_hw_start_nfcal(ah, true);
++			if (mci && mci_hw->ready)
++				ar9003_mci_2g5g_switch(ah, true);
++
+ 			if (AR_SREV_9271(ah))
+ 				ar9002_hw_load_ani_reg(ah, chan);
+ 			return 0;
+ 		}
+ 	}
+ 
++	if (mci) {
++		ar9003_mci_disable_interrupt(ah);
++
++		if (mci_hw->ready && !save_fullsleep) {
++			ar9003_mci_mute_bt(ah);
++			udelay(20);
++			REG_WRITE(ah, AR_BTCOEX_CTRL, 0);
++		}
++
++		mci_hw->bt_state = MCI_BT_SLEEP;
++		mci_hw->ready = false;
++	}
++
++
+ 	saveDefAntenna = REG_READ(ah, AR_DEF_ANTENNA);
+ 	if (saveDefAntenna == 0)
+ 		saveDefAntenna = 1;
+@@ -1619,6 +1684,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (r)
+ 		return r;
+ 
++	if (mci)
++		ar9003_mci_reset(ah, false, IS_CHAN_2GHZ(chan), save_fullsleep);
++
+ 	/*
+ 	 * Some AR91xx SoC devices frequently fail to accept TSF writes
+ 	 * right after the chip reset. When that happens, write a new
+@@ -1736,6 +1804,55 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	ath9k_hw_loadnf(ah, chan);
+ 	ath9k_hw_start_nfcal(ah, true);
+ 
++	if (mci && mci_hw->ready) {
++
++		if (IS_CHAN_2GHZ(chan) &&
++		    (mci_hw->bt_state == MCI_BT_SLEEP)) {
++
++			if (ar9003_mci_check_int(ah,
++			    AR_MCI_INTERRUPT_RX_MSG_REMOTE_RESET) ||
++			    ar9003_mci_check_int(ah,
++			    AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE)) {
++
++				/*
++				 * BT is sleeping. Check if BT wakes up during
++				 * WLAN calibration. If BT wakes up during
++				 * WLAN calibration, need to go through all
++				 * message exchanges again and recal.
++				 */
++
++				ath_dbg(common, ATH_DBG_MCI, "MCI BT wakes up"
++					"during WLAN calibration\n");
++
++				REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW,
++					  AR_MCI_INTERRUPT_RX_MSG_REMOTE_RESET |
++					  AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE);
++				ath_dbg(common, ATH_DBG_MCI, "MCI send"
++					"REMOTE_RESET\n");
++				ar9003_mci_remote_reset(ah, true);
++				ar9003_mci_send_sys_waking(ah, true);
++				udelay(1);
++				if (IS_CHAN_2GHZ(chan))
++					ar9003_mci_send_lna_transfer(ah, true);
++
++				mci_hw->bt_state = MCI_BT_AWAKE;
++
++				ath_dbg(common, ATH_DBG_MCI, "MCI re-cal\n");
++
++				if (caldata) {
++					caldata->done_txiqcal_once = false;
++					caldata->done_txclcal_once = false;
++					caldata->rtt_hist.num_readings = 0;
++				}
++
++				if (!ath9k_hw_init_cal(ah, chan))
++					return -EIO;
++
++			}
++		}
++		ar9003_mci_enable_interrupt(ah);
++	}
++
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 
+ 	ath9k_hw_restore_chainmask(ah);
+@@ -1778,6 +1895,21 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (ah->btcoex_hw.enabled)
+ 		ath9k_hw_btcoex_enable(ah);
+ 
++	if (mci && mci_hw->ready) {
++		/*
++		 * check BT state again to make
++		 * sure it's not changed.
++		 */
++
++		ar9003_mci_sync_bt_state(ah);
++		ar9003_mci_2g5g_switch(ah, true);
++
++		if ((mci_hw->bt_state == MCI_BT_AWAKE) &&
++				(mci_hw->query_bt == true)) {
++			mci_hw->need_flush_btinfo = true;
++		}
++	}
++
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		ar9003_hw_bb_watchdog_config(ah);
+ 
+-- 
+1.7.0.4
 
-Please try changing the if line to:
-if (AR_SREV_9300_20_OR_LATER(ah) && !AR_SREV_9480(ah))
-
-Apparently later changes even removed this check. I'll take a look at the
-history to figure out what's going on, this could probably explain other
-regressions on pre-AR9380 chips as well.
-
-- Felix
