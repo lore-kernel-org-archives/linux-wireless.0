@@ -1,37 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2971 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752241Ab1KTQOm (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:55674 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751493Ab1K3VXE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Nov 2011 11:14:42 -0500
-Date: Sun, 20 Nov 2011 10:44:00 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, mcgrof@gmail.com, nbd@openwrt.org,
-	jirislaby@gmail.com
-Subject: Re: [PATCH 13/13] ath5k: Optimize ath5k_cw_validate
-Message-ID: <20111120154359.GA4069@hash.lan> (sfid-20111120_171446_205493_41251B6E)
-References: <1321775788-12520-1-git-send-email-mickflemm@gmail.com>
- <1321775788-12520-14-git-send-email-mickflemm@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1321775788-12520-14-git-send-email-mickflemm@gmail.com>
+	Wed, 30 Nov 2011 16:23:04 -0500
+Date: Wed, 30 Nov 2011 16:21:57 -0500 (EST)
+Message-Id: <20111130.162157.1166144157202128144.davem@davemloft.net> (sfid-20111130_222328_986629_CB6B6951)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2011-11-30
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20111130193907.GB2477@tuxdriver.com>
+References: <20111130193907.GB2477@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 20, 2011 at 09:56:28AM +0200, Nick Kossifidis wrote:
-> +	/* Check if cw_req + 1 a power of 2 */
-> +	if (!((cw_req + 1) & cw_req))
-> +		return cw_req;
-> +
-> +	/* Check if cw_req is a power of 2 */
-> +	if (!(cw_req & (cw_req - 1)))
-> +		return cw_req - 1;
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 30 Nov 2011 14:39:07 -0500
 
-There's is_power_of_two() in log2.h .. but this whole thing could also
-be something like roundup_pow_of_two(cw) maybe?
+> There is an nl80211 fix for validating user input to prevent a buffer
+> underrun, a mac80211 race fix to prevent a WARN_ON, a mac80211 fix to
+> avoid trying to stop a single aggregation session twice, a mac80211 fix
+> for a race condition that could cause a crash when an addBA response
+> came late, the partial reversion of an ath9k change that broke wireless
+> on Ferrari One laptops, and a fix for an rtlwifi deadlock.
+> 
+> Please let me know if there are problems!
 
--- 
-Bob Copeland %% www.bobcopeland.com
-
+Applied, thanks.
