@@ -1,67 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:46218 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935498Ab1KJPtn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 10:49:43 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 23/27] iwlwifi: remove the use of the QOS debug flag
-Date: Thu, 10 Nov 2011 06:55:23 -0800
-Message-Id: <1320936927-9078-24-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_164950_883232_379B28F9)
-In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:38460 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754940Ab1K3Maj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Nov 2011 07:30:39 -0500
+Subject: Re: [PATCH 2/4] nl80211: Parse channel type attribute in an ibss
+ join request
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Alexander Simon <an.alexsimon@googlemail.com>,
+	Marek Lindner <lindner_marek@yahoo.de>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+In-Reply-To: <20111130122731.GA14283@pandem0nium>
+References: <1322502917-28205-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1322502917-28205-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1322655406.3982.12.camel@jlt3.sipsolutions.net>
+	 <20111130122731.GA14283@pandem0nium>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 30 Nov 2011 13:30:35 +0100
+Message-ID: <1322656235.3982.14.camel@jlt3.sipsolutions.net> (sfid-20111130_133041_141011_903430EF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Wed, 2011-11-30 at 13:27 +0100, Simon Wunderlich wrote:
+> Hey Johannes,
+> 
+> On Wed, Nov 30, 2011 at 01:16:46PM +0100, Johannes Berg wrote:
+> > On Mon, 2011-11-28 at 18:55 +0100, Simon Wunderlich wrote:
+> > > Prepare cfg80211 for IBSS HT:
+> > >  * extend cfg80211 ibss struct with channel_type
+> > >  * Check if extension channel can be used
+> > >  * Export can_beacon_sec_chan for use in mac80211 (will be called
+> > >    from ibss.c later).
+> > 
+> > I'm thinking there should be a "driver supports HT IBSS" flag, and we
+> > reject the config otherwise?
+> 
+> There is already an implicit check for this - rdev_freq_to_chan() checks
+> if the channel_type is supported, and -EINVAL otherwise. So if I call 
+> ibss_join with HT20 or HT40 on ath5k, it gets rejected already.
 
-This bit was used only once. Use IWL_DL_INFO instead.
+Right, but this just checks if HT is supported, not if HT-IBSS is
+supported. I can see some cfg80211 drivers implementing HT and IBSS, but
+not HT-IBSS, just like mac80211 before these patches.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debug.h    |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+> If this is not enough and we need a further flag, could you please give
+> me a hint how/where to implement it?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 8e45fba..b73077f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -117,7 +117,7 @@ static void iwlagn_update_qos(struct iwl_priv *priv,
- 	if (ctx->ht.enabled)
- 		ctx->qos_data.def_qos_parm.qos_flags |= QOS_PARAM_FLG_TGN_MSK;
- 
--	IWL_DEBUG_QOS(priv, "send QoS cmd with Qos active=%d FLAGS=0x%X\n",
-+	IWL_DEBUG_INFO(priv, "send QoS cmd with Qos active=%d FLAGS=0x%X\n",
- 		      ctx->qos_data.qos_active,
- 		      ctx->qos_data.def_qos_parm.qos_flags);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index 1dddf9b..a11e7aa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -166,7 +166,7 @@ static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
- #define IWL_DL_11H		(1 << 28)
- #define IWL_DL_STATS		(1 << 29)
- #define IWL_DL_TX_REPLY		(1 << 30)
--#define IWL_DL_QOS		(1 << 31)
-+#define IWL_DL_UNUSED		(1 << 31)
- 
- #define IWL_DEBUG_INFO(p, f, a...)	IWL_DEBUG(p, IWL_DL_INFO, f, ## a)
- #define IWL_DEBUG_MAC80211(p, f, a...)	IWL_DEBUG(p, IWL_DL_MAC80211, f, ## a)
-@@ -203,7 +203,7 @@ static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
- #define IWL_DEBUG_TX_REPLY(p, f, a...)	IWL_DEBUG(p, IWL_DL_TX_REPLY, f, ## a)
- #define IWL_DEBUG_TX_REPLY_LIMIT(p, f, a...) \
- 		IWL_DEBUG_LIMIT(p, IWL_DL_TX_REPLY, f, ## a)
--#define IWL_DEBUG_QOS(p, f, a...)	IWL_DEBUG(p, IWL_DL_QOS, f, ## a)
-+#define IWL_DEBUG_UNUSED(p, f, a...)	IWL_DEBUG(p, IWL_DL_UNUSED, f, ## a)
- #define IWL_DEBUG_RADIO(p, f, a...)	IWL_DEBUG(p, IWL_DL_RADIO, f, ## a)
- #define IWL_DEBUG_POWER(p, f, a...)	IWL_DEBUG(p, IWL_DL_POWER, f, ## a)
- #define IWL_DEBUG_11H(p, f, a...)	IWL_DEBUG(p, IWL_DL_11H, f, ## a)
--- 
-1.7.0.4
+I'd add it to enum nl80211_feature_flags.
+
+johannes
 
